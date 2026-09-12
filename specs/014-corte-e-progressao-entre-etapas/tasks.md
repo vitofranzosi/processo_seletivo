@@ -42,7 +42,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 **Purpose**: o ambiente da worktree, antes que o primeiro erro estranho custe uma hora.
 
 - [X] T001 Rodar `uv sync --extra dev` em `backend/`. *Worktree nova tem `.venv` próprio e ele nasce sem o grupo dev: `make test-pg` cria o ambiente, instala o runtime e morre com `Failed to spawn: pytest`. Parece defeito do alvo; é ambiente vazio*
-- [ ] T002 Preparar o banco próprio — `LC_ALL=pt_BR.UTF-8 DB_NAME=ps_demo_014 DB_USER=$USER make preparar` em `backend/` — e conferir `manage.py migrate --check`. *`preparar` são **três** passos nesta ordem: provisionar, migrar, provisionar de novo. A segunda passada concede privilégio sobre as tabelas que as migrations criaram, e é ela que dará ao papel de runtime o `INSERT` sem `UPDATE` das duas tabelas desta feature; se disser `0 de N protegidas`, ela não rodou*
+- [X] T002 Preparar o banco próprio — `LC_ALL=pt_BR.UTF-8 DB_NAME=ps_demo_014 DB_USER=$USER make preparar` em `backend/` — e conferir `manage.py migrate --check`. *`preparar` são **três** passos nesta ordem: provisionar, migrar, provisionar de novo. A segunda passada concede privilégio sobre as tabelas que as migrations criaram, e é ela que dará ao papel de runtime o `INSERT` sem `UPDATE` das duas tabelas desta feature; se disser `0 de N protegidas`, ela não rodou*
 
 **Checkpoint**: a suíte roda nesta worktree sem disputar banco com ninguém.
 
@@ -106,7 +106,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [X] T032 [US1] Desenhar a **Regra de corte** dentro de `backend/processo_seletivo/interface/templates/interface/_marco.html`, com os **seis** controles — espécie e quantidade do alvo, excedente, desfecho do empate, Etapa governada e admissão de continuação — e rótulos que dizem o que cada um decide, nunca `FIXED`/`STRICT`/`NONE` crus na tela. A Etapa governada é escolhida entre as Etapas do Edital, mais a opção explícita *não governa Etapa alguma*
 - [X] T033 [US1] Acrescentar `cutRule` ao catálogo de Retificação do marco em `backend/processo_seletivo/interface/retificacao.py`, endereçado por identidade — `/profiles/id=…/classificationMilestones/id=…/cutRule/targetCount` —, no padrão que `appealWindow` já usa (`FR-184`)
 - [X] T034 [US1] Escrever a regra na seção do marco do documento em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, pelo caminho por onde a janela recursal já sai (`FR-185`)
-- [ ] T035 [US1] Acrescentar a regra à tela de conferência em `backend/processo_seletivo/interface/revisao.py`, no formato que ela já usa para as demais declarações do marco
+- [X] T035 [US1] *(não se aplica — `revisao.py` não desenha marco nenhum; ver o §4 do relatório E2E)* Acrescentar a regra à tela de conferência em `backend/processo_seletivo/interface/revisao.py`, no formato que ela já usa para as demais declarações do marco
 - [X] T036 [US1] Conferir `backend/tests/interface/test_medida_dos_campos.py` e `backend/tests/interface/test_acessibilidade.py` para os controles novos: toda classe citada existe na folha, todo `aria-describedby` aponta alvo existente
 
 **Checkpoint**: `US1` fechada. O Edital publica como corta, a Retificação alcança cada campo por identidade, e **nenhum corte foi emitido**.
@@ -148,7 +148,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 - [X] T055 [US2] Gravar o universo declarado de [data-model.md](./data-model.md) §4 — inclusive o `rowId` da linha do quadro em alvo derivado. *Sem ele, retificado o quadro, não há como dizer se **aquele** corte ficou para trás: a quantidade sozinha não identifica a linha (`FR-193`, `R-009`)*
 - [X] T056 [US2] Acrescentar as quatro rotas de [contracts/corte.md](./contracts/corte.md) §2 em `backend/processo_seletivo/interface/urls.py:205`, pendendo do marco como as da ordem e as do sorteio, e as views em `backend/processo_seletivo/interface/views.py`
 - [X] T057 [US2] Criar `backend/processo_seletivo/interface/templates/interface/corte.html` e `_linha_do_corte.html`, com a confirmação de consequências inequívocas antes de emitir (`UX-028`)
-- [ ] T058 [US2] Apresentar o estado do corte de **todos os recortes** do marco numa visão só, sem exigir uma visita por recorte (`UX-029`)
+- [X] T058 [US2] Apresentar o estado do corte de **todos os recortes** do marco numa visão só, sem exigir uma visita por recorte (`UX-029`)
 
 **Checkpoint**: `US2` fechada. A ordem vira ato de corte, o empate na fronteira tem desfecho declarado, e a Etapa seguinte **ainda não mudou**.
 
@@ -214,20 +214,20 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 
 ### Tests for User Story 5
 
-- [ ] T078 [P] [US5] Teste de integração em `backend/tests/integration/classificacao/test_corte_obsoleto.py`: as **quatro** causas — ordem sucedida, regra alterada, quadro alterado e participante reingressou **no ato de ordenação** — aparecem **nomeadas**, e nunca como divergência genérica (`FR-215`, `FR-216`)
+- [X] T078 [P] [US5] Teste de integração em `backend/tests/integration/classificacao/test_corte_obsoleto.py`: as **quatro** causas — ordem sucedida, regra alterada, quadro alterado e participante reingressou **no ato de ordenação** — aparecem **nomeadas**, e nunca como divergência genérica (`FR-215`, `FR-216`)
 - [X] T079 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, a obsolescência **não altera, não substitui e não revoga** o corte vigente (`FR-217`, `SC-062`)
-- [ ] T080 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que devolve alguém ao universo **do ato de ordenação** produz a causa *participante reingressou* (`FR-218`)
-- [ ] T080a [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que **não** alcança o ato de ordenação — o recurso julgado na própria Etapa governada — **não** obsoleta o corte, e o trabalho da Etapa segue (`FR-230`). *Todo participante considerado está no universo do corte: medir a obsolescência ali faria qualquer reingresso parar a Etapa para exigir uma geração sucessora idêntica à anterior — e no 77, em que o recurso é julgado na Etapa que o corte governa, esse seria o caso normal*
+- [X] T080 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que devolve alguém ao universo **do ato de ordenação** produz a causa *participante reingressou* (`FR-218`)
+- [X] T080a [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, deferimento que **não** alcança o ato de ordenação — o recurso julgado na própria Etapa governada — **não** obsoleta o corte, e o trabalho da Etapa segue (`FR-230`). *Todo participante considerado está no universo do corte: medir a obsolescência ali faria qualquer reingresso parar a Etapa para exigir uma geração sucessora idêntica à anterior — e no 77, em que o recurso é julgado na Etapa que o corte governa, esse seria o caso normal*
 - [X] T081 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, corte obsoleto **impede** publicar resultado que dele dependa, com motivo nomeado e o caminho a seguir (`FR-219`, `SC-063`)
 - [X] T081a [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, com o corte obsoleto e a geração sucessora ainda não emitida, **distribuir, concluir avaliação e consolidar Resultado na Etapa governada são recusados** — os três —, com motivo nomeado e o caminho — emitir a geração sucessora. O trabalho já registrado continua íntegro, e a leitura continua disponível (`FR-228`, `UX-030`, `SC-073`). *É o reingresso que obriga: deferido o recurso que devolve alguém ao universo, trabalhar sob a faixa antiga é exatamente excluir quem teve o direito reconhecido — e o sistema já sabe disso, porque foi ele que marcou a causa*
 - [X] T081b [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, o percurso completo `emitir → continuar → a ordem muda → suceder`: **nenhuma** das duas faixas da geração anterior continua autorizando participante, e a Etapa governada passa a ler apenas a geração nova (`FR-227`, `SC-072`). *É o cenário que o desenho anterior não tinha como satisfazer — a sucessão sobre faixa isolada deixava a outra vigente*
-- [ ] T082 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, Retificação que **remove** a regra de um marco com corte emitido: o ato permanece legível, a causa é *regra alterada*, e a Etapa seguinte volta a admitir todos os habilitados
+- [X] T082 [P] [US5] Em `backend/tests/integration/classificacao/test_corte_obsoleto.py`, Retificação que **remove** a regra de um marco com corte emitido: o ato permanece legível, a causa é *regra alterada*, e a Etapa seguinte volta a admitir todos os habilitados
 
 ### Implementation for User Story 5
 
 - [X] T083 [US5] Acrescentar o estado do corte ao `estado_do_marco` em `backend/processo_seletivo/classificacao/application/selectors.py:281`, com as quatro comparações de [research.md](./research.md) `R-011`. As três primeiras não custam consulta nova; a quarta reusa `_reingressos` (`selectors.py:488`), que a `018` já escreveu
 - [X] T084 [US5] Acrescentar o impedimento de corte obsoleto em `backend/processo_seletivo/divulgacao/domain/publicabilidade.py`, ao lado do que já existe para ato de ordenação obsoleto (`FR-219`)
-- [ ] T085 [US5] Mostrar a obsolescência e a causa **ao abrir o marco**, sem que ninguém precise comparar nada manualmente (`UX-027`)
+- [X] T085 [US5] Mostrar a obsolescência e a causa **ao abrir o marco**, sem que ninguém precise comparar nada manualmente (`UX-027`)
 - [X] T085a [US5] Implementar o bloqueio dos **três** verbos na Etapa governada em `backend/processo_seletivo/resultados/application/prontidao.py`, como **impedimento da Etapa** — a mesma forma que a `013` já usa para *regra insuficiente*, que a presidência vê na prontidão antes de tentar consolidar. Não nasce estado novo de inscrição, e a partição de estados continua fechando (`FR-228`, `UX-030`)
 
 **Checkpoint**: `US5` fechada. Nenhum corte decide em silêncio quem está no certame.
@@ -250,7 +250,7 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 ### Implementation for User Story 6
 
 - [X] T090 [US6] Escrever a reprodução em `backend/processo_seletivo/classificacao/application/corte.py`, a partir do universo declarado — e **não** do estado de hoje
-- [ ] T091 [US6] Desenhar a leitura do corte histórico na rota `cortes/<corte_id>`, sucedido ou vigente, com a proveniência inteira (`UX-024`)
+- [X] T091 [US6] Desenhar a leitura do corte histórico na rota `cortes/<corte_id>`, sucedido ou vigente, com a proveniência inteira (`UX-024`)
 
 **Checkpoint**: todas as user stories fechadas e independentemente demonstráveis.
 
@@ -258,9 +258,9 @@ que já existem. Se alguma tarefa levar você a criar app, camada ou permissão,
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T092 [P] Regenerar a fixture de bytes de `backend/tests/contract/test_documento_publicado.py`, **de propósito**, e registrar no commit que a regra de corte entrou no PDF
-- [ ] T093 [P] Conferir o teto de abertura: 1.000 participantes por recorte em até 3 segundos, e número de consultas que **não cresce** com a população (`SC-067`)
-- [ ] T094 [P] Percorrer o [quickstart.md](./quickstart.md) inteiro contra o servidor real, pela interface, e registrar o relatório em `doc/e2e/014-corte-e-progressao/relatorio.md`, com os achados numerados `E2E14-NNN` e **cada um citado na docstring do teste que o fecha**
+- [X] T092 [P] *(nada a regenerar — o Edital da fixture não declara regra de corte, e os bytes não mudaram)* Regenerar a fixture de bytes de `backend/tests/contract/test_documento_publicado.py`, **de propósito**, e registrar no commit que a regra de corte entrou no PDF
+- [X] T093 [P] Conferir o teto de abertura: 1.000 participantes por recorte em até 3 segundos, e número de consultas que **não cresce** com a população (`SC-067`)
+- [X] T094 [P] Percorrer o [quickstart.md](./quickstart.md) inteiro contra o servidor real, pela interface, e registrar o relatório em `doc/e2e/014-corte-e-progressao/relatorio.md`, com os achados numerados `E2E14-NNN` e **cada um citado na docstring do teste que o fecha**
 - [X] T095 Rodar `DB_NAME=ps_demo_014 make lint check test-pg` em `backend/` e exigir verde. *`lint` são **dois** passos — `ruff check` **e** `ruff format --check`; rodar só o primeiro declara verde local e quebra no CI*
 - [X] T096 Escrever `specs/014-corte-e-progressao-entre-etapas/rastreabilidade.md` cobrindo `FR-178` a `FR-230`, `SC-055` a `SC-073` e `UX-024` a `UX-030`. *Onde existe matriz, `tests/test_citacoes_de_requisito.py` exige que ela alcance **cada** requisito — linha perdida é invisível de outro jeito*
 

@@ -182,7 +182,9 @@ def impedimento_do_corte(edital, etapa_id, *, at=None):
             at=at,
         )
         if estado["obsoleto"]:
-            causas = "; ".join(item["descricao"] for item in estado["causas"])
+            # Sem o ponto final de cada causa: quem monta a frase acrescenta o dela, e as duas
+            # pontuações juntas saíam como ".." na tela da Mesa.
+            causas = "; ".join(item["descricao"].rstrip(".") for item in estado["causas"])
             return (
                 CORTE_OBSOLETO,
                 "a faixa que governa esta Etapa está para trás, e o caminho é emitir a geração "
@@ -220,6 +222,34 @@ def fora_do_corte(edital, etapa_id, candidatas):
         )
         .values_list("pk", flat=True)
     )
+
+
+NAO_PARTICIPA = (
+    "Uma ou mais inscrições selecionadas não participam desta Etapa: elas foram eliminadas numa "
+    "Etapa anterior ou ainda aguardam o resultado da anterior."
+)
+FORA_DA_FAIXA = (
+    "Uma ou mais inscrições selecionadas estão fora do corte: a faixa publicada para esta Etapa "
+    "não as alcançou. Elas continuam registradas no corte emitido, com posição e causa."
+)
+E_TAMBEM_FORA = " Outras estão fora do corte: a faixa publicada para esta Etapa não as alcançou."
+
+
+def motivo_de_nao_participar(edital, etapa_id, candidatas):
+    """A recusa diz **qual** das causas incide, e não uma lista de todas (014, FR-210, UX-025).
+
+    A frase era uma só, escrita antes desta feature, e afirmava eliminação ou espera. Com o corte
+    ela passou a mentir: tentar distribuir quem a faixa não alcançou devolvia "foi eliminada numa
+    Etapa anterior ou aguarda o resultado da anterior" para alguém que não foi eliminado, não
+    aguarda nada e tem posição na ordem (E2E14-008). A diferença é do candidato, e a mensagem é
+    onde ela aparece para quem conduz o certame.
+    """
+    cortadas = fora_do_corte(edital, etapa_id, set(candidatas))
+    if not cortadas:
+        return NAO_PARTICIPA
+    if set(candidatas) - cortadas:
+        return NAO_PARTICIPA + E_TAMBEM_FORA
+    return FORA_DA_FAIXA
 
 
 def marcos_que_governam(edital, etapa_id, *, conteudo=None, at=None):
@@ -564,7 +594,9 @@ def contagens(panorama):
     A partição é verificável por construção: `participantes + eliminadas + aguardando` é o total, e
     os quatro estados dos participantes somam `participantes`.
     """
-    por_estado = {estado: 0 for estado in (CONSOLIDADA, PRONTA, IMPEDIDA, REAVALIACAO)}
+    por_estado = {
+        estado: 0 for estado in (CONSOLIDADA, PRONTA, IMPEDIDA, REAVALIACAO, FORA_DO_CORTE)
+    }
     for estado, _ in panorama["estados"].values():
         if estado in por_estado:
             por_estado[estado] += 1
@@ -576,5 +608,11 @@ def contagens(panorama):
         "prontas": por_estado[PRONTA],
         "impedidas": por_estado[IMPEDIDA],
         "reavaliacoes": por_estado[REAVALIACAO],
+        # **Sem esta contagem a partição deixava de fechar** (014, FR-210, UX-026). O estado já
+        # existia no panorama, mas nenhuma tela o contava: a Mesa da Etapa governada mostrava
+        # catorze submetidas e onze participantes, e os três que a faixa não alcançou não
+        # apareciam em número nenhum — sumiam, que é exatamente o que a UX-026 proíbe. Quem
+        # conduz a Etapa precisa somar a tela e fechar com o total (E2E14-007).
+        "fora_do_corte": por_estado[FORA_DO_CORTE],
         "total": len(panorama["estados"]),
     }

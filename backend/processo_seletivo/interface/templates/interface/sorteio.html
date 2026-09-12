@@ -153,6 +153,24 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   {% for recorte in recortes %}
   <article class="recorte">
     <h3>{{ recorte.nome }}</h3>
+    {% comment %}
+    O estado do corte **deste** recorte, aqui e não numa visita por lista (014, UX-029). Num marco
+    com cotas são três, e conferir três telas para saber se alguma faixa ficou para trás é onde o
+    esforço vira erro.
+    {% endcomment %}
+    {% if recorte.corte %}
+      {% if recorte.corte.obsoleto %}
+      <p class="erro" role="status"><strong>A faixa deste recorte está obsoleta.</strong>
+        {% for causa in recorte.corte.causas %}{{ causa.descricao }} {% endfor %}
+        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+      {% elif recorte.corte.faixas %}
+      <p class="imutavel"><strong>Corte emitido</strong> — {{ recorte.corte.faixas|length }} faixa{{ recorte.corte.faixas|length|pluralize:"s" }} na geração vigente.
+        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+      {% else %}
+      <p class="aviso">Nenhum corte emitido neste recorte.
+        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+      {% endif %}
+    {% endif %}
     {% if recorte.congelada %}
     <p class="imutavel"><strong>Relação congelada em {{ recorte.relacao.publicada_em|date:"d/m/Y H:i" }}</strong>
       por {{ recorte.relacao.publicada_por }}, com {{ recorte.relacao.quantidade }} participante{{ recorte.relacao.quantidade|pluralize }}.

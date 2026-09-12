@@ -21,7 +21,14 @@ from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.comissao import alocar_em, constituir, inscrever
-from tests.fixtures.corte import ENTREVISTA, MARCO, emitir, rascunho, regra
+from tests.fixtures.corte import (
+    ENTREVISTA,
+    MARCO,
+    emitir,
+    montar_cenario_do_corte,
+    rascunho,
+    regra,
+)
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
@@ -317,3 +324,29 @@ def test_a_trigger_recusa_o_delete_direto_no_item(cenario, gestor):
 
     with pytest.raises(DatabaseError, match="immutable"), transaction.atomic():
         ItemDoCorte.objects.filter(corte__edital=edital).delete()
+
+
+def test_o_empate_que_atravessa_a_faixa_sob_alvo_estrito_recusa_em_vez_de_estourar(
+    gestor, api_client, manager_headers, process_payload
+):
+    """A recusa da `FR-195` chega como `DomainError`, e não como exceção crua (E2E14-003).
+
+    O percurso E2E abriu a tela do corte num recorte com empate na fronteira e recebeu **500**:
+    `EmpateAtravessaOCorte` sobe do domínio e a view só traduz `DomainError`, de modo que o caso
+    que esta feature existe para não resolver sozinha derrubava a página em vez de explicá-la.
+    """
+    edital, _, _ = montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="corte-014-empate",
+        pontuacoes=("90.0000", "80.0000", "80.0000"),
+    )
+
+    with pytest.raises(DomainError) as erro:
+        calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+
+    assert erro.value.code == "empate_atravessa_o_corte"
+    assert erro.value.status == 409
+    assert "posição 2" in erro.value.detail and "2 participantes" in erro.value.detail

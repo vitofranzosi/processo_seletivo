@@ -466,6 +466,47 @@ def test_gravar_outra_etapa_preserva_o_quadro_de_vagas_inteiro(client, seletor_l
     assert _quadro_como_o_contrato_o_declara(edital) == PERFIL_COMPLETO["vacancyTable"]
 
 
+def _perfil_como_a_tela_o_envia():
+    """O POST do passo dos Perfis, com tudo o que aquela tela desenha — e só isso.
+
+    Compartilhado pelos dois testes da travessia porque o defeito mora justamente no que **falta**
+    aqui: um payload copiado e ajustado num teste só deixaria o outro provando outra coisa.
+    """
+    return {
+        "perfil-0-id": PERFIL,
+        "perfil-0-code": "TEC-LAB",
+        # A correção que a tela oferece: a denominação muda.
+        "perfil-0-name": "Técnico de Laboratório (Vitória)",
+        "perfil-0-description": PERFIL_COMPLETO["description"],
+        "perfil-0-requirements": PERFIL_COMPLETO["requirements"][0],
+        "perfil-0-immediateVacancies": "2",
+        "perfil-0-reserveType": "LIMITED",
+        "perfil-0-reserveLimit": "5",
+        "perfil-0-locality": PERFIL_COMPLETO["locality"],
+        "perfil-0-duties": PERFIL_COMPLETO["duties"],
+        "perfil-0-workload": PERFIL_COMPLETO["workload"],
+        "perfil-0-compensation": PERFIL_COMPLETO["compensation"],
+        "modalidade-0-0-id": MODALIDADE,
+        "modalidade-0-0-code": "AC",
+        "modalidade-0-0-name": "Ampla concorrência",
+        "modalidade-0-1-id": PPI,
+        "modalidade-0-1-code": "PPI",
+        "modalidade-0-1-name": "Pretos, pardos e indígenas",
+        # A seção do quadro, como a tela a desenha: a geral primeiro, e uma por Modalidade.
+        # A da "Ampla concorrência" vai **em branco**, que é o que a D-004 manda — e em branco
+        # não grava linha, e não vira zero.
+        "linha-0-0-id": LINHA_GERAL,
+        "linha-0-0-modalityId": "",
+        "linha-0-0-immediateVacancies": "1",
+        "linha-0-1-id": "aaaaaaaa-0000-4000-8000-0000000025d9",
+        "linha-0-1-modalityId": MODALIDADE,
+        "linha-0-1-immediateVacancies": "",
+        "linha-0-2-id": LINHA_PPI,
+        "linha-0-2-modalityId": PPI,
+        "linha-0-2-immediateVacancies": "1",
+    }
+
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_regravar_os_perfis_pela_tela_preserva_o_quadro(client, seletor_ligado, edital):
@@ -477,44 +518,27 @@ def test_regravar_os_perfis_pela_tela_preserva_o_quadro(client, seletor_ligado, 
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
 
-    resposta = client.post(
-        _etapa(edital, "perfis"),
-        {
-            "perfil-0-id": PERFIL,
-            "perfil-0-code": "TEC-LAB",
-            # A correção que a tela oferece: a denominação muda.
-            "perfil-0-name": "Técnico de Laboratório (Vitória)",
-            "perfil-0-description": PERFIL_COMPLETO["description"],
-            "perfil-0-requirements": PERFIL_COMPLETO["requirements"][0],
-            "perfil-0-immediateVacancies": "2",
-            "perfil-0-reserveType": "LIMITED",
-            "perfil-0-reserveLimit": "5",
-            "perfil-0-locality": PERFIL_COMPLETO["locality"],
-            "perfil-0-duties": PERFIL_COMPLETO["duties"],
-            "perfil-0-workload": PERFIL_COMPLETO["workload"],
-            "perfil-0-compensation": PERFIL_COMPLETO["compensation"],
-            "modalidade-0-0-id": MODALIDADE,
-            "modalidade-0-0-code": "AC",
-            "modalidade-0-0-name": "Ampla concorrência",
-            "modalidade-0-1-id": PPI,
-            "modalidade-0-1-code": "PPI",
-            "modalidade-0-1-name": "Pretos, pardos e indígenas",
-            # A seção do quadro, como a tela a desenha: a geral primeiro, e uma por Modalidade.
-            # A da "Ampla concorrência" vai **em branco**, que é o que a D-004 manda — e em branco
-            # não grava linha, e não vira zero.
-            "linha-0-0-id": LINHA_GERAL,
-            "linha-0-0-modalityId": "",
-            "linha-0-0-immediateVacancies": "1",
-            "linha-0-1-id": "aaaaaaaa-0000-4000-8000-0000000025d9",
-            "linha-0-1-modalityId": MODALIDADE,
-            "linha-0-1-immediateVacancies": "",
-            "linha-0-2-id": LINHA_PPI,
-            "linha-0-2-modalityId": PPI,
-            "linha-0-2-immediateVacancies": "1",
-        },
-    )
+    resposta = client.post(_etapa(edital, "perfis"), _perfil_como_a_tela_o_envia())
     assert resposta.status_code == 302, resposta.content
 
     perfil = PerfilVaga.objects.get(pk=PERFIL)
     assert perfil.name == "Técnico de Laboratório (Vitória)", "a correção que a tela oferece vale"
     assert _quadro_como_o_contrato_o_declara(edital) == PERFIL_COMPLETO["vacancyTable"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_regravar_os_perfis_pela_tela_preserva_os_marcos(client, seletor_ligado, edital):
+    """A travessia que o percurso E2E da 014 encontrou aberta (E2E14-001).
+
+    Quem desenha o marco é a etapa `classificacao`; a dos Perfis não o oferece, e `ler_perfis`
+    devolvia `classificationMilestones: []`. Como `replace_draft` apaga e recria, voltar aos
+    Perfis para declarar qual Modalidade é a ampla concorrência — exatamente o que a regra de corte
+    derivada do quadro exige — apagava o marco inteiro, sem recusa e sem aviso.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(_etapa(edital, "perfis"), _perfil_como_a_tela_o_envia())
+    assert resposta.status_code == 302, resposta.content
+
+    assert _marcos_como_o_contrato_os_declara(edital) == [MARCO_COMPLETO]

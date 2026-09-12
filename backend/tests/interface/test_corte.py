@@ -166,3 +166,131 @@ def cliente_no_corte(client, seletor_ligado, gestor, api_client, manager_headers
     # A base de gestão é o que a rota exige para emitir — ler tem porta mais larga.
     identificar(client, "carlos", ["gestor"])
     return client, edital, MARCO
+
+
+# --- T085 e T091, encontradas abertas pelo percurso E2E ----------------------------------------
+
+
+def _emitir_pela_tela(client, edital, marco):
+    corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
+    confirmacao = re.search(r'name="confirmacao_do_calculo" value="([^"]+)"', corpo).group(1)
+    chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
+    return client.post(
+        reverse("interface:emitir-corte", args=[edital.id, marco]),
+        {"confirmacao_do_calculo": confirmacao, "chave_idempotencia": chave},
+    )
+
+
+def test_a_tela_do_marco_mostra_a_faixa_obsoleta_com_a_causa(cliente_no_corte):
+    """A `UX-027` pede que a obsolescência seja **vista ao abrir o marco** (T085).
+
+    O percurso E2E sucedeu a ordem e abriu o marco: a tela não dizia nada. Quem sucede a ordem
+    descobriria que a faixa ficou para trás só ao tentar conduzir a Etapa governada — a recusa
+    chegaria no meio do trabalho, e não na tela que existe para conferir o marco.
+    """
+    from processo_seletivo.classificacao.application.calculo import calcular_ordem
+    from processo_seletivo.classificacao.application.emissao import (
+        assinatura_da_proposta,
+        emitir_ordem,
+    )
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+    from tests.fixtures.edital import PROFILE_ID
+
+    client, edital, marco = cliente_no_corte
+    _emitir_pela_tela(client, edital, marco)
+    vigente = AtoDeOrdenacao.objects.filter(
+        edital=edital, marco_id=marco, lista_id=None, sucessores__isnull=True
+    ).first()
+    proposta = calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=marco)
+    emitir_ordem(
+        actor=_ator_de_gestao(edital),
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        perfil_id=PROFILE_ID,
+        marco_id=marco,
+        idempotency_key="corte-014-ui-sucessor",
+        correlation_id="teste-014",
+        confirmacao_do_calculo=assinatura_da_proposta(proposta, ato_vigente=vigente),
+        motivo="Reemissão após conferência.",
+    )
+
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, marco])).content.decode()
+
+    assert "A faixa emitida está obsoleta" in corpo
+    assert "A ordem que este corte leu foi sucedida" in corpo
+
+
+def test_o_corte_historico_e_lido_pelos_nomes_da_versao_que_ele_congelou(cliente_no_corte):
+    """A rota `cortes/<id>` da `UX-024`, com a proveniência inteira (T091).
+
+    **Pelos nomes congelados**: renomear o marco hoje não pode mudar como um corte antigo é lido —
+    a mesma regra que a `015` aplica ao ato de ordenação. A reprodução aparece na mesma tela porque
+    é ali que ela serve: registrar o que foi usado e chegar de novo ao mesmo resultado são coisas
+    distintas, e a Constituição pede a segunda (`FR-199`).
+    """
+    client, edital, marco = cliente_no_corte
+    _emitir_pela_tela(client, edital, marco)
+    corte = Corte.objects.get(edital=edital, marco_id=marco)
+
+    corpo = client.get(
+        reverse("interface:corte-historico", args=[edital.id, corte.id])
+    ).content.decode()
+
+    assert "Proveniência" in corpo
+    assert corte.emitido_por in corpo, "o ator da emissão (FR-222, SC-070)"
+    assert "A regra que o governou" in corpo
+    assert "A faixa reproduz" in corpo, "a reprodução a partir do universo (FR-199)"
+    assert str(corte.ato_id) in corpo or "Ato de" in corpo, "a ordem citada"
+
+
+def _ator_de_gestao(edital):
+    from processo_seletivo.seguranca.domain import Actor
+
+    return Actor(
+        subject="carlos",
+        institution_scope=edital.processo.institution_scope,
+        permissions=frozenset({"classificacao:emitir", "comissao:gerir"}),
+    )
+
+
+def test_a_retificacao_alcanca_o_desfecho_do_empate_com_as_duas_opcoes(cliente_no_corte):
+    """O passo que o percurso E2E não conseguiu dar pela tela (E2E14-005).
+
+    O Percurso 2 do quickstart manda retificar o marco para *admite excedente* quando o empate
+    atravessa a faixa — e a Retificação oferecia `targetCount` e `surplusCount` e mais nada do
+    corte. A espécie do alvo, a Etapa governada e a continuação ficam de fora por decisão
+    registrada; o desfecho não tinha razão para ficar: são dois valores fechados, e `REFERENCIA`
+    os oferece conferindo a escolha contra a lista.
+    """
+    from processo_seletivo.interface.retificacao import campos_editaveis
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    _, edital, _ = cliente_no_corte
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("valid_from")
+
+    campos = [campo for grupo in campos_editaveis(vigente.content) for campo in grupo["campos"]]
+    desfecho = next(campo for campo in campos if campo["caminho"].endswith("/cutRule/tieOutcome"))
+
+    assert {identificador for identificador, _ in desfecho["opcoes"]} == {
+        "ADMITS_SURPLUS",
+        "STRICT",
+    }
+    assert desfecho["rotulo"] == "Empate na última posição"
+
+
+def test_a_tela_do_corte_identifica_quem_progride_pelo_protocolo(cliente_no_corte):
+    """A coluna imprimia UUID, e a casa inteira escreve `protocolo — nome` ali (E2E14-006).
+
+    Catorze linhas de identificador interno, e conferir quem progrediu exigia traduzi-las por
+    fora. A `UX-025` proíbe nomear por identificador interno, e a tela do ato de ordenação já
+    resolvia a mesma coluna do mesmo jeito.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    client, edital, marco = cliente_no_corte
+    protocolos = set(Inscricao.objects.filter(edital=edital).values_list("protocolo", flat=True))
+
+    corpo = client.get(reverse("interface:corte", args=[edital.id, marco])).content.decode()
+
+    assert protocolos, "o cenário grava protocolo"
+    assert any(protocolo in corpo for protocolo in protocolos)

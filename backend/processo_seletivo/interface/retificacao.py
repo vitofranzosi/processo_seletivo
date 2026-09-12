@@ -104,7 +104,20 @@ CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
 CAMPOS_DO_CORTE = [
     ("cutRule/targetCount", "Quantos progridem", INTEIRO),
     ("cutRule/surplusCount", "Suplentes alcançados na mesma faixa", INTEIRO),
+    # **O desfecho do empate entra, e as três exclusões acima continuam de fora.** A razão delas é
+    # a caixa de texto que publicaria valor não interpretável; o desfecho não tem esse problema —
+    # são dois valores fechados, e `REFERENCIA` os oferece conferindo a escolha contra a lista.
+    # Sem ele, o caminho que o próprio percurso da feature descreve — o empate atravessa a faixa
+    # sob alvo estrito, e a comissão decide admitir o excedente — não existia pela tela, e mudar o
+    # desfecho de um Edital publicado exigia chamada de API (E2E14-005).
+    ("cutRule/tieOutcome", "Empate na última posição", REFERENCIA),
 ]
+# Os dois desfechos, com as mesmas palavras da tela de composição: quem retifica escolhe entre o
+# que já leu ao declarar, e não entre dois códigos.
+DESFECHOS_DO_EMPATE = (
+    ("ADMITS_SURPLUS", "Todos os empatados progridem"),
+    ("STRICT", "A faixa para no alvo"),
+)
 # **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
 # número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
 # pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
@@ -491,6 +504,13 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
+                    opcoes={"cutRule/tieOutcome": DESFECHOS_DO_EMPATE},
+                    rotulos_do_vazio={
+                        # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
+                        # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
+                        # nomeia o marco.
+                        "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                    },
                 )
             )
             for criterio in marco.get("tiebreakers") or []:

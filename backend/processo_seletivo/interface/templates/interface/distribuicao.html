@@ -108,6 +108,16 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
   <a href="?prontidao=eliminada-antes" {% if prontidao == "eliminada-antes" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.eliminadas_antes }}</strong> <span>eliminadas antes</span></a>
   {% endif %}
+  {% comment %}
+  Quem a faixa não alcançou **é nomeado aqui**, e não some da tela (014, FR-210, UX-026). Ele não é
+  eliminado nem aguarda a Etapa anterior: foi considerado, tem posição na ordem, e a norma
+  publicada o deixou de fora — e é essa diferença que o candidato lê como "não fui chamado" em vez
+  de "não sei por quê".
+  {% endcomment %}
+  {% if resumo.fora_do_corte %}
+  <a href="?prontidao=fora-do-corte" {% if prontidao == "fora-do-corte" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.fora_do_corte }}</strong> <span>fora do corte</span></a>
+  {% endif %}
 </nav>
 
 <section aria-labelledby="carga">

@@ -11,6 +11,7 @@ from processo_seletivo.classificacao.application.calculo import calcular_ordem
 from processo_seletivo.classificacao.application.corte import calcular_corte, estado_do_corte
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
 from processo_seletivo.classificacao.models import Corte, ItemDoCorte
+from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.prontidao import impedimento_do_corte, participacao
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.corte import ENTREVISTA, MARCO, emitir
@@ -320,3 +321,151 @@ def test_a_linha_do_quadro_trocada_por_outra_de_mesma_quantidade_obsoleta(cenari
     )
 
     assert [item["tipo"] for item in causas_do_quadro] == ["quadro_alterado"]
+
+
+# --- T078/T080 · o reingresso no universo do ato, nomeado (FR-216, FR-218) --------------------
+
+
+def _superar_resultado(edital, inscricao_id, etapa_id):
+    """Um Resultado sucessor por recurso deferido, pelo caminho que a `018` publica.
+
+    Nada entra direto: a peça é interposta, admitida e decidida, e é a decisão que funda o
+    sucessor — a trigger de coerência da origem recusa qualquer atalho.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.fixtures.recursos import admitir, decidir, interpor, superar
+
+    superado = ResultadoEtapa.vigentes.get(
+        edital=edital, inscricao_id=inscricao_id, etapa_id=etapa_id
+    )
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("valid_from")
+    recurso = interpor(
+        inscricao=superado.inscricao,
+        versao=versao,
+        resultado=superado,
+        protocolo=f"REC-2026-{str(inscricao_id)[:6]}",
+    )
+    admitir(recurso)
+    decisao = decidir(
+        recurso,
+        protegido=superado,
+        consequencia=superado.consequencia,
+        forma=superado.forma,
+        pontuacao=superado.pontuacao,
+        sentido=superado.sentido,
+        versao=versao,
+    )
+    return superar(superado, decisao, pontuacao=superado.pontuacao)
+
+
+def test_o_reingresso_no_ato_de_ordenacao_e_nomeado_e_nao_vira_divergencia_generica(
+    cenario, gestor
+):
+    """A causa tem nome próprio, e a `018` já pagou o preço de não ter (FR-216, FR-218).
+
+    A divergência genérica escondia **o quê** havia mudado, e quem lia a tela não sabia se a faixa
+    ficara para trás por norma nova ou por gente nova no universo. São providências diferentes.
+    """
+    edital, pontuada, inscricoes = cenario
+    emitir(edital, gestor)
+
+    _superar_resultado(edital, inscricoes[0].id, pontuada["id"])
+
+    obsoleto, tipos = causas(edital)
+    assert obsoleto is True
+    assert tipos == {"participante_reingressou"}, tipos
+
+
+def test_o_deferimento_na_etapa_governada_nao_obsoleta_o_corte(cenario, gestor):
+    """A `FR-230` em código: medir no universo do corte pararia a Etapa para sempre.
+
+    Todo participante considerado está no universo do corte — inclusive quem já está dentro da
+    faixa. Se a medida fosse ali, **qualquer** deferimento o obsoletaria, e somado ao bloqueio de
+    trabalho novo isso exigiria uma geração sucessora idêntica à anterior. No 77/2026, em que o
+    recurso é julgado na própria Etapa que o corte governa, esse seria o caso normal.
+    """
+    from processo_seletivo.avaliacoes.application.avaliacao import concluir
+    from processo_seletivo.avaliacoes.application.distribuicao import distribuir
+    from processo_seletivo.comissoes.application.alocacao import alocar
+    from processo_seletivo.comissoes.models import MembroComissao
+    from tests.conftest import ator_institucional
+
+    edital, _, inscricoes = cenario
+    emitir(edital, gestor)
+    # O trabalho real da Etapa governada, até o Resultado: é ele que o deferimento vai superar.
+    membro = MembroComissao.objects.get(processo=edital.processo, identity_subject="joao")
+    alocar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        membro_id=membro.id,
+        edital_id=edital.id,
+        etapa_id=ENTREVISTA,
+        idempotency_key="corte-014-alocar-entrevista",
+        correlation_id="teste-corte-014",
+    )
+    distribuir(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        etapa_id=ENTREVISTA,
+        membro_ids=[membro.id],
+        inscricao_ids=[inscricoes[0].id],
+        idempotency_key="corte-014-lote-entrevista",
+        correlation_id="teste-corte-014",
+    )
+    concluir(
+        ator=ator_institucional("joao"),
+        edital=edital,
+        etapa_id=ENTREVISTA,
+        inscricao_id=inscricoes[0].id,
+        pontuacao="88.0000",
+        sentido=None,
+        parecer="Entrevista realizada.",
+        expected_revision=1,
+        versao_reconhecida=edital.versoes_consolidadas.latest("materialized_at").id,
+        correlation_id="teste-corte-014",
+    )
+    consolidar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        etapa_id=ENTREVISTA,
+        inscricao_ids=[inscricoes[0].id],
+        idempotency_key="corte-014-entrevista",
+        correlation_id="teste-corte-014",
+    )
+
+    _superar_resultado(edital, inscricoes[0].id, ENTREVISTA)
+
+    obsoleto, tipos = causas(edital)
+    assert (obsoleto, tipos) == (False, set())
+
+
+# --- T082 · a Retificação que **remove** a regra ----------------------------------------------
+
+
+def test_remover_a_regra_obsoleta_a_faixa_e_devolve_a_etapa_a_todos_os_habilitados(
+    cenario, gestor, api_client
+):
+    """Remover a regra é decisão normativa, e o ato emitido sob ela continua legível.
+
+    A faixa não é apagada — nada é —, mas deixa de governar: sem regra publicada não há corte, e a
+    Etapa seguinte volta a receber todos os habilitados, exatamente como em todo Edital anterior a
+    esta feature. É a segunda causa de dormência, e ela precisa ser a mesma coisa que a primeira.
+    """
+    edital, _, inscricoes = cenario
+    emitir(edital, gestor)
+    assert participacao(edital=edital, etapa_id=ENTREVISTA)[0] == {
+        inscricoes[0].id,
+        inscricoes[1].id,
+    }
+
+    retify(api_client, edital, [{"targetPath": CAMINHO_DA_REGRA, "operation": "REMOVE"}])
+
+    assert Corte.objects.filter(edital=edital).exists(), "o ato emitido permanece"
+    obsoleto, tipos = causas(edital)
+    assert (obsoleto, tipos) == (True, {"regra_alterada"})
+    participantes, _, _ = participacao(edital=edital, etapa_id=ENTREVISTA)
+    assert participantes == {inscricoes[0].id, inscricoes[1].id, inscricoes[2].id}
+    assert impedimento_do_corte(edital, ENTREVISTA) is None, "sem regra não há bloqueio"

@@ -74,12 +74,23 @@ def rascunho(cut=None):
 
 
 def montar_cenario_do_corte(
-    gestor, api_client, manager_headers, process_payload, *, cut=None, prefixo="corte-014"
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    cut=None,
+    prefixo="corte-014",
+    pontuacoes=("90.0000", "80.0000", "70.0000"),
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
     `cut` permite ao chamador declarar outra regra: quem exercita a continuação precisa de um Edital
     que a publique, e a do cenário base é a do 14/2026, que não a admite.
+
+    `pontuacoes` permite ao chamador arranjar a ordem: o empate que atravessa a fronteira só existe
+    se duas pontuações forem iguais, e um cenário de pontuações fixas não o alcança. Um inscrito a
+    mais que as pontuações fica sem avaliação, como no cenário base.
     """
     draft, pontuada = rascunho(cut=cut if cut is not None else regra())
     edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
@@ -96,16 +107,17 @@ def montar_cenario_do_corte(
         "membros": membros,
         "etapa": pontuada["id"],
     }
-    inscricoes = inscrever(edital, 4, primeiro=601)
-    distribuir_para(contexto, gestor, ["joao"], inscricoes[:3], chave=f"{prefixo}-lote")
-    for indice, pontuacao in enumerate(["90.0000", "80.0000", "70.0000"]):
+    inscricoes = inscrever(edital, len(pontuacoes) + 1, primeiro=601)
+    avaliados = inscricoes[: len(pontuacoes)]
+    distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-lote")
+    for indice, pontuacao in enumerate(pontuacoes):
         concluir_como(contexto, "joao", inscricoes[indice], pontuacao=pontuacao)
     consolidar(
         actor=gestor,
         processo_id=edital.processo_id,
         edital_id=edital.id,
         etapa_id=pontuada["id"],
-        inscricao_ids=[item.id for item in inscricoes[:3]],
+        inscricao_ids=[item.id for item in avaliados],
         idempotency_key=f"{prefixo}-consolidar",
         correlation_id="teste-corte-014",
     )

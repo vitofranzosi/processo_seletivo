@@ -151,7 +151,13 @@ def calcular(posicoes, *, alvo, excedente=0, desfecho, desde=0):
             # a do alvo. É o que o 57 e o 28 exigem: ninguém analisa o suplente 21 porque o 20
             # empatou.
             if desfecho == EMPATE_ESTRITO:
-                raise EmpateAtravessaOCorte(fronteira, len(empatados) + 1)
+                # **Quantos empataram naquela posição**, e não quantos sobraram fora dela. O `+1`
+                # de antes supunha que só um empatado estivesse dentro da faixa; com oito acima e
+                # três empatados na nona posição sob alvo dez, dois ficam dentro e a recusa dizia
+                # "2 participantes" para um empate de três (E2E14-004). Quem lê a mensagem precisa
+                # do tamanho do empate para saber quantos desempates julgar (FR-195, UX-025).
+                na_fronteira = sum(1 for item in candidatos if item[1] == fronteira)
+                raise EmpateAtravessaOCorte(fronteira, na_fronteira)
             excedentes = empatados
             dentro = dentro + empatados
     progrediram = [ident for ident, _ in dentro]

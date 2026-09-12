@@ -206,21 +206,27 @@ def _inscricoes_atribuiveis(edital, ids, etapa_id=None):
             campo="inscricao_id",
         )
     if etapa_id is not None:
-        from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
+        from processo_seletivo.resultados.application.prontidao import (
+            motivo_de_nao_participar,
+            restringir_a_participantes,
+        )
 
-        # A restrição é dobrada na consulta, e a comparação é de contagem: a seleção inteira ou
-        # nada, sem uma pergunta por inscrição selecionada.
-        participantes = restringir_a_participantes(
-            Inscricao.objects.filter(pk__in=[i.id for i in inscricoes]),
-            edital=edital,
-            etapa_id=etapa_id,
-            prefixo="",
-        ).count()
-        if participantes != len(inscricoes):
+        # A restrição é dobrada na consulta, e a comparação é de conjunto: a seleção inteira ou
+        # nada, sem uma pergunta por inscrição selecionada. **As identidades**, e não a contagem,
+        # porque a recusa precisa dizer qual causa incide sobre quem sobrou (014, E2E14-008).
+        participantes = set(
+            restringir_a_participantes(
+                Inscricao.objects.filter(pk__in=[i.id for i in inscricoes]),
+                edital=edital,
+                etapa_id=etapa_id,
+                prefixo="",
+            ).values_list("pk", flat=True)
+        )
+        sobraram = [item.id for item in inscricoes if item.id not in participantes]
+        if sobraram:
             raise DomainError(
                 "inscricao_fora_da_etapa",
-                "Uma ou mais inscrições selecionadas não participam desta Etapa: elas foram "
-                "eliminadas numa Etapa anterior ou ainda aguardam o resultado da anterior.",
+                motivo_de_nao_participar(edital, etapa_id, sobraram),
                 422,
                 campo="inscricao_id",
             )

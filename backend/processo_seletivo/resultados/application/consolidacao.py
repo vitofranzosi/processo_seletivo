@@ -25,6 +25,10 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
+    E_TAMBEM_FORA,
+    FORA_DA_FAIXA,
+    FORA_DO_CORTE,
+    NAO_PARTICIPA,
     PRONTA,
     REAVALIACAO,
     panorama_da_etapa,
@@ -97,10 +101,18 @@ def _inscricoes_da_selecao(edital, ids, panorama):
         )
     fora = [i for i in inscricoes if i.id not in panorama["participantes"]]
     if fora:
+        # **A causa sai do panorama**, que já a classificou — e não de uma segunda consulta. Dizer
+        # "foi eliminada ou aguarda a anterior" a quem a faixa do corte não alcançou afirmaria o
+        # que não aconteceu: ele foi considerado, tem posição na ordem, e a norma publicada o
+        # deixou de fora (014, FR-210, UX-025, E2E14-008).
+        cortadas = [i for i in fora if panorama["estados"].get(i.id, (None,))[0] == FORA_DO_CORTE]
         raise DomainError(
             "inscricao_fora_da_etapa",
-            "Uma ou mais inscrições selecionadas não participam desta Etapa: elas foram "
-            "eliminadas numa Etapa anterior ou ainda aguardam o resultado da anterior.",
+            (
+                FORA_DA_FAIXA
+                if len(cortadas) == len(fora)
+                else NAO_PARTICIPA + (E_TAMBEM_FORA if cortadas else "")
+            ),
             422,
             campo="inscricao_id",
         )

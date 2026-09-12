@@ -57,11 +57,11 @@ leitura, e não o inventário — quem quer o inventário lê o `git log` da fea
 | **FR-212** | T063 | `tests/integration/resultados/test_progressao_com_corte.py` | sim |
 | **FR-213** | T065, T068 | — | sim |
 | **FR-214** | T003, T064 | `editais/models/perfis.py`, `tests/integration/resultados/test_progressao_com_corte.py` | sim |
-| **FR-215** | T078, T104 | `classificacao/application/corte.py`, `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
-| **FR-216** | T078 | `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
+| **FR-215** | T078, T104 | `classificacao/application/corte.py`, `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
+| **FR-216** | T078 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **FR-217** | T079 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
-| **FR-218** | T080 | `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
-| **FR-230** | T080a, T096 | `tests/integration/classificacao/test_corte_obsoleto.py` | **não** |
+| **FR-218** | T080 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
+| **FR-230** | T080a, T096 | `tests/integration/classificacao/test_corte_obsoleto.py` | sim |
 | **FR-231** | T097, T098, T099, T115 | `classificacao/application/corte.py`, `editais/domain/validation.py`, `editais/migrations/0018_ampla_concorrencia_declarada.py` | sim |
 | **FR-232** | T102, T111 | `resultados/application/prontidao.py` | sim |
 | **FR-233** | T100 | `classificacao/application/corte.py` | sim |
@@ -93,7 +93,7 @@ leitura, e não o inventário — quem quer o inventário lê o `git log` da fea
 | **SC-064** | T071 | `tests/integration/classificacao/test_faixa_seguinte.py` | sim |
 | **SC-065** | T074 | `tests/integration/classificacao/test_faixa_seguinte.py` | sim |
 | **SC-066** | T075 | `tests/test_vocabulario_do_corte.py`, `tests/test_vocabulario_do_resultado.py` | sim |
-| **SC-067** | T093 | — | **não** |
+| **SC-067** | T093 | `tests/performance/test_corte.py` | sim |
 | **SC-068** | T065 | — | sim |
 | **SC-069** | T064 | `tests/integration/resultados/test_progressao_com_corte.py` | sim |
 | **SC-070** | T089, T107 | `classificacao/application/emissao_do_corte.py`, `tests/integration/classificacao/test_reproducao_do_corte.py` | sim |
@@ -109,10 +109,10 @@ leitura, e não o inventário — quem quer o inventário lê o `git log` da fea
 
 | Requisito | Tarefas | Onde vive | Fechado |
 |---|---|---|---|
-| **UX-024** | T020, T050, T091, T096, T106 | `tests/interface/test_corte.py` | **não** |
+| **UX-024** | T020, T050, T091, T096, T106 | `interface/templates/interface/corte_historico.html`, `tests/interface/test_corte.py` | sim |
 | **UX-025** | T024, T077 | `editais/domain/validation.py` | sim |
 | **UX-026** | T061, T070 | `tests/integration/resultados/test_progressao_com_corte.py` | sim |
-| **UX-027** | T085 | — | **não** |
+| **UX-027** | T085 | `interface/views.py`, `interface/templates/interface/ordenacao.html` | sim |
 | **UX-028** | T050, T057 | `interface/templates/interface/corte.html`, `tests/interface/test_corte.py` | sim |
-| **UX-029** | T058, T106 | — | **não** |
+| **UX-029** | T058, T106 | `interface/views.py`, `interface/templates/interface/sorteio.html` | sim |
 | **UX-030** | T081a, T085a, T096 | `resultados/application/prontidao.py`, `tests/integration/classificacao/test_corte_obsoleto.py` | sim |

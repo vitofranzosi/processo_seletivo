@@ -23,6 +23,21 @@
 <p class="aviso">Ainda não existe corte emitido neste recorte. O que está abaixo é uma proposta calculada agora, e nada foi gravado.</p>
 {% endif %}
 
+{% if corte_obsoleto %}
+{% comment %}
+A `UX-027` pede que a obsolescência do corte seja **vista ao abrir**, e não descoberta ao tentar
+conduzir a Etapa governada. As causas são nomeadas — ordem sucedida, regra alterada, quadro
+alterado, participante reingressou —, e nunca "divergência": a `018` já pagou o preço da
+divergência genérica uma vez.
+{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-corte-obsoleto">
+  <h2 id="titulo-corte-obsoleto">A faixa emitida está obsoleta</h2>
+  <p>Ela continua vigente e produzindo efeito até que a geração sucessora seja emitida. Enquanto
+    isso, a Etapa governada não admite trabalho novo.</p>
+  <ul>{% for causa in causas_do_corte %}<li>{{ causa.descricao }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
 {% if proposta %}
 <section aria-labelledby="titulo-faixa">
   <h2 id="titulo-faixa">A faixa calculada</h2>
@@ -48,7 +63,7 @@
     {% for item in proposta.itens %}
       <tr>
         <td>{% if item.posicao %}{{ item.posicao }}º{% else %}<span class="nenhuma">Sem posição</span>{% endif %}</td>
-        <td>{{ item.inscricao_id }}</td>
+        <td>{{ item.inscricao.protocolo|default:item.inscricao_id }}{% if item.inscricao.nome %} — {{ item.inscricao.nome }}{% endif %}</td>
         <td>{% if item.consequencia == "PROGREDIU" %}Progride{% if item.excedente_por_empate %} <span class="situacao s-EM_REVISAO">Excedente por empate</span>{% endif %}{% else %}Fora da faixa{% endif %}</td>
         <td>{{ item.motivo }}</td>
       </tr>
@@ -98,7 +113,7 @@
 {% if geracao %}
 <section aria-labelledby="titulo-geracao">
   <h2 id="titulo-geracao">Faixas desta geração</h2>
-  <ol>{% for faixa in geracao %}<li>{{ faixa.emitido_em|date:"d/m/Y H:i" }} — {{ faixa.emitido_por }}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
+  <ol>{% for faixa in geracao %}<li><a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a> — {{ faixa.emitido_por }}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
 </section>
 {% endif %}
 {% endblock %}

@@ -418,3 +418,22 @@ def test_dois_marcos_terminais_nao_colidem():
     segundo = marco(OUTRO_MARCO, cut=regra(governedStage="NONE"))
 
     assert impeditivos(perfil(primeiro, segundo)) == set()
+
+
+# --- a recusa nomeia o marco (FR-182, UX-025, E2E14-002) -------------------------------------
+
+
+def test_as_recusas_da_regra_de_corte_nomeiam_o_marco():
+    """Sem o código do marco, a recusa não diz qual dos três abrir (E2E14-002).
+
+    O percurso E2E encontrou as recusas mudas: a Revisão mostrava "a regra de corte não declara o
+    desfecho do empate" e um atalho para a tela dos Perfis, e ali podia haver três marcos. A
+    `FR-182` pede achado que **nomeia** o marco e a `UX-025` proíbe fazê-lo por identificador
+    interno — o `code` é o que quem elabora digitou e o que o documento publica.
+    """
+    mudo = marco(MARCO, cut=regra(tieOutcome=None, continuation=None, governedStage=None))
+
+    texto = mensagens(perfil(mudo))
+
+    assert texto.count(f"marco M-{MARCO[:4]}") == 3, texto
+    assert MARCO not in texto, "o identificador interno não aparece na recusa"

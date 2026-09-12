@@ -30,6 +30,16 @@
       ],
       "port": 8025,
       "url": "http://localhost:8025"
+    },
+    {
+      "name": "corte-014",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_014 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8014"
+      ],
+      "port": 8014,
+      "url": "http://localhost:8014"
     }
   ]
 }

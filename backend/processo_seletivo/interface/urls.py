@@ -211,6 +211,14 @@ urlpatterns = [
         views.emitir_ordenacao,
         name="emitir-ordenacao",
     ),
+    # A leitura de um corte pela identidade dele, sucedido ou vigente (014, UX-024). Pende do
+    # Edital, e não do marco: o corte histórico continua legível depois de a Retificação remover o
+    # marco da versão vigente, e exigir o marco na rota a tornaria inalcançável justamente aí.
+    path(
+        "editais/<uuid:edital_id>/cortes/<uuid:corte_id>",
+        views.corte_historico,
+        name="corte-historico",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>",
         views.ato_de_ordenacao,

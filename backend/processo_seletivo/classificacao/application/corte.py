@@ -8,6 +8,8 @@ mudaria, sozinho, quem participa da Etapa seguinte.
 critério de desempate novo — quem ordena é a `015`, e o corte é leitura dela.
 """
 
+from django.db.models import Q
+
 from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
 from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.classificacao.domain.nomes import nomes_do_marco
@@ -131,13 +133,27 @@ def calcular_corte(
     # que a `FR-204` deixou de ter, herdado por dentro do cálculo.
     tamanho = int(alvo) if quantidade is None else int(quantidade)
     excedente = int(regra.get("surplusCount") or 0) if quantidade is None else 0
-    progrediram, excedentes, primeira, ultima = faixa.calcular(
-        [(str(ident), posicao) for ident, posicao, _ in posicoes],
-        alvo=tamanho,
-        excedente=excedente,
-        desfecho=regra.get("tieOutcome"),
-        desde=desde,
-    )
+    try:
+        progrediram, excedentes, primeira, ultima = faixa.calcular(
+            [(str(ident), posicao) for ident, posicao, _ in posicoes],
+            alvo=tamanho,
+            excedente=excedente,
+            desfecho=regra.get("tieOutcome"),
+            desde=desde,
+        )
+    except faixa.EmpateAtravessaOCorte as empate:
+        # **A recusa é do domínio, e a tela precisa mostrá-la** (FR-195, UX-025). Sem esta
+        # tradução, o alvo estrito com empate na fronteira — que é o caso que a feature existe
+        # para não resolver sozinha — subia como exceção crua: abrir a tela do corte devolvia 500,
+        # e quem conduz o certame via um traceback no lugar do motivo (E2E14-003).
+        raise DomainError(
+            "empate_atravessa_o_corte",
+            f"O empate na posição {empate.posicao}, com {empate.quantas} participantes, atravessa "
+            "a última posição da faixa, e este Edital publicou alvo estrito: o sistema não "
+            "escolhe entre empatados. O caminho é julgar o desempate ou retificar o desfecho "
+            "declarado no marco.",
+            409,
+        ) from empate
     dentro, excedente_por_empate = set(progrediram), set(excedentes)
     itens = [
         {
@@ -350,6 +366,55 @@ def _reingressou(edital, geracao):
             ),
         }
     ]
+
+
+def nomes_do_corte(corte):
+    """Como a versão que o corte **congelou** nomeia o que ele identifica por UUID (014, UX-024).
+
+    A leitura é da versão citada, e nunca da vigente: uma Retificação posterior que renomeie o
+    Perfil, o marco ou a Modalidade do recorte não pode reescrever retroativamente como um corte
+    antigo é lido. Os nomes acompanham os identificadores — não os substituem —, porque ali o UUID
+    continua sendo a âncora de auditoria (mesmo princípio de `nomes_do_ato`, da `015`).
+    """
+    from processo_seletivo.classificacao.application.selectors import edital_por_extenso
+
+    conteudo = corte.versao.content
+    nomes = nomes_do_marco(conteudo, perfil_id=corte.perfil_id, marco_id=corte.marco_id)
+    perfil = nomes["perfil"]
+    lista = ""
+    if corte.lista_id:
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(corte.lista_id):
+                lista = modalidade.get("name") or modalidade.get("code") or ""
+                break
+    return {
+        "processo": nomes["processo"],
+        "edital": edital_por_extenso(conteudo, corte.edital),
+        "perfil": perfil.get("name", "") or "",
+        "marco": nomes["marco"].get("name", "") or "",
+        # Vazio quando o recorte é a ampla concorrência: ali a lista **é** a ausência de lista, e
+        # inventar-lhe um nome diria que o corte foi de uma reserva que ele não citou.
+        "lista": lista,
+    }
+
+
+def corte_por_id(*, edital, corte_id):
+    """O corte deste Edital, ou `None` — nunca o de outro (014, UX-024)."""
+    return (
+        Corte.objects.filter(edital=edital, id=corte_id)
+        .select_related("versao", "ato", "raiz", "faixa_anterior")
+        .first()
+    )
+
+
+def geracao_do_corte(corte):
+    """As faixas da geração a que este corte pertence, da inicial à última continuação."""
+    raiz = corte.raiz_id or corte.id
+    return list(
+        Corte.objects.filter(Q(id=raiz) | Q(raiz_id=raiz)).order_by(
+            "emitido_em", "primeira_posicao"
+        )
+    )
 
 
 def reproduzir_corte(corte):

@@ -193,3 +193,18 @@ def test_o_alvo_derivado_registra_a_identidade_da_linha_lida():
 
     assert quantidade == 40
     assert origem == {"source": "VACANCY_TABLE_ROW", "rowId": "linha-1"}
+
+
+def test_a_recusa_conta_todos_os_empatados_na_posicao_e_nao_so_os_de_fora():
+    """Oito acima, três empatados na nona posição, alvo dez: o empate é de três (E2E14-004).
+
+    Dois dos três cabem na faixa e um fica de fora, e a conta anterior — os de fora mais um —
+    dizia "2". Quem lê a recusa precisa saber quantos desempates terá de julgar, e o número que
+    importa é o tamanho do empate, não o do resto.
+    """
+    posicoes = ordem(1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14)
+
+    with pytest.raises(faixa.EmpateAtravessaOCorte) as erro:
+        calcular(posicoes, alvo=10)
+
+    assert (erro.value.posicao, erro.value.quantas) == (9, 3)

@@ -726,6 +726,17 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _marco_nomeado(marco) -> str:
+    """Como a recusa chama o marco (014, FR-182, UX-025).
+
+    O `code` é o que quem elabora digitou e o que o documento publica; o identificador só aparece
+    quando não há código, porque uma recusa que diga um UUID não diz nada a quem vai corrigi-la. O
+    percurso E2E encontrou as cinco recusas da regra de corte mudas quanto ao marco: num Perfil com
+    três marcos, "a regra de corte não declara o desfecho" não dizia **qual** abrir (E2E14-002).
+    """
+    return str(marco.get("code") or marco.get("name") or marco.get("id") or "sem código")
+
+
 def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[ValidationFinding]:
     """As declarações que o sistema não pode concluir por ninguém (014, FR-182, FR-224, FR-226).
 
@@ -739,13 +750,14 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
     regra = marco.get("cutRule")
     if not regra:
         return []
-    findings = _forma_do_alvo(regra, caminho=caminho)
+    nomeado = _marco_nomeado(marco)
+    findings = _forma_do_alvo(regra, caminho=caminho, nomeado=nomeado)
     if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
         findings.append(
             _impeditivo(
                 "cut_rule_sem_desfecho_de_empate",
-                "A regra de corte não declara o que acontece com o empate que atravessa a última "
-                "posição da faixa. O sistema não escolhe por ela.",
+                f"A regra de corte do marco {nomeado} não declara o que acontece com o empate que "
+                "atravessa a última posição da faixa. O sistema não escolhe por ela.",
                 f"{caminho}/cutRule/tieOutcome",
             )
         )
@@ -753,8 +765,8 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
         findings.append(
             _impeditivo(
                 "cut_rule_sem_politica_de_continuacao",
-                "A regra de corte não declara se este Edital admite continuação além da faixa "
-                "publicada.",
+                f"A regra de corte do marco {nomeado} não declara se este Edital admite "
+                "continuação além da faixa publicada.",
                 f"{caminho}/cutRule/continuation",
             )
         )
@@ -763,8 +775,9 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
         findings.append(
             _impeditivo(
                 "cut_rule_sem_etapa_governada",
-                "A regra de corte não declara qual Etapa o corte alimenta. Ela não é inferida de "
-                "lugar nenhum: declare a Etapa, ou declare que este corte não governa nenhuma.",
+                f"A regra de corte do marco {nomeado} não declara qual Etapa o corte alimenta. Ela "
+                "não é inferida de lugar nenhum: declare a Etapa, ou declare que este corte não "
+                "governa nenhuma.",
                 f"{caminho}/cutRule/governedStage",
             )
         )
@@ -773,7 +786,8 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
             findings.append(
                 _impeditivo(
                     "cut_rule_com_etapa_inexistente",
-                    "A regra de corte declara governar uma Etapa que este Edital não publica.",
+                    f"A regra de corte do marco {nomeado} declara governar uma Etapa que este "
+                    "Edital não publica.",
                     f"{caminho}/cutRule/governedStage",
                 )
             )
@@ -791,16 +805,17 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
             findings.append(
                 _impeditivo(
                     "cut_rule_com_etapa_circular",
-                    "A regra de corte governa uma Etapa que alimenta a própria ordem do marco: o "
-                    "universo da ordem passaria a depender do corte que ela produz.",
+                    f"A regra de corte do marco {nomeado} governa uma Etapa que alimenta a própria "
+                    "ordem do marco: o universo da ordem passaria a depender do corte que ela "
+                    "produz.",
                     f"{caminho}/cutRule/governedStage",
                 )
             )
-    findings.extend(_quadro_para_o_corte(regra, perfil=perfil, caminho=caminho))
+    findings.extend(_quadro_para_o_corte(regra, perfil=perfil, caminho=caminho, nomeado=nomeado))
     return findings
 
 
-def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
+def _forma_do_alvo(regra, *, caminho, nomeado) -> list[ValidationFinding]:
     """A espécie e a aritmética do alvo, **também** na publicação (014, FR-179).
 
     Elas já são recusadas na elaboração, e repeti-las aqui não é redundância: a **Retificação não
@@ -817,8 +832,8 @@ def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
         return [
             _impeditivo(
                 "cut_rule_sem_especie_de_alvo",
-                "A regra de corte não declara a espécie do alvo: uma quantidade fixa, ou a "
-                "quantidade que o quadro de vagas do recorte publica.",
+                f"A regra de corte do marco {nomeado} não declara a espécie do alvo: uma "
+                "quantidade fixa, ou a quantidade que o quadro de vagas do recorte publica.",
                 f"{caminho}/cutRule/targetKind",
             )
         ]
@@ -828,7 +843,7 @@ def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
         findings.append(
             _impeditivo(
                 "cut_rule_sem_alvo",
-                "A regra de corte declara alvo fixo e não diz quantos.",
+                f"A regra de corte do marco {nomeado} declara alvo fixo e não diz quantos.",
                 f"{caminho}/cutRule/targetCount",
             )
         )
@@ -836,8 +851,8 @@ def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
         findings.append(
             _impeditivo(
                 "cut_rule_com_alvo_duplicado",
-                "A regra de corte deriva o alvo do quadro de vagas e ainda assim declara uma "
-                "quantidade fixa: o alvo tem uma fonte só.",
+                f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas e ainda "
+                "assim declara uma quantidade fixa: o alvo tem uma fonte só.",
                 f"{caminho}/cutRule/targetCount",
             )
         )
@@ -849,14 +864,15 @@ def _forma_do_alvo(regra, *, caminho) -> list[ValidationFinding]:
             findings.append(
                 _impeditivo(
                     "cut_rule_com_quantidade_invalida",
-                    "As quantidades da regra de corte devem ser números inteiros não negativos.",
+                    f"As quantidades da regra de corte do marco {nomeado} devem ser números "
+                    "inteiros não negativos.",
                     f"{caminho}/cutRule/{campo}",
                 )
             )
     return findings
 
 
-def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
+def _quadro_para_o_corte(regra, *, perfil, caminho, nomeado) -> list[ValidationFinding]:
     """Alvo derivado exige linha de quadro para **todo recorte que o marco ordena** (014, FR-183).
 
     A `025` admite quadro parcial de propósito, e a regra de corte é do **marco**, que pode ordenar
@@ -901,7 +917,8 @@ def _quadro_para_o_corte(regra, *, perfil, caminho) -> list[ValidationFinding]:
     return [
         _impeditivo(
             "cut_rule_sem_linha_de_quadro",
-            f"A regra de corte deriva o alvo do quadro de vagas, e não há linha para {nome}.",
+            f"A regra de corte do marco {nomeado} deriva o alvo do quadro de vagas, e não há linha "
+            f"para {nome}.",
             f"{caminho}/cutRule/targetKind",
         )
         for chave, nome in exigidos

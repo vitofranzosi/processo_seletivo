@@ -19,6 +19,21 @@
 <p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
 {% endif %}
 
+{% if corte_obsoleto %}
+{% comment %}
+A `UX-027` pede que a obsolescência do corte seja **vista ao abrir**, e não descoberta ao tentar
+conduzir a Etapa governada. As causas são nomeadas — ordem sucedida, regra alterada, quadro
+alterado, participante reingressou —, e nunca "divergência": a `018` já pagou o preço da
+divergência genérica uma vez.
+{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-corte-obsoleto">
+  <h2 id="titulo-corte-obsoleto">A faixa emitida está obsoleta</h2>
+  <p>Ela continua vigente e produzindo efeito até que a geração sucessora seja emitida. Enquanto
+    isso, a Etapa governada não admite trabalho novo.</p>
+  <ul>{% for causa in causas_do_corte %}<li>{{ causa.descricao }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
 {% if obsoleto %}
 <section class="consequencias irreversivel" aria-labelledby="titulo-divergencia">
   <h2 id="titulo-divergencia">O ato vigente está obsoleto{% if not recomputavel %} e não é recomputável{% endif %}</h2>
