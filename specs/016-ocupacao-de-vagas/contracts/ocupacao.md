@@ -76,7 +76,7 @@ endereço de retificação não se conserta depois, porque publicação é ato i
 
 ### `GET /api/editais/{id}/ocupacao`
 
-Devolve, por recorte, os três números e o estado da apuração vigente.
+Devolve, por recorte, os quatro números e o estado da apuração vigente.
 
 ```yaml
 OcupacaoPorRecorte:

@@ -228,7 +228,7 @@ estão ocupadas e quantas faltam — com cada número rastreável ao ato que o p
 existir. Entregue sozinha, já substitui a planilha.
 
 **Percurso independente.** Com um Edital publicado com quadro, ordem emitida e corte emitido, abrir
-a tela do Perfil e ler os três números por recorte, sem emitir nada.
+a tela do Perfil e ler os quatro números por recorte, sem emitir nada.
 
 **Aceitação**
 
@@ -447,8 +447,10 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
   outro em nenhum percurso da interface.
 - **SC-081**: O ciclo do 77/2026 fecha pela interface: faixa emitida, documentação recusada,
   déficit apurado, faixa seguinte emitida com o déficit como causa — sem motivo digitado à mão.
-- **SC-082**: A apuração de um Perfil com 7 polos × 3 listas responde em tempo comparável ao da
-  emissão da ordem no mesmo volume — até 1.000 participantes por recorte.
+- **SC-082**: A apuração de um Edital com **7 Perfis** — os polos, conforme a `D-005` — e 3 listas
+  cada, com 1.000 participantes por recorte, responde em **no máximo o dobro** do tempo que a
+  emissão da ordem leva no mesmo volume. *A redação anterior dizia "um Perfil com 7 polos", que
+  contradiz a `D-005`, e "tempo comparável", que não é limite verificável.*
 - **SC-083**: Cem por cento dos números exibidos têm trilha até o ato que os produziu.
 - **SC-084**: Recebida a reversão, o recorte de destino cujo número mudou aparece **obsoleto**, com
   a causa nomeada, sem que ninguém emita nada — e passa a vigente na primeira emissão seguinte. É o
@@ -500,8 +502,9 @@ da primeira tela, e não depois dela.*
 1. **O cálculo puro** — ler quadro, ordem e recusas e apurar ocupadas e faltando, sem gravar.
    Determinístico e reproduzível, como a faixa da `014`.
 2. **O ato de apuração** — entidade append-only, privilégio sobre a tabela nova, emissão,
-   autorização, auditoria, sucessão e as três causas de obsolescência (`FR-263`).
-3. **A tela dos três números** — é a História 1, e é o que substitui a planilha.
+   autorização, auditoria, sucessão e as **quatro** causas de obsolescência (`FR-263`) — a quarta
+   é o movimento de vaga que alcança o recorte depois da apuração.
+3. **A tela dos quatro números** — é a História 1, e é o que substitui a planilha.
 4. **A declaração publicada da reversão** — esquema canônico, degrau, caminho de leitura das
    anteriores, elaboração na interface, documento e catálogo de Retificação, com as duas espécies
    da `D-007`.
@@ -516,7 +519,7 @@ alcança o 14/2026**, e é a consequência direta da `D-006`.
 ## 9. Gate de conclusão
 
 A feature está concluída quando, pela interface administrativa e sem manipulação de banco, for
-possível: ler os três números por recorte de um Perfil com três listas; declarar a reversão e
+possível: ler os quatro números por recorte de um Perfil com três listas; declarar a reversão e
 publicá-la no documento; ver a vaga reservada não preenchida passar à ampla, nomeada; emitir a
 faixa seguinte tendo o déficit apurado como causa; ver a vaga liberada por quem ocupou pela ampla
 voltar à lista reservada; e reconstruir, pela auditoria, o número de hoje a partir do quadro

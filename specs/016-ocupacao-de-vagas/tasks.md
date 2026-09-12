@@ -119,7 +119,7 @@ append-only de mentira, e a segunda passada do provisionamento é o que o retira
 **Goal**: a presidência lê, por recorte, publicadas, ocupadas e faltando — e para de usar planilha.
 
 **Independent Test**: com Edital publicado com quadro, ordem e corte emitidos, abrir a ocupação do
-Perfil e ler os três números por recorte, sem emitir nada.
+Perfil e ler os quatro números por recorte, sem emitir nada.
 
 ### Testes
 
@@ -137,9 +137,11 @@ Perfil e ler os três números por recorte, sem emitir nada.
       `ApuracaoDeOcupacao` igual antes e depois do `GET`. *Nenhuma outra tarefa provava isso, e a
       `014` já nomeou o defeito equivalente: ler não corta*
 - [ ] T019b [P] [US1] Medir o teto de volume em
-      `backend/tests/performance/test_ocupacao.py` (`SC-082`): apuração de um Perfil com 7 polos ×
-      3 listas e **1.000 participantes por recorte**, em tempo comparável ao da emissão da ordem no
-      mesmo volume. *A `T019` mede contagem de consulta, que é outra grandeza*
+      `backend/tests/performance/test_ocupacao.py` (`SC-082`): apuração de um Edital com **7
+      Perfis** — os polos, pela `D-005` — de 3 listas cada, com **1.000 participantes por
+      recorte**, em **no máximo o dobro** do tempo da emissão da ordem no mesmo volume, medido na
+      mesma execução. *A `T019` mede contagem de consulta, que é outra grandeza; e a razão contra
+      uma operação já existente é mais estável que um tempo absoluto, que varia com a máquina*
 
 ### Implementação
 
@@ -250,9 +252,16 @@ a faixa seguinte é emitida com o déficit como causa.
       apurado** como causa, e não texto digitado (`FR-255`)
 - [ ] T046 [P] [US3] Teste da recusa com déficit zero (`FR-256`) e da recusa sobre apuração
       obsoleta (`FR-263`), em `backend/tests/integration/ocupacao/test_causar_faixa.py`
-- [ ] T047 [P] [US3] Teste de direção da dependência em
-      `backend/tests/test_dependencia_da_ocupacao.py`: **nenhum** módulo de `classificacao` importa
-      `ocupacao` (`R-002`)
+- [ ] T047 [P] [US3] Teste de dependência em
+      `backend/tests/test_dependencia_da_ocupacao.py`, varrendo os imports por AST. Duas asserções:
+      **nenhum** módulo de `classificacao` importa `ocupacao` (`R-002`); e **nenhum** módulo de
+      `ocupacao` importa o que ordena ou desempata (`FR-257`) — a lista permitida é
+      `classificacao.models`, `classificacao.application.selectors` e
+      `classificacao.application.emissao_do_corte`, e ficam **proibidos**
+      `classificacao.application.emissao` (que emite ordem), `classificacao.domain.combinacao` e
+      `classificacao.domain.desempate`. *É o que torna a proibição verificável: ela é de import, e
+      não de redação — `emissao_do_corte` é a única porta, porque é por ela que a `016` causa a
+      faixa sem escolher ninguém*
 
 ### Implementação
 
@@ -262,11 +271,11 @@ a faixa seguinte é emitida com o déficit como causa.
 - [ ] T049 [US3] Ação para pedir a faixa seguinte pela ocupação — rota em
       `backend/processo_seletivo/interface/urls.py` e view em
       `backend/processo_seletivo/interface/views.py`
-- [ ] T050 [P] [US3] Teste do vocabulário **e da proibição** em
-      `backend/tests/test_vocabulario_da_ocupacao.py`: nenhuma tela, ato ou mensagem desta feature
-      usa termo de convocação, aceite ou matrícula (`FR-258`, `UX-034`), na forma de
-      `test_vocabulario_do_corte.py`; e nenhum caminho da `016` emite ordem, desempata ou seleciona
-      candidato (`FR-257`) — a seleção continua sendo ato da `014`
+- [ ] T050 [P] [US3] Teste do vocabulário em `backend/tests/test_vocabulario_da_ocupacao.py`:
+      nenhuma tela, ato ou mensagem desta feature usa termo de convocação, aceite ou matrícula
+      (`FR-258`, `UX-034`), na forma de `test_vocabulario_do_corte.py`. *A proibição estrutural da
+      `FR-257` mora na `T047`, e não aqui: varredura de texto não prova que nenhum caminho ordena —
+      prova de import prova*
 
 **Checkpoint**: o ciclo do 77/2026 fecha de ponta a ponta.
 
@@ -380,7 +389,7 @@ Foundational. **US1, US2 e US3 podem correr em paralelo** depois da Phase 2.
 ### MVP: só a US1
 
 1. Phase 1 → Phase 2 → Phase 3
-2. **PARE e VALIDE**: os três números na tela, e o Edital sem quadro dizendo que não tem quadro
+2. **PARE e VALIDE**: os quatro números na tela, e o Edital sem quadro dizendo que não tem quadro
 3. A planilha já foi substituída, e o Princípio VI está satisfeito
 
 ### Entrega incremental

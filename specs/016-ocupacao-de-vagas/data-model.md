@@ -164,7 +164,7 @@ tabela append-only sem privilégio ausente é append-only de mentira.
         │                                                            │
    apuração A ──── emitida ────▶ vigente ──── nova emissão ────▶ sucedida
                                     │
-                                    └── obsoleta (calculada, três causas — FR-263):
+                                    └── obsoleta (calculada, quatro causas — FR-263):
                                         · a ordem do recorte foi sucedida
                                         · o corte que a alimentou ficou obsoleto
                                         · o quadro publicado foi retificado na linha lida

@@ -138,7 +138,7 @@ leu, ao custo de catálogo de Retificação e tela por linha.
 
 ## R-006 · De onde sai o número sem estourar o orçamento de consulta
 
-**Problema.** A tela lista recortes, e cada linha precisa de três números. Calcular cada um
+**Problema.** A tela lista recortes, e cada linha precisa de quatro números. Calcular cada um
 abrindo o conteúdo publicado seria uma consulta por linha.
 
 **Decisão.** `publicadas`, `ocupadas` e `efetivas` são **colunas do ato**, gravadas na emissão; a

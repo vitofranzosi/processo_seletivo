@@ -133,7 +133,7 @@ backend/processo_seletivo/
 ├── seguranca/papeis.py                # as duas tabelas novas em TABELAS_APPEND_ONLY (24 → 26)
 └── interface/
     ├── retificacao.py                 # CAMPOS_PERFIL += a declaração
-    ├── forms.py, views.py             # elaboração e a tela dos três números
+    ├── forms.py, views.py             # elaboração e a tela dos quatro números
     └── templates/interface/ocupacao.html
 ```
 
@@ -141,16 +141,17 @@ backend/processo_seletivo/
 
 Segue a §8 da spec, com o que cada passo entrega e o que ele **não** pode deixar para depois.
 
-1. **O cálculo puro** — `ocupacao/domain/apuracao.py`. Lê quadro, ordem e recusas; devolve
-   publicadas, ocupadas e faltando por recorte. Determinístico, sem gravar, sem Django ORM na
+1. **O cálculo puro** — `ocupacao/domain/apuracao.py`. Lê quadro, ordem, recusas e movimentos
+   lidos; devolve **publicadas, efetivas e ocupadas** por recorte — e `faltando` é
+   `efetivas − ocupadas`, calculado na leitura. Determinístico, sem gravar, sem Django ORM na
    assinatura — é a forma de `classificacao/domain/faixa.py`, e é o que torna `FR-244` testável sem
    banco.
 2. **O ato de apuração** — modelo, migration, **as duas tabelas em `TABELAS_APPEND_ONLY`**, gatilho,
    privilégio, emissão, autorização, auditoria, sucessão e as causas de obsolescência.
    *Não deixar o registro em `papeis.py` para depois*: tabela append-only sem privilégio ausente é
    append-only de mentira, e a segunda passada do provisionamento é o que a concede.
-3. **A tela dos três números** — História 1, `UX-031` e `UX-032`. É o que substitui a planilha, e o
-   Princípio VI não considera entregue capacidade que nenhuma interface alcança.
+3. **A tela dos quatro números** — História 1, `UX-031` e `UX-032`. É o que substitui a
+   planilha, e o Princípio VI não considera entregue capacidade que nenhuma interface alcança.
 4. **A declaração publicada da reversão** — degrau 14, `SCHEMA_VERSION`, caminho de leitura,
    elaboração, documento, `CAMPOS_PERFIL` e conferência. As duas espécies da `D-007` entram juntas.
 5. **A reversão** — `MovimentoDeVaga`, o invariante da soma constante (`FR-247`) e `UX-033`.

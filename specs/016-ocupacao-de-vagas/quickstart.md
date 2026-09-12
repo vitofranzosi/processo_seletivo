@@ -32,7 +32,7 @@ Para servir esta worktree pelo painel de preview, acrescente uma entrada ao `.cl
 **O certame precisa ser montado à mão.** O `seed_demo` não produz este — o elenco dele colide com
 os candidatos, e o quadro por modalidade com polos não está lá. Monte pela tela, que é o ponto.
 
-## Cenário 1 — Ler os três números (História 1, `UX-031`, `UX-032`)
+## Cenário 1 — Ler os quatro números (História 1, `UX-031`, `UX-032`)
 
 1. Como **elaborador**, componha um Edital com um Perfil de **80 vagas imediatas**, três
    Modalidades (`AC`, `PPI`, `PCD`) e quadro `55 / 20 / 4` na linha geral e nas duas cotas.
@@ -41,8 +41,9 @@ os candidatos, e o quadro por modalidade com polos não está lá. Monte pela te
 3. Publique. Emita a ordem do marco classificatório e o corte.
 4. Abra a ocupação do Perfil.
 
-**Esperado:** três linhas de recorte, cada uma com **publicadas, ocupadas e faltando**. Nenhuma
-linha mostra só um número.
+**Esperado:** três linhas de recorte, cada uma com **publicadas, efetivas, ocupadas e faltando**.
+Nenhuma linha mostra só um número. Sem movimento algum, publicadas e efetivas coincidem, e a tela
+pode dizê-las em um número só.
 
 **Contraprova que importa:** abra a ocupação de um Edital publicado **antes do degrau 12** (sem
 quadro). A tela diz *que o Edital não publicou quadro* — e **não** mostra zero. Mostrar `0` aqui é o

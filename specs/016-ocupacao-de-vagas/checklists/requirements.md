@@ -35,7 +35,7 @@ evita é dizer *como* se calcula, onde se grava e com qual tecnologia — e diss
 |---|---|---|
 | `D-006` cascata do 14/2026 | é **alvo derivado da `014`** | o 14/2026 saiu da amostra desta feature; §1.1 passou de quatro Editais para três, §1.2 de quatro mecanismos para três, e a §8 deixou de prometê-lo |
 | `D-007` gatilho da reversão | **duas espécies declaradas** | `FR-249`, `FR-250` e `FR-251` — a espécie é conteúdo publicado, e a ausência recusa a publicação em vez de virar padrão |
-| `D-008` ato ou projeção | **ato append-only por recorte** | `FR-261` a `FR-263` — sucessão e três causas de obsolescência; a §8 passou a pôr entidade e privilégio **antes** da primeira tela |
+| `D-008` ato ou projeção | **ato append-only por recorte** | `FR-261` a `FR-263` — sucessão e **quatro** causas de obsolescência, a última sendo o movimento posterior que alcança o recorte; a §8 passou a pôr entidade e privilégio **antes** da primeira tela |
 
 **A `D-006` alcançou um artefato entregue, e a emenda foi autorizada.** O *Out of Scope* da `014`
 mandava a cascata para a `016` e ficou contradito por decisão mais nova. Aquela feature está
