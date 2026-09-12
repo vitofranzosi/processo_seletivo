@@ -386,16 +386,25 @@ depender de desistência, que é fato da `019` (`R-001`).
       apareceu três vezes, e nenhum `tasks.md` anterior tinha esta tarefa. **Faltava também a da
       `014`**, já mergeada na `main`: a tabela ia de `013` a `015`, e as duas entraram
 - [X] T064 Atualizar a contagem da suíte no `README.md` e no `AGENTS.md` com o número medido:
-      **5076 passando e 2 pulados** contra PostgreSQL, e **33 falham / 4844 passam / 201 puladas**
+      **5082 passando e 2 pulados** contra PostgreSQL, e **33 falham / 4850 passam / 201 puladas**
       no modo padrão, reclassificadas em 13 + 9 + 11 por causa medida. *As duas do modo padrão que
       a `016` acrescenta são da segunda classe: a mensagem do SQLite não nomeia
       `uq_apuracao_sucessora_unica`, e o `pytest.raises(match=...)` não casa.* **Atenção ao
       mergear**: o PR do achado da `R-006` altera estas mesmas linhas com os números de antes da
       `016` (4862 e 24 tabelas), e o conflito é esperado — quem entrar depois fica com 5076 e 26
-- [ ] T065 Percorrer o [quickstart](./quickstart.md) pela interface, contra servidor real, e
-      registrar o relatório em `doc/e2e/016-ocupacao-de-vagas/relatorio.md`
-- [ ] T066 Rodar `cd backend && DB_NAME=ps_demo_016 make lint check test-pg` e registrar o
-      resultado no commit que fecha a feature
+- [X] T065 Percorrer o [quickstart](./quickstart.md) pela interface, contra servidor real, e
+      registrar o relatório em `doc/e2e/016-ocupacao-de-vagas/relatorio.md`. **Seis defeitos
+      encontrados e corrigidos, com teste que os prende** — dois eram afirmação falsa na tela, um
+      deixava apuração vencida parecendo vigente (`corte_obsoleto` só olhava um sentido) e um
+      deixava a ação irreversível da faixa seguinte **sem confirmação alguma**. E **dois defeitos do
+      guia**: o Cenário 3 mandava introduzir a declaração de reversão por Retificação, o que o
+      catálogo não oferece, e os Cenários 3 e 5 exigem marco de **sorteio**, que o guia não dizia —
+      num marco calculado só a linha geral tem ordem. Os dois foram corrigidos no `quickstart.md`
+- [X] T066 Rodar `cd backend && DB_NAME=ps_demo_016 make lint check test-pg` e registrar o
+      resultado no commit que fecha a feature: **`lint` limpo nos dois passos**, `check` e
+      `makemigrations --check` sem pendência, e **5082 passando com 2 pulados** — os dois
+      deliberados. *Rodada **depois** da `T065`, e não antes: o percurso conduzido acrescentou seis
+      testes, e medir antes dele teria registrado um número que o commit não teria.*
 
 ---
 

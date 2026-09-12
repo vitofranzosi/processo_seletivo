@@ -44,7 +44,7 @@ arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, co
 ## As armadilhas caras
 
 **O modo padrão da suíte não é confiável — rode contra PostgreSQL.** Sem variável nenhuma, a
-suíte cai para SQLite: **33 falham, 4844 passam e 201 são puladas** (medido em 2026-09-12).
+suíte cai para SQLite: **33 falham, 4850 passam e 201 são puladas** (medido em 2026-09-12).
 Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado original
 ([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a primeira,
 quando eram 21:
@@ -57,7 +57,7 @@ quando eram 21:
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **5076 passando e 2 pulados** (medido em 2026-09-12). Os dois
+Contra PostgreSQL a suíte fecha em **5082 passando e 2 pulados** (medido em 2026-09-12). Os dois
 pulados são deliberados e estão nomeados em
 [doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
 um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave

@@ -180,7 +180,10 @@ def test_a_acao_da_faixa_seguinte_aparece_so_onde_ha_deficit(
     depois = abrir(client, edital).content.decode()
 
     assert "Pedir a faixa seguinte" in depois
-    assert "O deficit apurado de 3 vaga(s)" in depois
+    # **Acentuado**, e a asserção anterior dizia `"O deficit apurado"`: ela prendia na tela a
+    # grafia sem acento que o percurso conduzido encontrou. A varredura de
+    # `tests/test_vocabulario_da_ocupacao.py` é quem guarda a regra; aqui fica o caso concreto.
+    assert "O déficit apurado de 3 vaga(s) será a causa do ato" in depois
 
 
 def test_as_tres_rotas_da_ocupacao_sao_distintas():
@@ -359,3 +362,57 @@ def test_o_historico_sobrevive_a_retificacao_que_remove_o_marco(
 
     assert resposta.status_code == 200, "o histórico do marco removido continua acessível"
     assert "Apuração 1 de 1" in resposta.content.decode()
+
+
+def test_as_duas_acoes_da_tela_confirmam_coisas_diferentes(
+    client,
+    seletor_ligado,
+    db,
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    raiz_de_arquivos,
+):
+    """**O aviso diz qual ato aconteceu, e não só que algo deu certo.**
+
+    As duas ações voltam para esta tela, e um aviso único dizia "Apuração emitida" depois de causar
+    a faixa seguinte: frase falsa — apuração nenhuma foi emitida ali —, e quem acabara de pedir a
+    faixa ficava sem confirmação de que ela saiu, diante de uma ação que não se desfaz. Encontrado
+    no percurso conduzido, onde a única pista de que a faixa existia era a tela do corte dizer
+    "2 faixas".
+    """
+    from tests.fixtures.corte import regra
+    from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
+
+    # **Um Edital que admite continuação**, senão a segunda ação é recusada pela `014` e o teste
+    # mediria a recusa em vez da confirmação.
+    edital, _, _ = montar_cenario_da_ocupacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="tela-016-duas",
+        geral=3,
+        cut=regra(continuation="ALLOWED"),
+    )
+    identificar(client, "carlos", ["gestor"])
+    apurar(edital, gestor, chave="tela-016-duas-primeira")
+
+    depois_de_apurar = client.post(
+        reverse("interface:emitir-apuracao", args=[edital.id, MARCO]),
+        {"lista": "", "chave": "tela-016-duas-acoes", "motivo": "Reanálise documental"},
+        follow=True,
+    ).content.decode()
+
+    assert "Apuração emitida" in depois_de_apurar
+    assert "Faixa seguinte emitida" not in depois_de_apurar
+
+    depois_da_faixa = client.post(
+        reverse("interface:causar-faixa", args=[edital.id, MARCO]),
+        {"lista": "", "chave": "tela-016-faixa"},
+        follow=True,
+    ).content.decode()
+
+    assert "Faixa seguinte emitida com o déficit apurado como causa" in depois_da_faixa
+    assert "Apuração emitida" not in depois_da_faixa, "nenhuma apuração foi emitida nesta ação"

@@ -11,7 +11,10 @@
 <p class="sub">Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, quantas estão ocupadas e quantas faltam.</p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível apurar:</strong> {{ erro }}</p>{% endif %}
-{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Apuração emitida. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
+{% if resultado %}
+{% if acao == "faixa" %}<p class="sucesso" role="status" tabindex="-1">Faixa seguinte emitida com o déficit apurado como causa. A faixa anterior não foi revogada, e quem já progrediu continua nela.</p>
+{% else %}<p class="sucesso" role="status" tabindex="-1">Apuração emitida. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
+{% endif %}
 
 <p class="imutavel">Abrir esta tela <strong>não apura nada</strong>. Os números abaixo vêm de atos já emitidos, e onde não há ato não há número.</p>
 
@@ -43,7 +46,7 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O número abaixo é o que ela apurou, e o mundo mudou depois dela:</p>
   <ul class="consequencias">
     {% for causa in recorte.causasDeObsolescencia %}
-    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte que a alimentou não é mais o vigente{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -105,8 +108,8 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-faixa-{{ forloop.counter }}">
-    <p class="ajuda">O deficit apurado de {{ recorte.faltando }} vaga(s) sera a causa do ato, e a faixa anterior nao e revogada.</p>
-    <button type="submit" class="botao">Pedir a faixa seguinte com este deficit</button>
+    <p class="ajuda">O déficit apurado de {{ recorte.faltando }} vaga(s) será a causa do ato, e a faixa anterior não é revogada.</p>
+    <button type="submit" class="botao">Pedir a faixa seguinte com este déficit</button>
   </form>
   {% endif %}
 </section>

@@ -210,7 +210,7 @@ mensagem de constraint que o SQLite não escreve, outros ainda contam com gatilh
 linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
 [`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
 
-Contra PostgreSQL a suíte fecha em 5076 passando e 2 pulados — os dois deliberados, e nomeados em
+Contra PostgreSQL a suíte fecha em 5082 passando e 2 pulados — os dois deliberados, e nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e

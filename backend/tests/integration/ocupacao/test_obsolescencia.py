@@ -105,3 +105,41 @@ def _suceder_a_ordem(edital, gestor):
         ),
         motivo="Sucessão para o teste de obsolescência",
     )
+
+
+def test_o_corte_que_aparece_depois_obsoleta_a_apuracao(
+    db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+):
+    """**Segunda causa, na direção que o percurso conduzido encontrou faltando.**
+
+    Apurar um recorte **antes** de existir corte é legítimo: o marco pode ainda não ter cortado, e
+    ali `ocupadas` é zero porque faixa nenhuma alcançou ninguém. Emitido o corte depois, aquele zero
+    deixa de valer — e a apuração aparecia **vigente**, afirmando-o, porque a comparação só olhava
+    o corte quando a apuração citava um. Corte que aparece muda o número tanto quanto corte
+    sucedido.
+    """
+    from tests.fixtures.corte import emitir as emitir_corte
+    from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.ocupacao import rascunho_com_quadro
+
+    def monta(cut=None):
+        return rascunho_com_quadro(cut=cut)
+
+    edital, _, _ = montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="obsol-sem-corte",
+        draft_factory=monta,
+    )
+    apurar(edital, gestor, chave="obsol-sem-corte-apurar")
+    vigente = selectors.apuracao_vigente(
+        edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+    )
+    assert vigente.corte_id is None, "o cenário existe para apurar antes do corte"
+    assert causas(edital) == [], "sem corte nenhum, os dois lados concordam"
+
+    emitir_corte(edital, gestor, chave="obsol-sem-corte-corte")
+
+    assert nomes.CAUSA_CORTE_OBSOLETO in causas(edital)

@@ -31,6 +31,7 @@ TEMPLATES = RAIZ / "interface/templates/interface"
 # A tela da feature, e os módulos que produzem o que ela e a API dizem.
 DA_016 = [
     TEMPLATES / "ocupacao.html",
+    TEMPLATES / "ocupacao_historico.html",
     RAIZ / "ocupacao/application/emissao.py",
     RAIZ / "ocupacao/application/movimento.py",
     RAIZ / "ocupacao/application/selectors.py",
@@ -69,6 +70,72 @@ def test_nenhuma_superficie_da_016_afirma_o_que_ela_nao_conhece(caminho):
         f"{termo!r} — {porque}" for termo, porque in PROIBIDOS.items() if re.search(termo, corpo)
     ]
     assert achados == [], f"{caminho.name}: " + "; ".join(achados)
+
+
+# --- A acentuação do que a tela diz ------------------------------------------------------------
+# **Por que existe.** O percurso conduzido encontrou `"O deficit apurado de N vaga(s) sera a causa
+# do ato, e a faixa anterior nao e revogada"` na tela — e o teste que cobria aquela ação afirmava a
+# **mesma** grafia sem acento, de modo que ele prendia o defeito em vez de acusá-lo. A causa é a
+# convenção deste repositório de escrever comentário de template sem acento: ela vazou para o texto
+# visível, onde não vale.
+#
+# A varredura é só dos templates, porque em Python `ocupacao`, `apuracao` e `nao` são nome de
+# módulo, de variável e de parâmetro — ali a ausência de acento é a regra, e não o defeito.
+TEMPLATES_DA_016 = [caminho for caminho in DA_016 if caminho.suffix == ".html"]
+
+SEM_MARCACAO = re.compile(r"\{\{.*?\}\}|\{%.*?%\}|<[^>]*>", re.S)
+
+# A forma sem acento de cada palavra que o texto da feature usa. Nenhuma delas é palavra
+# portuguesa por si: encontrá-la no texto visível é sempre erro de digitação.
+SEM_ACENTO = (
+    "deficit",
+    "sera",
+    "nao",
+    "apuracao",
+    "ocupacao",
+    "sucessao",
+    "numero",
+    "historico",
+    "obsolescencia",
+    "versao",
+    "e imutavel",
+)
+
+
+def texto_visivel(caminho):
+    """Só os nós de texto: sem comentário, sem tag e sem expressão de template.
+
+    Atributo e nome de classe ficam de fora de propósito — `class="acoes"` e `situacao s-...` são
+    identificadores, e exigir acento neles quebraria a folha de estilo.
+    """
+    return SEM_MARCACAO.sub(" ", visivel(caminho))
+
+
+@pytest.mark.parametrize("caminho", TEMPLATES_DA_016, ids=lambda item: item.name)
+def test_o_texto_visivel_da_016_esta_acentuado(caminho):
+    corpo = texto_visivel(caminho).lower()
+    achados = [
+        palavra for palavra in SEM_ACENTO if re.search(rf"(?<![\w-]){palavra}(?![\w-])", corpo)
+    ]
+
+    assert achados == [], f"{caminho.name}: texto visível sem acento — {achados}"
+
+
+def test_a_varredura_de_acento_enxerga_a_falta(tmp_path):
+    """Uma varredura que nunca acusa aprova tudo, calada — e foi assim que o defeito passou."""
+    arquivo = tmp_path / "sintetico.html"
+    arquivo.write_text(
+        "{% comment %}o deficit sem acento no comentario e permitido{% endcomment %}\n"
+        '<p class="ocupacao">O deficit apurado nao foi revogado.</p>\n',
+        encoding="utf-8",
+    )
+
+    corpo = texto_visivel(arquivo).lower()
+
+    assert [p for p in SEM_ACENTO if re.search(rf"(?<![\w-]){p}(?![\w-])", corpo)] == [
+        "deficit",
+        "nao",
+    ], "o comentário e o atributo ficam de fora; o texto visível, não"
 
 
 def test_a_varredura_enxerga_um_termo_proibido():

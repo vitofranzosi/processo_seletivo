@@ -4342,6 +4342,12 @@ def ocupacao(request, edital_id, marco_id):
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_da_ocupacao", None),
+                # **Qual das duas ações aconteceu**, e não só que algo deu certo. As duas voltam
+                # para esta tela, e um aviso único dizia "Apuração emitida" depois de causar a
+                # faixa seguinte — frase falsa, porque apuração nenhuma foi emitida ali, e quem
+                # acabara de pedir a faixa ficava sem confirmação de que ela saiu. Encontrado no
+                # percurso conduzido da `016`.
+                "acao": request.session.pop("acao_da_ocupacao", None),
                 "erro": request.session.pop("erro_da_ocupacao", None),
             },
         )
@@ -4409,6 +4415,7 @@ def emitir_apuracao_view(request, edital_id, marco_id):
             correlation_id=f"interface-ocupacao-{edital_id}",
             motivo=(request.POST.get("motivo") or "").strip(),
         )
+        request.session["acao_da_ocupacao"] = "apuracao"
     except DomainError as erro:
         request.session["erro_da_ocupacao"] = erro.detail
     return redirect(destino)
@@ -4439,6 +4446,7 @@ def causar_faixa_view(request, edital_id, marco_id):
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-faixa-{edital_id}",
         )
+        request.session["acao_da_ocupacao"] = "faixa"
     except DomainError as erro:
         request.session["erro_da_ocupacao"] = erro.detail
     return redirect(destino)

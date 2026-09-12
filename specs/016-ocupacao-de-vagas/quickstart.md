@@ -32,6 +32,18 @@ Para servir esta worktree pelo painel de preview, acrescente uma entrada ao `.cl
 **O certame precisa ser montado à mão.** O `seed_demo` não produz este — o elenco dele colide com
 os candidatos, e o quadro por modalidade com polos não está lá. Monte pela tela, que é o ponto.
 
+**Só o recorte da ampla tem ordem num marco calculado, e isso decide quais cenários você alcança.**
+A ordem por cálculo (`015`) produz **um** ato de ordenação, o da linha geral; ordem **por recorte**
+— uma lista própria para `PPI` e para `PCD` — só existe em marco que ordena por **sorteio** (`021`),
+que é quem publica uma relação de habilitados por lista. Sem ela, a apuração de um recorte reservado
+é corretamente recusada com `ordem_nao_vigente`, e a tela o diz.
+
+Na prática: os Cenários 1, 2, 4 e 6 e as contraprovas deles rodam no marco calculado que o Cenário 1
+monta. Os Cenários **3 e 5** — reversão e concorrência concomitante — exigem um marco de sorteio, e
+o sorteio congela a semente a partir de **fonte pública externa**: percorrê-los de ponta a ponta
+depende da extração declarada ter sido publicada pela fonte. *Descoberto no percurso conduzido da
+`T065`, que chegou até aqui sem que o guia avisasse.*
+
 ## Cenário 1 — Ler os quatro números (História 1, `UX-031`, `UX-032`)
 
 1. Como **elaborador**, componha um Edital com um Perfil de **40 vagas imediatas**, três
@@ -55,7 +67,10 @@ defeito que a `UX-032` existe para impedir.
 ## Cenário 2 — Emitir a apuração e sucedê-la (`FR-262`, `D-008`)
 
 1. Emita a apuração do recorte de `PPI`.
-2. Emita de novo, **sem motivo**. → recusado, `motivo_da_sucessao_obrigatorio`.
+2. Emita de novo, **sem motivo**. → recusado, `motivo_da_sucessao_obrigatorio`. *Pela tela o campo
+   é obrigatório e o navegador nem envia o pedido: a recusa mora na aplicação, e é ali que o teste
+   a prende. A tela recusar antes é o desenho certo — descobrir a recusa com o cronograma correndo
+   é o que a `014` já pagou.*
 3. Emita de novo **com** motivo. → a anterior fica **sucedida**, e continua legível.
 
 **Esperado:** duas apurações no histórico, a segunda vigente. Nenhuma linha alterada — a primeira
@@ -67,8 +82,18 @@ privilégio. As duas camadas, e nenhuma contornável em desenvolvimento.
 
 ## Cenário 3 — Reverter cota para a ampla (História 2, `FR-245`–`FR-248`)
 
-1. Retifique o Perfil declarando reversão com espécie **"A quantidade que ficou sem preencher"**
-   (`ON_BALANCE`).
+1. **Publique o Edital já com a reversão declarada**, com espécie *"A quantidade que ficou sem
+   preencher"* (`ON_BALANCE`), no seletor do Perfil.
+
+   *A redação anterior mandava **retificar** o Perfil para declará-la, e isso não é executável: o
+   catálogo da Retificação só oferece os campos de um objeto que **existe**, e num Edital publicado
+   sem `vacancyReversion` o objeto é nulo — o grupo do Perfil não traz o campo. O comportamento é
+   deliberado e tem teste (`test_o_campo_nao_aparece_onde_o_objeto_nao_existe`), e é o mesmo do
+   `cutRule` da `014`; o defeito era do guia. Que um Edital publicado **sem** a cláusula não possa
+   vir a declará-la por Retificação é limitação registrada, e não decisão desta feature.*
+
+   Para exercitar a Retificação do degrau 14, retifique a **espécie**: publicado com `ON_BALANCE`,
+   troque para `ON_EXHAUSTION`, que é o caminho que o campo oferece.
 2. Faça a lista de `PPI` **esgotar** com saldo: a ordem de PPI tem 3 pessoas, as 3 ficam
    `HABILITADA`, e não há mais ninguém a analisar. Sobram 7 das 10 vagas reservadas.
 3. Emita a apuração de `PPI` e da ampla.
@@ -119,8 +144,11 @@ causa nomeada, e não causa faixa nenhuma.
 
 ## Cenário 5 — Quem ocupa por duas listas (História 4, `FR-252`, `FR-253`)
 
-1. Monte alguém autodeclarado que esteja dentro do número de vagas **nas duas** listas.
-2. Emita a apuração dos dois recortes.
+1. **Num marco que ordena por sorteio**, monte alguém autodeclarado que esteja dentro do número de
+   vagas **nas duas** listas. Num marco calculado a lista reservada não tem ordem, e a apuração
+   dela é recusada antes de chegar aqui.
+2. Emita a apuração dos dois recortes, **a da ampla primeiro**: é ela que registra quem ocupou pela
+   linha geral, e é essa leitura que a apuração da reservada consulta para excluí-lo.
 
 **Esperado:** a pessoa ocupa pela **ampla concorrência** e **não consta ocupando** na reservada,
 cuja vaga segue aberta ao próximo daquela lista. Nenhuma quantidade muda de recorte: as efetivas dos
@@ -133,9 +161,16 @@ Edital manda 2 e 1. Invariante de soma nenhum pega; só a asserção por recorte
 
 ## Cenário 6 — Auditar (História 5, `FR-259`)
 
-Abra a auditoria do Perfil e reconstrua o número de hoje a partir do quadro publicado: quadro →
-apurações → movimentos. Cada número exibido aponta o ato que o produziu e a versão do conteúdo que
-ele leu.
+Abra o **histórico do recorte** — o link *"Ver o histórico deste recorte"*, em cada bloco que tem
+apuração — e reconstrua o número de hoje a partir do quadro publicado: quadro → apurações →
+movimentos. Cada apuração aponta a versão do conteúdo que leu, a linha do quadro, a ordem, o corte e
+os movimentos que considerou; a anterior continua dizendo o que ela apurou.
+
+**A trilha de auditoria do Edital não lista os atos da ocupação**, e não é omissão desta feature: a
+tela de `editais/<id>/auditoria` mostra o ciclo do Edital e das Retificações, e os atos de
+ordenação, corte e consolidação também não aparecem nela. O registro existe — `OCUPACAO_APURAR`,
+com ator, recorte, ordem citada e as quantidades na razão —, e quem o prova é
+`tests/integration/ocupacao/test_auditoria.py`. *Registrado no percurso conduzido da `T065`.*
 
 ## O que este guia deliberadamente não percorre
 

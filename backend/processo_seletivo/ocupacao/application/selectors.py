@@ -84,21 +84,40 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 "descricao": "A ordem deste recorte está obsoleta.",
             }
         )
-    if apuracao.corte_id is not None:
-        geracao = geracao_vigente(
-            edital=edital,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
+    # **A comparação é nos dois sentidos, e o percurso conduzido mostrou por quê.** A versão
+    # anterior só olhava o corte quando a apuração citava um: apurado um recorte **antes** de
+    # existir corte — o que é legítimo, porque o marco pode ainda não ter cortado — e emitido o
+    # corte depois, a apuração continuava aparecendo vigente afirmando `0 ocupada`, quando a faixa
+    # recém-criada alcançava 28 pessoas. Corte que **aparece** muda o número tanto quanto corte que
+    # é sucedido.
+    #
+    # O marco que **não corta** continua sem causa: ali não há geração vigente e a apuração não cita
+    # corte algum, de modo que os dois lados concordam.
+    #
+    # A causa é **uma só** para os dois sentidos, e a tela a diz como *"o corte deste recorte não é
+    # o que ela leu"* — frase verdadeira tanto quando o corte foi sucedido quanto quando ele nem
+    # existia. A primeira redação dizia "não é mais o vigente", que era falsa no segundo caso.
+    geracao = geracao_vigente(
+        edital=edital,
+        perfil_id=apuracao.perfil_id,
+        marco_id=apuracao.marco_id,
+        lista_id=apuracao.lista_id,
+    )
+    vigentes = {item.id for item in geracao}
+    if apuracao.corte_id is not None and apuracao.corte_id not in vigentes:
+        causas.append(
+            {
+                "causa": nomes.CAUSA_CORTE_OBSOLETO,
+                "descricao": "O corte que alimentou esta apuração não é mais o vigente.",
+            }
         )
-        vigentes = {item.id for item in geracao}
-        if apuracao.corte_id not in vigentes:
-            causas.append(
-                {
-                    "causa": nomes.CAUSA_CORTE_OBSOLETO,
-                    "descricao": "O corte que alimentou esta apuração não é mais o vigente.",
-                }
-            )
+    elif apuracao.corte_id is None and vigentes:
+        causas.append(
+            {
+                "causa": nomes.CAUSA_CORTE_OBSOLETO,
+                "descricao": "Esta apuração foi emitida antes de existir corte, e já existe um.",
+            }
+        )
     if _quadro_retificado(apuracao, at=at):
         causas.append(
             {

@@ -51,7 +51,13 @@ que ela apurou, e quem audita precisa ver as duas.
     <dt>Versão do conteúdo lida</dt><dd>{{ passo.apuracao.versao_id }}</dd>
     <dt>Linha do quadro</dt><dd>{{ passo.apuracao.linha_do_quadro_id|default_if_none:"—" }}</dd>
     <dt>Ordem</dt><dd>{{ passo.apuracao.ato_id }}</dd>
-    <dt>Corte</dt><dd>{{ passo.apuracao.corte_id|default_if_none:"nenhum — o marco não corta" }}</dd>
+    {% comment %}
+    **Nulo aqui diz "nao havia corte quando ela apurou", e nao "este marco nao corta".** O
+    percurso conduzido encontrou a segunda frase numa apuracao de marco que corta: ela foi emitida
+    antes do corte existir, o que e legitimo — e a tela afirmava, sobre a regra publicada, algo que
+    o Edital nao diz. As duas situacoes produzem o mesmo `NULL`, e a frase precisa valer nas duas.
+    {% endcomment %}
+    <dt>Corte</dt><dd>{{ passo.apuracao.corte_id|default_if_none:"nenhum corte alimentou esta apuração" }}</dd>
   </dl>
 
   {% if passo.movimentos %}
@@ -68,7 +74,7 @@ que ela apurou, e quem audita precisa ver as duas.
   <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O mundo mudou depois dela:</p>
   <ul class="consequencias">
     {% for causa in passo.causasDeObsolescencia %}
-    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte que a alimentou não é mais o vigente{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
     {% endfor %}
   </ul>
   {% endif %}
