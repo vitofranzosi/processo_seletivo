@@ -414,11 +414,14 @@ precisava chegar para esta classe de Edital.
 
 ## Resíduos
 
-1. **A tabela de incrementos do `README.md` não tem a `014`, e o número da suíte está uma feature
-   atrás.** O README diz *"4681 passando e 2 pulados"* (`README.md:212`); a `014` fechou em
-   **4862 passando e 2 pulados** (commit `9d1c4f4`). **É a quarta vez que este resíduo aparece** — a
-   `021` ficou de fora e foi corrigida junto com a avaliação de 09/09; a `023`, a `024` e a `025`
-   ficaram de fora e foram corrigidas depois da de 11/09.
+1. **~~A tabela de incrementos do `README.md` não tem a `014`, e o número da suíte está uma feature
+   atrás.~~ Corrigido nesta leva.** O README dizia *"4681 passando e 2 pulados"* e a `AGENTS.md`
+   dizia *"4358"*, de duas features atrás — a suíte fecha em **4862 passando e 2 pulados**,
+   reconferido hoje contra PostgreSQL. A `014` entrou na tabela. **Era a quarta vez que este resíduo
+   aparecia** — a `021` ficou de fora e foi corrigida junto com a avaliação de 09/09; a `023`, a
+   `024` e a `025` ficaram de fora e foram corrigidas depois da de 11/09. **O padrão é o mesmo toda
+   vez**: quem mescla a feature não toca no README, e quem escreve a avaliação seguinte descobre.
+   Enquanto nada o verificar, ele volta.
 2. **[`achado-anexo-sem-destinatario.md`](achado-anexo-sem-destinatario.md)** continua aberto, e
    continua não sendo defeito.
 3. **A `002` tem sete tarefas em aberto, e a `T056` é bloqueio de implantação** — a autenticação

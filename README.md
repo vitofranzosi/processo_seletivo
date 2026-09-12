@@ -209,7 +209,7 @@ de PostgreSQL sob SQLite em casos que deveriam ter sido pulados e não foram. O 
 porque só roda contra PostgreSQL. O achado está em
 [`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
 
-Contra PostgreSQL a suíte fecha em 4681 passando e 2 pulados — os dois deliberados, e nomeados em
+Contra PostgreSQL a suíte fecha em 4862 passando e 2 pulados — os dois deliberados, e nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
@@ -309,6 +309,7 @@ Incrementos, na ordem em que foram especificados:
 | [`012`](specs/012-mesa-de-avaliacao/spec.md) | mesa de avaliação |
 | [`012`](specs/012-013-revisao-formas-de-conclusao/spec.md) | revisão de compatibilidade 012–013 |
 | [`013`](specs/013-consolidacao-resultado-etapa/spec.md) | consolidação do Resultado da Etapa |
+| [`014`](specs/014-corte-e-progressao-entre-etapas/spec.md) | corte e progressão entre Etapas |
 | [`015`](specs/015-ordenacao-e-classificacao/spec.md) | ordenação e classificação |
 | [`017`](specs/017-publicacao-de-resultados/spec.md) | publicação de resultados |
 | [`018`](specs/018-recursos-e-superacao-de-resultados/spec.md) | recursos e superação de resultados |
