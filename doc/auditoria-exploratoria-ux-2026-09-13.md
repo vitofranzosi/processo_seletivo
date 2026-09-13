@@ -449,9 +449,12 @@ Configurações cujo efeito só aparece etapas — às vezes semanas — depois:
 - **Método do sorteio (10 campos)** num marco que não sorteia. **Só quando necessário.**
 - **Regra de corte (6 campos)** num marco que não corta. **Só quando necessário.**
 - **"Como as pontuações se combinam" e "Normalização"**, obrigatórios, com uma Etapa só — as duas
-  opções produzem o mesmo número. **Inferir.**
+  opções produzem o mesmo número. **Inferir — mas com evidência normativa**, porque as duas são
+  conteúdo publicado (ver [decisão de mutabilidade normativa](decisao-mutabilidade-normativa.md)).
 - **Casas decimais e Arredondamento**, obrigatórios e sem padrão ("Escolha o arredondamento").
-  **Padrões seguros: 2 e meio-para-cima.**
+  Um padrão resolveria o atrito — **e não é decisão de interface**: `rounding/mode` e
+  `rounding/scale` são conteúdo normativo publicado que muda posição na ordem. Fixar o padrão exige
+  evidência nos Editais da amostra, e por isso este item **saiu do pacote de hardening**.
 - **"Chave" do documento exigido** — identificação estável, "sem espaços", inventada à mão.
   **Derivar do nome, com override.**
 - **Coluna MODALIDADE = "Não declarada"** em todas as linhas de um Edital sem modalidades.
@@ -500,10 +503,17 @@ Não se resolvem com polimento:
 
 ## 10. Quick wins
 
-Pequenos, seguros, sem mexer em regra de negócio:
+Pequenos, seguros, sem mexer em regra de negócio. **O critério é literal**: nada que altere
+conteúdo normativo publicado entra aqui, mesmo parecendo cosmético — foi o que tirou daqui os
+padrões de arredondamento, que governam o cálculo da classificação.
 
-1. Renderizar as dicas `.oculto` como texto auxiliar visível quando o controle não tiver placeholder
-   equivalente. *(Uma alteração de template; recupera a camada explicativa inteira.)*
+1. Recuperar as dicas `.oculto` — **por triagem, não em massa.** Expor as 25 de uma vez trocaria
+   ausência por sobrecarga, e a etapa de Classificação já tem 30 controles no caso simples. Cada
+   dica recebe um destino: consequência essencial → sempre visível; esclarecimento contextual →
+   junto do controle; detalhe excepcional → disclosure; justificativa de projeto → fora da
+   interface; redundante → eliminada. **As quatro do Perfil vêm primeiro**, porque são as que
+   anotam a armadilha S4 das vagas e a forma de convocação; as dezoito da Classificação seguem com
+   a spec de simplificação, que vai apagar metade dos controles que elas anotam.
 2. Acrescentar `"classificacao"` a `DESTINO_DA_PENDENCIA` e uma entrada específica para
    `…/milestones/…/stages` apontando para `etapas`.
 3. Acrescentar `"documentRequirements"` e `"attachments"` a `ORIGEM` (`forms.py:633`) e ao dicionário
@@ -512,16 +522,19 @@ Pequenos, seguros, sem mexer em regra de negócio:
 5. Tornar o número e o título do Edital um link na lista da página inicial.
 6. Link "Recursos" na página do Edital para quem tem `recurso:julgar`, e os recursos pendentes em
    "Minhas Etapas".
-7. Botão "Publicar resultado" na própria página do marco, ao lado de "Emitir ordem".
+7. Tornar explícito no marco o estado **ato vigente × divulgação**, e oferecer a publicação quando
+   divergirem — *"Ordem vigente emitida às 09:49. A divulgação pública ainda corresponde à ordem
+   anterior, de 09:44. [Publicar resultado vigente]"*. Reposicionar o botão sozinho não resolve: o
+   percurso encontrou justamente o estado em que o ato era B e a divulgação continuava A, depois do
+   recurso deferido.
 8. Corrigir o texto sob "Revisar inscrição", que continua dizendo "depois de anexar o documento que
    falta" com o documento já anexado e o banner verde ao lado.
 9. Formatar instantes na zona institucional nas telas de Retificação (hoje `+00:00`).
 10. Remover "Ativar Processo" do painel do Processo (a publicação já ativa).
-11. Padrões para "Casas decimais" (2) e "Arredondamento" (meio para cima).
-12. Uniformizar a apresentação de nota: "8,0000" e "8,00" aparecem na mesma página do candidato.
-13. Mover o prazo recursal para a página pública do resultado e para "Acompanhar" — hoje só aparece
+11. Uniformizar a apresentação de nota: "8,0000" e "8,00" aparecem na mesma página do candidato.
+12. Mover o prazo recursal para a página pública do resultado e para "Acompanhar" — hoje só aparece
     dentro de "Recorrer".
-14. Preencher "Concorrência:" no e-mail de confirmação, que hoje sai com o rótulo e sem valor.
+13. Preencher "Concorrência:" no e-mail de confirmação, que hoje sai com o rótulo e sem valor.
 
 ---
 
