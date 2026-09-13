@@ -786,16 +786,28 @@ canônico vigente (o mesmo que `publish_edital.py` grava) e comparei com o conju
 `interface.retificacao.campos_editaveis()` oferece sobre aquele mesmo conteúdo. Identidades foram
 colapsadas (`id=*`) para comparar forma, não instância.
 
-| Edital | Campos publicados | Alcançados pela tela | Cobertura |
-|---|---:|---:|---:|
-| 26/2026 — sorteio, com método declarado | **98** | **38** | 39% |
-| 01/2026 — 2 perfis, 2 modalidades, 2 anexos | 96 | 42 | 44% |
-| 51/2026 — 2 perfis, 3 Etapas | 87 | 38 | 44% |
-| 90/2026 — o do percurso | 81 | 34 | 42% |
+**A cobertura bruta não é o achado, e ler assim seria enganoso.** O denominador inclui
+identidade, derivados e campos cuja ausência é deliberada e documentada. O que importa é a fatia
+que não tem decisão nenhuma. Classificando cada campo publicado pela natureza da sua mutabilidade:
 
-O docstring de `campos_editaveis` diz: *"Cobre tudo o que o conteúdo publicado carrega e a
-gramática endereça."* No Edital com mais campos, cobre **38 de 98** — e a cobertura fica entre 39%
-e 44% nos quatro.
+| | 26/2026 | 01/2026 | 51/2026 | 90/2026 |
+|---|---:|---:|---:|---:|
+| Campos publicados | 98 | 96 | 87 | 81 |
+| **Retificável pela tela** | 38 | 42 | 38 | 34 |
+| Identidade e estrutura | 24 | 28 | 23 | 22 |
+| Derivado (ordem, situação, título de seção) | 5 | 5 | 5 | 5 |
+| Exclusão com justificativa escrita | 2 | 2 | 2 | 2 |
+| Objeto ausente — a tela não cria a declaração | 6 | 5 | 6 | 5 |
+| **Normativo, sem decisão nenhuma** | **23** | **14** | **13** | **13** |
+
+O achado é a última linha: **13 a 23 campos de norma publicada sem decisão explícita de
+retificabilidade** — 14% a 23% do conteúdo, e não os 56% que a cobertura bruta sugeriria. E o
+docstring de `campos_editaveis` diz *"Cobre tudo o que o conteúdo publicado carrega e a gramática
+endereça."*
+
+O 26/2026 lidera porque é o único com **método de sorteio declarado**: os dez campos do método —
+algoritmo, derivação, ocorrência, instante, regra de normalização e regra de substituição — são
+conteúdo publicado, e **nenhum deles é alcançável pela tela**.
 
 ### O que fica de fora com razão
 
@@ -831,10 +843,12 @@ módulo, que a documentam:
 | `…/stages/[]` | quais Etapas entram na ordem | muda o universo do cálculo |
 | `…/tiebreakers/…/{whenMissing, parameters/stageId}` | o critério de desempate em si | só a **ordem** dos critérios é retificável; o critério, não |
 | `/schedule/…/location` | onde o evento acontece | é o local da prova — e a `021`, cenário 3, tem como critério de aceitação *"uma Retificação altera o local de um evento"* |
+| `/maxInscricoesPorCandidato` | teto de inscrições por pessoa | norma publicada; hoje só existe quando declarado, e a tela não o alcança nem o cria |
 | `/schedule/…/isRegistrationPeriod` | qual Evento é o período de inscrições | publicar o Edital com o Evento errado designado não se conserta pela tela |
 | `/stages/…/scheduleEventId` | o vínculo Etapa ↔ Evento | é o que a Supervisão cobra como "Atenção" depois de publicado |
-| `/maxInscricoesPorCandidato` | teto de inscrições por pessoa | norma publicada |
-| `/profiles/…/competitionModalities/…/normativeRule/{effectiveFrom, rounding/modo}` | vigência e arredondamento do fundamento da reserva | norma publicada |
+| `…/drawMethod/{algorithm, derivation, occurrence, occurrenceAt, normalization/*, substitutionRule/*}` | **o método do sorteio inteiro** | a `021` determina que alterá-lo *"MUST ser Retificação sobre esse conteúdo"*, e a própria tela do sorteio diz ao operador *"Alterá-lo é uma Retificação, e não uma decisão desta tela"* — a Retificação não oferece um único desses campos |
+| `/profiles/…/competitionModalities/…/normativeRule/rounding/modo` | arredondamento do fundamento da reserva | decide quantas vagas a reserva recebe |
+| `/profiles/…/callInformation/forma`, `…/classificationInformation/criterio` | prosa institucional do Perfil | o candidato lê no Edital publicado |
 
 ### Um precedente que o próprio módulo já criou
 
@@ -852,5 +866,9 @@ Não codificar campo a campo. A pergunta a fechar primeiro é normativa, não t�
 o conteúdo publica, o que pode legitimamente precisar de correção administrativa?** O inventário
 acima é a entrada dessa conversa — e o teste-guardião que hoje existe só para `CAMPOS_ETAPA`
 (`tests/contract/test_retificacoes_api.py:101`) é a forma natural de a resposta não se perder:
-um teste que compare a forma publicada com a forma alcançável e falhe quando nascer um campo novo
+um teste que compare a forma publicada com a forma classificada e falhe quando nascer um campo novo
 sem decisão.
+
+A decisão tomada sobre este anexo está registrada em
+[`decisao-mutabilidade-normativa.md`](decisao-mutabilidade-normativa.md): o invariante, as quatro
+naturezas de mutabilidade, o guardião e os quatro canários que devem conduzir a spec.
