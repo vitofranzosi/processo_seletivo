@@ -162,5 +162,5 @@ cd backend && make lint check test-pg
 ```
 
 `ruff check` e `ruff format --check` limpos; `manage.py check` sem problemas; `makemigrations
---check` sem mudanças pendentes. A suíte contra PostgreSQL fecha em **5397 passando e 2 pulados** —
+--check` sem mudanças pendentes. A suíte contra PostgreSQL fecha em **5402 passando e 2 pulados** —
 os dois deliberados de sempre.

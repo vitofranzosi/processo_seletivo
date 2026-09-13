@@ -52,6 +52,7 @@ registrado na trilha sem mover o relógio (`FR-288b`).
 | `empate_na_fronteira_do_alvo` | empate residual não julgado atravessa a fronteira do alvo (`R-002` da pesquisa) |
 | `forma_de_comunicacao_nao_declarada` | o Perfil publicado não declarou `callForm` |
 | `referencia_da_publicacao_obrigatoria` | o Edital comunica por publicação e ninguém declarou onde se publicou — o sistema não publica por conta própria |
+| `emissao_em_estado_indeterminado` | a chave desta emissão foi reservada e nunca concluída: ou o envio está em curso, ou saiu sem ser registrado — e reenviar entregaria a mesma convocação duas vezes |
 | `desfecho_incompativel_com_a_chamada` | a espécie existe, mas não cabe nesta chamada: aceite numa convocação para regularizar, regularização numa chamada para vaga |
 | `nao_atendimento_antes_do_vencimento` | a comunicação não foi enviada, ou o vencimento informado ainda não passou |
 | `inercia_sem_ocupacao` | a Inscrição não consta ocupando vaga: não há matrícula a cancelar, e o desfecho certo é o não atendimento |

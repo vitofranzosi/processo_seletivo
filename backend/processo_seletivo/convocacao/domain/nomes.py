@@ -153,6 +153,12 @@ REFERENCIA_DO_PRAZO_OBRIGATORIA = "referencia_do_prazo_obrigatoria"
 # a emissão sem a referência iniciaria o prazo de uma convocação que ninguém viu (`FR-288`).
 REFERENCIA_DA_PUBLICACAO_OBRIGATORIA = "referencia_da_publicacao_obrigatoria"
 
+# **A emissão que reservou a chave e não chegou a registrar o desfecho.** Ou está em curso noutra
+# requisição, ou saiu e a gravação falhou depois dela — e as duas hipóteses têm a mesma aparência.
+# Reenviar por conta própria entregaria a mesma convocação duas vezes; o desfecho honesto é dizer
+# que o estado é indeterminado e pedir reconciliação.
+EMISSAO_EM_ESTADO_INDETERMINADO = "emissao_em_estado_indeterminado"
+
 # **Duas recusas que o contrato não lista, e são consequência da sucessão.** Corrigida a convocação,
 # é a sucessora que vale: gravar o desfecho na anterior o deixaria invisível para a leitura do
 # recorte, que só olha as vigentes, e a pessoa apareceria como não tendo respondido. E a

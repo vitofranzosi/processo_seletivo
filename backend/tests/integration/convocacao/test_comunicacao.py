@@ -10,10 +10,12 @@ tenha sucesso. Sem essa distinção, uma queda de SMTP fica indistinguível do s
 o desfecho que decorre de silêncio é perda de vaga.
 """
 
+import threading
 from datetime import timedelta
 
 import pytest
 from django.core import mail
+from django.db import connection
 from django.utils import timezone
 
 from processo_seletivo.convocacao.application import selectors
@@ -318,3 +320,145 @@ def test_o_ator_sem_base_nao_faz_o_sistema_ir_a_rede(cenario, sem_nada, gestor, 
 
     assert erro.value.code == "not_found"
     assert CorreioQueObservaATransacao.dentro_da_transacao is None, "nada foi enviado"
+
+
+class CorreioQueEspera:
+    """Um backend que avisa quando o envio começou e só termina quando alguém o libera.
+
+    Existe para tornar a concorrência **determinística**: sem ele, "duas requisições ao mesmo
+    tempo" seria uma corrida que passa ou falha conforme a máquina.
+    """
+
+    chegou = threading.Event()
+    liberado = threading.Event()
+    entregas = 0
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def send_messages(self, mensagens):
+        CorreioQueEspera.entregas += len(mensagens)
+        CorreioQueEspera.chegou.set()
+        CorreioQueEspera.liberado.wait(timeout=10)
+        return len(mensagens)
+
+
+class TestAIdempotenciaDaEmissao:
+    """A chave é reservada **antes** do envio (`FR-288`).
+
+    **Tirar o SMTP de dentro da transação deixou a idempotência depois dele.** Um duplo clique, ou
+    o retry de um proxy, entregava a segunda mensagem e só então descobria que o ato já havia
+    terminado — e a pessoa recebia duas convocações para a mesma vaga, com dois instantes de envio
+    diferentes brigando pelo início do prazo.
+    """
+
+    def test_a_repeticao_concluida_devolve_o_desfecho_sem_enviar_de_novo(
+        self, cenario, gestor, caixa
+    ):
+        edital, _, _ = cenario
+        convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="id-conv")
+
+        primeira = comunicar(edital, gestor, convocada["id"], chave="id-mesma")
+        segunda = comunicar(edital, gestor, convocada["id"], chave="id-mesma")
+
+        assert primeira == segunda
+        assert len(caixa) == 1, "a repetição não põe uma segunda mensagem na caixa"
+        assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 1
+
+    def test_a_chave_nova_emite_de_novo(self, cenario, gestor, caixa):
+        """A repetição é da **chave**, e não do ato: reemitir depois de uma falha é legítimo."""
+        edital, _, _ = cenario
+        convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="id-nova")
+
+        comunicar(edital, gestor, convocada["id"], chave="id-uma")
+        comunicar(edital, gestor, convocada["id"], chave="id-outra")
+
+        assert len(caixa) == 2
+        assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 2
+
+    def test_a_reserva_pendente_nao_reenvia_e_pede_reconciliacao(self, cenario, gestor, caixa):
+        """**O caso da falha entre o envio e a gravação.**
+
+        A reserva foi criada e nunca concluída: ou o envio está em curso, ou ele saiu e o registro
+        não entrou. As duas hipóteses têm a mesma aparência daqui, e reenviar entregaria a mesma
+        convocação duas vezes.
+        """
+        from processo_seletivo.shared.idempotency import reservar
+
+        edital, _, _ = cenario
+        convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="id-pend")
+        # A reserva que uma tentativa anterior deixou para trás, com a mesma carga.
+        reservar(
+            actor=gestor,
+            operation="convocacao:comunicar",
+            key="id-orfa",
+            payload={"convocacao": convocada["id"]},
+        )
+
+        with pytest.raises(DomainError) as erro:
+            comunicar(edital, gestor, convocada["id"], chave="id-orfa")
+
+        assert erro.value.code == nomes.EMISSAO_EM_ESTADO_INDETERMINADO
+        assert "pode ter saído" in erro.value.detail
+        assert caixa == [], "nada é enviado sobre uma reserva pendente"
+
+    def test_a_falha_na_gravacao_depois_do_envio_deixa_o_estado_indeterminado(
+        self, cenario, gestor, caixa, monkeypatch
+    ):
+        """O percurso inteiro do caso: envia, a gravação falha, e a retentativa **não** reenvia."""
+        edital, _, _ = cenario
+        convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="id-falha")
+
+        def explodir(self, *args, **kwargs):
+            raise RuntimeError("o disco sumiu entre o envio e a gravação")
+
+        monkeypatch.setattr(ComunicacaoEmitida, "save", explodir)
+        with pytest.raises(RuntimeError):
+            comunicar(edital, gestor, convocada["id"], chave="id-falha-chave")
+        monkeypatch.undo()
+
+        assert len(caixa) == 1, "a mensagem saiu"
+        assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 0
+
+        with pytest.raises(DomainError) as erro:
+            comunicar(edital, gestor, convocada["id"], chave="id-falha-chave")
+
+        assert erro.value.code == nomes.EMISSAO_EM_ESTADO_INDETERMINADO
+        assert len(caixa) == 1, "e a retentativa não põe uma segunda na caixa"
+
+    def test_duas_requisicoes_simultaneas_entregam_uma_mensagem_so(self, cenario, gestor, settings):
+        """A concorrência de verdade: a segunda chega enquanto a primeira ainda está na rede.
+
+        **É o duplo clique**, e o `UNIQUE` da reserva é quem o resolve — não a duração de transação
+        nenhuma.
+        """
+        settings.EMAIL_BACKEND = "tests.integration.convocacao.test_comunicacao.CorreioQueEspera"
+        CorreioQueEspera.chegou.clear()
+        CorreioQueEspera.liberado.clear()
+        CorreioQueEspera.entregas = 0
+        edital, _, _ = cenario
+        convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="id-conc")
+        desfecho = {}
+
+        def emitir():
+            try:
+                desfecho["primeira"] = comunicar(
+                    edital, gestor, convocada["id"], chave="id-simultanea"
+                )
+            finally:
+                connection.close()
+
+        thread = threading.Thread(target=emitir)
+        thread.start()
+        try:
+            assert CorreioQueEspera.chegou.wait(timeout=10), "a primeira não chegou à rede"
+            with pytest.raises(DomainError) as erro:
+                comunicar(edital, gestor, convocada["id"], chave="id-simultanea")
+        finally:
+            CorreioQueEspera.liberado.set()
+            thread.join(timeout=10)
+
+        assert erro.value.code == nomes.EMISSAO_EM_ESTADO_INDETERMINADO
+        assert CorreioQueEspera.entregas == 1, "uma mensagem, e não duas"
+        assert desfecho["primeira"]["resultado"] == "ENVIADA"
+        assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 1

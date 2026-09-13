@@ -136,23 +136,29 @@ def comunicar(
 
     **A falha não apaga o ato** (`FR-269a`). A convocação continua praticada; o que se registra é
     que a emissão não completou, e o recorte passa a exibir *"convocado, prazo não iniciado"* até
-    que uma emissão tenha sucesso. Sem isso, uma queda de SMTP ficaria indistinguível do silêncio
-    da pessoa — e o desfecho que decorre de silêncio é perda de vaga.
+    que uma emissão tenha sucesso.
 
     **O envio acontece fora da transação, e nunca dentro dela.** É a regra que
     `inscricoes/application/mensagem.py` escreve com todas as letras, e a razão aqui é a mesma
     aumentada de um grau: `comando_de_comissao` trava o Processo com `select_for_update`, de modo
     que um SMTP lento paralisaria **todos** os comandos daquele certame — e um `rollback` posterior
-    desfaria o registro sem desfazer a mensagem, deixando na caixa da pessoa uma convocação que o
-    sistema esqueceu de ter enviado.
+    desfaria o registro sem desfazer a mensagem.
 
-    A ordem é a que `exigir_base_de_comissao` existe para permitir: autorizar, ir à rede, e só
-    então abrir a transação que grava e audita.
+    **E a chave é reservada antes do envio**, numa transação curta e própria. Tirar o envio de
+    dentro da transação deixou a idempotência **depois** dele: um duplo clique, ou o retry de um
+    proxy, entregava a segunda mensagem e só então descobria que o ato já havia terminado. A ordem
+    é reservar, conferir, enviar, gravar.
+
+    **Reserva pendente não reenvia.** Quando a chave já existe e nunca foi concluída, ou o envio
+    está em curso noutra requisição, ou ele saiu e a gravação falhou depois dele — e as duas
+    hipóteses têm a mesma aparência daqui. Reenviar por conta própria entregaria a mesma convocação
+    duas vezes; o que o comando faz é dizer que o estado é indeterminado e pedir reconciliação, que
+    é o único desfecho honesto.
     """
     from processo_seletivo.comissoes.application import exigir_base_de_comissao
 
     # **Autorizar antes de trabalhar** (Princípio III): sem isto, um ator sem base faria o sistema
-    # ir à rede e entregar a mensagem antes de a pergunta "quem está pedindo" ser feita.
+    # reservar chave e ir à rede antes de a pergunta "quem está pedindo" ser feita.
     exigir_base_de_comissao(actor=actor, processo_id=processo_id)
     convocacao = _convocacao_do_processo_id(processo_id, convocacao_id, actor=actor)
     forma = forma_declarada(convocacao)
@@ -167,13 +173,8 @@ def comunicar(
     _recusar_vencimento_anterior_ao_envio(convocacao, agora=agora)
 
     referencia = (referencia_da_publicacao or "").strip()
-    destinatario, detalhe = "", ""
     if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
         guarda_da_revisao_da_010()
-        destinatario = destinatario_de(convocacao)
-        detalhe = _enviar(
-            convocacao, destinatario=destinatario, endereco_do_portal=endereco_do_portal
-        )
     elif not referencia:
         # **O sistema não publica no site do certame**, e registrar `ENVIADA` sem referência
         # iniciaria o prazo de uma convocação que ninguém viu (`FR-288`).
@@ -186,11 +187,35 @@ def comunicar(
             campo="referencia_da_publicacao",
         )
 
+    # **A mesma carga que `comando_de_comissao` usará adiante**: a reserva é a mesma linha, e um
+    # conteúdo diferente aqui produziria `idempotency_conflict` contra a própria chamada.
+    payload = {"convocacao": str(convocacao_id)}
+    concluida, pendente = _reservar_a_chave(actor=actor, key=idempotency_key, payload=payload)
+    if concluida is not None:
+        # **Repetição concluída não envia nada**, e devolve o que o ato respondeu — o duplo clique
+        # recebe a emissão original, e não uma segunda mensagem na caixa da pessoa.
+        return concluida
+    if pendente:
+        raise DomainError(
+            nomes.EMISSAO_EM_ESTADO_INDETERMINADO,
+            "Já há uma emissão desta convocação em curso com esta chave, ou uma que não chegou a "
+            "ser registrada. A mensagem pode ter saído: confira o histórico da convocação antes de "
+            "emitir de novo, e use a tela recarregada — ela traz chave nova.",
+            409,
+        )
+
+    destinatario, detalhe = "", ""
+    if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
+        destinatario = destinatario_de(convocacao)
+        detalhe = _enviar(
+            convocacao, destinatario=destinatario, endereco_do_portal=endereco_do_portal
+        )
+
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
         operation=ATO,
-        payload={"convocacao": str(convocacao_id)},
+        payload=payload,
         idempotency_key=idempotency_key,
     ) as ctx:
         if ctx.repetido:
@@ -208,6 +233,28 @@ def comunicar(
         )
         emitida.save()
         return _concluir(ctx, emitida, actor, correlation_id, idempotency_key)
+
+
+def _reservar_a_chave(*, actor, key, payload):
+    """Reserva a chave numa transação curta e diz o que ela encontrou.
+
+    Devolve `(desfecho_anterior, pendente)`: o desfecho quando a chave já foi **concluída**, e
+    `pendente=True` quando ela existe e nunca foi. Nos dois casos nada é enviado.
+
+    **Transação própria, curta, e sem travar o Processo.** O que ela precisa garantir é que duas
+    requisições com a mesma chave não criem duas reservas — e é o `UNIQUE` de
+    `IdempotencyRecord` que o garante, não a duração da transação. Segurá-la aberta durante o SMTP
+    seria trocar um problema por outro.
+    """
+    from django.db import transaction
+
+    from processo_seletivo.shared.idempotency import reservar
+
+    with transaction.atomic():
+        reserva, criada = reservar(actor=actor, operation=ATO, key=key, payload=payload)
+        if reserva.response_status is not None:
+            return reserva.result_payload, False
+        return None, not criada
 
 
 def _convocacao_do_processo_id(processo_id, convocacao_id, *, actor):

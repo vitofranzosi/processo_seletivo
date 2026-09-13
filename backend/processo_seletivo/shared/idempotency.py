@@ -3,7 +3,16 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
 
 
-def reserve(*, actor, operation: str, key: str, payload) -> IdempotencyRecord:
+def reservar(*, actor, operation: str, key: str, payload) -> tuple[IdempotencyRecord, bool]:
+    """A reserva, e **se ela nasceu agora**.
+
+    O segundo valor separa dois estados que a reserva sozinha confunde: *"eu acabei de reservar"* e
+    *"já havia uma reserva, e ela nunca foi concluída". Para quase todo comando a distinção não
+    importa — a transação que reserva é a mesma que grava, e uma reserva pendente só existe dentro
+    dela. Importa para quem faz alguma coisa **observável fora da transação** antes de gravar: ali
+    a reserva pendente significa que um envio pode ter saído sem que nada o tenha registrado, e
+    reenviar por conta própria seria entregar a mesma mensagem duas vezes (019, `FR-288`).
+    """
     digest = canonical_sha256(payload)
     record, created = IdempotencyRecord.objects.get_or_create(
         institution_scope=actor.institution_scope,
@@ -14,6 +23,12 @@ def reserve(*, actor, operation: str, key: str, payload) -> IdempotencyRecord:
     )
     if not created and record.request_hash != digest:
         raise DomainError("idempotency_conflict", "A chave foi usada com outro conteúdo.", 409)
+    return record, created
+
+
+def reserve(*, actor, operation: str, key: str, payload) -> IdempotencyRecord:
+    """A reserva, para quem reserva e grava na mesma transação — que é a maioria."""
+    record, _ = reservar(actor=actor, operation=operation, key=key, payload=payload)
     return record
 
 

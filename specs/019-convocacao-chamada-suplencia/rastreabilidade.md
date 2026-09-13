@@ -104,6 +104,7 @@ mudaram **regra**, e não só código:
 | a leitura do candidato só ia para o log | `FR-288b` pede trilha, e log de servidor não é auditável | `tests/interface/test_portal_convocacao.py::test_a_leitura_entra_na_trilha_do_edital` |
 | redirecionamento aberto | `voltar` vinha do corpo do pedido sem conferência | `tests/interface/test_convocacao.py::test_o_atestado_nao_redireciona_para_fora_do_sistema` |
 | a proveniência apontava para o ato errado | o efeito citava a **convocação**, e o rótulo dizia "desfecho de convocação" | `tests/interface/test_convocacao.py::test_o_efeito_de_ocupacao_cita_o_desfecho_que_o_produziu` |
+| a idempotência ficou **depois** do envio | tirar o SMTP da transação deixou a reserva da chave para depois dele: o duplo clique entregava a segunda mensagem e só então descobria que o ato já havia terminado | `tests/integration/convocacao/test_comunicacao.py::TestAIdempotenciaDaEmissao` |
 | desfecho sem efeito era possível | o campo era anulável e nenhuma constraint o exigia — numa tabela append-only a linha divergente não teria conserto | `convocacao/0003_sucessao_do_desfecho.py` |
 
 **Três decisões de domínio saíram daí**, e estão nos comentários dos módulos que as implementam:
@@ -114,7 +115,11 @@ mudaram **regra**, e não só código:
 2. **O desfecho sucede o desfecho.** A `FR-273` passa a ser lida como "um desfecho **vigente** por
    convocação", do mesmo modo que há uma apuração vigente por recorte. É o que torna o cancelamento
    por inércia registrável sobre quem havia aceitado.
-3. **A chamada tem número.** A mesma pessoa é legitimamente chamada mais de uma vez no mesmo
+3. **Reserva pendente não reenvia.** Quando a chave existe e nunca foi concluída, ou o envio está
+   em curso noutra requisição, ou ele saiu e a gravação falhou depois dele — e as duas hipóteses
+   têm a mesma aparência de dentro do comando. O desfecho honesto é dizer que o estado é
+   indeterminado e pedir reconciliação; reenviar entregaria a mesma convocação duas vezes.
+4. **A chamada tem número.** A mesma pessoa é legitimamente chamada mais de uma vez no mesmo
    recorte — o reclassificado que volta —, e o número é o que torna a regra exprimível no banco sem
    confundir chamada nova com correção.
 
