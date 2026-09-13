@@ -167,6 +167,9 @@ def _secao(secao, _snapshot):
             "schedule": "Cronograma",
             "stages": "Etapas",
             "documentRequirements": "Documentos Exigidos",
+            # A conferência de quem homologa lia "Composta a partir de attachments". O anexo é a
+            # única coleção do catálogo que não tinha nome em português aqui.
+            "attachments": "Anexos",
         }
         detalhe = f"Composta a partir de {origem.get(secao.get('source'), secao.get('source'))}."
     else:

@@ -29,10 +29,20 @@
 {% if ato.chave == 'publicar' %}
 <section aria-labelledby="mudancas-titulo" class="cartao">
   <h2 id="mudancas-titulo">Conteúdo que passará a vigorar</h2>
+  {% comment %}
+  A coluna diz **onde** e **qual campo**, em português, como a tela de composição já dizia — e o
+  caminho normativo fica em segundo plano, para quem audita. Esta é a tela em que se assina o ato
+  irreversível, e até a auditoria de 13/09 ela mostrava só `/schedule/id=1705f922-…/endAt` com os
+  instantes em UTC: um término digitado como 10/10/2026 23:59 aparecia a quem assina como
+  2026-10-11T02:59:00+00:00. Outro dia, não só outra hora.
+  {% endcomment %}
   <table>
-    <thead><tr><th scope="col">Caminho</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+    <thead><tr><th scope="col">Onde</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
     <tbody>{% for item in alteracoes %}
-      <tr><th scope="row"><code>{{ item.caminho }}</code></th>
+      <tr><th scope="row">
+        {% if item.onde %}{{ item.onde }}<span class="detalhe">{{ item.campo }}</span>{% endif %}
+        <code>{{ item.caminho }}</code>
+      </th>
         <td class="antes">{{ item.antes }}</td><td class="depois">{{ item.depois }}</td></tr>
     {% endfor %}</tbody>
   </table>

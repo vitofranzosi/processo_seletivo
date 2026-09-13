@@ -7,7 +7,7 @@ Quando volta como resposta do htmx, leva junto o resumo do cabeçalho — que vi
 por isso não seria alcançado pela troca normal. Elemento de topo da resposta, como o `hx-swap-oob`
 exige.
 {% endcomment %}
-{% if fragmento %}{% include "portal/_resumo_documentos.html" with oob=True %}{% endif %}
+{% if fragmento %}{% include "portal/_resumo_documentos.html" with oob=True %}{% include "portal/_ajuda_da_acao.html" with oob=True %}{% endif %}
 <section id="documentos" class="painel" aria-labelledby="documentos-titulo">
   <h2 id="documentos-titulo">Documentos necessários</h2>
   {% if documentos.linhas %}

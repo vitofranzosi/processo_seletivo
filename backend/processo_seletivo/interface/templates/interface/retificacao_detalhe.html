@@ -26,7 +26,12 @@
     {% else %}
     <p>Sem data declarada: passará a vigorar <strong>no momento da Publicação</strong>.</p>
     {% endif %}
-    <p class="ajuda">Nada muda para o público antes da Publicação.</p>
+    {% comment %}
+    Só enquanto ainda não publicou. Depois, a frase afirmava o passado como se fosse o presente:
+    uma Retificação publicada exibia "Publicada em 13/09/2026 09:38" e, na linha seguinte, "Nada
+    muda para o público antes da Publicação".
+    {% endcomment %}
+    {% if not publicada %}<p class="ajuda">Nada muda para o público antes da Publicação.</p>{% endif %}
   </section>
 
   <section aria-labelledby="acoes-titulo" class="cartao">

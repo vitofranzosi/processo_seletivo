@@ -126,6 +126,7 @@ from processo_seletivo.interface import (
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
+from processo_seletivo.interface.templatetags import interface_extras
 from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import create_process_with_first_edital
 from processo_seletivo.processos.application.selectors import (
@@ -470,20 +471,42 @@ DESTINO_DA_PENDENCIA = {
     "/schedule": ("inscricao", "#inscricao-periodo", True),
     "documentRequirements": ("inscricao", "#inscricao-documentos", True),
     "attachments": ("anexos", "#anexos-lista", True),
+    # O marco vive **dentro** do Perfil, e por isso a busca por coleção o mandava para `perfis`:
+    # toda pendência de marco terminava numa tela sem marco nenhum, que é a única do assistente
+    # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
+    # olhar o caminho inteiro — o segmento de coleção sozinho não distingue um do outro.
+    "classificationMilestones": ("classificacao", "#titulo-classificacao", True),
+}
+
+# Pendência do marco que **não** se resolve no marco. O peso é campo da Etapa, e a Etapa é quem o
+# declara; mandar para a Classificação faria a pessoa procurar, no cartão do marco, um controle que
+# está a duas telas dali. É a única exceção, e por isso é por código do achado, e não por caminho.
+DESTINO_POR_CODIGO = {
+    "milestone_stage_without_weight": ("etapas", "#etapas-titulo", True),
 }
 
 
-def _destino(caminho):
+def _destino(caminho, codigo=""):
     """A etapa onde o achado se resolve.
 
     Achado de raiz vem com o nome da coleção (`profiles`); achado de forma vem com o caminho da
     entidade (`/profiles/id=…/name`). Os dois se resolvem no mesmo lugar, e resolver só o primeiro
     faria a pendência mais específica — a que já diz qual campo corrigir — ser a única sem caminho.
+
+    O `codigo` vence o caminho quando o campo a corrigir mora em outra etapa que não a do conteúdo
+    que o achado endereça.
     """
+    if codigo in DESTINO_POR_CODIGO:
+        return DESTINO_POR_CODIGO[codigo]
     if caminho in DESTINO_DA_PENDENCIA:
         return DESTINO_DA_PENDENCIA[caminho]
-    colecao = caminho.split("/")[1] if caminho.startswith("/") else ""
-    return DESTINO_DA_PENDENCIA.get(colecao, (None, "", False))
+    # Do mais específico para o mais geral: o marco é a coleção mais profunda do caminho, e a
+    # primeira — `profiles` — é a mais rasa. Ler de trás para frente é o que faz a pendência do
+    # marco chegar à Classificação em vez de parar nos Perfis.
+    for segmento in reversed(caminho.split("/")):
+        if segmento in DESTINO_DA_PENDENCIA:
+            return DESTINO_DA_PENDENCIA[segmento]
+    return (None, "", False)
 
 
 # Caminho que a tradução não conhece — os da forma publicada, por exemplo — não ganha destino nem
@@ -497,7 +520,7 @@ def _pendencias(edital):
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
     for item in validate_for_publication(edital_snapshot(edital)):
-        etapa, ancora, corrigivel = _destino(item.path)
+        etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
@@ -2230,13 +2253,128 @@ def _retificacao_do_ator(ator, retificacao_id):
 
 
 def _resumo_de_linha(valor):
-    """Perfil e Evento inteiros são ilegíveis como dicionário; o que identifica basta."""
+    """Perfil e Evento inteiros são ilegíveis como dicionário; o que identifica basta.
+
+    Instante sai no fuso institucional. O conteúdo canônico materializa cada um como texto ISO em
+    UTC, e era assim que ele chegava às colunas "antes" e "depois": um término digitado como
+    `10/10/2026 23:59`, em Brasília, aparecia a quem homologa e a quem assina como
+    `2026-10-11T02:59:00+00:00` — outro dia, não só outra hora (auditoria de 13/09).
+    """
+    if isinstance(valor, str):
+        return interface_extras.instante(valor) if _PARECE_INSTANTE.match(valor) else valor
     if not isinstance(valor, dict):
         return valor
     for chave in ("code", "type", "name", "description"):
         if valor.get(chave):
             return valor[chave]
     return "—"
+
+
+# Texto ISO com fuso, que é a forma em que o conteúdo canônico materializa instante. Restrita de
+# propósito: um rótulo que comece com data — "2026: o ano em que…" — não é instante, e convertê-lo
+# apagaria o texto que a pessoa escreveu.
+_PARECE_INSTANTE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}")
+
+
+# O vocabulário da tela de composição, reaproveitado para dizer em português o campo que a
+# Retificação alterou. Ele já existe — é o que rotula cada controle na hora de elaborar —, e
+# reconstruí-lo aqui criaria dois nomes para o mesmo campo, que divergiriam no primeiro rename.
+#
+# **A chave é o par (coleção, campo), e não o campo sozinho.** Quatro nomes se repetem entre as
+# listas, e `name` se repete cinco vezes: achatá-las num dicionário só fazia a última vencer, e a
+# tela que confere o ato irreversível passava a chamar a Denominação do Perfil de "Nome", a Ordem de
+# aplicação do critério de desempate de "Ordem", e a Lista de concorrência da linha do quadro de
+# "Exigido apenas da modalidade".
+#
+# Campo aninhado — `cutRule/targetCount`, `normativeRule/percentage` — entra pelo último segmento,
+# que é como ele chega no caminho normativo, sob a coleção da entidade que o carrega.
+CAMPOS_POR_COLECAO = {
+    "": retificacao_ui.CAMPOS_RAIZ,
+    "profiles": retificacao_ui.CAMPOS_PERFIL + retificacao_ui.CAMPOS_DA_REVERSAO,
+    "schedule": retificacao_ui.CAMPOS_EVENTO,
+    "stages": retificacao_ui.CAMPOS_ETAPA,
+    "sections": retificacao_ui.CAMPOS_SECAO,
+    "attachments": retificacao_ui.CAMPOS_ANEXO,
+    "documentRequirements": retificacao_ui.CAMPOS_DOCUMENTO,
+    "competitionModalities": retificacao_ui.CAMPOS_MODALIDADE + retificacao_ui.CAMPOS_REGRA,
+    "vacancyTable": retificacao_ui.CAMPOS_DA_LINHA,
+    "classificationMilestones": retificacao_ui.CAMPOS_MARCO + retificacao_ui.CAMPOS_DO_CORTE,
+    "tiebreakers": retificacao_ui.CAMPOS_CRITERIO,
+    "declaredFacts": retificacao_ui.CAMPOS_FATO,
+}
+
+CAMPO_EM_PORTUGUES = {
+    (colecao, nome.rsplit("/", 1)[-1]): rotulo
+    for colecao, lista in CAMPOS_POR_COLECAO.items()
+    for nome, rotulo, *_ in lista
+}
+
+
+# Como cada coleção se chama quando é preciso dizer "onde" a alteração acontece.
+COLECAO_EM_PORTUGUES = {
+    "profiles": "Perfil",
+    "schedule": "Evento do cronograma",
+    "stages": "Etapa de avaliação",
+    "sections": "Seção do texto",
+    "documentRequirements": "Documento exigido",
+    "attachments": "Anexo",
+    "competitionModalities": "Modalidade",
+    "vacancyTable": "Linha do quadro de vagas",
+    "classificationMilestones": "Marco classificatório",
+    "tiebreakers": "Critério de desempate",
+    "declaredFacts": "Fato declarado",
+}
+
+
+def _nome_da_entidade(entidade):
+    """Como a pessoa reconhece a entidade que a alteração alcança."""
+    if not isinstance(entidade, dict):
+        return ""
+    for chave in ("label", "name", "title", "description", "code", "type", "order"):
+        if entidade.get(chave):
+            return str(entidade[chave])
+    return ""
+
+
+def _onde_e_campo(base, caminho):
+    """O caminho normativo dito em português: a entidade alcançada e o campo dela.
+
+    `interface/retificacao.py` abre dizendo por que isto existe — *"quem elabora um Edital tem um
+    problema administrativo, não um problema de representação"* — e a tela de composição obedece.
+    As telas de conferência, não: a Retificação chegava a quem homologa e a quem assina o ato
+    irreversível como `/schedule/id=1705f922-…/endAt`. A `004` verifica a tela de composição; estas
+    ficaram de fora (auditoria de 13/09).
+    """
+    segmentos = [parte for parte in (caminho or "").split("/") if parte]
+    if not segmentos:
+        return "", ""
+    # A entidade é o último seletor por identidade do caminho; a coleção dela, o segmento anterior.
+    # É essa coleção que desambigua o rótulo do campo: `name` existe em cinco listas.
+    posicao = next(
+        (i for i in range(len(segmentos) - 1, 0, -1) if segmentos[i].startswith("id=")),
+        None,
+    )
+    colecao = segmentos[posicao - 1] if posicao is not None else ""
+    campo = ""
+    if not segmentos[-1].startswith("id="):
+        campo = CAMPO_EM_PORTUGUES.get((colecao, segmentos[-1]), "")
+    onde = ""
+    if posicao is not None:
+        rotulo = COLECAO_EM_PORTUGUES.get(colecao, colecao)
+        # O nome é ornamento útil, e a coleção já diz o essencial. Um caminho que não resolva —
+        # entidade removida por uma Retificação anterior, seletor de forma antiga — degrada para
+        # "Perfil" em vez de derrubar a tela onde o ato irreversível é assinado.
+        try:
+            entidade = retificacao_ui._ler(base, "/" + "/".join(segmentos[: posicao + 1]))
+        except Exception:  # noqa: BLE001 — a tela de conferência não pode cair por um nome
+            entidade = None
+        nome = _nome_da_entidade(entidade)
+        onde = f"{rotulo} “{nome}”" if nome else rotulo
+    elif segmentos[0] in COLECAO_EM_PORTUGUES:
+        onde = COLECAO_EM_PORTUGUES[segmentos[0]]
+    elif campo:
+        onde = "Identificação do Edital"
+    return onde, campo
 
 
 def _alteracoes_legiveis(retificacao):
@@ -2257,8 +2395,9 @@ def _alteracoes_legiveis(retificacao):
             legivel
             or {
                 "caminho": alteracao.target_path,
-                "onde": "",
-                "campo": "",
+                **dict(
+                    zip(("onde", "campo"), _onde_e_campo(base, alteracao.target_path), strict=True)
+                ),
                 "operacao": alteracao.operation,
                 "antes": _resumo_de_linha(anterior) if anterior is not None else "—",
                 "depois": "removido do Edital"
@@ -2669,6 +2808,17 @@ def processo_detalhe(request, processo_id):
                 .first()
                 if ator.can("edital:elaborar")
                 else None
+            ),
+            # O outro lado da mesma pergunta. Quem não elabora via o painel oferecer só "Ativar" e
+            # "Cancelar", sem nada dizer que o certame espera outra pessoa — enquanto a página do
+            # Edital já sabe dizer exatamente isso ("Aguardando quem elabora"). Nomear a espera é o
+            # que separa "não há o que fazer" de "não há o que **você** faça agora".
+            "aguardando_elaboracao": (
+                None
+                if ator.can("edital:elaborar")
+                else processo.editais.filter(status=Edital.Status.EM_ELABORACAO)
+                .order_by("year", "number")
+                .first()
             ),
         },
     )
@@ -4059,6 +4209,12 @@ def ordenacao(request, edital_id, marco_id):
                     else ""
                 ),
                 "historico": historico_da_ordenacao(edital=edital, marco_id=marco_id),
+                # Emitir não divulga, e a tela nunca dizia isso. Depois de um recurso deferido, a
+                # sucessão do ato deixava a divulgação pública para trás — a página do candidato
+                # seguia afirmando "Este é o resultado vigente" com a ordem anterior — e o marco
+                # respondia apenas "Ordem emitida", sem mencionar publicação em lugar nenhum
+                # (auditoria de 13/09). O estado é a correção; o botão sozinho não era.
+                **_divulgacao_do_marco(edital, marco_id, estado["vigente"]),
                 # **A obsolescência do corte aparece ao abrir o marco** (014, UX-027). Sem isto,
                 # quem sucede a ordem não fica sabendo que a faixa emitida leu o ato anterior:
                 # descobriria ao tentar conduzir a Etapa governada, e a recusa chegaria no meio do
@@ -4067,6 +4223,38 @@ def ordenacao(request, edital_id, marco_id):
             },
         )
     )
+
+
+def _divulgacao_do_marco(edital, marco_id, ato_vigente):
+    """Se o que está divulgado corresponde ao ato vigente deste marco.
+
+    "Emitir" e "publicar" são atos distintos, em telas distintas, e essa é a distinção que o
+    operador mais precisa trazer de fora. Aqui ela deixa de ser conhecimento prévio: a tela diz qual
+    ordem o público está lendo.
+
+    **Estado, e não ação.** A `017`, SC-002, declara que a tela de cálculo não oferece publicar, e
+    o cenário de aceitação põe a ação na tela do ato. O que faltava aqui nunca foi o botão: era o
+    operador não ter como saber que o ato e a divulgação tinham se separado — e descobrir isso pela
+    página do candidato, que seguia afirmando "Este é o resultado vigente" com a ordem anterior.
+
+    **Um ato por marco, e é a premissa desta comparação.** Todas as publicações vigentes são
+    conferidas contra o mesmo `ato_vigente`, o que só é correto enquanto o marco tem um ato só. O
+    marco que ordena por sorteio pode ter um ato por lista de concorrência (`021`) — e não chega
+    aqui: `ordenacao` o desvia para a tela do sorteio antes, e é esse desvio que sustenta a
+    premissa. Se um dia um marco computado publicar por lista, esta função precisa comparar por
+    lista, e não o contrário.
+    """
+    if ato_vigente is None:
+        return {"divulgacao": None}
+    vigentes = [
+        linha["publicacao"]
+        for linha in historico_das_publicacoes(edital=edital, marco_id=marco_id)
+        if linha["vigente"]
+    ]
+    defasadas = [
+        publicacao for publicacao in vigentes if str(publicacao.ato_id) != str(ato_vigente.id)
+    ]
+    return {"divulgacao": {"nunca_divulgado": not vigentes, "defasadas": defasadas}}
 
 
 def _com_o_corte(edital, marco, recortes):

@@ -1,0 +1,20 @@
+{% comment %}
+O que falta para poder enviar, ao lado do botão que leva à revisão.
+
+Vive fora do `#documentos` — o botão precisa ficar depois do bloco, e `form=` é o que permite isso
+—, e por isso não era alcançado quando o bloco voltava do servidor. O resultado era a contradição
+que a auditoria de 13/09 registrou: o cabeçalho dizia "✓ O documento obrigatório foi enviado", a
+barra do bloco dizia "1 de 1 enviado", e esta linha continuava dizendo "você poderá enviar a
+inscrição depois de anexar o documento que falta". Texto de estado obsoleto imediatamente antes de
+um ato irreversível.
+
+Atualizado fora de banda, como o resumo do cabeçalho, e pela mesma razão.
+{% endcomment %}
+<p id="ajuda-da-acao" class="ajuda" {% if oob %}hx-swap-oob="true"{% endif %}>
+  {% if documentos.faltam %}
+  Você poderá enviar a inscrição depois de anexar
+  {% if documentos.faltam == 1 %}o documento que falta{% else %}os {{ documentos.faltam }} documentos que faltam{% endif %}.
+  {% else %}
+  Na próxima tela você confere tudo antes de enviar.
+  {% endif %}
+</p>
