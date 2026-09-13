@@ -155,8 +155,8 @@ estruturalmente; o que falta é o teste de fronteira que o declare, e os campos 
 
 - **Não declara a forma** das coleções aninhadas em `validation.py`. Enumerar um campo e declarar o
   tipo dele são coisas diferentes, e a segunda tem razão escrita para não ter sido feita (015,
-  T-009). O limite fica registrado; a spec não o fecha. → **FR-300 precisa ser reescrita**
-  (Complexity Tracking do [plan.md](../plan.md)).
+  T-009). O limite fica registrado; a spec não o fecha. É o que a FR-300 reescrita diz: enumerar
+  não depende de declarar forma.
 - **Não faz todo campo aparecer na tela** (D-006). Ausência deliberada continua ausência, desde que
   justificada por norma e protegida por teste.
 - **Não reclassifica Edital publicado** (FR-314). Mudar a natureza de um campo é decisão nova, e

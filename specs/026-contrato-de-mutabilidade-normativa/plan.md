@@ -129,12 +129,12 @@ escopo desta spec. O que esta spec entrega é a decisão escrita.
 
 ## Complexity Tracking
 
-> Preenchido porque a pesquisa encontrou **um requisito da spec que precisa ser corrigido antes de
-> `$speckit-tasks`**.
+> Preenchido porque a pesquisa encontrou **um requisito da spec que precisava ser corrigido antes
+> de `$speckit-tasks`**. Ele foi corrigido; a linha fica como registro do que mudou e por quê.
 
 | Item | O que a spec diz | O que a pesquisa encontrou | Recomendação |
 |---|---|---|---|
-| **FR-300** | "A forma publicada MUST estar declarada para toda coleção normativa … incluindo modalidade, marco, critério de desempate, fato declarado, linha do quadro e a raiz do Edital." | Mistura duas coisas: **enumerar** os campos (de que o contrato precisa, e que a travessia resolve) e **declarar a forma** deles em `validation.py` (que é outra feature, com razão escrita para não ter sido feita — 015, T-009). | Reescrever FR-300 como "toda coleção normativa MUST estar enumerada pelo contrato de mutabilidade". A declaração de forma das coleções aninhadas fica registrada como limite. |
+| **FR-300** ✅ **corrigida** | Dizia "a forma publicada MUST estar declarada para toda coleção normativa …". | Misturava **enumerar** os campos (de que o contrato precisa, e que a travessia resolve) com **declarar a forma** deles em `validation.py` — outra feature, com razão escrita para não ter sido feita (015, T-009). | Reescrita: "toda coleção normativa MUST estar enumerada pelo contrato de mutabilidade", e a enumeração não depende de forma declarada. Arrastou D-005, dois casos de fronteira, a premissa da fonte autoritativa e o passo 1 da ordem sugerida. |
 | **Prioridade do canário 4** | US4 em P2, por presumir custo de domínio. | `RelacaoDeHabilitados.metodo_hash` já garante FR-309 estruturalmente (R-005). O canário custa campos na tela e um teste de fronteira. | Reavaliar para P1 em `$speckit-tasks`, ou manter P2 pelo número de campos (dez) e não pelo risco. |
 
 Nenhuma outra violação. Nenhuma dependência nova, nenhum app novo, nenhuma migration.

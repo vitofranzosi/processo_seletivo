@@ -73,7 +73,7 @@ achado do teste que conferir a própria fixture.
 
 ## R-003 — Declarar `Campo` para as coleções aninhadas é necessário?
 
-**Decisão**: **não**, e a FR-300 da spec precisa ser corrigida antes de `$speckit-tasks`.
+**Decisão**: **não**, e a FR-300 da spec precisava ser corrigida antes de `$speckit-tasks`. **Foi**.
 
 **Racional**: a spec escreveu FR-300 como "a forma publicada MUST estar declarada para toda coleção
 normativa". A pesquisa mostra que isso confunde duas coisas:
@@ -154,6 +154,6 @@ tarde.
 
 | | Efeito |
 |---|---|
-| **R-003** | **FR-300 precisa ser corrigida** antes de `$speckit-tasks`. Ela mistura enumerar com declarar forma. |
+| **R-003** | **FR-300 foi corrigida** antes de `$speckit-tasks`: misturava enumerar com declarar forma. |
 | **R-005** | O canário 4 é mais barato do que a spec presumiu; a prioridade P2 merece revisão. |
 | **R-002** | O caminho é aprofundar um mecanismo que já existe, e não construir um novo. |

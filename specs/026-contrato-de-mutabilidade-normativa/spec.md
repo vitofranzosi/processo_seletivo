@@ -145,11 +145,16 @@ O guardião de hoje compara duas listas e falha quando divergem. O generalizado 
 campo publicado **não tem natureza declarada**. A diferença importa: divergência é corrigível
 escolhendo qualquer um dos lados; omissão obriga alguém a decidir.
 
-### D-005 — Não se classifica o que não está declarado
+### D-005 — Não se classifica o que o conteúdo publicado não carrega
 
-Um campo só recebe natureza se a forma publicada o declara. As coleções sem declaração —
-modalidade, marco, critério de desempate, fato declarado, raiz do Edital — precisam ganhá-la antes,
-e é por isso que ela entra nesta feature: sem a declaração, o guardião não tem o que guardar.
+Um campo só recebe natureza se a travessia do conteúdo canônico de um Edital publicado o encontra.
+A enumeração sai do que se publica de verdade, e não de uma lista que alguém mantém — é o que faz
+a omissão ser impossível de esconder e a classificação fantasma ser impossível de escrever.
+
+**O gate não é a declaração de forma em `validation.py`.** Ela cobre seis coleções entre doze, e
+esperar pelas outras seis atrasaria esta feature por um trabalho que tem razão escrita para não ter
+sido feito (015, T-009). Enumerar um campo e declarar o tipo dele são coisas diferentes: o contrato
+precisa da primeira.
 
 ### D-006 — O escopo não é "fazer todos os campos aparecerem na tela"
 
@@ -343,10 +348,13 @@ do marco nomeia o que não se corrige ali e por quê.
   nova, escrita, e não alcança retroativamente Edital publicado sob a classificação anterior.
 - **Objeto ausente no conteúdo publicado.** `cutRule: None` não é campo sem natureza: é declaração
   que não foi feita, e o contrato diz se ela pode passar a existir por Retificação.
-- **Coleção nova inteira.** Uma coleção que nasça sem forma publicada declarada precisa falhar a
-  suíte antes de qualquer campo dela ser classificado.
-- **Campo declarado na forma publicada mas que nunca aparece no conteúdo.** A classificação é sobre
-  a forma, não sobre a presença — e o guardião lê a forma.
+- **Coleção nova inteira.** Uma coleção que nasça no conteúdo publicado é encontrada pela travessia
+  com todos os seus campos, e cada um deles derruba a suíte até receber natureza — mesmo que a
+  coleção não tenha forma declarada em `validation.py`.
+- **Campo declarado em `validation.py` que nunca aparece no conteúdo.** Não deveria existir: a
+  declaração de forma é conferida como presença obrigatória em todo Edital publicado. Se existir,
+  a travessia não o encontra, ele não é classificado, e classificá-lo derruba a suíte por FR-302 —
+  que é a resposta certa, porque um campo que ninguém publica não é norma de ninguém.
 
 ---
 
@@ -362,9 +370,13 @@ do marco nomeia o que não se corrige ali e por quê.
   mudança.
 - **FR-299**: Natureza "não retificável" MUST carregar razão escrita, e a razão MUST ser normativa.
   Razão fundada em limitação de implementação NÃO DEVE ser aceita.
-- **FR-300**: A forma publicada MUST estar declarada para **toda** coleção normativa do conteúdo
-  canônico, incluindo modalidade de concorrência, marco classificatório, critério de desempate,
-  fato declarado, linha do quadro de vagas e a raiz do Edital.
+- **FR-300**: **Toda** coleção normativa do conteúdo canônico MUST estar enumerada pelo contrato
+  de mutabilidade — incluindo modalidade de concorrência, marco classificatório, critério de
+  desempate, fato declarado, linha do quadro de vagas e a raiz do Edital —, e a enumeração NÃO DEVE
+  depender de a coleção ter forma declarada em `validation.py`. Declarar a forma das coleções
+  aninhadas é outro trabalho, com razão escrita para não ter sido feito (015, T-009: o que vai
+  dentro do marco depende do conteúdo inteiro e não cabe numa forma de campo); esta feature
+  registra o limite e não o fecha.
 - **FR-301**: O guardião MUST falhar quando existir campo na forma publicada sem natureza
   declarada, nomeando o campo e a coleção.
 - **FR-302**: O guardião MUST falhar quando existir natureza declarada para campo que a forma
@@ -394,8 +406,12 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ### Key Entities
 
-- **Campo publicado**: um campo escalar da forma canônica de uma coleção normativa. Tem nome, tipo
-  e, a partir desta feature, natureza de mutabilidade e razão.
+- **Forma publicada**: nesta spec, a forma que o conteúdo canônico de um Edital publicado tem de
+  fato — a que a travessia encontra. Não é sinônimo de "declarada em `validation.py`": a declaração
+  cobre seis coleções entre doze, e a forma publicada é maior do que ela (FR-300, D-005).
+- **Campo publicado**: um campo escalar da forma publicada de uma coleção normativa. Tem nome, tipo
+  e, a partir desta feature, natureza de mutabilidade e razão. Identificado pelo par
+  `(coleção, campo)`, e não pelo nome sozinho — `name` existe em cinco coleções e `order` em três.
 - **Natureza de mutabilidade**: uma das quatro de D-001. É atributo do campo na forma publicada, não
   do valor num Edital específico.
 - **Razão**: o texto que sustenta uma natureza "não retificável". Normativa, e não técnica.
@@ -458,8 +474,10 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ## Assumptions
 
-- A forma publicada declarada em `editais/domain/validation.py` é a fonte autoritativa do que o
-  conteúdo canônico carrega, e as coleções hoje sem declaração serão declaradas nesta feature (D-005).
+- A travessia recursiva do conteúdo canônico de um Edital publicado é a fonte autoritativa do que
+  se classifica (D-005). `editais/domain/validation.py` continua sendo a autoridade sobre a **forma**
+  — tipo, nulabilidade, restrição — das seis coleções que declara, e esta feature não acrescenta
+  declaração de forma nenhuma.
 - O conjunto `NAO_SAO_NORMA` do guardião da Etapa é o precedente da natureza "identidade/estrutural"
   e "derivado", e será absorvido pelo contrato em vez de conviver com ele.
 - As quatro naturezas de D-001 são suficientes para a forma publicada de hoje. Se algum campo não
@@ -474,8 +492,8 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ## 8. Ordem de implementação sugerida
 
-1. **Declarar a forma publicada que falta** — modalidade, marco, critério de desempate, fato
-   declarado, raiz do Edital. Sem isto não há o que classificar (D-005).
+1. **Enumerar pela travessia** — percorrer recursivamente o conteúdo canônico de um Edital
+   publicado até o campo escalar, nas doze coleções. Sem isto não há o que classificar (D-005).
 2. **Escrever o contrato** — natureza e razão para cada campo, nominalmente (D-008), reexaminando
    as exclusões de razão técnica (FR-310).
 3. **Generalizar o guardião** — falha por omissão nos dois sentidos, cobrindo todas as coleções
