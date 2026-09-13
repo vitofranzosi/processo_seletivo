@@ -99,8 +99,15 @@ de declaração significa **não remaneja**, e não "remaneja do jeito comum".
 | a ordem de cada lista | ato de ordenação da `015`, recorte Perfil + marco + `lista_id` | **lê**; não reordena nem desempata |
 | quem progride, e a faixa | corte da `014` | **causa** nova faixa; não a calcula |
 | o percentual que fundamenta a cota | `percentage` | **não deriva quantidade dele** — a `025`, `FR-157`, proíbe |
-| a ordem de chamada entre recortes | `callRules` | **lê**, e é o primeiro consumidor que ele tem |
+| a ordem de chamada entre recortes | `callRules` | **não lê** — a `D-006` mandou a cascata para a `014`, e lá ela não está construída |
 | convocar, comunicar, aceitar, matricular | nada ainda — é a `019` | **não faz** |
+
+> **Emenda de 12/09/2026, autorizada pelo usuário.** A linha do `callRules` dizia *"**lê**, e é o
+> primeiro consumidor que ele tem"* — redação anterior à `D-006`, que no mesmo dia mandou a cascata
+> entre recortes para a `014` como segunda espécie de alvo derivado. A §7 já registrava que a
+> capacidade **não está construída**; esta tabela continuava prometendo o contrário, e a
+> contradição estava dentro da mesma spec. Conferido no código: `callRules` é escrito pela
+> publicação, relido pelo rascunho e editado pela interface — **nenhum domínio o consome**.
 
 ---
 

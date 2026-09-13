@@ -1257,7 +1257,12 @@ feature exige.
 **Recurso contra Edital, Retificação, convocação, heteroidentificação ou qualquer ato que ainda não
 exista no produto.**
 
-**Ocupação de vagas, convocação, aceite, posse e matrícula** — são da 019.
+**Convocação, aceite, posse e matrícula** — são da 019. *(Emenda de 12/09/2026, autorizada pelo
+usuário: a redação anterior dizia "Ocupação de vagas, convocação, aceite, posse e matrícula — são da
+019". A `D-002` da 014 fixou em 11/09 que quantas vagas foram ocupadas é da 016, e a 016 a entregou
+em 12/09. Esta spec era uma das duas frases incompatíveis que a `Q-1` nomeava; a outra é o arco da
+013, que sempre disse "016 ocupa vagas". A exclusão de escopo continua valendo — nada disto é da
+018 —, e o que muda é o endereço de metade dela.)*
 
 **Publicação coletiva de `ResultadoEtapa` e qualquer abstração genérica de publicável** — a 017 as
 excluiu por decisão, e a D-003 desta spec não as reabre.
