@@ -2279,27 +2279,36 @@ _PARECE_INSTANTE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}")
 # O vocabulário da tela de composição, reaproveitado para dizer em português o campo que a
 # Retificação alterou. Ele já existe — é o que rotula cada controle na hora de elaborar —, e
 # reconstruí-lo aqui criaria dois nomes para o mesmo campo, que divergiriam no primeiro rename.
+#
+# **A chave é o par (coleção, campo), e não o campo sozinho.** Quatro nomes se repetem entre as
+# listas, e `name` se repete cinco vezes: achatá-las num dicionário só fazia a última vencer, e a
+# tela que confere o ato irreversível passava a chamar a Denominação do Perfil de "Nome", a Ordem de
+# aplicação do critério de desempate de "Ordem", e a Lista de concorrência da linha do quadro de
+# "Exigido apenas da modalidade".
+#
+# Campo aninhado — `cutRule/targetCount`, `normativeRule/percentage` — entra pelo último segmento,
+# que é como ele chega no caminho normativo, sob a coleção da entidade que o carrega.
+CAMPOS_POR_COLECAO = {
+    "": retificacao_ui.CAMPOS_RAIZ,
+    "profiles": retificacao_ui.CAMPOS_PERFIL + retificacao_ui.CAMPOS_DA_REVERSAO,
+    "schedule": retificacao_ui.CAMPOS_EVENTO,
+    "stages": retificacao_ui.CAMPOS_ETAPA,
+    "sections": retificacao_ui.CAMPOS_SECAO,
+    "attachments": retificacao_ui.CAMPOS_ANEXO,
+    "documentRequirements": retificacao_ui.CAMPOS_DOCUMENTO,
+    "competitionModalities": retificacao_ui.CAMPOS_MODALIDADE + retificacao_ui.CAMPOS_REGRA,
+    "vacancyTable": retificacao_ui.CAMPOS_DA_LINHA,
+    "classificationMilestones": retificacao_ui.CAMPOS_MARCO + retificacao_ui.CAMPOS_DO_CORTE,
+    "tiebreakers": retificacao_ui.CAMPOS_CRITERIO,
+    "declaredFacts": retificacao_ui.CAMPOS_FATO,
+}
+
 CAMPO_EM_PORTUGUES = {
-    nome.rsplit("/", 1)[-1]: rotulo
-    for lista in (
-        retificacao_ui.CAMPOS_RAIZ,
-        retificacao_ui.CAMPOS_PERFIL,
-        retificacao_ui.CAMPOS_EVENTO,
-        retificacao_ui.CAMPOS_ETAPA,
-        retificacao_ui.CAMPOS_MODALIDADE,
-        retificacao_ui.CAMPOS_DA_LINHA,
-        retificacao_ui.CAMPOS_REGRA,
-        retificacao_ui.CAMPOS_MARCO,
-        retificacao_ui.CAMPOS_DO_CORTE,
-        retificacao_ui.CAMPOS_DA_REVERSAO,
-        retificacao_ui.CAMPOS_FATO,
-        retificacao_ui.CAMPOS_CRITERIO,
-        retificacao_ui.CAMPOS_SECAO,
-        retificacao_ui.CAMPOS_ANEXO,
-        retificacao_ui.CAMPOS_DOCUMENTO,
-    )
+    (colecao, nome.rsplit("/", 1)[-1]): rotulo
+    for colecao, lista in CAMPOS_POR_COLECAO.items()
     for nome, rotulo, *_ in lista
 }
+
 
 # Como cada coleção se chama quando é preciso dizer "onde" a alteração acontece.
 COLECAO_EM_PORTUGUES = {
@@ -2339,27 +2348,31 @@ def _onde_e_campo(base, caminho):
     segmentos = [parte for parte in (caminho or "").split("/") if parte]
     if not segmentos:
         return "", ""
+    # A entidade é o último seletor por identidade do caminho; a coleção dela, o segmento anterior.
+    # É essa coleção que desambigua o rótulo do campo: `name` existe em cinco listas.
+    posicao = next(
+        (i for i in range(len(segmentos) - 1, 0, -1) if segmentos[i].startswith("id=")),
+        None,
+    )
+    colecao = segmentos[posicao - 1] if posicao is not None else ""
     campo = ""
-    if segmentos[-1] in CAMPO_EM_PORTUGUES or not segmentos[-1].startswith("id="):
-        campo = CAMPO_EM_PORTUGUES.get(segmentos[-1], "")
-    # A entidade é o último seletor por identidade do caminho; a coleção, o segmento antes dele.
+    if not segmentos[-1].startswith("id="):
+        campo = CAMPO_EM_PORTUGUES.get((colecao, segmentos[-1]), "")
     onde = ""
-    for indice in range(len(segmentos) - 1, -1, -1):
-        if segmentos[indice].startswith("id=") and indice:
-            colecao = COLECAO_EM_PORTUGUES.get(segmentos[indice - 1], segmentos[indice - 1])
-            # O nome é ornamento útil, e a coleção já diz o essencial. Um caminho que não resolva
-            # — entidade removida por uma Retificação anterior, seletor de forma antiga — degrada
-            # para "Perfil" em vez de derrubar a tela onde o ato irreversível é assinado.
-            try:
-                entidade = retificacao_ui._ler(base, "/" + "/".join(segmentos[: indice + 1]))
-            except Exception:  # noqa: BLE001 — a tela de conferência não pode cair por um nome
-                entidade = None
-            nome = _nome_da_entidade(entidade)
-            onde = f"{colecao} “{nome}”" if nome else colecao
-            break
-    if not onde and segmentos[0] in COLECAO_EM_PORTUGUES:
+    if posicao is not None:
+        rotulo = COLECAO_EM_PORTUGUES.get(colecao, colecao)
+        # O nome é ornamento útil, e a coleção já diz o essencial. Um caminho que não resolva —
+        # entidade removida por uma Retificação anterior, seletor de forma antiga — degrada para
+        # "Perfil" em vez de derrubar a tela onde o ato irreversível é assinado.
+        try:
+            entidade = retificacao_ui._ler(base, "/" + "/".join(segmentos[: posicao + 1]))
+        except Exception:  # noqa: BLE001 — a tela de conferência não pode cair por um nome
+            entidade = None
+        nome = _nome_da_entidade(entidade)
+        onde = f"{rotulo} “{nome}”" if nome else rotulo
+    elif segmentos[0] in COLECAO_EM_PORTUGUES:
         onde = COLECAO_EM_PORTUGUES[segmentos[0]]
-    if not onde and campo:
+    elif campo:
         onde = "Identificação do Edital"
     return onde, campo
 
@@ -4213,20 +4226,23 @@ def ordenacao(request, edital_id, marco_id):
 
 
 def _divulgacao_do_marco(edital, marco_id, ato_vigente):
-    """Se o que está divulgado corresponde ao ato vigente — e o caminho para divulgá-lo.
+    """Se o que está divulgado corresponde ao ato vigente deste marco.
 
     "Emitir" e "publicar" são atos distintos, em telas distintas, e essa é a distinção que o
     operador mais precisa trazer de fora. Aqui ela deixa de ser conhecimento prévio: a tela diz qual
-    ordem o público está lendo, e oferece a publicação a quem pode praticá-la.
+    ordem o público está lendo.
 
-    A comparação é contra **todas** as publicações vigentes do marco, e não só a da lista geral: a
-    `021` divulga por lista de concorrência, e bastaria uma delas citar o ato anterior para o
-    público estar lendo ordem que já foi sucedida.
+    **Estado, e não ação.** A `017`, SC-002, declara que a tela de cálculo não oferece publicar, e
+    o cenário de aceitação põe a ação na tela do ato. O que faltava aqui nunca foi o botão: era o
+    operador não ter como saber que o ato e a divulgação tinham se separado — e descobrir isso pela
+    página do candidato, que seguia afirmando "Este é o resultado vigente" com a ordem anterior.
 
-    **Estado, e não ação.** A `017`, SC-002, declara que a tela de cálculo não oferece publicar. O
-    que faltava não era o botão: era o operador não ter como saber que o ato e a divulgação tinham
-    se separado — e descobrir isso pela página do candidato, que seguia afirmando "Este é o
-    resultado vigente" com a ordem anterior.
+    **Um ato por marco, e é a premissa desta comparação.** Todas as publicações vigentes são
+    conferidas contra o mesmo `ato_vigente`, o que só é correto enquanto o marco tem um ato só. O
+    marco que ordena por sorteio pode ter um ato por lista de concorrência (`021`) — e não chega
+    aqui: `ordenacao` o desvia para a tela do sorteio antes, e é esse desvio que sustenta a
+    premissa. Se um dia um marco computado publicar por lista, esta função precisa comparar por
+    lista, e não o contrário.
     """
     if ato_vigente is None:
         return {"divulgacao": None}

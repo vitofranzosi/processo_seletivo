@@ -11,6 +11,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.interface import views
+from tests.fixtures.divulgacao import emitir, montar_ato_publicavel, publicar_o_ato
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
@@ -219,53 +220,190 @@ def test_marco_sem_ato_nao_fala_de_divulgacao():
     assert views._divulgacao_do_marco(None, None, None) == {"divulgacao": None}
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_marco_diz_quando_a_divulgacao_ficou_para_tras(monkeypatch):
+def test_marco_diz_pela_tela_que_a_divulgacao_ficou_para_tras(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
     """O estado que a auditoria encontrou depois de um recurso deferido: ato B, divulgação A.
 
     A tela dizia "Ordem emitida. O ato é imutável" e não mencionava publicação em lugar nenhum,
     enquanto a página do candidato seguia afirmando "Este é o resultado vigente" com a ordem
-    anterior.
+    anterior. Pela tela, e não pela função: era a renderização que não dizia.
 
-    **Estado, e não ação**: a `017`, SC-002, mantém a ação na tela do ato, e
-    `test_publicar_resultado` guarda isso.
+    **Estado, e não ação**: a `017`, SC-002, mantém a publicação na tela do ato, e
+    `test_publicar_resultado` guarda isso. O aviso aponta para lá, e não oferece o botão.
     """
-
-    class AtoFalso:
-        id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-
-    class PublicacaoFalsa:
-        ato_id = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
-
-    monkeypatch.setattr(
-        views,
-        "historico_das_publicacoes",
-        lambda **_: [{"publicacao": PublicacaoFalsa(), "vigente": True}],
+    cenario = montar_ato_publicavel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=61,
+        codigo="0761",
+        pontuacoes=("90.0000", "70.0000"),
+        primeiro=901,
     )
-    estado = views._divulgacao_do_marco(object(), "marco", AtoFalso())["divulgacao"]
+    publicar_o_ato(cenario, chave="publicar-hardening-1")
+    # O sucessor, como o julgamento de um recurso o provoca: o ato muda, a divulgação não.
+    emitir(cenario, gestor, chave="emitir-hardening-2", motivo="Correção determinada em recurso.")
 
-    assert not estado["nunca_divulgado"]
-    assert len(estado["defasadas"]) == 1
+    identificar(client, "paula.publicadora", ["publicador", "gestor"])
+    corpo = client.get(
+        reverse("interface:ordenacao", args=[cenario["edital"].id, cenario["marco"]])
+    ).content.decode()
+
+    assert "A divulgação pública ficou para trás" in corpo
+    assert "corresponde a uma ordem anterior" in corpo
+    # SC-002 continua valendo: o aviso não vira porta para publicar.
+    assert "/publicar" not in corpo
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_marco_silencia_quando_a_divulgacao_corresponde_ao_ato(monkeypatch):
-    identidade = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-
-    class AtoFalso:
-        id = identidade
-
-    class PublicacaoFalsa:
-        ato_id = identidade
-
-    monkeypatch.setattr(
-        views,
-        "historico_das_publicacoes",
-        lambda **_: [{"publicacao": PublicacaoFalsa(), "vigente": True}],
+def test_marco_silencia_quando_a_divulgacao_corresponde_ao_ato(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """Nada a dizer quando o público lê o que o ato vigente diz — o aviso não é ruído de fundo."""
+    cenario = montar_ato_publicavel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=62,
+        codigo="0762",
+        pontuacoes=("90.0000", "70.0000"),
+        primeiro=921,
     )
-    estado = views._divulgacao_do_marco(object(), "marco", AtoFalso())["divulgacao"]
+    publicar_o_ato(cenario, chave="publicar-hardening-3")
 
-    assert not estado["nunca_divulgado"]
-    assert estado["defasadas"] == []
+    identificar(client, "paula.publicadora", ["publicador", "gestor"])
+    corpo = client.get(
+        reverse("interface:ordenacao", args=[cenario["edital"].id, cenario["marco"]])
+    ).content.decode()
+
+    assert "ficou para trás" not in corpo
+    assert "ainda não foi divulgado" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_marco_diz_quando_o_ato_nunca_foi_divulgado(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    cenario = montar_ato_publicavel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=63,
+        codigo="0763",
+        pontuacoes=("90.0000", "70.0000"),
+        primeiro=941,
+    )
+
+    identificar(client, "paula.publicadora", ["publicador", "gestor"])
+    corpo = client.get(
+        reverse("interface:ordenacao", args=[cenario["edital"].id, cenario["marco"]])
+    ).content.decode()
+
+    assert "Este ato ainda não foi divulgado" in corpo
+    assert "/publicar" not in corpo
+
+
+# --- O caminho normativo dito em português, sem colisão de rótulo -------------------------------
+#
+# `name` existe em cinco listas de campos, `order` em três, `label` e `modalityId` em duas. Um
+# dicionário achatado pelo último segmento fazia a última vencer, e a tela que confere o ato
+# irreversível chamava a Denominação do Perfil de "Nome" e a Ordem de aplicação do critério de
+# desempate de "Ordem". A chave é o par (coleção, campo).
+
+PERFIL_ID = "11111111-1111-1111-1111-111111111111"
+FILHO_ID = "22222222-2222-2222-2222-222222222222"
+
+BASE_COMPLETA = {
+    "title": "Edital 90/2026",
+    "profiles": [
+        {
+            "id": PERFIL_ID,
+            "code": "MON",
+            "name": "Monitor de Laboratório",
+            "classificationMilestones": [
+                {
+                    "id": FILHO_ID,
+                    "code": "FINAL",
+                    "name": "Classificação final",
+                    "tiebreakers": [{"id": FILHO_ID, "order": 1}],
+                }
+            ],
+            "vacancyTable": [{"id": FILHO_ID, "immediateVacancies": 2}],
+            "competitionModalities": [{"id": FILHO_ID, "code": "PPP", "name": "Pessoas pretas"}],
+            "declaredFacts": [{"id": FILHO_ID, "label": "Meses de experiência"}],
+        }
+    ],
+    "stages": [{"id": FILHO_ID, "name": "Prova didática"}],
+    "attachments": [{"id": FILHO_ID, "label": "ANEXO I", "order": 1}],
+    "documentRequirements": [{"id": FILHO_ID, "name": "Diploma", "order": 1}],
+}
+
+DENTRO_DO_PERFIL = f"/profiles/id={PERFIL_ID}"
+
+
+@pytest.mark.parametrize(
+    ("caminho", "campo", "onde"),
+    [
+        (f"{DENTRO_DO_PERFIL}/name", "Denominação", "Perfil"),
+        (f"/stages/id={FILHO_ID}/name", "Nome da Etapa", "Etapa de avaliação"),
+        (
+            f"{DENTRO_DO_PERFIL}/competitionModalities/id={FILHO_ID}/name",
+            "Denominação",
+            "Modalidade",
+        ),
+        (
+            f"{DENTRO_DO_PERFIL}/classificationMilestones/id={FILHO_ID}/name",
+            "Denominação do marco",
+            "Marco classificatório",
+        ),
+        (f"/documentRequirements/id={FILHO_ID}/name", "Nome", "Documento exigido"),
+        (
+            f"{DENTRO_DO_PERFIL}/classificationMilestones/id={FILHO_ID}"
+            f"/tiebreakers/id={FILHO_ID}/order",
+            "Ordem de aplicação",
+            "Critério de desempate",
+        ),
+        (f"/attachments/id={FILHO_ID}/order", "Ordem editorial", "Anexo"),
+        (f"/documentRequirements/id={FILHO_ID}/order", "Ordem", "Documento exigido"),
+        (
+            f"{DENTRO_DO_PERFIL}/vacancyTable/id={FILHO_ID}/modalityId",
+            "Lista de concorrência",
+            "Linha do quadro de vagas",
+        ),
+        (
+            f"/documentRequirements/id={FILHO_ID}/modalityId",
+            "Exigido apenas da modalidade",
+            "Documento exigido",
+        ),
+        (
+            f"{DENTRO_DO_PERFIL}/declaredFacts/id={FILHO_ID}/label",
+            "Rótulo exibido ao candidato",
+            "Fato declarado",
+        ),
+        (f"/attachments/id={FILHO_ID}/label", "Rótulo", "Anexo"),
+        (
+            f"{DENTRO_DO_PERFIL}/classificationMilestones/id={FILHO_ID}/cutRule/targetCount",
+            "Quantos progridem",
+            "Marco classificatório",
+        ),
+        (
+            f"{DENTRO_DO_PERFIL}/vacancyReversion/kind",
+            "Gatilho da reversão de vaga reservada",
+            "Perfil",
+        ),
+        ("/title", "Título do Edital", "Identificação do Edital"),
+    ],
+)
+def test_cada_campo_recebe_o_rotulo_da_propria_colecao(caminho, campo, onde):
+    encontrado_onde, encontrado_campo = views._onde_e_campo(BASE_COMPLETA, caminho)
+
+    assert encontrado_campo == campo
+    assert encontrado_onde.startswith(onde)
