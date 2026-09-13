@@ -22,6 +22,7 @@ from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupaca
 from processo_seletivo.ocupacao.application import selectors as ocupacao_selectors
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.publicacoes.application.selectors import effective_version
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import FORMA_POR_PUBLICACAO
 
 
 def convocacoes_do_recorte(*, edital, perfil_id, marco_id, lista_id=None):
@@ -47,9 +48,18 @@ def vigentes(convocacoes):
 
 
 def desfecho_de(convocacao):
-    """O desfecho da convocação, ou `None`. **Um por convocação**, e a constraint o garante."""
+    """O desfecho **vigente** da convocação, ou `None` — o que ninguém sucedeu.
+
+    **Vigente, e não "o único"**: um fato posterior sucede o desfecho sem apagá-lo, e é assim que o
+    cancelamento por inércia alcança quem havia aceitado (`US5`). A `FR-273` continua valendo — há
+    no máximo um vigente —, e a cadeia inteira continua legível no histórico.
+    """
     desfechos = list(convocacao.desfechos.all())
-    return desfechos[0] if desfechos else None
+    if not desfechos:
+        return None
+    sucedidos = {d.desfecho_anterior_id for d in desfechos if d.desfecho_anterior_id}
+    vigentes_do_ato = [d for d in desfechos if d.id not in sucedidos]
+    return max(vigentes_do_ato, key=lambda d: d.registrado_em) if vigentes_do_ato else None
 
 
 def envio_de(convocacao):
@@ -110,12 +120,20 @@ def contexto_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
-    titulares = fila.titulares(
-        alcancados_em_ordem=alcancados, efetivas=apuracao.efetivas if apuracao else 0
+    # **Os titulares saem da sequência que progrediu, e não dos alcançados** (`R-001`). A janela é
+    # recortada antes de perguntar por habilitação: quem é titular e foi eliminado não ocupa a vaga
+    # dele, e ela fica faltando. Recortá-la sobre os alcançados promoveria o próximo em silêncio —
+    # que é o defeito que esta feature existe para eliminar.
+    titulares = calculo.titulares_iniciais(
+        progrediram_em_ordem=ordem,
+        efetivas=apuracao.efetivas if apuracao else 0,
+        ocupantes_da_ampla=concomitantes,
     )
     # **Quem já está servido**, e não quantos: a contagem é da `016`, e a `UX-035` a varre.
     ocupando = calculo.ocupantes(
-        titulares=titulares, efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos)
+        titulares=titulares,
+        habilitadas=habilitadas,
+        efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
     )
     convocacoes = convocacoes_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
@@ -179,6 +197,22 @@ def reabilitados_por_deferimento(*, edital, etapa_id):
             consequencia=ResultadoEtapa.Consequencia.HABILITADA,
         )
     }
+
+
+def _forma_do_recorte(convocacoes):
+    """A forma declarada que as convocações deste recorte citam, ou `None`.
+
+    Lida da **versão que cada convocação congelou**, e não da vigente: é a norma que valia quando o
+    ato foi praticado. Todas as do recorte citam a mesma, salvo Retificação no meio do caminho — e
+    aí a primeira responde, porque é a que a tela está prestes a emitir.
+    """
+    from processo_seletivo.convocacao.application.comunicar import forma_declarada
+
+    for convocacao in convocacoes:
+        forma = forma_declarada(convocacao)
+        if forma is not None:
+            return forma
+    return None
 
 
 def identidades_de(inscricoes):
@@ -290,6 +324,9 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         "regularizaveis": [identificadas[i] for i in contexto["regularizaveis"]],
         "identificadas": identificadas,
         "linhas": linhas,
+        # A tela precisa saber **qual** forma o Edital declarou para oferecer o campo certo: a
+        # emissão por publicação pede onde se publicou, e a individual não tem esse campo.
+        "formaPorPublicacao": _forma_do_recorte(vigentes_do_recorte) == FORMA_POR_PUBLICACAO,
         "convocadas": len(vigentes_do_recorte),
         "respondidas": sum(1 for linha in linhas if linha["desfecho"] is not None),
         "esgotou": fila.esgotou(contexto["fila"]),

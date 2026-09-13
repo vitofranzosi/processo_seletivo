@@ -398,3 +398,65 @@ def test_a_tela_identifica_a_pessoa_por_protocolo_e_nome_e_nao_por_uuid(
     assert f"{registro.protocolo} — {registro.nome}" in depois, (
         "e a chamada praticada também é lida por protocolo e nome"
     )
+
+
+def test_o_atestado_nao_redireciona_para_fora_do_sistema(
+    client, seletor_ligado, cenario_da_tela, gestor
+):
+    """**`voltar` vem do corpo do pedido, e corpo de pedido é entrada do usuário.**
+
+    Sem conferência, um formulário forjado noutro domínio levaria quem está autenticado na gestão
+    para fora do sistema com um clique — e a página de destino veria um visitante que acabou de
+    praticar um ato administrativo.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    edital, _, _ = cenario_da_tela
+    alguem = Inscricao.objects.filter(edital=edital).first()
+    identificar(client, "carlos", ["gestor"])
+
+    resposta = client.post(
+        reverse("interface:atestar", args=[alguem.id]),
+        {
+            "especie": "NAO_ACESSO_AO_AMBIENTE",
+            "conclusao": "Não acessou o ambiente virtual.",
+            "referencia_do_prazo": "Primeira semana letiva, item 9.4.",
+            "voltar": "https://exemplo-malicioso.test/colher",
+            "chave": "atestado-redirect",
+        },
+    )
+
+    assert resposta.status_code == 302
+    assert not resposta["Location"].startswith("http"), resposta["Location"]
+    assert "exemplo-malicioso" not in resposta["Location"]
+
+
+def test_o_efeito_de_ocupacao_cita_o_desfecho_que_o_produziu(
+    client, seletor_ligado, cenario_da_tela, gestor
+):
+    """`FR-294`: a proveniência precisa apontar para o ato que de fato produziu o efeito.
+
+    **Apontar para a convocação faria a trilha da `016` citar a chamada como causa de uma exclusão
+    que ela não causou.** Quem convoca não exclui ninguém — e a mesma chamada pode ter um desfecho
+    sucedido por outro, de modo que o identificador da convocação não distingue os dois.
+    """
+    from processo_seletivo.convocacao.application.desfechar import desfechar
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+
+    edital, _, _ = cenario_da_tela
+    convocada = convocar(edital, gestor, proximo(edital), idempotency_key="prov-conv")
+
+    declarado = desfechar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        convocacao_id=convocada["id"],
+        especie=nomes.DESISTENCIA_EXPRESSA,
+        fundamento="Desistência expressa registrada em processo.",
+        idempotency_key="prov-desfecho",
+        correlation_id="teste",
+    )
+
+    desfecho = DesfechoDaConvocacao.objects.select_related("efeito").get(id=declarado["id"])
+    assert str(desfecho.efeito.ato_de_origem_id) == declarado["id"]
+    assert str(desfecho.efeito.ato_de_origem_id) != convocada["id"]
+    assert desfecho.efeito.rotulo_da_origem == "desfecho de convocação"

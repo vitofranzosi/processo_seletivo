@@ -17,7 +17,7 @@ from processo_seletivo.convocacao.application import selectors
 from processo_seletivo.convocacao.application.atestar import atestar
 from processo_seletivo.convocacao.application.desfechar import desfechar
 from processo_seletivo.convocacao.domain import nomes
-from processo_seletivo.convocacao.models import AtestadoDeFatoExterno
+from processo_seletivo.convocacao.models import AtestadoDeFatoExterno, Convocacao
 from processo_seletivo.ocupacao.application.selectors import ocupacao_do_recorte
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.convocacao import apurar, convocar
@@ -239,27 +239,59 @@ def test_o_desfecho_de_inercia_cita_o_atestado_e_o_atestante(cenario_do_77, gest
     assert desfecho.atestado.atestado_por == "carlos"
 
 
-def test_a_inercia_depois_de_um_aceite_registrado_ainda_nao_tem_caminho(cenario_do_77, gestor):
-    """**Um limite desta entrega, prendido por teste em vez de descoberto em produção.**
+def test_a_inercia_sucede_o_aceite_de_quem_desapareceu_depois(cenario_do_77, gestor):
+    """**O caso que a `§6` da spec descreve**: quem já ocupava, aceitou, e desapareceu.
 
-    A `FR-273` admite **um** desfecho por convocação, e a `§6` da spec diz que o cancelamento por
-    inércia *"alcança quem já ocupava e desapareceu"*. As duas coisas convivem no caminho que esta
-    feature implementa: a titular ocupa vaga desde a apuração, é chamada, a matrícula acontece fora
-    daqui, e a chamada continua sem desfecho até que alguém conclua — com aceite ou com inércia.
+    A `FR-273` admite um desfecho por convocação, e o aceite fecha a chamada. A inércia posterior
+    **sucede** aquele desfecho, com motivo: o aceite era verdadeiro quando registrado, e o que mudou
+    foi o mundo depois dele. É a mesma forma que o `ResultadoEtapa` usa para a superação por
+    recurso.
 
-    **Não convivem quando o aceite já foi registrado.** Aí a chamada está fechada, e a inércia
-    posterior não tem onde ser gravada: o desfecho seria o segundo da mesma convocação. Os artefatos
-    não resolvem esse caso, e resolvê-lo é decisão de domínio — suceder a convocação com motivo
-    mostraria a pessoa como chamada de novo, e admitir dois desfechos contrariaria a `FR-273`.
-
-    Este teste existe para que a lacuna seja **visível**: o dia em que ela for decidida, é ele que
-    falha e pede a implementação.
+    *A primeira implementação não tinha sucessão de desfecho, e este caminho era estruturalmente
+    impossível — a `US5` só alcançava quem nunca havia aceitado, que é o contrário do que a norma
+    descreve.*
     """
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+
     edital, _, _ = cenario_do_77
     titular = contexto(edital)["fila"][0]
-    convocada = convocar(edital, gestor, titular, idempotency_key="in-gap-conv")
-    desfechar_como(edital, gestor, convocada["id"], nomes.ACEITE, "in-gap-aceite")
-    atestado = registrar_atestado(edital, gestor, titular, chave="in-gap-atesta")
+    convocada = convocar(edital, gestor, titular, idempotency_key="in-suc-conv")
+    desfechar_como(edital, gestor, convocada["id"], nomes.ACEITE, "in-suc-aceite")
+    apurar(edital, gestor, chave="in-suc-apura-1", motivo="Aceite registrado")
+    atestado = registrar_atestado(edital, gestor, titular, chave="in-suc-atesta")
+
+    declarado = desfechar_como(
+        edital,
+        gestor,
+        convocada["id"],
+        nomes.INERCIA,
+        "in-suc-inercia",
+        atestado_id=atestado["id"],
+        motivo="Cancelamento de matrícula por inércia, atestado em processo.",
+    )
+
+    assert declarado["efeito"] == "EXCLUSAO"
+    vigente = selectors.desfecho_de(
+        Convocacao.objects.prefetch_related("desfechos").get(id=convocada["id"])
+    )
+    assert vigente.especie == nomes.INERCIA
+    assert vigente.desfecho_anterior.especie == nomes.ACEITE, "o aceite continua legível"
+    assert DesfechoDaConvocacao.objects.filter(convocacao_id=convocada["id"]).count() == 2
+
+    apurar(edital, gestor, chave="in-suc-apura-2", motivo="Cancelamento por inércia")
+    numeros = ocupacao_do_recorte(
+        edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+    )
+    assert numeros["faltando"] == 1, "a vaga voltou a faltar"
+
+
+def test_a_inercia_sem_motivo_de_sucessao_e_recusada(cenario_do_77, gestor):
+    """Suceder um desfecho é dizer por quê — e a recusa nomeia o caminho, em vez de só barrar."""
+    edital, _, _ = cenario_do_77
+    titular = contexto(edital)["fila"][0]
+    convocada = convocar(edital, gestor, titular, idempotency_key="in-sm-conv")
+    desfechar_como(edital, gestor, convocada["id"], nomes.ACEITE, "in-sm-aceite")
+    atestado = registrar_atestado(edital, gestor, titular, chave="in-sm-atesta")
 
     with pytest.raises(DomainError) as erro:
         desfechar_como(
@@ -267,8 +299,39 @@ def test_a_inercia_depois_de_um_aceite_registrado_ainda_nao_tem_caminho(cenario_
             gestor,
             convocada["id"],
             nomes.INERCIA,
-            "in-gap-inercia",
+            "in-sm-inercia",
             atestado_id=atestado["id"],
         )
 
     assert erro.value.code == nomes.DESFECHO_JA_REGISTRADO
+
+
+def test_a_inercia_sobre_quem_nunca_ocupou_e_recusada(cenario_do_77, gestor):
+    """`inercia_sem_ocupacao`: não há matrícula a cancelar, e o desfecho certo é outro.
+
+    **Registrá-la ali cancelaria uma matrícula que não existe.** Quem foi chamado e não respondeu
+    tem desfecho próprio — não atendimento à convocação —, e a recusa diz qual é.
+    """
+    edital, _, _ = cenario_do_77
+    fila = contexto(edital)["fila"]
+    suplente = fila[2]
+    convocar(edital, gestor, fila[0], idempotency_key="in-so-t1")
+    primeira = convocar(edital, gestor, fila[1], idempotency_key="in-so-t2")
+    desfechar_como(edital, gestor, primeira["id"], nomes.DESISTENCIA_EXPRESSA, "in-so-desiste")
+    apurar(edital, gestor, chave="in-so-apura", motivo="Desistência")
+    chamada = convocar(
+        edital, gestor, suplente, especie=nomes.SUPLENCIA, idempotency_key="in-so-suplente"
+    )
+    atestado = registrar_atestado(edital, gestor, suplente, chave="in-so-atesta")
+
+    with pytest.raises(DomainError) as erro:
+        desfechar_como(
+            edital,
+            gestor,
+            chamada["id"],
+            nomes.INERCIA,
+            "in-so-inercia",
+            atestado_id=atestado["id"],
+        )
+
+    assert erro.value.code == nomes.INERCIA_SEM_OCUPACAO

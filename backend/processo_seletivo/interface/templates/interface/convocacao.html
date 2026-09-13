@@ -207,10 +207,23 @@ Nenhuma linha aqui diz recebido, lido ou entregue (UX-039). O sistema registra q
     </dl>
 
     {% if pode_emitir and not linha.desfecho %}
+    {% comment %}
+    A emissao. Quando o Edital comunica **por publicacao**, o sistema nao publica no site do certame
+    — ele registra a forma que o Edital declarou. Por isso quem emite declara **onde** publicou: sem
+    a referencia, a emissao gravaria "enviada" e o prazo comecaria a correr para uma convocacao que
+    ninguem viu (FR-288).
+    {% endcomment %}
     <form method="post" action="{% url 'interface:comunicar-convocacao' edital.id marco_id linha.convocacao.id %}" class="acoes">
       {% csrf_token %}
       <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
       <input type="hidden" name="chave" value="{{ chave_idempotencia }}-comunicar-{{ forloop.counter }}">
+      {% if leitura.formaPorPublicacao %}
+      <p class="campo">
+        <label for="publicacao-{{ forloop.counter }}">Onde a convocação foi publicada</label>
+        <input type="text" id="publicacao-{{ forloop.counter }}" name="referencia_da_publicacao" required aria-describedby="ajuda-pub-{{ forloop.counter }}">
+        <span class="ajuda" id="ajuda-pub-{{ forloop.counter }}">O endereço e a data da publicação, como o Edital manda — por exemplo, “site do Cefor, 13/09/2026”. O prazo corre a partir dela.</span>
+      </p>
+      {% endif %}
       <button type="submit" class="botao">{% if linha.enviadaEm %}Emitir a comunicação de novo{% else %}Emitir a comunicação{% endif %}</button>
     </form>
 

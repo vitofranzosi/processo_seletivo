@@ -57,7 +57,7 @@ quando eram 21:
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **5377 passando e 2 pulados** (medido em 2026-09-13). Os dois
+Contra PostgreSQL a suíte fecha em **5397 passando e 2 pulados** (medido em 2026-09-13). Os dois
 pulados são deliberados e estão nomeados em
 [doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
 um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave

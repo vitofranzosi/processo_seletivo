@@ -145,13 +145,67 @@ class CorreioQueFalha:
         raise OSError("conexão recusada pelo servidor de SMTP")
 
 
-def test_o_prazo_e_dito_em_data_e_hora_locais(caixa):
-    """`UX-038`: a pessoa lê o prazo no relógio dela, e não em ISO com fuso.
+def test_o_prazo_e_dito_no_fuso_de_quem_le(caixa):
+    """`UX-038`: a pessoa lê o prazo no relógio dela, e não em ISO nem em UTC.
 
-    Um vencimento escrito `2026-09-20T17:00:00+00:00` é tecnicamente exato e ilegível — e a
-    diferença entre 17h e 14h decide se alguém perde a vaga.
+    **A diferença entre 17h e 14h decide se alguém perde a vaga**, e `strftime` sobre um instante
+    ciente formata no fuso que ele carrega. Um vencimento gravado às 17:00 UTC saía como "17:00"
+    numa mensagem lida em São Paulo — três horas de prazo que a pessoa não tem, e que ela só
+    descobriria não ter depois de perder.
+
+    *A primeira versão deste teste afirmava "17:00" e prendia o defeito em vez de acusá-lo.*
     """
+    from django.utils import timezone
+
+    mensagem = enviar(caixa)
+    local = timezone.localtime(VENCIMENTO).strftime("%d/%m/%Y às %H:%M")
+
+    assert local in mensagem.body
+    assert "2026-09-20T17:00" not in mensagem.body
+
+
+def test_o_prazo_em_sao_paulo_sai_tres_horas_antes_do_utc(caixa, settings):
+    """A asserção literal, para que a anterior não passe por um fuso que calha de ser UTC."""
+    settings.TIME_ZONE = "America/Sao_Paulo"
+
     mensagem = enviar(caixa)
 
-    assert "20/09/2026 às 17:00" in mensagem.body
-    assert "2026-09-20T17:00" not in mensagem.body
+    assert "20/09/2026 às 14:00" in mensagem.body
+    assert "às 17:00" not in mensagem.body
+
+
+class CorreioQueEngole:
+    """Um backend que aceita a chamada e **não** entrega: devolve zero, sem levantar nada.
+
+    Não é hipótese de laboratório — é o que um relay devolve quando recusa o destinatário sem
+    fechar a conexão, e o que `fail_silently` produz por dentro.
+    """
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def send_messages(self, mensagens):
+        return 0
+
+
+def test_o_retorno_zero_do_correio_e_falha(settings):
+    """**A falha mais silenciosa possível**, porque tudo indica sucesso.
+
+    `send_mail` devolve quantas mensagens entraram na fila. Descartar o retorno gravava `ENVIADA` e
+    iniciava o prazo de uma convocação que não saiu — e o desfecho que decorre disso é a pessoa
+    perder a vaga por não ter respondido a uma mensagem que nunca recebeu.
+    """
+    settings.EMAIL_BACKEND = "tests.unit.convocacao.test_mensagem.CorreioQueEngole"
+
+    detalhe = enviar_mensagem_de_convocacao(
+        para="candidata@exemplo.test",
+        dados={
+            "edital": "Edital 77/2026",
+            "vencimento": VENCIMENTO,
+            "endereco": "https://selecoes.exemplo.test/portal",
+            "atendimento": "selecao@exemplo.test",
+        },
+    )
+
+    assert detalhe, "zero mensagens entregues é falha, e não sucesso"
+    assert "candidata@exemplo.test" not in detalhe

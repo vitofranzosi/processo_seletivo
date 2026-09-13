@@ -16,6 +16,7 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.domain.universo import por_identidade
@@ -25,6 +26,7 @@ from processo_seletivo.convocacao.domain import nomes, prazo
 from processo_seletivo.convocacao.models import ComunicacaoEmitida, Convocacao
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_MENSAGEM_INDIVIDUAL,
+    FORMA_POR_PUBLICACAO,
     FORMAS_DE_CONVOCACAO,
 )
 from processo_seletivo.shared.api.problems import DomainError
@@ -128,6 +130,7 @@ def comunicar(
     idempotency_key,
     correlation_id,
     endereco_do_portal="",
+    referencia_da_publicacao="",
 ):
     """Emite a comunicação na forma declarada, e registra o que aconteceu — inclusive a falha.
 
@@ -135,7 +138,54 @@ def comunicar(
     que a emissão não completou, e o recorte passa a exibir *"convocado, prazo não iniciado"* até
     que uma emissão tenha sucesso. Sem isso, uma queda de SMTP ficaria indistinguível do silêncio
     da pessoa — e o desfecho que decorre de silêncio é perda de vaga.
+
+    **O envio acontece fora da transação, e nunca dentro dela.** É a regra que
+    `inscricoes/application/mensagem.py` escreve com todas as letras, e a razão aqui é a mesma
+    aumentada de um grau: `comando_de_comissao` trava o Processo com `select_for_update`, de modo
+    que um SMTP lento paralisaria **todos** os comandos daquele certame — e um `rollback` posterior
+    desfaria o registro sem desfazer a mensagem, deixando na caixa da pessoa uma convocação que o
+    sistema esqueceu de ter enviado.
+
+    A ordem é a que `exigir_base_de_comissao` existe para permitir: autorizar, ir à rede, e só
+    então abrir a transação que grava e audita.
     """
+    from processo_seletivo.comissoes.application import exigir_base_de_comissao
+
+    # **Autorizar antes de trabalhar** (Princípio III): sem isto, um ator sem base faria o sistema
+    # ir à rede e entregar a mensagem antes de a pergunta "quem está pedindo" ser feita.
+    exigir_base_de_comissao(actor=actor, processo_id=processo_id)
+    convocacao = _convocacao_do_processo_id(processo_id, convocacao_id, actor=actor)
+    forma = forma_declarada(convocacao)
+    if forma is None:
+        raise DomainError(
+            nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA,
+            "O Perfil publicado não declarou como este Edital comunica a convocação: declare "
+            "a forma por Retificação antes de emitir.",
+            409,
+        )
+    agora = timezone.now()
+    _recusar_vencimento_anterior_ao_envio(convocacao, agora=agora)
+
+    referencia = (referencia_da_publicacao or "").strip()
+    destinatario, detalhe = "", ""
+    if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
+        guarda_da_revisao_da_010()
+        destinatario = destinatario_de(convocacao)
+        detalhe = _enviar(
+            convocacao, destinatario=destinatario, endereco_do_portal=endereco_do_portal
+        )
+    elif not referencia:
+        # **O sistema não publica no site do certame**, e registrar `ENVIADA` sem referência
+        # iniciaria o prazo de uma convocação que ninguém viu (`FR-288`).
+        raise DomainError(
+            nomes.REFERENCIA_DA_PUBLICACAO_OBRIGATORIA,
+            "Este Edital comunica a convocação por publicação: declare onde ela foi publicada — "
+            "o endereço e a data —, porque o prazo corre a partir disso e o sistema não publica "
+            "por conta própria.",
+            422,
+            campo="referencia_da_publicacao",
+        )
+
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -145,37 +195,38 @@ def comunicar(
     ) as ctx:
         if ctx.repetido:
             return ctx.desfecho_anterior
-        convocacao = _convocacao_do_processo(ctx.processo, convocacao_id)
-        forma = forma_declarada(convocacao)
-        if forma is None:
-            raise DomainError(
-                nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA,
-                "O Perfil publicado não declarou como este Edital comunica a convocação: declare "
-                "a forma por Retificação antes de emitir.",
-                409,
-            )
-        if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
-            guarda_da_revisao_da_010()
-        _recusar_vencimento_anterior_ao_envio(convocacao, agora=ctx.now)
-
-        destinatario = destinatario_de(convocacao) if forma == FORMA_POR_MENSAGEM_INDIVIDUAL else ""
-        detalhe = ""
-        if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
-            detalhe = _enviar(
-                convocacao, destinatario=destinatario, endereco_do_portal=endereco_do_portal
-            )
         emitida = ComunicacaoEmitida(
             convocacao=convocacao,
             forma=forma,
             destinatario=destinatario,
+            referencia_da_publicacao=referencia if forma == FORMA_POR_PUBLICACAO else "",
             # **`FALHA` não tem instante, e a constraint o exige.** Um registro marcado enviado sem
             # instante faria o prazo correr a partir de nada.
-            enviado_em=None if detalhe else ctx.now,
+            enviado_em=None if detalhe else agora,
             resultado="FALHA" if detalhe else "ENVIADA",
             detalhe_tecnico=detalhe,
         )
         emitida.save()
         return _concluir(ctx, emitida, actor, correlation_id, idempotency_key)
+
+
+def _convocacao_do_processo_id(processo_id, convocacao_id, *, actor):
+    """A convocação, conferida contra o Processo **antes** de a transação abrir.
+
+    A conferência de autoridade já aconteceu em `exigir_base_de_comissao`; esta confere que a
+    convocação pertence ao Processo autorizado — e recusa como não encontrada, pela mesma razão de
+    sempre: dizer *"existe, mas não é sua"* já entregaria que existe.
+    """
+    convocacao = (
+        Convocacao.objects.filter(
+            id=identificador(convocacao_id), edital__processo_id=identificador(processo_id)
+        )
+        .select_related("edital", "versao", "inscricao")
+        .first()
+    )
+    if convocacao is None:
+        raise DomainError("convocacao_nao_encontrada", "Convocação não encontrada.", 404)
+    return convocacao
 
 
 def _recusar_vencimento_anterior_ao_envio(convocacao, *, agora):
@@ -226,7 +277,13 @@ def enviar_mensagem_de_convocacao(*, para, dados):
     corpo = CORPO.format(
         edital=dados["edital"],
         prazo=(
-            COM_PRAZO.format(vencimento=dados["vencimento"].strftime("%d/%m/%Y às %H:%M"))
+            COM_PRAZO.format(
+                # **No fuso da instalação, e não em UTC.** `strftime` sobre um instante ciente
+                # formata no fuso que ele carrega: um vencimento gravado às 17:00 UTC saía
+                # como "17:00" numa mensagem lida em São Paulo, onde ele vence às 14:00 — três
+                # horas a mais de prazo que a pessoa não tem.
+                vencimento=timezone.localtime(dados["vencimento"]).strftime("%d/%m/%Y às %H:%M")
+            )
             if dados.get("vencimento")
             else SEM_PRAZO
         ),
@@ -234,7 +291,11 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         atendimento=dados["atendimento"],
     )
     try:
-        send_mail(
+        # **O retorno é contado**, e não descartado: `send_mail` devolve quantas mensagens entraram
+        # na fila, e um backend que engole a mensagem devolve `0` sem levantar exceção nenhuma.
+        # Ignorá-lo gravava `ENVIADA` e iniciava o prazo de uma convocação que não saiu — a falha
+        # mais silenciosa possível, porque tudo indica sucesso.
+        entregues = send_mail(
             subject=ASSUNTO.format(edital=dados["edital"]),
             message=corpo,
             from_email=settings.DEFAULT_FROM_EMAIL or None,
@@ -245,6 +306,9 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         # Sem o endereço: o registro técnico diz que falhou e qual foi o erro, e nada além disso.
         logger.exception("Falha ao emitir a comunicação de convocação.")
         return f"{type(erro).__name__}: falha na emissão"
+    if not entregues:
+        logger.error("A comunicação de convocação não foi aceita pelo servidor de correio.")
+        return "o servidor de correio não aceitou a mensagem"
     return ""
 
 
@@ -276,17 +340,6 @@ def _concluir(ctx, emitida, actor, correlation_id, idempotency_key):
     }
     ctx.concluir_sem_resultado(201, declarado)
     return declarado
-
-
-def _convocacao_do_processo(processo, convocacao_id):
-    convocacao = (
-        Convocacao.objects.filter(id=identificador(convocacao_id), edital__processo=processo)
-        .select_related("edital", "versao", "inscricao")
-        .first()
-    )
-    if convocacao is None:
-        raise DomainError("convocacao_nao_encontrada", "Convocação não encontrada.", 404)
-    return convocacao
 
 
 __all__ = [

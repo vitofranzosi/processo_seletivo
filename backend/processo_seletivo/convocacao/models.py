@@ -133,22 +133,39 @@ class Convocacao(models.Model):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="sucessoras"
     )
     motivo_da_sucessao = models.TextField(blank=True, default="")
+    # **A quantas chamadas desta pessoa neste recorte esta é.** Cresce a cada chamada **nova**; a
+    # sucessora copia a da raiz que corrige, porque corrigir não é chamar de novo.
+    #
+    # **Existe porque a mesma pessoa é legitimamente chamada mais de uma vez** (`FR-283`): quem foi
+    # reclassificado volta ao fim da fila e é chamado outra vez quando a vez dele chega. A primeira
+    # versão tinha unicidade de raiz por pessoa e recorte, e ela transformava esse retorno em beco —
+    # a segunda chamada só cabia como sucessora, e sucessão é correção: pularia as guardas de ordem.
+    #
+    # **O número é o que torna a regra exprimível no banco.** "Uma chamada em aberto por pessoa" não
+    # é índice parcial possível — depende de haver ou não desfecho, que mora em outra tabela —, e a
+    # aplicação a impõe. O que o banco garante é que duas chamadas da mesma pessoa no mesmo recorte
+    # são chamadas **distintas**, e não uma duplicata.
+    chamada = models.PositiveIntegerField(default=1)
     criado_por = models.CharField(max_length=255)
     criado_em = models.DateTimeField()
 
     class Meta:
         constraints = [
-            # **Uma convocação raiz por pessoa e recorte, e as duas metades não são redundantes**:
-            # no PostgreSQL dois `NULL` não colidem, e uma só deixaria passar duas raízes de ampla
-            # concorrência para a mesma pessoa no mesmo marco. É a cirurgia de
+            # **Uma raiz por pessoa, recorte e número de chamada**, e as duas metades não são
+            # redundantes: no PostgreSQL dois `NULL` não colidem, e uma só deixaria passar duas
+            # raízes de ampla concorrência com o mesmo número no mesmo marco. É a cirurgia de
             # `uq_apuracao_primeira_por_marco`, e pela mesma razão.
+            #
+            # **O número entra na chave porque a mesma pessoa é chamada mais de uma vez.** Sem ele,
+            # o reclassificado que volta à fila não teria como ser chamado de novo — e a única saída
+            # seria declará-la sucessora, que é correção e pula as guardas de ordem.
             models.UniqueConstraint(
-                fields=["edital", "perfil_id", "marco_id", "inscricao"],
+                fields=["edital", "perfil_id", "marco_id", "inscricao", "chamada"],
                 condition=Q(convocacao_anterior__isnull=True, lista_id__isnull=True),
                 name="uq_convocacao_raiz_por_recorte",
             ),
             models.UniqueConstraint(
-                fields=["edital", "perfil_id", "marco_id", "lista_id", "inscricao"],
+                fields=["edital", "perfil_id", "marco_id", "lista_id", "inscricao", "chamada"],
                 condition=Q(convocacao_anterior__isnull=True, lista_id__isnull=False),
                 name="uq_convocacao_raiz_por_recorte_e_lista",
             ),
@@ -203,8 +220,11 @@ class Convocacao(models.Model):
 class DesfechoDaConvocacao(models.Model):
     """O que a pessoa respondeu, ou o que a Administração concluiu (019, `FR-273`).
 
-    **Um por convocação**, e por constraint. Dois desfechos para a mesma chamada seriam duas
-    respostas contraditórias sobre a mesma vaga, e o sistema não teria como dizer qual vale.
+    **Um vigente por convocação**, e por constraint. Dois desfechos **paralelos** para a mesma
+    chamada seriam duas respostas contraditórias sobre a mesma vaga, e o sistema não teria como
+    dizer qual vale. Já o desfecho que **sucede** outro é um fato posterior, e a cadeia diz em que
+    ordem os fatos aconteceram — é o que torna o cancelamento por inércia registrável sobre quem
+    havia aceitado.
 
     **Sete espécies, e os dois últimos de exclusão são distintos de propósito** (`D-011`). *Não
     atendimento à convocação* e *cancelamento de matrícula por inércia* têm atores, prazos e
@@ -246,22 +266,56 @@ class DesfechoDaConvocacao(models.Model):
         on_delete=models.PROTECT,
         related_name="desfechos_de_convocacao",
     )
-    # O que foi escrito na porta da `016`. Nulo enquanto não houver — e há sempre, nas sete
-    # espécies: duas incluem e cinco excluem. A anulabilidade existe para a ordem de gravação
-    # dentro da transação, e não para admitir desfecho sem efeito.
+    # O que foi escrito na porta da `016`. **Obrigatório**, e não anulável: as sete espécies têm
+    # efeito — duas incluem e cinco excluem —, e um desfecho sem efeito deixaria a contagem
+    # divergente sem nada que a explicasse. Numa tabela append-only essa linha não teria conserto:
+    # `UPDATE` é proibido, e sucedê-la não desfaz a divergência que ela já produziu.
     efeito = models.ForeignKey(
-        "ocupacao.EfeitoDeOcupacao",
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="desfechos",
+        "ocupacao.EfeitoDeOcupacao", on_delete=models.PROTECT, related_name="desfechos"
     )
+    # **A sucessão do desfecho, e a razão dela é a `US5`.** O cancelamento de matrícula por inércia
+    # *"alcança quem já ocupava e desapareceu"* (§6 da spec) — e quem já ocupava costuma ter
+    # aceitado a chamada. Sem sucessão, o aceite fecharia a convocação e a inércia posterior não
+    # teria onde ser gravada: a `US5` ficaria estruturalmente impossível no caso que ela nomeia.
+    #
+    # **Não é correção, e é por isso que o campo se chama sucessão.** O aceite era verdadeiro quando
+    # registrado; o que mudou foi o mundo depois dele. É a mesma forma que o `ResultadoEtapa` usa
+    # para a superação por recurso — um fato jurídico novo sobre o mesmo objeto, com a linha
+    # anterior intacta e legível.
+    #
+    # **A `FR-273` continua valendo**: há no máximo um desfecho **vigente** por convocação, como há
+    # uma apuração vigente por recorte e uma ordem vigente por marco.
+    desfecho_anterior = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="sucessores"
+    )
+    motivo_da_sucessao = models.TextField(blank=True, default="")
     registrado_por = models.CharField(max_length=255)
     registrado_em = models.DateTimeField()
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["convocacao"], name="uq_desfecho_por_convocacao"),
+            # **Um desfecho raiz por convocação** (`FR-273`), e os sucessores fora do índice: o que
+            # a regra proíbe é duas respostas paralelas para a mesma chamada, e não o fato novo que
+            # sucede o que foi respondido.
+            models.UniqueConstraint(
+                fields=["convocacao"],
+                condition=Q(desfecho_anterior__isnull=True),
+                name="uq_desfecho_por_convocacao",
+            ),
+            # Um sucessor por desfecho — a mesma cirurgia de `uq_apuracao_sucessora_unica`, e pela
+            # mesma razão: sem ela, dois sucessores do mesmo desfecho dariam dois vigentes.
+            models.UniqueConstraint(
+                fields=["desfecho_anterior"],
+                condition=Q(desfecho_anterior__isnull=False),
+                name="uq_desfecho_sucessor_unico",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(desfecho_anterior__isnull=True, motivo_da_sucessao="")
+                    | Q(desfecho_anterior__isnull=False) & ~Q(motivo_da_sucessao="")
+                ),
+                name="ck_desfecho_sucessao",
+            ),
             models.CheckConstraint(
                 condition=Q(especie__in=list(nomes.ESPECIES_DE_DESFECHO)),
                 name="ck_desfecho_especie",
@@ -317,6 +371,15 @@ class ComunicacaoEmitida(models.Model):
     # Vazio quando a forma é publicação: ali não há destinatário individual, e inventar um faria a
     # trilha afirmar um endereçamento que não houve.
     destinatario = models.CharField(max_length=255, blank=True, default="")
+    # **Onde a convocação foi publicada**, quando a forma é publicação. Vazio na mensagem
+    # individual, onde quem recebe é uma pessoa e não o público.
+    #
+    # **Existe porque o sistema não publica no site do certame** (`R-007` não lhe deu essa
+    # capacidade), e sem a referência a emissão por publicação seria um registro de que algo
+    # aconteceu em lugar nenhum: o prazo do 69/2026 começaria a correr sem que a convocação tivesse
+    # aparecido. É a mesma forma do `referencia_do_prazo` do atestado — quem pratica o ato declara
+    # onde ele aconteceu, e o registro guarda a declaração.
+    referencia_da_publicacao = models.TextField(blank=True, default="")
     enviado_em = models.DateTimeField(null=True, blank=True)
     resultado = models.CharField(
         max_length=16, choices=[("ENVIADA", "Enviada"), ("FALHA", "Falha")]
@@ -337,6 +400,15 @@ class ComunicacaoEmitida(models.Model):
                     | Q(resultado="FALHA", enviado_em__isnull=True)
                 ),
                 name="ck_comunicacao_enviada_tem_instante",
+            ),
+            # **Publicação sem referência não publica nada**, e o prazo do 69/2026 corre do envio:
+            # gravar `ENVIADA` ali iniciaria o prazo de uma convocação que ninguém viu. A `FALHA`
+            # fica de fora porque ela registra justamente que a emissão não completou.
+            models.CheckConstraint(
+                condition=(
+                    ~Q(forma="PUBLICATION") | Q(resultado="FALHA") | ~Q(referencia_da_publicacao="")
+                ),
+                name="ck_comunicacao_publicacao_com_referencia",
             ),
         ]
         indexes = [models.Index(fields=["convocacao"], name="ix_comunicacao_convocacao")]

@@ -62,6 +62,43 @@ EFEITO_POR_DESFECHO = {
     RECLASSIFICACAO: nomes_da_ocupacao.EFEITO_EXCLUSAO,
 }
 
+# **Que desfecho cabe em que chamada** — e a tabela existe porque nem toda combinação é possível
+# juridicamente. O enum sozinho aceitaria `ACEITE` numa convocação para regularizar, incluindo a
+# pessoa na contagem de ocupantes sem que Resultado nenhum a habilitasse; e `REGULARIZACAO` numa
+# chamada para vaga, produzindo sucessor de um Resultado que não estava indeferido.
+#
+# **`INERCIA` não cabe na chamada para regularizar**: não há matrícula a cancelar antes de a pessoa
+# ter regularizado. **`REGULARIZACAO` não cabe na chamada para vaga**: o que ela sucede é um
+# indeferimento, e ali não há um.
+DESFECHOS_POR_ESPECIE = {
+    VAGA_INICIAL: (
+        ACEITE,
+        INDEFERIMENTO,
+        DESISTENCIA_EXPRESSA,
+        NAO_ATENDIMENTO,
+        INERCIA,
+        RECLASSIFICACAO,
+    ),
+    SUPLENCIA: (
+        ACEITE,
+        INDEFERIMENTO,
+        DESISTENCIA_EXPRESSA,
+        NAO_ATENDIMENTO,
+        INERCIA,
+        RECLASSIFICACAO,
+    ),
+    PARA_REGULARIZAR: (
+        REGULARIZACAO,
+        INDEFERIMENTO,
+        DESISTENCIA_EXPRESSA,
+        NAO_ATENDIMENTO,
+        RECLASSIFICACAO,
+    ),
+}
+
+#: Os dois desfechos que **incluem** na contagem, e portanto pressupõem que a pessoa passe a ocupar.
+DESFECHOS_QUE_INCLUEM = (ACEITE, REGULARIZACAO)
+
 # --- Espécies de atestado de fato externo (019, data-model §3) ----------------------------------
 # O sistema **não detém o artefato** e não infere o fato: registra que alguém competente concluiu.
 ATESTADO_NAO_ACESSO_AO_AMBIENTE = "NAO_ACESSO_AO_AMBIENTE"
@@ -112,11 +149,23 @@ ESPECIE_DE_ATESTADO_INVALIDA = "especie_de_atestado_invalida"
 CONCLUSAO_OBRIGATORIA = "conclusao_obrigatoria"
 REFERENCIA_DO_PRAZO_OBRIGATORIA = "referencia_do_prazo_obrigatoria"
 
+# **A publicação precisa dizer onde publicou.** O sistema não publica no site do certame, e gravar
+# a emissão sem a referência iniciaria o prazo de uma convocação que ninguém viu (`FR-288`).
+REFERENCIA_DA_PUBLICACAO_OBRIGATORIA = "referencia_da_publicacao_obrigatoria"
+
 # **Duas recusas que o contrato não lista, e são consequência da sucessão.** Corrigida a convocação,
 # é a sucessora que vale: gravar o desfecho na anterior o deixaria invisível para a leitura do
 # recorte, que só olha as vigentes, e a pessoa apareceria como não tendo respondido. E a
 # regularização sem Resultado sucessor seria inclusão na contagem sem habilitação que a sustente.
 CONVOCACAO_SUCEDIDA = "convocacao_sucedida"
+
+# **Três recusas sobre *qual* desfecho cabe, e não sobre a forma dele.** O enum diz que a espécie
+# existe; estas dizem que ela não cabe **nesta** chamada, **agora**, ou **para esta pessoa**. Sem
+# elas o comando aceitaria transições juridicamente impossíveis, e o registro delas é append-only.
+DESFECHO_INCOMPATIVEL_COM_A_CHAMADA = "desfecho_incompativel_com_a_chamada"
+NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO = "nao_atendimento_antes_do_vencimento"
+INERCIA_SEM_OCUPACAO = "inercia_sem_ocupacao"
+MOTIVO_DA_SUCESSAO_DO_DESFECHO_OBRIGATORIO = "motivo_da_sucessao_do_desfecho_obrigatorio"
 REGULARIZACAO_EXIGE_SUCESSOR = "regularizacao_exige_sucessor"
 
 # --- Guarda de implantação, e não de domínio (019, contrato §3) ---------------------------------

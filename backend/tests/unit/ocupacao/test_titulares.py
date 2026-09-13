@@ -82,14 +82,26 @@ class TestNadaMudaOndeNaoHaDesfecho:
     def test_ninguem_habilitado_ocupa_zero(self):
         assert ocupadas(habilitadas=set()) == 0
 
-    def test_eliminado_no_topo_nao_segura_vaga(self):
-        """Quem não habilitou não é titular, e quem vem depois **sobe**.
+    def test_eliminado_no_topo_abre_vaga_em_vez_de_promover_o_proximo(self):
+        """**Três eliminados dentro do alvo deixam três vagas faltando** — e não três promovidos.
 
-        Se a janela fosse "os primeiros `efetivas` da faixa" sem olhar habilitação, três eliminados
-        no topo fariam o recorte ocupar 37 de 40 com 67 habilitados disponíveis — um buraco que
-        certame nenhum tem.
+        A janela de titulares é recortada sobre a sequência que progrediu, **antes** de perguntar
+        por habilitação. Quem é titular e foi eliminado não ocupa a vaga dele: ela aparece em
+        `faltando`, e alguém precisa **chamar** o próximo para ocupá-la, com ato registrado.
+
+        *Filtrar as habilitadas antes de recortar a janela é a promoção silenciosa vestida de
+        conveniência: os três seguintes entram na contagem sem que ninguém os tenha convocado, e o
+        certame anda sem que nenhum ato o tenha feito andar. Foi o defeito da primeira
+        implementação desta feature, e é o mesmo que a `§1.0` mediu do outro lado.*
         """
         habilitadas = set(FAIXA) - {"p01", "p02", "p03"}
+
+        assert ocupadas(habilitadas=habilitadas) == VAGAS - 3
+
+    def test_eliminado_fora_do_alvo_nao_muda_nada(self):
+        """A simetria da anterior: quem foi eliminado na suplência não ocupava vaga nenhuma."""
+        habilitadas = set(FAIXA) - {"p50", "p51", "p52"}
+
         assert ocupadas(habilitadas=habilitadas) == VAGAS
 
 
@@ -152,9 +164,23 @@ class TestOEmpateQueAtravessaAFronteiraDoAlvo:
         assert ocupadas(empates={"p50": 50, "p51": 50}) == VAGAS
 
     def test_empate_entre_eliminados_nao_recusa(self):
-        """Quem não habilitou não disputa titularidade: parar por causa dele pararia à toa."""
+        """**A recusa só alcança o empate que muda o número.**
+
+        Entre duas pessoas eliminadas na Etapa governada, tanto faz qual delas é a titular: nenhuma
+        ocupa vaga, e a contagem é a mesma nos dois cenários. Parar a apuração ali pediria um
+        desempate que não decide coisa alguma — e o caminho de saída, julgar na `015`, seria
+        trabalho pedido sem razão.
+        """
         habilitadas = set(FAIXA) - {"p40", "p41"}
-        assert ocupadas(habilitadas=habilitadas, empates={"p40": 40, "p41": 40}) == VAGAS
+
+        assert ocupadas(habilitadas=habilitadas, empates={"p40": 40, "p41": 40}) == VAGAS - 1
+
+    def test_empate_com_uma_habilitada_atravessando_recusa(self):
+        """Basta **uma** habilitada no grupo para a escolha passar a decidir a contagem."""
+        habilitadas = set(FAIXA) - {"p40"}
+
+        with pytest.raises(apuracao.EmpateNaFronteiraDoAlvo):
+            ocupadas(habilitadas=habilitadas, empates={"p40": 40, "p41": 40})
 
     def test_a_mensagem_nomeia_a_posicao_e_o_tamanho(self):
         """Quem lê precisa saber onde a ordem parou de separar, e quantos desempates julgar."""

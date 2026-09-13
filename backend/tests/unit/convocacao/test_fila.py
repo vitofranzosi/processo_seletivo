@@ -16,19 +16,26 @@ HABILITADAS = set(FAIXA)
 VAGAS = 2
 
 
-class TestTitularESuplente:
-    def test_os_primeiros_efetivas_sao_titulares_e_o_resto_e_suplente(self):
-        alcancados = fila.alcancados(progrediram_em_ordem=FAIXA, habilitadas=HABILITADAS)
+class TestQuemPodeSerChamado:
+    def test_quem_nao_habilitou_nao_e_chamavel(self):
+        """**Não se convoca para uma vaga quem foi eliminado na Etapa que o corte governa.**
 
-        assert fila.titulares(alcancados_em_ordem=alcancados, efetivas=VAGAS) == ["p1", "p2"]
-        assert fila.suplentes(alcancados_em_ordem=alcancados, efetivas=VAGAS) == ["p3", "p4"]
-
-    def test_quem_nao_habilitou_nao_e_alcancado(self):
-        """Eliminado na Etapa governada não segura vaga nenhuma, e quem vem depois **sobe**."""
+        E ele também não é promovido: a vaga dele continua sendo dele na janela de titulares da
+        `016`, e aparece em `faltando` até que alguém **chame** o próximo. Quem responde por quem é
+        titular é a `016`, e não este módulo.
+        """
         alcancados = fila.alcancados(progrediram_em_ordem=FAIXA, habilitadas=HABILITADAS - {"p2"})
 
         assert alcancados == ["p1", "p3", "p4"]
-        assert fila.titulares(alcancados_em_ordem=alcancados, efetivas=VAGAS) == ["p1", "p3"]
+
+    def test_a_fila_nao_diz_quem_e_titular(self):
+        """`UX-035`: a pergunta tem um dono, e não é esta feature.
+
+        Duas travessias respondendo *"quem é titular"* divergiriam na primeira regra nova — e foi
+        exatamente assim que a promoção silenciosa nasceu na primeira implementação desta feature.
+        """
+        assert not hasattr(fila, "titulares")
+        assert not hasattr(fila, "suplentes")
 
     def test_o_teto_e_a_faixa_e_nao_o_quadro(self):
         """**Quem está fora da faixa não é suplente**: é quem a `014` não selecionou.
@@ -69,7 +76,6 @@ class TestASuplenciaNaoAtravessaRecorte:
         )
 
         assert alcancados == ["p2", "p3", "p4"]
-        assert fila.titulares(alcancados_em_ordem=alcancados, efetivas=VAGAS) == ["p2", "p3"]
 
 
 class TestOEsgotamentoDaListaAlcancada:

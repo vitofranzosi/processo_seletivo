@@ -1,9 +1,9 @@
 """Quem é titular, quem é suplente e quem é chamável — puro, e numa ordem só (019, `FR-266`).
 
-**Esta feature não conta vagas** (`UX-035`). Quem responde *"quantas estão ocupadas"* é a `016`, e
-é dela que vem `titulares_iniciais`: reimplementar a travessia aqui daria duas respostas à mesma
-pergunta, e a primeira regra nova as faria divergir. O que este módulo acrescenta é a **cauda** —
-quem vem depois do último titular, e em que ordem é chamado.
+**Esta feature não conta vagas, e não diz quem é titular** (`UX-035`). As duas perguntas são da
+`016`, e é de lá que `titulares_iniciais` vem: reimplementá-las aqui daria duas respostas à mesma
+pergunta, e a primeira regra nova as faria divergir. O que este módulo responde é outra coisa —
+**quem pode ser chamado**, e em que ordem.
 
 **Sem banco e sem norma.** O que entra é a sequência da faixa, os conjuntos de quem ocupa, de quem
 já tem chamada em aberto e de quem já encerrou, e o que sai é uma lista na ordem de chamada. É o
@@ -39,20 +39,6 @@ def alcancados(*, progrediram_em_ordem, habilitadas, ocupantes_da_ampla=()):
         habilitadas=habilitadas,
         ocupantes_da_ampla=ocupantes_da_ampla,
     )
-
-
-def titulares(*, alcancados_em_ordem, efetivas):
-    """Os primeiros `efetivas` alcançados — os que ocupam vaga desde o início."""
-    return list(alcancados_em_ordem[: max(int(efetivas), 0)])
-
-
-def suplentes(*, alcancados_em_ordem, efetivas):
-    """A cauda: quem está na faixa, habilitou, e não ocupa vaga até que uma vague.
-
-    **Suplente não ocupa nada**, e é a frase que o `min` da contagem antiga apagava: no 77/2026 são
-    40 vagas com 30 suplentes na mesma faixa, e contá-los como ocupação daria 70 de 40.
-    """
-    return list(alcancados_em_ordem[max(int(efetivas), 0) :])
 
 
 def ordem_de_chamada(
@@ -172,6 +158,4 @@ __all__ = [
     "precedencia",
     "regularizaveis",
     "proximo",
-    "suplentes",
-    "titulares",
 ]

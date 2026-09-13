@@ -1681,6 +1681,10 @@ def _erro_do_arquivo(exc):
 
 logger = logging.getLogger("processo_seletivo.portal")
 
+# O rótulo da operação na trilha. **Não** é permissão concedida a ninguém: o ator do candidato
+# tem o conjunto vazio, como a `009` fixou.
+LER_CONVOCACAO = "CONVOCACAO_LER"
+
 
 def convocacao(request, inscricao_id):
     """A convocação da pessoa, pelo canal do ator dela (019, `US6`, `FR-294`).
@@ -1739,23 +1743,42 @@ def convocacao(request, inscricao_id):
 
 
 def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
-    """O acesso autenticado entra na trilha, **e o prazo não se move** (`FR-288b`).
+    """O acesso autenticado entra na **trilha do Edital**, e o prazo não se move (`FR-288b`).
 
-    **É registro de segurança, e não ato de negócio.** Ler a própria convocação não decide nada:
-    não inicia prazo, não constitui recebimento e não produz desfecho. O que ele responde é outra
-    pergunta, que alguém vai fazer um dia — *"a pessoa teve como saber?"* —, e a resposta precisa
-    existir sem que a leitura vire um fato jurídico que ninguém declarou.
+    **Trilha, e não linha de log.** A pergunta que alguém fará um dia é *"a pessoa teve como
+    saber?"*, e ela é respondida na mesma tela em que se responde por uma publicação ou por uma
+    convocação — não num arquivo do servidor que ninguém audita e que rotaciona.
+
+    **O ator é o candidato, sem uma permissão sequer**, pela forma que a `009` deixou: o conjunto
+    vazio é o que impede a trilha de afirmar autoridade que ele não tem, e o escopo é o do Processo
+    porque é dele que o ato trata.
+
+    **Ler não move o relógio.** Nada aqui toca `enviado_em`: o prazo corre do envio da comunicação,
+    e abrir a página não é nem o envio nem o recebimento. Se ler iniciasse ou reiniciasse o prazo, a
+    pessoa seria punida por conferir — e quem não conferisse ficaria em vantagem.
     """
-    logger.info(
-        "portal.convocacao.leitura",
-        extra={
-            "inscricao": str(registro.id),
-            "convocacao": str(chamada.id) if chamada else "",
-            "lido_em": agora.isoformat(),
-            # **O envio não é tocado.** O campo vai no registro para que a trilha mostre, lado a
-            # lado, quando o sistema enviou e quando a pessoa leu — sem que um vire o outro.
-            "enviado_em": "",
-        },
+    from processo_seletivo.auditoria.application import record_event
+    from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
+
+    if chamada is None:
+        # Sem convocação não há o que registrar: a página informa que ela não existe, e auditar a
+        # ausência encheria a trilha de linhas que não respondem pergunta nenhuma.
+        return
+    record_event(
+        actor=ator_do_candidato(
+            identidade_do_candidato.identidade_da_sessao(request), registro.edital
+        ),
+        permission="",
+        operation=LER_CONVOCACAO,
+        aggregate=chamada,
+        now=agora,
+        correlation_id=getattr(request, "correlation_id", "portal-convocacao"),
+        reason=(
+            f"Leitura da convocação {chamada.id} pela titular da inscrição {registro.id}. "
+            "A leitura não inicia nem reinicia prazo."
+        ),
+        new_state="",
+        new_revision=None,
     )
 
 

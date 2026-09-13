@@ -86,17 +86,44 @@ precisa de banco, e o repositório põe isso em `integration/`.
 
 ---
 
+## O que a revisão de código corrigiu
+
+Oito achados bloqueantes e quatro adicionais entraram depois da primeira implementação. Os que
+mudaram **regra**, e não só código:
+
+| Achado | O que estava errado | Onde ficou preso |
+|---|---|---|
+| a promoção silenciosa sobrevivia | a janela de titulares era recortada **depois** de filtrar as habilitadas, de modo que três eliminados dentro do alvo promoviam os três seguintes sem ato — `(40, 40, 40)` onde a `R-001` manda `37` | `tests/unit/ocupacao/test_titulares.py::TestNadaMudaOndeNaoHaDesfecho` |
+| `PUBLICACAO` não publicava nada | a emissão por publicação gravava `ENVIADA` sem artefato nenhum, e o prazo do 69/2026 começava a correr para uma convocação que ninguém viu | `tests/integration/convocacao/test_comunicacao.py::TestAFormaDeclarada::test_a_publicacao_sem_referencia_e_recusada` |
+| transições juridicamente impossíveis | `PARA_REGULARIZAR` podia terminar em `ACEITE`; `NAO_ATENDIMENTO` antes do envio; `INERCIA` sobre quem nunca ocupou | `tests/integration/convocacao/test_recusas.py::TestODesfechoQueNaoCabeNaChamada` |
+| a `US5` era estruturalmente impossível | com um desfecho por convocação, a inércia posterior ao aceite não tinha onde ser gravada — e o caminho que sobrava admitia inércia de quem nunca aceitou | `tests/integration/convocacao/test_inercia.py::test_a_inercia_sucede_o_aceite_de_quem_desapareceu_depois` |
+| o reclassificado não podia ser chamado | a unicidade de raiz por pessoa tornava a segunda chamada impossível, e a saída pela sucessão pulava as guardas de ordem | `tests/integration/convocacao/test_reclassificacao_integrada.py` |
+| o prazo começava sem mensagem | o retorno de `send_mail` era descartado, e um backend que engole a mensagem devolve `0` sem levantar nada | `tests/unit/convocacao/test_mensagem.py::test_o_retorno_zero_do_correio_e_falha` |
+| o SMTP corria dentro da trava do Processo | envio lento paralisava o certame, e um `rollback` deixava na caixa da pessoa uma convocação que o sistema esqueceu | `tests/integration/convocacao/test_comunicacao.py::test_o_envio_acontece_fora_da_transacao_que_trava_o_processo` |
+| o vencimento saía em UTC | `17:00` gravado virava `17:00` lido em São Paulo, onde vence às `14:00` — três horas de prazo que a pessoa não tem | `tests/unit/convocacao/test_mensagem.py::test_o_prazo_em_sao_paulo_sai_tres_horas_antes_do_utc` |
+| a leitura do candidato só ia para o log | `FR-288b` pede trilha, e log de servidor não é auditável | `tests/interface/test_portal_convocacao.py::test_a_leitura_entra_na_trilha_do_edital` |
+| redirecionamento aberto | `voltar` vinha do corpo do pedido sem conferência | `tests/interface/test_convocacao.py::test_o_atestado_nao_redireciona_para_fora_do_sistema` |
+| a proveniência apontava para o ato errado | o efeito citava a **convocação**, e o rótulo dizia "desfecho de convocação" | `tests/interface/test_convocacao.py::test_o_efeito_de_ocupacao_cita_o_desfecho_que_o_produziu` |
+| desfecho sem efeito era possível | o campo era anulável e nenhuma constraint o exigia — numa tabela append-only a linha divergente não teria conserto | `convocacao/0003_sucessao_do_desfecho.py` |
+
+**Três decisões de domínio saíram daí**, e estão nos comentários dos módulos que as implementam:
+
+1. **Titular não é ocupante.** A janela é recortada sobre a sequência que progrediu; ocupante é o
+   titular **habilitado**. Quem é titular e foi eliminado não ocupa a vaga dele — ela aparece em
+   `faltando`, e alguém precisa chamar o próximo, com ato.
+2. **O desfecho sucede o desfecho.** A `FR-273` passa a ser lida como "um desfecho **vigente** por
+   convocação", do mesmo modo que há uma apuração vigente por recorte. É o que torna o cancelamento
+   por inércia registrável sobre quem havia aceitado.
+3. **A chamada tem número.** A mesma pessoa é legitimamente chamada mais de uma vez no mesmo
+   recorte — o reclassificado que volta —, e o número é o que torna a regra exprimível no banco sem
+   confundir chamada nova com correção.
+
 ## O que esta entrega deixou aberto
+**A emissão por publicação depende de declaração humana.** O sistema não publica no site do certame
+— a `R-007` não lhe deu essa capacidade —, e quem emite declara onde publicou. A referência fica no
+registro e o prazo corre dela, mas **nada confere** que a publicação de fato existe naquele endereço.
+Fechá-lo exige a capacidade de publicar, que é incremento próprio.
 
-**A inércia depois de um aceite já registrado não tem caminho.** A `FR-273` admite um desfecho por
-convocação, e a `§6` da spec diz que o cancelamento por inércia *"alcança quem já ocupava e
-desapareceu"*. As duas convivem no percurso implementado — a titular ocupa desde a apuração, é
-chamada, a matrícula acontece fora daqui, e a chamada só recebe desfecho quando alguém conclui, com
-aceite **ou** com inércia. Não convivem quando o aceite já foi registrado: ali a chamada está
-fechada, e a inércia posterior seria o segundo desfecho da mesma convocação.
-
-Resolvê-lo é decisão de domínio, e não de implementação: suceder a convocação com motivo mostraria a
-pessoa como chamada de novo, e admitir dois desfechos contrariaria a `FR-273`. A lacuna está presa
-por teste em
-`tests/integration/convocacao/test_inercia.py::test_a_inercia_depois_de_um_aceite_registrado_ainda_nao_tem_caminho`,
-para que o dia em que ela for decidida seja um teste que falha, e não um caso descoberto em produção.
+**A reconciliação do portal não liga a conta à inscrição** no percurso conduzido, e é achado da
+`010`: a `019` não toca identidade, credencial nem reconciliação. Registrado em
+`doc/e2e/019-convocacao/relatorio.md`.

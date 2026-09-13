@@ -137,12 +137,30 @@ conexão com privilégio distinto, e os três estão medidos na suíte —
 `tests/unit/convocacao/test_append_only.py` mais
 `tests/integration/test_database_permissions.py`.
 
-## 6. Verificação final
+## 6. O que mudou depois deste percurso
+
+**Uma revisão de código posterior encontrou oito achados bloqueantes**, e três deles mudam o que
+este percurso observou:
+
+- **a janela de titulares foi recortada de novo.** Naquele momento ela era recortada depois de
+  filtrar as habilitadas, e três eliminados dentro do alvo promoviam os três seguintes sem ato — a
+  promoção silenciosa que a feature existe para eliminar, sobrevivendo do outro lado. Os números do
+  percurso não mudam (o cenário não tinha eliminados dentro do alvo), mas a regra sim;
+- **a emissão por publicação passou a exigir onde se publicou.** O passo 4 deste percurso usou a
+  forma **individual**, e não foi alcançado pela mudança;
+- **a `US5` deixou de ser impossível**: o desfecho passou a suceder o desfecho, e o cancelamento por
+  inércia alcança quem havia aceitado.
+
+A lista completa está em
+[`rastreabilidade.md`](../../../specs/019-convocacao-chamada-suplencia/rastreabilidade.md), com o
+teste que prende cada uma.
+
+## 7. Verificação final
 
 ```
 cd backend && make lint check test-pg
 ```
 
 `ruff check` e `ruff format --check` limpos; `manage.py check` sem problemas; `makemigrations
---check` sem mudanças pendentes. A suíte contra PostgreSQL fecha em **5377 passando e 2 pulados** —
+--check` sem mudanças pendentes. A suíte contra PostgreSQL fecha em **5397 passando e 2 pulados** —
 os dois deliberados de sempre.

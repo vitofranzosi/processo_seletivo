@@ -77,83 +77,121 @@ def chave_da_inscricao(identificador):
 
 
 def elegiveis_em_ordem(*, progrediram_em_ordem, habilitadas, ocupantes_da_ampla=()):
-    """Quem a faixa alcançou e habilitou, **na ordem** — titulares e suplentes, nesta sequência.
+    """Quem a faixa alcançou **e habilitou**, na ordem — o conjunto de quem pode ser chamado.
 
-    **Existe separada de `titulares_iniciais` porque a `019` precisa da cauda.** Quem chama o
-    suplente precisa da lista inteira; quem conta a ocupação só precisa do começo dela. Duas
-    implementações da mesma travessia divergiriam na primeira regra nova — e a fronteira entre
-    contar e chamar é justamente a que a `UX-035` verifica por varredura.
+    **Não é o conjunto de titulares, e a distinção é a feature inteira.** Titular inicial é quem
+    está entre as primeiras `efetivas` posições da sequência que progrediu, habilitado ou não
+    (`R-001`); esta lista é a dos **chamáveis**, e ali a habilitação importa: não se convoca para
+    uma vaga quem foi eliminado na Etapa que o corte governa.
+
+    Confundir as duas produz a promoção silenciosa que esta feature existe para eliminar — com três
+    eliminados dentro do alvo, os três seguintes entrariam na contagem sem que ninguém os chamasse.
     """
     habilitadas_de = {chave_da_inscricao(i) for i in habilitadas}
+    return [
+        identificador
+        for identificador in sequencia_por_pessoa(
+            progrediram_em_ordem, ocupantes_da_ampla=ocupantes_da_ampla
+        )
+        if chave_da_inscricao(identificador) in habilitadas_de
+    ]
+
+
+def sequencia_por_pessoa(progrediram_em_ordem, *, ocupantes_da_ampla=()):
+    """A sequência que progrediu, sem repetição e sem quem já ocupa pela ampla.
+
+    **Contada por pessoa** (`R-001`): a mesma inscrição repetida conta uma vez. A convenção é a de
+    `desempate.py` — o alvo conta pessoas, e não números de posição.
+
+    **`ocupantes_da_ampla` sai antes da janela, e é a única exclusão que sai.** O item 8.9 do
+    28/2026 diz que o autodeclarado sorteado dentro das vagas de ampla não é computado no
+    preenchimento da reservada, *"abrindo vaga para o próximo suplente autodeclarado"* — quem vem
+    depois **sobe**, e a norma o escreve com todas as letras. Nenhuma outra exclusão tem essa
+    licença: a eliminação na Etapa governada **não** promove ninguém.
+    """
     concomitantes = {chave_da_inscricao(i) for i in ocupantes_da_ampla}
-    elegiveis, vistas = [], set()
+    sequencia, vistas = [], set()
     for identificador in progrediram_em_ordem:
         chave = chave_da_inscricao(identificador)
-        if chave in vistas:
+        if chave in vistas or chave in concomitantes:
             continue
         vistas.add(chave)
-        if chave in habilitadas_de and chave not in concomitantes:
-            elegiveis.append(identificador)
-    return elegiveis
+        sequencia.append(identificador)
+    return sequencia
 
 
 def titulares_iniciais(
     *,
     progrediram_em_ordem,
-    habilitadas,
     efetivas,
     ocupantes_da_ampla=(),
     empates_residuais=None,
+    habilitadas=None,
 ):
-    """Quem ocupa as vagas iniciais: as primeiras `efetivas` habilitadas, **na ordem** (`R-001`).
+    """As primeiras `efetivas` posições da sequência que progrediu — habilitadas ou não (`R-001`).
 
-    **Habilitadas, e não "os primeiros da faixa".** Quem foi eliminado na Etapa governada não segura
-    vaga nenhuma — desce-se a ordem pulando quem não habilitou, e os primeiros `efetivas` que
-    sobram são os titulares. É como o certame de fato funciona, e é o que faz o número não mudar
-    onde ninguém desistiu: sem desfecho, `len(titulares)` é exatamente o `min(cabem, efetivas)` que
-    esta função substituiu.
+    **A janela é recortada antes de qualquer pergunta sobre habilitação**, e é essa ordem que
+    impede a promoção silenciosa. Quem é titular e foi eliminado na Etapa governada **não ocupa** a
+    vaga dele: ela fica faltando, aparece no `faltando` da apuração, e alguém precisa **chamar** o
+    próximo para ocupá-la. Foi para isso que esta feature nasceu.
 
-    **Contado por pessoa** (`R-001`): a mesma inscrição repetida na sequência conta uma vez. A
-    convenção é a de `desempate.py` — o alvo conta pessoas, e não números de posição.
+    *A primeira implementação filtrava as habilitadas antes de recortar a janela, e com três
+    eliminados dentro do alvo os três seguintes entravam na contagem sem ato nenhum — exatamente a
+    promoção em silêncio que a `§1.0` mediu. A `R-001` diz "entre as primeiras `efetivas` posições
+    **dessa sequência**", e a sequência é a dos que progrediram.*
 
-    **`ocupantes_da_ampla` sai antes da janela, e não depois.** O item 8.9 do 28/2026 diz que o
-    autodeclarado sorteado dentro das vagas de ampla não é computado no preenchimento da reservada,
-    *"abrindo vaga para o próximo suplente autodeclarado"* — quem vem depois **sobe**. Filtrar
-    depois de recortar a janela deixaria o buraco no lugar.
+    **A única exclusão que corre antes da janela é a concorrência concomitante**, porque o Edital a
+    escreve assim: *"abrindo vaga para o próximo suplente autodeclarado"* (`FR-252`).
     """
-    elegiveis = elegiveis_em_ordem(
-        progrediram_em_ordem=progrediram_em_ordem,
-        habilitadas=habilitadas,
-        ocupantes_da_ampla=ocupantes_da_ampla,
-    )
-    titulares = elegiveis[: max(int(efetivas), 0)]
+    sequencia = sequencia_por_pessoa(progrediram_em_ordem, ocupantes_da_ampla=ocupantes_da_ampla)
+    titulares = sequencia[: max(int(efetivas), 0)]
     _recusar_empate_na_fronteira(
-        titulares=titulares, elegiveis=elegiveis, empates_residuais=empates_residuais or {}
+        titulares=titulares,
+        elegiveis=sequencia,
+        habilitadas=habilitadas,
+        empates_residuais=empates_residuais or {},
     )
     return titulares
 
 
-def _recusar_empate_na_fronteira(*, titulares, elegiveis, empates_residuais):
+def _recusar_empate_na_fronteira(*, titulares, elegiveis, empates_residuais, habilitadas=None):
     """Recusa quando um grupo de empatados fica metade dentro e metade fora do alvo (`R-002`).
 
-    **Só os elegíveis contam.** Um empate entre eliminados não disputa titularidade nenhuma, e
-    recusar por causa dele pararia a apuração por um fato que não muda número algum.
+    **A fronteira é a da janela de titulares**, e por isso o conjunto comparado é a sequência que
+    progrediu — a mesma sobre a qual a janela foi recortada.
+
+    **Mas a recusa só alcança o empate que muda o número.** Entre pessoas eliminadas na Etapa
+    governada, qualquer atribuição da janela devolve a mesma contagem: nenhuma delas ocupa vaga. Se
+    a recusa disparasse ali, a apuração pararia por um desempate que não decide coisa alguma — e o
+    caminho de saída, julgar na `015`, seria pedido sem razão. Basta que **uma** das empatadas
+    esteja habilitada para a escolha passar a importar.
     """
     if not empates_residuais:
         return
     dentro = {chave_da_inscricao(t) for t in titulares}
     disputando = {chave_da_inscricao(e) for e in elegiveis}
+    decisivas = (
+        {chave_da_inscricao(i) for i in habilitadas} if habilitadas is not None else disputando
+    )
     grupos = {}
     for identificador, posicao in empates_residuais.items():
         grupos.setdefault(posicao, set()).add(chave_da_inscricao(identificador))
     for posicao in sorted(grupos, key=lambda p: (p is None, p)):
         competindo = grupos[posicao] & disputando
+        if not competindo & decisivas:
+            continue
         if competindo & dentro and competindo - dentro:
             raise EmpateNaFronteiraDoAlvo(posicao, len(competindo))
 
 
-def ocupantes(*, titulares, efeitos_lidos=()):
-    """O conjunto de quem ocupa vaga, depois de aplicados os efeitos que a `019` registrou.
+def ocupantes(*, titulares, habilitadas=None, efeitos_lidos=()):
+    """O conjunto de quem ocupa vaga: os titulares **habilitados**, mais os efeitos da `019`.
+
+    **A habilitação entra aqui, e não na janela.** `ocupadas = |titulares habilitados − excluídos ∪
+    incluídos|` é a fórmula da `R-001` lida ao pé da letra: quem é titular e foi eliminado na Etapa
+    governada não ocupa a vaga dele — e ela fica faltando, para que alguém chame o próximo.
+
+    `habilitadas=None` dispensa o filtro, e serve a quem já entrega a lista filtrada.
 
     **Conjunto, e não subtração de contagem** (`R-001`). Duas exclusões da mesma pessoa dariam `−2`
     numa soma, e o número deixaria de ser reproduzível a partir dos atos. E exclusão de quem **não
@@ -168,6 +206,8 @@ def ocupantes(*, titulares, efeitos_lidos=()):
     continua determinístico, porque `efeitos_lidos` é lista congelada, como `movimentos_lidos`.
     """
     ocupando = {chave_da_inscricao(t) for t in titulares}
+    if habilitadas is not None:
+        ocupando &= {chave_da_inscricao(i) for i in habilitadas}
     for especie, inscricao in efeitos_lidos:
         if especie == nomes.EFEITO_INCLUSAO:
             ocupando.add(chave_da_inscricao(inscricao))
@@ -195,6 +235,12 @@ def apurar(
     inicial depende de ordem, e um conjunto não a tem. Trocar a assinatura sem trocar quem a chama
     produziria um número plausível e errado — e plausível é o que faz passar; com o nome novo, quem
     ainda passa `dentro_da_faixa` recebe `TypeError` na hora.
+
+    **Titular não é o mesmo que ocupante, e a diferença é o que faz a vaga faltar.** A janela de
+    titulares é recortada sobre a sequência que progrediu, antes de qualquer pergunta sobre
+    habilitação; ocupante é o titular **habilitado**, mais e menos o que os efeitos da `019`
+    disseram. Quem é titular e foi eliminado na Etapa governada não ocupa a vaga dele, e ela
+    aparece em `faltando` — para que alguém **chame** o próximo, com ato.
 
     **Ocupada deixou de ser "quantos cabem".** O cálculo anterior era
     `min(|faixa ∩ habilitadas|, efetivas)`, e ele conta **capacidade**: enquanto sobrassem
@@ -229,13 +275,14 @@ def apurar(
     # aceita, entra por `efeitos_lidos`, e não por uma segunda contagem.
     titulares = titulares_iniciais(
         progrediram_em_ordem=progrediram_em_ordem,
-        habilitadas=habilitadas,
         efetivas=efetivas,
         ocupantes_da_ampla=ocupantes_da_ampla,
         empates_residuais=empates_residuais,
+        habilitadas=habilitadas,
     )
     ocupadas = min(
-        len(ocupantes(titulares=titulares, efeitos_lidos=efeitos_lidos)), max(efetivas, 0)
+        len(ocupantes(titulares=titulares, habilitadas=habilitadas, efeitos_lidos=efeitos_lidos)),
+        max(efetivas, 0),
     )
     return int(publicadas), efetivas, ocupadas
 

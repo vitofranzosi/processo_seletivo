@@ -100,13 +100,37 @@ class TestAFormaDeclarada:
         edital, _, _ = cenario_por_publicacao
         convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="pub-conv")
 
-        declarado = comunicar(edital, gestor, convocada["id"], chave="pub-comunicar")
+        declarado = comunicar(
+            edital,
+            gestor,
+            convocada["id"],
+            chave="pub-comunicar",
+            referencia_da_publicacao="Site do Cefor, 13/09/2026, item 7.2 do Edital 69/2026.",
+        )
 
         assert declarado["forma"] == FORMA_POR_PUBLICACAO
         assert declarado["resultado"] == "ENVIADA"
         assert caixa == [], "publicar não põe mensagem em caixa de entrada nenhuma"
         emitida = ComunicacaoEmitida.objects.get(id=declarado["id"])
         assert emitida.destinatario == ""
+        assert "Site do Cefor" in emitida.referencia_da_publicacao
+
+    def test_a_publicacao_sem_referencia_e_recusada(self, cenario_por_publicacao, gestor, caixa):
+        """**O sistema não publica no site do certame**, e a `R-007` não lhe deu essa capacidade.
+
+        Gravar `ENVIADA` sem dizer onde se publicou iniciaria o prazo do item 7.2 do 69/2026 contra
+        alguém que não teve como saber — e o registro é append-only: não haveria como desfazê-lo.
+        """
+        edital, _, _ = cenario_por_publicacao
+        convocada = convocar(
+            edital, gestor, primeiro_chamavel(edital), idempotency_key="pub-sem-ref-conv"
+        )
+
+        with pytest.raises(DomainError) as erro:
+            comunicar(edital, gestor, convocada["id"], chave="pub-sem-ref")
+
+        assert erro.value.code == nomes.REFERENCIA_DA_PUBLICACAO_OBRIGATORIA
+        assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 0
 
     def test_a_forma_lida_e_a_da_versao_que_a_convocacao_citou(self, cenario, gestor):
         """**Da versão citada, e não da vigente.**
@@ -233,3 +257,64 @@ def test_nenhum_campo_da_comunicacao_afirma_recebimento(cenario, gestor, caixa):
 
     assert "enviadaEm" in declarado
     assert not {"recebidaEm", "lidaEm", "entregueEm"} & set(declarado)
+
+
+class CorreioQueObservaATransacao:
+    """Registra se o envio aconteceu **dentro** de uma transação aberta."""
+
+    dentro_da_transacao = None
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def send_messages(self, mensagens):
+        from django.db import connection as conexao
+
+        CorreioQueObservaATransacao.dentro_da_transacao = conexao.in_atomic_block
+        return len(mensagens)
+
+
+def test_o_envio_acontece_fora_da_transacao_que_trava_o_processo(cenario, gestor, settings):
+    """**A regra que `inscricoes/application/mensagem.py` escreve com todas as letras.**
+
+    `comando_de_comissao` trava o Processo com `select_for_update`. Um SMTP lento dentro dela
+    paralisaria **todos** os comandos daquele certame; e um `rollback` posterior desfaria o registro
+    sem desfazer a mensagem — o candidato ficaria com uma convocação na caixa de entrada que o
+    sistema esqueceu de ter enviado.
+
+    A ordem certa é a que `exigir_base_de_comissao` existe para permitir: autorizar, ir à rede, e só
+    então abrir a transação que grava e audita.
+    """
+    settings.EMAIL_BACKEND = (
+        "tests.integration.convocacao.test_comunicacao.CorreioQueObservaATransacao"
+    )
+    CorreioQueObservaATransacao.dentro_da_transacao = None
+    edital, _, _ = cenario
+    convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="tx-conv")
+
+    declarado = comunicar(edital, gestor, convocada["id"], chave="tx-comunicar")
+
+    assert declarado["resultado"] == "ENVIADA"
+    assert CorreioQueObservaATransacao.dentro_da_transacao is False, (
+        "o envio correu dentro da transação que trava o Processo"
+    )
+
+
+def test_o_ator_sem_base_nao_faz_o_sistema_ir_a_rede(cenario, sem_nada, gestor, settings):
+    """**Autorizar antes de trabalhar** (Princípio III).
+
+    Com o envio fora da transação, a tentação é conferir autoridade só ao gravar — e aí quem não
+    pode nada já teria feito o sistema entregar a mensagem.
+    """
+    settings.EMAIL_BACKEND = (
+        "tests.integration.convocacao.test_comunicacao.CorreioQueObservaATransacao"
+    )
+    CorreioQueObservaATransacao.dentro_da_transacao = None
+    edital, _, _ = cenario
+    convocada = convocar(edital, gestor, primeiro_chamavel(edital), idempotency_key="aut-conv")
+
+    with pytest.raises(DomainError) as erro:
+        comunicar(edital, sem_nada, convocada["id"], chave="aut-comunicar")
+
+    assert erro.value.code == "not_found"
+    assert CorreioQueObservaATransacao.dentro_da_transacao is None, "nada foi enviado"

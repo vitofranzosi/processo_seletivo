@@ -206,6 +206,44 @@ def test_ler_a_convocacao_nao_move_o_relogio(client, certame, gestor, settings):
     assert ComunicacaoEmitida.objects.filter(convocacao_id=convocada["id"]).count() == 1
 
 
+def test_a_leitura_entra_na_trilha_do_edital(client, certame, gestor):
+    """`FR-288b`: o acesso é **registrado**, e a pergunta que ele responde é auditável.
+
+    **Trilha, e não linha de log.** *"A pessoa teve como saber?"* é respondida na mesma tela em que
+    se responde por uma publicação — e não num arquivo do servidor que ninguém audita.
+
+    O ator é o candidato, com o conjunto de permissões **vazio**: é o que impede a trilha de
+    afirmar autoridade que ele não tem.
+    """
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    edital, _, inscricoes = certame
+    chamada = proximo(edital)
+    convocada = convocar(edital, gestor, chamada, idempotency_key="trilha-portal")
+    titular = next(i for i in inscricoes if i.id == chamada)
+    entrar_como(client, titular)
+
+    abrir(client, titular)
+
+    registro = RegistroAuditoria.objects.filter(operation="CONVOCACAO_LER").latest("occurred_at")
+    assert str(registro.aggregate_id) == convocada["id"]
+    assert registro.actor_subject == titular.identity_subject
+    assert registro.permission == "", "o candidato não carrega permissão institucional nenhuma"
+    assert "não inicia nem reinicia prazo" in registro.reason
+
+
+def test_a_leitura_de_quem_nao_foi_chamado_nao_enche_a_trilha(client, certame):
+    """Auditar a ausência produziria linhas que não respondem pergunta nenhuma."""
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    _, _, inscricoes = certame
+    entrar_como(client, inscricoes[0])
+
+    abrir(client, inscricoes[0])
+
+    assert not RegistroAuditoria.objects.filter(operation="CONVOCACAO_LER").exists()
+
+
 def test_a_tela_cabe_em_375_px(client, certame, gestor):
     """`T071`: verificada agora, e não no fim da fila — como a `013` deixou e pagou.
 

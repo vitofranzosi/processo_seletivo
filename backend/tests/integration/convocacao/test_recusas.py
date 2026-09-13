@@ -277,3 +277,110 @@ class TestAForma:
             convocar(edital, gestor, fila[0], fundamento="   ", idempotency_key="sem-fundamento")
 
         assert erro.value.code == nomes.FUNDAMENTO_OBRIGATORIO
+
+
+class TestODesfechoQueNaoCabeNaChamada:
+    """Nem toda espécie cabe em toda convocação — e o enum sozinho não sabe disso.
+
+    **O registro é append-only**: a transição juridicamente impossível entraria uma vez e ficaria,
+    com a contagem divergindo do que os Resultados dizem.
+    """
+
+    def desfechar(self, edital, gestor, convocacao_id, especie, chave):
+        from processo_seletivo.convocacao.application.desfechar import desfechar
+
+        return desfechar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            convocacao_id=convocacao_id,
+            especie=especie,
+            fundamento="Registrado em processo.",
+            idempotency_key=chave,
+            correlation_id="teste-convocacao-019",
+        )
+
+    def test_a_chamada_para_vaga_nao_termina_em_regularizacao(self, cenario, gestor):
+        """Não há indeferimento a suceder: a regularização produziria sucessor de um Resultado que
+        estava habilitado."""
+        edital, _, _ = cenario
+        fila, _ = fila_do(edital)
+        convocada = convocar(edital, gestor, fila[0], idempotency_key="inc-vaga")
+
+        with pytest.raises(DomainError) as erro:
+            self.desfechar(edital, gestor, convocada["id"], nomes.REGULARIZACAO, "inc-vaga-d")
+
+        assert erro.value.code == nomes.DESFECHO_INCOMPATIVEL_COM_A_CHAMADA
+
+    def test_a_chamada_para_regularizar_nao_termina_em_aceite(
+        self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+    ):
+        """**O defeito mais caro dos três.** `ACEITE` inclui na contagem de ocupantes — e ali a
+        pessoa continuaria com o Resultado indeferido, ocupando vaga sem habilitação nenhuma."""
+        from tests.fixtures.convocacao import montar_cenario_da_convocacao
+
+        edital, _, _ = montar_cenario_da_convocacao(
+            gestor,
+            api_client,
+            manager_headers,
+            process_payload,
+            prefixo="incompativel-019",
+            indeferidas=(0,),
+        )
+        _, contexto = fila_do(edital)
+        convocada = convocar(
+            edital,
+            gestor,
+            contexto["regularizaveis"][0],
+            especie=nomes.PARA_REGULARIZAR,
+            idempotency_key="inc-reg",
+        )
+
+        with pytest.raises(DomainError) as erro:
+            self.desfechar(edital, gestor, convocada["id"], nomes.ACEITE, "inc-reg-d")
+
+        assert erro.value.code == nomes.DESFECHO_INCOMPATIVEL_COM_A_CHAMADA
+
+    def test_o_nao_atendimento_antes_do_envio_e_recusado(self, cenario, gestor):
+        """`FR-269a`: sem envio o prazo não corre, e não há não atendimento a registrar.
+
+        Dar por não atendida uma chamada que nunca partiu puniria a pessoa por uma falha do sistema.
+        """
+        edital, _, _ = cenario
+        fila, _ = fila_do(edital)
+        convocada = convocar(edital, gestor, fila[0], idempotency_key="prem-conv")
+
+        with pytest.raises(DomainError) as erro:
+            self.desfechar(edital, gestor, convocada["id"], nomes.NAO_ATENDIMENTO, "prem-d")
+
+        assert erro.value.code == nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO
+
+    def test_o_nao_atendimento_antes_do_vencimento_e_recusado(self, cenario, gestor, settings):
+        """E depois do envio, antes do vencimento, a pessoa ainda está dentro do prazo dela."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from processo_seletivo.convocacao.application.comunicar import comunicar
+
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        edital, _, _ = cenario
+        fila, _ = fila_do(edital)
+        convocada = convocar(
+            edital,
+            gestor,
+            fila[0],
+            vencimento=timezone.now() + timedelta(days=5),
+            idempotency_key="venc-conv",
+        )
+        comunicar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            convocacao_id=convocada["id"],
+            idempotency_key="venc-comunicar",
+            correlation_id="teste",
+        )
+
+        with pytest.raises(DomainError) as erro:
+            self.desfechar(edital, gestor, convocada["id"], nomes.NAO_ATENDIMENTO, "venc-d")
+
+        assert erro.value.code == nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO

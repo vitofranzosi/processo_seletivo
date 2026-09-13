@@ -2534,6 +2534,9 @@ OPERACOES = {
     "CONVOCACAO_DESFECHAR": "Desfecho de convocação registrado",
     "CONVOCACAO_COMUNICAR": "Comunicação de convocação emitida",
     "CONVOCACAO_ATESTAR": "Atestado de fato externo registrado",
+    # A leitura do candidato (`FR-288b`). Entra na mesma trilha porque a pergunta que ela responde
+    # — *"a pessoa teve como saber?"* — é feita por quem responde por todo o resto do certame.
+    "CONVOCACAO_LER": "Convocação lida pela pessoa convocada",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -4627,6 +4630,7 @@ def comunicar_view(request, edital_id, marco_id, convocacao_id):
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-comunicar-{edital_id}",
             endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            referencia_da_publicacao=request.POST.get("referencia_da_publicacao") or "",
         )
         request.session["acao_da_convocacao"] = "comunicacao"
     except DomainError as erro:
@@ -4651,7 +4655,9 @@ def atestar_view(request, inscricao_id):
     ator, edital, _ = _edital_para_classificar(request, inscricao.edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    destino = request.POST.get("voltar") or reverse("interface:detalhe", args=[edital.id])
+    destino = _destino_interno(
+        request.POST.get("voltar"), reverse("interface:detalhe", args=[edital.id])
+    )
     try:
         request.session["resultado_da_convocacao"] = atestar(
             actor=ator,
@@ -4667,6 +4673,25 @@ def atestar_view(request, inscricao_id):
     except DomainError as erro:
         request.session["erro_da_convocacao"] = erro.detail
     return redirect(destino)
+
+
+def _destino_interno(pedido, padrao):
+    """O destino do POST-redirect-GET, **conferido** antes de virar `Location`.
+
+    **Um `voltar` vindo do corpo do pedido é entrada do usuário, e não configuração.** Sem esta
+    conferência, um formulário forjado noutro domínio levaria quem está autenticado na gestão para
+    fora do sistema com um clique — e a página de destino veria um visitante que acabou de praticar
+    um ato administrativo.
+
+    Aceita só caminho do próprio servidor: nem host, nem esquema, nem `//` que o navegador leria
+    como origem.
+    """
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    candidato = (pedido or "").strip()
+    if candidato and url_has_allowed_host_and_scheme(candidato, allowed_hosts=None):
+        return candidato
+    return padrao
 
 
 def _volta_para_convocacao(edital_id, marco_id, lista_id):

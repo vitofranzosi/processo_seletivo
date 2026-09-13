@@ -116,13 +116,14 @@ def convocar(
                 409,
             )
 
-        anterior = _vigente_da_pessoa(contexto, inscricao)
+        anterior = _em_aberto_da_pessoa(contexto, inscricao)
         texto_do_motivo = (motivo or "").strip()
         if anterior is not None and not texto_do_motivo:
             raise DomainError(
                 nomes.CONVOCACAO_VIGENTE_EXISTENTE,
-                "Esta Inscrição já tem convocação vigente neste recorte. Para corrigi-la, declare "
-                "o motivo da sucessão.",
+                "Esta Inscrição tem convocação neste recorte aguardando desfecho. Para corrigi-la, "
+                "declare o motivo da sucessão; para chamá-la de novo, registre antes o desfecho da "
+                "chamada anterior.",
                 409,
             )
 
@@ -153,6 +154,13 @@ def convocar(
         )
 
         versao = effective_version(edital_id=edital.id, at=ctx.now)
+        # **A sucessora copia o número da raiz que corrige**; a chamada nova recebe o seguinte. É
+        # a diferença entre corrigir um ato e praticar outro, dita por dado.
+        chamada = (
+            anterior.chamada
+            if anterior is not None
+            else _proxima_chamada(contexto, inscricao=inscricao)
+        )
         convocacao = Convocacao(
             edital=edital,
             perfil_id=perfil,
@@ -168,6 +176,7 @@ def convocar(
             versao=versao,
             convocacao_anterior=anterior,
             motivo_da_sucessao=texto_do_motivo if anterior is not None else "",
+            chamada=chamada,
             criado_por=str(getattr(actor, "subject", actor)),
             criado_em=ctx.now,
         )
@@ -195,15 +204,44 @@ def _especie(valor):
     return especie
 
 
-def _vigente_da_pessoa(contexto, inscricao):
-    """A convocação vigente desta pessoa no recorte, ou `None`.
+def _proxima_chamada(contexto, *, inscricao):
+    """Quantas vezes esta pessoa já foi chamada neste recorte, mais um.
 
-    **Vigente é a que ninguém sucedeu**, e não a mais recente: sucessão cria linha nova, e a
-    anterior continua legível — é o que permite reconstruir o que foi corrigido, e por quê.
+    Conta **todas** as convocações dela, inclusive as sucedidas: o número identifica a chamada, e
+    uma chamada corrigida continua sendo aquela chamada.
+    """
+    alvo = chave_da_inscricao(inscricao)
+    numeros = [
+        convocacao.chamada
+        for convocacao in contexto["convocacoes"]
+        if chave_da_inscricao(convocacao.inscricao_id) == alvo
+    ]
+    return max(numeros, default=0) + 1
+
+
+def _em_aberto_da_pessoa(contexto, inscricao):
+    """A convocação desta pessoa que **ainda não teve desfecho**, ou `None`.
+
+    **Chamada em aberto, e não "chamada vigente"** — a distinção é o que faz a segunda convocação
+    da mesma pessoa ser possível quando ela cabe. Uma convocação com desfecho está **concluída**: a
+    pessoa respondeu, ou a Administração concluiu por ela. Chamá-la de novo — porque foi
+    reclassificada, ou porque a vaga voltou a vagar — é uma **chamada nova**, e não a correção da
+    anterior.
+
+    *A primeira versão bloqueava por convocação vigente, sem olhar o desfecho, e produzia um beco:
+    o reclassificado voltava ao fim da fila, chegava a vez dele, e a chamada era recusada com
+    `convocacao_vigente_existente`. A saída oferecida — declarar motivo de sucessão — era pior:
+    sucessão pula as guardas de ordem, de modo que a única forma de chamá-lo furava a fila.*
+
+    **Vigente continua sendo a que ninguém sucedeu**: sucessão cria linha nova, e a anterior segue
+    legível. O que muda é que a sucessão passa a ser o que ela sempre foi — correção de um ato
+    ainda pendente de resposta.
     """
     alvo = chave_da_inscricao(inscricao)
     for convocacao in selectors.vigentes(contexto["convocacoes"]):
-        if chave_da_inscricao(convocacao.inscricao_id) == alvo:
+        if chave_da_inscricao(convocacao.inscricao_id) != alvo:
+            continue
+        if selectors.desfecho_de(convocacao) is None:
             return convocacao
     return None
 

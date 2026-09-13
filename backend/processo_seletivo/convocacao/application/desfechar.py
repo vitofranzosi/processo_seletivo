@@ -24,13 +24,14 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
-from processo_seletivo.convocacao.domain import nomes
+from processo_seletivo.convocacao.domain import nomes, prazo
 from processo_seletivo.convocacao.models import (
     AtestadoDeFatoExterno,
     Convocacao,
     DesfechoDaConvocacao,
 )
 from processo_seletivo.ocupacao.application import efeitos as porta_de_efeitos
+from processo_seletivo.ocupacao.domain.apuracao import chave_da_inscricao
 from processo_seletivo.shared.api.problems import DomainError
 
 DESFECHAR = "CONVOCACAO_DESFECHAR"
@@ -52,6 +53,7 @@ def desfechar(
     correlation_id,
     atestado_id=None,
     resultado_sucessor=None,
+    motivo="",
 ):
     """Registra o desfecho, escreve o efeito na porta, e devolve o que o ato declarou."""
     payload = {
@@ -77,8 +79,20 @@ def desfechar(
                 422,
                 campo="fundamento",
             )
-        _recusar_desfecho_repetido(convocacao)
         _recusar_convocacao_sucedida(convocacao)
+        anterior = _vigente_da_convocacao(convocacao)
+        texto_do_motivo = (motivo or "").strip()
+        if anterior is not None and not texto_do_motivo:
+            raise DomainError(
+                nomes.DESFECHO_JA_REGISTRADO,
+                "Esta convocação já tem desfecho registrado. Um fato posterior — o cancelamento "
+                "por inércia de quem havia aceitado, por exemplo — o sucede, e a sucessão exige "
+                "motivo; o desfecho anterior continua legível.",
+                409,
+            )
+        _recusar_desfecho_incompativel(convocacao, especie=especie)
+        _recusar_nao_atendimento_prematuro(convocacao, especie=especie, agora=ctx.now)
+        _recusar_inercia_sem_ocupacao(convocacao, especie=especie, agora=ctx.now)
         atestado = _atestado(especie, atestado_id, convocacao)
         # **O identificador do desfecho nasce antes dele**, e a ordem é a mesma que a `016` usa para
         # o movimento de vaga: o Resultado sucessor precisa citar o desfecho que o produziu, e o
@@ -98,7 +112,11 @@ def desfechar(
             inscricao_id=convocacao.inscricao_id,
             especie=nomes.EFEITO_POR_DESFECHO[especie],
             fundamento=texto,
-            ato_de_origem_id=convocacao.id,
+            # **O ato de origem é o desfecho, e não a convocação** — é ele que produz o efeito, e
+            # é o que o rótulo ao lado diz. Apontar para a convocação faria a trilha da `016` citar
+            # a chamada como causa de uma exclusão que ela não causou: quem convoca não exclui
+            # ninguém, e a mesma chamada pode ter um desfecho sucedido por outro.
+            ato_de_origem_id=identidade,
             rotulo_da_origem=ROTULO_DA_ORIGEM,
             registrado_por=str(getattr(actor, "subject", actor)),
             registrado_em=ctx.now,
@@ -111,6 +129,8 @@ def desfechar(
             atestado=atestado,
             resultado_sucessor=resultado_sucessor,
             efeito=efeito,
+            desfecho_anterior=anterior,
+            motivo_da_sucessao=texto_do_motivo if anterior is not None else "",
             registrado_por=str(getattr(actor, "subject", actor)),
             registrado_em=ctx.now,
         )
@@ -204,20 +224,92 @@ def _especie(valor):
     return especie
 
 
-def _recusar_desfecho_repetido(convocacao):
-    """`desfecho_ja_registrado` (`FR-273`).
+def _vigente_da_convocacao(convocacao):
+    """O desfecho que ninguém sucedeu, ou `None` — a mesma leitura que a tela faz."""
+    return selectors.desfecho_de(convocacao)
 
-    **Recusado aqui e no banco, e as duas não são redundantes.** A constraint vale para quem chegue
-    por fora da aplicação; esta recusa é a que nomeia o que aconteceu para quem está na tela — e
-    evita que a resposta seja um erro de integridade sem tradução.
+
+def _recusar_desfecho_incompativel(convocacao, *, especie):
+    """Nem toda espécie cabe em toda chamada (`nomes.DESFECHOS_POR_ESPECIE`).
+
+    **O enum diz que a espécie existe; esta recusa diz que ela não cabe aqui.** Sem ela, uma
+    convocação **para regularizar** podia terminar em `ACEITE` — incluindo a pessoa na contagem de
+    ocupantes sem que Resultado nenhum a habilitasse —, e uma chamada para vaga podia terminar em
+    `REGULARIZACAO`, produzindo sucessor de um Resultado que não estava indeferido.
+
+    O registro é append-only: a transição impossível entraria uma vez e ficaria.
     """
-    if selectors.desfecho_de(convocacao) is not None:
+    admitidos = nomes.DESFECHOS_POR_ESPECIE.get(convocacao.especie, ())
+    if especie in admitidos:
+        return
+    raise DomainError(
+        nomes.DESFECHO_INCOMPATIVEL_COM_A_CHAMADA,
+        f"Uma convocação da espécie {convocacao.get_especie_display().lower()} não admite este "
+        "desfecho.",
+        422,
+        campo="especie",
+    )
+
+
+def _recusar_nao_atendimento_prematuro(convocacao, *, especie, agora):
+    """Não atender pressupõe ter tido como atender (`FR-269a`, `FR-269b`).
+
+    **Duas condições, e as duas são do prazo.** A comunicação precisa ter sido enviada — sem envio
+    o relógio não corre, e dar por não atendida uma chamada que nunca partiu puniria a pessoa por
+    uma falha do sistema. E o vencimento informado precisa ter passado: antes dele, a pessoa ainda
+    está dentro do prazo dela.
+
+    **Sem vencimento informado, basta o envio.** O Edital que não publica prazo deixa o juízo a
+    quem conduz o certame, e não é o sistema que vai inventar um.
+
+    Isto não contraria a `FR-274`: o decurso continua **não produzindo** desfecho nenhum sozinho.
+    O que ele faz é abrir a porta para o ato de quem conduz.
+    """
+    if especie != nomes.NAO_ATENDIMENTO:
+        return
+    enviado_em = selectors.envio_de(convocacao)
+    if not prazo.prazo_corre(enviado_em=enviado_em):
         raise DomainError(
-            nomes.DESFECHO_JA_REGISTRADO,
-            "Esta convocação já tem desfecho registrado. Corrigi-lo é suceder a convocação, com "
-            "motivo — e não sobrescrever o que foi respondido.",
+            nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO,
+            "A comunicação desta convocação não foi enviada com sucesso: o prazo não começou a "
+            "correr, e não há não atendimento a registrar.",
             409,
         )
+    if convocacao.vencimento is not None and not prazo.decorrido(
+        vencimento=convocacao.vencimento, enviado_em=enviado_em, agora=agora
+    ):
+        raise DomainError(
+            nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO,
+            "O vencimento informado nesta convocação ainda não passou: a pessoa está dentro do "
+            "prazo dela.",
+            409,
+        )
+
+
+def _recusar_inercia_sem_ocupacao(convocacao, *, especie, agora):
+    """O cancelamento por inércia alcança **quem já ocupava** e desapareceu (§6 da spec).
+
+    Registrá-lo sobre quem nunca ocupou vaga nenhuma cancelaria uma matrícula que não existe — e o
+    desfecho certo ali é outro: não atendimento à convocação, que é a resposta que falta.
+    """
+    if especie != nomes.INERCIA:
+        return
+    contexto = selectors.contexto_do_recorte(
+        edital=convocacao.edital,
+        perfil_id=convocacao.perfil_id,
+        marco_id=convocacao.marco_id,
+        lista_id=convocacao.lista_id,
+        at=agora,
+    )
+    if chave_da_inscricao(convocacao.inscricao_id) in contexto["ocupando"]:
+        return
+    raise DomainError(
+        nomes.INERCIA_SEM_OCUPACAO,
+        "Esta Inscrição não consta ocupando vaga neste recorte: não há matrícula a cancelar por "
+        "inércia. Quem foi chamado e não respondeu tem desfecho próprio — não atendimento à "
+        "convocação.",
+        409,
+    )
 
 
 def _recusar_convocacao_sucedida(convocacao):

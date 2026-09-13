@@ -45,12 +45,16 @@ registrado na trilha sem mover o relógio (`FR-288b`).
 | `convocacao_vigente_existente` | a pessoa já tem convocação vigente naquele recorte |
 | `reabilitado_a_frente` | há Inscrição reabilitada por deferimento no topo da fila (`FR-292b`) |
 | `vencimento_anterior_ao_envio` | o vencimento informado precede o envio (`FR-269b`) |
-| `desfecho_ja_registrado` | a convocação já tem desfecho |
+| `desfecho_ja_registrado` | a convocação já tem desfecho **vigente**, e sucedê-lo exige motivo — é assim que o cancelamento por inércia alcança quem havia aceitado |
 | `atestado_obrigatorio` | inércia sem atestado de fato externo |
 | `reclassificado_antes_do_esgotamento` | chamada de reclassificado com suplentes por esgotar |
 | `lista_alcancada_esgotada` | não há mais quem chamar dentro do teto publicado; a faixa seguinte é ato da `014` |
 | `empate_na_fronteira_do_alvo` | empate residual não julgado atravessa a fronteira do alvo (`R-002` da pesquisa) |
 | `forma_de_comunicacao_nao_declarada` | o Perfil publicado não declarou `callForm` |
+| `referencia_da_publicacao_obrigatoria` | o Edital comunica por publicação e ninguém declarou onde se publicou — o sistema não publica por conta própria |
+| `desfecho_incompativel_com_a_chamada` | a espécie existe, mas não cabe nesta chamada: aceite numa convocação para regularizar, regularização numa chamada para vaga |
+| `nao_atendimento_antes_do_vencimento` | a comunicação não foi enviada, ou o vencimento informado ainda não passou |
+| `inercia_sem_ocupacao` | a Inscrição não consta ocupando vaga: não há matrícula a cancelar, e o desfecho certo é o não atendimento |
 
 ### Guarda de implantação, e não de domínio
 
