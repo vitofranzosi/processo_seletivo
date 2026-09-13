@@ -478,7 +478,8 @@ Não se resolvem com polimento:
    a etapa mais complexa do assistente é a única inalcançável pelo caminho que existe para responder
    "onde conserto isto?".
 5. **A conferência da Retificação usa a representação, e não o domínio** (fricção #7).
-6. **A retificação não declara o que não alcança.** `interface/retificacao.py` exclui de propósito
+6. **A retificação alcança cerca de 40% do que publica, e não declara o que fica de fora.**
+   O anexo 16 mede: 38 de 98 campos no Edital com mais conteúdo. `interface/retificacao.py` exclui de propósito
    `stages`, `operation`, `targetKind`, `governedStage`, `continuation`, o tipo do fato — cada uma
    com justificativa escrita no código ("Retificações assim são possíveis pela API"). A tela promete
    "Altere os campos que precisam mudar" e não diz nada disso. Quem procurar "arredondamento",
@@ -632,19 +633,26 @@ a de homologação e a de publicação; e ganha o par antes/depois que hoje só 
 
 ## 14. Backlog priorizado
 
+**O que P0 significa aqui:** risco operacional — o certame pode sair errado, e o erro só aparece
+quando já não há como desfazê-lo. Não é "primeira leva de trabalho". Por esse critério, P0 são
+três, e não quatro: a microcópia invisível é S3 de altíssimo retorno, mas não põe um Edital
+publicado numa situação sem saída, e por isso desce para P1. O item de Recursos é P0 **porque a
+`018` está entregue** (140 de 140 tarefas, integrada na `main`): o fluxo de recurso é operacional,
+e um fluxo operacional sem porta de entrada é risco, não atrito.
+
 | Prio | Achado | Tipo | Sev. | Esforço | Impacto | Recomendação |
 |---|---|---|---|---|---|---|
 | **P0** | Quadro de vagas vazio desliga ocupação e convocação | modelo | S4 | M/G | altíssimo | Derivar a linha geral de "Vagas imediatas"; até lá, AVISO na validação e o quadro na Revisão |
-| **P0** | Dicas de consequência invisíveis (`.oculto` sem placeholder) | feedback | S3 | P | altíssimo | Renderizar como texto auxiliar visível |
 | **P0** | Reaproveitamento publica cronograma vencido | estados | S3 | P | alto | Cronograma nasce PENDENTE; AVISO para evento no passado; IMPEDE para inscrição já encerrada |
 | **P0** | Recursos sem porta de entrada | encontrabilidade | S3 | P | alto | Link no Edital e fila em "Minhas Etapas" |
+| **P1** | Dicas de consequência invisíveis (`.oculto` sem placeholder) | feedback | S3 | P | **altíssimo** | Renderizar como texto auxiliar visível — maior retorno por linha do backlog |
 | **P1** | Processo não recebe segundo Edital | arq. informação | S3 | P/M | alto | "Novo Edital neste Processo" |
 | **P1** | Pendência de marco roteada para a tela errada | consequência | S3 | P | alto | `classificacao` em `DESTINO_DA_PENDENCIA` |
 | **P1** | JSON Pointer e UTC na conferência da Retificação | nomenclatura | S3 | P/M | alto | Reaproveitar o renderizador público; zona institucional |
 | **P1** | Julgador não vê o objeto do recurso | contexto | S3 | M | alto | Links para resultado, avaliação, documentos e Edital |
 | **P1** | "Publicar resultado" fora da tela do marco | encontrabilidade | S3 | P | alto | Botão no marco + estado "emitido e não divulgado" |
 | **P1** | "Impedimento" com dois sentidos | nomenclatura | S3 | P | alto | Renomear o estado de prontidão |
-| **P1** | `requirements` do Perfil não retificável | consequência | S3 | P | alto | Incluir em `CAMPOS_PERFIL` e estender o teste-guardião |
+| **P1** | Retificação alcança ~40% dos campos publicados | capacidade | S3 | M | alto | Inventário do anexo antes de codificar campo a campo |
 | **P1** | Marco classificatório com 30 controles | densidade | S3 | M | alto | Disclosure por "como a ordem é produzida" |
 | **P2** | Atos operacionais sem confirmação | feedback | S2 | P/M | médio | Estender a página de ato a consolidar, emitir e remover membro |
 | **P2** | Bloqueios revelados só na tentativa | feedback | S2 | P | médio | Anunciar antes, como faz a tela de Comissão |
@@ -763,3 +771,86 @@ Em ordem de probabilidade:
    Comissão é a prova. Generalizar esse padrão para distribuição, publicação definitiva, segregação
    de funções e cronograma reaproveitado transformaria a maior parte das surpresas deste relatório
    em avisos oportunos.
+
+---
+
+## 16. Anexo — campos publicados × campos que a Retificação alcança
+
+A §9.6 registrou que a tela de Retificação não declara o que não alcança. Este anexo mede o
+tamanho disso, porque a pergunta normativa — *depois de publicado, tudo o que pode legitimamente
+precisar de correção tem caminho de Retificação **pela interface**?* — não se responde por
+impressão.
+
+**Método.** Para cada Edital publicado do ambiente, enumerei todo campo escalar do conteúdo
+canônico vigente (o mesmo que `publish_edital.py` grava) e comparei com o conjunto de caminhos que
+`interface.retificacao.campos_editaveis()` oferece sobre aquele mesmo conteúdo. Identidades foram
+colapsadas (`id=*`) para comparar forma, não instância.
+
+| Edital | Campos publicados | Alcançados pela tela | Cobertura |
+|---|---:|---:|---:|
+| 26/2026 — sorteio, com método declarado | **98** | **38** | 39% |
+| 01/2026 — 2 perfis, 2 modalidades, 2 anexos | 96 | 42 | 44% |
+| 51/2026 — 2 perfis, 3 Etapas | 87 | 38 | 44% |
+| 90/2026 — o do percurso | 81 | 34 | 42% |
+
+O docstring de `campos_editaveis` diz: *"Cobre tudo o que o conteúdo publicado carrega e a
+gramática endereça."* No Edital com mais campos, cobre **38 de 98** — e a cobertura fica entre 39%
+e 44% nos quatro.
+
+### O que fica de fora com razão
+
+Nem toda diferença é lacuna. Estes casos são legítimos e o código os documenta:
+
+- **Identidade e derivados** — `id`, `key` do documento, `order` de evento, seção e Etapa,
+  `status` operacional, `processoCode` e `processoTitle` (são do Processo, não do Edital),
+  `artifactHash` (derivado dos bytes), `schemaVersion`.
+- **Título das seções** — o catálogo é fixo, e divergência é recusada pela verificação de
+  topologia.
+- **Tipo do fato declarado** — trocá-lo reinterpretaria valor já congelado.
+- **Objeto ausente no conteúdo** (`cutRule: None`, `drawMethod: None`, `vacancyReversion: None`,
+  `normativeRule: None`) — endereçar caminho inexistente é recusado, e criar a declaração é
+  acréscimo, não alteração. **Tem consequência:** o que não foi declarado na publicação não passa
+  a existir por Retificação pela tela. O próprio módulo registra essa lição para `callForm` —
+  *"o primeiro Edital publicado com a forma declarada nasceria irretificável nela"* — e ela vale
+  igualmente para a regra de corte, o método do sorteio e a reversão.
+
+### O que fica de fora sem justificativa escrita
+
+São campos de norma, que o candidato lê ou que governam o cálculo, ausentes das listas `CAMPOS_*`
+sem nenhum comentário explicando a ausência — ao contrário de todas as exclusões deliberadas do
+módulo, que a documentam:
+
+| Caminho | O que é | Por que pesa |
+|---|---|---|
+| `/profiles/…/requirements/[]` | os requisitos de participação | decide **quem pode concorrer**; é o que a página pública exibe sob REQUISITOS |
+| `/profiles/…/description` | descrição do Perfil | o candidato lê antes de escolher a vaga |
+| `/profiles/…/reserveType` | há cadastro reserva, e se é limitado | o portal publica "com cadastro reserva"; só o *limite* é retificável, não a espécie |
+| `/profiles/…/classificationMilestones/…/appealWindow/{admits,durationDays,unit}` | **o prazo recursal publicado** | um Edital que publicou 3 dias e devia publicar 5 não se corrige pela tela |
+| `…/rounding/{mode,scale}` | arredondamento e casas decimais | muda posição na ordem |
+| `…/operation`, `…/normalization` | como as pontuações se combinam | muda a pontuação combinada |
+| `…/stages/[]` | quais Etapas entram na ordem | muda o universo do cálculo |
+| `…/tiebreakers/…/{whenMissing, parameters/stageId}` | o critério de desempate em si | só a **ordem** dos critérios é retificável; o critério, não |
+| `/schedule/…/location` | onde o evento acontece | é o local da prova — e a `021`, cenário 3, tem como critério de aceitação *"uma Retificação altera o local de um evento"* |
+| `/schedule/…/isRegistrationPeriod` | qual Evento é o período de inscrições | publicar o Edital com o Evento errado designado não se conserta pela tela |
+| `/stages/…/scheduleEventId` | o vínculo Etapa ↔ Evento | é o que a Supervisão cobra como "Atenção" depois de publicado |
+| `/maxInscricoesPorCandidato` | teto de inscrições por pessoa | norma publicada |
+| `/profiles/…/competitionModalities/…/normativeRule/{effectiveFrom, rounding/modo}` | vigência e arredondamento do fundamento da reserva | norma publicada |
+
+### Um precedente que o próprio módulo já criou
+
+A justificativa escrita para manter `stages` e `operation` fora é que *"retificá-las por caixa de
+texto publicaria regra que o cálculo não interpreta"*. Ela era verdadeira quando o único tipo
+disponível era texto — e deixou de ser: `cutRule/tieOutcome` e `callForm` entraram depois como
+`REFERENCIA`, *"porque são dois valores fechados, e a referência os oferece conferindo a escolha
+contra a lista"*. `operation`, `normalization`, `rounding/mode`, `appealWindow/unit`,
+`tiebreakers/whenMissing` e `reserveType` são exatamente da mesma natureza. O obstáculo original
+já caiu; a exclusão sobreviveu a ele.
+
+### O que isto sugere para a spec
+
+Não codificar campo a campo. A pergunta a fechar primeiro é normativa, não técnica: **de tudo que
+o conteúdo publica, o que pode legitimamente precisar de correção administrativa?** O inventário
+acima é a entrada dessa conversa — e o teste-guardião que hoje existe só para `CAMPOS_ETAPA`
+(`tests/contract/test_retificacoes_api.py:101`) é a forma natural de a resposta não se perder:
+um teste que compare a forma publicada com a forma alcançável e falhe quando nascer um campo novo
+sem decisão.
