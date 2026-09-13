@@ -81,8 +81,11 @@ responsabilidade. Solicite acesso a quem administra o sistema no Cefor.</p>
     <tbody>
       {% for edital in processo.editais.all %}
       <tr>
-        <th scope="row"><span class="codigo">{{ edital.number }}/{{ edital.year }}</span></th>
-        <td>{{ edital.title }}</td>
+        {% comment %} O número e o título eram texto puro, e a única porta para o Edital, a partir da
+        página inicial, eram as ações da última coluna — "Cancelar" entre elas. Abrir o Edital é o que
+        mais se faz aqui, e não tinha link. {% endcomment %}
+        <th scope="row"><a class="codigo" href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a></th>
+        <td><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.title }}</a></td>
         <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></td>
         <td>
           {% if edital.acoes %}

@@ -1,0 +1,18 @@
+{% comment %}
+A navegação da etapa que não grava rascunho. Anexos está fora de `ETAPAS_GRAVAVEIS` — a coleção não
+viaja no `replace_draft` e cada operação tem comando próprio, que grava na hora —, então ela não tem
+formulário de etapa onde pendurar os botões `name="destino"`. Ficou, por isso, sendo a única das
+nove sem ‹ Voltar e Avançar ›: o avanço do assistente simplesmente parava ali, e continuar exigia
+voltar aos cartões do topo.
+
+Link, e não botão: aqui não há nada a enviar. "Salvar rascunho" também não aparece, e a ausência é
+a verdade — cada anexo já foi gravado quando foi enviado.
+{% endcomment %}
+<p class="navegacao-etapa">
+  {% if anterior %}
+  <a class="acao" href="{% url 'interface:compor-etapa' edital.id anterior %}">‹ Voltar</a>
+  {% endif %}
+  {% if proxima %}
+  <a class="botao" href="{% url 'interface:compor-etapa' edital.id proxima %}">Avançar ›</a>
+  {% endif %}
+</p>

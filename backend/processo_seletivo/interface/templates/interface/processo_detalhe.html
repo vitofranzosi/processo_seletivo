@@ -69,8 +69,40 @@ regular. Os Editais mantêm suas próprias situações e todo o histórico perma
       <a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital
         {{ elaboravel.number }}/{{ elaboravel.year }}</a>
     </p>
+    {% elif aguardando_elaboracao %}
+    <p class="proximo-passo">
+      <strong>Aguardando quem elabora</strong> para compor o Edital
+      <a href="{% url 'interface:detalhe' aguardando_elaboracao.id %}">{{ aguardando_elaboracao.number }}/{{ aguardando_elaboracao.year }}</a>.
+    </p>
     {% endif %}
 
+    <ul class="lista-acoes">
+      {% for ato in atos %}
+      <li>
+        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
+           href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+        {% comment %}
+        A ativação é derivada: publicar o primeiro Edital do Processo já a pratica, com o motivo
+        "Ativação derivada da publicação do primeiro Edital do Processo". O ato continua existindo
+        porque a abertura formal pode preceder a publicação — o que não pode é o painel apresentá-lo
+        como se fosse o passo que falta.
+        {% endcomment %}
+        {% if ato.chave == 'ativar' %}
+        <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe
+          para quando a abertura formal precisa vir antes.</span>
+        {% endif %}
+      </li>
+      {% empty %}
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% endfor %}
+    </ul>
+
+    {% comment %}
+    Depois da lista, e não antes dela: o impedimento explica por que "Cancelar Processo" — que está
+    logo acima — seria recusado. Abrindo o cartão, ele anunciava a recusa de um ato que ninguém
+    tentou antes de mostrar qualquer ato que se pudesse praticar.
+    {% endcomment %}
     {% if pendentes and processo.status != 'CANCELADO' %}
     <details class="aviso">
       <summary><strong>O cancelamento do Processo está impedido.</strong></summary>
@@ -84,18 +116,6 @@ regular. Os Editais mantêm suas próprias situações e todo o histórico perma
       <p class="ajuda">Cancelar o Processo não cancela os Editais: cada um exige ato próprio.</p>
     </details>
     {% endif %}
-
-    <ul class="lista-acoes">
-      {% for ato in atos %}
-      <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
-      </li>
-      {% empty %}
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-      {% endfor %}
-    </ul>
   </section>
 </div>
 {% endblock %}

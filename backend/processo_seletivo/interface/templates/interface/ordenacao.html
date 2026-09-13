@@ -19,6 +19,36 @@
 <p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
 {% endif %}
 
+{% comment %}
+O estado da divulgação, logo abaixo do ato — porque é aqui que a diferença entre **emitir** e
+**publicar** importa, e era aqui que ela não existia. Sucedido o ato por um recurso deferido, esta
+tela dizia "Ordem emitida. O ato é imutável e já pode ser consultado" enquanto a página do candidato
+continuava afirmando "Este é o resultado vigente" com a ordem anterior.
+
+**Estado, e não ação.** A `017`, SC-002, declara que "a ação de publicar existe apenas a partir do
+ato emitido; a tela de cálculo não a oferece". O que faltava aqui nunca foi o botão — era o
+operador não ter como saber que o ato e a divulgação tinham se separado. O caminho continua sendo o
+do ato, que é onde o critério o coloca.
+{% endcomment %}
+{% if divulgacao %}
+{% if divulgacao.nunca_divulgado %}
+<p class="aviso">
+  <strong>Este ato ainda não foi divulgado.</strong> O público não lê esta ordem enquanto a
+  publicação não acontecer. A divulgação é ato do próprio ato emitido, e sai de lá — em
+  <em>Consultar ato e proveniência</em>, acima.
+</p>
+{% elif divulgacao.defasadas %}
+<p class="aviso">
+  <strong>A divulgação pública ficou para trás.</strong>
+  {% for publicacao in divulgacao.defasadas %}
+  O que está público é {{ publicacao.get_natureza_display|lower }}, de
+  {{ publicacao.publicado_em|date:"d/m/Y H:i" }}, e corresponde a uma ordem anterior.
+  {% endfor %}
+  Divulgar o ato vigente é ato dele, e sai de <em>Consultar ato e proveniência</em>, acima.
+</p>
+{% endif %}
+{% endif %}
+
 {% if corte_obsoleto %}
 {% comment %}
 A `UX-027` pede que a obsolescência do corte seja **vista ao abrir**, e não descoberta ao tentar

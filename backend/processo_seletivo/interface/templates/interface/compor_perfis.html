@@ -31,6 +31,32 @@
           Perfil que não declara fato nenhum não acrescenta campo nenhum à inscrição.</dd>
         <dt>Limite da reserva</dt>
         <dd>Quantas pessoas o cadastro comporta. O Edital publica "cadastro reserva limitado em 6".</dd>
+        {% comment %}
+        As quatro decisões cujo efeito aparece semanas depois, e cujas dicas estavam só em
+        `.oculto` — visíveis a leitor de tela e a mais ninguém, porque o controle é `<select>` e
+        `<select>` não tem `placeholder` onde a versão visível pudesse morar.
+
+        Aqui, e não dentro do cartão: a regra desta tela é que explicação que não muda de um Perfil
+        para o outro não se imprime uma vez por Perfil — um Edital de sete polos a imprimiria sete
+        vezes, e `test_medida_dos_campos` guarda isso. Uma vez por etapa é o lugar que respeita a
+        regra e devolve o texto a quem enxerga.
+
+        A do quadro é a mais cara das quatro: a caixa fica logo abaixo de "Vagas imediatas", e na
+        auditoria de 13/09 os quatro Editais do ambiente — inclusive os três da demonstração —
+        publicaram "N vagas imediatas" no portal e no PDF enquanto a Ocupação respondia "não há
+        quantidade declarada a apurar".
+        {% endcomment %}
+        <dt>Quadro de vagas</dt>
+        <dd>A quantidade que a apuração usa. É diferente de "Vagas imediatas", que é o número que o
+          Edital publica: em branco, a linha significa quantidade <strong>não declarada</strong> — e
+          a ocupação e a convocação ficam sem o que apurar.</dd>
+        <dt>Qual Modalidade é a ampla concorrência</dt>
+        <dd>A declarada não recebe linha própria no quadro: a quantidade dela é a da linha geral.</dd>
+        <dt>Reversão de vaga reservada</dt>
+        <dd>Declarar a reversão exige quadro de vagas publicado: sem quantidade por recorte não há o
+          que reverter.</dd>
+        <dt>Como a convocação é comunicada</dt>
+        <dd>Sem esta declaração o sistema recusa convocar: ele não escolhe a forma por você.</dd>
       </dl>
     </details>
     <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>

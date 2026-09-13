@@ -1,4 +1,4 @@
-{% extends "portal/base.html" %}
+{% extends "portal/base.html" %}{% load interface_extras %}
 {% block titulo %}Acompanhar{% endblock %}
 {% block conteudo %}
 <h1>Acompanhar</h1>
@@ -64,7 +64,12 @@ ato da instituição sobre você.
   <h3 id="etapa-{{ forloop.counter }}">{{ etapa.etapa }}</h3>
   <p class="posicao">
     <strong>{% if etapa.habilitada %}Habilitada{% else %}Eliminada{% endif %}</strong>
-    {% if etapa.pontuacao is not None %} · pontuação {{ etapa.pontuacao }}{% endif %}
+    {% comment %}
+    A nota como uma pessoa a escreve. O campo guarda quatro casas porque a norma pode exigi-las, e
+    a mesma página mostrava "pontuação 8,0000" na Etapa e "pontuação 8,00" no resultado divulgado —
+    duas grafias do mesmo número, uma delas saída de máquina.
+    {% endcomment %}
+    {% if etapa.pontuacao is not None %} · pontuação {{ etapa.pontuacao|pontuacao }}{% endif %}
   </p>
   {% comment %}
     O motivo é escrito para ser lido — "pontuação inferior à nota mínima da Etapa (45,0000 <
@@ -101,6 +106,15 @@ ato da instituição sobre você.
   {% endif %}
   {% comment %}O caminho leva sempre à publicação **vigente** (FR-061).{% endcomment %}
   <p><a href="{% url 'portal:resultado' resultado.publicacao.id %}">Ver o resultado completo</a></p>
+  {% comment %}
+  O prazo aqui, junto do resultado que ele alcança. A data existia só dentro de "Recorrer", isto é,
+  depois de a pessoa já ter decidido — e é ela que decide se ainda dá tempo de decidir.
+  {% endcomment %}
+  {% with prazo=prazo_por_publicacao|dicionario_simples:resultado.publicacao.id %}
+  {% if prazo %}
+  <p class="meta">Cabe recurso contra este resultado até {{ prazo|date:"d/m/Y" }} às {{ prazo|date:"H\hi" }}.</p>
+  {% endif %}
+  {% endwith %}
 </section>
 {% endfor %}
 

@@ -106,12 +106,7 @@ de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 {% endcomment %}
 <div class="barra-de-acao">
   <button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
-  {% if documentos.faltam %}
-  <p class="ajuda">Você poderá enviar a inscrição depois de anexar
-    {% if documentos.faltam == 1 %}o documento que falta{% else %}os {{ documentos.faltam }} documentos que faltam{% endif %}.</p>
-  {% else %}
-  <p class="ajuda">Na próxima tela você confere tudo antes de enviar.</p>
-  {% endif %}
+  {% include "portal/_ajuda_da_acao.html" %}
 </div>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>

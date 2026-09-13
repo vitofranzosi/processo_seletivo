@@ -56,6 +56,11 @@ input[type=date],input[type=datetime-local]{max-width:18rem}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
 .conferencia h3{font-size:1rem;margin:0 0 .5rem}
 .conferencia .detalhe{display:block;color:var(--texto-fraco);font-size:.875rem}
+/* A tabela de alterações da Retificação diz onde e qual campo, e embaixo o caminho normativo
+   para quem audita. Sem isto o campo colava no nome da entidade — "Evento do cronograma
+   “Inscrições”Término" — e o caminho saía do mesmo tamanho do que importa ler. */
+th .detalhe{display:block;font-weight:400;color:var(--texto-fraco);font-size:.875rem}
+th code{display:block;font-weight:400;color:var(--texto-fraco);font-size:.75rem;word-break:break-all;margin-top:.25rem}
 /* `object.documento`, e não `.documento`: a altura de 75vh é do **visualizador de PDF** da prévia,
    e o seletor solto alcançava também `fieldset.linha.documento` — o cartão do Documento Exigido no
    assistente. O cartão ficava com 675 px numa janela de 900, independentemente do que carregasse:

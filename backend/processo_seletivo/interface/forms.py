@@ -630,10 +630,15 @@ def secoes_do_edital(edital):
 # Como cada origem é lida por quem elabora, e onde ela se edita. A chave é a coleção do snapshot,
 # e o valor liga o vocabulário do conteúdo publicado ao do assistente — que é o que permite
 # oferecer, ao lado de uma seção gerada, o caminho para o dado que a origina.
+# As cinco origens que o catálogo de seções gera. Faltavam duas, e a ausência não era silenciosa:
+# a seção caía no token inglês — "Composta automaticamente a partir de attachments" — e perdia o
+# link para a etapa que a origina, que é o segundo elemento de cada par.
 ORIGEM = {
     "profiles": ("Perfis de Vaga", "perfis"),
     "schedule": ("Cronograma", "cronograma"),
     "stages": ("Etapas de Avaliação", "etapas"),
+    "documentRequirements": ("Documentos Exigidos", "inscricao"),
+    "attachments": ("Anexos do Edital", "anexos"),
 }
 
 

@@ -26,6 +26,8 @@ from django.urls import reverse
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.recursos.application import admitir as recursos_admitir
+from processo_seletivo.recursos.models import Recurso
 
 # Os nomes são os que `base.html` já define: `.botao` sozinho é a ação primária, e as duas
 # variações têm classe própria. Inventar nomes aqui deixaria o estilo sem efeito.
@@ -93,6 +95,17 @@ def _navegacao(edital, ator):
             # passou a feature inteira tirando.
             f"Inscrições recebidas ({recebidas})",
             reverse("interface:inscricoes", args=[edital.id]),
+        )
+    # Quem julga recurso não tinha por onde chegar ao próprio trabalho: a tela existia e nada
+    # apontava para ela. O avaliador tem "Minhas Etapas" no cabeçalho de toda página; o julgador
+    # não tem equivalente, e o recurso corre contra prazo. O total no rótulo pela mesma razão das
+    # inscrições — decide se vale abrir.
+    if edital.status in ESTADOS_COM_INSCRICOES and ator.can(recursos_admitir.PERMISSAO):
+        recebidos = Recurso.objects.filter(inscricao__edital=edital).count()
+        yield Acao(
+            "recursos",
+            f"Recursos recebidos ({recebidos})",
+            reverse("interface:recursos", args=[edital.id]),
         )
     if ator.can("auditoria:consultar"):
         yield Acao(

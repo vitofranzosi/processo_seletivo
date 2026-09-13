@@ -1320,6 +1320,7 @@ def acompanhamento(request, inscricao_id):
     registro, _identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
+    recorriveis = objetos_recorriveis(registro)
     return render(
         request,
         "portal/acompanhamento.html",
@@ -1344,7 +1345,16 @@ def acompanhamento(request, inscricao_id):
             # **não** é oferecida quando a interposição não é possível: um botão que sempre recusa
             # é pior do que nenhum botão (FR-013).
             "meus_recursos": recursos_do_titular(registro),
-            "recorriveis": objetos_recorriveis(registro),
+            "recorriveis": recorriveis,
+            # O prazo ao lado do resultado que ele alcança, e não só dentro da tela de interposição.
+            # Ele existia — a tela "Recorrer" já dizia "até 16/09/2026 às 23h59" —, mas só depois de
+            # a pessoa decidir recorrer. Quem lê o resultado e vai pensar no assunto saía daqui sem
+            # a única data que decide se ainda dá tempo (auditoria de 13/09).
+            "prazo_por_publicacao": {
+                alvo["id"]: alvo["fecha_em"]
+                for alvo in recorriveis
+                if alvo["tipo"] == "publicacao" and alvo["fecha_em"]
+            },
             # A versão aceita deixou de ser a vigente: o Edital mudou depois do envio. O aviso
             # informa; ele **não** altera a versão aceita nem reabre coisa alguma (FR-079).
             "retificado": registro.versao_aceita_id != versao.pk,
