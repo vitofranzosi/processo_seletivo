@@ -11,6 +11,7 @@ lá; esta entrega é a fatia navegável dela.
 """
 
 import json
+import logging
 from hashlib import sha256
 
 from django.conf import settings
@@ -1676,6 +1677,109 @@ def _erro_do_arquivo(exc):
     if exc.status != 422:
         raise exc
     return exc.detail
+
+
+logger = logging.getLogger("processo_seletivo.portal")
+
+# O rótulo da operação na trilha. **Não** é permissão concedida a ninguém: o ator do candidato
+# tem o conjunto vazio, como a `009` fixou.
+LER_CONVOCACAO = "CONVOCACAO_LER"
+
+
+def convocacao(request, inscricao_id):
+    """A convocação da pessoa, pelo canal do ator dela (019, `US6`, `FR-294`).
+
+    **O candidato não deve depender da caixa de entrada para saber que foi chamado.** Mensagem se
+    perde, cai em spam, chega a um endereço que a pessoa não usa mais — e o que está em jogo é a
+    vaga dela. A área do candidato é o lugar onde a informação está sempre, e é por isso que esta
+    tela existe mesmo nos Editais que comunicam por mensagem individual.
+
+    **A tela distingue *"não há convocação"* de *"você não foi chamado"***, e a diferença não é
+    sutil: a primeira diz que o certame ainda não chegou a essa fase; a segunda, que chegou e a
+    pessoa não estava entre os chamados. Colapsá-las faria quem ainda tem chance ler que não tem.
+
+    **Ler não move o relógio** (`FR-288b`). O prazo corre do envio da comunicação, e abrir esta
+    página não é nem o envio nem o recebimento: o acesso fica na trilha, e o prazo fica onde estava.
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        envio_de,
+        estado_de,
+    )
+    from processo_seletivo.convocacao.models import Convocacao
+
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    agora = timezone.now()
+    # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
+    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale.
+    chamada = (
+        Convocacao.objects.filter(inscricao=registro)
+        .filter(sucessoras__isnull=True)
+        .prefetch_related("desfechos", "comunicacoes")
+        .order_by("-criado_em")
+        .first()
+    )
+    # **O certame chegou a convocar neste recorte?** É esta pergunta que separa as duas ausências.
+    houve_convocacao_no_recorte = (
+        Convocacao.objects.filter(edital=registro.edital, perfil_id=registro.profile_id).exists()
+        if chamada is None
+        else True
+    )
+    _registrar_leitura_da_convocacao(request, registro, chamada, agora)
+    return render(
+        request,
+        "portal/convocacao.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "convocacao": chamada,
+            "desfecho": desfecho_de(chamada) if chamada else None,
+            "enviada_em": envio_de(chamada) if chamada else None,
+            "estado": estado_de(chamada, agora=agora) if chamada else None,
+            "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
+        },
+    )
+
+
+def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
+    """O acesso autenticado entra na **trilha do Edital**, e o prazo não se move (`FR-288b`).
+
+    **Trilha, e não linha de log.** A pergunta que alguém fará um dia é *"a pessoa teve como
+    saber?"*, e ela é respondida na mesma tela em que se responde por uma publicação ou por uma
+    convocação — não num arquivo do servidor que ninguém audita e que rotaciona.
+
+    **O ator é o candidato, sem uma permissão sequer**, pela forma que a `009` deixou: o conjunto
+    vazio é o que impede a trilha de afirmar autoridade que ele não tem, e o escopo é o do Processo
+    porque é dele que o ato trata.
+
+    **Ler não move o relógio.** Nada aqui toca `enviado_em`: o prazo corre do envio da comunicação,
+    e abrir a página não é nem o envio nem o recebimento. Se ler iniciasse ou reiniciasse o prazo, a
+    pessoa seria punida por conferir — e quem não conferisse ficaria em vantagem.
+    """
+    from processo_seletivo.auditoria.application import record_event
+    from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
+
+    if chamada is None:
+        # Sem convocação não há o que registrar: a página informa que ela não existe, e auditar a
+        # ausência encheria a trilha de linhas que não respondem pergunta nenhuma.
+        return
+    record_event(
+        actor=ator_do_candidato(
+            identidade_do_candidato.identidade_da_sessao(request), registro.edital
+        ),
+        permission="",
+        operation=LER_CONVOCACAO,
+        aggregate=chamada,
+        now=agora,
+        correlation_id=getattr(request, "correlation_id", "portal-convocacao"),
+        reason=(
+            f"Leitura da convocação {chamada.id} pela titular da inscrição {registro.id}. "
+            "A leitura não inicia nem reinicia prazo."
+        ),
+        new_state="",
+        new_revision=None,
+    )
 
 
 def _inscricao_do_titular(request, inscricao_id):

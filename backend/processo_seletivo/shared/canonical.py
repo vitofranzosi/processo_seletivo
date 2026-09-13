@@ -135,7 +135,16 @@ from uuid import UUID
 # reversão sem a espécie do gatilho impede a publicação em vez de virar padrão, porque os dois
 # Editais da amostra escrevem o gatilho de modo diferente e escolher por eles seria decidir norma
 # (016, D-007, FR-251).
-SCHEMA_VERSION = 14
+#
+# **O degrau 15 é a forma de comunicar a convocação** (019, D-009, R-007). `None` diz "este Edital
+# não declarou forma", e é verdade sobre todos os anteriores — a capacidade não existia. Conversão
+# sem invenção, como os degraus 12, 13 e 14.
+#
+# **E a ausência não vira padrão, pela mesma razão que a do degrau 14 não vira.** A amostra tem duas
+# formas incompatíveis e as duas são normais: o 69/2026 (7.2) convoca por publicação; o 77, o 58 e o
+# 59 (8.3) por mensagem individual, com o prazo contado do recebimento. Escolher uma por omissão
+# decidiria norma no lugar do Edital — e a `019` recusa convocar sem declaração.
+SCHEMA_VERSION = 15
 
 
 def _default(value):

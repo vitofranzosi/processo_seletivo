@@ -9,6 +9,7 @@ mesmo desenho de `classificacao/application/corte.py`, e as causas vêm **nomead
 from processo_seletivo.classificacao.application.corte import geracao_vigente, linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
 from processo_seletivo.classificacao.models import ItemDoCorte
+from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import nomes
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao, MovimentoDeVaga
@@ -55,12 +56,17 @@ def movimentos_lidos_por(apuracao):
 
 
 def causas_de_obsolescencia(apuracao, *, at=None):
-    """As **quatro** causas, nomeadas (`FR-263`).
+    """As **cinco** causas, nomeadas (`FR-263`, e a quinta veio com a `019`).
 
     A quarta — movimento posterior que alcança o recorte — é o que dispensa orquestração: a reversão
     não precisa disparar, em cascata, a emissão do destino. O destino aparece obsoleto, com a causa
     dita, e quem quiser o número novo emite. Reusar a obsolescência que já existe custa uma causa;
     obrigar emissão encadeada custaria uma orquestração entre dois recortes.
+
+    A quinta — efeito posterior — é o mesmo desenho aplicado ao desfecho de convocação: nenhuma
+    apuração é reescrita quando alguém desiste ou aceita. A vigente passa a aparecer obsoleta, e o
+    número novo sai na **emissão seguinte** (`D-006`). Fosse a `019` a reescrever a apuração, seria
+    `UPDATE` em tabela append-only — e a proibição está instalada no banco.
     """
     if apuracao is None:
         return []
@@ -130,6 +136,20 @@ def causas_de_obsolescencia(apuracao, *, at=None):
             {
                 "causa": nomes.CAUSA_MOVIMENTO_POSTERIOR,
                 "descricao": "Um movimento de vaga alcançou este recorte depois desta apuração.",
+            }
+        )
+    if _efeito_posterior(apuracao):
+        causas.append(
+            {
+                "causa": nomes.CAUSA_EFEITO_POSTERIOR,
+                # **A descrição não nomeia convocação**, e a `UX-034` é quem o exige: esta
+                # feature não conhece esse fato. O que ela conhece é o efeito que entrou pela
+                # porta — uma inscrição saiu do conjunto de ocupantes, ou entrou nele —, e quem
+                # dá sentido ao fundamento é quem o escreveu.
+                "descricao": (
+                    "Um efeito registrado depois desta apuração mudou o conjunto de ocupantes "
+                    "deste recorte."
+                ),
             }
         )
     return causas
@@ -268,27 +288,59 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     ]
 
 
-def dentro_da_faixa(*, edital, perfil_id, marco_id, lista_id=None):
-    """As inscrições que o corte vigente fez progredir — ou o universo do ato, quando não há corte.
+def progrediram_em_ordem(*, edital, perfil_id, marco_id, lista_id=None):
+    """`(sequência ordenada, corte, empates residuais)` do recorte (019, `R-001`, `R-002`).
+
+    **Sequência, e não conjunto, porque titular inicial depende de ordem.** É a correção que a
+    `019` trouxe: o cálculo anterior contava capacidade — enquanto sobrassem habilitados na faixa,
+    o número saturava no alvo — e 27 suplentes eram promovidas em silêncio antes de ele se mover.
+
+    **A ordem vem de `PosicaoNaOrdem`, e não de `ItemDoCorte`.** Os dois guardam posição, mas é a
+    posição na ordem que carrega `empate_residual`, e sem ela não há como saber se um empate não
+    julgado atravessa a fronteira do alvo (`R-002`). Ler os dois lugares para o mesmo fato é como
+    um deles fica para trás.
 
     **Marco que não corta continua tendo ocupação apurável**: a `014` fechou que corte de marco
     terminal é legítimo, e há Editais em que o marco não governa Etapa alguma. Nesse caso quem está
     "dentro" é quem o ato de ordenação considerou com posição.
     """
+    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
     geracao = geracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
+    corte = geracao[-1] if geracao else None
+    if ato is None:
+        return [], corte, {}
+    posicoes = [p for p in ato.posicoes.all() if p.posicao is not None]
+    posicoes.sort(key=lambda p: p.posicao)
     if geracao:
         itens = ItemDoCorte.objects.filter(
             corte__in=geracao, consequencia=ItemDoCorte.Consequencia.PROGREDIU
         )
-        return {item.inscricao_id for item in itens}, geracao[-1]
-    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
-    if ato is None:
-        return set(), None
-    return {
-        posicao.inscricao_id for posicao in ato.posicoes.all() if posicao.posicao is not None
-    }, None
+        progrediram = {item.inscricao_id for item in itens}
+        # **O corte pode alcançar quem o ato vigente não posiciona**, e o contrário também: são
+        # atos distintos, e o corte é lido pela faixa que ele emitiu. Quem progrediu sem posição
+        # legível entra ao fim, preservando o conjunto que a contagem anterior usava — perder
+        # alguém aqui reduziria a ocupação em silêncio, que é o modo de falha mais caro da `016`.
+        ordenadas = [p.inscricao_id for p in posicoes if p.inscricao_id in progrediram]
+        vistas = set(ordenadas)
+        ordenadas += sorted((i for i in progrediram if i not in vistas), key=str)
+    else:
+        ordenadas = [p.inscricao_id for p in posicoes]
+    empates = {p.inscricao_id: p.posicao for p in posicoes if p.empate_residual}
+    return ordenadas, corte, empates
+
+
+def dentro_da_faixa(*, edital, perfil_id, marco_id, lista_id=None):
+    """O **conjunto** de quem progrediu, para quem não precisa da ordem.
+
+    Sobrevive à `019` porque a concorrência concomitante é pergunta de pertinência, e não de
+    posição: quem ocupou pela ampla ocupou, e em que lugar da fila não muda nada.
+    """
+    ordenadas, corte, _ = progrediram_em_ordem(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    return set(ordenadas), corte
 
 
 def habilitadas_na_etapa(*, edital, etapa_id):
@@ -321,6 +373,23 @@ def _quantidade(linha):
         return None
     quantidade = linha.get("immediateVacancies")
     return quantidade if isinstance(quantidade, int) and not isinstance(quantidade, bool) else 0
+
+
+def _movimentos_que_alcancam(*, edital, perfil, marco, lista):
+    """Os movimentos que alcançam o recorte, cedendo ou recebendo.
+
+    **A busca é pelo recorte, e não pela apuração**: o movimento nasce com a apuração da origem, e
+    é a do destino que o lê — procurá-lo por `apuracao` devolveria só o que a própria origem gravou.
+    """
+    candidatos = MovimentoDeVaga.objects.filter(
+        apuracao__edital=edital, apuracao__perfil_id=perfil, apuracao__marco_id=marco
+    ).order_by("registrado_em")
+    return [
+        m
+        for m in candidatos
+        if calculo.mesma_lista(m.origem_lista_id, lista)
+        or calculo.mesma_lista(m.destino_lista_id, lista)
+    ]
 
 
 def _quadro_retificado(apuracao, *, at=None):
@@ -365,13 +434,102 @@ def _movimento_posterior(apuracao):
     return False
 
 
+def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
+    """Quem **ocupa vaga** pela ampla concorrência: os titulares dela, e não a faixa inteira.
+
+    É a mesma conta que a apuração da ampla faz, lida de fora — e é ela que a reservada subtrai.
+
+    **Titulares, e não "dentro da faixa"** (019, `R-001`). A versão anterior devolvia a faixa da
+    ampla inteira interseccionada com as habilitadas, e isso incluía os **suplentes** dela — gente
+    que está na faixa, habilitou, e não ocupa vaga nenhuma até que uma vague. Subtraí-los do recorte
+    reservado tirava da reserva quem não estava ocupando nada em lugar algum: num Perfil com 40
+    vagas na ampla, faixa de 70 e 2 vagas na PPI, as duas melhores candidatas PPI classificadas
+    entre a 41ª e a 70ª posição da ampla eram excluídas da própria reserva, e a PPI apurava
+    `ocupadas: 0` com as duas vagas preenchidas.
+
+    O erro não aparecia antes porque o cálculo antigo saturava: `min(cabem, efetivas)` devolvia o
+    alvo enquanto sobrasse gente na faixa, e escondia a subtração indevida. Com a contagem de
+    titulares da `019` ele passou a sair no número.
+
+    **O item 8.9 do 28/2026 fala de quem foi *"sorteado dentro do número de vagas oferecido para
+    ampla concorrência"*** — que é o titular, e não quem apenas alcançou a faixa dela.
+    """
+    progrediram, corte, empates = progrediram_em_ordem(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=None
+    )
+    etapa = corte.etapa_governada_id if corte is not None else None
+    habilitadas = habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+    linha = linha_do_quadro(versao.content, perfil_id=perfil_id, lista_id=None)
+    if linha is None:
+        # Sem linha geral publicada não há quantidade de ampla, e portanto ninguém a ocupa. É a
+        # mesma leitura que a `UX-032` fixa: ausência de quadro não é zero vaga, é nenhuma
+        # afirmação — e aqui a afirmação que não se faz é "estas pessoas ocupam vagas de ampla".
+        return set()
+    movimentos = _movimentos_que_alcancam(
+        edital=edital, perfil=perfil_id, marco=marco_id, lista=None
+    )
+    lidos = [
+        (m.especie, calculo.mesma_lista(m.destino_lista_id, None), m.quantidade) for m in movimentos
+    ]
+    recebidas = sum(q for _, recebida, q in lidos if recebida)
+    cedidas = sum(q for _, recebida, q in lidos if not recebida)
+    efetivas = (_quantidade(linha) or 0) + recebidas - cedidas
+    efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=None
+    )
+    # **Os efeitos da ampla entram**: quem desistiu de uma vaga de ampla deixou de ocupá-la, e
+    # continuar subtraindo essa pessoa da reserva a manteria fora das duas listas ao mesmo tempo.
+    return calculo.ocupantes(
+        titulares=calculo.titulares_iniciais(
+            progrediram_em_ordem=progrediram,
+            habilitadas=habilitadas,
+            efetivas=efetivas,
+            empates_residuais=empates,
+        ),
+        efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
+    )
+
+
+def _efeito_posterior(apuracao):
+    """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu.
+
+    **A comparação é por id congelado, e não por instante** — a mesma disciplina de
+    `_movimento_posterior`, e pela mesma razão: um efeito gravado na mesma transação da apuração
+    pareceria posterior a ela mesma se o critério fosse o relógio.
+
+    Apuração emitida antes desta feature não tem `efeitosLidos` no universo, e qualquer efeito do
+    recorte a torna obsoleta. Está certo: aquele efeito é mesmo posterior a ela.
+
+    **A pergunta é respondida no banco, e não em Python.** A versão anterior trazia todas as linhas
+    de efeito do recorte para descartar tudo menos um booleano — e esta função corre uma vez por
+    lista de concorrência em `recortes_do_marco`, na tela que tem teto de 3 s com 1.000
+    participantes (`SC-090`). Num certame longo o recorte acumula um efeito por desfecho, e o custo
+    de abrir a tela cresceria com o número de desistências.
+    """
+    from processo_seletivo.ocupacao.models import EfeitoDeOcupacao
+
+    lidos = [str(i) for i in (apuracao.universo or {}).get("efeitosLidos") or []]
+    return (
+        EfeitoDeOcupacao.objects.filter(
+            edital=apuracao.edital_id,
+            perfil_id=apuracao.perfil_id,
+            marco_id=apuracao.marco_id,
+            lista_id=apuracao.lista_id,
+        )
+        .exclude(id__in=lidos)
+        .exists()
+    )
+
+
 __all__ = [
     "apuracao_vigente",
     "recortes_do_marco",
     "causas_de_obsolescencia",
     "dentro_da_faixa",
+    "progrediram_em_ordem",
     "habilitadas_na_etapa",
     "historico_do_recorte",
     "movimentos_lidos_por",
     "ocupacao_do_recorte",
+    "ocupantes_da_ampla",
 ]

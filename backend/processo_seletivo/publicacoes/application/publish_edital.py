@@ -229,6 +229,14 @@ def edital_snapshot(edital: Edital) -> dict:
                 "vacancyReversion": (
                     {"kind": profile.especie_de_reversao} if profile.especie_de_reversao else None
                 ),
+                # Como este Perfil comunica a convocação (019, R-007). `None` quando o Perfil não
+                # declarou — e ausência **não** é padrão: a `019` recusa convocar sem declaração,
+                # com `forma_de_comunicacao_nao_declarada`, em vez de escolher uma das duas.
+                #
+                # **Campo solto, e não objeto**, ao contrário de `vacancyReversion`: ali o objeto
+                # existe porque a decisão da `016` previa parâmetros do gatilho. Aqui há um valor
+                # entre dois, e um envelope com uma chave só seria forma sem conteúdo.
+                "callForm": profile.forma_de_convocacao or None,
                 "declaredFacts": declared_facts,
                 "classificationMilestones": milestones,
                 "vacancyTable": vacancy_table,

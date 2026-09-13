@@ -2520,6 +2520,23 @@ OPERACOES = {
     "COMISSAO_REMOVER_MEMBRO": "Remoção da comissão",
     "ALOCACAO_INCLUIR": "Alocação em Etapa",
     "ALOCACAO_REMOVER": "Remoção de alocação",
+    # A apuração de ocupação (016) e os quatro atos da convocação (019), na mesma trilha e pela
+    # razão de sempre: quem investiga por que alguém perdeu uma vaga lê a mesma tela de quem
+    # investiga uma publicação.
+    #
+    # **A `016` estava faltando aqui**, e a trilha exibia `OCUPACAO_APURAR` cru. O achado é da `019`
+    # e a correção é de uma linha — deixá-la para depois manteria o código na tela de quem audita.
+    "OCUPACAO_APURAR": "Apuração de ocupação de vagas",
+    # **As quatro frases dizem o ato praticado, e não o nome da função** (`FR-296`). "Convocação
+    # praticada" é o que aconteceu; `CONVOCACAO_CONVOCAR` é como o sistema o chama internamente, e
+    # quem audita não tem por que aprender esse vocabulário.
+    "CONVOCACAO_CONVOCAR": "Convocação praticada",
+    "CONVOCACAO_DESFECHAR": "Desfecho de convocação registrado",
+    "CONVOCACAO_COMUNICAR": "Comunicação de convocação emitida",
+    "CONVOCACAO_ATESTAR": "Atestado de fato externo registrado",
+    # A leitura do candidato (`FR-288b`). Entra na mesma trilha porque a pergunta que ela responde
+    # — *"a pessoa teve como saber?"* — é feita por quem responde por todo o resto do certame.
+    "CONVOCACAO_LER": "Convocação lida pela pessoa convocada",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -2531,6 +2548,11 @@ AGREGADOS = {
     "Atribuicao": "Atribuição de avaliação",
     "Avaliacao": "Avaliação",
     "Impedimento": "Impedimento",
+    "ApuracaoDeOcupacao": "Apuração de ocupação",
+    "Convocacao": "Convocação",
+    "DesfechoDaConvocacao": "Desfecho de convocação",
+    "ComunicacaoEmitida": "Comunicação de convocação",
+    "AtestadoDeFatoExterno": "Atestado de fato externo",
 }
 
 # Os sete atos de FR-052, na ordem do percurso. É esta lista que a tela oferece como filtro.
@@ -4419,6 +4441,284 @@ def emitir_apuracao_view(request, edital_id, marco_id):
     except DomainError as erro:
         request.session["erro_da_ocupacao"] = erro.detail
     return redirect(destino)
+
+
+def convocacao(request, edital_id, marco_id):
+    """A tela do recorte: quem foi chamado, o que respondeu, e quantas vagas ainda faltam (019).
+
+    **Os quatro números são da `016`, e esta tela não os recalcula** (`UX-035`, `SC-092`). O que ela
+    acrescenta é o que a planilha paralela guardava até hoje: quantas pessoas foram convocadas,
+    quantas responderam, e quem é a próxima da fila.
+
+    **Abrir a tela não convoca ninguém, e não apura nada.** É o mesmo desenho da ordem, do corte e
+    da apuração — e pela mesma razão: um ato praticado por abrir uma página é um ato que ninguém
+    decidiu praticar.
+    """
+    from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
+
+    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    leitura = leitura_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/convocacao.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "leitura": leitura,
+                # A chave nasce no GET pela razão que o corte e a ocupação já registram: gerada a
+                # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
+                "chave_idempotencia": uuid4().hex,
+                "pode_emitir": pode_emitir,
+                # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
+                # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e
+                # quem acabara de desfechar lia "Apuração emitida".
+                "acao": request.session.pop("acao_da_convocacao", None),
+                "resultado": request.session.pop("resultado_da_convocacao", None),
+                "erro": request.session.pop("erro_da_convocacao", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def convocacao_historico(request, edital_id, marco_id):
+    """Todos os atos do recorte, com a proveniência de cada um (019, `FR-294`).
+
+    **Inclusive os sucedidos.** Correção é sucessão, e é a linha anterior que explica o que foi
+    corrigido e por quê — esconder as sucedidas deixaria a trilha contando metade da história.
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        convocacoes_do_recorte,
+        desfecho_de,
+        envio_de,
+        identidades_de,
+        leitura_do_recorte,
+        vigentes,
+    )
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    # **Sem `_perfil_do_marco` aqui, pela razão que a `016` já registra**: aquele helper resolve o
+    # marco na versão vigente e levanta 404 quando ele não está nela, de modo que uma Retificação
+    # que removesse o marco faria desaparecer o histórico que explica os atos daquela época.
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    convocacoes = convocacoes_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    em_vigor = {c.id for c in vigentes(convocacoes)}
+    # **A posição nova do reclassificado é derivada, e aparece no histórico** (019, `FR-291`). Ela
+    # não é coluna: guardá-la exigiria `UPDATE` numa tabela append-only, e cada chamada seguinte a
+    # deslocaria. O que o histórico mostra é onde ele está **agora** na fila — que é a pergunta que
+    # quem conduz o certame faz ao ler a linha.
+    contexto = leitura_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    posicoes = {str(item["id"]): indice for indice, item in enumerate(contexto["fila"], start=1)}
+    identificadas = identidades_de({c.inscricao_id for c in convocacoes})
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/convocacao_historico.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                "serie": [
+                    {
+                        "inscricao": identificadas[convocacao.inscricao_id],
+                        "convocacao": convocacao,
+                        "desfecho": desfecho_de(convocacao),
+                        "enviadaEm": envio_de(convocacao),
+                        "comunicacoes": list(convocacao.comunicacoes.all()),
+                        "vigente": convocacao.id in em_vigor,
+                        "posicaoNaFila": posicoes.get(str(convocacao.inscricao_id)),
+                    }
+                    for convocacao in convocacoes
+                ],
+            },
+        )
+    )
+
+
+@require_http_methods(["POST"])
+def convocar_view(request, edital_id, marco_id):
+    """Pratica a convocação e volta à leitura, pelo padrão POST-redirect-GET."""
+    from processo_seletivo.convocacao.application.convocar import convocar
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    try:
+        request.session["resultado_da_convocacao"] = convocar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=_perfil_do_marco(edital, marco_id),
+            marco_id=marco_id,
+            lista_id=lista_id,
+            inscricao_id=_identidade_ou_404(request.POST.get("inscricao")),
+            especie=request.POST.get("especie") or "",
+            fundamento=request.POST.get("fundamento") or "",
+            vencimento=_instante_ou_none(request.POST.get("vencimento")),
+            motivo=(request.POST.get("motivo") or "").strip(),
+            justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-convocacao-{edital_id}",
+        )
+        request.session["acao_da_convocacao"] = "convocacao"
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def desfechar_view(request, edital_id, marco_id, convocacao_id):
+    """Registra o desfecho e volta à leitura."""
+    from processo_seletivo.convocacao.application.desfechar import desfechar
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    try:
+        request.session["resultado_da_convocacao"] = desfechar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            convocacao_id=convocacao_id,
+            especie=request.POST.get("especie") or "",
+            fundamento=request.POST.get("fundamento") or "",
+            atestado_id=_identidade_ou_404(request.POST.get("atestado")),
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-desfecho-{edital_id}",
+        )
+        request.session["acao_da_convocacao"] = "desfecho"
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def comunicar_view(request, edital_id, marco_id, convocacao_id):
+    """Emite a comunicação na forma declarada e volta à leitura."""
+    from processo_seletivo.convocacao.application.comunicar import comunicar
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    try:
+        request.session["resultado_da_convocacao"] = comunicar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            convocacao_id=convocacao_id,
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-comunicar-{edital_id}",
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            referencia_da_publicacao=request.POST.get("referencia_da_publicacao") or "",
+        )
+        request.session["acao_da_convocacao"] = "comunicacao"
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def atestar_view(request, inscricao_id):
+    """Registra o atestado de fato externo e volta para onde o pedido veio.
+
+    **O atestado não cancela matrícula nenhuma**: ele é insumo do desfecho de inércia, que é outro
+    ato — possivelmente de outra pessoa. Quem constata o fato e quem decide a consequência dele não
+    precisam ser a mesma, e separá-los é o que torna a decisão auditável (`D-004`).
+    """
+    from processo_seletivo.convocacao.application.atestar import atestar
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    inscricao = Inscricao.objects.filter(pk=inscricao_id).select_related("edital").first()
+    if inscricao is None:
+        raise Http404
+    ator, edital, _ = _edital_para_classificar(request, inscricao.edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    destino = _destino_interno(
+        request.POST.get("voltar"), reverse("interface:detalhe", args=[edital.id])
+    )
+    try:
+        request.session["resultado_da_convocacao"] = atestar(
+            actor=ator,
+            processo_id=edital.processo_id,
+            inscricao_id=inscricao_id,
+            especie=request.POST.get("especie") or "",
+            conclusao=request.POST.get("conclusao") or "",
+            referencia_do_prazo=request.POST.get("referencia_do_prazo") or "",
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-atestado-{inscricao_id}",
+        )
+        request.session["acao_da_convocacao"] = "atestado"
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+def _destino_interno(pedido, padrao):
+    """O destino do POST-redirect-GET, **conferido** antes de virar `Location`.
+
+    **Um `voltar` vindo do corpo do pedido é entrada do usuário, e não configuração.** Sem esta
+    conferência, um formulário forjado noutro domínio levaria quem está autenticado na gestão para
+    fora do sistema com um clique — e a página de destino veria um visitante que acabou de praticar
+    um ato administrativo.
+
+    Aceita só caminho do próprio servidor: nem host, nem esquema, nem `//` que o navegador leria
+    como origem.
+    """
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    candidato = (pedido or "").strip()
+    if candidato and url_has_allowed_host_and_scheme(candidato, allowed_hosts=None):
+        return candidato
+    return padrao
+
+
+def _volta_para_convocacao(edital_id, marco_id, lista_id):
+    """O destino do POST-redirect-GET, **preservando o recorte**.
+
+    Sem o `?lista=`, desfechar numa lista reservada devolveria a pessoa à ampla concorrência — e ela
+    leria a confirmação de um ato ao lado dos números de outro recorte.
+    """
+    destino = reverse("interface:convocacao", args=[edital_id, marco_id])
+    return f"{destino}?lista={lista_id}" if lista_id else destino
+
+
+def _instante_ou_none(valor):
+    """O vencimento informado no formulário, ou `None` quando o Edital não publica prazo.
+
+    **O sistema não calcula dias úteis** (`R-004`): o que entra aqui é a data e a hora que quem
+    convoca digitou, interpretadas no fuso da instalação.
+    """
+    from django.utils.dateparse import parse_datetime
+
+    texto = (valor or "").strip()
+    if not texto:
+        return None
+    instante = parse_datetime(texto)
+    if instante is None:
+        raise Http404
+    return instante if timezone.is_aware(instante) else timezone.make_aware(instante)
 
 
 @require_http_methods(["POST"])

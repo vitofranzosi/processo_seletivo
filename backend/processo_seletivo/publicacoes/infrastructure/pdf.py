@@ -1422,6 +1422,38 @@ def _reversao_declarada(composicao, perfil):
         composicao.escrever(frase, antes=4.0, justificar=True)
 
 
+def _forma_de_convocacao_declarada(composicao, perfil):
+    """Como este Perfil comunica a convocação (019, D-009, R-007).
+
+    **Fora de `_quadro_de_vagas_do_perfil`, e não dentro dele.** A reversão mora lá porque é regra
+    sobre aquelas quantidades; esta é regra sobre como a pessoa é alcançada, e existe mesmo em
+    Perfil sem quadro publicado. Pô-la lá a faria desaparecer exatamente nos Editais anteriores ao
+    degrau 12 — que são os que mais precisam dela impressa.
+
+    **Sem declaração, nenhuma frase sai — nem "não declarou".** É a disciplina que a `025` aplicou
+    ao quadro ausente e que a `016` repetiu na reversão: um Edital que não declarou forma não passa
+    a afirmar coisa alguma sobre ela, e imprimir a negação seria afirmação nova sobre ato já
+    publicado. Quem convoca é que encontra a recusa, na tela, e não o leitor do documento.
+
+    **A frase vem do vocabulário do publicado**, e não é escrita aqui: duas grafias da mesma forma
+    em módulos diferentes é como uma delas fica para trás — e aqui a renomeação seria uma
+    Retificação, que o outro lado nem veria.
+    """
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+        FORMA_DE_CONVOCACAO_POR_EXTENSO,
+    )
+
+    frase = FORMA_DE_CONVOCACAO_POR_EXTENSO.get(perfil.get("callForm"))
+    if not frase:
+        return
+    with composicao.bloco():
+        composicao.escrever(
+            f"A convocação dos classificados será feita {frase}.",
+            antes=4.0,
+            justificar=True,
+        )
+
+
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
     """As modalidades em tabela — sem perder o que a frase corrida dizia (FR-018, FR-019).
 
@@ -1607,6 +1639,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                         composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
             _fatos_declarados(composicao, perfil)
             _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, len(perfis) > 1)
+            _forma_de_convocacao_declarada(composicao, perfil)
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
             _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 

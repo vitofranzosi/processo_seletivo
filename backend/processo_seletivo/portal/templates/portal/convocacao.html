@@ -1,0 +1,58 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Convocação{% endblock %}
+{% block conteudo %}
+<h1>Convocação</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>
+
+{% comment %}
+**Duas ausencias, e elas nao sao a mesma coisa** (FR-294). "Nao ha convocacao" diz que o certame
+ainda nao chegou a essa fase; "voce nao foi chamado" diz que chegou e a pessoa nao estava entre os
+chamados. Colapsa-las faria quem ainda tem chance ler que nao tem — e a pessoa pararia de
+acompanhar.
+
+**Nenhuma frase aqui diz recebido, lido ou entregue** (UX-039). O sistema registra que **enviou**, e
+a distancia entre enviar e receber e real: e ela que o Edital resolve dando prazo em dias uteis a
+partir do recebimento.
+
+**E nenhuma frase promete a vaga** (FR-292c). A convocacao chama para cumprir uma etapa; o que
+decide a vaga e o que a pessoa fizer dentro do prazo.
+{% endcomment %}
+
+{% if not convocacao %}
+{% if houve_convocacao_no_recorte %}
+<p class="aviso" role="status">As convocações deste Processo Seletivo já começaram, e você <strong>não foi chamado</strong> até agora. Continue acompanhando: quem está na lista pode ser chamado quando uma vaga vagar.</p>
+{% else %}
+<p class="aviso" role="status">Ainda <strong>não há convocação</strong> neste Processo Seletivo. Esta página passa a mostrar a sua chamada quando ela acontecer.</p>
+{% endif %}
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+
+{% else %}
+<section aria-labelledby="chamada">
+  <h2 id="chamada">Você foi convocada(o)</h2>
+  <dl class="meta">
+    <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
+    {% if enviada_em %}
+    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y H:i" }}</dd>
+    {% endif %}
+    {% if convocacao.vencimento %}
+    <dt>Prazo para atender</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y H:i" }}, contado do envio da comunicação</dd>
+    {% endif %}
+    <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
+  </dl>
+
+  {% if estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}
+  <p class="aviso" role="status">A comunicação desta convocação ainda não foi enviada. <strong>O seu prazo não começou a correr.</strong></p>
+  {% elif estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}
+  <p class="aviso" role="status">O prazo informado nesta convocação já passou. Isso <strong>não decide nada sozinho</strong>: fale com o atendimento se você atendeu e não consta.</p>
+  {% endif %}
+
+  {% if desfecho %}
+  <p class="ajuda">Situação registrada: {{ desfecho.get_especie_display }} — {{ desfecho.fundamento }}</p>
+  {% else %}
+  <h3>O que fazer</h3>
+  <p>Siga as instruções do Edital para esta convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
+  {% endif %}
+</section>
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+{% endif %}
+{% endblock %}

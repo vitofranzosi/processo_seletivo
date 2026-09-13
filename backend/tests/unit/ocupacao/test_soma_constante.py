@@ -42,7 +42,7 @@ class Mundo:
         ]
         _, efetivas, _ = apuracao.apurar(
             publicadas=self.publicadas[recorte],
-            dentro_da_faixa=set(),
+            progrediram_em_ordem=set(),
             habilitadas=set(),
             movimentos_lidos=lidos,
         )

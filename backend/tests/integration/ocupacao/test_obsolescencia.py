@@ -1,4 +1,4 @@
-"""As quatro causas de obsolescência, uma por vez e com a causa nomeada (016, `FR-263`).
+"""As cinco causas de obsolescência, uma por vez e com a causa nomeada (016, `FR-263`).
 
 **Obsoleta não é sucedida.** A primeira é leitura do mundo em volta; a segunda é ato novo. Uma
 apuração pode estar vigente e obsoleta ao mesmo tempo — e nesse estado não causa faixa seguinte.
@@ -7,9 +7,13 @@ apuração pode estar vigente e obsoleta ao mesmo tempo — e nesse estado não 
 isso este arquivo ataca o mundo em volta em vez de escrever flag nenhuma.
 """
 
+import uuid
+
 import pytest
+from django.utils import timezone
 
 from processo_seletivo.ocupacao.application import selectors
+from processo_seletivo.ocupacao.application.efeitos import registrar_efeito
 from processo_seletivo.ocupacao.domain import nomes
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
@@ -143,3 +147,58 @@ def test_o_corte_que_aparece_depois_obsoleta_a_apuracao(
     emitir_corte(edital, gestor, chave="obsol-sem-corte-corte")
 
     assert nomes.CAUSA_CORTE_OBSOLETO in causas(edital)
+
+
+def test_o_efeito_posterior_obsoleta_a_apuracao(cenario, gestor):
+    """**Quinta causa, e ela chegou com a `019`** (`D-006`, `FR-278a`).
+
+    Registrado o desfecho, a apuração vigente **não é reescrita**: ela passa a aparecer obsoleta,
+    com a causa dita, e o número novo sai na emissão seguinte. Reescrevê-la seria `UPDATE` em
+    tabela append-only, e a proibição está instalada no banco em duas camadas.
+
+    O que este teste impede é o estado mudo: a desistência acontecer, o número da tela continuar o
+    mesmo e nada dizer que ele está para trás. Entre o desfecho e a emissão seguinte a tela mostra
+    **o apurado**, com a obsolescência declarada.
+    """
+    edital, _, _ = cenario
+    apurar(edital, gestor)
+    assert causas(edital) == []
+
+    registrar_efeito(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        lista_id=None,
+        inscricao_id=uuid.uuid4(),
+        especie=nomes.EFEITO_EXCLUSAO,
+        fundamento="Desistência expressa da titular",
+        ato_de_origem_id=uuid.uuid4(),
+        rotulo_da_origem="desfecho de convocação",
+        registrado_por="teste",
+        registrado_em=timezone.now(),
+    )
+
+    assert nomes.CAUSA_EFEITO_POSTERIOR in causas(edital)
+
+
+def test_a_emissao_seguinte_le_o_efeito_e_deixa_de_ser_obsoleta(cenario, gestor):
+    """O caminho de saída existe, e é emitir — como nas outras quatro causas."""
+    edital, _, _ = cenario
+    apurar(edital, gestor)
+    registrar_efeito(
+        edital=edital,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        lista_id=None,
+        inscricao_id=uuid.uuid4(),
+        especie=nomes.EFEITO_EXCLUSAO,
+        fundamento="Desistência expressa da titular",
+        ato_de_origem_id=uuid.uuid4(),
+        rotulo_da_origem="desfecho de convocação",
+        registrado_por="teste",
+        registrado_em=timezone.now(),
+    )
+
+    apurar(edital, gestor, chave="apurar-depois-do-efeito", motivo="Desistência registrada")
+
+    assert causas(edital) == []

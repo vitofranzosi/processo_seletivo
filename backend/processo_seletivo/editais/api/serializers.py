@@ -136,6 +136,11 @@ class ProfileSerializer(serializers.Serializer):
     # A reversão declarada (016, D-007). Objeto anulável: `null` é "não declara", e objeto sem
     # `kind` é recusado pela conferência de publicação, não aqui — a recusa nomeia o Perfil.
     vacancyReversion = serializers.DictField(required=False, allow_null=True)
+    # Como este Perfil comunica a convocação (019, D-009). `allow_null` e `allow_blank` porque não
+    # declarar é resposta legítima — e a `019` recusa convocar nesse caso, em vez de escolher uma
+    # das duas formas. A grafia desconhecida é recusada pela conferência de publicação, e não aqui:
+    # é lá que a recusa nomeia o Perfil.
+    callForm = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     competitionModalities = CompetitionModalitySerializer(many=True)
     # Opcional no rascunho: um Edital que não classifica não declara marco nenhum.
     classificationMilestones = ClassificationMilestoneSerializer(many=True, required=False)

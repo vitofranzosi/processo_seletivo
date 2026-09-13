@@ -16,7 +16,7 @@ LINHA_PPI = "00000000-0000-4000-8000-000000000472"
 MODALIDADE_PPI = "00000000-0000-4000-8000-000000000473"
 
 
-def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None):
+def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=None):
     """O rascunho do corte com quadro de vagas publicado.
 
     `geral` é a linha da ampla concorrência — a de `modalityId` nulo, que é onde a quantidade da
@@ -49,6 +49,10 @@ def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None):
     perfil["immediateVacancies"] = geral + (ppi or 0)
     if reversao is not None:
         perfil["vacancyReversion"] = {"kind": reversao}
+    # A forma de comunicar a convocação (019, degrau 15). **Ausente significa "não declarou"**, e é
+    # o que todo cenário anterior à `019` afirma — nunca "convoca por publicação".
+    if forma is not None:
+        perfil["callForm"] = forma
     return base, pontuada
 
 

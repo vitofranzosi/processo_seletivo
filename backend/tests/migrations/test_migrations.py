@@ -518,7 +518,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
         # a 017 acrescentando migration a um app que ela lê: é outra feature, com decisão própria
         # (018, decisão C §1.1).
-        "resultados": 5,
+        # **Sobe para 6 com a 019**, e a justificativa é a mesma que este teste existe para
+        # exigir: a `resultados/0006` acrescenta a quinta origem legítima — o sucessor por
+        # regularização, com o desfecho de convocação como fonte jurídica própria. Não é a 017
+        # acrescentando migration a um app que ela lê: é outra feature, e a alternativa recusada
+        # foi afrouxar a constraint para admitir sucessor sem fonte (019, R-005).
+        "resultados": 6,
         # **Sobe para 11 com a 018**: a `editais/0011` acrescenta `janela_recursal` ao marco
         # classificatório — o degrau 8. É elaboração, e não divulgação: quem declara o prazo é o
         # Edital, e é por isso que o campo mora aqui e não na 017 (FR-020, FR-030).
@@ -551,7 +556,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
         # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
         # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
-        "editais": 19,
+        #
+        # **Sobe para 20 com a 019**: a `editais/0020` acrescenta `forma_de_convocacao` ao Perfil,
+        # pela mesma razão da anterior — a forma de comunicar a convocação é declarada pelo Edital,
+        # e não inferida do texto dele: o 69/2026 convoca por publicação e o 77, o 58 e o 59 por
+        # mensagem individual (019, D-009, R-007).
+        "editais": 20,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -694,12 +704,22 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # É elaboração pela razão das anteriores — o gatilho da reversão é declarado pelo Edital, e
         # não inferido do estado das listas, porque o 28/2026 e o 57/2026 o escrevem de modo
         # diferente e escolher por eles fixaria norma em ato publicado (016, D-007).
-        "editais": 19,
+        # **Sobe para 20 com a 019**: a `editais/0020` acrescenta `forma_de_convocacao` ao Perfil.
+        # É elaboração pela razão das anteriores — a forma de comunicar a convocação é declarada
+        # pelo Edital, e não inferida do texto dele: o 69/2026 convoca por publicação e o 77, o 58
+        # e o 59 por mensagem individual, e escolher por eles fixaria norma em ato publicado
+        # (019, D-009, R-007).
+        "editais": 20,
         "inscricoes": 4,
         "processos": 2,
         "publicacoes": 8,
         "recursos": 1,
-        "resultados": 5,
+        # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de
+        # `ck_resultado_origem` — o sucessor por regularização — e a fonte jurídica própria dele.
+        # Não é a 022 tocando o que lê: é outra feature, e a constraint foi **estendida**, não
+        # afrouxada. Admitir sucessor sem fonte destruiria a garantia que ela existe para dar
+        # (019, R-005, D-008).
+        "resultados": 6,
     }
     assert set(esperadas) == set(APPS_QUE_A_022_NAO_TOCA)
     for app, quantas in esperadas.items():

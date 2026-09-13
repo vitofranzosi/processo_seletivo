@@ -89,6 +89,16 @@ INSTALLED_APPS = [
     # `classificacao` a ler a apuração para descobrir a causa da faixa seguinte, a `014` deixaria de
     # ser compreensível sozinha — contra a fronteira que a decisão de 11/09/2026 fixou (016, R-002).
     "processo_seletivo.ocupacao",
+    # O ato que alcança a pessoa (019): convocar quem a ordem indica para a vaga que a `016` apurou
+    # como faltante, registrar o que ela respondeu e chamar o suplente quando a vaga vaga. App
+    # próprio, e não um módulo dentro de `ocupacao`, pela mesma razão que fez a `016` não morar em
+    # `classificacao`: o nome do módulo ficaria falso — `ocupacao` **conta**, e convocar é alcançar
+    # pessoa. A direção da dependência é única: `convocacao` lê `ocupacao`, `classificacao` e
+    # `resultados`, e **nenhum deles passa a conhecê-la**. A exclusão e a inclusão que os desfechos
+    # produzem chegam por uma porta que mora em `ocupacao`, com o ato de origem como UUID opaco —
+    # uma FK na direção contrária inverteria a dependência no grafo de migrations, que é onde ela
+    # é irreversível (019, R-003).
+    "processo_seletivo.convocacao",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são

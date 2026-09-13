@@ -12,6 +12,13 @@ de credencial, em `identidade/application/mensagem.py`. As duas são recibo de a
 pessoa praticou, e é essa a fronteira: aviso de resultado, de retificação e lembrete continuam fora,
 e uma terceira exigiria revisar a regra em vez de acrescentar um remetente.
 
+**A terceira chegou, e a regra foi revisada em vez de contornada** (019, `R-008`). A convocação por
+mensagem individual é a situação nova, em `convocacao/application/comunicar.py`, e ela **quebra** o
+critério que unia as duas primeiras: é ato da Administração dirigido à pessoa, e não recibo de ato
+dela. O que a admite é norma publicada — o Edital declara que comunica assim —, e a `FR-084` da
+`010` foi reescrita, com a redação anterior preservada. A contagem é verificada em
+`tests/test_situacoes_de_mensagem.py`, para que a quarta não entre calada como esta quase entrou.
+
 **Não é a mensagem do desafio.** Lá a caixa ainda não se sabe de quem é, e por isso a `FR-082`
 proíbe CPF e dado de inscrição. Aqui o endereço é credencial provada da identidade que praticou o
 ato, e o conteúdo é o que ela acabou de ver na tela. Ainda assim, **sem CPF e sem telefone**: eles

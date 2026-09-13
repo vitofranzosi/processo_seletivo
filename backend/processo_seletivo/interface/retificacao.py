@@ -63,6 +63,19 @@ CAMPOS_PERFIL = [
     ("compensation", "Remuneração", TEXTO),
     ("immediateVacancies", "Vagas imediatas", INTEIRO),
     ("reserveLimit", "Limite do Cadastro Reserva", INTEIRO),
+    # Como este Perfil comunica a convocação (019, D-009, R-007). **Declarado aqui antes da
+    # primeira emissão**, pela lição que a `025` registrou como a que não teria conserto: endereço
+    # de Retificação não se conserta depois, porque publicação é ato imutável. O primeiro Edital
+    # publicado com a forma declarada nasceria irretificável nela.
+    #
+    # `REFERENCIA`, e não texto, pelo precedente do `cutRule/tieOutcome`: são dois valores fechados,
+    # e caixa de texto publicaria forma que a `019` não interpreta — convocar pela forma errada é
+    # alcançar a pessoa por um canal que o Edital não prometeu.
+    #
+    # **Campo solto do Perfil, e não dentro de objeto**, e por isso entra em `CAMPOS_PERFIL` e não
+    # num grupo condicional como o da reversão: ele está sempre no conteúdo, `None` quando não
+    # declarado, e retificá-lo é alteração de campo existente — não criação de objeto.
+    ("callForm", "Forma de comunicar a convocação", REFERENCIA),
 ]
 CAMPOS_EVENTO = [
     ("description", "Descrição", TEXTO),
@@ -119,6 +132,13 @@ CAMPOS_DO_CORTE = [
 ESPECIES_DE_REVERSAO = (
     ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
     ("ON_BALANCE", "A quantidade que ficou sem preencher"),
+)
+# As duas formas de comunicar a convocação, com as mesmas palavras da tela de composição (019).
+# **As duas são normais**, e a amostra tem as duas: o 69/2026 (7.2) convoca por publicação; o 77, o
+# 58 e o 59 (8.3) por mensagem individual, com o prazo contado do recebimento.
+FORMAS_DE_CONVOCACAO = (
+    ("PUBLICATION", "Por publicação no endereço eletrônico do certame"),
+    ("INDIVIDUAL_MESSAGE", "Por mensagem individual à pessoa convocada"),
 )
 # A espécie do gatilho da reversão (016, D-007). **Só entra quando o objeto existe**, como os
 # campos do corte: um caminho de referência para dentro de objeto ausente não tem o que oferecer, e
@@ -453,6 +473,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 opcoes={
                     "generalCompetitionModalityId": modalidades_do_perfil,
                     "vacancyReversion/kind": ESPECIES_DE_REVERSAO,
+                    "callForm": FORMAS_DE_CONVOCACAO,
                 },
                 rotulos_do_vazio={
                     "generalCompetitionModalityId": (
@@ -462,6 +483,10 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     # ele provoca é o mínimo: sem gatilho, a reversão declarada não publica — e a
                     # ausência do objeto inteiro é "este Edital não reverte" (016, FR-251).
                     "vacancyReversion/kind": "Nenhum — este Edital não reverte vaga reservada",
+                    # **Dizer o que o vazio provoca, e não só que ele existe.** Sem forma
+                    # declarada a `019` recusa convocar, e não escolhe uma das duas — é a diferença
+                    # entre "não declarou" e "convoca por publicação" (019, FR-287).
+                    "callForm": "Nenhuma — este Edital não declarou como convoca",
                 },
             )
         )
@@ -933,6 +958,10 @@ def _perfil_completo(valores):
         # nasce sem quadro seria, além disso, regra inexequível, que a publicação recusa
         # (016, FR-245, FR-251).
         "vacancyReversion": None,
+        # A da versão 15, e é a última por enquanto. `None` diz que este Perfil não declarou como
+        # comunica a convocação — e nunca "convoca por publicação": as duas formas da amostra são
+        # normais, e escolher uma por omissão decidiria norma no lugar do Edital (019, FR-287).
+        "callForm": None,
     }
 
 

@@ -16,6 +16,7 @@ from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.application import movimento as movimento_de_vaga
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import apuracao as calculo
@@ -98,13 +99,21 @@ def emitir_apuracao(
                 campo="motivo",
             )
 
-        progrediram, corte = selectors.dentro_da_faixa(
+        progrediram, corte, empates = selectors.progrediram_em_ordem(
             edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
         )
         etapa = corte.etapa_governada_id if corte is not None else None
         habilitadas = selectors.habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+        # **Os efeitos que a `019` registrou, congelados como os movimentos já são** (`FR-244`).
+        # Reproduzir esta apuração é reler **estes** ids, e não os efeitos de hoje: sem o
+        # congelamento, uma apuração antiga relida devolveria o número que o mundo virou depois.
+        efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
+            edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+        )
 
-        movimentos = _movimentos_a_ler(edital=edital, perfil=perfil, marco=marco, lista=lista)
+        movimentos = selectors._movimentos_que_alcancam(
+            edital=edital, perfil=perfil, marco=marco, lista=lista
+        )
         lidos = [
             (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
             for m in movimentos
@@ -115,17 +124,33 @@ def emitir_apuracao(
         # suplente autodeclarado". A vaga reservada **continua sendo da reserva**, e o que muda é
         # que ele não a ocupou.
         ocupantes_da_ampla = (
-            _ocupantes_da_ampla(edital=edital, perfil=perfil, marco=marco)
+            selectors.ocupantes_da_ampla(
+                edital=edital, perfil_id=perfil, marco_id=marco, versao=versao
+            )
             if lista is not None
             else set()
         )
-        publicadas, efetivas, ocupadas = calculo.apurar(
-            publicadas=_quantidade(linha),
-            dentro_da_faixa=progrediram,
-            habilitadas=habilitadas,
-            movimentos_lidos=lidos,
-            ocupantes_da_ampla=ocupantes_da_ampla,
-        )
+        try:
+            publicadas, efetivas, ocupadas = calculo.apurar(
+                publicadas=_quantidade(linha),
+                progrediram_em_ordem=progrediram,
+                habilitadas=habilitadas,
+                movimentos_lidos=lidos,
+                ocupantes_da_ampla=ocupantes_da_ampla,
+                efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
+                empates_residuais=empates,
+            )
+        except calculo.EmpateNaFronteiraDoAlvo as erro:
+            # **Recusar é o desfecho, e não escolher** (019, `R-002`). A mensagem nomeia a posição
+            # e o tamanho do empate porque o caminho de saída existe e é da `015`: julgar o
+            # desempate. Sem os dois números, quem lê não sabe quantos julgar.
+            raise DomainError(
+                erro.codigo,
+                f"Um empate residual não julgado na posição {erro.posicao}, com {erro.quantas} "
+                "participantes, atravessa a fronteira das vagas deste recorte: não há como "
+                "determinar quem é titular sem o desempate julgado.",
+                409,
+            ) from erro
 
         # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
         # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
@@ -173,6 +198,7 @@ def emitir_apuracao(
                 # que o mundo virou depois, e não o que ela apurou.
                 "movimentosLidos": [str(m.id) for m in movimentos]
                 + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
+                "efeitosLidos": [str(e.id) for e in efeitos],
             },
             emitida_por=str(getattr(actor, "subject", actor)),
             emitida_em=ctx.now,
@@ -193,38 +219,6 @@ def emitir_apuracao(
             else None
         )
         return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, movimento=movimento)
-
-
-def _ocupantes_da_ampla(*, edital, perfil, marco):
-    """Quem ocupa vaga pela ampla concorrência: dentro da faixa dela **e** habilitado.
-
-    É a mesma conta que a apuração da ampla faz, lida de fora — e é ela que a reservada subtrai.
-    """
-    progrediram, corte = selectors.dentro_da_faixa(
-        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=None
-    )
-    etapa = corte.etapa_governada_id if corte is not None else None
-    return progrediram & selectors.habilitadas_na_etapa(edital=edital, etapa_id=etapa)
-
-
-def _movimentos_a_ler(*, edital, perfil, marco, lista):
-    """Os movimentos que alcançam este recorte, cedendo ou recebendo.
-
-    **A busca é pelo recorte, e não pela apuração.** O movimento nasce com a apuração da origem, e
-    é a apuração do destino que o lê: procurá-lo por `apuracao` devolveria só o que a própria origem
-    gravou, e o destino nunca veria o que recebeu.
-    """
-    from processo_seletivo.ocupacao.models import MovimentoDeVaga
-
-    candidatos = MovimentoDeVaga.objects.filter(
-        apuracao__edital=edital, apuracao__perfil_id=perfil, apuracao__marco_id=marco
-    ).order_by("registrado_em")
-    return [
-        m
-        for m in candidatos
-        if calculo.mesma_lista(m.origem_lista_id, lista)
-        or calculo.mesma_lista(m.destino_lista_id, lista)
-    ]
 
 
 def _declaracao(conteudo, *, perfil_id):

@@ -54,6 +54,16 @@ class ResultadoEtapa(models.Model):
 
         AVALIACAO = "AVALIACAO"
         OCORRENCIA = "OCORRENCIA"
+        # **`REGULARIZACAO` é a quinta linha, e ela chegou com a `019`.** O indeferido convocado
+        # para corrigir a documentação e que corrige tem o Resultado **sucedido** pelo mecanismo
+        # que a `018` deixou — e não por um caminho próprio de habilitação, que seria invisível
+        # para a contagem da `016` (019, D-008, R-005).
+        #
+        # A fonte jurídica dela **não é uma `DecisaoRecurso`**: ninguém interpôs recurso. Reusar
+        # aquela FK com um recurso sintético registraria um recurso que não existiu — o mesmo tipo
+        # de mentira que a `018` recusou ao proibir Resultado por recurso citando Avaliação
+        # inexistente.
+        REGULARIZACAO = "REGULARIZACAO"
         # **`RECURSO` é a terceira, e ela não cita Avaliação nenhuma.** A decisão recursal pode
         # fixar a consequência e, quando aplicável, a pontuação corrigida — e nesse caminho a
         # fonte jurídica é a decisão, não uma avaliação. Sintetizar uma `Avaliacao` para
@@ -142,6 +152,18 @@ class ResultadoEtapa(models.Model):
         on_delete=models.PROTECT,
         related_name="resultados",
     )
+    # A fonte jurídica do sucessor **por regularização**: o desfecho da convocação que a registrou
+    # (019, R-005). Presente nessa origem e nula em todas as outras.
+    #
+    # **Identidade opaca, e não FK — e a diferença é a feature inteira.** Uma FK daqui para
+    # `convocacao` inverteria a dependência no grafo de migrations, e `resultados` passaria a não
+    # migrar sem a `019`. É o mesmo recurso que `ocupacao.EfeitoDeOcupacao` usa para o ato de
+    # origem, e pela mesma razão.
+    #
+    # **A integridade referencial existe, e vem do outro lado**: `DesfechoDaConvocacao` tem FK
+    # `resultado_sucessor` para esta tabela, e o desfecho e o Resultado nascem na mesma transação.
+    # O par é mutuamente referente, com a chave estrangeira no lado que **pode** depender.
+    desfecho_de_convocacao_id = models.UUIDField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -173,8 +195,21 @@ class ResultadoEtapa(models.Model):
             # reavaliação impossível de existir.
             models.CheckConstraint(
                 condition=(
-                    Q(resultado_anterior__isnull=True, decisao__isnull=True)
-                    | Q(resultado_anterior__isnull=False, decisao__isnull=False)
+                    Q(
+                        resultado_anterior__isnull=True,
+                        decisao__isnull=True,
+                        desfecho_de_convocacao_id__isnull=True,
+                    )
+                    | Q(
+                        resultado_anterior__isnull=False,
+                        decisao__isnull=False,
+                        desfecho_de_convocacao_id__isnull=True,
+                    )
+                    | Q(
+                        resultado_anterior__isnull=False,
+                        decisao__isnull=True,
+                        desfecho_de_convocacao_id__isnull=False,
+                    )
                 ),
                 name="ck_sucessor_cita_decisao",
             ),
@@ -195,12 +230,13 @@ class ResultadoEtapa(models.Model):
             models.CheckConstraint(
                 # Literais, como `ck_resultado_consequencia` ao lado: `Origem` é classe aninhada
                 # e não está em escopo dentro de `Meta`.
-                # **Quatro linhas legítimas, e só quatro** (018, data-model §6.1):
+                # **Cinco linhas legítimas, e só cinco** (018, data-model §6.1; 019, R-005):
                 #
                 #   raiz por avaliação      AVALIACAO  · avaliação sim · anterior não
                 #   sucessor por reavaliação AVALIACAO · avaliação sim · anterior sim
                 #   raiz por ocorrência     OCORRENCIA · avaliação não · anterior não
-                #   sucessor por recurso    RECURSO    · avaliação não · anterior sim
+                #   sucessor por recurso    RECURSO   · avaliação não · anterior sim · decisão
+                #   sucessor por regularização        · avaliação não · anterior sim · desfecho
                 #
                 # O ramo de `AVALIACAO` **não fala de `decisao` nem de `resultado_anterior`**: ele
                 # serve às duas linhas de avaliação, e amarrar a decisão aqui tornaria o sucessor
@@ -216,6 +252,16 @@ class ResultadoEtapa(models.Model):
                 )
                 | Q(
                     origem="RECURSO",
+                    avaliacao__isnull=True,
+                    resultado_anterior__isnull=False,
+                )
+                # **A quinta linha, e ela foi acrescentada — não afrouxada** (019, R-005). O
+                # sucessor por regularização não cita Avaliação e não cita decisão recursal: a
+                # fonte dele é o desfecho da convocação, e `ck_sucessor_cita_decisao` exige que
+                # **alguma** fonte esteja lá. Admitir sucessor sem fonte nenhuma destruiria a
+                # garantia que aquela constraint existe para dar.
+                | Q(
+                    origem="REGULARIZACAO",
                     avaliacao__isnull=True,
                     resultado_anterior__isnull=False,
                 ),

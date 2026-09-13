@@ -545,16 +545,44 @@ remover o antigo e corrigir o nome.
 
 - **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
   técnico no servidor.
-- **FR-084**: Além do desafio, esta feature envia mensagem em exatamente **duas** situações, e as
-  duas são recibo de ato que a própria pessoa praticou: a confirmação do envio da inscrição,
-  endereçada à credencial que praticou o ato; e o aviso de que um endereço passou a alcançar — ou
-  deixou de alcançar — a conta, endereçado à credencial principal (`FR-018b`). O canal passar a
-  existir não torna comunicação transacional escopo implícito: aviso de retificação, de resultado,
-  lembrete e campanha continuam fora, e acrescentar uma terceira situação exige revisar esta regra.
-  As duas exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a
+- **FR-084** *(revisada pela `019` em 2026-09-12 — a redação anterior está ao fim desta alínea)*:
+  Além do desafio, o sistema envia mensagem em exatamente **três** situações, todas nominais: a
+  confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
+  endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
+  (`FR-018b`); e a **convocação**, quando o Perfil publicado declara que este Edital comunica por
+  mensagem individual (`019`, `FR-287`). O canal passar a existir não torna comunicação transacional
+  escopo implícito: aviso de retificação, de resultado, lembrete e campanha continuam fora, e
+  acrescentar uma quarta situação exige revisar esta regra de novo.
+
+  **A terceira quebra o critério que unia as duas primeiras, e é por isso que a revisão é escrita, e
+  não uma exceção silenciosa.** As duas primeiras eram recibo de ato que a própria pessoa praticou;
+  a convocação é ato da Administração dirigido a ela, e o prazo dela corre do envio (`019`,
+  `FR-269a`). O que a admite não é semelhança com as outras duas, e sim **norma publicada**: o
+  Edital declara a forma de comunicar, e três dos quatro Editais da amostra — o 77, o 58 e o 59, no
+  item 8.3 — convocam por mensagem individual. Um sistema que recusasse enviá-la não estaria
+  protegendo o candidato: estaria deixando de cumprir o Edital.
+
+  **A convocação entra por declaração, e nunca por padrão.** Perfil que não declarou `callForm` não
+  recebe mensagem nenhuma — a `019` recusa convocar, com `forma_de_comunicacao_nao_declarada`, em
+  vez de escolher a forma. E Perfil que declarou comunicação por publicação não gera envio
+  individual: a terceira situação existe onde o Edital a criou, e em lugar nenhum mais.
+
+  As três exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a
   primeira, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
   guardar; sem a segunda, quem anexa um endereço à conta alheia não deixa sinal nenhum para a
-  titular.
+  titular; sem a terceira, o Edital que promete convocar por mensagem individual não é cumprido pelo
+  sistema que o publicou.
+
+  > **Redação anterior, preservada porque a regra mandava revisá-la e não substituí-la em silêncio:**
+  > *"Além do desafio, esta feature envia mensagem em exatamente **duas** situações, e as duas são
+  > recibo de ato que a própria pessoa praticou: a confirmação do envio da inscrição, endereçada à
+  > credencial que praticou o ato; e o aviso de que um endereço passou a alcançar — ou deixou de
+  > alcançar — a conta, endereçado à credencial principal (`FR-018b`). O canal passar a existir não
+  > torna comunicação transacional escopo implícito: aviso de retificação, de resultado, lembrete e
+  > campanha continuam fora, e acrescentar uma terceira situação exige revisar esta regra. As duas
+  > exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a primeira,
+  > quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda guardar;
+  > sem a segunda, quem anexa um endereço à conta alheia não deixa sinal nenhum para a titular."*
 - **FR-084a**: A confirmação de inscrição DEVE conter protocolo, código de verificação, a
   oportunidade, o instante do envio e o que foi recebido. O aviso de mudança de credencial DEVE
   conter o endereço afetado, o que aconteceu com ele e o canal de atendimento. Nenhuma das duas PODE

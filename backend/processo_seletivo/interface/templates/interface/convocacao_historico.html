@@ -1,0 +1,66 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Histórico da convocação — com a proveniência de cada ato{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Convocação</a> ›
+  <span aria-current="page">Histórico</span>
+</nav>
+
+<h1>Histórico da convocação</h1>
+<p class="sub">Todos os atos deste recorte, do mais antigo ao mais novo, com a proveniência de cada um.</p>
+
+{% comment %}
+As sucedidas aparecem, e a ausencia delas seria o defeito: correcao e sucessao, e e a linha anterior
+que explica o que foi corrigido e por que. Esconde-las deixaria a trilha contando metade da
+historia (FR-294).
+{% endcomment %}
+{% if not serie %}
+<p class="aviso" role="status">Nenhuma convocação praticada neste recorte.</p>
+{% else %}
+<div class="rolagem">
+<table>
+  <caption>Convocações do recorte, com a proveniência de cada ato</caption>
+  <thead>
+    <tr>
+      <th scope="col">Inscrição</th>
+      <th scope="col">Espécie</th>
+      <th scope="col">Praticada em</th>
+      <th scope="col">Apuração citada</th>
+      <th scope="col">Ordem citada</th>
+      <th scope="col">Enviada em</th>
+      <th scope="col">Desfecho</th>
+      <th scope="col">Fundamento do desfecho</th>
+      <th scope="col">Situação do ato</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for item in serie %}
+    <tr>
+      <td>{{ item.inscricao.protocolo }} — {{ item.inscricao.nome }}</td>
+      <td>{{ item.convocacao.get_especie_display }}</td>
+      <td>{{ item.convocacao.criado_em|date:"d/m/Y H:i" }}</td>
+      <td>{{ item.convocacao.apuracao_id }}</td>
+      <td>{{ item.convocacao.ato_de_ordenacao_id }}</td>
+      <td>{% if item.enviadaEm %}{{ item.enviadaEm|date:"d/m/Y H:i" }}{% else %}não enviada{% endif %}</td>
+      <td>{% if item.desfecho %}{{ item.desfecho.get_especie_display }}{% if item.desfecho.especie == "RECLASSIFICACAO" and item.posicaoNaFila %} — hoje em {{ item.posicaoNaFila }}º na fila de chamada{% endif %}{% else %}sem desfecho{% endif %}</td>
+      <td>{% if item.desfecho %}{{ item.desfecho.fundamento }}{% else %}—{% endif %}</td>
+      <td>{% if item.vigente %}vigente{% else %}sucedida — {{ item.convocacao.sucessoras.first.motivo_da_sucessao }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="nota">Cada ato cita a apuração que disse que faltava vaga e a ordem que disse quem era o próximo. É por eles que o número que motivou a chamada se reconstrói.</p>
+{% comment %}
+A posicao do reclassificado e **derivada, e nao guardada** (FR-291): cada chamada seguinte a
+desloca, e uma coluna exigiria `UPDATE` numa tabela append-only. O que se mostra e onde ele esta
+agora — que e a pergunta que quem conduz o certame faz ao ler a linha.
+
+E a reclassificacao **nao afirma perda de habilitacao** (D-008): a pessoa continua habilitada, e o
+que ela perdeu foi a vez.
+{% endcomment %}
+<p class="nota">Quem foi reclassificado continua habilitado: o que mudou foi a posição dele na fila de chamada, e ele volta a ser chamável depois do último suplente.</p>
+{% endif %}
+{% endblock %}

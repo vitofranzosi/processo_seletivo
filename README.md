@@ -70,7 +70,7 @@ O que acontece nessa ordem, e por que ela é essa: o PostgreSQL sobe e é espera
 então a aplicação **provisiona os papéis, aplica as migrations e provisiona de novo**. A segunda
 passada não é redundância — papel e privilégio padrão precisam existir antes de qualquer tabela, e
 privilégio *sobre* tabela só pode ser concedido depois que ela existe. Ela é a que tranca. O
-terminal mostra `26 de 26 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
+terminal mostra `31 de 31 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
 deu certo.
 
 Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não
@@ -211,7 +211,7 @@ linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQ
 [`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md) — e mede 21, que era o número de
 09/09.
 
-Contra PostgreSQL a suíte fecha em 5082 passando e 2 pulados — os dois deliberados, e nomeados em
+Contra PostgreSQL a suíte fecha em 5402 passando e 2 pulados — os dois deliberados, e nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
@@ -316,6 +316,7 @@ Incrementos, na ordem em que foram especificados:
 | [`016`](specs/016-ocupacao-de-vagas/spec.md) | ocupação de vagas entre listas de concorrência |
 | [`017`](specs/017-publicacao-de-resultados/spec.md) | publicação de resultados |
 | [`018`](specs/018-recursos-e-superacao-de-resultados/spec.md) | recursos e superação de resultados |
+| [`019`](specs/019-convocacao-chamada-suplencia/spec.md) | convocação, chamada e suplência |
 | [`020`](specs/020-anexos-do-edital/spec.md) | anexos do Edital |
 | [`021`](specs/021-sorteio-publico-auditavel/spec.md) | sorteio público auditável |
 | [`022`](specs/022-supervisao-do-processo/spec.md) | supervisão do Processo |

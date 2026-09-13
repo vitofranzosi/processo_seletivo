@@ -254,6 +254,9 @@ def replace_draft(
                 # **Vazio, e não `None`**: a coluna é `CharField` com `default=""`, e escrever nulo
                 # viola o `NOT NULL`. É a mesma grafia de ausência que o resto do modelo usa.
                 especie_de_reversao=((payload.get("vacancyReversion") or {}).get("kind") or ""),
+                # Campo solto no conteúdo publicado, e por isso lido direto (019, R-007). Vazio
+                # quando ausente, pela mesma razão da linha acima.
+                forma_de_convocacao=(payload.get("callForm") or ""),
                 locality=payload.get("locality", ""),
                 duties=payload.get("duties", ""),
                 workload=payload.get("workload", ""),

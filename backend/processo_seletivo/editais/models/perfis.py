@@ -72,6 +72,23 @@ class PerfilVaga(models.Model):
             ("ON_BALANCE", "A quantidade que ficou sem preencher"),
         ],
     )
+    # Como este Perfil comunica a convocação (019, D-009, R-007). **Vazio significa "este Edital
+    # não declarou forma"** — nunca "convoca por publicação". A amostra tem as duas formas e as
+    # duas são normais: o 69/2026 (7.2) convoca por publicação; o 77, o 58 e o 59 (8.3) por
+    # mensagem individual, com prazo contado do recebimento. Escolher uma por omissão inventaria
+    # norma, e a `019` recusa convocar sem declaração em vez de escolher.
+    #
+    # **Vazio, e não nulo**, pela mesma razão de `especie_de_reversao` acima: é a grafia deste
+    # repositório para texto ausente, e os dois valores declaráveis são não vazios.
+    forma_de_convocacao = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        choices=[
+            ("PUBLICATION", "Por publicação no endereço eletrônico do certame"),
+            ("INDIVIDUAL_MESSAGE", "Por mensagem individual à pessoa convocada"),
+        ],
+    )
 
     class Meta:
         constraints = [

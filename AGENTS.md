@@ -35,7 +35,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, são **26** — e é por isso que a armadilha é o zero, e não o total.
+— eram 18, são **31** — e é por isso que a armadilha é o zero, e não o total.
 
 **Migration desaplicada contamina a sessão inteira.** O sintoma é `relation ... does not exist` num
 arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, confira
@@ -57,7 +57,7 @@ quando eram 21:
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **5082 passando e 2 pulados** (medido em 2026-09-12). Os dois
+Contra PostgreSQL a suíte fecha em **5402 passando e 2 pulados** (medido em 2026-09-13). Os dois
 pulados são deliberados e estão nomeados em
 [doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
 um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave

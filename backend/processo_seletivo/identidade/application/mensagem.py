@@ -5,6 +5,11 @@ fora de escopo — e esta frase está aqui exatamente porque, a partir da 010, a
 como enviar e-mail" deixa de existir. A confirmação de inscrição vive em `inscricoes`, junto do ato
 que a origina.
 
+**São três situações desde a `019`**, e não duas: a convocação por mensagem individual entrou depois
+de a `FR-084` ser revisada por escrito, e não por exceção silenciosa. Ela mora em
+`convocacao/application/comunicar.py`, e a contagem é varrida por
+`tests/test_situacoes_de_mensagem.py` — um `send_mail` num módulo não declarado reprova a suíte.
+
 **O código muda de texto conforme a finalidade** (FR-082a). Entrar e adicionar credencial produzem
 riscos opostos para quem recebe: no primeiro, ignorar a mensagem basta, porque ninguém entra sem o
 código; no segundo, quem obtiver o código anexa **esta** caixa à conta **dele**, e passa a entrar
