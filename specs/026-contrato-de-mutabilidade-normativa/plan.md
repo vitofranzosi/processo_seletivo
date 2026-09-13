@@ -36,11 +36,13 @@ e versionado com ele (R-001).
 **Performance Goals**: o guardião publica **um** Edital completo e o percorre em memória; custo
 comparável ao teste de coleções-raiz que já existe. Nenhuma consulta por campo.
 
-**Constraints**: nenhuma alteração de conteúdo já publicado; nenhuma reclassificação retroativa
-(FR-314); a razão de exclusão não pode repetir-se por entidade na tela (R-006).
+**Constraints**: nenhuma alteração de conteúdo já publicado; a classificação vigente governa os
+atos futuros e não é congelada por Publicação (FR-314, D-011); a razão de exclusão não pode
+repetir-se por entidade na tela (R-006).
 
-**Scale/Scope**: 81 a 98 campos publicados por Edital, em 12 coleções normativas — 6 na raiz e 6
-aninhadas. Quatro jornadas de correção.
+**Scale/Scope**: **121 entradas de contrato** — a forma, que é a união de tudo o que pode aparecer,
+medida em `publish_edital.py`. Os 81 a 98 da auditoria são ocorrências num Edital concreto, que é
+outra conta. 12 coleções normativas — 6 na raiz e 6 aninhadas. Quatro jornadas de correção.
 
 ## Constitution Check
 
@@ -49,9 +51,9 @@ aninhadas. Quatro jornadas de correção.
 | Princípio | Situação | Como esta feature o satisfaz |
 |---|---|---|
 | **I — Linguagem ubíqua** | ✅ | "Natureza de mutabilidade", "campo publicado", "razão" entram no vocabulário com significado único em spec, código e teste. Nada renomeia conceito existente. |
-| **II — Integridade normativa e temporalidade** | ✅ | Nada se sobrescreve. FR-314 proíbe reclassificação retroativa; R-005 confirma que a relação de sorteio congelada carrega o `metodo_hash` e não relê o método vigente. |
+| **II — Integridade normativa e temporalidade** | ✅ | Nada se sobrescreve. FR-314, na redação de D-011, preserva o **conteúdo** publicado e deixa a classificação vigente governar os atos futuros; R-005 confirma que a relação de sorteio congelada carrega o `metodo_hash` e não relê o método vigente. |
 | **III — Segurança e auditoria** | ✅ | Nenhum dado pessoal envolvido. As Retificações dos canários seguem o fluxo de atos existente, com autoria e trilha. |
-| **IV — Regras explícitas** | ✅ | É o núcleo da feature: D-008 proíbe classificação por heurística, e D-002 proíbe razão técnica. |
+| **IV — Regras explícitas** | ✅ | É o núcleo da feature: D-008 proíbe classificação por heurística, e D-002 proíbe razão técnica. A `matriz.md` é onde essas regras ficam explícitas antes de virarem código — e é ela que impede que a classificação seja decidida por quem implementa. |
 | **V — Qualidade e rastreabilidade** | ✅ | O guardião é a rastreabilidade: um campo sem decisão derruba a suíte nomeando-o. |
 | **VI — Completude de jornada** | ⚠️ **resolvido por D-009** | Uma feature só de matriz e guardião é trabalho exclusivamente técnico — admissível, mas **inconcluível** como spec. Os quatro canários deixaram de ser insumo de desenho e passaram a ser as jornadas, e o gate de conclusão exige as quatro pelo canal do ator, sem API e sem banco. |
 
@@ -69,6 +71,7 @@ introduz é a Retificação dos canários, que passa pelos atos existentes.
 specs/026-contrato-de-mutabilidade-normativa/
 ├── plan.md              # este arquivo
 ├── research.md          # Fase 0 — seis perguntas, duas mudam escopo
+├── matriz.md            # a classificação proposta, campo a campo — PRECISA DE APROVAÇÃO
 ├── data-model.md        # Fase 1
 ├── quickstart.md        # Fase 1
 ├── contracts/
@@ -112,8 +115,8 @@ A ordem sai da spec (§8) e da pesquisa. Cada fase é verificável sozinha.
 
 | # | Fase | Entrega | Depende de |
 |---|---|---|---|
-| **A** | Enumerar | Travessia recursiva do snapshot: as 12 coleções, com seus campos | — |
-| **B** | Classificar | `mutabilidade.py` com natureza e razão de cada campo, nominalmente | A |
+| **A** | Enumerar | Travessia recursiva do snapshot, sem lista nomeada de coleções, e parando em objeto opaco | — |
+| **B** | Classificar | `mutabilidade.py` transcrevendo a `matriz.md` aprovada | A, **matriz aprovada** |
 | **C** | Guardar | O guardião que falha por omissão nos dois sentidos | A, B |
 | **D** | Reexaminar | As exclusões de razão técnica, reclassificadas ou rejustificadas | B |
 | **E** | Canário 1 | Local do evento retificável pela tela | B |

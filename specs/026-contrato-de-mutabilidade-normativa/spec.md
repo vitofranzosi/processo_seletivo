@@ -190,6 +190,48 @@ chamada de API.
 **A implementação campo a campo do resto não entra.** Os quatro canários são escolhidos por
 natureza distinta, e existem para obrigar o desenho a generalizar — não para esgotar a lista.
 
+### D-011 — A classificação vigente governa os atos futuros, e não é congelada por Publicação
+
+A natureza de um campo **não viaja com o Edital**. Ela é norma sobre o que se pode corrigir, e uma
+Retificação é ato praticado hoje, sob a norma de hoje.
+
+**A alternativa foi considerada e recusada.** Congelar a classificação em cada Publicação faria o
+contrato deixar de ser código e virar dado versionado — contra R-001 e contra a própria forma que
+D-001 escolheu —, obrigaria o guardião a guardar toda classificação histórica, e prenderia cada
+Edital à classificação do dia em que foi publicado. Que é exatamente o precedente do `callForm`
+outra vez: *"o primeiro Edital publicado com a forma declarada nasceria irretificável nela"*.
+
+**O que a decisão preserva**: o conteúdo publicado continua imutável, porque a Constituição já o
+torna — reclassificar não reescreve nada do que foi publicado. O que muda é o que um ato **novo**
+pode fazer.
+
+**O que ela deixa aberto, e a FR-315 fecha**: a direção retificável → não retificável retira
+capacidade de quem já publicou. Ela continua admissível — é decisão normativa como qualquer outra —
+mas precisa dizer, por escrito, que fecha um caminho que existia.
+
+### D-010 — O quarto canário é o método do sorteio, e não a regra classificatória
+
+A decisão de origem — `doc/decisao-mutabilidade-normativa.md`, seção *Os quatro canários* — elege
+como quarto canário **a regra classificatória** (`rounding/{mode, scale}` e `operation`), e trata o
+método do sorteio como *"o quinto candidato natural, e o mais desconfortável"*. Esta spec troca um
+pelo outro. A troca veio do enunciado desta feature, e não do desenho; registrá-la aqui é o que
+faltava.
+
+**Por que a troca se sustenta**: a contradição do método é objetiva e já está escrita no produto —
+a `021` determina que alterá-lo é Retificação, e a própria tela do sorteio manda retificá-lo,
+enquanto a Retificação não oferece um único dos seus dez campos. A regra classificatória não tem
+contradição equivalente: ela está **excluída com razão registrada**, e a razão é técnica.
+
+**O que a troca custa, e onde isso é pago**: `rounding` e `operation` deixam de ter jornada
+própria. Eles não saem do escopo — são duas das exclusões por razão técnica que a FR-310 obriga a
+reexaminar, e estão nomeadas na tarefa que faz esse reexame. O que muda é o estatuto: de canário
+que conduz o desenho, para exclusão que precisa de razão normativa ou de reclassificação.
+
+**O que a troca perde**: as quatro naturezas cobertas pelos canários passam a ser escalar de texto,
+coleção de texto, objeto composto com valor fechado e objeto composto grande. **Valor fechado que
+muda a pontuação combinada** — que era o que `rounding` e `operation` traziam de distinto — deixa
+de ter jornada, e passa a depender só do reexame da FR-310.
+
 ---
 
 ## 4. Problema
@@ -344,8 +386,9 @@ do marco nomeia o que não se corrige ali e por quê.
 - **Campo que existe no conteúdo de um Edital antigo e não na forma publicada de hoje.** A forma
   evoluiu por degraus; o contrato classifica a forma vigente, e conteúdo histórico permanece legível
   sob a norma que o governou.
-- **Campo cuja natureza muda.** Reclassificar de "não retificável" para "retificável" é decisão
-  nova, escrita, e não alcança retroativamente Edital publicado sob a classificação anterior.
+- **Campo cuja natureza muda.** Reclassificar é decisão nova e escrita, e alcança os atos
+  praticados dali em diante — inclusive sobre Edital publicado antes dela (D-011). O que ela nunca
+  alcança é o conteúdo publicado, que a Constituição já torna imutável.
 - **Objeto ausente no conteúdo publicado.** `cutRule: None` não é campo sem natureza: é declaração
   que não foi feita, e o contrato diz se ela pode passar a existir por Retificação.
 - **Coleção nova inteira.** Uma coleção que nasça no conteúdo publicado é encontrada pela travessia
@@ -401,8 +444,12 @@ do marco nomeia o que não se corrige ali e por quê.
   entidade não se corrigem por ali e a razão normativa de cada exclusão.
 - **FR-313**: O contrato MUST declarar, para objeto normativo ausente no conteúdo publicado, se a
   declaração pode passar a existir por Retificação e por qual caminho.
-- **FR-314**: Reclassificar a natureza de um campo NÃO DEVE alterar Edital publicado sob a
-  classificação anterior.
+- **FR-314**: Reclassificar a natureza de um campo NÃO DEVE alterar **conteúdo** já publicado. A
+  classificação vigente governa os **atos futuros**, inclusive sobre Edital publicado antes dela:
+  uma Retificação é ato novo, praticado hoje, sob a norma de hoje (D-011).
+- **FR-315**: Reclassificar de "retificável" para "não retificável" MUST carregar, além da razão
+  normativa, o registro de que um caminho de correção foi fechado — é a única direção de
+  reclassificação que retira capacidade de quem já publicou.
 
 ### Key Entities
 

@@ -16,15 +16,23 @@ Um campo escalar do conteúdo canônico de uma coleção normativa. Existe hoje;
 | Atributo | Descrição |
 |---|---|
 | coleção | a coleção que o carrega — `profiles`, `schedule`, `classificationMilestones`… |
-| nome | o último segmento do caminho normativo: `endAt`, `requirements`, `targetCount` |
-| caminho | onde ele aparece no conteúdo: `/profiles/id=…/classificationMilestones/id=…/rounding/scale` |
+| caminho relativo | onde ele fica **dentro** da entidade: `endAt`, `requirements`, `cutRule/targetCount`, `drawMethod/normalization/rule` |
+| caminho absoluto | onde ele aparece no conteúdo: `/profiles/id=…/classificationMilestones/id=…/drawMethod/normalization/rule` |
 
-**Identidade**: o par `(coleção, nome)`. É a mesma chave que o PR #113 estabeleceu para o rótulo
-em português, e pela mesma razão: `name` existe em cinco coleções, `order` em três.
+**Identidade**: o par `(coleção, caminho relativo)`.
 
-**Campo aninhado** — `cutRule/targetCount`, `normativeRule/percentage`, `appealWindow/unit` —
-pertence à coleção da entidade que o carrega, e entra pelo último segmento. Não é coleção própria:
-não tem identidade nem item.
+O nome sozinho não serve, e o último segmento também não. O nome colide **entre** coleções — `name`
+existe em cinco, `order` em três —, e foi o que o PR #113 já pagou no rótulo em português. O último
+segmento colide **dentro** da mesma coleção: em `classificationMilestones`,
+`drawMethod/normalization/rule` e `drawMethod/substitutionRule/rule` dariam a mesma chave, e os dois
+`text` também. Com o último segmento como chave, o contrato não conseguiria representar nominalmente
+os dez campos do seu próprio canário 4.
+
+O caminho relativo é, além disso, a grafia que `interface/retificacao.py` já pratica —
+`normativeRule/percentage`, `normativeRule/foundation`. Não se inventa convenção nova.
+
+**Campo aninhado** pertence à coleção da entidade que o carrega. Não é coleção própria: não tem
+identidade nem item.
 
 ---
 
@@ -92,7 +100,7 @@ no nível raiz (R-002).
 | raiz | `sections` | sim | `SecaoPublicada` |
 | raiz | `attachments` | sim | `AnexoPublicado` |
 | raiz | `documentRequirements` | sim | `DocumentoExigidoPublicado` |
-| raiz | *(campos soltos: `title`, `description`, `maxInscricoesPorCandidato`)* | — | — |
+| raiz | *(dez campos soltos — ver abaixo)* | — | — |
 | sob `profiles` | `competitionModalities` | não | `ModalidadePublicada` |
 | sob `profiles` | `vacancyTable` | não (mas há `LINHA_DO_QUADRO_PUBLICADA`) | `LinhaDoQuadroPublicada` |
 | sob `profiles` | `declaredFacts` | não | **não** |
@@ -101,6 +109,49 @@ no nível raiz (R-002).
 | objetos aninhados | `cutRule`, `drawMethod`, `appealWindow`, `rounding`, `vacancyReversion`, `normativeRule` | não | parcial |
 
 A coluna da direita é o registro de um limite, não uma tarefa desta feature (R-003).
+
+**Os dez campos soltos da raiz**, medidos em
+`publicacoes/application/publish_edital.py:267-292`: `schemaVersion`, `editalId`, `processoId`,
+`maxInscricoesPorCandidato`, `processoCode`, `processoTitle`, `number`, `year`, `title`,
+`description`. Os sete primeiros são fortes candidatos a identidade/estrutural, mas a natureza de
+cada um é decisão escrita, e não inferência por parecer técnico (D-008).
+
+---
+
+## Objeto opaco — onde a travessia para
+
+Nem todo objeto do conteúdo publicado tem forma conhecida. Seis deles são `JSONField` livre no
+modelo, e o conjunto de folhas que carregam **depende do Edital**:
+
+| Caminho | Modelo |
+|---|---|
+| `profiles` / `classificationInformation` | `perfis.py:36` |
+| `profiles` / `callInformation` | `perfis.py:37` |
+| `competitionModalities` / `normativeRule/calculation` | `perfis.py:361` |
+| `competitionModalities` / `normativeRule/rounding` | `perfis.py:362` |
+| `competitionModalities` / `normativeRule/distribution` | `perfis.py:363` |
+| `competitionModalities` / `normativeRule/callRules` | `perfis.py:364` |
+| `classificationMilestones` / `rounding` | `perfis.py:261` |
+| `tiebreakers` / `parameters` | `perfis.py:341` |
+
+Descer dentro deles quebraria o guardião de um jeito silencioso e pior do que a omissão que ele
+existe para fechar: o mesmo campo estaria presente num Edital e ausente noutro, e o guardião
+alternaria entre falhar por FR-301 e falhar por FR-302 conforme o Edital que a fixture publicasse.
+A classificação dependeria da amostra, e não da norma.
+
+**Regra**: a travessia **não desce** em objeto declarado opaco, e o contrato classifica **o objeto
+inteiro** como um campo — `("classificationMilestones", "rounding")`, e não `rounding/mode` e
+`rounding/scale`.
+
+A lista dos opacos é declarada nominalmente no contrato, e não inferida de o valor ser um `dict`:
+`appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule` **também** são
+objetos, têm forma conhecida, e a travessia desce neles. Inferir por tipo confundiria os dois
+grupos exatamente ao contrário do que importa.
+
+**Consequência para a US6 e para a FR-310**: `rounding` classificado como um objeto só significa
+que ele se corrige — ou não — inteiro. Retificar `rounding/scale` sem tocar em `rounding/mode`
+passa a ser impossível por construção, e isso precisa ser uma decisão escrita, não um efeito
+colateral da travessia.
 
 ---
 

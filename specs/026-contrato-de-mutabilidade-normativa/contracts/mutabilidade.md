@@ -24,12 +24,21 @@ class Mutabilidade:
     razao: str = ""
 
 
+# chave: (coleção, caminho relativo dentro da entidade)
 CONTRATO: dict[tuple[str, str], Mutabilidade]
 ```
 
-Chave `(coleção, campo)` e não `campo` sozinho — `name` existe em cinco coleções e `order` em três;
-é a mesma correção que o PR #113 fez no rótulo em português depois de o rótulo de Perfil aparecer
-com o texto do Documento Exigido.
+**Chave `(coleção, caminho relativo)`** — `("classificationMilestones", "drawMethod/normalization/rule")`,
+e não `("classificationMilestones", "rule")`.
+
+O nome sozinho colide **entre** coleções: `name` existe em cinco e `order` em três, e é a correção
+que o PR #113 já pagou no rótulo em português. O último segmento colide **dentro** da mesma
+coleção: `drawMethod/normalization/rule` e `drawMethod/substitutionRule/rule` cairiam na mesma
+chave, e os dois `text` também — o contrato não conseguiria representar nominalmente os dez campos
+do seu próprio canário 4.
+
+O caminho relativo é a grafia que `interface/retificacao.py` já usa em `CAMPOS_REGRA`
+(`normativeRule/percentage`). Não se inventa convenção nova.
 
 **A razão é obrigatória para `NAO_RETIFICAVEL` e proibida para as outras três.** Construir um
 `Mutabilidade(NAO_RETIFICAVEL)` sem razão, ou um `RETIFICAVEL` com razão, é erro na carga do módulo
@@ -38,7 +47,7 @@ com o texto do Documento Exigido.
 ### Uma função de leitura, e uma só
 
 ```python
-def natureza_de(colecao: str, campo: str) -> Mutabilidade
+def natureza_de(colecao: str, caminho: str) -> Mutabilidade
 ```
 
 Levanta `KeyError` para par não declarado. **Não devolve um padrão.** Um padrão seria a decisão
@@ -67,6 +76,22 @@ faltou alguma.
 **A travessia é a fonte, e a lista é a consequência** (D-004, R-004). Ninguém mantém à mão o
 conjunto de campos; ele sai do Edital publicado. Um campo acrescentado ao conteúdo publicado
 derruba a suíte no mesmo commit que o acrescenta — e não no primeiro Edital publicado com ele.
+
+### Onde a travessia para: objeto opaco
+
+Seis objetos do conteúdo publicado são `JSONField` livre, e o conjunto de folhas que carregam
+depende do Edital — `classificationInformation`, `callInformation`, os quatro de `normativeRule`
+(`calculation`, `rounding`, `distribution`, `callRules`), o `rounding` do marco e o `parameters` do
+critério de desempate. A tabela com os modelos está em [data-model.md](../data-model.md).
+
+**A travessia não desce neles, e o contrato classifica o objeto inteiro.** Descer produziria um
+guardião cujo domínio muda de Edital para Edital: o mesmo campo presente num e ausente noutro faria
+a suíte alternar entre falhar por FR-301 e falhar por FR-302 conforme a fixture. A classificação
+passaria a depender da amostra, e não da norma.
+
+A lista dos opacos é **declarada**, nunca inferida de o valor ser `dict`: `appealWindow`,
+`drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule` também são objetos, têm forma
+conhecida, e a travessia desce neles.
 
 ### O alcance do guardião em relação ao que já existe
 
@@ -134,10 +159,20 @@ Governa um direito com prazo. Corrigi-lo cedo demais ou tarde demais tem efeito 
 
 ### Canário 4 — método do sorteio (`classificationMilestones` / `drawMethod`)
 
-**Dez campos**, e é a conta que fecha com a spec: cinco escalares de `CAMPOS_DO_METODO` em
-`editais/domain/perfis.py` (`algorithm`, `source`, `occurrence`, `occurrenceAt`, `derivation`),
-mais `qualifyingStageId`, mais o par `rule`/`text` dentro de `normalization` e dentro de
-`substitutionRule` — os dois são objetos, e o próprio validador cobra as duas chaves de cada um.
+**Dez campos**, e é a conta que fecha com a spec — todos na coleção `classificationMilestones`,
+com estes caminhos relativos:
+
+```text
+drawMethod/algorithm              drawMethod/normalization/rule
+drawMethod/source                 drawMethod/normalization/text
+drawMethod/occurrence             drawMethod/substitutionRule/rule
+drawMethod/occurrenceAt           drawMethod/substitutionRule/text
+drawMethod/derivation             drawMethod/qualifyingStageId
+```
+
+Os dois últimos pares são o que quebra a chave por último segmento: `normalization` e
+`substitutionRule` são objetos, o validador cobra `rule` e `text` de cada um
+(`editais/domain/perfis.py:283`), e os quatro colidiriam dois a dois.
 
 É o caso onde a contradição de hoje é mais visível: a 021 determina que alterar o método é
 Retificação, a própria tela do sorteio manda retificá-lo, e a Retificação não oferece um único dos
