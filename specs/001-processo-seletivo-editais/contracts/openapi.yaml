@@ -656,6 +656,14 @@ components:
             existe: declarar reversão sem kind responde 422 vacancy_reversion_kind_required, e
             declará-la num Perfil sem vacancyTable responde vacancy_reversion_sem_quadro, porque
             reverter pressupõe quantidade por recorte.
+        callForm:
+          type: [string, 'null']
+          enum: [PUBLICATION, INDIVIDUAL_MESSAGE, null]
+          description: >-
+            Como este Perfil comunica a convocação (019). **Opcional, e nulo significa "este Edital
+            não declarou como convoca"** — nunca "convoca por publicação": as duas formas da
+            amostra são normais, e escolher uma por omissão decidiria norma no lugar do Edital. Sem
+            declaração a convocação é recusada com forma_de_comunicacao_nao_declarada.
     LinhaDoQuadroInput:
       type: object
       description: >-
@@ -791,7 +799,7 @@ components:
         [id, code, name, description, requirements, immediateVacancies, reserveType, reserveLimit,
          locality, duties, workload, compensation, classificationInformation, callInformation,
          competitionModalities, declaredFacts, classificationMilestones, vacancyTable,
-         generalCompetitionModalityId, vacancyReversion]
+         generalCompetitionModalityId, vacancyReversion, callForm]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         code: { type: string }
@@ -876,6 +884,19 @@ components:
             régua de competitionModalities: a forma publicada confere que o campo existe e é objeto
             ou nulo, e que kind seja um dos dois declaráveis é conferido à parte, porque a recusa
             tem código próprio — vacancy_reversion_kind_required — em vez de "tipo inválido".
+        callForm:
+          type: [string, 'null']
+          description: >-
+            Como este Perfil comunica a convocação (019). Obrigatório aqui e opcional no input,
+            como vacancyTable e vacancyReversion: **null é a declaração de que este Edital não
+            disse como convoca**, e é a forma que todo conteúdo elevado da versão 14 recebe, porque
+            a capacidade não existia.
+
+            **Ausência não é padrão.** A amostra tem as duas formas e as duas são normais: o
+            69/2026 (7.2) convoca por publicação; o 77, o 58 e o 59 (8.3) por mensagem individual,
+            com o prazo contado do recebimento. Sem declaração o sistema recusa convocar, com
+            forma_de_comunicacao_nao_declarada, em vez de escolher uma das duas. Grafia fora das
+            duas declaráveis responde 422 call_form_unknown.
     LinhaDoQuadroPublicada:
       type: object
       description: >-

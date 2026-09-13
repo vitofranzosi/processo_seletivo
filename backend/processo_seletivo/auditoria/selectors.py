@@ -84,13 +84,57 @@ def consultar(
 
 
 def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
-    """Tudo que aconteceu com um Edital, incluindo suas Retificações.
+    """Tudo que aconteceu com um Edital, incluindo suas Retificações e a condução do certame.
 
     Os atos de uma Retificação são auditados sob o identificador dela, não do Edital; quem
     responde questionamento sobre o certame precisa dos dois lados na mesma linha do tempo.
+
+    **E o mesmo vale para a apuração de ocupação e para a convocação** (019, `FR-296`). Eles são
+    auditados sob o identificador do próprio ato — a apuração, a convocação, o desfecho —, e sem
+    esta reunião a pergunta que alguém de fato faz, *"por que esta pessoa perdeu a vaga"*, não teria
+    resposta nesta tela: teria no banco. É a mesma reunião que `trilha_da_comissao` faz, e pela
+    mesma razão que a `011` registrou ao fazê-la.
+
+    **O custo é conhecido e aceito**: a lista de identificadores cresce com o certame, e a consulta
+    é paginada. A alternativa seria uma coluna de Edital no registro de auditoria — um subsistema
+    paralelo de log para uma tela, que é exatamente o que a `D-018` da `011` recusou.
     """
-    identificadores = [edital.id, *edital.retificacoes.values_list("id", flat=True)]
+    identificadores = [
+        edital.id,
+        *edital.retificacoes.values_list("id", flat=True),
+        *_atos_da_conducao(edital),
+    ]
     return consultar(actor=actor, aggregate_ids=identificadores, cursor=cursor, limit=limit)
+
+
+def _atos_da_conducao(edital):
+    """Os identificadores dos atos que conduzem o certame: apuração, convocação e os dela.
+
+    Import tardio porque `auditoria` é lida por todo mundo: um import no topo faria este módulo
+    carregar `ocupacao` e `convocacao` em qualquer processo que só quisesse gravar um registro.
+    """
+    from processo_seletivo.convocacao.models import (
+        AtestadoDeFatoExterno,
+        ComunicacaoEmitida,
+        Convocacao,
+        DesfechoDaConvocacao,
+    )
+    from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+
+    convocacoes = list(Convocacao.objects.filter(edital=edital).values_list("id", flat=True))
+    return [
+        *ApuracaoDeOcupacao.objects.filter(edital=edital).values_list("id", flat=True),
+        *convocacoes,
+        *DesfechoDaConvocacao.objects.filter(convocacao_id__in=convocacoes).values_list(
+            "id", flat=True
+        ),
+        *ComunicacaoEmitida.objects.filter(convocacao_id__in=convocacoes).values_list(
+            "id", flat=True
+        ),
+        *AtestadoDeFatoExterno.objects.filter(inscricao__edital=edital).values_list(
+            "id", flat=True
+        ),
+    ]
 
 
 def trilha_da_comissao(

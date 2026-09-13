@@ -103,6 +103,9 @@ def test_o_perfil_reduzido_aos_campos_de_entrada_e_recusado():
         # A da versão 14, e a razão não muda: o Perfil publicado diz **sempre** sob qual gatilho a
         # vaga reservada reverte, e `null` é a declaração de que não reverte (016, FR-245).
         "vacancyReversion",
+        # A da versão 15, e a razão continua a mesma: o Perfil publicado diz **sempre** como
+        # comunica a convocação, e `null` é a declaração de que não disse (019, FR-287).
+        "callForm",
     }
 
 

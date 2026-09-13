@@ -47,6 +47,36 @@ def test_a_colecao_de_anexos_tem_chave():
     assert not colecoes.e_atomica("/attachments")
 
 
+def test_a_forma_de_convocacao_e_enderecavel_por_identidade():
+    """O `callForm` do degrau 15 é alcançado por `/profiles/id=…/callForm` (019, `T025`).
+
+    **Ele não é coleção, e por isso não entra em `COLECOES_COM_CHAVE`** — é campo escalar do
+    Perfil. O que precisa valer é o que a `025` registrou como o detalhe que não teria conserto:
+    que o endereço exista **antes** da primeira emissão. E existe porque `/profiles` é coleção com
+    chave: o Perfil resolve por identidade, e o campo por nome dentro dele.
+
+    O modo de errar aqui seria declará-lo como coleção por analogia com o quadro de vagas. Isso o
+    faria ser percorrido como lista, e `declaradas_que_nao_sao_lista` acusaria o conteúdo publicado
+    inteiro como malformado — a declaração ficaria falsa em silêncio.
+    """
+    assert colecoes.tem_chave("/profiles")
+    assert not colecoes.tem_chave("/profiles/*/callForm")
+    assert not colecoes.e_atomica("/profiles/*/callForm")
+    assert not colecoes.e_campo_nao_retificavel("/profiles/*/callForm")
+    assert not colecoes.e_campo_de_identidade("callForm")
+
+
+def test_a_forma_de_convocacao_declarada_nao_quebra_a_topologia():
+    """Um Perfil com a forma declarada continua percorrível, e nenhuma coleção some."""
+    conteudo = conteudo_normativo()
+    for perfil in conteudo["profiles"]:
+        perfil["callForm"] = "INDIVIDUAL_MESSAGE"
+
+    assert colecoes_nao_declaradas(conteudo) == []
+    assert elementos_sem_chave(conteudo) == []
+    assert colecoes.declaradas_que_nao_sao_lista(conteudo) == []
+
+
 def test_a_colecao_do_quadro_de_vagas_tem_chave():
     """Declarada antes de o snapshot a emitir, e é essa ordem que a torna retificável (025, FR-170).
 

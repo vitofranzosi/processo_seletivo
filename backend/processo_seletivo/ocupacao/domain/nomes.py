@@ -54,3 +54,35 @@ CAUSA_ORDEM_SUCEDIDA = "ordem_sucedida"
 CAUSA_CORTE_OBSOLETO = "corte_obsoleto"
 CAUSA_QUADRO_RETIFICADO = "quadro_retificado"
 CAUSA_MOVIMENTO_POSTERIOR = "movimento_posterior"
+# **A quinta, e ela chegou com a `019`.** Desfecho de convocação muda o conjunto de ocupantes do
+# recorte, e nenhuma apuração é reescrita por causa disso: a apuração vigente passa a aparecer
+# obsoleta, com a causa dita, e o número novo sai na emissão seguinte (`D-006`). É o mesmo desenho
+# da quarta — obsolescência em vez de orquestração.
+CAUSA_EFEITO_POSTERIOR = "efeito_posterior"
+
+# --- Espécies de efeito de ocupação (019, R-003) ------------------------------------------------
+# **A porta por onde a `019` mexe na contagem, e ela mora aqui porque a tabela mora aqui.** A `016`
+# não sabe o que é convocação: sabe que uma inscrição foi excluída do conjunto de ocupantes ou
+# incluída nele, com fundamento e proveniência. Quem dá sentido ao fundamento é quem o escreveu.
+#
+# **Duas, e a segunda é o que impede o número de só descer.** Sem a inclusão, quatro dos sete
+# desfechos da `019` reduzem a contagem e nenhum a recompõe — a suplente que aceita nunca entraria.
+EFEITO_EXCLUSAO = "EXCLUSAO"
+EFEITO_INCLUSAO = "INCLUSAO"
+ESPECIES_DE_EFEITO = (EFEITO_EXCLUSAO, EFEITO_INCLUSAO)
+
+# --- Recusa da determinação de titulares (019, R-002) -------------------------------------------
+# A `014` trata o empate na última posição **da faixa** (`alvo + excedente`), e o Edital declara
+# `tieOutcome` para ela. Titular inicial é contado até o **alvo**, que é outra fronteira, e para
+# essa a norma publicada não diz nada. Incluir todos os empatados faria `ocupadas > efetivas` e a
+# constraint recusaria o ato; escolher por ordem de chegada inventaria desempate. Recusar é o que a
+# `014` já faz quando o Edital publicou alvo estrito e o empate cruza a faixa.
+EMPATE_NA_FRONTEIRA_DO_ALVO = "empate_na_fronteira_do_alvo"
+
+# --- Recusas da porta de efeitos (019, R-003) ---------------------------------------------------
+# Aqui, e não como literal em `application/efeitos.py`, pela razão que o topo deste módulo escreve:
+# o mesmo código aparece na aplicação, na tela e no teste que o prende, e escrevê-lo três vezes é
+# como um deles fica para trás numa renomeação.
+ESPECIE_DE_EFEITO_INVALIDA = "especie_de_efeito_invalida"
+FUNDAMENTO_OBRIGATORIO = "fundamento_obrigatorio"
+PROVENIENCIA_OBRIGATORIA = "proveniencia_obrigatoria"

@@ -33,7 +33,7 @@ LINHA_PCD = "00000000-0000-4000-8000-000000000843"
 RECORTES = (None, LISTA_PPI, LISTA_PCD)
 
 
-def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2):
+def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2, excedente=0):
     """A regra de corte do marco de sorteio, **com Etapa governada declarada**.
 
     **É ela que torna o caminho positivo da US4 possível.** Sem Etapa governada não há Resultado a
@@ -42,11 +42,15 @@ def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2):
 
     O alvo é fixo e não derivado do quadro: derivá-lo exigiria linha para todo recorte que o marco
     ordena, e o que se exercita aqui é ocupação, não a conferência daquela regra.
+
+    `excedente` existe porque a suplência da `019` precisa de faixa **maior que o alvo**: com
+    excedente zero não há suplente nenhum, e a vaga que vaga não tem para onde ir. O padrão continua
+    zero, e nenhum teste da `016` muda.
     """
     return {
         "targetKind": "FIXED",
         "targetCount": alvo,
-        "surplusCount": 0,
+        "surplusCount": excedente,
         "tieOutcome": "ADMITS_SURPLUS",
         "governedStage": etapa_governada,
         "continuation": "ALLOWED",
@@ -54,7 +58,7 @@ def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2):
 
 
 def rascunho_sorteado_com_quadro(
-    *, geral=2, ppi=1, pcd=1, reversao=None, ampla_declarada=None, com_corte=False
+    *, geral=2, ppi=1, pcd=1, reversao=None, ampla_declarada=None, com_corte=False, excedente=0
 ):
     """O rascunho do certame de cotas, com quadro publicado e reversão opcional.
 
@@ -79,7 +83,7 @@ def rascunho_sorteado_com_quadro(
                 # concorrência". Um alvo maior que o quadro faria a faixa alcançar suplentes, que é
                 # legítimo e é outro cenário — o do teto da ocupação.
                 perfil["classificationMilestones"][0]["cutRule"] = regra_de_corte_do_sorteio(
-                    etapa_governada=governada, alvo=geral
+                    etapa_governada=governada, alvo=geral, excedente=excedente
                 )
     for perfil in rascunho["profiles"]:
         if str(perfil["id"]) != PROFILE_ID:
@@ -119,6 +123,7 @@ def certame_sorteado_com_quadro(
     *,
     quantos=6,
     prefixo="ocupacao-016-sort",
+    cotistas_ppi=1,
     **quadro,
 ):
     """Edital publicado, cotistas inscritos, e **uma ordem por recorte** — ampla, PPI e PcD.
@@ -148,8 +153,13 @@ def certame_sorteado_com_quadro(
     # **Os dois primeiros declaram cota, e é isso que a concorrência concomitante exercita**: eles
     # figuram na lista de ampla concorrência **e** na reserva deles, com numeração própria em cada
     # (021, FR-004; 28/2026, itens 4.3.1 e 8.7).
-    Inscricao.objects.filter(pk=inscricoes[0].pk).update(modality_id=LISTA_PPI)
-    Inscricao.objects.filter(pk=inscricoes[1].pk).update(modality_id=LISTA_PCD)
+    #
+    # `cotistas_ppi` existe porque a suplência da `019` precisa de **mais de um** na mesma lista
+    # reservada: com um só, a vaga que vaga não tem para quem ir, e o cenário não alcança o que a
+    # `SC-086` mede. O padrão continua sendo um, e nenhum teste da `016` muda.
+    for inscricao in inscricoes[:cotistas_ppi]:
+        Inscricao.objects.filter(pk=inscricao.pk).update(modality_id=LISTA_PPI)
+    Inscricao.objects.filter(pk=inscricoes[cotistas_ppi].pk).update(modality_id=LISTA_PCD)
     for inscricao in inscricoes:
         inscricao.refresh_from_db()
 
@@ -203,7 +213,8 @@ def certame_sorteado_com_quadro(
         "marco": MARCO,
         "inscricoes": inscricoes,
         "cotista_ppi": inscricoes[0],
-        "cotista_pcd": inscricoes[1],
+        "cotistas_ppi": inscricoes[:cotistas_ppi],
+        "cotista_pcd": inscricoes[cotistas_ppi],
         "atos": atos,
         # A Etapa que o corte governa, lida do publicado — é nela que o `HABILITADA` entra.
         "etapa_governada": (regra or {}).get("governedStage"),

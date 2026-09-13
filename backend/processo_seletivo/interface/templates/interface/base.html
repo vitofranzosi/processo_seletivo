@@ -597,6 +597,15 @@ fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
 .fatos-fixos dt{font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
 .fatos-fixos dd{margin:0}
 .ajuda{display:block;font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
+/* A nota de rodapé de um bloco: a frase que explica o número acima dela, e que não é ajuda de
+   campo. `.ajuda` pende de um controle e nasce dentro do `<p class="campo">`; esta pende do bloco
+   inteiro. A distinção importa porque a segunda é lida **depois** do que explica, e por isso não
+   pode ter o tamanho de um rótulo.
+
+   A regra faltava, e cinco telas já a citavam — `ocupacao`, `ocupacao_historico`, `mesa_inscricao`
+   e as duas da `019`. Classe sem regra não quebra nada em execução: ela some, e a frase que
+   explicava o número passa a ter o peso do próprio número. */
+.nota{color:var(--texto-fraco);font-size:.875rem;margin:.5rem 0 0}
 .ajuda code{background:var(--fundo);padding:.05rem .3rem;border-radius:3px}
 .remover{margin:.25rem 0 .75rem;text-align:right}
 /* As três ações da linha em símbolo (ver `_acoes_da_linha.html` para o porquê).

@@ -37,6 +37,9 @@ urlpatterns = [
     ),
     # As duas rotas do recurso (018, US2). O identificador está no **endereço**, e não na
     # linguagem apresentada — que é a distinção que a 017 fixou e esta feature herda.
+    # A convocação da pessoa (019, US6). Pende da **Inscrição**, como o acompanhamento e o
+    # comprovante: é dela que a titularidade é conferida, e é ela que o candidato reconhece.
+    path("inscricoes/<uuid:inscricao_id>/convocacao", views.convocacao, name="convocacao"),
     path("inscricoes/<uuid:inscricao_id>/recorrer", views.recorrer, name="recorrer"),
     path("recursos/<uuid:recurso_id>", views.recurso, name="recurso"),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),

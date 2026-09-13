@@ -46,7 +46,7 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O número abaixo é o que ela apurou, e o mundo mudou depois dela:</p>
   <ul class="consequencias">
     {% for causa in recorte.causasDeObsolescencia %}
-    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% endif %}</li>
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% elif causa == "efeito_posterior" %}um efeito registrado depois dela mudou o conjunto de ocupantes deste recorte{% endif %}</li>
     {% endfor %}
   </ul>
   {% endif %}

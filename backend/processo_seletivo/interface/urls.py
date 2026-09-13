@@ -268,6 +268,44 @@ urlpatterns = [
         views.ocupacao_historico,
         name="ocupacao-historico",
     ),
+    # A convocação (019). Pende do **marco**, como a ocupação, e pela mesma razão: é o recorte que
+    # ela conduz, e um marco com cotas tem três — cada um com a sua fila. O recorte vem em
+    # `?lista=`, e não no caminho, pelo mesmo precedente do histórico da `016`.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao",
+        views.convocacao,
+        name="convocacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/convocar",
+        views.convocar_view,
+        name="convocar",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/historico",
+        views.convocacao_historico,
+        name="convocacao-historico",
+    ),
+    # As duas ações que pendem de **uma** convocação, e por isso a carregam no caminho: o desfecho
+    # e a comunicação são atos sobre a chamada, e não sobre o recorte.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/desfecho",
+        views.desfechar_view,
+        name="desfechar",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/comunicar",
+        views.comunicar_view,
+        name="comunicar-convocacao",
+    ),
+    # O atestado de fato externo (019, US5). Pende da **Inscrição**, e não do marco: o fato é sobre
+    # a pessoa — ela não acessou o ambiente, não apareceu na primeira semana —, e não sobre o
+    # recorte. É por isso que ele existe antes e fora do desfecho que o cita.
+    path(
+        "inscricoes/<uuid:inscricao_id>/atestado",
+        views.atestar_view,
+        name="atestar",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
         views.continuar_corte_view,

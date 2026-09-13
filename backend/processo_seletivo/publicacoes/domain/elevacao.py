@@ -78,6 +78,15 @@ DEGRAUS_DE_PERFIL = {
     # E a ausência **não** é padrão de comportamento: o 57/2026 proíbe por escrito o remanejamento
     # entre cursos, e um sistema que revertesse por conta própria produziria ali o que ele veda.
     14: {"vacancyReversion": None},
+    # **O degrau 15 é a forma de comunicar a convocação** (019, D-009, R-007). `None` diz "este
+    # Edital não declarou forma", e é verdade sobre todos eles — a capacidade não existia.
+    # Conversão sem invenção, como os três degraus anteriores do mesmo objeto.
+    #
+    # **A ausência não é a publicação.** A amostra tem as duas formas e as duas são normais: o
+    # 69/2026 (7.2) convoca por publicação; o 77, o 58 e o 59 (8.3) por mensagem individual. Um
+    # padrão aqui faria todo Edital anterior passar a declarar o que ele não declarou — e a
+    # convocação por forma errada não tem conserto depois de emitida.
+    15: {"callForm": None},
 }
 
 DEGRAUS_DA_RAIZ = {

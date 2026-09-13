@@ -176,6 +176,29 @@
       <span class="oculto" id="ajuda-reversao-{{ indice }}">Declarar a reversão exige quadro de
         vagas publicado: sem quantidade por recorte não há o que reverter.</span>
     </p>
+    {% comment %}
+    Como este Edital comunica a convocacao (019, D-009).
+
+    As duas formas da amostra sao normais e incompativeis: o 69/2026 (7.2) convoca por publicacao;
+    o 77, o 58 e o 59 (8.3) por mensagem individual, com o prazo contado do recebimento. Inferir
+    qual pelo texto do Edital e o erro que a 025 recusou por escrito para a ampla concorrencia:
+    quem declara e o Edital.
+
+    Vazio significa que este Edital nao declarou forma, e nao que ele convoca por publicacao. Sem
+    a declaracao a 019 recusa convocar, em vez de escolher uma das duas.
+    {% endcomment %}
+    <p class="campo">
+      <label for="perfil-{{ indice }}-callForm">Como a convocação é comunicada</label>
+      <select id="perfil-{{ indice }}-callForm"
+              name="perfil-{{ indice }}-callForm"
+              aria-describedby="ajuda-convocacao-{{ indice }}">
+        <option value="">Não declarado — este Edital não diz como convoca</option>
+        <option value="PUBLICATION" {% if perfil.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação no endereço eletrônico do certame</option>
+        <option value="INDIVIDUAL_MESSAGE" {% if perfil.callForm == "INDIVIDUAL_MESSAGE" %}selected{% endif %}>Por mensagem individual à pessoa convocada</option>
+      </select>
+      <span class="oculto" id="ajuda-convocacao-{{ indice }}">Sem esta declaração o sistema recusa
+        convocar: ele não escolhe a forma por você.</span>
+    </p>
   </section>
   <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
     <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>

@@ -201,3 +201,81 @@ class MovimentoDeVaga(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("MovimentoDeVaga é append-only")
+
+
+class EfeitoDeOcupacao(models.Model):
+    """A porta por onde a `019` mexe na contagem: uma inscrição sai do conjunto de ocupantes, ou
+    entra nele (019, `R-003`).
+
+    **Mora aqui, e não em `convocacao`, por causa do grafo de migrations.** Uma FK de `ocupacao`
+    para a feature nova inverteria a dependência exatamente onde ela é irreversível: a `016`
+    passaria a não poder migrar sem a `019`. O ato de origem entra como **UUID opaco mais rótulo** —
+    é o mesmo recurso que `perfil_id` e `marco_id` já usam nesta app, pela mesma razão.
+
+    **A `016` não sabe o que é convocação.** Ela sabe que uma inscrição foi excluída ou incluída,
+    com fundamento e proveniência. Quem dá sentido ao fundamento é quem o escreveu — e é por isso
+    que `rotulo_da_origem` existe: sem ele a trilha diria "efeito de origem
+    `3f2a…`", que não é linguagem humana nenhuma (`FR-296`).
+
+    **Nenhuma unicidade por inscrição e recorte, e a ausência é deliberada.** Duas exclusões da
+    mesma pessoa em ciclos diferentes são fatos distintos, e os dois aconteceram. O que a apuração
+    faz com eles é **conjunto**, não soma — e é isso que evita o `−2` que a `R-001` nomeia.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(Edital, on_delete=models.PROTECT, related_name="efeitos_de_ocupacao")
+    perfil_id = models.UUIDField()
+    marco_id = models.UUIDField()
+    # `NULL` = ampla concorrência, a mesma grafia do resto do sistema.
+    lista_id = models.UUIDField(null=True, blank=True)
+    # **Identidade, e não FK**: é por esta coluna que `ocupacao` deixa de depender de `inscricoes`
+    # para registrar efeito. A FK existe do outro lado, em `convocacao.Convocacao`, onde o ato que
+    # alcança a pessoa é praticado.
+    inscricao_id = models.UUIDField()
+    especie = models.CharField(
+        max_length=16,
+        choices=[
+            (nomes.EFEITO_EXCLUSAO, "Exclusão do conjunto de ocupantes"),
+            (nomes.EFEITO_INCLUSAO, "Inclusão no conjunto de ocupantes"),
+        ],
+    )
+    fundamento = models.TextField()
+    # O desfecho que o produziu, **opaco**. Não é FK, e a ausência é a decisão (`R-003`).
+    ato_de_origem_id = models.UUIDField()
+    rotulo_da_origem = models.CharField(max_length=120)
+    registrado_por = models.CharField(max_length=255)
+    registrado_em = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(especie__in=list(nomes.ESPECIES_DE_EFEITO)),
+                name="ck_efeito_especie",
+            ),
+            # Fundamento é obrigatório, e vazio não é fundamento. A mesma forma que
+            # `ck_apuracao_sucessao_com_motivo` usa: o `CHECK` é o que impede a string vazia de
+            # entrar por um caminho que não passe pela aplicação.
+            models.CheckConstraint(condition=~Q(fundamento=""), name="ck_efeito_com_fundamento"),
+            models.CheckConstraint(
+                condition=~Q(rotulo_da_origem=""), name="ck_efeito_com_rotulo_da_origem"
+            ),
+        ]
+        indexes = [
+            # A leitura que a apuração faz: todos os efeitos do recorte, na ordem em que foram
+            # registrados. Sem ele, cada emissão varreria a tabela inteira.
+            models.Index(
+                fields=["edital", "perfil_id", "marco_id", "lista_id"],
+                name="ix_efeito_recorte",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.especie} {self.inscricao_id} — {self.rotulo_da_origem}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("EfeitoDeOcupacao é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("EfeitoDeOcupacao é append-only")

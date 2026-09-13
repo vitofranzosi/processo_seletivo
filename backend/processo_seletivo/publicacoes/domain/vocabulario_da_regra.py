@@ -31,6 +31,40 @@ QUANDO_AUSENTE = {
 ETAPA_NAO_IDENTIFICADA = "Etapa não identificada neste Edital"
 FATO_NAO_IDENTIFICADO = "dado não identificado neste Edital"
 
+# --- A forma de comunicar a convocação (019, R-007) ---------------------------------------------
+# **Vocabulário do conteúdo publicado, e é por isso que mora aqui e não em `convocacao`.** A `019`
+# lê estes valores do Perfil publicado; escrevê-los também lá seriam duas grafias do mesmo valor em
+# módulos diferentes — e é assim que uma delas fica para trás numa renomeação. Aqui a renomeação
+# seria uma Retificação, e o outro lado nem saberia.
+#
+# **As duas são normais, e a amostra tem as duas.** O 69/2026 (7.2) convoca por publicação; o
+# 77/2026, o 58 e o 59 (8.3) por mensagem individual, com o prazo contado do recebimento. Inferir
+# qual pelo texto do Edital é o erro que a `R-006` da `025` recusou por escrito para a ampla
+# concorrência: quem declara é o Edital.
+#
+# **A ausência não é padrão.** Perfil que não declarou `callForm` não convoca por publicação "por
+# omissão" — ele simplesmente não declarou, e a `019` recusa emitir com
+# `forma_de_comunicacao_nao_declarada`.
+FORMA_POR_PUBLICACAO = "PUBLICATION"
+FORMA_POR_MENSAGEM_INDIVIDUAL = "INDIVIDUAL_MESSAGE"
+FORMAS_DE_CONVOCACAO = (FORMA_POR_PUBLICACAO, FORMA_POR_MENSAGEM_INDIVIDUAL)
+
+FORMA_DE_CONVOCACAO_POR_EXTENSO = {
+    FORMA_POR_PUBLICACAO: "por publicação no endereço eletrônico do certame",
+    FORMA_POR_MENSAGEM_INDIVIDUAL: "por mensagem individual à pessoa convocada",
+}
+FORMA_DE_CONVOCACAO_NAO_DECLARADA = "forma de convocação não declarada neste Edital"
+
+
+def forma_de_convocacao_por_extenso(forma):
+    """A frase da forma declarada, ou a que nomeia a ausência — nunca o enum, nunca um padrão.
+
+    Imprimir `INDIVIDUAL_MESSAGE` no documento oficial repetiria o defeito `E2E15-006`, em que a
+    tabela de desempate saía com o nome interno. E devolver a frase da publicação para um Perfil
+    que não declarou nada afirmaria norma que o Edital não tem.
+    """
+    return FORMA_DE_CONVOCACAO_POR_EXTENSO.get(forma) or FORMA_DE_CONVOCACAO_NAO_DECLARADA
+
 
 def por_identificador(itens):
     return {str(item.get("id")): item for item in itens or [] if isinstance(item, dict)}
@@ -83,9 +117,15 @@ __all__ = [
     "CRITERIO_DE_DESEMPATE",
     "ETAPA_NAO_IDENTIFICADA",
     "FATO_NAO_IDENTIFICADO",
+    "FORMAS_DE_CONVOCACAO",
+    "FORMA_DE_CONVOCACAO_NAO_DECLARADA",
+    "FORMA_DE_CONVOCACAO_POR_EXTENSO",
+    "FORMA_POR_MENSAGEM_INDIVIDUAL",
+    "FORMA_POR_PUBLICACAO",
     "QUANDO_AUSENTE",
     "alvo_do_criterio",
     "criterio_com_a_ausencia",
     "criterio_por_extenso",
+    "forma_de_convocacao_por_extenso",
     "por_identificador",
 ]

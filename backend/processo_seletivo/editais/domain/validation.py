@@ -117,6 +117,15 @@ PERFIL_PUBLICADO = (
     # campo, o degrau 14 o elevava, e a forma publicada não o conferia. Quem o encontrou foi
     # `tests/contract/test_forma_publicada.py`, ao acrescentar `vacancyReversion` ao contrato.
     Campo("vacancyReversion", dict, admite_nulo=True),
+    # A forma de comunicar a convocação da `019` (D-009, R-007). **Texto anulável, e nulo é a
+    # declaração de que este Edital não disse como convoca** — não a ausência do campo: sempre
+    # presente depois do degrau 15, pela mesma razão do quadro depois do 12 e da reversão depois do
+    # 14. Duas grafias para a ausência é o que a versão canônica existe para não admitir.
+    #
+    # **Campo solto, e não objeto como `vacancyReversion`**: ali o envelope existe porque a decisão
+    # da `016` previa parâmetros do gatilho. Aqui há um valor entre dois, e um objeto com uma chave
+    # só seria forma sem conteúdo — mais um caminho a endereçar na Retificação, sem nada dentro.
+    Campo("callForm", str, admite_nulo=True),
 )
 
 # **A forma de dentro da linha É declarada**, ao contrário da de `competitionModalities`, que é a
@@ -633,6 +642,7 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
         }
         findings.extend(_ampla_concorrencia_declarada(perfil, base=base))
         findings.extend(_reversao_declarada(perfil, base=base))
+        findings.extend(_forma_de_convocacao_declarada(perfil, base))
         findings.extend(_corte_em_dois_marcos(perfil, base=base))
         for indice, marco in enumerate(perfil.get("classificationMilestones") or []):
             if not isinstance(marco, dict):
@@ -939,6 +949,34 @@ def _quadro_para_o_corte(regra, *, perfil, caminho, nomeado) -> list[ValidationF
         for chave, nome in exigidos
         if chave not in declarados
     ]
+
+
+def _forma_de_convocacao_declarada(perfil, base) -> list[ValidationFinding]:
+    """A forma declarada é uma das duas, ou nenhuma (019, `FR-287`).
+
+    **Nulo é legítimo, e é o que todo Edital anterior ao degrau 15 afirma.** O que se recusa aqui é
+    a forma **desconhecida**: publicada uma grafia que a `019` não interpreta, a convocação seria
+    emitida por um canal que ninguém definiu — e convocação alcançada pela forma errada não tem
+    conserto depois, porque publicação é ato imutável.
+    """
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import FORMAS_DE_CONVOCACAO
+
+    forma = perfil.get("callForm")
+    if forma is None:
+        return []
+    caminho = f"{base}/callForm"
+    if not isinstance(forma, str):
+        return [_impeditivo(TIPO_INVALIDO, f"O item deveria ser texto em {caminho}.", caminho)]
+    if forma not in FORMAS_DE_CONVOCACAO:
+        return [
+            _impeditivo(
+                "call_form_unknown",
+                f"A forma de convocação '{forma}' não é uma das declaráveis: o Edital comunica "
+                "por publicação ou por mensagem individual.",
+                caminho,
+            )
+        ]
+    return []
 
 
 def _reversao_declarada(perfil, *, base) -> list[ValidationFinding]:

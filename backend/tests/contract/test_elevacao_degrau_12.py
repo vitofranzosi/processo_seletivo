@@ -77,10 +77,15 @@ def test_o_edital_anterior_eleva_sem_inventar_quantidade():
     assert elevado["schemaVersion"] == SCHEMA_VERSION
     assert convertido["vacancyTable"] == []
     # **Os degraus seguintes também escrevem no Perfil**, e por isso a comparação descarta o que
-    # eles acrescentam: o 13 trouxe `generalCompetitionModalityId` (014, D-014) e o 14 trouxe
-    # `vacancyReversion` (016, D-007). O que este teste protege é que o degrau 12 não reescreve
-    # **o resto**, e isso continua valendo.
-    acrescentados = {"vacancyTable", "generalCompetitionModalityId", "vacancyReversion"}
+    # eles acrescentam: o 13 trouxe `generalCompetitionModalityId` (014, D-014), o 14 trouxe
+    # `vacancyReversion` (016, D-007) e o 15 trouxe `callForm` (019, D-009). O que este teste
+    # protege é que o degrau 12 não reescreve **o resto**, e isso continua valendo.
+    acrescentados = {
+        "vacancyTable",
+        "generalCompetitionModalityId",
+        "vacancyReversion",
+        "callForm",
+    }
     assert {
         chave: valor for chave, valor in convertido.items() if chave not in acrescentados
     } == perfil()

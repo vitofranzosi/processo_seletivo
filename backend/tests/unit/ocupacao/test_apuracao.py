@@ -81,7 +81,7 @@ class TestOcupadas:
 
     def test_a_intersecao_dos_dois_conjuntos(self):
         _, _, ocupadas = apuracao.apurar(
-            publicadas=28, dentro_da_faixa={"a", "b", "c"}, habilitadas={"b", "c", "d"}
+            publicadas=28, progrediram_em_ordem={"a", "b", "c"}, habilitadas={"b", "c", "d"}
         )
         assert ocupadas == 2
 
@@ -90,13 +90,13 @@ class TestOcupadas:
         sinônimo de "vagas ocupadas". Quem passou fora do alvo não ocupou vaga nenhuma.
         """
         _, _, ocupadas = apuracao.apurar(
-            publicadas=28, dentro_da_faixa={"a"}, habilitadas={"a", "b", "c", "d", "e"}
+            publicadas=28, progrediram_em_ordem={"a"}, habilitadas={"a", "b", "c", "d", "e"}
         )
         assert ocupadas == 1
 
     def test_dentro_da_faixa_e_nao_habilitado_nao_ocupa(self):
         _, _, ocupadas = apuracao.apurar(
-            publicadas=28, dentro_da_faixa={"a", "b", "c"}, habilitadas=set()
+            publicadas=28, progrediram_em_ordem={"a", "b", "c"}, habilitadas=set()
         )
         assert ocupadas == 0
 
@@ -106,7 +106,7 @@ class TestEfetivas:
 
     def test_sem_movimento_efetivas_igualam_publicadas(self):
         publicadas, efetivas, _ = apuracao.apurar(
-            publicadas=28, dentro_da_faixa=set(), habilitadas=set()
+            publicadas=28, progrediram_em_ordem=set(), habilitadas=set()
         )
         assert (publicadas, efetivas) == (28, 28)
 
@@ -114,7 +114,7 @@ class TestEfetivas:
         """É a `SC-079`: a efetiva vai a 35 e a **publicada permanece 28** (`FR-239a`)."""
         publicadas, efetivas, _ = apuracao.apurar(
             publicadas=28,
-            dentro_da_faixa=set(),
+            progrediram_em_ordem=set(),
             habilitadas=set(),
             movimentos_lidos=[(nomes.MOVIMENTO_REVERSAO, True, 7)],
         )
@@ -123,7 +123,7 @@ class TestEfetivas:
     def test_a_cota_que_cede_sete_fica_com_tres(self):
         publicadas, efetivas, _ = apuracao.apurar(
             publicadas=10,
-            dentro_da_faixa=set(),
+            progrediram_em_ordem=set(),
             habilitadas=set(),
             movimentos_lidos=[(nomes.MOVIMENTO_REVERSAO, False, 7)],
         )
@@ -134,7 +134,7 @@ class TestEfetivas:
         ato congelou, e não "os movimentos de hoje".
         """
         _, efetivas, _ = apuracao.apurar(
-            publicadas=28, dentro_da_faixa=set(), habilitadas=set(), movimentos_lidos=[]
+            publicadas=28, progrediram_em_ordem=set(), habilitadas=set(), movimentos_lidos=[]
         )
         assert efetivas == 28
 
@@ -157,7 +157,7 @@ class TestReprodutibilidade:
     def test_a_apuracao_e_deterministica(self, execucao):
         assert apuracao.apurar(
             publicadas=28,
-            dentro_da_faixa={"a", "b", "c"},
+            progrediram_em_ordem={"a", "b", "c"},
             habilitadas={"b", "c"},
             movimentos_lidos=[(nomes.MOVIMENTO_REVERSAO, True, 7)],
         ) == (28, 35, 2)
@@ -214,7 +214,7 @@ class TestOTetoDaOcupacao:
         faixa = {f"i{n}" for n in range(70)}
 
         _, efetivas, ocupadas = apuracao.apurar(
-            publicadas=40, dentro_da_faixa=faixa, habilitadas=faixa
+            publicadas=40, progrediram_em_ordem=faixa, habilitadas=faixa
         )
 
         assert (efetivas, ocupadas) == (40, 40)
@@ -223,7 +223,9 @@ class TestOTetoDaOcupacao:
         """Trinta habilitados além das vagas continuam sendo trinta — eles só não ocupam."""
         faixa = {f"i{n}" for n in range(70)}
 
-        _, _, ocupadas = apuracao.apurar(publicadas=40, dentro_da_faixa=faixa, habilitadas=faixa)
+        _, _, ocupadas = apuracao.apurar(
+            publicadas=40, progrediram_em_ordem=faixa, habilitadas=faixa
+        )
 
         assert ocupadas == 40, "e os outros 30 esperam que uma vaga vague — é a 019 que os chama"
 
@@ -233,7 +235,7 @@ class TestOTetoDaOcupacao:
 
         _, efetivas, ocupadas = apuracao.apurar(
             publicadas=2,
-            dentro_da_faixa=faixa,
+            progrediram_em_ordem=faixa,
             habilitadas=faixa,
             movimentos_lidos=[(nomes.MOVIMENTO_REVERSAO, True, 3)],
         )
@@ -250,7 +252,7 @@ class TestAExclusaoDaConcomitancia:
     def test_o_ocupante_da_ampla_sai_da_contagem_da_reservada(self):
         _, efetivas, ocupadas = apuracao.apurar(
             publicadas=1,
-            dentro_da_faixa={"cotista"},
+            progrediram_em_ordem={"cotista"},
             habilitadas={"cotista"},
             ocupantes_da_ampla={"cotista"},
         )
@@ -260,7 +262,7 @@ class TestAExclusaoDaConcomitancia:
     def test_quem_nao_ocupou_pela_ampla_continua_contando(self):
         _, _, ocupadas = apuracao.apurar(
             publicadas=1,
-            dentro_da_faixa={"outro"},
+            progrediram_em_ordem={"outro"},
             habilitadas={"outro"},
             ocupantes_da_ampla={"cotista"},
         )

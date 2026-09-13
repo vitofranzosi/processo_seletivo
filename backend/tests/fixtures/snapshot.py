@@ -119,6 +119,10 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(
         # vaga reservada" — que é o que todo Edital publicado antes do degrau afirma —, e nunca
         # "reverte do jeito comum" (016, D-007, FR-245).
         "vacancyReversion": None,
+        # A da versão 15, pela mesma razão: `None` significa "este Edital não declarou como comunica
+        # a convocação" — que é o que todo Edital publicado antes do degrau afirma —, e nunca
+        # "convoca por publicação" (019, D-009, FR-287).
+        "callForm": None,
     }
 
 
@@ -218,6 +222,7 @@ def rascunho_publicavel():
         # Pela mesma assimetria: opcional no rascunho, presente no publicado (014, FR-231).
         perfil_.pop("generalCompetitionModalityId", None)
         perfil_.pop("vacancyReversion", None)
+        perfil_.pop("callForm", None)
         for modalidade_ in perfil_["competitionModalities"]:
             modalidade_["normativeRule"] = {
                 chave: valor

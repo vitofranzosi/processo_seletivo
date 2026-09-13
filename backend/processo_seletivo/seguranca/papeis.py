@@ -85,6 +85,21 @@ TABELAS_APPEND_ONLY = (
     "publicacoes_publicacao",
     "publicacoes_revisaoedital",
     "publicacoes_versaoconsolidada",
+    # A porta de efeitos da `019`: a exclusão e a inclusão que os desfechos da convocação produzem
+    # no conjunto de ocupantes de um recorte. Append-only pela razão das demais — nasce e não muda
+    # —, com um agravante próprio: é a única linha que explica por que a contagem de ocupação de
+    # hoje difere da de ontem. Reescrevê-la faria a diferença ficar sem causa, e o número que
+    # alguém contesta deixaria de ser reconstruível a partir dos atos (019, R-003).
+    "ocupacao_efeitodeocupacao",
+    # As quatro da `019`: o ato que chama a pessoa, o que ela respondeu, a comunicação emitida e o
+    # atestado de fato externo. Históricas pela razão das demais — nascem e não mudam —, e com um
+    # agravante próprio: é sobre elas que se decide quem ocupa vaga. Reescrever um desfecho mudaria,
+    # sem rastro, quem foi chamado e o que respondeu; reescrever uma comunicação moveria o instante
+    # de onde o prazo corre, que é o que decide se alguém perdeu a vaga (019, FR-272, FR-288a).
+    "convocacao_convocacao",
+    "convocacao_desfechodaconvocacao",
+    "convocacao_comunicacaoemitida",
+    "convocacao_atestadodefatoexterno",
 )
 
 

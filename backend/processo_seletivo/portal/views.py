@@ -11,6 +11,7 @@ lá; esta entrega é a fatia navegável dela.
 """
 
 import json
+import logging
 from hashlib import sha256
 
 from django.conf import settings
@@ -1676,6 +1677,86 @@ def _erro_do_arquivo(exc):
     if exc.status != 422:
         raise exc
     return exc.detail
+
+
+logger = logging.getLogger("processo_seletivo.portal")
+
+
+def convocacao(request, inscricao_id):
+    """A convocação da pessoa, pelo canal do ator dela (019, `US6`, `FR-294`).
+
+    **O candidato não deve depender da caixa de entrada para saber que foi chamado.** Mensagem se
+    perde, cai em spam, chega a um endereço que a pessoa não usa mais — e o que está em jogo é a
+    vaga dela. A área do candidato é o lugar onde a informação está sempre, e é por isso que esta
+    tela existe mesmo nos Editais que comunicam por mensagem individual.
+
+    **A tela distingue *"não há convocação"* de *"você não foi chamado"***, e a diferença não é
+    sutil: a primeira diz que o certame ainda não chegou a essa fase; a segunda, que chegou e a
+    pessoa não estava entre os chamados. Colapsá-las faria quem ainda tem chance ler que não tem.
+
+    **Ler não move o relógio** (`FR-288b`). O prazo corre do envio da comunicação, e abrir esta
+    página não é nem o envio nem o recebimento: o acesso fica na trilha, e o prazo fica onde estava.
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        envio_de,
+        estado_de,
+    )
+    from processo_seletivo.convocacao.models import Convocacao
+
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    agora = timezone.now()
+    # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
+    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale.
+    chamada = (
+        Convocacao.objects.filter(inscricao=registro)
+        .filter(sucessoras__isnull=True)
+        .prefetch_related("desfechos", "comunicacoes")
+        .order_by("-criado_em")
+        .first()
+    )
+    # **O certame chegou a convocar neste recorte?** É esta pergunta que separa as duas ausências.
+    houve_convocacao_no_recorte = (
+        Convocacao.objects.filter(edital=registro.edital, perfil_id=registro.profile_id).exists()
+        if chamada is None
+        else True
+    )
+    _registrar_leitura_da_convocacao(request, registro, chamada, agora)
+    return render(
+        request,
+        "portal/convocacao.html",
+        {
+            "inscricao": registro,
+            "selecao": _selecao(versao),
+            "convocacao": chamada,
+            "desfecho": desfecho_de(chamada) if chamada else None,
+            "enviada_em": envio_de(chamada) if chamada else None,
+            "estado": estado_de(chamada, agora=agora) if chamada else None,
+            "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
+        },
+    )
+
+
+def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
+    """O acesso autenticado entra na trilha, **e o prazo não se move** (`FR-288b`).
+
+    **É registro de segurança, e não ato de negócio.** Ler a própria convocação não decide nada:
+    não inicia prazo, não constitui recebimento e não produz desfecho. O que ele responde é outra
+    pergunta, que alguém vai fazer um dia — *"a pessoa teve como saber?"* —, e a resposta precisa
+    existir sem que a leitura vire um fato jurídico que ninguém declarou.
+    """
+    logger.info(
+        "portal.convocacao.leitura",
+        extra={
+            "inscricao": str(registro.id),
+            "convocacao": str(chamada.id) if chamada else "",
+            "lido_em": agora.isoformat(),
+            # **O envio não é tocado.** O campo vai no registro para que a trilha mostre, lado a
+            # lado, quando o sistema enviou e quando a pessoa leu — sem que um vire o outro.
+            "enviado_em": "",
+        },
+    )
 
 
 def _inscricao_do_titular(request, inscricao_id):

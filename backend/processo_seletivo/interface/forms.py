@@ -447,6 +447,10 @@ def ler_perfis(dados):
                     if (especie := _texto(dados, f"{base}-vacancyReversion"))
                     else None
                 ),
+                # Como este Perfil comunica a convocação (019, D-009). Vazio significa que o Edital
+                # **não declarou forma** — e não que convoca por publicação: as duas formas da
+                # amostra são normais, e a `019` recusa convocar sem declaração em vez de escolher.
+                "callForm": _texto(dados, f"{base}-callForm") or None,
                 "reserveType": reserva,
                 "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
                 "locality": _texto(dados, f"{base}-locality"),
@@ -665,6 +669,10 @@ def perfis_do_edital(edital):
             # Travessia 3, pela mesma razão: sem isto a espécie gravada não voltaria à tela, e a
             # gravação seguinte a apagaria — `ler_perfis` leria um formulário sem ela.
             "vacancyReversion": perfil.especie_de_reversao,
+            # Travessia 3 de novo, e o defeito que ela evita é o mesmo: declarada a forma e gravado
+            # qualquer passo seguinte, o formulário voltaria sem ela e a gravação a apagaria — um
+            # Edital publicado sem declarar como convoca, sem que ninguém tenha desfeito nada.
+            "callForm": perfil.forma_de_convocacao,
             "modalidades": [
                 _modalidade_para_o_formulario(m) for m in perfil.modalidades.order_by("code")
             ],
@@ -823,6 +831,10 @@ def perfis_persistidos(edital):
             "vacancyReversion": (
                 {"kind": perfil.especie_de_reversao} if perfil.especie_de_reversao else None
             ),
+            # **Travessia 2, e ela vale aqui pela mesma razão.** Sem esta linha, declarar a forma
+            # no passo dos Perfis e gravar qualquer etapa seguinte publicaria um Edital que não a
+            # declara — e a `019` recusaria convocar nele, sem que nada explicasse por quê.
+            "callForm": perfil.forma_de_convocacao or None,
             "locality": perfil.locality,
             "duties": perfil.duties,
             "workload": perfil.workload,
