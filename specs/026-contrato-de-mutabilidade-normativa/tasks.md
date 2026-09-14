@@ -74,14 +74,14 @@ novo, **nenhuma migration**.
 
 ### A travessia
 
-- [ ] T005 Escrever a travessia recursiva em
+- [X] T005 Escrever a travessia recursiva em
   `backend/tests/contract/test_mutabilidade.py`: do `content` da `VersaoConsolidada` de um Edital
   publicado, descer por listas de entidades e objetos aninhados até o campo escalar, devolvendo
   pares `(coleção, caminho relativo)`. **Chave por caminho relativo**, e nunca pelo último segmento:
   `drawMethod/normalization/rule` e `drawMethod/substitutionRule/rule` colidiriam, e o contrato não
   representaria os dez campos do próprio canário 4. Toda entrada do contrato nasce desta chave
   (FR-297).
-- [ ] T006 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra do **objeto opaco**:
+- [X] T006 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra do **objeto opaco**:
   a travessia **não desce** nos **seis** objetos listados em [data-model.md](data-model.md) —
   `classificationInformation`, `callInformation` e os quatro de `normativeRule` —, e o contrato
   classifica cada um **inteiro**. Sem esta regra, o domínio do guardião mudaria de Edital para
@@ -93,21 +93,21 @@ novo, **nenhuma migration**.
   dois, como desce em `appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule`.
   Tratá-los como opacos seria classificar por onde o dado está guardado — razão técnica, que a
   D-002 proíbe.
-- [ ] T007 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra da **união**: o
+- [X] T007 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra da **união**: o
   domínio de uma coleção é a união das chaves dos seus itens, e nunca a interseção. `sections` é o
   caso concreto — `content` e `source` são mutuamente exclusivos, e exigir que todo item carregue
   todo campo faria o guardião falhar conforme a seção que a travessia visse primeiro.
-- [ ] T008 Fazer a travessia de `backend/tests/contract/test_mutabilidade.py` **derivar as coleções
+- [X] T008 Fazer a travessia de `backend/tests/contract/test_mutabilidade.py` **derivar as coleções
   sem lista nomeada** (FR-303): coleção é toda
   lista cujos itens são objetos, em qualquer profundidade. Nenhum literal com os nomes das doze.
   Acrescentar uma coleção ao conteúdo publicado passa a ser suficiente para o guardião a cobrir.
-- [ ] T009 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste que **mede a cobertura
+- [X] T009 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste que **mede a cobertura
   da fixture** e falha quando ela regride: toda coleção que `COLECOES_PUBLICADAS` declara, e todo
   objeto aninhado que `publish_edital.py` sabe emitir, precisa estar presente e **não vazio** no
   Edital de T001 (SC-103). **Não elimina o limite da D-012 — impede que ele cresça.** Uma coleção
   nova vazia continua invisível à travessia; o que este teste garante é que ela não fique invisível
   porque alguém simplificou a fixture.
-- [ ] T010 Registrar em `backend/tests/contract/test_mutabilidade.py`, como docstring do módulo, o
+- [X] T010 Registrar em `backend/tests/contract/test_mutabilidade.py`, como docstring do módulo, o
   **limite residual da cobertura**, que é a redação formal da garantia: o guardião cobre **todo
   campo que o Edital máximo publica**, e não "todo campo que existir". Campo que só apareça sob
   condição que a fixture não exercita fica fora da enumeração até a fixture exercitá-la.
@@ -120,20 +120,20 @@ novo, **nenhuma migration**.
 
 ### O módulo do contrato
 
-- [ ] T011 [P] Criar `backend/processo_seletivo/editais/domain/mutabilidade.py` com `Natureza`
+- [X] T011 [P] Criar `backend/processo_seletivo/editais/domain/mutabilidade.py` com `Natureza`
   (`StrEnum` de quatro valores), `Mutabilidade` (dataclass congelada com `natureza` e `razao`) e
   `CONTRATO: dict[tuple[str, str], Mutabilidade]` ainda vazio. **Três campos em `Mutabilidade`, e
   não dois**: `natureza`, `razao` e `fechou_caminho: bool = False` — a marca que a FR-315 exige,
   e sem a qual o código não distingue um **N** de origem de uma transição **R → N**. Não é
   histórico nem baseline: é declaração de quem faz a reclassificação, como a razão já é.
-- [ ] T012 [P] Implementar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
+- [X] T012 [P] Implementar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
   validação na **carga do módulo** (FR-299, FR-315), em três regras: `NAO_RETIFICAVEL` sem razão
   levanta; qualquer outra natureza **com** razão levanta; e `fechou_caminho=True` em natureza que
   não seja `NAO_RETIFICAVEL` levanta. Quem escreve o contrato descobre no `import`.
-- [ ] T013 [P] Implementar `natureza_de(colecao, caminho) -> Mutabilidade` em
+- [X] T013 [P] Implementar `natureza_de(colecao, caminho) -> Mutabilidade` em
   `backend/processo_seletivo/editais/domain/mutabilidade.py`, levantando `KeyError` para par não
   declarado. **Sem valor padrão**: um padrão é a decisão implícita que D-008 proíbe.
-- [ ] T014 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de T012 — construir
+- [X] T014 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de T012 — construir
   `Mutabilidade(NAO_RETIFICAVEL)` sem razão falha, e `Mutabilidade(RETIFICAVEL, "…")` também.
 
 **Checkpoint**: a travessia enumera sem lista nomeada, o módulo carrega, o contrato está vazio de
@@ -153,14 +153,14 @@ matriz é erro de transcrição, e não escolha de implementação.
 
 ### Testes primeiro
 
-- [ ] T015 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o guardião na direção
+- [X] T015 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o guardião na direção
   snapshot → contrato: todo `(coleção, caminho)` que a travessia encontra tem entrada em `CONTRATO`,
   e a falha **nomeia o campo, a coleção e o caminho absoluto onde ele apareceu** (FR-301). Mensagem
   que diga só "divergência" não atende — quem quebrou a suíte precisa ler qual decisão faltou.
-- [ ] T016 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o guardião na direção
+- [X] T016 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o guardião na direção
   contrato → snapshot (FR-302). Declarar natureza para campo inexistente é a mesma omissão ao
   contrário.
-- [ ] T017 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de que toda
+- [X] T017 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de que toda
   `NAO_RETIFICAVEL` do `CONTRATO` carrega razão não vazia (FR-299, SC-101). O teste confere
   presença; se a razão é normativa ou técnica é leitura humana, e é o trabalho de T018.
 
@@ -168,7 +168,7 @@ Neste ponto os três falham, porque o contrato está vazio. É a falha esperada.
 
 ### As razões que a matriz já escreve
 
-- [ ] T018 [US5] **Conferir**, antes de transcrever, que nenhuma razão de
+- [X] T018 [US5] **Conferir**, antes de transcrever, que nenhuma razão de
   [matriz.md](matriz.md) se funda em limitação de implementação (FR-310, D-002, SC-101). O
   `$speckit-analyze` de 2026-09-13 reescreveu as 18 que se fundavam, e a emenda está registrada na
   seção *O que a revisão mudou*. Esta tarefa é a conferência de que nenhuma voltou — não é reabrir
@@ -176,19 +176,19 @@ Neste ponto os três falham, porque o contrato está vazio. É a falha esperada.
 
 ### Transcrição da matriz
 
-- [ ] T019 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+- [X] T019 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
   seções 1, 8, 9, 10, 11 e 12 da [matriz.md](matriz.md) — raiz, `schedule`, `stages`, `sections`,
   `attachments`, `documentRequirements`. 53 entradas.
-- [ ] T020 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+- [X] T020 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
   seções 2, 3, 4 e 5 da [matriz.md](matriz.md) — `profiles`, `competitionModalities`,
   `vacancyTable`, `declaredFacts`. 37 entradas.
-- [ ] T021 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+- [X] T021 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
   seções 6 e 7 da [matriz.md](matriz.md) — `classificationMilestones` e `tiebreakers`. 33 entradas,
   e é onde moram dez dos vinte e três campos sem decisão do Edital 26/2026.
-- [ ] T022 [US5] Transcrever a **política de objeto ausente** da [matriz.md](matriz.md) para
+- [X] T022 [US5] Transcrever a **política de objeto ausente** da [matriz.md](matriz.md) para
   `backend/processo_seletivo/editais/domain/mutabilidade.py` (FR-313): cinco objetos, cada um com a
   decisão de se a declaração pode passar a existir por Retificação.
-- [ ] T023 [US5] Declarar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a lista dos
+- [X] T023 [US5] Declarar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a lista dos
   **seis objetos opacos** — `classificationInformation`, `callInformation` e os quatro de
   `normativeRule` —, nominalmente e com a justificativa de que **nada no sistema os lê**.
   `rounding` do marco e `parameters` do desempate **não** entram: a forma deles é conhecida e o
@@ -196,20 +196,20 @@ Neste ponto os três falham, porque o contrato está vazio. É a falha esperada.
 
 ### Absorção do guardião antigo
 
-- [ ] T024 [US5] Absorver `NAO_SAO_NORMA` de `backend/tests/contract/test_retificacoes_api.py:89`
+- [X] T024 [US5] Absorver `NAO_SAO_NORMA` de `backend/tests/contract/test_retificacoes_api.py:89`
   no contrato. `id` e `order` viram `ESTRUTURAL`; `scheduleEventId` recebe a razão escrita que a
   matriz propõe — hoje ele é exclusão **sem razão nenhuma**. O literal local deixa de existir.
-- [ ] T025 [US5] Reescrever `test_a_retificacao_alcanca_todo_campo_normativo_da_etapa` em
+- [X] T025 [US5] Reescrever `test_a_retificacao_alcanca_todo_campo_normativo_da_etapa` em
   `backend/tests/contract/test_retificacoes_api.py` para ler o contrato em vez de `NAO_SAO_NORMA`.
   Ele cobre uma coleção entre doze e continua valendo — o guardião novo o generaliza.
 
 ### Fechamento
 
-- [ ] T026 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste do Independent
+- [X] T026 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste do Independent
   Test: com um campo experimental no conteúdo publicado e sem entrada no contrato, o guardião falha
   com mensagem que **cita o nome do campo** (SC-096). O teste afirma sobre a mensagem, e não só
   sobre o fato de falhar.
-- [ ] T027 [US5] Rodar `cd backend && make lint check test-pg` e confirmar **zero campos sem
+- [X] T027 [US5] Rodar `cd backend && make lint check test-pg` e confirmar **zero campos sem
   natureza** (SC-095, FR-297).
 
 **Checkpoint**: o contrato existe e o guardião o guarda. É o MVP técnico — mas **não conclui a
@@ -224,7 +224,7 @@ spec**: o princípio VI exige jornada pelo canal do ator.
 US5 porque depende do contrato existir, e antes das jornadas porque é a infraestrutura comum que
 todas usam. É o que torna a execução sequencial defensável em vez de conflituosa.
 
-- [ ] T028 Escrever em `backend/tests/interface/test_campos_vem_do_contrato.py` o teste de FR-298 e
+- [X] T028 Escrever em `backend/tests/interface/test_campos_vem_do_contrato.py` o teste de FR-298 e
   FR-304, nos dois sentidos: todo campo `RETIFICAVEL` do `CONTRATO` é oferecido pela tela, e todo
   campo oferecido tem entrada no contrato.
 
@@ -233,22 +233,22 @@ todas usam. É o que torna a execução sequencial defensável em vez de conflit
   dele esteja faltando. Sem isso a fase 4 nasceria vermelha e ficaria vermelha até a fase 10, e uma
   suíte que fica vermelha por seis fases deixa de acusar regressão. Cada fase seguinte **remove** do
   conjunto os campos que implementou, e T076 exige que ele esteja vazio.
-- [ ] T029 Inverter a autoridade em `backend/processo_seletivo/interface/retificacao.py`: a
+- [X] T029 Inverter a autoridade em `backend/processo_seletivo/interface/retificacao.py`: a
   montagem dos grupos passa a **derivar do `CONTRATO`** quais campos existem, e as tuplas `CAMPOS_*`
   passam a ser **apresentação** — rótulo, tipo de controle, opções — indexadas por
   `(coleção, caminho)`. Hoje a lista é a fonte, e um campo retificável que ninguém acrescentou
   simplesmente não existe para a tela, sem que nada acuse.
-- [ ] T030 Fazer `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py:427`
+- [X] T030 Fazer `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py:427`
   falhar alto quando um campo `RETIFICAVEL` do contrato não tem apresentação declarada. Silêncio
   aqui reabriria o defeito pelo outro lado.
-- [ ] T031 Escrever em `backend/processo_seletivo/editais/domain/mutabilidade.py` o comentário de
+- [X] T031 Escrever em `backend/processo_seletivo/editais/domain/mutabilidade.py` o comentário de
   topo que registra a D-011: **a classificação vigente governa os atos futuros**, inclusive sobre
   Edital publicado antes dela. Reclassificar não reescreve conteúdo publicado — a Constituição já o
   torna imutável —; muda o que um ato novo pode fazer.
-- [ ] T032 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de FR-314: retificar um
+- [X] T032 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de FR-314: retificar um
   Edital publicado **antes** de uma reclassificação segue a classificação **vigente**, e o conteúdo
   já publicado permanece byte a byte o mesmo.
-- [ ] T033 Escrever em `backend/tests/contract/test_mutabilidade.py` os testes da FR-315, **com
+- [X] T033 Escrever em `backend/tests/contract/test_mutabilidade.py` os testes da FR-315, **com
   entradas sintéticas** e não sobre o `CONTRATO` — nenhuma entrada real nasce marcada, e um teste
   que só varra o contrato passaria vazio hoje e continuaria passando vazio para sempre:
 
@@ -273,28 +273,28 @@ acrescentar campo — e é por isso que elas deixam de disputar o mesmo arquivo 
 **Independent Test**: publicar um Edital com local declarado, retificá-lo pela interface, e
 verificar o Cronograma público e a versão anterior.
 
-- [ ] T034 [US1] Escrever em
+- [X] T034 [US1] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_do_local.py` o teste que falha: Retificação
   que altera o local de um Evento publicado vigora, e a versão consolidada anterior continua
   legível com o local antigo.
-- [ ] T035 [US1] Escrever em `backend/tests/interface/test_retificar_cronograma.py` o teste que
+- [X] T035 [US1] Escrever em `backend/tests/interface/test_retificar_cronograma.py` o teste que
   falha: a tela oferece o campo, a conferência o exibe **em português** ("Local"), e a publicação
   vigora com o valor novo (SC-097). `backend/processo_seletivo/publicacoes/domain/alteracoes.py:63`
   já traduz `location` — conferir que o caminho de conferência passa por ali.
-- [ ] T036 [US1] Declarar `location` em `EVENTO_PUBLICADO`, em
+- [X] T036 [US1] Declarar `location` em `EVENTO_PUBLICADO`, em
   `backend/processo_seletivo/editais/domain/validation.py`. **O campo é emitido por
   `backend/processo_seletivo/publicacoes/application/publish_edital.py:261` e não está declarado.**
   Nulabilidade: `backend/processo_seletivo/editais/models/cronograma.py:50` o define como
   `CharField(blank=True, default="")` e `backend/processo_seletivo/shared/canonical.py:97` registra
   que vazio significa "não declarado" — logo `Campo("location", str)` sem `admite_nulo`, como
   `duties` e `workload`.
-- [ ] T037 [US1] Acrescentar a apresentação de `("schedule", "location")` em
+- [X] T037 [US1] Acrescentar a apresentação de `("schedule", "location")` em
   `backend/processo_seletivo/interface/retificacao.py:80` — rótulo "Local", tipo `TEXTO`.
-- [ ] T038 [US1] Registrar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
+- [X] T038 [US1] Registrar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
   conclusão do segundo cenário de aceitação: com `location` sempre presente como `""`, informar um
   local onde não havia é **alteração de valor**, e não acréscimo de campo. Comentário na entrada
   `("schedule", "location")`.
-- [ ] T039 [US1] Remover `("schedule", "location")` de `AINDA_SEM_TELA` em
+- [X] T039 [US1] Remover `("schedule", "location")` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`. O conjunto só encolhe.
 - [ ] T040 [US1] Percorrer a jornada 1 do [quickstart.md](quickstart.md) pelo navegador, com o
   servidor da entrada `mutabilidade-026`. Teste verde sobre objeto falso não é jornada — foi o que

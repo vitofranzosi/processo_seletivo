@@ -83,11 +83,6 @@ def test_consolidar_sobre_conteudo_base_de_outra_versao_canonica_e_recusado(
 
 # ------------------------------ a tela alcança o que o Edital publica (012, D-008.10)
 
-# O que a Etapa publicada carrega e **não** é norma: identidade, insumo da progressão, e vínculo
-# endereçado pela coleção do Cronograma. Declarado aqui, e não descoberto por heurística, para que
-# excluir um campo novo seja uma decisão escrita e não um esquecimento.
-NAO_SAO_NORMA = {"id", "order", "scheduleEventId"}
-
 
 @pytest.mark.contract
 def test_a_retificacao_alcanca_todo_campo_normativo_da_etapa():
@@ -96,15 +91,32 @@ def test_a_retificacao_alcanca_todo_campo_normativo_da_etapa():
     A lista da tela ficou para trás uma vez — `maximumScore` e `evaluationsPerRegistration` nasceram
     na 012 e não entraram —, e o efeito foi publicar regra que afeta direito e só se corrige pela
     API. O domínio sempre alcançou: `colecoes.py` lista `/stages`. O que faltava era a tela.
+
+    **A exclusão deixou de ser literal local e passou a ser natureza nomeada** (026). Este teste
+    trazia `NAO_SAO_NORMA = {"id", "order", "scheduleEventId"}` — três campos excluídos **sem razão
+    escrita**, e a terceira sem nem a explicação que as duas primeiras tinham no comentário. Agora
+    `editais/domain/mutabilidade` classifica os três como estruturais, e é de lá que este teste lê.
+
+    Ele cobre **uma** coleção entre doze e continua valendo: `tests/contract/test_mutabilidade`
+    generaliza o mesmo argumento para todas, e não substitui este por outro mecanismo.
     """
+    from processo_seletivo.editais.domain.mutabilidade import CONTRATO, Natureza
     from processo_seletivo.editais.domain.validation import ETAPA_PUBLICADA
     from processo_seletivo.interface.retificacao import CAMPOS_ETAPA
 
     publicados = {campo.nome for campo in ETAPA_PUBLICADA}
+    normativos = {
+        caminho
+        for (colecao, caminho), decisao in CONTRATO.items()
+        if colecao == "stages" and decisao.natureza is Natureza.RETIFICAVEL
+    }
     oferecidos = {nome for nome, _, _ in CAMPOS_ETAPA}
 
-    assert oferecidos == publicados - NAO_SAO_NORMA, (
-        "a tela de Retificação e o contrato da Etapa publicada divergiram: "
-        f"faltando {sorted(publicados - NAO_SAO_NORMA - oferecidos)}, "
-        f"a mais {sorted(oferecidos - publicados)}"
+    assert normativos <= publicados, (
+        "o contrato classifica campo de Etapa que a forma publicada não declara: "
+        f"{sorted(normativos - publicados)}"
+    )
+    assert oferecidos == normativos, (
+        "a tela de Retificação e o contrato de mutabilidade divergiram sobre a Etapa: "
+        f"faltando {sorted(normativos - oferecidos)}, a mais {sorted(oferecidos - normativos)}"
     )

@@ -153,6 +153,16 @@ EVENTO_PUBLICADO = (
     # `status` é produzido pelo sistema e nenhum esquema declara a enumeração dele. Entra como
     # presença e tipo; escrever os valores aqui seria inventar restrição, não transcrever uma.
     Campo("status", str),
+    # Onde o Evento acontece (021, D-008). **Faltava**, e o defeito é o do `vacancyReversion`
+    # repetido: `publish_edital` o emite em todo Evento publicado, e esta declaração não o conferia
+    # — nenhum teste acusava, porque o guarda da forma confere coleções e não campos. Quem o
+    # encontrou foi a `026`, ao enumerar os campos publicados para classificar a mutabilidade de
+    # cada um: o campo governa onde a pessoa comparece e não tinha forma nem decisão.
+    #
+    # `str` sem `admite_nulo`, como `duties` e `workload` do Perfil: sempre presente, com `""`
+    # quando não declarado. Uma segunda convenção para texto faria a versão canônica admitir mais
+    # de uma forma.
+    Campo("location", str),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
     # `_um_periodo_de_inscricoes`, porque a forma confere um campo por vez.

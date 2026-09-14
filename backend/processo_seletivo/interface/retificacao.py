@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
+from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -81,6 +82,11 @@ CAMPOS_EVENTO = [
     ("description", "Descrição", TEXTO),
     ("startAt", "Início", INSTANTE),
     ("endAt", "Término", INSTANTE),
+    # Onde o Evento acontece (026, canário 1, FR-305). A `021` tem como critério de aceitação uma
+    # Retificação que altera o local, e a tela não tinha o campo — nem `EVENTO_PUBLICADO` tinha a
+    # declaração de forma. Informar local onde não havia é **alteração de valor**, e não acréscimo
+    # de campo: `location` é sempre presente, com `""` para "não declarado".
+    ("location", "Local", TEXTO),
 ]
 CAMPOS_RAIZ = [("title", "Título do Edital", TEXTO), ("description", "Descrição", TEXTO)]
 
@@ -208,6 +214,66 @@ CAMPOS_DOCUMENTO = [
     # ato, e a tela não ofereceria o campo que precisa mudar junto.
     ("attachmentId", "Modelo que o Edital fornece", REFERENCIA),
 ]
+
+# ------------------------------------------------------------------------------------------------
+# A autoridade sobre **quais** campos existem é do contrato de mutabilidade (026, FR-298).
+#
+# Estas listas continuam sendo a **apresentação** — rótulo, tipo de controle, ordem na tela —, e
+# deixaram de ser a fonte de quais campos a Retificação alcança. A diferença não é de estilo: antes
+# da `026`, um campo retificável que ninguém acrescentasse à lista simplesmente não existia para a
+# tela, e nada acusava. Foi assim que `maximumScore` e `evaluationsPerRegistration` nasceram na
+# `012` e ficaram fora até a auditoria encontrá-los.
+#
+# **A conferência se reparte em duas, e as duas direções têm donos diferentes**:
+#
+# - *nada se oferece sem decisão* — conferido aqui, na carga do módulo, e vale desde já;
+# - *todo retificável é oferecido* — conferido por `tests/interface/test_campos_vem_do_contrato`,
+#   que carrega o conjunto dos que ainda não têm tela e exige que ele encolha até esvaziar.
+#
+# A segunda não cabe aqui enquanto houver campo classificado e ainda não implementado: a produção
+# passaria a carregar a lista do que falta, que é registro de trabalho e não norma.
+COLECAO_DA_LISTA = {
+    "CAMPOS_RAIZ": mutabilidade.RAIZ,
+    "CAMPOS_PERFIL": "profiles",
+    "CAMPOS_DA_REVERSAO": "profiles",
+    "CAMPOS_MODALIDADE": "competitionModalities",
+    "CAMPOS_REGRA": "competitionModalities",
+    "CAMPOS_DA_LINHA": "vacancyTable",
+    "CAMPOS_FATO": "declaredFacts",
+    "CAMPOS_MARCO": "classificationMilestones",
+    "CAMPOS_DO_CORTE": "classificationMilestones",
+    "CAMPOS_CRITERIO": "tiebreakers",
+    "CAMPOS_EVENTO": "schedule",
+    "CAMPOS_ETAPA": "stages",
+    "CAMPOS_SECAO": "sections",
+    "CAMPOS_ANEXO": "attachments",
+    "CAMPOS_DOCUMENTO": "documentRequirements",
+}
+
+
+def _conferir_que_nada_se_oferece_sem_decisao():
+    """Nenhum campo chega à tela sem estar classificado como retificável (FR-298).
+
+    Levanta na **carga do módulo**, e não na execução de um teste: quem acrescentar um campo à
+    apresentação descobre no `import` que falta a decisão — que é onde a decisão ainda é barata.
+    """
+    fora = []
+    for nome, colecao in COLECAO_DA_LISTA.items():
+        for caminho, *_ in globals()[nome]:
+            decisao = mutabilidade.CONTRATO.get((colecao, caminho))
+            if decisao is None:
+                fora.append(f"{nome}: ({colecao}, {caminho}) não está no contrato")
+            elif decisao.natureza is not mutabilidade.Natureza.RETIFICAVEL:
+                fora.append(f"{nome}: ({colecao}, {caminho}) está classificado {decisao.natureza}")
+    if fora:
+        raise RuntimeError(
+            "a tela de Retificação oferece campo que o contrato de mutabilidade não admite:\n  "
+            + "\n  ".join(fora)
+        )
+
+
+_conferir_que_nada_se_oferece_sem_decisao()
+
 
 LISTA = "lista"
 # Um Perfil ou Evento acrescentado entra no snapshot publicado; precisa nascer com a mesma
