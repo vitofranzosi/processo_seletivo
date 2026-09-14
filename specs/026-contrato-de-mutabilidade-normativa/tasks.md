@@ -44,7 +44,7 @@ novo, **nenhuma migration**.
 
 **Purpose**: o Edital que a enumeração percorre, e o ambiente de onde as jornadas se verificam.
 
-- [ ] T001 Estender `rascunho_completo()` em `backend/tests/fixtures/snapshot.py` para um **Edital
+- [X] T001 Estender `rascunho_completo()` em `backend/tests/fixtures/snapshot.py` para um **Edital
   máximo**: `classificationMilestones` com ao menos um marco declarado (`stages`, `operation`,
   `normalization`, `rounding`, `cutRule`, `tiebreakers`, `appealWindow` e `drawMethod` completos),
   `vacancyReversion` declarado, `callForm` declarado, `normativeRule` completo em ao menos uma
@@ -52,14 +52,14 @@ novo, **nenhuma migration**.
   redigida (com `content`) e gerada (com `source`). Hoje o rascunho traz
   `classificationMilestones: []` (linha 110), `vacancyReversion: None` (121) e `callForm: None`
   (125), e uma travessia sobre ele não encontraria nenhum dos dez campos do método do sorteio.
-- [ ] T002 Escrever em `backend/tests/fixtures/snapshot.py` o comentário que registra **por que** o
+- [X] T002 Escrever em `backend/tests/fixtures/snapshot.py` o comentário que registra **por que** o
   rascunho é máximo: enumerar sobre um Edital pobre produz guardião silenciosamente incompleto, que
   é o defeito que esta feature existe para fechar. Sem isto, a próxima pessoa a simplificar a
   fixture não tem como saber o que quebra.
-- [ ] T003 Rodar `backend/tests/contract/test_forma_publicada.py` inteiro e confirmar que o Edital
+- [X] T003 Rodar `backend/tests/contract/test_forma_publicada.py` inteiro e confirmar que o Edital
   máximo **publica**. Se a publicação recusar, o rascunho novo viola coerência do domínio, e é ela
   que precisa ser satisfeita — não contornada com um rascunho menor.
-- [ ] T004 [P] Acrescentar a entrada `mutabilidade-026` ao `.claude/launch.json` — **acrescentar**,
+- [X] T004 [P] Acrescentar a entrada `mutabilidade-026` ao `.claude/launch.json` — **acrescentar**,
   sem reescrever o arquivo, que é versionado e carrega entradas de outras sessões. Porta 8026,
   `DB_NAME=ps_demo_026`, `INTERFACE_SELETOR_IDENTIDADE=true`, `PORTAL_IDENTIDADE_DEMO=true`, e
   `localhost` na `url`.

@@ -44,6 +44,16 @@ DOCUMENTO = {
     "A": "00000000-0000-0000-0000-000000000581",
     "B": "00000000-0000-0000-0000-000000000582",
 }
+# As identidades que o Edital máximo acrescenta (026, T001).
+MARCO = "00000000-0000-0000-0000-000000000591"
+CRITERIO = {
+    "ETAPA": "00000000-0000-0000-0000-000000000592",
+    "FATO": "00000000-0000-0000-0000-000000000593",
+}
+LINHA = {
+    "GERAL": "00000000-0000-0000-0000-000000000594",
+    "PPI": "00000000-0000-0000-0000-000000000595",
+}
 # A Regra Normativa de cada modalidade, por identificador da modalidade.
 REGRA = {
     MODALIDADE["A"]: "00000000-0000-0000-0000-000000000551",
@@ -255,6 +265,9 @@ def rascunho_com_etapas():
             "id": ETAPA["B"],
             "name": "Análise de títulos",
             "order": 2,
+            # **Com peso**: quem enumera a Etapa num marco declara o peso dela, porque ausência não
+            # é equivalência e o cálculo não a interpreta (015). O Edital máximo enumera as duas.
+            "weight": "1.0000",
             "eliminatory": False,
             "classificatory": True,
         },
@@ -262,13 +275,91 @@ def rascunho_com_etapas():
     return base
 
 
+def _marco_completo():
+    """Um marco classificatório com **todos** os seus objetos declarados (026, T001).
+
+    Cada objeto aqui existe porque a travessia do contrato de mutabilidade precisa encontrá-lo:
+    `rounding` e `parameters` porque a `026` decidiu que eles **não** são opacos e a travessia
+    desce neles; `appealWindow`, `drawMethod` e `cutRule` porque são dez, três e seis campos que
+    nenhum outro construtor materializa. Os dois critérios de desempate são de espécies diferentes
+    de propósito: um consome Etapa e o outro consome fato declarado, e são as duas chaves de
+    `parameters` que o contrato classifica separadamente.
+    """
+    return {
+        "id": MARCO,
+        "code": "FINAL",
+        "name": "Classificação final",
+        "stages": [ETAPA["A"], ETAPA["B"]],
+        "operation": "SOMA_PONDERADA",
+        "normalization": "NENHUMA",
+        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+        "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+        "drawMethod": {
+            "algorithm": "IFES-SORTEIO-SHA256-v1",
+            # A fonte de demonstração, e não a Loteria Federal: o teste não tem rede, e a fonte
+            # declarada é o que determina o adaptador consultado (021, FR-076).
+            "source": "Fonte de demonstração",
+            "occurrence": "5901",
+            "occurrenceAt": "2020-01-01T20:00:00-03:00",
+            "derivation": "A extração de sábado imediatamente anterior à data publicada.",
+            "normalization": {
+                "rule": "DIGITOS_EM_SEQUENCIA",
+                "text": "Os cinco números sorteados, na ordem dos prêmios.",
+            },
+            "substitutionRule": {
+                "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                "text": "Não havendo extração na data prevista, vale a seguinte da mesma fonte.",
+            },
+            # Declarada, e não `None`: é o décimo campo do método, e o guarda precisa encontrá-lo
+            # com valor. Precisa ser uma das Etapas que o próprio marco enumera.
+            "qualifyingStageId": ETAPA["A"],
+        },
+        # Alvo **fixo**, e não derivado do quadro: o alvo derivado impõe coerência com as linhas de
+        # cada recorte, e o que este conteúdo precisa é materializar os seis campos da regra.
+        "cutRule": {
+            "targetKind": "FIXED",
+            "targetCount": 3,
+            "surplusCount": 1,
+            "tieOutcome": "ADMITS_SURPLUS",
+            "governedStage": "NONE",
+            "continuation": "ALLOWED",
+        },
+        "tiebreakers": [
+            {
+                "id": CRITERIO["ETAPA"],
+                "order": 1,
+                "type": "MAIOR_PONTUACAO_NA_ETAPA",
+                "parameters": {"stageId": ETAPA["A"]},
+                "whenMissing": "ULTIMO_NO_CRITERIO",
+            },
+            {
+                "id": CRITERIO["FATO"],
+                "order": 2,
+                "type": "MAIOR_VALOR_DE_FATO",
+                "parameters": {"factId": FATO["EXPERIENCIA"]},
+                "whenMissing": "CRITERIO_NAO_SE_APLICA",
+            },
+        ],
+    }
+
+
 def rascunho_completo():
-    """O rascunho em que **toda** coleção-raiz de entidades está presente e não vazia.
+    """O rascunho **máximo**: toda coleção presente, e todo objeto opcional declarado.
 
     Existe para o guarda de cobertura: uma coleção declarada mas ausente do conteúdo publicado
     passaria despercebida, porque o guarda só enxerga o que o snapshot materializa. Os demais
     construtores continuam mínimos de propósito — um teste que não fala de documento exigido não
     deve passar a publicar um só porque a coleção nasceu.
+
+    **Por que ele precisa ser máximo, e não só completo** (026, D-012). O contrato de mutabilidade
+    enumera os campos publicados percorrendo o conteúdo canônico deste Edital. Enumerar sobre um
+    Edital pobre produz guardião **silenciosamente incompleto** — que é o mesmo defeito que a
+    feature existe para fechar, um nível acima. Antes da `026` este construtor trazia
+    `classificationMilestones: []`, `vacancyReversion: None` e `callForm: None`, e uma travessia
+    sobre ele não encontraria **nenhum** dos dez campos do método do sorteio.
+
+    Simplificar qualquer coisa aqui encolhe a garantia do guardião sem que nada acuse — e é por
+    isso que existe um teste medindo a cobertura desta fixture (SC-103).
 
     Os dois requisitos cobrem duas das quatro aplicabilidades: um para todos, um restrito a Perfil.
     """
@@ -291,6 +382,44 @@ def rascunho_completo():
             "profileId": PERFIL["A"],
         },
     ]
+    # O Evento ganha local: `location` é emitido no conteúdo publicado e, até a `026`, não era
+    # declarado em `EVENTO_PUBLICADO` — nenhum teste acusava, porque o guarda confere coleções e
+    # não campos. É o canário 1 da feature (FR-305).
+    base["schedule"][1]["location"] = "Campus Serra — Auditório"
+    for perfil_ in base["profiles"]:
+        # Sempre presentes no conteúdo publicado desde os degraus 13 a 15; declarados aqui com
+        # **valor**, e não com a grafia da ausência, porque o que a travessia não encontra não é
+        # classificado.
+        perfil_["callForm"] = "PUBLICATION"
+        perfil_["classificationInformation"] = {"criterio": "A ordem sai da soma ponderada."}
+        perfil_["callInformation"] = {"forma": "A convocação segue a ordem publicada."}
+    principal = base["profiles"][0]
+    # **Só no Perfil principal**, e a restrição é do domínio: quem declara reversão precisa publicar
+    # quadro, porque sem quantidade por recorte não há o que reverter (016). Um Perfil declarando é
+    # o bastante — a travessia toma a união das chaves dos itens da coleção.
+    principal["vacancyReversion"] = {"kind": "ON_EXHAUSTION"}
+    # Os fatos que os critérios de desempate consomem, e o marco que os declara.
+    principal["declaredFacts"] = [
+        fato(FATO["NASCIMENTO"], "NASCIMENTO", "Data de nascimento", "DATA"),
+        fato(FATO["EXPERIENCIA"], "EXPERIENCIA", "Meses de experiência", "INTEIRO"),
+    ]
+    principal["classificationMilestones"] = [_marco_completo()]
+    # A Modalidade `AC` é a ampla concorrência declarada, e por isso **não** recebe linha própria:
+    # a quantidade dela é a da linha geral (025, FR-231).
+    principal["generalCompetitionModalityId"] = MODALIDADE["A"]
+    principal["vacancyTable"] = [
+        {"id": LINHA["GERAL"], "modalityId": None, "immediateVacancies": 1},
+        {"id": LINHA["PPI"], "modalityId": MODALIDADE["B"], "immediateVacancies": 0},
+    ]
+    # A Regra Normativa inteira: os quatro objetos de forma livre precisam vir com conteúdo, ou a
+    # travessia não os encontra — e o contrato os classifica como opacos justamente por eles não
+    # terem forma declarada (026).
+    regra = principal["competitionModalities"][1]["normativeRule"]
+    regra["calculation"] = {"formula": "percentual sobre as vagas imediatas"}
+    regra["rounding"] = {"modo": "PARA_CIMA"}
+    regra["distribution"] = {"criterio": "alternância entre as listas"}
+    regra["callRules"] = {"observacao": "a convocação alterna entre ampla e reserva"}
+    regra["effectiveFrom"] = "2014-06-09T00:00:00+00:00"
     return base
 
 
