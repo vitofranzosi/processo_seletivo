@@ -181,6 +181,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("profiles", "code"): estrutural(),
     ("profiles", "name"): retificavel(),
     ("profiles", "description"): retificavel(),
+    # Canário 2 da `026` (FR-306). **A unidade endereçável é a lista inteira**, e não o item: texto
+    # em lista não tem identidade estável, e "o terceiro requisito" não é endereçar — é contar. Um
+    # ato que diz "onde se lê, leia-se" precisa nomear o que substitui, e o que ele pode nomear
+    # aqui é a lista. A tela a oferece como uma linha por requisito; linha em branco não vira
+    # requisito vazio, porque `""` publicado afirmaria exigência sem texto.
     ("profiles", "requirements"): retificavel(),
     ("profiles", "immediateVacancies"): retificavel(),
     ("profiles", "reserveType"): nao_retificavel(
@@ -276,6 +281,14 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ),
     ("classificationMilestones", "rounding/scale"): retificavel(),
     ("classificationMilestones", "rounding/mode"): retificavel(),
+    # Canário 3 da `026` (FR-307). Objeto composto: dois escalares e um valor de lista fechada. A
+    # unidade do prazo é oferecida como **escolha** e nunca como texto livre (FR-311) — contar em
+    # dias úteis exigiria o calendário de dias sem expediente, que o Edital não publica.
+    #
+    # **O canário encontrou um buraco maior do que o campo**: `_validar_janela_recursal` alcançava
+    # só a elaboração, e a publicação nunca conferia a janela — uma Retificação com zero dias
+    # publicava sem recusa. `validation._coerencia_da_janela_recursal` passou a reusar a mesma
+    # regra, e agora os dois caminhos cobram o mesmo.
     ("classificationMilestones", "appealWindow/admits"): retificavel(),
     ("classificationMilestones", "appealWindow/durationDays"): retificavel(),
     ("classificationMilestones", "appealWindow/unit"): retificavel(),

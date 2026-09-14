@@ -47,9 +47,23 @@ ARQUIVO = "arquivo"
 # A identidade de uma linha acrescentada. Não é campo de digitar: nasce no fragmento, viaja em
 # campo oculto e é o que torna a confirmação repetível (020).
 OCULTO = "oculto"
+# Os requisitos de participação: **coleção de texto dentro de uma entidade** (026, canário 2).
+#
+# **A unidade endereçável é a lista inteira**, e não o item. Item de lista de texto não tem
+# identidade estável — "o terceiro requisito" não é endereçar, é contar —, e um ato que diz "onde
+# se lê, leia-se" precisa nomear o que substitui. O que ele pode nomear aqui é a lista.
+#
+# Uma linha por requisito, numa caixa de texto: é a grafia em que a lista se lê e se edita sem
+# inventar controle. Linha vazia não vira requisito vazio — some, porque `""` publicado seria
+# afirmação de que existe uma exigência sem texto.
+LISTA_DE_TEXTO = "lista_de_texto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
+    # Os requisitos de participação (026, canário 2, FR-306). **É o campo que decide quem pode
+    # concorrer**, e até a `026` só se corrigia por chamada de API. A lista inteira é a unidade
+    # endereçável: ver `LISTA_DE_TEXTO` acima.
+    ("requirements", "Requisitos de participação", LISTA_DE_TEXTO),
     # Qual das Modalidades é a ampla concorrência (014, FR-231). Retificá-la é mudar quais recortes
     # exigem linha de quadro, e por isso é norma — não é rótulo. `REFERENCIA` porque o valor é a
     # identidade de uma Modalidade do próprio Perfil, e não texto livre.
@@ -111,6 +125,26 @@ CAMPOS_REGRA = [
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
 CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+# A janela recursal do marco (026, canário 3, FR-307). Objeto composto, com dois escalares e um
+# valor de lista fechada — é o canário que obriga o desenho a tratar as duas formas.
+#
+# **A unidade é lista fechada, e nunca caixa de texto** (FR-311). Ela admite um valor só hoje, e
+# `editais/domain/perfis` diz por quê: contar em dias úteis exigiria o calendário de dias sem
+# expediente, que o Edital não publica — e contá-los sem ele produziria um prazo errado com
+# aparência de exato.
+#
+# **A coerência entre os três é do domínio, e não daqui**: marco que declara não admitir recurso
+# não tem duração a declarar, e duração precisa ser inteiro maior que zero. Quem recusa é
+# `_validar_janela_recursal`, reusado — reescrever a regra na interface faria as duas envelhecerem
+# separadamente.
+CAMPOS_DA_JANELA = [
+    ("appealWindow/admits", "Admite recurso", BOOLEANO),
+    ("appealWindow/durationDays", "Prazo em dias", INTEIRO),
+    ("appealWindow/unit", "Contagem do prazo", REFERENCIA),
+]
+# A única contagem que o cálculo interpreta. Lista de um, e a lista existe mesmo assim: é ela que
+# torna o campo uma escolha conferida, e não texto livre que publicaria prazo incontável.
+UNIDADES_DO_PRAZO = (("DIAS_CORRIDOS", "Dias corridos"),)
 # A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
 # uma Retificação real muda: "onde se lê 10, leia-se 12".
 #
@@ -242,6 +276,7 @@ COLECAO_DA_LISTA = {
     "CAMPOS_FATO": "declaredFacts",
     "CAMPOS_MARCO": "classificationMilestones",
     "CAMPOS_DO_CORTE": "classificationMilestones",
+    "CAMPOS_DA_JANELA": "classificationMilestones",
     "CAMPOS_CRITERIO": "tiebreakers",
     "CAMPOS_EVENTO": "schedule",
     "CAMPOS_ETAPA": "stages",
@@ -346,6 +381,8 @@ def _valor(item, chave):
 def _para_formulario(valor, tipo):
     if tipo == BOOLEANO:
         return "1" if valor else "0"
+    if tipo == LISTA_DE_TEXTO:
+        return "\n".join(str(item) for item in (valor or []))
     if valor is None:
         return ""
     if tipo == INSTANTE:
@@ -617,15 +654,26 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     base_do_marco,
                     marco,
                     CAMPOS_MARCO
-                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
+                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else [])
+                    # **Só quando o objeto existe**, como os campos do corte: endereçar caminho
+                    # para dentro de objeto ausente é recusado pela gramática, e a Retificação que
+                    # *cria* a janela é acréscimo de declaração — o contrato diz que ela pode
+                    # nascer, e por qual caminho (FR-313).
+                    + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
-                    opcoes={"cutRule/tieOutcome": DESFECHOS_DO_EMPATE},
+                    opcoes={
+                        "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "appealWindow/unit": UNIDADES_DO_PRAZO,
+                    },
                     rotulos_do_vazio={
                         # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
                         # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
                         # nomeia o marco.
                         "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                        # Aqui o vazio **apaga a contagem declarada**, e uma janela sem unidade não
+                        # é computável: o candidato leria um prazo que ninguém sabe contar.
+                        "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
                     },
                 )
             )
@@ -817,6 +865,11 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
     bruto = (bruto or "").strip()
     if tipo == BOOLEANO:
         return bruto == "1"
+    if tipo == LISTA_DE_TEXTO:
+        # Lista vazia e ausência são coisas diferentes, e as duas são legítimas: um Perfil pode não
+        # exigir nada. O que não é legítimo é o item em branco — `""` publicado afirmaria que
+        # existe exigência sem texto.
+        return [linha.strip() for linha in bruto.splitlines() if linha.strip()]
     if bruto == "":
         return None
     if tipo == OCULTO:

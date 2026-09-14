@@ -27,12 +27,6 @@ from processo_seletivo.interface import retificacao
 #: O conjunto só encolhe. Acrescentar linha aqui é admitir que um campo classificado deixou de ter
 #: caminho pela tela — e isso não é ajuste de implementação: é a FR-304 deixando de valer.
 AINDA_SEM_TELA = {
-    # Canário 2 — os requisitos de participação (US2).
-    ("profiles", "requirements"),
-    # Canário 3 — a janela recursal (US3).
-    ("classificationMilestones", "appealWindow/admits"),
-    ("classificationMilestones", "appealWindow/durationDays"),
-    ("classificationMilestones", "appealWindow/unit"),
     # Canário 4 — o método do sorteio, dez campos (US4).
     ("classificationMilestones", "drawMethod/algorithm"),
     ("classificationMilestones", "drawMethod/source"),

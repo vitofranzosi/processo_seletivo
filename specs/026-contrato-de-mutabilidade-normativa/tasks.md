@@ -309,25 +309,25 @@ spec já é concluível a partir daqui** pelo princípio VI.
 
 **Goal**: a lista de requisitos de um Perfil publicado se corrige pela tela.
 
-- [ ] T041 [US2] Transcrever a decisão de **como** `requirements` se retifica, registrada na
+- [X] T041 [US2] Transcrever a decisão de **como** `requirements` se retifica, registrada na
   [matriz.md](matriz.md) §2, para `backend/processo_seletivo/editais/domain/mutabilidade.py`:
   **a lista inteira é a unidade endereçável**. Item de lista de texto não tem identidade estável, e
   "o terceiro requisito" não é endereçar — é contar; um ato que diz "onde se lê, leia-se" precisa
   nomear o que substitui. Não é escolha de quem implementa.
-- [ ] T042 [US2] Escrever em `backend/tests/interface/test_retificar_requisitos.py` o teste que
+- [X] T042 [US2] Escrever em `backend/tests/interface/test_retificar_requisitos.py` o teste que
   falha: a tela oferece a correção, e a conferência **nomeia o Perfil e o requisito alterado, sem
   caminho normativo em primeiro plano**.
-- [ ] T043 [US2] Escrever em
+- [X] T043 [US2] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_dos_requisitos.py` o teste que falha: a
   página pública exibe a lista corrigida e o comprovante da inscrição anterior continua apontando a
   versão aceita (SC-098).
-- [ ] T044 [US2] Implementar a apresentação de `("profiles", "requirements")` em
+- [X] T044 [US2] Implementar a apresentação de `("profiles", "requirements")` em
   `backend/processo_seletivo/interface/retificacao.py`, conforme T041. `CAMPOS_PERFIL` (linha 51)
   hospeda escalares; uma coleção de texto precisa de tratamento próprio — o mecanismo de `LISTA`
   (linha 212) é o precedente mais próximo.
-- [ ] T045 [US2] Renderizar o campo em
+- [X] T045 [US2] Renderizar o campo em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_perfil.html`.
-- [ ] T046 [US2] Remover `("profiles", "requirements")` de `AINDA_SEM_TELA` em
+- [X] T046 [US2] Remover `("profiles", "requirements")` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`.
 - [ ] T047 [US2] Percorrer a jornada 2 do [quickstart.md](quickstart.md) pelo navegador.
 
@@ -337,28 +337,28 @@ spec já é concluível a partir daqui** pelo princípio VI.
 
 **Goal**: a janela recursal declarada no marco se corrige pela tela, com a unidade como escolha.
 
-- [ ] T048 [US3] Escrever em
+- [X] T048 [US3] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_da_janela_recursal.py` o teste de fronteira
   que falha: a janela nova vale para o que vier, e **a janela gravada num recurso já interposto
   permanece intacta**.
-- [ ] T049 [US3] Escrever em `backend/tests/interface/test_retificar_janela_recursal.py` o teste
+- [X] T049 [US3] Escrever em `backend/tests/interface/test_retificar_janela_recursal.py` o teste
   que falha: unidade que o cálculo não interpreta é recusada **com a razão**, e não gravada; e
   marco que não admite recurso não aceita duração.
-- [ ] T050 [US3] Escrever em `backend/tests/portal/test_prazo_recursal_retificado.py` o teste que
+- [X] T050 [US3] Escrever em `backend/tests/portal/test_prazo_recursal_retificado.py` o teste que
   falha: depois da vigência, o candidato lê a data-limite recalculada a partir da divulgação do
   resultado (SC-099).
-- [ ] T051 [US3] Acrescentar a apresentação dos três campos em
+- [X] T051 [US3] Acrescentar a apresentação dos três campos em
   `backend/processo_seletivo/interface/retificacao.py`: `appealWindow/admits` (`BOOLEANO`),
   `appealWindow/durationDays` (`INTEIRO`) e `appealWindow/unit` — este **como escolha**, nunca como
   texto livre (FR-311). A lista fechada tem um valor só, `DIAS_CORRIDOS`, e
   `backend/processo_seletivo/editais/domain/perfis.py:475` diz por quê.
-- [ ] T052 [US3] Fazer a Retificação recusar a contradição reusando `_validar_janela_recursal` em
+- [X] T052 [US3] Fazer a Retificação recusar a contradição reusando `_validar_janela_recursal` em
   `backend/processo_seletivo/editais/domain/perfis.py:460` — e não reescrevendo a regra na
   interface.
-- [ ] T053 [US3] Renderizar o bloco da janela em
+- [X] T053 [US3] Renderizar o bloco da janela em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_marco.html` (novo, se ainda
   não existir).
-- [ ] T054 [US3] Remover os três campos de `appealWindow` de `AINDA_SEM_TELA` em
+- [X] T054 [US3] Remover os três campos de `appealWindow` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`.
 - [ ] T055 [US3] Percorrer a jornada 3 do [quickstart.md](quickstart.md) pelo navegador, incluindo
   a tela de recurso do candidato — que exige `PORTAL_IDENTIDADE_DEMO=true`.

@@ -19,9 +19,18 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
     antes de chegar aqui, e não por um filtro repetido em cada controle.
     {% endcomment %}
     {% for campo in grupo.campos %}
-    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' %} largo{% endif %}">
+    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' or campo.tipo == 'lista_de_texto' %} largo{% endif %}">
       <label for="c-{{ campo.referencia }}">{{ campo.rotulo }}</label>
-      {% if campo.tipo == 'texto_longo' %}
+      {% if campo.tipo == 'lista_de_texto' %}
+      {% comment %}
+      Um por linha, e a instrução dita junto do campo: sem ela a caixa de texto é ambígua — quem
+      escreve não sabe se a lista é um parágrafo ou uma enumeração, e as duas leituras publicam
+      coisas diferentes (026, canário 2).
+      {% endcomment %}
+      <textarea id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}" rows="4"
+                aria-describedby="ajuda-{{ campo.referencia }}">{{ campo.valor }}</textarea>
+      <span class="ajuda" id="ajuda-{{ campo.referencia }}">Um requisito por linha. A lista inteira é substituída.</span>
+      {% elif campo.tipo == 'texto_longo' %}
       <textarea id="c-{{ campo.referencia }}"
                 name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
       {% elif campo.tipo == 'referencia' %}

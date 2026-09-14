@@ -1309,10 +1309,50 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
+    findings.extend(_coerencia_da_janela_recursal(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
+    return findings
+
+
+def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
+    """A janela declarada precisa ser computável — **também depois de retificada** (026, US3).
+
+    A regra existia e alcançava um caminho só. `validate_classification_milestones` a aplica na
+    **elaboração** do Perfil, e a publicação nunca a conferiu: uma Retificação que gravasse
+    `durationDays: 0` publicava sem recusa alguma, e o candidato leria um prazo de zero dias.
+
+    Quem descobriu foi o canário 3 da `026`, ao levar o campo para a tela: oferecer um número que
+    ninguém confere é publicar, pela via administrativa, o que a via de elaboração recusa.
+
+    **A regra não é reescrita aqui** — `_validar_janela_recursal` continua sendo a única, e este
+    achado a invoca. Duas cópias envelheceriam separadamente, e a que ficasse para trás seria
+    justamente a do caminho menos percorrido.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_janela_recursal,
+    )
+
+    findings = []
+    for perfil in snapshot.get("profiles") or []:
+        for marco in perfil.get("classificationMilestones") or []:
+            try:
+                _validar_janela_recursal(marco.get("appealWindow"))
+            except ProfileValidationError as recusa:
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="appeal_window_invalid",
+                        message=f"Marco {marco.get('code', '')}: {recusa}",
+                        path=(
+                            f"/profiles/id={perfil.get('id', '')}"
+                            f"/classificationMilestones/id={marco.get('id', '')}/appealWindow"
+                        ),
+                    )
+                )
     return findings
 
 
