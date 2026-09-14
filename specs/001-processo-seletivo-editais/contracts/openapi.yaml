@@ -805,7 +805,12 @@ components:
         code: { type: string }
         name: { type: string }
         description: { type: string }
-        requirements: { type: array }
+        # Itens de **texto** (026, achado da revisão). Era `array` sem tipo de item, e a API
+        # aceitava qualquer JSON dentro: número, objeto, lista. A tela de Retificação oferece a
+        # lista numa caixa de texto — uma exigência por linha —, e item que não é texto não tem
+        # como voltar de lá igual ao que entrou. Declarar o tipo é o que impede publicar o que
+        # nenhum canal sabe representar.
+        requirements: { type: array, items: { type: string } }
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }

@@ -86,8 +86,8 @@ regra este certame vai sortear.
   quem lê com a regra e sem o meio (026, US4, FR-308).
   {% endcomment %}
   <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não
-    uma decisão desta tela — <a href="{% url 'interface:retificar' edital.id %}">abrir a
-    Retificação deste Edital</a>.</p>
+    uma decisão desta tela{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
+    a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
   {% else %}
   {% comment %}
   **A palavra "por Retificação" aqui precisa de ressalva**, e ela é do contrato: a `026` decidiu

@@ -355,12 +355,24 @@ def apply_change(content, change):
     parent, leaf, forma = _parent_of(content, path)
     # **Depois** de `_parent_of`, e não antes: caminho inexistente e seletor inválido têm
     # precedência, porque um caminho que não existe não endereça campo algum — retificável ou não.
-    if colecoes.e_campo_nao_retificavel(f"{forma}/{colecoes.escapar(leaf)}"):
+    razao = colecoes.razao_da_recusa(f"{forma}/{colecoes.escapar(leaf)}")
+    if razao is not None:
+        # **A razão vem do contrato, e não daqui.** Esta mensagem era fixa e falava do tipo do fato
+        # declarado — o único campo que a lista tinha. Com 25 campos derivados do contrato, ela
+        # passou a dizer "mudar o tipo de um fato declarado cria fato novo" para o título de uma
+        # seção e para o número do Edital. A recusa precisa dizer a razão **daquele** campo, que é
+        # o que o contrato já guarda escrita.
         raise CampoNaoRetificavel(
-            f"{path} endereça um campo que a Retificação não altera no lugar. Mudar o tipo de um "
-            "fato declarado cria fato novo: remova este e acrescente outro, com identidade "
-            "própria, para que o valor congelado sob o primeiro continue legível sob a norma "
-            "que o governou."
+            f"{path} endereça um campo que a Retificação não altera no lugar. {razao}"
+        )
+    if operation == "REPLACE" and colecoes.objeto_que_nao_pode_nascer(
+        f"{forma}/{colecoes.escapar(leaf)}", parent.get(leaf) if isinstance(parent, dict) else None
+    ):
+        raise CampoNaoRetificavel(
+            f"{path} cria uma declaração que o Edital publicado não fez, e o contrato de "
+            "mutabilidade registra que ela não pode nascer por Retificação. Um marco que não "
+            "declarou método de sorteio não sorteia, e fazê-lo sortear depois de publicado muda a "
+            "espécie da ordenação — não um parâmetro dela. O caminho é declarar marco novo."
         )
     if leaf == colecoes.CAMPO_CHAVE and colecoes.e_elemento_de_colecao_com_chave(forma):
         raise IdentidadeNaoEnderecavel(

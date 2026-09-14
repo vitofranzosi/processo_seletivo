@@ -5921,6 +5921,13 @@ def sorteio(request, edital_id, marco_id):
                 # Lido do Edital publicado e **exibido sem campo de edição**: quem conduz o sorteio
                 # não declara o método, e alterá-lo é Retificação (D-013, FR-014).
                 "metodo": estado["metodo"],
+                # **Quem pode retificar vê o caminho; quem não pode, vê o encaminhamento** (026).
+                #
+                # A frase "alterá-lo é uma Retificação" fala a toda pessoa que abre esta tela — e
+                # a presidência da comissão, que é quem mais a abre, não tem `retificacao:elaborar`.
+                # Um link para ela terminaria numa tela que se anuncia somente leitura: trocar o
+                # beco sem saída por um beco sinalizado não é ganho.
+                "pode_retificar": ator.can("retificacao:elaborar"),
                 "metodo_hash": estado["metodo_hash"],
                 # A ocorrência da vez — a declarada, ou a que a regra de substituição pôs no
                 # lugar dela —, é o que põe a semente à vista **antes** do ato, que é o que a

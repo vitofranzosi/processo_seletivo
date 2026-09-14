@@ -161,13 +161,22 @@ def test_a_tela_do_sorteio_aponta_o_caminho_que_ela_manda_seguir(
 
     certame = certame_de_sorteio(gestor, api_client, manager_headers, process_payload)
     edital = certame["edital"]
-    # A presidência da comissão é quem abre a tela do sorteio; o papel vem da constituição que a
-    # fixture faz, e não de um rótulo declarado aqui.
+    endereco = url("interface:sorteio", args=[edital.id, certame["marco"]])
+    caminho_da_retificacao = url("interface:retificar", args=[edital.id])
+
+    # **A presidência abre esta tela e não elabora Retificação.** Para ela o link terminaria numa
+    # tela que se anuncia somente leitura — trocar o beco sem saída por um beco sinalizado não é
+    # ganho. A frase diz quem pode, e não oferece um caminho que não termina.
     identificar(client, "maria", [])
+    da_presidencia = client.get(endereco).content.decode()
+    assert "Alterá-lo é uma Retificação" in da_presidencia
+    assert "quem elabora Retificações é quem pode alterá-lo" in da_presidencia
+    assert caminho_da_retificacao not in da_presidencia
 
-    corpo = client.get(
-        url("interface:sorteio", args=[edital.id, certame["marco"]])
-    ).content.decode()
-
-    assert "Alterá-lo é uma Retificação" in corpo
-    assert url("interface:retificar", args=[edital.id]) in corpo
+    # Para quem elabora, o caminho existe e a frase o nomeia. **É a mesma pessoa**, com o papel
+    # acumulado: numa equipe de duas ou três, quem preside a comissão também elabora — e é
+    # exatamente aí que o link vale a pena.
+    identificar(client, "maria", ["elaborador"])
+    de_quem_elabora = client.get(endereco).content.decode()
+    assert "Alterá-lo é uma Retificação" in de_quem_elabora
+    assert caminho_da_retificacao in de_quem_elabora

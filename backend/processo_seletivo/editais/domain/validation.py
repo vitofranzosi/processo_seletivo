@@ -74,7 +74,11 @@ PERFIL_PUBLICADO = (
     Campo("code", str),
     Campo("name", str),
     Campo("description", str),
-    Campo("requirements", list),
+    # **Itens de texto**, transcrito do contrato (026). A declaração faltava, e a API aceitava
+    # qualquer JSON dentro da lista: número, objeto, outra lista. A tela de Retificação a oferece
+    # numa caixa de texto, uma exigência por linha, e item que não é texto não volta de lá igual —
+    # o que se publicava não tinha como ser corrigido pelo canal do ator sem se corromper.
+    Campo("requirements", list, tipo_do_item=str),
     Campo("immediateVacancies", int, minimo=0),
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),

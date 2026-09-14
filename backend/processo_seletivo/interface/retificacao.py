@@ -105,8 +105,18 @@ CAMPOS_EVENTO = [
     # declaração de forma. Informar local onde não havia é **alteração de valor**, e não acréscimo
     # de campo: `location` é sempre presente, com `""` para "não declarado".
     ("location", "Local", TEXTO),
+    # Qual Evento designa o período de inscrições (009). Quantos podem ser verdadeiros é coerência
+    # entre itens, e quem recusa dois é a conferência de publicação — não este campo.
+    ("isRegistrationPeriod", "É o período de inscrições", BOOLEANO),
 ]
-CAMPOS_RAIZ = [("title", "Título do Edital", TEXTO), ("description", "Descrição", TEXTO)]
+CAMPOS_RAIZ = [
+    ("title", "Título do Edital", TEXTO),
+    ("description", "Descrição", TEXTO),
+    # O teto de inscrições por pessoa. **Retificável por decisão anterior**: reduzi-lo não invalida
+    # quem já se inscreveu — "publicação anterior não se reescreve: quem entrou sob a norma que a
+    # admitia permanece".
+    ("maxInscricoesPorCandidato", "Teto de inscrições por candidato", INTEIRO),
+]
 
 # A modalidade sem Regra Normativa não recebe os campos dela: o caminho não existiria no
 # conteúdo, e endereçá-lo seria recusado por caminho inexistente. A tela oferece exatamente o
@@ -137,7 +147,21 @@ CAMPOS_REGRA = [
 # O marco não oferece `stages` nem `operation` como texto livre: a primeira é lista de identidades
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
-CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+CAMPOS_MARCO = [
+    ("name", "Denominação do marco", TEXTO),
+    # Como as pontuações se combinam, e o que as torna comparáveis antes disso (015). **Escolha
+    # conferida**: o motor executa duas formas de cada, e texto livre publicaria regra que o
+    # cálculo não interpreta (FR-311).
+    #
+    # Retificá-las torna o ato de ordenação **obsoleto e recomputável** — é o que a `015` decidiu,
+    # e é a razão de elas serem retificáveis apesar de mudarem o que as notas significam: a
+    # consequência é tratada, e não silenciosa.
+    ("operation", "Como as pontuações se combinam", REFERENCIA),
+    ("normalization", "Normalização antes de combinar", REFERENCIA),
+]
+# As duas formas de combinar e as duas de normalizar que o motor executa.
+COMBINACOES = (("SOMA_PONDERADA", "Soma ponderada"), ("MEDIA_PONDERADA", "Média ponderada"))
+NORMALIZACOES = (("NENHUMA", "Nenhuma"), ("PELA_SOMA_DOS_PESOS", "Pela soma dos pesos"))
 # A janela recursal do marco (026, canário 3, FR-307). Objeto composto, com dois escalares e um
 # valor de lista fechada — é o canário que obriga o desenho a tratar as duas formas.
 #
@@ -748,6 +772,8 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     nome=nome_do_marco,
                     opcoes={
                         "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "operation": COMBINACOES,
+                        "normalization": NORMALIZACOES,
                         "rounding/mode": MODOS_DE_ARREDONDAR,
                         "appealWindow/unit": UNIDADES_DO_PRAZO,
                         **_opcoes_do_metodo(),
@@ -777,6 +803,8 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                         # é computável: o candidato leria um prazo que ninguém sabe contar.
                         "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
                         "rounding/mode": "Não declarado — a publicação será impedida",
+                        "operation": "Não declarada — a publicação será impedida",
+                        "normalization": "Não declarada — a publicação será impedida",
                         # A Etapa de habilitação é o único campo do método em que o vazio é
                         # legítimo: `null` significa "nenhuma", e é o caso dos quatro Editais da
                         # amostra, em que a análise documental vem **depois** do sorteio (021).
@@ -958,7 +986,6 @@ COLECAO_DO_TIPO = {
 ROTULO_DO_EXCLUIDO = {
     (mutabilidade.RAIZ, "number"): "Número do Edital",
     (mutabilidade.RAIZ, "year"): "Ano",
-    (mutabilidade.RAIZ, "maxInscricoesPorCandidato"): "Teto de inscrições por candidato",
     ("profiles", "reserveType"): "Espécie do Cadastro Reserva",
     ("profiles", "classificationInformation"): "Informações sobre a classificação",
     ("profiles", "callInformation"): "Informações sobre a convocação",
@@ -968,8 +995,6 @@ ROTULO_DO_EXCLUIDO = {
     ("competitionModalities", "normativeRule/callRules"): "Regras de convocação da reserva",
     ("declaredFacts", "type"): "Tipo do fato",
     ("classificationMilestones", "stages"): "Etapas que o marco mede",
-    ("classificationMilestones", "operation"): "Como as pontuações se combinam",
-    ("classificationMilestones", "normalization"): "Normalização das pontuações",
     ("classificationMilestones", "cutRule/targetKind"): "Espécie do alvo do corte",
     ("classificationMilestones", "cutRule/governedStage"): "Etapa que o corte alimenta",
     ("classificationMilestones", "cutRule/continuation"): "Continuação além da faixa",
@@ -978,7 +1003,6 @@ ROTULO_DO_EXCLUIDO = {
     ("tiebreakers", "parameters/factId"): "Fato comparado pelo critério",
     ("tiebreakers", "whenMissing"): "O que fazer quando o valor não existe",
     ("schedule", "type"): "Espécie do Evento",
-    ("schedule", "isRegistrationPeriod"): "É o período de inscrições",
     ("sections", "title"): "Título da seção",
     ("sections", "order"): "Ordem da seção",
     ("sections", "type"): "Espécie da seção",
@@ -1408,6 +1432,23 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 continue
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
+                    continue
+            elif campo["tipo"] == LISTA_DE_TEXTO:
+                # **Comparar pela ida e volta, e não pelo valor cru** (026, achado da revisão).
+                #
+                # A caixa de texto não é uma representação reversível de qualquer lista: item que
+                # não é string vira string, espaço nas pontas some, e quebra de linha dentro de um
+                # item o parte em dois. Comparar o convertido com o valor publicado acusaria
+                # alteração em toda lista que não sobrevivesse à ida e volta — e o formulário envia
+                # **todos** os campos, de modo que corrigir a denominação de um Perfil emitiria,
+                # junto, um `REPLACE` dos requisitos que ninguém pediu.
+                #
+                # A comparação é contra **o que a caixa trazia**, e não contra a reconversão: a
+                # caixa nasceu preenchida com a forma do valor publicado, e se o que voltou é
+                # idêntico byte a byte, ninguém a tocou. Comparar as duas listas convertidas não
+                # resolveria — `['  Diploma  ']` e `['Diploma']` continuam diferentes, e a
+                # normalização sozinha viraria "correção".
+                if enviado == _para_formulario(anterior, LISTA_DE_TEXTO):
                     continue
             elif str(anterior if anterior is not None else "") == str(
                 novo_valor if novo_valor is not None else ""

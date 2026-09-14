@@ -137,3 +137,72 @@ def test_a_conferencia_nomeia_o_perfil_e_nao_o_caminho_normativo(
     assert "Requisitos de participação" in corpo
     assert perfil["code"] in corpo
     assert "/profiles/id=" not in corpo
+
+
+def test_editar_outro_campo_nao_mexe_na_lista(client, seletor_ligado, edital, vigente):
+    """O achado da revisão: o formulário envia **todos** os campos.
+
+    A caixa de texto não é representação reversível de qualquer lista — espaço nas pontas some,
+    item que não é texto vira texto, quebra de linha dentro de um item o parte em dois. Comparando
+    o convertido com o valor publicado, corrigir a denominação de um Perfil emitiria junto um
+    `REPLACE` dos requisitos que ninguém pediu.
+
+    A comparação passou a ser entre as duas **formas do formulário**: "não toquei" volta a
+    significar "nada mudou".
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = vigente.content["profiles"][0]
+
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(vigente, **{f"/profiles/id={perfil['id']}/name": "Outra denominação"}),
+            "justificativa": "Correção da denominação.",
+            "confirmar": "1",
+            "chave_idempotencia": "retificar-requisitos-000003",
+        },
+    )
+
+    caminhos = {a.target_path for a in Retificacao.objects.get().alteracoes.all()}
+    assert caminhos == {f"/profiles/id={perfil['id']}/name"}, (
+        "editar a denominação levou junto outro campo"
+    )
+
+
+def test_lista_com_espaco_nas_pontas_nao_vira_alteracao_sozinha(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """O caso concreto que a comparação crua acusaria: `['  Diploma  ']` publicado.
+
+    A ida e volta o normaliza, e a comparação crua chamaria isso de correção. Não é: ninguém
+    escreveu nada, e o ato registraria uma mudança que não houve.
+    """
+    rascunho = complete_draft()
+    rascunho["profiles"][0]["requirements"] = ["  Diploma de graduação  "]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(vigente),
+            "justificativa": "Nada mudou.",
+            "confirmar": "1",
+            "chave_idempotencia": "retificar-requisitos-000004",
+        },
+    )
+    assert not Retificacao.objects.exists(), "uma Retificação nasceu sem ninguém ter alterado nada"
+
+
+def test_a_forma_publicada_exige_que_cada_requisito_seja_texto():
+    """A restrição que faltava, e que torna a caixa de texto uma representação fiel.
+
+    Sem ela a API aceitava qualquer JSON dentro da lista — número, objeto, outra lista —, e o que
+    se publicava não tinha como ser corrigido pelo canal do ator sem se corromper.
+    """
+    from processo_seletivo.editais.domain import validation
+
+    campo = next(c for c in validation.PERFIL_PUBLICADO if c.nome == "requirements")
+    assert campo.tipo is list
+    assert campo.tipo_do_item is str

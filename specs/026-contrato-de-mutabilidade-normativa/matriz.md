@@ -56,7 +56,7 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `year` | ⚠️ | **N** | Mesma razão. |
 | `title` | | **R** | Já oferecido hoje em `CAMPOS_RAIZ`. |
 | `description` | | **R** | Já oferecido hoje. |
-| `maxInscricoesPorCandidato` | ⚠️ | **N** | Governa quantas inscrições a pessoa pôde fazer. Reduzi-lo depois de aberto o prazo invalidaria inscrição já aceita; aumentá-lo daria a quem se inscreveu depois uma chance que os primeiros não tiveram. **Alternativa defensável**: retificável apenas para mais, e apenas antes de abrir o prazo — mas isso é regra condicional, e o contrato não tem forma para ela. |
+| `maxInscricoesPorCandidato` | ⚠️ | **R** — *restaurado* | **A matriz contradizia decisão anterior.** Ela argumentava que reduzir o teto invalidaria inscrição já aceita. O sistema decide o contrário e **trata** a consequência: `test_fatos_congelados` reduz o teto por Retificação e afirma que a inscrição já submetida permanece — *"publicação anterior não se reescreve: quem entrou sob a norma que a admitia permanece"*. |
 
 ## 2. `profiles` — 17 campos
 
@@ -123,8 +123,8 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `code` | | **E** | Identificador estável. |
 | `name` | | **R** | Já oferecido. |
 | `stages` | ⚠️ | **N** | Quais Etapas o marco mede é **o que o marco é**, e não um parâmetro dele. Um marco que passa a medir outras Etapas não é o mesmo marco corrigido: é outro marco, sob o mesmo nome e o mesmo código, com as pontuações já registradas valendo para uma pergunta que ninguém fez. O caminho para mudar o que se mede é declarar marco novo. |
-| `operation` | ⚠️ | **N** | Como as pontuações se combinam reinterpreta **toda pontuação já registrada** sob o marco: a mesma nota passa a significar outra posição sem que ninguém a tenha reavaliado. Trocar soma por média não corrige o que foi publicado, recalcula o certame. |
-| `normalization` | ⚠️ | **N** | Mesma razão de `operation`, um passo antes: a normalização é o que torna as notas comparáveis entre si. Mudá-la depois de publicada reinterpreta cada nota já lançada. |
+| `operation` | ⚠️ | **R** — *restaurado* | **A matriz contradizia a `015`.** A razão que ela dava — combinar de outro jeito reinterpreta toda nota registrada — é verdadeira, e a conclusão era errada: o sistema trata isso de propósito. `colecoes.py` registra em palavras que `operation` e `normalization` *"continuam retificáveis de propósito"*, e `test_calculo` exerce: retificar a operação torna o ato **obsoleto e recomputável**, que é reavaliar feito direito, e não em silêncio. |
+| `normalization` | ⚠️ | **R** — *restaurado* | Mesma decisão, e a mesma frase de `colecoes.py` a nomeia junto com `operation`. |
 | `rounding/scale` | | **R** | **Deixou de ser opaco na revisão.** `classificacao/domain/combinacao.py:63` lê `scale`, cobra inteiro e valida a faixa: a forma é conhecida e a máquina calcula com ela. Chamar isso de opaco era classificar por onde o dado é guardado (`JSONField`), que é razão técnica. Corrigir a escala é a correção clássica — "onde se lê 2 casas, leia-se 4". |
 | `rounding/mode` | | **R** | Idem: `combinacao.py:75` cobra um entre `MEIO_PARA_CIMA`, `MEIO_PARA_PAR` e `TRUNCAR`. Lista fechada, oferecida como escolha (FR-311). **Com estes dois, metade do canário 4 original volta a ser endereçável** — parte do que a troca da D-010 havia custado. |
 | `appealWindow/admits` | | **R** | **Canário 3.** |
@@ -170,7 +170,7 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `order` | | **E** | Posição no Cronograma. |
 | `status` | | **D** | Produzido pelo sistema. Nenhum esquema declara a enumeração dele. |
 | `location` | | **R** | **Canário 1.** Hoje nem forma declarada tem. |
-| `isRegistrationPeriod` | ⚠️ | **N** | Qual Evento é o período de inscrições. Trocá-lo depois de publicado redefiniria retroativamente quando as inscrições estiveram abertas. |
+| `isRegistrationPeriod` | ⚠️ | **R** — *restaurado* | **A matriz contradizia a `009`.** `test_contrato_de_inscricao` retifica a designação do período, e o nome do teste é o que ele guarda: *"a Retificação alcança o documento e a designação"*. |
 
 ## 9. `stages` — 13 campos
 
@@ -237,7 +237,7 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 |---|---|---|
 | `classificationMilestones/cutRule` | ⚠️ | Pode passar a existir. Um marco que não cortava passa a cortar por Retificação, com a regra inteira num ato só — declarar pela metade é o que a validação já recusa. |
 | `classificationMilestones/appealWindow` | ⚠️ | Pode passar a existir. Declarar janela onde não havia **concede** prazo, e conceder é menos grave do que retirar. |
-| `classificationMilestones/drawMethod` | ⚠️ | **Não pode.** Um marco que não declarou método não sorteia; fazê-lo sortear depois de publicado muda a espécie da ordenação, e não um parâmetro dela. |
+| `classificationMilestones/drawMethod` | ⚠️ | **Pode** — *restaurado*. A matriz propunha recusar, e a `021` decide o contrário por uma razão que ela não considerou: **todo Edital publicado antes do degrau 10 carrega `drawMethod` nulo**, e recusar o acréscimo deixaria o acervo inteiro sem caminho para declarar o método. `test_elevacao_degrau_10` eleva um Edital da versão 9 e o declara por Retificação. |
 | `profiles/vacancyReversion` | ⚠️ | Pode passar a existir — a `016` já a trata como declaração do Edital. |
 | `competitionModalities/normativeRule` | ⚠️ | **Não pode.** Modalidade sem regra normativa é Modalidade sem fundamento; acrescentá-lo depois é criar reserva que o Edital publicado não tinha. |
 
@@ -247,8 +247,8 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 
 | Natureza | Quantas |
 |---|---|
-| **R** — retificável | 68 |
-| **N** — não retificável | 27 |
+| **R** — retificável | 72 |
+| **N** — não retificável | 23 |
 | **E** — identidade/estrutural | 24 |
 | **D** — derivado | 4 |
 | **Total** | **123** |
@@ -256,13 +256,35 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 **27 linhas marcadas ⚠️**, mais as 5 de objeto ausente. A marca significa "esta linha foi escolha
 entre alternativas defensáveis" — e não "pendente".
 
-**Cruzamento com a tela**: 49 das 68 linhas **R** são campos que a Retificação já oferece hoje.
+**Cruzamento com a tela**: as **72** linhas **R** têm caminho pela tela, e o teste o exige sem exceção.
 Nenhuma linha **N**, **E** ou **D** é oferecida — depois da emenda. As demais transcrevem decisão
 que o código já registra com razão normativa, ou são identidade sem controvérsia.
 
 **O padrão que a matriz revela**: o reexame da FR-310 já aconteceu, e aconteceu aqui. Toda exclusão
 que se sustentava em "valor fechado", "lista de identidades" ou "UUID digitado" foi reescrita em
 termos de norma — ou caiu. O saldo é **seis campos a mais retificáveis** do que a primeira proposta.
+
+---
+
+## Emendada pela revisão do PR #114 — 14/09/2026
+
+**Cinco linhas contradiziam decisões anteriores do próprio sistema**, e as cinco foram restauradas:
+`operation`, `normalization`, `maxInscricoesPorCandidato` e `isRegistrationPeriod` passaram a
+retificáveis; `drawMethod` passou a poder nascer por Retificação.
+
+**A causa é metodológica, e vale mais do que as cinco linhas.** A matriz foi montada lendo o que o
+`publish_edital` **emite** e cruzando com o que a tela **oferece**. Não foi cruzada com o que o
+sistema já **decide** sobre retificabilidade — `colecoes.CAMPOS_NAO_RETIFICAVEIS`, e os testes que
+exercem Retificação. Quem expôs isso foi ligar o contrato à API: onze testes caíram, e cada um era
+uma decisão anterior escrita e testada.
+
+Enquanto o contrato governava só a tela, a contradição era invisível: a tela não oferecia o campo, e
+a API continuava aceitando. **Fonte única que governa um canal e não o outro não é fonte única** — e
+é por isso que a integração era bloqueador, e não polimento.
+
+`number` e `year` continuam **não retificáveis**, e é o único caso em que a matriz *decidiu* em vez
+de contradizer: `test_identidade_imutavel` os deixava endereçáveis e dizia, por escrito, que era
+questão aberta — *"se alguém decidir protegê-los, é aqui que a decisão aparece"*. Apareceu.
 
 ---
 

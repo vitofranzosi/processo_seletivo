@@ -185,11 +185,14 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ),
     (RAIZ, "title"): retificavel(),
     (RAIZ, "description"): retificavel(),
-    (RAIZ, "maxInscricoesPorCandidato"): nao_retificavel(
-        "Governa quantas inscrições a pessoa pôde fazer. Reduzi-lo depois de aberto o prazo "
-        "invalidaria inscrição já aceita; aumentá-lo daria a quem se inscreveu depois uma chance "
-        "que os primeiros não tiveram."
-    ),
+    # **Retificável, e a decisão não é desta spec.** A matriz o classificou como não retificável
+    # argumentando que reduzi-lo invalidaria inscrição já aceita. O sistema decide o contrário, e
+    # trata a consequência: `tests/integration/inscricoes/test_fatos_congelados` reduz o teto por
+    # Retificação e afirma que a inscrição já submetida **permanece** — "publicação anterior não se
+    # reescreve: quem entrou sob a norma que a admitia permanece".
+    #
+    # Encontrado ao ligar o contrato à API, na revisão do PR #114.
+    (RAIZ, "maxInscricoesPorCandidato"): retificavel(),
     # ---- profiles ---------------------------------------------------------------------------
     ("profiles", "id"): estrutural(),
     ("profiles", "code"): estrutural(),
@@ -285,15 +288,21 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
         "nome e o mesmo código, com as pontuações já registradas valendo para uma pergunta que "
         "ninguém fez. O caminho para mudar o que se mede é declarar marco novo."
     ),
-    ("classificationMilestones", "operation"): nao_retificavel(
-        "Como as pontuações se combinam reinterpreta toda pontuação já registrada sob o marco: "
-        "a mesma nota passa a significar outra posição sem que ninguém a tenha reavaliado. Trocar "
-        "soma por média não corrige o que foi publicado, recalcula o certame."
-    ),
-    ("classificationMilestones", "normalization"): nao_retificavel(
-        "Mesma razão da combinação, um passo antes: a normalização é o que torna as notas "
-        "comparáveis entre si, e mudá-la depois de publicada reinterpreta cada nota já lançada."
-    ),
+    # **Retificáveis, e a decisão não é desta spec** (015). A primeira redação da matriz os
+    # classificou como não retificáveis, com a razão de que combinar as pontuações de outro jeito
+    # reinterpreta toda nota já registrada. A razão é verdadeira e a conclusão era errada: o
+    # sistema **trata** essa consequência, e trata de propósito.
+    #
+    # `publicacoes/domain/colecoes` registra a decisão em palavras — "`operation` e `normalization`
+    # do marco continuam retificáveis de propósito: a spec exige que a regra seja retificável, e
+    # cita a Retificação da operação como causa de obsolescência do ato já emitido" — e
+    # `tests/integration/classificacao/test_calculo` a exerce: retificar a operação torna o ato
+    # vigente **obsoleto e recomputável**, que é reavaliar feito direito, e não em silêncio.
+    #
+    # Encontrado na revisão do PR #114, ao ligar o contrato à API de Retificação: classificá-los
+    # como não retificáveis **removeria** uma capacidade que o produto tem por decisão escrita.
+    ("classificationMilestones", "operation"): retificavel(),
+    ("classificationMilestones", "normalization"): retificavel(),
     ("classificationMilestones", "rounding/scale"): retificavel(),
     ("classificationMilestones", "rounding/mode"): retificavel(),
     # Canário 3 da `026` (FR-307). Objeto composto: dois escalares e um valor de lista fechada. A
@@ -386,11 +395,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     # seguem. Não há caminho inexistente a endereçar, e por isso a gramática da `004` não precisou
     # de regra nova para o segundo cenário de aceitação da história.
     ("schedule", "location"): retificavel(),
-    ("schedule", "isRegistrationPeriod"): nao_retificavel(
-        "Qual Evento é o período de inscrições determina quando as inscrições estiveram abertas. "
-        "Trocá-lo depois de publicado redefiniria retroativamente a janela em que as pessoas "
-        "podiam se inscrever — e há inscrição aceita sob a janela anterior."
-    ),
+    # **Retificável por decisão anterior** (009).
+    # `tests/integration/editais/test_contrato_de_inscricao` retifica a designação do período junto
+    # com o documento exigido, e o nome do teste diz o que ele guarda: "a Retificação alcança o
+    # documento e a designação". Encontrado na revisão do PR #114.
+    ("schedule", "isRegistrationPeriod"): retificavel(),
     # ---- stages -----------------------------------------------------------------------------
     ("stages", "id"): estrutural(),
     ("stages", "order"): estrutural(),
@@ -473,11 +482,17 @@ PODE_PASSAR_A_EXISTIR: dict[tuple[str, str], tuple[bool, str]] = {
         "Declarar janela onde não havia **concede** prazo, e conceder é menos grave do que "
         "retirar: quem já tinha o direito de recorrer continua tendo.",
     ),
+    # **Pode, e a `021` existe para isso.** A matriz propôs o contrário — "um marco que não
+    # declarou método não sorteia" —, e a FR-014 da `021` decide ao contrário com uma razão que a
+    # matriz não considerou: **todo Edital publicado antes do degrau 10 tem `drawMethod: null`**, e
+    # recusar o acréscimo deixaria o acervo inteiro sem caminho para declarar o método.
+    # `tests/contract/test_elevacao_degrau_10` eleva um Edital da versão 9 e declara o método por
+    # Retificação. Encontrado na revisão do PR #114.
     ("classificationMilestones", "drawMethod"): (
-        False,
-        "Um marco que não declarou método não sorteia. Fazê-lo sortear depois de publicado muda a "
-        "**espécie** da ordenação, e não um parâmetro dela — quem se inscreveu sabendo que a ordem "
-        "sairia da pontuação passaria a concorrer por sorteio.",
+        True,
+        "Todo Edital publicado antes do degrau 10 da versão canônica carrega `drawMethod` nulo, e "
+        "é por Retificação que ele passa a declarar o método (021, FR-014). Declarar o método "
+        "inteiro num ato só é o que a validação já exige: método pela metade não publica.",
     ),
     ("profiles", "vacancyReversion"): (
         True,
