@@ -610,16 +610,19 @@ Retificação. Quatro sessões simultâneas produziriam conflito em cada merge.
 existem, cada história acrescenta **apresentação** — uma linha indexada por `(coleção, caminho)` —
 em vez de mexer na estrutura de montagem. O conflito que sobra é textual e local.
 
-**Ownership de arquivo**, para quem executar em sessões distintas mesmo assim:
+**Ownership de arquivo**, para quem executar em sessões distintas mesmo assim. A tabela é do
+**planejamento**, e as duas fases de convergência não estavam nele: elas nasceram de revisões do
+PR #114, e a coluna registra o que a execução de fato fez.
 
 | Arquivo | Dono |
 |---|---|
 | `editais/domain/mutabilidade.py` | US5, depois fase 4 |
 | `tests/contract/test_mutabilidade.py` | Foundational, depois US5 |
-| `interface/retificacao.py` | fase 4; depois uma história por vez |
+| `interface/retificacao.py` | fase 4; depois uma história por vez; e as fases 12 e 13 |
 | `templates/interface/_retificacao_marco.html` | US3, depois US4 |
 | `templates/interface/_retificacao_perfil.html` | US2 |
-| `editais/domain/validation.py` | US1, e só ela |
+| `editais/domain/validation.py` | US1 no plano — e, de fato, também as fases 12 e 13 (T093) |
+| `publicacoes/domain/{colecoes,changes}.py` | fora do plano: fases 12 e 13 |
 
 ## Parallel Execution
 
