@@ -253,7 +253,7 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 | **D** — derivado | 4 |
 | **Total** | **123** |
 
-**27 linhas marcadas ⚠️**, mais as 5 de objeto ausente. A marca significa "esta linha foi escolha
+**28 linhas marcadas ⚠️**, mais as 5 de objeto ausente. A marca significa "esta linha foi escolha
 entre alternativas defensáveis" — e não "pendente".
 
 **Cruzamento com a tela**: as **72** linhas **R** têm caminho pela tela, e o teste o exige sem exceção.

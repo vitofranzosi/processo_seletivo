@@ -232,8 +232,9 @@ todas usam. É o que torna a execução sequencial defensável em vez de conflit
   FR-304, nos dois sentidos: todo campo `RETIFICAVEL` do `CONTRATO` é oferecido pela tela, e todo
   campo oferecido tem entrada no contrato.
 
-  **Com um conjunto `AINDA_SEM_TELA` que encolhe.** São 68 campos **R** e a tela oferece 49; os 19
-  restantes entram nesse conjunto, declarados nominalmente, e o teste exige apenas que nada **fora**
+  **Com um conjunto `AINDA_SEM_TELA` que encolhe.** Eram 68 campos **R** quando o contrato nasceu,
+  e 72 depois da emenda de 14/09; a tela oferecia 49, e os 19 restantes entraram nesse conjunto,
+  declarados nominalmente. O teste exige apenas que nada **fora**
   dele esteja faltando. Sem isso a fase 4 nasceria vermelha e ficaria vermelha até a fase 10, e uma
   suíte que fica vermelha por seis fases deixa de acusar regressão. Cada fase seguinte **remove** do
   conjunto os campos que implementou, e T076 exige que ele esteja vazio.
