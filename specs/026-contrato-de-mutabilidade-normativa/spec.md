@@ -420,8 +420,8 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ### Functional Requirements
 
-- **FR-297**: Todo campo da forma publicada de toda coleção normativa MUST ter exatamente uma
-  natureza de mutabilidade declarada — retificável, não retificável, derivado, ou
+- **FR-297**: Todo campo da forma publicada de toda coleção normativa **que o Edital máximo
+  publica** (D-012) MUST ter exatamente uma natureza de mutabilidade declarada — retificável, não retificável, derivado, ou
   identidade/estrutural. A grafia é essa nas quatro, em spec, matriz e código (`ESTRUTURAL` é
   só o valor da enumeração).
 - **FR-298**: A declaração de natureza MUST viver em local único e autoritativo, e MUST ser lida
@@ -429,15 +429,16 @@ do marco nomeia o que não se corrige ali e por quê.
   mudança.
 - **FR-299**: Natureza "não retificável" MUST carregar razão escrita, e a razão MUST ser normativa.
   Razão fundada em limitação de implementação NÃO DEVE ser aceita.
-- **FR-300**: **Toda** coleção normativa do conteúdo canônico MUST estar enumerada pelo contrato
-  de mutabilidade — incluindo modalidade de concorrência, marco classificatório, critério de
+- **FR-300**: **Toda** coleção normativa que o Edital máximo publica MUST estar enumerada pelo
+  contrato de mutabilidade — incluindo modalidade de concorrência, marco classificatório, critério de
   desempate, fato declarado, linha do quadro de vagas e a raiz do Edital —, e a enumeração NÃO DEVE
   depender de a coleção ter forma declarada em `validation.py`. Declarar a forma das coleções
   aninhadas é outro trabalho, com razão escrita para não ter sido feito (015, T-009: o que vai
   dentro do marco depende do conteúdo inteiro e não cabe numa forma de campo); esta feature
   registra o limite e não o fecha.
-- **FR-301**: O guardião MUST falhar quando existir campo na forma publicada sem natureza
-  declarada, nomeando o campo e a coleção.
+- **FR-301**: O guardião MUST falhar quando a travessia do Edital máximo encontrar campo sem
+  natureza declarada, nomeando o campo, a coleção e o caminho. O alcance é o da D-012, e a FR-303
+  é o que o mantém amplo: a travessia não depende de lista nomeada.
 - **FR-302**: O guardião MUST falhar quando existir natureza declarada para campo que a forma
   publicada não possui.
 - **FR-303**: O guardião MUST cobrir todas as coleções normativas, e NÃO DEVE depender de alguém
@@ -465,9 +466,10 @@ do marco nomeia o que não se corrige ali e por quê.
   uma Retificação é ato novo, praticado hoje, sob a norma de hoje (D-011).
 - **FR-315**: Reclassificar de "retificável" para "não retificável" MUST carregar, além da razão
   normativa, uma **marca própria na entrada do contrato** registrando que um caminho de correção
-  foi fechado. A marca MUST ser admitida apenas em natureza "não retificável", e a verificação
-  MUST acontecer na carga do contrato. É a única direção de reclassificação que retira capacidade
-  de quem já publicou.
+  foi fechado. A marca MUST ser admitida apenas em natureza "não retificável", e a verificação MUST
+  acontecer na carga do contrato. **A marca é governança de revisão, e não invariante automático**:
+  o contrato guarda só o vigente (D-011), logo o código não detecta a transição — ele recusa a
+  marca onde ela é incoerente, e o resto é o que a revisão de código vê no diff.
 
 ### Key Entities
 
@@ -491,8 +493,8 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ## 5. Invariantes observáveis
 
-- Nenhum campo da forma publicada existe sem natureza declarada.
-- Nenhuma natureza declarada aponta campo que a forma publicada não tem.
+- Nenhum campo que o Edital máximo publica existe sem natureza declarada (D-012).
+- Nenhuma natureza declarada aponta campo que o Edital máximo não publica.
 - Toda natureza "não retificável" tem razão escrita, e nenhuma razão escrita menciona limitação de
   implementação como fundamento.
 - Todo campo classificado como retificável tem caminho pela tela.
@@ -506,8 +508,11 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ### Measurable Outcomes
 
-- **SC-095**: Zero campos da forma publicada sem natureza declarada, verificável por execução da
-  suíte.
+- **SC-095**: Zero campos sem natureza declarada no conteúdo que o Edital máximo publica,
+  verificável por execução da suíte. O alcance é o da D-012, e SC-103 é o que impede o Edital
+  máximo de encolher.
+- **SC-103**: Toda coleção declarada e todo objeto que o emissor sabe emitir está presente e não
+  vazio no Edital máximo — é o que impede a garantia da D-012 de encolher sem que nada acuse.
 - **SC-096**: Um campo novo acrescentado **ao conteúdo que o Edital máximo publica**, sem decisão,
   faz a suíte falhar nomeando o campo — verificável por tentativa. **A garantia é essa, e não "todo
   campo que existir"**: campo que só apareça sob condição que a fixture não exercita fica fora da
@@ -553,8 +558,9 @@ do marco nomeia o que não se corrige ali e por quê.
 
 - A travessia recursiva do conteúdo canônico de um Edital publicado é a fonte autoritativa do que
   se classifica (D-005). `editais/domain/validation.py` continua sendo a autoridade sobre a **forma**
-  — tipo, nulabilidade, restrição — das seis coleções que declara, e esta feature não acrescenta
-  declaração de forma nenhuma.
+  — tipo, nulabilidade, restrição — das seis coleções que declara. Esta feature acrescenta **uma só**
+  declaração de forma, e por achado e não por escopo: `location`, que é emitido no conteúdo
+  publicado e não estava declarado em `EVENTO_PUBLICADO` (T036).
 - O conjunto `NAO_SAO_NORMA` do guardião da Etapa é o precedente da natureza "identidade/estrutural"
   e "derivado", e será absorvido pelo contrato em vez de conviver com ele.
 - As quatro naturezas de D-001 são suficientes para a forma publicada de hoje. Se algum campo não

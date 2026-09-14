@@ -124,11 +124,18 @@ A ordem sai da spec (§8) e da pesquisa. Cada fase é verificável sozinha.
 | **G** | Canário 3 | Janela recursal retificável | B, F |
 | **H** | Canário 4 | Método do sorteio retificável | B, G |
 | **I** | Declarar | A tela diz o que não alcança, uma vez por bloco de coleção | B |
+| **J** | Fechar | Os campos **R** que nenhum canário alcança, até `AINDA_SEM_TELA` esvaziar | B, E–H |
 
-A fase D é onde a feature pode crescer: se o reexame concluir que `operation`, `normalization`,
-`rounding/*`, `appealWindow/unit`, `whenMissing` e `reserveType` são retificáveis — e a pesquisa
-indica que a razão técnica que os excluía caiu —, a implementação deles é backlog derivado, e não
-escopo desta spec. O que esta spec entrega é a decisão escrita.
+**A fase D aconteceu no desenho, e não na implementação.** O reexame das exclusões por razão
+técnica foi feito ao montar a `matriz.md` — `operation`, `normalization`, `whenMissing`,
+`reserveType`, `targetKind`, `governedStage` e `continuation` continuam **não retificáveis**, com
+razão normativa escrita; `rounding/scale`, `rounding/mode` e mais quatro passaram a **retificáveis**.
+A fase D do plano virou conferência (T018), e não investigação.
+
+**A fase J existe por consequência, e não por escolha.** Com a matriz aprovada, a FR-304 obriga
+tela para os 70 campos **R**; a tela oferece 49 e os canários acrescentam 15. Chamar os seis
+restantes de "backlog derivado" era possível antes de a matriz existir — depois dela, não: não há
+"resto" para campo **R**.
 
 ## Complexity Tracking
 

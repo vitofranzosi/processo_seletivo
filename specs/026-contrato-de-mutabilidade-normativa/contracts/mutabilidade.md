@@ -23,9 +23,16 @@ class Mutabilidade:
     natureza: Natureza
     razao: str = ""
     # A marca da FR-315: esta entrada é resultado de uma reclassificação que **fechou** um caminho
-    # de correção que existia. Só faz sentido com natureza NAO_RETIFICAVEL, e é declaração de quem
-    # reclassificou — não histórico: o contrato guarda só o vigente (D-011), e o código não teria
-    # como deduzir a transição.
+    # de correção que existia. Só faz sentido com natureza NAO_RETIFICAVEL.
+    #
+    # **O que ela é**: declaração de quem reclassificou, como a razão já é. O contrato guarda só o
+    # vigente (D-011), então nada aqui *detecta* a transição — quem a vê é a revisão de código, no
+    # diff, e a marca é o que faz o diff dizer o que aconteceu em vez de só mostrar uma palavra
+    # trocada.
+    #
+    # **O que ela não é**: garantia de que toda transição R→N seja marcada. Isso exigiria guardar o
+    # passado, e guardar o passado é a alternativa que a D-011 recusou. A verificação automática
+    # cobre uma direção só — marca incoerente é recusada; marca ausente, não.
     fechou_caminho: bool = False
 
 
