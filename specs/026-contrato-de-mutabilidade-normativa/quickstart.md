@@ -125,6 +125,21 @@ O passo 3 já está estruturalmente garantido e o que falta é o teste de fronte
 `sorteios/models.py:48` grava `metodo_hash` em `RelacaoDeHabilitados` no congelamento, e
 `models.py:213` o copia e confere no `Sorteio`. A relação congelada **não relê** o método vigente.
 
+### Jornada 4b — **declarar** o método num Edital que não o tinha — FR-313
+
+*Acrescentada na revisão do PR #114: é o caso de todo Edital publicado antes do degrau 10 da versão
+canônica, que carrega `drawMethod` nulo.*
+
+1. Publicar um Edital com marco declarado e `drawMethod: null`.
+2. Retificação → bloco do marco: os dez campos aparecem **em branco**, e o rótulo do vazio de cada
+   escolha diz o que a ausência provoca.
+3. Preencher os dez e confirmar. A conferência mostra dez linhas `— → valor`; o ato guarda **uma**
+   Alteração, endereçando `…/drawMethod` com o objeto inteiro.
+4. Publicar. A versão consolidada seguinte carrega o método completo.
+
+Declarar pela metade não é erro de tela: o ato nasce, e é a validação da Publicação que o recusa
+nomeando o campo que falta. É a mesma resposta que a elaboração dá.
+
 ---
 
 ## 3. A tela diz o que não alcança — SC-102
