@@ -139,8 +139,78 @@ FORMA_DA_COLECAO = {
 #: **Não é exceção ao contrato**: os três continuam não retificáveis, e um teste confere que a
 #: recusa existe. O que se escolhe aqui é **onde** ela acontece.
 RECUSADOS_EM_OUTRO_LUGAR = frozenset(
-    {("sections", "title"), ("sections", "order"), ("sections", "type")}
+    {
+        ("sections", "title"),
+        ("sections", "order"),
+        ("sections", "type"),
+        # `source` é a quarta face da mesma topologia: a seção gerada declara a coleção que a
+        # origina, e trocá-la é divergir do catálogo como trocar o título é.
+        ("sections", "source"),
+        # O vínculo Etapa ↔ Evento é recusado por `_coerencia_das_etapas`, que confere se o Evento
+        # existe e nomeia qual não existe. A recusa genérica diria menos.
+        ("stages", "scheduleEventId"),
+    }
 )
+
+
+#: O campo **derivado** muda como consequência de outro, e por isso não se endereça sozinho — mas
+#: também não se bloqueia sozinho: quem o escreve é o ato que altera a fonte dele.
+#:
+#: `artifactHash` é o caso que obriga a distinção. Ele é derivado dos bytes do artefato, e a própria
+#: tela de Retificação emite um `REPLACE` nele **junto** com o `artifactId` que o originou —
+#: recusá-lo aqui quebraria o caminho que o torna derivado. A recusa, portanto, é do endereçamento
+#: **sozinho**, e vive em `apply_changes`, que enxerga o ato inteiro.
+FONTE_DO_DERIVADO = {
+    "/attachments/*/artifactHash": "/attachments/*/artifactId",
+}
+
+
+def _fora_do_alcance_direto():
+    """As formas que **nenhuma** Alteração endereça diretamente (026, FR-297).
+
+    Derivado e estrutural entram junto com o não retificável, e a razão é a mesma do contrato:
+    retificável é a **única** natureza que admite alteração direta. As outras três a recusam por
+    motivos diferentes — falta de decisão normativa, consequência de outro campo, ou substrato do
+    endereçamento —, e a recusa diz qual é.
+
+    Ficou de fora na primeira integração: só `NAO_RETIFICAVEL` bloqueava, e `profiles/code`,
+    `schedule/order` e `schedule/status` continuavam alteráveis apesar de o contrato dizer que não
+    pertencem ao objeto de Retificação. Encontrado na segunda revisão do PR #114.
+    """
+    return {
+        f"{FORMA_DA_COLECAO[colecao]}/{'/'.join(escapar(p) for p in caminho.split('/'))}": decisao
+        for (colecao, caminho), decisao in mutabilidade.CONTRATO.items()
+        if decisao.natureza is not mutabilidade.Natureza.RETIFICAVEL
+        and colecao in FORMA_DA_COLECAO
+        and (colecao, caminho) not in RECUSADOS_EM_OUTRO_LUGAR
+    }
+
+
+FORA_DO_ALCANCE_DIRETO = _fora_do_alcance_direto()
+
+RECUSA_POR_NATUREZA = {
+    mutabilidade.Natureza.DERIVADO: (
+        "Ele é derivado de outro campo, e muda como consequência dele: quem o escreve é o ato que "
+        "altera a fonte, e não uma Alteração própria."
+    ),
+    mutabilidade.Natureza.ESTRUTURAL: (
+        "Ele é identidade ou estrutura, e não conteúdo normativo: é o substrato pelo qual a "
+        "Retificação endereça o que ela corrige."
+    ),
+}
+
+
+def recusa_do_alcance_direto(forma):
+    """Por que esta forma não se endereça diretamente, ou `None` se ela se endereça.
+
+    A razão do não retificável vem do contrato, escrita campo a campo; a do derivado e a do
+    estrutural vêm da natureza, porque é a natureza que as explica — e é por isso que o contrato
+    não pede razão para as duas.
+    """
+    decisao = FORA_DO_ALCANCE_DIRETO.get(forma)
+    if decisao is None:
+        return None
+    return decisao.razao or RECUSA_POR_NATUREZA[decisao.natureza]
 
 
 def _nao_retificaveis():
@@ -197,6 +267,46 @@ OBJETOS_QUE_NAO_NASCEM = frozenset(
     for (colecao, objeto), (pode, _) in mutabilidade.PODE_PASSAR_A_EXISTIR.items()
     if not pode and colecao in FORMA_DA_COLECAO
 )
+
+
+def razao_do_que_nao_nasce(caminho_concreto):
+    """A razão do objeto, a partir do caminho concreto — para a recusa que acontece no ato.
+
+    Ali não há a forma calculada pela travessia: o que se tem é o caminho, e o sufixo basta porque
+    cada objeto proibido tem nome próprio no conteúdo.
+    """
+    sufixo = caminho_concreto.rsplit("/", 1)[-1]
+    for forma, razao in RAZAO_DO_QUE_NAO_NASCE.items():
+        if forma.rsplit("/", 1)[-1] == sufixo:
+            return razao
+    return ""
+
+
+def objetos_ausentes_que_nao_nascem(conteudo):
+    """Os caminhos concretos, hoje nulos, de objetos que o contrato proíbe de nascer.
+
+    Comparar o conjunto antes e depois do ato é o que fecha a sequência `REMOVE` + `ADD`: cada
+    Alteração dela é legítima sozinha, e o acréscimo só aparece no resultado.
+    """
+    ausentes = set()
+    for indice_perfil, perfil in enumerate(conteudo.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        base = f"/profiles/id={perfil.get('id', indice_perfil)}"
+        for modalidade in perfil.get("competitionModalities") or []:
+            if isinstance(modalidade, dict) and modalidade.get("normativeRule") is None:
+                ausentes.add(
+                    f"{base}/competitionModalities/id={modalidade.get('id', '')}/normativeRule"
+                )
+    return ausentes
+
+
+#: A razão de cada objeto que não nasce, pela forma do caminho.
+RAZAO_DO_QUE_NAO_NASCE = {
+    f"{FORMA_DA_COLECAO[colecao]}/{objeto}": razao
+    for (colecao, objeto), (pode, razao) in mutabilidade.PODE_PASSAR_A_EXISTIR.items()
+    if not pode and colecao in FORMA_DA_COLECAO
+}
 
 
 def objeto_que_nao_pode_nascer(forma, valor_atual):

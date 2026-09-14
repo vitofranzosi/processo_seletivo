@@ -21,6 +21,8 @@ BASE_DO_MARCO = f"/profiles/id={PERFIL}/classificationMilestones"
 MARCO = "00000000-0000-0000-0000-000000002602"
 MODALIDADE = "00000000-0000-0000-0000-000000002603"
 EVENTO = "00000000-0000-0000-0000-000000002604"
+ANEXO = "00000000-0000-0000-0000-000000002605"
+ARTEFATO = "00000000-0000-0000-0000-000000002606"
 
 
 def _conteudo():
@@ -113,7 +115,7 @@ def test_a_api_recusa_criar_declaracao_que_o_contrato_proibe():
     Modalidade sem regra normativa é outra coisa: acrescentá-la depois é criar reserva que o Edital
     publicado não tinha.
     """
-    with pytest.raises(CampoNaoRetificavel, match="não pode nascer"):
+    with pytest.raises(CampoNaoRetificavel, match="não nasce por Retificação"):
         apply_change(
             _conteudo(),
             {
@@ -180,4 +182,76 @@ def test_a_recusa_diz_a_razao_daquele_campo():
                 "operation": "REPLACE",
                 "newValue": "LIMITED",
             },
+        )
+
+
+@pytest.mark.contract
+def test_remover_e_acrescentar_e_o_mesmo_acrescimo_escrito_de_outro_jeito():
+    """A sequência que reproduzia o desvio: cada Alteração é legítima sozinha.
+
+    `REMOVE` de um `null` e `ADD` do objeto passam as duas por `apply_change` sem tocar em nada que
+    ele saiba recusar. O acréscimo só existe no **resultado** — e é por isso que a conferência vive
+    em `apply_changes`, que enxerga o ato inteiro.
+    """
+    from processo_seletivo.publicacoes.domain.changes import apply_changes
+
+    caminho = f"/profiles/id={PERFIL}/competitionModalities/id={MODALIDADE}/normativeRule"
+    with pytest.raises(CampoNaoRetificavel, match="não nasce por Retificação"):
+        apply_changes(
+            _conteudo(),
+            [
+                {"targetPath": caminho, "operation": "REMOVE"},
+                {"targetPath": caminho, "operation": "ADD", "newValue": {"foundation": "Lei"}},
+            ],
+            publication_id="00000000-0000-0000-0000-0000000000aa",
+        )
+
+
+@pytest.mark.contract
+def test_sumir_nao_e_nascer():
+    """Remover o objeto que continha a declaração não é criar a declaração.
+
+    A primeira redação da conferência comparava **conjuntos** de ausentes, e remover a Modalidade
+    inteira tirava o `normativeRule` dela do conjunto — o que aparecia como acréscimo. Quem acusou
+    foi o teste que remove Modalidade e linha do quadro no mesmo ato.
+    """
+    from processo_seletivo.publicacoes.domain.changes import apply_changes
+
+    resultado, _ = apply_changes(
+        _conteudo(),
+        [
+            {
+                "targetPath": f"/profiles/id={PERFIL}/competitionModalities/id={MODALIDADE}",
+                "operation": "REMOVE",
+            }
+        ],
+        publication_id="00000000-0000-0000-0000-0000000000bb",
+    )
+    assert resultado["profiles"][0]["competitionModalities"] == []
+
+
+@pytest.mark.contract
+def test_campo_derivado_endereçado_sozinho_e_recusado():
+    """O resumo do artefato é consequência dos bytes, e declará-lo sozinho afirma o que não é.
+
+    A tela emite os dois juntos — `artifactId` e `artifactHash` —, e é por isso que a recusa não
+    pode ser da Alteração isolada: ela é do **ato**, que precisa trazer a fonte.
+    """
+    from processo_seletivo.publicacoes.domain.changes import apply_changes
+
+    conteudo = _conteudo()
+    conteudo["attachments"] = [
+        {"id": ANEXO, "label": "ANEXO I", "order": 1, "artifactId": ARTEFATO, "artifactHash": "a"}
+    ]
+    with pytest.raises(CampoNaoRetificavel, match="sem o campo que o deriva"):
+        apply_changes(
+            conteudo,
+            [
+                {
+                    "targetPath": f"/attachments/id={ANEXO}/artifactHash",
+                    "operation": "REPLACE",
+                    "newValue": "b",
+                }
+            ],
+            publication_id="00000000-0000-0000-0000-0000000000cc",
         )

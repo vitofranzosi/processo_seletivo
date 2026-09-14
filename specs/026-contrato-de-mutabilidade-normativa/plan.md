@@ -126,14 +126,18 @@ A ordem sai da spec (§8) e da pesquisa. Cada fase é verificável sozinha.
 | **I** | Declarar | A tela diz o que não alcança, uma vez por bloco de coleção | B |
 | **J** | Fechar | Os campos **R** que nenhum canário alcança, até `AINDA_SEM_TELA` esvaziar | B, E–H |
 
-**A fase D aconteceu no desenho, e não na implementação.** O reexame das exclusões por razão
-técnica foi feito ao montar a `matriz.md` — `operation`, `normalization`, `whenMissing`,
-`reserveType`, `targetKind`, `governedStage` e `continuation` continuam **não retificáveis**, com
-razão normativa escrita; `rounding/scale`, `rounding/mode` e mais quatro passaram a **retificáveis**.
-A fase D do plano virou conferência (T018), e não investigação.
+**A fase D aconteceu em dois tempos.** O reexame das exclusões por razão técnica foi feito ao
+montar a `matriz.md`, e a fase D do plano virou conferência (T018) em vez de investigação.
+`whenMissing`, `reserveType`, `targetKind`, `governedStage` e `continuation` continuam **não
+retificáveis**, com razão normativa escrita.
+
+O segundo tempo foi a revisão do PR #114, ao ligar o contrato à API: **`operation` e
+`normalization` voltaram a retificáveis**, junto com `maxInscricoesPorCandidato` e
+`isRegistrationPeriod` — as quatro contradiziam decisões anteriores implementadas e testadas. Com
+`rounding/scale`, `rounding/mode` e os demais, são **72 retificáveis e 23 não**.
 
 **A fase J existe por consequência, e não por escolha.** Com a matriz aprovada, a FR-304 obriga
-tela para os 68 campos **R**; a tela oferece 49 e os canários acrescentam 15. Chamar os quatro
+tela para os 72 campos **R**; a tela oferece 49 e os canários acrescentam 15. Chamar os quatro
 restantes de "backlog derivado" era possível antes de a matriz existir — depois dela, não: não há
 "resto" para campo **R**.
 

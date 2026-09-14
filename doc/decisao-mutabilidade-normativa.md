@@ -72,9 +72,9 @@ decisão.
 Sem ele, o contrato é prosa. Com ele, a regressão estrutural fica impossível: um campo novo em
 `publish_edital.py` quebra a suíte até alguém dizer qual das quatro naturezas ele tem.
 
-**Feito, em 13/09/2026** (spec `026`). O contrato vive em
-`backend/processo_seletivo/editais/domain/mutabilidade.py` e classifica **123 campos** — 68
-retificáveis, 27 não retificáveis com razão normativa escrita, 24 de identidade ou estrutura e 4
+**Feito, em 13/09/2026** (spec `026`), e **emendado em 14/09**. O contrato vive em
+`backend/processo_seletivo/editais/domain/mutabilidade.py` e classifica **123 campos** — 72
+retificáveis, 23 não retificáveis com razão normativa escrita, 24 de identidade ou estrutura e 4
 derivados. O guardião é `backend/tests/contract/test_mutabilidade.py`: ele percorre o conteúdo
 canônico de um Edital publicado de verdade, sem lista nomeada de coleções, e falha por omissão nos
 dois sentidos — nomeando o campo, a coleção e o caminho.
@@ -90,8 +90,15 @@ Duas coisas a feature encontrou e que esta decisão não previa:
 
 **O quarto canário foi trocado.** Esta decisão elegia a regra classificatória — `rounding` e
 `operation` — e tratava o método do sorteio como quinto candidato. A spec `026` inverteu os dois, e
-a D-010 registra por quê. O custo foi pago em parte: `rounding/scale` e `rounding/mode` são
-retificáveis pela tela desde a fase 10, e `operation` ficou **não retificável**, com razão escrita.
+a D-010 registra por quê. O custo foi pago: `rounding/scale`, `rounding/mode`, `operation` e
+`normalization` são todos retificáveis pela tela.
+
+**E a matriz errou cinco linhas, que a revisão do PR #114 restaurou.** Ela foi montada cruzando o
+que o sistema **emite** com o que a tela **oferece**, e não com o que ele já **decide** sobre
+retificabilidade — `operation`, `normalization`, `maxInscricoesPorCandidato` e
+`isRegistrationPeriod` tinham decisão anterior escrita e testada em sentido contrário, e o método do
+sorteio **pode** nascer por Retificação, porque é assim que o acervo anterior ao degrau 10 o
+declara. A contradição só ficou visível quando o contrato passou a governar também a API.
 
 ## Os quatro canários
 

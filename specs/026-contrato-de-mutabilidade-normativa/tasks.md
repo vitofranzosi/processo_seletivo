@@ -15,8 +15,12 @@ description: "Tarefas de implementação — contrato de mutabilidade normativa"
 >
 > [matriz.md](matriz.md) foi aprovada como proposta e **emendada no mesmo dia** pelo
 > `$speckit-analyze`, que encontrou 18 razões técnicas e duas classificações erradas. São
-> **123 entradas**, 27 linhas ⚠️ e 5 políticas de objeto ausente. Ela é **norma**, e as tarefas da
-> fase 3 a **transcrevem**.
+> **123 entradas** e 5 políticas de objeto ausente. Ela é **norma**, e as tarefas da fase 3 a
+> **transcrevem**.
+>
+> **Emendada de novo em 14/09**, pela revisão do PR #114: cinco linhas contradiziam decisões
+> anteriores do sistema e foram restauradas. São **72 retificáveis e 23 não**. A fase 12 registra a
+> convergência.
 >
 > Divergir dela durante a implementação não é ajuste: é decisão nova, e volta para o usuário.
 > Natureza, razão e política de ausência afetam direitos, e não são decisão de quem implementa.
@@ -431,7 +435,7 @@ primeiros canários antes deles.
 
 ## Phase 10: FR-304 — os seis campos que faltam para o contrato fechar
 
-**Purpose**: a matriz classifica **68** campos como retificáveis. A tela oferece 49, e os quatro
+**Purpose**: a matriz classifica **68** campos como retificáveis — 72 depois da emenda de 14/09. A tela oferece 49, e os quatro
 canários acrescentam 15 — restam **quatro**. Enquanto eles faltarem, `AINDA_SEM_TELA` não esvazia e
 a FR-304 não se cumpre.
 
@@ -480,6 +484,58 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
   **e** `ruff format --check` —, e `test-pg` e não `test`.
 - [X] T078 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
   varredura derruba o CI quando uma citação aponta identificador que nenhuma spec define.
+
+---
+
+## Phase 12: Convergência — o contrato governa os dois canais
+
+**Purpose**: a entrega original ligou o contrato à **tela** e deixou a **API** para trás. As duas
+revisões do PR #114 encontraram o que essa metade escondia, e esta fase é o que fecha.
+
+**O achado que vale mais do que as tarefas**: enquanto o contrato governava um canal só, cinco
+linhas da matriz podiam contradizer decisões anteriores do sistema sem que nada acusasse — a tela
+não oferecia o campo, e a API continuava aceitando. **Fonte única que governa um canal e não o
+outro não é fonte única.**
+
+- [X] T079 Derivar `CAMPOS_NAO_RETIFICAVEIS` do contrato em
+  `backend/processo_seletivo/publicacoes/domain/colecoes.py`, em vez do literal de um item só que
+  ela era. `REPLACE /number` era aceito apesar de o contrato dizer que o número não se corrige.
+- [X] T080 Fazer a recusa dizer **a razão daquele campo**, lida do contrato, em
+  `backend/processo_seletivo/publicacoes/domain/changes.py`. A mensagem era fixa e falava do tipo
+  do fato declarado — recusar o título de uma seção explicava que "mudar o tipo de um fato
+  declarado cria fato novo".
+- [X] T081 Restaurar em `backend/processo_seletivo/editais/domain/mutabilidade.py` as cinco
+  decisões anteriores que a matriz contradizia: `operation`, `normalization`,
+  `maxInscricoesPorCandidato` e `isRegistrationPeriod` retificáveis, `drawMethod` podendo nascer.
+- [X] T082 Recusar alteração direta de **toda natureza que não seja retificável** em
+  `backend/processo_seletivo/publicacoes/domain/colecoes.py`. Só `NAO_RETIFICAVEL` bloqueava, e
+  `profiles/code`, `schedule/order` e `schedule/status` seguiam alteráveis.
+- [X] T083 Preservar as recusas mais específicas em
+  `backend/processo_seletivo/publicacoes/domain/colecoes.py`: a identidade tem exceção própria, e a
+  topologia das seções e o vínculo Etapa ↔ Evento já têm recusa que nomeia a regra. A escolha é
+  **onde**, e não **se**.
+- [X] T084 Tratar o campo **derivado** em `backend/processo_seletivo/publicacoes/domain/changes.py`
+  no nível do ato, e não da Alteração: `artifactHash` muda como consequência do `artifactId`, e
+  recusá-lo isoladamente quebraria o caminho que o torna derivado — endereçá-lo sozinho é declarar
+  um resumo que não é o dos bytes.
+- [X] T085 Aplicar a política de objeto ausente a `ADD` **e** `REPLACE`, e conferir o ato inteiro
+  em `apply_changes`: `REMOVE` seguido de `ADD` criava a declaração que o contrato proíbe, com
+  cada Alteração legítima sozinha.
+- [X] T086 Normalizar `CRLF` em `backend/processo_seletivo/interface/retificacao.py`. O navegador
+  envia `CRLF` num `textarea` e a comparação era contra `LF`: abrir a tela e não tocar em nada
+  emitia um `REPLACE` da lista inteira, com o conteúdo idêntico.
+- [X] T087 Fixar a representação sem ambiguidade: quebra de linha **dentro** de um requisito é
+  recusada na publicação (`_coerencia_dos_requisitos`), declarada no `openapi.yaml` e conferida no
+  serializer. Valor legado com quebra continua legível na tela, e corrigi-lo exige escrevê-lo sem
+  ela — que é o que a caixa consegue afirmar.
+- [X] T088 Oferecer os dez campos do método **sempre**, e não só quando o objeto existe, em
+  `backend/processo_seletivo/interface/retificacao.py`. Todo Edital anterior ao degrau 10 carrega
+  `drawMethod` nulo, e ocultar os campos deixava o acervo dependendo da API.
+- [X] T089 Propagar a reclassificação para `spec.md`, `plan.md`, `tasks.md`, `matriz.md` e
+  `doc/decisao-mutabilidade-normativa.md`: 72 retificáveis, 23 não, e as cinco decisões restauradas
+  com a evidência de cada uma.
+- [X] T090 Escrever `backend/tests/contract/test_contrato_governa_a_retificacao.py`: o contrato
+  aplicado ao ato, nas quatro naturezas e nas políticas de objeto ausente.
 
 ---
 

@@ -262,6 +262,13 @@ auditoria.
 
 ---
 
+> **Emendado em 14/09/2026, pela revisão do PR #114.** Cinco linhas da matriz contradiziam decisões
+> anteriores do próprio sistema, com teste passando, e foram restauradas: `operation`,
+> `normalization`, `maxInscricoesPorCandidato` e `isRegistrationPeriod` passaram a **retificáveis**,
+> e `drawMethod` passou a **poder nascer** por Retificação. São **72 retificáveis e 23 não**.
+> A causa está registrada em [matriz.md](matriz.md): a matriz foi cruzada com o que o sistema
+> **emite** e com o que a tela **oferece**, e não com o que ele já **decide**.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Corrigir o local de uma prova publicada (Priority: P1)
@@ -474,7 +481,7 @@ do marco nomeia o que não se corrige ali e por quê.
 ### Key Entities
 
 - **Forma publicada**: nesta spec, a forma que o conteúdo canônico de um Edital publicado tem de
-  fato — a que a travessia encontra. **São 123 campos**, medidos em `publish_edital.py` e
+  fato — a que a travessia encontra. **São 123 campos** — 72 retificáveis, 23 não, 24 estruturais e 4 derivados —, medidos em `publish_edital.py` e
   enumerados em [matriz.md](matriz.md). Os 81 a 98 que a auditoria contou são outra conta:
   ocorrências num Edital concreto, e não a união do que pode aparecer. Não é sinônimo de "declarada em `validation.py`": a declaração
   cobre seis coleções entre doze, e a forma publicada é maior do que ela (FR-300, D-005).
@@ -538,7 +545,7 @@ do marco nomeia o que não se corrige ali e por quê.
 ## 7. Out of Scope
 
 - **Implementar a retificabilidade de campo que o contrato NÃO classifica como retificável.** O
-  que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 68, e a matriz aprovada
+  que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 72, e a matriz aprovada
   fixou quais são. Os quatro canários provam o desenho; os seis campos que sobram têm fase própria,
   porque com a matriz escrita **não existe "resto" para campo R**.
 - **Dar forma, semântica ou destino a `classificationInformation` e `callInformation`.** A decisão

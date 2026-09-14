@@ -180,3 +180,33 @@ def test_a_tela_do_sorteio_aponta_o_caminho_que_ela_manda_seguir(
     de_quem_elabora = client.get(endereco).content.decode()
     assert "Alterá-lo é uma Retificação" in de_quem_elabora
     assert caminho_da_retificacao in de_quem_elabora
+
+
+def test_o_marco_sem_metodo_oferece_os_dez_campos_em_branco(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """FR-313 pelo canal do ator: é assim que o acervo anterior ao degrau 10 declara o método.
+
+    Todo Edital publicado antes daquele degrau carrega `drawMethod` nulo. A primeira redação só
+    mostrava os campos quando o objeto já existia — e, com isso, o acervo inteiro dependia da API
+    para declarar o método, que é o que o princípio VI não admite.
+    """
+    rascunho = rascunho_completo()
+    # **Marco declarado, método nulo** — é o retrato de todo Edital publicado antes do degrau 10.
+    # Um rascunho sem marco nenhum não serviria: o caso é o do marco que existe e não sorteia, e um
+    # teste que pulasse aqui não valeria nada.
+    for perfil_ in rascunho["profiles"]:
+        for marco_ in perfil_.get("classificationMilestones") or []:
+            marco_["drawMethod"] = None
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho, anexos=1
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    perfil = next(p for p in vigente.content["profiles"] if p.get("classificationMilestones"))
+    assert perfil["classificationMilestones"][0]["drawMethod"] is None
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    for _, rotulo, _ in CAMPOS_DO_METODO:
+        assert rotulo in corpo, f"o marco sem método não oferece '{rotulo}'"

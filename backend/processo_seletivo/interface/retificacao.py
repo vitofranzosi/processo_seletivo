@@ -480,11 +480,26 @@ def _valor(item, chave):
     return atual
 
 
+def _linhas(bruto):
+    """As linhas do que a caixa de texto mandou, com o fim de linha normalizado.
+
+    **O navegador envia `CRLF`.** É o que a especificação do `textarea` manda, e a comparação era
+    feita contra `LF`: abrir a tela e não tocar em nada emitia um `REPLACE` da lista inteira, com o
+    conteúdo idêntico. Normalizar aqui é o que faz a ida e a volta se encontrarem.
+    """
+    return (bruto or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
+
+
 def _para_formulario(valor, tipo):
     if tipo == BOOLEANO:
         return "1" if valor else "0"
     if tipo == LISTA_DE_TEXTO:
-        return "\n".join(str(item) for item in (valor or []))
+        # **Item com quebra de linha dentro não tem representação nesta caixa**, e por isso ele não
+        # se publica: a forma publicada declara `requirements` como lista de texto, e a conferência
+        # de publicação recusa o que não for. Aqui a quebra vira espaço para que o valor **legado**
+        # continue legível na tela — corrigi-lo passa a exigir escrevê-lo sem a quebra, que é o que
+        # a caixa consegue afirmar.
+        return "\n".join(" ".join(str(item).split()) for item in (valor or []))
     if valor is None:
         return ""
     if tipo == INSTANTE:
@@ -763,11 +778,20 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     # nascer, e por qual caminho (FR-313).
                     + (CAMPOS_DO_ARREDONDAMENTO if isinstance(marco.get("rounding"), dict) else [])
                     + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else [])
-                    # Só quando o marco sorteia: um marco que não declarou método não tem caminho
-                    # a endereçar, e o contrato registra que a declaração **não** pode nascer por
-                    # Retificação — fazê-lo sortear depois de publicado muda a espécie da
-                    # ordenação, e não um parâmetro dela (FR-313).
-                    + (CAMPOS_DO_METODO if isinstance(marco.get("drawMethod"), dict) else []),
+                    # **Sempre**, e não só quando o marco já sorteia (026, FR-313, corrigido na
+                    # segunda revisão do PR #114).
+                    #
+                    # A primeira redação só oferecia os campos com o objeto declarado, sobre a
+                    # premissa — errada — de que o método não podia nascer por Retificação. A
+                    # `021` decide o contrário, e por uma razão que a premissa não considerou:
+                    # **todo Edital publicado antes do degrau 10 carrega `drawMethod` nulo**, e é
+                    # por Retificação que ele passa a declarar o método. Ocultar os campos
+                    # deixaria o acervo inteiro dependendo da API — que é o que o princípio VI
+                    # não admite.
+                    #
+                    # Os dez vêm em branco quando o objeto é nulo, e declará-lo pela metade é
+                    # recusado na publicação: método declarado vale inteiro.
+                    + CAMPOS_DO_METODO,
                     tipo="Marco",
                     nome=nome_do_marco,
                     opcoes={
@@ -1098,7 +1122,7 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
         # Lista vazia e ausência são coisas diferentes, e as duas são legítimas: um Perfil pode não
         # exigir nada. O que não é legítimo é o item em branco — `""` publicado afirmaria que
         # existe exigência sem texto.
-        return [linha.strip() for linha in bruto.splitlines() if linha.strip()]
+        return [linha.strip() for linha in _linhas(bruto) if linha.strip()]
     if bruto == "":
         return None
     if tipo == OCULTO:
@@ -1448,7 +1472,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 # idêntico byte a byte, ninguém a tocou. Comparar as duas listas convertidas não
                 # resolveria — `['  Diploma  ']` e `['Diploma']` continuam diferentes, e a
                 # normalização sozinha viraria "correção".
-                if enviado == _para_formulario(anterior, LISTA_DE_TEXTO):
+                if "\n".join(_linhas(enviado)) == _para_formulario(anterior, LISTA_DE_TEXTO):
                     continue
             elif str(anterior if anterior is not None else "") == str(
                 novo_valor if novo_valor is not None else ""

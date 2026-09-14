@@ -119,7 +119,12 @@ class ProfileSerializer(serializers.Serializer):
     code = serializers.CharField(min_length=1, max_length=100)
     name = serializers.CharField(min_length=1, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)
-    requirements = serializers.ListField(child=serializers.JSONField(), required=False)
+    # **Texto, e sem quebra de linha dentro** (026). Era `JSONField`, e a borda aceitava número,
+    # objeto e lista — a publicação barrava depois, e o rascunho ficava gravado inválido. Alinhar
+    # aqui é o que faz a recusa chegar onde a pessoa ainda está escrevendo.
+    requirements = serializers.ListField(
+        child=serializers.RegexField(r"^[^\r\n]*$", allow_blank=True), required=False
+    )
     immediateVacancies = serializers.IntegerField(min_value=0)
     reserveType = serializers.ChoiceField(choices=["NONE", "LIMITED", "UNLIMITED"])
     reserveLimit = serializers.IntegerField(min_value=0, required=False, allow_null=True)

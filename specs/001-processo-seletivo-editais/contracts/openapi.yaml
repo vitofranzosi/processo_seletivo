@@ -810,7 +810,13 @@ components:
         # lista numa caixa de texto — uma exigência por linha —, e item que não é texto não tem
         # como voltar de lá igual ao que entrou. Declarar o tipo é o que impede publicar o que
         # nenhum canal sabe representar.
-        requirements: { type: array, items: { type: string } }
+        requirements:
+          type: array
+          # **Uma exigência por item, e nenhuma quebra de linha dentro dele** (026). O `pattern`
+          # não é apresentação: a Retificação oferece a lista numa caixa de texto, uma linha por
+          # exigência, e um item com `\n` dentro não tem como voltar de lá igual ao que entrou.
+          # Sem a restrição, o que se publicava não era corrigível pelo canal do ator.
+          items: { type: string, pattern: '^[^\r\n]*$' }
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }

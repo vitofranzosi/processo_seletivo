@@ -1315,6 +1315,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))
     findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
+    findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
@@ -1342,6 +1343,36 @@ def _marcos_bem_formados(perfil: dict) -> list[dict]:
     if not isinstance(marcos, list):
         return []
     return [marco for marco in marcos if isinstance(marco, dict)]
+
+
+def _coerencia_dos_requisitos(snapshot: dict) -> list[ValidationFinding]:
+    """Uma exigência por item, e nenhuma quebra de linha dentro dele (026).
+
+    O tipo do item é conferido pela forma publicada; o que não cabe lá é a **quebra**, porque ela é
+    string válida. A restrição existe pelo canal do ator: a Retificação oferece a lista numa caixa
+    de texto, uma linha por exigência, e um item com `\n` dentro se parte em dois ao voltar. Sem
+    esta recusa, o Edital publicaria conteúdo que ninguém consegue corrigir sem corrompê-lo.
+
+    É a mesma régua que a `026` aplicou ao `location` e à janela recursal: oferecer um campo cujo
+    valor ninguém confere é publicar, pela via administrativa, o que a via de elaboração recusa.
+    """
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for posicao, requisito in enumerate(perfil.get("requirements") or []):
+            if isinstance(requisito, str) and ("\n" in requisito or "\r" in requisito):
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="requirement_multiline",
+                        message=(
+                            "Cada requisito de participação é uma exigência, e não um parágrafo: "
+                            "quebra de linha dentro de um deles não tem como ser corrigida pela "
+                            "tela de Retificação, que os oferece um por linha."
+                        ),
+                        path=f"/profiles/id={perfil.get('id', '')}/requirements/{posicao}",
+                    )
+                )
+    return findings
 
 
 def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
