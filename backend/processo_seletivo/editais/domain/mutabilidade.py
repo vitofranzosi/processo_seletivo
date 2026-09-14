@@ -27,9 +27,23 @@ que foi publicado, que é o precedente do `callForm` outra vez.
 viaja com a razão. Uma classificação inferida por regra geral seria a mesma omissão de hoje, com
 aparência de método.
 
-**Limite conhecido**: a *forma* das seis coleções aninhadas continua não declarada em
+**Dois limites conhecidos, e os dois são deliberados.**
+
+O primeiro é de escopo: a *forma* das seis coleções aninhadas continua não declarada em
 `validation.py` (015, T-009). Enumerar um campo e declarar o tipo dele são coisas diferentes, e o
 contrato precisa só da primeira (FR-300).
+
+O segundo é de alcance: o guardião cobre **todo campo que o Edital máximo publica**, e não "todo
+campo que existir". Campo que só apareça sob condição que a fixture não exercita fica fora da
+enumeração até a fixture exercitá-la — lista vazia é o caso concreto, porque `[]` não distingue
+coleção sem itens de campo de lista sem valores. Enumerar estaticamente do código do emissor
+cobriria todo ramo condicional, e foi recusado: enumeraria a forma que o emissor **escreve**, e não
+a que o conteúdo **tem**, que é a diferença que descobriu o `location`.
+
+**Conferido contra a amostra real de Editais em 13/09/2026.** O que os Editais do Cefor de fato
+retificam é o Cronograma — "ANEXO I – CRONOGRAMA (RETIFICADO)" aparece literalmente em dois deles —,
+e nada na amostra contradiz as exclusões escritas aqui: nenhum Edital lido corrige o próprio número,
+o ano, o catálogo de seções ou a chave de um documento exigido.
 """
 
 from dataclasses import dataclass
@@ -189,7 +203,7 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("profiles", "requirements"): retificavel(),
     ("profiles", "immediateVacancies"): retificavel(),
     ("profiles", "reserveType"): nao_retificavel(
-        "A espécie do cadastro reserva define **o que o Edital ofereceu** — nenhum, limitado ou "
+        "A espécie do cadastro reserva define o que o Edital ofereceu: nenhum, limitado ou "
         "ilimitado. Quem se inscreveu decidiu concorrer sabendo se havia reserva e de que tipo; "
         "trocá-la depois não corrige um erro de redação, oferece outra coisa. O limite dentro da "
         "espécie é parâmetro, e esse se corrige."
@@ -209,9 +223,9 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ),
     ("profiles", "callInformation"): nao_retificavel(
         "Mesma razão: o domínio não reconhece forma nem semântica para este objeto, e por isso não "
-        "consegue determinar o que seria uma correção válida. O contraponto — `callForm` ao lado é "
-        "retificável e é exibido — reforça a decisão: ele tem forma declarada, valor de lista "
-        "fechada e destino observável, e é exatamente isso que falta aqui."
+        "consegue determinar o que seria uma correção válida. O contraponto reforça a decisão: a "
+        "forma de comunicar a convocação, ao lado, se corrige e é exibida — ela tem forma "
+        "declarada, valor de lista fechada e destino observável, e é isso que falta aqui."
     ),
     ("profiles", "generalCompetitionModalityId"): retificavel(),
     ("profiles", "vacancyReversion/kind"): retificavel(),
@@ -266,13 +280,13 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("classificationMilestones", "code"): estrutural(),
     ("classificationMilestones", "name"): retificavel(),
     ("classificationMilestones", "stages"): nao_retificavel(
-        "Quais Etapas o marco mede é **o que o marco é**, e não um parâmetro dele. Um marco que "
+        "Quais Etapas o marco mede é o que o marco é, e não um parâmetro dele. Um marco que "
         "passa a medir outras Etapas não é o mesmo marco corrigido: é outro marco, sob o mesmo "
         "nome e o mesmo código, com as pontuações já registradas valendo para uma pergunta que "
         "ninguém fez. O caminho para mudar o que se mede é declarar marco novo."
     ),
     ("classificationMilestones", "operation"): nao_retificavel(
-        "Como as pontuações se combinam reinterpreta **toda pontuação já registrada** sob o marco: "
+        "Como as pontuações se combinam reinterpreta toda pontuação já registrada sob o marco: "
         "a mesma nota passa a significar outra posição sem que ninguém a tenha reavaliado. Trocar "
         "soma por média não corrige o que foi publicado, recalcula o certame."
     ),
@@ -293,6 +307,17 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("classificationMilestones", "appealWindow/admits"): retificavel(),
     ("classificationMilestones", "appealWindow/durationDays"): retificavel(),
     ("classificationMilestones", "appealWindow/unit"): retificavel(),
+    # Canário 4 da `026` (FR-308). **Dez campos**, e a contradição mais visível do produto: a `021`
+    # determina que alterar o método é Retificação, a própria tela do sorteio manda retificá-lo, e
+    # a Retificação não oferecia um único deles.
+    #
+    # **A fronteira do congelamento já existia** (R-005): `sorteios.RelacaoDeHabilitados` grava o
+    # `metodo_hash` no congelamento e o `Sorteio` o copia e confere — a relação congelada não relê
+    # o método vigente, ela carrega o seu. Por isso o canário custou campos na tela e um teste de
+    # fronteira, e não trabalho de domínio.
+    #
+    # Quatro são escolha conferida contra o que este sistema **executa**; texto livre publicaria um
+    # nome que o motor não conhece, e quem reimplementasse chegaria a outra ordem.
     ("classificationMilestones", "drawMethod/algorithm"): retificavel(),
     ("classificationMilestones", "drawMethod/source"): retificavel(),
     ("classificationMilestones", "drawMethod/occurrence"): retificavel(),
@@ -304,8 +329,8 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("classificationMilestones", "drawMethod/substitutionRule/text"): retificavel(),
     ("classificationMilestones", "drawMethod/qualifyingStageId"): retificavel(),
     ("classificationMilestones", "cutRule/targetKind"): nao_retificavel(
-        "A espécie do alvo diz se o corte tem número fixo ou derivado do quadro — são **duas "
-        "regras diferentes**, e não dois valores da mesma. A quantidade dentro da espécie fixa é "
+        "A espécie do alvo diz se o corte tem número fixo ou derivado do quadro: são duas regras "
+        "diferentes, e não dois valores da mesma. A quantidade dentro da espécie fixa é "
         "parâmetro, e essa se corrige."
     ),
     ("classificationMilestones", "cutRule/targetCount"): retificavel(),
@@ -326,7 +351,7 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("tiebreakers", "id"): estrutural(),
     ("tiebreakers", "order"): retificavel(),
     ("tiebreakers", "type"): nao_retificavel(
-        "O que o critério compara é **o que ele é**: trocá-lo não corrige o desempate, substitui-o "
+        "O que o critério compara é o que ele é: trocá-lo não corrige o desempate, substitui-o "
         "por outro, e os empates já resolvidos sob o anterior ficariam resolvidos por um critério "
         "que o Edital não tem mais."
     ),
@@ -384,7 +409,7 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("sections", "id"): estrutural(),
     ("sections", "key"): estrutural(),
     ("sections", "title"): nao_retificavel(
-        "As seções do Edital são um **catálogo institucional**, e não escolha deste Edital: "
+        "As seções do Edital são um catálogo institucional, e não escolha deste Edital: "
         "título, ordem e espécie são os mesmos em todo Edital do Cefor, e é isso que torna um "
         "Edital legível por quem já leu outro. Corrigi-los aqui mudaria este Edital em relação aos "
         "demais. O que este Edital escreve é o conteúdo, e esse se corrige."

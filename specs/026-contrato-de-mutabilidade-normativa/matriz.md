@@ -266,6 +266,21 @@ termos de norma — ou caiu. O saldo é **seis campos a mais retificáveis** do 
 
 ---
 
+## Conferida contra a amostra real — 13/09/2026
+
+Ao fim da implementação, as 27 exclusões foram lidas contra os Editais do Cefor em `~/Downloads`.
+
+**O que a amostra de fato retifica é o Cronograma**: "ANEXO I – CRONOGRAMA (RETIFICADO)" aparece
+literalmente em dois Editais, e é a correção mais comum de todas. Isso confirma `startAt`, `endAt`,
+`description` — e `location`, que a `026` acrescentou.
+
+**Nada na amostra contradiz uma exclusão.** Nenhum Edital lido corrige o próprio número, o ano, o
+catálogo de seções ou a chave de um documento exigido. A régua que a spec propôs — "um campo que
+nenhum Edital da amostra jamais corrigiu é candidato legítimo a não retificável" — não derrubou
+nenhuma linha.
+
+---
+
 ## O que a revisão mudou
 
 O `$speckit-analyze` encontrou 18 linhas cuja razão era técnica, e duas classificações erradas. A

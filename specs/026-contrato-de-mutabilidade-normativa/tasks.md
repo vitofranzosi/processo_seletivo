@@ -296,7 +296,7 @@ verificar o Cronograma público e a versão anterior.
   `("schedule", "location")`.
 - [X] T039 [US1] Remover `("schedule", "location")` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`. O conjunto só encolhe.
-- [ ] T040 [US1] Percorrer a jornada 1 do [quickstart.md](quickstart.md) pelo navegador, com o
+- [X] T040 [US1] Percorrer a jornada 1 do [quickstart.md](quickstart.md) pelo navegador, com o
   servidor da entrada `mutabilidade-026`. Teste verde sobre objeto falso não é jornada — foi o que
   deixou passar o `AttributeError` do PR #113.
 
@@ -329,7 +329,7 @@ spec já é concluível a partir daqui** pelo princípio VI.
   `backend/processo_seletivo/interface/templates/interface/_retificacao_perfil.html`.
 - [X] T046 [US2] Remover `("profiles", "requirements")` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`.
-- [ ] T047 [US2] Percorrer a jornada 2 do [quickstart.md](quickstart.md) pelo navegador.
+- [X] T047 [US2] Percorrer a jornada 2 do [quickstart.md](quickstart.md) pelo navegador.
 
 ---
 
@@ -360,7 +360,7 @@ spec já é concluível a partir daqui** pelo princípio VI.
   não existir).
 - [X] T054 [US3] Remover os três campos de `appealWindow` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`.
-- [ ] T055 [US3] Percorrer a jornada 3 do [quickstart.md](quickstart.md) pelo navegador, incluindo
+- [X] T055 [US3] Percorrer a jornada 3 do [quickstart.md](quickstart.md) pelo navegador, incluindo
   a tela de recurso do candidato — que exige `PORTAL_IDENTIDADE_DEMO=true`.
 
 ---
@@ -380,7 +380,7 @@ spec já é concluível a partir daqui** pelo princípio VI.
   de um cartão para o outro não se imprime uma vez por cartão — é a decisão que
   `backend/tests/interface/test_medida_dos_campos.py` guarda no assistente, e que reprovou a
   primeira tentativa no PR #113.
-- [ ] T059 [US6] Percorrer a verificação 3 do [quickstart.md](quickstart.md) pelo navegador.
+- [X] T059 [US6] Percorrer a verificação 3 do [quickstart.md](quickstart.md) pelo navegador.
 
 ---
 
@@ -393,38 +393,38 @@ spec já é concluível a partir daqui** pelo princípio VI.
 e é o que mantém a história aqui: dez campos com interdependência, e o desenho precisava dos três
 primeiros canários antes deles.
 
-- [ ] T060 [US4] Escrever em
+- [X] T060 [US4] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_do_metodo_de_sorteio.py` o teste de fronteira
   que falha: Retificação sobre método **não** alcança relação congelada nem sorteio realizado
   (FR-309, SC-100). A garantia já é estrutural — `backend/processo_seletivo/sorteios/models.py:48`
   grava `metodo_hash` no congelamento e `models.py:213` o copia e confere no `Sorteio`. **O teste
   declara a fronteira; ele não a constrói.**
-- [ ] T061 [US4] Escrever em `backend/tests/interface/test_retificar_metodo_de_sorteio.py` o teste
+- [X] T061 [US4] Escrever em `backend/tests/interface/test_retificar_metodo_de_sorteio.py` o teste
   que falha: os dez campos são oferecidos, e a conferência exibe cada um em português.
-- [ ] T062 [US4] Acrescentar a apresentação dos cinco escalares em
+- [X] T062 [US4] Acrescentar a apresentação dos cinco escalares em
   `backend/processo_seletivo/interface/retificacao.py`: `drawMethod/algorithm`, `/source`,
   `/occurrence`, `/occurrenceAt` (`INSTANTE`) e `/derivation`.
-- [ ] T063 [US4] Acrescentar `drawMethod/qualifyingStageId` como `REFERENCIA` em
+- [X] T063 [US4] Acrescentar `drawMethod/qualifyingStageId` como `REFERENCIA` em
   `backend/processo_seletivo/interface/retificacao.py` — é identidade de Etapa do próprio marco, e
   UUID digitado à mão mudaria em silêncio qual Etapa habilita.
-- [ ] T064 [US4] Acrescentar os dois pares aninhados em
+- [X] T064 [US4] Acrescentar os dois pares aninhados em
   `backend/processo_seletivo/interface/retificacao.py`: `drawMethod/normalization/rule` e `/text`,
   `drawMethod/substitutionRule/rule` e `/text`. `rule` é o identificador que a máquina aplica e o
   terceiro reimplementa; `text` é a frase que a pessoa lê — e
   `backend/processo_seletivo/editais/domain/perfis.py:283` cobra as duas chaves de cada um. Com
   T063 e T064, fecham os dez.
-- [ ] T065 [US4] Fazer a Retificação recusar método declarado pela metade, reusando
+- [X] T065 [US4] Fazer a Retificação recusar método declarado pela metade, reusando
   `_validar_metodo_de_sorteio` em `backend/processo_seletivo/editais/domain/perfis.py:258` —
   inclusive `_validar_algoritmo_publicado`, `_validar_fonte_publicada` e `_validar_regra_publicada`.
-- [ ] T066 [US4] Renderizar o bloco do método em
+- [X] T066 [US4] Renderizar o bloco do método em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_marco.html`.
-- [ ] T067 [US4] Verificar que a tela do sorteio deixou de contradizer-se: ela manda retificar o
+- [X] T067 [US4] Verificar que a tela do sorteio deixou de contradizer-se: ela manda retificar o
   método, e agora a Retificação o oferece. Localizar o texto em
   `backend/processo_seletivo/interface/templates/interface/` e ajustá-lo se continuar apontando
   para caminho que não existe.
-- [ ] T068 [US4] Remover os dez campos de `drawMethod` de `AINDA_SEM_TELA` em
+- [X] T068 [US4] Remover os dez campos de `drawMethod` de `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py`.
-- [ ] T069 [US4] Percorrer a jornada 4 do [quickstart.md](quickstart.md) pelo navegador, incluindo
+- [X] T069 [US4] Percorrer a jornada 4 do [quickstart.md](quickstart.md) pelo navegador, incluindo
   a verificação pública de um sorteio já realizado sob o método anterior.
 
 ---
@@ -438,11 +438,11 @@ a FR-304 não se cumpre.
 Nenhum deles é canário: são o resto que o contrato, uma vez escrito, torna obrigatório. **É por
 isso que esta fase existe e não é backlog** — com a matriz aprovada, não há "resto" para campo **R**.
 
-- [ ] T070 Escrever em `backend/tests/interface/test_retificar_residuais.py` os testes que falham
+- [X] T070 Escrever em `backend/tests/interface/test_retificar_residuais.py` os testes que falham
   para os quatro campos: `profiles/description`,
   `competitionModalities/normativeRule/effectiveFrom`, `classificationMilestones/rounding/scale` e
   `.../rounding/mode`.
-- [ ] T071 Acrescentar a apresentação dos quatro em
+- [X] T071 Acrescentar a apresentação dos quatro em
   `backend/processo_seletivo/interface/retificacao.py`: `description` em `CAMPOS_PERFIL`
   (`TEXTO_LONGO`, pela mesma razão de `duties`), `normativeRule/effectiveFrom` em `CAMPOS_REGRA`
   como **`INSTANTE`** — o modelo é `DateTimeField` e o snapshot grava `isoformat()`, e a
@@ -450,7 +450,7 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
   como `CAMPOS_EVENTO` faz com `startAt` —, e os dois de `rounding` no marco — `scale` como `INTEIRO` e `mode` como **escolha** entre
   `MEIO_PARA_CIMA`, `MEIO_PARA_PAR` e `TRUNCAR` (FR-311), que é o que
   `backend/processo_seletivo/classificacao/domain/combinacao.py:75` cobra.
-- [ ] T072 Esvaziar `AINDA_SEM_TELA` em
+- [X] T072 Esvaziar `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py` e trocar a asserção: o conjunto precisa
   estar **vazio**, e o teste passa a exigir que todo campo **R** do contrato tenha tela (FR-304,
   sem exceção). A partir daqui, classificar um campo como retificável e não o oferecer derruba a
@@ -460,25 +460,25 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
 
 ## Phase 11: Polish & Cross-Cutting
 
-- [ ] T073 [P] Revisar as razões de
+- [X] T073 [P] Revisar as razões de
   `backend/processo_seletivo/editais/domain/mutabilidade.py` contra a amostra real de Editais
   (`~/Downloads`, com `pdftotext -layout`): campo que nenhum Edital da amostra jamais corrigiu é
   candidato legítimo a "não retificável"; campo que a amostra corrige e o contrato exclui é erro de
   classificação.
-- [ ] T074 [P] Conferir que `doc/achado-objeto-normativo-sem-forma.md` continua descrevendo o
+- [X] T074 [P] Conferir que `doc/achado-objeto-normativo-sem-forma.md` continua descrevendo o
   estado real ao fim da implementação — ele registra a decisão aberta sobre
   `classificationInformation` e `callInformation`, e **é registro, não prioridade**: o princípio VI
   proíbe derivar dele a prioridade da spec seguinte.
-- [ ] T075 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
+- [X] T075 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
   verificado por teste, com o caminho do guardião — e que o quarto canário foi trocado, conforme
   D-010.
-- [ ] T076 [P] Registrar como limite conhecido, em comentário no topo de
+- [X] T076 [P] Registrar como limite conhecido, em comentário no topo de
   `backend/processo_seletivo/editais/domain/mutabilidade.py`, que a **forma** das seis coleções
   aninhadas continua não declarada em `backend/processo_seletivo/editais/domain/validation.py`
   (015, T-009), e que a enumeração não depende dela (FR-300).
-- [ ] T077 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
+- [X] T077 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
   **e** `ruff format --check` —, e `test-pg` e não `test`.
-- [ ] T078 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
+- [X] T078 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
   varredura derruba o CI quando uma citação aponta identificador que nenhuma spec define.
 
 ---

@@ -62,6 +62,11 @@ Uma das duas, e é decisão de produto:
 Enquanto nenhuma das duas acontecer, eles permanecem publicados, não lidos e não retificáveis — que
 é o estado honesto, declarado por contrato e protegido por teste.
 
+**Conferido ao fim da implementação da `026`, em 13/09/2026.** Os dois estão no contrato como não
+retificáveis, com a razão acima; a tela de Retificação os declara entre o que não se corrige, no
+bloco da seção de Perfis; e nenhum canal passou a exibi-los. O estado descrito aqui continua sendo
+o estado real.
+
 ## Precedente relacionado
 
 É o mesmo gênero do que o código já registra para `callForm`: *"o primeiro Edital publicado com a

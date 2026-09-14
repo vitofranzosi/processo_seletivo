@@ -10,40 +10,25 @@ A conferência tem dois donos, e a razão é de método:
 - *todo retificável é oferecido* é o que este arquivo guarda, com o conjunto dos que ainda não têm
   tela declarado nominalmente.
 
-**Por que um conjunto que encolhe, e não a asserção inteira de uma vez.** São 68 campos
-retificáveis e a tela oferecia 49 quando o contrato nasceu. Afirmar a FR-304 inteira no primeiro
-commit deixaria a suíte vermelha por seis fases — e suíte que fica vermelha deixa de acusar
-regressão, que é o oposto do que esta feature entrega. Cada jornada remove os seus do conjunto, e a
-última tarefa o esvazia e troca a asserção.
-"""
+**O conjunto encolheu até esvaziar, e a asserção mudou.** São 68 campos retificáveis; a tela
+oferecia 49 quando o contrato nasceu, os quatro canários acrescentaram 15, e a fase 10 fechou os
+quatro que sobravam. `AINDA_SEM_TELA` existiu para que cada fase fechasse **verde** — afirmar a
+FR-304 inteira no primeiro commit deixaria a suíte vermelha por seis fases, e suíte que fica
+vermelha deixa de acusar regressão, que é o oposto do que esta feature entrega.
 
-import pytest
+Vazio, ele deixa de ser andaime e passa a ser guarda: classificar um campo como retificável e não
+lhe dar tela derruba a suíte a partir daqui, **sem exceção**.
+"""
 
 from processo_seletivo.editais.domain.mutabilidade import CONTRATO, Natureza
 from processo_seletivo.interface import retificacao
 
-#: Os campos que o contrato classifica como retificáveis e a tela **ainda** não oferece.
+#: Os campos que o contrato classifica como retificáveis e a tela ainda não oferece.
 #:
-#: O conjunto só encolhe. Acrescentar linha aqui é admitir que um campo classificado deixou de ter
-#: caminho pela tela — e isso não é ajuste de implementação: é a FR-304 deixando de valer.
-AINDA_SEM_TELA = {
-    # Canário 4 — o método do sorteio, dez campos (US4).
-    ("classificationMilestones", "drawMethod/algorithm"),
-    ("classificationMilestones", "drawMethod/source"),
-    ("classificationMilestones", "drawMethod/occurrence"),
-    ("classificationMilestones", "drawMethod/occurrenceAt"),
-    ("classificationMilestones", "drawMethod/derivation"),
-    ("classificationMilestones", "drawMethod/normalization/rule"),
-    ("classificationMilestones", "drawMethod/normalization/text"),
-    ("classificationMilestones", "drawMethod/substitutionRule/rule"),
-    ("classificationMilestones", "drawMethod/substitutionRule/text"),
-    ("classificationMilestones", "drawMethod/qualifyingStageId"),
-    # Os residuais: nenhum é canário, e todos são obrigatórios porque o contrato os classificou.
-    ("profiles", "description"),
-    ("competitionModalities", "normativeRule/effectiveFrom"),
-    ("classificationMilestones", "rounding/scale"),
-    ("classificationMilestones", "rounding/mode"),
-}
+#: **Vazio, e é o ponto.** Ele nasceu com 19 e encolheu a cada fase; a última o esvaziou. Voltar a
+#: pôr linha aqui é admitir que um campo classificado deixou de ter caminho pela tela — e isso não
+#: é ajuste de implementação, é a FR-304 deixando de valer. Quem o fizer precisa dizer por quê.
+AINDA_SEM_TELA: set[tuple[str, str]] = set()
 
 
 def _oferecidos():
@@ -80,12 +65,15 @@ def test_nenhum_campo_oferecido_esta_classificado_como_nao_retificavel():
     assert indevidos == [], "\n  ".join(indevidos)
 
 
-def test_todo_campo_retificavel_fora_do_conjunto_declarado_tem_tela():
-    """FR-304, com o alcance que o conjunto declara.
+def test_todo_campo_retificavel_tem_tela():
+    """FR-304, **sem exceção**.
 
     Falhar aqui significa que um campo classificado como retificável perdeu — ou nunca teve — o
-    caminho pela tela, **e não foi declarado como pendente**. É a regressão que a FR-304 proíbe.
+    caminho pela tela. É a regressão que a FR-304 proíbe, e a partir daqui ela derruba a suíte.
     """
+    assert AINDA_SEM_TELA == set(), (
+        "o conjunto dos pendentes voltou a ter linha: a FR-304 vale sem exceção desde a fase 10"
+    )
     faltando = sorted(
         f"({colecao}, {caminho})"
         for colecao, caminho in _retificaveis() - _oferecidos() - AINDA_SEM_TELA
@@ -112,12 +100,11 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
     assert AINDA_SEM_TELA <= _retificaveis()
 
 
-@pytest.mark.parametrize("colecao", sorted({colecao for colecao, _ in AINDA_SEM_TELA}))
-def test_o_tamanho_do_vao_por_colecao(colecao):
-    """Torna o vão legível por coleção, em vez de um número só.
+def test_a_conta_fecha_com_a_matriz():
+    """68 retificáveis, e 68 com tela. O número está na matriz aprovada e no contrato.
 
-    Não é redundância com o teste acima: quando uma jornada fecha, é aqui que se vê **qual**
-    coleção deixou de ter pendência.
+    Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
+    importam" — todos.
     """
-    pendentes = {caminho for outra, caminho in AINDA_SEM_TELA if outra == colecao}
-    assert pendentes, f"coleção sem pendência declarada continua no conjunto: {colecao}"
+    assert len(_retificaveis()) == 68
+    assert _retificaveis() <= _oferecidos()

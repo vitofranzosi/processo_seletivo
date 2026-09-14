@@ -72,6 +72,27 @@ decisão.
 Sem ele, o contrato é prosa. Com ele, a regressão estrutural fica impossível: um campo novo em
 `publish_edital.py` quebra a suíte até alguém dizer qual das quatro naturezas ele tem.
 
+**Feito, em 13/09/2026** (spec `026`). O contrato vive em
+`backend/processo_seletivo/editais/domain/mutabilidade.py` e classifica **123 campos** — 68
+retificáveis, 27 não retificáveis com razão normativa escrita, 24 de identidade ou estrutura e 4
+derivados. O guardião é `backend/tests/contract/test_mutabilidade.py`: ele percorre o conteúdo
+canônico de um Edital publicado de verdade, sem lista nomeada de coleções, e falha por omissão nos
+dois sentidos — nomeando o campo, a coleção e o caminho.
+
+Duas coisas a feature encontrou e que esta decisão não previa:
+
+- **`location` não estava declarado em lugar nenhum.** O `publish_edital` o emitia desde a `021`, e
+  nem o `openapi.yaml` nem `validation.py` o conferiam. Nenhum teste acusava, porque a conferência
+  da forma publicada olha coleções e não campos.
+- **A janela recursal e o método do sorteio não eram conferidos na publicação.** As regras existiam
+  e alcançavam só a elaboração do Perfil: uma Retificação podia publicar prazo de zero dias, ou
+  método declarado pela metade, sem recusa alguma.
+
+**O quarto canário foi trocado.** Esta decisão elegia a regra classificatória — `rounding` e
+`operation` — e tratava o método do sorteio como quinto candidato. A spec `026` inverteu os dois, e
+a D-010 registra por quê. O custo foi pago em parte: `rounding/scale` e `rounding/mode` são
+retificáveis pela tela desde a fase 10, e `operation` ficou **não retificável**, com razão escrita.
+
 ## Os quatro canários
 
 A spec que fechar este contrato deve ser conduzida por quatro correções de naturezas diferentes,

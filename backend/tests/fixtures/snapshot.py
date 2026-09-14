@@ -145,6 +145,9 @@ def evento(identificador, tipo, ordem, inicio):
         "endAt": None,
         "order": ordem,
         "status": "PLANEJADO",
+        # Onde o Evento acontece (021, D-008; declarado na forma publicada pela 026). String sempre
+        # presente, `""` quando não declarado — nunca `null`, nunca chave omitida.
+        "location": "",
         # A forma publicada exige o campo em todo Evento; a marca em si é de um só, e os testes
         # que falam dela a ligam explicitamente.
         "isRegistrationPeriod": False,
@@ -414,12 +417,16 @@ def rascunho_completo():
     # A Regra Normativa inteira: os quatro objetos de forma livre precisam vir com conteúdo, ou a
     # travessia não os encontra — e o contrato os classifica como opacos justamente por eles não
     # terem forma declarada (026).
-    regra = principal["competitionModalities"][1]["normativeRule"]
-    regra["calculation"] = {"formula": "percentual sobre as vagas imediatas"}
-    regra["rounding"] = {"modo": "PARA_CIMA"}
-    regra["distribution"] = {"criterio": "alternância entre as listas"}
-    regra["callRules"] = {"observacao": "a convocação alterna entre ampla e reserva"}
-    regra["effectiveFrom"] = "2014-06-09T00:00:00+00:00"
+    # **Em todas as Modalidades do Perfil**, e não só numa: a travessia acha o campo pela união
+    # das chaves dos itens, mas a *tela* desenha um grupo por Modalidade — e um grupo com o campo
+    # vazio esconderia que ele chega ao formulário.
+    for modalidade_ in principal["competitionModalities"]:
+        regra = modalidade_["normativeRule"]
+        regra["calculation"] = {"formula": "percentual sobre as vagas imediatas"}
+        regra["rounding"] = {"modo": "PARA_CIMA"}
+        regra["distribution"] = {"criterio": "alternância entre as listas"}
+        regra["callRules"] = {"observacao": "a convocação alterna entre ampla e reserva"}
+        regra["effectiveFrom"] = "2014-06-09T00:00:00+00:00"
     return base
 
 

@@ -130,3 +130,22 @@ def test_o_bloco_comeca_fechado(client, seletor_ligado, edital):
     abertura = re.search(r'<details class="exclusoes"([^>]*)>', corpo)
     assert abertura, "o bloco de exclusões não foi renderizado"
     assert "open" not in abertura.group(1)
+
+
+def test_nenhuma_razao_carrega_marcacao_de_markdown():
+    """As razões nasceram comentário e viraram texto de tela — os asteriscos vêm junto.
+
+    O navegador mostrou `**o que o Edital ofereceu**` literal na página, e nenhum teste pegou: o
+    teste anterior recusava caminho de código, e ênfase de Markdown não é caminho de código. É a
+    mesma classe de defeito uma segunda vez, e por isso vale uma asserção própria.
+
+    A razão é lida por uma pessoa numa tela HTML. Nada nela é renderizado como marcação.
+    """
+    sujas = sorted(
+        f"({colecao}, {caminho})"
+        for (colecao, caminho), decisao in CONTRATO.items()
+        if any(marca in decisao.razao for marca in ("**", "`", "](", "##"))
+    )
+    assert sujas == [], (
+        "razão com marcação de Markdown, que a tela imprime literal:\n  " + "\n  ".join(sujas)
+    )

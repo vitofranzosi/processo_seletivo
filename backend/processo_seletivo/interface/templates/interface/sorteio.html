@@ -77,12 +77,29 @@ regra este certame vai sortear.
     <dt>Se a ocorrência faltar</dt><dd>{{ metodo.substitutionRule.text }}</dd>
     <dt>Resumo do método</dt><dd><code>{{ metodo_hash }}</code></dd>
   </dl>
-  <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não uma decisão desta tela.</p>
+  {% comment %}
+  A frase mandava retificar e não dizia por onde — e até a `026` não havia por onde: a Retificação
+  não oferecia um único dos dez campos do método. Era a contradição mais visível do produto, e a
+  auditoria de 13/09 a registrou nestas palavras.
+
+  Agora o caminho existe, e a frase o nomeia. Dizer "é uma Retificação" sem apontar a tela deixava
+  quem lê com a regra e sem o meio (026, US4, FR-308).
+  {% endcomment %}
+  <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não
+    uma decisão desta tela — <a href="{% url 'interface:retificar' edital.id %}">abrir a
+    Retificação deste Edital</a>.</p>
   {% else %}
-  <p class="erro">Este marco não declara método de sorteio no Edital publicado. Enquanto ele não for
-    declarado — na composição, ou por Retificação, se o Edital já está publicado —, a relação não
-    pode ser congelada: congelar sob método indefinido seria escolher o método depois de conhecer
-    o universo.</p>
+  {% comment %}
+  **A palavra "por Retificação" aqui precisa de ressalva**, e ela é do contrato: a `026` decidiu
+  que o método **não** pode passar a existir por Retificação — um marco que não declarou método não
+  sorteia, e fazê-lo sortear depois de publicado muda a espécie da ordenação, e não um parâmetro
+  dela. Quem precisa do método num Edital já publicado declara marco novo (FR-313).
+  {% endcomment %}
+  <p class="erro">Este marco não declara método de sorteio no Edital publicado, e a Retificação não
+    cria a declaração: um marco que não declarou método não sorteia, e fazê-lo sortear depois de
+    publicado mudaria a espécie da ordenação. Enquanto ele não for declarado, a relação não pode
+    ser congelada — congelar sob método indefinido seria escolher o método depois de conhecer o
+    universo.</p>
   {% endif %}
 </section>
 

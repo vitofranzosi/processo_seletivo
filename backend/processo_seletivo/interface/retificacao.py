@@ -69,6 +69,10 @@ CAMPOS_PERFIL = [
     # identidade de uma Modalidade do próprio Perfil, e não texto livre.
     ("generalCompetitionModalityId", "Modalidade que é a ampla concorrência", REFERENCIA),
     ("name", "Denominação", TEXTO),
+    # A descrição do Perfil (026, fase 10). Não era oferecida, e ficava de fora sem razão escrita:
+    # o contrato a classificou retificável pela mesma razão de `duties` e `compensation`, que a
+    # FR-016 já admitira. É o que a FR-304 obriga — o que é retificável tem caminho pela tela.
+    ("description", "Descrição", TEXTO_LONGO),
     ("locality", "Localidade", TEXTO),
     # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
     # três, uma remuneração errada num Edital publicado exigiria chamada de API — o mesmo defeito
@@ -120,6 +124,15 @@ CAMPOS_REGRA = [
     ("normativeRule/percentage", "Percentual (%)", DECIMAL),
     ("normativeRule/foundation", "Fundamento normativo", TEXTO),
     ("normativeRule/version", "Versão do fundamento", TEXTO),
+    # Desde quando o fundamento vale (026, fase 10). **`INSTANTE`, e não uma data**: o modelo é
+    # `DateTimeField`, o snapshot grava `isoformat()`, e a Retificação não tem tipo `DATA` — usar
+    # `INSTANTE` é o que já converte pelo fuso institucional, como `CAMPOS_EVENTO` faz com o
+    # início do Evento.
+    #
+    # Entra junto com a versão porque os dois **são** o caminho de correção da regra de cota: a
+    # Constituição manda versionar, e não corrigir o parâmetro. Sem este campo, o caminho que o
+    # contrato aponta para os quatro objetos da regra estaria pela metade.
+    ("normativeRule/effectiveFrom", "Vigente desde", INSTANTE),
 ]
 # O marco não oferece `stages` nem `operation` como texto livre: a primeira é lista de identidades
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
@@ -137,6 +150,22 @@ CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
 # não tem duração a declarar, e duração precisa ser inteiro maior que zero. Quem recusa é
 # `_validar_janela_recursal`, reusado — reescrever a regra na interface faria as duas envelhecerem
 # separadamente.
+# O arredondamento do marco (026, fase 10). **Metade do canário 4 original** — a decisão de origem
+# elegia a regra classificatória como quarto canário, e a D-010 trocou pelo sorteio. A
+# endereçabilidade destes dois paga parte do que a troca custou.
+#
+# A escala é a casa decimal da pontuação combinada, e o modo é lista fechada: `combinacao` cobra um
+# entre três, e texto livre publicaria arredondamento que o cálculo não interpreta (FR-311).
+CAMPOS_DO_ARREDONDAMENTO = [
+    ("rounding/scale", "Casas decimais da pontuação", INTEIRO),
+    ("rounding/mode", "Como arredondar", REFERENCIA),
+]
+# Os três modos que o cálculo executa, com as palavras que quem compõe o Edital lê.
+MODOS_DE_ARREDONDAR = (
+    ("MEIO_PARA_CIMA", "Meio para cima"),
+    ("MEIO_PARA_PAR", "Meio para par"),
+    ("TRUNCAR", "Truncar"),
+)
 CAMPOS_DA_JANELA = [
     ("appealWindow/admits", "Admite recurso", BOOLEANO),
     ("appealWindow/durationDays", "Prazo em dias", INTEIRO),
@@ -145,6 +174,53 @@ CAMPOS_DA_JANELA = [
 # A única contagem que o cálculo interpreta. Lista de um, e a lista existe mesmo assim: é ela que
 # torna o campo uma escolha conferida, e não texto livre que publicaria prazo incontável.
 UNIDADES_DO_PRAZO = (("DIAS_CORRIDOS", "Dias corridos"),)
+
+# O método do sorteio (026, canário 4, FR-308). **Dez campos**, e é a contradição mais visível do
+# produto: a `021` determina que alterá-lo é Retificação, a própria tela do sorteio manda o
+# operador retificá-lo, e a Retificação não oferecia um único deles.
+#
+# **Quatro são escolha conferida, e não texto**: algoritmo, fonte e as duas regras identificam o
+# que este sistema **executa**. Texto livre ali publicaria um nome que o motor não conhece — e
+# quem reimplementasse a partir do publicado chegaria a outra ordem, concluindo, corretamente, que
+# o sorteio não confere. A Etapa de habilitação é referência pela razão de sempre: UUID digitado
+# muda em silêncio quem entra no sorteio.
+#
+# `text` ao lado de `rule` em cada par: o identificador que a máquina aplica e o terceiro
+# reimplementa, e a frase publicada que a pessoa lê. Prosa sozinha não atende à FR-015 — ninguém
+# executa uma frase —, e identificador sozinho não se lê no Edital.
+CAMPOS_DO_METODO = [
+    ("drawMethod/algorithm", "Algoritmo do sorteio", REFERENCIA),
+    ("drawMethod/source", "Fonte pública da semente", REFERENCIA),
+    ("drawMethod/occurrence", "Ocorrência que fixa a semente", TEXTO),
+    ("drawMethod/occurrenceAt", "Quando a ocorrência acontece", INSTANTE),
+    ("drawMethod/derivation", "Como a ocorrência foi escolhida", TEXTO_LONGO),
+    ("drawMethod/normalization/rule", "Regra de normalização", REFERENCIA),
+    ("drawMethod/normalization/text", "Normalização, como se publica", TEXTO_LONGO),
+    ("drawMethod/substitutionRule/rule", "Regra de substituição", REFERENCIA),
+    ("drawMethod/substitutionRule/text", "Substituição, como se publica", TEXTO_LONGO),
+    ("drawMethod/qualifyingStageId", "Etapa que habilita ao sorteio", REFERENCIA),
+]
+
+
+def _opcoes_do_metodo():
+    """As listas fechadas do método, lidas de quem as executa.
+
+    Importadas aqui dentro, e não no topo: `sorteios` é outro contexto, e a tela só precisa das
+    listas quando desenha um marco que sorteia.
+    """
+    from processo_seletivo.sorteios.domain.chave import ALGORITMOS
+    from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
+    from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
+    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+
+    return {
+        "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
+        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
+        "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
+        "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
+    }
+
+
 # A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
 # uma Retificação real muda: "onde se lê 10, leia-se 12".
 #
@@ -277,6 +353,8 @@ COLECAO_DA_LISTA = {
     "CAMPOS_MARCO": "classificationMilestones",
     "CAMPOS_DO_CORTE": "classificationMilestones",
     "CAMPOS_DA_JANELA": "classificationMilestones",
+    "CAMPOS_DO_METODO": "classificationMilestones",
+    "CAMPOS_DO_ARREDONDAMENTO": "classificationMilestones",
     "CAMPOS_CRITERIO": "tiebreakers",
     "CAMPOS_EVENTO": "schedule",
     "CAMPOS_ETAPA": "stages",
@@ -659,12 +737,36 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     # para dentro de objeto ausente é recusado pela gramática, e a Retificação que
                     # *cria* a janela é acréscimo de declaração — o contrato diz que ela pode
                     # nascer, e por qual caminho (FR-313).
-                    + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else []),
+                    + (CAMPOS_DO_ARREDONDAMENTO if isinstance(marco.get("rounding"), dict) else [])
+                    + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else [])
+                    # Só quando o marco sorteia: um marco que não declarou método não tem caminho
+                    # a endereçar, e o contrato registra que a declaração **não** pode nascer por
+                    # Retificação — fazê-lo sortear depois de publicado muda a espécie da
+                    # ordenação, e não um parâmetro dela (FR-313).
+                    + (CAMPOS_DO_METODO if isinstance(marco.get("drawMethod"), dict) else []),
                     tipo="Marco",
                     nome=nome_do_marco,
                     opcoes={
                         "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "rounding/mode": MODOS_DE_ARREDONDAR,
                         "appealWindow/unit": UNIDADES_DO_PRAZO,
+                        **_opcoes_do_metodo(),
+                        # As Etapas que **este marco** enumera, e não as do Edital: uma Etapa de
+                        # fora seria critério de entrada que a norma do marco não declara.
+                        "drawMethod/qualifyingStageId": tuple(
+                            (
+                                str(identificador),
+                                next(
+                                    (
+                                        etapa.get("name", "")
+                                        for etapa in conteudo.get("stages") or []
+                                        if str(etapa.get("id")) == str(identificador)
+                                    ),
+                                    str(identificador),
+                                ),
+                            )
+                            for identificador in marco.get("stages") or []
+                        ),
                     },
                     rotulos_do_vazio={
                         # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
@@ -674,6 +776,17 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                         # Aqui o vazio **apaga a contagem declarada**, e uma janela sem unidade não
                         # é computável: o candidato leria um prazo que ninguém sabe contar.
                         "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
+                        "rounding/mode": "Não declarado — a publicação será impedida",
+                        # A Etapa de habilitação é o único campo do método em que o vazio é
+                        # legítimo: `null` significa "nenhuma", e é o caso dos quatro Editais da
+                        # amostra, em que a análise documental vem **depois** do sorteio (021).
+                        "drawMethod/qualifyingStageId": "Nenhuma — todos participam do sorteio",
+                        "drawMethod/algorithm": "Não declarado — o sorteio não terá como ser feito",
+                        "drawMethod/source": "Não declarada — a semente não terá origem",
+                        "drawMethod/normalization/rule": "Não declarada — a semente não se produz",
+                        "drawMethod/substitutionRule/rule": (
+                            "Não declarada — a publicação será impedida"
+                        ),
                     },
                 )
             )

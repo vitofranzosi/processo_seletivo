@@ -1310,11 +1310,34 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))
+    findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
     return findings
+
+
+def _perfis_bem_formados(snapshot: dict) -> list[dict]:
+    """Os Perfis que são objetos — os demais já têm achado próprio.
+
+    **A conferência de coerência não pode quebrar sobre conteúdo malformado**: o trabalho dela é
+    acusá-lo, e uma exceção aqui apagaria todos os achados seguintes, inclusive os que dizem *por
+    que* o conteúdo está malformado. Quem recusa `profiles` que não é lista, ou item que não é
+    objeto, é `_violacoes_da_colecao`, e a mensagem dele é a que a pessoa precisa ler.
+    """
+    profiles = snapshot.get("profiles")
+    if not isinstance(profiles, list):
+        return []
+    return [perfil for perfil in profiles if isinstance(perfil, dict)]
+
+
+def _marcos_bem_formados(perfil: dict) -> list[dict]:
+    """Idem, um nível abaixo."""
+    marcos = perfil.get("classificationMilestones")
+    if not isinstance(marcos, list):
+        return []
+    return [marco for marco in marcos if isinstance(marco, dict)]
 
 
 def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
@@ -1337,8 +1360,8 @@ def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
     )
 
     findings = []
-    for perfil in snapshot.get("profiles") or []:
-        for marco in perfil.get("classificationMilestones") or []:
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
             try:
                 _validar_janela_recursal(marco.get("appealWindow"))
             except ProfileValidationError as recusa:
@@ -1350,6 +1373,46 @@ def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
                         path=(
                             f"/profiles/id={perfil.get('id', '')}"
                             f"/classificationMilestones/id={marco.get('id', '')}/appealWindow"
+                        ),
+                    )
+                )
+    return findings
+
+
+def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
+    """O método declarado vale inteiro — **também depois de retificado** (026, US4).
+
+    Mesma lacuna da janela recursal, encontrada pelo mesmo caminho:
+    `validate_classification_milestones` cobra o método completo na **elaboração** do Perfil, e a
+    publicação nunca o conferia. Uma Retificação podia esvaziar a regra de substituição e publicar
+    — e no dia da indisponibilidade a escolha da ocorrência voltaria para a mesa, que é exatamente
+    o que a `021` proíbe.
+
+    **A regra não é reescrita aqui**: `_validar_metodo_de_sorteio` continua sendo a única, e ela
+    confere também o algoritmo, a fonte, as duas regras e a Etapa de habilitação contra o que este
+    sistema executa.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_metodo_de_sorteio,
+    )
+
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            try:
+                _validar_metodo_de_sorteio(
+                    marco.get("drawMethod"), etapas=marco.get("stages") or []
+                )
+            except ProfileValidationError as recusa:
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="draw_method_invalid",
+                        message=f"Marco {marco.get('code', '')}: {recusa}",
+                        path=(
+                            f"/profiles/id={perfil.get('id', '')}"
+                            f"/classificationMilestones/id={marco.get('id', '')}/drawMethod"
                         ),
                     )
                 )
