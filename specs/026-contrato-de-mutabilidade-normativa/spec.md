@@ -538,7 +538,7 @@ do marco nomeia o que não se corrige ali e por quê.
 ## 7. Out of Scope
 
 - **Implementar a retificabilidade de campo que o contrato NÃO classifica como retificável.** O
-  que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 70, e a matriz aprovada
+  que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 68, e a matriz aprovada
   fixou quais são. Os quatro canários provam o desenho; os seis campos que sobram têm fase própria,
   porque com a matriz escrita **não existe "resto" para campo R**.
 - **Dar forma, semântica ou destino a `classificationInformation` e `callInformation`.** A decisão

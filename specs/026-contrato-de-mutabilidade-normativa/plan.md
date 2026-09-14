@@ -133,7 +133,7 @@ razão normativa escrita; `rounding/scale`, `rounding/mode` e mais quatro passar
 A fase D do plano virou conferência (T018), e não investigação.
 
 **A fase J existe por consequência, e não por escolha.** Com a matriz aprovada, a FR-304 obriga
-tela para os 70 campos **R**; a tela oferece 49 e os canários acrescentam 15. Chamar os seis
+tela para os 68 campos **R**; a tela oferece 49 e os canários acrescentam 15. Chamar os quatro
 restantes de "backlog derivado" era possível antes de a matriz existir — depois dela, não: não há
 "resto" para campo **R**.
 
