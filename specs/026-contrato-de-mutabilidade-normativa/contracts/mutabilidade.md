@@ -79,10 +79,13 @@ derruba a suíte no mesmo commit que o acrescenta — e não no primeiro Edital 
 
 ### Onde a travessia para: objeto opaco
 
-Seis objetos do conteúdo publicado são `JSONField` livre, e o conjunto de folhas que carregam
-depende do Edital — `classificationInformation`, `callInformation`, os quatro de `normativeRule`
-(`calculation`, `rounding`, `distribution`, `callRules`), o `rounding` do marco e o `parameters` do
-critério de desempate. A tabela com os modelos está em [data-model.md](../data-model.md).
+**Seis** objetos do conteúdo publicado são opacos — `classificationInformation`, `callInformation`
+e os quatro de `normativeRule` (`calculation`, `rounding`, `distribution`, `callRules`). O critério
+**não é** ser `JSONField`: é **nada no sistema ler o conteúdo**. A tabela com os leitores está em
+[data-model.md](../data-model.md).
+
+O `rounding` do marco e o `parameters` do desempate são `JSONField` e **não** são opacos: a forma
+deles é conhecida e cobrada, e o cálculo depende dela. A travessia desce nos dois.
 
 **A travessia não desce neles, e o contrato classifica o objeto inteiro.** Descer produziria um
 guardião cujo domínio muda de Edital para Edital: o mesmo campo presente num e ausente noutro faria
@@ -90,8 +93,8 @@ a suíte alternar entre falhar por FR-301 e falhar por FR-302 conforme a fixture
 passaria a depender da amostra, e não da norma.
 
 A lista dos opacos é **declarada**, nunca inferida de o valor ser `dict`: `appealWindow`,
-`drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule` também são objetos, têm forma
-conhecida, e a travessia desce neles.
+`drawMethod`, `cutRule`, `vacancyReversion`, `normativeRule`, `rounding` e `parameters` também são
+objetos, têm forma conhecida, e a travessia desce em todos.
 
 ### O alcance do guardião em relação ao que já existe
 

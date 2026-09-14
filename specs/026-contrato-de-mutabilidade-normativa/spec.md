@@ -190,25 +190,6 @@ chamada de API.
 **A implementação campo a campo do resto não entra.** Os quatro canários são escolhidos por
 natureza distinta, e existem para obrigar o desenho a generalizar — não para esgotar a lista.
 
-### D-011 — A classificação vigente governa os atos futuros, e não é congelada por Publicação
-
-A natureza de um campo **não viaja com o Edital**. Ela é norma sobre o que se pode corrigir, e uma
-Retificação é ato praticado hoje, sob a norma de hoje.
-
-**A alternativa foi considerada e recusada.** Congelar a classificação em cada Publicação faria o
-contrato deixar de ser código e virar dado versionado — contra R-001 e contra a própria forma que
-D-001 escolheu —, obrigaria o guardião a guardar toda classificação histórica, e prenderia cada
-Edital à classificação do dia em que foi publicado. Que é exatamente o precedente do `callForm`
-outra vez: *"o primeiro Edital publicado com a forma declarada nasceria irretificável nela"*.
-
-**O que a decisão preserva**: o conteúdo publicado continua imutável, porque a Constituição já o
-torna — reclassificar não reescreve nada do que foi publicado. O que muda é o que um ato **novo**
-pode fazer.
-
-**O que ela deixa aberto, e a FR-315 fecha**: a direção retificável → não retificável retira
-capacidade de quem já publicou. Ela continua admissível — é decisão normativa como qualquer outra —
-mas precisa dizer, por escrito, que fecha um caminho que existia.
-
 ### D-010 — O quarto canário é o método do sorteio, e não a regra classificatória
 
 A decisão de origem — `doc/decisao-mutabilidade-normativa.md`, seção *Os quatro canários* — elege
@@ -231,6 +212,24 @@ que conduz o desenho, para exclusão que precisa de razão normativa ou de recla
 coleção de texto, objeto composto com valor fechado e objeto composto grande. **Valor fechado que
 muda a pontuação combinada** — que era o que `rounding` e `operation` traziam de distinto — deixa
 de ter jornada, e passa a depender só do reexame da FR-310.
+### D-011 — A classificação vigente governa os atos futuros, e não é congelada por Publicação
+
+A natureza de um campo **não viaja com o Edital**. Ela é norma sobre o que se pode corrigir, e uma
+Retificação é ato praticado hoje, sob a norma de hoje.
+
+**A alternativa foi considerada e recusada.** Congelar a classificação em cada Publicação faria o
+contrato deixar de ser código e virar dado versionado — contra R-001 e contra a própria forma que
+D-001 escolheu —, obrigaria o guardião a guardar toda classificação histórica, e prenderia cada
+Edital à classificação do dia em que foi publicado. Que é exatamente o precedente do `callForm`
+outra vez: *"o primeiro Edital publicado com a forma declarada nasceria irretificável nela"*.
+
+**O que a decisão preserva**: o conteúdo publicado continua imutável, porque a Constituição já o
+torna — reclassificar não reescreve nada do que foi publicado. O que muda é o que um ato **novo**
+pode fazer.
+
+**O que ela deixa aberto, e a FR-315 fecha**: a direção retificável → não retificável retira
+capacidade de quem já publicou. Ela continua admissível — é decisão normativa como qualquer outra —
+mas precisa dizer, por escrito, que fecha um caminho que existia.
 
 ---
 
@@ -407,7 +406,8 @@ do marco nomeia o que não se corrige ali e por quê.
 
 - **FR-297**: Todo campo da forma publicada de toda coleção normativa MUST ter exatamente uma
   natureza de mutabilidade declarada — retificável, não retificável, derivado, ou
-  identidade/estrutural.
+  identidade/estrutural. A grafia é essa nas quatro, em spec, matriz e código (`ESTRUTURAL` é
+  só o valor da enumeração).
 - **FR-298**: A declaração de natureza MUST viver em local único e autoritativo, e MUST ser lida
   pelo guardião e por quem monta a tela de Retificação — duas fontes divergiriam na primeira
   mudança.
@@ -454,7 +454,9 @@ do marco nomeia o que não se corrige ali e por quê.
 ### Key Entities
 
 - **Forma publicada**: nesta spec, a forma que o conteúdo canônico de um Edital publicado tem de
-  fato — a que a travessia encontra. Não é sinônimo de "declarada em `validation.py`": a declaração
+  fato — a que a travessia encontra. **São 123 campos**, medidos em `publish_edital.py` e
+  enumerados em [matriz.md](matriz.md). Os 81 a 98 que a auditoria contou são outra conta:
+  ocorrências num Edital concreto, e não a união do que pode aparecer. Não é sinônimo de "declarada em `validation.py`": a declaração
   cobre seis coleções entre doze, e a forma publicada é maior do que ela (FR-300, D-005).
 - **Campo publicado**: um campo escalar da forma publicada de uma coleção normativa. Tem nome, tipo
   e, a partir desta feature, natureza de mutabilidade e razão. Identificado pelo par

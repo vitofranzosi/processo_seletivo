@@ -120,19 +120,24 @@ cada um é decisão escrita, e não inferência por parecer técnico (D-008).
 
 ## Objeto opaco — onde a travessia para
 
-Nem todo objeto do conteúdo publicado tem forma conhecida. Seis deles são `JSONField` livre no
-modelo, e o conjunto de folhas que carregam **depende do Edital**:
+Nem todo objeto do conteúdo publicado tem forma conhecida. **Mas `JSONField` não é o critério** —
+oito objetos são `JSONField` livre no modelo, e só seis são de fato opacos. O critério é **quem lê**:
 
-| Caminho | Modelo |
-|---|---|
-| `profiles` / `classificationInformation` | `perfis.py:36` |
-| `profiles` / `callInformation` | `perfis.py:37` |
-| `competitionModalities` / `normativeRule/calculation` | `perfis.py:361` |
-| `competitionModalities` / `normativeRule/rounding` | `perfis.py:362` |
-| `competitionModalities` / `normativeRule/distribution` | `perfis.py:363` |
-| `competitionModalities` / `normativeRule/callRules` | `perfis.py:364` |
-| `classificationMilestones` / `rounding` | `perfis.py:261` |
-| `tiebreakers` / `parameters` | `perfis.py:341` |
+| Caminho | Modelo | Quem lê | Opaco? |
+|---|---|---|---|
+| `profiles` / `classificationInformation` | `perfis.py:36` | ninguém | **sim** |
+| `profiles` / `callInformation` | `perfis.py:37` | ninguém | **sim** |
+| `competitionModalities` / `normativeRule/calculation` | `perfis.py:361` | ninguém | **sim** |
+| `competitionModalities` / `normativeRule/rounding` | `perfis.py:362` | ninguém | **sim** |
+| `competitionModalities` / `normativeRule/distribution` | `perfis.py:363` | ninguém | **sim** |
+| `competitionModalities` / `normativeRule/callRules` | `perfis.py:364` | ninguém | **sim** |
+| `classificationMilestones` / `rounding` | `perfis.py:261` | `classificacao/domain/combinacao.py:63-86` valida `scale` e `mode` | **não** |
+| `tiebreakers` / `parameters` | `perfis.py:341` | `desempate.py:37`, `emissao.py:244`, `calculo.py:217` | **não** |
+
+Os dois últimos têm forma conhecida e cobrada, e a máquina calcula com ela. Tratá-los como opacos
+seria classificar **por onde o dado está guardado**, que é razão técnica — e é exatamente o que a
+D-002 proíbe. A travessia desce neles: `rounding/scale`, `rounding/mode`, `parameters/stageId`,
+`parameters/factId`.
 
 Descer dentro deles quebraria o guardião de um jeito silencioso e pior do que a omissão que ele
 existe para fechar: o mesmo campo estaria presente num Edital e ausente noutro, e o guardião
@@ -140,18 +145,15 @@ alternaria entre falhar por FR-301 e falhar por FR-302 conforme o Edital que a f
 A classificação dependeria da amostra, e não da norma.
 
 **Regra**: a travessia **não desce** em objeto declarado opaco, e o contrato classifica **o objeto
-inteiro** como um campo — `("classificationMilestones", "rounding")`, e não `rounding/mode` e
-`rounding/scale`.
+inteiro** como um campo — `("profiles", "classificationInformation")`.
 
-A lista dos opacos é declarada nominalmente no contrato, e não inferida de o valor ser um `dict`:
-`appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule` **também** são
-objetos, têm forma conhecida, e a travessia desce neles. Inferir por tipo confundiria os dois
-grupos exatamente ao contrário do que importa.
+**São seis, e a lista é declarada nominalmente**, nunca inferida de o valor ser um `dict`:
+`appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion`, `normativeRule`, `rounding` do marco e
+`parameters` do desempate **também** são objetos, têm forma conhecida, e a travessia desce em todos.
 
-**Consequência para a US6 e para a FR-310**: `rounding` classificado como um objeto só significa
-que ele se corrige — ou não — inteiro. Retificar `rounding/scale` sem tocar em `rounding/mode`
-passa a ser impossível por construção, e isso precisa ser uma decisão escrita, não um efeito
-colateral da travessia.
+**O teste que impede a regra de crescer sozinha**: declarar um objeto como opaco é decisão escrita,
+e um objeto novo só entra na lista com justificativa de que **nada no sistema o lê**. Um `grep` que
+encontre leitor para um opaco declarado é o sinal de que a declaração envelheceu.
 
 ---
 

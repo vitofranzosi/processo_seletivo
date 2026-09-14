@@ -13,8 +13,10 @@ description: "Tarefas de implementação — contrato de mutabilidade normativa"
 
 > ## ✅ Gate: matriz aprovada em 2026-09-13
 >
-> [matriz.md](matriz.md) foi aprovada como proposta — 121 entradas, as 30 linhas ⚠️ e as 5 políticas
-> de objeto ausente, sem emenda. Ela é **norma**, e as tarefas da fase 3 a **transcrevem**.
+> [matriz.md](matriz.md) foi aprovada como proposta e **emendada no mesmo dia** pelo
+> `$speckit-analyze`, que encontrou 18 razões técnicas e duas classificações erradas. São
+> **123 entradas**, 27 linhas ⚠️ e 5 políticas de objeto ausente. Ela é **norma**, e as tarefas da
+> fase 3 a **transcrevem**.
 >
 > Divergir dela durante a implementação não é ajuste: é decisão nova, e volta para o usuário.
 > Natureza, razão e política de ausência afetam direitos, e não são decisão de quem implementa.
@@ -77,15 +79,20 @@ novo, **nenhuma migration**.
   publicado, descer por listas de entidades e objetos aninhados até o campo escalar, devolvendo
   pares `(coleção, caminho relativo)`. **Chave por caminho relativo**, e nunca pelo último segmento:
   `drawMethod/normalization/rule` e `drawMethod/substitutionRule/rule` colidiriam, e o contrato não
-  representaria os dez campos do próprio canário 4.
+  representaria os dez campos do próprio canário 4. Toda entrada do contrato nasce desta chave
+  (FR-297).
 - [ ] T006 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra do **objeto opaco**:
-  a travessia **não desce** nos oito objetos de forma livre listados em
-  [data-model.md](data-model.md) — `classificationInformation`, `callInformation`, os quatro de
-  `normativeRule`, o `rounding` do marco e o `parameters` do critério —, e o contrato classifica
-  cada um **inteiro**. A lista é declarada nominalmente, nunca inferida de o valor ser `dict`:
-  `appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule` também são objetos,
-  têm forma conhecida, e a travessia desce neles. Sem esta regra, o domínio do guardião mudaria de
-  Edital para Edital, e a suíte alternaria entre falhar por FR-301 e por FR-302 conforme a fixture.
+  a travessia **não desce** nos **seis** objetos listados em [data-model.md](data-model.md) —
+  `classificationInformation`, `callInformation` e os quatro de `normativeRule` —, e o contrato
+  classifica cada um **inteiro**. Sem esta regra, o domínio do guardião mudaria de Edital para
+  Edital, e a suíte alternaria entre falhar por FR-301 e por FR-302 conforme a fixture.
+
+  **O critério é quem lê, e não ser `JSONField`.** `rounding` do marco e `parameters` do desempate
+  são `JSONField` e **não** são opacos: `classificacao/domain/combinacao.py:63-86` valida `scale` e
+  `mode`, e `classificacao/domain/desempate.py:37` lê `stageId`/`factId`. A travessia desce nos
+  dois, como desce em `appealWindow`, `drawMethod`, `cutRule`, `vacancyReversion` e `normativeRule`.
+  Tratá-los como opacos seria classificar por onde o dado está guardado — razão técnica, que a
+  D-002 proíbe.
 - [ ] T007 Implementar em `backend/tests/contract/test_mutabilidade.py` a regra da **união**: o
   domínio de uma coleção é a união das chaves dos seus itens, e nunca a interseção. `sections` é o
   caso concreto — `content` e `source` são mutuamente exclusivos, e exigir que todo item carregue
@@ -147,75 +154,83 @@ matriz é erro de transcrição, e não escolha de implementação.
 
 Neste ponto os três falham, porque o contrato está vazio. É a falha esperada.
 
+### As razões que a matriz já escreve
+
+- [ ] T018 [US5] **Conferir**, antes de transcrever, que nenhuma razão de
+  [matriz.md](matriz.md) se funda em limitação de implementação (FR-310, D-002, SC-101). O
+  `$speckit-analyze` de 2026-09-13 reescreveu as 18 que se fundavam, e a emenda está registrada na
+  seção *O que a revisão mudou*. Esta tarefa é a conferência de que nenhuma voltou — não é reabrir
+  a decisão. Razão nova que precise ser escrita aqui é sinal de campo novo, e volta ao usuário.
+
 ### Transcrição da matriz
 
-- [ ] T018 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+- [ ] T019 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
   seções 1, 8, 9, 10, 11 e 12 da [matriz.md](matriz.md) — raiz, `schedule`, `stages`, `sections`,
   `attachments`, `documentRequirements`. 53 entradas.
-- [ ] T019 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+- [ ] T020 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
   seções 2, 3, 4 e 5 da [matriz.md](matriz.md) — `profiles`, `competitionModalities`,
   `vacancyTable`, `declaredFacts`. 37 entradas.
-- [ ] T020 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
-  seções 6 e 7 da [matriz.md](matriz.md) — `classificationMilestones` e `tiebreakers`. 31 entradas,
+- [ ] T021 [US5] Transcrever para `backend/processo_seletivo/editais/domain/mutabilidade.py` as
+  seções 6 e 7 da [matriz.md](matriz.md) — `classificationMilestones` e `tiebreakers`. 33 entradas,
   e é onde moram dez dos vinte e três campos sem decisão do Edital 26/2026.
-- [ ] T021 [US5] Transcrever a **política de objeto ausente** da [matriz.md](matriz.md) para
+- [ ] T022 [US5] Transcrever a **política de objeto ausente** da [matriz.md](matriz.md) para
   `backend/processo_seletivo/editais/domain/mutabilidade.py` (FR-313): cinco objetos, cada um com a
   decisão de se a declaração pode passar a existir por Retificação.
-- [ ] T022 [US5] Conferir que **nenhuma razão transcrita é técnica** (FR-310). A matriz já marcou
-  as candidatas: as linhas ⚠️ com natureza **N** são justamente as que hoje têm exclusão por razão
-  técnica em `backend/processo_seletivo/interface/retificacao.py` — `stages` e `operation` (linha
-  104), `targetKind`, `governedStage` e `continuation` (linha 117), `whenMissing`, `reserveType` e o
-  arredondamento. Razão que descreva limitação de implementação reprova: ela deixa de valer quando
-  a limitação some, e ninguém percebe.
+- [ ] T023 [US5] Declarar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a lista dos
+  **seis objetos opacos** — `classificationInformation`, `callInformation` e os quatro de
+  `normativeRule` —, nominalmente e com a justificativa de que **nada no sistema os lê**.
+  `rounding` do marco e `parameters` do desempate **não** entram: a forma deles é conhecida e o
+  cálculo depende dela, e tratá-los como opacos seria classificar por onde o dado está guardado.
 
 ### Absorção do guardião antigo
 
-- [ ] T023 [US5] Absorver `NAO_SAO_NORMA` de `backend/tests/contract/test_retificacoes_api.py:89`
+- [ ] T024 [US5] Absorver `NAO_SAO_NORMA` de `backend/tests/contract/test_retificacoes_api.py:89`
   no contrato. `id` e `order` viram `ESTRUTURAL`; `scheduleEventId` recebe a razão escrita que a
   matriz propõe — hoje ele é exclusão **sem razão nenhuma**. O literal local deixa de existir.
-- [ ] T024 [US5] Reescrever `test_a_retificacao_alcanca_todo_campo_normativo_da_etapa` em
+- [ ] T025 [US5] Reescrever `test_a_retificacao_alcanca_todo_campo_normativo_da_etapa` em
   `backend/tests/contract/test_retificacoes_api.py` para ler o contrato em vez de `NAO_SAO_NORMA`.
   Ele cobre uma coleção entre doze e continua valendo — o guardião novo o generaliza.
 
 ### Fechamento
 
-- [ ] T025 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste do Independent
+- [ ] T026 [US5] Escrever em `backend/tests/contract/test_mutabilidade.py` o teste do Independent
   Test: com um campo experimental no conteúdo publicado e sem entrada no contrato, o guardião falha
   com mensagem que **cita o nome do campo** (SC-096). O teste afirma sobre a mensagem, e não só
   sobre o fato de falhar.
-- [ ] T026 [US5] Rodar `cd backend && make lint check test-pg` e confirmar **zero campos sem
-  natureza** (SC-095).
+- [ ] T027 [US5] Rodar `cd backend && make lint check test-pg` e confirmar **zero campos sem
+  natureza** (SC-095, FR-297).
 
 **Checkpoint**: o contrato existe e o guardião o guarda. É o MVP técnico — mas **não conclui a
 spec**: o princípio VI exige jornada pelo canal do ator.
 
 ---
 
-## Phase 4: FR-298 e FR-314 — a interface passa a ler o contrato
+## Phase 4: Foundational II — a interface passa a ler o contrato (FR-298, FR-304, FR-314)
 
-**Purpose**: fechar os dois requisitos que o desenho prometia e as histórias não entregavam
-sozinhas. Precede as jornadas porque é a infraestrutura comum que todas usam — e é o que torna a
-execução sequencial defensável em vez de conflituosa.
+**Purpose**: fechar os requisitos que o desenho prometia e as histórias não entregavam sozinhas.
+É fase **foundational**, e não de história — as tarefas não levam rótulo por isso. Vem depois da
+US5 porque depende do contrato existir, e antes das jornadas porque é a infraestrutura comum que
+todas usam. É o que torna a execução sequencial defensável em vez de conflituosa.
 
-- [ ] T027 Escrever em `backend/tests/interface/test_campos_vem_do_contrato.py` o teste de FR-298:
-  todo campo `RETIFICAVEL` do `CONTRATO` é oferecido pela tela de Retificação, e todo campo
-  oferecido tem entrada no contrato. Falha nos dois sentidos.
-- [ ] T028 Inverter a autoridade em `backend/processo_seletivo/interface/retificacao.py`: a
+- [ ] T028 Escrever em `backend/tests/interface/test_campos_vem_do_contrato.py` o teste de FR-298:
+  todo campo `RETIFICAVEL` do `CONTRATO` é oferecido pela tela de Retificação (FR-304), e todo campo
+  oferecido tem entrada no contrato (FR-298). Falha nos dois sentidos.
+- [ ] T029 Inverter a autoridade em `backend/processo_seletivo/interface/retificacao.py`: a
   montagem dos grupos passa a **derivar do `CONTRATO`** quais campos existem, e as tuplas `CAMPOS_*`
   passam a ser **apresentação** — rótulo, tipo de controle, opções — indexadas por
   `(coleção, caminho)`. Hoje a lista é a fonte, e um campo retificável que ninguém acrescentou
   simplesmente não existe para a tela, sem que nada acuse.
-- [ ] T029 Fazer `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py:427`
+- [ ] T030 Fazer `campos_editaveis` em `backend/processo_seletivo/interface/retificacao.py:427`
   falhar alto quando um campo `RETIFICAVEL` do contrato não tem apresentação declarada. Silêncio
   aqui reabriria o defeito pelo outro lado.
-- [ ] T030 Escrever em `backend/processo_seletivo/editais/domain/mutabilidade.py` o comentário de
+- [ ] T031 Escrever em `backend/processo_seletivo/editais/domain/mutabilidade.py` o comentário de
   topo que registra a D-011: **a classificação vigente governa os atos futuros**, inclusive sobre
   Edital publicado antes dela. Reclassificar não reescreve conteúdo publicado — a Constituição já o
   torna imutável —; muda o que um ato novo pode fazer.
-- [ ] T031 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de FR-314: retificar um
+- [ ] T032 Escrever em `backend/tests/contract/test_mutabilidade.py` o teste de FR-314: retificar um
   Edital publicado **antes** de uma reclassificação segue a classificação **vigente**, e o conteúdo
   já publicado permanece byte a byte o mesmo.
-- [ ] T032 Implementar a exigência da FR-315 em
+- [ ] T033 Implementar a exigência da FR-315 em
   `backend/processo_seletivo/editais/domain/mutabilidade.py`: reclassificar de retificável para não
   retificável exige, além da razão normativa, o registro de que um caminho de correção foi fechado.
   É a única direção que retira capacidade de quem já publicou.
@@ -225,35 +240,35 @@ acrescentar campo — e é por isso que elas deixam de disputar o mesmo arquivo 
 
 ---
 
-## Phase 5: User Story 1 — Corrigir o local de uma prova publicada (P1)
+## Phase 5: User Story 1 — Corrigir o local de uma prova publicada (P1) — FR-305
 
 **Goal**: o local de um Evento publicado se corrige pela tela.
 
 **Independent Test**: publicar um Edital com local declarado, retificá-lo pela interface, e
 verificar o Cronograma público e a versão anterior.
 
-- [ ] T033 [US1] Escrever em
+- [ ] T034 [US1] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_do_local.py` o teste que falha: Retificação
   que altera o local de um Evento publicado vigora, e a versão consolidada anterior continua
   legível com o local antigo.
-- [ ] T034 [US1] Escrever em `backend/tests/interface/test_retificar_cronograma.py` o teste que
+- [ ] T035 [US1] Escrever em `backend/tests/interface/test_retificar_cronograma.py` o teste que
   falha: a tela oferece o campo, a conferência o exibe **em português** ("Local"), e a publicação
   vigora com o valor novo (SC-097). `backend/processo_seletivo/publicacoes/domain/alteracoes.py:63`
   já traduz `location` — conferir que o caminho de conferência passa por ali.
-- [ ] T035 [US1] Declarar `location` em `EVENTO_PUBLICADO`, em
+- [ ] T036 [US1] Declarar `location` em `EVENTO_PUBLICADO`, em
   `backend/processo_seletivo/editais/domain/validation.py`. **O campo é emitido por
   `backend/processo_seletivo/publicacoes/application/publish_edital.py:261` e não está declarado.**
   Nulabilidade: `backend/processo_seletivo/editais/models/cronograma.py:50` o define como
   `CharField(blank=True, default="")` e `backend/processo_seletivo/shared/canonical.py:97` registra
   que vazio significa "não declarado" — logo `Campo("location", str)` sem `admite_nulo`, como
   `duties` e `workload`.
-- [ ] T036 [US1] Acrescentar a apresentação de `("schedule", "location")` em
+- [ ] T037 [US1] Acrescentar a apresentação de `("schedule", "location")` em
   `backend/processo_seletivo/interface/retificacao.py:80` — rótulo "Local", tipo `TEXTO`.
-- [ ] T037 [US1] Registrar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
+- [ ] T038 [US1] Registrar em `backend/processo_seletivo/editais/domain/mutabilidade.py` a
   conclusão do segundo cenário de aceitação: com `location` sempre presente como `""`, informar um
   local onde não havia é **alteração de valor**, e não acréscimo de campo. Comentário na entrada
   `("schedule", "location")`.
-- [ ] T038 [US1] Percorrer a jornada 1 do [quickstart.md](quickstart.md) pelo navegador, com o
+- [ ] T039 [US1] Percorrer a jornada 1 do [quickstart.md](quickstart.md) pelo navegador, com o
   servidor da entrada `mutabilidade-026`. Teste verde sobre objeto falso não é jornada — foi o que
   deixou passar o `AttributeError` do PR #113.
 
@@ -262,83 +277,82 @@ spec já é concluível a partir daqui** pelo princípio VI.
 
 ---
 
-## Phase 6: User Story 2 — Corrigir um requisito de participação publicado (P1)
+## Phase 6: User Story 2 — Corrigir um requisito de participação publicado (P1) — FR-306
 
 **Goal**: a lista de requisitos de um Perfil publicado se corrige pela tela.
 
-- [ ] T039 [US2] Decidir e registrar em
-  `backend/processo_seletivo/editais/domain/mutabilidade.py` **como** `requirements` se retifica:
-  substituição da lista inteira ou endereçamento de item. Item de lista de texto não tem identidade
-  estável, e "o terceiro requisito" não é endereçar — é contar. **A decisão muda o que o ato
-  registra e precisa estar escrita antes do código**; se ela não estiver na matriz aprovada, é
-  pergunta para o usuário, e não escolha de quem implementa.
-- [ ] T040 [US2] Escrever em `backend/tests/interface/test_retificar_requisitos.py` o teste que
+- [ ] T040 [US2] Transcrever a decisão de **como** `requirements` se retifica, registrada na
+  [matriz.md](matriz.md) §2, para `backend/processo_seletivo/editais/domain/mutabilidade.py`:
+  **a lista inteira é a unidade endereçável**. Item de lista de texto não tem identidade estável, e
+  "o terceiro requisito" não é endereçar — é contar; um ato que diz "onde se lê, leia-se" precisa
+  nomear o que substitui. Não é escolha de quem implementa.
+- [ ] T041 [US2] Escrever em `backend/tests/interface/test_retificar_requisitos.py` o teste que
   falha: a tela oferece a correção, e a conferência **nomeia o Perfil e o requisito alterado, sem
   caminho normativo em primeiro plano**.
-- [ ] T041 [US2] Escrever em
+- [ ] T042 [US2] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_dos_requisitos.py` o teste que falha: a
   página pública exibe a lista corrigida e o comprovante da inscrição anterior continua apontando a
   versão aceita (SC-098).
-- [ ] T042 [US2] Implementar a apresentação de `("profiles", "requirements")` em
-  `backend/processo_seletivo/interface/retificacao.py`, conforme T039. `CAMPOS_PERFIL` (linha 51)
+- [ ] T043 [US2] Implementar a apresentação de `("profiles", "requirements")` em
+  `backend/processo_seletivo/interface/retificacao.py`, conforme T040. `CAMPOS_PERFIL` (linha 51)
   hospeda escalares; uma coleção de texto precisa de tratamento próprio — o mecanismo de `LISTA`
   (linha 212) é o precedente mais próximo.
-- [ ] T043 [US2] Renderizar o campo em
+- [ ] T044 [US2] Renderizar o campo em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_perfil.html`.
-- [ ] T044 [US2] Percorrer a jornada 2 do [quickstart.md](quickstart.md) pelo navegador.
+- [ ] T045 [US2] Percorrer a jornada 2 do [quickstart.md](quickstart.md) pelo navegador.
 
 ---
 
-## Phase 7: User Story 3 — Corrigir o prazo recursal publicado (P1)
+## Phase 7: User Story 3 — Corrigir o prazo recursal publicado (P1) — FR-307, FR-311
 
 **Goal**: a janela recursal declarada no marco se corrige pela tela, com a unidade como escolha.
 
-- [ ] T045 [US3] Escrever em
+- [ ] T046 [US3] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_da_janela_recursal.py` o teste de fronteira
   que falha: a janela nova vale para o que vier, e **a janela gravada num recurso já interposto
   permanece intacta**.
-- [ ] T046 [US3] Escrever em `backend/tests/interface/test_retificar_janela_recursal.py` o teste
+- [ ] T047 [US3] Escrever em `backend/tests/interface/test_retificar_janela_recursal.py` o teste
   que falha: unidade que o cálculo não interpreta é recusada **com a razão**, e não gravada; e
   marco que não admite recurso não aceita duração.
-- [ ] T047 [US3] Escrever em `backend/tests/portal/test_prazo_recursal_retificado.py` o teste que
+- [ ] T048 [US3] Escrever em `backend/tests/portal/test_prazo_recursal_retificado.py` o teste que
   falha: depois da vigência, o candidato lê a data-limite recalculada a partir da divulgação do
   resultado (SC-099).
-- [ ] T048 [US3] Acrescentar a apresentação dos três campos em
+- [ ] T049 [US3] Acrescentar a apresentação dos três campos em
   `backend/processo_seletivo/interface/retificacao.py`: `appealWindow/admits` (`BOOLEANO`),
   `appealWindow/durationDays` (`INTEIRO`) e `appealWindow/unit` — este **como escolha**, nunca como
   texto livre (FR-311). A lista fechada tem um valor só, `DIAS_CORRIDOS`, e
   `backend/processo_seletivo/editais/domain/perfis.py:475` diz por quê.
-- [ ] T049 [US3] Fazer a Retificação recusar a contradição reusando `_validar_janela_recursal` em
+- [ ] T050 [US3] Fazer a Retificação recusar a contradição reusando `_validar_janela_recursal` em
   `backend/processo_seletivo/editais/domain/perfis.py:460` — e não reescrevendo a regra na
   interface.
-- [ ] T050 [US3] Renderizar o bloco da janela em
+- [ ] T051 [US3] Renderizar o bloco da janela em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_marco.html` (novo, se ainda
   não existir).
-- [ ] T051 [US3] Percorrer a jornada 3 do [quickstart.md](quickstart.md) pelo navegador, incluindo
+- [ ] T052 [US3] Percorrer a jornada 3 do [quickstart.md](quickstart.md) pelo navegador, incluindo
   a tela de recurso do candidato — que exige `PORTAL_IDENTIDADE_DEMO=true`.
 
 ---
 
-## Phase 8: User Story 6 — A tela diz o que não alcança (P2)
+## Phase 8: User Story 6 — A tela diz o que não alcança (P2) — FR-312
 
 **Goal**: ausência deliberada deixa de parecer defeito.
 
-- [ ] T052 [US6] Escrever em `backend/tests/interface/test_retificar_exclusoes.py` o teste que
+- [ ] T053 [US6] Escrever em `backend/tests/interface/test_retificar_exclusoes.py` o teste que
   falha: o bloco do marco declara quais campos não se corrigem ali e a razão normativa de cada um
   (SC-102), e a mesma razão não aparece duas vezes no mesmo bloco.
-- [ ] T053 [US6] Expor em `backend/processo_seletivo/interface/retificacao.py` a leitura das
+- [ ] T054 [US6] Expor em `backend/processo_seletivo/interface/retificacao.py` a leitura das
   exclusões de uma coleção: os campos `NAO_RETIFICAVEL` com as respectivas razões, vindas de
   `backend/processo_seletivo/editais/domain/mutabilidade.py`.
-- [ ] T054 [US6] Renderizar a declaração **uma vez por bloco de coleção**, e não sob cada campo, em
+- [ ] T055 [US6] Renderizar a declaração **uma vez por bloco de coleção**, e não sob cada campo, em
   `backend/processo_seletivo/interface/templates/interface/retificar.html`. Explicação que não muda
   de um cartão para o outro não se imprime uma vez por cartão — é a decisão que
   `backend/tests/interface/test_medida_dos_campos.py` guarda no assistente, e que reprovou a
   primeira tentativa no PR #113.
-- [ ] T055 [US6] Percorrer a verificação 3 do [quickstart.md](quickstart.md) pelo navegador.
+- [ ] T056 [US6] Percorrer a verificação 3 do [quickstart.md](quickstart.md) pelo navegador.
 
 ---
 
-## Phase 9: User Story 4 — Corrigir o método do sorteio publicado (P2)
+## Phase 9: User Story 4 — Corrigir o método do sorteio publicado (P2) — FR-308, FR-309
 
 **Goal**: os dez campos do método se corrigem pela tela, e a relação congelada não é alcançada.
 
@@ -347,57 +361,57 @@ spec já é concluível a partir daqui** pelo princípio VI.
 e é o que mantém a história aqui: dez campos com interdependência, e o desenho precisava dos três
 primeiros canários antes deles.
 
-- [ ] T056 [US4] Escrever em
+- [ ] T057 [US4] Escrever em
   `backend/tests/integration/editais/test_mutabilidade_do_metodo_de_sorteio.py` o teste de fronteira
   que falha: Retificação sobre método **não** alcança relação congelada nem sorteio realizado
   (FR-309, SC-100). A garantia já é estrutural — `backend/processo_seletivo/sorteios/models.py:48`
   grava `metodo_hash` no congelamento e `models.py:213` o copia e confere no `Sorteio`. **O teste
   declara a fronteira; ele não a constrói.**
-- [ ] T057 [US4] Escrever em `backend/tests/interface/test_retificar_metodo_de_sorteio.py` o teste
+- [ ] T058 [US4] Escrever em `backend/tests/interface/test_retificar_metodo_de_sorteio.py` o teste
   que falha: os dez campos são oferecidos, e a conferência exibe cada um em português.
-- [ ] T058 [US4] Acrescentar a apresentação dos cinco escalares em
+- [ ] T059 [US4] Acrescentar a apresentação dos cinco escalares em
   `backend/processo_seletivo/interface/retificacao.py`: `drawMethod/algorithm`, `/source`,
   `/occurrence`, `/occurrenceAt` (`INSTANTE`) e `/derivation`.
-- [ ] T059 [US4] Acrescentar `drawMethod/qualifyingStageId` como `REFERENCIA` em
+- [ ] T060 [US4] Acrescentar `drawMethod/qualifyingStageId` como `REFERENCIA` em
   `backend/processo_seletivo/interface/retificacao.py` — é identidade de Etapa do próprio marco, e
   UUID digitado à mão mudaria em silêncio qual Etapa habilita.
-- [ ] T060 [US4] Acrescentar os dois pares aninhados em
+- [ ] T061 [US4] Acrescentar os dois pares aninhados em
   `backend/processo_seletivo/interface/retificacao.py`: `drawMethod/normalization/rule` e `/text`,
   `drawMethod/substitutionRule/rule` e `/text`. `rule` é o identificador que a máquina aplica e o
   terceiro reimplementa; `text` é a frase que a pessoa lê — e
   `backend/processo_seletivo/editais/domain/perfis.py:283` cobra as duas chaves de cada um. Com
-  T058 e T059, fecham os dez.
-- [ ] T061 [US4] Fazer a Retificação recusar método declarado pela metade, reusando
+  T059 e T060, fecham os dez.
+- [ ] T062 [US4] Fazer a Retificação recusar método declarado pela metade, reusando
   `_validar_metodo_de_sorteio` em `backend/processo_seletivo/editais/domain/perfis.py:258` —
   inclusive `_validar_algoritmo_publicado`, `_validar_fonte_publicada` e `_validar_regra_publicada`.
-- [ ] T062 [US4] Renderizar o bloco do método em
+- [ ] T063 [US4] Renderizar o bloco do método em
   `backend/processo_seletivo/interface/templates/interface/_retificacao_marco.html`.
-- [ ] T063 [US4] Verificar que a tela do sorteio deixou de contradizer-se: ela manda retificar o
+- [ ] T064 [US4] Verificar que a tela do sorteio deixou de contradizer-se: ela manda retificar o
   método, e agora a Retificação o oferece. Localizar o texto em
   `backend/processo_seletivo/interface/templates/interface/` e ajustá-lo se continuar apontando
   para caminho que não existe.
-- [ ] T064 [US4] Percorrer a jornada 4 do [quickstart.md](quickstart.md) pelo navegador, incluindo
+- [ ] T065 [US4] Percorrer a jornada 4 do [quickstart.md](quickstart.md) pelo navegador, incluindo
   a verificação pública de um sorteio já realizado sob o método anterior.
 
 ---
 
 ## Phase 10: Polish & Cross-Cutting
 
-- [ ] T065 [P] Revisar as razões de
+- [ ] T066 [P] Revisar as razões de
   `backend/processo_seletivo/editais/domain/mutabilidade.py` contra a amostra real de Editais
   (`~/Downloads`, com `pdftotext -layout`): campo que nenhum Edital da amostra jamais corrigiu é
   candidato legítimo a "não retificável"; campo que a amostra corrige e o contrato exclui é erro de
   classificação.
-- [ ] T066 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
+- [ ] T067 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
   verificado por teste, com o caminho do guardião — e que o quarto canário foi trocado, conforme
   D-010.
-- [ ] T067 [P] Registrar como limite conhecido, em comentário no topo de
+- [ ] T068 [P] Registrar como limite conhecido, em comentário no topo de
   `backend/processo_seletivo/editais/domain/mutabilidade.py`, que a **forma** das seis coleções
   aninhadas continua não declarada em `backend/processo_seletivo/editais/domain/validation.py`
   (015, T-009), e que a enumeração não depende dela (FR-300).
-- [ ] T068 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
+- [ ] T069 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
   **e** `ruff format --check` —, e `test-pg` e não `test`.
-- [ ] T069 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
+- [ ] T070 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
   varredura derruba o CI quando uma citação aponta identificador que nenhuma spec define.
 
 ---
@@ -407,15 +421,15 @@ primeiros canários antes deles.
 ```text
 ⛔ matriz.md aprovada
    └─> Setup (T001–T004)
-          └─> Foundational (T005–T014)
-                 └─> US5 (T015–T026)       ← MVP técnico
-                        └─> FR-298/314 (T027–T032)   ← a tela passa a ler o contrato
-                               └─> US1 (T033–T038)   ← conclui a spec pelo princípio VI
-                                      └─> US2 (T039–T044)
-                                             └─> US3 (T045–T051)
-                                                    └─> US6 (T052–T055)
-                                                           └─> US4 (T056–T064)
-                                                                  └─> Polish (T065–T069)
+          └─> Foundational I  (T005–T014)   travessia + módulo
+                 └─> US5 (T015–T027)        ← MVP técnico: o contrato e o guardião
+                        └─> Foundational II (T028–T033)  ← a tela passa a ler o contrato
+                               └─> US1 (T034–T039)   ← conclui a spec pelo princípio VI
+                                      └─> US2 (T040–T045)
+                                             └─> US3 (T046–T052)
+                                                    └─> US6 (T053–T056)
+                                                           └─> US4 (T057–T065)
+                                                                  └─> Polish (T066–T070)
 ```
 
 **As histórias não são paralelizáveis, e a afirmação contrária na versão anterior deste arquivo
@@ -444,18 +458,19 @@ Pouca, e declarada honestamente:
 - **Fase 1**: T004 em paralelo com T001–T003.
 - **Fase 2**: T011–T013 (`mutabilidade.py`) em paralelo com T005–T010
   (`test_mutabilidade.py`) — arquivos distintos. T014 depois de T012.
-- **Fase 3**: T018, T019 e T020 tocam o mesmo arquivo e **não** paralelizam.
-- **Fase 10**: T065, T066 e T067 em paralelo.
+- **Fase 3**: T019 a T023 tocam o mesmo arquivo e **não** paralelizam. T018 as precede: é a
+  conferência de que nenhuma razão da matriz voltou a ser técnica.
+- **Fase 10**: T066, T067 e T068 em paralelo.
 
 Quando houver mais de uma sessão, **`DB_NAME` próprio em cada uma** — suítes paralelas disputam
 `test_processo_seletivo` e se derrubam com erros que não têm nada a ver com a feature.
 
 ## Implementation Strategy
 
-**MVP técnico**: fases 1 a 3 (T001–T026). O contrato existe e o guardião falha por omissão. É o que
+**MVP técnico**: fases 1 a 3 (T001–T027). O contrato existe e o guardião falha por omissão. É o que
 a spec estrutural de vagas precisa que exista antes de começar.
 
-**MVP entregável**: mais as fases 4 e 5 (T027–T038). O princípio VI é explícito: capacidade que
+**MVP entregável**: mais as fases 4 e 5 (T028–T039). O princípio VI é explícito: capacidade que
 nenhuma interface alcança não é entregue. A US1 é a jornada mais barata que fecha a exigência — e o
 campo dela, `location`, é o achado que a própria feature descobriu no seu canário mais simples.
 
