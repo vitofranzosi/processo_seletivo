@@ -48,8 +48,13 @@ exclusiva: todo campo publicado tem exatamente uma.
 | **Derivado** | muda como consequência de outro campo | não aparece na tela, e não precisa de razão própria |
 | **Identidade / estrutural** | não pertence ao objeto de Retificação | idem |
 
-**Transição**: reclassificar é decisão nova e escrita. Não alcança Edital publicado sob a
-classificação anterior (FR-314). Não há estado intermediário: um campo nunca está "em revisão".
+**Transição**: reclassificar é decisão nova e escrita, e passa a valer para os **atos futuros** —
+inclusive sobre Edital publicado antes dela (FR-314, D-011). O que ela nunca altera é o conteúdo
+publicado, que a Constituição já torna imutável. Não há estado intermediário: um campo nunca está
+"em revisão".
+
+A direção **retificável → não retificável** é a única que retira capacidade de quem já publicou, e
+por isso carrega marca própria no contrato (FR-315).
 
 ---
 
@@ -73,7 +78,7 @@ O conjunto das classificações. Fonte única, lida pelo guardião e pela interf
 
 ```text
 mutabilidade.py
-└── CONTRATO: { (coleção, campo) → (natureza, razão) }
+└── CONTRATO: { (coleção, caminho relativo) → (natureza, razão, fechou_caminho) }
 ```
 
 **Invariante**: o domínio do contrato é exatamente o conjunto de campos que a travessia do snapshot

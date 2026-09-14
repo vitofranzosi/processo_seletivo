@@ -40,7 +40,7 @@ comparável ao teste de coleções-raiz que já existe. Nenhuma consulta por cam
 atos futuros e não é congelada por Publicação (FR-314, D-011); a razão de exclusão não pode
 repetir-se por entidade na tela (R-006).
 
-**Scale/Scope**: **121 entradas de contrato** — a forma, que é a união de tudo o que pode aparecer,
+**Scale/Scope**: **123 entradas de contrato** — a forma, que é a união de tudo o que pode aparecer,
 medida em `publish_edital.py`. Os 81 a 98 da auditoria são ocorrências num Edital concreto, que é
 outra conta. 12 coleções normativas — 6 na raiz e 6 aninhadas. Quatro jornadas de correção.
 
@@ -86,7 +86,7 @@ specs/026-contrato-de-mutabilidade-normativa/
 ```text
 backend/processo_seletivo/
 ├── editais/domain/
-│   ├── validation.py          # forma publicada (existe) — não muda
+│   ├── validation.py          # forma publicada (existe) — ganha só `location` (T036)
 │   └── mutabilidade.py        # NOVO: natureza e razão de cada campo publicado
 ├── interface/
 │   ├── retificacao.py         # passa a LER o contrato em vez de manter CAMPOS_* como fonte
@@ -115,7 +115,7 @@ A ordem sai da spec (§8) e da pesquisa. Cada fase é verificável sozinha.
 
 | # | Fase | Entrega | Depende de |
 |---|---|---|---|
-| **A** | Enumerar | Travessia recursiva do snapshot, sem lista nomeada de coleções, e parando em objeto opaco | — |
+| **A** | Enumerar | Travessia recursiva do snapshot, sem lista nomeada de coleções, e parando nos seis objetos opacos | — |
 | **B** | Classificar | `mutabilidade.py` transcrevendo a `matriz.md` aprovada | A |
 | **C** | Guardar | O guardião que falha por omissão nos dois sentidos | A, B |
 | **D** | Reexaminar | As exclusões de razão técnica, reclassificadas ou rejustificadas | B |

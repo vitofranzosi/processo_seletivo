@@ -231,6 +231,22 @@ pode fazer.
 capacidade de quem já publicou. Ela continua admissível — é decisão normativa como qualquer outra —
 mas precisa dizer, por escrito, que fecha um caminho que existia.
 
+### D-012 — O guardião cobre o que o Edital máximo publica, e essa é a garantia
+
+Enumerar a partir de um Edital publicado de verdade é o que descobriu `location` — emitido pelo
+código e não declarado em lugar nenhum. É também o que limita a cobertura: o guardião só vê o que
+aquele Edital carrega.
+
+**A alternativa foi considerada e recusada.** Enumerar estaticamente do código de `publish_edital.py`
+cobriria todo ramo condicional sem publicar nada — e enumeraria a forma que o **emissor escreve**,
+não a que o conteúdo **tem**. É precisamente essa diferença que produziu o achado do `location`, e
+trocar a fonte pela análise estática fecharia um buraco menor abrindo o maior.
+
+**O que sustenta o limite**: um teste que mede a cobertura da própria fixture — toda coleção
+declarada e todo objeto que o emissor sabe emitir precisa estar presente e não vazio no Edital
+máximo. O limite residual são as condições que nem o emissor distingue, e ele fica escrito na
+docstring do guardião em vez de ser prometido a mais do que dá.
+
 ---
 
 ## 4. Problema
@@ -448,8 +464,10 @@ do marco nomeia o que não se corrige ali e por quê.
   classificação vigente governa os **atos futuros**, inclusive sobre Edital publicado antes dela:
   uma Retificação é ato novo, praticado hoje, sob a norma de hoje (D-011).
 - **FR-315**: Reclassificar de "retificável" para "não retificável" MUST carregar, além da razão
-  normativa, o registro de que um caminho de correção foi fechado — é a única direção de
-  reclassificação que retira capacidade de quem já publicou.
+  normativa, uma **marca própria na entrada do contrato** registrando que um caminho de correção
+  foi fechado. A marca MUST ser admitida apenas em natureza "não retificável", e a verificação
+  MUST acontecer na carga do contrato. É a única direção de reclassificação que retira capacidade
+  de quem já publicou.
 
 ### Key Entities
 
@@ -460,7 +478,9 @@ do marco nomeia o que não se corrige ali e por quê.
   cobre seis coleções entre doze, e a forma publicada é maior do que ela (FR-300, D-005).
 - **Campo publicado**: um campo escalar da forma publicada de uma coleção normativa. Tem nome, tipo
   e, a partir desta feature, natureza de mutabilidade e razão. Identificado pelo par
-  `(coleção, campo)`, e não pelo nome sozinho — `name` existe em cinco coleções e `order` em três.
+  `(coleção, caminho relativo)` — não pelo nome, que colide entre coleções (`name` em cinco,
+  `order` em três), nem pelo último segmento, que colide dentro da mesma coleção
+  (`drawMethod/normalization/rule` e `drawMethod/substitutionRule/rule`).
 - **Natureza de mutabilidade**: uma das quatro de D-001. É atributo do campo na forma publicada, não
   do valor num Edital específico.
 - **Razão**: o texto que sustenta uma natureza "não retificável". Normativa, e não técnica.
@@ -477,7 +497,8 @@ do marco nomeia o que não se corrige ali e por quê.
   implementação como fundamento.
 - Todo campo classificado como retificável tem caminho pela tela.
 - Retificação sobre método de sorteio não altera relação congelada nem sorteio realizado.
-- Edital publicado permanece legível sob a classificação vigente quando ele foi publicado.
+- Edital publicado permanece **byte a byte o mesmo** depois de qualquer reclassificação: o que
+  muda é o que um ato novo pode fazer sobre ele, e não o que ele diz (D-011).
 
 ---
 
@@ -487,8 +508,11 @@ do marco nomeia o que não se corrige ali e por quê.
 
 - **SC-095**: Zero campos da forma publicada sem natureza declarada, verificável por execução da
   suíte.
-- **SC-096**: Um campo novo acrescentado à forma publicada sem decisão faz a suíte falhar, nomeando
-  o campo — verificável por tentativa.
+- **SC-096**: Um campo novo acrescentado **ao conteúdo que o Edital máximo publica**, sem decisão,
+  faz a suíte falhar nomeando o campo — verificável por tentativa. **A garantia é essa, e não "todo
+  campo que existir"**: campo que só apareça sob condição que a fixture não exercita fica fora da
+  enumeração até a fixture exercitá-la, e é o guardião da própria fixture que mantém essa condição
+  estreita (D-012).
 - **SC-097**: Um servidor corrige o local de uma prova publicada pela interface administrativa, sem
   chamada de API e sem manipulação de banco, e o Cronograma público passa a exibir o novo local.
 - **SC-098**: Um servidor corrige um requisito de participação publicado pela interface, e a página
@@ -508,15 +532,19 @@ do marco nomeia o que não se corrige ali e por quê.
 
 ## 7. Out of Scope
 
-- **Implementar a retificabilidade de todos os campos classificados.** Os quatro canários provam o
-  desenho; o resto é backlog derivado do contrato, por natureza.
+- **Implementar a retificabilidade de campo que o contrato NÃO classifica como retificável.** O
+  que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 70, e a matriz aprovada
+  fixou quais são. Os quatro canários provam o desenho; os seis campos que sobram têm fase própria,
+  porque com a matriz escrita **não existe "resto" para campo R**.
 - **A spec estrutural de vagas.** Ela vem depois, e vem obrigada a obedecer este contrato.
 - **A tela de composição do Edital.** Nada aqui muda a elaboração; o contrato é sobre o que acontece
   depois da publicação.
 - **Os três itens deixados fora do PR #113** — adjacência × duplicação nas dicas do Perfil, prazo
   recursal na página pública do resultado, e o AVISO ligando "vagas imediatas" à linha do quadro.
   Continuam backlog de design e de regra.
-- **Retroatividade.** Nenhuma reclassificação alcança Edital publicado sob classificação anterior.
+- **Congelar a classificação por Publicação.** A D-011 decidiu o contrário: a classificação
+  vigente governa os atos futuros, inclusive sobre Edital publicado antes dela. Versionar a
+  classificação junto de cada Edital é o que esta spec **não** faz, e a razão está na D-011.
 - **Mudar a gramática de endereçamento.** A `004` já alcança tudo por identidade.
 
 ---

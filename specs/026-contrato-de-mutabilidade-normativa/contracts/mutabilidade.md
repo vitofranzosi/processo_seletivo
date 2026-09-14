@@ -22,6 +22,11 @@ class Natureza(StrEnum):
 class Mutabilidade:
     natureza: Natureza
     razao: str = ""
+    # A marca da FR-315: esta entrada é resultado de uma reclassificação que **fechou** um caminho
+    # de correção que existia. Só faz sentido com natureza NAO_RETIFICAVEL, e é declaração de quem
+    # reclassificou — não histórico: o contrato guarda só o vigente (D-011), e o código não teria
+    # como deduzir a transição.
+    fechou_caminho: bool = False
 
 
 # chave: (coleção, caminho relativo dentro da entidade)
@@ -40,9 +45,9 @@ do seu próprio canário 4.
 O caminho relativo é a grafia que `interface/retificacao.py` já usa em `CAMPOS_REGRA`
 (`normativeRule/percentage`). Não se inventa convenção nova.
 
-**A razão é obrigatória para `NAO_RETIFICAVEL` e proibida para as outras três.** Construir um
-`Mutabilidade(NAO_RETIFICAVEL)` sem razão, ou um `RETIFICAVEL` com razão, é erro na carga do módulo
-— não na execução de um teste. Quem escreve o contrato descobre no `import`.
+**A razão é obrigatória para `NAO_RETIFICAVEL` e proibida para as outras três**, e
+`fechou_caminho` só é admitida em `NAO_RETIFICAVEL`. As três regras valem na **carga do módulo** —
+não na execução de um teste. Quem escreve o contrato descobre no `import`.
 
 ### Uma função de leitura, e uma só
 
@@ -64,8 +69,8 @@ conteúdo canônico.
 
 | Direção | Falha quando | Requisito |
 |---|---|---|
-| snapshot → contrato | a travessia encontra `(coleção, campo)` que `CONTRATO` não declara | FR-301 |
-| contrato → snapshot | `CONTRATO` declara `(coleção, campo)` que a travessia não encontra | FR-302 |
+| snapshot → contrato | a travessia encontra `(coleção, caminho)` que `CONTRATO` não declara | FR-301 |
+| contrato → snapshot | `CONTRATO` declara `(coleção, caminho)` que a travessia não encontra | FR-302 |
 | razão | alguma `NAO_RETIFICAVEL` tem razão vazia | FR-299 |
 | alcance | algum `RETIFICAVEL` não é oferecido pelo canal do ator | FR-304 |
 
@@ -197,7 +202,9 @@ estruturalmente; o que falta é o teste de fronteira que o declare, e os campos 
   não depende de declarar forma.
 - **Não faz todo campo aparecer na tela** (D-006). Ausência deliberada continua ausência, desde que
   justificada por norma e protegida por teste.
-- **Não reclassifica Edital publicado** (FR-314). Mudar a natureza de um campo é decisão nova, e
-  vale do commit para a frente.
+- **Não altera conteúdo publicado** (FR-314). Reclassificar um campo é decisão nova e vale do
+  commit para a frente — **inclusive para Editais publicados antes dela**, porque uma Retificação
+  é ato praticado hoje, sob a norma de hoje (D-011). O que nenhuma reclassificação toca é o que
+  já foi publicado.
 - **Não decide nada sozinho** (D-008). Cada entrada de `CONTRATO` é escrita nominalmente por uma
   pessoa, em revisão de código. Não há inferência por nome, tipo ou coleção.
