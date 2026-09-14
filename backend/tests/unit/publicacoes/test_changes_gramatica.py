@@ -517,11 +517,26 @@ def test_a_nested_modality_identifier_is_not_addressable_either():
         )
 
 
-def test_an_identifier_of_a_plain_object_stays_ordinary_content():
-    """`normativeRule` tem `id` e não é elemento de coleção: o `id` dela não endereça nada."""
+def test_o_identificador_de_um_objeto_simples_deixou_de_ser_endereçavel():
+    """`normativeRule` tem `id` e **não** é elemento de coleção: o `id` dela não endereça nada.
+
+    Essa continua sendo a verdade sobre a **gramática** — e era a razão de ela passar. A `026`
+    respondeu outra pergunta, sobre a **natureza**: um identificador que ninguém endereça continua
+    sendo identificador, e trocá-lo publica outro identificador para a mesma regra.
+
+    A recusa, por isso, não é `IdentidadeNaoEnderecavel` — que fala de chave de coleção —, e sim a
+    do contrato, que o classifica como estrutura. Se a decisão for revista, é a linha
+    `("competitionModalities", "normativeRule/id")` do contrato que muda, e este teste cai junto.
+    """
+    from processo_seletivo.publicacoes.domain.changes import CampoNaoRetificavel
+
     caminho = f"/profiles/id={P1}/competitionModalities/id={M1}/normativeRule/id"
-    depois = alterado(conteudo_normativo(), targetPath=caminho, operation="REPLACE", newValue="x")
-    assert resolve_path(depois, caminho) == "x"
+    conteudo = conteudo_normativo()
+
+    with pytest.raises(CampoNaoRetificavel, match="identidade ou estrutura"):
+        alterado(conteudo, targetPath=caminho, operation="REPLACE", newValue="x")
+
+    assert resolve_path(conteudo, caminho) != "x"
 
 
 def test_replacing_a_whole_collection_may_not_drop_the_identifiers():

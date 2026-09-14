@@ -861,7 +861,7 @@ módulo, que a documentam:
 | `/stages/…/scheduleEventId` | o vínculo Etapa ↔ Evento | é o que a Supervisão cobra como "Atenção" depois de publicado |
 | `…/drawMethod/{algorithm, derivation, occurrence, occurrenceAt, normalization/*, substitutionRule/*}` | **o método do sorteio inteiro** | a `021` determina que alterá-lo *"MUST ser Retificação sobre esse conteúdo"*, e a própria tela do sorteio diz ao operador *"Alterá-lo é uma Retificação, e não uma decisão desta tela"* — a Retificação não oferece um único desses campos |
 | `/profiles/…/competitionModalities/…/normativeRule/rounding/modo` | arredondamento do fundamento da reserva | decide quantas vagas a reserva recebe |
-| `/profiles/…/callInformation/forma`, `…/classificationInformation/criterio` | prosa institucional do Perfil | o candidato lê no Edital publicado |
+| `/profiles/…/callInformation/forma`, `…/classificationInformation/criterio` | prosa institucional do Perfil | **correção de 13/09**: esta linha dizia *"o candidato lê no Edital publicado"*, e é falso. Verificado ao desenhar a `026`: nenhum template, o PDF e o portal os leem — eles entram no conteúdo canônico e nenhum canal os exibe. A inferência veio do nome do campo e do conteúdo do `seed_demo`, não de observação. O achado continua de pé, e mudou de espécie: é norma publicada **sem destino observável** |
 
 ### Um precedente que o próprio módulo já criou
 

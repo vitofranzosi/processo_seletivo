@@ -289,3 +289,37 @@ def test_a_linha_geral_do_quadro_admite_modalidade_nula():
     ]
 
     assert [a for a in impeditivos(conteudo) if "vacancyTable" in a.path] == []
+
+
+# --- Requisito de participação: uma exigência por item, e com texto -------------------------
+
+
+@pytest.mark.parametrize(
+    ("requisito", "codigo"),
+    [
+        ("Diploma\nRegistro no conselho", "requirement_multiline"),
+        ("Diploma\r\nRegistro no conselho", "requirement_multiline"),
+        ("", "requirement_blank"),
+        ("   ", "requirement_blank"),
+    ],
+)
+def test_requisito_que_a_tela_nao_representa_nao_publica(requisito, codigo):
+    """A mesma régua dos dois lados (026, achado da revisão final do PR #114).
+
+    A Retificação oferece a lista numa caixa de texto, uma exigência por linha. O item com quebra
+    dentro volta partido em dois; o item em branco não volta — a conversão descarta a linha vazia.
+    Publicar qualquer um dos dois é publicar norma que o canal do ator não alcança, e a recusa da
+    quebra sem a do branco fechava só metade da porta.
+    """
+    conteudo = conteudo_normativo()
+    conteudo["profiles"][0]["requirements"] = ["Diploma de graduação", requisito]
+
+    assert codigo in {f.code for f in impeditivos(conteudo)}
+
+
+def test_lista_vazia_de_requisitos_continua_legitima():
+    """Não exigir nada é `[]`, e não um item sem texto."""
+    conteudo = conteudo_normativo()
+    conteudo["profiles"][0]["requirements"] = []
+
+    assert not [f for f in impeditivos(conteudo) if f.code.startswith("requirement_")]

@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
+from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -46,14 +47,32 @@ ARQUIVO = "arquivo"
 # A identidade de uma linha acrescentada. Não é campo de digitar: nasce no fragmento, viaja em
 # campo oculto e é o que torna a confirmação repetível (020).
 OCULTO = "oculto"
+# Os requisitos de participação: **coleção de texto dentro de uma entidade** (026, canário 2).
+#
+# **A unidade endereçável é a lista inteira**, e não o item. Item de lista de texto não tem
+# identidade estável — "o terceiro requisito" não é endereçar, é contar —, e um ato que diz "onde
+# se lê, leia-se" precisa nomear o que substitui. O que ele pode nomear aqui é a lista.
+#
+# Uma linha por requisito, numa caixa de texto: é a grafia em que a lista se lê e se edita sem
+# inventar controle. Linha vazia não vira requisito vazio — some, porque `""` publicado seria
+# afirmação de que existe uma exigência sem texto.
+LISTA_DE_TEXTO = "lista_de_texto"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
+    # Os requisitos de participação (026, canário 2, FR-306). **É o campo que decide quem pode
+    # concorrer**, e até a `026` só se corrigia por chamada de API. A lista inteira é a unidade
+    # endereçável: ver `LISTA_DE_TEXTO` acima.
+    ("requirements", "Requisitos de participação", LISTA_DE_TEXTO),
     # Qual das Modalidades é a ampla concorrência (014, FR-231). Retificá-la é mudar quais recortes
     # exigem linha de quadro, e por isso é norma — não é rótulo. `REFERENCIA` porque o valor é a
     # identidade de uma Modalidade do próprio Perfil, e não texto livre.
     ("generalCompetitionModalityId", "Modalidade que é a ampla concorrência", REFERENCIA),
     ("name", "Denominação", TEXTO),
+    # A descrição do Perfil (026, fase 10). Não era oferecida, e ficava de fora sem razão escrita:
+    # o contrato a classificou retificável pela mesma razão de `duties` e `compensation`, que a
+    # FR-016 já admitira. É o que a FR-304 obriga — o que é retificável tem caminho pela tela.
+    ("description", "Descrição", TEXTO_LONGO),
     ("locality", "Localidade", TEXTO),
     # O que um Edital diz sobre a vaga também se corrige depois de publicado (FR-016). Sem estes
     # três, uma remuneração errada num Edital publicado exigiria chamada de API — o mesmo defeito
@@ -81,8 +100,23 @@ CAMPOS_EVENTO = [
     ("description", "Descrição", TEXTO),
     ("startAt", "Início", INSTANTE),
     ("endAt", "Término", INSTANTE),
+    # Onde o Evento acontece (026, canário 1, FR-305). A `021` tem como critério de aceitação uma
+    # Retificação que altera o local, e a tela não tinha o campo — nem `EVENTO_PUBLICADO` tinha a
+    # declaração de forma. Informar local onde não havia é **alteração de valor**, e não acréscimo
+    # de campo: `location` é sempre presente, com `""` para "não declarado".
+    ("location", "Local", TEXTO),
+    # Qual Evento designa o período de inscrições (009). Quantos podem ser verdadeiros é coerência
+    # entre itens, e quem recusa dois é a conferência de publicação — não este campo.
+    ("isRegistrationPeriod", "É o período de inscrições", BOOLEANO),
 ]
-CAMPOS_RAIZ = [("title", "Título do Edital", TEXTO), ("description", "Descrição", TEXTO)]
+CAMPOS_RAIZ = [
+    ("title", "Título do Edital", TEXTO),
+    ("description", "Descrição", TEXTO),
+    # O teto de inscrições por pessoa. **Retificável por decisão anterior**: reduzi-lo não invalida
+    # quem já se inscreveu — "publicação anterior não se reescreve: quem entrou sob a norma que a
+    # admitia permanece".
+    ("maxInscricoesPorCandidato", "Teto de inscrições por candidato", INTEIRO),
+]
 
 # A modalidade sem Regra Normativa não recebe os campos dela: o caminho não existiria no
 # conteúdo, e endereçá-lo seria recusado por caminho inexistente. A tela oferece exatamente o
@@ -100,11 +134,117 @@ CAMPOS_REGRA = [
     ("normativeRule/percentage", "Percentual (%)", DECIMAL),
     ("normativeRule/foundation", "Fundamento normativo", TEXTO),
     ("normativeRule/version", "Versão do fundamento", TEXTO),
+    # Desde quando o fundamento vale (026, fase 10). **`INSTANTE`, e não uma data**: o modelo é
+    # `DateTimeField`, o snapshot grava `isoformat()`, e a Retificação não tem tipo `DATA` — usar
+    # `INSTANTE` é o que já converte pelo fuso institucional, como `CAMPOS_EVENTO` faz com o
+    # início do Evento.
+    #
+    # Entra junto com a versão porque os dois **são** o caminho de correção da regra de cota: a
+    # Constituição manda versionar, e não corrigir o parâmetro. Sem este campo, o caminho que o
+    # contrato aponta para os quatro objetos da regra estaria pela metade.
+    ("normativeRule/effectiveFrom", "Vigente desde", INSTANTE),
 ]
 # O marco não oferece `stages` nem `operation` como texto livre: a primeira é lista de identidades
 # e a segunda é escolha entre formas que o motor sabe executar — retificá-las por caixa de texto
 # publicaria regra que o cálculo não interpreta. O que a tela alcança aqui é o rótulo.
-CAMPOS_MARCO = [("name", "Denominação do marco", TEXTO)]
+CAMPOS_MARCO = [
+    ("name", "Denominação do marco", TEXTO),
+    # Como as pontuações se combinam, e o que as torna comparáveis antes disso (015). **Escolha
+    # conferida**: o motor executa duas formas de cada, e texto livre publicaria regra que o
+    # cálculo não interpreta (FR-311).
+    #
+    # Retificá-las torna o ato de ordenação **obsoleto e recomputável** — é o que a `015` decidiu,
+    # e é a razão de elas serem retificáveis apesar de mudarem o que as notas significam: a
+    # consequência é tratada, e não silenciosa.
+    ("operation", "Como as pontuações se combinam", REFERENCIA),
+    ("normalization", "Normalização antes de combinar", REFERENCIA),
+]
+# As duas formas de combinar e as duas de normalizar que o motor executa.
+COMBINACOES = (("SOMA_PONDERADA", "Soma ponderada"), ("MEDIA_PONDERADA", "Média ponderada"))
+NORMALIZACOES = (("NENHUMA", "Nenhuma"), ("PELA_SOMA_DOS_PESOS", "Pela soma dos pesos"))
+# A janela recursal do marco (026, canário 3, FR-307). Objeto composto, com dois escalares e um
+# valor de lista fechada — é o canário que obriga o desenho a tratar as duas formas.
+#
+# **A unidade é lista fechada, e nunca caixa de texto** (FR-311). Ela admite um valor só hoje, e
+# `editais/domain/perfis` diz por quê: contar em dias úteis exigiria o calendário de dias sem
+# expediente, que o Edital não publica — e contá-los sem ele produziria um prazo errado com
+# aparência de exato.
+#
+# **A coerência entre os três é do domínio, e não daqui**: marco que declara não admitir recurso
+# não tem duração a declarar, e duração precisa ser inteiro maior que zero. Quem recusa é
+# `_validar_janela_recursal`, reusado — reescrever a regra na interface faria as duas envelhecerem
+# separadamente.
+# O arredondamento do marco (026, fase 10). **Metade do canário 4 original** — a decisão de origem
+# elegia a regra classificatória como quarto canário, e a D-010 trocou pelo sorteio. A
+# endereçabilidade destes dois paga parte do que a troca custou.
+#
+# A escala é a casa decimal da pontuação combinada, e o modo é lista fechada: `combinacao` cobra um
+# entre três, e texto livre publicaria arredondamento que o cálculo não interpreta (FR-311).
+CAMPOS_DO_ARREDONDAMENTO = [
+    ("rounding/scale", "Casas decimais da pontuação", INTEIRO),
+    ("rounding/mode", "Como arredondar", REFERENCIA),
+]
+# Os três modos que o cálculo executa, com as palavras que quem compõe o Edital lê.
+MODOS_DE_ARREDONDAR = (
+    ("MEIO_PARA_CIMA", "Meio para cima"),
+    ("MEIO_PARA_PAR", "Meio para par"),
+    ("TRUNCAR", "Truncar"),
+)
+CAMPOS_DA_JANELA = [
+    ("appealWindow/admits", "Admite recurso", BOOLEANO),
+    ("appealWindow/durationDays", "Prazo em dias", INTEIRO),
+    ("appealWindow/unit", "Contagem do prazo", REFERENCIA),
+]
+# A única contagem que o cálculo interpreta. Lista de um, e a lista existe mesmo assim: é ela que
+# torna o campo uma escolha conferida, e não texto livre que publicaria prazo incontável.
+UNIDADES_DO_PRAZO = (("DIAS_CORRIDOS", "Dias corridos"),)
+
+# O método do sorteio (026, canário 4, FR-308). **Dez campos**, e é a contradição mais visível do
+# produto: a `021` determina que alterá-lo é Retificação, a própria tela do sorteio manda o
+# operador retificá-lo, e a Retificação não oferecia um único deles.
+#
+# **Quatro são escolha conferida, e não texto**: algoritmo, fonte e as duas regras identificam o
+# que este sistema **executa**. Texto livre ali publicaria um nome que o motor não conhece — e
+# quem reimplementasse a partir do publicado chegaria a outra ordem, concluindo, corretamente, que
+# o sorteio não confere. A Etapa de habilitação é referência pela razão de sempre: UUID digitado
+# muda em silêncio quem entra no sorteio.
+#
+# `text` ao lado de `rule` em cada par: o identificador que a máquina aplica e o terceiro
+# reimplementa, e a frase publicada que a pessoa lê. Prosa sozinha não atende à FR-015 — ninguém
+# executa uma frase —, e identificador sozinho não se lê no Edital.
+CAMPOS_DO_METODO = [
+    ("drawMethod/algorithm", "Algoritmo do sorteio", REFERENCIA),
+    ("drawMethod/source", "Fonte pública da semente", REFERENCIA),
+    ("drawMethod/occurrence", "Ocorrência que fixa a semente", TEXTO),
+    ("drawMethod/occurrenceAt", "Quando a ocorrência acontece", INSTANTE),
+    ("drawMethod/derivation", "Como a ocorrência foi escolhida", TEXTO_LONGO),
+    ("drawMethod/normalization/rule", "Regra de normalização", REFERENCIA),
+    ("drawMethod/normalization/text", "Normalização, como se publica", TEXTO_LONGO),
+    ("drawMethod/substitutionRule/rule", "Regra de substituição", REFERENCIA),
+    ("drawMethod/substitutionRule/text", "Substituição, como se publica", TEXTO_LONGO),
+    ("drawMethod/qualifyingStageId", "Etapa que habilita ao sorteio", REFERENCIA),
+]
+
+
+def _opcoes_do_metodo():
+    """As listas fechadas do método, lidas de quem as executa.
+
+    Importadas aqui dentro, e não no topo: `sorteios` é outro contexto, e a tela só precisa das
+    listas quando desenha um marco que sorteia.
+    """
+    from processo_seletivo.sorteios.domain.chave import ALGORITMOS
+    from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
+    from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
+    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+
+    return {
+        "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
+        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
+        "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
+        "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
+    }
+
+
 # A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
 # uma Retificação real muda: "onde se lê 10, leia-se 12".
 #
@@ -209,6 +349,69 @@ CAMPOS_DOCUMENTO = [
     ("attachmentId", "Modelo que o Edital fornece", REFERENCIA),
 ]
 
+# ------------------------------------------------------------------------------------------------
+# A autoridade sobre **quais** campos existem é do contrato de mutabilidade (026, FR-298).
+#
+# Estas listas continuam sendo a **apresentação** — rótulo, tipo de controle, ordem na tela —, e
+# deixaram de ser a fonte de quais campos a Retificação alcança. A diferença não é de estilo: antes
+# da `026`, um campo retificável que ninguém acrescentasse à lista simplesmente não existia para a
+# tela, e nada acusava. Foi assim que `maximumScore` e `evaluationsPerRegistration` nasceram na
+# `012` e ficaram fora até a auditoria encontrá-los.
+#
+# **A conferência se reparte em duas, e as duas direções têm donos diferentes**:
+#
+# - *nada se oferece sem decisão* — conferido aqui, na carga do módulo, e vale desde já;
+# - *todo retificável é oferecido* — conferido por `tests/interface/test_campos_vem_do_contrato`,
+#   que carrega o conjunto dos que ainda não têm tela e exige que ele encolha até esvaziar.
+#
+# A segunda não cabe aqui enquanto houver campo classificado e ainda não implementado: a produção
+# passaria a carregar a lista do que falta, que é registro de trabalho e não norma.
+COLECAO_DA_LISTA = {
+    "CAMPOS_RAIZ": mutabilidade.RAIZ,
+    "CAMPOS_PERFIL": "profiles",
+    "CAMPOS_DA_REVERSAO": "profiles",
+    "CAMPOS_MODALIDADE": "competitionModalities",
+    "CAMPOS_REGRA": "competitionModalities",
+    "CAMPOS_DA_LINHA": "vacancyTable",
+    "CAMPOS_FATO": "declaredFacts",
+    "CAMPOS_MARCO": "classificationMilestones",
+    "CAMPOS_DO_CORTE": "classificationMilestones",
+    "CAMPOS_DA_JANELA": "classificationMilestones",
+    "CAMPOS_DO_METODO": "classificationMilestones",
+    "CAMPOS_DO_ARREDONDAMENTO": "classificationMilestones",
+    "CAMPOS_CRITERIO": "tiebreakers",
+    "CAMPOS_EVENTO": "schedule",
+    "CAMPOS_ETAPA": "stages",
+    "CAMPOS_SECAO": "sections",
+    "CAMPOS_ANEXO": "attachments",
+    "CAMPOS_DOCUMENTO": "documentRequirements",
+}
+
+
+def _conferir_que_nada_se_oferece_sem_decisao():
+    """Nenhum campo chega à tela sem estar classificado como retificável (FR-298).
+
+    Levanta na **carga do módulo**, e não na execução de um teste: quem acrescentar um campo à
+    apresentação descobre no `import` que falta a decisão — que é onde a decisão ainda é barata.
+    """
+    fora = []
+    for nome, colecao in COLECAO_DA_LISTA.items():
+        for caminho, *_ in globals()[nome]:
+            decisao = mutabilidade.CONTRATO.get((colecao, caminho))
+            if decisao is None:
+                fora.append(f"{nome}: ({colecao}, {caminho}) não está no contrato")
+            elif decisao.natureza is not mutabilidade.Natureza.RETIFICAVEL:
+                fora.append(f"{nome}: ({colecao}, {caminho}) está classificado {decisao.natureza}")
+    if fora:
+        raise RuntimeError(
+            "a tela de Retificação oferece campo que o contrato de mutabilidade não admite:\n  "
+            + "\n  ".join(fora)
+        )
+
+
+_conferir_que_nada_se_oferece_sem_decisao()
+
+
 LISTA = "lista"
 # Um Perfil ou Evento acrescentado entra no snapshot publicado; precisa nascer com a mesma
 # forma que `edital_snapshot` produz, e não com um subconjunto que a consulta pública quebraria.
@@ -263,6 +466,20 @@ def _ler(conteudo, caminho):
     return None if valor is ABSENT else valor
 
 
+def _encaixar(objeto, chaves, valor):
+    """Grava `valor` fundo adentro de `objeto`, criando os níveis que faltarem."""
+    for chave in chaves[:-1]:
+        objeto = objeto.setdefault(chave, {})
+    objeto[chaves[-1]] = valor
+
+
+def _declarou_algo(valor):
+    """Alguém escreveu alguma coisa aqui dentro? `0` e `False` contam; vazio e ausente, não."""
+    if isinstance(valor, dict):
+        return any(_declarou_algo(dentro) for dentro in valor.values())
+    return valor is not None and valor != "" and valor != []
+
+
 def _valor(item, chave):
     """Valor de `chave`, que pode atravessar objetos — `normativeRule/percentage`.
 
@@ -277,9 +494,26 @@ def _valor(item, chave):
     return atual
 
 
+def _linhas(bruto):
+    """As linhas do que a caixa de texto mandou, com o fim de linha normalizado.
+
+    **O navegador envia `CRLF`.** É o que a especificação do `textarea` manda, e a comparação era
+    feita contra `LF`: abrir a tela e não tocar em nada emitia um `REPLACE` da lista inteira, com o
+    conteúdo idêntico. Normalizar aqui é o que faz a ida e a volta se encontrarem.
+    """
+    return (bruto or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
+
+
 def _para_formulario(valor, tipo):
     if tipo == BOOLEANO:
         return "1" if valor else "0"
+    if tipo == LISTA_DE_TEXTO:
+        # **Item com quebra de linha dentro não tem representação nesta caixa**, e por isso ele não
+        # se publica: a forma publicada declara `requirements` como lista de texto, e a conferência
+        # de publicação recusa o que não for. Aqui a quebra vira espaço para que o valor **legado**
+        # continue legível na tela — corrigi-lo passa a exigir escrevê-lo sem a quebra, que é o que
+        # a caixa consegue afirmar.
+        return "\n".join(" ".join(str(item).split()) for item in (valor or []))
     if valor is None:
         return ""
     if tipo == INSTANTE:
@@ -343,6 +577,11 @@ def _grupo(
         "campos": [
             {
                 "caminho": f"{caminho}/{chave}",
+                # A chave **relativa** ao grupo, e não só o caminho inteiro. É por ela que a
+                # emissão sabe que `drawMethod/algorithm` é folha de um objeto, e qual objeto —
+                # recortar o prefixo do caminho absoluto seria a mesma informação escrita duas
+                # vezes, e a segunda cópia erra no dia em que o seletor mudar de forma.
+                "chave": chave,
                 "rotulo": rotulo,
                 "tipo": tipo,
                 "valor": _para_formulario(_valor(item, chave), tipo),
@@ -551,15 +790,74 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     base_do_marco,
                     marco,
                     CAMPOS_MARCO
-                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else []),
+                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else [])
+                    # **Só quando o objeto existe**, como os campos do corte: endereçar caminho
+                    # para dentro de objeto ausente é recusado pela gramática, e a Retificação que
+                    # *cria* a janela é acréscimo de declaração — o contrato diz que ela pode
+                    # nascer, e por qual caminho (FR-313).
+                    + (CAMPOS_DO_ARREDONDAMENTO if isinstance(marco.get("rounding"), dict) else [])
+                    + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else [])
+                    # **Sempre**, e não só quando o marco já sorteia (026, FR-313, corrigido na
+                    # segunda revisão do PR #114).
+                    #
+                    # A primeira redação só oferecia os campos com o objeto declarado, sobre a
+                    # premissa — errada — de que o método não podia nascer por Retificação. A
+                    # `021` decide o contrário, e por uma razão que a premissa não considerou:
+                    # **todo Edital publicado antes do degrau 10 carrega `drawMethod` nulo**, e é
+                    # por Retificação que ele passa a declarar o método. Ocultar os campos
+                    # deixaria o acervo inteiro dependendo da API — que é o que o princípio VI
+                    # não admite.
+                    #
+                    # Os dez vêm em branco quando o objeto é nulo, e declará-lo pela metade é
+                    # recusado na publicação: método declarado vale inteiro.
+                    + CAMPOS_DO_METODO,
                     tipo="Marco",
                     nome=nome_do_marco,
-                    opcoes={"cutRule/tieOutcome": DESFECHOS_DO_EMPATE},
+                    opcoes={
+                        "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "operation": COMBINACOES,
+                        "normalization": NORMALIZACOES,
+                        "rounding/mode": MODOS_DE_ARREDONDAR,
+                        "appealWindow/unit": UNIDADES_DO_PRAZO,
+                        **_opcoes_do_metodo(),
+                        # As Etapas que **este marco** enumera, e não as do Edital: uma Etapa de
+                        # fora seria critério de entrada que a norma do marco não declara.
+                        "drawMethod/qualifyingStageId": tuple(
+                            (
+                                str(identificador),
+                                next(
+                                    (
+                                        etapa.get("name", "")
+                                        for etapa in conteudo.get("stages") or []
+                                        if str(etapa.get("id")) == str(identificador)
+                                    ),
+                                    str(identificador),
+                                ),
+                            )
+                            for identificador in marco.get("stages") or []
+                        ),
+                    },
                     rotulos_do_vazio={
                         # O vazio existe porque o `select` de referência sempre o desenha. Dizer o
                         # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
                         # nomeia o marco.
                         "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                        # Aqui o vazio **apaga a contagem declarada**, e uma janela sem unidade não
+                        # é computável: o candidato leria um prazo que ninguém sabe contar.
+                        "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
+                        "rounding/mode": "Não declarado — a publicação será impedida",
+                        "operation": "Não declarada — a publicação será impedida",
+                        "normalization": "Não declarada — a publicação será impedida",
+                        # A Etapa de habilitação é o único campo do método em que o vazio é
+                        # legítimo: `null` significa "nenhuma", e é o caso dos quatro Editais da
+                        # amostra, em que a análise documental vem **depois** do sorteio (021).
+                        "drawMethod/qualifyingStageId": "Nenhuma — todos participam do sorteio",
+                        "drawMethod/algorithm": "Não declarado — o sorteio não terá como ser feito",
+                        "drawMethod/source": "Não declarada — a semente não terá origem",
+                        "drawMethod/normalization/rule": "Não declarada — a semente não se produz",
+                        "drawMethod/substitutionRule/rule": (
+                            "Não declarada — a publicação será impedida"
+                        ),
                     },
                 )
             )
@@ -706,6 +1004,74 @@ TIPOS_ANINHADOS = frozenset(
 )
 
 
+# O tipo que a tela desenha, e a coleção que o contrato classifica. Explícito, e não derivado do
+# rótulo: o rótulo é texto de tela e muda; a coleção é chave de contrato e não pode mudar junto.
+COLECAO_DO_TIPO = {
+    "Edital": mutabilidade.RAIZ,
+    "Perfil": "profiles",
+    "Modalidade": "competitionModalities",
+    "Linha do quadro de vagas": "vacancyTable",
+    "Fato declarado": "declaredFacts",
+    "Marco": "classificationMilestones",
+    "Critério de desempate": "tiebreakers",
+    "Evento": "schedule",
+    "Etapa": "stages",
+    "Documento exigido": "documentRequirements",
+    "Anexo": "attachments",
+    "Seção": "sections",
+}
+
+# Como cada campo **excluído** se chama em português (026, US6, FR-312).
+#
+# Eles não estão em `CAMPOS_*` justamente por não se corrigirem aqui — e por isso não têm rótulo
+# vindo de lá. Sem esta tabela, a tela diria "appealWindow/unit" a quem lê, que é o caminho
+# normativo chegando ao HTML: exatamente o que a FR-019 existe para impedir.
+ROTULO_DO_EXCLUIDO = {
+    (mutabilidade.RAIZ, "number"): "Número do Edital",
+    (mutabilidade.RAIZ, "year"): "Ano",
+    ("profiles", "reserveType"): "Espécie do Cadastro Reserva",
+    ("profiles", "classificationInformation"): "Informações sobre a classificação",
+    ("profiles", "callInformation"): "Informações sobre a convocação",
+    ("competitionModalities", "normativeRule/calculation"): "Cálculo da reserva",
+    ("competitionModalities", "normativeRule/rounding"): "Arredondamento da reserva",
+    ("competitionModalities", "normativeRule/distribution"): "Distribuição da reserva",
+    ("competitionModalities", "normativeRule/callRules"): "Regras de convocação da reserva",
+    ("declaredFacts", "type"): "Tipo do fato",
+    ("classificationMilestones", "stages"): "Etapas que o marco mede",
+    ("classificationMilestones", "cutRule/targetKind"): "Espécie do alvo do corte",
+    ("classificationMilestones", "cutRule/governedStage"): "Etapa que o corte alimenta",
+    ("classificationMilestones", "cutRule/continuation"): "Continuação além da faixa",
+    ("tiebreakers", "type"): "O que o critério compara",
+    ("tiebreakers", "parameters/stageId"): "Etapa comparada pelo critério",
+    ("tiebreakers", "parameters/factId"): "Fato comparado pelo critério",
+    ("tiebreakers", "whenMissing"): "O que fazer quando o valor não existe",
+    ("schedule", "type"): "Espécie do Evento",
+    ("sections", "title"): "Título da seção",
+    ("sections", "order"): "Ordem da seção",
+    ("sections", "type"): "Espécie da seção",
+    ("documentRequirements", "key"): "Identificação do documento",
+}
+
+
+def exclusoes_do_tipo(tipo):
+    """Os campos daquela entidade que **não** se corrigem por Retificação, com a razão de cada um.
+
+    Lidos do contrato de mutabilidade, e não de uma lista aqui: a razão é norma e vive no domínio;
+    o rótulo é tela e vive aqui.
+    """
+    colecao = COLECAO_DO_TIPO.get(tipo)
+    if colecao is None:
+        return []
+    return [
+        {
+            "rotulo": ROTULO_DO_EXCLUIDO.get((colecao, caminho), caminho),
+            "razao": decisao.razao,
+        }
+        for (outra, caminho), decisao in mutabilidade.CONTRATO.items()
+        if outra == colecao and decisao.natureza is mutabilidade.Natureza.NAO_RETIFICAVEL
+    ]
+
+
 def agrupar_em_secoes(grupos):
     """As mesmas linhas, na mesma ordem, divididas nas seções que a tela mostra.
 
@@ -724,7 +1090,27 @@ def agrupar_em_secoes(grupos):
         conjunto = set(tipos)
         linhas = [grupo for grupo in grupos if grupo["tipo"] in conjunto]
         if linhas or identificador in SECOES_QUE_ACRESCENTAM:
-            secoes.append({"id": identificador, "titulo": titulo, "grupos": linhas})
+            secoes.append(
+                {
+                    "id": identificador,
+                    "titulo": titulo,
+                    "grupos": linhas,
+                    # **Uma vez por bloco, e não por cartão** (026, US6, FR-312). Explicação que
+                    # não muda de um cartão para o outro não se imprime uma vez por cartão — é a
+                    # decisão que `test_medida_dos_campos` guarda no assistente, e que reprovou a
+                    # primeira tentativa disto no PR #113.
+                    #
+                    # Só os tipos que a seção **de fato mostra**: declarar o que não se corrige num
+                    # Marco para um Edital sem marco nenhum seria responder pergunta que ninguém
+                    # fez.
+                    "exclusoes": [
+                        {"tipo": tipo, "campos": exclusoes_do_tipo(tipo)}
+                        for tipo in tipos
+                        if any(grupo["tipo"] == tipo for grupo in linhas)
+                        and exclusoes_do_tipo(tipo)
+                    ],
+                }
+            )
     return secoes
 
 
@@ -751,6 +1137,11 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
     bruto = (bruto or "").strip()
     if tipo == BOOLEANO:
         return bruto == "1"
+    if tipo == LISTA_DE_TEXTO:
+        # Lista vazia e ausência são coisas diferentes, e as duas são legítimas: um Perfil pode não
+        # exigir nada. O que não é legítimo é o item em branco — `""` publicado afirmaria que
+        # existe exigência sem texto.
+        return [linha.strip() for linha in _linhas(bruto) if linha.strip()]
     if bruto == "":
         return None
     if tipo == OCULTO:
@@ -1039,6 +1430,17 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
         # Alterar campo de linha que será removida não tem efeito e confundiria o resumo.
         if grupo["caminho"] and dentro_de_removido(grupo["caminho"]):
             continue
+        # **O objeto que ainda não existe se declara inteiro, e num `REPLACE` só.**
+        #
+        # A tela oferece os dez campos do método do sorteio mesmo quando `drawMethod` é nulo,
+        # porque é por Retificação que o acervo anterior ao degrau 10 declara o método (021,
+        # FR-014). Emitir um `REPLACE` por folha endereçava caminho para dentro de um objeto que
+        # não existe, e a gramática recusava o ato inteiro com `CaminhoInexistente` — a tela
+        # oferecia um caminho que não chegava a lugar nenhum, que é o que o Princípio VI não
+        # admite. Quem endereça o objeto endereça também a decisão que o contrato guarda sobre
+        # ele: `normativeRule` de Modalidade, se um dia for oferecida ausente, é recusada aqui
+        # com a razão escrita, e não com um erro de caminho.
+        nascendo = {}
         for campo in grupo["campos"]:
             enviado = dados.get(f"campo:{campo['referencia']}")
             if enviado is None:
@@ -1047,6 +1449,20 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
+            chaves = campo.get("chave", "").split("/")
+            objeto = f"{grupo['caminho']}/{chaves[0]}" if len(chaves) > 1 else ""
+            if objeto and _ler(conteudo, objeto) is None:
+                _encaixar(nascendo.setdefault(objeto, {}), chaves[1:], novo_valor)
+                if _declarou_algo(novo_valor):
+                    resumo.append(
+                        {
+                            "grupo": grupo["titulo"],
+                            "rotulo": campo["rotulo"],
+                            "antes": "—",
+                            "depois": _exibir(novo_valor, campo) or "—",
+                        }
+                    )
+                continue
             if campo["tipo"] == ARQUIVO:
                 if not novo_valor or str(anterior) == str(novo_valor):
                     continue
@@ -1085,6 +1501,23 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
                     continue
+            elif campo["tipo"] == LISTA_DE_TEXTO:
+                # **Comparar pela ida e volta, e não pelo valor cru** (026, achado da revisão).
+                #
+                # A caixa de texto não é uma representação reversível de qualquer lista: item que
+                # não é string vira string, espaço nas pontas some, e quebra de linha dentro de um
+                # item o parte em dois. Comparar o convertido com o valor publicado acusaria
+                # alteração em toda lista que não sobrevivesse à ida e volta — e o formulário envia
+                # **todos** os campos, de modo que corrigir a denominação de um Perfil emitiria,
+                # junto, um `REPLACE` dos requisitos que ninguém pediu.
+                #
+                # A comparação é contra **o que a caixa trazia**, e não contra a reconversão: a
+                # caixa nasceu preenchida com a forma do valor publicado, e se o que voltou é
+                # idêntico byte a byte, ninguém a tocou. Comparar as duas listas convertidas não
+                # resolveria — `['  Diploma  ']` e `['Diploma']` continuam diferentes, e a
+                # normalização sozinha viraria "correção".
+                if "\n".join(_linhas(enviado)) == _para_formulario(anterior, LISTA_DE_TEXTO):
+                    continue
             elif str(anterior if anterior is not None else "") == str(
                 novo_valor if novo_valor is not None else ""
             ):
@@ -1100,6 +1533,14 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                     "depois": _exibir(novo_valor, campo) or "—",
                 }
             )
+        for caminho, declarado in nascendo.items():
+            # Nada preenchido é nada declarado: quem abriu a tela e não escreveu o método não
+            # quis criar objeto nenhum. Preenchido pela metade **vai** — e é a publicação que
+            # recusa o método incompleto, com a mensagem que nomeia o campo que falta.
+            if _declarou_algo(declarado):
+                alteracoes.append(
+                    {"targetPath": caminho, "operation": "REPLACE", "newValue": declarado}
+                )
 
     for grupo in grupos_removidos:
         atual = _ler(conteudo, grupo["caminho"]) or {}

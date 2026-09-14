@@ -355,18 +355,43 @@ def apply_change(content, change):
     parent, leaf, forma = _parent_of(content, path)
     # **Depois** de `_parent_of`, e não antes: caminho inexistente e seletor inválido têm
     # precedência, porque um caminho que não existe não endereça campo algum — retificável ou não.
-    if colecoes.e_campo_nao_retificavel(f"{forma}/{colecoes.escapar(leaf)}"):
-        raise CampoNaoRetificavel(
-            f"{path} endereça um campo que a Retificação não altera no lugar. Mudar o tipo de um "
-            "fato declarado cria fato novo: remova este e acrescente outro, com identidade "
-            "própria, para que o valor congelado sob o primeiro continue legível sob a norma "
-            "que o governou."
-        )
+    forma_do_campo = f"{forma}/{colecoes.escapar(leaf)}"
+    # **A identidade primeiro**, e a razão é de precedência entre recusas: ela é a mais
+    # específica das três, tem nome próprio e mensagem própria, e já existia. Deixá-la para
+    # depois da recusa por natureza a trocaria por uma mensagem genérica — o identificador é
+    # estrutural no contrato, e cairia na recusa do estrutural.
     if leaf == colecoes.CAMPO_CHAVE and colecoes.e_elemento_de_colecao_com_chave(forma):
         raise IdentidadeNaoEnderecavel(
             f"{path} endereça o identificador da entidade, que é o substrato do endereçamento e "
             "não conteúdo normativo. Alterá-lo faria um caminho já publicado deixar de nomear a "
             "entidade que ele nomeava."
+        )
+
+    razao = colecoes.recusa_do_alcance_direto(forma_do_campo)
+    if razao is not None and forma_do_campo not in colecoes.FONTE_DO_DERIVADO:
+        # **A razão vem do contrato, e não daqui.** Esta mensagem era fixa e falava do tipo do fato
+        # declarado — o único campo que a lista tinha. Com 25 campos derivados do contrato, ela
+        # passou a dizer "mudar o tipo de um fato declarado cria fato novo" para o título de uma
+        # seção e para o número do Edital. A recusa precisa dizer a razão **daquele** campo, que é
+        # o que o contrato já guarda escrita.
+        raise CampoNaoRetificavel(
+            f"{path} endereça um campo que a Retificação não altera no lugar. {razao}"
+        )
+    # **`ADD` e `REPLACE`, e não só `REPLACE`.** A gramática grafa o acréscimo das duas formas —
+    # `REPLACE` sobre `null` e `ADD` de chave ausente —, e conferir uma só deixava a outra aberta.
+    # `REMOVE` seguido de `ADD` é a sequência que reproduzia o desvio, e é `apply_changes` que a
+    # enxerga: aqui cada Alteração chega sozinha.
+    if operation in ("ADD", "REPLACE") and colecoes.objeto_que_nao_pode_nascer(
+        forma_do_campo,
+        parent.get(leaf) if isinstance(parent, dict) else None,
+    ):
+        # A razão vem do contrato, como a da recusa por natureza. A mensagem era fixa e falava do
+        # método do sorteio — o objeto que a primeira redação proibia —, e sobreviveu à
+        # reclassificação explicando o método ao recusar a regra normativa de uma Modalidade.
+        raise CampoNaoRetificavel(
+            f"{path} cria uma declaração que o Edital publicado não fez, e o contrato de "
+            "mutabilidade registra que ela não nasce por Retificação. "
+            + colecoes.RAZAO_DO_QUE_NAO_NASCE[forma_do_campo]
         )
     antes = colecoes.identidades(content)
     value = deepcopy(change.get("newValue"))
@@ -381,9 +406,95 @@ def apply_change(content, change):
 
 
 def apply_changes(base, changes, *, publication_id):
+    """Aplica o ato inteiro, e confere o que só o ato inteiro deixa ver.
+
+    Duas conferências vivem aqui e não em `apply_change`, porque as duas precisam do conjunto:
+
+    - **o campo derivado** só muda acompanhado da fonte que o deriva. `artifactHash` é o caso: a
+      tela emite um `REPLACE` nele junto com o `artifactId`, e recusá-lo isoladamente quebraria o
+      caminho que o torna derivado — mas endereçá-lo sozinho é declarar um resumo que não é o dos
+      bytes;
+    - **o objeto que não pode nascer** não nasce nem por `REMOVE` seguido de `ADD`. Cada Alteração
+      chega legítima a `apply_change`; é a sequência que cria a declaração que o contrato proíbe.
+    """
     result = deepcopy(base)
     provenance = {}
+    # **Contra o conteúdo publicado, e antes de aplicar qualquer coisa.** A pergunta é se a fonte
+    # do derivado muda *neste ato*, e ela só tem resposta enquanto o conteúdo ainda é o de antes:
+    # conferir no meio da aplicação leria a fonte já trocada e responderia "não mudou" a todo ato
+    # legítimo — ou "mudou" conforme a ordem de emissão, que não é garantia de nada.
+    novos = {change["targetPath"]: change.get("newValue") for change in changes}
+    for change in changes:
+        _derivado_tem_a_fonte_no_mesmo_ato(base, change, novos)
+    ausentes_no_inicio = colecoes.objetos_ausentes_que_nao_nascem(result)
     for change in changes:
         apply_change(result, change)
         provenance[change["targetPath"]] = publication_id
+    nasceu = _primeiro_que_nasceu(result, ausentes_no_inicio)
+    if nasceu is not None:
+        raise CampoNaoRetificavel(
+            f"{nasceu} passou a existir neste ato, e o contrato de mutabilidade registra que esta "
+            "declaração não nasce por Retificação — remover e acrescentar é o mesmo acréscimo "
+            "escrito de outro jeito. " + colecoes.razao_do_que_nao_nasce(nasceu)
+        )
     return result, provenance
+
+
+def _primeiro_que_nasceu(content, ausentes_no_inicio):
+    """O caminho que era nulo e passou a carregar declaração — se houver.
+
+    **Sumir não é nascer**, e a primeira redação confundia os dois: ela comparava os conjuntos de
+    ausentes, e remover a Modalidade inteira tirava o `normativeRule` dela do conjunto — o que
+    aparecia como acréscimo. O teste que remove Modalidade e linha no mesmo ato foi quem acusou.
+
+    A pergunta certa é sobre **cada caminho**, e não sobre o tamanho do conjunto: ele ainda resolve,
+    e o que ele resolve agora é um objeto?
+    """
+    for caminho in sorted(ausentes_no_inicio):
+        try:
+            valor = resolve_path(content, caminho)
+        except (CaminhoInexistente, SeletorInvalido, KeyError, IndexError):
+            # O objeto que continha a declaração deixou de existir. Não nasceu nada.
+            continue
+        if isinstance(valor, dict):
+            return caminho
+    return None
+
+
+def _derivado_tem_a_fonte_no_mesmo_ato(publicado, change, novos):
+    """Campo derivado endereçado sozinho é resumo que ninguém calculou.
+
+    **Acompanhar a fonte não basta: a fonte tem de mudar.** A primeira redação só perguntava se o
+    caminho da fonte aparecia no ato, e um `REPLACE` do `artifactId` pelo mesmo valor satisfazia a
+    conferência — deixando passar um `artifactHash` arbitrário ao lado de um artefato que não
+    trocou. A verificação de integridade da Publicação ainda barrava o fechamento, então nada
+    inválido chegava a publicar; o que nascia era um ato impossível de publicar, e quem o
+    descobria era o servidor, no fim da jornada, sem mensagem que nomeasse a causa.
+    """
+    try:
+        _parent, leaf, forma = _parent_of(publicado, change["targetPath"])
+    except (CaminhoInexistente, SeletorInvalido):
+        return
+    forma_do_campo = f"{forma}/{colecoes.escapar(leaf)}"
+    fonte = colecoes.FONTE_DO_DERIVADO.get(forma_do_campo)
+    if fonte is None:
+        return
+    sufixo_derivado = forma_do_campo.rsplit("/", 1)[-1]
+    sufixo_da_fonte = fonte.rsplit("/", 1)[-1]
+    esperado = change["targetPath"].rsplit("/", 1)[0] + "/" + sufixo_da_fonte
+    if esperado not in novos:
+        raise CampoNaoRetificavel(
+            f"{change['targetPath']} endereça um campo derivado sem o campo que o deriva. O "
+            f"`{sufixo_derivado}` é consequência do `{sufixo_da_fonte}`, e declará-lo sozinho "
+            "afirmaria um resumo que não é o dos bytes publicados."
+        )
+    try:
+        anterior = resolve_path(publicado, esperado)
+    except (CaminhoInexistente, SeletorInvalido, KeyError, IndexError):
+        return
+    if anterior is not ABSENT and novos[esperado] == anterior:
+        raise CampoNaoRetificavel(
+            f"{change['targetPath']} muda o campo derivado enquanto o `{sufixo_da_fonte}` "
+            f"continua o mesmo. O `{sufixo_derivado}` é consequência dos bytes publicados: "
+            "trocá-lo sem trocá-los afirmaria um resumo que não é o deles."
+        )

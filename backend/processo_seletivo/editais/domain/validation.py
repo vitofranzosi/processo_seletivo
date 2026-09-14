@@ -74,7 +74,11 @@ PERFIL_PUBLICADO = (
     Campo("code", str),
     Campo("name", str),
     Campo("description", str),
-    Campo("requirements", list),
+    # **Itens de texto**, transcrito do contrato (026). A declaração faltava, e a API aceitava
+    # qualquer JSON dentro da lista: número, objeto, outra lista. A tela de Retificação a oferece
+    # numa caixa de texto, uma exigência por linha, e item que não é texto não volta de lá igual —
+    # o que se publicava não tinha como ser corrigido pelo canal do ator sem se corromper.
+    Campo("requirements", list, tipo_do_item=str),
     Campo("immediateVacancies", int, minimo=0),
     Campo("reserveType", str, valores=RESERVA),
     Campo("reserveLimit", int, admite_nulo=True, minimo=0),
@@ -153,6 +157,16 @@ EVENTO_PUBLICADO = (
     # `status` é produzido pelo sistema e nenhum esquema declara a enumeração dele. Entra como
     # presença e tipo; escrever os valores aqui seria inventar restrição, não transcrever uma.
     Campo("status", str),
+    # Onde o Evento acontece (021, D-008). **Faltava**, e o defeito é o do `vacancyReversion`
+    # repetido: `publish_edital` o emite em todo Evento publicado, e esta declaração não o conferia
+    # — nenhum teste acusava, porque o guarda da forma confere coleções e não campos. Quem o
+    # encontrou foi a `026`, ao enumerar os campos publicados para classificar a mutabilidade de
+    # cada um: o campo governa onde a pessoa comparece e não tinha forma nem decisão.
+    #
+    # `str` sem `admite_nulo`, como `duties` e `workload` do Perfil: sempre presente, com `""`
+    # quando não declarado. Uma segunda convenção para texto faria a versão canônica admitir mais
+    # de uma forma.
+    Campo("location", str),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
     # `_um_periodo_de_inscricoes`, porque a forma confere um campo por vez.
@@ -1299,10 +1313,164 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
+    findings.extend(_coerencia_da_janela_recursal(snapshot))
+    findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
+    findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
+    return findings
+
+
+def _perfis_bem_formados(snapshot: dict) -> list[dict]:
+    """Os Perfis que são objetos — os demais já têm achado próprio.
+
+    **A conferência de coerência não pode quebrar sobre conteúdo malformado**: o trabalho dela é
+    acusá-lo, e uma exceção aqui apagaria todos os achados seguintes, inclusive os que dizem *por
+    que* o conteúdo está malformado. Quem recusa `profiles` que não é lista, ou item que não é
+    objeto, é `_violacoes_da_colecao`, e a mensagem dele é a que a pessoa precisa ler.
+    """
+    profiles = snapshot.get("profiles")
+    if not isinstance(profiles, list):
+        return []
+    return [perfil for perfil in profiles if isinstance(perfil, dict)]
+
+
+def _marcos_bem_formados(perfil: dict) -> list[dict]:
+    """Idem, um nível abaixo."""
+    marcos = perfil.get("classificationMilestones")
+    if not isinstance(marcos, list):
+        return []
+    return [marco for marco in marcos if isinstance(marco, dict)]
+
+
+def _coerencia_dos_requisitos(snapshot: dict) -> list[ValidationFinding]:
+    """Uma exigência por item, com texto, e nenhuma quebra de linha dentro dele (026).
+
+    O tipo do item é conferido pela forma publicada; o que não cabe lá é a **quebra**, porque ela é
+    string válida. A restrição existe pelo canal do ator: a Retificação oferece a lista numa caixa
+    de texto, uma linha por exigência, e um item com `\n` dentro se parte em dois ao voltar. Sem
+    esta recusa, o Edital publicaria conteúdo que ninguém consegue corrigir sem corrompê-lo.
+
+    É a mesma régua que a `026` aplicou ao `location` e à janela recursal: oferecer um campo cujo
+    valor ninguém confere é publicar, pela via administrativa, o que a via de elaboração recusa.
+    """
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for posicao, requisito in enumerate(perfil.get("requirements") or []):
+            if not isinstance(requisito, str):
+                continue
+            caminho = f"/profiles/id={perfil.get('id', '')}/requirements/{posicao}"
+            if "\n" in requisito or "\r" in requisito:
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="requirement_multiline",
+                        message=(
+                            "Cada requisito de participação é uma exigência, e não um parágrafo: "
+                            "quebra de linha dentro de um deles não tem como ser corrigida pela "
+                            "tela de Retificação, que os oferece um por linha."
+                        ),
+                        path=caminho,
+                    )
+                )
+            elif not requisito.strip():
+                # **O item em branco pela mesma régua da quebra**, e a borda da API já o recusa:
+                # a Retificação oferece a lista uma exigência por linha e descarta a linha vazia
+                # ao converter, de modo que `""` publicado é exigência que ninguém lê e ninguém
+                # corrige. Não exigir nada continua legítimo — é `requirements: []`, e não um
+                # item sem texto.
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="requirement_blank",
+                        message=(
+                            "Requisito de participação em branco afirma que existe exigência sem "
+                            "texto. Perfil que não exige nada publica a lista vazia."
+                        ),
+                        path=caminho,
+                    )
+                )
+    return findings
+
+
+def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
+    """A janela declarada precisa ser computável — **também depois de retificada** (026, US3).
+
+    A regra existia e alcançava um caminho só. `validate_classification_milestones` a aplica na
+    **elaboração** do Perfil, e a publicação nunca a conferiu: uma Retificação que gravasse
+    `durationDays: 0` publicava sem recusa alguma, e o candidato leria um prazo de zero dias.
+
+    Quem descobriu foi o canário 3 da `026`, ao levar o campo para a tela: oferecer um número que
+    ninguém confere é publicar, pela via administrativa, o que a via de elaboração recusa.
+
+    **A regra não é reescrita aqui** — `_validar_janela_recursal` continua sendo a única, e este
+    achado a invoca. Duas cópias envelheceriam separadamente, e a que ficasse para trás seria
+    justamente a do caminho menos percorrido.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_janela_recursal,
+    )
+
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            try:
+                _validar_janela_recursal(marco.get("appealWindow"))
+            except ProfileValidationError as recusa:
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="appeal_window_invalid",
+                        message=f"Marco {marco.get('code', '')}: {recusa}",
+                        path=(
+                            f"/profiles/id={perfil.get('id', '')}"
+                            f"/classificationMilestones/id={marco.get('id', '')}/appealWindow"
+                        ),
+                    )
+                )
+    return findings
+
+
+def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
+    """O método declarado vale inteiro — **também depois de retificado** (026, US4).
+
+    Mesma lacuna da janela recursal, encontrada pelo mesmo caminho:
+    `validate_classification_milestones` cobra o método completo na **elaboração** do Perfil, e a
+    publicação nunca o conferia. Uma Retificação podia esvaziar a regra de substituição e publicar
+    — e no dia da indisponibilidade a escolha da ocorrência voltaria para a mesa, que é exatamente
+    o que a `021` proíbe.
+
+    **A regra não é reescrita aqui**: `_validar_metodo_de_sorteio` continua sendo a única, e ela
+    confere também o algoritmo, a fonte, as duas regras e a Etapa de habilitação contra o que este
+    sistema executa.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        ProfileValidationError,
+        _validar_metodo_de_sorteio,
+    )
+
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            try:
+                _validar_metodo_de_sorteio(
+                    marco.get("drawMethod"), etapas=marco.get("stages") or []
+                )
+            except ProfileValidationError as recusa:
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="draw_method_invalid",
+                        message=f"Marco {marco.get('code', '')}: {recusa}",
+                        path=(
+                            f"/profiles/id={perfil.get('id', '')}"
+                            f"/classificationMilestones/id={marco.get('id', '')}/drawMethod"
+                        ),
+                    )
+                )
     return findings
 
 
