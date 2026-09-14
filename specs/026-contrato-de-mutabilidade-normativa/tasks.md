@@ -11,14 +11,13 @@ description: "Tarefas de implementação — contrato de mutabilidade normativa"
 [data-model.md](data-model.md), [contracts/mutabilidade.md](contracts/mutabilidade.md),
 [matriz.md](matriz.md), [quickstart.md](quickstart.md)
 
-> ## ⛔ Gate: a matriz precisa estar aprovada
+> ## ✅ Gate: matriz aprovada em 2026-09-13
 >
-> [matriz.md](matriz.md) é **proposta**, com 30 linhas marcadas ⚠️ e 5 políticas de objeto ausente
-> que dependem de julgamento normativo. Natureza, razão e política de ausência afetam direitos, e
-> **não são decisão de quem implementa**.
+> [matriz.md](matriz.md) foi aprovada como proposta — 121 entradas, as 30 linhas ⚠️ e as 5 políticas
+> de objeto ausente, sem emenda. Ela é **norma**, e as tarefas da fase 3 a **transcrevem**.
 >
-> Nenhuma tarefa da fase 3 começa antes de a matriz estar aprovada. As tarefas de classificação
-> **transcrevem** a matriz aprovada — elas não decidem o conteúdo dela.
+> Divergir dela durante a implementação não é ajuste: é decisão nova, e volta para o usuário.
+> Natureza, razão e política de ausência afetam direitos, e não são decisão de quem implementa.
 
 **Tests**: obrigatórios. O entregável central **é** um teste, e o princípio V faz da
 rastreabilidade requisito. Em cada história os testes vêm **antes** da implementação, e precisam
@@ -130,7 +129,8 @@ propósito, e T009 garante que a fixture exercita o que o emissor sabe emitir.
 **Independent Test**: acrescentar um campo ao conteúdo publicado sem tocar em `mutabilidade.py`; a
 suíte falha **nomeando o campo e o caminho**. Desfazer, e a suíte volta ao verde.
 
-**⛔ Requer a matriz aprovada.** T018–T021 transcrevem [matriz.md](matriz.md); elas não decidem.
+**T018–T021 transcrevem [matriz.md](matriz.md); elas não decidem.** Entrada que não bater com a
+matriz é erro de transcrição, e não escolha de implementação.
 
 ### Testes primeiro
 

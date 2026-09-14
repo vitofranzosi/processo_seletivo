@@ -71,7 +71,7 @@ introduz é a Retificação dos canários, que passa pelos atos existentes.
 specs/026-contrato-de-mutabilidade-normativa/
 ├── plan.md              # este arquivo
 ├── research.md          # Fase 0 — seis perguntas, duas mudam escopo
-├── matriz.md            # a classificação proposta, campo a campo — PRECISA DE APROVAÇÃO
+├── matriz.md            # a classificação, campo a campo — APROVADA em 2026-09-13
 ├── data-model.md        # Fase 1
 ├── quickstart.md        # Fase 1
 ├── contracts/
@@ -116,7 +116,7 @@ A ordem sai da spec (§8) e da pesquisa. Cada fase é verificável sozinha.
 | # | Fase | Entrega | Depende de |
 |---|---|---|---|
 | **A** | Enumerar | Travessia recursiva do snapshot, sem lista nomeada de coleções, e parando em objeto opaco | — |
-| **B** | Classificar | `mutabilidade.py` transcrevendo a `matriz.md` aprovada | A, **matriz aprovada** |
+| **B** | Classificar | `mutabilidade.py` transcrevendo a `matriz.md` aprovada | A |
 | **C** | Guardar | O guardião que falha por omissão nos dois sentidos | A, B |
 | **D** | Reexaminar | As exclusões de razão técnica, reclassificadas ou rejustificadas | B |
 | **E** | Canário 1 | Local do evento retificável pela tela | B |

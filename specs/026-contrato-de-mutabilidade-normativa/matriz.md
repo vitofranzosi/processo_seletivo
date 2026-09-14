@@ -1,6 +1,15 @@
 # Matriz de mutabilidade — proposta para aprovação
 
-**Status**: proposta. **Nada aqui é decisão até você aprovar.**
+**Status**: **aprovada em 2026-09-13**, como proposta — as 121 entradas, as 30 linhas marcadas ⚠️ e
+as 5 políticas de objeto ausente, sem emenda.
+
+A partir daqui esta matriz é **norma**, e não sugestão. Mudar qualquer linha é decisão nova e
+escrita, sujeita à D-011 (a classificação vigente governa os atos futuros) e, na direção
+retificável → não retificável, à FR-315.
+
+As marcas ⚠️ ficam no documento de propósito: elas não significam mais "pendente", e sim "esta linha
+foi uma escolha entre alternativas defensáveis" — que é o que alguém precisa saber antes de
+reclassificá-la.
 
 Esta é a resposta ao achado C2: os artefatos definiam a estrutura do contrato e mandavam o
 implementador decidir o conteúdo dela. Natureza, razão e política de ausência são decisões
