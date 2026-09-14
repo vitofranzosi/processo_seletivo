@@ -432,8 +432,14 @@ do marco nomeia o que não se corrige ali e por quê.
   identidade/estrutural. A grafia é essa nas quatro, em spec, matriz e código (`ESTRUTURAL` é
   só o valor da enumeração).
 - **FR-298**: A declaração de natureza MUST viver em local único e autoritativo, e MUST ser lida
-  pelo guardião e por quem monta a tela de Retificação — duas fontes divergiriam na primeira
-  mudança.
+  pelos **três** consumidores: o guardião, quem monta a tela de Retificação, e quem aplica a
+  Alteração Normativa ao conteúdo — duas fontes divergiriam na primeira mudança.
+
+  *Emenda da revisão do PR #114.* A primeira redação nomeava só os dois primeiros, e a
+  implementação a seguiu: o contrato governava a tela, e a API aceitava o que a tela não oferecia.
+  Ligá-lo ao ato fez onze testes caírem, cada um uma decisão anterior que a matriz contradizia — e
+  enquanto o contrato governasse um canal só, nenhuma dessas contradições tinha como aparecer.
+  Fonte única que governa um canal e não o outro não é fonte única.
 - **FR-299**: Natureza "não retificável" MUST carregar razão escrita, e a razão MUST ser normativa.
   Razão fundada em limitação de implementação NÃO DEVE ser aceita.
 - **FR-300**: **Toda** coleção normativa que o Edital máximo publica MUST estar enumerada pelo

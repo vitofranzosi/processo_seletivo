@@ -716,3 +716,37 @@ def test_linha_que_aponta_modalidade_de_outro_perfil_e_recusada(
 
     assert resposta.status_code == 422, resposta.content
     assert "não pertence ao Perfil declarado" in resposta.json()["detail"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+@pytest.mark.parametrize("requisito", ["", "   ", "Diploma\nRegistro"])
+def test_requisito_que_a_tela_nao_representa_e_recusado_na_borda(
+    api_client, manager_headers, process_payload, requisito
+):
+    """A recusa chega onde a pessoa ainda está escrevendo (026, revisão final do PR #114).
+
+    A lista de requisitos decide quem pode concorrer e se corrige numa caixa de texto, uma
+    exigência por linha. O item com quebra dentro volta partido em dois; o item em branco não
+    volta. Aceitá-los aqui gravava rascunho que a Publicação recusa depois — e, pior, norma que o
+    canal do ator não teria como corrigir.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    rascunho = complete_draft()
+    rascunho["profiles"][0]["requirements"] = ["Diploma de graduação", requisito]
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        rascunho,
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="requisito-0000001"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 422, resposta.content
+    assert "requirements.1" in resposta.json()["detail"]

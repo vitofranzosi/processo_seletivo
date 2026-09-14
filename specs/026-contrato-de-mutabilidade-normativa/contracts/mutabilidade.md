@@ -1,8 +1,13 @@
 # Contrato — mutabilidade normativa
 
-O que esta feature expõe não é uma API HTTP: é um **contrato interno** entre três leitores — o
-guardião, a interface de Retificação e quem for escrever a próxima spec que acrescente conteúdo
-publicado. Este documento diz a forma dele e o que ele obriga de cada lado.
+O que esta feature expõe não é uma API HTTP: é um **contrato interno** entre quatro leitores — o
+guardião, a interface de Retificação, **a aplicação da Alteração Normativa** e quem for escrever a
+próxima spec que acrescente conteúdo publicado. Este documento diz a forma dele e o que ele obriga
+de cada lado.
+
+> **Emenda da revisão do PR #114.** O terceiro leitor não estava nesta lista, e a implementação
+> seguiu a lista: o contrato governava a tela, e a API aceitava o que a tela não oferecia. A
+> seção 3.1 diz o que ele obriga.
 
 ---
 
@@ -136,6 +141,28 @@ livre o que o domínio depois recusa produz Retificação que falha depois do at
 **A declaração de exclusão é por bloco de coleção, e não por campo** (R-006). Repetir a mesma frase
 sob cada campo do marco é a prática que `test_medida_dos_campos` já reprova no assistente:
 explicação que não muda de um cartão para o outro não se imprime uma vez por cartão.
+
+---
+
+## 3.1. O que a aplicação do ato obriga
+
+*Seção acrescentada na revisão do PR #114 — ver a emenda no topo.*
+
+A tela é um dos canais; o outro é `PATCH`/`POST` na API de Retificação, e é o ato — e não a tela —
+que produz efeito jurídico. `publicacoes/domain/colecoes.py` **deriva** do contrato o conjunto de
+formas que a Alteração não alcança diretamente, e `changes.py` lê dali tanto a recusa quanto a
+**razão escrita**, de modo que quem recebe o erro lê a decisão normativa e não uma mensagem
+genérica.
+
+| Antes | Depois |
+|---|---|
+| `CAMPOS_NAO_RETIFICAVEIS` era um literal de um item | O conjunto é derivado: retificável é a única natureza que admite alteração direta |
+| A tela não oferecia; a API aceitava | Os dois canais recusam a mesma coisa, pela mesma razão |
+| O acréscimo se conferia em `REPLACE` | `ADD` e `REPLACE`, e a sequência `REMOVE`+`ADD` no ato inteiro |
+
+Três recusas mais específicas têm **precedência** sobre a recusa por natureza, porque já existiam e
+nomeiam a regra: identidade não endereçável, topologia de seção, e o vínculo Etapa ↔ Evento. A
+escolha foi **onde** a recusa acontece, e não **se**.
 
 ---
 

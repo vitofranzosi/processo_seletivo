@@ -812,11 +812,14 @@ components:
         # nenhum canal sabe representar.
         requirements:
           type: array
-          # **Uma exigência por item, e nenhuma quebra de linha dentro dele** (026). O `pattern`
-          # não é apresentação: a Retificação oferece a lista numa caixa de texto, uma linha por
-          # exigência, e um item com `\n` dentro não tem como voltar de lá igual ao que entrou.
-          # Sem a restrição, o que se publicava não era corrigível pelo canal do ator.
-          items: { type: string, pattern: '^[^\r\n]*$' }
+          # **Uma exigência por item, com texto, e nenhuma quebra de linha dentro dele** (026). O
+          # `pattern` não é apresentação: a Retificação oferece a lista numa caixa de texto, uma
+          # linha por exigência, e um item com `\n` dentro não tem como voltar de lá igual ao que
+          # entrou. O item em branco tem o mesmo defeito pelo outro lado — a caixa descarta a linha
+          # vazia, e `""` publicado afirma exigência sem texto que ninguém lê nem corrige. Sem as
+          # duas restrições, o que se publicava não era corrigível pelo canal do ator. Lista vazia
+          # continua legítima: é assim que se exprime o Perfil que não exige nada.
+          items: { type: string, pattern: '^[^\r\n]*\S[^\r\n]*$' }
         immediateVacancies: { type: integer, minimum: 0 }
         reserveType: { type: string, enum: [NONE, LIMITED, UNLIMITED] }
         reserveLimit: { type: [integer, 'null'], minimum: 0 }

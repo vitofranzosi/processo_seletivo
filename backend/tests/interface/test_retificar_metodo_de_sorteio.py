@@ -15,7 +15,7 @@ from django.urls import reverse
 
 from processo_seletivo.interface.retificacao import CAMPOS_DO_METODO, campos_editaveis
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from tests.fixtures.publicacao import publish_original
+from tests.fixtures.publicacao import publish_original, publish_retification
 from tests.fixtures.snapshot import ETAPA, MARCO, rascunho_completo
 from tests.interface.conftest import identificar
 
@@ -210,3 +210,65 @@ def test_o_marco_sem_metodo_oferece_os_dez_campos_em_branco(
 
     for _, rotulo, _ in CAMPOS_DO_METODO:
         assert rotulo in corpo, f"o marco sem método não oferece '{rotulo}'"
+
+
+def test_o_marco_sem_metodo_declara_o_metodo_inteiro_e_o_ato_publica(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """FR-313 até o fim: a tela oferecia os dez campos e o ato não saía do lugar (PR #114).
+
+    Oferecer os campos não é oferecer o caminho. Cada um deles virava um `REPLACE` endereçado
+    para dentro de `drawMethod`, que é nulo — e a gramática recusava o ato inteiro com
+    `CaminhoInexistente`, num erro que não nomeia nada que o servidor possa corrigir. O teste
+    anterior conferia a tela; este atravessa a jornada, que é onde o defeito vivia.
+
+    O objeto que ainda não existe se declara **inteiro**, num `REPLACE` só — a mesma forma que a
+    021 usa pela API para elevar o acervo anterior ao degrau 10.
+    """
+    rascunho = rascunho_completo()
+    for perfil_ in rascunho["profiles"]:
+        for marco_ in perfil_.get("classificationMilestones") or []:
+            marco_["drawMethod"] = None
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=rascunho, anexos=1
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    base = _base_do_marco(vigente.content)
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    declarado = {
+        f"{base}/drawMethod/algorithm": "IFES-SORTEIO-SHA256-v1",
+        f"{base}/drawMethod/source": "Fonte de demonstração",
+        f"{base}/drawMethod/occurrence": "5901",
+        f"{base}/drawMethod/occurrenceAt": "2020-01-01T20:00",
+        f"{base}/drawMethod/derivation": "A extração de sábado imediatamente anterior.",
+        f"{base}/drawMethod/normalization/rule": "DIGITOS_EM_SEQUENCIA",
+        f"{base}/drawMethod/normalization/text": "Os cinco números, na ordem dos prêmios.",
+        f"{base}/drawMethod/substitutionRule/rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+        f"{base}/drawMethod/substitutionRule/text": "Vale a seguinte da mesma fonte.",
+        f"{base}/drawMethod/qualifyingStageId": ETAPA["A"],
+    }
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {
+            **campos(vigente, **declarado),
+            "justificativa": "O Edital foi publicado antes do método existir.",
+            "confirmar": "1",
+            "chave_idempotencia": "retificar-metodo-nascendo",
+        },
+    )
+    assert resposta.status_code in (200, 302), resposta.content
+
+    # **Uma alteração, e não dez**: o objeto ausente se endereça inteiro.
+    retificacao = Retificacao.objects.get()
+    alteracao = retificacao.alteracoes.get(target_path=f"{base}/drawMethod")
+    assert alteracao.new_value["algorithm"] == "IFES-SORTEIO-SHA256-v1"
+    assert alteracao.new_value["normalization"]["rule"] == "DIGITOS_EM_SEQUENCIA"
+    assert alteracao.new_value["qualifyingStageId"] == ETAPA["A"]
+
+    publish_retification(api_client, retificacao)
+    depois = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    perfil = next(p for p in depois.content["profiles"] if p.get("classificationMilestones"))
+    metodo = perfil["classificationMilestones"][0]["drawMethod"]
+    assert metodo["occurrence"] == "5901"
+    assert metodo["substitutionRule"]["text"] == "Vale a seguinte da mesma fonte."

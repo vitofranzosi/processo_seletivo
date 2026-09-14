@@ -255,3 +255,37 @@ def test_campo_derivado_endereçado_sozinho_e_recusado():
             ],
             publication_id="00000000-0000-0000-0000-0000000000cc",
         )
+
+
+@pytest.mark.contract
+def test_a_fonte_do_derivado_precisa_mudar_de_fato():
+    """Acompanhar a fonte não basta — ela tem de mudar (achado da revisão final do PR #114).
+
+    Um `REPLACE` do `artifactId` pelo **mesmo** valor satisfazia a conferência e abria caminho para
+    um `artifactHash` arbitrário ao lado de um artefato que não trocou. A Publicação ainda barrava
+    o fechamento pela verificação de integridade, então nada inválido chegava a publicar; o que
+    nascia era um ato impossível de publicar, descoberto pelo servidor no fim da jornada.
+    """
+    from processo_seletivo.publicacoes.domain.changes import apply_changes
+
+    conteudo = _conteudo()
+    conteudo["attachments"] = [
+        {"id": ANEXO, "label": "ANEXO I", "order": 1, "artifactId": ARTEFATO, "artifactHash": "a"}
+    ]
+    with pytest.raises(CampoNaoRetificavel, match="continua o mesmo"):
+        apply_changes(
+            conteudo,
+            [
+                {
+                    "targetPath": f"/attachments/id={ANEXO}/artifactId",
+                    "operation": "REPLACE",
+                    "newValue": ARTEFATO,
+                },
+                {
+                    "targetPath": f"/attachments/id={ANEXO}/artifactHash",
+                    "operation": "REPLACE",
+                    "newValue": "b",
+                },
+            ],
+            publication_id="00000000-0000-0000-0000-0000000000cc",
+        )

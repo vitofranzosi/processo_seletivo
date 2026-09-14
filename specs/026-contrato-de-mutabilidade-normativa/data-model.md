@@ -74,7 +74,9 @@ natureza, e retificável não precisa justificar-se.
 
 ### Contrato
 
-O conjunto das classificações. Fonte única, lida pelo guardião e pela interface (FR-298).
+O conjunto das classificações. Fonte única, lida pelos três consumidores (FR-298): o guardião, a
+interface de Retificação, e a aplicação da Alteração Normativa — `publicacoes/domain/colecoes.py`
+deriva do contrato o que o ato recusa, e `changes.py` lê dali a recusa e a razão dela.
 
 ```text
 mutabilidade.py

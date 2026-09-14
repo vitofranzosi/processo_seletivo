@@ -419,10 +419,15 @@ def apply_changes(base, changes, *, publication_id):
     """
     result = deepcopy(base)
     provenance = {}
-    enderecados = {change["targetPath"] for change in changes}
+    # **Contra o conteúdo publicado, e antes de aplicar qualquer coisa.** A pergunta é se a fonte
+    # do derivado muda *neste ato*, e ela só tem resposta enquanto o conteúdo ainda é o de antes:
+    # conferir no meio da aplicação leria a fonte já trocada e responderia "não mudou" a todo ato
+    # legítimo — ou "mudou" conforme a ordem de emissão, que não é garantia de nada.
+    novos = {change["targetPath"]: change.get("newValue") for change in changes}
+    for change in changes:
+        _derivado_tem_a_fonte_no_mesmo_ato(base, change, novos)
     ausentes_no_inicio = colecoes.objetos_ausentes_que_nao_nascem(result)
     for change in changes:
-        _derivado_tem_a_fonte_no_mesmo_ato(result, change, enderecados)
         apply_change(result, change)
         provenance[change["targetPath"]] = publication_id
     nasceu = _primeiro_que_nasceu(result, ausentes_no_inicio)
@@ -456,10 +461,18 @@ def _primeiro_que_nasceu(content, ausentes_no_inicio):
     return None
 
 
-def _derivado_tem_a_fonte_no_mesmo_ato(content, change, enderecados):
-    """Campo derivado endereçado sozinho é resumo que ninguém calculou."""
+def _derivado_tem_a_fonte_no_mesmo_ato(publicado, change, novos):
+    """Campo derivado endereçado sozinho é resumo que ninguém calculou.
+
+    **Acompanhar a fonte não basta: a fonte tem de mudar.** A primeira redação só perguntava se o
+    caminho da fonte aparecia no ato, e um `REPLACE` do `artifactId` pelo mesmo valor satisfazia a
+    conferência — deixando passar um `artifactHash` arbitrário ao lado de um artefato que não
+    trocou. A verificação de integridade da Publicação ainda barrava o fechamento, então nada
+    inválido chegava a publicar; o que nascia era um ato impossível de publicar, e quem o
+    descobria era o servidor, no fim da jornada, sem mensagem que nomeasse a causa.
+    """
     try:
-        _parent, leaf, forma = _parent_of(content, change["targetPath"])
+        _parent, leaf, forma = _parent_of(publicado, change["targetPath"])
     except (CaminhoInexistente, SeletorInvalido):
         return
     forma_do_campo = f"{forma}/{colecoes.escapar(leaf)}"
@@ -469,9 +482,19 @@ def _derivado_tem_a_fonte_no_mesmo_ato(content, change, enderecados):
     sufixo_derivado = forma_do_campo.rsplit("/", 1)[-1]
     sufixo_da_fonte = fonte.rsplit("/", 1)[-1]
     esperado = change["targetPath"].rsplit("/", 1)[0] + "/" + sufixo_da_fonte
-    if esperado not in enderecados:
+    if esperado not in novos:
         raise CampoNaoRetificavel(
             f"{change['targetPath']} endereça um campo derivado sem o campo que o deriva. O "
             f"`{sufixo_derivado}` é consequência do `{sufixo_da_fonte}`, e declará-lo sozinho "
             "afirmaria um resumo que não é o dos bytes publicados."
+        )
+    try:
+        anterior = resolve_path(publicado, esperado)
+    except (CaminhoInexistente, SeletorInvalido, KeyError, IndexError):
+        return
+    if anterior is not ABSENT and novos[esperado] == anterior:
+        raise CampoNaoRetificavel(
+            f"{change['targetPath']} muda o campo derivado enquanto o `{sufixo_da_fonte}` "
+            f"continua o mesmo. O `{sufixo_derivado}` é consequência dos bytes publicados: "
+            "trocá-lo sem trocá-los afirmaria um resumo que não é o deles."
         )

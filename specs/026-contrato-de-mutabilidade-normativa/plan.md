@@ -85,11 +85,19 @@ specs/026-contrato-de-mutabilidade-normativa/
 
 ```text
 backend/processo_seletivo/
-├── editais/domain/
-│   ├── validation.py          # forma publicada (existe) — ganha só `location` (T036)
-│   └── mutabilidade.py        # NOVO: natureza e razão de cada campo publicado
+├── editais/
+│   ├── api/serializers.py     # a borda alinhada ao contrato: `requirements` é texto, sem quebra
+│   │                          #   e sem branco (convergência)
+│   └── domain/
+│       ├── validation.py      # forma publicada (existe) — ganha `location`, e a coerência da
+│       │                      #   janela, do método e dos requisitos (T036 + convergência)
+│       └── mutabilidade.py    # NOVO: natureza e razão de cada campo publicado
+├── publicacoes/domain/        # ACRESCENTADO NA CONVERGÊNCIA — o terceiro consumidor (FR-298)
+│   ├── colecoes.py            # deriva do contrato o que o ato não alcança; era um literal
+│   └── changes.py             # recusa com a razão do contrato; políticas de objeto ausente
 ├── interface/
-│   ├── retificacao.py         # passa a LER o contrato em vez de manter CAMPOS_* como fonte
+│   ├── retificacao.py         # passa a LER o contrato em vez de manter CAMPOS_* como fonte;
+│   │                          #   o objeto ausente se declara inteiro, num REPLACE só
 │   └── templates/interface/
 │       ├── retificar.html     # o bloco declara o que não alcança (FR-312)
 │       └── _retificacao_*.html
@@ -97,17 +105,22 @@ backend/processo_seletivo/
 
 backend/tests/
 ├── contract/
-│   ├── test_forma_publicada.py        # a travessia passa a ser recursiva
-│   └── test_mutabilidade.py           # NOVO: o guardião que falha por omissão
+│   ├── test_forma_publicada.py                 # a travessia passa a ser recursiva
+│   ├── test_mutabilidade.py                    # NOVO: o guardião que falha por omissão
+│   └── test_contrato_governa_a_retificacao.py  # NOVO na convergência: o contrato no ato
 ├── integration/editais/               # canários 1 a 4, pelo domínio
 └── interface/
     └── test_retificar_*.py            # canários pela tela, e FR-312
 ```
 
+**A árvore acima cresceu durante a execução**, e o acréscimo tem nome: `publicacoes/domain/` não
+estava aqui porque o plano seguia FR-298 na redação que nomeava dois consumidores. A revisão do
+PR #114 emendou o requisito e a árvore junto — ver `research.md` e `contracts/mutabilidade.md`.
+
 **Structure Decision**: monólito existente, sem app novo. O contrato entra em `editais/domain/`
 porque a natureza de mutabilidade é norma sobre o conteúdo do Edital, e é de lá que tanto o
-guardião quanto a interface conseguem lê-la sem inverter dependência (R-001). Nenhuma
-infraestrutura nova.
+guardião, a interface e a aplicação do ato conseguem lê-la sem inverter dependência (R-001).
+Nenhuma infraestrutura nova.
 
 ## Fases de execução
 

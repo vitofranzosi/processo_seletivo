@@ -1346,7 +1346,7 @@ def _marcos_bem_formados(perfil: dict) -> list[dict]:
 
 
 def _coerencia_dos_requisitos(snapshot: dict) -> list[ValidationFinding]:
-    """Uma exigência por item, e nenhuma quebra de linha dentro dele (026).
+    """Uma exigência por item, com texto, e nenhuma quebra de linha dentro dele (026).
 
     O tipo do item é conferido pela forma publicada; o que não cabe lá é a **quebra**, porque ela é
     string válida. A restrição existe pelo canal do ator: a Retificação oferece a lista numa caixa
@@ -1359,7 +1359,10 @@ def _coerencia_dos_requisitos(snapshot: dict) -> list[ValidationFinding]:
     findings = []
     for perfil in _perfis_bem_formados(snapshot):
         for posicao, requisito in enumerate(perfil.get("requirements") or []):
-            if isinstance(requisito, str) and ("\n" in requisito or "\r" in requisito):
+            if not isinstance(requisito, str):
+                continue
+            caminho = f"/profiles/id={perfil.get('id', '')}/requirements/{posicao}"
+            if "\n" in requisito or "\r" in requisito:
                 findings.append(
                     ValidationFinding(
                         severity=Severity.BLOCKING_ERROR,
@@ -1369,7 +1372,24 @@ def _coerencia_dos_requisitos(snapshot: dict) -> list[ValidationFinding]:
                             "quebra de linha dentro de um deles não tem como ser corrigida pela "
                             "tela de Retificação, que os oferece um por linha."
                         ),
-                        path=f"/profiles/id={perfil.get('id', '')}/requirements/{posicao}",
+                        path=caminho,
+                    )
+                )
+            elif not requisito.strip():
+                # **O item em branco pela mesma régua da quebra**, e a borda da API já o recusa:
+                # a Retificação oferece a lista uma exigência por linha e descarta a linha vazia
+                # ao converter, de modo que `""` publicado é exigência que ninguém lê e ninguém
+                # corrige. Não exigir nada continua legítimo — é `requirements: []`, e não um
+                # item sem texto.
+                findings.append(
+                    ValidationFinding(
+                        severity=Severity.BLOCKING_ERROR,
+                        code="requirement_blank",
+                        message=(
+                            "Requisito de participação em branco afirma que existe exigência sem "
+                            "texto. Perfil que não exige nada publica a lista vazia."
+                        ),
+                        path=caminho,
                     )
                 )
     return findings

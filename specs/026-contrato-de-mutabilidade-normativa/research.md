@@ -17,9 +17,16 @@ repositório, e duas mudaram o escopo previsto pela spec.
 **Racional**: a natureza de mutabilidade é norma — "este campo pode ser corrigido depois de
 publicado" é afirmação sobre o ato administrativo, não sobre a tela. Mantê-la na interface é o que
 produziu o estado de hoje: a decisão vive numa lista de rótulos de formulário, e quem acrescenta
-campo ao conteúdo publicado não passa por lá. FR-298 exige fonte única lida pelos dois — o
-guardião e a tela —, e o domínio é o único lugar de onde os dois podem ler sem inversão de
-dependência.
+campo ao conteúdo publicado não passa por lá. FR-298 exige fonte única lida pelos três — o
+guardião, a tela e a aplicação do ato —, e o domínio é o único lugar de onde os três podem ler sem
+inversão de dependência.
+
+**Emenda da revisão do PR #114.** Esta seção dizia "pelos dois — o guardião e a tela", e a
+implementação a seguiu ao pé da letra: `publicacoes/domain/colecoes.py` continuou com um literal
+de um item só, e `REPLACE /number` era aceito pela API apesar de o contrato dizer que o número do
+Edital não se corrige. O terceiro consumidor não é acréscimo de escopo — é o canal onde a decisão
+tem efeito jurídico, e deixá-lo de fora tornava o contrato uma convenção de formulário. O texto
+acima fica registrado como estava; o que mudou é o número de leitores, não o racional.
 
 **Alternativas consideradas**:
 

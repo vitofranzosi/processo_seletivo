@@ -466,6 +466,20 @@ def _ler(conteudo, caminho):
     return None if valor is ABSENT else valor
 
 
+def _encaixar(objeto, chaves, valor):
+    """Grava `valor` fundo adentro de `objeto`, criando os níveis que faltarem."""
+    for chave in chaves[:-1]:
+        objeto = objeto.setdefault(chave, {})
+    objeto[chaves[-1]] = valor
+
+
+def _declarou_algo(valor):
+    """Alguém escreveu alguma coisa aqui dentro? `0` e `False` contam; vazio e ausente, não."""
+    if isinstance(valor, dict):
+        return any(_declarou_algo(dentro) for dentro in valor.values())
+    return valor is not None and valor != "" and valor != []
+
+
 def _valor(item, chave):
     """Valor de `chave`, que pode atravessar objetos — `normativeRule/percentage`.
 
@@ -563,6 +577,11 @@ def _grupo(
         "campos": [
             {
                 "caminho": f"{caminho}/{chave}",
+                # A chave **relativa** ao grupo, e não só o caminho inteiro. É por ela que a
+                # emissão sabe que `drawMethod/algorithm` é folha de um objeto, e qual objeto —
+                # recortar o prefixo do caminho absoluto seria a mesma informação escrita duas
+                # vezes, e a segunda cópia erra no dia em que o seletor mudar de forma.
+                "chave": chave,
                 "rotulo": rotulo,
                 "tipo": tipo,
                 "valor": _para_formulario(_valor(item, chave), tipo),
@@ -1411,6 +1430,17 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
         # Alterar campo de linha que será removida não tem efeito e confundiria o resumo.
         if grupo["caminho"] and dentro_de_removido(grupo["caminho"]):
             continue
+        # **O objeto que ainda não existe se declara inteiro, e num `REPLACE` só.**
+        #
+        # A tela oferece os dez campos do método do sorteio mesmo quando `drawMethod` é nulo,
+        # porque é por Retificação que o acervo anterior ao degrau 10 declara o método (021,
+        # FR-014). Emitir um `REPLACE` por folha endereçava caminho para dentro de um objeto que
+        # não existe, e a gramática recusava o ato inteiro com `CaminhoInexistente` — a tela
+        # oferecia um caminho que não chegava a lugar nenhum, que é o que o Princípio VI não
+        # admite. Quem endereça o objeto endereça também a decisão que o contrato guarda sobre
+        # ele: `normativeRule` de Modalidade, se um dia for oferecida ausente, é recusada aqui
+        # com a razão escrita, e não com um erro de caminho.
+        nascendo = {}
         for campo in grupo["campos"]:
             enviado = dados.get(f"campo:{campo['referencia']}")
             if enviado is None:
@@ -1419,6 +1449,20 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
+            chaves = campo.get("chave", "").split("/")
+            objeto = f"{grupo['caminho']}/{chaves[0]}" if len(chaves) > 1 else ""
+            if objeto and _ler(conteudo, objeto) is None:
+                _encaixar(nascendo.setdefault(objeto, {}), chaves[1:], novo_valor)
+                if _declarou_algo(novo_valor):
+                    resumo.append(
+                        {
+                            "grupo": grupo["titulo"],
+                            "rotulo": campo["rotulo"],
+                            "antes": "—",
+                            "depois": _exibir(novo_valor, campo) or "—",
+                        }
+                    )
+                continue
             if campo["tipo"] == ARQUIVO:
                 if not novo_valor or str(anterior) == str(novo_valor):
                     continue
@@ -1489,6 +1533,14 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                     "depois": _exibir(novo_valor, campo) or "—",
                 }
             )
+        for caminho, declarado in nascendo.items():
+            # Nada preenchido é nada declarado: quem abriu a tela e não escreveu o método não
+            # quis criar objeto nenhum. Preenchido pela metade **vai** — e é a publicação que
+            # recusa o método incompleto, com a mensagem que nomeia o campo que falta.
+            if _declarou_algo(declarado):
+                alteracoes.append(
+                    {"targetPath": caminho, "operation": "REPLACE", "newValue": declarado}
+                )
 
     for grupo in grupos_removidos:
         atual = _ler(conteudo, grupo["caminho"]) or {}

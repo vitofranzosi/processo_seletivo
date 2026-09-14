@@ -540,6 +540,37 @@ outro não é fonte única.**
 
 ---
 
+## Phase 13: Convergência II — a jornada do método, fechada (revisão final do PR #114)
+
+**Objetivo**: a T088 passou a oferecer os dez campos do método com `drawMethod` nulo, e parou aí.
+Cada campo virava um `REPLACE` endereçado para dentro de um objeto que não existe, e a gramática
+recusava o ato inteiro com `CaminhoInexistente` — a tela oferecia um caminho que não chegava a
+lugar nenhum. O teste da fase anterior conferia a tela; o defeito vivia depois dela.
+
+- [X] T091 Emitir **um** `REPLACE` do objeto inteiro quando ele ainda não existe, em
+  `backend/processo_seletivo/interface/retificacao.py`. A detecção é pela chave relativa do campo,
+  e não por uma lista de objetos: quem endereça o objeto endereça também a decisão que o contrato
+  guarda sobre ele.
+- [X] T092 Cobrir a jornada inteira em
+  `backend/tests/interface/test_retificar_metodo_de_sorteio.py`: POST, confirmação, publicação do
+  ato, e o método completo na versão consolidada seguinte.
+- [X] T093 Recusar requisito de participação em branco nos três lugares —
+  `backend/processo_seletivo/editais/api/serializers.py`,
+  `specs/001-processo-seletivo-editais/contracts/openapi.yaml` e
+  `backend/processo_seletivo/editais/domain/validation.py` (`requirement_blank`). É a mesma régua
+  da quebra de linha pelo outro lado: a caixa de texto descarta a linha vazia, e `""` publicado
+  afirma exigência sem texto que ninguém lê nem corrige.
+- [X] T094 Exigir que a **fonte** do campo derivado mude de fato, em
+  `backend/processo_seletivo/publicacoes/domain/changes.py`. Acompanhar não basta: um `REPLACE` do
+  `artifactId` pelo mesmo valor deixava passar um `artifactHash` arbitrário, e nascia um ato que
+  só a Publicação recusava, no fim da jornada.
+- [X] T095 Emendar FR-298 e os artefatos derivados — `spec.md`, `research.md`, `data-model.md` e
+  `contracts/mutabilidade.md` — para nomear o **terceiro** consumidor do contrato: quem aplica a
+  Alteração Normativa. A emenda fica registrada como emenda; o racional anterior continua legível.
+- [X] T096 Estender o diagrama de dependências e a árvore técnica do plano às fases 12 e 13.
+
+---
+
 ## Dependencies
 
 ```text
@@ -555,11 +586,21 @@ outro não é fonte única.**
                                                            └─> US4 (T060–T069)
                                                                   └─> FR-304 (T070–T072)
                                                                          └─> Polish (T073–T078)
+                                                                                └─> Convergência
+                                                                                    (T079–T090)
+                                                                                       └─> ⟲ (T091–T096)
 
 `classificationInformation` e `callInformation` saíram do conjunto: a decisão de 13/09 os
 classificou **N**, e o que fazer com eles virou achado à parte —
 `doc/achado-objeto-normativo-sem-forma.md`.
 ```
+
+**As duas últimas fases não estavam neste diagrama, e elas são a parte mais instrutiva dele.** Não
+saíram do plano: saíram de revisões do PR #114, e cada uma corrige uma decisão que as fases
+anteriores tomaram errado. A convergência (T079–T090) ligou o contrato ao **ato**, e foi ela que
+expôs seis contradições que o contrato não tinha como mostrar enquanto governasse só a tela. A
+fase 13 (T091–T096) fecha a jornada que a T088 abriu pela metade: oferecer os dez campos do método
+não era oferecer o caminho.
 
 **As histórias não são paralelizáveis, e a afirmação contrária na versão anterior deste arquivo
 estava errada.** US1, US2, US3, US4 e US6 tocam todas `interface/retificacao.py` e os templates de
