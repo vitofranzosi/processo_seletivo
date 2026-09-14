@@ -541,6 +541,12 @@ do marco nomeia o que não se corrige ali e por quê.
   que é **R** não é backlog: a FR-304 exige caminho pela tela para todos os 70, e a matriz aprovada
   fixou quais são. Os quatro canários provam o desenho; os seis campos que sobram têm fase própria,
   porque com a matriz escrita **não existe "resto" para campo R**.
+- **Dar forma, semântica ou destino a `classificationInformation` e `callInformation`.** A decisão
+  de 13/09 os classificou **não retificáveis** porque o domínio não reconhece forma nem semântica
+  para eles — logo não sabe o que seria uma correção válida. O que fazer com eles (declarar forma e
+  exibi-los, ou deixar de emiti-los no conteúdo canônico) está registrado em
+  `doc/achado-objeto-normativo-sem-forma.md`. **É registro, e não prioridade**: o princípio VI
+  proíbe derivar dele automaticamente a prioridade da spec seguinte.
 - **A spec estrutural de vagas.** Ela vem depois, e vem obrigada a obedecer este contrato.
 - **A tela de composição do Edital.** Nada aqui muda a elaboração; o contrato é sobre o que acontece
   depois da publicação.

@@ -228,11 +228,11 @@ todas usam. É o que torna a execução sequencial defensável em vez de conflit
   FR-304, nos dois sentidos: todo campo `RETIFICAVEL` do `CONTRATO` é oferecido pela tela, e todo
   campo oferecido tem entrada no contrato.
 
-  **Com um conjunto `AINDA_SEM_TELA` que encolhe.** São 70 campos **R** e a tela oferece 49; os 21
+  **Com um conjunto `AINDA_SEM_TELA` que encolhe.** São 68 campos **R** e a tela oferece 49; os 19
   restantes entram nesse conjunto, declarados nominalmente, e o teste exige apenas que nada **fora**
   dele esteja faltando. Sem isso a fase 4 nasceria vermelha e ficaria vermelha até a fase 10, e uma
   suíte que fica vermelha por seis fases deixa de acusar regressão. Cada fase seguinte **remove** do
-  conjunto os campos que implementou, e T075 exige que ele esteja vazio.
+  conjunto os campos que implementou, e T076 exige que ele esteja vazio.
 - [ ] T029 Inverter a autoridade em `backend/processo_seletivo/interface/retificacao.py`: a
   montagem dos grupos passa a **derivar do `CONTRATO`** quais campos existem, e as tuplas `CAMPOS_*`
   passam a ser **apresentação** — rótulo, tipo de controle, opções — indexadas por
@@ -431,15 +431,15 @@ primeiros canários antes deles.
 
 ## Phase 10: FR-304 — os seis campos que faltam para o contrato fechar
 
-**Purpose**: a matriz classifica **70** campos como retificáveis. A tela oferece 49, e os quatro
-canários acrescentam 15 — restam **seis**. Enquanto eles faltarem, `AINDA_SEM_TELA` não esvazia e
+**Purpose**: a matriz classifica **68** campos como retificáveis. A tela oferece 49, e os quatro
+canários acrescentam 15 — restam **quatro**. Enquanto eles faltarem, `AINDA_SEM_TELA` não esvazia e
 a FR-304 não se cumpre.
 
 Nenhum deles é canário: são o resto que o contrato, uma vez escrito, torna obrigatório. **É por
 isso que esta fase existe e não é backlog** — com a matriz aprovada, não há "resto" para campo **R**.
 
 - [ ] T070 Escrever em `backend/tests/interface/test_retificar_residuais.py` os testes que falham
-  para os quatro campos de forma simples: `profiles/description`,
+  para os quatro campos: `profiles/description`,
   `competitionModalities/normativeRule/effectiveFrom`, `classificationMilestones/rounding/scale` e
   `.../rounding/mode`.
 - [ ] T071 Acrescentar a apresentação dos quatro em
@@ -450,28 +450,6 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
   como `CAMPOS_EVENTO` faz com `startAt` —, e os dois de `rounding` no marco — `scale` como `INTEIRO` e `mode` como **escolha** entre
   `MEIO_PARA_CIMA`, `MEIO_PARA_PAR` e `TRUNCAR` (FR-311), que é o que
   `backend/processo_seletivo/classificacao/domain/combinacao.py:75` cobra.
-> ### ⛔ Decisão pendente: `classificationInformation` e `callInformation`
->
-> A primeira redação desta fase trazia um **editor genérico** — a tela derivaria os campos das
-> chaves que o conteúdo já tem. Foi **retirada**, e a razão é dupla.
->
-> **A evidência mudou.** A `matriz.md` os classificou **R** argumentando que descrevem norma que é
-> retificável. A revisão de 13/09 conferiu a afirmação da auditoria de que *"o candidato lê no
-> Edital publicado"* e ela é **falsa**: nenhum template, o PDF e o portal os leem. Eles entram no
-> conteúdo canônico e **nenhum canal os exibe**. A auditoria foi corrigida.
->
-> **O editor era desenho inventado, não decisão transcrita.** E o objeto admite lista, número e
-> booleano, não só prosa — a primeira redação pressupunha texto sem dizer, e não definia rótulo,
-> tipo, nem se a Retificação substitui o objeto inteiro ou alcança subcaminho que o contrato não
-> classifica.
->
-> **A pergunta é anterior à implementação**, e é normativa: conteúdo publicado que nenhum canal
-> exibe tem correção a fazer pela via administrativa? O princípio VI diz que capacidade que
-> nenhuma interface alcança não é entregue — e corrigir o que ninguém lê é o espelho disso.
->
-> Enquanto a decisão não vier, os dois **permanecem em `AINDA_SEM_TELA`** e a fase não fecha.
-> Reclassificá-los para **N** só por causa da dificuldade seria razão técnica, que a D-002 proíbe.
-
 - [ ] T072 Esvaziar `AINDA_SEM_TELA` em
   `backend/tests/interface/test_campos_vem_do_contrato.py` e trocar a asserção: o conjunto precisa
   estar **vazio**, e o teste passa a exigir que todo campo **R** do contrato tenha tela (FR-304,
@@ -487,16 +465,20 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
   (`~/Downloads`, com `pdftotext -layout`): campo que nenhum Edital da amostra jamais corrigiu é
   candidato legítimo a "não retificável"; campo que a amostra corrige e o contrato exclui é erro de
   classificação.
-- [ ] T074 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
+- [ ] T074 [P] Conferir que `doc/achado-objeto-normativo-sem-forma.md` continua descrevendo o
+  estado real ao fim da implementação — ele registra a decisão aberta sobre
+  `classificationInformation` e `callInformation`, e **é registro, não prioridade**: o princípio VI
+  proíbe derivar dele a prioridade da spec seguinte.
+- [ ] T075 [P] Registrar em `doc/decisao-mutabilidade-normativa.md` que o invariante passou a ser
   verificado por teste, com o caminho do guardião — e que o quarto canário foi trocado, conforme
   D-010.
-- [ ] T075 [P] Registrar como limite conhecido, em comentário no topo de
+- [ ] T076 [P] Registrar como limite conhecido, em comentário no topo de
   `backend/processo_seletivo/editais/domain/mutabilidade.py`, que a **forma** das seis coleções
   aninhadas continua não declarada em `backend/processo_seletivo/editais/domain/validation.py`
   (015, T-009), e que a enumeração não depende dela (FR-300).
-- [ ] T076 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
+- [ ] T077 Rodar `cd backend && make lint check test-pg`. `lint` são dois passos — `ruff check`
   **e** `ruff format --check` —, e `test-pg` e não `test`.
-- [ ] T077 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
+- [ ] T078 Rodar `backend/tests/test_citacoes_de_requisito.py`: esta feature escreve `specs/`, e a
   varredura derruba o CI quando uma citação aponta identificador que nenhuma spec define.
 
 ---
@@ -515,10 +497,11 @@ isso que esta fase existe e não é backlog** — com a matriz aprovada, não h�
                                                     └─> US6 (T056–T059)
                                                            └─> US4 (T060–T069)
                                                                   └─> FR-304 (T070–T072)
-                                                                         └─> Polish (T073–T077)
+                                                                         └─> Polish (T073–T078)
 
-⛔ `classificationInformation` e `callInformation` seguem sem decisão de desenho.
-   Enquanto isso, `AINDA_SEM_TELA` não esvazia e a FR-304 não vale sem exceção.
+`classificationInformation` e `callInformation` saíram do conjunto: a decisão de 13/09 os
+classificou **N**, e o que fazer com eles virou achado à parte —
+`doc/achado-objeto-normativo-sem-forma.md`.
 ```
 
 **As histórias não são paralelizáveis, e a afirmação contrária na versão anterior deste arquivo
@@ -549,7 +532,7 @@ Pouca, e declarada honestamente:
   (`test_mutabilidade.py`) — arquivos distintos. T014 depois de T012.
 - **Fase 3**: T019 a T023 tocam o mesmo arquivo e **não** paralelizam. T018 as precede: é a
   conferência de que nenhuma razão da matriz voltou a ser técnica.
-- **Fase 11**: T073, T074 e T075 em paralelo.
+- **Fase 11**: T073, T074 e T076 em paralelo.
 
 Quando houver mais de uma sessão, **`DB_NAME` próprio em cada uma** — suítes paralelas disputam
 `test_processo_seletivo` e se derrubam com erros que não têm nada a ver com a feature.
@@ -565,9 +548,7 @@ campo dela, `location`, é o achado que a própria feature descobriu no seu can�
 
 **Incremento seguinte**: US2 e US3 fecham as três correções P1. US6 e US4 completam os canários.
 
-**E a fase 10 fecha o contrato** — quase. Ela não é polimento: é o que falta para a FR-304 valer
-sem exceção. **Quatro** dos seis campos residuais têm tarefa; os outros dois,
-`classificationInformation` e `callInformation`, estão parados numa decisão de desenho que a
-revisão de 13/09 reabriu — nenhum canal os exibe, e corrigir o que ninguém lê é questão normativa,
-não de implementação. Enquanto ela não vier, `AINDA_SEM_TELA` não esvazia e **a spec não se declara
-concluída**.
+**E a fase 10 fecha o contrato.** Ela não é polimento: é o que falta para a FR-304 valer sem
+exceção — quatro campos que a matriz classificou **R** e que nenhum canário alcança. Quando
+`AINDA_SEM_TELA` esvaziar, classificar um campo como retificável e não o oferecer passa a derrubar
+a suíte, que é a garantia da FR-304.

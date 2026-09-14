@@ -74,8 +74,8 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `duties` | | **R** | Já oferecido (FR-016). |
 | `workload` | | **R** | Já oferecido. |
 | `compensation` | | **R** | Já oferecido. |
-| `classificationInformation` | ⚠️ | **R**, **em revisão** | **Reclassificado em 13/09, e reaberto na mesma data.** Nenhum cálculo o lê: armazenado, publicado, e mais nada. **A auditoria afirmava que "o candidato lê no Edital publicado"; foi conferido e é falso** — a linha foi corrigida em `doc/auditoria-exploratoria-ux-2026-09-13.md`. Com nenhum canal exibindo, a natureza **R** passa a ter contra si o princípio VI: corrigir o que ninguém lê é ato sem destinatário. **Decisão pendente** — ver o bloco da fase 10 em `tasks.md`. É texto descritivo da mesma natureza de `description`, e descreve norma que **é** retificável (o marco, o método). Se a norma se corrige e a descrição dela não, o Edital passa a dizer duas coisas. Classificado **inteiro**: a forma de dentro é do Edital, não do sistema. |
-| `callInformation` | ⚠️ | **R**, **em revisão** | Mesma situação, com um contraponto que pesa do outro lado: ele descreve a convocação, e `callForm` ao lado é **R** **e é exibido**. **Decisão pendente**, junto com o anterior. |
+| `classificationInformation` | ⚠️ | **N** | **Decisão de 13/09.** O domínio não reconhece forma nem semântica para este objeto; portanto, não consegue determinar o que seria uma correção administrativa válida. Atribuir-lhe significado normativo exige decisão e especificação próprias, não uma Retificação.<br><br>**A ausência de consumidores é evidência do problema, não a justificativa.** Nenhum canal o exibe — verificado, e foi o que derrubou a afirmação contrária da auditoria —, mas não é por faltar tela que ele é irretificável: é por não haver o que se corrija. Correção pressupõe saber o que seria o certo, e o domínio não sabe. Achado registrado à parte em `doc/achado-objeto-normativo-sem-forma.md`. |
+| `callInformation` | ⚠️ | **N** | Mesma razão: O domínio não reconhece forma nem semântica para este objeto; portanto, não consegue determinar o que seria uma correção administrativa válida. Atribuir-lhe significado normativo exige decisão e especificação próprias, não uma Retificação. O contraponto — `callForm` ao lado é **R** e é exibido — reforça a decisão em vez de contrariá-la: `callForm` tem forma declarada, valor de lista fechada e destino observável, e é exatamente isso que falta aqui. |
 | `generalCompetitionModalityId` | | **R** | Já oferecido (014, FR-231). |
 | `vacancyReversion/kind` | | **R** | Já oferecido — `CAMPOS_DA_REVERSAO`. |
 | `callForm` | ⚠️ | **R** | **É o precedente que deu origem a esta feature.** O código registra que "o primeiro Edital publicado com a forma declarada nasceria irretificável nela". Propor **R** é fechar esse precedente. |
@@ -247,8 +247,8 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 
 | Natureza | Quantas |
 |---|---|
-| **R** — retificável | 70 |
-| **N** — não retificável | 25 |
+| **R** — retificável | 68 |
+| **N** — não retificável | 27 |
 | **E** — identidade/estrutural | 24 |
 | **D** — derivado | 4 |
 | **Total** | **123** |
@@ -256,7 +256,7 @@ não foi feita, e a pergunta é se ela pode passar a existir por Retificação.
 **27 linhas marcadas ⚠️**, mais as 5 de objeto ausente. A marca significa "esta linha foi escolha
 entre alternativas defensáveis" — e não "pendente".
 
-**Cruzamento com a tela**: 49 das 70 linhas **R** são campos que a Retificação já oferece hoje.
+**Cruzamento com a tela**: 49 das 68 linhas **R** são campos que a Retificação já oferece hoje.
 Nenhuma linha **N**, **E** ou **D** é oferecida — depois da emenda. As demais transcrevem decisão
 que o código já registra com razão normativa, ou são identidade sem controvérsia.
 
@@ -281,7 +281,7 @@ conflito com o princípio II da Constituição.
 
 | Grupo | Quem lê | Veredicto |
 |---|---|---|
-| `classificationInformation`, `callInformation` | **ninguém** — nem o PDF, nem o portal, nem cálculo algum | texto descritivo → **R** |
+| `classificationInformation`, `callInformation` | **ninguém** — nem o PDF, nem o portal, nem cálculo algum | sem forma nem semântica reconhecida → **N** |
 | `normativeRule/{calculation, rounding, distribution, callRules}` | **ninguém** | mas a Constituição manda **versionar**, não corrigir → **N** com razão constitucional |
 | `classificationMilestones/rounding` | `combinacao.py:63-86`, que valida `scale` e `mode` | **não é opaco**: forma conhecida → dois campos **R** |
 | `tiebreakers/parameters` | `desempate.py:37`, `emissao.py:244`, `calculo.py:217` | **não é opaco**: forma conhecida → dois campos **N**, por razão de identidade |
