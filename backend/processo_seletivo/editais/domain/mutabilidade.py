@@ -203,9 +203,9 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
         "O domínio não reconhece forma nem semântica para este objeto; portanto, não consegue "
         "determinar o que seria uma correção administrativa válida. Atribuir-lhe significado "
         "normativo exige decisão e especificação próprias, não uma Retificação. "
-        "A ausência de consumidores é evidência do problema, não a justificativa: nenhum canal o "
-        "exibe, mas não é por faltar tela que ele é irretificável — é por não haver o que se "
-        "corrija. Ver doc/achado-objeto-normativo-sem-forma.md."
+        "Nenhum canal do sistema exibe este conteúdo hoje, e isso é evidência do problema e não a "
+        "justificativa: não é por faltar tela que ele não se corrige — é por não haver o que se "
+        "corrija."
     ),
     ("profiles", "callInformation"): nao_retificavel(
         "Mesma razão: o domínio não reconhece forma nem semântica para este objeto, e por isso não "
@@ -226,13 +226,14 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("competitionModalities", "normativeRule/version"): retificavel(),
     ("competitionModalities", "normativeRule/percentage"): retificavel(),
     ("competitionModalities", "normativeRule/effectiveFrom"): retificavel(),
+    # A Constituição, em Restrições e Invariantes: "Cotas DEVEM ser definidas por Perfil e, quando
+    # necessário, versionar modalidade, fundamento, percentual, cálculo, arredondamento,
+    # distribuição e vigência."
     ("competitionModalities", "normativeRule/calculation"): nao_retificavel(
-        "A Constituição determina que os parâmetros da cota mudam por **versionamento**, e não por "
-        "correção: 'Cotas DEVEM ser definidas por Perfil e, quando necessário, versionar "
-        "modalidade, fundamento, percentual, cálculo, arredondamento, distribuição e vigência'. O "
-        "cálculo da reserva é um deles. O caminho de correção existe e é outro — `version` e "
-        "`effectiveFrom`, ambos retificáveis. Corrigir o parâmetro no lugar de versionar a regra "
-        "apagaria sob qual norma cada Edital anterior concorreu."
+        "Os parâmetros da cota mudam por versionamento da regra normativa, e não por correção do "
+        "texto publicado. O caminho existe e é outro: corrigir a versão do fundamento e a data em "
+        "que ela passa a valer, que se retificam. Alterar o parâmetro no lugar de versionar a "
+        "regra apagaria sob qual norma cada Edital anterior concorreu."
     ),
     ("competitionModalities", "normativeRule/rounding"): nao_retificavel(
         "Mesma razão constitucional: o arredondamento é um dos parâmetros da cota que mudam por "
@@ -256,9 +257,9 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("declaredFacts", "code"): estrutural(),
     ("declaredFacts", "label"): retificavel(),
     ("declaredFacts", "type"): nao_retificavel(
-        "Trocar o tipo reinterpretaria valor já congelado sob o tipo anterior: mudar o tipo é "
+        "Trocar o tipo reinterpretaria valor já declarado sob o tipo anterior: mudar o tipo é "
         "remover um fato e acrescentar outro, e o que foi congelado sob o primeiro permanece "
-        "legível sob a norma que o governou (015, FR-058)."
+        "legível sob a norma que o governou."
     ),
     # ---- classificationMilestones -----------------------------------------------------------
     ("classificationMilestones", "id"): estrutural(),
@@ -310,10 +311,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("classificationMilestones", "cutRule/targetCount"): retificavel(),
     ("classificationMilestones", "cutRule/surplusCount"): retificavel(),
     ("classificationMilestones", "cutRule/tieOutcome"): retificavel(),
+    # A razão já estava escrita em `classificacao/domain/faixa.etapa_governada`; aqui ela é dita
+    # para quem lê a tela, e não para quem lê o código (FR-312).
     ("classificationMilestones", "cutRule/governedStage"): nao_retificavel(
-        "A razão está escrita em `classificacao/domain/faixa.etapa_governada`: trocá-la 'moveria "
-        "em silêncio quem continua no certame'. É o campo que decide quem progride, e corrigi-lo "
-        "depois do corte aplicado mudaria quem passou sem reavaliar ninguém."
+        "É o campo que decide quem progride no certame. Corrigi-lo depois de o corte ter sido "
+        "aplicado moveria, em silêncio, quem continua — sem que ninguém fosse reavaliado."
     ),
     ("classificationMilestones", "cutRule/continuation"): nao_retificavel(
         "Mesma razão da Etapa governada, do outro lado: admitir ou não continuação além da faixa "
@@ -335,11 +337,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("tiebreakers", "parameters/factId"): nao_retificavel(
         "Mesma razão: o fato que o critério compara é parte do que ele é."
     ),
+    # O domínio registra por que ela é declarada e nunca inferida: o silêncio não vira zero nem
+    # último lugar (015, FR-018).
     ("tiebreakers", "whenMissing"): nao_retificavel(
-        "O que fazer quando o valor não existe é regra de desempate como qualquer outra, e "
-        "`editais/domain/perfis` registra por que ela é declarada e nunca inferida: 'o silêncio "
-        "não vira zero nem último lugar'. Mudá-la depois de empates resolvidos os resolveria de "
-        "outro jeito."
+        "O que fazer quando o valor não existe é regra de desempate como qualquer outra. Mudá-la "
+        "depois de os empates terem sido resolvidos os resolveria de outro jeito."
     ),
     # ---- schedule ---------------------------------------------------------------------------
     ("schedule", "id"): estrutural(),

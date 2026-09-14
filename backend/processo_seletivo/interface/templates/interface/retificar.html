@@ -113,6 +113,33 @@ o navegador as trata como qualquer sumário.
     {% endfor %}
 
     {% comment %}
+    O que **não** se corrige aqui, e por quê (026, US6, FR-312).
+
+    Ausência deliberada e ausência que parece defeito são coisas diferentes, e até aqui a tela não
+    as distinguia: quem procurava corrigir o arredondamento varria a página e concluía que o
+    sistema tinha esquecido. Agora a razão está escrita, e ela é **normativa** — se ela disser
+    "não há tela para isso", a decisão está errada, e não o texto.
+
+    **Uma vez por bloco, e não sob cada campo.** Explicação que não muda de um cartão para o outro
+    não se imprime uma vez por cartão. Fechado por padrão: quem veio corrigir o que se corrige não
+    precisa atravessar a lista do que não se corrige para chegar aos campos.
+    {% endcomment %}
+    {% if secao.exclusoes %}
+    <details class="exclusoes">
+      <summary>O que não se corrige por Retificação nesta seção</summary>
+      {% for bloco in secao.exclusoes %}
+      <h3>{{ bloco.tipo }}</h3>
+      <dl>
+        {% for campo in bloco.campos %}
+        <dt>{{ campo.rotulo }}</dt>
+        <dd>{{ campo.razao }}</dd>
+        {% endfor %}
+      </dl>
+      {% endfor %}
+    </details>
+    {% endif %}
+
+    {% comment %}
     O botão de acrescentar mora **na seção do que ele acrescenta**, e não numa terceira área no
     fim da página. Antes, quem quisesse um Evento novo terminava de ler o Cronograma, atravessava
     as Etapas, os Documentos e as Seções do texto, e encontrava "Acrescentar Eventos" a quatro mil

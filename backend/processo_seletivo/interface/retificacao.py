@@ -820,6 +820,78 @@ TIPOS_ANINHADOS = frozenset(
 )
 
 
+# O tipo que a tela desenha, e a coleção que o contrato classifica. Explícito, e não derivado do
+# rótulo: o rótulo é texto de tela e muda; a coleção é chave de contrato e não pode mudar junto.
+COLECAO_DO_TIPO = {
+    "Edital": mutabilidade.RAIZ,
+    "Perfil": "profiles",
+    "Modalidade": "competitionModalities",
+    "Linha do quadro de vagas": "vacancyTable",
+    "Fato declarado": "declaredFacts",
+    "Marco": "classificationMilestones",
+    "Critério de desempate": "tiebreakers",
+    "Evento": "schedule",
+    "Etapa": "stages",
+    "Documento exigido": "documentRequirements",
+    "Anexo": "attachments",
+    "Seção": "sections",
+}
+
+# Como cada campo **excluído** se chama em português (026, US6, FR-312).
+#
+# Eles não estão em `CAMPOS_*` justamente por não se corrigirem aqui — e por isso não têm rótulo
+# vindo de lá. Sem esta tabela, a tela diria "appealWindow/unit" a quem lê, que é o caminho
+# normativo chegando ao HTML: exatamente o que a FR-019 existe para impedir.
+ROTULO_DO_EXCLUIDO = {
+    (mutabilidade.RAIZ, "number"): "Número do Edital",
+    (mutabilidade.RAIZ, "year"): "Ano",
+    (mutabilidade.RAIZ, "maxInscricoesPorCandidato"): "Teto de inscrições por candidato",
+    ("profiles", "reserveType"): "Espécie do Cadastro Reserva",
+    ("profiles", "classificationInformation"): "Informações sobre a classificação",
+    ("profiles", "callInformation"): "Informações sobre a convocação",
+    ("competitionModalities", "normativeRule/calculation"): "Cálculo da reserva",
+    ("competitionModalities", "normativeRule/rounding"): "Arredondamento da reserva",
+    ("competitionModalities", "normativeRule/distribution"): "Distribuição da reserva",
+    ("competitionModalities", "normativeRule/callRules"): "Regras de convocação da reserva",
+    ("declaredFacts", "type"): "Tipo do fato",
+    ("classificationMilestones", "stages"): "Etapas que o marco mede",
+    ("classificationMilestones", "operation"): "Como as pontuações se combinam",
+    ("classificationMilestones", "normalization"): "Normalização das pontuações",
+    ("classificationMilestones", "cutRule/targetKind"): "Espécie do alvo do corte",
+    ("classificationMilestones", "cutRule/governedStage"): "Etapa que o corte alimenta",
+    ("classificationMilestones", "cutRule/continuation"): "Continuação além da faixa",
+    ("tiebreakers", "type"): "O que o critério compara",
+    ("tiebreakers", "parameters/stageId"): "Etapa comparada pelo critério",
+    ("tiebreakers", "parameters/factId"): "Fato comparado pelo critério",
+    ("tiebreakers", "whenMissing"): "O que fazer quando o valor não existe",
+    ("schedule", "type"): "Espécie do Evento",
+    ("schedule", "isRegistrationPeriod"): "É o período de inscrições",
+    ("sections", "title"): "Título da seção",
+    ("sections", "order"): "Ordem da seção",
+    ("sections", "type"): "Espécie da seção",
+    ("documentRequirements", "key"): "Identificação do documento",
+}
+
+
+def exclusoes_do_tipo(tipo):
+    """Os campos daquela entidade que **não** se corrigem por Retificação, com a razão de cada um.
+
+    Lidos do contrato de mutabilidade, e não de uma lista aqui: a razão é norma e vive no domínio;
+    o rótulo é tela e vive aqui.
+    """
+    colecao = COLECAO_DO_TIPO.get(tipo)
+    if colecao is None:
+        return []
+    return [
+        {
+            "rotulo": ROTULO_DO_EXCLUIDO.get((colecao, caminho), caminho),
+            "razao": decisao.razao,
+        }
+        for (outra, caminho), decisao in mutabilidade.CONTRATO.items()
+        if outra == colecao and decisao.natureza is mutabilidade.Natureza.NAO_RETIFICAVEL
+    ]
+
+
 def agrupar_em_secoes(grupos):
     """As mesmas linhas, na mesma ordem, divididas nas seções que a tela mostra.
 
@@ -838,7 +910,27 @@ def agrupar_em_secoes(grupos):
         conjunto = set(tipos)
         linhas = [grupo for grupo in grupos if grupo["tipo"] in conjunto]
         if linhas or identificador in SECOES_QUE_ACRESCENTAM:
-            secoes.append({"id": identificador, "titulo": titulo, "grupos": linhas})
+            secoes.append(
+                {
+                    "id": identificador,
+                    "titulo": titulo,
+                    "grupos": linhas,
+                    # **Uma vez por bloco, e não por cartão** (026, US6, FR-312). Explicação que
+                    # não muda de um cartão para o outro não se imprime uma vez por cartão — é a
+                    # decisão que `test_medida_dos_campos` guarda no assistente, e que reprovou a
+                    # primeira tentativa disto no PR #113.
+                    #
+                    # Só os tipos que a seção **de fato mostra**: declarar o que não se corrige num
+                    # Marco para um Edital sem marco nenhum seria responder pergunta que ninguém
+                    # fez.
+                    "exclusoes": [
+                        {"tipo": tipo, "campos": exclusoes_do_tipo(tipo)}
+                        for tipo in tipos
+                        if any(grupo["tipo"] == tipo for grupo in linhas)
+                        and exclusoes_do_tipo(tipo)
+                    ],
+                }
+            )
     return secoes
 
 

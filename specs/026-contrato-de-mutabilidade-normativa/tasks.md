@@ -369,13 +369,13 @@ spec já é concluível a partir daqui** pelo princípio VI.
 
 **Goal**: ausência deliberada deixa de parecer defeito.
 
-- [ ] T056 [US6] Escrever em `backend/tests/interface/test_retificar_exclusoes.py` o teste que
+- [X] T056 [US6] Escrever em `backend/tests/interface/test_retificar_exclusoes.py` o teste que
   falha: o bloco do marco declara quais campos não se corrigem ali e a razão normativa de cada um
   (SC-102), e a mesma razão não aparece duas vezes no mesmo bloco.
-- [ ] T057 [US6] Expor em `backend/processo_seletivo/interface/retificacao.py` a leitura das
+- [X] T057 [US6] Expor em `backend/processo_seletivo/interface/retificacao.py` a leitura das
   exclusões de uma coleção: os campos `NAO_RETIFICAVEL` com as respectivas razões, vindas de
   `backend/processo_seletivo/editais/domain/mutabilidade.py`.
-- [ ] T058 [US6] Renderizar a declaração **uma vez por bloco de coleção**, e não sob cada campo, em
+- [X] T058 [US6] Renderizar a declaração **uma vez por bloco de coleção**, e não sob cada campo, em
   `backend/processo_seletivo/interface/templates/interface/retificar.html`. Explicação que não muda
   de um cartão para o outro não se imprime uma vez por cartão — é a decisão que
   `backend/tests/interface/test_medida_dos_campos.py` guarda no assistente, e que reprovou a
