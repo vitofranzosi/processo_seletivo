@@ -24,6 +24,20 @@ participar do ato. O sistema recusará esta operação.</p>
 <p class="erro" role="alert"><strong>Impedimento:</strong> {{ item.mensagem }}</p>
 {% endif %}{% endfor %}
 
+{% comment %}
+**A advertência também é repetida aqui** (027, FR-328). Ela não impede o ato — quadro parcial é
+legítimo, e recusar transformaria "o Edital não declarou" em "o Edital não pode existir" —, mas
+este é o último momento em que corrigi-la ainda é barato: depois da publicação, a mesma informação
+custa uma Retificação.
+
+Eram seis os pontos em que a cadeia podia ter avisado e não avisava, e a confirmação do ato era o
+terceiro. Quem publica precisa ver, no instante em que confirma, o que o Edital vai afirmar e o que
+a apuração vai alcançar — e os dois em números, para não ter de abrir outra tela para comparar.
+{% endcomment %}
+{% for item in pendencias %}{% if item.severidade == 'aviso' %}
+<p class="aviso" role="status"><strong>Aviso:</strong> {{ item.mensagem }}</p>
+{% endif %}{% endfor %}
+
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
   <h2 id="consequencias-titulo">

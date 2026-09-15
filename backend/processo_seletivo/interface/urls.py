@@ -90,6 +90,11 @@ urlpatterns = [
         views.fragmento_modalidade,
         name="fragmento-modalidade",
     ),
+    path(
+        "fragmentos/perfil/<str:indice>/quadro",
+        views.fragmento_quadro,
+        name="fragmento-quadro",
+    ),
     # O marco segue o mesmo esquema da modalidade, e o critério vai um nível mais fundo: os
     # campos dele são `criterio-<perfil>-<marco>-<n>-…`, e sem os dois índices na rota a linha nova
     # não saberia a que marco de que Perfil pertence.

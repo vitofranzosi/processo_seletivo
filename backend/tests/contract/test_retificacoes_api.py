@@ -41,7 +41,7 @@ def test_consolidar_sobre_conteudo_base_de_outra_versao_canonica_e_recusado(
     from processo_seletivo.publicacoes.application import retificacoes
     from processo_seletivo.publicacoes.domain.conflicts import previous_hash
     from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-    from tests.fixtures.edital import actor_headers, caminho_perfil
+    from tests.fixtures.edital import actor_headers, mudanca_de_vagas
     from tests.fixtures.publicacao import publish_original, try_publish_retification
 
     edital = publish_original(api_client, manager_headers, process_payload)
@@ -51,15 +51,13 @@ def test_consolidar_sobre_conteudo_base_de_outra_versao_canonica_e_recusado(
         {
             "baseSnapshotId": str(base.id),
             "justification": "Versão canônica divergente",
+            # O total e a linha da ampla concorrência são um ato só (027, FR-335).
             "changes": [
                 {
-                    "targetPath": caminho_perfil("immediateVacancies"),
-                    "operation": "REPLACE",
-                    "newValue": 5,
-                    "expectedPreviousHash": previous_hash(
-                        base.content, caminho_perfil("immediateVacancies")
-                    ),
+                    **mudanca,
+                    "expectedPreviousHash": previous_hash(base.content, mudanca["targetPath"]),
                 }
+                for mudanca in mudanca_de_vagas(5)
             ],
         },
         format="json",

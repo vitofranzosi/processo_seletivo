@@ -18,7 +18,7 @@ from referencing.jsonschema import DRAFT202012
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from tests.fixtures.edital import actor_headers, caminho_perfil
+from tests.fixtures.edital import actor_headers, caminho_perfil, mudanca_de_vagas
 from tests.fixtures.publicacao import create_retification, publish_original, retify
 
 CONTRACT = (
@@ -33,6 +33,8 @@ CONTRACT_URI = "urn:processo-seletivo:openapi"
 # Converte <uuid:processo_id> do Django no {processoId} do contrato.
 DJANGO_PARAM = re.compile(r"<(?:[^:>]+:)?([a-z_]+)>")
 VACANCIES = caminho_perfil("immediateVacancies")
+# **O total e a linha da ampla concorrência são um ato só** (027, FR-335): num Perfil sem lista
+# reservada os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
 
 
 @pytest.fixture(scope="module")
@@ -142,13 +144,13 @@ def cenario(api_client, manager_headers, process_payload):
     retificada = retify(
         api_client,
         edital,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7}],
+        mudanca_de_vagas(7),
         suffix="a",
     )
     rascunho = create_retification(
         api_client,
         edital,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 9}],
+        mudanca_de_vagas(9),
         suffix="b",
     )
     return {"edital": edital, "publicada": retificada, "rascunho": rascunho}

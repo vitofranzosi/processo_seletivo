@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from uuid import NAMESPACE_URL, uuid5
 
 
 class RecusaDeCampo(ValueError):
@@ -183,6 +184,103 @@ def validate_vacancy_table(profile: dict, *, modalidades_do_edital: set[str] | N
             campo="modalityId",
             identidade=identidade or identidade_do_perfil,
         )
+
+
+# O espaço de nomes do `uuid5` da linha geral derivada, fixo pela mesma razão que o das Seções: é o
+# que torna a identidade reproduzível entre execuções e entre máquinas. Derivá-lo do ambiente faria
+# a mesma linha do mesmo Perfil nascer com duas identidades em dois lugares.
+NAMESPACE_DA_LINHA_GERAL = uuid5(NAMESPACE_URL, "https://cefor.ifes.edu.br/editais/vacancy-table")
+
+
+def identidade_da_linha_geral(perfil_id):
+    """A identidade da linha geral derivada de um Perfil (027, T-001).
+
+    Pública porque é reproduzível por quem precisa endereçá-la sem ler o conteúdo publicado — e é
+    exatamente essa reprodutibilidade que faz a gravação ser idempotente.
+    """
+    return uuid5(NAMESPACE_DA_LINHA_GERAL, f"{perfil_id}:general")
+
+
+def listas_reservadas(profile: dict) -> set[str]:
+    """As Modalidades deste Perfil que exigem linha própria no quadro (027, FR-317).
+
+    **Lista reservada não é linha reservada, e a diferença de uma letra é cara.** A *lista* é a
+    Modalidade — um recorte de concorrência; a *linha* é o que o quadro escreve sobre ela. Esta
+    função responde quantas listas existem, e não quantas linhas foram declaradas.
+
+    **A Modalidade declarada como ampla concorrência fica de fora**, porque a quantidade dela mora
+    na linha geral (025, D-004): exigir linha própria dela seria exigir que o Edital declarasse o
+    mesmo número duas vezes, e a `_ampla_concorrencia_declarada` já recusa quem o fizer.
+
+    **A identificação vem da declaração do Edital, e nunca do nome.** Casar a denominação "Ampla
+    concorrência" foi recusado por escrito na `025` (R-006) e continua recusado: um Perfil que
+    declara Modalidade e não aponta qual é a da ampla tem, para o sistema, todas elas reservadas —
+    e é sobre isso que a advertência da FR-325 existe para avisar.
+
+    Conjunto vazio significa **uma lista de concorrência só**, e é o que autoriza a derivação da
+    linha geral (FR-318).
+    """
+    ampla = profile.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    return {
+        str(modalidade["id"])
+        for modalidade in profile.get("competitionModalities") or []
+        if isinstance(modalidade, dict) and modalidade.get("id") and str(modalidade["id"]) != ampla
+    }
+
+
+def derivar_linha_geral(profile: dict) -> dict:
+    """A linha geral de um Perfil sem lista reservada é a vaga imediata dele (027, D-001, FR-318).
+
+    O Princípio II proíbe que vaga exista como dado independente e divergente, e era isso que o
+    Perfil fazia: o número que o Edital publicava morava num campo, o que a apuração usava morava
+    noutro, e nada os relacionava. Enquanto há **uma** lista de concorrência, o segundo não é uma
+    segunda declaração — é uma projeção da primeira, e por isso ninguém o digita.
+
+    **Derivar não é calcular.** A fonte é o total que quem compõe declarou no próprio Perfil, e
+    nunca percentual, fundamento ou campo da Regra Normativa (FR-319, e a FR-157 da `025` antes
+    dela). O total continua declarado e não é tocado (FR-320): a projeção tem uma direção só.
+
+    **A identidade recebida é preservada, e a que falta é derivada do Perfil** — e é o ponto em que
+    esta função seria fácil de errar. `replace_draft` apaga e recria o rascunho inteiro, de modo que
+    uma linha que ganhasse `uuid4()` a cada gravação ficaria inalcançável pela Retificação e faria o
+    resumo canônico mudar sem o conteúdo mudar (FR-168 da `025`). A interface devolve o `id` que já
+    gravou, mas **quem grava por API não devolve**: enviar duas vezes a mesma carga sem quadro
+    mintaria duas identidades, e o contrato promete que a mesma carga produz o mesmo conteúdo. O
+    `uuid5` sobre a identidade do Perfil fecha isso sem consultar o banco — é o mesmo recurso, e
+    pela mesma razão, que a Seção já usa sobre `(edital, chave)`.
+
+    Isso **não** é derivar na emissão, que ficou recusado: a linha continua sendo gravada, e é ela
+    que a conferência confere, a Revisão exibe e a Retificação alcança.
+
+    **Idempotente, e reafirmando a quantidade a cada gravação.** É o que cumpre a FR-322: removida
+    a última lista reservada, a linha geral volta a valer o total, em vez de ficar num número que
+    a repartição de ontem deixou para trás.
+
+    Devolve o Perfil com a coleção ajustada; quando há lista reservada, devolve o que recebeu — ali
+    a repartição é declarada, e derivar apagaria declaração de quem compõe.
+    """
+    if listas_reservadas(profile):
+        return profile
+
+    total = profile.get("immediateVacancies")
+    # Total malformado não é problema desta função: `validate_profile` o recusa com mensagem que
+    # aponta o campo, e inventar uma linha a partir de lixo esconderia a recusa boa atrás de outra.
+    if isinstance(total, bool) or not isinstance(total, int):
+        return profile
+
+    linhas = [linha for linha in profile.get("vacancyTable") or [] if isinstance(linha, dict)]
+    geral = next((linha for linha in linhas if not linha.get("modalityId")), None)
+    # A linha geral vem primeiro no quadro, como os Editais reais a exibem (025, D-009). As demais
+    # sobrevivem: um Perfil pode ter linha reservada de uma Modalidade que ele acabou de remover no
+    # mesmo POST, e é `validate_vacancy_table` quem tem a mensagem certa para esse caso.
+    reservadas = [linha for linha in linhas if linha.get("modalityId")]
+    geral = {
+        **(geral or {"id": str(identidade_da_linha_geral(profile.get("id")))}),
+        "modalityId": None,
+        "immediateVacancies": total,
+    }
+    return {**profile, "vacancyTable": [geral, *reservadas]}
 
 
 def validate_declared_facts(facts: list[dict]) -> None:

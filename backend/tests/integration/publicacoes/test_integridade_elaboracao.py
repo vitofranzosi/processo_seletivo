@@ -41,7 +41,14 @@ REMOVER_NOME = [{"targetPath": f"/profiles/id={P2}/name", "operation": "REMOVE"}
 
 
 def test_a_criacao_recusa_o_replace_parcial(api_client, edital, base):
-    """SC-001 no primeiro momento."""
+    """SC-001 no primeiro momento.
+
+    **A recusa passou a chegar um portão antes** (027). Desde que a linha geral é materializada na
+    gravação, todo Perfil publicado carrega o quadro preenchido — e um `REPLACE` que o omite não é
+    só conteúdo malformado: é destruir uma coleção com chave, que a gramática recusa antes de a
+    conferência do conteúdo rodar. O que a spec exige continua verdadeiro e é o que se afirma
+    abaixo: o parcial é recusado, e o ato não chega a existir.
+    """
     recusa = elaborar(
         api_client,
         edital,
@@ -56,7 +63,7 @@ def test_a_criacao_recusa_o_replace_parcial(api_client, edital, base):
     )
 
     assert recusa.status_code == 422, recusa.content
-    assert recusa.data["code"] == "blocking_findings"
+    assert recusa.data["code"] == "invalid_change"
     assert not Retificacao.objects.filter(edital=edital).exists(), "o ato não chega a existir"
 
 

@@ -130,6 +130,18 @@ def remapear(conteudo, mapa):
             }
             for linha in perfil.get("vacancyTable") or []
         ]
+        # **E a declaração de qual Modalidade é a ampla concorrência** (014), pela mesma razão e
+        # com o mesmo custo do esquecimento: sem a troca, o Edital copiado apontaria a Modalidade
+        # do Edital **anterior** — um identificador de outro Edital dentro do conteúdo canônico
+        # deste. `None` atravessa intocado: significa "este Perfil não declara nenhuma".
+        #
+        # **Achado da `027`.** O campo nasceu na `014` e nunca entrou aqui, e nada acusava porque
+        # nenhuma fixture o declarava. Ele só apareceu quando a `027` passou a exigir a declaração
+        # para que a linha geral seja derivada — e aí o teste que proíbe a origem de vazar para o
+        # destino ficou vermelho.
+        novo_perfil["generalCompetitionModalityId"] = trocar(
+            perfil.get("generalCompetitionModalityId"), "generalCompetitionModalityId"
+        )
         marcos = []
         for marco in perfil.get("classificationMilestones") or []:
             novo_marco = {

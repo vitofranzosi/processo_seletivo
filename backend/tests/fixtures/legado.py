@@ -140,3 +140,24 @@ def hashes_publicados():
         "publicacoes": dict(Publicacao.objects.values_list("id", "content_hash")),
         "versoes": dict(VersaoConsolidada.objects.values_list("id", "content_hash")),
     }
+
+
+# A versão canônica imediatamente anterior ao degrau que criou o quadro de vagas (027).
+#
+# **Rebaixar até a 4 não serve para todo cenário**: aquele degrau é tão antigo que leva junto os
+# marcos classificatórios, e um cenário de corte publicado ali não encontra o marco que ele
+# precisa. O que estes testes pedem é outra coisa — um Edital **com** tudo o que veio até o degrau
+# 11 e **sem** o quadro, que é exatamente a condição do acervo real.
+VERSAO_ANTES_DO_QUADRO = 11
+
+
+def antes_do_quadro(api_client, manager_headers, process_payload, *, draft=None):
+    """Publica o Edital como ele teria sido antes de o quadro de vagas existir.
+
+    É o único jeito de ter, hoje, um Edital publicado sem linha nenhuma: desde a `027` a linha
+    geral é materializada na gravação, e a composição não produz mais esse estado. Os guardas de
+    "ausência de quadro não é zero" (FR-330) precisam dele para continuar guardando alguma coisa.
+    """
+    return publicar_na_versao_anterior(
+        api_client, manager_headers, process_payload, draft=draft, versao=VERSAO_ANTES_DO_QUADRO
+    )

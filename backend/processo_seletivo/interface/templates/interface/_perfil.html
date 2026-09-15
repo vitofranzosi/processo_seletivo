@@ -126,8 +126,16 @@
     <div id="modalidades-{{ indice }}">
       {% for modalidade in perfil.modalidades %}{% include "interface/_modalidade.html" with sub=forloop.counter0 %}{% endfor %}
     </div>
+    {% comment %}
+    **O Perfil inteiro vai junto** (027, FR-321). O servidor precisa saber se este Perfil já tem
+    lista reservada — para decidir entre entregar a seção do quadro inteira ou só mais uma linha —
+    e qual é o total, para pré-preencher a linha geral. Nada disso está no banco: está no
+    formulário, digitado agora. `hx-include` é o que o traz, e não exige `hx-vals='js:{...}'`, que
+    pediria o `allowEval` do HTMX e quebraria sob a CSP desta interface.
+    {% endcomment %}
     <button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
+            hx-include="closest fieldset"
             hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
     {% comment %}
     Qual das Modalidades acima é a ampla concorrência (014, D-014, FR-231).
@@ -142,8 +150,24 @@
     {% endcomment %}
     <p class="campo">
       <label for="perfil-{{ indice }}-generalCompetitionModalityId">Qual delas é a ampla concorrência</label>
+      {% comment %}
+      **A escolha reconstrói o quadro na hora** (027, FR-317). Apontar uma Modalidade como a da
+      ampla concorrência muda quantas listas reservadas existem, e portanto se há repartição a
+      pedir: sem esta reação, a caixa da Modalidade recém-apontada ficava na tela até a próxima
+      gravação — e quem digitasse nela levava recusa na submissão, porque a quantidade da ampla
+      mora na linha geral.
+
+      `hx-include` manda o Perfil inteiro: o servidor recalcula a partir do que está digitado
+      agora, e não do que está no banco. Sem `hx-vals='js:{...}'`, que pediria o `allowEval` do
+      HTMX e quebraria sob a CSP desta interface.
+      {% endcomment %}
       <select id="perfil-{{ indice }}-generalCompetitionModalityId"
               name="perfil-{{ indice }}-generalCompetitionModalityId"
+              hx-get="{% url 'interface:fragmento-quadro' indice %}"
+              hx-trigger="change"
+              hx-include="closest fieldset"
+              hx-target="#quadro-{{ indice }}"
+              hx-swap="innerHTML"
               aria-describedby="ajuda-ampla-{{ indice }}">
         <option value="">Nenhuma — a ampla concorrência é só a linha geral do quadro</option>
         {% for modalidade in perfil.modalidades %}
@@ -200,24 +224,26 @@
         convocar: ele não escolhe a forma por você.</span>
     </p>
   </section>
-  <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
-    <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>
-    {% comment %}
-    Seção do cartão do Perfil, e não tela à parte (UX-020). Uma tela à parte seria mais fácil de
-    escrever e destruiria o que a outra tivesse acabado de gravar, porque o rascunho é substituído
-    inteiro a cada POST: estando no mesmo formulário, o problema não existe.
+  {% comment %}
+  **O bloco do quadro só existe quando há repartição a pedir** (027, D-002, FR-321). Um Perfil sem
+  lista reservada tem exatamente uma lista de concorrência, e a quantidade dela já foi digitada em
+  "Vagas imediatas": desenhar o bloco ali era pedir o mesmo número duas vezes — um campo rotulado
+  em português corrente e outro sem explicação visível —, e foi assim que Editais publicaram um
+  número que a apuração não usava.
 
-    As linhas são **oferecidas**, e só a quantidade é digitada (UX-021): a geral mais uma por
-    Modalidade já declarada. Nenhum código, rótulo ou denominação é redigitado — sete polos de três
-    Modalidades dão 28 campos, e nem um a mais.
-
-    Quantidade em branco não grava linha: ausência é "não declarado", e nunca zero. Quem quiser
-    dizer zero digita zero.
-    {% endcomment %}
-    <div id="quadro-{{ indice }}">
-      {% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
-    </div>
-  </section>
+  **O ponto de ancoragem fica sempre.** `#quadro-<indice>` é o alvo fora de banda por onde o
+  fragmento da Modalidade entrega a linha nova; sem ele presente, o `hx-swap-oob` não acha destino,
+  **não erra**, e a linha se perde em silêncio. O que aparece e some é a seção, e não a âncora.
+  {% endcomment %}
+  {% comment %}
+  **Os dois estados moram dentro da âncora**, e não um dentro e outro fora. A linha geral viaja
+  mesmo com o bloco ausente — identidade e quantidade em campo oculto, porque é ela que a gravação
+  preserva e que a Retificação alcança depois de publicada —, e mantê-la aqui dentro é o que
+  permite ao seletor da ampla concorrência trocar os dois estados com um alvo só.
+  {% endcomment %}
+  <div id="quadro-{{ indice }}">
+    {% include "interface/_quadro_do_perfil.html" %}
+  </div>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
     <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>
     <div id="fatos-{{ indice }}">

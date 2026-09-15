@@ -1,0 +1,30 @@
+{% comment %}
+A seção do quadro de vagas, extraída do cartão do Perfil para que o fragmento da Modalidade possa
+entregá-la inteira na primeira vez (027, FR-321).
+
+Seção do cartão do Perfil, e não tela à parte (UX-020). Uma tela à parte seria mais fácil de
+escrever e destruiria o que a outra tivesse acabado de gravar, porque o rascunho é substituído
+inteiro a cada POST: estando no mesmo formulário, o problema não existe.
+
+As linhas são **oferecidas**, e só a quantidade é digitada (UX-021): a geral mais uma por
+Modalidade já declarada. Nenhum código, rótulo ou denominação é redigitado — sete polos de três
+Modalidades dão 28 campos, e nem um a mais.
+
+Quantidade em branco não grava linha: ausência é "não declarado", e nunca zero. Quem quiser dizer
+zero digita zero.
+{% endcomment %}
+<section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
+  <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>
+  {% comment %}
+  **A frase que explica por que o bloco apareceu agora** (UX-041). Ela é impressa, e não `.oculto`:
+  a microcópia invisível a quem enxerga é metade da causa do achado que esta feature fecha. Quem
+  acrescentou a primeira Modalidade precisa entender, sem procurar, que a conta mudou — o total
+  deixou de ser só da ampla concorrência e passou a ser repartido.
+  {% endcomment %}
+  <p class="explicacao">Este Perfil declara lista reservada, e por isso as vagas passam a ser
+    repartidas: diga quantas cabem em cada uma. A soma é conferida contra as vagas imediatas do
+    Perfil.</p>
+  <div id="linhas-do-quadro-{{ indice }}">
+    {% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
+  </div>
+</section>

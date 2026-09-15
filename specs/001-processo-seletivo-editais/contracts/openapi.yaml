@@ -641,8 +641,15 @@ components:
         vacancyTable:
           type: array
           description: >-
-            O quadro de vagas do Perfil. **Opcional**, porque o rascunho legitimamente não o traz e
-            porque quadro ausente significa "este Edital não publicou quadro" — nunca zero vaga.
+            O quadro de vagas do Perfil. **Opcional no envio**, porque o rascunho legitimamente não
+            o traz e porque quadro ausente significa "este Edital não publicou quadro" — nunca zero
+            vaga. **A linha geral, porém, é materializada na gravação** (027, FR-316 e FR-318):
+            quando o Perfil não declara lista reservada — nenhuma Modalidade, ou só aquela que ele
+            aponta em generalCompetitionModalityId —, a resposta traz uma linha de modalityId nulo
+            com immediateVacancies igual ao total do Perfil, mesmo que o envio não a tenha trazido.
+            O id enviado é preservado; sem envio, nasce um e é estável dali em diante. Enviar de
+            novo a mesma carga produz o mesmo conteúdo. Havendo lista reservada, nada é
+            materializado: ali a repartição é declarada por quem compõe.
           items: { $ref: '#/components/schemas/LinhaDoQuadroInput' }
         vacancyReversion:
           oneOf:

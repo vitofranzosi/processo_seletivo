@@ -161,7 +161,11 @@ def test_perfil_sem_modalidade_publicada_fica_sem_modalidade(
     api_client, manager_headers, process_payload
 ):
     def sem_modalidades(rascunho):
+        # Sem Modalidade, não há qual delas seja a ampla: o apontamento cai junto (027, FR-317).
+        # Deixá-lo para trás publicaria um Perfil que declara ampla concorrência numa Modalidade
+        # que ele não tem, e a publicação recusa — corretamente.
         rascunho["profiles"][1]["competitionModalities"] = []
+        rascunho["profiles"][1]["generalCompetitionModalityId"] = None
 
     edital = _publicar(api_client, manager_headers, process_payload, ajustar=sem_modalidades)
 

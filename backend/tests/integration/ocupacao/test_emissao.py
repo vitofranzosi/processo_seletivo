@@ -146,9 +146,15 @@ def test_apurar_sem_quadro_publicado_e_recusado(
     """
     from tests.fixtures.corte import emitir as emitir_corte_do_cenario
     from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.legado import antes_do_quadro
 
     edital, _, _ = montar_cenario_do_corte(
-        gestor, api_client, manager_headers, process_payload, prefixo="ocupacao-016-sem-quadro"
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="ocupacao-016-sem-quadro",
+        publicar=antes_do_quadro,
     )
     emitir_corte_do_cenario(edital, gestor, chave="ocupacao-016-sem-quadro-corte")
 

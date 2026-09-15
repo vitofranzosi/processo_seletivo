@@ -143,6 +143,24 @@ def perfis(numero, *, janela_recursal="declarada"):
                     },
                 },
             ],
+            # **Qual delas é a ampla concorrência, e como as 2 vagas se repartem** (027, FR-338).
+            # A demonstração publicava um total que a apuração não usava — os três Editais dela
+            # estavam na mesma condição do achado que a `027` fecha, e uma demonstração que
+            # reproduz o defeito ensina o defeito. O sistema não reconhece a "AC" pelo nome: a
+            # `025` recusou por escrito identificá-la assim, e é o Edital que declara.
+            "generalCompetitionModalityId": f"00000000-0000-0000-00{numero}-0000000000e1",
+            "vacancyTable": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000fa",
+                    "modalityId": None,
+                    "immediateVacancies": 1,
+                },
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000fb",
+                    "modalityId": f"00000000-0000-0000-00{numero}-0000000000e2",
+                    "immediateVacancies": 1,
+                },
+            ],
         },
         {
             "id": f"00000000-0000-0000-00{numero}-0000000000b2",
@@ -160,6 +178,11 @@ def perfis(numero, *, janela_recursal="declarada"):
                     "name": "Ampla concorrência",
                 }
             ],
+            # Declarada, e sem lista reservada nenhuma: aqui a linha geral **é** derivada do total
+            # na gravação, e não precisa ser escrita. Zero vagas imediatas dá linha geral de zero —
+            # que diz "zero", e não "não declarou". É o caso que a demonstração precisava ter para
+            # mostrar os dois lados da FR-318.
+            "generalCompetitionModalityId": f"00000000-0000-0000-00{numero}-0000000000e3",
         },
     ]
 
@@ -397,6 +420,24 @@ def perfil_de_sorteio(numero):
                         "percentage": "20.0000",
                         "rounding": {"modo": "PARA_CIMA"},
                     },
+                },
+            ],
+            # **O quadro das 40 vagas** (027, FR-338, FR-339). Este é o Perfil que a Ocupação e a
+            # Convocação percorrem na demonstração, e era ele que respondia "não há quantidade
+            # declarada a apurar" depois de o Edital publicar "40 vagas imediatas". A repartição é
+            # declarada porque há lista reservada: com a PPP declarada, a linha geral deixa de ser
+            # derivada — derivá-la escreveria na ampla um número que o Edital não repartiu.
+            "generalCompetitionModalityId": f"00000000-0000-0000-00{numero}-0000000000e1",
+            "vacancyTable": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000fa",
+                    "modalityId": None,
+                    "immediateVacancies": 30,
+                },
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000fb",
+                    "modalityId": f"00000000-0000-0000-00{numero}-0000000000e2",
+                    "immediateVacancies": 10,
                 },
             ],
             "declaredFacts": [],
@@ -1116,13 +1157,31 @@ class Command(BaseCommand):
         # As alterações nascem do conteúdo vigente, porque o caminho nomeia a entidade: o
         # identificador do Perfil e o do Evento só existem depois de o Edital ter sido publicado.
         def vagas_do_primeiro_perfil(conteudo):
-            perfil = conteudo["profiles"][0]["id"]
+            """A vaga nova entra na ampla concorrência, e os dois movimentos são um ato só.
+
+            Desde a `027` o total e o quadro não podem divergir (FR-335): alterar `2` para `3` sem
+            mover nenhuma linha publicaria um quadro que não fecha, e a conferência recusa dizendo
+            os dois números. Aqui a demonstração mostra o ato completo — que é também o que ela
+            precisa ensinar a quem for retificar de verdade.
+            """
+            perfil = conteudo["profiles"][0]
+            geral = next(
+                linha for linha in perfil["vacancyTable"] if linha.get("modalityId") is None
+            )
             return [
                 {
-                    "targetPath": f"/profiles/id={perfil}/immediateVacancies",
+                    "targetPath": f"/profiles/id={perfil['id']}/immediateVacancies",
                     "operation": "REPLACE",
                     "newValue": 3,
-                }
+                },
+                {
+                    "targetPath": (
+                        f"/profiles/id={perfil['id']}/vacancyTable/id={geral['id']}"
+                        "/immediateVacancies"
+                    ),
+                    "operation": "REPLACE",
+                    "newValue": 2,
+                },
             ]
 
         def termino_do_primeiro_evento(conteudo):

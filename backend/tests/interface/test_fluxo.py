@@ -18,7 +18,7 @@ from processo_seletivo.publicacoes.models import (
     RevisaoEdital,
 )
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import mudanca_de_vagas
 from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import compor_rascunho, identificar
 
@@ -285,11 +285,9 @@ def test_detalhe_oferece_o_documento_de_cada_publicacao_sem_rotular_vigente(
         api_client,
         edital,
         [
-            {
-                "targetPath": caminho_perfil("immediateVacancies"),
-                "operation": "REPLACE",
-                "newValue": 5,
-            }
+            # Alterar as vagas é **um ato de duas operações** desde a 027 (FR-335): o total e a
+            # linha da ampla concorrência são o mesmo número num Perfil sem lista reservada.
+            *mudanca_de_vagas(5),
         ],
         effective_at="2030-01-01T00:00:00-03:00",
     )
@@ -512,6 +510,16 @@ PERFIS_COM_COTA = {
     "modalidade-0-0-percentage": "20",
     "modalidade-0-0-foundation": "Lei 12.990/2014",
     "modalidade-0-0-version": "2014-06-09",
+    # **A repartição, porque a PPI é lista reservada** (027, FR-321). Onde há lista reservada a
+    # linha geral deixa de ser derivada — derivá-la escreveria na ampla um número que o Edital não
+    # repartiu —, e um Perfil que declara cota e não reparte não publica. A vaga fica na ampla, e a
+    # PPI declara zero, que **é** uma declaração, e não ausência.
+    "linha-0-0-id": "cccccccc-0000-4000-8000-00000000f041",
+    "linha-0-0-modalityId": "",
+    "linha-0-0-immediateVacancies": "1",
+    "linha-0-1-id": "cccccccc-0000-4000-8000-00000000f042",
+    "linha-0-1-modalityId": "cccccccc-0000-4000-8000-00000000f021",
+    "linha-0-1-immediateVacancies": "0",
 }
 
 

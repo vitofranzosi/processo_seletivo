@@ -89,9 +89,18 @@ def test_sem_quadro_publicado_a_tela_o_diz_e_nao_mostra_zero(
 ):
     """**`UX-032`**: mostrar `0` aqui afirmaria que o Edital publicou nenhuma vaga."""
     from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.legado import antes_do_quadro
 
+    # **Publicado antes de o quadro existir** (027). Desde que a linha geral é materializada na
+    # gravação, a composição não produz mais Edital sem quadro: esse estado só existe onde sempre
+    # existiu, no acervo — e é dele que este guarda precisa para continuar guardando.
     edital, _, _ = montar_cenario_do_corte(
-        gestor, api_client, manager_headers, process_payload, prefixo="ocupacao-016-tela"
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="ocupacao-016-tela",
+        publicar=antes_do_quadro,
     )
     identificar(client, "carlos", ["gestor"])
 

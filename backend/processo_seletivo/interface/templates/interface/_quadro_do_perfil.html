@@ -1,0 +1,18 @@
+{% comment %}
+O conteúdo da âncora do quadro, extraído para que o seletor da ampla concorrência possa
+reconstruí-lo **durante a edição** (027, FR-317).
+
+Os dois estados vivem aqui, e é o que torna a troca possível com um alvo só: com lista reservada,
+a seção que pede a repartição; sem ela, a linha geral sozinha, em campo oculto.
+
+**Por que reconstruir.** Escolher qual Modalidade é a ampla muda quantas listas reservadas existem
+— e, portanto, se há repartição a pedir. Enquanto isso só era recalculado na gravação, a caixa da
+Modalidade recém-apontada continuava na tela até salvar: quem digitasse nela recebia recusa na
+submissão, e o Perfil que ficava sem lista reservada continuava mostrando um bloco que já não tinha
+o que pedir.
+{% endcomment %}
+{% if perfil.tem_lista_reservada %}
+{% include "interface/_secao_do_quadro.html" %}
+{% else %}
+{% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
+{% endif %}

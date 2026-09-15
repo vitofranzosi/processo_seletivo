@@ -2,10 +2,13 @@ import pytest
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import publish_original, retify
 
 VACANCIES = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
+# os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 
 
 @pytest.fixture
@@ -93,7 +96,10 @@ def test_published_retification_matches_contract(api_client, edital_publicado):
     retificacao = retify(
         api_client,
         edital_publicado,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7}],
+        [
+            {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 7},
+        ],
     )
     response = api_client.get(f"/api/v1/public/retificacoes/{retificacao.id}")
     assert response.status_code == 200
@@ -109,6 +115,7 @@ def test_published_retification_matches_contract(api_client, edital_publicado):
     } <= set(body)
     assert body["changes"] == [
         {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7},
+        {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 7},
     ]
 
 
@@ -128,7 +135,10 @@ def test_history_page_matches_contract(api_client, edital_publicado):
     retify(
         api_client,
         edital_publicado,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7}],
+        [
+            {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 7},
+        ],
     )
     response = api_client.get(f"/api/v1/public/editais/{edital_publicado.id}/historico")
     assert response.status_code == 200
@@ -147,7 +157,10 @@ def test_history_paginates_by_opaque_cursor(api_client, edital_publicado):
     retify(
         api_client,
         edital_publicado,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7}],
+        [
+            {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 7},
+        ],
     )
     url = f"/api/v1/public/editais/{edital_publicado.id}/historico"
     todos = api_client.get(url, {"limit": 100}).json()["items"]

@@ -22,7 +22,7 @@ from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.models_retificacao import Retificacao
 from tests.fixtures.edital import identificador
 from tests.fixtures.publicacao import create_retification, retify
-from tests.fixtures.selecao import publicar_selecao
+from tests.fixtures.selecao import LINHA_GERAL_DO_DOCENTE, publicar_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -35,11 +35,22 @@ def mais_uma_vaga(edital, api_client, *, effective_at=None, suffix="a"):
         api_client,
         edital,
         [
+            # **O total e a linha da ampla mudam no mesmo ato** (027, FR-335): o Perfil docente
+            # reparte 2 vagas entre a ampla e a PPP, e levar o total a 3 sem mover a linha
+            # publicaria um quadro que não fecha. A vaga nova entra na ampla concorrência.
             {
                 "targetPath": f"/profiles/id={PERFIL}/immediateVacancies",
                 "operation": "REPLACE",
                 "newValue": 3,
-            }
+            },
+            {
+                "targetPath": (
+                    f"/profiles/id={PERFIL}/vacancyTable/id={LINHA_GERAL_DO_DOCENTE}"
+                    "/immediateVacancies"
+                ),
+                "operation": "REPLACE",
+                "newValue": 2,
+            },
         ],
         effective_at=effective_at,
         suffix=suffix,
@@ -180,11 +191,21 @@ def test_so_retificacao_publicada_entra_no_historico(
         api_client,
         edital,
         [
+            # O total e a linha da ampla mudam no mesmo ato (027, FR-335): o Perfil docente
+            # reparte 2 entre a ampla e a PPP, e a ampla absorve as sete novas.
             {
                 "targetPath": f"/profiles/id={PERFIL}/immediateVacancies",
                 "operation": "REPLACE",
                 "newValue": 9,
-            }
+            },
+            {
+                "targetPath": (
+                    f"/profiles/id={PERFIL}/vacancyTable/id={LINHA_GERAL_DO_DOCENTE}"
+                    "/immediateVacancies"
+                ),
+                "operation": "REPLACE",
+                "newValue": 8,
+            },
         ],
         suffix="rascunho",
     )

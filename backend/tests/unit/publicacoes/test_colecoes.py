@@ -158,9 +158,10 @@ def test_the_identity_topology_names_every_addressable_entity():
     assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
     assert f"/profiles/id={PERFIL['B']}/declaredFacts/id={FATO['NASCIMENTO']}" in topologia
     assert f"/attachments/id={ANEXO['A']}" in topologia
-    assert len(topologia) == 3 + 2 + 2 + 2 + 2, (
+    assert len(topologia) == 3 + 2 + 2 + 2 + 2 + 3, (
         "três Perfis, duas Modalidades do primeiro, dois Eventos, dois Fatos Declarados do "
-        "segundo e dois Anexos"
+        "segundo, dois Anexos e a linha geral do quadro de cada um dos três Perfis — que a `027` "
+        "passou a materializar na gravação, e que é endereçável como qualquer outra linha"
     )
 
 

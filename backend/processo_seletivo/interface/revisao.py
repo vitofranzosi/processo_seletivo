@@ -30,7 +30,12 @@ def _instante(valor):
 
 def _perfil(perfil, _snapshot):
     linhas = [
-        f"{perfil.get('immediateVacancies', 0)} vaga(s) imediata(s)",
+        # **O total e o quadro na mesma linha** (027, FR-326, UX-043). A Revisão dizia
+        # "2 vaga(s) imediata(s)" e nunca mencionava o quadro: quem submetia lia o número que o
+        # Edital publica sem ver o que a apuração usaria, e os dois podiam não ter relação alguma.
+        # Ler os dois juntos é o que torna a divergência visível no único momento em que corrigi-la
+        # ainda é barato — depois da publicação, a mesma informação custa uma Retificação.
+        _vagas_e_quadro(perfil),
         f"Cadastro Reserva: {RESERVA.get(perfil.get('reserveType'), '—')}"
         + (f" em {perfil['reserveLimit']}" if perfil.get("reserveLimit") is not None else ""),
     ]
@@ -50,7 +55,6 @@ def _perfil(perfil, _snapshot):
         linhas.append("Modalidade: " + " · ".join(partes))
     # O quadro de vagas, na ordem declarada e com a linha geral primeiro. Quem submete precisa ver
     # os números que vai congelar — e o quadro é o que separa o certame de existir como documento.
-    # Perfil sem quadro não ganha frase nenhuma: ausência é "não declarou", e não "declarou zero".
     denominacoes = {
         str(modalidade.get("id")): f"{modalidade.get('name', '')} ({modalidade.get('code', '')})"
         for modalidade in perfil.get("competitionModalities") or []
@@ -63,7 +67,49 @@ def _perfil(perfil, _snapshot):
             else "Ampla concorrência"
         )
         linhas.append(f"Quadro: {recorte} — {linha.get('immediateVacancies', 0)} vaga(s)")
+    sem_linha = _listas_sem_linha(perfil, denominacoes)
+    if sem_linha:
+        # Dito aqui, e não só na lista de pendências: quem lê o bloco do Perfil precisa ver, ao
+        # lado dos números, qual recorte fica sem quantidade — e não descobrir na etapa seguinte
+        # que uma das listas que ele declarou não terá o que apurar (FR-326).
+        linhas.append(
+            "Sem linha no quadro: "
+            + ", ".join(sem_linha)
+            + " — a ocupação e a convocação não terão quantidade a apurar nesse(s) recorte(s)."
+        )
     return {"titulo": f"{perfil.get('code', '')} — {perfil.get('name', '')}", "linhas": linhas}
+
+
+def _vagas_e_quadro(perfil):
+    """O que o Edital publica e o que o quadro reparte, lado a lado (027, FR-326)."""
+    total = perfil.get("immediateVacancies", 0)
+    linhas = [
+        linha
+        for linha in perfil.get("vacancyTable") or []
+        if isinstance(linha, dict) and isinstance(linha.get("immediateVacancies"), int)
+    ]
+    if not linhas:
+        # Acervo: publicado antes de o quadro existir. Ausência é "não declarou", e nunca zero — a
+        # frase diz o que falta em vez de inventar um número que o Edital não tem.
+        return f"{total} vaga(s) imediata(s) · o quadro de vagas não é declarado"
+    soma = sum(linha["immediateVacancies"] for linha in linhas)
+    return f"{total} vaga(s) imediata(s) · o quadro reparte {soma}"
+
+
+def _listas_sem_linha(perfil, denominacoes):
+    """As listas reservadas que o quadro não cobre, pelo nome com que a tela as mostra."""
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    com_linha = {
+        str(linha.get("modalityId"))
+        for linha in perfil.get("vacancyTable") or []
+        if isinstance(linha, dict) and linha.get("modalityId")
+    }
+    return sorted(
+        nome
+        for identidade, nome in denominacoes.items()
+        if identidade != ampla and identidade not in com_linha
+    )
 
 
 def _evento(evento, _snapshot):

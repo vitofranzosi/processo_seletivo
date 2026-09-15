@@ -42,6 +42,7 @@ from processo_seletivo.classificacao.application.corte import (
     divergencias_da_reproducao,
     estado_do_corte,
     geracao_do_corte,
+    linha_do_quadro,
     nomes_do_corte,
     reproduzir_corte,
 )
@@ -106,7 +107,11 @@ from processo_seletivo.editais.application.reaproveitamento import (
     rascunho_vazio,
     reaproveitar_edital,
 )
-from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.editais.domain.perfis import listas_reservadas
+from processo_seletivo.editais.domain.validation import (
+    ATO_DE_PUBLICACAO,
+    validate_for_publication,
+)
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.inscricoes.application.consulta import (
@@ -138,6 +143,7 @@ from processo_seletivo.processos.domain.finalizacao import pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
+    advertencias_do_ato,
     conteudo_base,
     create_retification,
 )
@@ -519,7 +525,7 @@ def _pendencias(edital):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
-    for item in validate_for_publication(edital_snapshot(edital)):
+    for item in validate_for_publication(edital_snapshot(edital), ato=ATO_DE_PUBLICACAO):
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {
@@ -865,7 +871,13 @@ def compor_etapa(request, edital_id, etapa):
                 erros.append(_recusa(exc, digitados, etapa))
             else:
                 try:
+                    # **Antes de gravar**, porque a gravação é quem sobrescreve: a derivação
+                    # reafirma a linha geral com o total, e quem digitou outro número precisa saber
+                    # que ele saiu (027, FR-322).
+                    rederivadas = _linhas_gerais_rederivadas(etapa, digitados)
                     _gravar_etapa(request, ator, edital, etapa, digitados)
+                    if rederivadas:
+                        request.session["quadro_rederivado"] = rederivadas
                     destino = request.POST.get("destino") or etapa
                     # A etapa salva viaja na confirmação porque "Avançar" grava uma e abre outra:
                     # "Rascunho salvo" sozinho, na tela seguinte, dizia respeito à anterior.
@@ -884,6 +896,11 @@ def compor_etapa(request, edital_id, etapa):
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
     anexos = _anexos_da_etapa(edital) if etapa == "anexos" else []
     recusa_de_anexo = request.session.pop("anexos_recusa", None) if etapa == "anexos" else None
+    # **Consumido em qualquer etapa, e não só na dos Perfis.** "Avançar" grava uma etapa e abre a
+    # seguinte: preso ao destino `perfis`, o aviso não aparecia para quem avança — e ficava na
+    # sessão esperando uma visita futura, onde surgiria já obsoleto, falando de uma gravação que
+    # ninguém lembra. Notícia do que acabou de acontecer não sobrevive à próxima tela (FR-322).
+    rederivadas = request.session.pop("quadro_rederivado", None)
     return render(
         request,
         template,
@@ -898,6 +915,10 @@ def compor_etapa(request, edital_id, etapa):
             },
             "anexos": anexos,
             "recusa_de_anexo": recusa_de_anexo,
+            # O que a derivação reafirmou nesta gravação (027, FR-322). Sobrescrever em silêncio
+            # seria trocar um defeito por outro: quem repartiu 60 na ampla e removeu a última lista
+            # reservada precisa ver que a ampla voltou a ser o total.
+            "quadro_rederivado": rederivadas,
             "progresso": _progresso(edital, etapa),
             "anterior": anterior,
             "proxima": proxima,
@@ -1110,6 +1131,10 @@ def _reexibir_perfis(perfis):
             # esta tela está mostrando pode ter sido causada por uma Modalidade que ainda não
             # existe no banco, e derivar dali devolveria a tela sem o que a pessoa digitou (R-009).
             "quadro": forms.quadro_do_formulario(perfil),
+            # Pela mesma razão: a lista reservada que faz o bloco existir pode ter sido acrescentada
+            # neste envio, e ainda não estar no banco. Lida do formulário, a tela volta com o bloco
+            # que a pessoa tinha na frente quando a recusa aconteceu (027, FR-321).
+            "tem_lista_reservada": bool(listas_reservadas(perfil)),
         }
         for perfil in perfis
     ]
@@ -1254,6 +1279,37 @@ def _ler_etapa(request, etapa):
     return LEITURA_DA_ETAPA[etapa](request.POST)
 
 
+def _linhas_gerais_rederivadas(etapa, digitados):
+    """Os Perfis cuja linha geral a gravação vai reafirmar com o total, e com outro número (027).
+
+    Acontece quando a última lista reservada sai do Perfil: a repartição deixa de existir, a ampla
+    concorrência volta a ser a vaga imediata inteira, e o número que estava declarado na linha é
+    substituído. A derivação está certa — com uma lista de concorrência só, os dois são o mesmo
+    número —, mas fazê-lo sem dizer seria esconder do operador que a conta dele mudou.
+
+    Só reporta quando o valor **muda**: reafirmar 2 sobre 2 não é notícia.
+    """
+    if etapa != "perfis":
+        return []
+    reafirmadas = []
+    for perfil in digitados or []:
+        if not isinstance(perfil, dict) or listas_reservadas(perfil):
+            continue
+        total = perfil.get("immediateVacancies")
+        geral = next(
+            (
+                linha
+                for linha in perfil.get("vacancyTable") or []
+                if isinstance(linha, dict) and not linha.get("modalityId")
+            ),
+            None,
+        )
+        if geral is None or geral.get("immediateVacancies") == total:
+            continue
+        reafirmadas.append({"code": perfil.get("code") or "", "total": total})
+    return reafirmadas
+
+
 def _gravar_etapa(request, ator, edital, etapa, digitados):
     """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
     if etapa == "identificacao":
@@ -1348,21 +1404,28 @@ def _indice_de_linha(request):
 
 @require_http_methods(["GET"])
 def fragmento_perfil(request):
-    """O Perfil novo nasce com a **linha geral** do quadro já oferecida (025, E2E25-001).
+    """O Perfil novo nasce com a linha geral do quadro, e **sem caixa para ela** (027, FR-316).
 
-    Sem ela, a seção do quadro de um Perfil recém-acrescentado aparecia vazia — título e mais nada
-    —, e quem compõe um Edital do zero não tinha onde escrever a quantidade da ampla concorrência
-    até salvar e recarregar. As reservadas continuam nascendo com as Modalidades, uma a uma, porque
-    é delas que vêm o rótulo e a identidade que a linha aponta.
+    A `025` fez a linha nascer com o Perfil porque a seção do quadro aparecia vazia — título e mais
+    nada — e quem compunha do zero não tinha onde escrever a quantidade da ampla concorrência. A
+    `027` resolveu o mesmo beco por outro lado, e melhor: o Perfil novo não tem lista reservada, e
+    a quantidade da ampla concorrência **é** a vaga imediata dele. O campo já existe, e é um só.
+
+    A linha continua nascendo aqui — identidade e quantidade em campo oculto —, porque é ela que a
+    gravação preserva e que a Retificação alcança depois de publicada. O que não nasce é o segundo
+    campo para o mesmo número, que é o que produzia o achado. As reservadas continuam nascendo com
+    as Modalidades, uma a uma, porque é delas que vêm o rótulo e a identidade que a linha aponta.
     """
+    identidade_nova = str(uuid4())
     return render(
         request,
         "interface/_perfil.html",
         {
             "perfil": {
-                "id": str(uuid4()),
+                "id": identidade_nova,
                 "reserveType": "NONE",
-                "quadro": forms.quadro_do_formulario({}),
+                "quadro": forms.quadro_do_formulario({"id": identidade_nova}),
+                "tem_lista_reservada": False,
             },
             "indice": _indice_de_linha(request),
             "reservas": forms.RESERVA,
@@ -1514,6 +1577,61 @@ def fragmento_criterio(request, indice, sub):
     )
 
 
+@require_http_methods(["GET"])
+def fragmento_quadro(request, indice):
+    """O quadro reconstruído a partir do que está digitado agora (027, FR-317, FR-321).
+
+    **Existe porque a escolha da ampla concorrência muda o quadro, e mudava só na gravação.**
+    Apontar uma Modalidade como a da ampla tira-a das listas reservadas: a caixa dela deixa de
+    existir, e o Perfil que fica sem lista reservada nenhuma deixa de ter bloco. Enquanto isso só
+    era recalculado ao salvar, a tela mentia entre uma gravação e outra — a caixa continuava lá, e
+    quem digitasse nela levava recusa na submissão.
+
+    Lê o Perfil do **formulário**, e não do banco: a Modalidade recém-acrescentada e o total
+    recém-digitado ainda não foram gravados, e é sobre eles que a pessoa está decidindo.
+
+    **Conteúdo incompleto não troca nada.** Quem está no meio de preencher pode não ter ainda o que
+    `ler_perfis` exige; responder 204 faz o htmx deixar a tela como está, que é melhor do que
+    devolver um quadro montado sobre metade do Perfil.
+    """
+    try:
+        perfis = forms.ler_perfis(request.GET)
+    except (ValueError, KeyError):
+        return HttpResponse(status=204)
+    identidade = request.GET.get(f"perfil-{indice}-id")
+    perfil = next((item for item in perfis if str(item.get("id")) == str(identidade)), None)
+    if perfil is None:
+        return HttpResponse(status=204)
+    return render(
+        request,
+        "interface/_quadro_do_perfil.html",
+        {
+            "perfil": {
+                **perfil,
+                "quadro": forms.quadro_do_formulario(perfil),
+                "tem_lista_reservada": bool(listas_reservadas(perfil)),
+            },
+            "indice": indice,
+        },
+    )
+
+
+def _tem_lista_reservada_no_formulario(request, indice):
+    """Se este Perfil **já** declara lista reservada, lido do formulário que veio junto (027).
+
+    Lista reservada é Modalidade declarada menos a que o Perfil aponta como a da ampla
+    concorrência (FR-317) — a mesma definição do domínio, sobre a outra fonte: aqui o dado não está
+    no banco, está sendo digitado agora.
+    """
+    ampla = request.GET.get(f"perfil-{indice}-generalCompetitionModalityId", "")
+    declaradas = {
+        valor
+        for chave, valor in request.GET.items()
+        if chave.startswith(f"modalidade-{indice}-") and chave.endswith("-id") and valor
+    }
+    return bool(declaradas - {ampla})
+
+
 def fragmento_modalidade(request, indice):
     """A linha nova nasce com **os dois** identificadores: o da modalidade e o da sua Regra.
 
@@ -1539,11 +1657,28 @@ def fragmento_modalidade(request, indice):
             "modalidade": modalidade,
             "indice": indice,
             "sub": sub,
+            # **A seção do quadro nasce aqui quando esta é a primeira lista reservada** (027,
+            # FR-321). O bloco não está na página enquanto não há repartição a pedir, e mandar a
+            # linha sozinha para um destino que não existe a perderia em silêncio — o `hx-swap-oob`
+            # não acha alvo e **não erra**.
+            "secao_nova": not _tem_lista_reservada_no_formulario(request, indice),
+            # A linha geral vem preenchida com o total que está no formulário: é o valor que a
+            # gravação materializaria, e vê-lo é o que faz a repartição começar de um lugar
+            # verdadeiro em vez de um campo vazio.
+            "geral": {
+                "id": request.GET.get(f"linha-{indice}-0-id") or str(uuid4()),
+                "modalityId": "",
+                "rotulo": "Ampla concorrência",
+                "geral": True,
+                "derivada": False,
+                "immediateVacancies": request.GET.get(f"perfil-{indice}-immediateVacancies", ""),
+            },
             "linha": {
                 "id": str(uuid4()),
                 "modalityId": modalidade["id"],
                 "rotulo": "Modalidade nova",
                 "geral": False,
+                "derivada": False,
                 "immediateVacancies": "",
             },
         },
@@ -2499,6 +2634,10 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         "autoridades": autoridades.CATALOGO,
+        # O que a conferência do ato sabe e descartava (027, FR-336). A submissão de um rascunho
+        # mostra as advertências dele; a Retificação as calculava e jogava fora, de modo que o
+        # mesmo conteúdo dizia duas coisas diferentes conforme o caminho por onde chegava.
+        "advertencias": advertencias_do_ato(item),
     }
     if request.method == "GET":
         return render(request, "interface/retificacao_confirmar.html", contexto)
@@ -4547,6 +4686,11 @@ def ocupacao(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "recortes": recortes,
+                # **Quem pode retificar vê o caminho; quem não pode, vê o encaminhamento** (027,
+                # FR-332). Critério da `026`: um link para quem não elabora Retificação terminaria
+                # numa tela que se anuncia somente leitura, e trocar o beco sem saída por um beco
+                # sinalizado não é ganho.
+                "pode_retificar": ator.can("retificacao:elaborar"),
                 # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
@@ -4662,6 +4806,18 @@ def convocacao(request, edital_id, marco_id):
                 "marco_id": marco_id,
                 "lista_id": lista_id,
                 "leitura": leitura,
+                # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
+                # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
+                # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
+                # quantidade declarada a apurar". Dois becos em sequência, e a causa em nenhum dos
+                # dois. Dizer aqui qual é ela poupa a viagem.
+                "sem_quadro_publicado": linha_do_quadro(
+                    effective_version(edital_id=edital.id).content,
+                    perfil_id=perfil_id,
+                    lista_id=lista_id,
+                )
+                is None,
+                "pode_retificar": ator.can("retificacao:elaborar"),
                 # A chave nasce no GET pela razão que o corte e a ocupação já registram: gerada a
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,

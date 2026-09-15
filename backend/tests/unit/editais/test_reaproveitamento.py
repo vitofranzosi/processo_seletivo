@@ -90,6 +90,10 @@ def conteudo_publicado():
                         },
                     }
                 ],
+                # A declaração de qual Modalidade é a da ampla concorrência (014). Ela entrou nesta
+                # origem porque **é referência**, e toda referência precisa ser remapeada: era a
+                # única do Perfil que o remapeamento não alcançava.
+                "generalCompetitionModalityId": MODALIDADE,
                 "declaredFacts": [
                     {"id": FATO, "code": "NASCIMENTO", "label": "Nascimento", "type": "DATA"}
                 ],
@@ -325,3 +329,46 @@ def test_so_as_secoes_textuais_passam():
 
     assert [secao["key"] for secao in secoes] == ["apresentacao"]
     assert secoes[0]["content"] == "Texto redigido"
+
+
+# ---------------------------------------------------------------------------
+# A referência que escapava do remapeamento
+# ---------------------------------------------------------------------------
+
+
+def test_a_ampla_concorrencia_declarada_aponta_a_modalidade_do_destino():
+    """A referência que atravessava a cópia sem ser trocada, e que ninguém via.
+
+    **O mecanismo é o que este arquivo existe para pegar**, dito na abertura dele: um identificador
+    da origem que escape do remapeamento continua coerente com os vizinhos e atravessa a gravação
+    sem recusa. `generalCompetitionModalityId` nasceu na `014` e nunca entrou na função; o Edital
+    copiado apontava, como ampla concorrência, uma Modalidade **do Edital anterior** — um
+    identificador de outro Edital dentro do conteúdo canônico deste.
+
+    Ninguém via porque nenhuma fixture o declarava. Ele apareceu quando a `027` passou a exigir a
+    declaração para derivar a linha geral do quadro, e o teste que proíbe a origem de vazar para o
+    destino ficou vermelho.
+    """
+    conteudo = conteudo_publicado()
+    mapa = mapa_de_identidades(conteudo)
+
+    copiado = remapear(conteudo, mapa)
+
+    perfil = copiado["profiles"][0]
+    declarada = perfil["generalCompetitionModalityId"]
+    assert declarada == mapa[MODALIDADE], "a declaração tem de apontar a Modalidade do destino"
+    assert declarada != MODALIDADE, "o identificador da origem não atravessa a cópia"
+    assert declarada == perfil["competitionModalities"][0]["id"], (
+        "e tem de apontar uma Modalidade que este Perfil realmente tem"
+    )
+
+
+def test_perfil_que_nao_declara_ampla_continua_sem_declarar():
+    """`None` significa "este Perfil não declara nenhuma", e copiar não pode inventar uma."""
+    conteudo = conteudo_publicado()
+    conteudo["profiles"][0]["generalCompetitionModalityId"] = None
+    mapa = mapa_de_identidades(conteudo)
+
+    copiado = remapear(conteudo, mapa)
+
+    assert copiado["profiles"][0]["generalCompetitionModalityId"] is None

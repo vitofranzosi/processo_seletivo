@@ -359,7 +359,7 @@ def test_retificacao_posterior_nao_altera_os_bytes_nem_regenera_o_documento(cena
     Não porque alguém o proteja: porque **não há o que alcançar**. O conteúdo está gravado, e não
     recomposto na leitura.
     """
-    from tests.fixtures.edital import caminho_perfil
+    from tests.fixtures.edital import mudanca_de_vagas
     from tests.fixtures.publicacao import retify
 
     publicacao = _publicar(cenario, chave="publicar-0753-ret")
@@ -371,11 +371,8 @@ def test_retificacao_posterior_nao_altera_os_bytes_nem_regenera_o_documento(cena
         api_client,
         cenario["edital"],
         [
-            {
-                "targetPath": caminho_perfil("immediateVacancies", 53),
-                "operation": "REPLACE",
-                "newValue": 7,
-            }
+            # O total e a linha da ampla concorrência são um ato só (027, FR-335).
+            *mudanca_de_vagas(7, seed=53),
         ],
         suffix="ret0753",
     )

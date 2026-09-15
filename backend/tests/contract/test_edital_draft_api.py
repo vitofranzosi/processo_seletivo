@@ -585,11 +585,18 @@ def _com_quadro(seed, linhas, modalidades=()):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.contract
-def test_o_quadro_de_vagas_e_opcional_no_rascunho(api_client, manager_headers, process_payload):
-    """FR-160: um Perfil sem quadro continua submetível, e é o que todo Edital de hoje afirma.
+def test_o_quadro_de_vagas_e_opcional_no_envio_e_a_linha_geral_e_materializada(
+    api_client, manager_headers, process_payload
+):
+    """Opcional no **envio**, e materializado na gravação (027, FR-316 e FR-318).
 
-    Exigir a coleção no rascunho recusaria o acervo inteiro — a capacidade não existia até a `025`,
-    e nenhum Edital publicado declarou quadro. Ausência não é zero.
+    A `025` deixou a coleção opcional porque exigi-la recusaria o acervo inteiro. Continua opcional
+    no que se envia — este rascunho não a traz —, e a `027` acrescentou o outro lado: num Perfil sem
+    lista reservada, a linha da ampla concorrência é a projeção do total, e quem grava não a digita.
+
+    Era aqui que o defeito nascia: o Edital publicava um número que a apuração não usava, e nada no
+    caminho dizia nada. O que se verifica agora é que **a coleção continua não sendo exigida de quem
+    envia, e mesmo assim o conteúdo gravado a tem**.
     """
     primeiro, _ = _dois_editais(
         api_client, manager_headers, process_payload, "quadro-de-vagas-opcional"
@@ -604,7 +611,9 @@ def test_o_quadro_de_vagas_e_opcional_no_rascunho(api_client, manager_headers, p
     )
 
     assert resposta.status_code == 200, resposta.content
-    assert LinhaDoQuadroDeVagas.objects.count() == 0
+    linha = LinhaDoQuadroDeVagas.objects.get()
+    assert linha.modalidade_id is None, "a linha materializada é a da ampla concorrência"
+    assert linha.vagas_imediatas == complete_draft(0)["profiles"][0]["immediateVacancies"]
 
 
 @pytest.mark.django_db(transaction=True)

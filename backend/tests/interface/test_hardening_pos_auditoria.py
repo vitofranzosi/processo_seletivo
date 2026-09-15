@@ -175,6 +175,16 @@ def test_a_etapa_de_perfis_explica_as_quatro_decisoes_de_efeito_tardio(
     isso, em `.oculto`, a frase não chegava a quem enxerga. A explicação volta **na etapa**, e não
     no cartão: `test_medida_dos_campos` guarda que explicação que não muda de um Perfil para o
     outro não se imprime uma vez por Perfil.
+
+    **Uma das quatro deixou de ser decisão de efeito tardio** (027). A caixa de número era o quadro,
+    e a explicação dizia a diferença entre ela e "Vagas imediatas" — a mitigação possível enquanto
+    os dois campos existiam lado a lado. Eles deixaram de existir lado a lado: sem lista reservada
+    há um campo só, e a linha geral é a projeção dele. A entrada do glossário continua, porque a
+    decisão continua existindo quando há repartição; o que mudou é o que ela ensina.
+
+    A frase antiga mandaria quem lê procurar uma caixa que não está mais na tela, que é pior do que
+    não explicar nada — e foi o percurso conduzido da `T039`, e não a suíte, que a encontrou: ela
+    era coerente, estava no lugar certo, e só estava errada em relação ao mundo.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = client.get(
@@ -182,7 +192,8 @@ def test_a_etapa_de_perfis_explica_as_quatro_decisoes_de_efeito_tardio(
     ).content.decode()
 
     assert "Quadro de vagas" in corpo
-    assert "a ocupação e a convocação ficam sem o que apurar" in corpo
+    assert "a quantidade da ampla concorrência" in corpo
+    assert "o bloco do quadro aparece para repartir esse total" in corpo
     assert "A declarada não recebe linha própria no quadro" in corpo
     assert "Declarar a reversão exige quadro de vagas publicado" in corpo
     assert "o sistema recusa convocar" in corpo

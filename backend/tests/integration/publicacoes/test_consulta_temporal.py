@@ -5,10 +5,13 @@ import pytest
 from django.utils import timezone
 
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_linha_geral, caminho_perfil, mudanca_de_vagas
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
 
 VACANCIES = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
+# os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 
 
 def vacancies_at(api_client, edital, instant=None):
@@ -21,7 +24,13 @@ def vacancies_at(api_client, edital, instant=None):
 
 
 def replace_vacancies(value):
-    return [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": value}]
+    """As **duas** operações de alterar as vagas (027, FR-335).
+
+    O Perfil de `complete_draft` não declara lista reservada, e nele o total e a linha da ampla
+    concorrência são o mesmo número: mover um sem o outro publicaria um quadro que não fecha, e a
+    conferência recusa dizendo os dois.
+    """
+    return mudanca_de_vagas(value)
 
 
 @pytest.fixture

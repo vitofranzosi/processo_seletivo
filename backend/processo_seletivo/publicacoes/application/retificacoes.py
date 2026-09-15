@@ -1,9 +1,11 @@
 import hashlib
 
 from django.db.models import F
+from django.utils import timezone
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.validation import (
+    ATO_DE_RETIFICACAO,
     blocking_findings,
     validate_for_publication,
 )
@@ -523,13 +525,61 @@ def _assert_well_formed(content, contexto):
     diz de que conteúdo se fala, porque a mesma verificação roda em dois momentos e, na Publicação,
     uma vez por fronteira de vigência.
     """
-    errors = blocking_findings(validate_for_publication(content))
+    # **Pelo ato de Retificação** (027, FR-323, T-003): a ausência de linha geral é impeditiva ao
+    # publicar Edital novo e não o é aqui, porque o acervo inteiro foi publicado antes de a
+    # capacidade existir. Recusar aqui prenderia até a Retificação que corrige uma data.
+    errors = blocking_findings(validate_for_publication(content, ato=ATO_DE_RETIFICACAO))
     if errors:
         raise DomainError(
             "blocking_findings",
             f"{contexto} possui erros impeditivos: " + "; ".join(item.message for item in errors),
             422,
         )
+
+
+def advertencias_do_ato(retificacao):
+    """O que a conferência **sabe** e hoje descarta (027, FR-336).
+
+    `_assert_well_formed` calcula os achados do conteúdo que a Retificação produziria e fica só com
+    os impeditivos; o resto — as advertências — é jogado fora. A FR-336 pede que a conferência da
+    Retificação diga sobre esse conteúdo o mesmo que a submissão diz sobre o rascunho, e a
+    informação já existia: faltava mostrá-la.
+
+    É o que faz o caso da borda parar de ser silencioso: retificar um Edital publicado acrescentando
+    a primeira Modalidade deixa o quadro parcial, que é legítimo — e quem o faz precisa saber que
+    aquele recorte ficará sem quantidade a apurar.
+
+    **Não levanta nada.** Achado impeditivo é assunto da conferência que recusa o ato; aqui, se o
+    conteúdo não puder sequer ser montado, a resposta é a lista vazia — o erro aparece no ato, que
+    é onde ele impede alguma coisa.
+
+    **E parte do conteúdo que vai vigorar, e não do conteúdo-base isolado.** O ato foi elaborado
+    sobre uma Versão Consolidada; o que a publicação confere é o resultado de consolidar **todas**
+    as Retificações vigentes na fronteira. Uma Retificação concorrente e não conflitante pode
+    acrescentar ou retirar exatamente a advertência que esta tela mostra — outra pessoa declarando
+    a linha de um recorte faz a advertência daquele recorte deixar de existir, e a confirmação
+    estaria mostrando um conselho sobre um mundo que já passou. A composição usada aqui é a mesma
+    que `publish_retification` usa para recusar alteração obsoleta: `_content_in_force` no instante
+    de vigência do ato.
+    """
+    changes = _changes_payload(retificacao)
+    if not changes:
+        return []
+    momento = retificacao.effective_at or timezone.now()
+    try:
+        content, _ = apply_changes(
+            _content_in_force(retificacao.edital, momento), changes, publication_id="draft"
+        )
+    except (ValueError, KeyError, TypeError):
+        # Conteúdo que nem se monta é assunto do ato, que recusa e diz por quê. Aqui a resposta é a
+        # lista vazia: conselho sobre conteúdo impossível não ajuda ninguém.
+        return []
+    impeditivos = {item.code for item in blocking_findings(validate_for_publication(content))}
+    return [
+        item
+        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO)
+        if item.code not in impeditivos
+    ]
 
 
 def _assert_versao_canonica(content, contexto):

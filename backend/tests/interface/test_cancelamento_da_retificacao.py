@@ -20,7 +20,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 from tests.interface.test_retificar import campos
@@ -28,6 +28,10 @@ from tests.interface.test_retificar import campos
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 VAGAS = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência muda junto** (027, FR-335). Num Perfil sem lista reservada os
+# dois campos são o mesmo número, e a tela de Retificação oferece os dois: mover só o total
+# publicaria um quadro que não fecha, e a conferência recusa dizendo os dois números.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 MOTIVO = "A Diretoria desistiu da ampliação antes de submeter."
 
 
@@ -42,7 +46,11 @@ def em_elaboracao(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
     client.post(
         reverse("interface:retificar", args=[edital.id]),
-        {**campos(vigente, **{VAGAS: "9"}), "justificativa": "Ampliação", "confirmar": "1"},
+        {
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
+            "justificativa": "Ampliação",
+            "confirmar": "1",
+        },
     )
     retificacao = Retificacao.objects.get()
     assert retificacao.status == Retificacao.Status.EM_ELABORACAO

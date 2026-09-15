@@ -5,10 +5,13 @@ from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao, RevisaoEdital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import create_retification, publish_original, retify
 
 VACANCIES = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
+# os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 
 
 @pytest.fixture
@@ -38,7 +41,10 @@ def test_unpublished_retification_is_not_revealed_to_the_public(api_client, edit
     rascunho = create_retification(
         api_client,
         edital_publicado,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 999}],
+        [
+            {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 999},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 999},
+        ],
     )
     assert api_client.get(f"/api/v1/public/retificacoes/{rascunho.id}").status_code == 404
 
@@ -71,7 +77,10 @@ def test_public_projection_never_exposes_audit_trail(api_client, edital_publicad
     retify(
         api_client,
         edital_publicado,
-        [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7}],
+        [
+            {"targetPath": VACANCIES, "operation": "REPLACE", "newValue": 7},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 7},
+        ],
     )
     assert RegistroAuditoria.objects.exists()
     corpo = api_client.get(

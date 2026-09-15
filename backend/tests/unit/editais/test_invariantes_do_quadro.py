@@ -12,7 +12,12 @@ from pathlib import Path
 import pytest
 
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
-from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from processo_seletivo.editais.domain.validation import (
+    ATO_DE_PUBLICACAO,
+    ATO_DE_RETIFICACAO,
+    blocking_findings,
+    validate_for_publication,
+)
 from processo_seletivo.publicacoes.domain import colecoes
 from processo_seletivo.publicacoes.domain.elevacao import DEGRAUS_DE_PERFIL
 
@@ -42,6 +47,11 @@ def linha(quantidade, modalidade_id=None, identidade="aaaaaaaa-0000-4000-8000-00
     return {"id": identidade, "modalityId": modalidade_id, "immediateVacancies": quantidade}
 
 
+def geral(quantidade):
+    """A linha da ampla concorrência (027, FR-318). Identidade própria, como qualquer outra."""
+    return linha(quantidade, None, identidade="aaaaaaaa-0000-4000-8000-00000000050f")
+
+
 def snapshot(um_perfil):
     return {
         "title": "Edital",
@@ -51,10 +61,16 @@ def snapshot(um_perfil):
     }
 
 
-def do_quadro(um_perfil):
+def do_quadro(um_perfil, *, ato=ATO_DE_PUBLICACAO):
+    """Os achados impeditivos do quadro, **no ato declarado**.
+
+    O ato entrou aqui com a `027`: a exigência da linha geral vale ao publicar Edital novo e não
+    vale ao retificar Edital do acervo, que foi publicado antes de o quadro existir (FR-323). Ler
+    os dois pelo mesmo caminho esconderia justamente a diferença que a feature criou.
+    """
     return [
         item
-        for item in blocking_findings(validate_for_publication(snapshot(um_perfil)))
+        for item in blocking_findings(validate_for_publication(snapshot(um_perfil), ato=ato))
         if item.code.startswith("vacancy_")
     ]
 
@@ -106,7 +122,10 @@ def test_invariante_2_a_ampla_concorrencia_aparece_uma_vez_por_perfil():
 
 def test_invariante_3_toda_linha_reservada_aponta_modalidade_do_proprio_perfil():
     alheia = perfil(
-        vacancyTable=[linha(4, "aaaaaaaa-0000-4000-8000-0000000005ff")],
+        # Com a linha geral, porque a `027` a tornou parte do Perfil publicável: sem ela o achado
+        # desta asserção viria acompanhado do `vacancy_general_row_missing`, e o teste deixaria de
+        # isolar o que existe para isolar.
+        vacancyTable=[geral(76), linha(4, "aaaaaaaa-0000-4000-8000-0000000005ff")],
     )
 
     with pytest.raises(ProfileValidationError):
@@ -116,7 +135,7 @@ def test_invariante_3_toda_linha_reservada_aponta_modalidade_do_proprio_perfil()
 
 def test_invariante_3_uma_modalidade_tem_no_maximo_uma_linha():
     repetida = perfil(
-        vacancyTable=[linha(4, PCD), linha(6, PCD, identidade=f"{PCD[:-1]}b")],
+        vacancyTable=[geral(70), linha(4, PCD), linha(6, PCD, identidade=f"{PCD[:-1]}b")],
     )
 
     with pytest.raises(ProfileValidationError):
@@ -136,17 +155,32 @@ def test_invariante_4_a_colecao_e_enderecada_por_identidade_e_nunca_por_posicao(
 
 
 def test_invariante_5_quadro_ausente_nunca_significa_zero():
-    """A conversão escreve lista **vazia**, e nenhum caminho lê ausência como `0`."""
+    """A conversão escreve lista **vazia**, e nenhum caminho lê ausência como `0`.
+
+    **A `027` estreitou este invariante, e só nesta metade** (D-004). Ausência de quadro continua
+    não sendo zero em lugar nenhum — o que mudou é que ela deixou de ser publicável em Edital novo,
+    porque a linha geral passou a ser materializada na gravação. No acervo, que foi publicado antes
+    de a capacidade existir, ela continua legítima: é o que o ato de Retificação afere.
+    """
     assert DEGRAUS_DE_PERFIL[12] == {"vacancyTable": []}
-    assert do_quadro(perfil()) == [], "Perfil sem quadro continua publicável"
-    assert do_quadro(perfil(vacancyTable=[linha(4, PCD)])) == [], "quadro parcial é legítimo"
+    assert do_quadro(perfil(), ato=ATO_DE_RETIFICACAO) == [], (
+        "o acervo publicado sem quadro continua legível e retificável"
+    )
+    assert [item.code for item in do_quadro(perfil())] == ["vacancy_general_row_missing"], (
+        "publicar Edital novo sem a linha da ampla concorrência criaria hoje o Edital inerte"
+    )
+    assert do_quadro(perfil(vacancyTable=[geral(76), linha(4, PCD)])) == [], (
+        "quadro parcial é legítimo: a `025` decidiu, e a `027` não reabre"
+    )
 
 
 # --- 6 · a soma nunca excede o total de vagas imediatas do Perfil (FR-177) -------------------
 
 
 def test_invariante_6_a_soma_nunca_excede_o_total():
-    excedente = perfil(vacancyTable=[linha(4, PCD), linha(200, PPI, identidade=f"{PPI[:-1]}b")])
+    excedente = perfil(
+        vacancyTable=[geral(0), linha(4, PCD), linha(200, PPI, identidade=f"{PPI[:-1]}b")]
+    )
 
     assert [item.code for item in do_quadro(excedente)] == ["vacancy_sum_exceeds_total"]
 

@@ -83,6 +83,7 @@ def montar_cenario_do_corte(
     prefixo="corte-014",
     pontuacoes=("90.0000", "80.0000", "70.0000"),
     draft_factory=None,
+    publicar=None,
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
@@ -99,7 +100,14 @@ def montar_cenario_do_corte(
     # O padrão continua sendo o rascunho do 14/2026, e nenhum teste da `014` muda.
     monta = draft_factory or rascunho
     draft, pontuada = monta(cut=cut if cut is not None else regra())
-    edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
+    # `publicar` permite pedir o Edital **do acervo** — publicado em versão canônica anterior ao
+    # degrau que criou o quadro (027). Desde que a linha geral é materializada na gravação, um
+    # Edital composto hoje sempre a tem; "sem quadro publicado" deixou de ser um estado que a
+    # composição produz, e passou a existir só onde sempre existiu: no que foi publicado antes.
+    # Quem guarda a FR-330 — nenhuma leitura infere linha ausente — precisa desse Edital.
+    edital = (publicar or publish_original)(
+        api_client, manager_headers, process_payload, draft=draft
+    )
     membros = constituir(
         gestor,
         edital.processo,

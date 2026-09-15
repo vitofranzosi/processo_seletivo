@@ -12,6 +12,7 @@ from uuid import uuid4
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import secoes
+from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -686,6 +687,11 @@ def perfis_do_edital(edital):
             # Travessia 3 de 4: sem isto o quadro gravado não voltaria à tela, e a gravação
             # seguinte o apagaria — porque `ler_perfis` leria um formulário sem linha nenhuma.
             "quadro": _quadro_para_o_formulario(perfil),
+            # **O bloco do quadro só existe quando há repartição a pedir** (027, D-002, FR-321).
+            # Sem lista reservada não há o que repartir, e desenhá-lo é o que produzia o defeito:
+            # dois campos para o mesmo número, um rotulado em português corrente e o outro sem
+            # explicação visível.
+            "tem_lista_reservada": bool(_listas_reservadas_do_modelo(perfil)),
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa",
@@ -720,17 +726,33 @@ def quadro_do_formulario(perfil):
     for linha in perfil.get("vacancyTable") or []:
         digitadas.setdefault(str(linha.get("modalityId") or ""), linha)
     geral = digitadas.get("")
+    # Pela mesma razão de `_quadro_para_o_formulario`, do outro lado: aqui o Perfil é o que veio do
+    # formulário, e a lista reservada é lida dele (027, FR-317).
+    derivada = not listas_reservadas(perfil)
     linhas = [
         {
-            "id": (geral or {}).get("id") or str(uuid4()),
+            "id": (geral or {}).get("id") or str(identidade_da_linha_geral(perfil.get("id"))),
             "modalityId": "",
             "rotulo": "Ampla concorrência",
             "geral": True,
-            "immediateVacancies": (geral or {}).get("immediateVacancies", ""),
+            "derivada": derivada,
+            "immediateVacancies": (
+                perfil.get("immediateVacancies", "")
+                if derivada
+                else (geral or {}).get("immediateVacancies", "")
+            ),
         }
     ]
+    # **A Modalidade declarada como ampla concorrência não recebe linha** (025, D-004, FR-176; 027,
+    # FR-317). A quantidade dela mora na linha geral, e oferecer uma caixa própria seria oferecer um
+    # campo cujo preenchimento a publicação recusa — `general_competition_modality_with_row`. Era o
+    # segundo campo para o mesmo número voltando pela porta dos fundos: no Perfil que só declara a
+    # ampla, a caixa aparecia inclusive fora do bloco que esta feature condicionou.
+    ampla = str(perfil.get("generalCompetitionModalityId") or "")
     for modalidade in perfil.get("competitionModalities") or []:
         chave = str(modalidade.get("id") or "")
+        if ampla and chave == ampla:
+            continue
         digitada = digitadas.get(chave)
         nome = modalidade.get("name") or ""
         codigo = modalidade.get("code") or ""
@@ -744,6 +766,17 @@ def quadro_do_formulario(perfil):
             }
         )
     return linhas
+
+
+def _listas_reservadas_do_modelo(perfil):
+    """As listas reservadas de um Perfil **do banco** (027, FR-317).
+
+    `listas_reservadas` lê a carga; esta lê o modelo. O conceito é um só e está escrito lá — as
+    Modalidades declaradas menos a que o Perfil aponta como a da ampla concorrência —, e duplicar
+    a regra seria pedir que as duas divirjam na primeira mudança. O que muda é de onde vem o dado.
+    """
+    ampla = perfil.modalidade_ampla_concorrencia
+    return {modalidade.id for modalidade in perfil.modalidades.all() if modalidade.id != ampla}
 
 
 def _quadro_para_o_formulario(perfil):
@@ -762,16 +795,31 @@ def _quadro_para_o_formulario(perfil):
         for linha in perfil.quadro_de_vagas.all()
     }
     geral = gravadas.get("")
+    # **A linha geral é projeção enquanto não há lista reservada** (027, D-001, FR-318). Aí ela não
+    # tem caixa: pedir o mesmo número duas vezes é o que criava a divergência que o Princípio II
+    # proíbe. Ela continua viajando no formulário — identidade e quantidade em campo oculto —,
+    # porque é ela que a gravação preserva e a Retificação alcança depois de publicada.
+    derivada = not _listas_reservadas_do_modelo(perfil)
     linhas = [
         {
-            "id": str(geral.id) if geral else str(uuid4()),
+            "id": str(geral.id) if geral else str(identidade_da_linha_geral(perfil.id)),
             "modalityId": "",
             "rotulo": "Ampla concorrência",
             "geral": True,
-            "immediateVacancies": geral.vagas_imediatas if geral else "",
+            "derivada": derivada,
+            "immediateVacancies": (
+                perfil.immediate_vacancies if derivada else (geral.vagas_imediatas if geral else "")
+            ),
         }
     ]
+    # **A Modalidade declarada como ampla concorrência não recebe linha** (025, D-004, FR-176; 027,
+    # FR-317). A quantidade dela mora na linha geral, e oferecer uma caixa própria seria oferecer um
+    # campo cujo preenchimento a publicação recusa — `general_competition_modality_with_row`. Era o
+    # segundo campo para o mesmo número voltando pela porta dos fundos: no Perfil que só declara a
+    # ampla, a caixa aparecia inclusive fora do bloco que esta feature condicionou.
     for modalidade in perfil.modalidades.order_by("code"):
+        if modalidade.id == perfil.modalidade_ampla_concorrencia:
+            continue
         gravada = gravadas.get(str(modalidade.id))
         linhas.append(
             {

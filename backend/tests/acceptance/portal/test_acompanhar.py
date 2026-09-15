@@ -16,7 +16,7 @@ from processo_seletivo.inscricoes.models import Inscricao
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, pdf, registrar
 from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import retify
-from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
+from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL, LINHA_GERAL_DO_DOCENTE
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.acceptance]
 
@@ -68,7 +68,23 @@ def test_percurso_da_entrega_5(client, canal, enviada, selecao, api_client):
 
     # 4. O Edital é retificado. O aviso aparece; a inscrição não muda.
     antes = Inscricao.objects.values().get(pk=enviada.pk)
-    retify(api_client, selecao, [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9}])
+    retify(
+        api_client,
+        selecao,
+        [
+            # O total e a linha da ampla mudam no mesmo ato (027, FR-335): o Perfil docente
+            # reparte 2 entre a ampla e a PPP, e a ampla absorve as sete novas.
+            {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9},
+            {
+                "targetPath": (
+                    f"{caminho_perfil()}/vacancyTable/id={LINHA_GERAL_DO_DOCENTE}"
+                    "/immediateVacancies"
+                ),
+                "operation": "REPLACE",
+                "newValue": 8,
+            },
+        ],
+    )
 
     corpo = client.get(reverse("portal:acompanhamento", args=[enviada.id])).content.decode()
     assert "Este Edital foi atualizado após sua inscrição" in corpo

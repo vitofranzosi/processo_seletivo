@@ -32,7 +32,20 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   <h2 id="recorte-{{ forloop.counter }}">{{ recorte.rotulo }}</h2>
 
   {% if recorte.estado == "NO_VACANCY_TABLE" %}
+  {% comment %}
+  **A frase continua verdadeira, e ganha a segunda metade** (027, FR-332, UX-045). Ela era um beco:
+  dizia o que falta e não dizia o que fazer, e quem a lia descobria meses depois que a correção já
+  não era digitar de novo, e sim Retificar. Nomear o ato aqui é o que transforma a constatação em
+  caminho — e este é o lugar certo, porque é onde quem opera encontra o problema.
+
+  **Apontar o ato não é praticá-lo**: nada nesta tela retifica coisa alguma, e quem não elabora
+  Retificação recebe o encaminhamento em vez de um link para uma tela que se anuncia somente
+  leitura — é o mesmo critério que a `026` fixou na tela do sorteio.
+  {% endcomment %}
   <p class="aviso" role="status">Este Edital não publicou quadro de vagas para este recorte. Não há quantidade declarada a apurar.</p>
+  <p class="nota">A quantidade é declarada por Retificação do Perfil, acrescentando a linha deste
+    recorte ao quadro de vagas{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
+    a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode declará-la{% endif %}.</p>
 
   {% elif recorte.estado == "NOT_APPRAISED" %}
   <p class="aviso" role="status">Ocupação ainda não apurada.</p>

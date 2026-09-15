@@ -44,6 +44,20 @@ Quem lia as duas frases juntas não tinha como saber qual delas era verdade.
   >Rascunho salvo — {{ salvo }}.</p>{% endif %}
 
 {% comment %}
+**O que a gravação reafirmou, dito por extenso** (027, FR-322). Saída a última lista reservada do
+Perfil, a repartição deixa de existir: a ampla concorrência volta a ser a vaga imediata inteira, e o
+número que estava declarado na linha é substituído. A derivação está certa — com uma lista de
+concorrência só, os dois **são** o mesmo número —, mas sobrescrever em silêncio seria trocar um
+defeito por outro: quem tinha repartido 60 na ampla precisa ver que ela voltou a ser 80.
+
+Some na gravação seguinte, como "Rascunho salvo": é notícia do que acabou de acontecer, e não
+estado do Edital.
+{% endcomment %}
+{% for perfil in quadro_rederivado %}<p class="aviso" role="status">O Perfil
+  {{ perfil.code }} não declara mais lista reservada: a ampla concorrência volta a ser as
+  {{ perfil.total }} vaga(s) imediata(s) do Perfil, e o quadro deixa de repartir.</p>{% endfor %}
+
+{% comment %}
 O aviso permanente da 023 (FR-014). Mora **aqui**, e não em `base.html`: todas as etapas do
 assistente estendem este arquivo, e só elas precisam do aviso — mexer na folha comum custaria
 asserção de template quebrada e alcançaria telas a que ele não pertence.

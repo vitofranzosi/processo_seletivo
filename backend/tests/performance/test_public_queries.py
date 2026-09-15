@@ -20,7 +20,7 @@ from django.utils import timezone
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil, complete_draft
+from tests.fixtures.edital import caminho_perfil, complete_draft, mudanca_de_vagas
 from tests.fixtures.publicacao import publish_original, retify
 
 VACANCIES = caminho_perfil("immediateVacancies")
@@ -29,8 +29,8 @@ BUDGET_SECONDS = 1.0
 
 
 def replace(valor, seed=0):
-    caminho = caminho_perfil("immediateVacancies", seed)
-    return [{"targetPath": caminho, "operation": "REPLACE", "newValue": valor}]
+    """O par que alterar as vagas exige (027, FR-335) — o total e a linha da ampla concorrência."""
+    return mudanca_de_vagas(valor, seed=seed)
 
 
 def outro_processo(process_payload, sufixo):

@@ -15,7 +15,7 @@ from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_sha256
-from tests.fixtures.edital import actor_headers, caminho_perfil, complete_draft
+from tests.fixtures.edital import actor_headers, caminho_perfil, complete_draft, mudanca_de_vagas
 from tests.fixtures.publicacao import SIGNATORY, create_retification, publish_original, retify
 
 VACANCIES = caminho_perfil("immediateVacancies")
@@ -180,7 +180,7 @@ def test_quickstart_s6_immediate_retification_takes_effect_on_publication(
 ):
     """S6: sem effectiveAt declarado, a vigência é o próprio instante da Publicação."""
     edital = publish_original(api_client, manager_headers, process_payload)
-    retificacao = retify(api_client, edital, replace(VACANCIES, 5))
+    retificacao = retify(api_client, edital, mudanca_de_vagas(5))
     publicacao = retificacao.publication
 
     assert publicacao.effective_at == publicacao.published_at
@@ -200,9 +200,7 @@ def test_quickstart_s7_retroactive_effective_date_is_rejected(
     """S7: effectiveAt anterior à Publicação é rejeitado e não produz efeito retroativo."""
     edital = publish_original(api_client, manager_headers, process_payload)
     passado = (timezone.now() - timedelta(days=1)).isoformat()
-    retificacao = create_retification(
-        api_client, edital, replace(VACANCIES, 5), effective_at=passado
-    )
+    retificacao = create_retification(api_client, edital, mudanca_de_vagas(5), effective_at=passado)
     api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao.id}/submissoes",
         format="json",
@@ -243,7 +241,7 @@ def test_quickstart_s9_same_effective_time_without_conflict_accumulates(
     """S9: mesma vigência em caminhos independentes compõe um único snapshot com ambas."""
     edital = publish_original(api_client, manager_headers, process_payload)
     vigencia = (timezone.now() + timedelta(days=7)).isoformat()
-    retify(api_client, edital, replace(VACANCIES, 42), effective_at=vigencia, suffix="a")
+    retify(api_client, edital, mudanca_de_vagas(42), effective_at=vigencia, suffix="a")
     retify(
         api_client, edital, replace(TITLE, "Título retificado"), effective_at=vigencia, suffix="b"
     )
@@ -291,11 +289,11 @@ def test_quickstart_s10_same_effective_time_with_conflict_is_decided_by_publicat
     retify(
         api_client,
         edital,
-        replace(VACANCIES, 10) + replace(TITLE, "Da primeira"),
+        mudanca_de_vagas(10) + replace(TITLE, "Da primeira"),
         effective_at=vigencia,
         suffix="a",
     )
-    segunda = retify(api_client, edital, replace(VACANCIES, 20), effective_at=vigencia, suffix="b")
+    segunda = retify(api_client, edital, mudanca_de_vagas(20), effective_at=vigencia, suffix="b")
 
     conteudo = api_client.get(
         f"/api/v1/public/editais/{edital.id}/versao-vigente", {"em": vigencia}
@@ -316,7 +314,7 @@ def test_quickstart_s11_recomputed_temporal_function_matches_the_materialized_sn
     """S11: recomputar a função temporal e comparar o hash ao snapshot materializado."""
     edital = publish_original(api_client, manager_headers, process_payload)
     for indice in range(1, 4):
-        retify(api_client, edital, replace(VACANCIES, 100 + indice), suffix=f"r{indice}")
+        retify(api_client, edital, mudanca_de_vagas(100 + indice), suffix=f"r{indice}")
 
     original = VersaoConsolidada.objects.filter(edital=edital).earliest("materialized_at")
     materializada = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")

@@ -96,9 +96,15 @@ class TestSemQuadroPublicado:
         self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
     ):
         from tests.fixtures.corte import montar_cenario_do_corte
+        from tests.fixtures.legado import antes_do_quadro
 
         edital, _, _ = montar_cenario_do_corte(
-            gestor, api_client, manager_headers, process_payload, prefixo="ocupacao-016-leitura"
+            gestor,
+            api_client,
+            manager_headers,
+            process_payload,
+            prefixo="ocupacao-016-leitura",
+            publicar=antes_do_quadro,
         )
 
         leitura = ler(edital)
