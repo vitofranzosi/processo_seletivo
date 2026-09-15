@@ -121,6 +121,33 @@ def test_o_bloco_de_um_perfil_nomeia_o_perfil():
     assert "perfil" in texto
 
 
+def test_perfis_de_mesmo_nome_produzem_cabecalhos_distinguiveis():
+    """Um código de inscrição por polo, para a mesma função, é o formato normal do Edital de
+    tutoria.
+
+    O 140/2025 abre dezesseis códigos e chama os dezesseis Perfis de "Tutor Presencial" — o que
+    muda entre eles é o polo. Com o cabeçalho composto só pelo `name`, os blocos de documentos
+    saíam idênticos e em sequência, e quem se inscreveu em Aracruz não tinha como achar o seu. É o
+    mesmo defeito que o cabeçalho existe para não cometer, chegando pelo outro lado: em vez de uma
+    exigência de uma modalidade parecer de todo mundo, a de um polo parece a de outro.
+
+    A grafia conferida é a da tabela de Perfis e a do título da seção de cada um — o documento não
+    ganha uma segunda forma de nomear o mesmo objeto.
+    """
+    documentos = [
+        dict(DOCUMENTOS[0], profileId=PERFIL["A"], modalityId=None),
+        dict(DOCUMENTOS[1], profileId=PERFIL["B"], modalityId=None),
+    ]
+    snapshot = _snapshot(documentos)
+    for perfil in snapshot["profiles"]:
+        perfil["name"] = "Tutor Presencial"
+
+    texto = _texto(snapshot)
+
+    assert "Dos candidatos ao perfil P1 — Tutor Presencial:" in texto
+    assert "Dos candidatos ao perfil P2 — Tutor Presencial:" in texto
+
+
 def test_sem_documento_exigido_a_secao_nao_e_composta():
     """Título sobre nada informaria que alguém esqueceu de preencher — e seria falso.
 
