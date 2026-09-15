@@ -626,10 +626,15 @@ Fora deste incremento, e por decisão:
 - **Depreciar os campos da Regra Normativa.** A `025` decidiu que a preservação do que já foi
   publicado é obrigatória e que a depreciação futura é pergunta aberta; esta feature não a reabre.
 - **Alterar o contrato de mutabilidade** (`026`). Esta feature o obedece.
-- **Os demais achados da auditoria de 13/09/2026** — o cronograma vencido do Edital copiado, a
-  microcópia invisível como classe, o segundo Edital no mesmo Processo, a porta de entrada de quem
-  julga recurso, as trinta decisões da Classificação. São registro, e o Princípio VI proíbe derivar
-  deles automaticamente a prioridade da spec seguinte.
+- **Os demais achados da auditoria de 13/09/2026 que continuam abertos** — o cronograma vencido do
+  Edital copiado, a microcópia invisível como classe, o segundo Edital no mesmo Processo, as trinta
+  decisões da Classificação. São registro, e o Princípio VI proíbe derivar deles automaticamente a
+  prioridade da spec seguinte.
+
+  *A porta de entrada de quem julga recurso saiu desta lista: ela **já foi fechada**, pelo PR #113 —
+  `interface/acoes.py` a monta na página do Edital, com a contagem no rótulo, para quem tem
+  `recurso:julgar`, e `interface/supervisao.py` a oferece num dos sinais do painel. O engano é fácil
+  de repetir: a entrada é construída em Python, e um `grep` pelos templates não a encontra.*
 
 ---
 
