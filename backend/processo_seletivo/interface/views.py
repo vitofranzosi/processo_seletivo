@@ -1577,6 +1577,45 @@ def fragmento_criterio(request, indice, sub):
     )
 
 
+@require_http_methods(["GET"])
+def fragmento_quadro(request, indice):
+    """O quadro reconstruído a partir do que está digitado agora (027, FR-317, FR-321).
+
+    **Existe porque a escolha da ampla concorrência muda o quadro, e mudava só na gravação.**
+    Apontar uma Modalidade como a da ampla tira-a das listas reservadas: a caixa dela deixa de
+    existir, e o Perfil que fica sem lista reservada nenhuma deixa de ter bloco. Enquanto isso só
+    era recalculado ao salvar, a tela mentia entre uma gravação e outra — a caixa continuava lá, e
+    quem digitasse nela levava recusa na submissão.
+
+    Lê o Perfil do **formulário**, e não do banco: a Modalidade recém-acrescentada e o total
+    recém-digitado ainda não foram gravados, e é sobre eles que a pessoa está decidindo.
+
+    **Conteúdo incompleto não troca nada.** Quem está no meio de preencher pode não ter ainda o que
+    `ler_perfis` exige; responder 204 faz o htmx deixar a tela como está, que é melhor do que
+    devolver um quadro montado sobre metade do Perfil.
+    """
+    try:
+        perfis = forms.ler_perfis(request.GET)
+    except (ValueError, KeyError):
+        return HttpResponse(status=204)
+    identidade = request.GET.get(f"perfil-{indice}-id")
+    perfil = next((item for item in perfis if str(item.get("id")) == str(identidade)), None)
+    if perfil is None:
+        return HttpResponse(status=204)
+    return render(
+        request,
+        "interface/_quadro_do_perfil.html",
+        {
+            "perfil": {
+                **perfil,
+                "quadro": forms.quadro_do_formulario(perfil),
+                "tem_lista_reservada": bool(listas_reservadas(perfil)),
+            },
+            "indice": indice,
+        },
+    )
+
+
 def _tem_lista_reservada_no_formulario(request, indice):
     """Se este Perfil **já** declara lista reservada, lido do formulário que veio junto (027).
 

@@ -71,8 +71,18 @@ def test_invariante_1_sem_lista_reservada_a_tela_nao_oferece_dois_campos():
     """
     linha = (CODIGO / "interface/templates/interface/_linha_do_quadro.html").read_text("utf-8")
     assert "{% if linha.derivada %}" in linha, "a linha derivada não desenha caixa"
-    perfil_html = (CODIGO / "interface/templates/interface/_perfil.html").read_text("utf-8")
-    assert "{% if perfil.tem_lista_reservada %}" in perfil_html
+
+    # **A condição é procurada nos templates, e não num arquivo nomeado.** Ela já mudou de casa uma
+    # vez — saiu de `_perfil.html` para `_quadro_do_perfil.html` quando o seletor da ampla passou a
+    # reconstruir o quadro durante a edição —, e um invariante que prendesse o caminho estaria
+    # medindo onde o código mora em vez de o que ele garante.
+    templates = (CODIGO / "interface/templates/interface").glob("*.html")
+    onde = [
+        arquivo.name
+        for arquivo in templates
+        if "{% if perfil.tem_lista_reservada %}" in arquivo.read_text("utf-8")
+    ]
+    assert onde, "o bloco do quadro é condicionado à existência de lista reservada"
 
 
 # --- 2 · todo Perfil publicado por esta interface publica linha geral -------------------------

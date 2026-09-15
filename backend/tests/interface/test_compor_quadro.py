@@ -891,3 +891,127 @@ def test_a_noticia_nao_sobrevive_para_uma_visita_futura(client, seletor_ligado, 
 
     depois = tela(client, composto)
     assert "não declara mais lista reservada" not in depois
+
+
+# --- 027 · o quadro reage ao seletor da ampla **durante a edição** (FR-317, FR-321) ------------
+
+
+def campos_do_perfil(**ajustes):
+    """O Perfil como o formulário o envia, pronto para ir no `hx-include` do seletor."""
+    return {**perfil(), **ajustes}
+
+
+def pedir_quadro(client, dados):
+    return client.get(reverse("interface:fragmento-quadro", args=[0]), dados).content.decode()
+
+
+def test_apontar_a_ampla_tira_a_caixa_dela_sem_precisar_salvar(client, seletor_ligado, edital):
+    """O caminho que o servidor consertava tarde demais.
+
+    A correção da montagem do formulário só valia na renderização seguinte: escolher a Modalidade
+    no seletor deixava a caixa dela na tela até a próxima gravação — e quem digitasse nela levava
+    recusa na submissão, porque a quantidade da ampla mora na linha geral.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ampla = _id("2510", sub=1)
+
+    antes = pedir_quadro(client, campos_do_perfil())
+    assert "Ampla concorrência (AC)" in antes, "sem apontamento, a AC é lista reservada como outra"
+
+    depois = pedir_quadro(
+        client, campos_do_perfil(**{"perfil-0-generalCompetitionModalityId": ampla})
+    )
+    assert "Ampla concorrência (AC)" not in depois, "apontada, ela deixa de ter caixa na hora"
+    assert "Pessoa com deficiência (PCD)" in depois
+    assert "Pretos, pardos e indígenas (PPI)" in depois
+
+
+def test_apontar_a_unica_modalidade_faz_o_bloco_sumir_na_hora(client, seletor_ligado, edital):
+    """E o terceiro sintoma: o bloco que já não tem o que pedir continuava na tela."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ampla = _id("2510", sub=1)
+    so_a_ac = {
+        "perfil-0-id": _id("2500"),
+        "perfil-0-code": "C1",
+        "perfil-0-name": "Curso 1",
+        "perfil-0-immediateVacancies": "2",
+        "perfil-0-reserveType": "NONE",
+        "modalidade-0-0-id": ampla,
+        "modalidade-0-0-code": "AC",
+        "modalidade-0-0-name": "Ampla concorrência",
+    }
+
+    com_bloco = pedir_quadro(client, so_a_ac)
+    assert '<h3 id="quadro-titulo-0">Quadro de vagas</h3>' in com_bloco
+
+    sem_bloco = pedir_quadro(client, {**so_a_ac, "perfil-0-generalCompetitionModalityId": ampla})
+    assert '<h3 id="quadro-titulo-0">Quadro de vagas</h3>' not in sem_bloco
+    visiveis = re.findall(
+        r'<input type="number"[^>]*name="linha-0-\d+-immediateVacancies"', sem_bloco
+    )
+    assert visiveis == [], "sem lista reservada não há caixa nenhuma"
+    assert 'name="linha-0-0-id"' in sem_bloco, "a linha geral continua viajando, oculta"
+
+
+def test_voltar_para_nenhuma_devolve_a_caixa_da_modalidade(client, seletor_ligado, edital):
+    """A troca vale nos dois sentidos: desfeito o apontamento, a Modalidade volta a contar."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ampla = _id("2510", sub=1)
+
+    pedir_quadro(client, campos_do_perfil(**{"perfil-0-generalCompetitionModalityId": ampla}))
+    voltou = pedir_quadro(client, campos_do_perfil(**{"perfil-0-generalCompetitionModalityId": ""}))
+
+    assert "Ampla concorrência (AC)" in voltou
+
+
+def test_o_que_ja_estava_digitado_sobrevive_a_troca(client, seletor_ligado, edital):
+    """A reconstrução lê o formulário, e não o banco: quantidade digitada e ainda não salva fica."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    dados = campos_do_perfil(
+        **{"perfil-0-generalCompetitionModalityId": _id("2510", sub=1)},
+    )
+    dados["linha-0-3-immediateVacancies"] = "17"
+
+    corpo = pedir_quadro(client, dados)
+
+    assert 'value="17"' in corpo, "o número digitado na PPI atravessa a troca"
+
+
+def test_perfil_que_o_formulario_nao_traz_nao_troca_nada(client, seletor_ligado, edital):
+    """Pedido que não casa com Perfil algum deixa a tela como está.
+
+    `ler_perfis` é tolerante com o meio do preenchimento — um Perfil só com identidade produz o
+    estado sem bloco, que é o certo, porque ele ainda não tem lista reservada. O que não pode
+    acontecer é o fragmento montar um quadro para um Perfil que não está no envio: aí a resposta é
+    204, e o htmx não troca nada.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.get(
+        reverse("interface:fragmento-quadro", args=[0]), {"perfil-3-id": _id("2500", indice=3)}
+    )
+
+    assert resposta.status_code == 204, "204 faz o htmx deixar a tela como está"
+    assert resposta.content == b""
+
+
+def test_perfil_no_meio_do_preenchimento_devolve_o_estado_sem_bloco(client, seletor_ligado, edital):
+    """E o caso tolerado: sem Modalidade nenhuma não há lista reservada, e portanto não há bloco."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = pedir_quadro(client, {"perfil-0-id": _id("2500")})
+
+    assert '<h3 id="quadro-titulo-0">Quadro de vagas</h3>' not in corpo
+    assert 'name="linha-0-0-id"' in corpo, "a linha geral viaja desde o primeiro instante"
+
+
+def test_o_seletor_declara_a_reacao_no_html(client, seletor_ligado, composto):
+    """A reação é do servidor, por `hx-get` — sem `js:{...}`, que a CSP desta tela proíbe."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = tela(client, composto)
+
+    seletor = corpo[corpo.index('id="perfil-0-generalCompetitionModalityId"') :][:600]
+    assert 'hx-trigger="change"' in seletor
+    assert 'hx-target="#quadro-0"' in seletor
+    assert "hx-include=" in seletor
+    assert "js:" not in seletor

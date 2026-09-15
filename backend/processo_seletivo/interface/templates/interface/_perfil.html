@@ -150,8 +150,24 @@
     {% endcomment %}
     <p class="campo">
       <label for="perfil-{{ indice }}-generalCompetitionModalityId">Qual delas é a ampla concorrência</label>
+      {% comment %}
+      **A escolha reconstrói o quadro na hora** (027, FR-317). Apontar uma Modalidade como a da
+      ampla concorrência muda quantas listas reservadas existem, e portanto se há repartição a
+      pedir: sem esta reação, a caixa da Modalidade recém-apontada ficava na tela até a próxima
+      gravação — e quem digitasse nela levava recusa na submissão, porque a quantidade da ampla
+      mora na linha geral.
+
+      `hx-include` manda o Perfil inteiro: o servidor recalcula a partir do que está digitado
+      agora, e não do que está no banco. Sem `hx-vals='js:{...}'`, que pediria o `allowEval` do
+      HTMX e quebraria sob a CSP desta interface.
+      {% endcomment %}
       <select id="perfil-{{ indice }}-generalCompetitionModalityId"
               name="perfil-{{ indice }}-generalCompetitionModalityId"
+              hx-get="{% url 'interface:fragmento-quadro' indice %}"
+              hx-trigger="change"
+              hx-include="closest fieldset"
+              hx-target="#quadro-{{ indice }}"
+              hx-swap="innerHTML"
               aria-describedby="ajuda-ampla-{{ indice }}">
         <option value="">Nenhuma — a ampla concorrência é só a linha geral do quadro</option>
         {% for modalidade in perfil.modalidades %}
@@ -219,18 +235,15 @@
   fragmento da Modalidade entrega a linha nova; sem ele presente, o `hx-swap-oob` não acha destino,
   **não erra**, e a linha se perde em silêncio. O que aparece e some é a seção, e não a âncora.
   {% endcomment %}
-  <div id="quadro-{{ indice }}">
-    {% if perfil.tem_lista_reservada %}{% include "interface/_secao_do_quadro.html" %}{% endif %}
-  </div>
   {% comment %}
-  A linha geral viaja mesmo com o bloco ausente: identidade e quantidade em campo oculto. É ela que
-  a gravação preserva e que a Retificação alcança depois de publicada — uma linha que não voltasse
-  ao formulário seria apagada na gravação seguinte, que é a travessia que já custou quantidade
-  publicável neste repositório.
+  **Os dois estados moram dentro da âncora**, e não um dentro e outro fora. A linha geral viaja
+  mesmo com o bloco ausente — identidade e quantidade em campo oculto, porque é ela que a gravação
+  preserva e que a Retificação alcança depois de publicada —, e mantê-la aqui dentro é o que
+  permite ao seletor da ampla concorrência trocar os dois estados com um alvo só.
   {% endcomment %}
-  {% if not perfil.tem_lista_reservada %}
-    {% for linha in perfil.quadro %}{% include "interface/_linha_do_quadro.html" with sub=forloop.counter0 %}{% endfor %}
-  {% endif %}
+  <div id="quadro-{{ indice }}">
+    {% include "interface/_quadro_do_perfil.html" %}
+  </div>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
     <h3 id="fato-titulo-{{ indice }}">Fatos exigidos do candidato</h3>
     <div id="fatos-{{ indice }}">
