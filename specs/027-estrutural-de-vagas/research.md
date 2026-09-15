@@ -22,12 +22,21 @@ depois de publicada e porque dois conteúdos idênticos têm de produzir o mesmo
   gravasse rascunho por `PUT /draft` continuaria publicando Perfil sem linha, e a FR-316 fala do
   sistema, não da tela.
 
-Sobra uma terceira, que **funciona e foi recusada por outra razão**: identidade determinística
-(`uuid5` da identidade do Perfil) derivada na emissão manteria o resumo estável. Ela foi recusada
-porque a linha continuaria não existindo no rascunho — a conferência da submissão não teria o que
-conferir, a Revisão não teria o que exibir e o `PROTECT` do banco não teria o que proteger. A linha
-derivada é uma linha; fingi-la só na saída faria o sistema ter, de novo, dois lugares dizendo a
-mesma coisa.
+Havia uma terceira, e ela é a que a execução acabou usando — **mas não onde esta pesquisa a
+imaginava**. Identidade determinística (`uuid5` sobre a identidade do Perfil) *derivada na emissão*
+manteria o resumo estável e continua recusada pela razão de sempre: a linha não existiria no
+rascunho, e então a conferência da submissão não teria o que conferir, a Revisão não teria o que
+exibir e o `PROTECT` do banco não teria o que proteger. A linha derivada é uma linha; fingi-la só na
+saída faria o sistema ter, de novo, dois lugares dizendo a mesma coisa.
+
+> **O que a implementação descobriu, e esta pesquisa não previu.** A linha é persistida — a decisão
+> acima vale inteira —, e o `uuid5` entrou como a **origem do `id` quando nenhum chega**, que é coisa
+> diferente de derivar na emissão. O motivo apareceu no teste da armadilha 1: a interface devolve o
+> `id` que já gravou, mas quem grava por `PUT /draft` não devolve, e duas gravações da mesma carga
+> cunhavam duas identidades — o resumo canônico mudava sem o conteúdo mudar, que é exatamente o
+> defeito que esta questão existia para evitar. A função é pública em `editais/domain/perfis.py`
+> (`identidade_da_linha_geral`) porque a reprodutibilidade dela é o que torna a gravação idempotente
+> para todo canal, e não só para a tela.
 
 **Onde entra:** `editais/application/draft.py`, imediatamente antes do laço que cria
 `LinhaDoQuadroDeVagas`, chamando uma função pura de `editais/domain/perfis.py`. Idempotente: se a

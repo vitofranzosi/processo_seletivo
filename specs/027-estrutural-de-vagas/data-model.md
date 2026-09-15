@@ -70,12 +70,17 @@ acervo fica como está (`FR-330`, `FR-333`).
 | `vacancy_general_row_missing` | **impeditivo, no ato de publicação** | Perfil sem linha geral | `FR-323` |
 | `vacancy_reserved_list_without_row` | advertência | lista reservada sem linha, uma por lista, dita em números | `FR-324` |
 | `general_competition_modality_undeclared` | advertência | Perfil declara Modalidade e não declara qual é a da ampla | `FR-325` |
+| `vacancy_table_absent_in_archive` | **advertência, e só no ato de Retificação** | Perfil publicado que declara vaga imediata e não publica quadro nenhum | `FR-332`, `FR-335` |
 
 Os três seguem a forma que `validation.py` já usa: código, mensagem em português com os números
 dentro, e caminho que `interface/views._destino` traduz para a etapa que resolve.
 
 **A severidade do primeiro depende do ato conferido**, e é a armadilha nomeada em `T-003`: no ato de
 Retificação ele não é produzido, porque o acervo inteiro o dispararia e nenhuma Retificação passaria.
+
+**E o quarto é o espelho dele**, acrescentado na execução: a mesma ausência que é impedimento ao
+publicar Edital novo é, no acervo, a condição normal — e ali ela vira o aviso que **nomeia o ato**.
+Os dois nunca coexistem, porque cada um só existe no ato em que o outro se cala.
 
 ---
 

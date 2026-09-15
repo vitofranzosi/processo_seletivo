@@ -110,6 +110,7 @@ specs/027-estrutural-de-vagas/
 │   └── estrutural-de-vagas.md
 ├── checklists/
 │   └── requirements.md
+├── rastreabilidade.md   # Fase 9 — cada requisito, onde foi feito e onde é verificado
 └── tasks.md             # Fase 2 — do $speckit-tasks, não deste comando
 ```
 
@@ -132,6 +133,7 @@ backend/processo_seletivo/
 │   ├── views.py                # o fragmento da Modalidade e o destino das pendências (T-007)
 │   └── templates/interface/
 │       ├── _perfil.html                 # o bloco do quadro condicionado à lista reservada
+│       ├── _secao_do_quadro.html        # a seção, extraída para o fragmento poder entregá-la
 │       ├── _linha_do_quadro.html        # a ajuda deixa de ser `.oculto` (UX-041)
 │       ├── _modalidade_com_linha.html   # entrega a seção quando ela ainda não existe
 │       ├── compor_revisao.html          # o par total × quadro
