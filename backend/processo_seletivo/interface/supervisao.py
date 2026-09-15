@@ -643,8 +643,14 @@ def acervo_sem_quadro(edital, conteudo, encaminhar):
     for posicao, perfil in enumerate(conteudo.get("profiles") or []):
         if not isinstance(perfil, dict):
             continue
+        # **Zero é uma declaração, e ausência não é zero** (025, D-005). Um Perfil legado que
+        # publica `0` vaga imediata e nenhuma linha continua sem dizer quanto a ampla concorrência
+        # tem: a Ocupação responde "não publicou quadro", e não "zero". Excluir o `0` daqui faria a
+        # FR-331 alcançar quase todo o acervo em vez de todo ele — e o `TEC-LAB` da demonstração é
+        # exatamente essa forma. Negativo continua de fora porque a conferência de forma já o
+        # recusa, e empilhar duas acusações sobre a mesma causa esconde a que resolve.
         total = perfil.get("immediateVacancies")
-        if isinstance(total, bool) or not isinstance(total, int) or total <= 0:
+        if isinstance(total, bool) or not isinstance(total, int) or total < 0:
             continue
         recortes, sem_linha = _recortes_do_perfil(perfil)
         if not sem_linha:

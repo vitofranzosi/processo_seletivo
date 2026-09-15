@@ -785,3 +785,109 @@ def test_a_igualdade_roda_no_edital_com_ampla_declarada(client, seletor_ligado, 
         "com a ampla apontada, o quadro fica completo e a igualdade finalmente confere"
     )
     assert "diferença de 1" in achados[0].message
+
+
+# --- 027 · a ampla declarada não recebe caixa (FR-317, e a `025` D-004 antes dela) -------------
+
+
+def test_a_modalidade_declarada_como_ampla_nao_ganha_caixa_propria(client, seletor_ligado, edital):
+    """O segundo campo para o mesmo número, voltando pela porta dos fundos.
+
+    A Modalidade apontada como ampla concorrência **não** recebe linha: a quantidade dela mora na
+    geral, e a publicação recusa quem lhe der uma (`general_competition_modality_with_row`).
+    Oferecer a caixa era oferecer um campo cujo preenchimento o sistema depois recusa — e, no
+    Perfil que declara cota, era de novo pedir a mesma quantidade duas vezes.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ampla = _id("2510", sub=1)
+    dados = perfil(**{"perfil-0-generalCompetitionModalityId": ampla})
+    dados["linha-0-1-immediateVacancies"] = ""
+    assert compor(client, edital, dados).status_code == 302
+
+    quadro = secao_do_quadro(tela(client, edital))
+    editaveis = re.findall(r'<input type="(?!hidden)[^"]*"[^>]*name="(linha-[^"]+)"', quadro)
+    assert len(editaveis) == 3, (
+        "a geral e as duas reservadas; a AC apontada como ampla não tem linha própria"
+    )
+    assert "Ampla concorrência (AC)" not in quadro, "o rótulo da linha da AC não é desenhado"
+    assert "Pessoa com deficiência (PCD)" in quadro
+    assert "Pretos, pardos e indígenas (PPI)" in quadro
+
+
+def test_perfil_que_so_declara_a_ampla_nao_mostra_campo_de_quadro_nenhum(
+    client, seletor_ligado, edital
+):
+    """O caso que a auditoria encontraria primeiro: o Edital sem cota nenhuma.
+
+    Declarada a AC como a da ampla, não há lista reservada — e portanto nem bloco, nem caixa. A
+    quantidade foi digitada uma vez, em "Vagas imediatas", e é ela que a apuração usa.
+
+    Antes desta correção a caixa da AC aparecia **fora** do bloco condicionado, solta no cartão e
+    sem título nenhum acima dela.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ampla = _id("2510", sub=1)
+    dados = {
+        f"perfil-0-{campo}": valor
+        for campo, valor in (
+            ("id", _id("2500")),
+            ("code", "C1"),
+            ("name", "Curso 1"),
+            ("immediateVacancies", "2"),
+            ("reserveType", "NONE"),
+            ("generalCompetitionModalityId", ampla),
+        )
+    }
+    dados.update(
+        {
+            "modalidade-0-0-id": ampla,
+            "modalidade-0-0-code": "AC",
+            "modalidade-0-0-name": "Ampla concorrência",
+        }
+    )
+    assert compor(client, edital, dados).status_code == 302
+
+    corpo = tela(client, edital)
+    assert '<h3 id="quadro-titulo-0">Quadro de vagas</h3>' not in corpo
+    visiveis = re.findall(r'<input type="number"[^>]*name="linha-0-\d+-immediateVacancies"', corpo)
+    assert visiveis == [], "nenhuma caixa de quadro: a quantidade é a de Vagas imediatas"
+    assert LinhaDoQuadroDeVagas.objects.get().vagas_imediatas == 2
+
+
+def test_avancar_mostra_a_noticia_da_rederivacao_na_etapa_seguinte(
+    client, seletor_ligado, composto
+):
+    """FR-322 pelo caminho que quem compõe usa: "Avançar", e não "Salvar rascunho".
+
+    O aviso é notícia do que a gravação **acabou** de fazer. Preso à etapa dos Perfis, ele não
+    aparecia para quem avança — e ficava guardado na sessão para surgir numa visita futura, já
+    obsoleto, falando de uma gravação que ninguém lembra.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    sem_modalidades = {
+        chave: valor
+        for chave, valor in perfil().items()
+        if not chave.startswith("modalidade-") and not re.match(r"linha-0-[123]-", chave)
+    }
+
+    resposta = compor(client, composto, {**sem_modalidades, "destino": "cronograma"})
+
+    assert resposta.status_code == 302
+    assert resposta["Location"].endswith("/compor/cronograma?salvo=perfis")
+    corpo = client.get(resposta["Location"]).content.decode()
+    assert "não declara mais lista reservada" in corpo, "quem avança também precisa saber"
+
+
+def test_a_noticia_nao_sobrevive_para_uma_visita_futura(client, seletor_ligado, composto):
+    """E o outro lado: consumida uma vez, ela some. Aviso guardado é aviso que envelhece."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    sem_modalidades = {
+        chave: valor
+        for chave, valor in perfil().items()
+        if not chave.startswith("modalidade-") and not re.match(r"linha-0-[123]-", chave)
+    }
+    resposta = compor(client, composto, {**sem_modalidades, "destino": "cronograma"})
+    client.get(resposta["Location"])
+
+    depois = tela(client, composto)
+    assert "não declara mais lista reservada" not in depois

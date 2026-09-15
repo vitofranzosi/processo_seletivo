@@ -1,6 +1,7 @@
 import hashlib
 
 from django.db.models import F
+from django.utils import timezone
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.validation import (
@@ -551,15 +552,27 @@ def advertencias_do_ato(retificacao):
     **Não levanta nada.** Achado impeditivo é assunto da conferência que recusa o ato; aqui, se o
     conteúdo não puder sequer ser montado, a resposta é a lista vazia — o erro aparece no ato, que
     é onde ele impede alguma coisa.
+
+    **E parte do conteúdo que vai vigorar, e não do conteúdo-base isolado.** O ato foi elaborado
+    sobre uma Versão Consolidada; o que a publicação confere é o resultado de consolidar **todas**
+    as Retificações vigentes na fronteira. Uma Retificação concorrente e não conflitante pode
+    acrescentar ou retirar exatamente a advertência que esta tela mostra — outra pessoa declarando
+    a linha de um recorte faz a advertência daquele recorte deixar de existir, e a confirmação
+    estaria mostrando um conselho sobre um mundo que já passou. A composição usada aqui é a mesma
+    que `publish_retification` usa para recusar alteração obsoleta: `_content_in_force` no instante
+    de vigência do ato.
     """
-    base = retificacao.base_snapshot
-    if base is None:
+    changes = _changes_payload(retificacao)
+    if not changes:
         return []
+    momento = retificacao.effective_at or timezone.now()
     try:
         content, _ = apply_changes(
-            conteudo_base(base), _changes_payload(retificacao), publication_id="draft"
+            _content_in_force(retificacao.edital, momento), changes, publication_id="draft"
         )
     except (ValueError, KeyError, TypeError):
+        # Conteúdo que nem se monta é assunto do ato, que recusa e diz por quê. Aqui a resposta é a
+        # lista vazia: conselho sobre conteúdo impossível não ajuda ninguém.
         return []
     impeditivos = {item.code for item in blocking_findings(validate_for_publication(content))}
     return [

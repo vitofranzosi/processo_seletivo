@@ -13,6 +13,7 @@ criou o quadro —, e não por `UPDATE`: publicação é append-only por trigger
 """
 
 import pytest
+from django.urls import reverse
 
 from processo_seletivo.publicacoes.domain.elevacao import elevar
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
@@ -195,3 +196,91 @@ def test_alterar_so_o_total_de_um_perfil_com_linha_geral_e_recusado_dizendo_os_d
     detalhe = recusa["detail"]
     assert str(total + 7) in detalhe and str(total) in detalhe, "a recusa diz os dois números"
     assert "mesmo número" in detalhe and "mesmo ato" in detalhe
+
+
+def test_a_advertencia_do_acervo_alcanca_o_perfil_de_zero_vaga(
+    api_client, manager_headers, process_payload
+):
+    """A outra metade da FR-331 no mesmo caso: a advertência da Retificação também não descarta o
+    zero. Ausência de quadro é ausência, tenha o Perfil 40 vagas ou nenhuma."""
+    from processo_seletivo.editais.domain.validation import (
+        ATO_DE_RETIFICACAO,
+        validate_for_publication,
+    )
+    from tests.fixtures.edital import complete_draft
+    from tests.fixtures.legado import publicar_na_versao_anterior
+
+    rascunho = complete_draft()
+    rascunho["profiles"][0]["immediateVacancies"] = 0
+    edital = publicar_na_versao_anterior(
+        api_client, manager_headers, process_payload, draft=rascunho, versao=11
+    )
+
+    achados = [
+        item
+        for item in validate_for_publication(conteudo_vigente(edital), ato=ATO_DE_RETIFICACAO)
+        if item.code == "vacancy_table_absent_in_archive"
+    ]
+    assert achados, "zero declarado não é o mesmo que quadro ausente"
+    assert "publica 0 vaga(s) imediata(s)" in achados[0].message
+
+
+def test_a_confirmacao_mostra_a_advertencia_do_conteudo_que_vai_vigorar(
+    client, api_client, do_acervo, seletor_ligado
+):
+    """FR-336 pelo canal do ator, e sobre a base certa.
+
+    **Duas coisas de uma vez.** A primeira é que a advertência chega à tela: a conferência do ato
+    calculava os achados e ficava só com os impeditivos, de modo que o mesmo conteúdo dizia coisas
+    diferentes conforme chegasse por submissão ou por Retificação.
+
+    A segunda é de onde ela é calculada. Aplicar as mudanças sobre o conteúdo-base isolado ignora as
+    Retificações concorrentes: a publicação consolida todas as vigentes na fronteira, e uma
+    Retificação de outra pessoa pode fazer a advertência aparecer ou sumir. Aqui a linha é declarada
+    por um ato **já publicado**, e o ato em elaboração — que não a toca — não pode continuar
+    anunciando que ela falta.
+    """
+    from processo_seletivo.publicacoes.application.retificacoes import advertencias_do_ato
+    from tests.fixtures.publicacao import create_retification
+    from tests.interface.conftest import identificar
+
+    perfil = conteudo_vigente(do_acervo)["profiles"][0]
+
+    # Um ato em elaboração que **não** toca no quadro: corrige a descrição.
+    em_elaboracao = create_retification(
+        api_client,
+        do_acervo,
+        [{"operation": "REPLACE", "targetPath": "/description", "newValue": "Corrigida"}],
+        suffix="d",
+    )
+    antes = {item.code for item in advertencias_do_ato(em_elaboracao)}
+    assert "vacancy_table_absent_in_archive" in antes, "o acervo sem quadro é dito a quem retifica"
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:retificacao-ato", args=[em_elaboracao.id, "submeter"])
+    ).content.decode()
+    assert "não publica quadro de vagas" in corpo, "e chega à tela de confirmação"
+
+    # Outra pessoa declara a linha, e publica. O ato em elaboração continua o mesmo.
+    retify(
+        api_client,
+        do_acervo,
+        [
+            {
+                "operation": "ADD",
+                "targetPath": f"/profiles/id={perfil['id']}/vacancyTable/-",
+                "newValue": {
+                    "id": "00000000-0000-0000-0000-0000000009e1",
+                    "modalityId": None,
+                    "immediateVacancies": perfil["immediateVacancies"],
+                },
+            }
+        ],
+        suffix="e",
+    )
+
+    depois = {item.code for item in advertencias_do_ato(em_elaboracao)}
+    assert "vacancy_table_absent_in_archive" not in depois, (
+        "a advertência fala do conteúdo que vai vigorar, e ele já não tem essa ausência"
+    )

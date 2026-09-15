@@ -117,3 +117,29 @@ def test_o_sinal_some_depois_de_a_linha_ser_declarada(do_acervo, supervisora, ap
     )
 
     assert do_quadro(do_acervo.processo, supervisora) == []
+
+
+def test_o_perfil_do_acervo_com_zero_vagas_tambem_aparece(
+    api_client, manager_headers, process_payload, supervisora
+):
+    """**Zero é uma declaração, e ausência não é zero** (`025`, D-005; 027, FR-331, SC-108).
+
+    Um Perfil legado que publica `0` vaga imediata e nenhuma linha continua sem dizer quanto a
+    ampla concorrência tem: a Ocupação responde "não publicou quadro", e não "zero". São
+    afirmações diferentes, e é a distinção que a `025` fixou.
+
+    Descartar o `0` faria a FR-331 alcançar **quase** todo o acervo em vez de todo ele — e a forma
+    existe: o `TEC-LAB` da própria demonstração publica zero vaga imediata.
+    """
+    from tests.fixtures.edital import complete_draft
+
+    rascunho = complete_draft()
+    rascunho["profiles"][0]["immediateVacancies"] = 0
+    edital = publicar_na_versao_anterior(
+        api_client, manager_headers, process_payload, draft=rascunho, versao=11
+    )
+
+    sinais = do_quadro(edital.processo, supervisora)
+
+    assert len(sinais) == 1, "o Perfil de zero vaga sem quadro não pode ficar invisível"
+    assert "publica 0 vaga(s) imediata(s)" in sinais[0].mensagem

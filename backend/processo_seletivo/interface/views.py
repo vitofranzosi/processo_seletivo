@@ -896,7 +896,11 @@ def compor_etapa(request, edital_id, etapa):
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
     anexos = _anexos_da_etapa(edital) if etapa == "anexos" else []
     recusa_de_anexo = request.session.pop("anexos_recusa", None) if etapa == "anexos" else None
-    rederivadas = request.session.pop("quadro_rederivado", None) if etapa == "perfis" else None
+    # **Consumido em qualquer etapa, e não só na dos Perfis.** "Avançar" grava uma etapa e abre a
+    # seguinte: preso ao destino `perfis`, o aviso não aparecia para quem avança — e ficava na
+    # sessão esperando uma visita futura, onde surgiria já obsoleto, falando de uma gravação que
+    # ninguém lembra. Notícia do que acabou de acontecer não sobrevive à próxima tela (FR-322).
+    rederivadas = request.session.pop("quadro_rederivado", None)
     return render(
         request,
         template,

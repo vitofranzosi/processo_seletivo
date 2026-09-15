@@ -1909,8 +1909,14 @@ def _acervo_sem_quadro(perfil, *, base, ato) -> list[ValidationFinding]:
     """
     if ato != ATO_DE_RETIFICACAO:
         return []
+    # **Zero é uma declaração, e ausência não é zero** (025, D-005). Um Perfil legado que publica
+    # `0` vaga imediata e nenhuma linha continua sem dizer quanto a ampla concorrência tem: a
+    # Ocupação responde "não publicou quadro", e não "zero". Excluir o `0` daqui faria a FR-331
+    # alcançar quase todo o acervo em vez de todo ele — e o `TEC-LAB` da demonstração é exatamente
+    # essa forma. Negativo continua de fora porque a conferência de forma já o recusa, e empilhar
+    # duas acusações sobre a mesma causa esconde a que resolve.
     total = perfil.get("immediateVacancies")
-    if isinstance(total, bool) or not isinstance(total, int) or total <= 0:
+    if isinstance(total, bool) or not isinstance(total, int) or total < 0:
         return []
     rotulo = perfil.get("code") or perfil.get("name") or ""
     return [

@@ -743,8 +743,16 @@ def quadro_do_formulario(perfil):
             ),
         }
     ]
+    # **A Modalidade declarada como ampla concorrência não recebe linha** (025, D-004, FR-176; 027,
+    # FR-317). A quantidade dela mora na linha geral, e oferecer uma caixa própria seria oferecer um
+    # campo cujo preenchimento a publicação recusa — `general_competition_modality_with_row`. Era o
+    # segundo campo para o mesmo número voltando pela porta dos fundos: no Perfil que só declara a
+    # ampla, a caixa aparecia inclusive fora do bloco que esta feature condicionou.
+    ampla = str(perfil.get("generalCompetitionModalityId") or "")
     for modalidade in perfil.get("competitionModalities") or []:
         chave = str(modalidade.get("id") or "")
+        if ampla and chave == ampla:
+            continue
         digitada = digitadas.get(chave)
         nome = modalidade.get("name") or ""
         codigo = modalidade.get("code") or ""
@@ -804,7 +812,14 @@ def _quadro_para_o_formulario(perfil):
             ),
         }
     ]
+    # **A Modalidade declarada como ampla concorrência não recebe linha** (025, D-004, FR-176; 027,
+    # FR-317). A quantidade dela mora na linha geral, e oferecer uma caixa própria seria oferecer um
+    # campo cujo preenchimento a publicação recusa — `general_competition_modality_with_row`. Era o
+    # segundo campo para o mesmo número voltando pela porta dos fundos: no Perfil que só declara a
+    # ampla, a caixa aparecia inclusive fora do bloco que esta feature condicionou.
     for modalidade in perfil.modalidades.order_by("code"):
+        if modalidade.id == perfil.modalidade_ampla_concorrencia:
+            continue
         gravada = gravadas.get(str(modalidade.id))
         linhas.append(
             {
