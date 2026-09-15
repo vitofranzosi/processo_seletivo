@@ -1779,10 +1779,34 @@ def _alinea(indice):
     return f"{letras})"
 
 
+def _rotulo_do_perfil(perfil):
+    """`LP01 — Tutor Presencial`: a grafia que a tabela de Perfis e o título da seção dele já usam.
+
+    **O código entra porque o nome não distingue.** Um Edital de tutoria abre um código de inscrição
+    por polo para a mesma função: os dezesseis Perfis do 140/2025 se chamam todos "Tutor
+    Presencial", e o cabeçalho composto só com `name` imprimia dezesseis vezes "Dos candidatos ao
+    perfil Tutor Presencial:", indistinguíveis. Quem se inscreveu em Aracruz não tinha como saber
+    qual bloco era o dele — que é exatamente o erro que este cabeçalho existe para não cometer.
+
+    **A grafia não é escolhida aqui.** É a que o leitor já viu na tabela de Perfis e no título da
+    seção daquele Perfil, e por isso é a que ele procura. Duas grafias para o mesmo objeto no mesmo
+    documento obrigariam a casá-las de cabeça.
+
+    O nome sozinho continua valendo quando não há código, e vice-versa: a validação de publicação
+    exige os dois, e compor `" — "` sobre um campo vazio produziria um travessão órfão em conteúdo
+    que nenhum teste de publicação alcança.
+    """
+    code = (perfil.get("code") or "").strip()
+    name = (perfil.get("name") or "").strip()
+    if code and name:
+        return f"{code} — {name}"
+    return name or code
+
+
 def _nomes_do_alcance(snapshot):
     perfis, modalidades = {}, {}
     for perfil in snapshot.get("profiles") or []:
-        perfis[perfil.get("id")] = perfil.get("name") or perfil.get("code", "")
+        perfis[perfil.get("id")] = _rotulo_do_perfil(perfil)
         for modalidade in perfil.get("competitionModalities") or []:
             modalidades[modalidade.get("id")] = modalidade.get("name") or modalidade.get("code", "")
     return perfis, modalidades
