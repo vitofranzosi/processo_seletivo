@@ -16,6 +16,20 @@
   <input type="hidden" name="linha-{{ indice }}-{{ sub }}-id" value="{{ linha.id }}">
   <input type="hidden" name="linha-{{ indice }}-{{ sub }}-modalityId"
          value="{{ linha.modalityId|default:'' }}">
+  {% comment %}
+  **A linha derivada não tem caixa** (027, D-001, FR-316). Enquanto o Perfil não declara lista
+  reservada, a quantidade da ampla concorrência é a vaga imediata dele: oferecer um segundo campo
+  para o mesmo número é o que criava a divergência que o Princípio II proíbe — e foi assim que
+  Editais publicaram um total que a apuração não usava.
+
+  Ela continua viajando: identidade, recorte e quantidade em campo oculto. É esta linha que a
+  gravação preserva e que a Retificação alcança depois de publicada, e uma linha que não voltasse
+  ao formulário seria apagada na gravação seguinte.
+  {% endcomment %}
+  {% if linha.derivada %}
+  <input type="hidden" name="linha-{{ indice }}-{{ sub }}-immediateVacancies"
+         value="{{ linha.immediateVacancies|default_if_none:'' }}">
+  {% else %}
   {% recusa_de recusas "linha" indice "immediateVacancies" sub as recusado_quantidade %}
   {% recusa_de recusas "linha" indice "modalityId" sub as recusado_recorte %}
   <p class="campo curto">
@@ -30,14 +44,17 @@
     {% if recusado_quantidade %}<span class="recusa" role="alert" id="recusa-linha-{{ indice }}-{{ sub }}-immediateVacancies">{{ recusado_quantidade }}</span>{% endif %}
     {% if recusado_recorte %}<span class="recusa" role="alert" id="recusa-linha-{{ indice }}-{{ sub }}-modalityId">{{ recusado_recorte }}</span>{% endif %}
     {% comment %}
-    Escondida, e não impressa: a explicação é a mesma em todos os cartões, e um Edital de sete
-    polos a imprimiria sete vezes. Continua anunciada a quem ouve a tela, pelo `aria-describedby`
-    do campo — sair de vista não é sair da página.
+    **Impressa, e não escondida** (027, UX-041, UX-042). Ela era `.oculto` — anunciada a quem ouve
+    a tela e invisível a quem enxerga —, e a auditoria registrou essa microcópia invisível como
+    metade da causa do achado que esta feature fecha: o operador não tinha como saber que o campo
+    de baixo era o que a apuração usa. O custo de imprimi-la é repetição num Edital de sete polos;
+    o custo de escondê-la foi um acervo inteiro inerte.
     {% endcomment %}
-    <span class="oculto" id="ajuda-linha-{{ indice }}-{{ sub }}">{% if linha.geral %}Esta é a linha
+    <span class="ajuda" id="ajuda-linha-{{ indice }}-{{ sub }}">{% if linha.geral %}Esta é a linha
       da ampla concorrência: o recorte de que todos os inscritos participam, inclusive quem
-      concorre por reserva. Em branco: quantidade não declarada.{% else %}Quantas vagas cabem nesta
-      lista de concorrência. Em branco: quantidade não declarada — que não é o mesmo que
-      zero.{% endif %}</span>
+      concorre por reserva. É dela que a ocupação e a convocação tiram a quantidade a
+      apurar.{% else %}Quantas vagas cabem nesta lista de concorrência. Em branco: quantidade não
+      declarada — que não é o mesmo que zero.{% endif %}</span>
   </p>
+  {% endif %}
 </div>

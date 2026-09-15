@@ -1,13 +1,13 @@
 {% comment %}
-Dois pedaços numa resposta só: a Modalidade, que entra onde o botão manda, e a linha do quadro
-correspondente, que entra fora de banda na seção do quadro do mesmo Perfil.
+Dois pedaços numa resposta só: a Modalidade, que entra onde o botão manda, e o quadro
+correspondente, que entra fora de banda na seção do mesmo Perfil.
 
-Ela vem junto porque a promessa da tela é que a linha seja **oferecida**, e não digitada: acrescentar
-uma Modalidade e não ver onde escrever a quantidade dela devolveria a pessoa ao salvamento só para
-descobrir o campo. O `sub` da linha é o mesmo da Modalidade, e não colide com os das linhas
-desenhadas na carga da página — que são numeradas por posição a partir de zero. Ele continua
-sendo **dígitos**: `forms._indices` ordena por número quando o índice é numérico e por texto quando
-não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` com `str`.
+Ela vem junto porque a promessa da tela é que a linha seja **oferecida**, e não digitada:
+acrescentar uma Modalidade e não ver onde escrever a quantidade dela devolveria a pessoa ao
+salvamento só para descobrir o campo. O `sub` da linha é o mesmo da Modalidade, e não colide com os
+das linhas desenhadas na carga da página — que são numeradas por posição a partir de zero. Ele
+continua sendo **dígitos**: `forms._indices` ordena por número quando o índice é numérico e por
+texto quando não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` com `str`.
 {% endcomment %}
 {% include "interface/_modalidade.html" %}
 {% comment %}
@@ -15,7 +15,31 @@ não é, e misturar os dois no mesmo Perfil faria a ordenação comparar `int` c
 elemento marcado com `hx-swap-oob`, e não o elemento: marcar a própria linha fazia os campos
 chegarem soltos dentro da seção, sem o `div.linha-do-quadro` que a desenha — a linha vinha, e vinha
 sem forma. O envelope abaixo existe só para ser jogado fora (E2E25-002).
+
+**E há dois destinos, porque há dois estados** (027, FR-321). Enquanto o Perfil não declara lista
+reservada, a seção do quadro **não está na página**: não há repartição a pedir, e desenhá-la seria
+pedir o mesmo número duas vezes. Esta Modalidade é a primeira lista reservada, então a seção nasce
+agora, inteira, com a linha geral já preenchida com o total — e é por isso que ela vem com a linha
+da Modalidade nova dentro, e não por fora.
+
+Mandar só a linha nesse estado a perderia em silêncio: o alvo `#linhas-do-quadro-<indice>` ainda
+não existe, o `hx-swap-oob` não acha destino e **não erra**.
 {% endcomment %}
+{% if secao_nova %}
 <div hx-swap-oob="beforeend:#quadro-{{ indice }}">
+  <section class="quadro" aria-labelledby="quadro-titulo-{{ indice }}">
+    <h3 id="quadro-titulo-{{ indice }}">Quadro de vagas</h3>
+    <p class="explicacao">Este Perfil declara lista reservada, e por isso as vagas passam a ser
+      repartidas: diga quantas cabem em cada uma. A soma é conferida contra as vagas imediatas do
+      Perfil.</p>
+    <div id="linhas-do-quadro-{{ indice }}">
+      {% include "interface/_linha_do_quadro.html" with linha=geral sub=0 %}
+      {% include "interface/_linha_do_quadro.html" %}
+    </div>
+  </section>
+</div>
+{% else %}
+<div hx-swap-oob="beforeend:#linhas-do-quadro-{{ indice }}">
   {% include "interface/_linha_do_quadro.html" %}
 </div>
+{% endif %}
