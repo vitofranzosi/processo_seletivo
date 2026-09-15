@@ -90,6 +90,15 @@
       ],
       "port": 8027,
       "url": "http://localhost:8027"
+    },
+    {
+      "name": "cronograma-028",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_028 POSTGRES_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8028"
+      ],
+      "port": 8028
     }
   ]
 }

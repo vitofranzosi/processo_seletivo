@@ -12,15 +12,29 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from tests.fixtures.publicacao import encerrar_inscricoes
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
 
 
 def _publicar_com_periodo(api_client, manager_headers, process_payload, *, inicio, fim):
+    """Publica a seleção com o período pedido.
+
+    Quando o término pedido já passou, publica com o prazo **aberto** e o encerra por Retificação
+    (`028`, FR-346, FR-355): o sistema recusa publicar Edital cujas inscrições já fecharam, e nenhum
+    Edital do mundo é publicado assim — ele é publicado antes, e o prazo vence com o tempo.
+    """
+    encerrado = fim is not None and fim < timezone.now()
     rascunho = rascunho_de_selecao()
     rascunho["schedule"][0]["startAt"] = inicio.isoformat()
-    rascunho["schedule"][0]["endAt"] = None if fim is None else fim.isoformat()
+    if encerrado:
+        rascunho["schedule"][0]["endAt"] = (timezone.now() + timedelta(days=1)).isoformat()
+    else:
+        rascunho["schedule"][0]["endAt"] = None if fim is None else fim.isoformat()
     rascunho["schedule"][0]["isRegistrationPeriod"] = True
-    return publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+    edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+    if encerrado:
+        edital = encerrar_inscricoes(api_client, edital, fim)
+    return edital
 
 
 @pytest.mark.django_db(transaction=True)

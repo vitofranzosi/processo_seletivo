@@ -107,6 +107,7 @@ from processo_seletivo.editais.application.reaproveitamento import (
     rascunho_vazio,
     reaproveitar_edital,
 )
+from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
@@ -525,7 +526,13 @@ def _pendencias(edital):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
-    for item in validate_for_publication(edital_snapshot(edital), ato=ATO_DE_PUBLICACAO):
+    # Um instante para a conferência inteira (`028`, FR-341). Aqui não há transação de gravação de
+    # onde herdá-lo, então ele é resolvido uma vez e passado — o que importa é que dois Eventos do
+    # mesmo cronograma nunca sejam julgados contra relógios diferentes.
+    agora = timezone.now()
+    for item in validate_for_publication(
+        edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
+    ):
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {
@@ -669,14 +676,44 @@ def _recusa(exc, digitados, etapa):
     return {"mensagem": mensagem, "ancora": ""}
 
 
+def _estado_do_cronograma(edital):
+    """Concluída quando há Evento e nenhum deles venceu (`028`, FR-359, FR-360).
+
+    Pendente **não impede nada** (FR-362): o selo orienta quem retoma o trabalho, e quem fecha porta
+    é o achado impeditivo do período de inscrições encerrado. E como o estado é derivado e não
+    persistido, ele volta sozinho assim que as datas são corrigidas — que é também o que o faz estar
+    certo na primeira abertura depois do reaproveitamento, sem gravação nenhuma.
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return PENDENTE
+    eventos = list(cronograma.eventos.all())
+    if not eventos:
+        return PENDENTE
+    agora = timezone.now()
+    if any(vencido(evento.start_at, evento.end_at, agora=agora) for evento in eventos):
+        return PENDENTE
+    return CONCLUIDA
+
+
 def _progresso(edital, atual):
     """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
     estados = {
         "identificacao": CONCLUIDA,
         "perfis": CONCLUIDA if edital.perfis.exists() else PENDENTE,
-        "cronograma": CONCLUIDA
-        if getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
-        else PENDENTE,
+        # **Concluída passou a significar "válida", e não "tem Evento"** (`028`, FR-359). O critério
+        # era `eventos.exists()`, e por isso um Edital criado a partir de outro nascia com o
+        # Cronograma concluído carregando o cronograma inteiro da oferta anterior — todas as nove
+        # etapas verdes, e um período de inscrições do ano passado já encerrado.
+        #
+        # O predicado é o mesmo que a conferência de publicação usa; ele mora em
+        # `editais/domain/calendario.py` justamente para que o selo e a Revisão não possam discordar
+        # sobre o mesmo cronograma. A leitura é em Python, e não um filtro no banco, pela mesma
+        # razão: um `Q(start_at__lt=...)` poria a regra numa expressão que o domínio não alcança.
+        #
+        # **O ano não entra aqui.** Divergência de ano é advertência; apagar o selo por ela daria a
+        # um Edital legítimo de dezembro a aparência de incompleto.
+        "cronograma": _estado_do_cronograma(edital),
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
         "etapas": CONCLUIDA if edital.etapas.exists() else PENDENTE,
         # Como `etapas`: um Edital pode não classificar, e nesta versão isso é legítimo. "Concluída"

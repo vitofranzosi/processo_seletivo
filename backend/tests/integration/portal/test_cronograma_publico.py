@@ -12,6 +12,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
+from tests.fixtures.publicacao import encerrar_inscricoes
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -211,7 +212,10 @@ def test_evento_sem_termino_nao_acontece_para_sempre(
             "type": "Inscrições",
             "description": "Período de inscrições",
             "startAt": (agora - timedelta(days=60)).isoformat(),
-            "endAt": (agora - timedelta(days=30)).isoformat(),
+            # Aberto na publicação e encerrado logo abaixo por Retificação (`028`, FR-346,
+            # FR-355): o Edital que este teste precisa é um Edital **encerrado**, e o caminho
+            # que o produz é o ato que encerra, não a publicação de um prazo já vencido.
+            "endAt": (agora + timedelta(days=1)).isoformat(),
             "order": 0,
             "isRegistrationPeriod": True,
         },
@@ -231,6 +235,7 @@ def test_evento_sem_termino_nao_acontece_para_sempre(
         },
     ]
     edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+    edital = encerrar_inscricoes(api_client, edital, agora - timedelta(days=30))
 
     corpo = corpo_da_selecao(client, edital)
     marcacao = corpo[corpo.index("</style>") :]

@@ -30,8 +30,19 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID
 
+from processo_seletivo.editais.domain.calendario import (
+    ano_do_evento,
+    instante_vencido,
+    vencido,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
+from processo_seletivo.inscricoes.domain.periodo import (
+    ENCERRADO,
+    evento_designado,
+    periodo_de_inscricoes,
+)
+from processo_seletivo.shared.tempo import ZONA
 
 
 class Severity(StrEnum):
@@ -1320,14 +1331,22 @@ ATO_DE_RETIFICACAO = "retificacao"
 
 
 def validate_for_publication(
-    snapshot: dict, *, ato: str = ATO_DE_PUBLICACAO
+    snapshot: dict, *, ato: str = ATO_DE_PUBLICACAO, agora: datetime | None = None
 ) -> list[ValidationFinding]:
     """Os achados do conteúdo, classificados pelo ato que está sendo conferido.
 
     **Publicação é o padrão de propósito.** As chamadas de teste que não dizem o ato continuam
     valendo, e — o que importa mais — esquecer de passá-lo erra pelo lado que **recusa**, e não
     pelo que deixa passar. Quem precisa do comportamento estreito é uma só: `retificacoes.py`.
+
+    **E o instante do ato é resolvido aqui, uma vez** (`028`, FR-341). Não a cada Evento: dois
+    Eventos do mesmo cronograma seriam julgados contra instantes diferentes, e um cronograma cujo
+    Evento vence no meio da passada produziria um relatório que não corresponde a estado nenhum.
+    Quem grava passa o `now` da própria transação — é o que a Constituição pede no Princípio II,
+    *"operações relacionadas DEVEM compartilhar referência temporal consistente na mesma
+    transação"* —, e o padrão `None` lê o relógio, errando de novo pelo lado que acusa.
     """
+    agora = agora or datetime.now(ZONA)
     findings = []
     if not snapshot.get("title"):
         findings.append(
@@ -1373,6 +1392,9 @@ def validate_for_publication(
     findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
+    findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
+    findings.extend(_ano_dos_eventos(snapshot, ato=ato))
+    findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
@@ -1571,6 +1593,167 @@ def _periodo_de_inscricoes(snapshot: dict) -> list[ValidationFinding]:
             )
         ]
     return []
+
+
+# --- O cronograma conferido contra o instante do ato (028) --------------------------------------
+#
+# As três verificações abaixo existem porque o reaproveitamento copia o conteúdo normativo inteiro,
+# datas inclusive, e nada acusava o Edital que nascia com o cronograma do ano anterior. Nenhuma
+# delas move data: elas dizem, e quem declara prazo continua sendo quem assina o Edital.
+#
+# **As três valem só no ato de publicação.** No acervo, Evento vencido é a condição normal — o
+# cronograma de todo Edital publicado vence com o tempo —, e produzi-las numa Retificação faria
+# toda correção de vírgula carregar uma advertência por Evento. O que se repete a cada ato deixa de
+# ser lido, e recusar prenderia o acervo inteiro. É a mesma forma que a `027` pratica em
+# `_linha_geral_exigida` e `_acervo_sem_quadro`, pela mesma razão (FR-354).
+
+
+def _instante(texto) -> datetime | None:
+    """O instante declarado, ou nada quando o texto não descreve um.
+
+    **Recuar em silêncio é deliberado.** Quem acusa texto que não é instante é a conferência de
+    forma — `EVENTO_PUBLICADO` com o padrão `INSTANTE` —, e empilhar duas acusações sobre a mesma
+    causa esconde a que resolve. É o mesmo recuo que `_perfis_bem_formados` pratica um nível acima.
+
+    Instante sem deslocamento também não passa: comparar ingênuo com consciente levanta exceção, e
+    a forma publicada exige o deslocamento. Quem o omitiu já tem achado próprio.
+    """
+    if not isinstance(texto, str):
+        return None
+    try:
+        lido = datetime.fromisoformat(texto)
+    except ValueError:
+        return None
+    return lido if lido.tzinfo is not None else None
+
+
+def _eventos_bem_formados(snapshot: dict) -> list[tuple[int, dict]]:
+    """Os Eventos que são objetos, com a posição em que foram declarados."""
+    eventos = snapshot.get("schedule")
+    if not isinstance(eventos, list):
+        return []
+    return [(posicao, evento) for posicao, evento in enumerate(eventos) if isinstance(evento, dict)]
+
+
+def _nome_do_evento(evento: dict) -> str:
+    """Como a mensagem chama o Evento — o que a pessoa digitou, e não o identificador."""
+    for chave in ("description", "type"):
+        valor = evento.get(chave)
+        if isinstance(valor, str) and valor.strip():
+            return valor.strip()
+    return "sem descrição"
+
+
+def _por_extenso(instante: datetime) -> str:
+    """O instante como quem lê o Edital o escreve, na zona institucional (UX-047).
+
+    Nunca texto ISO cru e nunca UTC: a auditoria de 13/09/2026 registrou como achado próprio a
+    conferência que devolvia JSON Pointer e instante em UTC a quem só queria saber que data mudar.
+    """
+    return instante.astimezone(ZONA).strftime("%d/%m/%Y às %H:%M")
+
+
+def _eventos_vencidos(snapshot: dict, *, ato: str, agora: datetime) -> list[ValidationFinding]:
+    """Evento cujo início ou término já passou — advertência, nunca recusa (FR-343).
+
+    **Advertência porque existe Edital legítimo com Evento vencido**: o que registra o que já
+    ocorreu, o que abre inscrições e é publicado no mesmo dia. Recusar transformaria "esta data já
+    passou" em "este Edital não pode existir".
+
+    **Um achado por Evento**, e ele nomeia o término quando os dois passaram (FR-343a): é o
+    instante mais tardio, o que diz que o Evento inteiro acabou. O caminho acompanha o instante
+    nomeado, para que a âncora leve ao campo de que a frase fala.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for posicao, evento in _eventos_bem_formados(snapshot):
+        inicio = _instante(evento.get("startAt"))
+        termino = _instante(evento.get("endAt"))
+        if not vencido(inicio, termino, agora=agora):
+            continue
+        alvo = instante_vencido(inicio, termino, agora=agora)
+        campo = "endAt" if alvo is termino else "startAt"
+        quando = "terminou" if campo == "endAt" else "começou"
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                "schedule_event_in_past",
+                f"O Evento '{_nome_do_evento(evento)}' {quando} em {_por_extenso(alvo)}, "
+                f"que já passou. O Edital será publicado com esta data como ela está.",
+                f"{_caminho_da_entidade('schedule', evento, posicao)}/{campo}",
+            )
+        )
+    return findings
+
+
+def _ano_dos_eventos(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Evento cujo ano diverge do ano do Edital — advertência, nunca recusa (FR-344).
+
+    **Nunca recusa, e são duas as razões.** Um Edital de 2027 publicado em dezembro de 2026 marca
+    legitimamente eventos dos dois anos; e o `year` do Edital é **não retificável** pelo contrato da
+    `026`, de modo que um impedimento apontaria para um campo que ninguém pode mexer.
+
+    **O ano é o do início, e nunca o do término.** Um Evento que começa em dezembro e termina em
+    janeiro é a definição de período que atravessa o ano; conferir os dois acusaria todo Edital de
+    fim de ano, que é exatamente o caso que esta advertência não quer incomodar.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    ano = snapshot.get("year")
+    if isinstance(ano, bool) or not isinstance(ano, int):
+        return []
+    findings = []
+    for posicao, evento in _eventos_bem_formados(snapshot):
+        inicio = _instante(evento.get("startAt"))
+        if inicio is None or ano_do_evento(inicio) == ano:
+            continue
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                "schedule_event_year_mismatch",
+                f"O Evento '{_nome_do_evento(evento)}' corre em {ano_do_evento(inicio)}, e o "
+                f"Edital é de {ano}. Confira se a data é a desta oferta.",
+                f"{_caminho_da_entidade('schedule', evento, posicao)}/startAt",
+            )
+        )
+    return findings
+
+
+def _periodo_de_inscricoes_encerrado(
+    snapshot: dict, *, ato: str, agora: datetime
+) -> list[ValidationFinding]:
+    """Publicar um Edital cujas inscrições já fecharam é publicar um certame que ninguém pode
+    disputar — e é o único achado desta feature que fecha porta (FR-346).
+
+    **A leitura não é escrita aqui.** `periodo_de_inscricoes` é a função que o **portal** obedece
+    para decidir se aceita uma inscrição; se a validação dissesse "encerrado" e o portal dissesse
+    "aberto", o sistema recusaria publicar um Edital que em seguida receberia inscrição — dado
+    independente e divergente, que é o que o Princípio II proíbe. O `>` estrito dela é também a
+    FR-347: término exatamente igual ao instante do ato ainda é prazo.
+
+    Sem término declarado não há encerramento, e a mesma função já responde assim: inventar um fim
+    seria o sistema criando prazo que o Edital não fixou.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    periodo = periodo_de_inscricoes(snapshot, agora)
+    if periodo.estado != ENCERRADO or periodo.fim is None:
+        return []
+    designado = evento_designado(snapshot) or {}
+    posicao = next(
+        (posicao for posicao, evento in _eventos_bem_formados(snapshot) if evento is designado),
+        0,
+    )
+    return [
+        _impeditivo(
+            "registration_period_closed",
+            f"O período de inscrições encerrou em {_por_extenso(periodo.fim)}. Publicado assim, "
+            "o Edital não receberá inscrição alguma — corrija a data do Evento na etapa "
+            "Cronograma antes de publicar.",
+            f"{_caminho_da_entidade('schedule', designado, posicao)}/endAt",
+        )
+    ]
 
 
 def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:

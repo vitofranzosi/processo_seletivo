@@ -568,7 +568,60 @@ class Command(BaseCommand):
             sorteio = self._sortear(sorteado, terceiro, agora)
 
         self._retificar(edital, agora)
+        # O quarto Edital: o que **não** publica, e é isso que ele demonstra (`028`, FR-366).
+        # Depois de tudo, porque parte de um dos anteriores já publicados.
+        if concluido is not None:
+            self._edital_reaproveitado(elaborador, codigo, numero, ano, concluido)
         self._resumo(processo, edital, publicacao, sorteio)
+
+    def _edital_reaproveitado(self, elaborador, codigo, numero, ano, origem):
+        """Um **quarto** Edital, criado a partir do segundo e deixado em elaboração (`028`).
+
+        **Ele não é publicado, e não é escolha: o sistema o impede.** É o cenário que a auditoria
+        exploratória de 13/09/2026 mediu — o Edital 12/2027 criado a partir do 90/2026, que nascia
+        com as nove etapas CONCLUÍDA e um período de inscrição do ano anterior, já encerrado, e
+        seguia para a publicação sem que nada o acusasse.
+
+        Três condições de uma vez, sem arranjo nenhum: a origem tem o cronograma no passado, o
+        período dela está encerrado, e o ano declarado aqui é o **seguinte** — de modo que a
+        divergência de ano também aparece. Reaproveitar o Edital encerrado produz o caso inteiro.
+
+        **Num Processo próprio, e não como quarto Edital do primeiro.** O ano seguinte é outro
+        certame, e a demonstração já afirma — com teste — que os Editais de um Processo compartilham
+        o ano: *"um certame não tem dois anos"*. Pendurar aqui a oferta de 2027 quebraria essa
+        invariante para produzir um cenário que, na vida, já nasce separado. O 12/2027 da auditoria
+        foi criado a partir do 90/2026 exatamente assim.
+
+        **Pela mesma porta que a pessoa usa**, e não escrevendo o rascunho direto: a demonstração
+        existe para mostrar o caminho que alguém vai percorrer, que é a razão de a `023` existir.
+        """
+        from processo_seletivo.editais.application.reaproveitamento import reaproveitar_edital
+
+        self.stdout.write("Criando o quarto Edital, reaproveitado e com o cronograma vencido…")
+        seguinte = ano + 1
+        processo, _ = self._criar(
+            elaborador,
+            f"{codigo}-R",
+            numero,
+            seguinte,
+            _titulo_do_processo(seguinte, None),
+        )
+        edital = Edital.objects.get(processo=processo)
+        reaproveitar_edital(
+            actor=elaborador,
+            edital_id=edital.id,
+            origem_id=origem.id,
+            expected_revision=edital.revision,
+            idempotency_key=f"seed-demo-reaproveitar-{processo.id.hex[:12]}",
+            correlation_id="seed-demo",
+        )
+        edital.refresh_from_db()
+        self.stdout.write(
+            f"  Edital {edital.number}/{edital.year} permanece **em elaboração**: o Cronograma "
+            "copiado já venceu, e a publicação é recusada enquanto o período de inscrições "
+            "estiver encerrado."
+        )
+        return edital
 
     def _criar(self, elaborador, codigo, numero, ano, titulo):
         self.stdout.write("Criando Processo e primeiro Edital…")
@@ -751,12 +804,21 @@ class Command(BaseCommand):
         )
         # O Cronograma inteiro deslocado para trás: o período de inscrições vai de 60 a 40 dias
         # atrás, e é isso que torna o conjunto fechado.
+        #
+        # **Mas ele não é publicado assim** (`028`, FR-346, FR-355). Publicar um Edital cujas
+        # inscrições já fecharam é publicar um certame que ninguém pode disputar, e o sistema
+        # passou a recusar. A demonstração deixa de tomar o atalho e passa a contar a verdade:
+        # o Edital é publicado com o prazo **aberto**, como todo Edital do mundo, e o prazo é
+        # encerrado em seguida por uma Retificação — que é o ato que existe para isso.
+        calendario = cronograma(agora - timedelta(days=60), numero)
+        encerramento = calendario[0]["endAt"]
+        calendario[0]["endAt"] = agora + timedelta(days=1)
         replace_draft(
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
             profiles=perfis(numero, janela_recursal=self.janela_recursal),
-            schedule=cronograma(agora - timedelta(days=60), numero),
+            schedule=calendario,
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
             correlation_id="seed-demo",
@@ -764,7 +826,61 @@ class Command(BaseCommand):
         edital.refresh_from_db()
         self._publicar(elaborador, homologador, publicador, edital)
         edital.refresh_from_db()
+        self._encerrar_as_inscricoes(edital, calendario[0]["id"], encerramento)
+        edital.refresh_from_db()
         return edital
+
+    def _encerrar_as_inscricoes(self, edital, evento_id, encerramento):
+        """A Retificação que fecha o prazo do segundo Edital (`028`, FR-355).
+
+        **Antes de distribuir, e não depois.** A distribuição exige o conjunto fechado, e o domínio
+        a recusa enquanto as inscrições correm; uma Retificação publicada depois dela deixaria a
+        demonstração distribuindo com o prazo ainda aberto. É por isso que a chamada mora aqui, no
+        fim da composição do Edital, e não perto do passo que avalia.
+
+        Sem vigência futura declarada: o ato vale do instante em que é publicado, e o que ele
+        afirma é o término que o Edital sempre teve por intenção.
+        """
+        elaborador = ator("ana.elaboradora", "retificacao:elaborar", "retificacao:submeter")
+        homologador = ator("bruno.homologador", "retificacao:homologar")
+        publicador = ator("carla.publicadora", "retificacao:publicar")
+        sufixo = f"enc-{edital.id.hex[:8]}"
+        base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+        retificacao, _ = create_retification(
+            actor=elaborador,
+            edital_id=edital.id,
+            data={
+                "baseSnapshotId": base.id,
+                "justification": "Encerramento do prazo de inscrições, conforme o cronograma.",
+                "changes": [
+                    {
+                        "targetPath": f"/schedule/id={evento_id}/endAt",
+                        "operation": "REPLACE",
+                        "newValue": encerramento.isoformat(),
+                    }
+                ],
+            },
+            idempotency_key=f"seed-demo-{sufixo}-elaborar",
+            correlation_id=f"seed-demo-{sufixo}",
+        )
+        for acao, ator_da_vez in (("submeter", elaborador), ("homologar", homologador)):
+            retificacao, _ = transition_retification(
+                actor=ator_da_vez,
+                retificacao_id=retificacao.id,
+                expected_revision=retificacao.revision,
+                action=acao,
+                reason="Conferido.",
+                idempotency_key=f"seed-demo-{sufixo}-{acao}",
+                correlation_id=f"seed-demo-{sufixo}",
+            )
+        publish_retification(
+            actor=publicador,
+            retificacao_id=retificacao.id,
+            expected_revision=retificacao.revision,
+            signatory=SIGNATARIO,
+            idempotency_key=f"seed-demo-{sufixo}-publicar",
+            correlation_id=f"seed-demo-{sufixo}",
+        )
 
     def _edital_de_sorteio(self, elaborador, homologador, publicador, processo, numero, ano, agora):
         """Um **terceiro** Edital, cujo marco ordena por sorteio (021).
@@ -793,18 +909,26 @@ class Command(BaseCommand):
             idempotency_key=f"seed-demo-edital3-{processo.id.hex[:12]}",
             correlation_id="seed-demo",
         )
+        # Mesmo caminho do segundo Edital, e pela mesma razão (`028`, FR-346, FR-355): publica-se
+        # com o prazo aberto e encerra-se por Retificação. O universo tem de estar fechado para que
+        # a relação possa ser congelada, e o ato que o fecha passa a aparecer na demonstração.
+        calendario = cronograma(agora - timedelta(days=30), numero)
+        encerramento = calendario[0]["endAt"]
+        calendario[0]["endAt"] = agora + timedelta(days=1)
         replace_draft(
             actor=elaborador,
             edital_id=edital.id,
             expected_revision=edital.revision,
             profiles=perfil_de_sorteio(numero),
-            schedule=cronograma(agora - timedelta(days=30), numero),
+            schedule=calendario,
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()
         self._publicar(elaborador, homologador, publicador, edital)
+        edital.refresh_from_db()
+        self._encerrar_as_inscricoes(edital, calendario[0]["id"], encerramento)
         edital.refresh_from_db()
         return edital
 

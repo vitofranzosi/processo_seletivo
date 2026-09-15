@@ -11,6 +11,7 @@ from io import StringIO
 
 import pytest
 from django.core.management import call_command
+from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.models import Publicacao
@@ -136,11 +137,23 @@ def test_o_comando_nao_oferece_uma_flag_que_nao_poderia_cumprir():
 
 @pytest.mark.django_db(transaction=True)
 def test_duas_demonstracoes_convivem_com_codigos_distintos():
+    """Cada demonstração tem **dois** Processos desde a `028`, e o sufixo `-R` os distingue.
+
+    O segundo é o do ano seguinte, onde mora o Edital reaproveitado que o sistema impede de
+    publicar. Ele é Processo próprio porque é outro certame — e porque este mesmo arquivo afirma,
+    logo acima, que os Editais de um Processo compartilham o ano.
+    """
     _executar(codigo="PS-TESTE-0004", numero="73", ano=2026)
     _executar(codigo="PS-TESTE-0005", numero="74", ano=2026)
 
     demonstracoes = ProcessoSeletivo.objects.filter(institutional_code__startswith="PS-TESTE-")
-    assert demonstracoes.count() == 2
+    assert demonstracoes.count() == 4
+    assert set(demonstracoes.values_list("institutional_code", flat=True)) == {
+        "PS-TESTE-0004",
+        "PS-TESTE-0004-R",
+        "PS-TESTE-0005",
+        "PS-TESTE-0005-R",
+    }
 
 
 @pytest.mark.django_db(transaction=True)
@@ -180,3 +193,71 @@ def test_a_relacao_da_demonstracao_e_congelada_antes_da_ocorrencia():
     ocorrencia = OcorrenciaDaFonte.objects.get()
 
     assert relacao.publicada_em < ocorrencia.observada_em
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_demonstracao_contem_o_edital_reaproveitado_que_o_sistema_impede(monkeypatch):
+    """O quarto Edital: o que **não** publica, e é isso que ele demonstra (028, FR-366, SC-119).
+
+    É o cenário que a auditoria exploratória de 13/09/2026 mediu — o Edital 12/2027 criado a partir
+    do 90/2026, que nascia com as nove etapas CONCLUÍDA e o cronograma do ano anterior já vencido, e
+    seguia para a publicação sem que nada o acusasse.
+
+    O teste exige as três coisas de uma vez, porque é assim que a pessoa as encontra: a etapa do
+    Cronograma pendente, os três achados na conferência, e a publicação recusada.
+    """
+    from processo_seletivo.editais.domain.validation import (
+        ATO_DE_PUBLICACAO,
+        blocking_findings,
+        validate_for_publication,
+    )
+    from processo_seletivo.interface.views import _estado_do_cronograma
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    _executar(codigo="PS-TESTE-0011", numero="61", ano=2026)
+
+    seguinte = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0011-R")
+    reaproveitado = Edital.objects.get(processo=seguinte)
+
+    assert reaproveitado.status == Edital.Status.EM_ELABORACAO, "ele não publica, e é o ponto"
+    assert reaproveitado.year == 2027
+    assert reaproveitado.cronograma.eventos.exists(), (
+        "a cópia trouxe o cronograma da oferta anterior"
+    )
+
+    assert _estado_do_cronograma(reaproveitado) == "pendente"
+
+    achados = validate_for_publication(edital_snapshot(reaproveitado), ato=ATO_DE_PUBLICACAO)
+    codigos = {item.code for item in achados}
+    assert {
+        "schedule_event_in_past",
+        "schedule_event_year_mismatch",
+        "registration_period_closed",
+    } <= codigos, sorted(codigos)
+    assert "registration_period_closed" in {i.code for i in blocking_findings(achados)}
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_segundo_edital_encerra_as_inscricoes_por_retificacao_publicada():
+    """A demonstração deixou de tomar o atalho que o sistema passou a recusar (028, FR-355).
+
+    Publicar um Edital cujas inscrições já fecharam é publicar um certame que ninguém pode disputar
+    — e nenhum Edital do mundo nasce assim. O prazo é aberto na publicação e encerrado depois, pelo
+    ato que existe para isso; a demonstração passa a **mostrar** esse ato.
+    """
+    from processo_seletivo.inscricoes.domain.periodo import ENCERRADO, periodo_de_inscricoes
+
+    saida = _executar(codigo="PS-TESTE-0012", numero="62", ano=2026)
+    assert saida
+
+    processo = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0012")
+    # O número do segundo Edital é derivado do primeiro pelo próprio comando.
+    from processo_seletivo.processos.management.commands.seed_demo import _numero_do_segundo_edital
+
+    concluido = Edital.objects.get(processo=processo, number=_numero_do_segundo_edital("62"))
+    versao = VersaoConsolidada.objects.filter(edital=concluido).latest("materialized_at")
+
+    assert periodo_de_inscricoes(versao.content, timezone.now()).estado == ENCERRADO
+    assert Retificacao.objects.filter(
+        edital=concluido, status=Retificacao.Status.PUBLICADA
+    ).exists(), "o prazo fechou por um ato, e o ato tem de estar no acervo"

@@ -240,10 +240,14 @@ def test_sem_periodo_em_curso_as_ultimas_24_horas_nao_sao_apresentadas(
 
     from django.utils import timezone
 
+    from tests.fixtures.publicacao import encerrar_inscricoes
     from tests.fixtures.supervisao import publicar_no_processo, rascunho_com_periodo
 
     agora = timezone.now()
-    publicar_no_processo(
+    # Publicado com o prazo **aberto** e encerrado por Retificação (`028`, FR-346, FR-355): o
+    # sistema recusa publicar Edital cujas inscrições já fecharam, e o que este teste precisa é
+    # justamente o Edital encerrado — que se obtém pelo ato que encerra.
+    edital = publicar_no_processo(
         api_client,
         manager_headers,
         processo_a,
@@ -251,9 +255,10 @@ def test_sem_periodo_em_curso_as_ultimas_24_horas_nao_sao_apresentadas(
         title="Período encerrado",
         chave="supervisao-encerrado",
         draft=rascunho_com_periodo(
-            5, inicio=agora - timedelta(days=30), fim=agora - timedelta(days=10)
+            5, inicio=agora - timedelta(days=30), fim=agora + timedelta(days=1)
         ),
     )
+    encerrar_inscricoes(api_client, edital, agora - timedelta(days=10), suffix="pulso-encerrado")
 
     lido = supervisao.pulso(processo_a)
 

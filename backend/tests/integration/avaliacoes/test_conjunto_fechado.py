@@ -27,7 +27,7 @@ from tests.fixtures.comissao import (
     inscrever,
 )
 from tests.fixtures.edital import complete_draft, identificador
-from tests.fixtures.publicacao import publish_original
+from tests.fixtures.publicacao import encerrar_inscricoes, publish_original
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -50,11 +50,24 @@ def etapa():
 
 
 def cenario(api_client, manager_headers, process_payload, gestor, etapa, *, inicio, fim):
+    """Publica o Edital com o período pedido, constitui a banca e inscreve duas pessoas.
+
+    Quando o término pedido já passou, o Edital é publicado com o prazo **aberto** e encerrado por
+    Retificação (`028`, FR-346, FR-355). O atalho anterior — publicar com a data já vencida — não
+    existe na realidade, e o sistema passou a recusá-lo: publicar um Edital cujas inscrições já
+    fecharam é publicar um certame que ninguém pode disputar.
+
+    A ordem importa e é a mesma da vida: as inscrições acontecem enquanto o prazo corre, e o prazo
+    fecha depois. Encerrar antes de inscrever deixaria o cenário sem ninguém a distribuir.
+    """
+    encerrado = fim is not None and fim < timezone.now()
     edital = publish_original(
         api_client,
         manager_headers,
         process_payload,
-        draft=rascunho_com_periodo(inicio=inicio, fim=fim),
+        draft=rascunho_com_periodo(
+            inicio=inicio, fim=timezone.now() + timedelta(days=1) if encerrado else fim
+        ),
     )
     membros = constituir(
         gestor,
@@ -63,7 +76,10 @@ def cenario(api_client, manager_headers, process_payload, gestor, etapa, *, inic
         prefixo="conjunto",
     )
     alocar_em(gestor, edital.processo, membros["joao"], edital, etapa)
-    return edital, membros, inscrever(edital, 2, primeiro=700)
+    inscricoes = inscrever(edital, 2, primeiro=700)
+    if encerrado:
+        edital = encerrar_inscricoes(api_client, edital, fim)
+    return edital, membros, inscricoes
 
 
 def test_distribuir_e_recusado_enquanto_as_inscricoes_correm(

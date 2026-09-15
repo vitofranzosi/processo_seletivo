@@ -10,6 +10,7 @@ A origem destes cenários **usa todas as quatro**. Uma origem pobre não provari
 """
 
 import json
+from datetime import timedelta
 
 import pytest
 from django.utils import timezone
@@ -155,7 +156,16 @@ def rascunho_rico():
                 "type": "INSCRICAO",
                 "description": "Período de inscrições",
                 "startAt": "2025-09-01T09:00:00-03:00",
-                "endAt": "2025-09-10T23:59:00-03:00",
+                # **O término é futuro, e a `028` é a razão.** A origem precisa ser um Edital
+                # *publicado*, e o sistema passou a recusar publicar Edital cujas inscrições já
+                # fecharam — publicá-lo é publicar um certame que ninguém pode disputar. O prazo
+                # aberto é o que torna esta origem publicável sem que ela deixe de ser o que estes
+                # testes precisam: um Edital anterior, com o Resultado abaixo ainda em 2025, do qual
+                # se parte para compor outro.
+                #
+                # Nenhuma asserção destes arquivos lê estas datas; o que elas afirmam é que a cópia
+                # carrega o que a origem publicou, qualquer que seja o valor.
+                "endAt": (timezone.now() + timedelta(days=30)).isoformat(),
                 "order": 1,
                 "status": "CONCLUIDO",
                 "isRegistrationPeriod": True,

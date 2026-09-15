@@ -79,11 +79,16 @@ def levar_a_publicacao(
     if antes_de_submeter is not None:
         antes_de_submeter(edital)
     edital.refresh_from_db()
-    api_client.post(
+    submetido = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/submissoes",
         format="json",
         **{**preparer, "HTTP_IF_MATCH": f'"{edital.revision}"'},
     )
+    # **A recusa da submissão é lida aqui, e não três passos adiante.** Sem esta asserção um achado
+    # impeditivo passava em silêncio e só aparecia na publicação, como `invalid_state` — "Edital não
+    # está homologado" —, que é verdade e não diz nada sobre a causa. Custou uma investigação quando
+    # a `028` passou a recusar cronograma com o prazo vencido.
+    assert submetido.status_code < 400, submetido.content
     edital.refresh_from_db()
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/homologacoes",
@@ -193,3 +198,41 @@ def retify(api_client, edital, changes, *, effective_at=None, suffix="a"):
         api_client, edital, changes, effective_at=effective_at, suffix=suffix
     )
     return publish_retification(api_client, retificacao, suffix=suffix)
+
+
+def encerrar_inscricoes(api_client, edital, fim, *, suffix="enc"):
+    """Fecha o período de inscrições de um Edital **já publicado**, por Retificação (028, FR-355).
+
+    **Por que os testes passaram a precisar disto.** A `028` recusa publicar Edital cujo período de
+    inscrições já terminou — publicá-lo é publicar um certame que ninguém pode disputar. Vários
+    cenários precisam de um Edital publicado com o prazo fechado: distribuir exige conjunto fechado,
+    a vitrine precisa de uma seleção encerrada para agrupar, a consulta precisa mostrar o que diz
+    uma página depois do prazo.
+
+    O atalho que eles usavam — publicar com a data já vencida — não existe na realidade: nenhum
+    Edital é publicado depois de as inscrições fecharem. Ele é publicado antes, e o prazo vence com
+    o tempo. Este ajudante faz o que a instituição faria, e a `FR-355` decidiu por escrito que a
+    Retificação que declara término já passado **não** é recusada: encerrar prazo é ato de quem
+    assina o Edital.
+
+    `fim` é o instante que o Edital passa a afirmar como término — normalmente no passado.
+    """
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    designado = next(
+        evento
+        for evento in versao.content["schedule"]
+        if evento.get("isRegistrationPeriod") is True
+    )
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/schedule/id={designado['id']}/endAt",
+                "operation": "REPLACE",
+                "newValue": fim.isoformat() if hasattr(fim, "isoformat") else fim,
+            }
+        ],
+        suffix=suffix,
+    )
+    return Edital.objects.get(pk=edital.pk)
