@@ -9,7 +9,11 @@ from processo_seletivo.editais.domain.documentos import (
     validate_document_requirements,
 )
 from processo_seletivo.editais.domain.etapas import StageValidationError, validate_stages
-from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
+from processo_seletivo.editais.domain.perfis import (
+    ProfileValidationError,
+    derivar_linha_geral,
+    validate_profiles,
+)
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
 from processo_seletivo.editais.models.documentos import DocumentoExigido
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
@@ -173,6 +177,21 @@ def replace_draft(
     sections = list(sections or [])
     document_requirements = list(document_requirements or [])
     _validar_secoes(sections)
+    # **A linha geral é materializada aqui, e não na tela nem no serializer** (027, D-001, FR-316).
+    # No command porque é o ponto por onde passam os dois canais: a interface administrativa invoca
+    # `replace_draft` direto, e a API chega ao mesmo lugar. Escrevê-la no formulário deixaria de
+    # fora quem grava rascunho por `PUT /draft`, e a FR-316 fala do sistema, não da tela.
+    #
+    # **Antes de validar**, para que a conferência enxergue o conteúdo que será gravado: a linha
+    # derivada passa pela mesma forma que qualquer outra, e não por uma porta lateral.
+    #
+    # **E antes de persistir**, porque `replace_draft` apaga e recria o rascunho inteiro: é daqui
+    # que sai o `id` que a linha leva para o banco, e é a preservação dele que mantém a linha
+    # alcançável pela Retificação depois de publicada (`research.md`, T-001).
+    profiles = [
+        derivar_linha_geral(payload) if isinstance(payload, dict) else payload
+        for payload in profiles
+    ]
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:

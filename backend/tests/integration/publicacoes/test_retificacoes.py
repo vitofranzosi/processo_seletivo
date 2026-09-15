@@ -13,10 +13,13 @@ from processo_seletivo.publicacoes.models_retificacao import (
     VersaoConsolidada,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
-from tests.fixtures.edital import actor_headers, caminho_evento, caminho_perfil
+from tests.fixtures.edital import actor_headers, caminho_evento, caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import SIGNATORY, publish_original, retify
 
 VAGAS = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
+# os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 DESCRICAO_DO_EVENTO = caminho_evento("description")
 PERFIL_UNICO = caminho_perfil()
 
@@ -826,7 +829,10 @@ def test_retification_without_effective_change_is_rejected_on_creation(
         api_client,
         edital,
         base,
-        [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 1}],
+        [
+            {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 1},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 1},
+        ],
     )
     assert response.status_code == 422
     assert response["Content-Type"].startswith("application/problem+json")
@@ -858,7 +864,10 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
     """
     edital = publish_original(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.get(edital=edital)
-    changes = [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 2}]
+    changes = [
+        {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 2},
+        {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 2},
+    ]
     first = create_retification(api_client, edital, base, changes, key="retificacao-chave-k1")
     second = create_retification(api_client, edital, base, changes, key="retificacao-chave-k2")
     assert (first.status_code, second.status_code) == (201, 201)
@@ -916,7 +925,10 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         api_client,
         edital,
         base,
-        [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 2}],
+        [
+            {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 2},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 2},
+        ],
         key="retificacao-chave-k1",
     )
     assert (
@@ -936,7 +948,10 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         api_client,
         edital,
         consolidated,
-        [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 1}],
+        [
+            {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 1},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 1},
+        ],
         key="retificacao-chave-k2",
     )
     assert revert.status_code == 201
@@ -971,8 +986,14 @@ def test_retification_changes_vacancies_and_schedule_inside_snapshot_lists(
         api_client,
         edital,
         [
+            # O total e a linha da ampla concorrência são um ato só (027, FR-335).
             {
                 "targetPath": VAGAS,
+                "operation": "REPLACE",
+                "newValue": 12,
+            },
+            {
+                "targetPath": LINHA_GERAL,
                 "operation": "REPLACE",
                 "newValue": 12,
             },
@@ -986,6 +1007,7 @@ def test_retification_changes_vacancies_and_schedule_inside_snapshot_lists(
 
     consolidada = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     assert consolidada.content["profiles"][0]["immediateVacancies"] == 12
+    assert consolidada.content["profiles"][0]["vacancyTable"][0]["immediateVacancies"] == 12
     assert consolidada.content["schedule"][0]["description"] == "Inscrições prorrogadas"
     assert consolidada.content["profiles"][0]["code"] == "P1"
 
@@ -1005,7 +1027,10 @@ def test_retification_with_future_effective_date_materializes_version_at_that_bo
     retify(
         api_client,
         edital,
-        [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 40}],
+        [
+            {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 40},
+            {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 40},
+        ],
         effective_at=vigencia.isoformat(),
     )
 

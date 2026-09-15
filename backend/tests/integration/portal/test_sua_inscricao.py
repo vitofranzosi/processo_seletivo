@@ -93,7 +93,11 @@ def test_perfil_sem_modalidade_declarada_nao_pergunta_nada(
     rascunho["schedule"][0]["isRegistrationPeriod"] = True
     # O Perfil técnico passa a não declarar modalidade nenhuma: é o caso em que a pergunta não
     # deve existir, e não o caso em que ela aparece com uma opção só.
+    # Sem Modalidade, não há qual delas seja a ampla: o apontamento cai junto (027, FR-317).
+    # Deixá-lo para trás publicaria um Perfil que declara ampla concorrência numa Modalidade
+    # que ele não tem, e a publicação recusa — corretamente.
     rascunho["profiles"][1]["competitionModalities"] = []
+    rascunho["profiles"][1]["generalCompetitionModalityId"] = None
     edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
 
     corpo = client.get(_abrir(client, edital, perfil=PERFIL_TECNICO)).content.decode()

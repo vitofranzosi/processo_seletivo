@@ -10,6 +10,7 @@ UUID aleatório que não diz de quem o ato falava.
 """
 
 import hashlib
+from uuid import NAMESPACE_URL, uuid5
 
 PERFIL = {
     "A": "00000000-0000-0000-0000-000000000501",
@@ -96,14 +97,32 @@ def fato(identificador, sigla, rotulo, tipo):
     return {"id": identificador, "code": sigla, "label": rotulo, "type": tipo}
 
 
-def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(), quadro=()):
+# O quadro que o construtor monta quando ninguém diz qual é (027, FR-318). **Não é conveniência de
+# teste**: é a forma que todo Perfil gravado por `replace_draft` passou a ter, e um construtor que
+# produzisse Perfil sem linha geral estaria produzindo conteúdo que a publicação recusa.
+#
+# Quem precisa da forma do **acervo** — publicado antes de a capacidade existir — passa `quadro=()`
+# e recebe a lista vazia, que é a grafia da ausência (025, D-005).
+DERIVADA = object()
+
+
+def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(), quadro=DERIVADA):
+    vagas = 1
+    if quadro is DERIVADA:
+        quadro = [
+            {
+                "id": str(uuid5(NAMESPACE_URL, f"quadro-geral:{identificador}")),
+                "modalityId": None,
+                "immediateVacancies": vagas,
+            }
+        ]
     return {
         "id": identificador,
         "code": sigla,
         "name": nome,
         "description": f"Perfil {sigla}",
         "requirements": list(requisitos),
-        "immediateVacancies": 1,
+        "immediateVacancies": vagas,
         "reserveType": "NONE",
         "reserveLimit": None,
         "locality": "Vitória",
@@ -118,8 +137,10 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(
         # e a versão canônica identifica **uma** grafia.
         "declaredFacts": list(fatos),
         "classificationMilestones": [],
-        # A da versão 12, pela mesma razão: vazia significa "este Edital não publicou quadro", que
-        # é o que todo Edital publicado antes do degrau afirma — e nunca "zero vaga" (025, D-005).
+        # A da versão 12. Vazia significa "este Edital não publicou quadro" — o que todo Edital do
+        # acervo afirma —, e nunca "zero vaga" (025, D-005). O construtor a preenche por padrão
+        # porque desde a `027` a linha geral é materializada na gravação; `quadro=()` devolve a
+        # forma do acervo.
         "vacancyTable": list(quadro),
         # A da versão 13, pela mesma razão: `None` significa "este Perfil não declarou qual das suas
         # Modalidades é a ampla concorrência", que é o que todo Edital publicado antes do degrau
@@ -236,6 +257,40 @@ def rascunho_publicavel():
         perfil_.pop("generalCompetitionModalityId", None)
         perfil_.pop("vacancyReversion", None)
         perfil_.pop("callForm", None)
+        # **Mas a ampla concorrência é declarada** (027, FR-317). Quem compõe um Perfil com uma
+        # Modalidade chamada "AC" e não diz que ela é a da ampla publica um Edital cujo total não
+        # governa recorte nenhum — o sistema não a reconhece pelo nome, e a `025` recusou por
+        # escrito identificá-la assim. Declarada, a linha geral é materializada na gravação; não
+        # declarada, a publicação recusa, que é a `FR-323` fazendo o seu trabalho. Este construtor
+        # é o do Edital que **publica**, e por isso declara.
+        ampla = next(
+            (m["id"] for m in perfil_["competitionModalities"] if m.get("code") == "AC"), None
+        )
+        if ampla:
+            perfil_["generalCompetitionModalityId"] = ampla
+        # **E o Perfil com lista reservada declara a repartição**, porque ali ela não é derivada:
+        # derivar escreveria, na ampla concorrência, um número que o Edital não repartiu. A linha
+        # geral leva o total e cada reservada leva zero — quadro completo que fecha, que é o que um
+        # Perfil com cota precisa ter para publicar.
+        reservadas = [
+            m["id"] for m in perfil_["competitionModalities"] if m["id"] != ampla and m.get("id")
+        ]
+        if reservadas:
+            perfil_["vacancyTable"] = [
+                {
+                    "id": str(uuid5(NAMESPACE_URL, f"quadro-geral:{perfil_['id']}")),
+                    "modalityId": None,
+                    "immediateVacancies": perfil_["immediateVacancies"],
+                },
+                *(
+                    {
+                        "id": str(uuid5(NAMESPACE_URL, f"quadro-{identidade}")),
+                        "modalityId": identidade,
+                        "immediateVacancies": 0,
+                    }
+                    for identidade in reservadas
+                ),
+            ]
         for modalidade_ in perfil_["competitionModalities"]:
             modalidade_["normativeRule"] = {
                 chave: valor

@@ -12,6 +12,8 @@ import pytest
 
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profiles
 from processo_seletivo.editais.domain.validation import (
+    ATO_DE_PUBLICACAO,
+    ATO_DE_RETIFICACAO,
     Severity,
     blocking_findings,
     validate_for_publication,
@@ -82,18 +84,21 @@ def snapshot(*perfis):
     }
 
 
-def codigos_impeditivos(*perfis):
-    """Só os achados do quadro.
+def codigos_impeditivos(*perfis, ato=ATO_DE_PUBLICACAO):
+    """Só os achados do quadro, **no ato declarado**.
 
     O snapshot destes casos é mínimo de propósito — o que se está verificando é a conferência do
     quadro, e não a forma publicada inteira do Perfil, que tem catálogo próprio de testes.
+
+    O ato entrou com a `027`: a exigência da linha geral vale ao publicar Edital novo e não vale ao
+    retificar Edital do acervo (FR-323).
     """
-    findings = blocking_findings(validate_for_publication(snapshot(*perfis)))
+    findings = blocking_findings(validate_for_publication(snapshot(*perfis), ato=ato))
     return {item.code for item in findings if item.code.startswith("vacancy_")}
 
 
-def impeditivos_do_quadro(*perfis):
-    findings = blocking_findings(validate_for_publication(snapshot(*perfis)))
+def impeditivos_do_quadro(*perfis, ato=ATO_DE_PUBLICACAO):
+    findings = blocking_findings(validate_for_publication(snapshot(*perfis), ato=ato))
     return [item for item in findings if item.code.startswith("vacancy_")]
 
 
@@ -200,22 +205,42 @@ def test_linha_geral_sozinha_e_quadro_legitimo():
 
 
 def test_so_reservadas_sem_linha_geral_e_quadro_parcial_aceito():
-    payload = perfil(vacancyTable=[linha(4, PCD), linha(20, PPI)])
+    """Parcial continua legítimo — o que a `027` exigiu é a linha geral, não a completude.
+
+    Quem não declara linha para a PcD diz que o Edital não declarou aquela quantidade, e a `025`
+    decidiu que isso é publicável. A `027` não reabre essa decisão: ela exige que a **ampla
+    concorrência** esteja declarada, porque sem ela o Edital publica um total que não governa nada.
+    """
+    payload = perfil(vacancyTable=[linha(56), linha(4, PCD), linha(20, PPI)])
     assert codigos_impeditivos(payload) == set()
 
+    sem_geral = perfil(vacancyTable=[linha(4, PCD), linha(20, PPI)])
+    assert codigos_impeditivos(sem_geral) == {"vacancy_general_row_missing"}
 
-def test_perfil_sem_quadro_permanece_publicavel():
-    """É o que **todo** Edital publicado até esta feature afirma (FR-160, D-005)."""
+
+def test_perfil_sem_quadro_e_legitimo_no_acervo_e_recusado_ao_publicar():
+    """A FR-160 da `025`, estreitada pela `027` — e só nesta metade (D-004, FR-323).
+
+    Era o que **todo** Edital publicado até então afirmava, e continua sendo: o acervo foi
+    publicado antes de a capacidade existir, e o ato de Retificação o afere sem exigir o que ele
+    não tinha como ter. Ao publicar Edital novo, não: a linha geral é materializada na gravação, e
+    chegar à publicação sem ela significa que alguém contornou o command — publicar assim criaria
+    hoje exatamente o Edital inerte que a `027` existe para deixar de produzir.
+
+    A elaboração continua aceitando: `validate_profiles` não exige quadro, porque quem compõe pode
+    estar no meio do trabalho.
+    """
     payload = perfil()
     validate_profiles([payload])
-    assert codigos_impeditivos(payload) == set()
+    assert codigos_impeditivos(payload, ato=ATO_DE_RETIFICACAO) == set()
+    assert codigos_impeditivos(payload) == {"vacancy_general_row_missing"}
 
 
 # --- T015 · o limite superior não espera pela completude (FR-177) ----------------------------
 
 
 def test_quadro_parcial_que_excede_o_total_e_recusado_com_os_tres_numeros():
-    payload = perfil(vacancyTable=[linha(4, PCD), linha(200, PPI)])
+    payload = perfil(vacancyTable=[linha(0), linha(4, PCD), linha(200, PPI)])
     findings = impeditivos_do_quadro(payload)
     assert [item.code for item in findings] == ["vacancy_sum_exceeds_total"]
     mensagem = findings[0].message
@@ -223,7 +248,12 @@ def test_quadro_parcial_que_excede_o_total_e_recusado_com_os_tres_numeros():
 
 
 def test_quadro_parcial_que_soma_menos_continua_aceito():
-    payload = perfil(vacancyTable=[linha(4, PCD), linha(20, PPI)])
+    """Parcial é o quadro em que **uma lista reservada não tem linha** — aqui, a PPI.
+
+    Com a linha geral e as duas reservadas o quadro seria completo, e aí a igualdade rodaria: é
+    outro caso, e tem teste próprio.
+    """
+    payload = perfil(vacancyTable=[linha(10), linha(4, PCD)])
     assert codigos_impeditivos(payload) == set()
 
 
@@ -294,3 +324,56 @@ def test_arredondamento_do_percentual_em_qualquer_direcao_nao_adverte():
     )
     findings = validate_for_publication(snapshot(payload))
     assert [item for item in findings if item.code == "vacancy_row_percentage_divergence"] == []
+
+
+# --- 027 · a igualdade passa a rodar no formato mais comum do acervo (FR-317, T-002) ------------
+
+
+def test_a_ampla_declarada_nao_impede_a_completude():
+    """A lacuna `R-006` da `025`, fechada pela `027`.
+
+    O Edital normal declara **também** uma Modalidade chamada "Ampla concorrência", e ela por norma
+    não recebe linha: a quantidade dela mora na linha geral (D-004, FR-176). Enquanto a completude
+    contava todas as Modalidades, a diferença nunca era vazia nesse formato — e a igualdade da
+    FR-161 **nunca rodava** justamente no Edital mais comum do acervo. Com a `generalCompetition-
+    ModalityId` descontada, ela roda: aqui a soma é 79 contra um total de 80.
+    """
+    payload = perfil(
+        competitionModalities=[
+            modalidade(PCD, "AC", "Ampla concorrência"),
+            modalidade(PPI, "PPI", "Preto, pardo ou indígena"),
+        ],
+        generalCompetitionModalityId=PCD,
+        vacancyTable=[linha(59), linha(20, PPI)],
+    )
+    findings = impeditivos_do_quadro(payload)
+    assert [item.code for item in findings] == ["vacancy_sum_mismatch"]
+    assert "diferença de 1" in findings[0].message
+
+
+def test_a_ampla_declarada_com_quadro_que_fecha_nao_produz_achado():
+    payload = perfil(
+        competitionModalities=[
+            modalidade(PCD, "AC", "Ampla concorrência"),
+            modalidade(PPI, "PPI", "Preto, pardo ou indígena"),
+        ],
+        generalCompetitionModalityId=PCD,
+        vacancyTable=[linha(60), linha(20, PPI)],
+    )
+    assert codigos_impeditivos(payload) == set()
+
+
+def test_sem_ampla_apontada_a_completude_continua_exigindo_linha_de_todas():
+    """O sistema não adivinha qual Modalidade é a ampla, e não é aqui que ele passa a adivinhar.
+
+    Sem o apontamento, as duas são listas reservadas: o quadro é parcial, a igualdade não roda, e
+    quem avisa que falta a declaração é a advertência da FR-325.
+    """
+    payload = perfil(
+        competitionModalities=[
+            modalidade(PCD, "AC", "Ampla concorrência"),
+            modalidade(PPI, "PPI", "Preto, pardo ou indígena"),
+        ],
+        vacancyTable=[linha(59), linha(20, PPI)],
+    )
+    assert codigos_impeditivos(payload) == set()

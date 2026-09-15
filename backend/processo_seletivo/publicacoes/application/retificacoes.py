@@ -4,6 +4,7 @@ from django.db.models import F
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.validation import (
+    ATO_DE_RETIFICACAO,
     blocking_findings,
     validate_for_publication,
 )
@@ -523,7 +524,10 @@ def _assert_well_formed(content, contexto):
     diz de que conteúdo se fala, porque a mesma verificação roda em dois momentos e, na Publicação,
     uma vez por fronteira de vigência.
     """
-    errors = blocking_findings(validate_for_publication(content))
+    # **Pelo ato de Retificação** (027, FR-323, T-003): a ausência de linha geral é impeditiva ao
+    # publicar Edital novo e não o é aqui, porque o acervo inteiro foi publicado antes de a
+    # capacidade existir. Recusar aqui prenderia até a Retificação que corrige uma data.
+    errors = blocking_findings(validate_for_publication(content, ato=ATO_DE_RETIFICACAO))
     if errors:
         raise DomainError(
             "blocking_findings",

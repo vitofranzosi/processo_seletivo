@@ -7,6 +7,9 @@ from processo_seletivo.shared.canonical import canonical_sha256
 from processo_seletivo.sorteios.models import ParticipanteHabilitado, RelacaoDeHabilitados
 
 MARCO = "00000000-0000-4000-8000-000000000821"
+LINHA_GERAL_DO_SORTEIO = "00000000-0000-0000-0000-0000000007f1"
+LINHA_PPI_DO_SORTEIO = "00000000-0000-0000-0000-0000000007f2"
+LINHA_PCD_DO_SORTEIO = "00000000-0000-0000-0000-0000000007f3"
 LISTA_PPI = "00000000-0000-4000-8000-000000000831"
 LISTA_PCD = "00000000-0000-4000-8000-000000000832"
 
@@ -132,6 +135,16 @@ def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, q
                     "name": "Pessoas com deficiência",
                     "reservedVacancies": 1,
                 },
+            ]
+            # **O quadro, porque aqui as duas são listas reservadas de verdade** (027, FR-317).
+            # Não há Modalidade de ampla concorrência a apontar — o recorte sem lista é a ampla, e
+            # é a linha geral que o carrega (025, D-004). Com lista reservada declarada a
+            # repartição não é derivada, e sem ela o Perfil não publica: quadro completo que fecha
+            # na única vaga imediata que este cenário declara.
+            perfil["vacancyTable"] = [
+                {"id": LINHA_GERAL_DO_SORTEIO, "modalityId": None, "immediateVacancies": 1},
+                {"id": LINHA_PPI_DO_SORTEIO, "modalityId": LISTA_PPI, "immediateVacancies": 0},
+                {"id": LINHA_PCD_DO_SORTEIO, "modalityId": LISTA_PCD, "immediateVacancies": 0},
             ]
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo="cotas-021")

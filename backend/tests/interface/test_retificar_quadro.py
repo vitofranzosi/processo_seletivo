@@ -12,8 +12,10 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.interface.retificacao import campos_editaveis
+from processo_seletivo.publicacoes.domain.elevacao import elevar
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from tests.fixtures.edital import complete_draft
+from tests.fixtures.legado import antes_do_quadro
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
@@ -142,9 +144,11 @@ def test_a_tela_acrescenta_linha_ao_quadro_de_um_perfil_que_nao_tem(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
     """A metade que faz o acervo poder ganhar quadro: todo Edital anterior tem a coleção vazia."""
-    edital = publish_original(api_client, manager_headers, process_payload)
+    # O Edital do acervo — publicado antes de o quadro existir (027). Composto hoje, ele nasceria
+    # com a linha geral materializada, e este cenário deixaria de existir.
+    edital = antes_do_quadro(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
-    assert base.content["profiles"][0]["vacancyTable"] == [], "o Edital nasce sem quadro"
+    assert elevar(base.content)["profiles"][0]["vacancyTable"] == [], "o Edital nasce sem quadro"
 
     identificar(client, "ana.elaboradora", ["elaborador"])
     fragmento = client.get(
@@ -221,7 +225,9 @@ def test_a_linha_acrescentada_com_zero_declara_zero(
     geral com `0` **e** reduz o total a `0` no mesmo ato — os dois movimentos que a FR-161 amarra —,
     e o `0` atravessa como quantidade declarada, e não como ausência.
     """
-    edital = publish_original(api_client, manager_headers, process_payload)
+    # Do acervo, pela mesma razão do cenário acima: "o Perfil não declarava quadro" é hoje um
+    # estado que só o que foi publicado antes da `027` tem.
+    edital = antes_do_quadro(api_client, manager_headers, process_payload)
     base = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     perfil_id = base.content["profiles"][0]["id"]
 

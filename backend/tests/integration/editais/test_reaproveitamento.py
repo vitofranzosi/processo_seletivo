@@ -98,6 +98,11 @@ def rascunho_rico():
                         },
                     }
                 ],
+                # **A ampla concorrência declarada** (027, FR-317). Ela é a única Modalidade deste
+                # Perfil, e sem o apontamento o sistema a trataria como lista reservada — não a
+                # reconhece pelo nome, e a `025` recusou por escrito identificá-la assim. Declarada,
+                # não há lista reservada, e a linha geral é derivada das 40 vagas na gravação.
+                "generalCompetitionModalityId": MODALIDADE,
                 "declaredFacts": [
                     {
                         "id": FATO,
@@ -639,9 +644,17 @@ def test_a_copia_parte_da_versao_vigente_e_nao_do_estado_relacional(
 
     A Retificação não reescreve `PerfilVaga` — ela produz versão consolidada nova. Se a cópia lesse
     as tabelas, traria 40 vagas, que é o que está gravado; o que vigora é 50.
+
+    **Os dois movimentos são um ato só** (027, FR-335). Alterar o total sem alterar a linha geral
+    publicaria um quadro que não fecha, e a conferência recusa dizendo os dois números — que é a
+    razão de a feature existir: num Perfil sem lista reservada, o total e a linha da ampla
+    concorrência são o mesmo número, e deixá-los divergir é recriar o defeito por outro caminho.
     """
+    from processo_seletivo.publicacoes.application.selectors import effective_version
     from tests.fixtures.publicacao import retify
 
+    vigente_antes = effective_version(edital_id=origem.id).content
+    linha_geral = vigente_antes["profiles"][0]["vacancyTable"][0]["id"]
     retify(
         api_client,
         origem,
@@ -650,7 +663,14 @@ def test_a_copia_parte_da_versao_vigente_e_nao_do_estado_relacional(
                 "targetPath": f"/profiles/id={PERFIL}/immediateVacancies",
                 "operation": "REPLACE",
                 "newValue": 50,
-            }
+            },
+            {
+                "targetPath": (
+                    f"/profiles/id={PERFIL}/vacancyTable/id={linha_geral}/immediateVacancies"
+                ),
+                "operation": "REPLACE",
+                "newValue": 50,
+            },
         ],
     )
     origem.refresh_from_db()
@@ -1123,3 +1143,41 @@ def test_a_troca_nao_toca_em_nenhuma_das_duas_origens(
     ]
     assert trocado.perfis.get().code == "P1"
     assert trocado.anexos.count() == 0
+
+
+# ---------------------------------------------------------------------------
+# 027 — a derivação alcança o Edital copiado
+# ---------------------------------------------------------------------------
+
+
+def test_a_derivacao_da_linha_geral_participa_do_edital_copiado(destino, origem, elaborador):
+    """O caminho mais exposto da 027, e o mais fácil de não testar (FR-317, FR-318).
+
+    A cópia escreve por `replace_draft`, então a derivação a alcança sem código próprio — e é
+    justamente aqui que ela precisa alcançar: todo Edital reaproveitado hoje vem de um Edital
+    publicado antes de o quadro existir, e portanto sem linha nenhuma.
+
+    **O que este cenário exercita é a metade que se abstém, e ela é a forma do mundo real.** A
+    origem declara uma Modalidade chamada "Ampla concorrência" e **não** aponta qual das suas é a
+    da ampla — que é como estão os Editais da demonstração e os do ambiente auditado. Para o
+    sistema, toda Modalidade não apontada é lista reservada, e onde há lista reservada a repartição
+    é declarada por quem compõe, nunca derivada: derivar ali escreveria, na ampla concorrência, um
+    número que o Edital não declarou. Quem avisa que falta a declaração é a advertência da FR-325.
+
+    A metade que deriva é provada em `test_derivacao_persistida.py`, sobre o mesmo command.
+    """
+    copiado = copiar(destino, origem, elaborador)
+
+    for perfil in copiado.perfis.all():
+        reservadas = set(perfil.modalidades.values_list("id", flat=True)) - {
+            perfil.modalidade_ampla_concorrencia
+        }
+        geral = perfil.quadro_de_vagas.filter(modalidade__isnull=True)
+        if reservadas:
+            assert not geral.exists(), (
+                f"o Perfil {perfil.code} tem lista reservada e ganhou linha geral derivada: "
+                "a repartição ali é declarada, e não projetada"
+            )
+        else:
+            assert geral.count() == 1
+            assert geral.get().vagas_imediatas == perfil.immediate_vacancies

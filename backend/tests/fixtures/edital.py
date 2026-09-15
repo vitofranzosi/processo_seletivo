@@ -52,6 +52,42 @@ def caminho_perfil(campo="", seed=0):
     return f"{caminho}/{campo}" if campo else caminho
 
 
+def caminho_linha_geral(campo="", seed=0):
+    """Caminho da linha geral do quadro do Perfil de `complete_draft`.
+
+    A identidade é reproduzível sem ler o conteúdo publicado porque a linha derivada nasce de um
+    `uuid5` sobre a identidade do Perfil (027, T-001) — que é o mesmo recurso que torna a gravação
+    idempotente para quem grava por API.
+    """
+    from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral
+
+    linha = identidade_da_linha_geral(identificador(401, seed))
+    caminho = f"{caminho_perfil(seed=seed)}/vacancyTable/id={linha}"
+    return f"{caminho}/{campo}" if campo else caminho
+
+
+def mudanca_de_vagas(novo_total, *, seed=0):
+    """As **duas** operações que alterar as vagas imediatas exige (027, FR-335).
+
+    Num Perfil sem lista reservada o total e a linha da ampla concorrência são o mesmo número, e
+    mover um sem o outro publicaria um quadro que não fecha — a conferência recusa dizendo os dois.
+    Os testes que usam "mudar as vagas" como retificação genérica passam por aqui em vez de repetir
+    o par, e quem lê vê de uma vez que é um ato só.
+    """
+    return [
+        {
+            "targetPath": caminho_perfil("immediateVacancies", seed),
+            "operation": "REPLACE",
+            "newValue": novo_total,
+        },
+        {
+            "targetPath": caminho_linha_geral("immediateVacancies", seed),
+            "operation": "REPLACE",
+            "newValue": novo_total,
+        },
+    ]
+
+
 def caminho_evento(campo="", seed=0):
     caminho = f"/schedule/id={identificador(402, seed)}"
     return f"{caminho}/{campo}" if campo else caminho

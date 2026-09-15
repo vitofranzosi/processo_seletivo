@@ -107,6 +107,11 @@ def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra
     rascunho["profiles"][0]["competitionModalities"] = [
         {"id": modalidade_de(seed), "code": "AC", "name": MODALIDADE_NOME, "vacancies": 1}
     ]
+    # **Dizer qual delas é a ampla concorrência** (027, FR-317). Sem isto, a Modalidade chamada
+    # "Ampla concorrência" conta como lista reservada — o sistema não a reconhece pelo nome, e a
+    # `025` recusou por escrito identificá-la assim —, e o Perfil fica sem a linha geral que a
+    # publicação passou a exigir. Declarar é o que faz a derivação escrever a linha sozinha.
+    rascunho["profiles"][0]["generalCompetitionModalityId"] = modalidade_de(seed)
     return rascunho
 
 

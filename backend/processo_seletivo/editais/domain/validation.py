@@ -1271,7 +1271,24 @@ def _decimal_ou_none(valor):
         return None
 
 
-def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
+# Os dois atos que conferem conteúdo normativo, e a razão de eles serem distinguidos (027, D-004,
+# FR-323, T-003). Publicar Edital novo sem linha geral **cria hoje** o defeito que a feature remove;
+# retificar Edital publicado antes dela é o único caminho que o acervo tem. Uma exigência impeditiva
+# escrita sem este recorte bloquearia toda Retificação de todo Edital do acervo — inclusive as que
+# corrigem uma data e nada têm com vagas —, e coagir não é o mecanismo.
+ATO_DE_PUBLICACAO = "publicacao"
+ATO_DE_RETIFICACAO = "retificacao"
+
+
+def validate_for_publication(
+    snapshot: dict, *, ato: str = ATO_DE_PUBLICACAO
+) -> list[ValidationFinding]:
+    """Os achados do conteúdo, classificados pelo ato que está sendo conferido.
+
+    **Publicação é o padrão de propósito.** As chamadas de teste que não dizem o ato continuam
+    valendo, e — o que importa mais — esquecer de passá-lo erra pelo lado que **recusa**, e não
+    pelo que deixa passar. Quem precisa do comportamento estreito é uma só: `retificacoes.py`.
+    """
     findings = []
     if not snapshot.get("title"):
         findings.append(
@@ -1319,7 +1336,7 @@ def validate_for_publication(snapshot: dict) -> list[ValidationFinding]:
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
-    findings.extend(_coerencia_do_quadro_de_vagas(snapshot))
+    findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     return findings
 
 
@@ -1629,7 +1646,9 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
     return findings
 
 
-def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
+def _coerencia_do_quadro_de_vagas(
+    snapshot: dict, *, ato: str = ATO_DE_PUBLICACAO
+) -> list[ValidationFinding]:
     """O quadro de vagas depois da publicação: referência, soma e advertência (025).
 
     **A conferência vale sobre o conteúdo que uma Retificação produziria**, e é isso que a faz
@@ -1655,12 +1674,17 @@ def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
     for posicao, perfil in enumerate(snapshot.get("profiles") or []):
         if not isinstance(perfil, dict):
             continue
+        base = _caminho_da_entidade("profiles", perfil, posicao)
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
-            # Quadro ausente é o que **todo** Edital publicado antes do degrau 12 afirma, e ele
-            # continua publicável: ausência não é zero (D-005, FR-160).
+            # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
+            # No acervo, ausência é o que **todo** Edital publicado antes do degrau 12 afirma, e
+            # continua legítima: ausência não é zero (025, D-005, FR-160). Publicando Edital novo,
+            # não: a linha geral é materializada na gravação, e chegar aqui sem ela significa que
+            # alguém a contornou — publicar assim criaria hoje o Edital inerte que a feature existe
+            # para deixar de produzir.
+            findings.extend(_linha_geral_exigida(perfil, base=base, ato=ato))
             continue
-        base = _caminho_da_entidade("profiles", perfil, posicao)
         modalidades = {
             str(modalidade.get("id")): modalidade
             for modalidade in perfil.get("competitionModalities") or []
@@ -1738,9 +1762,20 @@ def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
                 _divergencia_do_percentual(modalidades[modalidade_id], quantidade, total, caminho)
             )
 
+        if not tem_linha_geral:
+            findings.extend(_linha_geral_exigida(perfil, base=base, ato=ato))
+
         if not isinstance(total, int) or isinstance(total, bool):
             continue
         caminho_do_quadro = f"{base}/vacancyTable"
+        # **A completude desconta a Modalidade declarada como ampla** (027, FR-317, T-002). Ela,
+        # por norma, não tem linha — a quantidade dela mora na geral (025, D-004) —, e contá-la
+        # aqui fazia a diferença nunca ser vazia: no formato mais comum do acervo, uma Modalidade
+        # "Ampla concorrência" mais as reservadas, a igualdade **nunca rodava**. Era a lacuna que a
+        # `025` registrou em R-006 e não tinha como fechar, porque não havia quem dissesse qual das
+        # Modalidades era a ampla. Agora há, e a conferência alcança o Edital normal.
+        ampla = perfil.get("generalCompetitionModalityId")
+        reservadas = set(modalidades) - ({str(ampla)} if ampla else set())
         if soma > total:
             findings.append(
                 _impeditivo(
@@ -1750,7 +1785,7 @@ def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
                     caminho_do_quadro,
                 )
             )
-        elif tem_linha_geral and not (set(modalidades) - com_linha) and soma != total:
+        elif tem_linha_geral and not (reservadas - com_linha) and soma != total:
             findings.append(
                 _impeditivo(
                     "vacancy_sum_mismatch",
@@ -1760,6 +1795,36 @@ def _coerencia_do_quadro_de_vagas(snapshot: dict) -> list[ValidationFinding]:
                 )
             )
     return findings
+
+
+def _linha_geral_exigida(perfil, *, base, ato) -> list[ValidationFinding]:
+    """Um Perfil publicado hoje declara quantas vagas a ampla concorrência tem (027, FR-323).
+
+    **A exigência é do ato de publicação, e só dele.** No ato de Retificação ela não é produzida —
+    não por brandura, mas porque o acervo inteiro foi publicado antes de a capacidade existir, e
+    uma recusa aqui prenderia até a Retificação que corrige uma data. O caminho do acervo é a
+    FR-331 e a FR-332: dizer quem precisa do ato, e qual ato é.
+
+    **Total malformado ou negativo não chega a esta recusa**: quem tem a mensagem certa para ele é
+    a conferência de forma do Perfil, e empilhar duas acusações sobre a mesma causa esconde a que
+    resolve. Quem corrige o total resolve as duas de uma vez; quem lê duas não sabe por onde
+    começar.
+    """
+    total = perfil.get("immediateVacancies")
+    if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or not isinstance(total, int):
+        return []
+    if total < 0:
+        return []
+    rotulo = perfil.get("code") or perfil.get("name") or ""
+    return [
+        _impeditivo(
+            "vacancy_general_row_missing",
+            f"O Perfil '{rotulo}' publica {total} vaga(s) imediata(s) e não declara a linha da "
+            "ampla concorrência no quadro de vagas — sem ela, a ocupação e a convocação não teriam "
+            "quantidade a apurar.",
+            f"{base}/vacancyTable",
+        )
+    ]
 
 
 def _dentro(entidade, posicao):

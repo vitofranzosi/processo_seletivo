@@ -15,13 +15,26 @@ from processo_seletivo.publicacoes.application import selectors
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, identificar, pdf
 from tests.fixtures.edital import caminho_perfil
 from tests.fixtures.publicacao import retify
-from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
+from tests.fixtures.selecao import (
+    DOCUMENTO_DE_TODOS,
+    DOCUMENTO_DO_PERFIL,
+    LINHA_GERAL_DO_DOCENTE,
+)
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 # Endereçamento por chave, e não por posição: o índice deixou de ser forma admitida onde há chave
 # (004), e a recusa do servidor é explícita quanto a isso.
 VAGAS = caminho_perfil("immediateVacancies")
+# **O quadro acompanha o total** (027, FR-335). O Perfil docente do `selecao` reparte 2 vagas entre
+# a ampla e a PPP; levar o total a 9 sem mover as linhas publicaria um quadro que não fecha, e a
+# conferência recusa dizendo os dois números. Aqui a ampla absorve as sete novas.
+LINHA_GERAL = f"{caminho_perfil()}/vacancyTable/id={LINHA_GERAL_DO_DOCENTE}/immediateVacancies"
+
+AMPLIAR_PARA_NOVE = [
+    {"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9},
+    {"targetPath": LINHA_GERAL, "operation": "REPLACE", "newValue": 8},
+]
 
 
 @pytest.fixture
@@ -52,7 +65,7 @@ def test_sem_retificacao_nao_ha_aviso(client, enviada):
 
 
 def test_depois_da_retificacao_o_aviso_aparece(client, enviada, selecao, api_client):
-    retify(api_client, selecao, [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9}])
+    retify(api_client, selecao, AMPLIAR_PARA_NOVE)
 
     corpo = acompanhar(client, enviada)
 
@@ -62,7 +75,7 @@ def test_depois_da_retificacao_o_aviso_aparece(client, enviada, selecao, api_cli
 
 def test_o_aviso_nao_altera_a_versao_aceita(client, enviada, selecao, api_client):
     aceita_antes = enviada.versao_aceita_id
-    retify(api_client, selecao, [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9}])
+    retify(api_client, selecao, AMPLIAR_PARA_NOVE)
 
     acompanhar(client, enviada)
 
@@ -73,7 +86,7 @@ def test_o_aviso_nao_altera_a_versao_aceita(client, enviada, selecao, api_client
 
 def test_o_aviso_nao_reabre_a_inscricao(client, enviada, selecao, api_client):
     antes = Inscricao.objects.values().get(pk=enviada.pk)
-    retify(api_client, selecao, [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9}])
+    retify(api_client, selecao, AMPLIAR_PARA_NOVE)
 
     acompanhar(client, enviada)
 
@@ -85,7 +98,7 @@ def test_a_conferencia_continua_lendo_a_versao_aceita(client, enviada, selecao, 
     identificar(client, MARIA)
     antes = client.get(reverse("portal:inscricao", args=[enviada.id])).content.decode()
 
-    retify(api_client, selecao, [{"targetPath": VAGAS, "operation": "REPLACE", "newValue": 9}])
+    retify(api_client, selecao, AMPLIAR_PARA_NOVE)
 
     depois = client.get(reverse("portal:inscricao", args=[enviada.id])).content.decode()
     import re

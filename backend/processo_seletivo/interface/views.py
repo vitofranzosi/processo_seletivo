@@ -106,7 +106,10 @@ from processo_seletivo.editais.application.reaproveitamento import (
     rascunho_vazio,
     reaproveitar_edital,
 )
-from processo_seletivo.editais.domain.validation import validate_for_publication
+from processo_seletivo.editais.domain.validation import (
+    ATO_DE_PUBLICACAO,
+    validate_for_publication,
+)
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.inscricoes.application.consulta import (
@@ -519,7 +522,7 @@ def _pendencias(edital):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
-    for item in validate_for_publication(edital_snapshot(edital)):
+    for item in validate_for_publication(edital_snapshot(edital), ato=ATO_DE_PUBLICACAO):
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {

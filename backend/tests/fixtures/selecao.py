@@ -15,6 +15,11 @@ PERFIL_DOCENTE = "DOC-INFO"
 PERFIL_TECNICO = "TEC-LAB"
 
 
+# As linhas do quadro do Perfil docente, nomeadas para quem precisa retificá-las (027, FR-335).
+LINHA_GERAL_DO_DOCENTE = identificador(408, 0)
+LINHA_PPP_DO_DOCENTE = identificador(409, 0)
+
+
 def rascunho_de_selecao(seed=0):
     return {
         "profiles": [
@@ -46,6 +51,25 @@ def rascunho_de_selecao(seed=0):
                         },
                     },
                 ],
+                # **Qual delas é a ampla concorrência, e como as 2 vagas se repartem** (027).
+                # Sem a declaração, a Modalidade chamada "Ampla concorrência" conta como lista
+                # reservada — o sistema não a reconhece pelo nome, e a `025` recusou por escrito
+                # identificá-la assim —, e o Perfil ficaria sem a linha geral que a publicação
+                # exige. Com lista reservada declarada, a repartição não é derivada: derivar
+                # escreveria na ampla um número que o Edital não repartiu.
+                "generalCompetitionModalityId": identificador(403, seed),
+                "vacancyTable": [
+                    {
+                        "id": identificador(408, seed),
+                        "modalityId": None,
+                        "immediateVacancies": 1,
+                    },
+                    {
+                        "id": identificador(409, seed),
+                        "modalityId": identificador(404, seed),
+                        "immediateVacancies": 1,
+                    },
+                ],
             },
             {
                 "id": identificador(406, seed),
@@ -59,6 +83,10 @@ def rascunho_de_selecao(seed=0):
                 "competitionModalities": [
                     {"id": identificador(407, seed), "code": "AC", "name": "Ampla concorrência"}
                 ],
+                # Declarada, e sem lista reservada nenhuma: aqui a linha geral **é** derivada do
+                # total, e não precisa ser digitada. Zero vagas imediatas dá linha geral de zero —
+                # que diz "zero", e não "não declarou".
+                "generalCompetitionModalityId": identificador(407, seed),
             },
         ],
         "schedule": [

@@ -31,7 +31,16 @@ def impeditivos(conteudo):
 
 @pytest.mark.parametrize(("rotulo", "campo", "valor"), VIOLACOES_DE_PERFIL)
 def test_cada_violacao_no_perfil_e_erro_impeditivo(rotulo, campo, valor):
-    achados = impeditivos(com_violacao(conteudo_normativo(), "profiles", 0, campo, valor))
+    conteudo = com_violacao(conteudo_normativo(), "profiles", 0, campo, valor)
+    # **Total mutilado leva o quadro junto** (027). A linha geral é a projeção do total, e um total
+    # inválido a torna incoerente por consequência — a conferência da soma acusaria o quadro além
+    # do campo, e o que este teste isola é a violação de forma, uma por vez. Tirar o quadro é
+    # coerente com o que se está simulando: um Perfil cujo total não é um total. Quem garante que
+    # a ausência não vira uma segunda acusação é `_linha_geral_exigida`, que se cala sobre total
+    # malformado ou negativo pela mesma razão.
+    if campo == "immediateVacancies":
+        conteudo["profiles"][0]["vacancyTable"] = []
+    achados = impeditivos(conteudo)
 
     assert len(achados) == 1, rotulo
     assert achados[0].path.endswith(f"/{campo}")

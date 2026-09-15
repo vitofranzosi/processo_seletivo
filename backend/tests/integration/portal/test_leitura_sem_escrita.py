@@ -20,7 +20,7 @@ from django.urls import reverse
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from tests.fixtures.edital import identificador
 from tests.fixtures.publicacao import retify
-from tests.fixtures.selecao import publicar_selecao
+from tests.fixtures.selecao import LINHA_GERAL_DO_DOCENTE, publicar_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -42,11 +42,22 @@ def selecao_retificada(api_client, manager_headers, process_payload):
         api_client,
         edital,
         [
+            # **O total e a linha da ampla mudam no mesmo ato** (027, FR-335): o Perfil docente
+            # reparte 2 vagas entre a ampla e a PPP, e levar o total a 3 sem mover a linha
+            # publicaria um quadro que não fecha. A vaga nova entra na ampla concorrência.
             {
                 "targetPath": f"/profiles/id={PERFIL}/immediateVacancies",
                 "operation": "REPLACE",
                 "newValue": 3,
-            }
+            },
+            {
+                "targetPath": (
+                    f"/profiles/id={PERFIL}/vacancyTable/id={LINHA_GERAL_DO_DOCENTE}"
+                    "/immediateVacancies"
+                ),
+                "operation": "REPLACE",
+                "newValue": 2,
+            },
         ],
     )
     return edital

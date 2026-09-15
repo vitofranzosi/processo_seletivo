@@ -4,7 +4,11 @@ from decimal import Decimal
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.editais.domain import secoes
-from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from processo_seletivo.editais.domain.validation import (
+    ATO_DE_PUBLICACAO,
+    blocking_findings,
+    validate_for_publication,
+)
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
@@ -424,7 +428,7 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
         if edital.status != Edital.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Edital não está em elaboração.", 409)
         snapshot = edital_snapshot(edital)
-        findings = validate_for_publication(snapshot)
+        findings = validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO)
         errors = blocking_findings(findings)
         if errors:
             raise DomainError("blocking_findings", "; ".join(item.message for item in errors), 422)
@@ -642,7 +646,7 @@ def publish_edital(
             raise DomainError(
                 "homologated_revision_changed", "O rascunho diverge da revisão homologada.", 409
             )
-        findings = validate_for_publication(current_snapshot)
+        findings = validate_for_publication(current_snapshot, ato=ATO_DE_PUBLICACAO)
         if blocking_findings(findings):
             raise DomainError("blocking_findings", "O Edital possui erros impeditivos.", 422)
         # A autoridade é contexto do ato, não conteúdo publicado: ela chega por parâmetro

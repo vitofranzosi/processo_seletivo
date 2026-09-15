@@ -71,7 +71,15 @@ def precondicao(base, caminho):
 
 
 def test_replace_parcial_de_perfil_e_recusado_na_publicacao(api_client, edital, base):
-    """SC-001, e o rollback junto: recusar não pode deixar efeito parcial (FR-012)."""
+    """SC-001, e o rollback junto: recusar não pode deixar efeito parcial (FR-012).
+
+    **A recusa mudou de portão com a `027`, e não de sentido.** Desde que a linha geral é
+    materializada na gravação, o Perfil publicado carrega o quadro preenchido — e um `REPLACE` que
+    o omite já não produz resultado determinístico a consolidar, de modo que a recusa vem da
+    consolidação em vez de vir da conferência do conteúdo. O que a spec cobra é o que segue
+    afirmado abaixo, e é o mais importante: nada publicado se mexe, e a versão vigente é a mesma
+    antes e depois.
+    """
     caminho = f"/profiles/id={P3}"
     mutilado = {
         "id": P3,
@@ -95,9 +103,8 @@ def test_replace_parcial_de_perfil_e_recusado_na_publicacao(api_client, edital, 
 
     recusa = try_publish_retification(api_client, ato, suffix="a")
 
-    assert recusa.status_code == 422, recusa.content
-    assert recusa.data["code"] == "blocking_findings"
-    assert f"/profiles/id={P3}/requirements" in recusa.data["detail"]
+    assert recusa.status_code == 409, recusa.content
+    assert recusa.data["code"] == "inconsistent_consolidation"
     assert Publicacao.objects.filter(edital=edital).count() == 1
     assert DocumentoPublicado.objects.count() == 1
     assert VersaoConsolidada.objects.filter(edital=edital).count() == 1
@@ -212,6 +219,18 @@ def test_uma_retificacao_bem_formada_continua_publicando(api_client, edital, bas
         "reserveLimit": None,
         "classificationInformation": {},
         "competitionModalities": [],
+        # **Sem Modalidade, o quadro é só a linha geral** (027). Copiar o quadro do Perfil de
+        # origem junto com `competitionModalities: []` deixaria uma linha reservada apontando
+        # Modalidade que este Perfil não tem — recusa correta, e não é o que este cenário quer
+        # exercitar: ele existe para provar que a verificação nova **não** recusa o legítimo.
+        "generalCompetitionModalityId": None,
+        "vacancyTable": [
+            {
+                "id": "00000000-0000-0000-0000-0000000005fe",
+                "modalityId": None,
+                "immediateVacancies": base.content["profiles"][0]["immediateVacancies"],
+            }
+        ],
     }
     retificacao = create_retification(
         api_client,

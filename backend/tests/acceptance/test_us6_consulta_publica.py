@@ -7,14 +7,15 @@ from django.utils import timezone
 
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_perfil, mudanca_de_vagas
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
 
 VACANCIES = caminho_perfil("immediateVacancies")
 
 
 def replace_vacancies(value):
-    return [{"targetPath": VACANCIES, "operation": "REPLACE", "newValue": value}]
+    """O par que alterar as vagas exige (027, FR-335) — o total e a linha da ampla concorrência."""
+    return mudanca_de_vagas(value)
 
 
 @pytest.mark.django_db(transaction=True)

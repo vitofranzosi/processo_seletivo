@@ -40,6 +40,10 @@ def rascunho_com_documento():
     rascunho["profiles"][0]["competitionModalities"] = [
         {"id": MODALIDADE, "code": "AC", "name": "Ampla Concorrência"}
     ]
+    # Declarada como a da ampla concorrência (027, FR-317): sem isto ela contaria como lista
+    # reservada, o Perfil ficaria sem linha geral e a publicação recusaria. O sistema não a
+    # reconhece pelo nome — a `025` recusou por escrito identificá-la assim.
+    rascunho["profiles"][0]["generalCompetitionModalityId"] = MODALIDADE
     rascunho["documentRequirements"] = [
         {
             "id": DOCUMENTO,

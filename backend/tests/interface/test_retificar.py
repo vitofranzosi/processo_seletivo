@@ -11,12 +11,15 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
-from tests.fixtures.edital import caminho_perfil
+from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
 TODOS = ["elaborador", "homologador", "publicador"]
 VAGAS = caminho_perfil("immediateVacancies")
+# **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
+# os dois são o mesmo número, e mover um sem o outro publicaria um quadro que não fecha.
+LINHA_GERAL = caminho_linha_geral("immediateVacancies")
 
 
 @pytest.fixture
@@ -58,13 +61,15 @@ def test_editar_o_vigente_deriva_as_alteracoes(client, seletor_ligado, edital, v
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
             "justificativa": "Ampliação de vagas",
         },
     )
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
-    assert "O que vai mudar (1)" in corpo
+    # **Duas, e não uma** (027, FR-335): o total e a linha da ampla concorrência mudam no mesmo
+    # ato, e a tela oferece os dois campos. Derivar uma alteração só seria derivar metade do ato.
+    assert "O que vai mudar (2)" in corpo
     assert "Vagas imediatas" in corpo
     assert not Retificacao.objects.exists(), "ver o que muda não cria a Retificação"
 
@@ -78,7 +83,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
     resposta = client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9", "/title": "Novo título"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9", "/title": "Novo título"}),
             "justificativa": "Ampliação de vagas e ajuste de título",
             "confirmar": "1",
         },
@@ -87,7 +92,7 @@ def test_confirmar_cria_a_retificacao_com_as_alteracoes_derivadas(
 
     retificacao = Retificacao.objects.get()
     caminhos = {a.target_path: a.new_value for a in retificacao.alteracoes.all()}
-    assert caminhos == {VAGAS: 9, "/title": "Novo título"}
+    assert caminhos == {VAGAS: 9, LINHA_GERAL: 9, "/title": "Novo título"}
     assert retificacao.status == Retificacao.Status.EM_ELABORACAO
     assert retificacao.justification == "Ampliação de vagas e ajuste de título"
 
@@ -116,7 +121,7 @@ def test_vigencia_futura_e_dita_explicitamente(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
             "justificativa": "Vigência futura",
             "vigencia": "2027-03-01T09:00",
             "confirmar": "1",
@@ -139,7 +144,7 @@ def test_detalhe_mostra_antes_e_depois_de_cada_alteracao(client, seletor_ligado,
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -159,7 +164,7 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -217,7 +222,7 @@ def test_confirmacao_de_publicacao_mostra_o_que_passara_a_vigorar(
     client.post(
         reverse("interface:retificar", args=[edital.id]),
         {
-            **campos(vigente, **{VAGAS: "9"}),
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
             "justificativa": "Ampliação",
             "confirmar": "1",
         },
@@ -258,11 +263,15 @@ def test_a_tela_emite_alteracoes_pela_chave_da_entidade(client, seletor_ligado, 
     identificar(client, "ana.elaboradora", ["elaborador"])
     client.post(
         reverse("interface:retificar", args=[edital.id]),
-        {**campos(vigente, **{VAGAS: "9"}), "justificativa": "Ampliação", "confirmar": "1"},
+        {
+            **campos(vigente, **{VAGAS: "9", LINHA_GERAL: "9"}),
+            "justificativa": "Ampliação",
+            "confirmar": "1",
+        },
     )
 
     alteracoes = Retificacao.objects.get().alteracoes.all()
-    assert [item.target_path for item in alteracoes] == [VAGAS]
+    assert sorted(item.target_path for item in alteracoes) == sorted([VAGAS, LINHA_GERAL])
     assert all("id=" in item.target_path for item in alteracoes)
 
 
