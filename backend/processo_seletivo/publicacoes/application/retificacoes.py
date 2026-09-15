@@ -536,6 +536,39 @@ def _assert_well_formed(content, contexto):
         )
 
 
+def advertencias_do_ato(retificacao):
+    """O que a conferência **sabe** e hoje descarta (027, FR-336).
+
+    `_assert_well_formed` calcula os achados do conteúdo que a Retificação produziria e fica só com
+    os impeditivos; o resto — as advertências — é jogado fora. A FR-336 pede que a conferência da
+    Retificação diga sobre esse conteúdo o mesmo que a submissão diz sobre o rascunho, e a
+    informação já existia: faltava mostrá-la.
+
+    É o que faz o caso da borda parar de ser silencioso: retificar um Edital publicado acrescentando
+    a primeira Modalidade deixa o quadro parcial, que é legítimo — e quem o faz precisa saber que
+    aquele recorte ficará sem quantidade a apurar.
+
+    **Não levanta nada.** Achado impeditivo é assunto da conferência que recusa o ato; aqui, se o
+    conteúdo não puder sequer ser montado, a resposta é a lista vazia — o erro aparece no ato, que
+    é onde ele impede alguma coisa.
+    """
+    base = retificacao.base_snapshot
+    if base is None:
+        return []
+    try:
+        content, _ = apply_changes(
+            conteudo_base(base), _changes_payload(retificacao), publication_id="draft"
+        )
+    except (ValueError, KeyError, TypeError):
+        return []
+    impeditivos = {item.code for item in blocking_findings(validate_for_publication(content))}
+    return [
+        item
+        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO)
+        if item.code not in impeditivos
+    ]
+
+
 def _assert_versao_canonica(content, contexto):
     """A versão registrada tem de ser a versão do conteúdo (FR-047).
 

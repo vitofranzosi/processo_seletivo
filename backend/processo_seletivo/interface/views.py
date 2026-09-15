@@ -142,6 +142,7 @@ from processo_seletivo.processos.domain.finalizacao import pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
+    advertencias_do_ato,
     conteudo_base,
     create_retification,
 )
@@ -2589,6 +2590,10 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         "autoridades": autoridades.CATALOGO,
+        # O que a conferência do ato sabe e descartava (027, FR-336). A submissão de um rascunho
+        # mostra as advertências dele; a Retificação as calculava e jogava fora, de modo que o
+        # mesmo conteúdo dizia duas coisas diferentes conforme o caminho por onde chegava.
+        "advertencias": advertencias_do_ato(item),
     }
     if request.method == "GET":
         return render(request, "interface/retificacao_confirmar.html", contexto)

@@ -106,3 +106,92 @@ def test_nenhum_conteudo_publicado_anterior_e_reescrito(api_client, do_acervo):
     original.refresh_from_db()
     assert original.content == antes, "a versão anterior foi reescrita — publicação é ato imutável"
     assert vigente(do_acervo).id != original.id
+
+
+def test_a_retificacao_do_acervo_aponta_o_ato_que_declara_a_quantidade(do_acervo):
+    """FR-332 e FR-335: a advertência chega onde quem pode agir já está.
+
+    A tela de Retificação é exatamente o lugar onde a linha se acrescenta, e é nela que a
+    advertência aparece — em vez de o operador descobrir na Ocupação, meses depois, que o Edital
+    publica um número que não governa nada.
+
+    **Advertência, e nunca recusa.** Prender a Retificação de um Edital antigo até que alguém lhe
+    dê quadro bloquearia até a correção de uma data.
+    """
+    from processo_seletivo.editais.domain.validation import (
+        ATO_DE_PUBLICACAO,
+        ATO_DE_RETIFICACAO,
+        Severity,
+        validate_for_publication,
+    )
+
+    conteudo = conteudo_vigente(do_acervo)
+    achados = [
+        item
+        for item in validate_for_publication(conteudo, ato=ATO_DE_RETIFICACAO)
+        if item.code == "vacancy_table_absent_in_archive"
+    ]
+    assert achados, "o acervo sem quadro precisa ser dito a quem pode retificá-lo"
+    assert achados[0].severity == Severity.WARNING
+    assert "não publica quadro de vagas" in achados[0].message
+    assert "é o ato que declara a quantidade" in achados[0].message
+
+    # E no ato de publicação a mesma ausência é impedimento, e não conselho: ali ela significaria
+    # criar hoje o Edital inerte que a feature existe para deixar de produzir.
+    impeditivos = [
+        item.code
+        for item in validate_for_publication(conteudo, ato=ATO_DE_PUBLICACAO)
+        if item.code.startswith("vacancy_")
+    ]
+    assert "vacancy_general_row_missing" in impeditivos
+    assert "vacancy_table_absent_in_archive" not in impeditivos, (
+        "publicar não é a hora de aconselhar: ali a ausência é impedimento"
+    )
+
+
+def test_alterar_so_o_total_de_um_perfil_com_linha_geral_e_recusado_dizendo_os_dois(
+    api_client, do_acervo
+):
+    """FR-335: num Perfil sem lista reservada, o total e a linha são o mesmo número.
+
+    Este é o caminho pelo qual a divergência renasceria depois de a feature a ter eliminado: o
+    Edital ganha a linha por Retificação e, na Retificação seguinte, alguém move só o total.
+    """
+    from tests.fixtures.publicacao import create_retification
+
+    perfil = conteudo_vigente(do_acervo)["profiles"][0]
+    total = perfil["immediateVacancies"]
+    retify(
+        api_client,
+        do_acervo,
+        [
+            {
+                "operation": "ADD",
+                "targetPath": f"/profiles/id={perfil['id']}/vacancyTable/-",
+                "newValue": {
+                    "id": "00000000-0000-0000-0000-0000000009b1",
+                    "modalityId": None,
+                    "immediateVacancies": total,
+                },
+            }
+        ],
+        suffix="b",
+    )
+
+    recusa = create_retification(
+        api_client,
+        do_acervo,
+        [
+            {
+                "operation": "REPLACE",
+                "targetPath": f"/profiles/id={perfil['id']}/immediateVacancies",
+                "newValue": total + 7,
+            }
+        ],
+        suffix="c",
+        esperar=422,
+    )
+
+    detalhe = recusa["detail"]
+    assert str(total + 7) in detalhe and str(total) in detalhe, "a recusa diz os dois números"
+    assert "mesmo número" in detalhe and "mesmo ato" in detalhe

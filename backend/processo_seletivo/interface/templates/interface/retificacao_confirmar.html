@@ -14,6 +14,19 @@
 
 {% include "interface/_impedimento.html" %}
 
+{% comment %}
+**O que a conferência do ato sabe, e descartava** (027, FR-336). Ela calcula os achados do conteúdo
+que esta Retificação produziria e ficava só com os impeditivos: o mesmo conteúdo dizia duas coisas
+diferentes conforme chegasse por submissão de rascunho ou por Retificação.
+
+Não impede o ato — quadro parcial é legítimo, e o acervo inteiro foi publicado antes de o quadro
+existir. O que ela faz é dizer, no lugar onde quem pode agir já está: a tela de Retificação é
+exatamente onde a linha se acrescenta.
+{% endcomment %}
+{% for item in advertencias %}
+<p class="aviso" role="status"><strong>Aviso:</strong> {{ item.message }}</p>
+{% endfor %}
+
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
   <h2 id="consequencias-titulo">
