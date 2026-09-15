@@ -72,7 +72,20 @@ faixa seguinte e ato da `014`, e um controle aqui prometeria o que esta feature 
   <h2 id="fila">Quem pode ser chamado</h2>
   {% if leitura.esgotou %}
   <p class="aviso" role="status">Não há mais quem chamar dentro da faixa que o corte alcançou. Ampliar a faixa é ato do corte, e não desta tela.</p>
+  {% if sem_quadro_publicado %}
+  {% comment %}
+  **A causa, quando ela é outra** (027, FR-332, UX-045). A frase acima é verdadeira e manda a pessoa
+  à Ocupação pedir a faixa seguinte — que responde "não há quantidade declarada a apurar". Dois
+  becos em sequência, e a causa em nenhum dos dois: o Edital publica vagas e não publica a linha do
+  quadro deste recorte. Dizê-lo aqui poupa a viagem, e nomeia o ato que resolve.
+  {% endcomment %}
+  <p class="nota">Este Edital não publica quadro de vagas para este recorte, de modo que não há
+    quantidade a apurar nem faixa a ampliar. A quantidade é declarada por Retificação do Perfil,
+    acrescentando a linha deste recorte ao quadro{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
+    a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode declará-la{% endif %}.</p>
+  {% else %}
   <p class="acoes"><a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ir para a ocupação e pedir a faixa seguinte</a></p>
+  {% endif %}
   {% else %}
   <ol class="consequencias">
     {% for inscricao in leitura.fila %}

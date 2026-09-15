@@ -83,7 +83,8 @@ def emitir_apuracao(
             raise DomainError(
                 "sem_quadro_publicado",
                 "Este Edital não publicou quadro de vagas para este recorte: não há quantidade "
-                "declarada a apurar.",
+                "declarada a apurar. A quantidade é declarada por Retificação do Perfil, "
+                "acrescentando a linha deste recorte ao quadro de vagas.",
                 409,
             )
 

@@ -42,6 +42,7 @@ from processo_seletivo.classificacao.application.corte import (
     divergencias_da_reproducao,
     estado_do_corte,
     geracao_do_corte,
+    linha_do_quadro,
     nomes_do_corte,
     reproduzir_corte,
 )
@@ -4642,6 +4643,11 @@ def ocupacao(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "recortes": recortes,
+                # **Quem pode retificar vê o caminho; quem não pode, vê o encaminhamento** (027,
+                # FR-332). Critério da `026`: um link para quem não elabora Retificação terminaria
+                # numa tela que se anuncia somente leitura, e trocar o beco sem saída por um beco
+                # sinalizado não é ganho.
+                "pode_retificar": ator.can("retificacao:elaborar"),
                 # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
@@ -4757,6 +4763,18 @@ def convocacao(request, edital_id, marco_id):
                 "marco_id": marco_id,
                 "lista_id": lista_id,
                 "leitura": leitura,
+                # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
+                # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
+                # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
+                # quantidade declarada a apurar". Dois becos em sequência, e a causa em nenhum dos
+                # dois. Dizer aqui qual é ela poupa a viagem.
+                "sem_quadro_publicado": linha_do_quadro(
+                    effective_version(edital_id=edital.id).content,
+                    perfil_id=perfil_id,
+                    lista_id=lista_id,
+                )
+                is None,
+                "pode_retificar": ator.can("retificacao:elaborar"),
                 # A chave nasce no GET pela razão que o corte e a ocupação já registram: gerada a
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,

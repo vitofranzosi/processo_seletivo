@@ -459,8 +459,12 @@ UX_002 = "UX-002"
 UX_003 = "UX-003"
 UX_004 = "UX-004"
 UX_005 = "UX-005"
+# A sexta espécie é da `027`, e por isso carrega o identificador dela: o acervo publicado que
+# declara vaga imediata e não declara a linha do quadro — e que, por isso, não tem quantidade a
+# apurar nem a convocar.
+UX_046 = "UX-046"
 
-ESPECIES = (UX_001, UX_002, UX_003, UX_004, UX_005)
+ESPECIES = (UX_001, UX_002, UX_003, UX_004, UX_005, UX_046)
 
 # As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
 # indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
@@ -617,6 +621,69 @@ def cobertura_insuficiente(edital, conteudo, encaminhar):
             ),
             destino=encaminhar(UX_003, edital, etapa.get("id")),
         )
+
+
+# --- `UX-046` — o Edital publica vaga e não publica quadro (027) -----------------------------
+
+
+def acervo_sem_quadro(edital, conteudo, encaminhar):
+    """Perfil publicado que declara vaga imediata e não declara a linha do quadro (027, FR-331).
+
+    **É a metade que faz a US4 ser praticada, e não só possível.** A advertência da Retificação só
+    aparece para quem já abriu a Retificação daquele Edital; quem supervisiona não tem como saber
+    quais Editais precisam do ato sem abrir um por um. Sem esta leitura, o caminho existe e ninguém
+    o encontra.
+
+    A medida é **recortes sem quantidade sobre recortes publicados**, e não Perfis: é o recorte que
+    a Ocupação apura, e é nele que a ausência dói. Um Perfil com ampla e duas reservadas declaradas,
+    e nenhuma linha, conta três.
+
+    Lê o conteúdo vigente que a supervisão **já** carregou por Edital — nenhuma consulta nova.
+    """
+    for posicao, perfil in enumerate(conteudo.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        total = perfil.get("immediateVacancies")
+        if isinstance(total, bool) or not isinstance(total, int) or total <= 0:
+            continue
+        recortes, sem_linha = _recortes_do_perfil(perfil)
+        if not sem_linha:
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or f"Perfil {posicao + 1}"
+        yield Sinal(
+            especie=UX_046,
+            edital=edital,
+            alvo=rotulo,
+            medida=Medida(numerador=sem_linha, denominador=recortes),
+            mensagem=(
+                f"O Perfil {_citado(rotulo)}, do Edital {rotulo_do_edital(edital)}, publica "
+                f"{total} vaga(s) imediata(s) e não publica quantidade para {sem_linha} "
+                f"de {recortes} recorte(s): a ocupação e a convocação não têm o que apurar neles."
+            ),
+            destino=encaminhar(UX_046, edital),
+        )
+
+
+def _recortes_do_perfil(perfil):
+    """Quantos recortes o Perfil publica, e quantos deles não têm linha no quadro.
+
+    **A ampla concorrência é sempre um recorte**, tenha ou não Modalidade homônima declarada: é o
+    recorte de que todos participam, e a quantidade dele mora na linha geral. As reservadas são as
+    demais Modalidades — descontada a que o Perfil declara ser a da ampla, que não tem linha
+    própria por norma (`025`, D-004).
+    """
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    reservadas = {
+        str(modalidade["id"])
+        for modalidade in perfil.get("competitionModalities") or []
+        if isinstance(modalidade, dict) and modalidade.get("id") and str(modalidade["id"]) != ampla
+    }
+    linhas = [linha for linha in perfil.get("vacancyTable") or [] if isinstance(linha, dict)]
+    com_linha = {str(linha["modalityId"]) for linha in linhas if linha.get("modalityId")}
+    tem_geral = any(not linha.get("modalityId") for linha in linhas)
+    sem_linha = len(reservadas - com_linha) + (0 if tem_geral else 1)
+    return len(reservadas) + 1, sem_linha
 
 
 # --- `UX-004` — ato de ordenação vigente obsoleto -------------------------------------------
@@ -830,7 +897,7 @@ def comissao_impedida(processo, editais, encaminhar):
 # final o domínio recusa alteração dos seus Editais, e um Edital que não está publicado não admite
 # Retificação: nos dois casos oferecer o caminho seria oferecer um beco — o mesmo que a `007`
 # passou uma feature inteira tirando (`FR-036`).
-ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_001, UX_002})
+ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_001, UX_002, UX_046})
 
 # A permissão que **pratica** a Retificação. Ela não decide se o sinal aparece — a tela de destino
 # é legível por quem alcança o Edital —, e sim se o caminho é oferecido: o catálogo de ações do
@@ -850,6 +917,7 @@ ROTULOS_DO_DESTINO = {
     # aquele ato não usa, e quem lesse esperaria encontrar um recálculo que não existe ali.
     (UX_004, "sorteio"): "Abrir o sorteio do marco",
     UX_005: "Abrir os recursos do Edital",
+    UX_046: "Retificar o quadro de vagas do Edital",
 }
 
 
@@ -894,6 +962,7 @@ def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio
             args=[edital.id, referencia],
         ),
         UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
+        UX_046: lambda: reverse("interface:retificar", args=[edital.id]),
     }
     rotulo = ROTULOS_DO_DESTINO.get((especie, "sorteio") if sorteio else especie)
     return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
@@ -916,6 +985,10 @@ def alcance(ator, processo):
         UX_003: gere,
         UX_004: gere or bool(ator and ator.can("auditoria:consultar")),
         UX_005: bool(ator and ator.can(recursos_admitir.PERMISSAO)),
+        # Mesma porta da supervisão: o sinal fala do conteúdo **publicado** do Edital, que é
+        # legível por quem alcança o Processo. Quem pratica o ato é outra decisão, e ela é do
+        # encaminhamento — não da visibilidade.
+        UX_046: pode_supervisionar(ator, processo) is not None,
     }
 
 
@@ -951,6 +1024,8 @@ def sinais(processo, ator, *, agora=None):
             achados += list(
                 atos_obsoletos(edital, conteudo, versao_vigente_do_edital(edital), encaminhar)
             )
+        if alcancadas[UX_046]:
+            achados += list(acervo_sem_quadro(edital, conteudo, encaminhar))
     if alcancadas[UX_005]:
         achados += list(
             comissao_impedida(processo, [edital for edital, _ in publicados], encaminhar)

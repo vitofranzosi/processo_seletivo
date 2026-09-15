@@ -80,6 +80,16 @@
       ],
       "port": 8026,
       "url": "http://localhost:8026"
+    },
+    {
+      "name": "vagas-027",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_027 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8027"
+      ],
+      "port": 8027,
+      "url": "http://localhost:8027"
     }
   ]
 }

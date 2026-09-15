@@ -7,19 +7,26 @@ que ninguém verifica é uma intenção: este teste é o que a torna cobrável.
 from processo_seletivo.interface import supervisao
 
 
-def test_a_enumeracao_tem_exatamente_cinco_especies():
-    """`FR-024`: acrescentar uma sexta quebra aqui, antes de chegar à tela.
+def test_a_enumeracao_tem_exatamente_seis_especies():
+    """`FR-024`: acrescentar uma sétima quebra aqui, antes de chegar à tela.
 
     O número é escrito à mão de propósito. Derivá-lo da própria enumeração faria o teste concordar
     com qualquer tamanho — que é o oposto de fechar um catálogo.
+
+    **A sexta chegou pela `027`, e o guarda funcionou**: ele ficou vermelho no momento em que o
+    catálogo abriu, que é exatamente o serviço dele. Ela não é uma espécie a mais do mesmo — é o
+    `UX-046`, com requisito próprio: o Edital do acervo que publica vaga imediata e não publica a
+    linha do quadro, e que por isso não tem quantidade a apurar nem a convocar. Fechar o catálogo
+    nunca foi proibir que ele cresça; foi exigir que crescer seja uma decisão escrita.
     """
-    assert len(supervisao.ESPECIES) == 5
+    assert len(supervisao.ESPECIES) == 6
     assert supervisao.ESPECIES == (
         supervisao.UX_001,
         supervisao.UX_002,
         supervisao.UX_003,
         supervisao.UX_004,
         supervisao.UX_005,
+        supervisao.UX_046,
     )
 
 
