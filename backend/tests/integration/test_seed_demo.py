@@ -261,3 +261,102 @@ def test_o_segundo_edital_encerra_as_inscricoes_por_retificacao_publicada():
     assert Retificacao.objects.filter(
         edital=concluido, status=Retificacao.Status.PUBLICADA
     ).exists(), "o prazo fechou por um ato, e o ato tem de estar no acervo"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_quarto_edital_nao_ocupa_a_coordenada_do_primeiro_no_ano_seguinte():
+    """A colisão que o review encontrou (#1), e que só aparece na segunda demonstração.
+
+    O Edital reaproveitado nasce no ano **seguinte**, e `uq_edital_scope_number_year` é global ao
+    escopo. Se ele reusasse o número do primeiro, a demonstração de 2026 ocuparia `(cefor, 01,
+    2027)` — e a demonstração de 2027 com o mesmo `--numero` quebraria com erro de integridade no
+    meio da semeadura, e não com a recusa explicada que o comando dá para código repetido.
+    """
+    _executar(codigo="PS-TESTE-0014", numero="01", ano=2026)
+
+    seguinte = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0014-R")
+    reaproveitado = Edital.objects.get(processo=seguinte)
+
+    assert reaproveitado.year == 2027
+    assert reaproveitado.number != "01", "reusar o número do primeiro colide no ano seguinte"
+    assert not Edital.objects.filter(number="01", year=2027).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_coordenada_ocupada_pula_o_quarto_edital_e_diz():
+    """Quando a coordenada do ano seguinte já está tomada, o comando diz e segue.
+
+    Abortar ali desfaria três Editais corretos por causa do quarto; semear sem conferir devolveria
+    um erro de integridade no meio do log. É o mesmo desfecho que o comando já dá quando `--numero`
+    não é numérico.
+
+    **O bloqueio é montado à mão, e não por uma segunda demonstração.** Duas semeaduras com
+    números aparentados colidem por motivos que nada têm com esta feature — os identificadores
+    publicados embutem o número e não o ano, de modo que repetir `--numero` já era recusado antes.
+    Montar o obstáculo direto isola o comportamento que este teste afirma.
+    """
+    from processo_seletivo.processos.management.commands.seed_demo import (
+        ESCOPO,
+        _numero_do_quarto_edital,
+    )
+
+    outro = ProcessoSeletivo.objects.create(
+        institution_scope=ESCOPO,
+        institutional_code="PS-TESTE-OCUPADO",
+        title="Ocupa a coordenada do ano seguinte",
+        status=ProcessoSeletivo.Status.EM_ELABORACAO,
+        created_at=timezone.now(),
+        last_changed_at=timezone.now(),
+        created_by="teste",
+    )
+    Edital.objects.create(
+        processo=outro,
+        institution_scope=ESCOPO,
+        number=_numero_do_quarto_edital("07"),
+        year=2027,
+        title="Edital que ocupa a vaga",
+        created_at=timezone.now(),
+        created_by="teste",
+        last_edited_by="teste",
+    )
+
+    saida = _executar(codigo="PS-TESTE-0017", numero="07", ano=2026)
+
+    assert "o quarto Edital, reaproveitado, não foi criado" in saida
+    assert ProcessoSeletivo.objects.filter(institutional_code="PS-TESTE-0017").exists()
+    assert not ProcessoSeletivo.objects.filter(institutional_code="PS-TESTE-0017-R").exists()
+    assert Edital.objects.filter(processo__institutional_code="PS-TESTE-0017").count() == 3
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_resumo_enderec_a_o_edital_reaproveitado():
+    """SC-119: ele tem de ser percorrível, e sem linha no resumo não era (#2 do review).
+
+    Ele é o único Edital da demonstração que não publica, então não aparece em nenhuma das URLs
+    públicas. Sem esta linha, chegar até ele exigia consultar o banco.
+    """
+    saida = _executar(codigo="PS-TESTE-0019", numero="09", ano=2026)
+
+    seguinte = ProcessoSeletivo.objects.get(institutional_code="PS-TESTE-0019-R")
+    reaproveitado = Edital.objects.get(processo=seguinte)
+
+    assert "Reaproveitado" in saida
+    assert str(reaproveitado.id) in saida
+    assert f"/gestao/editais/{reaproveitado.id}/compor/cronograma" in saida
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_saida_do_comando_nao_traz_marcacao_de_markdown():
+    """#3 do review: `**em elaboração**` saía com os asteriscos crus no terminal."""
+    saida = _executar(codigo="PS-TESTE-0020", numero="11", ano=2026)
+
+    assert "**" not in saida, "a saída é lida num terminal, e não renderizada"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_log_nao_chama_o_quarto_edital_de_primeiro():
+    """#4 do review: `_criar` afirmava "primeiro Edital" nos dois chamadores."""
+    saida = _executar(codigo="PS-TESTE-0021", numero="13", ano=2026)
+
+    assert saida.count("Criando Processo e primeiro Edital…") == 1
+    assert "onde o Edital reaproveitado é composto" in saida

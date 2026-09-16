@@ -316,6 +316,25 @@ def _numero_do_segundo_edital(numero):
     return f"{(int(numero) + 50) % 100:02d}"
 
 
+def _numero_do_quarto_edital(numero):
+    """Dois dígitos, distintos dos três anteriores — o Edital reaproveitado (028).
+
+    **O deslocamento é 75 pela mesma aritmética que escolheu o 25 do terceiro**: com 50 ele voltaria
+    ao segundo, e os dois disputariam coordenada. Com 75, os quatro números são sempre distintos
+    entre si.
+
+    Aqui, porém, a razão é outra e é nova. Este Edital nasce no ano **seguinte**, e a restrição
+    `uq_edital_scope_number_year` é global ao escopo: repetir o número do primeiro poria a
+    demonstração de 2026 ocupando a coordenada `(cefor, 01, 2027)`, que a demonstração de 2027
+    tentaria ocupar depois. Duas demonstrações de anos consecutivos com o mesmo `--numero`
+    colidiriam — e a colisão apareceria como erro de integridade no meio da semeadura, e não como a
+    recusa explicada que o comando dá para código repetido.
+    """
+    if not numero.isdigit():
+        return None
+    return f"{(int(numero) + 75) % 100:02d}"
+
+
 def _numero_do_terceiro_edital(numero):
     """Dois dígitos, diferentes dos dois primeiros — o Edital de sorteio (021).
 
@@ -574,9 +593,10 @@ class Command(BaseCommand):
         self._retificar(edital, agora)
         # O quarto Edital: o que **não** publica, e é isso que ele demonstra (`028`, FR-366).
         # Depois de tudo, porque parte de um dos anteriores já publicados.
+        reaproveitado = None
         if concluido is not None:
-            self._edital_reaproveitado(elaborador, codigo, numero, ano, concluido)
-        self._resumo(processo, edital, publicacao, sorteio)
+            reaproveitado = self._edital_reaproveitado(elaborador, codigo, numero, ano, concluido)
+        self._resumo(processo, edital, publicacao, sorteio, reaproveitado)
 
     def _edital_reaproveitado(self, elaborador, codigo, numero, ano, origem):
         """Um **quarto** Edital, criado a partir do segundo e deixado em elaboração (`028`).
@@ -603,12 +623,29 @@ class Command(BaseCommand):
 
         self.stdout.write("Criando o quarto Edital, reaproveitado e com o cronograma vencido…")
         seguinte = ano + 1
+        quarto = _numero_do_quarto_edital(numero)
+        # A coordenada do ano seguinte pode já estar ocupada por uma demonstração daquele ano. O
+        # comando **diz e segue**, como já faz quando o número não é numérico: abortar aqui
+        # desfaria três Editais corretos por causa do quarto, e semear sem conferir devolveria um
+        # erro de integridade no meio do log em vez de uma frase que explica.
+        if (
+            quarto is None
+            or Edital.objects.filter(
+                institution_scope=ESCOPO, number=quarto, year=seguinte
+            ).exists()
+        ):
+            self.stdout.write(
+                f"  Já existe Edital {quarto}/{seguinte} neste escopo: o quarto Edital, "
+                "reaproveitado, não foi criado. Use --numero ou --ano para tê-lo."
+            )
+            return None
         processo, _ = self._criar(
             elaborador,
             f"{codigo}-R",
-            numero,
+            quarto,
             seguinte,
             _titulo_do_processo(seguinte, None),
+            anuncio=f"Criando o Processo de {seguinte}, onde o Edital reaproveitado é composto…",
         )
         edital = Edital.objects.get(processo=processo)
         reaproveitar_edital(
@@ -621,14 +658,22 @@ class Command(BaseCommand):
         )
         edital.refresh_from_db()
         self.stdout.write(
-            f"  Edital {edital.number}/{edital.year} permanece **em elaboração**: o Cronograma "
+            f"  Edital {edital.number}/{edital.year} permanece EM ELABORAÇÃO: o Cronograma "
             "copiado já venceu, e a publicação é recusada enquanto o período de inscrições "
             "estiver encerrado."
         )
         return edital
 
-    def _criar(self, elaborador, codigo, numero, ano, titulo):
-        self.stdout.write("Criando Processo e primeiro Edital…")
+    def _criar(self, elaborador, codigo, numero, ano, titulo, *, anuncio=None):
+        """Cria o Processo e o Edital inicial dele.
+
+        `anuncio` existe porque este método passou a ter **dois** chamadores: o da demonstração
+        principal e o do Processo do ano seguinte, onde mora o Edital reaproveitado. A frase fixa
+        "primeiro Edital" aparecia duas vezes no log, a segunda logo depois de o comando anunciar
+        que estava criando o quarto — duas afirmações contraditórias sobre o mesmo passo, numa
+        saída cujo propósito é ensinar o fluxo.
+        """
+        self.stdout.write(anuncio or "Criando Processo e primeiro Edital…")
         from processo_seletivo.processos.application.commands import (
             create_process_with_first_edital,
         )
@@ -1375,7 +1420,7 @@ class Command(BaseCommand):
                 correlation_id=correlacao,
             )
 
-    def _resumo(self, processo, edital, publicacao=None, sorteio=None):
+    def _resumo(self, processo, edital, publicacao=None, sorteio=None, reaproveitado=None):
         publicada = Retificacao.objects.filter(
             edital=edital, status=Retificacao.Status.PUBLICADA
         ).first()
@@ -1384,6 +1429,19 @@ class Command(BaseCommand):
         self.stdout.write(f"  Processo  {processo.institutional_code}  {processo.id}")
         self.stdout.write(f"  Edital    {edital.number}/{edital.year}  {edital.id}")
         self.stdout.write(f"  Versões consolidadas: {versoes}\n")
+        # **O quarto Edital precisa de endereço, ou não é percorrível** (`028`, SC-119). Ele é o
+        # único que não publica, então não tem URL pública nenhuma na lista abaixo — e sem esta
+        # linha a única forma de chegar até ele era consultar o banco pelo código terminado em
+        # `-R`. A demonstração existe para ser percorrida, e o caso que ela acrescenta é este.
+        if reaproveitado is not None:
+            self.stdout.write(
+                f"  Reaproveitado  {reaproveitado.number}/{reaproveitado.year}  "
+                f"{reaproveitado.id}  (em elaboração — a publicação é recusada)"
+            )
+            self.stdout.write(
+                "  Abra a composição dele, com o seletor de identidade ligado, em\n"
+                f"    http://localhost:8000/gestao/editais/{reaproveitado.id}/compor/cronograma\n"
+            )
         # `localhost`, e não `127.0.0.1`: o padrão de `ALLOWED_HOSTS` no código aceita só o
         # primeiro, e quem roda `runserver` sem o `.env` do compose recebe `DisallowedHost` ao
         # colar estes endereços. O README manda usar `localhost`; imprimir outra coisa aqui
