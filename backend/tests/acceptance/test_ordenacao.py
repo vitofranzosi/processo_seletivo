@@ -81,9 +81,18 @@ def test_percurso_inteiro_da_ordem(
     confirmacao = re.search(
         r'name="confirmacao_do_calculo" value="([^"]+)"', calculada.content.decode()
     ).group(1)
+    envio = {
+        "chave_idempotencia": "aceitacao-emissao-015",
+        "confirmacao_do_calculo": confirmacao,
+    }
+    # A conferência primeiro: emitir é irreversível, e corrigir uma ordem é sucedê-la.
+    conferencia = client.post(reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]), envio)
+    assert "Confira antes de emitir" in conferencia.content.decode()
+    assert AtoDeOrdenacao.objects.count() == 0
+
     emitida = client.post(
         reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
-        {"chave_idempotencia": "aceitacao-emissao-015", "confirmacao_do_calculo": confirmacao},
+        {**envio, "confirmar": "1"},
     )
     assert emitida.status_code == 302
     ato = AtoDeOrdenacao.objects.get()

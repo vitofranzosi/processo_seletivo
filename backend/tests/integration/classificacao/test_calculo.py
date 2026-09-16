@@ -188,9 +188,23 @@ def test_a_presidencia_emite_por_post_e_volta_para_a_consulta(
         corpo,
     ).group(1)
 
+    # O primeiro envio **não grava**: ele devolve a conferência do que o ato vai constituir.
+    conferencia = client.post(
+        reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
+        {
+            "chave_idempotencia": "interface-emissao-015",
+            "confirmacao_do_calculo": confirmacao,
+        },
+    )
+
+    assert conferencia.status_code == 200
+    assert "Confira antes de emitir" in conferencia.content.decode()
+    assert AtoDeOrdenacao.objects.count() == 0, "conferir não constitui ato"
+
     resposta = client.post(
         reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
         {
+            "confirmar": "1",
             "chave_idempotencia": "interface-emissao-015",
             "confirmacao_do_calculo": confirmacao,
         },
@@ -668,3 +682,74 @@ def test_tela_mostra_a_cadeia_e_o_motivo_da_sucessao(
     assert "Histórico de atos" in corpo
     assert str(primeiro.id) in corpo
     assert motivo in corpo
+
+
+def test_a_conferencia_recompoe_a_assinatura_e_diz_que_o_calculo_mudou(
+    cenario, client, seletor_ligado
+):
+    """O que se confirma é o que **esta** tela declarou, e não o que a anterior calculou.
+
+    Repassar a assinatura recebida fazia a conferência declarar o alcance de agora e enviar o
+    token de antes: quem lesse números certos e confirmasse recebia `proposta_mudou`. É a mesma
+    recomposição que `_renderizar_previa` faz na prévia de publicação, e pela mesma razão.
+    """
+    edital, _, _ = cenario
+    identificar(client, "maria", ["gestor"])
+
+    conferencia = client.post(
+        reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
+        {
+            "chave_idempotencia": "recompor-assinatura-015",
+            # O que uma tela aberta antes de o estado mudar teria enviado.
+            "confirmacao_do_calculo": "assinatura-de-uma-leitura-anterior",
+        },
+    )
+    corpo = conferencia.content.decode()
+
+    assert "O cálculo mudou desde que você abriu a ordem" in corpo
+    recomposta = re.search(r'name="confirmacao_do_calculo" value="([^"]+)"', corpo).group(1)
+    assert recomposta != "assinatura-de-uma-leitura-anterior"
+
+    emitida = client.post(
+        reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
+        {
+            "confirmar": "1",
+            "chave_idempotencia": "recompor-assinatura-015",
+            "confirmacao_do_calculo": recomposta,
+        },
+    )
+
+    assert emitida.status_code == 302, "a assinatura recomposta é a que o comando aceita"
+    assert AtoDeOrdenacao.objects.count() == 1
+
+
+def test_a_conferencia_pede_o_motivo_quando_o_vigente_nasce_no_caminho(
+    cenario, client, seletor_ligado, gestor
+):
+    """O motivo da sucessão é exigido quando há ato vigente, e a tela anterior só o pede se **ela**
+    viu um. Quando o vigente nasce entre aquela leitura e esta, o pedido chega sem motivo — e a
+    conferência não tinha por onde completá-lo: declarava "não informado" e oferecia um botão que o
+    comando recusaria.
+    """
+    edital, _, _ = cenario
+    emitir_ordem(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        idempotency_key="primeiro-ato-do-motivo-015",
+        correlation_id="teste-motivo",
+        confirmacao_do_calculo=_confirmacao(edital),
+    )
+    identificar(client, "maria", ["gestor"])
+
+    corpo = client.post(
+        reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]),
+        {"chave_idempotencia": "conferir-sem-motivo-015"},
+    ).content.decode()
+
+    campo = re.search(r"<textarea[^>]*\bname=\"motivo\"[^>]*>", corpo)
+    assert campo is not None, "a conferência precisa oferecer o campo, e não um valor escondido"
+    assert "required" in campo.group(0)
+    assert 'name="motivo" value=' not in corpo, "nada de hidden: ele não se preenche"

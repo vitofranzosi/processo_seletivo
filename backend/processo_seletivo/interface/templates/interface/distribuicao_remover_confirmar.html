@@ -1,0 +1,75 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferir retirada — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Conferir</span>
+</nav>
+
+<h1>Confira antes de retirar</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+**Retirar trabalho de alguém saía de um clique.** As caixas ficam numa lista em colunas, duas por
+inscrição — vinte e quatro numa página de doze —, e marcar a vizinha por engano tirava de um
+avaliador a inscrição que ele já estava lendo, sem que nada perguntasse.
+
+A tela declara o alcance como a inclusão na comissão declara o dela: quem perde qual inscrição, e
+o que a via comum **não** alcança. Esta última era a recusa que só se lia depois de tentar.
+{% endcomment %}
+<p class="ajuda">A atribuição retirada permanece registrada como inativa: o histórico não é
+  apagado, e redistribuir a mesma inscrição à mesma pessoa cria uma atribuição nova.</p>
+
+{% if removiveis %}
+<section aria-labelledby="alcance" class="consequencias">
+  <h2 id="alcance">O que será retirado — {{ removiveis|length }} atribuiç{{ removiveis|length|pluralize:"ão,ões" }}</h2>
+  <ul>
+    {% for atribuicao in removiveis %}
+    <li><strong>{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</strong>
+      deixa de avaliar a inscrição {{ atribuicao.inscricao.protocolo|default:atribuicao.inscricao.id }}{% if atribuicao.inscricao.nome %} — {{ atribuicao.inscricao.nome }}{% endif %}.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if intocaveis %}
+<section aria-labelledby="fora" class="consequencias">
+  <h2 id="fora">O que não será retirado — {{ intocaveis|length }} atribuiç{{ intocaveis|length|pluralize:"ão,ões" }}</h2>
+  <ul>
+    {% for atribuicao in intocaveis %}
+    <li><strong>{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</strong>
+      — inscrição {{ atribuicao.inscricao.protocolo|default:atribuicao.inscricao.id }}: a avaliação já foi concluída.</li>
+    {% endfor %}
+  </ul>
+  {% comment %}
+  A via comum não alcança trabalho concluído, e não por cautela de tela: retirá-lo mudaria o
+  conjunto que a consolidação consome. Desfazer uma avaliação concluída é ato de outra espécie —
+  a reabertura —, e ela tem porta própria (FR-092).
+  {% endcomment %}
+  <p class="ajuda">Retirar uma atribuição já concluída mudaria o conjunto que a consolidação
+    consome, e por isso não acontece por aqui. Para desfazer uma avaliação concluída, use a
+    reabertura.</p>
+</section>
+{% endif %}
+
+<form method="post" action="{% url 'interface:distribuicao-remover' edital.id etapa_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {% for atribuicao in removiveis %}
+  <input type="hidden" name="atribuicao_id" value="{{ atribuicao.id }}">
+  {% endfor %}
+  {% for atribuicao in intocaveis %}
+  <input type="hidden" name="atribuicao_id" value="{{ atribuicao.id }}">
+  {% endfor %}
+  <p class="salvar">
+    {% if removiveis %}
+    <button type="submit" class="botao perigoso">Retirar {{ removiveis|length }} atribuiç{{ removiveis|length|pluralize:"ão,ões" }}</button>
+    {% else %}
+    <span class="ajuda">Nenhuma das atribuições selecionadas pode ser retirada por aqui.</span>
+    {% endif %}
+    <a href="{% url 'interface:distribuicao' edital.id etapa_id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

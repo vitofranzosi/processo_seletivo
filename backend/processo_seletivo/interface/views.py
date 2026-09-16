@@ -3769,19 +3769,54 @@ def consolidar_resultados(request, edital_id, etapa_id):
 
     A porta é a de gestão da comissão — a mesma da reabertura —, e não há capacidade nova. Quem
     preside o Processo consolida a Etapa dele; quem não preside recebe a resposta uniforme.
+
+    **Confirmação em dois passos, como a ocorrência e como o impedimento da 012.** O primeiro passo
+    declara o alcance — quantas viram Resultado, com que consequência, e quais ficam de fora e por
+    quê — e o segundo pratica o ato. O botão ficava numa barra ao lado de "Distribuir as
+    selecionadas", que se desfaz, e este não: consolidar é irreversível, e a V1 não oferece
+    anulação.
     """
-    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
+    marcadas = request.POST.getlist("inscricao_id")
+    chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    if request.POST.get("confirmar") != "1":
+        try:
+            _etapa, consolidaveis, recusas = consolidacao_app.prever(
+                edital=edital, etapa_id=etapa_id, inscricao_ids=marcadas
+            )
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            # Erro sobre o **pedido** — seleção vazia, Etapa bloqueada, inscrição que a tela não
+            # deveria ter oferecido — volta para a tela que o produziu. Declarar o alcance de um
+            # pedido que não se pode praticar seria oferecer a confirmação de coisa nenhuma.
+            request.session["erro_da_consolidacao"] = recusa.detail
+            return redirect(destino)
+        return marcar_como_privada(
+            render(
+                request,
+                "interface/consolidacao_confirmar.html",
+                {
+                    "edital": edital,
+                    "processo": edital.processo,
+                    "etapa": etapa,
+                    "consolidaveis": consolidaveis,
+                    "recusas": recusas,
+                    "chave_idempotencia": chave,
+                },
+            )
+        )
     try:
         request.session["resultado_da_consolidacao"] = consolidacao_app.consolidar(
             actor=ator,
             processo_id=edital.processo_id,
             edital_id=edital.id,
             etapa_id=etapa_id,
-            inscricao_ids=request.POST.getlist("inscricao_id"),
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            inscricao_ids=marcadas,
+            idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
         )
     except DomainError as recusa:
@@ -3891,17 +3926,44 @@ def remover_atribuicao(request, edital_id, etapa_id):
     Rota própria, e não um ramo do formulário de distribuir: `acao` decidindo entre criar e
     remover foi como a 011 descobriu que ramo irmão decide sozinho, e aqui o custo do engano seria
     retirar trabalho de alguém.
+
+    **E uma confirmação antes**, como a inclusão na comissão já tinha. As caixas ficam numa lista
+    em colunas, duas por inscrição, e marcar a errada é retirar trabalho de alguém sem que nada o
+    pergunte. A conferência nomeia quem perde cada inscrição — e quais a via comum não alcança,
+    que era a recusa que só se lia depois de tentar (FR-092).
     """
-    ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
+    ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
+    marcadas = request.POST.getlist("atribuicao_id")
+    chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    if request.POST.get("confirmar") != "1":
+        if not marcadas:
+            request.session["erro_da_distribuicao"] = (
+                "Selecione ao menos uma atribuição para remover."
+            )
+            return redirect(destino)
+        return marcar_como_privada(
+            render(
+                request,
+                "interface/distribuicao_remover_confirmar.html",
+                {
+                    "edital": edital,
+                    "processo": edital.processo,
+                    "etapa": etapa,
+                    "etapa_id": etapa_id,
+                    **_alcance_da_remocao(edital, etapa_id, marcadas),
+                    "chave_idempotencia": chave,
+                },
+            )
+        )
     try:
         request.session["resultado_da_distribuicao"] = distribuicao_app.remover_atribuicao(
             actor=ator,
             processo_id=edital.processo_id,
-            atribuicao_ids=request.POST.getlist("atribuicao_id"),
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            atribuicao_ids=marcadas,
+            idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
         )
     except DomainError as recusa:
@@ -3909,6 +3971,46 @@ def remover_atribuicao(request, edital_id, etapa_id):
             raise Http404 from recusa
         request.session["erro_da_distribuicao"] = recusa.detail
     return redirect(destino)
+
+
+def _alcance_da_remocao(edital, etapa_id, atribuicao_ids):
+    """O que a remoção alcança e o que ela não alcança, lido sem trava e sem inativar nada.
+
+    **A palavra final continua sendo do comando**, que relê sob `select_for_update`: entre esta
+    tela e a confirmação alguém pode concluir uma avaliação, e é a trava que impede a via comum de
+    alcançar trabalho concluído (FR-092). O que se lê aqui é o alcance provável, e a recusa
+    declarada na volta continua respondendo pelo que de fato aconteceu.
+    """
+    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
+
+    atribuicoes = list(
+        Atribuicao.objects.filter(
+            pk__in=[item for item in atribuicao_ids if _e_identificador(item)],
+            edital=edital,
+            etapa_id=etapa_id,
+            ativo=True,
+        )
+        .select_related("membro", "inscricao")
+        .order_by("inscricao__protocolo", "membro__identity_subject")
+    )
+    concluidas = set(
+        Avaliacao.objects.filter(
+            atribuicao__in=atribuicoes, estado=Avaliacao.Estado.CONCLUIDA
+        ).values_list("atribuicao_id", flat=True)
+    )
+    return {
+        "removiveis": [item for item in atribuicoes if item.id not in concluidas],
+        "intocaveis": [item for item in atribuicoes if item.id in concluidas],
+    }
+
+
+def _e_identificador(valor):
+    """Um `atribuicao_id` que não é UUID não é recusa de linha: é pedido que a tela não fez."""
+    try:
+        UUID(str(valor))
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 @require_http_methods(["GET", "POST"])
@@ -4673,7 +4775,14 @@ def _perfil_do_marco(edital, marco_id):
 
 @require_http_methods(["POST"])
 def emitir_ordenacao(request, edital_id, marco_id):
-    """Constitui o cálculo do servidor e volta à leitura pelo padrão POST-redirect-GET."""
+    """Constitui o cálculo do servidor e volta à leitura pelo padrão POST-redirect-GET.
+
+    **Confirmação em dois passos**, como a inclusão na comissão e a ocorrência da 013. O primeiro
+    declara o alcance — quantos recebem posição, quantos ficam sem, o que este ato sucede e quais
+    decisões ele executa — e o segundo pratica. A tela anterior mostra a ordem inteira, e é a razão
+    de a confirmação não repeti-la: o que faltava não era ver as linhas, era ler, num lugar só, o
+    que o clique constitui. O ato é imutável, e corrigi-lo é sucedê-lo.
+    """
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
@@ -4682,6 +4791,61 @@ def emitir_ordenacao(request, edital_id, marco_id):
     if _e_marco_de_sorteio(edital, marco_id):
         return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
     destino = reverse("interface:ordenacao", args=[edital_id, marco_id])
+    chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    motivo = request.POST.get("motivo", "")
+    decisoes = request.POST.getlist("decisao")
+    confirmacao_do_calculo = request.POST.get("confirmacao_do_calculo", "")
+    if request.POST.get("confirmar") != "1":
+        try:
+            estado = estado_do_marco(edital=edital, marco_id=marco_id)
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            request.session["erro_da_ordenacao"] = recusa.detail
+            return redirect(destino)
+        proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
+        # As decisões chegam como identificadores; a confirmação precisa dizer **quais** são, e o
+        # nome delas já está na lista que a tela anterior ofereceu. Citar por UUID na tela que
+        # pergunta "confirma?" seria perguntar sobre o que não se pode ler.
+        oferecidas = _decisoes_a_citar(edital, marco_id, estado["marco"])
+        escolhidas = [item for item in oferecidas if str(item.id) in set(decisoes)]
+        # **A assinatura é recomposta aqui**, e é a mesma razão que `_renderizar_previa` escreve:
+        # o que a autoridade confirma é o que **esta** tela declarou, e não o que a anterior
+        # calculou. Repassar a assinatura recebida faria a conferência declarar o alcance de agora
+        # e enviar o token de antes — a emissão seria recusada por `proposta_mudou` depois de a
+        # pessoa ter lido, e confirmado, números que estavam certos.
+        recomposta = (
+            assinatura_da_proposta(proposta, ato_vigente=estado["vigente"])
+            if estado["proposta"] is not None
+            else ""
+        )
+        return marcar_como_privada(
+            render(
+                request,
+                "interface/ordenacao_confirmar.html",
+                {
+                    "processo": edital.processo,
+                    "edital": edital,
+                    "perfil": estado["perfil"],
+                    "marco": estado["marco"],
+                    "quantas_com_posicao": len(proposta["posicoes"]),
+                    "sem_posicao": proposta["sem_posicao"],
+                    "ato_vigente": estado["vigente"],
+                    "obsoleto": estado["obsoleto"],
+                    "decisoes": escolhidas,
+                    "motivo": motivo,
+                    "chave_idempotencia": chave,
+                    "confirmacao_do_calculo": recomposta,
+                    # **Recompor não é esconder.** Quem abriu a tela anterior conferiu outra coisa,
+                    # e confirmar em silêncio sobre um cálculo que mudou no caminho é o que a
+                    # assinatura existe para impedir. A divergência é dita, e o alcance ao lado
+                    # dela é o de agora.
+                    "calculo_mudou": bool(
+                        confirmacao_do_calculo and confirmacao_do_calculo != recomposta
+                    ),
+                },
+            )
+        )
     try:
         request.session["resultado_da_ordenacao"] = emitir_ordem(
             actor=ator,
@@ -4689,13 +4853,13 @@ def emitir_ordenacao(request, edital_id, marco_id):
             edital_id=edital.id,
             perfil_id=_perfil_do_marco(edital, marco_id),
             marco_id=marco_id,
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
-            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
-            motivo=request.POST.get("motivo", ""),
+            confirmacao_do_calculo=confirmacao_do_calculo,
+            motivo=motivo,
             # As decisões que este ato executa. A tela as oferece; gravá-las é do comando, na mesma
             # transação do ato — citação é proveniência, e não passo humano separado (FR-089).
-            decisoes=request.POST.getlist("decisao"),
+            decisoes=decisoes,
         )
     except DomainError as recusa:
         if recusa.status == 404:
