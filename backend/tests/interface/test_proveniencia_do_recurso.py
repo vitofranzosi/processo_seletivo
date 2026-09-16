@@ -175,8 +175,65 @@ def test_a_tela_do_recurso_nao_faz_uma_consulta_por_ato(
     caminho = reverse("interface:recurso", args=[julgado["peca"].id])
     client.get(caminho)
 
-    # Sete: sessão, a peça com os dois atos prefetchados, o impedimento, o Edital e o Resultado
-    # vigente do par que o formulário de julgamento assina. O número é **constante** — não cresce
-    # com a proveniência, e é isso que este orçamento protege.
-    with django_assert_num_queries(7):
+    # Oito: sessão, a peça com os dois atos prefetchados, o impedimento, o Edital, o Resultado
+    # vigente do par que o formulário de julgamento assina, e a presidência do Processo — que o
+    # bloco "Conferir o que se contesta" pergunta para não oferecer caminho que devolveria 404.
+    # A oitava só acontece para quem **não** tem `comissao:gerir`, como esta julgadora: com a
+    # permissão sistêmica a resposta sai sem consulta nenhuma.
+    #
+    # O número é **constante** — não cresce com a proveniência, e é isso que este orçamento
+    # protege.
+    with django_assert_num_queries(8):
         client.get(caminho)
+
+
+# --- Conferir o que se contesta ----------------------------------------------------------------
+#
+# A tela tinha três links, e os três eram a migalha de navegação: quem julga não alcançava a nota
+# atacada, a avaliação que a produziu nem os documentos do candidato. Cada caminho é oferecido só a
+# quem a tela de destino deixaria entrar — a oferta é a mesma decisão que o destino toma.
+
+
+def links_de(corpo):
+    return set(re.findall(r'<a class="acao" href="([^"]+)"', corpo))
+
+
+def test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta(client, seletor_ligado, julgado):
+    """`recurso:julgar` não concede leitura de Etapa nem de inscrição, e a tela diz isso."""
+    identificar(client, JULGADORA, ["julgador"])
+    corpo = client.get(reverse("interface:recurso", args=[julgado["peca"].id])).content.decode()
+    edital = julgado["inscricao"].edital
+
+    assert reverse("interface:detalhe", args=[edital.id]) in links_de(corpo)
+    assert reverse("interface:inscricao-recebida", args=[julgado["inscricao"].id]) not in corpo
+    assert "Julgar não as concede." in corpo
+
+
+def test_quem_audita_alcanca_o_resultado_e_a_avaliacao(client, seletor_ligado, julgado):
+    identificar(client, "ana.auditora", ["julgador", "auditor"])
+    peca = julgado["peca"]
+    edital = julgado["inscricao"].edital
+    etapa_id = str(julgado["superado"].etapa_id)
+    corpo = client.get(reverse("interface:recurso", args=[peca.id])).content.decode()
+
+    resultados = reverse("interface:resultados-da-etapa", args=[edital.id, etapa_id])
+    trilha = reverse("interface:trilha-da-avaliacao", args=[edital.id, etapa_id])
+    assert resultados in links_de(corpo)
+    # A trilha vai filtrada nesta inscrição: a da Etapa inteira devolveria o problema que o bloco
+    # existe para resolver.
+    assert f"{trilha}?inscricao={julgado['inscricao'].id}" in corpo
+    assert "Julgar não as concede." not in corpo
+
+    # **O que importa não é o link estar lá, é ele abrir.** Oferecer o que a outra tela recusaria
+    # devolveria 404, e foi o que já aconteceu em outras telas desta interface.
+    assert client.get(resultados).status_code == 200
+    assert client.get(trilha, {"inscricao": str(julgado["inscricao"].id)}).status_code == 200
+
+
+def test_quem_consulta_inscricoes_alcanca_os_documentos(client, seletor_ligado, julgado):
+    identificar(client, "marcia.gestora", ["julgador", "gestor"])
+    documentos = reverse("interface:inscricao-recebida", args=[julgado["inscricao"].id])
+    corpo = client.get(reverse("interface:recurso", args=[julgado["peca"].id])).content.decode()
+
+    assert documentos in links_de(corpo)
+    assert client.get(documentos).status_code == 200

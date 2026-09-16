@@ -208,11 +208,11 @@ def consolidar(
         panorama = panorama_da_etapa(
             edital=edital, etapa=etapa, etapas_vigentes=vigentes, conteudo=conteudo
         )
-        impedimento = panorama["impedimento_da_etapa"]
-        if impedimento is not None:
-            # Impedimento da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser
+        bloqueio = panorama["bloqueio_da_etapa"]
+        if bloqueio is not None:
+            # Bloqueio da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser
             # consolidada, e recusar linha a linha repetiria a mesma frase mil vezes (FR-015).
-            raise DomainError(impedimento[0], impedimento[1].capitalize() + ".", 422)
+            raise DomainError(bloqueio[0], bloqueio[1].capitalize() + ".", 422)
         inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
 
         criados, recusas = [], []

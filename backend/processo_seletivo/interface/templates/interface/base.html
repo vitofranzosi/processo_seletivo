@@ -51,7 +51,11 @@ input[type=date],input[type=datetime-local]{max-width:18rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
 .aviso strong{color:var(--amarelo)}
-.acoes-do-painel{margin:0 0 1.5rem}
+/* Em linha e com respiro próprio. Era um parágrafo de `.acao` soltos: com três rótulos
+   curtos cabia tudo numa linha e passava, mas a tela do recurso oferece cinco caminhos
+   nomeados por Etapa — e ao quebrar, as linhas se encostavam, porque a altura de linha
+   não conhece o preenchimento de cada ação. */
+.acoes-do-painel{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0 0 1.5rem}
 .conferencia{margin-bottom:1rem}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
 .conferencia h3{font-size:1rem;margin:0 0 .5rem}
@@ -956,6 +960,25 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
    O `input` continua curto — `.campo.curto>input` o limita —; quem cresce é a coluna, e a ajuda
    pára na medida de leitura como qualquer outra. */
 .opcoes .dependentes .campo.curto:only-child{flex-basis:auto}
+
+/* Os blocos que abrem no cartão do marco. Fechado é o estado de quem não declarou, e o resumo ao
+   lado do rótulo diz o que há dentro sem pedir o clique — é ele que separa divulgação progressiva
+   de esconder informação. A borda à esquerda prende o conteúdo ao próprio resumo: sem ela, os
+   campos que aparecem pareciam pertencer ao cartão, e não ao bloco. */
+.bloco-do-marco{margin:0 0 .9rem}
+.bloco-do-marco>summary{font-size:.9375rem;font-weight:600;cursor:pointer;padding:.25rem 0;
+  display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+/* `display:flex` no `summary` **apaga o triângulo que o navegador desenha**, e sem ele um bloco
+   fechado se lê como um rótulo qualquer: nada na tela diz que há conteúdo ali. A marca volta
+   explícita, e gira ao abrir. */
+.bloco-do-marco>summary::before{content:"\25B8";color:var(--texto-fraco);font-size:.75rem;
+  transition:transform .12s;display:inline-block}
+.bloco-do-marco[open]>summary::before{transform:rotate(90deg)}
+.bloco-do-marco>summary .resumo-do-bloco{font-weight:400;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.bloco-do-marco[open]>summary{margin-bottom:.4rem}
+.bloco-do-marco>*:not(summary){border-left:2px solid var(--borda);padding-left:.9rem;
+  margin-left:.3rem}
 
 /* O que a opção marcada torna inaplicável sai da tela. A regra é sempre "esconde **quando** outra
    opção está marcada", e nunca "esconde por padrão": onde `:has` não existir, tudo aparece como

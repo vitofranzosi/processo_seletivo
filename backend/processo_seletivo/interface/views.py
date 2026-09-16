@@ -134,13 +134,16 @@ from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface.templatetags import interface_extras
 from processo_seletivo.portal.arquivos import copia_verificada, entregar
-from processo_seletivo.processos.application.commands import create_process_with_first_edital
+from processo_seletivo.processos.application.commands import (
+    add_edital,
+    create_process_with_first_edital,
+)
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
     listar_processos,
     obter_edital,
 )
-from processo_seletivo.processos.domain.finalizacao import pending_editais
+from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
@@ -298,15 +301,96 @@ def criar_processo(request):
     return redirect(reverse("interface:processo-detalhe", args=[processo.id]))
 
 
+@require_http_methods(["GET", "POST"])
+def criar_edital(request, processo_id):
+    """O segundo Edital do mesmo Processo — o modelo sempre admitiu, e faltava a porta (FR-005).
+
+    Um Processo reúne Editais que podem ter cronogramas próprios, e `add_edital` já existia
+    atendendo à API desde a `002`. Pela interface, porém, o único caminho até um Edital era a tela
+    que cria o Processo: quem conduzia o certame terminava com o Edital com que o Processo nasceu,
+    e acrescentar o segundo exigia sair do sistema.
+
+    **A recusa por estado final fica com o comando.** `ensure_processo_accepts_changes` é quem
+    decide, e repetir a regra aqui criaria a segunda derivação que divergiria dela; o que a tela
+    faz é não oferecer o botão, que é outra coisa.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    processo = _processo_do_ator(ator, processo_id)
+    if not ator.can("edital:criar"):
+        # O mesmo 404 que a composição devolve: distinguir "não existe" de "você não pode" diria a
+        # quem não alcança que o Processo existe.
+        raise Http404
+
+    contexto = {
+        "processo": processo,
+        "digitado": request.POST if request.method == "POST" else {},
+        "ano_corrente": timezone.localtime().year,
+        # A chave atravessa o reenvio do formulário: recarregar depois de um erro de preenchimento
+        # não pode criar dois Editais quando a segunda tentativa der certo.
+        "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return render(request, "interface/edital_criar.html", contexto)
+
+    def recusado(recusas, status):
+        return render(
+            request,
+            "interface/edital_criar.html",
+            _com_recusas(contexto, recusas),
+            status=status,
+        )
+
+    try:
+        edital, _ = add_edital(
+            actor=ator,
+            processo_id=processo.id,
+            data=_edital_do_formulario(request.POST),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=request.correlation_id,
+        )
+    except RecusaDoFormulario as exc:
+        return recusado(exc.recusas, 422)
+    except ValueError as exc:
+        # Recusa sem campo conhecido continua em texto: apontar um campo qualquer seria pior.
+        return recusado([{"mensagem": str(exc), "ancora": ""}], 422)
+    except DomainError as exc:
+        return recusado(
+            [{"mensagem": exc.detail, "ancora": CAMPO_DO_CONFLITO.get(exc.code, "")}], exc.status
+        )
+    # Para o Edital recém-criado, e **não** para `compor`: `edital:criar` é do Gestor e
+    # `edital:elaborar` não — mandá-lo direto à composição daria 404 justamente a quem acabou de
+    # criar o Edital. A página do Edital sabe dizer as duas coisas: oferece elaborar a quem elabora
+    # e nomeia a espera a quem não elabora.
+    return redirect(reverse("interface:detalhe", args=[edital.id]))
+
+
+# Os campos obrigatórios, separados por agregado porque **duas telas** os preenchem: a criação do
+# Processo pede os dois grupos de uma vez, e o Edital acrescentado a um Processo que já existe pede
+# só o segundo. Uma lista única obrigaria a segunda tela a exigir o que ela não tem o que fazer com.
+CAMPOS_DO_PROCESSO = {
+    "codigo": "Identificação institucional",
+    "titulo": "Título do Processo",
+}
+CAMPOS_DO_EDITAL = {
+    "numero": "Número do Edital",
+    "ano": "Ano do Edital",
+    "titulo_edital": "Título do Edital",
+}
+
 # (campo do formulário, rótulo, modelo, campo do modelo). O limite vem de `_meta` em vez de ser
 # repetido aqui: campo maior que a coluna vira erro 500 no PostgreSQL, e um número copiado à mão
 # se desatualiza em silêncio na primeira migration que mudar o tamanho.
-TEXTOS_DA_CRIACAO = (
+TEXTOS_DO_PROCESSO = (
     ("codigo", "Identificação institucional", ProcessoSeletivo, "institutional_code"),
     ("titulo", "Título do Processo", ProcessoSeletivo, "title"),
+)
+TEXTOS_DO_EDITAL = (
     ("numero", "Número do Edital", Edital, "number"),
     ("titulo_edital", "Título do Edital", Edital, "title"),
 )
+TEXTOS_DA_CRIACAO = TEXTOS_DO_PROCESSO + TEXTOS_DO_EDITAL
 ANO_MINIMO, ANO_MAXIMO = 2000, 9999
 
 # O campo a que cada recusa do domínio pertence, na criação. `edital_identifier_conflict` nasceu na
@@ -338,30 +422,27 @@ class RecusaDoFormulario(ValueError):
         self.recusas = recusas
 
 
-def _processo_do_formulario(dados):
-    """Traduz o formulário e recusa o que a persistência não aguentaria (FR-020/SC-007).
+def _recusar(recusas):
+    """Interrompe se houver o que recusar. Existe para que cada verificação caiba numa linha."""
+    if recusas:
+        raise RecusaDoFormulario(recusas)
 
-    A tela nova entrava direto no command, sem passar pelo serializer que a API usa: o que
-    excedesse a coluna atravessava a borda e voltava como 500. Quem decide continua sendo o
-    domínio; o que se faz aqui é não deixar o erro chegar ao banco sem forma.
+
+def _vazios(dados, campos):
+    """Uma recusa **por campo**, e não uma frase agregada (FR-033).
+
+    "Preencha: A, B, C." obriga a pessoa a reencontrar cada um dos três; com a recusa presa ao
+    campo, o resumo leva até ele.
     """
-    campos = {
-        "codigo": "Identificação institucional",
-        "titulo": "Título do Processo",
-        "numero": "Número do Edital",
-        "ano": "Ano do Edital",
-        "titulo_edital": "Título do Edital",
-    }
-    # Uma recusa **por campo**, e não uma frase agregada (FR-033). "Preencha: A, B, C." obriga a
-    # pessoa a reencontrar cada um dos três; com a recusa presa ao campo, o resumo leva até ele.
-    recusas = [
+    return [
         {"mensagem": f"{rotulo} é obrigatório.", "ancora": chave}
         for chave, rotulo in campos.items()
         if not (dados.get(chave) or "").strip()
     ]
-    if recusas:
-        raise RecusaDoFormulario(recusas)
-    recusas = [
+
+
+def _excedidos(dados, textos):
+    return [
         {
             "mensagem": (
                 f"{rotulo} excede o máximo de "
@@ -369,11 +450,12 @@ def _processo_do_formulario(dados):
             ),
             "ancora": chave,
         }
-        for chave, rotulo, modelo, campo in TEXTOS_DA_CRIACAO
+        for chave, rotulo, modelo, campo in textos
         if len(dados[chave].strip()) > modelo._meta.get_field(campo).max_length
     ]
-    if recusas:
-        raise RecusaDoFormulario(recusas)
+
+
+def _ano_do_formulario(dados):
     try:
         ano = int(dados["ano"])
     except ValueError as exc:
@@ -389,15 +471,44 @@ def _processo_do_formulario(dados):
                 }
             ]
         )
+    return ano
+
+
+def _edital_do_formulario(dados):
+    """Os campos do Edital, traduzidos para o comando.
+
+    Compartilhado com a criação do Processo porque é o **mesmo** Edital: a tela que abre o Processo
+    cria o primeiro e a que o acrescenta cria o segundo, e duas validações separadas divergiriam na
+    primeira migration que mudasse o tamanho de uma coluna.
+    """
+    _recusar(_vazios(dados, CAMPOS_DO_EDITAL))
+    _recusar(_excedidos(dados, TEXTOS_DO_EDITAL))
+    return {
+        "number": dados["numero"].strip(),
+        "year": _ano_do_formulario(dados),
+        "title": dados["titulo_edital"].strip(),
+        "description": (dados.get("descricao") or "").strip(),
+    }
+
+
+def _processo_do_formulario(dados):
+    """Traduz o formulário e recusa o que a persistência não aguentaria (FR-020/SC-007).
+
+    A tela nova entrava direto no command, sem passar pelo serializer que a API usa: o que
+    excedesse a coluna atravessava a borda e voltava como 500. Quem decide continua sendo o
+    domínio; o que se faz aqui é não deixar o erro chegar ao banco sem forma.
+
+    **Os dois grupos são conferidos juntos, antes de delegar ao do Edital.** Conferir o Processo e
+    só depois o Edital devolveria os campos faltantes em duas rodadas — a pessoa corrigiria dois e
+    descobriria outros três no reenvio, que é exatamente o que a recusa por campo existe para
+    evitar.
+    """
+    _recusar(_vazios(dados, {**CAMPOS_DO_PROCESSO, **CAMPOS_DO_EDITAL}))
+    _recusar(_excedidos(dados, TEXTOS_DA_CRIACAO))
     return {
         "institutionalCode": dados["codigo"].strip(),
         "title": dados["titulo"].strip(),
-        "firstEdital": {
-            "number": dados["numero"].strip(),
-            "year": ano,
-            "title": dados["titulo_edital"].strip(),
-            "description": (dados.get("descricao") or "").strip(),
-        },
+        "firstEdital": _edital_do_formulario(dados),
     }
 
 
@@ -1235,6 +1346,11 @@ def _reexibir_marco(marco):
         "normalization": marco.get("normalization", ""),
         "scale": arredondamento.get("scale", ""),
         "mode": arredondamento.get("mode", ""),
+        # **Os três blocos opcionais, que esta função perdia.** Quem declarava um corte, errava
+        # outro campo e recebia a recusa via o corte sumir da tela — e o salvamento seguinte
+        # gravava o Edital sem ele. A recusa existe para que a pessoa corrija o que errou, e não
+        # para apagar o que ela acertou.
+        **forms.blocos_opcionais_do_marco(marco),
         "criterios": [_reexibir_criterio(item) for item in marco.get("tiebreakers") or []],
     }
 
@@ -3003,6 +3119,15 @@ def processo_detalhe(request, processo_id):
             "editais": processo.editais.order_by("year", "number"),
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),
+            # **Um Processo reúne Editais, e o painel só sabia mostrar o primeiro.** O modelo
+            # sempre admitiu mais de um — a suíte depende disso para demonstrar que "o total é a
+            # soma dos Editais" — e `add_edital` já servia à API. Faltava a porta.
+            #
+            # Processo em estado final não a recebe: `ensure_processo_accepts_changes` recusaria, e
+            # oferecer o botão convidaria a um ato que será recusado.
+            "pode_criar_edital": (
+                ator.can("edital:criar") and processo.status not in PROCESSO_FINAL
+            ),
             "pode_auditar": ator.can("auditoria:consultar"),
             # As duas telas da comissão exigem gerir (011, FR-016). O painel as oferecia a
             # qualquer identidade que enxergasse o Processo, e quem não gere batia num 404 sem
@@ -3888,7 +4013,7 @@ def distribuicao(request, edital_id, etapa_id):
                     edital=edital, etapa=etapa, panorama=panorama
                 ),
                 "prontidao": request.GET.get("prontidao") or "",
-                "impedimento_da_etapa": panorama["impedimento_da_etapa"],
+                "bloqueio_da_etapa": panorama["bloqueio_da_etapa"],
                 # Quem voltou ao certame por recurso aparece **nomeada** na Mesa: sem isso, ela
                 # entraria na lista como mais uma pendente, e a presidência não saberia por que
                 # alguém que estava eliminada reapareceu (FR-077).
@@ -5551,6 +5676,16 @@ def _inscricao_do_filtro(edital, valor):
     return str(encontrada.id) if encontrada is not None else None
 
 
+def _pode_auditar_a_etapa(ator, edital):
+    """A porta das telas de Etapa: presidência **ou** auditoria (FR-091).
+
+    Separada de `_etapa_para_auditar` porque a tela do recurso precisa **oferecer ou não** o
+    caminho antes de alguém batê-lo: link para porta fechada responde 404, e 404 não explica nada
+    a quem o recebe.
+    """
+    return pode_gerir_comissao(ator, edital.processo) is not None or ator.can("auditoria:consultar")
+
+
 def _etapa_para_auditar(request, edital_id, etapa_id):
     """A porta da consulta: presidência **ou** auditoria — nunca as duas ao mesmo tempo (FR-091).
 
@@ -5571,7 +5706,7 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     )
     if edital is None:
         raise Http404
-    if pode_gerir_comissao(ator, edital.processo) is None and not ator.can("auditoria:consultar"):
+    if not _pode_auditar_a_etapa(ator, edital):
         raise Http404
     try:
         etapa = etapa_vigente(edital, etapa_id)
@@ -5891,6 +6026,10 @@ def _peca_para_julgar(request, recurso_id):
         .select_related(
             "inscricao",
             "inscricao__edital",
+            # O Processo entra no `select_related` porque a tela pergunta pela presidência dele
+            # para decidir quais caminhos oferecer: sem esta linha, a pergunta custaria uma
+            # consulta a mais por leitura da peça.
+            "inscricao__edital__processo",
             "versao",
             "resultado_atacado",
             "resultado_atacado__avaliacao",
@@ -5934,6 +6073,7 @@ def recurso_recebido(request, recurso_id):
                 "pode_decidir": razao is None,
                 "assinatura": recursos_selectors.assinatura_do_estado_da_peca(peca),
                 **_alvo_da_correcao(peca),
+                **_para_conferir_o_objeto(ator, peca),
             },
         )
     )
@@ -5960,8 +6100,15 @@ def _alvo_da_correcao(peca):
     from processo_seletivo.recursos.domain.consequencia import etapa_publicada
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    alcancaveis = []
+    alcancaveis, etapas_do_objeto = [], []
     for etapa_id in _etapas_alcancaveis(peca):
+        etapa = etapa_publicada(peca.versao, etapa_id) or {}
+        # **A leitura é mais larga que a correção**, e por isso esta lista é montada antes do
+        # `continue` abaixo: a Etapa sem Resultado vigente não pode ser corrigida, mas continua
+        # sendo o que se contesta — e é justamente ela que quem julga precisa abrir para entender
+        # por que não há vigente. Nenhuma consulta nova: o nome sai do conteúdo já carregado.
+        nome = etapa.get("name") or str(etapa_id)
+        etapas_do_objeto.append({"etapa_id": str(etapa_id), "nome": nome})
         vigente = ResultadoEtapa.vigentes.filter(
             inscricao_id=peca.inscricao_id, etapa_id=etapa_id
         ).first()
@@ -5969,19 +6116,38 @@ def _alvo_da_correcao(peca):
             # Sem Resultado vigente não há o que corrigir naquela Etapa — e oferecê-la levaria a
             # uma recusa que a tela poderia ter evitado (FR-013).
             continue
-        etapa = etapa_publicada(peca.versao, etapa_id) or {}
         alcancaveis.append(
             {
                 "resultado": vigente,
                 "etapa_id": str(etapa_id),
-                "nome": etapa.get("name") or str(etapa_id),
+                "nome": nome,
                 # Vazia no ramo da Ocorrência: ali não há grandeza a fixar, e a decisão declara a
                 # consequência diretamente (FR-059).
                 "forma": "" if vigente.forma == "" else forma_publicada(etapa),
                 "sentidos": rotulos(etapa),
             }
         )
-    return {"alcancaveis": alcancaveis}
+    return {"alcancaveis": alcancaveis, "etapas_do_objeto": etapas_do_objeto}
+
+
+def _para_conferir_o_objeto(ator, peca):
+    """Quais caminhos até o objeto atacado esta pessoa pode abrir.
+
+    **A tela do recurso tinha três links, e os três eram a migalha de navegação.** Quem julga
+    abria a peça e não alcançava a nota atacada, a avaliação que a produziu nem os documentos que
+    o candidato entregou: cada um exigia procurar por fora, num fluxo que corre contra prazo.
+
+    A oferta é a **mesma decisão que a view de destino toma** — a porta da Etapa é presidência ou
+    auditoria (FR-091), e a dos documentos é `inscricao:consultar` (FR-072). Oferecer o que a
+    outra tela recusaria devolveria 404, e 404 não explica nada a quem o recebe.
+
+    Nenhuma consulta nova: as duas bases já estão nos vínculos lidos, e as Etapas vêm do conteúdo
+    que `_alvo_da_correcao` já resolveu.
+    """
+    return {
+        "pode_auditar_a_etapa": _pode_auditar_a_etapa(ator, peca.inscricao.edital),
+        "pode_ver_a_inscricao": ator.can(CONSULTAR),
+    }
 
 
 def _etapas_alcancaveis(peca):
@@ -6050,6 +6216,7 @@ def _recurso_com_recusa(request, ator, peca, recusa):
                 "motivo": request.POST.get("motivo", ""),
                 "motivacao": request.POST.get("motivacao", ""),
                 **_alvo_da_correcao(peca),
+                **_para_conferir_o_objeto(ator, peca),
             },
             status=recusa.status,
         )

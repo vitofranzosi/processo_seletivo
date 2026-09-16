@@ -51,7 +51,14 @@ ELIMINADA_ANTES = "eliminada-antes"
 AGUARDANDO_ANTERIOR = "aguardando-anterior"
 CONSOLIDADA = "consolidada"
 PRONTA = "pronta"
-IMPEDIDA = "impedida"
+# **Não se chama `IMPEDIDA`, e o nome é a correção de um defeito de leitura.** "Impedimento" já
+# tem dono neste sistema: é o conflito de interesse que a `012` manda declarar entre avaliador e
+# candidato (`FR-042`). O contador da Mesa dizia "6 com impedimento" na mesma tela que oferece
+# "Impedimentos", e a leitura natural — "seis candidatos têm conflito com a banca" — era o
+# contrário do que o número conta: são seis que ainda não podem ser consolidados, quase sempre
+# porque ninguém avaliou. Os motivos abaixo mostram por que "aguardando avaliação" também não
+# serviria: conclusões demais e divergência de conteúdo caem aqui e não são espera.
+NAO_CONSOLIDAVEL = "nao-consolidavel"
 # O sexto estado, e o único que a 018 acrescenta. Ele existe porque a inscrição com reavaliação
 # determinada **tem** Resultado — e por isso a prontidão a chamava de `consolidada`, escondendo
 # justamente a pendência que a decisão criou. Quem organiza a Etapa precisa vê-la como trabalho a
@@ -482,7 +489,7 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes=None, conteudo=None):
     """Participação e prontidão da Etapa inteira, em consultas de número constante.
 
     Devolve `estados` como `{inscricao_id: (estado, motivo)}` cobrindo **toda** inscrição
-    submetida, mais o impedimento da Etapa quando ele existe. É a única fonte dos números: o resumo
+    submetida, mais o bloqueio da Etapa quando ele existe. É a única fonte dos números: o resumo
     conta a partir daqui, e a listagem filtra a partir daqui, de modo que os dois não podem
     divergir.
     """
@@ -494,17 +501,17 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes=None, conteudo=None):
         edital=edital, etapa_id=etapa["id"], vigentes=etapas_vigentes, conteudo=conteudo
     )
     resultados = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
-    impedimento = impedimento_da_regra(etapa)
+    bloqueio = impedimento_da_regra(etapa)
     # A conferência da obsolescência só é feita onde há corte — e `ha_corte` veio da mesma consulta
     # que já buscou as submetidas, de modo que a Etapa sem corte não paga nada por esta linha.
-    if impedimento is None and ha_corte is not False:
-        impedimento = impedimento_do_corte(edital, etapa["id"])
+    if bloqueio is None and ha_corte is not False:
+        bloqueio = impedimento_do_corte(edital, etapa["id"])
     # Duas consultas para a Etapa inteira, e nenhuma por inscrição — o mesmo orçamento que o resto
     # deste módulo respeita.
     reavaliacoes = reavaliacoes_pendentes(edital, etapa_id=etapa["id"])
 
     elegiveis = {}
-    if impedimento is None:
+    if bloqueio is None:
         # `values_list` sobre o contrato herdado: o conjunto é o mesmo, e o que muda é o que vem
         # dentro dele. Os conteúdos das versões são resolvidos **uma vez por versão distinta** —
         # duas ou três por Edital —, e não uma por avaliação.
@@ -533,7 +540,7 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes=None, conteudo=None):
         estados[identidade] = (FORA_DO_CORTE, "fora da faixa que progride para esta Etapa")
     for identidade in participantes:
         estados[identidade] = _estado_do_participante(
-            identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes
+            identidade, etapa, resultados, elegiveis, bloqueio, reavaliacoes
         )
     panorama = {
         "participantes": participantes,
@@ -545,7 +552,7 @@ def panorama_da_etapa(*, edital, etapa, etapas_vigentes=None, conteudo=None):
         "aguardando": aguardando,
         "resultados": resultados,
         "elegiveis": elegiveis,
-        "impedimento_da_etapa": impedimento,
+        "bloqueio_da_etapa": bloqueio,
         "estados": estados,
     }
     # As contagens viajam **dentro** do panorama porque o resumo as lê daqui: um segundo cálculo,
@@ -561,7 +568,7 @@ def identificador_da_etapa(etapa):
     return identificador(etapa["id"])
 
 
-def _estado_do_participante(identidade, etapa, resultados, elegiveis, impedimento, reavaliacoes):
+def _estado_do_participante(identidade, etapa, resultados, elegiveis, bloqueio, reavaliacoes):
     if (identidade, identificador_da_etapa(etapa)) in reavaliacoes:
         # **Antes de "já consolidada"**, e é toda a questão: ela tem Resultado, e por isso caía no
         # ramo de baixo e sumia da lista de trabalho. A decisão determinou reavaliar, e enquanto
@@ -571,20 +578,20 @@ def _estado_do_participante(identidade, etapa, resultados, elegiveis, impediment
         # Já consolidada vem antes de tudo: reconsolidar não é o caminho normal esbarrando numa
         # regra, e apresentá-la como "pronta" convidaria a um ato que será recusado.
         return (CONSOLIDADA, "esta inscrição já possui Resultado nesta Etapa")
-    if impedimento is not None:
-        return (IMPEDIDA, impedimento[1])
+    if bloqueio is not None:
+        return (NAO_CONSOLIDAVEL, bloqueio[1])
     conclusoes = elegiveis.get(identidade, [])
     if not conclusoes:
-        return (IMPEDIDA, SEM_CONCLUSAO)
+        return (NAO_CONSOLIDAVEL, SEM_CONCLUSAO)
     if len(conclusoes) > 1:
         # Só alcançável quando a quantidade prevista mudou depois das conclusões. Escolher uma
         # seria o sistema decidindo qual nota vale.
-        return (IMPEDIDA, CONCLUSOES_DEMAIS.format(quantas=len(conclusoes)))
+        return (NAO_CONSOLIDAVEL, CONCLUSOES_DEMAIS.format(quantas=len(conclusoes)))
     divergencia = incompatibilidade(
         conteudo=conclusoes[0].conteudo, etapa_id=etapa["id"], etapa_vigente=etapa
     )
     if divergencia is not None:
-        return (IMPEDIDA, divergencia[1])
+        return (NAO_CONSOLIDAVEL, divergencia[1])
     return (PRONTA, "pronta para consolidar")
 
 
@@ -595,7 +602,7 @@ def contagens(panorama):
     os quatro estados dos participantes somam `participantes`.
     """
     por_estado = {
-        estado: 0 for estado in (CONSOLIDADA, PRONTA, IMPEDIDA, REAVALIACAO, FORA_DO_CORTE)
+        estado: 0 for estado in (CONSOLIDADA, PRONTA, NAO_CONSOLIDAVEL, REAVALIACAO, FORA_DO_CORTE)
     }
     for estado, _ in panorama["estados"].values():
         if estado in por_estado:
@@ -606,7 +613,7 @@ def contagens(panorama):
         "aguardando_anterior": len(panorama["aguardando"]),
         "consolidadas": por_estado[CONSOLIDADA],
         "prontas": por_estado[PRONTA],
-        "impedidas": por_estado[IMPEDIDA],
+        "nao_consolidaveis": por_estado[NAO_CONSOLIDAVEL],
         "reavaliacoes": por_estado[REAVALIACAO],
         # **Sem esta contagem a partição deixava de fechar** (014, FR-210, UX-026). O estado já
         # existia no panorama, mas nenhuma tela o contava: a Mesa da Etapa governada mostrava

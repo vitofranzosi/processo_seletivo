@@ -7,6 +7,8 @@ declara — e é exatamente por isso que os testes são de tela, e não de domí
 O relatório está em `doc/auditoria-exploratoria-ux-2026-09-13.md`.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -418,3 +420,198 @@ def test_cada_campo_recebe_o_rotulo_da_propria_colecao(caminho, campo, onde):
 
     assert encontrado_campo == campo
     assert encontrado_onde.startswith(onde)
+
+
+# --- O marco classificatório: vinte e nove controles numa tela ---------------------------------
+#
+# O cartão punha o método do sorteio e a regra de corte no mesmo nível dos pesos, e quem compõe um
+# marco comum — que não sorteia nem corta — percorria dezesseis campos que não lhe dizem respeito
+# para chegar aos sete que dizem. A organização passa a ser por como a ordem é produzida.
+
+
+def marco_renderizado(**declarado):
+    """O cartão do marco fora do assistente: o que se afirma aqui é do próprio template."""
+    from django.template.loader import render_to_string
+
+    return render_to_string(
+        "interface/_marco.html",
+        {
+            "marco": {"id": "11111111-1111-1111-1111-111111111111", **declarado},
+            "indice": "p0",
+            "sub": 0,
+            "etapas_classificatorias": [],
+            "etapas_governaveis": [],
+            "fatos_declarados": [],
+        },
+    )
+
+
+def blocos(marcacao):
+    """`{rótulo: aberto?}` de cada bloco que abre no cartão."""
+    achados = re.findall(
+        r'<details class="bloco-do-marco"( open)?>\s*<summary>\s*([^<]+?)\s*<', marcacao
+    )
+    return {rotulo: bool(aberto) for aberto, rotulo in achados}
+
+
+def test_o_marco_comum_nasce_com_os_tres_blocos_fechados():
+    """Quem não sorteia nem corta — a maioria — vê os sete campos que toda ordem exige."""
+    fechados = blocos(marco_renderizado())
+
+    assert fechados == {
+        "Recurso contra o resultado": False,
+        "Método do sorteio": False,
+        "Regra de corte": False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("declarado", "bloco"),
+    [
+        ({"appealDeclaration": "admite", "appealDurationDays": 5}, "Recurso contra o resultado"),
+        ({"appealDeclaration": "nao_admite"}, "Recurso contra o resultado"),
+        ({"drawAlgorithm": "IFES-SORTEIO-SHA256-v1"}, "Método do sorteio"),
+        ({"drawQualifyingStageId": "22222222-2222-2222-2222-222222222222"}, "Método do sorteio"),
+        ({"cutTargetKind": "FIXED", "cutTargetCount": 30}, "Regra de corte"),
+        ({"cutContinuation": "ALLOWED"}, "Regra de corte"),
+    ],
+)
+def test_o_bloco_declarado_abre_sozinho(declarado, bloco):
+    """Bloco fechado sobre conteúdo declarado é armadilha: quem reabre o Edital não veria o corte.
+
+    A negativa conta como declaração — "não admite recurso" é norma publicada, e some da tela se
+    o critério for "tem valor".
+    """
+    assert blocos(marco_renderizado(**declarado))[bloco] is True
+
+
+@pytest.mark.parametrize(
+    ("declarado", "dizeres"),
+    [
+        ({}, "este marco não sorteia"),
+        ({"appealDeclaration": "admite", "appealDurationDays": 5}, "admite, prazo de 5 dias"),
+        ({"appealDeclaration": "nao_admite"}, "não admite por esta via"),
+        ({"cutTargetKind": "FIXED", "cutTargetCount": 30}, "quantidade fixa de 30"),
+        ({"cutTargetKind": "FROM_VACANCY_TABLE"}, "o que o quadro de vagas publicar"),
+        ({"cutTieOutcome": "STRICT"}, "começada, e sem dizer quantos progridem"),
+    ],
+)
+def test_o_bloco_fechado_diz_o_que_ha_dentro(declarado, dizeres):
+    """É o que separa divulgação progressiva de esconder: o resumo responde sem pedir o clique."""
+    assert dizeres in marco_renderizado(**declarado)
+
+
+def test_nenhum_campo_obrigatorio_mora_num_bloco_que_fecha():
+    """`required` invisível é submissão que o navegador recusa sem conseguir mostrar o que falta.
+
+    A mensagem é "An invalid form control is not focusable", no console, e a tela não se move: a
+    pessoa clica em Salvar e nada acontece.
+    """
+    marcacao = marco_renderizado()
+    dentro = re.findall(r"<details class=\"bloco-do-marco\".*?</details>", marcacao, re.S)
+
+    assert dentro, "o cartão não tem bloco que fecha"
+    for bloco in dentro:
+        assert "required" not in bloco, bloco[:200]
+
+
+def test_nenhuma_descricao_do_marco_divide_identificador_com_outra():
+    """`ajuda-normalizacao-<i>-<s>` nomeava duas: a do sorteio e a dos pesos.
+
+    Dois elementos com o mesmo `id` não quebram nada em execução — o leitor de tela simplesmente
+    lê o primeiro nos dois campos, e quem chegava à combinação de pontuações ouvia a regra da
+    semente do sorteio.
+    """
+    identificadores = re.findall(r' id="([^"]+)"', marco_renderizado())
+
+    repetidos = {alvo for alvo in identificadores if identificadores.count(alvo) > 1}
+    assert repetidos == set(), repetidos
+
+
+def test_o_cartao_do_marco_nao_cita_edital_de_fora():
+    """A microcópia invisível citava "o 77/2026 admite; o 14/2026 não".
+
+    Dois Editais que este Edital não cita, que quem preenche não tem como consultar daqui, e num
+    `span.oculto` que ninguém que enxerga jamais leu. O que as leituras ensinaram continua — na
+    ajuda da lista, uma vez e para todo mundo.
+    """
+    marcacao = marco_renderizado()
+    sem_prosa = re.sub(r"{%\s*comment\s*%}.*?{%\s*endcomment\s*%}", "", marcacao, flags=re.S)
+
+    for citado in ("77/2026", "14/2026", "Editais de sorteio lidos"):
+        assert citado not in sem_prosa, citado
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_ajuda_da_lista_recebeu_o_sorteio_e_o_corte(client, seletor_ligado, rascunho):
+    """O conceito não some do produto: ele passa a viver onde a lista inteira o alcança."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[rascunho.id, "classificacao"])
+    ).content.decode()
+
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
+    assert "<dt>Método do sorteio</dt>" in bloco
+    assert "<dt>Regra de corte</dt>" in bloco
+    assert "entram todas as inscrições submetidas do recorte" in bloco
+    assert "fecham a faixa no que o ato publicou" in bloco
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_recusa_nao_apaga_o_corte_declarado(client, seletor_ligado, rascunho):
+    """A recusa existe para corrigir o que se errou, não para apagar o que se acertou.
+
+    `_reexibir_marco` montava o marco digitado sem a janela recursal, sem o método do sorteio e
+    sem a regra de corte. Quem declarava um corte, errava outro campo e recebia a recusa via os
+    três sumirem da tela — e o salvamento seguinte gravava o Edital sem eles, em silêncio. É a
+    mesma classe de perda que `_marco_persistido` já nomeia três vezes, num quarto caminho.
+    """
+    from processo_seletivo.editais.models.perfis import PerfilVaga
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = PerfilVaga.objects.create(edital=rascunho, code="MON", name="Monitor")
+    marco = "33333333-3333-3333-3333-333333333333"
+    base = f"marco-{perfil.id}-0"
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[rascunho.id, "classificacao"]),
+        {
+            "perfil_id": str(perfil.id),
+            f"{base}-id": marco,
+            # Código vazio: é ele que provoca a recusa, e é o único que a pessoa errou.
+            f"{base}-code": "",
+            f"{base}-name": "Classificação final",
+            f"{base}-scale": "2",
+            f"{base}-mode": "MEIO_PARA_CIMA",
+            f"{base}-operation": "SOMA_PONDERADA",
+            f"{base}-normalization": "NENHUMA",
+            f"{base}-appealDeclaration": "admite",
+            f"{base}-appealDurationDays": "5",
+            f"{base}-appealUnit": "DIAS_CORRIDOS",
+            f"{base}-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
+            f"{base}-cutTargetKind": "FIXED",
+            f"{base}-cutTargetCount": "30",
+            f"{base}-cutTieOutcome": "STRICT",
+        },
+    )
+    assert resposta.status_code in (200, 422), resposta.status_code
+    corpo = resposta.content.decode()
+
+    devolvido = next(
+        item for item in resposta.context["perfis"] if str(item["id"]) == str(perfil.id)
+    )["marcos"][0]
+    assert devolvido["appealDeclaration"] == "admite"
+    assert devolvido["appealDurationDays"] == 5
+    assert devolvido["drawAlgorithm"] == "IFES-SORTEIO-SHA256-v1"
+    assert devolvido["cutTargetKind"] == "FIXED"
+    assert devolvido["cutTargetCount"] == 30
+
+    # E os blocos voltam abertos: fechados, eles diriam "não declarado" sobre o que a pessoa
+    # acabou de digitar — que é a armadilha que a divulgação progressiva tinha de não criar.
+    assert blocos(corpo) == {
+        "Recurso contra o resultado": True,
+        "Método do sorteio": True,
+        "Regra de corte": True,
+    }

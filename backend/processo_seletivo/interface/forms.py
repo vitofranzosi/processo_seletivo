@@ -399,6 +399,28 @@ def _metodo_para_exibicao(metodo):
     }
 
 
+def blocos_opcionais_do_marco(marco):
+    """Janela recursal, método do sorteio e regra de corte — do contrato para a tela.
+
+    Existe porque a reexibição depois de uma recusa os perdia. `_reexibir_marco` montava o marco
+    digitado com identidade, Etapas, arredondamento e critérios, e **não** com estes três: quem
+    declarava um corte, errava outro campo e recebia a recusa via o corte sumir da tela — e o
+    salvamento seguinte gravava o Edital sem ele, sem que nada avisasse. É a mesma classe de perda
+    que `_marco_persistido` nomeia três vezes, num quarto caminho.
+
+    O mapeamento é o do persistido, e por isso mora aqui em vez de na view: são as mesmas chaves,
+    e duas cópias divergiriam na primeira que mudasse.
+    """
+    janela = marco.get("appealWindow") or {}
+    return {
+        "appealDeclaration": _declaracao_do_marco(marco.get("appealWindow")),
+        "appealDurationDays": janela.get("durationDays") or "",
+        "appealUnit": janela.get("unit") or "DIAS_CORRIDOS",
+        **_metodo_para_exibicao(marco.get("drawMethod")),
+        **_corte_para_exibicao(marco.get("cutRule")),
+    }
+
+
 def _declaracao_do_marco(janela):
     """Qual das três escolhas a tela deve reexibir marcada.
 

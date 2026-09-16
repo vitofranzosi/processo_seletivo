@@ -11,6 +11,11 @@ urlpatterns = [
     path("processos/criar", views.criar_processo, name="processo-criar"),
     path("processos/<uuid:processo_id>/", views.processo_detalhe, name="processo-detalhe"),
     path(
+        "processos/<uuid:processo_id>/editais/criar",
+        views.criar_edital,
+        name="edital-criar",
+    ),
+    path(
         "processos/<uuid:processo_id>/atos/<slug:acao>",
         views.praticar_ato_processo,
         name="processo-ato",
