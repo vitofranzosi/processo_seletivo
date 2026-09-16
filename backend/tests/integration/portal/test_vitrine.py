@@ -175,14 +175,18 @@ def _publicar_em(api_client, manager_headers, process_payload, *, situacao, seed
         evento["endAt"] = (agora + timedelta(days=20)).isoformat()
         evento["isRegistrationPeriod"] = True
     elif situacao == "encerrado":
+        # Publicado com o prazo **aberto** e encerrado por Retificação logo abaixo (`028`,
+        # FR-346, FR-355): o sistema recusa publicar Edital cujas inscrições já fecharam.
         evento["startAt"] = (agora - timedelta(days=30)).isoformat()
-        evento["endAt"] = (agora - timedelta(days=10)).isoformat()
+        evento["endAt"] = (agora + timedelta(days=1)).isoformat()
         evento["isRegistrationPeriod"] = True
     # `nao-designado`: o Evento existe e **não** é marcado como período de inscrições. Não é
     # esquecimento — é o Edital que não recebe inscrição por este sistema.
     # Cada Processo é criado com chave de idempotência própria: a do `manager_headers` é fixa, e
     # reusá-la com conteúdo diferente é recusado — corretamente — pelo próprio sistema.
-    return publicar_selecao(
+    from tests.fixtures.publicacao import encerrar_inscricoes
+
+    edital = publicar_selecao(
         api_client,
         {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"vitrine-situacao-{numero}"},
         {
@@ -193,6 +197,11 @@ def _publicar_em(api_client, manager_headers, process_payload, *, situacao, seed
         rascunho=rascunho,
         seed=seed,
     )
+    if situacao == "encerrado":
+        edital = encerrar_inscricoes(
+            api_client, edital, agora - timedelta(days=10), suffix=f"vitrine-{numero}"
+        )
+    return edital
 
 
 @pytest.mark.django_db(transaction=True)

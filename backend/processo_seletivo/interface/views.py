@@ -107,6 +107,7 @@ from processo_seletivo.editais.application.reaproveitamento import (
     rascunho_vazio,
     reaproveitar_edital,
 )
+from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
@@ -521,11 +522,21 @@ def _destino(caminho, codigo=""):
 MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
-def _pendencias(edital):
-    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
+def _pendencias(edital, *, agora=None):
+    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
+
+    **`agora` é recebido, e não lido aqui, quando a página também desenha o selo das etapas**
+    (`028`, FR-341). O selo do Cronograma e estas pendências respondem à mesma pergunta — que
+    Eventos venceram —, e dois relógios lidos na mesma requisição podem discordar: a etapa
+    apareceria pendente sem a explicação correspondente, que é o que a UX-049 proíbe. Quem não tem
+    selo a desenhar continua chamando sem o argumento.
+    """
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
-    for item in validate_for_publication(edital_snapshot(edital), ato=ATO_DE_PUBLICACAO):
+    agora = agora or timezone.now()
+    for item in validate_for_publication(
+        edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
+    ):
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {
@@ -669,14 +680,60 @@ def _recusa(exc, digitados, etapa):
     return {"mensagem": mensagem, "ancora": ""}
 
 
-def _progresso(edital, atual):
+def _eventos_do_cronograma(edital):
+    """Os Eventos do Cronograma, **numa consulta**, para serem passados adiante.
+
+    A página da etapa precisa deles duas vezes — o selo pergunta se algum venceu, a frase diz
+    quantos venceram —, e buscá-los duas vezes era consulta a mais contra a restrição que o plano
+    declara. Lidos aqui uma vez, os dois cálculos trabalham sobre a mesma lista, que é também o que
+    garante que o número exibido e o selo falem do mesmo cronograma.
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    return list(cronograma.eventos.all()) if cronograma is not None else []
+
+
+def _vencidos_entre(eventos, *, agora):
+    """Quais daqueles Eventos já passaram, pelo predicado do domínio."""
+    return [evento for evento in eventos if vencido(evento.start_at, evento.end_at, agora=agora)]
+
+
+def _estado_do_cronograma(edital, *, agora=None, eventos=None):
+    """Concluída quando há Evento e nenhum deles venceu (`028`, FR-359, FR-360).
+
+    Pendente **não impede nada** (FR-362): o selo orienta quem retoma o trabalho, e quem fecha porta
+    é o achado impeditivo do período de inscrições encerrado. E como o estado é derivado e não
+    persistido, ele volta sozinho assim que as datas são corrigidas — que é também o que o faz estar
+    certo na primeira abertura depois do reaproveitamento, sem gravação nenhuma.
+
+    `eventos` evita a segunda consulta quando quem chama já os tem; sem ele, busca por conta
+    própria — é o que mantém a função utilizável sozinha, de teste e de shell.
+    """
+    eventos = _eventos_do_cronograma(edital) if eventos is None else eventos
+    if not eventos:
+        return PENDENTE
+    if _vencidos_entre(eventos, agora=agora or timezone.now()):
+        return PENDENTE
+    return CONCLUIDA
+
+
+def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
     """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
     estados = {
         "identificacao": CONCLUIDA,
         "perfis": CONCLUIDA if edital.perfis.exists() else PENDENTE,
-        "cronograma": CONCLUIDA
-        if getattr(edital, "cronograma", None) and edital.cronograma.eventos.exists()
-        else PENDENTE,
+        # **Concluída passou a significar "válida", e não "tem Evento"** (`028`, FR-359). O critério
+        # era `eventos.exists()`, e por isso um Edital criado a partir de outro nascia com o
+        # Cronograma concluído carregando o cronograma inteiro da oferta anterior — todas as nove
+        # etapas verdes, e um período de inscrições do ano passado já encerrado.
+        #
+        # O predicado é o mesmo que a conferência de publicação usa; ele mora em
+        # `editais/domain/calendario.py` justamente para que o selo e a Revisão não possam discordar
+        # sobre o mesmo cronograma. A leitura é em Python, e não um filtro no banco, pela mesma
+        # razão: um `Q(start_at__lt=...)` poria a regra numa expressão que o domínio não alcança.
+        #
+        # **O ano não entra aqui.** Divergência de ano é advertência; apagar o selo por ela daria a
+        # um Edital legítimo de dezembro a aparência de incompleto.
+        "cronograma": _estado_do_cronograma(edital, agora=agora, eventos=eventos_do_cronograma),
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
         "etapas": CONCLUIDA if edital.etapas.exists() else PENDENTE,
         # Como `etapas`: um Edital pode não classificar, e nesta versão isso é legítimo. "Concluída"
@@ -890,7 +947,17 @@ def compor_etapa(request, edital_id, etapa):
         edital.refresh_from_db()
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
-    pendencias = _pendencias(edital)
+    # **Um instante para a página inteira** (`028`, FR-341). O selo da etapa Cronograma e as
+    # pendências respondem à mesma pergunta, e um Evento que vencesse entre as duas leituras faria
+    # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
+    # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
+    agora = timezone.now()
+    pendencias = _pendencias(edital, agora=agora)
+    # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
+    # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
+    # A lista é pedida — e não um booleano — porque a frase diz **quantos** Eventos a mantêm assim.
+    eventos_do_cronograma = _eventos_do_cronograma(edital)
+    vencidos = _vencidos_entre(eventos_do_cronograma, agora=agora) if etapa == "cronograma" else []
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
@@ -919,7 +986,10 @@ def compor_etapa(request, edital_id, etapa):
             # seria trocar um defeito por outro: quem repartiu 60 na ampla e removeu a última lista
             # reservada precisa ver que a ampla voltou a ser o total.
             "quadro_rederivado": rederivadas,
-            "progresso": _progresso(edital, etapa),
+            "progresso": _progresso(
+                edital, etapa, agora=agora, eventos_do_cronograma=eventos_do_cronograma
+            ),
+            "cronograma_vencidos": vencidos,
             "anterior": anterior,
             "proxima": proxima,
             "editavel": editavel,

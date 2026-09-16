@@ -574,6 +574,12 @@ def advertencias_do_ato(retificacao):
         # Conteúdo que nem se monta é assunto do ato, que recusa e diz por quê. Aqui a resposta é a
         # lista vazia: conselho sobre conteúdo impossível não ajuda ninguém.
         return []
+    # **O ato omitido aqui é deliberado, e não esquecimento.** Esta chamada usa o padrão —
+    # publicação — porque o que ela calcula é o conjunto de códigos que *impediriam* o conteúdo, e
+    # serve só para subtraí-los da lista logo abaixo. Passar `ATO_DE_RETIFICACAO` aqui mudaria o
+    # conjunto subtraído e alteraria, em silêncio, o que a confirmação da Retificação mostra.
+    # A `028` acrescentou achados condicionados ao ato e reconfirmou a leitura: o que volta para a
+    # tela vem da chamada de baixo, e nenhum achado daquela feature existe num ato de Retificação.
     impeditivos = {item.code for item in blocking_findings(validate_for_publication(content))}
     return [
         item

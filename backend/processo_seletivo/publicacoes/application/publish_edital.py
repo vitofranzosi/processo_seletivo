@@ -428,7 +428,10 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
         if edital.status != Edital.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Edital não está em elaboração.", 409)
         snapshot = edital_snapshot(edital)
-        findings = validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO)
+        # O `now` desta transação, e não um relógio lido de novo (`028`, FR-341). É o que faz o
+        # achado de cronograma vencido e o registro da revisão falarem do mesmo instante, como o
+        # Princípio II exige de operações relacionadas.
+        findings = validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=now)
         errors = blocking_findings(findings)
         if errors:
             raise DomainError("blocking_findings", "; ".join(item.message for item in errors), 422)
@@ -646,9 +649,22 @@ def publish_edital(
             raise DomainError(
                 "homologated_revision_changed", "O rascunho diverge da revisão homologada.", 409
             )
-        findings = validate_for_publication(current_snapshot, ato=ATO_DE_PUBLICACAO)
-        if blocking_findings(findings):
-            raise DomainError("blocking_findings", "O Edital possui erros impeditivos.", 422)
+        # Conferido de novo, e contra o instante **desta** publicação: submissão e publicação são
+        # atos distintos, em instantes distintos, e um período de inscrições que estava aberto na
+        # submissão pode ter encerrado aqui (`028`, FR-358). É por isso que a segunda conferência
+        # não é redundante com a primeira.
+        findings = validate_for_publication(current_snapshot, ato=ATO_DE_PUBLICACAO, agora=now)
+        # **A mensagem do achado vem junto, como já vem na submissão.** Dizer apenas "o Edital
+        # possui erros impeditivos" devolve a quem publica a informação de que algo está errado e
+        # nenhuma de qual — e há achado cuja mensagem é a única coisa acionável que existe: o
+        # período de inscrições encerrado diz **quando** encerrou, o que acontece se publicar assim
+        # e em que etapa a data se corrige (`028`, UX-048). Quem publica pode não ser quem compôs,
+        # e pode nunca ter aberto a Revisão.
+        impeditivos = blocking_findings(findings)
+        if impeditivos:
+            raise DomainError(
+                "blocking_findings", "; ".join(item.message for item in impeditivos), 422
+            )
         # A autoridade é contexto do ato, não conteúdo publicado: ela chega por parâmetro
         # porque o documento é composto **antes** de a `Publicacao` existir (`008`, FR-034).
         pdf = render_edital_pdf(
