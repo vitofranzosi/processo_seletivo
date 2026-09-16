@@ -556,3 +556,62 @@ def test_a_ajuda_da_lista_recebeu_o_sorteio_e_o_corte(client, seletor_ligado, ra
     assert "<dt>Regra de corte</dt>" in bloco
     assert "entram todas as inscrições submetidas do recorte" in bloco
     assert "fecham a faixa no que o ato publicou" in bloco
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_recusa_nao_apaga_o_corte_declarado(client, seletor_ligado, rascunho):
+    """A recusa existe para corrigir o que se errou, não para apagar o que se acertou.
+
+    `_reexibir_marco` montava o marco digitado sem a janela recursal, sem o método do sorteio e
+    sem a regra de corte. Quem declarava um corte, errava outro campo e recebia a recusa via os
+    três sumirem da tela — e o salvamento seguinte gravava o Edital sem eles, em silêncio. É a
+    mesma classe de perda que `_marco_persistido` já nomeia três vezes, num quarto caminho.
+    """
+    from processo_seletivo.editais.models.perfis import PerfilVaga
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    perfil = PerfilVaga.objects.create(edital=rascunho, code="MON", name="Monitor")
+    marco = "33333333-3333-3333-3333-333333333333"
+    base = f"marco-{perfil.id}-0"
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[rascunho.id, "classificacao"]),
+        {
+            "perfil_id": str(perfil.id),
+            f"{base}-id": marco,
+            # Código vazio: é ele que provoca a recusa, e é o único que a pessoa errou.
+            f"{base}-code": "",
+            f"{base}-name": "Classificação final",
+            f"{base}-scale": "2",
+            f"{base}-mode": "MEIO_PARA_CIMA",
+            f"{base}-operation": "SOMA_PONDERADA",
+            f"{base}-normalization": "NENHUMA",
+            f"{base}-appealDeclaration": "admite",
+            f"{base}-appealDurationDays": "5",
+            f"{base}-appealUnit": "DIAS_CORRIDOS",
+            f"{base}-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
+            f"{base}-cutTargetKind": "FIXED",
+            f"{base}-cutTargetCount": "30",
+            f"{base}-cutTieOutcome": "STRICT",
+        },
+    )
+    assert resposta.status_code in (200, 422), resposta.status_code
+    corpo = resposta.content.decode()
+
+    devolvido = next(
+        item for item in resposta.context["perfis"] if str(item["id"]) == str(perfil.id)
+    )["marcos"][0]
+    assert devolvido["appealDeclaration"] == "admite"
+    assert devolvido["appealDurationDays"] == 5
+    assert devolvido["drawAlgorithm"] == "IFES-SORTEIO-SHA256-v1"
+    assert devolvido["cutTargetKind"] == "FIXED"
+    assert devolvido["cutTargetCount"] == 30
+
+    # E os blocos voltam abertos: fechados, eles diriam "não declarado" sobre o que a pessoa
+    # acabou de digitar — que é a armadilha que a divulgação progressiva tinha de não criar.
+    assert blocos(corpo) == {
+        "Recurso contra o resultado": True,
+        "Método do sorteio": True,
+        "Regra de corte": True,
+    }

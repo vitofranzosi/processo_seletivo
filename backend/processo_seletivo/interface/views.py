@@ -1346,6 +1346,11 @@ def _reexibir_marco(marco):
         "normalization": marco.get("normalization", ""),
         "scale": arredondamento.get("scale", ""),
         "mode": arredondamento.get("mode", ""),
+        # **Os três blocos opcionais, que esta função perdia.** Quem declarava um corte, errava
+        # outro campo e recebia a recusa via o corte sumir da tela — e o salvamento seguinte
+        # gravava o Edital sem ele. A recusa existe para que a pessoa corrija o que errou, e não
+        # para apagar o que ela acertou.
+        **forms.blocos_opcionais_do_marco(marco),
         "criterios": [_reexibir_criterio(item) for item in marco.get("tiebreakers") or []],
     }
 
