@@ -35,6 +35,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     INTEGRIDADE,
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
+from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -153,6 +154,7 @@ from processo_seletivo.publicacoes.application.retificacoes import (
 )
 from processo_seletivo.publicacoes.application.selectors import (
     effective_version,
+    homologar_fecharia_a_publicacao,
     impede_por_segregacao,
     participantes_do_edital,
 )
@@ -2203,6 +2205,13 @@ def praticar_ato(request, edital_id, acao):
 
     participantes = participantes_do_edital(edital)
     segregacao = ato.chave == "publicar" and impede_por_segregacao(participantes, ator)
+    # **O impedimento de publicar, anunciado em Homologar** — que é onde ele passa a existir. Ele
+    # não impede homologar, e por isso não entra em `recusa_certa`: acumular os dois papéis é
+    # permitido, e o que falta é a pessoa saber, antes de praticar, que a publicação ficará com
+    # outra (FR-021 da 001).
+    homologar_fecha_a_publicacao = ato.chave == "homologar" and homologar_fecharia_a_publicacao(
+        participantes, ator
+    )
     pendencias = _pendencias(edital) if ato.chave in {"submeter", "publicar"} else []
     # Alcançável por URL direta: sem isto a tela oferece "Confirmar" para um ato que o
     # command recusaria, e a recusa só apareceria depois do clique.
@@ -2212,6 +2221,7 @@ def praticar_ato(request, edital_id, acao):
         "ato": ato,
         "participantes": participantes,
         "impedido_por_segregacao": segregacao,
+        "homologar_fecha_a_publicacao": homologar_fecha_a_publicacao,
         "pendencias": pendencias,
         "impedimento": impedimento,
         # As três previsões usam exatamente o que o command aplica — a mesma
@@ -4115,6 +4125,14 @@ def distribuicao(request, edital_id, etapa_id):
                     edital=edital, etapa=etapa, panorama=panorama
                 ),
                 "prontidao": request.GET.get("prontidao") or "",
+                # **O impedimento anunciado antes de alguém bater nele**, como a tela da Comissão
+                # faz com a presidência ausente. Distribuir com o período aberto é recusado pelo
+                # domínio nos três caminhos, e a tela oferecia os dois botões sem dizer nada: a
+                # frase só aparecia depois do clique, com a seleção já montada. É a mesma recusa,
+                # lida da mesma função — sem consulta nova, porque o conteúdo já está em mão.
+                "inscricoes_em_curso": (
+                    recusa_por_inscricoes_em_curso(conteudo_publicado, timezone.now())
+                ),
                 "bloqueio_da_etapa": panorama["bloqueio_da_etapa"],
                 # Quem voltou ao certame por recurso aparece **nomeada** na Mesa: sem isso, ela
                 # entraria na lista como mais uma pendente, e a presidência não saberia por que
@@ -5638,7 +5656,16 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
         # sobre um marco já divulgado não impede nada, e ainda assim é o que a autoridade precisa
         # ler antes de confirmar.
         publicabilidade = aferir_publicabilidade(
-            edital=edital, marco_id=marco_id, ato=ato, sucede=sucede, lista_id=ato.lista_id
+            edital=edital,
+            marco_id=marco_id,
+            ato=ato,
+            sucede=sucede,
+            lista_id=ato.lista_id,
+            # A tela oferece a natureza num `select`, e aferia como preliminar — o padrão seguro.
+            # O efeito era anunciar "nada impede esta divulgação" ao lado de uma opção que o
+            # comando recusaria depois do clique. Perguntar aqui custa as consultas da
+            # definitividade e **não** recalcula o estado, que é a parte cara: ele já foi lido.
+            prever_a_definitiva=True,
         )
     except DomainError as recusa:
         if recusa.status == 404:

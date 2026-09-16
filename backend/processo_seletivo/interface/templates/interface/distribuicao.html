@@ -73,6 +73,20 @@ tela pode somar.
   Esta Etapa não pode ser consolidada: {{ bloqueio_da_etapa.1 }}.
 </p>
 {% endif %}
+{% comment %}
+**O impedimento anunciado antes da tentativa**, como a tela da Comissão faz com a presidência
+ausente. Distribuir com o período de inscrições em curso é recusado nos três caminhos — a
+distribuição manual, a proposta do rodízio e a confirmação dela —, e esta tela oferecia os dois
+botões sem dizer nada: a frase aparecia depois do clique, com a seleção de dez pessoas já montada.
+
+É a mesma frase da recusa, e de propósito: duas redações do mesmo impedimento divergem no dia em
+que uma delas muda. A saída faz parte dela — "não pode" sem dizer por onde sair era metade da
+informação, e o ato cujo nome sugere a solução, Encerrar, é outro e não se desfaz.
+{% endcomment %}
+{% if inscricoes_em_curso %}
+<p class="aviso" role="status"><strong>Ainda não é possível distribuir esta Etapa.</strong>
+  {{ inscricoes_em_curso.detail }}</p>
+{% endif %}
 {% if erro_da_consolidacao %}
 <p class="erro" role="alert">{{ erro_da_consolidacao }}</p>
 {% endif %}

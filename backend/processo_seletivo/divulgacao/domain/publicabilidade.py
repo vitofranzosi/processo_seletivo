@@ -170,6 +170,12 @@ class Afericao:
     # Se há ato sucessor a emitir. Só faz sentido diante de impedimento, e é por isso que o padrão
     # é `True`: quem não impede não nomeia caminho nenhum, e a tela não lê este campo.
     admite_sucessor: bool = True
+    # **O que impediria a definitiva, para quem ainda não pediu nenhuma** — `(código, mensagem)` ou
+    # `None`. A prévia oferece a natureza num `select` e aferia como preliminar, que é o padrão
+    # seguro: a tela então apresentava "nada impede esta divulgação" ao lado de uma opção que o
+    # comando recusaria com 422 depois do clique. O fato existe antes do clique, e esta é a
+    # travessia que o leva à tela (FR-005, FR-081).
+    impede_a_definitiva: tuple | None = None
 
     @property
     def publicavel(self) -> bool:
@@ -216,7 +222,17 @@ def reingressos_pendentes(*, edital, marco, at=None):
     return pendentes
 
 
-def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id=None):
+def aferir(
+    *,
+    edital,
+    marco_id,
+    ato,
+    sucede=None,
+    at=None,
+    natureza="",
+    lista_id=None,
+    prever_a_definitiva=False,
+):
     """Afere a publicabilidade de `ato` contra o estado atual do marco.
 
     **`natureza` é a pretendida, e sem ela a verificação não distingue o que impede a definitiva do
@@ -228,6 +244,11 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
     Omitida, ela vale como preliminar: os três fatos da definitividade não se colocam, e a resposta
     é a mesma que a 017 já dava. É o padrão seguro — quem não sabe a natureza não pode estar
     pedindo a definitiva.
+
+    `prever_a_definitiva` é para a **tela**, e não para o comando: aferindo como preliminar, ela
+    também pergunta o que impediria a definitiva, para anunciá-lo antes de alguém escolher a
+    natureza. O comando não paga esse custo — ele já afere a natureza que recebeu, e para ele a
+    resposta seria trabalho sem consumidor.
 
     `at` existe para o comando aferir no instante da transação, e não no da leitura da tela.
 
@@ -339,10 +360,25 @@ def aferir(*, edital, marco_id, ato, sucede=None, at=None, natureza="", lista_id
             ADMITE_SUCESSOR[DESATUALIZADO],
         )
 
-    if sucede is not None:
-        return Afericao(AVISO, SUCEDERA, AVISO_DE_SUCESSAO, 200)
+    # Só chega aqui o que não impede **nenhuma** das duas naturezas; a previsão da definitiva é,
+    # portanto, a única coisa que ainda pode separá-las — e é o que a tela precisa anunciar.
+    previsto = (
+        _impedimento_da_definitiva(
+            edital=edital,
+            marco_id=marco_id,
+            marco=estado.get("marco"),
+            ato=ato,
+            at=at,
+            lista_id=lista_id,
+        )
+        if prever_a_definitiva and str(natureza).upper() != "DEFINITIVA"
+        else None
+    )
 
-    return Afericao(INFORMACAO, divergencias=[])
+    if sucede is not None:
+        return Afericao(AVISO, SUCEDERA, AVISO_DE_SUCESSAO, 200, impede_a_definitiva=previsto)
+
+    return Afericao(INFORMACAO, divergencias=[], impede_a_definitiva=previsto)
 
 
 def _corte_obsoleto(*, edital, estado, at=None, lista_id=None):

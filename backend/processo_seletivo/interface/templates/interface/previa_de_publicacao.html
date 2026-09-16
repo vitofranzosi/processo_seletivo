@@ -42,6 +42,23 @@ o nível é a aferição, e não o template — a tela mostra o que o domínio c
 {% endif %}
 
 {% comment %}
+**O impedimento da definitiva, anunciado antes da escolha.** O bloco acima verifica o que vale
+para as duas naturezas — ato sucedido, norma e universo divergentes —, e a definitividade tem
+fatos próprios: recurso pendente, reavaliação não cumprida, providência não executada, prazo
+recursal ainda correndo. Nenhum deles chegava aqui: o `select` oferecia "Resultado definitivo" sem
+condição, e o 422 vinha depois do clique.
+
+A aferição é a mesma do comando, e a frase também — ela já diz o próximo passo ("aguarde o
+encerramento, ou publique como resultado preliminar"), que é o que faltava ler antes. A opção
+continua no `select` de propósito: o estado pode mudar entre esta leitura e o envio, e é o comando
+que responde por ele; o que a tela deve é não deixar a pessoa descobrir isso depois.
+{% endcomment %}
+{% if publicabilidade.impede_a_definitiva %}
+<p class="aviso"><strong>Este marco ainda não pode ser publicado como definitivo.</strong>
+  {{ publicabilidade.impede_a_definitiva.1 }}</p>
+{% endif %}
+
+{% comment %}
 As consequências ditas **antes** da confirmação, e não depois: publicar torna o conteúdo abaixo
 acessível a qualquer pessoa, sem conta, num endereço estável — e não existe despublicar (FR-034,
 FR-040).

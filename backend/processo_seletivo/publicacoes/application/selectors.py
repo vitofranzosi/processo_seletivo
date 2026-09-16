@@ -272,6 +272,22 @@ def impede_por_segregacao(participantes, ator):
     )
 
 
+def homologar_fecharia_a_publicacao(participantes, ator):
+    """Homologar o que esta pessoa mesma elaborou fecha, para ela, a porta de publicar.
+
+    **A mesma regra, lida um ato antes.** A conferência de segregação só corria em `publicar`, e
+    quem elaborava e homologava a mesma revisão descobria o impedimento na terceira tela — com o
+    ato do meio já praticado e irreversível pela via comum. O fato existe antes: depois desta
+    homologação, `elaborou` e `homologou` serão a mesma pessoa, que é exatamente o que
+    `impede_por_segregacao` recusa.
+
+    Não impede homologar, e não deveria: acumular os dois papéis é permitido, e em equipe de duas
+    ou três pessoas é o caso comum. O que ela precisa saber é que a publicação ficará com outra
+    pessoa.
+    """
+    return bool(participantes["elaborou"] and participantes["elaborou"] == ator.subject)
+
+
 def versoes_vigentes(*, edital_ids, at=None):
     """A versão vigente de cada Edital da lista, num par de consultas (023, FR-004a).
 

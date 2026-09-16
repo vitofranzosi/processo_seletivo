@@ -20,6 +20,22 @@ esta revisão, então não pode publicá-la sozinho. Ao menos outra pessoa autor
 participar do ato. O sistema recusará esta operação.</p>
 {% endif %}
 
+{% comment %}
+**O mesmo impedimento, anunciado um ato antes.** A conferência de segregação só corria em Publicar:
+quem elaborava e homologava a mesma revisão descobria na terceira tela que não podia publicá-la —
+com a homologação já praticada, e ela não se desfaz pela via comum.
+
+Aviso, e não erro: acumular os dois papéis é permitido, e numa equipe de duas ou três pessoas é o
+caso comum. O que muda é saber, antes de homologar, que a publicação ficará com outra pessoa — e
+poder combiná-la em vez de descobri-la.
+{% endcomment %}
+{% if homologar_fecha_a_publicacao %}
+<p class="aviso" role="status">
+  <strong>Depois de homologar, você não poderá publicar esta revisão.</strong>
+  Você a elaborou, e publicar exige que ao menos outra pessoa autorizada tenha participado.
+  Homologar é permitido; a publicação precisará de outra autoridade.</p>
+{% endif %}
+
 {% for item in pendencias %}{% if item.severidade == 'erro' %}
 <p class="erro" role="alert"><strong>Impedimento:</strong> {{ item.mensagem }}</p>
 {% endif %}{% endfor %}
