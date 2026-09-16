@@ -41,7 +41,9 @@ def panorama(cenario, etapa="etapa_publicada"):
     )
 
 
-def test_us1_a_presidencia_ve_prontas_pendentes_e_impedidas(gestor, api_client, manager_headers):
+def test_us1_a_presidencia_ve_prontas_pendentes_e_nao_consolidaveis(
+    gestor, api_client, manager_headers
+):
     """US1, cenário 1: um mesmo resumo, três grupos, sem dupla contagem."""
     cenario = montar(gestor, api_client, manager_headers, seed=1340)
     inscricoes = inscrever(cenario["edital"], 3, primeiro=1)
@@ -51,10 +53,10 @@ def test_us1_a_presidencia_ve_prontas_pendentes_e_impedidas(gestor, api_client, 
     contagens = panorama(cenario)["contagens"]
     assert contagens["participantes"] == 3
     assert contagens["prontas"] == 1
-    assert contagens["impedidas"] == 2
+    assert contagens["nao_consolidaveis"] == 2
     assert contagens["consolidadas"] == 0
     # A partição fecha, e é isso que impede resumo e detalhe filtrado de divergirem.
-    assert contagens["prontas"] + contagens["impedidas"] + contagens["consolidadas"] == 3
+    assert contagens["prontas"] + contagens["nao_consolidaveis"] + contagens["consolidadas"] == 3
 
 
 def consolidar_como(cenario, inscricoes, *, chave, etapa=None):
@@ -168,7 +170,7 @@ def test_us3_a_exigencia_de_habilitacao_fica_dormente_ate_o_primeiro_resultado(
     inscricoes = inscrever(cenario["edital"], 3, primeiro=1)
 
     primeira = panorama(cenario)
-    assert primeira["impedimento_da_etapa"] is not None
+    assert primeira["bloqueio_da_etapa"] is not None
     assert primeira["contagens"]["prontas"] == 0
 
     segunda = panorama(cenario, etapa="segunda_publicada")

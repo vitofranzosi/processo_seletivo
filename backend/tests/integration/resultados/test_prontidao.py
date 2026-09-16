@@ -15,7 +15,7 @@ from processo_seletivo.avaliacoes.application.selectors import (
 )
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
 from processo_seletivo.resultados.application.prontidao import (
-    IMPEDIDA,
+    NAO_CONSOLIDAVEL,
     PRONTA,
     panorama_da_etapa,
 )
@@ -60,23 +60,23 @@ def test_sem_conclusao_a_causa_e_nomeada(gestor, api_client, manager_headers):
     distribuir_para(cenario, gestor, ["joao"], [inscricao], chave="lote-1322")
 
     estado, motivo = panorama(cenario)["estados"][inscricao.id]
-    assert estado == IMPEDIDA
+    assert estado == NAO_CONSOLIDAVEL
     assert "ainda não há avaliação concluída" in motivo
 
 
 def test_etapa_de_leitura_multipla_impede_a_etapa_inteira(gestor, api_client, manager_headers):
-    """Todas as inscrições impedidas, com a mesma frase, e a quantidade publicada nela."""
+    """Todas as inscrições não consolidáveis, com a mesma frase, e a quantidade publicada nela."""
     cenario = montar(gestor, api_client, manager_headers, seed=1323, avaliacoes=2)
     inscricoes = inscrever(cenario["edital"], 2, primeiro=1)
     distribuir_para(cenario, gestor, ["joao"], inscricoes, chave="lote-1323")
     concluir_como(cenario, "joao", inscricoes[0], pontuacao="75")
 
     resultado = panorama(cenario)
-    assert resultado["impedimento_da_etapa"] is not None
+    assert resultado["bloqueio_da_etapa"] is not None
     assert resultado["contagens"]["prontas"] == 0
     for inscricao in inscricoes:
         estado, motivo = resultado["estados"][inscricao.id]
-        assert estado == IMPEDIDA
+        assert estado == NAO_CONSOLIDAVEL
         assert "2 avaliações" in motivo
 
 
@@ -92,7 +92,7 @@ def test_o_resumo_existente_recebe_as_contagens_sem_duplicar(gestor, api_client,
     )
     # As dimensões da 012 continuam lá, e as da 013 entram ao lado delas.
     assert resumo["inscricoes"] == 2 and resumo["sem_conclusao"] == 1
-    assert resumo["prontas"] == 1 and resumo["impedidas"] == 1
+    assert resumo["prontas"] == 1 and resumo["nao_consolidaveis"] == 1
 
 
 def test_o_filtro_da_listagem_devolve_exatamente_o_grupo(gestor, api_client, manager_headers):

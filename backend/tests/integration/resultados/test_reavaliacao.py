@@ -98,7 +98,7 @@ def test_a_contagem_da_etapa_separa_a_pendencia(determinada):
     assert (
         contagens["consolidadas"]
         + contagens["prontas"]
-        + contagens["impedidas"]
+        + contagens["nao_consolidaveis"]
         + contagens["reavaliacoes"]
         == contagens["participantes"]
     )

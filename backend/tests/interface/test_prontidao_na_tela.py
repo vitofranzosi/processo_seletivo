@@ -1,7 +1,8 @@
 """A tela da Etapa: a prontidão sobrevive à paginação, e a ação existe.
 
-Um filtro que se perde ao avançar a página é pior que um filtro ausente: quem tinha 27 impedidas
-diante de si volta à população inteira sem entender por quê, e o trabalho de triagem recomeça.
+Um filtro que se perde ao avançar a página é pior que um filtro ausente: quem tinha 27 não
+consolidáveis diante de si volta à população inteira sem entender por quê, e o trabalho de
+triagem recomeça.
 """
 
 import re
@@ -35,19 +36,19 @@ def organizacao(cenario, consulta=""):
 
 def test_a_paginacao_preserva_o_filtro_de_prontidao(client, seletor_ligado, com_muitas):
     identificar(client, "maria", ["gestor"])
-    corpo = client.get(organizacao(com_muitas, "?prontidao=impedida")).content.decode()
+    corpo = client.get(organizacao(com_muitas, "?prontidao=nao-consolidavel")).content.decode()
 
     seguintes = re.findall(r'<a href="(\?pagina=[^"]*)">Próxima</a>', corpo)
     assert seguintes, "a paginação não apareceu"
-    assert all("prontidao=impedida" in href for href in seguintes), seguintes
+    assert all("prontidao=nao-consolidavel" in href for href in seguintes), seguintes
 
 
 def test_a_segunda_pagina_filtrada_continua_filtrada(client, seletor_ligado, com_muitas):
     identificar(client, "maria", ["gestor"])
-    resposta = client.get(organizacao(com_muitas, "?prontidao=impedida&pagina=2"))
+    resposta = client.get(organizacao(com_muitas, "?prontidao=nao-consolidavel&pagina=2"))
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
-    # 30 impedidas, 25 por página: a segunda tem exatamente cinco linhas de inscrição.
+    # 30 não consolidáveis, 25 por página: a segunda tem exatamente cinco linhas de inscrição.
     assert corpo.count('name="inscricao_id"') == 5
 
 

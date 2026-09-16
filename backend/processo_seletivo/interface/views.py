@@ -3888,7 +3888,7 @@ def distribuicao(request, edital_id, etapa_id):
                     edital=edital, etapa=etapa, panorama=panorama
                 ),
                 "prontidao": request.GET.get("prontidao") or "",
-                "impedimento_da_etapa": panorama["impedimento_da_etapa"],
+                "bloqueio_da_etapa": panorama["bloqueio_da_etapa"],
                 # Quem voltou ao certame por recurso aparece **nomeada** na Mesa: sem isso, ela
                 # entraria na lista como mais uma pendente, e a presidência não saberia por que
                 # alguém que estava eliminada reapareceu (FR-077).

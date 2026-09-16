@@ -65,12 +65,12 @@ dele: cobertura, conclusão e prontidão são perguntas sobre a mesma populaçã
 lugares daria dois números para a mesma Etapa (D-004).
 
 Os seis números fecham: participantes, eliminadas antes e aguardando a anterior somam o total
-submetido; e prontas, impedidas e consolidadas somam os participantes. Quem confere a tela pode
-somar.
+submetido; e prontas, não consolidáveis e consolidadas somam os participantes. Quem confere a
+tela pode somar.
 {% endcomment %}
-{% if impedimento_da_etapa %}
+{% if bloqueio_da_etapa %}
 <p class="aviso" role="status">
-  Esta Etapa não pode ser consolidada: {{ impedimento_da_etapa.1 }}.
+  Esta Etapa não pode ser consolidada: {{ bloqueio_da_etapa.1 }}.
 </p>
 {% endif %}
 {% if erro_da_consolidacao %}
@@ -96,8 +96,14 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
 <nav class="filtros-da-mesa" aria-label="Filtrar por prontidão para consolidar">
   <a href="?prontidao=pronta" {% if prontidao == "pronta" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.prontas }}</strong> <span>prontas para consolidar</span></a>
-  <a href="?prontidao=impedida" {% if prontidao == "impedida" %}aria-current="page"{% endif %}>
-    <strong>{{ resumo.impedidas }}</strong> <span>com impedimento</span></a>
+  {% comment %}
+  **"Ainda não consolidáveis", e não "com impedimento".** Esta mesma tela oferece "Impedimentos",
+  que é o conflito de interesse entre avaliador e candidato (012, FR-042): lado a lado, "6 com
+  impedimento" era lido como "seis candidatos têm conflito com a banca" — o contrário do que o
+  número conta, que é quem ainda não pode ser consolidado, quase sempre por falta de avaliação.
+  {% endcomment %}
+  <a href="?prontidao=nao-consolidavel" {% if prontidao == "nao-consolidavel" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.nao_consolidaveis }}</strong> <span>ainda não consolidáveis</span></a>
   <a href="?prontidao=consolidada" {% if prontidao == "consolidada" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.consolidadas }}</strong> <span>já consolidadas</span></a>
   {% if resumo.aguardando_anterior %}
