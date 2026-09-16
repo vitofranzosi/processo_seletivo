@@ -434,3 +434,108 @@ def test_o_processo_aberto_antes_nao_e_reativado_pela_publicacao(
         ).count()
         == 1
     )
+
+
+# --- O segundo Edital do mesmo Processo -------------------------------------------------------
+#
+# O modelo sempre admitiu mais de um, e a suíte depende disso: sem dois Editais sob o mesmo
+# Processo, "o total é a soma dos Editais" não é demonstrável (`tests/conftest.py`). Pela interface
+# não havia caminho nenhum — `add_edital` existia servindo só à API.
+
+
+def criar_edital(client, processo, **campos):
+    url = reverse("interface:edital-criar", args=[processo.id])
+    chave = client.get(url).context["chave_idempotencia"]
+    dados = {
+        "numero": "02",
+        "ano": "2028",
+        "titulo_edital": "Segundo Edital do mesmo Processo",
+        "descricao": "",
+        "chave_idempotencia": chave,
+    }
+    return client.post(url, {**dados, **campos})
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_painel_do_processo_oferece_um_segundo_edital(client, seletor_ligado, sem_publicacao):
+    identificar(client, "marcia.gestora", GESTOR)
+    corpo = client.get(
+        reverse("interface:processo-detalhe", args=[sem_publicacao.id])
+    ).content.decode()
+
+    assert "Novo Edital" in corpo
+    assert reverse("interface:edital-criar", args=[sem_publicacao.id]) in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_segundo_edital_nasce_no_mesmo_processo(client, seletor_ligado, sem_publicacao):
+    identificar(client, "marcia.gestora", GESTOR)
+    resposta = criar_edital(client, sem_publicacao)
+
+    criado = Edital.objects.get(processo=sem_publicacao, number="02")
+    assert criado.year == 2028
+    # Para a página do Edital, e não para a composição: quem tem `edital:criar` é o Gestor, e ele
+    # não tem `edital:elaborar` — a composição lhe devolveria 404 logo depois do acerto.
+    assert resposta.status_code == 302
+    assert resposta["Location"] == reverse("interface:detalhe", args=[criado.id])
+    assert sem_publicacao.editais.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_numero_repetido_e_recusado_no_campo_que_o_contem(client, seletor_ligado, sem_publicacao):
+    """`edital_identifier_conflict` já aponta o Edital; a interface o leva até o controle."""
+    identificar(client, "marcia.gestora", GESTOR)
+    resposta = criar_edital(client, sem_publicacao, numero="09", ano="2028")
+
+    assert resposta.status_code == 409
+    assert resposta.context["recusas"]["numero"]
+    assert sem_publicacao.editais.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_reenvio_com_a_mesma_chave_nao_cria_dois_editais(client, seletor_ligado, sem_publicacao):
+    identificar(client, "marcia.gestora", GESTOR)
+    url = reverse("interface:edital-criar", args=[sem_publicacao.id])
+    chave = client.get(url).context["chave_idempotencia"]
+    dados = {
+        "numero": "02",
+        "ano": "2028",
+        "titulo_edital": "Segundo Edital do mesmo Processo",
+        "descricao": "",
+        "chave_idempotencia": chave,
+    }
+    client.post(url, dados)
+    client.post(url, dados)
+
+    assert sem_publicacao.editais.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_quem_nao_cria_edital_nao_alcanca_a_tela(client, seletor_ligado, sem_publicacao):
+    """O mesmo 404 da composição: "você não pode" não pode revelar que o Processo existe."""
+    identificar(client, "julia.julgadora", ["julgador"])
+    url = reverse("interface:edital-criar", args=[sem_publicacao.id])
+
+    assert client.get(url).status_code == 404
+    assert client.post(url, {}).status_code == 404
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_processo_em_estado_final_nao_oferece_novo_edital(client, seletor_ligado, sem_publicacao):
+    """Oferecer o botão convidaria a um ato que `ensure_processo_accepts_changes` recusaria."""
+    identificar(client, "marcia.gestora", GESTOR)
+    ProcessoSeletivo.objects.filter(pk=sem_publicacao.pk).update(
+        status=ProcessoSeletivo.Status.CANCELADO
+    )
+    corpo = client.get(
+        reverse("interface:processo-detalhe", args=[sem_publicacao.id])
+    ).content.decode()
+
+    assert "Novo Edital" not in corpo
+    assert criar_edital(client, sem_publicacao).status_code == 409

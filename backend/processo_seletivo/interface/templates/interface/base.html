@@ -51,7 +51,11 @@ input[type=date],input[type=datetime-local]{max-width:18rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
 .aviso strong{color:var(--amarelo)}
-.acoes-do-painel{margin:0 0 1.5rem}
+/* Em linha e com respiro próprio. Era um parágrafo de `.acao` soltos: com três rótulos
+   curtos cabia tudo numa linha e passava, mas a tela do recurso oferece cinco caminhos
+   nomeados por Etapa — e ao quebrar, as linhas se encostavam, porque a altura de linha
+   não conhece o preenchimento de cada ação. */
+.acoes-do-painel{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0 0 1.5rem}
 .conferencia{margin-bottom:1rem}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
 .conferencia h3{font-size:1rem;margin:0 0 .5rem}

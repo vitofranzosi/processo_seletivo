@@ -54,6 +54,17 @@ regular. Os Editais mantêm suas próprias situações e todo o histórico perma
       </li>
       {% empty %}<li class="pendente">Nenhum Edital.</li>{% endfor %}
     </ul>
+    {% comment %}
+    Junto da lista, e não no cartão de atos: quem vem acrescentar o segundo Edital está olhando
+    para o primeiro. O cartão ao lado é o do ciclo de vida do Processo — ativar, encerrar,
+    cancelar —, e acrescentar Edital não é um passo dele.
+    {% endcomment %}
+    {% if pode_criar_edital %}
+    <p>
+      <a class="botao secundario" href="{% url 'interface:edital-criar' processo.id %}">Novo Edital
+        neste Processo</a>
+    </p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="acoes-processo" class="cartao">

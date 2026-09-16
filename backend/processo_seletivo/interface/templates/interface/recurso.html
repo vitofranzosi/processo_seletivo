@@ -37,6 +37,49 @@ porque, sendo a autoria de um ato o que impede, ela é conferível.
   <div><dt>Versão consolidada citada</dt><dd>{{ proveniencia.versao.id }}</dd></div>
 </dl>
 
+{% comment %}
+**Esta tela tinha três links, e os três eram a migalha de navegação.** Quem julga abria a peça e
+não alcançava a nota atacada, a avaliação que a produziu nem os documentos que o candidato
+entregou — cada um exigia procurar por fora, num fluxo que corre contra prazo.
+
+Cada caminho é oferecido **só a quem a tela de destino deixaria entrar**: a porta da Etapa é
+presidência ou auditoria (FR-091), e a dos documentos é `inscricao:consultar` (FR-072). Oferecer o
+que a outra tela recusaria devolveria 404, e 404 não explica nada a quem o recebe.
+
+Quem não alcança nenhum lê o que falta, e não um espaço vazio: a diferença entre "não há o que
+conferir" e "não há o que **você** possa conferir" é a que diz a quem pedir.
+{% endcomment %}
+<h2 id="conferir">Conferir o que se contesta</h2>
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:detalhe' edital.id %}">O Edital
+    {{ edital.number }}/{{ edital.year }}</a>
+  {% if pode_ver_a_inscricao %}
+  <a class="acao" href="{% url 'interface:inscricao-recebida' proveniencia.inscricao.id %}">Os
+    documentos da inscrição</a>
+  {% endif %}
+  {% if pode_auditar_a_etapa %}
+  {% for etapa in etapas_do_objeto %}
+  <a class="acao" href="{% url 'interface:resultados-da-etapa' edital.id etapa.etapa_id %}">O
+    resultado — {{ etapa.nome }}</a>
+  {% comment %}
+  Filtrada nesta inscrição: a trilha da Etapa inteira é volumosa por natureza, e mandar quem
+  julga procurar a própria linha nela é devolver o problema que este bloco resolve.
+
+  Pelo identificador, e não pelo protocolo que a trilha exibe: o filtro aceita os dois, mas o
+  protocolo é `""` enquanto a inscrição não o tem, e um filtro vazio devolveria "não há inscrição
+  com este protocolo" — pior do que não filtrar.
+  {% endcomment %}
+  <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.etapa_id %}?inscricao={{ proveniencia.inscricao.id }}">A
+    avaliação que o produziu — {{ etapa.nome }}</a>
+  {% endfor %}
+  {% endif %}
+</p>
+{% if not pode_ver_a_inscricao and not pode_auditar_a_etapa %}
+<p class="ajuda">Para abrir o resultado atacado, a avaliação que o produziu e os documentos da
+  inscrição é preciso presidir este Processo, ter a permissão de auditoria ou a de consultar
+  inscrições. Julgar não as concede.</p>
+{% endif %}
+
 <h2>Fundamentação</h2>
 {% comment %}
 Como escrita, e sem resumo. Resumir a razão de quem recorre é decidir por ele o que importa.

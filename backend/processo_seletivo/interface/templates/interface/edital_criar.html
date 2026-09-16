@@ -1,0 +1,69 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Novo Edital em {{ processo.institutional_code }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
+  <span aria-current="page">Novo Edital</span>
+</nav>
+
+<h1>Novo Edital</h1>
+<p class="sub">Em <strong>{{ processo.title }}</strong>
+  (<span class="codigo">{{ processo.institutional_code }}</span>). Editais do mesmo Processo têm
+  cronogramas e conteúdos próprios: nada aqui é copiado do que já existe.</p>
+
+{% include "interface/_erros.html" with titulo_da_recusa="Não foi possível criar:" %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+
+  {% comment %}
+  Os mesmos controles da criação do Processo, e deliberadamente: é o mesmo Edital, e quem já
+  preencheu aquela tela não deveria reaprender esta.
+  {% endcomment %}
+  <section aria-labelledby="edital-titulo" class="cartao">
+    <h2 id="edital-titulo">Identificação</h2>
+    <div class="campos">
+      <p class="campo curto">
+        <label for="numero">Número <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="numero" name="numero" required autofocus
+               value="{{ digitado.numero|default:'' }}" aria-required="true"
+           {% if recusas.numero %}aria-describedby="recusa-numero"{% endif %}
+           {% if recusas.numero %}aria-invalid="true"{% endif %}>
+    {% if recusas.numero %}<span class="recusa" role="alert" id="recusa-numero">{{ recusas.numero }}</span>{% endif %}
+      </p>
+      <p class="campo curto">
+        <label for="ano">Ano <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="number" id="ano" name="ano" required min="2000"
+               value="{{ digitado.ano|default:ano_corrente }}" aria-required="true"
+           {% if recusas.ano %}aria-describedby="recusa-ano"{% endif %}
+           {% if recusas.ano %}aria-invalid="true"{% endif %}>
+    {% if recusas.ano %}<span class="recusa" role="alert" id="recusa-ano">{{ recusas.ano }}</span>{% endif %}
+      </p>
+      <p class="campo largo">
+        <label for="titulo_edital">Título do Edital
+          <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <input type="text" id="titulo_edital" name="titulo_edital" required
+               value="{{ digitado.titulo_edital|default:'' }}" aria-required="true"
+           {% if recusas.titulo_edital %}aria-describedby="recusa-titulo_edital"{% endif %}
+           {% if recusas.titulo_edital %}aria-invalid="true"{% endif %}>
+    {% if recusas.titulo_edital %}<span class="recusa" role="alert" id="recusa-titulo_edital">{{ recusas.titulo_edital }}</span>{% endif %}
+      </p>
+    </div>
+    <p class="campo largo">
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="3"
+                aria-describedby="ajuda-descricao">{{ digitado.descricao|default:'' }}</textarea>
+      <span class="ajuda" id="ajuda-descricao">Opcional na criação, mas a validação avisa se ficar
+        ausente na submissão. Pode ser alterada depois, na etapa de Identificação, enquanto o Edital
+        estiver em elaboração.</span>
+    </p>
+  </section>
+
+  <p class="navegacao-etapa">
+    <a href="{% url 'interface:processo-detalhe' processo.id %}">Cancelar</a>
+    <button type="submit" class="botao">Criar Edital</button>
+  </p>
+</form>
+{% endblock %}
