@@ -63,7 +63,10 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
     dados = client.post(
         reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "123.456.789-09"}
     )
-    assert "Continuar inscrição" in dados.content.decode(), "volta para a vaga que ela escolheu"
+    assert dados["Location"].startswith(reverse("portal:selecao", args=[selecao.id])), (
+        "volta para a vaga que ela escolheu, e não para um interstício"
+    )
+    assert dados["Location"].endswith(f"#vaga-{PERFIL_DOCENTE}")
 
     identificada = client.post(vaga)
     inscricao = Inscricao.objects.get()

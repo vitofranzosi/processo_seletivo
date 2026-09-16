@@ -94,7 +94,14 @@ ato da instituição sobre você.
   <h3 id="marco-{{ forloop.counter }}">{{ resultado.marco }}</h3>
   <p class="sub">{{ resultado.natureza_rotulo }}</p>
   {% if resultado.classificada %}
-  <p class="posicao"><strong>{{ resultado.posicao }}º lugar</strong>{% if resultado.compartilhada %} — posição compartilhada{% endif %}{% if resultado.pontuacao %} · pontuação {{ resultado.pontuacao }}{% endif %}</p>
+  {% comment %}
+  O mesmo filtro da Etapa, acima, e pela razão que o comentário de lá registra: esta página
+  imprimia "pontuação 8,0000" numa linha e "pontuação 8,00" na seguinte, sobre a mesma nota.
+
+  E `is not None` em vez da verdade do valor: zero é nota, e a condição anterior a escondia — quem
+  tirasse zero lia a posição sem pontuação alguma, como se ela não tivesse sido apurada.
+  {% endcomment %}
+  <p class="posicao"><strong>{{ resultado.posicao }}º lugar</strong>{% if resultado.compartilhada %} — posição compartilhada{% endif %}{% if resultado.pontuacao is not None %} · pontuação {{ resultado.pontuacao|pontuacao }}{% endif %}</p>
   {% else %}
   {% comment %}
   Quem não recebeu posição vê a própria situação e o motivo aqui — e o nome dela **não** está na

@@ -353,7 +353,36 @@ def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
         "posicoes_divergentes": (
             _divergencias_das_posicoes(vigente, proposta) if vigente is not None else []
         ),
+        "criterios_do_desempate": criterios_do_desempate(
+            versao_atual.content, perfil_id=perfil["id"], marco_id=marco_id
+        ),
     }
+
+
+def criterios_do_desempate(conteudo, *, perfil_id, marco_id):
+    """As frases dos critérios publicados do marco, na ordem em que a partição os oferece.
+
+    **A tela dizia "empate residual" e parava aí.** Quem emite a ordem lia a pastilha sem saber se
+    faltou declarar critério, se os declarados foram todos aplicados, ou se o Edital simplesmente
+    não desempata aquele caso — três situações com providências diferentes, e nenhuma delas
+    conferível sem sair da tela. O portal já dizia o que o empate é; era a tela de gestão que
+    ficara para trás.
+
+    **Propriedade do marco, e não da linha.** A partição oferece todos os critérios publicados, na
+    ordem, a cada grupo que ainda não separou: quando um grupo chega ao fim empatado, é porque
+    nenhum deles o separou. Uma frase por marco responde por todos os grupos, e a resposta não
+    custa consulta nenhuma — o conteúdo já está em mão.
+
+    A grafia é a mesma que o documento publicado imprime, e pelo mesmo motivo de lá:
+    `MAIOR_VALOR_DE_FATO` não diz o que compara, e é justamente isso que se precisa ler aqui.
+    """
+    nomes = nomes_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)
+    etapas = por_identificador(conteudo.get("stages"))
+    fatos = por_identificador(nomes["perfil"].get("declaredFacts"))
+    ordenados = sorted(
+        nomes["marco"].get("tiebreakers") or [], key=lambda item: item.get("order") or 0
+    )
+    return [criterio_por_extenso(criterio, etapas, fatos) for criterio in ordenados]
 
 
 def posicoes_do_ato(*, ato, pagina=1, por_pagina=50):

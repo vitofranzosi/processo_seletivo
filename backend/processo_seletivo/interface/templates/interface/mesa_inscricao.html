@@ -9,7 +9,18 @@
 </nav>
 
 <h1>Inscrição {{ inscricao.protocolo|default:inscricao.id }}</h1>
-<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
+{% comment %}
+**Quem avalia lia os critérios aqui e o Edital que os publica em lugar nenhum.** A tela nomeava o
+Edital e não levava a ele: conferir o que a norma diz sobre a Etapa exigia sair do sistema e
+procurar por fora, no meio do trabalho.
+
+É o mesmo caminho que a tela do recurso passou a oferecer, e vai ao Edital e não a "a versão
+vigente": documento vigente não existe — a vigência pertence à Versão Consolidada, que não tem
+documento próprio, e é a tela do Edital que lista as Publicações na ordem (ver
+`_documentos_publicados`). A porta dela é o escopo institucional, que quem avalia neste Edital já
+tem; não há caminho oferecido aqui que a outra tela vá recusar.
+{% endcomment %}
+<p class="sub"><a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> — {{ processo.title }}</p>
 
 <div class="mesa-trabalho">
 
@@ -264,8 +275,14 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     <p class="campo">
       <label for="parecer">Parecer</label>
       <textarea id="parecer" name="parecer" rows="6" aria-describedby="ajuda-parecer">{{ valores.parecer }}</textarea>
+      {% comment %}
+      **Instruir quem escreve, e não descrever o objeto.** A frase anterior — "é o parecer que
+      responde a um recurso" — descrevia o campo, e descrevia errado: o parecer não responde a
+      recurso nenhum; ele é o que um recurso virá atacar, e o que a instituição terá para sustentar
+      o que decidiu. Quem lia aquilo antes de escrever não ficava sabendo o que escrever.
+      {% endcomment %}
       <span class="ajuda" id="ajuda-parecer">
-        É o parecer que responde a um recurso.
+        Registre o que fundamenta {% if decisoria %}a conclusão{% else %}a pontuação{% endif %}. É o que responderá a um eventual recurso.
         {% if decisoria %}A conclusão {{ rotulo_desfavoravel }} exige parecer.{% elif eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
       </span>
     </p>

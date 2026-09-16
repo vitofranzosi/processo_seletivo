@@ -1,4 +1,4 @@
-{% extends "portal/base.html" %}
+{% extends "portal/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ cabecalho.titulo }}{% endblock %}
 {% block conteudo %}
 <h1>{{ cabecalho.natureza_rotulo }}</h1>
@@ -111,7 +111,13 @@ leem é este.
       <td data-rotulo="Candidato">{{ item.candidato }}</td>
       <td data-rotulo="Protocolo">{{ item.protocolo }}</td>
       <td data-rotulo="Modalidade">{{ item.modalidade|default:"—" }}</td>
-      {% if not cabecalho.sorteio %}<td data-rotulo="Pontuação">{{ item.pontuacao|default:"—" }}</td>{% endif %}
+      {% comment %}
+      A nota como uma pessoa a escreve, e não como a coluna a guarda: são quatro casas gravadas, e
+      a relação divulgada imprimia `8.0000` ao lado do acompanhamento, que já dizia `8`. O filtro
+      também responde pelo vazio — `—` —, que é o que o `default` fazia aqui; e ao contrário dele,
+      não confunde a nota zero com nota ausente.
+      {% endcomment %}
+      {% if not cabecalho.sorteio %}<td data-rotulo="Pontuação">{{ item.pontuacao|pontuacao }}</td>{% endif %}
     </tr>
   {% endfor %}
   </tbody>

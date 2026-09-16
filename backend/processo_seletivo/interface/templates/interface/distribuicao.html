@@ -319,6 +319,13 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
         <tr>
           <th scope="col"><span class="oculto">Selecionar</span></th>
           <th scope="col">Inscrição</th>
+          {% comment %}
+          **Quem distribui decide sobre pessoas, e a tela só dizia protocolos.** Conferir
+          impedimento — que é o ato que esta mesma tela oferece — exige saber de quem se trata, e a
+          tela de ordenação, ao lado, já nomeia. O nome sai da coluna que a própria inscrição
+          guarda: nenhuma consulta por linha, que é o custo que a `012` tirou daqui (FR-006).
+          {% endcomment %}
+          <th scope="col">Participante</th>
           <th scope="col">Atribuídas</th>
           <th scope="col">Concluídas</th>
           <th scope="col">Prontidão</th>
@@ -334,6 +341,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
                    aria-label="Inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}">
           </td>
           <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
+          <td>{{ linha.inscricao.nome|default:"—" }}</td>
           <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
           <td>{{ linha.concluidas }} de {{ resumo.previstas }}</td>
           {% comment %}

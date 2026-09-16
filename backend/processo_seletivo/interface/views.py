@@ -4525,6 +4525,12 @@ def ordenacao(request, edital_id, marco_id):
                 "marco": estado["marco"],
                 "posicoes": proposta["posicoes"],
                 "sem_posicao": proposta["sem_posicao"],
+                # O que se esgotou quando a ordem deixa gente empatada. Vem do marco e não da
+                # linha, e por isso é uma leitura só para a tela inteira (015, FR-072).
+                "criterios_do_desempate": estado.get("criterios_do_desempate") or [],
+                "tem_empate_residual": any(
+                    item.get("empate_residual") for item in proposta["posicoes"]
+                ),
                 "ato_vigente": estado["vigente"],
                 "obsoleto": estado["obsoleto"],
                 "recomputavel": estado["recomputavel"],
