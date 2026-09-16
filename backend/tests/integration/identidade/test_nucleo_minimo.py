@@ -137,3 +137,33 @@ def test_corrigir_o_nome_alcanca_o_rascunho_e_nao_a_enviada(client, nova, seleca
     inscricao = Inscricao.objects.get()
     corpo = client.get(reverse("portal:inscricao", args=[inscricao.id])).content.decode()
     assert "Maria S. Silva" in corpo, "o rascunho aberto acompanha a identidade"
+
+
+def test_quem_informou_o_nucleo_volta_para_a_vaga_que_escolheu(client, nova, selecao):
+    """O retorno é a página da vaga, e não mais um interstício que não dizia nada.
+
+    A tela que ficava aqui — "Tudo certo", uma frase e um botão — não nomeava a seleção nem a vaga,
+    e não trazia nada que a página seguinte não trouxesse. O clique continua existindo, porque
+    abrir rascunho é ato auditado e `inscrever` é POST desde a `009`; o que muda é onde ele
+    acontece.
+    """
+    client.post(reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE]))
+
+    resposta = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+
+    vaga = reverse("portal:selecao", args=[selecao.id])
+    assert resposta["Location"] == f"{vaga}#vaga-{PERFIL_DOCENTE}"
+    assert Inscricao.objects.count() == 0, "voltar à vaga não pratica o ato"
+
+
+def test_destino_que_nao_e_vaga_volta_para_as_inscricoes(client, nova):
+    """Um destino inesperado não é convite a praticar ato nenhum."""
+    from processo_seletivo.portal.views import CHAVE_DO_DESTINO
+
+    sessao = client.session
+    sessao[CHAVE_DO_DESTINO] = "/portal/sair"
+    sessao.save()
+
+    resposta = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+
+    assert resposta["Location"] == reverse("portal:inscricoes")

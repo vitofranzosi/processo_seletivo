@@ -13,11 +13,12 @@ lá; esta entrega é a fatia navegável dela.
 import json
 import logging
 from hashlib import sha256
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
@@ -684,13 +685,41 @@ def _entrar(request, identidade):
     identidade_do_candidato.abrir_sessao(request, identidade)
     if not destino:
         return redirect(reverse("portal:inscricoes"))
-    request.session[CHAVE_DO_DESTINO] = destino
     if nucleo_da_identidade.falta_o_nucleo(identidade):
         # Quem veio a caminho de uma vaga e ainda não tem nome nem CPF informa os dois agora, e
         # volta para a vaga em seguida. Mandá-la primeiro ao convite e só depois ao formulário
         # acrescentaria uma tela sem acrescentar nada.
+        request.session[CHAVE_DO_DESTINO] = destino
         return redirect(reverse("portal:meus-dados"))
-    return render(request, "portal/retomar_convite.html", {"destino": destino})
+    return redirect(_de_volta_a_vaga(destino))
+
+
+def _de_volta_a_vaga(destino):
+    """A página da vaga que a pessoa escolheu, com a vaga à vista.
+
+    **Era uma tela inteira, e ela não dizia nada.** Depois de provar o e-mail — ou de informar nome
+    e CPF —, quem tinha vindo de uma vaga caía num interstício com o título "Tudo certo", uma
+    frase, um botão e um link. Não nomeava a seleção, não nomeava a vaga, e não trazia nada que a
+    tela seguinte não trouxesse: era um clique cobrado para não informar nada.
+
+    **O clique não sumiu, e não podia sumir.** Abrir rascunho cria registro e pratica ato auditado,
+    e é por isso que `inscrever` é POST desde a `009`: executar o destino sozinho ao fim da
+    autenticação faria um endereço `?destino=…` compartilhado criar inscrição em nome de quem
+    apenas se identificou. O que muda é **onde** o clique acontece — na página da vaga, que nomeia
+    o certame, mostra o que a vaga é e já traz o mesmo POST no lugar certo; e, se a inscrição já
+    existir, o caminho para continuá-la.
+
+    Destino que não seja uma vaga volta para a lista de inscrições: nada mais era oferecido por
+    aqui, e um destino inesperado não é convite a praticar ato nenhum.
+    """
+    try:
+        rota = resolve(urlparse(destino).path)
+    except Resolver404:
+        return reverse("portal:inscricoes")
+    if rota.view_name != "portal:inscrever":
+        return reverse("portal:inscricoes")
+    selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
+    return f"{selecao}#vaga-{rota.kwargs['profile_id']}"
 
 
 def _desafio_provado(request):
@@ -921,10 +950,7 @@ def meus_dados(request):
     _avisar(request, "Seus dados foram guardados.")
     destino = request.session.pop(CHAVE_DO_DESTINO, "")
     if destino:
-        # O convite é POST porque abrir rascunho cria registro e pratica ato auditado — a mesma
-        # razão da `009`. Reenviar por formulário é o que evita um endereço compartilhado virar
-        # criador de inscrições.
-        return render(request, "portal/retomar_convite.html", {"destino": destino})
+        return redirect(_de_volta_a_vaga(destino))
     return redirect(reverse("portal:inscricoes"))
 
 

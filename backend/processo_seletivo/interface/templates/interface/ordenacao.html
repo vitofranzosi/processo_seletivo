@@ -98,7 +98,7 @@ divergência genérica uma vez.
     <tbody>
     {% for item in posicoes %}
       <tr{% if item.empate_residual %} class="grupo-empatado"{% endif %}>
-        <td>{{ item.posicao }}º{% if item.empate_residual %}<span class="situacao s-EM_REVISAO">Empate residual</span>{% endif %}</td>
+        <td>{{ item.posicao }}º{% if item.empate_residual %}<span class="situacao s-EM_REVISAO" aria-describedby="sobre-o-que-sobrou">Empate residual</span>{% endif %}</td>
         <td>{{ item.protocolo|default:item.inscricao_id }}</td>
         <td>{{ item.nome }}</td>
         <td>{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao|pontuacao }}{% endif %}</td>
@@ -108,6 +108,33 @@ divergência genérica uma vez.
     </tbody>
   </table>
   </div>
+  {% comment %}
+  **A pastilha dizia que sobrou empate, e não dizia o que se esgotou.** Quem emite a ordem lia
+  "Empate residual" e não sabia distinguir três situações que pedem providências diferentes: o
+  Edital não declarou critério, os declarados foram todos aplicados e não bastaram, ou alguém
+  esqueceu de publicar o que pretendia. As três terminam na mesma pastilha.
+
+  O portal já dizia o que o empate é — "(posição compartilhada)", em texto e sem marca visual —, e
+  é a tela de gestão que ficara para trás. Aqui a pastilha continua, porque quem confere a ordem
+  antes de emiti-la procura a exceção com os olhos; o que ela ganha é a frase que a explica.
+
+  A nota fica fora da tabela e é apontada pelas pastilhas: repetida em cada linha, ela diria
+  dezenas de vezes a mesma coisa sobre o mesmo marco — o que se esgotou é do marco, e não da
+  linha (FR-072).
+  {% endcomment %}
+  {% if tem_empate_residual %}
+  <p class="nota" id="sobre-o-que-sobrou">
+    {% if criterios_do_desempate %}
+    Os critérios de desempate que este Edital publica para o marco foram oferecidos na ordem, e
+    nenhum separou quem ficou na mesma posição:
+    {% for criterio in criterios_do_desempate %}<strong>{{ criterio }}</strong>{% if not forloop.last %}; {% else %}. {% endif %}{% endfor %}
+    Nenhum outro é aplicado para desfazer o que sobrou.
+    {% else %}
+    Este Edital não publica critério de desempate para o marco: quem tem a mesma pontuação
+    combinada compartilha a posição, e nenhum critério é aplicado para desfazê-la.
+    {% endif %}
+  </p>
+  {% endif %}
   {% else %}<p class="vazio">Nenhum participante recebeu posição neste marco.</p>{% endif %}
 </section>
 

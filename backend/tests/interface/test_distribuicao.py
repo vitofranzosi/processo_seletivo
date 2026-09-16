@@ -188,7 +188,17 @@ def test_a_remocao_tem_rota_e_formulario_proprios(presidente, tela, edital_a, ba
 
     atribuicao = Atribuicao.objects.filter(ativo=True).first()
     remocao = reverse("interface:distribuicao-remover", args=[edital_a.id, atribuicao.etapa_id])
-    presidente.post(remocao, {"chave_idempotencia": "r1", "atribuicao_id": [str(atribuicao.id)]})
+    # O primeiro envio apenas confere: retirar trabalho de alguém não sai de um clique.
+    conferencia = presidente.post(
+        remocao, {"chave_idempotencia": "r1", "atribuicao_id": [str(atribuicao.id)]}
+    )
+    assert "Confira antes de retirar" in conferencia.content.decode()
+    assert Atribuicao.objects.filter(ativo=True).count() == 2, "conferir não retira nada"
+
+    presidente.post(
+        remocao,
+        {"confirmar": "1", "chave_idempotencia": "r1", "atribuicao_id": [str(atribuicao.id)]},
+    )
     depois = presidente.get(tela).content.decode()
 
     assert Atribuicao.objects.filter(ativo=True).count() == 1

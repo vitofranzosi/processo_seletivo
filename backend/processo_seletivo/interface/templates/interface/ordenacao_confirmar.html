@@ -1,0 +1,99 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferir emissão — {{ marco.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> ›
+  <span aria-current="page">Conferir</span>
+</nav>
+
+<h1>Confira antes de emitir</h1>
+<p class="sub">{{ marco.name }} — {{ perfil.name }}, Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+**O ato saía de um clique.** "Emitir ordem" ficava ao pé de uma tela longa, e o aviso de que ele é
+irreversível estava acima do botão, no meio do formulário — junto do motivo da sucessão e das
+caixas de citação, que competem pela mesma atenção.
+
+Esta tela **não repete a ordem**: ela está na anterior, inteira, e reimprimi-la faria a conferência
+começar de novo em vez de terminar. O que ela declara é o que o clique constitui — quantas posições,
+quantas ficam sem, o que este ato sucede e quais decisões ele executa.
+{% endcomment %}
+<p class="ajuda">O sistema recalcula sob trava e grava um <strong>ato imutável</strong>: esta tela
+  não envia posição, pontuação nem desempate. Corrigir uma ordem emitida é sucedê-la com motivo, e
+  a emitida permanece registrada.</p>
+
+{% comment %}
+**Recompor a assinatura não é esconder a mudança.** O alcance abaixo é o cálculo de agora, e não o
+que a tela anterior mostrou; quem abriu aquela conferiu outra coisa. A divergência é dita aqui para
+que a confirmação seja sobre o que **esta** tela declara.
+{% endcomment %}
+{% if calculo_mudou %}
+<p class="aviso" role="status"><strong>O cálculo mudou desde que você abriu a ordem.</strong>
+  O que está declarado abaixo é o resultado de agora — confira antes de emitir.</p>
+{% endif %}
+
+{% if obsoleto %}
+{% comment %}
+A divergência não impede a emissão — o que se grava é o cálculo de agora —, mas quem confirma
+precisa saber que o vigente foi calculado sob outro estado. Ler isso depois de emitir não serve
+para nada.
+{% endcomment %}
+<p class="aviso"><strong>O ato vigente diverge do cálculo de agora.</strong> Esta emissão grava o
+  cálculo de agora, e o vigente permanece registrado como está.</p>
+{% endif %}
+
+<section aria-labelledby="alcance" class="consequencias">
+  <h2 id="alcance">O que será gravado</h2>
+  <dl class="conferencia">
+    <dt>Participantes com posição</dt>
+    <dd><strong>{{ quantas_com_posicao }}</strong></dd>
+    <dt>Participantes sem posição</dt>
+    <dd>{% if sem_posicao %}<strong>{{ sem_posicao|length }}</strong> — {% for item in sem_posicao %}{{ item.protocolo|default:item.inscricao_id }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}nenhum{% endif %}</dd>
+    <dt>Este ato</dt>
+    <dd>{% if ato_vigente %}sucede o ato de {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}{% else %}é o primeiro ato deste marco{% endif %}</dd>
+    <dt>Decisões de recurso executadas</dt>
+    {% comment %}
+    Citar é declarar que este ato executa aquela decisão, e a citação publicada é o que prova o
+    cumprimento (FR-089). Quem não citou nenhuma lê a ausência aqui: emitir sem citar deixa a
+    providência pendente, e descobrir isso depois custa outro ato.
+    {% endcomment %}
+    <dd>{% if decisoes %}
+      <ul>{% for decisao in decisoes %}<li>Recurso {{ decisao.recurso.protocolo }} — {{ decisao.motivacao }}</li>{% endfor %}</ul>
+      {% else %}<span class="ausente">nenhuma — as providências pendentes deste marco continuam pendentes</span>{% endif %}</dd>
+  </dl>
+</section>
+
+<form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
+  {% comment %}
+  **Campo, e não valor escondido.** O motivo da sucessão é exigido quando há ato vigente, e a tela
+  anterior só o pede quando **ela** viu um: se o vigente nasce entre aquela leitura e esta, o
+  pedido chega sem motivo e a conferência não tinha por onde completá-lo — declarava "não
+  informado" e oferecia um botão que o comando recusaria, sem saída pela tela.
+
+  Ele fica aqui também quando veio preenchido, e de propósito: quem acabou de ler o alcance é quem
+  tem o que dizer sobre por que esta ordem sucede a anterior. Um `input` escondido ainda comeria as
+  quebras de linha que o `textarea` da tela anterior aceita.
+  {% endcomment %}
+  {% if ato_vigente %}
+  <p class="campo">
+    <label for="motivo">Motivo da sucessão</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">O ato vigente permanece íntegro; este motivo explica por
+      que uma nova ordem o sucede.</span>
+  </p>
+  {% endif %}
+  {% for decisao in decisoes %}
+  <input type="hidden" name="decisao" value="{{ decisao.id }}">
+  {% endfor %}
+  <p class="salvar">
+    <button type="submit" class="botao perigoso">Emitir a ordem</button>
+    <a href="{% url 'interface:ordenacao' edital.id marco.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

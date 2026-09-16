@@ -36,6 +36,16 @@ from processo_seletivo.shared.api.problems import DomainError
 EM_CURSO = frozenset({ABERTO, FUTURO})
 
 
+# **A saída, e não só o obstáculo.** A recusa dizia até quando esperar e parava aí: quem precisa
+# começar o trabalho antes do prazo lia "não pode" sem saber por onde sair, e o ato que o nome
+# sugere — Encerrar — é outro, mais amplo e irreversível. Alterar prazo publicado é Retificação,
+# e é a única porta.
+SAIDA = (
+    "Antecipar o término publicado é ato de Retificação; encerrar o Edital é outro ato, mais "
+    "amplo e irreversível."
+)
+
+
 def conjunto_fechado(conteudo, agora):
     """O conjunto de inscrições deste Edital ainda pode crescer?"""
     return periodo_de_inscricoes(conteudo, agora).estado not in EM_CURSO
@@ -65,6 +75,6 @@ def recusa_por_inscricoes_em_curso(conteudo, agora):
         detalhe = "As inscrições estão abertas e o Edital não declarou término"
     return DomainError(
         "inscricoes_em_curso",
-        f"{detalhe}. Distribuir agora deixaria sem avaliador quem se inscrever depois.",
+        (f"{detalhe}. Distribuir agora deixaria sem avaliador quem se inscrever depois. {SAIDA}"),
         409,
     )

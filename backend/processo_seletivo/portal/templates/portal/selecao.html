@@ -99,7 +99,11 @@ documentos, que é a ordem das perguntas de quem decide.
       Agora o requisito vem logo abaixo do nome, os documentos são anunciados com a contagem antes
       de serem abertos, e a ação fecha o argumento.
       {% endcomment %}
-      <li class="perfil">
+      {% comment %}
+      A âncora por onde quem acabou de se identificar volta: o retorno da autenticação traz a
+      pessoa para a vaga que ela escolheu, e não para o alto de uma página que pode ter dezenas.
+      {% endcomment %}
+      <li class="perfil" id="vaga-{{ perfil.id }}">
         <h3>{{ perfil.nome }}</h3>
 
         <div class="corpo-vaga">

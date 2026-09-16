@@ -179,10 +179,17 @@ classificado antes do primeiro.
       <input type="datetime-local" id="vencimento-regularizar" name="vencimento" aria-describedby="ajuda-venc-reg">
       <span class="ajuda" id="ajuda-venc-reg">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>.</span>
     </p>
+    {% comment %}
+    **A ajuda dizia "por exemplo, o 8.2 do Edital 77/2026".** É prosa de projeto: o 77/2026 é o
+    Edital da amostra com que esta feature foi escrita, e quem preenche este campo não tem como
+    consultá-lo — o exemplo pedia para copiar um item de um certame alheio. A citação continua
+    registrada no comentário da seção acima, que é o lugar dela; o que fica na tela é o que decide
+    o campo.
+    {% endcomment %}
     <p class="campo">
       <label for="fundamento-regularizar">Fundamento</label>
       <textarea id="fundamento-regularizar" name="fundamento" rows="3" required aria-describedby="ajuda-fund-reg"></textarea>
-      <span class="ajuda" id="ajuda-fund-reg">O item do Edital que autoriza a regularização — por exemplo, o 8.2 do Edital 77/2026.</span>
+      <span class="ajuda" id="ajuda-fund-reg">O item do Edital deste certame que autoriza a regularização, e o que dele decorre para esta pessoa.</span>
     </p>
     <p class="acoes"><button type="submit" class="botao">Convocar para regularizar</button></p>
   </form>

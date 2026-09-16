@@ -63,3 +63,31 @@ def test_a_acao_de_consolidar_esta_na_tela(client, seletor_ligado, com_muitas):
         )
         in corpo
     )
+
+
+def test_a_conferencia_declara_o_que_fica_de_fora(client, seletor_ligado, com_muitas):
+    """Consolidar é irreversível, e a recusa por linha só se lia depois do ato (013, FR-018).
+
+    Trinta inscrições sem avaliação nenhuma: a conferência não tem o que consolidar e diz por quê,
+    linha a linha, em vez de oferecer o botão e recusar tudo depois do clique.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    identificar(client, "maria", ["gestor"])
+    inscricoes = list(Inscricao.objects.filter(edital=com_muitas["edital"])[:3])
+
+    corpo = client.post(
+        reverse(
+            "interface:consolidar-resultados",
+            args=[com_muitas["edital"].id, com_muitas["primeira"]],
+        ),
+        {"inscricao_id": [str(i.id) for i in inscricoes], "chave_idempotencia": "conferir-1490"},
+    ).content.decode()
+
+    assert "Confira antes de consolidar" in corpo
+    assert "O que ficará de fora" in corpo
+    for inscricao in inscricoes:
+        assert (inscricao.protocolo or str(inscricao.id)) in corpo
+    assert "Consolidar 3" not in corpo, "não se oferece o ato que recusaria tudo"
+    assert ResultadoEtapa.objects.count() == 0

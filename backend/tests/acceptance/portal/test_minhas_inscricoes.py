@@ -39,8 +39,12 @@ def test_percurso_da_entrega_3(client, canal, selecao):
 
     # 1. Entra a caminho da vaga e informa nome e CPF uma única vez.
     assert entrar(client, canal, destino=vaga)["Location"] == reverse("portal:meus-dados")
+    # O retorno é a **página da vaga**, com a vaga à vista: o interstício que ficava aqui não
+    # nomeava a seleção nem trazia nada que ela não trouxesse.
     dados = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
-    assert "Continuar inscrição" in dados.content.decode()
+    selecao_com_a_vaga = reverse("portal:selecao", args=[selecao.id])
+    assert dados["Location"] == f"{selecao_com_a_vaga}#vaga-{PERFIL_DOCENTE}"
+    assert "Inscrever-se nesta vaga" in client.get(selecao_com_a_vaga).content.decode()
 
     # 2. Abre a inscrição, e ela já vem com o que a identidade sabe.
     client.post(vaga)

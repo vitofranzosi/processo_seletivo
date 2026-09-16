@@ -256,16 +256,21 @@ def test_a_jornada_completa_pela_interface_administrativa(
     assert "prontas para consolidar" in corpo
     assert "ainda não há avaliação concluída" in corpo
 
-    # 2. Consolida as duas prontas num ato só.
-    resposta = client.post(
-        reverse(
-            "interface:consolidar-resultados", args=[cenario["edital"].id, cenario["primeira"]]
-        ),
-        {
-            "inscricao_id": [str(inscricoes[0].id), str(inscricoes[1].id)],
-            "chave_idempotencia": "jornada-1480",
-        },
+    # 2. Consolida as duas prontas num ato só — atravessando a conferência, que declara o alcance
+    #    antes do ato. Consolidar é irreversível, e a V1 não oferece anulação.
+    consolidar = reverse(
+        "interface:consolidar-resultados", args=[cenario["edital"].id, cenario["primeira"]]
     )
+    selecao = {
+        "inscricao_id": [str(inscricoes[0].id), str(inscricoes[1].id)],
+        "chave_idempotencia": "jornada-1480",
+    }
+    conferencia = client.post(consolidar, selecao).content.decode()
+    assert "Confira antes de consolidar" in conferencia
+    assert "O que será consolidado" in conferencia
+    assert ResultadoEtapa.objects.count() == 0, "conferir não consolida"
+
+    resposta = client.post(consolidar, {**selecao, "confirmar": "1"})
     assert resposta.status_code == 302
     corpo = client.get(organizacao).content.decode()
     assert "2 </strong> consolidada(s)" in corpo.replace("\n", " ") or "consolidada(s)" in corpo

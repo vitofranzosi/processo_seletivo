@@ -177,10 +177,74 @@ def _pioraria(cumprindo, efeito, conclusao):
     return piora(protegido=protegido, consequencia=efeito, pontuacao=conclusao.pontuacao)
 
 
-def consolidar(
-    *, actor, processo_id, edital_id, etapa_id, inscricao_ids, idempotency_key, correlation_id
-):
-    """Cria o Resultado das inscrições prontas, e declara por que as demais ficaram de fora."""
+class Consolidavel:
+    """Uma inscrição que virará Resultado, com o que dela já está decidido."""
+
+    def __init__(self, inscricao, conclusao, cumprindo, efeito, causa):
+        self.inscricao = inscricao
+        self.conclusao = conclusao
+        self.cumprindo = cumprindo
+        self.efeito = efeito
+        self.causa = causa
+
+    def __repr__(self):
+        return f"Consolidavel({self.inscricao}, {self.efeito!r})"
+
+
+def _planejar(etapa, panorama, inscricoes):
+    """O que a consolidação fará com cada inscrição da seleção — sem fazer nada.
+
+    **Uma regra só para o ato e para a tela que o precede.** Consolidar é irreversível e a V1 não
+    oferece anulação, de modo que a confirmação precisa declarar o alcance antes; e uma previsão
+    escrita à parte seria uma segunda regra, livre para divergir da primeira justamente no caso em
+    que isso importa — o cumprimento de decisão, que o panorama classifica como não-pronta e que
+    **é** consolidável. A tela diria "será recusada" sobre o que seria criado.
+
+    Nenhuma consulta: tudo sai do panorama, que já respondeu pela Etapa inteira de uma vez.
+    """
+    consolidaveis, recusas = [], []
+    for inscricao in inscricoes:
+        estado, motivo = panorama["estados"][inscricao.id]
+        cumprindo = _decisao_a_cumprir(panorama, inscricao, estado)
+        if estado != PRONTA and cumprindo is None:
+            recusas.append(Recusa(inscricao, motivo))
+            continue
+        conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
+        if conclusao is None:
+            recusas.append(Recusa(inscricao, SEM_REAVALIACAO))
+            continue
+        efeito, causa = consequencia(etapa, conclusao)
+        if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
+            # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
+            # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele
+            # concluiu —, mas o seu Resultado não vira sucessor. Sem isto, a reavaliação
+            # ordenada seria a porta dos fundos da *non reformatio*.
+            recusas.append(Recusa(inscricao, PIORARIA))
+            continue
+        consolidaveis.append(Consolidavel(inscricao, conclusao, cumprindo, efeito, causa))
+    return consolidaveis, recusas
+
+
+def _plano_do_lote(edital, etapa_id, ids):
+    """`(etapa, consolidáveis, recusas)` para aquela seleção, na Etapa vigente.
+
+    **Uma leitura do panorama, antes do laço.** Elegíveis, Resultados existentes e conjuntos da
+    progressão saem daqui; dentro do laço não há consulta nenhuma.
+    """
+    etapa, vigentes, conteudo = _etapa_vigente_ou_404(edital, etapa_id)
+    panorama = panorama_da_etapa(
+        edital=edital, etapa=etapa, etapas_vigentes=vigentes, conteudo=conteudo
+    )
+    bloqueio = panorama["bloqueio_da_etapa"]
+    if bloqueio is not None:
+        # Bloqueio da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser
+        # consolidada, e recusar linha a linha repetiria a mesma frase mil vezes (FR-015).
+        raise DomainError(bloqueio[0], bloqueio[1].capitalize() + ".", 422)
+    inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
+    return (etapa, *_planejar(etapa, panorama, inscricoes))
+
+
+def _selecao_exigida(inscricao_ids):
     ids = [identificador(i) for i in inscricao_ids]
     if not ids:
         raise DomainError(
@@ -189,6 +253,28 @@ def consolidar(
             422,
             campo="inscricao_id",
         )
+    return ids
+
+
+def prever(*, edital, etapa_id, inscricao_ids):
+    """O alcance do ato, lido sem praticá-lo — o que vira Resultado e o que fica de fora, e por quê.
+
+    Custa um panorama, e ele é relido no ato: a confirmação não guarda o que viu, e o que vale é o
+    estado do instante em que o ato acontece. Declarar o alcance sobre uma leitura velha seria
+    prometer o que a transação seguinte não precisa cumprir — a recusa que aparece depois continua
+    sendo a palavra final, e é por isso que ela não sumiu da tela de destino.
+
+    A autorização é de quem chama: aqui não há ato a praticar, e a porta da Etapa já foi conferida
+    por quem chegou até esta leitura.
+    """
+    return _plano_do_lote(edital, etapa_id, _selecao_exigida(inscricao_ids))
+
+
+def consolidar(
+    *, actor, processo_id, edital_id, etapa_id, inscricao_ids, idempotency_key, correlation_id
+):
+    """Cria o Resultado das inscrições prontas, e declara por que as demais ficaram de fora."""
+    ids = _selecao_exigida(inscricao_ids)
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -201,39 +287,14 @@ def consolidar(
             # Antes de qualquer trabalho: a repetição devolve o desfecho original, e não um
             # recálculo que responderia "zero criados" sobre um estado que já mudou (FR-021).
             return ctx.desfecho_anterior
-        etapa, vigentes, conteudo = _etapa_vigente_ou_404(edital, etapa_id)
+        # **A mesma regra que a confirmação declarou**, relida aqui: o que vale é o estado do
+        # instante do ato, e não o que a tela anterior viu.
+        etapa, consolidaveis, recusas = _plano_do_lote(edital, etapa_id, ids)
 
-        # **Uma leitura do panorama, antes do laço.** Elegíveis, Resultados existentes e conjuntos
-        # da progressão saem daqui; dentro do laço não há consulta nenhuma.
-        panorama = panorama_da_etapa(
-            edital=edital, etapa=etapa, etapas_vigentes=vigentes, conteudo=conteudo
-        )
-        bloqueio = panorama["bloqueio_da_etapa"]
-        if bloqueio is not None:
-            # Bloqueio da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser
-            # consolidada, e recusar linha a linha repetiria a mesma frase mil vezes (FR-015).
-            raise DomainError(bloqueio[0], bloqueio[1].capitalize() + ".", 422)
-        inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
-
-        criados, recusas = [], []
-        for inscricao in inscricoes:
-            estado, motivo = panorama["estados"][inscricao.id]
-            cumprindo = _decisao_a_cumprir(panorama, inscricao, estado)
-            if estado != PRONTA and cumprindo is None:
-                recusas.append(Recusa(inscricao, motivo))
-                continue
-            conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
-            if conclusao is None:
-                recusas.append(Recusa(inscricao, SEM_REAVALIACAO))
-                continue
-            efeito, causa = consequencia(etapa, conclusao)
-            if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
-                # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
-                # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele
-                # concluiu —, mas o seu Resultado não vira sucessor. Sem isto, a reavaliação
-                # ordenada seria a porta dos fundos da *non reformatio*.
-                recusas.append(Recusa(inscricao, PIORARIA))
-                continue
+        criados = []
+        for item in consolidaveis:
+            inscricao, conclusao, cumprindo = item.inscricao, item.conclusao, item.cumprindo
+            efeito, causa = item.efeito, item.causa
             resultado = ResultadoEtapa.objects.create(
                 inscricao=inscricao,
                 edital=edital,
@@ -290,4 +351,4 @@ def consolidar(
         return declarado
 
 
-__all__ = ["ATO", "CONSOLIDAR", "Recusa", "consolidar"]
+__all__ = ["ATO", "CONSOLIDAR", "Consolidavel", "Recusa", "consolidar", "prever"]

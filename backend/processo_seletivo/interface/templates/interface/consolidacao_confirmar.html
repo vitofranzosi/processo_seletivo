@@ -1,0 +1,108 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferir consolidação — {{ etapa.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
+  <span aria-current="page">Conferir</span>
+</nav>
+
+<h1>Confira antes de consolidar</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+**O ato saía de um clique numa barra de botões.** "Consolidar as selecionadas" ficava ao lado de
+"Distribuir as selecionadas", que se desfaz — e este não: consolidar é irreversível, e a V1 não
+oferece anulação. A página de conferência já era o padrão do projeto em quatro atos menores, e
+faltava justamente no maior.
+
+**Ela declara o alcance**, como a do impedimento da `012` e a da ocorrência: o que vira Resultado,
+com que consequência, e o que fica de fora e por quê. A recusa que só aparecia depois do ato —
+"não estava pronta", "a reavaliação ainda não foi concluída" — passa a ser lida antes dele.
+
+O alcance é a leitura de agora, e o ato relê: entre esta tela e a confirmação alguém pode concluir
+uma avaliação. É por isso que a tela de destino continua declarando o que de fato aconteceu — esta
+promete o que se pretende, e aquela responde pelo que foi feito.
+{% endcomment %}
+<p class="ajuda">O Resultado nasce do cálculo que o Edital publica: a pontuação é cópia da
+  avaliação e a consequência sai da regra. <strong>Não há desfazer</strong> — corrigir um Resultado
+  consolidado é ato de outra espécie.</p>
+
+{% if consolidaveis %}
+<section aria-labelledby="alcance" class="consequencias">
+  <h2 id="alcance">O que será consolidado — {{ consolidaveis|length }} inscriç{{ consolidaveis|length|pluralize:"ão,ões" }}</h2>
+  <div class="tabela-rolavel">
+    <table class="tabela">
+      <caption class="oculto">Inscrições que virarão Resultado</caption>
+      <thead>
+        <tr>
+          <th scope="col">Inscrição</th>
+          <th scope="col">Participante</th>
+          <th scope="col">Consequência</th>
+          <th scope="col">Por quê</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in consolidaveis %}
+        <tr>
+          <td>{{ item.inscricao.protocolo|default:item.inscricao.id }}</td>
+          <td>{{ item.inscricao.nome|default:"—" }}</td>
+          {% comment %}
+          A consequência vem calculada, e não escolhida: não há campo para informá-la aqui pela
+          mesma razão que não há na Mesa — a presidência confirma um cálculo, não o informa
+          (FR-016). E ao lado dela a causa que o domínio já escreve — "pontuação inferior à nota
+          mínima da Etapa (45 < 60)" —, que é o que o Resultado vai guardar e o que responderá a
+          um recurso. A nota sozinha não diria por que o desfecho foi aquele, e a forma decisória
+          não tem nota nenhuma.
+
+          O cumprimento de decisão é dito, porque ele é a única porta pela qual consolidar sucede
+          um Resultado protegido (FR-068).
+          {% endcomment %}
+          <td>{{ item.efeito|title }}{% if item.cumprindo %} <span class="situacao s-EM_REVISAO">em cumprimento de decisão</span>{% endif %}</td>
+          <td>{{ item.causa }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if recusas %}
+<section aria-labelledby="fora" class="consequencias">
+  <h2 id="fora">O que ficará de fora — {{ recusas|length }} inscriç{{ recusas|length|pluralize:"ão,ões" }}</h2>
+  <ul>
+    {% for recusa in recusas %}
+    <li><strong>{{ recusa.inscricao.protocolo|default:recusa.inscricao.id }}</strong> — {{ recusa.motivo }}</li>
+    {% endfor %}
+  </ul>
+  <p class="ajuda">Estas não impedem as demais: o lote segue com o que estiver pronto.</p>
+</section>
+{% endif %}
+
+<form method="post" action="{% url 'interface:consolidar-resultados' edital.id etapa.id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {% for item in consolidaveis %}
+  <input type="hidden" name="inscricao_id" value="{{ item.inscricao.id }}">
+  {% endfor %}
+  {% for recusa in recusas %}
+  <input type="hidden" name="inscricao_id" value="{{ recusa.inscricao.id }}">
+  {% endfor %}
+  <p class="salvar">
+    {% if consolidaveis %}
+    <button type="submit" class="botao perigoso">Consolidar {{ consolidaveis|length }} inscriç{{ consolidaveis|length|pluralize:"ão,ões" }}</button>
+    {% else %}
+    {% comment %}
+    Nada a consolidar não é erro de pedido — as inscrições existem e a Etapa está aberta —, e por
+    isso a tela é a mesma. O que não se oferece é o ato: um botão que só pode recusar tudo convida
+    a praticar o que não vai acontecer.
+    {% endcomment %}
+    <span class="ajuda">Nenhuma das inscrições selecionadas está em condição de ser consolidada
+      agora.</span>
+    {% endif %}
+    <a href="{% url 'interface:distribuicao' edital.id etapa.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}
