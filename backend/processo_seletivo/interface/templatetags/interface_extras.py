@@ -174,3 +174,23 @@ def instante(valor):
     if timezone.is_aware(momento):
         momento = timezone.localtime(momento)
     return momento.strftime("%d/%m/%Y %H:%M")
+
+
+@register.filter
+def declarou(dados, prefixo):
+    """Se alguma chave com este prefixo tem valor — "este bloco foi preenchido".
+
+    Existe para o disclosure progressivo do marco classificatório: um bloco fechado sobre conteúdo
+    já declarado é uma armadilha — quem reabre o Edital não veria o corte que alguém publicou —, e
+    a alternativa em template seria um `{% if %}` de dez termos repetido em cada bloco, que se
+    desatualiza na primeira coluna nova sem que nada avise.
+
+    O prefixo, e não a lista de campos, **porque o achatamento já usa prefixo**: `_metodo_para_
+    exibicao` devolve `drawAlgorithm`, `drawSource`, e assim por diante. Campo novo no método entra
+    aqui sem que ninguém precise lembrar.
+    """
+    return any(
+        valor not in (None, "", [], {})
+        for chave, valor in (dados or {}).items()
+        if chave.startswith(prefixo)
+    )

@@ -961,6 +961,25 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
    pára na medida de leitura como qualquer outra. */
 .opcoes .dependentes .campo.curto:only-child{flex-basis:auto}
 
+/* Os blocos que abrem no cartão do marco. Fechado é o estado de quem não declarou, e o resumo ao
+   lado do rótulo diz o que há dentro sem pedir o clique — é ele que separa divulgação progressiva
+   de esconder informação. A borda à esquerda prende o conteúdo ao próprio resumo: sem ela, os
+   campos que aparecem pareciam pertencer ao cartão, e não ao bloco. */
+.bloco-do-marco{margin:0 0 .9rem}
+.bloco-do-marco>summary{font-size:.9375rem;font-weight:600;cursor:pointer;padding:.25rem 0;
+  display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+/* `display:flex` no `summary` **apaga o triângulo que o navegador desenha**, e sem ele um bloco
+   fechado se lê como um rótulo qualquer: nada na tela diz que há conteúdo ali. A marca volta
+   explícita, e gira ao abrir. */
+.bloco-do-marco>summary::before{content:"\25B8";color:var(--texto-fraco);font-size:.75rem;
+  transition:transform .12s;display:inline-block}
+.bloco-do-marco[open]>summary::before{transform:rotate(90deg)}
+.bloco-do-marco>summary .resumo-do-bloco{font-weight:400;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.bloco-do-marco[open]>summary{margin-bottom:.4rem}
+.bloco-do-marco>*:not(summary){border-left:2px solid var(--borda);padding-left:.9rem;
+  margin-left:.3rem}
+
 /* O que a opção marcada torna inaplicável sai da tela. A regra é sempre "esconde **quando** outra
    opção está marcada", e nunca "esconde por padrão": onde `:has` não existir, tudo aparece como
    antes — e o servidor, que é quem descarta de fato, continua correto de qualquer modo. */

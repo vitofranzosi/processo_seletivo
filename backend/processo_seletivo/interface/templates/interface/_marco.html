@@ -1,3 +1,20 @@
+{% load interface_extras %}
+{% comment %}
+**Vinte e nove controles numa tela, e a ordem entre eles não se lia.** O cartão punha o método do
+sorteio e a regra de corte no mesmo nível dos pesos — e quem compõe um marco comum, que não sorteia
+nem corta, percorria dezesseis campos que não lhe dizem respeito para chegar aos sete que dizem.
+
+A organização é por **como a ordem é produzida**: o que toda ordem exige fica à vista — quais
+Etapas entram, com quantas casas, arredondadas como, combinadas como. O que é escolha deste Edital
+— admitir recurso, sortear, cortar — abre quando é o assunto.
+
+**Aberto quando declarado**, e é a única regra que impede isto de virar armadilha: um bloco fechado
+sobre conteúdo que alguém publicou faria quem reabre o Edital não ver o corte que existe. Fechado
+significa "não declarado", e o resumo diz isso sem que ninguém precise abrir.
+
+Nenhum campo obrigatório entra nos blocos que fecham: campo `required` invisível é submissão que o
+navegador recusa sem conseguir mostrar o que falta.
+{% endcomment %}
 <fieldset class="linha marco">
   <legend>Marco classificatório</legend>
   {% comment %}
@@ -93,8 +110,11 @@
   do conjunto das três opções, e repeti-la em cada uma faria o leitor de tela dizer o parágrafo
   inteiro três vezes ao percorrer o grupo.
   {% endcomment %}
+  <details class="bloco-do-marco"{% if marco.appealDeclaration == "admite" or marco.appealDeclaration == "nao_admite" %} open{% endif %}>
+    <summary>Recurso contra o resultado
+      <span class="resumo-do-bloco">{% if marco.appealDeclaration == "admite" %}admite{% if marco.appealDurationDays %}, prazo de {{ marco.appealDurationDays }} dia{{ marco.appealDurationDays|pluralize }}{% endif %}{% elif marco.appealDeclaration == "nao_admite" %}não admite por esta via{% else %}nada declarado{% endif %}</span></summary>
   <fieldset class="opcoes" aria-describedby="ajuda-recurso-{{ indice }}-{{ sub }}">
-    <legend>Recurso contra o resultado deste marco</legend>
+    <legend class="oculto">Recurso contra o resultado deste marco</legend>
     <span class="oculto" id="ajuda-recurso-{{ indice }}-{{ sub }}">Não declarar e negar são coisas
       diferentes: o silêncio devolve a tempestividade ao juízo de admissibilidade motivado; a
       negativa é norma publicada, e recusa a interposição nomeando-a.</span>
@@ -138,6 +158,7 @@
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
     </p>
   </fieldset>
+  </details>
   {% comment %}
   O método do sorteio, quando este marco ordena por sorteio (021, FR-013, D-013).
 
@@ -149,8 +170,11 @@
   institucional por padrão — a mesma razão dos rótulos da Etapa e do local do Evento: um default
   aplicaria ao Edital uma norma que ele não publicou.
   {% endcomment %}
+  <details class="bloco-do-marco"{% if marco|declarou:"draw" %} open{% endif %}>
+    <summary>Método do sorteio
+      <span class="resumo-do-bloco">{% if marco|declarou:"draw" %}declarado{% else %}este marco não sorteia{% endif %}</span></summary>
   <fieldset class="campos" aria-describedby="ajuda-sorteio-{{ indice }}-{{ sub }}">
-    <legend>Método do sorteio, se este marco ordena por sorteio</legend>
+    <legend class="oculto">Método do sorteio, se este marco ordena por sorteio</legend>
     <span class="oculto" id="ajuda-sorteio-{{ indice }}-{{ sub }}">Declarado aqui, o método é
       conteúdo publicado do Edital: alterá-lo depois exige Retificação, e nunca implantação de
       software. Deixe tudo em branco se este marco não sorteia.</span>
@@ -189,14 +213,21 @@
       <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationRule">Regra de normalização</label>
       <select id="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
               name="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
-              aria-describedby="ajuda-normalizacao-{{ indice }}-{{ sub }}">
+              aria-describedby="ajuda-normalizacao-do-sorteio-{{ indice }}-{{ sub }}">
         <option value="">Não declarada</option>
         <option value="DIGITOS_EM_SEQUENCIA" {% if marco.drawNormalizationRule == "DIGITOS_EM_SEQUENCIA" %}selected{% endif %}>Os dígitos do material, na ordem em que aparecem</option>
         <option value="TEXTO_LITERAL" {% if marco.drawNormalizationRule == "TEXTO_LITERAL" %}selected{% endif %}>O texto literal do material observado</option>
       </select>
-      <span class="oculto" id="ajuda-normalizacao-{{ indice }}-{{ sub }}">A regra é escolhida de uma
-        lista publicada porque a máquina a aplica e um terceiro a reimplementa: prosa sozinha não é
-        executável, e duas pessoas lendo a mesma frase produzem sementes diferentes.</span>
+      {% comment %}
+      **O `id` diz de qual normalização se trata.** Ele era `ajuda-normalizacao-<i>-<s>` aqui e
+      **também** na normalização dos pesos, mais abaixo: dois elementos com o mesmo `id`, e o
+      leitor de tela lia esta descrição nos dois campos — quem chegasse à combinação de pontuações
+      ouvia a regra da semente do sorteio.
+      {% endcomment %}
+      <span class="oculto" id="ajuda-normalizacao-do-sorteio-{{ indice }}-{{ sub }}">A regra é
+        escolhida de uma lista publicada porque a máquina a aplica e um terceiro a reimplementa:
+        prosa sozinha não é executável, e duas pessoas lendo a mesma frase produzem sementes
+        diferentes.</span>
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationText">Como a regra de normalização será publicada</label>
@@ -231,11 +262,17 @@
         <option value="{{ etapa.id }}" {% if marco.drawQualifyingStageId == etapa.id %}selected{% endif %}>{{ etapa.rotulo }}</option>
         {% endfor %}
       </select>
-      <span class="oculto" id="ajuda-habilitacao-{{ indice }}-{{ sub }}">Nos quatro Editais de
-        sorteio lidos, a análise documental vem <strong>depois</strong> do sorteio: ali não há Etapa
-        de habilitação, e entram todas as inscrições submetidas do recorte.</span>
+      {% comment %}
+      A frase citava "os quatro Editais de sorteio lidos" — o que a equipe leu ao especificar, e não
+      o que quem preenche precisa decidir. A leitura em si continua valendo, e passou para a ajuda
+      da lista, onde é lida uma vez e por quem enxerga.
+      {% endcomment %}
+      <span class="oculto" id="ajuda-habilitacao-{{ indice }}-{{ sub }}">Deixe em nenhuma quando o
+        sorteio vier antes da análise documental: entram todas as inscrições submetidas do
+        recorte.</span>
     </p>
   </fieldset>
+  </details>
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -269,8 +306,11 @@
   Os quatro campos sem padrao ficam visiveis mesmo vazios, e quem cobra e a publicacao. O rascunho
   pode estar pela metade; o Edital publicado nao.
   {% endcomment %}
+  <details class="bloco-do-marco"{% if marco|declarou:"cut" %} open{% endif %}>
+    <summary>Regra de corte
+      <span class="resumo-do-bloco">{% if marco.cutTargetKind == "FIXED" %}quantidade fixa{% if marco.cutTargetCount %} de {{ marco.cutTargetCount }}{% endif %}{% elif marco.cutTargetKind == "FROM_VACANCY_TABLE" %}o que o quadro de vagas publicar{% elif marco|declarou:"cut" %}começada, e sem dizer quantos progridem{% else %}este marco não corta{% endif %}</span></summary>
   <fieldset class="campos">
-    <legend>Regra de corte</legend>
+    <legend class="oculto">Regra de corte</legend>
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTargetKind">Quantos progridem</label>
         <select id="marco-{{ indice }}-{{ sub }}-cutTargetKind" name="marco-{{ indice }}-{{ sub }}-cutTargetKind"
@@ -332,10 +372,17 @@
           <option value="ALLOWED" {% if marco.cutContinuation == "ALLOWED" %}selected{% endif %}>Admite continuar além da faixa publicada</option>
           <option value="NONE" {% if marco.cutContinuation == "NONE" %}selected{% endif %}>Não admite: a faixa é o que foi publicado</option>
         </select>
-        <span class="oculto" id="ajuda-continuacao-{{ indice }}-{{ sub }}">O 77/2026 admite — "até
-          que se preencha"; o 14/2026 não.</span>
+        {% comment %}
+        A frase era "o 77/2026 admite; o 14/2026 não" — dois Editais que este Edital não cita e que
+        quem preenche não tem como consultar daqui. O que ela ensinava é que as duas respostas
+        existem na prática, e isso passou para a ajuda da lista.
+        {% endcomment %}
+        <span class="oculto" id="ajuda-continuacao-{{ indice }}-{{ sub }}">Admitir continuar deixa a
+          faixa avançar além do que foi publicado quando alguém não assume a vaga; não admitir
+          fecha a faixa no que o ato publicou.</span>
       </p>
   </fieldset>
+  </details>
   <section class="modalidades">
     <h4>Critérios de desempate</h4>
     <div id="criterios-{{ indice }}-{{ sub }}">
