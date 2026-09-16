@@ -248,3 +248,14 @@ a mantêm usável, e sem elas a feature é um bloqueio que incomoda quem está c
 - Todo teste que afirme "passado" ou "futuro" passa `agora=` explicitamente. Um teste que dependa do
   dia em que a suíte rodar é o defeito que a `SC-118` existe para impedir.
 - Commit a cada tarefa ou grupo lógico; parar em qualquer checkpoint valida a story sozinha.
+
+---
+
+## Phase 9: Convergence
+
+**Purpose**: fechar as três lacunas entre o que os artefatos pedem e o que o código faz, medidas
+pelo `$speckit-converge` de 15/09/2026. Nenhuma é CRITICAL nem HIGH; nenhuma viola a Constituição.
+
+- [X] T035 Criar `backend/tests/acceptance/test_cronograma_reaproveitado.py` com o Percurso A do [quickstart.md](./quickstart.md) — reaproveitar, ver a etapa pendente na primeira abertura, ler os três achados na Revisão, ser recusado na submissão e publicar depois de corrigir as datas — **ou** registrar em [plan.md](./plan.md) por que a cobertura de `tests/interface/test_selo_do_cronograma.py` basta, per `plan: Project Structure` (missing). *O plano declarou o arquivo como "NOVO — o percurso do quickstart" e ele não existe. A cobertura equivalente existe um nível abaixo, em interface, e exercita o serviço de reaproveitamento de verdade — então isto pode ser decisão de lugar, e não lacuna de garantia. O que não pode é ficar como está: uma seção de estrutura que nomeia arquivos inexistentes deixa de ser lida na próxima feature*
+- [X] T036 Acrescentar à etapa Cronograma, em `backend/processo_seletivo/interface/templates/interface/compor_cronograma.html`, uma frase visível que ligue os avisos ao selo — algo como "esta etapa fica pendente enquanto o Cronograma carregar Evento cuja data já passou" —, com teste em `backend/tests/interface/test_selo_do_cronograma.py`, per `UX-049` (partial). *A metade "quais Eventos a mantêm assim" está satisfeita: cada mensagem nomeia o Evento e o instante. A metade "explicar por que está pendente" hoje é inferível — quem lê vê PENDENTE no topo e três AVISOS embaixo, e precisa ligar os dois sozinho. É a mesma classe do achado P1 da auditoria sobre microcópia: a explicação existe e não está dita*
+- [X] T037 Justificar por escrito, na docstring de `levar_a_publicacao` em `backend/tests/fixtures/publicacao.py`, por que a asserção sobre a submissão pertence a este ajudante — ou removê-la —, per `converge: unrequested` (unrequested). *Ela entrou no meio da `028` porque uma recusa engolida apareceu três passos adiante como "Edital não está homologado" e custou uma investigação. O benefício é real e alcança a suíte inteira; o problema é que nada nos artefatos a pediu, e ajudante compartilhado que ganha asserção nova sem decisão registrada é como uma suíte passa a exigir o que ninguém decidiu. Já há um comentário no lugar — esta tarefa é conferir se ele basta como decisão*

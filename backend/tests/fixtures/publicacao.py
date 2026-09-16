@@ -88,6 +88,13 @@ def levar_a_publicacao(
     # impeditivo passava em silêncio e só aparecia na publicação, como `invalid_state` — "Edital não
     # está homologado" —, que é verdade e não diz nada sobre a causa. Custou uma investigação quando
     # a `028` passou a recusar cronograma com o prazo vencido.
+    #
+    # **A asserção não foi pedida por spec nenhuma, e fica — decisão registrada na convergência da
+    # `028` (T037).** Ela alcança toda a suíte, porque este ajudante leva quase todo Edital de teste
+    # à publicação; o risco de acrescentar exigência a um ajudante compartilhado sem decisão escrita
+    # é a suíte passar a cobrar o que ninguém decidiu. Aqui não há exigência nova: o que ela faz é
+    # **não engolir** uma recusa que já existia. A faixa é deliberadamente larga — qualquer 2xx
+    # serve —, porque o que se afirma é que a submissão aconteceu, e não qual código ela devolve.
     assert submetido.status_code < 400, submetido.content
     edital.refresh_from_db()
     api_client.post(

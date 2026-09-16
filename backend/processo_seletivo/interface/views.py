@@ -680,6 +680,23 @@ def _recusa(exc, digitados, etapa):
     return {"mensagem": mensagem, "ancora": ""}
 
 
+def _eventos_vencidos_do_cronograma(edital, *, agora):
+    """Os Eventos do Cronograma cuja data já passou — a **lista**, e não o booleano.
+
+    A tela precisa dizer quantos são; o selo precisa saber se há algum. Uma função só, com o mesmo
+    predicado de domínio que a conferência de publicação usa, é o que impede o número exibido e o
+    selo de discordarem sobre o mesmo cronograma.
+    """
+    cronograma = getattr(edital, "cronograma", None)
+    if cronograma is None:
+        return []
+    return [
+        evento
+        for evento in cronograma.eventos.all()
+        if vencido(evento.start_at, evento.end_at, agora=agora)
+    ]
+
+
 def _estado_do_cronograma(edital, *, agora=None):
     """Concluída quando há Evento e nenhum deles venceu (`028`, FR-359, FR-360).
 
@@ -937,6 +954,10 @@ def compor_etapa(request, edital_id, etapa):
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
     pendencias = _pendencias(edital, agora=agora)
+    # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
+    # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
+    # A lista é pedida — e não um booleano — porque a frase diz **quantos** Eventos a mantêm assim.
+    vencidos = _eventos_vencidos_do_cronograma(edital, agora=agora) if etapa == "cronograma" else []
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
@@ -966,6 +987,7 @@ def compor_etapa(request, edital_id, etapa):
             # reservada precisa ver que a ampla voltou a ser o total.
             "quadro_rederivado": rederivadas,
             "progresso": _progresso(edital, etapa, agora=agora),
+            "cronograma_vencidos": vencidos,
             "anterior": anterior,
             "proxima": proxima,
             "editavel": editavel,

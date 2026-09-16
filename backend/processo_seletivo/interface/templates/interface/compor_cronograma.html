@@ -7,6 +7,19 @@
   {% csrf_token %}
   <section aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>
+    {% comment %}
+    UX-049 da 028: o selo desta etapa diz PENDENTE, e a razão precisa estar escrita **aqui**, em
+    texto que quem enxerga lê. Sem a frase, a pessoa via o selo no topo e os avisos embaixo e tinha
+    de ligar os dois sozinha — que é a mesma classe do achado de microcópia invisível da auditoria:
+    a explicação existia e não estava dita. A última oração é a FR-351 em voz alta: o sistema não
+    move data de ninguém.
+    {% endcomment %}
+    {% if cronograma_vencidos %}
+    <p class="aviso" role="status">Esta etapa fica <strong>pendente</strong> enquanto o Cronograma
+      carregar Evento cuja data já passou —
+      <strong>{{ cronograma_vencidos|length }} dele{{ cronograma_vencidos|length|pluralize:"s" }}</strong>
+      agora. Corrigir as datas abaixo é o que a conclui; o sistema não as altera nem as sugere.</p>
+    {% endif %}
     {% if pendencias_aqui %}
     <div class="pendencias" role="status">
       {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}

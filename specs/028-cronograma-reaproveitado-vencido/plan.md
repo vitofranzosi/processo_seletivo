@@ -140,17 +140,30 @@ backend/tests/
 │   ├── test_calendario.py              # NOVO — o predicado e o ano, sem banco
 │   └── test_cronograma_vencido.py      # NOVO — os três achados, por ato
 ├── interface/
-│   └── test_selo_do_cronograma.py      # NOVO — o selo, e o cenário do 12/2027 na composição
-├── integration/
-│   ├── avaliacoes/test_conjunto_fechado.py     # publica aberto, retifica para fechar (T-008)
-│   ├── portal/test_vitrine.py                  # idem
-│   ├── portal/test_situacao_inscricoes.py      # idem
-│   ├── portal/test_cronograma_publico.py       # idem
-│   ├── supervisao/test_pulso.py                # idem
-│   └── test_seed_demo.py                       # o quarto Edital
-└── acceptance/
-    └── test_cronograma_reaproveitado.py # NOVO — o percurso do quickstart
+│   └── test_selo_do_cronograma.py      # NOVO — o selo, a frase da etapa, e o percurso do
+│                                       #        quickstart com o cenário do 12/2027 (ver abaixo)
+└── integration/
+    ├── avaliacoes/test_conjunto_fechado.py     # publica aberto, retifica para fechar (T-008)
+    ├── portal/test_vitrine.py                  # idem
+    ├── portal/test_situacao_inscricoes.py      # idem
+    ├── portal/test_cronograma_publico.py       # idem
+    ├── supervisao/test_pulso.py                # idem
+    ├── publicacoes/test_cronograma_vencido_no_ato.py  # NOVO — os dois atos e o acervo
+    └── test_seed_demo.py                       # o quarto Edital
 ```
+
+> **O percurso do quickstart ficou em `tests/interface/`, e não em `tests/acceptance/`.** Esta
+> seção declarava `tests/acceptance/test_cronograma_reaproveitado.py`, e o
+> `$speckit-converge` de 15/09/2026 acusou o arquivo como ausente. A decisão, tomada na
+> convergência, é **não duplicar**: `tests/interface/test_selo_do_cronograma.py` já percorre o
+> Percurso A inteiro pelo canal do ator — cria o Edital pelo serviço de reaproveitamento de
+> verdade, abre a composição sem gravar nada, confere o selo, os achados na Revisão e cada data
+> contra a que a origem publicou. Um arquivo em `acceptance/` mediria a mesma coisa pela mesma
+> porta, e o custo de manter dois percursos que envelhecem juntos é maior que o ganho de o
+> percurso estar na pasta que o plano imaginou.
+>
+> Fica registrado porque seção de estrutura que nomeia arquivo inexistente deixa de ser lida na
+> feature seguinte — e porque a escolha é de **lugar**, não de garantia.
 
 **Structure Decision**: monólito Django existente, com **um** módulo de domínio novo e nenhum
 diretório novo. `editais/domain/calendario.py` existe para que o predicado tenha um lugar só — a

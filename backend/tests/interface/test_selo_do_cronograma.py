@@ -246,3 +246,67 @@ def test_o_edital_composto_do_zero_produz_os_mesmos_achados(client, seletor_liga
     assert resposta.context["origem_reaproveitada"] is None, "este Edital não veio de cópia nenhuma"
     codigos = {p["campo"] for p in resposta.context["pendencias"]}
     assert any("/schedule/id=" in caminho for caminho in codigos), codigos
+
+
+# --- T036 · a frase que liga os avisos ao selo (UX-049) ------------------------------------------
+
+
+def test_a_etapa_diz_por_que_esta_pendente_e_quantos_eventos_a_mantem_assim(
+    client, seletor_ligado, composto
+):
+    """UX-049 tem duas metades, e só uma estava satisfeita.
+
+    Os avisos já nomeavam cada Evento vencido — *"quais Eventos a mantêm assim"*. O que faltava era
+    a frase que diz **por que** a etapa está pendente: quem lia via PENDENTE no topo e os avisos
+    embaixo, e tinha de ligar os dois sozinho. É a mesma classe do achado de microcópia invisível da
+    auditoria — a explicação existia e não estava dita.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    agora = timezone.now()
+    datar(composto, inicio=agora - timedelta(days=9), fim=agora - timedelta(days=1))
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[composto.id, "cronograma"])
+    ).content.decode()
+
+    assert "fica <strong>pendente</strong> enquanto o Cronograma" in corpo
+    assert "<strong>1 dele</strong>" in corpo, "a frase diz quantos Eventos a mantêm pendente"
+    assert "o sistema não as altera nem as sugere" in corpo, "a FR-351 dita em voz alta"
+
+
+def test_a_frase_nao_aparece_quando_nenhum_evento_venceu(client, seletor_ligado, composto):
+    """Ruído numa etapa correta é o defeito simétrico: a frase só existe quando explica algo."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    agora = timezone.now()
+    datar(composto, inicio=agora + timedelta(days=1), fim=agora + timedelta(days=9))
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[composto.id, "cronograma"])
+    ).content.decode()
+
+    assert "fica <strong>pendente</strong> enquanto o Cronograma" not in corpo
+
+
+def test_a_frase_nao_aparece_num_cronograma_sem_evento_nenhum(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """**A etapa também fica pendente por não ter Evento algum, e aí a frase seria mentira.**
+
+    Foi por isso que a tela recebeu a lista de vencidos, e não o estado do selo: os dois motivos de
+    pendência são distintos, e explicar um com a razão do outro é pior do que não explicar.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    criado = api_client.post(
+        "/api/v1/admin/processos",
+        {**process_payload, "institutionalCode": "PS-SEM-EVENTO"},
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": "selo-sem-evento-0001"},
+    )
+    vazio = Edital.objects.get(processo_id=criado.json()["id"])
+
+    resposta = client.get(reverse("interface:compor-etapa", args=[vazio.id, "cronograma"]))
+    corpo = resposta.content.decode()
+
+    passos = {p["chave"]: p for p in resposta.context["progresso"]}
+    assert passos["cronograma"]["estado"] == "pendente", "sem Evento também é pendente"
+    assert "fica <strong>pendente</strong> enquanto o Cronograma" not in corpo
