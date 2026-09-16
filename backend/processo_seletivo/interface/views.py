@@ -522,14 +522,18 @@ def _destino(caminho, codigo=""):
 MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
-def _pendencias(edital):
-    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve."""
+def _pendencias(edital, *, agora=None):
+    """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
+
+    **`agora` é recebido, e não lido aqui, quando a página também desenha o selo das etapas**
+    (`028`, FR-341). O selo do Cronograma e estas pendências respondem à mesma pergunta — que
+    Eventos venceram —, e dois relógios lidos na mesma requisição podem discordar: a etapa
+    apareceria pendente sem a explicação correspondente, que é o que a UX-049 proíbe. Quem não tem
+    selo a desenhar continua chamando sem o argumento.
+    """
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
-    # Um instante para a conferência inteira (`028`, FR-341). Aqui não há transação de gravação de
-    # onde herdá-lo, então ele é resolvido uma vez e passado — o que importa é que dois Eventos do
-    # mesmo cronograma nunca sejam julgados contra relógios diferentes.
-    agora = timezone.now()
+    agora = agora or timezone.now()
     for item in validate_for_publication(
         edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
     ):
@@ -676,7 +680,7 @@ def _recusa(exc, digitados, etapa):
     return {"mensagem": mensagem, "ancora": ""}
 
 
-def _estado_do_cronograma(edital):
+def _estado_do_cronograma(edital, *, agora=None):
     """Concluída quando há Evento e nenhum deles venceu (`028`, FR-359, FR-360).
 
     Pendente **não impede nada** (FR-362): o selo orienta quem retoma o trabalho, e quem fecha porta
@@ -690,13 +694,13 @@ def _estado_do_cronograma(edital):
     eventos = list(cronograma.eventos.all())
     if not eventos:
         return PENDENTE
-    agora = timezone.now()
+    agora = agora or timezone.now()
     if any(vencido(evento.start_at, evento.end_at, agora=agora) for evento in eventos):
         return PENDENTE
     return CONCLUIDA
 
 
-def _progresso(edital, atual):
+def _progresso(edital, atual, *, agora=None):
     """Cada etapa sabe se já está resolvida — o que orienta quem retoma o trabalho depois."""
     estados = {
         "identificacao": CONCLUIDA,
@@ -713,7 +717,7 @@ def _progresso(edital, atual):
         #
         # **O ano não entra aqui.** Divergência de ano é advertência; apagar o selo por ela daria a
         # um Edital legítimo de dezembro a aparência de incompleto.
-        "cronograma": _estado_do_cronograma(edital),
+        "cronograma": _estado_do_cronograma(edital, agora=agora),
         # Etapas são opcionais; "concluída" aqui quer dizer "já tem conteúdo", não "obrigatória".
         "etapas": CONCLUIDA if edital.etapas.exists() else PENDENTE,
         # Como `etapas`: um Edital pode não classificar, e nesta versão isso é legítimo. "Concluída"
@@ -927,7 +931,12 @@ def compor_etapa(request, edital_id, etapa):
         edital.refresh_from_db()
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
-    pendencias = _pendencias(edital)
+    # **Um instante para a página inteira** (`028`, FR-341). O selo da etapa Cronograma e as
+    # pendências respondem à mesma pergunta, e um Evento que vencesse entre as duas leituras faria
+    # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
+    # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
+    agora = timezone.now()
+    pendencias = _pendencias(edital, agora=agora)
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
     conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
@@ -956,7 +965,7 @@ def compor_etapa(request, edital_id, etapa):
             # seria trocar um defeito por outro: quem repartiu 60 na ampla e removeu a última lista
             # reservada precisa ver que a ampla voltou a ser o total.
             "quadro_rederivado": rederivadas,
-            "progresso": _progresso(edital, etapa),
+            "progresso": _progresso(edital, etapa, agora=agora),
             "anterior": anterior,
             "proxima": proxima,
             "editavel": editavel,

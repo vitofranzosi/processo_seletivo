@@ -1712,8 +1712,9 @@ def _ano_dos_eventos(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
             ValidationFinding(
                 Severity.WARNING,
                 "schedule_event_year_mismatch",
-                f"O Evento '{_nome_do_evento(evento)}' corre em {ano_do_evento(inicio)}, e o "
-                f"Edital é de {ano}. Confira se a data é a desta oferta.",
+                f"O Evento '{_nome_do_evento(evento)}' começa em {_por_extenso(inicio)}, que é "
+                f"de {ano_do_evento(inicio)}, e o Edital é de {ano}. Confira se a data é a desta "
+                "oferta.",
                 f"{_caminho_da_entidade('schedule', evento, posicao)}/startAt",
             )
         )
@@ -1736,6 +1737,19 @@ def _periodo_de_inscricoes_encerrado(
     seria o sistema criando prazo que o Edital não fixou.
     """
     if ato != ATO_DE_PUBLICACAO:
+        return []
+    # **Com marca ambígua, este achado recua.** `periodo_de_inscricoes` escolhe o **primeiro**
+    # Evento marcado, e com dois marcados essa escolha é arbitrária: se o primeiro estiver
+    # encerrado, o conteúdo receberia `registration_period_ambiguous` **e**
+    # `registration_period_closed` ao mesmo tempo, sobre uma causa só. Quem responde nesse caso é o
+    # impeditivo que já existia — o Edital precisa de um período só antes de se poder dizer se ele
+    # encerrou. Empilhar dois relatos esconde o que resolve.
+    marcados = sum(
+        1
+        for _, evento in _eventos_bem_formados(snapshot)
+        if evento.get("isRegistrationPeriod") is True
+    )
+    if marcados != 1:
         return []
     periodo = periodo_de_inscricoes(snapshot, agora)
     if periodo.estado != ENCERRADO or periodo.fim is None:

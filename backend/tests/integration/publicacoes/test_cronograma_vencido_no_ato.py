@@ -6,7 +6,7 @@ recusa **não** alcança o acervo: no Edital já publicado, cronograma vencido �
 prender a Retificação dele bloquearia até a correção de uma vírgula.
 """
 
-import time
+from contextlib import contextmanager
 from datetime import timedelta
 
 import pytest
@@ -77,6 +77,31 @@ def publicar(api_client, edital, *, chave):
     )
 
 
+@contextmanager
+def _transacao_em(instante):
+    from django.db import transaction
+
+    with transaction.atomic():
+        yield instante
+
+
+def relogio(monkeypatch, instante):
+    """Faz os commands de publicação enxergarem `instante` como o agora da transação.
+
+    **Por que injetar em vez de esperar.** O conteúdo homologado não pode mudar entre a homologação
+    e a publicação — mudá-lo faz a publicação recusar por divergência de revisão, que é outra
+    recusa —, então só o tempo fecha o prazo. Esperá-lo de verdade custava sete segundos de CI e
+    podia falhar se a submissão consumisse a janela. Substituir o relógio da transação mede a mesma
+    coisa, e mede sempre.
+
+    `command_context` é substituído no **módulo que o usa**, e não na origem: o que se troca é o
+    relógio daquele ato, e nenhum outro.
+    """
+    from processo_seletivo.publicacoes.application import publish_edital as modulo
+
+    monkeypatch.setattr(modulo, "command_context", lambda: _transacao_em(instante))
+
+
 @pytest.fixture
 def em_elaboracao(api_client, manager_headers, process_payload):
     criado = api_client.post(
@@ -100,54 +125,49 @@ def test_a_submissao_e_recusada_com_o_periodo_ja_encerrado(api_client, em_elabor
 
 
 def test_a_publicacao_e_recusada_mesmo_sem_a_revisao_ter_sido_aberta(
-    api_client, manager_headers, process_payload, em_elaboracao
+    api_client, em_elaboracao, monkeypatch
 ):
     """FR-357. A conferência da publicação é independente da da submissão, e já era.
 
-    Este teste existe para que continue sendo depois de alguém "otimizar" a conferência duplicada:
-    o Edital chega homologado com o prazo aberto, e a publicação é o último portão.
+    **O rascunho não é tocado**, e é o ponto: mexer nele faria a publicação recusar por divergência
+    de revisão — outra recusa, que deixaria este teste verde mesmo se a conferência da publicação
+    fosse removida. O que muda é o relógio do ato, que é o que muda na vida.
     """
     agora = timezone.now()
     conteudo = rascunho(inicio=agora - timedelta(days=9), fim=agora + timedelta(days=9))
     preparar(api_client, em_elaboracao, conteudo, chave="vencido-publicacao-0001")
 
-    # O prazo fecha entre a homologação e a publicação, sem que o rascunho mude: quem o fecha é o
-    # tempo. Aqui ele é simulado movendo o Evento do rascunho — e por isso a publicação também
-    # recusaria por divergência de revisão; o que este teste afirma é a recusa **do período**.
-    from processo_seletivo.editais.models import EventoCronograma
-
-    EventoCronograma.objects.filter(cronograma__edital=em_elaboracao).update(
-        end_at=agora - timedelta(hours=1)
-    )
-    em_elaboracao.refresh_from_db()
-
+    relogio(monkeypatch, agora + timedelta(days=10))
     publicada = publicar(api_client, em_elaboracao, chave="vencido-publicacao-0001")
 
-    assert publicada.status_code in (409, 422), publicada.content
+    assert publicada.status_code == 422, publicada.content
+    corpo = publicada.json()
+    assert corpo["code"] == "blocking_findings", corpo
+    assert "encerrou em" in corpo["detail"], corpo["detail"]
 
 
 def test_o_prazo_que_vence_entre_a_homologacao_e_a_publicacao_impede_publicar(
-    api_client, em_elaboracao
+    api_client, em_elaboracao, monkeypatch
 ):
     """FR-358. Submissão e publicação são atos distintos, em instantes distintos.
 
-    **Este é o único teste da suíte que espera o relógio de verdade**, e não há como não esperar:
-    o conteúdo homologado não pode mudar entre um ato e outro — mudá-lo faria a publicação recusar
-    por divergência de revisão, que é outra recusa —, então só o tempo pode fechar o prazo. A
-    janela é de seis segundos, larga o bastante para submeter e homologar dentro dela.
+    O Edital é submetido e homologado com o prazo correndo — a submissão **passa** —, e a publicação
+    acontece depois de ele fechar. Nada no conteúdo mudou; mudou o instante do ato.
     """
     agora = timezone.now()
-    conteudo = rascunho(inicio=agora - timedelta(days=9), fim=agora + timedelta(seconds=6))
+    conteudo = rascunho(inicio=agora - timedelta(days=9), fim=agora + timedelta(days=2))
 
     submetido, homologado = preparar(api_client, em_elaboracao, conteudo, chave="vencido-tempo-01")
     assert submetido.status_code < 400, "o prazo ainda corria na submissão"
     assert homologado.status_code < 400, homologado.content
 
-    time.sleep(7)
+    relogio(monkeypatch, agora + timedelta(days=3))
     publicada = publicar(api_client, em_elaboracao, chave="vencido-tempo-01")
 
     assert publicada.status_code == 422, publicada.content
-    assert b"encerrou em" in publicada.content or b"impeditivos" in publicada.content
+    corpo = publicada.json()
+    assert corpo["code"] == "blocking_findings", corpo
+    assert "não receberá inscrição alguma" in corpo["detail"], corpo["detail"]
     em_elaboracao.refresh_from_db()
     assert em_elaboracao.status != Edital.Status.PUBLICADO
 

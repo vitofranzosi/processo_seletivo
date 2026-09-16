@@ -546,6 +546,10 @@ class Command(BaseCommand):
         # é o que garante que os dois Editais não disputem identificador de Perfil, Etapa ou marco.
         segundo = _numero_do_segundo_edital(numero)
         publicacao = None
+        # `concluido` é inicializado junto de `publicacao`, e pela mesma razão: os dois só existem
+        # quando o segundo Edital existe, e o quarto — que parte dele — precisa saber disso sem
+        # estourar. Com `--numero` não numérico, a demonstração tem um Edital só, e o diz.
+        concluido = None
         if segundo is None:
             self.stdout.write(
                 "Número do Edital não é numérico: o segundo Edital, com resultado divulgado, "

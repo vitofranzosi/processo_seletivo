@@ -174,3 +174,39 @@ E antes de empurrar, mesmo que só documentação tenha mudado:
 ```bash
 cd backend && uv run pytest tests/test_citacoes_de_requisito.py
 ```
+
+---
+
+## Registro da execução
+
+**15/09/2026**, banco `ps_demo_028`, servidor em `localhost:8028`, identidade `ana.elaboradora`
+com o papel Elaborador. O alvo foi o **quarto Edital da demonstração** — `01/2027`, reaproveitado
+do `51/2026` —, que é o cenário do `12/2027` reconstruído pelo `seed_demo`.
+
+| # | O que foi observado | Resultado |
+|---|---|---|
+| A2 | Etapa 3 · Cronograma, lida a partir da etapa 1 | **PENDENTE** ✔ |
+| A3 | Aviso da `023` no topo de todas as etapas | presente, e o sinal novo se soma a ele ✔ |
+| A4 | Etapa Cronograma diz quais Eventos venceram | três avisos, um por Evento ✔ |
+| A5 | Forma dos instantes | `06/08/2026 às 20:32` — zona institucional, sem ISO, sem UTC, sem JSON Pointer ✔ |
+| A6 | Etapa 9 · Revisão | "O que falta para submeter", **não** "Nada pendente"; três avisos de passado, três de ano e o IMPEDE ✔ |
+| A8 | Destino de cada pendência | "Ir para Cronograma" em todas ✔ |
+| A12 | Os outros oito selos | inalterados ✔ |
+| D1–D4 | O quarto Edital existe, em elaboração, pendente, com os três achados | ✔ |
+
+### O que **não** foi percorrido à mão, e por quê
+
+- **A1, A7, A9–A11 e o Percurso B inteiro** são verificados por teste automatizado contra as mesmas
+  views e os mesmos serviços — a lista está em [rastreabilidade.md](rastreabilidade.md). Repeti-los
+  na tela mediria a mesma coisa duas vezes.
+- **B9** — publicar depois de o prazo fechar — deixou de exigir espera real: o teste
+  `test_o_prazo_que_vence_entre_a_homologacao_e_a_publicacao_impede_publicar` injeta o instante do
+  ato em vez de dormir sete segundos. O roteiro acima permanece como está para quem quiser vê-lo
+  acontecer na tela.
+- **O Percurso C** (o acervo) é integralmente automatizado em
+  `tests/integration/publicacoes/test_cronograma_vencido_no_ato.py`.
+
+> **O que a execução à mão encontrou e o teste não encontraria.** Um cronograma de três Eventos
+> reaproveitado produz **sete** achados — três de passado, três de ano e o impeditivo. É a `FR-345`
+> funcionando como escrita, uma advertência por Evento e por espécie; num Edital real de quinze
+> Eventos seriam trinta linhas. Agrupar por espécie seria mudança de decisão, e não correção.

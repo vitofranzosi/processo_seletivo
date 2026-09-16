@@ -251,8 +251,11 @@ def test_os_achados_que_ja_existiam_sobre_o_periodo_nao_mudam():
     """FR-350: marca ausente continua advertindo, marca ambígua continua impedindo, e esta feature
     não empilha um segundo relato sobre nenhuma das duas causas."""
     sem_marca = conteudo(evento(inicio=em(days=1), fim=em(days=9)))
+    # **O primeiro marcado está encerrado, de propósito.** Com os dois no futuro este teste passava
+    # sem medir nada: `periodo_de_inscricoes` escolhe o primeiro marcado, e é justamente quando esse
+    # primeiro venceu que os dois impeditivos se empilham sobre a mesma causa.
     ambiguo = conteudo(
-        evento(inicio=em(days=1), fim=em(days=9), periodo=True),
+        evento(inicio=em(days=-9), fim=em(days=-1), periodo=True),
         evento(identidade=OUTRO, inicio=em(days=1), fim=em(days=9), periodo=True),
     )
 
@@ -264,7 +267,10 @@ def test_os_achados_que_ja_existiam_sobre_o_periodo_nao_mudam():
         item.code for item in blocking_findings(validate_for_publication(ambiguo, agora=AGORA))
     }
     assert "registration_period_ambiguous" in impeditivos
-    assert "registration_period_closed" not in impeditivos
+    assert "registration_period_closed" not in impeditivos, (
+        "com dois Eventos marcados, qual deles encerrou é pergunta sem resposta: quem responde é "
+        "o impeditivo da marca ambígua, sozinho"
+    )
 
 
 # --- T017 · a forma da mensagem (UX-047, UX-048) ------------------------------------------------
@@ -278,6 +284,20 @@ def test_a_mensagem_do_impedimento_diz_quando_encerrou_e_o_que_acontece():
     assert "14/09/2026 às 12:00" in item.message, item.message
     assert "não receberá inscrição alguma" in item.message
     assert "Cronograma" in item.message
+
+
+def test_toda_advertencia_desta_feature_exibe_o_instante_em_forma_legivel():
+    """UX-047 exige o instante, e não só a acusação.
+
+    A advertência de ano dizia apenas "corre em 2026": quem a lia sabia que havia divergência e não
+    sabia **qual data** conferir — num cronograma de quinze Eventos, é a diferença entre corrigir e
+    procurar.
+    """
+    snapshot = conteudo(evento(inicio=em(days=-9), fim=em(days=-1)), ano=2027)
+
+    for item in achados(snapshot):
+        assert "/2026" in item.message, (item.code, item.message)
+        assert "às" in item.message, (item.code, item.message)
 
 
 def test_nenhuma_mensagem_desta_feature_traz_iso_cru_json_pointer_ou_utc():
