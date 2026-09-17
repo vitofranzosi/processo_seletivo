@@ -283,6 +283,22 @@ def edital_snapshot(edital: Edital) -> dict:
         # O teto de Inscrições por candidato (D-3). Da raiz porque limita o **total** da pessoa no
         # certame; no Perfil seria redundante com `uq_inscricao_identidade_edital_perfil`.
         "maxInscricoesPorCandidato": edital.max_inscricoes_por_candidato,
+        # Se este certame exige Requerimento de Matrícula, e com que texto de veracidade (029,
+        # `FR-368`). **A chave está sempre presente, e `null` significa que o Edital não exige** —
+        # é a forma de `vacancyReversion` e `callForm` logo abaixo, e não a omissão: omitir faria o
+        # mesmo fato ter duas formas conforme o Edital.
+        #
+        # **Objeto, e não dois campos soltos**, pela razão que a `016` registrou em
+        # `vacancyReversion`: um campo novo da mesma decisão entra sem abrir um segundo degrau
+        # canônico.
+        "matriculationRequest": (
+            {
+                "moment": edital.requerimento_momento,
+                "declarationText": edital.requerimento_declaracao,
+            }
+            if edital.requerimento_momento
+            else None
+        ),
         "processoCode": edital.processo.institutional_code,
         "processoTitle": edital.processo.title,
         "number": edital.number,

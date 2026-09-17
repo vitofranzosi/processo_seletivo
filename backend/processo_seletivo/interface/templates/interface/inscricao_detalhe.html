@@ -38,6 +38,49 @@
   </dl>
 </section>
 
+{% if requerimento %}
+<section class="conferencia" aria-labelledby="requerimento-de-matricula">
+  <h2 id="requerimento-de-matricula">Requerimento de Matrícula</h2>
+  {% comment %}
+  **Sob a mesma permissao da tela**, `inscricao:consultar`, e **sem rota propria** (FR-400): uma
+  listagem dos requerimentos de um Edital poria cor/raca, filiacao e endereco de todo mundo numa
+  tela so, sem jornada que a peca.
+
+  **O bloco so existe quando ha requerimento.** Uma linha dizendo "nao ha" apareceria em todo
+  Edital que nao coleta — a maioria — e alongaria uma tela ja longa com uma ausencia que nao e
+  informacao.
+
+  **Rascunho aparece dito como rascunho.** Esconde-lo faria quem conduz concluir que a pessoa nao
+  declarou nada; mostra-lo sem a marca faria tratar como declarado o que ninguem enviou.
+
+  **Nenhuma palavra aqui e deferido, indeferido ou homologado** (SC-132). O requerimento e
+  declaracao da pessoa; o que se faz com ela e decisao de outro ato.
+  {% endcomment %}
+  {% if enviado_o_requerimento %}
+  <p class="sub">Enviado em {{ requerimento.requerimento.enviado_em|date:"d/m/Y H\hi" }},
+    sob a versão vigente desde {{ requerimento.requerimento.versao_aceita.valid_from|date:"d/m/Y H\hi" }}.</p>
+  {% else %}
+  <p class="aviso" role="status"><strong>Em preenchimento.</strong> A pessoa começou e ainda não
+    enviou. O que está abaixo não foi declarado.</p>
+  {% endif %}
+  {% if requerimento.sucede %}
+  <p class="sub">Corrige um requerimento anterior, sob autorização de convocação registrada. O
+    anterior continua legível — corrigir não apaga.</p>
+  {% endif %}
+  {% for grupo in requerimento.grupos %}
+  <h3>{{ grupo.titulo }}</h3>
+  <dl class="dados-da-inscricao">
+    {% for linha in grupo.linhas %}
+    <dt>{{ linha.rotulo }}</dt>
+    <dd>{% if linha.valor %}{{ linha.valor }}{% else %}<span class="ajuda">não informado</span>{% endif %}</dd>
+    {% endfor %}
+  </dl>
+  {% endfor %}
+  <p class="ajuda">{% if requerimento.conferido_por_referencia %}O município e a UF vieram da base
+    de CEP.{% else %}O endereço é o que a pessoa informou: o CEP não foi reconhecido na base.{% endif %}</p>
+</section>
+{% endif %}
+
 <section class="conferencia" aria-labelledby="documentos-apresentados">
   <h2 id="documentos-apresentados">Documentos apresentados</h2>
   {% comment %}

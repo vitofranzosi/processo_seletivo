@@ -1394,6 +1394,7 @@ def validate_for_publication(
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
     findings.extend(_ano_dos_eventos(snapshot, ato=ato))
+    findings.extend(_declaracao_do_requerimento(snapshot, ato=ato))
     findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
@@ -1651,6 +1652,37 @@ def _por_extenso(instante: datetime) -> str:
     conferência que devolvia JSON Pointer e instante em UTC a quem só queria saber que data mudar.
     """
     return instante.astimezone(ZONA).strftime("%d/%m/%Y às %H:%M")
+
+
+def _declaracao_do_requerimento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Momento declarado sem texto de declaração — **erro impeditivo** (029, `FR-407`).
+
+    **Impeditivo, e não advertência.** O texto é o que o candidato aceita, e é o que o cancelamento
+    por informação falsa invoca. Sem ele, o aceite da `FR-393` guardaria o resumo de uma string
+    vazia: um aceite de nada, gravado como se fosse aceite de alguma coisa. E publicação é ato
+    imutável — o Edital nasceria com um requerimento inaceitável, e a correção não seria digitar de
+    novo, e sim Retificar.
+
+    **Condicionado ao ato de publicação**, como os achados que a `028` acrescentou. Uma exigência
+    impeditiva sem esse recorte bloquearia toda Retificação de todo Edital do acervo, inclusive as
+    que corrigem uma data e nada têm com requerimento — é a lição que a `027` deixou escrita.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    declaracao = snapshot.get("matriculationRequest")
+    if not isinstance(declaracao, dict) or not declaracao.get("moment"):
+        return []
+    if (declaracao.get("declarationText") or "").strip():
+        return []
+    return [
+        ValidationFinding(
+            Severity.BLOCKING_ERROR,
+            "matriculation_request_without_declaration",
+            "O Edital exige Requerimento de Matrícula e não tem o texto da declaração de "
+            "veracidade. O candidato precisa aceitar um texto, e não um campo vazio.",
+            "matriculationRequest/declarationText",
+        )
+    ]
 
 
 def _eventos_vencidos(snapshot: dict, *, ato: str, agora: datetime) -> list[ValidationFinding]:

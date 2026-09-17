@@ -1222,7 +1222,19 @@ def ler_inscricao(dados):
                 "attachmentId": _texto(dados, f"{base}-attachmentId") or None,
             }
         )
-    return {"periodo": _texto(dados, "periodo-inscricoes"), "documentos": _renumerar(documentos)}
+    return {
+        "periodo": _texto(dados, "periodo-inscricoes"),
+        "documentos": _renumerar(documentos),
+        # **O Requerimento de Matrícula entra nesta etapa, e não numa nova** (029, `T-003`). É aqui
+        # que quem elabora decide o que se pede ao candidato — o período e os Documentos Exigidos já
+        # são compostos neste mesmo lugar, e o requerimento é a terceira face da mesma decisão.
+        #
+        # **Dois campos, e nem um a mais.** O Edital liga e agenda; quais campos o requerimento tem
+        # é decisão de domínio, escrita em spec (`D-002`). Não há construtor de formulário aqui, e
+        # a ausência é o que mantém essa recusa real.
+        "requerimento_momento": _texto(dados, "requerimento-momento"),
+        "requerimento_declaracao": _texto(dados, "requerimento-declaracao"),
+    }
 
 
 def documentos_do_edital(edital):

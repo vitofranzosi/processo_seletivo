@@ -99,6 +99,19 @@ INSTALLED_APPS = [
     # uma FK na direção contrária inverteria a dependência no grafo de migrations, que é onde ela
     # é irreversível (019, R-003).
     "processo_seletivo.convocacao",
+    # O Requerimento de Matrícula (029): o que a pessoa declara para que a candidatura vire dado
+    # apto à matrícula, e a base de referência de CEP que ajuda a preenchê-lo. App próprio pela
+    # razão que fez a `016` não morar em `classificacao` e a `019` não morar em `ocupacao` — o ato
+    # é outro. A Inscrição é o ato de **disputar** a vaga, e por isso ela congela na submissão; o
+    # Requerimento é o ato de **habilitar o vínculo** que a disputa deu, praticado às vezes meses
+    # depois. Guardá-lo dentro de `inscricoes` diria, na estrutura, que dado de matrícula é dado de
+    # seleção — que é a confusão que esta feature existe para desfazer.
+    #
+    # A direção da dependência: `requerimentos` lê `inscricoes`, `convocacao` e `publicacoes`, e
+    # nenhum deles passa a conhecê-lo. `inscricoes` consulta **só** o predicado que não alcança
+    # `convocacao` (`domain/disponibilidade.py::exigido_na_inscricao`), para que o ciclo
+    # `inscricoes → requerimentos → convocacao → inscricoes` não se feche.
+    "processo_seletivo.requerimentos",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são

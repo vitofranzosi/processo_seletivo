@@ -1,0 +1,160 @@
+"""A carga da base de referência de CEP (029, `T-008`, `T-015`, `D-008`).
+
+**O que a medição de 17/09/2026 encontrou, e que este arquivo prende.** A fonte não distribui um
+dump: distribui **um arquivo JSON por CEP** — 1.209.314 deles. O comando recebia uma pasta e fazia
+`rglob("*.json")`, o que contra a base real significa descompactar um milhão e duzentos mil arquivos
+para lê-los uma vez, e materializar uma lista de um milhão de caminhos antes do primeiro registro.
+
+Ele passou a ler o `.zip` **em fluxo**: uma abertura em vez de um milhão. A carga inteira leva 31
+segundos.
+
+**E latitude e longitude são descartadas na leitura** (`D-008`). Elas vêm em todo registro da fonte,
+e a própria fonte adverte que a confiabilidade delas é variável. O que não entra na tabela não
+precisa de política de exibição depois, e não vira o campo que alguém acha que pode mostrar como
+*"onde a pessoa mora"*.
+"""
+
+import json
+import zipfile
+
+import pytest
+from django.core.management import call_command
+
+from processo_seletivo.requerimentos.domain import endereco
+from processo_seletivo.requerimentos.models import ReferenciaDeCep
+
+pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+# Um registro na forma exata da fonte, com as coordenadas que o comando joga fora.
+DA_FONTE = {
+    "cep": "29040860",
+    "logradouro": "Rua Barão de Mauá",
+    "complemento": "",
+    "bairro": "Jucutuquara",
+    "localidade": "Vitória",
+    "uf": "ES",
+    "ibge": "3205309",
+    "latitude": "-20.3076396",
+    "longitude": "-40.3208734",
+}
+
+
+def zip_com(registros, tmp_path, nome="ceps.zip"):
+    """Um `.zip` no formato da fonte: um arquivo por CEP, dentro de uma pasta."""
+    caminho = tmp_path / nome
+    with zipfile.ZipFile(caminho, "w") as arquivo:
+        arquivo.writestr("banco-ceps-main/README.md", "# base\n")
+        for registro in registros:
+            arquivo.writestr(
+                f"banco-ceps-main/cep/{registro['cep']}.json",
+                json.dumps(registro, ensure_ascii=False),
+            )
+    return caminho
+
+
+class TestOZip:
+    def test_carrega_do_zip_sem_descompactar(self, tmp_path):
+        """A forma real da fonte, e a que a medição obrigou a suportar."""
+        origem = zip_com([DA_FONTE], tmp_path)
+
+        call_command("carregar_ceps", str(origem))
+
+        linha = ReferenciaDeCep.objects.get(pk="29040860")
+        assert linha.municipio == "Vitória"
+        assert linha.uf == "ES"
+        assert linha.codigo_ibge == "3205309"
+        assert linha.logradouro == "Rua Barão de Mauá"
+
+    def test_o_que_nao_e_json_no_zip_e_ignorado(self, tmp_path):
+        """O `README` e o `requirements.txt` vêm junto no arquivo da fonte."""
+        origem = zip_com([DA_FONTE], tmp_path)
+
+        call_command("carregar_ceps", str(origem))
+
+        assert ReferenciaDeCep.objects.count() == 1
+
+    def test_registro_ilegivel_nao_derruba_a_carga(self, tmp_path):
+        """A base é montada por raspagem, e a fonte publica a lista dos CEPs que falharam.
+
+        Abortar por causa de um arquivo corrompido deixaria a tabela pela metade — e metade de uma
+        base de referência é pior do que nenhuma: o CEP não encontrado passa a significar duas
+        coisas.
+        """
+        caminho = tmp_path / "ceps.zip"
+        with zipfile.ZipFile(caminho, "w") as arquivo:
+            arquivo.writestr("cep/29040860.json", json.dumps(DA_FONTE))
+            arquivo.writestr("cep/quebrado.json", "{ isto não é json")
+            arquivo.writestr("cep/01001000.json", json.dumps({**DA_FONTE, "cep": "01001000"}))
+
+        call_command("carregar_ceps", str(caminho))
+
+        assert ReferenciaDeCep.objects.count() == 2
+
+
+class TestOQueNaoEntraNaTabela:
+    def test_latitude_e_longitude_sao_descartadas(self, tmp_path):
+        """`D-008`: o que não entra na tabela não precisa de política de exibição depois."""
+        origem = zip_com([DA_FONTE], tmp_path)
+
+        call_command("carregar_ceps", str(origem))
+
+        colunas = {campo.name for campo in ReferenciaDeCep._meta.get_fields()}
+        assert not colunas & {"latitude", "longitude", "lat", "lng"}
+
+
+class TestAsOutrasOrigens:
+    def test_uma_pasta_de_arquivos_continua_funcionando(self, tmp_path):
+        """Quem já tem a base descompactada não é obrigado a recompactá-la."""
+        pasta = tmp_path / "cep"
+        pasta.mkdir()
+        (pasta / "29040860.json").write_text(json.dumps(DA_FONTE), encoding="utf-8")
+
+        call_command("carregar_ceps", str(pasta))
+
+        assert ReferenciaDeCep.objects.filter(pk="29040860").exists()
+
+    def test_um_dump_em_lista_tambem(self, tmp_path):
+        """A forma que qualquer outra origem usaria. Aceitar as duas não custa nada."""
+        arquivo = tmp_path / "dump.json"
+        arquivo.write_text(
+            json.dumps([DA_FONTE, {**DA_FONTE, "cep": "01001000"}]), encoding="utf-8"
+        )
+
+        call_command("carregar_ceps", str(arquivo))
+
+        assert ReferenciaDeCep.objects.count() == 2
+
+    def test_origem_inexistente_recusa_com_mensagem(self, tmp_path):
+        from django.core.management.base import CommandError
+
+        with pytest.raises(CommandError, match="não encontrada"):
+            call_command("carregar_ceps", str(tmp_path / "nao-existe.zip"))
+
+
+class TestACargaERepetivel:
+    def test_carregar_duas_vezes_atualiza_em_vez_de_duplicar(self, tmp_path):
+        """A chave primária é o CEP: recarregar é substituir, e não acumular.
+
+        É o que torna a atualização da base um comando só, sem passo de limpeza antes — e sem a
+        janela em que a tabela fica vazia enquanto a carga corre.
+        """
+        call_command("carregar_ceps", str(zip_com([DA_FONTE], tmp_path)))
+        atualizado = {**DA_FONTE, "bairro": "Bairro Renomeado"}
+
+        call_command("carregar_ceps", str(zip_com([atualizado], tmp_path, "outro.zip")))
+
+        assert ReferenciaDeCep.objects.count() == 1
+        assert ReferenciaDeCep.objects.get(pk="29040860").bairro == "Bairro Renomeado"
+
+
+class TestAPortaLeOQueFoiCarregado:
+    def test_o_cep_carregado_e_encontrado_pela_porta_do_dominio(self, tmp_path):
+        """A carga e a leitura são duas metades: sem esta asserção, a primeira pode gravar num
+        formato que a segunda não encontra — e nada acusaria."""
+        call_command("carregar_ceps", str(zip_com([DA_FONTE], tmp_path)))
+
+        achado = endereco.referencia_de_cep("29.040-860")
+
+        assert achado is not None
+        assert achado.municipio == "Vitória"
+        assert achado.codigo_ibge == "3205309"

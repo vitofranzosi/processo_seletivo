@@ -1,0 +1,211 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Requerimento de Matrícula{% endblock %}
+{% block conteudo %}
+<h1>Requerimento de Matrícula</h1>
+
+{% comment %}
+**A tela separa o que ja sabemos do que falta voce informar** (UX-053). Sem essa separacao, os
+vinte campos aparecem como um formulario de cadastro e a pessoa redigita nome e CPF por reflexo —
+que e exatamente o que esta feature existe para nao pedir (SC-120).
+
+**Nome, CPF e e-mail entram como informacao, e nao como campo desabilitado.** Um controle
+desabilitado diz "isto e um campo, e voce nao pode usa-lo" sem dizer por que nem onde se corrige. A
+lista abaixo diz a origem de cada dado e leva a tela em que ele se muda (FR-378).
+
+**Nenhuma palavra aqui e deferido, indeferido, homologado ou matricula efetivada** (SC-132). Enviar
+o requerimento nao decide nada: quem decide a vaga e a convocacao, e quem efetiva a matricula e o
+Registro Academico.
+
+**A ajuda mora aqui, e nao no cartao da inscricao** (UX-052): microcopia de preenchimento pertence
+a tela em que se preenche.
+{% endcomment %}
+
+{% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}
+{% if recusa %}<p class="recusa" role="alert" tabindex="-1">{{ recusa }}</p>{% endif %}
+
+<section aria-labelledby="ja-sabemos">
+  <h2 id="ja-sabemos">O que já sabemos</h2>
+  <p class="sub">Você não precisa informar nada disto de novo.</p>
+  {% comment %}
+  **A origem dita uma vez por linha, e curta.** A redacao anterior repetia "— vem dos seus dados;
+  para corrigir, va em Seus dados." em cada item: sete frases quase iguais, 434px de tela, e a
+  informacao que importa — o valor — competindo com a explicacao dela.
+  {% endcomment %}
+  <dl class="ja-sabemos">
+    {% for item in ja_sabemos %}
+    <dt>{{ item.rotulo }}</dt>
+    <dd>{{ item.valor }}
+      {% if item.caminho %}<span class="origem">· <a href="{{ item.caminho }}">corrigir em {{ item.onde }}</a></span>
+      {% else %}<span class="origem">· {{ item.origem }}</span>{% endif %}</dd>
+    {% endfor %}
+  </dl>
+</section>
+
+{% if not pode_escrever and not enviado and not conferindo %}
+{% comment %}
+**"Ainda nao chegou a sua vez" nao e "este certame nao pede"** (FR-405). O Edital que nao pede
+devolve 404: o recurso nao existe. Aqui ele pede, e a vez da pessoa ainda nao chegou — dizer a
+mesma frase nos dois casos faria quem ainda tem chance ler que nao tem.
+{% endcomment %}
+<section aria-labelledby="ainda-nao">
+  <h2 id="ainda-nao">{{ titulo_do_estado }}</h2>
+  <p class="aviso" role="status">{{ explicacao_do_estado }}</p>
+  <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+</section>
+
+{% elif enviado and not conferindo %}
+{% comment %}
+**O enviado continua legivel, e sem campo editavel** (FR-406). E a mesma promessa que a inscricao
+enviada ja cumpre: o que a pessoa mandou nao some da vista dela.
+{% endcomment %}
+<section aria-labelledby="enviado">
+  <h2 id="enviado">{{ titulo_do_estado }}</h2>
+  <p class="sub">Recebemos em {{ requerimento.enviado_em|date:"d/m/Y \à\s H:i" }}.
+  {{ explicacao_do_estado }}</p>
+  {% comment %}
+  **Os grupos legiveis, e nao os do formulario.** O formulario carrega o codigo que o controle
+  precisa — `PARDA`, `F`, `1994-07-12` —; a leitura carrega o que a pessoa escolheu. Sao a mesma
+  informacao em duas formas, e trocar uma pela outra e o defeito que o percurso do C8 encontrou.
+  {% endcomment %}
+  {% for grupo in grupos_legiveis %}
+  <h3>{{ grupo.titulo }}</h3>
+  <dl class="campos">
+    {% for linha in grupo.linhas %}
+    <dt>{{ linha.rotulo }}</dt>
+    <dd>{% if linha.valor %}{{ linha.valor }}{% else %}<span class="sub">não informado</span>{% endif %}</dd>
+    {% endfor %}
+  </dl>
+  {% endfor %}
+  <h3>Declaração aceita</h3>
+  <p>{{ declaracao }}</p>
+  {% if anterior %}
+  <p><a href="{% url 'portal:requerimento-anterior' inscricao.id anterior %}">Ver o requerimento
+    anterior, que este corrigiu</a> — corrigir não apaga.</p>
+  {% endif %}
+  {% if pode_atualizar %}
+  {% comment %}
+  **So quando as duas coisas coexistem** (FR-410): requerimento enviado e chamada em aberto. Fora
+  disso o botao nao aparece — e o comando recusa mesmo assim, porque a tela nao e fronteira de
+  seguranca.
+
+  **E a comparacao do "nada mudou" e do comando**, nao daqui: um POST montado a mao criaria
+  historico artificial — uma cadeia de correcoes em que nada foi corrigido.
+  {% endcomment %}
+  {% comment %}
+  **Link, e nao botao de envio.** Conferir nao pratica ato: abre os mesmos campos preenchidos com o
+  que foi enviado. O sucessor nasce quando alguma coisa muda — a redacao anterior o criava no
+  clique, e clicar e sair escondia o requerimento enviado atras de um rascunho que ninguem pediu
+  (FR-406, FR-410).
+  {% endcomment %}
+  <p class="sub">Você foi convocado e pode conferir o que enviou. Se algo mudou — endereço,
+    telefone, estado civil —, atualize agora. O que você enviou antes continua registrado.</p>
+  <p><a href="?atualizando=1">Conferir e atualizar</a></p>
+  {% endif %}
+</section>
+
+{% else %}
+{% if faltando %}
+{% comment %}
+**Anunciado antes da tentativa** (UX-054). Descobrir no clique o que faltava e o defeito que a
+auditoria de UX deste repositorio ja nomeou — e num formulario de vinte campos ele custa a
+rolagem inteira de volta.
+{% endcomment %}
+<p class="aviso" role="status">Para enviar, ainda falta informar:
+  {% for item in faltando %}{{ item }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+  Você pode guardar o que já preencheu e voltar depois.</p>
+{% endif %}
+
+<form method="post" action="{% url 'portal:requerimento' inscricao.id %}" id="formulario-do-requerimento" novalidate>
+  {% csrf_token %}
+  <input type="hidden" id="versao-exibida" name="versao_exibida" value="{{ versao_exibida }}">
+  {% comment %}
+  A revisao que esta tela exibe. Ela volta no POST para o comando recusar quando outra aba tiver
+  gravado no meio — sem ela, duas abas da mesma pessoa se sobrescrevem em silencio.
+  {% endcomment %}
+  <input type="hidden" id="revisao-exibida" name="revisao" value="{{ revisao }}">
+  {% if conferindo %}<input type="hidden" id="atualizando" name="atualizando" value="1">{% endif %}
+  <input type="hidden" id="declaracao-exibida" name="declaracao_exibida" value="{{ declaracao }}">
+
+  {% if conferindo %}
+  <h2>Confira e atualize</h2>
+  <p class="sub">Estes são os dados que você enviou. Altere o que mudou e envie de novo — o
+    requerimento anterior continua registrado, e nada é criado se você não mudar nada.</p>
+  {% else %}
+  <h2>{{ titulo_do_estado }}</h2>
+  {% endif %}
+  {% for grupo in grupos %}
+  <fieldset class="grupo-de-campos">
+    <legend>{{ grupo.titulo }}</legend>
+    {% if grupo.nota %}<p class="sub">{{ grupo.nota }}</p>{% endif %}
+    <div class="grade-de-campos">
+    {% for linha in grupo.campos %}
+    <div class="campo{% if linha.campo.largura %} {{ linha.campo.largura }}{% endif %}">
+      <label for="{{ linha.campo.nome }}">{{ linha.campo.rotulo }}</label>
+      {% if linha.campo.tipo == "escolha" %}
+      <select id="{{ linha.campo.nome }}" name="{{ linha.campo.nome }}"
+              {% if linha.fechado %}disabled{% endif %}
+              {% if linha.campo.ajuda %}aria-describedby="ajuda-{{ linha.campo.nome }}"{% endif %}>
+        <option value="">—</option>
+        {% for valor, rotulo in linha.campo.opcoes %}
+        <option value="{{ valor }}" {% if valor == linha.valor %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% elif linha.campo.tipo == "longo" %}
+      <textarea id="{{ linha.campo.nome }}" name="{{ linha.campo.nome }}" rows="3"
+                {% if linha.campo.ajuda %}aria-describedby="ajuda-{{ linha.campo.nome }}"{% endif %}>{{ linha.valor }}</textarea>
+      {% else %}
+      <input id="{{ linha.campo.nome }}" name="{{ linha.campo.nome }}" value="{{ linha.valor }}"
+             type="{% if linha.campo.tipo == 'data' %}date{% elif linha.campo.tipo == 'telefone' %}tel{% else %}text{% endif %}"
+             {% if linha.campo.exemplo %}placeholder="{{ linha.campo.exemplo }}"{% endif %}
+             {% if linha.campo.autocomplete %}autocomplete="{{ linha.campo.autocomplete }}"{% endif %}
+             {% if linha.campo.nome == "cep" %}data-rota-do-cep="{% url 'portal:requerimento-cep' %}" data-csrf="{{ csrf_token }}" aria-describedby="aviso-do-cep"{% endif %}
+             {% if linha.fechado %}readonly{% endif %}
+             {% if linha.campo.ajuda %}aria-describedby="ajuda-{{ linha.campo.nome }}"{% endif %}>
+      {% endif %}
+      {% if linha.campo.ajuda %}<span class="dica" id="ajuda-{{ linha.campo.nome }}">{{ linha.campo.ajuda }}</span>{% endif %}
+      {% comment %}
+      O aviso do CEP e **regiao viva**: o script escreve nele o desfecho da consulta. Nasce curto —
+      a frase longa que explicava tudo empurrava o endereco inteiro para baixo, e o que ela dizia
+      so importa quando a consulta falha, que e quando o script a substitui.
+      {% endcomment %}
+      {% if linha.campo.nome == "cep" %}<span class="dica" id="aviso-do-cep" role="status">Preenchemos município e UF.</span>{% endif %}
+      {% if linha.fechado %}<span class="dica">Veio do CEP.</span>{% endif %}
+    </div>
+    {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  {% comment %}
+  **A declaracao nao aparece na conferencia**, e a razao e que ali nao se envia: salva-se a
+  alteracao, o sucessor nasce, e o aceite acontece na tela seguinte — sobre o texto vigente naquele
+  momento. Pedir o aceite aqui o colheria antes de existir o requerimento que ele acompanha.
+  {% endcomment %}
+  {% if not conferindo %}
+  <fieldset class="grupo-de-campos">
+    <legend>Declaração</legend>
+    {% comment %}
+    **O texto vem do Edital publicado, e nunca de literal de codigo** (FR-392). O que se guarda e o
+    resumo do texto publicado, e a versao exibida viaja no campo oculto acima: uma Retificacao
+    entre abrir esta pagina e clicar em enviar faz o envio ser recusado, em vez de gravar um par
+    incoerente que ninguem notaria (FR-393).
+    {% endcomment %}
+    <p>{{ declaracao }}</p>
+    <div class="campo">
+      <label for="aceite">
+        <input type="checkbox" id="aceite" name="aceite" value="1"> Li e aceito a declaração acima.
+      </label>
+    </div>
+  </fieldset>
+
+  {% endif %}
+
+  <div class="acoes">
+    {% if not conferindo %}<button type="submit" name="guardar" value="1">Guardar e continuar depois</button>{% endif %}
+    <button type="submit" name="enviar" value="1" class="principal">{% if conferindo %}Salvar a atualização{% else %}Enviar requerimento{% endif %}</button>
+  </div>
+</form>
+{% load static %}<script src="{% static 'portal/cep.js' %}" defer></script>
+<script src="{% static 'portal/requerimento.js' %}" defer></script>
+{% endif %}
+{% endblock %}

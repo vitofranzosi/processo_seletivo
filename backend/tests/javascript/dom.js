@@ -101,7 +101,35 @@ class Elemento {
     documento.activeElement = this;
   }
 
-  addEventListener() {}
+  /* Era um no-op, e por isso nenhum script que escuta o **próprio campo** podia ser testado:
+     `cep.js` registra `blur` e `change` no controle do CEP, e com o no-op os ouvintes sumiam. O
+     registro é o mínimo — guardar e disparar —, e não muda nada para quem já passava: quem nunca
+     dispara nada continua sem efeito nenhum. */
+  addEventListener(tipo, ouvinte) {
+    (this.ouvintes = this.ouvintes || {})[tipo] = (this.ouvintes || {})[tipo] || [];
+    this.ouvintes[tipo].push(ouvinte);
+  }
+
+  /* `detalhe` permite ao teste montar o evento que o script vai ler — a tecla de um `keydown`, por
+     exemplo. Sem ele, o disparo entregava sempre `{type, target}` e todo script que olha `key`
+     saía pelo caminho de "não é comigo": o teste passava sem exercer nada.
+
+     `target` cai para o próprio elemento, que é o caso comum, e o teste o sobrescreve quando
+     precisa disparar no formulário um evento cujo alvo é um campo — que é como o borbulhamento
+     chega ao ouvinte no navegador. */
+  disparar(tipo, detalhe = {}) {
+    const evento = {
+      type: tipo,
+      target: this,
+      impedido: false,
+      preventDefault() {
+        this.impedido = true;
+      },
+      ...detalhe,
+    };
+    ((this.ouvintes || {})[tipo] || []).forEach((ouvinte) => ouvinte(evento));
+    return evento;
+  }
 
   replaceChildren() {}
 

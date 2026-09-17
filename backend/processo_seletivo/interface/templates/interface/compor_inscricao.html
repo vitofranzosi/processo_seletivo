@@ -62,6 +62,60 @@
             hx-target="#documentos" hx-swap="beforeend">Acrescentar documento</button>
     {% endif %}
   </section>
+  <section aria-labelledby="inscricao-requerimento">
+    <h2 id="inscricao-requerimento">Requerimento de Matrícula</h2>
+    <p class="ajuda">Se este Edital pede os dados de matrícula pelo sistema, e em que momento.
+      Deixe em branco para não pedir nada — é o padrão.</p>
+    {% comment %}
+    **Dois campos, e nem um a mais.** O Edital liga e agenda; quais campos o requerimento tem e
+    decisao de dominio, escrita em spec. Nao ha construtor de formulario aqui, e a ausencia dele e
+    o que mantem essa recusa real.
+
+    A ajuda detalhada vai para o `como-preencher` abaixo, e nao para junto do campo: a rubrica de
+    microcopia deste repositorio manda a explicacao longa para la.
+    {% endcomment %}
+    <p class="campo largo">
+      <label for="requerimento-momento">Quando pedir</label>
+      <select id="requerimento-momento" name="requerimento-momento"
+              aria-describedby="ajuda-requerimento-momento">
+        <option value="">Este Edital não pede Requerimento de Matrícula</option>
+        {% for valor, rotulo in momentos_do_requerimento %}
+        <option value="{{ valor }}" {% if requerimento_momento == valor %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-requerimento-momento">Na inscrição, o candidato só envia a
+        inscrição depois de preencher o requerimento. Na convocação, ele preenche quando for
+        chamado.</span>
+    </p>
+    <p class="campo largo">
+      <label for="requerimento-declaracao">Texto da declaração de veracidade</label>
+      <textarea id="requerimento-declaracao" name="requerimento-declaracao" rows="4"
+                aria-describedby="ajuda-requerimento-declaracao">{{ requerimento_declaracao }}</textarea>
+      <span class="ajuda" id="ajuda-requerimento-declaracao">Obrigatório quando o Edital pede o
+        requerimento. É o que o candidato lê e aceita antes de enviar, e a publicação é recusada
+        sem ele.</span>
+    </p>
+    <details class="como-preencher">
+      <summary>Como preencher estes campos</summary>
+      <dl>
+        <dt>Quando pedir</dt>
+        <dd>Na <strong>inscrição</strong>, todo mundo preenche — inclusive quem não for aprovado.
+          Na <strong>convocação</strong>, preenche quem for chamado, incluindo quem for chamado
+          por suplência depois de uma vaga vagar. Os campos pedidos são os mesmos nos dois casos:
+          o Edital decide o momento, não a lista.</dd>
+        <dt>Texto da declaração</dt>
+        <dd>Escreva a declaração inteira, como ela deve aparecer ao candidato. Ela é publicada
+          junto com o Edital, e o sistema guarda o resumo do texto que cada pessoa aceitou — de
+          modo que uma Retificação posterior não reescreve o que já foi aceito.</dd>
+        <dt>E o Anexo em papel?</dt>
+        <dd>Quando este Edital pede o Requerimento de Matrícula pelo sistema, o Anexo em papel
+          <strong>passa a ser dispensável</strong>: os mesmos dados são coletados aqui, com
+          declaração e registro de aceite. Se você mantiver os dois, o candidato fará a mesma
+          coisa duas vezes. Quem decide é este Edital — o sistema não remove o Documento Exigido
+          por conta própria, e não o exige por conta própria.</dd>
+      </dl>
+    </details>
+  </section>
   {% include "interface/_navegacao_etapa.html" %}
 </form>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>

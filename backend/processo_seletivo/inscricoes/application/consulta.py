@@ -314,6 +314,7 @@ def inscricao_para_consulta(*, actor, inscricao_id):
     versao = inscricao.versao_aceita or selectors.selecao_publica(edital_id=inscricao.edital_id)
     conteudo = versao.content
     perfil, modalidade = _nome_no_conteudo(conteudo, inscricao)
+    bloco_do_requerimento = _requerimento_do_dossie(inscricao)
     enviados = {
         str(documento.requirement_id): documento
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
@@ -346,7 +347,25 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,
         "documentos": documentos,
+        # **O Requerimento de Matrícula, sob a mesma permissão e na mesma tela** (029, `US4`).
+        # `None` quando o certame não coleta, e o dossiê não desenha bloco nenhum.
+        #
+        # **O import é tardio, e a razão é o sentido da dependência.** `requerimentos` conhece
+        # `inscricoes` — o requerimento aponta a Inscrição —, e importá-lo no topo daqui fecharia o
+        # ciclo no carregamento dos módulos. É o mesmo recurso que `submissao.py` usa, e pela mesma
+        # razão.
+        "requerimento": bloco_do_requerimento,
+        # Chave própria porque `{% if requerimento.enviado %}` no template silencia quando a chave
+        # some numa renomeação — e o bloco passaria a dizer *"em preenchimento"* sobre um
+        # requerimento enviado, sem que nada acusasse.
+        "enviado_o_requerimento": bool(bloco_do_requerimento and bloco_do_requerimento["enviado"]),
     }
+
+
+def _requerimento_do_dossie(inscricao):
+    from processo_seletivo.requerimentos.application.selectors import para_o_dossie
+
+    return para_o_dossie(inscricao)
 
 
 def documento_para_consulta(*, actor, inscricao_id, requirement_id):

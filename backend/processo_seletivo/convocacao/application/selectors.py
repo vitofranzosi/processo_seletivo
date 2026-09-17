@@ -62,6 +62,31 @@ def desfecho_de(convocacao):
     return max(vigentes_do_ato, key=lambda d: d.registrado_em) if vigentes_do_ato else None
 
 
+def chamada_em_aberto(inscricao):
+    """A convocação vigente **sem desfecho** desta Inscrição, ou `None` (029, `FR-373`).
+
+    **Em aberto, e não vigente** — a distinção é a mesma que `convocar.py::_em_aberto_da_pessoa`
+    registra, e é a que faz a diferença: uma convocação com desfecho continua **vigente**, porque
+    ninguém a sucedeu, mas está **concluída** — a pessoa respondeu, ou a Administração concluiu por
+    ela. A primeira versão daquele bloqueio olhava só a vigência e produziu um beco; ler só a
+    vigência aqui abriria o requerimento para quem já teve a chamada desfechada.
+
+    **Esta função existe para haver uma fonte só.** A `029` a consome para decidir se o requerimento
+    abre e se um sucessor pode nascer; escrever o predicado de novo lá dentro faria duas leituras de
+    "em aberto" que divergiriam na primeira mudança — e o preço dessa divergência já foi pago uma
+    vez nesta feature.
+    """
+    convocacoes = (
+        Convocacao.objects.filter(inscricao=inscricao)
+        .prefetch_related("desfechos", "sucessoras")
+        .order_by("-criado_em")
+    )
+    for convocacao in vigentes(convocacoes):
+        if desfecho_de(convocacao) is None:
+            return convocacao
+    return None
+
+
 def envio_de(convocacao):
     """O instante do envio bem-sucedido mais recente, ou `None` (`R-009`).
 

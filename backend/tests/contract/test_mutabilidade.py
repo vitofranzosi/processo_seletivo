@@ -31,6 +31,7 @@ from processo_seletivo.editais.domain.mutabilidade import (
     Mutabilidade,
     Natureza,
 )
+from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
 
@@ -90,6 +91,27 @@ def campos_publicados(conteudo):
     return _percorrer(RAIZ, [conteudo])
 
 
+def _declarar_requerimento(edital):
+    """O Edital máximo declara Requerimento de Matrícula (029).
+
+    **Sem isto o guardião falha pelo lado oposto.** Ele compara o `CONTRATO` com
+    `campos_publicados(conteudo_maximo)` — os campos que um Edital **realmente publicado**
+    emite. Com o requerimento não declarado, o snapshot traz `matriculationRequest: null`, o
+    percurso vê uma folha, e os dois caminhos aninhados que o contrato classifica nunca
+    aparecem: o teste acusaria classificação sem campo. Declarar aqui é o que faz o máximo ser
+    máximo.
+
+    `antes_de_submeter` é o gancho que existe para isto — campo de elaboração que precisa estar de
+    pé **antes** de o snapshot ser congelado.
+    """
+    Edital.objects.filter(pk=edital.pk).update(
+        requerimento_momento="AT_ENROLLMENT",
+        requerimento_declaracao=(
+            "Declaro, sob as penas da Lei, que as informações fornecidas são verdadeiras."
+        ),
+    )
+
+
 @pytest.fixture
 def conteudo_maximo(api_client, manager_headers, process_payload):
     """O conteúdo canônico de um Edital **máximo**, publicado de verdade.
@@ -102,7 +124,12 @@ def conteudo_maximo(api_client, manager_headers, process_payload):
     from tests.fixtures.snapshot import rascunho_completo
 
     edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_completo(), anexos=1
+        api_client,
+        manager_headers,
+        process_payload,
+        draft=rascunho_completo(),
+        anexos=1,
+        antes_de_submeter=_declarar_requerimento,
     )
     return VersaoConsolidada.objects.get(edital=edital).content
 

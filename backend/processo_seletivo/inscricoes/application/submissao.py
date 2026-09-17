@@ -232,11 +232,13 @@ def enviar_inscricao(
                 "As duas declarações são obrigatórias para enviar a inscrição.",
                 422,
             )
-        # 10 — o teto de Inscrições por candidato neste Edital (D-3), já serializado pelo par.
+        # 10 — o Requerimento de Matrícula, quando o Edital o coleta **na inscrição** (029).
+        _conferir_o_requerimento(travada)
+        # 11 — o teto de Inscrições por candidato neste Edital (D-3), já serializado pelo par.
         _conferir_o_teto(travada, conteudo)
-        # 11 — os fatos que o Edital declara, na forma que ele declarou.
+        # 12 — os fatos que o Edital declara, na forma que ele declarou.
         valores = _valores_dos_fatos(conteudo, travada, fatos or {})
-        # 12 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
+        # 13 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
         _gravar_o_ato(travada, modalidade=modalidade, versao=versao, agora=agora)
         # O congelamento é da **mesma transação** que muda o status: um valor gravado fora dela
         # existiria para uma inscrição que não chegou a ser submetida, e uma submissão sem os
@@ -261,6 +263,36 @@ def enviar_inscricao(
         idem.response_status = 201
         idem.save()
         return travada
+
+
+def _conferir_o_requerimento(inscricao):
+    """Recusa a submissão enquanto o Requerimento de Matrícula exigido não estiver enviado (029).
+
+    **A recusa é do comando, e a tela apenas a antecipa** (Princípio IV). O cartão da tela avisa
+    antes da tentativa (`UX-054`), mas quem chamar `enviar_inscricao` direto encontra a mesma
+    recusa aqui — do contrário a exigência inteira moraria no template.
+
+    **Vale somente para o momento *na inscrição***. Edital que coleta na convocação submete
+    normalmente: exigir ali um requerimento que só abre depois da chamada inverteria a ordem do
+    certame e tornaria o Edital impossível de cumprir.
+
+    **O import é de `exigencia`, e nunca de `preencher`.** Aquele módulo alcança `convocacao`, que
+    importa `inscricoes` de volta pela FK da `Convocacao`: importá-lo daqui fecharia o ciclo
+    `inscricoes → requerimentos → convocacao → inscricoes`. `exigencia` existe com essa lista de
+    imports por essa razão, e trocar este import pelo outro é o modo de reabrir o defeito.
+    """
+    from processo_seletivo.requerimentos.application.exigencia import (
+        inscricao_exige_requerimento_enviado,
+    )
+    from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
+
+    if inscricao_exige_requerimento_enviado(inscricao):
+        raise DomainError(
+            nomes_do_requerimento.REQUERIMENTO_EXIGIDO,
+            "Este Edital pede o Requerimento de Matrícula no ato da inscrição. Preencha e envie o "
+            "requerimento antes de enviar a inscrição.",
+            422,
+        )
 
 
 def _conferir_o_teto(inscricao, conteudo):

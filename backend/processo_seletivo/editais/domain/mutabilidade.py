@@ -193,6 +193,14 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     #
     # Encontrado ao ligar o contrato à API, na revisão do PR #114.
     (RAIZ, "maxInscricoesPorCandidato"): retificavel(),
+    # ---- matriculationRequest (029) ----------------------------------------------------------
+    (RAIZ, "matriculationRequest/moment"): nao_retificavel(
+        "O momento da coleta define o que foi exigido de quem já se inscreveu. Mudá-lo depois da "
+        "publicação ou invalida inscrição submetida — quem enviou sem requerimento porque o Edital "
+        "o pedia na convocação passaria a estar incompleto — ou cobra dado de quem já cumpriu o "
+        "que o Edital pedia. Não é correção de redação: é outra exigência."
+    ),
+    (RAIZ, "matriculationRequest/declarationText"): retificavel(),
     # ---- profiles ---------------------------------------------------------------------------
     ("profiles", "id"): estrutural(),
     ("profiles", "code"): estrutural(),

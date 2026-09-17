@@ -116,6 +116,13 @@ CAMPOS_RAIZ = [
     # quem já se inscreveu — "publicação anterior não se reescreve: quem entrou sob a norma que a
     # admitia permanece".
     ("maxInscricoesPorCandidato", "Teto de inscrições por candidato", INTEIRO),
+    # O texto da declaração de veracidade do Requerimento de Matrícula (029, `D-011`). **Retificável
+    # como todo texto normativo**, e sem risco para quem já aceitou: o aceite guarda o **resumo do
+    # texto exibido**, de modo que corrigi-lo aqui não reescreve o que ninguém leu.
+    #
+    # **O momento da coleta não aparece nesta lista**, e a ausência é a decisão: ele é não
+    # retificável, com razão escrita no contrato, e seu rótulo está em `ROTULO_DO_EXCLUIDO`.
+    ("matriculationRequest/declarationText", "Declaração do Requerimento de Matrícula", TEXTO),
 ]
 
 # A modalidade sem Regra Normativa não recebe os campos dela: o caminho não existiria no
@@ -1029,6 +1036,10 @@ COLECAO_DO_TIPO = {
 ROTULO_DO_EXCLUIDO = {
     (mutabilidade.RAIZ, "number"): "Número do Edital",
     (mutabilidade.RAIZ, "year"): "Ano",
+    # O momento da coleta do Requerimento de Matrícula (029). Quem abre a tela de Retificação
+    # precisa ler **em português** por que ele não está lá — sem o rótulo, a tela cairia no caminho
+    # normativo e mostraria o identificador técnico.
+    (mutabilidade.RAIZ, "matriculationRequest/moment"): "Momento do Requerimento de Matrícula",
     ("profiles", "reserveType"): "Espécie do Cadastro Reserva",
     ("profiles", "classificationInformation"): "Informações sobre a classificação",
     ("profiles", "callInformation"): "Informações sobre a convocação",

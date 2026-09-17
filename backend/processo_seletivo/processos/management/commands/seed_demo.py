@@ -122,6 +122,25 @@ def perfis(numero, *, janela_recursal="declarada"):
                     # recusa nomeando a norma. Semear só a primeira deixaria as outras duas
                     # indemonstráveis no navegador.
                     **_janela_do_marco(janela_recursal),
+                    # A regra de corte da `014`. **Sem ela não há faixa**, e sem faixa não há
+                    # apuração de ocupação nem convocação — de modo que o arco da demonstração
+                    # parava no resultado divulgado e a jornada da matrícula ficava inalcançável.
+                    #
+                    # A Etapa governada é a **Análise documental**, que é eliminatória e sem peso:
+                    # é exatamente o papel que o corte governa, e os rótulos dela já dizem
+                    # *Deferido* e *Indeferido*.
+                    #
+                    # `surplusCount: 1` é o que faz existir **suplente**: sem excedente, a faixa
+                    # para no alvo e a suplência — que é a razão inteira da `D-004` — não teria
+                    # como ser demonstrada.
+                    "cutRule": {
+                        "targetKind": "FIXED",
+                        "targetCount": 2,
+                        "surplusCount": 1,
+                        "tieOutcome": "STRICT",
+                        "governedStage": f"00000000-0000-0000-00{numero}-0000000000d3",
+                        "continuation": "NONE",
+                    },
                 }
             ],
             "competitionModalities": [
@@ -552,6 +571,7 @@ class Command(BaseCommand):
             processo, _ = self._criar(elaborador, codigo, numero, ano, titulo)
             edital = Edital.objects.get(processo=processo)
             self._elaborar(elaborador, edital, agora, numero)
+            self._declarar_o_requerimento(elaborador, edital, "AT_ENROLLMENT")
             self._anexar_formularios(edital, numero)
             self._declarar_fatos_e_teto(edital, numero)
             self._publicar(elaborador, homologador, publicador, edital)
@@ -873,11 +893,44 @@ class Command(BaseCommand):
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()
+        # **Na convocação, e não na inscrição** — o oposto do primeiro Edital, de propósito: são os
+        # dois momentos que a `FR-368` admite, e uma demonstração com um só deixaria metade da
+        # regra sem como ser vista.
+        self._declarar_o_requerimento(elaborador, edital, "AT_CALL")
         self._publicar(elaborador, homologador, publicador, edital)
         edital.refresh_from_db()
         self._encerrar_as_inscricoes(edital, calendario[0]["id"], encerramento)
         edital.refresh_from_db()
         return edital
+
+    def _declarar_o_requerimento(self, elaborador, edital, momento):
+        """O Edital passa a pedir o Requerimento de Matrícula (029, `FR-368`).
+
+        **Pelo command da aplicação**, como todo o resto deste arquivo. Um `UPDATE` direto gravaria
+        os dois campos sem trilha e sem a conferência de estado, e a demonstração passaria a mostrar
+        um Edital num estado que nenhum ator alcança pela tela.
+
+        **O texto da declaração é obrigatório quando há momento** (`FR-407`): sem ele a publicação
+        é recusada, e é justamente esse o achado impeditivo que a etapa Inscrição do assistente
+        anuncia. Semear sem o texto faria a demonstração parar na publicação.
+        """
+        from processo_seletivo.editais.application.requerimento import (
+            atualizar_requerimento_de_matricula,
+        )
+
+        atualizar_requerimento_de_matricula(
+            actor=elaborador,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            momento=momento,
+            declaracao=(
+                "Declaro, sob as penas da Lei, que as informações prestadas neste Requerimento de "
+                "Matrícula são verdadeiras, e estou ciente de que a inexatidão ou a falsidade de "
+                "qualquer delas acarreta o cancelamento da matrícula, a qualquer tempo."
+            ),
+            correlation_id="seed-demo",
+        )
+        edital.refresh_from_db()
 
     def _encerrar_as_inscricoes(self, edital, evento_id, encerramento):
         """A Retificação que fecha o prazo do segundo Edital (`028`, FR-355).
@@ -1146,8 +1199,12 @@ class Command(BaseCommand):
                 correlation_id="seed-demo",
             )
             membros[subject] = membro
-        for etapa in (primeira, segunda):
-            # Os **dois** avaliadores alocados nas duas Etapas: quem conclui a original é a Joana,
+        # **A Etapa governada entra na alocação junto com as outras duas** (029). É ela que o corte
+        # governa, e sem alguém alocado ali ninguém pode habilitar — de modo que não haveria quem
+        # ocupasse vaga, não haveria o que apurar, e a convocação não teria a quem chamar.
+        terceira = f"00000000-0000-0000-00{numero}-0000000000d3"
+        for etapa in (primeira, segunda, terceira):
+            # Os **dois** avaliadores alocados nas Etapas: quem conclui a original é a Joana,
             # e o Otávio fica disponível para a reavaliação que um deferimento pode determinar.
             # Alocar só na hora seria um passo a mais no roteiro, e um passo que a presidência já
             # teria dado ao montar a banca.
@@ -1282,7 +1339,138 @@ class Command(BaseCommand):
             idempotency_key=f"seed-demo-divulgar-{chave}",
             correlation_id="seed-demo",
         )
+        self._convocar_para_a_matricula(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            governada=terceira,
+            inscricoes=inscricoes,
+            presidencia=presidencia,
+            avaliadora=membros["joana.avaliadora"],
+            chave=chave,
+        )
         return publicacao
+
+    def _convocar_para_a_matricula(
+        self,
+        *,
+        edital,
+        perfil_id,
+        marco_id,
+        governada,
+        inscricoes,
+        presidencia,
+        avaliadora,
+        chave,
+    ):
+        """A faixa, a apuração e a chamada — o que faltava para a demonstração chegar à matrícula.
+
+        **O `seed_demo` não criava convocação nenhuma**, e isso não era opção de roteiro: era um
+        vazio. Sem chamada praticada, o Edital que coleta o Requerimento de Matrícula *na
+        convocação* nunca abre a tela para ninguém, e a `US2` inteira fica indemonstrável — o
+        roteiro chegava ao resultado divulgado e parava ali.
+
+        **Pelos mesmos commands da aplicação**, como o resto deste arquivo, e nesta ordem, que é a
+        do domínio: consolidar a Etapa **governada** (só quem habilitou ali ocupa vaga), emitir a
+        faixa, apurar a ocupação, e só então convocar. Pular um passo faz o seguinte recusar — e a
+        recusa é a regra funcionando, não obstáculo a contornar.
+
+        **Três habilitadas para duas vagas**, porque é a única forma de existir suplente: o alvo é
+        dois e o excedente é um. É o recorte do 77/2026, e é o que torna visível a decisão que a
+        `D-004` tomou — o gatilho do requerimento é a **chamada em aberto**, e não a classificação,
+        justamente para que o suplente chamado depois não fique de fora.
+        """
+        from processo_seletivo.avaliacoes.application.avaliacao import concluir
+        from processo_seletivo.avaliacoes.application.distribuicao import distribuir
+        from processo_seletivo.classificacao.application.corte import calcular_corte
+        from processo_seletivo.classificacao.application.emissao_do_corte import (
+            assinatura_da_proposta as assinatura_do_corte,
+        )
+        from processo_seletivo.classificacao.application.emissao_do_corte import emitir_corte
+        from processo_seletivo.convocacao.application.convocar import convocar
+        from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
+        from processo_seletivo.publicacoes.application.selectors import effective_version
+        from processo_seletivo.resultados.application.consolidacao import consolidar
+
+        self.stdout.write("Habilitando na Etapa governada, para que haja quem ocupe vaga…")
+        quem_avalia = ator("joana.avaliadora")
+        habilitadas = inscricoes[:3]
+        versao = effective_version(edital_id=edital.id)
+        distribuir(
+            actor=ator("gustavo.gestor", "comissao:gerir"),
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            etapa_id=governada,
+            membro_ids=[avaliadora.id],
+            inscricao_ids=[item.id for item in habilitadas],
+            idempotency_key=f"seed-demo-lote-gov-{chave}",
+            correlation_id="seed-demo",
+        )
+        for inscricao in habilitadas:
+            concluir(
+                ator=quem_avalia,
+                edital=edital,
+                etapa_id=governada,
+                inscricao_id=inscricao.id,
+                pontuacao=None,
+                parecer="Documentação conferida e regular.",
+                expected_revision=1,
+                versao_reconhecida=versao.id,
+                correlation_id="seed-demo",
+                sentido="FAVORAVEL",
+            )
+        consolidar(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            etapa_id=governada,
+            inscricao_ids=[item.id for item in habilitadas],
+            idempotency_key=f"seed-demo-consolidar-gov-{chave}",
+            correlation_id="seed-demo",
+        )
+
+        self.stdout.write("Emitindo a faixa de corte e apurando a ocupação…")
+        corte = emitir_corte(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            idempotency_key=f"seed-demo-corte-{chave}",
+            correlation_id="seed-demo",
+            # **A confirmação é do cálculo que o ator viu.** Ela existe para que emitir não seja
+            # um clique sobre número que mudou entre a conferência e o ato — e semear sem ela
+            # exigiria contornar a guarda, que é o que este arquivo não faz.
+            confirmacao_do_calculo=assinatura_do_corte(
+                calcular_corte(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+            ),
+        )
+        emitir_apuracao(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=None,
+            idempotency_key=f"seed-demo-apurar-{chave}",
+            correlation_id="seed-demo",
+            motivo="",
+        )
+
+        self.stdout.write("Convocando a primeira colocada…")
+        convocar(
+            actor=presidencia,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            inscricao_id=habilitadas[0].id,
+            especie="VAGA_INICIAL",
+            fundamento="No interesse da Administração, conforme o item 8.2 do Edital.",
+            idempotency_key=f"seed-demo-convocar-{chave}",
+            correlation_id="seed-demo",
+        )
+        return corte
 
     def _dar_acesso(self, inscricao):
         """A identidade e a credencial de quem já se inscreveu — para que ela consiga entrar.

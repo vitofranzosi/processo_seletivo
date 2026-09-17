@@ -10,7 +10,7 @@ A conferência tem dois donos, e a razão é de método:
 - *todo retificável é oferecido* é o que este arquivo guarda, com o conjunto dos que ainda não têm
   tela declarado nominalmente.
 
-**O conjunto encolheu até esvaziar, e a asserção mudou.** São 72 campos retificáveis — eram 68 até
+**O conjunto encolheu até esvaziar, e a asserção mudou.** São 73 campos retificáveis — eram 68 até
 a revisão do PR #114 restaurar quatro decisões anteriores que a matriz contradizia. A tela oferecia
 49 quando o contrato nasceu, os quatro canários acrescentaram 15, e a fase 10 fechou o resto.
 
@@ -103,10 +103,10 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
 
 
 def test_a_conta_fecha_com_a_matriz():
-    """72 retificáveis, e 72 com tela. O número está na matriz e no contrato.
+    """73 retificáveis, e 73 com tela. O número está na matriz e no contrato.
 
     Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
     importam" — todos.
     """
-    assert len(_retificaveis()) == 72
+    assert len(_retificaveis()) == 73
     assert _retificaveis() <= _oferecidos()

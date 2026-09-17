@@ -64,6 +64,11 @@ def montar_cenario_da_ocupacao(
     *,
     prefixo="ocupacao-016",
     cut=None,
+    # Repassado a `montar_cenario_do_corte`, e não consumido aqui. A `029` o usa para publicar um
+    # Edital que **declara o Requerimento de Matrícula**: a declaração é campo de elaboração, e
+    # precisa entrar antes de o snapshot congelar. Sem o repasse, `publicar` cairia em `**quadro` e
+    # chegaria a `rascunho_com_quadro` como argumento que ele não conhece.
+    publicar=None,
     **quadro,
 ):
     """Edital publicado com quadro, ordem emitida e corte emitido.
@@ -88,6 +93,7 @@ def montar_cenario_da_ocupacao(
         process_payload,
         prefixo=prefixo,
         draft_factory=monta,
+        publicar=publicar,
     )
     emitir_corte_do_cenario(edital, gestor, chave=f"{prefixo}-corte")
     return edital, pontuada, inscricoes

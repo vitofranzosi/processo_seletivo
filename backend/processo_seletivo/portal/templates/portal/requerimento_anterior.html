@@ -1,0 +1,40 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Requerimento anterior{% endblock %}
+{% block conteudo %}
+<h1>Requerimento de Matrícula anterior</h1>
+
+{% comment %}
+**Corrigir nao apaga** (UX-059). Esta tela existe para que quem corrigiu possa ver o que declarou
+antes: sem ela, a correcao esconderia o original de quem o escreveu, e responder a um
+questionamento sobre o que foi declarado em marco exigiria pedir a instituicao o que e da pessoa.
+
+**Sem campo editavel, e sem acao nenhuma.** O que esta aqui foi enviado e sucedido; o que se
+corrige e o requerimento vigente, na tela dele.
+
+**O identificador desta pagina e resolvido dentro da cadeia da Inscricao do titular** — a view nao
+faz `get(pk=...)` sobre ele. Com dois identificadores na rota, a titularidade da Inscricao nao
+confere o segundo, e um de outra pessoa passaria (FR-399).
+{% endcomment %}
+
+<p class="sub">Enviado em {{ requerimento.enviado_em|date:"d/m/Y \à\s H:i" }}. Este requerimento foi
+  <strong>corrigido depois</strong> — ele continua aqui porque corrigir não apaga.</p>
+
+<p><a href="{% url 'portal:requerimento' inscricao.id %}">Ver o requerimento que vale agora</a></p>
+
+{% for grupo in grupos %}
+<section aria-labelledby="grupo-{{ forloop.counter }}">
+  <h2 id="grupo-{{ forloop.counter }}">{{ grupo.titulo }}</h2>
+  <dl class="campos">
+    {% for linha in grupo.linhas %}
+    <dt>{{ linha.rotulo }}</dt>
+    <dd>{% if linha.valor %}{{ linha.valor }}{% else %}<span class="sub">não informado</span>{% endif %}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endfor %}
+
+<section aria-labelledby="declaracao-aceita">
+  <h2 id="declaracao-aceita">Declaração aceita</h2>
+  <p>{{ declaracao }}</p>
+</section>
+{% endblock %}

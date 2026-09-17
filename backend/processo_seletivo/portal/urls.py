@@ -42,6 +42,27 @@ urlpatterns = [
     path("inscricoes/<uuid:inscricao_id>/convocacao", views.convocacao, name="convocacao"),
     path("inscricoes/<uuid:inscricao_id>/recorrer", views.recorrer, name="recorrer"),
     path("recursos/<uuid:recurso_id>", views.recurso, name="recurso"),
+    # O Requerimento de Matrícula (029). Pende da **Inscrição**, como o acompanhamento, o
+    # comprovante e a convocação: é dela que a titularidade é conferida, e é ela que o candidato
+    # reconhece. O endereço não carrega nada sobre a pessoa — a FR-401 proíbe endereço, documento e
+    # filiação em URL, e o identificador da Inscrição não é nenhum dos três.
+    # **O CEP vai no corpo, e não no endereço** (`FR-401`): endereço em URL viaja para log de
+    # servidor, histórico de navegador e cabeçalho de referência sem que ninguém decida isso.
+    path("requerimento/cep", views.requerimento_cep, name="requerimento-cep"),
+    path(
+        "inscricoes/<uuid:inscricao_id>/requerimento",
+        views.requerimento,
+        name="requerimento",
+    ),
+    # **O anterior, pelo segundo identificador — e ele é buscado dentro da cadeia da Inscrição do
+    # titular, nunca por `get(pk=…)`.** A titularidade confere a Inscrição; ninguém confere o
+    # requerimento. Sem o filtro pela cadeia, um identificador de outra pessoa passaria — é o IDOR
+    # que a `FR-399` proíbe, e ele nasce justamente onde há **dois** identificadores na rota.
+    path(
+        "inscricoes/<uuid:inscricao_id>/requerimento/anterior/<uuid:requerimento_id>",
+        views.requerimento_anterior,
+        name="requerimento-anterior",
+    ),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
     # O mesmo documento, como arquivo. `.pdf` no endereço porque é o que ele devolve, e porque um
     # endereço que termina em `.pdf` é o que uma pessoa reconhece como arquivo para guardar.
