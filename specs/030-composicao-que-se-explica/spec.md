@@ -6,8 +6,9 @@
 
 **Status**: Draft
 
-**Input**: Reauditoria exploratória de UX de 2026-09-16 — `doc/auditoria-exploratoria-ux-2026-09-16.md`,
-em revisão no PR #121 —, achados ACH-04, ACH-05, ACH-09, ACH-10, ACH-16, ACH-36 e ACH-61.
+**Input**: Reauditoria exploratória de UX de 2026-09-16 —
+[doc/auditoria-exploratoria-ux-2026-09-16.md](../../doc/auditoria-exploratoria-ux-2026-09-16.md) —,
+achados ACH-04, ACH-05, ACH-09, ACH-10, ACH-16, ACH-36 e ACH-61.
 
 ## Por que esta feature existe
 
