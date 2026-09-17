@@ -176,7 +176,8 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 - [ ] T058 [P] Re-semear e conferir o documento publicado: documento publicado não se regenera, e mudou o renderizador é preciso re-semear para ver
 - [ ] T059 Percorrer os quatro cenários de [quickstart.md](quickstart.md) pela interface, com o papel exato do ator (404 na gestão costuma ser autorização, não rota quebrada)
 - [ ] T060 Rodar `cd backend && make lint check test-pg` e comparar com a linha de base de T003 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
-- [ ] T061 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec
+- [ ] T061 Escrever `specs/030-composicao-que-se-explica/rastreabilidade.md` cobrindo **os 24 requisitos** (FR-413 a FR-431, SC-138 a SC-142), no formato da `028`: por requisito, onde foi feito e onde é verificado, com **nomes reais** de função de teste — mais a comparação de contagem da suíte contra a linha de base de T003
+- [ ] T062 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec, e `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passa a cobrar cada um dos 24 assim que a matriz de T061 existir
 
 ---
 
@@ -229,6 +230,12 @@ falha que não é do diff. Rode a suíte com a árvore parada.
 
 ## Notes
 
+- **A matriz de rastreabilidade (T061) é artefato de implementação, não de planejamento.** Ela nomeia
+  função de teste e local de código que ainda não existem, e a da `028` fecha comparando a contagem
+  da suíte. Escrevê-la agora, com os requisitos listados e as duas colunas vazias, faria
+  `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passar sobre nada — o teste só
+  confere que todo requisito tem linha, não que a linha diz alguma coisa. Um guardião que aprova
+  vazio é pior que guardião nenhum, porque ninguém volta a olhar.
 - Uma spec por sessão: fechada a feature, a próxima começa em outra
 - Achado encontrado no meio disto vira registro, não escopo — a governança é do usuário
 - **Lacuna conhecida e não resolvida**: o marco de sorteio que não enumera Etapa está descrito como
