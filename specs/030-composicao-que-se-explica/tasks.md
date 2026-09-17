@@ -108,15 +108,22 @@ controles apresentados.
 
 **Goal**: cada termo do vocabulário interno tem definição visível no primeiro uso da tela.
 
-**Independent Test**: percorrer Classificação, Distribuição, Corte e Ocupação verificando que cada
-termo do domínio interno tem definição visível no primeiro uso.
+**Independent Test**: percorrer as **dez telas** que usam recorte, geração ou faixa em prosa visível
+— `compor_classificacao`, `compor_perfis`, `corte`, `corte_historico`, `ordenacao`, `ocupacao`,
+`ocupacao_historico`, `sorteio`, `convocacao`, `convocacao_historico` — verificando que cada termo do
+domínio interno tem definição visível no primeiro uso, mais a tela de distribuição para a
+consolidação.
+
+**A contagem veio de varredura, não de leitura.** As três telas que a primeira escrita das tarefas
+nomeava eram as que se lembra de cabeça; a varredura do texto visível, descartando `{% comment %}`,
+achou dez.
 
 **Não depende da Phase 2.** Pode ser entregue antes de US1 se a prioridade mudar.
 
 ### Testes
 
 - [ ] T030 [P] [US2] Teste de que a tela de distribuição declara o que a consolidação produz antes de a ação ser acionada, em `backend/tests/interface/test_distribuicao.py` (FR-422)
-- [ ] T031 [P] [US2] Teste de que recorte, geração e faixa têm definição visível no primeiro uso, em `backend/tests/interface/test_corte.py` (FR-424)
+- [ ] T031 [P] [US2] Criar `backend/tests/test_vocabulario_da_composicao.py`, **irmão** de `test_vocabulario_do_corte.py` e `test_vocabulario_da_ocupacao.py` — mesma mecânica de descartar `{% comment %}` e docstring, mas afirmando **presença** de definição em vez de ausência de termo — varrendo as dez telas que usam recorte, geração ou faixa (FR-424)
 - [ ] T032 [P] [US2] Teste de que nenhuma ajuda visível entra nos cartões de composição e que o equivalente para tecnologia assistiva permanece, em `backend/tests/interface/test_acessibilidade_da_classificacao.py` (FR-428)
 - [ ] T033 [P] [US2] Teste de que o bloco de ajuda da etapa não aparece sem item a que se refira, em `backend/tests/interface/test_compor_classificacao.py` (FR-426)
 
@@ -124,12 +131,14 @@ termo do domínio interno tem definição visível no primeiro uso.
 
 - [ ] T034 [P] [US2] Declarar o que a consolidação produz na tela de distribuição, antes da ação, em `backend/processo_seletivo/interface/templates/interface/distribuicao.html` (FR-422)
 - [ ] T035 [P] [US2] Explicar, na etapa de Classificação, por que a Etapa pertence ao Edital e a ordem pertence ao Perfil, em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (FR-423)
-- [ ] T036 [P] [US2] Definir **recorte**, **geração** e **faixa** no primeiro uso em `backend/processo_seletivo/interface/templates/interface/corte.html` (FR-424)
-- [ ] T037 [P] [US2] Definir os mesmos três termos no primeiro uso em `backend/processo_seletivo/interface/templates/interface/ocupacao.html` e `backend/processo_seletivo/interface/templates/interface/sorteio.html` (FR-424)
-- [ ] T038 [US2] Revisar as definições escritas em T034 a T037 (`distribuicao.html`, `compor_classificacao.html`, `corte.html`, `ocupacao.html`, `sorteio.html`, em `backend/processo_seletivo/interface/templates/interface/`) contra a linguagem ubíqua, sem introduzir termo novo para conceito já nomeado (FR-425)
-- [ ] T039 [US2] Ocultar o bloco de ajuda da etapa enquanto não existir item a que ele se refira, em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (FR-426)
-- [ ] T040 [US2] Ligar cada item do bloco de ajuda ao campo que ele explica, em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (FR-427)
-- [ ] T041 [US2] Conferir que nada de T034 a T040 pôs ajuda visível dentro dos cartões `_marco.html`, `_perfil.html` e `_modalidade.html` em `backend/processo_seletivo/interface/templates/interface/`; microcópia nova vai para o `como-preencher` da etapa (FR-428)
+- [ ] T036 [P] [US2] Definir **recorte**, **geração** e **faixa** no primeiro uso em `corte.html`, `corte_historico.html` e `ordenacao.html`, em `backend/processo_seletivo/interface/templates/interface/` (FR-424)
+- [ ] T037 [P] [US2] Definir os termos usados por `ocupacao.html`, `ocupacao_historico.html` e `sorteio.html`, no mesmo diretório (FR-424)
+- [ ] T038 [P] [US2] Definir os termos usados por `convocacao.html` e `convocacao_historico.html`, no mesmo diretório (FR-424)
+- [ ] T039 [US2] Definir **recorte** e **faixa** no `como-preencher` de `compor_classificacao.html` e de `compor_perfis.html`, **e não** dentro de `_marco.html` e `_perfil.html` — é o que resolve a colisão entre FR-424 e FR-428 sem afrouxar nenhum dos dois (FR-424, FR-428)
+- [ ] T040 [US2] Revisar as definições escritas em T034 a T039 contra a linguagem ubíqua, sem introduzir termo novo para conceito já nomeado (FR-425)
+- [ ] T041 [US2] Ocultar o bloco de ajuda da etapa enquanto não existir item a que ele se refira, em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (FR-426)
+- [ ] T042 [US2] Ligar cada item do bloco de ajuda ao campo que ele explica, em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (FR-427)
+- [ ] T043 [US2] Conferir que nada de T034 a T042 pôs ajuda visível dentro dos cartões `_marco.html`, `_perfil.html` e `_modalidade.html` em `backend/processo_seletivo/interface/templates/interface/`; microcópia nova vai para o `como-preencher` da etapa (FR-428)
 
 **Checkpoint**: US2 é demonstrável sozinha pelo cenário 2 do quickstart.
 
@@ -147,24 +156,24 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 
 ### Testes
 
-- [ ] T042 [P] [US3] Teste de que sete marcos de sorteio exigem uma declaração do método, em `backend/tests/interface/test_metodo_do_marco.py` (SC-140)
-- [ ] T043 [P] [US3] Teste de que o marco divergente registra a divergência explicitamente no conteúdo normativo, em `backend/tests/interface/test_metodo_do_marco.py` (FR-430)
-- [ ] T044 [P] [US3] Teste de que Edital publicado antes da feature mantém o método literal em cada marco e não ganha chave no nível do Edital, em `backend/tests/integration/editais/test_metodo_comum.py` — ao lado de `test_mutabilidade_do_metodo_de_sorteio.py` (FR-431, SC-142)
-- [ ] T045 [P] [US3] Teste de que o `metodo_hash` congelado de relação anterior à feature não muda, estendendo `backend/tests/integration/sorteios/test_metodo_nao_e_escolha.py` (a citação datada do método é o que impede que "qual método governa" se resolva depois da semente; a decisão é da 021, e esta feature não pode afrouxá-la)
-- [ ] T046 [P] [US3] Teste de retificação do método comum pelo endereçamento novo, estendendo `backend/tests/integration/editais/test_mutabilidade_do_metodo_de_sorteio.py`
+- [ ] T044 [P] [US3] Teste de que sete marcos de sorteio exigem uma declaração do método, em `backend/tests/interface/test_metodo_do_marco.py` (SC-140)
+- [ ] T045 [P] [US3] Teste de que o marco divergente registra a divergência explicitamente no conteúdo normativo, em `backend/tests/interface/test_metodo_do_marco.py` (FR-430)
+- [ ] T046 [P] [US3] Teste de que Edital publicado antes da feature mantém o método literal em cada marco e não ganha chave no nível do Edital, em `backend/tests/integration/editais/test_metodo_comum.py` — ao lado de `test_mutabilidade_do_metodo_de_sorteio.py` (FR-431, SC-142)
+- [ ] T047 [P] [US3] Teste de que o `metodo_hash` congelado de relação anterior à feature não muda, estendendo `backend/tests/integration/sorteios/test_metodo_nao_e_escolha.py` (a citação datada do método é o que impede que "qual método governa" se resolva depois da semente; a decisão é da 021, e esta feature não pode afrouxá-la)
+- [ ] T048 [P] [US3] Teste de retificação do método comum pelo endereçamento novo, estendendo `backend/tests/integration/editais/test_mutabilidade_do_metodo_de_sorteio.py`
 
 ### Implementação
 
-- [ ] T047 [US3] Acrescentar `metodo_de_sorteio_comum` a `Edital` em `backend/processo_seletivo/processos/models.py`, com `default=dict` (vazio significa não declarado)
-- [ ] T048 [US3] Gerar a migration do campo em `backend/processo_seletivo/processos/migrations/`, sem tocar em dado publicado
-- [ ] T049 [US3] Implementar a resolução — método do marco quando declarado, senão o do Edital — em **um lugar só**, `backend/processo_seletivo/sorteios/domain/metodo.py`, que já é o ponto de leitura do método no conteúdo versionado
-- [ ] T050 [US3] Fazer os leitores perguntarem à resolução de T049, em `backend/processo_seletivo/classificacao/application/selectors.py`, `backend/processo_seletivo/classificacao/application/emissao.py`, `backend/processo_seletivo/editais/api/serializers.py` e `backend/processo_seletivo/interface/supervisao.py`
-- [ ] T051 [US3] Publicar `drawMethod` no nível do Edital no conteúdo canônico, **omitindo a chave** quando vazio, em `backend/processo_seletivo/editais/api/serializers.py` e `backend/processo_seletivo/publicacoes/domain/colecoes.py`
-- [ ] T052 [US3] Acrescentar as nove entradas `("edital", "drawMethod/…")` ao catálogo em `backend/processo_seletivo/editais/domain/mutabilidade.py`, mantendo as nove do marco, que endereçam a divergência
-- [ ] T053 [US3] Oferecer a declaração do método comum na etapa de Classificação em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html`
-- [ ] T054 [US3] Fazer o cartão do marco referenciar o método comum, e permitir divergir declarando o próprio, em `backend/processo_seletivo/interface/templates/interface/_marco.html` (FR-429, FR-430)
-- [ ] T055 [US3] Ler e gravar o método comum no round-trip do rascunho em `backend/processo_seletivo/editais/application/draft.py`
-- [ ] T056 [US3] Conferir o reaproveitamento de Edital anterior contra o método comum em `backend/processo_seletivo/editais/domain/reaproveitamento.py`
+- [ ] T049 [US3] Acrescentar `metodo_de_sorteio_comum` a `Edital` em `backend/processo_seletivo/processos/models.py`, com `default=dict` (vazio significa não declarado)
+- [ ] T050 [US3] Gerar a migration do campo em `backend/processo_seletivo/processos/migrations/`, sem tocar em dado publicado
+- [ ] T051 [US3] Implementar a resolução — método do marco quando declarado, senão o do Edital — em **um lugar só**, `backend/processo_seletivo/sorteios/domain/metodo.py`, que já é o ponto de leitura do método no conteúdo versionado
+- [ ] T052 [US3] Fazer os leitores perguntarem à resolução de T051, em `backend/processo_seletivo/classificacao/application/selectors.py`, `backend/processo_seletivo/classificacao/application/emissao.py`, `backend/processo_seletivo/editais/api/serializers.py` e `backend/processo_seletivo/interface/supervisao.py`
+- [ ] T053 [US3] Publicar `drawMethod` no nível do Edital no conteúdo canônico, **omitindo a chave** quando vazio, em `backend/processo_seletivo/editais/api/serializers.py` e `backend/processo_seletivo/publicacoes/domain/colecoes.py`
+- [ ] T054 [US3] Acrescentar as nove entradas `("edital", "drawMethod/…")` ao catálogo em `backend/processo_seletivo/editais/domain/mutabilidade.py`, mantendo as nove do marco, que endereçam a divergência
+- [ ] T055 [US3] Oferecer a declaração do método comum na etapa de Classificação em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html`
+- [ ] T056 [US3] Fazer o cartão do marco referenciar o método comum, e permitir divergir declarando o próprio, em `backend/processo_seletivo/interface/templates/interface/_marco.html` (FR-429, FR-430)
+- [ ] T057 [US3] Ler e gravar o método comum no round-trip do rascunho em `backend/processo_seletivo/editais/application/draft.py`
+- [ ] T058 [US3] Conferir o reaproveitamento de Edital anterior contra o método comum em `backend/processo_seletivo/editais/domain/reaproveitamento.py`
 
 **Checkpoint**: US3 é demonstrável sozinha pelo cenário 3 do quickstart.
 
@@ -172,12 +181,12 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T057 [P] Atualizar `backend/processo_seletivo/processos/management/commands/seed_demo.py` para semear um Edital que exercite a forma da ordem e o método comum (lembrar: são necessários dois Editais — prazo aberto e resultado divulgado não cabem no mesmo)
-- [ ] T058 [P] Re-semear e conferir o documento publicado: documento publicado não se regenera, e mudou o renderizador é preciso re-semear para ver
-- [ ] T059 Percorrer os quatro cenários de [quickstart.md](quickstart.md) pela interface, com o papel exato do ator (404 na gestão costuma ser autorização, não rota quebrada)
-- [ ] T060 Rodar `cd backend && make lint check test-pg` e comparar com a linha de base de T003 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
-- [ ] T061 Escrever `specs/030-composicao-que-se-explica/rastreabilidade.md` cobrindo **os 24 requisitos** (FR-413 a FR-431, SC-138 a SC-142), no formato da `028`: por requisito, onde foi feito e onde é verificado, com **nomes reais** de função de teste — mais a comparação de contagem da suíte contra a linha de base de T003
-- [ ] T062 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec, e `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passa a cobrar cada um dos 24 assim que a matriz de T061 existir
+- [ ] T059 [P] Atualizar `backend/processo_seletivo/processos/management/commands/seed_demo.py` para semear um Edital que exercite a forma da ordem e o método comum (lembrar: são necessários dois Editais — prazo aberto e resultado divulgado não cabem no mesmo)
+- [ ] T060 [P] Re-semear e conferir o documento publicado: documento publicado não se regenera, e mudou o renderizador é preciso re-semear para ver
+- [ ] T061 Percorrer os quatro cenários de [quickstart.md](quickstart.md) pela interface, com o papel exato do ator (404 na gestão costuma ser autorização, não rota quebrada)
+- [ ] T062 Rodar `cd backend && make lint check test-pg` e comparar com a linha de base de T003 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
+- [ ] T063 Escrever `specs/030-composicao-que-se-explica/rastreabilidade.md` cobrindo **os 24 requisitos** (FR-413 a FR-431, SC-138 a SC-142), no formato da `028`: por requisito, onde foi feito e onde é verificado, com **nomes reais** de função de teste — mais a comparação de contagem da suíte contra a linha de base de T003
+- [ ] T064 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec, e `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passa a cobrar cada um dos 24 assim que a matriz de T063 existir
 
 ---
 
@@ -196,14 +205,14 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 
 - Os testes vêm antes da implementação que verificam, e precisam falhar antes
 - Modelo antes de serializer; serializer antes de template
-- A resolução de T049 antes dos leitores de T050 — sempre, sob pena de duas respostas para a mesma pergunta
+- A resolução de T051 antes dos leitores de T052 — sempre, sob pena de duas respostas para a mesma pergunta
 
 ### Parallel Opportunities
 
 - T004, T005 e T006 em paralelo: arquivos de teste diferentes
 - T013 a T018 em paralelo entre si
-- T030 a T033 e T034 a T037 em paralelo entre si
-- T042 a T046 em paralelo entre si
+- T030 a T033 e T034 a T038 em paralelo entre si
+- T044 a T048 em paralelo entre si
 - **US2 inteira em paralelo com a Phase 2 e com US1**: ela não toca em modelo, migration nem payload
 
 **Cuidado com um paralelismo que parece seguro e não é**: editar template durante `make test-pg` dá
@@ -230,7 +239,15 @@ falha que não é do diff. Rode a suíte com a árvore parada.
 
 ## Notes
 
-- **A matriz de rastreabilidade (T061) é artefato de implementação, não de planejamento.** Ela nomeia
+- **FR-424 e FR-428 colidem, e a colisão é real.** A FR-424 manda definir o termo no primeiro uso de
+  cada tela; a FR-428 proíbe ajuda visível dentro dos cartões de composição. `_marco.html` usa
+  **recorte** e **faixa**; `_perfil.html` usa **recorte**. A T039 resolve pela interpretação de que o
+  cartão é fragmento e não tela, e por isso o termo dele se define no `como-preencher` da etapa que o
+  contém. É interpretação, não requisito: se ela não for a pretendida, quem decide é o usuário, e a
+  saída seria emendar a FR-424 para dizer "de cada etapa do assistente" em vez de "de cada tela".
+  Nenhum teste pegaria isso sozinho — checklist, analyze e citações ficam verdes com FRs
+  incompatíveis.
+- **A matriz de rastreabilidade (T063) é artefato de implementação, não de planejamento.** Ela nomeia
   função de teste e local de código que ainda não existem, e a da `028` fecha comparando a contagem
   da suíte. Escrevê-la agora, com os requisitos listados e as duas colunas vazias, faria
   `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passar sobre nada — o teste só
