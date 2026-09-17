@@ -16,25 +16,10 @@ import pytest
 from processo_seletivo.requerimentos.application import preencher
 from processo_seletivo.requerimentos.models import ReferenciaDeCep
 from tests.fixtures.candidato import MARIA
+from tests.fixtures.cep import CEP, referencia
 from tests.integration.requerimentos.conftest import DECLARACAO
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
-
-CEP = "29040860"
-
-
-def referencia(**campos):
-    return ReferenciaDeCep.objects.create(
-        **{
-            "cep": CEP,
-            "logradouro": "Rua Barão de Mauá",
-            "bairro": "Jucutuquara",
-            "municipio": "Vitória",
-            "uf": "ES",
-            "codigo_ibge": "3205309",
-            **campos,
-        }
-    )
 
 
 def gravar(inscricao, campos, **sobrescreve):

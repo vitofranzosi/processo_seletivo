@@ -216,6 +216,57 @@ class RequerimentoDeMatricula(models.Model):
             raise TypeError(f"Requerimento de Matrícula enviado não é {verbo}.")
 
 
+class CargaDeCep(models.Model):
+    """Uma **geração** da base de referência de CEP, e qual delas vale agora.
+
+    **Por que geração, e não substituição linha a linha.** A carga anterior fazia `upsert` em lotes
+    sobre a mesma tabela. Duas consequências que só aparecem na operação recorrente: uma carga
+    interrompida no meio deixava a base numa **mistura** — parte da versão nova, parte da velha, e
+    nada dizendo qual linha era qual; e o CEP que a fonte **removeu** ficava para sempre, porque
+    `upsert` nunca apaga o que não veio.
+
+    A geração resolve as duas. A carga escreve num número novo, e só no fim — **numa transação** —
+    a vigência muda de dono. Interrupção não ativa nada: a geração anterior continua inteira e
+    respondendo. E a nova só tem o que a fonte mandou, de modo que o CEP removido some junto.
+
+    **Uma vigente por vez, e isso é do banco.** Índice parcial único sobre `vigente`, e não promessa
+    de código: duas gerações vigentes fariam a consulta devolver duas linhas para o mesmo CEP, e o
+    que a tela mostraria dependeria da ordem do plano de execução.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Cresce a cada carga. Não é o identificador — é a **ordem**, que é o que quem opera lê.
+    geracao = models.PositiveIntegerField(unique=True)
+    # De onde veio, e o resumo do arquivo. É o que permite responder *"esta base é a de qual
+    # instantâneo?"* sem abrir o banco, e o que o provisionamento confere para não recarregar o que
+    # já está lá.
+    origem = models.CharField(max_length=255)
+    checksum = models.CharField(max_length=64)
+    iniciada_em = models.DateTimeField()
+    # Nulo enquanto a carga corre. **É o que distingue interrompida de concluída**, e é o que o
+    # alerta de operação lê.
+    concluida_em = models.DateTimeField(null=True, blank=True)
+    linhas = models.PositiveIntegerField(default=0)
+    vigente = models.BooleanField(default=False)
+    # O que deu errado, quando deu. Vazio é o caso normal.
+    falha = models.TextField(blank=True, default="")
+
+    class Meta:
+        verbose_name = "carga de CEP"
+        verbose_name_plural = "cargas de CEP"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["vigente"],
+                condition=Q(vigente=True),
+                name="uq_carga_de_cep_vigente_unica",
+            )
+        ]
+        indexes = [models.Index(fields=["-geracao"])]
+
+    def __str__(self):
+        return f"Geração {self.geracao} de CEPs ({self.linhas} linhas)"
+
+
 class ReferenciaDeCep(models.Model):
     """O CEP e o que ele resolve — tabela de referência, e não dado de pessoa.
 
@@ -231,7 +282,11 @@ class ReferenciaDeCep(models.Model):
     este repositório já recusou ao modelar os campos descritivos do Perfil.
     """
 
-    cep = models.CharField(max_length=8, primary_key=True)
+    # **O CEP deixou de ser a chave primária** quando a carga passou a ser por geração: duas
+    # gerações convivem durante a troca, e o mesmo CEP existe nas duas. A unicidade que interessa é
+    # a do par, e ela está na `Meta`.
+    carga = models.ForeignKey(CargaDeCep, on_delete=models.CASCADE, related_name="referencias")
+    cep = models.CharField(max_length=8)
     # `""` para CEP de localidade, que não nomeia logradouro.
     logradouro = models.CharField(max_length=255, blank=True, default="")
     bairro = models.CharField(max_length=120, blank=True, default="")
@@ -244,6 +299,12 @@ class ReferenciaDeCep(models.Model):
     class Meta:
         verbose_name = "referência de CEP"
         verbose_name_plural = "referências de CEP"
+        constraints = [
+            models.UniqueConstraint(fields=["carga", "cep"], name="uq_referencia_de_cep_por_carga")
+        ]
+        # A consulta é sempre *"este CEP, na geração vigente"* — e nessa ordem, porque a carga
+        # discrimina mais do que o CEP durante a convivência das duas gerações.
+        indexes = [models.Index(fields=["carga", "cep"])]
 
     def __str__(self):
         return f"{self.cep} — {self.municipio}/{self.uf}"

@@ -14,7 +14,14 @@ from processo_seletivo.requerimentos.models import ReferenciaDeCep
 
 
 def buscar(cep_normalizado: str) -> EnderecoDeReferencia | None:
-    linha = ReferenciaDeCep.objects.filter(pk=cep_normalizado).first()
+    """O CEP na geração **vigente** — nunca numa geração antiga que ainda não foi recolhida.
+
+    O recorte por `carga__vigente` é o que torna a troca de geração invisível para quem preenche:
+    durante a carga nova, esta consulta continua respondendo pela anterior, inteira; no instante em
+    que a vigência muda de dono, ela passa a responder pela nova. Não há janela em que ela veja uma
+    mistura das duas.
+    """
+    linha = ReferenciaDeCep.objects.filter(cep=cep_normalizado, carga__vigente=True).first()
     if linha is None:
         return None
     return EnderecoDeReferencia(

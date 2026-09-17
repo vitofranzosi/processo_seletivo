@@ -354,3 +354,43 @@ de uma instalação: carregar é um comando, e leva menos tempo do que rodar a s
 **O campo que justifica tudo continua sendo o `ibge`.** Conferido na carga real:
 `29040860 → Rua Barão de Mauá, Jucutuquara, Vitória/ES, IBGE 3205309`. Latitude e longitude vêm no
 registro e são descartadas na leitura (`D-008`).
+
+## T-016 — Quem carrega a base, quando, e por que a carga é por geração
+
+**A `T-015` mediu o custo e parou aí.** Ficou em aberto o que ninguém tinha decidido: *quem* roda a
+carga. A decisão é de governança, e foi tomada — carga inicial no provisionamento, atualização por
+job agendado. **Nem recarregar a cada implantação, nem depender de execução manual.**
+
+| Momento | O que acontece |
+|---|---|
+| Primeira instalação | `make CEPS_ZIP=… ceps`, depois das migrations, com arquivo de resumo conhecido |
+| Atualização | job **mensal externo**, fora do processo web, com trava contra carga simultânea |
+| Implantação comum | `make ceps-situacao` — **confere**, e não baixa nem reimporta 379 MB |
+| Base ausente ou falha | caminho degradado da `FR-390`, sem bloquear inscrição nenhuma |
+| Operação | alerta quando a última carga falha ou a base envelhece; execução manual é só recuperação |
+| Artefato | o `.zip` fica em armazenamento controlado — **não no Git nem na imagem** |
+
+**A carga deixou de ser `upsert` e passou a ser geração.** O `upsert` em lotes tem dois defeitos que
+não aparecem numa carga só, e só aparecem na operação recorrente: interrupção no meio deixa a base
+numa **mistura** — parte nova, parte velha, e nada dizendo qual linha é qual —, e o CEP que a fonte
+**removeu** fica para sempre, porque `upsert` nunca apaga o que não veio. A carga escreve numa
+geração nova, invisível para quem consulta, e a vigência muda de dono **numa transação**. A leitura
+recorta por `carga__vigente`, de modo que ou a anterior responde inteira, ou a nova responde
+inteira.
+
+**Uma vigente por vez é regra do banco**, e não promessa de código: índice parcial único sobre
+`vigente`. Duas vigentes fariam a consulta devolver duas linhas para o mesmo CEP, e o que a tela
+mostrasse dependeria do plano de execução.
+
+**Custo da garantia: 40 s contra os 31 s da `T-015`.** Os nove segundos são a escrita da geração
+nova antes da troca — o preço de nunca haver mistura.
+
+**Sessenta dias para o alerta de idade, e não trinta.** O job é mensal; alertar em trinta faria toda
+execução atrasada por um dia virar incidente. O dobro do intervalo é o que distingue *"atrasou"* de
+*"parou"*.
+
+**O que este repositório não entrega**, e é preciso dizer: o agendador e o canal do alerta. O
+comando existe, sai com `1` quando alguém precisa olhar, e o
+[runbook](../../doc/runbook-base-de-cep.md) registra a carga inicial. Agendar o job mensal e ligar o
+código de saída ao canal que a equipe lê é trabalho do ambiente de implantação — e **enquanto não
+existirem, o recurso não está pronto para produção**, ainda que a aplicação possa seguir.

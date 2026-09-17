@@ -306,16 +306,9 @@ class TestARotaDoCep:
     def test_com_sessao_o_cep_reconhecido_devolve_municipio_e_uf(
         self, client, selecao_na_inscricao, candidatos_registrados
     ):
-        from processo_seletivo.requerimentos.models import ReferenciaDeCep
+        from tests.fixtures.cep import referencia
 
-        ReferenciaDeCep.objects.create(
-            cep="29040860",
-            logradouro="Rua Barão de Mauá",
-            bairro="Jucutuquara",
-            municipio="Vitória",
-            uf="ES",
-            codigo_ibge="3205309",
-        )
+        referencia()
         inscricao = pronta_para_enviar(selecao_na_inscricao)
         entrar_como(client, inscricao)
 
