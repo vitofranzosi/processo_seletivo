@@ -21,7 +21,9 @@ class FormaDaOrdem(models.TextChoices):
 **Regras de validação**
 
 - `POR_SORTEIO` com `etapas` vazio é **válido** — o sorteio precede a análise documental. Hoje a
-  validação exige Etapa, contradizendo a própria ajuda da tela (caso de borda da spec, ACH-48).
+  validação exige Etapa, contradizendo a própria ajuda da tela (**FR-432**, que é o ACH-48 da
+  reauditoria). A exigência de Etapa passa a ser condicionada à forma da ordem, e não removida:
+  `POR_PONTUACAO` continua exigindo ao menos uma.
 - `POR_PONTUACAO` com `metodo_de_sorteio` preenchido é **válido no rascunho** e **recusado na
   publicação**: é o campo oculto de R5, que guarda sem publicar.
 - `""` só é aceito em marco cujo Edital já estava publicado. Marco novo declara a forma.

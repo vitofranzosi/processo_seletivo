@@ -108,7 +108,7 @@ mesma regra precisa ser declarada.
 
 - Um marco de sorteio **não enumera Etapa** (o sorteio precede a análise documental). A pergunta de
   entrada precisa tornar isso possível sem exigir uma Etapa artificial — hoje a validação a exige,
-  contradizendo a própria ajuda da tela.
+  contradizendo a própria ajuda da tela. Coberto por **FR-432**.
 - Um Perfil ganha a **primeira** Modalidade depois de o marco já estar composto: as perguntas que
   estavam ocultas passam a ser pertinentes e precisam aparecer sem que o já declarado se perca.
 - Um marco **deixa** de ordenar por sorteio e passa a ordenar por pontuação, ou o contrário: o que
@@ -178,6 +178,17 @@ mesma regra precisa ser declarada.
   DEVE registrar essa divergência de forma explícita no conteúdo normativo.
 - **FR-431**: A mudança introduzida por FR-429 NÃO DEVE alterar o conteúdo normativo já publicado de
   Editais existentes.
+
+#### A Etapa que o sorteio não precisa ter
+
+- **FR-432**: O sistema DEVE aceitar marco cuja ordem nasce de sorteio **sem Etapa enumerada**, e
+  DEVE continuar exigindo ao menos uma Etapa do marco cuja ordem nasce de pontuação. Hoje a validação
+  exige Etapa de todo marco, contradizendo a ajuda da própria tela, que manda deixar a habilitação em
+  nenhuma quando o sorteio precede a análise documental.
+
+  **Só agora isto é construível.** A validação exigia Etapa de todos porque não tinha como distinguir
+  quem sorteia de quem pontua — a forma da ordem era inferida da presença do método, e método é coisa
+  que se declara depois. A FR-413 cria a informação que faltava, e é dela que esta regra depende.
 
 ### Key Entities
 

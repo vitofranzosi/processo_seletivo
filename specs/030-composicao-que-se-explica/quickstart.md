@@ -82,6 +82,29 @@ conteúdo publicado — e **precisa** reaparecer na tela se a forma voltar a ser
 
 ---
 
+## Cenário 3-bis — o sorteio que não precisa de Etapa (FR-432)
+
+O percurso mais curto desta feature, e o único que **remove** uma recusa em vez de remover uma
+pergunta.
+
+**Monte**: um Edital cujo sorteio precede a análise documental — o caso real do ACH-48.
+
+**Acrescente** um marco e responda que a ordem nasce de **sorteio**. Deixe a habilitação em
+*nenhuma* e **não enumere Etapa alguma**.
+
+| O que observar | Esperado |
+|---|---|
+| Publicar o Edital | **aceito** — hoje a validação recusa, exigindo uma Etapa que o Edital não tem |
+| A ajuda da tela | deixa de se contradizer: ela já mandava deixar em nenhuma |
+
+**A contraprova, no mesmo percurso**: troque a forma da ordem para **pontuação**, sem enumerar
+Etapa, e publique. Agora **tem que recusar**. A exigência não foi removida — foi condicionada.
+
+**Por que só agora dá**: a validação exigia Etapa de todo marco porque não conseguia distinguir
+quem sorteia de quem pontua. A forma da ordem cria a distinção, e é dela que a regra depende.
+
+---
+
 ## Cenário 4 — o que não pode ter mudado (SC-142)
 
 **Semeie** o banco e publique um Edital **antes** de aplicar a feature; guarde o conteúdo canônico.

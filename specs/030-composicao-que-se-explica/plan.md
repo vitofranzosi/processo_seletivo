@@ -48,7 +48,7 @@ participação sai de coluna e de SQL, nunca de leitura do conteúdo publicado
 - **Valor publicado é intocável.** Padrão de FR-419 e derivação de FR-420 não podem alcançar Edital
   já publicado, nem durante Retificação.
 
-**Scale/Scope**: 3 histórias, 19 FRs (FR-413 a FR-431), 5 SCs (SC-138 a SC-142). Superfície medida:
+**Scale/Scope**: 3 histórias, 20 FRs (FR-413 a FR-432), 5 SCs (SC-138 a SC-142). Superfície medida:
 `_marco.html` (400 linhas), `_perfil.html` (261), `compor_classificacao.html` (86),
 `distribuicao.html` (462), `corte.html`, `ocupacao`, `sorteio.html`, mais `draft.py`,
 `mutabilidade.py`, `forms.py` e os serializers.

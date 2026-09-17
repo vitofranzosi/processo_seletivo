@@ -81,7 +81,7 @@ controles apresentados.
 
 - [ ] T013 [P] [US1] Teste de contagem de controles do marco no Edital canônico, com o método de contagem do quickstart, em `backend/tests/interface/test_compor_classificacao.py` (SC-138)
 - [ ] T014 [P] [US1] Teste de que a pergunta de entrada vem antes de qualquer campo do marco, em `backend/tests/interface/test_compor_classificacao.py` (FR-413)
-- [ ] T015 [P] [US1] Teste de que combinação e normalização somem com uma Etapa e reaparecem com duas, sem invalidar o que o marco já publicava, em `backend/tests/interface/test_campos_que_a_escolha_governa.py` (FR-415, FR-416)
+- [ ] T015 [P] [US1] Teste de que combinação e normalização somem com uma Etapa e reaparecem com duas, sem invalidar o que o marco já publicava, **mais as duas contraprovas da FR-432** — marco `POR_SORTEIO` sem Etapa é aceito, marco `POR_PONTUACAO` sem Etapa continua recusado —, em `backend/tests/interface/test_campos_que_a_escolha_governa.py` (FR-415, FR-416, FR-432)
 - [ ] T016 [P] [US1] Teste de que as perguntas de ampla concorrência e reversão só aparecem depois de o Perfil declarar uma Modalidade, em `backend/tests/interface/test_compor_quadro.py` (FR-417)
 - [ ] T017 [P] [US1] Teste de que nenhum campo `required` é renderizado fora da tela, em `backend/tests/interface/test_acessibilidade_da_classificacao.py`
 - [ ] T018 [P] [US1] Teste de que padrão e derivação não alcançam Edital existente, inclusive em Retificação, em `backend/tests/integration/editais/test_derivacao_nao_alcanca_o_declarado.py` — ao lado de `test_derivacao_persistida.py`, que afirma o caso oposto (FR-421)
@@ -92,7 +92,7 @@ controles apresentados.
 - [ ] T020 [US1] Condicionar o bloco do método de sorteio à resposta `POR_SORTEIO` em `backend/processo_seletivo/interface/templates/interface/_marco.html`, removendo os campos do formulário em vez de escondê-los por CSS (FR-414)
 - [ ] T021 [US1] Condicionar combinação e normalização a duas ou mais Etapas em `backend/processo_seletivo/interface/templates/interface/_marco.html`, e declarar ali, em texto visível, que com uma Etapa a pontuação combinada é a dela (FR-415, FR-416)
 - [ ] T022 [US1] Emitir os campos impertinentes como `<input type="hidden">` com o último valor declarado em `backend/processo_seletivo/interface/templates/interface/_marco.html`, nunca como `disabled`, conforme [contracts/payload-do-rascunho.md](contracts/payload-do-rascunho.md) (FR-418)
-- [ ] T023 [US1] Remover o `required` junto com cada campo que sai da tela, e transferir a cobrança para a validação da publicação em `backend/processo_seletivo/editais/domain/validation.py`
+- [ ] T023 [US1] Remover o `required` junto com cada campo que sai da tela, e transferir a cobrança para a validação da publicação em `backend/processo_seletivo/editais/domain/validation.py` — **e, no mesmo lugar, condicionar a exigência de Etapa à forma da ordem**: obrigatória em `POR_PONTUACAO`, dispensada em `POR_SORTEIO`. A regra só é escrevível porque a FR-413 criou a distinção; antes, a validação não tinha como saber quem sorteia (FR-432)
 - [ ] T024 [US1] Servir o fragmento htmx que re-renderiza o cartão quando a forma da ordem muda, em `backend/processo_seletivo/interface/views.py`, seguindo o padrão de `fragmento-criterio`
 - [ ] T025 [US1] Ler `orderProduction` do envio em `backend/processo_seletivo/interface/forms.py`
 - [ ] T026 [P] [US1] Oferecer `scale: 2` e `mode: MEIO_PARA_CIMA` como padrão editável do marco novo em `backend/processo_seletivo/interface/views.py` (FR-419, valor confirmado em [research.md R3](research.md))
@@ -185,8 +185,8 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 - [ ] T060 [P] Re-semear e conferir o documento publicado: documento publicado não se regenera, e mudou o renderizador é preciso re-semear para ver
 - [ ] T061 Percorrer os quatro cenários de [quickstart.md](quickstart.md) pela interface, com o papel exato do ator (404 na gestão costuma ser autorização, não rota quebrada)
 - [ ] T062 Rodar `cd backend && make lint check test-pg` e comparar com a linha de base de T003 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
-- [ ] T063 Escrever `specs/030-composicao-que-se-explica/rastreabilidade.md` cobrindo **os 24 requisitos** (FR-413 a FR-431, SC-138 a SC-142), no formato da `028`: por requisito, onde foi feito e onde é verificado, com **nomes reais** de função de teste — mais a comparação de contagem da suíte contra a linha de base de T003
-- [ ] T064 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec, e `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passa a cobrar cada um dos 24 assim que a matriz de T063 existir
+- [ ] T063 Escrever `specs/030-composicao-que-se-explica/rastreabilidade.md` cobrindo **os 25 requisitos** (FR-413 a FR-432, SC-138 a SC-142), no formato da `028`: por requisito, onde foi feito e onde é verificado, com **nomes reais** de função de teste — mais a comparação de contagem da suíte contra a linha de base de T003
+- [ ] T064 Rodar `backend/tests/test_citacoes_de_requisito.py`: toda citação `FR-`/`SC-` desta feature precisa resolver contra a spec, e `test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature` passa a cobrar cada um dos 25 assim que a matriz de T063 existir
 
 ---
 
@@ -255,7 +255,8 @@ falha que não é do diff. Rode a suíte com a árvore parada.
   vazio é pior que guardião nenhum, porque ninguém volta a olhar.
 - Uma spec por sessão: fechada a feature, a próxima começa em outra
 - Achado encontrado no meio disto vira registro, não escopo — a governança é do usuário
-- **Lacuna conhecida e não resolvida**: o marco de sorteio que não enumera Etapa está descrito como
-  caso de borda da spec, e **nenhum FR** manda mudar a validação que hoje a exige. Nenhuma tarefa
-  acima o implementa, deliberadamente. Ou a spec ganha um requisito, ou o caso fica descrito e não
-  construído.
+- **O marco de sorteio sem Etapa entrou, e a contradição sumiu.** Ele estava descrito nos casos de
+  borda da spec e declarado como não-construído aqui — dois artefatos da mesma feature afirmando o
+  oposto, que é o pior estado possível, porque vira o que quem lê primeiro implementar. Virou
+  **FR-432**, coberto por T015 e T023. É o ACH-48, P1 na reauditoria, e a decisão de incluí-lo foi do
+  usuário.
