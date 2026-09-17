@@ -31,6 +31,8 @@ def montar_cenario_da_convocacao(
     prefixo="convocacao-019",
     forma=FORMA_POR_MENSAGEM_INDIVIDUAL,
     indeferidas=(),
+    # Repassado até `montar_cenario_do_corte` — ver a razão escrita em `tests/fixtures/ocupacao.py`.
+    publicar=None,
     **quadro,
 ):
     """Edital publicado com quadro, ordem, corte, Resultados **e apuração vigente**.
@@ -43,7 +45,14 @@ def montar_cenario_da_convocacao(
     que quem leia os três arquivos reconheça o cenário.
     """
     edital, pontuada, inscricoes = montar_cenario_da_ocupacao(
-        gestor, api_client, manager_headers, process_payload, prefixo=prefixo, forma=forma, **quadro
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo=prefixo,
+        forma=forma,
+        publicar=publicar,
+        **quadro,
     )
     # **Sem a Etapa governada consolidada não há ocupação nenhuma**, e o cenário da `016` para
     # exatamente aqui: a faixa progride e a Entrevista não conclui, de modo que `ocupadas` é zero.

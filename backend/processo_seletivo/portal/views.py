@@ -16,7 +16,7 @@ from hashlib import sha256
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
@@ -71,10 +71,21 @@ from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura
+from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import recursos_do_titular
+from processo_seletivo.requerimentos.application import exigencia as exigencia_do_requerimento
+from processo_seletivo.requerimentos.application import preencher as preencher_requerimento
+from processo_seletivo.requerimentos.application import selectors as leitura_do_requerimento
+from processo_seletivo.requerimentos.domain import (
+    disponibilidade as disponibilidade_do_requerimento,
+)
+from processo_seletivo.requerimentos.domain import endereco as endereco_de_referencia
+from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
+from processo_seletivo.requerimentos.domain import rotulos as rotulos_do_requerimento
+from processo_seletivo.requerimentos.models import RequerimentoDeMatricula
 from processo_seletivo.resultados.application.selectors import resultados_visiveis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.arquivos import tamanho_legivel
@@ -1265,6 +1276,11 @@ def inscricao(request, inscricao_id):
             "guardado": guardado,
             "erros": erros,
             "documentos": _documentos(conteudo, registro),
+            # **O cartão do requerimento anuncia o bloqueio antes da tentativa** (`UX-054`, 029).
+            # As duas perguntas vêm da política do domínio: a tela não decide nem uma nem outra, e
+            # o comando recusa por si quem chegar sem passar por aqui (Princípio IV).
+            "requerimento_exigido": disponibilidade_do_requerimento.exigido_na_inscricao(conteudo),
+            "requerimento_enviado": not exigencia_do_requerimento.falta_requerimento(registro),
             "descartes": descartes,
             "etapas": etapas_ate(0),
             **_mensagens(request),
@@ -2324,3 +2340,419 @@ def manifesto_do_sorteio(request, sorteio_id):
     resposta["Cache-Control"] = "public, max-age=31536000, immutable"
     resposta["Content-Disposition"] = f'attachment; filename="manifesto-{sorteio.id}.json"'
     return resposta
+
+
+# ---------------------------------------------------------------------------
+# O Requerimento de Matrícula (029, `US1`). Uma tela só, com três estados: indisponível, em
+# preenchimento e enviado. A política de disponibilidade é do domínio, e esta view a consulta —
+# nunca a reescreve (Princípio IV).
+# ---------------------------------------------------------------------------
+
+
+def _valor_do_campo(requerimento, campo):
+    """O valor pronto para o controle — data em ISO, que é o que `<input type="date">` lê."""
+    valor = getattr(requerimento, campo.nome, "") if requerimento else ""
+    if valor is None:
+        return ""
+    return valor.isoformat() if hasattr(valor, "isoformat") else valor
+
+
+def _o_que_o_sistema_ja_sabe(registro, identidade, conteudo):
+    """O que **não** se pergunta de novo, e de onde cada coisa veio (`FR-378`, `FR-380`, `UX-053`).
+
+    **Informação com caminho, e nunca campo desabilitado.** Um `<input disabled>` com o nome da
+    pessoa diz *"isto é um campo, e você não pode usá-lo"* sem dizer por quê nem onde se corrige —
+    e a auditoria de UX deste repositório já nomeou esse defeito. Aqui cada linha diz a origem e,
+    quando há, para onde ir mudar.
+
+    **Perfil, modalidade, protocolo e Edital são derivados** (`FR-380`): eles saem da Inscrição e do
+    conteúdo publicado, e perguntá-los seria pedir à pessoa que repetisse o que ela já escolheu.
+    """
+    # **O e-mail vem da identidade, e não de uma consulta a credenciais.** `_inscricao_do_titular`
+    # devolve o valor de identidade que a sessão já carrega — e é dele que `Sua conta` é a tela de
+    # correção. Ler credenciais aqui seria uma segunda consulta para a mesma resposta.
+    perfil = _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id))
+    return [
+        {
+            "rotulo": "Nome",
+            "valor": registro.nome,
+            "origem": "dos seus dados",
+            "caminho": reverse("portal:meus-dados"),
+            "onde": "Seus dados",
+        },
+        {
+            "rotulo": "CPF",
+            "valor": registro.cpf,
+            "origem": "dos seus dados",
+            "caminho": reverse("portal:meus-dados"),
+            "onde": "Seus dados",
+        },
+        {
+            "rotulo": "E-mail",
+            "valor": getattr(identidade, "email", ""),
+            "origem": "da sua conta",
+            "caminho": reverse("portal:conta"),
+            "onde": "Sua conta",
+        },
+        {
+            "rotulo": "Edital",
+            "valor": conteudo.get("title", ""),
+            "origem": "do Edital em que você se inscreveu",
+        },
+        {"rotulo": "Vaga", "valor": perfil["nome"], "origem": "da sua inscrição"},
+        {
+            "rotulo": "Concorrência",
+            "valor": _modalidade_da_inscricao(conteudo, registro),
+            "origem": "da sua inscrição",
+        },
+        {"rotulo": "Protocolo", "valor": registro.protocolo, "origem": "da sua inscrição"},
+    ]
+
+
+def _grupos_para_a_tela(requerimento, enviado_por_referencia):
+    """Os sete grupos, com o valor de cada campo e o que fecha enquanto o CEP for reconhecido."""
+    return [
+        {
+            "titulo": grupo.titulo,
+            "nota": grupo.nota,
+            "campos": [
+                {
+                    "campo": campo,
+                    "valor": _valor_do_campo(requerimento, campo),
+                    # Somente leitura **só** enquanto a referência responde. Sem esta condição o
+                    # município ficaria trancado para quem digitou um CEP que a base não conhece —
+                    # que é o caso em que ele mais precisa estar aberto (`FR-390`).
+                    "fechado": campo.fecha_com_o_cep and enviado_por_referencia,
+                }
+                for campo in grupo.campos
+            ],
+        }
+        for grupo in formulario_do_requerimento.GRUPOS
+    ]
+
+
+@require_http_methods(["GET", "POST"])
+@resposta_privada
+def requerimento(request, inscricao_id):
+    """Preencher e enviar o Requerimento de Matrícula (`US1`).
+
+    **`@resposta_privada` não é enfeite.** Esta tela carrega filiação, documento de identidade,
+    cor/raça, necessidade de atendimento e endereço — o conjunto mais sensível que o portal exibe.
+    Sem o cabeçalho, o navegador pode guardá-la em disco e o próximo a usar aquela máquina a
+    encontra no histórico.
+
+    **A recusa a quem não é titular vem do seletor**, indistinguível de recurso inexistente
+    (`FR-399`): `_inscricao_do_titular` levanta a mesma coisa para inscrição de outra pessoa e para
+    inscrição que não existe.
+
+    **Nada aqui decide disponibilidade.** A view pergunta à política do domínio e renderiza o que
+    ela responder; um `POST` que chegue sem passar por esta tela encontra a mesma recusa dentro do
+    comando.
+    """
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    conteudo = versao.content
+    apurado = preencher_requerimento.apurar(registro, conteudo)
+    if not apurado.exigido:
+        # **404, e não uma tela dizendo "não se aplica"**: onde o Edital não declara, o recurso não
+        # existe — inclusive por rota digitada à mão (`FR-371`).
+        raise Http404
+    correlacao = getattr(request, "correlation_id", "")
+    # **Conferir e atualizar é um `GET`, e não um `POST`.** Ele não pratica ato: abre o enviado
+    # para conferência, com os campos editáveis. O sucessor nasce quando alguma coisa muda, e não
+    # quando alguém clica — a redação anterior criava a linha no clique, e clicar e sair escondia o
+    # requerimento enviado atrás de um rascunho que ninguém pediu (`FR-406`, `FR-410`).
+    atualizando = bool(request.GET.get("atualizando") or request.POST.get("atualizando"))
+    if request.method == "POST" and atualizando:
+        try:
+            preencher_requerimento.atualizar(
+                inscricao=registro, dados=_declarado(request), correlation_id=correlacao
+            )
+        except DomainError as recusa:
+            return _tela_do_requerimento(
+                request,
+                registro,
+                identidade,
+                versao,
+                apurado,
+                exigencia_do_requerimento.vigente_de(registro),
+                recusa=recusa,
+                atualizando=True,
+            )
+        _avisar(request, "Requerimento atualizado. Agora confira e envie.")
+        return redirect(reverse("portal:requerimento", args=[registro.id]))
+    if request.method == "POST" and leitura_do_requerimento.leitura(apurado).pode_escrever:
+        return _gravar_ou_enviar(request, registro, identidade, versao, correlacao)
+    vigente = exigencia_do_requerimento.vigente_de(registro)
+    if atualizando and vigente is not None and vigente.status == requerimento_nomes.ENVIADO:
+        # A conferência: os mesmos campos, preenchidos com o que foi enviado, sem criar linha.
+        try:
+            preencher_requerimento.autorizacao_para_atualizar(registro, conteudo)
+        except DomainError as recusa:
+            return _tela_do_requerimento(
+                request, registro, identidade, versao, apurado, vigente, recusa=recusa
+            )
+        return _tela_do_requerimento(
+            request, registro, identidade, versao, apurado, vigente, atualizando=True
+        )
+    if apurado.disponivel and vigente is None:
+        # Abrir no `GET` é o que faz a cópia-para-a-frente acontecer antes de a pessoa ver a tela:
+        # ela encontra o que já sabemos preenchido, em vez de vinte campos vazios (`FR-377`).
+        vigente = preencher_requerimento.abrir_rascunho(
+            inscricao=registro, correlation_id=correlacao
+        )
+        apurado = preencher_requerimento.apurar(registro, conteudo)
+    return _tela_do_requerimento(request, registro, identidade, versao, apurado, vigente)
+
+
+def _declarado(request):
+    """Só os campos que o formulário oferece — e nada além (`FR-388`).
+
+    A lista fechada é a do descritor, e não as chaves do `POST`: é o que impede um `POST` montado à
+    mão de plantar coluna que a tela não expõe.
+    """
+    return {
+        campo.nome: request.POST.get(campo.nome, "")
+        for campo in formulario_do_requerimento.CAMPOS
+        if campo.nome in request.POST
+    }
+
+
+def _revisao_declarada(request):
+    """A revisão que a tela exibia, ou `None` quando o formulário não a trouxe.
+
+    **`None` desliga o controle otimista**, e é por isso que ela viaja: a primeira redação passava
+    `None` sempre, e duas abas da mesma pessoa se sobrescreviam em silêncio — a que gravasse por
+    último vencia, sem que nenhuma das duas soubesse.
+    """
+    declarada = (request.POST.get("revisao") or "").strip()
+    return int(declarada) if declarada.isdigit() else None
+
+
+def _gravar_ou_enviar(request, registro, identidade, versao, correlacao):
+    """Os dois botões da tela, e a recusa de cada um volta ao lado do que a causou."""
+    dados = _declarado(request)
+    try:
+        preencher_requerimento.gravar(
+            inscricao=registro,
+            dados=dados,
+            expected_revision=_revisao_declarada(request),
+            correlation_id=correlacao,
+        )
+        if not request.POST.get("enviar"):
+            _avisar(request, "Guardamos o que você preencheu. Você pode continuar depois.")
+            return redirect(reverse("portal:requerimento", args=[registro.id]))
+        preencher_requerimento.enviar(
+            identidade=identidade,
+            inscricao=registro,
+            versao_exibida_id=request.POST.get("versao_exibida", ""),
+            declaracao_exibida=request.POST.get("declaracao_exibida", ""),
+            aceite=bool(request.POST.get("aceite")),
+            correlation_id=correlacao,
+        )
+    except DomainError as recusa:
+        return _tela_do_requerimento(
+            request,
+            registro,
+            identidade,
+            versao,
+            preencher_requerimento.apurar(registro, versao.content),
+            exigencia_do_requerimento.vigente_de(registro),
+            recusa=recusa,
+        )
+    _avisar(request, "Requerimento de Matrícula enviado.")
+    return redirect(reverse("portal:requerimento", args=[registro.id]))
+
+
+def _tela_do_requerimento(
+    request, registro, identidade, versao, apurado, vigente, *, recusa=None, atualizando=False
+):
+    conteudo = versao.content
+    # **A view não decide estado: ela renderiza o que o tradutor devolver** (T041). Nenhuma leitura
+    # de disponibilidade vive aqui nem no template — uma segunda leitura divergiria da do comando, e
+    # quem paga é o candidato, que leria na tela um estado que o comando não reconhece.
+    lido = leitura_do_requerimento.leitura(apurado)
+    enviado = apurado.enviado
+    # **Conferir e atualizar só aparece quando as duas coisas coexistem** (`FR-410`): requerimento
+    # enviado **e** chamada em aberto. É também a mitigação do dado envelhecido de quem declarou na
+    # inscrição meses antes (`R-2`) — sem regra nova, pelo caminho que a correção já usa.
+    pode_atualizar = enviado and apurado.chamada is not None and not atualizando
+    # **Conferindo**: os campos do enviado, editáveis, e ainda **sem linha nova** — ela nasce em
+    # `atualizar`, e só se alguma coisa mudar.
+    conferindo = bool(atualizando and enviado)
+    # **O anterior, quando há um.** A cadeia é lida da Inscrição para fora; a rota resolve o
+    # identificador dentro dela, e não por `get(pk=…)`.
+    anterior = vigente.requerimento_anterior_id if vigente is not None else None
+    # **As mensagens vêm primeiro, e a recusa do comando vence a da sessão.** `_mensagens` devolve
+    # uma chave `recusa` — a que um redirect deixou guardada —, e espalhá-la por último apagava em
+    # silêncio a recusa que este `POST` acabou de produzir: a tela voltava sem dizer por quê.
+    mensagens = _mensagens(request)
+    faltando = (
+        preencher_requerimento.faltando_para_enviar(vigente)
+        if vigente is not None and not enviado
+        else []
+    )
+    return render(
+        request,
+        "portal/requerimento.html",
+        {
+            "inscricao": registro,
+            "requerimento": vigente,
+            "estado": lido.estado,
+            "titulo_do_estado": lido.titulo,
+            "explicacao_do_estado": lido.explicacao,
+            "pode_escrever": lido.pode_escrever,
+            "enviado": enviado,
+            "ja_sabemos": _o_que_o_sistema_ja_sabe(registro, identidade, conteudo),
+            "grupos": _grupos_para_a_tela(
+                vigente,
+                bool(vigente and vigente.endereco_conferido_por_referencia),
+            ),
+            # **O texto vem do conteúdo publicado, e nunca de literal de código** (`FR-392`).
+            #
+            # **E, no estado enviado, ele vem da versão *aceita*** — não da vigente. A redação
+            # anterior lia sempre a vigente: depois de uma Retificação no texto, a página dizia
+            # *"Declaração aceita"* sobre uma declaração que a pessoa **nunca leu**, enquanto o
+            # resumo guardado continuava sendo o do texto anterior. A tela afirmava uma coisa e o
+            # registro provava outra — e a `SC-129` existe justamente para que o que foi aceito seja
+            # reconstituível depois de o Edital mudar (`FR-393`).
+            "declaracao": _declaracao_da_tela(conteudo, vigente, enviado),
+            "versao_exibida": str(versao.id),
+            # **Anunciado antes da tentativa** (`UX-054`): descobrir o que falta no clique é o
+            # defeito que a auditoria de UX deste repositório já nomeou.
+            "faltando": faltando,
+            # **O enviado é lido, e leitura usa rótulo** — nunca o código guardado. Sem esta linha
+            # a tela mostrava `PARDA`, `F` e `DE_0_5_A_1` a quem acabara de escolher *Parda*,
+            # *Feminino* e *De meio a 1 salário mínimo*. Foi o percurso do `C8` que encontrou.
+            "grupos_legiveis": _linhas_do_requerimento(vigente) if vigente else [],
+            "pode_atualizar": pode_atualizar,
+            "conferindo": conferindo,
+            # A revisão que esta tela exibe, para o `POST` seguinte declarar contra o que ela viu.
+            "revisao": vigente.revision if vigente is not None else "",
+            "anterior": anterior,
+            **mensagens,
+            "recusa": recusa.detail if recusa else mensagens["recusa"],
+        },
+    )
+
+
+@require_http_methods(["POST"])
+@resposta_privada
+def requerimento_cep(request):
+    """O que a referência sabe sobre um CEP, para a tela preencher sem redigitação (T030).
+
+    **`POST` com o CEP no corpo, e não `GET /requerimento/cep/<cep>`.** A `FR-401` proíbe endereço
+    em URL, e endereço em URL viaja para log de servidor, histórico de navegador e cabeçalho de
+    referência sem que ninguém decida isso. A varredura da `FR-401` reprovaria a própria rota.
+
+    **Sessão de candidato exigida**, ainda que a tabela de CEPs não seja dado de pessoa: rota
+    aberta seria um serviço de consulta de CEP hospedado por engano, mantido e pago por esta
+    instituição para quem quisesse usá-lo.
+
+    **Nunca devolve erro por CEP desconhecido**, e a resposta não culpa quem digitou (`UX-055`).
+    Base ausente, desatualizada ou sem aquele CEP são o mesmo caso para quem preenche, e nenhum
+    deles impede o envio (`FR-390`). `conferido: false` é resposta normal, e a tela abre os campos.
+    """
+    if identidade_do_candidato.identidade_da_sessao(request) is None:
+        raise Http404
+    achado = endereco_de_referencia.referencia_de_cep(request.POST.get("cep", ""))
+    if achado is None:
+        return JsonResponse({"conferido": False})
+    return JsonResponse(
+        {
+            "conferido": bool(achado.municipio and achado.uf),
+            "logradouro": achado.logradouro,
+            "bairro": achado.bairro,
+            "municipio": achado.municipio,
+            "uf": achado.uf,
+        }
+    )
+
+
+def _cadeia_do_requerimento(inscricao):
+    """A cadeia inteira de requerimentos desta Inscrição, do mais recente ao mais antigo.
+
+    **Da Inscrição para fora, e nunca do identificador para dentro.** É esta direção que torna o
+    segundo identificador da rota inofensivo: o que não estiver nesta lista não existe para quem
+    pergunta, seja porque não existe mesmo, seja porque é de outra pessoa.
+    """
+    return list(
+        RequerimentoDeMatricula.objects.filter(inscricao=inscricao)
+        .select_related("versao_aceita")
+        .order_by("-created_at")
+    )
+
+
+@require_http_methods(["GET"])
+@resposta_privada
+def requerimento_anterior(request, inscricao_id, requerimento_id):
+    """Um requerimento **já sucedido**, como ele foi enviado (029, `US5`, `UX-059`).
+
+    **Corrigir não apaga, e a pessoa precisa poder ver o que declarou antes.** Sem esta tela, a
+    correção esconderia o original de quem o escreveu — e quem respondesse a um questionamento sobre
+    o que foi declarado em março teria de pedir à instituição o que é dele.
+
+    **O identificador é resolvido dentro da cadeia da Inscrição do titular** (`FR-399`). Um
+    `get(pk=requerimento_id)` aqui seria IDOR: `_inscricao_do_titular` confere a **Inscrição**, e o
+    segundo identificador ficaria sem dono — bastaria trocá-lo pelo de outra pessoa. É o modo
+    clássico de uma rota com dois identificadores vazar, e ele só aparece quando o segundo entra.
+    """
+    registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
+    alvo = next(
+        (
+            item
+            for item in _cadeia_do_requerimento(registro)
+            if str(item.id) == str(requerimento_id)
+        ),
+        None,
+    )
+    if alvo is None or alvo.status != requerimento_nomes.ENVIADO:
+        # **Rascunho abandonado não é histórico**, e um identificador fora da cadeia é
+        # indistinguível de inexistente — a mesma resposta nos dois casos.
+        raise Http404
+    return render(
+        request,
+        "portal/requerimento_anterior.html",
+        {
+            "inscricao": registro,
+            "requerimento": alvo,
+            # Do **alvo**, e não do vigente: esta tela mostra o que foi sucedido, e ler o vigente
+            # aqui exibiria a correção no lugar do corrigido.
+            "grupos": _linhas_do_requerimento(alvo),
+            "declaracao": preencher_requerimento.declaracao_publicada(
+                alvo.versao_aceita.content if alvo.versao_aceita else {}
+            ),
+        },
+    )
+
+
+def _declaracao_da_tela(conteudo, vigente, enviado):
+    """O texto que a tela mostra: o **aceito** quando já houve aceite, o vigente quando não.
+
+    A distinção é a mesma que a `Inscricao` já carrega entre `versao_reconhecida` e `versao_aceita`,
+    e pela mesma razão: o que se exibe para **aceitar** é a norma de hoje; o que se exibe como
+    **aceito** é a norma daquele dia.
+    """
+    if enviado and vigente is not None and vigente.versao_aceita_id:
+        return preencher_requerimento.declaracao_publicada(vigente.versao_aceita.content)
+    return preencher_requerimento.declaracao_publicada(conteudo)
+
+
+def _linhas_do_requerimento(requerimento):
+    """Os sete grupos com rótulo e valor legível — os mesmos que o dossiê da gestão lê.
+
+    **Os rótulos vêm do domínio.** Quem declarou e quem conduz leem o mesmo nome para o mesmo
+    campo; escrevê-los de novo aqui os faria divergir na primeira correção.
+    """
+    return [
+        {
+            "titulo": titulo,
+            "linhas": [
+                {
+                    "rotulo": rotulos_do_requerimento.ROTULOS[campo],
+                    "valor": rotulos_do_requerimento.legivel(campo, getattr(requerimento, campo)),
+                }
+                for campo in campos
+            ],
+        }
+        for titulo, campos in rotulos_do_requerimento.GRUPOS
+    ]

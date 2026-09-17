@@ -17,6 +17,7 @@ from datetime import datetime
 
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.interface.forms import ZONA
+from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
 CARATER = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
@@ -267,6 +268,49 @@ COLECOES = (
 )
 
 
+# Os dois momentos, ditos como quem revisa precisa lê-los. **Não é o código**: `AT_ENROLLMENT` não
+# diz nada a quem confere um Edital antes de publicá-lo.
+_QUANDO = {
+    nomes_do_requerimento.NA_INSCRICAO: "no ato da inscrição",
+    nomes_do_requerimento.NA_CONVOCACAO: "quando o candidato for convocado",
+}
+
+
+def _requerimento_de_matricula(snapshot):
+    """O que o Edital passou a exigir do candidato — e o texto que ele vai aceitar (029, T046).
+
+    **Quem revisa antes de publicar um ato imutável precisa ver isto.** Sem o bloco, a única
+    confirmação do texto da declaração seria a tela onde ele foi digitado: quem conferisse o Edital
+    na Revisão publicaria sem nunca reler o que o candidato vai ter de aceitar — e depois da
+    publicação a correção não é digitar de novo, e sim Retificar.
+
+    **O bloco some quando o Edital não declara**, e é o certo: uma linha dizendo *"não exige"* em
+    todo Edital do acervo seria ruído numa tela que já é longa. A ausência de exigência é o padrão.
+
+    **O texto aparece por extenso, e não resumido.** É norma que vai ao conteúdo publicado; cortá-lo
+    com reticências faria a conferência confirmar o que ninguém leu.
+    """
+    declaracao = snapshot.get("matriculationRequest") or {}
+    momento = declaracao.get("moment") or ""
+    if not momento:
+        return []
+    return [
+        {
+            "titulo": "Requerimento de Matrícula",
+            "etapa": "inscricao",
+            "itens": [
+                {
+                    "titulo": f"Exigido {_QUANDO.get(momento, momento)}",
+                    "linhas": [
+                        declaracao.get("declarationText")
+                        or "sem o texto da declaração — a publicação será recusada",
+                    ],
+                }
+            ],
+        }
+    ]
+
+
 def blocos(snapshot):
     """O Edital inteiro, na ordem em que se elabora, com o caminho de volta para cada etapa."""
     conferencia = [
@@ -284,6 +328,7 @@ def blocos(snapshot):
             ],
         }
     ]
+    conferencia.extend(_requerimento_de_matricula(snapshot))
     for chave, titulo, etapa, leitura in COLECOES:
         itens = snapshot.get(chave) or []
         conferencia.append(

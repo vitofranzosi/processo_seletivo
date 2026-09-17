@@ -711,7 +711,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # (019, D-009, R-007).
         "editais": 20,
         "inscricoes": 4,
-        "processos": 2,
+        # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
+        # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
+        # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o
+        # Edital passa a poder declarar (029, `FR-368`, `FR-407`).
+        "processos": 3,
         "publicacoes": 8,
         "recursos": 1,
         # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de

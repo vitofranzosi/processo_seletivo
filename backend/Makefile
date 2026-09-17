@@ -13,7 +13,7 @@ export
 endif
 endif
 
-.PHONY: install check lint test test-pg contract preparar provisionar migrate runserver seed
+.PHONY: install check lint test test-pg contract preparar provisionar migrate runserver seed ceps ceps-situacao
 
 install:
 	uv sync --extra dev
@@ -69,6 +69,22 @@ provisionar:
 
 migrate:
 	DB_ROLE=migration uv run python manage.py migrate
+
+# A carga inicial da base de referência de CEP (029). **Não entra no `preparar`**, e a ausência é
+# decisão: `preparar` roda em toda máquina de desenvolvimento e em cada banco de teste, e 379 MB de
+# CEPs não têm lugar ali. Quem instala pela primeira vez roda este alvo uma vez; a atualização é
+# job mensal externo. O caminho do arquivo vem de `CEPS_ZIP`.
+#
+# `--se-mudou` torna a repetição barata: o alvo pode entrar num roteiro de implantação sem
+# reimportar o que já está carregado.
+ceps:
+	@test -n "$(CEPS_ZIP)" || { echo "Defina CEPS_ZIP com o caminho do arquivo da base."; exit 1; }
+	DB_ROLE=migration uv run python manage.py carregar_ceps '$(CEPS_ZIP)' --se-mudou
+
+# O que o deploy comum roda: **confere e informa**, sem baixar nem reimportar nada. Sai com 1
+# quando alguém precisa olhar — base ausente, carga falhada, ou base velha demais.
+ceps-situacao:
+	uv run python manage.py situacao_dos_ceps
 
 runserver:
 	uv run python manage.py runserver

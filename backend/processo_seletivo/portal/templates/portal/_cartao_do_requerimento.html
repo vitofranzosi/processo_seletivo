@@ -1,0 +1,25 @@
+{% comment %}
+O cartao do Requerimento de Matricula na tela da inscricao (029, T031, UX-054).
+
+**Ele existe para anunciar o bloqueio antes da tentativa.** Quem coleta na inscricao nao pode
+descobrir no clique de `Revisar inscricao` que faltava um requerimento inteiro — a auditoria de UX
+deste repositorio ja nomeou esse defeito, e aqui ele custaria vinte campos de surpresa.
+
+**Sem ajuda visivel** (UX-052): a microcopia de como preencher mora na tela de preenchimento, e nao
+aqui. O cartao diz o que falta e para onde ir.
+
+**Nada aqui aparece quando o Edital coleta na convocacao**, e a razao e a ordem do certame: exigir
+na inscricao o que so abre depois da chamada tornaria o Edital impossivel de cumprir.
+{% endcomment %}
+{% if requerimento_exigido %}
+<section class="painel" aria-labelledby="requerimento">
+  <h2 id="requerimento">Requerimento de Matrícula</h2>
+  {% if requerimento_enviado %}
+  <p><span aria-hidden="true">✓</span> Enviado. <a href="{% url 'portal:requerimento' inscricao.id %}">Conferir o que você enviou</a>.</p>
+  {% else %}
+  <p class="aviso" role="status">Este Processo Seletivo pede o Requerimento de Matrícula
+  <strong>no ato da inscrição</strong>. Você não consegue enviar a inscrição sem ele.</p>
+  <p><a href="{% url 'portal:requerimento' inscricao.id %}" class="principal">Preencher o requerimento</a></p>
+  {% endif %}
+</section>
+{% endif %}

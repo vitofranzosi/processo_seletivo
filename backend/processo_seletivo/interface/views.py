@@ -108,6 +108,9 @@ from processo_seletivo.editais.application.reaproveitamento import (
     rascunho_vazio,
     reaproveitar_edital,
 )
+from processo_seletivo.editais.application.requerimento import (
+    atualizar_requerimento_de_matricula,
+)
 from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.validation import (
@@ -167,6 +170,7 @@ from processo_seletivo.recursos.application import selectors as recursos_selecto
 from processo_seletivo.recursos.domain.elegibilidade import RAZOES, impedimento
 from processo_seletivo.recursos.domain.janela import janela_declarada
 from processo_seletivo.recursos.models import Recurso
+from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
@@ -596,6 +600,12 @@ DESTINO_DA_PENDENCIA = {
     # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
     # olhar o caminho inteiro — o segmento de coleção sozinho não distingue um do outro.
     "classificationMilestones": ("classificacao", "#titulo-classificacao", True),
+    # O texto da declaração do Requerimento de Matrícula (029). É campo de **raiz**, como `title`,
+    # e se resolve na etapa `Inscrição`, que é onde ele é composto. Sem esta linha a pendência
+    # cairia em `(None, "", False)` e apareceria como **não corrigível** — o sistema apontaria um
+    # defeito e informaria que não há caminho, que é exatamente o que a `FR-007` proíbe e o que a
+    # Identificação sofreu antes de ganhar ato próprio.
+    "matriculationRequest/declarationText": ("inscricao", "#inscricao-requerimento", True),
 }
 
 # Pendência do marco que **não** se resolve no marco. O peso é campo da Etapa, e a Etapa é quem o
@@ -1147,6 +1157,19 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "inscricao" and digitados is not None
                 else forms.periodo_do_edital(edital)
             ),
+            # Após recusa, o que a pessoa digitou; fora disso, o que está gravado — a mesma regra
+            # das demais etapas, e o que impede a recusa apagar o preenchimento (029, T047).
+            "requerimento_momento": (
+                digitados["requerimento_momento"]
+                if etapa == "inscricao" and digitados is not None
+                else edital.requerimento_momento
+            ),
+            "requerimento_declaracao": (
+                digitados["requerimento_declaracao"]
+                if etapa == "inscricao" and digitados is not None
+                else edital.requerimento_declaracao
+            ),
+            "momentos_do_requerimento": MOMENTOS_DO_REQUERIMENTO,
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
             "anexos_do_edital": (forms.anexos_do_edital(edital) if etapa == "inscricao" else []),
             # As listas que o marco e o critério escolhem. Só no passo da classificação: montá-las
@@ -1532,6 +1555,24 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]
         ]
+        # **Ato próprio, e antes do `replace_draft`** (029, T045). Os dois campos são de **raiz** do
+        # Edital, e `replace_draft` não os carrega: passar por ele apagaria as coleções que ele
+        # substitui sem gravar nenhum dos dois. O ato próprio também tem auditoria própria, com o
+        # momento na razão — quem audita precisa saber *quando* o Edital passou a pedir isto.
+        #
+        # **Antes, e não depois**: este comando faz `compare_and_swap` e a revisão sobe; chamá-lo
+        # depois de `replace_draft` levaria a `expected_revision` obsoleta que o outro acabou de
+        # invalidar. Aqui, o `edital.refresh_from_db()` devolve a revisão que o `replace_draft`
+        # seguinte vai declarar.
+        atualizar_requerimento_de_matricula(
+            actor=ator,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            momento=digitados["requerimento_momento"],
+            declaracao=digitados["requerimento_declaracao"],
+            correlation_id=request.correlation_id,
+        )
+        edital.refresh_from_db()
     elif etapa == "classificacao":
         # Só os marcos vêm do formulário; o resto de cada Perfil é o que já estava gravado.
         marcos_por_perfil = {str(chave): valor for chave, valor in digitados.items()}
@@ -2955,10 +2996,22 @@ def _versao_por_extenso(versao):
     return f"versão da publicação nº {publicacao.publication_order}, vigente desde {vigencia}"
 
 
+# Os dois momentos declaráveis, com o rótulo em português que a etapa **Inscrição** mostra. A
+# ausência de declaração é a **primeira** opção da lista, com valor vazio: ela é o padrão, e não um
+# terceiro valor — o Edital que não pede requerimento é a esmagadora maioria dos casos.
+MOMENTOS_DO_REQUERIMENTO = (
+    (nomes_do_requerimento.NA_INSCRICAO, "No ato da inscrição"),
+    (nomes_do_requerimento.NA_CONVOCACAO, "Quando o candidato for convocado"),
+)
+
+
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
     "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
+    # A declaração do Requerimento de Matrícula (029). Sem rótulo, a trilha exibiria o código cru
+    # a quem responde *"quando o Edital passou a pedir isto?"*.
+    "ALTERAR_REQUERIMENTO": "Alteração do Requerimento de Matrícula",
     # A cópia de configuração de outro Edital (023). Sem esta entrada a trilha exibiria o
     # código cru, e `US3` ficaria atendida no banco e não no canal do ator.
     "REAPROVEITAR_EDITAL": "Criação a partir de Edital anterior",
@@ -3011,6 +3064,11 @@ OPERACOES = {
     # A leitura do candidato (`FR-288b`). Entra na mesma trilha porque a pergunta que ela responde
     # — *"a pessoa teve como saber?"* — é feita por quem responde por todo o resto do certame.
     "CONVOCACAO_LER": "Convocação lida pela pessoa convocada",
+    # O envio do Requerimento de Matrícula (029). Mesma trilha, pela razão de sempre: quem responde
+    # *"o que esta pessoa declarou, e sob qual declaração?"* lê a mesma tela de quem investiga uma
+    # publicação. **As duas frases dizem o ato, e não o nome da função** (`FR-296`).
+    "REQUERIMENTO_ENVIAR": "Requerimento de Matrícula enviado",
+    "REQUERIMENTO_SUCEDER": "Requerimento de Matrícula atualizado por sucessão",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",

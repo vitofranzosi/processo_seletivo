@@ -367,6 +367,39 @@ details.como-converter li{margin-bottom:.4rem}
   border-bottom:1px solid var(--borda)}
 .painel>.ajuda:last-child{margin-bottom:0}
 .painel .campo:last-child{margin-bottom:0}
+/* O formulario de vinte campos: grade que emparelha o que e curto, em vez de uma coluna de vinte
+   linhas. Sem ela a pagina passava de 3.800px — cinco telas de rolagem —, e a pessoa perdia de
+   vista em que grupo estava.
+
+   `auto-fit` com `minmax` faz a coluna sumir sozinha no celular: a mesma marcacao serve aos dois,
+   e nao ha ponto de quebra escrito a mao para manter. O minimo usa `min()` porque piso rigido em
+   tela de 375px empurra a grade para fora e cria rolagem lateral — defeito que esta folha ja
+   registrou uma vez. */
+.grade-de-campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));
+  gap:0 1rem;align-items:start}
+.grade-de-campos .campo{max-width:none;margin-bottom:.7rem}
+/* O campo que pede a linha inteira, mesmo dentro da grade: endereco e nome nao cabem em meia
+   coluna sem cortar o que a pessoa digitou. */
+.grade-de-campos .campo.largo{grid-column:1/-1}
+/* O bloco do que o sistema ja sabe: duas colunas de rotulo e valor, densas, porque ele e
+   referencia — a pessoa confere e segue. Ocupava 434px numa tela de conferencia. */
+.ja-sabemos{display:grid;grid-template-columns:auto 1fr;gap:.2rem .75rem;margin:0 0 1.25rem;
+  max-width:var(--leitura)}
+.ja-sabemos dt{font-weight:600;font-size:.875rem;color:var(--texto-fraco);align-self:baseline}
+.ja-sabemos dd{margin:0;overflow-wrap:anywhere}
+.ja-sabemos .origem{color:var(--texto-fraco);font-size:.875rem}
+/* Os grupos do formulario sem a moldura do `fieldset`: a borda de oito caixas empilhadas produz
+   ruido, e o que separa os grupos e o titulo. A legenda vira cabecalho de secao. */
+.grupo-de-campos{border:0;padding:0;margin:0 0 1rem;min-width:0}
+.grupo-de-campos>legend{font-weight:600;font-size:1.0625rem;padding:0;margin:0 0 .5rem;
+  border-bottom:1px solid var(--borda);width:100%;padding-bottom:.25rem}
+.grupo-de-campos>.sub{margin:0 0 .6rem;font-size:.9375rem}
+/* A linha de apoio do campo, quando ela sobrevive a triagem. Menor e sem a margem de 1.5rem que
+   `.sub` carrega: dentro do campo ela e uma linha, e nao um paragrafo. */
+.campo .dica{display:block;color:var(--texto-fraco);font-size:.8125rem;margin:.15rem 0 0}
+/* O exemplo dentro do campo precisa de contraste proprio: o cinza padrao do navegador reprova a
+   rubrica, e aqui ele e informacao — formato — e nao enfeite. */
+.campo input::placeholder{color:var(--texto-fraco);opacity:1}
 
 /* Rótulo pequeno em cima do valor: o olho encontra o valor sem atravessar o rótulo, e em 375px
    nada precisa de duas colunas para caber. */

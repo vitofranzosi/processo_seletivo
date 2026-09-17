@@ -98,6 +98,15 @@ DEGRAUS_DA_RAIZ = {
     # Edital não declarou anexo", e isso é verdade sobre todos eles, porque a capacidade não
     # existia (020, R-004).
     9: {"attachments": []},
+    # **O degrau 16 é o do Requerimento de Matrícula** (029, `FR-368`). `null` diz que o Edital
+    # **não exige** requerimento — e isso é verdade sobre todo Edital publicado antes deste degrau,
+    # porque a capacidade não existia. É a mesma leitura que o `callForm` fez no 15 e que o
+    # `attachments` fez no 9.
+    #
+    # **`null`, e não a chave ausente.** A grafia da ausência no conteúdo publicado é a chave
+    # presente com valor nulo — é o que `publish_edital` emite para `vacancyReversion` e `callForm`,
+    # e elevar sem a chave deixaria o acervo antigo com uma forma que o emissor de hoje não produz.
+    16: {"matriculationRequest": None},
 }
 
 # **O degrau 9 é o quarto nível**, e o primeiro dentro de `documentRequirements`. `attachmentId`

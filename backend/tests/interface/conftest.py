@@ -211,3 +211,33 @@ def cenario(db, gestor, api_client, manager_headers, process_payload, raiz_de_ar
         geral=3,
         ppi=2,
     )
+
+
+# --- O Requerimento de Matrícula (029) ---------------------------------------------------------
+# As funções moram em `tests/fixtures/requerimento.py`, e estas fixtures são as mesmas que
+# `tests/integration/requerimentos/conftest.py` declara. **Declaradas duas vezes de propósito**:
+# importar uma fixture de outro módulo de teste a redefine no importador, que é o que o `F811`
+# acusa. A regra está escrita em `tests/fixtures/corte.py`.
+
+
+@pytest.fixture
+def selecao_na_inscricao(raiz_de_arquivos, api_client, manager_headers, process_payload):
+    """Seleção publicada que coleta o requerimento **na inscrição** — o caso do 77 e do 58."""
+    from tests.fixtures.requerimento import publicar_com_requerimento
+
+    return publicar_com_requerimento(api_client, manager_headers, process_payload, "AT_ENROLLMENT")
+
+
+@pytest.fixture
+def selecao_na_convocacao(raiz_de_arquivos, api_client, manager_headers, process_payload):
+    """Seleção publicada que coleta **na convocação** — o caso do 69 e do 46."""
+    from tests.fixtures.requerimento import publicar_com_requerimento
+
+    return publicar_com_requerimento(api_client, manager_headers, process_payload, "AT_CALL")
+
+
+@pytest.fixture
+def campos_declarados():
+    from tests.fixtures.requerimento import campos_de_exemplo
+
+    return campos_de_exemplo()
