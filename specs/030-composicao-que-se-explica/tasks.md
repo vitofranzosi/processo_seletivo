@@ -22,6 +22,13 @@ vêm antes da implementação que verificam.
 
 Monólito Django. Código em `backend/processo_seletivo/`, testes em `backend/tests/`.
 
+**A suíte é organizada por espécie de teste, e o app é subpasta dela** — `tests/unit/editais/`,
+`tests/integration/editais/`, `tests/integration/sorteios/`, `tests/interface/`. Não existe
+`tests/editais/` nem `tests/sorteios/`: escrever ali criaria um diretório paralelo ao que já há.
+
+**`Edital` mora em `processos/models.py`**, e não em `editais/`. O app `editais` guarda o conteúdo do
+Edital — perfis, etapas, seções, cronograma —, não o Edital.
+
 ---
 
 ## Phase 1: Setup
@@ -45,9 +52,9 @@ pode começar em paralelo com a Phase 1.
 
 ### Testes que fixam a fronteira (antes da implementação)
 
-- [ ] T004 [P] Teste de que Edital publicado antes da feature mantém o conteúdo canônico idêntico, sem `orderProduction`, em `backend/tests/editais/test_forma_da_ordem.py` (SC-142)
+- [ ] T004 [P] Teste de que Edital publicado antes da feature mantém o conteúdo canônico idêntico, sem `orderProduction`, em `backend/tests/unit/editais/test_forma_da_ordem.py` — ao lado de `test_marco_classificatorio.py` e `test_forma_do_snapshot.py` (SC-142)
 - [ ] T005 [P] Teste de round-trip do rascunho: campo declarado e depois tornado impertinente volta no envio seguinte e não se perde, em `backend/tests/interface/test_round_trip_do_rascunho.py` (FR-418)
-- [ ] T006 [P] Teste de fronteira: o valor preservado em campo oculto **não** alcança o conteúdo publicado, em `backend/tests/editais/test_forma_da_ordem.py` (contrato do rascunho)
+- [ ] T006 [P] Teste de fronteira: o valor preservado em campo oculto **não** alcança o conteúdo publicado, em `backend/tests/unit/editais/test_forma_da_ordem.py` (contrato do rascunho)
 
 ### Implementação
 
@@ -77,7 +84,7 @@ controles apresentados.
 - [ ] T015 [P] [US1] Teste de que combinação e normalização somem com uma Etapa e reaparecem com duas, sem invalidar o que o marco já publicava, em `backend/tests/interface/test_campos_que_a_escolha_governa.py` (FR-415, FR-416)
 - [ ] T016 [P] [US1] Teste de que as perguntas de ampla concorrência e reversão só aparecem depois de o Perfil declarar uma Modalidade, em `backend/tests/interface/test_compor_quadro.py` (FR-417)
 - [ ] T017 [P] [US1] Teste de que nenhum campo `required` é renderizado fora da tela, em `backend/tests/interface/test_acessibilidade_da_classificacao.py`
-- [ ] T018 [P] [US1] Teste de que padrão e derivação não alcançam Edital existente, inclusive em Retificação, em `backend/tests/editais/test_retificacao.py` (FR-421)
+- [ ] T018 [P] [US1] Teste de que padrão e derivação não alcançam Edital existente, inclusive em Retificação, em `backend/tests/integration/editais/test_derivacao_nao_alcanca_o_declarado.py` — ao lado de `test_derivacao_persistida.py`, que afirma o caso oposto (FR-421)
 
 ### Implementação
 
@@ -142,9 +149,9 @@ maior risco: 22 arquivos Python leem `metodo_de_sorteio` ou `drawMethod`.
 
 - [ ] T042 [P] [US3] Teste de que sete marcos de sorteio exigem uma declaração do método, em `backend/tests/interface/test_metodo_do_marco.py` (SC-140)
 - [ ] T043 [P] [US3] Teste de que o marco divergente registra a divergência explicitamente no conteúdo normativo, em `backend/tests/interface/test_metodo_do_marco.py` (FR-430)
-- [ ] T044 [P] [US3] Teste de que Edital publicado antes da feature mantém o método literal em cada marco e não ganha chave no nível do Edital, em `backend/tests/editais/test_metodo_comum.py` (FR-431, SC-142)
-- [ ] T045 [P] [US3] Teste de que o `metodo_hash` congelado de relação anterior à feature não muda, em `backend/tests/sorteios/` (a citação datada do método é o que impede que "qual método governa" se resolva depois da semente; a decisão é da 021, e esta feature não pode afrouxá-la)
-- [ ] T046 [P] [US3] Teste de retificação do método comum pelo endereçamento novo, em `backend/tests/editais/test_mutabilidade.py`
+- [ ] T044 [P] [US3] Teste de que Edital publicado antes da feature mantém o método literal em cada marco e não ganha chave no nível do Edital, em `backend/tests/integration/editais/test_metodo_comum.py` — ao lado de `test_mutabilidade_do_metodo_de_sorteio.py` (FR-431, SC-142)
+- [ ] T045 [P] [US3] Teste de que o `metodo_hash` congelado de relação anterior à feature não muda, estendendo `backend/tests/integration/sorteios/test_metodo_nao_e_escolha.py` (a citação datada do método é o que impede que "qual método governa" se resolva depois da semente; a decisão é da 021, e esta feature não pode afrouxá-la)
+- [ ] T046 [P] [US3] Teste de retificação do método comum pelo endereçamento novo, estendendo `backend/tests/integration/editais/test_mutabilidade_do_metodo_de_sorteio.py`
 
 ### Implementação
 

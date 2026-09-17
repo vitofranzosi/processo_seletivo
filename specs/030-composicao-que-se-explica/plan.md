@@ -107,13 +107,16 @@ specs/030-composicao-que-se-explica/
 backend/processo_seletivo/
 ├── editais/
 │   ├── models/perfis.py          # MarcoClassificatorio: campo novo da forma da ordem (P1)
-│   ├── models/…                  # Edital: método comum do sorteio (P3)
 │   ├── application/draft.py      # replace_draft — a trava de FR-418
 │   ├── domain/mutabilidade.py    # catálogo de Retificação: endereçamento do drawMethod (P3)
 │   ├── domain/perfis.py          # derivação de código e denominação (FR-420)
+│   ├── domain/validation.py      # a cobrança que sai do `required` (FR-423 da tela → publicação)
 │   ├── domain/reaproveitamento.py
 │   ├── api/serializers.py        # conteúdo canônico publicado
 │   └── migrations/               # campo novo, sem tocar em dado publicado
+├── processos/
+│   ├── models.py                 # Edital: método comum do sorteio (P3) — ele NÃO mora em editais/
+│   └── migrations/
 ├── interface/
 │   ├── views.py                  # contexto das telas de composição e condução
 │   ├── forms.py                  # leitura do payload do marco
@@ -124,20 +127,31 @@ backend/processo_seletivo/
 │       ├── distribuicao.html     # o que a consolidação produz (FR-422)
 │       ├── corte.html            # recorte, geração, faixa (FR-424)
 │       └── sorteio.html
-├── classificacao/                # leitores do marco: cálculo, universo, reprodução
-└── sorteios/
+├── classificacao/                # leitores do marco: cálculo, emissão, seletores
+└── sorteios/domain/metodo.py     # o ponto ÚNICO de resolução do método (P3)
 
-backend/tests/
+backend/tests/                    # a suíte é organizada por ESPÉCIE de teste, e o app é subpasta:
+├── unit/editais/                 #   não existe `tests/editais/` — existe `tests/unit/editais/`
+├── integration/editais/          #   mutabilidade, retificação, derivação persistida
+├── integration/sorteios/         #   test_metodo_nao_e_escolha.py
 ├── interface/                    # test_compor_classificacao.py, test_metodo_do_marco.py,
 │                                 # test_round_trip_do_rascunho.py
-├── editais/                      # mutabilidade, retificação, publicação
+├── test_vocabulario_do_corte.py  # convenção já existente para termo de domínio em tela
 └── test_citacoes_de_requisito.py # varre specs/ — roda em PR de documentação também
 ```
 
-**Structure Decision**: monólito Django existente, sem módulo novo. A feature age em três camadas já
-estabelecidas — modelo e migração em `editais`, apresentação em `interface`, e o catálogo de
-mutabilidade em `editais/domain`. Nenhum app novo se justifica: o conceito é o mesmo, muda **quando**
-ele é apresentado e **onde** ele é declarado.
+**Structure Decision**: monólito Django existente, sem módulo novo. A feature age em camadas já
+estabelecidas — o marco e seu catálogo de mutabilidade em `editais`, apresentação em `interface`, e a
+resolução do método em `sorteios/domain/metodo.py`. Nenhum app novo se justifica: o conceito é o
+mesmo, muda **quando** ele é apresentado e **onde** ele é declarado.
+
+**Dois caminhos que enganam**, e que custaram uma correção depois da análise cruzada:
+
+- **`Edital` não mora em `editais/`.** O modelo está em `processos/models.py`; o app `editais` guarda
+  o conteúdo do Edital — perfis, etapas, seções, cronograma —, não o Edital.
+- **Não existe `backend/tests/editais/`.** A suíte é organizada por espécie de teste, e o app é
+  subpasta dela: `tests/unit/editais/`, `tests/integration/editais/`, `tests/integration/sorteios/`.
+  Criar `tests/editais/` produziria um diretório paralelo ao que já existe.
 
 ## Complexity Tracking
 
