@@ -61,7 +61,8 @@ existem, seguindo um precedente que já está no repositório, em vez de inventa
 | `ocupacao/application/selectors.py::recortes_do_marco` | **não** — exclui `generalCompetitionModalityId` | *"a quantidade dela mora na linha geral, e dar-lhe linha declararia duas vezes o mesmo número"* |
 
 Duas funções com **o mesmo nome**, em módulos diferentes, respondendo coisas diferentes para a mesma
-pergunta. A feature tem de escolher uma — e escolher errado produz uma ordem emitida para um recorte
+pergunta — e a medição do `plan` encontrou ainda um **terceiro** tratamento, no corte, que apelida a
+Modalidade declarada como ampla para a linha geral ([research.md](research.md), `R-3`). A feature tem de escolher uma — e escolher errado produz uma ordem emitida para um recorte
 que a ocupação não tem linha para consumir: **um ato publicado que não leva a lugar nenhum**, que é
 uma versão pior do defeito que esta spec existe para fechar.
 
@@ -174,10 +175,18 @@ apurar fora do sistema.
   de Concorrência reservada, MUST emitir **uma ordem por recorte** — a da ampla concorrência e a de
   cada Modalidade reservada —, cada uma com raiz, sucessão e proveniência próprias. É o mesmo desenho
   que a `021` já aplica ao sorteio, e não um mecanismo novo.
-- **FR-491**: O conjunto de recortes de um marco MUST ser derivado em **um lugar só**, e esse lugar
-  MUST responder o mesmo para a classificação, para a ocupação e para o sorteio. Hoje existem duas
-  derivações homônimas que discordam, e uma ordem emitida para recorte que a ocupação não consome é
-  um ato publicado que não leva a lugar nenhum.
+- **FR-491**: O conjunto de recortes de um marco MUST ser derivado em **um lugar só**, e a
+  classificação e a ocupação MUST obter o conjunto desse mesmo lugar. Uma ordem emitida para recorte
+  que a ocupação não consome é um ato publicado que não leva a lugar nenhum.
+  *O recorte é o da classificação e o da ocupação porque são os dois lados de um mesmo ato — quem
+  emite e quem apura.* A medição encontrou **três** tratamentos do mesmo fato, e não dois: a ocupação
+  não considera recorte a Modalidade declarada como ampla, o corte a considera e a **apelida** para a
+  linha geral, e o sorteio lhe dá **recorte próprio**. Os dois primeiros são compatíveis — o corte
+  aceita o apelido e nunca o oferece. O terceiro não é.
+- **FR-491a**: A divergência do sorteio MUST ser **registrada**, com a medição que a demonstra, e
+  MUST NOT ser corrigida por esta feature. Alinhá-la mudaria telas de uma feature que funciona, e o
+  tamanho da mudança é decisão de quem governa o backlog — não de quem implementa. Ampliar a
+  `FR-491` para alcançar o sorteio é a pergunta que a parada de escopo faz.
 - **FR-492**: O universo do recorte reservado MUST ser quem se autodeclarou naquela Modalidade, **e
   essas mesmas pessoas MUST permanecer no universo da ampla concorrência** (`D-001`). A cota preenche
   o que a ampla não preencheu; quem classifica pela ampla apenas não é computado no preenchimento da
@@ -254,7 +263,10 @@ apurar fora do sistema.
 - **SC-171**: Edital **sem** Modalidade reservada produz ordem **idêntica** à que produzia antes da
   feature — conferido por comparação da ordem e da proveniência, e não por contagem de linhas.
 - **SC-172**: **100%** dos recortes que a classificação deriva coincidem com os que a ocupação deriva,
-  para o mesmo marco — verificado por comparação direta das duas listas, e não por inspeção.
+  para o mesmo marco — verificado por comparação direta das duas listas, e não por inspeção. **São
+  duas listas, e não três, porque a `FR-491` obriga duas**: a do sorteio está registrada como
+  divergente em `FR-491a`, e medi-la aqui reprovaria a feature por um defeito que ela não causou e
+  não tem mandato para corrigir.
 - **SC-173**: O acervo publicado atravessa a feature sem mudar **conteúdo, resumo nem documento** —
   nenhum degrau de elevação de versão é acrescentado.
 - **SC-174**: **Nenhum** aviso da família da `032` dispara sobre recorte que passou a ter via de
@@ -301,10 +313,12 @@ nenhuma segunda pergunta seja criada. É `FR-500`.
 
 ### As demais premissas
 
-- A derivação única de `FR-491` é **uma escolha entre duas que existem**, não uma terceira: a da
-  ocupação é a que exclui a Modalidade declarada como ampla, e é a que a cauda consome.
-- O marco que ordena por sorteio continua com o caminho que tem. A feature não o toca, e a única
-  obrigação recíproca é a derivação comum de `FR-491`.
+- A derivação única de `FR-491` é **uma escolha entre três que existem**, não uma quarta: a da
+  ocupação é a que exclui a Modalidade declarada como ampla, e é a que a cauda consome. A primeira
+  redação desta spec dizia *"duas"*, porque a medição ainda não tinha sido feita — está corrigido
+  aqui e medido em [research.md](research.md), `R-3`.
+- O marco que ordena por sorteio continua com o caminho que tem, **inclusive a derivação de recortes
+  dele**. A feature não o toca; ela registra a divergência (`FR-491a`).
 - As medições citadas em *Por que esta feature existe* são de 18/09/2026 contra `af97d4c`. **Elas
   devem ser reconferidas no `plan`, e não assumidas** — três medições erradas seguidas na spec `033`
   vieram de ler definição de função em vez de medir.

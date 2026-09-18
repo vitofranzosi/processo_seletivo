@@ -91,13 +91,18 @@ rótulo resolveu quem lê; não resolveu quem consome.
 o mesmo.** A medição mostra que satisfazê-lo ao pé da letra significa **mudar o sorteio**, que é uma
 feature que funciona, que tem telas em produção e cujo comportamento a `034` declarou fora de escopo.
 
-**Proposta desta pesquisa, para decisão de quem governa o backlog:**
+**O que foi feito com esta medição, em 18/09/2026:**
 
 1. A `034` adota a derivação da **ocupação** para o caminho computado — é a que a cauda consome, e é
    a que três dos quatro módulos já praticam.
-2. `FR-491` é **estreitado** para *classificação e ocupação*, com a mesma forma de recorte que a
-   `033` usou quando encontrou superfície maior do que a descrita.
-3. A divergência do sorteio é **registrada como achado**, com esta medição, para a spec que a tratar.
+2. A `FR-491` foi **estreitada** para *classificação e ocupação*, e a `SC-172` diz por que mede duas
+   listas e não três. Isso não foi escolha deste arquivo: o `analyze` mostrou que a redação anterior
+   exigia três e era medida por um critério de duas — **requisito que o próprio critério não
+   alcança**, que é a mesma espécie de defeito que a `033` levou seis passadas para expulsar.
+3. A divergência do sorteio virou requisito próprio, a **`FR-491a`**: ela obriga a **registrar** e
+   proíbe **corrigir**.
+4. **A pergunta que sobra é de governança, e está na `T004`**: ampliar a `FR-491` para alcançar o
+   sorteio, ou manter a divergência registrada? Esta pesquisa não a responde.
 
 **É parada de escopo, e não decisão de implementação.** Ela está na `T004` do `tasks.md` pela mesma
 razão que a `033` pôs a dela lá: descobrir a diferença e resolvê-la em silêncio faz a feature crescer

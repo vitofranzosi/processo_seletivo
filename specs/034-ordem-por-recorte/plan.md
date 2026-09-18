@@ -62,13 +62,22 @@ removida.
 
 **A `T004` é parada de escopo, e ela pode fechar antes da implementação começar.**
 
-A medição encontrou que satisfazer a `FR-491` ao pé da letra — *"classificação, ocupação e sorteio
-MUST responder o mesmo"* — significa **mudar a derivação de recortes do sorteio**, que é uma feature
-que funciona, com telas em uso, e que esta spec declarou fora de escopo.
+A medição encontrou **três** tratamentos divergentes da Modalidade declarada como ampla. Dois são
+compatíveis; o do sorteio não é — ele lhe dá recorte próprio, e a ocupação não tem linha para
+consumir o que for emitido ali.
 
-A proposta da pesquisa é estreitar a `FR-491` para *classificação e ocupação* e registrar a
-divergência do sorteio como achado. **Isso é conversa com quem governa o backlog**, exatamente como a
-`T004` da `033`, e não decisão de quem implementa. Enquanto ela não for tomada, a fase 2 não começa.
+A primeira redação da `FR-491` exigia que classificação, ocupação **e sorteio** respondessem o mesmo.
+Cumpri-la ao pé da letra significa **mudar o sorteio**, que funciona, tem telas em uso e está fora de
+escopo — e a `SC-172`, que é o critério que a prende, media só duas listas. **Requisito que o próprio
+critério não alcança é requisito que ninguém sabe se entrou**, e foi o `analyze` que pegou.
+
+A `FR-491` passou a obrigar **classificação e ocupação**, e a `FR-491a` passou a obrigar o
+**registro** da divergência do sorteio. A pergunta que sobra — *ampliar a `FR-491` para alcançá-lo?*
+— é a que a `T004` leva a quem governa o backlog, e não decisão de quem implementa. **Qualquer que
+seja a resposta, a `T004` emenda a `spec.md`**: a `T044` vai afirmar na rastreabilidade que as duas
+foram cumpridas, e afirmação sem o requisito correspondente é a rastreabilidade mentindo.
+
+Enquanto a `T004` não fechar, a fase 2 não começa.
 
 ## Estrutura da entrega
 
