@@ -159,6 +159,17 @@ a exportação só existe para quem abre um shell.
   gestão do Edital, e a entrada no menu do Edital — **uma capacidade sem porta não é capacidade**
 - [ ] **T031e** `[US2]` O resumo das lacunas na tela, **antes** do download (`UX-060`), e a recusa
   dizendo o que falta e de quem (`UX-061`)
+- [ ] **T031g** `[US1]` **Acrescentar a tela nova a `tests/test_vocabulario_da_composicao.py::TELAS`**
+  e definir os termos no primeiro uso, dentro de `<dfn>`.
+
+  **A lista daquela varredura é literal, e não por `glob`** — por decisão escrita: uma lista
+  calculada deixaria de cobrir a tela que abandonasse o termo. A consequência para esta feature é
+  que a tela nova **escaparia da regra em silêncio**, e ninguém veria falha nenhuma.
+
+  E ela usa os termos sem querer: o padrão de *geração* é `\bgerac`, que casa com **"Gerar"** — um
+  botão escrito *"Gerar arquivo"* já é uso do termo. *Faixa* aparece no aviso da coluna 31
+  (`FR-452`). A regra da `030` (`FR-424`) vale aqui, e é preciso entrar na lista para que ela valha
+  de fato
 - [ ] **T031f** Percurso ponta a ponta pelo canal de quem conduz — entrar na gestão, abrir o Edital,
   escolher a população, ler as lacunas, baixar o arquivo — **sem shell e sem chamada manual**
   (Princípio VI)
