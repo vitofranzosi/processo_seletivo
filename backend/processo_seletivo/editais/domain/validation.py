@@ -1407,6 +1407,8 @@ def validate_for_publication(
     findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
     findings.extend(_coerencia_da_forma_da_ordem(snapshot))
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
+    findings.extend(_perfil_sem_marco(snapshot, ato=ato))
+    findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -1633,6 +1635,95 @@ def _forma_da_ordem_declarada(snapshot: dict, *, ato: str) -> list[ValidationFin
                     path=(
                         f"/profiles/id={perfil.get('id', '')}"
                         f"/classificationMilestones/id={marco.get('id', '')}/orderProduction"
+                    ),
+                )
+            )
+    return findings
+
+
+def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Perfil que não declara marco algum não classifica ninguém (032, FR-457).
+
+    **O achado de maior severidade da auditoria de 16/09/2026** (`ACH-49`), e o mais barato de
+    evitar: a etapa de Classificação já dizia, em prosa, que *"um Perfil sem marco não
+    classifica"*, e a Revisão respondia `IMPEDE: []` sobre um Edital em que isso era verdade. O
+    Edital saiu publicado — ato imutável —, e a saída virou Retificação.
+
+    **Na publicação, e não na gravação do rascunho**, pela razão que `_forma_da_ordem_declarada`
+    escreve por extenso: o rascunho pode estar pela metade, e recusar ali tornaria ilegal todo
+    payload que os clientes de hoje produzem. Um Perfil ganha marco na etapa de Classificação, que
+    vem **depois** da de Perfis; cobrá-lo antes recusaria o assistente no meio do próprio caminho.
+
+    **E não alcança a Retificação** (FR-460). O Edital sem marco existe: é o que a auditoria
+    publicou. Tornar irretificável justamente o Edital que esta família existe para evitar trocaria
+    um problema por outro pior — e é o que aconteceria sem o recorte, porque `retificacoes.py`
+    afere o conteúdo produzido com `blocking_findings(validate_for_publication(...))`.
+
+    **A truthiness é sobre o que o Perfil declara, e não sobre marcos bem formados.** Um
+    `classificationMilestones` malformado já tem acusação própria em `_violacoes_da_colecao`, e
+    empilhar duas sobre a mesma causa esconde a que resolve.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if perfil.get("classificationMilestones"):
+            continue
+        rotulo = perfil.get("name") or perfil.get("code") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_without_milestone",
+                message=(
+                    f"O Perfil '{rotulo}' não declara marco classificatório algum: sem marco "
+                    "ninguém é classificado por ele. Declare ao menos um na etapa Classificação."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/classificationMilestones",
+            )
+        )
+    return findings
+
+
+def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Marco sem regra de corte classifica e não convoca — e isso passa a ser dito (032, FR-461).
+
+    **A distinção que esta função existe para fazer**: *ausência* de `cutRule` e `cutRule` que
+    declara **não governar Etapa alguma** são estados diferentes, e só o primeiro dispara. A `014`
+    criou o segundo de propósito (`FR-224`): a regra existe, a faixa nasce, e a convocação alcança
+    — é o Edital 69/2026 da amostra, que sorteia, publica, convoca e manda comparecer, sem análise
+    documental entre a ordem e a chamada. Cobrar dele uma regra que ele **tem** seria falso
+    positivo no Edital mais simples e mais comum do acervo, e ruído treina a pessoa a ignorar a
+    família inteira — que é o oposto do que o Princípio IV pede.
+
+    **Aviso, e não impedimento.** Marco que não corta é legítimo, e a `014` fechou isso por
+    escrito. O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
+    seguinte recebe todos os habilitados"* — verdade, e a metade menos importante. A consequência
+    que importa é a outra ponta da cadeia, e a mensagem a nomeia inteira.
+
+    **Recebe `ato` ainda sendo aviso**, e é deliberado: aviso não impede publicação nenhuma, mas
+    sem o recorte a Retificação do Edital do acervo viria cheia de avisos sobre o que aquele Edital
+    publicou e não tem como deixar de ter publicado.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            if marco.get("cutRule"):
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.WARNING,
+                    code="milestone_without_cut_rule",
+                    message=(
+                        f"O marco {_marco_nomeado(marco)} não declara regra de corte. Sem corte "
+                        "não há geração, sem geração não há faixa, e sem faixa não há convocação: "
+                        "este marco classifica e não convoca. Declare a regra na etapa "
+                        "Classificação — ela pode declarar que não governa Etapa alguma."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={marco.get('id', '')}/cutRule"
                     ),
                 )
             )

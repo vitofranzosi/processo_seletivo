@@ -8,7 +8,7 @@ aplicabilidade de documento tenha as quatro combinações a partir da entrega 2.
 
 from datetime import timedelta
 
-from tests.fixtures.edital import identificador
+from tests.fixtures.edital import identidade_do_marco, identificador, marco_minimo
 from tests.fixtures.publicacao import publish_original
 
 PERFIL_DOCENTE = "DOC-INFO"
@@ -57,6 +57,11 @@ def rascunho_de_selecao(seed=0):
                 # identificá-la assim —, e o Perfil ficaria sem a linha geral que a publicação
                 # exige. Com lista reservada declarada, a repartição não é derivada: derivar
                 # escreveria na ampla um número que o Edital não repartiu.
+                # O marco que torna este Perfil publicável (032, FR-457). Sorteia e publica o
+                # método inteiro, que é o mínimo que a `FR-467` admite de quem sorteia.
+                "classificationMilestones": [
+                    marco_minimo(identidade_do_marco(identificador(401, seed)), codigo="DOC-SORT")
+                ],
                 "generalCompetitionModalityId": identificador(403, seed),
                 "vacancyTable": [
                     {
@@ -86,6 +91,9 @@ def rascunho_de_selecao(seed=0):
                 # Declarada, e sem lista reservada nenhuma: aqui a linha geral **é** derivada do
                 # total, e não precisa ser digitada. Zero vagas imediatas dá linha geral de zero —
                 # que diz "zero", e não "não declarou".
+                "classificationMilestones": [
+                    marco_minimo(identidade_do_marco(identificador(406, seed)), codigo="TEC-SORT")
+                ],
                 "generalCompetitionModalityId": identificador(407, seed),
             },
         ],

@@ -16,7 +16,7 @@ from django.urls import reverse
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import RevisaoEdital
 from tests.interface.conftest import compor_rascunho, identificar
-from tests.interface.test_fluxo import EVENTOS, PERFIS, praticar
+from tests.interface.test_fluxo import EVENTOS, MARCOS, PERFIS, praticar
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -33,7 +33,7 @@ def edital(api_client, manager_headers, process_payload):
 def submetido(client, seletor_ligado, edital):
     """Um Edital em revisão, composto e submetido pela própria tela."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     assert Edital.objects.get().status == Edital.Status.EM_REVISAO
     return Edital.objects.get()
@@ -69,7 +69,7 @@ def test_devolver_pela_tela_reabre_a_elaboracao(client, submetido):
     identificar(client, "ana.elaboradora", ["elaborador"])
     atual = Edital.objects.get()
     assert atual.status == Edital.Status.EM_ELABORACAO
-    compor_rascunho(client, atual, PERFIS, EVENTOS)
+    compor_rascunho(client, atual, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
 
     assert Edital.objects.get().status == Edital.Status.EM_REVISAO

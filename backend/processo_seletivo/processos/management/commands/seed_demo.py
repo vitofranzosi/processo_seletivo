@@ -194,6 +194,47 @@ def perfis(numero, *, janela_recursal="declarada"):
             "immediateVacancies": 0,
             "reserveType": "UNLIMITED",
             "locality": "Campus Vitória",
+            # **O marco do cadastro de reserva** (032, FR-457). Este Perfil não tinha marco
+            # nenhum, e a demonstração publicava um Perfil que não classificava ninguém — o
+            # mesmo defeito que a auditoria de 16/09/2026 encontrou em Edital real, semeado
+            # aqui como se fosse normal. Uma demonstração que reproduz o defeito ensina o
+            # defeito.
+            #
+            # **Ordena pela pontuação das mesmas Etapas** do Perfil docente: é o mesmo certame,
+            # e quem concorre ao cadastro de reserva faz as mesmas provas.
+            #
+            # **E o corte declara não governar Etapa alguma** (014, FR-224). Aqui isso não é
+            # economia: o Perfil oferece zero vaga imediata, a lista dele é cadastro de reserva,
+            # e não há Etapa seguinte a alimentar — o corte publica a ordem e para. É também o
+            # segundo dos dois estados que a `FR-224` distingue, e semear só o primeiro deixaria
+            # a distinção indemonstrável no navegador.
+            #
+            # **A janela recursal fica ausente de propósito**: é o terceiro estado que o marco
+            # acima nomeia — declarada, negada e ausente —, e sem ele a demonstração teria dois.
+            "classificationMilestones": [
+                {
+                    "id": f"00000000-0000-0000-00{numero}-0000000000a2",
+                    "code": "RESERVA",
+                    "name": "Classificação do cadastro de reserva",
+                    "orderProduction": "POR_PONTUACAO",
+                    "stages": [
+                        f"00000000-0000-0000-00{numero}-0000000000d1",
+                        f"00000000-0000-0000-00{numero}-0000000000d2",
+                    ],
+                    "operation": "SOMA_PONDERADA",
+                    "normalization": "NENHUMA",
+                    "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                    "tiebreakers": [],
+                    "cutRule": {
+                        "targetKind": "FIXED",
+                        "targetCount": 3,
+                        "surplusCount": 0,
+                        "tieOutcome": "ADMITS_SURPLUS",
+                        "governedStage": "NONE",
+                        "continuation": "NONE",
+                    },
+                }
+            ],
             "competitionModalities": [
                 {
                     "id": f"00000000-0000-0000-00{numero}-0000000000e3",

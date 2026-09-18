@@ -638,3 +638,187 @@ def test_a_recusa_nao_apaga_o_corte_declarado(client, seletor_ligado, rascunho):
         "Regra de corte": True,
         "Método do sorteio comum a este Edital": False,
     }
+
+
+# --- A Revisão recusa o Edital que não vai funcionar (032, FR-457, FR-458, FR-461) -------------
+#
+# **A Revisão respondia `IMPEDE: []` sobre um Edital que não classificava ninguém** (`ACH-49`), e
+# calava sobre o marco que classifica e não convoca (`ACH-46`). Os dois achados são da mesma
+# família, e o que este bloco prende é o que a `FR-458` exige dos dois: **a entidade, o que falta e
+# em que etapa se corrige** — e a etapa é `classificacao`, nunca `perfis`, que é a única tela do
+# assistente onde o conteúdo do marco não se corrige.
+#
+# **E os dois juntos, não o primeiro.** É o caso de borda "mais de um achado no mesmo Edital", e a
+# auditoria montou quatro Editais que disparam achados diferentes: a Revisão os apresenta todos.
+
+PERFIL_MUDO = "aaaaaaaa-0000-4000-8000-00000003201a"
+PERFIL_SEM_CONVOCACAO = "aaaaaaaa-0000-4000-8000-00000003202a"
+MARCO_SEM_CORTE_032 = "aaaaaaaa-0000-4000-8000-00000003203a"
+ETAPA_032 = "aaaaaaaa-0000-4000-8000-00000003204a"
+EVENTO_032 = "aaaaaaaa-0000-4000-8000-00000003205a"
+LINHA_MUDO = "aaaaaaaa-0000-4000-8000-00000003206a"
+LINHA_SEM_CONVOCACAO = "aaaaaaaa-0000-4000-8000-00000003207a"
+
+
+def _rascunho_inexecutavel_032():
+    """Um Edital com as duas faltas de US1: um Perfil sem marco e um marco sem regra de corte."""
+    return {
+        "profiles": [
+            {
+                "id": PERFIL_MUDO,
+                "code": "DOC-INFO",
+                "name": "Professor de Informática",
+                "immediateVacancies": 3,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "vacancyTable": [{"id": LINHA_MUDO, "modalityId": None, "immediateVacancies": 3}],
+                "classificationMilestones": [],
+            },
+            {
+                "id": PERFIL_SEM_CONVOCACAO,
+                "code": "DOC-MAT",
+                "name": "Professor de Matemática",
+                "immediateVacancies": 2,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "vacancyTable": [
+                    {"id": LINHA_SEM_CONVOCACAO, "modalityId": None, "immediateVacancies": 2}
+                ],
+                "classificationMilestones": [
+                    {
+                        "id": MARCO_SEM_CORTE_032,
+                        "code": "CLASS-TUT",
+                        "name": "Classificação final",
+                        "orderProduction": "POR_PONTUACAO",
+                        "stages": [ETAPA_032],
+                        "operation": "SOMA_PONDERADA",
+                        "normalization": "NENHUMA",
+                        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                        "tiebreakers": [],
+                    }
+                ],
+            },
+        ],
+        "stages": [
+            {
+                "id": ETAPA_032,
+                "name": "Análise curricular",
+                "order": 1,
+                "weight": "1.0000",
+                "eliminatory": False,
+                "classificatory": True,
+                "minimumScore": None,
+                "scheduleEventId": None,
+            }
+        ],
+        "schedule": [
+            {
+                "id": EVENTO_032,
+                "type": "INSCRICAO",
+                "description": "Inscrições",
+                "startAt": "2026-09-01T09:00:00-03:00",
+                "order": 1,
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def inexecutavel(rascunho, api_client):
+    """O rascunho do endurecimento, gravado com as duas faltas — e **aceito**, como manda FR-459."""
+    from tests.fixtures.edital import actor_headers
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{rascunho.id}/rascunho",
+        _rascunho_inexecutavel_032(),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="hardening-032-inexecutavel-01"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+    assert resposta.status_code == 200, resposta.content
+    rascunho.refresh_from_db()
+    return rascunho
+
+
+def _revisao(client, edital):
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "revisao"])
+    ).content.decode()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_revisao_mostra_as_duas_pendencias_e_nao_a_primeira(client, seletor_ligado, inexecutavel):
+    """O caso de borda "mais de um achado no mesmo Edital", e `SC-157` para os dois de US1."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = _revisao(client, inexecutavel)
+
+    assert "Nada pendente" not in corpo
+    assert "Professor de Informática" in corpo, "o Perfil que não classifica ninguém"
+    assert "CLASS-TUT" in corpo, "e o marco que classifica e não convoca"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_as_duas_pendencias_levam_a_classificacao_e_nao_a_perfis(
+    client, seletor_ligado, inexecutavel
+):
+    """`FR-458`: o caminho de volta é a etapa onde o conteúdo se corrige.
+
+    O marco vive **dentro** do Perfil, e a busca por coleção mandava toda pendência de marco para
+    `perfis` — a única tela do assistente onde o conteúdo do marco não se corrige. Os dois achados
+    novos endereçam `classificationMilestones`, e é o `_destino` existente que os roteia; nenhuma
+    entrada nova em `DESTINO_POR_CODIGO` é criada, e este teste é o que prova que nenhuma faz falta.
+    """
+    from processo_seletivo.editais.domain.validation import validate_for_publication
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    conteudo = edital_snapshot(inexecutavel)
+    achados = {
+        item.code: item
+        for item in validate_for_publication(conteudo)
+        if item.code in ("profile_without_milestone", "milestone_without_cut_rule")
+    }
+    assert set(achados) == {"profile_without_milestone", "milestone_without_cut_rule"}
+
+    for codigo, achado in achados.items():
+        etapa, ancora, corrigivel = views._destino(achado.path, codigo)
+        assert (etapa, ancora, corrigivel) == ("classificacao", "#titulo-classificacao", True), (
+            codigo
+        )
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    destino = reverse("interface:compor-etapa", args=[inexecutavel.id, "classificacao"])
+    assert _revisao(client, inexecutavel).count(f'href="{destino}#titulo-classificacao"') >= 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_submissao_e_recusada_com_a_mesma_frase_da_revisao(client, seletor_ligado, inexecutavel):
+    """`FR-457`, cenário 2: a recusa da submissão repete o que a Revisão já tinha dito.
+
+    Duas frases para o mesmo defeito fariam quem lê a segunda achar que encontrou outro problema.
+    A confirmação do ato é o último momento em que corrigir ainda é barato — depois dela o Edital
+    é ato imutável, e a saída passa a ser Retificar.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    da_revisao = _revisao(client, inexecutavel)
+    assert "sem marco ninguém é classificado por ele" in da_revisao
+
+    confirmacao = client.get(
+        reverse("interface:ato", args=[inexecutavel.id, "submeter"])
+    ).content.decode()
+    assert "sem marco ninguém é classificado por ele" in confirmacao, "a mesma frase, e não outra"
+
+    client.post(reverse("interface:ato", args=[inexecutavel.id, "submeter"]), {})
+
+    assert Edital.objects.get(pk=inexecutavel.pk).status == Edital.Status.EM_ELABORACAO, (
+        "o Edital que não classifica ninguém não atravessa a submissão"
+    )

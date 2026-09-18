@@ -36,13 +36,65 @@ def seletor_ligado(settings):
     settings.INTERFACE_SELETOR_IDENTIDADE = True
 
 
-def compor_rascunho(client, edital, perfis=None, eventos=None):
-    """Percorre o assistente: Perfis e Cronograma são etapas distintas, salvas em separado."""
+def marco_de_sorteio_no_formulario(perfil_id, *, indice=0, marco_id=None):
+    """O marco mínimo, na grafia que o formulário da etapa Classificação envia (032, FR-457).
+
+    **Ele passou a ser parte do percurso, e não um passo opcional.** Desde a `FR-457` um Edital com
+    Perfil sem marco não publica — sem marco ninguém é classificado por aquele Perfil —, e por isso
+    um roteiro que atravessa o assistente e submete precisa percorrer também esta etapa. Quem não
+    submete não precisa dela.
+
+    Sorteia porque sortear não exige Etapa (030, `FR-432`), e publica o método inteiro porque a
+    `FR-467` recusa quem sorteia sem publicá-lo.
+    """
+    from uuid import NAMESPACE_URL, uuid5
+
+    base = f"marco-{perfil_id}-{indice}"
+    return {
+        "perfil_id": perfil_id,
+        f"{base}-id": marco_id or str(uuid5(NAMESPACE_URL, f"marco-do-formulario:{perfil_id}")),
+        f"{base}-code": "SORT",
+        f"{base}-name": "Sorteio público",
+        f"{base}-orderProduction": "POR_SORTEIO",
+        f"{base}-operation": "SOMA_PONDERADA",
+        f"{base}-normalization": "NENHUMA",
+        f"{base}-scale": "2",
+        f"{base}-mode": "MEIO_PARA_CIMA",
+        f"{base}-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
+        f"{base}-draw-source": "Fonte de demonstração",
+        f"{base}-draw-occurrence": "5900",
+        f"{base}-draw-occurrenceAt": "2020-01-01T20:00:00-03:00",
+        f"{base}-draw-derivation": "A extração de sábado imediatamente anterior.",
+        f"{base}-draw-normalizationRule": "DIGITOS_EM_SEQUENCIA",
+        f"{base}-draw-normalizationText": "Os cinco números sorteados, na ordem dos prêmios.",
+        f"{base}-draw-substitutionRule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+        f"{base}-draw-substitutionText": "Não havendo extração, vale a seguinte da mesma fonte.",
+        f"{base}-cutTargetKind": "FIXED",
+        f"{base}-cutTargetCount": "1",
+        f"{base}-cutSurplusCount": "0",
+        f"{base}-cutTieOutcome": "STRICT",
+        f"{base}-cutGovernedStage": "NONE",
+        f"{base}-cutContinuation": "NONE",
+    }
+
+
+def compor_rascunho(client, edital, perfis=None, eventos=None, marcos=None):
+    """Percorre o assistente: Perfis, Classificação e Cronograma são etapas salvas em separado.
+
+    `marcos` é o passo que a `032` tornou obrigatório para quem vai **submeter**: sem marco o
+    Edital não publica (`FR-457`). Continua opcional aqui porque nem todo roteiro submete.
+    """
     from django.urls import reverse
 
     if perfis is not None:
         resposta = client.post(
             reverse("interface:compor-etapa", args=[edital.id, "perfis"]), perfis
+        )
+        assert resposta.status_code == 302, resposta.content
+    if marcos is not None:
+        edital.refresh_from_db()
+        resposta = client.post(
+            reverse("interface:compor-etapa", args=[edital.id, "classificacao"]), marcos
         )
         assert resposta.status_code == 302, resposta.content
     if eventos is not None:

@@ -425,3 +425,84 @@ def test_as_duas_acoes_da_tela_confirmam_coisas_diferentes(
 
     assert "Faixa seguinte emitida com o déficit apurado como causa" in depois_da_faixa
     assert "Apuração emitida" not in depois_da_faixa, "nenhuma apuração foi emitida nesta ação"
+
+
+# --- A ação que sempre falha deixa de ser oferecida (032, FR-463, SC-163) ----------------------
+#
+# **A auditoria de 16/09/2026 encontrou três botões idênticos, e dois deles sempre falhavam.** Este
+# bloco trata do primeiro: "Pedir a faixa seguinte com este déficit" num marco que **não declara
+# regra de corte**. Sem corte não há geração; sem geração não há faixa; e não há faixa seguinte a
+# pedir. A ação existe na tela, o clique alcança o servidor, e a recusa chega quando o cronograma
+# já está correndo.
+#
+# **A razão ocupa o lugar do botão — e não um `disabled`.** É o padrão que o produto adotou em três
+# telas no PR #120, e que a auditoria registrou como padrão a preservar: o bloqueio anunciado antes
+# da tentativa. Botão desabilitado não diz por quê.
+
+
+@pytest.fixture
+def sem_regra_de_corte(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O cenário da ocupação com o marco **sem** regra de corte, e sem ato de corte emitido.
+
+    Não é `montar_cenario_da_ocupacao`: aquele emite o corte, e um marco sem regra não tem corte a
+    emitir. O que este cenário exercita é o que a `016` já admitia por escrito — *"marco que não
+    corta continua tendo ocupação apurável"* —, e é justamente por isso que o recorte chega a
+    `CURRENT` com déficit e a tela chega a oferecer a faixa.
+    """
+    from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.ocupacao import rascunho_com_quadro
+
+    def monta(cut=None):
+        base, pontuada = rascunho_com_quadro(geral=3)
+        # A chave sai inteira: `{}` seria uma segunda grafia da ausência, e o marco do acervo não a
+        # tem — ele tem `cutRule` nulo, que é o que o degrau 13 escreve.
+        base["profiles"][0]["classificationMilestones"][0].pop("cutRule", None)
+        return base, pontuada
+
+    return montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="ocupacao-032-sem-corte",
+        draft_factory=monta,
+    )
+
+
+def test_sem_regra_de_corte_a_faixa_seguinte_nao_e_oferecida(
+    client, seletor_ligado, sem_regra_de_corte, gestor
+):
+    """`FR-463`: o déficit existe, e mesmo assim a ação não aparece — porque ela não executaria."""
+    edital, _, _ = sem_regra_de_corte
+    apurar(edital, gestor, chave="ocupacao-032-sem-corte-apurar")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "A ocupar" in pagina, "a premissa: o recorte foi apurado e tem déficit"
+    assert "Pedir a faixa seguinte" not in pagina
+
+
+def test_no_lugar_da_faixa_a_tela_diz_por_que_a_acao_nao_existe_ali(
+    client, seletor_ligado, sem_regra_de_corte, gestor
+):
+    """`SC-163`: a ação some **e** a razão aparece. Sumir calado seria a metade do conserto."""
+    edital, _, _ = sem_regra_de_corte
+    apurar(edital, gestor, chave="ocupacao-032-sem-corte-razao")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "regra de corte" in pagina, "a causa, e não o sintoma"
+    assert "não há faixa" in pagina
+
+
+def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
+    client, seletor_ligado, cenario, gestor
+):
+    """A contraprova. Uma condição escrita larga demais apagaria o botão do caso normal."""
+    edital, _, _ = cenario
+    apurar(edital, gestor, chave="ocupacao-032-com-corte")
+    identificar(client, "carlos", ["gestor"])
+
+    assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()

@@ -9,6 +9,15 @@ mesmo desenho de `classificacao/application/corte.py`, e as causas vêm **nomead
 from processo_seletivo.classificacao.application.corte import geracao_vigente, linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
 from processo_seletivo.classificacao.models import ItemDoCorte
+
+# **A primeira dependência de `ocupacao` sobre `editais`**, e ela é deliberada — conferido em
+# 18/09/2026: até aqui este módulo importava `classificacao`, `publicacoes` e `resultados`, e nada
+# de `editais`. A aresta é legítima na direção em que vai: `editais` é conteúdo normativo, não
+# depende de ninguém, e nada depende de `ocupacao`. O que se lê daqui são dois fatos do **marco
+# publicado** — se ele declara regra de corte, e se ele emite ordem num dado recorte —, e ambos são
+# conteúdo do Edital. Registrada por escrito para que a próxima pessoa saiba que ela foi escolhida,
+# e não acidental (032, T034).
+from processo_seletivo.editais.domain import marcos
 from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import nomes
@@ -180,6 +189,7 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # `publicadas` é a exceção, e por uma razão: ela **não** vem de apuração. Sai da linha do quadro
     # publicado, que é fato normativo do Edital e é rastreável a ele. Dizer "o Edital publicou 3
     # vagas neste recorte, e a ocupação ainda não foi apurada" é verdadeiro nas duas metades.
+    marco = marcos.marco_no_conteudo(versao.content, perfil_id=perfil_id, marco_id=marco_id)
     sem_apuracao = vigente is None
     return {
         "perfilId": str(perfil_id),
@@ -196,6 +206,18 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # obsolescência, e não como linha que o número não explica.
         "movimentos": _movimentos_lidos_por_apuracao(vigente),
         "apuracao": vigente,
+        # **Dois booleanos aditivos, e nenhum valor novo em `estado`** (032, `data-model.md`). Um
+        # recorte reservado em marco computado **é**, de fato, `NOT_APPRAISED`, e continuará
+        # sendo; acrescentar um quinto valor obrigaria todo consumidor que hoje distingue os
+        # quatro a aprender um quinto. A `016` registra por escrito que colapsar estados é o que a
+        # `UX-032` proíbe, e multiplicá-los sem necessidade é o erro simétrico. Campo é aditivo:
+        # quem não o lê continua lendo o que lia.
+        #
+        # `faixaDisponivel` é falso quando o marco não declara regra de corte alguma (`FR-463`):
+        # sem corte não há geração, sem geração não há faixa, e não há faixa seguinte a pedir. O
+        # marco do acervo carrega `cutRule` nulo, e é exatamente esse o caso que a tela precisa
+        # deixar de oferecer.
+        "faixaDisponivel": bool(marco and marco.get("cutRule")),
     }
 
 

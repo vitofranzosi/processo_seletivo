@@ -126,6 +126,14 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   obsoleta — pedir a faixa sobre numero que se sabe para tras e o que a `FR-263` impede.
   {% endcomment %}
   {% if pode_emitir and recorte.estado == "CURRENT" and recorte.faltando %}
+  {% comment %}
+  A razao ocupa o lugar do botao, e nao um `disabled` (032, FR-463). Marco que nao declara regra de
+  corte nao tem faixa: sem corte nao ha geracao, sem geracao nao ha faixa, e nao ha faixa seguinte
+  a pedir. Oferecer a acao e recusar no clique e descobrir a recusa com o cronograma correndo — o
+  padrao do PR #120 e o bloqueio anunciado antes da tentativa, e botao desabilitado nao diz por
+  que.
+  {% endcomment %}
+  {% if recorte.faixaDisponivel %}
   <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
@@ -133,6 +141,9 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     <p class="ajuda">O déficit apurado de {{ recorte.faltando }} vaga(s) será a causa do ato, e a faixa anterior não é revogada.</p>
     <button type="submit" class="botao">Pedir a faixa seguinte com este déficit</button>
   </form>
+  {% else %}
+  <p class="nota">Este marco não declara regra de corte, e a faixa nasce do corte: sem a regra não há faixa a continuar, e por isso não há faixa seguinte a pedir. Declarar a regra é ato de Retificação do Edital.</p>
+  {% endif %}
   {% endif %}
 </section>
 {% endfor %}

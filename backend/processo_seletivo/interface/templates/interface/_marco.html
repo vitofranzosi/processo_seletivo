@@ -450,7 +450,8 @@ cartão leva ao lugar onde a resposta que o revela é dada.
           <option value="FROM_VACANCY_TABLE" {% if marco.cutTargetKind == "FROM_VACANCY_TABLE" %}selected{% endif %}>Quantas vagas o quadro publicar no recorte</option>
         </select>
         <span class="oculto" id="ajuda-corte-{{ indice }}-{{ sub }}">Sem corte, a Etapa seguinte
-          recebe todos os habilitados, como hoje.</span>
+          recebe todos os habilitados — e não há faixa, de modo que este marco classifica e não
+          convoca.</span>
       </p>
       <p class="campo curto">
         <label for="marco-{{ indice }}-{{ sub }}-cutTargetCount">Alvo</label>
