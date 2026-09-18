@@ -1670,7 +1670,10 @@ def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     for perfil in _perfis_bem_formados(snapshot):
         if perfil.get("classificationMilestones"):
             continue
-        rotulo = perfil.get("name") or perfil.get("code") or ""
+        # **`code` antes de `name`, como os três achados do quadro de vagas já fazem.** Não é
+        # preferência: os quatro aparecem juntos na mesma lista da Revisão, e um Perfil chamado
+        # `DOC-INFO` numa linha e `Professor de Informática` na seguinte pareceriam dois Perfis.
+        rotulo = perfil.get("code") or perfil.get("name") or ""
         findings.append(
             ValidationFinding(
                 severity=Severity.BLOCKING_ERROR,
@@ -2360,7 +2363,88 @@ def _coerencia_do_quadro_de_vagas(
                 perfil, reservadas - com_linha, modalidades, base=base, rotulo=rotulo, soma=soma
             )
         )
+        findings.extend(
+            _reserva_sem_via_de_apuracao(
+                snapshot, perfil, modalidades, base=base, rotulo=rotulo, ato=ato
+            )
+        )
     return findings
+
+
+def _reserva_sem_via_de_apuracao(
+    snapshot, perfil, modalidades, *, base, rotulo, ato
+) -> list[ValidationFinding]:
+    """Vagas repartidas em recortes que o marco daquele Perfil não emite (032, FR-470, FR-471).
+
+    **O `ACH-47`, e é o achado de maior dano da auditoria**: cotas publicadas que o sistema não
+    apura nem convoca. No dia de convocar, dois dos três botões da tela de Ocupação sempre falhavam
+    — e a mensagem que a pessoa lia, *"Este recorte não tem ordem emitida"*, nomeia o sintoma e
+    chega quando a correção já depende de Retificação.
+
+    **Aviso, e não impedimento — a decisão foi tomada em 18/09/2026 e o porquê está na spec.**
+    Impedir era a leitura mais forte, e é o que esta feature faz nos outros três achados. Aqui
+    custaria caro e protegeria pouco: três Editais da amostra real — 57/2026, 28/2026 e 173/2025 —
+    declaram reserva em marco computado, e para eles a publicação é a única parte da jornada que
+    hoje funciona, porque a apuração por recorte já acontece fora do sistema. Impedir retiraria o
+    que funciona sem consertar o que não funciona. O limite sai com a feature de emissão por lista;
+    o que esta remove é o silêncio.
+
+    **Irmão de `vacancy_reserved_list_without_row`, e a diferença está no que falta.** Lá o Perfil
+    declara a lista e não declara a quantidade dela; aqui a quantidade **está** declarada, e o que
+    falta é a ordem.
+
+    **O recorte é o `modalityId` da linha, e nunca a Modalidade declarada como ampla.** É a
+    grafia-armadilha que este projeto já registrou: o recorte da ampla concorrência é o `NULL` da
+    linha geral, e condicionar pela Modalidade chamada "Ampla concorrência" produziria aviso em
+    todo Edital normal do acervo.
+
+    **Sem marco não há aviso**: quem resolve aquele Perfil é `FR-457`, que já o diz, e empilhar
+    duas acusações sobre a mesma causa esconde a que resolve — além de não haver marco que nomear
+    na mensagem.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    marcos_do_perfil = _marcos_bem_formados(perfil)
+    if not marcos_do_perfil:
+        return []
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    reservadas = []
+    for linha in perfil.get("vacancyTable") or []:
+        if not isinstance(linha, dict):
+            continue
+        modalidade_id = linha.get("modalityId")
+        quantidade = linha.get("immediateVacancies")
+        if modalidade_id is None or str(modalidade_id) == ampla:
+            continue
+        if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade <= 0:
+            continue
+        if marcos.emite_ordem_no_recorte(
+            snapshot,
+            perfil_id=perfil.get("id"),
+            marco_id=marcos_do_perfil[0].get("id"),
+            lista_id=modalidade_id,
+        ):
+            continue
+        modalidade = modalidades.get(str(modalidade_id)) or {}
+        reservadas.append((quantidade, modalidade.get("name") or modalidade.get("code") or ""))
+    if not reservadas:
+        return []
+    repartidas = " e ".join(
+        f"{quantidade} para '{nome}'" if indice else f"{quantidade} vaga(s) para '{nome}'"
+        for indice, (quantidade, nome) in enumerate(sorted(reservadas, key=lambda par: par[1]))
+    )
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "reserved_row_without_ordering",
+            f"O Perfil '{rotulo}' publica {repartidas}, e a ordem do marco "
+            f"{_marco_nomeado(marcos_do_perfil[0])} é emitida em lista única: só a ordem sorteada "
+            "é emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do "
+            "sistema.",
+            f"{base}/vacancyTable",
+        )
+    ]
 
 
 def _listas_reservadas_sem_linha(

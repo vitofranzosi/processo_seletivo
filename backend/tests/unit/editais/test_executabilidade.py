@@ -197,7 +197,7 @@ def test_a_recusa_do_perfil_sem_marco_nomeia_o_perfil_a_falta_e_a_etapa():
     """`FR-458`: a entidade, o que falta e onde se corrige — nunca apenas o sintoma."""
     achado = achados(snapshot(perfil(classificationMilestones=[])), "profile_without_milestone")[0]
 
-    assert "Professor de Informática" in achado.message, "a entidade"
+    assert "DOC-INFO" in achado.message, "a entidade, pelo código que quem compõe digitou"
     assert "marco classificatório" in achado.message, "o que falta"
     assert "Classificação" in achado.message, "e em que etapa do assistente se corrige"
     assert achado.path == f"/profiles/id={PERFIL}/classificationMilestones"
@@ -343,3 +343,115 @@ def test_o_sorteio_sem_metodo_nao_e_cobrado_na_retificacao():
     conteudo = snapshot(perfil(classificationMilestones=[de_sorteio(drawMethod=None)]))
 
     assert achados(conteudo, "drawn_milestone_without_method", ato=ATO_DE_RETIFICACAO) == []
+
+
+# --- FR-470 · a reserva que ninguém vai apurar -------------------------------------------------
+#
+# O `ACH-47`, e é o achado de maior dano da auditoria: cotas publicadas que o sistema não apura nem
+# convoca. No dia de convocar, a tela de Ocupação oferecia três botões idênticos e dois deles
+# sempre falhavam, com a mensagem *"Este recorte não tem ordem emitida"* — que nomeia o sintoma e
+# chega tarde demais para quem a lê.
+#
+# **É aviso, e não impedimento, e a decisão está registrada na spec.** Três Editais da amostra real
+# — 57/2026, 28/2026 e 173/2025 — declaram reserva em marco computado, e para eles a publicação é a
+# única parte da jornada que hoje funciona: a apuração por recorte já acontece fora do sistema.
+# Impedir retiraria o que funciona sem consertar o que não funciona. O que esta feature remove não
+# é o limite — é o silêncio.
+
+
+def com_reserva(**alteracoes):
+    """O Perfil do quadro 7/1/2 da auditoria, com as duas Modalidades reservadas repartidas."""
+    return perfil(**{"vacancyTable": list(QUADRO_7_1_2), **alteracoes})
+
+
+def test_reserva_em_marco_que_nao_sorteia_produz_aviso_e_nao_impedimento():
+    achado = achados(snapshot(com_reserva()), "reserved_row_without_ordering")
+
+    assert len(achado) == 1
+    assert achado[0].severity == Severity.WARNING, (
+        "impedir retiraria a única parte da jornada que hoje funciona para três Editais reais"
+    )
+    assert achado[0].path == f"/profiles/id={PERFIL}/vacancyTable"
+
+
+def test_o_aviso_da_reserva_nomeia_a_causa_e_nao_o_sintoma():
+    """`FR-471`: a causa é a forma de emissão da ordem, e não a ausência dela no dia da apuração.
+
+    *"Este recorte não tem ordem emitida"* é o que a auditoria leu meses depois, com o cronograma
+    correndo — verdadeiro, inútil, e sem nada a fazer com ele. A causa é outra e cabe antes da
+    publicação: **aquele marco emite a ordem em lista única**, e só a ordem sorteada é emitida por
+    recorte.
+    """
+    achado = achados(snapshot(com_reserva()), "reserved_row_without_ordering")[0]
+
+    assert "DOC-INFO" in achado.message, "a entidade, pelo mesmo rótulo dos irmãos do quadro"
+    assert "Pessoas com deficiência" in achado.message and "Negros" in achado.message
+    assert "CLASS-TUT" in achado.message, "e qual marco produz a ordem única"
+    assert "lista única" in achado.message, "a causa"
+    assert "só a ordem sorteada é emitida por recorte" in achado.message
+    assert "não tem ordem emitida" not in achado.message, "o sintoma que a auditoria leu tarde"
+
+
+def test_o_aviso_da_reserva_nao_e_emitido_na_retificacao():
+    """`FR-459`: o Edital do acervo já publicou essa reserva, e não tem como deixar de tê-la."""
+    assert (
+        achados(snapshot(com_reserva()), "reserved_row_without_ordering", ato=ATO_DE_RETIFICACAO)
+        == []
+    )
+
+
+def test_perfil_cujo_marco_sorteia_nao_recebe_achado():
+    """A contraprova de fundo: o sorteio **emite por lista**, e o quadro tem via de apuração.
+
+    É o que separa esta feature de uma que proibisse reserva: o problema nunca foi a cota, foi a
+    forma de emissão da ordem do marco que a governa.
+    """
+    conteudo = snapshot(com_reserva(classificationMilestones=[de_sorteio()]))
+
+    assert achados(conteudo, "reserved_row_without_ordering") == []
+
+
+def test_a_modalidade_declarada_como_ampla_nao_e_lida_como_reserva():
+    """A grafia-armadilha, e ela dispararia em todo Edital que nomeia a ampla concorrência.
+
+    **O recorte da ampla é o `NULL` da linha geral** — é ele que o ato computado emite. A
+    Modalidade chamada "Ampla concorrência" é outra coisa: um nome no quadro de Modalidades, sem
+    linha própria, porque a quantidade dela mora na linha geral (025, `FR-176`). Condicionar pela
+    Modalidade declarada, e não pelo recorte `NULL`, produziria falso positivo em todo Edital
+    normal do acervo.
+    """
+    so_a_ampla = perfil(
+        vacancyTable=[linha(LINHA_GERAL, None, 10), linha(LINHA_PCD, AMPLA, 0)],
+    )
+
+    assert achados(snapshot(so_a_ampla), "reserved_row_without_ordering") == []
+
+
+def test_linha_reservada_zerada_nao_produz_aviso():
+    """Zero é declaração, e não expectativa de apuração.
+
+    O Perfil que declara a lista e reparte **nenhuma** vaga nela não vai convocar por aquele
+    recorte — não há o que apurar, e avisar sobre isso seria ruído. Quem trata da lista declarada
+    sem linha é `vacancy_reserved_list_without_row`, que é outro achado e chegou na `027`.
+    """
+    zerada = perfil(
+        vacancyTable=[
+            linha(LINHA_GERAL, None, 10),
+            linha(LINHA_PCD, PCD, 0),
+            linha(LINHA_NEGROS, NEGROS, 0),
+        ],
+    )
+
+    assert achados(snapshot(zerada), "reserved_row_without_ordering") == []
+
+
+def test_perfil_sem_marco_algum_nao_acumula_o_aviso_da_reserva():
+    """Uma acusação por causa: sem marco, quem resolve é `FR-457`, e ele já está dito.
+
+    Empilhar o aviso da reserva sobre o Perfil que não declara marco nenhum esconderia o achado
+    que resolve — e a mensagem do aviso não teria marco que nomear.
+    """
+    conteudo = snapshot(com_reserva(classificationMilestones=[]))
+
+    assert achados(conteudo, "profile_without_milestone")
+    assert achados(conteudo, "reserved_row_without_ordering") == []

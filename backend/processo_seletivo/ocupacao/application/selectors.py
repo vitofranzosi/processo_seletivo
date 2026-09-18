@@ -218,6 +218,14 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # marco do acervo carrega `cutRule` nulo, e é exatamente esse o caso que a tela precisa
         # deixar de oferecer.
         "faixaDisponivel": bool(marco and marco.get("cutRule")),
+        # `apuravel` é falso quando o marco daquele Perfil **não emite ordem neste recorte**
+        # (`FR-472`). Hoje isso é todo recorte de lista reservada em marco que não sorteia: um ato
+        # computado emite uma lista só, a da ampla concorrência. A pergunta é feita por
+        # `marcos.emite_ordem_no_recorte`, que é **uma função só** — a validação faz a mesma
+        # pergunta antes da publicação, e dois predicados divergiriam na primeira mudança.
+        "apuravel": marcos.emite_ordem_no_recorte(
+            versao.content, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        ),
     }
 
 

@@ -506,3 +506,60 @@ def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
     identificar(client, "carlos", ["gestor"])
 
     assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()
+
+
+# --- O recorte que o marco não emite deixa de oferecer apuração (032, FR-472, SC-163) ----------
+#
+# **A segunda das duas ações que sempre falhavam.** A auditoria de 16/09/2026 encontrou, na tela de
+# Ocupação de um Perfil com cotas, três botões "Apurar a ocupação deste recorte" idênticos: o da
+# ampla funcionava, e os dois reservados recusavam com *"Este recorte não tem ordem emitida: não há
+# o que cortar"*. A mensagem é verdadeira e chega tarde — quem a lê no dia da apuração não tem mais
+# o que fazer com ela, porque a correção depende de Retificação.
+#
+# **A causa é a forma de emissão da ordem daquele marco**, e não a cota: um ato computado emite uma
+# lista só, a da ampla concorrência. O sorteio emite por recorte, e por isso o Perfil que sorteia
+# continua oferecendo os três.
+
+
+def test_recorte_reservado_em_marco_computado_nao_oferece_apuracao(
+    client, seletor_ligado, cenario, gestor
+):
+    """`FR-472`: o botão sai de onde ele nunca conseguiria executar."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
+    assert pagina.count("Apurar a ocupação deste recorte") == 1, (
+        "só o da ampla concorrência, que é o único que o marco computado emite"
+    )
+
+
+def test_no_lugar_da_apuracao_a_tela_nomeia_a_causa_e_nao_o_sintoma(
+    client, seletor_ligado, cenario, gestor
+):
+    """`FR-471` na tela: a ordem daquele marco sai em lista única, e é isso que precisa ser dito.
+
+    *"Este recorte não tem ordem emitida"* descreve o que a pessoa já está vendo. O que ela precisa
+    saber é **por que** — e que a apuração daquele recorte acontece fora do sistema.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "lista única" in pagina
+    assert "fora do sistema" in pagina
+
+
+def test_o_recorte_da_ampla_continua_apuravel(client, seletor_ligado, cenario, gestor):
+    """A contraprova, e a que uma condição larga demais quebraria: a ampla é o que o marco emite."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+    apurar(edital, gestor, chave="ocupacao-032-ampla-apura")
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "Ampla concorrência (linha geral do quadro)" in pagina
+    assert "A ocupar" in pagina, "e ela apurou, com os quatro números"
