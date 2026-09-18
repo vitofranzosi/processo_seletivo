@@ -696,3 +696,119 @@ def test_gravar_outra_etapa_nao_apaga_a_forma_da_ordem(client, com_etapas):
     assert resposta.status_code == 302, resposta.content
 
     assert MarcoClassificatorio.objects.get(pk=MARCO_DA_030).forma_da_ordem == "POR_SORTEIO"
+
+
+# --- A gravação do rascunho continua aceitando o Edital pela metade (032, FR-459) --------------
+#
+# **O décimo caso, e ele não é sobre travessia.** Os nove acima prendem o que o reenvio não pode
+# perder; este prende o que a gravação não pode passar a recusar. Mora aqui porque é o mesmo
+# contrato — o que `replace_draft` aceita — visto do outro lado.
+#
+# A `032` acrescenta quatro achados de executabilidade, dois deles impeditivos. A primeira linha de
+# cada um é o recorte por ato, e este teste é a contraprova dele: a `030` tentou recusar na
+# gravação e **derrubou 759 testes**, porque tornava ilegal todo payload que este repositório
+# produz. O rascunho pode estar pela metade; o Edital publicado não.
+#
+# Constantes próprias, e não as do topo: o que se grava aqui é o oposto do `PERFIL_COMPLETO`, e
+# reusá-lo obrigaria a desmontá-lo campo a campo.
+
+PERFIL_SEM_MARCO = "aaaaaaaa-0000-4000-8000-0000000032a1"
+PERFIL_DOS_MARCOS = "aaaaaaaa-0000-4000-8000-0000000032a2"
+MARCO_SEM_CORTE = "aaaaaaaa-0000-4000-8000-0000000032b1"
+MARCO_SEM_METODO = "aaaaaaaa-0000-4000-8000-0000000032b2"
+
+
+def _rascunho_inexecutavel():
+    """As três ausências que a `032` passa a recusar **na publicação**, num rascunho só.
+
+    Um Perfil sem marco algum (`FR-457`), um marco sem regra de corte (`FR-461`) e um marco que
+    ordena por sorteio sem método declarado (`FR-467`) — e nenhum método comum na raiz, para que a
+    terceira ausência seja mesmo ausência.
+    """
+    return {
+        "profiles": [
+            {
+                "id": PERFIL_SEM_MARCO,
+                "code": "SEM-MARCO",
+                "name": "Perfil que ainda não classifica",
+                "immediateVacancies": 1,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "classificationMilestones": [],
+            },
+            {
+                "id": PERFIL_DOS_MARCOS,
+                "code": "COM-MARCO",
+                "name": "Perfil em composição",
+                "immediateVacancies": 1,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "classificationMilestones": [
+                    {
+                        "id": MARCO_SEM_CORTE,
+                        "code": "SEM-CORTE",
+                        "name": "Classificação sem corte declarado",
+                        "orderProduction": "POR_PONTUACAO",
+                        "stages": [ETAPA],
+                        "operation": "SOMA_PONDERADA",
+                        "normalization": "NENHUMA",
+                        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                        "tiebreakers": [],
+                    },
+                    {
+                        "id": MARCO_SEM_METODO,
+                        "code": "SEM-METODO",
+                        "name": "Sorteio ainda sem método",
+                        # Sorteia, e ainda não declarou o método — que é exatamente o estado de
+                        # quem acabou de acrescentar o marco (030, FR-414).
+                        "orderProduction": "POR_SORTEIO",
+                        "stages": [],
+                        "operation": "SOMA_PONDERADA",
+                        "normalization": "NENHUMA",
+                        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                        "tiebreakers": [],
+                    },
+                ],
+            },
+        ],
+        "schedule": [EVENTO_DO_PERIODO],
+        "stages": [ETAPA_CLASSIFICATORIA],
+    }
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_gravar_rascunho_inexecutavel_continua_sendo_aceito(
+    api_client, manager_headers, process_payload
+):
+    """`FR-459` e `SC-160`: nenhuma verificação nova alcança a gravação.
+
+    O Edital que a `032` vai recusar na publicação continua **gravável** — e o que se afirma aqui
+    é o estado persistido, e não só o código de resposta: uma recusa parcial que gravasse metade
+    devolveria 200 e perderia o resto.
+    """
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _rascunho_inexecutavel(),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="round-trip-032-0001"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    assert PerfilVaga.objects.filter(pk=PERFIL_SEM_MARCO).exists(), "o Perfil sem marco foi gravado"
+    assert not MarcoClassificatorio.objects.filter(perfil_id=PERFIL_SEM_MARCO).exists()
+    sem_corte = MarcoClassificatorio.objects.get(pk=MARCO_SEM_CORTE)
+    sem_metodo = MarcoClassificatorio.objects.get(pk=MARCO_SEM_METODO)
+    assert not sem_corte.regra_de_corte, "o corte em branco atravessa a gravação"
+    assert not sem_metodo.metodo_de_sorteio, "e o sorteio sem método também"
+    assert sem_metodo.forma_da_ordem == "POR_SORTEIO"

@@ -370,14 +370,31 @@ def validate_common_draw_method(metodo) -> None:
     _validar_metodo_de_sorteio(metodo or None, etapas=())
 
 
+#: Os sete campos do método do sorteio: a chave, o que ela é, e como o documento a rotula.
+#:
+#: **A terceira posição entrou com a `032`** (FR-465), e não é decoração. O documento publicado
+#: passou a imprimir o método, e os rótulos dele precisavam sair **daqui** — se saíssem de uma
+#: tabela própria do renderizador, o Edital e a tela de composição passariam a ter dois nomes para
+#: a mesma coisa, que é o que o Princípio I proíbe. Um oitavo campo acrescentado aqui aparece no
+#: documento sem que ninguém precise lembrar de o acrescentar lá.
+#:
+#: **Por que dois textos, e não um.** A segunda posição completa uma recusa — *"o método não
+#: declara `o algoritmo e a sua versão`"* —, e por isso é uma frase. A terceira encabeça uma linha
+#: de par rótulo-valor, e por isso é curta: `_pares` alinha o valor pela largura do rótulo, e uma
+#: frase de sessenta caracteres desmontaria o bloco inteiro. São registros diferentes do mesmo
+#: conceito, e não conceitos diferentes.
 CAMPOS_DO_METODO = (
-    ("algorithm", "o algoritmo e a sua versão"),
-    ("source", "a fonte pública externa da semente"),
-    ("occurrence", "a ocorrência concreta que fixará a semente"),
-    ("occurrenceAt", "o instante publicado em que a ocorrência acontece"),
-    ("derivation", "como a ocorrência decorre da data programada"),
-    ("normalization", "como o material bruto vira semente"),
-    ("substitutionRule", "o que vale se a ocorrência faltar, atrasar, bifurcar ou vier inválida"),
+    ("algorithm", "o algoritmo e a sua versão", "Algoritmo"),
+    ("source", "a fonte pública externa da semente", "Fonte"),
+    ("occurrence", "a ocorrência concreta que fixará a semente", "Ocorrência"),
+    ("occurrenceAt", "o instante publicado em que a ocorrência acontece", "Quando"),
+    ("derivation", "como a ocorrência decorre da data programada", "Derivação"),
+    ("normalization", "como o material bruto vira semente", "Semente"),
+    (
+        "substitutionRule",
+        "o que vale se a ocorrência faltar, atrasar, bifurcar ou vier inválida",
+        "Se faltar",
+    ),
 )
 
 
@@ -400,7 +417,7 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
         raise ProfileValidationError(
             "O método do sorteio deve ser declarado como um objeto, ou não ser declarado."
         )
-    for campo, o_que_e in CAMPOS_DO_METODO:
+    for campo, o_que_e, _ in CAMPOS_DO_METODO:
         if not metodo.get(campo):
             raise ProfileValidationError(
                 f"O método do sorteio não declara {o_que_e} (`{campo}`). Um método declarado pela "

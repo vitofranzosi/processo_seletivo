@@ -17,6 +17,10 @@ from datetime import datetime
 
 from django.utils import timezone
 
+# Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
+# a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
+from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     ETAPA_NAO_IDENTIFICADA,
@@ -1214,6 +1218,114 @@ def _regra_de_corte(marco, etapas):
     return f"{frase}."
 
 
+#: Como a ordem do marco nasce, em português (032, FR-464). A ausência não entra: marco do acervo
+#: que não declara a forma não ganha o par, e sai do documento exatamente como sempre saiu.
+FORMA_DA_ORDEM = {
+    "POR_PONTUACAO": "pela pontuação combinada das Etapas",
+    "POR_SORTEIO": "por sorteio",
+}
+
+
+def _publica_a_mesma_norma(proprio, comum):
+    """Os dois métodos publicam a mesma norma? (032, FR-466)
+
+    **A comparação é sobre os sete campos que o documento imprime, e não sobre o dicionário
+    inteiro** — e a distinção custou um defeito. O método do **marco** carrega um décimo campo que
+    o método **comum** nunca tem: `qualifyingStageId`, a Etapa que habilita a participar do
+    sorteio, que é do marco porque depende de quais Etapas aquele marco enumera
+    (`metodo_comum_do_formulario` a remove de propósito). O formulário a grava como `None` quando
+    ninguém a declara — e a igualdade bruta então achava diferença entre dois métodos idênticos:
+    o documento anunciava *"diverge do comum deste Edital"* sobre um marco que publica, campo a
+    campo, exatamente o método comum.
+
+    **E o critério é o que o leitor vê.** O documento imprime os sete; anunciar uma divergência que
+    ele não mostra manda quem lê procurar no papel uma diferença que não está lá — num documento
+    normativo e imutável, que é onde o erro não tem conserto. Comparar pelo **valor impresso**, e
+    não pela chave crua, é o que amarra a afirmação ao artefato: o documento não diz que diverge
+    aquilo que ele mesmo mostra igual.
+    """
+    return all(
+        _valor_do_campo_do_metodo(campo, proprio or {})
+        == _valor_do_campo_do_metodo(campo, comum or {})
+        for campo, _, _ in CAMPOS_DO_METODO
+    )
+
+
+def _origem_do_metodo(snapshot, marco):
+    """Qual das três grafias de `Método:` vale para este marco (032, FR-466).
+
+    **Três, e só três** — a quarta, nem próprio nem comum, não chega ao documento: `FR-467` a
+    recusa na publicação.
+
+    **A divergência é nomeada quando existe**, e não sempre que há os dois. Um marco que declara o
+    próprio idêntico ao comum não diverge de nada, e escrever que diverge seria o documento
+    afirmando uma diferença que ninguém publicou — que é o oposto do que a `FR-466` pede. O que
+    conta como "idêntico" está em `_publica_a_mesma_norma`, e não é a igualdade bruta.
+    """
+    proprio = marco.get("drawMethod") or None
+    comum = (snapshot or {}).get("drawMethod") or None
+    if proprio is None:
+        return "comum a este Edital"
+    if comum is not None and not _publica_a_mesma_norma(proprio, comum):
+        return "próprio deste marco — diverge do comum deste Edital"
+    return "próprio deste marco"
+
+
+def _valor_do_campo_do_metodo(campo, metodo):
+    """O valor publicável de um dos sete campos, na grafia que o documento imprime.
+
+    Duas conversões, e as duas existem porque o campo não é texto simples: o instante da ocorrência
+    é escrito como um Edital escreve data e hora, e a normalização e a substituição são pares
+    `rule`/`text` — imprime-se o `text`, que é a frase publicada que a pessoa lê. O identificador
+    fica de fora do papel: ele é o que a máquina aplica, e o terceiro que reimplementa o encontra
+    no manifesto do sorteio, não no Edital.
+    """
+    valor = metodo.get(campo)
+    if campo == "occurrenceAt":
+        return _instante(valor)
+    if isinstance(valor, dict):
+        return valor.get("text") or ""
+    return str(valor) if valor else ""
+
+
+def _metodo_do_marco(snapshot, perfil, marco):
+    """Os pares do método que governa este marco, na ordem e com os rótulos de `CAMPOS_DO_METODO`.
+
+    **A resolução é a de `marcos.metodo_que_governa`** (032, FR-465), que é o ponto único desde a
+    `030`: o marco que não declara método próprio referencia o comum do Edital. Reimplementá-la
+    aqui criaria a segunda leitura que a `030` existe para não ter — e a divergência entre as duas
+    apareceria como documento publicado dizendo uma coisa e sorteio fazendo outra.
+
+    **O `snapshot` inteiro já chegava a `_marcos`**, e é por isso que o método comum está ao
+    alcance sem mudar assinatura nenhuma: ele mora na raiz do mesmo conteúdo.
+
+    **O documento publica a norma, e não o resultado.** Ele imprime a ocorrência que **fixará** a
+    semente, e nunca a semente: no dia da publicação ela ainda não existe. Quem publica a semente é
+    o documento do resultado do sorteio, que já o faz — e a verificação pública compara os dois.
+
+    Campo vazio não é impresso: numa prévia de rascunho o método pode estar pela metade, e inventar
+    o que falta seria o documento completando a regra que o Edital não declarou. No conteúdo
+    publicado isso não acontece, porque `FR-467` e `draw_method_invalid` o recusam antes.
+    """
+    identidade = marco.get("id")
+    metodo = (
+        regras_do_marco.metodo_que_governa(
+            snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+        )
+        if identidade
+        else None
+    ) or marco.get("drawMethod")
+    if not isinstance(metodo, dict) or not metodo:
+        return []
+    pares = [["Método", _origem_do_metodo(snapshot, marco)]]
+    pares.extend(
+        [rotulo, valor]
+        for campo, _, rotulo in CAMPOS_DO_METODO
+        if (valor := _valor_do_campo_do_metodo(campo, metodo))
+    )
+    return pares
+
+
 def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
@@ -1258,23 +1370,52 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                     antes=ANTES_DE_BLOCO,
                     junto=True,
                 )
+                # **Tudo abaixo é decidido pela forma que o marco declara**, e não pela inferida
+                # (032, FR-464). A distinção protege o acervo: marco composto antes da `030` não
+                # declara `orderProduction`, e a ausência **é** a afirmação — ele não ganha o par
+                # `Ordem` e sai do documento exatamente como sempre saiu, com a combinação que
+                # sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um marco
+                # antigo que carrega método, e documento publicado não muda de conteúdo.
+                forma = marco.get("orderProduction") or ""
+                sorteia = forma == regras_do_marco.POR_SORTEIO
                 pares = []
-                combinacao = _combinacao(marco, etapas)
-                if combinacao:
-                    pares.append(["Combinação", combinacao])
-                normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
-                if normalizacao:
-                    pares.append(["Normalização", normalizacao])
+                ordem = FORMA_DA_ORDEM.get(forma)
+                if ordem:
+                    pares.append(["Ordem", ordem])
+                # **Aquela ordem não vem de nota** (032, FR-468). Imprimir "soma ponderada da
+                # Etapa…" sob um marco de sorteio era o documento afirmando um método falso — o
+                # `ACH-50` da auditoria de 16/09/2026, lido no papel que a candidata recebe.
+                if not sorteia:
+                    combinacao = _combinacao(marco, etapas)
+                    if combinacao:
+                        pares.append(["Combinação", combinacao])
+                    normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
+                    if normalizacao:
+                        pares.append(["Normalização", normalizacao])
                 arredondamento = _arredondamento(marco)
                 if arredondamento:
                     pares.append(["Arredondamento", arredondamento])
+                _pares(composicao, pares, recuo=32.0)
+                # O bloco do método, entre o arredondamento e o recurso — a ordem é a que
+                # `contracts/marco-no-documento.md` fixa, e ela faz parte do contrato.
+                if sorteia and (metodo := _metodo_do_marco(snapshot, perfil, marco)):
+                    composicao.escrever(
+                        "Sorteio",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=32,
+                        antes=ANTES_DE_LINHA,
+                        junto=True,
+                    )
+                    _pares(composicao, metodo, recuo=46.0)
+                posteriores = []
                 janela = _janela_recursal(marco)
                 if janela:
-                    pares.append(["Recurso", janela])
+                    posteriores.append(["Recurso", janela])
                 corte = _regra_de_corte(marco, etapas)
                 if corte:
-                    pares.append(["Corte", corte])
-                _pares(composicao, pares, recuo=32.0)
+                    posteriores.append(["Corte", corte])
+                _pares(composicao, posteriores, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
                 )

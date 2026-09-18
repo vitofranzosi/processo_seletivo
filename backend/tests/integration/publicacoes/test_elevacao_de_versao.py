@@ -447,3 +447,78 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 
     assert publicacao.canonical_schema_version == 6
     assert publicacao.content_hash == literal
+
+
+# --- A `032` não acrescenta degrau, e o acervo não se mexe (FR-469, SC-161) --------------------
+#
+# **O risco que `FR-469` cobre não é o renderizador.** Documento publicado não se regenera: ele é
+# composto no ato da publicação e guardado, e mudar `pdf._marcos` não alcança documento algum que
+# já exista. O risco real é outro, e é o que este bloco trava: **um degrau de elevação
+# acrescentado por engano** reescreveria o conteúdo do acervo — e aí sim conteúdo e resumo mudam,
+# em toda versão consolidada, de uma vez.
+#
+# A `030` passou por esta mesma porta e não acrescentou degrau nenhum. A `032` também não deve: ela
+# **lê** `orderProduction` e `drawMethod`, que já estão publicados, e não escreve chave alguma.
+
+
+#: O censo dos degraus no dia em que a `032` começou — 18/09/2026. Literal, e não derivado: uma
+#: contagem lida do próprio módulo acompanharia em silêncio o degrau que ela existe para acusar,
+#: que é o mesmo defeito que `CHAVES_DO_MARCO_ANTES_DA_FEATURE` registra em
+#: `tests/unit/editais/test_forma_da_ordem.py`.
+CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
+    "SCHEMA_VERSION": 16,
+    "DEGRAUS": (5, 6),
+    "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
+    "DEGRAUS_DA_RAIZ": (7, 9, 16),
+    "DEGRAUS_DE_MARCO": (8, 10, 13),
+    "DEGRAUS_DE_EVENTO": (11,),
+    "DEGRAUS_DE_DOCUMENTO": (9,),
+}
+
+
+def test_a_032_nao_acrescenta_degrau_de_elevacao():
+    """`FR-469`: o que reescreveria o acervo é um degrau novo, e nenhum entra nesta feature.
+
+    Falha alta e cedo. Um degrau acrescentado sem querer — por cópia de um degrau vizinho, que é
+    como quase todos nascem — mudaria `content_hash` de **toda** versão consolidada do acervo, e o
+    sintoma apareceria longe da causa: num teste de consulta pública, ou num resumo criptográfico
+    que a verificação do sorteio não reconhece mais.
+
+    Quem acrescentar um degrau de propósito atualiza esta constante **e** diz, na spec daquela
+    feature, o que o acervo passa a afirmar que não afirmava.
+    """
+    from processo_seletivo.publicacoes.domain import elevacao
+
+    censo = {
+        "SCHEMA_VERSION": SCHEMA_VERSION,
+        "DEGRAUS": tuple(sorted(elevacao.DEGRAUS)),
+        "DEGRAUS_DE_PERFIL": tuple(sorted(elevacao.DEGRAUS_DE_PERFIL)),
+        "DEGRAUS_DA_RAIZ": tuple(sorted(elevacao.DEGRAUS_DA_RAIZ)),
+        "DEGRAUS_DE_MARCO": tuple(sorted(elevacao.DEGRAUS_DE_MARCO)),
+        "DEGRAUS_DE_EVENTO": tuple(sorted(elevacao.DEGRAUS_DE_EVENTO)),
+        "DEGRAUS_DE_DOCUMENTO": tuple(sorted(elevacao.DEGRAUS_DE_DOCUMENTO)),
+    }
+
+    assert censo == CENSO_DOS_DEGRAUS_ANTES_DA_032
+
+
+def test_o_acervo_atravessa_a_032_sem_mudar_conteudo_nem_resumo(api_client, legado):
+    """`SC-161`, no caminho que mais poderia mexer no acervo: uma Retificação sobre ele.
+
+    Três afirmações, e as três precisam valer juntas: o resumo de tudo o que já estava publicado
+    permanece, a `Publicacao` original continua carimbada na versão canônica em que **foi**
+    publicada, e o conteúdo dela continua sendo servido literalmente — a elevação é leitura, e o
+    que ela produz vai para uma Versão Consolidada nova, que é artefato novo.
+    """
+    antes = hashes_publicados()
+    publicacao = legado.publicacoes.latest("published_at")
+    literal = canonical_sha256(
+        VersaoConsolidada.objects.filter(edital=legado).earliest("materialized_at").content
+    )
+
+    publish_retification(api_client, create_retification(api_client, legado, TITULO), suffix="032")
+
+    assert_publicado_permanece(antes)
+    publicacao.refresh_from_db()
+    assert publicacao.canonical_schema_version == 4, "o carimbo da publicação original não muda"
+    assert publicacao.content_hash == literal, "e o conteúdo dela continua sendo o literal"

@@ -139,19 +139,27 @@ def test_a_publicacao_fica_na_trilha_com_ator_instante_e_correlacao(certame):
 def test_marco_sem_metodo_nao_congela(gestor, api_client, manager_headers, process_payload):
     """Congelar sob método indefinido seria escolher o método depois (FR-066)."""
     from processo_seletivo.comissoes.domain.funcoes import Funcao
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
     from tests.fixtures.comissao import constituir, inscrever, rascunho_com_etapas
     from tests.fixtures.edital import PROFILE_ID
-    from tests.fixtures.publicacao import publish_original
+    from tests.fixtures.legado import publicar_sem_aferir
     from tests.fixtures.sorteio import marco_com_metodo
 
+    # **O Edital nasce completo e é degradado antes do congelamento**, e não pela submissão: desde
+    # a `032` a publicação recusa o marco que ordena por sorteio e não publica método (`FR-467`),
+    # de modo que este estado deixou de ser produzível pelo caminho normal. Ele continua existindo
+    # no acervo — todo Edital anterior ao degrau 10 carrega `drawMethod` nulo —, e é sobre ele que
+    # este guarda de leitura precisa continuar valendo. As duas recusas são camadas distintas: a
+    # `FR-467` impede que o estado **nasça**; esta impede que ele **congele**.
     rascunho = rascunho_com_etapas()
-    marco_com_metodo(
-        rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"], metodo=None
+    marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+
+    def _sem_metodo(edital):
+        MarcoClassificatorio.objects.filter(perfil__edital=edital).update(metodo_de_sorteio={})
+
+    edital = publicar_sem_aferir(
+        api_client, manager_headers, process_payload, draft=rascunho, degradar=_sem_metodo
     )
-    for perfil in rascunho["profiles"]:
-        for marco in perfil.get("classificationMilestones") or []:
-            marco["drawMethod"] = None
-    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo="sem-metodo")
     inscrever(edital, 2, primeiro=951)
 

@@ -1050,17 +1050,26 @@ PERFIS_DA_TRINCA = [f"/profiles/id=00000000-0000-0000-0000-00000000050{n}" for n
 
 
 def draft_com_tres_perfis(nomes=("Perfil 1", "Perfil 2", "Perfil 3")):
-    """Três Perfis, para que remover um mexa na composição da lista."""
-    from tests.fixtures.edital import complete_draft
+    """Três Perfis, para que remover um mexa na composição da lista.
+
+    **Cada um com o marco dele.** Copiar o Perfil-modelo inteiro copiava também a identidade do
+    marco, e o marco é único globalmente: os três Perfis nasciam disputando a mesma linha. A
+    identidade sai de `identidade_do_marco`, que é o mesmo derivador do construtor — e é o que faz
+    a cópia continuar sendo cópia sem duplicar identidade.
+    """
+    from tests.fixtures.edital import complete_draft, identidade_do_marco, marco_minimo
 
     draft = complete_draft()
     modelo = draft["profiles"][0]
     draft["profiles"] = [
         {
             **modelo,
-            "id": f"00000000-0000-0000-0000-00000000050{numero}",
+            "id": (identidade := f"00000000-0000-0000-0000-00000000050{numero}"),
             "code": f"P{numero}",
             "name": nome,
+            "classificationMilestones": [
+                marco_minimo(identidade_do_marco(identidade), codigo=f"M{numero}")
+            ],
         }
         for numero, nome in enumerate(nomes, 1)
     ]

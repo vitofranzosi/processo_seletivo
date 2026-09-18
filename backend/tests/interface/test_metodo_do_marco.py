@@ -11,6 +11,8 @@ A leitura do método pela tela do sorteio — que exibe e **não** edita — é 
 `tests/integration/sorteios/test_metodo_nao_e_escolha.py`, que varre as superfícies do módulo.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -456,3 +458,65 @@ def test_a_recusa_do_metodo_comum_nao_apaga_o_que_foi_digitado(client, com_etapa
     assert _valor("edital-draw-substitutionText") == "", "o que faltava continua faltando"
     com_etapas.refresh_from_db()
     assert com_etapas.metodo_de_sorteio_comum == {}, "e nada foi gravado"
+
+
+# --- A consequência da ausência de corte, na etapa em que a decisão é tomada (032, FR-462) -----
+#
+# **Mora aqui porque é o cartão do marco**, que é o que este arquivo já guarda: o método do sorteio
+# e o corte são os dois blocos que a composição desenha e que nenhuma tela posterior edita.
+#
+# A auditoria de 16/09/2026 mediu o silêncio (`ACH-46`). O cartão dizia *"sem corte, a Etapa
+# seguinte recebe todos os habilitados"* — verdade, e a metade menos importante. A consequência que
+# decide é a outra ponta da cadeia: **sem corte não há convocação**. Dizê-la só na Revisão seria
+# dizê-la depois; `SC-162` pede que ela esteja onde a decisão é tomada.
+
+
+def _tela(client, edital):
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "classificacao"])
+    ).content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_cartao_do_marco_declara_que_sem_corte_nao_ha_convocacao(client, com_etapas):
+    """`FR-462` e `SC-162`: verificável na composição, sem abrir a Revisão."""
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    # O marco atravessa **sem** campo algum de corte: é o estado de quem ainda não decidiu.
+    assert _compor(client, com_etapas).status_code in (200, 302)
+
+    corpo = _tela(client, com_etapas)
+
+    ajuda = re.search(r'<span class="oculto" id="ajuda-corte-[^"]*">(.*?)</span>', corpo, re.S)
+    assert ajuda, "o cartão precisa continuar descrevendo o que a ausência de corte significa"
+    frase = re.sub(r"\s+", " ", ajuda.group(1))
+    # `convoca`, e não `convocação`: o cartão é microcópia e escreve a consequência como verbo —
+    # *"classifica e não convoca"*. O radical casa com as duas grafias, e prender a substantivada
+    # prenderia na tela uma escolha de redação que não é requisito.
+    assert "convoca" in frase, (
+        "a consequência que decide é a convocação, e era ela que o cartão não dizia"
+    )
+    assert "faixa" in frase, "a cadeia passa pela faixa: sem faixa não há quem convocar"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_explicacao_longa_do_corte_fica_no_como_preencher_e_nao_no_cartao(client, com_etapas):
+    """A rubrica de microcópia deste repositório, e ela é o motivo de a frase do cartão ser curta.
+
+    O cartão declara a consequência; **o porquê inteiro** — o que é faixa, o que é geração, o que
+    muda entre continuar e não continuar — mora no `como-preencher` da etapa, que é onde a pessoa
+    vai quando quer entender em vez de decidir.
+    """
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor(client, com_etapas)
+
+    corpo = _tela(client, com_etapas)
+
+    explicacao = re.search(r"cutTargetKind\">Regra de corte</a></dt>\s*<dd>(.*?)</dd>", corpo, re.S)
+    assert explicacao, "o `como-preencher` da etapa precisa continuar tratando da regra de corte"
+    assert "convocação" in re.sub(r"\s+", " ", explicacao.group(1))

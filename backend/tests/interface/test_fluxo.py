@@ -20,7 +20,11 @@ from processo_seletivo.publicacoes.models import (
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.edital import mudanca_de_vagas
 from tests.fixtures.publicacao import publish_original, retify
-from tests.interface.conftest import compor_rascunho, identificar
+from tests.interface.conftest import (
+    compor_rascunho,
+    identificar,
+    marco_de_sorteio_no_formulario,
+)
 
 TEXTO_PDF = re.compile(rb"\((.*?)\) Tj", re.DOTALL)
 # Só os fluxos de conteúdo das páginas. Desde que o documento embute o brasão, varrer o arquivo
@@ -52,6 +56,9 @@ PERFIS = {
     "perfil-0-immediateVacancies": "1",
     "perfil-0-reserveType": "NONE",
 }
+# O marco que a `032` tornou obrigatório para publicar (`FR-457`): sem ele o Perfil acima não
+# classifica ninguém, e a submissão é recusada antes de chegar ao ato.
+MARCOS = marco_de_sorteio_no_formulario("cccccccc-0000-4000-8000-00000000f001")
 EVENTOS = {
     "evento-0-id": "cccccccc-0000-4000-8000-00000000f002",
     "evento-0-type": "INSCRICAO",
@@ -82,7 +89,7 @@ def praticar(client, edital, acao, **campos):
 @pytest.mark.integration
 def test_fluxo_completo_ate_a_publicacao(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     assert Edital.objects.get().status == Edital.Status.EM_REVISAO
 
@@ -117,7 +124,7 @@ def test_confirmacao_diz_o_que_o_ato_provoca_antes_de_praticar(
 def test_confirmar_duas_vezes_pratica_um_ato_so(client, seletor_ligado, edital):
     """A chave de idempotência nasce no formulário: duplo clique não publica duas vezes."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
@@ -138,7 +145,7 @@ def test_confirmar_duas_vezes_pratica_um_ato_so(client, seletor_ligado, edital):
 def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital):
     """FR-012: comunicar a exigência antes, e não apenas depois da recusa."""
     identificar(client, "joao.sozinho", ["elaborador", "homologador", "publicador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
 
@@ -163,7 +170,7 @@ def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital)
 @pytest.mark.integration
 def test_motivo_obrigatorio_e_exigido_antes_do_command(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
 
@@ -177,7 +184,7 @@ def test_motivo_obrigatorio_e_exigido_antes_do_command(client, seletor_ligado, e
 @pytest.mark.integration
 def test_publicar_exige_autoridade_signataria(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="OK")
@@ -222,7 +229,7 @@ def test_edital_publicado_anuncia_imutabilidade(
 @pytest.mark.integration
 def test_ato_sem_permissao_nao_e_oferecido_nem_aceito(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
 
     corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
@@ -316,7 +323,7 @@ def test_detalhe_oferece_o_documento_de_cada_publicacao_sem_rotular_vigente(
 def test_previa_nao_cria_registro_publicado_nem_muda_o_estado(client, seletor_ligado, edital):
     """FR-011: visualizar não é ato — e é isso que torna a prévia utilizável a qualquer hora."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     edital.refresh_from_db()
 
     antes = (
@@ -350,7 +357,7 @@ def test_previa_reflete_o_rascunho_gravado_e_permite_continuar_editando(
 ):
     """FR-005 e FR-012: o que se vê é o que está gravado, e voltar não custa nada."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     edital.refresh_from_db()
     assert "Inscrições" in texto_do_pdf(
         client.get(reverse("interface:previa-documento", args=[edital.id]))
@@ -375,7 +382,7 @@ def test_previa_acompanha_o_edital_ate_a_homologacao_e_para_na_publicacao(
 ):
     """FR-008: quem homologa e quem publica precisam ler o documento antes de decidir."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     assert client.get(reverse("interface:previa", args=[edital.id])).status_code == 200
 
     praticar(client, Edital.objects.get(), "submeter")
@@ -422,7 +429,7 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
 ):
     """FR-013: é o que faz a prévia valer alguma coisa — e a diferença é só a moldura."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     praticar(client, Edital.objects.get(), "submeter")
     identificar(client, "bruno.homologador", ["homologador"])
     praticar(client, Edital.objects.get(), "homologar", motivo="Conferido")
@@ -473,7 +480,7 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
     com o campo `order` sendo ignorado.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     edital.refresh_from_db()
     assert (
         client.post(
@@ -532,7 +539,7 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(client, seletor
     documento continuar sem a cota, e ninguém saberia até publicar.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS_COM_COTA, EVENTOS)
+    compor_rascunho(client, edital, PERFIS_COM_COTA, EVENTOS, marcos=MARCOS)
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     for esperado in ("PPI", "Pessoas pretas, pardas e indígenas", "Lei 12.990/2014", "20%"):
@@ -553,7 +560,7 @@ def test_modalidades_aparecem_na_previa_e_no_documento_publicado(client, seletor
 @pytest.mark.integration
 def test_secao_textual_editada_aparece_no_documento(client, seletor_ligado, edital):
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     edital.refresh_from_db()
     assert (
         client.post(
@@ -579,7 +586,7 @@ def test_alterar_o_cronograma_reflete_na_secao_gerada_sem_sincronizar_nada(
     sincronizar — e é por isso que retificar o Evento não pode deixar um texto desatualizado.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, PERFIS, EVENTOS)
+    compor_rascunho(client, edital, PERFIS, EVENTOS, marcos=MARCOS)
     assert "Inscrições" in texto_do_pdf(
         client.get(reverse("interface:previa-documento", args=[edital.id]))
     )

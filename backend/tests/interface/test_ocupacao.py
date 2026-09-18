@@ -425,3 +425,141 @@ def test_as_duas_acoes_da_tela_confirmam_coisas_diferentes(
 
     assert "Faixa seguinte emitida com o déficit apurado como causa" in depois_da_faixa
     assert "Apuração emitida" not in depois_da_faixa, "nenhuma apuração foi emitida nesta ação"
+
+
+# --- A ação que sempre falha deixa de ser oferecida (032, FR-463, SC-163) ----------------------
+#
+# **A auditoria de 16/09/2026 encontrou três botões idênticos, e dois deles sempre falhavam.** Este
+# bloco trata do primeiro: "Pedir a faixa seguinte com este déficit" num marco que **não declara
+# regra de corte**. Sem corte não há geração; sem geração não há faixa; e não há faixa seguinte a
+# pedir. A ação existe na tela, o clique alcança o servidor, e a recusa chega quando o cronograma
+# já está correndo.
+#
+# **A razão ocupa o lugar do botão — e não um `disabled`.** É o padrão que o produto adotou em três
+# telas no PR #120, e que a auditoria registrou como padrão a preservar: o bloqueio anunciado antes
+# da tentativa. Botão desabilitado não diz por quê.
+
+
+@pytest.fixture
+def sem_regra_de_corte(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O cenário da ocupação com o marco **sem** regra de corte, e sem ato de corte emitido.
+
+    Não é `montar_cenario_da_ocupacao`: aquele emite o corte, e um marco sem regra não tem corte a
+    emitir. O que este cenário exercita é o que a `016` já admitia por escrito — *"marco que não
+    corta continua tendo ocupação apurável"* —, e é justamente por isso que o recorte chega a
+    `CURRENT` com déficit e a tela chega a oferecer a faixa.
+    """
+    from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.ocupacao import rascunho_com_quadro
+
+    def monta(cut=None):
+        base, pontuada = rascunho_com_quadro(geral=3)
+        # A chave sai inteira: `{}` seria uma segunda grafia da ausência, e o marco do acervo não a
+        # tem — ele tem `cutRule` nulo, que é o que o degrau 13 escreve.
+        base["profiles"][0]["classificationMilestones"][0].pop("cutRule", None)
+        return base, pontuada
+
+    return montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="ocupacao-032-sem-corte",
+        draft_factory=monta,
+    )
+
+
+def test_sem_regra_de_corte_a_faixa_seguinte_nao_e_oferecida(
+    client, seletor_ligado, sem_regra_de_corte, gestor
+):
+    """`FR-463`: o déficit existe, e mesmo assim a ação não aparece — porque ela não executaria."""
+    edital, _, _ = sem_regra_de_corte
+    apurar(edital, gestor, chave="ocupacao-032-sem-corte-apurar")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "A ocupar" in pagina, "a premissa: o recorte foi apurado e tem déficit"
+    assert "Pedir a faixa seguinte" not in pagina
+
+
+def test_no_lugar_da_faixa_a_tela_diz_por_que_a_acao_nao_existe_ali(
+    client, seletor_ligado, sem_regra_de_corte, gestor
+):
+    """`SC-163`: a ação some **e** a razão aparece. Sumir calado seria a metade do conserto."""
+    edital, _, _ = sem_regra_de_corte
+    apurar(edital, gestor, chave="ocupacao-032-sem-corte-razao")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "regra de corte" in pagina, "a causa, e não o sintoma"
+    assert "não há faixa" in pagina
+
+
+def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
+    client, seletor_ligado, cenario, gestor
+):
+    """A contraprova. Uma condição escrita larga demais apagaria o botão do caso normal."""
+    edital, _, _ = cenario
+    apurar(edital, gestor, chave="ocupacao-032-com-corte")
+    identificar(client, "carlos", ["gestor"])
+
+    assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()
+
+
+# --- O recorte que o marco não emite deixa de oferecer apuração (032, FR-472, SC-163) ----------
+#
+# **A segunda das duas ações que sempre falhavam.** A auditoria de 16/09/2026 encontrou, na tela de
+# Ocupação de um Perfil com cotas, três botões "Apurar a ocupação deste recorte" idênticos: o da
+# ampla funcionava, e os dois reservados recusavam com *"Este recorte não tem ordem emitida: não há
+# o que cortar"*. A mensagem é verdadeira e chega tarde — quem a lê no dia da apuração não tem mais
+# o que fazer com ela, porque a correção depende de Retificação.
+#
+# **A causa é a forma de emissão da ordem daquele marco**, e não a cota: um ato computado emite uma
+# lista só, a da ampla concorrência. O sorteio emite por recorte, e por isso o Perfil que sorteia
+# continua oferecendo os três.
+
+
+def test_recorte_reservado_em_marco_computado_nao_oferece_apuracao(
+    client, seletor_ligado, cenario, gestor
+):
+    """`FR-472`: o botão sai de onde ele nunca conseguiria executar."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
+    assert pagina.count("Apurar a ocupação deste recorte") == 1, (
+        "só o da ampla concorrência, que é o único que o marco computado emite"
+    )
+
+
+def test_no_lugar_da_apuracao_a_tela_nomeia_a_causa_e_nao_o_sintoma(
+    client, seletor_ligado, cenario, gestor
+):
+    """`FR-471` na tela: a ordem daquele marco sai em lista única, e é isso que precisa ser dito.
+
+    *"Este recorte não tem ordem emitida"* descreve o que a pessoa já está vendo. O que ela precisa
+    saber é **por que** — e que a apuração daquele recorte acontece fora do sistema.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "lista única" in pagina
+    assert "fora do sistema" in pagina
+
+
+def test_o_recorte_da_ampla_continua_apuravel(client, seletor_ligado, cenario, gestor):
+    """A contraprova, e a que uma condição larga demais quebraria: a ampla é o que o marco emite."""
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+    apurar(edital, gestor, chave="ocupacao-032-ampla-apura")
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "Ampla concorrência (linha geral do quadro)" in pagina
+    assert "A ocupar" in pagina, "e ela apurou, com os quatro números"

@@ -20,7 +20,7 @@ from processo_seletivo.editais.models.perfis import LinhaDoQuadroDeVagas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import DocumentoPublicado
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.interface.conftest import identificar
+from tests.interface.conftest import identificar, marco_de_sorteio_no_formulario
 from tests.interface.test_fluxo import EVENTOS, texto_de_pdf_bytes
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.acceptance]
@@ -80,6 +80,16 @@ def test_a1_a5_a_quantidade_declarada_uma_vez_governa_o_documento_e_a_apuracao(
     compor(client, edital, "perfis", PERFIL_SEM_COTA)
     linha = LinhaDoQuadroDeVagas.objects.get()
     assert (linha.modalidade_id, linha.vagas_imediatas) == (None, 2)
+
+    # O marco, que a `032` tornou precondição de publicar (`FR-457`): sem ele este Perfil não
+    # classifica ninguém, e a submissão do A4 é recusada antes de chegar ao ato. Entra entre o A2 e
+    # o A3 de propósito — a travessia do A3 precisa atravessar o marco também.
+    compor(
+        client,
+        edital,
+        "classificacao",
+        marco_de_sorteio_no_formulario("cccccccc-0000-4000-8000-00000000e001"),
+    )
 
     # A3 — a travessia que já custou quantidade publicável: gravar **outra** etapa não a leva.
     identidade = linha.id

@@ -12,6 +12,8 @@ UUID aleatório que não diz de quem o ato falava.
 import hashlib
 from uuid import NAMESPACE_URL, uuid5
 
+from tests.fixtures.edital import identidade_do_marco, marco_minimo
+
 PERFIL = {
     "A": "00000000-0000-0000-0000-000000000501",
     "B": "00000000-0000-0000-0000-000000000502",
@@ -136,7 +138,13 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(
         # não existir; a chave, porém, é obrigatória — no conteúdo publicado não há campo opcional,
         # e a versão canônica identifica **uma** grafia.
         "declaredFacts": list(fatos),
-        "classificationMilestones": [],
+        # **O marco deixou de poder faltar** (032, FR-457): um Perfil sem marco não classifica
+        # ninguém, e desde a `032` a publicação recusa. A identidade é derivada da do Perfil pelo
+        # mesmo `uuid5` que a linha geral do quadro usa — o construtor precisa ser reproduzível
+        # sem ler o conteúdo publicado, e um identificador literal colidiria entre os três Perfis.
+        "classificationMilestones": [
+            marco_minimo(identidade_do_marco(identificador), codigo=f"{sigla}-M")
+        ],
         # A da versão 12. Vazia significa "este Edital não publicou quadro" — o que todo Edital do
         # acervo afirma —, e nunca "zero vaga" (025, D-005). O construtor a preenche por padrão
         # porque desde a `027` a linha geral é materializada na gravação; `quadro=()` devolve a
@@ -249,7 +257,6 @@ def rascunho_publicavel():
         # marco são da `US2` e da `US1`, e o serializer do rascunho recusa campo desconhecido. O
         # conteúdo **publicado** as tem porque a emissão as deriva dos modelos; o rascunho, não.
         perfil_.pop("declaredFacts", None)
-        perfil_.pop("classificationMilestones", None)
         # O quadro é opcional no rascunho e obrigatório no publicado — a assimetria é a D-005 no
         # contrato: depois do degrau 12 todo conteúdo publicado tem a chave, vazia nos anteriores.
         perfil_.pop("vacancyTable", None)

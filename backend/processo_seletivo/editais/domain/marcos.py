@@ -144,12 +144,19 @@ def pontuacao_combinada_e_a_da_etapa(*, operacao, normalizacao) -> bool:
 
 
 def marco_no_conteudo(conteudo, *, perfil_id, marco_id):
-    """O marco, dentro do Perfil, no conteúdo publicado. `None` quando não existe."""
+    """O marco, dentro do Perfil, no conteúdo publicado. `None` quando não existe.
+
+    **Atravessa conteúdo malformado sem quebrar**, e a guarda não é zelo: desde a `032` esta
+    leitura é chamada de dentro de `validate_for_publication`, que roda sobre conteúdo que ainda
+    não foi conferido — um Perfil que é string em vez de objeto é exatamente o que a validação
+    existe para acusar. Uma exceção aqui apagaria todos os achados seguintes, inclusive o que diz
+    **por que** o conteúdo está malformado.
+    """
     for perfil in (conteudo or {}).get("profiles") or []:
-        if str(perfil.get("id")) != str(perfil_id):
+        if not isinstance(perfil, dict) or str(perfil.get("id")) != str(perfil_id):
             continue
         for marco in perfil.get("classificationMilestones") or []:
-            if str(marco.get("id")) == str(marco_id):
+            if isinstance(marco, dict) and str(marco.get("id")) == str(marco_id):
                 return marco
     return None
 
@@ -203,3 +210,33 @@ def marco_ordena_por_sorteio(conteudo, *, perfil_id, marco_id) -> bool:
         marco.get("orderProduction") or "",
         metodo_declarado=bool(metodo_que_governa(conteudo, perfil_id=perfil_id, marco_id=marco_id)),
     )
+
+
+def emite_ordem_no_recorte(conteudo, *, perfil_id, marco_id, lista_id=None) -> bool:
+    """Este marco emite ordem **neste recorte**? (032, FR-470, FR-472)
+
+    **Uma função só, consumida pela validação e pelo selector**, pela mesma razão que levou a `029`
+    a criar `chamada_em_aberto`: dois predicados de "emite aqui" divergiriam na primeira mudança, e
+    a divergência apareceria como a Revisão avisando sobre um recorte e a tela de Ocupação
+    oferecendo apuração para ele — ou o contrário, que é pior.
+
+    **A regra real vive em `classificacao/application/emissao.py`**, e é ela que este predicado
+    apenas lê: um ato computado nasce com `lista_id=None`, e o comentário de lá diz por quê — *"um
+    ato computado é sempre o de ampla concorrência: só o sorteio emite por lista"*. A decisão é de
+    escopo, tomada entre a `015` e a `021`, e esta função **não a muda**: ela a torna perguntável
+    antes da publicação, em vez de descoberta no dia da apuração.
+
+    **O que a escolha do módulo custa, dito por escrito.** Um fato de **emissão** passa a morar no
+    módulo de **conteúdo normativo**, e isso não é gratuito: quem procurar a regra vai procurá-la em
+    `classificacao`, e vai achar a execução dela lá — este é o espelho, e a fonte está nomeada
+    acima. Pô-la em `classificacao` inverteria a direção de dependência, porque
+    `editais/domain/validation.py` também a consome e domínio não importa aplicação. A aresta
+    contrária já existe e não é inédita: `classificacao/application/emissao.py` importa
+    `editais.domain.marcos`.
+
+    **A ampla concorrência é sempre emitida**, e por isso `lista_id=None` responde verdadeiro sem
+    perguntar mais nada: é o recorte que todo marco emite, sorteie ele ou não.
+    """
+    if lista_id is None:
+        return True
+    return marco_ordena_por_sorteio(conteudo, perfil_id=perfil_id, marco_id=marco_id)
