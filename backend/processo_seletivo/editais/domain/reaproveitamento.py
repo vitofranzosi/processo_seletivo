@@ -147,9 +147,6 @@ def remapear(conteudo, mapa):
             novo_marco = {
                 **marco,
                 "id": trocar(marco.get("id"), "classificationMilestones[].id"),
-                # As Etapas que o marco **enumera**. A gravação não confere a existência delas —
-                # só a publicação o faz —, e é por isso que esquecer esta linha seria defeito
-                # silencioso (023, FR-010a).
                 "stages": [
                     trocar(etapa, "classificationMilestones[].stages[]")
                     for etapa in marco.get("stages") or []
@@ -289,4 +286,15 @@ def payload_do_conteudo(conteudo):
             if secoes_do_catalogo.e_textual(secao.get("key") or "")
         ],
         "documentRequirements": list(conteudo.get("documentRequirements") or []),
+        # O método do sorteio comum ao Edital (030, FR-429). **Copia-se, e não se remapeia**: os
+        # nove campos dele são texto normativo e listas fechadas, e nenhum é identificador — a
+        # Etapa de habilitação, que é o único campo do método que aponta para outra entidade, é do
+        # marco e continua sendo tratada lá.
+        #
+        # **`{}` quando o Edital de origem não o declara**, e é o caso de todo Edital publicado
+        # antes desta feature. Esquecer esta linha faria o Edital reaproveitado de um Edital de
+        # sorteio nascer sem método comum, e os sete marcos que o referenciavam passariam a
+        # referenciar nada — defeito silencioso, porque a gravação não confere o que a publicação
+        # cobra (023, FR-010a).
+        "drawMethod": conteudo.get("drawMethod") or {},
     }

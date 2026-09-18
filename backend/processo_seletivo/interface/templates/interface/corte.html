@@ -8,7 +8,21 @@
 </nav>
 
 <h1>Corte e progressão</h1>
-<p class="sub">A faixa que progride, calculada a partir da ordem vigente e da regra publicada.</p>
+<p class="sub">A <dfn>faixa</dfn> é o trecho da ordem que progride para a Etapa seguinte — do
+  primeiro colocado ao último que o alvo alcançou —, calculada a partir da ordem vigente e da
+  regra publicada.</p>
+{% comment %}
+Os termos definidos onde a decisão acontece (030, FR-424, SC-141). **Fora de qualquer ramo**, e é
+por isso que eles não moram nas frases que já os usavam: `{% if geracao %}` e o `{% else %}` dele
+nunca aparecem juntos, e uma definição que só existe num dos dois não é "no primeiro uso" — é "às
+vezes". A frase da faixa, acima, está no subtítulo, que a tela sempre desenha.
+
+Nenhum termo novo: recorte, geração e faixa são os do domínio, e o que muda é onde eles se
+explicam (FR-425).
+{% endcomment %}
+<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla concorrência,
+  ou uma Modalidade de Concorrência declarada. <dfn>Geração</dfn> é o conjunto de faixas emitido de
+  uma vez: a seguinte sucede a anterior, que continua íntegra e legível.</p>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1">Corte emitido. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}

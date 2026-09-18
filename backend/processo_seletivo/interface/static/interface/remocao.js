@@ -88,8 +88,23 @@
      Os fragmentos da Retificação usam "Não acrescentar este Perfil" e "Não acrescentar este
      Evento" **sem** a classe, e descartavam a linha inteira em silêncio. O que identifica a
      remoção não é a cor do botão: é o `hx-target` apontar para a própria linha e o `hx-swap`
-     trocá-la por outra coisa. */
+     trocá-la por outra coisa.
+
+     **E precisa ser um botão** (030). A assinatura `closest fieldset` + `outerHTML` deixou de ser
+     exclusiva da remoção: o cartão do marco passou a se **recompor** quando a forma da ordem ou as
+     Etapas mudam, e essa troca tem exatamente a mesma forma — a linha sai e outra entra no lugar.
+     A diferença é o que sobra depois: a remoção deixa um vazio, e a recomposição devolve o mesmo
+     cartão com os campos que a resposta tornou pertinentes.
+
+     Sem esta guarda, escolher "por sorteio" abria "Remover Marco classificatório? Isto descarta 6
+     campos preenchidos" — e um "não" cancelava a recomposição, de modo que a tela não reagia à
+     escolha e nada explicava por quê. Foi encontrado percorrendo a interface, e não pela suíte:
+     nenhum teste de template enxerga o `htmx:confirm`. */
   function removeAPropriaLinha(botao) {
+    // Sem diferenciar caixa: o DOM do navegador devolve `BUTTON` e o shim dos testes devolve
+    // `button`, e uma comparação exata passaria num e falharia no outro — em silêncio, porque o
+    // que ela produz é "não é remoção", que é justamente o ramo sem efeito visível.
+    if (String(botao.tagName || "").toUpperCase() !== "BUTTON") return false;
     if (botao.classList && botao.classList.contains("perigo")) return true;
     var alvo = botao.getAttribute && botao.getAttribute("hx-target");
     var troca = botao.getAttribute && botao.getAttribute("hx-swap");

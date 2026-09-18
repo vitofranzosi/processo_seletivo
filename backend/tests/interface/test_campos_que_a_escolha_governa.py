@@ -270,3 +270,220 @@ def test_o_arredondamento_nao_se_oferece_como_travessao(client, com_etapas):
 
     assert '<option value="">Escolha o arredondamento</option>' in corpo
     assert '<option value="">—</option>' not in corpo
+
+
+# ------------------------------------------------ o marco: a forma da ordem governa o cartão (030)
+#
+# A terceira tela a entrar nesta divisão de trabalho, e a que a leva mais longe: aqui a escolha não
+# desabilita campo, ela decide **quais campos existem**. A folha esconde e o servidor descarta
+# continuam valendo — o que muda é que o escondido não é perdido, porque `replace_draft` apaga e
+# recria e campo que não volta no envio some em silêncio (FR-418).
+
+ETAPA_CLASSIFICATORIA = "aaaaaaaa-0000-4000-8000-00000000e021"
+ETAPA_SO_ELIMINATORIA = "aaaaaaaa-0000-4000-8000-00000000e023"
+MARCO_DA_ORDEM = "aaaaaaaa-0000-4000-8000-00000000e051"
+
+
+def cartao_recomposto(client, edital, **campos):
+    """O cartão reconstruído a partir do que está digitado agora — o caminho do htmx."""
+    base = {
+        f"marco-{PERFIL}-0-id": MARCO_DA_ORDEM,
+        f"marco-{PERFIL}-0-code": "FINAL",
+        f"marco-{PERFIL}-0-name": "Classificação final",
+        f"marco-{PERFIL}-0-scale": "2",
+        f"marco-{PERFIL}-0-mode": "MEIO_PARA_CIMA",
+        "edital": str(edital.id),
+    }
+    return client.get(
+        reverse("interface:fragmento-marco-recomposto", args=[PERFIL, "0"]), {**base, **campos}
+    ).content.decode()
+
+
+def test_a_combinacao_some_com_uma_etapa_e_volta_com_duas(client, com_etapas):
+    """FR-415 e FR-416 — duas perguntas matematicamente vazias quando há uma Etapa só.
+
+    Elas não somem do Edital: somem da tela. Os valores continuam viajando, ocultos, e o que a
+    pessoa lê no lugar é a consequência — com uma Etapa, a pontuação combinada é a dela.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    uma = cartao_recomposto(
+        client, com_etapas, **{f"marco-{PERFIL}-0-stages": ETAPA_CLASSIFICATORIA}
+    )
+
+    assert f'name="marco-{PERFIL}-0-operation"' in uma, "o valor continua viajando"
+    assert "Como as pontuações se combinam" not in uma, "e a pergunta não é feita"
+    assert "a pontuação combinada deste marco" in uma
+
+    duas = cartao_recomposto(
+        client,
+        com_etapas,
+        **{f"marco-{PERFIL}-0-stages": [ETAPA_CLASSIFICATORIA, ETAPA_SO_ELIMINATORIA]},
+    )
+
+    assert "Como as pontuações se combinam" in duas, "com duas, a pergunta volta a ser feita"
+    assert "Normalização" in duas
+
+
+def test_o_cartao_de_sorteio_traz_o_metodo_e_o_de_pontuacao_nao(client, com_etapas):
+    """FR-414 — os dez campos do método existem para quem respondeu que sorteia."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    sorteio = cartao_recomposto(
+        client, com_etapas, **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO"}
+    )
+    pontuacao = cartao_recomposto(
+        client, com_etapas, **{f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO"}
+    )
+
+    assert "Método do sorteio" in sorteio
+    assert "Método do sorteio" not in pontuacao
+    assert f'name="marco-{PERFIL}-0-draw-algorithm"' in pontuacao, (
+        "o campo sai da tela, e não do envio (FR-418)"
+    )
+
+
+# ------------------------------------------------ FR-432: a Etapa que o sorteio não precisa ter
+
+
+def marco_sem_etapa(**alteracoes):
+    base = {
+        "perfil_id": PERFIL,
+        f"marco-{PERFIL}-0-id": MARCO_DA_ORDEM,
+        f"marco-{PERFIL}-0-code": "FINAL",
+        f"marco-{PERFIL}-0-name": "Classificação final",
+        f"marco-{PERFIL}-0-stages": "",
+        f"marco-{PERFIL}-0-operation": "MEDIA_PONDERADA",
+        f"marco-{PERFIL}-0-normalization": "NENHUMA",
+        f"marco-{PERFIL}-0-scale": "2",
+        f"marco-{PERFIL}-0-mode": "MEIO_PARA_CIMA",
+    }
+    return {**base, **alteracoes}
+
+
+def test_o_marco_de_sorteio_sem_etapa_e_aceito(client, com_etapas):
+    """FR-432, o ACH-48: a ajuda da tela mandava deixar em nenhuma, e a validação recusava."""
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_sem_etapa(**{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO"}),
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    assert MarcoClassificatorio.objects.get(pk=MARCO_DA_ORDEM).etapas == []
+
+
+def test_o_marco_de_pontuacao_sem_etapa_continua_recusado(client, com_etapas):
+    """A contraprova, no mesmo percurso: a exigência não foi removida, foi condicionada."""
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_sem_etapa(**{f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO"}),
+    )
+
+    assert resposta.status_code == 200, "recusa reexibe o formulário"
+    assert not MarcoClassificatorio.objects.filter(pk=MARCO_DA_ORDEM).exists()
+
+
+def test_o_marco_que_nao_declara_a_forma_continua_exigindo_etapa(client, com_etapas):
+    """O estado de todo Edital anterior à `030`: sobre ele, nada afrouxa."""
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]), marco_sem_etapa()
+    )
+
+    assert resposta.status_code == 200
+    assert not MarcoClassificatorio.objects.filter(pk=MARCO_DA_ORDEM).exists()
+
+
+def test_a_tela_nao_manda_criar_etapa_para_o_marco_que_sorteia(client, com_etapas):
+    """FR-432 na prosa, e não só na validação (030).
+
+    A tela dizia "declare ao menos uma Etapa classificatória antes de compor a classificação" e o
+    cartão repetia "volte ao passo Etapas de Avaliação" — enquanto a ajuda do método, no mesmo
+    cartão, mandava deixar a habilitação em nenhuma quando o sorteio precede a análise documental.
+    Quem seguisse a prosa criava uma Etapa artificial para satisfazer uma regra que a FR-432
+    removeu; quem seguisse a ajuda não conseguia publicar.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    sorteio = cartao_recomposto(
+        client, com_etapas, **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO"}
+    )
+    pontuacao = cartao_recomposto(
+        client, com_etapas, **{f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO"}
+    )
+
+    assert "pode ficar assim" in sorteio or "Prova didática" in sorteio, (
+        "com Etapa classificatória no Edital o seletor aparece; sem ela, a frase não manda criar"
+    )
+    assert "Volte ao passo" not in sorteio
+    assert "ordena por sorteio, e pode ficar assim" in sorteio or "<select" in sorteio
+    assert "pode ficar assim" not in pontuacao
+
+
+def test_o_aviso_da_etapa_ausente_reconhece_o_marco_de_sorteio(client, com_etapas):
+    """O aviso do passo deixou de mandar, e passou a distinguir as duas formas."""
+    from django.template.loader import render_to_string
+
+    corpo = render_to_string(
+        "interface/compor_classificacao.html",
+        {"perfis": [], "etapas_classificatorias": [], "edital": com_etapas, "metodo_comum": {}},
+    )
+
+    assert "Um marco que ordena <strong>por sorteio</strong> pode não enumerar nenhuma" in corpo
+    assert "antes de\n      compor a classificação" not in corpo
+    assert 'role="alert"' not in corpo, "é aviso, e não impedimento"
+
+
+def test_o_marco_do_acervo_nao_tem_a_combinacao_transformada(client, com_etapas):
+    """FR-416, cenário 2-bis: o que o Edital declarou é o que a tela afirma (030).
+
+    Um marco composto antes desta feature pode enumerar uma Etapa e declarar **soma ponderada**
+    sobre peso diferente de 1: ali a pontuação publicada é `nota × peso`, e não a nota.
+    Transformá-lo em média para tornar a frase verdadeira reescreveria regra declarada — conteúdo
+    normativo, se o Edital estiver publicado. Afirmar o que é falso sobre ele seria pior: quem lê a
+    tela decide a partir dela.
+
+    A saída é a frase mudar, e não o conteúdo.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    acervo = cartao_recomposto(
+        client,
+        com_etapas,
+        **{
+            f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO",
+            f"marco-{PERFIL}-0-stages": ETAPA_CLASSIFICATORIA,
+            f"marco-{PERFIL}-0-operation": "SOMA_PONDERADA",
+            f"marco-{PERFIL}-0-normalization": "NENHUMA",
+        },
+    )
+    novo = cartao_recomposto(
+        client,
+        com_etapas,
+        **{
+            f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO",
+            f"marco-{PERFIL}-0-stages": ETAPA_CLASSIFICATORIA,
+        },
+    )
+
+    assert "combina como o Edital já\n    declarou" in acervo or "combina como o Edital" in acervo
+    assert "a pontuação combinada deste marco" not in acervo, (
+        "dizer que a pontuação é a da Etapa seria falso sobre soma ponderada com peso ≠ 1"
+    )
+    assert 'name="marco-' in acervo and "SOMA_PONDERADA" in acervo, "o declarado viaja intacto"
+
+    assert "a pontuação combinada deste marco" in novo
+    assert "MEDIA_PONDERADA" in novo, (
+        "o marco novo deriva a combinação que torna a frase verdadeira"
+    )

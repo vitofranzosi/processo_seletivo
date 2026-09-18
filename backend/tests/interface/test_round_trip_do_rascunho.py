@@ -542,3 +542,157 @@ def test_regravar_os_perfis_pela_tela_preserva_os_marcos(client, seletor_ligado,
     assert resposta.status_code == 302, resposta.content
 
     assert _marcos_como_o_contrato_os_declara(edital) == [MARCO_COMPLETO]
+
+
+# ---------------------------------------------------------------------------------------------
+# A revelação progressiva do marco (030, FR-418)
+# ---------------------------------------------------------------------------------------------
+#
+# **A mesma classe de defeito, pela porta nova.** Os oito testes acima guardam o que o assistente
+# perde ao **reenviar** o rascunho; estes três guardam o que ele perde ao **esconder** um campo.
+# A causa é a mesma — `replace_draft` apaga e recria, e campo que não volta no envio é campo
+# perdido em silêncio —, e por isso eles moram aqui e não num arquivo à parte.
+#
+# Esconder por CSS mantém o campo no formulário e o `required` ativo, que é o defeito que
+# `_marco.html` já documenta; `disabled` tira o campo do envio, que é a perda outra vez. Sobra uma
+# saída, e é a que o contrato do rascunho fixa: o campo impertinente sai da tela e do alcance do
+# teclado como `<input type="hidden">` com o último valor declarado.
+#
+# O irmão deste bloco é `tests/unit/editais/test_forma_da_ordem.py`, que prende o outro lado: o
+# que o rascunho guarda **não** alcança o conteúdo publicado. Os dois caminhos existem, e fechar
+# só um deixa o defeito vivo.
+
+import re  # noqa: E402
+
+from tests.interface.test_compor import PERFIL as PERFIL_DO_ASSISTENTE  # noqa: E402
+
+ETAPA_DA_030 = "aaaaaaaa-0000-4000-8000-00000000e021"
+MARCO_DA_030 = "aaaaaaaa-0000-4000-8000-00000000e051"
+CRITERIO_DA_030 = "aaaaaaaa-0000-4000-8000-00000000e061"
+
+ALGORITMO = "IFES-SORTEIO-SHA256-v1"
+FONTE = "Fonte de demonstração"
+
+
+def _marco_de_sorteio(**alteracoes):
+    """O marco de sorteio inteiro, como a tela o envia."""
+    base = {
+        "perfil_id": PERFIL_DO_ASSISTENTE,
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-id": MARCO_DA_030,
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-code": "FINAL",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-name": "Classificação final",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-orderProduction": "POR_SORTEIO",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-stages": ETAPA_DA_030,
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-operation": "SOMA_PONDERADA",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-normalization": "NENHUMA",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-scale": "2",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-mode": "MEIO_PARA_CIMA",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-algorithm": ALGORITMO,
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-source": FONTE,
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-occurrence": "5901",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-occurrenceAt": "2020-01-01T20:00:00-03:00",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-derivation": "A extração de sábado anterior.",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-normalizationRule": "DIGITOS_EM_SEQUENCIA",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-normalizationText": "Os cinco números.",
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-substitutionRule": (
+            "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE"
+        ),
+        f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-substitutionText": "Vale a seguinte.",
+        f"criterio-{PERFIL_DO_ASSISTENTE}-0-0-id": CRITERIO_DA_030,
+        f"criterio-{PERFIL_DO_ASSISTENTE}-0-0-order": "1",
+        f"criterio-{PERFIL_DO_ASSISTENTE}-0-0-type": "MAIOR_PONTUACAO_NA_ETAPA",
+        f"criterio-{PERFIL_DO_ASSISTENTE}-0-0-target": ETAPA_DA_030,
+        f"criterio-{PERFIL_DO_ASSISTENTE}-0-0-whenMissing": "ULTIMO_NO_CRITERIO",
+    }
+    return {**base, **alteracoes}
+
+
+def _compor_a_classificacao(client, edital, **alteracoes):
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital.id, "classificacao"]),
+        _marco_de_sorteio(**alteracoes),
+    )
+    assert resposta.status_code == 302, resposta.content
+    return resposta
+
+
+def _tela_da_classificacao(client, edital):
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "classificacao"])
+    ).content.decode()
+
+
+def _campo(corpo, nome):
+    """O `<input>` de nome exato, inteiro, como a página o escreve."""
+    achado = re.search(rf'<input[^>]*name="{re.escape(nome)}"[^>]*>', corpo)
+    return achado.group(0) if achado else ""
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_metodo_declarado_some_da_tela_e_continua_no_envio(client, com_etapas):
+    """O percurso inteiro de FR-418: declarar, tornar impertinente, e continuar declarado."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor_a_classificacao(client, com_etapas)
+
+    _compor_a_classificacao(
+        client, com_etapas, **{f"marco-{PERFIL_DO_ASSISTENTE}-0-orderProduction": "POR_PONTUACAO"}
+    )
+
+    guardado = MarcoClassificatorio.objects.get(pk=MARCO_DA_030)
+    assert guardado.forma_da_ordem == "POR_PONTUACAO"
+    assert guardado.metodo_de_sorteio.get("algorithm") == ALGORITMO, (
+        "o rascunho guarda o que a tela escondeu — trocar a resposta não descarta declaração"
+    )
+
+    corpo = _tela_da_classificacao(client, com_etapas)
+    oculto = _campo(corpo, f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-algorithm")
+
+    assert 'type="hidden"' in oculto, "o campo impertinente sai da tela, e não do envio"
+    assert ALGORITMO in oculto
+    assert "disabled" not in oculto, (
+        "campo `disabled` não é submetido pelo navegador: seria a perda que este contrato impede"
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_metodo_guardado_reaparece_quando_a_forma_volta_a_ser_sorteio(client, com_etapas):
+    """A outra metade: escondido não é apagado, e voltar atrás devolve o que estava lá."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor_a_classificacao(client, com_etapas)
+    _compor_a_classificacao(
+        client, com_etapas, **{f"marco-{PERFIL_DO_ASSISTENTE}-0-orderProduction": "POR_PONTUACAO"}
+    )
+
+    _compor_a_classificacao(
+        client, com_etapas, **{f"marco-{PERFIL_DO_ASSISTENTE}-0-orderProduction": "POR_SORTEIO"}
+    )
+
+    corpo = _tela_da_classificacao(client, com_etapas)
+    visivel = _campo(corpo, f"marco-{PERFIL_DO_ASSISTENTE}-0-draw-algorithm")
+
+    assert 'type="hidden"' not in visivel
+    assert ALGORITMO in visivel
+    assert MarcoClassificatorio.objects.get(pk=MARCO_DA_030).metodo_de_sorteio["source"] == FONTE
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_gravar_outra_etapa_nao_apaga_a_forma_da_ordem(client, com_etapas):
+    """A nona travessia, e ela é da mesma família das oito acima.
+
+    Sem a forma da ordem no marco persistido, declará-la aqui e visitar o Cronograma a apagaria —
+    e o marco voltaria a ser lido por inferência, sem que nada acusasse.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor_a_classificacao(client, com_etapas)
+
+    from tests.interface.test_compor import eventos
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "cronograma"]), eventos()
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    assert MarcoClassificatorio.objects.get(pk=MARCO_DA_030).forma_da_ordem == "POR_SORTEIO"

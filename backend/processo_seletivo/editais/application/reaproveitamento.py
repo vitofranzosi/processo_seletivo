@@ -340,6 +340,10 @@ def reaproveitar_edital(
             stages=payload["stages"],
             sections=payload["sections"],
             document_requirements=payload["documentRequirements"],
+            # O método comum do Edital de origem (030, FR-429). `{}` quando ele não o declara — e
+            # `{}`, e não `None`: este envio **fala** do método comum, e o que ele diz sobre um
+            # Edital de origem sem sorteio é que não há método comum nenhum.
+            draw_method=payload["drawMethod"],
             correlation_id=correlation_id,
             area=AREA,
         )

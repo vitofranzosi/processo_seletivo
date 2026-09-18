@@ -10,9 +10,11 @@ A conferência tem dois donos, e a razão é de método:
 - *todo retificável é oferecido* é o que este arquivo guarda, com o conjunto dos que ainda não têm
   tela declarado nominalmente.
 
-**O conjunto encolheu até esvaziar, e a asserção mudou.** São 73 campos retificáveis — eram 68 até
-a revisão do PR #114 restaurar quatro decisões anteriores que a matriz contradizia. A tela oferecia
-49 quando o contrato nasceu, os quatro canários acrescentaram 15, e a fase 10 fechou o resto.
+**O conjunto encolheu até esvaziar, e a asserção mudou.** São 83 campos retificáveis — eram 68 até
+a revisão do PR #114 restaurar quatro decisões anteriores que a matriz contradizia, 72 depois
+delas, 73 com o texto da declaração de veracidade da `029`, e 83 com a `030`: a forma da ordem do
+marco e os nove campos do método do sorteio comum ao Edital. A tela oferecia 49 quando o contrato
+nasceu, os quatro canários acrescentaram 15, e a fase 10 fechou o resto.
 
 `AINDA_SEM_TELA` existiu para que cada fase fechasse **verde** — afirmar a
 FR-304 inteira no primeiro commit deixaria a suíte vermelha por seis fases, e suíte que fica
@@ -103,10 +105,14 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
 
 
 def test_a_conta_fecha_com_a_matriz():
-    """73 retificáveis, e 73 com tela. O número está na matriz e no contrato.
+    """83 retificáveis, e 83 com tela. O número está na matriz e no contrato.
+
+    Era 73 com a `029` — o texto da declaração de veracidade — e chegou a 83 com a `030`, que
+    acrescentou `orderProduction` ao marco e os nove campos do método do sorteio comum ao Edital.
+
 
     Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
     importam" — todos.
     """
-    assert len(_retificaveis()) == 73
+    assert len(_retificaveis()) == 83
     assert _retificaveis() <= _oferecidos()

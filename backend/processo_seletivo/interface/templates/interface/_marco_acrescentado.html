@@ -1,0 +1,17 @@
+{% comment %}
+Dois pedaços numa resposta só, como `_modalidade_com_linha.html`: o cartão do marco, que entra
+onde o botão manda, e o bloco de ajuda da etapa, que entra fora de banda no invólucro do passo.
+
+**A ajuda vem junto porque ela não estava lá** (030, FR-426). O passo nasce sem marco nenhum, e um
+bloco que ensina a preencher campos que ninguém tem à frente é pior que ruído. Quando o primeiro
+marco nasce, a ajuda passa a ter a que se referir — e quem acrescentou o marco não deveria precisar
+recarregar a página para descobrir que ela existe.
+
+`innerHTML` e não `beforeend`: o swap é idempotente, e o segundo marco não produz um segundo bloco.
+O efeito colateral é bem-vindo — as âncoras de FR-427 passam a apontar para o cartão mais recente,
+que é o que a pessoa está preenchendo.
+{% endcomment %}
+{% include "interface/_marco.html" %}
+<div hx-swap-oob="innerHTML:#ajuda-da-classificacao">
+  {% include "interface/_como_preencher_o_marco.html" with ancora=ancora_do_marco %}
+</div>

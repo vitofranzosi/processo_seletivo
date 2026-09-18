@@ -52,6 +52,7 @@ def cenario(gestor, api_client, manager_headers, process_payload):
             "code": "FINAL",
             "name": "Classificação final",
             "stages": [etapa["id"]],
+            "orderProduction": "POR_PONTUACAO",
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
             "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
@@ -335,6 +336,7 @@ def test_retificacao_da_regra_obsoleta_sem_resultado_novo(cenario, gestor, api_c
                 "targetPath": (
                     f"/profiles/id={PROFILE_ID}/classificationMilestones/id={MARCO}/operation"
                 ),
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": "MEDIA_PONDERADA",
             }
@@ -382,6 +384,7 @@ def test_marco_removido_fica_obsoleto_nao_recomputavel_e_integro(cenario, gestor
         [
             {
                 "targetPath": (f"/profiles/id={PROFILE_ID}/classificationMilestones/id={MARCO}"),
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REMOVE",
             }
         ],
@@ -462,6 +465,7 @@ def test_reproduz_o_ato_sem_consultar_o_estado_vigente(cenario, gestor, api_clie
         [
             {
                 "targetPath": (f"/profiles/id={PROFILE_ID}/classificationMilestones/id={MARCO}"),
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REMOVE",
             }
         ],

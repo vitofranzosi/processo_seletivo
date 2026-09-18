@@ -118,6 +118,7 @@ def rascunho_rico():
                         "code": "FINAL",
                         "name": "Classificação final",
                         "stages": [ETAPA],
+                        "orderProduction": "POR_SORTEIO",
                         "operation": "SOMA_PONDERADA",
                         "normalization": "NENHUMA",
                         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
@@ -671,6 +672,7 @@ def test_a_copia_parte_da_versao_vigente_e_nao_do_estado_relacional(
         [
             {
                 "targetPath": f"/profiles/id={PERFIL}/immediateVacancies",
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": 50,
             },
@@ -678,6 +680,7 @@ def test_a_copia_parte_da_versao_vigente_e_nao_do_estado_relacional(
                 "targetPath": (
                     f"/profiles/id={PERFIL}/vacancyTable/id={linha_geral}/immediateVacancies"
                 ),
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": 50,
             },
@@ -839,6 +842,7 @@ def test_retificar_a_origem_depois_da_copia_nao_alcanca_o_destino(
         [
             {
                 "targetPath": f"/profiles/id={PERFIL}/name",
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": "Nome retificado",
             }
@@ -886,6 +890,7 @@ def test_a_trilha_registra_a_versao_o_ator_e_o_instante(destino, origem, elabora
         [
             {
                 "targetPath": f"/profiles/id={PERFIL}/name",
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": "Nome retificado",
             }
@@ -982,6 +987,7 @@ def test_duas_versoes_da_mesma_origem_nao_se_anunciam_iguais(
         [
             {
                 "targetPath": f"/profiles/id={PERFIL}/name",
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "REPLACE",
                 "newValue": "Nome retificado",
             }
@@ -1046,6 +1052,7 @@ def test_o_resumo_conta_o_conteudo_que_vigora_e_nao_as_tabelas(origem, elaborado
         [
             {
                 "targetPath": "/schedule/-",
+                "orderProduction": "POR_PONTUACAO",
                 "operation": "ADD",
                 "newValue": {
                     "id": ident(20),

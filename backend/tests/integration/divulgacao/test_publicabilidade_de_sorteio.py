@@ -54,12 +54,22 @@ def cenario_computado(api_client, manager_headers, process_payload):
 
 
 def marco_sem_metodo(rascunho, *, perfil_id, etapa_id):
-    """O marco da fixture do sorteio, menos o `drawMethod` — que é a única diferença que importa."""
+    """O marco da fixture do sorteio, convertido em marco que ordena pela pontuação.
+
+    **Eram duas diferenças desde a `030`, e não uma.** Tirar o `drawMethod` bastava enquanto "este
+    marco sorteia" era inferido da presença dele; agora quem responde é `orderProduction`, e um
+    marco que declare `POR_SORTEIO` sem método continua sendo um marco de sorteio — ainda sem
+    método declarado, que é justamente o estado que a FR-414 passou a reconhecer.
+
+    O que este cenário precisa é do outro marco: o que ordena pela pontuação, e cuja ordem se emite
+    por cálculo.
+    """
     marco_com_metodo(rascunho, perfil_id=perfil_id, etapa_id=etapa_id)
     for perfil in rascunho["profiles"]:
         if str(perfil["id"]) == str(perfil_id):
             for marco in perfil["classificationMilestones"]:
                 marco.pop("drawMethod", None)
+                marco["orderProduction"] = "POR_PONTUACAO"
     return rascunho
 
 

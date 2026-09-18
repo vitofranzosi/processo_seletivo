@@ -28,7 +28,7 @@
              name="modalidade-{{ indice }}-{{ sub }}-percentage"
              value="{{ modalidade.percentage|default:'' }}"
              aria-describedby="ajuda-perc-{{ indice }}-{{ sub }}">
-      <span class="ajuda" id="ajuda-perc-{{ indice }}-{{ sub }}">Vazio: sem reserva
+      <span class="oculto" id="ajuda-perc-{{ indice }}-{{ sub }}">Vazio: sem reserva
         percentual.</span>
     </p>
   </div>
@@ -45,7 +45,7 @@
              name="modalidade-{{ indice }}-{{ sub }}-version"
              value="{{ modalidade.version|default:'' }}"
              aria-describedby="ajuda-versao-{{ indice }}-{{ sub }}" placeholder="AAAA-MM-DD">
-      <span class="ajuda" id="ajuda-versao-{{ indice }}-{{ sub }}">Exigida sempre que houver
+      <span class="oculto" id="ajuda-versao-{{ indice }}-{{ sub }}">Exigida sempre que houver
         fundamento: sem ela, a norma aplicada não fica identificada.</span>
     </p>
   </div>

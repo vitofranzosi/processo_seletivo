@@ -77,6 +77,9 @@ def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra
             "id": marco_de(seed),
             "code": "Z-FINAL",
             "name": "Classificação final",
+            # A forma da ordem, declarada e não inferida (030, FR-413): a publicação a exige de
+            # todo marco, e a inferência pela presença do método deixou de ser suficiente.
+            "orderProduction": "POR_PONTUACAO",
             "stages": [segunda["id"]],
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
@@ -96,6 +99,7 @@ def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra
                 "id": marco_intermediario_de(seed),
                 "code": "A-INTERMEDIARIO",
                 "name": "Classificação da análise documental",
+                "orderProduction": "POR_PONTUACAO",
                 "stages": [primeira["id"]],
                 "operation": "SOMA_PONDERADA",
                 "normalization": "NENHUMA",

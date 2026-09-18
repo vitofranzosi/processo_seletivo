@@ -477,11 +477,23 @@ def test_nenhum_campo_aponta_para_descricao_que_nao_existe(fragmentos, parcial):
 def test_a_lista_carrega_a_explicacao_que_saiu_dos_cartoes(
     client, seletor_ligado, com_etapas, etapa_do_assistente, conceitos
 ):
-    """O conceito não some: ele passa a viver uma vez, onde a lista inteira o alcança."""
+    """O conceito não some: ele passa a viver uma vez, onde a lista inteira o alcança.
+
+    Na Classificação, a ajuda só é apresentada depois que existe marco a que ela se refira (030,
+    FR-426) — e ela chega junto com o primeiro, fora de banda. É por isso que esta etapa é lida
+    pelo fragmento e as outras duas, pela tela.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
 
-    corpo = client.get(
-        reverse("interface:compor-etapa", args=[com_etapas.id, etapa_do_assistente])
+    corpo = (
+        client.get(
+            reverse("interface:fragmento-marco", args=[com_etapas.perfis.get().id]),
+            {"edital": str(com_etapas.id), "indice": "0"},
+        )
+        if etapa_do_assistente == "classificacao"
+        else client.get(
+            reverse("interface:compor-etapa", args=[com_etapas.id, etapa_do_assistente])
+        )
     ).content.decode()
 
     # `<details class="como-preencher">`, e não a string solta: o nome da classe também aparece na

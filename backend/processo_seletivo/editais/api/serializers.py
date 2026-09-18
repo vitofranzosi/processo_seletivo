@@ -73,6 +73,13 @@ class ClassificationMilestoneSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     code = serializers.CharField(min_length=1, max_length=100)
     name = serializers.CharField(min_length=1, max_length=255)
+    # Como a ordem deste marco é produzida (030, FR-413). `required=False` e `allow_blank`
+    # porque **a ausência é o estado de todo marco composto antes desta feature** — e não um
+    # padrão a inventar aqui: quem não declara continua sendo lido como sempre foi, pela
+    # presença do método do sorteio.
+    orderProduction = serializers.ChoiceField(
+        choices=["POR_PONTUACAO", "POR_SORTEIO"], required=False, allow_blank=True
+    )
     stages = serializers.ListField(child=serializers.UUIDField(), required=False)
     operation = serializers.ChoiceField(choices=["SOMA_PONDERADA", "MEDIA_PONDERADA"])
     normalization = serializers.ChoiceField(choices=["NENHUMA", "PELA_SOMA_DOS_PESOS"])
@@ -291,6 +298,12 @@ class EditalDraftSerializer(serializers.Serializer):
 
     profiles = ProfileSerializer(many=True, allow_empty=False)
     schedule = EventSerializer(many=True)
+    # O método do sorteio comum a este Edital (030, FR-429). `allow_null` porque não declarar é a
+    # resposta da imensa maioria — Edital sem sorteio nunca o preenche —, e **a ausência da chave
+    # não é a mesma coisa que `{}`**: ausente significa "este envio não fala do método comum", e o
+    # comando preserva o que já estava; `{}` apaga. A distinção existe porque as demais etapas do
+    # assistente gravam o rascunho sem desenhar este campo.
+    drawMethod = serializers.JSONField(required=False, allow_null=True)
     stages = StageSerializer(many=True, required=False)
     sections = SectionSerializer(many=True, required=False)
     documentRequirements = DocumentRequirementSerializer(many=True, required=False)

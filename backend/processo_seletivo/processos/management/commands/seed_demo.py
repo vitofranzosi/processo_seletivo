@@ -97,6 +97,10 @@ def perfis(numero, *, janela_recursal="declarada"):
                     "id": f"00000000-0000-0000-00{numero}-0000000000a1",
                     "code": "FINAL",
                     "name": "Classificação final",
+                    # Declarada, e não inferida da ausência do método (030, FR-413). Este marco
+                    # enumera **duas** Etapas, e por isso continua perguntando como as pontuações
+                    # se combinam — é o contraponto do Edital canônico, que tem uma só.
+                    "orderProduction": "POR_PONTUACAO",
                     "stages": [
                         f"00000000-0000-0000-00{numero}-0000000000d1",
                         f"00000000-0000-0000-00{numero}-0000000000d2",
@@ -410,6 +414,21 @@ def metodo_do_sorteio(numero):
     }
 
 
+def metodo_comum_do_edital(numero):
+    """O mesmo método, como o **Edital** o declara — uma vez, para todos os marcos (030, FR-429).
+
+    **Nove campos, e não dez**: a Etapa que habilita a participar do sorteio é do marco, porque
+    depende de quais Etapas aquele marco enumera. Derivado do construtor do método do marco, e não
+    escrito de novo: dois textos normativos que deveriam ser o mesmo divergiriam na primeira
+    correção.
+    """
+    return {
+        chave: valor
+        for chave, valor in metodo_do_sorteio(numero).items()
+        if chave != "qualifyingStageId"
+    }
+
+
 def perfil_de_sorteio(numero):
     """O Perfil do Edital de sorteio: um marco que ordena por sorteio, e não por pontuação.
 
@@ -484,14 +503,20 @@ def perfil_de_sorteio(numero):
                     "id": f"00000000-0000-0000-00{numero}-0000000000a1",
                     "code": "SORTEIO",
                     "name": "Sorteio público",
+                    # Declarada, e não inferida da presença do método (030, FR-413). É o que a
+                    # demonstração precisa mostrar: a pergunta de entrada do cartão existe, e é ela
+                    # que governa o que o restante dele pergunta.
+                    "orderProduction": "POR_SORTEIO",
                     "stages": [f"00000000-0000-0000-00{numero}-0000000000d2"],
                     "operation": "SOMA_PONDERADA",
                     "normalization": "NENHUMA",
                     "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
                     "tiebreakers": [],
                     "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
-                    # É isto que faz a `021` funcionar: o método publicado, antes do congelamento.
-                    "drawMethod": metodo_do_sorteio(numero),
+                    # **Referencia o método comum do Edital, e não o redigita** (030, FR-429). É o
+                    # que faz a `021` funcionar desde a `030`: o método continua publicado antes do
+                    # congelamento, e a resolução o encontra — só que declarado uma vez.
+                    "drawMethod": None,
                 }
             ],
         }
@@ -1025,6 +1050,8 @@ class Command(BaseCommand):
             schedule=calendario,
             stages=etapas(numero),
             document_requirements=documentos_exigidos(numero),
+            # O método declarado uma vez, no Edital (030, FR-429). O marco acima o referencia.
+            draw_method=metodo_comum_do_edital(numero),
             correlation_id="seed-demo",
         )
         edital.refresh_from_db()

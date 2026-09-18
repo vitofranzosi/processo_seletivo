@@ -323,3 +323,33 @@ def test_o_filtro_de_avaliacao_pendente_responde_o_que_falta_avaliar(
 
 def etapa_do(tela):
     return tela.rstrip("/").split("/")[-1]
+
+
+# --- O que a consolidação produz, dito antes da ação (030, FR-422) ---------------------------
+
+
+def test_a_tela_declara_o_que_a_consolidacao_produz_antes_da_acao(
+    presidente, tela, edital_a, banca
+):
+    """FR-422 — o botão é irreversível, e o que sai dele não estava escrito em lugar nenhum.
+
+    A auditoria encontrou aqui o mesmo padrão do marco classificatório: a prosa é precisa e
+    abundante, e ainda assim quem chega pela primeira vez lê "Consolidar as selecionadas" sem
+    saber o que a ação produz.
+
+    **Antes** é ordem de leitura, e não só presença: quem rolou até a tabela não volta ao topo da
+    página para descobrir o que vai acontecer.
+    """
+    inscrever(edital_a, 3)
+
+    corpo = presidente.get(tela).content.decode()
+
+    declaracao = corpo.index("<dfn>Consolidar</dfn>")
+    acao = corpo.index("Consolidar as selecionadas")
+
+    assert declaracao < acao, "a declaração vem antes da ação, e não depois dela"
+    # **"Resultado da Etapa", e não "Resultado oficial"** (FR-425): o conceito já tem nome neste
+    # domínio — é o do modelo, o da consolidação e o da apuração —, e batizá-lo de novo na tela
+    # faria a mesma coisa ter duas palavras conforme onde se lê.
+    assert "Resultado da Etapa" in corpo[declaracao:acao]
+    assert "imutável" in corpo[declaracao:acao]

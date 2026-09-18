@@ -1015,3 +1015,87 @@ def test_o_seletor_declara_a_reacao_no_html(client, seletor_ligado, composto):
     assert 'hx-target="#quadro-0"' in seletor
     assert "hx-include=" in seletor
     assert "js:" not in seletor
+
+
+# --- A composição que se explica (030, FR-417) ----------------------------------------------
+
+
+def perfil_sem_modalidade(indice=0):
+    """O Perfil do Edital canônico: três vagas, nenhuma Modalidade declarada."""
+    return {
+        f"perfil-{indice}-id": _id("2500", indice=indice),
+        f"perfil-{indice}-code": f"C{indice + 1}",
+        f"perfil-{indice}-name": f"Curso {indice + 1}",
+        f"perfil-{indice}-immediateVacancies": "3",
+        f"perfil-{indice}-reserveType": "NONE",
+    }
+
+
+def test_sem_modalidade_a_tela_nao_pergunta_qual_e_a_ampla_nem_a_reversao(
+    client, seletor_ligado, edital
+):
+    """FR-417 — duas perguntas cuja resposta já está dada, num Perfil sem Modalidade nenhuma.
+
+    A da ampla concorrência ofereceria uma opção só, "nenhuma"; a da reversão fala de vaga
+    reservada que não existe, e a própria ajuda dela diz que declará-la exige quadro por recorte.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    assert compor(client, edital, perfil_sem_modalidade()).status_code == 302
+
+    corpo = tela(client, edital)
+
+    assert "Qual delas é a ampla concorrência" not in corpo
+    assert "Reverter vaga reservada não preenchida" not in corpo
+    assert 'name="perfil-0-generalCompetitionModalityId"' in corpo, (
+        "o campo sai da tela, e não do envio: `replace_draft` apaga o que não voltar (FR-418)"
+    )
+
+
+def test_a_primeira_modalidade_faz_as_duas_perguntas_aparecerem(client, seletor_ligado, composto):
+    """A outra metade: declarada a Modalidade, as perguntas passam a ser pertinentes."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = tela(client, composto)
+
+    assert "Qual delas é a ampla concorrência" in corpo
+    assert "Reverter vaga reservada não preenchida" in corpo
+
+
+def test_o_que_foi_declarado_sobrevive_a_remocao_da_ultima_modalidade(
+    client, seletor_ligado, composto
+):
+    """FR-418 sobre o Perfil: esconder a pergunta não pode apagar a resposta.
+
+    O cenário é o do caso de borda da spec, ao contrário: um Perfil que já declarou reversão e
+    depois fica sem Modalidade alguma. O campo some da tela, e a declaração continua no envio.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    assert (
+        compor(
+            client,
+            composto,
+            perfil(**{"perfil-0-vacancyReversion": "ON_EXHAUSTION"}),
+        ).status_code
+        == 302
+    )
+
+    # A remoção da última Modalidade, **como o navegador a envia**: os campos ocultos que a tela
+    # acabou de renderizar viajam junto. É o ponto inteiro do contrato do rascunho — se o teste
+    # postasse sem eles, estaria simulando um formulário que esta feature não produz.
+    assert (
+        compor(
+            client,
+            composto,
+            {
+                **perfil_sem_modalidade(),
+                "perfil-0-vacancyReversion": "ON_EXHAUSTION",
+                "perfil-0-generalCompetitionModalityId": "",
+            },
+        ).status_code
+        == 302
+    )
+    corpo = tela(client, composto)
+
+    assert "Reverter vaga reservada não preenchida" not in corpo
+    assert 'name="perfil-0-vacancyReversion" value="ON_EXHAUSTION"' in corpo
+    assert PerfilVaga.objects.get(pk=PERFIL).especie_de_reversao == "ON_EXHAUSTION"

@@ -114,6 +114,11 @@ urlpatterns = [
         name="fragmento-marco",
     ),
     path(
+        "fragmentos/perfil/<str:indice>/marco/<str:sub>/recompor",
+        views.fragmento_marco_recomposto,
+        name="fragmento-marco-recomposto",
+    ),
+    path(
         "fragmentos/perfil/<str:indice>/marco/<str:sub>/criterio",
         views.fragmento_criterio,
         name="fragmento-criterio",

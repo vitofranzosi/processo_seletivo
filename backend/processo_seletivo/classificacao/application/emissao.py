@@ -70,7 +70,7 @@ def emitir_ordem(
             marco_id=marco_id,
             at=ctx.now,
         )
-        _recusar_marco_de_sorteio(proposta["marco"])
+        _recusar_marco_de_sorteio(proposta)
         esperada = assinatura_da_proposta(proposta, ato_vigente=vigente)
         if not (confirmacao_do_calculo or "").strip():
             raise DomainError(
@@ -172,7 +172,7 @@ def _edital_do_processo(processo, edital_id):
     return edital
 
 
-def _recusar_marco_de_sorteio(marco):
+def _recusar_marco_de_sorteio(proposta):
     """A ordem de um marco de sorteio não se emite por cálculo (`021`, `D-006`, `FR-069`).
 
     **A recusa é aqui porque o dano é irreversível.** O ato saía com `origem=COMPUTADO` e
@@ -180,8 +180,20 @@ def _recusar_marco_de_sorteio(marco):
     recusava o certame com `ordering_act_already_exists`, e não havia desfazer — a tabela é
     append-only, e a sucessão de uma ordem sorteada nasce da anulação de um sorteio que, nesse
     caminho, nunca chegou a existir. Fechar só a tela deixaria a porta do comando aberta.
+
+    **Recebe a proposta inteira, e não só o marco** (030, FR-429). O marco pode referenciar o
+    método comum do Edital em vez de declarar o próprio, e a resolução precisa do conteúdo inteiro
+    para enxergá-lo: lendo só a chave do marco, um marco de sorteio que referencia o comum passaria
+    por aqui e a ordem dele seria emitida por cálculo — que é exatamente o dano irreversível que
+    esta recusa existe para impedir.
     """
-    if not (marco or {}).get("drawMethod"):
+    from processo_seletivo.editais.domain import marcos
+
+    if not marcos.marco_ordena_por_sorteio(
+        proposta["versao"].content,
+        perfil_id=proposta["perfil"]["id"],
+        marco_id=proposta["marco"]["id"],
+    ):
         return
     raise DomainError(
         "ordering_milestone_is_drawn",
