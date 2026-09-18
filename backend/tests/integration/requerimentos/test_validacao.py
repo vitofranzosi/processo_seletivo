@@ -155,3 +155,57 @@ class TestOQueContinuaPassando:
         gravado = gravar(rascunho_aberto, campos_declarados, cep="29.040-860")
 
         assert gravado.cep == "29040860"
+
+
+class TestOsDocumentosEleitorais:
+    """Os três campos da `031` (`D-007`), guardados numa forma só e **conferidos** (`FR-451`)."""
+
+    def test_a_pontuacao_do_cartao_e_aceita_e_descartada(self, rascunho_aberto, campos_declarados):
+        """`0123 4567 8901` é o título como ele aparece impresso; recusá-lo ensinaria a digitar."""
+        gravado = gravar(rascunho_aberto, campos_declarados, titulo_eleitoral="0123 4567 8901")
+
+        assert gravado.titulo_eleitoral == "012345678901"
+
+    def test_a_zona_e_a_secao_nascem_com_os_zeros_a_esquerda(
+        self, rascunho_aberto, campos_declarados
+    ):
+        """A pessoa escreve como fala — *"zona 34"* —, e a coluna guarda uma forma só.
+
+        Sem isto, `34` e `034` seriam duas grafias do mesmo número na mesma coluna.
+        """
+        gravado = gravar(
+            rascunho_aberto, campos_declarados, zona_eleitoral="34", secao_eleitoral="128"
+        )
+
+        assert gravado.zona_eleitoral == "034"
+        assert gravado.secao_eleitoral == "0128"
+
+    @pytest.mark.parametrize(
+        "intruso", ["abc012345678901", "0123-4567-890X", "título 012345678901"]
+    )
+    def test_letra_e_recusada_em_vez_de_apagada(self, rascunho_aberto, campos_declarados, intruso):
+        """**O defeito era silencioso**: os dígitos eram filtrados e o resto, descartado.
+
+        `abc012345678901` virava um título de doze dígitos válido, e quem digitou nunca saberia que
+        metade do que escreveu foi jogada fora. Descartar é certo para o separador impresso; para
+        letra, o certo é dizer que não serve.
+        """
+        with pytest.raises(DomainError) as recusa:
+            gravar(rascunho_aberto, campos_declarados, titulo_eleitoral=intruso)
+
+        assert recusa.value.code == "field_constraint_violated"
+        assert recusa.value.campo == "titulo_eleitoral"
+        assert intruso not in recusa.value.detail
+
+    def test_mais_digitos_que_o_documento_tem_e_recusado(self, rascunho_aberto, campos_declarados):
+        """Treze dígitos não é um título de eleitor, e completar não é o caso aqui."""
+        with pytest.raises(DomainError) as recusa:
+            gravar(rascunho_aberto, campos_declarados, titulo_eleitoral="0123456789012")
+
+        assert recusa.value.campo == "titulo_eleitoral"
+
+    def test_vazio_continua_admitido(self, rascunho_aberto, campos_declarados):
+        """Nem toda pessoa tem o título em mãos, e nenhum Edital o exige para enviar."""
+        gravado = gravar(rascunho_aberto, campos_declarados, titulo_eleitoral="")
+
+        assert gravado.titulo_eleitoral == ""

@@ -38,6 +38,7 @@ escopo desta feature: nenhum comando anterior pedia as duas linhas, e ninguém s
 """
 
 import hashlib
+import unicodedata
 
 from django.db import connection
 
@@ -74,6 +75,9 @@ CAMPOS_DECLARADOS = (
     "rg",
     "rg_orgao_emissor",
     "rg_expedido_em",
+    "titulo_eleitoral",
+    "zona_eleitoral",
+    "secao_eleitoral",
     "telefone_celular",
     "necessidade_especifica",
     "renda_familiar_faixa",
@@ -183,13 +187,37 @@ def _copiar_para_a_frente(inscricao):
 
     Sem requerimento anterior, o telefone vem da **Inscrição** — que congelou na submissão e pode
     ter meses, e por isso entra como ponto de partida a confirmar, nunca como verdade (`FR-379`).
+
+    **A nacionalidade é traduzida na cópia, e o anterior fica intacto** (`031`, `D-008`). O campo
+    foi texto livre até 18/09/2026, e um `Brasileira` copiado ao pé da letra para uma lista fechada
+    produz um rascunho com valor que o `<select>` não tem: a tela abre com o campo em branco, a
+    pessoa acha que nunca declarou, e o reaproveitamento que esta função existe para oferecer vira
+    um campo a preencher de novo. Traduzir **na cópia** é o único lugar em que a conversão cabe —
+    o requerimento enviado é imutável, e reescrevê-lo apagaria o que a pessoa declarou.
     """
     anterior = _anterior_da_identidade(inscricao)
     if anterior is None:
         return {"telefone_celular": inscricao.telefone}
     copiado = {campo: getattr(anterior, campo) for campo in CAMPOS_DECLARADOS}
     copiado["telefone_celular"] = anterior.telefone_celular or inscricao.telefone
+    copiado["nacionalidade"] = _nacionalidade_na_lista(anterior.nacionalidade)
     return copiado
+
+
+def _nacionalidade_na_lista(declarada: str) -> str:
+    """O valor histórico dito no vocabulário de hoje — e `OUTRO_PAIS` quando não era o Brasil.
+
+    **`OUTRO_PAIS` não perde a declaração da pessoa**: o país que ela escreveu continua escrito no
+    requerimento anterior, que é imutável e continua legível. O que se copia para a frente é um
+    ponto de partida a confirmar, e afirmar *"não é o Brasil"* é mais fiel do que copiar um texto
+    que a lista não aceita — ou do que deixar em branco, que diria que ela não declarou nada.
+    """
+    valor = (declarada or "").strip()
+    if not valor or valor in nomes.NACIONALIDADES:
+        return valor
+    sem_acento = unicodedata.normalize("NFKD", valor)
+    limpo = "".join(letra for letra in sem_acento if not unicodedata.combining(letra)).lower()
+    return nomes.BRASIL if limpo in nomes.GRAFIAS_HISTORICAS_DE_BRASIL else nomes.OUTRO_PAIS
 
 
 def abrir_rascunho(*, inscricao, correlation_id=""):

@@ -39,6 +39,38 @@ INDIGENA = "INDIGENA"
 COR_NAO_DECLARADA = "NAO_DECLARADA"
 CORES = (BRANCA, PRETA, PARDA, AMARELA, INDIGENA, COR_NAO_DECLARADA)
 
+# --- Nacionalidade (`031`, `D-008`) -------------------------------------------------------------
+# **Dois valores, e não uma tabela de países.** O campo era texto livre porque nada consumia o
+# código institucional; a exportação passou a consumi-lo, e com isso some a razão de manter aberto o
+# único campo de lista desta feature que não era lista.
+#
+# **Por que não os 249 países.** `BR` é o único código que a amostra do Registro Acadêmico prova, e
+# um exemplo não desempata entre alpha-2, alpha-3 e numérico da ISO 3166 (`Q-7`). Emitir `PT` por
+# Portugal seria a invenção que a `D-001` recusa, com o agravante de errar justamente no caso raro,
+# que é o que ninguém confere. Cadastrar nacionalidade está fora do escopo da `031` (§8).
+#
+# **`OUTRO_PAIS` não é "não declarada".** A pessoa declarou — declarou que não é o Brasil —, e é por
+# isso que ela aparece **nomeada** no relatório de lacunas em vez de sumir numa coluna vazia
+# (`FR-453`). Respondida a `Q-7`, este é o ponto onde o país passa a ser perguntado.
+BRASIL = "BRASIL"
+OUTRO_PAIS = "OUTRO_PAIS"
+NACIONALIDADES = (BRASIL, OUTRO_PAIS)
+
+# **As grafias que o texto livre produziu antes de a lista fechar**, comparadas sem acento e sem
+# caixa. Elas existem porque o campo foi texto livre de 16/09 a 18/09/2026, e o próprio formulário
+# sugeria *"Brasileira"* como exemplo.
+#
+# **Por que a lista existe em vez de a migration reescrever tudo.** Requerimento **enviado** é
+# imutável — por gatilho (migration `0002`) e pela Constituição, que proíbe reescrever o que já
+# produziu efeito. Reescrever a declaração de quem já enviou apagaria o que a pessoa disse, e
+# desabilitar o gatilho para isso seria contornar a garantia em vez de respeitá-la. Então o que já
+# foi declarado fica como está, e quem **lê** reconhece a grafia: a exportação emite `BR` para
+# qualquer uma destas, e vazio com a pessoa nomeada para o que não reconhecer (`FR-453`).
+#
+# **Só grafias inequívocas do Brasil.** *"Brasileira"* é a mesma declaração dita como adjetivo, e
+# era o exemplo impresso no campo; qualquer coisa além disso seria adivinhar.
+GRAFIAS_HISTORICAS_DE_BRASIL = ("brasil", "brasileira", "brasileiro")
+
 # --- Sexo ---------------------------------------------------------------------------------------
 # Dois valores porque é o que o formato de destino admite. **Não é identidade de gênero**, e nome
 # social não é coletado aqui — a `Q-8` decidiu que os dois são spec própria, com alcance que

@@ -2,8 +2,8 @@
 
 **Branch**: `claude/spec-031-exportacao-de-matriculas` · **Spec**: [spec.md](./spec.md)
 
-**Status**: plano completo. A implementação **não começa** antes de `Q-1` ser respondida — ver
-*Riscos do plano*.
+**Status**: plano completo, **implementação liberada** (revisto em 18/09/2026). A `Q-1` condiciona a
+aceitação final e três células — ver *Riscos do plano* e §5 da spec.
 
 ## Summary
 
@@ -105,7 +105,7 @@ sozinha — se algum dia outro app importar `matriculas`, é sinal de que a feat
 
 | Fase | O quê | Por que nessa ordem |
 |---|---|---|
-| 1 | `Q-1` respondida | o resto depende da forma que ela confirma |
+| 1 | Perguntar a `Q-1` — **e seguir sem esperar** | a resposta condiciona três células e a `SC-143`; perguntar cedo é o que evita descobri-la no fim |
 | 2 | `029`: os três campos eleitorais (`D-007`) e a lista fechada de nacionalidade (`D-008`); **a permissão e a tabela de registro** | a coluna precisa do dado antes do serializador; permissão e privilégio de tabela são fundação, e não superfície |
 | 3 | As 34 colunas em `domain/colunas.py`, com teste unitário cada | é onde o erro silencioso mora; testá-las isoladas é barato |
 | 4 | A população e as recusas | sem isso o arquivo sai com linha faltando |
@@ -118,7 +118,7 @@ sozinha — se algum dia outro app importar `matriculas`, é sinal de que a feat
 
 | Risco | Efeito no plano | Mitigação |
 |---|---|---|
-| **`Q-1` sem resposta** | a Fase 1 não fecha, e o resto é construído sobre suposição | **não começar.** É a única dependência externa, e ela custa uma hora |
+| **`Q-1` sem resposta** | três células ficam sobre suposição, e a `SC-143` não fecha | **construir mesmo assim.** Medido: se a resposta for *"não aceita"*, o retrabalho são **três** dos 34 serializadores, mais um cadastro de códigos. A redação anterior mandava esperar, o que trocava três funções de retrabalho pela feature inteira parada |
 | `Q-2` e `Q-3` sem resposta | duas colunas ficam sem serializador definido | as demais 32 seguem; as duas viram lacuna declarada até haver resposta |
 | A `029` não aceitar campo novo sem atrito | a Fase 2 empaca | são três colunas de texto num modelo que já tem 21 campos; o gatilho de imutabilidade não muda |
 | Fechar a lista de nacionalidade encontrar texto livre já declarado | requerimento **enviado** é imutável, e converter à força apagaria declaração | a migration reconhece `Brasil` e **preserva o resto como está** (`T008b`); a exportação já sabe emitir vazio para o que não reconhece |

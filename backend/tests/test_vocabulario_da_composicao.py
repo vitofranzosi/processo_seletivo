@@ -31,7 +31,7 @@ import pytest
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "processo_seletivo/interface/templates/interface"
 
-#: As dez telas que usam os termos em texto visível. Literal, e não descoberto por varredura: uma
+#: As onze telas que usam os termos em texto visível. Literal, e não descoberto por varredura: uma
 #: lista calculada passaria a ignorar a tela que deixasse de usar o termo — e o que interessa é
 #: que a tela que o usa o defina, não que a lista se conserte sozinha.
 TELAS = (
@@ -45,6 +45,10 @@ TELAS = (
     "sorteio.html",
     "convocacao.html",
     "convocacao_historico.html",
+    # A tela da exportação de matrículas (031). **Entra na lista no mesmo commit em que nasce**: a
+    # lista é literal e não `glob`, por decisão escrita acima, e sem esta linha a tela escaparia da
+    # regra em silêncio — ninguém veria falha nenhuma.
+    "matriculas.html",
 )
 
 #: O termo e o que o casa, singular e plural. Sem acento no padrão porque a comparação normaliza —

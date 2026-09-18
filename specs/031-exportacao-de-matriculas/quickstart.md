@@ -4,8 +4,9 @@
 conduz** — sem shell, sem banco e sem chamada manual —, que é o que a Constituição cobra no
 Princípio VI. O `C7` existe justamente para provar isso.
 
-> **`C0` primeiro, e ele não é deste repositório.** Enquanto a `Q-1` não for respondida, todo o
-> resto valida um formato que ninguém confirmou.
+> **`C0` cedo, e ele não é deste repositório** — mas ele **não segura os demais**. Enquanto a `Q-1`
+> não for respondida, três células e a `C9` ficam em aberto; o resto do roteiro percorre e prova.
+> §5 da spec mede o que a espera custaria.
 
 ---
 
@@ -30,12 +31,18 @@ make DB_NAME=ps_demo_031 runserver
 esta worktree semeia o banco de outra. O seletor de identidade precisa estar ligado
 (`INTERFACE_SELETOR_IDENTIDADE`), ou `/gestao/` devolve 503.
 
-**O papel precisa de `matricula:exportar`.** Ela nasce concedida a ninguém (`FR-455`): se a opção não
-aparecer no Edital, é autorização, e não rota quebrada.
+**O papel precisa de `matricula:exportar`.** Ela não é concedida a nenhum papel existente
+(`FR-455`): há um papel **próprio**, *Exportador de matrículas*, no molde do julgador de recursos —
+marque-o no seletor de identidade. Quem entrar só como Gestor não vê a opção no Edital, e isso é
+autorização funcionando, não rota quebrada.
+
+**O `seed_demo` já declara o Requerimento da convocada, e ela declarou cor indígena** (`T036`): é o
+caso do `R-1`, e ele existe na demonstração para que a lacuna nominal do `C3` seja vista, e não
+apenas descrita.
 
 ---
 
-## C0 — A pergunta que precede tudo *(Fase 0)*
+## C0 — A pergunta que se faz cedo *(Fase 0)*
 
 Fora do sistema. Enviar ao Registro Acadêmico **duas linhas sintéticas** — nunca a linha `2` da
 amostra (`D-006`) — com `COD_CURSO`, `COD_TURNO` e `COD_POLO` vazias.
@@ -52,9 +59,12 @@ amostra (`D-006`) — com `COD_CURSO`, `COD_TURNO` e `COD_POLO` vazias.
 
 ## C1 — O arquivo de um Edital *(US1, `FR-433`, `FR-436`, `FR-437`)*
 
-1. `/gestao/` → Edital com convocados → **Exportar para matrícula**.
-2. Escolher a população — a chamada, ou o resultado. **Não há padrão implícito**: sem escolher, o
-   botão não gera.
+1. `/gestao/` → Edital com convocados → **Exportar para matrícula**. A opção só aparece em Edital
+   que **declara o Requerimento de Matrícula**: num certame de servidores ou bolsistas ela não
+   existe (`029`, `D-002`).
+2. Escolher a população — os convocados de um marco, ou um resultado **definitivo e vigente**.
+   **Não há padrão implícito**: sem escolher, o botão não gera. Preliminar e publicação já
+   corrigida não aparecem na lista.
 3. Baixar.
 
 **Conferir no arquivo**, e não no código:
@@ -103,8 +113,11 @@ o que impede o número de viajar sem etiqueta.
 |---|---|
 | População com alguém **sem requerimento enviado** | recusa, **nomeando quem falta** |
 | População com um **rascunho** | ele não entra; a recusa diz que ninguém declarou aquilo |
-| Edital que **não exige** requerimento | recusa dizendo isso — e **não** um arquivo de zero linhas |
+| Edital que **não exige** requerimento | a opção não aparece no menu; pelo endereço, recusa dizendo que o certame não pede requerimento |
 | Modalidade com `code` desconhecido | recusa, nomeando **o código e o Edital**; a grafia publicada não é reescrita |
+| Resultado **preliminar** escolhido | não é oferecido, e colar o identificador também é recusado |
+| Baixar sem ter lido o resumo | recusado: o download confere a assinatura da prévia (`UX-060`) |
+| Corrigir um requerimento com a prévia aberta, e então baixar | recusado com *"não é o que foi conferido"* — releia o resumo |
 
 ---
 
