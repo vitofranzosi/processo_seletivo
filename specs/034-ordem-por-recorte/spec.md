@@ -257,8 +257,10 @@ apurar fora do sistema.
   algum já é impedimento da `032`, por outra regra.
 - **FR-501a**: O predicado que passar a responder **sempre a mesma coisa** MUST ser removido, junto
   com o campo derivado dele e com o teste de igualdade que a `FR-500` exige enquanto ele existe — e
-  não deixado no lugar respondendo sempre *sim*. **A remoção MUST vir depois de as telas deixarem de
-  consultá-lo**, e não antes: o motivo está na `FR-502`. É consequência direta
+  não deixado no lugar respondendo sempre *sim*. **Quando remover é a `FR-502` que diz**, e ela não é
+  repetida aqui de propósito: duas fontes para a mesma regra divergem na primeira edição, que é o que
+  a `FR-500` existe para impedir — e cometê-lo entre dois requisitos vizinhos seria o mesmo defeito
+  com outra roupa. É consequência direta
   da `FR-501`: um guarda que nunca reprova é pior do que guarda nenhum, porque o próximo a ler o
   código confia nele. Se a medição mostrar que ele **ainda varia** por alguma razão não prevista
   aqui, a razão MUST ser escrita antes de ele ficar.

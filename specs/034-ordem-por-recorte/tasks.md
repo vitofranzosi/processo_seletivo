@@ -8,8 +8,8 @@ description: "Task list — 034 · Ordem por recorte em marco computado"
 **Input**: [spec.md](spec.md) · [plan.md](plan.md) · [research.md](research.md) ·
 [data-model.md](data-model.md) · [contracts/](contracts/) · [quickstart.md](quickstart.md)
 
-**Tests**: **sim, e são obrigatórios.** A feature cria atos imutáveis e altera onze casos que passam
-hoje. A rastreabilidade é verificada por teste neste projeto, e requisito sem linha na matriz é
+**Tests**: **sim, e são obrigatórios.** A feature cria atos imutáveis e altera **oito** casos que passam
+hoje, em três arquivos. A rastreabilidade é verificada por teste neste projeto, e requisito sem linha na matriz é
 requisito que ninguém sabe se entrou.
 
 ## Format: `[ID] [P?] [Story] Descrição — e o arquivo`
@@ -32,7 +32,7 @@ requisito que ninguém sabe se entrou.
    mudar a derivação de recortes do **sorteio**, que funciona e está fora de escopo. A decisão de
    estreitar a `FR-491` é de **quem governa o backlog**. Enquanto ela não for tomada e registrada, a
    fase 2 não começa.
-2. **`T002` roda ANTES de qualquer alteração.** Ela grava o "antes" dos onze casos nomeados. Rodá-la
+2. **`T002` roda ANTES de qualquer alteração.** Ela grava o "antes" dos **oito** casos nomeados. Rodá-la
    depois torna a conferência da entrega impossível de refazer, e a conferência é caso a caso.
 3. **`T044` é lida CASO A CASO, e nunca pela contagem.** Um teste pode manter o número de asserções e
    trocar o que afirma. Foi assim que a `033` quase deixou passar um conjunto aceito alargado de
@@ -45,7 +45,7 @@ requisito que ninguém sabe se entrou.
 **Purpose**: deixar o ambiente de pé e congelar o estado contra o qual a entrega será conferida.
 
 - [ ] T001 Preparar a worktree: copiar `backend/.env` do checkout principal (**EXISTENTE lá, ausente aqui** — é gitignorado), trocar `DB_NAME` e `POSTGRES_DB` por um nome próprio desta worktree, rodar `uv sync --extra dev` e `make preparar` em `backend/`, conferindo que a saída termina em `N de M` com **N diferente de zero**
-- [ ] T002 Medir e gravar o "antes" em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**NOVO**): a contagem da suíte (`make test-pg`), e o **estado atual de cada um dos onze casos** que `research.md` `R-5` nomeia — o que cada um afirma hoje, citado. **Esta tarefa roda antes de qualquer edição de código**
+- [ ] T002 Medir e gravar o "antes" em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**NOVO**): a contagem da suíte (`make test-pg`), e o **estado atual de cada um dos oito casos** que `research.md` `R-5` nomeia — mais a frase de `test_reversao.py`, que não é caso e muda do mesmo jeito — o que cada um afirma hoje, citado. **Esta tarefa roda antes de qualquer edição de código**
 - [ ] T003 Inventariar por varredura, em `specs/034-ordem-por-recorte/inventario-dos-recortes.md` (**NOVO**): (a) todo ponto que deriva conjunto de recortes, (b) todo ponto que fixa `lista_id` na classificação, (c) todo ponto que lê `generalCompetitionModalityId`. A classificação sai do `if` que decide, **não** da leitura da definição da função — foi o que produziu três medições erradas na `033`
 - [ ] T004 **PARADA DE ESCOPO** — levar a quem governa o backlog a pergunta que a `FR-491a` deixa aberta: **ampliar a `FR-491` para alcançar o sorteio, ou manter a divergência registrada?** O registro, com a medição que o demonstra, vai para `specs/034-ordem-por-recorte/inventario-dos-recortes.md` (**EXISTENTE**, criado em T003). **Qualquer que seja a resposta, a `spec.md` (EXISTENTE) é emendada nesta tarefa** — a `FR-491` e a `FR-491a` passam a dizer o que foi decidido, porque a T047 vai afirmar na rastreabilidade que elas foram cumpridas. Se a decisão for **ampliar**, pare, reveja `spec.md`, `plan.md`, `contracts/recortes-de-um-marco.md` e este arquivo, e rode o `analyze` de novo. **A fase 2 não começa antes desta tarefa fechar**
 
@@ -148,8 +148,8 @@ que ainda tem.
 - [ ] T041 Percorrer o **cenário 2** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — a cauda inteira, do corte à convocação, nos três recortes. **É o `SC-169`, e é o que decide se a feature entra.** Se qualquer passo exigir shell, banco ou endereço digitado, o critério não fechou. Confira no mesmo percurso a `SC-170`: **toda** ação de apurar que a tela apresentar tem de concluir, e todo recorte sem ação tem de apresentar a razão no lugar do botão
 - [ ] T042 [P] Percorrer o **cenário 3** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — a Revisão sem o aviso, a contraprova do marco que sorteia, e o Edital do acervo intocado
 - [ ] T043 [P] Percorrer o **cenário 4** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — o acervo antes e depois, idênticos, e o censo dos degraus de elevação sem degrau novo (`FR-504`, `SC-173`)
-- [ ] T044 Conferir **caso a caso** os onze testes alterados contra o "antes" gravado em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**EXISTENTE**, criado em T002), e registrar ali mesmo a comparação. **Nunca pela contagem**: um caso pode manter o número de asserções e trocar o que afirma. Alargar um conjunto aceito é enfraquecer a asserção, e a suíte fica verde do mesmo jeito
-- [ ] T045 [P] Percorrer o **cenário 5** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — o recorte em que ninguém concorreu (`FR-492a`), a Modalidade que chega por Retificação depois das ordens emitidas (`FR-494a`) e o Edital do acervo com ordem única (`FR-504`). Os três têm teste e nenhum tinha percurso; são obrigações que o operador **vê**, e o Princípio VI é percurso
+- [ ] T044 Percorrer o **cenário 5** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — o recorte em que ninguém concorreu (`FR-492a`), a Modalidade que chega por Retificação depois das ordens emitidas (`FR-494a`) e o Edital do acervo com ordem única (`FR-504`). Os três têm teste e nenhum tinha percurso; são obrigações que o operador **vê**, e o Princípio VI é percurso. **Esta tarefa não é paralela**, embora os outros percursos sejam: o `5.2` **retifica**, e Retificação cria versão publicada — o censo do cenário 4 conta publicações, e uma a mais o reprovaria por um motivo que não é o diff
+- [ ] T045 Conferir **caso a caso** os oito testes alterados — **depois de todos os percursos**, porque é o último estado que se confere, e percurso que ache defeito muda o estado contra o "antes" gravado em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**EXISTENTE**, criado em T002), e registrar ali mesmo a comparação. **Nunca pela contagem**: um caso pode manter o número de asserções e trocar o que afirma. Alargar um conjunto aceito é enfraquecer a asserção, e a suíte fica verde do mesmo jeito
 - [ ] T046 Varrer os **doze Editais da amostra real** de `doc/avaliacao-de-capacidade-editais-2026-09-12.md` (**EXISTENTE**, leitura) e registrar, em `specs/034-ordem-por-recorte/varredura-da-amostra.md` (**NOVO**), quais avisos da família da `032` ainda disparam em cada um e quais deixaram de disparar (`SC-174`). A `032` fez essa varredura e foi ela que confirmou a decisão de tratar por aviso — checklist, `analyze` e o teste de citações ficam verdes com regras que se contradizem, e só a leitura Edital a Edital não fica
 - [ ] T047 Escrever `specs/034-ordem-por-recorte/rastreabilidade.md` (**NOVO**), citando a varredura de T046: uma linha por `FR-`, uma por `SC-` — e **uma por teste alterado, com o motivo**. É o que separa fechar o `ACH-47` de afrouxar a ordem. Registre aqui, nomeadamente, a conferência das **três** proibições da `FR-505` que nenhum comando prova — nenhuma capacidade nova, nenhum papel novo, nenhuma regra de autorização nova —, por leitura do diff; a quarta é a de T048
 - [ ] T048 Rodar `cd backend && make lint check test-pg` e registrar a contagem final em `specs/034-ordem-por-recorte/rastreabilidade.md` (**EXISTENTE**, criado em T047). `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Não edite arquivo do projeto enquanto a suíte roda**. O `make check` inclui `makemigrations --check`, e **ele é o guarda de uma das quatro proibições da `FR-505`** — a da migration, que é a `SC-175`. Registre o resultado dele com esse nome, e **só com esse**: as outras três — capacidade nova, papel novo, regra de autorização nova — ele não prova, e são conferidas em T047
@@ -198,6 +198,7 @@ diferentes: US2 vive em `interface/`, US3 em `editais/domain`, `validation.py` e
 |---|---|
 | T010 · T011 | arquivos diferentes, nenhuma dependência aberta |
 | T042 · T043 | percursos independentes, um sem banco e outro só de leitura |
+| — | **T044 fica de fora**: o cenário 5 retifica, e Retificação acrescenta publicação ao censo que T043 conta |
 | US2 inteira · US3 inteira | módulos disjuntos, depois que a US1 fecha |
 
 ---

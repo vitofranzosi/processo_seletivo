@@ -39,8 +39,8 @@ publicado. A leitura por recorte não pode virar N+1 sobre o conteúdo
 
 **Constraints**: publicação é ato imutável; nada do acervo é reescrito; nenhuma capacidade nova
 
-**Scale/Scope**: quatro módulos de aplicação, duas telas, 11 casos de teste alterados — contados por
-nome em `research.md`, `R-5`
+**Scale/Scope**: quatro módulos de aplicação, duas telas, **8** casos de teste alterados em 3 arquivos,
+mais uma correção de prosa num quarto — contados por nome, e **somados**, em `research.md`, `R-5`
 
 ## Constitution Check
 
@@ -53,7 +53,7 @@ nome em `research.md`, `R-5`
 | **VI · Completude de Jornada** | a entrega é jornada inteira e observável: o Edital com cota **chega à convocação**. `SC-169`, cenário 2 do quickstart, pela interface | [quickstart.md](quickstart.md) |
 | **I · Linguagem Ubíqua** | nenhum vocabulário novo — recorte, lista de concorrência, ampla concorrência e ordem já são do domínio | `FR-503` |
 | **V · Rastreabilidade e Simplicidade** | nenhuma entidade, nenhum campo, nenhuma migration; uma linha muda a resposta do predicado da `032` | [data-model.md](data-model.md) |
-| **III · Segurança e Auditoria** | **nenhuma superfície de autorização é tocada.** Nenhum dos 11 casos alterados é de autorização, e isso foi conferido por arquivo | `research.md`, `R-5` |
+| **III · Segurança e Auditoria** | **nenhuma superfície de autorização é tocada.** Nenhum dos 8 casos alterados é de autorização, e isso foi conferido por arquivo | `research.md`, `R-5` |
 
 **Gate: passou.** Nenhuma violação a justificar — a seção *Complexity Tracking* fica vazia e foi
 removida.
@@ -139,7 +139,7 @@ aplicação, e a `032` já registrou essa direção de dependência ao colocar `
 | **O aviso da `032` sobreviver** | ele e a tela pendem do mesmo predicado, e é fácil mudar um só | `FR-500`; os dois consumidores estão contados em `research.md`, `R-4` |
 | **O predicado sobreviver vazio** | depois de aposentar o aviso ele responde sempre sim, e continua parecendo um guarda | `FR-501a`, com a ordem `T033 → T034 → T035`; a tarefa manda **medir antes de remover** |
 | **A tela do acervo ficar com metade da `FR-504`** | comparar conteúdo, resumo e documento prova que nada foi reescrito, e não prova que a tela explica o que o operador vê | `T032`, com teste sobre Edital antigo de ordem única |
-| **Conferência por contagem** | 11 casos mudam, e um deles pode trocar o que afirma sem mudar o número | conferência caso a caso contra a lista nomeada, como a `033` fez |
+| **Conferência por contagem** | 8 casos mudam, e um deles pode trocar o que afirma sem mudar o número | conferência caso a caso contra a lista nomeada, como a `033` fez |
 | **`seed_demo` quebrar em silêncio** | ele chama `calcular_ordem` direto, e só reclama na próxima semeadura | `research.md`, `R-9`, e tarefa própria |
 
 ## O que fica fora, e onde está dito

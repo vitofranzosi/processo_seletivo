@@ -31,31 +31,51 @@
 
 ## Notes
 
-**Três observações sobre como esta spec passou na validação, porque nenhuma delas é gratuita.**
+**Revisto em 18/09/2026, depois de quatro passadas de `analyze`.** A primeira redação destas notas
+descrevia a spec do dia em que ela nasceu, e três levas de correção a deixaram para trás — ela ainda
+listava como "em aberto" três decisões que já eram requisito. Checklist que descreve uma spec que não
+existe mais é pior do que checklist nenhum, porque alguém o lê para decidir se pode começar.
 
-1. **"Sem detalhe de implementação" foi o item mais difícil, e a spec cede em um lugar de
-   propósito.** A seção *Por que esta feature existe* cita arquivos e funções por nome. Isso não é
-   desenho da solução: é a **medição do estado**, e ela está ali porque a `033` produziu três
-   medições erradas seguidas por ter descrito a superfície de memória. O que a spec **não** faz é
-   dizer como a emissão por recorte deve ser construída — e as `FR-` não citam arquivo nenhum.
+### As três cessões de "sem detalhe de implementação", e por que cada uma
 
-2. **`FR-491` é requisito sobre o código, e é o caso em que isso é legítimo.** Ele exige uma
+1. **A seção *Por que esta feature existe* cita arquivos e funções por nome.** Não é desenho da
+   solução: é a **medição do estado**, e está ali porque a `033` produziu três medições erradas
+   seguidas por ter descrito a superfície de memória.
+2. **A `FR-491` é requisito sobre o código**, e é o caso em que isso é legítimo: ela exige uma
    derivação única do conjunto de recortes. A razão é observável pelo usuário — ordem emitida para
    recorte que a ocupação não consome é ato publicado que não leva a lugar nenhum —, e o critério que
-   o prende, `SC-172`, se verifica comparando duas listas, sem saber como elas são produzidas.
+   a prende, a `SC-172`, compara duas listas sem saber como elas são produzidas.
+3. **A `FR-502` cita mecânica de template** — *"variável ausente é tratada como falsa"*. Esta é a
+   cessão mais funda das três, e foi deliberada: sem ela, a ordem *tela primeiro, campo depois* fica
+   sendo preferência de quem escreveu a tarefa, e tarefa se reordena por conveniência. Com ela, é
+   obrigação. O defeito que ela impede não deixa rastro — a ação de apurar some, a frase errada
+   aparece para todos, e a suíte fica verde.
 
-3. **Uma decisão normativa foi tomada com quem governa o backlog, e não presumida.** O `D-001` — o
-   autodeclarado ordenado nas duas listas — foi perguntado e respondido em 18/09/2026. A evidência
-   que sustentou a recomendação está registrada nas *Assumptions*, e a alternativa descartada também.
+### As decisões que esta spec tomou, em vez de adiar
 
-**O que fica em aberto para o `plan`, e está nomeado na spec:**
+| | Onde |
+|---|---|
+| O autodeclarado é ordenado **nas duas** listas — perguntado a quem governa o backlog | `D-001` |
+| A regra nova vale **adiante**; não há migração de acervo | `D-002` |
+| A coerência com a `032` passa pelo ponto único que ela criou | `D-003` |
+| Recorte sem autodeclarado tem **ordem vazia**, emitível e nunca automática | `FR-492a` |
+| Retificação que acrescenta Modalidade **não obsoleta** a ordem da ampla | `FR-494a` |
+| O aviso da `032` é **aposentado**, e não estreitado | `FR-501` |
+| Predicado que deixa de variar é **removido**, não deixado dizendo sempre sim | `FR-501a` |
 
-- O recorte reservado **sem nenhum autodeclarado** — ordem vazia publicável ou ausência de ato? É o
-  primeiro *Edge Case*, e a diferença é de significado, não de forma.
-- O destino exato do aviso da `032` (`FR-501`): some ou estreita. A spec obriga a decidir e a
-  registrar; não decide por antecipação.
-- A Retificação que acrescenta Modalidade depois de a ordem da ampla já ter sido emitida.
+**Nenhuma delas ficou para dentro da implementação**, que era como as três primeiras estavam na
+redação anterior deste arquivo.
 
-**Medições a reconferir no `plan`, e não a assumir** — a tabela de *Por que esta feature existe*
-inteira, e em especial a ausência de migration (`FR-505`) e a divergência entre as duas derivações
-homônimas de `recortes_do_marco`.
+### A única coisa que continua aberta, e é de governança
+
+**Ampliar a `FR-491` para alcançar o sorteio, ou manter a divergência registrada?** É a `T004`, é
+parada de escopo, e a `FR-491`/`FR-491a` está marcada como **proposta provisória** até ela fechar.
+A medição encontrou **três** tratamentos da Modalidade declarada como ampla — não dois, como a
+primeira redação desta nota dizia.
+
+### Medições a reconferir na implementação
+
+A tabela de *Por que esta feature existe* inteira, e em especial: a ausência de migration (`FR-505`),
+a divergência entre as três derivações, e **a contagem dos casos de teste alterados** — que nasceu
+errada, dizia "11 em 4 arquivos" quando a própria tabela somava **8 em 3**, e atravessou três
+passadas de `analyze` antes de alguém somar.

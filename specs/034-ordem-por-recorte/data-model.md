@@ -59,11 +59,18 @@ Nenhuma é nova. O que muda é **quais recortes as percorrem**.
 
 ```
 sem ordem ──emitir──► ordem vigente ──suceder──► ordem vigente (nova)
-                           │
-                           ├──cortar──► faixa ──apurar──► ocupação ──convocar──►
-                           │
-                           └──obsoletar──► ordem obsoleta
+    │                      │
+    │                      ├──cortar──► faixa ──apurar──► ocupação ──convocar──►
+    │                      │
+    │                      └──obsoletar──► ordem obsoleta
+    │
+    └──emitir, sem ninguém no universo──► ordem vigente VAZIA  (FR-492a)
 ```
+
+**A ordem vazia é ordem vigente, e não um quarto estado.** Ela percorre o mesmo caminho — pode ser
+sucedida, pode ficar obsoleta — e o que a distingue é o universo, não a situação. O que muda é o que
+a **tela** diz sobre ela: *"ninguém concorreu por este recorte"*, e não *"ainda não emitiram"*. Sem
+esse ato, as duas frases são indistinguíveis, e a diferença entre elas é quem tem trabalho a fazer.
 
 **A cadeia é por recorte, e não atravessa** (`FR-494`): suceder a ordem de PcD não obsoleta a da
 ampla, e a constraint `uq_ato_sucessor_unico` já garante que cada ato tem no máximo um sucessor

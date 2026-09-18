@@ -195,7 +195,16 @@ Depois da `034` o caminho passa a existir. **O helper não deve ser apagado nest
 chamado por **seis** casos de reversão, e trocá-lo mudaria o que eles exercitam —, mas a frase que o
 justifica fica falsa, e deixá-la é deixar documentação que mente.
 
-**Total medido: 11 casos mudam, em 4 arquivos.** Nenhum deles é de autorização.
+**Total medido: 8 casos mudam, em 3 arquivos** — cinco em `test_executabilidade.py` (367, 377, 395,
+474, 506), dois em `test_ocupacao.py` (524, 539) e um em `test_hardening_pos_auditoria.py` (1055).
+**Mais uma correção de prosa num quarto arquivo**, `test_reversao.py`, que não altera caso algum.
+Nenhum dos oito é de autorização.
+
+> **Esta linha dizia "11 casos em 4 arquivos", e o número nunca fechou com a tabela acima.** Ele
+> atravessou três passadas de `analyze` e se replicou em nove lugares, porque cada artefato novo o
+> copiou do anterior em vez de somar. O cabeçalho deste arquivo promete que *"tudo que é contagem foi
+> contado"* — aqui não tinha sido. Fica registrado, e não apagado: é o alicerce dos dois portões
+> desta feature, e quem grava o "antes" procurando onze e achando oito precisa saber por quê.
 
 ---
 
@@ -281,6 +290,6 @@ de semeadura que quebra só aparece na próxima vez que alguém semeia.
 | R-1 | Nenhuma migration; o esquema da `021` já serve | `FR-505` |
 | R-3 | Derivação única é a da **ocupação**; `FR-491` **estreita** para classificação e ocupação, e a divergência do sorteio vira achado | parada de escopo, `T004` |
 | R-4 | A coerência com a `032` passa pela resposta de `emite_ordem_no_recorte` | `FR-500` |
-| R-5 | 11 casos mudam, em 4 arquivos, nenhum de autorização | conferência caso a caso, na entrega |
+| R-5 | **8** casos mudam, em 3 arquivos — e uma correção de prosa num quarto —, nenhum de autorização | conferência caso a caso, na entrega |
 | R-6 | O corte já lê o recorte; falta navegação nas duas telas, e leitura na ordenação | `FR-497`, `FR-498` |
 | R-8 | Ordem vazia é emitível, nunca automática | tarefa de decisão |

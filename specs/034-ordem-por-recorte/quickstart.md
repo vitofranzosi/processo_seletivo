@@ -193,7 +193,8 @@ que não é do diff.
 
 ### A conferência que não é pela contagem
 
-`research.md` lista, por nome, os **11 casos** que esta feature altera, em 4 arquivos. A conferência
+`research.md` lista, por nome, os **8 casos** que esta feature altera, em 3 arquivos — mais uma
+correção de prosa num quarto, que não altera caso algum. A conferência
 é **caso a caso** contra essa lista: um teste pode manter o número de asserções e trocar o que
 afirma, e a suíte fica verde do mesmo jeito. Foi assim que a `033` quase deixou passar um conjunto
 aceito alargado.
