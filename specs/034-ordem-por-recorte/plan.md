@@ -39,8 +39,12 @@ publicado. A leitura por recorte não pode virar N+1 sobre o conteúdo
 
 **Constraints**: publicação é ato imutável; nada do acervo é reescrito; nenhuma capacidade nova
 
-**Scale/Scope**: quatro módulos de aplicação, duas telas, **8** casos de teste alterados em 3 arquivos,
-mais uma correção de prosa num quarto — contados por nome, e **somados**, em `research.md`, `R-5`
+**Scale/Scope**: **cinco** arquivos de aplicação, **três** de domínio — um deles novo —, um de
+infraestrutura, um comando de semeadura e **três** telas; **8** casos de teste alterados em 3
+arquivos, mais uma correção de prosa num quarto — contados por nome, e **somados**, em
+`research.md`, `R-5`. *A contagem anterior dizia "quatro módulos de aplicação, duas telas", e ficou
+atrás da própria árvore abaixo quando ela ganhou o PDF, o `seed_demo`, a `validation.py` e a
+`ocupacao.html`.*
 
 ## Constitution Check
 
@@ -135,7 +139,8 @@ backend/tests/
 ```
 
 **Structure Decision**: monólito Django existente, `backend/` único. A feature não cria módulo: ela
-muda quatro arquivos de aplicação, um de domínio e duas telas. A derivação única dos recortes é o
+muda cinco arquivos de aplicação, três de domínio, um de infraestrutura, um comando e três telas. A
+derivação única dos recortes é o
 único artefato novo, e vive no domínio porque a validação também a consumirá — domínio não importa
 aplicação, e a `032` já registrou essa direção de dependência ao colocar `emite_ordem_no_recorte` em
 `editais/domain`.
