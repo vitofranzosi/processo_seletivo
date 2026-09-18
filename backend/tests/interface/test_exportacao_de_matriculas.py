@@ -63,6 +63,42 @@ def test_a_opcao_aparece_no_menu_do_edital(client, seletor_ligado, cenario):
     assert tela(edital) in corpo
 
 
+def test_o_edital_que_nao_matricula_nao_oferece_a_opcao(
+    client,
+    seletor_ligado,
+    db,
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    raiz_de_arquivos,
+):
+    """`029`, `D-002`: num certame que não coleta requerimento, a capacidade **não existe**.
+
+    Não fica escondida nem desabilitada — não existe. Este sistema conduz Editais de professor
+    substituto, de técnico-administrativo, de tutores e de bolsistas, e nenhum deles matricula
+    ninguém. Oferecer *Exportar para matrícula* ali seria oferecer um beco.
+    """
+    from tests.fixtures.matriculas import montar_cenario_da_exportacao
+    from tests.fixtures.publicacao import publish_original
+
+    edital, _ = montar_cenario_da_exportacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="031-tela-sem-requerimento",
+        quantos=1,
+        publicar=lambda api, cabecalhos, carga, draft: publish_original(
+            api, cabecalhos, carga, draft=draft
+        ),
+    )
+    entrar(client)
+    corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+
+    assert "Exportar para matrícula" not in corpo
+
+
 def test_quem_nao_tem_a_permissao_nao_ve_a_opcao(client, seletor_ligado, cenario):
     """`FR-455`: a permissão não é concedida a papel nenhum por padrão.
 

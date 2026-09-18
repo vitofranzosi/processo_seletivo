@@ -10,6 +10,8 @@ baixar o arquivo, e é essa leitura que impede a célula vazia de virar preenchi
 pressas.
 """
 
+from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
+
 # --- A permissão (`FR-455`) ---------------------------------------------------------------------
 # **Própria, e o conteúdo é a razão.** O arquivo reúne, numa linha só, CPF, RG, filiação e endereço
 # de cada convocado — é o artefato mais concentrado de dado pessoal que este sistema produz. Quem lê
@@ -53,6 +55,10 @@ ESPECIES_DE_LACUNA = (AUSENCIA, EXTERNA, NOMINAL, DIVERGENCIA)
 # **A recusa diz o que falta e de quem** (`UX-061`), nunca *"não foi possível gerar"*. As quatro
 # separam fatos diferentes: escolher nada, população sem gente, gente sem declaração, e grafia que
 # obrigaria a exportação a inventar uma correspondência.
+# **Reaproveitado, e não inventado.** `requerimentos.domain.nomes.NAO_EXIGIDO` já nomeia
+# exatamente este fato — *"este certame não pede Requerimento de Matrícula"* —, e um segundo nome
+# para ele obrigaria a tela a tratar duas palavras como sinônimas.
+NAO_EXIGIDO = requerimento_nomes.NAO_EXIGIDO
 POPULACAO_NAO_ESCOLHIDA = "population_not_chosen"
 # **O download que não corresponde ao resumo lido** (`UX-060`). Não é falha de permissão nem de
 # dado: é o mundo ter mudado entre conferir e baixar — uma sucessão de requerimento, um desfecho
@@ -63,6 +69,7 @@ POPULACAO_VAZIA = "empty_population"
 DECLARACAO_FALTANDO = "declaration_missing"
 MODALIDADE_DESCONHECIDA = "unknown_modality_code"
 RECUSAS = (
+    NAO_EXIGIDO,
     POPULACAO_NAO_ESCOLHIDA,
     RESUMO_NAO_CONFERIDO,
     POPULACAO_VAZIA,

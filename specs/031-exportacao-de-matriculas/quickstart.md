@@ -59,7 +59,9 @@ amostra (`D-006`) — com `COD_CURSO`, `COD_TURNO` e `COD_POLO` vazias.
 
 ## C1 — O arquivo de um Edital *(US1, `FR-433`, `FR-436`, `FR-437`)*
 
-1. `/gestao/` → Edital com convocados → **Exportar para matrícula**.
+1. `/gestao/` → Edital com convocados → **Exportar para matrícula**. A opção só aparece em Edital
+   que **declara o Requerimento de Matrícula**: num certame de servidores ou bolsistas ela não
+   existe (`029`, `D-002`).
 2. Escolher a população — os convocados de um marco, ou um resultado **definitivo e vigente**.
    **Não há padrão implícito**: sem escolher, o botão não gera. Preliminar e publicação já
    corrigida não aparecem na lista.
@@ -111,7 +113,7 @@ o que impede o número de viajar sem etiqueta.
 |---|---|
 | População com alguém **sem requerimento enviado** | recusa, **nomeando quem falta** |
 | População com um **rascunho** | ele não entra; a recusa diz que ninguém declarou aquilo |
-| Edital que **não exige** requerimento | recusa dizendo isso — e **não** um arquivo de zero linhas |
+| Edital que **não exige** requerimento | a opção não aparece no menu; pelo endereço, recusa dizendo que o certame não pede requerimento |
 | Modalidade com `code` desconhecido | recusa, nomeando **o código e o Edital**; a grafia publicada não é reescrita |
 | Resultado **preliminar** escolhido | não é oferecido, e colar o identificador também é recusado |
 | Baixar sem ter lido o resumo | recusado: o download confere a assinatura da prévia (`UX-060`) |

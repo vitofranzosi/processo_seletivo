@@ -34,6 +34,7 @@ from processo_seletivo.matriculas.domain import nomes
 from processo_seletivo.ocupacao.domain import nomes as ocupacao_nomes
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.requerimentos.application.exigencia import vigente_de
+from processo_seletivo.requerimentos.domain import disponibilidade
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -62,6 +63,42 @@ class Alcancado:
 
     inscricao: object
     versao_id: str
+
+
+def exige_requerimento(edital) -> bool:
+    """Este certame pede Requerimento de Matrícula?
+
+    **É esta declaração que confina a feature a processos de alunos**, e a razão está escrita no
+    próprio modelo do Edital (`029`, `D-002`): o sistema não tem taxonomia de natureza do Processo,
+    e criá-la seria inventar um eixo que nenhuma outra feature consome. Um Edital de tutores,
+    bolsistas ou servidores simplesmente **não declara** — e nele a capacidade não existe.
+
+    **A versão é a vigente, e aqui ela é a certa**: a pergunta é *"este certame pede
+    requerimento?"* — sobre o Edital agora, e não sobre um ato praticado no passado.
+    """
+    try:
+        conteudo = effective_version(edital_id=edital.id).content
+    except DomainError:
+        return False
+    return bool(disponibilidade.momento_declarado(conteudo))
+
+
+def exigir_requerimento_declarado(edital) -> None:
+    """Recusa a exportação num certame que não coleta requerimento (§9, *Edge Cases*).
+
+    **E a recusa diz isso, em vez de nomear quem "falta"** (`UX-061`). Sem esta guarda, um Edital de
+    servidores com convocados chegaria à `FR-435` e listaria todo mundo como se cada pessoa tivesse
+    deixado de declarar algo — quando ninguém deixou: o certame nunca pediu. A frase certa é a
+    diferença entre *"cobre estas pessoas"* e *"você está no Edital errado"*.
+    """
+    if not exige_requerimento(edital):
+        raise DomainError(
+            nomes.NAO_EXIGIDO,
+            f"O Edital {edital.number}/{edital.year} não pede Requerimento de Matrícula, e a "
+            "exportação lê o que foi declarado nele. Certames que não coletam o requerimento — de "
+            "servidores, bolsistas ou tutores — não têm o que exportar.",
+            422,
+        )
 
 
 def opcoes(edital) -> list:

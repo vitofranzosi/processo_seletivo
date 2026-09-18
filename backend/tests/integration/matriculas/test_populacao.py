@@ -19,6 +19,7 @@ from processo_seletivo.matriculas.domain import colunas, nomes
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.divulgacao import publicar_o_ato
+from tests.fixtures.matriculas import montar_cenario_da_exportacao
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -98,6 +99,49 @@ def test_quem_ficou_sem_posicao_nao_entra_no_arquivo(cenario):
     protocolos = {alcancado.inscricao.protocolo for alcancado in alcancados}
     for situacao in sem_posicao.select_related("inscricao"):
         assert situacao.inscricao.protocolo not in protocolos
+
+
+# ---------------------------------------------------------------------------
+# Nem todo certame matricula alguém (`029`, `D-002`)
+# ---------------------------------------------------------------------------
+
+
+def test_o_edital_que_nao_coleta_requerimento_recusa_a_exportacao(
+    db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos, quem_exporta
+):
+    """Um Edital de servidores, tutores ou bolsistas **não tem o que exportar**.
+
+    **E a recusa diz isso, em vez de nomear quem "falta"**. Sem esta guarda, o certame chegava à
+    `FR-435` e listava todo mundo como se cada pessoa tivesse deixado de declarar algo — quando
+    ninguém deixou: o certame nunca pediu. A frase certa é a diferença entre *"cobre estas
+    pessoas"* e *"você está no Edital errado"*.
+    """
+    from tests.fixtures.publicacao import publish_original
+
+    edital, _ = montar_cenario_da_exportacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="031-sem-requerimento",
+        quantos=1,
+        # Publica **sem** declarar o requerimento: é o Edital de professor substituto do
+        # `seed_demo`, e é a maioria dos certames deste sistema.
+        publicar=lambda api, cabecalhos, carga, draft: publish_original(
+            api, cabecalhos, carga, draft=draft
+        ),
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        compor(
+            ator=quem_exporta,
+            edital=edital,
+            especie=nomes.CONVOCACAO,
+            referencia=str(uuid.uuid4()),
+        )
+    assert recusa.value.code == nomes.NAO_EXIGIDO
+    assert "não pede Requerimento de Matrícula" in recusa.value.detail
+    assert f"{edital.number}/{edital.year}" in recusa.value.detail
 
 
 # ---------------------------------------------------------------------------

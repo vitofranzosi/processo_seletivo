@@ -194,6 +194,9 @@ def compor(*, ator, edital, especie: str, referencia: str) -> Composicao:
     ordenação por protocolo.
     """
     require_permission(ator, nomes.EXPORTAR, institution_scope=edital.institution_scope)
+    # **Antes de olhar quem foi convocado**: num certame que não coleta requerimento não há o que
+    # exportar de ninguém, e a recusa diz isso em vez de listar pessoas (§9, *Edge Cases*).
+    populacao_da_geracao.exigir_requerimento_declarado(edital)
     escolhida = populacao_da_geracao.escolher(edital, especie, referencia)
     alcancados = populacao_da_geracao.alcancados_de(edital, escolhida)
     declaracoes = populacao_da_geracao.declaracoes_de(alcancados)

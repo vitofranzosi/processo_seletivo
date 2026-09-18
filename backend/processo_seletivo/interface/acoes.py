@@ -28,6 +28,7 @@ from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.recursos.application import admitir as recursos_admitir
 from processo_seletivo.recursos.models import Recurso
+from processo_seletivo.shared.api.problems import DomainError
 
 # Os nomes são os que `base.html` já define: `.botao` sozinho é a ação primária, e as duas
 # variações têm classe própria. Inventar nomes aqui deixaria o estilo sem efeito.
@@ -114,7 +115,11 @@ def _navegacao(edital, ator):
     #
     # **Só depois de publicado**, como as inscrições: antes disso não há convocado nem resultado, e
     # oferecer a tela vazia seria oferecer um beco.
-    if edital.status in ESTADOS_COM_INSCRICOES and ator.can("matricula:exportar"):
+    if (
+        edital.status in ESTADOS_COM_INSCRICOES
+        and ator.can("matricula:exportar")
+        and _pede_requerimento_de_matricula(edital)
+    ):
         yield Acao(
             "matriculas",
             "Exportar para matrícula",
@@ -126,6 +131,33 @@ def _navegacao(edital, ator):
             "Ver trilha de auditoria",
             reverse("interface:auditoria", args=[edital.id]),
         )
+
+
+def _pede_requerimento_de_matricula(edital) -> bool:
+    """Este Edital coleta Requerimento de Matrícula? (029, `D-002`).
+
+    **É esta declaração que confina a exportação a processos de alunos.** Nem todo certame deste
+    sistema matricula alguém: há Editais de professor substituto, de técnico-administrativo, de
+    tutores e de bolsistas, e neles a capacidade **não existe** — não fica escondida, não fica
+    desabilitada, não existe. É o que o próprio modelo do Edital escreve, e o sistema não tem (nem
+    precisa ter) taxonomia de natureza do Processo: quem coleta, declara.
+
+    **Sem isto, a ação aparecia em todo Edital publicado** — e quem a abrisse num certame de
+    servidores encontraria ou uma tela sem população, ou uma recusa listando pessoas como se cada
+    uma tivesse deixado de declarar algo. As duas são becos, e o segundo acusa gente inocente.
+
+    **Lido do conteúdo publicado, e não da linha de elaboração**: é a identidade estável, e é o que
+    a `029` já consulta para decidir se abre o formulário ao candidato. Edital sem versão vigente
+    não declarou coisa nenhuma.
+    """
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.requerimentos.domain.disponibilidade import momento_declarado
+
+    try:
+        conteudo = effective_version(edital_id=edital.id).content
+    except DomainError:
+        return False
+    return bool(momento_declarado(conteudo))
 
 
 def _motivo_previsivel(ato, *, pendencias, segregacao):

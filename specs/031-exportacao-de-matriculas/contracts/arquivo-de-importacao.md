@@ -19,6 +19,20 @@ Todas moram em `matriculas/domain/colunas.py`. Toda célula é **texto**, com fo
 > compartilham auxiliares de ausência e de formato de data, e **nenhuma decide o que a coluna
 > significa** fora da função dela.
 
+## Em quais Editais a capacidade existe
+
+**Nem todo certame deste sistema matricula alguém.** Há Editais de professor substituto, de
+técnico-administrativo, de tutores e de bolsistas, e nenhum deles coleta Requerimento de Matrícula.
+
+A porta é a declaração do Edital (`029`, `D-002`): **quem coleta, declara** — `matriculationRequest`
+no conteúdo publicado. Onde ela não existe, a exportação **não existe**: não aparece no menu do
+Edital, e a aplicação recusa com `matriculation_request_not_required` quem chegar pelo endereço.
+
+**A recusa é essa, e não a de quem não declarou** (`FR-435`). Um certame sem requerimento que
+chegasse à conferência de completude listaria todos os convocados como se cada um tivesse deixado
+de declarar algo — quando ninguém deixou: o certame nunca pediu. A frase certa é a diferença entre
+*"cobre estas pessoas"* e *"você está no Edital errado"*.
+
 ## De quem, e sob qual norma
 
 A população é escolhida (`FR-433`), e **nem todo conjunto serve para matricular**:

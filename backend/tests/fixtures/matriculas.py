@@ -24,6 +24,8 @@ from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 from processo_seletivo.requerimentos.models import RequerimentoDeMatricula
 from tests.fixtures.convocacao import convocar, montar_cenario_da_convocacao
 from tests.fixtures.corte import regra
+from tests.fixtures.publicacao import publish_original
+from tests.fixtures.requerimento import declarar as declarar_no_edital
 
 DECLARACAO = "Declaro, sob as penas da Lei, que as informações prestadas são verdadeiras."
 
@@ -37,6 +39,27 @@ MODALIDADE_DIVERGENTE = "00000000-0000-4000-8000-000000000481"
 LINHA_DIVERGENTE = "00000000-0000-4000-8000-000000000482"
 
 
+def publicar_coletando_requerimento(api_client, manager_headers, process_payload, draft, **extras):
+    """Publica o Edital **declarando que ele coleta o Requerimento de Matrícula** (`029`, `D-002`).
+
+    **Sem isto o cenário é irreal, e a primeira redação destes testes era.** Nem todo certame deste
+    sistema matricula alguém — há Editais de servidores, tutores e bolsistas —, e a exportação só
+    existe onde o Edital declara o requerimento. Um cenário que gravava requerimentos num Edital
+    que nunca os pediu exercitava um estado que o produto não produz.
+
+    **`AT_CALL`**, que é o caso do 69 e do 46: o requerimento abre quando a pessoa é convocada, que
+    é exatamente a população que esta feature exporta.
+    """
+    return publish_original(
+        api_client,
+        manager_headers,
+        process_payload,
+        draft=draft,
+        antes_de_submeter=declarar_no_edital("AT_CALL"),
+        **extras,
+    )
+
+
 def publicar_com_grafia_divergente(api_client, manager_headers, process_payload, draft):
     """Publica o mesmo rascunho, com uma Modalidade a mais cuja grafia o destino não reconhece.
 
@@ -44,8 +67,6 @@ def publicar_com_grafia_divergente(api_client, manager_headers, process_payload,
     linha quando o quadro é completo, e zero vaga não muda a apuração da ampla concorrência — o que
     se exercita aqui é a saída, e não a repartição de vagas.
     """
-    from tests.fixtures.publicacao import publish_original
-
     perfil = draft["profiles"][0]
     perfil.setdefault("competitionModalities", []).append(
         {
@@ -62,7 +83,7 @@ def publicar_com_grafia_divergente(api_client, manager_headers, process_payload,
             "immediateVacancies": 0,
         }
     )
-    return publish_original(api_client, manager_headers, process_payload, draft=draft)
+    return publicar_coletando_requerimento(api_client, manager_headers, process_payload, draft)
 
 
 def montar_cenario_da_exportacao(
@@ -78,6 +99,8 @@ def montar_cenario_da_exportacao(
     # requerimento depois — ele tem de nascer assim.
     declaracoes=(),
     # Repassado até `montar_cenario_do_corte` — ver a razão escrita em `tests/fixtures/ocupacao.py`.
+    # O padrão **declara o requerimento**: sem isso a exportação recusa o certame inteiro, e com
+    # razão.
     publicar=None,
 ):
     """Edital publicado, `quantos` convocados e o requerimento enviado de cada um.
@@ -96,7 +119,7 @@ def montar_cenario_da_exportacao(
         prefixo=prefixo,
         geral=3,
         cut=regra(surplusCount=1),
-        publicar=publicar,
+        publicar=publicar or publicar_coletando_requerimento,
     )
     convocadas = list(inscricoes[:quantos])
     variacoes = list(declaracoes) + [{}] * (quantos - len(declaracoes))
