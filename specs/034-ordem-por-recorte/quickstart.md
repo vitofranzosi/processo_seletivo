@@ -44,7 +44,13 @@ do `D-001`: se os autodeclarados não estiverem aqui, a decisão foi implementad
 ordem da ampla continua vigente e **inalterada** — confira o identificador do ato dela antes e
 depois.
 
-5. Volte ao recorte da ampla.
+5. Faça o mesmo no recorte **PcD**, pelo caminho oferecido.
+
+**Esperado**: o terceiro ato, com a autodeclarada de PcD. **Os três recortes têm ordem emitida** — e
+é isso que o cenário 2 vai percorrer. Sem este passo, o `SC-169` não tem como fechar, porque ele
+exige a jornada nos **três**.
+
+6. Volte ao recorte da ampla.
 
 **Esperado**: a ordem que estava lá, intacta. Nenhum aviso de obsolescência.
 
@@ -57,22 +63,48 @@ uma ordem, sem escolha de recorte, sem navegação nova.
 
 ## Cenário 2 — a cauda inteira, do corte à convocação (`SC-169`)
 
-Continuando no mesmo Edital, e **sempre pelo caminho que a página oferece**:
+Continuando no mesmo Edital, com os **três** recortes já ordenados no cenário 1, e **sempre pelo
+caminho que a página oferece**.
 
-1. No recorte PPI, abra o corte e emita a faixa.
-2. Abra a ocupação.
+**A jornada é percorrida três vezes, uma por recorte — e é essa repetição que é o critério.** Um
+recorte que funciona não demonstra nada sobre os outros dois: a ampla é o caminho que já existia, e
+são os reservados que nunca chegaram ao fim.
+
+### 2.1 — Ampla concorrência
+
+1. No recorte da ampla, abra o corte e emita a faixa.
+2. Abra a ocupação, apure, e convoque.
+
+**Esperado**: tudo como antes desta feature — **7** vagas na linha geral. Este passo é a
+não-regressão do caminho que já funcionava, e ele precisa estar aqui: é o único recorte cuja jornada
+a `034` poderia ter quebrado sem que ninguém notasse.
+
+### 2.2 — PPI
+
+3. No recorte PPI, abra o corte e emita a faixa.
+4. Abra a ocupação.
 
 **Esperado**: o recorte PPI oferece **Apurar a ocupação deste recorte**, e a ação conclui. Onde antes
 se lia *"A apuração deste recorte acontece fora do sistema"*, agora há o botão — e ele funciona
 (`FR-502`, `SC-170`).
 
-3. Apure, e convoque.
+5. Apure, e convoque.
 
-**Esperado**: a convocação alcança quem está na faixa daquele recorte.
+**Esperado**: a convocação alcança quem está na faixa daquele recorte, contra as **2** vagas da linha
+de PPI. E quem já ocupou pela ampla **não é computado** no preenchimento da cota — é o item 8.9 do
+28/2026, que a ocupação já implementa e que o `D-001` pressupõe.
 
-4. Repita para PcD.
+### 2.3 — PcD
+
+6. Repita os passos 3 a 5 no recorte PcD.
 
 **Esperado**: o mesmo, com o número da linha própria de PcD — **1**, e não 7.
+
+### O que fecha o critério
+
+**Os três recortes percorridos de ponta a ponta: ordem → corte → ocupação → convocação.** É isso, e
+só isso, que o `SC-169` pede. Se algum dos três parar antes da convocação, o critério não fechou —
+ainda que os outros dois tenham ido até o fim.
 
 **Este cenário é o `SC-169` inteiro.** Ele é o cenário 4 da reauditoria de 16/09, que parou na
 convocação. Se qualquer passo exigir shell, banco ou endereço digitado, o critério **não** fechou.

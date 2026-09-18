@@ -148,20 +148,24 @@ apurar fora do sistema.
 
 ### Edge Cases
 
-- **Recorte reservado sem nenhum autodeclarado.** A ordem existe e é vazia, ou não há ordem? A
-  diferença importa: uma ordem vazia é ato publicável que declara *"ninguém concorreu por aqui"*, e
-  a ausência de ato é indistinguível de "ainda não emitiram".
+- **Recorte reservado sem nenhum autodeclarado** — **decidido**, `FR-492a`. A ordem vazia é
+  emitível e nunca automática. A ausência de ato é indistinguível de "ainda não emitiram", e a tela
+  precisa poder dizer que ninguém concorreu ali.
 - **A Modalidade declarada como ampla concorrência.** É a grafia-armadilha: tem nome de modalidade,
   não tem vagas próprias, e a quantidade dela mora na linha geral. Ela **não** é recorte reservado, e
   tratá-la como tal declararia duas vezes o mesmo número.
 - **Edital já publicado com reserva e ordem única emitida.** Publicação é ato imutável e ordem
   emitida não se reescreve. O que a tela mostra para ele?
-- **Retificação que acrescenta uma Modalidade depois de a ordem da ampla já ter sido emitida.** O
-  recorte novo nasce sem ordem, e o da ampla continua vigente — ou a ordem da ampla fica obsoleta?
+- **Retificação que acrescenta uma Modalidade depois de a ordem da ampla já ter sido emitida** —
+  **decidido**, `FR-494a`. O recorte novo nasce sem ordem; a ordem da ampla **continua vigente**.
 - **Empate residual que atravessa a fronteira do alvo em dois recortes ao mesmo tempo.** O mesmo
   candidato pode estar empatado nas duas ordens, e o julgamento do empate vale para as duas.
-- **Marco que sorteia.** Já emite por lista desde a `021`, e esta feature não o toca — mas as duas
-  emissões passam a existir lado a lado, e nada pode fazê-las divergir na derivação dos recortes.
+- **Marco que sorteia.** Já emite por lista desde a `021`, e esta feature **não o toca**: a
+  obrigação é de **não interferência**, e não de convergência. O caminho computado não pode alterar o
+  que o sorteio deriva, emite ou apresenta — e a divergência já conhecida entre as duas derivações
+  **permanece registrada** (`FR-491a`), em vez de ser corrigida de passagem.
+  *A redação anterior dizia que nada podia fazê-las divergir, o que contradizia a própria `FR-491a`.
+  Era voz da versão em que a `FR-491` ainda alcançava o sorteio.*
 
 ---
 
@@ -184,7 +188,11 @@ apurar fora do sistema.
   linha geral, e o sorteio lhe dá **recorte próprio**. Os dois primeiros são compatíveis — o corte
   aceita o apelido e nunca o oferece. O terceiro não é.
 - **FR-491a**: A divergência do sorteio MUST ser **registrada**, com a medição que a demonstra, e
-  MUST NOT ser corrigida por esta feature. Alinhá-la mudaria telas de uma feature que funciona, e o
+  MUST NOT ser corrigida por esta feature.
+  > **As duas são proposta provisória, e não decisão tomada.** A redação acima é o que a medição
+  > recomenda, escrita assim para que a spec seja verificável enquanto isso; **a ratificação é da
+  > `T004`**, e até lá ninguém deve ler este `MUST NOT` como decisão de governança. Se a `T004`
+  > responder *ampliar*, as duas são reescritas antes de a fase 2 começar. Alinhá-la mudaria telas de uma feature que funciona, e o
   tamanho da mudança é decisão de quem governa o backlog — não de quem implementa. Ampliar a
   `FR-491` para alcançar o sorteio é a pergunta que a parada de escopo faz.
 - **FR-492**: O universo do recorte reservado MUST ser quem se autodeclarou naquela Modalidade, **e
@@ -192,12 +200,26 @@ apurar fora do sistema.
   o que a ampla não preencheu; quem classifica pela ampla apenas não é computado no preenchimento da
   reservada, que é o que `ocupacao/application/emissao.py` já implementa citando o item 8.9 do
   Edital 28/2026.
+- **FR-492a**: Recorte sem nenhum autodeclarado MUST admitir **ordem vazia**, emitida por quem
+  conduz e **nunca automaticamente**, e a tela dele MUST dizer que ninguém concorreu ali — em vez de
+  parecer pendência. Emitir continua sendo ato: o que muda é que passa a existir um ato que declara a
+  ausência, que é fato normativo e é publicável. Sem ele, *"ninguém se inscreveu por esta cota"* e
+  *"ainda não emitiram"* são indistinguíveis na tela, e a diferença entre as duas é quem tem trabalho
+  a fazer.
 - **FR-493**: A ordem da ampla concorrência MUST continuar sendo o universo inteiro do Perfil, e
   Perfil que não declara reserva MUST produzir exatamente a mesma ordem que produzia antes desta
   feature. É requisito de **não-regressão**, e é o que impede a feature de mudar resultado de Edital
   que ela não deveria alcançar.
 - **FR-494**: Emitir a ordem de um recorte MUST NOT constituir ato sobre os demais. Cada recorte tem
   vigência e sucessão próprias, e a obsolescência de um MUST NOT obsoletar os outros.
+- **FR-494a**: Retificação que **acrescenta** uma Modalidade depois de a ordem da ampla já ter sido
+  emitida MUST NOT obsoletar essa ordem. O recorte novo nasce **sem ordem**; o da ampla segue
+  vigente.
+  *A razão é a `FR-492`, e não uma escolha nova:* o universo da ampla é **todo mundo**, e acrescentar
+  uma Modalidade não retira nem acrescenta ninguém a ele — a ordem que foi emitida continua sendo a
+  ordem daquele universo, sob a norma que o ato citou. O que **pode** ficar obsoleto é a **apuração
+  da ocupação**, porque o Quadro de Vagas mudou de números, e para isso já existe detecção de
+  obsolescência: ela não precisa desta feature e não deve ser reinventada por ela.
 - **FR-495**: A confirmação do cálculo — a assinatura que impede emitir sobre leitura vencida — MUST
   ser **do recorte**. Uma assinatura comum deixaria emitir no recorte B uma leitura feita no A.
 - **FR-496**: O cálculo MUST continuar sendo leitura pura fora do comando transacional: abrir a tela
@@ -215,12 +237,25 @@ apurar fora do sistema.
 #### A coerência com a `032`
 
 - **FR-500**: A pergunta *"este marco emite ordem neste recorte?"* MUST continuar sendo respondida
-  por **um ponto só**, o que a `032` criou exatamente para isto. A validação da publicação, a tela de
-  ocupação e a emissão MUST consumir o mesmo predicado; dois predicados divergiriam na primeira
-  mudança, e a divergência apareceria como a Revisão avisando sobre um recorte que a tela oferece.
-- **FR-501**: O aviso de reserva sem via de apuração MUST NOT ser produzido para o caso que esta
-  feature passa a atender. O que sobrar dele MUST ser dito na spec: ou ele deixa de existir, ou
-  passa a nomear um caso estritamente menor.
+  por **um ponto só** — o que a `032` criou exatamente para isto — e esse ponto MUST ser **espelho**
+  da regra real, que vive na emissão. A validação da publicação e a tela de ocupação MUST consumir o
+  espelho; **a emissão é a fonte, e não o consome** — pedir que ela pergunte ao próprio reflexo seria
+  circular. O que MUST existir é um teste que prove que os dois dizem a mesma coisa: espelho que se
+  descola da fonte é a Revisão avisando sobre um recorte que a tela oferece, que é o defeito que o
+  ponto único existe para impedir.
+  *A primeira redação desta `FR` dizia que a emissão também consumiria o predicado. Não é o caso, e
+  o `research.md` `R-4` já contava dois consumidores — a `FR` é que não tinha sido corrigida.*
+- **FR-501**: O aviso de reserva sem via de apuração é **aposentado**, e não estreitado. A redação
+  anterior dizia *"ou deixa de existir, ou passa a nomear um caso estritamente menor"*, e uma spec que
+  oferece duas saídas não está determinada: a escolha mudaria quais testes mudam, e ela estava sendo
+  adiada para dentro da implementação. **Não sobra caso.** Todo marco ou sorteia — e o sorteio sempre
+  emitiu por lista — ou é computado, e o computado passa a emitir. Perfil com reserva e sem marco
+  algum já é impedimento da `032`, por outra regra.
+- **FR-501a**: O predicado que passar a responder **sempre a mesma coisa** MUST ser removido, junto
+  com o campo derivado dele, e não deixado no lugar respondendo sempre *sim*. É consequência direta
+  da `FR-501`: um guarda que nunca reprova é pior do que guarda nenhum, porque o próximo a ler o
+  código confia nele. Se a medição mostrar que ele **ainda varia** por alguma razão não prevista
+  aqui, a razão MUST ser escrita antes de ele ficar.
 - **FR-502**: A ação de apurar a ocupação MUST voltar a ser oferecida no recorte reservado que passou
   a ter ordem — e a frase que hoje diz que a apuração acontece fora do sistema MUST sair de lá, porque
   deixou de ser verdade.

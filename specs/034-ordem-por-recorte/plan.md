@@ -137,6 +137,8 @@ aplicação, e a `032` já registrou essa direção de dependência ao colocar `
 | **Confirmação cruzada entre recortes** | a assinatura hoje é do marco | `FR-495`; teste que confirma em A e tenta emitir em B |
 | **A derivação divergir de novo** | já divergiu três vezes, em três módulos | `SC-172` compara as duas listas; é igualdade, não inspeção |
 | **O aviso da `032` sobreviver** | ele e a tela pendem do mesmo predicado, e é fácil mudar um só | `FR-500`; os dois consumidores estão contados em `research.md`, `R-4` |
+| **O predicado sobreviver vazio** | depois de aposentar o aviso ele responde sempre sim, e continua parecendo um guarda | `FR-501a`, com a ordem `T033 → T034 → T035`; a tarefa manda **medir antes de remover** |
+| **A tela do acervo ficar com metade da `FR-504`** | comparar conteúdo, resumo e documento prova que nada foi reescrito, e não prova que a tela explica o que o operador vê | `T032`, com teste sobre Edital antigo de ordem única |
 | **Conferência por contagem** | 11 casos mudam, e um deles pode trocar o que afirma sem mudar o número | conferência caso a caso contra a lista nomeada, como a `033` fez |
 | **`seed_demo` quebrar em silêncio** | ele chama `calcular_ordem` direto, e só reclama na próxima semeadura | `research.md`, `R-9`, e tarefa própria |
 

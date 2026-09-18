@@ -160,9 +160,14 @@ afirma. Por isso a tabela abaixo é por **função de teste**, e diz o que acont
 | 492 | `…todos_os_marcos_sorteando_continua_sem_achado` | permanece |
 | 506 | `…dois_marcos_em_lista_unica_saem_num_achado_so_que_nomeia_os_dois` | **muda** |
 
-**Cinco mudam, cinco permanecem** — e os cinco que permanecem só permanecem se `FR-501` escolher
-*aposentar* o aviso. Se escolher *estreitar*, a conta é outra, e é por isso que a escolha é tarefa, e
-não detalhe.
+**Cinco mudam, cinco permanecem.** A conta vale porque a `FR-501` **aposenta** o aviso — decisão que
+está na spec, e não na implementação. Enquanto ela dizia *"aposentar ou estreitar"*, esta conta não
+existia: a escolha muda quais casos mudam, e spec que oferece duas saídas não está determinada.
+
+**E há uma consequência que a aposentadoria arrasta.** Sem caso que produza o aviso,
+`emite_ordem_no_recorte` passa a responder **sempre sim**, e o campo `apuravel` derivado dele deixa de
+variar. Guarda que nunca reprova é pior do que guarda nenhum, porque o próximo a ler o código confia
+nele — é a `FR-501a`, e ela manda **medir antes de remover**.
 
 ### Os três casos do `apuravel`, em `tests/interface/test_ocupacao.py`
 
@@ -243,9 +248,13 @@ não se materializou. A cauda não precisa de mudança para consumir a ordem nov
 | O que a ocupação faz com ela | apura zero ocupadas sobre zero classificados | não tem o que apurar |
 | Custo | um ato a mais para conferir na Retificação | o operador não sabe se falta trabalho ou não há trabalho |
 
-**Recomendação desta pesquisa: ordem vazia é emitível, e não é emitida automaticamente.** A emissão
-continua sendo ato de quem conduz — o que muda é que a tela do recorte vazio explica o que ele é, em
-vez de parecer pendência. Fica como tarefa de decisão, com esta tabela como entrada.
+**Decidido, e a decisão foi para a spec: `FR-492a`.** Ordem vazia é emitível e **nunca automática** —
+a emissão continua sendo ato de quem conduz, e o que muda é que passa a existir um ato que declara a
+ausência. A tela do recorte vazio explica o que ele é, em vez de parecer pendência.
+
+*Esta tabela é o caminho da decisão, e não a decisão em aberto.* A primeira redação a deixava como
+"tarefa de decisão", e pesquisa que recomenda sem decidir empurra para dentro da implementação uma
+escolha de significado — foi o `analyze` que pegou.
 
 ---
 
