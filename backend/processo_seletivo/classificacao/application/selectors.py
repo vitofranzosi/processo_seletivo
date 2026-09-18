@@ -542,3 +542,33 @@ def _reingressos(edital, proposta):
             resultado_anterior__isnull=False,
         ).values_list("inscricao_id", flat=True)
     )
+
+
+def atos_vigentes_por_marco(*, edital, marcos_ids):
+    """Os atos sem sucessor de vários marcos, numa consulta só (033, `FR-474`).
+
+    Existe como leitura em lote, e não como `ato_vigente` chamado num laço, porque quem a usa é a
+    **tela do Edital**: ela desenha um item por marco, e perguntar por marco faria a lista de
+    destinos crescer o orçamento de consulta da tela proporcionalmente ao número de marcos. É a
+    mesma razão que fez `etapas_autorizadas` existir ao lado de `pode_atuar_na_etapa`.
+
+    Devolve um dicionário de `marco_id` para a lista dos atos vigentes daquele marco — uma lista, e
+    não um ato, porque desde a `021` três listas de concorrência produzem três atos raiz no mesmo
+    marco, e cada um deles é divulgável por si.
+
+    Marco sem ato emitido simplesmente **não aparece** no dicionário: é ausência, e quem pergunta
+    trata a ausência como "não há o que divulgar".
+    """
+    por_marco = {}
+    atos = (
+        AtoDeOrdenacao.objects.filter(
+            edital=edital,
+            marco_id__in=list(marcos_ids),
+            sucessores__isnull=True,
+        )
+        .only("id", "marco_id", "lista_id", "emitido_em")
+        .order_by("emitido_em")
+    )
+    for ato in atos:
+        por_marco.setdefault(str(ato.marco_id), []).append(ato)
+    return por_marco

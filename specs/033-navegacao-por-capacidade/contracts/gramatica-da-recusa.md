@@ -9,8 +9,19 @@ o que esta feature promete não mexer.
 recusa **se apresenta**. Nenhuma delas altera o conjunto de atores que atravessa uma porta. O
 critério que prende isso é `SC-168`, e ele é aritmético.
 
-**Este contrato vale para `/gestao/`.** O canal do candidato mantém o **404 uniforme**, de propósito:
-lá, distinguir "não existe" de "é de outra pessoa" seria oráculo de enumeração.
+**Este contrato vale para as portas desta feature**, em `/gestao/`. O canal do candidato mantém o
+**404 uniforme**, de propósito: lá, distinguir "não existe" de "é de outra pessoa" seria oráculo de
+enumeração.
+
+**O recorte às portas desta feature não estava na primeira escrita, e é correção de medição.** Ele
+dizia `/gestao/` inteira, e o inventário de `T003` mostrou que a afirmação era falsa: há **sete**
+outras recusas de autorização em `interface/views.py` que continuam respondendo "não encontrado", e
+continuarão — cada uma justifica o 404 no próprio comentário, e três citam doutrina de spec anterior
+por identificador. A decisão de governança de 2026-09-18 foi mantê-las fora.
+
+Um contrato que descrevesse `/gestao/` inteira seria contradito pelo código que embarca no mesmo
+commit. As sete estão nomeadas em [inventario-das-negativas.md](../inventario-das-negativas.md), e
+a `SC-165` tem o mesmo recorte pela mesma razão.
 
 ---
 
@@ -22,6 +33,11 @@ lá, distinguir "não existe" de "é de outra pessoa" seria oráculo de enumera�
 3. falta de capacidade nomeada     ──► 403 com recusa explicada   (já é assim em 2 das 6 portas)
 4. falta de base de autorização    ──► 403 com recusa explicada   (o que muda, nas 4 restantes)
 ```
+
+**As seis portas, e não `/gestao/` inteira.** Fora delas há sete pontos que respondem "não
+encontrado" a recusa de autorização e que esta feature não toca; o inventário os nomeia um a um.
+Quem escrever a spec que os tratar herda esta tabela — ela é a doutrina, e o que lhe falta é
+alcance, não correção.
 
 **A quarta é composta, e é a que não tinha tratamento.** Uma base é "esta capacidade **ou** aquele
 vínculo", cada um suficiente sozinho. `require_permission` recebe **uma** permissão e não sabe

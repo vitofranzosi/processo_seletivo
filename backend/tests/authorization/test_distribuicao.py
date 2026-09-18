@@ -3,8 +3,14 @@
 Distribuir é ato de quem **gere** a comissão — as duas bases que a 011 reconhece. Alocação não
 abre esta tela: quem atua na Etapa executa o trabalho, não o organiza.
 
-Toda recusa responde como recurso inexistente, pela convenção do projeto: a existência de uma
-Etapa, de um Edital ou de um Processo não é enumerável por quem não os alcança.
+**As recusas deixaram de ser uma só** (033, `FR-478`, `FR-488`). O que continua sendo "não
+encontrado" é o que é de **outro escopo institucional** ou não existe — a consulta que busca o
+Edital filtra por escopo, e objeto de outra unidade é indistinguível de objeto inexistente. Falta
+de base é sobre o ator, e passou a ser recusa explicada: escondê-la atrás de "não encontrado" fazia
+a tela mentir sobre por que ela não abre.
+
+**O que não mudou é quem entra.** Cada caso abaixo recusa exatamente quem recusava antes; só o
+número da recusa mudou, e a asserção de que nada foi gravado é a mesma.
 """
 
 import pytest
@@ -47,13 +53,23 @@ def test_quem_apenas_atua_na_etapa_nao_distribui(client, seletor_ligado, tela, c
     """João está alocado — ele executa o trabalho, e não o organiza."""
     identificar(client, "joao", [])
 
-    assert client.get(tela).status_code == 404
+    assert client.get(tela).status_code == 403
 
 
-def test_quem_nao_tem_vinculo_nenhum_recebe_inexistente(client, seletor_ligado, tela, cenario):
+def test_quem_nao_tem_vinculo_nenhum_recebe_a_recusa_explicada(
+    client, seletor_ligado, tela, cenario
+):
+    """O nome mudou porque ele **afirmava a doutrina antiga** (033).
+
+    Ele se chamava `test_quem_nao_tem_vinculo_nenhum_recebe_inexistente`, e o que ele prendia era
+    exatamente o defeito do `ACH-35`: o ator do mesmo escopo, que não tem vínculo nenhum, recebia
+    "não encontrado" e ficava duvidando do link.
+
+    A asserção de que ele **não entra** é a mesma, letra por letra. Só o número mudou.
+    """
     identificar(client, "estranho", [])
 
-    assert client.get(tela).status_code == 404
+    assert client.get(tela).status_code == 403
 
 
 def test_etapa_de_outro_edital_nao_e_alcancavel(
@@ -70,6 +86,14 @@ def test_etapa_de_outro_edital_nao_e_alcancavel(
 def test_escopo_institucional_divergente_e_inexistente(
     client, seletor_ligado, settings, tela, cenario
 ):
+    """**Este caso não muda, e é a contenção da mudança acima** (033, `FR-480`, `FR-488`).
+
+    Esta porta decidia escopo-ou-inexistente e falta de base no mesmo `if`. Trocar o status sem
+    separar antes teria transformado **este** caso em recusa explicada — e aí a feature passaria a
+    dizer, a quem não alcança, que o Edital de outra unidade existe. É vazamento, e não melhoria.
+
+    Ele fica aqui inalterado de propósito: é ele que prova que as duas condições foram separadas.
+    """
     identificar(client, "carlos", ["gestor"], escopo="outra-unidade")
 
     assert client.get(tela).status_code == 404
@@ -81,5 +105,5 @@ def test_a_distribuicao_por_post_tambem_e_recusada(client, seletor_ligado, tela,
 
     resposta = client.post(tela, {"acao": "distribuir", "inscricao_id": [str(cenario[0].id)]})
 
-    assert resposta.status_code == 404
+    assert resposta.status_code == 403
     assert Atribuicao.objects.count() == 0

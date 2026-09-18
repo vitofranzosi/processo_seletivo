@@ -256,13 +256,24 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 
 - **SC-164**: Um Publicador puro, sem vínculo de comissão, vai da tela do Edital até a divulgação do
   resultado com **zero URLs digitadas**.
-- **SC-165**: Nenhuma porta de autorização da gestão responde "não encontrado" para recusa de
-  capacidade ou de vínculo. As duas únicas origens de "não encontrado" passam a ser objeto
-  inexistente e outro escopo institucional. **E o critério é verificado por varredura, não caso a
-  caso**: uma porta acrescentada depois desta feature, com a gramática antiga, tem de ser recusada
-  pela suíte — senão o critério vale para o dia em que foi conferido e não para os seguintes.
+- **SC-165**: Nenhuma das **portas desta feature** responde "não encontrado" para recusa de
+  capacidade ou de vínculo. Para elas, as duas únicas origens de "não encontrado" passam a ser
+  objeto inexistente e outro escopo institucional. **E o critério é verificado por varredura, não
+  caso a caso**: uma porta acrescentada depois desta feature, com a gramática antiga, tem de ser
+  recusada pela suíte — senão o critério vale para o dia em que foi conferido e não para os
+  seguintes.
+  *O recorte às portas desta feature é o mesmo que a `FR-476` já pratica, e pela mesma razão:* o
+  inventário de `T003` contou **onze** recusas de autorização em `interface/views.py`, das quais
+  **sete** ficam fora das quatro portas — e cada uma delas justifica o 404 no próprio comentário,
+  três citando doutrina de spec anterior por identificador. Escrever a `SC-165` como obrigação
+  universal a tornaria impossível de fechar sem contradizer a `022`, e um critério que não fecha não
+  é critério. **As sete estão registradas** em
+  [inventario-das-negativas.md](./inventario-das-negativas.md), e a decisão de governança de
+  2026-09-18 foi mantê-las fora: são conversa de spec própria, não escopo desta.
 - **SC-166**: 100% das recusas desta família nomeiam a capacidade ou o vínculo que as resolve, e a
-  varredura de `SC-165` também cobre esta contagem.
+  varredura de `SC-165` também cobre esta contagem. **"Desta família" é o mesmo recorte da
+  `SC-165`** — as portas desta feature —, e está dito aqui porque herdá-lo em silêncio faria dois
+  critérios vizinhos parecerem ter alcances diferentes.
 - **SC-167**: Percorrendo os seis papéis que o seletor de identidade oferece, **nenhum** deles vê, na
   tela do Edital, um caminho que não consegue abrir — e nenhum deixa de ver um que conseguia.
 - **SC-168**: O conjunto de pares (ator, tela) que abre é **idêntico** antes e depois da feature.

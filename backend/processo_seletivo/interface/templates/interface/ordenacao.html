@@ -23,7 +23,16 @@ Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (F
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1">Ordem emitida. O ato é imutável e já pode ser consultado.</p>{% endif %}
 
 {% if ato_vigente %}
-<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.</p>
+{% comment %}
+**O terceiro caminho para a mesma tela, e o único que existe quando não há aviso de divulgação**
+(033, `FR-477`). Os dois avisos abaixo aparecem conforme o estado da publicação; este link aparece
+sempre que há ato vigente, e é por ele que a presidência chega à tela do ato no caso comum — o do
+ato já divulgado e em dia. Deixá-lo mudo diria "consulte" a quem vai lá para divulgar e não pode.
+
+A frase segue a formulação que `detalhe.html` já pratica em *"Peça a alguém com a permissão de
+publicar que conclua o ato"*, e não inventa uma segunda (`FR-486`).
+{% endcomment %}
+<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado.{% endif %}</p>
 {% else %}
 <p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
 {% endif %}
@@ -44,7 +53,8 @@ do ato, que é onde o critério o coloca.
 <p class="aviso">
   <strong>Este ato ainda não foi divulgado.</strong> O público não lê esta ordem enquanto a
   publicação não acontecer. A divulgação é ato do próprio ato emitido, e sai de lá — em
-  <em>Consultar ato e proveniência</em>, acima.
+  <em>Consultar ato e proveniência</em>, acima.{% if not pode_divulgar %} Ela não é sua: peça a
+  alguém com a permissão de publicar resultado que a conclua.{% endif %}
 </p>
 {% elif divulgacao.defasadas %}
 <p class="aviso">
@@ -53,7 +63,8 @@ do ato, que é onde o critério o coloca.
   O que está público é {{ publicacao.get_natureza_display|lower }}, de
   {{ publicacao.publicado_em|date:"d/m/Y H:i" }}, e corresponde a uma ordem anterior.
   {% endfor %}
-  Divulgar o ato vigente é ato dele, e sai de <em>Consultar ato e proveniência</em>, acima.
+  Divulgar o ato vigente é ato dele, e sai de <em>Consultar ato e proveniência</em>, acima.{% if not pode_divulgar %}
+  Ela não é sua: peça a alguém com a permissão de publicar resultado que a conclua.{% endif %}
 </p>
 {% endif %}
 {% endif %}
@@ -158,6 +169,27 @@ divergência genérica uma vez.
   </table>
   </div>
 </section>
+{% endif %}
+
+{% if not pode_emitir %}
+{% comment %}
+**Quem lê e não emite sabe a quem pedir** (033, `FR-484`, `FR-485`, `FR-479`).
+
+Esta tela simplesmente escondia o formulário de emissão para quem não tem a base, e o silêncio é o
+mesmo beco do ato: a auditoria abre o marco, confere a ordem calculada e não descobre por que não
+há como constituí-la.
+
+**O que falta aqui não é uma capacidade, é uma base** — e ela é composta: a permissão sistêmica de
+gerir a comissão **ou** a presidência deste Processo, cada uma suficiente sozinha. Nomear só uma
+mandaria pedir metade do que resolve.
+
+E as duas se pedem de maneiras diferentes, que é o ponto da `FR-485`. A primeira é papel, e se pede
+como papel. A segunda **não é papel nenhum**: a presidência vem da composição da comissão, e
+nenhum papel a concede — mandar pedir "o papel de presidente" mandaria pedir o que não existe.
+{% endcomment %}
+<p class="ajuda">Emitir a ordem deste marco depende da <strong>permissão de gerir a comissão</strong>
+ou da <strong>presidência deste Processo</strong> — cada uma basta sozinha. A segunda não é papel:
+ela vem da composição da comissão. Peça a quem tem a permissão, ou a quem preside.</p>
 {% endif %}
 
 {% if pode_emitir and recomputavel %}

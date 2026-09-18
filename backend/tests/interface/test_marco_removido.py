@@ -276,8 +276,11 @@ def test_nenhuma_permissao_se_alargou_para_resolver_navegacao(client, seletor_li
     """A porta de cada tela continua a mesma: o que mudou foi o que se oferece, não quem entra."""
     identificar(client, "paula.publicadora", ["publicador"])
 
-    assert client.get(_ato(cenario)).status_code == 404
-    assert client.get(_ordenacao(cenario)).status_code == 404
+    # **A asserção que este caso existe para fazer é que Paula não entra**, e ela é a mesma: a
+    # `033` acrescentou caminho na tela do Edital e não alargou porta nenhuma. O número da recusa
+    # mudou porque ela passou a dizer o que falta (`FR-483`, `SC-168`).
+    assert client.get(_ato(cenario)).status_code == 403
+    assert client.get(_ordenacao(cenario)).status_code == 403
 
 
 def test_a_classificacao_do_marco_removido_abre_para_quem_a_alcanca(
@@ -299,9 +302,11 @@ def test_o_endereco_que_nao_abre_responde_institucionalmente(client, seletor_lig
 
     resposta = client.get(_ordenacao(sem_o_marco))
 
-    assert resposta.status_code == 404
+    # O que este caso prende é **de quem é a página**, e não qual recusa ela carrega: produto, e
+    # nunca a de depuração do Django. A recusa virou 403 na `033`, e o título acompanhou.
+    assert resposta.status_code == 403
     corpo = resposta.content.decode()
-    assert "Página não encontrada" in corpo
+    assert "Você não tem permissão para isto" in corpo
     assert "Cefor" in corpo
     assert "URLconf" not in corpo, "a lista de rotas não é resposta a ninguém"
     assert "Raised by" not in corpo

@@ -1,4 +1,9 @@
-"""Quem consulta a ordem não ganha o ato; quem não alcança recebe 404 uniforme (015, T090)."""
+"""Quem consulta a ordem não ganha o ato, e cada recusa diz a verdade dela (015, T090).
+
+**O "404 uniforme" deixou de ser uniforme** (033, `FR-478`). Escopo institucional alheio continua
+sendo "não encontrado"; falta de base passou a ser recusa explicada. Quem atravessa cada rota é
+exatamente quem atravessava, e nenhum ato passou a ser emitido por quem não o emitia.
+"""
 
 import pytest
 from django.urls import reverse
@@ -52,19 +57,27 @@ def test_gestao_e_auditoria_consultam(client, seletor_ligado, edital_com_marco, 
 def test_auditoria_consulta_e_nao_emite(client, seletor_ligado, edital_com_marco):
     identificar(client, "iris", ["auditor"])
     assert client.get(_consulta(edital_com_marco)).status_code == 200
+    # Emitir chama a porta com `somente_gestao=True`, e ali a capacidade de auditoria **não** é
+    # base aceita: a recusa é sobre o ator, e passou a dizê-lo (033).
     assert (
         client.post(_emissao(edital_com_marco), {"chave_idempotencia": "auditor"}).status_code
-        == 404
+        == 403
     )
     assert AtoDeOrdenacao.objects.count() == 0
 
 
-def test_sem_base_recebe_404_uniforme(client, seletor_ligado, edital_com_marco):
+def test_sem_base_recebe_a_recusa_explicada(client, seletor_ligado, edital_com_marco):
+    """O nome mudou porque ele afirmava a doutrina antiga (033).
+
+    Era `test_sem_base_recebe_404_uniforme`. O ator é do **mesmo** escopo e não tem base nenhuma;
+    a recusa é sobre ele, e dizer "não encontrado" fazia a tela mentir. As duas asserções de que
+    ele não entra, e a de que nenhum ato nasceu, são as mesmas.
+    """
     identificar(client, "estranho", [])
-    assert client.get(_consulta(edital_com_marco)).status_code == 404
+    assert client.get(_consulta(edital_com_marco)).status_code == 403
     assert (
         client.post(_emissao(edital_com_marco), {"chave_idempotencia": "intruso"}).status_code
-        == 404
+        == 403
     )
     assert AtoDeOrdenacao.objects.count() == 0
 
@@ -142,5 +155,8 @@ def test_fato_usado_no_desempate_so_aparece_para_gestao_e_auditoria(
 
     identificar(client, inscricao.identity_subject, [])
     negada = client.get(url)
-    assert negada.status_code == 404
+    # O status mudou; **o que não vaza continua não vazando**, e é essa a asserção que importa
+    # aqui. Uma recusa explicada que entregasse o valor de desempate junto seria pior do que o 404
+    # mudo que ela substituiu (033).
+    assert negada.status_code == 403
     assert str(segredo) not in negada.content.decode()

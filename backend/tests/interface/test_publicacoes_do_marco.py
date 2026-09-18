@@ -127,7 +127,7 @@ def test_o_caminho_para_o_ato_de_origem_nao_aparece_a_quem_nao_tem(
                 args=[cenario["edital"].id, cenario["marco"], cenario["ato"].id],
             )
         ).status_code
-        == 404
+        == 403
     ), "o teste só vale se a porta do ato de fato recusar quem não a tem"
 
 

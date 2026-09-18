@@ -11,8 +11,15 @@ validação. Por isso cada recusa aqui manda o payload que **seria aceito** — 
 controle positivo, que é o que impede este arquivo de passar por acidente no dia em que o
 formulário mudar de nome de campo.
 
-Toda recusa é 404: a existência de uma inscrição, de uma Etapa ou de um Processo não é
-enumerável por quem não os alcança (FR-044).
+**A recusa deixou de ser uma só** (033, `FR-478`). As rotas da Mesa — gravar e concluir avaliação —
+continuam em 404 para tudo, e é deliberado: o que elas escondem é a inscrição **de outro
+avaliador**, e distinguir ali aproxima o oráculo de enumeração que o canal do candidato fecha de
+propósito. Essa decisão está registrada no inventário das negativas, e ficou fora desta feature.
+
+As rotas da **presidência** — distribuir, impedir e reabrir — passam pela porta da gestão da
+comissão, e essa é uma das quatro que a `033` corrige: para o ator do **mesmo** escopo a recusa
+passou a ser explicada; para o de **outra unidade** ela continua sendo "não encontrado". É por isso
+que `SEM_GESTAO` carrega o status esperado por caso, em vez de um número só para a lista inteira.
 """
 
 import pytest
@@ -146,17 +153,20 @@ def test_concluir_com_o_mesmo_corpo_e_aceito_de_quem_tem_a_atribuicao(
 # comissão, e quem apenas atua na Etapa não a atravessa (FR-067).
 # ---------------------------------------------------------------------------
 
+# O quarto elemento é o **status esperado**, e ele difere pela razão da recusa, nunca pela pessoa:
+# 403 quando o que falta é a base, 404 quando o Edital é de outra unidade — que é indistinguível de
+# Edital inexistente, e tem de continuar sendo (033, `FR-480`).
 SEM_GESTAO = [
-    pytest.param("joao", [], None, id="quem-apenas-atua-na-etapa"),
-    pytest.param("estranho", [], None, id="sem-vinculo-nenhum"),
-    pytest.param("iris", ["auditor"], None, id="quem-so-audita"),
-    pytest.param("carlos", ["gestor"], "outra-unidade", id="gestor-de-outra-unidade"),
+    pytest.param("joao", [], None, 403, id="quem-apenas-atua-na-etapa"),
+    pytest.param("estranho", [], None, 403, id="sem-vinculo-nenhum"),
+    pytest.param("iris", ["auditor"], None, 403, id="quem-so-audita"),
+    pytest.param("carlos", ["gestor"], "outra-unidade", 404, id="gestor-de-outra-unidade"),
 ]
 
 
-@pytest.mark.parametrize(("subject", "papeis", "escopo"), SEM_GESTAO)
+@pytest.mark.parametrize(("subject", "papeis", "escopo", "esperado"), SEM_GESTAO)
 def test_remover_atribuicao_por_post_e_recusado(
-    client, seletor_ligado, cenario, subject, papeis, escopo
+    client, seletor_ligado, cenario, subject, papeis, escopo, esperado
 ):
     """A recusa é do servidor, e não da tela que esconde o botão."""
     identificar(client, subject, papeis, escopo=escopo)
@@ -167,13 +177,13 @@ def test_remover_atribuicao_por_post_e_recusado(
         {"chave_idempotencia": "remocao-alheia", "atribuicao_id": [str(atribuicao.id)]},
     )
 
-    assert resposta.status_code == 404
+    assert resposta.status_code == esperado
     assert Atribuicao.objects.get(pk=atribuicao.pk).ativo is True
 
 
-@pytest.mark.parametrize(("subject", "papeis", "escopo"), SEM_GESTAO)
+@pytest.mark.parametrize(("subject", "papeis", "escopo", "esperado"), SEM_GESTAO)
 def test_registrar_impedimento_por_post_e_recusado(
-    client, seletor_ligado, cenario, subject, papeis, escopo
+    client, seletor_ligado, cenario, subject, papeis, escopo, esperado
 ):
     """FR-039: impedir é ato da presidência, e a recusa vem antes de o motivo ser lido."""
     identificar(client, subject, papeis, escopo=escopo)
@@ -190,23 +200,23 @@ def test_registrar_impedimento_por_post_e_recusado(
         },
     )
 
-    assert resposta.status_code == 404
+    assert resposta.status_code == esperado
     assert not Impedimento.objects.exists()
     assert Atribuicao.objects.filter(ativo=True).count() == 1
 
 
-@pytest.mark.parametrize(("subject", "papeis", "escopo"), SEM_GESTAO)
+@pytest.mark.parametrize(("subject", "papeis", "escopo", "esperado"), SEM_GESTAO)
 def test_a_tela_de_impedimentos_nao_e_alcancavel(
-    client, seletor_ligado, cenario, subject, papeis, escopo
+    client, seletor_ligado, cenario, subject, papeis, escopo, esperado
 ):
     identificar(client, subject, papeis, escopo=escopo)
 
-    assert client.get(rota("interface:impedimentos", cenario)).status_code == 404
+    assert client.get(rota("interface:impedimentos", cenario)).status_code == esperado
 
 
-@pytest.mark.parametrize(("subject", "papeis", "escopo"), SEM_GESTAO)
+@pytest.mark.parametrize(("subject", "papeis", "escopo", "esperado"), SEM_GESTAO)
 def test_reabrir_avaliacao_por_post_e_recusado(
-    client, seletor_ligado, cenario, subject, papeis, escopo
+    client, seletor_ligado, cenario, subject, papeis, escopo, esperado
 ):
     """FR-036: reabrir é ato da presidência, e o que foi concluído continua concluído."""
     identificar(client, "joao", [])
@@ -226,7 +236,7 @@ def test_reabrir_avaliacao_por_post_e_recusado(
         },
     )
 
-    assert resposta.status_code == 404
+    assert resposta.status_code == esperado
     assert Avaliacao.objects.get(pk=avaliacao.pk).estado == Avaliacao.Estado.CONCLUIDA
 
 

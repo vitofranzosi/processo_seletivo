@@ -133,17 +133,19 @@ permanecem preservados.</p>
   <h2 id="classificacao-titulo">Classificação</h2>
   <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico.</p>
   {% comment %}
-  **O marco que ordena por sorteio abre a tela do sorteio, e não a da ordenação** (021, D-013).
+  **A lista é derivada por destino, e a derivação é da view** (033, `FR-473`, `FR-476`).
 
-  Esta lista mandava todos para a ordenação, e a tela do sorteio não era alcançável por link nenhum
-  do sistema: no dia da transmissão ela dependia de alguém ter a URL decorada. Pior, a ordenação
-  oferecia "Emitir ordem" a um marco que não ordena por Etapas — e emitir ali ocupava o ato raiz do
-  recorte, deixando o sorteio sem lugar onde nascer.
+  Esta marcação decidia, ela mesma, para onde cada marco levava: sorteio ou ordenação, corte quando
+  houvesse regra, ocupação sempre. Funcionava enquanto o bloco inteiro pendia de **uma** porta — a
+  da presidência e da auditoria. Não funcionava para o segundo eixo: quem detém a capacidade de
+  publicar resultado alcança a divulgação do ato e não alcança nenhum dos outros, e a tela não
+  tinha como saber disso sem repetir aqui a pergunta que a view já faz.
 
-  O rótulo diz o que se vai encontrar, e é a mesma regra que a supervisão já aplica ao mesmo par de
-  telas: "ordenação" nomearia um recálculo que aquele marco não tem.
+  Repetir a decisão aqui criaria duas verdades sobre a mesma lista, e elas divergiriam na primeira
+  mudança de qualquer um dos lados. O que restou para o template é o que é dele: **como** cada
+  destino aparece.
   {% endcomment %}
-  <ul class="resumo-lista">{% for grupo in marcos_classificatorios %}{% for marco in grupo.marcos %}<li>{% if marco.drawMethod %}<a href="{% url 'interface:sorteio' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }} — sorteio público</span>{% else %}<a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> <span class="quando">{{ grupo.perfil.name }}</span>{% endif %}{% if marco.cutRule %} · <a href="{% url 'interface:corte' edital.id marco.id %}">corte</a>{% endif %} · <a href="{% url 'interface:ocupacao' edital.id marco.id %}">ocupação</a></li>{% endfor %}{% endfor %}</ul>
+  <ul class="resumo-lista">{% for item in marcos_classificatorios %}<li>{% for destino in item.destinos %}{% if destino.principal %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a> <span class="quando">{{ item.perfil.name }}{% if destino.nota %} — {{ destino.nota }}{% endif %}</span>{% else %}{% if not forloop.first %} · {% endif %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a>{% endif %}{% endfor %}{% if not item.destinos.0.principal %} <span class="quando">{{ item.marco.name }} — {{ item.perfil.name }}</span>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 

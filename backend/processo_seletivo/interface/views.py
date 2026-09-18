@@ -57,6 +57,7 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 )
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
+    atos_vigentes_por_marco,
     estado_do_marco,
     nomear_criterios,
     nomes_do_ato,
@@ -176,7 +177,12 @@ from processo_seletivo.resultados.application import consolidacao as consolidaca
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
-from processo_seletivo.seguranca.application.authorization import require_permission
+from processo_seletivo.seguranca.application.authorization import (
+    Base,
+    base_de_permissao,
+    require_authorization_base,
+    require_permission,
+)
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import aceitar, tamanho_legivel
@@ -2360,26 +2366,122 @@ def detalhe(request, edital_id):
     )
 
 
-def _marcos_publicados(edital, ator=None):
-    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia.
+def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
+    """Para onde este marco leva **aquele** ator, e nada além.
 
-    **Alcançáveis por quem está olhando.** A porta do marco é `_edital_para_classificar`:
-    presidência ou auditoria lê, e o resto recebe 404. A lista era montada sem consultar o ator,
-    então quem julga recursos — que não tem nenhuma das duas — via "Classificação final" na tela do
-    Edital e recebia erro ao clicar. Oferecer o que se vai recusar é pior do que não oferecer.
+    Um destino entra se, e só se, quem está olhando o alcança — que é o princípio que esta tela já
+    declarava. O que muda é o sujeito dele: era aplicado à lista inteira, por uma porta escolhida
+    de antemão, e passa a ser aplicado **a cada destino**.
+
+    Os destinos do primeiro grupo pendem da mesma porta que `_edital_para_classificar` guarda; o
+    da divulgação pende de `resultado:publicar`, que não decorre de nenhuma das outras. Eram dois
+    eixos de autorização e uma pergunta só — e é daí que vinha o `ACH-40`.
     """
-    if ator is not None and pode_gerir_comissao(ator, edital.processo) is None:
-        if not ator.can("auditoria:consultar"):
-            return []
+    marco_id = str(marco.get("id"))
+    destinos = []
+    if pode_classificar:
+        # **O marco que ordena por sorteio abre a tela do sorteio** (021, D-013): o rótulo diz o
+        # que se vai encontrar, e "ordenação" nomearia um recálculo que aquele marco não tem.
+        if marco.get("drawMethod"):
+            destinos.append(
+                {
+                    "rotulo": marco.get("name") or "",
+                    "url": reverse("interface:sorteio", args=[edital.id, marco_id]),
+                    "principal": True,
+                    "nota": "sorteio público",
+                }
+            )
+        else:
+            destinos.append(
+                {
+                    "rotulo": marco.get("name") or "",
+                    "url": reverse("interface:ordenacao", args=[edital.id, marco_id]),
+                    "principal": True,
+                    "nota": "",
+                }
+            )
+        # A condição do corte é a regra de corte declarada, e continua sendo exatamente essa: ela
+        # é escopo da `032`, e o que mudou aqui é **onde** ela é avaliada, nunca o que ela decide.
+        # Deixá-la no template obrigaria a tela a conhecer metade da derivação, e duas verdades
+        # sobre a mesma lista divergem na primeira mudança.
+        if marco.get("cutRule"):
+            destinos.append(
+                {"rotulo": "corte", "url": reverse("interface:corte", args=[edital.id, marco_id])}
+            )
+        destinos.append(
+            {"rotulo": "ocupação", "url": reverse("interface:ocupacao", args=[edital.id, marco_id])}
+        )
+    # **A divulgação de cada ato emitido** — o destino que a tela não oferecia a ninguém. Ela
+    # depende do ato **existir**: marco sem ato não tem o que divulgar, e oferecer um caminho que
+    # termina em nada é o mesmo defeito que este bloco existe para evitar, com outra roupa.
+    for ato in atos_vigentes:
+        destinos.append(
+            {
+                "rotulo": "divulgar o resultado",
+                "url": reverse(
+                    "interface:previa-de-publicacao", args=[edital.id, marco_id, ato.id]
+                ),
+            }
+        )
+    return destinos
+
+
+def _marcos_publicados(edital, ator=None):
+    """Os marcos do Edital publicado, com os destinos que **aquele ator** alcança em cada um.
+
+    **A derivação era por porta, e passou a ser por destino.** A lista inteira dependia de
+    `_edital_para_classificar` — presidência ou auditoria —, e essa porta é a de *um* dos eixos de
+    autorização do produto. Quem detinha `resultado:publicar` sem vínculo de comissão nenhum podia
+    divulgar o resultado, a tela de divulgação abria para ele, e esta tela não mostrava caminho
+    nenhum até lá: ele só chegava sabendo montar a URL. Era o `ACH-40`, e a segregação de papéis
+    que o produto recomenda ficava inexecutável por causa dele.
+
+    O princípio que a versão anterior já declarava continua inteiro, e é o que impede a correção
+    de virar o defeito espelhado: *oferecer o que se vai recusar é pior do que não oferecer*.
+    Aplicado à lista, ele fazia quem julga recursos ver "Classificação final" e receber erro ao
+    clicar; aplicado a cada destino, ele responde pelos dois sentidos — nenhum caminho oferecido
+    que se vá recusar, e nenhum caminho alcançável escondido (`FR-473`, `FR-476`).
+
+    Marco sem destino nenhum não entra, e Edital em que nenhum marco rende destino devolve lista
+    vazia: a tela não desenha o bloco, e **a ausência do bloco não é recusa** — é ausência.
+    """
     try:
         conteudo = effective_version(edital_id=edital.id).content
     except DomainError:
         return []
-    return [
-        {"perfil": perfil, "marcos": perfil.get("classificationMilestones") or []}
+    perfis_com_marcos = [
+        perfil
         for perfil in conteudo.get("profiles") or []
         if perfil.get("classificationMilestones")
     ]
+    if not perfis_com_marcos:
+        return []
+
+    pode_classificar = ator is None or _pode_ver_a_classificacao(ator, edital)
+    pode_divulgar = ator is not None and ator.can("resultado:publicar")
+    atos_por_marco = {}
+    if pode_divulgar:
+        atos_por_marco = atos_vigentes_por_marco(
+            edital=edital,
+            marcos_ids=[
+                str(marco.get("id"))
+                for perfil in perfis_com_marcos
+                for marco in perfil["classificationMilestones"]
+            ],
+        )
+
+    itens = []
+    for perfil in perfis_com_marcos:
+        for marco in perfil["classificationMilestones"]:
+            destinos = _destinos_do_marco(
+                edital,
+                marco,
+                pode_classificar=pode_classificar,
+                atos_vigentes=atos_por_marco.get(str(marco.get("id")), ()),
+            )
+            if destinos:
+                itens.append({"perfil": perfil, "marco": marco, "destinos": destinos})
+    return itens
 
 
 @require_http_methods(["GET", "POST"])
@@ -3712,15 +3814,49 @@ def _registrar_divergencia(ator, documento, request):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# **As bases que as portas da gestão aceitam, nomeadas como a recusa as apresenta** (033).
+#
+# Ficam aqui, e não na camada de segurança, porque o conjunto aceito é **de quem chama** e não da
+# porta: duas portas têm modo, e nelas o conjunto muda conforme a tela (`FR-479`, `FR-489`). O
+# mecanismo mora em `seguranca/application`; a composição é de quem pergunta.
+#
+# A presidência é a única que não nasce de `base_de_permissao`, e a diferença é o ponto da
+# `FR-485`: ela **não é papel**, vem da composição da comissão, e nenhum papel a concede. Mandar
+# pedir "o papel de presidente" mandaria pedir o que não existe.
+# ---------------------------------------------------------------------------
+
+BASE_DE_GESTAO = base_de_permissao("gerir a comissão")
+BASE_DA_PRESIDENCIA = Base("a presidência deste Processo", "a quem preside este Processo")
+BASE_DE_AUDITORIA = base_de_permissao("consultar auditoria")
+BASE_DE_PUBLICAR_RESULTADO = base_de_permissao("publicar resultado")
+
+# O predicado de `pode_gerir_comissao`, dito como recusa: as duas bases que ela aceita.
+BASES_DA_GESTAO_DA_COMISSAO = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA)
+# E o mesmo, acrescido da leitura por auditoria — que serve em **algumas** chamadas, nunca em
+# todas. É por isso que são duas constantes e não uma com argumento opcional.
+BASES_DA_GESTAO_OU_AUDITORIA = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA, BASE_DE_AUDITORIA)
+
+
 def _processo_para_gerir(request, processo_id):
-    """Processo, ator e base — ou 404 para tudo que este ator não alcança (D-017)."""
+    """Processo, ator e base — com 404 só para o que não existe ou é de outra unidade (D-017).
+
+    **A negativa era 404 para tudo**, e ela confundia duas coisas diferentes. Processo de outro
+    escopo institucional é 404 e continua sendo: `_processo_do_ator` filtra por escopo na própria
+    consulta, e o ator não deve sequer saber que aquele Processo existe. Falta de base é sobre o
+    ator, e responder "não encontrado" fazia a tela mentir sobre por que ela não abre (033,
+    `FR-478`).
+
+    A pergunta desta porta é **composta** — a permissão sistêmica de gerir a comissão **ou** a
+    presidência deste Processo, cada uma suficiente sozinha —, e é por não haver como recusá-la
+    num ponto só que esta porta improvisou o seu próprio `raise Http404`, igual às outras três.
+    """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return None, None, None
     processo = _processo_do_ator(ator, processo_id)
     base = pode_gerir_comissao(ator, processo)
-    if base is None:
-        raise Http404
+    require_authorization_base(base is not None, bases=BASES_DA_GESTAO_DA_COMISSAO)
     return ator, processo, base
 
 
@@ -3956,8 +4092,22 @@ def _etapa_para_distribuir(request, edital_id, etapa_id):
         .select_related("processo")
         .first()
     )
-    if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+    # **Duas condições, duas respostas — e elas compartilhavam um `if`** (033, `FR-488`):
+    #
+    #     if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+    #
+    # Enquanto estivessem juntas, trocar o 404 por recusa explicada responderia recusa explicada
+    # também para Edital de outra unidade, e isso é vazamento — não melhoria. **Separar veio
+    # antes de mudar a gramática**, e não como arrumação: é a ordem que impede o vazamento.
+    #
+    # A de cima continua sendo 404 e continua sendo indistinguível de objeto inexistente, porque a
+    # consulta acima filtra por `institution_scope` (`FR-487`). A de baixo é sobre o ator.
+    if edital is None:
         raise Http404
+    require_authorization_base(
+        pode_gerir_comissao(ator, edital.processo) is not None,
+        bases=BASES_DA_GESTAO_DA_COMISSAO,
+    )
     try:
         etapa = etapa_vigente(edital, etapa_id)
     except DomainError:
@@ -4912,8 +5062,14 @@ def _pode_ver_a_classificacao(ator, edital):
 def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
 
-    Tudo que o ator não alcança responde 404. O identificador público do marco não confere
+    **O 404 fica com o escopo e com o que não existe**; falta de base é recusa explicada, como em
+    toda porta desta família (033, `FR-478`). O identificador público do marco não confere
     autorização e, no POST, a aplicação volta a conferir a gestão depois de obter a trava.
+
+    **Esta porta tem dois modos, e o conjunto de bases muda entre eles** (`FR-489`). Na consulta, a
+    capacidade de auditoria é uma das bases aceitas; com `somente_gestao` — que é a maioria das
+    chamadas, porque emitir é ato de quem gere — ela **não** serve. Recusar as duas com a mesma
+    frase mandaria metade das pessoas pedir uma permissão que não abriria aquela tela.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
@@ -4926,8 +5082,11 @@ def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     if edital is None:
         raise Http404
     pode_emitir = pode_gerir_comissao(ator, edital.processo) is not None
-    if not pode_emitir and (somente_gestao or not ator.can("auditoria:consultar")):
-        raise Http404
+    bases = BASES_DA_GESTAO_DA_COMISSAO if somente_gestao else BASES_DA_GESTAO_OU_AUDITORIA
+    require_authorization_base(
+        pode_emitir or (not somente_gestao and ator.can("auditoria:consultar")),
+        bases=bases,
+    )
     return ator, edital, pode_emitir
 
 
@@ -4976,6 +5135,13 @@ def ordenacao(request, edital_id, marco_id):
                 "divergencias": estado["divergencias"],
                 "posicoes_divergentes": estado["posicoes_divergentes"],
                 "pode_emitir": pode_emitir,
+                # **De quem é o ato de divulgar, lido contra quem está olhando** (033, `FR-477`).
+                # Esta tela manda o operador à do ato, três vezes, para divulgar. Quem a lê é a
+                # presidência — que é justamente quem **não** divulga na configuração segregada,
+                # porque `resultado:publicar` não decorre de `comissao:gerir` nem da presidência.
+                # Mandá-la a uma tela onde não haverá botão é o beco que o `ACH-38` descreve, e a
+                # correção não é esconder a instrução: é dizer de quem o ato é.
+                "pode_divulgar": ator.can("resultado:publicar"),
                 # As providências a jusante pendentes deste marco: a emissão as oferece para que o
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
@@ -5935,8 +6101,20 @@ def _edital_para_publicar(request, edital_id, *, consulta=False):
         return None, None, False
     pode_publicar = ator.can("resultado:publicar")
     pode_consultar = pode_publicar or (consulta and ator.can("auditoria:consultar"))
-    if not pode_consultar:
-        raise DomainError("forbidden", "A operação não é permitida.", 403)
+    # **O status desta porta sempre esteve certo; o que ela não dizia era o quê** (033, `FR-481`).
+    # A frase genérica de antes — *"A operação não é permitida."* — nunca mentiu, porque não
+    # nomeava nada. **É ao nomear que ela passa a poder mentir**, e esta porta tem modo: com
+    # `consulta` a capacidade de auditoria serve, sem ele não serve. A única porta que não
+    # precisava de conserto é a que esta mudança pode quebrar, e é por isso que o conjunto vem
+    # daqui, do ponto de chamada, e não de uma constante da porta (`FR-489`).
+    require_authorization_base(
+        pode_consultar,
+        bases=(
+            (BASE_DE_PUBLICAR_RESULTADO, BASE_DE_AUDITORIA)
+            if consulta
+            else (BASE_DE_PUBLICAR_RESULTADO,)
+        ),
+    )
     edital = (
         Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
         .select_related("processo")
@@ -6221,8 +6399,11 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     lia 403, e quem audita sem gerir o Processo lia 404. Quem responde a um recurso é um dos dois,
     e quase nunca é os dois — o que a spec concede a cada um, a porta negava a ambos.
 
-    A recusa é 404 para as duas, como em todo o resto da feature: quem não alcança não descobre
-    pela resposta se o que existe é a Etapa ou a permissão (FR-044).
+    **A recusa deixou de ser 404 para as duas** (033, `FR-478`). O que ela protegia — não revelar
+    a existência do que o ator não alcança — continua protegido, e por outro mecanismo: a consulta
+    abaixo filtra por `institution_scope`, de modo que Edital de outra unidade é indistinguível de
+    Edital inexistente (`FR-487`). O que o 404 fazia **a mais** era esconder do ator do mesmo
+    escopo a razão de a tela não abrir, e essa parte era ruído, não proteção.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
@@ -6234,8 +6415,9 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     )
     if edital is None:
         raise Http404
-    if not _pode_auditar_a_etapa(ator, edital):
-        raise Http404
+    require_authorization_base(
+        _pode_auditar_a_etapa(ator, edital), bases=BASES_DA_GESTAO_OU_AUDITORIA
+    )
     try:
         etapa = etapa_vigente(edital, etapa_id)
     except DomainError:

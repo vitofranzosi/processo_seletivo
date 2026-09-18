@@ -337,3 +337,146 @@ def test_a_recusa_recompoe_a_assinatura_para_a_reconfirmacao(client, seletor_lig
 
     assert aceita.status_code == 302, "reconfirmar a partir da tela recusada precisa funcionar"
     assert PublicacaoResultado.objects.count() == 1
+
+
+# ---------------------------------------------------------------------------
+# A navegação por capacidade (033, US1). Os dois casos abaixo prendem as pontas que o bloco de
+# destinos da tela do Edital não alcança: que o caminho oferecido **abre**, e que o texto que
+# manda o operador a outra tela vale para quem o lê.
+# ---------------------------------------------------------------------------
+
+
+def test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao(client, seletor_ligado, cenario):
+    """`SC-164` de ponta a ponta: da tela do Edital à divulgação, com **zero URLs digitadas**.
+
+    Os testes de `test_destinos_do_edital.py` provam que o caminho é oferecido; este prova que
+    ele leva a algum lugar. Separá-los importa porque as duas metades falham sozinhas: um link
+    para porta fechada é o defeito que a `FR-476` proíbe, e ele passaria naquele arquivo.
+
+    O caminho é **lido da própria página**, e não montado aqui: montá-lo testaria a `reverse` do
+    teste, e é exatamente a URL digitada à mão que o `SC-164` existe para eliminar.
+    """
+    edital = cenario["edital"]
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    tela_do_edital = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    bloco = re.search(
+        r'<section aria-labelledby="classificacao-titulo".*?</section>', tela_do_edital, re.DOTALL
+    )
+    assert bloco is not None, "a tela do Edital não ofereceu caminho nenhum a quem publica"
+    oferecido = re.search(r'<a href="([^"]+)"', bloco.group(0)).group(1)
+
+    assert client.get(oferecido).status_code == 200, (
+        f"a tela do Edital ofereceu {oferecido}, e a tela recusou quem o seguiu"
+    )
+
+
+def test_a_tela_de_ordenacao_diz_de_quem_e_o_ato_de_divulgar(client, seletor_ligado, cenario):
+    """`FR-477`: texto que manda o operador a outra tela vale para quem alcança aquela tela.
+
+    Quem lê a tela de ordenação é a presidência — que é justamente quem **não** divulga na
+    configuração segregada. Mandá-la a "Consultar ato e proveniência" sem dizer de quem é o ato a
+    manda a uma tela onde não haverá botão, e o beco é descoberto depois do clique.
+
+    A asserção é sobre **nomear o dono do ato**, e não sobre uma frase literal: prender a redação
+    faria este caso brigar com a `FR-486`, que é quem governa a formulação.
+    """
+    edital, marco = cenario["edital"], cenario["marco"]
+    identificar(client, "maria", [])
+
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, marco])).content.decode()
+
+    assert "Este ato ainda não foi divulgado" in corpo, (
+        "o cenário precisa de um ato emitido e não divulgado para o aviso existir"
+    )
+    assert "permissão de publicar" in corpo, (
+        "a tela manda a presidência divulgar sem dizer que a divulgação é de quem tem a "
+        "capacidade de publicar resultado"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Quem trava sabe a quem pedir (033, US3). O beco é o `ACH-38`: a presidência é mandada divulgar,
+# segue a instrução, e encontra "Você não tem ação disponível sobre este ato" — sem dizer a quem.
+# ---------------------------------------------------------------------------
+
+
+def _ato(cenario):
+    return reverse(
+        "interface:ato-de-ordenacao",
+        args=[cenario["edital"].id, cenario["marco"], cenario["ato"].id],
+    )
+
+
+def test_a_tela_do_ato_nomeia_a_capacidade_que_resolve(client, seletor_ligado, cenario):
+    """`FR-484`: nomear a capacidade e instruir a pedir a quem a detém.
+
+    Maria preside a comissão e emitiu este ato. Ela não tem `resultado:publicar` — a capacidade
+    não decorre de ter emitido —, então a tela abre e não lhe oferece ação nenhuma. O que ela lia
+    era um beco: "Você não tem ação disponível sobre este ato", sem dizer o que falta nem a quem
+    pedir.
+
+    A asserção é sobre **o que a frase nomeia**, e não sobre a redação: prender a redação faria
+    este caso brigar com a `FR-486`, que é quem governa a formulação.
+    """
+    identificar(client, "maria", [])
+
+    corpo = client.get(_ato(cenario)).content.decode()
+
+    assert "não tem ação disponível" not in corpo, "o beco continua lá, sem dizer a quem pedir"
+    assert "permissão de publicar resultado" in corpo
+    assert "Peça a alguém" in corpo
+
+
+def test_quem_ja_tem_a_capacidade_nao_le_a_instrucao(client, seletor_ligado, cenario):
+    """A contraprova de sempre: a frase aparece para quem trava, e não para todo mundo.
+
+    Sem ela, um `{% if %}` invertido — ou ausente — deixaria a instrução na tela de quem já tem o
+    botão, e o caso acima ficaria verde do mesmo jeito.
+
+    Quem acumula os dois é o ator certo aqui, e não o Publicador puro: a porta desta tela é a da
+    presidência e da auditoria, e o Publicador puro **não a atravessa**. O caminho dele até a
+    divulgação é o direto, que a `US1` acrescentou à tela do Edital — e é exatamente por isso que
+    ele precisava existir.
+    """
+    identificar(client, "maria", ["publicador"])
+
+    corpo = client.get(_ato(cenario)).content.decode()
+
+    assert "Publicar resultado" in corpo
+    assert "Peça a alguém" not in corpo
+
+
+def test_onde_a_tela_aceita_duas_bases_a_frase_nomeia_as_duas(client, seletor_ligado, cenario):
+    """`FR-485` e `FR-479`: nomear metade manda pedir metade do que resolve.
+
+    Íris audita: ela **lê** a ordenação e não a emite. O que lhe falta não é uma capacidade, é
+    uma **base** — a permissão de gerir a comissão **ou** a presidência deste Processo, cada uma
+    suficiente sozinha. A tela apenas escondia o formulário de emitir, sem dizer nada.
+
+    E o que a `FR-485` proíbe não é nomear papel: é nomear papel que **não** resolve aquele caso.
+    Uma das duas bases é um papel e se pede como papel; a outra é vínculo, vem da composição da
+    comissão, e **nenhum papel a concede** — mandar pedir "o papel de presidente" mandaria pedir o
+    que não existe.
+    """
+    edital, marco = cenario["edital"], cenario["marco"]
+    identificar(client, "iris", ["auditor"])
+
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, marco])).content.decode()
+
+    assert "permissão de gerir a comissão" in corpo
+    assert "presidência deste Processo" in corpo
+    assert "papel de presidente" not in corpo, (
+        "nenhum papel concede a presidência — ela vem do vínculo, e pedi-la como papel manda a "
+        "pessoa pedir o que não resolve"
+    )
+
+
+def test_quem_pode_emitir_nao_le_a_instrucao_de_pedir(client, seletor_ligado, cenario):
+    """A contraprova do caso acima, no eixo da base."""
+    edital, marco = cenario["edital"], cenario["marco"]
+    identificar(client, "maria", [])
+
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, marco])).content.decode()
+
+    assert "permissão de gerir a comissão" not in corpo
