@@ -99,11 +99,13 @@ def marco(**alteracoes):
 def de_sorteio(**alteracoes):
     """O marco que ordena por sorteio, com o método próprio declarado."""
     return marco(
-        code="SORT-X",
-        name="Sorteio público",
-        orderProduction="POR_SORTEIO",
-        drawMethod=dict(METODO),
-        **alteracoes,
+        **{
+            "code": "SORT-X",
+            "name": "Sorteio público",
+            "orderProduction": "POR_SORTEIO",
+            "drawMethod": dict(METODO),
+            **alteracoes,
+        }
     )
 
 
@@ -274,3 +276,70 @@ def test_os_achados_de_us1_nao_sao_emitidos_na_retificacao(codigo):
         )
         == []
     )
+
+
+# --- FR-467 · o sorteio que ninguém consegue conferir ------------------------------------------
+#
+# O `ACH-50`: um Edital de sorteio publicado sem algoritmo, sem fonte, sem semente, sem
+# normalização e sem regra de substituição. A tela dizia que *"o método é conteúdo publicado do
+# Edital"*, e o documento saiu sem ele. Sem método publicado, a verificação pública que a `021`
+# construiu fica sem base normativa: não há contra o que conferir o sorteio.
+
+
+def test_marco_que_sorteia_sem_metodo_impede_a_publicacao():
+    conteudo = snapshot(perfil(classificationMilestones=[de_sorteio(drawMethod=None)]))
+
+    achado = achados(conteudo, "drawn_milestone_without_method")
+
+    assert len(achado) == 1
+    assert achado[0].severity == Severity.BLOCKING_ERROR
+    assert "SORT-X" in achado[0].message
+    assert "nem próprio, nem comum" in achado[0].message
+    assert achado[0].path.endswith(f"/classificationMilestones/id={MARCO}/drawMethod")
+
+
+def test_o_metodo_comum_do_edital_satisfaz_o_marco_que_o_referencia():
+    """`FR-429` da `030`: o marco que não declara o próprio referencia o comum, e ele governa.
+
+    Sem esta contraprova, a recusa leria só a chave do marco — e concluiria que sorteia sem método
+    justamente o Edital que declarou o método **uma vez**, para todos os marcos, que é a forma que
+    a `030` criou.
+    """
+    conteudo = snapshot(
+        perfil(classificationMilestones=[de_sorteio(drawMethod=None)]), drawMethod=dict(METODO)
+    )
+
+    assert achados(conteudo, "drawn_milestone_without_method") == []
+
+
+def test_metodo_pela_metade_continua_sendo_o_achado_antigo_e_nao_este():
+    """A separação que importa: `draw_method_invalid` é da `026`, e trata da **declaração**.
+
+    Este achado trata da **ausência**. Empilhar os dois sobre o mesmo marco esconderia o que
+    resolve — e trocar um pelo outro faria o método pela metade deixar de ser acusado pelo achado
+    que sabe dizer **qual** dos sete campos falta.
+    """
+    pela_metade = {chave: valor for chave, valor in METODO.items() if chave != "substitutionRule"}
+    conteudo = snapshot(perfil(classificationMilestones=[de_sorteio(drawMethod=pela_metade)]))
+
+    assert achados(conteudo, "drawn_milestone_without_method") == []
+    antigo = achados(conteudo, "draw_method_invalid")
+    assert len(antigo) == 1
+    assert antigo[0].severity == Severity.BLOCKING_ERROR
+
+
+def test_marco_que_ordena_por_pontuacao_nao_e_cobrado_de_metodo():
+    """A contraprova mais barata, e a que uma condição larga demais quebraria primeiro."""
+    assert achados(snapshot(), "drawn_milestone_without_method") == []
+
+
+def test_o_sorteio_sem_metodo_nao_e_cobrado_na_retificacao():
+    """`FR-459` e `FR-460`, para este achado.
+
+    `orderProduction` vazio é o estado legítimo de **todo** marco do acervo, e um Edital que
+    declarou o sorteio antes desta feature não pode ficar irretificável por não ter dito o que a
+    capacidade não pedia.
+    """
+    conteudo = snapshot(perfil(classificationMilestones=[de_sorteio(drawMethod=None)]))
+
+    assert achados(conteudo, "drawn_milestone_without_method", ato=ATO_DE_RETIFICACAO) == []

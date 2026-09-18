@@ -29,8 +29,16 @@ def rascunho(*, com_metodo_comum, com_metodo_no_marco):
     if not com_metodo_comum:
         base.pop("drawMethod", None)
     perfil = next(item for item in base["profiles"] if item["id"] == PERFIL["A"])
+    marco = perfil["classificationMilestones"][0]
     if not com_metodo_no_marco:
-        perfil["classificationMilestones"][0]["drawMethod"] = None
+        marco["drawMethod"] = None
+    if not com_metodo_comum and not com_metodo_no_marco:
+        # **Sem método em lugar nenhum, o marco deixa de ordenar por sorteio** — e precisa dizê-lo.
+        # O construtor declara `POR_SORTEIO` porque declara o método inteiro; tirar o método e
+        # manter a forma descreveria um Edital que sorteia e não publica como, que a `FR-467` da
+        # `032` recusa na publicação. E recusa com razão: é o `ACH-50` da auditoria. O que este
+        # caso quer dizer é outra coisa — um Edital que **não sorteia** não ganha a chave na raiz.
+        marco["orderProduction"] = marcos.POR_PONTUACAO
     return base
 
 

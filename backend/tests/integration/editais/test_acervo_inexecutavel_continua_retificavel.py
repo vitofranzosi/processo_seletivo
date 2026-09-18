@@ -17,19 +17,16 @@ O acervo é simulado como ele realmente é — `Publicacao` inserida com o conte
 publicado —, e não por `UPDATE` sobre linha publicada: publicação é append-only por trigger desde a
 `002`.
 
-**E a publicação é montada aqui, e não por `publicar_na_versao_anterior`.** Aquela fixture submete
-pela API, e a submissão afere publicabilidade — ela recusa, hoje, o marco que não declara a forma
-da ordem, e recusará amanhã os três estados que este arquivo precisa ter publicados. Uma fixture
-que atravesse a aferição não consegue, por construção, produzir o Edital que a aferição rejeita; e
-é exatamente esse Edital que existe no acervo e precisa continuar retificável. O rascunho é gravado
+**E a publicação passa por `publicar_sem_aferir`, e não por `publicar_na_versao_anterior`.** Aquela
+submete pela API, e a submissão afere publicabilidade — ela recusa o marco que não declara a forma
+da ordem, e recusa os três estados que este arquivo precisa ter publicados. Uma fixture que
+atravesse a aferição não consegue, por construção, produzir o Edital que a aferição rejeita; e é
+exatamente esse Edital que existe no acervo e precisa continuar retificável. O rascunho é gravado
 como a composição de então o gravava — completo —, e os marcos são devolvidos ao estado do acervo
 **antes** do congelamento do snapshot, que é o mesmo recurso que `test_forma_da_ordem.py` usa.
 """
 
-import hashlib
-
 import pytest
-from django.utils import timezone
 
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_RETIFICACAO,
@@ -37,18 +34,9 @@ from processo_seletivo.editais.domain.validation import (
     validate_for_publication,
 )
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
-from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
-from processo_seletivo.publicacoes.models import (
-    DocumentoPublicado,
-    Publicacao,
-    RevisaoEdital,
-)
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from processo_seletivo.shared.canonical import canonical_bytes, canonical_sha256
-from tests.fixtures.edital import actor_headers
-from tests.fixtures.legado import rebaixar
-from tests.fixtures.publicacao import SIGNATORY, retify
+from tests.fixtures.legado import publicar_sem_aferir
+from tests.fixtures.publicacao import retify
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -225,80 +213,16 @@ def _devolver_ao_estado_do_acervo(edital):
     MarcoClassificatorio.objects.filter(pk=MARCO_DE_SORTEIO).update(metodo_de_sorteio={})
 
 
-def _publicar_como_o_acervo(api_client, manager_headers, process_payload):
-    """Grava, submete, degrada e **então** congela — nessa ordem, e a ordem é o ponto.
-
-    A gravação e a submissão recebem o Edital completo, porque é assim que a composição de então o
-    produzia. O congelamento acontece depois da degradação, e por isso a `Publicacao` nasce
-    carregando o estado que o acervo tem de verdade.
-    """
-    criado = api_client.post(
-        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
-    )
-    assert criado.status_code == 201, criado.content
-    edital = Edital.objects.get(processo_id=criado.json()["id"])
-    preparador = actor_headers(
-        "preparador", ["edital:elaborar", "edital:submeter"], key="acervo-inexecutavel-032-0001"
-    )
-    gravado = api_client.put(
-        f"/api/v1/admin/editais/{edital.id}/rascunho",
-        _rascunho_do_acervo(),
-        format="json",
-        **{**preparador, "HTTP_IF_MATCH": '"1"'},
-    )
-    assert gravado.status_code == 200, gravado.content
-    submetido = api_client.post(
-        f"/api/v1/admin/editais/{edital.id}/submissoes",
-        format="json",
-        **{**preparador, "HTTP_IF_MATCH": '"2"'},
-    )
-    assert submetido.status_code in (200, 201), submetido.content
-
-    _devolver_ao_estado_do_acervo(edital)
-
-    revisao = RevisaoEdital.objects.filter(edital=edital).latest("submitted_at")
-    conteudo = rebaixar(edital_snapshot(edital), para=VERSAO_DO_ACERVO)
-    agora = timezone.now()
-    publicacao = Publicacao.objects.create(
-        edital=edital,
-        revisao=revisao,
-        publication_order=edital.next_publication_order,
-        published_at=agora,
-        effective_at=agora,
-        content_hash=canonical_sha256(conteudo),
-        canonical_content=canonical_bytes(conteudo),
-        canonical_schema_version=VERSAO_DO_ACERVO,
-        published_by="publicador",
-        signatory_id=SIGNATORY["authorityId"],
-        signatory_name=SIGNATORY["name"],
-        signatory_role=SIGNATORY["role"],
-    )
-    DocumentoPublicado.objects.create(
-        publicacao=publicacao,
-        bytes=b"documento do acervo inexecutavel",
-        document_hash=hashlib.sha256(b"documento do acervo inexecutavel").hexdigest(),
-    )
-    VersaoConsolidada.objects.create(
-        edital=edital,
-        valid_from=agora,
-        materialized_at=agora,
-        source_publication=publicacao,
-        content=conteudo,
-        canonical_content=canonical_bytes(conteudo),
-        content_hash=canonical_sha256(conteudo),
-        applied_publications=[str(publicacao.id)],
-    )
-    Edital.objects.filter(pk=edital.pk).update(
-        status=Edital.Status.PUBLICADO,
-        next_publication_order=edital.next_publication_order + 1,
-        revision=edital.revision + 1,
-    )
-    return Edital.objects.get(pk=edital.pk)
-
-
 @pytest.fixture
 def do_acervo(api_client, manager_headers, process_payload):
-    return _publicar_como_o_acervo(api_client, manager_headers, process_payload)
+    return publicar_sem_aferir(
+        api_client,
+        manager_headers,
+        process_payload,
+        draft=_rascunho_do_acervo(),
+        degradar=_devolver_ao_estado_do_acervo,
+        versao=VERSAO_DO_ACERVO,
+    )
 
 
 def vigente(edital):

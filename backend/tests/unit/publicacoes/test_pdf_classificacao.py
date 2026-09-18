@@ -396,3 +396,174 @@ def test_com_mais_de_um_perfil_o_bloco_diz_de_qual_perfil_e_o_marco():
     assert "Marcos classificatórios — DOC-INFO" in escrito
     assert "Marcos classificatórios — DOC-MAT" in escrito
     assert "soma ponderada da Etapa Análise de títulos (peso 1)" in escrito
+
+
+# ---------------------------------------------------------------------------
+# 032 — a seção do marco diz como a ordem nasce, e publica o método do sorteio
+# ---------------------------------------------------------------------------
+#
+# **O `ACH-50`, visto do papel.** O documento de um Edital de sorteio imprimia "soma ponderada da
+# Etapa…" — uma regra que aquele marco não aplica — e não imprimia nada do método que ele aplica.
+# Quem recebia o Edital lia um método falso e não tinha como conferir o sorteio contra a norma.
+#
+# **O documento publica a norma, e não o resultado.** Ele imprime a ocorrência que **fixará** a
+# semente, e nunca a semente: no dia da publicação ela ainda não existe. Quem publica a semente é o
+# documento do resultado do sorteio (`Algoritmo`, `Semente`), e a verificação pública compara os
+# dois — é essa comparação que a `FR-465` torna possível.
+
+METODO_DO_EDITAL = {
+    "algorithm": "IFES-SORTEIO-SHA256-v1",
+    "source": "Loteria Federal",
+    "occurrence": "concurso 6100 da Loteria Federal",
+    "occurrenceAt": "2026-11-20T20:00:00-03:00",
+    "derivation": "o primeiro concurso realizado após a data programada do sorteio",
+    "normalization": {
+        "rule": "DIGITOS_EM_SEQUENCIA",
+        "text": "os dígitos das cinco dezenas, em sequência",
+    },
+    "substitutionRule": {
+        "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+        "text": "a ocorrência seguinte da mesma fonte",
+    },
+}
+
+METODO_PROPRIO = {
+    **METODO_DO_EDITAL,
+    "occurrence": "concurso 6101 da Loteria Federal",
+    "derivation": "o segundo concurso realizado após a data programada do sorteio",
+}
+
+
+def sorteado(**alteracoes):
+    """O marco que ordena por sorteio. Sem `stages`: sortear não exige Etapa (030, `FR-432`)."""
+    return marco(
+        **{
+            "code": "SORT-X",
+            "name": "Sorteio público",
+            "orderProduction": "POR_SORTEIO",
+            "stages": [],
+            "tiebreakers": [],
+            **alteracoes,
+        }
+    )
+
+
+def documento_de_sorteio(*, no_marco=None, no_edital=None):
+    """O conteúdo de um Edital cujo único marco sorteia, com o método onde o chamador o puser."""
+    base = com_classificacao(marcos=[sorteado(drawMethod=no_marco)] if no_marco else [sorteado()])
+    if no_marco is None:
+        base["profiles"][0]["classificationMilestones"][0].pop("drawMethod", None)
+    if no_edital is not None:
+        base["drawMethod"] = no_edital
+    return texto(base)
+
+
+def test_o_marco_declara_como_a_ordem_dele_e_produzida():
+    """`FR-464`: a primeira coisa que a seção do marco diz é de onde a ordem vem."""
+    assert "Ordem: pela pontuação combinada das Etapas" in texto(com_classificacao())
+    assert "Ordem: por sorteio" in documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+
+
+def test_o_marco_do_acervo_sem_forma_declarada_sai_exatamente_como_hoje():
+    """A outra metade da `FR-464`, e a que protege o acervo.
+
+    Marco composto antes da `030` não declara `orderProduction`, e a ausência **é** a afirmação:
+    dela os leitores derivam o comportamento de sempre. O documento dele não ganha o par `Ordem`, e
+    tudo o mais continua onde estava — inclusive a combinação, que é o que ele sempre imprimiu.
+    """
+    do_acervo = marco()
+    do_acervo.pop("orderProduction")
+
+    escrito = texto(com_classificacao(marcos=[do_acervo]))
+
+    assert "Ordem:" not in escrito
+    assert "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)" in (
+        escrito
+    )
+
+
+@pytest.mark.parametrize(
+    ("rotulo", "trecho"),
+    [
+        ("Algoritmo", "IFES-SORTEIO-SHA256-v1"),
+        ("Fonte", "Loteria Federal"),
+        ("Ocorrência", "concurso 6100 da Loteria Federal"),
+        ("Quando", "20/11/2026, às 20h"),
+        ("Derivação", "o primeiro concurso realizado após a data programada do sorteio"),
+        ("Semente", "os dígitos das cinco dezenas, em sequência"),
+        ("Se faltar", "a ocorrência seguinte da mesma fonte"),
+    ],
+)
+def test_o_documento_imprime_os_sete_dados_do_metodo(rotulo, trecho):
+    """`FR-465` e `SC-158`: os sete que tornam a semente reproduzível por terceiro.
+
+    O instante sai como um Edital escreve data e hora — `20/11/2026, às 20h` —, e não como um banco
+    a armazena. A normalização e a substituição saem pela **frase publicada**: o identificador é o
+    que a máquina aplica, e ele mora no manifesto do sorteio, não no Edital.
+    """
+    escrito = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+
+    assert f"{rotulo}: {trecho}" in escrito
+
+
+def test_os_rotulos_do_metodo_saem_do_vocabulario_do_dominio():
+    """Princípio I: o documento e a tela de composição dizem a mesma coisa com as mesmas palavras.
+
+    A varredura é sobre a **fonte**, e não sobre a grafia: se `CAMPOS_DO_METODO` ganhar um oitavo
+    campo, ou perder um, este teste falha antes de o documento passar a omitir algo que a norma
+    declara. É o que impede o renderizador de inventar um oitavo nome para a mesma coisa.
+    """
+    from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
+
+    escrito = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+
+    assert len(CAMPOS_DO_METODO) == 7
+    for _, _, rotulo in CAMPOS_DO_METODO:
+        assert f"{rotulo}:" in escrito, rotulo
+
+
+@pytest.mark.parametrize(
+    ("no_marco", "no_edital", "grafia"),
+    [
+        (None, METODO_DO_EDITAL, "Método: comum a este Edital"),
+        (
+            METODO_PROPRIO,
+            METODO_DO_EDITAL,
+            "Método: próprio deste marco — diverge do comum deste Edital",
+        ),
+        (METODO_PROPRIO, None, "Método: próprio deste marco"),
+    ],
+)
+def test_o_documento_diz_qual_metodo_governa_o_marco(no_marco, no_edital, grafia):
+    """`FR-466`, e são três grafias — a quarta não chega ao documento porque `FR-467` a recusa."""
+    assert grafia in documento_de_sorteio(no_marco=no_marco, no_edital=no_edital)
+
+
+def test_o_proprio_identico_ao_comum_nao_e_anunciado_como_divergente():
+    """A `FR-466` nomeia a divergência **quando ela existe**.
+
+    Um marco que declara o próprio idêntico ao comum não diverge de nada, e escrever que diverge
+    seria o documento afirmando uma diferença que ninguém publicou.
+    """
+    escrito = documento_de_sorteio(no_marco=METODO_DO_EDITAL, no_edital=METODO_DO_EDITAL)
+
+    assert "Método: próprio deste marco" in escrito
+    assert "diverge" not in escrito
+
+
+def test_o_marco_que_sorteia_nao_imprime_combinacao_de_pontuacoes():
+    """`FR-468`: aquela ordem não vem de nota, e imprimi-la era o que afirmava um método falso."""
+    escrito = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+
+    assert "Combinação" not in escrito
+    assert "Normalização:" not in escrito
+    assert "soma ponderada" not in escrito
+
+
+def test_o_marco_que_ordena_por_pontuacao_nao_ganha_bloco_de_sorteio():
+    """A contraprova simétrica: o Edital comum não passa a falar de sorteio."""
+    escrito = texto(com_classificacao())
+
+    assert "Sorteio" not in escrito
+    assert "Método:" not in escrito
+    assert "soma ponderada das Etapas Prova didática (peso 2)" in escrito

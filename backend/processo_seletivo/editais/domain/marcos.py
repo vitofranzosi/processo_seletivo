@@ -144,12 +144,19 @@ def pontuacao_combinada_e_a_da_etapa(*, operacao, normalizacao) -> bool:
 
 
 def marco_no_conteudo(conteudo, *, perfil_id, marco_id):
-    """O marco, dentro do Perfil, no conteúdo publicado. `None` quando não existe."""
+    """O marco, dentro do Perfil, no conteúdo publicado. `None` quando não existe.
+
+    **Atravessa conteúdo malformado sem quebrar**, e a guarda não é zelo: desde a `032` esta
+    leitura é chamada de dentro de `validate_for_publication`, que roda sobre conteúdo que ainda
+    não foi conferido — um Perfil que é string em vez de objeto é exatamente o que a validação
+    existe para acusar. Uma exceção aqui apagaria todos os achados seguintes, inclusive o que diz
+    **por que** o conteúdo está malformado.
+    """
     for perfil in (conteudo or {}).get("profiles") or []:
-        if str(perfil.get("id")) != str(perfil_id):
+        if not isinstance(perfil, dict) or str(perfil.get("id")) != str(perfil_id):
             continue
         for marco in perfil.get("classificationMilestones") or []:
-            if str(marco.get("id")) == str(marco_id):
+            if isinstance(marco, dict) and str(marco.get("id")) == str(marco_id):
                 return marco
     return None
 

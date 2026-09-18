@@ -1409,6 +1409,7 @@ def validate_for_publication(
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
+    findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -1724,6 +1725,68 @@ def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFin
                     path=(
                         f"/profiles/id={perfil.get('id', '')}"
                         f"/classificationMilestones/id={marco.get('id', '')}/cutRule"
+                    ),
+                )
+            )
+    return findings
+
+
+def _metodo_do_sorteio_publicavel(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Quem ordena por sorteio publica o método que o governa (032, FR-467).
+
+    **O `ACH-50` da auditoria de 16/09/2026**: um Edital de sorteio foi publicado sem algoritmo,
+    sem fonte, sem semente, sem normalização e sem regra de substituição. A tela já dizia que *"o
+    método é conteúdo publicado do Edital"*; o que faltava era a verificação. Sem o método
+    publicado, quem recebe o resultado não tem contra o que conferir o sorteio — e a verificação
+    pública que a `021` construiu fica sem base normativa.
+
+    **É a ausência, e não a declaração pela metade.** O método incompleto já tem achado próprio
+    desde a `026` — `draw_method_invalid`, que reusa `_validar_metodo_de_sorteio` e confere os sete
+    campos, a fonte que o sistema consulta e as duas regras com identificador e frase. Este trata
+    do caso em que não há método nenhum: nem próprio no marco, nem comum na raiz do Edital.
+
+    **A resolução é uma só** — `marcos.metodo_que_governa`, que é o ponto único desde a `030`. Uma
+    segunda leitura aqui divergiria da do renderizador na primeira mudança, e a divergência
+    apareceria como documento publicado dizendo uma coisa e sorteio fazendo outra.
+
+    **Marco sem identidade não é endereçável**, e por isso a resolução não o alcança: ele recebe o
+    achado, o que erra pelo lado que recusa. Quem tem a mensagem certa para ele é a conferência de
+    forma, que já o acusa.
+
+    **Só na publicação**, e não alcança a Retificação: `orderProduction` vazio é o estado legítimo
+    de todo marco do acervo, e um Edital que declarou o sorteio antes desta feature não pode ficar
+    irretificável por não ter dito o que a capacidade não pedia.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            identidade = marco.get("id")
+            metodo = (
+                marcos.metodo_que_governa(snapshot, perfil_id=perfil.get("id"), marco_id=identidade)
+                if identidade
+                else None
+            )
+            if not marcos.ordena_por_sorteio(
+                marco.get("orderProduction") or "", metodo_declarado=bool(metodo)
+            ):
+                continue
+            if metodo:
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="drawn_milestone_without_method",
+                    message=(
+                        f"O marco {_marco_nomeado(marco)} ordena por sorteio e não publica método "
+                        "— nem próprio, nem comum a este Edital. Sem o método publicado ninguém "
+                        "consegue conferir o sorteio contra a norma. Declare-o na etapa "
+                        "Classificação."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={identidade or ''}/drawMethod"
                     ),
                 )
             )
