@@ -12,7 +12,7 @@ from django.utils import timezone
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import identificador
+from tests.fixtures.edital import identidade_do_marco, identificador, marco_minimo
 from tests.fixtures.publicacao import levar_a_publicacao
 
 # Ids distintos dos da `011`, que usa `seed` 0 e 1: Perfil e Evento são únicos globalmente.
@@ -82,6 +82,8 @@ def rascunho_com_periodo(
                 "immediateVacancies": 1,
                 "reserveType": "NONE",
                 "competitionModalities": [],
+                # O marco que torna o Perfil publicável (032, FR-457).
+                "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(seed)))],
             }
         ],
         "schedule": eventos

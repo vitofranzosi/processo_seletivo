@@ -1407,6 +1407,9 @@ def validate_for_publication(
     findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
     findings.extend(_coerencia_da_forma_da_ordem(snapshot))
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
+    findings.extend(_perfil_sem_marco(snapshot, ato=ato))
+    findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
+    findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -1633,6 +1636,160 @@ def _forma_da_ordem_declarada(snapshot: dict, *, ato: str) -> list[ValidationFin
                     path=(
                         f"/profiles/id={perfil.get('id', '')}"
                         f"/classificationMilestones/id={marco.get('id', '')}/orderProduction"
+                    ),
+                )
+            )
+    return findings
+
+
+def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Perfil que não declara marco algum não classifica ninguém (032, FR-457).
+
+    **O achado de maior severidade da auditoria de 16/09/2026** (`ACH-49`), e o mais barato de
+    evitar: a etapa de Classificação já dizia, em prosa, que *"um Perfil sem marco não
+    classifica"*, e a Revisão respondia `IMPEDE: []` sobre um Edital em que isso era verdade. O
+    Edital saiu publicado — ato imutável —, e a saída virou Retificação.
+
+    **Na publicação, e não na gravação do rascunho**, pela razão que `_forma_da_ordem_declarada`
+    escreve por extenso: o rascunho pode estar pela metade, e recusar ali tornaria ilegal todo
+    payload que os clientes de hoje produzem. Um Perfil ganha marco na etapa de Classificação, que
+    vem **depois** da de Perfis; cobrá-lo antes recusaria o assistente no meio do próprio caminho.
+
+    **E não alcança a Retificação** (FR-460). O Edital sem marco existe: é o que a auditoria
+    publicou. Tornar irretificável justamente o Edital que esta família existe para evitar trocaria
+    um problema por outro pior — e é o que aconteceria sem o recorte, porque `retificacoes.py`
+    afere o conteúdo produzido com `blocking_findings(validate_for_publication(...))`.
+
+    **A truthiness é sobre o que o Perfil declara, e não sobre marcos bem formados.** Um
+    `classificationMilestones` malformado já tem acusação própria em `_violacoes_da_colecao`, e
+    empilhar duas sobre a mesma causa esconde a que resolve.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if perfil.get("classificationMilestones"):
+            continue
+        # **`code` antes de `name`, como os três achados do quadro de vagas já fazem.** Não é
+        # preferência: os quatro aparecem juntos na mesma lista da Revisão, e um Perfil chamado
+        # `DOC-INFO` numa linha e `Professor de Informática` na seguinte pareceriam dois Perfis.
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_without_milestone",
+                message=(
+                    f"O Perfil '{rotulo}' não declara marco classificatório algum: sem marco "
+                    "ninguém é classificado por ele. Declare ao menos um na etapa Classificação."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/classificationMilestones",
+            )
+        )
+    return findings
+
+
+def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Marco sem regra de corte classifica e não convoca — e isso passa a ser dito (032, FR-461).
+
+    **A distinção que esta função existe para fazer**: *ausência* de `cutRule` e `cutRule` que
+    declara **não governar Etapa alguma** são estados diferentes, e só o primeiro dispara. A `014`
+    criou o segundo de propósito (`FR-224`): a regra existe, a faixa nasce, e a convocação alcança
+    — é o Edital 69/2026 da amostra, que sorteia, publica, convoca e manda comparecer, sem análise
+    documental entre a ordem e a chamada. Cobrar dele uma regra que ele **tem** seria falso
+    positivo no Edital mais simples e mais comum do acervo, e ruído treina a pessoa a ignorar a
+    família inteira — que é o oposto do que o Princípio IV pede.
+
+    **Aviso, e não impedimento.** Marco que não corta é legítimo, e a `014` fechou isso por
+    escrito. O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
+    seguinte recebe todos os habilitados"* — verdade, e a metade menos importante. A consequência
+    que importa é a outra ponta da cadeia, e a mensagem a nomeia inteira.
+
+    **Recebe `ato` ainda sendo aviso**, e é deliberado: aviso não impede publicação nenhuma, mas
+    sem o recorte a Retificação do Edital do acervo viria cheia de avisos sobre o que aquele Edital
+    publicou e não tem como deixar de ter publicado.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            if marco.get("cutRule"):
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.WARNING,
+                    code="milestone_without_cut_rule",
+                    message=(
+                        f"O marco {_marco_nomeado(marco)} não declara regra de corte. Sem corte "
+                        "não há geração, sem geração não há faixa, e sem faixa não há convocação: "
+                        "este marco classifica e não convoca. Declare a regra na etapa "
+                        "Classificação — ela pode declarar que não governa Etapa alguma."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={marco.get('id', '')}/cutRule"
+                    ),
+                )
+            )
+    return findings
+
+
+def _metodo_do_sorteio_publicavel(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Quem ordena por sorteio publica o método que o governa (032, FR-467).
+
+    **O `ACH-50` da auditoria de 16/09/2026**: um Edital de sorteio foi publicado sem algoritmo,
+    sem fonte, sem semente, sem normalização e sem regra de substituição. A tela já dizia que *"o
+    método é conteúdo publicado do Edital"*; o que faltava era a verificação. Sem o método
+    publicado, quem recebe o resultado não tem contra o que conferir o sorteio — e a verificação
+    pública que a `021` construiu fica sem base normativa.
+
+    **É a ausência, e não a declaração pela metade.** O método incompleto já tem achado próprio
+    desde a `026` — `draw_method_invalid`, que reusa `_validar_metodo_de_sorteio` e confere os sete
+    campos, a fonte que o sistema consulta e as duas regras com identificador e frase. Este trata
+    do caso em que não há método nenhum: nem próprio no marco, nem comum na raiz do Edital.
+
+    **A resolução é uma só** — `marcos.metodo_que_governa`, que é o ponto único desde a `030`. Uma
+    segunda leitura aqui divergiria da do renderizador na primeira mudança, e a divergência
+    apareceria como documento publicado dizendo uma coisa e sorteio fazendo outra.
+
+    **Marco sem identidade não é endereçável**, e por isso a resolução não o alcança: ele recebe o
+    achado, o que erra pelo lado que recusa. Quem tem a mensagem certa para ele é a conferência de
+    forma, que já o acusa.
+
+    **Só na publicação**, e não alcança a Retificação: `orderProduction` vazio é o estado legítimo
+    de todo marco do acervo, e um Edital que declarou o sorteio antes desta feature não pode ficar
+    irretificável por não ter dito o que a capacidade não pedia.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            identidade = marco.get("id")
+            metodo = (
+                marcos.metodo_que_governa(snapshot, perfil_id=perfil.get("id"), marco_id=identidade)
+                if identidade
+                else None
+            )
+            if not marcos.ordena_por_sorteio(
+                marco.get("orderProduction") or "", metodo_declarado=bool(metodo)
+            ):
+                continue
+            if metodo:
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="drawn_milestone_without_method",
+                    message=(
+                        f"O marco {_marco_nomeado(marco)} ordena por sorteio e não publica método "
+                        "— nem próprio, nem comum a este Edital. Sem o método publicado ninguém "
+                        "consegue conferir o sorteio contra a norma. Declare-o na etapa "
+                        "Classificação."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={identidade or ''}/drawMethod"
                     ),
                 )
             )
@@ -2206,7 +2363,115 @@ def _coerencia_do_quadro_de_vagas(
                 perfil, reservadas - com_linha, modalidades, base=base, rotulo=rotulo, soma=soma
             )
         )
+        findings.extend(
+            _reserva_sem_via_de_apuracao(
+                snapshot, perfil, modalidades, base=base, rotulo=rotulo, ato=ato
+            )
+        )
     return findings
+
+
+def _reserva_sem_via_de_apuracao(
+    snapshot, perfil, modalidades, *, base, rotulo, ato
+) -> list[ValidationFinding]:
+    """Vagas repartidas em recortes que o marco daquele Perfil não emite (032, FR-470, FR-471).
+
+    **O `ACH-47`, e é o achado de maior dano da auditoria**: cotas publicadas que o sistema não
+    apura nem convoca. No dia de convocar, dois dos três botões da tela de Ocupação sempre falhavam
+    — e a mensagem que a pessoa lia, *"Este recorte não tem ordem emitida"*, nomeia o sintoma e
+    chega quando a correção já depende de Retificação.
+
+    **Aviso, e não impedimento — a decisão foi tomada em 18/09/2026 e o porquê está na spec.**
+    Impedir era a leitura mais forte, e é o que esta feature faz nos outros três achados. Aqui
+    custaria caro e protegeria pouco: três Editais da amostra real — 57/2026, 28/2026 e 173/2025 —
+    declaram reserva em marco computado, e para eles a publicação é a única parte da jornada que
+    hoje funciona, porque a apuração por recorte já acontece fora do sistema. Impedir retiraria o
+    que funciona sem consertar o que não funciona. O limite sai com a feature de emissão por lista;
+    o que esta remove é o silêncio.
+
+    **Irmão de `vacancy_reserved_list_without_row`, e a diferença está no que falta.** Lá o Perfil
+    declara a lista e não declara a quantidade dela; aqui a quantidade **está** declarada, e o que
+    falta é a ordem.
+
+    **O recorte é o `modalityId` da linha, e nunca a Modalidade declarada como ampla.** É a
+    grafia-armadilha que este projeto já registrou: o recorte da ampla concorrência é o `NULL` da
+    linha geral, e condicionar pela Modalidade chamada "Ampla concorrência" produziria aviso em
+    todo Edital normal do acervo.
+
+    **Sem marco não há aviso**: quem resolve aquele Perfil é `FR-457`, que já o diz, e empilhar
+    duas acusações sobre a mesma causa esconde a que resolve — além de não haver marco que nomear
+    na mensagem.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    marcos_do_perfil = _marcos_bem_formados(perfil)
+    if not marcos_do_perfil:
+        return []
+    ampla = perfil.get("generalCompetitionModalityId")
+    ampla = str(ampla) if ampla else None
+    reservadas = []
+    for linha in perfil.get("vacancyTable") or []:
+        if not isinstance(linha, dict):
+            continue
+        modalidade_id = linha.get("modalityId")
+        quantidade = linha.get("immediateVacancies")
+        if modalidade_id is None or str(modalidade_id) == ampla:
+            continue
+        if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade <= 0:
+            continue
+        modalidade = modalidades.get(str(modalidade_id)) or {}
+        reservadas.append(
+            (quantidade, modalidade.get("name") or modalidade.get("code") or "", modalidade_id)
+        )
+    if not reservadas:
+        return []
+    # **Todos os marcos do Perfil, e não o primeiro.** Um Perfil pode publicar mais de um marco, e
+    # a tela de Ocupação é **por marco**: um Perfil cujo primeiro marco sorteia e cujo segundo
+    # computa tem, no segundo, exatamente os recortes que este aviso existe para nomear. Ler só o
+    # primeiro devolvia o silêncio pela porta dos fundos — e reabria a divergência entre a
+    # validação e o selector que `emite_ordem_no_recorte` existe para fechar, agora não por haver
+    # dois predicados, mas por um deles ser perguntado sobre menos marcos que o outro.
+    sem_via = [
+        marco
+        for marco in marcos_do_perfil
+        if any(
+            not marcos.emite_ordem_no_recorte(
+                snapshot,
+                perfil_id=perfil.get("id"),
+                marco_id=marco.get("id"),
+                lista_id=modalidade_id,
+            )
+            for _, _, modalidade_id in reservadas
+        )
+    ]
+    if not sem_via:
+        return []
+    repartidas = " e ".join(
+        f"{quantidade} para '{nome}'" if indice else f"{quantidade} vaga(s) para '{nome}'"
+        for indice, (quantidade, nome, _) in enumerate(
+            sorted(reservadas, key=lambda linha: linha[1])
+        )
+    )
+    nomeados = [_marco_nomeado(marco) for marco in sem_via]
+    # Um achado por Perfil, nomeando os marcos — e não um achado por marco. Os dois dizem o mesmo
+    # do quadro, endereçam o mesmo `vacancyTable` e levam à mesma etapa; repeti-lo por marco
+    # encheria a Revisão de linhas que só diferem no código do marco.
+    da_ordem = (
+        f"a ordem do marco {nomeados[0]} é emitida em lista única"
+        if len(nomeados) == 1
+        else f"a ordem dos marcos {', '.join(nomeados[:-1])} e {nomeados[-1]} é emitida em "
+        "lista única"
+    )
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "reserved_row_without_ordering",
+            f"O Perfil '{rotulo}' publica {repartidas}, e {da_ordem}: só a ordem sorteada é "
+            "emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do "
+            "sistema.",
+            f"{base}/vacancyTable",
+        )
+    ]
 
 
 def _listas_reservadas_sem_linha(

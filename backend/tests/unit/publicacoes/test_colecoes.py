@@ -158,10 +158,12 @@ def test_the_identity_topology_names_every_addressable_entity():
     assert f"/profiles/id={PERFIL['A']}/competitionModalities/id={MODALIDADE['A']}" in topologia
     assert f"/profiles/id={PERFIL['B']}/declaredFacts/id={FATO['NASCIMENTO']}" in topologia
     assert f"/attachments/id={ANEXO['A']}" in topologia
-    assert len(topologia) == 3 + 2 + 2 + 2 + 2 + 3, (
+    assert len(topologia) == 3 + 2 + 2 + 2 + 2 + 3 + 3, (
         "três Perfis, duas Modalidades do primeiro, dois Eventos, dois Fatos Declarados do "
-        "segundo, dois Anexos e a linha geral do quadro de cada um dos três Perfis — que a `027` "
-        "passou a materializar na gravação, e que é endereçável como qualquer outra linha"
+        "segundo, dois Anexos, a linha geral do quadro de cada um dos três Perfis — que a `027` "
+        "passou a materializar na gravação — e o marco classificatório de cada um dos três, que a "
+        "`032` tornou precondição de publicar: um Perfil sem marco não classifica ninguém "
+        "(`FR-457`), e o construtor deixou de produzir esse estado"
     )
 
 

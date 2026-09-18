@@ -22,7 +22,7 @@ Edital em elaboração de terceiros sem que requisito nenhum peça isso.
 {
   "severity": "BLOCKING_ERROR",
   "code": "profile_without_milestone",
-  "message": "O Perfil 'Professor de Informática' não declara marco classificatório algum: sem marco ninguém é classificado por ele. Declare ao menos um na etapa Classificação.",
+  "message": "O Perfil 'DOC-INFO' não declara marco classificatório algum: sem marco ninguém é classificado por ele. Declare ao menos um na etapa Classificação.",
   "path": "/profiles/id=…/classificationMilestones"
 }
 ```
@@ -63,7 +63,7 @@ e trata do método **declarado pela metade**; este trata da **ausência**.
 {
   "severity": "WARNING",
   "code": "reserved_row_without_ordering",
-  "message": "O Perfil 'Professor de Informática' publica 1 vaga(s) para 'Pessoas com deficiência' e 2 para 'Negros', e o marco CLASS-TUT produz uma ordem única: só a ordem sorteada é emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do sistema.",
+  "message": "O Perfil 'DOC-INFO' publica 2 vaga(s) para 'Negros' e 1 para 'Pessoas com deficiência', e a ordem do marco CLASS-TUT é emitida em lista única: só a ordem sorteada é emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do sistema.",
   "path": "/profiles/id=…/vacancyTable"
 }
 ```
@@ -71,6 +71,20 @@ e trata do método **declarado pela metade**; este trata da **ausência**.
 **É aviso, e não impedimento** — decisão registrada na `spec.md`, história P3. É irmão de
 `vacancy_reserved_list_without_row`, que trata do caso em que **falta a linha**; este trata do caso
 em que a linha existe e o que falta é a ordem.
+
+**Duas correções que a implementação trouxe** (18/09/2026), e nas duas o código estava certo:
+
+- **O Perfil é nomeado pelo `code`, e não pelo `name`.** Os exemplos deste contrato escreviam
+  `'Professor de Informática'`; os três achados que já existem em `_coerencia_do_quadro_de_vagas`
+  escrevem o código. Os quatro aparecem juntos na mesma lista da Revisão, e um Perfil chamado
+  `DOC-INFO` numa linha com `Professor de Informática` na seguinte pareceriam dois Perfis.
+- **A causa se escreve "a ordem do marco X é emitida em lista única"**, e não "o marco produz uma
+  ordem única". É o que a `FR-471` exige literalmente, e o requisito é a autoridade sobre o
+  exemplo.
+
+**E os recortes saem em ordem alfabética do nome da Modalidade**, e não na ordem das linhas do
+quadro: a ordem das linhas é acidente de gravação, e duas gravações da mesma repartição
+produziriam duas frases.
 
 ---
 
@@ -105,3 +119,9 @@ O recorte, na leitura da tela e do contrato da `016`, ganha dois booleanos. **Ne
 
 Consumidor que não conhece os campos novos vê exatamente o que via. O que muda é a tela: onde o
 booleano é falso, **a razão ocupa o lugar do botão**.
+
+**A razão da tela para na apuração, e a da Revisão não.** O aviso de `reserved_row_without_ordering`
+diz que a ocupação **e a convocação** daquele recorte acontecem fora do sistema, porque ali quem
+fala é o conteúdo normativo. A tela de Ocupação é da `016`, que conta vaga e não sabe quem foi
+chamado — `tests/test_vocabulario_da_ocupacao.py` guarda essa fronteira por varredura, e
+atravessá-la faria a tela afirmar um fato que ela não tem.

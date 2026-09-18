@@ -134,6 +134,92 @@ def publicar_na_versao_anterior(
     return Edital.objects.get(pk=edital.pk)
 
 
+def publicar_sem_aferir(
+    api_client, manager_headers, process_payload, *, draft, degradar=None, versao=VERSAO_ANTERIOR
+):
+    """Publica um conteúdo que a aferição de publicabilidade de **hoje** recusaria.
+
+    **Por que não dá para fazer isso pela submissão.** `publicar_na_versao_anterior` submete pela
+    API, e a submissão afere: ela recusa o marco que não declara a forma da ordem (030, `FR-413`) e
+    o que ordena por sorteio sem publicar método (032, `FR-467`). Uma fixture que atravesse a
+    aferição não consegue, por construção, produzir o Edital que a aferição rejeita — e é
+    exatamente esse Edital que existe no acervo e que os guardas de leitura precisam continuar
+    alcançando.
+
+    **A ordem é gravar, submeter, degradar e só então congelar.** A gravação e a submissão recebem
+    o Edital completo, porque é assim que a composição de então o produzia. `degradar` recebe o
+    Edital e devolve os marcos ao estado que a migration deixou — é `update()` sobre a
+    **elaboração**, que é editável; o que é append-only é a Publicação, e ela ainda não existe
+    neste ponto.
+    """
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+    from processo_seletivo.publicacoes.models import RevisaoEdital
+
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    assert criado.status_code == 201, criado.content
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    preparador = actor_headers(
+        "preparador", ["edital:elaborar", "edital:submeter"], key="acervo-sem-aferir-0001"
+    )
+    gravado = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        draft,
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"1"'},
+    )
+    assert gravado.status_code == 200, gravado.content
+    submetido = api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/submissoes",
+        format="json",
+        **{**preparador, "HTTP_IF_MATCH": '"2"'},
+    )
+    assert submetido.status_code in (200, 201), submetido.content
+
+    if degradar is not None:
+        degradar(edital)
+
+    revisao = RevisaoEdital.objects.filter(edital=edital).latest("submitted_at")
+    conteudo = rebaixar(edital_snapshot(edital), para=versao)
+    agora = timezone.now()
+    publicacao = Publicacao.objects.create(
+        edital=edital,
+        revisao=revisao,
+        publication_order=edital.next_publication_order,
+        published_at=agora,
+        effective_at=agora,
+        content_hash=canonical_sha256(conteudo),
+        canonical_content=canonical_bytes(conteudo),
+        canonical_schema_version=versao,
+        published_by="publicador",
+        signatory_id=SIGNATORY["authorityId"],
+        signatory_name=SIGNATORY["name"],
+        signatory_role=SIGNATORY["role"],
+    )
+    DocumentoPublicado.objects.create(
+        publicacao=publicacao,
+        bytes=b"documento do acervo",
+        document_hash=hashlib.sha256(b"documento do acervo").hexdigest(),
+    )
+    VersaoConsolidada.objects.create(
+        edital=edital,
+        valid_from=agora,
+        materialized_at=agora,
+        source_publication=publicacao,
+        content=conteudo,
+        canonical_content=canonical_bytes(conteudo),
+        content_hash=canonical_sha256(conteudo),
+        applied_publications=[str(publicacao.id)],
+    )
+    Edital.objects.filter(pk=edital.pk).update(
+        status=Edital.Status.PUBLICADO,
+        next_publication_order=edital.next_publication_order + 1,
+        revision=edital.revision + 1,
+    )
+    return Edital.objects.get(pk=edital.pk)
+
+
 def hashes_publicados():
     """Os hashes de tudo que já está publicado, para afirmar depois que nada mudou."""
     return {

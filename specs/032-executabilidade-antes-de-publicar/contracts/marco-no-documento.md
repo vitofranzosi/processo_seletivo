@@ -53,7 +53,8 @@ SORT-X — Sorteio público
     Método:        comum a este Edital
     Algoritmo:     IFES-SORTEIO-SHA256-v1
     Fonte:         Loteria Federal
-    Ocorrência:    concurso 6100 da Loteria Federal, de 20/11/2026 às 20:00
+    Ocorrência:    concurso 6100 da Loteria Federal
+    Quando:        20/11/2026, às 20h
     Derivação:     o primeiro concurso realizado após a data programada do sorteio
     Semente:       os dígitos das cinco dezenas, em sequência
     Se faltar:     a ocorrência seguinte da mesma fonte
@@ -66,8 +67,15 @@ SORT-X — Sorteio público
 | Situação | O que o documento imprime |
 |---|---|
 | o marco não declara método próprio, e o Edital declara o comum | `comum a este Edital` |
-| o marco declara método próprio, e o Edital declara o comum | `próprio deste marco — diverge do comum deste Edital` |
+| o marco declara método próprio **diferente** do comum do Edital | `próprio deste marco — diverge do comum deste Edital` |
 | o marco declara método próprio, e o Edital não declara comum | `próprio deste marco` |
+| o marco declara método próprio **idêntico** ao comum | `próprio deste marco` |
+
+**A quarta linha entrou na implementação** (18/09/2026), e o contrato estava errado: ele mandava
+nomear a divergência sempre que houvesse os dois. A `FR-466` diz outra coisa — *"quando o marco
+declara método próprio **divergente** do comum"* —, e um marco cujo próprio é igual ao comum não
+diverge de nada. Escrever que diverge seria o documento afirmando uma diferença que ninguém
+publicou.
 
 A quarta situação — nem próprio, nem comum — **não chega ao documento**: `FR-467` a recusa na
 publicação.
@@ -84,6 +92,22 @@ coisa e sorteio fazendo outra.
 Saem de `CAMPOS_DO_METODO`, em `editais/domain/perfis.py`, onde os sete campos já estão nomeados em
 português. O documento e a tela de composição dizem a mesma coisa com as mesmas palavras — é o
 Princípio I, e é o que impede o documento de inventar um oitavo nome para a mesma coisa.
+
+**A constante passou a trinca na implementação** (18/09/2026), e o contrato se contradizia sem que
+ninguém percebesse: ele mostrava rótulos curtos no bloco acima e, três parágrafos abaixo, dizia que
+eles saíam de `CAMPOS_DO_METODO` — cujas entradas eram frases de sessenta caracteres, escritas para
+completar uma recusa (*"o método não declara `o algoritmo e a sua versão`"*). Como `_pares` alinha o
+valor pela largura do rótulo, usá-las como rótulo desmontaria o bloco.
+
+A saída não foi escolher um dos dois: foi acrescentar a terceira posição, `(campo, o_que_é,
+rótulo)`. A frase continua completando a recusa, o rótulo encabeça a linha do documento, e os dois
+saem do **mesmo lugar** — que é o que a frase acima promete e o que o Princípio I pede. Um oitavo
+campo acrescentado ali aparece no documento sem ninguém precisar lembrar de acrescentá-lo aqui, e
+um teste afirma que os sete rótulos aparecem.
+
+**E a ocorrência saiu em dois pares, e não num.** O bloco de exemplo os fundia — `Ocorrência:
+concurso 6100, de 20/11/2026 às 20:00` —, e a `FR-465` os lista separados. Separados, cada um dos
+sete campos tem rótulo próprio e nenhum fica sem uso.
 
 **O documento publica a norma, não o resultado.** Ele imprime a ocorrência que **fixará** a semente,
 e nunca a semente: no dia da publicação ela ainda não existe. Quem publica a semente é o documento

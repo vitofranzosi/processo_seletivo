@@ -103,7 +103,24 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   <p class="acoes"><a href="{% url 'interface:ocupacao-historico' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">Ver o histórico deste recorte</a></p>
   {% endif %}
 
-  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}
+  {% comment %}
+  A razao no lugar do botao, e nao um `disabled` (032, FR-472). O recorte reservado de um marco que
+  nao sorteia nunca tera ordem emitida: um ato computado emite uma lista so, a da ampla
+  concorrencia. A auditoria de 16/09/2026 encontrou tres botoes identicos, dos quais dois sempre
+  falhavam — e a recusa chegava no dia da apuracao, quando a correcao ja depende de Retificacao.
+
+  A frase nomeia a **causa**, e nao o sintoma: *"Este recorte nao tem ordem emitida"* descreve o
+  que a pessoa ja esta vendo.
+
+  **E ela para na apuracao.** O aviso equivalente da Revisao diz que a ocupacao e a convocacao
+  daquele recorte acontecem fora do sistema, porque ali quem fala e o conteudo normativo. Aqui nao:
+  esta tela e da `016`, que conta vaga e nao sabe quem foi chamado — a fronteira com a `019` e
+  guardada por varredura, e atravessa-la faria a tela afirmar um fato que ela nao tem.
+  {% endcomment %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.apuravel %}
+  <p class="nota">A ordem deste marco é emitida em lista única, e por isso este recorte não recebe ordem própria: só a ordem sorteada é emitida por recorte. A apuração deste recorte acontece fora do sistema.</p>
+  {% endif %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.apuravel %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
@@ -126,6 +143,14 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   obsoleta — pedir a faixa sobre numero que se sabe para tras e o que a `FR-263` impede.
   {% endcomment %}
   {% if pode_emitir and recorte.estado == "CURRENT" and recorte.faltando %}
+  {% comment %}
+  A razao ocupa o lugar do botao, e nao um `disabled` (032, FR-463). Marco que nao declara regra de
+  corte nao tem faixa: sem corte nao ha geracao, sem geracao nao ha faixa, e nao ha faixa seguinte
+  a pedir. Oferecer a acao e recusar no clique e descobrir a recusa com o cronograma correndo — o
+  padrao do PR #120 e o bloqueio anunciado antes da tentativa, e botao desabilitado nao diz por
+  que.
+  {% endcomment %}
+  {% if recorte.faixaDisponivel %}
   <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
@@ -133,6 +158,9 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     <p class="ajuda">O déficit apurado de {{ recorte.faltando }} vaga(s) será a causa do ato, e a faixa anterior não é revogada.</p>
     <button type="submit" class="botao">Pedir a faixa seguinte com este déficit</button>
   </form>
+  {% else %}
+  <p class="nota">Este marco não declara regra de corte, e a faixa nasce do corte: sem a regra não há faixa a continuar, e por isso não há faixa seguinte a pedir. Declarar a regra é ato de Retificação do Edital.</p>
+  {% endif %}
   {% endif %}
 </section>
 {% endfor %}
