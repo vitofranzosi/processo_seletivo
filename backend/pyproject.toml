@@ -10,6 +10,11 @@ dependencies = [
   "Django>=5.2,<5.3",
   "djangorestframework>=3.16,<3.17",
   "psycopg[binary]>=3.2,<3.4",
+  # A quarta, e a razão está escrita em `matriculas/infrastructure/planilha.py` e no
+  # *Complexity Tracking* do plano da `031`: o formato de destino é `.xlsx`, e o detalhe que decide
+  # — formato de célula `@` — é onde implementação caseira erra primeiro, num formato cuja única
+  # prova é o importador do Registro Acadêmico.
+  "openpyxl>=3.1,<3.2",
 ]
 
 [project.optional-dependencies]

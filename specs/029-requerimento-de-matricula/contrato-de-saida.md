@@ -22,8 +22,8 @@ nenhum: a varredura `backend/tests/test_sem_dado_pessoal_da_amostra.py` guarda e
 | 1 | `INSC` | inscrição | `Inscricao.protocolo` | formato divergente do que o destino espera |
 | 2 | `NOME` | identidade | `CandidateIdentity.nome` | — |
 | 3 | `CLASSIF_CURSO_FINAL` | classificação | posição na ordem vigente | o destino pede numeração sequencial das linhas, não a classificação |
-| 4 | `COD_CURSO` | — | **sem fonte** | `Q-3`: nenhum código de curso existe neste sistema |
-| 5 | `COD_TURNO` | — | **sem fonte** | `Q-3`: turno não é dado que o Edital declare |
+| 4 | `COD_CURSO` | — | **sem fonte** | `D-001` da [`031`](../031-exportacao-de-matriculas/spec.md): vocabulário do sistema acadêmico, e a célula sai vazia |
+| 5 | `COD_TURNO` | — | **sem fonte** | `D-001` da [`031`](../031-exportacao-de-matriculas/spec.md): turno não é dado que o Edital declare, e a célula sai vazia |
 | 6 | `COD_FORMA_INGRESSO` | oferta | `ModalidadeConcorrencia.code` | correspondência inexistente entre os dois vocabulários |
 | 7 | `CPF` | identidade | `cpf_normalizado`, sem pontuação | — |
 | 8 | `SEXO` | requerimento | `sexo` | — |
@@ -52,7 +52,7 @@ nenhum: a varredura `backend/tests/test_sem_dado_pessoal_da_amostra.py` guarda e
 | 31 | `RENDA_PER_CAPITA_PNP` | requerimento | `renda_familiar_faixa` | **a faixa mede a soma da família; a coluna significa per capita** (`R-7`) |
 | 32 | `NECESSIDADES_ESPECIAIS` | requerimento | `necessidade_especifica` | distinto da cota PcD (`FR-385`) |
 | 33 | `NOME_POLO` | oferta | `PerfilVaga.locality` | texto livre dos dois lados |
-| 34 | `COD_POLO` | — | **sem fonte** | `Q-3`: nenhum código de polo existe neste sistema |
+| 34 | `COD_POLO` | — | **sem fonte** | `D-001` da [`031`](../031-exportacao-de-matriculas/spec.md): vocabulário do sistema acadêmico, e a célula sai vazia |
 
 ## A conta
 

@@ -77,7 +77,7 @@ def campos_de_exemplo():
         "data_de_nascimento": "1990-03-14",
         "municipio_natal": "Vitória",
         "uf_natal": "ES",
-        "nacionalidade": "Brasileira",
+        "nacionalidade": nomes.BRASIL,
         "sexo": nomes.FEMININO,
         "cor_raca": nomes.PARDA,
         "estado_civil": nomes.SOLTEIRO,

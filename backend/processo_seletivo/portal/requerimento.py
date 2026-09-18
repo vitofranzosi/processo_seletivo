@@ -68,6 +68,7 @@ def _opcoes(valores, rotulos):
 
 
 SEXO = _opcoes(nomes.SEXOS, rotulos.SEXO)
+NACIONALIDADE = _opcoes(nomes.NACIONALIDADES, rotulos.NACIONALIDADE)
 ESTADO_CIVIL = _opcoes(nomes.ESTADOS_CIVIS, rotulos.ESTADO_CIVIL)
 UF = tuple((sigla, sigla) for sigla in nomes.UFS)
 
@@ -95,7 +96,10 @@ GRUPOS = (
             _campo("data_de_nascimento", tipo=DATA, largura="curto", autocomplete="bday"),
             _campo("municipio_natal"),
             _campo("uf_natal", tipo=ESCOLHA, opcoes=UF, largura="curto"),
-            _campo("nacionalidade", exemplo="Brasileira"),
+            # **Lista, e não mais texto livre** (`031`, `D-008`). O exemplo *"Brasileira"* que
+            # estava aqui é justamente o que a lista fechada elimina: ele produzia *"Brasileira"*,
+            # *"Brasil"* e *"BRASIL"* na mesma coluna.
+            _campo("nacionalidade", tipo=ESCOLHA, opcoes=NACIONALIDADE, largura="curto"),
             _campo("sexo", tipo=ESCOLHA, opcoes=SEXO, largura="curto"),
             # Sem ajuda: *"as categorias são as do IBGE"* é curiosidade, e *"declarar é opcional"*
             # já está dito pela opção **Prefiro não declarar**, que a pessoa lê ao abrir a lista.
@@ -119,7 +123,17 @@ GRUPOS = (
             _campo("rg", largura="curto"),
             _campo("rg_orgao_emissor", largura="curto", exemplo="SSP"),
             _campo("rg_expedido_em", tipo=DATA, largura="curto"),
+            # **Os três eleitorais** (`031`, `D-007`). `curto` nos três: são números de até doze
+            # dígitos, e um campo de linha inteira para quatro dígitos convida a digitar outra
+            # coisa. O exemplo mostra a pontuação que a pessoa vê no cartão — ela é aceita e
+            # descartada na gravação, porque o que se guarda é uma forma só (`FR-387`).
+            _campo("titulo_eleitoral", largura="curto", exemplo="0123 4567 8901"),
+            _campo("zona_eleitoral", largura="curto", exemplo="034"),
+            _campo("secao_eleitoral", largura="curto", exemplo="0128"),
         ),
+        # **Nem toda pessoa tem o título em mãos, e nenhum Edital o exige para matricular.** Dizê-lo
+        # aqui evita que alguém pare o preenchimento para procurar o documento.
+        nota="Deixe em branco se não tiver o título de eleitor em mãos.",
     ),
     Grupo(
         "Contato",

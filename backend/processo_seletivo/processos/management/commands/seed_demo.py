@@ -1497,7 +1497,76 @@ class Command(BaseCommand):
             idempotency_key=f"seed-demo-convocar-{chave}",
             correlation_id="seed-demo",
         )
+        self._declarar_para_a_matricula(edital, habilitadas[0])
         return corte
+
+    def _declarar_para_a_matricula(self, edital, inscricao):
+        """O Requerimento de Matrícula **enviado** de quem foi chamado (031, `T036`).
+
+        **Sem ele não há o que exportar**, e a `031` fica indemonstrável: a exportação só inclui
+        requerimento enviado (`FR-434`), e recusa a geração nomeando quem falta (`FR-435`). O
+        roteiro chegava à convocação e parava ali.
+
+        **Cor indígena, de propósito** (`FR-440`, `SC-146`, `R-1`). O formato de destino não
+        comporta o valor: a coluna `COR` sai vazia e a pessoa aparece **nomeada** no relatório. O
+        caso precisa existir na demonstração para ser visto — e a contradição que ele expõe é do
+        destino, que reserva vaga pela Modalidade `PPP`, fundada na lei que nomeia indígenas, e não
+        sabe registrá-los na coluna de cor.
+
+        **Pelos comandos da aplicação**, como o resto deste arquivo: abrir o rascunho, gravar o que
+        a pessoa declara, e enviar aceitando a declaração publicada. Gravar direto no banco pularia
+        o saneamento — e a demonstração passaria a exibir dado que o produto não aceitaria.
+        """
+        from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+        from processo_seletivo.publicacoes.application.selectors import effective_version
+        from processo_seletivo.requerimentos.application import preencher
+        from processo_seletivo.requerimentos.domain import nomes as requerimento
+
+        self.stdout.write("Declarando o Requerimento de Matrícula de quem foi convocada…")
+        identidade = IdentidadeDoCandidato(
+            inscricao.identity_subject, inscricao.nome, inscricao.cpf, inscricao.email
+        )
+        rascunho = preencher.abrir_rascunho(inscricao=inscricao, correlation_id="seed-demo")
+        preencher.gravar(
+            inscricao=inscricao,
+            expected_revision=rascunho.revision,
+            correlation_id="seed-demo",
+            dados={
+                "data_de_nascimento": "1994-07-12",
+                "municipio_natal": "Cariacica",
+                "uf_natal": "ES",
+                "nacionalidade": requerimento.BRASIL,
+                "sexo": requerimento.FEMININO,
+                "cor_raca": requerimento.INDIGENA,
+                "estado_civil": requerimento.CASADO,
+                "nome_da_mae": "Antônia Ferreira Gonçalves",
+                "nome_do_pai": "",
+                "rg": "0123456",
+                "rg_orgao_emissor": "SSP-ES",
+                "rg_expedido_em": "2015-06-01",
+                "titulo_eleitoral": "0123 4567 8901",
+                "zona_eleitoral": "34",
+                "secao_eleitoral": "128",
+                "telefone_celular": "(27) 98888-7766",
+                "necessidade_especifica": "NENHUMA",
+                "renda_familiar_faixa": requerimento.DE_UM_E_MEIO_A_DOIS_E_MEIO,
+                "cep": "29040860",
+                "logradouro": "Rua Barão de Mauá",
+                "numero": "s/n",
+                "bairro": "Jucutuquara",
+                "municipio": "Vitória",
+                "uf": "ES",
+            },
+        )
+        versao = effective_version(edital_id=edital.id)
+        preencher.enviar(
+            identidade=identidade,
+            inscricao=inscricao,
+            versao_exibida_id=str(versao.id),
+            declaracao_exibida=preencher.declaracao_publicada(versao.content),
+            aceite=True,
+            correlation_id="seed-demo",
+        )
 
     def _dar_acesso(self, inscricao):
         """A identidade e a credencial de quem já se inscreveu — para que ela consiga entrar.

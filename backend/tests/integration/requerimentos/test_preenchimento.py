@@ -190,6 +190,52 @@ class TestACopiaParaAFrente:
 
         assert RequerimentoDeMatricula.objects.get(pk=anterior.pk).nome_da_mae == "Maria da Silva"
 
+    @pytest.mark.parametrize(
+        ("declarada", "esperada"),
+        [
+            ("Brasil", nomes.BRASIL),
+            ("Brasileira", nomes.BRASIL),
+            ("BRASILEIRO", nomes.BRASIL),
+            ("Portugal", nomes.OUTRO_PAIS),
+        ],
+    )
+    def test_a_nacionalidade_historica_chega_traduzida_ao_rascunho_novo(
+        self,
+        inscricao_na_inscricao,
+        campos_declarados,
+        segunda_inscricao_da_mesma_pessoa,
+        declarada,
+        esperada,
+    ):
+        """`031`, `D-008`: o campo foi texto livre, e a lista fechou depois.
+
+        **Copiar ao pé da letra era o defeito**: `Brasileira` num `<select>` que só conhece
+        `BRASIL` e `OUTRO_PAIS` abre a tela com o campo em branco — a pessoa acha que nunca
+        declarou, e o reaproveitamento que esta cópia existe para oferecer vira um campo a
+        preencher de novo.
+
+        **`OUTRO_PAIS` não apaga a declaração**: o país escrito continua no requerimento anterior,
+        que é imutável. O que se copia é ponto de partida a confirmar, e dizer *"não é o Brasil"* é
+        mais fiel do que copiar um texto que a lista não aceita.
+        """
+        preencher.abrir_rascunho(inscricao=inscricao_na_inscricao)
+        preencher.gravar(
+            inscricao=inscricao_na_inscricao,
+            dados=campos_declarados,
+            expected_revision=None,
+        )
+        # O texto livre de antes do fechamento da lista, gravado como o banco o guardava então.
+        RequerimentoDeMatricula.objects.filter(inscricao=inscricao_na_inscricao).update(
+            nacionalidade=declarada
+        )
+        anterior = _enviar(inscricao_na_inscricao)
+
+        novo = preencher.abrir_rascunho(inscricao=segunda_inscricao_da_mesma_pessoa)
+
+        assert novo.nacionalidade == esperada
+        # E o que a pessoa escreveu continua escrito onde ela o escreveu.
+        assert RequerimentoDeMatricula.objects.get(pk=anterior.pk).nacionalidade == declarada
+
 
 class TestARetificacaoEntreOGetEOPost:
     def test_versao_exibida_obsoleta_e_recusada(self, inscricao_na_inscricao, campos_declarados):
