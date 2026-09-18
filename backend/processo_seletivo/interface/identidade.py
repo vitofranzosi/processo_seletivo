@@ -68,6 +68,21 @@ PAPEIS = {
     # quem a FR-039 manda afastar — e o impedimento viraria a regra em vez da exceção.
     "julgador": ("Julgador de recursos", ["recurso:julgar"]),
     "auditor": ("Auditor", ["auditoria:consultar"]),
+    # Papel **próprio**, e não uma capacidade acrescentada a um existente — a mesma forma que o
+    # julgador de recursos tem, e pela mesma razão (031, `FR-455`). O arquivo de importação reúne
+    # CPF, RG, filiação e endereço de toda a população numa peça só; pendurar `matricula:exportar`
+    # no Gestor concederia esse acesso, por construção, a quem já tem `inscricao:consultar` — e a
+    # `FR-455` diz, com todas as letras, que ler um dossiê por vez e baixar o conjunto inteiro são
+    # atos distintos.
+    #
+    # **Nenhum papel existente ganha a permissão**, e é isso que "negar por padrão" significa aqui:
+    # quem não assumir este papel não exporta, por caminho nenhum. Se a opção não aparecer no
+    # Edital, é autorização — e não rota quebrada.
+    #
+    # **A permissão vai escrita, e não importada de `matriculas`**, como todas as outras deste
+    # mapa: este módulo é a fronteira de identidade, e não deve conhecer o app que consome a
+    # permissão. A grafia é conferida por `tests/authorization/test_exportacao_de_matriculas.py`.
+    "exportador": ("Exportador de matrículas", ["matricula:exportar"]),
 }
 
 

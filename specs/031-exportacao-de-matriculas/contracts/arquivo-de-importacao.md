@@ -12,6 +12,39 @@ errar em silêncio.
 
 Todas moram em `matriculas/domain/colunas.py`. Toda célula é **texto**, com formato `@` (`FR-437`).
 
+> **Os nomes abaixo são os das funções implementadas**, e não uma família de auxiliares genéricos.
+> A primeira redação nomeava `texto` e `data` em dezesseis colunas, o que é o mesmo `legivel()`
+> genérico com outro nome: uma mudança em `texto` alcançaria dezesseis colunas de uma vez, e a
+> décima sétima seria acrescentada ali por conveniência. Cada coluna tem função própria — elas
+> compartilham auxiliares de ausência e de formato de data, e **nenhuma decide o que a coluna
+> significa** fora da função dela.
+
+## De quem, e sob qual norma
+
+A população é escolhida (`FR-433`), e **nem todo conjunto serve para matricular**:
+
+| Espécie | Quem entra | Quem não entra |
+|---|---|---|
+| Convocados de um marco | quem foi chamado e não teve a chamada desfeita | quem desistiu, foi indeferido, não atendeu ou foi reclassificado |
+| Resultado divulgado | quem o ato **classificou**, num resultado **definitivo e vigente** | `SEM_POSICAO`; resultado preliminar; publicação já sucedida |
+
+**Preliminar não entra porque ele existe para ser contestado**: o julgamento de um recurso pode
+reordenar quem está dentro, e a matrícula não se desfaz por reordenação.
+
+**Cada linha é composta sob a versão do Edital que o ato citou** — a convocação, ou o ato de
+ordenação que a publicação divulgou —, e nunca sob a norma vigente hoje (Princípio II). Perfil,
+Modalidade e polo saem dali. Ler a versão de hoje faria uma Retificação mudar em silêncio o arquivo
+de quem já foi chamado, e faria uma Modalidade removida **recusar** a geração de quem concorreu
+legitimamente por ela.
+
+## O resumo e o arquivo são o mesmo ato
+
+O download só acontece contra a **assinatura da composição** que a prévia mostrou
+(`assinatura_da_composicao`): as 34 células de cada linha, mais os requerimentos de que elas
+saíram. Um `POST` sem ela é recusado com `export_preview_stale`, e uma sucessão de requerimento
+entre a leitura e o clique também — nos dois casos, porque **este arquivo não é o que foi
+conferido** (`UX-060`). É o mesmo mecanismo de `assinatura_da_previa` da `017`.
+
 ## Estrutura física
 
 | | |
@@ -37,29 +70,29 @@ Todas moram em `matriculas/domain/colunas.py`. Toda célula é **texto**, com fo
 | 8 | `SEXO` | `sexo` | `F` / `M` | vazia |
 | 9 | `ESTADO_CIVIL` | `estado_civil_flexionado` | tabela da `D-004`, por `SEXO` | vazia |
 | 10 | `EMAIL` | `email` | credencial principal | nunca vazio |
-| 11 | `DATA_NASCIMENTO` | `data` | `data_de_nascimento` | vazia |
+| 11 | `DATA_NASCIMENTO` | `data_de_nascimento` | `data_de_nascimento` | vazia |
 | 12 | `COR` | `cor` | `cor_raca` | **vazia e nominal** se *indígena* (`FR-440`) |
-| 13 | `NOME_MAE` | `texto` | `nome_da_mae` | vazia — ausência **declarada** |
-| 14 | `NOME_PAI` | `texto` | `nome_do_pai` | idem |
-| 15 | `CIDADE_NATAL` | `texto` | `municipio_natal` | vazia |
+| 13 | `NOME_MAE` | `nome_da_mae` | `nome_da_mae` | vazia — ausência **declarada** |
+| 14 | `NOME_PAI` | `nome_do_pai` | `nome_do_pai` | idem |
+| 15 | `CIDADE_NATAL` | `cidade_natal` | `municipio_natal` | vazia |
 | 16 | `COD_NACIONALIDADE` | `nacionalidade` | Brasil → `BR` | **vazia e nominal** para outros países (`FR-453`) |
-| 17 | `RG` | `texto` | `rg` | vazia |
-| 18 | `EMISSOR` | `texto` | `rg_orgao_emissor` | vazia |
-| 19 | `IDENTIDADE_DATA` | `data` | `rg_expedido_em` | vazia |
+| 17 | `RG` | `rg` | `rg` | vazia |
+| 18 | `EMISSOR` | `emissor` | `rg_orgao_emissor` | vazia |
+| 19 | `IDENTIDADE_DATA` | `identidade_data` | `rg_expedido_em` | vazia |
 | 20 | `TITULO_ELE` | `titulo_eleitoral` | três blocos de quatro | vazia |
 | 21 | `ZONA_ELE` | `zona` | três dígitos, zeros à esquerda | vazia |
 | 22 | `SECAO_ELE` | `secao` | quatro dígitos, zeros à esquerda | vazia |
 | 23 | `CEP` | `cep` | guardado sem pontuação, **emitido com hífen** | vazia |
-| 24 | `ENDEREÇO` | `texto` | `logradouro` | vazia |
-| 25 | `NÚMERO` | `texto` | `numero` | vazia — *"s/n"* existe |
-| 26 | `COMPLEMENTO` | `texto` | `complemento` | vazia — nem todo endereço tem |
-| 27 | `BAIRRO` | `texto` | `bairro` | vazia |
-| 28 | `CIDADE` | `texto` | `municipio` | vazia |
-| 29 | `ESTADO` | `texto` | `uf` | vazia |
+| 24 | `ENDEREÇO` | `endereco` | `logradouro` | vazia |
+| 25 | `NÚMERO` | `numero` | `numero` | vazia — *"s/n"* existe |
+| 26 | `COMPLEMENTO` | `complemento` | `complemento` | vazia — nem todo endereço tem |
+| 27 | `BAIRRO` | `bairro` | `bairro` | vazia |
+| 28 | `CIDADE` | `cidade` | `municipio` | vazia |
+| 29 | `ESTADO` | `estado` | `uf` | vazia |
 | 30 | `CELULAR` | `telefone` | sem pontuação | vazia |
 | 31 | `RENDA_PER_CAPITA_PNP` | `renda_da_familia` | `renda_familiar_faixa`, **sem conversão** | vazia; **aviso obrigatório** em toda geração (`FR-452`) |
-| 32 | `NECESSIDADES_ESPECIAIS` | `texto` | `necessidade_especifica` | vazia |
-| 33 | `NOME_POLO` | `texto` | `PerfilVaga.locality` | vazia |
+| 32 | `NECESSIDADES_ESPECIAIS` | `necessidades_especiais` | `necessidade_especifica` | vazia |
+| 33 | `NOME_POLO` | `nome_polo` | `PerfilVaga.locality` | vazia |
 | 34 | `COD_POLO` | `vazio_externo` | — | **sempre vazia** (`D-001`) |
 
 ## A conta

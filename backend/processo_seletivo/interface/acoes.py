@@ -107,6 +107,19 @@ def _navegacao(edital, ator):
             f"Recursos recebidos ({recebidos})",
             reverse("interface:recursos", args=[edital.id]),
         )
+    # A exportação de matrículas (031). **Sem porta, a capacidade não é entregue** — Princípio VI:
+    # *"uma capacidade que o domínio sustenta mas que nenhuma interface alcança NÃO DEVE ser
+    # considerada entregue"*. A permissão é própria e não é concedida a papel nenhum por padrão, de
+    # modo que a ação só aparece para quem a tem (`FR-455`).
+    #
+    # **Só depois de publicado**, como as inscrições: antes disso não há convocado nem resultado, e
+    # oferecer a tela vazia seria oferecer um beco.
+    if edital.status in ESTADOS_COM_INSCRICOES and ator.can("matricula:exportar"):
+        yield Acao(
+            "matriculas",
+            "Exportar para matrícula",
+            reverse("interface:exportar-matriculas", args=[edital.id]),
+        )
     if ator.can("auditoria:consultar"):
         yield Acao(
             "auditoria",

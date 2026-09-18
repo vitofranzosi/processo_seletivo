@@ -100,6 +100,13 @@ TABELAS_APPEND_ONLY = (
     "convocacao_desfechodaconvocacao",
     "convocacao_comunicacaoemitida",
     "convocacao_atestadodefatoexterno",
+    # O registro de geração do arquivo de matrícula (031): quem exportou o conjunto mais
+    # concentrado de dado pessoal deste sistema, quando, de qual população e sob quais regras de
+    # conversão. Append-only pela razão das demais — nasce e não muda —, e com um agravante próprio:
+    # o arquivo **não é guardado** (`FR-456`), de modo que este registro é a única prova de que a
+    # exportação aconteceu. Reescrevê-lo apagaria o rastro de um acesso a dado pessoal sem deixar
+    # rastro de que alguém o apagou (031, FR-447).
+    "matriculas_geracaodearquivo",
 )
 
 

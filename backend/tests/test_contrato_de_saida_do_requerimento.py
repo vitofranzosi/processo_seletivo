@@ -76,20 +76,29 @@ def test_cada_coluna_tem_origem_declarada_ou_ausencia_nomeada(linha):
 
 
 @pytest.mark.parametrize("linha", linhas_da_tabela(), ids=lambda item: item["coluna"])
-def test_coluna_sem_fonte_nomeia_a_questao_aberta(linha):
-    """*"Sem fonte"* sozinho é lacuna; com a questão nomeada, é decisão registrada.
+def test_coluna_sem_fonte_nomeia_a_questao_aberta_ou_a_decisao(linha):
+    """*"Sem fonte"* sozinho é lacuna; nomeada a pergunta **ou a decisão**, é registro.
 
-    A diferença aparece no dia em que alguém for implementar a exportação: ou ele encontra a
-    pergunta que precisa levar a quem define o formato, ou encontra um espaço em branco e inventa
-    uma resposta.
+    A diferença aparece no dia em que alguém for implementar a exportação: ou ele encontra o que
+    precisa levar a quem define o formato, ou encontra um espaço em branco e inventa uma resposta.
+
+    **A decisão entrou aqui, e a razão é a `031`.** Esta tabela citava `Q-3` para `COD_CURSO`,
+    `COD_TURNO` e `COD_POLO` — e `Q-3` desta spec é *"e-mail da matrícula"*, **resolvida em
+    16/09/2026**: a citação apontava para pergunta encerrada sobre outro assunto, e a `031` §17
+    manda corrigi-la. O que aquelas três colunas têm agora não é pergunta, é resposta: a `D-001`
+    decidiu que o valor é vocabulário do sistema acadêmico e que a célula **sai vazia**.
+
+    Exigir questão aberta onde há decisão fechada obrigaria a reabrir uma pergunta só para caber no
+    teste. O que a regra protege — *"ninguém encontra espaço em branco e inventa"* — continua de pé
+    nas duas formas, e só nelas.
     """
     if SEM_FONTE not in linha["de_onde"]:
         return
 
     assert linha["origem"] == "—", "coluna sem fonte não pode declarar origem"
-    assert re.search(r"`Q-\d+`", linha["ressalva"]), (
-        f"{linha['coluna']}: sem fonte e sem questão aberta nomeada — "
-        "quem for implementar a exportação não terá o que perguntar"
+    assert re.search(r"`(Q|D)-\d+`", linha["ressalva"]), (
+        f"{linha['coluna']}: sem fonte, sem questão aberta e sem decisão nomeada — "
+        "quem for implementar a exportação não terá o que perguntar nem o que ler"
     )
 
 

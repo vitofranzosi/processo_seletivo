@@ -112,6 +112,13 @@ INSTALLED_APPS = [
     # `convocacao` (`domain/disponibilidade.py::exigido_na_inscricao`), para que o ciclo
     # `inscricoes → requerimentos → convocacao → inscricoes` não se feche.
     "processo_seletivo.requerimentos",
+    # A exportação de matrículas (031): o que o candidato declarou no Requerimento, no formato que
+    # o Registro Acadêmico importa. App próprio, e é o **último** da lista por uma razão que vale
+    # como teste: ele é a ponta da leitura, e **ninguém o importa**. A `029` custou uma sessão a um
+    # ciclo de importação (`inscricoes → requerimentos → convocacao → inscricoes`); um app que
+    # nenhum outro conhece não entra em ciclo nenhum, e `tests/test_matriculas_e_ponta.py` prende
+    # essa propriedade. Se algum dia outro app o importar, a feature deixou de ser ponta.
+    "processo_seletivo.matriculas",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
