@@ -1,0 +1,65 @@
+{% comment %}
+O bloco de ajuda da etapa de Classificação, em arquivo próprio (030, FR-426, FR-427).
+
+**Saiu de dentro de `compor_classificacao.html` porque ele passou a ter dois nascedouros.** Ele
+não é apresentado enquanto não existe marco a que se referir — ajuda sobre campos que não estão na
+tela é ruído, e pior do que ruído: ela ensina a preencher o que ninguém tem à frente. Quando o
+primeiro marco nasce pelo `hx-get`, o bloco vem junto, fora de banda. Duplicar a lista nos dois
+lugares a faria divergir na primeira entrada nova.
+
+**Cada item leva ao campo que explica** (FR-427). `ancora` é o prefixo do primeiro marco da tela —
+`marco-<perfil>-<n>` —, e os `id` dos campos são ele mais o sufixo. Os três itens que dependem da
+resposta de entrada apontam para o **cartão**, e não para o campo: com a revelação progressiva, o
+método do sorteio pode não estar na tela, e um link para âncora inexistente não leva a lugar
+nenhum. Apontar para o cartão leva a pessoa ao lugar onde a resposta que revela aquele campo é
+dada, que é o passo anterior ao que ela procurava.
+{% endcomment %}
+<details class="como-preencher">
+  <summary>Como preencher estes campos</summary>
+  <dl>
+    <dt><a href="#{{ ancora }}-orderProduction">Como a ordem é produzida</a></dt>
+    <dd>É a primeira pergunta do cartão, e ela governa as demais: quem ordena pela pontuação
+      enumera Etapas e combina as notas delas; quem ordena por sorteio declara o método e pode não
+      ter Etapa alguma — o sorteio costuma vir antes da análise documental.</dd>
+    <dt><a href="#{{ ancora }}-stages">Etapas que entram na ordem</a></dt>
+    <dd>Só Etapas classificatórias. O peso de cada uma é o que ela já publica; aqui se escolhe
+      quais entram.</dd>
+    <dt><a href="#{{ ancora }}-scale">Casas decimais e arredondamento</a></dt>
+    <dd>O arredondamento é aplicado uma vez, sobre a pontuação combinada. O marco novo já nasce com
+      duas casas e meio para cima, que é o que este projeto pratica — e os dois são editáveis.</dd>
+    <dt><a href="#{{ ancora }}">Como as pontuações se combinam</a></dt>
+    <dd>Perguntado a partir de <strong>duas</strong> Etapas enumeradas. Com uma só, a pontuação
+      combinada é a dela, e o cartão declara isso em vez de perguntar. O peso de cada Etapa é o que
+      a própria Etapa já publica; aqui se declara o que se faz com eles, e os pesos não precisam
+      somar 1 — é a normalização declarada que responde por isso.</dd>
+    <dt><a href="#{{ ancora }}-appealDeclaration-admite">Recurso contra o resultado</a></dt>
+    <dd>Não declarar e negar são coisas diferentes: o silêncio devolve a tempestividade ao juízo
+      de admissibilidade motivado; a negativa é norma publicada, e recusa a interposição
+      nomeando-a. O prazo é contado do dia seguinte ao da divulgação, incluindo o do vencimento;
+      dias úteis exigiriam o calendário de dias sem expediente, que o Edital não publica.</dd>
+    {% comment %}
+    As duas entradas abaixo vieram de descrições `.oculto` do cartão do marco, onde ninguém que
+    enxerga as lia — e onde citavam Editais externos ("o 77/2026 admite; o 14/2026 não") que quem
+    preenche não tem como consultar. O conteúdo que as duas leituras produziram fica; a citação
+    sai. Aqui elas são lidas uma vez, e por todo mundo.
+    {% endcomment %}
+    <dt><a href="#{{ ancora }}">Método do sorteio</a></dt>
+    <dd>Só para o marco que ordena por sorteio: responda isso na primeira pergunta do cartão e os
+      campos aparecem. Declarado aqui, o método é conteúdo publicado do Edital — alterá-lo depois
+      exige Retificação, e nunca implantação de software. Na prática, o sorteio costuma vir
+      <strong>antes</strong> da análise documental: quando é o caso, não há Etapa que habilite a
+      participar, e entram todas as inscrições submetidas do <dfn>recorte</dfn> — que é a lista em
+      que a pessoa concorre: a ampla concorrência, ou uma Modalidade de Concorrência que este
+      Perfil declare.</dd>
+    <dt><a href="#{{ ancora }}-cutTargetKind">Regra de corte</a></dt>
+    <dd>Quantos progridem é o interruptor: sem ele, o marco não corta e a Etapa seguinte recebe
+      todos os habilitados. A <dfn>faixa</dfn> é o trecho da ordem que o ato de corte publicou —
+      quem progride, do primeiro colocado ao último que o alvo alcançou. Continuar além dela é a
+      outra decisão que não tem padrão: há Editais que admitem seguir adiante quando alguém não
+      assume a vaga, e Editais que fecham a faixa no que o ato publicou. O empate na última posição
+      também não tem padrão: sem essa declaração o Edital não publica.</dd>
+    <dt><a href="#criterios-{{ ancora|cut:'marco-' }}">Critérios de desempate</a></dt>
+    <dd>Aplicados na ordem declarada. Esgotados todos, os empatados compartilham posição, e o ato
+      registra que ali não existe ordem normativa.</dd>
+  </dl>
+</details>

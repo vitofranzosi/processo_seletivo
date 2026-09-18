@@ -51,6 +51,7 @@ def conteudo_na_versao(versao):
                         "code": "M1",
                         "name": "Final",
                         "stages": ["11111111-1111-1111-1111-111111111111"],
+                        "orderProduction": "POR_PONTUACAO",
                         "operation": "SOMA_PONDERADA",
                         "normalization": "NENHUMA",
                         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

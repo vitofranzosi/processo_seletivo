@@ -140,3 +140,56 @@ def test_a_relacao_congelada_continua_citando_o_metodo_de_entao(certame, api_cli
 
     relacao.refresh_from_db()
     assert relacao.metodo_hash == resumo_de_entao, "a relação congelada não muda de método"
+
+
+# --- O método comum do Edital não afrouxa o compromisso datado (030, FR-429) -----------------
+
+
+def test_o_resumo_congelado_nao_muda_quando_o_edital_ganha_metodo_comum(certame):
+    """A `030` acrescenta uma fonte para o método, e a citação datada continua valendo.
+
+    **É aqui que a feature poderia afrouxar a `021` sem que nada acusasse.** A relação congela o
+    resumo do método que governava o marco naquele instante; se a resolução passasse a preferir o
+    comum do Edital, ou a misturar os dois, o resumo mudaria sem que o conteúdo do marco mudasse —
+    e "qual método governa" voltaria a se resolver **depois** da semente, que é exatamente o que a
+    D-014 fechou.
+
+    O certame desta fixture declara método **no marco**. A resolução devolve o do marco quando ele
+    existe, e é isso que este teste prende: declarar um comum no Edital não o alcança.
+    """
+    from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.processos.models import Edital
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    edital = certame["edital"]
+    publicar_relacao(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        edital_id=edital.id,
+        perfil_id=certame["perfil"],
+        marco_id=certame["marco"],
+        lista_id=None,
+        idempotency_key="relacao-metodo-comum-0001",
+        correlation_id="teste-030",
+    )
+    congelada = RelacaoDeHabilitados.objects.get(edital_id=edital.id)
+    congelado = congelada.metodo_hash
+    assert congelado
+
+    # O Edital passa a declarar um método comum **diferente** do que o marco publicou. Escrito no
+    # modelo, e não por Retificação, de propósito: o que se mede aqui é a resolução, e uma
+    # Retificação traria junto a Versão Consolidada nova, que é outra fronteira.
+    Edital.objects.filter(pk=edital.pk).update(
+        metodo_de_sorteio_comum={**METODO, "occurrence": "9999"}
+    )
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    resolvido = marcos.metodo_que_governa(
+        vigente.content, perfil_id=certame["perfil"], marco_id=certame["marco"]
+    )
+
+    congelada.refresh_from_db()
+    assert congelada.metodo_hash == congelado, "o compromisso datado não se reabre"
+    assert canonical_sha256(resolvido) == congelado, (
+        "quem declarou o próprio método quis o próprio: o comum não o alcança"
+    )

@@ -454,15 +454,25 @@ def blocos(marcacao):
     return {rotulo: bool(aberto) for aberto, rotulo in achados}
 
 
-def test_o_marco_comum_nasce_com_os_tres_blocos_fechados():
-    """Quem não sorteia nem corta — a maioria — vê os sete campos que toda ordem exige."""
+def test_o_marco_comum_nasce_com_os_blocos_fechados():
+    """Quem não sorteia nem corta — a maioria — vê os campos que toda ordem exige.
+
+    **Eram três blocos, e são dois** (030, FR-414). O do método do sorteio deixou de existir para
+    quem não sorteia: fechá-lo era melhor do que espalhá-lo, e não perguntá-lo é melhor ainda —
+    um bloco fechado ainda ocupa a tela, ainda pede leitura, e ainda é decisão adiada.
+    """
     fechados = blocos(marco_renderizado())
 
     assert fechados == {
         "Recurso contra o resultado": False,
-        "Método do sorteio": False,
         "Regra de corte": False,
     }
+
+
+def test_o_bloco_do_sorteio_so_existe_para_quem_sorteia():
+    """FR-414: os dez campos do método aparecem quando a resposta de entrada os pede."""
+    assert "Método do sorteio" not in blocos(marco_renderizado())
+    assert "Método do sorteio" in blocos(marco_renderizado(orderProduction="POR_SORTEIO"))
 
 
 @pytest.mark.parametrize(
@@ -470,6 +480,8 @@ def test_o_marco_comum_nasce_com_os_tres_blocos_fechados():
     [
         ({"appealDeclaration": "admite", "appealDurationDays": 5}, "Recurso contra o resultado"),
         ({"appealDeclaration": "nao_admite"}, "Recurso contra o resultado"),
+        # **Sem `orderProduction`**, de propósito: é o marco de Edital publicado antes da `030`, e
+        # a inferência de sempre continua valendo sobre ele — sorteia quem declara método.
         ({"drawAlgorithm": "IFES-SORTEIO-SHA256-v1"}, "Método do sorteio"),
         ({"drawQualifyingStageId": "22222222-2222-2222-2222-222222222222"}, "Método do sorteio"),
         ({"cutTargetKind": "FIXED", "cutTargetCount": 30}, "Regra de corte"),
@@ -488,7 +500,7 @@ def test_o_bloco_declarado_abre_sozinho(declarado, bloco):
 @pytest.mark.parametrize(
     ("declarado", "dizeres"),
     [
-        ({}, "este marco não sorteia"),
+        ({"orderProduction": "POR_SORTEIO"}, "ainda não declarado"),
         ({"appealDeclaration": "admite", "appealDurationDays": 5}, "admite, prazo de 5 dias"),
         ({"appealDeclaration": "nao_admite"}, "não admite por esta via"),
         ({"cutTargetKind": "FIXED", "cutTargetCount": 30}, "quantidade fixa de 30"),
@@ -545,16 +557,22 @@ def test_o_cartao_do_marco_nao_cita_edital_de_fora():
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_a_ajuda_da_lista_recebeu_o_sorteio_e_o_corte(client, seletor_ligado, rascunho):
-    """O conceito não some do produto: ele passa a viver onde a lista inteira o alcança."""
+    """O conceito não some do produto: ele passa a viver onde a lista inteira o alcança.
+
+    **Sobre a tela que já tem marco**, desde a `030`: o bloco não é apresentado enquanto não há
+    item a que ele se refira (FR-426), e cobrá-lo num passo vazio cobraria o defeito que a feature
+    veio fechar — ajuda sobre campos que ninguém tem à frente.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = client.get(
-        reverse("interface:compor-etapa", args=[rascunho.id, "classificacao"])
+        reverse("interface:fragmento-marco", args=[PERFIL]),
+        {"edital": str(rascunho.id), "indice": "0"},
     ).content.decode()
 
     bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
-    assert "<dt>Método do sorteio</dt>" in bloco
-    assert "<dt>Regra de corte</dt>" in bloco
-    assert "entram todas as inscrições submetidas do recorte" in bloco
+    assert ">Método do sorteio</a></dt>" in bloco
+    assert ">Regra de corte</a></dt>" in bloco
+    assert "entram todas as inscrições submetidas do <dfn>recorte</dfn>" in bloco
     assert "fecham a faixa no que o ato publicou" in bloco
 
 
@@ -610,8 +628,13 @@ def test_a_recusa_nao_apaga_o_corte_declarado(client, seletor_ligado, rascunho):
 
     # E os blocos voltam abertos: fechados, eles diriam "não declarado" sobre o que a pessoa
     # acabou de digitar — que é a armadilha que a divulgação progressiva tinha de não criar.
+    #
+    # O quarto é o do **Edital**, e não do marco: a `030` trouxe para esta etapa o método do
+    # sorteio comum, com a mesma espécie de bloco e a mesma regra de abrir quando declarado. Este
+    # Edital não o declara, e por isso ele está fechado — que é o que "não declarado" deve dizer.
     assert blocos(corpo) == {
         "Recurso contra o resultado": True,
         "Método do sorteio": True,
         "Regra de corte": True,
+        "Método do sorteio comum a este Edital": False,
     }

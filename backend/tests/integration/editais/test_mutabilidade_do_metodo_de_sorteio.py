@@ -143,3 +143,77 @@ def test_fonte_que_o_sistema_nao_consulta_e_recusada_na_retificacao(api_client, 
         suffix="fonte",
     )
     assert "Random.org" in problema["detail"]
+
+
+# --- O método comum do Edital, retificável pelo endereçamento novo (030, FR-429) -------------
+
+
+def _publicado_com_metodo_comum(api_client, manager_headers, process_payload):
+    """Um Edital publicado com o método comum declarado, e um marco que o referencia."""
+    import copy
+
+    from tests.fixtures.publicacao import publish_original
+    from tests.fixtures.snapshot import PERFIL, rascunho_completo
+
+    rascunho = copy.deepcopy(rascunho_completo())
+    perfil = next(item for item in rascunho["profiles"] if item["id"] == PERFIL["A"])
+    perfil["classificationMilestones"][0]["drawMethod"] = None
+    return publish_original(api_client, manager_headers, process_payload, draft=rascunho, anexos=1)
+
+
+def test_o_metodo_comum_se_retifica_pelo_caminho_da_raiz(
+    api_client, manager_headers, process_payload
+):
+    """FR-429 e o contrato: as nove entradas `(raiz, "drawMethod/…")` são alcançáveis.
+
+    **Da raiz, e não do Perfil**: o método comum é do Edital, e `/drawMethod/occurrence` já resolve
+    — é objeto, e em objeto o segmento do caminho é nome de chave literal, que é a mesma gramática
+    que as dez entradas do marco usam desde a `026`.
+    """
+    edital = _publicado_com_metodo_comum(api_client, manager_headers, process_payload)
+
+    retify(
+        api_client,
+        edital,
+        [{"operation": "REPLACE", "targetPath": "/drawMethod/occurrence", "newValue": "6001"}],
+        suffix="comum",
+    )
+
+    depois = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    assert depois.content["drawMethod"]["occurrence"] == "6001"
+    assert depois.content["drawMethod"]["algorithm"] == "IFES-SORTEIO-SHA256-v1", (
+        "o resto do método atravessa intacto"
+    )
+
+
+def test_a_retificacao_do_comum_alcanca_o_marco_que_o_referencia(
+    api_client, manager_headers, process_payload
+):
+    """A consequência que torna a FR-429 útil: uma correção, e não sete.
+
+    O marco não é tocado pela Retificação — ele continua sem método próprio —, e a resolução
+    devolve o comum corrigido. É o oposto do estado anterior, em que a mesma correção teria de ser
+    endereçada a cada um dos sete marcos, um por um.
+    """
+    from processo_seletivo.editais.domain import marcos
+    from tests.fixtures.snapshot import MARCO, PERFIL
+
+    edital = _publicado_com_metodo_comum(api_client, manager_headers, process_payload)
+
+    retify(
+        api_client,
+        edital,
+        [{"operation": "REPLACE", "targetPath": "/drawMethod/occurrence", "newValue": "6002"}],
+        suffix="comum-alcanca",
+    )
+
+    depois = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    marco = depois.content["profiles"][0]["classificationMilestones"][0]
+
+    assert marco["drawMethod"] is None, "o marco continua referenciando, e não copiando"
+    assert (
+        marcos.metodo_que_governa(depois.content, perfil_id=PERFIL["A"], marco_id=MARCO)[
+            "occurrence"
+        ]
+        == "6002"
+    )

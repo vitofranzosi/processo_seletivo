@@ -243,6 +243,22 @@ class MarcoClassificatorio(models.Model):
     elaboração, porque a Retificação sabe acrescentar item a coleção e não escreve de volta aqui.
     """
 
+    class FormaDaOrdem(models.TextChoices):
+        """Como a ordem deste marco é produzida (030, FR-413).
+
+        **Existe porque a inferência não distingue dois estados que a tela precisa separar.** Até
+        aqui "este marco sorteia" era lido da presença de `metodo_de_sorteio` — e isso confunde
+        *não sorteia* com *sorteia e ainda não declarei o método*, que é exatamente o estado de
+        quem acabou de acrescentar um marco de sorteio e ainda não preencheu campo nenhum.
+
+        **Vazio é o estado dos marcos compostos antes desta feature**, e não um padrão: os leitores
+        derivam dele o comportamento de sempre — sorteia se o método está declarado. A migration
+        não percorre linha publicada, e a chave não nasce em snapshot já publicado (FR-431, SC-142).
+        """
+
+        POR_PONTUACAO = "POR_PONTUACAO"
+        POR_SORTEIO = "POR_SORTEIO"
+
     class Operacao(models.TextChoices):
         SOMA_PONDERADA = "SOMA_PONDERADA"
         MEDIA_PONDERADA = "MEDIA_PONDERADA"
@@ -255,6 +271,13 @@ class MarcoClassificatorio(models.Model):
     perfil = models.ForeignKey(PerfilVaga, on_delete=models.CASCADE, related_name="marcos")
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
+    # Como a ordem deste marco é produzida (030, FR-413). **`""` é ausência, e não padrão**: é o
+    # que todo marco composto antes desta feature afirma, e a validação da publicação continua
+    # exigindo Etapa dele, como sempre exigiu. Marco novo declara a forma, e é dela que a
+    # dispensa de Etapa do sorteio depende (FR-432).
+    forma_da_ordem = models.CharField(
+        max_length=30, choices=FormaDaOrdem.choices, blank=True, default=""
+    )
     etapas = models.JSONField(default=list, blank=True)
     operacao = models.CharField(max_length=30, choices=Operacao.choices)
     normalizacao = models.CharField(max_length=30, choices=Normalizacao.choices)

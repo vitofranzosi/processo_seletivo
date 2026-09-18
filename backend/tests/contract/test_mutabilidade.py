@@ -283,6 +283,14 @@ def test_o_edital_maximo_exercita_o_que_o_emissor_sabe_emitir(conteudo_maximo):
     for objeto in ("calculation", "rounding", "distribution", "callRules", "effectiveFrom"):
         assert regra.get(objeto), f"a Regra Normativa do Edital máximo não declara {objeto}"
     assert any(evento.get("location") for evento in conteudo_maximo["schedule"])
+    # O método comum do Edital (030, FR-429). Sem ele, as nove entradas `(raiz, "drawMethod/…")`
+    # ficariam fora da travessia e o guardião as acusaria como classificação de campo inexistente —
+    # que é o sintoma de a fixture ter encolhido, e não de o contrato estar errado.
+    assert conteudo_maximo.get("drawMethod"), "o Edital máximo não declara o método comum"
+    assert "qualifyingStageId" not in conteudo_maximo["drawMethod"], (
+        "a Etapa de habilitação é do marco: no Edital ela endereçaria Etapa que parte dos marcos "
+        "não mede"
+    )
 
 
 # --------------------------------------------------------------------------------------------

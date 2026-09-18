@@ -62,6 +62,8 @@ def rascunho(cut=None):
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação por títulos",
+            # A forma da ordem, declarada e não inferida (030, FR-413).
+            "orderProduction": "POR_PONTUACAO",
             "stages": [pontuada["id"]],
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",

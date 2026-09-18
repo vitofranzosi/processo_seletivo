@@ -10,6 +10,7 @@ Antes desta correção a tela publicava marco sem Etapa e critério sem alvo, e 
 que combinar.
 """
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -191,8 +192,14 @@ def test_marco_recem_acrescentado_leva_o_edital_ate_o_criterio(client, com_etapa
     ).content.decode()
 
     assert f"?edital={com_etapas.id}" in marco, "o botão de critério precisa levar o Edital adiante"
-    endereco = marco.split('hx-get="')[1].split('"')[0]
-    assert endereco.startswith(reverse("interface:fragmento-criterio", args=[PERFIL, "0"]))
+    # **O `hx-get` do critério, e não o primeiro do cartão.** Desde a `030` o cartão tem outros —
+    # a pergunta de entrada e o seletor de Etapas recompõem o marco no servidor —, e pegar o
+    # primeiro passou a testar a recomposição em vez do botão de critério.
+    rota = reverse("interface:fragmento-criterio", args=[PERFIL, "0"])
+    endereco = next(
+        trecho.split('"')[0] for trecho in marco.split('hx-get="')[1:] if trecho.startswith(rota)
+    )
+    assert endereco.startswith(rota)
 
     # O endereço vai inteiro, com a query que o botão montou: passar `data` ao cliente de teste
     # descartaria a query do caminho, e o teste deixaria de exercitar justamente o que se corrigiu.
@@ -212,3 +219,141 @@ def test_fragmento_de_marco_sem_edital_nao_quebra(client, com_etapas):
 
     assert resposta.status_code == 200
     assert "?edital=" in resposta.content.decode()
+
+
+# --- A composição que se explica (030) ------------------------------------------------------
+
+#: O método de contagem de SC-138, transcrito de `quickstart.md`: conta-se cada controle que recebe
+#: foco por teclado na composição de **um** marco. Campo oculto não conta — ele não é pergunta —, e
+#: o que está dentro de um `<details>` fechado também não: ele não foi apresentado.
+_CONTROLE = re.compile(r"<(input|select|textarea)\b[^>]*>", re.I)
+_DETALHE_FECHADO = re.compile(r"<details(?![^>]*\bopen\b)[^>]*>.*?</details>", re.I | re.S)
+
+
+def controles_apresentados(cartao):
+    """Os controles que o cartão de fato apresenta, pelo método de contagem do quickstart."""
+    visivel = _DETALHE_FECHADO.sub(" ", cartao)
+    return [
+        achado.group(0)
+        for achado in _CONTROLE.finditer(visivel)
+        if 'type="hidden"' not in achado.group(0)
+    ]
+
+
+def cartao_novo(client, edital):
+    """O cartão do marco recém-acrescentado, pelo mesmo `hx-get` do botão da tela."""
+    return client.get(
+        reverse("interface:fragmento-marco", args=[PERFIL]),
+        {"edital": str(edital.id), "indice": "0"},
+    ).content.decode()
+
+
+def test_o_marco_do_edital_canonico_pede_menos_de_dez_respostas(client, com_etapas):
+    """SC-138 — eram 28 controles, e o critério de aceitação é uma contagem que só cai.
+
+    O Edital canônico é o mais simples da amostra: um Perfil, uma Etapa classificatória, sem
+    Modalidade. O que este teste mede é o cartão como ele chega a quem clica em "Acrescentar
+    marco" — antes de qualquer resposta, e sem abrir disclosure nenhum.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    controles = controles_apresentados(cartao_novo(client, com_etapas))
+
+    assert len(controles) < 10, f"o cartão apresenta {len(controles)} controles:\n  " + "\n  ".join(
+        controles
+    )
+
+
+def test_a_pergunta_de_entrada_vem_antes_de_qualquer_campo_do_marco(client, com_etapas):
+    """FR-413 — ela não é campo do marco: é o que decide quais campos o marco tem."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    cartao = cartao_novo(client, com_etapas)
+
+    entrada = cartao.index(f'name="marco-{PERFIL}-0-orderProduction"')
+
+    for campo in ("code", "name", "stages", "scale", "mode"):
+        assert entrada < cartao.index(f'name="marco-{PERFIL}-0-{campo}"'), (
+            f"o campo {campo} é apresentado antes da pergunta que decide se ele existe"
+        )
+
+
+def test_o_marco_novo_nasce_com_arredondamento_e_identidade(client, com_etapas):
+    """FR-419 e FR-420 — duas obrigatórias sem padrão, e um código inventado no ato.
+
+    O par do arredondamento é o que o próprio projeto pratica onde já escolheu; o código e a
+    denominação saem do Perfil a que o marco pertence. Os três continuam editáveis.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    cartao = cartao_novo(client, com_etapas)
+    perfil = com_etapas.perfis.get()
+
+    assert 'value="2" required' in cartao, "as casas decimais nascem preenchidas"
+    assert '<option value="MEIO_PARA_CIMA" selected>' in cartao
+    assert f'value="{perfil.code}"' in cartao, "o código inicial é derivado do Perfil"
+    assert f"Classificação final — {perfil.name}" in cartao
+
+
+def test_o_codigo_derivado_desempata_quando_o_perfil_ja_tem_marco(client, com_etapas):
+    """`uq_marco_perfil_code` continua valendo: dois marcos no Perfil pedem dois códigos."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_form(**{f"marco-{PERFIL}-0-code": com_etapas.perfis.get().code}),
+    )
+
+    cartao = cartao_novo(client, com_etapas)
+
+    assert f'value="{com_etapas.perfis.get().code}-2"' in cartao
+
+
+def test_a_ajuda_da_etapa_nao_aparece_sem_marco_a_que_se_referir(client, com_etapas):
+    """FR-426 — ajuda sobre campos que ninguém tem à frente ensina a preencher o que não existe."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    vazia = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    assert '<details class="como-preencher">' not in vazia
+    assert '<div id="ajuda-da-classificacao">' in vazia, (
+        "o invólucro existe sempre: é o destino do `hx-swap-oob` que traz a ajuda com o primeiro "
+        "marco, e sem ele na página o htmx não acha alvo e não erra"
+    )
+
+    client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]), marco_form()
+    )
+    com_marco = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    assert '<details class="como-preencher">' in com_marco
+
+
+def test_a_ajuda_chega_junto_com_o_primeiro_marco_acrescentado(client, com_etapas):
+    """FR-426, a outra metade: quem acrescenta o marco não recarrega a página para ver a ajuda."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    cartao = cartao_novo(client, com_etapas)
+
+    assert 'hx-swap-oob="innerHTML:#ajuda-da-classificacao"' in cartao
+    assert '<details class="como-preencher">' in cartao
+
+
+def test_cada_item_da_ajuda_leva_ao_campo_que_explica(client, com_etapas):
+    """FR-427 — a ancoragem é o que substitui levar a ajuda para dentro do cartão."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]), marco_form()
+    )
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
+    alvos = re.findall(r'<dt><a href="#([^"]+)">', bloco)
+
+    assert len(alvos) == len(re.findall(r"<dt>", bloco)), "todo item do bloco leva a algum lugar"
+    identificadores = set(re.findall(r'id="([^"]+)"', corpo))
+    sem_destino = sorted(alvo for alvo in alvos if alvo not in identificadores)
+    assert sem_destino == [], f"itens da ajuda apontando âncora que a tela não tem: {sem_destino}"

@@ -201,6 +201,26 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
         "que o Edital pedia. Não é correção de redação: é outra exigência."
     ),
     (RAIZ, "matriculationRequest/declarationText"): retificavel(),
+    # O método do sorteio comum ao Edital (030, FR-429). **Nove entradas, espelhando as do marco**
+    # — e são nove, e não dez: a Etapa que habilita a participar do sorteio é do marco, porque
+    # depende de quais Etapas aquele marco enumera, e um valor comum a todos endereçaria Etapa que
+    # parte deles não mede.
+    #
+    # Retificáveis pela mesma razão que as do marco: a `021` determina que alterar o método é
+    # Retificação, e a fronteira do congelamento já existe — a relação congelada carrega o seu
+    # `metodo_hash` e não relê o vigente.
+    #
+    # **As nove do marco permanecem**, e não são substituídas: elas endereçam a divergência, e
+    # Edital publicado depende delas.
+    (RAIZ, "drawMethod/algorithm"): retificavel(),
+    (RAIZ, "drawMethod/source"): retificavel(),
+    (RAIZ, "drawMethod/occurrence"): retificavel(),
+    (RAIZ, "drawMethod/occurrenceAt"): retificavel(),
+    (RAIZ, "drawMethod/derivation"): retificavel(),
+    (RAIZ, "drawMethod/normalization/rule"): retificavel(),
+    (RAIZ, "drawMethod/normalization/text"): retificavel(),
+    (RAIZ, "drawMethod/substitutionRule/rule"): retificavel(),
+    (RAIZ, "drawMethod/substitutionRule/text"): retificavel(),
     # ---- profiles ---------------------------------------------------------------------------
     ("profiles", "id"): estrutural(),
     ("profiles", "code"): estrutural(),
@@ -290,6 +310,19 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("classificationMilestones", "id"): estrutural(),
     ("classificationMilestones", "code"): estrutural(),
     ("classificationMilestones", "name"): retificavel(),
+    # Como a ordem do marco é produzida (030, FR-413). **Retificável**, e a decisão é do contrato
+    # desta feature — `specs/030-composicao-que-se-explica/contracts/conteudo-normativo.md`.
+    #
+    # Ela convive com a exclusão de `stages`, logo abaixo, e a fronteira entre as duas é estreita:
+    # trocar as Etapas que o marco mede é declarar outro marco, e trocar a forma da ordem é
+    # corrigir o que o Edital disse sobre o marco que já existe. A consequência de uma correção
+    # aqui é a mesma de `operation` — o ato vigente fica obsoleto e recomputável, que é reavaliar
+    # feito direito, e não em silêncio.
+    #
+    # **A chave é omitida quando não declarada**, e não grafada como nula: ver `edital_snapshot`.
+    # Marco publicado antes desta feature não a tem, e o contrato não a cobra dele — o guardião
+    # enumera o que o Edital **máximo** publica, e é ele que a declara.
+    ("classificationMilestones", "orderProduction"): retificavel(),
     ("classificationMilestones", "stages"): nao_retificavel(
         "Quais Etapas o marco mede é o que o marco é, e não um parâmetro dele. Um marco que "
         "passa a medir outras Etapas não é o mesmo marco corrigido: é outro marco, sob o mesmo "

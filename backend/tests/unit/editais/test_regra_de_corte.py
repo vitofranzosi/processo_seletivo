@@ -57,6 +57,7 @@ def marco(identidade=MARCO, *, etapas=(ETAPA_1,), cut=..., **overrides):
         "code": f"M-{identidade[:4]}",
         "name": "Marco",
         "stages": list(etapas),
+        "orderProduction": "POR_PONTUACAO",
         "operation": "SOMA_PONDERADA",
         "normalization": "NENHUMA",
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
@@ -392,6 +393,11 @@ def test_o_marco_de_sorteio_governa_a_etapa_que_enumera_e_isso_e_o_caso_normal()
     sorteio = marco(
         etapas=(ETAPA_1,),
         cut=regra(governedStage=ETAPA_1),
+        # **A forma declarada, e não só o método** (030, FR-413). A guarda de circularidade pergunta
+        # se o marco ordena por sorteio, e desde a `030` quem responde é a declaração — o método
+        # sozinho continua valendo para o acervo, mas um marco que diz `POR_PONTUACAO` **e** declara
+        # método é conteúdo contraditório, recusado por `_coerencia_da_forma_da_ordem`.
+        orderProduction="POR_SORTEIO",
         drawMethod=METODO_DE_SORTEIO,
     )
 

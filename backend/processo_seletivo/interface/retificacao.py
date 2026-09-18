@@ -125,6 +125,28 @@ CAMPOS_RAIZ = [
     ("matriculationRequest/declarationText", "Declaração do Requerimento de Matrícula", TEXTO),
 ]
 
+# O método do sorteio comum ao Edital (030, FR-429). **Nove campos, e não dez**: a Etapa que
+# habilita a participar do sorteio é do marco, porque depende de quais Etapas aquele marco enumera.
+#
+# **Oferecido só quando o Edital já o declara**, ao contrário dos dez do marco. A diferença é a
+# mesma da forma da ordem: `drawMethod` do marco é objeto que todo Edital anterior ao degrau 10
+# carrega **nulo**, e por isso há onde escrever; o do Edital é chave **ausente** em todo Edital
+# anterior a esta feature, e ausente de propósito — acrescentá-la a snapshot publicado mudaria o
+# conteúdo e o resumo dele (FR-431, SC-142).
+#
+# E o Edital anterior não precisa dela: cada marco dele carrega o método literal que publicou.
+CAMPOS_DO_METODO_COMUM = [
+    ("drawMethod/algorithm", "Algoritmo do sorteio comum", REFERENCIA),
+    ("drawMethod/source", "Fonte pública da semente", REFERENCIA),
+    ("drawMethod/occurrence", "Ocorrência que fixa a semente", TEXTO),
+    ("drawMethod/occurrenceAt", "Quando a ocorrência acontece", INSTANTE),
+    ("drawMethod/derivation", "Como a ocorrência foi escolhida", TEXTO_LONGO),
+    ("drawMethod/normalization/rule", "Regra de normalização", REFERENCIA),
+    ("drawMethod/normalization/text", "Normalização, como se publica", TEXTO_LONGO),
+    ("drawMethod/substitutionRule/rule", "Regra de substituição", REFERENCIA),
+    ("drawMethod/substitutionRule/text", "Substituição, como se publica", TEXTO_LONGO),
+]
+
 # A modalidade sem Regra Normativa não recebe os campos dela: o caminho não existiria no
 # conteúdo, e endereçá-lo seria recusado por caminho inexistente. A tela oferece exatamente o
 # que a gramática admite.
@@ -166,6 +188,24 @@ CAMPOS_MARCO = [
     ("operation", "Como as pontuações se combinam", REFERENCIA),
     ("normalization", "Normalização antes de combinar", REFERENCIA),
 ]
+# Como a ordem do marco é produzida (030, FR-413). **Lista própria, e oferecida só quando o marco
+# já a declara** — ao contrário dos dez campos do método, que a tela oferece sempre.
+#
+# A diferença está no conteúdo publicado, e não numa preferência de desenho: `drawMethod` é objeto
+# que todo Edital anterior ao degrau 10 carrega **nulo**, e por isso há onde escrever. A forma da
+# ordem é chave **ausente** no Edital anterior a esta feature — ausente de propósito, porque
+# acrescentá-la a snapshot publicado mudaria o conteúdo e o resumo dele (FR-431, SC-142). Oferecer
+# um caminho para dentro de chave que não existe seria oferecer uma recusa da gramática.
+#
+# **E o Edital anterior não precisa dela**: os leitores derivam da ausência o comportamento de
+# sempre, que é exatamente o que ele publicou.
+CAMPOS_DA_FORMA_DA_ORDEM = [
+    ("orderProduction", "Como a ordem é produzida", REFERENCIA),
+]
+FORMAS_DA_ORDEM = (
+    ("POR_PONTUACAO", "Pela pontuação combinada das Etapas"),
+    ("POR_SORTEIO", "Por sorteio"),
+)
 # As duas formas de combinar e as duas de normalizar que o motor executa.
 COMBINACOES = (("SOMA_PONDERADA", "Soma ponderada"), ("MEDIA_PONDERADA", "Média ponderada"))
 NORMALIZACOES = (("NENHUMA", "Nenhuma"), ("PELA_SOMA_DOS_PESOS", "Pela soma dos pesos"))
@@ -375,6 +415,7 @@ CAMPOS_DOCUMENTO = [
 # passaria a carregar a lista do que falta, que é registro de trabalho e não norma.
 COLECAO_DA_LISTA = {
     "CAMPOS_RAIZ": mutabilidade.RAIZ,
+    "CAMPOS_DO_METODO_COMUM": mutabilidade.RAIZ,
     "CAMPOS_PERFIL": "profiles",
     "CAMPOS_DA_REVERSAO": "profiles",
     "CAMPOS_MODALIDADE": "competitionModalities",
@@ -382,6 +423,7 @@ COLECAO_DA_LISTA = {
     "CAMPOS_DA_LINHA": "vacancyTable",
     "CAMPOS_FATO": "declaredFacts",
     "CAMPOS_MARCO": "classificationMilestones",
+    "CAMPOS_DA_FORMA_DA_ORDEM": "classificationMilestones",
     "CAMPOS_DO_CORTE": "classificationMilestones",
     "CAMPOS_DA_JANELA": "classificationMilestones",
     "CAMPOS_DO_METODO": "classificationMilestones",
@@ -673,6 +715,17 @@ def _referenciar(grupos):
 def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     """Campos que uma Retificação pode alterar, agrupados como a pessoa os enxerga.
 
+    **Nenhum padrão e nenhuma derivação entram por aqui** (030, FR-421). O valor de cada campo sai
+    do conteúdo **publicado**, e nada nesta função o completa: o arredondamento padrão do marco
+    novo e a identidade derivada do Perfil moram em `interface/views._marco_novo`, que só o
+    fragmento de criação chama. Um Edital publicado antes da `030` entra em Retificação com o
+    arredondamento que ele publicou, e a proposta não inclui campo que ninguém pediu para corrigir
+    — a autoridade assinaria a mudança sem que ninguém a tivesse decidido.
+
+    A garantia é estrutural, e `tests/integration/editais/test_derivacao_nao_alcanca_o_declarado`
+    a declara: esta tela alcança os campos do que já existe, e não há fragmento que acrescente
+    marco a uma Retificação.
+
     Cobre tudo o que o conteúdo publicado carrega e a gramática endereça. A `006` publicou
     Etapas, Seções e a Regra Normativa e não trouxe nenhuma das três para cá; corrigir uma cota
     depois de publicada exigia chamada de API, o que a Constituição não admite como jornada
@@ -687,7 +740,24 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
     precisa nomear arquivo nenhum: a descrição serve à tela, e consultá-la no POST seria uma ida
     ao banco por Anexo para produzir texto que ninguém lê.
     """
-    grupos = [_grupo("Edital", "", conteudo, CAMPOS_RAIZ, removivel=False, tipo="Edital")]
+    grupos = [
+        _grupo(
+            "Edital",
+            "",
+            conteudo,
+            CAMPOS_RAIZ
+            + (CAMPOS_DO_METODO_COMUM if isinstance(conteudo.get("drawMethod"), dict) else []),
+            removivel=False,
+            tipo="Edital",
+            opcoes=_opcoes_do_metodo(),
+            rotulos_do_vazio={
+                "drawMethod/algorithm": "Não declarado — o sorteio não terá como ser feito",
+                "drawMethod/source": "Não declarada — a semente não terá origem",
+                "drawMethod/normalization/rule": "Não declarada — a semente não se produz",
+                "drawMethod/substitutionRule/rule": "Não declarada — a publicação será impedida",
+            },
+        )
+    ]
 
     for perfil in conteudo.get("profiles") or []:
         caminho = f"/profiles/id={perfil.get('id', '')}"
@@ -802,6 +872,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     # para dentro de objeto ausente é recusado pela gramática, e a Retificação que
                     # *cria* a janela é acréscimo de declaração — o contrato diz que ela pode
                     # nascer, e por qual caminho (FR-313).
+                    + (CAMPOS_DA_FORMA_DA_ORDEM if "orderProduction" in marco else [])
                     + (CAMPOS_DO_ARREDONDAMENTO if isinstance(marco.get("rounding"), dict) else [])
                     + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else [])
                     # **Sempre**, e não só quando o marco já sorteia (026, FR-313, corrigido na
@@ -822,6 +893,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     nome=nome_do_marco,
                     opcoes={
                         "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "orderProduction": FORMAS_DA_ORDEM,
                         "operation": COMBINACOES,
                         "normalization": NORMALIZACOES,
                         "rounding/mode": MODOS_DE_ARREDONDAR,
@@ -853,6 +925,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                         # é computável: o candidato leria um prazo que ninguém sabe contar.
                         "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
                         "rounding/mode": "Não declarado — a publicação será impedida",
+                        "orderProduction": "Não declarada — lida como o Edital sempre a leu",
                         "operation": "Não declarada — a publicação será impedida",
                         "normalization": "Não declarada — a publicação será impedida",
                         # A Etapa de habilitação é o único campo do método em que o vazio é

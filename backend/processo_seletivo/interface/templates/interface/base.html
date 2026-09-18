@@ -628,6 +628,24 @@ fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.
    e as duas da `019`. Classe sem regra não quebra nada em execução: ela some, e a frase que
    explicava o número passa a ter o peso do próprio número. */
 .nota{color:var(--texto-fraco);font-size:.875rem;margin:.5rem 0 0}
+/* Os termos do domínio definidos no primeiro uso da tela (030, FR-424, SC-141).
+
+   Peso de corpo de texto, e nao de rotulo: quem chega pela primeira vez le a definicao junto com o
+   resto, e nao como nota de rodape. O `dfn` do HTML e o elemento certo — ele marca a ocorrencia em
+   que o termo e definido, que e exatamente o que a FR-424 pede —, e sai em negrito em vez do
+   italico que os navegadores aplicam: a tela ja usa italico em nada, e uma segunda enfase visual
+   para a mesma coisa confundiria com citacao. */
+.definicoes{color:var(--texto);font-size:.875rem;margin:.25rem 0 1rem;max-width:var(--leitura)}
+dfn{font-style:normal;font-weight:600}
+/* O que o sistema **afirma** no lugar de uma pergunta que deixou de fazer (030, FR-416).
+
+   Não e ajuda, e por isso nao e `.ajuda`: ajuda explica como preencher um campo, e esta frase diz
+   o que vale quando nao ha campo nenhum. A decisao do projeto de nao levar ajuda visivel para
+   dentro dos cartoes de composicao continua de pe — o que entra aqui e declaracao, e ela precisa
+   ser lida por quem enxerga tanto quanto pela tecnologia assistiva.
+
+   Peso de corpo de texto, e nao de rotulo: ela e consequencia, e nao instrucao. */
+.declaracao-derivada{color:var(--texto);font-size:.875rem;margin:.25rem 0 .75rem;max-width:var(--leitura)}
 .ajuda code{background:var(--fundo);padding:.05rem .3rem;border-radius:3px}
 .remover{margin:.25rem 0 .75rem;text-align:right}
 /* As três ações da linha em símbolo (ver `_acoes_da_linha.html` para o porquê).

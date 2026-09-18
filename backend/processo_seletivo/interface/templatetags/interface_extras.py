@@ -194,3 +194,57 @@ def declarou(dados, prefixo):
         for chave, valor in (dados or {}).items()
         if chave.startswith(prefixo)
     )
+
+
+@register.filter
+def ordena_por_sorteio(marco):
+    """Este marco, como a tela o tem agora, ordena por sorteio? (030, FR-414)
+
+    A **regra** mora em `editais/domain/marcos`, e não aqui: ela é a mesma que a validação e os
+    serializers aplicam, e duplicá-la no template seria a segunda resposta para a pergunta que a
+    FR-413 existe para tornar única. O que este filtro faz é traduzir a forma do formulário — em
+    que o método viaja achatado, `drawAlgorithm` e companhia — para os dois argumentos da regra.
+    """
+    from processo_seletivo.editais.domain import marcos
+
+    return marcos.ordena_por_sorteio(
+        (marco or {}).get("orderProduction") or "",
+        metodo_declarado=declarou(marco, "draw"),
+    )
+
+
+@register.filter
+def pergunta_a_combinacao(marco):
+    """A tela pergunta como as pontuações se combinam? Só com duas ou mais Etapas (FR-415)."""
+    from processo_seletivo.editais.domain import marcos
+
+    return marcos.pergunta_a_combinacao((marco or {}).get("etapas"))
+
+
+@register.filter
+def combinacao_efetiva(marco):
+    """`{"operation": …, "normalization": …}` — o que este marco aplica agora (030, FR-416).
+
+    Existe para os campos ocultos que carregam a combinação quando a tela deixa de perguntá-la: o
+    valor precisa ser o declarado, quando há, e o derivado quando não há. A regra está em
+    `editais/domain/marcos`; aqui só se lê o marco do formulário.
+    """
+    from processo_seletivo.editais.domain import marcos
+
+    marco = marco or {}
+    return marcos.combinacao_efetiva(
+        operacao=marco.get("operation") or "",
+        normalizacao=marco.get("normalization") or "",
+        etapas=marco.get("etapas"),
+    )
+
+
+@register.filter
+def pontuacao_e_a_da_etapa(marco):
+    """A frase de FR-416 é verdadeira sobre este marco?"""
+    from processo_seletivo.editais.domain import marcos
+
+    efetiva = combinacao_efetiva(marco)
+    return marcos.pontuacao_combinada_e_a_da_etapa(
+        operacao=efetiva["operation"], normalizacao=efetiva["normalization"]
+    )

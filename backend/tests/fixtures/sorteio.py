@@ -57,6 +57,10 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
                 "id": marco_id,
                 "code": "SORTEIO",
                 "name": "Sorteio público",
+                # **`POR_SORTEIO`**, e é o cenário que a declaração torna legível: este marco
+                # declara o método, e antes da `030` era essa presença que dizia que ele sorteia
+                # (030, FR-413).
+                "orderProduction": "POR_SORTEIO",
                 "stages": [etapa_id],
                 "operation": "SOMA_PONDERADA",
                 "normalization": "NENHUMA",

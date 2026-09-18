@@ -561,7 +561,13 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # pela mesma razão da anterior — a forma de comunicar a convocação é declarada pelo Edital,
         # e não inferida do texto dele: o 69/2026 convoca por publicação e o 77, o 58 e o 59 por
         # mensagem individual (019, D-009, R-007).
-        "editais": 20,
+        #
+        # **Sobe para 21 com a 030**: a `editais/0021` acrescenta `forma_da_ordem` ao marco
+        # classificatório. É elaboração pela razão das anteriores — como a ordem do marco é
+        # produzida passa a ser declarado em vez de inferido da presença do método do sorteio, e a
+        # inferência não distinguia "não sorteia" de "sorteia e ainda não declarei o método". A
+        # coluna nasce vazia e a migration não percorre linha publicada (030, FR-413, SC-142).
+        "editais": 21,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -709,13 +715,25 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # pelo Edital, e não inferida do texto dele: o 69/2026 convoca por publicação e o 77, o 58
         # e o 59 por mensagem individual, e escolher por eles fixaria norma em ato publicado
         # (019, D-009, R-007).
-        "editais": 20,
+        #
+        # **Sobe para 21 com a 030**: a `editais/0021` acrescenta `forma_da_ordem` ao marco
+        # classificatório. É elaboração pela razão das anteriores — como a ordem do marco é
+        # produzida passa a ser declarado em vez de inferido da presença do método do sorteio, e a
+        # inferência não distinguia "não sorteia" de "sorteia e ainda não declarei o método". A
+        # coluna nasce vazia e a migration não percorre linha publicada (030, FR-413, SC-142).
+        "editais": 21,
         "inscricoes": 4,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o
         # Edital passa a poder declarar (029, `FR-368`, `FR-407`).
-        "processos": 3,
+        # **Sobe para 4 com a 030**: a `processos/0004` acrescenta `metodo_de_sorteio_comum` ao
+        # Edital. É conteúdo normativo pela razão das colunas de elaboração dos outros apps — o
+        # método do sorteio é declarado pelo Edital e alterá-lo é Retificação —, e ele mora aqui
+        # porque o sorteio é um evento: a mesma extração semeia todas as listas do certame, e sete
+        # Perfis declaravam a mesma regra sete vezes. A coluna nasce vazia e a migration não
+        # percorre linha publicada (030, FR-429, SC-142).
+        "processos": 4,
         "publicacoes": 8,
         "recursos": 1,
         # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de

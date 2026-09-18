@@ -8,6 +8,7 @@ from processo_seletivo.classificacao.domain.combinacao import combinar
 def test_pesos_nao_precisam_somar_um():
     marco = {
         "stages": ["a", "b"],
+        "orderProduction": "POR_PONTUACAO",
         "operation": "SOMA_PONDERADA",
         "normalization": "NENHUMA",
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

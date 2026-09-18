@@ -347,6 +347,11 @@ def _marco_completo():
         "id": MARCO,
         "code": "FINAL",
         "name": "Classificação final",
+        # A forma da ordem declarada (030, FR-413). **`POR_SORTEIO` e não `POR_PONTUACAO`**: este
+        # marco declara o método do sorteio inteiro, e um marco de pontuação não publica método —
+        # a fronteira de FR-418 o descartaria, e os dez campos do método sumiriam da travessia do
+        # contrato de mutabilidade.
+        "orderProduction": "POR_SORTEIO",
         "stages": [ETAPA["A"], ETAPA["B"]],
         "operation": "SOMA_PONDERADA",
         "normalization": "NENHUMA",
@@ -401,6 +406,26 @@ def _marco_completo():
     }
 
 
+#: O método do sorteio comum ao Edital (030, FR-429). **Nove campos, e não dez**: a Etapa que
+#: habilita a participar do sorteio é do marco, porque depende de quais Etapas aquele marco
+#: enumera — um valor comum a todos endereçaria Etapa que parte deles não mede.
+METODO_COMUM = {
+    "algorithm": "IFES-SORTEIO-SHA256-v1",
+    "source": "Fonte de demonstração",
+    "occurrence": "5902",
+    "occurrenceAt": "2020-01-08T20:00:00-03:00",
+    "derivation": "A extração de sábado imediatamente anterior à data publicada.",
+    "normalization": {
+        "rule": "DIGITOS_EM_SEQUENCIA",
+        "text": "Os cinco números sorteados, na ordem dos prêmios.",
+    },
+    "substitutionRule": {
+        "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+        "text": "Não havendo extração na data prevista, vale a seguinte da mesma fonte.",
+    },
+}
+
+
 def rascunho_completo():
     """O rascunho **máximo**: toda coleção presente, e todo objeto opcional declarado.
 
@@ -422,6 +447,11 @@ def rascunho_completo():
     Os dois requisitos cobrem duas das quatro aplicabilidades: um para todos, um restrito a Perfil.
     """
     base = rascunho_com_etapas()
+    # O método comum do Edital, que o guardião do contrato precisa encontrar preenchido: as nove
+    # entradas `(RAIZ, "drawMethod/…")` só são alcançadas pela travessia se o Edital máximo as
+    # publicar. O marco continua declarando o **próprio** método — é a divergência da FR-430, e é
+    # ela que mantém as dez entradas do marco vivas.
+    base["drawMethod"] = METODO_COMUM
     base["documentRequirements"] = [
         {
             "id": DOCUMENTO["A"],

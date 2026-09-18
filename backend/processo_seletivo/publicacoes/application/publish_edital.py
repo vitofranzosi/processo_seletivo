@@ -10,6 +10,7 @@ from processo_seletivo.editais.domain.validation import (
     validate_for_publication,
 )
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
+from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.infrastructure.pdf import (
@@ -100,6 +101,19 @@ def _sections(edital: Edital) -> list[dict]:
     ]
 
 
+def _metodo_publicado(marco):
+    """O método do sorteio que este marco publica — `None` quando ele não ordena por sorteio.
+
+    Um marco que foi de sorteio e passou a ser de pontuação **guarda** o método no rascunho, para
+    que ele reapareça se a forma voltar a ser sorteio (030, FR-418), e **não o publica**. Vive numa
+    função porque é decisão de uma linha que precisa ter um lugar só: repetida no serializer e no
+    emissor, seriam duas respostas para a mesma pergunta.
+    """
+    if marco.forma_da_ordem == MarcoClassificatorio.FormaDaOrdem.POR_PONTUACAO:
+        return None
+    return marco.metodo_de_sorteio or None
+
+
 def edital_snapshot(edital: Edital) -> dict:
     profiles = []
     for profile in edital.perfis.prefetch_related(
@@ -146,6 +160,14 @@ def edital_snapshot(edital: Edital) -> dict:
                 "id": str(marco.id),
                 "code": marco.code,
                 "name": marco.name,
+                # A forma da ordem, **e a chave some quando ela não foi declarada** (030, FR-413,
+                # FR-431). É a única chave do conteúdo publicado que se omite em vez de grafar a
+                # ausência, e a razão é a que o degrau de elevação não resolveria: um degrau
+                # escreveria `orderProduction: null` em todo Edital já publicado, mudando o
+                # conteúdo e o resumo dele. A ausência da chave **é** o que o Edital anterior a
+                # esta feature afirma, e os leitores derivam dela o comportamento de sempre —
+                # sorteia se `drawMethod` está declarado (SC-142).
+                **({"orderProduction": marco.forma_da_ordem} if marco.forma_da_ordem else {}),
                 "stages": [str(etapa) for etapa in marco.etapas],
                 "operation": marco.operacao,
                 "normalization": marco.normalizacao,
@@ -157,7 +179,18 @@ def edital_snapshot(edital: Edital) -> dict:
                 # `None` quando o marco não declara método: é o que a versão 10 grafa para a
                 # ausência, e a mesma grafia que `elevar_marco` escreve em Edital anterior ao
                 # degrau (021, FR-066, D-013).
-                "drawMethod": marco.metodo_de_sorteio or None,
+                #
+                # **E `None` também quando o marco não ordena por sorteio** (030, FR-418). O
+                # rascunho guarda o método que a revelação progressiva escondeu — é o que impede
+                # que trocar a forma da ordem apague, em silêncio, o que já tinha sido declarado.
+                # O que o rascunho guarda, porém, não se publica: publicá-lo faria o Edital
+                # afirmar um sorteio que ele não faz. **A fronteira é aqui, e é só aqui**; fechar
+                # só o lado do rascunho deixaria o defeito vivo, que é a lição que o assistente já
+                # aprendeu uma vez.
+                #
+                # `""` não entra nesta recusa: é a ausência de declaração dos marcos anteriores à
+                # feature, e sobre eles nada muda.
+                "drawMethod": _metodo_publicado(marco),
                 # `None` quando o marco não corta: é o que a versão 13 grafa para a ausência, e a
                 # mesma grafia que `elevar_marco` escreve em Edital anterior ao degrau. Declarada,
                 # ela sai **normalizada** — `surplusCount` sempre presente, `targetCount` nulo em
@@ -298,6 +331,17 @@ def edital_snapshot(edital: Edital) -> dict:
             }
             if edital.requerimento_momento
             else None
+        ),
+        # O método do sorteio comum a este Edital (030, FR-429). **A chave some quando ele não é
+        # declarado**, pela mesma razão de `orderProduction` no marco: acrescentá-la a snapshot
+        # publicado mudaria o conteúdo e o resumo dele, e a ausência **é** o que todo Edital
+        # anterior a esta feature afirma — cada marco dele carrega o método literal, e a resolução
+        # só alcança marco sem método próprio (FR-431, SC-142).
+        #
+        # Da raiz, e não do Perfil: o sorteio é **um evento**, e a mesma extração semeia todas as
+        # listas do certame. Sete Perfis de sorteio declaravam a mesma regra sete vezes.
+        **(
+            {"drawMethod": edital.metodo_de_sorteio_comum} if edital.metodo_de_sorteio_comum else {}
         ),
         "processoCode": edital.processo.institutional_code,
         "processoTitle": edital.processo.title,

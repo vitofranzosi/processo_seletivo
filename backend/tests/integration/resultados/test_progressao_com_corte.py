@@ -63,6 +63,7 @@ def rascunho(*, com_regra=True, alvo=2):
         "code": "FINAL",
         "name": "Classificação por títulos",
         "stages": [pontuada["id"]],
+        "orderProduction": "POR_PONTUACAO",
         "operation": "SOMA_PONDERADA",
         "normalization": "NENHUMA",
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

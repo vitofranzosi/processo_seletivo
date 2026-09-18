@@ -315,7 +315,16 @@ def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
     # **O marco que declara sorteio não passa pelo motor de Etapas**, tenha ou não ato ainda. Ler
     # `drawMethod` aqui é ler conteúdo publicado — não é dependência do app do sorteio, que continua
     # sendo `sorteios → classificacao` e nunca o contrário (021, D-013).
-    if marco.get("drawMethod"):
+    #
+    # **E a pergunta passou a ter uma resolução própria** (030, FR-429): o marco pode referenciar o
+    # método comum do Edital em vez de declarar o seu, e quem lesse só a chave dele concluiria que
+    # não sorteia. A regra mora em `editais/domain/marcos` — que é conteúdo do marco, e não do app
+    # do sorteio, justamente para que esta leitura não inverta a direção da dependência.
+    from processo_seletivo.editais.domain import marcos as marcos_do_edital
+
+    if marcos_do_edital.marco_ordena_por_sorteio(
+        versao_atual.content, perfil_id=perfil["id"], marco_id=marco_id
+    ):
         return _estado_do_marco_que_sorteia(perfil=perfil, marco=marco, vigente=vigente)
 
     proposta = calcular_ordem(

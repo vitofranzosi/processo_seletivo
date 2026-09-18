@@ -13,55 +13,123 @@
   <p class="ajuda">Onde a ordem entre participantes é produzida. Um Perfil sem marco não
     classifica.</p>
   {% comment %}
-  Oito explicações viviam dentro do cartão do marco, e um Edital com três Perfis as imprimia três
-  vezes cada. Seis delas nem `id` tinham: não eram anunciadas a leitor de tela nenhum. Agora todas
-  têm, e o campo aponta para a sua — de modo que sair de vista **melhorou** o que se anuncia, em
-  vez de piorar.
+  **Por que a Etapa é do Edital e a ordem é do Perfil** (030, FR-423). A auditoria observou que
+  esta é a pergunta que quem chega faz em silêncio, e a que a tela não respondia: as duas coisas
+  estão no mesmo assistente, uma logo depois da outra, e nada dizia por que uma é declarada uma vez
+  para o certame inteiro e a outra, uma vez por Perfil.
+
+  É explicação da estrutura, e não de campo — por isso fica aqui, no passo, e não dentro do cartão,
+  onde a FR-428 não admite ajuda visível.
   {% endcomment %}
-  <details class="como-preencher">
-    <summary>Como preencher estes campos</summary>
-    <dl>
-      <dt>Etapas que entram na ordem</dt>
-      <dd>Só Etapas classificatórias. O peso de cada uma é o que ela já publica; aqui se escolhe
-        quais entram.</dd>
-      <dt>Casas decimais e arredondamento</dt>
-      <dd>O arredondamento é aplicado uma vez, sobre a pontuação combinada.</dd>
-      <dt>Como as pontuações se combinam</dt>
-      <dd>O peso de cada Etapa é o que a própria Etapa já publica; aqui se declara o que se faz com
-        eles. Os pesos não precisam somar 1: é a normalização declarada que responde por isso.</dd>
-      <dt>Recurso contra o resultado</dt>
-      <dd>Não declarar e negar são coisas diferentes: o silêncio devolve a tempestividade ao juízo
-        de admissibilidade motivado; a negativa é norma publicada, e recusa a interposição
-        nomeando-a. O prazo é contado do dia seguinte ao da divulgação, incluindo o do vencimento;
-        dias úteis exigiriam o calendário de dias sem expediente, que o Edital não publica.</dd>
-      {% comment %}
-      As duas entradas abaixo vieram de descrições `.oculto` do cartão do marco, onde ninguém que
-      enxerga as lia — e onde citavam Editais externos ("o 77/2026 admite; o 14/2026 não") que quem
-      preenche não tem como consultar. O conteúdo que as duas leituras produziram fica; a citação
-      sai. Aqui elas são lidas uma vez, e por todo mundo.
-      {% endcomment %}
-      <dt>Método do sorteio</dt>
-      <dd>Só para o marco que ordena por sorteio, e a maioria não ordena — deixe o bloco vazio e
-        ele permanece fechado. Declarado aqui, o método é conteúdo publicado do Edital: alterá-lo
-        depois exige Retificação, e nunca implantação de software. Na prática, o sorteio costuma
-        vir <strong>antes</strong> da análise documental: quando é o caso, não há Etapa que habilite
-        a participar, e entram todas as inscrições submetidas do recorte.</dd>
-      <dt>Regra de corte</dt>
-      <dd>Quantos progridem é o interruptor: sem ele, o marco não corta e a Etapa seguinte recebe
-        todos os habilitados. A faixa seguinte é a outra decisão que não tem padrão — há Editais que
-        admitem continuar além do que foi publicado, quando alguém não assume a vaga, e Editais que
-        fecham a faixa no que o ato publicou. O empate na última posição também não tem padrão: sem
-        essa declaração o Edital não publica.</dd>
-      <dt>Critérios de desempate</dt>
-      <dd>Aplicados na ordem declarada. Esgotados todos, os empatados compartilham posição, e o ato
-        registra que ali não existe ordem normativa.</dd>
-    </dl>
+  <p class="definicoes">A <strong>Etapa de Avaliação</strong> pertence ao Edital porque ela é um
+    momento do certame: a mesma prova, o mesmo dia, o mesmo peso, para quem quer que a preste. O
+    <strong>marco classificatório</strong> pertence ao Perfil de Vaga porque ordenar é comparar
+    quem concorre entre si — e quem concorre a um Perfil não disputa a vaga de outro. Um Edital com
+    sete Perfis tem uma Etapa e sete ordens.</p>
+  {% comment %}
+  **A ajuda da etapa não aparece enquanto não houver marco a que ela se refira** (030, FR-426).
+  Oito explicações viviam dentro do cartão do marco, e um Edital com três Perfis as imprimia três
+  vezes cada; trazê-las para cá resolveu a repetição e criou o oposto — um bloco que ensinava a
+  preencher campos que ninguém tinha à frente, porque o passo nasce sem marco nenhum.
+
+  O invólucro existe sempre, mesmo vazio: é o destino do `hx-swap-oob` que traz o bloco quando o
+  primeiro marco nasce pelo botão. Sem ele na página, o htmx não acha alvo e **não erra**.
+  {% endcomment %}
+  <div id="ajuda-da-classificacao">
+    {% if ancora_do_marco %}{% include "interface/_como_preencher_o_marco.html" with ancora=ancora_do_marco %}{% endif %}
+  </div>
+  {% comment %}
+  **O método do sorteio, declarado uma vez para o Edital** (030, FR-429). Sete Perfis de sorteio
+  declaravam a mesma regra sete vezes — mesmo algoritmo, mesma fonte, mesma ocorrência —, porque o
+  sorteio é **um evento**: a mesma extração semeia todas as listas do certame.
+
+  Fica aqui, no passo, e não no cartão, porque é do Edital: o cartão o referencia, e só redigita
+  quando precisa divergir (FR-430). Bloco que fecha, e aberto quando declarado — a mesma regra dos
+  blocos do marco, e pela mesma razão: fechado sobre conteúdo publicado seria armadilha.
+
+  Nenhum campo obrigatório aqui: o método vale inteiro ou não é declarado, e quem cobra a metade é
+  a validação — com uma mensagem que nomeia o campo que falta.
+
+  A classe é `bloco-do-marco` embora o bloco seja do Edital: ela nomeia a **espécie** — o
+  disclosure que fecha sobre declaração opcional e diz no resumo o que há dentro —, e não o dono.
+  Uma classe própria com a mesma regra seria uma segunda folha a manter, e as duas divergiriam.
+  {% endcomment %}
+  <details class="bloco-do-marco"{% if tem_metodo_comum %} open{% endif %}>
+    <summary>Método do sorteio comum a este Edital
+      <span class="resumo-do-bloco">{% if tem_metodo_comum %}declarado{% else %}não declarado{% endif %}</span></summary>
+    <fieldset class="campos" aria-describedby="ajuda-metodo-comum">
+      <legend class="oculto">Método do sorteio comum a este Edital</legend>
+      <span class="oculto" id="ajuda-metodo-comum">Declarado aqui, ele vale para todo marco que
+        ordena por sorteio e não declara método próprio. Alterá-lo depois de publicado exige
+        Retificação, e nunca implantação de software.</span>
+      <p class="campo">
+        <label for="edital-draw-algorithm">Algoritmo e versão</label>
+        <input type="text" id="edital-draw-algorithm" name="edital-draw-algorithm"
+               value="{{ metodo_comum.drawAlgorithm }}" placeholder="IFES-SORTEIO-SHA256-v1">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-source">Fonte pública externa da semente</label>
+        <input type="text" id="edital-draw-source" name="edital-draw-source"
+               value="{{ metodo_comum.drawSource }}">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-occurrence">Ocorrência que fixará a semente</label>
+        <input type="text" id="edital-draw-occurrence" name="edital-draw-occurrence"
+               value="{{ metodo_comum.drawOccurrence }}">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-occurrenceAt">Quando a ocorrência acontece</label>
+        <input type="text" id="edital-draw-occurrenceAt" name="edital-draw-occurrenceAt"
+               value="{{ metodo_comum.drawOccurrenceAt }}" placeholder="2026-11-20T20:00:00-03:00">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-derivation">Como a ocorrência decorre da data programada</label>
+        <input type="text" id="edital-draw-derivation" name="edital-draw-derivation"
+               value="{{ metodo_comum.drawDerivation }}">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-normalizationRule">Regra de normalização</label>
+        <select id="edital-draw-normalizationRule" name="edital-draw-normalizationRule">
+          <option value="">Não declarada</option>
+          <option value="DIGITOS_EM_SEQUENCIA" {% if metodo_comum.drawNormalizationRule == "DIGITOS_EM_SEQUENCIA" %}selected{% endif %}>Os dígitos do material, na ordem em que aparecem</option>
+          <option value="TEXTO_LITERAL" {% if metodo_comum.drawNormalizationRule == "TEXTO_LITERAL" %}selected{% endif %}>O texto literal do material observado</option>
+        </select>
+      </p>
+      <p class="campo">
+        <label for="edital-draw-normalizationText">Como a regra de normalização será publicada</label>
+        <input type="text" id="edital-draw-normalizationText" name="edital-draw-normalizationText"
+               value="{{ metodo_comum.drawNormalizationText }}">
+      </p>
+      <p class="campo">
+        <label for="edital-draw-substitutionRule">Regra de substituição</label>
+        <select id="edital-draw-substitutionRule" name="edital-draw-substitutionRule">
+          <option value="">Não declarada</option>
+          <option value="OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" {% if metodo_comum.drawSubstitutionRule == "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" %}selected{% endif %}>A ocorrência seguinte da mesma fonte</option>
+        </select>
+      </p>
+      <p class="campo">
+        <label for="edital-draw-substitutionText">Como a regra de substituição será publicada</label>
+        <input type="text" id="edital-draw-substitutionText" name="edital-draw-substitutionText"
+               value="{{ metodo_comum.drawSubstitutionText }}">
+      </p>
+    </fieldset>
   </details>
   {% if not etapas_classificatorias %}
-  <div class="aviso" role="alert">
-    <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco só pode enumerar
-      Etapas classificatórias — declare ao menos uma no passo de Etapas de Avaliação antes de
-      compor a classificação.</p>
+  {% comment %}
+  **O aviso deixou de mandar** (030, FR-432). Ele dizia "declare ao menos uma antes de compor a
+  classificação", e a partir da FR-432 isso é falso para metade dos marcos: o que ordena por
+  sorteio pode não enumerar Etapa alguma, e é o caso do Edital em que o sorteio precede a análise
+  documental. A tela mandava criar uma Etapa artificial para satisfazer uma regra que deixou de
+  existir — e a ajuda do método, logo abaixo, mandava o contrário.
+
+  Continua sendo aviso, e não impedimento: quem ordena pela pontuação precisa mesmo de Etapa, e
+  saber disso aqui é melhor do que descobrir na publicação.
+  {% endcomment %}
+  <div class="aviso" role="status">
+    <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco que ordena
+      <strong>pela pontuação</strong> precisa de ao menos uma — declare-a no passo de Etapas de
+      Avaliação. Um marco que ordena <strong>por sorteio</strong> pode não enumerar nenhuma: é o
+      caso de quem sorteia antes da análise documental.</p>
   </div>
   {% endif %}
   {% for perfil in perfis %}
