@@ -37,11 +37,14 @@ porta da divulgação — *"sem a capacidade é 403, e não 404 … o 404 fica p
 alcança"*. A feature aplica o que o produto decidiu e não cumpriu. Onde não há escolha aberta, não se
 fabrica pergunta.
 
-**O escopo foi medido, não estimado.** A interface administrativa tem 76 pontos que respondem "não
-encontrado", e prometer varrer os 76 seria escopo que ninguém sustenta. A superfície real são as
-**quatro portas de autorização nomeadas**, e a que erra a gramática governa **23 telas** — o que
-torna `SC-165` verificável. O plano deve confirmar caso a caso que os demais são objeto inexistente,
-e registrar o que encontrar; a spec já assume isso por escrito.
+**O escopo foi medido pela metade, e o `analyze` pegou.** A primeira redação dizia que *"a superfície
+real são as quatro portas de autorização nomeadas"* — medindo só as **definições de função**. O
+número que faltava apareceu depois: `views.py` tem **75** `raise Http404` e **apenas 4** vivem dentro
+das portas. Os outros **71** são presunção razoável, não medição, e presunção não entra em spec como
+fato. A spec passou a dizer isso, e o inventário ganhou **gatilho de escopo**: encontrou recusa de
+autorização fora das portas, para antes de implementar e leva a conversa a quem governa o backlog.
+
+A porta que erra a gramática governa **23 telas**, e é isso que torna `SC-165` verificável.
 
 **A garantia mais importante é `SC-168`**, e ela existe porque a feature toca superfície de
 segurança: o conjunto de pares (ator, tela) que abre tem de ser **idêntico** antes e depois. Sem ela,

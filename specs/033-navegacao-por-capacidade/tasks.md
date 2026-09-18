@@ -53,7 +53,7 @@ comparar. **Não é formalidade.**
 
 - [ ] T001 Rodar `uv sync --extra dev` em `backend/` e preparar um banco próprio desta worktree com `make preparar DB_NAME=<próprio> POSTGRES_DB=<o mesmo>`, conferindo que a saída termina em `N de M` com `N` diferente de zero
 - [ ] T002 Registrar em `/tmp/033-autorizacao-antes.txt` a lista de casos de `backend/tests/authorization/` — arquivo, nome do caso e status esperado em cada asserção de recusa. São **197 casos** em 38 arquivos, e este arquivo é o "antes" do cenário 4 do quickstart
-- [ ] T003 [P] Inventariar em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` os **76** pontos de `processo_seletivo/interface/views.py` que respondem "não encontrado", classificando cada um como **objeto inexistente**, **escopo institucional** ou **recusa de autorização** — os dois primeiros ficam como estão, o terceiro é a superfície desta feature
+- [ ] T003 [P] Inventariar em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` os **75** pontos de `processo_seletivo/interface/views.py` que respondem "não encontrado", classificando cada um como **objeto inexistente**, **escopo institucional** ou **recusa de autorização** — os dois primeiros ficam como estão, o terceiro é a superfície desta feature. **Apenas 4 dos 75 vivem dentro das portas nomeadas**, e os outros 71 são presunção, não medição: é esta tarefa que a desfaz. **Gatilho de escopo obrigatório**: se o inventário encontrar recusa de autorização fora das quatro portas, **pare antes de T027 e leve a conversa a quem governa o backlog** — crescer a feature em silêncio é o que a `FR-483` existe para impedir
 
 **Checkpoint**: o "antes" está registrado, e a superfície real da feature está nomeada linha a linha
 
@@ -87,7 +87,7 @@ com ato emitido e chegar à divulgação com **zero URLs digitadas**.
 - [ ] T007 [P] [US1] Criar o **arquivo novo** `tests/interface/test_destinos_do_edital.py` com o caso de `FR-474` e `SC-164`: ator com a capacidade de publicar resultado e **sem vínculo nenhum** vê, na tela do Edital, o caminho até a divulgação de cada ato emitido
 - [ ] T008 [P] [US1] Acrescentar ao mesmo arquivo o caso de `FR-475`, que é a contraprova que mais importa: a presidência **sem** a capacidade de publicar continua vendo **todos** os destinos que vê hoje — nenhum a menos. Monte a lista esperada a partir do comportamento atual, e não da intenção
 - [ ] T009 [P] [US1] Acrescentar ao mesmo arquivo os três casos de `FR-473` e `FR-476`: quem preside **e** publica vê a união, **sem destino repetido**; quem não alcança nada não vê o bloco; e quem **julga recursos** continua não vendo — é o defeito que o código já corrigiu, e regredi-lo seria trocar um achado por outro
-- [ ] T010 [P] [US1] Acrescentar ao mesmo arquivo a ausência que não é recusa: marco **sem ato emitido** não oferece divulgação ao Publicador. Oferecer caminho que termina em nada é o mesmo defeito com outra roupa
+- [ ] T010 [P] [US1] Acrescentar ao mesmo arquivo as **duas** ausências que não são recusa: marco **sem ato emitido** não oferece divulgação ao Publicador, e **Edital ainda não publicado** não mostra o bloco para ator nenhum. Oferecer caminho que termina em nada é o mesmo defeito com outra roupa; e ausência de bloco não é negativa, é ausência
 - [ ] T011 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_publicar_resultado.py` o caso de ponta a ponta: o Publicador puro segue o caminho oferecido e **a tela de divulgação abre** — sem recusa, porque a capacidade dele sempre bastou
 
 ### Implementation for User Story 1
@@ -113,7 +113,7 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 
 ### Tests for User Story 3
 
-- [ ] T016 [P] [US3] Acrescentar ao **arquivo existente** `tests/interface/test_publicar_resultado.py` o caso de `FR-484`: na tela do ato, o ator sem ação disponível lê a capacidade que resolve e a instrução de pedir a quem a detém
+- [ ] T016 [P] [US3] Acrescentar ao **arquivo existente** `tests/interface/test_publicar_resultado.py` dois casos: o de `FR-484` — na tela do ato, o ator sem ação disponível lê a capacidade que resolve e a instrução de pedir a quem a detém —, e o de `FR-477`, que hoje só tem implementação: a tela de ordenação, lida pela presidência, declara **de quem é o ato** de divulgar, e não apenas onde ele mora
 - [ ] T017 [P] [US3] Acrescentar ao mesmo arquivo a contraprova de `FR-485`: quando o que falta é **vínculo**, a frase nomeia a **presidência daquele Processo** e **não** manda pedir um papel — nenhum papel concede presidência, e mandar pedir o que não resolve é o defeito
 
 ### Implementation for User Story 3
@@ -162,6 +162,7 @@ Hoje responde "não encontrado"; deve responder recusa explicada.
 - [ ] T031 [P] Conferir o implementado contra `contracts/gramatica-da-recusa.md` e `contracts/destinos-da-tela-do-edital.md`, corrigindo **o artefato** quando o código estiver certo e o contrato errado, e dizendo qual dos dois mudou
 - [ ] T032 Percorrer os cenários 1 a 3 de `quickstart.md` pela interface administrativa, com o seletor de identidade, medindo `SC-167`: nenhum dos seis papéis vê caminho que não abre, e nenhum deixa de ver um que abria
 - [ ] T033 Rodar `make lint check test-pg` em `backend/` e registrar em `rastreabilidade.md` a contagem final — `lint` são dois passos, `ruff check` **e** `ruff format --check`
+- [ ] T034 Criar o **arquivo novo** `tests/test_gramatica_das_portas.py` com a varredura que torna `SC-165`, `SC-166` e `FR-486` invariantes em vez de conferências datadas: percorrer as portas de autorização da gestão e afirmar a taxonomia do contrato — escopo institucional responde "não encontrado", capacidade e vínculo respondem recusa explicada, e toda recusa nomeia o que falta. Espelhe a forma de `tests/test_vocabulario_da_composicao.py`, que a `030` usou para varrer tela × termo. **É o que faz uma porta acrescentada no ano que vem, com a gramática antiga, ser recusada pela suíte** — sem ela, os três critérios valem para o dia em que foram conferidos e não para os seguintes
 
 ---
 

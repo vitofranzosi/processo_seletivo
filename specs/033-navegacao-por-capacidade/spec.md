@@ -153,7 +153,9 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   Esta feature MUST NOT retirar caminho de ninguém.
 - **FR-476**: Nenhuma tela MUST oferecer caminho que o ator não alcança. É o princípio que o produto
   já declara — *oferecer o que se vai recusar é pior do que não oferecer* — aplicado por capacidade,
-  e não por uma porta só.
+  e não por uma porta só. **Como princípio ele vale para o produto inteiro; como requisito desta
+  feature, ele é verificado nas telas que ela alcança** — a do Edital e a do ato. Escrevê-lo como
+  obrigação universal o tornaria impossível de fechar, e um requisito que não fecha não é requisito.
 - **FR-477**: Texto que instrui o operador a ir a outra tela MUST levar ao destino que **aquele**
   ator alcança, ou declarar que aquele caminho não é dele.
 
@@ -205,8 +207,11 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   resultado com **zero URLs digitadas**.
 - **SC-165**: Nenhuma porta de autorização da gestão responde "não encontrado" para recusa de
   capacidade ou de vínculo. As duas únicas origens de "não encontrado" passam a ser objeto
-  inexistente e outro escopo institucional.
-- **SC-166**: 100% das recusas desta família nomeiam a capacidade ou o vínculo que as resolve.
+  inexistente e outro escopo institucional. **E o critério é verificado por varredura, não caso a
+  caso**: uma porta acrescentada depois desta feature, com a gramática antiga, tem de ser recusada
+  pela suíte — senão o critério vale para o dia em que foi conferido e não para os seguintes.
+- **SC-166**: 100% das recusas desta família nomeiam a capacidade ou o vínculo que as resolve, e a
+  varredura de `SC-165` também cobre esta contagem.
 - **SC-167**: Percorrendo os seis papéis que o seletor de identidade oferece, **nenhum** deles vê, na
   tela do Edital, um caminho que não consegue abrir — e nenhum deixa de ver um que conseguia.
 - **SC-168**: O conjunto de pares (ator, tela) que abre é **idêntico** antes e depois da feature.
@@ -217,9 +222,14 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 - A tela de recusa e o mecanismo que a produz **já existem** e alcançam toda a gestão: uma recusa do
   domínio com status 403 vira página com título, motivo e a frase de que nada foi alterado. Esta
   feature usa o que existe; não constrói um segundo mecanismo.
-- As **quatro portas de autorização** nomeadas da gestão são a superfície desta feature. Os demais
-  pontos que respondem "não encontrado" na interface administrativa são objeto inexistente, e não
-  pertencem a esta família — o plano deve confirmá-lo caso a caso, e registrar o que encontrar.
+- As **quatro portas de autorização** nomeadas da gestão são a superfície **conhecida** desta
+  feature, e não necessariamente a superfície inteira. A medição de 18/09/2026 é clara sobre isso:
+  a interface administrativa tem **75** pontos que respondem "não encontrado", e **apenas 4** vivem
+  dentro das portas nomeadas. Os outros **71** são presumidamente objeto inexistente — a maioria
+  quase certamente é —, mas isso **não foi verificado**, e a spec não o afirma.
+  **O tamanho real da feature só se conhece depois do inventário**, que é a primeira coisa que o
+  plano manda fazer. Se ele encontrar recusa de autorização fora das quatro portas, isso é conversa
+  de escopo com quem governa o backlog, e não decisão de quem implementa.
 - O seletor de identidade, usado para percorrer os papéis em `SC-167`, é recurso de demonstração e
   não existe em produção. Ele serve à verificação, não ao requisito.
 - A equipe real deste sistema tem duas ou três pessoas, que acumulam papéis. A feature é escrita para

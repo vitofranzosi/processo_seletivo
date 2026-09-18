@@ -30,23 +30,30 @@ Fecharia `ACH-40` e deixaria `ACH-35` vivo — e pior: a tela deixaria de oferec
 
 ---
 
-## R-2 · A superfície real são quatro portas, não 76 pontos
+## R-2 · A superfície **conhecida** são quatro portas — e 71 pontos continuam sem classificação
 
-`interface/views.py` tem **76** `raise Http404`. Varrer os 76 seria escopo que ninguém sustenta, e a
-maioria é a resposta verdadeira — objeto que não existe.
-
-As portas de autorização nomeadas são quatro:
+`interface/views.py` tem **75** `raise Http404`, e **apenas 4** estão dentro das portas de
+autorização nomeadas.
 
 | Porta | Telas que governa | Gramática hoje |
 |---|---|---|
 | `_edital_para_classificar` | **23** | ❌ 404 para vínculo e para capacidade |
 | `_edital_para_publicar` | 4 | ✅ 403 para capacidade, 404 para escopo |
 | `_ato_para_publicar` | — | derivada da anterior |
-| `_processo_para_gerir` | — | a conferir no plano |
+| `_processo_para_gerir` | — | a conferir no inventário |
 
-**Decisão.** O escopo é o das portas. O plano tem uma tarefa dedicada a **classificar** os demais
-pontos — cada um vira "objeto inexistente" (fica) ou "recusa de autorização" (entra) —, e o que for
-encontrado se registra, mesmo que não entre.
+**Decisão.** O escopo conhecido é o das portas, e o inventário é o que fecha o resto. É a primeira
+coisa que o plano manda fazer, e não uma formalidade: **os outros 71 pontos são presunção, não
+medição**. A presunção é razoável — a maioria quase certamente responde por objeto que não existe —,
+mas presunção não entra em spec como fato.
+
+**O gatilho que isso cria.** Se o inventário encontrar recusa de autorização fora das quatro portas,
+o tamanho da feature mudou, e isso é conversa de escopo com quem governa o backlog — não decisão de
+quem implementa. Está escrito na tarefa do inventário e nas Assumptions da spec.
+
+**Por que isso quase passou.** A primeira redação afirmava *"a superfície real são quatro portas,
+não 76 pontos"*, medindo só as definições de função. O número que faltava — 4 de 75 dentro delas —
+apareceu no `analyze`, e é a diferença entre um escopo medido e um escopo estimado.
 
 ---
 

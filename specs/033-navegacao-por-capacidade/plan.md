@@ -47,7 +47,7 @@ ser idêntico antes e depois; o 404 de escopo institucional é proteção de dad
 do candidato mantém o 404 uniforme
 
 **Scale/Scope**: quatro portas de autorização, uma função de derivação de destinos, três frases de
-template, e uma revisão dirigida dos 76 pontos que respondem "não encontrado" na gestão
+template, e o inventário dos 75 pontos que respondem "não encontrado" na gestão, dos quais só 4 vivem dentro das portas nomeadas
 
 ## Constitution Check
 
@@ -144,3 +144,5 @@ formalidade**.
 | Regredir o defeito que o código já corrigiu | quem julga recursos volta a ver "Classificação final" e a receber erro ao clicar | é caso de aceitação de US1, e não caso de borda |
 | Retirar destino de quem já tinha | a presidência perde um caminho | `FR-475` e o cenário 1 do quickstart medem os dois sentidos |
 | Esconder link e achar que protegeu | a URL montada à mão passa | `FR-482`, e o teste que monta a URL à mão |
+| **O escopo crescer no meio do caminho** | o inventário encontra recusa de autorização fora das quatro portas — e 71 dos 75 pontos ainda não foram classificados | o inventário é a **primeira** tarefa, e carrega gatilho explícito: encontrou, para antes de implementar e leva a conversa a quem governa o backlog |
+| O critério valer só no dia em que foi conferido | uma porta nova nasce depois com a gramática antiga, e a suíte não reclama | a varredura da fase 6, espelhando `test_vocabulario_da_composicao.py` da `030` |
