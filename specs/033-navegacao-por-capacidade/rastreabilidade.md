@@ -90,3 +90,32 @@ Três portões pegaram defeito real, e nenhum deles teria aparecido na revisão 
    escopo estavam verdes — eles recusavam, e recusavam pelo motivo errado.
 2. **A conferência caso a caso da `T032`** pegou o `in (302, 403, 404)` descrito acima.
 3. **A varredura da `T039`** pegou as duas frases da tabela anterior.
+
+## O detector disparou antes de a feature entrar
+
+Vale registrar porque é a única evidência que existe de que a `SC-165` sobrevive ao dia seguinte.
+
+Ao integrar a `main` — que trazia a `031` —, a `T038` reprovou a suíte: `exportar_matriculas`
+respondia "não encontrado" e não estava no inventário. **Ela está certa**: a consulta filtra por
+escopo institucional, e a autorização vai por `require_permission`, que responde 403. Foi
+classificada e o verde voltou.
+
+O caso é pequeno e é o ponto inteiro. O detector **não julga a gramática** — ele obriga alguém a
+olhar. Uma porta escrita com a gramática antiga teria entrado pela mesma via, e a diferença é que
+alguém teria de escrever no inventário que ela responde 404 a recusa de autorização. Sem isso, a
+`SC-165` valeria para 18/09/2026 e para mais nenhum dia.
+
+## Cenários percorridos
+
+| Cenário | Como foi verificado |
+|---|---|
+| **1** · o Publicador puro chega à divulgação | automatizado, nos dois sentidos: `test_destinos_do_edital.py` (8 casos, um por papel) e `test_publicar_resultado.py::test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao`, que **lê o caminho da própria página** em vez de montá-lo |
+| **2** · a recusa se explica | automatizado: `test_gramatica_da_recusa.py`, 21 casos, com as quatro contraprovas do quickstart — outro escopo, identificador inexistente, URL montada à mão e o 404 uniforme do portal |
+| **3** · quem trava sabe a quem pedir | automatizado: os quatro casos de `test_publicar_resultado.py`, com as duas contraprovas de `FR-485` puxando para lados opostos |
+| **4** · nada foi afrouxado | **caso a caso**, por comparação mecânica com o "antes" da `T002` — ver a tabela de testes alterados |
+
+**`SC-167` não foi percorrida à mão pela interface, e isso é uma lacuna declarada, não uma
+equivalência.** O que a `T035` pede é entrar pelos seis papéis do seletor de identidade e olhar; o
+que existe é a mesma matriz verificada por teste, papel a papel, nos dois sentidos — nenhum vê
+caminho que não abre, e nenhum deixa de ver um que abria. A diferença entre as duas coisas é real:
+o teste lê o `href` do bloco de classificação, e o olho humano lê a tela inteira.
