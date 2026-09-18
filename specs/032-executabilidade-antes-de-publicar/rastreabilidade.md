@@ -15,9 +15,14 @@ Caminhos relativos a `backend/`.
 | Depois de US1 | 6905 | 11 | 0 |
 | Depois de US2 | 6933 | 11 | 0 |
 | Final (T040) | **6947** | **11** | **0** |
+| Depois de integrar a `main` com a `031` | **7158** | **12** | **0** |
 
 `make lint check test-pg` limpo: `ruff check`, `ruff format --check`, `manage.py check`,
 `makemigrations --check` (**nenhuma migration**, que é o que a `data-model.md` promete) e a suíte.
+
+**A `main` andou no meio da feature**, e a 031 entrou com 211 testes novos. Nenhum deles é alcançado
+pela `FR-457`: as fixtures que ela trouxe já declaram marco. O pulado que volta é da 031, e não
+desta feature.
 
 **Um pulado a menos, e é melhoria.** `tests/test_vocabulario_da_composicao.py` pula o caso em que a
 tela não usa o termo. As frases novas passaram a usar **geração** em duas telas que não a usavam, e
