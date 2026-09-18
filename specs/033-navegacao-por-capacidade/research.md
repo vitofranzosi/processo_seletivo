@@ -30,30 +30,40 @@ Fecharia `ACH-40` e deixaria `ACH-35` vivo — e pior: a tela deixaria de oferec
 
 ---
 
-## R-2 · A superfície **conhecida** são quatro portas — e 71 pontos continuam sem classificação
+## R-2 · A superfície autorizativa **não está medida**, e é o inventário que a mede
 
-`interface/views.py` tem **75** `raise Http404`, e **apenas 4** estão dentro das portas de
-autorização nomeadas.
+**O único número conferido é este:** `interface/views.py` tem **75** `raise Http404`. Tudo além
+disso é o que T003 vai determinar.
 
-| Porta | Telas que governa | Gramática hoje |
-|---|---|---|
-| `_edital_para_classificar` | **23** | ❌ 404 para vínculo e para capacidade |
-| `_edital_para_publicar` | 4 | ✅ 403 para capacidade, 404 para escopo |
-| `_ato_para_publicar` | — | derivada da anterior |
-| `_processo_para_gerir` | — | a conferir no inventário |
+As funções nomeadas que se pareciam com "as portas" são quatro, e a leitura delas desfez a própria
+pergunta:
 
-**Decisão.** O escopo conhecido é o das portas, e o inventário é o que fecha o resto. É a primeira
-coisa que o plano manda fazer, e não uma formalidade: **os outros 71 pontos são presunção, não
-medição**. A presunção é razoável — a maioria quase certamente responde por objeto que não existe —,
-mas presunção não entra em spec como fato.
+| Função | Telas que governa | É porta de autorização? | Gramática hoje |
+|---|---|---|---|
+| `_edital_para_classificar` | **23** | sim | ❌ 404 para vínculo e para capacidade |
+| `_edital_para_publicar` | 4 | sim | ✅ 403 para capacidade, 404 para escopo |
+| `_processo_para_gerir` | — | sim | a classificar |
+| `_ato_para_publicar` | — | **não** | recebe `edital`, `marco_id` e `ato_id`, **sem `request` e sem ator**: busca o ato dentro de um Edital já autorizado. O 404 dela é objeto inexistente |
 
-**O gatilho que isso cria.** Se o inventário encontrar recusa de autorização fora das quatro portas,
-o tamanho da feature mudou, e isso é conversa de escopo com quem governa o backlog — não decisão de
-quem implementa. Está escrito na tarefa do inventário e nas Assumptions da spec.
+Elas somam **5** ocorrências de `raise Http404` — 1, 2, 1 e 1 —, e não 4. Das cinco, **quatro** estão
+em funções que de fato autorizam, distribuídas por **três** portas.
 
-**Por que isso quase passou.** A primeira redação afirmava *"a superfície real são quatro portas,
-não 76 pontos"*, medindo só as definições de função. O número que faltava — 4 de 75 dentro delas —
-apareceu no `analyze`, e é a diferença entre um escopo medido e um escopo estimado.
+**Decisão.** A spec **não antecipa** a repartição. Nem "4 e 71", nem "5 e 70": o que ela afirma é
+que há 75 no arquivo e que a superfície autorizativa sai do inventário. O que se sabe hoje é o
+suficiente para escrever os requisitos — a porta que erra a gramática está identificada e governa 23
+telas — e não é suficiente para declarar o tamanho da feature.
+
+**O gatilho que isso cria.** Se o inventário encontrar recusa de autorização fora das portas já
+identificadas, o tamanho mudou, e isso é conversa de escopo com quem governa o backlog — não decisão
+de quem implementa. Por isso a parada é **logo depois de T003**, antes da fase 2, e não às vésperas
+de uma tarefa específica.
+
+**Por que a primeira medição errou duas vezes.** A redação original afirmava *"a superfície real são
+quatro portas, não 76 pontos"*, medindo só as **definições de função**. A correção seguinte trocou
+por *"apenas 4 dos 75 vivem dentro das portas"* — e errou de novo, por duas razões: a varredura por
+faixa de linhas cobriu três intervalos e deixou `_ato_para_publicar` de fora, e a lista de "portas"
+incluía uma função que não autoriza ninguém. **Duas tentativas de estimar o que só se sabe contando**
+— e é por isso que o inventário é tarefa, e não parágrafo.
 
 ---
 

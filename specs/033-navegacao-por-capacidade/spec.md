@@ -222,14 +222,17 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 - A tela de recusa e o mecanismo que a produz **já existem** e alcançam toda a gestão: uma recusa do
   domínio com status 403 vira página com título, motivo e a frase de que nada foi alterado. Esta
   feature usa o que existe; não constrói um segundo mecanismo.
-- As **quatro portas de autorização** nomeadas da gestão são a superfície **conhecida** desta
-  feature, e não necessariamente a superfície inteira. A medição de 18/09/2026 é clara sobre isso:
-  a interface administrativa tem **75** pontos que respondem "não encontrado", e **apenas 4** vivem
-  dentro das portas nomeadas. Os outros **71** são presumidamente objeto inexistente — a maioria
-  quase certamente é —, mas isso **não foi verificado**, e a spec não o afirma.
-  **O tamanho real da feature só se conhece depois do inventário**, que é a primeira coisa que o
-  plano manda fazer. Se ele encontrar recusa de autorização fora das quatro portas, isso é conversa
-  de escopo com quem governa o backlog, e não decisão de quem implementa.
+- **A superfície autorizativa desta feature não está medida, e a spec não a estima.** O único número
+  conferido é que a interface administrativa tem **75** pontos que respondem "não encontrado". A
+  repartição entre *objeto inexistente*, *escopo institucional* e *recusa de autorização* sai do
+  inventário, que é a primeira coisa que o plano manda fazer.
+  O que se sabe é o bastante para escrever os requisitos e não para declarar o tamanho: a porta que
+  erra a gramática está identificada e governa **23 telas**, e nem toda função que responde "não
+  encontrado" é porta — `_ato_para_publicar`, por exemplo, não recebe ator nenhum e apenas busca o
+  ato dentro de um Edital já autorizado.
+  **Se o inventário encontrar recusa de autorização fora das portas já identificadas, o tamanho da
+  feature mudou** — e isso é conversa de escopo com quem governa o backlog, não decisão de quem
+  implementa.
 - O seletor de identidade, usado para percorrer os papéis em `SC-167`, é recurso de demonstração e
   não existe em produção. Ele serve à verificação, não ao requisito.
 - A equipe real deste sistema tem duas ou três pessoas, que acumulam papéis. A feature é escrita para
