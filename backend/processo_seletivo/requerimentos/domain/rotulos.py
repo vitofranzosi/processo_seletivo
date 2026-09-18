@@ -35,6 +35,11 @@ ROTULOS = {
     "rg": "Número do documento de identidade",
     "rg_orgao_emissor": "Órgão emissor",
     "rg_expedido_em": "Data de expedição",
+    # **Os três dizem "eleitoral" no rótulo**, e não só "Título": num formulário de matrícula,
+    # "Título" sozinho é ambíguo com título de eleitor, título de crédito e título acadêmico.
+    "titulo_eleitoral": "Título de eleitor",
+    "zona_eleitoral": "Zona eleitoral",
+    "secao_eleitoral": "Seção eleitoral",
     "telefone_celular": "Telefone celular",
     "necessidade_especifica": "Necessidade específica de atendimento",
     # **O rótulo diz o que a faixa mede.** Ver a razão no topo do módulo.
@@ -55,6 +60,11 @@ ROTULOS = {
 # oferece; a segunda, um fato que se registra. Oferecer "não declarada" soaria a formulário
 # incompleto; registrar "prefiro não declarar" poria na boca da pessoa uma frase que ela não disse.
 SEXO = {nomes.FEMININO: "Feminino", nomes.MASCULINO: "Masculino"}
+
+# **"Outro país" é uma declaração, e não uma recusa de declarar.** Quem a escolhe disse que não é o
+# Brasil; o que falta é o país, e ele não é perguntado enquanto a `Q-7` não disser qual esquema de
+# código o destino usa (`D-008`). Quem lê o dossiê precisa ver essa diferença.
+NACIONALIDADE = {nomes.BRASIL: "Brasil", nomes.OUTRO_PAIS: "Outro país"}
 
 COR_RACA = {
     nomes.BRANCA: "Branca",
@@ -86,6 +96,7 @@ RENDA = {
 
 VALORES = {
     "sexo": SEXO,
+    "nacionalidade": NACIONALIDADE,
     "cor_raca": COR_RACA,
     "estado_civil": ESTADO_CIVIL,
     "renda_familiar_faixa": RENDA,
@@ -112,7 +123,19 @@ GRUPOS = (
         ),
     ),
     ("Filiação", ("nome_da_mae", "nome_do_pai")),
-    ("Documento de identidade", ("rg", "rg_orgao_emissor", "rg_expedido_em")),
+    # **Os eleitorais fecham o grupo do documento de identidade** (`031`, `D-007`): são documento,
+    # e abrir um grupo só para eles alongaria o formulário com um título por três campos.
+    (
+        "Documento de identidade",
+        (
+            "rg",
+            "rg_orgao_emissor",
+            "rg_expedido_em",
+            "titulo_eleitoral",
+            "zona_eleitoral",
+            "secao_eleitoral",
+        ),
+    ),
     ("Contato", ("telefone_celular",)),
     ("Atendimento durante o curso", ("necessidade_especifica",)),
     ("Renda", ("renda_familiar_faixa",)),
@@ -148,6 +171,11 @@ def legivel(campo: str, valor) -> str:
     # dois lados do balcão. `1994-07-12` numa tela em português é data que se lê duas vezes.
     if hasattr(valor, "strftime"):
         return valor.strftime("%d/%m/%Y")
+    if campo == "titulo_eleitoral":
+        # Guardado sem pontuação e **lido** em três blocos de quatro, pela razão do CEP logo
+        # abaixo: a forma única é da coluna, e não da leitura. Doze dígitos corridos num dossiê são
+        # conferidos contando com o dedo.
+        return " ".join(valor[i : i + 4] for i in range(0, 12, 4)) if len(valor) == 12 else valor
     if campo == "cep":
         # O CEP é guardado sem pontuação (`FR-387`) e **lido** com ela: a forma única é da coluna,
         # e não da leitura.

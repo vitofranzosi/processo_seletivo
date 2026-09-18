@@ -123,10 +123,18 @@ def trechos_de(texto: str) -> set:
 
 
 def arquivos_varridos():
-    """Os quatro alvos da `SC-137`: spec, descoberta, **teste e fixture**."""
+    """Os quatro alvos da `SC-137`: spec, descoberta, **teste e fixture**.
+
+    **A `031` entra aqui, e a razão é a `SC-151` dela**: aquela spec promete que nenhum arquivo da
+    exportação reproduz a linha real *"verificado pela varredura que a `029` já mantém"*. Os testes
+    e as fixtures já chegavam por `rglob`; os `.md` da feature seguinte, não — e a promessa ficaria
+    verdadeira só para metade dos arquivos dela. A `031` lê a mesma planilha, coluna por coluna, e é
+    justamente o tipo de documento em que um valor de exemplo entra sem pensar.
+    """
     alvos = sorted(
         {
             *(RAIZ / "specs").glob("029-*/**/*.md"),
+            *(RAIZ / "specs").glob("031-*/**/*.md"),
             *(RAIZ / "doc").glob("descoberta-029-*.md"),
             *(BACKEND / "tests").rglob("*.py"),
         }

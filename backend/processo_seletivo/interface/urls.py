@@ -50,6 +50,15 @@ urlpatterns = [
         name="anexo-arquivo",
     ),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
+    # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
+    # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um
+    # marco, ou um resultado divulgado — é escolhida **dentro** da tela, porque é a escolha que a
+    # `FR-433` obriga a ser explícita. Pendurá-la no marco faria a URL já escolher por quem abre.
+    path(
+        "editais/<uuid:edital_id>/matriculas",
+        views.exportar_matriculas,
+        name="exportar-matriculas",
+    ),
     path(
         "editais/<uuid:edital_id>/inscricoes",
         views.inscricoes_recebidas,

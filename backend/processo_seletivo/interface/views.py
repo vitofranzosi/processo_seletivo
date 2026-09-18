@@ -3286,6 +3286,10 @@ OPERACOES = {
     # A execução do trabalho (012). Os sete atos de FR-052 na mesma trilha, pela razão de sempre:
     # quem investiga por que uma avaliação não conta lê a mesma tela de quem investiga uma
     # publicação.
+    # A prévia da exportação de matrículas (031). Ela nomeia quem declarou cor/raça que o
+    # formato de destino não comporta, e por isso é registrada — a razão está em
+    # `matriculas/domain/nomes.py`.
+    "MATRICULA_PREVER": "Prévia de exportação para matrícula",
     "AVALIACAO_ATRIBUIR": "Atribuição de inscrição a avaliador",
     "AVALIACAO_ATRIBUICAO_REMOVER": "Remoção de atribuição",
     "AVALIACAO_GRAVAR": "Gravação de avaliação",
@@ -3610,6 +3614,114 @@ def _querystring(**parametros):
     """
     presentes = {chave: valor for chave, valor in parametros.items() if valor not in (None, "", 1)}
     return urlencode(presentes) if presentes else ""
+
+
+# ---------------------------------------------------------------------------
+# A exportação de matrículas (031). Duas metades numa rota só: o GET escolhe a população e **lê as
+# lacunas antes do download** (`UX-060`), e o POST gera o arquivo. Depois do download ninguém lê o
+# resumo, e é por isso que ele não pode vir junto.
+#
+# **É aqui que `interface` passa a conhecer `matriculas`, e é a única porta.** O app é a ponta da
+# leitura e ninguém o importa — `tests/test_matriculas_e_ponta.py` prende isso, com esta view como a
+# exceção nomeada: `interface` é o canal do ator, e nenhum app de domínio a importa de volta, de
+# modo que o ciclo continua impossível.
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET", "POST"])
+def exportar_matriculas(request, edital_id):
+    """A tela que gera o arquivo de importação do Registro Acadêmico (031, `US1`, `US2`).
+
+    **A recusa mora na aplicação, e a tela apenas a antecipa** (Princípio IV). Quem colar o endereço
+    direto, sem a permissão própria, encontra a mesma recusa que o menu esconde — e quem não tem o
+    Edital no escopo recebe 404, indistinguível de inexistente.
+    """
+    from processo_seletivo.matriculas.application import exportar as exportacao
+    from processo_seletivo.matriculas.application import populacao as populacoes
+    from processo_seletivo.matriculas.domain import nomes as nomes_da_exportacao
+
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    # 403 quando falta a permissão própria, e a página de recusa diz qual é. Esconder a tela com um
+    # 404 aqui confundiria *"você não pode"* com *"isto não existe"* — e a primeira é acionável.
+    require_permission(ator, nomes_da_exportacao.EXPORTAR)
+
+    dados = request.POST if request.method == "POST" else request.GET
+    escolha = (dados.get("populacao") or "").strip()
+    especie, _, referencia = escolha.partition(":")
+    contexto = {
+        "processo": edital.processo,
+        "edital": edital,
+        "populacoes": populacoes.opcoes(edital),
+        "escolha": escolha,
+    }
+    if not escolha:
+        return marcar_como_privada(render(request, "interface/matriculas.html", contexto))
+    try:
+        if request.method == "POST":
+            arquivo = exportacao.gerar(
+                ator=ator,
+                edital=edital,
+                especie=especie,
+                referencia=referencia,
+                # **A assinatura do que a pessoa conferiu** (`UX-060`). Ela viaja num campo oculto
+                # da prévia; quem chega por `POST` sem passar por lá não a tem, e quem passou por
+                # uma prévia que envelheceu tem a errada. Os dois são recusados pelo comando.
+                confirmacao_do_resumo=request.POST.get("confirmacao_do_resumo", ""),
+            )
+            resposta = HttpResponse(
+                arquivo.conteudo, content_type=nomes_da_exportacao.TIPO_DO_ARQUIVO
+            )
+            # `attachment`: o arquivo é para o Registro Acadêmico, e não para ser lido no navegador.
+            resposta["Content-Disposition"] = f'attachment; filename="{arquivo.nome}"'
+            return marcar_como_privada(resposta)
+        composicao = exportacao.compor(
+            ator=ator, edital=edital, especie=especie, referencia=referencia
+        )
+    except DomainError as recusa:
+        # **A recusa volta para esta tela, e não para a página genérica** (`UX-061`): quem conduz
+        # precisa ler quem falta com a escolha ainda à vista, para cobrar a pessoa ou trocar de
+        # população sem refazer o caminho.
+        contexto["erro"] = recusa.detail
+        return marcar_como_privada(
+            render(request, "interface/matriculas.html", contexto, status=recusa.status)
+        )
+    # **A prévia que nomeia pessoas é acesso a dado sensível, e fica registrada** (Princípio III).
+    # Ela diz *"fulana declarou Indígena"* — cor/raça, nominalmente —, e a `GeracaoDeArquivo` não a
+    # alcança de propósito: aquele registro é do **arquivo**, e a prévia não gera arquivo nenhum.
+    # Sem esta linha, a leitura mais sensível desta tela seria a única que não deixa rastro.
+    #
+    # **O registro referencia e não copia**: ator, Edital, população e instante. Uma trilha que
+    # repetisse a declaração multiplicaria a superfície em vez de protegê-la (`FR-401` da `029`).
+    if composicao.nomeia_pessoas:
+        record_event(
+            actor=ator,
+            permission=nomes_da_exportacao.EXPORTAR,
+            operation=nomes_da_exportacao.OPERACAO_PREVIA,
+            aggregate=edital,
+            now=timezone.now(),
+            correlation_id=request.correlation_id,
+            reason=f"prévia de exportação: {composicao.populacao.rotulo}; "
+            f"{composicao.quantidade} linha(s)",
+            new_state=edital.status,
+            new_revision=None,
+        )
+    contexto.update(
+        {
+            "composicao": composicao,
+            "populacao": composicao.populacao,
+            "relatorio": composicao.relatorio,
+        }
+    )
+    return marcar_como_privada(render(request, "interface/matriculas.html", contexto))
 
 
 @require_http_methods(["GET"])

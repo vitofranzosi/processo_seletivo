@@ -77,9 +77,23 @@ class RequerimentoDeMatricula(models.Model):
     data_de_nascimento = models.DateField(null=True, blank=True)
     municipio_natal = models.CharField(max_length=120, blank=True, default="")
     uf_natal = models.CharField(max_length=2, blank=True, default="")
-    # Texto, e não código: o código institucional de nacionalidade é da exportação, e o domínio não
-    # o conhece (contrato §3, "sem fonte").
-    nacionalidade = models.CharField(max_length=60, blank=True, default="")
+    # **Lista fechada desde a `031`** (`D-008`), e a razão de ela ter sido texto livre expirou: o
+    # comentário anterior dizia que "o código institucional de nacionalidade é da exportação, e o
+    # domínio não o conhece" — a exportação deixou de ser hipótese, e com ela some o motivo de
+    # manter aberto o único campo de lista desta feature que não era lista. Fechá-la elimina
+    # *"Brasilera"* e *"BRASIL"* como valores possíveis.
+    #
+    # **Dois valores, e não uma tabela de países** (`031`, §8): cadastrar nacionalidade está fora
+    # de escopo, e `BR` é o único código que a amostra do Registro Acadêmico prova. Quem declara
+    # outro país sai com a coluna vazia e **nomeado no relatório de lacunas** (`FR-453`) — nunca
+    # com um código de país inventado.
+    #
+    # **O que já foi declarado em texto livre continua como está.** A migration `0005` reconhece as
+    # grafias de Brasil e preserva o resto: requerimento enviado é imutável, e converter à força
+    # apagaria a declaração de quem já enviou.
+    nacionalidade = models.CharField(
+        max_length=60, choices=_escolhas(nomes.NACIONALIDADES), blank=True, default=""
+    )
     sexo = models.CharField(max_length=1, choices=_escolhas(nomes.SEXOS))
     cor_raca = models.CharField(
         max_length=20, choices=_escolhas(nomes.CORES), blank=True, default=""
@@ -97,6 +111,22 @@ class RequerimentoDeMatricula(models.Model):
     rg = models.CharField(max_length=30, blank=True, default="")
     rg_orgao_emissor = models.CharField(max_length=30, blank=True, default="")
     rg_expedido_em = models.DateField(null=True, blank=True)
+    # **Os três eleitorais entram porque passaram a ter destino demonstrado** (`031`, `D-007`), e é
+    # o teste da minimização sendo satisfeito, não contornado: a `FR-382` recusa oito informações
+    # *"nenhuma com destino na saída ou cláusula de Edital que a consuma"*, e estes não estão
+    # naquela lista — eles só não tinham consumidor. O formato de importação do Registro Acadêmico
+    # é a finalidade institucional que faltava.
+    #
+    # **Guardados sem pontuação, como o CEP** (`FR-387`): uma forma só na coluna, pontuada na
+    # saída. O título tem 12 dígitos; a zona e a seção são guardadas já completadas com zeros à
+    # esquerda, de modo que a coluna nunca admita `34` e `034` como duas grafias do mesmo número.
+    #
+    # **Não entram em `OBRIGATORIOS_PARA_ENVIAR`**: o contrato de saída prevê as três colunas
+    # vazias na ausência, e exigi-las travaria o envio de quem não tem o documento em mãos por uma
+    # exigência que Edital nenhum faz.
+    titulo_eleitoral = models.CharField(max_length=12, blank=True, default="")
+    zona_eleitoral = models.CharField(max_length=3, blank=True, default="")
+    secao_eleitoral = models.CharField(max_length=4, blank=True, default="")
 
     # --- Contato ----------------------------------------------------------------------------
     # Pré-preenchido do telefone da Inscrição, que **congelou na submissão** e pode ter meses: ele

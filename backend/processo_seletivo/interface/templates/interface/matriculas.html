@@ -1,0 +1,108 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Exportar para matrícula — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Exportar para matrícula</span>
+</nav>
+
+<h1>Exportar para matrícula</h1>
+<p class="sub">O que cada pessoa declarou no Requerimento de Matrícula, no formato que o Registro
+  Acadêmico importa — sem redigitação e sem planilha montada à mão.</p>
+
+{% comment %}
+FR-424 e T031g: os termos deste vocabulário se definem no primeiro uso visível. Esta tela entra na
+lista literal de `tests/test_vocabulario_da_composicao.py::TELAS` no mesmo commit — a lista não é
+`glob`, por decisão escrita, e sem a entrada a tela escaparia da regra em silêncio.
+{% endcomment %}
+<p class="definicoes"><dfn>Geração</dfn> é o ato de montar o arquivo de uma população escolhida: ela
+  não altera nada e não guarda o arquivo, e repeti-la produz o mesmo conteúdo.
+  <dfn>Faixa</dfn> é o intervalo de renda declarado, em salários mínimos — e a lacuna da coluna 31,
+  abaixo, existe porque a faixa daqui e a do destino não medem a mesma coisa.</p>
+
+{% comment %}
+FR-456 e §18: o arquivo não é persistido. Dizê-lo na tela é o que impede alguém de procurá-lo
+depois — e é o que torna a ausência de política de retenção uma decisão legível, e não um
+esquecimento.
+{% endcomment %}
+<p class="imutavel">O arquivo <strong>não fica guardado no sistema</strong>. Ele é montado, entregue
+  e descartado; o que permanece é o registro de quem gerou, quando e quantas linhas. Precisar dele
+  de novo é gerá-lo de novo.</p>
+
+{% if erro %}
+<p class="erro" role="alert" tabindex="-1" autofocus><strong>Nada foi gerado:</strong> {{ erro }}</p>
+{% endif %}
+
+{% if populacoes %}
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="populacao">Quem entra no arquivo</label>
+    <select id="populacao" name="populacao" aria-describedby="ajuda-populacao">
+      <option value="">Escolha</option>
+      {% for opcao in populacoes %}
+      <option value="{{ opcao.especie }}:{{ opcao.referencia }}"
+              {% if escolha == opcao.especie|add:":"|add:opcao.referencia %}selected{% endif %}>{{ opcao.rotulo }}</option>
+      {% endfor %}
+    </select>
+    {% comment %}
+    FR-433: a escolha é explícita, e não há população padrão. A ajuda diz por quê, porque quem
+    esperava um botão "exportar tudo" precisa entender que a ausência dele é a regra.
+    {% endcomment %}
+    <span class="ajuda" id="ajuda-populacao">Não existe “exportar tudo”: o arquivo tem o conjunto
+      que você escolher. Entram apenas as pessoas com Requerimento de Matrícula <strong>enviado</strong>
+      — rascunho não é declaração.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="acao">Ver o que sairá vazio</button>
+  </p>
+</form>
+{% else %}
+<div class="vazio">
+  <p>Este Edital ainda não tem quem matricular: não há convocado nem resultado divulgado.</p>
+</div>
+{% endif %}
+
+{% if composicao %}
+<section aria-labelledby="lacunas" class="resumo">
+  <h2 id="lacunas">O que sairá vazio, e por quê</h2>
+  {% comment %}
+  UX-060: o resumo vem **antes** do download. Depois dele ninguém lê — e uma planilha com células
+  vazias e sem explicação é preenchida à mão por quem a recebe, que é exatamente o erro silencioso
+  que esta feature existe para fechar.
+  {% endcomment %}
+  <p class="nota">{{ populacao.rotulo }} — <strong>{{ composicao.quantidade }}</strong> linha(s).
+    Leia este resumo antes de baixar: é ele que impede uma célula vazia de virar preenchimento
+    manual no destino.</p>
+  <dl class="meta">
+    {% for item in relatorio %}
+    <dt>{{ item.coluna }}{% if item.quantidade %} <span class="codigo">{{ item.quantidade }} linha(s)</span>{% endif %}</dt>
+    <dd>
+      {{ item.razao }}
+      {% if item.pessoas %}
+      <ul class="consequencias">
+        {% for pessoa in item.pessoas %}<li>{{ pessoa }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </dd>
+    {% endfor %}
+  </dl>
+
+  <form method="post" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="populacao" value="{{ escolha }}">
+    {% comment %}
+    UX-060: a assinatura do que está desenhado acima. Ela é o que amarra o resumo ao download — sem
+    ela, um POST direto baixaria o arquivo sem que resumo nenhum tivesse sido lido, e uma correção
+    de requerimento entre esta página e o clique entregaria um arquivo diferente do conferido. O
+    comando recusa com 409, como a prévia obsoleta da 017.
+    {% endcomment %}
+    <input type="hidden" name="confirmacao_do_resumo" value="{{ composicao.assinatura }}">
+    <p class="salvar">
+      <button type="submit" class="botao">Baixar o arquivo</button>
+      <a class="acao" href="{% url 'interface:detalhe' edital.id %}">Voltar ao Edital</a>
+    </p>
+  </form>
+</section>
+{% endif %}
+{% endblock %}
