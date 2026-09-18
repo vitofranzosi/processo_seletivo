@@ -72,10 +72,10 @@ escopo — e a `SC-172`, que é o critério que a prende, media só duas listas.
 critério não alcança é requisito que ninguém sabe se entrou**, e foi o `analyze` que pegou.
 
 A `FR-491` passou a obrigar **classificação e ocupação**, e a `FR-491a` passou a obrigar o
-**registro** da divergência do sorteio. A pergunta que sobra — *ampliar a `FR-491` para alcançá-lo?*
-— é a que a `T004` leva a quem governa o backlog, e não decisão de quem implementa. **Qualquer que
-seja a resposta, a `spec.md` diz o que foi decidido**: a `T047` vai afirmar na rastreabilidade que as
-duas foram cumpridas, e afirmação sem o requisito correspondente é a rastreabilidade mentindo.
+**registro** da divergência do sorteio. A pergunta que restava — *ampliar a `FR-491` para
+alcançá-lo?* — era de quem governa o backlog, e não de quem implementa. **A `spec.md` diz o que foi
+decidido**, porque a `T047` vai afirmar na rastreabilidade que as duas foram cumpridas, e afirmação
+sem o requisito correspondente é a rastreabilidade mentindo.
 
 **Foi decidido em 18/09/2026, e o escopo estreito está ratificado** (`D-004`): a `034` alinha
 classificação e ocupação, e o sorteio fica fora. A razão não é o tamanho da mudança — é que a `021`

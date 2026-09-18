@@ -85,11 +85,13 @@ por outra via: ela **desambiguou os rótulos**, porque *"a tela mostrava dois bl
 o sorteio feito e outro vazio, e quem conduz o certame não tinha como saber em qual publicar"*. O
 rótulo resolveu quem lê; não resolveu quem consome.
 
-### O que isto obriga esta feature a decidir
+### O que isto obrigou esta feature a decidir
 
-**`FR-491` manda derivar em um lugar só, e diz que classificação, ocupação e sorteio MUST responder
-o mesmo.** A medição mostra que satisfazê-lo ao pé da letra significa **mudar o sorteio**, que é uma
-feature que funciona, que tem telas em produção e cujo comportamento a `034` declarou fora de escopo.
+**A primeira redação da `FR-491` mandava derivar em um lugar só e dizia que classificação, ocupação
+**e sorteio** MUST responder o mesmo.** A medição mostrou que satisfazê-la ao pé da letra significava
+**mudar o sorteio**, que é uma feature que funciona, que tem telas em produção e cujo comportamento a
+`034` declarou fora de escopo. *A `FR-491` de hoje já não diz isso — ela alcança classificação e
+ocupação, e a `FR-491a` cuida do registro.*
 
 **O que foi feito com esta medição, em 18/09/2026:**
 
