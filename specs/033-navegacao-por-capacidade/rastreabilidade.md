@@ -107,15 +107,61 @@ alguém teria de escrever no inventário que ela responde 404 a recusa de autori
 
 ## Cenários percorridos
 
-| Cenário | Como foi verificado |
-|---|---|
-| **1** · o Publicador puro chega à divulgação | automatizado, nos dois sentidos: `test_destinos_do_edital.py` (8 casos, um por papel) e `test_publicar_resultado.py::test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao`, que **lê o caminho da própria página** em vez de montá-lo |
-| **2** · a recusa se explica | automatizado: `test_gramatica_da_recusa.py`, 21 casos, com as quatro contraprovas do quickstart — outro escopo, identificador inexistente, URL montada à mão e o 404 uniforme do portal |
-| **3** · quem trava sabe a quem pedir | automatizado: os quatro casos de `test_publicar_resultado.py`, com as duas contraprovas de `FR-485` puxando para lados opostos |
-| **4** · nada foi afrouxado | **caso a caso**, por comparação mecânica com o "antes" da `T002` — ver a tabela de testes alterados |
+Percorridos **pela interface administrativa**, com o seletor de identidade ligado, contra o banco
+semeado por `seed_demo` — Edital 26/2026, com marco classificatório e ato de classificação emitido.
 
-**`SC-167` não foi percorrida à mão pela interface, e isso é uma lacuna declarada, não uma
-equivalência.** O que a `T035` pede é entrar pelos seis papéis do seletor de identidade e olhar; o
-que existe é a mesma matriz verificada por teste, papel a papel, nos dois sentidos — nenhum vê
-caminho que não abre, e nenhum deixa de ver um que abria. A diferença entre as duas coisas é real:
-o teste lê o `href` do bloco de classificação, e o olho humano lê a tela inteira.
+### Cenário 1 — o Publicador puro chega à divulgação (`SC-164`)
+
+Entrando como `paula.publicadora`, com `resultado:publicar` e **nenhum vínculo de comissão**, a tela
+do Edital oferece **um** destino: *"divulgar o resultado"*. Seguindo o caminho oferecido — o `href`
+lido da própria página, sem digitar nada —, a tela de divulgação **abre com 200** e traz o botão
+"Publicar resultado". **Zero URLs digitadas.**
+
+### `SC-167` — os papéis, um a um, e nos dois sentidos
+
+| Ator | O que a tela do Edital oferece | Todos abrem? |
+|---|---|---|
+| presidência, sem publicar | ordenação do marco · ocupação | ✅ 200 · 200 |
+| **Publicador puro** | **divulgar o resultado** | ✅ 200 |
+| preside **e** publica | ordenação · ocupação · divulgar | ✅ 200 · 200 · 200 — sem repetir |
+| gestor | ordenação · ocupação | ✅ 200 · 200 |
+| auditoria | ordenação · ocupação | ✅ 200 · 200 |
+| elaborador | **o bloco não aparece** | — |
+| julgador de recursos | **o bloco não aparece** | — |
+| sem papel nenhum | **o bloco não aparece** | — |
+
+Os dois sentidos fecham: **nenhum papel vê caminho que não abre** — todo destino oferecido respondeu
+200 — e **nenhum deixou de ver o que via**: a presidência, o gestor e a auditoria mantêm exatamente
+os dois destinos que a medição do "antes" registrou.
+
+### Cenário 2 — a recusa se explica (`FR-478`, `FR-481`, `FR-479`)
+
+`paula.publicadora` abrindo a **distribuição** do mesmo Edital, que antes respondia "não encontrado":
+
+> **403** · *Você não tem permissão para isto*
+> *"Esta operação depende da permissão de gerir a comissão ou da presidência deste Processo — cada
+> uma basta sozinha. Peça a alguém com a permissão de gerir a comissão ou a quem preside este
+> Processo."*
+> *Nenhuma alteração foi feita.*
+
+E a contraprova, no mesmo percurso: **identificador que não corresponde a nada continua 404**.
+
+**O percurso corrigiu a frase.** Ela saía *"depende **de a** permissão"*, que ninguém escreve. Os
+nomes das bases nascem com artigo porque é assim que aparecem no "peça a alguém com…"; a contração
+passou a ser feita no ponto da frase, e não no nome, para que o mesmo `Base` sirva às duas posições.
+Nenhum teste pegaria isso — eles afirmam o que a frase **nomeia**, e nomeava certo.
+
+### Cenário 3 — quem trava sabe a quem pedir (`FR-484`, `FR-486`)
+
+`paulo.presidente`, que emitiu o ato e não tem `resultado:publicar`, na tela do ato:
+
+> *"Nenhum ato sobre este é seu. Divulgar o resultado depende da **permissão de publicar resultado**,
+> que não decorre de presidir a comissão nem de ter emitido a ordem. Peça a alguém com a permissão
+> de publicar resultado que conclua o ato."*
+
+Onde antes se lia *"Você não tem ação disponível sobre este ato."*
+
+### Cenário 4 — nada foi afrouxado
+
+Conferido caso a caso, por comparação mecânica com o "antes" da `T002` — ver a tabela de testes
+alterados acima.

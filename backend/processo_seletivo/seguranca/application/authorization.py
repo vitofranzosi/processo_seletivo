@@ -50,6 +50,17 @@ def _enumerar(itens):
     return f"{', '.join(itens[:-1])} ou {itens[-1]}"
 
 
+def _com_de(nome):
+    """`de` + o nome da base, com a contração que o português exige.
+
+    Os nomes nascem com artigo — *"a permissão de gerir a comissão"* — porque é assim que eles
+    aparecem no "peça a alguém com...". Concatenados atrás de "depende de", produziam *"depende de
+    a permissão"*, que ninguém escreve. A contração é aqui, e não no nome, para que o mesmo `Base`
+    sirva às duas posições da frase.
+    """
+    return f"da {nome[2:]}" if nome.startswith("a ") else f"de {nome}"
+
+
 def frase_da_recusa(bases) -> str:
     """O motivo e o a quem pedir, numa frase — a formulação que a tela do Edital já pratica.
 
@@ -59,7 +70,7 @@ def frase_da_recusa(bases) -> str:
     bases = tuple(bases)
     sozinha = " — cada uma basta sozinha" if len(bases) > 1 else ""
     return (
-        f"Esta operação depende de {_enumerar([base.nome for base in bases])}{sozinha}. "
+        f"Esta operação depende {_enumerar([_com_de(base.nome) for base in bases])}{sozinha}. "
         f"Peça {_enumerar([base.a_quem for base in bases])}."
     )
 
