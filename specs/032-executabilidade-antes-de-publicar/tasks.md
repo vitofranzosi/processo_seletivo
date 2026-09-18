@@ -41,9 +41,9 @@ tornava ilegal todo payload que o repositório já produz. O recorte por `ato` n
 
 **Purpose**: ambiente da worktree e a medida do "antes", sem a qual `SC-161` não é verificável
 
-- [ ] T001 Rodar `uv sync --extra dev` em `backend/` e preparar um banco próprio desta worktree com `make preparar DB_NAME=<próprio> POSTGRES_DB=<o mesmo>`, conferindo que a saída termina em `N de M` com `N` diferente de zero
-- [ ] T002 Registrar a contagem de partida da suíte — `make test-pg` — no rascunho de `specs/032-executabilidade-antes-de-publicar/rastreabilidade.md`, para que o delta final seja legível
-- [ ] T003 [P] Semear o acervo com `make seed` e gravar o conteúdo canônico e o resumo criptográfico de **cada** versão publicada em `/tmp/032-acervo-antes.json`, fora do repositório — é o "antes" que o cenário 4 do quickstart compara, e sem ele `SC-161` não é verificável
+- [X] T001 Rodar `uv sync --extra dev` em `backend/` e preparar um banco próprio desta worktree com `make preparar DB_NAME=<próprio> POSTGRES_DB=<o mesmo>`, conferindo que a saída termina em `N de M` com `N` diferente de zero
+- [X] T002 Registrar a contagem de partida da suíte — `make test-pg` — no rascunho de `specs/032-executabilidade-antes-de-publicar/rastreabilidade.md`, para que o delta final seja legível
+- [X] T003 [P] Semear o acervo com `make seed` e gravar o conteúdo canônico e o resumo criptográfico de **cada** versão publicada em `/tmp/032-acervo-antes.json`, fora do repositório — é o "antes" que o cenário 4 do quickstart compara, e sem ele `SC-161` não é verificável
 
 **Checkpoint**: ambiente de pé, e a medida do acervo capturada antes de qualquer mudança
 
@@ -57,9 +57,9 @@ alcançar a Retificação do acervo, não mexer no já publicado. Elas precisam 
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase
 
-- [ ] T004 Acrescentar ao **arquivo existente** `tests/interface/test_round_trip_do_rascunho.py` o caso que prende `FR-459`: rascunho com Perfil sem marco, marco sem corte e marco de sorteio sem método continua sendo **gravado** sem recusa — acrescente ao fim, com constantes próprias, e não reescreva os 11 casos que já estão lá
-- [ ] T005 [P] Criar o **arquivo novo** `tests/integration/editais/test_acervo_inexecutavel_continua_retificavel.py` prendendo `FR-460`: Retificação de Edital do acervo sem marco, sem método de sorteio e com reserva em marco computado continua sendo aceita — espelhe a forma de `test_acervo_sem_quadro_continua_retificavel.py`, que já existe ao lado
-- [ ] T006 [P] Acrescentar ao **arquivo existente** `tests/integration/publicacoes/test_elevacao_de_versao.py` o caso que prende `FR-469` e `SC-161`: nenhum degrau novo, e conteúdo e resumo de toda versão do acervo idênticos
+- [X] T004 Acrescentar ao **arquivo existente** `tests/interface/test_round_trip_do_rascunho.py` o caso que prende `FR-459`: rascunho com Perfil sem marco, marco sem corte e marco de sorteio sem método continua sendo **gravado** sem recusa — acrescente ao fim, com constantes próprias, e não reescreva os 11 casos que já estão lá
+- [X] T005 [P] Criar o **arquivo novo** `tests/integration/editais/test_acervo_inexecutavel_continua_retificavel.py` prendendo `FR-460`: Retificação de Edital do acervo sem marco, sem método de sorteio e com reserva em marco computado continua sendo aceita — espelhe a forma de `test_acervo_sem_quadro_continua_retificavel.py`, que já existe ao lado
+- [X] T006 [P] Acrescentar ao **arquivo existente** `tests/integration/publicacoes/test_elevacao_de_versao.py` o caso que prende `FR-469` e `SC-161`: nenhum degrau novo, e conteúdo e resumo de toda versão do acervo idênticos
 
 **Checkpoint**: as três redes de proteção existem e passam sobre o código de hoje
 
@@ -76,21 +76,21 @@ conferindo o aviso na Revisão e a frase na composição.
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Criar o **arquivo novo** `tests/unit/editais/test_executabilidade.py` com o caso de `FR-457`: snapshot cujo Perfil traz `classificationMilestones` vazio produz `profile_without_milestone` como `BLOCKING_ERROR`, com `path` terminando em `/classificationMilestones`
-- [ ] T008 [P] [US1] Acrescentar ao mesmo `tests/unit/editais/test_executabilidade.py` os dois casos de `FR-461`: marco **sem** `cutRule` produz `milestone_without_cut_rule` como `WARNING`; e — a contraprova que importa — marco cuja `cutRule` declara **não governar Etapa alguma** (`FR-224` da `014`, o caso do Edital 69/2026) **não** produz achado nenhum
-- [ ] T009 [P] [US1] Acrescentar ao mesmo arquivo o caso de `FR-459`: com `ato=ATO_DE_RETIFICACAO`, nenhum dos dois achados é emitido
-- [ ] T010 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso de `FR-458` para os **dois** achados que US1 cria: um Edital com Perfil sem marco **e** com marco sem regra de corte mostra as **duas** pendências na Revisão — não a primeira —, cada uma com caminho de volta para a etapa `classificacao`, e não para `perfis`. Isso também prende o Edge Case "mais de um achado no mesmo Edital"
-- [ ] T011 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_metodo_do_marco.py` o caso de `FR-462`: o cartão do marco com o corte em branco declara que sem corte não há convocação — e não apenas que a Etapa seguinte recebe todos os habilitados
-- [ ] T012 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-463`: com marco sem `cutRule`, a tela não renderiza o botão "Pedir a faixa seguinte com este déficit" e traz, no lugar dele, a razão
+- [X] T007 [P] [US1] Criar o **arquivo novo** `tests/unit/editais/test_executabilidade.py` com o caso de `FR-457`: snapshot cujo Perfil traz `classificationMilestones` vazio produz `profile_without_milestone` como `BLOCKING_ERROR`, com `path` terminando em `/classificationMilestones`
+- [X] T008 [P] [US1] Acrescentar ao mesmo `tests/unit/editais/test_executabilidade.py` os dois casos de `FR-461`: marco **sem** `cutRule` produz `milestone_without_cut_rule` como `WARNING`; e — a contraprova que importa — marco cuja `cutRule` declara **não governar Etapa alguma** (`FR-224` da `014`, o caso do Edital 69/2026) **não** produz achado nenhum
+- [X] T009 [P] [US1] Acrescentar ao mesmo arquivo o caso de `FR-459`: com `ato=ATO_DE_RETIFICACAO`, nenhum dos dois achados é emitido
+- [X] T010 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso de `FR-458` para os **dois** achados que US1 cria: um Edital com Perfil sem marco **e** com marco sem regra de corte mostra as **duas** pendências na Revisão — não a primeira —, cada uma com caminho de volta para a etapa `classificacao`, e não para `perfis`. Isso também prende o Edge Case "mais de um achado no mesmo Edital"
+- [X] T011 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_metodo_do_marco.py` o caso de `FR-462`: o cartão do marco com o corte em branco declara que sem corte não há convocação — e não apenas que a Etapa seguinte recebe todos os habilitados
+- [X] T012 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-463`: com marco sem `cutRule`, a tela não renderiza o botão "Pedir a faixa seguinte com este déficit" e traz, no lugar dele, a razão
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implementar `_perfil_sem_marco(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py`, com `if ato != ATO_DE_PUBLICACAO: return []` na primeira linha, seguindo `_forma_da_ordem_declarada` como modelo
-- [ ] T014 [US1] Implementar `_marco_sem_regra_de_corte(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py`, distinguindo ausência de `cutRule` de `cutRule` que declara não governar Etapa alguma, e registrando no docstring por que a distinção existe
-- [ ] T015 [US1] Ligar as duas em `validate_for_publication`, em `processo_seletivo/editais/domain/validation.py`, ao lado de `_coerencia_dos_marcos`
-- [ ] T016 [US1] Acrescentar `faixaDisponivel` à leitura de cada recorte em `processo_seletivo/ocupacao/application/selectors.py`, sem tocar em `estado` — campo aditivo, conforme `data-model.md`
-- [ ] T017 [US1] Condicionar o bloco "Pedir a faixa seguinte com este déficit" em `processo_seletivo/interface/templates/interface/ocupacao.html` e escrever a razão no lugar do botão — não `disabled`, não alerta depois do clique
-- [ ] T018 [US1] Reescrever a consequência da ausência de corte em `processo_seletivo/interface/templates/interface/_marco.html`, nomeando a convocação; a explicação longa vai para o `como-preencher` da etapa, e não para dentro do cartão
+- [X] T013 [US1] Implementar `_perfil_sem_marco(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py`, com `if ato != ATO_DE_PUBLICACAO: return []` na primeira linha, seguindo `_forma_da_ordem_declarada` como modelo
+- [X] T014 [US1] Implementar `_marco_sem_regra_de_corte(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py`, distinguindo ausência de `cutRule` de `cutRule` que declara não governar Etapa alguma, e registrando no docstring por que a distinção existe
+- [X] T015 [US1] Ligar as duas em `validate_for_publication`, em `processo_seletivo/editais/domain/validation.py`, ao lado de `_coerencia_dos_marcos`
+- [X] T016 [US1] Acrescentar `faixaDisponivel` à leitura de cada recorte em `processo_seletivo/ocupacao/application/selectors.py`, sem tocar em `estado` — campo aditivo, conforme `data-model.md`
+- [X] T017 [US1] Condicionar o bloco "Pedir a faixa seguinte com este déficit" em `processo_seletivo/interface/templates/interface/ocupacao.html` e escrever a razão no lugar do botão — não `disabled`, não alerta depois do clique
+- [X] T018 [US1] Reescrever a consequência da ausência de corte em `processo_seletivo/interface/templates/interface/_marco.html`, nomeando a convocação; a explicação longa vai para o `como-preencher` da etapa, e não para dentro do cartão
 
 **Checkpoint**: US1 funciona sozinha. O Edital 03/2026 não passa mais, e o corte em branco avisa.
 
@@ -107,19 +107,19 @@ não publica.
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Acrescentar ao **arquivo existente** `tests/unit/publicacoes/test_pdf_classificacao.py` os casos de `FR-464` e `FR-465`: a seção do marco imprime `Ordem` e os sete campos do método, com os rótulos de `CAMPOS_DO_METODO`
-- [ ] T020 [P] [US2] Acrescentar ao mesmo arquivo os três casos de `FR-466`: `Método: comum a este Edital`, `próprio deste marco — diverge do comum deste Edital` e `próprio deste marco`, conforme `contracts/marco-no-documento.md`
-- [ ] T021 [P] [US2] Acrescentar ao mesmo arquivo os dois casos de `FR-468` e do acervo: marco que sorteia **não** imprime `Combinação` nem `Normalização`; marco do acervo sem `orderProduction` sai **exatamente** como hoje, sem o par `Ordem`
-- [ ] T022 [P] [US2] Acrescentar a `tests/unit/editais/test_executabilidade.py` o caso de `FR-467`: marco que ordena por sorteio sem método próprio e sem método comum produz `drawn_milestone_without_method` como `BLOCKING_ERROR`; o caso que o separa de `draw_method_invalid` — método pela metade continua sendo o achado antigo; e o caso de `FR-459` para este achado — com `ato=ATO_DE_RETIFICACAO` ele **não** é emitido, porque `orderProduction` ausente é o estado legítimo de todo marco do acervo
-- [ ] T023 [P] [US2] Criar o **arquivo novo** `tests/integration/publicacoes/test_sorteio_no_documento.py` prendendo `SC-158`: publicar um Edital de sorteio pelo caminho de publicação e extrair do documento a ocorrência que fixará a semente e a regra de substituição
+- [X] T019 [P] [US2] Acrescentar ao **arquivo existente** `tests/unit/publicacoes/test_pdf_classificacao.py` os casos de `FR-464` e `FR-465`: a seção do marco imprime `Ordem` e os sete campos do método, com os rótulos de `CAMPOS_DO_METODO`
+- [X] T020 [P] [US2] Acrescentar ao mesmo arquivo os três casos de `FR-466`: `Método: comum a este Edital`, `próprio deste marco — diverge do comum deste Edital` e `próprio deste marco`, conforme `contracts/marco-no-documento.md`
+- [X] T021 [P] [US2] Acrescentar ao mesmo arquivo os dois casos de `FR-468` e do acervo: marco que sorteia **não** imprime `Combinação` nem `Normalização`; marco do acervo sem `orderProduction` sai **exatamente** como hoje, sem o par `Ordem`
+- [X] T022 [P] [US2] Acrescentar a `tests/unit/editais/test_executabilidade.py` o caso de `FR-467`: marco que ordena por sorteio sem método próprio e sem método comum produz `drawn_milestone_without_method` como `BLOCKING_ERROR`; o caso que o separa de `draw_method_invalid` — método pela metade continua sendo o achado antigo; e o caso de `FR-459` para este achado — com `ato=ATO_DE_RETIFICACAO` ele **não** é emitido, porque `orderProduction` ausente é o estado legítimo de todo marco do acervo
+- [X] T023 [P] [US2] Criar o **arquivo novo** `tests/integration/publicacoes/test_sorteio_no_documento.py` prendendo `SC-158`: publicar um Edital de sorteio pelo caminho de publicação e extrair do documento a ocorrência que fixará a semente e a regra de substituição
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Implementar `_metodo_do_marco(snapshot, perfil, marco)` em `processo_seletivo/publicacoes/infrastructure/pdf.py`, resolvendo por `marcos.metodo_que_governa` e rotulando por `CAMPOS_DO_METODO` — uma leitura só, nunca uma segunda resolução local
-- [ ] T025 [US2] Acrescentar o par `Ordem` à seção do marco em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`, omitindo-o quando o marco do acervo não declara `orderProduction`
-- [ ] T026 [US2] Acrescentar o bloco `Sorteio` e a linha `Método:` em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`, na ordem que `contracts/marco-no-documento.md` fixa
-- [ ] T027 [US2] Condicionar `Combinação` e `Normalização` a `marcos.marco_ordena_por_sorteio` em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`
-- [ ] T028 [US2] Implementar `_metodo_do_sorteio_publicavel(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py` e ligá-la em `validate_for_publication`, com o mesmo recorte por ato
+- [X] T024 [US2] Implementar `_metodo_do_marco(snapshot, perfil, marco)` em `processo_seletivo/publicacoes/infrastructure/pdf.py`, resolvendo por `marcos.metodo_que_governa` e rotulando por `CAMPOS_DO_METODO` — uma leitura só, nunca uma segunda resolução local
+- [X] T025 [US2] Acrescentar o par `Ordem` à seção do marco em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`, omitindo-o quando o marco do acervo não declara `orderProduction`
+- [X] T026 [US2] Acrescentar o bloco `Sorteio` e a linha `Método:` em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`, na ordem que `contracts/marco-no-documento.md` fixa
+- [X] T027 [US2] Condicionar `Combinação` e `Normalização` a `marcos.marco_ordena_por_sorteio` em `processo_seletivo/publicacoes/infrastructure/pdf.py::_marcos`
+- [X] T028 [US2] Implementar `_metodo_do_sorteio_publicavel(snapshot, *, ato)` em `processo_seletivo/editais/domain/validation.py` e ligá-la em `validate_for_publication`, com o mesmo recorte por ato
 
 **Checkpoint**: US1 e US2 funcionam, cada uma por si. O Edital 04/2026 publica a norma que faltava.
 
@@ -136,16 +136,16 @@ reservados.
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Acrescentar a `tests/unit/editais/test_executabilidade.py` três casos: `FR-470` — linha de quadro com `modalityId` não nulo e quantidade maior que zero, em Perfil cujo marco não sorteia, produz `reserved_row_without_ordering` como `WARNING` e **não** como impedimento; `FR-471` — a **mensagem** nomeia a causa, citando que a ordem daquele marco é emitida em lista única, e não repete o sintoma *"Este recorte não tem ordem emitida"* que a auditoria leu no dia da apuração; e `FR-459` — com `ato=ATO_DE_RETIFICACAO` o aviso não é emitido sobre Edital do acervo
-- [ ] T030 [P] [US3] Acrescentar ao mesmo arquivo as duas contraprovas: Perfil cujo marco **sorteia** não recebe achado; e a grafia-armadilha — a Modalidade declarada como ampla concorrência, apontada por `generalCompetitionModalityId`, **não** é lida como reserva, porque o recorte da ampla é o `NULL` da linha geral
-- [ ] T031 [P] [US3] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-472`: os recortes reservados não renderizam "Apurar a ocupação deste recorte" e trazem a razão; o recorte da ampla continua renderizando e funcionando
+- [X] T029 [P] [US3] Acrescentar a `tests/unit/editais/test_executabilidade.py` três casos: `FR-470` — linha de quadro com `modalityId` não nulo e quantidade maior que zero, em Perfil cujo marco não sorteia, produz `reserved_row_without_ordering` como `WARNING` e **não** como impedimento; `FR-471` — a **mensagem** nomeia a causa, citando que a ordem daquele marco é emitida em lista única, e não repete o sintoma *"Este recorte não tem ordem emitida"* que a auditoria leu no dia da apuração; e `FR-459` — com `ato=ATO_DE_RETIFICACAO` o aviso não é emitido sobre Edital do acervo
+- [X] T030 [P] [US3] Acrescentar ao mesmo arquivo as duas contraprovas: Perfil cujo marco **sorteia** não recebe achado; e a grafia-armadilha — a Modalidade declarada como ampla concorrência, apontada por `generalCompetitionModalityId`, **não** é lida como reserva, porque o recorte da ampla é o `NULL` da linha geral
+- [X] T031 [P] [US3] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-472`: os recortes reservados não renderizam "Apurar a ocupação deste recorte" e trazem a razão; o recorte da ampla continua renderizando e funcionando
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Implementar `emite_ordem_no_recorte(conteudo, *, perfil_id, marco_id, lista_id)` em `processo_seletivo/editais/domain/marcos.py` — **uma função só**, consumida pela validação e pelo selector, pela mesma razão que levou a `029` a criar `chamada_em_aberto`: dois predicados divergiriam na primeira mudança. O docstring MUST registrar as duas coisas que a escolha do módulo custa: que um fato de **emissão** passa a morar no módulo de **conteúdo normativo** — a regra real vive em `classificacao/application/emissao.py`, que fixa `lista_id=None` porque só o sorteio emite por lista —, e que pô-lo em `classificacao` inverteria a direção de dependência, porque `editais/domain/validation.py` também o consome e domínio não importa aplicação. `classificacao/application/emissao.py` já importa `editais.domain.marcos`, então a aresta não é inédita
-- [ ] T033 [US3] Emitir o aviso em `_coerencia_do_quadro_de_vagas`, em `processo_seletivo/editais/domain/validation.py`, ao lado de `vacancy_reserved_list_without_row` e no mesmo tom
-- [ ] T034 [US3] Acrescentar `apuravel` à leitura de cada recorte em `processo_seletivo/ocupacao/application/selectors.py`, consumindo `emite_ordem_no_recorte`. **É a primeira dependência de `ocupacao` sobre `editais`** — conferido em 18/09/2026: hoje o módulo importa `classificacao`, `publicacoes` e `resultados`, e nada de `editais`. A aresta é legítima na direção em que vai, e ninguém depende de `ocupacao`; registre-a no comentário do import, para que a próxima pessoa saiba que ela foi deliberada e não acidental
-- [ ] T035 [US3] Condicionar o botão "Apurar a ocupação deste recorte" em `processo_seletivo/interface/templates/interface/ocupacao.html` e escrever a razão no lugar dele, nomeando a causa e não o sintoma
+- [X] T032 [US3] Implementar `emite_ordem_no_recorte(conteudo, *, perfil_id, marco_id, lista_id)` em `processo_seletivo/editais/domain/marcos.py` — **uma função só**, consumida pela validação e pelo selector, pela mesma razão que levou a `029` a criar `chamada_em_aberto`: dois predicados divergiriam na primeira mudança. O docstring MUST registrar as duas coisas que a escolha do módulo custa: que um fato de **emissão** passa a morar no módulo de **conteúdo normativo** — a regra real vive em `classificacao/application/emissao.py`, que fixa `lista_id=None` porque só o sorteio emite por lista —, e que pô-lo em `classificacao` inverteria a direção de dependência, porque `editais/domain/validation.py` também o consome e domínio não importa aplicação. `classificacao/application/emissao.py` já importa `editais.domain.marcos`, então a aresta não é inédita
+- [X] T033 [US3] Emitir o aviso em `_coerencia_do_quadro_de_vagas`, em `processo_seletivo/editais/domain/validation.py`, ao lado de `vacancy_reserved_list_without_row` e no mesmo tom
+- [X] T034 [US3] Acrescentar `apuravel` à leitura de cada recorte em `processo_seletivo/ocupacao/application/selectors.py`, consumindo `emite_ordem_no_recorte`. **É a primeira dependência de `ocupacao` sobre `editais`** — conferido em 18/09/2026: hoje o módulo importa `classificacao`, `publicacoes` e `resultados`, e nada de `editais`. A aresta é legítima na direção em que vai, e ninguém depende de `ocupacao`; registre-a no comentário do import, para que a próxima pessoa saiba que ela foi deliberada e não acidental
+- [X] T035 [US3] Condicionar o botão "Apurar a ocupação deste recorte" em `processo_seletivo/interface/templates/interface/ocupacao.html` e escrever a razão no lugar dele, nomeando a causa e não o sintoma
 
 **Checkpoint**: as três histórias funcionam. O `ACH-47` sai **nomeado**, e a spec já diz que ele não sai resolvido.
 
@@ -153,13 +153,13 @@ reservados.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T036 Escrever `specs/032-executabilidade-antes-de-publicar/rastreabilidade.md` com uma linha por `FR-` e por `SC-`: onde foi feito e onde é verificado — é o Princípio V, e requisito sem linha aqui é requisito que ninguém sabe se entrou
-- [ ] T037 [P] Conferir o implementado contra `specs/032-executabilidade-antes-de-publicar/contracts/achados-de-executabilidade.md` e `contracts/marco-no-documento.md`, corrigindo **o artefato** quando o código estiver certo e o contrato errado, e dizendo qual dos dois mudou
-- [ ] T038 Percorrer os cenários 1 a 3 de `quickstart.md` pela interface administrativa, com o banco próprio desta worktree — sem shell e sem banco, que é o que o Princípio VI cobra
-- [ ] T039 Percorrer o cenário 4 de `quickstart.md`: comparar conteúdo e resumo de cada versão do acervo com o que T003 registrou
-- [ ] T040 Rodar `make lint check test-pg` em `backend/` e registrar em `rastreabilidade.md` a contagem final contra a de T002 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
-- [ ] T041 Varrer as quatro regras novas contra a amostra real de `doc/avaliacao-de-capacidade-editais-2026-09-12.md`, Edital a Edital, e registrar quais disparariam — checklist, analyze e o teste de citações ficam verdes com regras que se contradizem, e só a varredura manual pega
-- [ ] T042 Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso que fecha `SC-159`: um Edital que dispara os **quatro** achados da família mostra os quatro na Revisão, cada um com caminho de volta para a etapa certa — `classificacao` para os três do marco, `perfis` para o do quadro. Mora aqui, e não dentro de uma história, porque só existe depois das três: pô-lo em US1 criaria dependência entre histórias que deveriam ser entregáveis isoladas
+- [X] T036 Escrever `specs/032-executabilidade-antes-de-publicar/rastreabilidade.md` com uma linha por `FR-` e por `SC-`: onde foi feito e onde é verificado — é o Princípio V, e requisito sem linha aqui é requisito que ninguém sabe se entrou
+- [X] T037 [P] Conferir o implementado contra `specs/032-executabilidade-antes-de-publicar/contracts/achados-de-executabilidade.md` e `contracts/marco-no-documento.md`, corrigindo **o artefato** quando o código estiver certo e o contrato errado, e dizendo qual dos dois mudou
+- [X] T038 Percorrer os cenários 1 a 3 de `quickstart.md` pela interface administrativa, com o banco próprio desta worktree — sem shell e sem banco, que é o que o Princípio VI cobra
+- [X] T039 Percorrer o cenário 4 de `quickstart.md`: comparar conteúdo e resumo de cada versão do acervo com o que T003 registrou
+- [X] T040 Rodar `make lint check test-pg` em `backend/` e registrar em `rastreabilidade.md` a contagem final contra a de T002 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
+- [X] T041 Varrer as quatro regras novas contra a amostra real de `doc/avaliacao-de-capacidade-editais-2026-09-12.md`, Edital a Edital, e registrar quais disparariam — checklist, analyze e o teste de citações ficam verdes com regras que se contradizem, e só a varredura manual pega
+- [X] T042 Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso que fecha `SC-159`: um Edital que dispara os **quatro** achados da família mostra os quatro na Revisão, cada um com caminho de volta para a etapa certa — `classificacao` para os três do marco, `perfis` para o do quadro. Mora aqui, e não dentro de uma história, porque só existe depois das três: pô-lo em US1 criaria dependência entre histórias que deveriam ser entregáveis isoladas
 
 ---
 
