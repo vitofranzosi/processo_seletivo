@@ -57,7 +57,7 @@ O que esta feature acrescenta é **conteúdo**, não estrutura.
 | Elemento | Hoje | Depois |
 |---|---|---|
 | Título | "Você não tem permissão para isto" | igual |
-| Motivo | "A operação não é permitida." | nomeia **o que falta**: a capacidade nomeada, ou as bases que teriam servido — a permissão de gerir a comissão **ou** a presidência daquele Processo |
+| Motivo | "A operação não é permitida." | nomeia **o que falta naquela chamada**: a capacidade nomeada, ou **todas** as bases que teriam servido ali |
 | A quem pedir | "peça a quem administra o sistema no Cefor" | nomeia quem resolve **aquele** caso |
 | Garantia | "Nenhuma alteração foi feita" | igual |
 

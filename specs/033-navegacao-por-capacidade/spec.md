@@ -42,13 +42,18 @@ A medição de 18/09/2026:
 | Porta | Escopo | O que ela pergunta | Recusa hoje |
 |---|---|---|---|
 | a da divulgação, a do recurso | ✅ | **uma capacidade nomeada** | ✅ recusa explicada |
-| a do marco | ✅ | base **ou** capacidade de auditoria | ❌ "não encontrado" |
+| a do marco | ✅ | base — **e a capacidade de auditoria serve ou não, conforme quem chama** | ❌ "não encontrado" |
 | a da consulta de Etapa | ✅ | base **ou** capacidade de auditoria | ❌ "não encontrado" |
 | a da gestão do Processo | ✅ | **base** | ❌ "não encontrado" |
 | **a da distribuição** | ⚠️ na mesma condição da base | **base** | ❌ "não encontrado" |
 
 **Nenhuma das quatro erra no escopo, e nenhuma erra por descuido isolado**: as quatro fazem a mesma
 pergunta que a camada de segurança não sabe responder.
+
+**E a terceira coluna não é constante da porta.** A porta do marco tem dois modos: em boa parte das
+chamadas a capacidade de auditoria **não** serve, e nas demais serve. Ou seja, **o conjunto de bases
+que teriam servido é do ponto de chamada** — e uma recusa que assuma conjunto fixo mente em metade
+dos casos.
 
 **Esta feature não inventa gramática: ela completa a que existe**, dando à base de autorização o
 mesmo tratamento que a capacidade nomeada já tem, num ponto único. E há uma peça pronta para isso —
@@ -139,8 +144,9 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 
 1. **Given** um ator na tela de um ato sobre o qual não tem ação, **When** a tela é desenhada,
    **Then** ela nomeia a capacidade que resolve e diz para pedir a quem a tem.
-2. **Given** um ator que trava por falta de **vínculo**, e não de papel, **When** a tela é desenhada,
-   **Then** ela nomeia o **vínculo** — presidência da comissão —, e não um papel que não existe.
+2. **Given** um ator que trava numa tela que aceita **mais de uma base**, **When** a tela é desenhada,
+   **Then** ela nomeia **todas** as que teriam servido naquela chamada; e onde só o vínculo serve,
+   ela nomeia a presidência e não inventa um papel que a conceda.
 3. **Given** qualquer das frases acima, **When** ela é escrita, **Then** ela segue o padrão que a
    tela do Edital já pratica, sem inventar uma segunda formulação para a mesma coisa.
 
@@ -190,7 +196,11 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   **ou** um vínculo, cada um suficiente sozinho — MUST seguir a mesma gramática da recusa por
   capacidade nomeada, e MUST ter **um ponto único**, ao lado do que a camada de segurança já oferece.
   Cada porta improvisar o seu é o que produziu a divergência atual, e é o que produziria a próxima.
-  A recusa MUST nomear **as bases que teriam servido**, e não apenas uma delas.
+  A recusa MUST nomear **as bases que teriam servido**, e não apenas uma delas — e o conjunto dessas
+  bases MUST vir de **quem chama**, porque a mesma porta aceita conjuntos diferentes conforme a tela.
+- **FR-489**: A frase que nomeia o que falta MUST dizer a verdade **daquela chamada**. Recusa que
+  nomeie uma base que não serviria ali manda a pessoa pedir o que não resolve — que é o defeito que
+  esta feature existe para fechar, e não uma versão mais educada dele.
 - **FR-480**: "Não encontrado" MUST ficar reservado a duas situações, e apenas a elas: objeto que não
   existe, e objeto de **outro escopo institucional**. A segunda é proteção de dados e MUST NOT mudar.
 - **FR-481**: Toda recusa desta família MUST nomear **o que falta** — a capacidade ou o vínculo — e

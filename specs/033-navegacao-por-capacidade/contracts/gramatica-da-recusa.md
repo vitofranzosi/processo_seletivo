@@ -14,17 +14,22 @@ lá, distinguir "não existe" de "é de outra pessoa" seria oráculo de enumera�
 
 ---
 
-## As três origens, e o que cada uma responde
+## As quatro origens, e o que cada uma responde
 
 ```
-1. escopo institucional alheio ──► 404   (inalterado — é proteção de dados)
-2. objeto inexistente          ──► 404   (inalterado — é a resposta verdadeira)
-3. falta de capacidade          ──► 403 com recusa explicada   (já é assim em 2 das 6 portas)
-4. falta de vínculo de comissão ──► 403 com recusa explicada   (o que muda, nas 4 restantes)
+1. escopo institucional alheio     ──► 404   (inalterado — é proteção de dados)
+2. objeto inexistente              ──► 404   (inalterado — é a resposta verdadeira)
+3. falta de capacidade nomeada     ──► 403 com recusa explicada   (já é assim em 2 das 6 portas)
+4. falta de base de autorização    ──► 403 com recusa explicada   (o que muda, nas 4 restantes)
 ```
+
+**A quarta é composta, e é a que não tinha tratamento.** Uma base é "esta capacidade **ou** aquele
+vínculo", cada um suficiente sozinho. `require_permission` recebe **uma** permissão e não sabe
+expressar a alternativa — e é por isso que as quatro portas que perguntam por uma base improvisaram,
+e improvisaram igual.
 
 **O que protege não é a ordem de avaliação — é o filtro.** Uma versão anterior deste contrato
-mandava avaliar escopo **antes** de capacidade e vínculo. A medição desmentiu: a porta da divulgação
+mandava avaliar escopo **antes** de capacidade e base. A medição desmentiu: a porta da divulgação
 avalia **capacidade primeiro**, devolve 403 sem tocar no banco, e **não vaza** — quem não tem a
 capacidade recebe 403 para tudo e nunca aprende se o objeto existe.
 
@@ -35,7 +40,7 @@ por escopo institucional**, de modo que objeto de outra unidade e objeto inexist
 **A ordem que vaza** é buscar o objeto **sem** filtrar por escopo e decidir depois. Nenhuma porta faz
 isso hoje, e é isso que este contrato proíbe.
 
-**E há uma porta travada.** A da distribuição decide escopo-ou-inexistente e falta de vínculo na
+**E há uma porta travada.** A da distribuição decide escopo-ou-inexistente e falta de base na
 **mesma condição**:
 
 ```python
@@ -60,15 +65,21 @@ garantia:  Nenhuma alteração foi feita
 O título e a garantia já existem e não mudam. O que esta feature escreve é o **motivo** e o **a
 quem**.
 
-### O motivo, nas duas formas
+### O motivo, e a regra que o governa
 
-| O que falta | Como se escreve |
+| O que a tela aceita | Como a recusa se escreve |
 |---|---|
-| capacidade de papel | nomeia a capacidade — por exemplo, a de publicar resultado — e diz que ela é concedida por papel |
-| vínculo de comissão | nomeia o vínculo — a presidência **deste** Processo —, e **não** nomeia um papel, porque nenhum papel concede presidência |
+| **uma capacidade nomeada** | nomeia a capacidade — por exemplo, a de publicar resultado |
+| **mais de uma base**, cada uma suficiente | nomeia **todas** as que teriam servido **naquela chamada** — por exemplo, a permissão de gerir a comissão **e** a presidência deste Processo |
+| **só o vínculo** | nomeia a presidência, e **não** inventa um papel que a conceda, porque nenhum concede |
 
-**A distinção não é estilo.** Dizer "peça o papel de X" a quem precisa de **vínculo** manda a pessoa
-pedir o que não resolve. É o defeito que `FR-485` fecha.
+**O conjunto de bases é de quem chama, não da porta.** A porta do marco tem dois modos: em boa parte
+das chamadas a capacidade de auditoria **não** serve, e nas demais serve. Uma recusa que assuma
+conjunto fixo mente em metade dos casos (`FR-489`).
+
+**A distinção não é estilo.** Dizer "peça o papel de X" a quem precisa de outra coisa manda a pessoa
+pedir o que não resolve; nomear só uma das bases manda pedir metade. É o que `FR-485` e `FR-479`
+fecham, cada uma do seu lado.
 
 ### A fonte
 

@@ -72,9 +72,15 @@ onde a tela de ordenação a manda.
 | Hoje | *"Você não tem ação disponível sobre este ato."* |
 | Depois | nomeia a capacidade que resolve e diz para pedir a quem a tem |
 
-**A contraprova de `FR-485`:** num caso em que o que falta é **vínculo**, e não papel, a frase nomeia
-a **presidência daquele Processo** — e **não** manda pedir um papel, porque nenhum papel concede
-presidência. Mandar pedir o que não resolve é o defeito, não a falta da frase.
+**As duas contraprovas de `FR-485`, e elas puxam para lados opostos de propósito:**
+
+1. Onde a tela aceita **mais de uma base** — a permissão de gerir a comissão **ou** a presidência
+   daquele Processo —, a frase nomeia **as duas** (`FR-479`). Nomear só a presidência mandaria a
+   pessoa pedir metade do que resolve, e uma das duas **é** um papel.
+2. Onde a tela aceita **só o vínculo**, a frase nomeia a presidência e **não** inventa um papel que a
+   conceda, porque nenhum concede.
+
+O que `FR-485` proíbe é nomear papel que **não** resolve aquele caso — não é nomear papel.
 
 ---
 
