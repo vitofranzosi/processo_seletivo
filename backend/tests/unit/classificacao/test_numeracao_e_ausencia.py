@@ -23,6 +23,7 @@ ETAPA_B = "00000000-0000-0000-0000-0000000000b1"
 ETAPAS = {ETAPA_A: {"weight": "2.0000"}, ETAPA_B: {"weight": "1.0000"}}
 MARCO = {
     "stages": [ETAPA_A, ETAPA_B],
+    "orderProduction": "POR_PONTUACAO",
     "operation": "SOMA_PONDERADA",
     "normalization": "NENHUMA",
     # Escala 4 para que estes testes falem de combinação, e não de arredondamento: o que eles

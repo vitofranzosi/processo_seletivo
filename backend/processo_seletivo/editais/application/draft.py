@@ -12,6 +12,7 @@ from processo_seletivo.editais.domain.etapas import StageValidationError, valida
 from processo_seletivo.editais.domain.perfis import (
     ProfileValidationError,
     derivar_linha_geral,
+    validate_common_draw_method,
     validate_profiles,
 )
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
@@ -170,6 +171,7 @@ def replace_draft(
     stages=None,
     sections=None,
     document_requirements=None,
+    draw_method=None,
     area="",
 ):
     require_permission(actor, "edital:elaborar")
@@ -200,6 +202,13 @@ def replace_draft(
         raise DomainError(
             "invalid_profiles", str(exc), 422, campo=exc.campo, identidade=exc.identidade
         ) from exc
+    if draw_method:
+        try:
+            validate_common_draw_method(draw_method)
+        except ProfileValidationError as exc:
+            raise DomainError(
+                "invalid_draw_method", str(exc), 422, campo=exc.campo, identidade=exc.identidade
+            ) from exc
     try:
         validate_schedule(schedule)
     except ScheduleValidationError as exc:
@@ -342,6 +351,10 @@ def replace_draft(
                     perfil=perfil,
                     code=marco_payload["code"],
                     name=marco_payload["name"],
+                    # `""` quando o marco não declara a forma da ordem (030, FR-413). A ausência
+                    # é o estado de todo marco composto antes desta feature, e não uma omissão a
+                    # corrigir depois: é dela que os leitores derivam o comportamento de sempre.
+                    forma_da_ordem=marco_payload.get("orderProduction") or "",
                     etapas=[str(etapa) for etapa in marco_payload.get("stages", [])],
                     operacao=marco_payload["operation"],
                     normalizacao=marco_payload["normalization"],
@@ -446,11 +459,20 @@ def replace_draft(
                 for requirement in document_requirements
             ]
         )
+        # O método do sorteio comum ao Edital (030, FR-429). **`None` significa "não veio neste
+        # envio", e `{}` significa "não declarado"** — e a diferença é a que impede a travessia:
+        # `replace_draft` apaga e recria tudo o que recebe, e as demais etapas do assistente não
+        # desenham este campo. Se a ausência valesse por vazio, declarar o método na Classificação
+        # e visitar o Cronograma o apagaria em silêncio, que é a classe de perda que este comando
+        # já nomeia quatro vezes.
+        atualizacao = {"last_edited_by": actor.subject}
+        if draw_method is not None:
+            atualizacao["metodo_de_sorteio_comum"] = draw_method or {}
         compare_and_swap(
             Edital.objects,
             pk=edital.pk,
             expected_revision=expected_revision,
-            last_edited_by=actor.subject,
+            **atualizacao,
         )
         edital.refresh_from_db()
         record_event(

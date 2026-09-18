@@ -48,9 +48,14 @@ sem abrir o disclosure de ajuda, contando os controles apresentados.
 1. **Given** um Edital com um Perfil e uma Etapa classificatória, **When** o elaborador acrescenta um
    marco, **Then** o sistema pergunta primeiro **como a ordem é produzida** e apresenta apenas os
    campos pertinentes à resposta.
-2. **Given** um marco cuja ordem nasce da pontuação e que enumera **uma única** Etapa, **When** o
-   elaborador compõe o marco, **Then** o sistema **não pergunta** como as pontuações se combinam nem
-   qual normalização aplicar, e **declara** que com uma Etapa a pontuação combinada é a dela.
+2. **Given** um marco **novo** cuja ordem nasce da pontuação e que enumera **uma única** Etapa,
+   **When** o elaborador compõe o marco, **Then** o sistema **não pergunta** como as pontuações se
+   combinam nem qual normalização aplicar, e **declara** que com uma Etapa a pontuação combinada é
+   a dela.
+2-bis. **Given** um marco **do acervo** que enumera uma única Etapa e já declarou uma combinação
+   que não devolve a nota daquela Etapa, **When** o elaborador o reabre, **Then** o sistema
+   continua não perguntando combinação nem normalização, **preserva** o que foi declarado, e
+   **declara** que o marco combina como o Edital já declarou — e não que a pontuação é a da Etapa.
 3. **Given** um marco recém-acrescentado, **When** o elaborador o vê pela primeira vez, **Then**
    casas decimais e arredondamento já vêm preenchidos com valor padrão editável.
 4. **Given** um Perfil sem nenhuma Modalidade de Concorrência declarada, **When** o elaborador o
@@ -131,9 +136,19 @@ mesma regra precisa ser declarada.
   a FR-413 indicar que a ordem nasce de sorteio.
 - **FR-415**: O sistema DEVE apresentar as declarações de combinação de pontuações e de normalização
   **somente** quando o marco enumerar **duas ou mais** Etapas.
-- **FR-416**: Quando o marco enumerar exatamente **uma** Etapa, o sistema DEVE declarar, em texto
-  visível, que a pontuação combinada é a daquela Etapa, e NÃO DEVE perguntar combinação nem
-  normalização.
+- **FR-416**: Quando o marco enumerar exatamente **uma** Etapa, o sistema NÃO DEVE perguntar
+  combinação nem normalização, e DEVE declarar em texto visível o que a combinação produz naquele
+  marco.
+
+  **Para o marco novo, a declaração é que a pontuação combinada é a da Etapa**, e o sistema DEVE
+  derivar a combinação que torna isso verdadeiro.
+
+  **Para o marco que já declarou combinação, a declaração é a que ele aplica**, e o sistema NÃO
+  DEVE transformá-la. Um marco composto antes desta feature pode enumerar uma Etapa e declarar soma
+  ponderada sobre peso diferente de 1: ali a pontuação publicada é o produto, e não a nota.
+  Transformar a combinação reescreveria regra que alguém declarou — e, em Edital publicado,
+  conteúdo normativo (FR-421, FR-431). Afirmar o que é falso sobre ele seria pior: quem lê a tela
+  decide a partir dela.
 - **FR-417**: O sistema DEVE apresentar as declarações sobre qual Modalidade é a da ampla
   concorrência e sobre reversão de vaga reservada **somente** depois de o Perfil declarar ao menos
   uma Modalidade de Concorrência.

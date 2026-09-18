@@ -111,6 +111,7 @@ from processo_seletivo.editais.application.reaproveitamento import (
 from processo_seletivo.editais.application.requerimento import (
     atualizar_requerimento_de_matricula,
 )
+from processo_seletivo.editais.domain import marcos
 from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.validation import (
@@ -1091,6 +1092,13 @@ def compor_etapa(request, edital_id, etapa):
     # sessão esperando uma visita futura, onde surgiria já obsoleto, falando de uma gravação que
     # ninguém lembra. Notícia do que acabou de acontecer não sobrevive à próxima tela (FR-322).
     rederivadas = request.session.pop("quadro_rederivado", None)
+    perfis = (
+        _reexibir_perfis(digitados)
+        if etapa == "perfis" and digitados is not None
+        else _reexibir_classificacao(edital, digitados)
+        if etapa == "classificacao" and digitados is not None
+        else forms.perfis_do_edital(edital)
+    )
     return render(
         request,
         template,
@@ -1129,12 +1137,36 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "identificacao" and digitados is not None
                 else {"title": edital.title, "description": edital.description}
             ),
-            "perfis": (
-                _reexibir_perfis(digitados)
-                if etapa == "perfis" and digitados is not None
-                else _reexibir_classificacao(edital, digitados)
+            "perfis": perfis,
+            # O prefixo dos campos do primeiro marco desta tela — `marco-<perfil>-0` (030,
+            # FR-426, FR-427). **Vazio significa que não há marco**, e é o que faz o bloco de
+            # ajuda da etapa não ser apresentado: ajuda sobre campos que ninguém tem à frente é
+            # pior que ruído, porque ensina a preencher o que não existe.
+            #
+            # É também a âncora de cada item do bloco. Do **primeiro** marco, e não de todos: o
+            # bloco é da etapa, e um por marco reintroduziria a repetição que trazê-lo para cá
+            # veio resolver — num Edital de três Perfis, três blocos idênticos.
+            "ancora_do_marco": _ancora_do_primeiro_marco(perfis)
+            if etapa == "classificacao"
+            else "",
+            # O método do sorteio comum ao Edital (030, FR-429): o passo o oferece uma vez, e cada
+            # cartão de marco o referencia em vez de redigitá-lo.
+            #
+            # **Depois de uma recusa, o que volta é o digitado**, e não o gravado — a mesma regra
+            # dos marcos, logo acima, e pela mesma razão. A validação do método acontece antes da
+            # gravação: ler o banco aqui devolveria os nove campos vazios a quem esqueceu um deles,
+            # e a recusa existe para corrigir o que se errou, não para apagar o que se acertou.
+            "metodo_comum": (
+                forms.metodo_comum_digitado(request.POST)
                 if etapa == "classificacao" and digitados is not None
-                else forms.perfis_do_edital(edital)
+                else forms.metodo_comum_para_exibicao(edital)
+                if etapa == "classificacao"
+                else {}
+            ),
+            "tem_metodo_comum": (
+                bool(forms.metodo_comum_do_formulario(request.POST))
+                if etapa == "classificacao" and digitados is not None
+                else bool(edital.metodo_de_sorteio_comum)
             ),
             "eventos": (
                 _reexibir_eventos(digitados)
@@ -1346,6 +1378,14 @@ def _reexibir_perfis(perfis):
     ]
 
 
+def _ancora_do_primeiro_marco(perfis):
+    """`marco-<perfil>-0` do primeiro Perfil que tem marco; `""` quando nenhum tem (030, FR-426)."""
+    for perfil in perfis or []:
+        if perfil.get("marcos"):
+            return f"marco-{perfil['id']}-0"
+    return ""
+
+
 def _reexibir_classificacao(edital, marcos_por_perfil):
     """Funde o digitado sobre os Perfis persistidos depois de uma recusa.
 
@@ -1366,6 +1406,9 @@ def _reexibir_marco(marco):
         "id": marco.get("id", ""),
         "code": marco.get("code", ""),
         "name": marco.get("name", ""),
+        # Sem esta linha, uma recusa devolveria o cartão sem a resposta de entrada — e o cartão
+        # sem resposta esconde tudo o que a resposta revela (030, FR-413).
+        "orderProduction": marco.get("orderProduction", ""),
         "etapas": marco.get("stages") or [],
         "operation": marco.get("operation", ""),
         "normalization": marco.get("normalization", ""),
@@ -1594,6 +1637,14 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         stages=conteudo["stages"],
         sections=conteudo["sections"],
         document_requirements=conteudo["documentRequirements"],
+        # **Só no passo da Classificação, e `None` nos demais** (030, FR-429). É onde o método
+        # comum é oferecido, e é o único envio que fala dele: `None` nas outras etapas preserva o
+        # que já estava, em vez de apagá-lo na primeira visita ao Cronograma.
+        draw_method=(
+            forms.metodo_comum_do_formulario(request.POST) or {}
+            if etapa == "classificacao"
+            else None
+        ),
         correlation_id=request.correlation_id,
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
@@ -1714,13 +1765,32 @@ def _edital_do_fragmento(request):
 
     O fragmento não recebe o Edital na rota — ele é um pedaço de uma tela que já o tem. O
     identificador viaja na query, como o índice da linha já viaja.
-    """
-    from processo_seletivo.processos.models import Edital
 
+    **E a autorização é a mesma da tela que o contém** (princípio III: negar por padrão, e
+    verificar escopo em toda operação). O identificador vem da query, e query é entrada de quem
+    chama: sem esta guarda, quem conhecesse o UUID de um Edital de outra unidade lia por aqui as
+    Etapas classificatórias, os fatos declarados e — desde a `030`, que passou a derivar a
+    identidade do marco — o código e a denominação dos Perfis dele. Nenhuma dessas leituras passava
+    por `ator_da_sessao` nem por `obter_edital`.
+
+    **Fora do escopo é 404, e não 403**, como na tela: a existência do Edital de outra unidade não
+    é informação que este ator tenha direito de obter.
+
+    **Sem o parâmetro continua sendo `None`**, e não recusa: é o fragmento pedido de uma tela que
+    ainda não tem Edital, e os chamadores desenham listas vazias. Distinguir os dois casos é o
+    ponto — ausência de parâmetro é estado legítimo; parâmetro que aponta para fora do escopo é
+    tentativa de leitura alheia.
+    """
     identificador = request.GET.get("edital")
     if not identificador:
         return None
-    return Edital.objects.filter(pk=identificador).first()
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        raise Http404
+    edital = obter_edital(actor=ator, edital_id=identificador)
+    if edital is None:
+        raise Http404
+    return edital
 
 
 def _etapas_e_fatos_do_edital(edital):
@@ -1756,6 +1826,32 @@ def _etapas_governaveis(edital):
     ]
 
 
+def _marco_novo(edital, indice):
+    """O marco recém-acrescentado, já com o que o sistema sabe responder por ele (030).
+
+    **Identidade primeiro**, pela mesma razão da modalidade: a gravação preserva o `id` recebido, e
+    uma linha sem identidade não teria o que preservar.
+
+    **Depois o que era pergunta sem resposta possível.** O arredondamento nasce com o par que o
+    projeto pratica (FR-419) e a identidade nasce derivada do Perfil (FR-420) — as duas obrigatórias
+    sem padrão e o código inventado para um objeto lido pela primeira vez, que eram três das vinte e
+    oito perguntas do Edital mais simples.
+
+    **Só no marco novo.** Nada disto alcança marco já declarado, nem em Retificação (FR-421): esta
+    função só é chamada pelo fragmento que cria a linha.
+    """
+    novo = {"id": str(uuid4()), **marcos.ARREDONDAMENTO_PADRAO}
+    perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
+    if perfil is None:
+        return novo
+    codigo, nome = marcos.identidade_derivada(
+        codigo_do_perfil=perfil.code,
+        nome_do_perfil=perfil.name,
+        codigos_em_uso=perfil.marcos.values_list("code", flat=True),
+    )
+    return {**novo, "code": codigo, "name": nome}
+
+
 def fragmento_marco(request, indice):
     """A linha nova nasce com identidade, pela mesma razão da modalidade.
 
@@ -1763,13 +1859,22 @@ def fragmento_marco(request, indice):
     """
     edital = _edital_do_fragmento(request)
     etapas, fatos = _etapas_e_fatos_do_edital(edital) if edital else ([], [])
+    sub = _indice_de_linha(request)
     return render(
         request,
-        "interface/_marco.html",
+        "interface/_marco_acrescentado.html",
         {
-            "marco": {"id": str(uuid4())},
+            "marco": _marco_novo(edital, indice),
             "indice": indice,
-            "sub": _indice_de_linha(request),
+            "sub": sub,
+            # **O cartão precisa saber se o Edital declara método comum** (030, FR-429): sem isto
+            # o fragmento diria "ainda não declarado" sobre um marco que referencia o comum, e a
+            # tela inteira — que sabe — passaria a contradizer o pedaço dela que o htmx troca.
+            "tem_metodo_comum": bool(edital.metodo_de_sorteio_comum) if edital else False,
+            # O bloco de ajuda da etapa vem junto, fora de banda: até este marco nascer não havia a
+            # que ele se referir, e quem acrescentou o marco não deveria recarregar a página para
+            # descobrir que a ajuda existe (030, FR-426).
+            "ancora_do_marco": f"marco-{indice}-{sub}",
             # Sem as listas, a linha nova nasceria com os selects vazios — e quem acrescentasse um
             # marco não teria o que escolher, que é o defeito que este passo existe para evitar.
             "etapas_classificatorias": etapas,
@@ -1779,6 +1884,50 @@ def fragmento_marco(request, indice):
             # pedido carrega o Edital na query. Sem `edital` aqui, o `hx-get` do botão sairia com o
             # parâmetro vazio e o critério acrescentado a partir de um marco recém-criado nasceria
             # sem alvo — o mesmo defeito que as listas acima evitam, um nível abaixo.
+            "edital": edital,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_marco_recomposto(request, indice, sub):
+    """O cartão do marco reconstruído a partir do que está digitado agora (030, FR-413 a FR-418).
+
+    **Existe porque a resposta de entrada governa quais campos o cartão tem.** Escolher "por
+    sorteio" precisa trazer o método à tela; escolher "pela pontuação" precisa tirá-lo, e a segunda
+    Etapa precisa fazer a combinação voltar a ser perguntada. Sem a ida ao servidor, isso seria
+    JavaScript — que a CSP desta interface não admite — ou ocultação por CSS, que mantém o
+    `required` ativo e reproduz a submissão que o navegador recusa sem mostrar o que falta.
+
+    Lê o marco do **formulário**, e não do banco, pela mesma razão de `fragmento_quadro`: o que a
+    pessoa está decidindo é sobre o que ela acabou de digitar, e recompor sobre o gravado apagaria
+    tudo desde a última gravação.
+
+    **Conteúdo incompleto não troca nada.** Quem está no meio de preencher pode não ter ainda o que
+    a leitura exige; responder 204 faz o htmx deixar a tela como está, que é melhor do que devolver
+    um cartão montado sobre metade do marco.
+    """
+    edital = _edital_do_fragmento(request)
+    etapas, fatos = _etapas_e_fatos_do_edital(edital) if edital else ([], [])
+    try:
+        marco = forms.marco_do_formulario(request.GET, indice, sub)
+    except (ValueError, KeyError):
+        return HttpResponse(status=204)
+    if marco is None:
+        return HttpResponse(status=204)
+    return render(
+        request,
+        "interface/_marco.html",
+        {
+            "marco": _reexibir_marco(marco),
+            "indice": indice,
+            "sub": sub,
+            # Como no fragmento que cria a linha, e pela mesma razão: o pedaço trocado não pode
+            # saber menos do que a tela que o contém (030, FR-429).
+            "tem_metodo_comum": bool(edital.metodo_de_sorteio_comum) if edital else False,
+            "etapas_classificatorias": etapas,
+            "etapas_governaveis": _etapas_governaveis(edital),
+            "fatos_declarados": fatos,
             "edital": edital,
         },
     )
@@ -4837,8 +4986,20 @@ def _e_marco_de_sorteio(edital, marco_id):
     sem ato nenhum é o caso perigoso — é nele que a tela da `015` calculava uma ordem por Etapas
     para um marco que só o sorteio ordena.
     """
-    _, marco = _marco_publicado(edital, marco_id)
-    return bool((marco or {}).get("drawMethod"))
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    perfil, _ = _marco_publicado(edital, marco_id)
+    if perfil is None:
+        return False
+    # **Pela resolução, e não pela chave do marco** (030, FR-429). Um marco que referencia o método
+    # comum do Edital não tem `drawMethod` próprio, e ler a chave dele concluiria que ele não
+    # sorteia — a tela da `015` voltaria a calcular uma ordem por Etapas para um marco que só o
+    # sorteio ordena, que é o caso perigoso que esta função existe para desviar.
+    return marcos.marco_ordena_por_sorteio(
+        effective_version(edital_id=edital.id).content,
+        perfil_id=perfil["id"],
+        marco_id=marco_id,
+    )
 
 
 def _perfil_do_marco(edital, marco_id):

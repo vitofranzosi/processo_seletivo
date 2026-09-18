@@ -60,7 +60,10 @@ def _compor(client, edital, **extra):
 def test_a_tela_oferece_os_seis_campos_do_metodo(client, com_etapas):
     # O fragmento do marco só é desenhado quando existe marco: o passo nasce sem nenhum, e é o
     # `hx-get` que o acrescenta. Gravar um primeiro é o mesmo percurso de quem compõe de verdade.
-    _compor(client, com_etapas)
+    #
+    # **Com a forma da ordem declarada** desde a `030`: os dez campos do método existem para quem
+    # respondeu que a ordem nasce de sorteio, e não para todo mundo (FR-414).
+    _compor(client, com_etapas, **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO"})
 
     resposta = client.get(reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]))
     corpo = resposta.content.decode()
@@ -208,3 +211,248 @@ def test_o_algoritmo_declarado_e_o_que_o_dominio_executa():
 
     assert _METODO_VALIDO["algorithm"] in ALGORITMOS
     assert ALGORITMOS == frozenset({ALGORITMO})
+
+
+# --- O método declarado uma vez (030, US3, FR-429, FR-430, SC-140) ---------------------------
+
+METODO_COMUM_NO_FORMULARIO = {
+    "edital-draw-algorithm": "IFES-SORTEIO-SHA256-v1",
+    "edital-draw-source": "Loteria Federal",
+    "edital-draw-occurrence": "5900",
+    "edital-draw-occurrenceAt": "2026-11-20T20:00:00-03:00",
+    "edital-draw-derivation": "a extração de sábado anterior à data publicada",
+    "edital-draw-normalizationRule": "DIGITOS_EM_SEQUENCIA",
+    "edital-draw-normalizationText": "os cinco números, na ordem dos prêmios",
+    "edital-draw-substitutionRule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+    "edital-draw-substitutionText": "não havendo extração, vale a seguinte",
+}
+
+
+def test_o_metodo_comum_e_declarado_uma_vez_e_os_marcos_o_referenciam(client, com_etapas):
+    """SC-140 — sete Perfis de sorteio declaravam a mesma regra sete vezes.
+
+    O sorteio é **um evento**: a mesma extração semeia todas as listas do certame. O que este
+    teste mede é que a declaração acontece uma vez e que o marco que não a redigita continua
+    ordenando por sorteio — que é a metade que uma leitura da chave do marco não veria.
+    """
+    from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.processos.models import Edital
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    resposta = _compor(
+        client,
+        com_etapas,
+        **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO", **METODO_COMUM_NO_FORMULARIO},
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    edital = Edital.objects.get(pk=com_etapas.pk)
+    assert edital.metodo_de_sorteio_comum["algorithm"] == "IFES-SORTEIO-SHA256-v1"
+    assert MarcoClassificatorio.objects.get(pk=MARCO).metodo_de_sorteio == {}, (
+        "o marco referencia o comum, e não o redigita"
+    )
+
+    conteudo = edital_snapshot(edital)
+    assert conteudo["drawMethod"]["source"] == "Loteria Federal"
+    assert conteudo["profiles"][0]["classificationMilestones"][0]["drawMethod"] is None
+    assert marcos.marco_ordena_por_sorteio(conteudo, perfil_id=PERFIL, marco_id=MARCO), (
+        "o marco que referencia o método comum ordena por sorteio, e quem lesse só a chave dele "
+        "concluiria que não"
+    )
+
+
+def test_o_marco_divergente_registra_a_divergencia_no_conteudo_normativo(client, com_etapas):
+    """FR-430 — a divergência se lê do documento, sem inferência: a chave está lá, preenchida."""
+    from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.processos.models import Edital
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    resposta = _compor(
+        client,
+        com_etapas,
+        **{
+            f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO",
+            **METODO_COMUM_NO_FORMULARIO,
+            **METODO_NO_FORMULARIO,
+            f"marco-{PERFIL}-0-draw-source": "Fonte de demonstração",
+        },
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    conteudo = edital_snapshot(Edital.objects.get(pk=com_etapas.pk))
+    marco = conteudo["profiles"][0]["classificationMilestones"][0]
+
+    assert conteudo["drawMethod"]["source"] == "Loteria Federal"
+    assert marco["drawMethod"]["source"] == "Fonte de demonstração"
+    assert (
+        marcos.metodo_que_governa(conteudo, perfil_id=PERFIL, marco_id=MARCO)["source"]
+        == "Fonte de demonstração"
+    ), "quem declarou o próprio método quis o próprio"
+
+
+def test_a_tela_oferece_o_metodo_comum_no_passo_da_classificacao(client, com_etapas):
+    """FR-429 na folha: a declaração é do Edital, e por isso mora no passo, e não no cartão."""
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    assert "Método do sorteio comum a este Edital" in corpo
+    for campo in ("algorithm", "source", "occurrence", "derivation"):
+        assert f'name="edital-draw-{campo}"' in corpo
+    assert 'name="edital-draw-qualifyingStageId"' not in corpo, (
+        "a Etapa de habilitação é do marco: no Edital ela endereçaria Etapa que parte dos marcos "
+        "não mede"
+    )
+
+
+def test_o_cartao_diz_que_usa_o_comum_e_diz_quando_diverge(client, com_etapas):
+    """A diferença precisa ser legível na tela, e não só no conteúdo publicado."""
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor(
+        client,
+        com_etapas,
+        **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO", **METODO_COMUM_NO_FORMULARIO},
+    )
+    referencia = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    assert "usa o <strong>método comum deste" in referencia
+    assert "o comum deste Edital" in referencia
+
+    _compor(
+        client,
+        com_etapas,
+        **{
+            f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO",
+            **METODO_COMUM_NO_FORMULARIO,
+            **METODO_NO_FORMULARIO,
+        },
+    )
+    divergente = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    assert "próprio — diverge do comum do Edital" in divergente
+
+
+def test_gravar_outra_etapa_nao_apaga_o_metodo_comum(client, com_etapas):
+    """A travessia, e ela é a razão de `draw_method=None` significar "não veio neste envio".
+
+    `replace_draft` apaga e recria o que recebe, e as demais etapas do assistente não desenham
+    este campo. Se a ausência valesse por vazio, declarar o método comum na Classificação e visitar
+    o Cronograma o apagaria em silêncio — que é a classe de perda que este assistente já pagou
+    quatro vezes.
+    """
+    from processo_seletivo.processos.models import Edital
+    from tests.interface.test_compor import eventos
+
+    _compor(
+        client,
+        com_etapas,
+        **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO", **METODO_COMUM_NO_FORMULARIO},
+    )
+    com_etapas.refresh_from_db()
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "cronograma"]), eventos()
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    assert Edital.objects.get(pk=com_etapas.pk).metodo_de_sorteio_comum["algorithm"]
+
+
+def test_o_fragmento_do_marco_sabe_do_metodo_comum(client, com_etapas):
+    """O pedaço que o htmx troca não pode saber menos do que a tela que o contém (030).
+
+    Encontrado percorrendo a interface: a tela dizia "o comum deste Edital" e o cartão recomposto
+    dizia "ainda não declarado" sobre o mesmo marco, porque o contexto do fragmento não carregava a
+    declaração do Edital. Nenhum teste de template pegaria — os dois caminhos renderizam o mesmo
+    arquivo, e é o contexto que difere.
+    """
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    _compor(
+        client,
+        com_etapas,
+        **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO", **METODO_COMUM_NO_FORMULARIO},
+    )
+
+    # O cartão recém-criado ainda não respondeu à pergunta de entrada, e por isso não desenha bloco
+    # de sorteio nenhum — é o estado correto, e não o que este teste mede.
+    acrescentado = client.get(
+        reverse("interface:fragmento-marco", args=[PERFIL]),
+        {"edital": str(com_etapas.id), "indice": "0"},
+    ).content.decode()
+    assert f'<input type="hidden" name="marco-{PERFIL}-0-draw-algorithm"' in acrescentado, (
+        "sem resposta à pergunta de entrada, o método viaja oculto e não abre bloco nenhum"
+    )
+
+    recomposto = client.get(
+        reverse("interface:fragmento-marco-recomposto", args=[PERFIL, "0"]),
+        {
+            "edital": str(com_etapas.id),
+            f"marco-{PERFIL}-0-id": MARCO,
+            f"marco-{PERFIL}-0-code": "FINAL",
+            f"marco-{PERFIL}-0-name": "Classificação final",
+            f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO",
+            f"marco-{PERFIL}-0-stages": ETAPA_CLASSIFICATORIA,
+            f"marco-{PERFIL}-0-scale": "2",
+            f"marco-{PERFIL}-0-mode": "MEIO_PARA_CIMA",
+        },
+    ).content.decode()
+
+    assert "o comum deste Edital" in recomposto
+    assert "ainda não declarado" not in recomposto
+    assert "usa o <strong>método comum deste" in recomposto
+
+
+def test_a_recusa_do_metodo_comum_nao_apaga_o_que_foi_digitado(client, com_etapas):
+    """A recusa existe para corrigir o que se errou, e não para apagar o que se acertou (030).
+
+    O método vale inteiro ou não é declarado, e a validação acontece **antes** da gravação. Ler o
+    Edital do banco na reexibição devolvia os nove campos vazios a quem esqueceu um deles — e a
+    pessoa tinha de redigitar os outros oito para descobrir se acertou o nono.
+
+    É a mesma classe de perda que `_reexibir_marco` já pagou uma vez com a janela recursal, o
+    método e a regra de corte do marco.
+    """
+    from tests.interface.conftest import identificar
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    sem_substituicao = {
+        chave: valor
+        for chave, valor in METODO_COMUM_NO_FORMULARIO.items()
+        if "substitution" not in chave
+    }
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_form(**{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO", **sem_substituicao}),
+    )
+
+    assert resposta.status_code == 200, "método pela metade é recusado inteiro"
+    corpo = resposta.content.decode()
+
+    # O `<input>` inteiro, e não a dupla `name="…" value="…"`: o template quebra os atributos em
+    # duas linhas, e uma asserção sobre a vizinhança deles passaria a depender do recuo.
+    import re as _re
+
+    def _valor(nome):
+        achado = _re.search(rf'<input[^>]*name="{nome}"[^>]*>', corpo, _re.S)
+        assert achado, f"a tela não reexibe {nome}"
+        return _re.search(r'value="([^"]*)"', achado.group(0)).group(1)
+
+    assert _valor("edital-draw-algorithm") == "IFES-SORTEIO-SHA256-v1"
+    assert _valor("edital-draw-occurrence") == "5900"
+    assert _valor("edital-draw-derivation") == "a extração de sábado anterior à data publicada"
+    assert _valor("edital-draw-substitutionText") == "", "o que faltava continua faltando"
+    com_etapas.refresh_from_db()
+    assert com_etapas.metodo_de_sorteio_comum == {}, "e nada foi gravado"

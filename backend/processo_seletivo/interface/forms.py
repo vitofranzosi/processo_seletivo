@@ -222,6 +222,11 @@ def _marcos(dados, prefixo):
                 "id": _texto(dados, f"{base}-id"),
                 "code": _texto(dados, f"{base}-code"),
                 "name": _texto(dados, f"{base}-name"),
+                # A pergunta de entrada do cartão (030, FR-413). É ela que governa quais campos o
+                # fragmento seguinte renderiza — e, por isso, precisa viajar no envio como
+                # qualquer outra declaração. `""` é o marco composto antes desta feature, relido
+                # sem que a tela lhe atribua forma nenhuma.
+                "orderProduction": _texto(dados, f"{base}-orderProduction"),
                 # As Etapas enumeradas: seleção múltipla, e a ordem aqui não é normativa.
                 # `getlist` de um campo vazio devolve `[""]`, que é lista truthy: sem o filtro, um
                 # marco sem Etapa alguma passaria pela validação que exige ao menos uma.
@@ -248,6 +253,43 @@ def _marcos(dados, prefixo):
             }
         )
     return marcos
+
+
+def metodo_comum_do_formulario(dados):
+    """O método do sorteio comum ao Edital, lido do passo da Classificação (030, FR-429).
+
+    **Reusa `_metodo_de_sorteio`**, com a base `edital` em vez do prefixo do marco: é o mesmo
+    objeto normativo, com os mesmos campos e a mesma regra de tudo-ou-nada — só muda de quem ele é.
+    Uma segunda leitura própria divergiria da do marco no primeiro campo novo.
+
+    **Sem a Etapa de habilitação**, que é do marco: qual Etapa habilita a participar do sorteio
+    depende de quais Etapas aquele marco enumera, e um valor comum a todos endereçaria Etapa que
+    parte deles não mede. É a diferença entre os nove campos do Edital e os dez do marco.
+    """
+    metodo = _metodo_de_sorteio(dados, "edital")
+    if metodo is None:
+        return None
+    return {chave: valor for chave, valor in metodo.items() if chave != "qualifyingStageId"}
+
+
+def metodo_comum_para_exibicao(edital):
+    """O método comum de volta para a tela, achatado no prefixo `draw`, como o do marco."""
+    return _metodo_para_exibicao(edital.metodo_de_sorteio_comum)
+
+
+def metodo_comum_digitado(dados):
+    """O método comum **como está no formulário**, para a reexibição depois de uma recusa (030).
+
+    Existe pela mesma razão que `blocos_opcionais_do_marco`: a recusa existe para que a pessoa
+    corrija o que errou, e não para apagar o que ela acertou. A validação do método acontece
+    **antes** da gravação — um método pela metade é recusado inteiro —, de modo que ler o Edital do
+    banco devolveria a tela com os nove campos vazios, e quem esqueceu a regra de substituição
+    teria de redigitar os outros oito.
+
+    Passa pelo mesmo achatamento do marco, e não por uma leitura própria: são os mesmos campos, e
+    duas cópias divergiriam na primeira que mudasse.
+    """
+    return _metodo_para_exibicao(metodo_comum_do_formulario(dados))
 
 
 # Os seis campos do método, na ordem em que a tela os pede. `normalization` e `substitutionRule`
@@ -397,6 +439,25 @@ def _metodo_para_exibicao(metodo):
         "drawSubstitutionText": substituicao.get("text") or "",
         "drawQualifyingStageId": declarado.get("qualifyingStageId") or "",
     }
+
+
+def marco_do_formulario(dados, indice, sub):
+    """O marco de índice `sub` do Perfil `indice`, lido do formulário — `None` se não está lá.
+
+    Existe para o fragmento que recompõe o cartão quando a forma da ordem muda (030, FR-413): o que
+    precisa ser relido é o que está **digitado agora**, e não o que está gravado — a pessoa está
+    decidindo sobre o preenchimento em curso, e recompor sobre o banco apagaria tudo o que ela
+    escreveu desde a última gravação.
+
+    Lê pelo caminho público do passo inteiro, `_marcos`, e não por uma segunda leitura própria:
+    duas leituras do mesmo formulário divergiriam no primeiro campo novo.
+    """
+    for posicao, marco in zip(
+        _indices(dados, f"marco-{indice}"), _marcos(dados, f"marco-{indice}"), strict=True
+    ):
+        if str(posicao) == str(sub):
+            return marco
+    return None
 
 
 def blocos_opcionais_do_marco(marco):
@@ -966,6 +1027,7 @@ def _marco_para_o_formulario(marco):
         "id": str(marco.id),
         "code": marco.code,
         "name": marco.name,
+        "orderProduction": marco.forma_da_ordem,
         "etapas": [str(etapa) for etapa in marco.etapas],
         "operation": marco.operacao,
         "normalization": marco.normalizacao,
@@ -1000,6 +1062,11 @@ def _marco_persistido(marco):
         "id": str(marco.id),
         "code": marco.code,
         "name": marco.name,
+        # Travessia da forma da ordem, pela mesma razão da janela, do método e do corte abaixo: o
+        # reenvio carrega **o contrato inteiro**, e não os campos que a tela da etapa atual
+        # desenha. Sem esta linha, declarar a forma no passo Classificação e gravar qualquer passo
+        # seguinte apagaria a declaração — e o marco voltaria a ser lido por inferência (030).
+        "orderProduction": marco.forma_da_ordem,
         "stages": [str(etapa) for etapa in marco.etapas],
         "operation": marco.operacao,
         "normalization": marco.normalizacao,

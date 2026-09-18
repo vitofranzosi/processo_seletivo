@@ -28,9 +28,21 @@ def marco_na_versao(conteudo, *, perfil_id, marco_id):
 
 
 def metodo_declarado(conteudo, *, perfil_id, marco_id):
-    """O `drawMethod` do marco, ou `None` quando o marco não declara método."""
-    marco = marco_na_versao(conteudo, perfil_id=perfil_id, marco_id=marco_id)
-    return (marco or {}).get("drawMethod") or None
+    """O método que governa este marco: o dele quando declarado, senão o comum do Edital (030).
+
+    **Delega, e não decide.** A regra mora em `editais/domain/marcos.metodo_que_governa`, porque o
+    que ela lê é conteúdo do marco — e porque `classificacao` também a consome, e a `021` decidiu
+    por escrito que a dependência corre `sorteios → classificacao`, nunca o contrário. Duas
+    implementações da mesma resolução seriam duas respostas para a mesma pergunta, que é o que o
+    princípio II proíbe.
+
+    Este módulo continua sendo o ponto de leitura do método no conteúdo versionado: é por ele que o
+    congelamento da relação e a constituição do sorteio perguntam, e é o resumo daqui que vira o
+    compromisso datado.
+    """
+    from processo_seletivo.editais.domain import marcos
+
+    return marcos.metodo_que_governa(conteudo, perfil_id=perfil_id, marco_id=marco_id)
 
 
 def resumo_do_metodo(metodo) -> str:

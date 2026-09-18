@@ -290,11 +290,19 @@ def test_sem_a_conversao_a_validacao_estoura_em_vez_de_recusar():
         validate_stages(conteudo["stages"], schedule=conteudo["schedule"])
 
 
-def test_o_payload_traz_as_cinco_colecoes_e_nada_mais():
+def test_o_payload_traz_as_cinco_colecoes_e_o_metodo_comum():
+    """As cinco coleções, e nada além delas — mais o único campo de raiz que se copia.
+
+    **`drawMethod` não é coleção**, e é por isso que ele entra nominalmente: o método do sorteio
+    comum é conteúdo normativo do Edital, e um Edital reaproveitado de um Edital de sorteio que o
+    perdesse nasceria com sete marcos referenciando nada (030, FR-429). Os demais campos de raiz
+    continuam de fora: número, ano e título são entrada da criação, e não conteúdo a copiar.
+    """
     payload = payload_do_conteudo(conteudo_publicado())
 
     assert sorted(payload) == [
         "documentRequirements",
+        "drawMethod",
         "profiles",
         "schedule",
         "sections",

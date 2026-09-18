@@ -84,6 +84,7 @@ def marco(**alteracoes):
         "code": "FINAL",
         "name": "Classificação final",
         "stages": [DIDATICA, TITULOS],
+        "orderProduction": "POR_PONTUACAO",
         "operation": "SOMA_PONDERADA",
         "normalization": "NENHUMA",
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

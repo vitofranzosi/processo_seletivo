@@ -93,6 +93,23 @@ class Edital(models.Model):
     #
     # Edital que declara momento e não tem texto **não publica**: aceite sem texto é aceite de nada.
     requerimento_declaracao = models.TextField(blank=True, default="")
+    # O método do sorteio comum a este Edital (030, FR-429). **`{}` significa não declarado**, como
+    # no marco — Edital sem sorteio nunca o preenche, e Edital publicado antes desta feature não o
+    # tem: cada marco dele continua carregando o método literal, e a resolução só alcança marco
+    # **sem** método próprio, estado que nenhum Edital publicado tem (FR-431, SC-142).
+    #
+    # **Mora aqui, e não numa tabela de sorteio**, pela mesma razão escrita em
+    # `MarcoClassificatorio.metodo_de_sorteio`: alterá-lo é Retificação, com a autoridade daquele
+    # ato. Uma tabela própria seria registro operacional que se diz normativo — sem versão
+    # consolidada, sem autoridade signatária, fora do snapshot e fora da gramática de
+    # endereçamento. No Edital ele tem as quatro propriedades que o modelo cobrava: mesmo snapshot,
+    # mesma assinatura, `/drawMethod/…` já resolve, e a Versão Consolidada o carrega.
+    #
+    # **E é do Edital, e não do Perfil.** Sete Perfis de sorteio declaravam a mesma regra sete
+    # vezes — mesmo algoritmo, mesma fonte, mesma ocorrência —, porque o sorteio é **um evento**:
+    # a mesma extração semeia todas as listas do certame. O marco que precisar divergir declara o
+    # próprio, e a divergência fica explícita porque a chave existe nele (FR-430).
+    metodo_de_sorteio_comum = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField()
     created_by = models.CharField(max_length=255)
     last_edited_by = models.CharField(max_length=255)

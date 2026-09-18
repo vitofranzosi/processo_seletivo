@@ -148,6 +148,24 @@
     Fica aqui, e nao na secao do quadro, porque e declaracao sobre a **Modalidade** — o quadro so a
     consome.
     {% endcomment %}
+    {% comment %}
+    **As duas declarações abaixo só existem depois da primeira Modalidade** (030, FR-417).
+
+    Qual Modalidade é a da ampla concorrência é pergunta sobre a lista acima: sem lista, ela oferece
+    uma única opção — "nenhuma" — e é pergunta cuja resposta já está dada. A reversão de vaga
+    reservada é a mesma coisa um passo adiante: não há vaga reservada a reverter num Perfil que não
+    declara Modalidade nenhuma, e a própria ajuda do campo diz que declará-la exige quadro de vagas
+    por recorte.
+
+    **Atenção à grafia-armadilha**: o recorte da ampla concorrência que o sorteio usa é o `NULL` da
+    linha geral, e a Modalidade "AC" declarada é outra coisa. O que condiciona a pergunta é a
+    Modalidade **declarada**, que é o que a lista acima tem.
+
+    **O declarado não se perde** (FR-418): o Perfil que já apontou a ampla e depois ficou sem
+    Modalidade nenhuma continua enviando as duas declarações, ocultas. `replace_draft` apaga e
+    recria, e campo que não volta no envio é campo perdido em silêncio.
+    {% endcomment %}
+    {% if perfil.modalidades %}
     <p class="campo">
       <label for="perfil-{{ indice }}-generalCompetitionModalityId">Qual delas é a ampla concorrência</label>
       {% comment %}
@@ -200,6 +218,10 @@
       <span class="oculto" id="ajuda-reversao-{{ indice }}">Declarar a reversão exige quadro de
         vagas publicado: sem quantidade por recorte não há o que reverter.</span>
     </p>
+    {% else %}
+    <input type="hidden" name="perfil-{{ indice }}-generalCompetitionModalityId" value="{{ perfil.generalCompetitionModalityId|default:'' }}">
+    <input type="hidden" name="perfil-{{ indice }}-vacancyReversion" value="{{ perfil.vacancyReversion|default:'' }}">
+    {% endif %}
     {% comment %}
     Como este Edital comunica a convocacao (019, D-009).
 

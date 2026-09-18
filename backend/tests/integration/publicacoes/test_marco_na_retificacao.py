@@ -52,6 +52,7 @@ def publicado(api_client, manager_headers, process_payload):
             "code": "FINAL",
             "name": "Classificação final",
             "stages": [ETAPA["A"]],
+            "orderProduction": "POR_PONTUACAO",
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
             # Exigido desde que o contrato de `rounding` foi fixado: um marco sem escala e modo
@@ -112,12 +113,14 @@ def test_reordenar_criterios_preserva_os_identificadores(api_client, publicado):
         {
             "targetPath": f"/profiles/id={PERFIL['B']}/classificationMilestones/id={MARCO}"
             f"/tiebreakers/id={CRITERIOS[1]}/order",
+            "orderProduction": "POR_PONTUACAO",
             "operation": "REPLACE",
             "newValue": 1,
         },
         {
             "targetPath": f"/profiles/id={PERFIL['B']}/classificationMilestones/id={MARCO}"
             f"/tiebreakers/id={CRITERIOS[0]}/order",
+            "orderProduction": "POR_PONTUACAO",
             "operation": "REPLACE",
             "newValue": 2,
         },

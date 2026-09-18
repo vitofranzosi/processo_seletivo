@@ -36,6 +36,7 @@ def test_percurso_inteiro_da_ordem(
             "code": "FINAL",
             "name": "Classificação final",
             "stages": [etapa["id"]],
+            "orderProduction": "POR_PONTUACAO",
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
             "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

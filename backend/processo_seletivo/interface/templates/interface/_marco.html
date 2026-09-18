@@ -15,7 +15,14 @@ significa "não declarado", e o resumo diz isso sem que ninguém precise abrir.
 Nenhum campo obrigatório entra nos blocos que fecham: campo `required` invisível é submissão que o
 navegador recusa sem conseguir mostrar o que falta.
 {% endcomment %}
-<fieldset class="linha marco">
+{% comment %}
+O `id` do cartão é o prefixo dos campos dele, sem sufixo — `marco-<perfil>-<n>`. Ele não
+colide com `marco-<perfil>-<n>-code` e companhia, e é a âncora para onde os itens da ajuda
+da etapa apontam quando o campo que explicam pode não estar na tela (030, FR-427): com a
+revelação progressiva, um link para o método do sorteio pode não ter destino, e levar ao
+cartão leva ao lugar onde a resposta que o revela é dada.
+{% endcomment %}
+<fieldset class="linha marco" id="marco-{{ indice }}-{{ sub }}">
   <legend>Marco classificatório</legend>
   {% comment %}
   O identificador viaja oculto pela mesma razão da Modalidade: a gravação preserva o `id` recebido,
@@ -23,6 +30,42 @@ navegador recusa sem conseguir mostrar o que falta.
   realizou. Uma linha sem identidade não teria o que preservar.
   {% endcomment %}
   <input type="hidden" name="marco-{{ indice }}-{{ sub }}-id" value="{{ marco.id }}">
+  {% comment %}
+  **A pergunta de entrada, e ela vem antes de tudo** (030, FR-413). Não é campo do marco: é o que
+  decide quais campos do marco existem. Vinha depois, e não vinha — "este marco sorteia" era
+  inferido da presença do método, o que não distingue *não sorteia* de *sorteia e ainda não
+  declarei o método*. Era esse segundo estado que fazia o cartão abrir dez campos de sorteio para
+  quem não sorteia, e nenhum caminho para quem sorteia e ainda não preencheu nada.
+
+  Uma lista, e não duas opções de rádio, pela contagem de SC-138: o que se mede é controle que
+  recebe foco, e a lista é um.
+
+  A resposta reconstrói o cartão no servidor, e não por JavaScript: a CSP desta interface não
+  admite `hx-vals='js:{...}'`, e o `hx-include` do fieldset é o que leva o que já foi digitado —
+  sem ele, trocar a resposta apagaria o preenchimento em curso.
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo largo">
+      <label for="marco-{{ indice }}-{{ sub }}-orderProduction">Como a ordem deste marco é produzida <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="marco-{{ indice }}-{{ sub }}-orderProduction"
+              name="marco-{{ indice }}-{{ sub }}-orderProduction"
+              required aria-required="true"
+              hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
+              hx-trigger="change"
+              hx-include="closest fieldset"
+              hx-target="closest fieldset"
+              hx-swap="outerHTML"
+              aria-describedby="ajuda-forma-da-ordem-{{ indice }}-{{ sub }}">
+        <option value="">Escolha como a ordem é produzida</option>
+        <option value="POR_PONTUACAO" {% if marco.orderProduction == "POR_PONTUACAO" %}selected{% endif %}>Pela pontuação combinada das Etapas</option>
+        <option value="POR_SORTEIO" {% if marco.orderProduction == "POR_SORTEIO" %}selected{% endif %}>Por sorteio</option>
+      </select>
+      <span class="oculto" id="ajuda-forma-da-ordem-{{ indice }}-{{ sub }}">A resposta governa o
+        que este cartão pergunta em seguida. Quem ordena por pontuação enumera Etapas; quem ordena
+        por sorteio declara o método, e pode não ter Etapa alguma — o sorteio costuma preceder a
+        análise documental.</span>
+    </p>
+  </div>
   <div class="campos">
     <p class="campo curto">
       <label for="marco-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -40,27 +83,46 @@ navegador recusa sem conseguir mostrar o que falta.
   </div>
   <div class="campos">
     <p class="campo largo">
-      <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem {% if not marco|ordena_por_sorteio %}<span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</label>
       {% comment %}
       Sem Etapa classificatória, isto era uma caixa vazia, obrigatória e impossível de preencher: o
       navegador recusava a submissão apontando para um retângulo em branco, e a única explicação
       estava num aviso no alto da página, fora da tela de quem já rolou até aqui. O `required` sai
       junto com o seletor — o rascunho continua salvável, e é a validação da publicação que cobra as
       Etapas, como sempre cobrou.
+
+      **E sai também quando a ordem nasce de sorteio** (030, FR-432). A ajuda do método, logo
+      abaixo, sempre mandou deixar a habilitação em nenhuma quando o sorteio precede a análise
+      documental — e a validação, ao mesmo tempo, exigia Etapa de todo marco. A tela contradizia a
+      si mesma, e quem seguia a ajuda não conseguia publicar. A exigência não foi removida: foi
+      condicionada à forma da ordem, que é a distinção que a FR-413 acabou de criar.
+
+      A seleção reconstrói o cartão pela mesma razão da pergunta de entrada: passar de uma Etapa
+      para duas faz a combinação voltar a ser perguntada (FR-415).
       {% endcomment %}
       {% if etapas_classificatorias %}
       <select id="marco-{{ indice }}-{{ sub }}-stages" name="marco-{{ indice }}-{{ sub }}-stages"
-              multiple required aria-required="true" aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
+              multiple {% if not marco|ordena_por_sorteio %}required aria-required="true"{% endif %}
+              hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
+              hx-trigger="change"
+              hx-include="closest fieldset"
+              hx-target="closest fieldset"
+              hx-swap="outerHTML"
+              aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
         {% for etapa in etapas_classificatorias %}
         <option value="{{ etapa.id }}" {% if etapa.id in marco.etapas %}selected{% endif %}>{{ etapa.rotulo }}</option>
         {% endfor %}
       </select>
       <span class="oculto" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
-        peso de cada uma é o que ela já publica; aqui se escolhe quais entram.</span>
+        peso de cada uma é o que ela já publica; aqui se escolhe quais entram.{% if marco|ordena_por_sorteio %} Um
+        marco de sorteio pode não enumerar nenhuma: é o caso de quem sorteia antes da análise
+        documental.{% endif %}</span>
       {% else %}
       <span class="vazio" id="ajuda-etapas-{{ indice }}-{{ sub }}">Nenhuma Etapa deste Edital foi
-        marcada como <strong>Classificatória</strong>. Volte ao passo <strong>Etapas de
-        Avaliação</strong> e marque as que entram na ordem; elas aparecem aqui.</span>
+        marcada como <strong>Classificatória</strong>.{% if marco|ordena_por_sorteio %} Este marco
+        ordena por sorteio, e pode ficar assim — a ordem vem da relação de habilitados, e não de
+        nota.{% else %} Volte ao passo <strong>Etapas de Avaliação</strong> e marque as que entram
+        na ordem; elas aparecem aqui.{% endif %}</span>
       {% endif %}
     </p>
   </div>
@@ -170,14 +232,34 @@ navegador recusa sem conseguir mostrar o que falta.
   institucional por padrão — a mesma razão dos rótulos da Etapa e do local do Evento: um default
   aplicaria ao Edital uma norma que ele não publicou.
   {% endcomment %}
+  {% if marco|ordena_por_sorteio %}
+  {% comment %}
+  **O marco referencia o método comum, e só redigita para divergir** (030, FR-429, FR-430).
+
+  Não há campo para escolher entre "usar o comum" e "declarar o próprio", e a ausência é a decisão:
+  a escolha **é** o conteúdo. Marco com os campos em branco usa o comum; marco com qualquer campo
+  preenchido diverge, e a divergência se lê do documento sem inferência — a chave está lá, sob o
+  marco. Um interruptor à parte criaria um terceiro estado ("diverge, e ainda não digitei nada")
+  que o conteúdo publicado não sabe representar, e seria a ambiguidade que a FR-413 acabou de
+  desfazer um nível acima.
+  {% endcomment %}
   <details class="bloco-do-marco"{% if marco|declarou:"draw" %} open{% endif %}>
     <summary>Método do sorteio
-      <span class="resumo-do-bloco">{% if marco|declarou:"draw" %}declarado{% else %}este marco não sorteia{% endif %}</span></summary>
+      <span class="resumo-do-bloco">{% if marco|declarou:"draw" %}{% if tem_metodo_comum %}próprio — diverge do comum do Edital{% else %}declarado{% endif %}{% elif tem_metodo_comum %}o comum deste Edital{% else %}ainda não declarado{% endif %}</span></summary>
   <fieldset class="campos" aria-describedby="ajuda-sorteio-{{ indice }}-{{ sub }}">
     <legend class="oculto">Método do sorteio, se este marco ordena por sorteio</legend>
     <span class="oculto" id="ajuda-sorteio-{{ indice }}-{{ sub }}">Declarado aqui, o método é
       conteúdo publicado do Edital: alterá-lo depois exige Retificação, e nunca implantação de
-      software. Deixe tudo em branco se este marco não sorteia.</span>
+      software. {% if tem_metodo_comum %}Deixe tudo em branco para usar o método comum deste
+      Edital; preencha para divergir dele, e a divergência fica explícita no conteúdo
+      publicado.{% else %}Deixe tudo em branco se este marco não sorteia.{% endif %}</span>
+    {% if tem_metodo_comum %}
+    <p class="declaracao-derivada">{% if marco|declarou:"draw" %}Este marco <strong>diverge</strong>
+      do método comum deste Edital: o que estiver preenchido abaixo é o que vale para ele, e a
+      divergência é publicada como tal.{% else %}Este marco usa o <strong>método comum deste
+      Edital</strong> — declarado uma vez, no alto desta etapa. Preencha abaixo apenas se ele
+      precisar de método distinto dos demais.{% endif %}</p>
+    {% endif %}
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-algorithm">Algoritmo e versão</label>
       <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
@@ -273,6 +355,45 @@ navegador recusa sem conseguir mostrar o que falta.
     </p>
   </fieldset>
   </details>
+  {% else %}
+  {% comment %}
+  **O método sai da tela e não sai do envio** (030, FR-418, contrato do rascunho). `replace_draft`
+  apaga e recria: o payload substitui o conteúdo inteiro do rascunho, e campo que não volta no
+  envio é campo perdido — em silêncio. Quem declarou o método, trocou a forma da ordem para
+  pontuação e gravou perderia os dez campos sem que nada avisasse, e precisaria redigitá-los para
+  voltar atrás.
+
+  **`hidden`, e nunca `disabled`.** Campo `disabled` não é submetido pelo navegador: usá-lo
+  reproduziria exatamente a perda que este bloco existe para impedir. E `display:none` é pior
+  ainda, porque mantém o `required` ativo — a submissão que o navegador recusa sem conseguir
+  mostrar o que falta, que é a regra escrita no alto deste arquivo.
+
+  **O que fica guardado não se publica**: `edital_snapshot` descarta o método do marco que ordena
+  por pontuação. São dois caminhos, e fechar só um deixaria o defeito vivo.
+  {% endcomment %}
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-algorithm" value="{{ marco.drawAlgorithm|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-source" value="{{ marco.drawSource|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt" value="{{ marco.drawOccurrenceAt|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-derivation" value="{{ marco.drawDerivation|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-normalizationRule" value="{{ marco.drawNormalizationRule|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-normalizationText" value="{{ marco.drawNormalizationText|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-substitutionRule" value="{{ marco.drawSubstitutionRule|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-substitutionText" value="{{ marco.drawSubstitutionText|default:'' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId" value="{{ marco.drawQualifyingStageId|default:'' }}">
+  {% endif %}
+  {% comment %}
+  **Combinação e normalização só com duas ou mais Etapas** (030, FR-415, FR-416). Com uma, as duas
+  respostas são dedutíveis do que já foi declarado, e SC-139 proíbe perguntar o que se deduz: eram
+  duas das vinte e oito perguntas do Edital mais simples da amostra, e as duas eram matematicamente
+  vazias.
+
+  O que elas valem continua **publicado** — o que deixa de existir é a pergunta. Os valores viajam
+  ocultos pelo mesmo contrato do método acima, e a derivação não sobrescreve o que já foi
+  declarado: marco antigo que enumera uma Etapa e declara soma ponderada continua declarando soma
+  ponderada (FR-421).
+  {% endcomment %}
+  {% if marco|pergunta_a_combinacao %}
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -295,6 +416,15 @@ navegador recusa sem conseguir mostrar o que falta.
         1: é a normalização declarada que responde por isso.</span>
     </p>
   </div>
+  {% else %}
+  <p class="declaracao-derivada">{% if marco.etapas %}{% if marco|pontuacao_e_a_da_etapa %}Com uma
+    Etapa, a pontuação combinada deste marco <strong>é a dela</strong> — não há o que combinar, e o
+    Edital publica isso.{% else %}Com uma Etapa, este marco combina como o Edital já
+    declarou.{% endif %}{% else %}Este marco não enumera Etapa: não há pontuação a combinar, e a
+    ordem não vem de nota.{% endif %}</p>
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-operation" value="{{ marco|combinacao_efetiva|dicionario_simples:'operation' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-normalization" value="{{ marco|combinacao_efetiva|dicionario_simples:'normalization' }}">
+  {% endif %}
   {% comment %}
   A regra de corte deste marco (014, D-011 a D-014).
 

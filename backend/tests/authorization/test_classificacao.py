@@ -25,6 +25,7 @@ def edital_com_marco(api_client, manager_headers, process_payload):
             "code": "FINAL",
             "name": "Classificação final",
             "stages": [etapa["id"]],
+            "orderProduction": "POR_PONTUACAO",
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
             "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},

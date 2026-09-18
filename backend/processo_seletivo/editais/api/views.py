@@ -20,6 +20,9 @@ class EditalDraftView(APIView):
             stages=serializer.validated_data.get("stages", []),
             sections=serializer.validated_data.get("sections", []),
             document_requirements=serializer.validated_data.get("documentRequirements", []),
+            # `None` quando a chave não veio, e é o que preserva o que já estava: a ausência
+            # significa "este envio não fala do método comum", e não "apague-o" (030, FR-429).
+            draw_method=serializer.validated_data.get("drawMethod"),
             correlation_id=request.correlation_id,
         )
         response = Response(EditalResponseSerializer(edital).data)

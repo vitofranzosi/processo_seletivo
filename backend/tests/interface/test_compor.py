@@ -983,3 +983,76 @@ def test_a_etapa_nasce_pontuada_quando_ninguem_escolhe(client, seletor_ligado, e
     client.post(etapa(edital, "etapas"), etapas_form())
 
     assert {gravada.forma for gravada in EtapaAvaliacao.objects.all()} == {"PONTUADA"}
+
+
+# --- Anti-IDOR nos fragmentos do assistente (030) --------------------------------------------
+#
+# **O identificador do Edital viaja na query, e query é entrada de quem chama.** A tela de
+# composição nega por padrão — `ator_da_sessao` e `obter_edital` — e os fragmentos que a compõem
+# não negavam: `_edital_do_fragmento` filtrava por `pk` e pronto. Quem conhecesse o UUID de um
+# Edital de outra unidade lia por aqui as Etapas classificatórias, os fatos declarados e, desde a
+# `030` — que passou a derivar a identidade do marco do Perfil —, o código e a denominação dos
+# Perfis dele.
+#
+# A varredura é sobre **todos** os fragmentos que recebem o Edital na query, e não sobre os dois da
+# `030`: a guarda mora num lugar só, e é esse lugar que este teste prende.
+
+FRAGMENTOS_QUE_RECEBEM_EDITAL = (
+    ("interface:fragmento-marco", (PERFIL,), {"indice": "0"}),
+    ("interface:fragmento-marco-recomposto", (PERFIL, "0"), {"indice": "0"}),
+    ("interface:fragmento-criterio", (PERFIL, "0"), {"indice": "0"}),
+    ("interface:fragmento-etapa", None, {}),
+    ("interface:fragmento-documento", None, {}),
+)
+
+
+def _endereco(nome, argumentos, edital):
+    return reverse(nome, args=argumentos if argumentos is not None else [edital.id])
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+@pytest.mark.parametrize(("nome", "argumentos", "extra"), FRAGMENTOS_QUE_RECEBEM_EDITAL)
+def test_fragmento_de_edital_de_outro_escopo_responde_404(
+    client, seletor_ligado, edital, nome, argumentos, extra
+):
+    """Anti-IDOR: conhecer o identificador não concede acesso, nem pelo pedaço da tela."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    sessao = client.session
+    sessao["interface_identidade"] = {
+        "subject": "ana.elaboradora",
+        "escopo": "outra-instituicao",
+        "papeis": ["elaborador"],
+    }
+    sessao.save()
+
+    resposta = client.get(_endereco(nome, argumentos, edital), {"edital": str(edital.id), **extra})
+
+    assert resposta.status_code == 404, nome
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_fragmento_sem_identidade_nao_le_edital_nenhum(client, seletor_ligado, edital):
+    """Sem sessão não há escopo a verificar, e sem escopo não se lê conteúdo de Edital."""
+    resposta = client.get(
+        reverse("interface:fragmento-marco", args=[PERFIL]),
+        {"edital": str(edital.id), "indice": "0"},
+    )
+
+    assert resposta.status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_fragmento_sem_o_parametro_continua_desenhando_listas_vazias(client, seletor_ligado):
+    """A ausência do parâmetro não é tentativa de leitura alheia: é tela que ainda não tem Edital.
+
+    Distinguir os dois casos é o ponto da guarda. Confundi-los faria o assistente quebrar onde ele
+    hoje degrada — a linha nova nasce com os selects vazios, e quem a preenche salva depois.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.get(reverse("interface:fragmento-marco", args=[PERFIL]), {"indice": "0"})
+
+    assert resposta.status_code == 200

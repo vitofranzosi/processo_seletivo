@@ -722,7 +722,7 @@ def sorteado(ato):
     return (ato.universo or {}).get("origem") == ORIGEM_SORTEIO
 
 
-def listas_do_marco(perfil, marco):
+def listas_do_marco(perfil, marco, conteudo=None):
     """Os recortes daquele marco: `[(lista_id, nome)]`, ampla concorrência primeiro.
 
     **Só o sorteio emite ato por lista** (`021`, `D-006`): um marco de cotas produz três atos raiz
@@ -730,8 +730,22 @@ def listas_do_marco(perfil, marco):
     de qual lista devolveria um dos três pela ordem de emissão. Um marco computado tem um recorte
     só, e percorrer as modalidades dele custaria uma consulta por modalidade para não encontrar ato
     nenhum.
+
+    `conteudo` é o da versão vigente, e existe porque a pergunta "este marco sorteia" passou a ter
+    resolução própria (030, FR-429): o marco pode referenciar o método comum do Edital, e ler só a
+    chave dele responderia que não. Sem o conteúdo, a leitura cai na chave — que é o que todo
+    Edital publicado antes desta feature carrega, e sobre ele a resposta é a mesma.
     """
-    if not marco.get("drawMethod"):
+    from processo_seletivo.editais.domain import marcos
+
+    sorteia = (
+        marcos.marco_ordena_por_sorteio(
+            conteudo, perfil_id=perfil.get("id"), marco_id=marco.get("id")
+        )
+        if conteudo is not None
+        else bool(marco.get("drawMethod"))
+    )
+    if not sorteia:
         return [(None, "")]
     return [(None, "")] + [
         (modalidade.get("id"), modalidade.get("name") or "")
@@ -782,7 +796,7 @@ def atos_obsoletos(edital, conteudo, versao_vigente, encaminhar):
     """
     for perfil, marco in marcos_do_conteudo(conteudo):
         marco_id = marco.get("id")
-        for lista_id, nome_da_lista in listas_do_marco(perfil, marco):
+        for lista_id, nome_da_lista in listas_do_marco(perfil, marco, conteudo):
             ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
             if ato is None or not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
                 continue

@@ -22,7 +22,7 @@ resumo dele — o que o princípio II proíbe (SC-142).
   "operation": "SOMA_PONDERADA",
   "normalization": "NENHUMA",
   "rounding": { "scale": 2, "mode": "MEIO_PARA_CIMA" },
-  "drawMethod": { }                    // vazio = referencia o método comum do Edital (FR-429)
+  "drawMethod": null                   // ausente = referencia o método comum do Edital (FR-429)
 }
 ```
 
@@ -31,6 +31,13 @@ resumo dele — o que o princípio II proíbe (SC-142).
 | `orderProduction` | `POR_PONTUACAO` | A ordem nasce da pontuação combinada das Etapas enumeradas |
 | `orderProduction` | `POR_SORTEIO` | A ordem nasce de sorteio |
 | `orderProduction` | *ausente* | Edital anterior à feature: sorteia se `drawMethod` está declarado |
+
+**A ausência do método se grafa `null`, e nunca `{}`.** A primeira redação deste contrato escrevia
+`{ }`, e estava errada: a versão 10 do conteúdo canônico já fixou `null` para "método não
+declarado" — é o que `elevar_marco` escreve em todo Edital anterior ao degrau, e o que
+`edital_snapshot` emite desde então. Um dicionário vazio seria uma **segunda grafia da mesma
+ausência**, e é o modo de falha que `publicacoes/domain/elevacao` recusa por escrito em toda parte:
+com duas grafias, o mesmo Edital admitiria dois resumos canônicos.
 
 **`operation` e `normalization` com uma Etapa** (FR-416): continuam publicados, com o valor que o
 Edital afirma. O que muda é que deixam de ser **perguntados** — a tela declara que a pontuação

@@ -32,6 +32,20 @@
         <dt>Limite da reserva</dt>
         <dd>Quantas pessoas o cadastro comporta. O Edital publica "cadastro reserva limitado em 6".</dd>
         {% comment %}
+        As duas entradas abaixo eram `<span class="ajuda">` dentro do cartão da Modalidade — as duas
+        últimas ajudas visíveis dentro de um cartão de composição (030, FR-428). O projeto já tinha
+        tomado a decisão para o marco e para o Perfil; a Modalidade ficou de fora, e num Edital de
+        sete polos com três Modalidades cada as duas frases apareciam vinte e uma vezes.
+
+        O texto não some e o equivalente para tecnologia assistiva continua de pé: o `span` virou
+        `.oculto`, e o `aria-describedby` do campo continua apontando para ele.
+        {% endcomment %}
+        <dt>Percentual da reserva</dt>
+        <dd>Vazio significa sem reserva percentual — é o caso da ampla concorrência.</dd>
+        <dt>Versão da norma que fundamenta a reserva</dt>
+        <dd>Exigida sempre que houver fundamento: sem ela, a norma aplicada não fica
+          identificada.</dd>
+        {% comment %}
         As quatro decisões cujo efeito aparece semanas depois, e cujas dicas estavam só em
         `.oculto` — visíveis a leitor de tela e a mais ninguém, porque o controle é `<select>` e
         `<select>` não tem `placeholder` onde a versão visível pudesse morar.
@@ -61,7 +75,9 @@
         <dt>Qual Modalidade é a ampla concorrência</dt>
         <dd>A declarada não recebe linha própria no quadro: a quantidade dela é a da linha geral.</dd>
         <dt>Reversão de vaga reservada</dt>
-        <dd>Declarar a reversão exige quadro de vagas publicado: sem quantidade por recorte não há o
+        <dd>Declarar a reversão exige quadro de vagas publicado: sem quantidade por <dfn>recorte</dfn>
+        — que é a lista em que a pessoa concorre, a ampla concorrência ou uma Modalidade
+        declarada — não há o
           que reverter.</dd>
         <dt>Como a convocação é comunicada</dt>
         <dd>Sem esta declaração o sistema recusa convocar: ele não escolhe a forma por você.</dd>

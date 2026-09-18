@@ -30,6 +30,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID
 
+from processo_seletivo.editais.domain import marcos
 from processo_seletivo.editais.domain.calendario import (
     ano_do_evento,
     instante_vencido,
@@ -676,13 +677,23 @@ def _coerencia_dos_marcos(snapshot: dict) -> list[ValidationFinding]:
             dentro = f"id={chave}" if isinstance(chave, str) and chave else str(indice)
             caminho = f"{base}/classificationMilestones/{dentro}"
             findings.extend(_arredondamento_do_marco(marco, caminho))
-            if not marco.get("stages"):
+            # **A exigência de Etapa é condicionada à forma da ordem** (030, FR-432), pela mesma
+            # regra que a elaboração aplica em `editais/domain/perfis` — e a regra é a mesma
+            # função, não uma cópia. O marco de sorteio que precede a análise documental não tem
+            # Etapa a enumerar, e recusá-lo aqui contradizia a ajuda da própria tela.
+            #
+            # **Marco que não declara a forma continua exigindo Etapa**: é o que todo Edital
+            # publicado antes desta feature afirma, e afrouxar sobre ele mudaria o já publicado.
+            if not marco.get("stages") and marcos.exige_etapa(
+                marco.get("orderProduction") or "",
+                metodo_declarado=bool(marco.get("drawMethod")),
+            ):
                 findings.append(
                     ValidationFinding(
                         Severity.BLOCKING_ERROR,
                         "milestone_without_stage",
-                        "O marco classificatório não enumera Etapa alguma: sem Etapa não há "
-                        "pontuação a combinar, e a ordem não sai.",
+                        "O marco classificatório ordena pela pontuação e não enumera Etapa "
+                        "alguma: sem Etapa não há pontuação a combinar, e a ordem não sai.",
                         f"{caminho}/stages",
                     )
                 )
@@ -849,9 +860,13 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
         # do sorteio e a única que existe é a análise documental que o corte alimenta. Uma guarda
         # escrita como "a Etapa governada deve suceder a ordem do marco" tornaria aquele Edital
         # impublicável.
-        elif not marco.get("drawMethod") and str(declarada) in {
-            str(item) for item in (marco.get("stages") or [])
-        }:
+        # A pergunta "este marco ordena por sorteio?" passou a ter resposta declarada (030,
+        # FR-413), e é `editais/domain/marcos` que a responde — aqui e nos demais leitores. Ler a
+        # presença do método direto, como esta linha fazia, era a inferência que a FR-413 veio
+        # substituir: ela não distingue *não sorteia* de *sorteia e ainda não declarei o método*.
+        elif not marcos.ordena_por_sorteio(
+            marco.get("orderProduction") or "", metodo_declarado=bool(marco.get("drawMethod"))
+        ) and str(declarada) in {str(item) for item in (marco.get("stages") or [])}:
             findings.append(
                 _impeditivo(
                     "cut_rule_com_etapa_circular",
@@ -1390,6 +1405,8 @@ def validate_for_publication(
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))
     findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
+    findings.extend(_coerencia_da_forma_da_ordem(snapshot))
+    findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -1529,9 +1546,31 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
     from processo_seletivo.editais.domain.perfis import (
         ProfileValidationError,
         _validar_metodo_de_sorteio,
+        validate_common_draw_method,
     )
 
     findings = []
+    # **O método comum do Edital passa pela mesma conferência** (030, FR-429). A elaboração o
+    # valida em `replace_draft`; a Retificação não passa por lá — ela opera sobre o snapshot, e o
+    # que a governa é esta função. Sem esta passagem, remover `/drawMethod/substitutionRule` da
+    # raiz, trocar a fonte por uma que este sistema não consulta ou invalidar o instante comum
+    # publicava sem recusa.
+    #
+    # **E o dano é maior do que o do marco**, porque é um só ato: o método comum governa todo marco
+    # que não declara o próprio, e uma Retificação que o esvazie devolve à mesa a escolha da
+    # ocorrência de todos eles de uma vez.
+    if snapshot.get("drawMethod") is not None:
+        try:
+            validate_common_draw_method(snapshot.get("drawMethod"))
+        except ProfileValidationError as recusa:
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="common_draw_method_invalid",
+                    message=f"Método do sorteio comum a este Edital: {recusa}",
+                    path="/drawMethod",
+                )
+            )
     for perfil in _perfis_bem_formados(snapshot):
         for marco in _marcos_bem_formados(perfil):
             try:
@@ -1550,6 +1589,94 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
                         ),
                     )
                 )
+    return findings
+
+
+def _forma_da_ordem_declarada(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Marco que se publica pela primeira vez declara como a ordem dele é produzida (030, FR-413).
+
+    **A tela obriga, e obrigar na tela não basta.** O `select` da composição é `required`, mas
+    regra normativa não pode depender do navegador: a interface administrativa não é o único
+    caminho até o conteúdo publicado — a API de rascunho é pública ao elaborador, e um envio que
+    omita a chave gravava `""` sem que nada acusasse. O princípio IV pede a verificação no
+    servidor, e é esta.
+
+    **Na publicação, e não na gravação do rascunho.** O rascunho pode estar pela metade — é o que
+    `cutRule`, `drawMethod` e `appealWindow` já praticam —, e recusar ali tornaria ilegal todo
+    payload que os clientes de hoje produzem, sem que requisito nenhum peça essa quebra. O que não
+    pode estar pela metade é o Edital publicado.
+
+    **E não alcança a Retificação**, pela mesma razão que os achados do Cronograma não alcançam:
+    `""` é o estado legítimo de todo marco do acervo, e cobrar dele uma declaração que a capacidade
+    não oferecia quando ele foi composto seria pedir que a autoridade decidisse hoje o que o Edital
+    de então não disse. A ausência continua sendo lida como sempre foi — sorteia quem declara
+    método (FR-431, SC-142).
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            if marco.get("orderProduction"):
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="order_production_nao_declarada",
+                    message=(
+                        f"O marco {marco.get('code', '')} não declara como a ordem dele é "
+                        "produzida. Responda a primeira pergunta do cartão — pela pontuação "
+                        "combinada das Etapas, ou por sorteio: sem ela o sistema volta a inferir a "
+                        "forma da presença do método do sorteio, e a inferência não distingue quem "
+                        "não sorteia de quem sorteia e ainda não declarou o método."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={marco.get('id', '')}/orderProduction"
+                    ),
+                )
+            )
+    return findings
+
+
+def _coerencia_da_forma_da_ordem(snapshot: dict) -> list[ValidationFinding]:
+    """O marco não publica duas declarações incompatíveis sobre como a ordem nasce (030, FR-413).
+
+    **A regra está escrita em `data-model.md`**: `POR_PONTUACAO` com método de sorteio preenchido é
+    válido no rascunho — é o campo oculto que a FR-418 exige, e é ele que faz trocar a resposta não
+    apagar o que já foi declarado — e **recusado na publicação**.
+
+    **Por que a projeção de `edital_snapshot` não basta.** Ela descarta o método impertinente ao
+    compor o snapshot, e com isso o ato de publicação nunca chega aqui com a contradição. A
+    Retificação não passa por ela: ela opera sobre o conteúdo vigente, campo a campo, e uma
+    Alteração que troque **só** `orderProduction` de `POR_SORTEIO` para `POR_PONTUACAO` deixa o
+    `drawMethod` do marco onde estava. O resultado seria norma publicada dizendo, no mesmo objeto,
+    que a ordem nasce da pontuação e que o sorteio tem fonte, ocorrência e regra de substituição.
+
+    A recusa nomeia a saída, porque ela existe e é uma só: alterar os dois no mesmo ato. Um ato que
+    muda a forma da ordem **é** um ato sobre o método, e separá-los publica a metade.
+    """
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            if marco.get("orderProduction") != "POR_PONTUACAO" or not marco.get("drawMethod"):
+                continue
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="order_production_contradiz_o_metodo",
+                    message=(
+                        f"O marco {marco.get('code', '')} declara que a ordem nasce da pontuação "
+                        "e publica método de sorteio. As duas coisas não valem ao mesmo tempo: "
+                        "retire o método no mesmo ato que muda a forma da ordem, ou mantenha a "
+                        "forma por sorteio."
+                    ),
+                    path=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={marco.get('id', '')}/orderProduction"
+                    ),
+                )
+            )
     return findings
 
 

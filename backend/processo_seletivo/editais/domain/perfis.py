@@ -1,6 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from uuid import NAMESPACE_URL, uuid5
 
+from processo_seletivo.editais.domain import marcos
+
 
 class RecusaDeCampo(ValueError):
     """Uma recusa do domínio que sabe **a que campo pertence**.
@@ -311,10 +313,21 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
     if len(codes) != len(set(codes)):
         raise ProfileValidationError("Marcos classificatórios não podem repetir código no Perfil.")
     for marco in milestones:
-        if not marco.get("stages"):
+        # **A exigência de Etapa é condicionada à forma da ordem** (030, FR-432). Ela valia para
+        # todo marco porque não havia como distinguir quem sorteia de quem pontua — a forma era
+        # inferida da presença do método, e método é coisa que se declara depois. A ajuda da
+        # própria tela mandava deixar a habilitação em nenhuma quando o sorteio precede a análise
+        # documental, e a validação recusava o Edital que a seguisse.
+        #
+        # A regra mora em `editais/domain/marcos`, e é a mesma que a publicação aplica: duas
+        # cópias divergiriam na primeira que mudasse, e esta é a que recusa o rascunho.
+        if not marco.get("stages") and marcos.exige_etapa(
+            marco.get("orderProduction") or "",
+            metodo_declarado=bool(marco.get("drawMethod")),
+        ):
             raise ProfileValidationError(
-                "Um marco classificatório deve enumerar ao menos uma Etapa: sem Etapa não há "
-                "pontuação a combinar, e a ordem não sai."
+                "Um marco classificatório que ordena pela pontuação deve enumerar ao menos uma "
+                "Etapa: sem Etapa não há pontuação a combinar, e a ordem não sai."
             )
         criterios = marco.get("tiebreakers", [])
         ordens = [criterio.get("order") for criterio in criterios]
@@ -340,6 +353,21 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
         _validar_janela_recursal(marco.get("appealWindow"))
         _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
         _validar_regra_de_corte(marco.get("cutRule"))
+
+
+def validate_common_draw_method(metodo) -> None:
+    """O método comum do Edital vale inteiro, ou não é declarado (030, FR-429).
+
+    **A mesma regra do método do marco**, e a mesma função: um método comum pela metade prometeria
+    conduta mecânica numa hipótese que ninguém escreveu, e no dia da indisponibilidade a escolha
+    voltaria para a mesa — com o agravante de valer para todos os marcos de uma vez.
+
+    **Sem Etapa de habilitação.** Ela é do marco: qual Etapa habilita a participar do sorteio
+    depende de quais Etapas aquele marco enumera, e um valor comum a todos endereçaria Etapa que
+    parte deles não mede. É por isso que o contrato do conteúdo normativo dá nove campos ao método
+    do Edital, e dez ao do marco — e `etapas=()` aqui é o que recusa o décimo.
+    """
+    _validar_metodo_de_sorteio(metodo or None, etapas=())
 
 
 CAMPOS_DO_METODO = (

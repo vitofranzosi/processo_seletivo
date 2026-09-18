@@ -63,6 +63,7 @@ def conteudo_com_marco(
             "code": "FINAL",
             "name": "Classificação final",
             "stages": [ETAPA["A"]] if etapas_do_marco is None else etapas_do_marco,
+            "orderProduction": "POR_PONTUACAO",
             "operation": "SOMA_PONDERADA",
             "normalization": "NENHUMA",
             "rounding": ARREDONDAMENTO if rounding is None else rounding,

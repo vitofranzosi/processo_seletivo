@@ -327,3 +327,45 @@ test("um alvo declarado que não existe no documento não quebra a confirmação
   assert.equal(evento.impedido, true);
   assert.match(perguntas[0], /1 campo preenchido/);
 });
+
+/* A recomposição do cartão do marco tem a mesma assinatura da remoção (030).
+
+   `hx-target="closest fieldset"` com `hx-swap="outerHTML"` deixou de identificar a remoção sozinho:
+   o cartão do marco se recompõe quando a forma da ordem ou as Etapas mudam, e essa troca substitui
+   a linha exatamente como a remoção substitui. A diferença é o que sobra — a remoção deixa um
+   vazio, e a recomposição devolve o mesmo cartão com os campos que a resposta tornou pertinentes.
+
+   Sem a guarda, escolher "por sorteio" abria "Remover Marco classificatório? Isto descarta 6
+   campos preenchidos", e um "não" cancelava a recomposição: a tela não reagia à escolha, e nada
+   explicava por quê. */
+test("um campo que recompõe a própria linha não pede confirmação de remoção", () => {
+  const alvo = linhaRemovivel({
+    valores: { "marco-0-0-code": "FINAL", "marco-0-0-name": "Classificação final" },
+    rotulo: "Marco classificatório",
+  });
+  const seletor = new Elemento("select", {
+    name: "marco-0-0-orderProduction",
+    "hx-target": "closest fieldset",
+    "hx-swap": "outerHTML",
+  });
+  seletor.parentNode = alvo.linha;
+  alvo.linha.filhos.push(seletor);
+
+  const { evento, perguntas } = remover({ linha: alvo.linha, botao: seletor });
+
+  assert.equal(evento.impedido, false, "recompor não é descartar");
+  assert.deepEqual(perguntas, []);
+});
+
+test("o botão de remover continua perguntando no mesmo cartão", () => {
+  const alvo = linhaRemovivel({
+    valores: { "marco-0-0-code": "FINAL" },
+    rotulo: "Marco classificatório",
+    atributos: { "hx-target": "closest fieldset", "hx-swap": "outerHTML" },
+  });
+
+  const { evento, perguntas } = remover(alvo);
+
+  assert.equal(evento.impedido, true);
+  assert.match(perguntas[0], /Marco classificatório/);
+});
