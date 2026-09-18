@@ -38,9 +38,10 @@ uma dependência madura por um bug que só aparece no destino, e o `FR-437` depe
 convocados, não milhões — mas o modo de fluxo custa a mesma linha de código e tira a questão da
 mesa.
 
-**Armazenamento**: o arquivo **não é persistido**. Ele é gerado, entregue na resposta e descartado;
-o que fica é o registro da geração. Guardar o binário criaria um acervo de dado pessoal concentrado
-com política de retenção própria — decisão que esta feature não precisa tomar para funcionar.
+**Armazenamento**: o arquivo **não é persistido** — e isso é requisito, não escolha de
+implementação: `FR-456` e §18 da spec. Ele é gerado, entregue na resposta e descartado; o que fica é
+o registro da geração. Guardar o binário criaria um acervo de dado pessoal concentrado com política
+de retenção própria, e não guardá-lo **dispensa** essa política em vez de adiá-la.
 
 **Ordem determinística** (`FR-446`): as linhas saem ordenadas por `CLASSIF_CURSO_FINAL` e, no
 empate, por protocolo. Sem ordem explícita, duas gerações do mesmo conjunto saem em ordens
@@ -54,10 +55,10 @@ diferentes e o `SC-148` não fecha.
 |---|---|---|
 | **I — Linguagem ubíqua** | "Requerimento", "convocação", "modalidade" e "classificação" já são do domínio. O conceito novo é **lacuna** — a coluna que sai vazia com razão declarada —, e ele é do domínio desta feature, não jargão técnico | ✅ |
 | **II — Integridade normativa e imutabilidade** | A exportação **lê**, e a `FR-449` escreve isso. O `code` da Modalidade publicada não é reescrito na saída (`D-003`): corrigir grafia de ato publicado é retificação, não formatação. O registro da geração é append-only (`FR-447`) | ✅ |
-| **III — Segurança, proteção de dados e auditoria** | É o princípio que governa a feature. Permissão **nova** e própria (`matricula:exportar`), porque o arquivo concentra CPF, RG, filiação e endereço de toda a população numa peça só — ler um dossiê por vez é outro ato e tem outra permissão. O arquivo não é persistido. A `D-006` mantém a amostra real fora do repositório | ✅ |
+| **III — Segurança, proteção de dados e auditoria** | É o princípio que governa a feature. Permissão **nova** e própria (`FR-455`), porque o arquivo concentra CPF, RG, filiação e endereço de toda a população numa peça só. O arquivo **não é persistido** (`FR-456`), o que dispensa política de retenção em vez de adiá-la. **A primeira versão desta spec não tinha avaliação de LGPD**, que a Constituição exige de toda especificação; ela é agora a §18 | ✅ *(corrigido)* |
 | **IV — Regras explícitas e consistência** | A recusa mora na aplicação, e a tela só a antecipa. Quem chamar a geração sem permissão, ou com população incompleta, encontra a mesma recusa por qualquer caminho | ✅ |
 | **V — Qualidade, rastreabilidade e simplicidade** | **Aqui está a observação.** A feature acrescenta uma dependência e 34 serializadores — é mais código do que o mínimo concebível. A justificativa de ambos está no *Technical Context*, e a alternativa mais curta foi nomeada e recusada por escrito. Nenhuma entidade nova além do registro de auditoria | ⚠️ ✅ |
-| **VI — Completude de jornada** | Quatro histórias, e a que **relata a lacuna** é P1 junto com a que gera o arquivo: entregar o arquivo sem o relatório deixaria a jornada pela metade, porque quem recebe completaria as células vazias à mão | ✅ |
+| **VI — Completude de jornada** | Quatro histórias, e a que **relata a lacuna** é P1 junto com a que gera o arquivo. **A primeira versão deste plano reprovou aqui**: as tarefas não criavam rota, view nem template, e a capacidade só existiria para quem abrisse um shell — exatamente o que o princípio recusa. A Fase 7 das tarefas existe por causa disso | ✅ *(corrigido)* |
 
 ### Invariantes do domínio tocados
 
@@ -105,12 +106,12 @@ sozinha — se algum dia outro app importar `matriculas`, é sinal de que a feat
 | Fase | O quê | Por que nessa ordem |
 |---|---|---|
 | 1 | `Q-1` respondida | o resto depende da forma que ela confirma |
-| 2 | `029`: os três campos eleitorais (`D-007`) e a lista fechada de nacionalidade (`D-008`) | a coluna precisa do dado antes de existir o serializador |
+| 2 | `029`: os três campos eleitorais (`D-007`) e a lista fechada de nacionalidade (`D-008`); **a permissão e a tabela de registro** | a coluna precisa do dado antes do serializador; permissão e privilégio de tabela são fundação, e não superfície |
 | 3 | As 34 colunas em `domain/colunas.py`, com teste unitário cada | é onde o erro silencioso mora; testá-las isoladas é barato |
 | 4 | A população e as recusas | sem isso o arquivo sai com linha faltando |
 | 5 | A planilha e o formato `@` | precisa das colunas prontas para ter o que escrever |
 | 6 | O relatório de lacunas | depende das colunas saberem dizer por que estão vazias |
-| 7 | Permissão, rota, tela, registro | a superfície, por último |
+| 7 | **Rota, view, template e o percurso ponta a ponta** | sem eles a capacidade não é alcançável, e o Princípio VI não a considera entregue |
 | 8 | Transversais e a verificação com o importador real (`SC-143`) | fecha contra o destino, não contra a leitura da planilha |
 
 ## Riscos do plano

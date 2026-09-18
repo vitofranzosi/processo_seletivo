@@ -362,13 +362,36 @@ ninguém sabe qual foi importado.
 
 - **FR-446**: Duas gerações da mesma população, sem alteração entre elas, MUST produzir conteúdo
   idêntico, com linhas em ordem determinística.
-- **FR-447**: Toda geração MUST registrar Edital, população, quantidade de linhas, autor, instante e
-  a versão dos mapeamentos usados — e o registro MUST ser append-only, como os demais atos.
-- **FR-448**: `CLASSIF_CURSO_FINAL` MUST vir de fonte declarada, e MUST NOT vir do índice da linha
-  no arquivo. Qual fonte é `Q-2`.
+- **FR-447**: Toda geração MUST registrar Edital, população, quantidade de linhas, autor, instante,
+  a versão do resultado de que saiu e a **versão dos mapeamentos** — e o registro MUST ser
+  append-only, como os demais atos.
+- **FR-454**: A **versão dos mapeamentos** MUST ser uma constante declarada em
+  `matriculas/domain/colunas.py`, e MUST ser alterada por quem mudar qualquer serializador — do mesmo
+  modo que `SCHEMA_VERSION` é alterada à mão, e pela mesma razão: o número precisa dizer *"esta
+  geração usou estas regras"*, e um valor derivado do arquivo mudaria também quando só um comentário
+  mudasse.
+- **FR-448**: `CLASSIF_CURSO_FINAL` MUST vir da fonte que a `Q-2` estabelecer, e a exportação
+  MUST NOT escolher entre as duas leituras — classificação no curso ou numeração das linhas —
+  enquanto a resposta não existir. Até lá a coluna MUST sair vazia e nomeada no relatório, como as
+  demais lacunas.
 
-### 10.6 O que esta feature não faz
+  **A redação anterior pré-julgava a pergunta.** Ela proibia a numeração de linha, que é **uma das
+  duas respostas possíveis** — de modo que, se o Registro Acadêmico respondesse isso, o requisito
+  contradiria a resposta. Uma questão aberta não se fecha por requisito escrito antes dela.
 
+### 10.6 Autorização
+
+- **FR-455**: A geração MUST exigir a permissão `matricula:exportar`, verificada no backend, e ela
+  MUST NOT ser concedida a papel nenhum por padrão. A permissão existente de consulta de inscrição
+  MUST NOT autorizar a geração: ler um dossiê por vez e baixar o conjunto inteiro são atos distintos
+  (§11, Princípio III).
+
+### 10.7 O que esta feature não faz
+
+- **FR-456**: O arquivo gerado MUST NOT ser persistido. Ele é entregue na resposta e descartado; o
+  que fica é o registro da `FR-447`. Guardá-lo criaria um acervo do artefato mais concentrado de dado
+  pessoal deste sistema, com política de retenção própria — decisão que a feature não precisa tomar
+  para funcionar (§18).
 - **FR-449**: A exportação MUST NOT alterar requerimento, inscrição, resultado ou Edital. É leitura.
 - **FR-450**: A exportação MUST NOT chamar o sistema acadêmico por interface programática.
 
@@ -404,6 +427,10 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
   esquerda preservados.
 - **SC-153**: Toda geração — inclusive uma sem nenhuma outra lacuna — traz no relatório o aviso
   sobre a coluna 31, com as duas medidas nomeadas.
+- **SC-155**: Depois de uma geração, **nenhum arquivo do conjunto exportado existe no servidor** —
+  verificado no armazenamento, e não pela ausência de código que o grave.
+- **SC-156**: Uma geração completa **não escreve em tabela nenhuma** além do registro da `FR-447` —
+  verificado contando as escritas durante a geração, e não lendo o código.
 - **SC-146**: Um convocado que declarou cor indígena gera arquivo com `COR` vazia e relatório que o
   nomeia — verificado como caso próprio, e não como efeito colateral.
 - **SC-147**: Uma Modalidade com grafia desconhecida recusa a geração inteira, e a mensagem traz o
@@ -470,3 +497,66 @@ Mas `Q-3` na spec da `029` é *"e-mail da matrícula"*, **resolvida em 16/09/202
 aberta daquela spec cobre os códigos institucionais. A citação aponta para pergunta resolvida sobre
 outro assunto. Esta feature substitui aquela justificativa pela `D-001`, e o contrato de saída deve
 passar a citá-la.
+
+## 18. Privacidade e LGPD
+
+**Esta feature produz o artefato mais concentrado de dado pessoal do sistema**, e é por isso que a
+avaliação não cabe em observação de rodapé: uma linha reúne CPF, RG, filiação, endereço e data de
+nascimento de uma pessoa identificada, e o arquivo reúne uma linha por convocado.
+
+### Finalidade
+
+A finalidade é **a mesma que autorizou a coleta**: a `029` perguntou cada campo porque a matrícula o
+exige, e o contrato de saída registrou, coluna a coluna, onde cada um é consumido. **A exportação não
+amplia a finalidade; ela a executa.** É o que distingue esta feature de um relatório: não há uso novo
+do dado — há o uso previsto, feito sem redigitação.
+
+**O teste da `FR-382` continua valendo do outro lado.** Os três campos eleitorais entram porque
+passaram a ter destino demonstrado (`D-007`); o tamanho do domicílio não entra porque não é
+necessário ao comportamento decidido (`D-002`, `Q-6`). Finalidade demonstrada é o critério nos dois
+sentidos — para admitir e para recusar.
+
+### Minimização
+
+| Recorte | Efeito |
+|---|---|
+| População explícita (`FR-433`) | não existe *"exportar tudo"*; o arquivo tem o conjunto que alguém escolheu e nomeou |
+| Só *enviados* (`FR-434`) | rascunho não entra: ninguém o declarou |
+| 34 colunas, e nenhuma a mais (`FR-436`) | o que o destino não pede não sai, mesmo que o sistema tenha — `codigo_ibge`, `uf_natal` e a procedência do endereço ficam |
+| Sem listagem | não há tela que enumere dado pessoal de muita gente; há a geração de um arquivo, com permissão própria |
+
+### Retenção
+
+**O arquivo não é guardado** (`FR-456`). Ele é montado, entregue e descartado; o que permanece é o
+registro da geração — quem, quando, quantas linhas —, que **não contém dado de candidato**.
+
+A consequência é deliberada: não há acervo de arquivos exportados, e portanto não há prazo de
+retenção a definir, nem expurgo a agendar, nem backup que precise de política própria. Precisar do
+arquivo de novo é gerá-lo de novo, e a `FR-446` garante que sai idêntico.
+
+**O que este sistema não controla** é o arquivo depois de entregue. Ele vira anexo de e-mail, pasta
+compartilhada, pendrive — e nada aqui alcança isso. É o `R-4`, e a mitigação honesta é reduzir o
+número de vezes que ele precisa existir, não fingir que a borda é vigiada.
+
+### Acesso
+
+Permissão própria, negada por padrão (`FR-455`). A permissão de consulta de inscrição **não** serve:
+ela autoriza ver uma pessoa por vez, que é ato de natureza diferente do de baixar todas.
+
+### Auditoria
+
+Toda geração fica registrada com ator, instante, entidade e quantidade (`FR-447`), em tabela
+append-only. **O registro não guarda o conteúdo** — auditar quem exportou não pode exigir uma segunda
+cópia do que foi exportado, que é como o log vira o vazamento.
+
+### Direitos do titular
+
+A `029` já dá ao candidato acesso ao que ele declarou, com o histórico das correções e o anterior
+legível. Esta feature **não cria coleta nova nem tratamento novo**, e por isso não acrescenta
+superfície de direito a exercer — o que ela acrescenta é o registro de quando o dado foi usado para
+a finalidade prevista.
+
+### O que esta avaliação deixa em aberto
+
+**Nada bloqueante.** A única decisão de privacidade que a feature poderia ter tomado e não tomou é a
+retenção do arquivo — e ela não foi adiada, foi **evitada**, não guardando o arquivo.

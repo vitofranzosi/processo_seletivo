@@ -67,11 +67,16 @@ modo padrão da suíte.
   conversão do texto livre existente — **`Brasil` reconhecido, o resto preservado como declarado
   até alguém conferir**, porque converter à força apagaria declaração de quem já enviou
 - [ ] **T009** `[P]` Criar `matriculas/models.py::GeracaoDeArquivo` — Edital, população, quantidade,
-  autor, instante, versão dos mapeamentos — e `migrations/0001_geracao.py` (`FR-447`)
+  autor, instante, **versão do resultado** e **versão dos mapeamentos** — e
+  `migrations/0001_geracao.py` (`FR-447`)
+- [ ] **T009b** `[P]` Declarar `VERSAO_DOS_MAPEAMENTOS` em `matriculas/domain/colunas.py` como
+  constante alterada à mão, no molde de `SCHEMA_VERSION`, com o comentário dizendo **por que não é
+  derivada do arquivo**: um resumo criptográfico mudaria também quando só um comentário mudasse
+  (`FR-454`)
 - [ ] **T010** Acrescentar a tabela a `seguranca/papeis.py::TABELAS_APPEND_ONLY` **na mesma leva**, e
   confirmar que `make provisionar` diz `32 de 32`
 - [ ] **T011** `[P]` Criar a permissão `matricula:exportar` no catálogo de permissões, sem concedê-la
-  a papel nenhum por padrão (Princípio *negar por padrão*)
+  a papel nenhum por padrão (`FR-455`, Princípio *negar por padrão*)
 
 ## Phase 3: User Story 1 — O arquivo de um Edital, sem redigitar nada (P1)
 
@@ -87,9 +92,16 @@ modo padrão da suíte.
 - [ ] **T016** `[US1]` `RENDA_PER_CAPITA_PNP` recebe `renda_familiar_faixa` sem conversão (`D-002`),
   e o serializador **cita a decisão no docstring** — é a coluna que alguém vai tentar "consertar"
 - [ ] **T017** `[P]` `[US1]` `TITULO_ELE`, `ZONA_ELE`, `SECAO_ELE` na forma do destino, com zeros à
-  esquerda (`FR-451`)
+  esquerda (`FR-451`, `SC-152`)
 - [ ] **T017b** `[P]` `[US1]` `COD_NACIONALIDADE`: `BR` para Brasil, vazia e nomeada para os demais
   (`FR-453`, `SC-154`). **Sem tabela de países** enquanto `Q-7` não responder
+- [ ] **T017c** `[US1]` As **três** colunas da `D-001` — `COD_CURSO`, `COD_TURNO`, `COD_POLO` — saem
+  vazias, e o teste prova que nenhuma delas recebe valor deduzido (`FR-438`, `SC-145`). É a decisão
+  central da spec, e ela precisa de tarefa própria em vez de ficar diluída em T013
+- [ ] **T017d** `[US1]` `CLASSIF_CURSO_FINAL` sai **vazia e nomeada no relatório** enquanto `Q-2`
+  não for respondida, e o serializador **não escolhe** entre classificação e numeração de linha
+  (`FR-448`). Quando a `Q-2` responder, esta tarefa vira a implementação da fonte que ela indicar
+- [ ] **T017e** `[P]` `[US1]` `CEP` com hífen, `CPF` e `CELULAR` sem pontuação (`FR-444`)
 - [ ] **T018** `[US1]` `matriculas/infrastructure/planilha.py`: `.xlsx` de uma aba
   `Import_ModeloCefor`, 34 cabeçalhos em `A1:AH1` na grafia exata — `ENDEREÇO` e `NÚMERO` acentuados
   —, dados a partir da linha 2, **tudo com formato `@`** (`FR-436`, `FR-437`)
@@ -97,8 +109,9 @@ modo padrão da suíte.
   do arquivo gerado (`SC-144`)
 - [ ] **T020** `[US1]` `matriculas/application/populacao.py`: a população explícita, só *enviados*
   (`FR-433`, `FR-434`)
-- [ ] **T021** `[US1]` `matriculas/application/exportar.py`: permissão, montagem, ordem
-  determinística, registro da geração
+- [ ] **T021** `[US1]` `matriculas/application/exportar.py`: permissão (`FR-455`), montagem, ordem
+  determinística (`FR-446`), registro da geração (`FR-447`) — e **o arquivo não é persistido**
+  (`FR-456`)
 
 ## Phase 4: User Story 2 — O que saiu vazio, dito antes de alguém perguntar (P1)
 
@@ -113,7 +126,8 @@ modo padrão da suíte.
 ## Phase 5: User Story 3 — A geração que se recusa a mentir (P1)
 
 - [ ] **T026** `[US3]` Recusa quando alguém da população não tem requerimento enviado, nomeando quem
-  falta (`FR-435`, `SC-149`)
+  falta (`FR-435`, `SC-149`) — **e quando a população fica vazia** porque o Edital não exige
+  requerimento, a recusa diz isso, em vez de um arquivo de zero linhas (§9, *Edge Cases*)
 - [ ] **T027** `[US3]` Recusa quando o `code` da Modalidade é desconhecido, nomeando código e Edital
   (`FR-441`, `SC-147`)
 - [ ] **T028** `[US3]` A recusa diz o que falta e de quem (`UX-061`), e **a aplicação recusa mesmo
@@ -128,7 +142,28 @@ modo padrão da suíte.
 - [ ] **T031** `[US4]` Requerimento sucedido entre gerações: o arquivo traz o **vigente**, e o
   registro guarda qual era
 
-## Phase 7: Polish & Cross-Cutting Concerns
+## Phase 7: A superfície — sem ela a capacidade não é entregue
+
+**Esta fase não é acabamento.** A Constituição, Princípio VI: *"Uma capacidade que o domínio sustenta
+mas que nenhuma interface alcança NÃO DEVE ser considerada entregue"*, e *"demonstrar por chamada
+manual aquilo que o canal do ator não oferece NÃO satisfaz esta exigência"*. Sem as tarefas abaixo,
+a exportação só existe para quem abre um shell.
+
+- [ ] **T031b** `[US1]` Rota de geração em `processo_seletivo/interface/urls.py`, sob o Edital, com a
+  verificação de escopo do ator — e o 404 indistinguível para quem não tem o Edital, como o resto da
+  gestão já faz
+- [ ] **T031c** `[US1]` View de geração em `processo_seletivo/interface/views.py`: recebe a escolha da
+  população, chama `exportar`, devolve o `.xlsx` em resposta de download — **sem gravar o arquivo**
+  (`FR-456`)
+- [ ] **T031d** `[US1]` Template com a escolha da população e o botão, no molde das demais telas de
+  gestão do Edital, e a entrada no menu do Edital — **uma capacidade sem porta não é capacidade**
+- [ ] **T031e** `[US2]` O resumo das lacunas na tela, **antes** do download (`UX-060`), e a recusa
+  dizendo o que falta e de quem (`UX-061`)
+- [ ] **T031f** Percurso ponta a ponta pelo canal de quem conduz — entrar na gestão, abrir o Edital,
+  escolher a população, ler as lacunas, baixar o arquivo — **sem shell e sem chamada manual**
+  (Princípio VI)
+
+## Phase 8: Polish & Cross-Cutting Concerns
 
 - [ ] **T032** `[P]` `contracts/arquivo-de-importacao.md`: as 34 colunas com o serializador nomeado,
   e a `D-001` substituindo a citação errada de `Q-3` no
@@ -138,6 +173,13 @@ modo padrão da suíte.
   feature continua sendo ponta de leitura (plan.md, *Project Structure*)
 - [ ] **T035** `[P]` Confirmar que a varredura `tests/test_sem_dado_pessoal_da_amostra.py` alcança
   os arquivos novos por `glob` (`SC-151`, `D-006`)
+- [ ] **T035b** `[P]` **A exportação não escreve nada** além do registro da `FR-447`: teste que conta
+  as escritas durante uma geração completa (`FR-449`, `SC-156`). Ler o código não prova — é preciso
+  contar
+- [ ] **T035c** `[P]` **Nenhum arquivo fica no servidor** depois da geração, verificado no
+  armazenamento (`FR-456`, `SC-155`)
+- [ ] **T035d** `[P]` `matriculas/` não faz chamada de rede nem importa cliente de sistema externo
+  (`FR-450`) — verificado por varredura, junto da T034
 - [ ] **T036** Semear em `seed_demo.py` um Edital com convocados de requerimento enviado, incluindo
   **um que declarou cor indígena** — o caso do `R-1` precisa existir para ser visto
 - [ ] **T037** `make lint check test-pg` verde, e `make provisionar` dizendo `32 de 32`
@@ -150,14 +192,20 @@ modo padrão da suíte.
 - T006–T008b (campos eleitorais e lista de nacionalidade) antes de T017 e T017b
 - T013 antes de T014, T018 e T022 — as colunas são o centro
 - T009–T010 juntas: tabela e privilégio na mesma leva, ou o provisionamento reporta errado
+- **T031b–T031f depois de T021**, e antes da T037: são elas que tornam a capacidade alcançável
+- T017d é reaberta quando a `Q-2` for respondida — a tarefa não morre com o vazio
 - T038 por último, e fora deste repositório
 
 ## Parallel Execution
 
-`[P]` em T009/T011, T012, T014, T017, T017b, T032–T035. O resto é sequencial porque passa por
+`[P]` em T009/T009b/T011, T012, T014, T017, T017b, T017e, T032–T035, T035b–T035d. O resto é sequencial porque passa por
 `colunas.py`.
 
 ## Implementation Strategy
+
+**MVP é US1 + US2 mais a Fase 7, e as três juntas.** A superfície não é acabamento: sem rota e
+tela, o que existe é uma função que ninguém alcança — e o Princípio VI diz, com todas as letras, que
+isso não conta como entregue.
 
 **MVP é US1 + US2, e as duas juntas.** Gerar o arquivo sem o relatório de lacunas entregaria
 exatamente o problema que a feature existe para resolver: alguém recebe uma planilha com células
