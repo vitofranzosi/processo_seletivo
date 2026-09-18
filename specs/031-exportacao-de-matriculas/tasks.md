@@ -30,7 +30,7 @@ modo padrão da suíte.
 
 ---
 
-## Phase 0: O bloqueio externo
+## Phase 0: A pergunta externa — feita cedo, **sem parar a fila**
 
 - [ ] **T001** Obter do Registro Acadêmico a resposta de `Q-1`: o importador aceita célula vazia em
   `COD_CURSO`, `COD_TURNO`, `COD_POLO` e `COD_NACIONALIDADE`? Enviar **duas linhas sintéticas** —
@@ -41,8 +41,12 @@ modo padrão da suíte.
   quem declarou cor **indígena**. As quatro perguntas custam uma conversa só, e `Q-7` custa uma
   frase — se a resposta for sim, a `D-008` se simplifica e a coluna 16 sai exata também para
   estrangeiro
-- [ ] **T003** Registrar as respostas em [spec.md](./spec.md) §15 e mover o **Status** de *bloqueada*
-  para *pronta*. **Nenhuma tarefa abaixo começa antes desta**
+- [ ] **T003** Registrar as respostas em [spec.md](./spec.md) §15, fechar as questões e ajustar o
+  que elas mudarem — `T017c` e `T017d` são as tarefas que dependem delas.
+
+  **Esta tarefa não segura as demais.** A primeira redação dizia que nenhuma começava antes dela, e
+  §5 da spec mede por que era largo demais: se a `Q-1` responder *"não aceita"*, o retrabalho são
+  três dos 34 serializadores. Perguntar cedo continua certo; esperar pela resposta, não
 
 ## Phase 1: Setup
 
@@ -201,7 +205,9 @@ a exportação só existe para quem abre um shell.
 
 ## Dependencies
 
-- **T001–T003 bloqueiam tudo.** Não é formalidade: a forma do arquivo depende da resposta
+- **T001–T003 primeiro, e em paralelo com o resto.** Elas são uma conversa com gente de fora, e
+  atrasar a pergunta é o que custa caro. O que elas **gateiam** é estreito: a `T038` (a importação
+  real, `SC-143`), a `T017c` (as três células da `D-001`) e a `T017d` (`CLASSIF_CURSO_FINAL`)
 - T006–T008b (campos eleitorais e lista de nacionalidade) antes de T017 e T017b
 - T013 antes de T014, T018 e T022 — as colunas são o centro
 - T009–T010 juntas: tabela e privilégio na mesma leva, ou o provisionamento reporta errado
@@ -211,7 +217,7 @@ a exportação só existe para quem abre um shell.
 
 ## Parallel Execution
 
-`[P]` em T009/T009b/T011, T012, T014, T017, T017b, T017e, T032–T035, T035b–T035d. O resto é sequencial porque passa por
+`[P]` em **T001–T003** (são conversa, não código), T009/T009b/T011, T012, T014, T017, T017b, T017e, T032–T035, T035b–T035d. O resto é sequencial porque passa por
 `colunas.py`.
 
 ## Implementation Strategy
