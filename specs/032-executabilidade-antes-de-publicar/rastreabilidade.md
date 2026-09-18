@@ -16,6 +16,7 @@ Caminhos relativos a `backend/`.
 | Depois de US2 | 6933 | 11 | 0 |
 | Final (T040) | **6947** | **11** | **0** |
 | Depois de integrar a `main` com a `031` | **7158** | **12** | **0** |
+| Depois das duas correções da revisão | **7165** | **12** | **0** |
 
 `make lint check test-pg` limpo: `ruff check`, `ruff format --check`, `manage.py check`,
 `makemigrations --check` (**nenhuma migration**, que é o que a `data-model.md` promete) e a suíte.
@@ -43,11 +44,11 @@ lá ela agora é definida no primeiro uso — dois casos que eram pulados passar
 | **FR-463** a faixa seguinte não é oferecida sem corte | `ocupacao/application/selectors.py` (`faixaDisponivel`) e `ocupacao.html` | `tests/interface/test_ocupacao.py::test_sem_regra_de_corte_a_faixa_seguinte_nao_e_oferecida` · `::test_no_lugar_da_faixa_a_tela_diz_por_que_a_acao_nao_existe_ali` · `::test_com_regra_de_corte_a_faixa_continua_sendo_oferecida` |
 | **FR-464** o documento diz como a ordem nasce | `publicacoes/infrastructure/pdf.py::_marcos` (par `Ordem`, `FORMA_DA_ORDEM`) | `tests/unit/publicacoes/test_pdf_classificacao.py::test_o_marco_declara_como_a_ordem_dele_e_produzida` · `::test_o_marco_do_acervo_sem_forma_declarada_sai_exatamente_como_hoje` |
 | **FR-465** os sete dados do método no documento | `pdf.py::_metodo_do_marco` + `CAMPOS_DO_METODO` | `test_pdf_classificacao.py::test_o_documento_imprime_os_sete_dados_do_metodo` (7 casos) · `::test_os_rotulos_do_metodo_saem_do_vocabulario_do_dominio` |
-| **FR-466** próprio, comum, e a divergência nomeada | `pdf.py::_origem_do_metodo` | `test_pdf_classificacao.py::test_o_documento_diz_qual_metodo_governa_o_marco` (3 casos) · `::test_o_proprio_identico_ao_comum_nao_e_anunciado_como_divergente` |
+| **FR-466** próprio, comum, e a divergência nomeada | `pdf.py::_origem_do_metodo` + `::_publica_a_mesma_norma` | `test_pdf_classificacao.py::test_o_documento_diz_qual_metodo_governa_o_marco` (3 casos) · `::test_o_metodo_do_marco_igual_ao_comum_nao_e_anunciado_como_divergente` · `::test_a_divergencia_real_continua_sendo_nomeada` · `::test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha` |
 | **FR-467** sorteio sem método não publica | `validation.py::_metodo_do_sorteio_publicavel` | `test_executabilidade.py::test_marco_que_sorteia_sem_metodo_impede_a_publicacao` · `::test_o_metodo_comum_do_edital_satisfaz_o_marco_que_o_referencia` · `::test_metodo_pela_metade_continua_sendo_o_achado_antigo_e_nao_este` |
 | **FR-468** marco de sorteio não imprime combinação | `pdf.py::_marcos`, condicionado por `orderProduction` | `test_pdf_classificacao.py::test_o_marco_que_sorteia_nao_imprime_combinacao_de_pontuacoes` · `tests/integration/publicacoes/test_sorteio_no_documento.py::test_o_documento_do_sorteio_nao_afirma_combinacao_de_pontuacoes` |
 | **FR-469** o documento do acervo não muda | **nada** — é conferência | `tests/integration/publicacoes/test_elevacao_de_versao.py::test_a_032_nao_acrescenta_degrau_de_elevacao` · `::test_o_acervo_atravessa_a_032_sem_mudar_conteudo_nem_resumo` · cenário 4 do quickstart (abaixo) |
-| **FR-470** aviso da reserva sem via de apuração | `validation.py::_reserva_sem_via_de_apuracao` + `marcos.emite_ordem_no_recorte` | `test_executabilidade.py::test_reserva_em_marco_que_nao_sorteia_produz_aviso_e_nao_impedimento` · `::test_perfil_cujo_marco_sorteia_nao_recebe_achado` · `::test_a_modalidade_declarada_como_ampla_nao_e_lida_como_reserva` |
+| **FR-470** aviso da reserva sem via de apuração | `validation.py::_reserva_sem_via_de_apuracao` + `marcos.emite_ordem_no_recorte` | `test_executabilidade.py::test_reserva_em_marco_que_nao_sorteia_produz_aviso_e_nao_impedimento` · `::test_perfil_cujo_marco_sorteia_nao_recebe_achado` · `::test_a_modalidade_declarada_como_ampla_nao_e_lida_como_reserva` · `::test_o_aviso_alcanca_o_segundo_marco_quando_o_primeiro_sorteia` · `::test_todos_os_marcos_sorteando_continua_sem_achado` |
 | **FR-471** a mensagem nomeia a causa, não o sintoma | a mensagem de `reserved_row_without_ordering` | `test_executabilidade.py::test_o_aviso_da_reserva_nomeia_a_causa_e_nao_o_sintoma` · `tests/interface/test_ocupacao.py::test_no_lugar_da_apuracao_a_tela_nomeia_a_causa_e_nao_o_sintoma` |
 | **FR-472** a apuração não é oferecida no recorte não emitido | `selectors.py` (`apuravel`) e `ocupacao.html` | `test_ocupacao.py::test_recorte_reservado_em_marco_computado_nao_oferece_apuracao` · `::test_o_recorte_da_ampla_continua_apuravel` |
 
@@ -169,3 +170,49 @@ Uma demonstração que reproduz o defeito ensina o defeito.
 três vezes copiava a identidade do marco junto. A identidade passou a sair de
 `tests/fixtures/edital.py::identidade_do_marco`, derivada do Perfil por `uuid5` — o mesmo recurso
 que a `027` usa para a linha geral do quadro.
+
+---
+
+## O que a revisão encontrou, e o que ele muda
+
+Dois defeitos, os dois reproduzidos antes de corrigir, e os dois na mesma família: **uma afirmação
+que o artefato não sustenta**.
+
+### O documento anunciava uma divergência que não existia
+
+`_origem_do_metodo` comparava os dois métodos por igualdade bruta de dicionário. Mas o método do
+**marco** carrega `qualifyingStageId` — a Etapa que habilita a participar do sorteio, que é do
+marco porque depende de quais Etapas ele enumera — e o método **comum** nunca a carrega:
+`metodo_comum_do_formulario` a remove de propósito. O formulário a grava como `None` quando ninguém
+a declara, e a comparação achava diferença entre dois métodos campo a campo idênticos. O documento
+publicado — normativo e imutável — dizia *"diverge do comum deste Edital"* sobre um marco que
+publica exatamente o método comum.
+
+**A ironia é o ponto**: essa comparação foi acrescentada nesta feature justamente para o documento
+não afirmar uma divergência inexistente, e era ela que a afirmava, no caminho mais comum.
+
+A correção **não** foi normalizar nulos. A comparação passou a ser **pelo valor impresso dos sete
+campos** (`_publica_a_mesma_norma`), o que amarra a afirmação ao artefato: o documento não diz que
+diverge aquilo que ele mesmo mostra igual. Isso também resolve o caso que a normalização de nulos
+deixaria em aberto — um marco que **declara** uma Etapa de habilitação está especificando o que o
+comum não tem como dizer, e não o contrariando.
+
+### A validação parava no primeiro marco
+
+`_reserva_sem_via_de_apuracao` lia `marcos_do_perfil[0]` e nada mais. Num Perfil cujo primeiro marco
+sorteia e cujo segundo computa, **nenhum aviso era emitido** — e é no segundo que a tela de Ocupação
+mostra os recortes reservados sem ordem a apurar.
+
+É a mesma divergência que `emite_ordem_no_recorte` existe para fechar, entrando por outra porta:
+não por haver dois predicados, mas por um deles ser perguntado sobre **menos marcos** que o outro.
+A tela de Ocupação é por marco; a validação precisava ser também. Agora percorre todos e emite **um
+achado por Perfil** nomeando os marcos que produzem lista única — um por marco encheria a Revisão de
+linhas que só diferem no código.
+
+### E o que ele diz sobre os testes que eu tinha escrito
+
+Os casos de divergência montavam os dois dicionários **à mão, com a mesma forma**, e por isso a
+igualdade bruta os satisfazia. Os testes novos pedem os métodos a `interface/forms.py`, a partir do
+mesmo formulário, e um deles prende a premissa por escrito
+(`test_a_tela_produz_um_proprio_que_difere_do_comum_por_uma_chave_nula`): o dia em que o formulário
+mudar dá **falha**, e não silêncio.

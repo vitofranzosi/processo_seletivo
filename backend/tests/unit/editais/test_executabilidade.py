@@ -455,3 +455,71 @@ def test_perfil_sem_marco_algum_nao_acumula_o_aviso_da_reserva():
 
     assert achados(conteudo, "profile_without_milestone")
     assert achados(conteudo, "reserved_row_without_ordering") == []
+
+
+# --- O Perfil com mais de um marco, e o aviso que parava no primeiro --------------------------
+#
+# **O defeito que uma revisão encontrou**, e ele devolvia o silêncio pela porta dos fundos: a
+# conferência lia `marcos_do_perfil[0]` e nada mais. Num Perfil cujo **primeiro** marco sorteia e
+# cujo **segundo** computa, nenhum aviso era emitido — e é no segundo que a tela de Ocupação mostra
+# os recortes reservados sem ordem a apurar.
+#
+# É a mesma divergência que `emite_ordem_no_recorte` existe para fechar, entrando por outra porta:
+# não por haver dois predicados, mas por um deles ser perguntado sobre **menos marcos** que o outro.
+# A tela de Ocupação é por marco; a validação precisava ser também.
+
+SEGUNDO_MARCO = "aaaaaaaa-0000-4000-8000-000000000328"
+
+
+def test_o_aviso_alcanca_o_segundo_marco_quando_o_primeiro_sorteia():
+    """O caso reproduzido: sorteia, computa — e é o segundo que não apura os recortes."""
+    conteudo = snapshot(
+        com_reserva(
+            classificationMilestones=[
+                de_sorteio(),
+                marco(id=SEGUNDO_MARCO, code="COMPUTA"),
+            ]
+        )
+    )
+
+    achado = achados(conteudo, "reserved_row_without_ordering")
+
+    assert len(achado) == 1
+    assert "COMPUTA" in achado[0].message, "o marco que não emite é o que precisa ser nomeado"
+    assert "SORT-X" not in achado[0].message, "e o que emite não entra na frase"
+
+
+def test_todos_os_marcos_sorteando_continua_sem_achado():
+    """A contraprova de fundo, agora sobre mais de um marco: todos emitem por recorte."""
+    conteudo = snapshot(
+        com_reserva(
+            classificationMilestones=[
+                de_sorteio(),
+                de_sorteio(id=SEGUNDO_MARCO, code="SORT-Y"),
+            ]
+        )
+    )
+
+    assert achados(conteudo, "reserved_row_without_ordering") == []
+
+
+def test_dois_marcos_em_lista_unica_saem_num_achado_so_que_nomeia_os_dois():
+    """Um achado por Perfil, e não um por marco.
+
+    Os dois dizem o mesmo do quadro, endereçam o mesmo `vacancyTable` e levam à mesma etapa;
+    repeti-lo por marco encheria a Revisão de linhas que só diferem no código do marco.
+    """
+    conteudo = snapshot(
+        com_reserva(
+            classificationMilestones=[
+                marco(),
+                marco(id=SEGUNDO_MARCO, code="COMPUTA-2"),
+            ]
+        )
+    )
+
+    achado = achados(conteudo, "reserved_row_without_ordering")
+
+    assert len(achado) == 1
+    assert "os marcos CLASS-TUT e COMPUTA-2" in achado[0].message
+    assert achado[0].path == f"/profiles/id={PERFIL}/vacancyTable"

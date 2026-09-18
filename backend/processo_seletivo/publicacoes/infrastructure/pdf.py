@@ -20,6 +20,7 @@ from django.utils import timezone
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     ETAPA_NAO_IDENTIFICADA,
@@ -1225,6 +1226,31 @@ FORMA_DA_ORDEM = {
 }
 
 
+def _publica_a_mesma_norma(proprio, comum):
+    """Os dois métodos publicam a mesma norma? (032, FR-466)
+
+    **A comparação é sobre os sete campos que o documento imprime, e não sobre o dicionário
+    inteiro** — e a distinção custou um defeito. O método do **marco** carrega um décimo campo que
+    o método **comum** nunca tem: `qualifyingStageId`, a Etapa que habilita a participar do
+    sorteio, que é do marco porque depende de quais Etapas aquele marco enumera
+    (`metodo_comum_do_formulario` a remove de propósito). O formulário a grava como `None` quando
+    ninguém a declara — e a igualdade bruta então achava diferença entre dois métodos idênticos:
+    o documento anunciava *"diverge do comum deste Edital"* sobre um marco que publica, campo a
+    campo, exatamente o método comum.
+
+    **E o critério é o que o leitor vê.** O documento imprime os sete; anunciar uma divergência que
+    ele não mostra manda quem lê procurar no papel uma diferença que não está lá — num documento
+    normativo e imutável, que é onde o erro não tem conserto. Comparar pelo **valor impresso**, e
+    não pela chave crua, é o que amarra a afirmação ao artefato: o documento não diz que diverge
+    aquilo que ele mesmo mostra igual.
+    """
+    return all(
+        _valor_do_campo_do_metodo(campo, proprio or {})
+        == _valor_do_campo_do_metodo(campo, comum or {})
+        for campo, _, _ in CAMPOS_DO_METODO
+    )
+
+
 def _origem_do_metodo(snapshot, marco):
     """Qual das três grafias de `Método:` vale para este marco (032, FR-466).
 
@@ -1233,13 +1259,14 @@ def _origem_do_metodo(snapshot, marco):
 
     **A divergência é nomeada quando existe**, e não sempre que há os dois. Um marco que declara o
     próprio idêntico ao comum não diverge de nada, e escrever que diverge seria o documento
-    afirmando uma diferença que ninguém publicou — que é o oposto do que a `FR-466` pede.
+    afirmando uma diferença que ninguém publicou — que é o oposto do que a `FR-466` pede. O que
+    conta como "idêntico" está em `_publica_a_mesma_norma`, e não é a igualdade bruta.
     """
     proprio = marco.get("drawMethod") or None
     comum = (snapshot or {}).get("drawMethod") or None
     if proprio is None:
         return "comum a este Edital"
-    if comum is not None and proprio != comum:
+    if comum is not None and not _publica_a_mesma_norma(proprio, comum):
         return "próprio deste marco — diverge do comum deste Edital"
     return "próprio deste marco"
 
@@ -1280,8 +1307,6 @@ def _metodo_do_marco(snapshot, perfil, marco):
     o que falta seria o documento completando a regra que o Edital não declarou. No conteúdo
     publicado isso não acontece, porque `FR-467` e `draw_method_invalid` o recusam antes.
     """
-    from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
-
     identidade = marco.get("id")
     metodo = (
         regras_do_marco.metodo_que_governa(

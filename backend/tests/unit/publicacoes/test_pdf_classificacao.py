@@ -567,3 +567,100 @@ def test_o_marco_que_ordena_por_pontuacao_nao_ganha_bloco_de_sorteio():
     assert "Sorteio" not in escrito
     assert "Método:" not in escrito
     assert "soma ponderada das Etapas Prova didática (peso 2)" in escrito
+
+
+# ---------------------------------------------------------------------------
+# A divergência anunciada tem de existir — contra a representação que a tela produz
+# ---------------------------------------------------------------------------
+#
+# **O caso que os testes acima não alcançavam**, e que uma revisão encontrou: eles montam os dois
+# métodos à mão, com a mesma forma, e por isso a igualdade bruta os satisfazia. A tela produz outra
+# coisa — o método do **marco** carrega `qualifyingStageId`, que é dele, e o método **comum** não o
+# carrega, porque qual Etapa habilita depende de quais Etapas aquele marco enumera.
+#
+# Resultado: dois métodos campo a campo idênticos diferiam por uma chave nula, e o documento
+# anunciava *"diverge do comum deste Edital"* sobre um marco que publica exatamente o método comum.
+# Num documento normativo e imutável, essa afirmação não tem conserto.
+#
+# Por isso este bloco **não monta os dicionários**: ele os pede a `interface/forms.py`, a partir do
+# mesmo formulário. É o que amarra o documento à representação real.
+
+CAMPOS_DO_FORMULARIO = {
+    "algorithm": "IFES-SORTEIO-SHA256-v1",
+    "source": "Loteria Federal",
+    "occurrence": "concurso 6100 da Loteria Federal",
+    "occurrenceAt": "2026-11-20T20:00:00-03:00",
+    "derivation": "o primeiro concurso realizado após a data programada do sorteio",
+    "normalizationRule": "DIGITOS_EM_SEQUENCIA",
+    "normalizationText": "os dígitos das cinco dezenas, em sequência",
+    "substitutionRule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+    "substitutionText": "a ocorrência seguinte da mesma fonte",
+}
+
+
+def _metodos_como_a_tela_os_produz(**divergencia):
+    """`(próprio, comum)` lidos de `interface/forms.py`, a partir do mesmo formulário.
+
+    `divergencia` altera um campo **do marco**, para o caso em que a divergência é real.
+    """
+    from processo_seletivo.interface import forms
+
+    do_edital = {f"edital-draw-{campo}": valor for campo, valor in CAMPOS_DO_FORMULARIO.items()}
+    do_marco = {
+        f"m-draw-{campo}": divergencia.get(campo, valor)
+        for campo, valor in CAMPOS_DO_FORMULARIO.items()
+    }
+    return forms._metodo_de_sorteio(do_marco, "m"), forms.metodo_comum_do_formulario(do_edital)
+
+
+def test_a_tela_produz_um_proprio_que_difere_do_comum_por_uma_chave_nula():
+    """A premissa, e é ela que faltava: sem isto o teste abaixo provaria outra coisa.
+
+    Se um dia o formulário parar de gravar a chave, ou o método comum passar a carregá-la, este
+    caso falha e diz que a premissa mudou — em vez de o teste seguinte passar a não exercitar nada.
+    """
+    proprio, comum = _metodos_como_a_tela_os_produz()
+
+    assert proprio != comum, "a igualdade bruta acha diferença…"
+    assert set(proprio) - set(comum) == {"qualifyingStageId"}
+    assert proprio["qualifyingStageId"] is None, "…e ela é uma chave nula, e não uma norma"
+
+
+def test_o_metodo_do_marco_igual_ao_comum_nao_e_anunciado_como_divergente():
+    """`FR-466`: o documento não afirma uma divergência que ele mesmo não mostra."""
+    proprio, comum = _metodos_como_a_tela_os_produz()
+
+    escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
+
+    assert "Método: próprio deste marco" in escrito
+    assert "diverge" not in escrito
+
+
+def test_a_divergencia_real_continua_sendo_nomeada():
+    """A contraprova, e a que uma normalização larga demais apagaria.
+
+    Trocado um dos sete campos impressos, a divergência **existe** e o documento a nomeia — que é o
+    que dá ao leitor a razão de conferir este bloco, e não o método comum do Edital.
+    """
+    proprio, comum = _metodos_como_a_tela_os_produz(occurrence="concurso 6101 da Loteria Federal")
+
+    escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
+
+    assert "Método: próprio deste marco — diverge do comum deste Edital" in escrito
+
+
+def test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha():
+    """A Etapa de habilitação é do marco, e o método comum **nunca** a carrega.
+
+    Ela não pode, por isso, ser fonte de divergência: um marco que a declara está **especificando**
+    o que o comum não tem como dizer, e não contrariando-o. O documento não a imprime — ela não
+    está entre os sete —, e anunciar divergência por ela mandaria procurar no papel uma diferença
+    que o papel não mostra.
+    """
+    proprio, comum = _metodos_como_a_tela_os_produz()
+    proprio = {**proprio, "qualifyingStageId": DIDATICA}
+
+    escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
+
+    assert "Método: próprio deste marco" in escrito
+    assert "diverge" not in escrito

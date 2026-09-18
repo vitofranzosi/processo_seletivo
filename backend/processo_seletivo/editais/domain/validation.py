@@ -2419,28 +2419,55 @@ def _reserva_sem_via_de_apuracao(
             continue
         if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade <= 0:
             continue
-        if marcos.emite_ordem_no_recorte(
-            snapshot,
-            perfil_id=perfil.get("id"),
-            marco_id=marcos_do_perfil[0].get("id"),
-            lista_id=modalidade_id,
-        ):
-            continue
         modalidade = modalidades.get(str(modalidade_id)) or {}
-        reservadas.append((quantidade, modalidade.get("name") or modalidade.get("code") or ""))
+        reservadas.append(
+            (quantidade, modalidade.get("name") or modalidade.get("code") or "", modalidade_id)
+        )
     if not reservadas:
+        return []
+    # **Todos os marcos do Perfil, e não o primeiro.** Um Perfil pode publicar mais de um marco, e
+    # a tela de Ocupação é **por marco**: um Perfil cujo primeiro marco sorteia e cujo segundo
+    # computa tem, no segundo, exatamente os recortes que este aviso existe para nomear. Ler só o
+    # primeiro devolvia o silêncio pela porta dos fundos — e reabria a divergência entre a
+    # validação e o selector que `emite_ordem_no_recorte` existe para fechar, agora não por haver
+    # dois predicados, mas por um deles ser perguntado sobre menos marcos que o outro.
+    sem_via = [
+        marco
+        for marco in marcos_do_perfil
+        if any(
+            not marcos.emite_ordem_no_recorte(
+                snapshot,
+                perfil_id=perfil.get("id"),
+                marco_id=marco.get("id"),
+                lista_id=modalidade_id,
+            )
+            for _, _, modalidade_id in reservadas
+        )
+    ]
+    if not sem_via:
         return []
     repartidas = " e ".join(
         f"{quantidade} para '{nome}'" if indice else f"{quantidade} vaga(s) para '{nome}'"
-        for indice, (quantidade, nome) in enumerate(sorted(reservadas, key=lambda par: par[1]))
+        for indice, (quantidade, nome, _) in enumerate(
+            sorted(reservadas, key=lambda linha: linha[1])
+        )
+    )
+    nomeados = [_marco_nomeado(marco) for marco in sem_via]
+    # Um achado por Perfil, nomeando os marcos — e não um achado por marco. Os dois dizem o mesmo
+    # do quadro, endereçam o mesmo `vacancyTable` e levam à mesma etapa; repeti-lo por marco
+    # encheria a Revisão de linhas que só diferem no código do marco.
+    da_ordem = (
+        f"a ordem do marco {nomeados[0]} é emitida em lista única"
+        if len(nomeados) == 1
+        else f"a ordem dos marcos {', '.join(nomeados[:-1])} e {nomeados[-1]} é emitida em "
+        "lista única"
     )
     return [
         ValidationFinding(
             Severity.WARNING,
             "reserved_row_without_ordering",
-            f"O Perfil '{rotulo}' publica {repartidas}, e a ordem do marco "
-            f"{_marco_nomeado(marcos_do_perfil[0])} é emitida em lista única: só a ordem sorteada "
-            "é emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do "
+            f"O Perfil '{rotulo}' publica {repartidas}, e {da_ordem}: só a ordem sorteada é "
+            "emitida por recorte. A ocupação e a convocação desses recortes acontecerão fora do "
             "sistema.",
             f"{base}/vacancyTable",
         )
