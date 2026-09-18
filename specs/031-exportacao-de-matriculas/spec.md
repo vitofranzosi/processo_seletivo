@@ -32,7 +32,7 @@ Registro Acadêmico importa**, sem redigitação e sem planilha montada à mão.
 A `029` coletou 21 das 34 colunas e **proibiu a exportação** (`FR-404`). Esta spec revoga aquela
 proibição — e a revoga pelo motivo que a criou: a proibição existia porque **nenhuma conversão podia
 ser inventada** antes de alguém medir de onde cada coluna sairia. O contrato de saída mediu. Agora
-há o que exportar, e há oito colunas que este sistema legitimamente não tem.
+há o que exportar, e há quatro colunas que este sistema legitimamente não tem.
 
 ## 2. Problema
 
@@ -68,7 +68,8 @@ ausência; uma coluna preenchida por dedução humana é indistinguível de dado
 | A `029` mesclada, com requerimentos enviados | ✅ `main`, desde 17/09/2026 |
 | O contrato de saída versionado (`FR-403`) | ✅ 34 colunas mapeadas |
 | Resultado com convocados | ✅ a convocação já existe |
-| **O importador aceita célula vazia nas oito colunas da `D-001`** | ❌ **não verificado** (`Q-1`) |
+| Os três campos eleitorais coletados no Requerimento (`D-007`) | ⏳ trabalho da `029`, motivado aqui |
+| **O importador aceita célula vazia nas quatro colunas da `D-001`** | ❌ **não verificado** (`Q-1`) |
 
 **Por que a última bloqueia.** Toda a forma desta feature depende dela. Se o importador recusar
 `COD_CURSO` vazio, o arquivo gerado não serve para nada, e isso se descobre **depois da matrícula**.
@@ -79,32 +80,56 @@ três perguntas mais caras desta spec.
 
 ### D-001 — Dado que este sistema não possui sai **vazio**, nunca deduzido
 
-Decisão do usuário, 17/09/2026. Oito colunas saem vazias porque o valor é **externo a este
-sistema** — vocabulário do sistema acadêmico, ou dado que a `029` decidiu não coletar:
+Decisão do usuário, 17/09/2026. **Quatro** colunas saem vazias porque o valor é **externo a este
+sistema** — vocabulário do sistema acadêmico que este não conhece:
 
 | Coluna | Por que é externa |
 |---|---|
-| `COD_CURSO`, `COD_TURNO`, `COD_POLO` | vocabulário do sistema acadêmico, que este sistema não conhece |
+| `COD_CURSO`, `COD_TURNO`, `COD_POLO` | vocabulário do sistema acadêmico |
 | `COD_NACIONALIDADE` | este sistema guarda texto livre; o destino pede código, sem tabela de correspondência |
-| `TITULO_ELE`, `ZONA_ELE`, `SECAO_ELE` | a `029` decidiu **não coletar** (`FR-382`, `Q-4` da `029`) |
-| `RENDA_PER_CAPITA_PNP` | ver `D-002` |
+
+**Os três campos eleitorais saíram desta lista** em 17/09/2026: passam a ser coletados (`D-007`).
 
 **A consequência de escopo é grande, e é o que essa decisão comprou:** não há configuração de
 códigos por oferta, não há tabela oficial de nacionalidade, não há cadastro de turno nem de polo.
 Um subsistema inteiro de configuração sai do escopo porque a resposta certa é a célula vazia.
 
-### D-002 — A faixa de renda não é convertida, porque os limites coincidirem não as torna a mesma coisa
+### D-007 — Título, zona e seção eleitorais passam a ser coletados no Requerimento
 
-`RENDA_PER_CAPITA_PNP` sai **vazia**, e esta decisão precisa da tabela ao lado para ser entendida:
+Decisão do usuário, 17/09/2026, e ela **responde a `Q-4` da `029`** — que estava aberta e declarada
+não bloqueante justamente à espera de um consumidor.
+
+**Isto não contraria a minimização; é o teste dela sendo satisfeito.** A `FR-382` recusa oito
+informações *"nenhuma com destino na saída ou cláusula de Edital que a consuma"* — e os campos
+eleitorais **não estão naquela lista**. Eles não foram recusados por falta de finalidade; foram
+apenas não coletados, porque nenhum Edital os exigia para inscrever. O formato de importação do
+Registro Acadêmico é a finalidade institucional demonstrada que faltava.
+
+A coleta é da `029` — três colunas novas no Requerimento —, e esta spec é quem a motiva. O formato
+segue a amostra: título em três blocos de quatro dígitos, zona com três, seção com quatro, todos
+guardados sem pontuação e emitidos na forma do destino (`FR-451`).
+
+### D-002 — `RENDA_PER_CAPITA_PNP` recebe a faixa da família, e o arquivo diz que é isso
+
+Decisão do usuário, 17/09/2026, tomada depois de a divergência ser medida e apresentada. A coluna
+**é preenchida** com `renda_familiar_faixa`, sem conversão.
 
 | Este sistema — soma da família (`FR-412`) | Destino — por pessoa |
 |---|---|
 | Até 0,5 · 0,5–1 · 1–1,5 · 1,5–2,5 · 2,5–3,5 · acima de 3,5 | os mesmos cortes, com outro denominador |
 
-**Os limites são idênticos, e é exatamente por isso que o mapeamento direto é tentador.** Muda o
-denominador. O número de pessoas do domicílio nunca foi coletado, e dividir uma faixa por um número
-que não se tem não produz uma faixa. A divergência já estava nomeada na `029` (o `R-7` daquela spec); aqui ela
-vira a instrução de emitir vazio.
+**Os limites são idênticos, e o denominador não.** É essa coincidência que torna a cópia natural de
+se fazer, e é ela que exige que a divergência fique escrita — a `029` já a nomeava (`R-7` daquela
+spec), e aqui ela deixa de ser teórica, porque passa a haver um arquivo que a carrega.
+
+**O efeito, medido.** Família de quatro pessoas com renda total de 2 salários mínimos declara *acima
+de 1,5 até 2,5*. Per capita, ela está em **0,5**. A coluna receberá *1,5 a 2,5* — três faixas acima —
+e o desvio é sempre no mesmo sentido, maior quanto maior a família.
+
+**Por isso a cópia vem acompanhada, e não sozinha** (`FR-452`): o relatório de lacunas diz, em toda
+geração, que a coluna 31 traz faixa da **soma da família** num campo que o destino define como **por
+pessoa**. Quem recebe o arquivo fica em condição de decidir o que fazer com isso; quem o gera não
+decide por ele. A alternativa que tornaria a coluna exata está registrada em `Q-6`.
 
 ### D-003 — `AC` sai da **ausência** de Modalidade, e as cotas saem do código do Edital
 
@@ -147,6 +172,7 @@ já guarda essa promessa e alcança os arquivos desta feature por `glob`.
 - Emitir as 34 colunas na ordem e na grafia exatas do destino, todas como texto.
 - Relatar, junto do arquivo, o que saiu vazio e por quê.
 - Recusar a geração quando um valor teria de ser **inventado**.
+- Motivar, na `029`, a coleta dos três campos eleitorais (`D-007`).
 - Registrar quem gerou, quando, de qual versão do resultado e com qual versão dos mapeamentos.
 
 ## 8. Fora de escopo
@@ -155,7 +181,6 @@ já guarda essa promessa e alcança os arquivos desta feature por `glob`.
   uma pessoa.
 - Cadastrar códigos de curso, turno, polo ou nacionalidade (`D-001`).
 - Corrigir a grafia de Modalidade de Editais publicados (`D-003`).
-- Coletar título, zona e seção eleitorais. Reabrir é `Q-4` da `029`, e continua não bloqueante.
 - Alterar qualquer coisa no Requerimento. Esta feature **lê**.
 
 ## 9. User Scenarios & Testing *(mandatory)*
@@ -189,7 +214,7 @@ quantas pessoas, e por qual motivo.
 relatório, quem receber o arquivo vai completar as células vazias — e o erro volta pela porta que a
 feature existe para fechar.
 
-**Independent Test**: gerar e conferir que o relatório nomeia as oito colunas da `D-001` com a razão
+**Independent Test**: gerar e conferir que o relatório nomeia as quatro colunas da `D-001` com a razão
 de cada uma.
 
 **Acceptance Scenarios**:
@@ -263,10 +288,13 @@ ninguém sabe qual foi importado.
 
 ### 10.3 O que sai vazio, e o que interrompe
 
-- **FR-438**: As oito colunas da `D-001` MUST sair vazias, e a geração MUST NOT deduzir valor para
+- **FR-438**: As quatro colunas da `D-001` MUST sair vazias, e a geração MUST NOT deduzir valor para
   nenhuma delas.
 - **FR-439**: A geração MUST produzir um **relatório de lacunas** junto do arquivo, nomeando cada
   coluna vazia, a razão e a quantidade de linhas afetadas.
+- **FR-452**: O relatório de lacunas MUST declarar, em **toda** geração, que
+  `RENDA_PER_CAPITA_PNP` traz faixa da soma da família num campo que o destino define como por
+  pessoa (`D-002`), e MUST NOT omitir o aviso quando não houver outras lacunas.
 - **FR-440**: Quando o valor declarado não tem correspondente no destino — o caso conhecido é a cor
   **indígena** (`R-1`) —, a coluna MUST sair vazia e o relatório MUST nomear a pessoa e o valor
   declarado. A exportação MUST NOT substituir por valor próximo.
@@ -288,6 +316,9 @@ ninguém sabe qual foi importado.
 
 - **FR-443**: `COD_FORMA_INGRESSO` MUST receber `AC` quando a Inscrição não tem Modalidade, e o
   `code` publicado quando tem (`D-003`).
+- **FR-451**: `TITULO_ELE` MUST sair em três blocos de quatro dígitos separados por espaço,
+  `ZONA_ELE` com três dígitos e `SECAO_ELE` com quatro, **com zeros à esquerda** — guardados sem
+  pontuação, como o CEP já é (`FR-387` da `029`), e pontuados na saída.
 - **FR-444**: `CEP` MUST sair com hífen, `CPF` e `CELULAR` sem pontuação — a forma de cada um é a do
   destino, e não a da coluna deste sistema.
 - **FR-445**: Cada uma das 34 colunas MUST ter serializador próprio, com origem, transformação e
@@ -331,8 +362,13 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
   **contra o importador**, e não contra a leitura da planilha.
 - **SC-144**: Um CPF iniciado por zero, uma data e um CEP sobrevivem à ida e volta pelo Excel sem
   perder zero, virar número serial ou trocar de formato.
-- **SC-145**: As oito colunas da `D-001` saem vazias, e o relatório nomeia as oito com a razão de
-  cada uma.
+- **SC-145**: As quatro colunas da `D-001` saem vazias, e o relatório nomeia as quatro com a razão
+  de cada uma.
+- **SC-152**: Título, zona e seção eleitorais declarados no Requerimento chegam ao arquivo na forma
+  do destino — título em três blocos de quatro, zona com três dígitos, seção com quatro, zeros à
+  esquerda preservados.
+- **SC-153**: Toda geração — inclusive uma sem nenhuma outra lacuna — traz no relatório o aviso
+  sobre a coluna 31, com as duas medidas nomeadas.
 - **SC-146**: Um convocado que declarou cor indígena gera arquivo com `COR` vazia e relatório que o
   nomeia — verificado como caso próprio, e não como efeito colateral.
 - **SC-147**: Uma Modalidade com grafia desconhecida recusa a geração inteira, e a mensagem traz o
@@ -350,13 +386,14 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
 |---|---|---|
 | **`R-1` — o destino não comporta *indígena*** | quem se declarou indígena chega ao Registro Acadêmico sem cor, ou com cor errada | `FR-440`: vazio e relatório nominal. **Corrigir de verdade exige mudar o domínio do destino** |
 | `R-1b` — a contradição é interna ao destino | a Modalidade de cota **nomeia** indígenas (`PPP`, Lei 12.990/2014), e a coluna `COR` do mesmo arquivo não os comporta | nenhuma, deste lado: a incoerência é do formato de destino, e é material para a conversa de `Q-1` |
+| **`R-1c` — a coluna 31 superestima a renda por pessoa** | o desvio é sistemático e cresce com o tamanho da família; 1,5 SM per capita é o corte de baixa renda da Lei 12.711/2012 | `FR-452`: o aviso vai em toda geração. **Não corrige o número** — só impede que ele viaje sem etiqueta. `Q-6` guarda o que corrigiria |
 | `R-2` — o importador recusar célula vazia | a feature inteira não serve | `Q-1`, verificado **antes** de escrever código |
 | `R-3` — grafia de Modalidade divergente em Editais antigos | geração recusada para certames já encerrados | `FR-441` recusa e nomeia; a correspondência é decisão de quem opera, por Edital |
 | `R-4` — o arquivo circular por e-mail | o artefato mais concentrado de dado pessoal fora do sistema | `UX-060` e a permissão própria reduzem; **não eliminam** |
 
 ## 15. Questões abertas
 
-- **Q-1** — **O importador aceita célula vazia nas oito colunas da `D-001`?** *(Bloqueante: §5.)*
+- **Q-1** — **O importador aceita célula vazia nas quatro colunas da `D-001`?** *(Bloqueante: §5.)*
   Custa duas linhas sintéticas enviadas ao importador real, e responde também `Q-3` e `R-1`.
 - **Q-2** — `CLASSIF_CURSO_FINAL` é a classificação no curso ou a numeração das linhas? O nome e o
   comentário do Registro Acadêmico discordam, e a planilha não desempata — vem pré-preenchida de `1`
@@ -366,6 +403,12 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
   protocolo deste sistema é `INS-2026-K7M4Q2PX`, **deliberadamente sem sequência**, porque um número
   corrido diria quantas inscrições existem. Não é divergência de formato a normalizar: torná-lo
   sequencial desfaria uma decisão de domínio. *(Bloqueante para a coluna.)*
+- **Q-6** — **Tornar a coluna 31 exata exigiria o denominador.** A `FR-382` recusa *"número de
+  pessoas do domicílio"* por nome, e a razão escrita daquela recusa — *"nenhuma com destino na
+  saída"* — deixou de valer no instante em que esta feature passou a emitir a coluna. Emendar a
+  `FR-382` e coletar o tamanho do domicílio, ou passar a perguntar a faixa **per capita**
+  diretamente, são os dois caminhos que tornariam o valor correto. *(Não bloqueante: a `D-002`
+  decidiu o comportamento de agora.)*
 - **Q-4** — O comentário de `IDENTIDADE_DATA` na planilha chama a coluna de *"data de nascimento"*,
   por erro de cópia. Confirmar com o Registro Acadêmico antes de tratar os comentários como fonte.
   *(Não bloqueante: o cabeçalho é inequívoco.)*
