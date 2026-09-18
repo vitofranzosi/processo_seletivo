@@ -92,13 +92,13 @@ specs/034-ordem-por-recorte/
 
 ```text
 backend/processo_seletivo/
-├── classificacao/
-│   ├── application/
-│   │   ├── calculo.py         # recebe o recorte; filtra o universo por modalidade
-│   │   ├── emissao.py         # deixa de fixar lista nula; assinatura por recorte
-│   │   └── selectors.py       # a proposta e o vigente, por recorte
-│   └── domain/                # a derivação única dos recortes
-├── editais/domain/marcos.py   # a resposta de `emite_ordem_no_recorte`
+├── classificacao/application/
+│   ├── calculo.py             # recebe o recorte; filtra o universo por modalidade
+│   ├── emissao.py             # deixa de fixar lista nula; assinatura por recorte
+│   └── selectors.py           # a proposta e o vigente, por recorte
+├── editais/domain/
+│   ├── recortes.py            # NOVO — a derivação única do conjunto de recortes
+│   └── marcos.py              # a resposta de `emite_ordem_no_recorte`
 ├── ocupacao/application/selectors.py   # consome a derivação única
 └── interface/
     ├── views.py               # ordenação lê o recorte; as duas telas navegam
