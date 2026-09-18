@@ -4,8 +4,9 @@
 conduz** — sem shell, sem banco e sem chamada manual —, que é o que a Constituição cobra no
 Princípio VI. O `C7` existe justamente para provar isso.
 
-> **`C0` primeiro, e ele não é deste repositório.** Enquanto a `Q-1` não for respondida, todo o
-> resto valida um formato que ninguém confirmou.
+> **`C0` cedo, e ele não é deste repositório** — mas ele **não segura os demais**. Enquanto a `Q-1`
+> não for respondida, três células e a `C9` ficam em aberto; o resto do roteiro percorre e prova.
+> §5 da spec mede o que a espera custaria.
 
 ---
 
@@ -35,7 +36,7 @@ aparecer no Edital, é autorização, e não rota quebrada.
 
 ---
 
-## C0 — A pergunta que precede tudo *(Fase 0)*
+## C0 — A pergunta que se faz cedo *(Fase 0)*
 
 Fora do sistema. Enviar ao Registro Acadêmico **duas linhas sintéticas** — nunca a linha `2` da
 amostra (`D-006`) — com `COD_CURSO`, `COD_TURNO` e `COD_POLO` vazias.

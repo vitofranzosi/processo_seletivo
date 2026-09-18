@@ -12,9 +12,9 @@
 
 **Created**: 2026-09-17
 
-**Status**: Draft — **bloqueada para implementação** por uma verificação externa (§5 e `Q-1`). A
-redação está completa; o que falta não é decisão de produto, é uma resposta do Registro Acadêmico
-que custa uma hora e não depende deste repositório.
+**Status**: **pronta para implementação** (revisto em 18/09/2026). A `Q-1` continua sem resposta e
+continua sendo trabalho a fazer — mas ela condiciona **a aceitação final e três células**, não a
+construção. A redação anterior dizia *"bloqueada"*, e §5 explica por que isso era largo demais.
 
 **Input**: o contrato de saída da `029`
 ([contrato-de-saida.md](../029-requerimento-de-matricula/contrato-de-saida.md)), a inspeção da
@@ -61,7 +61,7 @@ ausência; uma coluna preenchida por dedução humana é indistinguível de dado
 
 ## 5. Pré-condições
 
-**Uma delas não é deste repositório, e é bloqueante.** As demais já estão satisfeitas.
+**Uma delas não é deste repositório.** As demais já estão satisfeitas.
 
 | Pré-condição | Situação |
 |---|---|
@@ -72,10 +72,31 @@ ausência; uma coluna preenchida por dedução humana é indistinguível de dado
 | Nacionalidade como lista fechada no Requerimento (`D-008`) | ⏳ trabalho da `029`, motivado aqui |
 | **O importador aceita célula vazia nas três colunas da `D-001`** | ❌ **não verificado** (`Q-1`) |
 
-**Por que a última bloqueia.** Toda a forma desta feature depende dela. Se o importador recusar
-`COD_CURSO` vazio, o arquivo gerado não serve para nada, e isso se descobre **depois da matrícula**.
-A verificação custa duas linhas sintéticas enviadas ao importador real — e responde, de uma vez, as
-três perguntas mais caras desta spec.
+### O que a `Q-1` condiciona de verdade
+
+**A primeira redação desta spec dizia que ela bloqueava tudo. Medida, ela não bloqueia.**
+
+Se a resposta for *"aceita"*, constrói-se o que está escrito. Se for *"não aceita"*, a `D-001` cai e
+passa a ser preciso um cadastro de códigos de curso, turno e polo. Vale perguntar o que se perderia
+do que já tivesse sido construído:
+
+| | |
+|---|---|
+| 31 dos 34 serializadores | **mantidos** |
+| Escrita do `.xlsx`, formato `@`, cabeçalhos | **mantida** |
+| População, recusas, ordem determinística | **mantidas** |
+| Registro de geração, permissão, rota, tela | **mantidos** |
+| `vazio_externo` em três colunas | **substituído** por três leitores de cadastro |
+
+**Três funções.** Esse é o retrabalho que a espera evitaria — e o custo da espera é a feature inteira
+parada até alguém conseguir uma conversa com o Registro Acadêmico.
+
+**O que a `Q-1` de fato condiciona**: a `SC-143` — o critério de aceite que só o importador real
+fecha — e o conteúdo de três células. É lá que o gate pertence, e não na primeira linha de código.
+
+**As demais perguntas nem isso condicionam.** `Q-2`, `Q-3`, `Q-7` e `R-1` já têm comportamento
+decidido para enquanto não houver resposta — vazio e nomeado no relatório —, e esse comportamento
+**é o correto no interregno**, não um substituto provisório.
 
 ## 6. Decisões fechadas antes do planejamento
 
@@ -455,8 +476,9 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
 
 ## 15. Questões abertas
 
-- **Q-1** — **O importador aceita célula vazia nas três colunas da `D-001`?** *(Bloqueante: §5.)*
-  Custa duas linhas sintéticas enviadas ao importador real, e responde também `Q-3` e `R-1`.
+- **Q-1** — **O importador aceita célula vazia nas três colunas da `D-001`?** *(Bloqueante para a
+  `SC-143` e para três células — **não para a construção**, §5.)* Custa duas linhas sintéticas
+  enviadas ao importador real, e responde também `Q-3` e `R-1`.
 - **Q-2** — `CLASSIF_CURSO_FINAL` é a classificação no curso ou a numeração das linhas? O nome e o
   comentário do Registro Acadêmico discordam, e a planilha não desempata — vem pré-preenchida de `1`
   a `35`, com o comentário mandando continuar a sequência. *(Bloqueante para a coluna, não para a
@@ -485,7 +507,8 @@ autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permi
 **Reais e de leitura** — o Requerimento de Matrícula (`029`), a convocação (população), a
 classificação (`Q-2`), a identidade (nome, CPF, e-mail), a oferta (`NOME_POLO`).
 
-**Externa e bloqueante** — a confirmação do Registro Acadêmico sobre célula vazia (`Q-1`).
+**Externa** — a confirmação do Registro Acadêmico sobre célula vazia (`Q-1`). Ela condiciona a
+`SC-143` e três células, **não a construção** (§5).
 
 **Declarada e não construída** — o cadastro de códigos institucionais. A `D-001` a dispensa desta
 feature; se um dia o Registro Acadêmico exigir os códigos preenchidos, ela volta como spec própria.
