@@ -32,16 +32,6 @@
       "url": "http://localhost:8025"
     },
     {
-      "name": "corte-014",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_014 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8014"
-      ],
-      "port": 8014,
-      "url": "http://localhost:8014"
-    },
-    {
       "name": "ocupacao-016",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -129,26 +119,6 @@
       ],
       "port": 8030,
       "url": "http://localhost:8030"
-    },
-    {
-      "name": "matriculas-031",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_031 POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8032"
-      ],
-      "port": 8032,
-      "url": "http://localhost:8032"
-    },
-    {
-      "name": "executabilidade-032",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=processo_seletivo_032 POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8034"
-      ],
-      "port": 8034,
-      "url": "http://localhost:8034"
     },
     {
       "name": "navegacao-033",
