@@ -163,3 +163,45 @@ def test_o_protocolo_publicado_nao_resolve_a_inscricao_sem_autenticacao(client, 
         assert titular.nome not in corpo, f"{nome} devolveu o nome a partir do protocolo publicado"
         assert titular.email not in corpo
         assert str(titular.id) not in corpo
+
+
+def test_no_portal_a_recusa_por_titularidade_e_a_por_inexistencia_sao_a_mesma(client, cenario):
+    """A fronteira entre os dois canais, tornada falsificável (033, `FR-480`).
+
+    O docstring deste arquivo já declara a doutrina; o caso acima a exercita por um lado só —
+    quem tenta a inscrição alheia recebe 404. **Isso sozinho não prova uniformidade**: um 404
+    com corpo diferente do de "não existe" já seria oráculo, e passaria naquele caso.
+
+    A prova é a comparação. Aqui a `033` leva recusa explicada à gestão, e a tentação seguinte é
+    levá-la também ao portal — onde ela seria vazamento, e não melhoria: o candidato passaria a
+    distinguir "esta inscrição não existe" de "existe e é de outra pessoa", que é exatamente o
+    oráculo de enumeração que o 404 uniforme fecha.
+
+    As duas respostas têm de ser **indistinguíveis**, e não apenas ter o mesmo número.
+    """
+    import re
+    from uuid import uuid4
+
+    from tests.fixtures.candidato import MARIA
+    from tests.fixtures.candidato import identificar as identificar_candidata
+
+    publicar_o_ato(cenario, chave="publicar-0755-c")
+    alheia = cenario["inscricoes"][0]
+    identificar_candidata(client, MARIA)
+
+    de_outra_pessoa = client.get(reverse("portal:acompanhamento", args=[alheia.id]))
+    inexistente = client.get(reverse("portal:acompanhamento", args=[uuid4()]))
+
+    # O token CSRF é sorteado por requisição, e a página de recusa do portal traz o cabeçalho
+    # inteiro — inclusive o formulário de sair. Comparar o corpo cru acusaria diferença em toda
+    # execução, e a diferença não seria um oráculo: ninguém aprende nada sobre a inscrição alheia
+    # a partir de um token novo.
+    def sem_o_token(resposta):
+        return re.sub(rb'name="csrfmiddlewaretoken" value="[^"]*"', b"", resposta.content)
+
+    assert de_outra_pessoa.status_code == 404
+    assert inexistente.status_code == de_outra_pessoa.status_code
+    assert sem_o_token(inexistente) == sem_o_token(de_outra_pessoa), (
+        "o portal passou a distinguir 'não existe' de 'é de outra pessoa' — e distinguir ali é "
+        "oráculo de enumeração, não recusa explicada"
+    )

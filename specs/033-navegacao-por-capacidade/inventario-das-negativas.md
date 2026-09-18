@@ -87,8 +87,20 @@ que *"se o inventário encontrar recusa de autorização fora das portas já ide
 feature mudou — e isso é conversa de escopo com quem governa o backlog, não decisão de quem
 implementa."*
 
-Ele encontrou **sete**. A decisão do que fazer com elas é de quem governa o backlog, e está
-registrada na seção seguinte — não foi tomada por quem implementa.
+Ele encontrou **sete**.
+
+**A decisão, de 2026-09-18, foi manter o escopo nas quatro portas.** Ela é de quem governa o backlog,
+e não de quem implementa. O que a decisão pesou:
+
+- **Nenhuma das sete é descuido**, e três citam doutrina de spec anterior por identificador.
+  Corrigi-las contradiria a `022` — o que é conversa de spec, não de implementação.
+- **Três misturam escopo e vínculo na mesma resposta.** Cada uma é o mesmo trabalho que a `FR-488`
+  manda fazer na porta da distribuição, e nenhuma tem tarefa que o descreva.
+- **`mesa._autorizar` tem argumento próprio a favor do 404 uniforme**, e ele não é fraco.
+
+**O que muda nos artefatos, e só isso:** a `SC-165` passa a se recortar às portas desta feature — o
+mesmo recorte que a `FR-476` já praticava, e pela mesma razão. A `T030` fecha sem código, entregando
+este registro. As sete ficam aqui, nomeadas, para a spec que as tratar.
 
 ---
 
