@@ -105,7 +105,7 @@ sozinha — se algum dia outro app importar `matriculas`, é sinal de que a feat
 | Fase | O quê | Por que nessa ordem |
 |---|---|---|
 | 1 | `Q-1` respondida | o resto depende da forma que ela confirma |
-| 2 | `029`: os três campos eleitorais (`D-007`) | a coluna precisa do dado antes de existir o serializador |
+| 2 | `029`: os três campos eleitorais (`D-007`) e a lista fechada de nacionalidade (`D-008`) | a coluna precisa do dado antes de existir o serializador |
 | 3 | As 34 colunas em `domain/colunas.py`, com teste unitário cada | é onde o erro silencioso mora; testá-las isoladas é barato |
 | 4 | A população e as recusas | sem isso o arquivo sai com linha faltando |
 | 5 | A planilha e o formato `@` | precisa das colunas prontas para ter o que escrever |
@@ -120,6 +120,7 @@ sozinha — se algum dia outro app importar `matriculas`, é sinal de que a feat
 | **`Q-1` sem resposta** | a Fase 1 não fecha, e o resto é construído sobre suposição | **não começar.** É a única dependência externa, e ela custa uma hora |
 | `Q-2` e `Q-3` sem resposta | duas colunas ficam sem serializador definido | as demais 32 seguem; as duas viram lacuna declarada até haver resposta |
 | A `029` não aceitar campo novo sem atrito | a Fase 2 empaca | são três colunas de texto num modelo que já tem 21 campos; o gatilho de imutabilidade não muda |
+| Fechar a lista de nacionalidade encontrar texto livre já declarado | requerimento **enviado** é imutável, e converter à força apagaria declaração | a migration reconhece `Brasil` e **preserva o resto como está** (`T008b`); a exportação já sabe emitir vazio para o que não reconhece |
 | `openpyxl` recusado na revisão | a Fase 5 refaz | a alternativa está nomeada, e o custo de trocá-la é uma camada só (`infrastructure/planilha.py`) |
 
 ## Complexity Tracking

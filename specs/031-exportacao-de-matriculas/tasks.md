@@ -13,7 +13,8 @@
 Monólito Django. Código em `backend/processo_seletivo/`, testes em `backend/tests/`.
 
 **O que esta feature acrescenta**: um app (`matriculas/`), **uma** tabela, uma permissão, uma
-dependência e três campos em `requerimentos.RequerimentoDeMatricula`. **O que ela não acrescenta**:
+dependência, três campos em `requerimentos.RequerimentoDeMatricula` e o fechamento de uma lista que
+já existia aberta. **O que ela não acrescenta**:
 nenhum estado novo, nenhuma etapa no assistente, nenhum acervo de arquivo.
 
 **Banco próprio nesta worktree**: `DB_NAME=ps_demo_031`, e **como variável do Make** —
@@ -35,8 +36,11 @@ modo padrão da suíte.
   `COD_CURSO`, `COD_TURNO`, `COD_POLO` e `COD_NACIONALIDADE`? Enviar **duas linhas sintéticas** —
   nunca a linha `2` da amostra (`D-006`) — e registrar a resposta na spec
 - [ ] **T002** Na mesma conversa, perguntar `Q-3` (o importador aceita protocolo opaco
-  `INS-2026-K7M4Q2PX`?) e `Q-2` (`CLASSIF_CURSO_FINAL` é classificação ou numeração de linha?), e
-  confirmar `R-1`: o que o destino espera para quem declarou cor **indígena**
+  `INS-2026-K7M4Q2PX`?), `Q-2` (`CLASSIF_CURSO_FINAL` é classificação ou numeração de linha?) e
+  **`Q-7` (a coluna 16 usa ISO 3166-1 alpha-2?)**, e confirmar `R-1`: o que o destino espera para
+  quem declarou cor **indígena**. As quatro perguntas custam uma conversa só, e `Q-7` custa uma
+  frase — se a resposta for sim, a `D-008` se simplifica e a coluna 16 sai exata também para
+  estrangeiro
 - [ ] **T003** Registrar as respostas em [spec.md](./spec.md) §15 e mover o **Status** de *bloqueada*
   para *pronta*. **Nenhuma tarefa abaixo começa antes desta**
 
@@ -58,6 +62,10 @@ modo padrão da suíte.
 - [ ] **T008** `[US1]` Rótulos e descritores dos três campos em `requerimentos/domain/rotulos.py` e
   `portal/requerimento.py`, no grupo *Documento de identidade* — e conferir que o ENTER continua
   percorrendo a ordem certa
+- [ ] **T008b** `[US1]` Fechar a lista de `nacionalidade` na `029` (`D-008`): entrada em
+  `requerimentos/domain/nomes.py` e `rotulos.py`, em `declaracao.py::LISTAS`, e a migration de
+  conversão do texto livre existente — **`Brasil` reconhecido, o resto preservado como declarado
+  até alguém conferir**, porque converter à força apagaria declaração de quem já enviou
 - [ ] **T009** `[P]` Criar `matriculas/models.py::GeracaoDeArquivo` — Edital, população, quantidade,
   autor, instante, versão dos mapeamentos — e `migrations/0001_geracao.py` (`FR-447`)
 - [ ] **T010** Acrescentar a tabela a `seguranca/papeis.py::TABELAS_APPEND_ONLY` **na mesma leva**, e
@@ -80,6 +88,8 @@ modo padrão da suíte.
   e o serializador **cita a decisão no docstring** — é a coluna que alguém vai tentar "consertar"
 - [ ] **T017** `[P]` `[US1]` `TITULO_ELE`, `ZONA_ELE`, `SECAO_ELE` na forma do destino, com zeros à
   esquerda (`FR-451`)
+- [ ] **T017b** `[P]` `[US1]` `COD_NACIONALIDADE`: `BR` para Brasil, vazia e nomeada para os demais
+  (`FR-453`, `SC-154`). **Sem tabela de países** enquanto `Q-7` não responder
 - [ ] **T018** `[US1]` `matriculas/infrastructure/planilha.py`: `.xlsx` de uma aba
   `Import_ModeloCefor`, 34 cabeçalhos em `A1:AH1` na grafia exata — `ENDEREÇO` e `NÚMERO` acentuados
   —, dados a partir da linha 2, **tudo com formato `@`** (`FR-436`, `FR-437`)
@@ -137,14 +147,14 @@ modo padrão da suíte.
 ## Dependencies
 
 - **T001–T003 bloqueiam tudo.** Não é formalidade: a forma do arquivo depende da resposta
-- T006–T008 (campos eleitorais) antes de T017
+- T006–T008b (campos eleitorais e lista de nacionalidade) antes de T017 e T017b
 - T013 antes de T014, T018 e T022 — as colunas são o centro
 - T009–T010 juntas: tabela e privilégio na mesma leva, ou o provisionamento reporta errado
 - T038 por último, e fora deste repositório
 
 ## Parallel Execution
 
-`[P]` em T009/T011, T012, T014, T017, T032–T035. O resto é sequencial porque passa por
+`[P]` em T009/T011, T012, T014, T017, T017b, T032–T035. O resto é sequencial porque passa por
 `colunas.py`.
 
 ## Implementation Strategy
