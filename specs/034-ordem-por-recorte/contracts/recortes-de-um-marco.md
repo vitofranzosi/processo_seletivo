@@ -35,9 +35,11 @@ leva a lugar nenhum — uma versão pior do `ACH-47`, com a aparência de conser
 
 O corte é compatível com ela: ele **aceita** o apelido se alguém o pedir, e nunca o **oferece**.
 
-> **O sorteio fica como está, e a divergência fica registrada.** Alinhá-lo mudaria telas de uma
-> feature que funciona e que esta spec declarou fora de escopo. É parada de escopo — `T004` — e não
-> decisão de quem implementa.
+> **O sorteio fica como está, e a divergência fica registrada** — e isto é **proposta provisória**,
+> não decisão tomada. Alinhá-lo mudaria telas de uma feature que funciona e que esta spec declarou
+> fora de escopo, e por isso é o que a medição recomenda. **A ratificação é da `T004`**, com quem
+> governa o backlog. Se a resposta for *ampliar*, este contrato é reescrito antes de a fase 2
+> começar — e quem implementar não deve ler a regra acima como fechada até lá.
 
 ---
 

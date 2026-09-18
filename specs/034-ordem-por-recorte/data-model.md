@@ -75,11 +75,15 @@ ampla, e a constraint `uq_ato_sucessor_unico` já garante que cada ato tem no m�
 
 | Regra | Hoje | Depois |
 |---|---|---|
-| `reserved_row_without_ordering` | avisa que a reserva não tem via de apuração | **não é produzida** para o caso atendido (`FR-501`) |
-| `apuravel` do recorte | falso em recorte reservado de marco computado | verdadeiro (`FR-502`) |
+| `reserved_row_without_ordering` | avisa que a reserva não tem via de apuração | **aposentada** — não sobra caso que a produza (`FR-501`) |
+| `emite_ordem_no_recorte` | responde não para recorte reservado de marco computado | **removida**, com o campo `apuravel` derivado dela, por deixar de variar (`FR-501a`) |
+| a ação de apurar, na tela | ramifica em `apuravel` | oferecida sempre que o recorte tem ordem — e **sem instante em que deixe de ser oferecida** durante a travessia (`FR-502`) |
 | assinatura da proposta | uma por marco | **uma por recorte** (`FR-495`) |
 
-As três decorrem da mesma linha: a resposta de `emite_ordem_no_recorte`.
+**As três primeiras decorrem da mesma linha** — a resposta de `emite_ordem_no_recorte` —, e a quarta
+**não**: a assinatura por recorte vem da `FR-495` e não tem relação com o predicado. A redação
+anterior dizia "as três decorrem", com três linhas na tabela, e uma delas era a assinatura: a
+afirmação nunca foi verdadeira e sobreviveu porque a contagem batia.
 
 ---
 

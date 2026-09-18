@@ -153,7 +153,7 @@ afirma. Por isso a tabela abaixo é por **função de teste**, e diz o que acont
 | 377 | `…o_aviso_da_reserva_nomeia_a_causa_e_nao_o_sintoma` | **muda** |
 | 395 | `…o_aviso_da_reserva_nao_e_emitido_na_retificacao` | **muda** — vira vacuamente verdadeiro, e caso vacuamente verdadeiro é caso que não prende nada |
 | 403 | `…perfil_cujo_marco_sorteia_nao_recebe_achado` | permanece |
-| 414 | `…a_modalidade_declarada_como_ampla_nao_e_lida_como_reserva` | permanece — e passa a ser a **contraprova de `R-3`** |
+| 414 | `…a_modalidade_declarada_como_ampla_nao_e_lida_como_reserva` | permanece, e **passa a passar vacuamente** — com o aviso aposentado, `achados(...) == []` é verdade qualquer que seja a derivação. Não é contraprova de nada; a da derivação única é a `SC-172`, que compara as duas listas. Mantenha-o, e **não** o cite como guarda |
 | 430 | `…linha_reservada_zerada_nao_produz_aviso` | permanece |
 | 448 | `…perfil_sem_marco_algum_nao_acumula_o_aviso_da_reserva` | permanece |
 | 474 | `…o_aviso_alcanca_o_segundo_marco_quando_o_primeiro_sorteia` | **muda** |

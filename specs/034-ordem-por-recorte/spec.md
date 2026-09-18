@@ -236,15 +236,19 @@ apurar fora do sistema.
 
 #### A coerência com a `032`
 
-- **FR-500**: A pergunta *"este marco emite ordem neste recorte?"* MUST continuar sendo respondida
-  por **um ponto só** — o que a `032` criou exatamente para isto — e esse ponto MUST ser **espelho**
-  da regra real, que vive na emissão. A validação da publicação e a tela de ocupação MUST consumir o
-  espelho; **a emissão é a fonte, e não o consome** — pedir que ela pergunte ao próprio reflexo seria
-  circular. O que MUST existir é um teste que prove que os dois dizem a mesma coisa: espelho que se
-  descola da fonte é a Revisão avisando sobre um recorte que a tela oferece, que é o defeito que o
-  ponto único existe para impedir.
-  *A primeira redação desta `FR` dizia que a emissão também consumiria o predicado. Não é o caso, e
-  o `research.md` `R-4` já contava dois consumidores — a `FR` é que não tinha sido corrigida.*
+- **FR-500**: **Enquanto a pergunta *"este marco emite ordem neste recorte?"* tiver resposta que
+  varia**, ela MUST ser respondida por **um ponto só** — o que a `032` criou exatamente para isto —,
+  esse ponto MUST ser **espelho** da regra real, que vive na emissão, e MUST existir teste que prove
+  que os dois dizem a mesma coisa. A validação da publicação e a tela de ocupação consomem o espelho;
+  **a emissão é a fonte, e não o consome** — pedir que ela pergunte ao próprio reflexo seria circular.
+  Espelho que se descola da fonte é a Revisão avisando sobre um recorte que a tela oferece, que é o
+  defeito que o ponto único existe para impedir.
+  *A condicional do início não é decoração:* a `FR-501a` encerra a pergunta quando ela deixa de
+  variar, e as duas seriam contraditórias sem ela — uma mandando manter o ponto e testá-lo, a outra
+  mandando removê-lo. **A `FR-500` governa a travessia; a `FR-501a` governa o destino.** Enquanto o
+  predicado existir, o teste de igualdade existe com ele, e sai junto.
+  *E uma correção anterior, que fica registrada:* a primeira redação dizia que a emissão também
+  consumiria o predicado. Não é o caso — o `research.md` `R-4` já contava dois consumidores.
 - **FR-501**: O aviso de reserva sem via de apuração é **aposentado**, e não estreitado. A redação
   anterior dizia *"ou deixa de existir, ou passa a nomear um caso estritamente menor"*, e uma spec que
   oferece duas saídas não está determinada: a escolha mudaria quais testes mudam, e ela estava sendo
@@ -252,12 +256,18 @@ apurar fora do sistema.
   emitiu por lista — ou é computado, e o computado passa a emitir. Perfil com reserva e sem marco
   algum já é impedimento da `032`, por outra regra.
 - **FR-501a**: O predicado que passar a responder **sempre a mesma coisa** MUST ser removido, junto
-  com o campo derivado dele, e não deixado no lugar respondendo sempre *sim*. É consequência direta
+  com o campo derivado dele e com o teste de igualdade que a `FR-500` exige enquanto ele existe — e
+  não deixado no lugar respondendo sempre *sim*. **A remoção MUST vir depois de as telas deixarem de
+  consultá-lo**, e não antes: o motivo está na `FR-502`. É consequência direta
   da `FR-501`: um guarda que nunca reprova é pior do que guarda nenhum, porque o próximo a ler o
   código confia nele. Se a medição mostrar que ele **ainda varia** por alguma razão não prevista
   aqui, a razão MUST ser escrita antes de ele ficar.
 - **FR-502**: A ação de apurar a ocupação MUST voltar a ser oferecida no recorte reservado que passou
-  a ter ordem — e a frase que hoje diz que a apuração acontece fora do sistema MUST sair de lá, porque
+  a ter ordem, **e MUST NOT deixar de ser oferecida em nenhum instante da travessia**. A tela ramifica
+  hoje num campo derivado do predicado, e o mecanismo de template deste produto trata **variável
+  ausente como falsa**: remover o campo antes de a tela deixar de consultá-lo esconderia a ação e
+  exibiria, para todos, a frase que manda apurar fora do sistema — o **inverso** da feature, sem erro
+  e sem teste vermelho. A ordem é **tela primeiro, campo depois** — e a frase que hoje diz que a apuração acontece fora do sistema MUST sair de lá, porque
   deixou de ser verdade.
 
 #### O que não muda

@@ -144,6 +144,40 @@ reescreveria o conteúdo de toda versão consolidada do acervo de uma vez, e a c
 
 ---
 
+## Cenário 5 — as três coisas que o operador vê e que teste nenhum encena
+
+Curto, e pela interface. Os três são obrigações **visíveis a quem conduz**, e o Princípio VI é
+percurso, não só teste — foi o `analyze` que notou que os três tinham teste e não tinham percurso.
+
+### 5.1 — o recorte em que ninguém concorreu (`FR-492a`)
+
+Num Edital com uma Modalidade reservada **sem nenhum autodeclarado**, abra o recorte dela.
+
+**Esperado**: a tela **não** parece pendência. Ela diz que ninguém concorreu ali, e a emissão da
+ordem vazia continua sendo **ato de quem conduz** — nada foi emitido sozinho. Emita, e confira que o
+ato existe e declara a ausência.
+
+**Contraprova**: antes de emitir, a tela **não** afirma que a ordem existe.
+
+### 5.2 — a Modalidade que chega depois (`FR-494a`)
+
+No Edital do cenário 1, já com as três ordens emitidas, **retifique** acrescentando uma quarta
+Modalidade com linha própria no Quadro.
+
+**Esperado**: o recorte novo aparece **sem ordem**, dizendo o que falta. E a ordem da ampla
+**continua vigente** — nenhum aviso de obsolescência sobre ela. O que **pode** ficar obsoleto é a
+apuração da ocupação, porque o Quadro mudou de números, e isso é a detecção que já existia.
+
+### 5.3 — o Edital que emitiu antes desta feature (`FR-504`)
+
+Abra um Edital do acervo que tenha reserva e **ordem única** emitida.
+
+**Esperado**: a tela mostra a ordem que foi emitida, **diz o que ela é** — anterior à ordem por
+recorte — e **não oferece** correção nenhuma. Publicação é ato imutável, e oferecer conserto que a
+imutabilidade não permite é pior do que não oferecer nada.
+
+---
+
 ## Verificação
 
 ```bash
