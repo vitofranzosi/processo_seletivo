@@ -189,12 +189,12 @@ apurar fora do sistema.
   aceita o apelido e nunca o oferece. O terceiro não é.
 - **FR-491a**: A divergência do sorteio MUST ser **registrada**, com a medição que a demonstra, e
   MUST NOT ser corrigida por esta feature.
-  > **As duas são proposta provisória, e não decisão tomada.** A redação acima é o que a medição
-  > recomenda, escrita assim para que a spec seja verificável enquanto isso; **a ratificação é da
-  > `T004`**, e até lá ninguém deve ler este `MUST NOT` como decisão de governança. Se a `T004`
-  > responder *ampliar*, as duas são reescritas antes de a fase 2 começar. Alinhá-la mudaria telas de uma feature que funciona, e o
+  > **Ratificado em 18/09/2026 por quem governa o backlog** (`D-004`). O escopo estreito é decisão
+  > tomada, e não proposta: a `034` alinha **classificação e ocupação**, e o sorteio permanece como
+  > está, com a divergência registrada. Alinhá-la mudaria telas de uma feature que funciona, e o
   tamanho da mudança é decisão de quem governa o backlog — não de quem implementa. Ampliar a
-  `FR-491` para alcançar o sorteio é a pergunta que a parada de escopo faz.
+  `FR-491` para alcançar o sorteio foi a pergunta que a parada de escopo fez, e a resposta está em
+  `D-004`: **não**, e por causa das cadeias históricas da `021`, não por causa do tamanho do código.
 - **FR-492**: O universo do recorte reservado MUST ser quem se autodeclarou naquela Modalidade, **e
   essas mesmas pessoas MUST permanecer no universo da ampla concorrência** (`D-001`). A cota preenche
   o que a ampla não preencheu; quem classifica pela ampla apenas não é computado no preenchimento da
@@ -358,6 +358,22 @@ torna perguntável antes da publicação, em vez de descoberta no dia da apuraç
 Esta feature muda a **resposta** dela. O aviso da Revisão e a tela de ocupação seguem atrás, sem que
 nenhuma segunda pergunta seja criada. É `FR-500`.
 
+### D-004 — o sorteio fica fora, e a razão não é o tamanho do helper
+
+**Ratificado em 18/09/2026 por quem governa o backlog.** A `034` alinha a derivação de recortes da
+**classificação** e da **ocupação**. O sorteio permanece como está.
+
+**O que pesou, e não foi a medição.** A medição só mostrou que a derivação do sorteio inclui a
+Modalidade declarada como ampla e as outras duas não. Se ampliar fosse trocar um helper, seria barato
+e teria entrado. Não é: a `021` construiu, sobre o recorte por lista, **decisões próprias, telas,
+relações publicadas, verificadores e cadeias históricas**. Retirar o recorte excedente obriga a
+responder **como os atos já emitidos nele continuam alcançáveis** — e ato publicado não se apaga nem
+se reescreve, de modo que a resposta não é uma migração, é um desenho.
+
+**Isso é análise própria, e entrar em silêncio na `034` seria exatamente o que a parada de escopo
+existe para impedir.** A divergência fica registrada como achado, com o risco nomeado, para a spec
+que a tratar — e registrá-la **não** a torna automaticamente a próxima feature.
+
 ### As demais premissas
 
 - A derivação única de `FR-491` é **uma escolha entre três que existem**, não uma quarta: a da
@@ -379,6 +395,14 @@ nenhuma segunda pergunta seja criada. É `FR-500`.
 
 Cada um com spec própria:
 
+- **A derivação de recortes do sorteio** — achado **registrado por esta feature**, e não herdado.
+  `sorteios/application/previa.py::recortes_do_marco` dá **recorte próprio** à Modalidade declarada
+  como ampla; a ocupação não lhe dá linha. O sorteio pode, hoje, emitir para um recorte que a apuração
+  não consome — o mesmo defeito que a `FR-491` fecha do lado computado, vivo do lado sorteado, e
+  anterior a esta spec.
+  **O risco que torna isso spec própria, e não conserto:** a `021` tem decisões, telas, relações
+  publicadas, verificadores e cadeias históricas por lista. Retirar o recorte excedente exige definir
+  **como os atos históricos dele continuam acessíveis**, e ato publicado não se apaga. Ver `D-004`.
 - **O sorteio executável** — `ACH-55` e `ACH-51`. Causa própria: a derivação da ocorrência não é
   computável e a fonte da semente é texto livre onde o valor é criado. O sorteio **já** emite por
   lista; o que falta nele é outra coisa.

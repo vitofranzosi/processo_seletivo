@@ -35,11 +35,11 @@ leva a lugar nenhum — uma versão pior do `ACH-47`, com a aparência de conser
 
 O corte é compatível com ela: ele **aceita** o apelido se alguém o pedir, e nunca o **oferece**.
 
-> **O sorteio fica como está, e a divergência fica registrada** — e isto é **proposta provisória**,
-> não decisão tomada. Alinhá-lo mudaria telas de uma feature que funciona e que esta spec declarou
-> fora de escopo, e por isso é o que a medição recomenda. **A ratificação é da `T004`**, com quem
-> governa o backlog. Se a resposta for *ampliar*, este contrato é reescrito antes de a fase 2
-> começar — e quem implementar não deve ler a regra acima como fechada até lá.
+> **O sorteio fica como está, e a divergência fica registrada.** Decidido em 18/09/2026 por quem
+> governa o backlog (`D-004`), e a razão não é o tamanho da mudança: a `021` construiu sobre o
+> recorte por lista decisões, telas, relações publicadas, verificadores e **cadeias históricas**.
+> Retirar o recorte excedente obriga a responder como os atos já emitidos nele continuam alcançáveis
+> — e ato publicado não se apaga. É spec própria, e a regra acima é **fechada** para esta feature.
 
 ---
 

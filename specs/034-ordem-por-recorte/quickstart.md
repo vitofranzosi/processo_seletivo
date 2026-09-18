@@ -132,11 +132,16 @@ não foi invertido.
 
 Este precisa do banco, e é o único que precisa.
 
-1. **Antes** de qualquer mudança, exporte o estado do acervo: para cada publicação, o
-   `content_hash`, o resumo do conteúdo canônico e os bytes do documento.
-2. Ao fim da implementação, exporte de novo.
+**A metade "antes" deste cenário não se faz aqui.** Ela é gravada na `T002`, antes da primeira
+edição de código, e o motivo é óbvio depois de dito: chegando a este ponto com a implementação
+pronta, **não existe mais "antes" que se possa exportar**. Uma prova de imutabilidade que só pode ser
+feita uma vez, e de memória, não é prova.
 
-**Esperado**: os dois arquivos **idênticos**. Mesmo `schemaVersion`, mesmo número de publicações,
+1. O retrato do acervo **já está gravado** pela `T002`: por publicação, o `content_hash`, o resumo do
+   conteúdo canônico, o do documento e o censo dos degraus de elevação.
+2. Exporte agora, do mesmo jeito, e compare com ele.
+
+**Esperado**: os dois **idênticos**. Mesmo `schemaVersion`, mesmo número de publicações,
 versões consolidadas e documentos, e cada um com o mesmo resumo.
 
 **E o censo dos degraus de elevação**: nenhum degrau novo. Um degrau acrescentado por engano

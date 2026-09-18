@@ -28,13 +28,15 @@ requisito que ninguém sabe se entrou.
 
 **Estes não são formalidade. Cada um existe porque o projeto já pagou por não tê-lo.**
 
-1. **`T004` é PARADA DE ESCOPO.** A medição mostrou que cumprir a `FR-491` ao pé da letra obriga a
-   mudar a derivação de recortes do **sorteio**, que funciona e está fora de escopo. A decisão de
-   estreitar a `FR-491` é de **quem governa o backlog**. Enquanto ela não for tomada e registrada, a
-   fase 2 não começa.
+1. **`T004` é PORTÃO DE ESCOPO, e agora é de reconfirmação.** O tamanho da feature está
+   **ratificado** (`D-004`): a `034` alinha classificação e ocupação, e o sorteio fica fora, com a
+   divergência registrada. O que a `T004` confere é que a **superfície não mudou** desde a medição —
+   se o inventário de `T003` encontrar derivação ou recusa que ela não previu, o escopo reabre, e é
+   conversa com quem governa o backlog. **A fase 2 não começa antes de ela fechar.**
+
 2. **`T002` roda ANTES de qualquer alteração.** Ela grava o "antes" dos **oito** casos nomeados. Rodá-la
    depois torna a conferência da entrega impossível de refazer, e a conferência é caso a caso.
-3. **`T044` é lida CASO A CASO, e nunca pela contagem.** Um teste pode manter o número de asserções e
+3. **`T045` é lida CASO A CASO, e nunca pela contagem.** Um teste pode manter o número de asserções e
    trocar o que afirma. Foi assim que a `033` quase deixou passar um conjunto aceito alargado de
    `403` para `(302, 403, 404)`.
 
@@ -45,9 +47,9 @@ requisito que ninguém sabe se entrou.
 **Purpose**: deixar o ambiente de pé e congelar o estado contra o qual a entrega será conferida.
 
 - [ ] T001 Preparar a worktree: copiar `backend/.env` do checkout principal (**EXISTENTE lá, ausente aqui** — é gitignorado), trocar `DB_NAME` e `POSTGRES_DB` por um nome próprio desta worktree, rodar `uv sync --extra dev` e `make preparar` em `backend/`, conferindo que a saída termina em `N de M` com **N diferente de zero**
-- [ ] T002 Medir e gravar o "antes" em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**NOVO**): a contagem da suíte (`make test-pg`), e o **estado atual de cada um dos oito casos** que `research.md` `R-5` nomeia — mais a frase de `test_reversao.py`, que não é caso e muda do mesmo jeito — o que cada um afirma hoje, citado. **Esta tarefa roda antes de qualquer edição de código**
+- [ ] T002 Medir e gravar o "antes" em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**NOVO**): a contagem da suíte (`make test-pg`); o **estado atual de cada um dos oito casos** que `research.md` `R-5` nomeia — mais a frase de `test_reversao.py`, que não é caso e muda do mesmo jeito —, com o que cada um afirma hoje, citado; **e o retrato do acervo**: por publicação, o resumo do conteúdo canônico, o do documento e o censo dos degraus de elevação. O retrato do acervo é a metade "antes" do cenário 4 do quickstart, e **só existe agora** — depois da primeira edição não há mais "antes" a gravar, e a prova de imutabilidade deixa de ser refazível. **Esta tarefa roda antes de qualquer edição de código**
 - [ ] T003 Inventariar por varredura, em `specs/034-ordem-por-recorte/inventario-dos-recortes.md` (**NOVO**): (a) todo ponto que deriva conjunto de recortes, (b) todo ponto que fixa `lista_id` na classificação, (c) todo ponto que lê `generalCompetitionModalityId`. A classificação sai do `if` que decide, **não** da leitura da definição da função — foi o que produziu três medições erradas na `033`
-- [ ] T004 **PARADA DE ESCOPO** — levar a quem governa o backlog a pergunta que a `FR-491a` deixa aberta: **ampliar a `FR-491` para alcançar o sorteio, ou manter a divergência registrada?** O registro, com a medição que o demonstra, vai para `specs/034-ordem-por-recorte/inventario-dos-recortes.md` (**EXISTENTE**, criado em T003). **Qualquer que seja a resposta, a `spec.md` (EXISTENTE) é emendada nesta tarefa** — a `FR-491` e a `FR-491a` passam a dizer o que foi decidido, porque a T047 vai afirmar na rastreabilidade que elas foram cumpridas. Se a decisão for **ampliar**, pare, reveja `spec.md`, `plan.md`, `contracts/recortes-de-um-marco.md` e este arquivo, e rode o `analyze` de novo. **A fase 2 não começa antes desta tarefa fechar**
+- [ ] T004 **PORTÃO DE ESCOPO — reconfirmação, e não decisão.** O escopo já está **ratificado** (`D-004`, 18/09/2026): a `034` alinha classificação e ocupação, e o sorteio fica fora. O que esta tarefa faz é **conferir que a superfície não mudou** — comparar o inventário de `T003` com a medição de `research.md` `R-3`. **Se bater, siga.** Se o inventário encontrar derivação de recortes ou recusa de emissão que a medição não previu, **pare**: o escopo reabre, e é conversa com quem governa o backlog. Registre a conferência — **e o registro da divergência do sorteio que a `FR-491a` exige**, com o risco dos atos históricos da `021` nomeado — em `specs/034-ordem-por-recorte/inventario-dos-recortes.md` (**EXISTENTE**, criado em T003). **A fase 2 não começa antes desta tarefa fechar**
 
 **Checkpoint**: o "antes" está gravado, a superfície está contada, e o tamanho da feature está
 decidido por quem pode decidi-lo.
@@ -147,7 +149,7 @@ que ainda tem.
 - [ ] T040 Percorrer o **cenário 1** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) pela interface administrativa, com o seletor de identidade ligado — inclusive a contraprova do Edital sem reserva —, e registrar o observado para a T047
 - [ ] T041 Percorrer o **cenário 2** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — a cauda inteira, do corte à convocação, nos três recortes. **É o `SC-169`, e é o que decide se a feature entra.** Se qualquer passo exigir shell, banco ou endereço digitado, o critério não fechou. Confira no mesmo percurso a `SC-170`: **toda** ação de apurar que a tela apresentar tem de concluir, e todo recorte sem ação tem de apresentar a razão no lugar do botão
 - [ ] T042 [P] Percorrer o **cenário 3** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — a Revisão sem o aviso, a contraprova do marco que sorteia, e o Edital do acervo intocado
-- [ ] T043 [P] Percorrer o **cenário 4** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — o acervo antes e depois, idênticos, e o censo dos degraus de elevação sem degrau novo (`FR-504`, `SC-173`)
+- [ ] T043 [P] Percorrer o **cenário 4** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**): exportar o acervo **agora** e compará-lo com o retrato gravado em T002 — idênticos, e o censo dos degraus de elevação sem degrau novo (`FR-504`, `SC-173`). **Esta tarefa não grava o "antes"**: quem o grava é T002, e é por isso que ela vive na fase 1
 - [ ] T044 Percorrer o **cenário 5** de `specs/034-ordem-por-recorte/quickstart.md` (**EXISTENTE**) — o recorte em que ninguém concorreu (`FR-492a`), a Modalidade que chega por Retificação depois das ordens emitidas (`FR-494a`) e o Edital do acervo com ordem única (`FR-504`). Os três têm teste e nenhum tinha percurso; são obrigações que o operador **vê**, e o Princípio VI é percurso. **Esta tarefa não é paralela**, embora os outros percursos sejam: o `5.2` **retifica**, e Retificação cria versão publicada — o censo do cenário 4 conta publicações, e uma a mais o reprovaria por um motivo que não é o diff
 - [ ] T045 Conferir **caso a caso** os oito testes alterados — **depois de todos os percursos**, porque é o último estado que se confere, e percurso que ache defeito muda o estado contra o "antes" gravado em `specs/034-ordem-por-recorte/antes-da-ordem-por-recorte.md` (**EXISTENTE**, criado em T002), e registrar ali mesmo a comparação. **Nunca pela contagem**: um caso pode manter o número de asserções e trocar o que afirma. Alargar um conjunto aceito é enfraquecer a asserção, e a suíte fica verde do mesmo jeito
 - [ ] T046 Varrer os **doze Editais da amostra real** de `doc/avaliacao-de-capacidade-editais-2026-09-12.md` (**EXISTENTE**, leitura) e registrar, em `specs/034-ordem-por-recorte/varredura-da-amostra.md` (**NOVO**), quais avisos da família da `032` ainda disparam em cada um e quais deixaram de disparar (`SC-174`). A `032` fez essa varredura e foi ela que confirmou a decisão de tratar por aviso — checklist, `analyze` e o teste de citações ficam verdes com regras que se contradizem, e só a leitura Edital a Edital não fica
@@ -159,7 +161,7 @@ que ainda tem.
 ## Dependências
 
 ```
-Phase 1 (T001–T004) ──► T004 é PARADA DE ESCOPO ──► Phase 2 (T005–T012)
+Phase 1 (T001–T004) ──► T004 é PORTÃO DE ESCOPO ──► Phase 2 (T005–T012)
                                                           │
                                                           ▼
                                                     US1 (T013–T024)  🎯 MVP
@@ -177,10 +179,11 @@ diferentes: US2 vive em `interface/`, US3 em `editais/domain`, `validation.py` e
 
 ### Dentro das fases
 
-- **T016 → T017 → T018 → T019 → T020 → T022** são o mesmo arquivo, criado em T016. **Não são
-  paralelas**, e por isso nenhuma leva `[P]` — é a regra que a `033` viu ser quebrada exatamente
-  assim. O grupo cresceu de quatro para seis quando o `analyze` achou o cenário de aceitação sem
-  tarefa e os dois casos de borda sem dono.
+- **T016 → T017 → T018 → T019 → T020 → T021 → T022** são o mesmo arquivo, criado em T016 — **sete
+  tarefas, e não seis**. A `T021` entrou na conta porque ela também acrescenta ali: os testes de ato
+  vazio e de mensagem da tela. **Nenhuma leva `[P]`**, e é a regra que a `033` viu ser quebrada
+  exatamente assim. O grupo cresceu de quatro para sete ao longo de três passadas de `analyze`, e a
+  cada vez alguém teve de lembrar de recontá-lo — na quarta, ninguém tinha.
 - **T013 → T014** são a mesma função.
 - **T033 → T034 → T035 → T036** — e **cada seta é por um motivo diferente**. O aviso só se aposenta
   depois de o predicado mudar de resposta. A tela só sai de cima do campo depois de o aviso sair. E o

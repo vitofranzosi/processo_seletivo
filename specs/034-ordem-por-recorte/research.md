@@ -101,12 +101,21 @@ feature que funciona, que tem telas em produção e cujo comportamento a `034` d
    alcança**, que é a mesma espécie de defeito que a `033` levou seis passadas para expulsar.
 3. A divergência do sorteio virou requisito próprio, a **`FR-491a`**: ela obriga a **registrar** e
    proíbe **corrigir**.
-4. **A pergunta que sobra é de governança, e está na `T004`**: ampliar a `FR-491` para alcançar o
-   sorteio, ou manter a divergência registrada? Esta pesquisa não a responde.
+4. **A pergunta de governança foi respondida em 18/09/2026: o sorteio fica fora** (`D-004`). O que
+   pesou não foi esta medição, e é por isso que a decisão não era de quem implementa: a `021`
+   construiu sobre o recorte por lista **decisões, telas, relações publicadas, verificadores e
+   cadeias históricas**. Ampliar obrigaria a definir **como os atos históricos do recorte excedente
+   continuam alcançáveis**, e ato publicado não se apaga nem se reescreve — não é migração, é
+   desenho. A divergência fica como **achado registrado**, com o risco nomeado, e registrá-la não a
+   torna a próxima feature.
+5. **O que sobra para a `T004`** deixou de ser decidir e passou a ser **reconfirmar**: se o
+   inventário de `T003` encontrar a superfície diferente da medida aqui, o escopo reabre; se não,
+   segue.
 
-**É parada de escopo, e não decisão de implementação.** Ela está na `T004` do `tasks.md` pela mesma
-razão que a `033` pôs a dela lá: descobrir a diferença e resolvê-la em silêncio faz a feature crescer
-sem que ninguém tenha decidido isso.
+**Era parada de escopo, e não decisão de implementação** — pela mesma razão que a `033` pôs a dela
+lá: descobrir a diferença e resolvê-la em silêncio faz a feature crescer sem que ninguém tenha
+decidido isso. **Foi decidida em 18/09/2026** (`D-004`), e o que restou à `T004` é reconfirmar que a
+superfície não mudou.
 
 ---
 
@@ -288,7 +297,7 @@ de semeadura que quebra só aparece na próxima vez que alguém semeia.
 | | Decisão | Onde vira requisito |
 |---|---|---|
 | R-1 | Nenhuma migration; o esquema da `021` já serve | `FR-505` |
-| R-3 | Derivação única é a da **ocupação**; `FR-491` **estreita** para classificação e ocupação, e a divergência do sorteio vira achado | parada de escopo, `T004` |
+| R-3 | Derivação única é a da **ocupação**; `FR-491` alcança classificação e ocupação, e a divergência do sorteio vira achado registrado | ratificado em `D-004`; `T004` reconfirma |
 | R-4 | A coerência com a `032` passa pela resposta de `emite_ordem_no_recorte` | `FR-500` |
 | R-5 | **8** casos mudam, em 3 arquivos — e uma correção de prosa num quarto —, nenhum de autorização | conferência caso a caso, na entrega |
 | R-6 | O corte já lê o recorte; falta navegação nas duas telas, e leitura na ordenação | `FR-497`, `FR-498` |

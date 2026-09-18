@@ -60,7 +60,7 @@ removida.
 
 ## O portão que não é formalidade
 
-**A `T004` é parada de escopo, e ela pode fechar antes da implementação começar.**
+**A `T004` é portão de escopo, e o escopo já foi decidido — o que falta a ela é reconfirmar.**
 
 A medição encontrou **três** tratamentos divergentes da Modalidade declarada como ampla. Dois são
 compatíveis; o do sorteio não é — ele lhe dá recorte próprio, e a ocupação não tem linha para
@@ -74,10 +74,18 @@ critério não alcança é requisito que ninguém sabe se entrou**, e foi o `ana
 A `FR-491` passou a obrigar **classificação e ocupação**, e a `FR-491a` passou a obrigar o
 **registro** da divergência do sorteio. A pergunta que sobra — *ampliar a `FR-491` para alcançá-lo?*
 — é a que a `T004` leva a quem governa o backlog, e não decisão de quem implementa. **Qualquer que
-seja a resposta, a `T004` emenda a `spec.md`**: a `T044` vai afirmar na rastreabilidade que as duas
-foram cumpridas, e afirmação sem o requisito correspondente é a rastreabilidade mentindo.
+seja a resposta, a `spec.md` diz o que foi decidido**: a `T047` vai afirmar na rastreabilidade que as
+duas foram cumpridas, e afirmação sem o requisito correspondente é a rastreabilidade mentindo.
 
-Enquanto a `T004` não fechar, a fase 2 não começa.
+**Foi decidido em 18/09/2026, e o escopo estreito está ratificado** (`D-004`): a `034` alinha
+classificação e ocupação, e o sorteio fica fora. A razão não é o tamanho da mudança — é que a `021`
+construiu sobre o recorte por lista decisões, telas, relações publicadas, verificadores e **cadeias
+históricas**, e retirar o recorte excedente obriga a definir como os atos já emitidos nele continuam
+alcançáveis. Ato publicado não se apaga: isso é desenho, não migração, e é spec própria.
+
+A `T004` deixou de ser tarefa de decisão e passou a ser de **reconfirmação**: se o inventário de
+`T003` encontrar superfície diferente da medida, o escopo reabre. Enquanto ela não fechar, a fase 2
+não começa.
 
 ## Estrutura da entrega
 
@@ -107,13 +115,17 @@ backend/processo_seletivo/
 │   └── selectors.py           # a proposta e o vigente, por recorte
 ├── editais/domain/
 │   ├── recortes.py            # NOVO — a derivação única do conjunto de recortes
-│   └── marcos.py              # a resposta de `emite_ordem_no_recorte`
-├── ocupacao/application/selectors.py   # consome a derivação única
+│   ├── marcos.py              # a resposta de `emite_ordem_no_recorte`, e depois a remoção dele
+│   └── validation.py          # o aviso da reserva, aposentado
+├── ocupacao/application/selectors.py   # consome a derivação única; perde `apuravel`
+├── publicacoes/infrastructure/pdf.py   # o documento nomeia o recorte
+├── processos/management/commands/seed_demo.py   # diz de qual recorte fala
 └── interface/
     ├── views.py               # ordenação lê o recorte; as duas telas navegam
     └── templates/interface/
         ├── ordenacao.html
-        └── corte.html
+        ├── corte.html
+        └── ocupacao.html      # sai de cima de `apuravel` antes de ele ser removido
 
 backend/tests/
 ├── unit/classificacao/        # o universo de cada recorte
@@ -137,7 +149,7 @@ aplicação, e a `032` já registrou essa direção de dependência ao colocar `
 | **Confirmação cruzada entre recortes** | a assinatura hoje é do marco | `FR-495`; teste que confirma em A e tenta emitir em B |
 | **A derivação divergir de novo** | já divergiu três vezes, em três módulos | `SC-172` compara as duas listas; é igualdade, não inspeção |
 | **O aviso da `032` sobreviver** | ele e a tela pendem do mesmo predicado, e é fácil mudar um só | `FR-500`; os dois consumidores estão contados em `research.md`, `R-4` |
-| **O predicado sobreviver vazio** | depois de aposentar o aviso ele responde sempre sim, e continua parecendo um guarda | `FR-501a`, com a ordem `T033 → T034 → T035`; a tarefa manda **medir antes de remover** |
+| **O predicado sobreviver vazio** | depois de aposentar o aviso ele responde sempre sim, e continua parecendo um guarda | `FR-501a`, com a ordem `T033 → T034 → T035 → T036`, em que a tela sai de cima do campo **antes** de ele ser removido; a tarefa manda **medir antes de remover** |
 | **A tela do acervo ficar com metade da `FR-504`** | comparar conteúdo, resumo e documento prova que nada foi reescrito, e não prova que a tela explica o que o operador vê | `T032`, com teste sobre Edital antigo de ordem única |
 | **Conferência por contagem** | 8 casos mudam, e um deles pode trocar o que afirma sem mudar o número | conferência caso a caso contra a lista nomeada, como a `033` fez |
 | **`seed_demo` quebrar em silêncio** | ele chama `calcular_ordem` direto, e só reclama na próxima semeadura | `research.md`, `R-9`, e tarefa própria |
@@ -146,6 +158,6 @@ aplicação, e a `032` já registrou essa direção de dependência ao colocar `
 
 A spec tem a lista inteira. Os dois que mais convidam a escorregar:
 
-- **A derivação de recortes do sorteio** — `research.md`, `R-3`. É a parada de escopo.
+- **A derivação de recortes do sorteio** — `research.md`, `R-3`, e `D-004`. Decidido: fica fora, e a divergência fica registrada como achado, com o risco dos atos históricos nomeado.
 - **O link do corte condicionado à regra de corte** — parte (c) da melhoria 13.1, e explicitamente
   fora desde a `033`.

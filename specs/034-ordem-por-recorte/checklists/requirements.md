@@ -66,10 +66,17 @@ existe mais é pior do que checklist nenhum, porque alguém o lê para decidir s
 **Nenhuma delas ficou para dentro da implementação**, que era como as três primeiras estavam na
 redação anterior deste arquivo.
 
-### A única coisa que continua aberta, e é de governança
+### A decisão de governança que faltava, e que fechou
 
-**Ampliar a `FR-491` para alcançar o sorteio, ou manter a divergência registrada?** É a `T004`, é
-parada de escopo, e a `FR-491`/`FR-491a` está marcada como **proposta provisória** até ela fechar.
+**Ampliar a `FR-491` para alcançar o sorteio, ou manter a divergência registrada?** Respondido em
+18/09/2026: **o sorteio fica fora** (`D-004`). A `FR-491`, a `FR-491a` e o contrato deixaram de
+carregar a marca de proposta provisória, e a `T004` passou de tarefa de **decisão** a tarefa de
+**reconfirmação** da medição de `T003`.
+
+A razão está registrada e não é o tamanho da mudança: a `021` tem decisões, telas, relações
+publicadas, verificadores e cadeias históricas por lista, e retirar o recorte excedente obriga a
+definir como os atos já emitidos nele continuam alcançáveis.
+
 A medição encontrou **três** tratamentos da Modalidade declarada como ampla — não dois, como a
 primeira redação desta nota dizia.
 
