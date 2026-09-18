@@ -160,8 +160,11 @@ conferir que o sistema se manifesta antes da publicação, com mensagem que nome
   publicado é intocável e a família nova não pode tornar impossível corrigir justamente o Edital que
   ela existe para evitar.
 - **Perfil sem marco num Edital que ainda não tem Etapa alguma.** A recusa de `FR-457` continua
-  valendo e aponta a etapa de Classificação; a de Etapa ausente, quando houver, é a que a `030` já
-  emite.
+  valendo e aponta a etapa de Classificação. **Não há, nem esta feature cria, impeditivo de raiz para
+  Edital sem Etapa**: a validação de publicabilidade exige título, Perfil e Evento, e mais nada — e
+  a `030` fixou que um marco pode sortear sem enumerar Etapa alguma (`FR-432`). O Edital sem Etapa
+  que **precisa** de uma já é recusado por outro caminho, e é o de sempre: marco que ordena pela
+  pontuação e não enumera Etapa recebe `milestone_without_stage`, que existe desde a `015`.
 - **Marco de sorteio sem Etapa.** Aceito desde a `030` (`FR-432`). A ausência de Etapa não é
   motivo de achado de executabilidade aqui.
 - **Mais de um achado no mesmo Edital.** Os quatro Editais da auditoria disparam achados
@@ -205,7 +208,7 @@ conferir que o sistema se manifesta antes da publicação, com mensagem que nome
   sorteio cujo método não será publicado — nem próprio, nem comum.
 - **FR-468**: Para marco que ordena por sorteio, o documento MUST NOT imprimir linha de combinação
   de pontuações.
-- **FR-469**: Nenhum documento de Edital publicado antes desta feature MUST mudar de conteúdo nem de
+- **FR-469**: O documento de Edital publicado antes desta feature MUST NOT mudar de conteúdo nem de
   resumo criptográfico.
 
 #### A reserva de vagas sem via de apuração
@@ -245,7 +248,10 @@ conferir que o sistema se manifesta antes da publicação, com mensagem que nome
 - **SC-157**: Nenhum dos quatro Editais que a auditoria montou chega à submissão sem que a Revisão
   nomeie o problema — 4 de 4, reencenados pelo mesmo caminho da interface.
 - **SC-158**: O documento publicado de um Edital de sorteio contém os sete dados do método, e quem o
-  recebe consegue reproduzir a semente sem pedir nada à instituição.
+  recebe consegue dizer, **sem pedir nada à instituição**, qual ocorrência fixará a semente, como ela
+  vira semente e o que vale se ela faltar. **Não é a semente que se reproduz a partir do Edital**: no
+  dia da publicação ela ainda não existe, e quem a publica é o documento do resultado do sorteio. O
+  que esta feature entrega é a base normativa contra a qual aquele resultado se confere.
 - **SC-159**: 100% dos achados novos citam a etapa do assistente em que a correção é feita.
 - **SC-160**: Gravar um rascunho incompleto continua possível em 100% dos casos em que hoje é
   possível — nenhuma das verificações novas alcança a gravação.

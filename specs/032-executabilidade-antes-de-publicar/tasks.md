@@ -79,7 +79,7 @@ conferindo o aviso na Revisão e a frase na composição.
 - [ ] T007 [P] [US1] Criar o **arquivo novo** `tests/unit/editais/test_executabilidade.py` com o caso de `FR-457`: snapshot cujo Perfil traz `classificationMilestones` vazio produz `profile_without_milestone` como `BLOCKING_ERROR`, com `path` terminando em `/classificationMilestones`
 - [ ] T008 [P] [US1] Acrescentar ao mesmo `tests/unit/editais/test_executabilidade.py` os dois casos de `FR-461`: marco **sem** `cutRule` produz `milestone_without_cut_rule` como `WARNING`; e — a contraprova que importa — marco cuja `cutRule` declara **não governar Etapa alguma** (`FR-224` da `014`, o caso do Edital 69/2026) **não** produz achado nenhum
 - [ ] T009 [P] [US1] Acrescentar ao mesmo arquivo o caso de `FR-459`: com `ato=ATO_DE_RETIFICACAO`, nenhum dos dois achados é emitido
-- [ ] T010 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso de `FR-458`: a Revisão de um Edital com Perfil sem marco mostra a pendência com caminho de volta para a etapa `classificacao`, e não para `perfis`
+- [ ] T010 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso de `FR-458` para os **dois** achados que US1 cria: um Edital com Perfil sem marco **e** com marco sem regra de corte mostra as **duas** pendências na Revisão — não a primeira —, cada uma com caminho de volta para a etapa `classificacao`, e não para `perfis`. Isso também prende o Edge Case "mais de um achado no mesmo Edital"
 - [ ] T011 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_metodo_do_marco.py` o caso de `FR-462`: o cartão do marco com o corte em branco declara que sem corte não há convocação — e não apenas que a Etapa seguinte recebe todos os habilitados
 - [ ] T012 [P] [US1] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-463`: com marco sem `cutRule`, a tela não renderiza o botão "Pedir a faixa seguinte com este déficit" e traz, no lugar dele, a razão
 
@@ -110,7 +110,7 @@ não publica.
 - [ ] T019 [P] [US2] Acrescentar ao **arquivo existente** `tests/unit/publicacoes/test_pdf_classificacao.py` os casos de `FR-464` e `FR-465`: a seção do marco imprime `Ordem` e os sete campos do método, com os rótulos de `CAMPOS_DO_METODO`
 - [ ] T020 [P] [US2] Acrescentar ao mesmo arquivo os três casos de `FR-466`: `Método: comum a este Edital`, `próprio deste marco — diverge do comum deste Edital` e `próprio deste marco`, conforme `contracts/marco-no-documento.md`
 - [ ] T021 [P] [US2] Acrescentar ao mesmo arquivo os dois casos de `FR-468` e do acervo: marco que sorteia **não** imprime `Combinação` nem `Normalização`; marco do acervo sem `orderProduction` sai **exatamente** como hoje, sem o par `Ordem`
-- [ ] T022 [P] [US2] Acrescentar a `tests/unit/editais/test_executabilidade.py` o caso de `FR-467`: marco que ordena por sorteio sem método próprio e sem método comum produz `drawn_milestone_without_method` como `BLOCKING_ERROR`, e o caso que o separa de `draw_method_invalid` — método pela metade continua sendo o achado antigo
+- [ ] T022 [P] [US2] Acrescentar a `tests/unit/editais/test_executabilidade.py` o caso de `FR-467`: marco que ordena por sorteio sem método próprio e sem método comum produz `drawn_milestone_without_method` como `BLOCKING_ERROR`; o caso que o separa de `draw_method_invalid` — método pela metade continua sendo o achado antigo; e o caso de `FR-459` para este achado — com `ato=ATO_DE_RETIFICACAO` ele **não** é emitido, porque `orderProduction` ausente é o estado legítimo de todo marco do acervo
 - [ ] T023 [P] [US2] Criar o **arquivo novo** `tests/integration/publicacoes/test_sorteio_no_documento.py` prendendo `SC-158`: publicar um Edital de sorteio pelo caminho de publicação e extrair do documento a ocorrência que fixará a semente e a regra de substituição
 
 ### Implementation for User Story 2
@@ -136,7 +136,7 @@ reservados.
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Acrescentar a `tests/unit/editais/test_executabilidade.py` o caso de `FR-470`: linha de quadro com `modalityId` não nulo e quantidade maior que zero, em Perfil cujo marco não sorteia, produz `reserved_row_without_ordering` como `WARNING` — e **não** como impedimento
+- [ ] T029 [P] [US3] Acrescentar a `tests/unit/editais/test_executabilidade.py` três casos: `FR-470` — linha de quadro com `modalityId` não nulo e quantidade maior que zero, em Perfil cujo marco não sorteia, produz `reserved_row_without_ordering` como `WARNING` e **não** como impedimento; `FR-471` — a **mensagem** nomeia a causa, citando que a ordem daquele marco é emitida em lista única, e não repete o sintoma *"Este recorte não tem ordem emitida"* que a auditoria leu no dia da apuração; e `FR-459` — com `ato=ATO_DE_RETIFICACAO` o aviso não é emitido sobre Edital do acervo
 - [ ] T030 [P] [US3] Acrescentar ao mesmo arquivo as duas contraprovas: Perfil cujo marco **sorteia** não recebe achado; e a grafia-armadilha — a Modalidade declarada como ampla concorrência, apontada por `generalCompetitionModalityId`, **não** é lida como reserva, porque o recorte da ampla é o `NULL` da linha geral
 - [ ] T031 [P] [US3] Acrescentar ao **arquivo existente** `tests/interface/test_ocupacao.py` o caso de `FR-472`: os recortes reservados não renderizam "Apurar a ocupação deste recorte" e trazem a razão; o recorte da ampla continua renderizando e funcionando
 
@@ -159,6 +159,7 @@ reservados.
 - [ ] T039 Percorrer o cenário 4 de `quickstart.md`: comparar conteúdo e resumo de cada versão do acervo com o que T003 registrou
 - [ ] T040 Rodar `make lint check test-pg` em `backend/` e registrar em `rastreabilidade.md` a contagem final contra a de T002 — `lint` são dois passos, `ruff check` **e** `ruff format --check`
 - [ ] T041 Varrer as quatro regras novas contra a amostra real de `doc/avaliacao-de-capacidade-editais-2026-09-12.md`, Edital a Edital, e registrar quais disparariam — checklist, analyze e o teste de citações ficam verdes com regras que se contradizem, e só a varredura manual pega
+- [ ] T042 Acrescentar ao **arquivo existente** `tests/interface/test_hardening_pos_auditoria.py` o caso que fecha `SC-159`: um Edital que dispara os **quatro** achados da família mostra os quatro na Revisão, cada um com caminho de volta para a etapa certa — `classificacao` para os três do marco, `perfis` para o do quadro. Mora aqui, e não dentro de uma história, porque só existe depois das três: pô-lo em US1 criaria dependência entre histórias que deveriam ser entregáveis isoladas
 
 ---
 
@@ -187,6 +188,7 @@ reservados.
 | `tests/unit/editais/test_executabilidade.py` | T007, T008, T009 (US1), T022 (US2), T029, T030 (US3) | arquivo novo, criado em T007; os demais **acrescentam** |
 | `tests/unit/publicacoes/test_pdf_classificacao.py` | T019, T020, T021 (US2) | arquivo existente de 398 linhas; acrescentar ao fim |
 | `tests/interface/test_ocupacao.py` | T012 (US1), T031 (US3) | arquivo existente de 427 linhas; acrescentar ao fim |
+| `tests/interface/test_hardening_pos_auditoria.py` | T010 (US1), T042 (polish) | arquivo existente de 640 linhas; T042 fecha o que T010 só alcança para US1 |
 
 ### Within Each User Story
 
