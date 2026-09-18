@@ -57,6 +57,7 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 )
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
+    atos_vigentes_por_marco,
     estado_do_marco,
     nomear_criterios,
     nomes_do_ato,
@@ -2360,26 +2361,122 @@ def detalhe(request, edital_id):
     )
 
 
-def _marcos_publicados(edital, ator=None):
-    """Marcos alcançáveis a partir do Edital publicado, agrupados pelo Perfil que os nomeia.
+def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
+    """Para onde este marco leva **aquele** ator, e nada além.
 
-    **Alcançáveis por quem está olhando.** A porta do marco é `_edital_para_classificar`:
-    presidência ou auditoria lê, e o resto recebe 404. A lista era montada sem consultar o ator,
-    então quem julga recursos — que não tem nenhuma das duas — via "Classificação final" na tela do
-    Edital e recebia erro ao clicar. Oferecer o que se vai recusar é pior do que não oferecer.
+    Um destino entra se, e só se, quem está olhando o alcança — que é o princípio que esta tela já
+    declarava. O que muda é o sujeito dele: era aplicado à lista inteira, por uma porta escolhida
+    de antemão, e passa a ser aplicado **a cada destino**.
+
+    Os destinos do primeiro grupo pendem da mesma porta que `_edital_para_classificar` guarda; o
+    da divulgação pende de `resultado:publicar`, que não decorre de nenhuma das outras. Eram dois
+    eixos de autorização e uma pergunta só — e é daí que vinha o `ACH-40`.
     """
-    if ator is not None and pode_gerir_comissao(ator, edital.processo) is None:
-        if not ator.can("auditoria:consultar"):
-            return []
+    marco_id = str(marco.get("id"))
+    destinos = []
+    if pode_classificar:
+        # **O marco que ordena por sorteio abre a tela do sorteio** (021, D-013): o rótulo diz o
+        # que se vai encontrar, e "ordenação" nomearia um recálculo que aquele marco não tem.
+        if marco.get("drawMethod"):
+            destinos.append(
+                {
+                    "rotulo": marco.get("name") or "",
+                    "url": reverse("interface:sorteio", args=[edital.id, marco_id]),
+                    "principal": True,
+                    "nota": "sorteio público",
+                }
+            )
+        else:
+            destinos.append(
+                {
+                    "rotulo": marco.get("name") or "",
+                    "url": reverse("interface:ordenacao", args=[edital.id, marco_id]),
+                    "principal": True,
+                    "nota": "",
+                }
+            )
+        # A condição do corte é a regra de corte declarada, e continua sendo exatamente essa: ela
+        # é escopo da `032`, e o que mudou aqui é **onde** ela é avaliada, nunca o que ela decide.
+        # Deixá-la no template obrigaria a tela a conhecer metade da derivação, e duas verdades
+        # sobre a mesma lista divergem na primeira mudança.
+        if marco.get("cutRule"):
+            destinos.append(
+                {"rotulo": "corte", "url": reverse("interface:corte", args=[edital.id, marco_id])}
+            )
+        destinos.append(
+            {"rotulo": "ocupação", "url": reverse("interface:ocupacao", args=[edital.id, marco_id])}
+        )
+    # **A divulgação de cada ato emitido** — o destino que a tela não oferecia a ninguém. Ela
+    # depende do ato **existir**: marco sem ato não tem o que divulgar, e oferecer um caminho que
+    # termina em nada é o mesmo defeito que este bloco existe para evitar, com outra roupa.
+    for ato in atos_vigentes:
+        destinos.append(
+            {
+                "rotulo": "divulgar o resultado",
+                "url": reverse(
+                    "interface:previa-de-publicacao", args=[edital.id, marco_id, ato.id]
+                ),
+            }
+        )
+    return destinos
+
+
+def _marcos_publicados(edital, ator=None):
+    """Os marcos do Edital publicado, com os destinos que **aquele ator** alcança em cada um.
+
+    **A derivação era por porta, e passou a ser por destino.** A lista inteira dependia de
+    `_edital_para_classificar` — presidência ou auditoria —, e essa porta é a de *um* dos eixos de
+    autorização do produto. Quem detinha `resultado:publicar` sem vínculo de comissão nenhum podia
+    divulgar o resultado, a tela de divulgação abria para ele, e esta tela não mostrava caminho
+    nenhum até lá: ele só chegava sabendo montar a URL. Era o `ACH-40`, e a segregação de papéis
+    que o produto recomenda ficava inexecutável por causa dele.
+
+    O princípio que a versão anterior já declarava continua inteiro, e é o que impede a correção
+    de virar o defeito espelhado: *oferecer o que se vai recusar é pior do que não oferecer*.
+    Aplicado à lista, ele fazia quem julga recursos ver "Classificação final" e receber erro ao
+    clicar; aplicado a cada destino, ele responde pelos dois sentidos — nenhum caminho oferecido
+    que se vá recusar, e nenhum caminho alcançável escondido (`FR-473`, `FR-476`).
+
+    Marco sem destino nenhum não entra, e Edital em que nenhum marco rende destino devolve lista
+    vazia: a tela não desenha o bloco, e **a ausência do bloco não é recusa** — é ausência.
+    """
     try:
         conteudo = effective_version(edital_id=edital.id).content
     except DomainError:
         return []
-    return [
-        {"perfil": perfil, "marcos": perfil.get("classificationMilestones") or []}
+    perfis_com_marcos = [
+        perfil
         for perfil in conteudo.get("profiles") or []
         if perfil.get("classificationMilestones")
     ]
+    if not perfis_com_marcos:
+        return []
+
+    pode_classificar = ator is None or _pode_ver_a_classificacao(ator, edital)
+    pode_divulgar = ator is not None and ator.can("resultado:publicar")
+    atos_por_marco = {}
+    if pode_divulgar:
+        atos_por_marco = atos_vigentes_por_marco(
+            edital=edital,
+            marcos_ids=[
+                str(marco.get("id"))
+                for perfil in perfis_com_marcos
+                for marco in perfil["classificationMilestones"]
+            ],
+        )
+
+    itens = []
+    for perfil in perfis_com_marcos:
+        for marco in perfil["classificationMilestones"]:
+            destinos = _destinos_do_marco(
+                edital,
+                marco,
+                pode_classificar=pode_classificar,
+                atos_vigentes=atos_por_marco.get(str(marco.get("id")), ()),
+            )
+            if destinos:
+                itens.append({"perfil": perfil, "marco": marco, "destinos": destinos})
+    return itens
 
 
 @require_http_methods(["GET", "POST"])
@@ -4864,6 +4961,13 @@ def ordenacao(request, edital_id, marco_id):
                 "divergencias": estado["divergencias"],
                 "posicoes_divergentes": estado["posicoes_divergentes"],
                 "pode_emitir": pode_emitir,
+                # **De quem é o ato de divulgar, lido contra quem está olhando** (033, `FR-477`).
+                # Esta tela manda o operador à do ato, três vezes, para divulgar. Quem a lê é a
+                # presidência — que é justamente quem **não** divulga na configuração segregada,
+                # porque `resultado:publicar` não decorre de `comissao:gerir` nem da presidência.
+                # Mandá-la a uma tela onde não haverá botão é o beco que o `ACH-38` descreve, e a
+                # correção não é esconder a instrução: é dizer de quem o ato é.
+                "pode_divulgar": ator.can("resultado:publicar"),
                 # As providências a jusante pendentes deste marco: a emissão as oferece para que o
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),

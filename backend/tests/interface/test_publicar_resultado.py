@@ -337,3 +337,59 @@ def test_a_recusa_recompoe_a_assinatura_para_a_reconfirmacao(client, seletor_lig
 
     assert aceita.status_code == 302, "reconfirmar a partir da tela recusada precisa funcionar"
     assert PublicacaoResultado.objects.count() == 1
+
+
+# ---------------------------------------------------------------------------
+# A navegação por capacidade (033, US1). Os dois casos abaixo prendem as pontas que o bloco de
+# destinos da tela do Edital não alcança: que o caminho oferecido **abre**, e que o texto que
+# manda o operador a outra tela vale para quem o lê.
+# ---------------------------------------------------------------------------
+
+
+def test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao(client, seletor_ligado, cenario):
+    """`SC-164` de ponta a ponta: da tela do Edital à divulgação, com **zero URLs digitadas**.
+
+    Os testes de `test_destinos_do_edital.py` provam que o caminho é oferecido; este prova que
+    ele leva a algum lugar. Separá-los importa porque as duas metades falham sozinhas: um link
+    para porta fechada é o defeito que a `FR-476` proíbe, e ele passaria naquele arquivo.
+
+    O caminho é **lido da própria página**, e não montado aqui: montá-lo testaria a `reverse` do
+    teste, e é exatamente a URL digitada à mão que o `SC-164` existe para eliminar.
+    """
+    edital = cenario["edital"]
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    tela_do_edital = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    bloco = re.search(
+        r'<section aria-labelledby="classificacao-titulo".*?</section>', tela_do_edital, re.DOTALL
+    )
+    assert bloco is not None, "a tela do Edital não ofereceu caminho nenhum a quem publica"
+    oferecido = re.search(r'<a href="([^"]+)"', bloco.group(0)).group(1)
+
+    assert client.get(oferecido).status_code == 200, (
+        f"a tela do Edital ofereceu {oferecido}, e a tela recusou quem o seguiu"
+    )
+
+
+def test_a_tela_de_ordenacao_diz_de_quem_e_o_ato_de_divulgar(client, seletor_ligado, cenario):
+    """`FR-477`: texto que manda o operador a outra tela vale para quem alcança aquela tela.
+
+    Quem lê a tela de ordenação é a presidência — que é justamente quem **não** divulga na
+    configuração segregada. Mandá-la a "Consultar ato e proveniência" sem dizer de quem é o ato a
+    manda a uma tela onde não haverá botão, e o beco é descoberto depois do clique.
+
+    A asserção é sobre **nomear o dono do ato**, e não sobre uma frase literal: prender a redação
+    faria este caso brigar com a `FR-486`, que é quem governa a formulação.
+    """
+    edital, marco = cenario["edital"], cenario["marco"]
+    identificar(client, "maria", [])
+
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, marco])).content.decode()
+
+    assert "Este ato ainda não foi divulgado" in corpo, (
+        "o cenário precisa de um ato emitido e não divulgado para o aviso existir"
+    )
+    assert "permissão de publicar" in corpo, (
+        "a tela manda a presidência divulgar sem dizer que a divulgação é de quem tem a "
+        "capacidade de publicar resultado"
+    )
