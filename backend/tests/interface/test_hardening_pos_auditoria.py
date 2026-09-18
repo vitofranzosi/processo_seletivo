@@ -822,3 +822,256 @@ def test_a_submissao_e_recusada_com_a_mesma_frase_da_revisao(client, seletor_lig
     assert Edital.objects.get(pk=inexecutavel.pk).status == Edital.Status.EM_ELABORACAO, (
         "o Edital que não classifica ninguém não atravessa a submissão"
     )
+
+
+# --- Os quatro achados da família, no mesmo Edital (032, SC-159, SC-157) -----------------------
+#
+# **Mora aqui, e não dentro de uma história.** Ele só existe depois das três — pô-lo em US1 criaria
+# dependência entre histórias que deveriam ser entregáveis isoladas.
+#
+# O que ele fecha é `SC-159`: **100% dos achados novos citam a etapa do assistente em que a
+# correção é feita**. Três deles endereçam o marco e caem na Classificação; o quarto endereça o
+# quadro e cai nos Perfis de Vaga. Nenhum precisa de entrada nova em `DESTINO_POR_CODIGO`, e é este
+# teste que prova que nenhuma faz falta.
+
+PERFIL_DA_RESERVA = "aaaaaaaa-0000-4000-8000-00000003208a"
+PERFIL_DO_SORTEIO = "aaaaaaaa-0000-4000-8000-00000003209a"
+MARCO_DA_RESERVA = "aaaaaaaa-0000-4000-8000-0000000320aa"
+MARCO_DO_SORTEIO = "aaaaaaaa-0000-4000-8000-0000000320ba"
+PCD_032 = "aaaaaaaa-0000-4000-8000-0000000320ca"
+LINHA_GERAL_DA_RESERVA = "aaaaaaaa-0000-4000-8000-0000000320da"
+LINHA_PCD_DA_RESERVA = "aaaaaaaa-0000-4000-8000-0000000320ea"
+LINHA_DO_SORTEIO = "aaaaaaaa-0000-4000-8000-0000000320fa"
+
+#: Cada achado da família, com a etapa em que a correção é feita e o que a mensagem precisa nomear.
+#: Literal, e não derivado: uma lista lida do próprio módulo passaria a ignorar o achado que
+#: deixasse de ser emitido, que é exatamente o que `SC-159` existe para acusar.
+A_FAMILIA = {
+    "profile_without_milestone": ("classificacao", "SEM-MARCO"),
+    "milestone_without_cut_rule": ("classificacao", "CLASS-TUT"),
+    "drawn_milestone_without_method": ("classificacao", "SORT-X"),
+    "reserved_row_without_ordering": ("perfis", "COM-COTA"),
+}
+
+
+def _rascunho_dos_quatro_achados():
+    """Os quatro Editais da auditoria, condensados num só.
+
+    **Três Perfis, e cada um carrega um defeito diferente** — o que não classifica ninguém, o que
+    classifica e não convoca e reparte cotas que ninguém apura, e o que sorteia sem dizer como. A
+    Revisão precisa apresentar os quatro, e não o primeiro.
+    """
+    return {
+        "profiles": [
+            {
+                "id": PERFIL_MUDO,
+                "code": "SEM-MARCO",
+                "name": "Professor de Informática",
+                "immediateVacancies": 3,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "vacancyTable": [{"id": LINHA_MUDO, "modalityId": None, "immediateVacancies": 3}],
+                "classificationMilestones": [],
+            },
+            {
+                "id": PERFIL_DA_RESERVA,
+                "code": "COM-COTA",
+                "name": "Professor de Matemática",
+                "immediateVacancies": 3,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [
+                    {"id": PCD_032, "code": "PCD", "name": "Pessoas com deficiência"}
+                ],
+                "vacancyTable": [
+                    {
+                        "id": LINHA_GERAL_DA_RESERVA,
+                        "modalityId": None,
+                        "immediateVacancies": 2,
+                    },
+                    {
+                        "id": LINHA_PCD_DA_RESERVA,
+                        "modalityId": PCD_032,
+                        "immediateVacancies": 1,
+                    },
+                ],
+                # Ordena pela pontuação e **não declara corte**: os dois achados de uma vez, e é a
+                # forma dos três Editais da amostra real que a spec nomeia.
+                "classificationMilestones": [
+                    {
+                        "id": MARCO_DA_RESERVA,
+                        "code": "CLASS-TUT",
+                        "name": "Classificação final",
+                        "orderProduction": "POR_PONTUACAO",
+                        "stages": [ETAPA_032],
+                        "operation": "SOMA_PONDERADA",
+                        "normalization": "NENHUMA",
+                        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                        "tiebreakers": [],
+                    }
+                ],
+            },
+            {
+                "id": PERFIL_DO_SORTEIO,
+                "code": "SORTEIA",
+                "name": "Técnico de Laboratório",
+                "immediateVacancies": 1,
+                "reserveType": "NONE",
+                "reserveLimit": None,
+                "competitionModalities": [],
+                "vacancyTable": [
+                    {"id": LINHA_DO_SORTEIO, "modalityId": None, "immediateVacancies": 1}
+                ],
+                "classificationMilestones": [
+                    {
+                        "id": MARCO_DO_SORTEIO,
+                        "code": "SORT-X",
+                        "name": "Sorteio público",
+                        "orderProduction": "POR_SORTEIO",
+                        "stages": [],
+                        "operation": "SOMA_PONDERADA",
+                        "normalization": "NENHUMA",
+                        "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+                        "tiebreakers": [],
+                        "cutRule": {
+                            "targetKind": "FIXED",
+                            "targetCount": 1,
+                            "surplusCount": 0,
+                            "tieOutcome": "STRICT",
+                            "governedStage": "NONE",
+                            "continuation": "NONE",
+                        },
+                    }
+                ],
+            },
+        ],
+        "stages": [
+            {
+                "id": ETAPA_032,
+                "name": "Análise curricular",
+                "order": 1,
+                "weight": "1.0000",
+                "eliminatory": False,
+                "classificatory": True,
+                "minimumScore": None,
+                "scheduleEventId": None,
+            }
+        ],
+        "schedule": [
+            {
+                "id": EVENTO_032,
+                "type": "INSCRICAO",
+                "description": "Inscrições",
+                "startAt": "2026-09-01T09:00:00-03:00",
+                "order": 1,
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def com_os_quatro_achados(rascunho, api_client):
+    from tests.fixtures.edital import actor_headers
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{rascunho.id}/rascunho",
+        _rascunho_dos_quatro_achados(),
+        format="json",
+        **{
+            **actor_headers("preparador", ["edital:elaborar"], key="hardening-032-quatro-0001"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+    assert resposta.status_code == 200, resposta.content
+    rascunho.refresh_from_db()
+    return rascunho
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_familia_inteira_dispara_no_mesmo_edital(com_os_quatro_achados):
+    """A premissa de `SC-159`: sem os quatro emitidos, o roteamento não prova nada."""
+    from processo_seletivo.editais.domain.validation import validate_for_publication
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    emitidos = {
+        item.code
+        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        if item.code in A_FAMILIA
+    }
+
+    assert emitidos == set(A_FAMILIA)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_cada_achado_da_familia_leva_a_etapa_em_que_a_correcao_e_feita(com_os_quatro_achados):
+    """`SC-159`: 100% dos achados novos citam a etapa do assistente em que se corrige.
+
+    Três caem na Classificação — que é a única tela onde o conteúdo do marco se edita — e o do
+    quadro cai nos Perfis de Vaga. Nenhum precisa de exceção por código: o `path` **é** o endereço,
+    e o `_destino` existente o lê de trás para frente.
+    """
+    from processo_seletivo.editais.domain.validation import validate_for_publication
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    achados = {
+        item.code: item
+        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        if item.code in A_FAMILIA
+    }
+
+    for codigo, (etapa_esperada, entidade) in A_FAMILIA.items():
+        achado = achados[codigo]
+        etapa, _, corrigivel = views._destino(achado.path, codigo)
+        assert (etapa, corrigivel) == (etapa_esperada, True), codigo
+        assert entidade in achado.message, f"{codigo} precisa nomear a entidade de que fala"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_revisao_apresenta_os_quatro_e_nao_o_primeiro(
+    client, seletor_ligado, com_os_quatro_achados
+):
+    """O caso de borda "mais de um achado no mesmo Edital", com a família inteira."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = _revisao(client, com_os_quatro_achados)
+
+    assert "Nada pendente" not in corpo
+    for _, entidade in A_FAMILIA.values():
+        assert entidade in corpo, entidade
+    para_classificacao = reverse(
+        "interface:compor-etapa", args=[com_os_quatro_achados.id, "classificacao"]
+    )
+    para_perfis = reverse("interface:compor-etapa", args=[com_os_quatro_achados.id, "perfis"])
+    assert corpo.count(f'href="{para_classificacao}#titulo-classificacao"') >= 3
+    assert f'href="{para_perfis}' in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_os_dois_avisos_da_familia_nao_impedem_a_publicacao(com_os_quatro_achados):
+    """A metade que faz deles avisos, e ela é decisão registrada na spec.
+
+    O corte em branco e a reserva sem apuração **advertem**. Se um dia qualquer um dos dois virasse
+    impedimento, três Editais da amostra real — 57/2026, 28/2026 e 173/2025 — perderiam a única
+    parte da jornada que hoje funciona para eles.
+    """
+    from processo_seletivo.editais.domain.validation import (
+        Severity,
+        validate_for_publication,
+    )
+    from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
+
+    achados = {
+        item.code: item.severity
+        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        if item.code in A_FAMILIA
+    }
+
+    assert achados["milestone_without_cut_rule"] == Severity.WARNING
+    assert achados["reserved_row_without_ordering"] == Severity.WARNING
+    assert achados["profile_without_milestone"] == Severity.BLOCKING_ERROR
+    assert achados["drawn_milestone_without_method"] == Severity.BLOCKING_ERROR
