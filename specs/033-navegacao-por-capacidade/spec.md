@@ -185,6 +185,10 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   e não por uma porta só. **Como princípio ele vale para o produto inteiro; como requisito desta
   feature, ele é verificado nas telas que ela alcança** — a do Edital e a do ato. Escrevê-lo como
   obrigação universal o tornaria impossível de fechar, e um requisito que não fecha não é requisito.
+  *Ele é o recíproco da `FR-473`, e as duas existem porque falham de modos diferentes:* a `FR-473`
+  falha quando um destino que o ator alcança **não** é oferecido — foi o `ACH-40` —, e a `FR-476`
+  falha quando um destino que ele **não** alcança é oferecido, que é o defeito que o código já
+  corrigiu uma vez. Um teste que prende uma delas não prende a outra.
 - **FR-477**: Texto que instrui o operador a ir a outra tela MUST levar ao destino que **aquele**
   ator alcança, ou declarar que aquele caminho não é dele.
 
@@ -198,9 +202,6 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   Cada porta improvisar o seu é o que produziu a divergência atual, e é o que produziria a próxima.
   A recusa MUST nomear **as bases que teriam servido**, e não apenas uma delas — e o conjunto dessas
   bases MUST vir de **quem chama**, porque a mesma porta aceita conjuntos diferentes conforme a tela.
-- **FR-489**: A frase que nomeia o que falta MUST dizer a verdade **daquela chamada**. Recusa que
-  nomeie uma base que não serviria ali manda a pessoa pedir o que não resolve — que é o defeito que
-  esta feature existe para fechar, e não uma versão mais educada dele.
 - **FR-480**: "Não encontrado" MUST ficar reservado a duas situações, e apenas a elas: objeto que não
   existe, e objeto de **outro escopo institucional**. A segunda é proteção de dados e MUST NOT mudar.
 - **FR-481**: Toda recusa desta família MUST nomear **o que falta** — a capacidade ou o vínculo — e
@@ -217,6 +218,13 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 - **FR-488**: Porta que hoje decide escopo e vínculo na **mesma condição** MUST separá-las antes de
   mudar de gramática. Trocar a resposta sem separar responderia recusa explicada também para objeto
   de outra unidade.
+- **FR-489**: A frase que nomeia o que falta MUST dizer a verdade **daquela chamada**. Recusa que
+  nomeie uma base que não serviria ali manda a pessoa pedir o que não resolve — que é o defeito que
+  esta feature existe para fechar, e não uma versão mais educada dele.
+  *Ela é separada da `FR-479` de propósito, e não por redundância:* a `FR-479` obriga o **mecanismo**
+  a receber o conjunto de quem chama, e é satisfeita por uma assinatura de função; a `FR-489` obriga
+  **cada chamada** a passar o conjunto certo, e só se verifica comparando duas chamadas da mesma
+  porta. Um mecanismo correto com um chamador desatento passa na primeira e falha na segunda.
 
 #### Quem trava sabe a quem pedir
 

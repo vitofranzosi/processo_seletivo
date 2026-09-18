@@ -38,16 +38,21 @@ Esta é a descoberta que a leitura de prosa não dava. Classificando as seis:
 
 | Porta | Escopo | O que ela pergunta | Recusa hoje | Veredito |
 |---|---|---|---|---|
-| `_edital_para_publicar` | 404 ✅ | uma capacidade nomeada | **403** ✅ | ✅ correta |
+| `_edital_para_publicar` | 404 ✅ | `resultado:publicar` — **e auditoria também, quando quem chama passa `consulta=True`** | **403** ✅ | ✅ correta |
 | `_peca_para_julgar` | 404 ✅ | uma capacidade nomeada, via `require_permission` | **403** ✅ | ✅ correta |
 | `_edital_para_classificar` | 404 ✅ | base composta **ou** `auditoria:consultar` | **404** ❌ | ❌ |
 | `_etapa_para_auditar` | 404 ✅ | base composta **ou** `auditoria:consultar` | **404** ❌ | ❌ |
 | `_processo_para_gerir` | 404 ✅ | base composta | **404** ❌ | ❌ |
 | `_etapa_para_distribuir` | **na mesma condição da base** ❌ | base composta | **404** ❌ | ❌ e estruturalmente travada |
 
-**Duas já estão certas, e a diferença entre elas e as outras quatro não é cuidado — é o tipo de
-pergunta.** As duas certas perguntam por **uma capacidade nomeada**, que é exatamente o que
-`require_permission` sabe recusar. As quatro erradas perguntam por um **predicado composto**:
+**Duas já estão certas, e a diferença entre elas e as outras quatro não é cuidado — é o que cada uma
+faz com a pergunta.** As duas certas respondem **403** em todos os seus modos, inclusive quando a
+pergunta é composta: `_edital_para_publicar` aceita `resultado:publicar` **ou** auditoria quando quem
+chama pede a leitura. Elas acertam porque a resposta que dão não depende de a pergunta ser simples.
+
+**E duas das seis têm modo** — `_edital_para_classificar(somente_gestao)` e
+`_edital_para_publicar(consulta)` —, o que significa que **o conjunto de bases aceitas é do ponto de
+chamada**, e não da porta (`FR-489`). As quatro erradas perguntam por um **predicado composto**:
 
 | Porta | O que ela pergunta |
 |---|---|
