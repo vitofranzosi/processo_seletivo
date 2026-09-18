@@ -95,49 +95,6 @@ sistema** — vocabulário do sistema acadêmico que este não conhece:
 códigos por oferta, não há tabela oficial de nacionalidade, não há cadastro de turno nem de polo.
 Um subsistema inteiro de configuração sai do escopo porque a resposta certa é a célula vazia.
 
-### D-007 — Título, zona e seção eleitorais passam a ser coletados no Requerimento
-
-Decisão do usuário, 17/09/2026, e ela **responde a `Q-4` da `029`** — que estava aberta e declarada
-não bloqueante justamente à espera de um consumidor.
-
-**Isto não contraria a minimização; é o teste dela sendo satisfeito.** A `FR-382` recusa oito
-informações *"nenhuma com destino na saída ou cláusula de Edital que a consuma"* — e os campos
-eleitorais **não estão naquela lista**. Eles não foram recusados por falta de finalidade; foram
-apenas não coletados, porque nenhum Edital os exigia para inscrever. O formato de importação do
-Registro Acadêmico é a finalidade institucional demonstrada que faltava.
-
-A coleta é da `029` — três colunas novas no Requerimento —, e esta spec é quem a motiva. O formato
-segue a amostra: título em três blocos de quatro dígitos, zona com três, seção com quatro, todos
-guardados sem pontuação e emitidos na forma do destino (`FR-451`).
-
-### D-008 — Nacionalidade vira lista fechada, e `BR` é derivação, não inferência
-
-Decisão do usuário, 17/09/2026. `COD_NACIONALIDADE` deixa de sair sempre vazia:
-
-| Declarado | Coluna 16 |
-|---|---|
-| Brasil | `BR` |
-| qualquer outro país | **vazia**, e a pessoa nomeada no relatório de lacunas |
-
-**A razão de o campo ser texto livre expirou.** O modelo da `029` diz, em comentário, que
-`nacionalidade` é *"texto, e não código: o código institucional de nacionalidade é da exportação, e
-o domínio não o conhece"*. A exportação deixou de ser hipótese, e com ela some o motivo de manter
-aberto o único campo de lista da `029` que não é lista. Ele passa a ser fechado, como `sexo`,
-`cor_raca`, `estado_civil` e as duas UFs já são — o que também elimina *"Brasilera"* e *"BRASIL"*
-como valores possíveis.
-
-**`BR` é o único valor que a amostra prova**, e é por isso que só ele é emitido. `BR` é compatível
-com ISO 3166-1 alpha-2; se o destino usasse alpha-3 seria `BRA`, e numérico seria `076`. Um único
-exemplo não desempata o suficiente para emitir `PT` por Portugal — isso seria exatamente a invenção
-que a `D-001` recusa, com o agravante de errar justamente no caso raro, que é o que ninguém confere.
-
-**E o caso raro é raro:** a esmagadora maioria dos convocados declara Brasil. A coluna passa de
-sempre vazia a quase sempre correta, sem que nenhuma linha fique errada.
-
-**`Q-7` fecha o resto de graça.** Se o Registro Acadêmico confirmar alpha-2 na mesma conversa da
-`Q-1`, o estrangeiro também passa a sair exato e esta decisão se simplifica para *"emita o código do
-país declarado"*.
-
 ### D-002 — `RENDA_PER_CAPITA_PNP` recebe a faixa da família, e o arquivo diz que é isso
 
 Decisão do usuário, 17/09/2026, tomada depois de a divergência ser medida e apresentada. A coluna
@@ -194,6 +151,49 @@ linhas de dados — e nada mais.
 `A2:AH2` contém dados de uma pessoa real. Ela não vira fixture, nem exemplo em documentação, nem
 caso de teste. A varredura `backend/tests/test_sem_dado_pessoal_da_amostra.py`, que a `029` criou,
 já guarda essa promessa e alcança os arquivos desta feature por `glob`.
+
+### D-007 — Título, zona e seção eleitorais passam a ser coletados no Requerimento
+
+Decisão do usuário, 17/09/2026, e ela **responde a `Q-4` da `029`** — que estava aberta e declarada
+não bloqueante justamente à espera de um consumidor.
+
+**Isto não contraria a minimização; é o teste dela sendo satisfeito.** A `FR-382` recusa oito
+informações *"nenhuma com destino na saída ou cláusula de Edital que a consuma"* — e os campos
+eleitorais **não estão naquela lista**. Eles não foram recusados por falta de finalidade; foram
+apenas não coletados, porque nenhum Edital os exigia para inscrever. O formato de importação do
+Registro Acadêmico é a finalidade institucional demonstrada que faltava.
+
+A coleta é da `029` — três colunas novas no Requerimento —, e esta spec é quem a motiva. O formato
+segue a amostra: título em três blocos de quatro dígitos, zona com três, seção com quatro, todos
+guardados sem pontuação e emitidos na forma do destino (`FR-451`).
+
+### D-008 — Nacionalidade vira lista fechada, e `BR` é derivação, não inferência
+
+Decisão do usuário, 17/09/2026. `COD_NACIONALIDADE` deixa de sair sempre vazia:
+
+| Declarado | Coluna 16 |
+|---|---|
+| Brasil | `BR` |
+| qualquer outro país | **vazia**, e a pessoa nomeada no relatório de lacunas |
+
+**A razão de o campo ser texto livre expirou.** O modelo da `029` diz, em comentário, que
+`nacionalidade` é *"texto, e não código: o código institucional de nacionalidade é da exportação, e
+o domínio não o conhece"*. A exportação deixou de ser hipótese, e com ela some o motivo de manter
+aberto o único campo de lista da `029` que não é lista. Ele passa a ser fechado, como `sexo`,
+`cor_raca`, `estado_civil` e as duas UFs já são — o que também elimina *"Brasilera"* e *"BRASIL"*
+como valores possíveis.
+
+**`BR` é o único valor que a amostra prova**, e é por isso que só ele é emitido. `BR` é compatível
+com ISO 3166-1 alpha-2; se o destino usasse alpha-3 seria `BRA`, e numérico seria `076`. Um único
+exemplo não desempata o suficiente para emitir `PT` por Portugal — isso seria exatamente a invenção
+que a `D-001` recusa, com o agravante de errar justamente no caso raro, que é o que ninguém confere.
+
+**E o caso raro é raro:** a esmagadora maioria dos convocados declara Brasil. A coluna passa de
+sempre vazia a quase sempre correta, sem que nenhuma linha fique errada.
+
+**`Q-7` fecha o resto de graça.** Se o Registro Acadêmico confirmar alpha-2 na mesma conversa da
+`Q-1`, o estrangeiro também passa a sair exato e esta decisão se simplifica para *"emita o código do
+país declarado"*.
 
 ## 7. Escopo
 

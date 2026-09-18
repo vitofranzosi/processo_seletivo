@@ -55,13 +55,13 @@ modo padrão da suíte.
 
 - [ ] **T006** `[US1]` Acrescentar `titulo_eleitoral`, `zona_eleitoral` e `secao_eleitoral` a
   `backend/processo_seletivo/requerimentos/models.py`, guardados **sem pontuação** como o CEP já é,
-  e a migration `requerimentos/0005_campos_eleitorais.py` (`D-007`)
+  e a migration `requerimentos/0005_campos_eleitorais.py` (`D-007`, `FR-451`)
 - [ ] **T007** `[US1]` Estender `requerimentos/domain/declaracao.py` com o saneamento dos três —
   dígitos apenas, comprimentos 12/3/4, e a recusa **sem repetir o valor rejeitado** (`FR-401` da
   `029`)
 - [ ] **T008** `[US1]` Rótulos e descritores dos três campos em `requerimentos/domain/rotulos.py` e
   `portal/requerimento.py`, no grupo *Documento de identidade* — e conferir que o ENTER continua
-  percorrendo a ordem certa
+  percorrendo a ordem certa (`D-007`)
 - [ ] **T008b** `[US1]` Fechar a lista de `nacionalidade` na `029` (`D-008`): entrada em
   `requerimentos/domain/nomes.py` e `rotulos.py`, em `declaracao.py::LISTAS`, e a migration de
   conversão do texto livre existente — **`Brasil` reconhecido, o resto preservado como declarado
@@ -74,7 +74,7 @@ modo padrão da suíte.
   derivada do arquivo**: um resumo criptográfico mudaria também quando só um comentário mudasse
   (`FR-454`)
 - [ ] **T010** Acrescentar a tabela a `seguranca/papeis.py::TABELAS_APPEND_ONLY` **na mesma leva**, e
-  confirmar que `make provisionar` diz `32 de 32`
+  confirmar que `make provisionar` diz `32 de 32` (`FR-447`)
 - [ ] **T011** `[P]` Criar a permissão `matricula:exportar` no catálogo de permissões, sem concedê-la
   a papel nenhum por padrão (`FR-455`, Princípio *negar por padrão*)
 
@@ -86,7 +86,7 @@ modo padrão da suíte.
   cabeçalho, origem, serializador e comportamento na ausência (`FR-445`). Uma função por coluna —
   **nunca** `legivel()` genérico
 - [ ] **T014** `[P]` `[US1]` Teste unitário por coluna em `backend/tests/unit/matriculas/`, cobrindo
-  o caso normal e o vazio. É a fase em que o erro silencioso morre
+  o caso normal e o vazio (`FR-445`). É a fase em que o erro silencioso morre
 - [ ] **T015** `[US1]` `COD_FORMA_INGRESSO`: ausência de Modalidade → `AC`; com Modalidade → o `code`
   publicado, sem reescrita (`FR-443`, `D-003`)
 - [ ] **T016** `[US1]` `RENDA_PER_CAPITA_PNP` recebe `renda_familiar_faixa` sem conversão (`D-002`),
@@ -140,7 +140,7 @@ modo padrão da suíte.
 - [ ] **T030** `[US4]` Ordem determinística e comparação célula a célula de duas gerações seguidas
   (`FR-446`, `SC-148`)
 - [ ] **T031** `[US4]` Requerimento sucedido entre gerações: o arquivo traz o **vigente**, e o
-  registro guarda qual era
+  registro guarda qual era (`FR-447`, §9 *Edge Cases*)
 
 ## Phase 7: A superfície — sem ela a capacidade não é entregue
 
@@ -150,8 +150,8 @@ manual aquilo que o canal do ator não oferece NÃO satisfaz esta exigência"*. 
 a exportação só existe para quem abre um shell.
 
 - [ ] **T031b** `[US1]` Rota de geração em `processo_seletivo/interface/urls.py`, sob o Edital, com a
-  verificação de escopo do ator — e o 404 indistinguível para quem não tem o Edital, como o resto da
-  gestão já faz
+  verificação de escopo do ator (`FR-455`) — e o 404 indistinguível para quem não tem o Edital, como
+  o resto da gestão já faz
 - [ ] **T031c** `[US1]` View de geração em `processo_seletivo/interface/views.py`: recebe a escolha da
   população, chama `exportar`, devolve o `.xlsx` em resposta de download — **sem gravar o arquivo**
   (`FR-456`)
@@ -165,7 +165,8 @@ a exportação só existe para quem abre um shell.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] **T032** `[P]` `contracts/arquivo-de-importacao.md`: as 34 colunas com o serializador nomeado,
+- [ ] **T032** `[P]` `contracts/arquivo-de-importacao.md`: as 34 colunas com o serializador nomeado
+  (`FR-445`),
   e a `D-001` substituindo a citação errada de `Q-3` no
   [contrato de saída da `029`](../029-requerimento-de-matricula/contrato-de-saida.md) (spec §17)
 - [ ] **T033** `[P]` `quickstart.md` com um cenário por FR
@@ -181,7 +182,8 @@ a exportação só existe para quem abre um shell.
 - [ ] **T035d** `[P]` `matriculas/` não faz chamada de rede nem importa cliente de sistema externo
   (`FR-450`) — verificado por varredura, junto da T034
 - [ ] **T036** Semear em `seed_demo.py` um Edital com convocados de requerimento enviado, incluindo
-  **um que declarou cor indígena** — o caso do `R-1` precisa existir para ser visto
+  **um que declarou cor indígena** (`FR-440`, `SC-146`) — o caso do `R-1` precisa existir para ser
+  visto
 - [ ] **T037** `make lint check test-pg` verde, e `make provisionar` dizendo `32 de 32`
 - [ ] **T038** **`SC-143`: gerar e importar de verdade no ambiente do Registro Acadêmico.** É o único
   critério que não se verifica neste repositório, e é o que decide se a feature funciona
