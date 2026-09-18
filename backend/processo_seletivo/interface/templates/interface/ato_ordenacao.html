@@ -32,7 +32,23 @@ de ausência deriva do mesmo conjunto que a lista, e não de um `if` separado.
   {% for acao in acoes %}
     <li><a class="botao {{ acao.estilo }}" href="{{ acao.url }}">{{ acao.rotulo }}</a></li>
   {% empty %}
-    <li class="nenhuma">Você não tem ação disponível sobre este ato.</li>
+    {% comment %}
+    **O beco vira instrução** (033, `FR-484`, `FR-486`). A frase anterior era *"Você não tem ação
+    disponível sobre este ato"*, e ela é o `ACH-38` por escrito: a presidência é mandada divulgar
+    pela tela de ordenação, segue a instrução, chega aqui e lê que não pode — sem saber o que
+    falta nem a quem pedir.
+
+    O que falta tem nome e é uma capacidade só: `resultado:publicar`. Ela não decorre de presidir
+    nem de ter emitido o ato — emitir constitui a ordem, divulgar a torna pública, e são atos de
+    autoridades distintas. Quem chega aqui sem ela chegou pela porta da presidência ou da
+    auditoria, e a resposta honesta é dizer de quem o ato é.
+
+    A formulação é a que `detalhe.html` já pratica em *"Peça a alguém com a permissão de publicar
+    que conclua o ato"*. Uma segunda redação para a mesma coisa é o que a `FR-486` proíbe.
+    {% endcomment %}
+    <li class="nenhuma">Nenhum ato sobre este é seu. Divulgar o resultado depende da
+    <strong>permissão de publicar resultado</strong>, que não decorre de presidir a comissão nem de
+    ter emitido a ordem. Peça a alguém com essa permissão que conclua o ato.</li>
   {% endfor %}
   </ul>
 </section>

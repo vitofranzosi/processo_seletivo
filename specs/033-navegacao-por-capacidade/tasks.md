@@ -116,13 +116,13 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 
 ### Tests for User Story 3
 
-- [ ] T017 [US3] Acrescentar ao **arquivo existente** `tests/interface/test_publicar_resultado.py` o caso de `FR-484`: na tela do ato, o ator sem ação disponível lê a capacidade que resolve e a instrução de pedir a quem a detém
-- [ ] T018 [US3] Acrescentar ao mesmo arquivo a contraprova de `FR-485`: quando o que falta é **vínculo**, a frase nomeia a **presidência daquele Processo** e **não** manda pedir um papel — nenhum papel concede presidência, e mandar pedir o que não resolve é o defeito
+- [x] T017 [US3] Acrescentar ao **arquivo existente** `tests/interface/test_publicar_resultado.py` o caso de `FR-484`: na tela do ato, o ator sem ação disponível lê a capacidade que resolve e a instrução de pedir a quem a detém
+- [x] T018 [US3] Acrescentar ao mesmo arquivo a contraprova de `FR-485`: quando o que falta é **vínculo**, a frase nomeia a **presidência daquele Processo** e **não** manda pedir um papel — nenhum papel concede presidência, e mandar pedir o que não resolve é o defeito
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Reescrever a frase de `processo_seletivo/interface/templates/interface/ato_ordenacao.html`, hoje *"Você não tem ação disponível sobre este ato."*, seguindo a formulação que `detalhe.html` já pratica em *"Peça a alguém com a permissão de publicar que conclua o ato"* (`FR-486`)
-- [ ] T020 [US3] Levar à tela o que falta, a partir da base de autorização que a view já consultou, em `processo_seletivo/interface/views.py` — uma leitura só, nunca uma segunda
+- [x] T019 [US3] Reescrever a frase de `processo_seletivo/interface/templates/interface/ato_ordenacao.html`, hoje *"Você não tem ação disponível sobre este ato."*, seguindo a formulação que `detalhe.html` já pratica em *"Peça a alguém com a permissão de publicar que conclua o ato"* (`FR-486`)
+- [x] T020 [US3] Levar à tela o que falta, a partir da base de autorização que a view já consultou, em `processo_seletivo/interface/views.py` — uma leitura só, nunca uma segunda
 
 **Checkpoint**: US1 e US3 funcionam, cada uma por si. Nenhuma porta foi tocada ainda.
 

@@ -171,6 +171,27 @@ divergência genérica uma vez.
 </section>
 {% endif %}
 
+{% if not pode_emitir %}
+{% comment %}
+**Quem lê e não emite sabe a quem pedir** (033, `FR-484`, `FR-485`, `FR-479`).
+
+Esta tela simplesmente escondia o formulário de emissão para quem não tem a base, e o silêncio é o
+mesmo beco do ato: a auditoria abre o marco, confere a ordem calculada e não descobre por que não
+há como constituí-la.
+
+**O que falta aqui não é uma capacidade, é uma base** — e ela é composta: a permissão sistêmica de
+gerir a comissão **ou** a presidência deste Processo, cada uma suficiente sozinha. Nomear só uma
+mandaria pedir metade do que resolve.
+
+E as duas se pedem de maneiras diferentes, que é o ponto da `FR-485`. A primeira é papel, e se pede
+como papel. A segunda **não é papel nenhum**: a presidência vem da composição da comissão, e
+nenhum papel a concede — mandar pedir "o papel de presidente" mandaria pedir o que não existe.
+{% endcomment %}
+<p class="ajuda">Emitir a ordem deste marco depende da <strong>permissão de gerir a comissão</strong>
+ou da <strong>presidência deste Processo</strong> — cada uma basta sozinha. A segunda não é papel:
+ela vem da composição da comissão. Peça a quem tem a permissão, ou a quem preside.</p>
+{% endif %}
+
 {% if pode_emitir and recomputavel %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
