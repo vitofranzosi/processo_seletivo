@@ -123,8 +123,9 @@ aparecem nomeados, e que seguir o caminho oferecido para o recorte reservado abr
 
 ### User Story 3 - O produto para de avisar sobre um problema que deixou de existir (Priority: P3)
 
-A Revisão deixa de avisar que a reserva não tem via de apuração onde a via passou a existir, e a tela
-de ocupação volta a oferecer a apuração naquele recorte.
+A Revisão deixa de avisar que a reserva não tem via de apuração onde a via passou a existir, a tela
+de ocupação volta a oferecer a apuração naquele recorte — e o guarda que respondia àquela pergunta
+sai, em vez de ficar respondendo sempre sim.
 
 **Why this priority**: é a menor em código e a maior em coerência. A `032` entregou três requisitos
 que existem **porque** a emissão por lista não existia; deixá-los de pé depois desta feature faz o
@@ -143,6 +144,10 @@ apurar fora do sistema.
    daquele recorte, **Then** a ação de apurar é oferecida, e ela funciona.
 3. **Given** um Edital **do acervo**, publicado antes desta feature, **When** se abre qualquer tela
    dele, **Then** o conteúdo publicado e o documento não mudaram.
+4. **Given** a feature entregue, **When** se procura o predicado que respondia *"este marco emite
+   ordem neste recorte?"*, **Then** ele **não existe mais** — nem o campo derivado dele, nem o teste
+   que provava o espelho igual à fonte (`FR-501a`). Se a medição tiver mostrado que ele ainda varia,
+   **Then** ele existe **e a razão está escrita**.
 
 ---
 
