@@ -163,3 +163,4 @@ As três histórias são separáveis, e a ordem abaixo é a de risco crescente.
 | Duas resoluções do método | documento diz o comum, sorteio usa o próprio | uma função só: `marcos.metodo_que_governa` |
 | A recusa alcançar o rascunho | testes de payload caem em bloco | é o que derrubou 759 testes na `030`; o recorte por `ato` é obrigatório desde a primeira tarefa |
 | Um degrau de elevação acrescentado por engano | resumo de versão do acervo muda | cenário 4 do quickstart, medido antes e depois |
+| A aresta nova `ocupacao` → `editais.domain` passar despercebida | um fato de emissão morando no módulo de conteúdo normativo, sem ninguém saber por quê | T032 e T034 exigem o registro por escrito: no docstring da função e no comentário do import |
