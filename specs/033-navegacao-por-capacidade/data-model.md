@@ -12,8 +12,13 @@ O que muda de forma é de duas espécies, e nenhuma é persistência.
 
 ## 1. A taxonomia da recusa — quatro origens, duas respostas
 
-Hoje as origens se misturam e produzem respostas inconsistentes. Passam a ser distintas, e a resposta
-de cada uma passa a ser fixa.
+Hoje as origens se misturam e produzem respostas inconsistentes. **Nas portas desta feature** elas
+passam a ser distintas, e a resposta de cada uma passa a ser fixa.
+
+O recorte é medição, e não modéstia: o inventário de `T003` contou **onze** recusas de autorização
+em `interface/views.py`, e sete delas ficam fora — pela decisão de governança de 2026-09-18, que
+[o inventário](./inventario-das-negativas.md) registra com o porquê. A taxonomia abaixo é a
+doutrina; o que ela ainda não tem é alcance universal.
 
 | Origem da negativa | Resposta | Por quê |
 |---|---|---|

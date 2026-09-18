@@ -177,7 +177,12 @@ from processo_seletivo.resultados.application import consolidacao as consolidaca
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
-from processo_seletivo.seguranca.application.authorization import require_permission
+from processo_seletivo.seguranca.application.authorization import (
+    Base,
+    base_de_permissao,
+    require_authorization_base,
+    require_permission,
+)
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import aceitar, tamanho_legivel
@@ -3697,15 +3702,49 @@ def _registrar_divergencia(ator, documento, request):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# **As bases que as portas da gestão aceitam, nomeadas como a recusa as apresenta** (033).
+#
+# Ficam aqui, e não na camada de segurança, porque o conjunto aceito é **de quem chama** e não da
+# porta: duas portas têm modo, e nelas o conjunto muda conforme a tela (`FR-479`, `FR-489`). O
+# mecanismo mora em `seguranca/application`; a composição é de quem pergunta.
+#
+# A presidência é a única que não nasce de `base_de_permissao`, e a diferença é o ponto da
+# `FR-485`: ela **não é papel**, vem da composição da comissão, e nenhum papel a concede. Mandar
+# pedir "o papel de presidente" mandaria pedir o que não existe.
+# ---------------------------------------------------------------------------
+
+BASE_DE_GESTAO = base_de_permissao("gerir a comissão")
+BASE_DA_PRESIDENCIA = Base("a presidência deste Processo", "a quem preside este Processo")
+BASE_DE_AUDITORIA = base_de_permissao("consultar auditoria")
+BASE_DE_PUBLICAR_RESULTADO = base_de_permissao("publicar resultado")
+
+# O predicado de `pode_gerir_comissao`, dito como recusa: as duas bases que ela aceita.
+BASES_DA_GESTAO_DA_COMISSAO = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA)
+# E o mesmo, acrescido da leitura por auditoria — que serve em **algumas** chamadas, nunca em
+# todas. É por isso que são duas constantes e não uma com argumento opcional.
+BASES_DA_GESTAO_OU_AUDITORIA = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA, BASE_DE_AUDITORIA)
+
+
 def _processo_para_gerir(request, processo_id):
-    """Processo, ator e base — ou 404 para tudo que este ator não alcança (D-017)."""
+    """Processo, ator e base — com 404 só para o que não existe ou é de outra unidade (D-017).
+
+    **A negativa era 404 para tudo**, e ela confundia duas coisas diferentes. Processo de outro
+    escopo institucional é 404 e continua sendo: `_processo_do_ator` filtra por escopo na própria
+    consulta, e o ator não deve sequer saber que aquele Processo existe. Falta de base é sobre o
+    ator, e responder "não encontrado" fazia a tela mentir sobre por que ela não abre (033,
+    `FR-478`).
+
+    A pergunta desta porta é **composta** — a permissão sistêmica de gerir a comissão **ou** a
+    presidência deste Processo, cada uma suficiente sozinha —, e é por não haver como recusá-la
+    num ponto só que esta porta improvisou o seu próprio `raise Http404`, igual às outras três.
+    """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return None, None, None
     processo = _processo_do_ator(ator, processo_id)
     base = pode_gerir_comissao(ator, processo)
-    if base is None:
-        raise Http404
+    require_authorization_base(base is not None, bases=BASES_DA_GESTAO_DA_COMISSAO)
     return ator, processo, base
 
 
@@ -3941,8 +3980,22 @@ def _etapa_para_distribuir(request, edital_id, etapa_id):
         .select_related("processo")
         .first()
     )
-    if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+    # **Duas condições, duas respostas — e elas compartilhavam um `if`** (033, `FR-488`):
+    #
+    #     if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+    #
+    # Enquanto estivessem juntas, trocar o 404 por recusa explicada responderia recusa explicada
+    # também para Edital de outra unidade, e isso é vazamento — não melhoria. **Separar veio
+    # antes de mudar a gramática**, e não como arrumação: é a ordem que impede o vazamento.
+    #
+    # A de cima continua sendo 404 e continua sendo indistinguível de objeto inexistente, porque a
+    # consulta acima filtra por `institution_scope` (`FR-487`). A de baixo é sobre o ator.
+    if edital is None:
         raise Http404
+    require_authorization_base(
+        pode_gerir_comissao(ator, edital.processo) is not None,
+        bases=BASES_DA_GESTAO_DA_COMISSAO,
+    )
     try:
         etapa = etapa_vigente(edital, etapa_id)
     except DomainError:
@@ -4897,8 +4950,14 @@ def _pode_ver_a_classificacao(ator, edital):
 def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
 
-    Tudo que o ator não alcança responde 404. O identificador público do marco não confere
+    **O 404 fica com o escopo e com o que não existe**; falta de base é recusa explicada, como em
+    toda porta desta família (033, `FR-478`). O identificador público do marco não confere
     autorização e, no POST, a aplicação volta a conferir a gestão depois de obter a trava.
+
+    **Esta porta tem dois modos, e o conjunto de bases muda entre eles** (`FR-489`). Na consulta, a
+    capacidade de auditoria é uma das bases aceitas; com `somente_gestao` — que é a maioria das
+    chamadas, porque emitir é ato de quem gere — ela **não** serve. Recusar as duas com a mesma
+    frase mandaria metade das pessoas pedir uma permissão que não abriria aquela tela.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
@@ -4911,8 +4970,11 @@ def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     if edital is None:
         raise Http404
     pode_emitir = pode_gerir_comissao(ator, edital.processo) is not None
-    if not pode_emitir and (somente_gestao or not ator.can("auditoria:consultar")):
-        raise Http404
+    bases = BASES_DA_GESTAO_DA_COMISSAO if somente_gestao else BASES_DA_GESTAO_OU_AUDITORIA
+    require_authorization_base(
+        pode_emitir or (not somente_gestao and ator.can("auditoria:consultar")),
+        bases=bases,
+    )
     return ator, edital, pode_emitir
 
 
@@ -5927,8 +5989,20 @@ def _edital_para_publicar(request, edital_id, *, consulta=False):
         return None, None, False
     pode_publicar = ator.can("resultado:publicar")
     pode_consultar = pode_publicar or (consulta and ator.can("auditoria:consultar"))
-    if not pode_consultar:
-        raise DomainError("forbidden", "A operação não é permitida.", 403)
+    # **O status desta porta sempre esteve certo; o que ela não dizia era o quê** (033, `FR-481`).
+    # A frase genérica de antes — *"A operação não é permitida."* — nunca mentiu, porque não
+    # nomeava nada. **É ao nomear que ela passa a poder mentir**, e esta porta tem modo: com
+    # `consulta` a capacidade de auditoria serve, sem ele não serve. A única porta que não
+    # precisava de conserto é a que esta mudança pode quebrar, e é por isso que o conjunto vem
+    # daqui, do ponto de chamada, e não de uma constante da porta (`FR-489`).
+    require_authorization_base(
+        pode_consultar,
+        bases=(
+            (BASE_DE_PUBLICAR_RESULTADO, BASE_DE_AUDITORIA)
+            if consulta
+            else (BASE_DE_PUBLICAR_RESULTADO,)
+        ),
+    )
     edital = (
         Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
         .select_related("processo")
@@ -6213,8 +6287,11 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     lia 403, e quem audita sem gerir o Processo lia 404. Quem responde a um recurso é um dos dois,
     e quase nunca é os dois — o que a spec concede a cada um, a porta negava a ambos.
 
-    A recusa é 404 para as duas, como em todo o resto da feature: quem não alcança não descobre
-    pela resposta se o que existe é a Etapa ou a permissão (FR-044).
+    **A recusa deixou de ser 404 para as duas** (033, `FR-478`). O que ela protegia — não revelar
+    a existência do que o ator não alcança — continua protegido, e por outro mecanismo: a consulta
+    abaixo filtra por `institution_scope`, de modo que Edital de outra unidade é indistinguível de
+    Edital inexistente (`FR-487`). O que o 404 fazia **a mais** era esconder do ator do mesmo
+    escopo a razão de a tela não abrir, e essa parte era ruído, não proteção.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
@@ -6226,8 +6303,9 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     )
     if edital is None:
         raise Http404
-    if not _pode_auditar_a_etapa(ator, edital):
-        raise Http404
+    require_authorization_base(
+        _pode_auditar_a_etapa(ator, edital), bases=BASES_DA_GESTAO_OU_AUDITORIA
+    )
     try:
         etapa = etapa_vigente(edital, etapa_id)
     except DomainError:

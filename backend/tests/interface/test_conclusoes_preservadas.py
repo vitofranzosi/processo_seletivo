@@ -109,7 +109,8 @@ def test_a_porta_e_a_presidencia_ou_a_auditoria(client, seletor_ligado, cenario,
         assert client.get(pagina(cenario)).status_code == 200, subject
 
     identificar(client, "joao", [])  # avaliador: trabalha na Etapa, não a audita
-    assert client.get(pagina(cenario)).status_code == 404
+    # 403 desde a 033: a asserção de que ele **não entra** é a mesma.
+    assert client.get(pagina(cenario)).status_code == 403
 
 
 def test_o_filtro_aceita_o_protocolo_da_tabela(client, seletor_ligado, cenario, concluida):
@@ -189,7 +190,7 @@ def test_a_auditoria_le_a_pagina_e_nao_reabre(client, seletor_ligado, cenario, c
         },
     )
 
-    assert recusa.status_code == 404
+    assert recusa.status_code == 403
     assert Avaliacao.objects.get(pk=concluida["avaliacao"].pk).estado == Avaliacao.Estado.CONCLUIDA
 
 

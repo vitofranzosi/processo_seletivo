@@ -162,5 +162,28 @@ formalidade**.
 | Regredir o defeito que o código já corrigiu | quem julga recursos volta a ver "Classificação final" e a receber erro ao clicar | é caso de aceitação de US1, e não caso de borda |
 | Retirar destino de quem já tinha | a presidência perde um caminho | `FR-475` e o cenário 1 do quickstart medem os dois sentidos |
 | Esconder link e achar que protegeu | a URL montada à mão passa | `FR-482`, e o teste que monta a URL à mão |
-| **O escopo crescer no meio do caminho** | o inventário encontra recusa de autorização fora das seis portas — e **26** funções autorizativas ainda não foram classificadas | o inventário é a **primeira** tarefa, e T004 é portão: encontrou, para antes da fase 2 e leva a conversa a quem governa o backlog |
+| **O escopo crescer no meio do caminho** — **este risco ocorreu** | o inventário encontra recusa de autorização fora das seis portas — e **26** funções autorizativas ainda não foram classificadas | o inventário é a **primeira** tarefa, e T004 é portão: encontrou, para antes da fase 2 e leva a conversa a quem governa o backlog. **A contenção funcionou**: ver abaixo |
 | O critério valer só no dia em que foi conferido | uma porta nova nasce depois com a gramática antiga, e a suíte não reclama | a varredura da fase 6, espelhando `test_vocabulario_da_composicao.py` da `030` |
+
+## O que aconteceu com o risco de escopo
+
+**Ele ocorreu, e a contenção funcionou.** O inventário de `T003` classificou as **75** negativas de
+`interface/views.py` por varredura de AST — 23 propagações de 404 do domínio, 22 de escopo ∪
+inexistente, 17 de objeto inexistente, 1 de estado, 1 de não autenticado e **11 de autorização**.
+
+Das 11, quatro são as portas que este plano nomeia. **Sete não estavam descritas em artefato
+nenhum**: `criar_edital`, `anexo_do_rascunho`, `reaproveitar`, `supervisao`, `minha_etapa` e as duas
+telas da Mesa, que recusam em `avaliacoes/application/mesa.py::_autorizar`.
+
+Nenhuma delas é descuido — cada uma justifica o 404 no próprio comentário, e três citam doutrina de
+spec anterior por identificador. Três misturam escopo e vínculo na mesma resposta, que é trabalho da
+natureza da `FR-488` e não tem tarefa aqui.
+
+**A decisão de quem governa o backlog, em 2026-09-18, foi manter o escopo nas quatro portas.** Em
+consequência: a `SC-165` passou a se recortar às portas desta feature — o mesmo recorte que a
+`FR-476` já praticava —, o contrato e o `data-model` foram recortados junto, e a `T030` fechou sem
+código, entregando o registro. As sete estão nomeadas em
+[inventario-das-negativas.md](./inventario-das-negativas.md), e há um teste que quebra se alguém
+desfizer a decisão de passagem.
+
+O `analyze` rodou de novo sobre os três artefatos depois disso, e não encontrou crítica.

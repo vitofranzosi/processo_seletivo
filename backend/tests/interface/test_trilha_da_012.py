@@ -274,10 +274,16 @@ def test_a_porta_da_trilha_e_a_presidencia_ou_a_auditoria(
 def test_quem_nao_preside_nem_audita_nao_alcanca_a_trilha(
     client, seletor_ligado, cenario, percurso
 ):
-    """E a recusa é 404, como em todo o resto da feature: a resposta não revela o que existe."""
+    """E a recusa se explica — o que ela **não** revela continua não sendo revelado.
+
+    Era 404 pela doutrina uniforme da `011`. O que aquela doutrina protegia era não confirmar a
+    existência do Edital a quem não o alcança, e isso continua protegido pelo filtro de escopo na
+    consulta que o busca (033, `FR-487`). João é do **mesmo** escopo e já sabe que a Etapa existe:
+    ele trabalha nela. Esconder dele a razão não protegia nada.
+    """
     identificar(client, "joao", [])  # avaliador desta Etapa — trabalha nela, não a audita
 
-    assert client.get(trilha(cenario)).status_code == 404
+    assert client.get(trilha(cenario)).status_code == 403
 
 
 def proxima_pagina(cliente, url):

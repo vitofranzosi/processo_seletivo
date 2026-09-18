@@ -179,3 +179,164 @@ def test_no_escopo_certo_o_marco_e_a_divulgacao_abrem(client, seletor_ligado, ce
     identificar(client, "carlos", papeis)
 
     assert client.get(caminho).status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# A recusa por base de autorização (033, US2). O que muda daqui para baixo é **como a negativa se
+# apresenta**; quem atravessa cada porta é exatamente quem atravessava.
+# ---------------------------------------------------------------------------
+
+NADA_FOI_ALTERADO = "Nenhuma alteração foi feita"
+
+
+def _corpo(resposta):
+    return resposta.content.decode()
+
+
+@pytest.mark.parametrize(
+    "tela",
+    ["distribuicao", "gestao-do-processo", "consulta-de-etapa"],
+)
+def test_quem_nao_satisfaz_base_nenhuma_le_a_recusa_e_nao_o_inexistente(
+    client, seletor_ligado, edital_a, etapa_a1, processo_a, cenario, tela
+):
+    """`FR-478`: a recusa é sobre o ator, e "não encontrado" mentia sobre por que a tela não abre.
+
+    As quatro portas erradas fazem a **mesma** pergunta que a camada de segurança não sabia
+    responder — uma base composta —, e cada uma improvisou o seu `raise Http404`. Improvisaram
+    igual porque o buraco era o mesmo.
+    """
+    caminho, _ = _telas(edital_a, etapa_a1, processo_a)[tela]
+    identificar(client, "estranho", [])
+
+    resposta = client.get(caminho)
+
+    assert resposta.status_code == 403
+    assert NADA_FOI_ALTERADO in _corpo(resposta)
+
+
+def test_a_recusa_nomeia_as_duas_bases_que_teriam_servido(
+    client, seletor_ligado, edital_a, etapa_a1, cenario
+):
+    """`FR-481` e `FR-479`: nomear uma só manda a pessoa pedir metade do que resolve.
+
+    A porta da distribuição aceita a permissão de gerir a comissão **ou** a presidência daquele
+    Processo, cada uma suficiente sozinha. Quem não tem nenhuma das duas não falhou num eixo:
+    falhou em **duas alternativas**, e a recusa honesta nomeia as duas.
+    """
+    identificar(client, "estranho", [])
+
+    corpo = _corpo(client.get(reverse("interface:distribuicao", args=[edital_a.id, etapa_a1])))
+
+    assert "gerir a comissão" in corpo
+    assert "presidência deste Processo" in corpo
+    assert NADA_FOI_ALTERADO in corpo
+
+
+def test_a_porta_do_marco_diz_coisas_diferentes_nos_seus_dois_modos(
+    client, seletor_ligado, certame
+):
+    """`FR-489`, primeiro par: o conjunto de bases é de **quem chama**, não da porta.
+
+    `_edital_para_classificar` tem dois modos. Na consulta, a capacidade de auditoria serve; na
+    emissão — `somente_gestao=True`, que é a maioria das chamadas — ela **não** serve. Uma recusa
+    que assuma conjunto fixo mente em metade dos casos: ou manda pedir auditoria a quem ela não
+    resolveria, ou esconde a alternativa de quem ela resolveria.
+
+    Se as duas frases forem iguais, o conjunto virou constante. É por isso que a asserção é de
+    **diferença**, e não de conteúdo.
+    """
+    edital, marco = certame["edital"], certame["marco"]
+    identificar(client, "estranho", [])
+
+    consulta = _corpo(client.get(reverse("interface:ordenacao", args=[edital.id, marco])))
+    emissao = _corpo(
+        client.post(
+            reverse("interface:emitir-ordenacao", args=[edital.id, marco]),
+            {"chave_idempotencia": "estranho-033"},
+        )
+    )
+
+    assert "consultar auditoria" in consulta, "no modo de consulta a auditoria serviria, e é base"
+    assert "consultar auditoria" not in emissao, (
+        "com somente_gestao a auditoria não serve, e nomeá-la manda pedir o que não resolve"
+    )
+
+
+def test_a_porta_da_divulgacao_diz_coisas_diferentes_nos_seus_dois_modos(
+    client, seletor_ligado, certame
+):
+    """`FR-489`, segundo par — e é a porta que **já estava certa**.
+
+    O status dela nunca esteve errado, e a mensagem genérica de hoje nunca mentiu porque não
+    nomeia nada. **É justamente ao nomear que ela passa a poder mentir**: com `consulta=True` a
+    capacidade de auditoria serve, e sem ele não serve. A única porta que não precisava de
+    conserto é a que esta mudança pode quebrar.
+    """
+    edital, marco = certame["edital"], certame["marco"]
+    identificar(client, "estranho", [])
+
+    agir = _corpo(
+        client.get(
+            reverse("interface:previa-de-publicacao", args=[edital.id, marco, certame["ato"].id])
+        )
+    )
+    consultar = _corpo(
+        client.get(reverse("interface:publicacoes-do-marco", args=[edital.id, marco]))
+    )
+
+    assert "publicar resultado" in agir
+    assert "consultar auditoria" not in agir, (
+        "divulgar não admite auditoria como alternativa, e nomeá-la mandaria pedir o que não abre"
+    )
+    assert "consultar auditoria" in consultar
+
+
+def test_na_distribuicao_o_escopo_alheio_continua_inexistente_e_a_falta_de_vinculo_nao(
+    client, seletor_ligado, edital_a, etapa_a1, cenario
+):
+    """`FR-488`: a porta travada, e a prova de que as duas condições foram separadas.
+
+    Ela decidia escopo-ou-inexistente e falta de base no **mesmo `if`**:
+
+        if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+
+    Trocar o status ali sem separar antes responderia recusa explicada também para Edital de outra
+    unidade — que é vazamento, e não melhoria. Este é o único caso que distingue "separou" de
+    "trocou o número", e ele precisa dos dois lados no mesmo teste: um só passaria com a porta
+    ainda travada.
+    """
+    tela = reverse("interface:distribuicao", args=[edital_a.id, etapa_a1])
+
+    identificar(client, "carlos", ["gestor"], escopo="outra-unidade")
+    de_fora = client.get(tela)
+
+    identificar(client, "estranho", [])
+    de_dentro = client.get(tela)
+
+    assert de_fora.status_code == 404, "a existência de Edital de outra unidade voltou a vazar"
+    assert de_dentro.status_code == 403
+
+
+def test_a_supervisao_continua_inexistente_porque_ficou_fora_do_escopo(
+    client, seletor_ligado, processo_a, edital_a, cenario
+):
+    """A decisão de escopo da `T004`, tornada falsificável — e não deixada como prosa.
+
+    O inventário contou **onze** recusas de autorização em `interface/views.py`; quatro são as
+    portas desta feature, e **sete** ficam fora. A supervisão é uma delas: ela pergunta pela mesma
+    base composta que a gestão do Processo — `pode_supervisionar` devolve literalmente
+    `pode_gerir_comissao` —, e responde "não encontrado" citando requisito e critério da `022` por
+    identificador.
+
+    Mudá-la aqui contradiria doutrina escrita de outra spec, e a decisão de quem governa o backlog
+    foi mantê-la. Este caso existe para que a decisão **quebre** se alguém a desfizer de passagem:
+    a supervisão e a gestão do Processo são vizinhas no mesmo arquivo e fazem a mesma pergunta, e
+    é exatamente assim que uma correção de escopo vaza para fora dele.
+    """
+    identificar(client, "estranho", [])
+
+    assert client.get(reverse("interface:supervisao", args=[processo_a.id])).status_code == 404, (
+        "a supervisão saiu do 404 — se isso foi deliberado, a decisão de escopo da T004 mudou e "
+        "o inventário precisa registrar a nova"
+    )

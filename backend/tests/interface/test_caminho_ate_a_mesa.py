@@ -90,7 +90,8 @@ def test_quem_nao_gere_nao_recebe_o_elo(client, seletor_ligado, cenario):
 
     alocacoes = reverse("interface:alocacoes", args=[cenario["processo"].id])
 
-    assert client.get(alocacoes).status_code == 404
+    # A recusa passou a se explicar (033, `FR-478`); quem entra é exatamente quem entrava.
+    assert client.get(alocacoes).status_code == 403
 
 
 def test_quem_pode_gerir_ve_o_caminho_mesmo_sem_integrar_a_comissao(

@@ -271,7 +271,9 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
   [inventario-das-negativas.md](./inventario-das-negativas.md), e a decisão de governança de
   2026-09-18 foi mantê-las fora: são conversa de spec própria, não escopo desta.
 - **SC-166**: 100% das recusas desta família nomeiam a capacidade ou o vínculo que as resolve, e a
-  varredura de `SC-165` também cobre esta contagem.
+  varredura de `SC-165` também cobre esta contagem. **"Desta família" é o mesmo recorte da
+  `SC-165`** — as portas desta feature —, e está dito aqui porque herdá-lo em silêncio faria dois
+  critérios vizinhos parecerem ter alcances diferentes.
 - **SC-167**: Percorrendo os seis papéis que o seletor de identidade oferece, **nenhum** deles vê, na
   tela do Edital, um caminho que não consegue abrir — e nenhum deixa de ver um que conseguia.
 - **SC-168**: O conjunto de pares (ator, tela) que abre é **idêntico** antes e depois da feature.

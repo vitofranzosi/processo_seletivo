@@ -28,8 +28,9 @@ def test_quem_nao_gere_nao_recebe_a_oferta_no_painel(client, seletor_ligado, pro
 
     assert COMISSAO not in corpo
     assert reverse("interface:alocacoes", args=[processo_a.id]) not in corpo
-    # E a recusa da rota permanece: esconder o link é conveniência, não fronteira (FR-002).
-    assert client.get(reverse("interface:alocacoes", args=[processo_a.id])).status_code == 404
+    # E a recusa da rota permanece: esconder o link é conveniência, não fronteira (FR-002). O que
+    # mudou foi só o número dela — ela passou a dizer o que falta (033, `FR-478`).
+    assert client.get(reverse("interface:alocacoes", args=[processo_a.id])).status_code == 403
 
 
 def test_o_gestor_continua_recebendo_a_oferta_no_painel(client, seletor_ligado, processo_a):

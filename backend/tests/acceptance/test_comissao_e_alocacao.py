@@ -83,7 +83,11 @@ def test_o_percurso_completo_da_organizacao_do_trabalho(
     assert do_joao.get(adulterada).status_code == 404
 
     # --- Nem administra o Processo -------------------------------------------------------
-    assert do_joao.get(comissao).status_code == 404
+    # **403, e não 404** (033, `FR-478`): João é do mesmo escopo e já sabe que o Processo existe —
+    # ele acabou de abrir a Etapa dele, acima. O que ele não tem é a base para geri-lo, e essa é
+    # recusa sobre o ator. Os 404 acima continuam 404, e por outra razão: `minha-etapa` ficou fora
+    # do escopo desta feature, e Etapa adulterada é objeto inexistente.
+    assert do_joao.get(comissao).status_code == 403
 
     # --- Remover a alocação revoga o acesso, sem tocar em papel global -------------------
     from processo_seletivo.comissoes.models import AlocacaoEtapa
