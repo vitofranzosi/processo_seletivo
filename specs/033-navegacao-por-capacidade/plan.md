@@ -6,18 +6,21 @@
 
 ## Summary
 
-A tela do Edital passa a derivar seus destinos **por capacidade**, e as portas de autorização passam
-a apresentar a recusa com a gramática que o produto já documentou num lugar só.
+A tela do Edital passa a derivar seus destinos **por capacidade**, e as quatro portas que recusam por
+vínculo de comissão passam a fazê-lo com a gramática que a camada de segurança já implementa para os
+outros dois eixos.
 
-**A abordagem técnica cabe numa frase: o produto já decidiu, e não cumpriu.** Cada peça necessária
-existe e foi conferida na árvore (ver [research.md](./research.md)):
+**A abordagem técnica cabe numa frase: falta o terceiro eixo.** O produto sabe recusar por
+capacidade e por escopo — está implementado e duas das seis portas usam. Para **vínculo** não há
+nada, e as quatro portas que dependem dele improvisaram o mesmo `raise Http404`. Cada peça necessária
+foi **medida** na árvore, por varredura de AST (ver [research.md](./research.md)):
 
 | O que a feature precisa | O que já existe |
 |---|---|
-| a doutrina da recusa | escrita por extenso no docstring de `_edital_para_publicar` |
+| a doutrina da recusa | **implementada** em `seguranca/application/authorization.py::require_permission` — capacidade → 403, escopo → 404 — e usada por 2 das 6 portas |
 | a recusa como página | `interface/erros.py::RecusaDoDominioMiddleware` + `interface/recusa.html`, com título, motivo e "nada foi alterado" |
 | saber **o que falta** | `comissoes/domain/autorizacao.py::pode_gerir_comissao`, que devolve a base ou `None` |
-| o princípio da navegação | *"oferecer o que se vai recusar é pior do que não oferecer"*, no docstring de `_marcos_publicados` |
+| o princípio da navegação | *"oferecer o que se vai recusar é pior do que não oferecer"*, em `_marcos_publicados` — e o padrão de **derivar a navegação do predicado da porta**, já aplicado numa tela por `_pode_auditar_a_etapa` |
 | a frase do "peça a alguém" | praticada na tela do Edital, em `detalhe.html` |
 | o instrumento de `SC-168` | `tests/authorization/`, **197 casos** em 38 arquivos |
 
@@ -46,8 +49,12 @@ já está carregado. O orçamento de consulta não muda: a base de autorização
 ser idêntico antes e depois; o 404 de escopo institucional é proteção de dados e não se toca; o canal
 do candidato mantém o 404 uniforme
 
-**Scale/Scope**: quatro portas de autorização, uma função de derivação de destinos, três frases de
-template, e o inventário dos 75 pontos que respondem "não encontrado" na gestão, dos quais só 4 vivem dentro das portas nomeadas
+**Scale/Scope**: **seis** portas de autorização, das quais **quatro** erram — e todas no mesmo eixo,
+o vínculo de comissão. Uma delas, a da distribuição, decide escopo e vínculo na mesma condição e
+precisa ser separada antes. Mais: um ponto único de recusa por vínculo na camada de segurança, a
+derivação de destinos, três frases de template, e o inventário dos **75** pontos que respondem "não
+encontrado" — dos quais **59 funções**, **53** recebendo `request` e **32** consultando ator, escopo
+ou vínculo
 
 ## Constitution Check
 
@@ -68,9 +75,11 @@ contenção.
 
 Nada mudou de direção, e três descobertas apertaram o desenho:
 
-- **A ordem de avaliação virou requisito de contrato.** Escopo institucional é verificado **antes**
-  de capacidade e vínculo. Inverter faria a recusa de escopo virar 403 e vazar a existência de
-  Editais de outras unidades — e **nenhum teste de status pegaria**, porque o status estaria "certo".
+- **A regra que eu havia escrito no contrato estava errada, e a medição a corrigiu.** Não é a ordem
+  de avaliação que protege — a porta da divulgação avalia capacidade **antes** do escopo e não vaza.
+  O que protege é o **filtro por escopo na própria consulta**, que as seis portas já fazem, tornando
+  objeto de outra unidade indistinguível de objeto inexistente. `FR-487` fixa isso, e `FR-488` trata
+  da porta que decide escopo e vínculo no mesmo `if`.
 - **O canal do candidato ficou explicitamente fora.** Lá o 404 é uniforme de propósito, para que
   ninguém descubra pela resposta se a inscrição não existe ou é de outra pessoa. Levar a recusa
   explicada para lá seria vazamento, não melhoria.
@@ -102,14 +111,15 @@ specs/033-navegacao-por-capacidade/
 ```text
 backend/processo_seletivo/
 ├── interface/
-│   ├── views.py                     # as quatro portas; a derivação de destinos
+│   ├── views.py                     # as quatro portas erradas; a derivação de destinos
 │   ├── erros.py                     # nada — o middleware já faz o que precisa
 │   └── templates/interface/
 │       ├── detalhe.html             # o bloco de marcos, por destino
 │       ├── ordenacao.html           # o texto que instrui, e para quem ele vale
 │       ├── ato_ordenacao.html       # "não tem ação disponível" passa a dizer a quem pedir
 │       └── recusa.html              # nada — já traz título, motivo e "nada foi alterado"
-└── comissoes/domain/autorizacao.py  # leitura; é quem sabe nomear o que falta
+├── comissoes/domain/autorizacao.py  # leitura; é quem sabe nomear o que falta
+└── seguranca/application/authorization.py  # onde nasce o ponto único de recusa por vínculo
 
 backend/tests/
 ├── authorization/                   # onde a garantia mora — e onde os casos mudam de status
@@ -118,7 +128,10 @@ backend/tests/
 
 **Structure Decision**: monólito Django com a separação que o repositório já pratica. A decisão de
 autorização permanece onde está — nas portas, no servidor. O que esta feature acrescenta é
-**apresentação** e **derivação da navegação**, e as duas moram em `interface`.
+**apresentação** e **derivação da navegação**, em `interface` — mais **um ponto único de recusa por
+vínculo** em `seguranca/application`, ao lado do que já existe para capacidade. Espalhá-lo pelas
+portas reproduziria a divergência que a feature existe para fechar: foi a ausência desse ponto que
+produziu quatro improvisos idênticos.
 
 ## Ordem de execução sugerida
 
@@ -132,7 +145,12 @@ formalidade**.
    `P0` e a que menos risco carrega.
 2. **US3 · as frases.** Menor esforço, e independente das outras duas.
 3. **US2 · a gramática da recusa.** Por último de propósito: é a que mexe em superfície de segurança
-   e a que altera testes existentes. Entra com o cenário 4 do quickstart ao lado.
+   e a que altera testes existentes. Entra com o cenário 4 do quickstart ao lado. E tem ordem interna
+   própria, que a medição impôs:
+   1. o **ponto único** de recusa por vínculo, em `seguranca/application`;
+   2. a **separação** de escopo e vínculo na porta da distribuição, que hoje os decide no mesmo `if`;
+   3. só então as quatro portas passam a usar o ponto único.
+   Inverter 2 e 3 responderia recusa explicada para Edital de outra unidade.
 
 ## Riscos, e o que cada um custaria
 
@@ -144,5 +162,5 @@ formalidade**.
 | Regredir o defeito que o código já corrigiu | quem julga recursos volta a ver "Classificação final" e a receber erro ao clicar | é caso de aceitação de US1, e não caso de borda |
 | Retirar destino de quem já tinha | a presidência perde um caminho | `FR-475` e o cenário 1 do quickstart medem os dois sentidos |
 | Esconder link e achar que protegeu | a URL montada à mão passa | `FR-482`, e o teste que monta a URL à mão |
-| **O escopo crescer no meio do caminho** | o inventário encontra recusa de autorização fora das quatro portas — e 71 dos 75 pontos ainda não foram classificados | o inventário é a **primeira** tarefa, e carrega gatilho explícito: encontrou, para antes de implementar e leva a conversa a quem governa o backlog |
+| **O escopo crescer no meio do caminho** | o inventário encontra recusa de autorização fora das seis portas — e **26** funções autorizativas ainda não foram classificadas | o inventário é a **primeira** tarefa, e T004 é portão: encontrou, para antes da fase 2 e leva a conversa a quem governa o backlog |
 | O critério valer só no dia em que foi conferido | uma porta nova nasce depois com a gramática antiga, e a suíte não reclama | a varredura da fase 6, espelhando `test_vocabulario_da_composicao.py` da `030` |

@@ -19,13 +19,32 @@ lá, distinguir "não existe" de "é de outra pessoa" seria oráculo de enumera�
 ```
 1. escopo institucional alheio ──► 404   (inalterado — é proteção de dados)
 2. objeto inexistente          ──► 404   (inalterado — é a resposta verdadeira)
-3. falta de capacidade          ─┐
-4. falta de vínculo de comissão ─┴► 403 com recusa explicada   (o que muda)
+3. falta de capacidade          ──► 403 com recusa explicada   (já é assim em 2 das 6 portas)
+4. falta de vínculo de comissão ──► 403 com recusa explicada   (o que muda, nas 4 restantes)
 ```
 
-**A ordem de avaliação é normativa.** O escopo é verificado **antes** de capacidade e vínculo.
-Inverter a ordem faria a recusa de escopo virar 403 e vazar a existência de Editais de outras
-unidades — e nenhum teste de status pegaria isso, porque o status estaria "certo".
+**O que protege não é a ordem de avaliação — é o filtro.** Uma versão anterior deste contrato
+mandava avaliar escopo **antes** de capacidade e vínculo. A medição desmentiu: a porta da divulgação
+avalia **capacidade primeiro**, devolve 403 sem tocar no banco, e **não vaza** — quem não tem a
+capacidade recebe 403 para tudo e nunca aprende se o objeto existe.
+
+A invariante real é outra, e já é uniforme nas seis portas: **a consulta que busca o objeto filtra
+por escopo institucional**, de modo que objeto de outra unidade e objeto inexistente caiam no mesmo
+`is None` e sejam **indistinguíveis**.
+
+**A ordem que vaza** é buscar o objeto **sem** filtrar por escopo e decidir depois. Nenhuma porta faz
+isso hoje, e é isso que este contrato proíbe.
+
+**E há uma porta travada.** A da distribuição decide escopo-ou-inexistente e falta de vínculo na
+**mesma condição**:
+
+```python
+if edital is None or pode_gerir_comissao(ator, edital.processo) is None:
+    raise Http404
+```
+
+Trocar o status ali, sem separar as duas condições antes, responderia recusa explicada também para
+Edital de outra unidade. **Separar vem primeiro; mudar a gramática vem depois.**
 
 ---
 

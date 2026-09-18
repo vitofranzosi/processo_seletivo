@@ -26,16 +26,24 @@ O defeito é que **a navegação é montada por um eixo e as permissões pelo ou
 | **ACH-35** · S2/P1 | A recusa por vínculo responde **404 mudo**. Em todo o resto o produto explica e indica o próximo passo; aqui, silêncio — e em produção será um 404 genérico |
 | **ACH-38** · S2/P1 | O espelho do ACH-40: a presidência é **mandada divulgar**, segue a instrução e encontra *"Você não tem ação disponível sobre este ato"*, sem dizer a quem pedir |
 
-**A regra certa já está escrita neste repositório, e aplicada num lugar só.** A porta da divulgação
-declara, por extenso, o que as outras deveriam fazer:
+**A regra certa já está implementada neste repositório — para dois dos três eixos.** Não é só prosa:
+a camada de segurança tem uma função que recusa por **capacidade** com "você não tem permissão" e por
+**escopo institucional** com "não encontrado", e duas das seis portas da gestão a usam.
 
-> *"Sem a capacidade é **403, e não 404**, inclusive para quem preside a comissão: a recusa é sobre o
-> ator, e escondê-la atrás de 'não encontrado' faria a tela mentir sobre por que ela não abre. O 404
-> fica para o que o ator **não alcança** — Edital de outro escopo institucional, que ele não deve
-> sequer saber que existe."*
+**O que não existe é tratamento para o terceiro eixo.** Não há equivalente para o **vínculo de
+comissão** — e as quatro portas que dependem dele improvisaram, cada uma, o mesmo "não encontrado".
+A medição de 18/09/2026 é o que sustenta a frase:
 
-A porta do marco declara o oposto — *"tudo que o ator não alcança responde 404"* — e é ela que
-governa 23 telas da gestão.
+| Porta | Escopo | Capacidade | Vínculo |
+|---|---|---|---|
+| a da divulgação, a do recurso | ✅ | ✅ | não se aplica |
+| a do marco, a da consulta de Etapa, a da gestão do Processo, **a da distribuição** | ✅ | — | ❌ "não encontrado" |
+
+As quatro erram **a mesma coisa, no mesmo eixo**. Nenhuma erra no escopo.
+
+**Esta feature não inventa gramática: ela completa a que existe**, dando ao vínculo o mesmo
+tratamento que a capacidade já tem, num ponto único — porque foi a ausência desse ponto que produziu
+quatro improvisos idênticos.
 
 **Esta feature não cria capacidade nenhuma e não afrouxa autorização nenhuma.** O que muda é **de
 onde a navegação é derivada** e **como a recusa se apresenta**.
@@ -79,11 +87,15 @@ Um ator abre uma tela que a autorização não lhe dá. Em vez de um "não encon
 do link, ele lê que não tem permissão, o que falta e a quem pedir. O "não encontrado" fica reservado
 ao que é de outro escopo institucional — e aí ele é proteção de dados, não inconsistência.
 
-**Why this priority**: é o que torna o produto coerente consigo mesmo. A gramática certa já existe,
-já tem tela e já tem middleware; falta uma porta usá-la.
+**Why this priority**: é o que torna o produto coerente consigo mesmo. E a medição mostra que o
+buraco é **um só, e tem nome**: o produto já sabe recusar por **capacidade** e por **escopo** — a
+regra está implementada na camada de segurança e duas das seis portas a usam. O que não existe é
+tratamento para o terceiro eixo, o **vínculo de comissão**; e as quatro portas que dependem dele
+improvisaram, cada uma, o mesmo `raise Http404`.
 
-**Independent Test**: entrar como Publicador puro e abrir a tela de distribuição do mesmo Edital.
-Hoje responde 404; deve responder recusa explicada.
+**Independent Test**: entrar como Publicador puro e abrir a tela de **distribuição** do mesmo Edital
+— cuja porta é `_etapa_para_distribuir`. Hoje responde "não encontrado"; deve responder recusa
+explicada.
 
 **Acceptance Scenarios**:
 
@@ -164,7 +176,8 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 - **FR-478**: Recusa por **capacidade** MUST ser apresentada como recusa explicada, e MUST NOT ser
   apresentada como "não encontrado".
 - **FR-479**: Recusa por **vínculo de comissão** MUST seguir a mesma gramática da recusa por
-  capacidade.
+  capacidade, e MUST ter **um ponto único de recusa**, ao lado do que a camada de segurança já
+  oferece para capacidade. Cada porta improvisar a sua é o que produziu a divergência atual.
 - **FR-480**: "Não encontrado" MUST ficar reservado a duas situações, e apenas a elas: objeto que não
   existe, e objeto de **outro escopo institucional**. A segunda é proteção de dados e MUST NOT mudar.
 - **FR-481**: Toda recusa desta família MUST nomear **o que falta** — a capacidade ou o vínculo — e
@@ -174,6 +187,13 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 - **FR-483**: Nenhuma capacidade nova MUST ser criada, e nenhuma regra de autorização MUST ser
   afrouxada. O conjunto de pares (ator, tela) que abre depois desta feature MUST ser exatamente o
   que abre antes dela.
+- **FR-487**: O que garante `FR-480` MUST ser o **filtro por escopo na própria consulta** que busca
+  o objeto, de modo que objeto fora de escopo seja **indistinguível** de objeto inexistente. Buscar
+  o objeto sem filtrar por escopo e decidir depois MUST NOT acontecer — é a única ordem que vaza, e
+  nenhuma porta a pratica hoje.
+- **FR-488**: Porta que hoje decide escopo e vínculo na **mesma condição** MUST separá-las antes de
+  mudar de gramática. Trocar a resposta sem separar responderia recusa explicada também para objeto
+  de outra unidade.
 
 #### Quem trava sabe a quem pedir
 

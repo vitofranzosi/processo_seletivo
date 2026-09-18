@@ -32,38 +32,38 @@
 ## Notes
 
 **Nenhum marcador de clarificação, e a ausência é achado.** Ao contrário da `032`, aqui não havia
-decisão de governança a tomar: a doutrina certa **já está escrita no repositório**, por extenso, na
-porta da divulgação — *"sem a capacidade é 403, e não 404 … o 404 fica para o que o ator não
-alcança"*. A feature aplica o que o produto decidiu e não cumpriu. Onde não há escolha aberta, não se
-fabrica pergunta.
+decisão de governança a tomar: a doutrina certa **já está implementada no repositório**, na camada de
+segurança, para capacidade e escopo. A feature completa o eixo que ficou de fora. Onde não há escolha
+aberta, não se fabrica pergunta.
 
-**O escopo foi estimado duas vezes, e errado nas duas.** A primeira redação dizia *"a superfície real
-são as quatro portas nomeadas"*, medindo só as **definições de função**. A segunda trocou por
-*"apenas 4 dos 75 vivem dentro das portas"* — e também estava errada: a varredura por faixa de linhas
-cobriu três intervalos e deixou `_ato_para_publicar` de fora, e essa função **não autoriza ninguém**
-(recebe `edital`, `marco_id` e `ato_id`, sem `request` e sem ator). São **5** ocorrências em 4
-funções, ou **4** em 3 portas propriamente autorizativas.
+**O Phase 0 foi refeito por medição, na terceira passada — e foi a medição que faltava desde o
+início.** As duas primeiras versões descreviam a superfície lendo definições de função; uma varredura
+por AST levou dois minutos e desmentiu as duas.
 
-A terceira redação não estima: afirma os **75** do arquivo e manda o inventário contar o resto. É a
-diferença entre um escopo medido e um escopo adivinhado, e foram necessárias duas revisões para
-chegar lá.
+| O que as versões anteriores diziam | O que a medição mostra |
+|---|---|
+| "a superfície são quatro portas" | os 75 `raise Http404` vivem em **59 funções**; **53** recebem `request`; **32** consultam ator, escopo ou vínculo |
+| "quatro portas nomeadas" | são **seis** helpers autorizativos, e `_ato_para_publicar` — que eu listava — **não autoriza ninguém** |
+| "a porta do marco é a do `ACH-35`" | a tela de distribuição passa por **`_etapa_para_distribuir`**, que nenhuma versão anterior mencionava |
+| "uma porta discorda da outra" | **quatro** portas erram, e todas **no mesmo eixo**: negativa por vínculo vira "não encontrado" |
+| "a gramática certa está num docstring" | está **implementada** em `seguranca/application/authorization.py::require_permission`, e usada por duas portas |
 
-**A parada de escopo virou tarefa própria** (T004), logo depois do inventário e **antes da fase 2** —
-não às vésperas de uma tarefa específica. A implementação começa em T013, e um gatilho posicionado em
-T028 chegaria tarde demais.
+**Isso mudou a espinha da spec, para melhor.** A feature deixa de ser "aplicar a doutrina de uma
+porta às outras" e passa a ser: **o produto trata dois dos três eixos e não tem tratamento para o
+terceiro**. Não há gramática a inventar — há um ponto único de recusa por vínculo a criar, ao lado do
+que já existe para capacidade.
 
-A porta que erra a gramática governa **23 telas**, e é isso que torna `SC-165` verificável hoje.
+**E a medição corrigiu uma regra que eu mesmo havia escrito no contrato.** Ele mandava avaliar escopo
+**antes** de capacidade e vínculo. A porta da divulgação faz o oposto — 403 antes de tocar no banco —
+e **não vaza**. O que protege é o **filtro por escopo na consulta**, uniforme nas seis portas.
+`FR-487` passou a fixar a invariante certa, e `FR-488` a tratar da porta que decide escopo e vínculo
+no mesmo `if` — que não admite troca de status sem separação prévia.
 
-**A varredura precisou de um mecanismo diferente do que eu propus.** A primeira versão mandava
-espelhar `tests/test_vocabulario_da_composicao.py`, da `030` — e aquele teste usa **lista literal**,
-dizendo no próprio comentário por quê: *"uma lista calculada passaria a ignorar a tela que deixasse
-de usar o termo"*. Para o problema dele isso está certo; para este é inútil, porque o que precisa ser
-detectado é a porta que **aparece depois**, e lista literal nunca a vê. T036 passou a ser um
-**detector de novidade ancorado no inventário**: falha quando aparece um "não encontrado" que ninguém
-registrou. O custo — toda negativa nova exige uma linha no inventário — é o ponto, não o efeito
-colateral.
+**Uma tarefa nasceu dessa descoberta e tem ordem obrigatória:** T027 cria o ponto único, T028 separa
+as condições na porta travada, T029 faz as quatro portas consumirem o ponto. Inverter T028 e T029
+responde recusa explicada para Edital de outra unidade.
 
-**E `FR-486` ganhou asserção própria** (T037). Verificar a taxonomia da recusa e verificar a
+**`FR-486` ganhou asserção própria** (T039). Verificar a taxonomia da recusa e verificar a
 **formulação** são coisas diferentes; a varredura da taxonomia cobre `SC-165`, `SC-166` e `FR-481`, e
 não fecha a `FR-486`.
 
@@ -82,7 +82,12 @@ revelada nem dentro do escopo, ele é achado para registrar, não para resolver 
 **Faixa de identificadores medida em todas as worktrees, em 18/09/2026:** teto `FR-472 / SC-163 /
 UX-061`, ocupado pela `032`. Esta spec abre em **FR-473** e **SC-164**, e não define `UX-`.
 
-**Citações externas conferidas contra o código, não assumidas:** `_edital_para_publicar` e
-`_edital_para_classificar` foram lidas nesta sessão, e é a contradição entre os dois docstrings que
-dá à feature a sua espinha. `RecusaDoDominioMiddleware` e `interface/recusa.html` também — é por
-existirem que `FR-478` não precisa construir mecanismo nenhum.
+**Tudo conferido contra o código, e desta vez por varredura.** As seis portas foram lidas uma a uma;
+`require_permission`, `RecusaDoDominioMiddleware`, `interface/recusa.html` e `_pode_auditar_a_etapa`
+também. É por `_pode_auditar_a_etapa` existir que a `FR-473` tem precedente no próprio produto: ela é
+o predicado extraído da porta para que a tela possa consultá-lo **antes** de oferecer o caminho —
+exatamente o que falta na tela do Edital.
+
+**O que ainda não foi medido, e é tarefa:** as **26** funções autorizativas fora dos seis helpers.
+Três tentativas de estimar a repartição já erraram; o inventário conta, e T004 decide o que fazer com
+o que ele encontrar.
