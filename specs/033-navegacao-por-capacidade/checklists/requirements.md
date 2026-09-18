@@ -48,10 +48,17 @@ por AST levou dois minutos e desmentiu as duas.
 | "uma porta discorda da outra" | **quatro** portas erram, e todas **no mesmo eixo**: negativa por vínculo vira "não encontrado" |
 | "a gramática certa está num docstring" | está **implementada** em `seguranca/application/authorization.py::require_permission`, e usada por duas portas |
 
-**Isso mudou a espinha da spec, para melhor.** A feature deixa de ser "aplicar a doutrina de uma
-porta às outras" e passa a ser: **o produto trata dois dos três eixos e não tem tratamento para o
-terceiro**. Não há gramática a inventar — há um ponto único de recusa por vínculo a criar, ao lado do
-que já existe para capacidade.
+**Isso mudou a espinha da spec, para melhor — e a quarta passada a afinou de novo.** A feature deixa
+de ser "aplicar a doutrina de uma porta às outras" e passa a ser: **a camada de segurança sabe recusar
+uma capacidade nomeada, e não sabe recusar uma pergunta composta.** `require_permission` recebe *uma*
+permissão; quatro portas perguntam por "esta **ou** aquela", e as quatro improvisaram igual porque o
+buraco é o mesmo.
+
+O rótulo "o eixo do vínculo", que a terceira passada usou, era grosso: `pode_gerir_comissao` mistura
+capacidade (`comissao:gerir`) e vínculo (presidência), e a porta do marco recusa **também** por falta
+de `auditoria:consultar`, que é capacidade pura — produzindo "não encontrado" por capacidade. Não há
+gramática a inventar; há um ponto único de recusa por **base composta** a criar, que nomeie **as
+bases que teriam servido**.
 
 **E a medição corrigiu uma regra que eu mesmo havia escrito no contrato.** Ele mandava avaliar escopo
 **antes** de capacidade e vínculo. A porta da divulgação faz o oposto — 403 antes de tocar no banco —

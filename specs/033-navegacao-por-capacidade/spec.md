@@ -26,24 +26,34 @@ O defeito é que **a navegação é montada por um eixo e as permissões pelo ou
 | **ACH-35** · S2/P1 | A recusa por vínculo responde **404 mudo**. Em todo o resto o produto explica e indica o próximo passo; aqui, silêncio — e em produção será um 404 genérico |
 | **ACH-38** · S2/P1 | O espelho do ACH-40: a presidência é **mandada divulgar**, segue a instrução e encontra *"Você não tem ação disponível sobre este ato"*, sem dizer a quem pedir |
 
-**A regra certa já está implementada neste repositório — para dois dos três eixos.** Não é só prosa:
-a camada de segurança tem uma função que recusa por **capacidade** com "você não tem permissão" e por
-**escopo institucional** com "não encontrado", e duas das seis portas da gestão a usam.
+**A regra certa já está implementada neste repositório — para um tipo de pergunta.** Não é só prosa:
+a camada de segurança tem uma função que recusa por **uma capacidade nomeada** com "você não tem
+permissão", e por **escopo institucional** com "não encontrado". Duas das seis portas da gestão a
+usam, e acertam.
 
-**O que não existe é tratamento para o terceiro eixo.** Não há equivalente para o **vínculo de
-comissão** — e as quatro portas que dependem dele improvisaram, cada uma, o mesmo "não encontrado".
-A medição de 18/09/2026 é o que sustenta a frase:
+**O que não existe é recusa para a pergunta composta.** Boa parte das portas não pergunta por *uma*
+capacidade: pergunta por uma **base de autorização** — a permissão de gerir a comissão **ou** a
+presidência daquele Processo, cada uma suficiente sozinha —, e há porta que aceita essa base **ou** a
+capacidade de consultar auditoria. Para isso a camada de segurança não oferece nada, e **cada porta
+que depende de um predicado composto improvisou o seu próprio "não encontrado"**.
 
-| Porta | Escopo | Capacidade | Vínculo |
+A medição de 18/09/2026:
+
+| Porta | Escopo | O que ela pergunta | Recusa hoje |
 |---|---|---|---|
-| a da divulgação, a do recurso | ✅ | ✅ | não se aplica |
-| a do marco, a da consulta de Etapa, a da gestão do Processo, **a da distribuição** | ✅ | — | ❌ "não encontrado" |
+| a da divulgação, a do recurso | ✅ | **uma capacidade nomeada** | ✅ recusa explicada |
+| a do marco | ✅ | base **ou** capacidade de auditoria | ❌ "não encontrado" |
+| a da consulta de Etapa | ✅ | base **ou** capacidade de auditoria | ❌ "não encontrado" |
+| a da gestão do Processo | ✅ | **base** | ❌ "não encontrado" |
+| **a da distribuição** | ⚠️ na mesma condição da base | **base** | ❌ "não encontrado" |
 
-As quatro erram **a mesma coisa, no mesmo eixo**. Nenhuma erra no escopo.
+**Nenhuma das quatro erra no escopo, e nenhuma erra por descuido isolado**: as quatro fazem a mesma
+pergunta que a camada de segurança não sabe responder.
 
-**Esta feature não inventa gramática: ela completa a que existe**, dando ao vínculo o mesmo
-tratamento que a capacidade já tem, num ponto único — porque foi a ausência desse ponto que produziu
-quatro improvisos idênticos.
+**Esta feature não inventa gramática: ela completa a que existe**, dando à base de autorização o
+mesmo tratamento que a capacidade nomeada já tem, num ponto único. E há uma peça pronta para isso —
+a função que decide a base **já devolve um objeto que nomeia qual delas autorizou**. Falta o espelho:
+nomear o que faltou quando não autoriza.
 
 **Esta feature não cria capacidade nenhuma e não afrouxa autorização nenhuma.** O que muda é **de
 onde a navegação é derivada** e **como a recusa se apresenta**.
@@ -88,10 +98,10 @@ do link, ele lê que não tem permissão, o que falta e a quem pedir. O "não en
 ao que é de outro escopo institucional — e aí ele é proteção de dados, não inconsistência.
 
 **Why this priority**: é o que torna o produto coerente consigo mesmo. E a medição mostra que o
-buraco é **um só, e tem nome**: o produto já sabe recusar por **capacidade** e por **escopo** — a
-regra está implementada na camada de segurança e duas das seis portas a usam. O que não existe é
-tratamento para o terceiro eixo, o **vínculo de comissão**; e as quatro portas que dependem dele
-improvisaram, cada uma, o mesmo `raise Http404`.
+buraco é **um só, e tem nome**: a camada de segurança sabe recusar **uma capacidade nomeada** e
+**escopo institucional**, e duas das seis portas a usam. O que ela não sabe recusar é o **predicado
+composto** — "esta capacidade **ou** aquele vínculo" — que é o que as outras quatro perguntam. Cada
+uma improvisou o seu `raise Http404`, e improvisaram igual porque o buraco é o mesmo.
 
 **Independent Test**: entrar como Publicador puro e abrir a tela de **distribuição** do mesmo Edital
 — cuja porta é `_etapa_para_distribuir`. Hoje responde "não encontrado"; deve responder recusa
@@ -101,8 +111,9 @@ explicada.
 
 1. **Given** um ator do mesmo escopo institucional que não tem a capacidade exigida por uma tela,
    **When** ele a abre, **Then** o sistema responde **recusa explicada**, e não "não encontrado".
-2. **Given** um ator do mesmo escopo que tem a capacidade mas **não** tem o vínculo de comissão que a
-   tela exige, **When** ele a abre, **Then** o sistema responde recusa explicada, nomeando o vínculo.
+2. **Given** um ator do mesmo escopo que não satisfaz **nenhuma** das bases que a tela aceita —
+   nem a capacidade, nem o vínculo —, **When** ele a abre, **Then** o sistema responde recusa
+   explicada, nomeando **as duas** bases que teriam servido, e não apenas uma.
 3. **Given** um ator de **outro escopo institucional**, **When** ele abre a tela de um Edital que não
    é do escopo dele, **Then** o sistema responde **"não encontrado"** — e isso não muda.
 4. **Given** um identificador que não corresponde a objeto nenhum, **When** a tela é aberta, **Then**
@@ -175,9 +186,11 @@ classificação e ler o que hoje é *"Você não tem ação disponível sobre es
 
 - **FR-478**: Recusa por **capacidade** MUST ser apresentada como recusa explicada, e MUST NOT ser
   apresentada como "não encontrado".
-- **FR-479**: Recusa por **vínculo de comissão** MUST seguir a mesma gramática da recusa por
-  capacidade, e MUST ter **um ponto único de recusa**, ao lado do que a camada de segurança já
-  oferece para capacidade. Cada porta improvisar a sua é o que produziu a divergência atual.
+- **FR-479**: Recusa por **base de autorização** — o predicado composto que aceita uma capacidade
+  **ou** um vínculo, cada um suficiente sozinho — MUST seguir a mesma gramática da recusa por
+  capacidade nomeada, e MUST ter **um ponto único**, ao lado do que a camada de segurança já oferece.
+  Cada porta improvisar o seu é o que produziu a divergência atual, e é o que produziria a próxima.
+  A recusa MUST nomear **as bases que teriam servido**, e não apenas uma delas.
 - **FR-480**: "Não encontrado" MUST ficar reservado a duas situações, e apenas a elas: objeto que não
   existe, e objeto de **outro escopo institucional**. A segunda é proteção de dados e MUST NOT mudar.
 - **FR-481**: Toda recusa desta família MUST nomear **o que falta** — a capacidade ou o vínculo — e

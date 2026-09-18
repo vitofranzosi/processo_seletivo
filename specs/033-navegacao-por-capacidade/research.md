@@ -32,29 +32,41 @@ levantam 404 elas mesmas. Não foram classificadas uma a uma; é o que o invent�
 
 ---
 
-## R-2 · As quatro portas erradas erram todas a mesma coisa
+## R-2 · As quatro portas erradas fazem todas a mesma pergunta
 
 Esta é a descoberta que a leitura de prosa não dava. Classificando as seis:
 
-| Porta | Escopo | Capacidade | **Vínculo** | Veredito |
+| Porta | Escopo | O que ela pergunta | Recusa hoje | Veredito |
 |---|---|---|---|---|
-| `_edital_para_publicar` | 404 ✅ | **403** ✅ | n/a | ✅ correta |
-| `_peca_para_julgar` | 404 ✅ | **403** ✅, via `require_permission` | n/a | ✅ correta |
-| `_edital_para_classificar` | 404 ✅ | — | **404** ❌ | ❌ |
-| `_etapa_para_auditar` | 404 ✅ | — | **404** ❌ | ❌ |
-| `_processo_para_gerir` | 404 ✅ | — | **404** ❌ | ❌ |
-| `_etapa_para_distribuir` | **misturado** ❌ | — | **404** ❌ | ❌ e estruturalmente travada |
+| `_edital_para_publicar` | 404 ✅ | uma capacidade nomeada | **403** ✅ | ✅ correta |
+| `_peca_para_julgar` | 404 ✅ | uma capacidade nomeada, via `require_permission` | **403** ✅ | ✅ correta |
+| `_edital_para_classificar` | 404 ✅ | base composta **ou** `auditoria:consultar` | **404** ❌ | ❌ |
+| `_etapa_para_auditar` | 404 ✅ | base composta **ou** `auditoria:consultar` | **404** ❌ | ❌ |
+| `_processo_para_gerir` | 404 ✅ | base composta | **404** ❌ | ❌ |
+| `_etapa_para_distribuir` | **na mesma condição da base** ❌ | base composta | **404** ❌ | ❌ e estruturalmente travada |
 
-**Duas já estão certas. As quatro erradas erram exatamente no mesmo ponto: negativa por vínculo de
-comissão responde "não encontrado".** Nenhuma delas erra no escopo — todas filtram o Edital por
-`institution_scope` na própria consulta.
+**Duas já estão certas, e a diferença entre elas e as outras quatro não é cuidado — é o tipo de
+pergunta.** As duas certas perguntam por **uma capacidade nomeada**, que é exatamente o que
+`require_permission` sabe recusar. As quatro erradas perguntam por um **predicado composto**:
 
-O achado deixa de ser *"duas portas discordam"* e passa a ser: **o produto sabe tratar capacidade e
-escopo, e não tem tratamento para vínculo.**
+| Porta | O que ela pergunta |
+|---|---|
+| `_processo_para_gerir`, `_etapa_para_distribuir` | `comissao:gerir` **ou** presidência daquele Processo |
+| `_edital_para_classificar`, `_etapa_para_auditar` | a base acima **ou** `auditoria:consultar` |
+
+Nenhuma delas erra no escopo — todas filtram o Edital por `institution_scope` na própria consulta.
+
+O achado deixa de ser *"duas portas discordam"* e passa a ser: **a camada de segurança sabe recusar
+uma capacidade nomeada, e não sabe recusar uma base composta** — então toda porta que pergunta por
+uma base improvisou. Elas improvisaram igual porque o buraco é o mesmo.
+
+**E há uma peça pronta para o conserto.** `pode_gerir_comissao` devolve um objeto `Base` que
+**nomeia** qual das duas autorizou. O que falta é o espelho: nomear o que faltou quando devolve
+`None`.
 
 ---
 
-## R-3 · A taxonomia já está implementada — para dois dos três eixos
+## R-3 · A taxonomia já está implementada — para **um tipo de pergunta**
 
 **Descoberta.** Não é só docstring. `seguranca/application/authorization.py::require_permission`
 **implementa** a regra:
@@ -68,20 +80,25 @@ if institution_scope is not None and actor.institution_scope != institution_scop
 
 `_peca_para_julgar` a consome. `_edital_para_publicar` reescreve a mesma coisa à mão.
 
-**O que falta é o terceiro eixo.** Não existe equivalente para **vínculo de comissão** — e é por
-isso que cada porta que depende dele improvisou `raise Http404`. A feature não inventa gramática:
-ela **completa a que existe**, dando ao vínculo o mesmo tratamento que a capacidade já tem.
+**Note a assinatura: `require_permission(actor, permission, *, institution_scope)`.** Ela recebe
+**uma** permissão. Não há como expressar "esta **ou** aquela", que é o que quatro portas perguntam —
+e é por isso que as quatro improvisaram, e improvisaram igual.
 
-**Decisão.** O ponto único de recusa por vínculo vive ao lado de `require_permission`, na camada de
-segurança — e não em `interface`. Espalhá-lo pelas portas reproduziria exatamente a divergência que
-esta feature existe para fechar.
+**O que falta, portanto, não é "o eixo do vínculo": é recusa nomeada para base composta.** Um ator
+sem `comissao:gerir` e sem presidência não falhou num eixo — falhou em **duas** alternativas, e a
+recusa honesta nomeia as duas.
+
+**Decisão.** O ponto único vive ao lado de `require_permission`, na camada de segurança — e não em
+`interface`. Espalhá-lo pelas portas reproduziria exatamente a divergência que esta feature existe
+para fechar.
 
 ---
 
 ## R-4 · A regra que eu tinha escrito no contrato estava mal formulada
 
 A primeira versão do contrato dizia que **escopo é avaliado antes de capacidade e vínculo**, e que
-inverter vazaria a existência de Editais de outras unidades.
+inverter vazaria a existência de Editais de outras unidades. Ela chegou até o `data-model.md`, que foi
+o último artefato a ser corrigido.
 
 **A medição desmente.** `_edital_para_publicar` avalia **capacidade primeiro** — 403 antes de
 qualquer consulta ao banco — e **não vaza**: quem não tem a capacidade recebe 403 para tudo, e nunca
@@ -173,7 +190,7 @@ Um caso que passe a esperar sucesso onde esperava recusa derruba a feature, não
 ## R-10 · O que ainda não foi medido, e é tarefa
 
 As **26 funções autorizativas fora dos seis helpers** não foram classificadas. Algumas quase
-certamente respondem por objeto inexistente; outras podem ser recusa por vínculo, e aí são superfície
+certamente respondem por objeto inexistente; outras podem ser recusa por base de autorização, e aí são superfície
 desta feature.
 
 **Isto não é estimado aqui de novo.** Três tentativas de adivinhar essa repartição já erraram — por

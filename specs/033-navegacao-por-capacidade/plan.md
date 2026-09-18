@@ -7,19 +7,19 @@
 ## Summary
 
 A tela do Edital passa a derivar seus destinos **por capacidade**, e as quatro portas que recusam por
-vínculo de comissão passam a fazê-lo com a gramática que a camada de segurança já implementa para os
+base de autorização composta passam a fazê-lo com a gramática que a camada de segurança já implementa para os
 outros dois eixos.
 
-**A abordagem técnica cabe numa frase: falta o terceiro eixo.** O produto sabe recusar por
-capacidade e por escopo — está implementado e duas das seis portas usam. Para **vínculo** não há
-nada, e as quatro portas que dependem dele improvisaram o mesmo `raise Http404`. Cada peça necessária
-foi **medida** na árvore, por varredura de AST (ver [research.md](./research.md)):
+**A abordagem técnica cabe numa frase: falta recusar a pergunta composta.** `require_permission`
+recebe **uma** permissão; não há como expressar "esta **ou** aquela", que é o que quatro das seis
+portas perguntam — e por isso as quatro improvisaram o mesmo `raise Http404`. Cada peça necessária foi
+**medida** na árvore, por varredura de AST (ver [research.md](./research.md)):
 
 | O que a feature precisa | O que já existe |
 |---|---|
-| a doutrina da recusa | **implementada** em `seguranca/application/authorization.py::require_permission` — capacidade → 403, escopo → 404 — e usada por 2 das 6 portas |
+| a doutrina da recusa | **implementada** em `seguranca/application/authorization.py::require_permission` — uma capacidade nomeada → 403, escopo → 404 — e usada por 2 das 6 portas |
 | a recusa como página | `interface/erros.py::RecusaDoDominioMiddleware` + `interface/recusa.html`, com título, motivo e "nada foi alterado" |
-| saber **o que falta** | `comissoes/domain/autorizacao.py::pode_gerir_comissao`, que devolve a base ou `None` |
+| saber **o que falta** | `comissoes/domain/autorizacao.py::pode_gerir_comissao` devolve uma `Base` que **nomeia** o que autorizou; a recusa é o espelho dela |
 | o princípio da navegação | *"oferecer o que se vai recusar é pior do que não oferecer"*, em `_marcos_publicados` — e o padrão de **derivar a navegação do predicado da porta**, já aplicado numa tela por `_pode_auditar_a_etapa` |
 | a frase do "peça a alguém" | praticada na tela do Edital, em `detalhe.html` |
 | o instrumento de `SC-168` | `tests/authorization/`, **197 casos** em 38 arquivos |
@@ -49,9 +49,9 @@ já está carregado. O orçamento de consulta não muda: a base de autorização
 ser idêntico antes e depois; o 404 de escopo institucional é proteção de dados e não se toca; o canal
 do candidato mantém o 404 uniforme
 
-**Scale/Scope**: **seis** portas de autorização, das quais **quatro** erram — e todas no mesmo eixo,
-o vínculo de comissão. Uma delas, a da distribuição, decide escopo e vínculo na mesma condição e
-precisa ser separada antes. Mais: um ponto único de recusa por vínculo na camada de segurança, a
+**Scale/Scope**: **seis** portas de autorização, das quais **quatro** erram — e as quatro fazem a
+mesma pergunta composta, que a camada de segurança não sabe recusar. Uma delas, a da distribuição, decide escopo e vínculo na mesma condição e
+precisa ser separada antes. Mais: um ponto único de recusa por base composta na camada de segurança, a
 derivação de destinos, três frases de template, e o inventário dos **75** pontos que respondem "não
 encontrado" — dos quais **59 funções**, **53** recebendo `request` e **32** consultando ator, escopo
 ou vínculo
@@ -119,7 +119,7 @@ backend/processo_seletivo/
 │       ├── ato_ordenacao.html       # "não tem ação disponível" passa a dizer a quem pedir
 │       └── recusa.html              # nada — já traz título, motivo e "nada foi alterado"
 ├── comissoes/domain/autorizacao.py  # leitura; é quem sabe nomear o que falta
-└── seguranca/application/authorization.py  # onde nasce o ponto único de recusa por vínculo
+└── seguranca/application/authorization.py  # onde nasce o ponto único de recusa por base composta
 
 backend/tests/
 ├── authorization/                   # onde a garantia mora — e onde os casos mudam de status
@@ -129,7 +129,7 @@ backend/tests/
 **Structure Decision**: monólito Django com a separação que o repositório já pratica. A decisão de
 autorização permanece onde está — nas portas, no servidor. O que esta feature acrescenta é
 **apresentação** e **derivação da navegação**, em `interface` — mais **um ponto único de recusa por
-vínculo** em `seguranca/application`, ao lado do que já existe para capacidade. Espalhá-lo pelas
+base composta** em `seguranca/application`, ao lado do que já existe para capacidade nomeada. Espalhá-lo pelas
 portas reproduziria a divergência que a feature existe para fechar: foi a ausência desse ponto que
 produziu quatro improvisos idênticos.
 
@@ -147,7 +147,7 @@ formalidade**.
 3. **US2 · a gramática da recusa.** Por último de propósito: é a que mexe em superfície de segurança
    e a que altera testes existentes. Entra com o cenário 4 do quickstart ao lado. E tem ordem interna
    própria, que a medição impôs:
-   1. o **ponto único** de recusa por vínculo, em `seguranca/application`;
+   1. o **ponto único** de recusa por base composta, em `seguranca/application`;
    2. a **separação** de escopo e vínculo na porta da distribuição, que hoje os decide no mesmo `if`;
    3. só então as quatro portas passam a usar o ponto único.
    Inverter 2 e 3 responderia recusa explicada para Edital de outra unidade.
