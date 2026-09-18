@@ -1,0 +1,562 @@
+# Feature Specification: Exportação de matrículas — o que já foi declarado, no formato que o Registro Acadêmico lê
+
+**Feature Branch**: `claude/spec-031-exportacao-de-matriculas`
+
+> **A numeração é `031` porque é o próximo número livre.** Varredura de 17/09/2026 nas worktrees
+> desta máquina e na `main`: a maior pasta é `030`. O número virá de `--number 31`, e não da pasta.
+
+> **Os identificadores continuam a faixa global.** Teto medido no mesmo dia, em todas as worktrees,
+> **inclusive nas que têm trabalho não comitado** — `FR-432`, `SC-142`, `UX-059`. Esta spec abre em
+> `FR-433`, `SC-143`, `UX-060`. As **decisões** reiniciam em `D-001`, porque são lidas dentro da
+> feature que as produziu.
+
+**Created**: 2026-09-17
+
+**Status**: Draft — **bloqueada para implementação** por uma verificação externa (§5 e `Q-1`). A
+redação está completa; o que falta não é decisão de produto, é uma resposta do Registro Acadêmico
+que custa uma hora e não depende deste repositório.
+
+**Input**: o contrato de saída da `029`
+([contrato-de-saida.md](../029-requerimento-de-matricula/contrato-de-saida.md)), a inspeção da
+planilha `Import_LIBB_58_78-2026.xlsx` — aba `Import_ModeloCefor`, 34 cabeçalhos em `A1:AH1`, uma
+linha de exemplo em `A2:AH2`, 13 comentários de cabeçalho, tudo armazenado como texto com formato
+`@` — e a medição das divergências contra o código, registrada na §6.
+
+---
+
+## 1. Visão
+
+O que o candidato declarou no Requerimento de Matrícula sai deste sistema **no formato que o
+Registro Acadêmico importa**, sem redigitação e sem planilha montada à mão.
+
+A `029` coletou 21 das 34 colunas e **proibiu a exportação** (`FR-404`). Esta spec revoga aquela
+proibição — e a revoga pelo motivo que a criou: a proibição existia porque **nenhuma conversão podia
+ser inventada** antes de alguém medir de onde cada coluna sairia. O contrato de saída mediu. Agora
+há o que exportar, e há **três** colunas que este sistema legitimamente não tem.
+
+## 2. Problema
+
+Hoje a passagem da seleção para a matrícula é **redigitação**. Alguém lê o dossiê de cada convocado
+e preenche uma planilha, linha por linha, com dado que o sistema já guarda em coluna. O erro de
+digitação aparece depois da matrícula, no Registro Acadêmico, com a pessoa no meio.
+
+**O risco não é o trabalho, é o erro silencioso.** Uma planilha montada à mão preenche toda coluna,
+porque a pessoa que a monta tenta ser prestativa: sem código de curso, ela escreve o que parece
+certo; sem faixa per capita, ela converte a faixa familiar de cabeça. Nada nesse fluxo distingue
+*"este dado foi declarado"* de *"este dado foi deduzido por alguém às pressas"*.
+
+## 3. Motivação
+
+**Exportar é mais seguro do que redigitar — desde que a exportação saiba dizer "não sei".** É essa a
+diferença que justifica a feature: uma coluna vazia gerada por regra é uma afirmação verificável de
+ausência; uma coluna preenchida por dedução humana é indistinguível de dado declarado.
+
+## 4. Atores
+
+| Quem | Papel nesta feature |
+|---|---|
+| Quem conduz o processo | pede o arquivo de um Edital, lê o que saiu vazio e por quê |
+| Registro Acadêmico | consome o arquivo; **não** é usuário deste sistema |
+| Candidato | não age nesta feature — ele já declarou na `029` |
+
+## 5. Pré-condições
+
+**Uma delas não é deste repositório, e é bloqueante.** As demais já estão satisfeitas.
+
+| Pré-condição | Situação |
+|---|---|
+| A `029` mesclada, com requerimentos enviados | ✅ `main`, desde 17/09/2026 |
+| O contrato de saída versionado (`FR-403`) | ✅ 34 colunas mapeadas |
+| Resultado com convocados | ✅ a convocação já existe |
+| Os três campos eleitorais coletados no Requerimento (`D-007`) | ⏳ trabalho da `029`, motivado aqui |
+| Nacionalidade como lista fechada no Requerimento (`D-008`) | ⏳ trabalho da `029`, motivado aqui |
+| **O importador aceita célula vazia nas três colunas da `D-001`** | ❌ **não verificado** (`Q-1`) |
+
+**Por que a última bloqueia.** Toda a forma desta feature depende dela. Se o importador recusar
+`COD_CURSO` vazio, o arquivo gerado não serve para nada, e isso se descobre **depois da matrícula**.
+A verificação custa duas linhas sintéticas enviadas ao importador real — e responde, de uma vez, as
+três perguntas mais caras desta spec.
+
+## 6. Decisões fechadas antes do planejamento
+
+### D-001 — Dado que este sistema não possui sai **vazio**, nunca deduzido
+
+Decisão do usuário, 17/09/2026. **Três** colunas saem vazias porque o valor é **externo a este
+sistema** — vocabulário do sistema acadêmico que este não conhece:
+
+| Coluna | Por que é externa |
+|---|---|
+| `COD_CURSO`, `COD_TURNO`, `COD_POLO` | vocabulário do sistema acadêmico, que este sistema não conhece |
+
+**Duas saídas desta lista em 17/09/2026**: os três campos eleitorais passam a ser coletados
+(`D-007`), e `COD_NACIONALIDADE` passa a sair preenchida na maioria dos casos (`D-008`).
+
+**A consequência de escopo é grande, e é o que essa decisão comprou:** não há configuração de
+códigos por oferta, não há tabela oficial de nacionalidade, não há cadastro de turno nem de polo.
+Um subsistema inteiro de configuração sai do escopo porque a resposta certa é a célula vazia.
+
+### D-002 — `RENDA_PER_CAPITA_PNP` recebe a faixa da família, e o arquivo diz que é isso
+
+Decisão do usuário, 17/09/2026, tomada depois de a divergência ser medida e apresentada. A coluna
+**é preenchida** com `renda_familiar_faixa`, sem conversão.
+
+| Este sistema — soma da família (`FR-412`) | Destino — por pessoa |
+|---|---|
+| Até 0,5 · 0,5–1 · 1–1,5 · 1,5–2,5 · 2,5–3,5 · acima de 3,5 | os mesmos cortes, com outro denominador |
+
+**Os limites são idênticos, e o denominador não.** É essa coincidência que torna a cópia natural de
+se fazer, e é ela que exige que a divergência fique escrita — a `029` já a nomeava (`R-7` daquela
+spec), e aqui ela deixa de ser teórica, porque passa a haver um arquivo que a carrega.
+
+**O efeito, medido.** Família de quatro pessoas com renda total de 2 salários mínimos declara *acima
+de 1,5 até 2,5*. Per capita, ela está em **0,5**. A coluna receberá *1,5 a 2,5* — três faixas acima —
+e o desvio é sempre no mesmo sentido, maior quanto maior a família.
+
+**Por isso a cópia vem acompanhada, e não sozinha** (`FR-452`): o relatório de lacunas diz, em toda
+geração, que a coluna 31 traz faixa da **soma da família** num campo que o destino define como **por
+pessoa**. Quem recebe o arquivo fica em condição de decidir o que fazer com isso; quem o gera não
+decide por ele. A alternativa que tornaria a coluna exata está registrada em `Q-6`.
+
+### D-003 — `AC` sai da **ausência** de Modalidade, e as cotas saem do código do Edital
+
+`Inscricao.modality_id` é anulável, e **nulo é ampla concorrência** — não é falta de dado. O destino
+chama isso de `AC`. A correspondência *ausência → `AC`* é a única desta feature que é derivação
+legítima, e não invenção: ela traduz o mesmo fato.
+
+Para as demais, `COD_FORMA_INGRESSO` recebe `ModalidadeConcorrencia.code` **como o Edital o
+escreveu**. Esse campo é texto livre digitado por quem redige, e certames já publicados podem trazer
+grafia que o destino não conhece — o próprio `seed_demo` escreve `PPP` onde o comentário da planilha
+prevê `PPI`. **A exportação não corrige a grafia**: o código publicado é ato imutável, e reescrevê-lo
+na saída faria o arquivo discordar do Edital. Grafia desconhecida é relatada (`FR-441`), não trocada.
+
+**E a grafia divergente não é hipótese.** O `seed_demo` deste repositório declara a Modalidade
+`PPP` — *"Pessoas pretas, pardas e indígenas"*, fundada na Lei 12.990/2014 — onde o comentário da
+planilha prevê `PPI`. Duas letras de diferença, o mesmo instituto jurídico, e nenhuma das duas
+pontas sabe da outra.
+
+### D-004 — `ESTADO_CIVIL` é flexionado por tabela explícita, e isso não é bloqueio
+
+O destino escreve `Casada`; este sistema guarda `CASADO` e exibe `Casado(a)`. São 4 estados civis × 2
+sexos = **8 strings**, escritas nesta spec (§10.4) e verificadas por teste. `SEXO` é binário dos dois
+lados, de modo que a flexão é total — não há caso sem resposta.
+
+### D-005 — O arquivo é gerado, nunca copiado do modelo
+
+O binário da amostra carrega formatação residual até `AT1000` e componentes de extensão do Excel que
+leitores estritos rejeitam. A saída é um `.xlsx` **construído**, com uma aba, 34 cabeçalhos e as
+linhas de dados — e nada mais.
+
+### D-006 — A linha de exemplo da planilha não entra no repositório, em forma nenhuma
+
+`A2:AH2` contém dados de uma pessoa real. Ela não vira fixture, nem exemplo em documentação, nem
+caso de teste. A varredura `backend/tests/test_sem_dado_pessoal_da_amostra.py`, que a `029` criou,
+já guarda essa promessa e alcança os arquivos desta feature por `glob`.
+
+### D-007 — Título, zona e seção eleitorais passam a ser coletados no Requerimento
+
+Decisão do usuário, 17/09/2026, e ela **responde a `Q-4` da `029`** — que estava aberta e declarada
+não bloqueante justamente à espera de um consumidor.
+
+**Isto não contraria a minimização; é o teste dela sendo satisfeito.** A `FR-382` recusa oito
+informações *"nenhuma com destino na saída ou cláusula de Edital que a consuma"* — e os campos
+eleitorais **não estão naquela lista**. Eles não foram recusados por falta de finalidade; foram
+apenas não coletados, porque nenhum Edital os exigia para inscrever. O formato de importação do
+Registro Acadêmico é a finalidade institucional demonstrada que faltava.
+
+A coleta é da `029` — três colunas novas no Requerimento —, e esta spec é quem a motiva. O formato
+segue a amostra: título em três blocos de quatro dígitos, zona com três, seção com quatro, todos
+guardados sem pontuação e emitidos na forma do destino (`FR-451`).
+
+### D-008 — Nacionalidade vira lista fechada, e `BR` é derivação, não inferência
+
+Decisão do usuário, 17/09/2026. `COD_NACIONALIDADE` deixa de sair sempre vazia:
+
+| Declarado | Coluna 16 |
+|---|---|
+| Brasil | `BR` |
+| qualquer outro país | **vazia**, e a pessoa nomeada no relatório de lacunas |
+
+**A razão de o campo ser texto livre expirou.** O modelo da `029` diz, em comentário, que
+`nacionalidade` é *"texto, e não código: o código institucional de nacionalidade é da exportação, e
+o domínio não o conhece"*. A exportação deixou de ser hipótese, e com ela some o motivo de manter
+aberto o único campo de lista da `029` que não é lista. Ele passa a ser fechado, como `sexo`,
+`cor_raca`, `estado_civil` e as duas UFs já são — o que também elimina *"Brasilera"* e *"BRASIL"*
+como valores possíveis.
+
+**`BR` é o único valor que a amostra prova**, e é por isso que só ele é emitido. `BR` é compatível
+com ISO 3166-1 alpha-2; se o destino usasse alpha-3 seria `BRA`, e numérico seria `076`. Um único
+exemplo não desempata o suficiente para emitir `PT` por Portugal — isso seria exatamente a invenção
+que a `D-001` recusa, com o agravante de errar justamente no caso raro, que é o que ninguém confere.
+
+**E o caso raro é raro:** a esmagadora maioria dos convocados declara Brasil. A coluna passa de
+sempre vazia a quase sempre correta, sem que nenhuma linha fique errada.
+
+**`Q-7` fecha o resto de graça.** Se o Registro Acadêmico confirmar alpha-2 na mesma conversa da
+`Q-1`, o estrangeiro também passa a sair exato e esta decisão se simplifica para *"emita o código do
+país declarado"*.
+
+## 7. Escopo
+
+- Gerar o arquivo de importação de um Edital, para a população escolhida.
+- Emitir as 34 colunas na ordem e na grafia exatas do destino, todas como texto.
+- Relatar, junto do arquivo, o que saiu vazio e por quê.
+- Recusar a geração quando um valor teria de ser **inventado**.
+- Motivar, na `029`, a coleta dos três campos eleitorais (`D-007`) e o fechamento da lista de
+  nacionalidade (`D-008`).
+- Registrar quem gerou, quando, de qual versão do resultado e com qual versão dos mapeamentos.
+
+## 8. Fora de escopo
+
+- **Importar** no sistema acadêmico, ou chamá-lo por interface programática. O arquivo é entregue a
+  uma pessoa.
+- Cadastrar códigos de curso, turno, polo ou nacionalidade (`D-001`).
+- Corrigir a grafia de Modalidade de Editais publicados (`D-003`).
+- Alterar qualquer coisa no Requerimento. Esta feature **lê**.
+
+## 9. User Scenarios & Testing *(mandatory)*
+
+### User Story 1 — O arquivo de um Edital, sem redigitar nada (Priority: P1)
+
+Quem conduz abre o Edital, escolhe a população, e recebe um `.xlsx` com uma linha por pessoa,
+pronto para o importador.
+
+**Why this priority**: é a feature. Sem ela, nada muda para ninguém.
+
+**Independent Test**: gerar para um Edital com convocados e abrir o arquivo — 34 colunas, na ordem,
+tudo texto, dados a partir da linha 2.
+
+**Acceptance Scenarios**:
+
+1. **Given** um Edital com três convocados de requerimento enviado, **When** quem conduz gera o
+   arquivo, **Then** ele tem 3 linhas de dados e nenhuma linha de exemplo.
+2. **Given** um convocado de ampla concorrência, **When** o arquivo é gerado, **Then**
+   `COD_FORMA_INGRESSO` traz `AC`, derivado da ausência de Modalidade (`D-003`).
+3. **Given** um CPF que começa por zero, **When** o arquivo é aberto, **Then** o zero inicial está lá.
+
+---
+
+### User Story 2 — O que saiu vazio, dito antes de alguém perguntar (Priority: P1)
+
+Junto do arquivo, quem conduz recebe o **relatório de lacunas**: quais colunas saíram vazias, para
+quantas pessoas, e por qual motivo.
+
+**Why this priority**: é o que impede a lacuna de virar preenchimento manual às pressas. Sem o
+relatório, quem receber o arquivo vai completar as células vazias — e o erro volta pela porta que a
+feature existe para fechar.
+
+**Independent Test**: gerar e conferir que o relatório nomeia as três colunas da `D-001` com a razão
+de cada uma.
+
+**Acceptance Scenarios**:
+
+1. **Given** qualquer geração, **When** o relatório é lido, **Then** `COD_CURSO` aparece como
+   *"vocabulário do sistema acadêmico — preencher no destino"*, e não como erro.
+2. **Given** um convocado que declarou cor **indígena**, **When** o relatório é lido, **Then** ele
+   nomeia a pessoa e diz que o destino não comporta o valor declarado (`FR-438`).
+
+---
+
+### User Story 3 — A geração que se recusa a mentir (Priority: P1)
+
+Quando uma coluna exigiria valor inventado, a geração **para** e diz o que falta.
+
+**Why this priority**: é a garantia que separa esta feature de uma planilha feita à mão. E é P1, e
+não P3, porque uma exportação que aproxima é **pior** do que redigitar: ela erra com autoridade.
+
+**Independent Test**: gerar para um Edital cuja Modalidade tem grafia desconhecida e verificar que
+nada é gerado.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma Inscrição sem requerimento enviado na população escolhida, **When** a geração é
+   pedida, **Then** ela é recusada e a recusa nomeia a pessoa.
+2. **Given** um requerimento em rascunho, **When** a geração é pedida, **Then** ele **não** entra no
+   arquivo — ninguém declarou aquilo.
+
+---
+
+### User Story 4 — O mesmo arquivo, duas vezes (Priority: P2)
+
+Gerar de novo, do mesmo resultado, produz o mesmo conteúdo.
+
+**Why this priority**: sem isso, duas pessoas gerando no mesmo dia obtêm arquivos diferentes e
+ninguém sabe qual foi importado.
+
+**Independent Test**: gerar duas vezes sem mudança no meio e comparar o conteúdo célula a célula.
+
+---
+
+### Edge Cases
+
+- **Requerimento sucedido entre duas gerações**: o arquivo traz o **vigente** no instante da
+  geração, e o registro de auditoria guarda qual era.
+- **Convocado sem requerimento porque o Edital não o exige**: a população fica vazia, e a geração é
+  recusada com essa frase — não com um arquivo de zero linhas.
+- **`NÚMERO` com `S/N`**: sai como texto, sem tentativa de virar número.
+- **Nome com acento e cedilha**: preservado; o cabeçalho `ENDEREÇO` também é acentuado e sai
+  exatamente assim.
+
+## 10. Regras de negócio
+
+### 10.1 A população
+
+- **FR-433**: A geração MUST exigir a escolha explícita de uma população — os convocados de uma
+  chamada, ou o conjunto de um resultado — e MUST NOT ter população padrão implícita.
+- **FR-434**: A geração MUST incluir **apenas** requerimentos com status *enviado*, e MUST NOT
+  incluir rascunho: rascunho não é declaração.
+- **FR-435**: Quando alguém da população não tem requerimento enviado, a geração MUST ser recusada,
+  nomeando quem falta — e MUST NOT gerar o arquivo com a linha faltando.
+
+### 10.2 O formato físico
+
+- **FR-436**: O arquivo MUST ser `.xlsx` com **uma** aba chamada `Import_ModeloCefor`, 34 cabeçalhos
+  em `A1:AH1` na grafia e na ordem do destino — acentos inclusive — e dados a partir da linha 2.
+- **FR-437**: Todas as 34 células de dado MUST ser emitidas como **texto**, com formato `@`,
+  inclusive datas, CPF, RG, CEP e códigos: é o que preserva zero à esquerda e impede o Excel de
+  reinterpretar `dd/mm/aaaa` como número serial. Datas MUST sair em `dd/mm/aaaa` sem depender do
+  idioma do servidor.
+
+### 10.3 O que sai vazio, e o que interrompe
+
+- **FR-438**: As três colunas da `D-001` MUST sair vazias, e a geração MUST NOT deduzir valor para
+  nenhuma delas.
+- **FR-439**: A geração MUST produzir um **relatório de lacunas** junto do arquivo, nomeando cada
+  coluna vazia, a razão e a quantidade de linhas afetadas.
+- **FR-452**: O relatório de lacunas MUST declarar, em **toda** geração, que
+  `RENDA_PER_CAPITA_PNP` traz faixa da soma da família num campo que o destino define como por
+  pessoa (`D-002`), e MUST NOT omitir o aviso quando não houver outras lacunas.
+- **FR-440**: Quando o valor declarado não tem correspondente no destino — o caso conhecido é a cor
+  **indígena** (`R-1`) —, a coluna MUST sair vazia e o relatório MUST nomear a pessoa e o valor
+  declarado. A exportação MUST NOT substituir por valor próximo.
+- **FR-441**: Quando o `code` da Modalidade não está entre os que o destino reconhece, a geração
+  MUST ser recusada e MUST nomear o código e o Edital — e MUST NOT reescrever a grafia publicada
+  (`D-003`).
+
+### 10.4 As conversões que existem
+
+- **FR-442**: `ESTADO_CIVIL` MUST ser flexionado conforme `SEXO`, por esta tabela e por nenhuma
+  outra regra:
+
+| | Masculino | Feminino |
+|---|---|---|
+| `SOLTEIRO` | Solteiro | Solteira |
+| `CASADO` | Casado | Casada |
+| `DIVORCIADO` | Divorciado | Divorciada |
+| `VIUVO` | Viúvo | Viúva |
+
+- **FR-443**: `COD_FORMA_INGRESSO` MUST receber `AC` quando a Inscrição não tem Modalidade, e o
+  `code` publicado quando tem (`D-003`).
+- **FR-453**: `COD_NACIONALIDADE` MUST receber `BR` quando a nacionalidade declarada é Brasil, e
+  MUST sair vazia com a pessoa nomeada no relatório para qualquer outro país, enquanto `Q-7` não for
+  respondida (`D-008`). A exportação MUST NOT emitir código de país não confirmado.
+- **FR-451**: `TITULO_ELE` MUST sair em três blocos de quatro dígitos separados por espaço,
+  `ZONA_ELE` com três dígitos e `SECAO_ELE` com quatro, **com zeros à esquerda** — guardados sem
+  pontuação, como o CEP já é (`FR-387` da `029`), e pontuados na saída.
+- **FR-444**: `CEP` MUST sair com hífen, `CPF` e `CELULAR` sem pontuação — a forma de cada um é a do
+  destino, e não a da coluna deste sistema.
+- **FR-445**: Cada uma das 34 colunas MUST ter serializador próprio, com origem, transformação e
+  comportamento na ausência declarados. A exportação MUST NOT aplicar `legivel()` genericamente:
+  aquela função serve à leitura humana das duas telas da `029`, e o destino não é uma delas.
+
+### 10.5 Reprodutibilidade e registro
+
+- **FR-446**: Duas gerações da mesma população, sem alteração entre elas, MUST produzir conteúdo
+  idêntico, com linhas em ordem determinística.
+- **FR-447**: Toda geração MUST registrar Edital, população, quantidade de linhas, autor, instante,
+  a versão do resultado de que saiu e a **versão dos mapeamentos** — e o registro MUST ser
+  append-only, como os demais atos.
+- **FR-454**: A **versão dos mapeamentos** MUST ser uma constante declarada em
+  `matriculas/domain/colunas.py`, e MUST ser alterada por quem mudar qualquer serializador — do mesmo
+  modo que `SCHEMA_VERSION` é alterada à mão, e pela mesma razão: o número precisa dizer *"esta
+  geração usou estas regras"*, e um valor derivado do arquivo mudaria também quando só um comentário
+  mudasse.
+- **FR-448**: `CLASSIF_CURSO_FINAL` MUST vir da fonte que a `Q-2` estabelecer, e a exportação
+  MUST NOT escolher entre as duas leituras — classificação no curso ou numeração das linhas —
+  enquanto a resposta não existir. Até lá a coluna MUST sair vazia e nomeada no relatório, como as
+  demais lacunas.
+
+  **A redação anterior pré-julgava a pergunta.** Ela proibia a numeração de linha, que é **uma das
+  duas respostas possíveis** — de modo que, se o Registro Acadêmico respondesse isso, o requisito
+  contradiria a resposta. Uma questão aberta não se fecha por requisito escrito antes dela.
+
+### 10.6 Autorização
+
+- **FR-455**: A geração MUST exigir a permissão `matricula:exportar`, verificada no backend, e ela
+  MUST NOT ser concedida a papel nenhum por padrão. A permissão existente de consulta de inscrição
+  MUST NOT autorizar a geração: ler um dossiê por vez e baixar o conjunto inteiro são atos distintos
+  (§11, Princípio III).
+
+### 10.7 O que esta feature não faz
+
+- **FR-456**: O arquivo gerado MUST NOT ser persistido. Ele é entregue na resposta e descartado; o
+  que fica é o registro da `FR-447`. Guardá-lo criaria um acervo do artefato mais concentrado de dado
+  pessoal deste sistema, com política de retenção própria — decisão que a feature não precisa tomar
+  para funcionar (§18).
+- **FR-449**: A exportação MUST NOT alterar requerimento, inscrição, resultado ou Edital. É leitura.
+- **FR-450**: A exportação MUST NOT chamar o sistema acadêmico por interface programática.
+
+## 11. Autorização
+
+| Quem | O quê | Como |
+|---|---|---|
+| Quem conduz | gerar o arquivo de um Edital sob seu escopo | **permissão nova**: `matricula:exportar` |
+
+**Aqui há permissão nova, e a razão é o conteúdo.** O arquivo reúne, numa linha só, CPF, RG,
+filiação e endereço de cada convocado — é o artefato mais concentrado de dado pessoal que este
+sistema produz. Quem lê o dossiê de uma Inscrição vê uma pessoa por vez, e a permissão existente
+autoriza isso. Baixar o conjunto inteiro é outro ato, e por isso é outra permissão (Princípio III).
+
+## 12. UX
+
+- **UX-060**: O arquivo e o relatório de lacunas MUST chegar juntos, e a tela MUST mostrar o resumo
+  das lacunas **antes** do download — depois dele, ninguém lê.
+- **UX-061**: A recusa MUST dizer o que falta e de quem, em vez de *"não foi possível gerar"*.
+
+## 13. Critérios de aceite
+
+- **SC-143**: Um Edital com convocados gera arquivo que o importador real aceita — verificado
+  **contra o importador**, e não contra a leitura da planilha.
+- **SC-144**: Um CPF iniciado por zero, uma data e um CEP sobrevivem à ida e volta pelo Excel sem
+  perder zero, virar número serial ou trocar de formato.
+- **SC-145**: As três colunas da `D-001` saem vazias, e o relatório nomeia as três com a razão de
+  cada uma.
+- **SC-154**: Um convocado brasileiro traz `BR` na coluna 16; um estrangeiro traz a coluna vazia e
+  aparece nomeado no relatório.
+- **SC-152**: Título, zona e seção eleitorais declarados no Requerimento chegam ao arquivo na forma
+  do destino — título em três blocos de quatro, zona com três dígitos, seção com quatro, zeros à
+  esquerda preservados.
+- **SC-153**: Toda geração — inclusive uma sem nenhuma outra lacuna — traz no relatório o aviso
+  sobre a coluna 31, com as duas medidas nomeadas.
+- **SC-155**: Depois de uma geração, **nenhum arquivo do conjunto exportado existe no servidor** —
+  verificado no armazenamento, e não pela ausência de código que o grave.
+- **SC-156**: Uma geração completa **não escreve em tabela nenhuma** além do registro da `FR-447` —
+  verificado contando as escritas durante a geração, e não lendo o código.
+- **SC-146**: Um convocado que declarou cor indígena gera arquivo com `COR` vazia e relatório que o
+  nomeia — verificado como caso próprio, e não como efeito colateral.
+- **SC-147**: Uma Modalidade com grafia desconhecida recusa a geração inteira, e a mensagem traz o
+  código e o Edital.
+- **SC-148**: Duas gerações seguidas produzem arquivos idênticos célula a célula.
+- **SC-149**: Um rascunho na população não entra no arquivo, e a geração é recusada por falta de
+  declaração.
+- **SC-150**: A geração sem `matricula:exportar` é recusada, inclusive por acesso direto ao endereço.
+- **SC-151**: Nenhum arquivo desta feature contém dado da linha de exemplo da planilha — verificado
+  pela varredura que a `029` já mantém (`D-006`).
+
+## 14. Riscos
+
+| Risco | Efeito | Mitigação |
+|---|---|---|
+| **`R-1` — o destino não comporta *indígena*** | quem se declarou indígena chega ao Registro Acadêmico sem cor, ou com cor errada | `FR-440`: vazio e relatório nominal. **Corrigir de verdade exige mudar o domínio do destino** |
+| `R-1b` — a contradição é interna ao destino | a Modalidade de cota **nomeia** indígenas (`PPP`, Lei 12.990/2014), e a coluna `COR` do mesmo arquivo não os comporta | nenhuma, deste lado: a incoerência é do formato de destino, e é material para a conversa de `Q-1` |
+| **`R-1c` — a coluna 31 superestima a renda por pessoa** | o desvio é sistemático e cresce com o tamanho da família; 1,5 SM per capita é o corte de baixa renda da Lei 12.711/2012 | `FR-452`: o aviso vai em toda geração. **Não corrige o número** — só impede que ele viaje sem etiqueta. `Q-6` guarda o que corrigiria |
+| `R-2` — o importador recusar célula vazia | a feature inteira não serve | `Q-1`, verificado **antes** de escrever código |
+| `R-3` — grafia de Modalidade divergente em Editais antigos | geração recusada para certames já encerrados | `FR-441` recusa e nomeia; a correspondência é decisão de quem opera, por Edital |
+| `R-4` — o arquivo circular por e-mail | o artefato mais concentrado de dado pessoal fora do sistema | `UX-060` e a permissão própria reduzem; **não eliminam** |
+
+## 15. Questões abertas
+
+- **Q-1** — **O importador aceita célula vazia nas três colunas da `D-001`?** *(Bloqueante: §5.)*
+  Custa duas linhas sintéticas enviadas ao importador real, e responde também `Q-3` e `R-1`.
+- **Q-2** — `CLASSIF_CURSO_FINAL` é a classificação no curso ou a numeração das linhas? O nome e o
+  comentário do Registro Acadêmico discordam, e a planilha não desempata — vem pré-preenchida de `1`
+  a `35`, com o comentário mandando continuar a sequência. *(Bloqueante para a coluna, não para a
+  feature.)* Herdada da `Q-7` da `029`.
+- **Q-3** — **O Registro Acadêmico aceita um protocolo opaco?** `INSC` traz `117817` na amostra; o
+  protocolo deste sistema é `INS-2026-K7M4Q2PX`, **deliberadamente sem sequência**, porque um número
+  corrido diria quantas inscrições existem. Não é divergência de formato a normalizar: torná-lo
+  sequencial desfaria uma decisão de domínio. *(Bloqueante para a coluna.)*
+- **Q-6** — **Tornar a coluna 31 exata exigiria o denominador.** A `FR-382` recusa *"número de
+  pessoas do domicílio"* por nome, e a razão escrita daquela recusa — *"nenhuma com destino na
+  saída"* — deixou de valer no instante em que esta feature passou a emitir a coluna. Emendar a
+  `FR-382` e coletar o tamanho do domicílio, ou passar a perguntar a faixa **per capita**
+  diretamente, são os dois caminhos que tornariam o valor correto. *(Não bloqueante: a `D-002`
+  decidiu o comportamento de agora.)*
+- **Q-7** — **A coluna 16 usa ISO 3166-1 alpha-2?** A amostra traz `BR`, que é compatível com
+  alpha-2 e insuficiente para provar o esquema. *(Não bloqueante: a `D-008` já resolve a maioria.)*
+  **Perguntar na mesma conversa da `Q-1`** — custa uma frase, e fecha a coluna inteira.
+- **Q-4** — O comentário de `IDENTIDADE_DATA` na planilha chama a coluna de *"data de nascimento"*,
+  por erro de cópia. Confirmar com o Registro Acadêmico antes de tratar os comentários como fonte.
+  *(Não bloqueante: o cabeçalho é inequívoco.)*
+- **Q-5** — `NECESSIDADES_ESPECIAIS` é texto livre aqui (`TextField`) e traz `NENHUMA` na amostra.
+  Há vocabulário fechado no destino? *(Não bloqueante: texto livre passa.)*
+
+## 16. Dependências
+
+**Reais e de leitura** — o Requerimento de Matrícula (`029`), a convocação (população), a
+classificação (`Q-2`), a identidade (nome, CPF, e-mail), a oferta (`NOME_POLO`).
+
+**Externa e bloqueante** — a confirmação do Registro Acadêmico sobre célula vazia (`Q-1`).
+
+**Declarada e não construída** — o cadastro de códigos institucionais. A `D-001` a dispensa desta
+feature; se um dia o Registro Acadêmico exigir os códigos preenchidos, ela volta como spec própria.
+
+## 17. Correção a fazer na `029`
+
+O contrato de saída cita `Q-3` como justificativa das colunas `COD_CURSO`, `COD_TURNO` e `COD_POLO`.
+Mas `Q-3` na spec da `029` é *"e-mail da matrícula"*, **resolvida em 16/09/2026**, e nenhuma questão
+aberta daquela spec cobre os códigos institucionais. A citação aponta para pergunta resolvida sobre
+outro assunto. Esta feature substitui aquela justificativa pela `D-001`, e o contrato de saída deve
+passar a citá-la.
+
+## 18. Privacidade e LGPD
+
+**Esta feature produz o artefato mais concentrado de dado pessoal do sistema**, e é por isso que a
+avaliação não cabe em observação de rodapé: uma linha reúne CPF, RG, filiação, endereço e data de
+nascimento de uma pessoa identificada, e o arquivo reúne uma linha por convocado.
+
+### Finalidade
+
+A finalidade é **a mesma que autorizou a coleta**: a `029` perguntou cada campo porque a matrícula o
+exige, e o contrato de saída registrou, coluna a coluna, onde cada um é consumido. **A exportação não
+amplia a finalidade; ela a executa.** É o que distingue esta feature de um relatório: não há uso novo
+do dado — há o uso previsto, feito sem redigitação.
+
+**O teste da `FR-382` continua valendo do outro lado.** Os três campos eleitorais entram porque
+passaram a ter destino demonstrado (`D-007`); o tamanho do domicílio não entra porque não é
+necessário ao comportamento decidido (`D-002`, `Q-6`). Finalidade demonstrada é o critério nos dois
+sentidos — para admitir e para recusar.
+
+### Minimização
+
+| Recorte | Efeito |
+|---|---|
+| População explícita (`FR-433`) | não existe *"exportar tudo"*; o arquivo tem o conjunto que alguém escolheu e nomeou |
+| Só *enviados* (`FR-434`) | rascunho não entra: ninguém o declarou |
+| 34 colunas, e nenhuma a mais (`FR-436`) | o que o destino não pede não sai, mesmo que o sistema tenha — `codigo_ibge`, `uf_natal` e a procedência do endereço ficam |
+| Sem listagem | não há tela que enumere dado pessoal de muita gente; há a geração de um arquivo, com permissão própria |
+
+### Retenção
+
+**O arquivo não é guardado** (`FR-456`). Ele é montado, entregue e descartado; o que permanece é o
+registro da geração — quem, quando, quantas linhas —, que **não contém dado de candidato**.
+
+A consequência é deliberada: não há acervo de arquivos exportados, e portanto não há prazo de
+retenção a definir, nem expurgo a agendar, nem backup que precise de política própria. Precisar do
+arquivo de novo é gerá-lo de novo, e a `FR-446` garante que sai idêntico.
+
+**O que este sistema não controla** é o arquivo depois de entregue. Ele vira anexo de e-mail, pasta
+compartilhada, pendrive — e nada aqui alcança isso. É o `R-4`, e a mitigação honesta é reduzir o
+número de vezes que ele precisa existir, não fingir que a borda é vigiada.
+
+### Acesso
+
+Permissão própria, negada por padrão (`FR-455`). A permissão de consulta de inscrição **não** serve:
+ela autoriza ver uma pessoa por vez, que é ato de natureza diferente do de baixar todas.
+
+### Auditoria
+
+Toda geração fica registrada com ator, instante, entidade e quantidade (`FR-447`), em tabela
+append-only. **O registro não guarda o conteúdo** — auditar quem exportou não pode exigir uma segunda
+cópia do que foi exportado, que é como o log vira o vazamento.
+
+### Direitos do titular
+
+A `029` já dá ao candidato acesso ao que ele declarou, com o histórico das correções e o anterior
+legível. Esta feature **não cria coleta nova nem tratamento novo**, e por isso não acrescenta
+superfície de direito a exercer — o que ela acrescenta é o registro de quando o dado foi usado para
+a finalidade prevista.
+
+### O que esta avaliação deixa em aberto
+
+**Nada bloqueante.** A única decisão de privacidade que a feature poderia ter tomado e não tomou é a
+retenção do arquivo — e ela não foi adiada, foi **evitada**, não guardando o arquivo.
