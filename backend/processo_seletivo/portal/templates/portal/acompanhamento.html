@@ -58,6 +58,16 @@ ato da instituição sobre você.
   — nem que houve resultado (E2E17-004).
 
   Nada aqui é de terceiro: nenhum nome, nenhuma nota alheia, nenhum parecer, nenhuma avaliação.
+
+  **O sujeito dessa frase é "de terceiro", e é isso que ela proíbe** (036, FR-526, FR-535). Ela foi
+  escrita quando nenhum parecer aparecia aqui, e lida rápido parecia proibir todos — inclusive o
+  **do próprio titular**, que é justamente o que a 036 entrega. A distinção é esta:
+
+    parecer de terceiro   → continua proibido, e nada o traz para esta tela
+    parecer do titular    → é o dele, sobre a avaliação dele, e ele tem direito de ler
+
+  A frase fica porque é a regra escrita no lugar onde alguém a lê antes de mexer; o que mudou é que
+  agora ela diz **qual** parecer proíbe.
 {% endcomment %}
 {% endif %}
 <section class="resultado-da-etapa" aria-labelledby="etapa-{{ forloop.counter }}">
@@ -76,6 +86,34 @@ ato da instituição sobre você.
     60,0000)" —, e é obrigatório por constraint desde a 013. Antes desta feature ninguém o lia.
   {% endcomment %}
   {% if etapa.motivo %}<p class="meta">{{ etapa.motivo }}</p>{% endif %}
+  {% comment %}
+    **O parecer, ao lado do motivo e não no lugar dele** (036, FR-525a). O motivo, acima, é a regra
+    aplicada ao número; o parecer é a razão que a pessoa que avaliou escreveu. O motivo diz que a
+    nota não bastou — o parecer diz **o que faltou**, e é contra ele que um recurso se escreve.
+
+    Três estados, e nenhum deles é silêncio:
+
+      visível    → o texto, identificado como a fundamentação daquele resultado
+      encerrado  → o parecer saiu, **e a tela diz por quê** (FR-524)
+      ausente    → não houve parecer, e a tela diz isso também (FR-525)
+
+    O terceiro caso existe de verdade: a obrigatoriedade depende do caráter da Etapa e da forma da
+    avaliação. E o segundo é o que separa esta feature de um defeito — sumir em silêncio faria a
+    pessoa pensar que perdeu algo, ou que o sistema falhou.
+
+    Só o resultado **desfavorável** recebe linha aqui, e é o recorte que a regra do parecer já
+    descreve. Num resultado favorável o dicionário não tem entrada, e nada nesta tela muda.
+  {% endcomment %}
+  {% with parecer=parecer_por_resultado|dicionario_simples:etapa.id %}
+  {% if parecer.texto %}
+  <div class="parecer" role="group" aria-label="Fundamentação da avaliação">
+    <p class="rotulo-do-parecer">Fundamentação escrita por quem avaliou</p>
+    <p class="texto-do-parecer">{{ parecer.texto|linebreaksbr }}</p>
+  </div>
+  {% elif parecer.aviso %}
+  <p class="meta sem-parecer">{{ parecer.aviso }}</p>
+  {% endif %}
+  {% endwith %}
   {% if etapa.corrigido %}
   {% comment %}
     **Mostrar sem explicar transformaria a correção em erro aparente.** Quem vê a nota mudar

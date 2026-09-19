@@ -36,7 +36,15 @@ def requisito_de(seed=0):
 
 
 def cenario_instruivel(
-    gestor, api_client, manager_headers, process_payload, *, seed, codigo, admitir_a_peca=True
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    seed,
+    codigo,
+    admitir_a_peca=True,
+    janela_recursal=None,
 ):
     """Peça admitida contra um Resultado **eliminado com parecer**, e um documento na inscrição.
 
@@ -53,6 +61,7 @@ def cenario_instruivel(
         admitir_a_peca=admitir_a_peca,
         parecer=PARECER,
         documentos=[requisito_de(seed)],
+        janela_recursal=janela_recursal,
     )
     inscricao = montado["inscricao"]
     montado["documento"] = inscricao.documentos.get(requirement_id=requisito_de(seed))
