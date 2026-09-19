@@ -207,6 +207,16 @@ cd backend && make lint check test-pg
 | `make check` (inclui `makemigrations --check`) | — | **No changes detected** — `SC-181` |
 | Suíte contra PostgreSQL | 7213 passando, 12 pulados | **7267 passando, 12 pulados, 0 falhas** |
 
+**Reconferido depois do rebase sobre a `main` que já traz a `034`** (PR #138), em 19/09/2026:
+**7343 passando, 11 pulados, 0 falhas**, com `ruff check`, `ruff format --check` e
+`makemigrations --check` limpos. As duas features tocam `editais/domain/validation.py` em funções
+diferentes, como a spec previu: o único conflito do rebase foi no `.claude/launch.json`, onde as
+duas acrescentaram uma entrada — e as duas ficaram, porque apagar a do outro é o defeito que aquele
+arquivo já registrou.
+
+*A contagem de pulados caiu de 12 para 11 porque a `034` entrou junto; ela não é efeito desta
+feature.*
+
 Os 54 casos a mais são os quatro arquivos novos e os sete acrescentados ao fim de
 `test_metodo_do_marco.py`. **Nenhum teste existente foi removido**, e os três arquivos existentes
 alterados estão na tabela acima, um a um, com o motivo.
