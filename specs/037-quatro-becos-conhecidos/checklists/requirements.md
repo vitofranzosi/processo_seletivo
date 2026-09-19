@@ -46,6 +46,16 @@
 | "pedir o peso onde a Etapa é enumerada" | o peso é campo **da Etapa**, e o marco enumera por seleção múltipla — seria mudança de modelo (`D-003`) |
 | "três telas calam" | são **duas**: a `033` já fechou a terceira |
 
+## O que o Phase 0 achou depois, e que a spec não previa
+
+| Achado | Consequência |
+|---|---|
+| a tela do corte anexa **um** caminho a **três** recusas, e ele serve a duas | `FR-539a` — a feature criaria um beco no fim do caminho que abre |
+| o `ACH-02` já diz "o que falta", com caminho | `FR-542` reescrita e `FR-542b` — o percurso decide se ainda há o que fechar |
+| a formulação existe como **mecanismo público**, não como padrão a copiar | `FR-543` — imitar o texto derrota a guarda que a `033` deixou |
+| a escolha do instante da frase discordaria da régua | `FR-546a` — as duas mudam no mesmo ato |
+| o canal do candidato deriva a situação por conta própria | `FR-549a` — concordância de desfecho, não de código |
+
 ## Notes
 
 - Items marked incomplete require spec updates before `$speckit-clarify` or `$speckit-plan`

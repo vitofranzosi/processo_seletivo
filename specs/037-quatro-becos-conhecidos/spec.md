@@ -67,9 +67,13 @@ pela tela do Edital que o destino do corte é oferecido e que abri-lo diz por qu
    Edital abre a tela dele, **Then** o destino do corte **é oferecido**.
 2. **Given** esse mesmo marco, **When** a pessoa abre o destino do corte, **Then** ela lê **por que
    não há faixa** — a frase que a tela já produz hoje, sem alteração.
-3. **Given** um marco **com** regra de corte declarada, **When** a tela é aberta, **Then** nada muda:
-   o destino continua sendo oferecido e continua levando à faixa.
-4. **Given** alguém que **não alcança** a classificação deste Edital, **When** a tela é montada,
+3. **Given** o marco sem regra e a recusa exibida, **When** a pessoa procura o que fazer, **Then** o
+   caminho oferecido é o **da regra de corte**, e não o da classificação — que resolve as outras duas
+   recusas desta tela e não esta.
+4. **Given** um marco **com** regra de corte declarada, **When** a tela é aberta, **Then** nada muda:
+   o destino continua sendo oferecido, continua levando à faixa, e o caminho da recusa de ordem
+   ausente continua sendo o da classificação.
+5. **Given** alguém que **não alcança** a classificação deste Edital, **When** a tela é montada,
    **Then** o destino do corte **não** lhe é oferecido — a garantia da `033` não é desfeita.
 
 ---
@@ -93,7 +97,12 @@ recém-criado, e conferir que os dois blocos nomeiam a ação e a permissão.
    impedimento diz o que fazer, e **a quem pedir** quando o ator não pode fazê-lo.
 3. **Given** um ator que **pode** praticar a ação, **When** o bloco é exibido, **Then** ele recebe o
    caminho — e não a frase de pedir a outra pessoa.
-4. **Given** qualquer dos dois casos, **When** a condução é escrita, **Then** ela nomeia **a
+4. **Given** o Edital sem Perfil, **When** a pendência é exibida, **Then** ela **continua** dizendo o
+   que falta e levando à etapa de Perfis — o que já existe não é refeito.
+5. **Given** o percurso reproduzindo o ator da auditoria, **When** ele esbarra no impedimento,
+   **Then** ou falta-lhe uma permissão — e a condução a nomeia — ou não falta, e **isso fica
+   registrado como o fechamento do achado**.
+6. **Given** qualquer dos dois casos, **When** a condução é escrita, **Then** ela nomeia **a
    permissão**, nunca uma pessoa: não há fila, designação nem nome próprio na tela.
 
 ---
@@ -175,6 +184,12 @@ marco o diz naquele momento.
 - **FR-539**: A tela de destino MUST continuar explicando por que está vazia, **e esta feature NÃO a
   reescreve** — ela já o faz, e reescrevê-la criaria uma segunda verdade sobre a mesma lista
   (`D-001`).
+- **FR-539a**: O **caminho** oferecido ao lado da recusa MUST depender de **qual recusa é**. A tela
+  imprime hoje, para as três recusas do corte, o mesmo *"Ir para a classificação deste recorte"* — e
+  ele resolve duas delas. Para o marco **sem regra de corte** o que falta é conteúdo do Edital, não
+  ordem: mandar quem lê para a classificação seria abrir, no fim do caminho que a `FR-538` cria, um
+  segundo caminho que não resolve. *A `FR-538` torna alcançável uma combinação que hoje ninguém
+  alcança* — e é por isso que este requisito nasce com ela, e não depois dela.
 - **FR-540**: O destino MUST continuar sendo oferecido **apenas a quem o alcança**. A garantia da
   `033` — a tela não oferece caminho que o ator não abre — não é desfeita por esta feature.
 
@@ -183,12 +198,23 @@ marco o diz naquele momento.
 - **FR-541**: O aviso de **conteúdo imutável** de um Edital publicado MUST nomear a ação e a
   permissão que a pratica, na formulação que o produto já usa. *Ele hoje diz que correções ocorrem
   por Retificação e para aí* — e o mesmo cartão, seis linhas acima, já pratica a frase que falta.
-- **FR-542**: O impedimento por **ausência de Perfil** MUST conduzir: o que fazer, e a quem pedir
-  quando o ator não pode fazê-lo.
+- **FR-542**: O impedimento por **ausência de Perfil** MUST dizer **a quem pedir** quando o ator não
+  pode resolvê-lo. *"O que fazer" já é dito*: a pendência é marcada corrigível e leva à etapa de
+  Perfis, e isso foi fechado por feature anterior. O que falta é a outra metade — e dizê-la exige
+  que a montagem das pendências conheça **o ator**, o que hoje ela não conhece.
+- **FR-542b**: Antes de a condução ser escrita, o percurso MUST decidir **se ainda há o que fechar**:
+  a auditoria inferiu papel ausente da ausência de controle, e o controle existe. Se o gestor da
+  auditoria travava por outra razão, o achado se fecha **registrando isso**, e não escrevendo frase
+  para um problema que não existe.
 - **FR-542a**: A condução MUST nascer **onde a tela a exibe**, e não na mensagem normativa. A
   mensagem descreve o defeito do **conteúdo**, é lida por mais de uma superfície e não conhece quem
   está olhando; condução depende de quem lê (`D-002`).
-- **FR-543**: Toda condução MUST nomear **a permissão**, nunca uma pessoa. Não há fila, designação
+- **FR-543**: Toda condução MUST ser produzida pelo **mecanismo único** que o produto já tem para
+  dizê-la, e não redigida à mão. Existe **uma** maneira de dizer isto, e ela é pública exatamente
+  para que não nasça uma segunda; imitar o texto numa tela nova derrota a guarda que a criou.
+- **FR-543a**: A formulação MUST ser a **cheia** — *"peça a alguém com a permissão de X **que Y**"*.
+  Das quatro ocorrências de hoje, uma larga a oração final e diz só a quem pedir, sem dizer o quê.
+- **FR-543b**: Toda condução MUST nomear **a permissão**, nunca uma pessoa. Não há fila, designação
   nem nome próprio — é a disciplina que o produto já mantém.
 - **FR-544**: Quem **pode** praticar a ação MUST receber o caminho, e não a frase de pedir a outra
   pessoa.
@@ -200,6 +226,10 @@ marco o diz naquele momento.
 - **FR-546**: **Não** havendo término, o Evento MUST continuar vencendo pelo início. *Este requisito
   existe para impedir a correção errada*: trocar a régua por "o término passou" silenciaria o Evento
   pontual, e a ausência de término é Evento que o Edital não fechou — nunca um fim no futuro.
+- **FR-546a**: A escolha do **instante que a frase nomeia** MUST mudar junto com a régua. Se o
+  predicado deixar de vencer o Evento em curso e a escolha do instante continuar apontando o início
+  dele, as duas passam a **discordar sobre o mesmo Evento** — que é a divergência que levou a régua a
+  virar módulo. Elas mudam no mesmo ato ou o módulo perde a razão de existir.
 - **FR-547**: A régua MUST continuar **única**. As duas superfícies que a consultam — o selo da etapa
   do Cronograma e a conferência de publicação — derivam dela, e foi para que não discordassem que ela
   virou módulo.
@@ -207,6 +237,10 @@ marco o diz naquele momento.
   legítimo com Evento vencido, e esta feature não toca nisso.
 - **FR-549**: A frase da conferência MUST continuar nomeando o **término** quando os dois instantes
   passaram (`FR-343a`), e o caminho do achado MUST continuar acompanhando o instante nomeado.
+- **FR-549a**: A concordância entre a gestão e o canal do candidato é de **desfecho**, e não de
+  código. As duas leituras são independentes — o canal do candidato deriva a situação do Evento por
+  conta própria —, e **unificá-las não é escopo desta feature**. O que se exige é que passem a dizer
+  a mesma coisa sobre o mesmo Evento; como cada uma chega lá continua sendo assunto delas.
 
 ### O rótulo do peso
 
@@ -259,10 +293,14 @@ que está vazio. **A segunda já existe** — a view captura a recusa do domíni
 registrada por escrito no código. Reescrevê-la produziria uma segunda frase sobre o mesmo estado, e
 duas verdades sobre a mesma lista divergem na primeira mudança.
 
-**O que fica registrado como custo:** a frase existente foi escrita para quem chegava ali com regra
-declarada e ordem obsoleta. Se, ao ser percorrida pelo marco **sem regra**, ela não servir, a
-correção é de prosa e entra nesta feature; se servir, não se toca nela. **A decisão de qual dos dois
-é o caso pertence ao percurso, e não a esta spec.**
+**A Phase 0 conferiu, e a frase é deste caso.** Ela tem código próprio — a recusa distingue *"este
+marco não declara regra de corte"* de *"a ordem está obsoleta"* — e sai como conflito, não como
+ausência, de modo que a tela a mostra em vez de virar erro de página inexistente. Nada a reescrever.
+
+**Mas a mesma medição achou o que a decisão não cobria.** O que a tela anexa à frase — o caminho — é
+único para as **três** recusas que passam por ali, e foi escrito para as outras duas. Abrir o link
+sem corrigir isso entregaria um beco no fim do caminho criado para remover um beco. Daí a `FR-539a`:
+**a frase não muda; o caminho passa a depender de qual recusa é.**
 
 ### D-002 — a condução nasce na tela, e não na mensagem normativa
 
