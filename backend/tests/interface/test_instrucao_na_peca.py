@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
 @pytest.fixture
-def instruivel(gestor, api_client, manager_headers, process_payload):
+def instruivel(raiz_de_arquivos, gestor, api_client, manager_headers, process_payload):
     return cenario_instruivel(
         gestor, api_client, manager_headers, process_payload, seed=150, codigo="0850"
     )

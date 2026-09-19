@@ -37,7 +37,16 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
 @pytest.fixture
-def instruivel(gestor, api_client, manager_headers, process_payload):
+def instruivel(raiz_de_arquivos, gestor, api_client, manager_headers, process_payload):
+    """**`raiz_de_arquivos` não é decoração**: `cenario_instruivel` anexa um documento, e o
+    armazenamento privado recusa gravar sem raiz declarada — *"sem raiz declarada, o sistema não
+    recebe documentos de candidato"*. A raiz vem do ambiente, e o `.env` de desenvolvimento a
+    declara; **o CI não declara nenhuma**, e é de propósito: o repositório entrega a raiz por
+    fixture, uma por teste, para que dois testes não escrevam no mesmo lugar.
+
+    Quem monta cenário com documento pede a fixture. Quem esquece passa verde na máquina de quem
+    tem `.env` e vermelho no CI — que foi exatamente o que aconteceu aqui.
+    """
     return cenario_instruivel(
         gestor, api_client, manager_headers, process_payload, seed=136, codigo="0836"
     )
@@ -290,7 +299,7 @@ def test_quem_so_julga_nao_instrui_e_a_recusa_nomeia_as_duas_bases(instruivel):
 
 
 def test_nao_se_instrui_parecer_de_recurso_contra_a_publicacao(
-    gestor, api_client, manager_headers, process_payload
+    raiz_de_arquivos, gestor, api_client, manager_headers, process_payload
 ):
     """Caso de borda da spec: ali não há parecer a instruir, e a recusa o diz com esta palavra."""
     from processo_seletivo.publicacoes.application.selectors import selecao_publica

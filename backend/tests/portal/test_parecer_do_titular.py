@@ -49,7 +49,7 @@ JANELA = {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}
 
 
 @pytest.fixture
-def eliminada(gestor, api_client, manager_headers, process_payload):
+def eliminada(raiz_de_arquivos, gestor, api_client, manager_headers, process_payload):
     """Eliminada por nota abaixo da mínima, com parecer escrito e recurso já interposto."""
     return cenario_instruivel(
         gestor,
@@ -156,7 +156,7 @@ def test_com_o_prazo_fechado_e_a_peca_dele_em_curso_o_parecer_permanece(client, 
 
 
 def test_com_as_duas_condicoes_encerradas_o_parecer_sai_e_a_tela_diz_por_que(
-    client, gestor, api_client, manager_headers, process_payload
+    client, raiz_de_arquivos, gestor, api_client, manager_headers, process_payload
 ):
     """`FR-524` — **o cenário que separa a feature de um defeito.**
 

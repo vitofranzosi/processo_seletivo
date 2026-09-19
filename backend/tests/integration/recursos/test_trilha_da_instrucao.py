@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
 @pytest.fixture
-def instruido(gestor, api_client, manager_headers, process_payload):
+def instruido(raiz_de_arquivos, gestor, api_client, manager_headers, process_payload):
     montado = cenario_instruivel(
         gestor, api_client, manager_headers, process_payload, seed=160, codigo="0860"
     )
@@ -127,7 +127,7 @@ def test_abrir_o_documento_instruido_fica_registrado_por_item(client, seletor_li
 
 
 def test_sem_instrucao_nao_ha_registro_de_acesso(
-    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+    client, seletor_ligado, raiz_de_arquivos, gestor, api_client, manager_headers, process_payload
 ):
     """**Zero** acessos registrados quando não há o que acessar — o `SC-184` do outro lado."""
     montado = cenario_instruivel(
