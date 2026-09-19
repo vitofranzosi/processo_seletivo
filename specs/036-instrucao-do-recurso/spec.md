@@ -40,6 +40,23 @@ citado.
 **O sistema exige o texto pela razão de servir ao candidato, guarda o texto, e não o entrega a ele.**
 Não é omissão de quem escreveu a regra — é a regra cumprida pela metade.
 
+### O candidato não está no escuro absoluto, e a distinção importa
+
+A tela de acompanhamento **já exibe um motivo** — *"pontuação inferior à nota mínima da Etapa
+(45,0000 < 60,0000)"* —, obrigatório por constraint desde a `013`.
+
+| | O que é | Quem escreve |
+|---|---|---|
+| **motivo** | a regra aplicada ao número | a máquina, a partir da norma |
+| **parecer** | a razão da avaliação | **a pessoa que avaliou** |
+
+**O motivo diz que a nota não bastou. O parecer diz o que faltou.** É no segundo que está *"o
+currículo não comprova os seis meses"*, e é contra ele que um recurso se escreve — não contra a
+aritmética, que ninguém contesta.
+
+*Esta distinção está aqui porque sem ela a primeira revisão pergunta "mas já não há um motivo?", e a
+resposta é sim — e ele não substitui o outro.*
+
 ### E a tela de quem julga é um beco **honesto**, o que muda o alvo
 
 A tela do recurso **não** oferece caminho que o julgador não alcança: os destinos são guardados, e o
@@ -177,6 +194,10 @@ alcance e o instante.
 - **FR-525**: Resultado desfavorável **sem** parecer MUST ser dito como tal. A ausência é possível —
   a obrigatoriedade depende do caráter da Etapa e da forma da avaliação —, e calar sobre ela é pior
   do que declará-la.
+- **FR-525a**: O parecer MUST ser exibido **ao lado do motivo já existente, e não no lugar dele**.
+  São coisas diferentes — o motivo é a regra aplicada ao número, o parecer é a razão que a pessoa
+  escreveu —, e substituir um pelo outro tiraria da tela a aritmética que hoje sustenta a
+  contestação.
 - **FR-526**: O parecer MUST NOT alcançar ninguém além do titular, da autoridade julgadora instruída
   e da auditoria. Identificador MUST NOT conceder acesso.
 
