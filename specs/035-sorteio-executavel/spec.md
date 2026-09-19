@@ -69,7 +69,7 @@ semente"*. **O domínio já sabe o que ela é. O formulário não diz.**
 
 | O que existe | Onde |
 |---|---|
-| **A escolha** entre os valores publicados, montada a partir do próprio vocabulário fechado | na tela de **Retificação**, para o algoritmo |
+| **A escolha** entre os valores publicados, montada a partir do próprio vocabulário | na tela de **Retificação**, para **quatro** campos — algoritmo, fonte, normalização e substituição —, por uma função que já existe |
 | **A ajuda** com forma, exemplo e consequência | na tela de **composição**, para o instante da ocorrência |
 
 Os dois padrões que esta feature precisa **já são praticados pelo produto**. Nenhum deles alcança os
@@ -122,8 +122,9 @@ ocorrência precisa terminar em número, e chegar a um método que roda.
    digitados.
 2. **Given** o campo da ocorrência, **When** se chega nele, **Then** a tela diz **a forma** que ele
    precisa ter e **por quê** — que a substituição deriva do número da ocorrência.
-3. **Given** um método já declarado em Edital do acervo, **When** se abre a Retificação dele,
-   **Then** o valor publicado continua legível, mesmo que não esteja entre os que o sistema executa.
+3. **Given** um rascunho **criado a partir de Edital anterior** cujo método traz valor fora do
+   vocabulário de hoje, **When** se abre a composição dele, **Then** o valor continua legível e
+   identificado como o que veio da origem — e **não** aparece como escolha válida.
 
 ---
 
@@ -204,9 +205,10 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
 
 - **FR-507**: Os campos do método cujo valor pertence a **vocabulário fechado** — o algoritmo e a
   fonte — MUST ser oferecidos na composição como **escolha entre os valores que o sistema executa**,
-  e MUST NOT ser digitados livremente. **Isto generaliza o que a tela de Retificação já faz** com o
-  algoritmo, montando as opções a partir do próprio vocabulário: o padrão existe, e só não alcança a
-  composição. Hoje a composição deixa digitar e **recusa ao gravar** — a guarda existe, o ensino não,
+  e MUST NOT ser digitados livremente. **Isto generaliza o que a tela de Retificação já faz** — ela
+  oferece **quatro** campos fechados como escolha, por uma função única que lê os vocabulários de
+  quem os executa. A composição MUST reusar essa função, e MUST NOT montar uma segunda lista: duas
+  origens para o mesmo vocabulário divergem quando ele muda. Hoje a composição deixa digitar e **recusa ao gravar** — a guarda existe, o ensino não,
   e a pessoa descobre o vocabulário por tentativa.
 - **FR-508**: O campo da **ocorrência** MUST declarar, no ponto de uso, **a forma que precisa ter e a
   razão dela** — que a regra de substituição deriva do número da ocorrência. Ele MUST NOT virar
@@ -218,9 +220,14 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
   livre. Ele é prosa normativa, sai no documento e **nenhum caminho de execução o lê**; quem deriva é
   a regra de substituição, que já é vocabulário fechado. Trocá-lo por um código removeria do Edital a
   frase que diz a norma em português.
-- **FR-511**: Valor publicado que **não** esteja entre os oferecidos MUST continuar legível na
-  Retificação, identificado como o que foi publicado, e MUST NOT desaparecer nem ser apresentado como
+- **FR-511**: Valor que **não** esteja entre os oferecidos MUST continuar legível **na composição**,
+  identificado como o que veio do conteúdo de origem, e MUST NOT desaparecer nem ser apresentado como
   escolha válida.
+  *A tela é a da composição, e não a da Retificação:* a Retificação **já** oferece os quatro campos
+  fechados como escolha, e esta feature não a toca. A escolha **nova** é a da composição, e o caminho
+  por onde um valor de fora do vocabulário chega a ela é o rascunho **criado a partir de Edital
+  anterior** — se o vocabulário encolheu desde a publicação de origem, um `select` que só oferece o
+  de hoje faria o campo parecer **vazio** num Edital que o declarou.
 
 #### A sexta guarda
 
@@ -282,7 +289,10 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
 - **SC-177**: **Zero** Editais chegam à publicação com método de sorteio que o sistema não executa —
   e a conferência que o garante é **a mesma** que o motor aplica na hora de derivar, verificada por
   comparação direta das duas respostas.
-- **SC-178**: **100%** dos achados desta família nomeiam campo, forma esperada e etapa de correção.
+- **SC-178**: **100%** das recusas desta guarda nomeiam **o campo, a forma esperada e a razão da
+  forma** — e nenhuma delas descreve o sintoma. *A redação anterior pedia "etapa de correção" e falava
+  em "achados desta família": as duas vieram da versão em que a conferência era uma família nova na
+  publicação, e a revisão a trocou por **uma** guarda, ao lado das cinco que já existem.*
 - **SC-179**: Nenhum valor publicado no acervo deixa de ser legível, e **nenhum** sorteio já
   realizado muda de resultado — conferido por comparação de conteúdo, resumo e manifesto.
 - **SC-180**: A varredura contra os Editais de sorteio da amostra real registra, um a um, **como
