@@ -666,10 +666,32 @@ def pode_compor(edital, ator) -> bool:
     exatamente onde ela própria oferece o formulário.
 
     **O estado entra no predicado**, e não só a permissão: Edital que saiu da elaboração não se
-    compõe por ninguém, e mandar pedir ali seria prometer um caminho que não existe para pessoa
-    alguma.
+    compõe por ninguém — nem por quem detém `edital:elaborar`.
     """
     return edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
+
+
+def falta_permissao_para_compor(edital, ator) -> bool:
+    """Há alguém a quem pedir a correção? (037, `FR-542`, `FR-544`)
+
+    **Não é a negação de `pode_compor`, e foi exatamente assim que esta feature errou na primeira
+    escrita.** `not pode_compor(...)` reúne duas negativas que pedem respostas opostas:
+
+    | Por que não pode | Há o que pedir? |
+    |---|---|
+    | está em elaboração e falta a permissão | **sim** — outra pessoa compõe |
+    | saiu da elaboração | **não** — ninguém compõe por esta rota, nem quem tem a permissão |
+
+    Negando o predicado inteiro, a tela de um Edital **publicado** mandava pedir *"a alguém com a
+    permissão de elaborar o Edital"* — e mandava **a quem já a tem**. Duas falsidades numa frase:
+    nomeia como solução uma permissão que não abre aquele estado, e a oferece a quem não precisaria
+    pedi-la. É o que a `FR-544` proíbe, e é a razão de a `D-002` insistir que condução depende de
+    quem lê **e** do que o estado admite.
+
+    O estado continua entrando — mas pelo lado certo: só há a quem pedir onde a composição ainda é
+    possível para alguém.
+    """
+    return edital.status == Edital.Status.EM_ELABORACAO and not ator.can("edital:elaborar")
 
 
 def _pendencias(edital, *, agora=None, ator=None):
@@ -700,7 +722,7 @@ def _pendencias(edital, *, agora=None, ator=None):
     # **Uma pergunta para a lista inteira**, e não uma por item: o predicado é do par
     # Edital×ator, e repeti-lo por pendência custaria uma consulta de permissão por linha sem
     # poder responder diferente em nenhuma delas.
-    conduzir = ator is not None and not pode_compor(edital, ator)
+    conduzir = ator is not None and falta_permissao_para_compor(edital, ator)
     for item in validate_for_publication(
         edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
     ):

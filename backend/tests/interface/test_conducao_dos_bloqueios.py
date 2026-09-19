@@ -240,3 +240,63 @@ def test_nenhuma_conducao_nomeia_pessoa(client, seletor_ligado, edital):
     assert "com a permissão de elaborar o Edital" in lista
     for nome in ("ana.gestora", "ana.elaboradora", "preparador", "Fale com"):
         assert nome not in lista, f"a condução nomeou {nome!r} em vez da permissão"
+
+
+# ---------------------------------------------------------------------------
+# O estado, que é a outra metade da pergunta — e que a primeira escrita errou
+# ---------------------------------------------------------------------------
+
+
+def test_edital_publicado_nao_manda_pedir_a_ninguem(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """`FR-544`: **ninguém** compõe um Edital publicado, e por isso não há a quem pedir.
+
+    **Esta é a regressão do defeito que a revisão achou.** A condução saía de
+    `not pode_compor(...)`, e `pode_compor` reúne estado e permissão: negado inteiro, o Edital
+    publicado caía no mesmo ramo de quem apenas não tem a permissão. A tela passava a nomear, como
+    solução, uma permissão que não abre aquele estado para pessoa alguma.
+
+    O ator deste caso **tem** `edital:elaborar` — é ele quem torna a falsidade dupla: a frase o
+    mandava pedir a outra pessoa exatamente o que ele já detém, e que ainda assim não resolveria.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = _etapa(client, edital, "revisao")
+
+    assert edital.status == Edital.Status.PUBLICADO
+    assert "Ir para" in pagina, "o cenário só vale se houver pendência corrigível na tela"
+    assert CONDUCAO_DA_COMPOSICAO not in pagina
+
+
+def test_edital_publicado_nao_manda_pedir_nem_a_quem_nao_tem_a_permissao(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """A contraprova do caso acima, pelo outro lado do par.
+
+    Sem ela, a correção poderia ter sido *"cale quando o ator tem a permissão"* — que conserta o
+    caso visível e deixa o defeito de pé para todo mundo que não a tem. O que decide aqui é o
+    **estado**: publicado não se compõe, e a pergunta "a quem pedir?" não tem resposta.
+    """
+    edital = publish_original(api_client, manager_headers, process_payload)
+    identificar(client, "ana.gestora", ["gestor"])
+
+    pagina = _etapa(client, edital, "revisao")
+
+    assert CONDUCAO_DA_COMPOSICAO not in pagina
+
+
+def test_em_elaboracao_a_conducao_depende_so_da_permissao(client, seletor_ligado, edital):
+    """E o par completo, do lado em que a composição ainda é possível.
+
+    Os dois casos acima poderiam ser satisfeitos por um predicado que calasse **sempre**. Este é o
+    que impede isso: em elaboração, quem não tem a permissão continua lendo a quem pedir.
+    """
+    assert edital.status == Edital.Status.EM_ELABORACAO
+
+    identificar(client, "ana.gestora", ["gestor"])
+    assert CONDUCAO_DA_COMPOSICAO in _etapa(client, edital, "revisao")
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    assert CONDUCAO_DA_COMPOSICAO not in _etapa(client, edital, "revisao")
