@@ -45,10 +45,12 @@ medição.** As features `029` a `033` são código, e tudo que se diz delas é 
 eram **artefato** quando este arquivo foi escrito; **foram implementadas, percorridas e mescladas no
 dia seguinte**, e a §13 agora confronta o que se previu com o que aconteceu.
 
-**A marca não ficou sem endereço: ela mudou de andar.** A §14 é a projeção nova — o que a `036` e a
-`037` fecham —, e a §13 é o que se pode conferir contra ela quando as duas entrarem. É a terceira
-rodada deste arquivo fazendo o mesmo movimento, e a §7 e a §13 mostram o que as duas anteriores
-valeram.
+**A marca muda de andar a cada rodada, e este arquivo já teve quatro.** A §7 confere a projeção da
+manhã de 18/09; a §13, a de 18/09 à tarde; a §14, a de 19/09 — que acertou o titular e **errou um
+detalhe que custaria uma feature inteira**; e a **§14-ter** é a nova, sobre a `038`.
+
+**É esse vaivém que dá crédito à projeção seguinte**, e é por isso que nenhuma delas é apagada quando
+vira medição.
 
 **O que mais continua marcado como projeção** são as **colunas de nota** — a `Proj. manhã` e a
 `[PROJ. 18/09]` das §3 e §10 —, porque remedi-las exige percorrer os seis cenários de novo, que é
@@ -565,13 +567,40 @@ auditar os merges precisa saber qual valia em cada um.
 
 ---
 
-## 14. `[PROJEÇÃO]` O que a `036` e a `037` fecham
+## 14. `[MEDIÇÃO]` O que a `036` e a `037` fecharam — e o que a projeção errou
 
-**Nada nesta seção é medição.** A `036` está em implementação; a `037` é spec num PR aberto. O que se
-diz aqui é leitura de requisito, e fica registrado pela mesma razão que a §13 registra a projeção
-anterior: **é a única maneira de saber se a projeção seguinte merece crédito.**
+**Esta seção era projeção até 19/09.** As duas entraram no mesmo dia — a `036` pelo PR #142
+(`0c96283`) e a `037` pelo #144 (`fcb448f`) —, e o texto abaixo confronta o que se previu com o que
+aconteceu. **A projeção anterior fica no histórico**, pelo mesmo motivo que a §7 e a §13 guardam as
+suas.
 
-A ordem suposta é `036` → `037`, que é a da fila.
+### O que ela acertou
+
+**Os seis `P0` fecharam.** A `036` fechou o `ACH-43`, o último aberto; a `037` fechou a parte (c) do
+`ACH-46`, o único parcial. E **o estrutural não se moveu**: quatro de sete, exatamente como projetado
+— os `P0` que restavam eram sintomas de raízes já fechadas.
+
+A suíte foi de **7343** para **7454 passando, 11 pulados**.
+
+### O que ela errou, e o erro é instrutivo
+
+A projeção dizia que sobraria *"o que sobrar do `ACH-02`, que a medição da `037` já encontrou **meio
+fechado**"*. **Não estava meio fechado.**
+
+A medição tinha lido os **dados** — a pendência de Perfil é marcada corrigível e aponta para a etapa
+— e concluído que o caminho existia. O **percurso** da `037`, feito com `ana.gestora`, a mesma atriz
+da reauditoria, leu o **ator**:
+
+> O cartão ofereceu **duas** ações: `Visualizar Edital` e `Cancelar`. Não há caminho algum até os
+> Perfis, e **não há `Elaborar o Edital`** — porque o Gestor não detém `edital:elaborar`.
+
+A condução foi escrita, e o achado fechou inteiro. **A lição não é sobre o `ACH-02`**: é que dado
+corrigível na estrutura não é caminho disponível ao ator, e só o percurso distingue os dois. Foi para
+isso que a `FR-542b` mandou percorrer antes de escrever.
+
+---
+
+A ordem suposta era `036` → `037`, e foi a que aconteceu.
 
 ### O titular: os seis `P0` fecham
 
@@ -753,6 +782,80 @@ informada, não para contestá-la.**
 
 ---
 
+## 14-ter. `[PROJEÇÃO]` O que a `038` fecha
+
+**Nada nesta seção é medição.** A `038` é spec num PR aberto. Fica registrada pela mesma razão que as
+anteriores: **é a única maneira de saber se a projeção seguinte merece crédito** — e a §14 acabou de
+mostrar que a de ontem acertou o titular e errou um detalhe que custaria uma feature inteira.
+
+### O titular: a quinta raiz estrutural fecha
+
+| Raiz | hoje, medido | `[PROJ.]` pós-`038` |
+|---|---|---|
+| `E-1` a cauda não fecha | ✅ | ✅ |
+| `E-2` autorização e navegação discordam | ✅ com ressalva | ✅ |
+| `E-5` a explicação desgrudou do campo | ✅ | ✅ |
+| `E-7` a validação não pergunta se é executável | ✅ | ✅ |
+| **`E-6` a visão global some com o Processo vivo** | 🔴 | **✅** |
+| `E-3` duas gramáticas para o mesmo fato | 🔴 | 🔴 |
+| `E-4` fontes normativas que ninguém confronta | 🔴 | 🔴 |
+
+**Cinco de sete**, e é a **primeira raiz fechada desde a `035`**: a `036` e a `037` fecharam `P0`s sem
+mover o estrutural. Esta move.
+
+### As duas que sobram são irmãs, e isso é o achado desta projeção
+
+`E-3` é *duas gramáticas para o mesmo fato normativo*. `E-4` é *duas fontes para a mesma data*.
+
+**São a mesma doença em dois tecidos**: o produto diz a mesma coisa em dois lugares e não confronta
+os dois. Depois da `038`, **o que resta do estrutural é uma família só** — e nenhuma das duas tem
+`P0` para forçá-la na fila, que é como elas atravessaram sete features.
+
+### A nota que move, e o teto que ela não alcança
+
+| Dimensão | Agora | `[PROJ.]` pós-`038` |
+|---|---|---|
+| **Visão global** | **5** | **8** |
+
+A justificativa do 5 nomeia **dois** bloqueios — *"`ACH-25` e os oito contadores concorrentes,
+intocados"*. A `038` fecha o primeiro inteiro e **não toca** o segundo: o `ACH-27` está explicitamente
+fora do escopo dela.
+
+**E não vai a 9, por razão que a própria spec registrou.** O painel cobre avaliação, recurso, ocupação
+e publicação; **sorteio e matrícula ficaram de fora, registrados** — o primeiro é ato com momento
+próprio, o segundo é superfície que nunca teve auditoria de UX. Um painel do Processo vivo que não
+diz onde o sorteio está **ainda não conta a viagem inteira**.
+
+**Nenhuma outra nota se move.** A `038` não toca organização do trabalho, encontrabilidade nem
+experiência do candidato.
+
+### A composição do que sobra mudou de natureza
+
+Depois da `038`, o backlog **deixa de ser dominado por achados** e passa a ser dominado por
+**trabalho que as decisões da §14-bis criaram**:
+
+| Frente | Origem |
+|---|---|
+| `E-3` e `E-4` | auditoria — as duas raízes irmãs |
+| `FR-461` impeditiva · ocorrência externa do sorteio · Retificação acrescenta Modalidade · as sete recusas | **decisões de governança de 19/09** |
+| `ACH-60` trabalho por Perfil/polo (**P1**) · `ACH-27` oito contadores · densidade da Classificação | auditoria |
+| ~7 linhas `P3` | cabem numa varredura só |
+
+**Quatro das dez frentes vêm de decisões, e não de defeitos.** É a consequência de ter respondido as
+cinco perguntas, e continua sendo melhor do que tê-las abertas.
+
+### A resposta à pergunta que governa
+
+| | |
+|---|---|
+| **hoje, medido** | sim, do começo ao fim, para as três famílias — inclusive o recurso, com a prova |
+| `[PROJ.]` **pós-`038`** | **sim, e agora dá para ver o certame correndo** — menos o sorteio e a matrícula, que o painel ainda não alcança |
+
+**O que passa a faltar não é conduzir, nem ver.** É o produto **parar de contar a mesma história de
+dois jeitos** — que é `E-3` e `E-4`, a família que sobra.
+
+---
+
 ## 15. O que evoluir de forma global
 
 **O produto parou de entortar.** A elaboração continua excelente, e a condução andou pela primeira
@@ -764,10 +867,11 @@ em 19/09:
 
 | Era | Virou |
 |---|---|
-| 1. ordem por lista em marco computado | ✅ `034`, mesclada |
-| 2. sorteio executável | ✅ `035`, mesclada |
-| 3. o resto da 13.1 e os "peça a alguém" | 📄 `037`, spec em PR aberto |
-| — | 📄 `036` instrução do recurso, **implementação em curso** |
+| 1. ordem por lista em marco computado | ✅ `034`, implementada |
+| 2. sorteio executável | ✅ `035`, implementada |
+| 3. o resto da 13.1 e os "peça a alguém" | ✅ `037`, implementada |
+| — | ✅ `036` instrução do recurso, implementada |
+| **1. painel de condução** (abaixo) | 📄 **`038`, spec em PR aberto** |
 
 **A `036` não estava nesta lista** — ela estava em *"o que eu não faria agora"*, por ser menos urgente
 que a cauda. Com a cauda fechada, a ordem se inverteu: ela passou a ser o último `P0` e foi escrita
@@ -793,8 +897,9 @@ decisões criaram entram **depois** dele, e **nenhuma delas amplia o escopo da `
 
 A ordem detalhada:
 
-**1. O painel de condução do Processo vivo (`E-6`).** A **visão global continua em 5**, e passa a ser
-a nota mais baixa por margem larga. O sistema já calcula todos os estados; eles só não estão
+**1. O painel de condução do Processo vivo (`E-6`).** 📄 **Já é a `038`, com spec em PR aberto** — a
+§14-ter projeta o que ela fecha. A **visão global continua em 5**, e passa a ser a nota mais baixa por
+margem larga. O sistema já calcula todos os estados; eles só não estão
 reunidos — e é exatamente quando o certame passa a correr de ponta a ponta que a falta dói mais.
 **Cinco** features atravessaram este relatório sem tocá-la, e é agora o item mais antigo da fila sem
 dono.
@@ -833,16 +938,26 @@ governança, e fica registrada aqui como tal pela segunda vez.
 
 ## 16. Para a próxima spec
 
-| Item | Valor medido em **19/09/2026**, em **todas as onze worktrees**, depois da `037` |
+| Item | Valor medido em **19/09/2026**, em **todas as worktrees**, depois da `038` |
 |---|---|
-| Teto de `FR-` | **FR-555** |
-| Teto de `SC-` | **SC-195** |
-| Teto de `UX-` | **UX-061** — a `034`, a `035`, a `036` e a `037` não abriram `UX-` nenhum |
-| Próxima faixa livre | **FR-556**, **SC-196**, **UX-062** |
-| Próxima pasta livre | `specs/038-…` |
+| Teto de `FR-` | **FR-567** |
+| Teto de `SC-` | **SC-200** |
+| Teto de `UX-` | **UX-066** — a `038` é a primeira desde a `027` a abrir `UX-`, e abriu quatro |
+| Próxima faixa livre | **FR-568**, **SC-201**, **UX-067** |
+| Próxima pasta livre | `specs/039-…` |
 
-**A medição de 18/09 dizia FR-521, e ficou 34 identificadores atrasada em um dia.** Três specs
-entraram no intervalo. É a razão do parágrafo abaixo, e não um detalhe de manutenção deste arquivo.
+**O `UX-062` continua reservado e nunca definido**: a `037` o anunciou no blockquote da faixa e não
+abriu `UX-` nenhum. A `038` não o disputou, e ele fica como buraco declarado — ver a nota abaixo
+sobre o que a guarda de citações aceita como definição.
+
+**A medição de 18/09 dizia FR-521, e ficou 46 identificadores atrasada em pouco mais de um dia.**
+Quatro specs entraram no intervalo. É a razão do parágrafo abaixo, e não um detalhe de manutenção
+deste arquivo.
+
+**E há uma armadilha na guarda que a `038` mediu e registrou**: `tests/test_citacoes_de_requisito.py`
+trata **qualquer identificador em negrito numa spec** como definição. Um blockquote que apenas
+*reserva* faixa já "define" o identificador. A guarda protege contra identificador **inventado**, não
+contra identificador **anunciado e nunca especificado** — que é exatamente o caso do `UX-062`.
 
 **Meça de novo na hora de escrever.** O teto acima vale para o instante desta medição, e este projeto
 já produziu **duas** colisões de faixa por medir só a árvore local — a `030` contra a `029`, e a `032`
@@ -891,10 +1006,14 @@ a prática inteira**, e a pergunta de governança segue registrada e sem respost
 ele está — a visão global continua em **5**, e é a última nota que a auditoria deu e que **cinco**
 features atravessaram sem tocar.
 
-`[PROJEÇÃO]` **E depois da `036` e da `037` ela fica sozinha.** Com os seis `P0` fechados, a visão
-global passa a ser a pior nota por **quatro pontos** de margem, e o maior bloco de trabalho não
-endereçado do produto deixa de ser defeito: passam a ser **cinco perguntas de governança** que as
-features registraram e não responderam. A §14 as lista. **Nenhuma delas se resolve escrevendo
-código.**
+`[MEDIÇÃO 19/09]` **A `036` e a `037` entraram, e ela ficou sozinha.** Com os seis `P0` fechados, a
+visão global é a pior nota por **quatro pontos** de margem. As cinco perguntas de governança que as
+features tinham acumulado **foram respondidas no mesmo dia** — estão na §14-bis, e quatro delas
+criaram spec.
+
+`[PROJEÇÃO]` **E a `038` é a que a tira de lá.** Fechando o `ACH-25`, a visão global vai a **8** e a
+quinta raiz estrutural cai. O que sobra do estrutural passa a ser **uma família só**: `E-3` e `E-4`,
+duas maneiras de contar a mesma história — uma em duas gramáticas, outra em duas fontes. A §14-ter
+desenvolve.
 
 Essa é a próxima linha de base.
