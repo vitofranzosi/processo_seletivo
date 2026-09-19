@@ -107,3 +107,124 @@ def test_tela_de_mil_participantes_fica_abaixo_do_teto(
     assert resposta.status_code == 200
     print(f"\n[escala] ordenacao: {ESCALA} participantes, tela em {duracao:.3f}s")
     assert duracao < BUDGET_SECONDS, f"a tela levou {duracao:.3f}s com {ESCALA} participantes"
+
+
+# --- O cálculo por recorte não vira N+1 sobre o conteúdo publicado (034) -----------------------
+#
+# **Não prende requisito nenhum, e é higiene de engenharia.** Vem do *Technical Context* do
+# `plan.md` da `034`: o cálculo por recorte multiplica o número de leituras de um marco pelo número
+# de recortes dele, e este projeto já reprova leitura de condição de participação por listagem. O
+# que não pode acontecer é o recorte reservado custar consulta por participante, ou reabrir o
+# conteúdo publicado uma vez por pessoa.
+
+MODALIDADE_EM_ESCALA = "00000000-0000-4000-8000-000000000491"
+LINHA_GERAL_EM_ESCALA = "00000000-0000-4000-8000-000000000492"
+LINHA_COTA_EM_ESCALA = "00000000-0000-4000-8000-000000000493"
+
+
+@pytest.fixture
+def edital_em_escala_com_cota(api_client, manager_headers, process_payload):
+    """O mesmo Edital em escala, com uma Modalidade reservada e metade dos inscritos nela.
+
+    **Metade, e não um punhado**: um recorte reservado com três pessoas teria custo constante por
+    acidente, e não por desenho. O que se mede é que o custo do recorte não acompanha o tamanho
+    dele.
+    """
+    rascunho = rascunho_com_etapas(avaliacoes=1, maxima="100.0000", minima="0.0000")
+    etapa = rascunho["stages"][1]
+    etapa["weight"] = "1.0000"
+    perfil = rascunho["profiles"][0]
+    perfil["classificationMilestones"] = [
+        {
+            "id": MARCO,
+            "code": "FINAL",
+            "name": "Classificação final",
+            "stages": [etapa["id"]],
+            "orderProduction": "POR_PONTUACAO",
+            "operation": "SOMA_PONDERADA",
+            "normalization": "NENHUMA",
+            "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+            "tiebreakers": [],
+        }
+    ]
+    perfil["competitionModalities"] = [
+        {
+            "id": MODALIDADE_EM_ESCALA,
+            "code": "PPI",
+            "name": "Pretos, pardos e indígenas",
+            "vacancies": 0,
+        }
+    ]
+    perfil["vacancyTable"] = [
+        {"id": LINHA_GERAL_EM_ESCALA, "modalityId": None, "immediateVacancies": 1},
+        {
+            "id": LINHA_COTA_EM_ESCALA,
+            "modalityId": MODALIDADE_EM_ESCALA,
+            "immediateVacancies": 1,
+        },
+    ]
+    perfil["immediateVacancies"] = 2
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    _acrescentar_inscricoes(edital, quantidade=SEMENTE, inicio=1)
+    return edital
+
+
+def _autodeclarar_metade(edital):
+    ids = list(
+        Inscricao.objects.filter(edital=edital).order_by("protocolo").values_list("id", flat=True)
+    )
+    Inscricao.objects.filter(id__in=ids[::2]).update(modality_id=MODALIDADE_EM_ESCALA)
+
+
+def test_o_recorte_reservado_custa_as_mesmas_consultas_que_a_ampla(edital_em_escala_com_cota):
+    """O filtro do recorte entra na consulta, e não numa leitura a mais por pessoa."""
+    _acrescentar_inscricoes(
+        edital_em_escala_com_cota, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1
+    )
+    _autodeclarar_metade(edital_em_escala_com_cota)
+
+    with CaptureQueriesContext(connection) as da_ampla:
+        calcular_ordem(edital=edital_em_escala_com_cota, perfil_id=PROFILE_ID, marco_id=MARCO)
+    with CaptureQueriesContext(connection) as do_recorte:
+        proposta = calcular_ordem(
+            edital=edital_em_escala_com_cota,
+            perfil_id=PROFILE_ID,
+            marco_id=MARCO,
+            lista_id=MODALIDADE_EM_ESCALA,
+        )
+
+    print(
+        f"\n[escala] ordenacao por recorte: {len(da_ampla)} consultas na ampla, "
+        f"{len(do_recorte)} no recorte reservado"
+    )
+    assert len(proposta["universo"]["participants"]) > 0, "a premissa: o recorte não está vazio"
+    assert len(do_recorte) == len(da_ampla)
+
+
+def test_o_numero_de_consultas_do_recorte_nao_cresce_com_o_universo(edital_em_escala_com_cota):
+    """A mesma garantia da ampla, agora por recorte: custo do conjunto, e não do participante."""
+    _autodeclarar_metade(edital_em_escala_com_cota)
+    with CaptureQueriesContext(connection) as pequeno:
+        calcular_ordem(
+            edital=edital_em_escala_com_cota,
+            perfil_id=PROFILE_ID,
+            marco_id=MARCO,
+            lista_id=MODALIDADE_EM_ESCALA,
+        )
+    _acrescentar_inscricoes(
+        edital_em_escala_com_cota, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1
+    )
+    _autodeclarar_metade(edital_em_escala_com_cota)
+    with CaptureQueriesContext(connection) as grande:
+        calcular_ordem(
+            edital=edital_em_escala_com_cota,
+            perfil_id=PROFILE_ID,
+            marco_id=MARCO,
+            lista_id=MODALIDADE_EM_ESCALA,
+        )
+
+    print(
+        f"\n[escala] ordenacao por recorte: {SEMENTE} → {ESCALA} participantes, "
+        f"{len(pequeno)} → {len(grande)} consultas"
+    )
+    assert len(grande) == len(pequeno)

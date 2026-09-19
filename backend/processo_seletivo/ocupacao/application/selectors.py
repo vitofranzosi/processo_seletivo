@@ -218,14 +218,12 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # marco do acervo carrega `cutRule` nulo, e é exatamente esse o caso que a tela precisa
         # deixar de oferecer.
         "faixaDisponivel": bool(marco and marco.get("cutRule")),
-        # `apuravel` é falso quando o marco daquele Perfil **não emite ordem neste recorte**
-        # (`FR-472`). Hoje isso é todo recorte de lista reservada em marco que não sorteia: um ato
-        # computado emite uma lista só, a da ampla concorrência. A pergunta é feita por
-        # `marcos.emite_ordem_no_recorte`, que é **uma função só** — a validação faz a mesma
-        # pergunta antes da publicação, e dois predicados divergiriam na primeira mudança.
-        "apuravel": marcos.emite_ordem_no_recorte(
-            versao.content, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
-        ),
+        # **`apuravel` foi removido, e a ausência é a notícia** (034, `FR-501a`). Ele era falso
+        # no recorte reservado de marco computado, porque um ato computado emitia uma lista só; a
+        # `034` fez a ordem por recorte existir, e o predicado que o derivava passou a responder
+        # sempre "sim". Guarda que nunca reprova é pior do que guarda nenhum: o próximo a ler o
+        # código confia nele. Quem quiser saber se há o que apurar pergunta pela ordem vigente
+        # daquele recorte, que é a regra real — e é o que a apuração já faz ao recusar.
     }
 
 
@@ -281,28 +279,22 @@ def historico_do_recorte(*, edital, marco_id, lista_id=None, perfil_id=None):
 def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     """Todo recorte do marco, com os quatro números e o estado de cada um (`UX-031`).
 
-    **A Modalidade declarada como ampla concorrência não é recorte próprio**, e por isso não entra
-    na lista: a quantidade dela mora na linha geral, e dar-lhe linha declararia duas vezes o mesmo
-    número. É a mesma regra que o leitor de linha da `014` aplica, vista de fora.
+    **A derivação deixou de morar aqui** (034, `FR-491`). A regra é a mesma — a Modalidade
+    declarada como ampla não é recorte próprio, porque a quantidade dela mora na linha geral, e
+    dar-lhe linha declararia duas vezes o mesmo número —, e o que mudou é que ela passou a ser
+    respondida por `editais/domain/recortes.py`, que a classificação também consome. Duas listas
+    iguais hoje e derivadas em dois lugares divergem na primeira Retificação, e a `SC-172` compara
+    as duas justamente por isso.
 
-    **O rótulo do recorte sem lista diz o que ele é.** A `021` pagou o preço de não dizer: num
-    Edital que declara uma Modalidade chamada "Ampla concorrência", a tela mostrava dois blocos
-    homônimos e quem conduz o certame não sabia em qual agir.
+    **Os rótulos são os mesmos**, e continuam sendo os da derivação: o do recorte sem lista diz que
+    ele é a linha geral. A `021` pagou o preço de não dizer — num Edital que declara uma Modalidade
+    chamada "Ampla concorrência", a tela mostrava dois blocos homônimos e quem conduz o certame não
+    sabia em qual agir.
     """
-    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 
     versao = effective_version(edital_id=edital.id, at=at)
-    perfil = por_identidade((versao.content or {}).get("profiles"), perfil_id) or {}
-    ampla_declarada = perfil.get("generalCompetitionModalityId")
-    recortes = [(None, "Ampla concorrência (linha geral do quadro)")]
-    for modalidade in perfil.get("competitionModalities") or []:
-        if not isinstance(modalidade, dict) or not modalidade.get("id"):
-            continue
-        identidade = str(modalidade["id"])
-        if ampla_declarada and identidade == str(ampla_declarada):
-            continue
-        nome = modalidade.get("name") or identidade
-        recortes.append((identidade, f"{nome} ({modalidade.get('code')})"))
+    recortes = recortes_do_perfil(versao.content, perfil_id=perfil_id)
     return [
         {
             "rotulo": rotulo,
