@@ -3542,17 +3542,37 @@ def _processo_do_ator(ator, processo_id):
 
 @require_http_methods(["GET"])
 def processo_detalhe(request, processo_id):
-    """Situação do Processo, seus Editais e os atos do ciclo de vida (US5 da 002)."""
+    """Situação do Processo, seus Editais, os atos do ciclo de vida — e onde cada Edital está.
+
+    **O guia deixava de conduzir no instante da publicação** (`038`, `FR-556`). Publicado o Edital,
+    esta página listava Editais e oferecia encerrar ou cancelar — justamente quando há inscrição
+    chegando, comissão a compor e avaliação a organizar. O que faltava não era cálculo: o pulso e a
+    Atenção já existiam, a uma tela de distância, e ninguém os reunia aqui.
+
+    **Lidos, e nunca recalculados** (`FR-557`). São as mesmas duas funções que a Supervisão chama, e
+    é por isso que as duas telas não podem divergir: não há segundo cálculo a divergir. Uma cópia
+    das derivações aqui seria a segunda verdade que esta série passou a semana removendo.
+
+    **A porta é a da Supervisão, e não a desta página.** Quem alcança o Processo não alcança por
+    isso o que a Supervisão mostra, e oferecer o pulso a quem a tela dona recusaria contornaria a
+    porta dela por uma rota lateral. Dentro dos sinais a supressão continua sendo **por sinal**
+    (`FR-004`): `sinais` recebe o ator e decide espécie a espécie.
+    """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     processo = _processo_do_ator(ator, processo_id)
+    conduz = supervisao_do_processo.pode_supervisionar(ator, processo) is not None
     return render(
         request,
         "interface/processo_detalhe.html",
         {
             "processo": processo,
             "trilha": _trilha_processo(processo),
+            # As mesmas chamadas da Supervisão, e `None` para quem não a alcança — o template não
+            # decide porta, só deixa de desenhar o que não veio.
+            "pulso": supervisao_do_processo.pulso(processo) if conduz else None,
+            "sinais": supervisao_do_processo.sinais(processo, ator) if conduz else None,
             "editais": processo.editais.order_by("year", "number"),
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),

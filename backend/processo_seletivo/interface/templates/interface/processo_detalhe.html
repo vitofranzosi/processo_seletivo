@@ -42,6 +42,67 @@
 regular. Os Editais mantêm suas próprias situações e todo o histórico permanece preservado.</p>
 {% endif %}
 
+{% comment %}
+038, FR-556: **o guia não desliga quando o Edital é publicado.** Até aqui esta página listava
+Editais e oferecia encerrar ou cancelar — dois atos terminais — justamente no momento em que há
+inscrição chegando e avaliação a organizar. O pulso e a Atenção já existiam; faltava reuni-los onde
+quem conduz o certame chega primeiro.
+
+**Nada é calculado aqui.** A view lê as duas funções que a Supervisão lê, e por isso as duas telas
+dizem a mesma coisa sobre o mesmo Edital (FR-557). Elas chegam nulas para quem não alcança a
+Supervisão, e a região inteira não é desenhada: a porta é a da tela dona, e não uma daqui.
+{% endcomment %}
+{% if pulso %}
+<section aria-labelledby="conducao-titulo" class="cartao">
+  <h2 id="conducao-titulo">Onde cada Edital está</h2>
+  <p class="sub">Lido em {{ pulso.lido_em|date:"d/m/Y, H\hi" }}.
+    <a href="{% url 'interface:supervisao' processo.id %}">Abrir a Supervisão</a></p>
+
+  <ul class="resumo" aria-label="Inscrições no Processo">
+    <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
+    <li><strong>{{ pulso.rascunhos_no_processo }}</strong>em preenchimento</li>
+    {% comment %}
+    A contagem recente some quando nenhum período está em curso, porque ali ela é sempre zero — e
+    zero apresentado como notícia é ruído. É a mesma regra da Supervisão, e o valor é o mesmo.
+    {% endcomment %}
+    {% if pulso.ultimas_24h is not None %}
+    <li><strong>{{ pulso.ultimas_24h }}</strong>nas últimas 24 horas</li>
+    {% endif %}
+  </ul>
+
+  {% comment %}
+  D-005: o prazo pende do Edital, e cada linha o nomeia. Não existe data do Processo, e escolher a
+  de um dos Editais para representá-lo seria inventá-la.
+  {% endcomment %}
+  {% for item in pulso.por_edital %}
+  <p>
+    <strong>Edital {{ item.edital.number }}/{{ item.edital.year }}</strong> —
+    {{ item.submetidas }} recebida{{ item.submetidas|pluralize:"s" }},
+    {{ item.rascunhos }} em preenchimento.
+    {% if item.ausencia == "sem-cronograma" %}Sem cronograma vigente.
+    {% elif item.ausencia == "sem-periodo" %}O cronograma não marca período de inscrições.
+    {% else %}Inscrições até
+      {% if item.periodo.fim %}{{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
+    {% endif %}
+  </p>
+  {% endfor %}
+
+  {% comment %}
+  FR-559: sinal ausente não ocupa espaço, e não há seção permanente por espécie. A região encolhe a
+  **uma linha** quando não há nada a sinalizar, mas não some — sumir não distinguiria "nada a
+  sinalizar" de "a página não carregou". É a mesma forma que a Supervisão usa, e o mesmo parcial.
+  {% endcomment %}
+  <h3>Atenção</h3>
+  {% if sinais %}
+  <ul class="sinais">
+    {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  {% endif %}
+</section>
+{% endif %}
+
 <div class="colunas">
   <section aria-labelledby="editais-titulo" class="cartao">
     <h2 id="editais-titulo">Editais ({{ editais|length }})</h2>
