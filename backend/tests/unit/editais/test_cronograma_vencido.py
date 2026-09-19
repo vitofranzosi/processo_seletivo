@@ -140,12 +140,17 @@ def test_sem_termino_declarado_a_mensagem_nomeia_o_inicio():
     assert "06/09/2026" in item.message, item.message
 
 
-def test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro():
+def test_evento_em_curso_nao_produz_achado_nenhum():
+    """037, `FR-545`: a conferência deixa de acusar o Evento que está acontecendo.
+
+    **O nome anterior — *"nomeia o início e não o término futuro"* — descrevia a régua errada.** O
+    Evento em curso não venceu, e por isso não há achado a produzir nem instante a nomear. A
+    escolha do instante mudou no mesmo ato que o predicado (`FR-546a`), e é por isso que este caso
+    afirma a **ausência** do achado, e não outro caminho para ele.
+    """
     snapshot = conteudo(evento(inicio=em(days=-1), fim=em(days=2)))
 
-    (item,) = achados(snapshot)
-
-    assert item.path == f"/schedule/id={EVENTO}/startAt"
+    assert codigos(snapshot) == []
 
 
 def test_um_achado_por_evento_e_nao_um_por_instante():
@@ -226,11 +231,20 @@ def test_periodo_sem_termino_declarado_nao_encerra():
     assert "registration_period_closed" not in codigos(snapshot)
 
 
-def test_periodo_em_curso_adverte_mas_nao_impede():
-    """O Edital que abre inscrições e é publicado no mesmo dia é legítimo."""
+def test_periodo_em_curso_nao_adverte_e_continua_sem_impedir():
+    """037, `FR-545` e `SC-190`: o Edital que abre inscrições e é publicado no mesmo dia é legítimo.
+
+    **A docstring deste caso já dizia isso, e a asserção prendia o contrário** — a advertência que
+    tornava a etapa 3 impossível de concluir. Era a forma mais cara de defeito que um teste tem: a
+    intenção certa, escrita, guardando o comportamento errado.
+
+    O nome mudou por obrigação. *"Adverte mas não impede"* passaria a afirmar *"não adverte"*, e a
+    metade que continua valendo — **não impede** — está na segunda asserção: período **em curso**
+    nunca impediu, e período **encerrado** continua impedindo, por outra regra e noutro caso.
+    """
     snapshot = periodo(inicio=em(days=-1), fim=em(days=9))
 
-    assert codigos(snapshot) == ["schedule_event_in_past"]
+    assert codigos(snapshot) == []
     assert blocking_findings(achados(snapshot)) == []
 
 

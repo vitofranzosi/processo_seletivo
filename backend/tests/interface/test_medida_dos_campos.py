@@ -367,9 +367,22 @@ def test_a_consequencia_de_deixar_vazio_esta_no_proprio_controle(etapa, campo, m
 @pytest.mark.parametrize("campo", ["minimumScore", "maximumScore", "weight"])
 def test_o_campo_que_admite_vazio_se_diz_opcional(etapa, campo):
     """O contrário do asterisco: quem se pergunta se pode deixar em branco lê a resposta no
-    próprio rótulo."""
+    próprio rótulo.
+
+    **O parêntese admite ressalva, e passou a admitir na `037`** (`FR-550`). O rótulo do peso
+    dizia `(opcional)` sem qualificação, e isso era falso na única situação em que o peso importa:
+    enumerada por um marco, a Etapa **precisa** dele. Hoje ele diz
+    `(opcional até um marco enumerar esta Etapa)`.
+
+    O que este caso prende continua sendo o mesmo — que a optatividade seja **declarada no
+    rótulo** —, e por isso a asserção mudou de igualdade de texto para a forma do parêntese: ele
+    abre com "opcional" e pode dizer até quando. Exigir a palavra solta deixaria passar
+    `(opcionalmente…)`; exigir `(opcional)` literal proíbe a ressalva que a `FR-550` manda
+    escrever.
+    """
     rotulo = re.search(rf'<label for="etapa-0-{campo}">(.*?)</label>', etapa, re.S)
-    assert rotulo and "(opcional)" in rotulo.group(1), campo
+    assert rotulo, campo
+    assert re.search(r"\(opcional\b[^)]*\)", rotulo.group(1)), rotulo.group(1)
 
 
 def test_nenhuma_descricao_se_perdeu_ao_sair_de_vista(etapa):

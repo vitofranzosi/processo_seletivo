@@ -56,8 +56,19 @@ contraprova da `FR-493` vista na tela.
 A recusa do domínio, **com o caminho para o que falta** (034, FR-498). A ausência de ordem é um
 estado do percurso, e não um erro: nomeá-la sem dizer onde ela se resolve manda o operador procurar a
 tela, que é o beco que a `033` registrou como `ACH-40`.
+
+**O caminho passa a ser o daquela recusa** (037, FR-539a). A razão acima continua inteira; o que
+mudou é quantas recusas chegam aqui. Enquanto o link do corte pendia da regra de corte, o marco que
+não a declara nunca alcançava esta tela, e o caminho único servia às duas que alcançavam. A FR-538
+abriu o link — e mandar quem lê "este marco não declara regra de corte" para a classificação seria
+oferecer, no fim do caminho aberto para remover um beco, um segundo que não resolve.
+
+Quem escolhe é a view, e não este bloco: a escolha depende de qual recusa é **e** do que o ator
+alcança (FR-539b), e deixá-la aqui obrigaria a tela a conhecer metade da derivação. Quem não alcança
+a Retificação recebe a condução em vez do link, e ela sai do mecanismo único — não se redige aqui
+(FR-543).
 {% endcomment %}
-<p class="aviso" role="status">{{ recusa }} <a href="{{ para_a_ordenacao }}">Ir para a classificação deste recorte</a>.</p>
+<p class="aviso" role="status">{{ recusa }}{% if caminho_da_recusa %} <a href="{{ caminho_da_recusa.url }}">{{ caminho_da_recusa.rotulo }}</a>.{% endif %}{% if conducao_da_recusa %} {{ conducao_da_recusa }}{% endif %}</p>
 {% endif %}
 
 {% if geracao %}

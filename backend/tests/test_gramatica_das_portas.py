@@ -312,3 +312,64 @@ def test_nenhuma_tela_inventa_uma_segunda_redacao():
     assert encontradas == [], "segunda gramática para o ato de pedir:\n  " + "\n  ".join(
         encontradas
     )
+
+
+# ---------------------------------------------------------------------------
+# 037 · as frases que **não** moram no template, e que a varredura acima não vê
+# ---------------------------------------------------------------------------
+#
+# As duas varreduras acima leem o HTML. As conduções da `037` são produzidas em Python e chegam ao
+# template como variável — de propósito, porque é isso que a `FR-543` significa: *usar o
+# mecanismo*, e não *imitar o texto*. O efeito colateral é que elas passariam pelas duas sem serem
+# olhadas, e a guarda ficaria com um buraco do tamanho da feature que ela acabou de admitir.
+
+
+def _conducoes_produzidas():
+    """As frases que as telas da `037` imprimem, pedidas a quem as produz.
+
+    Importadas de `views`, e não recopiadas: uma cópia aqui seria a segunda redação que este
+    arquivo inteiro existe para impedir, escrita dentro do guardião.
+    """
+    from processo_seletivo.interface.views import CONDUCAO_DA_COMPOSICAO, CONDUCAO_DA_RETIFICACAO
+
+    return {
+        "condução da Retificação": CONDUCAO_DA_RETIFICACAO,
+        "condução da composição": CONDUCAO_DA_COMPOSICAO,
+    }
+
+
+def test_as_conducoes_produzidas_seguem_a_formulacao_canonica():
+    """`FR-543` e `FR-543a`: a formulação continua única, e as frases novas passam por ela.
+
+    O mesmo `CANONICA` que julga os templates, aplicado ao que o mecanismo devolve. E a forma é a
+    **cheia**: entre o destinatário e o ponto final há a oração do ato, que é o que distingue
+    *"peça a alguém com a permissão de X"* de *"peça a alguém com a permissão de X **que Y**"*.
+    """
+    for nome, frase in _conducoes_produzidas().items():
+        trechos = re.findall(r"Peça [^.<]{0,80}", re.sub(r"\s+", " ", frase))
+
+        assert trechos, f"{nome}: não instrui a pedir"
+        for trecho in trechos:
+            assert CANONICA.search(trecho), f"{nome}: segunda formulação — {trecho.strip()!r}"
+            assert " que " in trecho, f"{nome}: sem a oração do ato (FR-543a) — {trecho.strip()!r}"
+
+
+def test_nenhuma_conducao_produzida_inventa_uma_segunda_redacao():
+    """O outro lado, aplicado ao que não está no template — irmão do caso acima."""
+    for nome, frase in _conducoes_produzidas().items():
+        for expressao in SEGUNDAS_REDACOES:
+            assert expressao not in frase, f"{nome}: segunda gramática — {expressao!r}"
+
+
+def test_nenhuma_conducao_produzida_nomeia_pessoa():
+    """`FR-543b`: a permissão, e nunca alguém.
+
+    Não há fila, designação nem nome próprio — é a disciplina que o produto já mantém, e que a
+    `FR-485` registrou ao recusar mandar pedir "o papel de presidente", que não existe. O que se
+    cobra aqui é a forma do destinatário: ele é sempre uma **capacidade** ou um **vínculo**, nunca
+    um cargo nominal nem um setor.
+    """
+    for nome, frase in _conducoes_produzidas().items():
+        assert re.search(r"Peça (a alguém com a permissão de|a quem|à |ao )", frase), (
+            f"{nome}: o destinatário não é uma permissão nem um vínculo"
+        )

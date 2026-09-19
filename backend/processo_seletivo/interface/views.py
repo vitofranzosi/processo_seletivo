@@ -181,6 +181,7 @@ from processo_seletivo.resultados.application import selectors as resultado_sele
 from processo_seletivo.seguranca.application.authorization import (
     Base,
     base_de_permissao,
+    frase_do_aviso,
     require_authorization_base,
     require_permission,
 )
@@ -653,7 +654,25 @@ def _destino(caminho, codigo=""):
 MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
-def _pendencias(edital, *, agora=None):
+def pode_compor(edital, ator) -> bool:
+    """Esta pessoa pode compor **este** Edital? (037, `FR-542`)
+
+    A pergunta já era feita por `compor_etapa`, para decidir se a etapa é formulário ou leitura.
+    O que ela não era é consultável — e a pendência passou a precisar dela para saber se quem lê
+    consegue resolver o que a tela acabou de nomear.
+
+    **Uma derivação, e não duas**, pela razão de sempre: duas respostas para a mesma pergunta
+    divergem na primeira mudança, e aqui o custo seria a tela mandar pedir a outra pessoa
+    exatamente onde ela própria oferece o formulário.
+
+    **O estado entra no predicado**, e não só a permissão: Edital que saiu da elaboração não se
+    compõe por ninguém, e mandar pedir ali seria prometer um caminho que não existe para pessoa
+    alguma.
+    """
+    return edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
+
+
+def _pendencias(edital, *, agora=None, ator=None):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
 
     **`agora` é recebido, e não lido aqui, quando a página também desenha o selo das etapas**
@@ -661,10 +680,27 @@ def _pendencias(edital, *, agora=None):
     Eventos venceram —, e dois relógios lidos na mesma requisição podem discordar: a etapa
     apareceria pendente sem a explicação correspondente, que é o que a UX-049 proíbe. Quem não tem
     selo a desenhar continua chamando sem o argumento.
+
+    **`ator` é o que a `037` acrescentou, e é o que torna a condução possível** (`FR-542`,
+    `FR-542a`). "O que falta" e "onde se resolve" já eram ditos; "a quem pedir" **não podia** ser,
+    porque esta montagem não conhecia quem está olhando — e condução depende de quem lê: *"peça a
+    alguém com a permissão de X"* é falso para quem tem a permissão de X (`FR-544`, `D-002`).
+
+    **Sem `ator`, nenhuma condução** — e é assim que as duas outras chamadas continuam intactas.
+    A tela do Edital e a de confirmação do ato exibem a pendência noutra moldura, e levá-la a elas
+    é decisão de navegação com a garantia da `033` a respeitar; fica registrado em
+    `achado-do-ach-02.md`, e não vira escopo aqui.
+
+    **A condução nasce aqui, e não na mensagem normativa** (`FR-542a`): a mensagem descreve o
+    defeito do **conteúdo**, é lida por mais de uma superfície e não conhece permissão nenhuma.
     """
     rotulos = {chave: rotulo for chave, rotulo, _ in ETAPAS_COMPOSICAO}
     pendencias = []
     agora = agora or timezone.now()
+    # **Uma pergunta para a lista inteira**, e não uma por item: o predicado é do par
+    # Edital×ator, e repeti-lo por pendência custaria uma consulta de permissão por linha sem
+    # poder responder diferente em nenhuma delas.
+    conduzir = ator is not None and not pode_compor(edital, ator)
     for item in validate_for_publication(
         edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
     ):
@@ -679,6 +715,11 @@ def _pendencias(edital, *, agora=None):
                 "corrigivel": corrigivel,
                 "rotulo_etapa": rotulos.get(etapa, ""),
                 "motivo": "" if corrigivel else MOTIVO_SEM_DESTINO,
+                # **Só onde há o que pedir.** A pendência que nenhuma etapa do assistente trata
+                # não se resolve compondo, e mandar pedir a composição dela nomearia um caminho
+                # que não existe — o defeito que o `MOTIVO_SEM_DESTINO` acima existe para evitar,
+                # com outra roupa.
+                "conducao": CONDUCAO_DA_COMPOSICAO if (conduzir and corrigivel) else "",
             }
         )
     return pendencias
@@ -1036,7 +1077,7 @@ def compor_etapa(request, edital_id, etapa):
     if edital is None:
         raise Http404
 
-    editavel = edital.status == Edital.Status.EM_ELABORACAO and ator.can("edital:elaborar")
+    editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
     erros, digitados = [], None
 
@@ -1083,7 +1124,7 @@ def compor_etapa(request, edital_id, etapa):
     # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
-    pendencias = _pendencias(edital, agora=agora)
+    pendencias = _pendencias(edital, agora=agora, ator=ator)
     # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
     # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
     # A lista é pedida — e não um booleano — porque a frase diz **quantos** Eventos a mantêm assim.
@@ -1808,7 +1849,18 @@ def _etapas_e_fatos_do_edital(edital):
     publicação (FR-010).
     """
     etapas = [
-        {"id": str(etapa.id), "rotulo": f"{etapa.name}"}
+        {
+            "id": str(etapa.id),
+            "rotulo": f"{etapa.name}",
+            # **Se a Etapa declara peso** (037, `FR-551`). É campo a mais no que já era montado, e
+            # não consulta nova nem controle novo — é o que mantém a `FR-551a` satisfeita num
+            # cartão que a auditoria já acusa de ter 28 controles.
+            #
+            # Aqui, e não em cada chamador: esta lista é consumida em **quatro** pontos do
+            # arquivo, e acrescentar o campo em três deixaria o cartão mudo numa das rotas —
+            # justamente o fragmento recomposto, que é o que dá o "no momento em que enumera".
+            "tem_peso": etapa.weight is not None,
+        }
         for etapa in edital.etapas.filter(classificatory=True).order_by("order")
     ]
     fatos = [
@@ -2361,6 +2413,18 @@ def detalhe(request, edital_id):
             "pendencias": pendencias,
             "acoes": conjunto,
             "impedido_por_segregacao": segregacao,
+            # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
+            # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
+            # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
+            # é derivada uma vez (`FR-541a`) — duas respostas divergiriam na primeira mudança.
+            #
+            # A decisão fica aqui, e não no template, pela razão de sempre: deixá-la lá obrigaria
+            # a tela a conhecer metade da derivação. E é **prosa no aviso**, nunca uma ação
+            # desabilitada com motivo (`FR-541c`) — a lista não oferece destino que o ator não
+            # abre, e desfazer isso desfaria a regra da `007` e da `033`.
+            "conducao_do_imutavel": (
+                "" if acoes.pode_retificar(edital, ator) else CONDUCAO_DA_RETIFICACAO
+            ),
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
             "marcos_classificatorios": _marcos_publicados(edital, ator),
         },
@@ -2401,14 +2465,19 @@ def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
                     "nota": "",
                 }
             )
-        # A condição do corte é a regra de corte declarada, e continua sendo exatamente essa: ela
-        # é escopo da `032`, e o que mudou aqui é **onde** ela é avaliada, nunca o que ela decide.
-        # Deixá-la no template obrigaria a tela a conhecer metade da derivação, e duas verdades
-        # sobre a mesma lista divergem na primeira mudança.
-        if marco.get("cutRule"):
-            destinos.append(
-                {"rotulo": "corte", "url": reverse("interface:corte", args=[edital.id, marco_id])}
-            )
+        # **O destino do corte não pende mais da regra de corte** (037, FR-538). Ele pendia — a
+        # `032` avaliou a condição aqui em vez de no template, e não mudou o que ela decidia —, e
+        # o efeito era o inverso do pretendido: quem mais precisa entender por que não há faixa é
+        # exatamente quem não declarou a regra, e era dele que o caminho sumia. A tela de destino
+        # já explica a ausência, com frase própria escrita para este caso; o que faltava era o
+        # link (`FR-539`, e é por isso que esta feature não a reescreve).
+        #
+        # **O que continua condicionado é o alcance do ator**, e é outra coisa (`FR-540`): é a
+        # garantia da `033` de que a tela não oferece destino que quem olha não abre. As duas
+        # condições moram a dez linhas uma da outra, e confundi-las produz becos opostos.
+        destinos.append(
+            {"rotulo": "corte", "url": reverse("interface:corte", args=[edital.id, marco_id])}
+        )
         destinos.append(
             {"rotulo": "ocupação", "url": reverse("interface:ocupacao", args=[edital.id, marco_id])}
         )
@@ -3828,6 +3897,25 @@ def _registrar_divergencia(ator, documento, request):
 # ---------------------------------------------------------------------------
 
 BASE_DE_GESTAO = base_de_permissao("gerir a comissão")
+# A base de quem propõe Retificação, e a condução que ela produz (037, `FR-541`, `FR-543`).
+#
+# **A frase é produzida, e não redigida.** Imitar o texto numa tela nova derrotaria a guarda que a
+# `033` deixou — existe uma maneira de dizer isto, e ela é pública exatamente para que não nasça
+# uma segunda. A forma é a **cheia**, com a oração do ato (`FR-543a`), e ela nomeia a permissão e
+# nunca uma pessoa (`FR-543b`).
+#
+# **Aviso, e não recusa** (`FR-543d`): é dita em telas onde ninguém tentou operação alguma — ao
+# lado de "Conteúdo imutável", e ao lado da recusa do corte que fala de outra coisa.
+BASE_DE_RETIFICAR = base_de_permissao("retificar")
+CONDUCAO_DA_RETIFICACAO = frase_do_aviso(
+    (BASE_DE_RETIFICAR,), acao="A Retificação", que="a proponha"
+)
+# E a de quem compõe (037, `FR-542`). **O percurso da `T011` é que a autorizou a existir**: ele
+# reproduziu o Gestor da reauditoria e mediu que o caminho até os Perfis existe, leva à etapa, e
+# termina numa tela de leitura — *"Você não tem a permissão `edital:elaborar`"*. O que falta ali é
+# a outra metade, e é só ela: **a quem pedir**.
+BASE_DE_COMPOR = base_de_permissao("elaborar o Edital")
+CONDUCAO_DA_COMPOSICAO = frase_do_aviso((BASE_DE_COMPOR,), acao="A correção", que="a faça")
 BASE_DA_PRESIDENCIA = Base("a presidência deste Processo", "a quem preside este Processo")
 BASE_DE_AUDITORIA = base_de_permissao("consultar auditoria")
 BASE_DE_PUBLICAR_RESULTADO = base_de_permissao("publicar resultado")
@@ -5624,6 +5712,35 @@ def _inteiro_do_formulario(valor):
         return 0
 
 
+def _caminho_da_recusa_do_corte(codigo, *, edital, ator, para_a_ordenacao):
+    """Qual caminho acompanha **aquela** recusa da tela do corte (037, `FR-539a`, `FR-539b`).
+
+    São **três** recusas passando pelo mesmo bloco, e até aqui as três recebiam o mesmo caminho.
+    Ele resolve duas — falta a ordem, ou ela está obsoleta —, e as duas se resolvem na
+    classificação do recorte. A terceira pede **conteúdo do Edital**: num Edital publicado a regra
+    de corte não se edita, ela muda por Retificação.
+
+    **Ela era inalcançável até agora**, porque sem regra não havia caminho até esta tela. A
+    `FR-538` a tornou alcançável — e mandar quem a lê para a classificação entregaria, no fim do
+    caminho aberto para remover um beco, um segundo caminho que não resolve. É o `ACH-40` outra
+    vez, criado pela correção do `ACH-46`.
+
+    **O alcance é o de retificar, e não o de classificar** (`FR-539b`). Quem classifica pode não
+    poder retificar, e a capacidade que governa esta tela — a de classificar, `FR-540` — é outra,
+    a dez linhas de distância. Oferecer o caminho a quem não o abre reabriria, dentro da correção
+    de um beco, o beco que a `033` fechou. Não o alcançando, o que se recebe é a frase que diz a
+    quem pedir, pelo mecanismo único e não redigida aqui (`FR-543`).
+    """
+    if codigo != "marco_sem_regra_de_corte":
+        return {"url": para_a_ordenacao, "rotulo": "Ir para a classificação deste recorte"}, ""
+    if acoes.pode_retificar(edital, ator):
+        return {
+            "url": reverse("interface:retificar", args=[edital.id]),
+            "rotulo": "Retificar o Edital para declarar a regra de corte",
+        }, ""
+    return None, CONDUCAO_DA_RETIFICACAO
+
+
 @require_http_methods(["GET"])
 def corte(request, edital_id, marco_id):
     """Calcula a faixa para conferência, sem constituir ato algum (014, FR-190).
@@ -5647,7 +5764,7 @@ def corte(request, edital_id, marco_id):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     geracao = estado["geracao"]
-    proposta, recusa = None, None
+    proposta, recusa, codigo_da_recusa = None, None, ""
     try:
         proposta = calcular_corte(
             edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
@@ -5658,8 +5775,21 @@ def corte(request, edital_id, marco_id):
         # A recusa é **mostrada**, e não devolvida como erro de servidor: "este marco não corta" e
         # "a ordem está obsoleta" são estados legítimos da tela, e quem os lê precisa do motivo.
         recusa = erro.detail
+        # **O código, e não só a frase** (037, `FR-539a`). A frase nasce no domínio e não muda; o
+        # que passa a depender de qual recusa é o **caminho** que a tela anexa a ela.
+        codigo_da_recusa = erro.code
     if proposta:
         _com_a_inscricao(proposta["itens"])
+    para_a_ordenacao = reverse("interface:ordenacao", args=[edital.id, marco_id]) + (
+        f"?lista={lista_id}" if lista_id else ""
+    )
+    caminho_da_recusa, conducao_da_recusa = (
+        _caminho_da_recusa_do_corte(
+            codigo_da_recusa, edital=edital, ator=ator, para_a_ordenacao=para_a_ordenacao
+        )
+        if recusa
+        else (None, "")
+    )
     return marcar_como_privada(
         render(
             request,
@@ -5673,8 +5803,11 @@ def corte(request, edital_id, marco_id):
                 # O caminho para emitir a ordem **deste** recorte, que é o que falta quando não há o
                 # que cortar (`FR-498`). Nomear a pendência sem dizer onde ela se resolve manda o
                 # operador procurar a tela — e a `033` registrou que esse é o beco do `ACH-40`.
-                "para_a_ordenacao": reverse("interface:ordenacao", args=[edital.id, marco_id])
-                + (f"?lista={lista_id}" if lista_id else ""),
+                "para_a_ordenacao": para_a_ordenacao,
+                # O caminho **daquela** recusa, escolhido na view (037, `FR-539a`): o template
+                # imprime o que recebeu, em vez de anexar um caminho só às três.
+                "caminho_da_recusa": caminho_da_recusa,
+                "conducao_da_recusa": conducao_da_recusa,
                 "proposta": proposta,
                 "recusa": recusa,
                 "geracao": geracao,

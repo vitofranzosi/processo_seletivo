@@ -294,3 +294,166 @@ def test_a_tela_do_corte_identifica_quem_progride_pelo_protocolo(cliente_no_cort
 
     assert protocolos, "o cenário grava protocolo"
     assert any(protocolo in corpo for protocolo in protocolos)
+
+
+# ---------------------------------------------------------------------------
+# 037 · o marco sem regra de corte, e o caminho que a recusa dele oferece
+# ---------------------------------------------------------------------------
+
+#: A frase do domínio para este caso, **literal**. A `FR-539` é uma proibição de reescrever, e sem
+#: asserção literal uma reescrita bem-intencionada na view ou no template passaria por todas as
+#: tarefas desta feature sem ser notada — a tela continuaria mostrando "alguma recusa", que é o que
+#: uma asserção frouxa afirma.
+RECUSA_SEM_REGRA = "Este marco não declara regra de corte: o Edital não publicou quantos progridem."
+
+#: E a das outras duas, que continuam indo para a classificação.
+RECUSA_SEM_ORDEM = "Este recorte ainda não tem ordem emitida"
+
+
+def _sem_regra_de_corte(cut=None):
+    """O cenário do corte com o marco **sem** `cutRule` declarada.
+
+    A ausência da regra é estado legítimo do conteúdo publicado — recebe aviso na publicação, e não
+    recusa. `cut` é recebido e ignorado de propósito: quem monta o cenário passa sempre a regra
+    padrão, e o que este rascunho existe para produzir é justamente a falta dela.
+    """
+    from tests.fixtures.corte import rascunho
+
+    base, pontuada = rascunho()
+    base["profiles"][0]["classificationMilestones"][0].pop("cutRule", None)
+    return base, pontuada
+
+
+@pytest.fixture
+def corte_sem_regra(client, seletor_ligado, gestor, api_client, manager_headers, process_payload):
+    """Ordem emitida e marco **sem** regra de corte — a recusa que a `FR-538` tornou alcançável.
+
+    A ordem precisa existir: sem ela a recusa é a da ordem ausente, que é outra, e o cenário
+    exercitaria o caminho de hoje em vez do que a feature cria.
+    """
+    from tests.fixtures.corte import MARCO, montar_cenario_do_corte
+
+    edital, _, _ = montar_cenario_do_corte(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        draft_factory=_sem_regra_de_corte,
+        prefixo="corte-037-sem-regra",
+    )
+    return client, edital, MARCO
+
+
+def _abrir_corte(client, edital, marco, *, lista=None):
+    endereco = reverse("interface:corte", args=[edital.id, marco])
+    if lista:
+        endereco = f"{endereco}?lista={lista}"
+    resposta = client.get(endereco)
+    assert resposta.status_code == 200, resposta.status_code
+    return resposta.content.decode()
+
+
+def test_o_marco_sem_regra_mostra_a_recusa_e_nao_pagina_inexistente(corte_sem_regra):
+    """`FR-539`: a recusa é **conflito**, e a tela a mostra — ela não vira 404.
+
+    E a frase é afirmada **literalmente**, e não por "alguma recusa apareceu": esta feature promete
+    não reescrever a explicação que a tela já dá, e a promessa só é verificável contra o texto.
+    """
+    client, edital, marco = corte_sem_regra
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = _abrir_corte(client, edital, marco)
+
+    assert RECUSA_SEM_REGRA in pagina
+
+
+def test_o_marco_sem_regra_recebe_o_caminho_da_regra_e_nao_o_da_classificacao(corte_sem_regra):
+    """**A contraprova, metade um** (`FR-539a`).
+
+    O que falta aqui é conteúdo do Edital, e num Edital publicado a regra de corte não se edita:
+    ela muda por Retificação. Mandar quem lê para a classificação abriria, no fim do caminho que a
+    `FR-538` cria para remover um beco, um segundo caminho que não resolve.
+    """
+    client, edital, marco = corte_sem_regra
+    identificar(client, "carlos", ["gestor", "elaborador"])
+
+    pagina = _abrir_corte(client, edital, marco)
+
+    assert f'href="{reverse("interface:retificar", args=[edital.id])}"' in pagina
+    assert reverse("interface:ordenacao", args=[edital.id, marco]) not in pagina, (
+        "a classificação resolve as outras duas recusas, e não esta"
+    )
+
+
+def test_o_marco_com_regra_e_sem_ordem_continua_indo_para_a_classificacao(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """**A contraprova, metade dois** (`FR-539a`) — e é ela que separa esta feature de um beco novo.
+
+    O recorte reservado do cenário 7/1/2 tem regra de corte e **não** tem ordem própria. A recusa é
+    outra, e o caminho dela não mudou: quem lê continua sendo mandado à classificação do recorte,
+    que é onde a ordem se emite.
+
+    **Se as duas metades oferecessem o mesmo caminho, a `FR-539a` não teria sido cumprida** — ainda
+    que o link do corte aparecesse corretamente na tela do Edital.
+    """
+    from tests.fixtures.corte import MARCO
+    from tests.fixtures.recortes import MODALIDADE_PPI, montar_cenario_7_1_2
+
+    edital, _, _ = montar_cenario_7_1_2(
+        gestor, api_client, manager_headers, process_payload, prefixo="corte-037-sem-ordem"
+    )
+    identificar(client, "carlos", ["gestor", "elaborador"])
+
+    pagina = _abrir_corte(client, edital, MARCO, lista=MODALIDADE_PPI)
+
+    assert RECUSA_SEM_ORDEM in pagina
+    destino = reverse("interface:ordenacao", args=[edital.id, MARCO])
+    assert f'href="{destino}?lista={MODALIDADE_PPI}"' in pagina
+    assert reverse("interface:retificar", args=[edital.id]) not in pagina, (
+        "a Retificação resolve a falta da regra, e não a falta da ordem"
+    )
+
+
+def test_quem_nao_alcanca_a_retificacao_recebe_a_frase_e_nao_o_caminho(corte_sem_regra):
+    """`FR-539b`: o segundo lugar desta feature onde o beco da `033` cabe.
+
+    Quem classifica pode não poder retificar — a base de gestão da comissão não concede
+    `retificacao:elaborar` —, e oferecer-lhe o caminho seria abrir, dentro da correção de um beco,
+    o beco que a `033` fechou. O que ele recebe é a frase que diz a quem pedir, e ela nomeia **a
+    ação** e **a permissão**, nunca uma pessoa (`FR-543a`, `FR-543b`).
+    """
+    client, edital, marco = corte_sem_regra
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = _abrir_corte(client, edital, marco)
+
+    assert reverse("interface:retificar", args=[edital.id]) not in pagina
+    assert "A Retificação depende da permissão de retificar." in pagina
+    assert "Peça a alguém com a permissão de retificar que a proponha." in pagina
+
+
+def test_o_marco_que_ordena_por_sorteio_diz_que_nao_corta(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """O caso de borda que a spec deixou em aberto, e que o percurso respondeu.
+
+    Um marco que ordena por sorteio não corta e não enumera Etapa. O destino é oferecido do mesmo
+    modo — a `FR-538` não distingue formas de ordem —, e a tela diz que este marco não declara
+    regra de corte, que é verdade e é a mesma frase.
+
+    **A prosa serve ao caso**, e a razão está na frase: ela fala do que o *Edital* não publicou, e
+    não do que o marco calculou. Um marco por sorteio sem regra de corte está exatamente nessa
+    situação — e o caminho que ele recebe, a Retificação, é onde a regra se declararia. Palavra
+    própria para o sorteio afirmaria que a ausência tem causa diferente, e ela não tem.
+    """
+    from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
+
+    cenario = certame_sorteado_com_quadro(
+        gestor, api_client, manager_headers, process_payload, prefixo="corte-037-sorteio"
+    )
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = _abrir_corte(client, cenario["edital"], cenario["marco"])
+
+    assert RECUSA_SEM_REGRA in pagina

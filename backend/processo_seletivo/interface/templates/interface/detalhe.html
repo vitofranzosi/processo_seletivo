@@ -61,9 +61,25 @@ permanecem preservados.</p>
     com a permissão de publicar que conclua o ato.</p>
     {% endif %}
 
+    {% comment %}
+    O aviso dizia que correções ocorrem por Retificação e parava aí — e a frase que conduz já era
+    praticada seis linhas acima, no mesmo cartão. Quem não pode retificar lia o bloqueio e não lia
+    o que fazer (037, FR-541).
+
+    **Ele tem dois estados, e nenhum deles é "sempre".** Quem pode retificar recebe `Retificar` na
+    lista abaixo — já recebia —, e para esse a condução **cala** (FR-541b): dizer "peça a alguém"
+    ao lado do botão que a pessoa pode clicar ensina a desconfiar da tela. Quem não pode lê a ação
+    e a permissão que a pratica.
+
+    A decisão é da view, e é a **mesma** que decidiu se `Retificar` entra na lista (FR-541a); a
+    frase sai do mecanismo único (FR-543), na forma cheia (FR-543a), e nomeia a permissão e nunca
+    uma pessoa (FR-543b). Não vire isto em ação desabilitada com motivo: a lista não oferece
+    destino que o ator não abre, e desfazê-lo desfaria a regra da 007 e da 033 (FR-541c).
+    {% endcomment %}
     {% if edital.status == 'PUBLICADO' %}
     <p class="imutavel"><strong>Conteúdo imutável.</strong> Um Edital publicado não pode ser
-    editado. Correções ocorrem por Retificação, com novo fluxo de aprovação.</p>
+    editado. Correções ocorrem por Retificação, com novo fluxo de aprovação.{% if conducao_do_imutavel %}
+    {{ conducao_do_imutavel }}{% endif %}</p>
     {% endif %}
 
     {% comment %}

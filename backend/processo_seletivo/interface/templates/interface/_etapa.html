@@ -130,7 +130,13 @@
       </div>
     </fieldset>
     <p class="campo curto">
-      <label for="etapa-{{ indice }}-weight">Peso <span class="opcional">(opcional)</span></label>
+      {% comment %}
+      O rótulo dizia "(opcional)" sem ressalva, e era falso na única situação em que o peso
+      importa: enumerada por um marco, a Etapa **precisa** de peso, e a conferência só dizia isso
+      nove etapas adiante (037, FR-550). A ressalva é o que faltava — não a palavra "opcional",
+      que continua verdadeira para a Etapa que nenhum marco enumera.
+      {% endcomment %}
+      <label for="etapa-{{ indice }}-weight">Peso <span class="opcional">(opcional até um marco enumerar esta Etapa)</span></label>
       {% recusa_de recusas "etapa" indice "weight" as recusado %}
       <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-weight"
              name="etapa-{{ indice }}-weight" value="{{ etapa_linha.weight|default:'' }}"
@@ -138,7 +144,8 @@
              aria-describedby="ajuda-peso-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-weight{% endif %}"
              {% if recusado %}aria-invalid="true"{% endif %}>
       {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-weight">{{ recusado }}</span>{% endif %}
-      <span class="oculto" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera.</span>
+      <span class="oculto" id="ajuda-peso-{{ indice }}">Vazio: a Etapa não pondera. O marco que
+        a enumerar exige o peso declarado.</span>
     </p>
     <p class="campo curto">
       <label for="etapa-{{ indice }}-evaluationsPerRegistration">Avaliações por inscrição</label>

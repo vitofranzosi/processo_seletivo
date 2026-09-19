@@ -44,9 +44,18 @@ def test_inicio_ausente_nao_responde():
     assert vencido(None, None, agora=AGORA) is False
 
 
-def test_evento_em_curso_vence_pelo_inicio():
-    """Começou e não terminou: a advertência existe, e é só isso que este predicado diz."""
-    assert vencido(em(days=-1), em(days=2), agora=AGORA) is True
+def test_evento_em_curso_nao_vence():
+    """037, `FR-545`: período em curso não é período vencido.
+
+    **Este caso afirmava o contrário, e o nome dele defendia o defeito**: *"vence pelo início"*.
+    A régua vencia pelo **ou** dos dois instantes, e com isso o Edital que abre inscrições no dia
+    em que é publicado ficava com a etapa do Cronograma impossível de concluir — enquanto o canal
+    do candidato lia o mesmo Evento como acontecendo agora.
+
+    Renomear foi obrigatório e não é cosmético: um caso chamado *"vence pelo início"* que passasse
+    a afirmar *"não vence"* é a forma mais discreta de a suíte mentir.
+    """
+    assert vencido(em(days=-1), em(days=2), agora=AGORA) is False
 
 
 def test_evento_inteiro_no_futuro_nao_vence():
@@ -71,10 +80,19 @@ def test_sem_termino_declarado_a_mensagem_nomeia_o_inicio():
     assert instante_vencido(inicio, None, agora=AGORA) == inicio
 
 
-def test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro():
-    """O término ainda não passou: nomeá-lo faria a frase acusar um prazo que está correndo."""
-    inicio = em(days=-1)
-    assert instante_vencido(inicio, em(days=2), agora=AGORA) == inicio
+def test_evento_em_curso_nao_nomeia_instante_nenhum():
+    """037, `FR-546a`: a escolha do instante muda **junto com** a régua, e no mesmo ato.
+
+    Este caso é o que prende isso. Ele afirmava que o Evento em curso nomeia o início — coerente
+    enquanto o predicado o vencia —, e continuaria verde se só o predicado mudasse: as duas
+    funções do mesmo módulo passariam a discordar sobre o mesmo Evento, uma dizendo que ele não
+    venceu e a outra escolhendo um instante vencido para ele. É a divergência que a `028` criou
+    este módulo para impedir.
+
+    O Evento não venceu; não há instante a nomear. Quem escolhe o início é o Evento **pontual**,
+    e o caso dele está logo acima.
+    """
+    assert instante_vencido(em(days=-1), em(days=2), agora=AGORA) is None
 
 
 def test_evento_que_nao_venceu_nao_nomeia_instante_nenhum():
