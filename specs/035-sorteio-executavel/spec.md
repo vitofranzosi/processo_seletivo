@@ -182,9 +182,10 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
 
 ### Edge Cases
 
-- **Edital do acervo com valor fora do vocabulário.** O valor publicado é norma e não se reescreve.
-  A tela de Retificação precisa **mostrá-lo** sem oferecê-lo como escolha válida, e sem parecer que o
-  campo está vazio.
+- **Rascunho criado a partir de Edital anterior, com valor fora do vocabulário de hoje.** O valor
+  veio de conteúdo publicado, e a escolha **nova** da composição precisa **mostrá-lo** sem oferecê-lo
+  como válido e sem parecer que o campo está vazio (`FR-511`). *A tela de Retificação não entra: ela
+  já oferece os quatro campos fechados como escolha, e esta feature não a toca.*
 - **Vocabulário que cresce.** Quando um algoritmo ou uma fonte é acrescentada, os Editais publicados
   antes continuam citando o que citaram. A escolha nova aparece na composição; nada muda no acervo.
 - **Ocorrência que termina em número mas cuja fonte não a reconhece.** A forma está certa e a
@@ -404,13 +405,15 @@ Cada um com spec própria:
 ## Conformidade com a Constituição
 
 **Princípio II — Integridade Normativa, Imutabilidade e Temporalidade.** O método é conteúdo
-publicado, e o que já foi publicado não se corrige: `FR-511`, `FR-515` e `FR-520` fixam que o acervo
-continua legível, retificável e intocado, e `SC-179` é o critério que prende os três.
+publicado, e o que já foi publicado não se corrige: **`FR-511`** mantém legível o valor que veio de
+conteúdo publicado, **`FR-514`** impede que a guarda torne o acervo irretificável, e **`FR-519`**
+que algo publicado seja reescrito. `SC-179` é o critério que prende os três — e ele alcança o que
+mais importa aqui: **nenhum sorteio já realizado muda de resultado**.
 
-**Princípio IV — Regras Explícitas e Consistência Operacional.** `FR-516` existe por causa dele: a
-conferência da Revisão e a execução do sorteio MUST responder pela mesma regra. Duas respostas para
-*"este método roda?"* apareceriam como a Revisão aprovando o que o sorteio recusa — e quem lê a
-Revisão acredita nela.
+**Princípio IV — Regras Explícitas e Consistência Operacional.** **`FR-515`** existe por causa dele:
+a conferência da **composição** e a derivação do **motor** MUST responder pela mesma regra. Duas
+respostas para *"esta referência é derivável?"* apareceriam como a composição aceitando o que o
+sorteio recusa — e aí o Edital já estaria publicado.
 
 **Princípio VI — Completude de Jornada e Valor Demonstrável.** A capacidade entregue fecha uma
 jornada que hoje não termina: o `SC-176` é o sorteio inteiro, do congelamento à verificação pública,

@@ -64,7 +64,7 @@ removida.
 |---|---|---|
 | três campos sem guarda | **um** — os outros cinco já são conferidos ao gravar | a `US2` encolhe para um validador |
 | "nada valida na composição" | seis validadores, para o método próprio **e** o comum | não há família nova de achados |
-| criar a escolha de vocabulário | a **Retificação já a faz** com o algoritmo | a `FR-507` vira *generalizar* |
+| criar a escolha de vocabulário | a **Retificação já a faz** com **quatro** campos, por uma função única | a `FR-507` vira *generalizar*, e a composição **reusa** a função |
 | a varredura conta quantos Editais seriam impedidos | **nenhum** dos quatro que li declara ocorrência externa | o `SC-180` mudou de pergunta |
 
 **E uma pergunta de governança ficou registrada e não respondida**: o sistema exige uma declaração

@@ -83,7 +83,7 @@ precisa terminar em número, e chegar a um método que roda.
 - [ ] T010 [US1] Acrescentar a ajuda do campo da **ocorrência** em `backend/processo_seletivo/interface/templates/interface/_marco.html` e `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html` (**EXISTENTE**): **forma, exemplo e consequência**, dizendo que ali vai **só a referência** — a fonte já está declarada acima — e **por que** ela precisa terminar em número (`FR-508`). Siga a formulação do campo do instante da ocorrência, citada em `research.md` `R-5`; uma segunda redação para a mesma coisa é o que a `FR-509` proíbe
 - [ ] T011 [US1] **Não tocar** o campo *"como a ocorrência decorre da data programada"* — `FR-510`. Esta tarefa é uma conferência, e existe porque é o requisito mais fácil de perder de vista: ele manda **não fazer** o que a auditoria parecia pedir. Registre em `specs/035-sorteio-executavel/inventario-do-metodo.md` (**EXISTENTE**) que o campo continua texto livre e que a varredura de leitores continua devolvendo zero
 - [ ] T012 [US1] Prender as duas telas em `backend/tests/interface/test_metodo_do_marco.py` (**EXISTENTE** — **acrescente ao fim**): o algoritmo e a fonte são oferecidos como escolha, nas duas; a ocorrência traz ajuda que diz forma, exemplo e consequência; e o campo da derivação **continua** sendo texto livre
-- [ ] T013 [P] [US1] Corrigir os **dois** rótulos divergentes entre a composição e a Retificação, em `backend/processo_seletivo/interface/retificacao.py` e nos dois templates de composição (**EXISTENTE**): a **derivação** — *"Como a ocorrência decorre da data programada"* × *"Como a ocorrência foi escolhida"* — e a **ocorrência** — *"Ocorrência que **fixará** a semente"* × *"Ocorrência que **fixa** a semente"*. Dois rótulos para o mesmo campo é o que o Princípio I proíbe; os dois foram achados de passagem, o primeiro no `research.md` `R-3` e o segundo no `analyze`
+- [ ] T013 [US1] Corrigir os **dois** rótulos divergentes entre a composição e a Retificação, em `backend/processo_seletivo/interface/retificacao.py` e nos dois templates de composição (**EXISTENTE**): a **derivação** — *"Como a ocorrência decorre da data programada"* × *"Como a ocorrência foi escolhida"* — e a **ocorrência** — *"Ocorrência que **fixará** a semente"* × *"Ocorrência que **fixa** a semente"*. Dois rótulos para o mesmo campo é o que o Princípio I proíbe; os dois foram achados de passagem, o primeiro no `research.md` `R-3` e o segundo no `analyze`
 
 **Checkpoint**: **este é o MVP.** A composição ensina, e quem segue a tela produz um método que roda.
 
@@ -164,10 +164,14 @@ Phase 1 (T001–T004) ──► T004 é PORTÃO DE MEDIÇÃO ──► Phase 2 (
 ### Dentro das fases
 
 - **T005 → T006** — não há o que comparar antes de a consulta existir.
-- **T007 → T008 → T009 → T010** são os **dois mesmos templates**, e por isso **nenhuma leva `[P]`**.
-  Parecem independentes porque falam de campos diferentes — a escolha, o valor do acervo, a ajuda —,
-  e não são: as quatro editam os mesmos dois arquivos. A `T009` entrou na cadeia quando o `tasks`
-  achou a `FR-511` sem tarefa, e a cadeia teve de ser recontada.
+- **T007 → T008 → T009 → T010 → T013** são os **dois mesmos templates**, e por isso **nenhuma leva
+  `[P]`**. Parecem independentes porque falam de campos diferentes — a escolha, o valor de origem, a
+  ajuda, os rótulos —, e não são: as **cinco** editam os mesmos dois arquivos.
+  **A cadeia foi recontada duas vezes, e as duas por acréscimo.** A `T009` entrou quando a
+  conferência do `tasks` achou a `FR-511` sem tarefa. A `T013` entrou quando o `analyze` mandou
+  incluir o segundo rótulo divergente — e nesse momento ela deixou de ser paralela, porque passou a
+  editar os templates da composição. **Acrescentar arquivo a uma tarefa `[P]` é o modo mais discreto
+  de quebrar a regra do `[P]`**, e foi o que aconteceu aqui.
 - **T014 → T015** são a mesma função.
 - **T016 → T017** são o mesmo arquivo, criado em T016.
 - **T019 → T020** — a tela só pode dizer a causa certa depois de as duas serem separadas.
@@ -177,7 +181,7 @@ Phase 1 (T001–T004) ──► T004 é PORTÃO DE MEDIÇÃO ──► Phase 2 (
 
 | Tarefas | Por que podem |
 |---|---|
-| T013 · T018 | arquivos diferentes, nenhuma dependência aberta |
+| T018, dentro da US2 | arquivo **novo**, e nenhuma das outras quatro da história o toca |
 | T026 · T028 | percursos independentes, um sem banco e outro só de leitura |
 | US2 inteira · US3 inteira | módulos disjuntos, depois que a US1 fecha |
 

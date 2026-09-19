@@ -50,8 +50,9 @@ sorteio de rodar quando mal declarado — não tem nenhum.
 
 ### E a escolha já existe, na tela ao lado
 
-`interface/retificacao.py` oferece o algoritmo como **escolha entre os publicados**, construindo as
-opções a partir do próprio vocabulário fechado. **A Retificação já faz o que a composição não faz.**
+`interface/retificacao.py` oferece **quatro** campos fechados — algoritmo, fonte, normalização e
+substituição — como **escolha entre os publicados**, por **uma função única** que lê os vocabulários
+de quem os executa. **A Retificação já faz o que a composição não faz.**
 
 Isto reforça a `FR-507` e muda o argumento dela: não é "criar uma escolha", é **generalizar a que já
 existe** — o mesmo tipo de argumento que a `FR-509` faz sobre a ajuda do instante da ocorrência.

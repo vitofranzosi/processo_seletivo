@@ -23,7 +23,7 @@ permite rodar o sorteio sem rede.
 1. Abra a etapa de Classificação e componha o método do marco de sorteio.
 
 **Esperado**: o **algoritmo** e a **fonte** são **escolhidos** entre os que o sistema executa — não
-há o que digitar errado. É o que a tela de Retificação já fazia com o algoritmo.
+há o que digitar errado. É o que a tela de Retificação já fazia com **quatro** campos fechados, pela mesma função que a composição passa a reusar.
 
 2. Chegue ao campo da **ocorrência**.
 

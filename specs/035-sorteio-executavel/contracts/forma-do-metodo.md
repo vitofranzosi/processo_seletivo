@@ -47,7 +47,7 @@ a levantar antes de escolher o lugar, e está como tarefa.
 
 | Espécie do campo | O que a tela faz | Precedente que ela segue |
 |---|---|---|
-| vocabulário **fechado** | **oferece a escolha**, montada do próprio vocabulário | a tela de Retificação, com o algoritmo |
+| vocabulário **fechado** | **oferece a escolha**, montada do próprio vocabulário | a tela de Retificação, com **quatro** campos, por uma função única que a composição reusa |
 | forma **restrita** | **diz a forma, o exemplo e a consequência** | o campo do instante da ocorrência |
 | **prosa normativa** | não interfere | — |
 
