@@ -168,7 +168,31 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     <button type="submit" class="botao">Observar a ocorrência {{ proxima_referencia }} na fonte</button>
   </form>
   {% endif %}
+  {% elif recusa_da_ocorrencia.causa == "declaracao" %}
+  {% comment %}
+  **A causa é a declaração, e não a fonte** (035, FR-516, FR-517). Aqui se lia que a ocorrência e
+  todas as substitutas estavam indisponíveis — frase falsa neste caso, e que culpa quem não errou:
+  a fonte nunca esteve indisponível, e quem lesse ficaria esperando por algo que não viria, para
+  depois Retificar sem saber o quê.
+
+  **A ordem das três frases é o requisito.** Primeiro qual campo e o que ele precisa conter, e só
+  então que corrigir exige Retificação: quem lê precisa saber **o que** antes de saber **como**.
+  {% endcomment %}
+  <p class="erro">A ocorrência declarada no Edital — <strong>{{ recusa_da_ocorrencia.referencia }}</strong> —
+    não pôde ser lida pela regra de substituição publicada. O campo <strong>{{ recusa_da_ocorrencia.campo }}</strong> —
+    {{ recusa_da_ocorrencia.o_que_e }} — precisa terminar no número da ocorrência, como
+    <code>5900</code> ou <code>Concurso 5900</code>: é do número final que a regra deriva a
+    substituta quando a fonte não publica.</p>
+  <p class="meta">A fonte não foi consultada, e não há o que esperar dela. Corrigir a declaração
+    exige Retificação, porque o método é conteúdo publicado deste Edital{% if pode_retificar %} —
+    <a href="{% url 'interface:retificar' edital.id %}">elabore a Retificação deste Edital</a>{% else %}:
+    quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
   {% else %}
+  {% comment %}
+  **A indisponibilidade real, e a frase dela não mudou** (035, FR-518). A cadeia esgotou porque a
+  fonte esteve indisponível tantas vezes quanto a regra encadeia — e para **esta** causa o que está
+  escrito aqui é verdadeiro. Esta feature não mexe no que já está certo.
+  {% endcomment %}
   <p class="erro">A ocorrência declarada e todas as substitutas previstas pela regra publicada estão
     indisponíveis. Prosseguir exige Retificação que declare outro método: o sistema não escolhe
     fonte por conta própria, e continuar tentando seria escolher.</p>

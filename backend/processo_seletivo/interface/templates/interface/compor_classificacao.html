@@ -1,4 +1,5 @@
 {% extends "interface/compor_base.html" %}
+{% load interface_extras %}
 {% block etapa_titulo %}Classificação{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario">
@@ -62,20 +63,44 @@
       <span class="oculto" id="ajuda-metodo-comum">Declarado aqui, ele vale para todo marco que
         ordena por sorteio e não declara método próprio. Alterá-lo depois de publicado exige
         Retificação, e nunca implantação de software.</span>
+      {% comment %}
+      **Os dois lugares declaram o mesmo método, e precisam ensinar igual** (035, FR-507). O comum
+      governa todo marco que não declara o próprio: um valor inválido aqui alcança todos de uma vez.
+      {% endcomment %}
       <p class="campo">
         <label for="edital-draw-algorithm">Algoritmo e versão</label>
-        <input type="text" id="edital-draw-algorithm" name="edital-draw-algorithm"
-               value="{{ metodo_comum.drawAlgorithm }}" placeholder="IFES-SORTEIO-SHA256-v1">
+        <select id="edital-draw-algorithm" name="edital-draw-algorithm">
+          <option value="">Não declarado</option>
+          {% escolhas_do_metodo "drawMethod/algorithm" metodo_comum.drawAlgorithm as algoritmos %}
+          {% for escolha in algoritmos %}
+          <option value="{{ escolha.valor }}"{% if escolha.selecionado %} selected{% endif %}>{{ escolha.rotulo }}</option>
+          {% endfor %}
+        </select>
       </p>
       <p class="campo">
         <label for="edital-draw-source">Fonte pública externa da semente</label>
-        <input type="text" id="edital-draw-source" name="edital-draw-source"
-               value="{{ metodo_comum.drawSource }}">
+        <select id="edital-draw-source" name="edital-draw-source">
+          <option value="">Não declarada</option>
+          {% escolhas_do_metodo "drawMethod/source" metodo_comum.drawSource as fontes %}
+          {% for escolha in fontes %}
+          <option value="{{ escolha.valor }}"{% if escolha.selecionado %} selected{% endif %}>{{ escolha.rotulo }}</option>
+          {% endfor %}
+        </select>
       </p>
       <p class="campo">
         <label for="edital-draw-occurrence">Ocorrência que fixará a semente</label>
         <input type="text" id="edital-draw-occurrence" name="edital-draw-occurrence"
-               value="{{ metodo_comum.drawOccurrence }}">
+               value="{{ metodo_comum.drawOccurrence }}" placeholder="5900"
+               aria-describedby="ajuda-ocorrencia-comum">
+        {% comment %}
+        A mesma ajuda do método do marco, palavra por palavra — e é isso que a `FR-509` pede: uma
+        segunda redação para a mesma coisa seria a segunda maneira de ensinar que ela proíbe.
+        {% endcomment %}
+        <span class="oculto" id="ajuda-ocorrencia-comum">Só a referência, terminando no número —
+          como 5900, ou Concurso 5900. É do número final que a regra de substituição deriva a
+          ocorrência seguinte quando a fonte não publica; sem ele, não há substituta e prosseguir
+          exige Retificação. A fonte já está declarada no campo acima: repeti-la depois do número
+          põe o número no meio, e ali a regra não o encontra.</span>
       </p>
       <p class="campo">
         <label for="edital-draw-occurrenceAt">Quando a ocorrência acontece</label>
