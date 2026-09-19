@@ -443,11 +443,20 @@ def test_a_recusa_do_metodo_comum_nao_apaga_o_que_foi_digitado(client, com_etapa
     assert resposta.status_code == 200, "método pela metade é recusado inteiro"
     corpo = resposta.content.decode()
 
-    # O `<input>` inteiro, e não a dupla `name="…" value="…"`: o template quebra os atributos em
+    # O controle inteiro, e não a dupla `name="…" value="…"`: o template quebra os atributos em
     # duas linhas, e uma asserção sobre a vizinhança deles passaria a depender do recuo.
+    #
+    # **E o controle pode ser `<input>` ou `<select>`** desde a `035` (FR-507): o algoritmo e a
+    # fonte deixaram de ser digitados. A garantia que este teste prende não é a forma do controle —
+    # é que a recusa **não apaga o que se acertou** —, e ela vale igual nos dois. Ler só o `<input>`
+    # faria o teste passar a não guardar nada sobre os dois campos que viraram escolha, em silêncio.
     import re as _re
 
     def _valor(nome):
+        escolha = _re.search(rf'<select[^>]*name="{nome}"[^>]*>(.*?)</select>', corpo, _re.S)
+        if escolha:
+            selecionada = _re.search(r'<option value="([^"]*)"[^>]*selected', escolha.group(1))
+            return selecionada.group(1) if selecionada else ""
         achado = _re.search(rf'<input[^>]*name="{nome}"[^>]*>', corpo, _re.S)
         assert achado, f"a tela não reexibe {nome}"
         return _re.search(r'value="([^"]*)"', achado.group(0)).group(1)
@@ -520,3 +529,147 @@ def test_a_explicacao_longa_do_corte_fica_no_como_preencher_e_nao_no_cartao(clie
     explicacao = re.search(r"cutTargetKind\">Regra de corte</a></dt>\s*<dd>(.*?)</dd>", corpo, re.S)
     assert explicacao, "o `como-preencher` da etapa precisa continuar tratando da regra de corte"
     assert "convocação" in re.sub(r"\s+", " ", explicacao.group(1))
+
+
+# --- A composição ensina a forma que o motor exige (035, US1) -----------------------------------
+#
+# **Acrescentado ao fim, e não no meio**: o que está acima guarda a `021`, a `026` e a `030`, e
+# reescrever qualquer daqueles casos apagaria regressão que ninguém reporia. O que estas quatro
+# acrescentam é a outra metade da mesma tela — a que ela **ensina**, e não a que ela grava.
+#
+# A tela recusava o algoritmo fora do vocabulário desde a `021` e não dizia qual era o vocabulário;
+# e não dizia nada sobre a ocorrência, que é o único campo em que errar impede o sorteio de rodar.
+
+
+def _com_marco_de_sorteio(client, edital):
+    """O cartão do método só existe depois de a forma da ordem ser declarada (030, FR-414)."""
+    _compor(client, edital, **{f"marco-{PERFIL}-0-orderProduction": "POR_SORTEIO"})
+    return client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "classificacao"])
+    ).content.decode()
+
+
+def test_o_algoritmo_e_a_fonte_do_marco_sao_escolhidos_e_nao_digitados(client, com_etapas):
+    """`FR-507` — a escolha impede que o valor inválido seja **escrito**, e não só gravado."""
+    import re as _re
+
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    for campo in ("algorithm", "source"):
+        nome = f"marco-{PERFIL}-0-draw-{campo}"
+        assert _re.search(rf'<select[^>]*name="{nome}"', corpo), f"{campo} continua digitável"
+        assert not _re.search(rf'<input[^>]*name="{nome}"', corpo), f"{campo} ainda é digitável"
+    # E as opções saem de quem executa, e não de uma lista escrita no template.
+    assert "IFES-SORTEIO-SHA256-v1" in corpo
+    assert "Loteria Federal" in corpo and "Fonte de demonstração" in corpo
+
+
+def test_o_algoritmo_e_a_fonte_do_metodo_comum_tambem_sao_escolhidos(client, com_etapas):
+    """`FR-507` nas duas telas: o comum governa todo marco que não declara o próprio."""
+    import re as _re
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"])
+    ).content.decode()
+
+    for nome in ("edital-draw-algorithm", "edital-draw-source"):
+        assert _re.search(rf'<select[^>]*name="{nome}"', corpo), f"{nome} continua digitável"
+        assert not _re.search(rf'<input[^>]*name="{nome}"', corpo)
+
+
+def test_a_ocorrencia_ensina_forma_exemplo_e_consequencia(client, com_etapas):
+    """`FR-508` e `FR-509` — a formulação é a do campo do instante, três linhas abaixo.
+
+    As três frases são testadas uma a uma porque cada uma responde a um pedaço do requisito: a
+    forma, o exemplo e a consequência. E a terceira é a que a varredura da amostra real mostrou ser
+    a que mais importa — a forma natural de escrever duplica a fonte, e é justamente a que não roda.
+    """
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    assert f'aria-describedby="ajuda-ocorrencia-{PERFIL}-0"' in corpo
+    ajuda = corpo.split(f'id="ajuda-ocorrencia-{PERFIL}-0"', 1)[1].split("</span>", 1)[0]
+    assert "terminando" in ajuda and "número" in ajuda, "a forma"
+    assert "5900" in ajuda, "o exemplo"
+    assert "deriva a ocorrência seguinte" in ajuda, "a consequência"
+    assert "A fonte já está declarada" in ajuda, "e que ali vai só a referência"
+
+
+def test_a_derivacao_em_prosa_continua_texto_livre_nas_duas_telas(client, com_etapas):
+    """`FR-510` — o requisito que manda **não** fazer o que a auditoria parecia pedir.
+
+    Ele é prosa normativa: sai no documento com o rótulo *Derivação*, e nenhum caminho de execução
+    o lê — quem deriva é a regra de substituição, que já é vocabulário fechado. Trocá-lo por um
+    código removeria do Edital a frase que diz a norma em português.
+    """
+    import re as _re
+
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    for nome in (f"marco-{PERFIL}-0-draw-derivation", "edital-draw-derivation"):
+        assert _re.search(rf'<input[^>]*type="text"[^>]*name="{nome}"', corpo), (
+            f"{nome} deixou de ser texto livre"
+        )
+        assert not _re.search(rf'<select[^>]*name="{nome}"', corpo)
+
+
+def test_valor_fora_do_vocabulario_continua_legivel_e_nao_e_oferecido(client, com_etapas):
+    """`FR-511` — o caminho é o rascunho criado a partir de Edital anterior.
+
+    Se o vocabulário encolheu desde a publicação de origem, um `select` que só oferecesse o de hoje
+    faria o campo parecer **vazio** num Edital que o declarou — e a gravação seguinte publicaria a
+    ausência como se alguém a tivesse escolhido. Aqui ele aparece, identificado como o que veio da
+    origem, e `disabled`: continua sendo submetido porque é o que está selecionado, e não pode ser
+    escolhido por quem não o herdou.
+    """
+    from processo_seletivo.interface.templatetags.interface_extras import escolhas_do_metodo
+
+    escolhas = escolhas_do_metodo("drawMethod/algorithm", "IFES-SORTEIO-MD5-v0")
+
+    herdada = [escolha for escolha in escolhas if escolha["de_origem"]]
+    assert len(herdada) == 1, "o valor da origem não aparece"
+    assert herdada[0]["valor"] == "IFES-SORTEIO-MD5-v0"
+    assert herdada[0]["selecionado"] is True, "o campo pareceria vazio num Edital que o declarou"
+    assert "veio do Edital de origem" in herdada[0]["rotulo"]
+    assert [escolha["valor"] for escolha in escolhas if not escolha["de_origem"]] == [
+        "IFES-SORTEIO-SHA256-v1"
+    ], "e o vocabulário de hoje continua o que é"
+
+
+def test_o_valor_de_hoje_nao_e_marcado_como_vindo_da_origem(client, com_etapas):
+    """A contraprova da anterior: sem ela, tudo seria 'da origem' e o rótulo não diria nada."""
+    from processo_seletivo.interface.templatetags.interface_extras import escolhas_do_metodo
+
+    escolhas = escolhas_do_metodo("drawMethod/source", "Loteria Federal")
+
+    assert not any(escolha["de_origem"] for escolha in escolhas)
+    selecionadas = [escolha["valor"] for escolha in escolhas if escolha["selecionado"]]
+    assert selecionadas == ["Loteria Federal"]
+
+
+def test_a_opcao_herdada_nao_e_disabled_porque_disabled_nao_e_submetido(client, com_etapas):
+    """A armadilha que a primeira escrita da `FR-511` caiu, medida no navegador.
+
+    `<option selected disabled>` dá `select.value == "HERDADO"` e `FormData.get(campo) == null`: o
+    valor **não é submetido**. Desabilitar a opção para impedir que ela fosse escolhida produziria
+    exatamente a perda que a `FR-511` existe para impedir — o valor herdado sumiria na gravação
+    seguinte, em silêncio, e o Edital publicaria a ausência como se alguém a tivesse escolhido.
+
+    **Nenhum teste de Python pega isso sozinho**: eles afirmam sobre o HTML renderizado, e não sobre
+    o que o navegador envia. Este afirma sobre o atributo, que é o que se pode afirmar daqui — e é
+    o irmão da asserção que `test_round_trip_do_rascunho.py` já fazia sobre o campo oculto, pela
+    mesma razão e com as mesmas palavras.
+
+    O que impede a opção herdada de ser escolha **válida** é outra coisa, e já existia: o rótulo
+    diz que o sistema não a executa, e `_validar_algoritmo_publicado` recusa ao gravar.
+    """
+    import re as _re
+
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    for campo in ("algorithm", "source"):
+        nome = f"marco-{PERFIL}-0-draw-{campo}"
+        escolha = _re.search(rf'<select[^>]*name="{nome}"[^>]*>(.*?)</select>', corpo, _re.S)
+        assert escolha, nome
+        assert "disabled" not in escolha.group(1), (
+            "opção `disabled` não é submetida pelo navegador: seria a perda da FR-511"
+        )

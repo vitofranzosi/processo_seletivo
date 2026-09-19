@@ -31,7 +31,7 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     # sem o filtro da Etapa de habilitação: onde o Edital declara uma, a comissão via um número e
     # congelava outro, sem que nada explicasse a diferença.
     habilitadas = habilitadas_na_etapa(edital, metodo)
-    ocorrencia_da_vez, proxima_referencia, descartadas = _ocorrencia_declarada(metodo)
+    ocorrencia_da_vez, proxima_referencia, descartadas, recusa = _ocorrencia_declarada(metodo)
     # **Os recortes precisam ser distinguíveis na tela** (021, D-006). O primeiro é o recorte sem
     # lista — todos os inscritos do Perfil —, e os demais são as modalidades declaradas. Quando o
     # Edital declara uma modalidade chamada "Ampla concorrência", que é o caso normal, os dois
@@ -63,6 +63,10 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         "ocorrencia": ocorrencia_da_vez,
         "proxima_referencia": proxima_referencia,
         "ocorrencias_descartadas": descartadas,
+        # **Por que não há ocorrência da vez**, quando não há — e são duas razões, não uma (035,
+        # FR-516). `None` quando há. A tela precisa da distinção porque as duas pedem coisas
+        # opostas de quem lê: uma manda esperar pela fonte, a outra manda corrigir a declaração.
+        "recusa_da_ocorrencia": recusa,
         "metodo_hash": dominio_do_metodo.resumo_do_metodo(metodo) if metodo else "",
         "recortes": [
             _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas)
@@ -86,25 +90,36 @@ def _ocorrencia_declarada(metodo):
     continuava mostrando aquela linha, o botão de observar sumia — porque a ocorrência "existia" —
     e o sorteio ficava travado para sempre. Agora ela pergunta à regra qual é a vez, e a resposta é
     derivada, não escolhida.
+
+    **E quando não há resposta, a razão é dita** (035, FR-516). Duas causas distintas caíam no mesmo
+    `except`, e a tela dizia a mesma frase para as duas — *"a ocorrência declarada e todas as
+    substitutas estão indisponíveis"*. Ela é verdadeira quando a cadeia esgotou, e **falsa** quando
+    a regra não soube derivar: ali a fonte nunca esteve indisponível, e a pessoa é mandada esperar
+    por algo que não vai acontecer, para depois Retificar sem saber o quê.
+
+    **A frase certa já existia**, específica e correta — é o `detail` da recusa que a própria regra
+    de substituição levanta —, e era descartada a uma linha de onde seria exibida. O trabalho aqui
+    não foi escrevê-la: foi parar de jogá-la fora.
     """
     from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 
     if not metodo:
-        return None, "", []
+        return None, "", [], None
     fonte = metodo.get("source", "")
     registradas = list(OcorrenciaDaFonte.objects.filter(fonte=fonte))
     indisponiveis = {o.referencia for o in registradas if o.indisponivel}
     try:
         proxima = substituicao.proxima_a_observar(metodo, indisponiveis)
-    except DomainError as esgotada:
+    except DomainError as recusa:
         return (
             None,
             "",
             [
-                {"referencia": o.referencia, "evidencia": o.evidencia, "motivo": esgotada.detail}
+                {"referencia": o.referencia, "evidencia": o.evidencia, "motivo": recusa.detail}
                 for o in registradas
                 if o.indisponivel
             ],
+            _causa_da_recusa(recusa, metodo),
         )
     atual = next((o for o in registradas if o.referencia == proxima), None)
     descartadas = [
@@ -112,7 +127,42 @@ def _ocorrencia_declarada(metodo):
         for o in registradas
         if o.indisponivel and o.referencia != proxima
     ]
-    return atual, proxima, descartadas
+    return atual, proxima, descartadas, None
+
+
+def _causa_da_recusa(recusa, metodo):
+    """Qual das duas, e o que a tela precisa dizer sobre cada uma (035, FR-516 a FR-518).
+
+    A distinção sai do **código** da recusa, e não da frase: a frase é para quem lê, e duas frases
+    comparadas por substring seriam a terceira cópia da mesma regra.
+
+    **Os dois nomes do campo vêm de `CAMPOS_DO_METODO`**, que é a mesma tabela de onde o documento
+    publicado tira os dele desde a `032` — e ela guarda os dois de propósito: o rótulo curto, que
+    encabeça o par rótulo-valor, e a frase, que completa uma recusa. A tela precisa dos dois: o
+    curto é como o campo se chama, e a frase é o que ele é. Escrevê-los aqui daria ao Edital um
+    nome na tela do sorteio e outro no documento, que é o que o Princípio I proíbe.
+
+    **E a direção da dependência não se inverte** (FR-521): esta leitura importa do domínio dos
+    Editais, e não da interface — o rótulo que a tela de Retificação exibe é outro registro do mesmo
+    conceito, e lê-lo daqui seria `sorteios/application` dependendo de `interface`.
+    """
+    from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
+
+    if recusa.code != substituicao.RECUSA_POR_FORMA_DA_REFERENCIA:
+        # A cadeia esgotou: a fonte esteve indisponível tantas vezes quanto a regra encadeia. Para
+        # **esta** causa a frase de hoje está certa, e a `FR-518` manda não mexer no que está certo.
+        return {"causa": "cadeia", "detalhe": recusa.detail}
+    campo, o_que_e, rotulo = next(
+        (linha for linha in CAMPOS_DO_METODO if linha[0] == "occurrence"),
+        ("occurrence", "a ocorrência concreta que fixará a semente", "Ocorrência"),
+    )
+    return {
+        "causa": "declaracao",
+        "campo": rotulo,
+        "o_que_e": o_que_e,
+        "referencia": str((metodo or {}).get("occurrence") or ""),
+        "detalhe": recusa.detail,
+    }
 
 
 def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas):

@@ -23,6 +23,14 @@ from processo_seletivo.shared.api.problems import DomainError
 
 OCORRENCIA_SEGUINTE_DA_MESMA_FONTE = "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE"
 
+# O código da recusa que diz *a referência declarada não tem a forma que a regra consome* —
+# distinta de `substitution_chain_exhausted`, que diz *a fonte não publicou tantas vezes quanto
+# a regra encadeia*. **As duas caíam no mesmo `except`**, e a tela do sorteio dizia a segunda
+# frase para as duas causas: ela é verdadeira para uma e falsa para a outra, e a falsa manda
+# esperar por uma fonte que nunca esteve indisponível (035, FR-516). A constante existe para
+# que quem distingue leia o nome daqui, e não repita a string.
+RECUSA_POR_FORMA_DA_REFERENCIA = "substitution_rule_not_applicable"
+
 # Quantas substituições a regra encadeia antes de exigir ato humano. Cinco cobre um mês de
 # extrações semanais indisponíveis — muito além de qualquer caso real — e ainda assim é finito.
 LIMITE_DA_CADEIA = 5
@@ -39,7 +47,7 @@ def _seguinte_da_mesma_fonte(referencia: str) -> str:
     achado = _NUMERO_FINAL.match(referencia.strip())
     if achado is None:
         raise DomainError(
-            "substitution_rule_not_applicable",
+            RECUSA_POR_FORMA_DA_REFERENCIA,
             f"A regra da ocorrência seguinte não se aplica a {referencia!r}: ela deriva do número "
             "da ocorrência, e esta referência não termina em número. Substituir exige, aqui, "
             "Retificação que declare outro método.",
@@ -102,6 +110,34 @@ def proxima_a_observar(metodo, indisponiveis):
     )
 
 
+def derivavel(referencia, *, regra=OCORRENCIA_SEGUINTE_DA_MESMA_FONTE) -> bool:
+    """Se a regra publicada **sabe derivar** a seguinte a partir desta referência (035, FR-515).
+
+    É a mesma pergunta que `proxima_a_observar` responde no dia do sorteio, feita antes — na
+    composição, quando corrigir ainda não exige Retificação. E ela é respondida **aplicando a
+    própria derivação**, e não reimplementando a forma que a derivação exige.
+
+    A distinção não é preciosismo. A regra de hoje é de uma linha — *termina em número* —, e
+    copiá-la para a conferência custaria menos do que importá-la daqui. Duas linhas que dizem a
+    mesma coisa hoje divergem na primeira vez que uma das duas mudar, e a divergência apareceria
+    do pior jeito possível: a composição aceitando o que o sorteio recusa, com o Edital já
+    publicado e o cronograma correndo.
+
+    **Regra fora do vocabulário responde `False`, e não estoura.** Quem recusa a regra não
+    publicada é `regra_publicada`, e duplicar essa recusa aqui daria duas mensagens para o mesmo
+    erro; o que esta função responde é sobre a **referência**, e uma referência que regra nenhuma
+    conhecida consome não é derivável.
+    """
+    aplicar = REGRAS.get(regra)
+    if aplicar is None:
+        return False
+    try:
+        aplicar(str(referencia or ""))
+    except DomainError:
+        return False
+    return True
+
+
 def admissivel(metodo, ocorrencia, indisponiveis) -> bool:
     """Se **esta** ocorrência é a que a regra publicada manda usar agora.
 
@@ -117,9 +153,11 @@ def admissivel(metodo, ocorrencia, indisponiveis) -> bool:
 __all__ = [
     "LIMITE_DA_CADEIA",
     "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+    "RECUSA_POR_FORMA_DA_REFERENCIA",
     "REGRAS",
     "admissivel",
     "cadeia",
+    "derivavel",
     "proxima_a_observar",
     "regra_publicada",
 ]

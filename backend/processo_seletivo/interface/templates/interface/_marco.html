@@ -260,21 +260,61 @@ cartão leva ao lugar onde a resposta que o revela é dada.
       Edital</strong> — declarado uma vez, no alto desta etapa. Preencha abaixo apenas se ele
       precisar de método distinto dos demais.{% endif %}</p>
     {% endif %}
+    {% comment %}
+    **Escolha, e não caixa de texto** (035, FR-507). Os dois são vocabulário fechado, e a guarda
+    que recusa o valor de fora dele já existia — só disparava ao gravar, de modo que a pessoa
+    descobria o vocabulário por tentativa. A escolha faz mais do que recusar o inválido: **impede
+    que ele seja escrito**, e o custo de um valor inválido aqui não é um formulário recusado, é um
+    manifesto publicando o nome de um algoritmo que ninguém implementa — quem reimplementasse a
+    partir do publicado chegaria a outra ordem e concluiria, corretamente, que o sorteio não
+    confere.
+
+    As listas saem de `opcoes_do_metodo`, que é a **mesma** que a tela de Retificação lê. Uma
+    segunda lista aqui divergiria dela na primeira vez que o vocabulário mudasse.
+    {% endcomment %}
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-algorithm">Algoritmo e versão</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
-             name="marco-{{ indice }}-{{ sub }}-draw-algorithm"
-             value="{{ marco.drawAlgorithm }}" placeholder="IFES-SORTEIO-SHA256-v1">
+      <select id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
+              name="marco-{{ indice }}-{{ sub }}-draw-algorithm">
+        <option value="">Não declarado</option>
+        {% escolhas_do_metodo "drawMethod/algorithm" marco.drawAlgorithm as algoritmos %}
+        {% for escolha in algoritmos %}
+        <option value="{{ escolha.valor }}"{% if escolha.selecionado %} selected{% endif %}>{{ escolha.rotulo }}</option>
+        {% endfor %}
+      </select>
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-source">Fonte pública externa da semente</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-source"
-             name="marco-{{ indice }}-{{ sub }}-draw-source" value="{{ marco.drawSource }}">
+      <select id="marco-{{ indice }}-{{ sub }}-draw-source"
+              name="marco-{{ indice }}-{{ sub }}-draw-source">
+        <option value="">Não declarada</option>
+        {% escolhas_do_metodo "drawMethod/source" marco.drawSource as fontes %}
+        {% for escolha in fontes %}
+        <option value="{{ escolha.valor }}"{% if escolha.selecionado %} selected{% endif %}>{{ escolha.rotulo }}</option>
+        {% endfor %}
+      </select>
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-occurrence">Ocorrência que fixará a semente</label>
       <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrence"
-             name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence }}">
+             name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence }}"
+             placeholder="5900"
+             aria-describedby="ajuda-ocorrencia-{{ indice }}-{{ sub }}">
+      {% comment %}
+      **A ajuda que faltava, na formulação que o campo do instante já pratica** — forma, exemplo e
+      consequência (035, FR-508, FR-509). Este é o único campo do método em que errar impede o
+      sorteio de rodar, e era o único sem ensino nenhum.
+
+      A terceira frase não é redundância. A forma natural de escrever **duplica a fonte** —
+      `concurso 6100 da Loteria Federal` —, e é justamente a que não roda: o número vai para o meio,
+      onde a regra não o procura. Era a forma de três fixtures deste próprio repositório, e é a que
+      alguém escreveria partindo de um Edital real, onde a referência não aparece separada da fonte.
+      {% endcomment %}
+      <span class="oculto" id="ajuda-ocorrencia-{{ indice }}-{{ sub }}">Só a referência, terminando
+        no número — como 5900, ou Concurso 5900. É do número final que a regra de substituição
+        deriva a ocorrência seguinte quando a fonte não publica; sem ele, não há substituta e
+        prosseguir exige Retificação. A fonte já está declarada no campo acima: repeti-la depois do
+        número põe o número no meio, e ali a regra não o encontra.</span>
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt">Quando a ocorrência acontece</label>

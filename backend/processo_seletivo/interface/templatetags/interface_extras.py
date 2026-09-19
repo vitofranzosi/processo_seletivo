@@ -248,3 +248,59 @@ def pontuacao_e_a_da_etapa(marco):
     return marcos.pontuacao_combinada_e_a_da_etapa(
         operacao=efetiva["operation"], normalizacao=efetiva["normalization"]
     )
+
+
+@register.simple_tag
+def escolhas_do_metodo(campo, declarado):
+    """As opções de um campo fechado do método, e o valor que veio da origem (035, FR-511).
+
+    **Existe como tag, e não como contexto de view, porque são três telas que desenham o método** —
+    o passo da Classificação, o fragmento que acrescenta um marco e o fragmento que o recompõe — e
+    um quarto ponto de renderização apareceria sem as listas, com os `select` vazios. Foi o que a
+    `030` registrou ao acrescentar `etapas_classificatorias` aos fragmentos: *"sem as listas, a
+    linha nova nasceria com os selects vazios"*. Aqui o esquecimento não é possível, porque a lista
+    é pedida pelo próprio template que a usa.
+
+    A origem do vocabulário é **uma só** — `forms.opcoes_do_metodo`, que a Retificação também lê.
+
+    **O valor de fora do vocabulário entra na lista, selecionado** (`FR-511`). O caminho por onde
+    ele chega é o rascunho criado a partir de Edital anterior: se o vocabulário encolheu desde a
+    publicação de origem, um `select` que só oferecesse o de hoje faria o campo parecer **vazio**
+    num Edital que o declarou — e a gravação seguinte publicaria a ausência como se alguém a
+    tivesse escolhido.
+
+    **E ele entra SEM `disabled`, que foi a primeira tentativa e estava errada.** Medido no
+    navegador: um `<option selected disabled>` dá `select.value == "HERDADO"` e
+    `new FormData(form).get(campo) == null` — o valor **não é submetido**. Desabilitar para impedir
+    a escolha teria produzido exatamente a perda que a `FR-511` existe para impedir, e nenhum teste
+    de Python a pegaria: eles afirmam sobre o HTML renderizado, e não sobre o que o navegador envia.
+    É a mesma armadilha que `test_round_trip_do_rascunho.py` já registrou por escrito — *"campo
+    `disabled` não é submetido pelo navegador: seria a perda que este contrato impede"*.
+
+    **O que impede que ele seja escolha válida é outra coisa, e ela já existia**: o rótulo diz que
+    o sistema não o executa, e `_validar_algoritmo_publicado` recusa ao gravar. O valor sobrevive à
+    travessia, e quem o mantiver lê por que ele não serve.
+    """
+    from processo_seletivo.interface.forms import opcoes_do_metodo
+
+    publicadas = opcoes_do_metodo().get(campo, ())
+    declarado = str(declarado or "")
+    escolhas = [
+        {
+            "valor": valor,
+            "rotulo": rotulo,
+            "selecionado": valor == declarado,
+            "de_origem": False,
+        }
+        for valor, rotulo in publicadas
+    ]
+    if declarado and declarado not in {valor for valor, _ in publicadas}:
+        escolhas.append(
+            {
+                "valor": declarado,
+                "rotulo": f"{declarado} — veio do Edital de origem, e este sistema não o executa",
+                "selecionado": True,
+                "de_origem": True,
+            }
+        )
+    return escolhas
