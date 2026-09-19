@@ -67,10 +67,8 @@ dois cálculos se separaram, que é exatamente o que o contrato proíbe.
 
 **Esperado**: sinal levando à publicação daquele resultado.
 
-> **Se a `037` ainda não entrou**, o passo 2 não é percorrível: a derivação vive em
-> `interface/views.py` e a extração espera a feature anterior. **Registre, não contorne** — é a
-> `FR-567`, e a `034` criou o precedente. *Nesse caso a `SC-198` é conferida contra **três**
-> espécies, e não quatro: ela mede o entregue contra o decidido.*
+> **A derivação vive em `interface/views.py`**, que a `037` alterou. Ela está na `main` desde
+> `fcb448f`, então o passo é percorrível — **desde que a branch tenha integrado a `main`**.
 
 ---
 
@@ -87,8 +85,9 @@ fecha essa distância.
 
 3. Rode o orçamento de consulta dos sinais.
 
-**Esperado**: as três espécies de leitura existente **não acrescentam consulta**; a quarta acrescenta
-**uma**, e o orçamento é remedido com o número novo escrito. *Esta é a guarda que a feature mais
-facilmente quebra.*
+**Esperado**: `UX-063` e `UX-064` **não acrescentam consulta** — leem retorno que outra espécie já
+busca. O `UX-065` acrescenta **uma por recorte**; o `UX-066`, o que a extração trouxer. O orçamento é
+remedido com o número novo **e a razão por espécie**. *Esta é a guarda que a feature mais facilmente
+quebra, e ajustar o número até passar é perdê-la sem removê-la.*
 
 4. Confira que as **seis** espécies antigas continuam disparando como antes.

@@ -33,7 +33,7 @@
 
 | | Alvo | Real |
 |---|---|---|
-| Linhas de spec | ~400 | **249** |
+| Linhas de spec | ~400 | **279** — eram 249 antes de o `analyze` definir `UX-063` a `UX-066` |
 | Histórias | ≤ 3 | **3** |
 | Requisitos | ~15 | **12** |
 | Passadas de `analyze` previstas | **1** | — |

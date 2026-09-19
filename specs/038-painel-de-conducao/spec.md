@@ -225,11 +225,10 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
 - **SC-196**: Quem abre um Processo com Editais vivos lê, **na primeira tela**, onde cada um está e
   o que pede ação — percorrido pela interface, sem shell e sem banco.
 - **SC-197**: **Zero** divergências entre o que o Processo e a Supervisão dizem sobre o mesmo Edital.
-- **SC-198**: Os estados da cauda **que a feature entregou** produzem sinal, e cada um leva a uma
-  tela que resolve — conferido clicando cada um. *São quatro quando a quarta espécie é executada, e
-  três quando ela é registrada em vez de implementada* (`FR-567`): o critério mede **o que foi
-  entregue contra o que foi decidido**, e não um número fixo que a própria feature se autoriza a não
-  atingir.
+- **SC-198**: Os **quatro** estados da cauda produzem sinal, e cada um leva a uma tela que resolve —
+  conferido clicando os quatro. *A redação anterior admitia três*, para o caso de a `037` não ter
+  entrado; **ela entrou** (`fcb448f`), e um critério que se autoriza a não atingir o que os requisitos
+  `MUST` exigem deixaria concluir sem cumprir.
 - **SC-199**: **Zero** sinais que nomeiem pessoa, e **zero** destinos oferecidos a quem não os abre.
 - **SC-200**: O requisito que fecha o catálogo nomeia **exatamente** as espécies que o produto
   apresenta — conferido contando as duas listas.

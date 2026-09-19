@@ -3,8 +3,9 @@
 **Quando**: 19/09/2026, contra a `main` `6f322e4`. **Método**: leitura da **condição**, não da mensagem
 — foi lendo mensagem que a spec errou duas premissas antes de ser escrita.
 
-**Placar**: as quatro medições da spec se confirmam. Das quatro espécies novas, **três saem de graça
-e uma custa** — e o que ela custa está medido.
+**Placar**: as quatro medições da spec se confirmam. Das quatro espécies novas, **duas saem sem
+consulta**, **uma custa uma leitura por recorte** e **uma custa extração** — e cada custo está medido
+onde a espécie é descrita.
 
 ---
 

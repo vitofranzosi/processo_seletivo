@@ -9,7 +9,7 @@ description: "Task list — 038 · Painel de condução do Processo vivo"
 [data-model.md](data-model.md) · [contracts/](contracts/) · [quickstart.md](quickstart.md)
 
 **Tests**: **sim.** A feature acrescenta quatro espécies a um catálogo cercado por **34 casos**, e
-três delas leem números que outra espécie já lê. Requisito sem linha na matriz é requisito que
+**duas** delas leem números que outra espécie já busca. Requisito sem linha na matriz é requisito que
 ninguém sabe se entrou.
 
 ## Format: `[ID] [P?] [Story] Descrição — e o arquivo`
@@ -25,16 +25,17 @@ ninguém sabe se entrou.
 1. **`T002` roda ANTES de qualquer edição**, e tem **dois** alvos: a contagem da suíte **e o número
    do orçamento de consulta** de
    `tests/integration/supervisao/test_sinais.py::test_dobrar_os_recursos_pendentes_nao_dobra_as_consultas`.
-   A quarta espécie acrescenta uma consulta, e o número precisa ser **remedido com justificativa**,
-   nunca ajustado até passar.
+   **Duas** das quatro espécies acrescentam consulta — o `UX-065`, uma por recorte, e o `UX-066`, o
+   que a extração trouxer —, e o número precisa ser **remedido com justificativa por espécie**, nunca
+   ajustado até passar.
 
 2. **Esta feature NÃO tem migration.** O total do `make preparar` continua **`N de 33`**. **32** é
    worktree atrás da `main`; **31**, muito atrás. *O portão só serve se distinguir desatualização de
    defeito.*
 
-3. **`T014` decide se a `US2b` existe.** A quarta espécie exige extrair de `interface/views.py` uma
-   derivação privada, e a `037` está alterando esse arquivo. **Duas saídas nomeadas**, e uma delas
-   não executa a fase.
+3. **`T014` confirma a integração antes de tocar em `interface/views.py`.** A quarta espécie exige
+   extrair dali uma derivação privada, e a `037` alterou esse arquivo. **Confira ancestralidade**, não
+   a ponta do log: `git log -1` diz "sim" para uma `main` que ainda não trouxe a feature.
 
 4. **`T020` reconta os casos alterados, caso a caso.** A `034` previu oito e entregou doze.
 
@@ -44,7 +45,7 @@ ninguém sabe se entrou.
 
 - [ ] T001 Preparar a worktree: copiar `backend/.env` do checkout principal (**EXISTENTE lá, ausente aqui** — é gitignorado), trocar `DB_NAME` e `POSTGRES_DB` por nome próprio, rodar `uv sync --extra dev` e `make preparar` em `backend/`, conferindo **`N de 33`** com N diferente de zero
 - [ ] T002 Medir e gravar o "antes" em `specs/038-painel-de-conducao/antes-do-painel.md` (**NOVO**): a contagem da suíte (`make test-pg`); **o número do orçamento** do teste nomeado no portão 1; e a contagem dos quatro arquivos que cercam a Supervisão — `tests/interface/test_supervisao.py` (15), `tests/integration/supervisao/test_sinais.py` (13), `test_fronteira.py` (5), `tests/acceptance/test_supervisao_do_processo.py` (1). **Antes de qualquer edição**
-- [ ] T003 Confirmar por varredura, em `specs/038-painel-de-conducao/antes-do-painel.md` (**EXISTENTE**, criado em T002), as quatro premissas: a **condição** do `UX-005` é a comissão inteira impedida; o `UX-003` mede **cobertura**; `ESPECIES` tem **seis** e a `FR-024` da `022` diz **cinco**; e a derivação de *ato sem divulgação* vive **só** em `interface/views.py`. **Leia a condição, não a mensagem** — foi lendo mensagem que a spec errou duas premissas
+- [ ] T003 Confirmar por varredura, em `specs/038-painel-de-conducao/antes-do-painel.md` (**EXISTENTE**, criado em T002), as quatro premissas: a **condição** do `UX-005` é a comissão inteira impedida; o `UX-003` mede **cobertura**; `ESPECIES` tem **seis** e a `FR-024` da `022` diz **cinco**; e a derivação de *ato sem divulgação* vive **só** em `interface/views.py`. **Se alguma das quatro não for derivável com o que existe, registre e não implemente às pressas** (`FR-567`) — foi assim que sorteio e matrícula ficaram de fora, por decisão escrita e não por esquecimento. **Leia a condição, não a mensagem** — foi lendo mensagem que a spec errou duas premissas
 
 **Checkpoint**: o "antes" está gravado com o orçamento, e as quatro premissas conferidas.
 
@@ -84,8 +85,8 @@ destino que resolve.
 
 **Goal**: o pulso e a Atenção aparecem na página do Processo, lidos e não recalculados.
 
-**Depende da `037`** — `processo_detalhe` vive em `backend/processo_seletivo/interface/views.py`, que
-ela está alterando. Integre a `main` antes.
+**Depende da `037`**, que **já está na `main`** (`fcb448f`) — `processo_detalhe` vive em
+`backend/processo_seletivo/interface/views.py`, que ela alterou. Integre a `main` antes.
 
 **Independent Test**: abrir um Processo com Editais vivos e ler, por Edital, o que hoje só a
 Supervisão mostra.
@@ -100,27 +101,28 @@ Supervisão mostra.
 
 ## Phase 5: US2b — A quarta espécie, por extração (P2)
 
-- [ ] T014 [US2b] **DECIDE SE ESTA FASE EXISTE.** Confira se a `037` está na `main` — `git log --oneline -1` deve alcançá-la. **Duas saídas**: (a) **está** → siga para a `T015`; (b) **não está** → **registre em `specs/038-painel-de-conducao/antes-do-painel.md` (EXISTENTE) que a quarta espécie fica para depois, com a razão**, e a fase **não é executada**. É a `FR-567`: o que não está pronto fica registrado, não implementado às pressas
+- [ ] T014 [US2b] **Confirmar a integração da `037` antes de tocar em `interface/views.py`**: `git merge-base --is-ancestor fcb448f origin/main` — **ancestralidade, e não `git log -1`**, que só olha a ponta e diz "sim" para uma `main` que ainda não a trouxe. A `037` entrou em 19/09; se por algum motivo a worktree não a alcançar, **integre a `main` e recomece esta fase** — não a pule
 - [ ] T015 [US2b] **Extrair**, e nunca reescrever, a derivação de *ato vigente sem divulgação vigente* (`UX-066`) de `backend/processo_seletivo/interface/views.py` (**EXISTENTE**) para onde a Supervisão e a tela de destino a alcancem, `FR-557`. **Reescrevê-la no sinal criaria a segunda verdade** que este projeto passou a semana removendo. O que a tela já faz com ela **não muda**
 - [ ] T016 [US2b] Acrescentar a espécie e prendê-la em `backend/processo_seletivo/interface/supervisao.py` (**EXISTENTE**) e `backend/tests/integration/supervisao/test_sinais.py` (**EXISTENTE**), `FR-562`: ato emitido e não divulgado dispara, levando à publicação daquele resultado; divulgado, não dispara
 
-**Checkpoint**: os quatro estados da cauda sinalizam — ou três, com o quarto registrado. **A `SC-198` é conferida contra o que foi decidido**, e não contra um número fixo.
+**Checkpoint**: os **quatro** estados da cauda sinalizam.
 
 ---
 
 ## Phase 6: US3 — O catálogo volta a ser verdade (P3)
 
-- [ ] T017 [US3] **Emendar a `FR-024`** em `specs/022-supervisao-do-processo/spec.md` (**EXISTENTE**), `FR-565`. **Substituir não é acrescentar**: hoje ela diz *"exclusivamente os sinais definidos em `UX-001` a `UX-005`"*, e o produto tem seis — a `027` acrescentou o `UX-046` sem revisá-la. A emenda nomeia as **dez** espécies vigentes — `UX-001` a `UX-005`, `UX-046`, e `UX-063` a `UX-066` desta feature — e **diz que substitui**. Se a `T014` apontou a saída (b), o `UX-066` **não** entra na emenda, e a razão fica escrita ali. É a lição que a `D-G2` registrou: decisão nova que não endereça a anterior deixa duas verdades no repositório
+- [ ] T017 [US3] **Emendar a `FR-024`** em `specs/022-supervisao-do-processo/spec.md` (**EXISTENTE**), `FR-565`. **Substituir não é acrescentar**: hoje ela diz *"exclusivamente os sinais definidos em `UX-001` a `UX-005`"*, e o produto tem seis — a `027` acrescentou o `UX-046` sem revisá-la. A emenda nomeia as **dez** espécies vigentes — `UX-001` a `UX-005`, `UX-046`, e `UX-063` a `UX-066` desta feature — e **diz que substitui**. É a lição que a `D-G2` registrou: decisão nova que não endereça a anterior deixa duas verdades no repositório
 - [ ] T018 [US3] Prender a contagem em `backend/tests/acceptance/test_supervisao_do_processo.py` (**EXISTENTE** — acrescente; o caso que existe permanece): as espécies que o produto apresenta e as que o requisito nomeia são **a mesma lista** (`SC-200`)
 
 ---
 
 ## Phase 7: Polimento e conferência
 
-- [ ] T019 Percorrer os **cinco cenários** de `specs/038-painel-de-conducao/quickstart.md` (**EXISTENTE**) pela interface — inclusive as **três contraprovas**. São o `SC-196`, o `SC-197`, o `SC-198` e o `SC-199`: o Processo conduz, diz o mesmo que a Supervisão, os quatro estados sinalizam, e **nenhuma mensagem nomeia pessoa**. Se a `T014` apontou a saída (b), o passo 2 do cenário 4 **não é percorrível**: registre, não contorne
+- [ ] T019 Percorrer os **cinco cenários** de `specs/038-painel-de-conducao/quickstart.md` (**EXISTENTE**) pela interface — inclusive as **três contraprovas** e os **quatro** sinais.
+ São o `SC-196`, o `SC-197`, o `SC-198` e o `SC-199`: o Processo conduz, diz o mesmo que a Supervisão, os quatro estados sinalizam, e **nenhuma mensagem nomeia pessoa**. Os quatro sinais são percorríveis: a `037` está na `main`
 - [ ] T020 Conferir **caso a caso** os testes alterados contra o "antes" de `specs/038-painel-de-conducao/antes-do-painel.md` (**EXISTENTE**), e **recontar**. Confira que os vizinhos permaneceram — 15, 13, 5 e 1
 - [ ] T021 **Remedir o orçamento de consulta** em `backend/tests/integration/supervisao/test_sinais.py` (**EXISTENTE**, o caso que já existe): **duas** das três espécies da `US2a` — avaliação (`UX-063`) e recurso (`UX-064`) — **não podem acrescentar consulta**, porque leem retorno que outra espécie já busca. A do **recorte** (`UX-065`) acrescenta **uma por recorte**, e a quarta (`UX-066`) o que a extração trouxer. O número novo entra **com a justificativa escrita ao lado**, espécie por espécie. *Ajustar o número até passar é o modo de perder a guarda sem removê-la*
-- [ ] T022 Escrever `specs/038-painel-de-conducao/rastreabilidade.md` (**NOVO**) — uma linha por `FR-`, uma por `SC-`, uma por teste alterado com o motivo, e **o que a `T014` decidiu** — e rodar `cd backend && make lint check test-pg`, registrando a contagem final. `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Rode a suíte inteira**: a varredura deste repositório lê o comentário do template. As promessas que se conferem **lendo o diff** são as da `FR-566`: nenhuma capacidade de autorização nova, nenhuma ajuda instrucional nos cartões, nenhum conteúdo publicado reescrito, nada apagado
+- [ ] T022 Escrever `specs/038-painel-de-conducao/rastreabilidade.md` (**NOVO**) — uma linha por `FR-`, uma por `SC-`, uma por teste alterado com o motivo, e **a confirmação de que a `037` foi integrada antes da `US2b`** — e rodar `cd backend && make lint check test-pg`, registrando a contagem final. `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Rode a suíte inteira**: a varredura deste repositório lê o comentário do template. As promessas que se conferem **lendo o diff** são as da `FR-566`: nenhuma capacidade de autorização nova, nenhuma ajuda instrucional nos cartões, nenhum conteúdo publicado reescrito, nada apagado
 
 ---
 
@@ -133,7 +135,7 @@ Phase 1 (T001–T003)
       │
       ├──► US1  (T011–T013)   ← depende da 037 (views.py)
       │
-      └──► US2b (T014–T016)   ← T014 decide se existe; depende da 037
+      └──► US2b (T014–T016)   ← T014 confirma a integração da 037
                  │
                  └──► US3 (T017–T018) ──► Polimento (T019–T022)
 ```
@@ -148,7 +150,7 @@ mais valor; a `US2a` vem antes porque **não encosta no arquivo que a `037` est�
   sinais divergirem na primeira mudança da regra de impedimento.
 - **T008 → T009 → T010** são o mesmo arquivo; as contraprovas vêm depois do caso simples.
 - **T011 → T012** — a view lê, o template exibe.
-- **T014 → T015 → T016** — a decisão, a extração, a espécie.
+- **T014 → T015 → T016** — a confirmação, a extração, a espécie.
 - **T017 → T018** — o requisito antes do teste que o confere.
 - **T020 e T021 depois de todos os percursos**.
 
@@ -164,8 +166,8 @@ Nenhuma tarefa leva `[P]`, porque dentro de cada fase há cadeia.
 
 **Primeiro entregável**: a `US2a`. Três dos quatro estados da cauda, sem esperar ninguém.
 
-**Depois**: `US1` e `US2b`, quando a `037` entrar. **Se ela demorar**, a `US2a` mais a `US3` já
-entregam valor e fecham a dívida do catálogo.
+**Depois**: `US1` e `US2b`. A `037` **já entrou** (`fcb448f`), de modo que as duas estão liberadas
+assim que a branch integrar a `main`.
 
 **O que não se faz**: implementar a quarta espécie reescrevendo a derivação em vez de extraí-la.
 Seria mais rápido hoje e seria a segunda verdade amanhã.

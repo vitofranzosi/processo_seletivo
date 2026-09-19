@@ -60,9 +60,9 @@ Completa em [research.md](research.md). As quatro premissas da spec se confirmam
 ```
 US2a — três espécies, só em supervisao.py     ← primeiro entregável, não espera ninguém
    │
-   ├──► US1  — o Processo recebe pulso e Atenção   ← views.py: ESPERA a 037
+   ├──► US1  — o Processo recebe pulso e Atenção   ← views.py: integre a main antes
    │
-   └──► US2b — a quarta, por extração             ← views.py: ESPERA a 037
+   └──► US2b — a quarta, por extração             ← views.py: integre a main antes
                 │
                 └──► US3 — o catálogo volta a ser verdade
 ```
