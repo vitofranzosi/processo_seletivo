@@ -877,3 +877,98 @@ def test_a_divulgacao_e_lida_uma_vez_por_marco_e_nao_por_recorte(certame_sortead
 
     assert com_um_recorte == 1, "a cadeia do marco é uma leitura, e não zero nem duas"
     assert acrescimo() == com_um_recorte, "o segundo recorte releu a cadeia do marco"
+
+
+# ---------------------------------------------------------------------------
+# `FR-564` e `SC-199` — nenhuma das quatro espécies novas nomeia pessoa
+#
+# **Duas varreduras, porque nenhum cenário dispara as quatro.** O da `018` produz o recurso com
+# julgador e o recorte sem ocupação; o do sorteio produz o ato sem divulgação; e a banca, a
+# avaliação parada. Um teste só, sobre um cenário só, afirmaria as quatro e conferiria duas.
+# ---------------------------------------------------------------------------
+
+NOVAS = ("UX-063", "UX-064", "UX-065", "UX-066")
+
+# "Membro da comissão" **como conjunto** é permitido, e é o que o `UX-064` diz: nomear a condição
+# não é nomear quem a resolve. O que não pode aparecer é gente.
+PALAVRAS_PROIBIDAS = ("responsável", "responsavel", "produtividade", "desempenho")
+
+
+def sem_nome_de_pessoa(processo, ator, esperadas):
+    """Varre as espécies novas de um Processo e devolve o texto lido, conferindo o que disparou.
+
+    **O conferimento do que disparou é metade do teste.** Sem ele, um cenário que deixasse de
+    produzir sinal passaria em silêncio — e uma varredura sobre lista vazia aprova qualquer coisa.
+    """
+    from processo_seletivo.comissoes.application import selectors as comissao_selectors
+
+    sinais = [sinal for sinal in supervisao.sinais(processo, ator) if sinal.especie in NOVAS]
+    assert sorted({sinal.especie for sinal in sinais}) == sorted(esperadas), (
+        "o cenário deixou de produzir as espécies que esta varredura existe para varrer"
+    )
+
+    lido = " ".join(f"{sinal.alvo} {sinal.mensagem}" for sinal in sinais)
+    for membro in comissao_selectors.membros(processo):
+        assert membro.identity_subject not in lido, f"{membro.identity_subject} foi nomeado"
+    for proibido in PALAVRAS_PROIBIDAS:
+        assert proibido not in lido.lower(), f"a mensagem afirma {proibido}"
+    return lido
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_recurso_e_o_recorte_nao_nomeiam_pessoa(peca, quem_divulga):
+    """`FR-564` e `SC-199`, sobre o `UX-064` e o `UX-065`.
+
+    **O produto não liga identidade a papel** — os papéis vêm da sessão, e não há registro que
+    faça essa ligação. O `UX-005` já registra a razão por escrito, e ela vale igual para as quatro
+    espécies da `038`: um painel que prometesse responsável afirmaria o que os dados não sustentam,
+    e seria a pior espécie de painel — o que parece saber.
+    """
+    lido = sem_nome_de_pessoa(
+        peca["cenario"]["processo"], quem_divulga, [supervisao.UX_064, supervisao.UX_065]
+    )
+
+    assert peca["inscricao"].nome not in lido
+    assert peca["inscricao"].identity_subject not in lido
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_ato_sem_divulgacao_nao_nomeia_pessoa(certame_sorteado, quem_divulga):
+    """`FR-564` e `SC-199`, sobre o `UX-066` — e o ato **guarda quem o emitiu**.
+
+    É a espécie onde o vazamento seria mais fácil: `AtoDeOrdenacao.emitido_por` está a um atributo
+    de distância da mensagem, e dizer "emitido por Maria e não divulgado" pareceria prestativo. O
+    painel diz o que está parado e onde se resolve; quem emitiu é do histórico do ato.
+    """
+    from tests.fixtures.sorteio import LISTA_PPI
+
+    cotista = certame_sorteado["cotista_ppi"]
+    ato_sorteado(
+        certame_sorteado,
+        relacao_do_recorte(certame_sorteado, lista_id=LISTA_PPI, inscricoes=[cotista]),
+        lista_id=LISTA_PPI,
+    )
+
+    lido = sem_nome_de_pessoa(
+        certame_sorteado["processo"], quem_divulga, [supervisao.UX_065, supervisao.UX_066]
+    )
+
+    assert "maria" not in lido.lower(), "o ato guarda `emitido_por`, e ele não vai para a mensagem"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_avaliacao_parada_nao_nomeia_pessoa(banca, gestor, presidenta_da_banca):
+    """`FR-564` e `SC-199`, sobre o `UX-063` — e é a espécie que mais convidaria a nomear.
+
+    A avaliação parada **tem** avaliador designado, e dizer quem é seria a carga por pessoa que a
+    `FR-034` da `022` já proibia. A mensagem nomeia a Etapa e o Edital; quem avalia está na tela
+    da distribuição, que é onde o trabalho se resolve.
+    """
+    from tests.fixtures.mesa import distribuir_para
+
+    distribuir_para(banca, gestor, ["joao", "ana"], banca["inscricoes"])
+
+    lido = sem_nome_de_pessoa(banca["processo"], presidenta_da_banca, [supervisao.UX_063])
+
+    for avaliador in ("joao", "ana"):
+        assert avaliador not in lido.lower(), f"{avaliador} foi nomeado na avaliação parada"

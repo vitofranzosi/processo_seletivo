@@ -90,6 +90,11 @@ página num menu com contadores. Sinal ausente não ocupa espaço; ausência de 
 
 Cinco sinais, definidos em `UX-001` a `UX-005`. **Sinal novo exige revisão desta spec.**
 
+> **A decisão continua de pé; o número envelheceu.** O catálogo é fechado e cresce por decisão
+> escrita — foi o que aconteceu duas vezes, e as duas vezes o guarda ficou vermelho antes da tela.
+> A lista vigente tem **dez** espécies e está na `FR-024` emendada, logo abaixo. Este parágrafo
+> guarda o número de 09/09/2026, quando eram cinco, porque é o que a decisão decidiu naquele dia.
+
 O identificador importa por uma razão mecânica: a varredura de citações reconhece `FR-`, `SC-`,
 `UX-` e `D-`, e falha quando um deles é citado sem definição. Um rótulo fora desse conjunto —
 `S01`, por exemplo — citado num template e definido em lugar nenhum passa em silêncio, que é
@@ -464,8 +469,40 @@ que a supervisão não apresenta em si mesma os registros contados.
 
 #### Atenção — catálogo fechado
 
-- **FR-024**: O sistema MUST apresentar exclusivamente os sinais definidos em `UX-001` a `UX-005`, e
-  MUST NOT apresentar sinal fora desse catálogo (`D-002`).
+- **FR-024**: ~~O sistema MUST apresentar exclusivamente os sinais definidos em `UX-001` a
+  `UX-005`, e MUST NOT apresentar sinal fora desse catálogo (`D-002`).~~
+  **SUBSTITUÍDA pela `FR-565` da [`038`](../038-painel-de-conducao/spec.md)**, em 19/09/2026.
+
+  **A redação acima dizia cinco, e o produto tinha seis.** A `027` acrescentou o `UX-046` — o
+  acervo publicado que declara vaga imediata e não declara a linha do quadro — **sem revisar este
+  requisito**, e por duas features o repositório carregou um catálogo fechado que não fechava o
+  que existia. A `038` levaria a distância de uma espécie para cinco, e por isso a endereça em vez
+  de acrescentar mais uma divergência ao lado: **decisão nova que não endereça a anterior deixa
+  duas verdades no repositório** — é a lição que a `D-G2` registrou.
+
+  O requisito sucessor é a **`FR-565`**, e o catálogo vigente tem **dez** espécies, nomeadas uma a
+  uma — **por extenso, e não por faixa**, porque é assim que a conferência da `SC-200` as lê:
+
+  | Espécie | O que ela diz | De onde vem |
+  |---|---|---|
+  | `UX-001` | Etapa sem marco no cronograma | `022` |
+  | `UX-002` | estado declarado × posição temporal | `022` |
+  | `UX-003` | cobertura de avaliação insuficiente | `022` |
+  | `UX-004` | ato de ordenação vigente obsoleto | `022` |
+  | `UX-005` | recurso pendente com a comissão inteira impedida | `022` |
+  | `UX-046` | acervo que declara vaga imediata sem linha do quadro | `027` |
+  | `UX-063` | avaliação distribuída e não concluída | `038` |
+  | `UX-064` | recurso aguardando julgamento com julgador disponível | `038` |
+  | `UX-065` | recorte com ordem vigente e ocupação não apurada | `038` |
+  | `UX-066` | ato de ordenação vigente sem divulgação vigente | `038` |
+
+  Quem conta é `supervisao.ESPECIES`; o guarda que prende o número é
+  `tests/unit/interface/test_supervisao.py::test_a_enumeracao_tem_exatamente_dez_especies`, e quem
+  compara **esta tabela** com o produto é
+  `tests/acceptance/test_supervisao_do_processo.py::test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apresenta`.
+
+  **O resto desta seção continua vigente.** A `FR-025` a `FR-033` não foram tocadas: o que mudou
+  foi a lista, e não as regras de apresentação, de ausência ou de encaminhamento.
 - **FR-025**: Sinal ausente MUST NOT ocupar espaço; a ausência de todos MUST ser declarada em uma
   única linha, e o sistema MUST NOT manter seção permanente por sinal (`D-001`).
 - **FR-026**: O sistema MUST identificar Etapa sem Evento de cronograma vinculado, e MUST NOT
