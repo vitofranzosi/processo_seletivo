@@ -31,8 +31,8 @@ entrou.
    citado**. Dois defendem o defeito por escrito.
 
 2. **Esta feature NÃO tem migration.** Nenhuma entidade, nenhuma tabela. O total do `make preparar`
-   continua **`N de 32`** — a 32ª veio da `036`, que acabou de entrar na `main`. **Se a saída disser
-   31, a worktree está atrás da `main`**, e isso é ambiente, não defeito do diff.
+   continua **`N de 33`** — a 33ª veio da `036`, que já está na `main`. **Se a saída disser 32, a
+   worktree está atrás da `main`**, e isso é ambiente, não defeito do diff.
 
 3. **A `US2` começa por um PERCURSO, e não por código.** A `T011` **decide** se o `ACH-02` ainda tem
    o que fechar. As duas saídas estão nomeadas na tarefa, e uma delas **cancela a `T015`**.
@@ -49,7 +49,7 @@ entrou.
 
 ## Phase 1: Setup e medição do "antes"
 
-- [ ] T001 Preparar a worktree: copiar `backend/.env` do checkout principal (**EXISTENTE lá, ausente aqui** — é gitignorado), trocar `DB_NAME` e `POSTGRES_DB` por um nome próprio, rodar `uv sync --extra dev` e `make preparar` em `backend/`, conferindo que a saída termina em **`N de 32`** com N diferente de zero. **32, e não 31**: a `036` acrescentou a 32ª tabela append-only e já está na `main`. Ver 31 significa worktree desatualizada
+- [ ] T001 Preparar a worktree: copiar `backend/.env` do checkout principal (**EXISTENTE lá, ausente aqui** — é gitignorado), trocar `DB_NAME` e `POSTGRES_DB` por um nome próprio, rodar `uv sync --extra dev` e `make preparar` em `backend/`, conferindo que a saída termina em **`N de 33`** com N diferente de zero. **33, e não 32**: o total **já era 32 antes da `036`** — a `research.md` dela dizia 31 e a medição do "antes" corrigiu —, e a `036` acrescentou a **33ª**. Ver 32 significa worktree atrás da `main`; ver 31 significa worktree muito atrás
 - [ ] T002 Medir e gravar o "antes" em `specs/037-quatro-becos-conhecidos/antes-dos-quatro-becos.md` (**NOVO**): a contagem da suíte (`make test-pg`) e, **citado**, o que cada um dos **quatro** casos de `research.md` `R-4` afirma hoje — os dois de `tests/unit/editais/test_calendario.py` e os dois de `tests/unit/editais/test_cronograma_vencido.py`. Registre também a contagem de `test_destinos_do_edital.py` (10), `test_corte.py` (13) e `test_selo_do_cronograma.py` (11), que são os vizinhos que **devem permanecer**. **Esta tarefa roda antes de qualquer edição de código**
 - [ ] T003 Confirmar por varredura, em `specs/037-quatro-becos-conhecidos/antes-dos-quatro-becos.md` (**EXISTENTE**, criado em T002), as quatro premissas de que a feature depende: que a recusa do marco sem regra sai como **conflito e não como ausência** (`R-1`); que a pendência de Perfil **já é corrigível e já leva à etapa** (`R-5`); que `frase_da_recusa` existe e é pública (`R-6`); e que a lista de Etapas do cartão do marco **não carrega o peso** (`R-8`). É o "confirme, não assuma" que a `035` provou valer
 
