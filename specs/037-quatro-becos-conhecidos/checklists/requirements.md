@@ -72,6 +72,24 @@ não o satisfaz.
 | **M2** | as **quatro** rotas que consomem a lista de Etapas não tinham contraprova |
 | **L1** | a `FR-539` é proibição de reescrever, e nada afirmava a frase **literalmente** |
 
+## A segunda passada do `analyze`, e o padrão que ela expôs
+
+**Seis dos oito achados eram a mesma espécie**: a `US2` foi reescrita na primeira passada e quatro
+artefatos continuaram descrevendo a versão anterior — o título da história, o resumo do plano, o
+objetivo da fase, o `data-model` e o `quickstart`. Na `036` foram sete pontos; aqui, quatro.
+**Emenda tardia propaga mal por natureza**, e é por isso que a segunda passada existe.
+
+| Achado | O que estava errado |
+|---|---|
+| **H1** | a `FR-541` mandava o aviso nomear **sem condição**, e a `FR-541b` mandava calar — a forma exata da `FR-500 × FR-501a` da `034`, que sobreviveu a três passadas |
+| **H2** | a `FR-539b` e a `FR-540` diziam "alcança" para capacidades diferentes — retificar e classificar — sem nomear nenhuma |
+| **H3** | o `data-model` ainda dizia `US2 \| duas frases \| prosa`, e a `US2` mexe em derivação e pode produzir **uma** frase |
+| **M1** | objetivo e teste independente da fase 4, incondicionais |
+| **M2** | o cenário 2 prometia "as duas frases" e citava só a `SC-189`, reescopada |
+| **M3** | o resumo do plano — o mesmo lugar onde a independência sobreviveu à primeira passada |
+| **M4** | o título da `US2` prometia o que a `FR-542b` autoriza a não acontecer |
+| **L1** | a `T011` produzia o desfecho da `SC-195` sem citá-la |
+
 ## Notes
 
 - Items marked incomplete require spec updates before `$speckit-clarify` or `$speckit-plan`

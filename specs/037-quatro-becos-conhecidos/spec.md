@@ -78,10 +78,14 @@ pela tela do Edital que o destino do corte é oferecido e que abri-lo diz por qu
 
 ---
 
-### User Story 2 - Os dois bloqueios que calam passam a conduzir (Priority: P1)
+### User Story 2 - Quem esbarra num bloqueio passa a saber a quem pedir (Priority: P1)
 
 Quem esbarra num bloqueio lê **o que fazer e a quem pedir**, na formulação que o produto já pratica,
 em vez de ler só que não pode.
+
+*O título não diz "os dois bloqueios"* porque a `FR-542b` autoriza que um deles já não precise de
+condução — e uma história cujo nome promete o que ela pode legitimamente não entregar parece
+incompleta justamente quando foi entregue por inteiro.
 
 **Why this priority**: é o achado de maior retorno por linha alterada de toda a reauditoria, e é `P1`.
 A frase modelo já existe **dentro do mesmo cartão** de um dos dois casos.
@@ -193,19 +197,37 @@ marco o diz naquele momento.
   ordem: mandar quem lê para a classificação seria abrir, no fim do caminho que a `FR-538` cria, um
   segundo caminho que não resolve. *A `FR-538` torna alcançável uma combinação que hoje ninguém
   alcança* — e é por isso que este requisito nasce com ela, e não depois dela.
-- **FR-539b**: O caminho da recusa **do marco sem regra** MUST respeitar o que o ator alcança. A tela
+- **FR-539b**: O caminho da recusa **do marco sem regra** MUST depender da capacidade de **retificar**
+  — e **não** da de classificar, que é outra, e é a da `FR-540`. A tela
   do corte só é percorrida **depois da publicação**, e num Edital publicado a regra de corte não se
   edita: ela muda por **Retificação**. Quem classifica pode não poder retificar — e oferecer-lhe o
   caminho seria abrir, dentro da correção de um beco, o beco que a `033` fechou. Havendo alcance, o
   caminho; não havendo, **a frase que diz a quem pedir**, pelo mesmo mecanismo da `FR-543`.
-- **FR-540**: O destino MUST continuar sendo oferecido **apenas a quem o alcança**. A garantia da
+- **FR-540**: O destino do corte MUST continuar sendo oferecido apenas a quem alcança a
+  **classificação** deste Edital — que é a capacidade de hoje, e **não** a de retificar, que governa
+  o caminho da `FR-539b`. *As duas aparecem na mesma tela e a dez linhas uma da outra*, e confundi-las
+  produz becos opostos: com a de retificar, a tela do corte some de quem deveria vê-la; com a de
+  classificar, a Retificação é oferecida a quem não pode praticá-la. A garantia da
   `033` — a tela não oferece caminho que o ator não abre — não é desfeita por esta feature.
 
 ### Os dois bloqueios que calam
 
 - **FR-541**: O aviso de **conteúdo imutável** de um Edital publicado MUST nomear a ação e a
-  permissão que a pratica, na formulação que o produto já usa. *Ele hoje diz que correções ocorrem
-  por Retificação e para aí* — e o mesmo cartão, seis linhas acima, já pratica a frase que falta.
+  permissão que a pratica **quando a ação de Retificar não está oferecida àquele ator**. *Ele hoje
+  diz que correções ocorrem por Retificação e para aí* — e o mesmo cartão, seis linhas acima, já
+  pratica a frase que falta.
+
+  O aviso tem **dois** estados, e nenhum deles é "sempre":
+
+  | O ator | A lista de ações | O aviso |
+  |---|---|---|
+  | pode retificar | oferece **Retificar** | **cala** (`FR-541b`) |
+  | não pode | não oferece nada a respeito | **nomeia** a ação e a permissão (`FR-541`) |
+
+  *A condição está escrita no requisito, e não deduzida da leitura conjunta*: a `034` teve dois
+  requisitos incompatíveis sobre o mesmo predicado — um mandando manter o que o outro mandava
+  remover — e eles sobreviveram a três passadas de análise porque cada um, lido sozinho, fazia
+  sentido.
 - **FR-541a**: A pergunta *"esta pessoa pode retificar?"* MUST ser derivada **uma vez**. O mesmo
   cartão já a responde para decidir se oferece a ação de Retificar; o aviso passa a depender da
   **mesma** derivação, e não de uma segunda. *Duas respostas para a mesma pergunta divergem na

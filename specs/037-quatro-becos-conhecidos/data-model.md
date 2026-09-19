@@ -8,9 +8,14 @@ nenhuma persiste estado, nenhuma toca conteúdo publicado.
 | História | O que muda | Espécie |
 |---|---|---|
 | `US1` | a lista de destinos do marco, e o caminho anexado à recusa | derivação e prosa |
-| `US2` | duas frases, produzidas pelo mecanismo existente | prosa |
+| `US2` | a derivação de *"pode retificar?"*, e **uma ou duas** frases produzidas pelo mecanismo existente | **derivação** e prosa |
 | `US3` | um predicado de domínio, e a escolha do instante que o acompanha | calibragem |
 | `US4` | um rótulo, um campo no que já é montado, e uma frase derivada | prosa e contexto |
+
+**A `US2` é a única que não é só prosa**, e a linha acima diz isso de propósito: a derivação de
+*"esta pessoa pode retificar?"* passa a ser feita **uma vez** e consultada pelo aviso, em vez de
+nascer uma segunda vez ao lado da primeira. E são **uma ou duas** frases, não duas: na saída em que o
+`ACH-02` já está fechado, a segunda não é escrita.
 
 **O total do `make preparar` continua `N de 32`.** A 32ª tabela veio da `036`; esta feature não
 acrescenta nenhuma. Se a saída disser 31, a worktree está atrás da `main`, e não é defeito daqui.

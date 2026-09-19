@@ -43,7 +43,11 @@ abre. É o segundo lugar desta feature onde o beco da `033` cabe.
 
 ---
 
-## Cenário 2 — as duas frases, e o percurso que decide se há o que fechar (`SC-189`)
+## Cenário 2 — a condução, e o percurso que decide se há a segunda (`SC-189`, `SC-195`)
+
+**Duas metades com critérios diferentes.** O aviso do Edital publicado responde pela `SC-189`, que
+alcança **só** aquele cartão. O `ACH-02` responde pela `SC-195`, que exige **desfecho escrito** —
+qualquer que ele seja.
 
 **Este cenário começa decidindo, e não conferindo** (`FR-542b`).
 

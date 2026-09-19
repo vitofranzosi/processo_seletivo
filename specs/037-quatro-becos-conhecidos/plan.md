@@ -13,8 +13,9 @@ description: "Implementation plan — 037 · Quatro becos que o sistema já conh
 
 Quatro achados, uma família: **em todos o sistema já sabe, e a informação não chega ao lugar onde a
 pessoa decide.** O link do corte deixa de sumir — e o caminho que a tela oferece ao lado da recusa
-passa a depender de qual recusa é; dois bloqueios passam a dizer a quem pedir, pelo mecanismo único
-que a `033` deixou; a régua do vencido passa a olhar o término **quando há término**; e o rótulo do
+passa a depender de qual recusa é **e de quem lê**; quem esbarra num bloqueio passa a saber a quem
+pedir — **quando ainda não sabe**, porque o cartão já entrega o caminho a quem pode e um dos dois
+achados pode já estar fechado; a régua do vencido passa a olhar o término **quando há término**; e o rótulo do
 peso para de mentir, com a contradição antecipando para o momento em que a Etapa é enumerada.
 
 **Nenhuma entidade nova. Nenhuma migration. Nenhuma capacidade nova. Nenhum conteúdo publicado
