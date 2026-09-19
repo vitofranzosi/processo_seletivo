@@ -298,6 +298,32 @@ def metodo_comum_digitado(dados):
 CAMPOS_SIMPLES_DO_METODO = ("algorithm", "source", "occurrence", "occurrenceAt", "derivation")
 
 
+def opcoes_do_metodo():
+    """As listas fechadas do método, lidas de quem as executa — nas três telas (035, FR-507).
+
+    **Ela nasceu na Retificação, e a composição não a tinha.** A Retificação já oferecia quatro
+    campos fechados como escolha; a composição deixava digitar os mesmos quatro e recusava ao
+    gravar, de modo que a pessoa descobria o vocabulário por tentativa. Mudá-la de lugar é o que
+    torna a `FR-507` *generalizar* em vez de *criar* — e é o que impede a segunda lista: duas
+    origens para o mesmo vocabulário divergem na primeira vez que ele muda, e a divergência
+    apareceria como a Retificação oferecendo o que a composição não oferece.
+
+    Importadas aqui dentro, e não no topo: `sorteios` é outro contexto, e a tela só precisa das
+    listas quando desenha um marco que sorteia.
+    """
+    from processo_seletivo.sorteios.domain.chave import ALGORITMOS
+    from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
+    from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
+    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+
+    return {
+        "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
+        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
+        "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
+        "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
+    }
+
+
 def _metodo_de_sorteio(dados, base):
     """`{...}` quando o marco declara o método do sorteio; `None` quando não declara.
 

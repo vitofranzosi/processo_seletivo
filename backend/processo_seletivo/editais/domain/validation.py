@@ -1404,7 +1404,7 @@ def validate_for_publication(
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))
-    findings.extend(_coerencia_do_metodo_de_sorteio(snapshot))
+    findings.extend(_coerencia_do_metodo_de_sorteio(snapshot, ato=ato))
     findings.extend(_coerencia_da_forma_da_ordem(snapshot))
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
@@ -1533,7 +1533,7 @@ def _coerencia_da_janela_recursal(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
-def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
+def _coerencia_do_metodo_de_sorteio(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     """O método declarado vale inteiro — **também depois de retificado** (026, US4).
 
     Mesma lacuna da janela recursal, encontrada pelo mesmo caminho:
@@ -1545,6 +1545,16 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
     **A regra não é reescrita aqui**: `_validar_metodo_de_sorteio` continua sendo a única, e ela
     confere também o algoritmo, a fonte, as duas regras e a Etapa de habilitação contra o que este
     sistema executa.
+
+    **A conferência da forma da ocorrência só entra na publicação** (035, FR-514). Ela é a sexta
+    guarda do método, e a única que alcança conteúdo publicado que nunca passou por ela — as outras
+    cinco existem desde que o método existe. Ligada no ato de Retificação, ela prenderia o Edital do
+    acervo cuja ocorrência está em prosa: a Retificação é a **única** saída que ele tem, e é por
+    onde a `FR-517` manda a pessoa ir. É o mesmo recorte, e pela mesma razão, que
+    `_metodo_do_sorteio_publicavel` escreveu na `032`.
+
+    **E não é afrouxamento.** O Edital que se publica hoje continua sendo impedido; o que muda é
+    que corrigir o de ontem continua possível.
     """
     from processo_seletivo.editais.domain.perfis import (
         ProfileValidationError,
@@ -1552,6 +1562,7 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
         validate_common_draw_method,
     )
 
+    conferir_forma = ato == ATO_DE_PUBLICACAO
     findings = []
     # **O método comum do Edital passa pela mesma conferência** (030, FR-429). A elaboração o
     # valida em `replace_draft`; a Retificação não passa por lá — ela opera sobre o snapshot, e o
@@ -1564,7 +1575,9 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
     # ocorrência de todos eles de uma vez.
     if snapshot.get("drawMethod") is not None:
         try:
-            validate_common_draw_method(snapshot.get("drawMethod"))
+            validate_common_draw_method(
+                snapshot.get("drawMethod"), conferir_forma_da_ocorrencia=conferir_forma
+            )
         except ProfileValidationError as recusa:
             findings.append(
                 ValidationFinding(
@@ -1578,7 +1591,9 @@ def _coerencia_do_metodo_de_sorteio(snapshot: dict) -> list[ValidationFinding]:
         for marco in _marcos_bem_formados(perfil):
             try:
                 _validar_metodo_de_sorteio(
-                    marco.get("drawMethod"), etapas=marco.get("stages") or []
+                    marco.get("drawMethod"),
+                    etapas=marco.get("stages") or [],
+                    conferir_forma_da_ocorrencia=conferir_forma,
                 )
             except ProfileValidationError as recusa:
                 findings.append(

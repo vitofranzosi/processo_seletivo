@@ -7199,6 +7199,10 @@ def sorteio(request, edital_id, marco_id):
                 # E as que a indisponibilidade descartou, visíveis de propósito: o descarte de
                 # ocorrência é justamente o que precisa ser auditável (R-006).
                 "ocorrencias_descartadas": estado["ocorrencias_descartadas"],
+                # **Por que não há ocorrência da vez**, distinguindo a fonte que não publicou da
+                # declaração que não pôde ser lida (035, FR-516). Sem isto a tela atribuía à fonte
+                # externa uma falha da declaração, e mandava esperar por algo que não viria.
+                "recusa_da_ocorrencia": estado["recusa_da_ocorrencia"],
                 "ocorre_em": estado["ocorre_em"],
                 # **Com o estado do corte de cada um** (014, UX-029). Esta é a tela que já reúne
                 # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
