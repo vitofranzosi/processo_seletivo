@@ -314,17 +314,68 @@ feita sobre um instantâneo anterior. Fica registrado para que a discrepância n
 
 ---
 
-## Um achado da integração, registrado e não corrigido
+## O achado da integração — registrado, e corrigido a pedido
 
 **A `036` criou uma quinta ocorrência renderizada da frase, e escolheu a forma de recusa para uma
-tela onde ninguém tentou nada.** `recurso.html` imprime, num parágrafo informativo — *"Nada foi
-instruído neste recurso… {{ instrucao_a_quem_pedir }}"* —, o resultado de
-`frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO)`, que abre com **"Esta operação depende de…"**.
+tela onde ninguém tentou nada.** `recurso.html` imprimia, num parágrafo informativo — *"Nada foi
+instruído neste recurso…"* —, o resultado de `frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO)`, que
+abre com **"Esta operação depende de…"**. É exatamente a situação de fala que a `FR-543d` separa:
+não houve operação a recusar.
 
-É exatamente a situação de fala que a `FR-543d` separa: não houve operação. O mecanismo agora
-produz a forma de aviso, e trocar a chamada seria uma linha.
+Foi **registrado primeiro e corrigido depois**, por decisão de quem governa o backlog — a tela é de
+outra feature, especificada e mesclada nos termos dela, e a `FR-543d` obriga esta feature a
+distinguir as duas formas **no mecanismo**, não a reescrever chamadas alheias por conta própria.
 
-**Não foi trocada.** A tela é da `036`, que foi especificada, percorrida e mesclada nos termos dela,
-e a `FR-543d` obriga esta feature a *distinguir as duas formas no mecanismo* — não a reescrever as
-chamadas alheias. **Governança é de quem governa o backlog**: fica como achado, com o endereço
-exato, e não como escopo tomado por conta própria.
+| | A frase |
+|---|---|
+| antes | *"**Esta operação** depende da permissão de gerir a comissão ou da presidência deste Processo — cada uma basta sozinha. Peça a alguém com a permissão de gerir a comissão ou a quem preside este Processo."* |
+| depois | *"**A instrução** depende da permissão de gerir a comissão ou da presidência deste Processo — cada uma basta sozinha. Peça a alguém com a permissão de gerir a comissão ou a quem preside este Processo **que a pratique**."* |
+
+**A troca não cria segunda formulação, e é isso que a torna admissível.** As duas formas
+compartilham a construção do *a quem pedir*: o texto depois de "Peça" é **idêntico**, letra por
+letra, salvo a oração do ato que a `FR-543a` exige. O que muda é o sujeito da primeira oração — que
+é justamente o que a `FR-543d` separou. A `FR-486` continua de pé.
+
+**E ela cabe nas palavras da própria `036`.** A `FR-532` daquela feature pede *"o que falta e a quem
+pedir, na formulação que o produto já pratica"* — as **duas** metades. A forma anterior entregava a
+segunda e abria nomeando um ato que não houve; a nova entrega as duas.
+
+**Com rede, e no teste que é dono da tela.** `test_proveniencia_do_recurso.py::test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta`
+já afirmava as bases; passou a afirmar também a abertura, a oração do ato e a **ausência** de *"Esta
+operação"* naquele parágrafo. Conferido contra o código antigo: reprova sem a correção.
+
+### As três que sobravam — corrigidas a pedido, e uma delas não era só a oração
+
+A varredura de todas as ocorrências renderizadas — **sensível a maiúscula e minúscula**, porque a
+primeira passagem só olhou `Peça` com maiúscula e escondeu quatro — achou **nove** frases que mandam
+pedir. Seis diziam **o que** se pede; três não. As três foram fechadas:
+
+| Onde | Antes | Depois |
+|---|---|---|
+| `ordenacao.html` · divulgação | *"…peça a alguém com a permissão de publicar resultado."* | *"…**que o divulgue**."* |
+| `ordenacao.html` · emissão | prosa à mão que **reproduzia o mecanismo** | produzida por `frase_do_aviso`, com *"**que a emita**"* |
+| `recusa.html` | *"peça a quem administra o sistema no Cefor."* | *"peça **acesso** a quem administra…"* |
+
+**A do meio não era falta de oração — era uma segunda formulação.** A tela escrevia à mão
+*"Emitir a ordem deste marco depende da permissão de gerir a comissão ou da presidência deste
+Processo — cada uma basta sozinha"* e, abaixo, *"Peça a quem tem a permissão, ou a quem preside."*
+O primeiro período é, palavra por palavra, o que `frase_do_aviso` produz das mesmas bases; o segundo
+é uma redação alheia ao mecanismo, que larga a oração do ato **e** encurta o destinatário. É o que a
+`FR-486` existe para não deixar nascer, com o agravante de ser indistinguível da forma canônica até
+alguém melhorar uma das duas.
+
+A frase passou a vir da view. **O que continua escrito na tela é o que o mecanismo não sabe**: que a
+presidência não é papel, e vem da composição da comissão — explicação sobre a natureza da base, e
+não formulação do pedido (`FR-485`).
+
+**A da `recusa.html` não ganhou oração de ato, e a razão é de domínio.** *"Quem administra o sistema
+no Cefor"* não é permissão nem papel do modelo: não sai do mecanismo, e inventar-lhe um *"que o
+conceda"* criaria uma **terceira** maneira de pedir o que `lista.html` já pede de outra. Ela foi
+igualada à irmã — *"peça **acesso** a quem administra o sistema"* —, que é a forma que o guardião da
+gramática documenta como cheia: o objeto do pedido entre o verbo e o destinatário.
+
+**Com rede, no teste dono de cada tela.** `test_publicar_resultado.py::test_onde_a_tela_aceita_duas_bases_a_frase_nomeia_as_duas`
+já afirmava as duas bases; passou a afirmar a frase do mecanismo, a oração do ato, a **ausência** da
+redação à mão, e que a explicação sobre a natureza da base continua na tela.
+
+**O saldo: nove de nove frases renderizadas dizem, agora, a quem pedir e o quê.**

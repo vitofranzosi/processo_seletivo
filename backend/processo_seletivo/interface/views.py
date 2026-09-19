@@ -184,7 +184,6 @@ from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import (
     base_de_permissao,
-    frase_da_recusa,
     frase_do_aviso,
     require_authorization_base,
     require_permission,
@@ -5407,6 +5406,19 @@ def ordenacao(request, edital_id, marco_id):
                 # Mandá-la a uma tela onde não haverá botão é o beco que o `ACH-38` descreve, e a
                 # correção não é esconder a instrução: é dizer de quem o ato é.
                 "pode_divulgar": ator.can("resultado:publicar"),
+                # **A quem pedir a emissão, pelo mecanismo** (037, `FR-486`, `FR-543a`). A tela
+                # escrevia esta frase à mão e reproduzia o que `frase_do_aviso` produz das mesmas
+                # bases — duas redações para o mesmo pedido, que divergiriam na primeira que
+                # alguém melhorasse. Montada aqui, ela é a mesma das outras conduções, e traz a
+                # oração do ato que faltava.
+                #
+                # **É aviso, e não recusa**: a tela informa de quem é o ato a quem não o pratica;
+                # ninguém tentou emitir nada para chegar até aqui.
+                "conducao_para_emitir": frase_do_aviso(
+                    BASES_DA_GESTAO_DA_COMISSAO,
+                    acao="Emitir a ordem deste marco",
+                    que="a emita",
+                ),
                 # As providências a jusante pendentes deste marco: a emissão as oferece para que o
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
@@ -7265,7 +7277,19 @@ def _instrucao_da_peca(request, ator, peca, *, base):
         # A frase do que falta e a quem pedir, na **formulação única** que a `033` fixou (`FR-486`).
         # Escrever uma segunda aqui criaria duas maneiras de dizer a mesma coisa, e a segunda
         # divergiria na primeira palavra que alguém melhorasse.
-        "instrucao_a_quem_pedir": frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO),
+        #
+        # **É a forma de aviso, e não a de recusa** (037, `FR-543d`). Esta tela informa que não
+        # houve instrução; ninguém tentou operação alguma ao chegar aqui, e a frase de recusa abria
+        # com *"Esta operação depende de…"*, nomeando um ato que não aconteceu. Quando a `036`
+        # nasceu havia uma forma só, e ela era a da recusa; a `037` separou as duas situações de
+        # fala **sem** separar o "a quem pedir", que continua sendo o mesmo texto — é por isso que
+        # trocar a chamada não cria segunda formulação, e é o que mantém a `FR-486` de pé.
+        #
+        # E a forma cheia traz a oração do ato (`FR-543a`): "…que a pratique" diz o que se pede, e
+        # não só a quem. A `FR-532` pede *"o que falta e a quem pedir"* — as duas metades.
+        "instrucao_a_quem_pedir": frase_do_aviso(
+            BASES_DA_GESTAO_DA_COMISSAO, acao="A instrução", que="a pratique"
+        ),
         # **Instruir peça encerrada é recusado pelo comando**, e por isso a tela não o oferece: um
         # botão que sempre recusa ensina a pessoa a desconfiar da tela (`FR-013` da `018`).
         "pode_instruir": base is not None and not desfecho,

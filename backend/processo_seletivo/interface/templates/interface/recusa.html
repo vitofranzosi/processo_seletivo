@@ -3,7 +3,14 @@
 {% block conteudo %}
 <h1>{{ titulo }}</h1>
 <p class="erro" role="alert">{{ detalhe }}</p>
-<p class="ajuda">Se você acredita que deveria ter acesso, peça a quem administra o sistema no
+{% comment %}
+**O objeto do pedido antes do destinatário** (037, `FR-543a`), que é a forma que `lista.html` já
+pratica em *"Peça acesso a quem administra o sistema no Cefor"*. Esta dizia só a quem, e quem
+administra o sistema não é permissão nem papel do modelo — não sai do mecanismo, e inventar-lhe uma
+oração de ato ("que o conceda") criaria uma terceira maneira de pedir o que as outras duas telas já
+pedem de duas.
+{% endcomment %}
+<p class="ajuda">Se você acredita que deveria ter acesso, peça acesso a quem administra o sistema no
   Cefor. Nenhuma alteração foi feita.</p>
 <p><a class="botao secundario" href="{% url 'interface:lista' %}">Voltar aos Processos Seletivos</a></p>
 {% endblock %}
