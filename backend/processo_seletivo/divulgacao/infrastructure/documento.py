@@ -73,10 +73,20 @@ def _timbre(composicao, cabecalho):
 
 
 def _identificacao(composicao, cabecalho):
-    """Processo, Edital, marco, natureza e o ato de origem — o que o documento afirma ser.
+    """Processo, Edital, marco, recorte, natureza e o ato de origem — o que o documento afirma ser.
 
     O ato de origem entra com o seu instante: é ele que liga a divulgação à decisão que ela
     divulga, e sem ele o documento afirmaria uma ordem sem dizer de onde ela veio (FR-063).
+
+    **A lista de concorrência entra na moldura, e entra sempre** (034, FR-506). Desde que o marco
+    computado também emite por recorte, um marco pode ter três ordens divulgadas — e um documento
+    que não nomeasse a sua seria indistinguível dos outros dois. O conteúdo já carregava o dado
+    desde a `021`, e a página pública já o exibia; era só o documento que não o imprimia.
+
+    **Sempre, e não só quando há lista**, ao contrário da seção do sorteio logo abaixo. A diferença
+    é o que a ausência afirma: uma chave nula de sorteio diria "este resultado não foi sorteado" em
+    milhares de atos a que a pergunta nunca foi feita, ao passo que "Ampla concorrência" é
+    verdadeiro em todo ato sem lista — é o nome do recorte, e não a negação de outro.
     """
     with composicao.bloco(moldura=True):
         composicao.espaco(4.0)
@@ -85,6 +95,7 @@ def _identificacao(composicao, cabecalho):
             ("EDITAL", cabecalho["edital"]),
             ("PERFIL", cabecalho["perfil"]),
             ("MARCO", cabecalho["marco"]),
+            ("LISTA DE CONCORRÊNCIA", cabecalho.get("lista") or "Ampla concorrência"),
             ("NATUREZA", cabecalho["natureza_rotulo"]),
             # **A causa da retificação, quando existe** (FR-088). Sem ela, o documento de uma
             # divulgação que corrige outra afirmava uma ordem nova sem dizer que corrigia nada —

@@ -205,12 +205,23 @@ def _divergencias_do_sorteio(vigente):
     ]
 
 
-def historico(*, edital, marco_id):
-    return list(
-        AtoDeOrdenacao.objects.filter(edital=edital, marco_id=marco_id)
-        .select_related("versao", "ato_anterior")
-        .order_by("-emitido_em")
-    )
+def historico(*, edital, marco_id, lista_id=None, todos_os_recortes=False):
+    """Os atos daquele marco, do mais novo ao mais antigo — **de um recorte só**, por padrão.
+
+    **`lista_id` deixou de ser opcional no sentido que importa** (034, `FR-490`), pela mesma razão
+    que levou `ato_vigente` a exigi-lo na `021`: desde que um marco computado pode ter três cadeias,
+    "o histórico do marco" passou a misturar atos que não se sucedem. A tela do recorte mostraria,
+    numa lista só, três raízes e três sucessões — e a frase "primeiro ato do marco" apareceria três
+    vezes.
+
+    O padrão é a **ampla concorrência**, e não "todos": quem chama sem dizer o recorte está lendo a
+    tela de um recorte, e é a ampla que ele abriu. Quem quer de fato a série inteira — a supervisão,
+    que conta atos do certame — pede `todos_os_recortes=True`, e o pedido fica escrito.
+    """
+    consulta = AtoDeOrdenacao.objects.filter(edital=edital, marco_id=marco_id)
+    if not todos_os_recortes:
+        consulta = consulta.filter(lista_id=lista_id)
+    return list(consulta.select_related("versao", "ato_anterior").order_by("-emitido_em"))
 
 
 def ato_por_id(*, edital, marco_id, ato_id):
@@ -279,7 +290,15 @@ def nomear_criterios(linhas, ato):
 
 
 def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
-    """A proposta de agora ao lado do ato vigente, sem escrever nenhum dos dois."""
+    """A proposta de agora ao lado do ato vigente **daquele recorte**, sem escrever nenhum dos dois.
+
+    **`lista_id` chegava aqui e parava no vigente** (034, `FR-490`). O ato era buscado por recorte
+    desde a `021`, mas a proposta era sempre a da ampla: abrir o recorte reservado de um marco
+    computado mostrava a ordem do universo inteiro ao lado de um vigente que não existia. Agora o
+    recorte atravessa até o cálculo, e as duas metades da tela falam do mesmo recorte.
+
+    O padrão continua sendo a ampla, que é o que todo chamador anterior a esta feature queria.
+    """
     vigente = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
     if vigente is not None and (vigente.universo or {}).get("origem") == ORIGEM_SORTEIO:
         return _estado_do_marco_sorteado(edital=edital, marco_id=marco_id, vigente=vigente, at=at)
@@ -331,6 +350,7 @@ def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
         edital=edital,
         perfil_id=perfil["id"],
         marco_id=marco_id,
+        lista_id=lista_id,
         at=at,
     )
     divergencias = []

@@ -304,3 +304,54 @@ de semeadura que quebra só aparece na próxima vez que alguém semeia.
 | R-5 | **8** casos mudam, em 3 arquivos — e uma correção de prosa num quarto —, nenhum de autorização | conferência caso a caso, na entrega |
 | R-6 | O corte já lê o recorte; falta navegação nas duas telas, e leitura na ordenação | `FR-497`, `FR-498` |
 | R-8 | Ordem vazia é emitível, nunca automática | tarefa de decisão |
+
+---
+
+## R-10 — A varredura da aposentadoria, exigida pela `T034`
+
+**Feita depois de remover `_reserva_sem_via_de_apuracao` e a chamada dela**, em 18/09/2026:
+
+| Varredura | Resultado |
+|---|---|
+| `reserved_row_without_ordering` em `processo_seletivo/` | **0 ocorrências** |
+| casos da suíte que ainda produzem o achado | **0** — os dez de `test_executabilidade.py` afirmam ausência |
+| Editais da amostra real em que ele ainda dispararia | **0** — ver [varredura-da-amostra.md](varredura-da-amostra.md) |
+
+**Não sobrou caso, e a `FR-501` está certa.** Todo marco ou sorteia — e o sorteio emite por lista
+desde a `021` — ou é computado, e o computado passou a emitir. Perfil com reserva e sem marco algum
+continua sendo impedimento da `032`, por `FR-457`, que é outra regra.
+
+---
+
+## R-11 — A medição que autorizou a remoção do predicado, exigida pela `FR-501a`
+
+**Feita antes de remover**, com o aviso já aposentado (`T034`) e a tela já fora do campo (`T035`):
+
+| O que se mediu | Resultado |
+|---|---|
+| ramificações (`if`/`elif`) no corpo de `emite_ordem_no_recorte` | **0** |
+| o corpo executável | `return True`, e nada mais |
+| consumidores de produção restantes | **1** — o campo `apuravel` do selector da ocupação, que a `T036` remove no mesmo passo |
+| consumidores de teste | 1, o de igualdade que a `T033` criou para a travessia |
+
+**O predicado deixou de variar, e por isso saiu.** Guarda que nunca reprova é pior do que guarda
+nenhum: o próximo a ler o código confia nele. Não apareceu razão não prevista para mantê-lo.
+
+**O que ficou no lugar**: quem quiser saber se há o que apurar num recorte pergunta pela ordem
+vigente dele, que é a regra real — e é o que a apuração já faz ao recusar.
+
+---
+
+## R-12 — O que a implementação corrigiu nesta medição
+
+Três endereços que este arquivo e o `plan.md` davam, e que a implementação mediu de novo:
+
+| Onde a spec dizia | Onde está de fato |
+|---|---|
+| `publicacoes/infrastructure/pdf.py` compõe o documento do ato (`FR-506`) | **não**: aquele arquivo compõe o documento do **Edital**. Quem compõe o do ato divulgado é `divulgacao/infrastructure/documento.py`, e o dado já existia — `cabecalho["lista"]` é gravado desde a `021`, e a página pública já o exibia. Faltava o papel imprimi-lo |
+| `tests/unit/editais/test_marcos.py` guarda o predicado (`T033`, `T036`) | **o arquivo não existe**. O predicado da `032` nunca teve teste próprio; o teste de igualdade da travessia viveu em `tests/unit/editais/test_forma_da_ordem.py`, que é o que cobre `editais/domain/marcos.py` |
+| `R-5` conta **um** caso em `test_hardening_pos_auditoria.py` | são **quatro**: o código é uma entrada do dicionário `A_FAMILIA`, lido por quatro casos. A contagem por linha não enxerga um dicionário compartilhado — e o total de casos alterados subiu de 8 para 12, com o décimo segundo vindo de outra causa (a colisão entre `recorte` e a varredura por substring de `corte`) |
+
+*As três ficam registradas, e não corrigidas para trás nos artefatos*, pelo mesmo critério que este
+arquivo aplicou à própria contagem errada de `R-3`: quem conferir a entrega procurando o número
+antigo precisa saber por que ele mudou.

@@ -1,17 +1,19 @@
 """A reversão de cota: declaração publicada, movimento e efeito (016).
 
-**Um achado que a implementação revelou, e que a spec não previa.** Apurar a ocupação de uma cota
-exige **ordem vigente daquele recorte** (`FR-243`), e `emitir_ordem` fixa `lista_id=None` por
+**Um achado que a implementação revelou, e que a `034` fechou.** Apurar a ocupação de uma cota
+exige **ordem vigente daquele recorte** (`FR-243`), e `emitir_ordem` fixava `lista_id=None` por
 decisão declarada (PR #85): *"um ato computado é sempre o de ampla concorrência — só o sorteio emite
-por lista"*. Logo **reversão de cota só é apurável em certame de sorteio**.
+por lista"*. Daí decorria que **reversão de cota só era apurável em certame de sorteio**.
 
-Isso é coerente com a amostra, e não uma limitação surpresa: o 28/2026 e o 57/2026 — os dois Editais
-que declaram reversão — são certames de **sorteio**. Mas significa que o percurso de ponta a ponta
-da reversão precisa do cenário de sorteio com cotas, e não do cenário computado da `014`.
+**Isso deixou de valer.** A `034` fez o marco computado emitir uma ordem por recorte, e o caminho do
+ator alcança a apuração da cota nos dois tipos de certame. A frase acima fica registrada porque ela
+explica a **forma** destes testes, e não porque ainda descreva o sistema.
 
-Enquanto esse cenário não existir, estes testes cobrem o que é provável sem ele: a declaração
-atravessando a publicação inteira, e o movimento sobre uma apuração de cota construída à mão — com a
-construção declarada, para ninguém a confundir com o percurso do ator.
+O que não mudou é o que estes testes exercitam: a declaração atravessando a publicação inteira, e o
+movimento sobre uma apuração de cota construída à mão. **O helper continua construído à mão de
+propósito** — ele é chamado por seis casos de reversão, e trocá-lo pelo percurso do ator mudaria o
+que cada um deles exercita. Isolar o movimento do que o precede é a razão de ele existir, e ela
+sobrevive à `034`.
 """
 
 import pytest
@@ -70,9 +72,12 @@ def test_a_declaracao_atravessa_o_snapshot(com_saldo):
 def apuracao_da_cota(edital, gestor, *, publicadas=2, ocupadas=0):
     """A apuração da cota, **construída à mão** — e a razão está no topo do arquivo.
 
-    O caminho do ator não a alcança em certame computado, porque não existe ordem com `lista_id`.
-    Construí-la aqui isola o que este arquivo testa — o movimento — do que falta para o percurso
-    completo, que é o cenário de sorteio com cotas.
+    *A razão de antes dizia que o caminho do ator não a alcançava em certame computado, porque não
+    existia ordem com `lista_id`. A `034` fez existir, e a frase saiu.* A razão de hoje é outra, e é
+    ela que mantém a construção: isolar o **movimento** do que o precede. Os seis casos que chamam
+    este helper testam a reversão, e não o percurso que leva até ela — fazê-los emitir ordem, corte
+    e apuração mudaria o que cada um exercita, e uma falha no percurso apareceria como falha da
+    reversão.
     """
     from django.utils import timezone
 

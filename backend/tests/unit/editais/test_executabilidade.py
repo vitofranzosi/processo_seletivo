@@ -364,36 +364,57 @@ def com_reserva(**alteracoes):
     return perfil(**{"vacancyTable": list(QUADRO_7_1_2), **alteracoes})
 
 
-def test_reserva_em_marco_que_nao_sorteia_produz_aviso_e_nao_impedimento():
-    achado = achados(snapshot(com_reserva()), "reserved_row_without_ordering")
+# --- O aviso da reserva foi **aposentado** pela `034` (FR-501) ---------------------------------
+#
+# **Não sobrou caso.** Todo marco ou sorteia — e o sorteio sempre emitiu por lista, desde a `021` —
+# ou é computado, e o computado passou a emitir por recorte. Perfil com reserva e sem marco algum já
+# é impedimento por outra regra (`FR-457`).
+#
+# Os cinco casos abaixo afirmavam que o aviso era produzido. Eles **não foram apagados**: cada um
+# monta um conteúdo diferente — um marco, o segundo marco quando o primeiro sorteia, dois marcos
+# computados, a Retificação —, e é essa variedade que garante que a aposentadoria alcança todos, e
+# não só o caso simples. O que mudou foi o que eles afirmam.
+#
+# **A prova de que a via passou a existir não está aqui**, e é deliberado: um teste de validação não
+# emite ordem nenhuma. Ela vive em `tests/integration/classificacao/test_ordem_por_recorte.py`, que
+# emite a ordem do recorte reservado de um marco computado e confere o ato que nasce.
 
-    assert len(achado) == 1
-    assert achado[0].severity == Severity.WARNING, (
-        "impedir retiraria a única parte da jornada que hoje funciona para três Editais reais"
-    )
-    assert achado[0].path == f"/profiles/id={PERFIL}/vacancyTable"
 
+def test_reserva_em_marco_que_nao_sorteia_nao_produz_mais_aviso():
+    """A `034` fechou a causa: o recorte reservado de marco computado passou a receber ordem.
 
-def test_o_aviso_da_reserva_nomeia_a_causa_e_nao_o_sintoma():
-    """`FR-471`: a causa é a forma de emissão da ordem, e não a ausência dela no dia da apuração.
-
-    *"Este recorte não tem ordem emitida"* é o que a auditoria leu meses depois, com o cronograma
-    correndo — verdadeiro, inútil, e sem nada a fazer com ele. A causa é outra e cabe antes da
-    publicação: **aquele marco emite a ordem em lista única**, e só a ordem sorteada é emitida por
-    recorte.
+    Enquanto ele não recebia, este aviso era a única coisa que o sistema tinha a dizer antes da
+    publicação — e era advertência, e não impedimento, porque impedir retiraria a única parte da
+    jornada que funcionava para três Editais reais. A via existe agora, e o aviso perdeu o objeto.
     """
-    achado = achados(snapshot(com_reserva()), "reserved_row_without_ordering")[0]
-
-    assert "DOC-INFO" in achado.message, "a entidade, pelo mesmo rótulo dos irmãos do quadro"
-    assert "Pessoas com deficiência" in achado.message and "Negros" in achado.message
-    assert "CLASS-TUT" in achado.message, "e qual marco produz a ordem única"
-    assert "lista única" in achado.message, "a causa"
-    assert "só a ordem sorteada é emitida por recorte" in achado.message
-    assert "não tem ordem emitida" not in achado.message, "o sintoma que a auditoria leu tarde"
+    assert achados(snapshot(com_reserva()), "reserved_row_without_ordering") == []
 
 
-def test_o_aviso_da_reserva_nao_e_emitido_na_retificacao():
-    """`FR-459`: o Edital do acervo já publicou essa reserva, e não tem como deixar de tê-la."""
+def test_nenhum_achado_da_familia_sobra_sobre_o_quadro_com_reserva():
+    """A contraprova que impede a aposentadoria de virar silêncio sobre **outra** coisa.
+
+    O aviso saiu; o que **não** pode ter saído com ele são as regras vizinhas do mesmo quadro — a
+    lista reservada sem linha e a soma que não fecha. Um Perfil com reserva bem formada não produz
+    achado nenhum sobre o `vacancyTable`, e é isso que se afirma; um que estivesse mal formado
+    continuaria produzindo, e há caso próprio para ele neste arquivo.
+    """
+    do_quadro = [
+        item
+        for item in validate_for_publication(snapshot(com_reserva()))
+        if item.path == f"/profiles/id={PERFIL}/vacancyTable"
+    ]
+
+    assert do_quadro == []
+
+
+def test_a_aposentadoria_alcanca_tambem_a_retificacao():
+    """`FR-459` continua de pé por outra razão: não há aviso a emitir, em ato nenhum.
+
+    Antes, o silêncio na Retificação era uma **exceção** — o Edital do acervo já publicou aquela
+    reserva e não tem como deixar de tê-la. Agora ele é a regra geral. O caso fica porque a
+    distinção entre os dois atos continua sendo real para as outras regras do quadro, e um dia em
+    que ela se quebrasse aqui seria um dia em que alguém a quebrou em toda parte.
+    """
     assert (
         achados(snapshot(com_reserva()), "reserved_row_without_ordering", ato=ATO_DE_RETIFICACAO)
         == []
@@ -471,8 +492,14 @@ def test_perfil_sem_marco_algum_nao_acumula_o_aviso_da_reserva():
 SEGUNDO_MARCO = "aaaaaaaa-0000-4000-8000-000000000328"
 
 
-def test_o_aviso_alcanca_o_segundo_marco_quando_o_primeiro_sorteia():
-    """O caso reproduzido: sorteia, computa — e é o segundo que não apura os recortes."""
+def test_o_segundo_marco_computado_tambem_deixou_de_receber_o_aviso():
+    """O caso que uma revisão encontrou, e que a aposentadoria precisa alcançar inteiro.
+
+    O Perfil cujo **primeiro** marco sorteia e cujo **segundo** computa era o caso em que o aviso
+    quase não saiu: a conferência lia `marcos_do_perfil[0]` e nada mais. Ele fica aqui porque a
+    forma do defeito sobrevive à regra que o revelou — uma regra futura que leia só o primeiro marco
+    vai errar do mesmo jeito, e este conteúdo é o que a pega.
+    """
     conteudo = snapshot(
         com_reserva(
             classificationMilestones=[
@@ -482,11 +509,7 @@ def test_o_aviso_alcanca_o_segundo_marco_quando_o_primeiro_sorteia():
         )
     )
 
-    achado = achados(conteudo, "reserved_row_without_ordering")
-
-    assert len(achado) == 1
-    assert "COMPUTA" in achado[0].message, "o marco que não emite é o que precisa ser nomeado"
-    assert "SORT-X" not in achado[0].message, "e o que emite não entra na frase"
+    assert achados(conteudo, "reserved_row_without_ordering") == []
 
 
 def test_todos_os_marcos_sorteando_continua_sem_achado():
@@ -503,11 +526,13 @@ def test_todos_os_marcos_sorteando_continua_sem_achado():
     assert achados(conteudo, "reserved_row_without_ordering") == []
 
 
-def test_dois_marcos_em_lista_unica_saem_num_achado_so_que_nomeia_os_dois():
-    """Um achado por Perfil, e não um por marco.
+def test_dois_marcos_computados_no_mesmo_perfil_nao_produzem_aviso_algum():
+    """O Perfil com dois marcos computados e cota repartida: nenhum dos dois carece de via.
 
-    Os dois dizem o mesmo do quadro, endereçam o mesmo `vacancyTable` e levam à mesma etapa;
-    repeti-lo por marco encheria a Revisão de linhas que só diferem no código do marco.
+    Este caso existia para prender a **agregação** — um achado por Perfil, e não um por marco, para
+    não encher a Revisão de linhas que só diferem no código do marco. A agregação deixou de ter o
+    que agregar; o conteúdo fica porque é o que prova que a aposentadoria não parou no Perfil de um
+    marco só.
     """
     conteudo = snapshot(
         com_reserva(
@@ -518,8 +543,4 @@ def test_dois_marcos_em_lista_unica_saem_num_achado_so_que_nomeia_os_dois():
         )
     )
 
-    achado = achados(conteudo, "reserved_row_without_ordering")
-
-    assert len(achado) == 1
-    assert "os marcos CLASS-TUT e COMPUTA-2" in achado[0].message
-    assert achado[0].path == f"/profiles/id={PERFIL}/vacancyTable"
+    assert achados(conteudo, "reserved_row_without_ordering") == []
