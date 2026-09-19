@@ -45,8 +45,13 @@ medição.** As features `029` a `033` são código, e tudo que se diz delas é 
 eram **artefato** quando este arquivo foi escrito; **foram implementadas, percorridas e mescladas no
 dia seguinte**, e a §13 agora confronta o que se previu com o que aconteceu.
 
-**O que continua marcado como projeção neste arquivo** são as **colunas de nota** — a `Proj. manhã` e
-a `[PROJ. 18/09]` das §3 e §10 —, porque remedi-las exige percorrer os seis cenários de novo, que é
+**A marca não ficou sem endereço: ela mudou de andar.** A §14 é a projeção nova — o que a `036` e a
+`037` fecham —, e a §13 é o que se pode conferir contra ela quando as duas entrarem. É a terceira
+rodada deste arquivo fazendo o mesmo movimento, e a §7 e a §13 mostram o que as duas anteriores
+valeram.
+
+**O que mais continua marcado como projeção** são as **colunas de nota** — a `Proj. manhã` e a
+`[PROJ. 18/09]` das §3 e §10 —, porque remedi-las exige percorrer os seis cenários de novo, que é
 uma reauditoria e não uma consequência de merge. A §13 diz, por escrito, o que foi medido e o que
 não foi.
 
@@ -560,7 +565,97 @@ auditar os merges precisa saber qual valia em cada um.
 
 ---
 
-## 14. O que evoluir de forma global
+## 14. `[PROJEÇÃO]` O que a `036` e a `037` fecham
+
+**Nada nesta seção é medição.** A `036` está em implementação; a `037` é spec num PR aberto. O que se
+diz aqui é leitura de requisito, e fica registrado pela mesma razão que a §13 registra a projeção
+anterior: **é a única maneira de saber se a projeção seguinte merece crédito.**
+
+A ordem suposta é `036` → `037`, que é a da fila.
+
+### O titular: os seis `P0` fecham
+
+É a primeira vez desde 16/09.
+
+| | 16/09 | **hoje, medido** | `[PROJ.]` pós-`036` | `[PROJ.]` pós-`037` |
+|---|---|---|---|---|
+| `P0` fechados | 0 | **4** | 5 | **6** |
+| `P0` parciais | 0 | 1 — `ACH-46` | 1 | **0** |
+| `P0` abertos | 6 | 1 — `ACH-43` | 0 | **0** |
+
+A `036` fecha o `ACH-43`, o último aberto, e o `ACH-42` junto. A `037` fecha a parte **(c)** do
+`ACH-46` — o único trecho parcial que resta — mais `ACH-30`, `ACH-08`, `ACH-16` e o que sobrar do
+`ACH-02`, que a medição da `037` já encontrou **meio fechado**.
+
+### E o número que **não** se move: quatro de sete
+
+**Nenhuma das duas fecha raiz estrutural nova.**
+
+| Raiz | hoje | `[PROJ.]` pós-`037` |
+|---|---|---|
+| `E-1` a cauda não fecha | ✅ medido | ✅ |
+| `E-2` autorização e navegação discordam | ✅ com ressalva | ✅ com a **mesma** ressalva |
+| `E-5` a explicação desgrudou do campo | ✅ | ✅ |
+| `E-7` a validação não pergunta se é executável | ✅ | ✅ |
+| `E-3` duas gramáticas para o mesmo fato | 🔴 | 🔴 |
+| `E-4` fontes normativas que ninguém confronta | 🔴 | 🔴 |
+| `E-6` a visão global some com o Processo vivo | 🔴 | 🔴 |
+
+**Zerar os `P0` sem mover o estrutural é o achado mais útil desta projeção.** Os `P0` que restavam
+eram sintomas de raízes **já fechadas**. O que sobra são três raízes inteiras, e **nenhuma delas tem
+`P0` para forçá-la na fila** — que é exatamente como uma raiz atravessa sete features sem ser tocada.
+
+### As notas: uma sobe, uma vira a primeira 10, e a mais óbvia não se move
+
+| Dimensão | Agora | `[PROJ.]` pós-`037` | Por quê |
+|---|---|---|---|
+| **Fluxo ponta a ponta** | 6 | **9** | 8 pela cauda — já percorrida —, e +1 pela `036`. A projeção de 18/09 dizia que não ia a 9 *"porque o recurso continua sendo decidido sem a prova"*, e é isso que a `036` fecha |
+| **Clareza conceitual** | 9 | **10** | a justificativa do 9 termina em *"sobra o rótulo `Peso (opcional)` que vira impeditivo"*, e a `037` é a feature que o tira. **Seria a primeira 10 do produto** |
+| **Encontrabilidade** | 8 | **8** | a justificativa nomeia **dois** bloqueios — o link do corte **e** o período de inscrições editado em dois lugares. A `037` tira um; o outro é `E-4` |
+| **Recuperação de erros** | 8 | **9** | sobe pela cauda. As **sete recusas fora das portas** seguem em 404 por decisão registrada, e é o que impede o 10 |
+| **Visão global** | 5 | **5** | `ACH-25` intocado |
+
+**A `037` — a mais barata da fila — move uma nota, e não é a que ela parece mover.** Ela tira o
+último obstáculo da *clareza conceitual* e não tira o da *encontrabilidade*, que é onde ela age.
+
+### O que sobra, e não é o que parece
+
+Zerados os `P0`, a fila deixa de ser sobre a espinha do produto. Sobram três coisas, e **só uma está
+no backlog como achado**:
+
+**1. A visão global.** Continua em **5**, e passa a ser a pior nota por **quatro pontos** de margem.
+Terá atravessado **seis** features sem ser tocada.
+
+**2. As duas raízes normativas.** `E-3` — o renderizador único das telas de ato — e `E-4` — o
+confronto entre fontes. Nenhuma tem `P0`, e as duas produzem **contradição silenciosa**, que é a
+espécie de defeito que este produto menos consegue ver sozinho.
+
+**3. As perguntas de governança que as features registraram e não responderam.** É a categoria que
+nenhuma contagem de achados enxerga:
+
+| Pergunta | Quem a registrou |
+|---|---|
+| os **dez de dez** Editais de sorteio não declaram ocorrência de fonte externa | `035` |
+| a `FR-461` deve virar impeditiva? — registrada **duas** vezes | `032`, e este arquivo |
+| o peso deve ser do par marco×Etapa, e não da Etapa? | `037`, `D-003` |
+| as **sete recusas** fora das portas: corrigir, ou ratificar o 404 uniforme? | `033`, §8 |
+| a Retificação não acrescenta Modalidade — e um Perfil de cotas sem ampla não recebe inscrição de não-cotista | `034`, no percurso |
+
+**Cinco decisões de governança, e nenhuma delas é um defeito.** Depois da `037`, elas passam a ser o
+**maior bloco de trabalho não endereçado do produto** — maior que os achados abertos que restam.
+
+### A resposta à pergunta que governa
+
+| | |
+|---|---|
+| **hoje, medido** | sim para as três famílias da amostra real; o recurso decide **sem a prova** |
+| `[PROJ.]` **pós-`037`** | **sim, do começo ao fim, para as três famílias — inclusive o recurso**, com a prova para quem julga e o parecer chegando a quem foi avaliado |
+
+**O que passa a faltar não é o certame correr. É ver o certame correndo.**
+
+---
+
+## 15. O que evoluir de forma global
 
 **O produto parou de entortar.** A elaboração continua excelente, e a condução andou pela primeira
 vez desde a auditoria.
@@ -580,6 +675,11 @@ em 19/09:
 que a cauda. Com a cauda fechada, a ordem se inverteu: ela passou a ser o último `P0` e foi escrita
 antes das outras. **O registro fica porque a inversão foi certa e a lista estava errada**: uma
 prioridade calculada contra um gargalo some junto com o gargalo.
+
+**O que a §14 projeta muda o sentido desta lista.** Fechada a `037`, **os seis `P0` acabam** — e o
+que resta não tem `P0` nenhum para forçá-lo na fila. A partir daí a prioridade deixa de ser dada
+pela severidade dos achados e passa a ser **escolha de governança**, que é uma situação nova para
+este backlog.
 
 Na ordem em que eu investiria **agora**:
 
@@ -619,7 +719,7 @@ governança, e fica registrada aqui como tal pela segunda vez.
 
 ---
 
-## 15. Para a próxima spec
+## 16. Para a próxima spec
 
 | Item | Valor medido em **19/09/2026**, em **todas as onze worktrees**, depois da `037` |
 |---|---|
@@ -650,7 +750,7 @@ colisão: ele resolve contra a união das specs, não contra a unicidade delas.
 
 ---
 
-## 16. Fechamento — a pergunta que governa
+## 17. Fechamento — a pergunta que governa
 
 **O que mudou na resposta.** Uma pessoa que chega hoje ao sistema compõe o marco classificatório sem
 precisar dominar o modelo interno; é avisada, **na etapa em que decide**, de que um Edital sem regra
@@ -678,5 +778,11 @@ a prática inteira**, e a pergunta de governança segue registrada e sem respost
 **A pergunta seguinte já não é sobre a cauda.** É se quem conduz um Processo vivo consegue ver onde
 ele está — a visão global continua em **5**, e é a última nota que a auditoria deu e que **cinco**
 features atravessaram sem tocar.
+
+`[PROJEÇÃO]` **E depois da `036` e da `037` ela fica sozinha.** Com os seis `P0` fechados, a visão
+global passa a ser a pior nota por **quatro pontos** de margem, e o maior bloco de trabalho não
+endereçado do produto deixa de ser defeito: passam a ser **cinco perguntas de governança** que as
+features registraram e não responderam. A §14 as lista. **Nenhuma delas se resolve escrevendo
+código.**
 
 Essa é a próxima linha de base.
