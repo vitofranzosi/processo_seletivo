@@ -94,7 +94,9 @@ def calcular_corte(
     if ato is None:
         raise DomainError(
             "sem_ato_vigente",
-            "Este recorte não tem ordem emitida: não há o que cortar.",
+            "Este recorte ainda não tem ordem emitida, e a faixa nasce da ordem: emita a ordem "
+            "deste recorte na tela de classificação do marco e volte aqui. A ausência de ordem é "
+            "um estado do percurso, e não um erro.",
             409,
         )
     # **A norma é a vigente, e a ordem é a emitida.** O ato congela as posições; a regra e o quadro

@@ -57,6 +57,7 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 )
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
+    ato_vigente,
     atos_vigentes_por_marco,
     estado_do_marco,
     nomear_criterios,
@@ -5090,9 +5091,99 @@ def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
     return ator, edital, pode_emitir
 
 
+def _recorte_pedido(edital, marco_id, pedido):
+    """O recorte de `?lista=`, reduzido à grafia canônica — ou 404 (034, FR-499, FR-503).
+
+    **Normalizar aqui, e não só no cálculo**, porque a tela faz duas perguntas com o mesmo recorte —
+    "qual é o ato vigente?" e "qual é a proposta de agora?" — e elas precisam falar do mesmo. Pedida
+    a Modalidade que o Perfil aponta como sendo a ampla, o cálculo a reduziria ao nulo e a busca do
+    vigente continuaria procurando por ela: a tela mostraria a ordem da ampla ao lado de um vigente
+    que nunca existiu.
+
+    A derivação é a única (`editais/domain/recortes.py`), e é a mesma que a ocupação consome.
+
+    **Marco que a norma vigente já não conhece devolve o pedido cru, e não 404.** A tela do marco
+    removido existe de propósito (`015`, `E2E15-010`), e não há Perfil vigente contra o qual
+    conferir recorte algum: exigi-lo aqui tornaria inalcançável justamente a tela do ato histórico,
+    que é a que mais importa. O ato é buscado pela identidade, e não pela derivação.
+    """
+    from processo_seletivo.editais.domain.recortes import normalizar_recorte
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    lista_id = _identidade_ou_404(pedido)
+    perfil, _ = _marco_publicado(edital, marco_id)
+    if perfil is None:
+        return lista_id
+    try:
+        return normalizar_recorte(
+            effective_version(edital_id=edital.id).content,
+            perfil_id=perfil["id"],
+            lista_id=lista_id,
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        raise
+
+
+def _recortes_navegaveis(edital, marco_id, *, rota, atual):
+    """Os recortes do marco com o endereço de cada um — **derivados na view** (034, FR-497).
+
+    **A decisão é da view, e não do template.** Repetir a derivação no template criaria duas
+    verdades sobre a mesma lista, e elas divergem na primeira mudança: é a lição que a `033` pagou.
+    O template recebe rótulo, endereço e qual é o atual, e não monta endereço nenhum.
+
+    Devolve lista vazia quando o Perfil tem **um** recorte só. Um Edital sem reserva não ganha
+    navegação nova — é a contraprova da `FR-493` vista na tela, e oferecer um seletor de um item
+    seria dizer que há escolha onde não há.
+    """
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    perfil, _ = _marco_publicado(edital, marco_id)
+    if perfil is None:
+        return []
+    conteudo = effective_version(edital_id=edital.id).content
+    recortes = recortes_do_perfil(conteudo, perfil_id=perfil["id"])
+    if len(recortes) < 2:
+        return []
+    destino = reverse(rota, args=[edital.id, marco_id])
+    return [
+        {
+            "lista_id": lista,
+            "rotulo": rotulo,
+            "href": destino if lista is None else f"{destino}?lista={lista}",
+            "atual": lista == atual,
+        }
+        for lista, rotulo in recortes
+    ]
+
+
+def _navegacao_do_recorte(edital, marco_id, *, rota, atual):
+    """`{recortes, recorte_atual}` — as duas chaves que a navegação lê, derivadas juntas.
+
+    **Juntas de propósito.** A tela do corte recebeu, numa primeira versão, só `recortes`, e o
+    cabeçalho dela saiu com *"Recorte:"* seguido de nada: o template lia `recorte_atual`, que
+    ninguém tinha passado, e o mecanismo trata variável ausente como vazia. Não houve erro, exceção
+    nem teste vermelho — só uma tela que deixou de dizer em qual recorte se está, que é metade do
+    que a `FR-497` pede. Foi o percurso do `quickstart` que o pegou.
+    """
+    recortes = _recortes_navegaveis(edital, marco_id, rota=rota, atual=atual)
+    return {
+        "recortes": recortes,
+        "recorte_atual": next((item for item in recortes if item["atual"]), None),
+    }
+
+
 @require_http_methods(["GET"])
 def ordenacao(request, edital_id, marco_id):
-    """Calcula a ordem vigente para conferência, sem constituir ato algum (015, FR-022)."""
+    """Calcula a ordem vigente de **um recorte**, sem constituir ato algum (015, FR-022).
+
+    **O recorte vem em `?lista=`**, como na tela do corte (034, `FR-497`). A rota do corte já
+    declarava esse padrão por escrito — "um marco de cotas tem três, e cada um tem a sua faixa" —, e
+    inventar uma segunda gramática para a mesma coisa seria criar duas maneiras de dizer o mesmo.
+    Ausente, o recorte é a ampla concorrência, que é o que esta tela sempre mostrou.
+    """
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
@@ -5103,15 +5194,17 @@ def ordenacao(request, edital_id, marco_id):
     # `constituir_sorteio` passava a recusar o certame inteiro com `ordering_act_already_exists`.
     # Não havia volta: a tabela é append-only, e a sucessão de um ato sorteado nasce da anulação
     # de um sorteio que nunca existiu (`021`, `D-006`, `FR-069`).
+    if _e_marco_de_sorteio(edital, marco_id):
+        return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
+    lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
     try:
-        if _e_marco_de_sorteio(edital, marco_id):
-            return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
-        estado = estado_do_marco(edital=edital, marco_id=marco_id)
+        estado = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
         raise
     proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
+    navegacao = _navegacao_do_recorte(edital, marco_id, rota="interface:ordenacao", atual=lista_id)
     return marcar_como_privada(
         render(
             request,
@@ -5121,6 +5214,28 @@ def ordenacao(request, edital_id, marco_id):
                 "edital": edital,
                 "perfil": estado["perfil"],
                 "marco": estado["marco"],
+                "lista_id": lista_id,
+                **navegacao,
+                # **Ninguém concorreu aqui**, e é diferente de "ainda não emitiram" (`FR-492a`). Sem
+                # esta distinção a tela do recorte vazio parece pendência, e a diferença entre as
+                # duas frases é quem tem trabalho a fazer. Só faz sentido no recorte reservado: a
+                # ampla vazia é um Edital sem inscrição nenhuma, que é outro assunto.
+                "recorte_sem_ninguem": bool(
+                    lista_id
+                    and estado["proposta"] is not None
+                    and not proposta["posicoes"]
+                    and not proposta["sem_posicao"]
+                ),
+                # **A ordem única que já existe neste marco, quando este recorte não tem a sua**
+                # (`FR-504`, `T032`). O ato da ampla não é corrigido nem substituído: emitir a
+                # ordem deste recorte é ato novo, e o da ampla continua vigente. A tela diz isso em
+                # vez de oferecer um conserto que a imutabilidade não permite — e a frase é
+                # verdadeira tanto para o Edital do acervo quanto para o que está em andamento.
+                "ordem_unica_do_marco": (
+                    ato_vigente(edital=edital, marco_id=marco_id, lista_id=None)
+                    if lista_id and estado["vigente"] is None
+                    else None
+                ),
                 "posicoes": proposta["posicoes"],
                 "sem_posicao": proposta["sem_posicao"],
                 # O que se esgotou quando a ordem deixa gente empatada. Vem do marco e não da
@@ -5153,24 +5268,26 @@ def ordenacao(request, edital_id, marco_id):
                     if estado["proposta"] is not None
                     else ""
                 ),
-                "historico": historico_da_ordenacao(edital=edital, marco_id=marco_id),
+                "historico": historico_da_ordenacao(
+                    edital=edital, marco_id=marco_id, lista_id=lista_id
+                ),
                 # Emitir não divulga, e a tela nunca dizia isso. Depois de um recurso deferido, a
                 # sucessão do ato deixava a divulgação pública para trás — a página do candidato
                 # seguia afirmando "Este é o resultado vigente" com a ordem anterior — e o marco
                 # respondia apenas "Ordem emitida", sem mencionar publicação em lugar nenhum
                 # (auditoria de 13/09). O estado é a correção; o botão sozinho não era.
-                **_divulgacao_do_marco(edital, marco_id, estado["vigente"]),
+                **_divulgacao_do_marco(edital, marco_id, estado["vigente"], lista_id=lista_id),
                 # **A obsolescência do corte aparece ao abrir o marco** (014, UX-027). Sem isto,
                 # quem sucede a ordem não fica sabendo que a faixa emitida leu o ato anterior:
                 # descobriria ao tentar conduzir a Etapa governada, e a recusa chegaria no meio do
                 # trabalho em vez de na tela que existe para conferir o marco.
-                **_corte_do_marco(edital, marco_id, estado["marco"]),
+                **_corte_do_marco(edital, marco_id, estado["marco"], lista_id=lista_id),
             },
         )
     )
 
 
-def _divulgacao_do_marco(edital, marco_id, ato_vigente):
+def _divulgacao_do_marco(edital, marco_id, ato_vigente, *, lista_id=None):
     """Se o que está divulgado corresponde ao ato vigente deste marco.
 
     "Emitir" e "publicar" são atos distintos, em telas distintas, e essa é a distinção que o
@@ -5182,19 +5299,18 @@ def _divulgacao_do_marco(edital, marco_id, ato_vigente):
     operador não ter como saber que o ato e a divulgação tinham se separado — e descobrir isso pela
     página do candidato, que seguia afirmando "Este é o resultado vigente" com a ordem anterior.
 
-    **Um ato por marco, e é a premissa desta comparação.** Todas as publicações vigentes são
-    conferidas contra o mesmo `ato_vigente`, o que só é correto enquanto o marco tem um ato só. O
-    marco que ordena por sorteio pode ter um ato por lista de concorrência (`021`) — e não chega
-    aqui: `ordenacao` o desvia para a tela do sorteio antes, e é esse desvio que sustenta a
-    premissa. Se um dia um marco computado publicar por lista, esta função precisa comparar por
-    lista, e não o contrário.
+    **Um ato por recorte, e a premissa mudou** (034, `FR-490`). Esta função comparava todas as
+    publicações vigentes do marco contra um `ato_vigente` só, e dizia por escrito: *"se um dia um
+    marco computado publicar por lista, esta função precisa comparar por lista"*. Esse dia é este.
+    Sem o filtro, a divulgação da ordem da ampla apareceria como defasada ao se abrir o recorte de
+    PPI — e a tela mandaria divulgar de novo um ato que já está divulgado.
     """
     if ato_vigente is None:
         return {"divulgacao": None}
     vigentes = [
         linha["publicacao"]
         for linha in historico_das_publicacoes(edital=edital, marco_id=marco_id)
-        if linha["vigente"]
+        if linha["vigente"] and str(linha["publicacao"].ato.lista_id or "") == str(lista_id or "")
     ]
     defasadas = [
         publicacao for publicacao in vigentes if str(publicacao.ato_id) != str(ato_vigente.id)
@@ -5226,12 +5342,19 @@ def _com_o_corte(edital, marco, recortes):
     return recortes
 
 
-def _corte_do_marco(edital, marco_id, marco):
-    """O estado da faixa vigente deste marco, ou nada quando ele não corta (014, UX-027)."""
+def _corte_do_marco(edital, marco_id, marco, *, lista_id=None):
+    """O estado da faixa vigente **deste recorte**, ou nada quando o marco não corta (014, UX-027).
+
+    O recorte entra porque a faixa é dele (034, `FR-497`): sem ele, a tela do recorte de PPI
+    anunciaria a obsolescência da faixa da ampla, que é de outra cadeia.
+    """
     if not (marco or {}).get("cutRule"):
         return {"corte_obsoleto": False, "causas_do_corte": []}
     estado = estado_do_corte(
-        edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
+        edital=edital,
+        perfil_id=_perfil_do_marco(edital, marco_id),
+        marco_id=marco_id,
+        lista_id=lista_id,
     )
     return {
         "corte_obsoleto": estado["obsoleto"],
@@ -5305,14 +5428,20 @@ def emitir_ordenacao(request, edital_id, marco_id):
     # esta rota alcançável por quem tivesse a tela antiga aberta, e é ela que grava o ato.
     if _e_marco_de_sorteio(edital, marco_id):
         return redirect(reverse("interface:sorteio", args=[edital_id, marco_id]))
-    destino = reverse("interface:ordenacao", args=[edital_id, marco_id])
+    # **O recorte vem no POST, e o destino volta para ele** (034, `FR-490`). Sem isso, emitir a
+    # ordem de PPI devolveria o operador à tela da ampla — e a confirmação seria recomposta sobre
+    # outro recorte, que é exatamente o que a `FR-495` existe para impedir.
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
+    destino = reverse("interface:ordenacao", args=[edital_id, marco_id]) + (
+        f"?lista={lista_id}" if lista_id else ""
+    )
     chave = request.POST.get("chave_idempotencia") or uuid4().hex
     motivo = request.POST.get("motivo", "")
     decisoes = request.POST.getlist("decisao")
     confirmacao_do_calculo = request.POST.get("confirmacao_do_calculo", "")
     if request.POST.get("confirmar") != "1":
         try:
-            estado = estado_do_marco(edital=edital, marco_id=marco_id)
+            estado = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -5343,6 +5472,10 @@ def emitir_ordenacao(request, edital_id, marco_id):
                     "edital": edital,
                     "perfil": estado["perfil"],
                     "marco": estado["marco"],
+                    "lista_id": lista_id,
+                    **_navegacao_do_recorte(
+                        edital, marco_id, rota="interface:ordenacao", atual=lista_id
+                    ),
                     "quantas_com_posicao": len(proposta["posicoes"]),
                     "sem_posicao": proposta["sem_posicao"],
                     "ato_vigente": estado["vigente"],
@@ -5368,6 +5501,7 @@ def emitir_ordenacao(request, edital_id, marco_id):
             edital_id=edital.id,
             perfil_id=_perfil_do_marco(edital, marco_id),
             marco_id=marco_id,
+            lista_id=lista_id,
             idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
             confirmacao_do_calculo=confirmacao_do_calculo,
@@ -5489,7 +5623,12 @@ def corte(request, edital_id, marco_id):
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    # **Pela derivação única, e não só por `_identidade_ou_404`** (034, `FR-499`). Antes, um
+    # identificador bem formado que não fosse Modalidade alguma do Perfil chegava ao corte como
+    # recorte vazio — indistinguível de um recorte legítimo sem ordem, o que esconde erro de
+    # digitação. E a Modalidade declarada como ampla, que o cálculo da linha já apelida para a linha
+    # geral, procurava um ato vigente que nunca existiria.
+    lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
     perfil_id = _perfil_do_marco(edital, marco_id)
     # O estado traz a geração **e** as causas da obsolescência na mesma leitura: perguntá-las em
     # dois lugares daria duas respostas para a mesma faixa (014, UX-027).
@@ -5519,6 +5658,12 @@ def corte(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "lista_id": lista_id,
+                **_navegacao_do_recorte(edital, marco_id, rota="interface:corte", atual=lista_id),
+                # O caminho para emitir a ordem **deste** recorte, que é o que falta quando não há o
+                # que cortar (`FR-498`). Nomear a pendência sem dizer onde ela se resolve manda o
+                # operador procurar a tela — e a `033` registrou que esse é o beco do `ACH-40`.
+                "para_a_ordenacao": reverse("interface:ordenacao", args=[edital.id, marco_id])
+                + (f"?lista={lista_id}" if lista_id else ""),
                 "proposta": proposta,
                 "recusa": recusa,
                 "geracao": geracao,

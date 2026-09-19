@@ -9,14 +9,41 @@
 
 <h1>{{ marco.name }}</h1>
 <p class="sub">{{ perfil.name }} — ordem calculada conforme a versão normativa vigente.</p>
+
 {% comment %}
 Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141). Fora de qualquer
 ramo, porque uma definição que só aparece em um dos ramos não é "no primeiro uso" — é "às vezes".
 Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (FR-425).
 {% endcomment %}
-<p class="definicoes"><dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
+<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
+  concorrência, ou uma Modalidade de Concorrência declarada —, e cada um tem a sua ordem.
+  <dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
   colocado ao último que o alvo alcançou. <dfn>Geração</dfn> é o conjunto de faixas emitido de uma vez: a
   seguinte sucede a anterior, que continua íntegra e legível.</p>
+
+{% if recortes %}
+{% comment %}
+A navegação entre os recortes do marco (034, FR-497). **A lista vem da view**, já com o endereço de
+cada um: derivá-la aqui criaria uma segunda verdade sobre quais são os recortes, e as duas divergem
+na primeira Retificação — é a lição que a `033` pagou.
+
+O recorte em que se está é dito **e** marcado com `aria-current`: quem lê a tela por voz precisa da
+mesma informação que quem a lê com os olhos. E ele não é link para si mesmo — um caminho que volta
+ao lugar onde já se está é ruído.
+
+Aparece só quando há mais de um recorte. Edital sem reserva não ganha navegação nova, que é a
+contraprova da `FR-493` vista na tela.
+{% endcomment %}
+<nav aria-label="Recortes deste marco" class="recortes">
+  <p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
+  <ul class="abas">
+    {% for recorte in recortes %}
+    <li>{% if recorte.atual %}<span aria-current="true">{{ recorte.rotulo }}</span>{% else %}<a href="{{ recorte.href }}">{{ recorte.rotulo }}</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
 
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
@@ -34,7 +61,25 @@ publicar que conclua o ato"*, e não inventa uma segunda (`FR-486`).
 {% endcomment %}
 <p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado.{% endif %}</p>
 {% else %}
-<p class="aviso">Ainda não existe ato emitido para este marco. A lista abaixo é uma proposta calculada agora.</p>
+{% comment %}
+Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a, FR-498, FR-504).
+
+1. **Ninguém concorreu por este recorte.** A tela não pode parecer pendência: a diferença entre
+   "ninguém se inscreveu por esta cota" e "ainda não emitiram" é quem tem trabalho a fazer. A ordem
+   vazia continua sendo **ato de quem conduz** — o botão está abaixo, e nada é emitido sozinho.
+2. **Este recorte não tem ordem, e o marco já tem a da ampla.** É o Edital que emitiu antes da ordem
+   por recorte, e também o que está no meio do caminho. A ordem da ampla **não é corrigida nem
+   substituída**: emitir a deste recorte é ato novo, e o dela continua vigente. Oferecer um conserto
+   que a imutabilidade não permite seria pior do que não oferecer nada.
+3. **Ainda não emitiram.** O caso comum, e a frase diz onde se emite: aqui mesmo.
+{% endcomment %}
+{% if recorte_sem_ninguem %}
+<p class="aviso"><strong>Ninguém concorreu por este recorte.</strong> Nenhuma inscrição se autodeclarou nesta Modalidade de Concorrência, e por isso a ordem dele é vazia. Isso não é pendência de conferência: a ordem vazia é um fato normativo, e emiti-la declara que ninguém concorreu ali. Emitir continua sendo ato seu — nada foi constituído automaticamente.</p>
+{% elif ordem_unica_do_marco %}
+<p class="aviso"><strong>Este recorte ainda não tem ordem própria.</strong> O que este marco tem é a ordem da ampla concorrência, emitida em {{ ordem_unica_do_marco.emitido_em|date:"d/m/Y H:i" }}, e ela alcança <em>todos</em> os inscritos do Perfil — inclusive quem se autodeclarou nesta Modalidade. Ela não é corrigida nem substituída por esta: emitir a ordem deste recorte é ato novo, e a da ampla continua vigente. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ordem_unica_do_marco.id %}">Consultar a ordem da ampla concorrência</a>.</p>
+{% else %}
+<p class="aviso">Ainda não existe ato emitido para este recorte, e é aqui que ele se emite. A lista abaixo é uma proposta calculada agora, e abrir esta tela não constitui ato algum.</p>
+{% endif %}
 {% endif %}
 
 {% comment %}
@@ -109,7 +154,7 @@ divergência genérica uma vez.
 {% endif %}
 
 <section aria-labelledby="titulo-ordem">
-  <h2 id="titulo-ordem">Ordem calculada</h2>
+  <h2 id="titulo-ordem">Ordem calculada{% if recorte_atual %} — {{ recorte_atual.rotulo }}{% endif %}</h2>
   {% if posicoes %}
   <div class="tabela-rolavel">
   <table>
@@ -155,7 +200,7 @@ divergência genérica uma vez.
     {% endif %}
   </p>
   {% endif %}
-  {% else %}<p class="vazio">Nenhum participante recebeu posição neste marco.</p>{% endif %}
+  {% else %}{% if recorte_sem_ninguem %}<p class="vazio">Nenhuma inscrição se autodeclarou nesta Modalidade de Concorrência.</p>{% else %}<p class="vazio">Nenhum participante recebeu posição neste recorte.</p>{% endif %}{% endif %}
 </section>
 
 {% if sem_posicao %}
@@ -195,6 +240,11 @@ ela vem da composição da comissão. Peça a quem tem a permissão, ou a quem p
 {% if pode_emitir and recomputavel %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
+  {% comment %}
+  **O recorte viaja no POST** (034, FR-490). Sem ele, confirmar a ordem de PPI recomporia a
+  assinatura sobre a ampla e emitiria no recorte errado — que é o que a FR-495 existe para impedir.
+  {% endcomment %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
   {% comment %}A posição, a nota e o desempate nunca vêm do navegador. O POST só confirma que o servidor deve recalcular e constituir o ato.{% endcomment %}

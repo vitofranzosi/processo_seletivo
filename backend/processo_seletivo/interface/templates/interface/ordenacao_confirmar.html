@@ -65,8 +65,16 @@ para nada.
   </dl>
 </section>
 
+{% if recorte_atual %}
+{% comment %}
+**A confirmação nomeia o recorte** (034, FR-490). Esta tela declara o alcance do clique, e o alcance
+mudou: um marco com cotas tem três ordens, e confirmar sem saber qual é confirmar no escuro.
+{% endcomment %}
+<p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
+{% endif %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
   <input type="hidden" name="confirmar" value="1">
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">

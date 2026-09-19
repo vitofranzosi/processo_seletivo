@@ -8,6 +8,7 @@
 </nav>
 
 <h1>Corte e progressão</h1>
+
 <p class="sub">A <dfn>faixa</dfn> é o trecho da ordem que progride para a Etapa seguinte — do
   primeiro colocado ao último que o alvo alcançou —, calculada a partir da ordem vigente e da
   regra publicada.</p>
@@ -24,11 +25,39 @@ explicam (FR-425).
   ou uma Modalidade de Concorrência declarada. <dfn>Geração</dfn> é o conjunto de faixas emitido de
   uma vez: a seguinte sucede a anterior, que continua íntegra e legível.</p>
 
+{% if recortes %}
+{% comment %}
+A navegação entre os recortes do marco (034, FR-497). **A lista vem da view**, já com o endereço de
+cada um: derivá-la aqui criaria uma segunda verdade sobre quais são os recortes, e as duas divergem
+na primeira Retificação — é a lição que a `033` pagou.
+
+O recorte em que se está é dito **e** marcado com `aria-current`: quem lê a tela por voz precisa da
+mesma informação que quem a lê com os olhos. E ele não é link para si mesmo — um caminho que volta
+ao lugar onde já se está é ruído.
+
+Aparece só quando há mais de um recorte. Edital sem reserva não ganha navegação nova, que é a
+contraprova da `FR-493` vista na tela.
+{% endcomment %}
+<nav aria-label="Recortes deste marco" class="recortes">
+  <p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
+  <ul class="abas">
+    {% for recorte in recortes %}
+    <li>{% if recorte.atual %}<span aria-current="true">{{ recorte.rotulo }}</span>{% else %}<a href="{{ recorte.href }}">{{ recorte.rotulo }}</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1">Corte emitido. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}
 
 {% if recusa %}
-<p class="aviso" role="status">{{ recusa }}</p>
+{% comment %}
+A recusa do domínio, **com o caminho para o que falta** (034, FR-498). A ausência de ordem é um
+estado do percurso, e não um erro: nomeá-la sem dizer onde ela se resolve manda o operador procurar a
+tela, que é o beco que a `033` registrou como `ACH-40`.
+{% endcomment %}
+<p class="aviso" role="status">{{ recusa }} <a href="{{ para_a_ordenacao }}">Ir para a classificação deste recorte</a>.</p>
 {% endif %}
 
 {% if geracao %}
