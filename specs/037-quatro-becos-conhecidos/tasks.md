@@ -34,15 +34,15 @@ entrou.
    continua **`N de 32`** — a 32ª veio da `036`, que acabou de entrar na `main`. **Se a saída disser
    31, a worktree está atrás da `main`**, e isso é ambiente, não defeito do diff.
 
-3. **A `US2` começa por um PERCURSO, e não por código.** A `T010` **decide** se o `ACH-02` ainda tem
-   o que fechar. As duas saídas estão nomeadas na tarefa, e uma delas **cancela a `T013`**.
+3. **A `US2` começa por um PERCURSO, e não por código.** A `T011` **decide** se o `ACH-02` ainda tem
+   o que fechar. As duas saídas estão nomeadas na tarefa, e uma delas **cancela a `T014`**.
 
-4. **A `T009` é contraprova OBRIGATÓRIA**, e é o que separa esta feature de um beco novo: o marco
+4. **A `T010` é contraprova OBRIGATÓRIA**, e é o que separa esta feature de um beco novo: o marco
    **sem regra** recebe o caminho **da regra**; o marco **com regra e sem ordem** continua recebendo
    o caminho **da classificação**. Se os dois oferecerem o mesmo, a feature abriu o beco que existe
    para fechar — **mesmo com o link aparecendo corretamente**.
 
-5. **`T028` reconta os casos alterados, caso a caso.** `R-4` prevê **quatro**; a `034` previu oito e
+5. **`T029` reconta os casos alterados, caso a caso.** `R-4` prevê **quatro**; a `034` previu oito e
    entregou doze. Um teste pode manter o número de asserções e trocar o que afirma.
 
 ---
@@ -78,11 +78,12 @@ oferece passa a ser o da coisa que falta.
 que o destino aparece e que abri-lo leva à regra.
 
 - [ ] T004 [US1] Oferecer o destino do corte **sem condicioná-lo à regra** em `backend/processo_seletivo/interface/views.py` (**EXISTENTE** — a montagem dos destinos do marco), `FR-538`. A condição que sai é `if marco.get("cutRule")`; o que **não** sai é a condição de alcance do ator, que é outra coisa e é a garantia da `033` (`FR-540`)
-- [ ] T005 [US1] Escolher o **caminho conforme a recusa** na view do corte, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**, o mesmo arquivo de T004), `FR-539a` e [contracts/o-caminho-da-recusa.md](contracts/o-caminho-da-recusa.md). São **três** recusas passando pelo mesmo bloco: ordem ausente e ordem obsoleta continuam indo para a classificação; **marco sem regra vai para onde a regra se declara**. A frase de cada recusa **não muda** — ela nasce no domínio e tem código próprio
-- [ ] T006 [US1] Imprimir o caminho que a view escolheu, em `backend/processo_seletivo/interface/templates/interface/corte.html` (**EXISTENTE**). O template hoje anexa um caminho fixo; ele passa a imprimir o que recebeu. **Emende o comentário do bloco**, que registra a razão do caminho único e cita o `ACH-40` — a razão continua válida, o que mudou é que agora há três recusas alcançáveis e não duas. **Não apague a frase**
-- [ ] T007 [US1] Prender o destino em `backend/tests/interface/test_destinos_do_edital.py` (**EXISTENTE** — acrescente ao fim; os 10 casos de hoje permanecem): o destino **aparece** no marco sem regra; **continua aparecendo** no marco com regra; e **não aparece** para quem não alcança a classificação (`FR-538`, `FR-540`)
-- [ ] T008 [US1] Prender a tela em `backend/tests/interface/test_corte.py` (**EXISTENTE** — acrescente ao fim; os 13 casos de hoje permanecem): abrir o corte num marco sem regra **mostra a recusa** e não devolve página inexistente — a recusa é conflito, não ausência (`FR-539`)
-- [ ] T009 [US1] **CONTRAPROVA OBRIGATÓRIA** — os dois caminhos lado a lado, em `backend/tests/interface/test_corte.py` (**EXISTENTE**, o mesmo arquivo de T008): marco **sem regra** recebe o caminho **da regra**; marco **com regra e sem ordem** recebe o caminho **da classificação**. **Se os dois forem iguais, a `FR-539a` não foi cumprida** — e a feature abriu o beco que existe para fechar, ainda que o link do T004 apareça certo
+- [ ] T005 [US1] Escolher o **caminho conforme a recusa** na view do corte, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**, o mesmo arquivo de T004), `FR-539a` e [contracts/o-caminho-da-recusa.md](contracts/o-caminho-da-recusa.md). São **três** recusas passando pelo mesmo bloco: ordem ausente e ordem obsoleta continuam indo para a classificação; **marco sem regra vai para a Retificação**, que é onde a regra de um Edital publicado se declara. A frase de cada recusa **não muda** — ela nasce no domínio e tem código próprio
+- [ ] T006 [US1] Condicionar **esse** caminho ao que o ator alcança, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**, o mesmo arquivo de T005), `FR-539b`. Quem alcança a Retificação recebe o caminho; **quem não alcança recebe a frase que diz a quem pedir**, pelo mesmo mecanismo da `FR-543`. Sem isto, a correção de um beco abre o beco que a `033` fechou — e este é o segundo lugar da feature onde o mesmo erro cabe
+- [ ] T007 [US1] Imprimir o caminho que a view escolheu, em `backend/processo_seletivo/interface/templates/interface/corte.html` (**EXISTENTE**). O template hoje anexa um caminho fixo; ele passa a imprimir o que recebeu. **Emende o comentário do bloco**, que registra a razão do caminho único e cita o `ACH-40` — a razão continua válida, o que mudou é que agora há três recusas alcançáveis e não duas. **Não apague a frase**
+- [ ] T008 [US1] Prender o destino em `backend/tests/interface/test_destinos_do_edital.py` (**EXISTENTE** — acrescente ao fim; os 10 casos de hoje permanecem): o destino **aparece** no marco sem regra; **continua aparecendo** no marco com regra; e **não aparece** para quem não alcança a classificação (`FR-538`, `FR-540`)
+- [ ] T009 [US1] Prender a tela em `backend/tests/interface/test_corte.py` (**EXISTENTE** — acrescente ao fim; os 13 casos de hoje permanecem): abrir o corte num marco sem regra **mostra a recusa** e não devolve página inexistente — a recusa é conflito, não ausência (`FR-539`). **Afirme a frase literalmente**, e não só que alguma recusa apareceu: a `FR-539` é uma proibição de reescrever, e sem asserção literal uma reescrita bem-intencionada na T005 ou na T007 passaria por todas as tarefas sem ser notada
+- [ ] T010 [US1] **CONTRAPROVA OBRIGATÓRIA** — os dois caminhos lado a lado, em `backend/tests/interface/test_corte.py` (**EXISTENTE**, o mesmo arquivo de T009): marco **sem regra** recebe o caminho **da regra**; marco **com regra e sem ordem** recebe o caminho **da classificação**. **Se os dois forem iguais, a `FR-539a` não foi cumprida** — e a feature abriu o beco que existe para fechar, ainda que o link do T004 apareça certo. Acrescente o caso do ator **que não alcança a Retificação**: ele recebe a **frase**, e não o caminho (`FR-539b`)
 
 **Checkpoint**: **este é o MVP.** A parte (c) da 13.1 fecha, e sem beco novo no fim dela.
 
@@ -94,12 +95,12 @@ que o destino aparece e que abri-lo leva à regra.
 
 **Independent Test**: abrir a tela de um Edital publicado como gestor e ler a ação e a permissão.
 
-- [ ] T010 [US2] **PERCURSO QUE DECIDE, e ele vem antes do código** (`FR-542b`). Percorra o cenário 2 passo 1 de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) com o ator exato da auditoria, e registre o desfecho em `specs/037-quatro-becos-conhecidos/achado-do-ach-02.md` (**NOVO**). **Duas saídas, e as duas são legítimas**: (a) **alguma permissão impede** o gestor → a `T013` é executada; (b) **nada o impede**, e o caminho até os Perfis já está na tela → **o `ACH-02` fecha aqui, registrando isso, e a `T013` NÃO é executada**. Escrever frase para problema que não existe é pior do que não escrever
-- [ ] T011 [US2] Conduzir no aviso de conteúdo imutável, em `backend/processo_seletivo/interface/templates/interface/detalhe.html` (**EXISTENTE**), `FR-541`. A frase sai de `frase_da_recusa`, em `backend/processo_seletivo/seguranca/application/authorization.py` — **não redija o texto à mão**: existe **uma** maneira de dizer isto, e ela é pública exatamente para que não nasça uma segunda (`FR-543`). Use a formulação **cheia**, *"peça a alguém com a permissão de X **que Y**"* (`FR-543a`)
-- [ ] T012 [US2] Dar o **caminho** a quem pode retificar, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**), `FR-544`. Quem tem a permissão recebe a ação; mandar quem pode pedir a si mesmo é o remédio no lugar errado
-- [ ] T013 [US2] **SÓ SE a `T010` apontar a saída (a)** — levar o ator à montagem das pendências, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**, o mesmo arquivo de T012) e exibir a condução em `backend/processo_seletivo/interface/templates/interface/_pendencias.html` (**EXISTENTE**), `FR-542` e `FR-542a`. **A mensagem normativa não é tocada**: ela descreve o defeito do conteúdo, é lida por mais de uma superfície e não conhece quem está olhando — a condução nasce **onde a tela exibe o achado**. **É assinatura a mudar, com chamadores a encontrar** — não é uma frase a mais. O que a tela **já diz** (o que falta, e o caminho até a etapa) **permanece intocado**
-- [ ] T014 [US2] Prender as conduções em `backend/tests/interface/test_conducao_dos_bloqueios.py` (**NOVO**): o Edital publicado nomeia a ação e a permissão; quem **pode** recebe o caminho e **não** a frase de pedir; e a pendência de Perfil **continua** dizendo o que falta e levando à etapa (`FR-541`, `FR-542`, `FR-544`)
-- [ ] T015 [US2] Conferir que a gramática das recusas não se partiu, em `backend/tests/test_gramatica_das_portas.py` (**EXISTENTE**, o guardião que já existe): a formulação continua única, e as frases novas passam por ela (`FR-543`, `FR-543a`). Confira também que **nenhuma condução nomeia pessoa** — só a permissão, sem fila e sem designação (`FR-543b`)
+- [ ] T011 [US2] **PERCURSO QUE DECIDE, e ele vem antes do código** (`FR-542b`). Percorra o cenário 2 passo 1 de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) com o ator exato da auditoria, e registre o desfecho em `specs/037-quatro-becos-conhecidos/achado-do-ach-02.md` (**NOVO**). **Duas saídas, e as duas são legítimas**: (a) **alguma permissão impede** o gestor → a `T014` é executada; (b) **nada o impede**, e o caminho até os Perfis já está na tela → **o `ACH-02` fecha aqui, registrando isso, e a `T014` NÃO é executada**. Escrever frase para problema que não existe é pior do que não escrever
+- [ ] T012 [US2] Derivar **uma vez** se o ator pode retificar, em `backend/processo_seletivo/interface/acoes.py` (**EXISTENTE**) e `backend/processo_seletivo/interface/views.py` (**EXISTENTE**), `FR-541a` e `FR-544`. **Leia primeiro `acoes.py`**: o cartão já responde a essa pergunta para decidir se oferece a ação de Retificar — `edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")` —, e **quem pode já recebe o caminho**. O aviso passa a depender da **mesma** derivação, e não de uma segunda; duas respostas para a mesma pergunta divergem na primeira mudança
+- [ ] T013 [US2] Conduzir no aviso de conteúdo imutável, em `backend/processo_seletivo/interface/templates/interface/detalhe.html` (**EXISTENTE**), `FR-541`, `FR-541b` e `FR-541c`. A frase sai de `frase_da_recusa`, em `backend/processo_seletivo/seguranca/application/authorization.py` — **não redija o texto à mão** (`FR-543`), e use a formulação **cheia** (`FR-543a`). **O aviso cala quando a ação já está oferecida ali**: dizer *"peça a alguém"* ao lado do botão que a pessoa pode clicar ensina a desconfiar da tela. **E não transforme Retificar em botão desabilitado com motivo**: a lista de navegação não oferece destino que o ator não abre, e desfazer isso desfaria a regra da `007` e da `033`
+- [ ] T014 [US2] **SÓ SE a `T011` apontar a saída (a)** — levar o ator à montagem das pendências, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**, o mesmo arquivo de T013) e exibir a condução em `backend/processo_seletivo/interface/templates/interface/_pendencias.html` (**EXISTENTE**), `FR-542` e `FR-542a`. **Este parcial é incluído por OITO telas** — `compor_identificacao`, `compor_perfis`, `compor_etapas`, `compor_cronograma`, `compor_inscricao`, `compor_conteudo`, `compor_anexos` e `compor_revisao` —, e a mudança alcança as oito de uma vez. Dimensione a conferência para isso, e não para uma. **A mensagem normativa não é tocada**: ela descreve o defeito do conteúdo, é lida por mais de uma superfície e não conhece quem está olhando — a condução nasce **onde a tela exibe o achado**. **É assinatura a mudar, com chamadores a encontrar** — não é uma frase a mais. O que a tela **já diz** (o que falta, e o caminho até a etapa) **permanece intocado**
+- [ ] T015 [US2] Prender as conduções em `backend/tests/interface/test_conducao_dos_bloqueios.py` (**NOVO**): o Edital publicado nomeia a ação e a permissão; quem **pode** recebe o caminho e **não** a frase de pedir; e a pendência de Perfil **continua** dizendo o que falta e levando à etapa (`FR-541`, `FR-542`, `FR-544`)
+- [ ] T016 [US2] Conferir que a gramática das recusas não se partiu, em `backend/tests/test_gramatica_das_portas.py` (**EXISTENTE**, o guardião que já existe): a formulação continua única, e as frases novas passam por ela (`FR-543`, `FR-543a`). Confira também que **nenhuma condução nomeia pessoa** — só a permissão, sem fila e sem designação (`FR-543b`)
 
 **Checkpoint**: `ACH-30` fechado; `ACH-02` fechado **ou registrado como já fechado**.
 
@@ -111,11 +112,11 @@ que o destino aparece e que abri-lo leva à regra.
 
 **Independent Test**: compor um período em curso e conferir que o selo conclui e a conferência cala.
 
-- [ ] T016 [US3] Corrigir a régua **e a escolha do instante no MESMO ato**, em `backend/processo_seletivo/editais/domain/calendario.py` (**EXISTENTE**), `FR-545`, `FR-546` e `FR-546a`, conforme [contracts/a-regua-do-vencido.md](contracts/a-regua-do-vencido.md). **Havendo término, vence quem terminou; não havendo, vence quem começou.** Trocar por "o término passou" silenciaria o Evento pontual, e o módulo já registra por escrito que *"ausência não vence"*. **Separar as duas funções em dois atos faz o módulo discordar de si mesmo** — que é a razão de ele existir, e é o que a `FR-547` prende: a régua continua **única**, e as duas superfícies continuam derivando dela em vez de cada uma responder por conta. **Não toque** na função homônima de `backend/processo_seletivo/interface/static/interface/rascunho.js`: ela é sobre validade de rascunho no navegador e não consulta esta régua
-- [ ] T017 [US3] Atualizar os **dois** casos nomeados em `backend/tests/unit/editais/test_calendario.py` (**EXISTENTE** — altere **só** `test_evento_em_curso_vence_pelo_inicio` e `test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro`). **Renomeie os dois**: um caso chamado *"vence pelo início"* que passa a afirmar *"não vence"* é a forma mais discreta de a suíte mentir. **Os outros doze casos permanecem**, e são a contraprova de que a régua não se afrouxou
-- [ ] T018 [US3] Atualizar os **dois** casos nomeados em `backend/tests/unit/editais/test_cronograma_vencido.py` (**EXISTENTE** — altere **só** `test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro` e `test_periodo_em_curso_adverte_mas_nao_impede`). O segundo é o mais perigoso: a docstring dele diz *"O Edital que abre inscrições e é publicado no mesmo dia é legítimo"* — **descreve a intenção certa e prende o comportamento errado** —, e o nome fica falso depois da correção. **Renomear é obrigatório.** Confira, no mesmo arquivo e **sem alterar os casos**, que o vencido continua sendo **advertência e nunca recusa** (`FR-548`) e que a frase continua nomeando o **término** quando os dois instantes passaram (`FR-549`). O impedimento por **período encerrado** é outra regra e **não é tocado**
-- [ ] T019 [US3] Conferir o selo da etapa em `backend/tests/interface/test_selo_do_cronograma.py` (**EXISTENTE**, os 11 casos): o período em curso **conclui**, e os casos do Evento passado e do Cronograma inteiro no futuro **não mudam de sentido** (`SC-190`)
-- [ ] T020 [US3] Prender a concordância com o canal do candidato em `backend/tests/integration/portal/test_cronograma_publico.py` (**EXISTENTE** — acrescente ao fim): o **mesmo** Evento em curso é *acontecendo agora* nos dois lados (`FR-549a`, `SC-191`). **A concordância é de desfecho, e não de código**: as duas superfícies derivam a situação por conta própria, e unificá-las **não é escopo**
+- [ ] T017 [US3] Corrigir a régua **e a escolha do instante no MESMO ato**, em `backend/processo_seletivo/editais/domain/calendario.py` (**EXISTENTE**), `FR-545`, `FR-546` e `FR-546a`, conforme [contracts/a-regua-do-vencido.md](contracts/a-regua-do-vencido.md). **Havendo término, vence quem terminou; não havendo, vence quem começou.** Trocar por "o término passou" silenciaria o Evento pontual, e o módulo já registra por escrito que *"ausência não vence"*. **Separar as duas funções em dois atos faz o módulo discordar de si mesmo** — que é a razão de ele existir, e é o que a `FR-547` prende: a régua continua **única**, e as duas superfícies continuam derivando dela em vez de cada uma responder por conta. **Não toque** na função homônima de `backend/processo_seletivo/interface/static/interface/rascunho.js`: ela é sobre validade de rascunho no navegador e não consulta esta régua
+- [ ] T018 [US3] Atualizar os **dois** casos nomeados em `backend/tests/unit/editais/test_calendario.py` (**EXISTENTE** — altere **só** `test_evento_em_curso_vence_pelo_inicio` e `test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro`). **Renomeie os dois**: um caso chamado *"vence pelo início"* que passa a afirmar *"não vence"* é a forma mais discreta de a suíte mentir. **Os outros doze casos permanecem**, e são a contraprova de que a régua não se afrouxou
+- [ ] T019 [US3] Atualizar os **dois** casos nomeados em `backend/tests/unit/editais/test_cronograma_vencido.py` (**EXISTENTE** — altere **só** `test_evento_em_curso_nomeia_o_inicio_e_nao_o_termino_futuro` e `test_periodo_em_curso_adverte_mas_nao_impede`). O segundo é o mais perigoso: a docstring dele diz *"O Edital que abre inscrições e é publicado no mesmo dia é legítimo"* — **descreve a intenção certa e prende o comportamento errado** —, e o nome fica falso depois da correção. **Renomear é obrigatório.** Confira, no mesmo arquivo e **sem alterar os casos**, que o vencido continua sendo **advertência e nunca recusa** (`FR-548`) e que a frase continua nomeando o **término** quando os dois instantes passaram (`FR-549`). O impedimento por **período encerrado** é outra regra e **não é tocado**
+- [ ] T020 [US3] Conferir o selo da etapa em `backend/tests/interface/test_selo_do_cronograma.py` (**EXISTENTE**, os 11 casos): o período em curso **conclui**, e os casos do Evento passado e do Cronograma inteiro no futuro **não mudam de sentido** (`SC-190`)
+- [ ] T021 [US3] Prender a concordância com o canal do candidato em `backend/tests/integration/portal/test_cronograma_publico.py` (**EXISTENTE** — acrescente ao fim): o **mesmo** Evento em curso é *acontecendo agora* nos dois lados (`FR-549a`, `SC-191`). **A concordância é de desfecho, e não de código**: as duas superfícies derivam a situação por conta própria, e unificá-las **não é escopo**
 
 **Checkpoint**: a etapa que era impossível de concluir conclui, e as duas superfícies param de discordar.
 
@@ -127,10 +128,10 @@ que o destino aparece e que abri-lo leva à regra.
 
 **Independent Test**: declarar uma Etapa sem peso, enumerá-la num marco, e ver o cartão dizê-lo ali.
 
-- [ ] T021 [US4] Declarar a condição no rótulo, em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (**EXISTENTE**), `FR-550`. O vazio é legítimo **até que um marco enumere esta Etapa** — e é essa ressalva que falta, não a palavra "opcional"
-- [ ] T022 [US4] Levar **se a Etapa tem peso** à lista que o cartão já recebe, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**), `FR-551`. **Derive num lugar só**: a lista é montada por um helper e consumida em **quatro** pontos do arquivo; acrescentar o campo no helper cobre os quatro, e acrescentá-lo em três deixa o cartão mudo numa das rotas — que é a falha que a `034` descreveu por inteiro. **Campo, e não controle** (`FR-551a`)
-- [ ] T023 [US4] Nomear as Etapas enumeradas sem peso, em `backend/processo_seletivo/interface/templates/interface/_marco.html` (**EXISTENTE**), `FR-551`. O cartão **já se reconstrói a cada mudança da seleção**, e é esse ciclo que dá o *"no momento em que enumera"* — não há tela a inventar. A frase nova **não pode contradizer** a que já está lá: *"O peso de cada uma é o que ela já publica; aqui se escolhe quais entram."*, nem as duas que cobram o peso na conferência e no domínio
-- [ ] T024 [US4] Prender em `backend/tests/interface/test_peso_no_momento_de_enumerar.py` (**NOVO**): o rótulo declara a condição; enumerar uma Etapa sem peso **nomeia a Etapa**; declarar o peso **some com a cobrança**; Etapa sem peso que **nenhum** marco enumera **não é acusada**; e marco que **ordena por sorteio** e não enumera nada **não acusa** (`FR-550`, `FR-551`)
+- [ ] T022 [US4] Declarar a condição no rótulo, em `backend/processo_seletivo/interface/templates/interface/_etapa.html` (**EXISTENTE**), `FR-550`. O vazio é legítimo **até que um marco enumere esta Etapa** — e é essa ressalva que falta, não a palavra "opcional"
+- [ ] T023 [US4] Levar **se a Etapa tem peso** à lista que o cartão já recebe, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**), `FR-551`. **Derive num lugar só**: a lista é montada por um helper e consumida em **quatro** pontos do arquivo; acrescentar o campo no helper cobre os quatro, e acrescentá-lo em três deixa o cartão mudo numa das rotas — que é a falha que a `034` descreveu por inteiro. **Campo, e não controle** (`FR-551a`)
+- [ ] T024 [US4] Nomear as Etapas enumeradas sem peso, em `backend/processo_seletivo/interface/templates/interface/_marco.html` (**EXISTENTE**), `FR-551`. O cartão **já se reconstrói a cada mudança da seleção**, e é esse ciclo que dá o *"no momento em que enumera"* — não há tela a inventar. A frase nova **não pode contradizer** a que já está lá: *"O peso de cada uma é o que ela já publica; aqui se escolhe quais entram."*, nem as duas que cobram o peso na conferência e no domínio
+- [ ] T025 [US4] Prender em `backend/tests/interface/test_peso_no_momento_de_enumerar.py` (**NOVO**): o rótulo declara a condição; enumerar uma Etapa sem peso **nomeia a Etapa**; declarar o peso **some com a cobrança**; Etapa sem peso que **nenhum** marco enumera **não é acusada**; e marco que **ordena por sorteio** e não enumera nada **não acusa** (`FR-550`, `FR-551`). **Exercite as QUATRO rotas** que consomem a lista da `T023`, uma a uma — inclusive o **fragmento recomposto**, que é o ciclo que dá o *"no momento em que enumera"*. Um teste que passe só pela composição fica verde com o cartão mudo justamente na rota que importa; é a conta que a `034` pagou para aprender
 
 **Checkpoint**: a contradição da etapa 9 passa a aparecer na etapa 5.
 
@@ -138,13 +139,13 @@ que o destino aparece e que abri-lo leva à regra.
 
 ## Phase 7: Polimento e conferência
 
-- [ ] T025 Percorrer o **cenário 1** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) pela interface — **inclusive a contraprova dos dois caminhos e o passo de quem não alcança**. É o `SC-188`
-- [ ] T026 Percorrer o **cenário 2** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**), lembrando que o passo 1 dele já foi percorrido na `T010` e que o registro daquela tarefa é a entrada deste. É o `SC-189`
-- [ ] T027 Percorrer o **cenário 3** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**), **inclusive as duas contraprovas da régua** — o Evento pontual passado, que **continua** vencido, e o Evento com os dois instantes passados, que continua nomeando o término. São o `SC-190` e o `SC-191`. **O código de acesso do portal sai no terminal do servidor**
-- [ ] T028 Percorrer os **cenários 4 e 5** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) — o peso, e depois **o que não pode ter mudado**: contar os controles do cartão do marco antes e depois (`FR-551a`), e conferir que **o peso continua sendo campo da Etapa** (`FR-552`) e que nenhum conteúdo publicado foi reescrito nem nada apagado (`FR-555`). São o `SC-192`, o `SC-193` e o `SC-194`
-- [ ] T029 Conferir **caso a caso** os testes alterados contra o "antes" gravado em `specs/037-quatro-becos-conhecidos/antes-dos-quatro-becos.md` (**EXISTENTE**, criado em T002), e **recontar**: `research.md` `R-4` prevê **quatro**, e a `034` previu oito e entregou doze. Se forem mais, registre por quê. Confira também que os **vizinhos permaneceram** — 10, 13 e 11 casos nos três arquivos medidos
-- [ ] T030 Escrever `specs/037-quatro-becos-conhecidos/rastreabilidade.md` (**NOVO**): uma linha por `FR-`, uma por `SC-`, **uma por teste alterado com o motivo**, e uma seção que responde por escrito **o que o percurso da `T010` decidiu** — porque é a única tarefa desta feature cujo desfecho muda o que foi entregue
-- [ ] T031 Rodar `cd backend && make lint check test-pg` e registrar a contagem final em `specs/037-quatro-becos-conhecidos/rastreabilidade.md` (**EXISTENTE**, criado em T030). `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Esta feature não tem migration**, e o `makemigrations --check` aqui prova exatamente isso. As promessas que se conferem **lendo o diff** são três: nenhuma regra de domínio mudou o que **decide** (`FR-553`), nenhuma ajuda visível entrou nos cartões (`FR-554`) e nenhum conteúdo publicado foi reescrito (`FR-555`). **Rode a suíte inteira, e não só os arquivos tocados**: a varredura deste repositório **lê o comentário do template**, e três das quatro histórias são prosa
+- [ ] T026 Percorrer o **cenário 1** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) pela interface — **inclusive a contraprova dos dois caminhos e o passo de quem não alcança**. É o `SC-188`
+- [ ] T027 Percorrer o **cenário 2** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**), lembrando que o passo 1 dele já foi percorrido na `T011` e que o registro daquela tarefa é a entrada deste. É o `SC-189`
+- [ ] T028 Percorrer o **cenário 3** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**), **inclusive as duas contraprovas da régua** — o Evento pontual passado, que **continua** vencido, e o Evento com os dois instantes passados, que continua nomeando o término. São o `SC-190` e o `SC-191`. **O código de acesso do portal sai no terminal do servidor**
+- [ ] T029 Percorrer os **cenários 4 e 5** de `specs/037-quatro-becos-conhecidos/quickstart.md` (**EXISTENTE**) — o peso, e depois **o que não pode ter mudado**: contar os controles do cartão do marco antes e depois (`FR-551a`), e conferir que **o peso continua sendo campo da Etapa** (`FR-552`) e que nenhum conteúdo publicado foi reescrito nem nada apagado (`FR-555`). São o `SC-192`, o `SC-193` e o `SC-194`
+- [ ] T030 Conferir **caso a caso** os testes alterados contra o "antes" gravado em `specs/037-quatro-becos-conhecidos/antes-dos-quatro-becos.md` (**EXISTENTE**, criado em T002), e **recontar**: `research.md` `R-4` prevê **quatro**, e a `034` previu oito e entregou doze. Se forem mais, registre por quê. Confira também que os **vizinhos permaneceram** — 10, 13 e 11 casos nos três arquivos medidos
+- [ ] T031 Escrever `specs/037-quatro-becos-conhecidos/rastreabilidade.md` (**NOVO**): uma linha por `FR-`, uma por `SC-`, **uma por teste alterado com o motivo**, e uma seção que responde por escrito **o que o percurso da `T011` decidiu** (`SC-195`) — porque é a única tarefa desta feature cujo desfecho muda o que foi entregue, e **achado sem desfecho registrado volta na próxima auditoria**
+- [ ] T032 Rodar `cd backend && make lint check test-pg` e registrar a contagem final em `specs/037-quatro-becos-conhecidos/rastreabilidade.md` (**EXISTENTE**, criado em T031). `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Esta feature não tem migration**, e o `makemigrations --check` aqui prova exatamente isso. As promessas que se conferem **lendo o diff** são três: nenhuma regra de domínio mudou o que **decide** (`FR-553`), nenhuma ajuda visível entrou nos cartões (`FR-554`) e nenhum conteúdo publicado foi reescrito (`FR-555`). **Rode a suíte inteira, e não só os arquivos tocados**: a varredura deste repositório **lê o comentário do template**, e três das quatro histórias são prosa
 
 ---
 
@@ -153,13 +154,13 @@ que o destino aparece e que abri-lo leva à regra.
 ```
 Phase 1 (T001–T003)
       │
-      ├──► US1 (T004–T009)  🎯 MVP
-      ├──► US2 (T010–T015)   ← T010 decide se T013 existe
-      ├──► US3 (T016–T020)
-      └──► US4 (T021–T024)
+      ├──► US1 (T004–T010)  🎯 MVP
+      ├──► US2 (T011–T016)   ← T011 decide se T014 existe
+      ├──► US3 (T017–T021)
+      └──► US4 (T022–T025)
                  │
                  ▼
-        Polimento (T025–T031)
+        Polimento (T026–T032)
 ```
 
 **As quatro histórias são independentes na ENTREGA**: cada uma fecha um achado sozinha, e nenhuma
@@ -170,14 +171,17 @@ tocam o mesmo `interface/views.py`.
 
 - **T004 → T005** são o **mesmo arquivo**, e a ordem importa: oferecer o link antes de o caminho
   distinguir a recusa deixa o beco novo aberto entre uma tarefa e a outra.
-- **T005 → T006** — a view escolhe, o template imprime.
-- **T008 → T009** são o mesmo arquivo, e a contraprova vem depois do caso simples.
-- **T010 → T013** — o percurso decide se a tarefa existe.
-- **T012 → T013** são o mesmo arquivo.
-- **T016 → T017 → T018 → T019 → T020** — o módulo antes dos testes das duas superfícies, e as duas
-  superfícies depois dele. **T016 é um ato só**: predicado e escolha do instante juntos.
-- **T022 → T023** — o campo antes da frase que o lê.
-- **T029 depois de todos os percursos** — percurso que ache defeito muda o estado que ela confere.
+- **T005 → T006** são o **mesmo arquivo** e a mesma decisão em dois passos: qual caminho, e se este
+  ator o alcança. Separá-las em ordem inversa oferece o caminho antes de perguntar quem o abre.
+- **T006 → T007** — a view escolhe, o template imprime.
+- **T009 → T010** são o mesmo arquivo, e a contraprova vem depois do caso simples.
+- **T011 → T014** — o percurso decide se a tarefa existe.
+- **T012 → T014** são o mesmo arquivo (`interface/views.py`), e a `T012` vem antes porque é ela que
+  cria a derivação única de que a `T014` depende.
+- **T017 → T018 → T019 → T020 → T021** — o módulo antes dos testes das duas superfícies, e as duas
+  superfícies depois dele. **T017 é um ato só**: predicado e escolha do instante juntos.
+- **T023 → T024** — o campo antes da frase que o lê.
+- **T030 depois de todos os percursos** — percurso que ache defeito muda o estado que ela confere.
 
 ### Oportunidades de paralelismo
 

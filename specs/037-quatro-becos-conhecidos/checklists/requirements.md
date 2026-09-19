@@ -56,6 +56,22 @@
 | a escolha do instante da frase discordaria da régua | `FR-546a` — as duas mudam no mesmo ato |
 | o canal do candidato deriva a situação por conta própria | `FR-549a` — concordância de desfecho, não de código |
 
+## O que o `analyze` achou, e que nenhuma das contas via
+
+A conta de cobertura deu **33/33** antes deste passo. Ela não vê requisito coberto por tarefa que
+não o satisfaz.
+
+| Achado | O que estava errado |
+|---|---|
+| **C1** | a `US2` prescrevia prosa no aviso ignorando `acoes.py`, que **já deriva** "pode retificar?" e **já entrega** o caminho a quem pode |
+| **H1** | o caminho da `FR-539a` leva à Retificação, que quem classifica pode não alcançar — o beco da `033` dentro da correção do `ACH-46` |
+| **H2** | o `plan.md` ainda dizia *"telas diferentes, nenhuma dependência"* depois de o `tasks` medir que três histórias tocam o mesmo arquivo |
+| **H3** | o cenário 2 da `US2` era incondicional e a `FR-542b` autoriza a perna em que ele não se aplica |
+| **H4** | a `SC-189` alcança só o cartão do Edital; o `ACH-02` ficava sem critério em qualquer das duas saídas |
+| **M1** | a `T014` fala de "a tela", e o parcial é incluído por **oito** |
+| **M2** | as **quatro** rotas que consomem a lista de Etapas não tinham contraprova |
+| **L1** | a `FR-539` é proibição de reescrever, e nada afirmava a frase **literalmente** |
+
 ## Notes
 
 - Items marked incomplete require spec updates before `$speckit-clarify` or `$speckit-plan`

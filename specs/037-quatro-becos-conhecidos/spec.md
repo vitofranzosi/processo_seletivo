@@ -86,15 +86,18 @@ em vez de ler só que não pode.
 **Why this priority**: é o achado de maior retorno por linha alterada de toda a reauditoria, e é `P1`.
 A frase modelo já existe **dentro do mesmo cartão** de um dos dois casos.
 
-**Independent Test**: abrir a tela de um Edital publicado como gestor, e a validação de um Edital
-recém-criado, e conferir que os dois blocos nomeiam a ação e a permissão.
+**Independent Test**: abrir a tela de um Edital publicado como gestor e conferir que o aviso nomeia
+a ação e a permissão. *O segundo bloco entra no teste **se** o percurso da `FR-542b` apontar que há o
+que fechar* — e, não apontando, o que se confere é o registro dessa decisão.
 
 **Acceptance Scenarios**:
 
 1. **Given** um Edital **publicado**, **When** um gestor abre a tela dele, **Then** o aviso de
    conteúdo imutável nomeia **a ação** (Retificação) e **quem pode praticá-la**.
-2. **Given** um Edital recém-criado **sem Perfil**, **When** a validação é exibida, **Then** o
-   impedimento diz o que fazer, e **a quem pedir** quando o ator não pode fazê-lo.
+2. **Given** um Edital recém-criado **sem Perfil** **e o percurso da `FR-542b` tendo apontado que
+   falta permissão ao ator**, **When** a validação é exibida, **Then** o impedimento diz o que fazer
+   e **a quem pedir**. *Apontando o percurso que nada o impede, este cenário não se aplica* — e o
+   que vale é o cenário 5.
 3. **Given** um ator que **pode** praticar a ação, **When** o bloco é exibido, **Then** ele recebe o
    caminho — e não a frase de pedir a outra pessoa.
 4. **Given** o Edital sem Perfil, **When** a pendência é exibida, **Then** ela **continua** dizendo o
@@ -190,6 +193,11 @@ marco o diz naquele momento.
   ordem: mandar quem lê para a classificação seria abrir, no fim do caminho que a `FR-538` cria, um
   segundo caminho que não resolve. *A `FR-538` torna alcançável uma combinação que hoje ninguém
   alcança* — e é por isso que este requisito nasce com ela, e não depois dela.
+- **FR-539b**: O caminho da recusa **do marco sem regra** MUST respeitar o que o ator alcança. A tela
+  do corte só é percorrida **depois da publicação**, e num Edital publicado a regra de corte não se
+  edita: ela muda por **Retificação**. Quem classifica pode não poder retificar — e oferecer-lhe o
+  caminho seria abrir, dentro da correção de um beco, o beco que a `033` fechou. Havendo alcance, o
+  caminho; não havendo, **a frase que diz a quem pedir**, pelo mesmo mecanismo da `FR-543`.
 - **FR-540**: O destino MUST continuar sendo oferecido **apenas a quem o alcança**. A garantia da
   `033` — a tela não oferece caminho que o ator não abre — não é desfeita por esta feature.
 
@@ -198,6 +206,17 @@ marco o diz naquele momento.
 - **FR-541**: O aviso de **conteúdo imutável** de um Edital publicado MUST nomear a ação e a
   permissão que a pratica, na formulação que o produto já usa. *Ele hoje diz que correções ocorrem
   por Retificação e para aí* — e o mesmo cartão, seis linhas acima, já pratica a frase que falta.
+- **FR-541a**: A pergunta *"esta pessoa pode retificar?"* MUST ser derivada **uma vez**. O mesmo
+  cartão já a responde para decidir se oferece a ação de Retificar; o aviso passa a depender da
+  **mesma** derivação, e não de uma segunda. *Duas respostas para a mesma pergunta divergem na
+  primeira mudança* — é o que a `034` gastou uma feature inteira corrigindo em outra tela.
+- **FR-541b**: O aviso MUST **calar** quando a ação de Retificar já está oferecida ali. Dizer *"peça
+  a alguém"* ao lado do botão que a pessoa pode clicar é pior do que não dizer nada: ensina a
+  desconfiar da tela.
+- **FR-541c**: A condução MUST ser **prosa no aviso**, e não uma ação desabilitada na lista. A lista
+  de ações **não oferece destino que o ator não abre** — é a regra que a `007` e a `033` deixaram,
+  e transformar Retificar em botão morto com motivo a desfaria. *Esta linha existe porque a
+  alternativa é plausível e está errada*, e quem implementar vai considerá-la.
 - **FR-542**: O impedimento por **ausência de Perfil** MUST dizer **a quem pedir** quando o ator não
   pode resolvê-lo. *"O que fazer" já é dito*: a pendência é marcada corrigível e leva à etapa de
   Perfis, e isso foi fechado por feature anterior. O que falta é a outra metade — e dizê-la exige
@@ -217,7 +236,9 @@ marco o diz naquele momento.
 - **FR-543b**: Toda condução MUST nomear **a permissão**, nunca uma pessoa. Não há fila, designação
   nem nome próprio — é a disciplina que o produto já mantém.
 - **FR-544**: Quem **pode** praticar a ação MUST receber o caminho, e não a frase de pedir a outra
-  pessoa.
+  pessoa. *Medido: a lista de ações do cartão **já entrega** o caminho a quem pode retificar.* O que
+  esta feature acrescenta não é o caminho — é o silêncio do aviso nesse caso (`FR-541b`) e a frase
+  no caso oposto.
 
 ### A régua do vencido
 
@@ -270,7 +291,12 @@ marco o diz naquele momento.
 - **SC-188**: Um marco **sem** regra de corte declarada oferece o destino do corte, e quem o abre lê
   por que não há faixa — percorrido pela interface, **sem shell e sem banco**.
 - **SC-189**: **Zero** bloqueios no cartão "O que fazer agora" sem ação nomeada e sem a quem pedir —
-  contados na tela, antes e depois.
+  contados na tela, antes e depois. *Este critério alcança o aviso de conteúdo imutável, e só ele*:
+  o cartão existe numa tela, e a pendência de Perfil vive noutra.
+- **SC-195**: O `ACH-02` tem **desfecho escrito**, qualquer que ele seja: ou a condução existe e é
+  lida nas telas de composição que exibem a pendência, ou está registrado por que não há o que
+  escrever. *Um achado sem desfecho registrado é um achado que volta na próxima auditoria* — e este
+  é o único da feature cujo resultado depende de um percurso.
 - **SC-190**: Um Edital cujo período de inscrições está **em curso** conclui a etapa do Cronograma —
   hoje ela é impossível de concluir.
 - **SC-191**: **Zero** divergências entre a gestão e o canal do candidato sobre o mesmo Evento.

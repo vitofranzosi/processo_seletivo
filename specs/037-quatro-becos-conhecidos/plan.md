@@ -72,13 +72,18 @@ percurso**, e a spec foi emendada antes de o desenho começar: `FR-539a`, `FR-54
 
 ```
 US1 (o corte)  ──┐
-US2 (as frases) ─┼─► independentes entre si: telas diferentes, nenhuma dependência
+US2 (as frases) ─┼─► independentes na ENTREGA; NÃO na edição (mesmo views.py)
 US3 (a régua)  ──┤
 US4 (o peso)   ──┘
 ```
 
-**As quatro são independentes**, e é a primeira vez nesta série que isso acontece — são quatro
-achados reunidos por causa comum, não por dependência técnica. Qualquer uma entrega sozinha.
+**As quatro são independentes na ENTREGA**, e é a primeira vez nesta série que isso acontece — são
+quatro achados reunidos por causa comum, não por dependência técnica. Qualquer uma entrega sozinha.
+
+**E não são independentes na EDIÇÃO.** A `US1`, a `US2` e a `US4` tocam o mesmo
+`backend/processo_seletivo/interface/views.py`. *Esta frase nasceu sem o qualificador e foi corrigida
+depois que o `tasks` mediu os arquivos* — dito aqui porque é o plano que alguém lê antes de decidir
+paralelizar, e é assim que a regra do `[P]` se quebra.
 
 **A `US3` é a mais arriscada**, e não a maior: ela muda um predicado que **duas** superfícies
 consultam e que **quatro** testes prendem, dois deles defendendo o comportamento errado por escrito.

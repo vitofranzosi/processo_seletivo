@@ -9,7 +9,7 @@ delas se resolvem na classificação; a terceira, não.
 |---|---|---|
 | a ordem ainda não foi emitida | a **ordem** do recorte | a classificação deste recorte — **como hoje** |
 | a ordem está obsoleta | **reemitir** a ordem | a classificação deste recorte — **como hoje** |
-| o marco não declara regra de corte | a **regra de corte**, que é conteúdo do Edital | **o lugar onde a regra se declara** |
+| o marco não declara regra de corte | a **regra de corte**, que é conteúdo do Edital | a **Retificação** — e só a quem a alcança |
 
 **A frase de cada recusa não muda.** Ela nasce no domínio, tem código próprio e foi escrita para o
 seu caso. O que passa a depender da recusa é o que vem **depois** dela.
@@ -23,6 +23,19 @@ um segundo caminho que não resolve.
 É o mesmo defeito que a `033` fechou sob outro nome: *nomear a pendência sem dizer onde ela se
 resolve manda o operador procurar a tela*. O comentário que hoje justifica o caminho único diz
 exatamente isso — e foi escrito quando só havia duas recusas alcançáveis por ali.
+
+## O caminho da terceira depende de quem lê
+
+A tela do corte só é percorrida **depois da publicação**, e num Edital publicado a regra de corte
+não se edita: ela muda por **Retificação**. Quem classifica pode não poder retificar.
+
+| Quem lê | O que recebe |
+|---|---|
+| alcança a Retificação | o **caminho** até ela |
+| não alcança | a **frase** que diz a quem pedir, pelo mecanismo único |
+
+**Oferecer o caminho a quem não o abre seria abrir, dentro da correção de um beco, o beco que a
+`033` fechou.** É a razão de esta seção existir, e não uma cautela genérica.
 
 ## O que não muda
 

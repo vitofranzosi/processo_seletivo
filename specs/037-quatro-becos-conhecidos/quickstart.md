@@ -31,7 +31,13 @@ telas devolvem 503. O Edital de trabalho precisa de **um marco classificatório*
 Se os dois casos oferecerem o mesmo caminho, a `FR-539a` não foi cumprida, ainda que o link do
 cenário 1 tenha aparecido corretamente.
 
-5. Entre como alguém que **não alcança** a classificação deste Edital.
+5. Volte ao marco **sem regra** e abra o corte como alguém que classifica e **não alcança a
+   Retificação**.
+
+**Esperado**: ele lê a recusa e recebe **a frase que diz a quem pedir** — e não um caminho que não
+abre. É o segundo lugar desta feature onde o beco da `033` cabe.
+
+6. Entre como alguém que **não alcança** a classificação deste Edital.
 
 **Esperado**: nenhum destino de corte é oferecido. A garantia da `033` não foi desfeita.
 
@@ -51,15 +57,20 @@ cenário 1 tenha aparecido corretamente.
 **Se nada o impede**, o achado se fecha **registrando isso**, e a condução do `ACH-02` não é
 escrita — escrever frase para problema que não existe é pior do que não escrever.
 
-2. Abra a tela de um Edital **publicado** como gestor.
+2. Abra a tela de um Edital **publicado** como gestor **sem** a permissão de retificar.
 
 **Esperado**: junto de *"Conteúdo imutável"*, a tela nomeia a ação e a permissão — na formulação
 **cheia**, *"peça a alguém com a permissão de X **que Y**"*.
 
 3. Abra a mesma tela como alguém que **pode** retificar.
 
-**Esperado**: ela recebe o caminho, e **não** a frase de pedir a outra pessoa. Mandar quem pode pedir
-a si mesma é o defeito com o remédio no lugar errado.
+**Esperado**: a ação **Retificar aparece na lista** — ela já aparecia — e o aviso **cala**. Repetir
+*"peça a alguém"* ao lado do botão que a pessoa pode clicar ensina a desconfiar da tela.
+
+4. Conte as ações da lista nos dois casos.
+
+**Esperado**: **nenhuma ação nova**, e Retificar **não** virou botão desabilitado. Navegação que o
+ator não abre continua não sendo oferecida — e desfazer isso desfaria a regra da `007` e da `033`.
 
 ---
 

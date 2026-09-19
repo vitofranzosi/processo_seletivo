@@ -202,6 +202,38 @@ Unificar as duas é mudança maior, com o portal no caminho, e **não cabe aqui*
 
 ---
 
+## R-10 — O cartão do Edital **já tem** mecanismo para dizer o que se pode fazer
+
+**Achado do `analyze`, e ele reescreveu metade da `US2`.**
+
+O cartão *"O que fazer agora"* monta as ações num lugar só, `interface/acoes.py`, e o módulo nasceu
+justamente para acabar com **três** lugares respondendo à mesma pergunta sem se falarem — um deles
+*"um `<li>` fixo com `Retificar` no template, fora dos dois"*.
+
+A ação de Retificar sai assim:
+
+```
+if edital.status == "PUBLICADO" and ator.can("retificacao:elaborar"):
+    yield Acao("retificar", "Retificar", …)
+```
+
+**Duas consequências que a spec não previa:**
+
+1. **Quem pode retificar já recebe o caminho.** A `FR-544` estava, nessa metade, já satisfeita — e a
+   tarefa que prometia entregá-la seria no-op, ou criaria um segundo caminho ao lado do que existe.
+2. **A pergunta "esta pessoa pode retificar?" já é feita ali.** Escrever o aviso com uma segunda
+   derivação da mesma pergunta é exatamente o defeito que a `034` gastou uma feature corrigindo em
+   outra tela. Daí a `FR-541a`.
+
+**E a correção óbvia está errada.** Seria tentador transformar Retificar em ação **desabilitada com
+motivo**, que é o tratamento que o cartão dá aos atos (`FR-024`). Mas navegação segue outra regra, e
+o próprio módulo a registra ao falar de outra tela: *"oferecer a tela vazia seria oferecer um
+beco"*. **Destino que o ator não abre não é oferecido** — é a garantia da `007` e da `033`. A
+condução é **prosa no aviso**, e a `FR-541c` existe para dizer isso a quem for considerar a
+alternativa.
+
+---
+
 ## Testes de template nas telas tocadas, e a armadilha da prosa
 
 `test_destinos_do_edital.py` (10), `test_corte.py` (13) e `test_selo_do_cronograma.py` (11). Além
@@ -224,3 +256,12 @@ são, essencialmente, prosa.
 | **`FR-546a` novo** | a escolha do instante discordaria da régua; as duas mudam no mesmo ato (`R-3`) |
 | **`FR-543` precisada** | usar `frase_da_recusa`, e não imitar o texto (`R-6`) |
 | **`FR-549` precisada** | concordância de desfecho, não unificação de código (`R-9`) |
+
+## O que o `analyze` mudou depois
+
+| Mudança | Por quê |
+|---|---|
+| **`FR-541a`, `FR-541b`, `FR-541c`** | o cartão já deriva "pode retificar?" e já entrega o caminho; a condução é prosa, e a ação desabilitada seria a correção errada (`R-10`) |
+| **`FR-539b` novo** | o caminho até a Retificação pode ser inalcançável para quem classifica — o beco da `033` renascendo dentro da correção do `ACH-46` |
+| **`SC-195` novo** | o `ACH-02` não tinha critério algum: a `SC-189` alcança só o cartão do Edital |
+| **cenário 2 da `US2` condicionado** | era incondicional e a `FR-542b` autoriza a perna em que ele não se aplica |
