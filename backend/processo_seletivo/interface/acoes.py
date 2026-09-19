@@ -65,6 +65,24 @@ class Acao:
 ESTADOS_COM_INSCRICOES = ("PUBLICADO", "ENCERRADO", "CANCELADO")
 
 
+def pode_retificar(edital, ator) -> bool:
+    """Esta pessoa pode propor a Retificação **deste** Edital? (037, FR-541a)
+
+    **A pergunta já era feita aqui**, para decidir se `Retificar` entra na lista — o que ela não
+    era é consultável de fora. E ela passou a ter mais de um leitor: o aviso de conteúdo imutável
+    cala quando a ação está oferecida (`FR-541b`), e a tela do corte só oferece o caminho até a
+    regra a quem a alcança (`FR-539b`).
+
+    **Uma derivação, e não duas.** Duas respostas para a mesma pergunta divergem na primeira
+    mudança — foi o que a `034` gastou uma feature inteira corrigindo em outra tela —, e o custo
+    aqui seria a tela afirmar que alguém não pode ao lado do botão que ele pode clicar.
+
+    **O estado entra no predicado**, e não só a permissão: Edital que não está publicado não se
+    retifica, e é por isso que a ação nunca apareceu antes da publicação.
+    """
+    return edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")
+
+
 def _navegacao(edital, ator):
     """Ações que levam a outra tela. Não são atos: não confirmam, não registram, não alteram."""
     if ator.can("edital:elaborar") and edital.status == "EM_ELABORACAO":
@@ -77,7 +95,7 @@ def _navegacao(edital, ator):
     if edital.status in ESTADOS_COM_PREVIA:
         yield Acao("visualizar", "Visualizar Edital", reverse("interface:previa", args=[edital.id]))
     # A permissão que `ACOES_POR_SITUACAO` já declarava desde a `002` e que o template ignorava.
-    if edital.status == "PUBLICADO" and ator.can("retificacao:elaborar"):
+    if pode_retificar(edital, ator):
         yield Acao("retificar", "Retificar", reverse("interface:retificar", args=[edital.id]))
     # Só depois de publicado: antes disso não há inscrição a consultar, e oferecer a tela vazia
     # seria oferecer um beco — exatamente o que a `007` tirou desta página. Cancelado entra na

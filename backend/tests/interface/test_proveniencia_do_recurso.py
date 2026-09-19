@@ -223,6 +223,21 @@ def test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta(client, seletor_lig
     assert "Nada foi instruído neste recurso" in corpo
     assert "ato de instrução" in corpo
     assert "gerir a comissão" in corpo and "preside este Processo" in corpo
+    # **E na forma de AVISO, e não na de recusa** (037, `FR-543d`). Quando esta tela nasceu havia
+    # uma forma só, e ela abria com *"Esta operação depende de…"* — que, num parágrafo onde ninguém
+    # tentou nada, nomeia um ato que não houve. O "a quem pedir" é o mesmo texto nas duas formas, e
+    # é por isso que a troca não cria segunda formulação: o que muda é o sujeito da primeira oração.
+    #
+    # A oração final é a outra metade que faltava (`FR-543a`): dizer a quem pedir sem dizer o quê
+    # entrega meio endereço, e a `FR-532` pede os dois.
+    bloco = corpo[corpo.index("Nada foi instruído neste recurso") :]
+    bloco = bloco[: bloco.index("</p>")]
+    assert bloco.startswith("Nada foi instruído")
+    assert "A instrução depende" in bloco
+    assert "que a pratique" in bloco
+    assert "Esta operação" not in bloco, (
+        "a tela voltou à forma de recusa — e aqui não houve operação a recusar"
+    )
     # Nada de instruir é oferecido a quem não pode instruir — a garantia da `033`, do outro lado.
     assert reverse("interface:recurso-instruir", args=[julgado["peca"].id]) not in corpo
 

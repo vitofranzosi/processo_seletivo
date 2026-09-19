@@ -114,12 +114,29 @@ def test_pendente_nao_impede_avancar_entre_etapas_nem_submeter(client, seletor_l
 
     Quem fecha porta é o achado impeditivo do período encerrado, e ele é um só — aqui o período
     está aberto, então nada deve impedir.
+
+    **O arranjo mudou com a `037`, e o que o caso afirma não.** Ele produzia o selo pendente com
+    um período de início vencido e término futuro — o que a régua antiga chamava de vencido e a
+    nova, corretamente, não chama mais (`FR-545`). Um segundo Evento, **pontual e já ocorrido**,
+    é o que hoje mantém o selo pendente com o prazo de inscrições aberto: as duas condições que
+    este caso precisa ter ao mesmo tempo deixaram de caber num Evento só.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
     agora = timezone.now()
-    # Início vencido e término futuro: o selo fica pendente, e as inscrições continuam correndo.
+    # O período de inscrições **em curso**: aberto, e por isso nada impede.
     datar(composto, inicio=agora - timedelta(days=1), fim=agora + timedelta(days=9))
     EventoCronograma.objects.filter(cronograma__edital=composto).update(is_registration_period=True)
+    periodo = EventoCronograma.objects.get(cronograma__edital=composto)
+    # E o Evento que mantém o selo pendente: sem término declarado, e o instante dele já passou —
+    # ausência de término não é fim no futuro (`FR-546`).
+    EventoCronograma.objects.create(
+        cronograma=periodo.cronograma,
+        type="Divulgação",
+        description="Divulgação do resultado preliminar",
+        start_at=agora - timedelta(days=9),
+        end_at=None,
+        order=2,
+    )
 
     passos, resposta = progresso(client, composto)
 
@@ -310,3 +327,43 @@ def test_a_frase_nao_aparece_num_cronograma_sem_evento_nenhum(
     passos = {p["chave"]: p for p in resposta.context["progresso"]}
     assert passos["cronograma"]["estado"] == "pendente", "sem Evento também é pendente"
     assert "fica <strong>pendente</strong> enquanto o Cronograma" not in corpo
+
+
+# --- 037 · a etapa que era impossível de concluir (SC-190) ---------------------------------------
+
+
+def test_periodo_em_curso_conclui_a_etapa(client, seletor_ligado, composto):
+    """`SC-190`: hoje esta etapa é impossível de concluir, e não por defeito de quem preenche.
+
+    **O Edital que abre inscrições no dia em que é publicado é legítimo** — a conferência de
+    publicação já dizia isso por escrito —, e ainda assim o selo ficava eternamente `PENDENTE`:
+    a régua vencia pelo **ou** dos dois instantes, e um período em curso tem início no passado.
+    Não havia data a corrigir; só havia a etapa vermelha.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    agora = timezone.now()
+    datar(composto, inicio=agora - timedelta(days=1), fim=agora + timedelta(days=9))
+
+    passos, _ = progresso(client, composto, etapa="identificacao")
+
+    assert passos["cronograma"]["estado"] == "concluida"
+
+
+def test_evento_pontual_no_passado_continua_mantendo_a_etapa_pendente(
+    client, seletor_ligado, composto
+):
+    """A contraprova que impede a correção errada (`FR-546`).
+
+    Trocar a régua por *"o término passou"* é a leitura imediata do defeito, e ela silenciaria o
+    Evento **pontual**: sem término, nenhum Evento venceria nunca, e o Cronograma inteiro de uma
+    oferta anterior voltaria a nascer verde — que é o achado que a `028` existe para ter fechado.
+
+    Sem este caso, a correção errada passaria por todos os outros deste arquivo.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    agora = timezone.now()
+    datar(composto, inicio=agora - timedelta(days=9), fim=None)
+
+    passos, _ = progresso(client, composto, etapa="identificacao")
+
+    assert passos["cronograma"]["estado"] == "pendente"

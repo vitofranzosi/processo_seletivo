@@ -58,8 +58,12 @@ ato já divulgado e em dia. Deixá-lo mudo diria "consulte" a quem vai lá para 
 
 A frase segue a formulação que `detalhe.html` já pratica em *"Peça a alguém com a permissão de
 publicar que conclua o ato"*, e não inventa uma segunda (`FR-486`).
+
+**E segue-a por inteiro** (037, `FR-543a`): o modelo citado acima termina em *"que conclua o ato"*, e
+esta dizia só a quem pedir. Dizer o destinatário sem dizer o pedido entrega meio endereço — quem lê
+sabe a quem se dirigir e não sabe pedir o quê.
 {% endcomment %}
-<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado.{% endif %}</p>
+<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado que o divulgue.{% endif %}</p>
 {% else %}
 {% comment %}
 Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a, FR-498, FR-504).
@@ -231,10 +235,18 @@ mandaria pedir metade do que resolve.
 E as duas se pedem de maneiras diferentes, que é o ponto da `FR-485`. A primeira é papel, e se pede
 como papel. A segunda **não é papel nenhum**: a presidência vem da composição da comissão, e
 nenhum papel a concede — mandar pedir "o papel de presidente" mandaria pedir o que não existe.
+
+**A frase passou a vir do mecanismo** (037, `FR-486`, `FR-543`, `FR-543a`). Ela era escrita aqui à
+mão e **reproduzia**, palavra por palavra, o que `frase_do_aviso` já produz a partir das mesmas
+bases — que é a segunda formulação que a `FR-486` existe para não deixar nascer, com o agravante de
+ser indistinguível da primeira até alguém melhorar uma das duas. Junto veio a oração do ato, que a
+versão à mão não tinha: dizia a quem pedir, e não o quê.
+
+O que **continua** escrito aqui é a única coisa que o mecanismo não sabe: que a presidência não é
+papel. É explicação sobre a natureza da base, e não formulação do pedido.
 {% endcomment %}
-<p class="ajuda">Emitir a ordem deste marco depende da <strong>permissão de gerir a comissão</strong>
-ou da <strong>presidência deste Processo</strong> — cada uma basta sozinha. A segunda não é papel:
-ela vem da composição da comissão. Peça a quem tem a permissão, ou a quem preside.</p>
+<p class="ajuda">{{ conducao_para_emitir }} A presidência não é papel: ela vem da composição da
+comissão.</p>
 {% endif %}
 
 {% if pode_emitir and recomputavel %}

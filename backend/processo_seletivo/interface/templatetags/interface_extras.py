@@ -304,3 +304,46 @@ def escolhas_do_metodo(campo, declarado):
             }
         )
     return escolhas
+
+
+@register.filter
+def enumeradas_sem_peso(etapas_classificatorias, marco):
+    """As Etapas que **este** marco enumera e que ainda não declaram peso (037, `FR-551`).
+
+    **Filtro, e não campo pronto no contexto**, porque o cruzamento depende de dois lados que
+    mudam em tempos diferentes: a lista de Etapas é do Edital e vem da view; a seleção é do marco
+    e vem do formulário, reconstruída a cada mudança pelo fragmento recomposto. Montar o
+    cruzamento na view obrigaria os **quatro** pontos que servem a lista a repeti-lo, e o que a
+    `034` mediu é que três se lembram e um esquece.
+
+    A pergunta "tem peso?" não é respondida aqui: ela chega pronta, como `tem_peso`, de quem lê a
+    Etapa. Este filtro só cruza — e por isso não há segunda verdade sobre o peso.
+
+    **Lista vazia não escreve nada**, e é isso que faz a frase do cartão ser aviso derivado do
+    estado e não ajuda instrucional (`FR-554a`): declarado o peso, a cobrança some sozinha.
+    """
+    enumeradas = {str(identidade) for identidade in (marco or {}).get("etapas") or []}
+    return [
+        etapa
+        for etapa in (etapas_classificatorias or [])
+        if str(etapa.get("id")) in enumeradas and not etapa.get("tem_peso")
+    ]
+
+
+@register.filter
+def conducao_da_lista(itens):
+    """A condução comum a estas pendências, para ser dita **uma vez** (037, `FR-542`).
+
+    **O dado é por item, e a fala é da lista.** Quem monta as pendências responde, item a item, se
+    quem lê consegue resolver aquela — e a resposta é a mesma para todas, porque o predicado é do
+    par Edital×ator. Impressa dentro do laço, a mesma frase saía três vezes seguidas na Revisão,
+    que é ruído exatamente na tela que a auditoria já acusa de densa.
+
+    **Colher em vez de recalcular** é o que mantém a derivação única: a condição de quando falar
+    continua sendo a de quem montou a lista — só as pendências que têm onde se resolver a carregam
+    —, e este filtro não a reescreve.
+    """
+    for item in itens or []:
+        if item.get("conducao"):
+            return item["conducao"]
+    return ""
