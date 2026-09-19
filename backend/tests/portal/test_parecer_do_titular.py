@@ -350,3 +350,38 @@ def test_o_parecer_lido_e_o_da_conclusao_que_fundamenta_o_resultado(eliminada):
     assert conclusoes[0].parecer == PARECER
 
     assert parecer_que_fundamenta(resultado, conclusoes) == PARECER
+
+
+def test_peca_inadmitida_nao_mantem_o_parecer_visivel(
+    client, raiz_de_arquivos, gestor, api_client, manager_headers, process_payload
+):
+    """**O outro desfecho terminal**, e o que a primeira redação desta feature não viu (`FR-524`).
+
+    Juízo negativo encerra a peça **sem mérito**, e o banco o garante: a trigger
+    `decisao_recurso_coerente` recusa decisão sobre recurso não admitido. Enquanto "pendente"
+    significava só *"sem decisão"*, a peça inadmitida contava como em curso **para sempre** — e o
+    parecer nunca saía da tela do titular.
+
+    Não era uma janela generosa demais: era uma janela sem fechadura sobre dado pessoal, e a
+    `FR-524` deixava de ter quando acontecer.
+    """
+    from tests.fixtures.instrucao import inadmitir_a_peca
+
+    # Sem juízo no cenário: cabe **um** por recurso, e o do cenário padrão já é positivo.
+    montado = cenario_instruivel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=143,
+        codigo="0843",
+        admitir_a_peca=False,
+        janela_recursal=JANELA,
+    )
+    inadmitir_a_peca(montado)
+
+    with patch("django.utils.timezone.now", return_value=depois_do_prazo()):
+        corpo = abrir_como_titular(client, montado["inscricao"])
+
+    assert PARECER not in corpo
+    assert POR_QUE_SAIU in corpo

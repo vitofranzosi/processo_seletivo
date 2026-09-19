@@ -625,7 +625,7 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
 
     ```text
     prazo recursal aberto para aquele resultado            → aparece
-    peça dele contra AQUELE resultado, não decidida        → aparece, mesmo com o prazo fechado
+    peça dele contra AQUELE resultado, ainda em curso      → aparece, mesmo com o prazo fechado
     as duas encerradas                                     → some, E a tela diz por quê
     ```
 
@@ -633,6 +633,9 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
     "recurso dele" sem recorte diria *qualquer peça em curso*, e uma peça sobre a Etapa seguinte
     reabriria o parecer de um resultado cujo prazo terminou há semanas — minimização perdida sem que
     ninguém decidisse perdê-la.
+
+    **E "em curso" exclui a peça inadmitida**, que é terminal e nunca receberá decisão: contá-la
+    manteria o parecer visível para sempre.
 
     **Três consultas, e o número não cresce com a quantidade de Etapas**: os Resultados com a
     Avaliação, as peças pendentes daquele titular, e as conclusões preservadas. A janela é computada
@@ -659,10 +662,16 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
             "avaliacao"
         )
     )
+    # **Pendente é a peça que ainda pode mudar de desfecho**, e não a que só não tem decisão de
+    # mérito. Juízo negativo é terminal — o banco recusa decisão sobre recurso não admitido —, de
+    # modo que `decisoes__isnull=True` sozinho classificaria a peça inadmitida como pendente **para
+    # sempre**, e o parecer nunca sairia da tela. A `FR-524` deixaria de ter quando acontecer.
     pendentes = set(
         Recurso.objects.filter(
             inscricao=inscricao, resultado_atacado_id__in=desfavoraveis, decisoes__isnull=True
-        ).values_list("resultado_atacado_id", flat=True)
+        )
+        .exclude(juizos__admitido=False)
+        .values_list("resultado_atacado_id", flat=True)
     )
     conclusoes = _conclusoes_por_avaliacao(
         ConclusaoAvaliacao, [linha.avaliacao_id for linha in linhas if linha.avaliacao_id]

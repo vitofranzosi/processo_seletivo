@@ -41,6 +41,11 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.idempotency import finish_batch, reserve
 
+# A permissão que abre documento de candidato. Escrita aqui e não importada de `inscricoes`: é a
+# mesma grafia que `interface/views.py` usa, e a fronteira de autorização não deve conhecer o app
+# que consome a permissão — o mesmo idioma de `interface/identidade.py`.
+CONSULTAR_INSCRICAO = "inscricao:consultar"
+
 OPERACAO = "RECURSO_INSTRUIR"
 # A leitura exercida sobre o que foi instruído. Nome no mesmo formato do resto do mapa de operações
 # — `APP_ATO`, em maiúsculas —, e com rótulo em `interface/views.py::OPERACOES`: sem o rótulo, a
@@ -59,12 +64,20 @@ PARECER_INEXISTENTE = (
     "não existe. A obrigatoriedade do parecer depende do caráter da Etapa e da forma da avaliação."
 )
 NAO_ENCONTRADO = "Recurso não encontrado."
-JA_DECIDIDO = (
-    "Este recurso já foi decidido. Instruir agora abriria um alcance que a decisão encerrou, e o "
-    "que a decisão encerra não se reabre."
+JA_ENCERRADO = (
+    "Este recurso já teve desfecho — {}. Instruir agora abriria um alcance que o desfecho já "
+    "encerrou, e o que se encerra não se reabre."
+)
+# Instruir documento exige **alcançá-lo**. A base composta autoriza o ato; ela não concede leitura
+# dos documentos do candidato, e deixar a autoridade anexar o que ela própria não abre seria
+# conceder a si mesma, por um POST, o acesso que a porta lhe nega — bastaria instruir e depois abrir
+# pela rota da peça. É a `FR-105` da `018` contornada pelo ato que existe para respeitá-la.
+SEM_ALCANCE_DO_DOCUMENTO = (
+    "Instruir um documento do candidato exige a permissão de consultar inscrições: não se anexa a "
+    "um recurso o que quem instrui não pode abrir. O parecer atacado continua instruível."
 )
 ALCANCE_ENCERRADO = (
-    "O alcance da instrução terminou com a decisão deste recurso. O registro de que ela houve "
+    "O alcance da instrução terminou {} deste recurso. O registro de que ela houve "
     "permanece — nada foi apagado; o que se encerrou foi o acesso."
 )
 
@@ -101,14 +114,33 @@ class Alcance:
         return tuple(ato for ato in self.atos if ato.especie == AtoDeInstrucao.Especie.DOCUMENTO)
 
 
-def decidido(peca):
-    """Se a peça já foi julgada — lido do `prefetch` que a porta faz, e não de coluna.
+def encerrado(peca):
+    """Se a peça **acabou** — e ela acaba de duas maneiras, não de uma (`FR-529`).
 
     `Recurso` não tem coluna de situação, e é decisão da `018`: o que aconteceu com uma peça é a
     existência dos atos que a alcançaram. Aqui isso é vantagem — o fim do alcance não depende de
     ninguém lembrar de virar uma chave.
+
+    ```text
+    decisão de mérito          → acabou
+    juízo de admissibilidade NEGATIVO → acabou, e sem mérito
+    ```
+
+    **A inadmissão é terminal, e o banco o garante**: a trigger `decisao_recurso_coerente` recusa
+    decisão sobre recurso não admitido. Esperar pela decisão, portanto, não deixaria uma janela
+    larga demais — deixaria uma janela **sem fechadura**, aberta sobre dado pessoal para sempre. Foi
+    o que a primeira redação desta feature fez, e é o defeito que este predicado fecha.
     """
-    return bool(peca.decisoes.all())
+    if any(True for _ in peca.decisoes.all()):
+        return True
+    return any(juizo.admitido is False for juizo in peca.juizos.all())
+
+
+def razao_do_encerramento(peca):
+    """*"com a decisão"* ou *"com a inadmissão"* — a tela diz qual, e não uma das duas por sorte."""
+    if any(True for _ in peca.decisoes.all()):
+        return "com a decisão"
+    return "com a inadmissão"
 
 
 def alcance_da_instrucao(peca, *, atos=None):
@@ -124,7 +156,7 @@ def alcance_da_instrucao(peca, *, atos=None):
     (FR-528).
     """
     lidos = tuple(peca.instrucoes.select_related("documento").all() if atos is None else atos)
-    return Alcance(houve=bool(lidos), aberto=bool(lidos) and not decidido(peca), atos=lidos)
+    return Alcance(houve=bool(lidos), aberto=bool(lidos) and not encerrado(peca), atos=lidos)
 
 
 def ato_alcancado(peca, *, documento_id):
@@ -146,8 +178,10 @@ def ato_alcancado(peca, *, documento_id):
     )
     if ato is None:
         raise DomainError("not_found", NAO_ENCONTRADO, 404)
-    if decidido(peca):
-        raise DomainError("instruction_reach_closed", ALCANCE_ENCERRADO, 403)
+    if encerrado(peca):
+        raise DomainError(
+            "instruction_reach_closed", ALCANCE_ENCERRADO.format(razao_do_encerramento(peca)), 403
+        )
     return ato
 
 
@@ -182,11 +216,17 @@ def instruir(
         base = pode_gerir_comissao(actor, peca.inscricao.edital.processo)
         # A base composta, e a recusa que nomeia o que teria bastado — a formulação única da `033`.
         require_authorization_base(base is not None, bases=BASES_DA_GESTAO_DA_COMISSAO)
-        if decidido(peca):
-            # **A porta fechada não se reabre pela frente.** Instruir depois de decidido gravaria um
+        if encerrado(peca):
+            # **A porta fechada não se reabre pela frente.** Instruir depois do desfecho gravaria um
             # ato cujo alcance nasce encerrado — nem registro útil nem acesso concedido —, e
             # sugeriria a quem praticou que alguma coisa foi aberta (FR-529).
-            raise DomainError("appeal_already_decided", JA_DECIDIDO, 409)
+            raise DomainError(
+                "appeal_already_closed", JA_ENCERRADO.format(razao_do_encerramento(peca)), 409
+            )
+        if pedidos and not actor.can(CONSULTAR_INSCRICAO):
+            # **Esconder não é recusar.** A tela já não oferece a escolha a quem não alcança o
+            # original; a fronteira é aqui, porque um `POST` forjado não passa pela tela.
+            raise DomainError("forbidden", SEM_ALCANCE_DO_DOCUMENTO, 403)
 
         reserva = reserve(
             actor=actor,

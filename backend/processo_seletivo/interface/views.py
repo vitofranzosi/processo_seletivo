@@ -191,6 +191,7 @@ from processo_seletivo.seguranca.application.authorization import (
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import aceitar, tamanho_legivel
+from processo_seletivo.shared.canonical import canonical_sha256
 from processo_seletivo.shared.http import marcar_como_privada
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -7095,21 +7096,24 @@ def _instrucao_da_peca(request, ator, peca, *, base):
         OPERACAO_DE_ACESSO,
         alcance_da_instrucao,
         motivo_do_acesso_a_peca,
+        razao_do_encerramento,
     )
 
     # `atos=()` quando a subconsulta já disse que não há: é o que mantém em **zero** o custo da tela
     # sem instrução, que é a maioria delas.
     alcance = alcance_da_instrucao(peca, atos=None if peca.instrucoes_praticadas else ())
-    decidido = decidido_o_recurso(peca)
+    desfecho = encerrado_o_recurso(peca)
     contexto = {
         "instrucao": alcance,
+        # *"com a decisão"* ou *"com a inadmissão"*: a tela diz qual, em vez de acertar por sorte.
+        "instrucao_razao_do_fim": razao_do_encerramento(peca) if alcance.encerrado else "",
         # A frase do que falta e a quem pedir, na **formulação única** que a `033` fixou (`FR-486`).
         # Escrever uma segunda aqui criaria duas maneiras de dizer a mesma coisa, e a segunda
         # divergiria na primeira palavra que alguém melhorasse.
         "instrucao_a_quem_pedir": frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO),
-        # **Instruir peça decidida é recusado pelo comando**, e por isso a tela não o oferece: um
+        # **Instruir peça encerrada é recusado pelo comando**, e por isso a tela não o oferece: um
         # botão que sempre recusa ensina a pessoa a desconfiar da tela (`FR-013` da `018`).
-        "pode_instruir": base is not None and not decidido,
+        "pode_instruir": base is not None and not desfecho,
         "parecer_instruido": "",
         "parecer_instruivel": False,
         # Os documentos que a autoridade pode escolher anexar. Lidos **só para quem pode instruir e
@@ -7143,6 +7147,7 @@ def _instrucao_da_peca(request, ator, peca, *, base):
             and peca.resultado_atacado_id is not None
             and bool(_parecer_atacado(peca))
         )
+        # Espelho da recusa do comando: a autoridade não anexa o que ela própria não abre.
         if ator.can(CONSULTAR):
             instruidos = {ato.documento_id for ato in alcance.documentos}
             contexto["documentos_instruiveis"] = [
@@ -7171,10 +7176,15 @@ def _parecer_atacado(peca):
     return recursos_selectors.parecer_que_fundamenta(resultado, conclusoes)
 
 
-def decidido_o_recurso(peca):
-    from processo_seletivo.recursos.application.instruir import decidido
+def encerrado_o_recurso(peca):
+    """A peça acabou — **por decisão ou por inadmissão** (`FR-529`).
 
-    return decidido(peca)
+    As duas encerram, e a segunda é a que a primeira redação desta feature esqueceu: juízo negativo
+    é terminal, e o banco o garante.
+    """
+    from processo_seletivo.recursos.application.instruir import encerrado
+
+    return encerrado(peca)
 
 
 @require_http_methods(["POST"])
@@ -7200,7 +7210,13 @@ def instruir_recurso(request, recurso_id):
             parecer=request.POST.get("parecer") == "sim",
             documento_ids=request.POST.getlist("documento"),
             razao=request.POST.get("razao", ""),
-            idempotency_key=f"instruir-{peca.id}-{request.POST.get('assinatura', '')}",
+            # **A chave vem do que se pede, e não do estado da peça.** A assinatura cobre juízo e
+            # decisão, e instrução nenhuma a move: anexar o parecer e depois o documento reusaria a
+            # mesma chave com conteúdo diferente, e o segundo ato morreria em `409` — o oposto
+            # exato de *"instruir de novo acrescenta"*. Derivada do pedido, ela continua fazendo o
+            # que a idempotência existe para fazer: o duplo clique devolve os mesmos atos, e um
+            # pedido diferente é um ato diferente.
+            idempotency_key=f"instruir-{peca.id}-{_chave_do_pedido(request)}",
             correlation_id=str(peca.id),
         )
     except DomainError as recusa:
@@ -7208,6 +7224,21 @@ def instruir_recurso(request, recurso_id):
             raise
         return _recurso_com_recusa(request, ator, peca, recusa)
     return redirect(f"{reverse('interface:recurso', args=[peca.id])}#instrucao")
+
+
+def _chave_do_pedido(request):
+    """O resumo do que este `POST` pede — parecer, documentos e razão.
+
+    Canônico e ordenado, como toda chave de idempotência do projeto: dois envios iguais produzem a
+    mesma chave, e a repetição devolve os atos do primeiro em vez de gravar de novo.
+    """
+    return canonical_sha256(
+        {
+            "parecer": request.POST.get("parecer") == "sim",
+            "documentos": sorted(request.POST.getlist("documento")),
+            "razao": request.POST.get("razao", ""),
+        }
+    )
 
 
 @require_http_methods(["GET"])

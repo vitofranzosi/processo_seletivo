@@ -24,12 +24,14 @@ from processo_seletivo.recursos.application.instruir import (
 )
 from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 from processo_seletivo.shared.api.problems import DomainError
+from tests.conftest import ator_institucional
 from tests.fixtures.instrucao import (
     INSTRUTORA,
     PARECER,
     autoridade,
     cenario_instruivel,
     decidir_a_peca,
+    inadmitir_a_peca,
     outra_peca,
 )
 
@@ -49,6 +51,24 @@ def instruivel(raiz_de_arquivos, gestor, api_client, manager_headers, process_pa
     """
     return cenario_instruivel(
         gestor, api_client, manager_headers, process_payload, seed=136, codigo="0836"
+    )
+
+
+@pytest.fixture
+def sem_juizo(raiz_de_arquivos, gestor, api_client, manager_headers, process_payload):
+    """A peça **sem juízo de admissibilidade** — um por recurso, e o do cenário já é positivo.
+
+    Instruir antes da admissibilidade é legítimo e é o caso normal de quem precisa da prova para
+    apreciar a peça. É por aqui que a inadmissão pode ser exercida depois.
+    """
+    return cenario_instruivel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=138,
+        codigo="0838",
+        admitir_a_peca=False,
     )
 
 
@@ -347,3 +367,89 @@ def test_a_repeticao_da_chave_devolve_os_mesmos_atos(instruivel):
 
     assert {ato.pk for ato in primeira} == {ato.pk for ato in segunda}
     assert AtoDeInstrucao.objects.count() == 2
+
+
+# --- A inadmissão também encerra, e o banco prova que ela é terminal (FR-529) --------------------
+
+
+def test_o_alcance_fecha_com_a_inadmissao(sem_juizo):
+    """**O segundo desfecho terminal**, e o que a primeira redação desta feature não viu.
+
+    Juízo negativo encerra a peça **sem mérito**: nunca haverá `DecisaoRecurso`, e não é uma questão
+    de ninguém ter julgado ainda — a trigger `decisao_recurso_coerente` **recusa** decisão sobre
+    recurso não admitido. Um alcance que espere pela decisão não fica com uma janela larga demais:
+    fica com uma janela **sem fechadura**, aberta sobre dado pessoal para sempre.
+    """
+    instruir_tudo(sem_juizo)
+    inadmitir_a_peca(sem_juizo)
+
+    alcance = alcance_da_instrucao(recarregar(sem_juizo["recurso"]))
+
+    assert alcance.houve is True
+    assert alcance.aberto is False
+    assert alcance.encerrado is True
+
+
+def test_depois_da_inadmissao_o_documento_nao_abre(sem_juizo):
+    instruir_tudo(sem_juizo)
+    inadmitir_a_peca(sem_juizo)
+
+    with pytest.raises(DomainError) as recusa:
+        ato_alcancado(recarregar(sem_juizo["recurso"]), documento_id=sem_juizo["documento"].id)
+
+    assert recusa.value.status == 403
+    assert "permanece" in recusa.value.detail
+
+
+def test_nao_se_instrui_peca_inadmitida(sem_juizo):
+    """Instruir depois do desfecho gravaria um ato cujo alcance nasce encerrado."""
+    inadmitir_a_peca(sem_juizo)
+
+    with pytest.raises(DomainError) as recusa:
+        instruir_tudo(sem_juizo)
+
+    assert recusa.value.status == 409
+    assert not AtoDeInstrucao.objects.exists()
+
+
+# --- Instruir documento exige alcançá-lo (FR-105 da 018, FR-530) --------------------------------
+
+
+def test_quem_nao_consulta_inscricoes_nao_instrui_documento(instruivel):
+    """**A autoridade não anexa o que ela própria não alcança.**
+
+    A base composta — gestão **ou** presidência — autoriza o ato; ela não concede leitura dos
+    documentos do candidato. Quem preside sem `inscricao:consultar` não abre a tela de documentos,
+    e deixá-lo instruir um deles seria conceder a si mesmo, por um POST, o acesso que a porta lhe
+    nega: bastaria instruir e depois abrir pela rota da peça. É a `FR-105` da `018` — *"MUST NOT
+    ampliar o acesso a documentos do candidato"* — contornada pelo ato que existe para respeitá-la.
+
+    A tela já não oferecia a escolha. **Esconder não é recusar**, e a fronteira é o comando.
+    """
+    presidencia = ator_institucional("paulo.presidente", "recurso:julgar", "comissao:gerir")
+
+    with pytest.raises(DomainError) as recusa:
+        instruir(
+            actor=presidencia,
+            recurso_id=instruivel["recurso"].id,
+            documento_ids=[instruivel["documento"].id],
+            idempotency_key="instruir-sem-consultar",
+        )
+
+    assert recusa.value.status == 403
+    assert "consultar inscrições" in recusa.value.detail
+    assert not AtoDeInstrucao.objects.exists()
+
+
+def test_quem_nao_consulta_inscricoes_ainda_instrui_o_parecer(instruivel):
+    """E o parecer continua instruível: a autoridade **já** o alcança, pela porta da Etapa."""
+    presidencia = ator_institucional("paulo.presidente", "recurso:julgar", "comissao:gerir")
+
+    atos = instruir(
+        actor=presidencia,
+        recurso_id=instruivel["recurso"].id,
+        parecer=True,
+        idempotency_key="instruir-so-parecer-sem-consultar",
+    )
+
+    assert [ato.especie for ato in atos] == [AtoDeInstrucao.Especie.PARECER]

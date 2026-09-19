@@ -21,9 +21,9 @@ O "antes" contra o qual tudo aqui se compara está em
 | **FR-526** | a porta do portal é a titularidade, e nada nesta feature a afrouxa | `test_parecer_do_titular.py::test_outro_candidato_nao_alcanca_o_parecer_alheio` |
 | **FR-527** | `recursos/models.py::AtoDeInstrucao` e `recursos/application/instruir.py::instruir` | `test_alcance_da_instrucao.py::test_a_instrucao_abre_o_alcance_com_autor_e_instante` |
 | **FR-528** | o alcance é **derivado** da relação `recurso → instrucoes`; não há lista de pessoas | `test_alcance_da_instrucao.py::test_instruir_uma_peca_nao_alcanca_outra_da_mesma_etapa`, `test_instrucao_na_peca.py::test_o_mesmo_julgador_em_outro_recurso_nao_alcanca_nada` |
-| **FR-529** | `Alcance.aberto` pende de `decidido(peca)`; `ato_alcancado` recusa depois da decisão | `test_alcance_da_instrucao.py::test_o_alcance_fecha_com_a_decisao_e_o_registro_permanece`, `…::test_depois_de_decidido_o_documento_nao_abre_e_a_recusa_diz_por_que` |
+| **FR-529** | `Alcance.aberto` pende de `encerrado(peca)` — **decisão de mérito ou juízo negativo**; `ato_alcancado` recusa depois dos dois | `test_alcance_da_instrucao.py::test_o_alcance_fecha_com_a_decisao_e_o_registro_permanece`, `…::test_o_alcance_fecha_com_a_inadmissao`, `…::test_depois_da_inadmissao_o_documento_nao_abre` |
 | **FR-530** | a autorização é `pode_gerir_comissao` — a base composta que a `033` já exigia; nenhum papel e nenhuma permissão nova em `interface/identidade.py` | `test_alcance_da_instrucao.py::test_quem_so_julga_nao_instrui_e_a_recusa_nomeia_as_duas_bases`; e os dois vizinhos intactos em `test_proveniencia_do_recurso.py` |
-| **FR-531** | `AtoDeInstrucao.documento` é `FK` para o `DocumentoSubmetido` original; `documento_instruido` serve os bytes dele | `test_alcance_da_instrucao.py::test_o_ato_alcanca_o_documento_por_referencia_e_nao_por_copia` |
+| **FR-531** | `AtoDeInstrucao.documento` é `FK` para o documento original; `documento_instruido` serve os bytes dele. **Instruir documento exige `inscricao:consultar`** — a autoridade não anexa o que ela própria não abre | `test_alcance_da_instrucao.py::test_o_ato_alcanca_o_documento_por_referencia_e_nao_por_copia`, `…::test_quem_nao_consulta_inscricoes_nao_instrui_documento` |
 | **FR-531a** | não há campo de arquivo no ato — não há onde uma cópia caber | `test_instrucao_na_peca.py::test_instruir_nao_duplica_arquivo_no_armazenamento`, `…::test_abrir_o_documento_instruido_tambem_nao_duplica` (conferido no **armazenamento**) |
 | **FR-532** | `interface/views.py::_instrucao_da_peca` e os três ramos de `interface/recurso.html` | `test_instrucao_na_peca.py` — os três casos de estado, mais os quatro de "não oferecer o que não se alcança" |
 | **FR-533** | `instruir.py::instruir` audita cada linha, com `motivo_do_ato` | `test_trilha_da_instrucao.py::test_o_ato_aparece_com_autor_instante_recurso_e_o_que_foi_anexado`, `…::test_o_ato_registra_qual_base_autorizou` |
@@ -212,6 +212,49 @@ pergunta que a `FR-534` responde é *"quem, além do titular, viu isto?"*.
 A trilha do Edital responde as quatro, numa tela: o ato nomeia quem autorizou e quando; o alcance é
 daquele recurso e termina com a decisão dele; e os registros de acesso dizem quem de fato leu, e
 quantas vezes.
+
+---
+
+## 6a. O que a revisão do PR encontrou, e o que cada achado custava
+
+Três achados, **todos procedentes**. Os dois primeiros eram acesso a dado pessoal — a espécie de
+defeito que esta feature existe para não ter.
+
+### O alcance de um recurso **inadmitido** nunca fechava
+
+`encerrado()` olhava só para `DecisaoRecurso`. Mas juízo de admissibilidade negativo é **terminal**,
+e o banco o garante: a trigger `decisao_recurso_coerente` **recusa** decisão sobre recurso não
+admitido. Uma peça inadmitida, portanto, nunca receberia a decisão que o alcance esperava.
+
+**Não era uma janela larga demais: era uma janela sem fechadura.** O documento instruído continuava
+abrindo, o parecer continuava na tela do titular, e novas instruções continuavam sendo aceitas —
+indefinidamente. Nos dois canais, porque `pareceres_do_titular` classificava a peça inadmitida como
+"pendente" pela mesma razão.
+
+O predicado passou a reconhecer os **dois** desfechos, e a tela diz qual: *"terminou com a
+decisão"* ou *"terminou com a inadmissão"*, em vez de acertar por sorte.
+
+### Instruir documento sem poder abri-lo
+
+A tela escondia a escolha de quem não tem `inscricao:consultar`; o **comando aceitava**. Uma
+presidência com `recurso:julgar` — que tem a base composta e **não** tem a permissão de consultar
+inscrições — podia forjar o `POST`, anexar o documento e depois abri-lo pela rota nova. Isto é a
+`FR-105` da `018` contornada **pelo ato que existe para respeitá-la**.
+
+**Esconder não é recusar**, e a fronteira é o comando. O parecer segue instruível por ela, porque
+esse a autoridade já alcança pela porta da Etapa.
+
+### Duas instruções sucessivas morriam em `409`
+
+A chave de idempotência vinha da **assinatura da peça**, que cobre juízo e decisão — e instrução
+nenhuma a move. Anexar o parecer e depois o documento reusava a mesma chave com conteúdo diferente:
+`idempotency_conflict`. O oposto exato de *"instruir de novo acrescenta"*, e invisível na tela,
+porque ela redireciona de todo jeito. A chave passou a vir do **pedido**.
+
+**E o teste que deveria ter pego isso media o nada.** Ele postava um terceiro ato e conferia só o
+orçamento de consulta; com o `409`, nada era criado e o número não se movia — corretamente. Agora
+ele confere status e contagem, e há duas regressões novas pelo canal real: dois envios parciais
+criam dois atos, e o mesmo envio repetido continua criando um só.
 
 ---
 

@@ -131,8 +131,12 @@ que esta feature não amplia.
 O terceiro estado. Ele afirma as duas metades, porque as duas são o ponto: o ato **houve** — e o
 registro dele não se apaga —, e o acesso que ele concedia **terminou** com a decisão (FR-529).
 {% endcomment %}
-<p class="ajuda">Houve instrução neste recurso: {{ instrucao.atos|length }} ato(s). O alcance que ela
-  concedia terminou com a decisão, e o registro de que ela houve permanece — nada foi apagado.</p>
+{% comment %}
+A frase fica **numa linha só** por causa do que a asserção procura: quebrá-la entre "nada foi" e
+"apagado" partiu a frase no HTML e derrubou a regressão — o template não põe espaço onde havia
+quebra, e a busca por substring não encontra o que a pessoa lê inteiro na tela.
+{% endcomment %}
+<p class="ajuda">Houve instrução neste recurso: {{ instrucao.atos|length }} ato(s). O alcance que ela concedia terminou {{ instrucao_razao_do_fim }}, e o registro de que ela houve permanece — nada foi apagado.</p>
 {% else %}
 <p class="ajuda">Nada foi instruído neste recurso. O parecer atacado e os documentos citados chegam
   por <strong>ato de instrução</strong>, e não por permissão de julgar.

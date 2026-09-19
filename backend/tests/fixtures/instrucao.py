@@ -84,6 +84,26 @@ def decidir_a_peca(montado, *, especie=DecisaoRecurso.Especie.INDEFERIDO):
     )
 
 
+def inadmitir_a_peca(montado, *, motivo="Intempestivo: a peça chegou depois da janela."):
+    """O **outro** desfecho terminal de um recurso, e o que a `036` esquecera (`FR-529`).
+
+    Juízo negativo encerra a peça sem mérito, e o banco garante que ele é definitivo: a trigger
+    `decisao_recurso_coerente` recusa decisão sobre recurso não admitido. Um alcance que espere pela
+    decisão, portanto, **nunca** fecha — não é uma janela larga, é uma janela sem fechadura.
+    """
+    from processo_seletivo.recursos.application.admitir import admitir
+    from tests.fixtures.recursos_us4 import assinatura_de
+
+    return admitir(
+        actor=julgador(),
+        recurso_id=montado["recurso"].id,
+        admitido=False,
+        motivo=motivo,
+        assinatura_do_estado=assinatura_de(montado["recurso"]),
+        idempotency_key=f"inadmitir-{montado['recurso'].id}",
+    )
+
+
 def outra_peca(montado, *, chave="interpor-outra-036"):
     """Um **segundo** recurso da mesma Etapa, do outro candidato — a contraprova da `T021`.
 
@@ -127,17 +147,20 @@ def outra_peca(montado, *, chave="interpor-outra-036"):
 
 
 def autoridade(subject=INSTRUTORA):
-    """Quem instrui: **julga e gere a comissão**, e nenhuma das duas é papel novo (FR-530).
+    """Quem instrui **com documento**: julga, gere a comissão e consulta inscrições (FR-530).
 
-    `recurso:julgar` porque a porta da peça o exige — instruir acontece na tela do recurso —, e
-    `comissao:gerir` porque é uma das duas bases que `pode_gerir_comissao` aceita. A outra base é a
-    presidência, que **não é papel** e por isso não aparece aqui: ela é vínculo, e quem a exerce é
-    conferido objeto a objeto.
+    As três são as do papel `gestor` somado ao `julgador`, e nenhuma é nova — é exatamente o ator
+    que `test_quem_consulta_inscricoes_alcanca_os_documentos` já usava antes desta feature.
 
-    É exatamente o par que o papel `gestor` da interface já reúne com o `julgador` — o mesmo
-    ator que `test_quem_consulta_inscricoes_alcanca_os_documentos` já usava antes desta feature.
+    **`inscricao:consultar` está aqui porque instruir documento exige alcançá-lo.** A base composta
+    — gestão ou presidência — autoriza o **ato**; ela não concede leitura dos documentos do
+    candidato, e quem não os abre não os anexa: seria conceder a si mesmo, por um `POST`, o acesso
+    que a porta nega.
+
+    A presidência **sem** `inscricao:consultar` continua instruindo o parecer, e é o caso de
+    `test_quem_nao_consulta_inscricoes_ainda_instrui_o_parecer`.
     """
-    return ator_institucional(subject, "recurso:julgar", "comissao:gerir")
+    return ator_institucional(subject, "recurso:julgar", "comissao:gerir", "inscricao:consultar")
 
 
 __all__ = [
@@ -147,6 +170,7 @@ __all__ = [
     "autoridade",
     "cenario_instruivel",
     "decidir_a_peca",
+    "inadmitir_a_peca",
     "julgador",
     "outra_peca",
     "requisito_de",

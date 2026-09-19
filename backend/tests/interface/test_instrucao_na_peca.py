@@ -329,12 +329,69 @@ def test_a_tela_instruida_custa_uma_leitura_a_mais_e_ela_nao_cresce(
     com_dois_atos = len(contexto)
 
     # Um terceiro ato na mesma peça, e o número **não** se move.
+    #
+    # **A conferência de que o ato nasceu é parte do teste, e não zelo.** A primeira redação daqui
+    # postava e seguia direto para o orçamento: com a chave de idempotência derivada da assinatura
+    # da peça, aquele `POST` morria em `409` e o número não se movia — corretamente, porque nada
+    # fora criado. O teste passava medindo o nada.
     identificar(client, INSTRUTORA, ["julgador", "gestor"])
-    client.post(
+    antes = AtoDeInstrucao.objects.filter(recurso=instruivel["recurso"]).count()
+    resposta = client.post(
         reverse("interface:recurso-instruir", args=[instruivel["recurso"].id]),
         {"documento": [str(instruivel["documento"].id)], "razao": "de novo"},
     )
+    assert resposta.status_code == 302, resposta.content.decode()[:400]
+    assert AtoDeInstrucao.objects.filter(recurso=instruivel["recurso"]).count() == antes + 1
+
     identificar(client, JULGADORA, ["julgador"])
     client.get(caminho)
     with django_assert_num_queries(com_dois_atos):
         client.get(caminho)
+
+
+# --- Instruir de novo acrescenta, e pelo canal real (FR-527) ------------------------------------
+
+
+def test_duas_instrucoes_sucessivas_pela_tela_criam_dois_atos(client, seletor_ligado, instruivel):
+    """**"Instruir de novo acrescenta"**, e o percurso que o prova é o de quem de fato instrui.
+
+    A autoridade anexa o parecer, recarrega a tela e anexa o documento — dois `POST` parciais, que é
+    como a instrução acontece quando a prova chega em dois momentos.
+
+    **A chave de idempotência derivava da assinatura da peça**, e a assinatura cobre juízo e
+    decisão: instrução nenhuma a move. O segundo envio reusava a mesma chave com conteúdo diferente
+    e morria em `409 idempotency_conflict` — o oposto exato do que o modelo promete, e invisível
+    porque a tela redireciona de todo jeito.
+    """
+    caminho = reverse("interface:recurso-instruir", args=[instruivel["recurso"].id])
+    identificar(client, INSTRUTORA, ["julgador", "gestor"])
+
+    primeira = client.post(caminho, {"parecer": "sim", "razao": "O parecer é o que se contesta."})
+    segunda = client.post(
+        caminho, {"documento": [str(instruivel["documento"].id)], "razao": "E o documento citado."}
+    )
+
+    assert primeira.status_code == 302
+    assert segunda.status_code == 302, segunda.content.decode()[:400]
+    especies = sorted(
+        AtoDeInstrucao.objects.filter(recurso=instruivel["recurso"]).values_list(
+            "especie", flat=True
+        )
+    )
+    assert especies == ["DOCUMENTO", "PARECER"]
+
+    corpo = abrir_a_peca(client, instruivel["recurso"])
+    assert PARECER in corpo
+    assert instruivel["documento"].nome_original in corpo
+
+
+def test_o_mesmo_envio_repetido_nao_duplica_o_ato(client, seletor_ligado, instruivel):
+    """O duplo clique continua sendo um ato só — é o que a idempotência existe para fazer."""
+    caminho = reverse("interface:recurso-instruir", args=[instruivel["recurso"].id])
+    identificar(client, INSTRUTORA, ["julgador", "gestor"])
+    pedido = {"parecer": "sim", "razao": "O parecer é o que se contesta."}
+
+    client.post(caminho, pedido)
+    client.post(caminho, pedido)
+
+    assert AtoDeInstrucao.objects.filter(recurso=instruivel["recurso"]).count() == 1
