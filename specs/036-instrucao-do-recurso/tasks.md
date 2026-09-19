@@ -81,10 +81,10 @@ morre onde deve.
 
 - [ ] T009 [US1] Levar o parecer ao acompanhamento em `backend/processo_seletivo/portal/views.py` (**EXISTENTE**): o da avaliação que **fundamenta o resultado contestável** (`FR-523`, `D-002`), e o do registro histórico quando houve reabertura
 - [ ] T010 [US1] Exibi-lo em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**) **ao lado do motivo, e não no lugar dele** (`FR-525a`). O motivo é a regra aplicada ao número; o parecer é a razão que a pessoa escreveu. Identifique-o como a fundamentação daquele resultado
-- [ ] T011 [US1] Condicionar ao **prazo recursal aberto** (`FR-522`, `D-001`), e **dizer quando ele se encerrou** (`FR-524`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). Sumir em silêncio faria a pessoa pensar que perdeu algo — é a diferença entre a feature e um defeito
+- [ ] T011 [US1] Condicionar às **duas** condições da `FR-522` — prazo recursal aberto **ou** recurso dele ainda não decidido (`D-001`) —, e **dizer por que saiu** quando as duas se encerram (`FR-524`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). Sumir em silêncio faria a pessoa pensar que perdeu algo — é a diferença entre a feature e um defeito
 - [ ] T012 [US1] Dizer que **não há parecer** quando não há (`FR-525`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). A obrigatoriedade depende do caráter da Etapa e da forma da avaliação, e a ausência é real
 - [ ] T013 [US1] **Emendar o comentário** de `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**) que hoje diz *"Nada aqui é de terceiro: nenhum nome, nenhuma nota alheia, nenhum parecer, nenhuma avaliação"*. O sujeito dele é **de terceiro**, e a emenda MUST **dizer a distinção** — parecer de terceiro continua proibido, parecer do próprio titular é o que a feature entrega. **Não apague a frase**: ela é a regra escrita onde alguém a lê antes de mexer
-- [ ] T014 [US1] Prender a `US1` em `backend/tests/portal/test_parecer_do_titular.py` (**NOVO**): o titular lê; lê **ao lado** do motivo; não lê depois do prazo, **e a tela diz**; não lê quando não há, **e a tela diz**; e **outro candidato não alcança nada** (`FR-526`, `FR-535`, `SC-186`). Inclua o caso do **escopo institucional divergente**, que recebe a resposta uniforme (`FR-536`)
+- [ ] T014 [US1] Prender a `US1` em `backend/tests/portal/test_parecer_do_titular.py` (**NOVO**): o titular lê; lê **ao lado** do motivo; **continua lendo enquanto o recurso dele corre, mesmo com o prazo fechado**; não lê depois de as duas condições se encerrarem, **e a tela diz por quê**; não lê quando não há, **e a tela diz**; e **outro candidato não alcança nada** (`FR-526`, `FR-535`, `SC-186`). Inclua o caso do **escopo institucional divergente**, que recebe a resposta uniforme (`FR-536`)
 
 **Checkpoint**: **este é o MVP.** Quem foi eliminado sabe por quê, e pode recorrer com fundamento.
 
@@ -102,8 +102,8 @@ contra o quê, depois quem julga decide vendo o quê.
 
 - [ ] T015 [US2] Oferecer o ato de instrução na peça, em `backend/processo_seletivo/interface/views.py` (**EXISTENTE**), a quem tem a **base composta** que a `033` já sabe exigir — gestão **ou** presidência. **Nenhuma capacidade nova** (`FR-530`)
 - [ ] T016 [US2] Exibir o que foi instruído em `backend/processo_seletivo/interface/templates/interface/recurso.html` (**EXISTENTE**): o parecer atacado, e o caminho para o documento citado **por referência** (`FR-531`). **Exiba o que a porta já carregou** — `research.md` `R-3` — e **não** busque de novo: há teste de orçamento de consulta nesta tela
-- [ ] T017 [US2] Dizer **o que falta e a quem pedir** quando nada foi instruído, em `backend/processo_seletivo/interface/templates/interface/recurso.html` (**EXISTENTE**) — `FR-532`, na formulação que o produto já pratica. **E continuar não oferecendo caminho que aquele ator não alcança**: é a garantia da `033`, e esta é a tarefa que mais facilmente a desfaz
-- [ ] T018 [US2] Prender o que quem julga passa a ver, em `backend/tests/interface/test_instrucao_na_peca.py` (**NOVO**): sem instrução, lê o que falta; com instrução, lê o parecer e alcança o documento; e a tela **não** oferece o que ele não alcança (`FR-535`, `FR-536`)
+- [ ] T017 [US2] Distinguir os **três** estados da tela em `backend/processo_seletivo/interface/templates/interface/recurso.html` (**EXISTENTE**) — `FR-532`: (a) **nada instruído** → o que falta e a quem pedir, na formulação que o produto já pratica; (b) **instruído e não decidido** → a prova; (c) **houve instrução e o acesso terminou** → que houve, e que o alcance se encerrou. **O terceiro é o que a primeira redação não tinha**: sem ele a tela diz *"nada foi instruído"* a quem viu a prova ontem, e isso é falso sobre um ato que aconteceu. **Em nenhum dos três ofereça caminho que aquele ator não alcança** — é a garantia da `033`, e esta é a tarefa que mais facilmente a desfaz
+- [ ] T018 [US2] Prender o que quem julga passa a ver, em `backend/tests/interface/test_instrucao_na_peca.py` (**NOVO**): sem instrução, lê o que falta; com instrução, lê o parecer e alcança o documento; **depois de decidido, lê que houve instrução e que o alcance terminou**; e a tela **não** oferece o que ele não alcança (`FR-535`, `FR-536`). Acrescente a asserção da `FR-531a`: o documento é alcançado **por referência**, e **nada foi duplicado** — conferido no armazenamento, e não só no caminho que a tela aponta
 - [ ] T019 [US2] Atualizar o **único** caso alterado, em `backend/tests/interface/test_proveniencia_do_recurso.py` (**EXISTENTE** — altere **só** `test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta`). **Os dois vizinhos permanecem** e são a contraprova de que nada se ampliou por engano
 - [ ] T020 [US2] Conferir que o **orçamento de consulta** da tela não mudou, em `backend/tests/interface/test_proveniencia_do_recurso.py` (**EXISTENTE**, o caso que já existe). Exibir o já carregado não custa consulta; se o número subiu, a `T016` buscou de novo
 - [ ] T021 [US2] **CONTRAPROVA OBRIGATÓRIA** — o mesmo julgador, **outro** recurso da mesma Etapa, em `backend/tests/integration/recursos/test_alcance_da_instrucao.py` (**EXISTENTE**, criado em T008 — acrescente): ele **não** alcança nada por causa da instrução anterior (`SC-185`). **Se alcançar, o que se construiu foi uma permissão**, e a feature está errada no seu ponto central
@@ -129,9 +129,9 @@ texto do parecer em lugar nenhum.
 
 ## Phase 6: Polimento e conferência
 
-- [ ] T025 [P] Percorrer os **cenários 1 e 2** de `specs/036-instrucao-do-recurso/quickstart.md` (**EXISTENTE**) pelo portal, com o seletor de identidade do candidato — inclusive as três contraprovas do cenário 1 — é o `SC-182`. **O código de acesso do portal sai no terminal do servidor**
+- [ ] T025 Percorrer os **cenários 1 e 2** de `specs/036-instrucao-do-recurso/quickstart.md` (**EXISTENTE**) pelo portal, com o seletor de identidade do candidato — inclusive as três contraprovas do cenário 1 — é o `SC-182`. **O código de acesso do portal sai no terminal do servidor**
 - [ ] T026 Percorrer os **cenários 3 e 4** de `specs/036-instrucao-do-recurso/quickstart.md` (**EXISTENTE**) pela interface administrativa, **inclusive o passo 5 do cenário 3** — o mesmo julgador em outro recurso, que é o que distingue ato de permissão. O cenário 3 é o `SC-183`
-- [ ] T027 [P] Percorrer o **cenário 5** de `specs/036-instrucao-do-recurso/quickstart.md` (**EXISTENTE**) — a trilha, com a contraprova do conteúdo que não pode aparecer
+- [ ] T027 Percorrer o **cenário 5** de `specs/036-instrucao-do-recurso/quickstart.md` (**EXISTENTE**) — a trilha, com a contraprova do conteúdo que não pode aparecer
 - [ ] T028 Conferir **caso a caso** os testes alterados contra o "antes" gravado em `specs/036-instrucao-do-recurso/antes-da-instrucao.md` (**EXISTENTE**, criado em T002), e **recontar**: `research.md` `R-6` prevê **um**, e a `034` previu oito e entregou doze porque um código vivia num dicionário compartilhado. Se forem mais, registre por que
 - [ ] T029 Escrever `specs/036-instrucao-do-recurso/rastreabilidade.md` (**NOVO**): uma linha por `FR-`, uma por `SC-`, **uma por teste alterado com o motivo** — e, porque esta feature concede acesso a dado pessoal, **uma seção que responde, por escrito: quem passou a ver o quê, por quanto tempo, e o que ficou registrado**
 - [ ] T030 Rodar `cd backend && make lint check test-pg` e registrar a contagem final em `specs/036-instrucao-do-recurso/rastreabilidade.md` (**EXISTENTE**, criado em T029). `test-pg` e **nunca** `test`; `lint` são **dois** passos. **Esta feature tem migration**: o `makemigrations --check` prova que a migration cobre o modelo, e **não** prova "nada mudou". As promessas que se conferem lendo o diff são **nenhuma capacidade nova, nenhum papel novo e nenhum parecer alterado** (`FR-530`, `FR-537`, `SC-187`)
@@ -165,6 +165,7 @@ por instrução nenhuma. Se a fase 2 travar, a `US1` entrega sozinha — e ela �
   Nenhuma leva `[P]` — as quatro últimas se empilham no mesmo arquivo.
 - **T008 → T021** são o mesmo arquivo, criado em T008.
 - **T016 → T020** — o orçamento se confere depois de a tela mudar.
+- **T025 → T026 → T027** — os percursos são cadeia, e não conjunto: a `T027` lê o que a `T026` escreve.
 - **T028 depois de todos os percursos** — percurso que ache defeito muda o estado que ela confere.
 
 ### Oportunidades de paralelismo
@@ -172,9 +173,14 @@ por instrução nenhuma. Se a fase 2 travar, a `US1` entrega sozinha — e ela �
 | Tarefas | Por que podem |
 |---|---|
 | US1 inteira · fase 2 | canais diferentes, e a `US1` não depende do ato |
-| T025 · T027 | um é o portal, o outro é a trilha |
 
-**T026 fica de fora**: ele pratica atos que mudam o estado que a `T027` lê.
+**Nenhum percurso é paralelo, e a razão é uma cadeia:** a `T027` lê a trilha **da instrução que a
+`T026` pratica**. Rodá-las fora de ordem faz a `T027` procurar registro que ainda não existe e
+encontrar a trilha vazia — que é um verde falso, e não uma falha.
+
+*A primeira redação marcava `T025 · T027` como paralelas e explicava ao contrário: dizia que a `T026`
+ficava de fora "porque pratica atos que mudam o estado que a T027 lê". Isso é a razão de a `T027` vir
+**depois**, e não de a `T026` não ser paralela.*
 
 ---
 

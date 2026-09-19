@@ -48,11 +48,31 @@ resultado, e não como um segundo motivo.
 
 ## Cenário 2 — o prazo fecha, e a tela diz (`FR-524`)
 
-1. Com o mesmo Edital, faça o prazo recursal se encerrar — pelo cronograma publicado, **e não
-   mexendo no relógio nem no banco**.
-2. Abra o acompanhamento como o titular.
+**Como encerrar o prazo sem mexer no relógio.** A composição **recusa Evento com data passada** — a
+etapa fica pendente —, de modo que compor um Edital já vencido não é caminho. O que funciona é
+declarar a **janela recursal do marco curta**, de minutos, e esperar ela passar de verdade.
 
-**Esperado**: o parecer **não** aparece, **e a tela diz que o prazo se encerrou**.
+> **Se não houver caminho pela interface, registre e siga.** A `034` esbarrou no equivalente — a
+> Retificação não acrescenta Modalidade — e registrou *"inexequível pela interface"* com a metade que
+> deu para percorrer. Fazer o mesmo aqui é a resposta certa; **contornar por banco ou por relógio não
+> é**, e o protocolo do projeto proíbe.
+
+1. Faça o prazo recursal se encerrar, pelo caminho acima.
+2. **Confira que não há recurso pendente** daquela inscrição — é a segunda condição da `FR-522`, e
+   com um recurso em julgamento o parecer **continua aparecendo**, corretamente.
+3. Abra o acompanhamento como o titular.
+
+**Esperado**: o parecer **não** aparece, **e a tela diz por quê**.
+
+### A contraprova da segunda condição, e ela é a que o `analyze` acrescentou
+
+4. No mesmo Edital, com **outra** inscrição eliminada: interponha o recurso **antes** de o prazo
+   fechar, e deixe-o **sem decisão**.
+5. Depois de o prazo fechar, abra o acompanhamento como esse titular.
+
+**Esperado**: o parecer **continua aparecendo**. Quem recorreu decide se insiste, escreve réplica ou
+aceita a decisão — e fazer isso sem poder reler o texto que está contestando é o defeito desta
+feature acontecendo um passo adiante.
 
 **Este é o cenário que separa a feature de um defeito.** Sumir em silêncio faria a pessoa pensar que
 perdeu algo, ou que o sistema falhou. Se a frase não estiver lá, a `FR-524` não foi cumprida — ainda
@@ -90,10 +110,12 @@ construiu foi uma permissão, e não um ato.
 1. Com a instrução praticada, **decida** o recurso.
 2. Volte à peça como quem julgou.
 
-**Esperado**: o **registro** de que a instrução houve permanece — e o **acesso** que ela concedia
+**Esperado**: a tela diz **que houve instrução e que o alcance se encerrou** — e não *"nada foi
+instruído"*, que seria falso sobre um ato que aconteceu. O **registro** permanece; o **acesso**
 terminou.
 
-**As duas metades são o ponto.** Nada se apaga; a porta fecha.
+**As duas metades são o ponto.** Nada se apaga; a porta fecha. E a tela precisa saber dizer **os três
+estados**, não dois.
 
 ---
 

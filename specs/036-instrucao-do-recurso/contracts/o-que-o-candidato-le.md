@@ -23,11 +23,16 @@ a contestação; substituir o parecer pelo motivo é o estado de hoje.
 ## Quando aparece
 
 ```
-resultado desfavorável + prazo recursal aberto   →  o parecer aparece
-prazo encerrado                                  →  some, E a tela diz que o prazo se encerrou
-resultado favorável                              →  nada muda
-sem parecer escrito                              →  a tela diz que não há
+desfavorável + prazo aberto            →  o parecer aparece
+desfavorável + recurso NÃO decidido    →  o parecer aparece, mesmo com o prazo fechado
+prazo fechado E sem recurso pendente   →  some, E a tela diz por quê
+resultado favorável                    →  nada muda
+sem parecer escrito                    →  a tela diz que não há
 ```
+
+**A segunda linha é a que o `analyze` acrescentou.** Prender só ao prazo tirava o parecer de quem
+recorreu enquanto o recurso dela corria — a pessoa que esta feature existe para servir, no momento em
+que ela mais precisa.
 
 **O terceiro caso é o que separa esta feature de um defeito.** Sumir em silêncio faria a pessoa
 pensar que perdeu algo, ou que o sistema falhou. `FR-524` obriga a frase.

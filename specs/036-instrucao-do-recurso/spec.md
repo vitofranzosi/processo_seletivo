@@ -171,6 +171,9 @@ alcance e o instante.
   a união de todas.
 - **Resultado desfavorável sem parecer.** Existe: a obrigatoriedade depende do caráter da Etapa e da
   forma. A tela precisa dizer que não há parecer — e não parecer que há e sumiu.
+- **Prazo que fecha com o recurso da pessoa ainda em julgamento.** Era o buraco da primeira redação:
+  a exibição pendia só do prazo, e a pessoa perdia de vista o texto que o **próprio recurso dela**
+  contesta. Resolvido pela segunda condição da `FR-522` (`D-001`).
 - **Recurso sem resultado atacado.** Há recurso contra publicação, e não contra resultado individual.
   Ali não há parecer a instruir, e a tela precisa dizer isso.
 - **Instrução praticada duas vezes.** O ato é append-only; instruir de novo acrescenta, e não
@@ -185,12 +188,17 @@ alcance e o instante.
 ### O parecer chega a quem foi avaliado
 
 - **FR-522**: O titular MUST ler, no canal do candidato, o **parecer** que fundamenta um resultado
-  desfavorável a ele, **enquanto o prazo de recurso estiver aberto** (`D-001`).
+  desfavorável a ele, **enquanto o prazo de recurso estiver aberto — ou enquanto houver recurso dele
+  ainda não decidido** (`D-001`).
+  *A segunda condição não é generosidade:* quem recorreu decide se insiste, escreve réplica ou aceita
+  a decisão, e fazer isso sem poder reler o texto que está contestando é o defeito que esta feature
+  existe para fechar, acontecendo um passo adiante. **E foi o sistema que o obrigou a recorrer contra
+  aquele texto.**
 - **FR-523**: O parecer exibido MUST ser o que **fundamenta o resultado contestável** — o da avaliação
   que o produziu, e não o estado atual de uma avaliação reaberta depois. O registro histórico da
   conclusão existe para isso e MUST ser a fonte quando houver reabertura.
-- **FR-524**: Encerrado o prazo, o parecer MUST deixar de ser exibido, **e a tela MUST dizer que o
-  prazo se encerrou**. Desaparecer em silêncio faria a pessoa pensar que perdeu algo que nunca teve.
+- **FR-524**: Encerradas **as duas** condições da `FR-522` — o prazo fechou **e** não há recurso
+  pendente —, o parecer MUST deixar de ser exibido, **e a tela MUST dizer por quê**. Desaparecer em silêncio faria a pessoa pensar que perdeu algo que nunca teve.
 - **FR-525**: Resultado desfavorável **sem** parecer MUST ser dito como tal. A ausência é possível —
   a obrigatoriedade depende do caráter da Etapa e da forma da avaliação —, e calar sobre ela é pior
   do que declará-la.
@@ -215,12 +223,24 @@ alcance e o instante.
 - **FR-531**: O documento citado MUST ser alcançado **por referência**, e MUST NOT ser copiado para o
   recurso. Copiar multiplicaria a superfície do dado pessoal e criaria uma segunda cópia que a
   Constituição depois proíbe apagar.
-- **FR-532**: A tela de quem julga, quando nada foi instruído, MUST dizer **o que falta e a quem
-  pedir**, na formulação que o produto já pratica — e MUST NOT oferecer caminho que aquele ator não
-  alcança, que é a garantia deixada pela `033`.
+- **FR-531a**: O documento alcançado por referência MUST NOT ser copiado para dentro do recurso, e a
+  **ausência da cópia MUST ser verificável** — não basta o caminho apontar para o original; nada pode
+  ter sido duplicado no caminho.
 
 ### O rastro
 
+- **FR-532**: A tela de quem julga MUST distinguir **três** estados, e não dois:
+
+  | Estado | O que a tela diz |
+  |---|---|
+  | nada foi instruído | **o que falta e a quem pedir**, na formulação que o produto já pratica |
+  | há instrução, e o recurso não foi decidido | a prova |
+  | **houve instrução, e o acesso terminou com a decisão** | **que houve, e que o alcance se encerrou** |
+
+  O terceiro é o que a primeira redação não tinha: sem ele, a tela diria *"nada foi instruído"* a
+  quem viu a prova ontem — e isso é falso sobre um ato que aconteceu.
+  Em nenhum dos três a tela MUST oferecer caminho que aquele ator não alcança, que é a garantia
+  deixada pela `033`.
 - **FR-533**: O ato de instrução MUST ser registrado na auditoria, com autor, instante, recurso
   alcançado e o que foi anexado.
 - **FR-534**: O **acesso exercido** sobre o que foi instruído MUST ser registrado. Saber que a prova
@@ -269,18 +289,27 @@ alcance e o instante.
 
 Decidido em 19/09/2026 por quem governa o backlog.
 
-O parecer aparece **enquanto houver prazo recursal**, que é o recorte da melhoria 13.2 e o que a
-`012` descreve ao exigir o texto: ele serve para recorrer, e aparece enquanto recorrer for possível.
-É também a menor superfície de dado pessoal exposta.
+O parecer aparece **enquanto houver prazo recursal — ou enquanto houver recurso dele ainda não
+decidido**. A primeira condição é o recorte da melhoria 13.2 e o que a `012` descreve ao exigir o
+texto: ele serve para recorrer, e aparece enquanto recorrer for possível.
 
-**O custo, dito por escrito:** encerrado o prazo, a pessoa perde acesso à razão da própria
-eliminação, e ela continua sendo a titular daquele dado. **A `FR-524` é o que impede esse custo de
-virar defeito** — a tela diz que o prazo se encerrou, em vez de calar. Se a decisão for revista um
+**A segunda foi acrescentada em 19/09/2026, depois que o `analyze` mostrou o que a primeira sozinha
+custava.** Prender só ao prazo tirava o parecer justamente de quem recorreu, enquanto o recurso dele
+corria — a pessoa que a feature existe para servir, no momento em que ela mais precisa. Quem recorreu
+já alcança a própria peça e a decisão; o parecer é o terceiro documento do mesmo processo que ela
+moveu, e não uma superfície nova.
+
+*Fica registrado que a decisão foi tomada duas vezes*: a primeira com o custo dito de forma genérica,
+a segunda com o caso na mesa. A diferença entre as duas é o que uma passada de `analyze` produz.
+
+**O custo que permanece, dito por escrito:** encerradas as duas condições, a pessoa perde acesso à
+razão da própria eliminação, e ela continua sendo a titular daquele dado. **A `FR-524` é o que impede
+esse custo de virar defeito** — a tela diz **por quê**, em vez de calar. Se a decisão for revista um
 dia, é esta linha que muda.
 
-**Alternativas descartadas**: exibir sempre ao titular, que é mais coerente com direito do titular e
-deixa a superfície permanente; e exibir durante o prazo e depois só a quem recorreu, que fecha o caso
-de *"perdi o prazo e não sei por quê"* ao custo de duas regras e um estado a mais.
+**Alternativas descartadas**: exibir **sempre** ao titular, que é mais coerente com direito do
+titular e deixa a superfície permanente; e exibir até o resultado virar **definitivo**, que é mais
+simples de explicar e mantém a superfície aberta por todo o certame.
 
 ### D-002 — o parecer é o da avaliação que fundamenta o resultado
 

@@ -11,10 +11,15 @@ pessoal**. As três perguntas abaixo são as que toda revisão deve fazer a cada
 ## 1. Quem passa a ver
 
 ```
-sem instrução   quem julga → a peça, e a frase que diz o que falta e a quem pedir
-com instrução   quem julga → a peça + o parecer atacado + o documento citado, por referência
-sempre          quem preside ou audita → exatamente o que já alcançavam
+sem instrução        quem julga → a peça, e a frase que diz o que falta e a quem pedir
+com instrução        quem julga → a peça + o parecer atacado + o documento citado, por referência
+depois de decidido   quem julga → a peça, e a frase que diz que houve instrução e que o alcance
+                                   se encerrou  ← NÃO "nada foi instruído": seria falso
+sempre               quem preside ou audita → exatamente o que já alcançavam
 ```
+
+**São três estados, e não dois.** O terceiro é fácil de esquecer porque o código que o produz é o
+mesmo que produz o primeiro — e o resultado é a tela negar um ato que aconteceu.
 
 **Ninguém ganha acesso por ter um papel.** O acesso vem do **par (aquele recurso, aquela pessoa que o
 julga)**, e nasce de um ato que alguém praticou e assinou.
