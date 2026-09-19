@@ -505,6 +505,34 @@ ESPECIES = (
     UX_066,
 )
 
+# As quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém retoma.
+TRABALHO_PENDENTE = frozenset({UX_063, UX_064, UX_065, UX_066})
+
+# Os dois estados em que o Edital **parou por ato**. Depois deles não há trabalho a retomar: o que
+# parou, parou porque alguém o encerrou ou o cancelou, e apontar avaliação pendente num Edital
+# encerrado mandaria concluir o que a instituição decidiu não concluir.
+EDITAL_PAROU_POR_ATO = frozenset({Edital.Status.ENCERRADO, Edital.Status.CANCELADO})
+
+
+def alcance_no_edital(alcancadas, edital):
+    """O alcance do ator **neste** Edital — o geral, menos o que o estado dele já respondeu.
+
+    **Só as espécies novas são retiradas, e a assimetria é deliberada** (`038`). As seis anteriores
+    continuam exatamente como estavam: o `UX-001` e o `UX-002` falam do **conteúdo publicado**, que
+    um Edital encerrado continua tendo e continua podendo Retificar; o `UX-004` fala de ordem que
+    envelheceu, e ela envelhece depois do encerramento como antes. Silenciá-las aqui mudaria o
+    comportamento de seis sinais que ninguém pediu para mudar.
+
+    As quatro da `038` são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho não se
+    retoma num Edital que parou por ato.
+    """
+    if edital.status not in EDITAL_PAROU_POR_ATO:
+        return alcancadas
+    return {
+        especie: valor and especie not in TRABALHO_PENDENTE for especie, valor in alcancadas.items()
+    }
+
+
 # As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
 # indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
 # "depois" (`T-005`).
@@ -1126,6 +1154,11 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
         # precisar de um terceiro caso.
         return
     for edital in editais:
+        # A fila é por Edital, e o estado dele também: um Edital encerrado não tem julgamento a
+        # retomar, mas continua tendo peça cuja comissão está impedida — que é fato do `UX-005`.
+        deste = alcance_no_edital(alcancadas, edital)
+        if not (deste[UX_005] or deste[UX_064]):
+            continue
         pendentes = [
             linha["recurso"]
             for linha in recursos_selectors.recursos_do_edital(
@@ -1138,7 +1171,7 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
         livres = {peca.id: membros - impedidos.get(peca.id, set()) for peca in pendentes}
         travadas = [peca for peca in pendentes if not livres[peca.id]]
         soltas = [peca for peca in pendentes if livres[peca.id]]
-        if alcancadas[UX_005] and travadas:
+        if deste[UX_005] and travadas:
             yield Sinal(
                 especie=UX_005,
                 edital=edital,
@@ -1149,7 +1182,7 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
                 ),
                 destino=encaminhar(UX_005, edital),
             )
-        if alcancadas[UX_064] and soltas:
+        if deste[UX_064] and soltas:
             yield Sinal(
                 especie=UX_064,
                 edital=edital,
@@ -1307,7 +1340,7 @@ def alcance(ator, processo):
 # --- A região inteira ------------------------------------------------------------------------
 
 
-def sinais(processo, ator, *, agora=None):
+def sinais(processo, ator, *, agora=None, alcancadas=None):
     """Os sinais deste Processo, na ordem do catálogo — e nada além deles.
 
     A ordem é a de `ESPECIES`, e não uma de gravidade: os cinco são igualmente acionáveis, e
@@ -1317,7 +1350,11 @@ def sinais(processo, ator, *, agora=None):
     que é ao mesmo tempo a supressão silenciosa e a leitura mais barata.
     """
     agora = agora or timezone.now()
-    alcancadas = alcance(ator, processo)
+    # `alcancadas` entra pronto quando quem chama já o leu. A página do Processo precisa saber,
+    # **antes** de montar a região, se este ator alcança alguma espécie — e `pode_gerir_comissao`
+    # consulta a comissão, de modo que recalculá-lo aqui custaria a mesma leitura duas vezes.
+    if alcancadas is None:
+        alcancadas = alcance(ator, processo)
 
     def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None):
         return destino_de(
@@ -1336,13 +1373,14 @@ def sinais(processo, ator, *, agora=None):
         # Cada uma serve a duas espécies com uma consulta só, e decidir aqui qual delas o ator
         # alcança obrigaria a escolher entre ler duas vezes e suprimir demais. A supressão continua
         # sendo por sinal, dentro delas (`FR-004`).
-        achados += list(sinais_da_etapa(edital, conteudo, encaminhar, alcancadas))
+        # **O estado do Edital entra aqui, e por espécie** (`038`): o que parou por ato não tem
+        # trabalho a retomar, e as seis espécies anteriores não se movem.
+        deste = alcance_no_edital(alcancadas, edital)
+        achados += list(sinais_da_etapa(edital, conteudo, encaminhar, deste))
         achados += list(
-            sinais_do_marco(
-                edital, conteudo, versao_vigente_do_edital(edital), encaminhar, alcancadas
-            )
+            sinais_do_marco(edital, conteudo, versao_vigente_do_edital(edital), encaminhar, deste)
         )
-        if alcancadas[UX_046]:
+        if deste[UX_046]:
             achados += list(acervo_sem_quadro(edital, conteudo, encaminhar))
     achados += list(
         sinais_do_recurso(processo, [edital for edital, _ in publicados], encaminhar, alcancadas)
@@ -1370,7 +1408,10 @@ __all__ = [
     "ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL",
     "PERMISSAO_DE_RETIFICAR",
     "ESPECIES",
+    "EDITAL_PAROU_POR_ATO",
     "ROTULOS_DO_DESTINO",
+    "TRABALHO_PENDENTE",
+    "alcance_no_edital",
     "UX_001",
     "UX_002",
     "UX_003",

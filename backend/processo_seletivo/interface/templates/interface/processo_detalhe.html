@@ -49,8 +49,13 @@ inscrição chegando e avaliação a organizar. O pulso e a Atenção já existi
 quem conduz o certame chega primeiro.
 
 **Nada é calculado aqui.** A view lê as duas funções que a Supervisão lê, e por isso as duas telas
-dizem a mesma coisa sobre o mesmo Edital (FR-557). Elas chegam nulas para quem não alcança a
-Supervisão, e a região inteira não é desenhada: a porta é a da tela dona, e não uma daqui.
+dizem a mesma coisa sobre o mesmo Edital (FR-557).
+
+**O Pulso é de quem alcança o Processo**, e não só de quem alcança a Supervisão: ele é agregado,
+não carrega destino nem dado pessoal, e esta página já diz que o Processo existe e quais são os
+Editais dele. A porta é **por sinal** (FR-004) — e quem não alcança espécie nenhuma não recebe a
+região da Atenção, porque dizer-lhe "nenhuma condição" afirmaria que não há nada quando o que há é
+coisa que ela não pode ver.
 {% endcomment %}
 {% if pulso %}
 <section aria-labelledby="conducao-titulo" class="cartao">
@@ -85,6 +90,31 @@ Supervisão, e a região inteira não é desenhada: a porta é a da tela dona, e
       {% if item.periodo.fim %}{{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
     {% endif %}
   </p>
+
+  {% comment %}
+  A série e os próximos marcos vêm do **mesmo** `pulso` que a Supervisão lê, e o mesmo parcial
+  desenha a série nas duas telas. Sem eles a página responderia "quanto chegou" e não "o que vem",
+  que é metade do que a US1 promete — e o Pulso apresentado pela metade seria uma terceira leitura,
+  nem a da Supervisão nem nenhuma.
+  {% endcomment %}
+  {% if item.serie %}{% include "interface/_serie_de_inscricoes.html" %}{% endif %}
+
+  {% if item.proximos_marcos %}
+  <h4>Próximos marcos — Edital {{ item.edital.number }}/{{ item.edital.year }}</h4>
+  <ul class="marcos">
+    {% for marco in item.proximos_marcos %}
+    {% comment %}
+    O estado do Evento aparece como **declaração**, e a tela não o corrige nem o arbitra contra as
+    datas (FR-023, D-004). Quando os dois discordam, quem diz isso é o sinal de UX-002.
+    {% endcomment %}
+    <li>
+      <strong>{{ marco.descricao }}</strong>
+      — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
+      {% if marco.declarado %}<span class="marca">declarado {{ marco.declarado_legivel }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% endfor %}
 
   {% comment %}
@@ -92,6 +122,7 @@ Supervisão, e a região inteira não é desenhada: a porta é a da tela dona, e
   **uma linha** quando não há nada a sinalizar, mas não some — sumir não distinguiria "nada a
   sinalizar" de "a página não carregou". É a mesma forma que a Supervisão usa, e o mesmo parcial.
   {% endcomment %}
+  {% if atencao_visivel %}
   <h3>Atenção</h3>
   {% if sinais %}
   <ul class="sinais">
@@ -99,6 +130,7 @@ Supervisão, e a região inteira não é desenhada: a porta é a da tela dona, e
   </ul>
   {% else %}
   <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  {% endif %}
   {% endif %}
 </section>
 {% endif %}

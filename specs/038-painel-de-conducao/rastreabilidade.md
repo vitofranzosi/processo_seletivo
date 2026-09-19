@@ -21,9 +21,9 @@ git merge-base --is-ancestor fcb448f HEAD          →  verdadeiro
 
 | `FR-` | Onde entrou | O que o prende |
 |---|---|---|
-| **FR-556** | `views.processo_detalhe` e `processo_detalhe.html`: a região *Onde cada Edital está* | `test_a_pagina_do_processo_apresenta_o_pulso_e_a_atencao` |
+| **FR-556** | `views.processo_detalhe` e `processo_detalhe.html`: a região *Onde cada Edital está*, com contagens, **série** e **próximos marcos** — *quanto chegou, o que vem, e o que pede ação* | `test_a_pagina_do_processo_apresenta_o_pulso_e_a_atencao`, `test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho` |
 | **FR-557** | as três leituras fundidas (`sinais_da_etapa`, `sinais_do_recurso`, `sinais_do_marco`); `divulgacao_do_ato` extraída de `views.py` | `test_o_processo_e_a_supervisao_dizem_a_mesma_coisa_do_mesmo_edital` — compara **as frases**, não a presença |
-| **FR-558** | `alcance()` ganhou as quatro chaves; a região inteira pende de `pode_supervisionar` | `test_quem_nao_alcanca_a_supervisao_nao_recebe_a_conducao_pela_porta_lateral`, `test_sem_a_porta_da_divulgacao_o_sinal_nao_e_montado` |
+| **FR-558** | `alcance()` ganhou as quatro chaves; a **Atenção** pende de o ator alcançar ao menos uma espécie, e o Pulso não pende de nada além do Processo | `test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho`, `test_quem_preside_recebe_a_atencao_na_mesma_regiao`, `test_sem_a_porta_da_divulgacao_o_sinal_nao_e_montado` |
 | **FR-559** | `processo_detalhe.html`, mesma forma da Supervisão e mesmo parcial `_sinal.html` | `test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha` |
 | **FR-560** | `avaliacao_parada` (`UX-063`) | `test_avaliacao_distribuida_e_nao_concluida_produz_o_sinal`, `test_concluidas_as_avaliacoes_o_sinal_some` |
 | **FR-561** | `sinais_do_recurso` (`UX-005` + `UX-064`), **um ato só** | `test_recurso_com_julgador_disponivel_produz_o_sinal`, **`test_a_mesma_peca_nunca_dispara_os_dois_sinais`** |
@@ -34,6 +34,19 @@ git merge-base --is-ancestor fcb448f HEAD          →  verdadeiro
 | **FR-566** | conferível **lendo o diff**: nenhuma permissão nova (as quatro reusam `comissao:gerir`, `recurso:julgar`, `auditoria:consultar` e `resultado:publicar`); nenhuma ajuda instrucional nos cartões; nenhum conteúdo publicado reescrito; nada apagado | `git diff` — nenhuma linha removida de conteúdo normativo, nenhuma migration |
 | **FR-567** | nenhum estado novo: `UX-063` sai de `resumo_da_etapa`, `UX-064` do cálculo do `UX-005`, `UX-065` de `ato_vigente` + `apuracao_vigente`, `UX-066` da derivação **extraída** | `makemigrations --check` → *No changes detected*; `make preparar` → **33 de 33** |
 
+**Os dois casos-limite da spec que a primeira implementação não cumpria**, corrigidos depois da
+revisão e prendidos por teste:
+
+| Caso-limite | O que faltava | O que o prende |
+|---|---|---|
+| *"Ator que alcança o Processo e nenhum dos destinos. **Lê o estado** e não recebe caminho algum."* | a região inteira pendia de `pode_supervisionar`: quem alcançava o Processo e não a Supervisão não lia **estado nenhum** | `test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho` |
+| *"**Edital encerrado ou cancelado.** Não produz sinal de trabalho pendente — o que parou, parou por ato."* | "publicado" queria dizer apenas *tem conteúdo vigente*, e um Edital encerrado continua tendo: as quatro espécies seguiam montadas, **com destino** | `test_edital_parado_por_ato_nao_aponta_trabalho_pendente` (encerrado **e** cancelado) e `test_o_edital_parado_nao_silencia_as_especies_anteriores` |
+
+A segunda correção é **assimétrica de propósito**: `alcance_no_edital` retira apenas as quatro
+espécies de trabalho pendente. As seis anteriores continuam como estavam — o `UX-001` e o `UX-002`
+falam do conteúdo publicado, que um Edital encerrado continua tendo; o `UX-004` fala de ordem que
+envelheceu, e ela envelhece depois do encerramento como antes.
+
 **A `FR-567` não precisou tirar nada do escopo.** As quatro se mostraram deriváveis com o que
 existe, e a quarta não era menos derivável: era derivável **no lugar errado**.
 
@@ -42,9 +55,9 @@ existe, e a quarta não era menos derivável: era derivável **no lugar errado**
 | `SC-` | Como foi conferido |
 |---|---|
 | **SC-196** | percorrido **pela interface**, cenário 1: a página do Processo abre com o pulso e a Atenção na primeira tela. Sem shell e sem banco |
-| **SC-197** | **zero divergências**: Processo e Supervisão lidos lado a lado no mesmo Processo semeado — mesmos 12/0/12, mesmas frases, mesma ordem. E não *podem* divergir: não há segundo cálculo |
+| **SC-197** | **zero divergências**: Processo e Supervisão lidos lado a lado no mesmo Processo semeado — mesmos 12/0/12, mesmas séries, mesmos próximos marcos, mesmas frases, mesma ordem. E não *podem* divergir: não há segundo cálculo. O teste compara **frase a frase**; a redação anterior conferia só o dígito `4`, e por isso passava com o Pulso pela metade |
 | **SC-198** | **os quatro** disparam, e os quatro destinos foram **abertos**: distribuição da Etapa, recursos do Edital, ocupação do marco (*"Apurar a ocupação deste recorte"*) e publicação do ato (*"nada impede esta divulgação"*) |
-| **SC-199** | **zero** mensagens nomeando pessoa (três varreduras + leitura no percurso); **zero** destinos a quem não os abre — `helena.auditora` alcança o Processo e não recebe a região; `paulo.presidente`, sem `resultado:publicar`, não recebe o `UX-066` |
+| **SC-199** | **zero** mensagens nomeando pessoa (três varreduras + leitura no percurso); **zero** destinos a quem não os abre — `helena.semnada` alcança o Processo, **lê o Pulso** e não recebe sinal nem caminho; `paulo.presidente`, sem `resultado:publicar`, não recebe o `UX-066` |
 | **SC-200** | o requisito nomeia **exatamente** as dez que o produto apresenta, conferido contando as duas listas — e o teste lê a spec do disco |
 
 ## 3. Testes alterados — **recontados caso a caso**
@@ -55,14 +68,20 @@ espécies tornariam vermelho por construção.
 
 | Arquivo | Antes | Agora | Novos | Motivo |
 |---|---|---|---|---|
-| `tests/integration/supervisao/test_sinais.py` | 13 | 29 | +16 | as quatro espécies, as **duas contraprovas obrigatórias**, a invariância por marco do `UX-066` e as três varreduras de nome de pessoa |
-| `tests/interface/test_supervisao.py` | 15 | 19 | +4 | a `US1` pelo canal: apresenta, **diz o mesmo**, não vaza destino, declara a ausência |
+| `tests/integration/supervisao/test_sinais.py` | 13 | 32 | +19 | as quatro espécies, as **duas contraprovas obrigatórias**, a invariância por marco do `UX-066`, as três varreduras de nome de pessoa e os **três** casos do Edital parado por ato |
+| `tests/interface/test_supervisao.py` | 15 | 20 | +5 | a `US1` pelo canal: apresenta, **diz o mesmo frase a frase**, lê o estado sem receber caminho, recebe a Atenção quando alcança, declara a ausência |
 | `tests/acceptance/test_supervisao_do_processo.py` | 1 | 2 | +1 | a `SC-200`, lendo a `FR-024` emendada do disco |
 | `tests/unit/interface/test_supervisao.py` | 3 | 3 | 0 (**1 emendado**) | o guardião do catálogo: seis → dez, com as dez nomeadas |
 | `tests/integration/supervisao/test_fronteira.py` | 5 | 5 | 0 (**1 emendado**) | `processo_detalhe.html` entrou na varredura de termos proibidos: a Atenção passou a ser apresentada ali |
-| **Total** | **37** | **58** | **+21** | |
+| **Total** | **37** | **62** | **+25** | |
 
-**Os vizinhos permaneceram**: 15, 13, 5, 1 e 3 continuam lá, nenhum reescrito.
+Contados como o `pytest` os coleta: são **61 funções** e **62 casos**, porque o do Edital parado é
+parametrizado sobre *encerrado* e *cancelado* — dois estados, um corpo. Conferido com
+`pytest --collect-only` sobre os cinco arquivos.
+
+**Os vizinhos permaneceram**: 15, 13, 5, 1 e 3 continuam lá. Dois foram **emendados** e nenhum
+reescrito: o guardião do catálogo (seis → dez) e a varredura de termos proibidos dos templates,
+que passou a ler `processo_detalhe.html`.
 
 ## 4. Orçamento de consulta — **remedido, espécie por espécie**
 
@@ -99,10 +118,11 @@ servidor, que é de onde ele sai.
 
 | Cenário | Resultado |
 |---|---|
-| **1 — o Processo conduz** | o pulso e a Atenção aparecem; Supervisão e Processo dizem **o mesmo**; `helena.auditora` lê o Processo e **não** recebe a região; o Processo de 2027, sem Edital publicado, declara a ausência em **uma linha** |
+| **1 — o Processo conduz** | o pulso (contagens, série e próximos marcos) e a Atenção aparecem; Supervisão e Processo dizem **o mesmo**; `helena.semnada` **lê o estado** e não recebe sinal nem caminho; o Processo de 2027, sem Edital publicado, declara a ausência em **uma linha** |
 | **2 — avaliação parada** | alocada a comissão e distribuídas as 7 inscrições **sem concluir**, a Etapa *Prova objetiva* **deixou de ser `UX-003` e virou `UX-063`**. As outras Etapas seguiram em cobertura — a fronteira é **por Etapa** |
 | **3 — recurso** | recurso interposto pelo portal e admitido pela gestão → **`UX-064`**. Declarados os impedimentos dos **três** membros sobre a peça, o `UX-064` **sumiu** e o **`UX-005` apareceu**. Nunca os dois |
 | **4 — recorte e ato** | o sorteio do Edital 63 tem ordem emitida e nada apurado (**`UX-065`**) e ato não divulgado (**`UX-066`**); os dois destinos abrem nas telas que resolvem |
+| **4b — o Edital que parou por ato** | encerrado o Edital 63 pela interface, os três sinais de trabalho pendente dele (`UX-063`, `UX-065`, `UX-066`) **sumiram**, e o `UX-001`, o `UX-002` e o `UX-003` do mesmo Edital **ficaram** |
 | **5 — o que não pode ter mudado** | nenhuma das quatro mensagens nomeia pessoa; o requisito e o produto contam **dez**; o orçamento foi remedido com a razão por espécie; as espécies antigas continuam disparando |
 
 ### O que o percurso **não** alcançou, e fica registrado
@@ -133,12 +153,17 @@ cd backend && make lint check test-pg
 | Suíte | Passando | Pulados |
 |---|---|---|
 | **antes** (`fcb448f`, árvore limpa) | **7454** | 11 |
-| **depois** | **7475** | 11 |
+| **depois** | **7479** | 11 |
 
 **O briefing dizia 7406 para o "antes", e a medição deu 7454.** Os pulados batem; os passados não.
 A árvore estava limpa em `fcb448f`, de modo que a diferença não é do diff — é do número de
 referência, medido antes de alguma integração que chegou à `main` em 19/09. Está registrada em
 [antes-do-painel.md](antes-do-painel.md), e o "antes" usado aqui é o **medido**.
 
-**7454 + 21 = 7475**, e os 21 são exatamente os casos novos da tabela da seção 3 — nenhum caso
+**7454 + 25 = 7479**, e os 25 são exatamente os casos novos da tabela da seção 3 — nenhum caso
 existente deixou de rodar, e nenhum caso novo foi pulado. Os 11 pulados são os mesmos de antes.
+
+> **A contagem mudou depois da revisão**, e a conta de fechamento é a única prova de que ela mudou
+> pela razão certa: a primeira entrega tinha 21 casos novos e fechava em 7475; as quatro correções
+> acrescentaram quatro casos — os três do Edital parado por ato e o do ator que alcança o Processo
+> sem alcançar sinal — e fecham em 7479.

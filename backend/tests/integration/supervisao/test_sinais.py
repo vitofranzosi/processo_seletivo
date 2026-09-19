@@ -972,3 +972,66 @@ def test_a_avaliacao_parada_nao_nomeia_pessoa(banca, gestor, presidenta_da_banca
 
     for avaliador in ("joao", "ana"):
         assert avaliador not in lido.lower(), f"{avaliador} foi nomeado na avaliação parada"
+
+
+# ---------------------------------------------------------------------------
+# O Edital que **parou por ato** — encerrado ou cancelado (038, caso-limite da spec)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("estado", ["ENCERRADO", "CANCELADO"])
+def test_edital_parado_por_ato_nao_aponta_trabalho_pendente(peca, quem_divulga, estado):
+    """*"Não produz sinal de trabalho pendente — o que parou, parou por ato."*
+
+    **A primeira implementação não olhava o estado do Edital**, e a revisão a pegou: "publicado"
+    ali queria dizer apenas *tem conteúdo vigente*, e um Edital encerrado continua tendo. As quatro
+    espécies seguiam montadas, **com destino** — mandando retomar avaliação e apurar ocupação de um
+    certame que a instituição decidiu encerrar.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    processo = peca["cenario"]["processo"]
+    assert [
+        sinal.especie
+        for sinal in supervisao.sinais(processo, quem_divulga)
+        if sinal.especie in supervisao.TRABALHO_PENDENTE
+    ], "sem trabalho pendente antes, o encerramento não provaria nada"
+
+    Edital.objects.filter(pk=peca["cenario"]["edital"].pk).update(
+        status=getattr(Edital.Status, estado)
+    )
+
+    depois = supervisao.sinais(processo, quem_divulga)
+
+    assert [s for s in depois if s.especie in supervisao.TRABALHO_PENDENTE] == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_edital_parado_nao_silencia_as_especies_anteriores(peca, quem_divulga):
+    """**A assimetria é deliberada**: só as quatro da `038` se calam.
+
+    O `UX-001` e o `UX-002` falam do **conteúdo publicado**, que um Edital encerrado continua tendo
+    e continua podendo Retificar; o `UX-004` fala de ordem que envelheceu, e ela envelhece depois
+    do encerramento como antes. Silenciá-las mudaria o comportamento de seis sinais que ninguém
+    pediu para mudar — e é o defeito que a correção mais facilmente introduziria.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    processo = peca["cenario"]["processo"]
+    antigas = {
+        sinal.especie
+        for sinal in supervisao.sinais(processo, quem_divulga)
+        if sinal.especie not in supervisao.TRABALHO_PENDENTE
+    }
+    assert antigas, "sem espécie anterior disparando, este teste não provaria a preservação"
+
+    Edital.objects.filter(pk=peca["cenario"]["edital"].pk).update(status=Edital.Status.ENCERRADO)
+
+    depois = {
+        sinal.especie
+        for sinal in supervisao.sinais(processo, quem_divulga)
+        if sinal.especie not in supervisao.TRABALHO_PENDENTE
+    }
+
+    assert depois == antigas, "o encerramento moveu uma espécie que não é de trabalho pendente"

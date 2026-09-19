@@ -3556,26 +3556,39 @@ def processo_detalhe(request, processo_id):
     é por isso que as duas telas não podem divergir: não há segundo cálculo a divergir. Uma cópia
     das derivações aqui seria a segunda verdade que esta série passou a semana removendo.
 
-    **A porta é a da Supervisão, e não a desta página.** Quem alcança o Processo não alcança por
-    isso o que a Supervisão mostra, e oferecer o pulso a quem a tela dona recusaria contornaria a
-    porta dela por uma rota lateral. Dentro dos sinais a supressão continua sendo **por sinal**
-    (`FR-004`): `sinais` recebe o ator e decide espécie a espécie.
+    **Quem alcança o Processo lê o estado** (`FR-556`, e o caso-limite da spec: *"lê o estado e não
+    recebe caminho algum"*). O Pulso é agregado — quanto chegou, quando encerra —, não carrega
+    destino nem dado pessoal, e esta página já diz que o Processo existe, quais são os Editais dele
+    e em que situação estão. Condicioná-lo à porta da Supervisão tirava dessas pessoas exatamente o
+    estado que o requisito manda mostrar.
+
+    **A porta continua existindo, e é por sinal.** `alcance` decide espécie a espécie (`FR-004`), e
+    o que carrega destino é o sinal. Quem não alcança **nenhuma** espécie não recebe a região da
+    Atenção: dizer-lhe *"nenhuma condição de atenção"* afirmaria que não há nada quando o que há é
+    coisa que ela não pode ver — que é a supressão silenciosa virada do avesso.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return redirect(reverse("interface:identificar"))
     processo = _processo_do_ator(ator, processo_id)
-    conduz = supervisao_do_processo.pode_supervisionar(ator, processo) is not None
+    # Lido uma vez e passado adiante: `pode_gerir_comissao` consulta a comissão, e recalculá-lo
+    # dentro de `sinais` custaria a mesma leitura duas vezes.
+    alcancadas = supervisao_do_processo.alcance(ator, processo)
+    alguma = any(alcancadas.values())
     return render(
         request,
         "interface/processo_detalhe.html",
         {
             "processo": processo,
             "trilha": _trilha_processo(processo),
-            # As mesmas chamadas da Supervisão, e `None` para quem não a alcança — o template não
-            # decide porta, só deixa de desenhar o que não veio.
-            "pulso": supervisao_do_processo.pulso(processo) if conduz else None,
-            "sinais": supervisao_do_processo.sinais(processo, ator) if conduz else None,
+            # As mesmas chamadas da Supervisão — lidas, nunca recalculadas.
+            "pulso": supervisao_do_processo.pulso(processo),
+            "atencao_visivel": alguma,
+            "sinais": (
+                supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas)
+                if alguma
+                else ()
+            ),
             "editais": processo.editais.order_by("year", "number"),
             "pendentes": pending_editais(processo),
             "atos": list(atos_processo.disponiveis(processo, ator)),
