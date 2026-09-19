@@ -508,49 +508,58 @@ def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
     assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()
 
 
-# --- O recorte que o marco não emite deixa de oferecer apuração (032, FR-472, SC-163) ----------
+# --- A apuração volta a ser oferecida no recorte reservado (034, FR-502, SC-170) ---------------
 #
-# **A segunda das duas ações que sempre falhavam.** A auditoria de 16/09/2026 encontrou, na tela de
-# Ocupação de um Perfil com cotas, três botões "Apurar a ocupação deste recorte" idênticos: o da
-# ampla funcionava, e os dois reservados recusavam com *"Este recorte não tem ordem emitida: não há
-# o que cortar"*. A mensagem é verdadeira e chega tarde — quem a lê no dia da apuração não tem mais
-# o que fazer com ela, porque a correção depende de Retificação.
+# **A segunda das duas ações que sempre falhavam, e ela deixou de falhar.** A auditoria de
+# 16/09/2026 encontrou, na tela de Ocupação de um Perfil com cotas, três botões "Apurar a ocupação
+# deste recorte" idênticos: o da ampla funcionava, e os dois reservados recusavam. A `032` tirou os
+# dois botões e pôs a razão no lugar deles — *"a apuração deste recorte acontece fora do
+# sistema"* —, que era verdade enquanto um ato computado emitia uma lista só.
 #
-# **A causa é a forma de emissão da ordem daquele marco**, e não a cota: um ato computado emite uma
-# lista só, a da ampla concorrência. O sorteio emite por recorte, e por isso o Perfil que sorteia
-# continua oferecendo os três.
+# A `034` fez a ordem por recorte existir. **A razão deixou de ser verdadeira, e saiu**: frase
+# verdadeira que virou falsa é pior do que frase ausente, porque quem a lê acredita nela e vai
+# apurar em planilha um recorte que o sistema apura.
+#
+# Os dois casos abaixo são os mesmos de antes, com o sentido invertido — e o terceiro, o da ampla,
+# continua sendo a não-regressão que uma condição larga demais quebraria.
 
 
-def test_recorte_reservado_em_marco_computado_nao_oferece_apuracao(
+def test_recorte_reservado_em_marco_computado_agora_oferece_apuracao(
     client, seletor_ligado, cenario, gestor
 ):
-    """`FR-472`: o botão sai de onde ele nunca conseguiria executar."""
-    edital, _, _ = cenario
-    identificar(client, "carlos", ["gestor"])
+    """`FR-502`: a ação volta a ser oferecida onde ela passou a executar.
 
-    pagina = abrir(client, edital).content.decode()
-
-    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
-    assert pagina.count("Apurar a ocupação deste recorte") == 1, (
-        "só o da ampla concorrência, que é o único que o marco computado emite"
-    )
-
-
-def test_no_lugar_da_apuracao_a_tela_nomeia_a_causa_e_nao_o_sintoma(
-    client, seletor_ligado, cenario, gestor
-):
-    """`FR-471` na tela: a ordem daquele marco sai em lista única, e é isso que precisa ser dito.
-
-    *"Este recorte não tem ordem emitida"* descreve o que a pessoa já está vendo. O que ela precisa
-    saber é **por que** — e que a apuração daquele recorte acontece fora do sistema.
+    **A conferência é por contagem de botões, e a contagem é a do cenário**: a fixture da interface
+    monta a linha geral e uma cota, e são esses dois recortes que a tela lista. Um terceiro botão
+    aqui seria a Modalidade declarada como ampla ganhando linha própria, que é o que a `FR-503`
+    proíbe.
     """
     edital, _, _ = cenario
     identificar(client, "carlos", ["gestor"])
 
     pagina = abrir(client, edital).content.decode()
 
-    assert "lista única" in pagina
-    assert "fora do sistema" in pagina
+    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
+    assert pagina.count("Apurar a ocupação deste recorte") == 2, (
+        "a ampla e a cota — as duas, porque as duas passaram a ter ordem"
+    )
+
+
+def test_a_frase_do_fora_do_sistema_saiu_da_tela(client, seletor_ligado, cenario, gestor):
+    """`FR-502`: ela deixou de ser verdade, e por isso não pode ficar.
+
+    As duas metades importam. A frase sai **e** a ação aparece: retirar só a frase deixaria o
+    recorte mudo, e oferecer só a ação deixaria a tela afirmando, ao lado do botão, que a apuração
+    acontece fora do sistema.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "fora do sistema" not in pagina
+    assert "lista única" not in pagina
+    assert "não recebe ordem própria" not in pagina
 
 
 def test_o_recorte_da_ampla_continua_apuravel(client, seletor_ligado, cenario, gestor):

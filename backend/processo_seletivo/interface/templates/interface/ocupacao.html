@@ -104,23 +104,23 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   {% endif %}
 
   {% comment %}
-  A razao no lugar do botao, e nao um `disabled` (032, FR-472). O recorte reservado de um marco que
-  nao sorteia nunca tera ordem emitida: um ato computado emite uma lista so, a da ampla
-  concorrencia. A auditoria de 16/09/2026 encontrou tres botoes identicos, dos quais dois sempre
-  falhavam — e a recusa chegava no dia da apuracao, quando a correcao ja depende de Retificacao.
+  **A acao de apurar volta a ser oferecida em todo recorte que tem quadro** (034, FR-502).
 
-  A frase nomeia a **causa**, e nao o sintoma: *"Este recorte nao tem ordem emitida"* descreve o
-  que a pessoa ja esta vendo.
+  A `032` punha aqui a razao no lugar do botao, e a razao era verdadeira: um ato computado emitia
+  uma lista so, a da ampla concorrencia, e os dois botoes reservados que a auditoria de 16/09/2026
+  encontrou sempre falhavam. A frase que ocupava este lugar dizia que a apuracao daquele recorte
+  acontecia **fora do sistema**.
 
-  **E ela para na apuracao.** O aviso equivalente da Revisao diz que a ocupacao e a convocacao
-  daquele recorte acontecem fora do sistema, porque ali quem fala e o conteudo normativo. Aqui nao:
-  esta tela e da `016`, que conta vaga e nao sabe quem foi chamado — a fronteira com a `019` e
-  guardada por varredura, e atravessa-la faria a tela afirmar um fato que ela nao tem.
+  A `034` fez a ordem por recorte existir, e a frase deixou de ser verdade. **Frase verdadeira que
+  virou falsa e um defeito maior do que frase ausente**, porque quem a le acredita nela e vai
+  apurar em planilha um recorte que o sistema apura.
+
+  Com ela sai tambem a ramificacao em `recorte.apuravel`: o campo derivava de um predicado que
+  passou a responder sempre a mesma coisa, e guarda que nunca reprova e pior do que guarda nenhum
+  (FR-501a). A condicao que resta e a que sempre governou o botao — quem pode emitir, e recorte com
+  linha publicada no quadro.
   {% endcomment %}
-  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.apuravel %}
-  <p class="nota">A ordem deste marco é emitida em lista única, e por isso este recorte não recebe ordem própria: só a ordem sorteada é emitida por recorte. A apuração deste recorte acontece fora do sistema.</p>
-  {% endif %}
-  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.apuravel %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
