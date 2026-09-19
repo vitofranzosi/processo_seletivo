@@ -24,8 +24,11 @@ a contestação; substituir o parecer pelo motivo é o estado de hoje.
 
 ```
 desfavorável + prazo aberto            →  o parecer aparece
-desfavorável + recurso NÃO decidido    →  o parecer aparece, mesmo com o prazo fechado
-prazo fechado E sem recurso pendente   →  some, E a tela diz por quê
+desfavorável + peça contra ESSE        →  o parecer aparece, mesmo com o prazo fechado
+  resultado ainda não decidida
+prazo fechado E sem peça contra esse   →  some, E a tela diz por quê
+  resultado (peça contra outro, ou
+  contra a publicação, não conta)
 resultado favorável                    →  nada muda
 sem parecer escrito                    →  a tela diz que não há
 ```
@@ -37,7 +40,7 @@ que ela mais precisa.
 **O terceiro caso é o que separa esta feature de um defeito.** Sumir em silêncio faria a pessoa
 pensar que perdeu algo, ou que o sistema falhou. `FR-524` obriga a frase.
 
-**O quarto existe de verdade**: a obrigatoriedade do parecer depende do caráter da Etapa e da forma
+**O último existe de verdade**: a obrigatoriedade do parecer depende do caráter da Etapa e da forma
 da avaliação. Calar sobre a ausência é pior do que declará-la (`FR-525`).
 
 ## Qual parecer

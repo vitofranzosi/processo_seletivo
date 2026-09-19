@@ -104,11 +104,18 @@ conferir pelo portal que o titular lê a frase do avaliador enquanto o prazo cor
 1. **Given** uma inscrição eliminada por nota abaixo da mínima e o prazo recursal aberto, **When** o
    titular abre o acompanhamento, **Then** ele lê **o parecer**, identificado como a fundamentação
    daquele resultado.
-2. **Given** o prazo recursal **encerrado**, **When** o titular abre o acompanhamento, **Then** o
-   parecer **não** é exibido, e a tela diz que o prazo se encerrou — e não fica em silêncio.
-3. **Given** um resultado **favorável**, **When** o titular abre o acompanhamento, **Then** nada
+2. **Given** o prazo recursal **encerrado** e um recurso dele **contra aquele mesmo resultado** ainda
+   não decidido, **When** o titular abre o acompanhamento, **Then** ele **continua lendo o parecer**
+   — é contra esse texto que a peça dele corre.
+3. **Given** o prazo recursal **encerrado** e **nenhum** recurso pendente contra aquele resultado,
+   **When** o titular abre o acompanhamento, **Then** o parecer **não** é exibido, e a tela diz por
+   quê — e não fica em silêncio.
+4. **Given** o prazo recursal **encerrado** e um recurso pendente **contra outro resultado ou contra
+   a publicação**, **When** o titular abre o acompanhamento, **Then** o parecer **não** é exibido:
+   pende do resultado que a peça ataca, e não de haver peça qualquer em curso (`D-001`).
+5. **Given** um resultado **favorável**, **When** o titular abre o acompanhamento, **Then** nada
    muda: esta feature alcança o desfavorável, que é o recorte que a regra do parecer já descreve.
-4. **Given** qualquer pessoa que não seja o titular, **When** ela tenta alcançar o parecer, **Then**
+6. **Given** qualquer pessoa que não seja o titular, **When** ela tenta alcançar o parecer, **Then**
    a resposta é a mesma que ela receberia se o recurso não existisse.
 
 ---
@@ -173,7 +180,8 @@ alcance e o instante.
   forma. A tela precisa dizer que não há parecer — e não parecer que há e sumiu.
 - **Prazo que fecha com o recurso da pessoa ainda em julgamento.** Era o buraco da primeira redação:
   a exibição pendia só do prazo, e a pessoa perdia de vista o texto que o **próprio recurso dela**
-  contesta. Resolvido pela segunda condição da `FR-522` (`D-001`).
+  contesta. Resolvido pela segunda condição da `FR-522` (`D-001`), que pende do **resultado
+  atacado** — peça contra outro resultado, ou contra a publicação, não abre este parecer.
 - **Recurso sem resultado atacado.** Há recurso contra publicação, e não contra resultado individual.
   Ali não há parecer a instruir, e a tela precisa dizer isso.
 - **Instrução praticada duas vezes.** O ato é append-only; instruir de novo acrescenta, e não
@@ -189,7 +197,9 @@ alcance e o instante.
 
 - **FR-522**: O titular MUST ler, no canal do candidato, o **parecer** que fundamenta um resultado
   desfavorável a ele, **enquanto o prazo de recurso estiver aberto — ou enquanto houver recurso dele
-  ainda não decidido** (`D-001`).
+  contra aquele mesmo resultado ainda não decidido** (`D-001`). A segunda condição pende do
+  **resultado atacado**, e não de haver peça qualquer em curso: recurso contra **outro** resultado, e
+  recurso contra a **publicação**, MUST NOT abrir o parecer.
   *A segunda condição não é generosidade:* quem recorreu decide se insiste, escreve réplica ou aceita
   a decisão, e fazer isso sem poder reler o texto que está contestando é o defeito que esta feature
   existe para fechar, acontecendo um passo adiante. **E foi o sistema que o obrigou a recorrer contra
@@ -198,7 +208,7 @@ alcance e o instante.
   que o produziu, e não o estado atual de uma avaliação reaberta depois. O registro histórico da
   conclusão existe para isso e MUST ser a fonte quando houver reabertura.
 - **FR-524**: Encerradas **as duas** condições da `FR-522` — o prazo fechou **e** não há recurso
-  pendente —, o parecer MUST deixar de ser exibido, **e a tela MUST dizer por quê**. Desaparecer em silêncio faria a pessoa pensar que perdeu algo que nunca teve.
+  pendente contra aquele resultado —, o parecer MUST deixar de ser exibido, **e a tela MUST dizer por quê**. Desaparecer em silêncio faria a pessoa pensar que perdeu algo que nunca teve.
 - **FR-525**: Resultado desfavorável **sem** parecer MUST ser dito como tal. A ausência é possível —
   a obrigatoriedade depende do caráter da Etapa e da forma da avaliação —, e calar sobre ela é pior
   do que declará-la.
@@ -270,7 +280,8 @@ alcance e o instante.
 ### Measurable Outcomes
 
 - **SC-182**: Um candidato eliminado por nota abaixo da mínima **lê a frase que o avaliador escreveu**,
-  no portal, enquanto o prazo corre — percorrido pelo canal do candidato, sem shell e sem banco.
+  no portal, enquanto o prazo corre **ou enquanto o recurso dele contra aquele resultado não for
+  decidido** — percorrido pelo canal do candidato, sem shell e sem banco.
 - **SC-183**: Um julgador com **apenas** a capacidade de julgar recursos decide com o parecer atacado
   à vista, **sem que nenhuma permissão tenha sido ampliada** — conferido por comparação das
   capacidades antes e depois.
@@ -285,13 +296,13 @@ alcance e o instante.
 
 ## Assumptions
 
-### D-001 — o parecer acompanha o prazo, e não a inscrição
+### D-001 — o parecer acompanha o prazo e a peça, e não a inscrição
 
 Decidido em 19/09/2026 por quem governa o backlog.
 
-O parecer aparece **enquanto houver prazo recursal — ou enquanto houver recurso dele ainda não
-decidido**. A primeira condição é o recorte da melhoria 13.2 e o que a `012` descreve ao exigir o
-texto: ele serve para recorrer, e aparece enquanto recorrer for possível.
+O parecer aparece **enquanto houver prazo recursal — ou enquanto houver recurso dele contra aquele
+mesmo resultado ainda não decidido**. A primeira condição é o recorte da melhoria 13.2 e o que a
+`012` descreve ao exigir o texto: ele serve para recorrer, e aparece enquanto recorrer for possível.
 
 **A segunda foi acrescentada em 19/09/2026, depois que o `analyze` mostrou o que a primeira sozinha
 custava.** Prender só ao prazo tirava o parecer justamente de quem recorreu, enquanto o recurso dele
@@ -299,11 +310,21 @@ corria — a pessoa que a feature existe para servir, no momento em que ela mais
 já alcança a própria peça e a decisão; o parecer é o terceiro documento do mesmo processo que ela
 moveu, e não uma superfície nova.
 
+**E a segunda condição é estreita de propósito: ela pende do resultado atacado.** "Recurso dele" sem
+recorte diria *qualquer peça em curso*, e uma peça sobre a Etapa seguinte reabriria o parecer de um
+resultado cujo prazo terminou há semanas — acesso a dado pessoal concedido por um fato que nada tem a
+ver com ele, que é minimização perdida sem que ninguém decidisse perdê-la.
+
+**Recurso contra a publicação não conta, e isto está decidido, não omitido.** Ele não ataca resultado
+individual nenhum — a própria lista de casos de borda já registra que ali não há parecer a instruir —,
+e contá-lo abriria o parecer de todos os resultados daquela publicação a partir de uma peça que não
+discute nenhum deles.
+
 *Fica registrado que a decisão foi tomada duas vezes*: a primeira com o custo dito de forma genérica,
 a segunda com o caso na mesa. A diferença entre as duas é o que uma passada de `analyze` produz.
 
-**O custo que permanece, dito por escrito:** encerradas as duas condições, a pessoa perde acesso à
-razão da própria eliminação, e ela continua sendo a titular daquele dado. **A `FR-524` é o que impede
+**O custo que permanece, dito por escrito:** encerrado o prazo e decidida a peça contra aquele
+resultado, a pessoa perde acesso à razão da própria eliminação, e ela continua sendo a titular daquele dado. **A `FR-524` é o que impede
 esse custo de virar defeito** — a tela diz **por quê**, em vez de calar. Se a decisão for revista um
 dia, é esta linha que muda.
 

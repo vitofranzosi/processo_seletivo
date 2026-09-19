@@ -58,8 +58,10 @@ declarar a **janela recursal do marco curta**, de minutos, e esperar ela passar 
 > é**, e o protocolo do projeto proíbe.
 
 1. Faça o prazo recursal se encerrar, pelo caminho acima.
-2. **Confira que não há recurso pendente** daquela inscrição — é a segunda condição da `FR-522`, e
-   com um recurso em julgamento o parecer **continua aparecendo**, corretamente.
+2. **Confira que não há recurso pendente contra aquele resultado** — é a segunda condição da
+   `FR-522`, e ela pende do resultado atacado, não de haver peça qualquer em curso;
+   com uma peça contra **esse** resultado em julgamento o parecer **continua aparecendo**,
+   corretamente — e peça contra **outro** resultado, ou contra a **publicação**, não o traz de volta.
 3. Abra o acompanhamento como o titular.
 
 **Esperado**: o parecer **não** aparece, **e a tela diz por quê**.

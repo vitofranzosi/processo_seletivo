@@ -73,7 +73,7 @@ morre onde deve.
 
 ## Phase 3: US1 — O candidato lê a razão (P1) 🎯 MVP
 
-**Goal**: o titular lê o parecer enquanto o prazo corre.
+**Goal**: o titular lê o parecer enquanto o prazo corre — ou enquanto a peça dele contra aquele resultado não for decidida.
 
 **Independent Test**: eliminar por nota abaixo da mínima, divulgar, e ler o parecer pelo portal.
 
@@ -81,10 +81,10 @@ morre onde deve.
 
 - [ ] T009 [US1] Levar o parecer ao acompanhamento em `backend/processo_seletivo/portal/views.py` (**EXISTENTE**): o da avaliação que **fundamenta o resultado contestável** (`FR-523`, `D-002`), e o do registro histórico quando houve reabertura
 - [ ] T010 [US1] Exibi-lo em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**) **ao lado do motivo, e não no lugar dele** (`FR-525a`). O motivo é a regra aplicada ao número; o parecer é a razão que a pessoa escreveu. Identifique-o como a fundamentação daquele resultado
-- [ ] T011 [US1] Condicionar às **duas** condições da `FR-522` — prazo recursal aberto **ou** recurso dele ainda não decidido (`D-001`) —, e **dizer por que saiu** quando as duas se encerram (`FR-524`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). Sumir em silêncio faria a pessoa pensar que perdeu algo — é a diferença entre a feature e um defeito
+- [ ] T011 [US1] Condicionar às **duas** condições da `FR-522` — prazo recursal aberto **ou** recurso dele **contra aquele resultado** ainda não decidido (`D-001`) —, e **dizer por que saiu** quando as duas se encerram (`FR-524`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). Sumir em silêncio faria a pessoa pensar que perdeu algo — é a diferença entre a feature e um defeito
 - [ ] T012 [US1] Dizer que **não há parecer** quando não há (`FR-525`), em `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**). A obrigatoriedade depende do caráter da Etapa e da forma da avaliação, e a ausência é real
 - [ ] T013 [US1] **Emendar o comentário** de `backend/processo_seletivo/portal/templates/portal/acompanhamento.html` (**EXISTENTE**) que hoje diz *"Nada aqui é de terceiro: nenhum nome, nenhuma nota alheia, nenhum parecer, nenhuma avaliação"*. O sujeito dele é **de terceiro**, e a emenda MUST **dizer a distinção** — parecer de terceiro continua proibido, parecer do próprio titular é o que a feature entrega. **Não apague a frase**: ela é a regra escrita onde alguém a lê antes de mexer
-- [ ] T014 [US1] Prender a `US1` em `backend/tests/portal/test_parecer_do_titular.py` (**NOVO**): o titular lê; lê **ao lado** do motivo; **continua lendo enquanto o recurso dele corre, mesmo com o prazo fechado**; não lê depois de as duas condições se encerrarem, **e a tela diz por quê**; não lê quando não há, **e a tela diz**; e **outro candidato não alcança nada** (`FR-526`, `FR-535`, `SC-186`). Inclua o caso do **escopo institucional divergente**, que recebe a resposta uniforme (`FR-536`)
+- [ ] T014 [US1] Prender a `US1` em `backend/tests/portal/test_parecer_do_titular.py` (**NOVO**): o titular lê; lê **ao lado** do motivo; **continua lendo enquanto a peça dele contra aquele resultado corre, mesmo com o prazo fechado**; **não** volta a ler por causa de peça contra **outro** resultado ou contra a **publicação**; não lê depois de as duas condições se encerrarem, **e a tela diz por quê**; não lê quando não há, **e a tela diz**; e **outro candidato não alcança nada** (`FR-526`, `FR-535`, `SC-186`). Inclua o caso do **escopo institucional divergente**, que recebe a resposta uniforme (`FR-536`)
 
 **Checkpoint**: **este é o MVP.** Quem foi eliminado sabe por quê, e pode recorrer com fundamento.
 

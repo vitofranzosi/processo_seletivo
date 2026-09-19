@@ -33,7 +33,8 @@ Edital, enquanto durar o papel. O alcance da instrução vale para **uma** peça
 |---|---|
 | instrução praticada | abre |
 | recurso decidido | **fecha** |
-| prazo recursal encerrado | o parecer some do canal do candidato (`FR-524`) |
+| prazo recursal encerrado, **sem** recurso pendente contra aquele resultado | o parecer some do canal do candidato, **e a tela diz por quê** (`FR-524`) |
+| prazo recursal encerrado, **com** recurso dele contra aquele resultado em curso | o parecer **permanece** no canal do candidato até a decisão (`FR-522`, `D-001`) |
 | instrução praticada de novo | acrescenta; **não** substitui, e **não** reabre o que fechou |
 
 **O fechamento não é limpeza — é regra.** Alcance que sobrevive ao ato que o justificou vira acesso

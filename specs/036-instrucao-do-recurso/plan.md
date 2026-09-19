@@ -7,7 +7,8 @@
 ## Summary
 
 O parecer que o avaliador escreve passa a **chegar a quem ele foi escrito para servir**: ao candidato,
-enquanto o prazo de recurso corre; e a quem julga, por um **ato de instrução** que anexa a prova
+enquanto o prazo de recurso corre — ou enquanto a peça dele contra aquele resultado não for
+decidida; e a quem julga, por um **ato de instrução** que anexa a prova
 àquele recurso, com alcance que termina na decisão e rastro que permanece.
 
 Fecha o `ACH-43` — **o último `P0` aberto** — e o `ACH-42`.

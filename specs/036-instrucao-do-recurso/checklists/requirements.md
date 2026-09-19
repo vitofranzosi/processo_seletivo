@@ -45,7 +45,7 @@ reabrir uma avaliação não pode destruir o que ela havia concluído.
 
 | | Onde | Custo dito por escrito |
 |---|---|---|
-| O parecer acompanha o **prazo**, não a inscrição | `D-001` | encerrado o prazo, o titular perde acesso à razão da própria eliminação. A `FR-524` impede que isso vire defeito silencioso |
+| O parecer acompanha o **prazo e a peça contra aquele resultado**, não a inscrição | `D-001` | encerrado o prazo **e decidida a peça**, o titular perde acesso à razão da própria eliminação. A `FR-524` impede que isso vire defeito silencioso. Peça contra **outro** resultado, ou contra a **publicação**, não abre este parecer |
 | O parecer é o da **avaliação que fundamenta o resultado** | `D-002` | nenhum — é medição, não escolha |
 | A prova chega por **referência**, e o alcance **morre com o ato** | `D-003` | uma consulta a mais em vez de uma cópia; e o julgador perde o acesso depois de decidir, o que é o ponto |
 

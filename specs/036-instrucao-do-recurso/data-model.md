@@ -69,7 +69,7 @@ Sem a segunda, a instrução seria uma ampliação de acesso permanente concedid
 
 | Tela | Quem | Quando |
 |---|---|---|
-| acompanhamento, no canal do candidato | **o titular** | enquanto o prazo recursal estiver aberto (`D-001`) |
+| acompanhamento, no canal do candidato | **o titular** | enquanto o prazo recursal estiver aberto — **ou enquanto o recurso dele contra aquele resultado não for decidido** (`D-001`) |
 | peça do recurso, na gestão | **quem julga aquele recurso** | depois da instrução, até a decisão |
 | peça do recurso, na gestão | quem preside ou audita | **como hoje** — esta feature não muda o que eles já alcançam |
 | qualquer listagem | ninguém | a fundamentação e o parecer não entram em listagem, e isso já é prendido |
