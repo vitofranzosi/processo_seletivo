@@ -255,6 +255,16 @@ marco o diz naquele momento.
   para que não nasça uma segunda; imitar o texto numa tela nova derrota a guarda que a criou.
 - **FR-543a**: A formulação MUST ser a **cheia** — *"peça a alguém com a permissão de X **que Y**"*.
   Das quatro ocorrências de hoje, uma larga a oração final e diz só a quem pedir, sem dizer o quê.
+- **FR-543c**: O mecanismo único MUST ser **ampliado** para produzir a forma cheia, porque hoje ele
+  não a produz: ele termina em *"Peça a alguém com a permissão de X."*, sem a oração do ato. *Sem
+  esta linha, a `FR-543` e a `FR-543a` se contradizem* — uma proíbe escrever à mão, a outra exige
+  uma forma que só se obtém escrevendo à mão.
+- **FR-543d**: A ampliação MUST distinguir as **duas situações de fala**, que hoje são uma só. O
+  mecanismo existe para **recusar uma operação tentada** — sua frase abre com *"Esta operação depende
+  de…"* e acompanha uma recusa —, e esta feature precisa **avisar numa tela onde ninguém tentou
+  nada**. Dizer *"esta operação"* ao lado de *"Conteúdo imutável"* nomeia uma operação que não houve.
+  As duas formas MUST compartilhar a construção do **a quem pedir**, e é isso que mantém a
+  formulação única.
 - **FR-543b**: Toda condução MUST nomear **a permissão**, nunca uma pessoa. Não há fila, designação
   nem nome próprio — é a disciplina que o produto já mantém.
 - **FR-544**: Quem **pode** praticar a ação MUST receber o caminho, e não a frase de pedir a outra
@@ -298,10 +308,19 @@ marco o diz naquele momento.
 
 ### O que esta feature não faz
 
-- **FR-553**: Nenhuma regra de domínio MUST mudar **o que decide**. O que muda é onde a informação é
-  avaliada, quando ela é dita e a calibragem de um predicado — nunca o desfecho de um ato.
-- **FR-554**: Nenhuma ajuda visível MUST ser acrescentada aos cartões. Microcópia nova vai para onde
-  a regra do produto já manda, e essa decisão foi tomada deliberadamente pela `030`.
+- **FR-553**: Nenhuma decisão de **autorização** e nenhum **aceite ou recusa de ato** MUST mudar. O
+  que muda é onde a informação é avaliada, quando ela é dita, e **a classificação temporal de um
+  Evento com os avisos que dela nascem** — que é o objeto declarado da `US3`, e não um efeito
+  colateral. *A redação anterior dizia "nenhuma regra de domínio muda o que decide" e era falsa por
+  construção*: a `US3` muda, deliberadamente, o que a régua do vencido responde.
+- **FR-554**: Nenhuma **ajuda instrucional** nova MUST ser acrescentada aos cartões. Microcópia que
+  ensina a preencher vai para onde a regra do produto já manda, e essa decisão foi tomada
+  deliberadamente pela `030`.
+- **FR-554a**: O que a `FR-551` acrescenta ao cartão do marco **não é ajuda instrucional, e é por
+  isso que ela não viola a `FR-554`**: é **aviso derivado do estado** — existe só quando há Etapa
+  enumerada sem peso, desaparece quando o peso é declarado, e não explica como preencher coisa
+  alguma. *A distinção está escrita porque as duas frases moram no mesmo cartão e parecem a mesma
+  espécie*, e quem conferir a `FR-554` sem ela concluirá que a `FR-551` a desrespeita.
 - **FR-555**: Nenhum conteúdo publicado MUST ser reescrito, e nada MUST ser apagado.
 
 ---
@@ -326,7 +345,9 @@ marco o diz naquele momento.
   de conferência.
 - **SC-193**: **Zero** controles acrescentados ao cartão do marco e **zero** campos movidos de
   entidade — conferido por comparação do antes e do depois.
-- **SC-194**: **Zero** desfechos de ato alterados: as mesmas entradas produzem as mesmas decisões.
+- **SC-194**: **Zero** desfechos de **ato** alterados e **zero** decisões de autorização alteradas:
+  as mesmas entradas produzem as mesmas respostas a *"isto pode?"* e *"isto foi aceito?"*. *A
+  classificação temporal de um Evento fica de fora desta conta*, porque mudá-la é o que a `US3` faz.
 
 ---
 

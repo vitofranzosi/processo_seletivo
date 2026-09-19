@@ -234,6 +234,31 @@ alternativa.
 
 ---
 
+## R-11 — O mecanismo único **não produz** a forma cheia, e fala de outra coisa
+
+**Medido depois da revisão externa, e ele desfaz uma contradição entre dois requisitos.**
+
+`frase_da_recusa` termina assim:
+
+```
+f"Esta operação depende {…}. Peça {…}."
+```
+
+onde o segundo `{…}` é *"a alguém com a permissão de X"*. **A frase acaba aí** — sem a oração do
+ato. A `FR-543a` pede a forma cheia, *"…que Y"*, e a `FR-543` proíbe escrever à mão: sem ampliar o
+helper, os dois requisitos se contradizem.
+
+**E há uma diferença de situação de fala que o helper não distingue.** Ele é chamado de um lugar só —
+`require_authorization_base`, que levanta recusa 403 —, e a frase abre com *"Esta operação depende
+de…"*. Esta feature precisa avisar **numa tela onde ninguém tentou operação alguma**: dizer *"esta
+operação"* ao lado de *"Conteúdo imutável"* nomeia um ato que não houve.
+
+**Nenhum teste afirma o texto deste helper hoje.** A varredura não achou um só caso citando
+`frase_da_recusa` nem a frase que ele produz — de modo que ampliá-lo é mexer em código sem rede, e a
+tarefa cria a rede antes.
+
+---
+
 ## Testes de template nas telas tocadas, e a armadilha da prosa
 
 `test_destinos_do_edital.py` (10), `test_corte.py` (13) e `test_selo_do_cronograma.py` (11). Além

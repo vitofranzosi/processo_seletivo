@@ -18,8 +18,12 @@ pedir — **quando ainda não sabe**, porque o cartão já entrega o caminho a q
 achados pode já estar fechado; a régua do vencido passa a olhar o término **quando há término**; e o rótulo do
 peso para de mentir, com a contradição antecipando para o momento em que a Etapa é enumerada.
 
-**Nenhuma entidade nova. Nenhuma migration. Nenhuma capacidade nova. Nenhum conteúdo publicado
-reescrito.**
+**Nenhuma entidade nova. Nenhuma migration. Nenhuma capacidade de autorização nova. Nenhum conteúdo
+publicado reescrito.**
+
+**E uma promessa que NÃO se faz**, porque seria falsa: *"nenhuma regra de domínio muda o que
+decide"*. A `US3` muda, deliberadamente, o que a régua do vencido responde — é o objeto dela. O que
+não muda é decisão de **autorização** e **aceite ou recusa de ato** (`FR-553`).
 
 ## Technical Context
 
@@ -32,7 +36,8 @@ do Cronograma e a conferência de publicação.
 | Entidade nova? | **não** — `data-model.md` |
 | Migration? | **não**. O total do `make preparar` continua **32** (a `036` acrescentou a 32ª) |
 | Capacidade nova? | **não** (`FR-553`) |
-| Regra de domínio muda o que decide? | **não** — muda *quando* e *onde* se diz, e a calibragem de um predicado |
+| Decisão de **autorização** ou aceite de ato muda? | **não** (`FR-553`) |
+| Alguma regra de domínio muda o que responde? | **sim, uma, e é o objeto da `US3`**: a classificação temporal do Evento |
 | Testes que mudam de sentido | **4**, medidos, em 3 arquivos (`research.md` `R-4`) — **recontar** |
 | A frase da condução | existe como **mecanismo público**, não como padrão a copiar (`R-6`) |
 
@@ -42,7 +47,7 @@ do Cronograma e a conferência de publicação.
 |---|---|---|
 | **Publicação é ato imutável** | nada de conteúdo publicado é reescrito; a régua do vencido continua **advertindo e nunca recusando** | `FR-548`, `FR-555` |
 | **Nada é excluído** | nenhuma migration, nenhum dado normativo tocado | `data-model.md` |
-| **Negar por padrão** | nenhuma capacidade nova; o destino do corte continua oferecido só a quem o alcança | `FR-540`, `FR-553` |
+| **Negar por padrão** | nenhuma capacidade **de autorização** nova; o destino do corte continua oferecido só a quem alcança a **classificação** | `FR-540`, `FR-553` |
 | **I · Linguagem Ubíqua** | *regra de corte*, *Evento vencido*, *peso da Etapa*, *Retificação* são do domínio | `FR-538`, `FR-545`, `FR-550` |
 | **VI · Completude de Jornada** | três becos fechados e um quarto registrado; a jornada da composição deixa de ter etapa impossível de concluir | `SC-190` |
 | **Uma maneira de dizer cada coisa** | a condução sai do mecanismo único, e não de texto imitado | `FR-543` |

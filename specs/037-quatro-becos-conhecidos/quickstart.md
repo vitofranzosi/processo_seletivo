@@ -37,7 +37,13 @@ cenário 1 tenha aparecido corretamente.
 **Esperado**: ele lê a recusa e recebe **a frase que diz a quem pedir** — e não um caminho que não
 abre. É o segundo lugar desta feature onde o beco da `033` cabe.
 
-6. Entre como alguém que **não alcança** a classificação deste Edital.
+6. Abra o corte de um marco que **ordena por sorteio** — que não corta e não enumera Etapa.
+
+**Esperado**: o destino é oferecido do mesmo modo, e a tela diz que **este marco não corta**.
+**Registre se a prosa serve ao caso do sorteio ou se precisa de palavra própria** — é a pergunta que
+o caso de borda deixou em aberto, e o percurso é quem a responde.
+
+7. Entre como alguém que **não alcança** a classificação deste Edital.
 
 **Esperado**: nenhum destino de corte é oferecido. A garantia da `033` não foi desfeita.
 

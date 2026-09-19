@@ -90,6 +90,24 @@ objetivo da fase, o `data-model` e o `quickstart`. Na `036` foram sete pontos; a
 | **M4** | o título da `US2` prometia o que a `FR-542b` autoriza a não acontecer |
 | **L1** | a `T011` produzia o desfecho da `SC-195` sem citá-la |
 
+## A revisão externa, e as três contradições executáveis
+
+Passaram pelas duas passadas do `analyze` porque **nenhuma delas é detectável por contagem**: as três
+eram requisitos que, lidos sozinhos, faziam sentido.
+
+| Achado | O que estava errado |
+|---|---|
+| **I1** | a `FR-543a` exigia a forma cheia e a `FR-543` proibia escrever à mão — e o mecanismo **não produz** a forma cheia (`R-11`) |
+| **I2** | a `FR-554` proibia ajuda visível no cartão, e a `FR-551` mandava acrescentar uma frase ao cartão |
+| **I3** | a `FR-553` e a `SC-194` negavam a mudança de decisão que a `US3` faz **de propósito** |
+| **U1** | o marco por sorteio estava no caso de borda e em nenhuma contraprova |
+| **I4** | *"nenhuma capacidade nova"* conflitava com a linguagem do princípio VI |
+| **I5** | o quinto portão citava a tarefa errada da recontagem |
+
+**As três `HIGH` têm a mesma forma**: uma promessa geral escrita antes de a feature saber o que ia
+fazer, e que a feature depois desrespeita legitimamente. O remédio não é cumprir a promessa — é
+**restringi-la ao que ela realmente protege**.
+
 ## Notes
 
 - Items marked incomplete require spec updates before `$speckit-clarify` or `$speckit-plan`
