@@ -43,23 +43,37 @@ que sugere que falta mecanismo. **Falta não.**
 | **A conferência antes de publicar** | ❌ | a `032` confere presença, não execução |
 | **A recusa que diz o que corrigir** | ❌ | ela culpa a fonte externa |
 
-### O defeito, medido: três campos do caminho executável são texto livre
+### O defeito, medido: **cinco dos seis campos do método têm guarda, e o sexto não**
 
-Cada um deles **tem forma determinada em algum lugar do código**, e a tela não a declara em lugar
-nenhum.
+A primeira redação desta spec dizia *"três campos de texto livre que nada valida"*. **O `plan`
+mediu, e são outros os números** — o que se segue é a medição, e está em
+[research.md](research.md), `R-2`.
 
-| Campo, como a tela o chama | A forma que o motor exige | O que a tela oferece hoje |
+| Campo do método | Vocabulário | Tem guarda hoje? |
 |---|---|---|
-| **Algoritmo e versão** | vocabulário **fechado** de um elemento; acrescentar algoritmo é publicar versão nova, com implementação, vetores e contrato | caixa de texto, com um `placeholder` |
-| **Fonte pública externa da semente** | vocabulário **fechado** de dois nomes, cada um ligado ao adaptador que o executa; acrescentar fonte é publicar adaptador | caixa de texto, **sem ajuda nenhuma** |
-| **Ocorrência que fixará a semente** | livre, mas **tem de terminar em número** — a substituição deriva dele | caixa de texto, **sem ajuda nenhuma** |
+| Algoritmo | **fechado**, um elemento | ✅ recusa o que o sistema não executa |
+| Fonte | **fechado**, dois nomes | ✅ recusa o que não tem adaptador |
+| Instante da ocorrência | livre, exige fuso | ✅ recusa sem fuso |
+| Regra de normalização | **fechado** | ✅ |
+| Regra de substituição | **fechado** | ✅ |
+| **Ocorrência** | **livre, e tem de terminar em número** | ❌ **nenhuma** |
 
-**O contraexemplo está na mesma tela, três linhas acima.** *"Quando a ocorrência acontece"* é o mesmo
-tipo de campo, e a tela **ensina** a forma: *"Com fuso, como `2026-11-20T20:00:00-03:00`. É este
-instante que separa 'a fonte ainda não publicou' de 'a fonte não publicará'."*
+As cinco guardas disparam **ao gravar o rascunho**, e valem tanto para o método próprio do marco
+quanto para o método comum do Edital.
 
-O padrão a generalizar já existe. Ele só não foi aplicado aos três campos em que errar impede o
-sorteio de rodar.
+**A ocorrência é o único buraco, e é o que quebra o sorteio.** Ela aparece uma única vez no módulo
+que valida o método: numa tabela de rótulos, chamada de *"a ocorrência **concreta** que fixará a
+semente"*. **O domínio já sabe o que ela é. O formulário não diz.**
+
+### E a tela já sabe ensinar — em dois lugares, para outros campos
+
+| O que existe | Onde |
+|---|---|
+| **A escolha** entre os valores publicados, montada a partir do próprio vocabulário fechado | na tela de **Retificação**, para o algoritmo |
+| **A ajuda** com forma, exemplo e consequência | na tela de **composição**, para o instante da ocorrência |
+
+Os dois padrões que esta feature precisa **já são praticados pelo produto**. Nenhum deles alcança os
+campos em que errar impede o sorteio de rodar.
 
 ### Uma correção à leitura da auditoria
 
@@ -73,12 +87,17 @@ fato é a **regra de substituição**, que já é uma seleção de vocabulário 
 Pedir forma computável a ele seria trocar por um código a frase que diz a norma em português, que é
 exatamente a função dele. A spec o deixa como está, e registra por quê.
 
-### E nada disso é dito antes de publicar
+### O que sobra, então
 
-A `032` entregou que marco que sorteia **sem** método publicável não publica. Ela confere
-**presença**; esta confere **execução**. Um Edital com algoritmo inventado, fonte fora do vocabulário
-ou ocorrência que não termina em número atravessa a Revisão, é homologado e publicado sem uma
-palavra — e a falha aparece no dia do sorteio, quando corrigir já depende de Retificação.
+Três coisas, e as três são menores do que a primeira redação desta spec supôs:
+
+1. **A sexta guarda.** A ocorrência ganha a conferência de forma que os outros cinco campos já têm,
+   no mesmo lugar e no mesmo momento.
+2. **A tela ensina.** Escolha onde o vocabulário é fechado, ajuda onde a forma é livre mas restrita
+   — generalizando o que a Retificação e o campo do instante já praticam.
+3. **A recusa do dia do sorteio distingue duas causas.** Hoje *"a fonte não publicou"* e *"a
+   declaração não pôde ser lida"* caem na mesma frase, e a frase é falsa na segunda. A frase certa
+   **já existe**, específica e correta, e é descartada a uma linha de onde seria exibida.
 
 ---
 
@@ -108,28 +127,32 @@ ocorrência precisa terminar em número, e chegar a um método que roda.
 
 ---
 
-### User Story 2 - A publicação recusa o método que não roda (Priority: P2)
+### User Story 2 - A ocorrência ganha a guarda que os outros cinco campos já têm (Priority: P2)
 
-A Revisão impede publicar um marco cujo método o sistema não consegue executar, nomeando **o campo, a
-forma esperada e a etapa em que se corrige**.
+Quem declara uma ocorrência que o motor não consegue derivar é recusado **no mesmo momento** em que
+já é recusado por declarar um algoritmo que o sistema não executa — e lê o que precisa corrigir.
 
 **Why this priority**: é a rede. A `US1` faz o erro ficar difícil; esta faz ele ficar impossível de
-publicar. E é a mesma família da `032` — descobrir antes, e não no dia.
+atravessar a composição. E o lugar dela não é escolha de estilo: **cinco campos irmãos já são
+conferidos ali**, e pôr o sexto noutro lugar criaria duas gramáticas para o mesmo tipo de erro.
 
-**Independent Test**: compor um marco com ocorrência em prosa, abrir a Revisão, e ser impedido com
-uma frase que diz o que corrigir e onde.
+**Independent Test**: declarar a ocorrência em prosa, gravar, e ser recusado com uma frase que nomeia
+o campo e a forma — sem precisar chegar à Revisão para descobrir.
 
 **Acceptance Scenarios**:
 
-1. **Given** um marco de sorteio cuja ocorrência não termina em número, **When** se abre a Revisão,
-   **Then** a publicação é **impedida**, e o achado nomeia o campo, a forma e a etapa.
-2. **Given** o mesmo Edital, **When** se tenta submeter assim mesmo, **Then** a submissão é recusada
-   com a **mesma frase** da Revisão.
-3. **Given** um marco que **não** sorteia, **When** se abre a Revisão, **Then** nada desta família é
-   produzido.
-4. **Given** um Edital **do acervo**, publicado antes desta feature com método não executável,
-   **When** se pratica uma Retificação sobre ele, **Then** a Retificação **não** é impedida por esta
-   regra.
+1. **Given** um marco de sorteio cuja ocorrência não termina em número, **When** se grava,
+   **Then** a composição recusa, nomeando **o campo, a forma e por quê**.
+2. **Given** o **método comum do Edital** com a mesma ocorrência, **When** se grava, **Then** a
+   recusa é a mesma: a conferência não distingue o método próprio do comum.
+3. **Given** um marco que **não** sorteia, ou um Edital sem método algum, **When** se grava,
+   **Then** nada desta família dispara.
+4. **Given** um Edital **do acervo** cuja ocorrência publicada não tem a forma exigida, **When** se
+   pratica uma Retificação sobre ele, **Then** a Retificação **não** é impedida — nem por esta
+   guarda, nem por efeito dela.
+5. **Given** a mesma ocorrência, **When** o motor tenta derivá-la, **Then** ele recusa **pela mesma
+   regra** que a composição aplicou: a composição não aceita o que o sorteio recusaria, nem o
+   contrário.
 
 ---
 
@@ -180,10 +203,11 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
 #### A forma, na composição
 
 - **FR-507**: Os campos do método cujo valor pertence a **vocabulário fechado** — o algoritmo e a
-  fonte — MUST ser oferecidos como **escolha entre os valores que o sistema executa**, e MUST NOT ser
-  digitados livremente. A razão está escrita no próprio código: acrescentar fonte é **publicar
-  adaptador**, e não escrever uma linha no Edital; um Edital que declarasse uma fonte sem adaptador
-  faria o manifesto publicar uma fonte que nunca foi consultada.
+  fonte — MUST ser oferecidos na composição como **escolha entre os valores que o sistema executa**,
+  e MUST NOT ser digitados livremente. **Isto generaliza o que a tela de Retificação já faz** com o
+  algoritmo, montando as opções a partir do próprio vocabulário: o padrão existe, e só não alcança a
+  composição. Hoje a composição deixa digitar e **recusa ao gravar** — a guarda existe, o ensino não,
+  e a pessoa descobre o vocabulário por tentativa.
 - **FR-508**: O campo da **ocorrência** MUST declarar, no ponto de uso, **a forma que precisa ter e a
   razão dela** — que a regra de substituição deriva do número da ocorrência. Ele MUST NOT virar
   vocabulário fechado: a referência é do Edital e da fonte, e enumerá-la seria enumerar o futuro.
@@ -198,42 +222,41 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
   Retificação, identificado como o que foi publicado, e MUST NOT desaparecer nem ser apresentado como
   escolha válida.
 
-#### A conferência, antes de publicar
+#### A sexta guarda
 
-- **FR-512**: Marco que ordena por sorteio cujo método **não pode ser executado** MUST impedir a
-  publicação. É a mesma resposta que a `032` deu ao caso vizinho — marco que sorteia sem método
-  publicável —, e a razão é a mesma: o custo de descobrir tarde é o dia do sorteio, com o cronograma
-  correndo e a correção já dependendo de Retificação (`D-001`).
-- **FR-513**: O achado MUST nomear **o campo**, **a forma esperada** e **a etapa em que se corrige**,
-  na mesma gramática da família da `032`. *"O método não é executável"* descreve o sintoma; a pessoa
-  precisa de qual campo e do que ele tem de conter.
-- **FR-514**: A conferência MUST ser feita sobre o método **que governa o marco** — o próprio quando
-  declarado, o comum do Edital quando não. Conferir apenas o declarado deixaria passar o marco que
-  herda um método comum inexecutável.
-- **FR-515**: O impedimento MUST valer **somente no ato de publicação**. Gravar rascunho continua
-  possível, e **Retificação de Edital do acervo continua aceita** — impedir ali criaria um Edital
-  publicado do qual não se sai.
-- **FR-516**: A conferência MUST reutilizar as regras que o motor já aplica, e MUST NOT reimplementar
-  nenhuma delas. Duas respostas para *"este método roda?"* divergiriam na primeira mudança, e a
-  divergência apareceria como a Revisão aprovando o que o sorteio recusa.
+- **FR-512**: A ocorrência MUST ser recusada quando **não tiver a forma que a regra de substituição
+  consome** — hoje, terminar em número. A recusa MUST acontecer **no mesmo lugar e no mesmo momento**
+  em que os outros cinco campos do método já são conferidos, e MUST valer tanto para o método próprio
+  do marco quanto para o comum do Edital. *Uma sexta guarda ao lado de cinco é mais barata e mais
+  honesta do que uma família nova de achados ao lado delas* (`D-001`).
+- **FR-513**: A recusa MUST nomear **o campo**, **a forma esperada** e **por que ela é exigida** — que
+  a substituição deriva do número da ocorrência —, na mesma gramática das outras cinco. *"O método
+  não é executável"* descreve o sintoma.
+- **FR-514**: A recusa MUST NOT tornar **irretificável** nenhum Edital do acervo. Há conteúdo
+  publicado que nunca passou por esta conferência, porque ela não existia; se o lugar natural da
+  guarda impedir a Retificação desse conteúdo, **o lugar está errado** — publicação é ato imutável, e
+  um Edital do qual não se sai é pior do que um método que não roda.
+- **FR-515**: A conferência MUST reutilizar a regra que o motor já aplica, e MUST NOT reimplementá-la.
+  Duas respostas para *"esta referência é derivável?"* divergiriam na primeira mudança, e a
+  divergência apareceria como a composição aceitando o que o sorteio recusa.
 
 #### A recusa, no dia
 
-- **FR-517**: A recusa da tela do sorteio MUST distinguir **a fonte não publicou** de **a declaração
+- **FR-516**: A recusa da tela do sorteio MUST distinguir **a fonte não publicou** de **a declaração
   não pôde ser lida**, e MUST NOT atribuir à fonte externa uma falha que é da declaração.
-- **FR-518**: Quando a causa é a declaração, a frase MUST dizer **qual campo** e **o que ele precisa
+- **FR-517**: Quando a causa é a declaração, a frase MUST dizer **qual campo** e **o que ele precisa
   conter**, e só então que corrigir exige Retificação — porque o Edital está publicado.
-- **FR-519**: Quando a causa é indisponibilidade real, a frase MUST continuar dizendo o que diz hoje.
+- **FR-518**: Quando a causa é indisponibilidade real, a frase MUST continuar dizendo o que diz hoje.
   Esta feature **não** mexe no que já está certo.
 
 #### O que não muda
 
-- **FR-520**: Nenhum conteúdo publicado MUST ser reescrito, e nenhum vocabulário MUST ser alargado
+- **FR-519**: Nenhum conteúdo publicado MUST ser reescrito, e nenhum vocabulário MUST ser alargado
   por esta feature. Acrescentar algoritmo ou fonte continua sendo **publicar implementação, vetores e
   contrato**.
-- **FR-521**: A feature MUST NOT criar capacidade nova, papel novo nem regra de autorização nova, e
+- **FR-520**: A feature MUST NOT criar capacidade nova, papel novo nem regra de autorização nova, e
   MUST NOT alterar o resultado de sorteio algum já realizado.
-- **FR-522**: A direção de dependência entre sorteio e classificação MUST permanecer como a `021` a
+- **FR-521**: A direção de dependência entre sorteio e classificação MUST permanecer como a `021` a
   declarou por escrito. Esta feature não a inverte.
 
 ### Key Entities
@@ -256,13 +279,20 @@ uma frase que nomeia a declaração, e não a indisponibilidade da fonte.
   semente, execução, ordem sorteada, manifesto e verificação pública —, com o Edital composto pela
   interface e **sem que ninguém precise saber de antemão** que a ocorrência tem de terminar em
   número.
-- **SC-177**: **Zero** Editais chegam à publicação com método de sorteio que o sistema não executa.
+- **SC-177**: **Zero** Editais chegam à publicação com método de sorteio que o sistema não executa —
+  e a conferência que o garante é **a mesma** que o motor aplica na hora de derivar, verificada por
+  comparação direta das duas respostas.
 - **SC-178**: **100%** dos achados desta família nomeiam campo, forma esperada e etapa de correção.
 - **SC-179**: Nenhum valor publicado no acervo deixa de ser legível, e **nenhum** sorteio já
   realizado muda de resultado — conferido por comparação de conteúdo, resumo e manifesto.
-- **SC-180**: A varredura contra os **doze** Editais da amostra real registra, um a um, quais
-  passariam a ser impedidos e por qual campo — e **nenhum** deles é impedido por motivo que a
-  composição de hoje não permitisse evitar.
+- **SC-180**: A varredura contra os Editais de sorteio da amostra real registra, um a um, **como
+  cada um declara — ou não declara — a ocorrência que fixa a semente**, e o que alguém teria de
+  escrever no campo ao compor a partir dele.
+  *O critério mudou de pergunta, e a razão está medida:* a primeira redação contava **quantos seriam
+  impedidos**, e a leitura de quatro Editais que sorteiam — 57, 58, 69 e 78/2026 — mostrou que
+  **nenhum declara ocorrência de fonte externa**. A contagem devolveria zero por ausência de
+  declaração, e não por declaração correta. O que a varredura precisa produzir é **o que a ajuda da
+  `FR-508` tem de ensinar a quem parte de um Edital real** ([research.md](research.md), `R-7`).
 - **SC-181**: **Nenhuma migration**, e nenhum vocabulário alargado.
 
 ---
@@ -287,7 +317,13 @@ alguém ainda pode escrever o que quiser. **A alternativa descartada**, avisar, 
 que declara fonte ainda não adaptada; o próprio código argumenta contra, porque o manifesto
 publicaria uma fonte que nunca foi consultada.
 
-`FR-515` é o que impede a decisão de alcançar o acervo.
+**O que a medição do `plan` mudou, e o que não mudou.** A decisão — *impedir* — está de pé. O
+**lugar** dela mudou: a primeira redação previa uma família nova de achados na validação da
+publicação, e a medição mostrou que **cinco campos irmãos já são conferidos ao gravar o rascunho**,
+para o método próprio e para o comum. A sexta guarda vai para junto das cinco. Onde a conferência
+vive é engenharia; que ela impeça é governança, e essa parte é sua.
+
+`FR-514` é o que impede a decisão de alcançar o acervo.
 
 ### D-002 — o vocabulário vira escolha, e não texto validado
 
@@ -304,6 +340,22 @@ continuar legíveis.
 Registrada porque contraria a leitura da auditoria, que a citou junto com a ocorrência. Medição:
 nenhum caminho de execução lê esse campo; quem deriva é a regra de substituição, que já é vocabulário
 fechado. Ele é a frase que diz a norma em português, e é assim que um Edital se escreve.
+
+### Uma pergunta de governança que esta feature registra e **não** responde
+
+**Os Editais correntes do Cefor não declaram ocorrência de fonte externa.** Li quatro dos que
+sorteiam — 57, 58, 69 e 78/2026 — e os quatro trazem a mesma cláusula: *o software sorteia e publica
+a semente usada, para auditoria*. Nenhum menciona fonte pública, concurso ou extração.
+
+O modelo deste sistema é **deliberadamente mais forte**, e a `021` o escolheu por escrito: semente
+derivada de fonte pública externa, **declarada antes**, verificável por terceiro. É o que entrega a
+auditabilidade que aqueles Editais prometem e não cumprem — semente publicada **depois** não prova
+nada a quem não estava lá.
+
+**Mas o sistema exige uma declaração que os Editais de hoje não fazem.** Ou eles passam a fazê-la, e
+isso é ganho de auditabilidade a ser combinado com quem os redige, ou existe uma família de sorteio
+que o modelo atual não representa. **Esta spec não decide, e não deve**: ela ensina a declarar o que
+o modelo pede, e registra a pergunta para quem governa o backlog.
 
 ### As demais premissas
 

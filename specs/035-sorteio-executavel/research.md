@@ -194,7 +194,22 @@ uma semente publicada depois não prova nada a quem não estava lá.
 | R-6 | 3 fixtures quebram, num arquivo, com a forma que uma pessoa escreve | é a evidência, não o problema |
 | **R-7** | **quatro Editais reais não declaram ocorrência externa alguma** | **o `SC-180` precisa mudar de pergunta** |
 
-**O Phase 1 não deve começar antes de a `spec.md` ser revista nos pontos R-2 e R-7.** Escrever
-`data-model`, contratos e `quickstart` sobre uma premissa medida como falsa é construir três
-artefatos que depois teriam de ser refeitos — e é o que a `034` mostrou custar quatro passadas de
-`analyze`.
+**A `spec.md` foi revista nos pontos `R-2` e `R-7` antes do Phase 1**, em 18/09/2026, e só então os
+artefatos de desenho foram escritos. Escrevê-los sobre uma premissa medida como falsa seria construir
+três arquivos para refazer depois — e é o que a `034` mostrou custar quatro passadas de `analyze`.
+
+**O que mudou na spec, e o que não mudou:**
+
+| | |
+|---|---|
+| A seção do defeito | de *"três campos sem guarda"* para **a assimetria**: cinco têm, o sexto não |
+| A `FR-507` | de *criar* a escolha para **generalizar** a que a Retificação já faz |
+| A `US2` e a `FR-512` | de família nova de achados na publicação para **a sexta guarda**, junto das cinco |
+| A `FR-514` | passou a proibir que a guarda **prenda o acervo** — risco que a medição levantou |
+| O `SC-180` | mudou de pergunta: não *quantos seriam impedidos*, mas **como os Editais reais declaram** |
+| O `D-001` | **não mudou**. A decisão é impedir, e ela é sua; onde a guarda vive é engenharia |
+
+**Uma medição a mais, feita depois do primeiro registro deste arquivo:** o **método comum do Edital**
+passa pelo mesmo validador do método do marco — há uma função só, e o docstring dela explica que o
+método do Edital tem nove campos e o do marco dez. Isso fecha a última porta pela qual um método
+inexecutável poderia entrar sem guarda, e é o que torna a `FR-512` suficiente sozinha.
