@@ -824,7 +824,7 @@ def test_a_submissao_e_recusada_com_a_mesma_frase_da_revisao(client, seletor_lig
     )
 
 
-# --- Os quatro achados da família, no mesmo Edital (032, SC-159, SC-157) -----------------------
+# --- Os achados da família, no mesmo Edital (032, SC-159, SC-157; 034, FR-501) -----------------
 #
 # **Mora aqui, e não dentro de uma história.** Ele só existe depois das três — pô-lo em US1 criaria
 # dependência entre histórias que deveriam ser entregáveis isoladas.
@@ -846,20 +846,33 @@ LINHA_DO_SORTEIO = "aaaaaaaa-0000-4000-8000-0000000320fa"
 #: Cada achado da família, com a etapa em que a correção é feita e o que a mensagem precisa nomear.
 #: Literal, e não derivado: uma lista lida do próprio módulo passaria a ignorar o achado que
 #: deixasse de ser emitido, que é exatamente o que `SC-159` existe para acusar.
+#:
+#: **Eram quatro, e são três** (034, `FR-501`). `reserved_row_without_ordering` avisava que a
+#: reserva não tinha via de apuração, e a `034` construiu a via: o marco computado passou a emitir
+#: uma ordem por recorte, e não sobrou caso que o aviso pudesse nomear. Ele foi **aposentado**, e
+#: não estreitado — retirar a entrada daqui é o que faz esta lista literal continuar sendo o guarda
+#: que ela é, em vez de exigir para sempre um achado que ninguém mais produz.
+#:
+#: *A remoção alcança quatro casos deste arquivo, e não um.* A contagem de `research.md` `R-5`
+#: previa só `test_os_dois_avisos_da_familia_nao_impedem_a_publicacao`, porque contou por linha e
+#: não pelo dicionário — os outros três leem `A_FAMILIA` e mudam com ela.
 A_FAMILIA = {
     "profile_without_milestone": ("classificacao", "SEM-MARCO"),
     "milestone_without_cut_rule": ("classificacao", "CLASS-TUT"),
     "drawn_milestone_without_method": ("classificacao", "SORT-X"),
-    "reserved_row_without_ordering": ("perfis", "COM-COTA"),
 }
 
 
-def _rascunho_dos_quatro_achados():
-    """Os quatro Editais da auditoria, condensados num só.
+def _rascunho_dos_tres_achados():
+    """Os Editais da auditoria, condensados num só.
 
     **Três Perfis, e cada um carrega um defeito diferente** — o que não classifica ninguém, o que
     classifica e não convoca e reparte cotas que ninguém apura, e o que sorteia sem dizer como. A
-    Revisão precisa apresentar os quatro, e não o primeiro.
+    Revisão precisa apresentá-los todos, e não o primeiro.
+
+    **O Perfil `COM-COTA` continua aqui depois da `034`**, e não é resíduo: ele carrega também o
+    marco sem regra de corte, que é um dos achados que restaram. Retirá-lo tiraria da Revisão o
+    caso de um Perfil com dois defeitos ao mesmo tempo.
     """
     return {
         "profiles": [
@@ -971,12 +984,12 @@ def _rascunho_dos_quatro_achados():
 
 
 @pytest.fixture
-def com_os_quatro_achados(rascunho, api_client):
+def com_os_tres_achados(rascunho, api_client):
     from tests.fixtures.edital import actor_headers
 
     resposta = api_client.put(
         f"/api/v1/admin/editais/{rascunho.id}/rascunho",
-        _rascunho_dos_quatro_achados(),
+        _rascunho_dos_tres_achados(),
         format="json",
         **{
             **actor_headers("preparador", ["edital:elaborar"], key="hardening-032-quatro-0001"),
@@ -990,14 +1003,19 @@ def com_os_quatro_achados(rascunho, api_client):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_a_familia_inteira_dispara_no_mesmo_edital(com_os_quatro_achados):
-    """A premissa de `SC-159`: sem os quatro emitidos, o roteamento não prova nada."""
+def test_a_familia_inteira_dispara_no_mesmo_edital(com_os_tres_achados):
+    """A premissa de `SC-159`: sem todos eles emitidos, o roteamento não prova nada.
+
+    A igualdade com `A_FAMILIA` é o que faz este caso acusar tanto o achado que deixa de ser
+    emitido quanto o que passa a ser — e foi ela que acusou a aposentadoria da `034`, em vez de
+    deixá-la passar como silêncio.
+    """
     from processo_seletivo.editais.domain.validation import validate_for_publication
     from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 
     emitidos = {
         item.code
-        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        for item in validate_for_publication(edital_snapshot(com_os_tres_achados))
         if item.code in A_FAMILIA
     }
 
@@ -1006,7 +1024,7 @@ def test_a_familia_inteira_dispara_no_mesmo_edital(com_os_quatro_achados):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_cada_achado_da_familia_leva_a_etapa_em_que_a_correcao_e_feita(com_os_quatro_achados):
+def test_cada_achado_da_familia_leva_a_etapa_em_que_a_correcao_e_feita(com_os_tres_achados):
     """`SC-159`: 100% dos achados novos citam a etapa do assistente em que se corrige.
 
     Três caem na Classificação — que é a única tela onde o conteúdo do marco se edita — e o do
@@ -1018,7 +1036,7 @@ def test_cada_achado_da_familia_leva_a_etapa_em_que_a_correcao_e_feita(com_os_qu
 
     achados = {
         item.code: item
-        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        for item in validate_for_publication(edital_snapshot(com_os_tres_achados))
         if item.code in A_FAMILIA
     }
 
@@ -1031,33 +1049,41 @@ def test_cada_achado_da_familia_leva_a_etapa_em_que_a_correcao_e_feita(com_os_qu
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_a_revisao_apresenta_os_quatro_e_nao_o_primeiro(
-    client, seletor_ligado, com_os_quatro_achados
-):
-    """O caso de borda "mais de um achado no mesmo Edital", com a família inteira."""
+def test_a_revisao_apresenta_os_tres_e_nao_o_primeiro(client, seletor_ligado, com_os_tres_achados):
+    """O caso de borda "mais de um achado no mesmo Edital", com a família inteira.
+
+    *Este caso não falhou quando a `034` aposentou o quarto achado, e o silêncio é o ponto:*
+    `COM-COTA` continuava aparecendo no corpo por causa de **outro** achado do mesmo Perfil. A
+    asserção passou a valer por acidente, e por isso o nome foi corrigido junto — um teste que diz
+    "os quatro" e confere três é um teste que ninguém relê.
+    """
     identificar(client, "ana.elaboradora", ["elaborador"])
 
-    corpo = _revisao(client, com_os_quatro_achados)
+    corpo = _revisao(client, com_os_tres_achados)
 
     assert "Nada pendente" not in corpo
     for _, entidade in A_FAMILIA.values():
         assert entidade in corpo, entidade
     para_classificacao = reverse(
-        "interface:compor-etapa", args=[com_os_quatro_achados.id, "classificacao"]
+        "interface:compor-etapa", args=[com_os_tres_achados.id, "classificacao"]
     )
-    para_perfis = reverse("interface:compor-etapa", args=[com_os_quatro_achados.id, "perfis"])
+    para_perfis = reverse("interface:compor-etapa", args=[com_os_tres_achados.id, "perfis"])
     assert corpo.count(f'href="{para_classificacao}#titulo-classificacao"') >= 3
     assert f'href="{para_perfis}' in corpo
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_os_dois_avisos_da_familia_nao_impedem_a_publicacao(com_os_quatro_achados):
-    """A metade que faz deles avisos, e ela é decisão registrada na spec.
+def test_o_aviso_que_resta_na_familia_nao_impede_a_publicacao(com_os_tres_achados):
+    """A metade que faz dele aviso, e ela é decisão registrada na spec.
 
-    O corte em branco e a reserva sem apuração **advertem**. Se um dia qualquer um dos dois virasse
-    impedimento, três Editais da amostra real — 57/2026, 28/2026 e 173/2025 — perderiam a única
-    parte da jornada que hoje funciona para eles.
+    **Eram dois, e é um** (034, `FR-501`): a reserva sem via de apuração deixou de ser advertida
+    porque deixou de existir — o marco computado passou a emitir por recorte. O corte em branco
+    continua advertindo, e pela razão de sempre: se virasse impedimento, Editais reais perderiam a
+    parte da jornada que funciona para eles.
+
+    Os dois impedimentos ficam como estão. É a diferença entre "o Edital tem um defeito que se
+    conserta depois" e "o Edital não pode existir assim", e ela não foi tocada.
     """
     from processo_seletivo.editais.domain.validation import (
         Severity,
@@ -1067,11 +1093,13 @@ def test_os_dois_avisos_da_familia_nao_impedem_a_publicacao(com_os_quatro_achado
 
     achados = {
         item.code: item.severity
-        for item in validate_for_publication(edital_snapshot(com_os_quatro_achados))
+        for item in validate_for_publication(edital_snapshot(com_os_tres_achados))
         if item.code in A_FAMILIA
     }
 
     assert achados["milestone_without_cut_rule"] == Severity.WARNING
-    assert achados["reserved_row_without_ordering"] == Severity.WARNING
+    assert "reserved_row_without_ordering" not in achados, (
+        "aposentado pela `034`: a reserva em marco computado ganhou via de apuração"
+    )
     assert achados["profile_without_milestone"] == Severity.BLOCKING_ERROR
     assert achados["drawn_milestone_without_method"] == Severity.BLOCKING_ERROR

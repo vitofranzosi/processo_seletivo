@@ -324,3 +324,20 @@ def test_o_marco_do_acervo_com_metodo_e_sem_forma_declarada_continua_publicando(
     marco.pop("orderProduction", None)
 
     assert "order_production_contradiz_o_metodo" not in _codigos(conteudo)
+
+
+# --- O espelho da `032` foi removido (034, FR-501a) --------------------------------------------
+#
+# **Aqui viveu, por uma travessia, o teste que provava que `emite_ordem_no_recorte` dizia o mesmo
+# que a emissão.** Ele nasceu na `T033` e saiu na `T036`, e o registro fica porque a ordem entre as
+# duas é o que impediu um defeito sem rastro.
+#
+# A medição que autorizou a remoção, feita antes dela: depois de a `034` fazer o marco computado
+# emitir por recorte e de a `FR-501` aposentar o aviso da Revisão, o corpo do predicado ficou em
+# `return True`, com **zero** ramificações, e o único consumidor de produção que restava era o campo
+# `apuravel` do selector da ocupação. Guarda que nunca reprova é pior do que guarda nenhum, porque o
+# próximo a ler o código confia nele.
+#
+# **A regra real continua tendo teste, e é o que importa**: quem prova que a ordem de cada recorte
+# é emitida é `tests/integration/classificacao/test_ordem_por_recorte.py`, contra a fonte — e não
+# contra o reflexo dela.

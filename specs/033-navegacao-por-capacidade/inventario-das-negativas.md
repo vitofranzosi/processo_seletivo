@@ -186,6 +186,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7176 | `observar_ocorrencia_do_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 7211 | `realizar_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 7243 | `anular_o_sorteio` | sim | não | propagação de 404 do domínio | idem |
+| 5105 | `_recorte_pedido` | sim | não | objeto inexistente | **acrescentada pela `034`** — `?lista=` que não corresponde a Modalidade alguma do Perfil (`FR-499`). Recorte inexistente e recorte vazio são coisas diferentes: confundi-los esconde erro de digitação, e a `FR-492a` fez da ordem vazia um estado legítimo justamente para que a distinção exista. Não é escopo nem autorização — a porta do Edital já filtrou os dois antes |
 
 ---
 

@@ -4,7 +4,12 @@
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:ordenacao' edital.id marco.id %}">{{ marco.name }}</a> ›
+  {% comment %}
+  A trilha volta **ao recorte que se está conferindo** (034, FR-497). Sem a `?lista=`, ela leva à
+  ampla concorrência: quem sobe a trilha de uma conferência de PPI cai noutro recorte, e a tela que
+  abre é legítima — o que torna o desvio silencioso.
+  {% endcomment %}
+  <a href="{{ url_do_recorte }}">{{ marco.name }}</a> ›
   <span aria-current="page">Conferir</span>
 </nav>
 
@@ -52,7 +57,13 @@ para nada.
     <dt>Participantes sem posição</dt>
     <dd>{% if sem_posicao %}<strong>{{ sem_posicao|length }}</strong> — {% for item in sem_posicao %}{{ item.protocolo|default:item.inscricao_id }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}nenhum{% endif %}</dd>
     <dt>Este ato</dt>
-    <dd>{% if ato_vigente %}sucede o ato de {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}{% else %}é o primeiro ato deste marco{% endif %}</dd>
+    {% comment %}
+    **"deste recorte", e não "deste marco"** (034, FR-490). O vigente passou a ser lido por recorte:
+    ao emitir a primeira ordem de uma cota num marco que já tem a da ampla, `ato_vigente` é vazio — e
+    a frase antiga afirmaria, numa confirmação de ato imutável, que nenhum ato existe no marco.
+    Afirmação falsa na tela que a pessoa lê para decidir.
+    {% endcomment %}
+    <dd>{% if ato_vigente %}sucede o ato de {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}{% else %}é o primeiro ato deste recorte{% endif %}</dd>
     <dt>Decisões de recurso executadas</dt>
     {% comment %}
     Citar é declarar que este ato executa aquela decisão, e a citação publicada é o que prova o
@@ -65,8 +76,16 @@ para nada.
   </dl>
 </section>
 
+{% if recorte_atual %}
+{% comment %}
+**A confirmação nomeia o recorte** (034, FR-490). Esta tela declara o alcance do clique, e o alcance
+mudou: um marco com cotas tem três ordens, e confirmar sem saber qual é confirmar no escuro.
+{% endcomment %}
+<p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
+{% endif %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
   <input type="hidden" name="confirmar" value="1">
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
@@ -93,7 +112,12 @@ para nada.
   {% endfor %}
   <p class="salvar">
     <button type="submit" class="botao perigoso">Emitir a ordem</button>
-    <a href="{% url 'interface:ordenacao' edital.id marco.id %}" class="acao">Cancelar e voltar</a>
+    {% comment %}
+    **Cancelar volta ao recorte, e não ao marco** (034). Cancelar uma emissão e reaparecer noutro
+    recorte é pior do que um erro: a tela seguinte é válida, mostra uma ordem verdadeira, e a única
+    pista de que se trocou de recorte é o cabeçalho que a pessoa acabou de ler.
+    {% endcomment %}
+    <a href="{{ url_do_recorte }}" class="acao">Cancelar e voltar</a>
   </p>
 </form>
 {% endblock %}

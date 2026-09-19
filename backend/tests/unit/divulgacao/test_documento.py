@@ -236,3 +236,62 @@ def test_o_documento_continua_deterministico_apesar_da_conversao_de_fuso(conteud
     primeiro = render_resultado_pdf(conteudo)
 
     assert primeiro == render_resultado_pdf(conteudo)
+
+
+# --- O documento nomeia o recorte (034, FR-506) -------------------------------------------------
+#
+# **Aqui, e não em `tests/unit/publicacoes/test_pdf_classificacao.py`**, que é onde a `T024` o
+# situava: aquele arquivo prova que o **Edital** publicado basta para reconstruir a regra de
+# classificação. Quem compõe o documento do **ato divulgado** é `divulgacao/infrastructure`, e é
+# este o arquivo que o exercita — a correção de endereço está registrada na rastreabilidade.
+#
+# O dado já existia: `cabecalho["lista"]` é gravado desde a `021` e a página pública já o exibia.
+# O que faltava era o papel. Sem ele, os três documentos de um marco com cotas são indistinguíveis,
+# e o Edital publica três ordens que parecem a mesma.
+
+
+def test_o_documento_da_ampla_nomeia_a_ampla(conteudo):
+    """A linha existe **sempre**, e dizer "Ampla concorrência" é verdadeiro em todo ato sem lista.
+
+    É o oposto da seção do sorteio, que só aparece quando há sorteio: lá a ausência afirmaria que o
+    resultado não foi sorteado; aqui o nome do recorte é o próprio fato.
+    """
+    texto = texto_de_pdf_bytes(render_resultado_pdf(conteudo))
+
+    assert conteudo["cabecalho"].get("lista", "") == "", "a premissa: o cenário é o da ampla"
+    assert "LISTA DE CONCORR" in texto
+    assert "Ampla concorr" in texto
+
+
+def test_o_documento_do_recorte_reservado_nomeia_a_modalidade(conteudo):
+    """Dois documentos do mesmo marco deixam de ser indistinguíveis.
+
+    A composição é a mesma do cenário, com a lista preenchida como o ato de um recorte reservado a
+    grava — é o que torna a comparação entre os dois papéis possível num teste só.
+
+    O nome usado aqui **não** é o `MODALIDADE_NOME` da fixture, e a razão é medida: naquele cenário
+    a Modalidade se chama "Ampla concorrência" e o nome aparece na coluna de modalidade de cada
+    linha da tabela. Uma asserção por substring sobre ele não distinguiria a moldura da tabela — que
+    é exatamente o tipo de asserção que passa sem provar nada.
+    """
+    reservada = "Pretos, pardos e indígenas"
+    do_recorte = {**conteudo, "cabecalho": {**conteudo["cabecalho"], "lista": reservada}}
+
+    da_ampla = texto_de_pdf_bytes(render_resultado_pdf(conteudo))
+    do_reservado = texto_de_pdf_bytes(render_resultado_pdf(do_recorte))
+
+    assert reservada in do_reservado
+    assert reservada not in da_ampla
+    assert do_reservado != da_ampla, "o papel dos dois recortes deixou de ser o mesmo"
+
+
+def test_a_ordem_da_ampla_continua_saindo_com_tudo_o_que_saia(conteudo):
+    """A não-regressão do papel: a linha nova acrescenta, e não substitui (`FR-493`, `SC-173`)."""
+    texto = texto_de_pdf_bytes(render_resultado_pdf(conteudo))
+    cabecalho = conteudo["cabecalho"]
+
+    assert cabecalho["processo"] in texto
+    assert cabecalho["edital"] in texto
+    assert cabecalho["marco"] in texto
+    assert cabecalho["perfil"] in texto
+    assert cabecalho["natureza_rotulo"] in texto

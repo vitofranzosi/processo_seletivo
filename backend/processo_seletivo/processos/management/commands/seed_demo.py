@@ -1377,19 +1377,29 @@ class Command(BaseCommand):
                 correlation_id="seed-demo",
             )
 
-        self.stdout.write("Emitindo a ordem classificatória…")
-        proposta = calcular_ordem(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+        self.stdout.write("Emitindo a ordem classificatória da ampla concorrência…")
+        # **O recorte é dito, e não herdado** (034, `FR-490`). Desde que o marco computado emite uma
+        # ordem por recorte, "a ordem do marco" deixou de ser pergunta com uma resposta só: o
+        # certame da semeadura tem um recorte — a ampla —, e nomeá-lo é o que impede este comando
+        # de emitir num recorte por omissão no dia em que o cenário ganhar cota. Comando de
+        # semeadura que quebra só reclama na próxima vez que alguém semeia.
+        proposta = calcular_ordem(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=None
+        )
         emitir_ordem(
             actor=presidencia,
             processo_id=edital.processo_id,
             edital_id=edital.id,
             perfil_id=perfil_id,
             marco_id=marco_id,
+            lista_id=None,
             idempotency_key=f"seed-demo-ordem-{chave}",
             correlation_id="seed-demo",
             confirmacao_do_calculo=assinatura_da_proposta(proposta, ato_vigente=None),
         )
-        ato = AtoDeOrdenacao.objects.get(edital=edital, marco_id=marco_id, sucessores__isnull=True)
+        ato = AtoDeOrdenacao.objects.get(
+            edital=edital, marco_id=marco_id, lista_id=None, sucessores__isnull=True
+        )
 
         self.stdout.write("Divulgando o resultado…")
         publicadora = ator("paula.publicadora", "resultado:publicar")

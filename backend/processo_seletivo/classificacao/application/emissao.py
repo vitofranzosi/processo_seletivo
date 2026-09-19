@@ -27,14 +27,33 @@ def emitir_ordem(
     idempotency_key,
     correlation_id,
     confirmacao_do_calculo,
+    lista_id=None,
     motivo="",
     decisoes=(),
 ):
-    """Emite a proposta confirmada; havendo vigente, cria sucessor sem alterar o anterior."""
+    """Emite a proposta confirmada de **um recorte**; havendo vigente, cria sucessor sem alterá-lo.
+
+    **Uma ordem por recorte** (034, `FR-490`): a da ampla concorrência e a de cada Modalidade
+    reservada, cada uma com raiz, sucessão e proveniência próprias. É o mesmo desenho que a `021`
+    aplica ao sorteio desde que três listas de concorrência podem produzir três atos raiz no mesmo
+    marco — e não um mecanismo novo.
+
+    **Emitir num recorte não constitui ato sobre os outros** (`FR-494`). As três ordens de um marco
+    nascem do mesmo cálculo e da mesma versão normativa, e é natural tratá-las como uma coisa só —
+    tratá-las assim faria uma sucessão num recorte revogar em silêncio duas ordens que ninguém
+    decidiu revogar. A obsolescência é por cadeia, e a cadeia é do recorte: quem garante isso é o
+    `lista_id` do filtro do vigente, logo abaixo, e as duas `UniqueConstraint` parciais do modelo.
+
+    `lista_id` nulo é a ampla concorrência, e é o que todo ato emitido antes desta feature é.
+    """
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
         "marco": str(marco_id),
+        # **O recorte entra no payload da idempotência** (`FR-494`). Sem ele, emitir a ordem de
+        # PPI com a chave que emitiu a da ampla seria lido como repetição, e a segunda emissão
+        # devolveria o desfecho da primeira — um recorte ficaria sem ato, e ninguém saberia por quê.
+        "lista": str(lista_id) if lista_id else "",
         "confirmacao": confirmacao_do_calculo or "",
         "motivo": (motivo or "").strip(),
         "decisoes": sorted(str(item) for item in decisoes or ()),
@@ -51,26 +70,37 @@ def emitir_ordem(
         if ctx.repetido:
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
-        vigente = AtoDeOrdenacao.objects.filter(
-            edital=edital,
-            perfil_id=identificador(perfil_id),
-            marco_id=identificador(marco_id),
-            # **A lista entra aqui pelo mesmo motivo que entrou em `ato_vigente`** (`021`,
-            # `D-006`): um marco de cotas tem uma raiz por lista de concorrência, e perguntar pelo
-            # vigente sem dizer de qual delas devolveria uma das três pela ordem de emissão. Um
-            # ato computado é sempre o de ampla concorrência — só o sorteio emite por lista —, e é
-            # isso que a coluna nula afirma.
-            lista_id=None,
-            sucessores__isnull=True,
-        ).first()
-
+        # **O cálculo vem antes da busca do vigente, e a ordem passou a importar** (034, `FR-491`).
+        # O vigente é o **daquele recorte**, e quem diz qual recorte é — depois de reduzir ao nulo a
+        # Modalidade que o Perfil aponta como sendo a ampla, e de recusar o identificador que não
+        # corresponde a Modalidade alguma — é o próprio cálculo. Resolver o recorte aqui também
+        # criaria um segundo lugar que responde "quais são os recortes deste marco", que é
+        # exatamente o defeito que a derivação única existe para fechar.
         proposta = calcular_ordem(
             edital=edital,
             perfil_id=perfil_id,
             marco_id=marco_id,
+            lista_id=lista_id,
             at=ctx.now,
         )
         _recusar_marco_de_sorteio(proposta)
+        recorte = proposta["lista_id"]
+        vigente = AtoDeOrdenacao.objects.filter(
+            edital=edital,
+            perfil_id=identificador(perfil_id),
+            marco_id=identificador(marco_id),
+            # **A lista entra aqui pelo mesmo motivo que entrou em `ato_vigente`** (`021`, `D-006`):
+            # um marco de cotas tem uma raiz por lista de concorrência, e perguntar pelo vigente sem
+            # dizer de qual delas devolveria uma das três pela ordem de emissão.
+            #
+            # *Aqui havia `lista_id=None` fixo, com o comentário "um ato computado é sempre o de
+            # ampla concorrência — só o sorteio emite por lista". Era decisão de escopo tomada
+            # entre a `015` e a `021`, e a `034` é a feature que a revisita: o computado passa a
+            # emitir por recorte também. O comentário sai junto da decisão que ele explicava —
+            # comentário que sobrevive à decisão passa a mentir.*
+            lista_id=recorte,
+            sucessores__isnull=True,
+        ).first()
         esperada = assinatura_da_proposta(proposta, ato_vigente=vigente)
         if not (confirmacao_do_calculo or "").strip():
             raise DomainError(
@@ -108,6 +138,7 @@ def emitir_ordem(
             edital=edital,
             perfil_id=proposta["perfil"]["id"],
             marco_id=proposta["marco"]["id"],
+            lista_id=recorte,
             versao=proposta["versao"],
             ato_anterior=vigente,
             motivo_da_sucessao=texto_do_motivo,
@@ -129,7 +160,10 @@ def emitir_ordem(
             correlation_id=correlation_id,
             reason=(
                 texto_do_motivo
-                or f"Ordem do marco {proposta['marco'].get('name') or marco_id} emitida."
+                or (
+                    f"Ordem do marco {proposta['marco'].get('name') or marco_id} emitida"
+                    + (f", no recorte {recorte}." if recorte else ", na ampla concorrência.")
+                )
             ),
             idempotency_key=idempotency_key,
         )
@@ -139,11 +173,23 @@ def emitir_ordem(
 
 
 def assinatura_da_proposta(proposta, *, ato_vigente=None):
-    """Identidade do que foi conferido, vinculada ao vigente visto naquela leitura."""
+    """Identidade do que foi conferido, vinculada ao recorte e ao vigente daquela leitura.
+
+    **A confirmação é do recorte** (034, `FR-495`). Uma assinatura comum aceitaria, no recorte B, a
+    conferência lida no A — e o operador emitiria a ordem certa com a conferência errada, sem que
+    nada acusasse. O caso não é hipotético: dois recortes reservados **sem nenhum autodeclarado** no
+    mesmo marco produzem universo e ordem idênticos, e só o recorte os distingue.
+
+    O recorte entra **aqui**, e não no resumo do universo que o ato grava: lá ele faria a comparação
+    de obsolescência confrontar um universo gravado sem a chave com um calculado com ela, e o acervo
+    inteiro apareceria obsoleto de uma vez. A assinatura é efêmera — nasce no GET, morre no POST —,
+    e por isso mudar a forma dela não alcança ato nenhum já emitido.
+    """
     linhas = proposta["posicoes"] + proposta["sem_posicao"]
     return canonical_sha256(
         {
             "atoVigente": str(ato_vigente.id) if ato_vigente is not None else None,
+            "recorte": proposta.get("lista_id"),
             "universo": proposta["universo"],
             "ordem": [
                 {

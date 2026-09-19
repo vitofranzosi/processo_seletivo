@@ -142,7 +142,11 @@ def test_a_conferencia_exibe_o_metodo_em_portugues(client, seletor_ligado, edita
         },
     ).content.decode()
 
-    assert "Ocorrência que fixa a semente" in corpo
+    # **O rótulo é o mesmo da composição e o do documento publicado** (035, FR-507, Princípio I).
+    # Ele dizia "Ocorrência que fixa a semente" aqui e "que fixará" nas outras duas: dois nomes
+    # para o mesmo campo, e o que fica é o de `CAMPOS_DO_METODO`, que é de onde o documento tira
+    # os dele desde a `032`.
+    assert "Ocorrência que fixará a semente" in corpo
     assert "drawMethod" not in corpo
 
 

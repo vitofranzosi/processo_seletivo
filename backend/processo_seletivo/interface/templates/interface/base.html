@@ -343,6 +343,19 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 .impedimentos li{padding:.3rem 0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
 .trilha a{color:var(--verde-texto)}
+/* A navegacao entre os recortes de um marco (034, FR-497). Nao e trilha — a trilha sobe a
+   hierarquia, e esta anda de lado entre irmaos —, e nao e aba de componente: o recorte atual e um
+   `span` com `aria-current`, e nao um link morto. O recorte em que se esta fica visualmente
+   preso, para que quem volta a tela depois de emitir saiba onde esta sem reler o cabecalho. */
+.recortes{margin:0 0 1.25rem}
+.recortes .sub{margin:0 0 .35rem}
+.recortes .abas{list-style:none;padding:0;margin:0;display:flex;gap:.5rem;flex-wrap:wrap}
+.recortes .abas li{font-size:.875rem}
+.recortes .abas a,.recortes .abas span{display:inline-block;padding:.3rem .7rem;border-radius:4px;
+  border:1px solid var(--borda)}
+.recortes .abas a{color:var(--verde-texto);text-decoration:none}
+.recortes .abas a:hover,.recortes .abas a:focus{background:var(--cinza-fundo)}
+.recortes .abas span{background:var(--cinza-fundo);font-weight:600;color:var(--texto)}
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
   padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
 /* A organização do trabalho (011). `.etapas` já existia e é o indicador de passos do

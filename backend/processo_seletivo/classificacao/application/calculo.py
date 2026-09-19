@@ -9,6 +9,7 @@ from collections import defaultdict
 
 from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, combinar
 from processo_seletivo.classificacao.domain.desempate import ordenar
+from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
@@ -17,11 +18,22 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 
 
-def calcular_ordem(*, edital, perfil_id, marco_id, at=None):
-    """Calcula a proposta vigente de um marco e devolve sua proveniência em memória.
+def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
+    """Calcula a proposta vigente de **um recorte** do marco, e devolve a proveniência em memória.
 
     A função é deliberadamente read-only. Quem emite chama o mesmo cálculo dentro do comando
-    transacional; abrir a tela pode chamá-la quantas vezes quiser sem constituir ato algum.
+    transacional; abrir a tela pode chamá-la quantas vezes quiser, em quantos recortes forem, sem
+    constituir ato algum (`FR-496`).
+
+    **`lista_id` nulo é a ampla concorrência, e ela continua sendo o universo inteiro do Perfil**
+    (`FR-492`, `FR-493`, `D-001`). Quem se autodeclarou numa Modalidade reservada **permanece**
+    aqui: a cota preenche o que a ampla não preencheu, e é a ocupação que desconta da cota quem
+    já ocupou pela ampla. Não é uma partição — é uma sobreposição, e ler isso ao contrário mudaria
+    a ordem de todo Edital do acervo sem que teste algum de recorte reservado acusasse.
+
+    **O padrão é o comportamento de antes desta feature**, e por isso Perfil sem Modalidade
+    reservada produz exatamente a ordem que produzia: o único filtro novo é o que o recorte
+    reservado acrescenta.
     """
     versao = effective_version(edital_id=edital.id, at=at)
     conteudo = versao.content
@@ -29,6 +41,11 @@ def calcular_ordem(*, edital, perfil_id, marco_id, at=None):
     marco = _por_identidade(perfil.get("classificationMilestones") if perfil else None, marco_id)
     if perfil is None or marco is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
+    # **A recusa do recorte inexistente é aqui, e não só na tela** (`FR-499`). A porta do comando
+    # também passa por este ponto, e fechar só a view deixaria a emissão alcançável por quem
+    # tivesse o formulário antigo aberto. A normalização também reduz ao nulo a Modalidade que o
+    # Perfil aponta como sendo a ampla: aceitar o apelido e nunca oferecê-lo é o que o corte já faz.
+    recorte = normalizar_recorte(conteudo, perfil_id=perfil["id"], lista_id=lista_id)
 
     etapas = {str(item["id"]): item for item in conteudo.get("stages") or []}
     enumeradas = [str(item) for item in marco.get("stages") or []]
@@ -42,6 +59,11 @@ def calcular_ordem(*, edital, perfil_id, marco_id, at=None):
         profile_id=perfil["id"],
         status=Inscricao.Status.SUBMETIDA,
     )
+    # **O filtro do recorte reservado, e ele é o único acréscimo ao universo** (`FR-492`). Fica na
+    # própria consulta, junto do resto: filtrar em memória depois de ler leria o Perfil inteiro por
+    # recorte, e o projeto tem orçamento de consulta verificado por teste.
+    if recorte is not None:
+        consulta = consulta.filter(modality_id=recorte)
     consulta = restringir_a_participantes(
         consulta,
         edital=edital,
@@ -168,6 +190,13 @@ def calcular_ordem(*, edital, perfil_id, marco_id, at=None):
         "versao": versao,
         "perfil": perfil,
         "marco": marco,
+        # **O recorte, normalizado, viaja com a proposta** — é dele que a assinatura da confirmação
+        # se distingue (`FR-495`). Dois recortes reservados vazios do mesmo marco produziriam
+        # universo e ordem idênticos, e uma assinatura comum aceitaria no recorte B a leitura feita
+        # no A. Não entra em `universo`: o ato já guarda o recorte na coluna `lista_id`, e
+        # acrescentá-lo ao resumo faria a comparação de obsolescência de todo ato do acervo
+        # confrontar um universo gravado sem a chave com um calculado com ela.
+        "lista_id": recorte,
         "etapas": etapas,
         "posicoes": posicoes,
         "sem_posicao": sem_posicao,

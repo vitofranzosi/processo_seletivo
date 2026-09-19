@@ -411,10 +411,20 @@ def test_com_mais_de_um_perfil_o_bloco_diz_de_qual_perfil_e_o_marco():
 # documento do resultado do sorteio (`Algoritmo`, `Semente`), e a verificação pública compara os
 # dois — é essa comparação que a `FR-465` torna possível.
 
+# **As três declarações de `occurrence` deste arquivo diziam `concurso 6100 da Loteria Federal`**, e
+# a `035` as corrigiu — as **fixtures**, e nunca a regra (FR-512, `research.md` R-6).
+#
+# Elas não eram um obstáculo à feature: eram a evidência dela. Alguém do próprio projeto, escrevendo
+# uma fixture, escreveu a referência do jeito que uma pessoa escreve — com o número no meio e a
+# fonte repetida no fim, embora a fonte já seja o campo de cima — e o motor não a derivaria. O
+# número estava lá; ele só não estava onde a regra o procura.
+#
+# **Afrouxar a derivação para achar o número em qualquer posição** resolveria estas três linhas e
+# criaria ambiguidade onde há mais de um número: `concurso 6100 de 2026` derivaria para **2027**.
 METODO_DO_EDITAL = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
     "source": "Loteria Federal",
-    "occurrence": "concurso 6100 da Loteria Federal",
+    "occurrence": "Concurso 6100",
     "occurrenceAt": "2026-11-20T20:00:00-03:00",
     "derivation": "o primeiro concurso realizado após a data programada do sorteio",
     "normalization": {
@@ -429,7 +439,7 @@ METODO_DO_EDITAL = {
 
 METODO_PROPRIO = {
     **METODO_DO_EDITAL,
-    "occurrence": "concurso 6101 da Loteria Federal",
+    "occurrence": "Concurso 6101",
     "derivation": "o segundo concurso realizado após a data programada do sorteio",
 }
 
@@ -487,7 +497,7 @@ def test_o_marco_do_acervo_sem_forma_declarada_sai_exatamente_como_hoje():
     [
         ("Algoritmo", "IFES-SORTEIO-SHA256-v1"),
         ("Fonte", "Loteria Federal"),
-        ("Ocorrência", "concurso 6100 da Loteria Federal"),
+        ("Ocorrência", "Concurso 6100"),
         ("Quando", "20/11/2026, às 20h"),
         ("Derivação", "o primeiro concurso realizado após a data programada do sorteio"),
         ("Semente", "os dígitos das cinco dezenas, em sequência"),
@@ -588,7 +598,7 @@ def test_o_marco_que_ordena_por_pontuacao_nao_ganha_bloco_de_sorteio():
 CAMPOS_DO_FORMULARIO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
     "source": "Loteria Federal",
-    "occurrence": "concurso 6100 da Loteria Federal",
+    "occurrence": "Concurso 6100",
     "occurrenceAt": "2026-11-20T20:00:00-03:00",
     "derivation": "o primeiro concurso realizado após a data programada do sorteio",
     "normalizationRule": "DIGITOS_EM_SEQUENCIA",
@@ -642,7 +652,7 @@ def test_a_divergencia_real_continua_sendo_nomeada():
     Trocado um dos sete campos impressos, a divergência **existe** e o documento a nomeia — que é o
     que dá ao leitor a razão de conferir este bloco, e não o método comum do Edital.
     """
-    proprio, comum = _metodos_como_a_tela_os_produz(occurrence="concurso 6101 da Loteria Federal")
+    proprio, comum = _metodos_como_a_tela_os_produz(occurrence="Concurso 6101")
 
     escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
 

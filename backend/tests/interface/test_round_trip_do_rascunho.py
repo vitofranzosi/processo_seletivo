@@ -623,9 +623,21 @@ def _tela_da_classificacao(client, edital):
 
 
 def _campo(corpo, nome):
-    """O `<input>` de nome exato, inteiro, como a página o escreve."""
+    """O controle de nome exato, inteiro, como a página o escreve.
+
+    **`<input>` ou `<select>`**, desde a `035` (FR-507): o algoritmo e a fonte deixaram de ser
+    digitados na composição, e continuam `<input type="hidden">` quando o marco não sorteia — que é
+    justamente a travessia que este arquivo guarda.
+
+    Ler só o `<input>` faria o caso "reaparece quando a forma volta a ser sorteio" devolver string
+    vazia e falhar por motivo que não é o dele; e, pior, faria uma asserção de ausência passar a não
+    guardar nada, em silêncio.
+    """
     achado = re.search(rf'<input[^>]*name="{re.escape(nome)}"[^>]*>', corpo)
-    return achado.group(0) if achado else ""
+    if achado:
+        return achado.group(0)
+    escolha = re.search(rf'<select[^>]*name="{re.escape(nome)}"[^>]*>.*?</select>', corpo, re.S)
+    return escolha.group(0) if escolha else ""
 
 
 @pytest.mark.django_db

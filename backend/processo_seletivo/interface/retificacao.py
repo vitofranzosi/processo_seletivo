@@ -23,6 +23,7 @@ from uuid import uuid4
 
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
+from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -138,9 +139,9 @@ CAMPOS_RAIZ = [
 CAMPOS_DO_METODO_COMUM = [
     ("drawMethod/algorithm", "Algoritmo do sorteio comum", REFERENCIA),
     ("drawMethod/source", "Fonte pública da semente", REFERENCIA),
-    ("drawMethod/occurrence", "Ocorrência que fixa a semente", TEXTO),
+    ("drawMethod/occurrence", "Ocorrência que fixará a semente", TEXTO),
     ("drawMethod/occurrenceAt", "Quando a ocorrência acontece", INSTANTE),
-    ("drawMethod/derivation", "Como a ocorrência foi escolhida", TEXTO_LONGO),
+    ("drawMethod/derivation", "Como a ocorrência decorre da data programada", TEXTO_LONGO),
     ("drawMethod/normalization/rule", "Regra de normalização", REFERENCIA),
     ("drawMethod/normalization/text", "Normalização, como se publica", TEXTO_LONGO),
     ("drawMethod/substitutionRule/rule", "Regra de substituição", REFERENCIA),
@@ -262,34 +263,15 @@ UNIDADES_DO_PRAZO = (("DIAS_CORRIDOS", "Dias corridos"),)
 CAMPOS_DO_METODO = [
     ("drawMethod/algorithm", "Algoritmo do sorteio", REFERENCIA),
     ("drawMethod/source", "Fonte pública da semente", REFERENCIA),
-    ("drawMethod/occurrence", "Ocorrência que fixa a semente", TEXTO),
+    ("drawMethod/occurrence", "Ocorrência que fixará a semente", TEXTO),
     ("drawMethod/occurrenceAt", "Quando a ocorrência acontece", INSTANTE),
-    ("drawMethod/derivation", "Como a ocorrência foi escolhida", TEXTO_LONGO),
+    ("drawMethod/derivation", "Como a ocorrência decorre da data programada", TEXTO_LONGO),
     ("drawMethod/normalization/rule", "Regra de normalização", REFERENCIA),
     ("drawMethod/normalization/text", "Normalização, como se publica", TEXTO_LONGO),
     ("drawMethod/substitutionRule/rule", "Regra de substituição", REFERENCIA),
     ("drawMethod/substitutionRule/text", "Substituição, como se publica", TEXTO_LONGO),
     ("drawMethod/qualifyingStageId", "Etapa que habilita ao sorteio", REFERENCIA),
 ]
-
-
-def _opcoes_do_metodo():
-    """As listas fechadas do método, lidas de quem as executa.
-
-    Importadas aqui dentro, e não no topo: `sorteios` é outro contexto, e a tela só precisa das
-    listas quando desenha um marco que sorteia.
-    """
-    from processo_seletivo.sorteios.domain.chave import ALGORITMOS
-    from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
-    from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
-    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
-
-    return {
-        "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
-        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
-        "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
-        "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
-    }
 
 
 # A regra de corte, alcançada **campo a campo** (014, FR-184). Os dois números e o rótulo são o que
@@ -749,7 +731,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
             + (CAMPOS_DO_METODO_COMUM if isinstance(conteudo.get("drawMethod"), dict) else []),
             removivel=False,
             tipo="Edital",
-            opcoes=_opcoes_do_metodo(),
+            opcoes=opcoes_do_metodo(),
             rotulos_do_vazio={
                 "drawMethod/algorithm": "Não declarado — o sorteio não terá como ser feito",
                 "drawMethod/source": "Não declarada — a semente não terá origem",
@@ -898,7 +880,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                         "normalization": NORMALIZACOES,
                         "rounding/mode": MODOS_DE_ARREDONDAR,
                         "appealWindow/unit": UNIDADES_DO_PRAZO,
-                        **_opcoes_do_metodo(),
+                        **opcoes_do_metodo(),
                         # As Etapas que **este marco** enumera, e não as do Edital: uma Etapa de
                         # fora seria critério de entrada que a norma do marco não declara.
                         "drawMethod/qualifyingStageId": tuple(

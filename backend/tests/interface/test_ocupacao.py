@@ -11,6 +11,7 @@ from django.urls import reverse
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.ocupacao import MODALIDADE_PPI
 from tests.integration.ocupacao.test_emissao import apurar
 from tests.interface.conftest import identificar
 
@@ -508,49 +509,115 @@ def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
     assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()
 
 
-# --- O recorte que o marco não emite deixa de oferecer apuração (032, FR-472, SC-163) ----------
+# --- A apuração volta a ser oferecida no recorte reservado (034, FR-502, SC-170) ---------------
 #
-# **A segunda das duas ações que sempre falhavam.** A auditoria de 16/09/2026 encontrou, na tela de
-# Ocupação de um Perfil com cotas, três botões "Apurar a ocupação deste recorte" idênticos: o da
-# ampla funcionava, e os dois reservados recusavam com *"Este recorte não tem ordem emitida: não há
-# o que cortar"*. A mensagem é verdadeira e chega tarde — quem a lê no dia da apuração não tem mais
-# o que fazer com ela, porque a correção depende de Retificação.
+# **A segunda das duas ações que sempre falhavam, e ela deixou de falhar.** A auditoria de
+# 16/09/2026 encontrou, na tela de Ocupação de um Perfil com cotas, três botões "Apurar a ocupação
+# deste recorte" idênticos: o da ampla funcionava, e os dois reservados recusavam. A `032` tirou os
+# dois botões e pôs a razão no lugar deles — *"a apuração deste recorte acontece fora do
+# sistema"* —, que era verdade enquanto um ato computado emitia uma lista só.
 #
-# **A causa é a forma de emissão da ordem daquele marco**, e não a cota: um ato computado emite uma
-# lista só, a da ampla concorrência. O sorteio emite por recorte, e por isso o Perfil que sorteia
-# continua oferecendo os três.
+# A `034` fez a ordem por recorte existir. **A razão deixou de ser verdadeira, e saiu**: frase
+# verdadeira que virou falsa é pior do que frase ausente, porque quem a lê acredita nela e vai
+# apurar em planilha um recorte que o sistema apura.
+#
+# Os dois casos abaixo são os mesmos de antes, com o sentido invertido — e o terceiro, o da ampla,
+# continua sendo a não-regressão que uma condição larga demais quebraria.
 
 
-def test_recorte_reservado_em_marco_computado_nao_oferece_apuracao(
+def test_recorte_reservado_com_ordem_emitida_oferece_apuracao_e_ela_conclui(
     client, seletor_ligado, cenario, gestor
 ):
-    """`FR-472`: o botão sai de onde ele nunca conseguiria executar."""
+    """`FR-502` e `SC-170`: a ação é oferecida onde executa — **e o teste a executa**.
+
+    **Contar botões não basta, e esta é a lição que custou um defeito.** A primeira versão deste
+    caso afirmava `count(...) == 2` e passava enquanto a tela oferecia, no recorte reservado **sem
+    ordem emitida**, um botão que o comando recusava com `ordem_nao_vigente` — a ação que sempre
+    falha que a `SC-170` proíbe, reintroduzida pela feature que existe para eliminá-la. A asserção
+    era verdadeira e não provava nada, porque nunca clicava.
+
+    Agora o caso emite a ordem do recorte, conta os botões **e pratica a apuração**: o desfecho é o
+    que prova a promessa.
+    """
+    from tests.fixtures.recortes import emitir_recorte
+
     edital, _, _ = cenario
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="ocupacao-034-ordem-ppi")
     identificar(client, "carlos", ["gestor"])
 
     pagina = abrir(client, edital).content.decode()
-
     assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
-    assert pagina.count("Apurar a ocupação deste recorte") == 1, (
-        "só o da ampla concorrência, que é o único que o marco computado emite"
+    assert pagina.count("Apurar a ocupação deste recorte") == 2, (
+        "a ampla e a cota — as duas, porque as duas têm ordem emitida"
+    )
+
+    resposta = client.post(
+        reverse("interface:emitir-apuracao", args=[edital.id, MARCO]),
+        {"lista": MODALIDADE_PPI, "chave": "ocupacao-034-apura-ppi"},
+    )
+
+    assert resposta.status_code == 302
+    depois = abrir(client, edital).content.decode()
+    assert "Não foi possível apurar" not in depois, "a ação oferecida concluiu"
+    assert ApuracaoDeOcupacao.objects.filter(edital=edital, lista_id=MODALIDADE_PPI).exists(), (
+        "e o ato do recorte existe"
     )
 
 
-def test_no_lugar_da_apuracao_a_tela_nomeia_a_causa_e_nao_o_sintoma(
+def test_recorte_sem_ordem_nao_oferece_apuracao_e_diz_onde_emiti_la(
     client, seletor_ligado, cenario, gestor
 ):
-    """`FR-471` na tela: a ordem daquele marco sai em lista única, e é isso que precisa ser dito.
+    """`SC-170` pela outra metade: onde a ação não conclui, aparece a razão — e o caminho.
 
-    *"Este recorte não tem ordem emitida"* descreve o que a pessoa já está vendo. O que ela precisa
-    saber é **por que** — e que a apuração daquele recorte acontece fora do sistema.
+    O cenário da interface emite só a ordem da ampla. O recorte reservado, portanto, **não tem
+    ordem vigente**, e apurar ali seria recusado. O botão não pode estar lá.
     """
     edital, _, _ = cenario
     identificar(client, "carlos", ["gestor"])
 
     pagina = abrir(client, edital).content.decode()
 
-    assert "lista única" in pagina
-    assert "fora do sistema" in pagina
+    assert pagina.count("Apurar a ocupação deste recorte") == 1, "só a ampla, que tem ordem"
+    assert "ainda não tem ordem emitida, e a apuração conta sobre a ordem" in pagina
+    destino = reverse("interface:ordenacao", args=[edital.id, MARCO])
+    assert f'href="{destino}?lista={MODALIDADE_PPI}"' in pagina, "o caminho para emiti-la"
+
+
+def test_a_acao_oferecida_no_recorte_sem_ordem_seria_recusada(
+    client, seletor_ligado, cenario, gestor
+):
+    """A contraprova que sustenta as duas anteriores: o comando **de fato** recusa.
+
+    Sem ela, esconder o botão poderia estar escondendo uma ação que funcionava — e a tela estaria
+    calando em vez de explicar. O que se afirma aqui é que a razão dita na tela é a razão real.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    client.post(
+        reverse("interface:emitir-apuracao", args=[edital.id, MARCO]),
+        {"lista": MODALIDADE_PPI, "chave": "ocupacao-034-recusa-ppi"},
+    )
+
+    assert "Não foi possível apurar" in abrir(client, edital).content.decode()
+    assert not ApuracaoDeOcupacao.objects.filter(edital=edital, lista_id=MODALIDADE_PPI).exists()
+
+
+def test_a_frase_do_fora_do_sistema_saiu_da_tela(client, seletor_ligado, cenario, gestor):
+    """`FR-502`: ela deixou de ser verdade, e por isso não pode ficar.
+
+    As duas metades importam. A frase sai **e** a ação aparece: retirar só a frase deixaria o
+    recorte mudo, e oferecer só a ação deixaria a tela afirmando, ao lado do botão, que a apuração
+    acontece fora do sistema.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "fora do sistema" not in pagina
+    assert "lista única" not in pagina
+    assert "não recebe ordem própria" not in pagina
 
 
 def test_o_recorte_da_ampla_continua_apuravel(client, seletor_ligado, cenario, gestor):

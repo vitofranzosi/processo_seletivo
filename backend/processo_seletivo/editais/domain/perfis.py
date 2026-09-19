@@ -355,7 +355,7 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
         _validar_regra_de_corte(marco.get("cutRule"))
 
 
-def validate_common_draw_method(metodo) -> None:
+def validate_common_draw_method(metodo, *, conferir_forma_da_ocorrencia=True) -> None:
     """O método comum do Edital vale inteiro, ou não é declarado (030, FR-429).
 
     **A mesma regra do método do marco**, e a mesma função: um método comum pela metade prometeria
@@ -367,7 +367,11 @@ def validate_common_draw_method(metodo) -> None:
     parte deles não mede. É por isso que o contrato do conteúdo normativo dá nove campos ao método
     do Edital, e dez ao do marco — e `etapas=()` aqui é o que recusa o décimo.
     """
-    _validar_metodo_de_sorteio(metodo or None, etapas=())
+    _validar_metodo_de_sorteio(
+        metodo or None,
+        etapas=(),
+        conferir_forma_da_ocorrencia=conferir_forma_da_ocorrencia,
+    )
 
 
 #: Os sete campos do método do sorteio: a chave, o que ela é, e como o documento a rotula.
@@ -398,7 +402,7 @@ CAMPOS_DO_METODO = (
 )
 
 
-def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
+def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrencia=True) -> None:
     """O método declarado vale inteiro, ou não é declarado (021, FR-013, FR-015).
 
     **A ausência é válida e significa alguma coisa**: marco que não sorteia não declara método, e a
@@ -410,6 +414,17 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
     aplica e o terceiro reimplementa, e a frase, que é o que a pessoa lê. Prosa sozinha não atende
     à FR-015 nem à FR-027 — ninguém executa uma frase, e duas pessoas lendo "os dígitos sorteados"
     produzem seis grafias da mesma semente.
+
+    **`conferir_forma_da_ocorrencia` é o recorte que a FR-514 obriga** (035). A sexta guarda é a
+    única das seis que alcança conteúdo que **nunca passou por ela**: as outras cinco existem desde
+    que o método existe, e todo Edital publicado já as atravessou. Esta não — e esta função é
+    chamada tanto na elaboração quanto na aferição, que roda também no ato de **Retificação**.
+    Deixá-la ligada ali tornaria irretificável todo Edital do acervo cuja ocorrência não satisfaça
+    a forma, inclusive por uma Retificação que só corrige uma data; e um Edital do qual não se sai é
+    pior do que um método que não roda.
+
+    **O padrão é ligado**, pela mesma razão que o padrão de `ato` em `validate_for_publication`:
+    esquecer de passá-lo erra pelo lado que **recusa**, e não pelo que deixa passar.
     """
     if metodo is None:
         return
@@ -435,6 +450,8 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=()) -> None:
     _validar_instante_da_ocorrencia(metodo["occurrenceAt"])
     _validar_regra_publicada(metodo["normalization"]["rule"])
     _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
+    if conferir_forma_da_ocorrencia:
+        _validar_forma_da_ocorrencia(metodo["occurrence"], metodo["substitutionRule"]["rule"])
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
 
 
@@ -582,6 +599,35 @@ def _validar_substituicao_publicada(regra) -> None:
         raise ProfileValidationError(
             f"Regra de substituição não publicada por este sistema: {regra!r}. "
             f"As publicadas são: {', '.join(sorted(REGRAS))}."
+        )
+
+
+def _validar_forma_da_ocorrencia(ocorrencia, regra) -> None:
+    """A ocorrência declarada tem de ter a forma que a regra de substituição consome (035, FR-512).
+
+    **É a sexta guarda, e ela chegou cinco depois das outras.** O algoritmo, a fonte, o instante e
+    as duas regras já eram conferidos aqui; a ocorrência — o único campo cuja má declaração impede
+    o sorteio de **rodar** — não era conferida em lugar nenhum, e aparecia neste módulo uma única
+    vez, como rótulo. O domínio já a chamava de *concreta*; nada exigia que ela fosse.
+
+    O que a ausência custava: quem escrevia a referência como uma pessoa escreve — com o número no
+    meio e a fonte repetida no fim — publicava o Edital, congelava o universo e descobria no dia do
+    sorteio, com o cronograma correndo e a única saída sendo Retificação.
+
+    **A regra não é reescrita aqui** (FR-515). Quem responde é `substituicao.derivavel`, que aplica
+    a própria derivação do motor. A regra de hoje é de uma linha, e copiá-la custaria menos do que
+    importá-la — e as duas cópias divergiriam na primeira mudança, com a divergência aparecendo como
+    a composição aceitando o que o sorteio recusa.
+    """
+    from processo_seletivo.sorteios.domain.substituicao import derivavel
+
+    if not derivavel(ocorrencia, regra=regra):
+        raise ProfileValidationError(
+            f"Ocorrência que a regra de substituição declarada não sabe derivar: {ocorrencia!r}. "
+            "Ela deve terminar no número da ocorrência — como `5900` ou `Concurso 5900` —, porque "
+            "é do número final que a regra deriva a substituta quando a fonte não publica. A fonte "
+            "já é declarada em campo próprio; repeti-la depois do número põe o número no meio, e "
+            "ali a regra não o encontra."
         )
 
 
