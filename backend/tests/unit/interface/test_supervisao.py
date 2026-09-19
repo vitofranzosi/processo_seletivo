@@ -1,25 +1,29 @@
 """O catálogo de sinais é fechado, e o fechamento é executável.
 
-`D-002` diz que sinal fora dos cinco não existe, e que acrescentar um é revisar a spec. Uma regra
+`D-002` diz que sinal fora do catálogo não existe, e que acrescentar um é revisar a spec. Uma regra
 que ninguém verifica é uma intenção: este teste é o que a torna cobrável.
 """
 
 from processo_seletivo.interface import supervisao
 
 
-def test_a_enumeracao_tem_exatamente_seis_especies():
-    """`FR-024`: acrescentar uma sétima quebra aqui, antes de chegar à tela.
+def test_a_enumeracao_tem_exatamente_nove_especies():
+    """`FR-565`: acrescentar uma décima quebra aqui, antes de chegar à tela.
 
     O número é escrito à mão de propósito. Derivá-lo da própria enumeração faria o teste concordar
     com qualquer tamanho — que é o oposto de fechar um catálogo.
 
-    **A sexta chegou pela `027`, e o guarda funcionou**: ele ficou vermelho no momento em que o
-    catálogo abriu, que é exatamente o serviço dele. Ela não é uma espécie a mais do mesmo — é o
-    `UX-046`, com requisito próprio: o Edital do acervo que publica vaga imediata e não publica a
-    linha do quadro, e que por isso não tem quantidade a apurar nem a convocar. Fechar o catálogo
-    nunca foi proibir que ele cresça; foi exigir que crescer seja uma decisão escrita.
+    **O guarda já ficou vermelho duas vezes, e as duas por serviço prestado.** A sexta chegou pela
+    `027` — o `UX-046`, do acervo que publica vaga imediata e não publica a linha do quadro. As
+    três desta leva são da `038`, e levam a Atenção à cauda do certame: `UX-063`, avaliação
+    distribuída e não concluída; `UX-064`, recurso aguardando julgamento com julgador disponível;
+    `UX-065`, recorte com ordem vigente e ocupação não apurada. Fechar o catálogo nunca foi proibir
+    que ele cresça; foi exigir que crescer seja uma decisão escrita.
+
+    **A `FR-024` da `022` dizia cinco enquanto o produto tinha seis**, porque a `027` não a
+    revisou. Quem a substitui é a `FR-565`, e é por ela que este teste passa a citar.
     """
-    assert len(supervisao.ESPECIES) == 6
+    assert len(supervisao.ESPECIES) == 9
     assert supervisao.ESPECIES == (
         supervisao.UX_001,
         supervisao.UX_002,
@@ -27,6 +31,9 @@ def test_a_enumeracao_tem_exatamente_seis_especies():
         supervisao.UX_004,
         supervisao.UX_005,
         supervisao.UX_046,
+        supervisao.UX_063,
+        supervisao.UX_064,
+        supervisao.UX_065,
     )
 
 

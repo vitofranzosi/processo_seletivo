@@ -351,6 +351,25 @@ def test_dobrar_os_recursos_pendentes_nao_dobra_as_consultas(
 
     Iterar o guardião individual custaria cinco leituras por par, que é exatamente o custo por
     linha que a `018` já recusou uma vez.
+
+    **O orçamento não é um teto escrito: é a invariância** (`038`, `T021`). Ele é medido com uma
+    peça e cobrado com quatro, e o que ele prova é que o custo não acompanha a fila. Ajustar um
+    número até passar seria perder a guarda sem removê-la — aqui não há número a ajustar, e é essa
+    a razão da forma.
+
+    **O que as espécies da `038` fizeram com ele, medido espécie a espécie**, de 21 para 22
+    consultas neste cenário:
+
+    - `UX-063` — **nenhuma**. Lê `completas` e `sem_conclusao` do mesmo `resumo_da_etapa` que o
+      `UX-003` já busca, por `sinais_da_etapa`.
+    - `UX-064` — **nenhuma**. Sai do mesmo `recursos_do_edital` e do mesmo `impedidos_por_recurso`
+      que o `UX-005` já chama, partidos em dois desfechos por `sinais_do_recurso`.
+    - `UX-065` — **uma por recorte com ato**, e só ela: `apuracao_vigente`, que a Supervisão não
+      lia. O `ato_vigente` é o mesmo que o `UX-004` busca. Este cenário tem um recorte com ato, e
+      é dele que vem a única consulta a mais.
+
+    **E a consulta nova não escala com a fila**, que é o que este teste cobra: triplicar os
+    recursos pendentes não acrescenta recorte nenhum.
     """
     from django.db import connection
     from django.test.utils import CaptureQueriesContext
@@ -495,3 +514,235 @@ def test_o_ato_de_uma_lista_de_reserva_tambem_e_alcancado(certame_sorteado, pres
     # O recorte é nomeado: sem ele os três sinais do mesmo marco sairiam com a mesma frase.
     assert "Pretos, pardos e indígenas" in achados[0].alvo
     assert "Pretos, pardos e indígenas" in achados[0].mensagem
+
+
+# ---------------------------------------------------------------------------
+# `UX-063` — avaliação distribuída e não concluída (038)
+#
+# **A fronteira com o `UX-003` é a razão de esta seção existir.** Os dois falam da mesma Etapa e
+# dizem coisas diferentes: aquele pergunta se há avaliador, este se o trabalho andou. A contraprova
+# de `test_a_etapa_sem_distribuicao_e_cobertura_e_nao_trabalho_parado` é o que impede a condição
+# nova de ficar frouxa e os dois dispararem pelo mesmo fato.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def banca(gestor, api_client, manager_headers):
+    """Uma Etapa que declara duas avaliações, com dois avaliadores alocados e ninguém distribuído.
+
+    É o ponto de partida das duas perguntas: sem distribuição, a Etapa é **cobertura**; distribuída
+    e sem conclusão, ela é **trabalho parado**.
+    """
+    from tests.fixtures.mesa import inscricoes_de, montar_banca
+
+    cenario = montar_banca(gestor, api_client, manager_headers, seed=140, codigo="0380")
+    cenario["inscricoes"] = inscricoes_de(cenario, 3, primeiro=7100)
+    return cenario
+
+
+@pytest.fixture
+def presidenta_da_banca():
+    """Quem preside a banca — e, por isso, alcança a distribuição da Etapa."""
+    return ator_institucional("maria", "recurso:julgar")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_avaliacao_distribuida_e_nao_concluida_produz_o_sinal(banca, gestor, presidenta_da_banca):
+    """`FR-560` e `SC-198`: o que parou depois da distribuição passa a ser dito.
+
+    Antes desta feature a cauda era cega: uma Etapa com avaliador para todo mundo e nenhuma
+    avaliação concluída não produzia sinal nenhum, porque o `UX-003` já estava satisfeito.
+    """
+    from tests.fixtures.mesa import distribuir_para
+
+    distribuir_para(banca, gestor, ["joao", "ana"], banca["inscricoes"])
+
+    achados = das_especies(
+        supervisao.sinais(banca["processo"], presidenta_da_banca), supervisao.UX_063
+    )
+
+    assert len(achados) == 1
+    unico = achados[0]
+    assert unico.edital.id == banca["edital"].id
+    # A Etapa e o Edital são nomeados (`FR-560`): sem os dois, quem lê não sabe onde ir.
+    assert unico.alvo
+    assert f"{banca['edital'].number}/{banca['edital'].year}" in unico.mensagem
+    assert "distribuída e não concluída" in unico.mensagem
+    # A medida é **paradas sobre distribuídas** — as três receberam avaliador, nenhuma concluiu.
+    assert unico.medida == supervisao.Medida(numerador=3, denominador=3)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concluidas_as_avaliacoes_o_sinal_some(banca, gestor, presidenta_da_banca):
+    """A contraprova: o trabalho andou, e o sinal não sobrevive ao fato que o produziu."""
+    from tests.fixtures.mesa import concluir_como, distribuir_para
+
+    distribuir_para(banca, gestor, ["joao", "ana"], banca["inscricoes"])
+    for inscricao in banca["inscricoes"]:
+        for avaliador in ("joao", "ana"):
+            concluir_como(banca, avaliador, inscricao)
+
+    achados = das_especies(
+        supervisao.sinais(banca["processo"], presidenta_da_banca), supervisao.UX_063
+    )
+
+    assert achados == []
+
+
+def daquela_etapa(sinais, especie, etapa_id):
+    """Os sinais de **uma** Etapa, identificada pelo destino que o sinal oferece.
+
+    A fronteira entre o `UX-003` e o `UX-063` é por Etapa, e o Edital da banca tem duas: varrer o
+    Processo inteiro misturaria a Etapa distribuída com a que ninguém tocou, e o teste passaria a
+    falar de outra coisa.
+    """
+    return [
+        sinal
+        for sinal in das_especies(sinais, especie)
+        if sinal.destino is not None and str(etapa_id) in sinal.destino.url
+    ]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_etapa_sem_distribuicao_e_cobertura_e_nao_trabalho_parado(banca, presidenta_da_banca):
+    """**CONTRAPROVA OBRIGATÓRIA** — a fronteira com o `UX-003` (`T009`).
+
+    Etapa sem distribuição nenhuma: quem responde é a **cobertura**, e não o trabalho parado. Se as
+    duas dispararem pelo mesmo Edital e pela mesma Etapa, a condição da espécie nova está frouxa —
+    é o que aconteceria ao lê-la pela mensagem em vez da condição.
+    """
+    sinais = supervisao.sinais(banca["processo"], presidenta_da_banca)
+    etapa = banca["etapa"]
+
+    assert len(daquela_etapa(sinais, supervisao.UX_003, etapa)) == 1, (
+        "sem avaliador atribuído, a cobertura é a pergunta"
+    )
+    assert daquela_etapa(sinais, supervisao.UX_063, etapa) == [], (
+        "nada foi distribuído: não há trabalho parado a apontar"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_distribuida_e_parada_a_etapa_deixa_de_ser_cobertura(banca, gestor, presidenta_da_banca):
+    """O outro lado da mesma fronteira: distribuída, a cobertura se satisfaz e a parada aparece.
+
+    **Um fato, um sinal.** As três inscrições passam a ter os dois avaliadores previstos naquela
+    Etapa, de modo que `carentes` zera nela; nenhuma foi concluída, de modo que a parada é total.
+
+    **A outra Etapa do Edital não se move**, e ela está no teste de propósito: é a prova de que a
+    fronteira é por Etapa, e não por Edital.
+    """
+    from tests.fixtures.mesa import distribuir_para
+
+    distribuir_para(banca, gestor, ["joao", "ana"], banca["inscricoes"])
+
+    sinais = supervisao.sinais(banca["processo"], presidenta_da_banca)
+    etapa = banca["etapa"]
+
+    assert daquela_etapa(sinais, supervisao.UX_003, etapa) == []
+    assert len(daquela_etapa(sinais, supervisao.UX_063, etapa)) == 1
+    # A Etapa que ninguém distribuiu continua sendo cobertura, e não vira trabalho parado.
+    assert len(das_especies(sinais, supervisao.UX_003)) == 1
+    assert len(das_especies(sinais, supervisao.UX_063)) == 1
+
+
+# ---------------------------------------------------------------------------
+# `UX-064` — recurso aguardando julgamento com julgador disponível (038)
+#
+# **É a negação da condição do `UX-005`, e os dois nascem do mesmo cálculo.** A contraprova de
+# `test_a_mesma_peca_nunca_dispara_os_dois_sinais` é obrigatória: separados, uma mudança na regra
+# de impedimento moveria um e deixaria o outro para trás.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+def test_recurso_com_julgador_disponivel_produz_o_sinal(peca, presidenta):
+    """`FR-561` e `SC-198`: hoje não havia sinal nenhum para a peça que alguém pode julgar.
+
+    O `UX-005` exige a comissão **inteira** impedida, e a peça deste cenário tem Maria livre: antes
+    desta feature ela esperava julgamento sem que a Atenção dissesse uma palavra.
+    """
+    achados = das_especies(
+        supervisao.sinais(peca["cenario"]["processo"], presidenta), supervisao.UX_064
+    )
+
+    assert len(achados) == 1
+    unico = achados[0]
+    assert unico.edital.id == peca["cenario"]["edital"].id
+    assert "aguardando julgamento" in unico.mensagem
+    assert "desimpedido" in unico.mensagem
+    # Uma peça pendente, e ela tem julgador.
+    assert unico.medida == supervisao.Medida(numerador=1, denominador=1)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_mesma_peca_nunca_dispara_os_dois_sinais(peca, presidenta):
+    """**CONTRAPROVA OBRIGATÓRIA** — um fato, um sinal (`T010`).
+
+    A **mesma** peça, nos dois estados. Com Maria livre é o `UX-064`; impedindo-a, a comissão
+    inteira fica impedida e a peça vira `UX-005`. **Nunca as duas**: se ambas aparecerem, os dois
+    cálculos se separaram, que é exatamente o que o contrato proíbe.
+    """
+    processo = peca["cenario"]["processo"]
+
+    com_julgador = supervisao.sinais(processo, presidenta)
+    assert len(das_especies(com_julgador, supervisao.UX_064)) == 1
+    assert das_especies(com_julgador, supervisao.UX_005) == []
+
+    impedir(peca["inscricao"], "maria")
+
+    sem_julgador = supervisao.sinais(processo, presidenta)
+    assert len(das_especies(sem_julgador, supervisao.UX_005)) == 1
+    assert das_especies(sem_julgador, supervisao.UX_064) == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sem_peca_pendente_nenhum_dos_dois_aparece(peca, presidenta):
+    """A contraprova da ausência: julgada a peça, a fila esvazia e os dois somem juntos."""
+    deferir(peca)
+
+    sinais = supervisao.sinais(peca["cenario"]["processo"], presidenta)
+
+    assert das_especies(sinais, supervisao.UX_064) == []
+    assert das_especies(sinais, supervisao.UX_005) == []
+
+
+# ---------------------------------------------------------------------------
+# `UX-065` — recorte com ordem vigente e ocupação não apurada (038)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+def test_ordem_emitida_sem_ocupacao_apurada_produz_o_sinal(peca, presidenta):
+    """`FR-563` e `SC-198`: a ordem existe, e ninguém apurou quem ela acomoda.
+
+    O cenário da `018` emite o ato de ordenação e **não** apura ocupação — que é o estado em que
+    todo marco fica no instante seguinte à emissão, e que até aqui não produzia sinal nenhum.
+    """
+    achados = das_especies(
+        supervisao.sinais(peca["cenario"]["processo"], presidenta), supervisao.UX_065
+    )
+
+    assert len(achados) == 1
+    unico = achados[0]
+    assert unico.edital.id == peca["cenario"]["edital"].id
+    assert "ordem vigente" in unico.mensagem
+    assert "nenhuma apuração de ocupação" in unico.mensagem
+    # O marco é nomeado, e o destino leva à ocupação dele.
+    assert unico.alvo
+    assert unico.destino is not None
+    assert "ocupacao" in unico.destino.url
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sem_ato_de_ordenacao_o_recorte_nao_sinaliza(
+    processo_a, edital_a, edital_c, comissao_de_a, presidenta
+):
+    """A contraprova: sem ordem emitida não há ocupação a apurar — o recorte não chegou lá.
+
+    **Não é o mesmo que "apurado"**, e é por isso que a condição exige o ato: sinalizar um marco
+    que ninguém ordenou mandaria apurar o que não existe.
+    """
+    achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_065)
+
+    assert achados == []
