@@ -1,0 +1,90 @@
+---
+
+description: "Implementation plan — 038 · Painel de condução do Processo vivo"
+---
+
+# Implementation Plan: Painel de condução do Processo vivo
+
+**Branch**: `claude/spec-038-painel` · **Spec**: [spec.md](spec.md)
+
+## Summary
+
+O guia não desliga quando o Edital é publicado. A página do Processo passa a mostrar o **pulso** e a
+**Atenção** que hoje só existem na Supervisão, e a Atenção ganha **quatro espécies** que alcançam a
+cauda: avaliação parada, recurso com julgador disponível, recorte sem ocupação e ato não publicado.
+
+**Nenhuma entidade nova, nenhuma migration, nenhuma capacidade de autorização nova, nenhum estado
+novo calculado.** A feature **reúne e encaminha**.
+
+## Technical Context
+
+Python 3.13 · Django 5.2.17 · PostgreSQL. Superfícies: a página do **Processo** e o módulo de
+**Supervisão**. O total do `make preparar` continua **`N de 33`**.
+
+| Pergunta | Resposta, medida |
+|---|---|
+| Entidade nova? | **não** |
+| Migration? | **não** |
+| Estado novo calculado? | **não** — três espécies saem de leitura existente, a quarta de extração (`R-6`) |
+| Consulta nova? | **uma**, e só para a quarta espécie |
+| Casos que cercam a Supervisão | **34**, em 4 arquivos (`R-7`) — recontar |
+
+## Constitution Check
+
+| Princípio | Como se respeita | Onde |
+|---|---|---|
+| **Negar por padrão** | nenhuma capacidade nova; sinal não oferece destino que o ator não abre | `FR-558`, `FR-566` |
+| **Nada é excluído** | nenhuma migration, nenhum dado normativo tocado | `data-model.md` |
+| **Publicação é ato imutável** | a feature **lê** estado de publicação; não a pratica nem a altera | `FR-566` |
+| **Uma maneira de dizer cada coisa** | indicador deriva da mesma leitura que governa o destino | `FR-557`, `R-6` |
+| **VI · Completude de Jornada** | o Processo passa a dizer onde cada Edital está | `SC-196` |
+
+**Nenhuma violação.** Nenhum desvio a justificar.
+
+## Phase 0 — o que a medição decidiu
+
+Completa em [research.md](research.md). As quatro premissas da spec se confirmam, e a medição
+**repartiu as quatro espécies em duas classes**:
+
+- **três saem de leitura que já existe** — `resumo_da_etapa` já é chamado pelo `UX-003`;
+  `apuracao_vigente` e `ato_vigente` são públicos; o recurso com julgador é a **negação** da condição
+  do `UX-005` e parte do mesmo cálculo;
+- **uma custa**: a derivação de *ato emitido e não publicado* existe **só dentro de
+  `interface/views.py`**, e a `FR-557` obriga a extraí-la em vez de reescrevê-la.
+
+**Nenhuma inventa estado**, de modo que a `FR-567` não precisou tirar nada do escopo.
+
+## Ordem de entrega, e a dependência da `037`
+
+```
+US1 (o Processo recebe pulso e Atenção)
+   │
+   ├──► US2a — três espécies de leitura existente      ← independentes da 037
+   │
+   └──► US2b — a quarta, por extração de views.py      ← ESPERA a 037 entrar
+                │
+                └──► US3 (o catálogo volta a ser verdade)
+```
+
+**A `US2` se parte em duas por medição, e não por conveniência.** A `037` altera
+`interface/views.py`, e a quarta espécie exige mexer exatamente nele. As outras três não encostam.
+
+**Se a `037` demorar**, a `US2a` entrega três das quatro e a quarta fica registrada — é o que a
+`FR-567` manda fazer com o que não estiver pronto, e o percurso do quickstart a cobre à parte.
+
+## Riscos, medidos
+
+| Risco | Onde | Como se fecha |
+|---|---|---|
+| quebrar o orçamento de consulta dos sinais | `R-7` — há guarda com nome | as três espécies não acrescentam consulta; a quarta acrescenta uma e o orçamento é remedido |
+| os dois sinais de recurso divergirem | `R-4` | nascem do **mesmo** cálculo, partido em dois desfechos |
+| reescrever a derivação da divulgação | `R-6` | **extrair**, nunca reescrever — é a `FR-557` |
+| contar os casos alterados pelo nome do arquivo | `R-7` | 34 casos em 4 arquivos; recontar caso a caso |
+
+## Phase 1 — desenho
+
+| Artefato | O que decide |
+|---|---|
+| [data-model.md](data-model.md) | que não há modelo a mudar, e de onde cada espécie lê |
+| [contracts/as-quatro-especies.md](contracts/as-quatro-especies.md) | condição, mensagem e destino de cada uma — e o que **não** se afirma |
+| [quickstart.md](quickstart.md) | quatro percursos, um por espécie, mais o do Processo |
