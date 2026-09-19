@@ -19,3 +19,25 @@ precisa não descartar essa informação.
   </li>
   {% endfor %}
 </ul>
+{% comment %}
+**A quem pedir, quando quem lê não pode resolver** (037, FR-542). O que falta já era dito, e o
+caminho até a etapa também — isso foi fechado por feature anterior. O que não era dito é a outra
+metade, e o percurso da T011 mediu o custo dela: o Gestor segue o caminho, chega à etapa e encontra
+"Somente leitura".
+
+**Uma vez, e depois da lista.** O predicado é do par Edital×ator, e a resposta é a mesma para todas
+as pendências: impressa dentro do laço, a frase saía três vezes seguidas na Revisão. O percurso
+mostrou isso antes de qualquer teste reclamar, que é para o que o percurso serve.
+
+**Fora do `com_link`**, e de propósito: sete das oito telas que incluem este parcial passam
+`com_link=False` — elas mostram as pendências **daquela** etapa, e o caminho até onde a pessoa já
+está seria ruído. A condução não é caminho, e vale nas oito.
+
+A frase vem pronta da view, produzida pelo mecanismo único (FR-543) na forma cheia (FR-543a): ela
+nomeia a permissão e nunca uma pessoa (FR-543b), e só existe para quem não pode compor — dizer
+"peça a alguém" a quem tem o formulário à frente é falso (FR-544).
+{% endcomment %}
+{% load interface_extras %}
+{% with conducao=itens|conducao_da_lista %}
+{% if conducao %}<p class="ajuda">{{ conducao }}</p>{% endif %}
+{% endwith %}

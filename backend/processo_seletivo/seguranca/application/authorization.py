@@ -61,18 +61,57 @@ def _com_de(nome):
     return f"da {nome[2:]}" if nome.startswith("a ") else f"de {nome}"
 
 
-def frase_da_recusa(bases) -> str:
-    """O motivo e o a quem pedir, numa frase — a formulação que a tela do Edital já pratica.
+def _depende(bases) -> str:
+    """*"depende da permissão de X"* — o que faltou, nomeado, com o "cada uma basta" do plural."""
+    sozinha = " — cada uma basta sozinha" if len(bases) > 1 else ""
+    return f"depende {_enumerar([_com_de(base.nome) for base in bases])}{sozinha}"
+
+
+def _peca_a(bases, *, que: str) -> str:
+    """O **a quem pedir**, na forma cheia: *"Peça a alguém com a permissão de X que Y"* (FR-543a).
+
+    É esta função que mantém a formulação única depois que as situações de fala se separaram: o
+    que muda entre elas é o sujeito da primeira oração, e nunca como o destinatário é nomeado.
+    Compartilhá-la é o que a `FR-543d` exige em troca de haver duas frases.
+
+    **`que` vazio produz a forma de antes**, palavra por palavra. Das quatro ocorrências
+    renderizadas que a `037` mediu, uma larga a oração final — e o padrão passa a ser a cheia, sem
+    que as recusas de hoje precisem mudar no mesmo ato.
+    """
+    oracao = f" que {que}" if que else ""
+    return f"Peça {_enumerar([base.a_quem for base in bases])}{oracao}"
+
+
+def frase_da_recusa(bases, *, que: str = "") -> str:
+    """O motivo e o a quem pedir de uma operação **que foi tentada e recusada**.
 
     Ela é pública porque é o que a `FR-486` prende: existe **uma** maneira de dizer isto, e criar
     uma segunda para a mesma coisa é o que a feature existe para não fazer.
+
+    **Abre com *"Esta operação"* porque acompanha uma recusa**, e há uma operação a que se referir:
+    o único chamador é `require_authorization_base`, que levanta 403. Quem precisa dizer a mesma
+    coisa numa tela onde ninguém tentou nada usa `frase_do_aviso` — ver `FR-543d`.
     """
     bases = tuple(bases)
-    sozinha = " — cada uma basta sozinha" if len(bases) > 1 else ""
-    return (
-        f"Esta operação depende {_enumerar([_com_de(base.nome) for base in bases])}{sozinha}. "
-        f"Peça {_enumerar([base.a_quem for base in bases])}."
-    )
+    return f"Esta operação {_depende(bases)}. {_peca_a(bases, que=que)}."
+
+
+def frase_do_aviso(bases, *, acao: str, que: str) -> str:
+    """O mesmo a quem pedir, dito **onde ninguém tentou nada** (037, FR-543c, FR-543d).
+
+    **A diferença é de situação de fala, e não de estilo.** `frase_da_recusa` responde a um ato
+    tentado; esta avisa, antes de qualquer tentativa, que um caminho existe e não é deste ator —
+    ao lado de *"Conteúdo imutável"*, ou de uma recusa do domínio que fala de outra coisa. Dizer
+    *"esta operação"* ali nomearia um ato que não houve.
+
+    Por isso o sujeito é recebido: quem avisa **nomeia a ação** — *"A Retificação"* —, que é
+    metade do que a `FR-541` cobra; a outra metade é a permissão, e ela sai das `bases`.
+
+    A construção do *a quem pedir* é a mesma das recusas, e é isso que mantém a formulação única
+    com duas frases (`FR-543`, `FR-543b`: nomeia a permissão, nunca uma pessoa).
+    """
+    bases = tuple(bases)
+    return f"{acao} {_depende(bases)}. {_peca_a(bases, que=que)}."
 
 
 def require_permission(actor, permission: str, *, institution_scope: str | None = None) -> None:

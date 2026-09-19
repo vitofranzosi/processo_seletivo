@@ -117,6 +117,31 @@ cartão leva ao lugar onde a resposta que o revela é dada.
         peso de cada uma é o que ela já publica; aqui se escolhe quais entram.{% if marco|ordena_por_sorteio %} Um
         marco de sorteio pode não enumerar nenhuma: é o caso de quem sorteia antes da análise
         documental.{% endif %}</span>
+      {% comment %}
+      A contradição que aparecia nove etapas adiante, dita onde ela nasce (037, FR-551). A
+      conferência de publicação já sabe que a Etapa enumerada precisa de peso — e o domínio
+      também —, e as duas só falavam na Revisão. O cartão se reconstrói a cada mudança da seleção,
+      e é esse ciclo que dá o "no momento em que enumera": não há tela a inventar.
+
+      **Aviso derivado do estado, e não ajuda instrucional** (FR-554a). Ele existe só enquanto há
+      Etapa enumerada sem peso, some quando o peso é declarado, e não ensina a preencher coisa
+      alguma — é por isso que ele não desrespeita a FR-554, e é por isso que quem conferir aquela
+      promessa precisa ler esta antes. Microcópia que ensina continua indo para o bloco de ajuda
+      da etapa, onde a 030 a pôs.
+
+      **Nenhum controle novo** (FR-551a): o cartão já carrega 28, e a densidade dele é achado
+      próprio. O que entrou foi um campo na lista que a tela já recebia — `tem_peso` —, e o
+      cruzamento com a seleção é filtro, não consulta.
+
+      A frase não contradiz a de cima: lá se diz que o peso é o que a Etapa publica, e aqui se diz
+      quais delas ainda não publicaram nenhum. Nem contradiz as duas que cobram o peso na
+      publicação — é a mesma cobrança, antecipada.
+      {% endcomment %}
+      {% with sem_peso=etapas_classificatorias|enumeradas_sem_peso:marco %}
+      {% if sem_peso %}
+      <span class="aviso">Sem peso declarado: {% for etapa in sem_peso %}<strong>{{ etapa.rotulo }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}. Quem enumera declara o peso, e ele se declara na Etapa.</span>
+      {% endif %}
+      {% endwith %}
       {% else %}
       <span class="vazio" id="ajuda-etapas-{{ indice }}-{{ sub }}">Nenhuma Etapa deste Edital foi
         marcada como <strong>Classificatória</strong>.{% if marco|ordena_por_sorteio %} Este marco

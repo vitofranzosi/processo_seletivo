@@ -470,6 +470,15 @@ def test_onde_a_tela_aceita_duas_bases_a_frase_nomeia_as_duas(client, seletor_li
         "nenhum papel concede a presidência — ela vem do vínculo, e pedi-la como papel manda a "
         "pessoa pedir o que não resolve"
     )
+    # **E a frase vem do mecanismo, na forma cheia** (037, `FR-486`, `FR-543a`). Ela era escrita à
+    # mão nesta tela e reproduzia, palavra por palavra, o que `frase_do_aviso` produz das mesmas
+    # bases — segunda formulação indistinguível da primeira até alguém melhorar uma das duas. E
+    # dizia a quem pedir sem dizer o quê: "Peça a quem tem a permissão, ou a quem preside."
+    assert "Emitir a ordem deste marco depende da permissão de gerir a comissão" in corpo
+    assert "que a emita" in corpo, "a condução diz a quem pedir e não o quê"
+    assert "Peça a quem tem a permissão" not in corpo, "a redação à mão voltou"
+    # A explicação que o mecanismo **não** sabe dar continua na tela: a natureza da base.
+    assert "presidência não é papel" in corpo
 
 
 def test_quem_pode_emitir_nao_le_a_instrucao_de_pedir(client, seletor_ligado, cenario):

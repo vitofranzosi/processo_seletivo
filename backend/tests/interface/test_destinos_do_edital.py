@@ -110,6 +110,10 @@ def test_a_presidencia_sem_publicar_nao_perde_destino_nenhum(client, seletor_lig
 
     esperados = [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # **O corte entrou na lista com a `037`** (`FR-538`), e o marco deste cenário é justamente
+        # o que não declara regra de corte — era dele que o caminho sumia. A promessa deste caso
+        # continua sendo "nenhum a menos", e ela não é desfeita por um a mais.
+        reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
     ]
 
@@ -143,6 +147,8 @@ def test_quem_preside_e_publica_ve_a_uniao_sem_repetir(client, seletor_ligado, c
 
     assert urls == [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
+        reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
         _divulgacao(certame),
     ]
@@ -175,6 +181,8 @@ def test_a_auditoria_continua_lendo_o_que_lia(client, seletor_ligado, certame):
 
     assert _urls(_destinos(client, edital)) == [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
+        reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
     ]
 
@@ -203,3 +211,61 @@ def test_edital_nao_publicado_nao_mostra_o_bloco_para_ninguem(client, seletor_li
         identificar(client, subject, papeis)
 
         assert _destinos(client, edital) is None
+
+
+# --- 037 · FR-538 e FR-540 · o destino do corte deixa de pender da regra -----------------------
+
+
+@pytest.fixture
+def com_regra_de_corte(gestor, api_client, manager_headers, process_payload):
+    """O contraponto do `certame`: um marco que **declara** regra de corte.
+
+    Vem de outro módulo de fixtures porque é lá que o cenário do corte mora, e duplicá-lo aqui
+    criaria uma segunda verdade sobre o que é "marco com regra".
+    """
+    from tests.fixtures.corte import MARCO, montar_cenario_do_corte
+
+    edital, _, _ = montar_cenario_do_corte(
+        gestor, api_client, manager_headers, process_payload, prefixo="destinos-037"
+    )
+    return edital, MARCO
+
+
+def test_o_marco_sem_regra_de_corte_passa_a_oferecer_o_destino(client, seletor_ligado, certame):
+    """`FR-538`: era dele que o caminho sumia, e é ele quem mais precisa da tela.
+
+    A tela de destino **já explica** por que não há faixa, com frase escrita para este caso — o
+    que faltava era só o link. Condicioná-lo à regra escondia a explicação de quem não declarou a
+    regra, que é precisamente quem precisava lê-la.
+    """
+    edital, marco = certame["edital"], certame["marco"]
+    identificar(client, "maria", [])
+
+    assert reverse("interface:corte", args=[edital.id, marco]) in _urls(_destinos(client, edital))
+
+
+def test_o_marco_com_regra_de_corte_continua_oferecendo_o_destino(
+    client, seletor_ligado, com_regra_de_corte
+):
+    """A outra metade da `FR-538`: acrescentar não pode ter virado substituir."""
+    edital, marco = com_regra_de_corte
+    identificar(client, "carlos", ["gestor"])
+
+    assert reverse("interface:corte", args=[edital.id, marco]) in _urls(_destinos(client, edital))
+
+
+def test_quem_nao_alcanca_a_classificacao_nao_recebe_o_destino_do_corte(
+    client, seletor_ligado, certame
+):
+    """`FR-540`: o que saiu foi a condição da **regra**, e não a do alcance.
+
+    As duas moram a dez linhas uma da outra, e confundi-las produz becos opostos. Paula publica
+    resultado e não classifica: o corte não é dela, e continua não lhe sendo oferecido — ainda que
+    o marco agora ofereça o destino a quem classifica.
+    """
+    edital, marco = certame["edital"], certame["marco"]
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    assert reverse("interface:corte", args=[edital.id, marco]) not in _urls(
+        _destinos(client, edital)
+    )

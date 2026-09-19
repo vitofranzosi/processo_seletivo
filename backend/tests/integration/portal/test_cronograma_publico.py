@@ -6,6 +6,7 @@ era a prova; quem estava decidindo se valia a pena, não. Era exatamente o inver
 da informação, e não havia dado novo a produzir: só faltava mostrar.
 """
 
+import re
 from datetime import timedelta
 
 import pytest
@@ -273,3 +274,59 @@ def test_o_periodo_de_inscricoes_sem_termino_continua_em_curso(
 
     assert "Inscrições abertas" in corpo
     assert 'class="marco em_curso"' in corpo
+
+
+# ---------------------------------------------------------------------------
+# 037 · as duas superfícies param de discordar sobre o mesmo Evento
+# ---------------------------------------------------------------------------
+
+
+def test_o_periodo_em_curso_e_acontecendo_agora_dos_dois_lados(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """`FR-549a` e `SC-191`: **concordância de desfecho**, e não unificação de código.
+
+    O defeito que este caso prende foi medido na reauditoria de 16/09/2026: o mesmo período de
+    inscrições era *"acontecendo agora"* na página pública e **vencido** na gestão, no mesmo
+    instante e sobre o mesmo dado. Não era erro de cálculo compartilhado — são **duas leituras
+    independentes**, e cada uma lia certo pela régua que tinha.
+
+    **Unificá-las não é escopo** (`FR-549a`): `portal/leitura.py` deriva a situação por conta
+    própria e continua derivando. O que se exige é que as duas passem a dizer a mesma coisa — e é
+    por isso que este caso afirma os **dois** lados na mesma requisição, e não a régua.
+    """
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    agora = timezone.now()
+    edital = publicar_selecao(
+        api_client, manager_headers, process_payload, rascunho=rascunho_com_tres_eventos(agora)
+    )
+
+    # O lado do candidato: o período de inscrições começou há dois dias e termina em dez — é o
+    # Evento em curso da página.
+    publica = corpo_da_selecao(client, edital)
+
+    assert 'class="marco em_curso"' in publica
+    assert "Período de inscrições" in publica
+
+    # E o lado da gestão, sobre o **mesmo** Edital e na mesma requisição: a conferência de
+    # conteúdo deixou de acusá-lo. As outras advertências do Cronograma não mudam — o que se
+    # afirma é a ausência **desta**, e não a ausência de qualquer uma.
+    identificar(client, "ana.gestora", ["gestor"])
+    gestao = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+
+    acusados = re.findall(r"O Evento &#x27;([^&]+)&#x27;[^<]*já passou", gestao) or re.findall(
+        r"O Evento '([^']+)'[^<]*já passou", gestao
+    )
+
+    # **A contraprova de que a conferência está sendo lida**, e não simplesmente ausente da tela:
+    # a Homologação do mesmo Cronograma começou há trinta dias e terminou há vinte, e continua
+    # acusada. Sem esta linha, o caso passaria com a página vazia.
+    assert "Homologação das inscrições" in acusados, (
+        f"a conferência do Cronograma não chegou à tela da gestão: {acusados}"
+    )
+    assert "Período de inscrições" not in acusados, (
+        "a gestão continua chamando de vencido o Evento que a página pública diz estar em curso"
+    )
