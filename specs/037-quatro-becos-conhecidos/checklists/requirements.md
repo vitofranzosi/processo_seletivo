@@ -1,0 +1,54 @@
+# Specification Quality Checklist: Quatro becos que o sistema já conhece
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-09-19
+**Feature**: [spec.md](../spec.md)
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+## As decisões desta feature, e por que elas são decisões
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| A tela do corte não é reescrita | `D-001` | ela já explica; uma segunda frase sobre o mesmo estado diverge na primeira mudança |
+| A condução nasce na tela, não na mensagem normativa | `D-002` | condução depende de quem lê, e o domínio não conhece o ator — *"peça a alguém com a permissão de X"* é falso para quem tem X |
+| O peso continua sendo da Etapa | `D-003` | a direção literal do achado exigiria mudança de modelo; a contradição antecipa em vez de o campo se mover |
+
+## O que a medição corrigiu antes de a spec ser escrita
+
+| Afirmação de partida | O que a medição achou |
+|---|---|
+| "o link precisa levar a uma tela que explique" | a tela **já explica** — metade do requisito não precisa ser escrita (`D-001`) |
+| "a régua deve olhar o término" | ao pé da letra, **silenciaria o Evento pontual**; a regra é *havendo término, o término; não havendo, o início* (`FR-546`) |
+| "pedir o peso onde a Etapa é enumerada" | o peso é campo **da Etapa**, e o marco enumera por seleção múltipla — seria mudança de modelo (`D-003`) |
+| "três telas calam" | são **duas**: a `033` já fechou a terceira |
+
+## Notes
+
+- Items marked incomplete require spec updates before `$speckit-clarify` or `$speckit-plan`
+- As quatro medições de partida **devem ser reconferidas pelo Phase 0 do plano**. Nas quatro
+  features anteriores a medição corrigiu a spec cinco vezes, e três das correções acima já vieram
+  dessa disciplina.
