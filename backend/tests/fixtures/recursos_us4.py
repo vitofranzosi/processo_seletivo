@@ -46,6 +46,8 @@ def cenario_julgavel(
     admitir_a_peca=True,
     publicar=True,
     na_primeira_etapa=False,
+    parecer=None,
+    documentos=(),
 ):
     """Edital publicado, marco divulgado, recurso interposto pela primeira inscrição e admitido.
 
@@ -74,8 +76,18 @@ def cenario_julgavel(
     # eliminação está numa Etapa **anterior** à seguinte, e a Etapa do marco é a última. Sem isso,
     # "reaparece na Etapa seguinte" não teria Etapa seguinte para reaparecer.
     alvo = cenario["primeira"] if na_primeira_etapa else cenario["etapa"]
+    # `parecer` e `documentos` são passagem para `pontuar`, e entraram com a `036`: ela precisa do
+    # **texto** que o avaliador escreveu — é ele que a feature entrega — e de um documento
+    # apresentado, que é a segunda espécie que a instrução anexa.
     cenario["inscricoes"] = pontuar(
-        cenario, gestor, list(pontuacoes), primeiro=seed * 10 + 1, sufixo=str(seed), etapa=alvo
+        cenario,
+        gestor,
+        list(pontuacoes),
+        primeiro=seed * 10 + 1,
+        sufixo=str(seed),
+        etapa=alvo,
+        parecer=parecer,
+        documentos=documentos,
     )
     cenario["etapa_do_recurso"] = alvo
     marco = cenario["marco_intermediario"] if na_primeira_etapa else cenario["marco"]

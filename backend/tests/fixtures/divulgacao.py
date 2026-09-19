@@ -187,18 +187,38 @@ def montar_marco(
     }
 
 
-def pontuar(cenario, gestor, pontuacoes, *, primeiro=701, etapa=None, sufixo="a"):
+def pontuar(
+    cenario,
+    gestor,
+    pontuacoes,
+    *,
+    primeiro=701,
+    etapa=None,
+    sufixo="a",
+    parecer=None,
+    documentos=(),
+):
     """Inscrições submetidas, distribuídas, concluídas e consolidadas na Etapa do marco.
 
     `pontuacoes` é a lista de notas: uma inscrição por nota, na ordem. `None` deixa a inscrição
     **sem Resultado** — é o que produz alguém considerado e sem posição, que é a linha que separa
     a projeção pública da individual (FR-017).
+
+    `parecer` e `documentos` entraram com a `036`, e as duas são passagem e não comportamento novo:
+    o parecer vai para `concluir_como`, e os documentos para `inscrever`. Sem elas, um teste que
+    precise do **texto** que o avaliador escreveu, ou de um documento apresentado, teria de gravar
+    por fora — e documento de inscrição enviada não é criado, de modo que "por fora" significaria
+    contornar a guarda da `009` em vez de percorrer o caminho que o produto tem.
     """
     alvo = etapa or cenario["etapa"]
     anterior = cenario["etapa"]
     cenario["etapa"] = alvo
     inscricoes = inscrever(
-        cenario["edital"], len(pontuacoes), primeiro=primeiro, perfil=cenario["perfil"]
+        cenario["edital"],
+        len(pontuacoes),
+        primeiro=primeiro,
+        perfil=cenario["perfil"],
+        documentos=documentos,
     )
     # A modalidade é escolhida na inscrição, e o cenário a declara para todas: é o que dá à
     # projeção um rótulo institucional a resolver em vez de uma coluna vazia.
@@ -216,7 +236,13 @@ def pontuar(cenario, gestor, pontuacoes, *, primeiro=701, etapa=None, sufixo="a"
         distribuir_para(cenario, gestor, ["joao"], com_nota, chave=f"lote-017-{sufixo}")
         for inscricao, nota in zip(inscricoes, pontuacoes, strict=True):
             if nota is not None:
-                concluir_como(cenario, "joao", inscricao, pontuacao=nota)
+                concluir_como(
+                    cenario,
+                    "joao",
+                    inscricao,
+                    pontuacao=nota,
+                    **({"parecer": parecer} if parecer is not None else {}),
+                )
         consolidar(
             actor=gestor,
             processo_id=cenario["edital"].processo_id,

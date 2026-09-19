@@ -72,6 +72,9 @@ from processo_seletivo.comissoes.application import alocacao as alocacao_app
 from processo_seletivo.comissoes.application import comissao as comissao_app
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import (
+    BASE_DA_PRESIDENCIA_DO_PROCESSO,
+    BASE_DE_GESTAO_DA_COMISSAO,
+    BASES_DA_GESTAO_DA_COMISSAO,
     pode_atuar_na_etapa,
     pode_gerir_comissao,
 )
@@ -179,7 +182,6 @@ from processo_seletivo.resultados.application import ocorrencia as ocorrencia_ap
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import (
-    Base,
     base_de_permissao,
     require_authorization_base,
     require_permission,
@@ -3827,13 +3829,19 @@ def _registrar_divergencia(ator, documento, request):
 # pedir "o papel de presidente" mandaria pedir o que não existe.
 # ---------------------------------------------------------------------------
 
-BASE_DE_GESTAO = base_de_permissao("gerir a comissão")
-BASE_DA_PRESIDENCIA = Base("a presidência deste Processo", "a quem preside este Processo")
 BASE_DE_AUDITORIA = base_de_permissao("consultar auditoria")
 BASE_DE_PUBLICAR_RESULTADO = base_de_permissao("publicar resultado")
 
-# O predicado de `pode_gerir_comissao`, dito como recusa: as duas bases que ela aceita.
-BASES_DA_GESTAO_DA_COMISSAO = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA)
+# **As duas bases da gestão da comissão mudaram de casa** (036), e a razão é que a interface deixou
+# de ser a única a perguntá-las: o ato de instrução do recurso — que é comando, e recusa dentro da
+# transação — pergunta a mesma coisa. Definir o par duas vezes criaria a segunda formulação que a
+# `FR-486` existe para não haver, e a cópia divergiria na primeira palavra que alguém melhorasse.
+#
+# O par vive agora junto do predicado que o decide, em `comissoes/domain/autorizacao.py`, e continua
+# citável por estes nomes aqui — a composição por ponto de chamada, que é o que a `FR-489` prende,
+# não muda: quem escolhe o conjunto continua sendo quem chama.
+BASE_DE_GESTAO = BASE_DE_GESTAO_DA_COMISSAO
+BASE_DA_PRESIDENCIA = BASE_DA_PRESIDENCIA_DO_PROCESSO
 # E o mesmo, acrescido da leitura por auditoria — que serve em **algumas** chamadas, nunca em
 # todas. É por isso que são duas constantes e não uma com argumento opcional.
 BASES_DA_GESTAO_OU_AUDITORIA = (BASE_DE_GESTAO, BASE_DA_PRESIDENCIA, BASE_DE_AUDITORIA)
