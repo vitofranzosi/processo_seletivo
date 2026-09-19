@@ -57,20 +57,25 @@ Completa em [research.md](research.md). As quatro premissas da spec se confirmam
 ## Ordem de entrega, e a dependência da `037`
 
 ```
-US1 (o Processo recebe pulso e Atenção)
+US2a — três espécies, só em supervisao.py     ← primeiro entregável, não espera ninguém
    │
-   ├──► US2a — três espécies de leitura existente      ← independentes da 037
+   ├──► US1  — o Processo recebe pulso e Atenção   ← views.py: ESPERA a 037
    │
-   └──► US2b — a quarta, por extração de views.py      ← ESPERA a 037 entrar
+   └──► US2b — a quarta, por extração             ← views.py: ESPERA a 037
                 │
-                └──► US3 (o catálogo volta a ser verdade)
+                └──► US3 — o catálogo volta a ser verdade
 ```
 
 **A `US2` se parte em duas por medição, e não por conveniência.** A `037` altera
-`interface/views.py`, e a quarta espécie exige mexer exatamente nele. As outras três não encostam.
+`interface/views.py`, e a quarta espécie exige mexer exatamente nele.
 
-**Se a `037` demorar**, a `US2a` entrega três das quatro e a quarta fica registrada — é o que a
-`FR-567` manda fazer com o que não estiver pronto, e o percurso do quickstart a cobre à parte.
+**E a ordem das fases não é a das prioridades.** O `tasks` obrigou a encarar o que este plano tinha
+deixado implícito: a **`US1` também vive em `interface/views.py`** — é lá que está `processo_detalhe`
+—, de modo que a única fase que não espera a `037` é a `US2a`. Ela é `P2` e vai primeiro; é **ordem
+de integração, não de valor**.
+
+**Se a `037` demorar**, a `US2a` e a `US3` já entregam — três dos quatro estados e a dívida do
+catálogo fechada —, e a quarta espécie fica registrada, que é o que a `FR-567` manda.
 
 ## Riscos, medidos
 
