@@ -58,14 +58,17 @@ separados, uma mudança na regra de impedimento moveria um e não o outro.
 
 ---
 
-## R-5 — Espécie nova ➌, recorte com ordem e sem ocupação: **de graça**
+## R-5 — Espécie nova ➌, recorte com ordem e sem ocupação: **derivável, e custa uma leitura por recorte**
 
-`ocupacao/application/selectors.py::apuracao_vigente(edital, perfil_id, marco_id, lista_id)` devolve
-a apuração vigente, e **`None` é o estado que interessa**. Com `ato_vigente` do lado da
-classificação, o predicado é `ato_vigente is not None and apuracao_vigente is None`.
+O predicado é `ato_vigente is not None and apuracao_vigente is None`, e as duas funções são públicas.
 
-**As duas funções existem e são públicas.** Uma leitura por recorte, que é a forma que a `034` já
-adotou para não exigir visita por lista.
+**Mas só uma delas já é lida pela Supervisão.** `interface/supervisao.py` importa `ato_vigente` e o
+chama para o `UX-004`; de `ocupacao` ela **não importa nada** — `apuracao_vigente` não aparece no
+módulo. *A primeira leitura desta seção dizia "de graça" porque conferiu a função errada.*
+
+**Custo medido**: uma leitura por recorte, que é a forma que a `034` adotou para não exigir visita
+por lista — e que **o orçamento de consulta precisa acomodar**, com o número remedido e a razão
+escrita ao lado (`R-7`).
 
 ---
 

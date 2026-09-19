@@ -11,8 +11,8 @@ A feature não persiste nada. O total do `make preparar` continua **`N de 33`** 
 |---|---|---|
 | avaliação distribuída e não concluída | `resumo_da_etapa` — `completas − avaliadas` | **não**; o `UX-003` já a chama |
 | recurso aguardando julgamento com julgador | `recursos_do_edital(AGUARDANDO_JULGAMENTO)` + `impedidos_por_recurso` | **não**; o `UX-005` já as chama |
-| recorte com ordem e sem ocupação | `ato_vigente` + `apuracao_vigente` | **não**; as duas são públicas |
-| ato emitido e não publicado | derivação hoje privada em `interface/views.py` | **sim, uma** — e exige **extração** (`R-6`) |
+| recorte com ordem e sem ocupação | `ato_vigente` + `apuracao_vigente` | **sim, uma por recorte** — a Supervisão lê `ato_vigente`, mas **não lê** `apuracao_vigente` |
+| ato emitido e não publicado | derivação hoje privada em `interface/views.py` | **sim** — e exige **extração**, não reescrita (`R-6`) |
 
 ## Por que o Pulso não muda
 

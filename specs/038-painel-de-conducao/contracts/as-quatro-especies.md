@@ -3,12 +3,12 @@
 Cada sinal é **coisa parada com tela que a resolve**. O que é apenas leitura fica no Pulso, e não
 vira sinal (`D-002`).
 
-| Espécie | Condição | Destino |
-|---|---|---|
-| **avaliação parada** | Etapa com inscrições **completas** (atribuições feitas) e **não avaliadas** | a Etapa, onde o trabalho está |
-| **recurso com julgador** | peça `AGUARDANDO_JULGAMENTO` com **ao menos um** membro não impedido | os recursos daquele Edital |
-| **recorte sem ocupação** | recorte com **ordem vigente** e **sem apuração vigente** | a ocupação daquele recorte |
-| **ato não publicado** | ato de ordenação vigente **sem divulgação vigente** | a publicação daquele resultado |
+| Espécie | Condição | Destino | Consulta nova |
+|---|---|---|---|
+| **`UX-063`** avaliação parada | Etapa com inscrições **completas** (atribuições feitas) e **não avaliadas** | a Etapa, onde o trabalho está | **não** |
+| **`UX-064`** recurso com julgador | peça `AGUARDANDO_JULGAMENTO` com **ao menos um** membro não impedido | os recursos daquele Edital | **não** |
+| **`UX-065`** recorte sem ocupação | recorte com **ordem vigente** e **sem apuração vigente** | a ocupação daquele recorte | **uma por recorte** |
+| **`UX-066`** ato não publicado | ato de ordenação vigente **sem divulgação vigente** | a publicação daquele resultado | o que a extração trouxer |
 
 ## Um fato, um sinal
 

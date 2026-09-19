@@ -26,7 +26,7 @@ Python 3.13 · Django 5.2.17 · PostgreSQL. Superfícies: a página do **Process
 | Entidade nova? | **não** |
 | Migration? | **não** |
 | Estado novo calculado? | **não** — três espécies saem de leitura existente, a quarta de extração (`R-6`) |
-| Consulta nova? | **uma**, e só para a quarta espécie |
+| Consulta nova? | **uma por recorte** (terceira espécie) e o que a extração da quarta trouxer |
 | Casos que cercam a Supervisão | **34**, em 4 arquivos (`R-7`) — recontar |
 
 ## Constitution Check
@@ -46,10 +46,11 @@ Python 3.13 · Django 5.2.17 · PostgreSQL. Superfícies: a página do **Process
 Completa em [research.md](research.md). As quatro premissas da spec se confirmam, e a medição
 **repartiu as quatro espécies em duas classes**:
 
-- **três saem de leitura que já existe** — `resumo_da_etapa` já é chamado pelo `UX-003`;
-  `apuracao_vigente` e `ato_vigente` são públicos; o recurso com julgador é a **negação** da condição
-  do `UX-005` e parte do mesmo cálculo;
-- **uma custa**: a derivação de *ato emitido e não publicado* existe **só dentro de
+- **duas saem de leitura que já existe, sem consulta nova** — `resumo_da_etapa` já é chamado pelo
+  `UX-003`, e o recurso com julgador é a **negação** da condição do `UX-005`, do mesmo cálculo;
+- **uma custa consulta**: o recorte sem ocupação precisa de `apuracao_vigente`, que a Supervisão
+  **não lê hoje** — uma leitura por recorte, e o orçamento precisa acomodá-la (`R-5`);
+- **uma custa extração**: a derivação de *ato emitido e não publicado* existe **só dentro de
   `interface/views.py`**, e a `FR-557` obriga a extraí-la em vez de reescrevê-la.
 
 **Nenhuma inventa estado**, de modo que a `FR-567` não precisou tirar nada do escopo.
@@ -81,7 +82,7 @@ catálogo fechada —, e a quarta espécie fica registrada, que é o que a `FR-5
 
 | Risco | Onde | Como se fecha |
 |---|---|---|
-| quebrar o orçamento de consulta dos sinais | `R-7` — há guarda com nome | as três espécies não acrescentam consulta; a quarta acrescenta uma e o orçamento é remedido |
+| quebrar o orçamento de consulta dos sinais | `R-7` — há guarda com nome | **duas** espécies não acrescentam consulta; a do recorte acrescenta **uma por recorte**, e o orçamento é remedido com a razão escrita |
 | os dois sinais de recurso divergirem | `R-4` | nascem do **mesmo** cálculo, partido em dois desfechos |
 | reescrever a derivação da divulgação | `R-6` | **extrair**, nunca reescrever — é a `FR-557` |
 | contar os casos alterados pelo nome do arquivo | `R-7` | 34 casos em 4 arquivos; recontar caso a caso |

@@ -8,10 +8,11 @@
 
 **Input**: reauditoria de 2026-09-16 — `ACH-25` (S2/P2), raiz estrutural `E-6`, melhoria 13.6. Item 1 da ordem de investimento confirmada em 19/09.
 
-> **Faixa de identificadores.** Esta spec abre em **FR-556**, **SC-196** e **UX-063**. Teto medido em
-> 19/09/2026 na `main` `6f322e4` e em todas as worktrees: **FR-555 / SC-195**. O `UX-062` está
-> **reservado pela `037`** e ainda não definido; esta spec não o disputa. As **decisões** reiniciam
-> em `D-001`.
+> **Faixa de identificadores.** Esta spec abre em **FR-556**, **SC-196** e **UX-063**, e **define
+> `UX-063` a `UX-066`** — uma por espécie nova, porque o catálogo da `022` é indexado por
+> identificador e a `FR-565` vai nomeá-lo por ele. Teto medido em 19/09/2026 na `main` `6f322e4` e em
+> todas as worktrees: **FR-555 / SC-195**. O `UX-062` está **reservado pela `037`** e ainda não
+> definido; esta spec não o disputa. As **decisões** reiniciam em `D-001`.
 
 > **Teto proporcional.** Esta spec cabe em **três histórias** e **doze requisitos**, por decisão de
 > método tomada em 19/09: a semana produziu 2496 linhas de spec para uma mudança que removeu código.
@@ -73,8 +74,11 @@ sustentam.
 Quem abre o Processo vê, por Edital, o que já se sabe: quanto chegou, o que vem, e o que pede ação —
 em vez de uma lista de Editais com dois atos terminais.
 
-**Why this priority**: é a metade da melhoria que **não cria nada**. O pulso e a Atenção existem e
-estão numa tela só. Entrega sozinha, e é o MVP.
+**Why this priority**: é a metade da melhoria que **não cria nada** — o pulso e a Atenção existem e
+estão numa tela só — e é a que mais move a nota. É `P1` **por valor**.
+
+*Não é o primeiro entregável, e a razão é de integração, não de importância*: ela vive na mesma
+superfície que a `037` está alterando. A `US2` entra antes porque **não encosta nela**.
 
 **Independent Test**: abrir a página de um Processo com Editais publicados e conferir que o pulso e
 os sinais aparecem ali, com os mesmos valores da Supervisão.
@@ -152,6 +156,28 @@ coincidem.
 
 ---
 
+## As quatro espécies, e os identificadores que elas ganham
+
+O catálogo da `022` é indexado por identificador, e é por identificador que a `FR-565` vai nomeá-lo.
+**Cada espécie nova ganha o seu**, com a condição que a define — nunca a mensagem, que é o que
+confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
+
+- **UX-063** — **Avaliação distribuída e não concluída.** A Etapa e o Edital são nomeados. *Não é
+  cobertura*: o `UX-003` pergunta se há avaliador suficiente, este pergunta se o trabalho andou. O
+  encaminhamento leva à Etapa.
+- **UX-064** — **Recurso aguardando julgamento com julgador disponível.** O Edital é nomeado. *É a
+  negação da condição do `UX-005`*, e os dois nascem do mesmo cálculo: nenhuma peça cai nos dois. O
+  encaminhamento leva aos recursos daquele Edital.
+- **UX-065** — **Recorte com ordem vigente e ocupação não apurada.** O recorte e o marco são
+  nomeados. O encaminhamento leva à ocupação daquele recorte.
+- **UX-066** — **Ato de ordenação emitido e não divulgado.** O marco é nomeado. *Não é
+  obsolescência*: o `UX-004` fala de ordem que ficou para trás, este de ordem que ninguém publicou.
+  O encaminhamento leva à publicação daquele resultado.
+
+**Nenhuma das quatro nomeia pessoa** (`FR-564`).
+
+---
+
 ## Requirements *(mandatory)*
 
 ### O Processo passa a conduzir
@@ -183,8 +209,9 @@ coincidem.
 ### O que esta feature corrige e o que ela não faz
 
 - **FR-565**: A `FR-024` da `022` MUST ser **explicitamente substituída**, e o requisito sucessor
-  MUST nomear todas as espécies vigentes — inclusive a que a `027` acrescentou sem revisá-la.
-  *Requisito que diz cinco onde há seis não fecha catálogo nenhum.*
+  MUST nomear as **dez** espécies vigentes: `UX-001` a `UX-005` da `022`, o `UX-046` que a `027`
+  acrescentou sem revisá-la, e o `UX-063` a `UX-066` desta feature. *Requisito que diz cinco onde há
+  seis não fecha catálogo nenhum — e esta feature levaria a distância de uma para cinco.*
 - **FR-566**: Nenhuma **capacidade de autorização** nova, nenhuma **ajuda instrucional** nova nos
   cartões, nenhum conteúdo publicado reescrito, e nada apagado.
 - **FR-567**: Nenhum **estado novo** MUST ser calculado. Esta feature **reúne e encaminha** o que o
@@ -198,8 +225,11 @@ coincidem.
 - **SC-196**: Quem abre um Processo com Editais vivos lê, **na primeira tela**, onde cada um está e
   o que pede ação — percorrido pela interface, sem shell e sem banco.
 - **SC-197**: **Zero** divergências entre o que o Processo e a Supervisão dizem sobre o mesmo Edital.
-- **SC-198**: Os **quatro** estados da cauda produzem sinal, e cada um leva a uma tela que resolve —
-  conferido clicando os quatro.
+- **SC-198**: Os estados da cauda **que a feature entregou** produzem sinal, e cada um leva a uma
+  tela que resolve — conferido clicando cada um. *São quatro quando a quarta espécie é executada, e
+  três quando ela é registrada em vez de implementada* (`FR-567`): o critério mede **o que foi
+  entregue contra o que foi decidido**, e não um número fixo que a própria feature se autoriza a não
+  atingir.
 - **SC-199**: **Zero** sinais que nomeiem pessoa, e **zero** destinos oferecidos a quem não os abre.
 - **SC-200**: O requisito que fecha o catálogo nomeia **exatamente** as espécies que o produto
   apresenta — conferido contando as duas listas.

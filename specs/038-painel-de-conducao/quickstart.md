@@ -69,7 +69,8 @@ dois cálculos se separaram, que é exatamente o que o contrato proíbe.
 
 > **Se a `037` ainda não entrou**, o passo 2 não é percorrível: a derivação vive em
 > `interface/views.py` e a extração espera a feature anterior. **Registre, não contorne** — é a
-> `FR-567`, e a `034` criou o precedente.
+> `FR-567`, e a `034` criou o precedente. *Nesse caso a `SC-198` é conferida contra **três**
+> espécies, e não quatro: ela mede o entregue contra o decidido.*
 
 ---
 
