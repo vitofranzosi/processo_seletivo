@@ -96,7 +96,7 @@ canais reais: o portal para a candidata, a gestão para a comissão e a autorida
 | Cenário | Desfecho |
 |---|---|
 | **1 — o candidato lê a razão** | **percorrido.** Elisa Moraes (4,0 contra mínima 6,0) lê o motivo e, ao lado, o parecer. Contraprovas: outra candidata recebe *"Recurso não encontrado"*; Ana Silva, com resultado favorável, não vê bloco nenhum |
-| **2 — o prazo fecha, e a tela diz** | **inexequível pela interface — registrado na §5.** A metade que deu para percorrer está lá |
+| **2 — o prazo fecha, e a tela diz** | **percorrido**, com `seed_demo --dias-atras 10`. Encerrado o prazo e sem peça pendente, o parecer some **e a tela diz por quê**, na letra da `FR-524`. A contraprova da segunda condição ficou de fora — §5.1 |
 | **3 — quem julga, antes e depois** | **percorrido, inclusive o passo 5.** Antes: *"Nada foi instruído… Peça a alguém com a permissão de gerir a comissão ou a quem preside este Processo."* A presidência instrui. Depois: a mesma julgadora lê o parecer. **E em outro recurso da mesma Etapa não alcança nada** |
 | **4 — o alcance morre com a decisão** | **percorrido.** Decidido o recurso, a tela diz *"Houve instrução neste recurso: 1 ato(s). O alcance que ela concedia terminou com a decisão, e o registro de que ela houve permanece — nada foi apagado."* O parecer sai da tela |
 | **5 — a auditoria responde quem viu o quê** | **percorrido.** A trilha do Edital mostra o ato (*"Recurso REC-2026-AUA2FHAJ instruído com o parecer atacado"*, por `paulo.presidente`) e os acessos (por `helena.julgadora` e `paulo.presidente`). **Contraprova conferida na página**: o texto do parecer e a fundamentação de quem recorreu não aparecem |
@@ -111,24 +111,29 @@ impedimento está escrita em `instruir.py`, e foi este percurso que a confirmou 
 
 ## 5. O que ficou inexequível pela interface, e por quê
 
-### 5.1 O prazo recursal encerrado (cenário 2, primeira metade)
+### 5.1 A contraprova da **segunda** condição (cenário 2, passos 4 e 5)
 
-O quickstart sugeria *"declarar a janela recursal do marco curta, de minutos, e esperar ela passar
-de verdade"*. **Isso não existe no produto**: `editais/domain/perfis.py` recusa qualquer unidade que
-não seja `DIAS_CORRIDOS`, e `recursos/domain/janela.py` conta em dias e fecha no **último instante
-do dia** do vencimento. A janela mais curta declarável é de um dia, e ela só fecha no fim do dia
-seguinte ao da publicação. Encerrar um prazo hoje exigiria esperar até amanhã, mexer no relógio ou
-reescrever `publicado_em` num agregado append-only — e os três últimos são o que o protocolo do
-projeto proíbe.
+**O cenário 2 foi percorrido**, e o caminho não é o que o quickstart sugeria. Ele propunha
+*"declarar a janela recursal do marco curta, de minutos"*, e **isso não existe no produto**:
+`editais/domain/perfis.py` recusa qualquer unidade que não seja `DIAS_CORRIDOS`, e
+`recursos/domain/janela.py` fecha no **último instante do dia** do vencimento — a janela mais curta
+declarável só fecha no fim do dia seguinte.
 
-**A metade que deu para percorrer**, e ela é a que o `analyze` acrescentou: com o prazo **aberto** e
-a peça dela contra aquele resultado **decidida**, o parecer continua aparecendo — porque a primeira
-condição basta sozinha. Foi o que o cenário 4 deixou na tela da Elisa depois do indeferimento.
+O caminho que existe é `seed_demo --dias-atras N`, e ele **não afrouxa regra nenhuma**: o certame
+percorre os mesmos commands, com as mesmas aferições, e só o instante em que ele ocorreu é outro.
+A aplicação continua lendo o relógio real — por isso o resultado semeado aparece, no navegador, com
+a janela já encerrada. É o que o próprio comando documenta, e foi assim que a `FR-524` foi vista na
+tela, na letra.
 
-**O que cobre a metade que faltou**: `test_parecer_do_titular.py` exercita o prazo fechado avançando
-o relógio **da leitura** — a publicação continua no instante em que aconteceu, e o que muda é quando
-se pergunta. São três casos: o parecer permanece com peça viva, sai com as duas condições
-encerradas, e não volta por peça contra outro resultado.
+**O que ficou de fora é a contraprova dos passos 4 e 5**: com o prazo fechado **e** uma peça dela
+contra aquele resultado ainda em julgamento, o parecer **continua** aparecendo. Isolar isso exigiria
+uma peça interposta **no passado** — e interpor agora, com o prazo vencido, é recusado pelo comando,
+corretamente. O seed não interpõe recurso nenhum, e não há caminho de interface que o faça retroagir.
+
+**O que cobre a contraprova**: `test_parecer_do_titular.py` exercita o prazo fechado avançando o
+relógio **da leitura** — a publicação continua no instante em que aconteceu, e o que muda é quando
+se pergunta. São três casos, e juntos eles separam as duas condições: o parecer permanece com peça
+viva, sai com as duas encerradas, e **não** volta por peça contra outro resultado.
 
 ### 5.2 A instrução de **documento** (cenário 3, segunda espécie)
 
