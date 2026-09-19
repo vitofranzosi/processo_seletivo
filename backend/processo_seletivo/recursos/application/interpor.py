@@ -464,6 +464,47 @@ def _resultado(inscricao, identificador):
     return ResultadoEtapa.objects.filter(pk=identificador, inscricao=inscricao).first()
 
 
+PRAZO_ABERTO = "aberto"
+PRAZO_ENCERRADO = "encerrado"
+PRAZO_NAO_ADMITIDO = "nao_admitido"
+
+
+def situacao_do_prazo(inscricao, *, publicacao=None, resultado=None, agora=None):
+    """Como está a janela recursal daquele objeto **agora** — a primeira condição da `FR-522` (036).
+
+    Três respostas, e não duas, porque **"o prazo fechou" e "o Edital não prevê recurso" não são a
+    mesma frase**. A `FR-524` obriga a tela a dizer *por quê* o parecer saiu, e dizer "o prazo
+    encerrou" sobre um marco que nunca admitiu recurso seria a tela mentindo com precisão.
+
+    ```text
+    aberto        há janela aberta, ou não há janela declarada — recorrer é possível
+    encerrado     havia janela, e ela fechou
+    nao_admitido  o Edital declarou que aquele marco não admite recurso por esta via
+    ```
+
+    A ausência de janela declarada responde **aberto**, e é o mesmo que `_no_prazo` já responde: sem
+    norma não há prazo a aplicar, e é o comportamento de todo Edital anterior ao degrau 8.
+
+    Deriva do mesmo cálculo que a interposição faz, e não de um segundo: o parecer aparece
+    *enquanto recorrer for possível*, e computar essa data por outra conta faria a tela do candidato
+    prometer um prazo e o comando aceitar outro — o defeito que `_fecha_em` já registra do outro
+    lado.
+
+    Ela difere de `objetos_recorriveis` num ponto que importa aqui: aquela função exclui o que **já
+    foi recorrido**, porque oferece a ação de interpor. Esta responde só pela janela, e é o que a
+    `FR-522` pede — quem já recorreu continua no prazo, e a segunda condição é outra pergunta.
+    """
+    from django.utils import timezone
+
+    agora = agora or timezone.now()
+    janelas, so_negativas = _janelas_pertinentes(inscricao, publicacao, resultado, agora)
+    if so_negativas:
+        return PRAZO_NAO_ADMITIDO
+    if not janelas or any(agora <= fecha for _abre, fecha in janelas):
+        return PRAZO_ABERTO
+    return PRAZO_ENCERRADO
+
+
 def _no_prazo(inscricao, publicacao, resultado, agora):
     """Se ainda cabe recorrer deste objeto **hoje**, pela janela declarada.
 

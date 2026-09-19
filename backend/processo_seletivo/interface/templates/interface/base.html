@@ -721,6 +721,19 @@ dfn{font-style:normal;font-weight:600}
   border:1px solid var(--borda);border-left:4px solid var(--borda);border-radius:4px;
   padding:.75rem 1rem;margin:0 0 1.5rem}
 .julgado{margin:0 0 .35rem}
+/* O que a instrução anexou (036, FR-527). Reusa a moldura da fundamentação porque é a mesma espécie
+   de coisa — texto escrito por uma pessoa, lido inteiro —, e mudar de moldura entre os dois
+   sugeriria que um é menos oficial que o outro. O rótulo acima dele é o que diz **de quem** o texto
+   é: sem ele, o parecer atacado e a fundamentação de quem recorreu ficam dois parágrafos iguais, e
+   quem julga precisa saber qual é qual. */
+.instruido{max-width:var(--leitura);background:var(--branco);border:1px solid var(--borda);
+  border-left:4px solid var(--borda);border-radius:4px;padding:.75rem 1rem;margin:0 0 1rem}
+.instruido .rotulo-do-parecer{margin:0;font-size:.75rem;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--texto-fraco)}
+.instruido .texto-do-parecer{margin:.3rem 0 0;white-space:pre-wrap}
+/* As escolhas do ato de instrução: uma linha por item anexável, e o controle junto do rótulo. Sem
+   isto elas herdam o empilhamento de `.campo`, e a caixa fica longe do texto que ela marca. */
+.campo.escolha label{display:inline-flex;align-items:center;gap:.4rem}
 /* A reabilitação por recurso, na linha da Mesa e no painel da Etapa: aviso e não erro, e por isso
    verde — quem voltou ao certame não é uma pendência a resolver, é um fato a saber. */
 .reabilitada{margin:.25rem 0 0;font-size:.875rem;color:var(--verde-texto)}

@@ -9,12 +9,38 @@ from dataclasses import dataclass
 
 from processo_seletivo.comissoes.domain.etapas import etapa_vigente, etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
+from processo_seletivo.seguranca.application.authorization import (
+    Base as BaseDaRecusa,
+)
+from processo_seletivo.seguranca.application.authorization import (
+    base_de_permissao,
+)
 from processo_seletivo.shared.api.problems import DomainError
 
 # A permissão sistêmica vive em `PAPEIS`; a presidência **não** — ela é vínculo, e este nome
 # existe só para a trilha dizer qual base autorizou o ato (FR-016, D-011, D-014).
 PERMISSAO_SISTEMICA = "comissao:gerir"
 BASE_PRESIDENCIA = "comissao:presidir"
+
+# --- As mesmas duas bases, ditas como recusa (033, `FR-486`) ------------------------------------
+#
+# **São o predicado de `pode_gerir_comissao` escrito para quem recebe a negativa**, e moram aqui —
+# junto dele — porque a interface deixou de ser a única a perguntá-lo: o ato de instrução do recurso
+# recusa **dentro da transação**, e importar a constante da camada de views seria ciclo. Definir o
+# par nos dois lugares criaria a segunda formulação que a `FR-486` existe para não haver, e a cópia
+# divergiria na primeira palavra que alguém melhorasse (036).
+#
+# **O conjunto aceito continua sendo de quem chama**, que é o que a `FR-489` prende: este módulo
+# oferece o par; nenhuma porta é obrigada a usá-lo, e as que têm modo compõem o seu.
+#
+# A presidência é a única que não nasce de `base_de_permissao`, e a diferença é o ponto da `FR-485`:
+# ela **não é papel**, vem da composição da comissão, e nenhum papel a concede. Mandar pedir "o
+# papel de presidente" mandaria pedir o que não existe.
+BASE_DE_GESTAO_DA_COMISSAO = base_de_permissao("gerir a comissão")
+BASE_DA_PRESIDENCIA_DO_PROCESSO = BaseDaRecusa(
+    "a presidência deste Processo", "a quem preside este Processo"
+)
+BASES_DA_GESTAO_DA_COMISSAO = (BASE_DE_GESTAO_DA_COMISSAO, BASE_DA_PRESIDENCIA_DO_PROCESSO)
 
 
 @dataclass(frozen=True)

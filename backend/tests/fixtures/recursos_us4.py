@@ -46,6 +46,9 @@ def cenario_julgavel(
     admitir_a_peca=True,
     publicar=True,
     na_primeira_etapa=False,
+    parecer=None,
+    documentos=(),
+    janela_recursal=None,
 ):
     """Edital publicado, marco divulgado, recurso interposto pela primeira inscrição e admitido.
 
@@ -69,13 +72,27 @@ def cenario_julgavel(
         # contestar. Sem regra publicada, toda nota habilita, e a US4 inteira ficaria provando o
         # deferimento de quem nunca foi prejudicado.
         regra_da_etapa={"minimumScore": "60.0000", "eliminatory": True},
+        # A janela recursal declarada, quando o teste precisa de uma. Sem ela não há prazo
+        # computável e recorrer é sempre possível — o comportamento de todo Edital anterior ao
+        # degrau 8, e o padrão destas fixtures desde a `018`.
+        janela_recursal=janela_recursal,
     )
     # `na_primeira_etapa` existe para a US8: a progressão retroativa só se enxerga quando a
     # eliminação está numa Etapa **anterior** à seguinte, e a Etapa do marco é a última. Sem isso,
     # "reaparece na Etapa seguinte" não teria Etapa seguinte para reaparecer.
     alvo = cenario["primeira"] if na_primeira_etapa else cenario["etapa"]
+    # `parecer` e `documentos` são passagem para `pontuar`, e entraram com a `036`: ela precisa do
+    # **texto** que o avaliador escreveu — é ele que a feature entrega — e de um documento
+    # apresentado, que é a segunda espécie que a instrução anexa.
     cenario["inscricoes"] = pontuar(
-        cenario, gestor, list(pontuacoes), primeiro=seed * 10 + 1, sufixo=str(seed), etapa=alvo
+        cenario,
+        gestor,
+        list(pontuacoes),
+        primeiro=seed * 10 + 1,
+        sufixo=str(seed),
+        etapa=alvo,
+        parecer=parecer,
+        documentos=documentos,
     )
     cenario["etapa_do_recurso"] = alvo
     marco = cenario["marco_intermediario"] if na_primeira_etapa else cenario["marco"]

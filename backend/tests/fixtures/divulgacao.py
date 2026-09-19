@@ -61,8 +61,21 @@ def ator_publicador(subject=PUBLICADORA):
     return ator_institucional(subject, "resultado:publicar")
 
 
-def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra_da_etapa=None):
-    """O rascunho da 015: duas Etapas, a segunda enumerada por um marco classificatório."""
+def rascunho_com_marco(
+    seed=0,
+    *,
+    com_intermediario=False,
+    criterios=None,
+    regra_da_etapa=None,
+    janela_recursal=None,
+):
+    """O rascunho da 015: duas Etapas, a segunda enumerada por um marco classificatório.
+
+    `janela_recursal` entrou com a `036`, e é declarada **no rascunho** de propósito: a alternativa
+    que a `018` usa — reescrever o conteúdo publicado com o gatilho desligado — existe para
+    exercitar norma publicada há dez dias, e aqui não é disso que se trata. Declarar antes de
+    publicar é o caminho normal, e ele não desliga garantia nenhuma.
+    """
     rascunho = rascunho_com_etapas(seed, avaliacoes=1, maxima="100.0000", minima="60.0000")
     primeira, segunda = rascunho["stages"]
     segunda["weight"] = "1.0000"
@@ -87,6 +100,8 @@ def rascunho_com_marco(seed=0, *, com_intermediario=False, criterios=None, regra
             "tiebreakers": criterios or [],
         }
     ]
+    if janela_recursal is not None:
+        marcos[0]["appealWindow"] = janela_recursal
     if com_intermediario:
         # O marco intermediário enumera a primeira Etapa, e o Edital só publica marco sobre Etapa
         # **classificatória** — enumerar uma que ele não publicou assim é recusa de validação, e
@@ -131,6 +146,7 @@ def montar_marco(
     criterios=None,
     fatos=None,
     regra_da_etapa=None,
+    janela_recursal=None,
 ):
     """Edital publicado, comissão constituída e banca alocada nas duas Etapas."""
     rascunho = rascunho_com_marco(
@@ -138,6 +154,7 @@ def montar_marco(
         com_intermediario=com_intermediario,
         criterios=criterios,
         regra_da_etapa=regra_da_etapa,
+        janela_recursal=janela_recursal,
     )
     if fatos is not None:
         rascunho["profiles"][0]["declaredFacts"] = fatos
@@ -187,18 +204,38 @@ def montar_marco(
     }
 
 
-def pontuar(cenario, gestor, pontuacoes, *, primeiro=701, etapa=None, sufixo="a"):
+def pontuar(
+    cenario,
+    gestor,
+    pontuacoes,
+    *,
+    primeiro=701,
+    etapa=None,
+    sufixo="a",
+    parecer=None,
+    documentos=(),
+):
     """Inscrições submetidas, distribuídas, concluídas e consolidadas na Etapa do marco.
 
     `pontuacoes` é a lista de notas: uma inscrição por nota, na ordem. `None` deixa a inscrição
     **sem Resultado** — é o que produz alguém considerado e sem posição, que é a linha que separa
     a projeção pública da individual (FR-017).
+
+    `parecer` e `documentos` entraram com a `036`, e as duas são passagem e não comportamento novo:
+    o parecer vai para `concluir_como`, e os documentos para `inscrever`. Sem elas, um teste que
+    precise do **texto** que o avaliador escreveu, ou de um documento apresentado, teria de gravar
+    por fora — e documento de inscrição enviada não é criado, de modo que "por fora" significaria
+    contornar a guarda da `009` em vez de percorrer o caminho que o produto tem.
     """
     alvo = etapa or cenario["etapa"]
     anterior = cenario["etapa"]
     cenario["etapa"] = alvo
     inscricoes = inscrever(
-        cenario["edital"], len(pontuacoes), primeiro=primeiro, perfil=cenario["perfil"]
+        cenario["edital"],
+        len(pontuacoes),
+        primeiro=primeiro,
+        perfil=cenario["perfil"],
+        documentos=documentos,
     )
     # A modalidade é escolhida na inscrição, e o cenário a declara para todas: é o que dá à
     # projeção um rótulo institucional a resolver em vez de uma coluna vazia.
@@ -216,7 +253,13 @@ def pontuar(cenario, gestor, pontuacoes, *, primeiro=701, etapa=None, sufixo="a"
         distribuir_para(cenario, gestor, ["joao"], com_nota, chave=f"lote-017-{sufixo}")
         for inscricao, nota in zip(inscricoes, pontuacoes, strict=True):
             if nota is not None:
-                concluir_como(cenario, "joao", inscricao, pontuacao=nota)
+                concluir_como(
+                    cenario,
+                    "joao",
+                    inscricao,
+                    pontuacao=nota,
+                    **({"parecer": parecer} if parecer is not None else {}),
+                )
         consolidar(
             actor=gestor,
             processo_id=cenario["edital"].processo_id,

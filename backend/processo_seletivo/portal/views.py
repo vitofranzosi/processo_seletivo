@@ -75,7 +75,10 @@ from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
-from processo_seletivo.recursos.application.selectors import recursos_do_titular
+from processo_seletivo.recursos.application.selectors import (
+    pareceres_do_titular,
+    recursos_do_titular,
+)
 from processo_seletivo.requerimentos.application import exigencia as exigencia_do_requerimento
 from processo_seletivo.requerimentos.application import preencher as preencher_requerimento
 from processo_seletivo.requerimentos.application import selectors as leitura_do_requerimento
@@ -1363,6 +1366,7 @@ def acompanhamento(request, inscricao_id):
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
     recorriveis = objetos_recorriveis(registro)
+    resultados_das_etapas = resultados_visiveis(registro)
     return render(
         request,
         "portal/acompanhamento.html",
@@ -1382,7 +1386,23 @@ def acompanhamento(request, inscricao_id):
             # responde "o que a instituição registrou de mim em cada Etapa que aquele marco
             # conta". Quem foi eliminado antes do marco só existe no segundo — e era exatamente
             # ele que não via nada (E2E17-004, FR-014, FR-015).
-            "resultados_das_etapas": resultados_visiveis(registro),
+            "resultados_das_etapas": resultados_das_etapas,
+            # **O parecer que o avaliador escreveu, entregue a quem ele foi escrito para servir**
+            # (036, FR-522). O sistema exigia o texto pela razão de servir ao candidato, guardava o
+            # texto, e não o entregava a ele — a regra da `012` cumprida pela metade.
+            #
+            # Vem **ao lado** do motivo, e nunca no lugar dele (FR-525a): o motivo é a regra
+            # aplicada ao número — *"30,0000 < 40,0000"* —, e o parecer é a razão que a pessoa
+            # escreveu. É no
+            # segundo que está *"o currículo não comprova os seis meses"*, e é contra ele que um
+            # recurso se escreve; substituir um pelo outro tiraria da tela a aritmética que hoje
+            # sustenta a contestação.
+            #
+            # Dicionário indexado pelo Resultado, e não campo acrescentado a `resultados_visiveis`:
+            # a **condição** de exibição é do recurso — prazo aberto, ou peça contra aquele
+            # resultado ainda não decidida —, e `resultados` não sabe dizer até quando cabe
+            # contestar.
+            "parecer_por_resultado": pareceres_do_titular(registro, resultados_das_etapas),
             # Os recursos que a pessoa já interpôs, e o que pode ser contestado agora. A ação
             # **não** é oferecida quando a interposição não é possível: um botão que sempre recusa
             # é pior do que nenhum botão (FR-013).

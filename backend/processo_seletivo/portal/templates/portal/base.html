@@ -748,6 +748,25 @@ form.convite{margin:.75rem 0 0}
    mais um detalhe do registro (FR-016). */
 .resultado-da-etapa .corrigido{color:var(--texto);border-left:3px solid var(--borda);
   padding-left:.75rem}
+/* O parecer da avaliação (036, FR-525a). Fica **ao lado** do motivo, e não no lugar dele, e a
+   moldura é o que diz a diferença: o motivo acima é a regra aplicada ao número, em texto fraco; o
+   parecer é frase escrita por uma pessoa, e aparece em texto pleno. Sem essa distinção visual, as
+   duas linhas cinzas empilhadas parecem dois motivos — e é exatamente a confusão que a FR-525a
+   existe para evitar.
+
+   **A prosa desta folha é varrida junto com a página** por dois testes: um confere que toda classe
+   citada tem regra, e outro proíbe um vocabulário na tela do candidato. Foi o segundo que uma
+   redação anterior deste comentário quebrou, ao conter por acaso uma expressão proibida — a
+   varredura não distingue comentário de conteúdo, e não deveria: o que chega ao navegador chega
+   inteiro.
+
+   A ausência do parecer reusa `.meta` e ganha só o nome: é nota da tela **sobre** o registro, e não
+   o registro. Dar a ela a moldura do parecer faria a frase "não há parecer" parecer um parecer. */
+.resultado-da-etapa .parecer{border-left:3px solid var(--borda);padding-left:.75rem;margin:0 0 .5rem}
+.resultado-da-etapa .rotulo-do-parecer{margin:0;font-size:.8125rem;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--texto-fraco)}
+.resultado-da-etapa .texto-do-parecer{margin:.25rem 0 0;color:var(--texto)}
+.resultado-da-etapa .sem-parecer{font-style:italic}
 
 /* Os anexos do Edital (020). Cada item já é um botão, então o marcador de lista não organiza nada;
    e o formato vem no rótulo porque estes links baixam, enquanto o do Edital abre no navegador. */

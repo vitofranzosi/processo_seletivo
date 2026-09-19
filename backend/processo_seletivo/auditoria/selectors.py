@@ -108,10 +108,25 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
 
 
 def _atos_da_conducao(edital):
-    """Os identificadores dos atos que conduzem o certame: apuração, convocação e os dela.
+    """Os identificadores dos atos que conduzem o certame: apuração, convocação, e a instrução.
 
     Import tardio porque `auditoria` é lida por todo mundo: um import no topo faria este módulo
     carregar `ocupacao` e `convocacao` em qualquer processo que só quisesse gravar um registro.
+
+    **A instrução do recurso entrou com a `036`**, e sem ela a feature registraria o ato e o acesso
+    num lugar que nenhuma tela alcança — que é a `FR-533`/`FR-534` cumprida no banco e não no canal
+    do ator, exatamente o que o Princípio VI recusa.
+
+    São **dois** identificadores, porque os dois registros da `036` têm agregados diferentes, e a
+    diferença é deliberada: o **ato** é anotado sob a linha que ele criou, que é o que nomeia o que
+    foi anexado; o **acesso** é anotado sob a **peça**, porque o que se leu foi a instrução dela
+    inteira, e anotá-lo por item faria o custo da tela crescer com a quantidade instruída.
+
+    **Incluir a peça traz junto a interposição dela**, e isso é efeito colateral conhecido e aceito:
+    ele alcança **só os recursos instruídos**, e a interposição é proveniência do certame como a
+    convocação é — nada de conteúdo sensível viaja nela, que é o que a `018` já prende. Os demais
+    atos do recurso — admitir e julgar — são auditados sob o juízo e sob a decisão, e **continuam
+    fora**: trazê-los mudaria o que esta tela mostra por uma razão que não é desta feature.
     """
     from processo_seletivo.convocacao.models import (
         AtestadoDeFatoExterno,
@@ -120,9 +135,16 @@ def _atos_da_conducao(edital):
         DesfechoDaConvocacao,
     )
     from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+    from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 
     convocacoes = list(Convocacao.objects.filter(edital=edital).values_list("id", flat=True))
     return [
+        *AtoDeInstrucao.objects.filter(recurso__inscricao__edital=edital).values_list(
+            "id", flat=True
+        ),
+        *Recurso.objects.filter(inscricao__edital=edital, instrucoes__isnull=False)
+        .distinct()
+        .values_list("id", flat=True),
         *ApuracaoDeOcupacao.objects.filter(edital=edital).values_list("id", flat=True),
         *convocacoes,
         *DesfechoDaConvocacao.objects.filter(convocacao_id__in=convocacoes).values_list(

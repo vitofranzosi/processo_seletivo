@@ -80,6 +80,101 @@ conferir" e "não há o que **você** possa conferir" é a que diz a quem pedir.
   inscrições. Julgar não as concede.</p>
 {% endif %}
 
+{% comment %}
+**A instrução do recurso** (036, FR-527, FR-532). O bloco acima diz o que este ator **não** alcança
+por permissão; este diz o que ele alcança por **ato** — alguém com autoridade decidiu anexar aquela
+prova a este recurso, e isso ficou registrado.
+
+A separação entre os dois blocos é o desenho da feature, e não arrumação de tela: ampliar o papel de
+julgar é o que a FR-105 da 018 proíbe, e é por isso que a saída é um ato. O que muda com a instrução
+não é a permissão de ninguém — é o que existe anexado **a esta peça**.
+
+Três estados, e nunca dois:
+
+  nada instruído       → o que falta e a quem pedir, na formulação que o produto já pratica
+  instruído e vivo     → a prova
+  houve e encerrou     → que houve, e que o alcance terminou com a decisão
+
+O terceiro é o que a primeira redação da spec não tinha: sem ele, esta tela diria "nada foi
+instruído" a quem viu a prova ontem, e isso é falso sobre um ato que aconteceu. O registro permanece;
+o que termina é a porta.
+
+E em nenhum dos três esta tela oferece caminho que aquele ator não alcança — a garantia da 033, e
+esta é a tarefa que mais facilmente a desfaz. O documento vai pela rota da própria peça, e não pela
+tela de documentos da inscrição: aquela porta exige `inscricao:consultar`, que quem julga não tem e
+que esta feature não amplia.
+{% endcomment %}
+<h2 id="instrucao">Instrução do recurso</h2>
+{% if instrucao.aberto %}
+{% if parecer_instruido %}
+<div class="instruido" role="group" aria-label="Parecer atacado">
+  <p class="rotulo-do-parecer">O parecer atacado, anexado por instrução</p>
+  <p class="texto-do-parecer">{{ parecer_instruido|linebreaksbr }}</p>
+</div>
+{% endif %}
+{% if instrucao.documentos %}
+<p class="acoes-do-painel">
+  {% for ato in instrucao.documentos %}
+  {% comment %}
+  **Por referência, e nunca por cópia** (FR-531). O caminho serve os bytes do documento original,
+  conferidos contra o resumo que a inscrição gravou — não há segundo arquivo em lugar nenhum.
+  {% endcomment %}
+  <a class="acao" href="{% url 'interface:recurso-documento-instruido' peca.id ato.documento_id %}">O
+    documento citado — {{ ato.documento.nome_original }}</a>
+  {% endfor %}
+</p>
+{% endif %}
+<p class="meta">{{ instrucao.atos|length }} ato(s) de instrução neste recurso. O alcance vale
+  enquanto o recurso não for decidido.</p>
+{% elif instrucao.encerrado %}
+{% comment %}
+O terceiro estado. Ele afirma as duas metades, porque as duas são o ponto: o ato **houve** — e o
+registro dele não se apaga —, e o acesso que ele concedia **terminou** com a decisão (FR-529).
+{% endcomment %}
+{% comment %}
+A frase fica **numa linha só** por causa do que a asserção procura: quebrá-la entre "nada foi" e
+"apagado" partiu a frase no HTML e derrubou a regressão — o template não põe espaço onde havia
+quebra, e a busca por substring não encontra o que a pessoa lê inteiro na tela.
+{% endcomment %}
+<p class="ajuda">Houve instrução neste recurso: {{ instrucao.atos|length }} ato(s). O alcance que ela concedia terminou {{ instrucao_razao_do_fim }}, e o registro de que ela houve permanece — nada foi apagado.</p>
+{% else %}
+<p class="ajuda">Nada foi instruído neste recurso. O parecer atacado e os documentos citados chegam
+  por <strong>ato de instrução</strong>, e não por permissão de julgar.
+  {{ instrucao_a_quem_pedir }}</p>
+{% endif %}
+
+{% if pode_instruir %}{% if parecer_instruivel or documentos_instruiveis %}
+{% comment %}
+O formulário aparece **só para quem tem a base composta** que a 033 já sabe exigir — a permissão de
+gerir a comissão, ou a presidência deste Processo. Nenhuma capacidade nova (FR-530).
+
+E oferece só o que ainda não foi anexado: instruir de novo o mesmo item acrescentaria linha sem
+acrescentar alcance. O documento só é oferecido a quem alcança o original — oferecer a escolha de
+anexar o que a própria autoridade não abre seria oferecer caminho que ela não alcança.
+{% endcomment %}
+<form method="post" action="{% url 'interface:recurso-instruir' peca.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="assinatura" value="{{ assinatura }}">
+  {% if parecer_instruivel %}
+  <p class="campo escolha"><label><input type="checkbox" name="parecer" value="sim"> Anexar o parecer
+    atacado</label></p>
+  {% endif %}
+  {% for documento in documentos_instruiveis %}
+  <p class="campo escolha"><label><input type="checkbox" name="documento"
+    value="{{ documento.id }}"> Anexar o documento — {{ documento.nome_original }}</label></p>
+  {% endfor %}
+  <div class="campo">
+    <label for="razao">Razão da instrução</label>
+    {% comment %}
+    Opcional, e é a única coisa opcional deste ato: o que o torna defensável é o autor, o instante e
+    o que foi anexado — e os três são gravados sem depender de ninguém escrever nada.
+    {% endcomment %}
+    <textarea id="razao" name="razao" rows="3">{{ razao }}</textarea>
+  </div>
+  <p class="salvar"><button type="submit" class="botao">Instruir o recurso</button></p>
+</form>
+{% endif %}{% endif %}
+
 <h2>Fundamentação</h2>
 {% comment %}
 Como escrita, e sem resumo. Resumir a razão de quem recorre é decidir por ele o que importa.
