@@ -631,18 +631,12 @@ confronto entre fontes. Nenhuma tem `P0`, e as duas produzem **contradição sil
 espécie de defeito que este produto menos consegue ver sozinho.
 
 **3. As perguntas de governança que as features registraram e não responderam.** É a categoria que
-nenhuma contagem de achados enxerga:
+nenhuma contagem de achados enxerga.
 
-| Pergunta | Quem a registrou |
-|---|---|
-| os **dez de dez** Editais de sorteio não declaram ocorrência de fonte externa | `035` |
-| a `FR-461` deve virar impeditiva? — registrada **duas** vezes | `032`, e este arquivo |
-| o peso deve ser do par marco×Etapa, e não da Etapa? | `037`, `D-003` |
-| as **sete recusas** fora das portas: corrigir, ou ratificar o 404 uniforme? | `033`, §8 |
-| a Retificação não acrescenta Modalidade — e um Perfil de cotas sem ampla não recebe inscrição de não-cotista | `034`, no percurso |
-
-**Cinco decisões de governança, e nenhuma delas é um defeito.** Depois da `037`, elas passam a ser o
-**maior bloco de trabalho não endereçado do produto** — maior que os achados abertos que restam.
+**As cinco foram respondidas em 19/09/2026**, e estão na §14-bis abaixo, com quem as havia
+registrado e o que cada resposta cria. **Nenhuma delas era um defeito**, e **quatro delas criaram
+trabalho** — que é a consequência de decidir, e era invisível enquanto as perguntas estavam
+abertas.
 
 ### A resposta à pergunta que governa
 
@@ -652,6 +646,110 @@ nenhuma contagem de achados enxerga:
 | `[PROJ.]` **pós-`037`** | **sim, do começo ao fim, para as três famílias — inclusive o recurso**, com a prova para quem julga e o parecer chegando a quem foi avaliado |
 
 **O que passa a faltar não é o certame correr. É ver o certame correndo.**
+
+---
+
+## 14-bis. As decisões de governança, respondidas em 19/09
+
+**Quem decide é quem governa o backlog; o papel deste arquivo é registrar, não decidir.** As cinco
+perguntas que as features acumularam desde a `032` foram respondidas de uma vez, e ficam aqui com o
+que cada uma **fecha** e o que cada uma **cria**.
+
+### D-G1 — a `FR-461` passa a ser **impeditiva**
+
+**Registrada por**: `032`, e duas vezes por este arquivo.
+
+O que deve ser obrigatório **não é existir corte**: é existir **declaração explícita** — o marco
+corta segundo determinada regra, **ou** declara que não governa Etapa alguma. A `032` já implementou
+a distinção entre *ausência de regra* e *regra que declara não governar nada*, de modo que **o falso
+positivo que justificava o aviso deixou de existir**. Ausência de declaração não deve mais chegar à
+publicação como advertência.
+
+**Cria**: spec curta. A distinção existe; falta o aviso virar impedimento.
+
+### D-G2 — a fronteira entre `403` e `404`, e ela não é em bloco
+
+**Registrada por**: `033`, §8 — o inventário das sete recusas fora das portas.
+
+**Nem ratificar nem corrigir em bloco.** A regra passa a ser:
+
+| Situação | Resposta |
+|---|---|
+| inexistência, ou objeto fora do escopo | **`404`** |
+| ausência de vínculo cuja revelação permitiria **enumeração** | **`404`** |
+| objeto **já pertencente ao escopo visível**, ator sem capacidade para a ação | **`403`** |
+
+Aplicada ao inventário:
+
+| Recusa | Passa a | Por quê |
+|---|---|---|
+| `criar_edital`, `reaproveitar`, `supervisao` | **`403`** | separar escopo de autorização; o objeto é visível, falta capacidade |
+| `anexo_do_rascunho`, `minha_etapa`, `inscricao_da_mesa`, `documento_da_mesa` | **`404`** | protegem conteúdo ou vínculo cuja existência **não deve ser enumerável** |
+
+**A spec curta não troca códigos: ela registra a fronteira**, e **substitui explicitamente** a
+decisão anterior onde houver conflito — três das sete citam doutrina de spec anterior por
+identificador, e uma decisão nova que não as enderece deixa duas verdades no repositório.
+
+**Cria**: a spec das recusas, que já estava na fila — agora com critério em vez de inventário.
+
+### D-G3 — o sorteio declara **fonte pública externa**, e o produto não acomoda o contrário
+
+**Registrada por**: `035`, depois de varrer **dez** Editais e achar **dez** sem declaração.
+
+O Cefor **passa a declarar a fonte pública externa**. O produto **não deve acomodar como equivalente
+auditável** a prática de gerar e publicar a própria semente depois do sorteio — isso preserva o
+modelo mais forte, que é o que a `021` desenhou e a `035` tornou executável.
+
+**O acervo histórico permanece intocado.** A exigência vale **prospectivamente**, inclusive para
+Editais **reaproveitados** — que é o caso que mais facilmente escaparia, porque reaproveitar copia a
+cláusula antiga.
+
+**Cria**: spec. E a regra do reaproveitamento é a parte não óbvia dela.
+
+### D-G4 — o peso continua sendo **da Etapa**, e a pergunta se encerra
+
+**Registrada por**: `037`, `D-003`.
+
+**Não mover para o par marco×Etapa sem evidência de um Edital real** que precise atribuir pesos
+diferentes à mesma Etapa em marcos distintos. Até que apareça, o que a `037` faz — parar de chamar o
+peso de simplesmente opcional, e antecipar a contradição para o momento em que a Etapa é enumerada —
+**é suficiente**.
+
+**Esta decisão fica registrada como encerrada, e não como pergunta indefinidamente aberta.**
+
+**Cria**: nada. É a única das cinco que fecha sem trabalho.
+
+### D-G5 — a Retificação **passa a acrescentar** Modalidade de Concorrência
+
+**Registrada por**: `034`, no percurso do cenário 5.2 — *inexequível pela interface*.
+
+Um Edital publicado **não pode ficar sem correção possível** quando a ausência da ampla impede a
+inscrição de não-cotistas. A inclusão MUST:
+
+- **preservar integralmente** as versões anteriores;
+- produzir efeito **somente pela nova versão**;
+- **validar** quadro, documentos e regras dependentes;
+- **não reescrever** inscrições nem ordens anteriores;
+- fazer o **novo recorte nascer sem ordem própria**, preservando as ordens vigentes dos demais.
+
+**Cria**: spec própria, e **não pequena**. As cinco restrições são a feature.
+
+---
+
+### O que a rodada de decisões custou, dito por escrito
+
+**Responder as cinco não encurtou a fila: acrescentou quatro specs.** Uma encerrou sem trabalho
+(`D-G4`), uma deu critério a uma spec que já estava na fila (`D-G2`), e três criaram trabalho novo
+(`D-G1`, `D-G3`, `D-G5`).
+
+**Isto não é crítica das decisões.** É a consequência de decidir, e era **invisível enquanto as
+perguntas estavam abertas** — o que é exatamente a razão de elas não deverem ficar abertas.
+
+**E uma delas muda de peso ao ser respondida.** A `D-G5` descreve um Edital publicado que **não
+recebe inscrição de não-cotista e não tem conserto**. Não estava na auditoria porque nasceu num
+percurso; pela severidade, é a coisa mais grave da lista — mais que o painel. **A ordem da §15
+registra a escolha de quem governa o backlog, e esta observação fica aqui para que a escolha seja
+informada, não para contestá-la.**
 
 ---
 
@@ -681,7 +779,19 @@ que resta não tem `P0` nenhum para forçá-lo na fila. A partir daí a priorida
 pela severidade dos achados e passa a ser **escolha de governança**, que é uma situação nova para
 este backlog.
 
-Na ordem em que eu investiria **agora**:
+**A ordem abaixo foi confirmada por quem governa o backlog em 19/09**, depois das decisões da
+§14-bis, e com a ressalva daquela seção registrada e não acatada: *o painel continua sendo a próxima
+entrega, porque a visão global permanece a maior lacuna isolada do produto.* As quatro specs que as
+decisões criaram entram **depois** dele, e **nenhuma delas amplia o escopo da `038`**.
+
+| | O quê | De onde vem |
+|---|---|---|
+| **1** | **painel de condução** (`E-6`, `ACH-25`) | a fila |
+| **2** | as **sete recusas**, com a fronteira `403`/`404` | `D-G2` deu o critério |
+| **3** | **validação cruzada** entre fontes normativas (`E-4`) | a fila |
+| — | `FR-461` impeditiva · ocorrência externa prospectiva · Retificação acrescenta Modalidade | `D-G1`, `D-G3`, `D-G5` — **sem posição atribuída** |
+
+A ordem detalhada:
 
 **1. O painel de condução do Processo vivo (`E-6`).** A **visão global continua em 5**, e passa a ser
 a nota mais baixa por margem larga. O sistema já calcula todos os estados; eles só não estão
@@ -689,9 +799,11 @@ reunidos — e é exatamente quando o certame passa a correr de ponta a ponta qu
 **Cinco** features atravessaram este relatório sem tocá-la, e é agora o item mais antigo da fila sem
 dono.
 
-**2. As sete recusas do inventário (§8).** Como spec que **decide**, com o inventário pronto servindo
-de entrada — três delas contradizem a `022` por identificador, e uma tem argumento próprio a favor do
-404 uniforme.
+**2. As sete recusas do inventário (§8).** **Deixou de ser spec que decide e virou spec que
+aplica**: a `D-G2` já deu a fronteira — inexistência e vínculo enumerável respondem `404`; objeto
+visível sem capacidade responde `403` —, e nomeou as sete uma a uma. O que resta é registrar a
+fronteira e **substituir explicitamente** a decisão anterior onde houver conflito, porque três delas
+citam doutrina de spec anterior por identificador.
 
 **5. A validação cruzada entre fontes normativas (`E-4`).** Ataca uma classe inteira de contradições
 silenciosas.
