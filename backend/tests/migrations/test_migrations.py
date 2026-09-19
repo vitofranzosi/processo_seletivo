@@ -75,12 +75,18 @@ TRIGGERS_POR_APP = {
     # acontecem uma vez cada, e não há ato em curso que legitime mutação. As duas de coerência são
     # **duas** porque o gatilho é por tabela: `recurso_coerente` roda no `INSERT` do `Recurso`, e
     # nenhuma linha de `DecisaoRecurso` passa por ela.
+    # A `036` acrescenta o quarto ato do recurso — a instrução — e com ele mais duas: a de
+    # imutabilidade, absoluta como as três de cima, e a de coerência, que confere o que `CHECK` não
+    # alcança por atravessar tabela — que o documento anexado é da Inscrição da peça, e que só se
+    # instrui parecer sobre peça que ataca Resultado.
     "recursos": (
         "recurso_append_only",
         "recurso_coerente",
         "juizo_de_admissibilidade_append_only",
         "decisao_recurso_append_only",
         "decisao_recurso_coerente",
+        "ato_de_instrucao_append_only",
+        "ato_de_instrucao_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -735,7 +741,14 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # percorre linha publicada (030, FR-429, SC-142).
         "processos": 4,
         "publicacoes": 8,
-        "recursos": 1,
+        # **Sobe para 2 com a 036**: a `recursos/0002` cria o `AtoDeInstrucao` — o ato pelo qual a
+        # autoridade anexa a **um** recurso o parecer atacado e o documento citado, para que quem
+        # julga decida com o que se contesta à vista. Não é a 022 tocando o que lê: é outra feature,
+        # e a tabela nasce append-only nas duas camadas que a Constituição exige — trigger e
+        # privilégio ausente. Ela **não** guarda cópia de documento, nem texto de parecer, nem lista
+        # de quem pode ver: o alcance é derivado do estado do recurso, e é isso que a separa de uma
+        # permissão (036, FR-527, FR-528, FR-530).
+        "recursos": 2,
         # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de
         # `ck_resultado_origem` — o sucessor por regularização — e a fonte jurídica própria dele.
         # Não é a 022 tocando o que lê: é outra feature, e a constraint foi **estendida**, não

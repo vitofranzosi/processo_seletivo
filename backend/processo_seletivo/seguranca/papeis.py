@@ -107,6 +107,12 @@ TABELAS_APPEND_ONLY = (
     # exportação aconteceu. Reescrevê-lo apagaria o rastro de um acesso a dado pessoal sem deixar
     # rastro de que alguém o apagou (031, FR-447).
     "matriculas_geracaodearquivo",
+    # O ato de instrução do recurso (036): quem decidiu anexar **aquela** prova **àquele** recurso,
+    # quando, e o que anexou. Append-only pela razão das demais — nasce e não muda —, e com um
+    # agravante próprio: é este registro que torna defensável um acesso a dado pessoal concedido a
+    # quem não teria permissão para ele. Reescrevê-lo mudaria, sem rastro, quem autorizou quem a ver
+    # o quê; apagá-lo deixaria o acesso exercido sem fato que o justifique (036, FR-529, FR-533).
+    "recursos_atodeinstrucao",
 )
 
 

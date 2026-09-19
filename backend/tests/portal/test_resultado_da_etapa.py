@@ -35,6 +35,13 @@ from tests.fixtures.recursos import deferir_corrigindo
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
+# O parecer **das outras duas** inscrições, e por isso o adjetivo está no texto: ele é o que a
+# fronteira desta tela proíbe atravessar, e uma frase distintiva é o que torna a busca por
+# substring honesta (036, FR-535). Antes da `036` nenhum parecer aparecia aqui, e a asserção podia
+# ser a palavra solta; hoje o parecer do **próprio titular** aparece, e a palavra solta acusaria o
+# que a regra permite.
+PARECER_ALHEIO = "A documentação apresentada por esta outra pessoa comprova o requisito."
+
 
 @pytest.fixture
 def cenario(gestor, api_client, manager_headers, process_payload):
@@ -49,7 +56,12 @@ def cenario(gestor, api_client, manager_headers, process_payload):
         gestor, api_client, manager_headers, process_payload, seed=80, codigo="0780"
     )
     cenario["inscricoes"] = pontuar(
-        cenario, gestor, ["90.0000", "70.0000", None], primeiro=801, sufixo="80"
+        cenario,
+        gestor,
+        ["90.0000", "70.0000", None],
+        primeiro=801,
+        sufixo="80",
+        parecer=PARECER_ALHEIO,
     )
     registrar_ocorrencia(
         actor=gestor,
@@ -216,7 +228,18 @@ def test_o_vigente_e_o_que_aparece_e_nao_o_superado(client, cenario, gestor):
 
 
 def test_nada_de_terceiro_atravessa(client, cenario, gestor):
-    """Nem nome, nem nota alheia, nem parecer, nem avaliador — nem por engano de template."""
+    """Nem nome, nem nota alheia, nem parecer **de terceiro**, nem avaliador (FR-535).
+
+    **A asserção era a palavra solta, e a `036` a tornou imprecisa.** Ela foi escrita quando
+    parecer nenhum aparecia nesta tela, de modo que "a palavra `parecer` não está no corpo" e
+    "nenhum parecer de terceiro está no corpo" diziam a mesma coisa. Passaram a dizer coisas
+    diferentes: o titular lê o parecer **dele**, e nesta inscrição — eliminada por Ocorrência, sem
+    Avaliação — a tela declara que **não houve** parecer, que é a `FR-525` sendo cumprida.
+
+    O sujeito da regra sempre foi *de terceiro*, e a asserção agora o diz: o texto escrito sobre as
+    outras duas pessoas não atravessa, e o nome de quem avaliou continua fora. É a mesma emenda que
+    a `036` fez no comentário deste bloco no template, e pela mesma razão.
+    """
     eliminada = cenario["inscricoes"][2]
     publicar_o_ato(cenario, chave="publicar-018-us1f")
     outras = [item for item in cenario["inscricoes"] if item.id != eliminada.id]
@@ -227,7 +250,10 @@ def test_nada_de_terceiro_atravessa(client, cenario, gestor):
         assert outra.nome not in conteudo
         assert str(outra.id) not in conteudo
         assert (outra.protocolo or "—") not in conteudo
-    assert "parecer" not in conteudo.lower()
+    assert PARECER_ALHEIO not in conteudo
+    # E o que a tela **diz** sobre o parecer desta pessoa é que não houve: ela foi eliminada por
+    # Ocorrência, e ali não há avaliador a citar.
+    assert "não registrou parecer" in conteudo
     assert "joao" not in conteudo
 
 

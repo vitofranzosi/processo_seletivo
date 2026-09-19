@@ -572,3 +572,164 @@ def _resultados_do_universo(ato):
         for item in (ato.universo or {}).get("stageResults") or []
         if item.get("id")
     }
+
+
+# --- O parecer que o titular lê, e quando (036) --------------------------------------------------
+#
+# **O sistema exigia o texto pela razão de servir ao candidato, guardava o texto, e não o entregava
+# a ele.** Não era omissão de quem escreveu a regra da `012` — era a regra cumprida pela metade, e é
+# esta seção que fecha a outra metade (FR-522 a FR-525a).
+#
+# A leitura mora aqui, e não em `resultados`, porque a **condição** é do recurso: prazo recursal
+# aberto, ou peça daquele titular contra aquele resultado ainda não decidida. Quem sabe responder as
+# duas é este módulo; `resultados` sabe qual foi a consequência, e não até quando cabe contestá-la.
+
+VISIVEL = "visivel"
+ENCERRADO = "encerrado"
+AUSENTE = "ausente"
+
+# **Sumir em silêncio é a diferença entre a feature e um defeito** (FR-524). Encerradas as duas
+# condições, a pessoa perde acesso à razão da própria eliminação — e ela continua sendo a titular
+# daquele dado. O custo está dito por escrito na `D-001`; esta frase é o que impede o custo de virar
+# defeito, porque a alternativa é a pessoa pensar que perdeu algo que nunca teve, ou que a tela
+# falhou.
+POR_QUE_SAIU = (
+    "O parecer da avaliação não é mais exibido aqui: o prazo de recurso contra este resultado "
+    "encerrou e não há recurso seu pendente contra ele. O texto continua registrado — nada foi "
+    "apagado."
+)
+# **E "o prazo fechou" não é a mesma frase que "não cabe recurso por esta via."** Dizer a primeira
+# sobre um marco que o Edital declarou não recorrível seria a tela mentindo com precisão, e a
+# `FR-524` pede a razão verdadeira — não uma razão qualquer.
+POR_QUE_NAO_APARECE = (
+    "O Edital não prevê recurso contra este resultado por esta via, e por isso o parecer da "
+    "avaliação não é exibido aqui. O texto continua registrado."
+)
+# A ausência é real, e calar sobre ela é pior do que declará-la (FR-525). A obrigatoriedade do
+# parecer depende do caráter da Etapa e da forma da avaliação: na Etapa que elimina por nota abaixo
+# da mínima ele é obrigatório, e fora dali pode legitimamente não existir.
+NAO_HOUVE_PARECER = (
+    "A avaliação deste resultado não registrou parecer. A exigência do parecer depende do caráter "
+    "da Etapa e da forma da avaliação, e aqui ela não se aplicou."
+)
+
+
+def pareceres_do_titular(inscricao, resultados, *, agora=None):
+    """`{resultado_id: {"estado", "texto"}}` para os resultados **desfavoráveis** desta Inscrição.
+
+    Só o desfavorável entra, e é o recorte que a regra do parecer já descreve: é ele o caso em que o
+    parecer é obrigatório, e é contra ele que um recurso se escreve. Resultado favorável não recebe
+    linha nenhuma, e a tela dele não muda (cenário 1 do quickstart).
+
+    **As duas condições da `FR-522`, e a segunda pende do resultado atacado** (`D-001`):
+
+    ```text
+    prazo recursal aberto para aquele resultado            → aparece
+    peça dele contra AQUELE resultado, ainda em curso      → aparece, mesmo com o prazo fechado
+    as duas encerradas                                     → some, E a tela diz por quê
+    ```
+
+    Peça contra **outro** resultado, e peça contra a **publicação**, não abrem este parecer:
+    "recurso dele" sem recorte diria *qualquer peça em curso*, e uma peça sobre a Etapa seguinte
+    reabriria o parecer de um resultado cujo prazo terminou há semanas — minimização perdida sem que
+    ninguém decidisse perdê-la.
+
+    **E "em curso" exclui a peça inadmitida**, que é terminal e nunca receberá decisão: contá-la
+    manteria o parecer visível para sempre.
+
+    **Três consultas, e o número não cresce com a quantidade de Etapas**: os Resultados com a
+    Avaliação, as peças pendentes daquele titular, e as conclusões preservadas. A janela é computada
+    por Resultado, com a mesma função que a interposição usa — ler o prazo por outra conta faria a
+    tela prometer uma data e o comando aceitar outra.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
+    from processo_seletivo.recursos.application.interpor import (
+        PRAZO_ABERTO,
+        PRAZO_NAO_ADMITIDO,
+        situacao_do_prazo,
+    )
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    desfavoraveis = [item["id"] for item in resultados if not item["habilitada"]]
+    if not desfavoraveis:
+        return {}
+
+    agora = agora or timezone.now()
+    linhas = list(
+        ResultadoEtapa.objects.filter(pk__in=desfavoraveis, inscricao=inscricao).select_related(
+            "avaliacao"
+        )
+    )
+    # **Pendente é a peça que ainda pode mudar de desfecho**, e não a que só não tem decisão de
+    # mérito. Juízo negativo é terminal — o banco recusa decisão sobre recurso não admitido —, de
+    # modo que `decisoes__isnull=True` sozinho classificaria a peça inadmitida como pendente **para
+    # sempre**, e o parecer nunca sairia da tela. A `FR-524` deixaria de ter quando acontecer.
+    pendentes = set(
+        Recurso.objects.filter(
+            inscricao=inscricao, resultado_atacado_id__in=desfavoraveis, decisoes__isnull=True
+        )
+        .exclude(juizos__admitido=False)
+        .values_list("resultado_atacado_id", flat=True)
+    )
+    conclusoes = _conclusoes_por_avaliacao(
+        ConclusaoAvaliacao, [linha.avaliacao_id for linha in linhas if linha.avaliacao_id]
+    )
+
+    lido = {}
+    for linha in linhas:
+        texto = parecer_que_fundamenta(linha, conclusoes.get(linha.avaliacao_id, ()))
+        if not texto:
+            lido[linha.pk] = {"estado": AUSENTE, "texto": "", "aviso": NAO_HOUVE_PARECER}
+            continue
+        prazo = situacao_do_prazo(inscricao, resultado=linha, agora=agora)
+        # **A segunda condição pende do resultado atacado** (`D-001`), e é por isso que `pendentes`
+        # foi lido com `resultado_atacado_id__in`: peça contra outro resultado, e peça contra a
+        # publicação, não entram no conjunto e não reabrem este parecer.
+        if prazo == PRAZO_ABERTO or linha.pk in pendentes:
+            lido[linha.pk] = {"estado": VISIVEL, "texto": texto, "aviso": ""}
+            continue
+        aviso = POR_QUE_NAO_APARECE if prazo == PRAZO_NAO_ADMITIDO else POR_QUE_SAIU
+        lido[linha.pk] = {"estado": ENCERRADO, "texto": "", "aviso": aviso}
+    return lido
+
+
+def parecer_que_fundamenta(resultado, conclusoes=()):
+    """O parecer que fundamenta **aquele** Resultado — e não o estado de hoje da Avaliação (FR-523).
+
+    *Vale o que o ato citou*, que é a doutrina que o projeto já aplica a ato histórico. A conclusão
+    preservada é a fonte: entre as conclusões daquela Avaliação, a última que existia **quando o
+    Resultado foi consolidado**. Só na ausência de conclusão preservada — dado anterior à `012` — a
+    leitura cai para o campo corrente.
+
+    **A reabertura que isto protege está hoje fechada por outra porta**, e a medição está no
+    `antes-da-instrucao.md`: a `013` recusa reabrir avaliação que fundamenta Resultado, de modo que
+    o campo corrente e a última conclusão coincidem sempre. Ler a conclusão de todo jeito é o que
+    torna a `FR-523` verdadeira por construção, em vez de verdadeira **porque** aquela guarda
+    existe — e é a guarda de outra feature, que esta não governa.
+
+    Resultado sem Avaliação devolve vazio, e a ausência é real: o sucessor nascido de decisão
+    recursal e o Resultado por Ocorrência não têm avaliador nenhum a citar.
+    """
+    for conclusao in conclusoes:
+        if conclusao.concluida_em <= resultado.consolidado_em:
+            return (conclusao.parecer or "").strip()
+    avaliacao = resultado.avaliacao
+    return (avaliacao.parecer or "").strip() if avaliacao is not None else ""
+
+
+def _conclusoes_por_avaliacao(modelo, avaliacao_ids):
+    """As conclusões preservadas de cada Avaliação, **da mais recente para a mais antiga**.
+
+    A ordem é o que permite a `parecer_que_fundamenta` parar no primeiro casamento: a primeira
+    conclusão cuja data não é posterior ao Resultado é, por construção, a que o fundamentou.
+    """
+    if not avaliacao_ids:
+        return {}
+    agrupadas = {}
+    for conclusao in modelo.objects.filter(avaliacao_id__in=avaliacao_ids).order_by(
+        "avaliacao_id", "-ordem"
+    ):
+        agrupadas.setdefault(conclusao.avaliacao_id, []).append(conclusao)
+    return agrupadas

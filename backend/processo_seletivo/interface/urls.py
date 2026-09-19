@@ -394,6 +394,18 @@ urlpatterns = [
     path("recursos/<uuid:recurso_id>", views.recurso_recebido, name="recurso"),
     path("recursos/<uuid:recurso_id>/admitir", views.admitir_recurso, name="recurso-admitir"),
     path("recursos/<uuid:recurso_id>/julgar", views.julgar_recurso, name="recurso-julgar"),
+    # O ato de instrução e o documento que ele alcança (036). As duas pendem do **recurso**, como as
+    # três acima e pela mesma razão: instruir não é ato de marco nem de Etapa.
+    #
+    # O documento tem rota própria em vez de link para `inscricao-recebida` porque a autorização é
+    # outra: ali a porta é `inscricao:consultar`, que quem julga não tem e que esta feature **não**
+    # amplia; aqui é o ato de instrução daquela peça (`FR-530`, `FR-531`).
+    path("recursos/<uuid:recurso_id>/instruir", views.instruir_recurso, name="recurso-instruir"),
+    path(
+        "recursos/<uuid:recurso_id>/instrucao/<uuid:documento_id>",
+        views.documento_instruido,
+        name="recurso-documento-instruido",
+    ),
     path("minhas-etapas", views.minhas_etapas, name="minhas-etapas"),
     # A inscrição como instrumento de trabalho, sob a Mesa que a autoriza (012, US3). O caminho
     # pende de `minhas-etapas` porque é dali que ele é alcançado, e porque a autorização é a

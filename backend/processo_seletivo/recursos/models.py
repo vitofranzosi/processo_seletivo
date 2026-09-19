@@ -13,6 +13,11 @@ vigência na `015` e na `017`.
 sobre dois casos concretos, conhecidos e finitos produz indireção sem consumidor — é a mesma recusa
 que a `017` fez com `Publicavel`. Duas colunas e um `CHECK` dizem a mesma coisa, e o banco as
 verifica (018, T-003).
+
+**E há um quarto ato, o de instrução** (036, FR-527). Ele não decide nada sobre a peça — anexa a ela
+o parecer atacado e o documento citado, para que quem julga decida com o que se contesta à vista.
+Nasce e não muda, pelas mesmas três camadas; o que ele **não** tem é unicidade por recurso, porque
+instruir de novo acrescenta em vez de substituir.
 """
 
 import uuid
@@ -304,3 +309,97 @@ class DecisaoRecurso(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("Decisão de recurso é append-only.")
+
+
+class AtoDeInstrucao(models.Model):
+    """O ato pelo qual a autoridade anexa prova a **um** recurso, para que ele seja julgado com o
+    que se contesta à vista (FR-527).
+
+    **É ato, e não permissão**, e a diferença mora no que esta tabela guarda. Uma permissão vale
+    para a classe — todo recurso, todo Edital, enquanto durar o papel. Aqui a linha nomeia **uma**
+    peça, e o alcance que ela abre é derivado dela: quem julga *aquele* recurso, enquanto ele não
+    estiver decidido. Nada disso é coluna, e é de propósito (FR-528, FR-529, FR-530).
+
+    **Três coisas que ela deliberadamente não guarda**, e cada ausência responde por um requisito:
+
+    - **não guarda cópia do documento.** A prova é alcançada por referência — esta é uma `FK` para o
+      `DocumentoSubmetido` original, e não um segundo arquivo. Copiar multiplicaria a superfície do
+      dado pessoal e criaria uma cópia que a Constituição depois proíbe apagar (FR-531, FR-531a);
+    - **não guarda o texto do parecer.** Ele já existe na Avaliação; duplicá-lo criaria duas
+      verdades sobre o que o avaliador escreveu, e a segunda envelheceria (FR-537);
+    - **não guarda "quem pode ver".** Lista de pessoas é permissão com outro nome, e é exatamente o
+      que a `FR-530` proíbe.
+
+    **Append-only, e instruir de novo acrescenta** — nas três camadas, como `Recurso`,
+    `JuizoDeAdmissibilidade` e `DecisaoRecurso`: `save`/`delete` recusam, a trigger recusa mesmo
+    quem tem privilégio, e o papel de runtime não tem `UPDATE` nem `DELETE`. Não há juízo em curso
+    que legitime mutação: instruir acontece, e o que aconteceu não se desfaz. Uma segunda instrução
+    é outra linha, e **não** reabre o alcance que a decisão fechou.
+
+    **Sem `UniqueConstraint` por recurso**, ao contrário do juízo e da decisão, e a ausência é
+    decisão: aqueles dois acontecem uma vez cada, este acontece quantas vezes a autoridade
+    entender — anexar o parecer hoje e um documento amanhã são dois atos legítimos sobre a mesma
+    peça.
+    """
+
+    class Especie(models.TextChoices):
+        # O parecer atacado. Não tem coluna própria porque o caminho até ele é o do próprio
+        # recurso: `resultado_atacado → avaliacao → parecer`, que a porta da peça já carrega.
+        PARECER = "PARECER"
+        # O documento citado, e a `FK` abaixo diz **qual**.
+        DOCUMENTO = "DOCUMENTO"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # `PROTECT` porque a peça instruída não pode desaparecer sob o ato que a nomeia — a mesma
+    # escolha que o juízo e a decisão fazem.
+    recurso = models.ForeignKey(Recurso, on_delete=models.PROTECT, related_name="instrucoes")
+    especie = models.CharField(max_length=20, choices=Especie.choices)
+    # **A referência, e nunca a cópia** (FR-531). `PROTECT` pela razão de sempre num registro
+    # histórico: apagar o documento deixaria o ato citando uma prova que ninguém mais encontra.
+    # Nula na espécie `PARECER`, e a nulidade é amarrada à espécie por constraint e por trigger.
+    documento = models.ForeignKey(
+        "inscricoes.DocumentoSubmetido",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="instrucoes_que_o_citam",
+    )
+    razao = models.TextField(blank=True)
+    # Identificador estável, e não vínculo: a autoria é histórica e sobrevive à saída da pessoa,
+    # como em `Recurso.interposto_por` e `DecisaoRecurso.decidido_por`.
+    instruido_por = models.CharField(max_length=255)
+    instruido_em = models.DateTimeField()
+
+    class Meta:
+        ordering = ["instruido_em", "id"]
+        constraints = [
+            # `TextChoices` valida no formulário e **não** cria constraint: num registro
+            # append-only a espécie inválida entraria uma vez e ficaria, porque nada a corrige
+            # depois. É a mesma razão de `ck_decisao_especie`.
+            models.CheckConstraint(
+                condition=Q(especie__in=("PARECER", "DOCUMENTO")),
+                name="ck_instrucao_especie",
+            ),
+            # A espécie amarrada ao que ela implica. Sem isto, `null=True` em `documento` seria uma
+            # instrução de documento que não diz qual documento — e uma instrução de parecer
+            # arrastando um documento afirmaria um anexo que o ato não praticou.
+            models.CheckConstraint(
+                condition=(
+                    Q(especie="DOCUMENTO", documento__isnull=False)
+                    | Q(especie="PARECER", documento__isnull=True)
+                ),
+                name="ck_instrucao_anexo_por_especie",
+            ),
+        ]
+        indexes = [models.Index(fields=["recurso"])]
+
+    def __str__(self):
+        return f"{self.recurso_id} — {self.especie}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("Ato de instrução é append-only: instruir de novo acrescenta.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("Ato de instrução é append-only.")

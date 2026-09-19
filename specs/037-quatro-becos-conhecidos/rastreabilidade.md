@@ -1,6 +1,7 @@
 # Rastreabilidade — 037, os quatro becos que o sistema já conhece
 
-**Quando**: 19/09/2026. **Contra**: a `main` `23bf70e`, na worktree `spec-037-implementacao`.
+**Quando**: 19/09/2026. **Base da implementação**: `23bf70e`. **Integrada e medida contra**: a `main`
+`0c96283`, que traz a `036`.
 
 O "antes" está em [antes-dos-quatro-becos.md](antes-dos-quatro-becos.md); o desfecho do percurso que
 decidiu metade da `US2`, em [achado-do-ach-02.md](achado-do-ach-02.md).
@@ -47,6 +48,7 @@ uma das três estava correta.
 | `FR-541b` o aviso cala quando a ação está oferecida | `views.py::detalhe` (`conducao_do_imutavel`) | `test_conducao_dos_bloqueios.py::test_quem_pode_retificar_recebe_o_caminho_e_o_aviso_cala` |
 | `FR-541c` condução é prosa, não ação desabilitada | `detalhe.html` — a lista não mudou | `test_conducao_dos_bloqueios.py::test_retificar_nao_virou_botao_desabilitado_com_motivo` |
 | `FR-542` a pendência diz a quem pedir | `views.py::_pendencias` (`ator`) + `_pendencias.html` | `test_conducao_dos_bloqueios.py::test_quem_nao_pode_compor_le_a_quem_pedir` e `…_alcanca_tambem_a_etapa_em_que_a_pendencia_mora` |
+| `FR-544` **só há a quem pedir onde alguém pode compor** | `views.py::falta_permissao_para_compor` — e **não** a negação de `pode_compor` | `test_conducao_dos_bloqueios.py::test_edital_publicado_nao_manda_pedir_a_ninguem`, `…_nem_a_quem_nao_tem_a_permissao` e `test_em_elaboracao_a_conducao_depende_so_da_permissao` |
 | `FR-542a` a condução nasce **na tela**, não na mensagem normativa | `_pendencias`/`_pendencias.html`; `editais/domain/validation.py` **intocado** | `test_conducao_dos_bloqueios.py::test_quem_pode_compor_nao_recebe_a_frase_de_pedir` |
 | `FR-542b` percorrer antes de prometer | [achado-do-ach-02.md](achado-do-ach-02.md) | o próprio documento — é o `SC-195` |
 | `FR-543` produzida pelo mecanismo único | `seguranca/application/authorization.py` | `test_gramatica_das_portas.py::test_as_conducoes_produzidas_seguem_a_formulacao_canonica` |
@@ -198,14 +200,10 @@ desapareceu sem substituto nomeado.
 
 ## A contagem final
 
-```
-$ cd backend && make lint check test-pg
-uv run ruff check .          → All checks passed!
-uv run ruff format --check . → 1125 files already formatted
-uv run python manage.py check → System check identified no issues (0 silenced).
-uv run python manage.py makemigrations --check --dry-run → No changes detected
-================= 7388 passed, 11 skipped in 686.74s (0:11:26) =================
-```
+São **duas** medições, e as duas importam. A primeira responde *"a feature funciona?"*; só a
+segunda responde *"ela pode entrar?"* — e foi a que faltava na primeira leitura deste trabalho.
+
+### Na base isolada `23bf70e`, sem a `036`
 
 | | Antes | Depois |
 |---|---|---|
@@ -214,11 +212,32 @@ uv run python manage.py makemigrations --check --dry-run → No changes detected
 
 **+45 execuções**, e elas fecham: **41** casos escritos por esta feature — 14 acrescentados aos oito
 arquivos existentes e 27 nos três novos — mais **4** que `test_sem_dado_pessoal_da_amostra.py`
-gerou sozinho, um por arquivo novo. **Os 11 pulados são os mesmos de antes**, um a um: esta feature
+gerou sozinho, um por arquivo novo.
+
+### Integrada à `main` `0c96283`, **que é o que o PR propõe**
+
+```
+$ cd backend && make lint check test-pg
+uv run ruff check .          → All checks passed!
+uv run ruff format --check . → 1132 files already formatted
+uv run python manage.py check → System check identified no issues (0 silenced).
+uv run python manage.py makemigrations --check --dry-run → No changes detected
+================= 7454 passed, 11 skipped in 712.90s (0:11:52) =================
+```
+
+| | `main` sozinha | Integrada |
+|---|---|---|
+| coletados | **7417** | **7465** |
+| passando | — | **7454** |
+| pulados | — | **11** |
+
+**+48 sobre a `main`**: os 41 da feature, as **3 regressões** que a revisão motivou, e os 4 do
+guardião por arquivo. **Os 11 pulados são os mesmos** nas duas medições e na `main`: esta feature
 não acrescentou pulo nenhum, e não destravou nenhum.
 
-**Nenhuma migration**: o `make preparar` continua fechando em `32 de 32` tabelas append-only, e o
-`makemigrations --check` não detecta mudança.
+**Nenhuma migration**: integrada, o `make preparar` fecha em **`33 de 33`** tabelas append-only — o
+mesmo que a `main` sozinha fecha, porque a 33ª é a da `036` —, e o `makemigrations --check` não
+detecta mudança.
 
 ### Os dois que a suíte achou, e a varredura por arquivo não acharia
 
@@ -236,3 +255,76 @@ encontrada relendo os arquivos que esta feature tocou:
    outra feature para calar um guardião.
 
 **É a razão de o portão mandar rodar a suíte inteira, e não os arquivos tocados.**
+
+---
+
+## O que a revisão achou depois, e o que foi feito
+
+A primeira leitura externa deste trabalho encontrou quatro coisas. **Três procedem e foram
+corrigidas**; uma estava desatualizada. Ficam aqui porque o valor delas é o registro.
+
+### 1. A condução confundia falta de permissão com estado não editável — **corrigido**
+
+`conduzir` saía de `not pode_compor(edital, ator)`, e `pode_compor` reúne **estado e permissão**.
+Negado inteiro, o predicado punha no mesmo ramo duas negativas que pedem respostas opostas:
+
+| Por que não pode | Há a quem pedir? | O que a tela fazia |
+|---|---|---|
+| em elaboração, e falta a permissão | **sim** | certo |
+| saiu da elaboração | **não** — ninguém compõe por ali | **mandava pedir assim mesmo** |
+
+Reproduzido: num Edital **publicado** com advertência corrigível, `ana.elaboradora` — que **tem**
+`edital:elaborar` — lia *"Peça a alguém com a permissão de elaborar o Edital que a faça."* Duas
+falsidades numa frase: nomeia como solução uma permissão que não abre aquele estado, e a oferece a
+quem já a detém. É o que a `FR-544` proíbe, e é a razão de a `D-002` dizer que condução depende de
+quem lê **e** do que o estado admite.
+
+**O mais caro do achado é que o comentário estava certo.** O docstring de `pode_compor` dizia, com
+todas as letras, *"Edital que saiu da elaboração não se compõe por ninguém, e mandar pedir ali seria
+prometer um caminho que não existe para pessoa alguma"* — e a linha ao lado fazia exatamente isso.
+Prosa correta não prende comportamento.
+
+A pergunta virou função própria, `falta_permissao_para_compor`, com a tabela acima escrita nela. As
+**três** regressões novas foram conferidas contra o código antigo: as duas do estado publicado
+reprovam sem a correção, e a terceira impede que a correção seja *"cale sempre"*.
+
+### 2. A branch estava oito commits atrás da `main` — **integrado**
+
+A `036` entrou em `0c96283` **durante** esta implementação, e o diff não aplicava limpo. Dois
+conflitos, os dois reais:
+
+- **`interface/views.py`** — a `036` moveu `BASE_DE_GESTAO_DA_COMISSAO` e
+  `BASE_DA_PRESIDENCIA_DO_PROCESSO` para um módulo compartilhado (o ato de instrução também as
+  pergunta) e passou a importar `frase_da_recusa`. Resolvido mantendo a mudança de casa da `036` e
+  as constantes da `037`, com as **duas** frases importadas.
+- **`.claude/launch.json`** — a `036` ocupou **8037 e 8038**. A entrada `becos-037` passou para
+  **8039**, sobre a versão da `main` para que nenhuma entrada se perdesse.
+
+### 3. A evidência era da branch isolada — **remedida**
+
+O `antes` foi medido em `23bf70e` e continua sendo o "antes" correto **daquela base**; o que faltava
+era a medição do **conjunto integrado**, e ela está abaixo. A afirmação de que *"a 32ª tabela veio da
+`036`, que já está na `main`"* — herdada do portão 2 do `tasks.md` — **era falsa**, e os dois
+documentos foram corrigidos: são **32 sem a `036`** e **33 com ela**, medidos nos dois estados.
+
+### 4. "A implementação está sem commit" — **não procedia**
+
+O trabalho estava commitado em `2302d23` e publicado no PR desde antes da revisão; a leitura foi
+feita sobre um instantâneo anterior. Fica registrado para que a discrepância não volte como dúvida.
+
+---
+
+## Um achado da integração, registrado e não corrigido
+
+**A `036` criou uma quinta ocorrência renderizada da frase, e escolheu a forma de recusa para uma
+tela onde ninguém tentou nada.** `recurso.html` imprime, num parágrafo informativo — *"Nada foi
+instruído neste recurso… {{ instrucao_a_quem_pedir }}"* —, o resultado de
+`frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO)`, que abre com **"Esta operação depende de…"**.
+
+É exatamente a situação de fala que a `FR-543d` separa: não houve operação. O mecanismo agora
+produz a forma de aviso, e trocar a chamada seria uma linha.
+
+**Não foi trocada.** A tela é da `036`, que foi especificada, percorrida e mesclada nos termos dela,
+e a `FR-543d` obriga esta feature a *distinguir as duas formas no mecanismo* — não a reescrever as
+chamadas alheias. **Governança é de quem governa o backlog**: fica como achado, com o endereço
+exato, e não como escopo tomado por conta própria.

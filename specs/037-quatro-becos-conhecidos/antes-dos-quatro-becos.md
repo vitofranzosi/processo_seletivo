@@ -18,14 +18,25 @@ $ cd backend && make test-pg
 
 **7343 passando, 11 pulados.** É este o número contra o qual a `T033` compara.
 
-**E o `make preparar` fecha em `32 de 32`**, que é o que o segundo portão manda conferir:
+**E o `make preparar` fechou em `32 de 32`** nesta base:
 
 ```
 Papéis provisionados. 32 de 32 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
 ```
 
-A 32ª veio da `036`, que já está na `main`. Esta feature **não tem migration**, e o total tem de
-continuar `32` no fim — ver `32` de novo prova que nenhuma tabela nasceu aqui.
+> **Correção — a atribuição do portão estava errada, e a medição a desfez.** O segundo portão do
+> `tasks.md` manda conferir `N de 32` dizendo que *"a 32ª veio da `036`, que já está na `main`"*.
+> **Não estava.** A `036` entrou na `main` em `0c96283`, **depois** desta base `23bf70e`, e é ela
+> que traz a **33ª** — `recursos/0002_ato_de_instrucao`. O número certo é: **32 sem a `036`, 33 com
+> ela**. Medido nos dois estados, e não herdado.
+>
+> A conferência que o portão quer continua valendo, com o total corrigido: esta feature **não tem
+> migration**, e depois de integrar a `main` o `make preparar` fecha em `33 de 33` — o mesmo que a
+> `main` sozinha fecha. Nenhuma tabela nasceu aqui.
+
+**Este "antes" foi medido na base `23bf70e`, sem a `036`.** A contagem da suíte abaixo é, portanto,
+a da branch isolada; a comparação que vale para o PR é contra a `main` integrada, e está na
+[rastreabilidade](rastreabilidade.md).
 
 ---
 
