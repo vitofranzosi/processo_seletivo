@@ -29,6 +29,7 @@ A pergunta que a reauditoria governou continua sendo a mesma:
 | Verificação executada | `make lint check test-pg` no checkout principal → **7213 passando, 12 pulados, zero falhas** (11m15s); `ruff check`, `ruff format --check`, `manage.py check` e `makemigrations --check` limpos |
 | Confirmação independente | a árvore de `af97d4c` é **idêntica** à de `37f45f3`, que é a cabeça em que o CI do #132 rodou verde — o que está na `main` é exatamente o que foi testado lá |
 | Medição pela interface (manhã) | `runserver` na porta 8032, banco exclusivo `reauditoria_0918`, preparado com `make preparar` (31 de 31 tabelas append-only protegidas) |
+| **Especificado e não implementado** | **`034` — ordem por recorte em marco computado** (PR #135, mergeada) e **`035` — sorteio executável** (PR #136, aberta). Nenhuma linha de código das duas |
 
 ### Taxonomia de evidência
 
@@ -39,7 +40,14 @@ A pergunta que a reauditoria governou continua sendo a mesma:
 | `[SUÍTE]` | afirmado por teste que roda no CI |
 | `[NÃO REAUDITADO]` | superfície que a auditoria de 16/09 nunca viu |
 
-**A marca `[PROJEÇÃO]` não aparece mais em nota nenhuma.** As três features são código.
+**A marca `[PROJEÇÃO]` voltou, e agora ela tem endereço: a §13.** As features `029` a `033` são
+código, e tudo que se diz delas é medição. A `034` e a `035` são **artefato**, e tudo que se diz
+delas está na §13, marcado.
+
+**Por que separar assim, em vez de misturar.** A primeira versão deste arquivo projetou o efeito da
+`032`, e a §7 confere hoje o que aquelas projeções valeram — as quatro notas previstas bateram, e o
+fluxo moveu por um motivo a mais do que se previu. É a única maneira de saber se a projeção seguinte
+merece crédito, e ela só funciona se a projeção ficar separada da medição.
 
 ### Limitações desta reavaliação
 
@@ -65,6 +73,10 @@ Das 39 linhas do backlog priorizado da auditoria, **7 fecharam e 6 ficaram parci
 achados P0**, **três fecharam e dois ficaram parciais** — de manhã eram zero. Duas das três falhas
 `S4` fecharam; a terceira (`ACH-47`) segue nomeada e não resolvida, e agora é a mais cara da lista.
 
+**E as duas que faltam para fechar a cauda estão especificadas.** A `034` e a `035` cobrem os quatro
+cenários que pararam — dois na convocação, dois na execução do sorteio —, e a **§13** projeta o que
+elas fecham, marcada como projeção.
+
 Quatro frases resumem o estado:
 
 - **Quem pode agir chega à ação.** O Publicador puro — capacidade de publicar resultado, nenhum
@@ -88,19 +100,22 @@ dois dos cinco cenários da amostra.
 
 ## 3. Notas (0–10)
 
-| Dimensão | 16/09 | 18/09 manhã | Projeção da manhã | **Agora** | Justificativa do movimento |
-|---|---|---|---|---|---|
-| Clareza conceitual | 7 | **9** | 9 | **9** | `[UI]` Os cinco conceitos ganharam definição no primeiro uso; a assimetria Etapa×marco está escrita na etapa de Classificação. A `032` levou *geração* a duas telas que não a usavam, e lá ela nasce definida. Sobra o rótulo `Peso (opcional)` que vira impeditivo |
-| Encontrabilidade | 7 | 7 | 7 | **8** | `[CÓDIGO]` Das três falhas nomeadas, **uma fechou**: *publicar resultado (sem caminho)* era o `ACH-40`. O **link do corte continua condicional** e o período de inscrições segue intocado — por isso 8 e não 9 |
-| Previsibilidade | 5 | **6** | 9 | **9** | Projeção confirmada. Os quatro achados de executabilidade entraram; cada um nomeia entidade, falta e a etapa em que a correção é feita |
-| **Fluxo ponta a ponta** | **4** | **4** | 6 | **6** | Projeção confirmada, **e por um motivo a mais do que se previu** — ver §7 |
-| Generalização entre famílias | 7 | 7 | 7 | **7** | O modelo não mudou. O custo de autoria caiu: num Edital de 7 polos o método do sorteio passou de 7 declarações (98 campos) a 1 (9 campos) |
-| Organização do trabalho | 7 | 7 | 7 | **7\*** | `ACH-60` intocado: alocação por Etapa, distribuição sem filtro por polo ou modalidade. \*`[NÃO REAUDITADO]` A `031` acrescentou a exportação para o Registro Acadêmico |
-| Experiência do candidato | 8\* | 8\* | 8\* | **8\*** | \*`[NÃO REAUDITADO]` O Requerimento de Matrícula da `029` continua sem auditoria de UX |
-| Avaliação | 9 | 9 | 9 | **9** | Intocado, e continua sendo o melhor artefato do produto |
-| Resultado e publicação | 8 | 8 | 9 | **9** | `[UI]` O documento imprime os sete dados do método do sorteio e declara como a ordem nasce; o marco que sorteia parou de afirmar combinação de pontuações que não existe |
-| Recuperação de erros | 7 | 7 | 8 | **8** | O erro passa a aparecer **antes** da publicação — recuperação antes do dano, e publicação é ato imutável — e o 404 mudo fechou **nas portas**. Sete recusas fora delas seguem em 404: é por isso que não é 9 |
-| Visão global | 5 | 5 | 5 | **5** | `ACH-25` e os oito contadores concorrentes, intocados |
+> **A coluna *Pós-034+035* é projeção, e está justificada uma a uma na §13.** Ela lê requisito, e
+> não comportamento.
+
+| Dimensão | 16/09 | manhã | Proj. manhã | **Agora** | `[PROJ.]` pós-`034`+`035` | Justificativa do movimento até agora |
+|---|---|---|---|---|---|---|
+| Clareza conceitual | 7 | **9** | 9 | **9** | 9 | `[UI]` Os cinco conceitos ganharam definição no primeiro uso; a assimetria Etapa×marco está escrita na etapa de Classificação. A `032` levou *geração* a duas telas que não a usavam, e lá ela nasce definida. Sobra o rótulo `Peso (opcional)` que vira impeditivo |
+| Encontrabilidade | 7 | 7 | 7 | **8** | 8 | `[CÓDIGO]` Das três falhas nomeadas, **uma fechou**: *publicar resultado (sem caminho)* era o `ACH-40`. O **link do corte continua condicional** e o período de inscrições segue intocado — por isso 8 e não 9 |
+| Previsibilidade | 5 | **6** | 9 | **9** | 9 | Projeção confirmada. Os quatro achados de executabilidade entraram; cada um nomeia entidade, falta e a etapa em que a correção é feita |
+| **Fluxo ponta a ponta** | **4** | **4** | 6 | **6** | **8** | Projeção confirmada, **e por um motivo a mais do que se previu** — ver §7 |
+| Generalização entre famílias | 7 | 7 | 7 | **7** | 7 | O modelo não mudou. O custo de autoria caiu: num Edital de 7 polos o método do sorteio passou de 7 declarações (98 campos) a 1 (9 campos) |
+| Organização do trabalho | 7 | 7 | 7 | **7\*** | 7\* | `ACH-60` intocado: alocação por Etapa, distribuição sem filtro por polo ou modalidade. \*`[NÃO REAUDITADO]` A `031` acrescentou a exportação para o Registro Acadêmico |
+| Experiência do candidato | 8\* | 8\* | 8\* | **8\*** | 8\* | \*`[NÃO REAUDITADO]` O Requerimento de Matrícula da `029` continua sem auditoria de UX |
+| Avaliação | 9 | 9 | 9 | **9** | 9 | Intocado, e continua sendo o melhor artefato do produto |
+| Resultado e publicação | 8 | 8 | 9 | **9** | 9 | `[UI]` O documento imprime os sete dados do método do sorteio e declara como a ordem nasce; o marco que sorteia parou de afirmar combinação de pontuações que não existe |
+| Recuperação de erros | 7 | 7 | 8 | **8** | **9** | O erro passa a aparecer **antes** da publicação — recuperação antes do dano, e publicação é ato imutável — e o 404 mudo fechou **nas portas**. Sete recusas fora delas seguem em 404: é por isso que não é 9 |
+| Visão global | 5 | 5 | 5 | **5** | 5 | `ACH-25` e os oito contadores concorrentes, intocados |
 
 **Não se tira média.** 9 na avaliação e 6 no fluxo ponta a ponta convivem, e continua sendo essa a
 forma do produto — só que a distância entre as duas pontas encolheu pela primeira vez.
@@ -380,18 +395,22 @@ aberta é `ACH-43` — o julgador que decide sem a prova.
 
 ## 10. Os problemas estruturais
 
-| | Estado | Observação |
-|---|---|---|
-| **E-5** · a explicação desgrudou do campo | ✅ **resolvido** | `030` |
-| **E-7** · a validação não pergunta se o Edital é executável | ✅ **resolvido** | `032` — 3 dos 4 achados; `ACH-47` nomeado e deixado de fora por decisão |
-| **E-2** · autorização e navegação discordam | ✅ **resolvido, com ressalva** | `033` — `ACH-40`, `ACH-35` e `ACH-38` fechados; **sete recusas fora das portas mantêm a gramática antiga** (§8) |
-| **E-1** · a cauda do processo não fecha | 🟡 **parcial** | o cenário simples fecha; reserva (`ACH-47`) e sorteio (`ACH-51`/`ACH-55`) seguem |
-| **E-3** · duas gramáticas para o mesmo fato | 🔴 intocado | `ACH-39`, `ACH-31`, `ACH-45` |
-| **E-4** · fontes normativas que ninguém confronta | 🔴 intocado | `ACH-41`, `ACH-13`, `ACH-18` |
-| **E-6** · a visão global some com o Processo vivo | 🔴 intocado | `ACH-25` |
+| | Estado | `[PROJ.]` pós-`034`+`035` | Observação |
+|---|---|---|---|
+| **E-5** · a explicação desgrudou do campo | ✅ **resolvido** | ✅ | `030` |
+| **E-7** · a validação não pergunta se o Edital é executável | ✅ **resolvido** | ✅ | `032` — 3 dos 4 achados; `ACH-47` nomeado e deixado de fora por decisão |
+| **E-2** · autorização e navegação discordam | ✅ **resolvido, com ressalva** | ✅ | `033` — `ACH-40`, `ACH-35` e `ACH-38` fechados; **sete recusas fora das portas mantêm a gramática antiga** (§8) |
+| **E-1** · a cauda do processo não fecha | 🟡 **parcial** | **✅ resolvido** | o cenário simples fecha; reserva (`ACH-47`) e sorteio (`ACH-51`/`ACH-55`) seguem |
+| **E-3** · duas gramáticas para o mesmo fato | 🔴 intocado | 🔴 | `ACH-39`, `ACH-31`, `ACH-45` |
+| **E-4** · fontes normativas que ninguém confronta | 🔴 intocado | 🔴 | `ACH-41`, `ACH-13`, `ACH-18` |
+| **E-6** · a visão global some com o Processo vivo | 🔴 intocado | 🔴 | `ACH-25` |
 
 **Três de sete resolvidos** — um deles com ressalva registrada —, **um parcial, três intactos.** Eram
 dois de manhã, e um dos dois era projeção.
+
+`[PROJEÇÃO]` **Depois da `034` e da `035`, quatro de sete**, e o que fecha é o `E-1` — a cauda que não
+fechava, e que era metade do diagnóstico central. Os três que restam atravessaram cinco features sem
+serem tocados. Ver §13.
 
 ---
 
@@ -430,42 +449,128 @@ recursos 🟡 → resultado final 🟡 → convocação 🟡 → matrícula 🟢
 | **Matrícula** | — | — | **🟢\*** | \*`[NÃO REAUDITADO]` superfície nova, `029` + `031` |
 | Recurso | 🟡 | 🟡 | 🟡 | `ACH-43` intocado |
 
+`[PROJEÇÃO]` **Depois da `034` e da `035`**: a convocação vai de 🟡 a **🟢** — alcançável também pelo
+recorte reservado —, e o sorteio deixa de ser o fim da linha nos cenários 3 e 5. O **recurso**
+continua 🟡, e passa a ser o único trecho de modelo de fluxo ainda quebrado. Ver §13.
+
 ---
 
-## 13. O que evoluir de forma global
+## 13. `[PROJEÇÃO]` O que a `034` e a `035` fecham
+
+**Nada nesta seção é medição.** As duas são artefato — spec, plan, tasks, contratos —, e o que se diz
+aqui é leitura de requisito. A §7 mostra o que a projeção anterior valeu; esta fica registrada pelo
+mesmo motivo.
+
+### As duas, em uma frase cada
+
+| | O que fecha | Achados |
+|---|---|---|
+| **`034`** Ordem por recorte em marco computado | a reserva de vagas publicada passa a ter **via de apuração e de convocação** dentro do sistema | `ACH-47` (**S4 / P0**) |
+| **`035`** Sorteio executável | o método publicado passa a ser **declarável de um jeito que o motor leia** | `ACH-55` (S3), `ACH-51` |
+
+### O que elas fecham juntas: a cauda
+
+Os seis cenários da reauditoria pararam em **quatro** lugares. Os cenários **1 e 4** na convocação;
+os cenários **3 e 5** na execução do sorteio.
+
+**A `034` desbloqueia os dois primeiros. A `035`, os dois últimos.** É o problema estrutural `E-1`
+inteiro — *a cauda do certame não fecha* —, e ele era metade do diagnóstico central da auditoria.
+
+| Problema estrutural | Hoje | `[PROJ.]` pós |
+|---|---|---|
+| `E-5` a explicação desgrudou do campo | ✅ | ✅ |
+| `E-7` a validação não pergunta se é executável | ✅ | ✅ |
+| `E-2` autorização e navegação discordam | ✅ com ressalva | ✅ |
+| **`E-1` a cauda do processo não fecha** | 🟡 parcial | **✅ resolvido** |
+| `E-3` duas gramáticas para o mesmo fato | 🔴 | 🔴 |
+| `E-4` fontes normativas que ninguém confronta | 🔴 | 🔴 |
+| `E-6` a visão global some com o Processo vivo | 🔴 | 🔴 |
+
+**Quatro de sete.** No backlog, as linhas fechadas vão de **7 para 10** — `ACH-47`, `ACH-55` e
+`ACH-51` —, e os `P0` ficam em **4 fechados, 1 parcial e 1 aberto**, de **zero** em 16/09.
+
+### As duas notas que se movem, e por quê
+
+**Fluxo ponta a ponta, 6 → 8.** Os quatro cenários bloqueados destravam. Não vai a 9 porque o
+recurso continua sendo decidido sem a prova (`ACH-43`), e isso é modelo de fluxo, não microcópia.
+
+**Recuperação de erros, 8 → 9.** O beco da convocação fecha, e a mensagem que atribui à fonte externa
+uma falha da declaração sai. O que impede o 10 são as **sete recusas** fora das portas, que seguem
+respondendo "não encontrado" por decisão registrada (§8).
+
+**As outras nove não se movem**, e cinco delas estão exatamente onde a auditoria as deixou em 16/09.
+
+### O diagnóstico central deixa de valer
+
+A auditoria disse: *o sistema elabora e publica bem, e cede na condução do certame*. Depois das duas,
+**a condução fecha para as três famílias da amostra real** — pontuada com cota, sorteio com cota, e
+curso FIC.
+
+O que sobra **não é mais a cauda**. São bordas — a microcópia que cala, o link do corte que some, o
+`Peso (opcional)` que impede, o caminho da raiz pública para a gestão — e **duas coisas de porte**: o
+recurso que decide sem a prova, que passa a ser o último `P0`, e a **visão global**, que continua em
+**5** e passa a ser a nota mais baixa por margem larga.
+
+**O gargalo muda de lugar.** Hoje é a cauda; depois, é o painel de condução e o recurso.
+
+### Três ressalvas que não devem passar
+
+**1. A `035` faz o sorteio rodar no modelo do sistema — e os Editais reais não usam esse modelo.**
+Foram lidos quatro dos que sorteiam, da amostra real: **nenhum declara ocorrência de fonte externa**;
+todos publicam a semente **depois**, para auditoria. O critério da `035` fecha com um Edital
+**composto no sistema**. Se o Cefor não passar a declarar a ocorrência, a família real continua sem
+representação fiel — e a diferença entre *"o sorteio funciona"* e *"o sorteio do Cefor funciona"* é
+uma pergunta de governança que a `035` registrou e não respondeu.
+
+**2. Resultado e publicação fica em 9, e quase seria 10.** Com a `032` levando o método ao documento
+e a `035` tornando-o executável, a **verificação pública** passa a fechar: um terceiro reimplementa a
+partir do publicado e confere a ordem. É o que a `021` desenhou e nunca foi executado. Fica em 9
+porque isso é projeção, e só o percurso prova.
+
+**3. A `034` tem um portão que pode mudar o desenho.** Se a reconfirmação da superfície encontrar
+derivação ou recusa fora do medido, o escopo reabre. Esta projeção supõe que ele fecha limpo.
+
+---
+
+## 14. O que evoluir de forma global
 
 **O produto parou de entortar.** A elaboração continua excelente, e a condução andou pela primeira
-vez desde a auditoria. O que sobrou não é mais um problema de navegação — é o **ato do fim** para
-dois dos cinco cenários.
+vez desde a auditoria.
+
+**As duas primeiras prioridades desta lista viraram spec no mesmo dia** — a `034` e a `035` —, e a
+§13 projeta o que elas fecham. O que segue é a lista **depois** delas, e a mudança mais importante é
+que o topo dela não é mais a cauda.
 
 Na ordem em que eu investiria:
 
-**1. Emissão de ordem por lista em marco computado (`ACH-47`).** Passou a ser o gargalo nº 1, e a
-`032` o deixou explícito na tela: hoje se lê *"a apuração deste recorte acontece fora do sistema"*.
-Três Editais da amostra real dependem disso, a decisão de governança já está tomada, e a admissão
-escrita é um custo que só se paga uma vez.
+**1. O ato de instrução do recurso (`ACH-43`, `ACH-42`).** Passa a ser o **último `P0`**, e é o único
+trecho de modelo de fluxo que continua quebrado: o julgador decide sem a prova, e o parecer não chega
+ao candidato. Com a cauda fechada, é o que resta entre *"o certame corre"* e *"o certame corre por
+inteiro"*.
 
-**2. Sorteio executável (`ACH-55` + `ACH-51`).** Fecha os cenários 3 e 5 de uma vez. A `032` levou o
-método ao documento; sem estes dois, o documento descreve um sorteio que não roda — a derivação da
-ocorrência não é computável e a fonte da semente é texto livre onde o valor é criado.
+**2. O painel de condução do Processo vivo (`E-6`).** A **visão global continua em 5**, e passa a ser
+a nota mais baixa por margem larga. O sistema já calcula todos os estados; eles só não estão
+reunidos — e é exatamente quando o certame passa a correr de ponta a ponta que a falta dói mais.
+Três features atravessaram este relatório sem tocá-la.
 
-**3. O resto da 13.1 e os dois "peça a alguém" que sobraram.** É a única coisa barata da lista: o
-link do corte deixar de sumir, e duas frases. Meio dia de trabalho contra dois achados P1 e um
-trecho 🟡 da jornada.
+**3. O pacote de microcópia e navegação.** Barato e represado: o link do corte que continua sumindo —
+a parte **(c)** da melhoria 13.1, a única que ficou —, mais `ACH-02`, `ACH-30`, `ACH-08` e `ACH-16`.
+Quatro linhas do backlog, meio dia, e nenhuma delas depende de outra coisa.
 
-**4. As sete recusas do inventário (§8).** Não como correção automática — três contradizem a `022`
-por identificador, e `mesa._autorizar` tem argumento próprio a favor do 404 uniforme. Como **spec que
-decide**, com o inventário pronto servindo de entrada. O detector garante que a lista não cresce em
-silêncio; não garante que ela encolha.
+**4. As sete recusas do inventário (§8).** Como spec que **decide**, com o inventário pronto servindo
+de entrada — três delas contradizem a `022` por identificador, e uma tem argumento próprio a favor do
+404 uniforme.
 
-**5. Validação cruzada entre fontes normativas (`E-4`).** Ataca uma classe inteira de contradições
-silenciosas, e não um caso. É a irmã natural da `032`: mesma tela, mesma família de achados.
+**5. A validação cruzada entre fontes normativas (`E-4`).** Ataca uma classe inteira de contradições
+silenciosas.
 
-**6. Painel de condução do Processo vivo (`E-6`).** O sistema já calcula todos os estados; eles só
-não estão reunidos.
+**6. A derivação de recortes do sorteio.** Achado registrado pela `034`, e a razão de ele não estar
+mais acima é a que a decisão dela nomeia: a `021` tem relações publicadas, verificadores e **cadeias
+históricas** por lista, e retirar o recorte excedente obriga a definir como os atos já emitidos nele
+continuam alcançáveis.
 
-**O que eu não faria agora:** o renderizador normativo único das telas de ato (`E-3`) e a instrução
-do recurso (`ACH-43`/`ACH-42`). Os dois são legítimos e os dois são menos urgentes que a cauda.
+**O que eu não faria agora:** o renderizador normativo único das telas de ato (`E-3`). Continua
+legítimo e continua menos urgente que tudo acima.
 
 ### Uma decisão de governança que continua aberta
 
@@ -482,15 +587,15 @@ governança, e fica registrada aqui como tal pela segunda vez.
 
 ---
 
-## 14. Para a próxima spec
+## 15. Para a próxima spec
 
-| Item | Valor medido em 18/09/2026, depois da `033` |
+| Item | Valor medido em 18/09/2026, depois da `035` |
 |---|---|
-| Teto de `FR-` em todas as worktrees | **FR-489** |
-| Teto de `SC-` em todas as worktrees | **SC-168** |
-| Teto de `UX-` | **UX-061** |
-| Próxima faixa livre | **FR-490**, **SC-169**, **UX-062** |
-| Próxima pasta livre | `specs/034-…` |
+| Teto de `FR-` em todas as worktrees | **FR-521** |
+| Teto de `SC-` em todas as worktrees | **SC-181** |
+| Teto de `UX-` | **UX-061** — nem a `034` nem a `035` abriram `UX-` |
+| Próxima faixa livre | **FR-522**, **SC-182**, **UX-062** |
+| Próxima pasta livre | `specs/036-…` |
 
 **Meça de novo na hora de escrever.** O teto acima vale para o instante desta medição, e este projeto
 já produziu **duas** colisões de faixa por medir só a árvore local — a `030` contra a `029`, e a `032`
@@ -510,7 +615,7 @@ colisão: ele resolve contra a união das specs, não contra a unicidade delas.
 
 ---
 
-## 15. Fechamento — a pergunta que governa
+## 16. Fechamento — a pergunta que governa
 
 **O que mudou na resposta.** Uma pessoa que chega hoje ao sistema compõe o marco classificatório sem
 precisar dominar o modelo interno; é avisada, **na etapa em que decide**, de que um Edital sem regra
@@ -525,5 +630,14 @@ não fecham.
 **A resposta à pergunta que governa deixou de ser *"quase, e trava na cauda"*.** Hoje é: **sim, para
 o Edital simples, do começo ao fim, por quem tem a permissão de cada ato; ainda não, para cota e para
 sorteio.**
+
+`[PROJEÇÃO]` **E as duas que faltam estão especificadas.** Depois da `034` e da `035`, a resposta
+passa a ser **sim para as três famílias da amostra real** — pontuada com cota, sorteio com cota e
+curso FIC —, com duas ressalvas que a §13 desenvolve: o recurso continua sendo decidido sem a prova,
+e o sorteio roda **no modelo do sistema**, que não é o que os Editais correntes do Cefor declaram.
+
+**A pergunta seguinte já não é sobre a cauda.** É se quem conduz um Processo vivo consegue ver onde
+ele está — a visão global continua em **5**, e é a última nota que a auditoria deu e que nenhuma
+feature tocou.
 
 Essa é a próxima linha de base.
