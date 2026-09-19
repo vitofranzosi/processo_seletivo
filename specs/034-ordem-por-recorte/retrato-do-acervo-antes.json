@@ -1,0 +1,148 @@
+{
+  "censoDosDegraus": {
+    "DEGRAUS": 2,
+    "DEGRAUS_DA_RAIZ": 3,
+    "DEGRAUS_DE_DOCUMENTO": 1,
+    "DEGRAUS_DE_EVENTO": 1,
+    "DEGRAUS_DE_MARCO": 3,
+    "DEGRAUS_DE_PERFIL": 5
+  },
+  "contagens": {
+    "documentos": 7,
+    "publicacoes": 7,
+    "versoesConsolidadas": 7
+  },
+  "documentos": [
+    {
+      "documentHash": "de36e199532a6089a173e484e57ed9be6e45d2bc442b42f6b94ba71ac419b309",
+      "id": "3d8b8b78-daad-4c07-a164-3393181998bd",
+      "publicacao": "f2a4bad7-052d-4d01-935e-724c2d443053",
+      "resumoDosBytes": "de36e199532a6089a173e484e57ed9be6e45d2bc442b42f6b94ba71ac419b309"
+    },
+    {
+      "documentHash": "dce6a775b7285da3262897545b903e552364cfb01c94d283678e5369c3875cc5",
+      "id": "7a9d64d3-468e-4169-8414-1659510f4dd5",
+      "publicacao": "2c3eb015-b897-41a2-a93e-55c9e4c86f55",
+      "resumoDosBytes": "dce6a775b7285da3262897545b903e552364cfb01c94d283678e5369c3875cc5"
+    },
+    {
+      "documentHash": "b78244995827115d89b9b2ae70d3ae6111b84c146fb9102e911d76fa5bdb9d21",
+      "id": "9ef3c63b-8c64-4bd5-bf20-e5fe2111a506",
+      "publicacao": "4a5926ad-e3aa-4960-8979-6e21803790f9",
+      "resumoDosBytes": "b78244995827115d89b9b2ae70d3ae6111b84c146fb9102e911d76fa5bdb9d21"
+    },
+    {
+      "documentHash": "49480976cf80fe7fd0ec5aa18c5754d52420eefcd98c8ec5162ce41ff2ac6bfa",
+      "id": "cbc2a22c-93cc-423e-9894-1b10e887ff67",
+      "publicacao": "f010a812-9168-4559-9aa2-1136fb2f400a",
+      "resumoDosBytes": "49480976cf80fe7fd0ec5aa18c5754d52420eefcd98c8ec5162ce41ff2ac6bfa"
+    },
+    {
+      "documentHash": "9bf01c1884f9e0419737ac492efb9482a5e691cbba3191ec20580e73931e03ad",
+      "id": "d96519a0-a635-4a4b-8841-6c9fff536f58",
+      "publicacao": "d5cac4a9-b1a0-477c-b88f-a79c4c7cb571",
+      "resumoDosBytes": "9bf01c1884f9e0419737ac492efb9482a5e691cbba3191ec20580e73931e03ad"
+    },
+    {
+      "documentHash": "eba642f7d27adf095cd6db94ce59f74d0dda09a05298c6de694c49ad90a57005",
+      "id": "e828db5e-d9e1-4d44-9954-60f6e912df44",
+      "publicacao": "bebeb6cf-1bc1-4d50-af1b-b62d1be4c6fb",
+      "resumoDosBytes": "eba642f7d27adf095cd6db94ce59f74d0dda09a05298c6de694c49ad90a57005"
+    },
+    {
+      "documentHash": "9063b4de4d294f2b0d1fa1670b7659a2392d3ea41d2503b7c17d1590c37ae036",
+      "id": "ec82f350-46d2-421a-b6a8-fe8bd1559038",
+      "publicacao": "16928bd8-c357-43c4-bb7e-ce5c42a6a1b6",
+      "resumoDosBytes": "9063b4de4d294f2b0d1fa1670b7659a2392d3ea41d2503b7c17d1590c37ae036"
+    }
+  ],
+  "publicacoes": [
+    {
+      "contentHash": "f2649a4a59e57e427034fcf4d0a04989df75f71a687780c4254653794df10c5e",
+      "id": "16928bd8-c357-43c4-bb7e-ce5c42a6a1b6",
+      "ordem": 2,
+      "resumoDoCanonico": "f2649a4a59e57e427034fcf4d0a04989df75f71a687780c4254653794df10c5e",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "2bced30f5045d1ce5d6637567d334ba134e3cd5a192d155ec3f64b67ab38c292",
+      "id": "2c3eb015-b897-41a2-a93e-55c9e4c86f55",
+      "ordem": 1,
+      "resumoDoCanonico": "2bced30f5045d1ce5d6637567d334ba134e3cd5a192d155ec3f64b67ab38c292",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "d721c085ef9d6bd6a878b847710c759c648eead804b5be2207441ce087a08daf",
+      "id": "4a5926ad-e3aa-4960-8979-6e21803790f9",
+      "ordem": 2,
+      "resumoDoCanonico": "d721c085ef9d6bd6a878b847710c759c648eead804b5be2207441ce087a08daf",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "dd6eac0fb5c05c006aed9752da7c1d04556dda83a963b8c797a44fe884c7a6ca",
+      "id": "bebeb6cf-1bc1-4d50-af1b-b62d1be4c6fb",
+      "ordem": 2,
+      "resumoDoCanonico": "dd6eac0fb5c05c006aed9752da7c1d04556dda83a963b8c797a44fe884c7a6ca",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "59a3bd626048ed27d3142c847b7a32cba117fa1b6d2749e9af2cbad3916ad53c",
+      "id": "d5cac4a9-b1a0-477c-b88f-a79c4c7cb571",
+      "ordem": 1,
+      "resumoDoCanonico": "59a3bd626048ed27d3142c847b7a32cba117fa1b6d2749e9af2cbad3916ad53c",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "3e414e2f0caabb910fc5c5e92810dfbb84a7e56e200f3f6b5adb7221fde1a1ba",
+      "id": "f010a812-9168-4559-9aa2-1136fb2f400a",
+      "ordem": 1,
+      "resumoDoCanonico": "3e414e2f0caabb910fc5c5e92810dfbb84a7e56e200f3f6b5adb7221fde1a1ba",
+      "schemaCanonico": 16
+    },
+    {
+      "contentHash": "d011c7e49f0e6947f1b470008163aef04c343b3d20d7478daef1d7b794df1a3c",
+      "id": "f2a4bad7-052d-4d01-935e-724c2d443053",
+      "ordem": 3,
+      "resumoDoCanonico": "d011c7e49f0e6947f1b470008163aef04c343b3d20d7478daef1d7b794df1a3c",
+      "schemaCanonico": 16
+    }
+  ],
+  "schemaVersion": 16,
+  "versoesConsolidadas": [
+    {
+      "contentHash": "dd6eac0fb5c05c006aed9752da7c1d04556dda83a963b8c797a44fe884c7a6ca",
+      "id": "0e88f6f6-0362-46fb-81d8-3179d03426e4",
+      "resumoDoCanonico": "dd6eac0fb5c05c006aed9752da7c1d04556dda83a963b8c797a44fe884c7a6ca"
+    },
+    {
+      "contentHash": "59a3bd626048ed27d3142c847b7a32cba117fa1b6d2749e9af2cbad3916ad53c",
+      "id": "6ec0b791-2b4a-48a6-b503-f6beea9d3492",
+      "resumoDoCanonico": "59a3bd626048ed27d3142c847b7a32cba117fa1b6d2749e9af2cbad3916ad53c"
+    },
+    {
+      "contentHash": "3e414e2f0caabb910fc5c5e92810dfbb84a7e56e200f3f6b5adb7221fde1a1ba",
+      "id": "7aeb34a1-8517-424d-98cf-d4bb80ee4f54",
+      "resumoDoCanonico": "3e414e2f0caabb910fc5c5e92810dfbb84a7e56e200f3f6b5adb7221fde1a1ba"
+    },
+    {
+      "contentHash": "d721c085ef9d6bd6a878b847710c759c648eead804b5be2207441ce087a08daf",
+      "id": "8bb3aaf2-4cf1-4174-9332-daab56b2a713",
+      "resumoDoCanonico": "d721c085ef9d6bd6a878b847710c759c648eead804b5be2207441ce087a08daf"
+    },
+    {
+      "contentHash": "2bced30f5045d1ce5d6637567d334ba134e3cd5a192d155ec3f64b67ab38c292",
+      "id": "9a4f31cc-d3bd-4c1f-a165-ecfb75223e9c",
+      "resumoDoCanonico": "2bced30f5045d1ce5d6637567d334ba134e3cd5a192d155ec3f64b67ab38c292"
+    },
+    {
+      "contentHash": "f2649a4a59e57e427034fcf4d0a04989df75f71a687780c4254653794df10c5e",
+      "id": "a3e9fe1f-3083-4ff7-b049-f38ffba9da64",
+      "resumoDoCanonico": "f2649a4a59e57e427034fcf4d0a04989df75f71a687780c4254653794df10c5e"
+    },
+    {
+      "contentHash": "d011c7e49f0e6947f1b470008163aef04c343b3d20d7478daef1d7b794df1a3c",
+      "id": "fc958798-2a36-4b27-8da9-80081a3886d6",
+      "resumoDoCanonico": "d011c7e49f0e6947f1b470008163aef04c343b3d20d7478daef1d7b794df1a3c"
+    }
+  ]
+}
