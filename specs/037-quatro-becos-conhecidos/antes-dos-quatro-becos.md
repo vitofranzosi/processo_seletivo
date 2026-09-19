@@ -24,15 +24,20 @@ $ cd backend && make test-pg
 Papéis provisionados. 32 de 32 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
 ```
 
-> **Correção — a atribuição do portão estava errada, e a medição a desfez.** O segundo portão do
-> `tasks.md` manda conferir `N de 32` dizendo que *"a 32ª veio da `036`, que já está na `main`"*.
-> **Não estava.** A `036` entrou na `main` em `0c96283`, **depois** desta base `23bf70e`, e é ela
-> que traz a **33ª** — `recursos/0002_ato_de_instrucao`. O número certo é: **32 sem a `036`, 33 com
-> ela**. Medido nos dois estados, e não herdado.
+> **Por que 32, e não 33.** Esta base **não tinha a `036`**: ela entrou na `main` em `0c96283`,
+> depois de `23bf70e`, e é ela que traz a **33ª** tabela — `recursos/0002_ato_de_instrucao`. Os
+> números são **32 sem a `036`** e **33 com ela**, medidos nos dois estados.
 >
-> A conferência que o portão quer continua valendo, com o total corrigido: esta feature **não tem
-> migration**, e depois de integrar a `main` o `make preparar` fecha em `33 de 33` — o mesmo que a
-> `main` sozinha fecha. Nenhuma tabela nasceu aqui.
+> O portão 2 do `tasks.md` dizia `N de 32` atribuindo a 32ª à `036`, e a atribuição era falsa nas
+> duas metades. **Ele já foi corrigido na `main` pela [#145]**, que mediu contra o banco e reescreveu
+> a linha inteira — inclusive o que este registro não sabia: o total **já era 32 antes** da `036`,
+> porque a `research.md` dela dizia 31 e a medição do "antes" dela corrigiu para 32.
+>
+> A conferência que o portão quer continua valendo: esta feature **não tem migration**, e depois de
+> integrar a `main` o `make preparar` fecha em `33 de 33` — o mesmo que a `main` sozinha fecha.
+> Nenhuma tabela nasceu aqui.
+
+[#145]: https://github.com/vitofranzosi/processo_seletivo/pull/145
 
 **Este "antes" foi medido na base `23bf70e`, sem a `036`.** A contagem da suíte abaixo é, portanto,
 a da branch isolada; a comparação que vale para o PR é contra a `main` integrada, e está na
