@@ -218,12 +218,25 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # marco do acervo carrega `cutRule` nulo, e é exatamente esse o caso que a tela precisa
         # deixar de oferecer.
         "faixaDisponivel": bool(marco and marco.get("cutRule")),
-        # **`apuravel` foi removido, e a ausência é a notícia** (034, `FR-501a`). Ele era falso
-        # no recorte reservado de marco computado, porque um ato computado emitia uma lista só; a
-        # `034` fez a ordem por recorte existir, e o predicado que o derivava passou a responder
-        # sempre "sim". Guarda que nunca reprova é pior do que guarda nenhum: o próximo a ler o
-        # código confia nele. Quem quiser saber se há o que apurar pergunta pela ordem vigente
-        # daquele recorte, que é a regra real — e é o que a apuração já faz ao recusar.
+        # **`temOrdem` é o guarda que `apuravel` deixou de ser** (034, `FR-501a`, `FR-502`,
+        # `SC-170`). Não é o mesmo campo com outro nome, e a diferença é a razão de este existir:
+        #
+        # `apuravel` perguntava *"este marco emite ordem neste recorte?"* — propriedade **normativa
+        # do marco**, que deixou de variar quando o computado passou a emitir por recorte, e por
+        # isso foi removido. `temOrdem` pergunta *"existe ordem vigente neste recorte, agora?"* —
+        # **estado do certame**, que varia o tempo todo: ele é falso no recorte reservado enquanto
+        # ninguém emitiu a ordem dele, e passa a verdadeiro no instante em que emitem.
+        #
+        # **Remover um e não pôr o outro foi um defeito real, e ele chegou a existir.** Entre a
+        # remoção de `apuravel` e esta linha, a tela ofereceu "Apurar a ocupação deste recorte" em
+        # recorte sem ordem, e o comando recusava com `ordem_nao_vigente` (409) — que é exatamente
+        # a ação que sempre falha que a `SC-170` proíbe, reintroduzida pela feature que existe para
+        # eliminá-la. O teste que a cobria contava botões e não exercitava o clique.
+        #
+        # **A regra real continua morando na emissão**, e este campo a lê pela mesma porta que ela
+        # usa — `ato_vigente` do recorte —, e não por um predicado paralelo. Uma leitura por
+        # recorte, que é o mesmo custo que `recortes_do_marco` já declara aceitar.
+        "temOrdem": ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id) is not None,
     }
 
 

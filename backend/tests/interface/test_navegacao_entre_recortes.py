@@ -302,3 +302,71 @@ def test_o_historico_da_tela_e_o_do_recorte_e_nao_o_do_marco(
     historico = re.search(r'<section aria-labelledby="titulo-historico".*?</section>', do_ppi, re.S)
     assert historico is not None
     assert historico.group(0).count("<li>") == 1, "um ato — o deste recorte, e não os três"
+
+
+# --- A confirmação não troca de recorte pelo caminho (034, FR-490, FR-497) ----------------------
+#
+# **Os três casos abaixo vieram de revisão, e não de spec.** Uma tela de confirmação de ato
+# imutável que perde o recorte no caminho de volta, ou que afirma ser o primeiro ato do marco
+# quando é o primeiro daquele recorte, não produz erro nenhum: produz uma pessoa decidindo sobre
+# outra coisa. É o mesmo defeito silencioso que a `FR-502` descreve, entrando pela porta do texto.
+
+
+def confirmar(client, edital, *, lista=None):
+    """O primeiro passo da emissão: o POST sem `confirmar=1`, que devolve a tela de conferência."""
+    dados = {"chave_idempotencia": "navegacao-034-confirmar"}
+    if lista:
+        dados["lista"] = lista
+    return client.post(reverse("interface:emitir-ordenacao", args=[edital.id, MARCO]), dados)
+
+
+def test_a_confirmacao_volta_para_o_recorte_que_se_esta_confirmando(
+    client, seletor_ligado, cenario
+):
+    """Cancelar numa conferência de PPI não pode devolver a pessoa à ampla concorrência.
+
+    A tela que abriria seria **legítima** — uma ordem verdadeira, de um recorte verdadeiro —, e é
+    isso que torna o desvio silencioso: nada avisa que se trocou de lista.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = confirmar(client, edital, lista=MODALIDADE_PPI).content.decode()
+
+    destino = reverse("interface:ordenacao", args=[edital.id, MARCO])
+    assert pagina.count(f'href="{destino}?lista={MODALIDADE_PPI}"') == 2, (
+        "a trilha e o «Cancelar e voltar», os dois preservando o recorte"
+    )
+    assert f'href="{destino}"' not in pagina, "e nenhum dos dois cai na ampla"
+
+
+def test_a_confirmacao_do_recorte_novo_nao_diz_ser_o_primeiro_ato_do_marco(
+    client, seletor_ligado, cenario
+):
+    """`FR-490`: o vigente é lido por recorte, e a frase tem de acompanhar.
+
+    O marco já tem a ordem da ampla — o cenário a emite. Ao confirmar a primeira ordem de PPI,
+    `ato_vigente` vem vazio **porque é vazio naquele recorte**, e dizer "primeiro ato deste marco"
+    afirmaria, numa confirmação de ato imutável, que o marco não tem ato nenhum.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = confirmar(client, edital, lista=MODALIDADE_PPI).content.decode()
+
+    assert "é o primeiro ato deste recorte" in pagina
+    assert "primeiro ato deste marco" not in pagina
+
+
+def test_o_historico_do_recorte_nomeia_a_raiz_como_do_recorte(
+    client, seletor_ligado, cenario, gestor
+):
+    """A mesma frase, na tela que fica: a raiz listada é a daquela cadeia, e não a do marco."""
+    edital, _, _ = cenario
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="navegacao-034-raiz")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital, lista=MODALIDADE_PPI).content.decode()
+
+    assert "primeiro ato deste recorte" in pagina
+    assert "primeiro ato do marco" not in pagina

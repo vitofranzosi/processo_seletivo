@@ -277,9 +277,14 @@ ela vem da composição da comissão. Peça a quem tem a permissão, ou a quem p
 {% endif %}
 
 {% if historico %}
+{% comment %}
+O histórico é **do recorte**, e a frase de fecho também (034, FR-490). A lista já vem filtrada pela
+view — três cadeias num histórico só mostrariam três raízes como se fossem uma —, e "primeiro ato do
+marco" mentiria sobre a raiz de uma cota emitida depois da ampla.
+{% endcomment %}
 <section aria-labelledby="titulo-historico">
-  <h2 id="titulo-historico">Histórico de atos</h2>
-  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {{ ato.emitido_por }}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato do marco{% endif %}</li>{% endfor %}</ol>
+  <h2 id="titulo-historico">Histórico de atos{% if recorte_atual %} — {{ recorte_atual.rotulo }}{% endif %}</h2>
+  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {{ ato.emitido_por }}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato deste recorte{% endif %}</li>{% endfor %}</ol>
 </section>
 {% endif %}
 {% endblock %}

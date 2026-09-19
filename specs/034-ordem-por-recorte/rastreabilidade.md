@@ -14,10 +14,10 @@ que afirma, e a suíte fica verde do mesmo jeito.
 | **FR-491** — derivação única | `editais/domain/recortes.py` (**novo**), consumido por `ocupacao/application/selectors.py` e pela classificação | `test_recortes_do_marco.py::test_a_classificacao_e_a_ocupacao_derivam_a_mesma_lista` |
 | **FR-491a** — a divergência do sorteio é registrada, não corrigida | nada em código: registro em [inventario-dos-recortes.md](inventario-dos-recortes.md) | a ausência de mudança em `sorteios/` é o próprio cumprimento; `git diff --stat` não toca o módulo |
 | **FR-492** — universo do recorte, e o autodeclarado fica nas duas listas | `calculo.py`, o `filter(modality_id=...)` que só o recorte reservado aplica | `test_universo_do_recorte.py`, seis casos |
-| **FR-492a** — ordem vazia emitível, nunca automática | `emissao.py` (nenhuma guarda de universo vazio) e `ordenacao.html` (a frase "Ninguém concorreu por este recorte") | `test_ordem_por_recorte.py::test_recorte_sem_autodeclarado_admite_ordem_vazia_emitida`, `::test_a_ordem_vazia_nunca_e_automatica`; `test_navegacao_entre_recortes.py::test_o_recorte_sem_autodeclarado_diz_que_ninguem_concorreu` |
+| **FR-492a** — ordem vazia emitível, nunca automática | `emissao.py` (nenhuma guarda de universo vazio) e `ordenacao.html` (a frase "Ninguém concorreu por este recorte") | `test_ordem_por_recorte.py::test_recorte_sem_autodeclarado_admite_ordem_vazia_emitida`, `::test_a_ordem_vazia_nunca_e_automatica`; `test_navegacao_entre_recortes.py::test_o_recorte_sem_autodeclarado_diz_que_ninguem_concorreu`; **percurso, cenário 5.1 — Edital 35/2026** |
 | **FR-493** — a ampla não muda | `calculo.py`: o filtro só existe quando há recorte; o padrão é o de antes | `test_ordem_sem_reserva_nao_muda.py`, quatro casos; percurso, contraprova do cenário 1 |
 | **FR-494** — emitir num recorte não constitui ato sobre os outros | o `lista_id` no filtro do vigente e as duas `UniqueConstraint` da `021` | `test_ordem_por_recorte.py::test_emitir_no_recorte_reservado_nao_toca_a_ordem_da_ampla`, `::test_suceder_num_recorte_nao_obsoleta_os_outros`, `::test_a_mesma_chave_de_idempotencia_nao_serve_a_dois_recortes` |
-| **FR-494a** — Modalidade acrescentada depois não obsoleta a ampla | consequência da cadeia por recorte; nenhuma linha própria | `test_ordem_por_recorte.py::test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla` |
+| **FR-494a** — Modalidade acrescentada depois não obsoleta a ampla | consequência da cadeia por recorte; nenhuma linha própria | `test_ordem_por_recorte.py::test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla`; **percurso, cenário 5.2 na metade que a interface alcança** — ver abaixo |
 | **FR-495** — confirmação do recorte | `assinatura_da_proposta` passou a incluir `"recorte"` | `test_ordem_por_recorte.py::test_confirmar_num_recorte_e_emitir_no_outro_e_recusado`, `::test_dois_recortes_vazios_do_mesmo_marco_nao_compartilham_confirmacao` |
 | **FR-496** — abrir a tela não constitui ato | `calcular_ordem` continua fora do comando transacional | `test_ordem_por_recorte.py::test_ler_os_tres_recortes_repetidamente_nao_constitui_ato`, `::test_a_leitura_do_recorte_sem_ordem_nao_cria_ato_vazio` |
 | **FR-497** — as telas nomeiam o recorte e oferecem os outros | `interface/views.py::_recortes_navegaveis` e `::_navegacao_do_recorte`; `ordenacao.html` e `corte.html` | `test_navegacao_entre_recortes.py`, seis casos — entre eles `::test_as_duas_telas_nomeiam_o_recorte_em_que_se_esta` |
@@ -58,6 +58,48 @@ A quarta — **nenhuma migration** — é a `SC-175`, e quem a prova é `manage.
 | **SC-173** — o acervo atravessa sem mudar conteúdo, resumo nem documento | retrato exportado antes da primeira edição (`T002`) e de novo ao fim (`T043`) | **cumprido — os dois retratos são idênticos**, campo a campo: 7 publicações, 7 documentos, 7 versões consolidadas, `schemaVersion` 16, 15 degraus de elevação |
 | **SC-174** — nenhum aviso da família dispara sobre recorte que ganhou via | [varredura-da-amostra.md](varredura-da-amostra.md) | **cumprido** |
 | **SC-175** — nenhuma migration | `make check` | **cumprido** |
+
+### O cenário 5, percorrido — e a metade que a interface não alcança
+
+**5.1 — o recorte em que ninguém concorreu: percorrido.** O Edital 35/2026 foi composto por
+reaproveitamento do 34/2026, com o mesmo quadro 7/1/2, publicado **sem receber inscrição alguma**. A
+tela do recorte de PcD diz *"Ninguém concorreu por este recorte… a ordem vazia é um fato normativo,
+e emiti-la declara que ninguém concorreu ali. Emitir continua sendo ato seu — nada foi constituído
+automaticamente"*, e a seção da ordem diz *"Nenhuma inscrição se autodeclarou nesta Modalidade de
+Concorrência"* em vez de parecer pendência. A ordem vazia foi então **emitida pela interface**: a
+confirmação declarou zero participantes com posição, e o ato nasceu. `FR-492a` cumprida por percurso.
+
+**5.2 — a Modalidade que chega depois: inexequível pela interface, e a metade que resta foi
+percorrida.** A tela de Retificação **não acrescenta Modalidade de Concorrência** — ela acrescenta
+Perfil, linha do quadro, Evento e Anexo, e cada Modalidade existente só oferece "Remover do Edital".
+O registro da medição está em
+[achado-percurso-ampla-sem-inscricao.md](achado-percurso-ampla-sem-inscricao.md).
+
+O que foi percorrido é a regra que a `FR-494a` protege, pela Retificação que a interface permite:
+com **as três ordens já emitidas**, o Quadro de Vagas do Edital 34/2026 foi retificado — a linha de
+PPI de 2 para 3, e o total do Perfil de 10 para 11 — e a Retificação foi publicada. O resultado:
+
+| O que se olhou | O que aconteceu |
+|---|---|
+| ordem da ampla | **continua vigente**, emitida 22:29, sem aviso de obsolescência |
+| ordem de PPI | **continua vigente**, emitida 22:30, sem aviso sobre ela |
+| ordem de PcD | **continua vigente**, sem aviso |
+| corte de PPI | **ficou obsoleto** — *"a linha do quadro de vagas de onde este corte tirou o alvo mudou"* |
+| corte de PcD e da ampla | **intactos** |
+
+**É a `FR-494a` e a `FR-494` de uma vez.** A Retificação do quadro não obsoleta ordem nenhuma — o
+que ela alcança é a cauda, que é o que a `FR-494a` antecipa por escrito ("o que pode ficar obsoleto
+é a apuração da ocupação, porque o Quadro de Vagas mudou de números") —, e a obsolescência **não
+atravessou** para os outros dois recortes, embora a Retificação seja do mesmo Perfil e do mesmo
+marco.
+
+**O que não foi demonstrado, e fica dito:** que o recorte **novo** nasce sem ordem. Ele depende de
+criar uma Modalidade por Retificação, e a interface não o faz. A regra está prendida por
+`test_ordem_por_recorte.py::test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla`.
+
+**5.3 — o Edital que emitiu antes desta feature: percorrido**, no passo 4 do cenário 1. A tela do
+recorte sem ordem própria explica a ordem única do marco, oferece consultá-la e não oferece
+correção nenhuma.
 
 ### A ressalva do `SC-169`, dita inteira
 
@@ -146,6 +188,54 @@ por quê.
    `cutGovernedStage`, `cutSurplusCount` e `cutContinuation`. Só `cutTieOutcome` aparece. Corrigir a
    Etapa governada de um marco publicado, portanto, não tem caminho pela interface. Foi o que impediu
    o percurso de exercitar a convocação para vaga inicial.
+
+---
+
+## O que a revisão de código pegou, e o que cada coisa custou
+
+**Quatro achados, e o primeiro era da própria promessa da feature.**
+
+### O botão que voltou a sempre falhar — e a lição sobre a `FR-501a`
+
+A `032` guardava a ação de apurar com o campo `apuravel`, derivado do predicado
+`emite_ordem_no_recorte`. A `FR-501a` mandou remover o predicado **porque ele deixou de variar**, e
+a remoção estava certa. **O que estava errado foi não pôr nada no lugar**: a condição que a tela
+passou a usar — quem pode emitir, e recorte com linha no quadro — não pergunta o que a apuração
+exige, que é **ordem vigente naquele recorte**.
+
+O resultado foi a `SC-170` violada pela feature que existe para cumpri-la: num certame com as ordens
+reservadas ainda não emitidas, a tela oferecia os três botões e dois recusavam com
+`ordem_nao_vigente` (409). Medido por reprodução antes de corrigir: **3 botões oferecidos, 1 com
+ordem**.
+
+**O teste que devia ter pego contava botões e nunca clicava.** Ele afirmava
+`count("Apurar a ocupação deste recorte") == 2` sobre um cenário em que só a ampla tinha ordem — a
+asserção era verdadeira, o produto estava errado, e a suíte ficava verde. É exatamente o defeito
+contra o qual a `T045` adverte, cometido dentro da feature que a escreveu.
+
+**A correção** é `temOrdem` no selector, e ele **não é `apuravel` renomeado**: `apuravel` perguntava
+se o **marco** emite ordem naquele recorte — propriedade normativa, que deixou de variar —, e
+`temOrdem` pergunta se **existe ordem vigente ali agora** — estado do certame, que varia o tempo
+todo. Onde não há, a tela mostra a razão e o caminho para emiti-la, que é a `FR-498` aplicada à
+outra tela.
+
+**Os três casos que a prendem** estão em `test_ocupacao.py`, e um deles **pratica o POST**:
+`…com_ordem_emitida_oferece_apuracao_e_ela_conclui`,
+`…sem_ordem_nao_oferece_apuracao_e_diz_onde_emiti_la` e
+`…a_acao_oferecida_no_recorte_sem_ordem_seria_recusada` — este último provando que a razão dita na
+tela é a razão real, e não uma tela que cala.
+
+### Três defeitos de texto e de caminho, todos na mesma família
+
+| Achado | O que acontecia | Correção |
+|---|---|---|
+| **"Cancelar e voltar" perdia o recorte** | numa conferência de PPI, o botão e a trilha voltavam à ampla. A tela que abria era **legítima** — uma ordem verdadeira, de um recorte verdadeiro —, e é isso que tornava o desvio silencioso | `views.py::_navegacao_do_recorte` passou a preparar `url_do_recorte`, e os dois links a usam. Nenhum template monta `?lista=` na mão |
+| **"é o primeiro ato deste marco"** | ao confirmar a primeira ordem de uma cota num marco que já tem a da ampla, `ato_vigente` vem vazio **porque é vazio naquele recorte** — e a frase afirmava, numa confirmação de ato imutável, que o marco não tinha ato nenhum | "deste recorte", em `ordenacao_confirmar.html` |
+| **"primeiro ato do marco" no histórico** | a mesma frase na tela que fica, sobre uma lista que a view já filtra por recorte | "deste recorte", e o título da seção passou a nomear o recorte |
+
+**Os três são da mesma espécie do defeito que a `FR-502` descreve**: nada quebra, nada erra, e o que
+sobra é uma pessoa decidindo sobre outra coisa. Prendidos por três casos em
+`test_navegacao_entre_recortes.py`.
 
 ---
 

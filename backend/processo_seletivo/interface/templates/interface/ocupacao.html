@@ -117,10 +117,28 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
 
   Com ela sai tambem a ramificacao em `recorte.apuravel`: o campo derivava de um predicado que
   passou a responder sempre a mesma coisa, e guarda que nunca reprova e pior do que guarda nenhum
-  (FR-501a). A condicao que resta e a que sempre governou o botao — quem pode emitir, e recorte com
-  linha publicada no quadro.
+  (FR-501a).
+
+  **No lugar dele entrou `recorte.temOrdem`, e nao e o mesmo campo renomeado.** `apuravel` dizia se
+  o **marco** emite ordem naquele recorte, que e propriedade normativa e deixou de variar;
+  `temOrdem` diz se **existe ordem vigente ali agora**, que e estado do certame e varia o tempo
+  todo. Trocar um pelo outro e o que mantem a promessa da SC-170: a acao so aparece onde ela
+  conclui, e onde nao conclui aparece a razao com o caminho.
   {% endcomment %}
-  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.temOrdem %}
+  {% comment %}
+  **A razao no lugar do botao, e o caminho junto** (034, FR-498, SC-170). Apurar exige ordem vigente
+  daquele recorte, e o comando recusa com `ordem_nao_vigente` quando ela nao existe. Oferecer o
+  botao ali seria a acao que sempre falha — a mesma que a auditoria de 16/09/2026 encontrou, e que
+  esta feature existe para eliminar.
+
+  **A frase nomeia o que falta e onde se faz**, e nao o sintoma: "este recorte nao tem ordem" e o
+  que a pessoa ja esta vendo. O que ela precisa e o caminho para emiti-la, que fica na tela da
+  classificacao daquele recorte.
+  {% endcomment %}
+  <p class="nota">Este recorte ainda não tem ordem emitida, e a apuração conta sobre a ordem: emita a ordem deste recorte na <a href="{% url 'interface:ordenacao' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">classificação dele</a> e volte aqui. É estado do percurso, e não erro.</p>
+  {% endif %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.temOrdem %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">

@@ -52,3 +52,33 @@ Seguiu com seis inscrições cotistas — duas em PcD e quatro em PPI. O cenári
 três recortes e as três ordens, porque a ampla é o universo inteiro e os seis estão nela. O que ele
 **não** exercita é a metade *"quem não se autodeclarou aparece só na ampla"*, que fica prendida por
 `tests/unit/classificacao/test_universo_do_recorte.py::test_quem_nao_se_autodeclarou_aparece_so_na_ampla`.
+
+---
+
+# O segundo achado: a Retificação não acrescenta Modalidade
+
+**Medido em 18/09/2026**, na tela `/retificar` do Edital 34/2026, varrendo os botões que ela
+oferece.
+
+A Retificação acrescenta **Perfil**, **linha do quadro de vagas**, **Evento** e **Anexo**. Não
+acrescenta **Modalidade de Concorrência** — cada Modalidade existente traz "Remover do Edital", e
+não há "Acrescentar Modalidade".
+
+**A consequência é aritmética e visível:** dá para acrescentar a linha do quadro de um recorte
+novo, e não dá para criar a Modalidade a que essa linha se referiria. O recorte novo, portanto, não
+nasce por Retificação.
+
+**E os campos da regra de corte também não aparecem:** `cutTargetKind`, `cutGovernedStage`,
+`cutSurplusCount` e `cutContinuation` não são retificáveis; só `cutTieOutcome` é. Corrigir a Etapa
+que o corte governa, num Edital publicado, não tem caminho pela interface.
+
+## O que isso custou ao `quickstart`
+
+- **O cenário 5.2** — *"retifique acrescentando uma quarta Modalidade"* — **é inexequível pela
+  interface**. O percurso exercitou a metade que a interface alcança, e ela é a metade que a
+  `FR-494a` protege: uma Retificação **do quadro**, publicada **depois** das três ordens emitidas.
+  O resultado está no registro do cenário 5 da [rastreabilidade](rastreabilidade.md).
+- **A convocação para vaga inicial** do cenário 2 dependia de trocar a Etapa governada do corte, e
+  não houve como.
+
+**Nenhum dos dois é da `034`**, e os dois ficam como registro para quem prioriza o backlog.

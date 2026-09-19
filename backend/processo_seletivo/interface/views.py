@@ -5160,18 +5160,29 @@ def _recortes_navegaveis(edital, marco_id, *, rota, atual):
 
 
 def _navegacao_do_recorte(edital, marco_id, *, rota, atual):
-    """`{recortes, recorte_atual}` — as duas chaves que a navegação lê, derivadas juntas.
+    """`{recortes, recorte_atual, url_do_recorte}` — o que a navegação lê, derivado junto.
 
     **Juntas de propósito.** A tela do corte recebeu, numa primeira versão, só `recortes`, e o
     cabeçalho dela saiu com *"Recorte:"* seguido de nada: o template lia `recorte_atual`, que
     ninguém tinha passado, e o mecanismo trata variável ausente como vazia. Não houve erro, exceção
     nem teste vermelho — só uma tela que deixou de dizer em qual recorte se está, que é metade do
     que a `FR-497` pede. Foi o percurso do `quickstart` que o pegou.
+
+    **`url_do_recorte` é o endereço desta mesma tela no recorte em que se está**, e existe para que
+    nenhum template monte endereço com `?lista=` na mão. Quem volta de uma confirmação tem de voltar
+    ao recorte que estava confirmando: um "Cancelar e voltar" que perde a `?lista=` devolve a pessoa
+    à ampla concorrência, e ela reabre a conferência do recorte errado sem perceber.
+
+    **Ela é calculada fora da lista de navegação, e não a partir dela.** A lista é vazia quando o
+    Perfil tem um recorte só — é a contraprova da `FR-493` —, e derivar o endereço dali faria a
+    volta sumir justamente no Edital sem reserva, que é onde ela sempre funcionou.
     """
+    destino = reverse(rota, args=[edital.id, marco_id])
     recortes = _recortes_navegaveis(edital, marco_id, rota=rota, atual=atual)
     return {
         "recortes": recortes,
         "recorte_atual": next((item for item in recortes if item["atual"]), None),
+        "url_do_recorte": f"{destino}?lista={atual}" if atual else destino,
     }
 
 

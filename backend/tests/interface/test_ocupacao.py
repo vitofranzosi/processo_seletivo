@@ -11,6 +11,7 @@ from django.urls import reverse
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.ocupacao import MODALIDADE_PPI
 from tests.integration.ocupacao.test_emissao import apurar
 from tests.interface.conftest import identificar
 
@@ -524,25 +525,82 @@ def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
 # continua sendo a não-regressão que uma condição larga demais quebraria.
 
 
-def test_recorte_reservado_em_marco_computado_agora_oferece_apuracao(
+def test_recorte_reservado_com_ordem_emitida_oferece_apuracao_e_ela_conclui(
     client, seletor_ligado, cenario, gestor
 ):
-    """`FR-502`: a ação volta a ser oferecida onde ela passou a executar.
+    """`FR-502` e `SC-170`: a ação é oferecida onde executa — **e o teste a executa**.
 
-    **A conferência é por contagem de botões, e a contagem é a do cenário**: a fixture da interface
-    monta a linha geral e uma cota, e são esses dois recortes que a tela lista. Um terceiro botão
-    aqui seria a Modalidade declarada como ampla ganhando linha própria, que é o que a `FR-503`
-    proíbe.
+    **Contar botões não basta, e esta é a lição que custou um defeito.** A primeira versão deste
+    caso afirmava `count(...) == 2` e passava enquanto a tela oferecia, no recorte reservado **sem
+    ordem emitida**, um botão que o comando recusava com `ordem_nao_vigente` — a ação que sempre
+    falha que a `SC-170` proíbe, reintroduzida pela feature que existe para eliminá-la. A asserção
+    era verdadeira e não provava nada, porque nunca clicava.
+
+    Agora o caso emite a ordem do recorte, conta os botões **e pratica a apuração**: o desfecho é o
+    que prova a promessa.
+    """
+    from tests.fixtures.recortes import emitir_recorte
+
+    edital, _, _ = cenario
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="ocupacao-034-ordem-ppi")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
+    assert pagina.count("Apurar a ocupação deste recorte") == 2, (
+        "a ampla e a cota — as duas, porque as duas têm ordem emitida"
+    )
+
+    resposta = client.post(
+        reverse("interface:emitir-apuracao", args=[edital.id, MARCO]),
+        {"lista": MODALIDADE_PPI, "chave": "ocupacao-034-apura-ppi"},
+    )
+
+    assert resposta.status_code == 302
+    depois = abrir(client, edital).content.decode()
+    assert "Não foi possível apurar" not in depois, "a ação oferecida concluiu"
+    assert ApuracaoDeOcupacao.objects.filter(edital=edital, lista_id=MODALIDADE_PPI).exists(), (
+        "e o ato do recorte existe"
+    )
+
+
+def test_recorte_sem_ordem_nao_oferece_apuracao_e_diz_onde_emiti_la(
+    client, seletor_ligado, cenario, gestor
+):
+    """`SC-170` pela outra metade: onde a ação não conclui, aparece a razão — e o caminho.
+
+    O cenário da interface emite só a ordem da ampla. O recorte reservado, portanto, **não tem
+    ordem vigente**, e apurar ali seria recusado. O botão não pode estar lá.
     """
     edital, _, _ = cenario
     identificar(client, "carlos", ["gestor"])
 
     pagina = abrir(client, edital).content.decode()
 
-    assert "Pretos, pardos e indígenas" in pagina, "a premissa: o recorte reservado está na tela"
-    assert pagina.count("Apurar a ocupação deste recorte") == 2, (
-        "a ampla e a cota — as duas, porque as duas passaram a ter ordem"
+    assert pagina.count("Apurar a ocupação deste recorte") == 1, "só a ampla, que tem ordem"
+    assert "ainda não tem ordem emitida, e a apuração conta sobre a ordem" in pagina
+    destino = reverse("interface:ordenacao", args=[edital.id, MARCO])
+    assert f'href="{destino}?lista={MODALIDADE_PPI}"' in pagina, "o caminho para emiti-la"
+
+
+def test_a_acao_oferecida_no_recorte_sem_ordem_seria_recusada(
+    client, seletor_ligado, cenario, gestor
+):
+    """A contraprova que sustenta as duas anteriores: o comando **de fato** recusa.
+
+    Sem ela, esconder o botão poderia estar escondendo uma ação que funcionava — e a tela estaria
+    calando em vez de explicar. O que se afirma aqui é que a razão dita na tela é a razão real.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    client.post(
+        reverse("interface:emitir-apuracao", args=[edital.id, MARCO]),
+        {"lista": MODALIDADE_PPI, "chave": "ocupacao-034-recusa-ppi"},
     )
+
+    assert "Não foi possível apurar" in abrir(client, edital).content.decode()
+    assert not ApuracaoDeOcupacao.objects.filter(edital=edital, lista_id=MODALIDADE_PPI).exists()
 
 
 def test_a_frase_do_fora_do_sistema_saiu_da_tela(client, seletor_ligado, cenario, gestor):
