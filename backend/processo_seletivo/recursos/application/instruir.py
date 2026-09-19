@@ -257,13 +257,28 @@ def motivo_do_ato(peca, ato):
     )
 
 
-def motivo_do_acesso(peca, ato):
-    """A frase da trilha do **acesso exercido** (FR-534), na forma que o produto já pratica.
+def motivo_do_acesso_a_peca(peca, alcance):
+    """A frase do acesso exercido **sobre a tela** — o escopo, e não os itens um por um (`FR-534`).
 
-    Saber que a prova foi anexada não responde quem a viu, e é por isso que há dois registros e não
-    um. A forma segue os dois precedentes que o repositório já tem — a prévia da exportação da `031`
-    e a consulta a documento da `009` —: revisão nula, porque nada mudou de estado, e uma razão que
-    descreve o **escopo** do que foi visto.
+    Ela diz *quantos* e *de que espécie*, e é a forma que a `031` fixou ao registrar a prévia da
+    exportação: *"população; N linha(s)"*. O conteúdo fica fora, e é a regra que a `018` já
+    pratica — a trilha responde *houve ato, por quem e quando*, e não *o que ele dizia*.
+    """
+    partes = []
+    if alcance.pareceres:
+        partes.append("o parecer atacado")
+    if alcance.documentos:
+        partes.append(f"{len(alcance.documentos)} documento(s)")
+    return f"Acesso ao que foi instruído no recurso {peca.protocolo}: {'; '.join(partes)}."
+
+
+def motivo_do_acesso(peca, ato):
+    """A frase do acesso a **um** item instruído — a abertura do documento (`FR-534`).
+
+    Aqui a precisão por item é a resposta certa, e não excesso: abrir um arquivo é um acesso a um
+    arquivo, e *"quem viu o quê"* precisa dizer qual. O requisito basta para saber o que foi aberto,
+    e é a mesma escolha que a `009` fez — *"registra a leitura, e não o conteúdo, nem o nome do
+    arquivo, que é do candidato"*.
     """
     if ato.especie == AtoDeInstrucao.Especie.PARECER:
         return f"Acesso ao parecer instruído no recurso {peca.protocolo}."

@@ -199,7 +199,18 @@ def links_de(corpo):
 
 
 def test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta(client, seletor_ligado, julgado):
-    """`recurso:julgar` não concede leitura de Etapa nem de inscrição, e a tela diz isso."""
+    """`recurso:julgar` não concede leitura de Etapa nem de inscrição, e a tela diz isso.
+
+    **O que a `036` mudou aqui não foi o alcance: foi o que a tela passa a dizer sobre a falta.**
+    Antes, quem só julgava lia que presidência, auditoria ou consulta a inscrições abririam o objeto
+    atacado — e nada além disso, de modo que a frase descrevia um beco honesto mas sem saída. Agora
+    ela diz também que existe uma saída, e que ela é um **ato** e não uma permissão: alguém com
+    autoridade decide anexar aquela prova a este recurso.
+
+    As duas asserções de alcance **continuam idênticas**, e é isso que elas provam: o Edital
+    continua alcançável, a tela de documentos da inscrição continua fora, e `recurso:julgar` não foi
+    ampliado por esta feature (`FR-530`, `SC-187`).
+    """
     identificar(client, JULGADORA, ["julgador"])
     corpo = client.get(reverse("interface:recurso", args=[julgado["peca"].id])).content.decode()
     edital = julgado["inscricao"].edital
@@ -207,6 +218,13 @@ def test_quem_so_julga_alcanca_o_edital_e_le_o_que_lhe_falta(client, seletor_lig
     assert reverse("interface:detalhe", args=[edital.id]) in links_de(corpo)
     assert reverse("interface:inscricao-recebida", args=[julgado["inscricao"].id]) not in corpo
     assert "Julgar não as concede." in corpo
+    # **E a falta passou a ter endereço** (`FR-532`): o que falta, e a quem pedir — na formulação
+    # única que a `033` fixou, e não numa segunda escrita à mão nesta tela.
+    assert "Nada foi instruído neste recurso" in corpo
+    assert "ato de instrução" in corpo
+    assert "gerir a comissão" in corpo and "preside este Processo" in corpo
+    # Nada de instruir é oferecido a quem não pode instruir — a garantia da `033`, do outro lado.
+    assert reverse("interface:recurso-instruir", args=[julgado["peca"].id]) not in corpo
 
 
 def test_quem_audita_alcanca_o_resultado_e_a_avaliacao(client, seletor_ligado, julgado):

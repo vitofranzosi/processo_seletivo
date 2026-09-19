@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -175,7 +176,7 @@ from processo_seletivo.recursos.application import julgar as recursos_julgar
 from processo_seletivo.recursos.application import selectors as recursos_selectors
 from processo_seletivo.recursos.domain.elegibilidade import RAZOES, impedimento
 from processo_seletivo.recursos.domain.janela import janela_declarada
-from processo_seletivo.recursos.models import Recurso
+from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
@@ -183,6 +184,7 @@ from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.seguranca.application.authorization import (
     base_de_permissao,
+    frase_da_recusa,
     require_authorization_base,
     require_permission,
 )
@@ -3327,6 +3329,22 @@ OPERACOES = {
     # publicação. **As duas frases dizem o ato, e não o nome da função** (`FR-296`).
     "REQUERIMENTO_ENVIAR": "Requerimento de Matrícula enviado",
     "REQUERIMENTO_SUCEDER": "Requerimento de Matrícula atualizado por sucessão",
+    # A instrução do recurso e o acesso que ela concede (036, `FR-533`, `FR-534`). **São duas
+    # entradas porque são duas perguntas**: saber que a prova foi anexada não responde quem a viu, e
+    # é a segunda que torna o acesso defensável. As frases dizem o ato praticado, e não o nome da
+    # função, como as quatro da `019`.
+    "RECURSO_INSTRUIR": "Instrução do recurso praticada",
+    "RECURSO_INSTRUCAO_ACESSAR": "Acesso ao que foi instruído no recurso",
+    # **A interposição passou a ter rótulo porque passou a ser exibida** (036). Ela sempre foi
+    # registrada, sob o identificador da peça; o que mudou é que a trilha do Edital agora reúne os
+    # recursos **instruídos**, para que o acesso concedido por instrução tenha onde ser lido — e a
+    # peça veio junto. Sem esta linha a tela exibiria `recurso:interpor` cru a quem pergunta quem
+    # leu o quê, que é o defeito que a `019` já corrigira para a apuração de ocupação.
+    #
+    # `recurso:admitir` e `recurso:julgar` continuam **sem** rótulo aqui, e a ausência é coerente:
+    # eles são auditados sob o juízo e sob a decisão, que esta tela não reúne. Rótulo para o que não
+    # se exibe seria promessa de uma tela que não existe.
+    "recurso:interpor": "Recurso interposto",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -3343,6 +3361,8 @@ AGREGADOS = {
     "DesfechoDaConvocacao": "Desfecho de convocação",
     "ComunicacaoEmitida": "Comunicação de convocação",
     "AtestadoDeFatoExterno": "Atestado de fato externo",
+    "AtoDeInstrucao": "Ato de instrução do recurso",
+    "Recurso": "Recurso",
 }
 
 # Os sete atos de FR-052, na ordem do percurso. É esta lista que a tela oferece como filtro.
@@ -6911,6 +6931,14 @@ def _peca_para_julgar(request, recurso_id):
             "publicacao_atacada__ato",
         )
         .prefetch_related("juizos", "decisoes")
+        # **Houve instrução nesta peça?** — por subconsulta, e não por `prefetch_related` (036).
+        # A diferença é o orçamento: `EXISTS` viaja na mesma leitura e não custa consulta nenhuma,
+        # enquanto um `prefetch` custaria uma **em toda** abertura da tela, inclusive nas que não
+        # têm ato a mostrar, que são a maioria. As linhas do ato são lidas depois, e só quando esta
+        # resposta é verdadeira — e aí uma leitura só, que não cresce com o número de atos.
+        .annotate(
+            instrucoes_praticadas=Exists(AtoDeInstrucao.objects.filter(recurso=OuterRef("pk")))
+        )
         .first()
     )
     if peca is None or peca.inscricao.edital.institution_scope != ator.institution_scope:
@@ -6931,6 +6959,11 @@ def recurso_recebido(request, recurso_id):
         return redirect(reverse("interface:identificar"))
 
     razao = impedimento(ator, peca)
+    # **Uma pergunta, duas respostas** (036). A base da gestão da comissão decide dois blocos desta
+    # tela — quais caminhos oferecer até o objeto atacado, e quem pode praticar a instrução —, e ela
+    # custa uma consulta para quem não tem a permissão sistêmica. Lida aqui, uma vez, e entregue aos
+    # dois: o orçamento desta tela é constante e prendido por teste.
+    base = pode_gerir_comissao(ator, peca.inscricao.edital.processo)
     # **A resposta carrega a fundamentação e o protocolo de quem recorreu**, e por isso não fica no
     # cache do navegador: é o mesmo cuidado que a 013 aplicou às telas de Resultado, e a mesma razão
     # — computador compartilhado, e o botão "voltar" de quem já saiu (FR-105).
@@ -6947,7 +6980,8 @@ def recurso_recebido(request, recurso_id):
                 "pode_decidir": razao is None,
                 "assinatura": recursos_selectors.assinatura_do_estado_da_peca(peca),
                 **_alvo_da_correcao(peca),
-                **_para_conferir_o_objeto(ator, peca),
+                **_para_conferir_o_objeto(ator, peca, base=base),
+                **_instrucao_da_peca(request, ator, peca, base=base),
             },
         )
     )
@@ -7004,7 +7038,7 @@ def _alvo_da_correcao(peca):
     return {"alcancaveis": alcancaveis, "etapas_do_objeto": etapas_do_objeto}
 
 
-def _para_conferir_o_objeto(ator, peca):
+def _para_conferir_o_objeto(ator, peca, *, base):
     """Quais caminhos até o objeto atacado esta pessoa pode abrir.
 
     **A tela do recurso tinha três links, e os três eram a migalha de navegação.** Quem julga
@@ -7017,11 +7051,212 @@ def _para_conferir_o_objeto(ator, peca):
 
     Nenhuma consulta nova: as duas bases já estão nos vínculos lidos, e as Etapas vêm do conteúdo
     que `_alvo_da_correcao` já resolveu.
+
+    **`base` chega pronta, e não é relida aqui** (036). A presidência do Processo custa uma consulta
+    para quem não tem a permissão sistêmica, e a tela passou a precisar da mesma resposta em dois
+    lugares — este bloco e o da instrução. Perguntá-la duas vezes elevava o orçamento desta tela de
+    oito para nove consultas, e o teste que o prende existe justamente para que esse tipo de custo
+    não entre em silêncio.
     """
     return {
-        "pode_auditar_a_etapa": _pode_auditar_a_etapa(ator, peca.inscricao.edital),
+        "pode_auditar_a_etapa": base is not None or ator.can("auditoria:consultar"),
         "pode_ver_a_inscricao": ator.can(CONSULTAR),
     }
+
+
+def _instrucao_da_peca(request, ator, peca, *, base):
+    """O que foi instruído nesta peça, e o que a tela pode oferecer sobre isso (036, US2 e US3).
+
+    **Três estados, e não dois** (`FR-532`). O terceiro — *houve instrução, e o acesso terminou com
+    a decisão* — é o que a primeira redação da spec não tinha, e é fácil de esquecer porque o código
+    que o produz é o mesmo que produz o primeiro: sem ele, a tela diria *"nada foi instruído"* a
+    quem viu a prova ontem, e isso é falso sobre um ato que aconteceu.
+
+    **O parecer sai do que a porta já carregou** (`research.md` `R-3`): a avaliação do resultado
+    atacado está no `select_related`, de modo que exibi-lo não custa consulta. O que esta função
+    paga é a leitura das linhas do ato — uma, e só quando a subconsulta disse que há ato — e a das
+    conclusões preservadas, que é o que faz a `FR-523` valer aqui como vale no portal.
+
+    **O acesso exercido é registrado no estado aberto** (`FR-534`): saber que a prova foi anexada
+    não responde quem a viu. **Um** registro por leitura da tela, descrevendo o **escopo** do que
+    foi visto — o parecer e quantos documentos —, que é a forma dos dois precedentes do repositório:
+    a prévia da exportação da `031` e a consulta a documento da `009`.
+
+    **Um, e não um por item**, e a razão é o orçamento: um registro por linha faria o custo desta
+    tela crescer com o número de atos de instrução, que é exatamente o que o teste de orçamento
+    desta tela existe para impedir. A precisão por item continua onde ela de fato importa: na rota
+    do documento, onde cada abertura é um acesso a um arquivo e rende o seu próprio registro.
+
+    E registra-se para quem quer que esteja lendo, a autoridade inclusive, cujo acesso vem da base
+    dela e não da instrução: um rastro que só cobrisse parte dos leitores responderia menos do que
+    parece.
+    """
+    from processo_seletivo.recursos.application.instruir import (
+        OPERACAO_DE_ACESSO,
+        alcance_da_instrucao,
+        motivo_do_acesso_a_peca,
+    )
+
+    # `atos=()` quando a subconsulta já disse que não há: é o que mantém em **zero** o custo da tela
+    # sem instrução, que é a maioria delas.
+    alcance = alcance_da_instrucao(peca, atos=None if peca.instrucoes_praticadas else ())
+    decidido = decidido_o_recurso(peca)
+    contexto = {
+        "instrucao": alcance,
+        # A frase do que falta e a quem pedir, na **formulação única** que a `033` fixou (`FR-486`).
+        # Escrever uma segunda aqui criaria duas maneiras de dizer a mesma coisa, e a segunda
+        # divergiria na primeira palavra que alguém melhorasse.
+        "instrucao_a_quem_pedir": frase_da_recusa(BASES_DA_GESTAO_DA_COMISSAO),
+        # **Instruir peça decidida é recusado pelo comando**, e por isso a tela não o oferece: um
+        # botão que sempre recusa ensina a pessoa a desconfiar da tela (`FR-013` da `018`).
+        "pode_instruir": base is not None and not decidido,
+        "parecer_instruido": "",
+        "parecer_instruivel": False,
+        # Os documentos que a autoridade pode escolher anexar. Lidos **só para quem pode instruir e
+        # alcança os documentos**: oferecer a escolha a quem não abre o original seria oferecer
+        # caminho que aquele ator não alcança, que é a garantia da `033` desfeita (`FR-532`).
+        "documentos_instruiveis": (),
+    }
+    if alcance.aberto and alcance.pareceres:
+        contexto["parecer_instruido"] = _parecer_atacado(peca)
+    if alcance.aberto:
+        with command_context() as agora:
+            record_event(
+                actor=ator,
+                permission=recursos_admitir.PERMISSAO,
+                operation=OPERACAO_DE_ACESSO,
+                aggregate=peca,
+                now=agora,
+                correlation_id=getattr(request, "correlation_id", ""),
+                reason=motivo_do_acesso_a_peca(peca, alcance),
+                # Revisão nula porque **nada mudou de estado**: é leitura, e o `Recurso` não tem nem
+                # coluna de estado a informar. É o padrão da `031`, e a sentinela de `record_event`
+                # existe justamente para que o nulo deliberado não caia no valor do agregado.
+                new_state="",
+                new_revision=None,
+            )
+    if contexto["pode_instruir"]:
+        # Só o que ainda não foi anexado, e só o que existe: instruir de novo o mesmo parecer
+        # acrescentaria uma linha sem acrescentar alcance, e oferecer isso seria oferecer ruído.
+        contexto["parecer_instruivel"] = (
+            not alcance.pareceres
+            and peca.resultado_atacado_id is not None
+            and bool(_parecer_atacado(peca))
+        )
+        if ator.can(CONSULTAR):
+            instruidos = {ato.documento_id for ato in alcance.documentos}
+            contexto["documentos_instruiveis"] = [
+                documento
+                for documento in peca.inscricao.documentos.all()
+                if documento.pk not in instruidos
+            ]
+    return contexto
+
+
+def _parecer_atacado(peca):
+    """O parecer que fundamenta o resultado atacado — o mesmo que o titular lê (`FR-523`).
+
+    **A fonte é a conclusão preservada**, e não o campo corrente da Avaliação: vale o que o ato
+    citou. Uma leitura, e ela só acontece quando há instrução aberta com parecer anexado — de modo
+    que a tela sem instrução continua custando exatamente o que custava.
+    """
+    from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
+
+    resultado = peca.resultado_atacado
+    if resultado is None or resultado.avaliacao_id is None:
+        return ""
+    conclusoes = list(
+        ConclusaoAvaliacao.objects.filter(avaliacao_id=resultado.avaliacao_id).order_by("-ordem")
+    )
+    return recursos_selectors.parecer_que_fundamenta(resultado, conclusoes)
+
+
+def decidido_o_recurso(peca):
+    from processo_seletivo.recursos.application.instruir import decidido
+
+    return decidido(peca)
+
+
+@require_http_methods(["POST"])
+def instruir_recurso(request, recurso_id):
+    """O ato de instrução: a autoridade anexa a prova **àquele** recurso (036, `FR-527`).
+
+    A porta é a da peça — `recurso:julgar` e escopo institucional —, e a autoridade é a **base
+    composta** que a `033` já sabe exigir e explicar quando falta. **Nenhuma capacidade nova**
+    (`FR-530`): quem instrui é quem já podia gerir a comissão ou presidir o Processo.
+
+    A recusa volta na própria tela da peça, como a da admissibilidade, e pela mesma razão: mandá-la
+    para uma página de erro faria a autoridade refazer o caminho para descobrir o que faltava.
+    """
+    from processo_seletivo.recursos.application import instruir as recursos_instruir
+
+    ator, peca = _peca_para_julgar(request, recurso_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    try:
+        recursos_instruir.instruir(
+            actor=ator,
+            recurso_id=peca.id,
+            parecer=request.POST.get("parecer") == "sim",
+            documento_ids=request.POST.getlist("documento"),
+            razao=request.POST.get("razao", ""),
+            idempotency_key=f"instruir-{peca.id}-{request.POST.get('assinatura', '')}",
+            correlation_id=str(peca.id),
+        )
+    except DomainError as recusa:
+        if recusa.status == 403 and recusa.code == "forbidden":
+            raise
+        return _recurso_com_recusa(request, ator, peca, recusa)
+    return redirect(f"{reverse('interface:recurso', args=[peca.id])}#instrucao")
+
+
+@require_http_methods(["GET"])
+def documento_instruido(request, recurso_id, documento_id):
+    """O documento citado, alcançado **por referência** e por causa de um ato (036, `FR-531`).
+
+    **Não há segunda cópia**: os bytes saem do documento original que o candidato apresentou,
+    conferidos contra o resumo que a inscrição gravou, exatamente como a tela de documentos da
+    comissão faz. O que muda é a autorização — aqui ela não é `inscricao:consultar`, é o ato de
+    instrução daquela peça.
+
+    O nome da classe do documento **não** é escrito nesta prosa de propósito: `views.py` já conhece
+    o artefato do Anexo, e há um guardião que recusa qualquer arquivo que cite os dois ao mesmo
+    tempo — a comparação entre o modelo e o devolvido é juízo da banca, e não do sistema. A
+    varredura é por texto e não distingue prosa de código, e é bom que não distinga: quem lê um
+    arquivo que nomeia os dois não sabe, de antemão, se ele só fala ou se ele compara.
+
+    É por isso que esta rota existe em vez de um link para a tela de documentos: aquela porta exige
+    uma capacidade que quem julga não tem e que esta feature **não** amplia, e oferecer um caminho
+    que devolveria 403 seria a tela oferecendo o que aquele ator não alcança.
+    """
+    from processo_seletivo.recursos.application.instruir import (
+        OPERACAO_DE_ACESSO,
+        ato_alcancado,
+        motivo_do_acesso,
+    )
+
+    ator, peca = _peca_para_julgar(request, recurso_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    ato = ato_alcancado(peca, documento_id=documento_id)
+    documento = ato.documento
+    copia, calculado = copia_verificada(documento)
+    if calculado != documento.content_hash:
+        copia.close()
+        _registrar_divergencia(ator, documento, request)
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=recursos_admitir.PERMISSAO,
+            operation=OPERACAO_DE_ACESSO,
+            aggregate=ato,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=motivo_do_acesso(peca, ato),
+            new_state="",
+            new_revision=None,
+        )
+    return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
 
 
 def _etapas_alcancaveis(peca):
@@ -7074,6 +7309,7 @@ def _recurso_com_recusa(request, ator, peca, recusa):
     """
     peca.refresh_from_db()
     razao = impedimento(ator, peca)
+    base = pode_gerir_comissao(ator, peca.inscricao.edital.processo)
     resposta = marcar_como_privada(
         render(
             request,
@@ -7090,7 +7326,8 @@ def _recurso_com_recusa(request, ator, peca, recusa):
                 "motivo": request.POST.get("motivo", ""),
                 "motivacao": request.POST.get("motivacao", ""),
                 **_alvo_da_correcao(peca),
-                **_para_conferir_o_objeto(ator, peca),
+                **_para_conferir_o_objeto(ator, peca, base=base),
+                **_instrucao_da_peca(request, ator, peca, base=base),
             },
             status=recusa.status,
         )
