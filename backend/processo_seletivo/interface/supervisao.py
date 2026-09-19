@@ -27,6 +27,10 @@ from processo_seletivo.classificacao.application.selectors import (
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+from processo_seletivo.divulgacao.application.selectors import (
+    divulgacao_do_ato,
+    historico_do_marco,
+)
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
@@ -483,8 +487,23 @@ UX_063 = "UX-063"
 UX_064 = "UX-064"
 # `UX-065` é ordem emitida cuja ocupação ninguém apurou.
 UX_065 = "UX-065"
+# `UX-066` não é o `UX-004`: aquele fala da ordem que **ficou para trás**, este da ordem que
+# **ninguém publicou**. Um mesmo marco pode ter os dois, e deve — são dois fatos sobre o mesmo ato,
+# e cada um se resolve numa tela diferente.
+UX_066 = "UX-066"
 
-ESPECIES = (UX_001, UX_002, UX_003, UX_004, UX_005, UX_046, UX_063, UX_064, UX_065)
+ESPECIES = (
+    UX_001,
+    UX_002,
+    UX_003,
+    UX_004,
+    UX_005,
+    UX_046,
+    UX_063,
+    UX_064,
+    UX_065,
+    UX_066,
+)
 
 # As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
 # indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
@@ -874,14 +893,21 @@ def sinais_do_marco(edital, conteudo, versao_vigente, encaminhar, alcancadas):
     da ocupação faz para uma delas. `recortes_do_marco` responderia mais, e custaria os quatro
     números de cada recorte para decidir uma pergunta de sim ou não.
     """
-    if not (alcancadas[UX_004] or alcancadas[UX_065]):
+    if not (alcancadas[UX_004] or alcancadas[UX_065] or alcancadas[UX_066]):
         return
     for perfil, marco in marcos_do_conteudo(conteudo):
         marco_id = marco.get("id")
+        # **A cadeia de publicações é do marco, e não do recorte**, e por isso é lida uma vez para
+        # todas as listas dele. Relê-la por recorte custaria uma consulta por lista para devolver
+        # exatamente as mesmas linhas — e o filtro por lista é feito sobre elas, em memória.
+        #
+        # Preguiçosa de propósito: um marco cujos recortes não têm ato não chega a pagá-la.
+        historico = None
         for lista_id, nome_da_lista in listas_do_marco(perfil, marco, conteudo):
             ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
-            # **As duas espécies falam de um ato que existe.** Sem ato não há ordem que envelheça
-            # nem ocupação a apurar: o recorte ainda não chegou lá, e isso não é sinal.
+            # **As três espécies falam de um ato que existe.** Sem ato não há ordem que envelheça,
+            # ocupação a apurar nem resultado a divulgar: o recorte ainda não chegou lá, e isso não
+            # é sinal.
             if ato is None:
                 continue
             if alcancadas[UX_004]:
@@ -898,6 +924,12 @@ def sinais_do_marco(edital, conteudo, versao_vigente, encaminhar, alcancadas):
             if alcancadas[UX_065]:
                 yield from recorte_sem_ocupacao(
                     edital, perfil, marco, marco_id, lista_id, nome_da_lista, encaminhar
+                )
+            if alcancadas[UX_066]:
+                if historico is None:
+                    historico = historico_do_marco(edital=edital, marco_id=marco_id)
+                yield from ato_sem_divulgacao(
+                    edital, marco, marco_id, lista_id, nome_da_lista, ato, historico, encaminhar
                 )
 
 
@@ -931,6 +963,49 @@ def recorte_sem_ocupacao(edital, perfil, marco, marco_id, lista_id, nome_da_list
             f"nenhuma apuração de ocupação."
         ),
         destino=encaminhar(UX_065, edital, marco_id),
+    )
+
+
+def ato_sem_divulgacao(
+    edital, marco, marco_id, lista_id, nome_da_lista, ato, historico, encaminhar
+):
+    """Ato de ordenação vigente **sem divulgação vigente** (`FR-562`, `UX-066`).
+
+    **A derivação não é escrita aqui: é lida de onde a tela de destino a lê** (`FR-557`). Ela vivia
+    dentro de `interface/views.py`, num ajudante privado, e foi **extraída** para
+    `divulgacao.application.selectors`. Reescrevê-la neste sinal daria duas respostas para a mesma
+    pergunta, e a primeira a mudar deixaria a outra para trás sem que nada ficasse vermelho.
+
+    **Duas formas de não estar divulgado, e o mesmo destino.** Ou ninguém publicou aquele ato, ou o
+    que está publicado é de um ato anterior — e nos dois casos o resultado que o público lê não é o
+    que vale. A frase distingue as duas porque quem conduz age diferente: a primeira é uma
+    divulgação que falta, a segunda é uma que ficou para trás.
+
+    **Não é o `UX-004`.** Aquele diz que a ordem envelheceu; este, que ela não foi publicada. Um
+    marco pode ter os dois, e os dois se resolvem em telas diferentes — suprimir um deles aqui
+    esconderia trabalho que ninguém mais apontaria.
+    """
+    estado = divulgacao_do_ato(
+        edital=edital, marco_id=marco_id, ato=ato, lista_id=lista_id, historico=historico
+    )
+    if estado is None or not (estado["nunca_divulgado"] or estado["defasadas"]):
+        return
+    nome = marco.get("name") or str(marco_id)
+    alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
+    razao = (
+        "não foi divulgado"
+        if estado["nunca_divulgado"]
+        else "não é o que está divulgado: o público lê um ato anterior"
+    )
+    yield Sinal(
+        especie=UX_066,
+        edital=edital,
+        alvo=alvo,
+        mensagem=(
+            f"O ato de ordenação vigente do marco {_citado(alvo)}, do Edital "
+            f"{rotulo_do_edital(edital)}, {razao}."
+        ),
+        destino=encaminhar(UX_066, edital, marco_id, ato=ato),
     )
 
 
@@ -1125,6 +1200,7 @@ ROTULOS_DO_DESTINO = {
     UX_063: "Abrir a distribuição da Etapa",
     UX_064: "Abrir os recursos do Edital",
     UX_065: "Abrir a ocupação do marco",
+    UX_066: "Abrir a divulgação do resultado",
 }
 
 
@@ -1150,7 +1226,7 @@ def admite_encaminhamento(processo, especie, edital, ator):
     )
 
 
-def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False):
+def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None):
     """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
     if not admite_encaminhamento(processo, especie, edital, ator):
         return None
@@ -1179,6 +1255,12 @@ def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio
         # A ocupação é por **marco**, e mostra os recortes dele: a referência é o marco, e o
         # recorte que produziu o sinal está nomeado no alvo.
         UX_065: lambda: reverse("interface:ocupacao", args=[edital.id, referencia]),
+        # **A rota da divulgação pende do ato, e não do marco** (`017`): é o ato que a autorização
+        # qualifica, e é dele que a prévia é composta. Um marco de cotas tem três atos, e mandar o
+        # sinal ao marco obrigaria quem chega a adivinhar qual deles publicar.
+        UX_066: lambda: reverse(
+            "interface:previa-de-publicacao", args=[edital.id, referencia, ato.id]
+        ),
     }
     rotulo = ROTULOS_DO_DESTINO.get((especie, "sorteio") if sorteio else especie)
     return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
@@ -1214,6 +1296,11 @@ def alcance(ator, processo):
         UX_063: gere,
         UX_064: bool(ator and ator.can(recursos_admitir.PERMISSAO)),
         UX_065: gere or bool(ator and ator.can("auditoria:consultar")),
+        # A divulgação tem porta própria — `resultado:publicar` —, e ela não decorre das outras: a
+        # presidência que conduz o certame pode não ser quem divulga, na configuração segregada que
+        # a `033` nomeou. Oferecer o sinal a quem não abre a tela seria o beco que a `FR-558`
+        # recusa.
+        UX_066: bool(ator and ator.can("resultado:publicar")),
     }
 
 
@@ -1232,8 +1319,10 @@ def sinais(processo, ator, *, agora=None):
     agora = agora or timezone.now()
     alcancadas = alcance(ator, processo)
 
-    def encaminhar(especie, edital, referencia=None, *, sorteio=False):
-        return destino_de(processo, especie, edital, referencia, ator=ator, sorteio=sorteio)
+    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None):
+        return destino_de(
+            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato
+        )
 
     leitura = leitura_dos_editais(processo)
     publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
@@ -1291,6 +1380,7 @@ __all__ = [
     "UX_063",
     "UX_064",
     "UX_065",
+    "UX_066",
     "Destino",
     "Marco",
     "Medida",

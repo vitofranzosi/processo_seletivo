@@ -367,9 +367,14 @@ def test_dobrar_os_recursos_pendentes_nao_dobra_as_consultas(
     - `UX-065` — **uma por recorte com ato**, e só ela: `apuracao_vigente`, que a Supervisão não
       lia. O `ato_vigente` é o mesmo que o `UX-004` busca. Este cenário tem um recorte com ato, e
       é dele que vem a única consulta a mais.
+    - `UX-066` — **uma por marco**, e **nenhuma aqui**: a `presidenta` deste cenário não tem
+      `resultado:publicar`, e o sinal que ela não alcança não chega a ser calculado (`FR-004`). O
+      custo dele é medido onde ele existe, por
+      `test_a_divulgacao_e_lida_uma_vez_por_marco_e_nao_por_recorte` — e é **por marco**, porque a
+      cadeia de publicações é do marco e o recorte é filtro sobre as linhas dela.
 
-    **E a consulta nova não escala com a fila**, que é o que este teste cobra: triplicar os
-    recursos pendentes não acrescenta recorte nenhum.
+    **E nenhuma das quatro escala com a fila**, que é o que este teste cobra: triplicar os recursos
+    pendentes não acrescenta Etapa, recorte nem marco.
     """
     from django.db import connection
     from django.test.utils import CaptureQueriesContext
@@ -746,3 +751,129 @@ def test_sem_ato_de_ordenacao_o_recorte_nao_sinaliza(
     achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_065)
 
     assert achados == []
+
+
+# ---------------------------------------------------------------------------
+# `UX-066` — ato de ordenação vigente sem divulgação vigente (038)
+#
+# **A derivação é a mesma que a tela do ato usa**, extraída de `interface/views.py` para
+# `divulgacao.application.selectors`. Reescrevê-la aqui daria duas respostas para a mesma pergunta,
+# e a tela mandaria divulgar enquanto o painel diria que está tudo publicado.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def quem_divulga():
+    """A divulgação tem porta própria, e ela não decorre de presidir.
+
+    Na configuração segregada que a `033` nomeou, quem conduz o certame **não** é quem divulga — e
+    é por isso que este ator existe separado da `presidenta`.
+    """
+    return ator_institucional("maria", "recurso:julgar", "resultado:publicar")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_ato_emitido_e_nao_divulgado_produz_o_sinal(certame_sorteado, quem_divulga):
+    """`FR-562` e `SC-198`: emitir não é divulgar, e o intervalo entre os dois era invisível.
+
+    O ato existe e o público não o lê. Até aqui isso só se descobria abrindo o marco — ou, pior,
+    pela página do candidato, que seguia afirmando o resultado anterior.
+    """
+    from tests.fixtures.sorteio import LISTA_PPI
+
+    cotista = certame_sorteado["cotista_ppi"]
+    relacao = relacao_do_recorte(certame_sorteado, lista_id=LISTA_PPI, inscricoes=[cotista])
+    ato_sorteado(certame_sorteado, relacao, lista_id=LISTA_PPI)
+
+    achados = das_especies(
+        supervisao.sinais(certame_sorteado["processo"], quem_divulga), supervisao.UX_066
+    )
+
+    assert len(achados) == 1
+    unico = achados[0]
+    assert "não foi divulgado" in unico.mensagem
+    # O marco e o recorte são nomeados, e o destino é a publicação **daquele ato**.
+    assert "Pretos, pardos e indígenas" in unico.alvo
+    assert unico.destino is not None
+    assert "publicar" in unico.destino.url
+
+
+@pytest.mark.django_db(transaction=True)
+def test_divulgado_o_ato_o_sinal_some(peca, quem_divulga):
+    """A contraprova: o cenário da `018` emite **e divulga**, e nada fica a sinalizar.
+
+    É a prova de que a condição lê a divulgação, e não a mera existência do ato — sem ela, todo
+    marco ordenado do sistema produziria sinal para sempre.
+    """
+    achados = das_especies(
+        supervisao.sinais(peca["cenario"]["processo"], quem_divulga), supervisao.UX_066
+    )
+
+    assert achados == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sem_a_porta_da_divulgacao_o_sinal_nao_e_montado(certame_sorteado, presidenta):
+    """`FR-004` e `FR-558`: quem não divulga não recebe o sinal que leva à divulgação.
+
+    A `presidenta` conduz o certame e **não** tem `resultado:publicar`. A supressão é silenciosa:
+    anunciar que há um sinal suprimido diria a quem não pode vê-lo que há algo para ver.
+    """
+    from tests.fixtures.sorteio import LISTA_PPI
+
+    cotista = certame_sorteado["cotista_ppi"]
+    relacao = relacao_do_recorte(certame_sorteado, lista_id=LISTA_PPI, inscricoes=[cotista])
+    ato_sorteado(certame_sorteado, relacao, lista_id=LISTA_PPI)
+
+    achados = das_especies(
+        supervisao.sinais(certame_sorteado["processo"], presidenta), supervisao.UX_066
+    )
+
+    assert achados == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_divulgacao_e_lida_uma_vez_por_marco_e_nao_por_recorte(certame_sorteado, quem_divulga):
+    """`T021`: o custo do `UX-066` é **por marco**, e acrescentar recorte não o move.
+
+    A cadeia de publicações é do marco; o recorte é filtro sobre as linhas dela. Lê-la dentro do
+    laço dos recortes devolveria as mesmas linhas uma vez por lista, e um marco de cotas pagaria
+    três vezes pela mesma resposta — o custo por linha que a `018` recusou, reintroduzido pela
+    porta dos sinais.
+
+    **A medição é o acréscimo da espécie, e não o total da página**: a diferença entre o mesmo
+    Processo lido por quem divulga e por quem não divulga. Comparar totais faria este teste variar
+    com o custo das outras nove.
+    """
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from tests.fixtures.sorteio import LISTA_PCD, LISTA_PPI
+
+    cotista = certame_sorteado["cotista_ppi"]
+    processo = certame_sorteado["processo"]
+    sem_a_porta = ator_institucional("maria", "recurso:julgar")
+
+    def acrescimo():
+        with CaptureQueriesContext(connection) as sem:
+            supervisao.sinais(processo, sem_a_porta)
+        with CaptureQueriesContext(connection) as com:
+            supervisao.sinais(processo, quem_divulga)
+        return len(com.captured_queries) - len(sem.captured_queries)
+
+    ato_sorteado(
+        certame_sorteado,
+        relacao_do_recorte(certame_sorteado, lista_id=LISTA_PPI, inscricoes=[cotista]),
+        lista_id=LISTA_PPI,
+    )
+    com_um_recorte = acrescimo()
+
+    # Um **segundo recorte do mesmo marco** ganha ato. A cadeia continua sendo uma só.
+    ato_sorteado(
+        certame_sorteado,
+        relacao_do_recorte(certame_sorteado, lista_id=LISTA_PCD, inscricoes=[cotista]),
+        lista_id=LISTA_PCD,
+    )
+
+    assert com_um_recorte == 1, "a cadeia do marco é uma leitura, e não zero nem duas"
+    assert acrescimo() == com_um_recorte, "o segundo recorte releu a cadeia do marco"

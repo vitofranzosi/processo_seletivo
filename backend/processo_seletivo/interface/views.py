@@ -93,6 +93,9 @@ from processo_seletivo.divulgacao.application.publicar import (
     publicar_resultado as publicar_resultado_do_marco,
 )
 from processo_seletivo.divulgacao.application.selectors import (
+    divulgacao_do_ato,
+)
+from processo_seletivo.divulgacao.application.selectors import (
     historico_do_marco as historico_das_publicacoes,
 )
 from processo_seletivo.divulgacao.application.selectors import (
@@ -5470,34 +5473,23 @@ def ordenacao(request, edital_id, marco_id):
 
 
 def _divulgacao_do_marco(edital, marco_id, ato_vigente, *, lista_id=None):
-    """Se o que está divulgado corresponde ao ato vigente deste marco.
-
-    "Emitir" e "publicar" são atos distintos, em telas distintas, e essa é a distinção que o
-    operador mais precisa trazer de fora. Aqui ela deixa de ser conhecimento prévio: a tela diz qual
-    ordem o público está lendo.
+    """Se o que está divulgado corresponde ao ato vigente deste marco, na forma do contexto.
 
     **Estado, e não ação.** A `017`, SC-002, declara que a tela de cálculo não oferece publicar, e
     o cenário de aceitação põe a ação na tela do ato. O que faltava aqui nunca foi o botão: era o
     operador não ter como saber que o ato e a divulgação tinham se separado — e descobrir isso pela
     página do candidato, que seguia afirmando "Este é o resultado vigente" com a ordem anterior.
 
-    **Um ato por recorte, e a premissa mudou** (034, `FR-490`). Esta função comparava todas as
-    publicações vigentes do marco contra um `ato_vigente` só, e dizia por escrito: *"se um dia um
-    marco computado publicar por lista, esta função precisa comparar por lista"*. Esse dia é este.
-    Sem o filtro, a divulgação da ordem da ampla apareceria como defasada ao se abrir o recorte de
-    PPI — e a tela mandaria divulgar de novo um ato que já está divulgado.
+    **A derivação saiu daqui, e o que a tela faz com ela não mudou** (`038`, `FR-557`). Ela vivia
+    neste ajudante privado, e a Supervisão passou a precisar da mesma resposta para o `UX-066`:
+    duas cópias divergiriam na primeira mudança, e a tela mandaria divulgar enquanto o painel
+    diria que está tudo publicado. O que resta aqui é o envelope do contexto do template.
     """
-    if ato_vigente is None:
-        return {"divulgacao": None}
-    vigentes = [
-        linha["publicacao"]
-        for linha in historico_das_publicacoes(edital=edital, marco_id=marco_id)
-        if linha["vigente"] and str(linha["publicacao"].ato.lista_id or "") == str(lista_id or "")
-    ]
-    defasadas = [
-        publicacao for publicacao in vigentes if str(publicacao.ato_id) != str(ato_vigente.id)
-    ]
-    return {"divulgacao": {"nunca_divulgado": not vigentes, "defasadas": defasadas}}
+    return {
+        "divulgacao": divulgacao_do_ato(
+            edital=edital, marco_id=marco_id, ato=ato_vigente, lista_id=lista_id
+        )
+    }
 
 
 def _com_o_corte(edital, marco, recortes):

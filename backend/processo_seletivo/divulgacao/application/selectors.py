@@ -147,7 +147,46 @@ def _rotulos(publicacao):
     }
 
 
+def divulgacao_do_ato(*, edital, marco_id, ato, lista_id=None, historico=None):
+    """Se o que está divulgado corresponde **àquele** ato, ou `None` quando não há ato.
+
+    "Emitir" e "publicar" são atos distintos, em telas distintas, e essa é a distinção que o
+    operador mais precisa trazer de fora. Esta derivação é o que permite ao sistema dizê-la.
+
+    **Vivia dentro de `interface/views.py`, num ajudante privado** (`038`, `R-6`, `FR-557`). Saiu
+    de lá porque a Supervisão passou a precisar da mesma resposta, e reescrevê-la no sinal seria a
+    segunda verdade que este projeto vem removendo: a tela mandaria divulgar e o painel diria que
+    está tudo divulgado, ou o contrário, e nada ficaria vermelho. `atos_publicados`, em
+    `publicacoes`, **não** responde isto — ela responde os atos *do Edital*, abertura e
+    Retificações.
+
+    **Um ato por recorte** (`034`, `FR-490`). Sem o filtro por lista, a divulgação da ordem da
+    ampla apareceria como defasada ao se abrir o recorte de PPI — e a tela mandaria divulgar de
+    novo um ato que já está divulgado.
+
+    **As duas formas de não estar divulgado** são devolvidas separadas porque se resolvem no mesmo
+    lugar e se leem diferente: `nunca_divulgado` é o ato que ninguém publicou, e `defasadas` são as
+    publicações vigentes de um ato anterior — o resultado que o público lê não é o que vale.
+
+    `historico` entra pronto quando quem chama já o leu. A Supervisão percorre os recortes de um
+    marco em sequência e a cadeia é **do marco**, não do recorte: relê-la por recorte custaria uma
+    consulta por lista para devolver as mesmas linhas.
+    """
+    if ato is None:
+        return None
+    if historico is None:
+        historico = historico_do_marco(edital=edital, marco_id=marco_id)
+    vigentes = [
+        linha["publicacao"]
+        for linha in historico
+        if linha["vigente"] and str(linha["publicacao"].ato.lista_id or "") == str(lista_id or "")
+    ]
+    defasadas = [publicacao for publicacao in vigentes if str(publicacao.ato_id) != str(ato.id)]
+    return {"nunca_divulgado": not vigentes, "defasadas": defasadas}
+
+
 __all__ = [
+    "divulgacao_do_ato",
     "documento_do_resultado",
     "historico_do_marco",
     "publicacao_por_id",
