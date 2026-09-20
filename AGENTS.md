@@ -35,7 +35,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, são **31** — e é por isso que a armadilha é o zero, e não o total.
+— eram 18, são **33** — e é por isso que a armadilha é o zero, e não o total.
 
 **Migration desaplicada contamina a sessão inteira.** O sintoma é `relation ... does not exist` num
 arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, confira
@@ -44,26 +44,50 @@ arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, co
 ## As armadilhas caras
 
 **O modo padrão da suíte não é confiável — rode contra PostgreSQL.** Sem variável nenhuma, a
-suíte cai para SQLite: **33 falham, 4850 passam e 201 são puladas** (medido em 2026-09-12).
+suíte cai para SQLite: **35 falham, ~7211 passam e 243 são puladas** (medido em 2026-09-20).
 Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado original
 ([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a primeira,
 quando eram 21:
 
 | Quantas | Por que |
 |---|---|
-| 13 | SQL que só o PostgreSQL entende — `ALTER TABLE ... DISABLE TRIGGER` |
+| 14 | SQL que só o PostgreSQL entende — `near "DISABLE": syntax error`, de `ALTER TABLE ... DISABLE TRIGGER` |
 | 9 | a mensagem do SQLite não nomeia a constraint, e o `pytest.raises(match=...)` não casa |
-| 11 | garantia ou forma que o SQLite não tem — gatilho ausente (`DID NOT RAISE`, 5), `select_for_update` que não tranca (2) e erro de constraint que escapa cru (4) |
+| 11 | garantia que o SQLite não tem — gatilho ausente (`DID NOT RAISE`, 5), transação que não tranca (3) e erro de constraint que escapa cru (3) |
+
+**O total neste modo não é reprodutível, e o `~` acima é literal**: duas execuções seguidas do mesmo
+commit deram 7211 e 7212 passando, com 1 e 2 erros. Cinco falhas do `portal` não se repetiram ao
+rodar os mesmos arquivos isolados, e não há plugin de ordem aleatória instalado — de modo que há
+acoplamento entre casos que só aparece aqui. Não investigue por este caminho: a repartição acima é
+o que importa, e nenhuma das três colunas é defeito de produto.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **5402 passando e 2 pulados** (medido em 2026-09-13). Os dois
-pulados são deliberados e estão nomeados em
-[doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md):
-um só roda fora do PostgreSQL, e o outro é o E2E contra o serviço real da Caixa, atrás da chave
-`SORTEIO_E2E_FONTE_REAL`. Para chegar lá é preciso o **par**:
+Contra PostgreSQL a suíte fecha em **7479 passando e 11 pulados** (medido em 2026-09-20). Os onze
+são deliberados, e se repartem em três: **9** são pares *termo × template* que
+`test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
+é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
+Caixa, atrás da chave `SORTEIO_E2E_FONTE_REAL`. Os dois últimos estão nomeados em
+[doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
+
+Para chegar lá é preciso o **par**:
 `TEST_DB_ENGINE=postgresql` **e** `DB_USER`. Só o primeiro cai para SQLite; só o segundo tenta
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
+
+**A suíte leva ~12 minutos, e a preparação do banco não tem nada com isso.** Criar o banco de teste
+e aplicar as 80 migrations custa **~2 segundos** — medido em 2026-09-20, isolando a preparação com
+`--reuse-db` sobre um caso só. O custo está nos **791 casos que declaram `transaction=True`**, em 292
+dos 605 arquivos de teste: eles não podem terminar em `ROLLBACK`, e o Django limpa truncando as
+tabelas depois de cada um. São ~10% dos casos, e é o décimo caro. Não é desleixo de quem os
+escreveu: é consequência de as garantias deste sistema morarem no banco — gatilho append-only,
+privilégio ausente e `select_for_update` que realmente tranca não são observáveis dentro de uma
+transação que vai ser desfeita.
+
+**`--reuse-db` não economiza nada, e já foi medido — não repita o experimento.** Duas rodadas com a
+bandeira ligada deram 670s e 686s, contra 733s sem ela; e a segunda, que **reusava** o banco, saiu
+mais lenta que a primeira, que o **criou**. A variação entre rodadas idênticas é de ~60s, uma ordem
+de grandeza acima do que a bandeira poupa. Ela trocaria 2 segundos por um banco que envelhece em
+silêncio quando uma migration muda.
 
 **Um banco de teste por worktree.** Suítes paralelas disputam `test_processo_seletivo` e se
 derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
