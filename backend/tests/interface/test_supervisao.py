@@ -560,6 +560,14 @@ def test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho(
     assert "Nenhuma condição de atenção" not in lido
     assert 'class="sinal"' not in corpo
 
+    # **E nem o caminho que estava fora da conta.** A redação anterior conferia só os sinais, e
+    # por isso afirmava no nome o que não verificava: o link da região continuava sendo oferecido
+    # a quem a Supervisão recusa, e 7478 casos passaram com o 404 de pé. O guarda que não segue a
+    # região inteira deixa de guardá-la — a mesma lição que a varredura de `test_fronteira`
+    # aprendeu quando esta página entrou nela.
+    assert url(processo_a) not in corpo, "a página oferece a Supervisão a quem ela recusa"
+    assert "Abrir a Supervisão" not in lido
+
 
 def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
     client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
@@ -569,10 +577,17 @@ def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
     Sem este caso, o teste acima passaria igualmente sobre uma região que nunca mostra Atenção
     nenhuma — e a `US1` teria entregue meia tela para todo mundo.
     """
-    conducao = regiao(abrir_o_processo(client, processo_a), "conducao-titulo")
+    corpo = abrir_o_processo(client, processo_a)
+    conducao = regiao(corpo, "conducao-titulo")
 
     assert "Atenção" in texto(conducao)
     assert "sem marco no cronograma" in texto(conducao)
+
+    # **A contraprova do caminho**, pela mesma razão que esta função existe: sem ela, o caso acima
+    # passaria sobre uma região que nunca oferece a Supervisão a ninguém — e apagar o link seria
+    # uma correção tão verde quanto a certa.
+    assert url(processo_a) in corpo
+    assert "Abrir a Supervisão" in texto(conducao)
 
 
 def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(

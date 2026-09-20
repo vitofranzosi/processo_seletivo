@@ -60,8 +60,16 @@ coisa que ela não pode ver.
 {% if pulso %}
 <section aria-labelledby="conducao-titulo" class="cartao">
   <h2 id="conducao-titulo">Onde cada Edital está</h2>
+  {% comment %}
+  **O caminho só é oferecido a quem o abre** (033, FR-476). A porta da Supervisão é a mesma que a
+  lista de ações acima já consulta, e `pode_supervisionar` não faz outra pergunta: delega a ela.
+  Esta linha nasceu sem a guarda, e o defeito só apareceu quando o Pulso deixou de pender da porta
+  — a região passou a ser desenhada para todo papel, e o link foi junto, devolvendo 404 a auditor,
+  publicador, julgador e elaborador. O beco que a 033 e a 037 gastaram duas features removendo
+  tinha voltado na tela nova.
+  {% endcomment %}
   <p class="sub">Lido em {{ pulso.lido_em|date:"d/m/Y, H\hi" }}.
-    <a href="{% url 'interface:supervisao' processo.id %}">Abrir a Supervisão</a></p>
+    {% if pode_gerir_comissao %}<a href="{% url 'interface:supervisao' processo.id %}">Abrir a Supervisão</a>{% endif %}</p>
 
   <ul class="resumo" aria-label="Inscrições no Processo">
     <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
