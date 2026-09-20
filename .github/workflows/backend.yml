@@ -1,8 +1,27 @@
 name: Backend
 
+# **`push` só na `main`, e é o que impede o trabalho em dobro.** Sem o filtro, todo commit de uma
+# branch com PR aberto disparava esta suíte **duas vezes** — uma pelo `push`, outra pelo
+# `pull_request` —, sobre o mesmo SHA e com o mesmo resultado. Eram ~54 minutos de runner por
+# commit e quatro checks a ler, sendo dois deles cópia dos outros dois.
+#
+# O que se perde é a verificação de branch **sem PR**, e é perda aceitável: aqui todo trabalho entra
+# por PR, e o merge na `main` continua verificado pelo `push` que este filtro preserva.
 on:
   push:
+    branches: [main]
   pull_request:
+
+# **Run superada é cancelada, e só em PR.** Empurrar uma correção enquanto o CI roda deixava a run
+# anterior seguir até o fim — 26 minutos verificando um commit que já não é o da branch. O grupo é
+# por branch de origem, de modo que PRs diferentes não se cancelam.
+#
+# **A condição existe para proteger a `main`.** Ali o evento é `push`, e cancelar significaria
+# deixar um commit da `main` sem verificação nenhuma quando dois merges caem perto. Em PR o
+# cancelamento não perde nada: o que importa é o último commit, e é ele que fica.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
