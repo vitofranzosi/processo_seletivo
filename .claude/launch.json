@@ -179,6 +179,16 @@
       ],
       "port": 8039,
       "url": "http://localhost:8039"
+    },
+    {
+      "name": "painel-038",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_038_percurso POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8041"
+      ],
+      "port": 8041,
+      "url": "http://localhost:8041"
     }
   ]
 }

@@ -107,3 +107,40 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
     # E se existe condição que impede o próximo ato.
     assert "está sem marco no cronograma" in lido
     assert reverse("interface:retificar", args=[primeiro.id]) in resposta.content.decode()
+
+
+def test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apresenta():
+    """`SC-200` e `FR-565`: as duas listas são **a mesma**, e a conferência é contando as duas.
+
+    **Por duas features elas não foram.** A `FR-024` desta spec dizia *"exclusivamente os sinais
+    definidos em `UX-001` a `UX-005`"*, e a `027` acrescentou o `UX-046` sem revisá-la: um catálogo
+    fechado que não fechava o que existia. A `038` levaria a distância de uma espécie para cinco, e
+    por isso emendou o requisito em vez de acrescentar mais uma divergência ao lado.
+
+    **Este teste lê a spec, e não uma cópia dela.** Conferir contra uma lista escrita aqui provaria
+    que o teste concorda consigo mesmo — que é exatamente o que deixou o requisito envelhecer por
+    duas features sem que nada ficasse vermelho.
+    """
+    from pathlib import Path
+
+    from processo_seletivo.interface import supervisao
+
+    # `parents[3]` é a raiz do repositório: este arquivo está em `backend/tests/acceptance/`.
+    raiz = Path(__file__).resolve().parents[3]
+    spec = raiz / "specs" / "022-supervisao-do-processo" / "spec.md"
+    requisito = re.search(r"- \*\*FR-024\*\*:(.+?)(?=\n- \*\*FR-025\*\*)", spec.read_text(), re.S)
+    assert requisito is not None, "a FR-024 não foi encontrada onde o catálogo é fechado"
+
+    # **Por extenso, e nunca por faixa.** Aceitar `UX-001` a `UX-005` como cinco nomes faria o
+    # teste concordar com uma faixa que cresce sozinha — e foi exatamente assim que o requisito
+    # passou a dizer cinco onde havia seis.
+    nomeadas = set(re.findall(r"UX-\d{3}", requisito.group(1)))
+
+    assert nomeadas == set(supervisao.ESPECIES), (
+        "o requisito e o produto discordam sobre o catálogo: "
+        f"só no requisito {sorted(nomeadas - set(supervisao.ESPECIES))}, "
+        f"só no produto {sorted(set(supervisao.ESPECIES) - nomeadas)}"
+    )
+    assert "SUBSTITUÍDA" in requisito.group(1), (
+        "a FR-024 precisa dizer que foi substituída, e não apenas mudar de conteúdo"
+    )

@@ -111,7 +111,14 @@ def test_a_supervisao_nao_apresenta_carga_nem_desempenho_de_membro(
     for membro in comissao_de_a.values():
         assert membro.identity_subject not in lido
 
-    for arquivo in ("supervisao.html", "_sinal.html", "_serie_de_inscricoes.html"):
+    # `processo_detalhe.html` entrou na varredura com a `038`: a Atenção passou a ser apresentada
+    # ali também, e um guarda que não segue a região que ele guarda deixa de guardá-la.
+    for arquivo in (
+        "supervisao.html",
+        "_sinal.html",
+        "_serie_de_inscricoes.html",
+        "processo_detalhe.html",
+    ):
         marcacao = (TEMPLATES / arquivo).read_text().lower()
         for proibido in ("membro", "avaliador", "produtividade", "desempenho", "carga"):
             assert proibido not in marcacao, f"{arquivo} apresenta {proibido}"

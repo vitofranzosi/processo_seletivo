@@ -27,6 +27,10 @@ from processo_seletivo.classificacao.application.selectors import (
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+from processo_seletivo.divulgacao.application.selectors import (
+    divulgacao_do_ato,
+    historico_do_marco,
+)
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
@@ -35,6 +39,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
     periodo_de_inscricoes,
 )
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.ocupacao.application.selectors import apuracao_vigente
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -448,10 +453,15 @@ def pulso(processo, *, agora=None):
 
 
 # ---------------------------------------------------------------------------
-# 7. Atenção — o catálogo fechado dos cinco sinais
+# 7. Atenção — o catálogo fechado dos sinais
 #
-# Cinco perguntas nomeadas, e nenhum mecanismo genérico. Acrescentar uma sexta é revisar a spec, e
-# `tests/unit/interface/test_supervisao.py` é o que torna essa regra cobrável (`D-002`, `FR-024`).
+# Perguntas nomeadas, e nenhum mecanismo genérico. Acrescentar uma é revisar a spec, e
+# `tests/unit/interface/test_supervisao.py` é o que torna essa regra cobrável (`D-002`, `FR-565`).
+#
+# **O número saiu deste cabeçalho de propósito** (038). Ele dizia "cinco" desde a `022`, e continuou
+# dizendo depois de a `027` acrescentar a sexta: um comentário que conta é um segundo catálogo, e
+# ele envelhece sem que nada fique vermelho. Quem conta é `ESPECIES`, e o guarda que o prende é o
+# teste nomeado acima.
 # ---------------------------------------------------------------------------
 
 UX_001 = "UX-001"
@@ -464,7 +474,64 @@ UX_005 = "UX-005"
 # apurar nem a convocar.
 UX_046 = "UX-046"
 
-ESPECIES = (UX_001, UX_002, UX_003, UX_004, UX_005, UX_046)
+# As espécies da `038`, que levam a Atenção à **cauda** do certame — o que para depois da
+# avaliação. Cada uma carrega o identificador daquela feature, e cada uma é a **negação ou a
+# vizinha** de uma que já existia: ler a mensagem da vizinha em vez da condição é o que faria as
+# duas dispararem pelo mesmo fato (`R-1`).
+#
+# `UX-063` não é o `UX-003`: aquele mede **cobertura** — se há avaliador suficiente —, este mede se
+# o trabalho **andou**.
+UX_063 = "UX-063"
+# `UX-064` é a **negação da condição** do `UX-005`, e os dois nascem do mesmo cálculo. Nenhuma peça
+# cai nos dois (`FR-561`).
+UX_064 = "UX-064"
+# `UX-065` é ordem emitida cuja ocupação ninguém apurou.
+UX_065 = "UX-065"
+# `UX-066` não é o `UX-004`: aquele fala da ordem que **ficou para trás**, este da ordem que
+# **ninguém publicou**. Um mesmo marco pode ter os dois, e deve — são dois fatos sobre o mesmo ato,
+# e cada um se resolve numa tela diferente.
+UX_066 = "UX-066"
+
+ESPECIES = (
+    UX_001,
+    UX_002,
+    UX_003,
+    UX_004,
+    UX_005,
+    UX_046,
+    UX_063,
+    UX_064,
+    UX_065,
+    UX_066,
+)
+
+# As quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém retoma.
+TRABALHO_PENDENTE = frozenset({UX_063, UX_064, UX_065, UX_066})
+
+# Os dois estados em que o Edital **parou por ato**. Depois deles não há trabalho a retomar: o que
+# parou, parou porque alguém o encerrou ou o cancelou, e apontar avaliação pendente num Edital
+# encerrado mandaria concluir o que a instituição decidiu não concluir.
+EDITAL_PAROU_POR_ATO = frozenset({Edital.Status.ENCERRADO, Edital.Status.CANCELADO})
+
+
+def alcance_no_edital(alcancadas, edital):
+    """O alcance do ator **neste** Edital — o geral, menos o que o estado dele já respondeu.
+
+    **Só as espécies novas são retiradas, e a assimetria é deliberada** (`038`). As seis anteriores
+    continuam exatamente como estavam: o `UX-001` e o `UX-002` falam do **conteúdo publicado**, que
+    um Edital encerrado continua tendo e continua podendo Retificar; o `UX-004` fala de ordem que
+    envelheceu, e ela envelhece depois do encerramento como antes. Silenciá-las aqui mudaria o
+    comportamento de seis sinais que ninguém pediu para mudar.
+
+    As quatro da `038` são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho não se
+    retoma num Edital que parou por ato.
+    """
+    if edital.status not in EDITAL_PAROU_POR_ATO:
+        return alcancadas
+    return {
+        especie: valor and especie not in TRABALHO_PENDENTE for especie, valor in alcancadas.items()
+    }
+
 
 # As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
 # indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
@@ -595,32 +662,90 @@ def divergencias_temporais(edital, conteudo, agora, encaminhar):
         )
 
 
-# --- `UX-003` — cobertura de avaliação insuficiente -----------------------------------------
+# --- A Etapa: **uma leitura, duas perguntas** (`UX-003` e `UX-063`) --------------------------
 
 
-def cobertura_insuficiente(edital, conteudo, encaminhar):
+def sinais_da_etapa(edital, conteudo, encaminhar, alcancadas):
+    """As duas perguntas que se fazem sobre a mesma Etapa, com **uma** chamada de `resumo_da_etapa`.
+
+    **Ter avaliador não é ter avaliação**, e as duas perguntas são distintas: a cobertura pergunta
+    se há quem avalie, o trabalho parado pergunta se quem tem avaliador já foi avaliado. Uma Etapa
+    coberta com cinquenta avaliações paradas responde "sim" à primeira e "não" à segunda.
+
+    **A leitura é uma só, e é por isso que esta função existe** (`FR-557`, `038`). Escrever a
+    espécie nova como um gerador ao lado custaria **uma agregação a mais por Etapa** — o mesmo
+    número, buscado duas vezes, que é exatamente a segunda verdade que este projeto vem removendo.
+    O `resumo` desce como argumento para que cada espécie continue tendo a função dela.
+
+    O alcance entra aqui, e não na porta, porque a leitura serve às duas: suprimir a espécie que o
+    ator não alcança é decisão **por sinal** (`FR-004`), e não motivo para deixar de ler.
+    """
+    if not (alcancadas[UX_003] or alcancadas[UX_063]):
+        return
+    for etapa in etapas_do_conteudo(conteudo):
+        resumo = resumo_da_etapa(edital=edital, etapa=etapa)
+        if alcancadas[UX_003]:
+            yield from cobertura_insuficiente(edital, etapa, resumo, encaminhar)
+        if alcancadas[UX_063]:
+            yield from avaliacao_parada(edital, etapa, resumo, encaminhar)
+
+
+def cobertura_insuficiente(edital, etapa, resumo, encaminhar):
     """Etapa com inscrição carente de avaliador, com numerador e denominador (`FR-028`).
 
     Reusa `resumo_da_etapa` **como está**: uma agregação por Etapa, e não um laço sobre inscrições.
     A unidade sem nenhum avaliador é carente e permanece no denominador — retirá-la faria a
     cobertura parecer completa justamente onde ela não começou (`FR-033`).
+
+    O `resumo` chega pronto de `sinais_da_etapa`, que o lê uma vez para as duas espécies.
     """
-    for etapa in etapas_do_conteudo(conteudo):
-        resumo = resumo_da_etapa(edital=edital, etapa=etapa)
-        if not resumo["carentes"]:
-            continue
-        nome = nome_da_etapa(etapa)
-        yield Sinal(
-            especie=UX_003,
-            edital=edital,
-            alvo=nome,
-            medida=Medida(numerador=resumo["carentes"], denominador=resumo["inscricoes"]),
-            mensagem=(
-                f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
-                f"tem inscrição sem avaliador suficiente."
-            ),
-            destino=encaminhar(UX_003, edital, etapa.get("id")),
-        )
+    if not resumo["carentes"]:
+        return
+    nome = nome_da_etapa(etapa)
+    yield Sinal(
+        especie=UX_003,
+        edital=edital,
+        alvo=nome,
+        medida=Medida(numerador=resumo["carentes"], denominador=resumo["inscricoes"]),
+        mensagem=(
+            f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
+            f"tem inscrição sem avaliador suficiente."
+        ),
+        destino=encaminhar(UX_003, edital, etapa.get("id")),
+    )
+
+
+def avaliacao_parada(edital, etapa, resumo, encaminhar):
+    """Inscrição com avaliação **distribuída e não concluída** (`FR-560`, `UX-063`).
+
+    **A condição é a distribuída que não andou**, e não a que nunca foi distribuída: a segunda é o
+    `UX-003`, que mede cobertura. Uma Etapa sem distribuição nenhuma tem `completas` zerado, e esta
+    espécie não dispara nela — é o que impede os dois sinais de saírem pelo mesmo fato.
+
+    **`resumo_da_etapa` não devolve `avaliadas`**, e a medição desta feature foi encontrá-lo: o que
+    ele devolve é `sem_conclusao = inscricoes − avaliadas`. A conta é a mesma, e escrevê-la com o
+    nome que existe é o que impede o próximo leitor de procurar uma chave que não está lá.
+
+    A medida é **paradas sobre distribuídas** (`FR-032`): o denominador é o universo que já tem
+    avaliador, porque é sobre ele que a pergunta do progresso se faz. Usar o total de inscrições
+    diluiria a parada num universo que ainda nem começou a ser distribuído.
+    """
+    avaliadas = resumo["inscricoes"] - resumo["sem_conclusao"]
+    paradas = resumo["completas"] - avaliadas
+    if paradas <= 0:
+        return
+    nome = nome_da_etapa(etapa)
+    yield Sinal(
+        especie=UX_063,
+        edital=edital,
+        alvo=nome,
+        medida=Medida(numerador=paradas, denominador=resumo["completas"]),
+        mensagem=(
+            f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, tem avaliação "
+            f"distribuída e não concluída."
+        ),
+        destino=encaminhar(UX_063, edital, etapa.get("id")),
+    )
 
 
 # --- `UX-046` — o Edital publica vaga e não publica quadro (027) -----------------------------
@@ -784,7 +909,137 @@ def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
     ).exists()
 
 
-def atos_obsoletos(edital, conteudo, versao_vigente, encaminhar):
+def sinais_do_marco(edital, conteudo, versao_vigente, encaminhar, alcancadas):
+    """As duas perguntas sobre o **ato vigente de cada recorte**, com uma leitura dele só.
+
+    **O ato é lido uma vez e serve às duas** (`FR-557`, `038`): a obsolescência pergunta se a ordem
+    ficou para trás, a ocupação pergunta se alguém apurou o que ela produziu. Um gerador ao lado
+    releria `ato_vigente` por recorte, e o custo da espécie nova dobraria antes de ela existir.
+
+    **Uma leitura por recorte, e nunca uma visita por lista** — é a forma que a `034` adotou, e a
+    razão é a mesma: são no máximo as listas que o Perfil declara, e é a mesma pergunta que a tela
+    da ocupação faz para uma delas. `recortes_do_marco` responderia mais, e custaria os quatro
+    números de cada recorte para decidir uma pergunta de sim ou não.
+    """
+    if not (alcancadas[UX_004] or alcancadas[UX_065] or alcancadas[UX_066]):
+        return
+    for perfil, marco in marcos_do_conteudo(conteudo):
+        marco_id = marco.get("id")
+        # **A cadeia de publicações é do marco, e não do recorte**, e por isso é lida uma vez para
+        # todas as listas dele. Relê-la por recorte custaria uma consulta por lista para devolver
+        # exatamente as mesmas linhas — e o filtro por lista é feito sobre elas, em memória.
+        #
+        # Preguiçosa de propósito: um marco cujos recortes não têm ato não chega a pagá-la.
+        historico = None
+        for lista_id, nome_da_lista in listas_do_marco(perfil, marco, conteudo):
+            ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+            # **As três espécies falam de um ato que existe.** Sem ato não há ordem que envelheça,
+            # ocupação a apurar nem resultado a divulgar: o recorte ainda não chegou lá, e isso não
+            # é sinal.
+            if ato is None:
+                continue
+            if alcancadas[UX_004]:
+                yield from atos_obsoletos(
+                    edital,
+                    marco,
+                    marco_id,
+                    lista_id,
+                    nome_da_lista,
+                    ato,
+                    versao_vigente,
+                    encaminhar,
+                )
+            if alcancadas[UX_065]:
+                yield from recorte_sem_ocupacao(
+                    edital, perfil, marco, marco_id, lista_id, nome_da_lista, encaminhar
+                )
+            if alcancadas[UX_066]:
+                if historico is None:
+                    historico = historico_do_marco(edital=edital, marco_id=marco_id)
+                yield from ato_sem_divulgacao(
+                    edital, marco, marco_id, lista_id, nome_da_lista, ato, historico, encaminhar
+                )
+
+
+def recorte_sem_ocupacao(edital, perfil, marco, marco_id, lista_id, nome_da_lista, encaminhar):
+    """Recorte com ordem vigente e **sem apuração vigente** (`FR-563`, `UX-065`).
+
+    **Esta é a única das três espécies da `US2a` que acrescenta consulta**, e o custo foi medido
+    antes de ser pago: a Supervisão já lia `ato_vigente` para o `UX-004`, mas não lia nada de
+    `ocupacao` — `apuracao_vigente` não aparecia neste módulo. É **uma leitura por recorte**, e
+    nenhuma por participante.
+
+    **Não é obsolescência**: o `UX-004` fala da ordem que ficou para trás, e esta fala da ordem que
+    ninguém apurou. Um recorte pode disparar os dois, e deve: são dois fatos sobre o mesmo ato — a
+    ordem envelheceu **e** a ocupação nunca foi feita —, e cada um se resolve numa tela diferente.
+    """
+    if (
+        apuracao_vigente(
+            edital=edital, perfil_id=perfil["id"], marco_id=marco_id, lista_id=lista_id
+        )
+        is not None
+    ):
+        return
+    nome = marco.get("name") or str(marco_id)
+    alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
+    yield Sinal(
+        especie=UX_065,
+        edital=edital,
+        alvo=alvo,
+        mensagem=(
+            f"O marco {_citado(alvo)}, do Edital {rotulo_do_edital(edital)}, tem ordem vigente e "
+            f"nenhuma apuração de ocupação."
+        ),
+        destino=encaminhar(UX_065, edital, marco_id),
+    )
+
+
+def ato_sem_divulgacao(
+    edital, marco, marco_id, lista_id, nome_da_lista, ato, historico, encaminhar
+):
+    """Ato de ordenação vigente **sem divulgação vigente** (`FR-562`, `UX-066`).
+
+    **A derivação não é escrita aqui: é lida de onde a tela de destino a lê** (`FR-557`). Ela vivia
+    dentro de `interface/views.py`, num ajudante privado, e foi **extraída** para
+    `divulgacao.application.selectors`. Reescrevê-la neste sinal daria duas respostas para a mesma
+    pergunta, e a primeira a mudar deixaria a outra para trás sem que nada ficasse vermelho.
+
+    **Duas formas de não estar divulgado, e o mesmo destino.** Ou ninguém publicou aquele ato, ou o
+    que está publicado é de um ato anterior — e nos dois casos o resultado que o público lê não é o
+    que vale. A frase distingue as duas porque quem conduz age diferente: a primeira é uma
+    divulgação que falta, a segunda é uma que ficou para trás.
+
+    **Não é o `UX-004`.** Aquele diz que a ordem envelheceu; este, que ela não foi publicada. Um
+    marco pode ter os dois, e os dois se resolvem em telas diferentes — suprimir um deles aqui
+    esconderia trabalho que ninguém mais apontaria.
+    """
+    estado = divulgacao_do_ato(
+        edital=edital, marco_id=marco_id, ato=ato, lista_id=lista_id, historico=historico
+    )
+    if estado is None or not (estado["nunca_divulgado"] or estado["defasadas"]):
+        return
+    nome = marco.get("name") or str(marco_id)
+    alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
+    razao = (
+        "não foi divulgado"
+        if estado["nunca_divulgado"]
+        else "não é o que está divulgado: o público lê um ato anterior"
+    )
+    yield Sinal(
+        especie=UX_066,
+        edital=edital,
+        alvo=alvo,
+        mensagem=(
+            f"O ato de ordenação vigente do marco {_citado(alvo)}, do Edital "
+            f"{rotulo_do_edital(edital)}, {razao}."
+        ),
+        destino=encaminhar(UX_066, edital, marco_id, ato=ato),
+    )
+
+
+def atos_obsoletos(
+    edital, marco, marco_id, lista_id, nome_da_lista, ato, versao_vigente, encaminhar
+):
     """Ato vigente **confirmado** obsoleto (`FR-029`).
 
     Duas passagens, e a segunda só onde a primeira acusar. Chamar `estado_do_marco` para todos os
@@ -793,39 +1048,37 @@ def atos_obsoletos(edital, conteudo, versao_vigente, encaminhar):
 
     O sinal nasce da **confirmação**. Parar na primeira passagem exibiria candidato como sinal, e
     fato posterior não implica divergência — um painel que erra uma vez deixa de ser lido.
+
+    O ato e o recorte chegam prontos de `sinais_do_marco`, que os lê uma vez para as duas espécies.
     """
-    for perfil, marco in marcos_do_conteudo(conteudo):
-        marco_id = marco.get("id")
-        for lista_id, nome_da_lista in listas_do_marco(perfil, marco, conteudo):
-            ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
-            if ato is None or not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
-                continue
-            try:
-                estado = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
-            except DomainError:
-                # Marco que a norma vigente não conhece e ato que não existe: a leitura recusa, e
-                # a supervisão não inventa sinal a partir de uma recusa.
-                continue
-            if not estado["obsoleto"]:
-                continue
-            nome = (estado["marco"] or {}).get("name") or marco.get("name") or str(marco_id)
-            # O recorte entra no alvo porque um marco de cotas tem três atos: sem ele os três
-            # sinais sairiam com a mesma frase, e quem lesse não saberia qual lista abrir.
-            alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
-            yield Sinal(
-                especie=UX_004,
-                edital=edital,
-                alvo=alvo,
-                mensagem=(
-                    f"O ato de ordenação vigente do marco {alvo}, do Edital "
-                    f"{rotulo_do_edital(edital)}, está obsoleto."
-                ),
-                # A dona não é a mesma nos dois casos: a ordenação diagnostica a divergência de um
-                # ato computado, e o sorteio é onde uma ordem sorteada se refaz — com relação nova
-                # e ocorrência nova. Mandar um sorteio para a ordenação levaria a uma tela que
-                # oferece recalcular o que só uma semente nova produz.
-                destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato)),
-            )
+    if not candidato_a_obsoleto(edital, ato, marco, versao_vigente):
+        return
+    try:
+        estado = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    except DomainError:
+        # Marco que a norma vigente não conhece e ato que não existe: a leitura recusa, e a
+        # supervisão não inventa sinal a partir de uma recusa.
+        return
+    if not estado["obsoleto"]:
+        return
+    nome = (estado["marco"] or {}).get("name") or marco.get("name") or str(marco_id)
+    # O recorte entra no alvo porque um marco de cotas tem três atos: sem ele os três sinais
+    # sairiam com a mesma frase, e quem lesse não saberia qual lista abrir.
+    alvo = f"{nome} — {nome_da_lista}" if nome_da_lista else nome
+    yield Sinal(
+        especie=UX_004,
+        edital=edital,
+        alvo=alvo,
+        mensagem=(
+            f"O ato de ordenação vigente do marco {alvo}, do Edital "
+            f"{rotulo_do_edital(edital)}, está obsoleto."
+        ),
+        # A dona não é a mesma nos dois casos: a ordenação diagnostica a divergência de um ato
+        # computado, e o sorteio é onde uma ordem sorteada se refaz — com relação nova e
+        # ocorrência nova. Mandar um sorteio para a ordenação levaria a uma tela que oferece
+        # recalcular o que só uma semente nova produz.
+        destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato)),
+    )
 
 
 # --- `UX-005` — recurso sem membro desimpedido ----------------------------------------------
@@ -874,20 +1127,38 @@ def impedidos_por_recurso(pendentes):
     return impedidos
 
 
-def comissao_impedida(processo, editais, encaminhar):
-    """Recurso aguardando julgamento para o qual nenhum membro ativo está desimpedido (`FR-030`).
+def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
+    """As peças pendentes, **partidas em dois desfechos por um cálculo só** (`FR-561`, `038`).
+
+    **Um fato, um sinal.** A peça cujos membros estão todos impedidos é o `UX-005`; a que tem ao
+    menos um livre é o `UX-064`. A partição é por construção — as duas listas saem do **mesmo**
+    conjunto `membros - impedidos`, e nenhuma peça cai nas duas.
+
+    **É por isso que isto é um ato só, e não duas funções.** Calculadas em lugares separados, uma
+    mudança na regra de impedimento moveria um sinal e deixaria o outro para trás, e os dois
+    passariam a discordar sobre a mesma peça sem que nada ficasse vermelho.
 
     **A mensagem se limita ao que verifica.** Julgar exige também a permissão sistêmica de julgar
     recurso, e o sistema não sabe quem a possui: os papéis vêm da sessão, e não há registro que
     ligue identidade a papel. Afirmar que o julgamento é impossível seria afirmar o que os dados
-    não sustentam — alguém de fora da comissão pode detê-la (`FR-030a`, `T-004`).
+    não sustentam — alguém de fora da comissão pode detê-la (`FR-030a`, `T-004`). Pela mesma razão
+    o `UX-064` diz que **há** recurso esperando, e não quem deveria julgá-lo (`FR-564`).
     """
+    if not (alcancadas[UX_005] or alcancadas[UX_064]):
+        return
     membros = {membro.identity_subject for membro in comissao_selectors.membros(processo)}
     if not membros:
         # Sem comissão ativa não há "comissão inteira impedida": há ausência de comissão, que é
-        # outra condição e não está no catálogo.
+        # outra condição e não está no catálogo. **E não há `UX-064` tampouco**: "ao menos um
+        # membro livre" é falso quando não há membro nenhum, e a partição continua exaustiva sem
+        # precisar de um terceiro caso.
         return
     for edital in editais:
+        # A fila é por Edital, e o estado dele também: um Edital encerrado não tem julgamento a
+        # retomar, mas continua tendo peça cuja comissão está impedida — que é fato do `UX-005`.
+        deste = alcance_no_edital(alcancadas, edital)
+        if not (deste[UX_005] or deste[UX_064]):
+            continue
         pendentes = [
             linha["recurso"]
             for linha in recursos_selectors.recursos_do_edital(
@@ -895,18 +1166,37 @@ def comissao_impedida(processo, editais, encaminhar):
             )
         ]
         impedidos = impedidos_por_recurso(pendentes)
-        if not any(not (membros - impedidos.get(peca.id, set())) for peca in pendentes):
-            continue
-        yield Sinal(
-            especie=UX_005,
-            edital=edital,
-            alvo=rotulo_do_edital(edital),
-            mensagem=(
-                f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} para o "
-                f"qual todos os membros da comissão estão impedidos de julgar."
-            ),
-            destino=encaminhar(UX_005, edital),
-        )
+        # O **mesmo** conjunto responde as duas perguntas, e é a razão de ele ser calculado aqui e
+        # não dentro de cada desfecho.
+        livres = {peca.id: membros - impedidos.get(peca.id, set()) for peca in pendentes}
+        travadas = [peca for peca in pendentes if not livres[peca.id]]
+        soltas = [peca for peca in pendentes if livres[peca.id]]
+        if deste[UX_005] and travadas:
+            yield Sinal(
+                especie=UX_005,
+                edital=edital,
+                alvo=rotulo_do_edital(edital),
+                mensagem=(
+                    f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} para "
+                    f"o qual todos os membros da comissão estão impedidos de julgar."
+                ),
+                destino=encaminhar(UX_005, edital),
+            )
+        if deste[UX_064] and soltas:
+            yield Sinal(
+                especie=UX_064,
+                edital=edital,
+                alvo=rotulo_do_edital(edital),
+                # A medida é **esperando sobre pendentes**: as travadas estão no denominador
+                # porque também aguardam julgamento, e retirá-las faria o número dizer que o
+                # Edital tem menos recurso parado do que tem.
+                medida=Medida(numerador=len(soltas), denominador=len(pendentes)),
+                mensagem=(
+                    f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} com "
+                    f"membro da comissão desimpedido para julgá-lo."
+                ),
+                destino=encaminhar(UX_064, edital),
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -938,6 +1228,12 @@ ROTULOS_DO_DESTINO = {
     (UX_004, "sorteio"): "Abrir o sorteio do marco",
     UX_005: "Abrir os recursos do Edital",
     UX_046: "Retificar o quadro de vagas do Edital",
+    # As três da `038`. O rótulo diz **o que se vai encontrar**, e não o que se vai fazer: a
+    # decisão de agir é de quem chega (`FR-035`). Nenhum deles nomeia pessoa (`FR-564`).
+    UX_063: "Abrir a distribuição da Etapa",
+    UX_064: "Abrir os recursos do Edital",
+    UX_065: "Abrir a ocupação do marco",
+    UX_066: "Abrir a divulgação do resultado",
 }
 
 
@@ -963,7 +1259,7 @@ def admite_encaminhamento(processo, especie, edital, ator):
     )
 
 
-def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False):
+def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None):
     """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
     if not admite_encaminhamento(processo, especie, edital, ator):
         return None
@@ -983,6 +1279,21 @@ def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio
         ),
         UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
         UX_046: lambda: reverse("interface:retificar", args=[edital.id]),
+        # **A mesma tela dona, e nunca uma segunda implementação do fato** (`FR-557`). O `UX-063`
+        # leva à distribuição da Etapa, que é onde o trabalho está; o `UX-064` aos recursos do
+        # Edital, exatamente como o `UX-005` — os dois falam de peças da mesma fila, e mandá-los a
+        # telas diferentes faria a fronteira entre eles parecer maior do que é.
+        UX_063: lambda: reverse("interface:distribuicao", args=[edital.id, referencia]),
+        UX_064: lambda: reverse("interface:recursos", args=[edital.id]),
+        # A ocupação é por **marco**, e mostra os recortes dele: a referência é o marco, e o
+        # recorte que produziu o sinal está nomeado no alvo.
+        UX_065: lambda: reverse("interface:ocupacao", args=[edital.id, referencia]),
+        # **A rota da divulgação pende do ato, e não do marco** (`017`): é o ato que a autorização
+        # qualifica, e é dele que a prévia é composta. Um marco de cotas tem três atos, e mandar o
+        # sinal ao marco obrigaria quem chega a adivinhar qual deles publicar.
+        UX_066: lambda: reverse(
+            "interface:previa-de-publicacao", args=[edital.id, referencia, ato.id]
+        ),
     }
     rotulo = ROTULOS_DO_DESTINO.get((especie, "sorteio") if sorteio else especie)
     return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
@@ -1009,13 +1320,27 @@ def alcance(ator, processo):
         # legível por quem alcança o Processo. Quem pratica o ato é outra decisão, e ela é do
         # encaminhamento — não da visibilidade.
         UX_046: pode_supervisionar(ator, processo) is not None,
+        # As três da `038` repetem a porta da espécie **vizinha**, e repeti-la por extenso é o
+        # ponto: o dia em que a tela dona mudar de porta, o lugar de mudar é este.
+        #
+        # O `UX-063` leva à mesma tela do `UX-003`. O `UX-064` exige a mesma permissão do `UX-005`,
+        # porque é a mesma fila de peças. O `UX-065` leva à ocupação, cuja consulta aceita as duas
+        # bases que a ordenação aceita — é a porta do `UX-004`, e não uma mais estreita.
+        UX_063: gere,
+        UX_064: bool(ator and ator.can(recursos_admitir.PERMISSAO)),
+        UX_065: gere or bool(ator and ator.can("auditoria:consultar")),
+        # A divulgação tem porta própria — `resultado:publicar` —, e ela não decorre das outras: a
+        # presidência que conduz o certame pode não ser quem divulga, na configuração segregada que
+        # a `033` nomeou. Oferecer o sinal a quem não abre a tela seria o beco que a `FR-558`
+        # recusa.
+        UX_066: bool(ator and ator.can("resultado:publicar")),
     }
 
 
 # --- A região inteira ------------------------------------------------------------------------
 
 
-def sinais(processo, ator, *, agora=None):
+def sinais(processo, ator, *, agora=None, alcancadas=None):
     """Os sinais deste Processo, na ordem do catálogo — e nada além deles.
 
     A ordem é a de `ESPECIES`, e não uma de gravidade: os cinco são igualmente acionáveis, e
@@ -1025,10 +1350,16 @@ def sinais(processo, ator, *, agora=None):
     que é ao mesmo tempo a supressão silenciosa e a leitura mais barata.
     """
     agora = agora or timezone.now()
-    alcancadas = alcance(ator, processo)
+    # `alcancadas` entra pronto quando quem chama já o leu. A página do Processo precisa saber,
+    # **antes** de montar a região, se este ator alcança alguma espécie — e `pode_gerir_comissao`
+    # consulta a comissão, de modo que recalculá-lo aqui custaria a mesma leitura duas vezes.
+    if alcancadas is None:
+        alcancadas = alcance(ator, processo)
 
-    def encaminhar(especie, edital, referencia=None, *, sorteio=False):
-        return destino_de(processo, especie, edital, referencia, ator=ator, sorteio=sorteio)
+    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None):
+        return destino_de(
+            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato
+        )
 
     leitura = leitura_dos_editais(processo)
     publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
@@ -1038,18 +1369,22 @@ def sinais(processo, ator, *, agora=None):
             achados += list(etapas_sem_marco(edital, conteudo, encaminhar))
         if alcancadas[UX_002]:
             achados += list(divergencias_temporais(edital, conteudo, agora, encaminhar))
-        if alcancadas[UX_003]:
-            achados += list(cobertura_insuficiente(edital, conteudo, encaminhar))
-        if alcancadas[UX_004]:
-            achados += list(
-                atos_obsoletos(edital, conteudo, versao_vigente_do_edital(edital), encaminhar)
-            )
-        if alcancadas[UX_046]:
-            achados += list(acervo_sem_quadro(edital, conteudo, encaminhar))
-    if alcancadas[UX_005]:
+        # **As leituras partilhadas recebem o alcance inteiro, e não um `if` na chamada** (`038`).
+        # Cada uma serve a duas espécies com uma consulta só, e decidir aqui qual delas o ator
+        # alcança obrigaria a escolher entre ler duas vezes e suprimir demais. A supressão continua
+        # sendo por sinal, dentro delas (`FR-004`).
+        # **O estado do Edital entra aqui, e por espécie** (`038`): o que parou por ato não tem
+        # trabalho a retomar, e as seis espécies anteriores não se movem.
+        deste = alcance_no_edital(alcancadas, edital)
+        achados += list(sinais_da_etapa(edital, conteudo, encaminhar, deste))
         achados += list(
-            comissao_impedida(processo, [edital for edital, _ in publicados], encaminhar)
+            sinais_do_marco(edital, conteudo, versao_vigente_do_edital(edital), encaminhar, deste)
         )
+        if deste[UX_046]:
+            achados += list(acervo_sem_quadro(edital, conteudo, encaminhar))
+    achados += list(
+        sinais_do_recurso(processo, [edital for edital, _ in publicados], encaminhar, alcancadas)
+    )
     # Espécie, depois **Edital**, depois alvo. O Edital entra no meio porque a leitura da região é
     # feita por Edital: ordenar só pelo nome do alvo intercalava dois Editais com Etapas homônimas
     # — "Análise documental" de um, depois a do outro —, e quem lê perdia a conta de onde estava.
@@ -1073,12 +1408,20 @@ __all__ = [
     "ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL",
     "PERMISSAO_DE_RETIFICAR",
     "ESPECIES",
+    "EDITAL_PAROU_POR_ATO",
     "ROTULOS_DO_DESTINO",
+    "TRABALHO_PENDENTE",
+    "alcance_no_edital",
     "UX_001",
     "UX_002",
     "UX_003",
     "UX_004",
     "UX_005",
+    "UX_046",
+    "UX_063",
+    "UX_064",
+    "UX_065",
+    "UX_066",
     "Destino",
     "Marco",
     "Medida",

@@ -10,7 +10,7 @@ import pytest
 from django.urls import reverse
 
 from tests.fixtures.edital import identificador
-from tests.fixtures.supervisao import rascunhar, submeter
+from tests.fixtures.supervisao import SEGUNDO_SEED, rascunhar, submeter
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -449,3 +449,141 @@ def test_edital_nao_publicado_nao_recebe_encaminhamento_de_retificacao(
     do_encerrado = [item for item in depois if item.edital.id == edital_a.id]
     assert do_encerrado, "o sinal continua: o conteúdo publicado não muda porque o Edital encerrou"
     assert all(item.destino is None for item in do_encerrado)
+
+
+# ---------------------------------------------------------------------------
+# A página do Processo passa a conduzir (038, US1)
+#
+# **A prova que importa é a da igualdade.** O pulso e a Atenção não são recalculados aqui: são as
+# mesmas duas funções, lidas de uma segunda tela. Um teste que só conferisse "aparece" passaria
+# igualmente sobre uma segunda derivação — que é exatamente o que a `FR-557` proíbe.
+# ---------------------------------------------------------------------------
+
+
+def url_do_processo(processo):
+    return reverse("interface:processo-detalhe", args=[processo.id])
+
+
+def abrir_o_processo(client, processo, subject="maria", papeis=()):
+    identificar(client, subject, list(papeis))
+    resposta = client.get(url_do_processo(processo))
+    assert resposta.status_code == 200, resposta.content
+    return resposta.content.decode()
+
+
+def test_a_pagina_do_processo_apresenta_o_pulso_e_a_atencao(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """`FR-556`: o guia não desliga quando o Edital é publicado.
+
+    Antes desta feature a página listava Editais e oferecia encerrar ou cancelar — dois atos
+    terminais — e nada dizia sobre o certame em curso.
+    """
+    submeter(edital_c, 3, seed=SEGUNDO_SEED)
+
+    conducao = regiao(abrir_o_processo(client, processo_a), "conducao-titulo")
+
+    lido = texto(conducao)
+    assert "3" in lido
+    assert f"Edital {edital_c.number}/{edital_c.year}" in lido
+    # A Atenção veio junto, e não só o pulso.
+    assert "Atenção" in lido
+
+
+def test_o_processo_e_a_supervisao_dizem_a_mesma_coisa_do_mesmo_edital(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """`FR-557` e `SC-197`: **zero divergências** — e elas não podem existir, por construção.
+
+    As duas telas chamam `pulso` e `sinais`; não há segundo cálculo a divergir. Este teste é o que
+    tornaria vermelha a tentação de recalcular aqui "para não depender da Supervisão".
+
+    **A comparação é frase a frase, e não por um número solto.** Uma asserção de que o dígito `4`
+    aparece nas duas telas passaria com o Pulso pela metade — e passou, até a revisão da `038`
+    apontar que a série e os próximos marcos não estavam sendo apresentados.
+    """
+    submeter(edital_c, 4, seed=SEGUNDO_SEED)
+
+    do_processo = texto(regiao(abrir_o_processo(client, processo_a), "conducao-titulo"))
+    do_painel = abrir(client, processo_a)
+    pulso_da_supervisao = texto(regiao(do_painel, "pulso-titulo"))
+    atencao_da_supervisao = texto(regiao(do_painel, "atencao-titulo"))
+
+    # **O que aconteceu**: a soma do Processo, dita com as mesmas palavras.
+    assert "4 inscrições recebidas no Processo" in do_processo
+    assert "4 inscrições recebidas no Processo" in pulso_da_supervisao
+
+    # **O que vem**: cada marco que a Supervisão anuncia é anunciado aqui também.
+    marcos = re.findall(
+        r"declarado (?:planejado|em andamento|concluído|cancelado)", pulso_da_supervisao
+    )
+    assert marcos, "sem marco na Supervisão, este teste não provaria a igualdade"
+    assert len(
+        re.findall(r"declarado (?:planejado|em andamento|concluído|cancelado)", do_processo)
+    ) == len(marcos)
+
+    # A série tem o mesmo equivalente textual nas duas — é o mesmo parcial, lido do mesmo Pulso.
+    for valores in re.findall(r"Valores da série — \d+ dias?", pulso_da_supervisao):
+        assert valores in do_processo, f"a Supervisão mostra {valores!r} e o Processo não"
+
+    # **O que pede ação**: as mesmas frases, e não paráfrases.
+    for mensagem in re.findall(r"A Etapa [^.]+\.", atencao_da_supervisao):
+        assert mensagem in do_processo, f"a Supervisão diz {mensagem!r} e o Processo não"
+
+
+def test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """`FR-556` e o caso-limite da spec: *"lê o estado e não recebe caminho algum"*.
+
+    **Esta era a leitura errada da primeira implementação**, e a revisão a pegou: a região inteira
+    pendia de `pode_supervisionar`, de modo que quem alcançava o Processo e não a Supervisão não
+    lia estado nenhum — o oposto do que o requisito manda.
+
+    O Pulso é agregado: não carrega destino nem dado pessoal, e esta página já diz que o Processo
+    existe e quais são os Editais dele. O que carrega destino é o **sinal**, e é ele que `alcance`
+    suprime espécie a espécie (`FR-004`). Quem não alcança espécie nenhuma não recebe a região da
+    Atenção — dizer-lhe *"nenhuma condição"* afirmaria que não há nada quando o que há é coisa que
+    ela não pode ver.
+    """
+    submeter(edital_c, 3, seed=SEGUNDO_SEED)
+
+    corpo = abrir_o_processo(client, processo_a, subject="estranho")
+    lido = texto(corpo)
+
+    # Lê o estado.
+    assert 'aria-labelledby="conducao-titulo"' in corpo
+    assert "3 inscrições recebidas no Processo" in lido
+
+    # E não recebe caminho algum: nem sinal, nem a linha que anunciaria a ausência deles.
+    assert "Atenção" not in texto(regiao(corpo, "conducao-titulo"))
+    assert "Nenhuma condição de atenção" not in lido
+    assert 'class="sinal"' not in corpo
+
+
+def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """O outro lado: quem alcança as espécies recebe os sinais, e não só o Pulso.
+
+    Sem este caso, o teste acima passaria igualmente sobre uma região que nunca mostra Atenção
+    nenhuma — e a `US1` teria entregue meia tela para todo mundo.
+    """
+    conducao = regiao(abrir_o_processo(client, processo_a), "conducao-titulo")
+
+    assert "Atenção" in texto(conducao)
+    assert "sem marco no cronograma" in texto(conducao)
+
+
+def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(
+    client, seletor_ligado, processo_limpo
+):
+    """`FR-559`: uma linha declarada, e nunca uma seção vazia por espécie.
+
+    A mesma regra da Supervisão, e pela mesma razão: sumir não distinguiria *nada a sinalizar* de
+    *a página não carregou*, e um cabeçalho por espécie diria dez vezes que não há nada.
+    """
+    conducao = regiao(abrir_o_processo(client, processo_limpo), "conducao-titulo")
+
+    assert "Nenhuma condição de atenção" in texto(conducao)
+    assert '<li class="sinal"' not in conducao
