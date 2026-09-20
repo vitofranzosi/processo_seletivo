@@ -1,7 +1,15 @@
 name: Backend
 
+# **`push` só na `main`, e é o que impede o trabalho em dobro.** Sem o filtro, todo commit de uma
+# branch com PR aberto disparava esta suíte **duas vezes** — uma pelo `push`, outra pelo
+# `pull_request` —, sobre o mesmo SHA e com o mesmo resultado. Eram ~54 minutos de runner por
+# commit e quatro checks a ler, sendo dois deles cópia dos outros dois.
+#
+# O que se perde é a verificação de branch **sem PR**, e é perda aceitável: aqui todo trabalho entra
+# por PR, e o merge na `main` continua verificado pelo `push` que este filtro preserva.
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
