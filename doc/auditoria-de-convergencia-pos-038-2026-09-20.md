@@ -109,9 +109,27 @@ grande, não depois.
   estão em `~/Downloads`, fora do repositório. O que medi do Cenário D é estrutural, não de percurso.
 - **Não reexecutou** os 17 `AX` de 15/09 — a varredura de 19/09 o fez, e nada em `editais/models`
   mudou desde então.
-- Uma fonte citada no briefing — `doc/relatorio-longitudinal-produto-001-a-037-2026-09-19.md` — **não
-  existe** no repositório. O documento de 19/09 é `varredura-dos-dezessete-2026-09-19.md`, e foi esse
-  que usei.
+- **Não leu o relatório longitudinal de 19/09** —
+  [`relatorio-longitudinal-produto-001-a-037-2026-09-19.md`](relatorio-longitudinal-produto-001-a-037-2026-09-19.md).
+  O documento de 19/09 que usei é [`varredura-dos-dezessete-2026-09-19.md`](varredura-dos-dezessete-2026-09-19.md).
+
+  > **Correção de 21/09/2026.** Esta linha afirmava que aquela fonte **"não existe" no repositório**.
+  > A afirmação estava errada. O arquivo existia desde 19/09, no diretório de trabalho do checkout
+  > principal e **não rastreado**: `git status` o via, `git ls-files` não. Foi versionado em 21/09,
+  > com aviso próprio sobre o que nele venceu.
+  >
+  > **O que esta auditoria fez continua valendo como está escrito** — ela não o usou. O que muda é a
+  > razão: não por ele não existir, mas por ele estar invisível ao repositório. É a armadilha que a
+  > [varredura dos dezessete](varredura-dos-dezessete-2026-09-19.md) documentou como lição de método
+  > no mesmo dia, e que se repetiu aqui, com um documento diferente, no dia seguinte.
+  >
+  > **O que ficou de fora da §4 e da §19 por causa disso.** Sete coisas que este documento não cobre
+  > ou deixou como `[NÃO REAUDITADO]`: divergência real entre duas avaliações da mesma inscrição,
+  > heteroidentificação, barema e grupos em cascata, notificação que nunca alcança ator interno,
+  > `E-3`, a densidade da Classificação e as specs implementadas que seguem em `Status: Draft`. As
+  > sete estão conferidas contra a `main` no aviso do próprio relatório — e a primeira é a mais
+  > séria: a unicidade da avaliação concluída é **por pessoa**, dois avaliadores da mesma inscrição
+  > concluem os dois, e a consolidação recusa sem oferecer resolução.
 
 ---
 
