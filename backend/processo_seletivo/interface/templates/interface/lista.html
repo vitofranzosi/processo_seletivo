@@ -25,9 +25,18 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
-{% if pode_criar %}
+{% if pode_criar or pode_ver_visao %}
 <p class="acoes-do-painel">
-  <a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>
+  {% if pode_criar %}<a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>{% endif %}
+  {% comment %}
+  O caminho para a visão institucional (040, FR-605). **Condicionado à capacidade**: oferecer um
+  destino que a autorização vai recusar é pior do que não oferecer — foi o defeito `N-03` da 038,
+  e é o que a 033 proíbe. Esconder o link não substitui a verificação: quem montar a URL à mão
+  recebe a mesma recusa, que mora na view.
+
+  E não vai no cabeçalho de `base.html`: lá só existe um link, e ele não depende de papel nenhum.
+  {% endcomment %}
+  {% if pode_ver_visao %}<a class="botao secundario" href="{% url 'interface:visao-geral' %}">Visão Geral</a>{% endif %}
 </p>
 {% endif %}
 

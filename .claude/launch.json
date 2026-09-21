@@ -189,6 +189,16 @@
       ],
       "port": 8041,
       "url": "http://localhost:8041"
+    },
+    {
+      "name": "visao-040",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_040 POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8042"
+      ],
+      "port": 8042,
+      "url": "http://localhost:8042"
     }
   ]
 }
