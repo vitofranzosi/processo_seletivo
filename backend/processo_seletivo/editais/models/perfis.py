@@ -116,7 +116,8 @@ class ModalidadeConcorrencia(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["perfil", "code"], name="uq_modalidade_perfil_code")
+            models.UniqueConstraint(fields=["perfil", "code"], name="uq_modalidade_perfil_code"),
+            models.UniqueConstraint(fields=["id", "perfil"], name="uq_modalidade_id_perfil")
         ]
 
     def __str__(self):

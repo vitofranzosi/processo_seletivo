@@ -122,10 +122,8 @@ class Inscricao(models.Model):
         pelo queryset — e é justamente por isso que esta guarda pode ser total sem impedir o
         próprio envio.
 
-        **O que ela não é**: garantia de banco. `Inscricao` muda legitimamente enquanto está em
-        rascunho, então ela não entra nas tabelas append-only da `003` — pela mesma razão que
-        `Retificacao` ficou de fora: imutabilidade condicional ao estado não cabe em privilégio de
-        tabela.
+        A migration 0005 impõe a mesma fronteira no PostgreSQL, inclusive por UPDATE direto.
+        A tabela permanece fora de append-only: o rascunho exige escrita legítima.
         """
         if not self._state.adding:
             anterior = Inscricao.objects.filter(pk=self.pk).values("status").first()

@@ -49,6 +49,9 @@ class MembroComissao(models.Model):
     class Meta:
         ordering = ["funcao", "identity_subject"]
         constraints = [
+            models.CheckConstraint(
+                condition=Q(funcao__in=["PRESIDENTE", "MEMBRO"]), name="ck_membro_funcao",
+            ),
             # Parcial: readicionar quem saiu cria linha nova, e o histórico sobrevive (FR-003).
             models.UniqueConstraint(
                 fields=["processo", "identity_subject"],
