@@ -127,9 +127,12 @@ grande, não depois.
   > ou deixou como `[NÃO REAUDITADO]`: divergência real entre duas avaliações da mesma inscrição,
   > heteroidentificação, barema e grupos em cascata, notificação que nunca alcança ator interno,
   > `E-3`, a densidade da Classificação e as specs implementadas que seguem em `Status: Draft`. As
-  > sete estão conferidas contra a `main` no aviso do próprio relatório — e a primeira é a mais
-  > séria: a unicidade da avaliação concluída é **por pessoa**, dois avaliadores da mesma inscrição
-  > concluem os dois, e a consolidação recusa sem oferecer resolução.
+  > sete estão conferidas contra a `main` no aviso do próprio relatório — e a primeira virou achado
+  > próprio, em
+  > [`achado-duas-avaliacoes-sem-regra-de-combinacao.md`](achado-duas-avaliacoes-sem-regra-de-combinacao.md):
+  > uma Etapa que declara duas avaliações por inscrição **publica um ato que não se consolida**, e a
+  > `032` não o vê. É outro Edital publicado sem conserto possível, ao lado do que a §20 já nomeia
+  > na `D-G5`.
 
 ---
 
