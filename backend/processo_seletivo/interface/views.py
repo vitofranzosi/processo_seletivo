@@ -146,6 +146,7 @@ from processo_seletivo.interface import (
 )
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
+from processo_seletivo.interface import visao_geral as visao_institucional
 from processo_seletivo.interface.templatetags import interface_extras
 from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import (
@@ -263,8 +264,57 @@ def lista(request):
                 if situacao in contagem
             ],
             "pode_criar": ator.can("processo:criar"),
+            # Sem consulta nova: a capacidade já veio na sessão (040, FR-605).
+            "pode_ver_visao": ator.can(visao_institucional.CONSULTAR),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
+        },
+    )
+
+
+def visao_geral(request):
+    """A visão institucional dos Processos Seletivos — acima do Processo (040, `FR-581`).
+
+    **A recusa mora na aplicação, e a tela apenas a antecipa** (Princípio IV). Quem colar o endereço
+    sem a capacidade encontra a mesma recusa que a lista esconde: retirar o link não substitui a
+    verificação, e é o que a `FR-482` da `033` cobra.
+
+    **Não há 404 de escopo aqui, e a ausência é decisão.** Em tela de objeto, escopo alheio devolve
+    "não encontrado" para que objeto inexistente e objeto de outra unidade sejam indistinguíveis.
+    Esta página não endereça objeto: é listagem, e listagem de escopo alheio não existe — o ator vê
+    o **seu** escopo, sempre, porque o filtro é da consulta.
+
+    Montagem de contexto, e nada além: as derivações moram em `visao_geral.py`, onde se testam sem
+    requisição.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    # **Pela porta que nomeia o que falta**, e não por `require_permission` (033, `FR-481`). A
+    # recusa desta família tem de dizer qual capacidade faltou e a quem pedi-la, e
+    # `require_permission` devolve *"A operação não é permitida"* — verdade, e não acionável.
+    # `bases` com **uma**
+    # alternativa é uso legítimo — a função recebe o conjunto aceito **naquele ponto de chamada**,
+    # e aqui não há vínculo que sirva: não existe "presidir a instituição".
+    require_authorization_base(
+        ator.can(visao_institucional.CONSULTAR),
+        bases=[base_de_permissao("consultar a visão institucional")],
+    )
+
+    recorte, linhas, consolidado = visao_institucional.ler(ator, request.GET)
+    return render(
+        request,
+        "interface/visao_geral.html",
+        {
+            "recorte": recorte,
+            "linhas": linhas,
+            "consolidado": consolidado,
+            "situacoes": Edital.Status.choices,
+            "situacoes_do_periodo": visao_institucional.SITUACOES_DO_PERIODO,
+            "ordens": visao_institucional.ORDENS,
+            "todos_os_anos": visao_institucional.TODOS,
+            # O instante da leitura, declarado — a mesma cortesia que a Supervisão já presta.
+            "lido_em": timezone.localtime(),
         },
     )
 
