@@ -1,9 +1,25 @@
-# Estudo exploratório — esforço operacional para cadastrar Processos Seletivos e Editais
+# Estudo exploratório — esforço de autoria, reaproveitamento e fidelidade documental
 
 **Data:** 2026-09-21 · **Fuso:** -03 (America/Sao_Paulo) · **Branch:** `claude/edital-registration-ux-study-1291e7`
 **Commit base:** `396e75c` · **Diário operacional:** [doc/diario-estudo-esforco-2026-09-21.md](diario-estudo-esforco-2026-09-21.md)
 **Ambiente:** execução nativa, PostgreSQL local, banco exclusivo `ps_ux_edital` (`make preparar` → **33 de 33** tabelas append-only protegidas), `runserver` na porta 8043 conectando como a role de runtime.
 **Regra do estudo:** todo o cadastro foi feito pela interface web. Nenhum dado entrou por shell, fixture, Admin ou API. O código só foi consultado **depois** de cada comportamento observado.
+
+> **O que este estudo é, e o que não é.** Os cinco Editais são **reais e já encerrados**, e servem
+> como **amostra normativa e de complexidade** — não como cenário operacional. Carga retroativa de
+> Editais encerrados não é caminho suportado ([decisão de 25/09](decisao-sem-carga-retroativa.md)),
+> e para publicá-los foi preciso falsear a data de encerramento das inscrições. O que decorre só
+> disso vem marcado como **artefato do método**.
+>
+> **Medido × estimado.** As interações foram contadas no percurso em **dois** Editais (78/2026 e
+> 140/2025). Nos outros três, os números são estimados por custo unitário; o que se afirma sobre
+> eles vem do documento publicado, conferido. Interação não é tempo nem taxa de erro: nenhuma
+> sessão foi cronometrada com um operador real.
+>
+> **Complemento, não substituto.** A [auditoria pós-038](auditoria-de-convergencia-pos-038-2026-09-20.md)
+> declarou não ter percorrido a composição desde o zero nem uma família multipolo real. Este
+> estudo cobre essas duas lacunas — e só elas: não avalia o Processo vivo, avaliação, recurso,
+> convocação, matrícula, Retificação nem o portal do candidato.
 
 ---
 
@@ -17,36 +33,29 @@ chega ao servidor, o documento gerado tem timbre, numeração, legendas de tabel
 documentos em a)–o) e verificação por SHA-256. A segregação de funções na publicação funciona e se
 explica na própria tela. Nada disso é pouco.
 
-Os gargalos, em ordem de impacto:
+Os gargalos, com a integridade normativa antes da eficiência:
 
-1. **Um defeito de uma linha torna "Cadastro Reserva limitado" inalcançável pela interface** — e a
-   consequência viaja até o PDF publicado, que passa a declarar o **oposto** do que o Edital diz.
-2. **Não existe reaproveitamento dentro de um Edital.** Nenhum duplicar, nenhum aplicar-a-todos,
-   nenhuma edição em lote — confirmado por varredura do código. O único reuso é o Edital inteiro
-   (023), e ele **exige um Edital de origem já publicado**.
-3. **O reuso entre Editais copia a prosa normativa inteira e avisa sobre outra coisa.** No
-   140/2025 vieram 10.900 caracteres de texto do Edital 14/2026 — incluindo o nome da função e do
-   curso do outro certame — enquanto o banner nomeia "datas, vagas e prazos".
-4. **As citações legais somem, e nada no fluxo percebe.** Medido nos cinco: 149/2024 e 28/2026
-   publicaram **zero** dos **sete** atos normativos que o original cita, a LGPD entre eles. O
-   sistema não conhece o documento de origem; a fidelidade do texto livre depende só do operador.
-5. **Um Edital cujas datas já passaram não pode ser publicado.** Nos cinco casos foi preciso
-   falsear a data de encerramento das inscrições — e no 140/2025 a falsificação **aparece no
-   documento publicado**, num cronograma em que as inscrições fecham um ano depois de abrirem.
-6. **O que o Edital declara uma vez, o sistema pede por Perfil.** No 140/2025, 16 Perfis × 4
-   Modalidades custaram **~530 interações numa única etapa**, para dizer o que o Anexo III original
-   diz em uma tabela de uma página. O PDF gerado herda a repetição: **34 tabelas em 27 páginas**,
-   metade do documento repetindo dezesseis vezes a mesma regra.
-7. **Documento obrigatório sob condição não tem como ser declarado.** O campo é booleano e o
-   recorte só existe por par *(Perfil, Modalidade)*. No 140/2025 isso publicou **nove documentos
-   obrigatórios como `(facultativo)`** — entre eles o laudo médico do candidato PcD. A alternativa
-   fiel custaria 112 linhas de documento.
-8. **O vocabulário fechado do método de sorteio não comporta o sorteio que estes Editais usam.**
-   Para publicar, o operador declara uma norma que o documento original não contém — e o PDF sai
-   **se contradizendo**.
-9. **A estrutura documental é fixa.** Oito seções de primeiro nível do 140/2025 (FUNÇÕES, VAGAS,
-   CONVOCAÇÃO, MOBILIDADE, CURSO DE FORMAÇÃO, VINCULAÇÃO À UAB, PRAZO DE VALIDADE, CLASSIFICAÇÃO
-   FINAL) viraram parágrafos em caixa alta dentro de outras seções.
+1. **Um defeito de uma linha tornava "Cadastro Reserva limitado" inalcançável pela interface** — e
+   o PDF publicado passava a declarar o **oposto** do que o Edital diz. Corrigido à parte, no #159.
+2. **Documento obrigatório sob condição não tem como ser declarado.** O campo é booleano e o
+   recorte só existe por par *(Perfil, Modalidade)*. No 140/2025, **nove documentos obrigatórios
+   saíram como `(facultativo)`** — entre eles o laudo médico do candidato PcD.
+3. **O reuso copia a prosa normativa inteira e avisa sobre outra coisa.** No 140/2025 vieram 10.900
+   caracteres do Edital 14/2026 — com a função e o curso do outro certame — enquanto o banner nomeia
+   "datas, vagas e prazos". É também por aí que a cláusula antiga de sorteio atravessaria para a
+   oferta nova, que a D-G3 manda declarar fonte pública externa.
+4. **O que o Edital declara uma vez, o sistema pede por Perfil.** No 140/2025, 16 Perfis × 4
+   Modalidades custaram **~530 interações numa única etapa**, ~80% sem informação nova. O PDF
+   herda a repetição: **34 tabelas em 27 páginas**.
+5. **Não existe reaproveitamento dentro de um Edital** — nenhum duplicar, aplicar-a-todos ou edição
+   em lote, confirmado no código. E como o reuso entre Editais exige origem publicada, **a primeira
+   oferta de cada família é sempre composta do zero**.
+6. **Citações legais não transcritas passam sem que nada perceba.** Em dois Editais, **nenhum** dos
+   sete atos normativos citados no original chegou ao documento — a LGPD entre eles. Não foi o
+   sistema que os removeu: fui eu, operador, que não os transcrevi; o sistema nunca conheceu a
+   fonte e não tem como notar a falta. Com conferência fato a fato, o último Edital chegou a 11 de 13.
+7. **A estrutura documental é fixa.** Oito seções de primeiro nível do 140/2025 viraram parágrafos
+   em caixa alta dentro de outras seções.
 
 ## 2. Editais analisados
 
@@ -118,8 +127,9 @@ dos campos nos cinco Editais. No 140/2025 a etapa de Perfis sozinha custou **~53
 pelo sistema, não pelo documento.
 
 **O documento gerado é mais curto que o original em quatro dos cinco casos** — e a causa não é
-concisão: é que **os Anexos não entram**. O 140/2025 empata em 27 páginas *apesar* de perder onze
-anexos, porque a repetição por Perfil consome a diferença.
+concisão: **nenhum Anexo foi enviado** (o navegador desta sessão não envia arquivo; ver §14). O
+140/2025 empata em 27 páginas *apesar* de sair sem os onze anexos, porque a repetição por Perfil
+consome a diferença.
 
 ## 5. Principais atritos, com evidência
 
@@ -160,7 +170,7 @@ quando deveria.
 **Saída que sobrou ao operador:** declarar "ilimitado". O PDF publicado passou a dizer
 `Cadastro reserva: ilimitado` — o oposto do Edital.
 
-### 5.2 Cadastro retroativo é impossível *(Classe C, alto impacto)*
+### 5.2 Edital encerrado não publica — artefato do método, não achado
 
 ```
 IMPEDE O período de inscrições encerrou em 03/09/2026 às 23:59. Publicado assim, o Edital
@@ -168,31 +178,27 @@ IMPEDE O período de inscrições encerrou em 03/09/2026 às 23:59. Publicado as
        de publicar.
 ```
 
-O Edital 78/2026 correu de 05/08 a 14/09/2026; hoje é 21/09/2026. Para chegar ao PDF **tive de
-falsear a data de encerramento das inscrições**. Um Edital real já vencido não entra no sistema sem
-mentir.
+O comportamento é o correto. Os cinco Editais já tinham corrido, e carga retroativa não é caminho
+suportado ([decisão de 25/09](decisao-sem-carga-retroativa.md)). Para chegar ao PDF, falseei a data
+de encerramento das inscrições — no 140/2025 ela saiu impressa no documento. Isso é custo do método.
 
-A etapa Cronograma também fica **permanentemente PENDENTE** nesse caso, e o motivo só aparece
-quando se entra nela — ao avançar, o operador vê "Cronograma PENDENTE" sem explicação na tela
-seguinte.
+O que sobrevive à decisão, porque vale para qualquer reuso — e todo reuso parte de uma oferta
+passada: as datas herdadas estão sempre vencidas, e a etapa Cronograma abre com um paredão de
+avisos (25 no 140/2025; §5.12).
 
-### 5.3 O método do sorteio não comporta o sorteio destes Editais *(Classe C, alto impacto)*
+### 5.3 O reuso herda a cláusula de sorteio que a D-G3 manda substituir *(Classe B)*
 
-A tela de Classificação oferece vocabulário fechado: **Algoritmo** = `IFES-SORTEIO-SHA256-v1`
-(opção única); **Fonte pública externa da semente** = `Fonte de demonstração` | `Loteria Federal`.
+O §6.2 do 78/2026 e o §8.2 do 28/2026 declaram semente **gerada e publicada pelo próprio
+sistema**, sem fonte externa. O vocabulário da tela de Classificação não comporta isso — e não
+deve: a D-G3 decidiu que, **prospectivamente**, o Cefor declara fonte pública externa. A
+incompatibilidade com os Editais antigos é, portanto, artefato do método; para publicá-los declarei
+Loteria Federal, e o PDF saiu se contradizendo (§9.A).
 
-O §6.2 do Edital 78/2026 — e o §8.2 do 28/2026, palavra por palavra — declaram outra coisa:
-
-> "O Software usado pelo CEFOR já é utilizado por outros institutos federais. Este programa
-> sorteia aleatoriamente a ordem dos números através de algoritmos e cálculos matemáticos. Para
-> fins de auditoria, observar o campo 'Semente utilizada: xxxxxxxxxxxxx', localizado ao fim da
-> página do sorteio."
-
-Semente **gerada e publicada pelo próprio sistema**, sem fonte externa. Não há opção
-correspondente, e sem método declarado a publicação é IMPEDIDA. Declarei Loteria Federal e mais
-oito campos que o Edital não contém — com o resultado descrito em §9.
-
-Isto não é particularidade de um Edital: **dois dos cinco** da amostra usam exatamente este texto.
+O que permanece é de reuso. A cláusula antiga mora em **texto livre**, e o reuso copia o texto livre
+inteiro sem marcar nada (diário, Caso E, seção E2 — medido no 140/2025). Uma oferta nova feita a partir do
+28/2026 traria a cláusula junto, e só a regra estruturada do sorteio a contradiria — no documento
+publicado. A D-G3 já apontava o reuso como o caso que mais facilmente escaparia; o estudo mostra por
+onde.
 
 ### 5.4 Campo obrigatório que não se anuncia, e impedimento com caminho interno *(Classe A/B)*
 
@@ -449,7 +455,9 @@ bloco de **Autoridade Signatária**.
    *"Fonte: Loteria Federal · Ocorrência: Concurso 5900 · Semente: os dígitos dos cinco prêmios da
    extração"*; a seção 7, transcrita do §6.2 do Edital, publica *"o software usado pelo Cefor…
    observar o campo 'Semente utilizada' ao fim da página do sorteio"*. **Duas normas incompatíveis
-   no mesmo ato.** A primeira não existe no documento original.
+   no mesmo ato.** A primeira não existe no documento original. *Artefato do método* quanto à
+   origem (Edital antigo, anterior à D-G3); o mecanismo — estrutura e prosa dizendo coisas
+   diferentes sem que nada acuse — é o mesmo do §5.3.
 
 3. **Horas inventadas viram norma.** "05/08/2026, **às 00h**" em 9 dos 11 eventos. O Anexo I
    publica só a data; o `datetime-local` obrigatório produziu a hora, e o gerador a imprime como se
@@ -555,11 +563,14 @@ abaixo foi conferida no PDF publicado.
 |---|---|---|
 | 78/2026 | "análise de documentos de até **30** suplentes" | "Cadastro reserva: **ilimitado**" |
 | 140/2025 | "quem se inscrever como PcD **deverá** apresentar laudo médico" | "Laudo Médico de Especialista (PcD) … **(facultativo)**" |
-| 78/2026, 28/2026 | sorteio pelo software do Cefor, semente no relatório | "Fonte: **Loteria Federal**, Concurso 5900" |
-| 140/2025 | cronograma inteiro em 2025 | inscrições encerram em **22/10/2026** |
 
-Os quatro têm a mesma forma: **o campo admite menos estados do que a norma**, e o gerador imprime
+Os dois têm a mesma forma: **o campo admite menos estados do que a norma**, e o gerador imprime
 o estado escolhido como se fosse declarado. Nenhum deles é erro de digitação.
+
+Duas outras divergências saíram nos PDFs e **não entram nesta conta**, porque são artefato do
+método: "Fonte: Loteria Federal" no 78/2026 e no 28/2026 (a norma antiga de sorteio, anterior à
+D-G3) e as inscrições encerrando em 22/10/2026 no 140/2025 (a data falseada para publicar um
+Edital já encerrado).
 
 ### A completude erra sempre no mesmo lugar: no texto livre
 
@@ -629,7 +640,7 @@ operador declara "ilimitado" para conseguir prosseguir
 PDF, Tabela 1: "Cadastro reserva: ilimitado"    ← o oposto do Edital
 ```
 
-**Caso 2 — a norma que o sistema acrescentou**
+**Caso 2 — a norma que o sistema acrescentou** *(artefato do método: norma anterior à D-G3)*
 
 ```
 §6.2: semente gerada pelo software, publicada ao fim da página do sorteio
@@ -676,7 +687,7 @@ PDF §4.j: "Laudo Médico de Especialista (PcD) — Apenas para quem concorre na
            PcD … (facultativo)"          ← obrigatório sob condição publicado como dispensável
 ```
 
-**Caso 6 — a data falseada que fica impressa** *(140/2025)*
+**Caso 6 — a data falseada que fica impressa** *(140/2025; artefato do método — ver §5.2)*
 
 ```
 Anexo II: inscrições de 07/10/2025 a 22/10/2025          (certame encerrado)
@@ -722,15 +733,14 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
 
 | # | Achado | Classe |
 |---|---|---|
-| A1 | `validacao.js` lê o rádio sem `:checked` — "Cadastro Reserva limitado" é inalcançável e a informação some do ato publicado | A |
+| A1 | `validacao.js` lê o rádio sem `:checked` — "Cadastro Reserva limitado" é inalcançável e a informação some do ato publicado. **Corrigido no #159** | A |
 | A2 | Não há reuso dentro do Edital (duplicar Perfil / aplicar Modalidades a todos / edição em lote); o único reuso exige origem **publicada** | A + C |
-| A3 | Edital com datas passadas não publica — cadastro retroativo e carga de acervo ficam impossíveis | C |
-| A4 | Vocabulário fechado do sorteio não comporta o sorteio real; o sistema acrescenta norma e o PDF se contradiz | C |
+| A4 | O reuso herda a cláusula de sorteio em texto livre, e nada pede a substituição que a D-G3 exige — estrutura e prosa publicariam normas opostas | B |
 | A5 | 12 seções fixas não acomodam matriz curricular, matrícula e certificado | C + D |
 | A6 | Bloco do método do sorteio repetido por Perfil no documento, rotulado "comum a este Edital" | D |
 | A7 | Documento exigido não sabe dizer "obrigatório para quem concorre como PcD": `required` é booleano e o recorte só existe por par *(Perfil, Modalidade)* — 9 documentos obrigatórios publicados como `(facultativo)` | C |
 | A8 | O reuso copia as seções de texto livre inteiras e o aviso nomeia "datas, vagas e prazos" — 10.900 caracteres de prosa de outro certame vieram sem sinalização | B + C |
-| A9 | As citações legais das seções de texto livre somem e nada no fluxo percebe — 0 de 7 em dois Editais, LGPD entre elas | B + C |
+| A9 | Citações legais não transcritas pelo operador passam sem que nada perceba — 0 de 7 em dois Editais, LGPD entre elas | B + C |
 | A10 | Não há objeto para a tabela de ordem de convocação (50 posições, item 10.5 do 140/2025), nem para submodalidade de PPIQ (Pretos/Pardos, Indígenas, Quilombolas) | C |
 
 ### Médio impacto
@@ -774,8 +784,9 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
 
 ## 12. Quick wins
 
-1. **Acrescentar `:checked` ao seletor de `reserveType` em `validacao.js`.** Uma linha. Destrava o
-   Cadastro Reserva limitado e devolve o aviso de "LIMITED exige um limite", hoje também morto.
+1. **Acrescentar `:checked` ao seletor de `reserveType` em `validacao.js`.** Feito no #159. Não
+   foi uma linha: os testes do caso existiam e passavam, porque a fixture montava o grupo de rádios
+   como um campo único. A correção levou junto a fixture e o shim de DOM.
 2. **Usar `Tipo · data — Descrição` no seletor de Evento das Etapas** — o rótulo que a tela de
    Inscrição já usa. Elimina as opções idênticas.
 3. **Marcar "Rótulo do resultado favorável/desfavorável" com `*`** quando a Etapa é decisória.
@@ -819,15 +830,19 @@ O padrão que o sistema já usa em três lugares (Etapas do Edital, Documentos c
 Perfis", método do sorteio comum) resolve o caso. A pergunta aberta é quais destes podem migrar
 sem violar a razão pela qual o marco é do Perfil.
 
-**E3 — Editais que o sistema não pode receber.** Datas passadas impedem publicação e Editais não
-publicados não servem de origem. Junto, isso fecha a porta para carregar o acervo histórico — que é
-justamente o material de onde sairia o reuso. Decidir se existe um caminho de **registro de Edital
-já executado**, distinto de publicar um Edital novo, é decisão de produto.
+Um dado para essa decisão: **na amostra, nenhum Perfil diverge dos irmãos** em Modalidades,
+percentuais, carga horária ou remuneração — os 16 do 140/2025, os 7 polos do 28/2026, os 7 códigos
+do 14/2026. Exceção por Perfil é plausível, mas não foi observada; o modelo atual, por Perfil, já a
+admite, e o que falta para o caso comum é "aplicar a todos" (E1).
 
-**E4 — O sorteio real não cabe no modelo.** Dois dos cinco Editais declaram semente gerada pelo
-próprio sistema e publicada após o ato. O modelo atual pressupõe fonte pública externa anterior.
-Ou o vocabulário admite essa forma, ou o Cefor muda a norma dos seus Editais — e isso não é decisão
-de engenharia.
+**E3 — Editais já encerrados: decidido, fora do produto.** Não haverá carga retroativa
+([decisão de 25/09](decisao-sem-carga-retroativa.md)). Uma consequência merece ficar escrita: como o
+reuso exige origem publicada, **a primeira oferta de cada família será sempre composta do zero** —
+o custo de autoria da §8 é pago ao menos uma vez por família, e o reuso não o amortiza.
+
+**E4 — Sorteio: decidido pela D-G3.** Os próximos Editais declaram fonte pública externa, e o
+produto não acomoda a semente própria. O que resta é de reuso, e está no §5.3: a cláusula antiga
+viaja em texto livre, e nada pede sua substituição.
 
 **E5 — A forma do documento.** Doze seções fixas não comportam matriz curricular, matrícula e
 certificado, que aparecem em Editais de curso. E a ordem de leitura (inscrição antes das vagas)
@@ -840,6 +855,18 @@ nove documentos obrigatórios como facultativos. Falta ou um escopo por Modalida
 todos os Perfis, ou um estado "obrigatório sob condição" com a condição declarada. E duas condições
 do Edital — sexo/idade para o serviço militar, vínculo de servidor para a declaração de chefia —
 não são de modalidade nem de perfil: são do candidato, e não há onde declará-las.
+
+São três casos, e não a mesma decisão que E2: **regra comum a todos os Perfis**, **regra comum com
+exceção**, e **condição sobre o candidato**. O que a amostra sustenta é menos do que parece:
+
+- o recorte "todos os PcD" cabe no **código** da Modalidade, que já existe e é igual nos 16 Perfis
+  — 112 linhas viram 7 sem conceito novo;
+- a condição sobre o candidato cabe num estado **"obrigatório sob condição"** com a condição em
+  texto. Modelá-la como atributo exigiria **coletar sexo, idade e vínculo de todo candidato** para
+  decidir se pede um papel — dado que o sistema não precisa por outro motivo;
+- exceção por Perfil não apareceu em nenhum dos cinco Editais (E2).
+
+Antes de desenhar, falta ver o que o candidato PcD de fato encontra no portal como exigido.
 
 **E7 — Submodalidade e ordem de convocação.** O 140/2025 convoca por `PPIQ (Pretos/Pardos)`,
 `PPIQ (Indígenas)` e `PPIQ (Quilombolas)`, com cascata de reversão entre elas (item 10.5.1), numa
@@ -858,7 +885,14 @@ que tem prosa (códigos e denominações de marco, seções de texto, quantidade
 de produto é se o reuso deve **marcar** o que copiou como pendente de revisão, campo a campo, em
 vez de avisar em bloco no topo da tela.
 
-**E10 — Ficha de avaliação sem forma.** O Anexo IV do 140/2025 e do 14/2026 é uma tabela de títulos
+**E10 — Redação no sistema ou transcrição?** O estudo mediu um cenário de **transcrição**: um PDF
+pronto, redigitado no sistema. É dele que vem a perda das citações legais (§9-bis). Se o Cefor
+redigir o Edital no sistema, não existe fonte a que ser fiel, e o risco se desloca para a prosa
+herdada no reuso (§5.3, A8). Se continuar redigindo no Word, a fidelidade à fonte é risco real, e
+as saídas vão de anexar a fonte a uma conferência estruturada antes da publicação. É decisão de
+processo do Cefor, e vem antes de qualquer spec sobre fidelidade.
+
+**E11 — Ficha de avaliação sem forma.** O Anexo IV do 140/2025 e do 14/2026 é uma tabela de títulos
 com pontos por item e teto por natureza. A Etapa de Avaliação só tem "Nota mínima", "Pontuação
 máxima" e "Peso" — **não há representação para a tabela de pontuação**. Nos dois Editais de
 prova de títulos ela teria de virar anexo em PDF ou texto livre, e o sistema não consegue conferir
@@ -876,6 +910,10 @@ a pontuação que ele mesmo vai publicar.
   cita `ANEXO I` a `ANEXO XI` sem publicar nenhum.
 - **Não medi tempo com operador humano.** Os tempos não foram estimados nesta revisão justamente
   por isso; as métricas da §4 contam interações, não minutos.
+- **A economia do reuso entre ofertas sucessivas não está sustentada.** O percurso 149/2024 →
+  28/2026 foi feito por reuso e a economia chegou a ser contada na sessão, mas o número não foi
+  registrado com o método e não é reverificável pelos artefatos. Fica fora deste relatório até ser
+  refeito — de preferência entre duas ofertas futuras da mesma família.
 - **Não contei as interações dos três Editais do meio** (149/2024, 28/2026, 14/2026) na hora. Os
   números com `~` na §4 são derivados de custo unitário; os que não têm `~` foram conferidos no
   artefato publicado.
@@ -886,30 +924,35 @@ a pontuação que ele mesmo vai publicar.
 
 ---
 
-## 15. Recomendações para próximas SPECs
+## 15. Recomendações
 
-Há evidência suficiente para justificar SPEC própria em sete frentes. **Não as escrevi.**
+**Uma correção, já feita à parte:** o `:checked` de `validacao.js` (#159). Era o único achado que
+fazia o ato publicado dizer o oposto da norma sem que o operador errasse nada.
 
-| Prioridade | Tema | Evidência que o sustenta |
+**Três decisões, antes de qualquer spec.** Nenhuma é de engenharia:
+
+1. **Redação no sistema ou transcrição** (§13/E10). Define se fidelidade à fonte é problema.
+2. **Conteúdo comum e documento condicional, tomadas juntas** (§13/E2 e E6). Têm a mesma raiz — a
+   granularidade em que a regra é declarada — mas não são a mesma decisão, e o desenho de uma
+   limita o da outra. A evidência da amostra aponta para o menor desenho que cobre os casos (§13/E6).
+3. **O conjunto de seções do documento** (§13/E5). É conteúdo normativo: 3 seções sem lugar no
+   78/2026, **8** no 140/2025.
+
+**Frentes com evidência para spec, em ordem de risco.** Não as escrevi.
+
+| Ordem | Tema | Evidência |
 |---|---|---|
-| 1 | **Reaproveitamento dentro do Edital** — duplicar Perfil, aplicar Modalidades/marco aos demais, edição em lote | §6.2, §6.4, §8: ~430 campos redigitados em um Edital real, ~80% da etapa de Perfis; nenhuma capacidade no código |
-| 2 | **Escopo de Edital para o que o Edital declara uma vez** — Modalidades, critérios de desempate, requisitos gerais, carga horária | §6.2, §6.3, §8: três blocos de requisito no original viram dezesseis no sistema; o padrão de escopo já existe em três lugares e funciona |
-| 3 | **Condição de exigência de documento** — escopo por Modalidade válido para todos os Perfis, e estado "obrigatório sob condição" | §5.9, §13/E6: nove documentos obrigatórios publicados como `(facultativo)`; a alternativa fiel custa 112 linhas |
-| 4 | **Fidelidade das seções de texto livre** — conferência contra a fonte, ou marcação do que o reuso copiou | §9-bis, §13/E9: 0 de 7 atos normativos em dois Editais, LGPD entre eles; nada no fluxo percebe |
-| 5 | **Economia e legibilidade do documento gerado** — método comum impresso uma vez, total de vagas, assinatura com nome e portaria, colunas e filetes das tabelas, o que é do Edital impresso uma vez e não por Perfil | §9.B–D, §9-bis: 34 tabelas em 27 páginas; cabeçalho cortado, filete ausente e data quebrada em três linhas |
-| 6 | **Registro de Edital já executado** — caminho para o acervo histórico, distinto de publicar Edital novo | §5.2, §13/E3: nos cinco casos foi preciso falsear a data, e no 140/2025 a falsificação saiu impressa |
-| 7 | **Cadastro de reserva como forma própria** — convocação sem quantidade publicada, submodalidade, ordem de convocação | §13/E7, §13/E8: 32 avisos sem resposta certa; a tabela de 50 posições não tem objeto e o texto publicado a cita |
+| 1 | **Exigência documental condicional**, incluindo o que o portal pede e o que a análise confere | §5.9: nove obrigatórios publicados como `(facultativo)` |
+| 2 | **Conteúdo comum aos Perfis e aplicação em lote** — duplicar, aplicar a todos, sem cópias que divirjam em silêncio | §6.2, §8: ~430 campos redigitados, ~80% da etapa; nenhuma capacidade no código |
+| 3 | **Reuso com estado de revisão** — o que veio da oferta anterior fica marcado até alguém revisar, inclusive a cláusula de sorteio | §5.3, A8: 10.900 caracteres de outro certame sem sinal |
+| 4 | **Estrutura e economia do documento gerado** — o comum impresso uma vez, total de vagas, autoridade com nome e ato, tabelas legíveis | §9-bis: 34 tabelas em 27 páginas; cabeçalho cortado, filete ausente |
 
-Duas frentes **não** viram SPEC antes de decisão do usuário:
+Saíram desta lista, desde a primeira versão: **registro de Edital já executado** (decisão de 25/09)
+e **o vocabulário do sorteio** (D-G3).
 
-- **O vocabulário do sorteio** (§13/E4) — depende de decidir se o Cefor muda a norma dos Editais ou
-  se o sistema admite semente própria.
-- **O conjunto de seções do documento** (§13/E5) — é conteúdo normativo, não arquitetura. Vale
-  registrar que o problema cresceu com a amostra: são 3 seções sem lugar no 78/2026 e **8** no
-  140/2025.
-
-E um item não é SPEC, é correção: o `:checked` de `validacao.js` (§12.1). Enquanto ele não for
-feito, **todo Edital com cadastro reserva limitado sai publicado com a regra invertida.**
+**Antes da frente 1, um complemento pequeno.** Não repetir os cinco cadastros. Compor com **datas
+futuras**: uma oferta N e a N+1 por reuso; uma Retificação; candidatos em AC, PcD e PPIQ no portal;
+anexos enviados de verdade. Só o item do portal condiciona a frente 1; o resto informa as outras.
 
 ---
 

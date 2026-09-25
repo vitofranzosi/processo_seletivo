@@ -4,6 +4,12 @@ Ambiente: worktree `edital-registration-ux-study-1291e7`, banco `ps_ux_edital` v
 append-only protegidas), servidor em :8043, identidade `joana.operadora` com papéis
 **Elaborador + Gestor**.
 
+> **Nota de 25/09, na revisão.** Os cinco Editais são reais e já encerrados; para publicá-los foi
+> preciso falsear a data de encerramento das inscrições. Carga retroativa não é caminho suportado
+> ([decisão](decisao-sem-carga-retroativa.md)). O que aqui decorre só disso — o IMPEDE de inscrições
+> encerradas, a data falsa no PDF do 140/2025, a Loteria Federal declarada para Editais anteriores à
+> D-G3 — é artefato do método, não achado do produto.
+
 ## Caso A — Edital 78/2026 (Libras Iniciante A1, vagas remanescentes)
 
 ### A0. Identificar-se
@@ -453,7 +459,8 @@ reserva de vagas, o quantitativo será destinado à respectiva ampla concorrênc
 3. **Uma data falseada fica visível no documento.** Para vencer o IMPEDE de "período de inscrições
    encerrado" tive de mover o fim das inscrições de 22/10/**2025** para 22/10/**2026**. O documento
    publica um cronograma em que as inscrições terminam **um ano depois** de abertas e **um mês
-   depois** do resultado final. Não é erro de quem digita: é o preço da regra.
+   depois** do resultado final. Não é erro de quem digita, nem defeito da regra: é o preço de
+   publicar um Edital já encerrado — artefato do método.
 
 4. **O quadro de vagas publicado é degenerado.** As dezesseis Tabelas de quadro têm **uma linha
    só** — "Ampla concorrência | 0" — enquanto a tabela de Modalidades ao lado publica 5%, 30% e
