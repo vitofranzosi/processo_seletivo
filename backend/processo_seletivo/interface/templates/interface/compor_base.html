@@ -71,8 +71,10 @@ vigência não distingue duas linhas diferentes.
 <p class="aviso" role="status">
   {% if origem_reaproveitada.edital %}<strong>Este Edital foi iniciado a partir do Edital {{ origem_reaproveitada.edital.number }}/{{ origem_reaproveitada.edital.year }}</strong> — {{ origem_reaproveitada.versao_por_extenso }}.
   {% else %}<strong>Este Edital foi iniciado a partir de outro Edital.</strong>{% endif %}
-  Confira e atualize as informações desta oferta — datas, vagas e prazos são da oferta anterior até
-  que alguém os revise.
+  Confira e atualize as informações desta oferta — datas, vagas e prazos{% with n=origem_reaproveitada.secoes_de_texto %}{% if n %}
+  e o texto de {% if n == 1 %}uma seção{% else %}{{ n }} seções{% endif %} de
+  <a href="{% url 'interface:compor-etapa' edital.id 'conteudo' %}">Conteúdo</a>{% endif %}{% endwith %}
+  são da oferta anterior até que alguém os revise.
   {% comment %}
   A troca mora aqui porque é aqui que a origem é nomeada — e é lendo o Cronograma ou os Perfis que
   se descobre ter partido do Edital errado. Só para quem pode elaborar: a ação é de elaboração.

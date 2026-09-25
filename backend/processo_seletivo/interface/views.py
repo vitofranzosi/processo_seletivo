@@ -711,6 +711,61 @@ def _destino(caminho, codigo=""):
 MOTIVO_SEM_DESTINO = "não há etapa do assistente que trate deste conteúdo"
 
 
+# Um caminho normativo dentro da frase: tem ao menos uma identidade (`id=`), e termina antes do
+# ponto ou do espaço que a frase põe depois dele. Sem `id=` não há o que traduzir — `/schedule`
+# sozinho é nome de coleção, e as mensagens de raiz já o dizem em português.
+CAMINHO_NA_MENSAGEM = re.compile(r"/[\w/=-]*id=[\w/=-]+")
+
+
+def nomes_dos_caminhos(snapshot):
+    """Caminho normativo → como a pessoa o enxerga, lido do vocabulário da Retificação.
+
+    **O vocabulário é o da Retificação, e não um segundo.** `campos_editaveis` já nomeia cada
+    entidade ("Etapa Prova didática") e cada campo ("Rótulo do resultado favorável") para a tela
+    que corrige o Edital publicado; um dicionário próprio da Revisão divergiria dele no primeiro
+    campo novo, e a mesma coisa teria dois nomes conforme o estado do Edital.
+    """
+    grupos, campos = {}, {}
+    for grupo in retificacao_ui.campos_editaveis(snapshot):
+        if grupo["caminho"]:
+            grupos[grupo["caminho"]] = grupo["titulo"]
+        for campo in grupo["campos"]:
+            campos[campo["caminho"]] = (grupo["titulo"], campo["rotulo"])
+    return grupos, campos
+
+
+def _caminho_legivel(caminho, grupos, campos):
+    """`/stages/id=…/rotuloFavoravel` → `«Etapa Prova didática», campo «Rótulo do resultado…»`.
+
+    Campo que a Retificação não nomeia recua para a entidade que o contém: dizer só "Etapa Prova
+    didática" é menos do que o caminho dizia, mas é o que a pessoa consegue ler — e o "Ir para" ao
+    lado leva ao cartão. Caminho sem entidade conhecida fica como está, porque inventar-lhe nome
+    seria pior do que mostrá-lo.
+    """
+    if caminho in campos:
+        entidade, rotulo = campos[caminho]
+        return f"«{entidade}», campo «{rotulo}»"
+    prefixo = caminho
+    while "/" in prefixo:
+        if prefixo in grupos:
+            return f"«{grupos[prefixo]}»"
+        prefixo = prefixo.rsplit("/", 1)[0]
+    return caminho
+
+
+def mensagem_legivel(mensagem, grupos, campos):
+    """A mensagem do domínio com cada caminho trocado pelo nome (§12, item 4 do estudo de esforço).
+
+    **A mensagem normativa não muda** — ela é lida pela API e por outras superfícies, e o caminho é
+    o que a torna inequívoca. Quem troca é a tela, que é quem sabe para quem está escrevendo: o
+    estudo mediu `/stages/id=3338c19f-…/rotuloFavoravel` como o ponto em que a interface mais exigia
+    do operador o modelo interno.
+    """
+    return CAMINHO_NA_MENSAGEM.sub(
+        lambda achado: _caminho_legivel(achado.group(0), grupos, campos), mensagem
+    )
+
+
 def pode_compor(edital, ator) -> bool:
     """Esta pessoa pode compor **este** Edital? (037, `FR-542`)
 
@@ -780,14 +835,15 @@ def _pendencias(edital, *, agora=None, ator=None):
     # Edital×ator, e repeti-lo por pendência custaria uma consulta de permissão por linha sem
     # poder responder diferente em nenhuma delas.
     conduzir = ator is not None and falta_permissao_para_compor(edital, ator)
-    for item in validate_for_publication(
-        edital_snapshot(edital), ato=ATO_DE_PUBLICACAO, agora=agora
-    ):
+    snapshot = edital_snapshot(edital)
+    grupos, campos = nomes_dos_caminhos(snapshot)
+    for item in validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=agora):
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
-                "mensagem": item.message,
+                "mensagem": mensagem_legivel(item.message, grupos, campos),
+                "codigo": item.code,
                 "campo": item.path,
                 "etapa": etapa,
                 "ancora": ancora,
@@ -3346,12 +3402,23 @@ def _origem_reaproveitada(edital):
     )
     if registro is None:
         return None
+    # **O texto também veio, e o aviso não o dizia** (estudo de esforço, §12, item 15). O reuso
+    # copia as seções de Conteúdo inteiras, e o aviso falava só de "datas, vagas e prazos": no
+    # 140/2025, 10.900 caracteres com a função e o curso de outro certame estavam prontos para sair
+    # no PDF de quem confiasse nele. Contadas as que têm texto, porque a vazia não traz nada.
+    secoes_de_texto = edital.secoes.exclude(content="").count()
     versao = _versao_por_identificador(registro.reason)
     if versao is None:
         # A versão não é apagável — é append-only —, mas um motivo que não resolve não pode derrubar
         # a composição: o que se perde é o detalhe, não a tela.
-        return {"edital": None, "versao": None, "quando": registro.occurred_at}
+        return {
+            "edital": None,
+            "versao": None,
+            "quando": registro.occurred_at,
+            "secoes_de_texto": secoes_de_texto,
+        }
     return {
+        "secoes_de_texto": secoes_de_texto,
         "edital": versao.edital,
         "versao": versao,
         # A mesma frase da trilha, pela mesma razão: sem as duas datas, duas versões distintas se

@@ -790,10 +790,13 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
 2. **Usar `Tipo · data — Descrição` no seletor de Evento das Etapas** — o rótulo que a tela de
    Inscrição já usa. Elimina as opções idênticas.
 3. **Marcar "Rótulo do resultado favorável/desfavorável" com `*`** quando a Etapa é decisória.
-4. **Nomear o campo na mensagem de impedimento**, em vez do caminho com UUID.
+4. **Nomear o campo na mensagem de impedimento**, em vez do caminho com UUID. Feito no #163: a
+   tela troca o caminho por «Etapa 1 — Prova didática», campo «Rótulo do resultado favorável»,
+   com o vocabulário que a Retificação já usava. A mensagem do domínio não muda.
 5. **Esconder Casas decimais, Arredondamento e Alvo** quando não se aplicam — a divulgação
    progressiva já existe no cartão, só não alcança estes três.
 6. **Colapsar os AVISOs de data passada** em uma linha ("11 Eventos com data já passada — ver").
+   Feito no #163, com `details`: cada aviso continua lá dentro, com a frase e o "Ir para".
 7. **Consertar a Tabela 4 do documento**: alargar as colunas "Nº" e Início (hoje o cabeçalho sai
    cortado e cada data ocupa três linhas) e restaurar o filete entre as linhas 7 e 8, que hoje
    saem fundidas.
@@ -805,11 +808,14 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
     máxima ao escolher "com decisão, sem nota".
 12. **Marcar "Fundamento da homologação" com `*`**, como os demais obrigatórios.
 13. **Ancorar a regra do ano no período do certame**, não no ano do Edital, e colapsar os avisos
-    de ano divergente como os de data passada.
+    de ano divergente como os de data passada. **O colapso foi feito no #163**, pelo mesmo
+    mecanismo do item 6. **A âncora não é quick win**: a FR-344 diz "ano do Edital" com razão
+    escrita (o `year` não é retificável, e o aviso nunca recusa), e trocar a referência é mudar o
+    requisito — decisão registrada aqui, não tomada.
 14. **Restaurar o filete entre linhas consecutivas com células iguais** no gerador de tabelas — o
     colapso atual funde dois eventos distintos num bloco só, no 78/2026 e no 140/2025.
 15. **Nomear o que o reuso copiou** no banner: "…e **as sete seções de texto** são da oferta
-    anterior", com link para a etapa Conteúdo. Uma frase.
+    anterior", com link para a etapa Conteúdo. Uma frase. Feito no #163.
 
 Nenhum destes altera o domínio.
 
