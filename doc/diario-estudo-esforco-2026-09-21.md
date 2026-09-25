@@ -507,6 +507,11 @@ Conferidos na página renderizada a 150 dpi, não no texto extraído:
    o filete some entre linhas consecutivas cujas células vizinhas têm **o mesmo valor** — aqui, as
    duas com `—` em Término e em Onde. Dois eventos distintos, com datas iguais, viram um bloco só.
    É o mesmo defeito do 78/2026, e não é aleatório.
+
+   > **Correção de 25/09.** A regra caracterizada acima está errada. Nos dois casos a primeira
+   > linha do par é a que a quebra de página levou para a página seguinte: o gerador anotava o
+   > início dela antes da quebra, a quebra recomeçava o quadro sem ele, e a linha ficava fora da
+   > grade. As células iguais eram coincidência.
 4. **As datas quebram no meio do número**: `26/11/2` / `025, às` / `00h`. A coluna não comporta
    `dd/mm/aaaa, às HHh`.
 

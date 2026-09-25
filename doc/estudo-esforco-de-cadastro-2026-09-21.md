@@ -600,10 +600,11 @@ Conferidos em páginas renderizadas a 150–300 dpi, não no texto extraído:
 
 1. **Cabeçalho de coluna cortado.** `Nº` não cabe na coluna e o `º` transborda a borda. Aparece na
    Tabela 4 do 78/2026 e na Tabela 34 do 140/2025.
-2. **Filete horizontal ausente entre linhas consecutivas com células iguais.** No 78/2026 são as
-   linhas 7 e 8; no 140/2025, as 6 e 7 — em ambos os casos, duas linhas cujas células vizinhas
-   têm o mesmo valor. Dois eventos distintos viram um bloco. **Não é aleatório: é uma colapso de
-   células idênticas.**
+2. **Filete horizontal ausente entre linhas consecutivas.** No 78/2026 são as linhas 7 e 8; no
+   140/2025, as 6 e 7. Dois eventos distintos viram um bloco. *Corrigido em 25/09: a causa não é
+   "células iguais".* Nos dois casos a primeira das duas é a linha que a quebra de página levou
+   para a página seguinte; o gerador perdia o início dela na quebra, e a linha ficava fora da
+   grade — com ela, o fio de baixo.
 3. **Quebra no meio do número.** `26/11/2` / `025, às` / `00h`; e os números de linha `10` a `13`
    quebram em `1`/`0`, `1`/`1`…
 4. **Hora inventada impressa como norma.** "às 00h" em 11 dos 13 eventos do 140/2025 e em 9 dos 11
@@ -796,22 +797,33 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
 6. **Colapsar os AVISOs de data passada** em uma linha ("11 Eventos com data já passada — ver").
 7. **Consertar a Tabela 4 do documento**: alargar as colunas "Nº" e Início (hoje o cabeçalho sai
    cortado e cada data ocupa três linhas) e restaurar o filete entre as linhas 7 e 8, que hoje
-   saem fundidas.
+   saem fundidas. Feito no #164: com duas colunas longas (Evento e Onde), a regra encolhia todas
+   na mesma proporção; agora as curtas recebem o que pedem e as longas repartem o resto. O filete
+   é o item 14. Documento já publicado não se regenera — vale para as próximas publicações.
 8. **Ocultar o bloco "Quadro de vagas"** quando o Perfil não tem Modalidade.
-9. **Copiar a Descrição** no "Partir de um Edital anterior".
+9. **Copiar a Descrição** no "Partir de um Edital anterior". **Não é quick win**: a FR-007 da
+   `023` diz que a identificação — número, ano, título **e descrição** — não deve ser copiada, e o
+   `data-model` da `023` repete a decisão. Copiá-la é mudar o requisito — registrado aqui, não
+   tomado.
 10. **Imprimir o bloco do método do sorteio uma vez**, na seção do Edital, quando for o método
-    comum — os marcos passam a remetê-lo.
+    comum — os marcos passam a remetê-lo. **Não é quick win**: a FR-465/466 da `032` e o contrato
+    `marco-no-documento.md` exigem que a seção de cada marco de sorteio imprima o método que o
+    governa. Remeter em vez de imprimir é mudar o requisito — registrado aqui, não tomado.
 11. **Limpar o campo dependente quando a regra muda** — Alvo ao escolher "não corta", Pontuação
     máxima ao escolher "com decisão, sem nota".
 12. **Marcar "Fundamento da homologação" com `*`**, como os demais obrigatórios.
 13. **Ancorar a regra do ano no período do certame**, não no ano do Edital, e colapsar os avisos
     de ano divergente como os de data passada.
 14. **Restaurar o filete entre linhas consecutivas com células iguais** no gerador de tabelas — o
-    colapso atual funde dois eventos distintos num bloco só, no 78/2026 e no 140/2025.
+    colapso atual funde dois eventos distintos num bloco só, no 78/2026 e no 140/2025. Feito no
+    #164 — e a causa era outra: a linha levada à página seguinte pela quebra perdia o início e
+    saía da grade (§9-bis, item 2).
 15. **Nomear o que o reuso copiou** no banner: "…e **as sete seções de texto** são da oferta
     anterior", com link para a etapa Conteúdo. Uma frase.
 
-Nenhum destes altera o domínio.
+Nenhum destes altera o domínio. *Conferido em 25/09, ao aplicá-los:* três deles contrariam
+requisito escrito — o 9 (FR-007 da `023`), o 10 (FR-465/466 da `032`) e a âncora do 13 (FR-344) —
+e o 5 esconderia campo que a publicação exige. Esses ficaram registrados, e não feitos.
 
 ---
 

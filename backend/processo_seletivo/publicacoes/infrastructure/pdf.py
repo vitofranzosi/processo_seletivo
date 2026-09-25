@@ -747,10 +747,18 @@ class Composicao:
                 continue
 
             if item[0] == "fecha_linha":
-                if quadro is not None and "inicio" in quadro:
-                    quadro["linhas"].append((quadro["inicio"], y))
+                if quadro is not None:
+                    # **A linha que a quebra levou para a página seguinte começou na anterior**, e
+                    # a quebra recomeça o quadro sem o início dela. Descartá-la aqui tirava da grade
+                    # a primeira linha da página nova — e com ela o fio abaixo, que fundia duas
+                    # linhas do Cronograma num bloco só (estudo de esforço, §12, item 14). Nesta
+                    # página ela começa onde terminou a anterior, que é o cabeçalho repetido.
+                    inicio = quadro.pop("inicio", None)
+                    if inicio is None:
+                        inicio = quadro["linhas"][-1][1] if quadro["linhas"] else y
+                    quadro["linhas"].append((inicio, y))
                     if len(quadro["linhas"]) == 1 and cabecalho_ativo:
-                        quadro["cabecalho"] = (quadro["inicio"], y)
+                        quadro["cabecalho"] = (inicio, y)
                 indice += 1
                 continue
 
@@ -920,8 +928,14 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     medida sem teto, uma descrição longa soma além da página e empurra as colunas seguintes para
     fora do papel — o documento sai sem as datas, e nada acusa.
 
-    O excesso é tirado sempre da coluna mais larga, e não distribuído: quem estoura a linha é a
-    célula longa, e encolher a coluna do `Nº` para acomodá-la não ajudaria ninguém.
+    O excesso é tirado só das colunas longas, e não distribuído: quem estoura a linha é a célula
+    longa, e encolher a coluna do `Nº` para acomodá-la não ajudaria ninguém.
+
+    **Longas no plural** (estudo de esforço, §12, item 7). A regra anterior tirava tudo da mais
+    larga, e quando nem ela no piso bastava — Evento **e** Onde longos, no Cronograma do 78/2026 —
+    todas encolhiam na mesma proporção: o `Nº` saía cortado pela borda e cada data ocupava três
+    linhas. Agora cada coluna curta recebe o que pede, e as longas repartem em partes iguais o que
+    sobrou; "curta" é a que cabe na parte igual de quem ainda não foi atendido.
     """
     colunas = len(linhas[0])
     naturais = [
@@ -932,16 +946,19 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
         + PADDING_DA_COLUNA
         for c in range(colunas)
     ]
-    piso = largura("MMMM", tamanho, REGULAR) + PADDING_DA_COLUNA
-    while sum(naturais) > disponivel:
-        maior = max(range(colunas), key=lambda c: naturais[c])
-        sobra = disponivel - (sum(naturais) - naturais[maior])
-        if sobra < piso:
-            # Nem encolhendo a maior cabe: todas cedem na mesma proporção, e o refluxo por célula
-            # cuida do resto. É o caso extremo, e sair da página não é alternativa.
-            fator = disponivel / sum(naturais)
-            return [n * fator for n in naturais]
-        naturais[maior] = sobra
+    if sum(naturais) > disponivel:
+        longas, restante = set(range(colunas)), disponivel
+        while True:
+            parte = restante / len(longas)
+            curtas = [c for c in longas if naturais[c] <= parte]
+            if not curtas:
+                break
+            for c in curtas:
+                longas.remove(c)
+                restante -= naturais[c]
+        # Sem curta nenhuma, todas repartem por igual e o refluxo por célula cuida do resto: é o
+        # caso extremo, e sair da página não é alternativa.
+        return [restante / len(longas) if c in longas else naturais[c] for c in range(colunas)]
     sobra = disponivel - sum(naturais)
     if sobra > 0:
         # A folga é distribuída **em proporção**, e não entregue à coluna mais larga. Num quadro de
