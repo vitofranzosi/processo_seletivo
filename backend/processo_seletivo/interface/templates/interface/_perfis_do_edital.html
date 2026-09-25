@@ -1,0 +1,115 @@
+{% comment %}
+A expansão dos Perfis (041, `FR-606`). **Uma segunda `<tr>`, e o `<details>` dentro do `<td>`.**
+
+`<details>` **não é filho válido** de `<tr>` nem de `<tbody>` — os filhos de `<tr>` são `<td>` e
+`<th>`, e nada mais. Pôr o `<details>` direto na linha produz HTML que cada navegador reparenteia à
+sua maneira, e **nenhum teste deste repositório cobre estrutura de tabela**: a suíte inteira passaria
+(`research.md`, `R-001` e `R-007`).
+
+**O controle é o `<summary>`, e não a linha** (`FR-620`). A linha do Edital continua levando ao
+Edital — é a `FR-600` da `040` —, e uma linha que alternasse a expansão faria as duas coisas
+disputarem o mesmo clique.
+{% endcomment %}
+{% if linha.perfis %}
+<tr class="expansao-do-edital">
+  <td colspan="8">
+    {% comment %}
+    **O controle nomeia a ação e a quantidade** (042, `FR-629`), e tem **marcador de divulgação**.
+    A `041` o perdeu sem perceber: `display:inline-block` tira o elemento de `list-item`, e o
+    triângulo que o navegador desenha simplesmente some — o que sobrou foi uma caixa de 67 px com
+    borda, que lê como botão (`R-001`). O marcador volta desenhado pela folha, é **decoração**, e
+    fica fora do nome acessível: quem ouve a tela recebe o estado por `open`.
+
+    **Os dois rótulos vivem no documento**, e `details[open]` alterna qual aparece. Nunca por
+    `content` de CSS: conteúdo gerado **não é texto do documento** e chega de forma inconsistente a
+    leitor de tela — serve para o triângulo, não para um rótulo de ação (`R-003`).
+    {% endcomment %}
+    <details class="perfis-do-edital">
+      <summary><span class="ao-abrir">Mostrar</span><span class="ao-fechar">Ocultar</span>
+        {{ linha.perfis|length }} Perfi{{ linha.perfis|length|pluralize:"l,s" }} de vaga
+        <span class="oculto">do Edital {{ linha.edital.number }}/{{ linha.edital.year }}</span></summary>
+
+      <table class="tabela-de-perfis">
+        {% comment %}
+        A legenda é o **nome acessível** da tabela aninhada, e continua no documento — invisível
+        (`FR-625`). Removê-la deixaria um leitor de tela diante de uma tabela sem nome dentro de
+        outra; desenhá-la repete o que a linha logo acima já diz.
+        {% endcomment %}
+        <caption class="oculto">Perfis de Vaga do Edital {{ linha.edital.number }}/{{ linha.edital.year }}, na versão vigente.</caption>
+        {% comment %}
+        **A grade é declarada, e não negociada com o conteúdo** (042, `FR-632`). Cada expansão é uma
+        `<table>` própria; em layout automático cada uma se dimensiona contra o que ela mesma tem
+        dentro, e duas expansões do mesmo recorte saem com grades diferentes. Medido: `Inscr./vaga`
+        com `192 px` num Edital e `78 px` no seguinte, porque num deles a frase de ausência caiu
+        naquela célula. Rolando a página, a mesma coluna salta.
+
+        As larguras são **proporção**, e não pixel: a tabela vive dentro de uma célula recuada, cuja
+        largura muda com o viewport — e a moldura de rolagem já governa o que não couber.
+        {% endcomment %}
+        <colgroup>
+          <col class="c-perfil">
+          <col class="c-vagas">
+          <col class="c-submetidas">
+          <col class="c-preenchimento">
+          <col class="c-razao">
+          <col class="c-atencao">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Perfil</th>
+            <th scope="col" class="numero">Vagas imediatas</th>
+            <th scope="col" class="numero">Submetidas</th>
+            <th scope="col" class="numero">Em preenchimento</th>
+            <th scope="col" class="numero">Inscr./vaga</th>
+            <th scope="col">Atenção</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for perfil in linha.perfis %}
+          <tr>
+            <th scope="row">{{ perfil.denominacao }}
+              {% comment %}
+              **Código, localidade e cadastro de reserva na identidade, e nenhum em coluna**
+              (042, `FR-626`, `FR-627`). Reserva é atributo **caracterizador** do Perfil, não
+              métrica que alguém compare verticalmente — e como coluna ela alargava a tabela e
+              reforçava a leitura de "planilha dentro de planilha".
+
+              A composição mora no módulo (`identidade_secundaria`), e não aqui: decidir quais
+              partes existem e como se separam é regra, e regra em template é a segunda verdade que
+              a `FR-582` da `040` proíbe. Vazia, a linha some.
+              {% endcomment %}
+              {% if perfil.identidade_secundaria %}<span class="nota">{{ perfil.identidade_secundaria }}</span>{% endif %}</th>
+            <td class="numero">{{ perfil.vagas.valor }}</td>
+            <td class="numero">{{ perfil.submetidas.valor }}{% if perfil.submetidas.parcial %}<span class="parcial">parcial</span>{% endif %}</td>
+            <td class="numero">{{ perfil.em_preenchimento.valor }}</td>
+            <td class="numero">
+              {% if perfil.razao.existe %}{{ perfil.razao.valor }}{% comment %}A razão do Perfil é
+              parcial pela mesma razão que a do Edital (`FR-595`).{% endcomment %}{% if perfil.razao.parcial %}<span class="parcial">parcial</span>{% endif %}{% else %}<span class="ausente">—</span>
+              <span class="motivo-da-ausencia">{{ perfil.razao.ausencia.motivo }}</span>{% endif %}</td>
+            {% comment %}
+            **O Perfil rotula; o Edital resume** (042, `FR-628`). A mesma frase nas duas
+            granularidades era correta e visualmente pesada: o agregado deve resumir, e o detalhe
+            explicar.
+            {% endcomment %}
+            <td>{% for marca in perfil.marcas %}<span class="marca m-{{ marca.especie }}">{{ marca.rotulo }}</span>{% empty %}<span class="sem-marca">—</span>{% endfor %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% comment %}
+      A diferença, **em texto e só quando existe** (`FR-613a`). Nenhuma linha, agrupamento ou
+      rótulo — *Outros*, *Removidos*, *Sem Perfil* — faz as vezes de Perfil para acomodá-las: isso
+      inventaria na tela um Perfil que o Edital nunca publicou, e fazer a conta fechar assim é pior
+      que não fechar.
+      {% endcomment %}
+      {% if linha.submetidas_sem_perfil or linha.rascunhos_sem_perfil %}
+      <p class="sem-perfil-vigente">
+        {% if linha.submetidas_sem_perfil %}{{ linha.submetidas_sem_perfil }} inscriç{{ linha.submetidas_sem_perfil|pluralize:"ão,ões" }} submetida{{ linha.submetidas_sem_perfil|pluralize }}{% endif %}{% if linha.submetidas_sem_perfil and linha.rascunhos_sem_perfil %} e {% endif %}{% if linha.rascunhos_sem_perfil %}{{ linha.rascunhos_sem_perfil }} em preenchimento{% endif %}
+        pertence{{ linha.submetidas_sem_perfil|add:linha.rascunhos_sem_perfil|pluralize:"m," }} a Perfis que a versão vigente
+        não tem mais: elas contam no total do Edital e não aparecem acima.</p>
+      {% endif %}
+    </details>
+  </td>
+</tr>
+{% endif %}

@@ -59,6 +59,20 @@ PAPEIS = {
             # **sistêmica** de gestão; a outra base é a presidência, que não é papel e por isso
             # não aparece aqui — ela é verificada contra o vínculo, objeto a objeto.
             "comissao:gerir",
+            # Ler o panorama institucional — o conjunto dos certames do escopo, acima do Processo
+            # (040, FR-604). **Capacidade própria, e não efeito de outra**: reusar
+            # `inscricao:consultar` concederia o panorama a quem pode abrir dossiê de candidato, e
+            # `auditoria:consultar` o concederia a quem lê trilha — duas permissões que respondem
+            # por outras perguntas. É a mesma recusa que `matricula:exportar` registrou.
+            #
+            # **Vai ao Gestor porque é ele quem hoje conduz os Processos do escopo.** Um papel
+            # próprio de Diretoria custaria uma entrada neste mapa e é decisão institucional, não
+            # técnica: está registrada como pendente na spec da 040 e não é tomada aqui.
+            #
+            # A permissão vai **escrita**, como todas as deste mapa: este módulo é a fronteira de
+            # identidade e não deve conhecer quem a consome. A grafia é conferida por
+            # `tests/authorization/test_visao_institucional.py`.
+            "visao:consultar",
         ],
     ),
     # Papel **próprio**, e não uma capacidade acrescentada a um existente (D-005, T-005). Cada

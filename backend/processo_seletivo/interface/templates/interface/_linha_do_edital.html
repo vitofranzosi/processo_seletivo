@@ -1,0 +1,85 @@
+{% load interface_extras %}
+{% comment %}
+A linha da tabela (040, FR-600). Extraída para que o teste de fragmento a alcance sem renderizar a
+página inteira — e porque é aqui que mora a gramática da ausência, que é o que separa esta tabela
+de um painel que parece saber.
+
+**Nenhuma ausência se escreve `0`, e nenhum zero legítimo vira `—`** (FR-591). O template não
+decide qual é qual: ele lê `numero.existe` e, quando não existe, escreve o motivo que a derivação
+já nomeou.
+{% endcomment %}
+{% comment %}
+**Um `<tbody>` por Edital** (042, `R-002`). `<table>` admite vários, e o significado deles é
+exatamente este: *grupo de linhas*. Um Edital e a sua expansão **são** um grupo.
+
+Com a agrupação, o **separador** entre Editais passa a ser a borda do grupo, e não a da linha —
+e é isso que permite régua e recuo na expansão **sem** posicionamento, **sem** pseudo-elemento que
+precise alcançar a linha de cima, e **sem** `:has()`.
+{% endcomment %}
+<tbody>
+<tr>
+  <th scope="row">
+    <a href="{% url 'interface:detalhe' linha.edital.id %}">Edital {{ linha.edital.number }}/{{ linha.edital.year }}</a>
+    <span class="processo-da-linha">{{ linha.edital.processo.title }}</span>
+  </th>
+  <td><span class="situacao s-{{ linha.edital.status }}">{{ linha.edital.status|situacao }}</span></td>
+  <td>
+    {% if linha.periodo.estado %}
+      {% if linha.periodo.estado == "aberto" %}Inscrições abertas{% elif linha.periodo.estado == "futuro" %}Inscrições ainda não abriram{% else %}Inscrições encerradas{% endif %}
+      {% if linha.periodo.fim %}<span class="prazo">até {{ linha.periodo.fim|date:"d/m/Y" }}</span>{% endif %}
+    {% else %}
+      <span class="ausente" title="{{ linha.periodo.motivo }}">—</span>
+      <span class="motivo-da-ausencia">{{ linha.periodo.motivo }}</span>
+    {% endif %}
+  </td>
+  <td class="numero">
+    {% if linha.vagas.existe %}
+      {{ linha.vagas.valor }}
+      {% comment %}
+      **A marca de reserva saiu na `041`.** Ela dizia *"algum Perfil tem reserva"* — já ambíguo no
+      agregado, e perda agora: a espécie é do Perfil, e as três se distinguem na expansão.
+      {% endcomment %}
+    {% else %}
+      <span class="ausente">—</span>
+      <span class="motivo-da-ausencia">{{ linha.vagas.ausencia.motivo }}</span>
+    {% endif %}
+  </td>
+  {% comment %}
+  **A marca é `parcial`, e o motivo não se repete aqui** (`040`, gramática da ausência, emendada
+  pela `042`). Escrito por extenso — *"parcial — as inscrições ainda estão abertas"* —, ele ocupava
+  73 px numa célula de 108, em prosa alinhada à direita, e dizia o que a coluna *Período* desta
+  mesma linha acabara de dizer. O motivo é único nesta tela e nasce junto com o período aberto: a
+  linha sempre o carrega, duas colunas à esquerda.
+  {% endcomment %}
+  <td class="numero">
+    {{ linha.submetidas.valor }}
+    {% if linha.submetidas.parcial %}<span class="parcial">parcial</span>{% endif %}
+  </td>
+  <td class="numero">{{ linha.em_preenchimento.valor }}</td>
+  <td class="numero">
+    {% if linha.razao.existe %}
+      {{ linha.razao.valor }}
+      {% comment %}
+      **A razão também é parcial enquanto o período corre** (`FR-595`), e a marca faltava: a
+      derivação a produzia — `Numero.de(..., parcial=aberto)` —, e o template a descartava. Um
+      Edital com inscrições abertas mostrava `0,0` como se fosse número fechado, que é justamente
+      a leitura que a `FR-595` existe para impedir.
+      {% endcomment %}
+      {% if linha.razao.parcial %}<span class="parcial">parcial</span>{% endif %}
+      {% if linha.populacao_da_razao %}<span class="nota">{{ linha.populacao_da_razao }}</span>{% endif %}
+    {% else %}
+      <span class="ausente">—</span>
+      <span class="motivo-da-ausencia">{{ linha.razao.ausencia.motivo }}</span>
+    {% endif %}
+  </td>
+  <td>
+    {% comment %}
+    As marcas são texto, e a cor é reforço (FR-602). Um estado comunicado só por cor não chega a
+    quem lê em preto e branco nem a quem usa leitor de tela — e esta coluna é a resposta a "quais
+    merecem atenção?".
+    {% endcomment %}
+    {% for marca in linha.marcas %}<span class="marca m-{{ marca.especie }}">{{ marca.mensagem }}</span>{% empty %}<span class="sem-marca">—</span>{% endfor %}
+  </td>
+</tr>
+{% include "interface/_perfis_do_edital.html" %}
+</tbody>

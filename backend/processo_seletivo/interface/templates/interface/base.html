@@ -754,11 +754,24 @@ form.identificar{background:var(--branco);border:1px solid var(--borda);border-r
 fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}
 legend{font-weight:600;padding:0 .4rem}
 label{display:block;margin-bottom:.5rem}
-/* FR-034: a regra cobria só `input[type=text]`, e `Ano` — que é `number` — ficava com a aparência
-   padrão do navegador: 22px de altura e fonte de 13px ao lado de vizinhos de 39px e 16px. O mesmo
-   valia para `textarea` e `select` fora do agrupamento do assistente. */
+{% comment %}
+FR-034: a regra cobria só `input[type=text]`, e `Ano` — que é `number` — ficava com a aparência
+padrão do navegador: 22px de altura e fonte de 13px ao lado de vizinhos de 39px e 16px. O mesmo
+valia para `textarea` e `select` fora do agrupamento do assistente.
+
+**E aconteceu de novo, com `search`.** A busca da Visão Geral (`040`) foi o primeiro
+`type="search"` desta folha, e caiu exatamente aqui: 22px de altura, fonte de 13,33px e borda
+`2px inset` ao lado de selects de 41px — e, como a barra alinha por `flex-end`, o rótulo *Buscar*
+descia os mesmos 19px de diferença. Uma lista que enumera tipos esquece o tipo seguinte, e foi por
+isso que o guardião passou a varrer os templates em vez de conferir a lista.
+
+**E o comentário é de Django, não de CSS.** Comentário de CSS viaja em toda página: escrito com
+`/* */`, este bloco estourou em 40 bytes o teto de 120.000 da tela de distribuição, que é a mais
+pesada do sistema. `
+{% endcomment %}
 input[type=text],input[type=number],input[type=date],input[type=datetime-local],
-input[type=email],input[type=url],select,textarea{
+input[type=email],input[type=url],input[type=search],input[type=tel],
+input[type=password],select,textarea{
   width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit}
 textarea{resize:vertical}
@@ -1149,6 +1162,23 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
   color:var(--texto-fraco)}
 .passos-da-anulacao li{margin:.2rem 0}
 
+{% comment %}
+**O estilo daquela página, e não de todas** (040).
+
+Nasceu porque a `040` acrescentou 4 KB de folha que só uma tela usa, e eles passaram a viajar em
+toda página da gestão: a tela de distribuição — que já estava a **488 bytes** do teto que
+`tests/performance/test_escala_da_mesa.py` prende — estourou por 3533. O guardião fez o trabalho
+dele, e a resposta certa era escopar, não levantar o teto.
+
+**A explicação de cada regra mora com a regra**, em `visao_geral.html`. Aqui fica só o ponto de
+extensão: prosa dentro de `<style>` é bytes na rede, e foi a segunda vez que esse mesmo teto
+reclamou — da primeira, deste comentário.
+
+**Quem preencher este bloco continua sob a regra das larguras.** `tests/interface/test_larguras.py`
+lê a folha **renderizada**, e há um caso que lê a da Visão Geral justamente para que estilo nenhum
+escape do guardião por mudar de lugar.
+{% endcomment %}
+{% block estilo_da_pagina %}{% endblock %}
 </style>
 </head>
 <body>

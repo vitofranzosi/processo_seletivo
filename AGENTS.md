@@ -44,7 +44,7 @@ arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, co
 ## As armadilhas caras
 
 **O modo padrão da suíte não é confiável — rode contra PostgreSQL.** Sem variável nenhuma, a
-suíte cai para SQLite: **35 falham, ~7211 passam e 243 são puladas** (medido em 2026-09-20).
+suíte cai para SQLite: **35 falham, ~7326 passam e 243 são puladas** (medido em 2026-09-21).
 Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado original
 ([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a primeira,
 quando eram 21:
@@ -55,15 +55,21 @@ quando eram 21:
 | 9 | a mensagem do SQLite não nomeia a constraint, e o `pytest.raises(match=...)` não casa |
 | 11 | garantia que o SQLite não tem — gatilho ausente (`DID NOT RAISE`, 5), transação que não tranca (3) e erro de constraint que escapa cru (3) |
 
-**O total neste modo não é reprodutível, e o `~` acima é literal**: duas execuções seguidas do mesmo
-commit deram 7211 e 7212 passando, com 1 e 2 erros. Cinco falhas do `portal` não se repetiram ao
-rodar os mesmos arquivos isolados, e não há plugin de ordem aleatória instalado — de modo que há
-acoplamento entre casos que só aparece aqui. Não investigue por este caminho: a repartição acima é
-o que importa, e nenhuma das três colunas é defeito de produto.
+**O total neste modo não é reprodutível, e o `~` acima é literal**: duas execuções seguidas de um
+mesmo commit, em 09/20, deram 7211 e 7212 passando, com 1 e 2 erros. Cinco falhas do `portal` não
+se repetiram ao rodar os mesmos arquivos isolados, e não há plugin de ordem aleatória instalado —
+de modo que há acoplamento entre casos que só aparece aqui. Não investigue por este caminho: a
+repartição acima é o que importa, e nenhuma das três colunas é defeito de produto.
+
+**Ao atualizar estes números, atualize as falhas e os pulados junto — e desconfie se mudarem.**
+Entre 09/20 e 09/21 o total subiu **115** casos, e as duas outras contagens ficaram onde estavam:
+35 e 243. É o que se espera, porque as três causas são do vendor e não do produto, e teste novo
+não entra nelas. Uma delas mexendo é sinal de que alguém escreveu SQL de PostgreSQL num caminho
+que antes não tinha — e aí vale investigar, ao contrário do total.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **7479 passando e 11 pulados** (medido em 2026-09-20). Os onze
+Contra PostgreSQL a suíte fecha em **7594 passando e 11 pulados** (medido em 2026-09-21). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
@@ -77,7 +83,7 @@ conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos 
 **A suíte leva ~12 minutos, e a preparação do banco não tem nada com isso.** Criar o banco de teste
 e aplicar as 80 migrations custa **~2 segundos** — medido em 2026-09-20, isolando a preparação com
 `--reuse-db` sobre um caso só. O custo está nos **791 casos que declaram `transaction=True`**, em 292
-dos 605 arquivos de teste: eles não podem terminar em `ROLLBACK`, e o Django limpa truncando as
+dos 609 arquivos de teste: eles não podem terminar em `ROLLBACK`, e o Django limpa truncando as
 tabelas depois de cada um. São ~10% dos casos, e é o décimo caro. Não é desleixo de quem os
 escreveu: é consequência de as garantias deste sistema morarem no banco — gatilho append-only,
 privilégio ausente e `select_for_update` que realmente tranca não são observáveis dentro de uma
