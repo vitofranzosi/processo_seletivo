@@ -2210,7 +2210,69 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
                     caminho,
                 )
             )
+            continue
+        if perfil_id is None:
+            achado = _recorte_que_o_documento_publicado_alarga(documento, perfis, caminho)
+            if achado is not None:
+                findings.append(achado)
     return findings
+
+
+def _rotulo_da_modalidade(modalidade: dict) -> str:
+    """O que o documento publicado escreve: o nome, e o código quando não há nome."""
+    return str(modalidade.get("name") or modalidade.get("code") or "").strip()
+
+
+def _recorte_que_o_documento_publicado_alarga(
+    documento: dict, perfis: dict, caminho: str
+) -> ValidationFinding | None:
+    """Todos os Perfis, com a modalidade de um só: o Edital e a inscrição diriam coisas diferentes.
+
+    Cada Perfil tem as suas Modalidades, e a inscrição aplica o recorte **pela identidade** — o
+    documento restrito ao PcD do C1 nunca é pedido ao PcD do C2. O documento publicado, sem Perfil
+    declarado, escreve o grupo **pelo nome**: *"Dos candidatos concorrentes na modalidade Pessoas
+    com Deficiência"*. Com outro Perfil tendo modalidade de mesmo nome, o ato publicado exige o
+    documento de todos eles e o portal o pede de um só. Foi o que a conferência do portal mostrou:
+    um candidato PcD do C2 enviou a inscrição sem o laudo que o Edital dizia exigir dele
+    (doc/achado-documento-condicional-no-portal.md). "Partir de um Edital anterior" produz esse
+    recorte sozinho, ao acrescentar Perfis a uma origem que tinha um só.
+
+    **Só quando o nome se repete.** Se nenhum outro Perfil tem modalidade com aquele nome, o grupo
+    publicado alcança exatamente quem o portal alcança, e não há o que acusar.
+    """
+    dono, modalidade = next(
+        (
+            (perfil, item)
+            for perfil in perfis.values()
+            for item in perfil.get("competitionModalities") or []
+            if str(item.get("id")) == str(documento.get("modalityId"))
+        ),
+        (None, None),
+    )
+    if dono is None:
+        return None
+    rotulo = _rotulo_da_modalidade(modalidade)
+    outros = [
+        perfil
+        for perfil in perfis.values()
+        if perfil is not dono
+        and any(
+            _rotulo_da_modalidade(item) == rotulo
+            for item in perfil.get("competitionModalities") or []
+        )
+    ]
+    if not rotulo or not outros:
+        return None
+    perfil_dono = dono.get("code") or dono.get("name") or ""
+    return _impeditivo(
+        "document_requirement_modality_scope_ambiguous",
+        f"O Documento Exigido '{documento.get('name', '')}' vale para todos os Perfis, mas "
+        f"está restrito à modalidade '{rotulo}' do Perfil '{perfil_dono}'. O Edital publicado o "
+        f"exigiria de todo candidato em '{rotulo}', e a inscrição o pediria só no Perfil "
+        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento — ou, para exigi-lo "
+        "também nos outros Perfis, repita-o com a modalidade de cada um.",
+        caminho,
+    )
 
 
 def _coerencia_do_quadro_de_vagas(
