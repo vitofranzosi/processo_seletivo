@@ -760,7 +760,7 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
 | M10 | Ordem de leitura: inscrição e documentos antes dos Perfis de Vaga | D |
 | M11 | Campo dependente não se limpa ao mudar a regra: Alvo `10` num marco que não corta; Pontuação máxima `100` numa Etapa decisória | A |
 | M12 | Rótulo da Modalidade fica velho no `<select>` do quadro até salvar — no reuso, são os rótulos de outro certame | A |
-| M13 | "Fundamento da homologação" é obrigatório e não se anuncia; o envio falha em silêncio | A |
+| M13 | ~~"Fundamento da homologação" é obrigatório e não se anuncia; o envio falha em silêncio~~ **Não procede** (conferido em 25/09): o campo tem `*`, `required` e `aria-required` desde a 007. O silêncio foi do painel do navegador do estudo, que suprime o balão da validação nativa | — |
 | M14 | A regra do ano ancora no ano do Edital, não no período do certame: 13 avisos idênticos de uma vez logo após o reuso | B |
 | M15 | O quadro de vagas de um cadastro de reserva sai degenerado — uma linha "Ampla concorrência \| 0" ao lado de uma tabela que publica 5%, 30% e 25% | C + D |
 | M16 | `<select multiple>` de "Etapas que entram na ordem": clique simples reinicia a seleção, sem aviso e sem alternativa na tela | A |
@@ -789,18 +789,29 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
    foi uma linha: os testes do caso existiam e passavam, porque a fixture montava o grupo de rádios
    como um campo único. A correção levou junto a fixture e o shim de DOM.
 2. **Usar `Tipo · data — Descrição` no seletor de Evento das Etapas** — o rótulo que a tela de
-   Inscrição já usa. Elimina as opções idênticas.
+   Inscrição já usa. Elimina as opções idênticas. Feito no #162.
 3. **Marcar "Rótulo do resultado favorável/desfavorável" com `*`** quando a Etapa é decisória.
-4. **Nomear o campo na mensagem de impedimento**, em vez do caminho com UUID.
+   Feito no #162 — `*` e `aria-required`, sem `required`: o bloco decisório só some da tela, e
+   `required` nele travaria o envio da Etapa pontuada.
+4. **Nomear o campo na mensagem de impedimento**, em vez do caminho com UUID. Feito no #163: a
+   tela troca o caminho por «Etapa 1 — Prova didática», campo «Rótulo do resultado favorável»,
+   com o vocabulário que a Retificação já usava. A mensagem do domínio não muda.
 5. **Esconder Casas decimais, Arredondamento e Alvo** quando não se aplicam — a divulgação
-   progressiva já existe no cartão, só não alcança estes três.
+   progressiva já existe no cartão, só não alcança estes três. **Alvo: feito no #162**, visível só
+   sob "quantidade fixa". **Casas decimais e Arredondamento não são quick win**: a publicação os
+   exige em todo marco, inclusive no que ordena por sorteio, e o marco novo já nasce com o padrão
+   preenchido (FR-419). Escondê-los esconderia campo obrigatório; dispensá-los no sorteio é decisão
+   de domínio, e fica registrada aqui, não tomada.
 6. **Colapsar os AVISOs de data passada** em uma linha ("11 Eventos com data já passada — ver").
+   Feito no #163, com `details`: cada aviso continua lá dentro, com a frase e o "Ir para".
 7. **Consertar a Tabela 4 do documento**: alargar as colunas "Nº" e Início (hoje o cabeçalho sai
    cortado e cada data ocupa três linhas) e restaurar o filete entre as linhas 7 e 8, que hoje
    saem fundidas. Feito no #164: com duas colunas longas (Evento e Onde), a regra encolhia todas
    na mesma proporção; agora as curtas recebem o que pedem e as longas repartem o resto. O filete
    é o item 14. Documento já publicado não se regenera — vale para as próximas publicações.
-8. **Ocultar o bloco "Quadro de vagas"** quando o Perfil não tem Modalidade.
+8. **Ocultar o bloco "Quadro de vagas"** quando o Perfil não tem Modalidade. Feito no #162: remover
+   uma Modalidade reconstrói o quadro pelo mesmo fragmento que o seletor da ampla concorrência já
+   usava, e a seção sai quando a última lista reservada sai.
 9. **Copiar a Descrição** no "Partir de um Edital anterior". **Não é quick win**: a FR-007 da
    `023` diz que a identificação — número, ano, título **e descrição** — não deve ser copiada, e o
    `data-model` da `023` repete a decisão. Copiá-la é mudar o requisito — registrado aqui, não
@@ -810,16 +821,23 @@ PDF: a frase é publicada; o documento gerado não tem item 10.5 algum
     `marco-no-documento.md` exigem que a seção de cada marco de sorteio imprima o método que o
     governa. Remeter em vez de imprimir é mudar o requisito — registrado aqui, não tomado.
 11. **Limpar o campo dependente quando a regra muda** — Alvo ao escolher "não corta", Pontuação
-    máxima ao escolher "com decisão, sem nota".
-12. **Marcar "Fundamento da homologação" com `*`**, como os demais obrigatórios.
+    máxima ao escolher "com decisão, sem nota". **Sem mudança própria**: o servidor já descartava os
+    dois (`_regra_de_corte`, `ler_etapas`), e nada do que se via chegava ao conteúdo. O defeito era
+    só de tela — o número continuava à vista —, e o item 5 o fecha para o Alvo; a Pontuação máxima
+    já saía da tela sob a forma decisória.
+12. ~~**Marcar "Fundamento da homologação" com `*`**, como os demais obrigatórios.~~ Já estava
+    marcado; o achado M13 não procede (§11).
 13. **Ancorar a regra do ano no período do certame**, não no ano do Edital, e colapsar os avisos
-    de ano divergente como os de data passada.
+    de ano divergente como os de data passada. **O colapso foi feito no #163**, pelo mesmo
+    mecanismo do item 6. **A âncora não é quick win**: a FR-344 diz "ano do Edital" com razão
+    escrita (o `year` não é retificável, e o aviso nunca recusa), e trocar a referência é mudar o
+    requisito — decisão registrada aqui, não tomada.
 14. **Restaurar o filete entre linhas consecutivas com células iguais** no gerador de tabelas — o
     colapso atual funde dois eventos distintos num bloco só, no 78/2026 e no 140/2025. Feito no
     #164 — e a causa era outra: a linha levada à página seguinte pela quebra perdia o início e
     saía da grade (§9-bis, item 2).
 15. **Nomear o que o reuso copiou** no banner: "…e **as sete seções de texto** são da oferta
-    anterior", com link para a etapa Conteúdo. Uma frase.
+    anterior", com link para a etapa Conteúdo. Uma frase. Feito no #163.
 
 Nenhum destes altera o domínio. *Conferido em 25/09, ao aplicá-los:* três deles contrariam
 requisito escrito — o 9 (FR-007 da `023`), o 10 (FR-465/466 da `032`) e a âncora do 13 (FR-344) —

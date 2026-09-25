@@ -24,7 +24,7 @@
         <option value="">Sem vínculo</option>
         {% for evento in eventos %}
         <option value="{{ evento.id }}"
-                {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.rotulo }}</option>
+                {% if evento.id == etapa_linha.scheduleEventId %}selected{% endif %}>{{ evento.rotulo }} — {{ evento.description }}</option>
         {% endfor %}
       </select>
       <span class="oculto" id="ajuda-evento-{{ indice }}">As datas vêm do Evento; não se digitam
@@ -103,24 +103,31 @@
       {% comment %}
         Os rótulos que **este** Edital usa. O `placeholder` é exemplo de tela, e não default do
         domínio: o que não pode existir é o sistema aplicar rótulo que ninguém publicou (D-008).
+
+        Obrigatórios na Etapa decisória, e a marca estava ausente: parecendo opcionais pela
+        convenção do próprio cartão, eles só se revelavam na Revisão, como IMPEDE. O `*` é
+        incondicional porque o bloco só aparece com a decisória escolhida. `required` não entra:
+        campo escondido com `required` trava o envio da pontuada, sem que a pessoa veja por quê.
       {% endcomment %}
       <div class="campos dependentes so-decisoria">
         <p class="campo">
-          <label for="etapa-{{ indice }}-rotuloFavoravel">Rótulo do resultado favorável</label>
+          <label for="etapa-{{ indice }}-rotuloFavoravel">Rótulo do resultado favorável <span class="obrigatorio" aria-hidden="true">*</span></label>
           {% recusa_de recusas "etapa" indice "rotuloFavoravel" as recusado %}
           <input type="text" maxlength="100" id="etapa-{{ indice }}-rotuloFavoravel"
                  name="etapa-{{ indice }}-rotuloFavoravel"
                  value="{{ etapa_linha.rotuloFavoravel|default:'' }}" placeholder="ex.: Deferido"
+                 aria-required="true"
                  aria-describedby="ajuda-rotulos-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-rotuloFavoravel{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-rotuloFavoravel">{{ recusado }}</span>{% endif %}
         </p>
         <p class="campo">
-          <label for="etapa-{{ indice }}-rotuloDesfavoravel">Rótulo do resultado desfavorável</label>
+          <label for="etapa-{{ indice }}-rotuloDesfavoravel">Rótulo do resultado desfavorável <span class="obrigatorio" aria-hidden="true">*</span></label>
           {% recusa_de recusas "etapa" indice "rotuloDesfavoravel" as recusado %}
           <input type="text" maxlength="100" id="etapa-{{ indice }}-rotuloDesfavoravel"
                  name="etapa-{{ indice }}-rotuloDesfavoravel"
                  value="{{ etapa_linha.rotuloDesfavoravel|default:'' }}" placeholder="ex.: Indeferido"
+                 aria-required="true"
                  aria-describedby="ajuda-rotulos-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-rotuloDesfavoravel{% endif %}"
                  {% if recusado %}aria-invalid="true"{% endif %}>
           {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-rotuloDesfavoravel">{{ recusado }}</span>{% endif %}

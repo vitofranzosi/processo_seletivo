@@ -330,6 +330,48 @@ def enumeradas_sem_peso(etapas_classificatorias, marco):
     ]
 
 
+# As advertências que se repetem uma por Evento, e o que dizer delas juntas. Só advertência entra
+# aqui: um impedimento dobrado sob um resumo seria um impedimento que a pessoa pode não abrir.
+RESUMO_DAS_REPETIDAS = {
+    "schedule_event_in_past": "{n} Eventos com data que já passou",
+    "schedule_event_year_mismatch": "{n} Eventos que começam em ano diferente do ano do Edital",
+}
+
+
+@register.filter
+def agrupar_repetidas(itens):
+    """As pendências com as advertências repetidas dobradas numa linha só (§12, itens 6 e 13).
+
+    O estudo de esforço mediu onze avisos idênticos de data passada — e treze de ano divergente logo
+    depois do reuso — empurrando os impedimentos para fora da tela da Revisão. **O achado continua
+    sendo um por Evento** (FR-343a): nenhum some, e cada um mantém a frase e o caminho que tem. O
+    que muda é que eles se leem como um, e se abrem quando a pessoa quer saber quais.
+
+    Um só não se dobra: resumo de um item é a mesma frase, mais longa. O grupo fica onde estava o
+    primeiro, para que a ordem da lista continue sendo a do domínio.
+    """
+    itens = list(itens or [])
+    contagem = {}
+    for item in itens:
+        if item.get("codigo") in RESUMO_DAS_REPETIDAS and item.get("severidade") == "aviso":
+            contagem[item["codigo"]] = contagem.get(item["codigo"], 0) + 1
+    entradas, grupos = [], {}
+    for item in itens:
+        codigo = item.get("codigo")
+        if item.get("severidade") != "aviso" or contagem.get(codigo, 0) < 2:
+            entradas.append({"item": item})
+            continue
+        if codigo not in grupos:
+            grupos[codigo] = {
+                "resumo": RESUMO_DAS_REPETIDAS[codigo].format(n=contagem[codigo]),
+                "severidade": item["severidade"],
+                "itens": [],
+            }
+            entradas.append(grupos[codigo])
+        grupos[codigo]["itens"].append(item)
+    return entradas
+
+
 @register.filter
 def conducao_da_lista(itens):
     """A condução comum a estas pendências, para ser dita **uma vez** (037, `FR-542`).
