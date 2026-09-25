@@ -1045,7 +1045,8 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
 fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
 fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
 fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
-fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada{
+fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada,
+fieldset.marco:has(select[name$="-cutTargetKind"] option[value="FIXED"]:not(:checked)) .so-fixo{
   display:none}
 /* ── Retificação de Edital publicado ───────────────────────────────────────────────────────────
    Um Edital institucional rende sessenta linhas editáveis e vários metros de rolagem. Tudo aqui

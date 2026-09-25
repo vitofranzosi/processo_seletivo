@@ -569,3 +569,7 @@ todos são consequência de o reuso copiar as datas da oferta anterior.
 `Submeter` → `Homologar` (com **Fundamento da homologação** obrigatório — campo que não se anuncia
 como obrigatório até o envio falhar em silêncio) → troca de identidade → `Publicar` com escolha da
 Autoridade Signatária. Publicado às 23:32 de 22/09/2026 por `carlos.publicador`.
+
+> **Correção de 25/09.** O campo se anuncia: tem `*`, `required` e `aria-required` desde a 007. O
+> envio "em silêncio" foi o painel do navegador do estudo, que suprime o balão da validação nativa
+> — o mesmo painel em que `confirm()` também não aparece. Não é achado do produto.

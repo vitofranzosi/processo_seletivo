@@ -263,7 +263,22 @@
   preserva e que a Retificação alcança depois de publicada —, e mantê-la aqui dentro é o que
   permite ao seletor da ampla concorrência trocar os dois estados com um alvo só.
   {% endcomment %}
-  <div id="quadro-{{ indice }}">
+  {% comment %}
+  **Remover uma Modalidade também reconstrói o quadro**, pela mesma razão do seletor da ampla
+  concorrência. `junto=` tira a linha dela, e só a linha: removida a última lista reservada, a seção
+  ficava na tela dizendo "Este Perfil declara lista reservada" sobre um Perfil que já não declara,
+  com a caixa da ampla concorrência pedindo de novo o número de "Vagas imediatas".
+
+  O evento vem de `#modalidades-<indice>`, e não do botão: o botão sai da página com a Modalidade, e
+  o htmx, achando o elemento desligado, dispara `htmx:afterRequest` no primeiro ancestral que
+  continua na página. Acrescentar não passa por aqui — o botão dele está fora da lista, e o quadro
+  já chega pronto, fora de banda.
+  {% endcomment %}
+  <div id="quadro-{{ indice }}"
+       hx-get="{% url 'interface:fragmento-quadro' indice %}"
+       hx-trigger="htmx:afterRequest from:#modalidades-{{ indice }}"
+       hx-include="closest fieldset"
+       hx-swap="innerHTML">
     {% include "interface/_quadro_do_perfil.html" %}
   </div>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
