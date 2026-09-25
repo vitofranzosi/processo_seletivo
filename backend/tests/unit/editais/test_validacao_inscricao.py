@@ -80,6 +80,59 @@ def test_modalidade_do_perfil_declarado_passa():
     ] == []
 
 
+# A PPI de um segundo Perfil: outra identidade, mesmo nome. É o par que a conferência do portal
+# encontrou — o PcD do C1 e o PcD do C2 são objetos distintos com o mesmo rótulo publicado.
+PPI_DO_PERFIL_B = "00000000-0000-0000-0000-0000000009fd"
+REGRA_DA_PPI_DO_PERFIL_B = "00000000-0000-0000-0000-0000000009fc"
+
+
+def _com_a_ppi_tambem_no_perfil_b(conteudo):
+    principal, segundo = conteudo["profiles"][0], conteudo["profiles"][1]
+    ppi = next(m for m in principal["competitionModalities"] if m["id"] == MODALIDADE["B"])
+    copia = {**ppi, "id": PPI_DO_PERFIL_B}
+    copia["normativeRule"] = {**ppi["normativeRule"], "id": REGRA_DA_PPI_DO_PERFIL_B}
+    segundo["competitionModalities"] = [*(segundo.get("competitionModalities") or []), copia]
+    return conteudo
+
+
+def _achados_de_recorte(conteudo):
+    return [
+        achado
+        for achado in validate_for_publication(conteudo)
+        if achado.code == "document_requirement_modality_scope_ambiguous"
+    ]
+
+
+def test_todos_os_perfis_com_a_modalidade_de_um_so_e_impeditivo_quando_o_nome_se_repete():
+    """O Edital publicado diria "todos da PPI"; a inscrição pediria só aos do Perfil A."""
+    conteudo = _com_a_ppi_tambem_no_perfil_b(_conteudo())
+    conteudo["documentRequirements"][0]["modalityId"] = MODALIDADE["B"]
+
+    achados = _achados_de_recorte(conteudo)
+
+    assert [a.severity for a in achados] == [Severity.BLOCKING_ERROR]
+    assert achados[0].path == "/documentRequirements/0"
+    assert "Perfil 'P1'" in achados[0].message
+    assert "'Modalidade PPI'" in achados[0].message
+
+
+def test_o_mesmo_recorte_com_o_perfil_declarado_passa():
+    """Declarado o Perfil, o documento publicado nomeia o Perfil — e diz o que o portal faz."""
+    conteudo = _com_a_ppi_tambem_no_perfil_b(_conteudo())
+    conteudo["documentRequirements"][0]["modalityId"] = MODALIDADE["B"]
+    conteudo["documentRequirements"][0]["profileId"] = conteudo["profiles"][0]["id"]
+
+    assert _achados_de_recorte(conteudo) == []
+
+
+def test_modalidade_que_so_um_perfil_tem_nao_e_acusada():
+    """Sem outra modalidade de mesmo nome, "todos da PPI" são exatamente os do Perfil A."""
+    conteudo = _conteudo()
+    conteudo["documentRequirements"][0]["modalityId"] = MODALIDADE["B"]
+
+    assert _achados_de_recorte(conteudo) == []
+
+
 @pytest.mark.parametrize("valor", ["texto", {"a": 1}, None])
 def test_colecao_malformada_nao_faz_a_coerencia_explodir(valor):
     """Forma é assunto da declaração, que já reporta. A coerência ignora, e não levanta exceção."""
