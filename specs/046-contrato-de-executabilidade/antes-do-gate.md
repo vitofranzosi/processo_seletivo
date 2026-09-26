@@ -64,4 +64,17 @@ a `FR-755` e o `R-5`.
 
 ## Os percursos (T040)
 
-*Preenchido no fecho.*
+Em 26/09/2026, com o servidor de desenvolvimento desta worktree (`ps_046`, depois do `seed_demo`), a
+identidade `ana.elaboradora` e o navegador. Os rascunhos dos percursos 1 e 2 foram gravados pela API
+do próprio servidor, a partir das fixtures da suíte, e a Revisão foi aberta pela tela.
+
+| Percurso | O que a tela disse | Confere |
+|---|---|---|
+| **1** — Edital 461, *Análise documental* eliminatória com duas avaliações | *"IMPEDE A Etapa 'Análise documental' não terá Resultado: o Edital prevê 2 avaliações para esta Etapa e não declara como combiná-las. Ela é eliminatória, e ninguém é eliminado por ela: o Edital seguiria sem o critério que publicou. Corrija-a na etapa Etapas."* — e *"Ir para Etapas de Avaliação"* | sim |
+| **2** — Edital 462, Perfil de marco único em *"Este marco não corta"* | *"IMPEDE Nenhum marco do Perfil 'P1' declara regra de corte: sem corte não há faixa, e a convocação não alcança ninguém deste Perfil…"* — *"Ir para Classificação"*; nenhum aviso por marco junto | sim |
+| **3** — Edital 51 do `seed_demo`, publicado, inscrições encerradas em 17/08 | a seção *"Validação do conteúdo"* traz só os dois avisos da Etapa sem Evento (`045`, `FR-739`); nenhum *"Impede"*, nenhum *"o período de inscrições encerrou"*, nenhum *"será publicado"* | sim |
+
+**Uma observação, fora do escopo.** No percurso 1, o selo da etapa *Etapas de Avaliação* diz
+**CONCLUÍDA** com um *"IMPEDE"* apontando para ela logo abaixo. O selo é derivado da existência de
+linhas (`views.py`, `edital.etapas.exists()`), e não das pendências — o mesmo para toda etapa, e
+anterior a esta feature. Registro, e não escopo.

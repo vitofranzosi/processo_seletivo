@@ -331,9 +331,11 @@ sorteio da suíte continuam rodando sem rede.
   habilitação de sorteio; nenhuma das quatro) —, a publicação recusa **exatamente** os casos em que a
   consolidação recusa e o Resultado é exigido, e avisa **exatamente** os demais: **zero** divergências
   entre as duas.
-- **SC-276**: Os Editais executáveis que a suíte já publica — as três famílias da amostra real, o
-  sorteio do 77/2026 e o corte sem Etapa governada do 69/2026 — continuam publicando com **zero**
-  achados novos desta feature (Cenário B).
+- **SC-276**: Os Editais executáveis que a suíte já publica — o sorteio com corte sem Etapa
+  governada do 69/2026, a pontuação com corte do 14/2026, o sorteio com cotas do 28/2026 e do
+  57/2026, a classificação por pontuação com marco intermediário e a seleção de dois Perfis — e o
+  `seed_demo`, que corta governando a Análise documental como o 77/2026, continuam publicando com
+  **zero** achados novos desta feature (Cenário B).
 - **SC-277**: Percorrido pela interface, um Perfil de marco único sem corte é recusado na submissão;
   o mesmo Perfil com um segundo marco que corta é publicado, e o marco sem corte recebe **um** aviso,
   e não dois.
