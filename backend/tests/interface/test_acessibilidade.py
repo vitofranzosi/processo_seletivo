@@ -127,9 +127,22 @@ TELAS_CRITICAS = [
     ("interface:identificar", None),
 ]
 NAO_NATIVOS = re.compile(
-    r"<(?!a\b|button\b|input\b|select\b|textarea\b|main\b)[a-z]+[^>]*\s(?:onclick|hx-get|hx-post)=",
+    r"<(?!a\b|button\b|input\b|select\b|textarea\b|main\b)[a-z]+[^>]*\s(?:onclick|hx-get|hx-post)=[^>]*>",
     re.IGNORECASE,
 )
+# **O que reage a outro elemento não é controle.** O quadro do Perfil se reconstrói quando uma
+# Modalidade é removida: ninguém clica nele, e não há o que o teclado alcançar — quem é acionado é
+# o botão da Modalidade, que é nativo. O que a guarda procura é o `div` que a pessoa aciona, e esse
+# nunca declara `from:`.
+REACAO_A_OUTRO_ELEMENTO = re.compile(r'hx-trigger="[^"]*\bfrom:[^"]*"')
+
+
+def controles_nao_nativos(corpo):
+    return [
+        tag.group(0)
+        for tag in NAO_NATIVOS.finditer(corpo)
+        if "onclick" in tag.group(0) or not REACAO_A_OUTRO_ELEMENTO.search(tag.group(0))
+    ]
 
 
 @pytest.mark.parametrize(
@@ -144,7 +157,7 @@ def test_controles_sao_nativos(template):
     """
     corpo = (BASE.parent / template).read_text()
 
-    assert not NAO_NATIVOS.search(corpo), "controle interativo fora de elemento nativo"
+    assert not controles_nao_nativos(corpo), "controle interativo fora de elemento nativo"
     # `<a(?=[\s>])` e não `<a`: sem isso, <article> casa e o teste acusa o que não existe.
     assert not re.search(r"<a(?=[\s>])(?![^>]*\bhref=)[^>]*>", corpo), (
         "âncora sem href não recebe foco"
@@ -424,7 +437,66 @@ def test_todo_botao_de_envio_declara_o_seu_peso(template):
 PORTAL = Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templates/portal/base.html"
 # Dois canais, duas folhas, e a varredura valia só para um. O portal é o que o candidato vê.
 CANAIS = [(BASE.parent, FONTE), (PORTAL.parent, PORTAL.read_text())]
-DAS_DUAS_FOLHAS = [(t, folha) for pasta, folha in CANAIS for t in sorted(pasta.glob("*.html"))]
+
+
+_BLOCO_DE_ESTILO = re.compile(
+    r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", re.S
+)
+_INCLUI = re.compile(r'\{%\s*include\s+"[\w/]+/([\w.\-]+)"')
+
+
+def _estilo_proprio(template):
+    achado = _BLOCO_DE_ESTILO.search(template.read_text())
+    return achado.group(1) if achado else ""
+
+
+def folha_da_pagina(template, da_base, pasta):
+    """A folha que vale para **aquele** template: a da base, mais o estilo próprio da página — e,
+    num parcial, o das páginas que o incluem.
+
+    A `040` escopou o estilo de uma tela num `{% block estilo_da_pagina %}` porque 4 KB de folha
+    que só ela usa viajavam em toda página da gestão, e a tela de distribuição — a 488 bytes do
+    teto — estourou.
+
+    **Sem esta soma a varredura mentiria nas duas direções**: acusaria como órfãs as classes que a
+    própria página define, e — pior — deixaria de cobrir em silêncio a próxima tela que escopasse a
+    sua folha.
+
+    **O parcial herda de quem o inclui**, e não tem bloco próprio: `_linha_do_edital.html` desenha
+    com as classes que `visao_geral.html` define, como todo parcial sempre desenhou com as da base.
+    Resolver o `include` é o que `test_vocabulario_da_composicao.py` já faz, e pela mesma razão.
+    """
+    return da_base + _estilo_proprio(template) + _de_quem_inclui(template, pasta)
+
+
+def _de_quem_inclui(template, pasta, vistos=None):
+    """O estilo das páginas que incluem este template, **transitivamente**.
+
+    A primeira versão só enxergava inclusão **direta**, e isso não bastou uma feature depois: a
+    `041` criou um parcial incluído por **outro parcial**, que não tem bloco de estilo. As classes
+    dele seriam acusadas de órfãs — ou, pior, a próxima tela nessa situação escaparia do guardião em
+    silêncio.
+
+    `vistos` guarda contra recursão, como `test_vocabulario_da_composicao.py` já faz pela mesma
+    razão: um parcial que se incluísse de volta travaria a varredura.
+    """
+    vistos = set() if vistos is None else vistos
+    if template.name in vistos:
+        return ""
+    vistos.add(template.name)
+    folhas = []
+    for pagina in sorted(pasta.glob("*.html")):
+        if template.name in _INCLUI.findall(pagina.read_text()):
+            folhas.append(_estilo_proprio(pagina))
+            folhas.append(_de_quem_inclui(pagina, pasta, vistos))
+    return "".join(folhas)
+
+
+DAS_DUAS_FOLHAS = [
+    (t, folha_da_pagina(t, folha, pasta))
+    for pasta, folha in CANAIS
+    for t in sorted(pasta.glob("*.html"))
+]
 
 
 def sem_prosa(texto):

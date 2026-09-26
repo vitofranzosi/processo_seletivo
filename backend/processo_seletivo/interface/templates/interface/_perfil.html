@@ -1,6 +1,11 @@
 {% load interface_extras %}<fieldset class="linha perfil">
   <legend>Perfil de Vaga</legend>
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
+  {% if perfil.marcos_em_transito %}<input type="hidden" name="perfil-{{ indice }}-marcosEmTransito" value="{{ perfil.marcos_em_transito }}">{% endif %}
+  {% if duplicado %}
+  {% comment %}O anúncio da cópia (043, FR-637, FR-645, FR-650): o que ela é, o que leva sem desenhar, e o que ficou só na origem.{% endcomment %}
+  <p class="aviso" role="status">Perfil {{ perfil.code }} criado a partir de {{ duplicado.origem }}.{% if duplicado.marcos %} Leva {{ duplicado.marcos }} {{ duplicado.marcos|plural:"marco,marcos" }} de classificação, que se {{ duplicado.marcos|plural:"edita,editam" }} na etapa Classificação depois de gravar.{% endif %}{% if duplicado.documentos %} {{ duplicado.documentos }} {{ duplicado.documentos|plural:"documento exigido restrito,documentos exigidos restritos" }} a {{ duplicado.origem }} não {{ duplicado.documentos|plural:"foi replicado,foram replicados" }} para este Perfil.{% endif %}</p>
+  {% endif %}
   {% comment %}
   Quatro bandas, e não oito linhas: identidade, o trabalho, o texto longo, a quantidade.
 
@@ -16,7 +21,7 @@
     <p class="campo curto">
       <label for="perfil-{{ indice }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-code" name="perfil-{{ indice }}-code"
-             value="{{ perfil.code|default:'' }}" required aria-required="true">
+             value="{{ perfil.code|default:'' }}" required aria-required="true"{% if duplicado %} autofocus{% endif %}>
     </p>
     {% comment %}Sem `largo`: com `flex 2` ela pedia 725 px, o teto de leitura a cortava em 685 e o vão aparecia no meio da linha.{% endcomment %}
     <p class="campo">
@@ -263,7 +268,22 @@
   preserva e que a Retificação alcança depois de publicada —, e mantê-la aqui dentro é o que
   permite ao seletor da ampla concorrência trocar os dois estados com um alvo só.
   {% endcomment %}
-  <div id="quadro-{{ indice }}">
+  {% comment %}
+  **Remover uma Modalidade também reconstrói o quadro**, pela mesma razão do seletor da ampla
+  concorrência. `junto=` tira a linha dela, e só a linha: removida a última lista reservada, a seção
+  ficava na tela dizendo "Este Perfil declara lista reservada" sobre um Perfil que já não declara,
+  com a caixa da ampla concorrência pedindo de novo o número de "Vagas imediatas".
+
+  O evento vem de `#modalidades-<indice>`, e não do botão: o botão sai da página com a Modalidade, e
+  o htmx, achando o elemento desligado, dispara `htmx:afterRequest` no primeiro ancestral que
+  continua na página. Acrescentar não passa por aqui — o botão dele está fora da lista, e o quadro
+  já chega pronto, fora de banda.
+  {% endcomment %}
+  <div id="quadro-{{ indice }}"
+       hx-get="{% url 'interface:fragmento-quadro' indice %}"
+       hx-trigger="htmx:afterRequest from:#modalidades-{{ indice }}"
+       hx-include="closest fieldset"
+       hx-swap="innerHTML">
     {% include "interface/_quadro_do_perfil.html" %}
   </div>
   <section class="marcos" aria-labelledby="fato-titulo-{{ indice }}">
@@ -275,6 +295,7 @@
             hx-get="{% url 'interface:fragmento-fato' indice %}"
             hx-target="#fatos-{{ indice }}" hx-swap="beforeend">Acrescentar fato</button>
   </section>
+  {% if editavel and edital %}{% include "interface/_duplicar_perfil.html" with codigo="" localidade="" erro="" aberto=False %}{% endif %}
   <p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"

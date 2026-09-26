@@ -1,0 +1,373 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Visão Geral dos Processos Seletivos{% endblock %}
+{% block estilo_da_pagina %}
+/* A visão institucional (040). As regras moram aqui porque é onde o CSS deste projeto mora: não
+   há folha externa, e `interface/static/` só tem JavaScript. */
+.filtros-da-visao{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;
+  padding:.85rem 1rem;border:1px solid #d7dce2;border-radius:6px;background:#fafbfc;margin:1rem 0}
+.filtros-da-visao p{margin:0;display:flex;flex-direction:column;gap:.25rem}
+.filtros-da-visao label{font-size:.82rem;color:#4a5560}
+
+/* Quatro números, e o denominador **embaixo** de cada um. Dois cartões lado a lado fariam o
+   denominador competir com o número que ele existe para explicar (FR-585). */
+.consolidado{list-style:none;padding:0;margin:1.25rem 0;display:grid;gap:1rem;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.consolidado li{padding:.9rem 1rem;border:1px solid #d7dce2;border-radius:6px;background:#fff}
+.consolidado strong{display:block;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.consolidado .rotulo{display:block;margin-top:.15rem;font-weight:600;font-size:.92rem}
+.consolidado .denominador{display:block;margin-top:.35rem;font-size:.8rem;color:#5a6470;line-height:1.35}
+
+.tabela-da-visao{width:100%;border-collapse:collapse;margin:1rem 0}
+.tabela-da-visao caption{text-align:left;font-size:.85rem;color:#5a6470;padding-bottom:.4rem}
+.tabela-da-visao th,.tabela-da-visao td{border-bottom:1px solid #e3e7ec;padding:.55rem .5rem;
+  text-align:left;vertical-align:top}
+.tabela-da-visao thead th{font-size:.82rem;color:#37404a;border-bottom-width:2px}
+/* **Cabeçalho e número dividem a borda** — a convenção já era da casa (`.tabela th.numero`, em
+   `base.html`), e esta tela cobria só o `td`. O efeito era o rótulo colado à esquerda da coluna e
+   o número colado à direita: medido, `Em preenchimento` punha `137 px` entre o começo de um e o
+   fim do outro, e o número ficava mais perto do rótulo **da coluna seguinte** que do seu.
+
+   Alinhar à direita, e não centralizar: centralizado, `2`, `40` e `105` deixam de empilhar pela
+   casa das unidades, e a coluna perde a comparação de relance que justifica ser uma coluna. */
+.tabela-da-visao td.numero,.tabela-da-visao th.numero,
+.tabela-de-perfis td.numero,.tabela-de-perfis th.numero{text-align:right;
+  font-variant-numeric:tabular-nums}
+.tabela-da-visao td.numero{white-space:nowrap}
+.tabela-da-visao .processo-da-linha{display:block;font-weight:400;font-size:.8rem;color:#5a6470}
+.tabela-da-visao .prazo{display:block;font-size:.8rem;color:#5a6470}
+.tabela-da-visao .vazio{padding:1.2rem .5rem;color:#5a6470}
+
+/* A ausência é escrita. `—` sozinho é enigma; `—` com o motivo é informação (FR-594). */
+.ausente{color:#6b7580}
+.motivo-da-ausencia{display:block;font-size:.76rem;color:#6b7580;font-weight:400;white-space:normal}
+.parcial,.nota{display:block;font-size:.76rem;color:#5a6470;font-weight:400;white-space:normal}
+
+/* A marca é texto; a cor é reforço, e nunca o único meio (FR-602). */
+.marca{display:block;font-size:.8rem;line-height:1.35;padding:.2rem .4rem;border-radius:4px;
+  border-left:3px solid #b8860b;background:#fdf8ec;color:#5a4a1f;margin-bottom:.25rem}
+.marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d2525}
+.sem-marca{color:#9aa3ad}
+
+.o-que-nao-medimos{margin:2rem 0 1rem;padding:1rem 1.1rem;border:1px solid #d7dce2;
+  border-radius:6px;background:#fafbfc}
+.o-que-nao-medimos h2{margin-top:0;font-size:1rem}
+.o-que-nao-medimos ul{margin:.5rem 0;padding-left:1.1rem}
+.o-que-nao-medimos li{margin:.35rem 0;font-size:.88rem;line-height:1.45}
+.o-que-nao-medimos .lido-em{margin:.6rem 0 0;font-size:.78rem;color:#5a6470}
+
+/* No telefone a tabela recolhe as três colunas de contexto e mantém as que decidem — e o que
+   ainda sobrar rola **dentro da moldura**, e não na página.
+
+   **A moldura só rola em tela estreita**, e a restrição é a lição que esta folha já registra em
+   outra tabela: `overflow-x:auto` faz o `overflow-y` computar para `auto` também, e um cabeçalho
+   `position:sticky` passaria a valer contra a moldura em vez da janela. Esta tabela não tem
+   cabeçalho fixo hoje; escopar a regra é o que impede que ela ganhe um e quebre calada.
+
+   Medido: sem isto, `documentElement.scrollWidth` dava 477 px contra 375 px de janela — a página
+   inteira rolava para o lado, e o cabeçalho e a declaração rolavam junto com a tabela. */
+@media (max-width:40rem){
+  /* **O combinador é `>`, e a razão é cara** (`FR-627`). Escrito como descendente — o que ele era
+     até aqui —, este seletor alcança a tabela **aninhada**, que vive dentro de um `<td>` desta.
+     Lá o terceiro e o sexto não são *Período* e *Em preenchimento*: são **Submetidas** e
+     **Atenção**. No telefone a expansão perdia as duas em silêncio, ficando com três colunas onde
+     a `FR-627` exige cinco, e a coluna de atenção — a razão de a tela existir — simplesmente não
+     era desenhada. Nenhum teste via: `display:none` não muda o HTML. */
+  .tabela-da-visao>thead>tr>*:nth-child(3),.tabela-da-visao>tbody>tr>*:nth-child(3),
+  .tabela-da-visao>thead>tr>*:nth-child(6),.tabela-da-visao>tbody>tr>*:nth-child(6),
+  .tabela-da-visao>thead>tr>*:nth-child(7),.tabela-da-visao>tbody>tr>*:nth-child(7){display:none}
+  .rolagem-da-tabela{overflow-x:auto}
+  .consolidado{grid-template-columns:1fr 1fr}
+  .consolidado strong{font-size:1.5rem}
+}
+/* O recolhimento dos três limites secundários (040). A linha de matrícula fica fora, e por isso
+   não ganha regra própria — ela é parágrafo do bloco, como sempre foi. */
+.o-que-nao-medimos .limite-permanente{margin:.4rem 0 .7rem;font-size:.88rem;line-height:1.45}
+.demais-limites>summary{display:inline-block;cursor:pointer;font-size:.82rem;font-weight:600;
+  color:var(--verde-texto);padding:.2rem .5rem;border:1px solid #d7dce2;border-radius:4px;
+  max-width:100%}
+.demais-limites>summary:hover{border-color:var(--verde-texto)}
+.demais-limites[open]>summary{margin-bottom:.5rem}
+
+/* O booleano da atenção (041). Os demais filtros são rótulo **acima** do controle; este é
+   caixa **ao lado** do rótulo, e sem a regra ele herdaria a coluna dos vizinhos — a caixa em cima
+   do texto, que não é como caixa de seleção se lê. */
+/* **A base é a mesma de todos**, e não o centro da linha. `align-self:center` anulava o
+   `align-items:flex-end` do formulário só para este item: todo o resto terminava em 87px e ele em
+   66 — 21px acima. A `min-height` iguala a caixa à do botão *Aplicar*, de modo que os dois
+   partilham base **e** eixo central; sem ela, os centros ficavam a 69 e 76. */
+.filtro-de-atencao{align-self:flex-end}
+.filtro-de-atencao>label{display:flex;align-items:center;gap:.4rem;font-size:.9rem;
+  cursor:pointer;white-space:nowrap;margin-bottom:0;min-height:2.25rem}
+.filtro-de-atencao input{margin:0}
+
+/* A expansão dos Perfis (041), com a hierarquia que a 042 lhe deu.
+
+   **O separador passou a ser do grupo, e não da linha** (`R-002`): cada Edital é um `<tbody>`, e é
+   a borda dele que separa um do outro. Dentro do grupo não há borda, e as duas linhas leem como um
+   bloco — que é o que faltava para a expansão não parecer uma tabela irmã.
+
+   **Medido antes**: a filha ocupava **98%** da largura da principal, com cabeçalho de 12,16 px
+   contra 13,12 px. Com 98% e a mesma espessura, ela não tinha como ler como subordinada. */
+.tabela-da-visao>tbody{border-bottom:1px solid #e3e7ec}
+.tabela-da-visao>tbody>tr>th,.tabela-da-visao>tbody>tr>td{border-bottom:0}
+
+/* A régua e o recuo, que carregam o parentesco. O `padding-left` é o que **estreita** a filha —
+   a largura menor não é regra própria, é consequência dele (`FR-623`). */
+.expansao-do-edital>td{padding:0 .5rem .7rem 2.5rem;border-left:3px solid #d7dce2;
+  border-bottom:0;background:#fcfdfd}
+
+/* **A régua fica; o recuo encolhe** (`FR-623`, `R-004`). Em 375 px a tabela filha já rola dentro da
+   moldura, e cada pixel de recuo sai da leitura das métricas. A largura **não** é forçada aqui: a
+   moldura já governa.
+
+   **E esta consulta mora depois da regra acima, não junto das outras.** As duas têm a mesma
+   especificidade, e `@media` não acrescenta nenhuma: quem vier por último vence. Escrita lá em
+   cima, no bloco de consultas estreitas, ela era sobrescrita pelo `padding` de mesa em toda
+   largura — o recuo ficava em 40 px no telefone, e nada acusava. */
+@media (max-width:40rem){
+  .expansao-do-edital>td{padding-left:.6rem}
+}
+
+/* **O controle é o `<summary>`**, e a linha do Edital continua sendo link — as duas coisas nunca
+   disputam o mesmo clique (`FR-620`).
+
+   **E ele volta a ter marcador** (`FR-629`, `R-001`). `display:inline-block` tira o elemento de
+   `list-item` e apaga o triângulo nativo: foi assim que a `041` o perdeu, e o que sobrou foi uma
+   caixa que lê como botão. O `::before` o devolve, girando por `details[open]`. */
+.perfis-do-edital>summary{display:inline-block;cursor:pointer;font-size:.82rem;font-weight:600;
+  color:var(--verde-texto);padding:.15rem .1rem}
+.perfis-do-edital>summary::before{content:"\25B8";display:inline-block;margin-right:.35rem;
+  transition:transform .12s ease}
+.perfis-do-edital[open]>summary::before{transform:rotate(90deg)}
+.perfis-do-edital>summary:hover{text-decoration:underline}
+.perfis-do-edital[open]>summary{margin-bottom:.45rem}
+/* Os dois rótulos vivem no documento; `details[open]` decide qual aparece (`R-003`). */
+.perfis-do-edital>summary .ao-fechar{display:none}
+.perfis-do-edital[open]>summary .ao-abrir{display:none}
+.perfis-do-edital[open]>summary .ao-fechar{display:inline}
+
+/* A tabela filha: **mais estreita** pelo recuo, e com cabeçalho **menos dominante** (`FR-624`). */
+
+/* **`table-layout:fixed` é o que torna a grade estável** (`FR-632`). Sem ele, cada expansão negocia
+   as larguras com o próprio conteúdo, e duas expansões do mesmo recorte saem diferentes — medido,
+   nenhuma das seis colunas coincidia, e `Inscr./vaga` variava `192 px` contra `78 px`. Com ele, as
+   proporções abaixo valem para todas, e **nenhum** texto secundário estica coluna: a frase de
+   ausência passa a quebrar dentro da largura que lhe cabe, em vez de dilatá-la.
+
+   Somam 100, e por isso a última não precisa ser dita — mas é, porque uma soma que não fecha é o
+   tipo de coisa que só aparece na tela. */
+.tabela-de-perfis{width:100%;border-collapse:collapse;table-layout:fixed}
+.tabela-de-perfis .c-perfil{width:26%}
+.tabela-de-perfis .c-vagas{width:12%}
+.tabela-de-perfis .c-submetidas{width:12%}
+.tabela-de-perfis .c-preenchimento{width:15%}
+.tabela-de-perfis .c-razao{width:14%}
+.tabela-de-perfis .c-atencao{width:21%}
+.tabela-de-perfis th,.tabela-de-perfis td{border-bottom:1px solid #eef1f4;padding:.35rem .5rem;
+  text-align:left;vertical-align:top;font-size:.84rem}
+.tabela-de-perfis thead th{font-size:.7rem;font-weight:500;color:#6b7580;
+  text-transform:none;letter-spacing:.02em}
+.tabela-de-perfis tbody tr:last-child th,.tabela-de-perfis tbody tr:last-child td{border-bottom:0}
+/* Grade fixa corta o que não couber; a palavra longa quebra em vez de transbordar. */
+.tabela-de-perfis th,.tabela-de-perfis td{overflow-wrap:anywhere}
+
+/* **A marca do Perfil também é rebaixada** (`FR-633`). A `FR-624` obrigou só o cabeçalho, e a
+   marca ficou idêntica à do Edital — 12,8 px, peso 400, borda de 3 px —, de modo que o elemento
+   mais gritante da região filha era justamente o que menos deveria competir com a linha acima.
+   O texto continua sendo o meio (`FR-602` da `040`): o que cai é o tamanho, não a legibilidade. */
+.tabela-de-perfis .marca{font-size:.72rem;line-height:1.3;padding:.15rem .35rem;
+  border-left-width:2px;margin-bottom:.2rem}
+
+/* A diferença que a `FR-613a` manda declarar — em texto, e nunca como linha da tabela. */
+.sem-perfil-vigente{margin:.5rem 0 0;font-size:.8rem;color:#5a4a1f;background:#fdf8ec;
+  border-left:3px solid #b8860b;padding:.35rem .5rem;border-radius:4px}
+
+{% endblock %}
+{% block conteudo %}
+{% comment %}
+**"Recorte" não aparece na prosa visível desta tela, e a ausência é decisão** (040, R-006).
+É palavra de especificação, não de quem lê: quem abre a página quer ler "Editais de 2026". E a
+varredura de vocabulário de `tests/test_vocabulario_da_composicao.py` cobra que o primeiro uso
+visível de *recorte*, *geração* ou *faixa* esteja dentro de um `<dfn>` — por uma lista **literal**
+de telas, que esta não integra. Escrever a palavra aqui faria a tela escapar da regra em silêncio:
+nenhuma falha apareceria. Quem a trouxer de volta acrescenta esta tela àquela lista no mesmo
+commit, e define o termo.
+{% endcomment %}
+<h1>Visão Geral</h1>
+<p class="sub">O conjunto dos Processos Seletivos do escopo <strong>{{ ator.institution_scope }}</strong>.
+  <strong>{{ recorte.rotulo }}</strong>.</p>
+
+<form method="get" class="filtros-da-visao" aria-label="Filtros da consulta">
+  <p>
+    <label for="f-ano">Ano do Edital</label>
+    <select name="ano" id="f-ano">
+      {% for ano in recorte.anos_disponiveis %}
+        <option value="{{ ano }}" {% if recorte.ano == ano %}selected{% endif %}>{{ ano }}</option>
+      {% endfor %}
+      <option value="{{ todos_os_anos }}" {% if recorte.ano == todos_os_anos %}selected{% endif %}>Todos os anos</option>
+    </select>
+  </p>
+  <p>
+    <label for="f-situacao">Situação do Edital</label>
+    <select name="situacao" id="f-situacao">
+      <option value="">Todas</option>
+      {% for valor, rotulo in situacoes %}
+        <option value="{{ valor }}" {% if recorte.situacao == valor %}selected{% endif %}>{{ valor|situacao }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="f-periodo">Situação do período</label>
+    <select name="periodo" id="f-periodo">
+      <option value="">Qualquer situação</option>
+      <option value="futuro" {% if recorte.situacao_periodo == "futuro" %}selected{% endif %}>Ainda não abriram</option>
+      <option value="aberto" {% if recorte.situacao_periodo == "aberto" %}selected{% endif %}>Abertas</option>
+      <option value="encerrado" {% if recorte.situacao_periodo == "encerrado" %}selected{% endif %}>Encerradas</option>
+      <option value="nao-designado" {% if recorte.situacao_periodo == "nao-designado" %}selected{% endif %}>Sem período designado</option>
+    </select>
+  </p>
+  <p>
+    <label for="f-busca">Buscar</label>
+    <input type="search" name="busca" id="f-busca" value="{{ recorte.busca }}" placeholder="Processo ou número do Edital">
+  </p>
+  <p>
+    <label for="f-ordem">Ordenar por</label>
+    <select name="ordem" id="f-ordem">
+      {% for chave, rotulo in ordens.items %}
+        <option value="{{ chave }}" {% if recorte.ordem == chave %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    {% comment %}
+    **Critério e direção, separados** (042, `FR-630`). Antes, a primeira caixa oferecia *"Mais
+    recentes"* — que já é uma direção — e a segunda dizia *"Menor primeiro"*: combinadas,
+    significavam *"mais antigos"*, e ninguém lê assim. As **chaves** de consulta não mudaram.
+    {% endcomment %}
+    <label for="f-sentido">Ordem</label>
+    <select name="sentido" id="f-sentido">
+      <option value="desc" {% if recorte.sentido == "desc" %}selected{% endif %}>Decrescente</option>
+      <option value="asc" {% if recorte.sentido == "asc" %}selected{% endif %}>Crescente</option>
+    </select>
+  </p>
+  <p class="filtro-de-atencao">
+    {% comment %}
+    Booleano sobre fato **já derivado** (041, `FR-621`, `D-008`): a marca existe quando a linha é
+    montada. Não inventa dimensão, não lê nada de novo, e é o **terceiro** degrau da ordem — depois
+    da materialização, porque a marca depende do conteúdo publicado.
+    {% endcomment %}
+    <label for="f-atencao">
+      <input type="checkbox" name="atencao" id="f-atencao" value="1"
+        {% if recorte.so_com_atencao %}checked{% endif %}>
+      Somente com atenção</label>
+  </p>
+  <p><button type="submit" class="botao">Aplicar</button></p>
+</form>
+
+{% comment %}
+Quatro números, e os denominadores **abaixo** de cada um (FR-585). Dois cartões — "12 Editais" e
+"9 publicados" — fariam competir um número com o que existe para explicá-lo.
+{% endcomment %}
+<ul class="consolidado" aria-label="Indicadores do período selecionado">
+  <li>
+    <strong>{{ consolidado.editais }}</strong>
+    <span class="rotulo">Edita{{ consolidado.editais|pluralize:"l,is" }}</span>
+    <span class="denominador">em {{ consolidado.processos }} Processo{{ consolidado.processos|pluralize:"s" }}</span>
+  </li>
+  <li>
+    {% if consolidado.vagas.existe %}<strong>{{ consolidado.vagas.valor }}</strong>{% else %}<strong class="ausente">—</strong>{% endif %}
+    <span class="rotulo">Vagas imediatas publicadas</span>
+    {% comment %}
+    **A ressalva só aparece quando há ressalva.** A redação anterior dizia *"em 3 de 3 Edital(is) —
+    os demais não têm conteúdo publicado"*, afirmando um "demais" que não existia. Numa página cuja
+    tese é que todo número traz o denominador dito, uma frase que se contradiz é o pior defeito
+    possível.
+    {% endcomment %}
+    <span class="denominador">
+      {% if not consolidado.editais %}nenhum Edital no período selecionado
+      {% elif consolidado.sem_conteudo %}em {{ consolidado.editais_publicados }} de {{ consolidado.editais }} Editais — {{ consolidado.sem_conteudo }} ainda sem conteúdo publicado
+      {% else %}em {% if consolidado.editais > 1 %}todos os {% endif %}{{ consolidado.editais }} Edita{{ consolidado.editais|pluralize:"l,is" }}{% endif %}</span>
+  </li>
+  <li>
+    <strong>{{ consolidado.submetidas.valor }}</strong>
+    <span class="rotulo">Inscrições submetidas</span>
+    <span class="denominador">
+      {% if consolidado.parciais %}inclui {{ consolidado.parciais }} Edita{{ consolidado.parciais|pluralize:"l,is" }} com inscrições abertas — número parcial{% else %}nenhum Edital selecionado ainda recebe inscrição{% endif %}</span>
+  </li>
+  <li>
+    {% if consolidado.razao.existe %}<strong>{{ consolidado.razao.valor }}</strong>{% else %}<strong class="ausente">—</strong>{% endif %}
+    <span class="rotulo">Inscrições por vaga</span>
+    <span class="denominador">
+      {% if consolidado.razao.existe %}sobre {{ consolidado.perfis_com_vaga }} Perfi{{ consolidado.perfis_com_vaga|pluralize:"l,s" }} com vaga imediata{% if consolidado.fora_da_razao %}; {{ consolidado.fora_da_razao }} Edita{{ consolidado.fora_da_razao|pluralize:"l,is" }} fora da relação{% endif %}
+      {% else %}{{ consolidado.razao.ausencia.motivo }}{% endif %}</span>
+  </li>
+</ul>
+
+<div class="rolagem-da-tabela">
+<table class="tabela-da-visao">
+  <caption>Os Editais do período selecionado. Cada linha leva ao Edital.</caption>
+  <thead>
+    <tr>
+      <th scope="col">Processo / Edital</th>
+      <th scope="col">Situação</th>
+      <th scope="col">Período de inscrições</th>
+      <th scope="col" class="numero">Vagas</th>
+      <th scope="col" class="numero">Submetidas</th>
+      <th scope="col" class="numero">Em preenchimento</th>
+      <th scope="col" class="numero">Inscr./vaga</th>
+      <th scope="col">Atenção</th>
+    </tr>
+  </thead>
+  {% comment %} Cada Edital abre e fecha o seu próprio `<tbody>`, em `_linha_do_edital.html`
+     (042, `R-002`). O caso vazio tem o dele, como qualquer grupo. {% endcomment %}
+  {% for linha in linhas %}{% include "interface/_linha_do_edital.html" %}{% empty %}
+  <tbody>
+    <tr><td colspan="8" class="vazio">Nenhum Edital no período selecionado. Isto não é uma afirmação
+      sobre o acervo: troque o ano ou escolha <em>Todos os anos</em> para ver os demais.</td></tr>
+  </tbody>
+  {% endfor %}
+</table>
+</div>
+
+{% comment %}
+A declaração do que a página não mede (FR-596). Não é rodapé de cortesia: é o que impede alguém de
+ler uma ausência como um zero, e de esperar daqui um número que o sistema não tem.
+{% endcomment %}
+<section class="o-que-nao-medimos" aria-labelledby="nao-medimos">
+  {% comment %}
+  A declaração do que a página não mede (`FR-596`, `SC-212`). **Uma linha permanente e três
+  recolhidas**, e a repartição não é de espaço: é de risco.
+
+  **A de matrícula fica sempre à vista** porque é a única cuja ausência alguém pode confundir com
+  zero e decidir em cima — "não há matriculados" e "não medimos matrícula" levam a decisões
+  diferentes, e só a segunda é verdade.
+
+  **As outras três recolhem** porque, depois da primeira leitura, são ruído para quem abre a página
+  todo dia — e ocupavam quase meia tela. `<details>` mantém o texto no documento, alcançável por
+  teclado e por leitor de tela: recolher não é esconder. E o resumo **nomeia os três**, de modo que
+  quem nunca o abrir saiba o que há dentro.
+  {% endcomment %}
+  <h2 id="nao-medimos">O que esta página não mede</h2>
+  <p class="limite-permanente"><strong>Matrícula efetivada.</strong> O sistema coleta o Requerimento
+    de Matrícula e gera o arquivo para o Registro Acadêmico, e não sabe se a matrícula foi criada
+    lá. Não há fonte canônica, e por isso não há indicador — nem <em>matriculados</em>, nem taxa de
+    matrícula.</p>
+
+  <details class="demais-limites">
+    <summary>Outros três limites: ocupação que envelheceu, indicadores ainda não apresentados, e
+      recortes que o domínio não tem</summary>
+    <ul>
+      <li><strong>Se a ocupação apurada envelheceu.</strong> Quando esta página apresentar ocupação,
+        ela somará as apurações vigentes; se uma delas ficou para trás, quem reporta é a Supervisão
+        daquele Processo.</li>
+      <li><strong>Classificados, convocados, ocupação e requerimentos de matrícula.</strong> Estão
+        definidos e ainda não são apresentados aqui — cada um continua na tela do Edital que o
+        produz.</li>
+      <li><strong>Divisões que o domínio não tem:</strong> campus ou polo dentro da unidade, tipo ou
+        família do Processo, e ano ou semestre de ingresso. O ano acima é o <strong>ano do
+        Edital</strong>, que não é o ano de ingresso.</li>
+    </ul>
+  </details>
+  <p class="lido-em">Leitura de {{ lido_em|date:"d/m/Y H:i" }}.</p>
+</section>
+{% endblock %}

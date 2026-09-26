@@ -158,6 +158,22 @@ def test_o_aviso_nomeia_a_origem_em_todas_as_etapas(client, destino, origem):
         assert "atualize as informações desta oferta" in corpo
 
 
+def test_o_aviso_diz_que_o_texto_tambem_veio_da_origem(client, destino, origem):
+    """Estudo de esforço, §12, item 15: o aviso falava de "datas, vagas e prazos", e o reuso copia
+    as seções de texto inteiras — no 140/2025, a função e o curso de outro certame."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+    copiadas = destino.secoes.exclude(content="").count()
+    assert copiadas, "o cenário precisa de texto copiado para haver o que avisar"
+
+    corpo = client.get(composicao(destino, "perfis")).content.decode()
+
+    aviso = re.search(r"atualize as informações desta oferta(.*?)até que", corpo, re.S).group(1)
+    quantas = "uma seção" if copiadas == 1 else f"{copiadas} seções"
+    assert quantas in aviso
+    assert f'href="{composicao(destino, "conteudo")}"' in aviso
+
+
 def test_a_trilha_diz_de_onde_veio_em_forma_legivel(client, destino, origem, api_client):
     """Identificador no registro, Edital e versão na tela (FR-014a).
 

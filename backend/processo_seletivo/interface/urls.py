@@ -8,6 +8,10 @@ urlpatterns = [
     path("", views.lista, name="lista"),
     path("identificar", views.identificar, name="identificar"),
     path("sair", views.sair, name="sair"),
+    # A visão institucional (040). **Rota de primeiro nível, e não sob `processos/`**: a página é
+    # do escopo, como a lista, e não de agregado nenhum — ela observa a fronteira **entre** os
+    # Processos, que é justamente o nível que não existia (FR-581).
+    path("visao-geral", views.visao_geral, name="visao-geral"),
     path("processos/criar", views.criar_processo, name="processo-criar"),
     path("processos/<uuid:processo_id>/", views.processo_detalhe, name="processo-detalhe"),
     path(
@@ -103,6 +107,12 @@ urlpatterns = [
         "fragmentos/perfil/<str:indice>/modalidade",
         views.fragmento_modalidade,
         name="fragmento-modalidade",
+    ),
+    # Duplicar lê o Perfil de índice `indice` da tela e devolve outro (043).
+    path(
+        "fragmentos/perfil/<str:indice>/duplicar",
+        views.fragmento_perfil_duplicado,
+        name="fragmento-perfil-duplicado",
     ),
     path(
         "fragmentos/perfil/<str:indice>/quadro",

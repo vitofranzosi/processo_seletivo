@@ -189,6 +189,36 @@
       ],
       "port": 8041,
       "url": "http://localhost:8041"
+    },
+    {
+      "name": "visao-040",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_040 POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8042"
+      ],
+      "port": 8042,
+      "url": "http://localhost:8042"
+    },
+    {
+      "name": "ux-edital",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DJANGO_SECRET_KEY=ux-study DJANGO_DEBUG=true DB_NAME=ps_ux_edital DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me DB_HOST=localhost DB_PORT=5432 INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-ux uv run python manage.py runserver 8043"
+      ],
+      "port": 8043,
+      "url": "http://localhost:8043"
+    },
+    {
+      "name": "duplicar-043",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_043_demo POSTGRES_USER=$USER DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true uv run python manage.py runserver 8044"
+      ],
+      "port": 8044,
+      "url": "http://localhost:8044"
     }
   ]
 }
