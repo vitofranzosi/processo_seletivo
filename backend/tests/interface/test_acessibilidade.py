@@ -445,9 +445,21 @@ _BLOCO_DE_ESTILO = re.compile(
 _INCLUI = re.compile(r'\{%\s*include\s+"[\w/]+/([\w.\-]+)"')
 
 
+_INCLUSAO = re.compile(r"""\{%\s*include\s+["']([^"']+)["']\s*%\}""")
+
+
 def _estilo_proprio(template):
+    """O bloco de estilo da página, com os `include` de dentro dele resolvidos.
+
+    A `044` pôs num parcial as regras que só a Mesa e o detalhe da consulta usam, incluído pelo
+    bloco das duas: no `base.html` elas iam em toda página, e a tela de distribuição passou do teto
+    de bytes. Sem resolver o `include`, as classes dessas duas páginas seriam acusadas de órfãs.
+    """
     achado = _BLOCO_DE_ESTILO.search(template.read_text())
-    return achado.group(1) if achado else ""
+    if not achado:
+        return ""
+    raiz = template.parent.parent
+    return _INCLUSAO.sub(lambda inclusao: (raiz / inclusao.group(1)).read_text(), achado.group(1))
 
 
 def folha_da_pagina(template, da_base, pasta):
