@@ -531,13 +531,17 @@ def _validar_fonte_publicada(fonte) -> None:
     consultada. A identidade da fonte é conteúdo normativo — se ela não determina de onde a semente
     vem, não é conteúdo normativo de nada.
     """
-    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+    from processo_seletivo.sorteios.infrastructure.fontes import fontes_publicadas
 
-    if fonte not in FONTES:
+    # O vocabulário **deste ambiente** (046, `FR-757`): em produção a fonte de demonstração não está
+    # nele, e o conteúdo que a declara — por API, por reaproveitamento ou por Retificação — é
+    # recusado aqui, pela mesma frase de qualquer fonte que o sistema não consulta.
+    vocabulario = fontes_publicadas()
+    if fonte not in vocabulario:
         raise ProfileValidationError(
             f"Fonte de sorteio não publicada por este sistema: {fonte!r}. "
-            f"As publicadas são: {', '.join(sorted(FONTES))}. Declarar uma fonte que o sistema não "
-            "consulta faria o manifesto publicar uma origem que a semente não teve."
+            f"As publicadas são: {', '.join(sorted(vocabulario))}. Declarar uma fonte que o "
+            "sistema não consulta faria o manifesto publicar uma origem que a semente não teve."
         )
 
 

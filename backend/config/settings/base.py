@@ -157,6 +157,14 @@ INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false"
 # um de demonstração. Como o seletor acima, nunca em produção — ver `production.py`.
 PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() == "true"
 
+# A fonte de demonstração do sorteio (046, `FR-757`): semente fixa, sem rede, para `seed_demo`,
+# o roteiro do `quickstart` e a suíte. Um sorteio publicado com ela seria previsível, e por isso
+# ela só existe no vocabulário onde este valor é verdadeiro — `development.py` e `test.py` o
+# ligam, a base não, e `production.py` recusa subir com ele (`FR-758`).
+SORTEIO_FONTE_DE_DEMONSTRACAO = (
+    os.getenv("SORTEIO_FONTE_DE_DEMONSTRACAO", "false").lower() == "true"
+)
+
 # O canal de e-mail que a 010 inaugura: até ela, o projeto não enviava mensagem nenhuma. O
 # mecanismo vem do ambiente porque desenvolvimento imprime no terminal e produção entrega de
 # verdade — e é justamente por isso que `production.py` recusa subir com um mecanismo que não

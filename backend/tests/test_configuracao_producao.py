@@ -72,6 +72,16 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
     assert producao.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] == [INSTITUCIONAL]
 
 
+def test_producao_nasce_sem_a_fonte_de_demonstracao():
+    """Sem variável nenhuma, a fonte de demonstração está fora do vocabulário (046, `FR-757`).
+
+    O padrão é o que decide, e não a recusa: se a base nascesse com ela ligada, produção só subiria
+    com uma variável a mais declarando o contrário — e a barreira viraria uma armadilha de
+    implantação em vez de uma garantia.
+    """
+    assert _carregar().SORTEIO_FONTE_DE_DEMONSTRACAO is False
+
+
 @pytest.mark.parametrize(
     ("alteracoes", "variavel"),
     [
@@ -100,6 +110,9 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
         # Os dois eixos de identidade têm a mesma barreira, e o do candidato não é menos grave:
         # uma inscrição atribuída a quem se declarou candidato não vale nada.
         ({"PORTAL_IDENTIDADE_DEMO": "true"}, "PORTAL_IDENTIDADE_DEMO"),
+        # A terceira demonstração (046, `FR-758`): a fonte do sorteio de semente fixa. Um sorteio
+        # publicado com ela teria o resultado conhecido antes da extração.
+        ({"SORTEIO_FONTE_DE_DEMONSTRACAO": "true"}, "SORTEIO_FONTE_DE_DEMONSTRACAO"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": None}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": "arquivos-dos-candidatos"}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         (
