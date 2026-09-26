@@ -399,9 +399,9 @@ def razao_legivel(veredito: Veredito, conteudo: dict) -> str:
     elif recorte.forma == MODALIDADE_EM_TODOS_OS_PERFIS:
         denominacao = denominacao_do_codigo(conteudo, recorte.modalidade_codigo or "")
         frase = f"pedido de quem concorre em {denominacao}, em todos os Perfis"
-    else:
+    modalidade = None
+    if recorte.forma in (PERFIL_E_MODALIDADE, TODOS_COM_MODALIDADE_DE_UM_PERFIL):
         dono = perfil
-        modalidade = None
         for candidato in perfis.values():
             achada = _modalidade_do_perfil(candidato, recorte.modalidade_id)
             if achada is not None:
@@ -412,9 +412,9 @@ def razao_legivel(veredito: Veredito, conteudo: dict) -> str:
     if veredito.situacao == NAO_SE_APLICA:
         frase = f"Não se aplica: {frase}"
     if veredito.divergente_do_publicado:
-        denominacao = _rotulo_da_modalidade(
-            perfis_que_o_documento_publicado_alcanca(veredito.requisito, perfis)[1]
-        )
+        # A denominação sai do **recorte**, e não do documento: numa linha gravada o recorte é o
+        # registro, e o documento da versão é só de onde vêm nome e instrução.
+        denominacao = _rotulo_da_modalidade(modalidade)
         frase += (
             f" — o Edital publicado o exigia de todo candidato em {denominacao}. O portal não o "
             "pediu a esta inscrição."

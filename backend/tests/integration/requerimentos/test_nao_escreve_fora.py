@@ -19,7 +19,7 @@ from django.test.utils import CaptureQueriesContext
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.identidade.models import CandidateIdentity
-from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
+from processo_seletivo.inscricoes.models import Inscricao, ItemDaListaExigida, ValorDeFato
 from processo_seletivo.requerimentos.application import preencher
 from processo_seletivo.requerimentos.models import RequerimentoDeMatricula
 from tests.fixtures.candidato import MARIA
@@ -32,7 +32,8 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 # `identidade_candidateidentity` — a asserção passava por não casar com nada, que é o modo de um
 # teste de proibição morrer sem avisar.
 PROIBIDAS = frozenset(
-    modelo._meta.db_table for modelo in (CandidateIdentity, Inscricao, ValorDeFato)
+    modelo._meta.db_table
+    for modelo in (CandidateIdentity, Inscricao, ValorDeFato, ItemDaListaExigida)
 )
 REQUERIMENTO = RequerimentoDeMatricula._meta.db_table
 TRILHA = RegistroAuditoria._meta.db_table

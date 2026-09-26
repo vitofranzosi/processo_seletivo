@@ -293,3 +293,28 @@ def test_quem_confere_ve_o_mesmo_codigo_do_comprovante(gestor, inscricao_enviada
 
     assert esperado in corpo
     assert "Código de verificação" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_detalhe_da_enviada_mostra_a_razao_e_o_que_nao_se_aplica(gestor, inscricao_enviada):
+    """A lista gravada no envio, com os três estados (044, FR-719, UX-081)."""
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_enviada.id])
+    ).content.decode()
+
+    assert "pedido de todos os candidatos" in corpo
+    assert "Não se aplicam a esta inscrição" in corpo
+    assert "Autodeclaração étnico-racial" in corpo, "o documento da PPP não some para a ampla"
+    assert "foi reconstruída" not in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_rascunho_nao_tem_lista_nem_aviso(gestor, inscricao_de_maria):
+    corpo = gestor.get(
+        reverse("interface:inscricao-recebida", args=[inscricao_de_maria.id])
+    ).content.decode()
+
+    assert "Não se aplicam a esta inscrição" not in corpo
+    assert "foi reconstruída" not in corpo

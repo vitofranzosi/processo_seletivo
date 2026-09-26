@@ -15,6 +15,13 @@ from uuid import UUID
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 
+from processo_seletivo.editais.domain.documentos import (
+    NAO_SE_APLICA,
+    OBRIGATORIO,
+    aplicabilidade,
+    razao_legivel,
+)
+from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida, listas_exigidas
 from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
@@ -229,6 +236,12 @@ def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
     if coincidentes is None:
         coincidentes = _cpfs_coincidentes(edital)
+    # As listas exigidas das inscrições **enviadas** desta página, numa consulta só (044, FR-719,
+    # R-006). O rascunho continua recalculando sobre a vigente: ele ainda não pediu nada a ninguém.
+    enviadas = [
+        inscricao for inscricao in inscricoes if inscricao.status == Inscricao.Status.SUBMETIDA
+    ]
+    listas = listas_exigidas(enviadas, lambda inscricao: _conteudo_da_inscricao(inscricao, vigente))
     linhas = []
     for inscricao in inscricoes:
         # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
@@ -237,11 +250,18 @@ def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
         # reescrito na tela de quem confere (princípio II).
         conteudo = _conteudo_da_inscricao(inscricao, vigente)
         perfil, modalidade = _nome_no_conteudo(conteudo, inscricao)
-        obrigatorios = [
-            str(requisito["id"])
-            for requisito in requisitos_da_inscricao(conteudo, inscricao)
-            if requisito.get("required", True)
-        ]
+        if inscricao.pk in listas:
+            obrigatorios = [
+                str(veredito.requisito["id"])
+                for veredito in listas[inscricao.pk].itens
+                if veredito.situacao == OBRIGATORIO
+            ]
+        else:
+            obrigatorios = [
+                str(requisito["id"])
+                for requisito in requisitos_da_inscricao(conteudo, inscricao)
+                if requisito.get("required", True)
+            ]
         recebidos = enviados.get(inscricao.id, set())
         linhas.append(
             {
@@ -319,22 +339,54 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         str(documento.requirement_id): documento
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
+    # Enviada, a lista é a gravada no envio, com os três estados e a razão (044, FR-719). Em
+    # rascunho, o que a versão vigente pede agora — nada foi pedido ainda.
+    lista = (
+        lista_exigida(inscricao, conteudo)
+        if inscricao.status == Inscricao.Status.SUBMETIDA
+        else None
+    )
+    vereditos = (
+        lista.pedidos
+        if lista is not None
+        else [
+            veredito
+            for veredito in aplicabilidade(
+                conteudo,
+                profile_id=str(inscricao.profile_id),
+                modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
+            )
+            if veredito.situacao != NAO_SE_APLICA
+        ]
+    )
     documentos = [
         {
-            "id": str(requisito["id"]),
-            "nome": requisito.get("name", ""),
-            "obrigatorio": requisito.get("required", True),
-            "enviado": enviados.get(str(requisito["id"])),
+            "id": str(veredito.requisito["id"]),
+            "nome": veredito.requisito.get("name", ""),
+            "obrigatorio": veredito.situacao == OBRIGATORIO,
+            "razao": razao_legivel(veredito, conteudo) if lista is not None else "",
+            "enviado": enviados.get(str(veredito.requisito["id"])),
             # O tamanho legível acompanha o nome porque dois arquivos com o mesmo nome quase nunca
             # têm o mesmo tamanho; o resumo, que vem do próprio documento, decide quando têm.
             "tamanho": (
                 None
-                if enviados.get(str(requisito["id"])) is None
-                else tamanho_legivel(enviados[str(requisito["id"])].tamanho)
+                if enviados.get(str(veredito.requisito["id"])) is None
+                else tamanho_legivel(enviados[str(veredito.requisito["id"])].tamanho)
             ),
         }
-        for requisito in requisitos_da_inscricao(conteudo, inscricao)
+        for veredito in vereditos
     ]
+    nao_se_aplicam = (
+        []
+        if lista is None
+        else [
+            {
+                "nome": veredito.requisito.get("name", ""),
+                "razao": razao_legivel(veredito, conteudo),
+            }
+            for veredito in lista.nao_se_aplicam
+        ]
+    )
     return {
         "inscricao": inscricao,
         "perfil": perfil,
@@ -347,6 +399,8 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,
         "documentos": documentos,
+        "nao_se_aplicam": nao_se_aplicam,
+        "lista_reconstruida": lista is not None and lista.reconstruida,
         # **O Requerimento de Matrícula, sob a mesma permissão e na mesma tela** (029, `US4`).
         # `None` quando o certame não coleta, e o dossiê não desenha bloco nenhum.
         #

@@ -183,6 +183,134 @@ class ValorDeFato(models.Model):
         return f"{self.fato_id} — {self.valor_data or self.valor_inteiro}"
 
 
+class ItemDaListaExigida(models.Model):
+    """O que foi pedido a uma inscrição, documento a documento, gravado no envio (044, D4).
+
+    A Constituição pede que o sistema **reproduza** os documentos exigidos de cada Inscrição. Antes
+    desta tabela ele os **recalculava**: a Mesa refazia o recorte sobre a versão aceita, e herdava o
+    erro dele — no 903/2026, o laudo que o portal dispensou por erro sumiu também da análise, e o
+    analista indeferiu por um documento que o sistema nunca tinha pedido.
+
+    **Um item por Documento Exigido da versão aceita, inclusive os que não se aplicam** (D-003).
+    "Não se aplica" é informação registrada, e não ausência de linha: gravar só os aplicáveis
+    deixaria o resto para ser deduzido na leitura, e deduzir é recalcular.
+
+    **O que ela protege, dito com precisão.** Os leitores já liam a versão aceita, que é imutável:
+    uma Retificação posterior não mudava a Mesa. O que muda sem esta tabela é a **regra**, no
+    código — como a que a própria `044` mudou em `aplicaveis`. A lista é a leitura que não depende
+    da regra do dia (R-006).
+
+    **Append-only, nas duas camadas**: `TABELAS_APPEND_ONLY` tira do runtime `UPDATE` e `DELETE`, e
+    o gatilho recusa a mutação mesmo de quem tem privilégio. `ValorDeFato`, gravado no mesmo ato,
+    tem só a primeira — a lista não repete isso (R-005). Por isso `inscricao` é `PROTECT`: um
+    `CASCADE` que jamais poderia executar seria promessa falsa no esquema.
+
+    **O que o gatilho não garante** é o preenchimento retroativo: quem copiar `submitted_at` para
+    `gravada_em` passa. Essa garantia é da aplicação — só o envio e a semente gravam (D-004).
+
+    Não guarda nome, instrução nem arquivo: a versão aceita é imutável e está na linha, e ler o nome
+    dela não é recalcular recorte. Copiar o texto seria uma segunda fonte para o mesmo valor.
+    """
+
+    class Situacao(models.TextChoices):
+        OBRIGATORIO = "OBRIGATORIO"
+        FACULTATIVO = "FACULTATIVO"
+        NAO_SE_APLICA = "NAO_SE_APLICA"
+
+    class Forma(models.TextChoices):
+        TODOS = "TODOS"
+        PERFIL = "PERFIL"
+        PERFIL_E_MODALIDADE = "PERFIL_E_MODALIDADE"
+        MODALIDADE_EM_TODOS_OS_PERFIS = "MODALIDADE_EM_TODOS_OS_PERFIS"
+        TODOS_COM_MODALIDADE_DE_UM_PERFIL = "TODOS_COM_MODALIDADE_DE_UM_PERFIL"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.PROTECT, related_name="lista_exigida")
+    versao = models.ForeignKey(
+        VersaoConsolidada, on_delete=models.PROTECT, related_name="listas_exigidas"
+    )
+    # A identidade **publicada** do documento, e não chave estrangeira para a linha de elaboração,
+    # pela razão de `ValorDeFato.fato_id`.
+    requisito_id = models.UUIDField()
+    chave = models.CharField(max_length=100)
+    situacao = models.CharField(max_length=16, choices=Situacao.choices)
+    forma_do_recorte = models.CharField(max_length=40, choices=Forma.choices)
+    perfil_id = models.UUIDField(null=True, blank=True)
+    modalidade_id = models.UUIDField(null=True, blank=True)
+    modalidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    # O documento publicado o exigia de quem concorre nesta modalidade, e o portal não o pediu:
+    # a forma que a #161 passou a recusar, em versão publicada antes dela (FR-727, D-007).
+    divergente_do_publicado = models.BooleanField(default=False)
+    gravada_em = models.DateTimeField()
+
+    class Meta:
+        ordering = ["gravada_em", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["inscricao", "requisito_id"], name="uq_item_da_lista_por_requisito"
+            ),
+            models.CheckConstraint(
+                condition=Q(situacao__in=["OBRIGATORIO", "FACULTATIVO", "NAO_SE_APLICA"]),
+                name="ck_item_da_lista_situacao",
+            ),
+            # Os parâmetros coerentes com a forma: cada forma usa exatamente os seus.
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        forma_do_recorte="TODOS",
+                        perfil_id__isnull=True,
+                        modalidade_id__isnull=True,
+                        modalidade_codigo="",
+                    )
+                    | Q(
+                        forma_do_recorte="PERFIL",
+                        perfil_id__isnull=False,
+                        modalidade_id__isnull=True,
+                        modalidade_codigo="",
+                    )
+                    | Q(
+                        forma_do_recorte="PERFIL_E_MODALIDADE",
+                        perfil_id__isnull=False,
+                        modalidade_id__isnull=False,
+                        modalidade_codigo="",
+                    )
+                    | (
+                        Q(
+                            forma_do_recorte="MODALIDADE_EM_TODOS_OS_PERFIS",
+                            perfil_id__isnull=True,
+                            modalidade_id__isnull=True,
+                        )
+                        & ~Q(modalidade_codigo="")
+                    )
+                    | Q(
+                        forma_do_recorte="TODOS_COM_MODALIDADE_DE_UM_PERFIL",
+                        perfil_id__isnull=True,
+                        modalidade_id__isnull=False,
+                        modalidade_codigo="",
+                    )
+                ),
+                name="ck_item_da_lista_forma",
+            ),
+            models.CheckConstraint(
+                condition=Q(divergente_do_publicado=False)
+                | Q(forma_do_recorte="TODOS_COM_MODALIDADE_DE_UM_PERFIL"),
+                name="ck_item_da_lista_divergencia",
+            ),
+        ]
+        indexes = [models.Index(fields=["inscricao"])]
+
+    def __str__(self):
+        return f"{self.inscricao_id} — {self.chave} — {self.situacao}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("A lista exigida é append-only: ela é o que foi pedido no envio.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("A lista exigida é append-only.")
+
+
 class DocumentoSubmetido(models.Model):
     """O arquivo que o candidato apresentou **para um Documento Exigido específico**.
 

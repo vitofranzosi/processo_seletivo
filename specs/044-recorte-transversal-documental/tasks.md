@@ -120,45 +120,45 @@ leem essa lista.
 
 ### Testes
 
-- [ ] T029 [P] [US2] Criar `T/integration/inscricoes/test_lista_exigida.py` (`transaction=True` onde a garantia é do banco):
+- [X] T029 [P] [US2] Criar `T/integration/inscricoes/test_lista_exigida.py` (`transaction=True` onde a garantia é do banco):
   - o envio grava **uma linha por documento** da versão aceita, inclusive os `NAO_SE_APLICA`, com forma e parâmetros;
   - `versao` = `versao_aceita`, `gravada_em` = `submitted_at`;
   - o reenvio com a mesma chave não grava de novo;
   - uma Retificação publicada depois não muda as linhas, e duas Retificações seguidas, com envios entre elas, deixam cada inscrição com a lista do seu envio;
   - **o teste que discrimina:** gravar para uma inscrição uma linha cuja situação difere do que `aplicabilidade` calcula hoje sobre a mesma versão, e provar que a Mesa, a consulta e o portal mostram a linha gravada. Sem isso, o teste passaria sem a feature, porque os leitores já usam a `versao_aceita` (`research.md`, R-006) (`FR-714` a `FR-717`, `FR-723`, `SC-264`)
-- [ ] T030 [P] [US2] Criar `T/integration/inscricoes/test_lista_exigida_imutavel.py`, só-PostgreSQL no molde de `T/integration/test_database_permissions.py`, que prova, cada uma na sua camada:
+- [X] T030 [P] [US2] Criar `T/integration/inscricoes/test_lista_exigida_imutavel.py`, só-PostgreSQL no molde de `T/integration/test_database_permissions.py`, que prova, cada uma na sua camada:
   - `UPDATE` e `DELETE` recusados pelo gatilho, como superusuário;
   - recusados pelo privilégio, como runtime;
   - `save()` fora da adição e `delete()` recusados no modelo;
   - `INSERT` recusado para inscrição em rascunho, para versão diferente da aceita e para `gravada_em` diferente de `submitted_at`;
   - **o que o gatilho não prova, a aplicação prova** (`D-004`, `research.md` R-005): migrar sobre um banco com inscrições enviadas cria zero linhas; e uma varredura do código confirma que só `B/inscricoes/application/submissao.py` e `B/processos/management/commands/seed_demo.py` chamam `gravar_lista_exigida`
-- [ ] T031 [P] [US2] Em `T/integration/inscricoes/test_lista_exigida_concorrencia.py` (`transaction=True`, só-PostgreSQL, no molde das threads de `T/integration/inscricoes/test_teto_por_candidato.py`): um envio e a publicação de uma Retificação que muda o recorte, concorrentes. A lista gravada é da `versao_aceita` que o envio registrou, ou o envio é serializado atrás da publicação e recusa com `edital_updated`. Nunca uma lista de uma versão com a inscrição apontando outra (caso-limite do envio concorrente, `FR-714`)
-- [ ] T032 [P] [US2] Em `T/interface/test_mesa.py` e `T/integration/interface/test_inscricoes_recebidas.py`: o analista a quem a inscrição **não** foi distribuída não vê a lista na Mesa (a mesma recusa de hoje, por identificador fabricado inclusive); o envio produz um único evento `SUBMETER`, e nenhum registro de auditoria contém o conteúdo da lista (`FR-728`, `FR-729`)
-- [ ] T033 [P] [US2] Em `T/interface/test_mesa.py` (ou `T/interface/test_mesa_lista_exigida.py`, novo): os três estados, a marca *facultativo*, a razão de `UX-081`, a seção "Não se aplicam a esta inscrição" depois dos pedidos, sem depender de cor (`UX-082`); nada some (`FR-718`, `SC-263`); a instrução do documento continua aparecendo, se o PR #167 já estiver no branch
-- [ ] T034 [P] [US2] Em `T/integration/interface/test_inscricoes_recebidas.py`: na lista, "recebidos de esperados" sai da lista gravada; no detalhe, os três estados e a razão; a seção "em preenchimento" não muda (`FR-719`). Em `T/integration/interface/test_inscricoes_em_escala.py`, a asserção de consultas iguais para 5 e 300 continua valendo, com as inscrições **enviadas pelo caminho que grava a lista**
-- [ ] T035 [P] [US2] Em `T/integration/portal/test_comprovante_preservado.py` e `T/integration/portal/test_conferir_inscricao.py`: a inscrição enviada e o comprovante tiram as linhas da lista; o comprovante imprime o mesmo e o código de verificação não muda; um documento enviado continua na tela depois de uma Retificação que mudaria o recorte dele (`FR-720`)
-- [ ] T036 [P] [US2] Em `T/integration/inscricoes/test_lista_exigida.py`, a reconstrução: inscrição enviada sem linhas devolve `reconstruida=True` com os vereditos da versão aceita (`FR-726`)
+- [X] T031 [P] [US2] Em `T/integration/inscricoes/test_lista_exigida_concorrencia.py` (`transaction=True`, só-PostgreSQL, no molde das threads de `T/integration/inscricoes/test_teto_por_candidato.py`): um envio e a publicação de uma Retificação que muda o recorte, concorrentes. A lista gravada é da `versao_aceita` que o envio registrou, ou o envio é serializado atrás da publicação e recusa com `edital_updated`. Nunca uma lista de uma versão com a inscrição apontando outra (caso-limite do envio concorrente, `FR-714`)
+- [X] T032 [P] [US2] Em `T/interface/test_mesa.py` e `T/integration/interface/test_inscricoes_recebidas.py`: o analista a quem a inscrição **não** foi distribuída não vê a lista na Mesa (a mesma recusa de hoje, por identificador fabricado inclusive); o envio produz um único evento `SUBMETER`, e nenhum registro de auditoria contém o conteúdo da lista (`FR-728`, `FR-729`)
+- [X] T033 [P] [US2] Em `T/interface/test_mesa.py` (ou `T/interface/test_mesa_lista_exigida.py`, novo): os três estados, a marca *facultativo*, a razão de `UX-081`, a seção "Não se aplicam a esta inscrição" depois dos pedidos, sem depender de cor (`UX-082`); nada some (`FR-718`, `SC-263`); a instrução do documento continua aparecendo, se o PR #167 já estiver no branch
+- [X] T034 [P] [US2] Em `T/integration/interface/test_inscricoes_recebidas.py`: na lista, "recebidos de esperados" sai da lista gravada; no detalhe, os três estados e a razão; a seção "em preenchimento" não muda (`FR-719`). Em `T/integration/interface/test_inscricoes_em_escala.py`, a asserção de consultas iguais para 5 e 300 continua valendo, com as inscrições **enviadas pelo caminho que grava a lista**
+- [X] T035 [P] [US2] Em `T/integration/portal/test_comprovante_preservado.py` e `T/integration/portal/test_conferir_inscricao.py`: a inscrição enviada e o comprovante tiram as linhas da lista; o comprovante imprime o mesmo e o código de verificação não muda; um documento enviado continua na tela depois de uma Retificação que mudaria o recorte dele (`FR-720`)
+- [X] T036 [P] [US2] Em `T/integration/inscricoes/test_lista_exigida.py`, a reconstrução: inscrição enviada sem linhas devolve `reconstruida=True` com os vereditos da versão aceita (`FR-726`)
 
 ### Implementação
 
-- [ ] T037 [US2] Em `B/inscricoes/models.py`, criar `ItemDaListaExigida` com os campos, as restrições e as guardas de `save`/`delete` de `data-model.md` §2. Docstring no tom do arquivo: por que PROTECT, por que duas camadas quando `ValorDeFato` tem uma (`R-005`)
-- [ ] T038 [US2] Criar `B/inscricoes/migrations/0005_item_da_lista_exigida.py`, com a tabela e os dois gatilhos via `RunPython(proteger, desproteger)`, com guarda de vendor e caminho reverso, no molde de `B/recursos/migrations/0002_ato_de_instrucao.py`:
+- [X] T037 [US2] Em `B/inscricoes/models.py`, criar `ItemDaListaExigida` com os campos, as restrições e as guardas de `save`/`delete` de `data-model.md` §2. Docstring no tom do arquivo: por que PROTECT, por que duas camadas quando `ValorDeFato` tem uma (`R-005`)
+- [X] T038 [US2] Criar `B/inscricoes/migrations/0005_item_da_lista_exigida.py`, com a tabela e os dois gatilhos via `RunPython(proteger, desproteger)`, com guarda de vendor e caminho reverso, no molde de `B/recursos/migrations/0002_ato_de_instrucao.py`:
   - `item_da_lista_exigida_append_only`: `BEFORE UPDATE OR DELETE`;
   - `item_da_lista_exigida_coerente`: `BEFORE INSERT`, que confere status, versão e instante.
 
   Sem importar domínio nem aplicação
-- [ ] T039 [US2] Em `B/seguranca/papeis.py`, acrescentar `"inscricoes_itemdalistaexigida"` a `TABELAS_APPEND_ONLY`, com o comentário de feature e razão
-- [ ] T040 [US2] Em `T/migrations/test_migrations.py`: `"inscricoes": 4 → 5` no guardião da `022`, com justificativa; `inscricoes` em `APPS`; os dois gatilhos em `TRIGGERS_POR_APP`. Em `T/integration/requerimentos/test_nao_escreve_fora.py`, acrescentar a tabela às que o requerimento não escreve (`R-013`)
-- [ ] T041 [US2] Criar `B/inscricoes/application/lista_exigida.py` com:
+- [X] T039 [US2] Em `B/seguranca/papeis.py`, acrescentar `"inscricoes_itemdalistaexigida"` a `TABELAS_APPEND_ONLY`, com o comentário de feature e razão
+- [X] T040 [US2] Em `T/migrations/test_migrations.py`: `"inscricoes": 4 → 5` no guardião da `022`, com justificativa; `inscricoes` em `APPS`; os dois gatilhos em `TRIGGERS_POR_APP`. Em `T/integration/requerimentos/test_nao_escreve_fora.py`, acrescentar a tabela às que o requerimento não escreve (`R-013`)
+- [X] T041 [US2] Criar `B/inscricoes/application/lista_exigida.py` com:
   - `gravar_lista_exigida(inscricao, versao, agora)`: `bulk_create` dos vereditos;
   - `lista_exigida(inscricao, conteudo) → ListaExigida`: lê as linhas ou reconstrói;
   - `listas_exigidas(inscricoes, conteudos)`: uma consulta para a página (`R-006`, `contracts/lista-exigida.md` §2)
-- [ ] T042 [US2] Em `B/inscricoes/application/submissao.py`, `enviar_inscricao` chama `gravar_lista_exigida` logo depois de `_congelar`, com a mesma `versao` e o mesmo `agora`, na mesma transação
-- [ ] T043 [US2] Em `B/avaliacoes/application/mesa.py`, `inscricao_para_avaliar` monta `documentos` a partir de `lista_exigida` sobre a versão aceita, com situação, razão legível e o sinal `reconstruida`. Preservar `modelo` e, se já presente, `instrucoes` (PR #167)
-- [ ] T044 [US2] Em `B/interface/templates/interface/mesa_inscricao.html`, a seção de pedidos (com *obrigatório*/*facultativo*, a razão, *apresentado*/*não apresentado*), depois a de "Não se aplicam a esta inscrição", e o aviso de lista reconstruída acima (`contracts/lista-exigida.md` §3). Ajustar `B/interface/views.py` (`inscricao_da_mesa`) se a contagem de "abertos" depender da lista antiga
-- [ ] T045 [US2] Em `B/inscricoes/application/consulta.py`, `_linhas` (seção recebidas) usa `listas_exigidas` para "recebidos de esperados", e `inscricao_para_consulta`, para inscrição enviada, usa `lista_exigida`. Em `B/interface/templates/interface/inscricao_detalhe.html`, os três estados, a razão e o aviso
-- [ ] T046 [US2] Em `B/portal/views.py`, `_documentos` lê de `lista_exigida` quando a inscrição está `SUBMETIDA`, e de `requisitos_da_inscricao` quando está em rascunho. O filtro "só enviados" de `_conferencia` e do comprovante continua, e o portal não traz aviso de reconstrução (`FR-726`)
-- [ ] T047 [US2] Rodar T029 a T036, `T/integration/test_database_permissions.py`, `T/integration/test_imutabilidade_do_historico.py` e as famílias de T001. Rodar `provisionar_papeis` duas vezes no banco da worktree, depois de migrar, e conferir "34 de 34". Demonstrar os passos 7 e 8 do cenário A de `quickstart.md`
+- [X] T042 [US2] Em `B/inscricoes/application/submissao.py`, `enviar_inscricao` chama `gravar_lista_exigida` logo depois de `_congelar`, com a mesma `versao` e o mesmo `agora`, na mesma transação
+- [X] T043 [US2] Em `B/avaliacoes/application/mesa.py`, `inscricao_para_avaliar` monta `documentos` a partir de `lista_exigida` sobre a versão aceita, com situação, razão legível e o sinal `reconstruida`. Preservar `modelo` e, se já presente, `instrucoes` (PR #167)
+- [X] T044 [US2] Em `B/interface/templates/interface/mesa_inscricao.html`, a seção de pedidos (com *obrigatório*/*facultativo*, a razão, *apresentado*/*não apresentado*), depois a de "Não se aplicam a esta inscrição", e o aviso de lista reconstruída acima (`contracts/lista-exigida.md` §3). Ajustar `B/interface/views.py` (`inscricao_da_mesa`) se a contagem de "abertos" depender da lista antiga
+- [X] T045 [US2] Em `B/inscricoes/application/consulta.py`, `_linhas` (seção recebidas) usa `listas_exigidas` para "recebidos de esperados", e `inscricao_para_consulta`, para inscrição enviada, usa `lista_exigida`. Em `B/interface/templates/interface/inscricao_detalhe.html`, os três estados, a razão e o aviso
+- [X] T046 [US2] Em `B/portal/views.py`, `_documentos` lê de `lista_exigida` quando a inscrição está `SUBMETIDA`, e de `requisitos_da_inscricao` quando está em rascunho. O filtro "só enviados" de `_conferencia` e do comprovante continua, e o portal não traz aviso de reconstrução (`FR-726`)
+- [X] T047 [US2] Rodar T029 a T036, `T/integration/test_database_permissions.py`, `T/integration/test_imutabilidade_do_historico.py` e as famílias de T001. Rodar `provisionar_papeis` duas vezes no banco da worktree, depois de migrar, e conferir "34 de 34". Demonstrar os passos 7 e 8 do cenário A de `quickstart.md`
 
 **Checkpoint**: as US1 e US2 juntas fecham o caso do 903: o que o PDF exige é o que o portal pede e o
 que a Mesa mostra.

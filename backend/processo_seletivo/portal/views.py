@@ -43,6 +43,7 @@ from processo_seletivo.identidade.application.mensagem import (
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
 from processo_seletivo.identidade.models import DesafioDeAcesso
+from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
 from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
@@ -1570,6 +1571,18 @@ def congeladas_ou_derivadas(cabecalho):
     return [unica] if unica else []
 
 
+def _requisitos_pedidos(conteudo, inscricao):
+    """O que foi pedido: a lista gravada, se a inscrição foi enviada; a regra vigente, se não (044).
+
+    Enviada, a página e o comprovante leem a mesma lista que a Mesa e a consulta administrativa
+    (FR-720). O portal mostra só o que a pessoa enviou, e a reconstrução de uma inscrição anterior à
+    `044` não muda isso — por isso ele não traz o aviso de lista reconstruída (FR-726).
+    """
+    if inscricao.status == Inscricao.Status.SUBMETIDA:
+        return [veredito.requisito for veredito in lista_exigida(inscricao, conteudo).pedidos]
+    return requisitos_da_inscricao(conteudo, inscricao)
+
+
 def _documentos(conteudo, inscricao):
     """Cada requisito aplicável, com o arquivo que já chegou para ele — e o que falta.
 
@@ -1581,7 +1594,7 @@ def _documentos(conteudo, inscricao):
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
     linhas = []
-    for requisito in requisitos_da_inscricao(conteudo, inscricao):
+    for requisito in _requisitos_pedidos(conteudo, inscricao):
         documento = enviados.get(str(requisito["id"]))
         linhas.append(
             {
