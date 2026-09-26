@@ -195,7 +195,7 @@ muda o recorte do laudo e reabrir as duas: nada muda.
    aparece num de três estados, *apresentado*, *não apresentado* ou *não se aplica*, com a razão, e o
    facultativo não apresentado se distingue do obrigatório.
 3. **Given** uma inscrição enviada, **When** uma Retificação posterior muda o recorte de um documento,
-   **Then** a Mesa, a consulta administrativa e o acompanhamento do candidato continuam mostrando a
+   **Then** a Mesa, a consulta administrativa e a inscrição enviada no portal continuam mostrando a
    lista gravada no envio, sem nenhuma diferença.
 4. **Given** a consulta administrativa "Inscrições recebidas", **When** o Gestor a abre, **Then** a
    contagem "recebidos de esperados" de cada inscrição enviada sai da lista gravada, e não de recálculo.
@@ -208,8 +208,9 @@ muda o recorte do laudo e reabrir as duas: nada muda.
 
 O Edital 140/2025 foi publicado antes desta feature, com o laudo "facultativo" para todos. Uma
 Retificação troca o recorte para "PcD em todos os Perfis" e o torna obrigatório. O resumo público "O
-que mudou" diz isso em palavras: *Documento exigido "Laudo médico": recorte passou a ser Pessoas com
-Deficiência (PcD) em todos os Perfis; obrigatoriedade passou a obrigatório*. As inscrições já
+que mudou" diz isso em palavras, como diz toda alteração: *Documento exigido "Laudo médico" —
+Modalidade em todos os Perfis — alterado*, e o mesmo para a obrigatoriedade. Quem quer o valor abre o
+documento da Retificação, que está na mesma linha do histórico. As inscrições já
 enviadas continuam com o que lhes foi pedido. As que forem enviadas depois da Retificação já exigem o
 laudo.
 
@@ -219,15 +220,16 @@ Perfil LP03. A Retificação é recusada até a denominação mudar nos 16 Perfi
 **Why this priority**: o recorte é retificável, e quem mais precisa dele são os Editais já publicados
 com o "facultativo com instrução". Mas a US1 e a US2 entregam valor sem esta.
 
-**Independent Test**: sobre um Edital publicado com o recorte exato repetido por Perfil, publicar pela
-interface uma Retificação que troca as N linhas por uma transversal. O resumo público nomeia a
-mudança de recorte, e as inscrições enviadas antes não mudam na Mesa.
+**Independent Test**: sobre um Edital publicado com um documento "facultativo para todos", com a
+condição na instrução, publicar pela interface uma Retificação que troca o recorte dele para
+transversal e o torna obrigatório. O resumo público nomeia as duas mudanças, e as inscrições enviadas
+antes não mudam na Mesa.
 
 **Acceptance Scenarios**:
 
 1. **Given** um Edital publicado, **When** uma Retificação acrescenta, remove ou troca o recorte
-   transversal de um Documento Exigido, **Then** o "O que mudou" público lista essa alteração, com a
-   denominação e o código da Modalidade, e nunca com identificador interno.
+   transversal de um Documento Exigido, **Then** o "O que mudou" público lista essa alteração: o
+   documento, pelo nome, e o campo, por rótulo do domínio, nunca por identificador interno.
 2. **Given** um documento recortado como "PcD em todos os Perfis", **When** uma Retificação muda a
    denominação de `PcD` em um Perfil só, **Then** a Retificação é impedida, e a mensagem nomeia os
    Perfis que ficaram com a denominação antiga.
@@ -383,17 +385,20 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
   aplica*. Cada um vem com a obrigatoriedade e a razão.
 - **FR-719**: A consulta administrativa ("Inscrições recebidas", a lista e o detalhe) DEVE ler a lista
   exigida para a contagem de obrigatórios recebidos e esperados e para a relação de documentos.
-- **FR-720**: O acompanhamento da inscrição enviada, no portal do candidato, DEVE ler a mesma lista.
-  O comprovante e o código de verificação NÃO mudam.
+- **FR-720**: A página da inscrição enviada, no portal do candidato, DEVE ler a mesma lista. O
+  comprovante e o código de verificação NÃO mudam.
 
 ### Retificação e mutabilidade
 
 - **FR-721**: O campo do recorte transversal DEVE ser declarado **retificável** na matriz de
   mutabilidade, com a razão escrita (`D-002`). O resumo público "O que mudou" DEVE nomeá-lo: quem
-  acrescenta, remove ou troca o recorte transversal produz uma linha legível, com a denominação e o
-  código da Modalidade, e nunca com identificador interno.
+  acrescenta, remove ou troca o recorte transversal produz uma linha legível, com o nome do documento
+  e o rótulo do campo, e nunca com identificador interno. Como toda linha desse resumo, ela diz
+  **que** o campo mudou, e não o valor: o valor está no documento da Retificação (`D-008`).
 - **FR-722**: A tela de Retificação DEVE oferecer o recorte transversal nas mesmas condições da
-  composição, inclusive a troca de N documentos exatos por um transversal no mesmo ato.
+  composição, inclusive a troca, no mesmo ato, do recorte de um documento existente ("todos", ou
+  exato) pelo transversal. Acrescentar e remover Documento Exigido continuam fora da Retificação,
+  como já são (`D-009`).
 - **FR-723**: Uma Retificação NÃO PODE alterar a lista exigida de inscrição já enviada. As inscrições
   enviadas depois dela DEVEM gravar a lista da versão que aceitaram.
 - **FR-724**: Remover de todos os Perfis a Modalidade de um código usado por recorte transversal DEVE
@@ -405,12 +410,15 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 - **FR-725**: Documento publicado antes desta feature NÃO PODE ser regenerado nem alterado. A versão
   publicada continua sendo lida como foi publicada.
 - **FR-726**: Inscrição enviada antes desta feature não tem lista exigida, e NÃO DEVE ganhar uma
-  escrita depois do envio (`D-004`). A Mesa, a consulta administrativa e o acompanhamento DEVEM
+  escrita depois do envio (`D-004`). A Mesa, a consulta administrativa e a inscrição enviada no
+  portal DEVEM
   **reconstruí-la** a partir da versão aceita, pela regra única (`FR-705`), e DEVEM dizer que ela foi
   reconstruída.
-- **FR-727**: Na reconstrução, quando a versão aceita tiver o recorte "Todos os Perfis" + Modalidade
-  de um Perfil, e o Perfil da inscrição tiver Modalidade de mesma denominação, a Mesa DEVE mostrar o
-  documento como *não pedido pelo portal, exigido pelo Edital publicado* (`D-007`).
+- **FR-727**: Quando a versão aceita tiver o recorte "Todos os Perfis" + Modalidade de um Perfil, e
+  o Perfil da inscrição tiver Modalidade de mesma denominação, a Mesa DEVE mostrar o documento como
+  *não pedido pelo portal, exigido pelo Edital publicado* (`D-007`). Vale para a lista reconstruída
+  **e** para a gravada. Um Edital publicado antes da #161 pode continuar recebendo inscrições depois
+  desta feature, e a lista dessas inscrições é gravada sobre a mesma versão ambígua.
 
 ### Autorização, dados pessoais e auditoria
 
@@ -425,7 +433,7 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 - **UX-080** — **A opção de recorte transversal diz o alcance.** A opção mostra a denominação, o
   código e quantos Perfis têm aquela Modalidade (*"Pessoas com Deficiência (PcD) — em todos os Perfis
   que a têm (16 de 16)"*). Fica separada dos pares Perfil × Modalidade, e antes deles.
-- **UX-081** — **A razão se lê como frase.** Na Mesa e no acompanhamento, a razão é escrita para quem
+- **UX-081** — **A razão se lê como frase.** Na Mesa e na consulta administrativa, a razão é escrita para quem
   lê: *"pedido de todos os candidatos"*, *"pedido de quem concorre ao Perfil C1"*, *"pedido de quem
   concorre em Pessoas com Deficiência, em todos os Perfis"*, *"pedido de quem concorre ao Perfil C1 em
   PPIQ"*. O "não se aplica" diz a quem o documento era pedido.
@@ -462,7 +470,8 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
   aceita aparecem na Mesa com estado e razão. **Zero** somem. O laudo aparece na inscrição AC como
   *não se aplica*, com a razão.
 - **SC-264**: Uma Retificação que muda o recorte de um documento, publicada depois de envios,
-  produz **zero** diferenças na Mesa, na consulta administrativa e no acompanhamento dessas
+  produz **zero** diferenças na Mesa, na consulta administrativa e na inscrição enviada no portal
+  dessas
   inscrições.
 - **SC-265**: Na inscrição do C2 do 903 original (enviada antes da feature), a Mesa mostra o laudo
   como *não pedido pelo portal, exigido pelo Edital publicado*, e anuncia a lista como reconstruída.
@@ -470,8 +479,8 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 - **SC-266**: Com um documento transversal por `PcD`, renomear a denominação em **1** dos 16 Perfis
   produz **exatamente 1** IMPEDE, que nomeia as duas denominações. Renomear nos **16** produz **zero**.
 - **SC-267**: Nas três operações sobre o recorte transversal feitas por Retificação (acrescentar,
-  remover, trocar o código), **3 de 3** aparecem no "O que mudou" público, com a denominação e o
-  código, e com **zero** identificadores internos. A contagem não inclui a mudança do recorte exato,
+  remover, trocar o código), **3 de 3** aparecem no "O que mudou" público, com o nome do documento e
+  o rótulo do campo, e com **zero** identificadores internos. A contagem não inclui a mudança do recorte exato,
   cuja omissão é defeito anterior, na fila das diretas (§3).
 - **SC-268**: Os cenários das User Stories 1 e 2 são executados de ponta a ponta pelos canais dos
   atores, sem banco, shell ou API: compor e publicar pela interface administrativa; inscrever e
@@ -538,6 +547,24 @@ documento publicado e o portal dizerem coisas diferentes. Reconstruir a lista pe
 calar, repetiria na Mesa o que levou ao indeferimento no 903. A Mesa mostra os dois fatos, o que o
 portal pediu e o que o Edital publicado dizia. O juízo continua sendo de quem analisa.
 
+### D-008 — o resumo público nomeia o campo, e não o valor
+
+Acrescentada no planejamento. A primeira redação pedia a denominação e o código na linha do "O que
+mudou". O resumo, porém, foi desenhado pela `024` para dizer **onde** e **qual campo**, e nunca o
+valor: quem quer o texto exato abre o documento da Retificação, na mesma linha do histórico. Pôr o
+código só nesta linha abriria uma exceção a esse desenho sem necessidade. O que a decisão de 25/09
+pedia, que o campo novo não seja descartado em silêncio, continua garantido.
+
+### D-009 — a Retificação muda o recorte, mas não junta linhas
+
+Acrescentada no planejamento. A tela de Retificação não acrescenta nem remove Documento Exigido, e a
+razão já está escrita no código: acrescentar um obrigatório depois de publicado torna incompleta a
+inscrição de quem já enviou, e o que fazer com essas pessoas é decisão normativa. Remover segue a
+mesma lógica. Esta feature não reabre isso. O caso do 140/2025, um documento "facultativo para
+todos" por linha, cabe inteiro, porque é **trocar o recorte da linha que já existe**. Um Edital
+publicado com o mesmo documento repetido por Perfil (N linhas exatas) não se reduz a uma linha por
+Retificação: pode tornar uma delas transversal, mas as outras ficam. Isso fica em Riscos e lacunas.
+
 ## LGPD
 
 **Nenhum dado pessoal novo é coletado.** A lista exigida deriva do Perfil e da modalidade que a
@@ -559,6 +586,10 @@ documento.
   protegidas, e a migration entra no guardião de contagem por app. O plano precisa prever os dois.
 - **A submodalidade continua sem forma** (§1). Três documentos do 140/2025 seguem facultativos. É o
   limite E7 do estudo, e fica registrado aqui, sem virar escopo.
+- **Edital publicado com o documento repetido por Perfil** não se reduz a uma linha por
+  Retificação (`D-009`). Tornar uma das N linhas transversal, com as outras N−1 ainda lá, faria o
+  candidato daquela modalidade ver o documento duas vezes no Perfil que a linha exata alcança. O
+  caso não apareceu na amostra, onde o atalho usado foi o "facultativo para todos". Fica registrado.
 - **Filtro de concorrência da consulta administrativa** repete "Pessoas com Deficiência" uma vez por
   Perfil, sem nomeá-lo (conferência, §3). É defeito de tela independente desta feature, e fica
   registrado, sem virar escopo.
