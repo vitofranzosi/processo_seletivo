@@ -635,7 +635,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Relações: AX-7, AX-14, AX-4, D-G5, "três nomes para duas coisas" (FR-572 da 039).
 - Confiança: alta quanto ao conteúdo; média quanto ao motivo (inferido — sem registro explícito).
 
-### 044 — Recorte transversal do documento exigido: spec na main, implementação só na branch
+### 044 — Recorte transversal do documento exigido: mesclada pelo #173 em 26/09
 - Origem: `specs/044-recorte-transversal-documental/` (spec/plan/tasks mesclados em `bb774d9`, 25/09).
   **Correção de premissa recebida durante a auditoria:** a implementação existe em
   `origin/claude/044-recorte-transversal-documental` — `bccfda0`, `fe9780b`, `6e2aa5a`, `85ebd61`,
@@ -690,13 +690,15 @@ aparece no campo "Impacto atual" de cada bloco.
     na ampla declarada); o sorteio continua como está.
   - **Não fecha**: AX-15 (submodalidade — excluída em §3), AX-1/AX-11 (fora), condição sobre o
     candidato (D2).
-- Estado atual: **IMPLEMENTADO, MAS NÃO VALIDADO** — **fora da main** (branch + PR #173 aberto, CI
-  `test` pendente). Na main de hoje a lacuna que a 044 fecha continua aberta.
+- Estado atual: **RESOLVIDO** — atualizado em 26/09: o #173 foi mesclado (`47876ad`) com o CI verde
+  (7831 passando, 11 pulados), e a Mesa foi percorrida no navegador depois do merge
+  (`specs/044-recorte-transversal-documental/rastreabilidade.md`, `0c4e6b0`). O que está acima
+  descreve a branch como foi lida antes do merge.
 - Ainda faz sentido?: sim; é a frente decidida pelo usuário para esta família de achados.
-- Lacuna residual: na main, toda a 044; na branch, validação independente (CI verde e conferência pela
-  tela do 140/2025 com os sete documentos).
-- Grupo do resíduo: **B**
-- Próxima ação sugerida: validar (CI do #173 e percurso pela tela); merge é do usuário.
+- Lacuna residual: nenhuma de implementação. Falta a T065: o 140/2025 não foi recomposto pela tela,
+  e a redução 112 → 7 (SC-260, SC-261) é afirmada por construção `[VALIDAR]`.
+- Grupo do resíduo: —
+- Próxima ação sugerida: demonstrar a T065, se a medição for pedida.
 - Relações: AX-7, AX-10, AX-14/17, E-4; PR #172 e `doc/achado-filtro-de-concorrencia-sem-perfil.md`
   (a 044 registrou o defeito do seletor como fora de escopo); memória
   `valor-de-fato-corrigir-depois-da-044.md` (a correção do `ValorDeFato` espera esta migration `0005`).
@@ -976,7 +978,7 @@ aparece no campo "Impacto atual" de cada bloco.
 | AX-16 | Restaurar rascunho local perde coleções aninhadas | NÃO IMPLEMENTADO | **A** | validar pela tela e corrigir (ou restringir a salvaguarda) |
 | E-3 | Custo de autoria sem duplicar | PARCIALMENTE RESOLVIDO (043) | B | nenhuma além da 044 |
 | 039 | Catálogo de Modalidades / alcance declarável (branch local) | CONTRADITO POR DECISÃO POSTERIOR | B (peças órfãs: D-G5, alcance da Etapa) | usuário registrar encerramento e destino das peças |
-| 044 | Recorte transversal + lista gravada | IMPLEMENTADO, MAS NÃO VALIDADO (**fora da main**, PR #173) | B | validar (CI + tela); merge do usuário |
+| 044 | Recorte transversal + lista gravada | RESOLVIDO (#173, mesclado em 26/09) | — | T065, se a medição for pedida |
 | ACH-41 (E-4) | Janela recursal do marco × Evento de recurso | NÃO IMPLEMENTADO | **A** | criar spec: designar Evento de recurso + AVISO |
 | ACH-13 (E-4) | Período de inscrições: "marcado" × designado na etapa 6 | NÃO IMPLEMENTADO | C | microcópia |
 | ACH-18/33 (E-4) | Numeração de seção tela × PDF | NÃO IMPLEMENTADO | C | nenhuma urgente (ato público usa título) |
@@ -999,16 +1001,16 @@ se decompõe nos quatro membros).
 
 | Estado | Nº | Quais |
 |---|---:|---|
-| RESOLVIDO | 4 | AX-13, AX-14/17, igualdade da soma, decisão de mutabilidade |
+| RESOLVIDO | 6 | AX-13, AX-14/17, igualdade da soma, decisão de mutabilidade, 044 (#173), PR #172 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 | — (o AX-14/17 fechou pela família (d) que ele próprio listava) |
 | PARCIALMENTE RESOLVIDO | 6 | AX-1, AX-10, AX-11, E-3, "três nomes", ampla não remapeada |
 | NÃO IMPLEMENTADO | 16 | AX-2, AX-3, AX-4, AX-5, AX-6, AX-8, AX-9, AX-12, AX-15, AX-16, ACH-41, ACH-13, ACH-18, objeto sem forma, objeto que nasce só pelo método, anexo sem destinatário |
-| IMPLEMENTADO, MAS NÃO VALIDADO | 2 | 044 (fora da main, PR #173), PR #172 |
+| IMPLEMENTADO, MAS NÃO VALIDADO | 0 | — (os dois, 044 e PR #172, foram mesclados em 26/09) |
 | SUPERADO / OBSOLETO | 1 | divergências sem achado |
 | DUPLICADO / ABSORVIDO | 1 | H-1…H-3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 | AX-7 (estrutural), 039 |
 
-Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 16 · **C** = 9 · sem resíduo = 5.
+Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 15 · **C** = 9 · sem resíduo = 6 (a 044 passou de B a sem resíduo em 26/09).
 
 Leitura dos 17 AX de 15/09 contra a varredura de 19/09 ("0 fechados"): hoje **3 fechados**
 (AX-13, AX-14, AX-17), **3 parciais** (AX-1, AX-10, AX-11), **1 contradito por decisão** (AX-7) e

@@ -2,6 +2,9 @@
 
 **Data:** 26/09/2026
 **Contra:** a `main` em `bb774d9` (merge do #168, 25/09 23:23), com a worktree sincronizada com `origin/main`
+**Atualização:** 26/09, depois dos merges do #173 (`47876ad`) e do #172 (`8e6fb4a`). Mudaram RC-52, RC-53 e
+RC-54, o mapa residual e as contagens da §1 e dos anexos 5 e 6. O resto do documento descreve a `main` em
+`bb774d9`, e as menções ao #173 como aberto fora dessas unidades não foram revistas.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
 25/09 — ver o inventário na §2.
 **Método:** leitura de código, testes, specs e histórico do git. **Nada foi executado**: nem a suíte, nem
@@ -46,31 +49,31 @@ consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha regi
 
 | Estado | Unidades |
 |---|---:|
-| RESOLVIDO | 24 |
+| RESOLVIDO | 27 |
 | RESOLVIDO POR OUTRO CAMINHO | 3 |
 | PARCIALMENTE RESOLVIDO | 11 |
 | NÃO IMPLEMENTADO | 49 |
-| IMPLEMENTADO, MAS NÃO VALIDADO | 8 |
+| IMPLEMENTADO, MAS NÃO VALIDADO | 5 |
 | SUPERADO / OBSOLETO | 3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 12 |
 | **Total** | **110** |
 
 Lido pela pergunta da auditoria:
 
-- **27** unidades estão resolvidas, pelo caminho recomendado ou por outro.
+- **30** unidades estão resolvidas, pelo caminho recomendado ou por outro.
 - **15** foram eliminadas por decisão consciente (12) ou por obsolescência (3) e **não devem voltar ao
   backlog** (§7).
-- **73** carregam algum resíduo. São 68 unidades abertas, parciais ou não validadas, mais cinco resolvidas
-  que deixaram uma sobra: RC-02, RC-45, RC-72, RC-87 e RC-102. Separadas por natureza:
+- **71** carregam algum resíduo. São 65 unidades abertas, parciais ou não validadas, mais seis resolvidas
+  que deixaram uma sobra: RC-02, RC-45, RC-54, RC-72, RC-87 e RC-102. Separadas por natureza:
 
 | Grupo | Unidades | O que são |
 |---|---:|---|
-| **A** — lacuna real | **14** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
+| **A** — lacuna real | **12** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
 | **B** — evolução relevante | **35** | ganho claro, sem defeito |
 | **C** — opcional | **24** | polimento e higiene |
 
-- **Validação antes de trabalho.** Das 14 unidades A, **três já estão prontas em PR aberto** — RC-52 e
-  RC-53 no #173, e o RC-54, que é C, no #172. **Três exigem percurso pela tela** antes de qualquer spec:
+- **Validação antes de trabalho.** Das 12 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
+  entraram na `main` pelo #173, e o RC-54, que é C, pelo #172, os três em 26/09. **Três exigem percurso pela tela** antes de qualquer spec:
   RC-08, RC-58 e, entre as B, RC-32. E **uma depende do Ifes**: RC-92.
 - **O que sobra de fato como trabalho novo de grupo A são oito unidades**: RC-29, RC-37, RC-38, RC-39,
   RC-72, RC-78, RC-79 e RC-80. Quatro delas são o painel da `038` e a Retificação.
@@ -93,7 +96,7 @@ outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), s�
 | RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito | A `[VALIDAR]` | `convocar.py:100-152` · nenhum consumidor de `reserveLimit` |
 | RC-72 | **"Fonte de demonstração"** do sorteio pode ser escolhida e publicada em produção | A | `fontes/__init__.py:83-92` · `production.py` sem guarda |
 | RC-39 | O **"O que mudou"** público omite a mudança de recorte do documento, contra a `FR-130` da `024` | A | `alteracoes.py:89-95` |
-| RC-52/53 | Recorte transversal e lista exigida gravada: **prontos no PR #173, fora da main** | A | `origin/claude/044-…` |
+| RC-52/53 | Recorte transversal e lista exigida gravada: **integrados pelo #173 em 26/09**, com a Mesa percorrida; falta só recompor o 140/2025 (T065) | — `[VALIDAR]` | `documentos.py:206-290` · `mesa.py:135` · `inscricoes/0005` |
 | RC-101 | `ValorDeFato` é append-only **por uma camada só** (PR #171); o conserto espera a `044` | A | `papeis.py:39` · `inscricoes/models.py:137-183` |
 | RC-08 | Restaurar o rascunho local **perde coleções aninhadas e regrava a perda**, contra a `FR-020` da `002` | A `[VALIDAR]` | `rascunho.js:81-133` (inalterado desde 08/09) |
 | RC-38 | Janela recursal, corte e reversão "podem nascer" por Retificação, **mas a tela não oferece o caminho** | A (janela) / B | `mutabilidade.py:515-548` · `retificacao.py:764,852,859` |
@@ -265,8 +268,8 @@ quando indicado.
 | RC | IDs antigos | Problema original → recomendação | Specs · implementação | Evidência atual | Estado | Faz sentido? | Resíduo · grupo | Próxima ação | Anexo |
 |---|---|---|---|---|---|---|---|---|---|
 | RC-51 | #161 · achado do portal | "Todos os Perfis" + Modalidade de um só: PDF e portal divergiam | `01d9163` | ver RC-28 | RESOLVIDO | não | a terceira saída e a divergência nas inscrições antigas (FR-727) estão no #173 | nenhuma | 6 |
-| RC-52 | estudo §5.9 · A7 · E6 (modalidade) · Caso 5 · §15 frente 1 · AX-10 · AX-14 (custo) · AX-17 · decisão D1/D1a/D3/D5 | "todo PcD" custa 112 linhas; o atalho publicou **9 obrigatórios como facultativos** → recorte por **código** da Modalidade | **044, implementada no PR #173** (fora da main; `test` pendente no CI) | na main, `editais/domain/documentos.py:97-114` (identidade exata); na branch, `documentos.py:206-290`, `validation.py:2234-2321`, migration `editais/0022` | IMPLEMENTADO, MAS NÃO VALIDADO | sim — é a frente decidida pelo usuário | na main, tudo; na branch faltam a T065 (recompor o 140/2025) e o percurso da Mesa · **A** | validar o #173 (CI, T065, Mesa) e mesclar | 6, 5 |
-| RC-53 | conferência §3/§6 · decisão D4 | a Mesa **recalcula** a lista; "não se aplica" não existe; nada registra o que foi pedido | **044 no #173** (`inscricoes/0005`, três camadas append-only) | na main, `avaliacoes/application/mesa.py:113-141` recalcula; `inscricoes/migrations` termina em `0004` | IMPLEMENTADO, MAS NÃO VALIDADO | sim — a Constituição (`constitution.md:200-201`) pede reproduzir os documentos exigidos de cada Inscrição | **A** | mesma frente do RC-52 | 6 |
+| RC-52 | estudo §5.9 · A7 · E6 (modalidade) · Caso 5 · §15 frente 1 · AX-10 · AX-14 (custo) · AX-17 · decisão D1/D1a/D3/D5 | "todo PcD" custa 112 linhas; o atalho publicou **9 obrigatórios como facultativos** → recorte por **código** da Modalidade | **044, mesclada pelo #173** (`47876ad`, 26/09; CI verde) | `editais/domain/documentos.py:206-290` (recorte por código), `editais/domain/validation.py:2234-2321` (código inexistente, da ampla, denominação divergente), migration `editais/0022`; percurso pela tela em `specs/044-recorte-transversal-documental/rastreabilidade.md` | RESOLVIDO | sim — é a frente decidida pelo usuário | a T065 não foi feita: a redução 112 → 7 no 140/2025 (SC-260, SC-261) é afirmada por construção, e não medida `[VALIDAR]` · — | demonstrar a T065, se a medição for pedida | 6, 5 |
+| RC-53 | conferência §3/§6 · decisão D4 | a Mesa **recalcula** a lista; "não se aplica" não existe; nada registra o que foi pedido | **044, mesclada pelo #173** (`inscricoes/0005`, três camadas append-only) | `avaliacoes/application/mesa.py:135` lê a lista gravada, e `:171-217` monta "Não se aplicam"; `inscricoes/migrations/0005_item_da_lista_exigida.py`; `inscricoes_itemdalistaexigida` em `seguranca/papeis.py:120`; Mesa percorrida no navegador (`rastreabilidade.md` da 044, `0c4e6b0`) | RESOLVIDO | sim — a Constituição (`constitution.md:200-201`) pede reproduzir os documentos exigidos de cada Inscrição | — | nenhuma | 6 |
 | RC-54 | conferência §3/§7 · 044 "Riscos e lacunas" | o filtro de concorrência repete "PcD" por Perfil sem dizer de qual | **PR #172**, mesclado em 26/09 (`8e6fb4a`) | `interface/templates/interface/inscricoes.html:64` — a opção leva o nome do Perfil quando há mais de um | RESOLVIDO | sim | o seletor não se restringe ao Perfil escolhido, registrado em `doc/achado-filtro-de-concorrencia-sem-perfil.md` · C | nenhuma | 6, 5 |
 | RC-55 | AX-15 · estudo E7 · A10 · Caso 8 · H-3 · reversão hierárquica | submodalidades de PPIQ, reversão entre elas e ordem de convocação sem forma | 044 exclui por decisão (§1, §3) | `editais/models/perfis.py:110-119` (Modalidade plana) | NÃO IMPLEMENTADO | sim, como evolução — a amostra tem um Edital só com essa forma | 3 documentos do 140/2025 seguem facultativos mesmo com a 044 · B | nenhuma agora; reabrir com um segundo Edital | 5, 6, 1 |
 | RC-56 | conferência §3–§5 · E2E-012 | a lista da Mesa sem Perfil nem completude; nenhum juízo por documento | a 044 recusa o juízo por documento | `mesa_inscricao.html:90-91` | NÃO IMPLEMENTADO | parcialmente | conveniência · C | reavaliar depois do #173 | 6, 1 |
