@@ -51,11 +51,17 @@ resposta, e não ausência de resposta.
   </p>
   <p class="campo">
     <label for="modalidade">Concorrência</label>
+    {% comment %}
+    A Modalidade é do Perfil: dois Perfis com ampla concorrência são duas opções, com duas
+    identidades. Sem o Perfil no rótulo elas se liam iguais, e só a contagem dizia qual era qual.
+    O nome, e não o código, porque é como os cartões acima e a coluna Perfil o identificam; e só
+    com mais de um Perfil, a mesma condição dos cartões, porque com um só não há o que desfazer.
+    {% endcomment %}
     <select id="modalidade" name="modalidade">
       <option value="">Todas</option>
       {% for item in por_modalidade %}
       <option value="{{ item.id }}" {% if modalidade == item.id %}selected{% endif %}>
-        {{ item.nome }} ({{ item.quantas }})</option>
+        {% if por_perfil|length > 1 %}{{ item.perfil }} · {% endif %}{{ item.nome }} ({{ item.quantas }})</option>
       {% endfor %}
     </select>
   </p>
