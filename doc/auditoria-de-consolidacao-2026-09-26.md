@@ -4,9 +4,11 @@
 **Contra:** a `main` em `bb774d9` (merge do #168, 25/09 23:23), com a worktree sincronizada com `origin/main`
 **Atualização:** 26/09, depois dos merges do #171 (`2f38dc2`, só o registro do achado), do #173 (`47876ad`,
 a 044) e do #172 (`8e6fb4a`). Mudaram RC-51 a RC-54, RC-56 e RC-101, as contagens da §1 e dos anexos 5 e 6,
-e todas as passagens deste documento e desses dois anexos que tratavam os três PRs como abertos. O
-inventário da §2 e a reconciliação entre lotes registram o que as fontes eram, e só ganharam o desfecho.
-Fora isso, o documento descreve a `main` em `bb774d9`.
+e todas as passagens deste documento e desses dois anexos que tratavam os três PRs como abertos. Depois,
+no mesmo dia, o #183 (`8e7c698`) corrigiu o `ValorDeFato`, e o RC-101 passou a RESOLVIDO, com as contagens,
+o anexo 6 e as decisões nº 19 e nº 21 do anexo 7. O inventário da §2 e a reconciliação entre lotes
+registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
+`bb774d9`.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
 25/09 — ver o inventário na §2.
 **Método:** leitura de código, testes, specs e histórico do git. **Nada foi executado**: nem a suíte, nem
@@ -51,10 +53,10 @@ consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha regi
 
 | Estado | Unidades |
 |---|---:|
-| RESOLVIDO | 27 |
+| RESOLVIDO | 28 |
 | RESOLVIDO POR OUTRO CAMINHO | 3 |
 | PARCIALMENTE RESOLVIDO | 11 |
-| NÃO IMPLEMENTADO | 49 |
+| NÃO IMPLEMENTADO | 48 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 5 |
 | SUPERADO / OBSOLETO | 3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 12 |
@@ -62,24 +64,24 @@ consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha regi
 
 Lido pela pergunta da auditoria:
 
-- **30** unidades estão resolvidas, pelo caminho recomendado ou por outro.
+- **31** unidades estão resolvidas, pelo caminho recomendado ou por outro.
 - **15** foram eliminadas por decisão consciente (12) ou por obsolescência (3) e **não devem voltar ao
   backlog** (§7).
-- **71** carregam algum resíduo. São 65 unidades abertas, parciais ou não validadas, mais seis resolvidas
+- **70** carregam algum resíduo. São 64 unidades abertas, parciais ou não validadas, mais seis resolvidas
   que deixaram uma sobra: RC-02, RC-45, RC-54, RC-72, RC-87 e RC-102. Separadas por natureza:
 
 | Grupo | Unidades | O que são |
 |---|---:|---|
-| **A** — lacuna real | **12** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
+| **A** — lacuna real | **11** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
 | **B** — evolução relevante | **35** | ganho claro, sem defeito |
 | **C** — opcional | **24** | polimento e higiene |
 
-- **Validação antes de trabalho.** Das 12 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
+- **Validação antes de trabalho.** Das 11 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
   entraram na `main` pelo #173, e o RC-54, que é C, pelo #172, os três em 26/09. **Três exigem percurso pela tela** antes de qualquer spec:
   RC-08, RC-58 e, entre as B, RC-32. E **uma depende do Ifes**: RC-92.
-- **O que sobra de fato como trabalho novo de grupo A são nove unidades**: RC-29, RC-37, RC-38, RC-39,
-  RC-72, RC-78, RC-79, RC-80 e RC-101. Quatro delas são o painel da `038` e a Retificação. O RC-101
-  estava bloqueado pela `inscricoes/0005` da 044, que entrou com o #173.
+- **O que sobra de fato como trabalho novo de grupo A são oito unidades**: RC-29, RC-37, RC-38, RC-39,
+  RC-72, RC-78, RC-79 e RC-80. Quatro delas são o painel da `038` e a Retificação. O RC-101, que foi a
+  nona enquanto esteve desbloqueado, foi corrigido pelo #183 em 26/09.
 
 **O fato que mais pesa.** Desde a auditoria de convergência de 20/09, **as três recomendações
 prioritárias dela não receberam trabalho nem decisão registrada**. São elas: fechar a `038`, derivar o
@@ -100,7 +102,7 @@ outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), s�
 | RC-72 | **"Fonte de demonstração"** do sorteio pode ser escolhida e publicada em produção | A | `fontes/__init__.py:83-92` · `production.py` sem guarda |
 | RC-39 | O **"O que mudou"** público omite a mudança de recorte do documento, contra a `FR-130` da `024` | A | `alteracoes.py:89-95` |
 | RC-52/53 | Recorte transversal e lista exigida gravada: **integrados pelo #173 em 26/09**, com a Mesa percorrida; falta só recompor o 140/2025 (T065) | — `[VALIDAR]` | `documentos.py:206-290` · `mesa.py:135` · `inscricoes/0005` |
-| RC-101 | `ValorDeFato` é append-only **por uma camada só** (registrado no #171); a `044` entrou, e o conserto (`inscricoes/0006`) está livre | A | `papeis.py:39` · `inscricoes/models.py:137-183` |
+| RC-101 | `ValorDeFato` era append-only **por uma camada só**: **corrigido pelo #183 em 26/09**, com gatilho e guarda de modelo | — | `papeis.py:39` · `inscricoes/models.py:137-183` |
 | RC-08 | Restaurar o rascunho local **perde coleções aninhadas e regrava a perda**, contra a `FR-020` da `002` | A `[VALIDAR]` | `rascunho.js:81-133` (inalterado desde 08/09) |
 | RC-38 | Janela recursal, corte e reversão "podem nascer" por Retificação, **mas a tela não oferece o caminho** | A (janela) / B | `mutabilidade.py:515-548` · `retificacao.py:764,852,859` |
 | RC-92 | **Autenticação institucional real** | A (depende do Ifes) | `seguranca/api/authentication.py:7-23` |
@@ -113,16 +115,17 @@ outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), s�
 A dívida que restou **não está espalhada**. Ela se concentra em quatro focos, e nenhum deles reescreve o
 que já foi publicado. As duas camadas append-only seguiam de pé na última medição (`33 de 33`, 20/09), e
 nenhum commit da `main` tocou `seguranca/papeis.py` nem as migrations desde então. A única exceção de
-integridade é o RC-101: uma tabela protegida por uma camada só, sem dano observado.
+integridade era o RC-101, uma tabela protegida por uma camada só, sem dano observado. O #183 a corrigiu em
+26/09, e nenhuma tabela append-only depende mais de uma camada só.
 
 1. **Condução**: quatro unidades A e B no painel da `038`. É a superfície mais nova, e a única que
    quebra o padrão mais forte do produto, a ausência honesta.
 2. **Publicar o que não se executa até o fim**: cinco unidades A. As duas avaliações, o cadastro de
    reserva, a Modalidade que não se acrescenta, a fonte de demonstração e os objetos que "podem nascer"
    sem porta. É a mesma doença que a `032` atacou, em pontos que ela não cobriu.
-3. **Trabalho decidido e não feito**: duas unidades A. O `ValorDeFato`, cuja correção esperava a
-   `044` e ficou livre quando ela entrou pelo #173 em 26/09, e o "O que mudou" que a decisão de 25/09
-   mandou para a fila das diretas e ninguém pegou. A `044`, que era a terceira, está integrada.
+3. **Trabalho decidido e não feito**: uma unidade A, o "O que mudou" que a decisão de 25/09 mandou
+   para a fila das diretas e ninguém pegou. As outras duas foram feitas em 26/09: a `044` entrou pelo
+   #173, e o `ValorDeFato` foi corrigido pelo #183.
 4. **Implantação**: autenticação, correio, retenção e Registro Acadêmico. É dívida real, mas com
    dependência externa.
 
@@ -132,7 +135,7 @@ lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 o
 ### Próxima onda recomendada
 
 - **Onda A — fechar o que já foi decidido e o que afirma o que não sabe.** Fechar a `038` (RC-78, RC-79,
-  RC-80, RC-81, RC-82); o `ValorDeFato` (RC-101), agora que o #173 entrou, e o RC-39; a varredura "publica e não
+  RC-80, RC-81, RC-82); o RC-39; a varredura "publica e não
   executa" (RC-29, RC-30, RC-72, RC-32). É pequena e média, quase toda com decisão já tomada.
 - **Onda B — Edital publicado com conserto e oferta executável até o fim.** Uma Retificação que acrescenta
   o que o contrato já permite (RC-37 + RC-38) e o cadastro de reserva convocável (RC-58), este depois
@@ -169,7 +172,7 @@ deles deve ser lido sozinho.
 | 16 | [`inventario-supervisao-do-processo.md`](inventario-supervisao-do-processo.md) | 09/09 | o que a supervisão deveria ver | Parte 3 | status do Evento "declarado" | premissa contradita pelo contrato da 026 (RC-80) |
 | 17 | 15 achados avulsos `doc/achado-*.md` | 08–25/09 | um defeito ou lacuna cada | — | vários | ver RC-13, RC-26, RC-29, RC-33, RC-38, RC-41, RC-52, RC-74, RC-103, RC-108 |
 | 18 | registros de decisão: `decisao-*.md`, `descoberta-*.md`, `decisoes-pre-vertical.md`, `briefing-*.md` | 03–25/09 | decisões de domínio e de escopo | D-1…D-4, decisão C da 018, D1–D5 do recorte | — | usados para o rótulo CONTRADITO (anexo 7, Parte 2) |
-| 19 | PRs abertos #171, #172, #173 e issue #117 | 15–26/09 | — | — | — | #173 = a 044 implementada; #171 bloqueado por ela. **Os três mesclados em 26/09**; o #171 era só o registro, e a correção (RC-101) continua por fazer |
+| 19 | PRs abertos #171, #172, #173 e issue #117 | 15–26/09 | — | — | — | #173 = a 044 implementada; #171 bloqueado por ela. **Os três mesclados em 26/09**; o #171 era só o registro, e a correção (RC-101) veio no #183, no mesmo dia |
 | 20 | branch local `claude/spec-039-alcance` | 19–20/09 | spec 039 (catálogo de Modalidades), nunca mesclada | — | — | contradita pela decisão de 25/09 (RC-102) |
 | 21 | notas de memória do usuário | — | decisões registradas fora de `doc/` | — | — | três delas decidem classificação (sem carga retroativa; equipe de 2–3; ValorDeFato após a 044) |
 
@@ -356,7 +359,7 @@ quando indicado.
 | RC-98 | contrato de mutabilidade (13–14/09) | campo publicado sem natureza declarada → invariante com guardião | 026 | `tests/contract/test_mutabilidade.py:303,339`; o contrato cresceu de 123 para 139 entradas | RESOLVIDO | não | o "retificável" não garante canal de exibição (RC-12) nem porta de acréscimo (RC-38) | nenhuma | 5 |
 | RC-99 | ACH-06 · ACH-12 · ACH-20 · B6 · B7 · B8 · E2E15-015 · LONG-§10.10 | `name` em inglês; desempate por idade; vigência densa; Anexos sem "Salvar rascunho"; papéis crus no seletor; cancelamento "sem dizer por quê"; a 037 "em deriva" | — | ver os anexos 2, 3 e 6 | SUPERADO / OBSOLETO | não | — | nenhuma | 2, 3, 6 |
 | RC-100 | NOVO-2 do lote 2 · NOVO-2 do lote 3 · longitudinal preâmbulo item 6 | "`_marco.html` com 42 controles, e cresceu" | — | 13 dos 42 são `hidden`; os visíveis foram de 28 para 29, e na chegada são 6 | SUPERADO / OBSOLETO | não | a medição do longitudinal é que estava errada | corrigir o texto do longitudinal, se desejado | 2, 3 |
-| RC-101 | PR #171 · achado ValorDeFato · memória "corrigir depois da 044" | `inscricoes_valordefato` está na lista append-only, mas sem gatilho e sem recusa no modelo | 015 D-2; a correção foi **decidida para depois da `0005` da 044**, que entrou com o #173 | `seguranca/papeis.py:39`; `inscricoes/models.py:137-183`; `inscricoes/migrations/0004_valor_de_fato.py` sem `RunSQL`; `tests/migrations/test_migrations.py:34-91` | NÃO IMPLEMENTADO | sim — contradiz a regra de duas camadas independentes | **A** | corrigir: `inscricoes/0006`, agora que a `0005` está na main | 6, 7 |
+| RC-101 | PR #171 · achado ValorDeFato · memória "corrigir depois da 044" | `inscricoes_valordefato` está na lista append-only, mas sem gatilho e sem recusa no modelo | 015 D-2; a correção foi **decidida para depois da `0005` da 044**, que entrou com o #173; **feita pelo #183** (`8e7c698`, 26/09) | `inscricoes/migrations/0006_valor_de_fato_append_only.py` (gatilho `valor_de_fato_append_only`); `ValorDeFato.save`/`delete` em `inscricoes/models.py`; `tests/integration/test_imutabilidade_do_historico.py` | RESOLVIDO | sim — contradizia a regra de duas camadas independentes | `PosicaoNaOrdem`, `RevisaoEdital` e `GeracaoDeArquivo` seguem com duas camadas de três, só registradas por decisão · — | nenhuma | 6, 7 |
 | RC-102 | spec 039 (branch local) | catálogo de Modalidades no Edital; alcance declarável | nunca mesclada; sem registro explícito de abandono | `git log main..claude/spec-039-alcance` | CONTRADITO POR DECISÃO POSTERIOR | não, o catálogo; **sim** as duas peças que ela absorvia (D-G5 → RC-37; alcance da Etapa → RC-64) | risco de governança: parece trabalho em curso · C | registrar o encerramento e apagar ou arquivar a branch | 5 |
 | RC-103 | Status Draft (41 de 44 specs com estado errado) · README (`31 de 31`; tabela até a 025; "5402 passando") · contagens divergentes · manual atrás do código · suíte em SQLite · testes em UTC · teste CSRF instável · `seed_demo --numero` · guarda de citações (`UX-062`) · derivação duplicada de `pode_retificar` · grade dos cartões | higiene de documentação, teste e ferramenta | — | `README.md:73, 206-214`; `backend/Makefile:36-37`; `tests/integration/identidade/test_adicionar_credencial.py:46-52`; `processos/management/commands/seed_demo.py:579-582`; `interface/views.py:6320` | NÃO IMPLEMENTADO | parcialmente | nada disso afeta produção · C | uma varredura de higiene; a convenção de `Status` é decisão do usuário | 7, 4, 3, 1 |
 
@@ -633,7 +636,7 @@ executável. É por isso que ela não aparece aqui como uma spec.
 | **Recursos** | instrução, parecer, tempestividade | RC-76 datas (parte viável em RC-48) | — |
 | **Condução** | Processo = Supervisão; visão entre Processos | **RC-78, RC-79, RC-80** (A); RC-81, RC-82; RC-77 remedir | RC-84, RC-85, RC-86 |
 | **Identidade e implantação** | barreira de produção | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico | RC-94 D-G2, RC-96 |
-| **Integridade e engenharia** | append-only 33/33, contrato de mutabilidade | **RC-101** ValorDeFato (A) | RC-102, RC-103 |
+| **Integridade e engenharia** | append-only 34/34, contrato de mutabilidade, `ValorDeFato` nas três camadas (RC-101, #183) | — | RC-102, RC-103 |
 
 ---
 
@@ -674,23 +677,22 @@ antes.
 - **Justifica uma futura spec** — curta, ou emenda da `038`.
 
 **B-2 · O que dependia da `044`**
-- **Problema.** `ValorDeFato` é append-only por uma camada só, e o "O que mudou" omite a mudança de
-  recorte do documento. O recorte transversal e a lista gravada, que eram o centro desta evolução,
-  entraram com o #173 em 26/09.
+- **Problema.** O "O que mudou" omite a mudança de recorte do documento. O recorte transversal e a lista
+  gravada, que eram o centro desta evolução, entraram com o #173, e o `ValorDeFato` foi corrigido pelo
+  #183, os dois em 26/09.
 - **Origem.** Estudo de 21/09 §5.9/E6; AX-10, AX-14 e AX-17; a conferência e a decisão de 25/09; o PR
   #171.
 - **Situação atual.** A `044` está na `main` (#173, `47876ad`, CI verde), e a Mesa foi percorrida pela
-  tela depois do merge (`0c4e6b0`). O #171 entrou como registro, sem a correção.
-- **Lacuna residual.** RC-101 (ValorDeFato) e RC-39 ("O que mudou" sem o recorte), que é independente e
-  barato. Da `044` fica só a T065 (recompor o 140/2025), que é medição, e não lacuna.
+  tela depois do merge (`0c4e6b0`). O #171 entrou como registro, e a correção veio no #183
+  (`inscricoes/0006`, gatilho e guarda de modelo).
+- **Lacuna residual.** RC-39 ("O que mudou" sem o recorte), que é independente e barato. Da `044` fica
+  só a T065 (recompor o 140/2025), que é medição, e não lacuna.
 - **Escopo mínimo.**
-  - A migration `inscricoes/0006` do ValorDeFato.
   - As duas entradas de `alteracoes.py`.
 - **Fora de escopo.** Submodalidade (RC-55) e condição sobre o candidato (decisão D2).
-- **Dependências.** Nenhuma: a `0005` que a `0006` esperava já está na `main`.
-- **Natureza.** fechamento, integridade de dados e transparência.
-- **Por que P1.** É pequeno e já decidido. A regra das duas camadas independentes é violada por uma
-  tabela, e a FR-130 da `024` é violada hoje.
+- **Dependências.** Nenhuma.
+- **Natureza.** transparência.
+- **Por que P1.** É pequeno e já decidido, e a FR-130 da `024` é violada hoje.
 - **Não precisa de spec nova.**
 
 **B-3 · O que o Edital publica e não executa: a varredura que a `032` não fez**
@@ -901,7 +903,7 @@ antes.
 ## 11. Dependências entre as evoluções restantes
 
 ```
-B-2 (a 044, mesclada pelo #173) ──► B-2b (RC-101, ValorDeFato: `0006` depois da `0005`, já na main)
+B-2 (a 044, mesclada pelo #173) ──► B-2b (RC-101, ValorDeFato: `0006`, mesclada pelo #183)
       └─────────────► B-9 (o aviso de percentual mora ao lado do confronto de denominação)
 
 B-1 ─ decisão da doutrina do `status` ──► N-06 ──► N-05 ──► N-04
@@ -936,7 +938,7 @@ a barreira da fonte de demonstração dentro da B-3, e a B-20.
 Os agrupamentos saem das dependências e da natureza, não da ordem dos relatórios.
 
 **Onda A — fechar o que já foi decidido e o que afirma o que não sabe**
-B-1 (fechar a 038) · B-2 (o ValorDeFato e o "O que mudou"; a 044 já entrou) · B-3 (o que publica e não executa) ·
+B-1 (fechar a 038) · B-2 (o "O que mudou"; a 044 e o ValorDeFato já entraram) · B-3 (o que publica e não executa) ·
 B-6 (rascunho, se confirmar).
 *Critério da onda:* a decisão já existe ou a correção é pequena; todas atacam um instrumento que hoje
 afirma mais do que sabe — o painel, a validação, o documento ou o rascunho. Ao fim dela, as condicionantes
