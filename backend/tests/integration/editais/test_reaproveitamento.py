@@ -21,7 +21,9 @@ from processo_seletivo.editais.application.reaproveitamento import (
     reaproveitar_edital,
 )
 from processo_seletivo.editais.domain.secoes import e_textual
+from processo_seletivo.editais.domain.validation import validate_for_publication
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.conftest import ator_institucional
 from tests.fixtures.publicacao import publish_original
@@ -147,6 +149,18 @@ def rascunho_rico():
                                 "whenMissing": "CRITERIO_NAO_SE_APLICA",
                             },
                         ],
+                        # A Etapa que o corte alimenta é mais uma referência a Etapa que a gravação
+                        # não confere. Governar a Etapa que o marco enumera é o caso normal num
+                        # marco por sorteio — a forma do 77/2026 (achado-etapa-governada-nao-
+                        # remapeada.md).
+                        "cutRule": {
+                            "targetKind": "FIXED",
+                            "targetCount": 2,
+                            "surplusCount": 1,
+                            "tieOutcome": "STRICT",
+                            "governedStage": ETAPA,
+                            "continuation": "NONE",
+                        },
                     }
                 ],
             }
@@ -610,6 +624,17 @@ def test_contraprova_do_sorteio_a_coerencia_interna_e_o_que_faz_a_gravacao_passa
 
     metodo = gravado.perfis.get().marcos.get().metodo_de_sorteio
     assert metodo["qualifyingStageId"] == etapa_da_origem
+
+
+def test_o_corte_governa_etapa_do_destino(destino, origem, elaborador):
+    """A consequência que o achado mediu: a publicação acusava uma pendência que a cópia criou."""
+    copiado = copiar(destino, origem, elaborador)
+
+    regra = copiado.perfis.get().marcos.get().regra_de_corte
+    assert regra["governedStage"] == str(copiado.etapas.get().id)
+    assert regra["governedStage"] != str(origem.etapas.get().id)
+    codigos = {item.code for item in validate_for_publication(edital_snapshot(copiado))}
+    assert "cut_rule_com_etapa_inexistente" not in codigos
 
 
 # ---------------------------------------------------------------------------

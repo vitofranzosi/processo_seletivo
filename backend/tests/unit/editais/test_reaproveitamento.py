@@ -117,6 +117,17 @@ def conteudo_publicado():
                                 "whenMissing": "IGNORA",
                             }
                         ],
+                        # A Etapa que o corte alimenta (D-012) **é identidade de Etapa**, e entrou
+                        # nesta origem por isso: sem ela, a varredura negativa abaixo não tinha
+                        # como enxergar a posição, e a posição escapava do remapeamento.
+                        "cutRule": {
+                            "targetKind": "FIXED",
+                            "targetCount": 2,
+                            "surplusCount": 1,
+                            "tieOutcome": "STRICT",
+                            "governedStage": ETAPA,
+                            "continuation": "NONE",
+                        },
                     }
                 ],
             }
@@ -392,3 +403,44 @@ def test_o_recorte_transversal_atravessa_o_remapeamento_sem_mudar():
 
     assert copia["documentRequirements"][0]["modalityCode"] == "PcD"
     assert payload_do_conteudo(copia)["documentRequirements"][0]["modalityCode"] == "PcD"
+
+
+def test_a_etapa_que_o_corte_alimenta_aponta_a_etapa_do_destino():
+    """A mesma classe da ampla concorrência declarada, numa posição que a fixture não declarava.
+
+    `governedStage` é identidade de Etapa, como `stages[]`, `qualifyingStageId` e o `stageId` do
+    critério — que são trocadas. Copiada sem troca, a regra de corte do Edital novo governa uma
+    Etapa do Edital **anterior**: a gravação do rascunho não confere a referência, e só a
+    publicação acusa (`cut_rule_com_etapa_inexistente`). Ver
+    `doc/achado-etapa-governada-nao-remapeada.md`.
+    """
+    conteudo = conteudo_publicado()
+    mapa = mapa_de_identidades(conteudo)
+
+    copiado = remapear(conteudo, mapa)
+
+    regra = copiado["profiles"][0]["classificationMilestones"][0]["cutRule"]
+    assert regra["governedStage"] == mapa[ETAPA], "a regra tem de governar a Etapa do destino"
+    assert regra["governedStage"] == copiado["stages"][0]["id"], (
+        "e tem de apontar uma Etapa que este Edital realmente publica"
+    )
+
+
+def test_o_corte_que_nao_governa_etapa_continua_sem_governar():
+    """`NONE` é declaração, e não identidade: remapeá-lo seria recusar o marco terminal (D-012).
+
+    Antes da correção este caso passava por acaso — `cutRule` inteiro atravessava intocado. Ele
+    prende a exceção: trocar `governedStage` por `trocar()` sem excetuar o sentinela faria a cópia
+    de todo Edital com marco terminal falhar alto com `ReferenciaNaoMapeada`.
+    """
+    from processo_seletivo.classificacao.domain.faixa import SEM_ETAPA_GOVERNADA
+
+    conteudo = conteudo_publicado()
+    marco = conteudo["profiles"][0]["classificationMilestones"][0]
+    marco["cutRule"]["governedStage"] = SEM_ETAPA_GOVERNADA
+    mapa = mapa_de_identidades(conteudo)
+
+    copiado = remapear(conteudo, mapa)
+
+    regra = copiado["profiles"][0]["classificationMilestones"][0]["cutRule"]
+    assert regra["governedStage"] == SEM_ETAPA_GOVERNADA
