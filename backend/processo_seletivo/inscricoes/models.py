@@ -146,6 +146,11 @@ class ValorDeFato(models.Model):
     `TABELAS_APPEND_ONLY`, e por isso `inscricao` é `PROTECT` e não `CASCADE` — o runtime não tem
     `DELETE`, e um `CASCADE` que jamais poderia executar seria promessa falsa no esquema.
 
+    Da `015` até a `inscricoes/0006`, o privilégio foi a única camada: sem gatilho e sem recusa,
+    quem conectava com privilégio reescrevia o valor em silêncio. A `0006` pôs o gatilho, e
+    `save`/`delete` abaixo recusam antes do banco (`doc/achado-valor-de-fato-sem-gatilho.md`). O
+    `bulk_create` do envio não passa por `save`, e é a única escrita que a tabela admite.
+
     **A consequência precisa ser dita:** o candidato **não corrige** o que informou depois de
     submeter. A `009` não tem retificação de inscrição, e esta feature não a cria. É o que D-2
     pede, porque congelar é o ponto inteiro.
@@ -181,6 +186,14 @@ class ValorDeFato(models.Model):
 
     def __str__(self):
         return f"{self.fato_id} — {self.valor_data or self.valor_inteiro}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("O valor de fato é append-only: ele é o que o envio congelou.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("O valor de fato é append-only.")
 
 
 class ItemDaListaExigida(models.Model):
