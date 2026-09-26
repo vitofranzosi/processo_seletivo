@@ -88,6 +88,11 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
     <li>
       <a href="{% url 'portal:resultado' item.publicacao.id %}">{{ item.natureza_rotulo }} — {{ item.marco }}</a>
       <span class="meta">publicado em {{ item.publicacao.publicado_em|date:"d/m/Y" }}</span>
+      {% comment %}
+      O prazo que ainda corre (047, FR-770). Encerrado, nada é dito aqui: a página do resultado diz
+      quando encerrou, e a lista fica com o que decide agir.
+      {% endcomment %}
+      {% if item.recurso_ate %}<span class="prazo-recursal">recurso até {{ item.recurso_ate|date:"d/m/Y" }} às {{ item.recurso_ate|date:"H\hi" }}</span>{% endif %}
     </li>
     {% endfor %}
   </ul>

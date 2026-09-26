@@ -82,6 +82,7 @@ from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
+    janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
 )
@@ -409,6 +410,12 @@ def selecao(request, edital_id):
     # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
     # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
     contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
+    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). O conteúdo vigente já
+    # está carregado, e a conta é a mesma da página do resultado e da interposição.
+    agora = timezone.now()
+    for item in contexto["resultados_divulgados"]:
+        janela = janela_da_publicacao_divulgada(item["publicacao"], conteudo=versao.content)
+        item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
     # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
@@ -2256,6 +2263,15 @@ def resultado(request, publicacao_id):
         if foi_sucedida
         else None
     )
+    # **O prazo de recurso, na página que o público abre** (047, `FR-769`). É a conta que a
+    # interposição aplica, e não outra: a data dita aqui é a data em que o sistema deixa de aceitar
+    # a peça. Só na vigente — a sucedida leva à vigente, e é lá que o prazo se lê.
+    prazo = None
+    if not foi_sucedida:
+        janela = janela_da_publicacao_divulgada(publicacao)
+        if janela is not None:
+            abre, fecha = janela
+            prazo = {"abre": abre, "fecha": fecha, "aberto": timezone.now() <= fecha}
     return render(
         request,
         "portal/resultado.html",
@@ -2265,6 +2281,7 @@ def resultado(request, publicacao_id):
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
+            "prazo": prazo,
             # **Não nasce natureza nova** (FR-087). A definitiva que corrige outra é apresentada
             # pela **causa** — a decisão que a motivou —, derivada da cadeia. Uma natureza
             # `DEFINITIVA_RETIFICADA` seria terceiro valor no enum, mais um par na regra de não

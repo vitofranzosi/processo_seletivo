@@ -169,7 +169,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 **Independent Test**: quickstart, percurso 5.
 
-- [ ] T022 [P] [US4] Escrever os testes em `backend/tests/portal/test_prazo_recursal_publico.py` (**NOVO**), com `rascunho_com_marco(janela_recursal={"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"})` e `publicar_o_ato` de `tests/fixtures/divulgacao.py`. Casos:
+- [X] T022 [P] [US4] Escrever os testes em `backend/tests/portal/test_prazo_recursal_publico.py` (**NOVO**), com `rascunho_com_marco(janela_recursal={"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"})` e `publicar_o_ato` de `tests/fixtures/divulgacao.py`. Casos:
   - preliminar vigente com prazo em curso: a página do resultado diz abertura, encerramento e *aberto*, sem se identificar;
   - a lista de vigentes da página do Edital diz *recurso até* a data;
   - **a data é igual à de `recursos/application/interpor.py`** (`situacao_do_prazo`/`_fecha_em`) para uma inscrição daquele ato (`SC-284`);
@@ -180,12 +180,12 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - **Edital encerrado pela gestão com o prazo ainda em curso** (`close_edital`): a página do resultado continua dizendo o prazo aberto, com a mesma data de `situacao_do_prazo`. É o caso-limite *"Edital com desfecho e janela recursal ainda aberta"*: o desfecho não apaga a norma aplicada a ato já publicado, e a projeção não decide por conta própria o que o domínio de recursos aceita;
   - nenhuma ação de recorrer em caso algum. O teste existente `test_a_pagina_nao_oferece_acao_de_recurso` continua.
   - Em `tests/portal/test_resultado_publico.py` (**EXISTENTE**, `TABELAS_PROIBIDAS`, linhas 197-202), retirar **só** `publicacoes_versaoconsolidada`, com comentário que cita a `D-008`. As outras três continuam, e o teste da fronteira continua passando.
-- [ ] T023 [US4] Em `backend/processo_seletivo/recursos/application/selectors.py` (**EXISTENTE**), criar `janela_da_publicacao_divulgada(publicacao)`: o conteúdo vigente do Edital, `declaracao_do_marco(conteudo, publicacao.marco_id)` e `janela_da_publicacao(publicacao, declaracao)`. Devolve `(abre, fecha)` ou `None`. A docstring diz que ela é **a** conta da interposição, e por que a norma é a vigente (`research.md`, `R-5`; `D-005`).
-- [ ] T024 [US4] Em `backend/processo_seletivo/recursos/application/interpor.py` (**EXISTENTE**, `_janelas_pertinentes`, linhas 164-205), fazer o ramo `publicacao is not None` chamar `janela_da_publicacao_divulgada`. O ramo do `ResultadoEtapa` não muda. Rodar os testes de `tests/portal/test_parecer_do_titular.py` e os de interposição (`grep -rl interpor tests/`): **devem continuar verdes sem edição**.
-- [ ] T025 [US4] Em `backend/processo_seletivo/portal/views.py` (`FR-769`, `FR-770`):
+- [X] T023 [US4] Em `backend/processo_seletivo/recursos/application/selectors.py` (**EXISTENTE**), criar `janela_da_publicacao_divulgada(publicacao)`: o conteúdo vigente do Edital, `declaracao_do_marco(conteudo, publicacao.marco_id)` e `janela_da_publicacao(publicacao, declaracao)`. Devolve `(abre, fecha)` ou `None`. A docstring diz que ela é **a** conta da interposição, e por que a norma é a vigente (`research.md`, `R-5`; `D-005`).
+- [X] T024 [US4] Em `backend/processo_seletivo/recursos/application/interpor.py` (**EXISTENTE**, `_janelas_pertinentes`, linhas 164-205), fazer o ramo `publicacao is not None` chamar `janela_da_publicacao_divulgada`. O ramo do `ResultadoEtapa` não muda. Rodar os testes de `tests/portal/test_parecer_do_titular.py` e os de interposição (`grep -rl interpor tests/`): **devem continuar verdes sem edição**.
+- [X] T025 [US4] Em `backend/processo_seletivo/portal/views.py` (`FR-769`, `FR-770`):
   - `resultado`: quando `not foi_sucedida`, pôr no contexto a janela e se ela está aberta no instante da leitura;
   - `selecao`: anotar cada item de `resultados_divulgados` com `fecha_em` só quando o prazo estiver aberto.
-- [ ] T026 [US4] Em `backend/processo_seletivo/portal/templates/portal/resultado.html` e no trecho de resultados divulgados de `selecao.html`, dizer o período em texto, com dia, mês, ano e hora do encerramento na zona institucional. Pode dizer, sem link de ação, que a interposição é feita na área do candidato (`FR-771`, MAY). Comentário no template: o prazo é o da interposição, e a página não o recalcula.
+- [X] T026 [US4] Em `backend/processo_seletivo/portal/templates/portal/resultado.html` e no trecho de resultados divulgados de `selecao.html`, dizer o período em texto, com dia, mês, ano e hora do encerramento na zona institucional. Pode dizer, sem link de ação, que a interposição é feita na área do candidato (`FR-771`, MAY). Comentário no template: o prazo é o da interposição, e a página não o recalcula.
 
 **Checkpoint**: a mesma data na página pública, no acompanhamento e na recusa da interposição.
 

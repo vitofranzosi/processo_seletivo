@@ -171,6 +171,7 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
     """
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
     from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+    from processo_seletivo.recursos.application.selectors import janela_da_publicacao_divulgada
     from processo_seletivo.recursos.domain.janela import (
         admite_recurso,
         declaracao_do_marco,
@@ -194,12 +195,17 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
     for marco_id in marcos:
         declaracao = declaracao_do_marco(conteudo, marco_id)
         negados.append(admite_recurso(declaracao) is False)
-        vigente = (
-            publicacao
+        # **Contra a publicação, a conta é a mesma que a página pública diz** (047, `FR-769`): uma
+        # função só, para que a data anunciada ao público e a data aplicada a quem recorre não
+        # possam divergir. Contra o Resultado da Etapa, o prazo é o do marco vigente, e só a
+        # interposição o lê.
+        computada = (
+            janela_da_publicacao_divulgada(publicacao, conteudo=conteudo)
             if publicacao is not None
-            else vigente_do_marco(edital=edital, marco_id=marco_id)
+            else janela_da_publicacao(
+                vigente_do_marco(edital=edital, marco_id=marco_id), declaracao
+            )
         )
-        computada = janela_da_publicacao(vigente, declaracao)
         if computada is not None:
             janelas.append(computada)
     return janelas, bool(negados) and all(negados)

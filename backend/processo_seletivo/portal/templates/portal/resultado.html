@@ -46,6 +46,24 @@ resolvem numa emissão só, e nomear um deles omitiria quem recorreu e teve raz�
   Assinado por {{ cabecalho.signatario_nome }} — {{ cabecalho.signatario_cargo }}.
 </p>
 
+{% comment %}
+**O prazo de recurso** (047, FR-769). É o que a interposição aplica a esta publicação, pela mesma
+conta, e por isso nunca diverge do que o candidato lê na área dele. Nenhuma ação de recorrer é
+oferecida aqui (017, FR-055): a página diz o prazo e onde se recorre, e só. Sem janela declarada,
+nada é dito — nem "não cabe recurso", que afirmaria o que o Edital talvez nunca tenha declarado.
+{% endcomment %}
+{% if prazo %}
+<p class="prazo-recursal">
+  {% if prazo.aberto %}
+  <strong>Prazo de recurso aberto</strong>, de {{ prazo.abre|date:"d/m/Y" }} até
+  {{ prazo.fecha|date:"d/m/Y" }} às {{ prazo.fecha|date:"H\hi" }}. Quem se inscreveu recorre pela
+  própria área do candidato.
+  {% else %}
+  Prazo de recurso encerrado em {{ prazo.fecha|date:"d/m/Y" }} às {{ prazo.fecha|date:"H\hi" }}.
+  {% endif %}
+</p>
+{% endif %}
+
 <p><a href="{% url 'portal:selecao' edital_id %}">Ver o {{ cabecalho.edital }}</a></p>
 
 <h2 id="titulo-do-resultado">Resultado</h2>

@@ -194,10 +194,13 @@ def test_abrir_a_pagina_nao_recalcula_a_ordem(client, cenario, publicada, api_cl
     assert antes == depois
 
 
+# **A versão consolidada saiu da lista com a 047** (`D-008`). Ela guarda o conteúdo normativo
+# publicado — público por definição, e servido pela API pública em `versao-vigente` —, e é dela que
+# sai a janela recursal que a página passou a dizer (`FR-769`). As três que ficam guardam dado
+# individual, e a razão da T-013 da 017 continua inteira para elas.
 TABELAS_PROIBIDAS = (
     "inscricoes_inscricao",
     "classificacao_posicaonaordem",
-    "publicacoes_versaoconsolidada",
     "divulgacao_situacaodivulgada",
 )
 
