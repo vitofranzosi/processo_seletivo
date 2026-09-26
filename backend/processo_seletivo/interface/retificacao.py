@@ -481,6 +481,16 @@ NOVO_EVENTO = [
     ("description", "Descrição", TEXTO),
     ("startAt", "Início", INSTANTE),
     ("endAt", "Término", INSTANTE),
+    # Onde o Evento acontece (021, D-008). Sem o campo aqui, a prova acrescentada seria publicada
+    # sem dizer onde acontece, e o local só chegaria numa segunda Retificação — porque a identidade
+    # do Evento nasce no servidor, e o ato não alcança o que ele mesmo acrescenta. Vazio é `""`,
+    # "não declarado", e nunca um local institucional por padrão.
+    #
+    # **`isRegistrationPeriod` fica fora, por decisão** — registrada em
+    # `doc/achado-evento-acrescentado-sem-local.md`: Evento que nascesse marcado disputaria a
+    # designação com o período vigente, e mudar o período de inscrições é, na prática, retificar as
+    # datas do Evento que já o designa.
+    ("location", "Local", TEXTO),
 ]
 # Um Anexo acrescentado por Retificação. O arquivo entra como os demais — enviado antes, citado
 # pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
@@ -1467,6 +1477,14 @@ def _perfil_completo(valores):
 
 
 def _evento_completo(valores, ordem):
+    """Forma que `edital_snapshot` produz — um subconjunto é recusado na elaboração do ato.
+
+    Não é a consulta pública que quebra aqui, como no Perfil: é `EVENTO_PUBLICADO`, que a
+    elaboração da Retificação confere sobre o conteúdo que o ato produz. Um Evento sem as duas
+    últimas chaves abaixo fazia a tela devolver "campo obrigatório não está presente" a quem só
+    quis acrescentar um Evento — e nenhum teste via, porque os do domínio declaravam o Evento
+    inteiro à mão.
+    """
     return {
         "id": str(uuid4()),
         "type": valores.get("type") or "",
@@ -1475,6 +1493,12 @@ def _evento_completo(valores, ordem):
         "endAt": valores.get("endAt"),
         "order": ordem,
         "status": "PLANEJADO",
+        # `""` quando a pessoa não o informou: é a grafia de "não declarado" que a D-008 da `021`
+        # fixou — nunca um local institucional por padrão, que publicaria o que o Edital não disse.
+        "location": valores.get("location") or "",
+        # **Fixo, e não lido do formulário**: `NOVO_EVENTO` não o oferece, por decisão escrita ao
+        # lado dele. `False` é a ausência de marca, e não "não informado" (009).
+        "isRegistrationPeriod": False,
     }
 
 
@@ -1823,5 +1847,17 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 "depois": valores.get("description") or "novo Evento",
             }
         )
+        # Linha própria, e não sufixo da descrição: o local é o que a pessoa candidata vai seguir
+        # para comparecer, e a conferência existe para quem retifica notar que digitou o lugar
+        # errado antes de o ato ser gravado.
+        if valores.get("location"):
+            resumo.append(
+                {
+                    "grupo": f"Evento {valores.get('type') or ''}".strip(),
+                    "rotulo": "Local",
+                    "antes": "—",
+                    "depois": valores["location"],
+                }
+            )
 
     return alteracoes, resumo
