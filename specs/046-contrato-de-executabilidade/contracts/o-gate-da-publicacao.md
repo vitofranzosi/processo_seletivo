@@ -64,7 +64,7 @@ A `<frase de impedimento_da_regra>` é o segundo elemento que a função devolve
 |---|---|---|
 | `milestone_without_cut_rule` (`032`, `FR-461`) num Perfil **sem** corte algum | um aviso por marco | nenhum — a recusa `profile_without_cut_rule` é o relato (`FR-753`) |
 | `milestone_without_cut_rule` num Perfil em que outro marco corta | aviso | aviso, sem mudança |
-| Seção *"Validação do conteúdo"* na tela do Edital, e pendências do assistente, com Edital `PUBLICADO`, `ENCERRADO` ou `CANCELADO` | achados do ato de publicação sobre o relacional | **nada** (`FR-755`) |
+| Seção *"Validação do conteúdo"* na tela do Edital, e pendências do assistente, com Edital `PUBLICADO`, `ENCERRADO` ou `CANCELADO` | todos os achados do ato de publicação sobre o relacional | **só** os códigos da lista de fatos do conteúdo publicado — hoje `stage_without_schedule_event` (`045`, `FR-739`), como *"Aviso"*; nenhum impeditivo (`FR-755`) |
 | Previsão de recusa dos atos em Edital publicado | calculada e nunca usada | não calculada |
 
 Nada muda para `EM_ELABORACAO`, `EM_REVISAO` e `HOMOLOGADO`.

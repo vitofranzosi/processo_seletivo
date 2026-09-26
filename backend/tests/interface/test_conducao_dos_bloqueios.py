@@ -20,6 +20,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
+from tests.fixtures.edital import complete_draft
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
@@ -259,8 +260,23 @@ def test_edital_publicado_nao_manda_pedir_a_ninguem(
 
     O ator deste caso **tem** `edital:elaborar` — é ele quem torna a falsidade dupla: a frase o
     mandava pedir a outra pessoa exatamente o que ele já detém, e que ainda assim não resolveria.
+
+    **Publicado com uma Etapa sem Evento, e não mais com o rascunho mínimo.** A `046` tirou do
+    Edital publicado o juízo de publicabilidade (`FR-755`), e com ele a pendência corrigível que o
+    rascunho mínimo produzia; sem pendência na tela, este caso passaria calado com o defeito de pé.
+    A Etapa sem Evento é o fato que continua dito ali (`045`, `FR-739`), e traz o *"Ir para"*.
     """
-    edital = publish_original(api_client, manager_headers, process_payload)
+    rascunho = complete_draft()
+    rascunho["stages"] = [
+        {
+            "id": "aaaaaaaa-0000-4000-8000-0000000046c1",
+            "name": "Prova didática",
+            "order": 1,
+            "eliminatory": False,
+            "classificatory": True,
+        }
+    ]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     identificar(client, "ana.elaboradora", ["elaborador"])
 
     pagina = _etapa(client, edital, "revisao")

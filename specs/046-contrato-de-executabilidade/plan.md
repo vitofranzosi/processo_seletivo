@@ -75,7 +75,8 @@ Completa em [research.md](research.md). O que a spec não sabia:
    responderia a `override_settings`.
 5. **A suíte quebra em bloco, e por fixture** (`R-7`): 1457 casos, quatro causas, todas resolvidas antes da regra.
 6. **A `045` prende o contrário da `FR-755`** numa tarefa ainda não executada (`R-8`). O usuário
-   decidiu em 26/09: a `045` entra antes, e a `046` retira a cláusula ao rebasear.
+   decidiu em 26/09: a `045` entra antes. Com ela mesclada, a leitura mostrou que era requisito (`FR-739`
+   de lá), e não cláusula de teste; o usuário decidiu *"fatos ficam, gate sai"* (`D-003`, `R-5`).
 
 ## Ordem de entrega
 
@@ -84,7 +85,7 @@ Fase 0 — o chão
    a. conferir que a 045 está na main e rebasear (R-8)
    b. publicar_como_acervo em tests/fixtures/ (sem regra nova ainda: ele só precisa existir)
    ▼
-US3 — o Edital publicado não se julga como se fosse publicar   ← views.py (_pendencias); 3 casos + a cláusula da T021; varredura da FR-756
+US3 — o Edital publicado não se julga como se fosse publicar   ← views.py (_pendencias); 3 casos + a contraprova na T021 da 045; varredura da FR-756
    ▼   (primeiro porque é o menor e não depende de fixture)
 US4 — a fonte de demonstração                                   ← settings + fontes/__init__.py + 2 leitores; independente
    ▼
@@ -117,7 +118,7 @@ a correção vira caça — foi o que a primeira rodada do protótipo mostrou (8
 | o corte que não governa Etapa mudar participação | as quatro fixtures de marco | `faixa.etapa_governada` devolve `None` e nenhum corte é emitido por elas; o `FR-214` preserva o conjunto. Se um caso emitir corte sobre essas fixtures, a recontagem o acusa |
 | o ajudante de acervo esconder regressão | `publicar_como_acervo` | neutraliza **só** as duas funções desta feature, e só durante a publicação; o nome e o docstring dizem o que simula; a varredura do `FR-756` não o alcança porque ele não chama a validação |
 | a advertência da Retificação sumir | `advertencias_do_ato` (#117) | dois códigos (`R-3`); um caso confere a advertência **na confirmação**, e não só na função |
-| divergência com a `045` | `validation.py`, `views.py`, a `T021` | a `045` entra antes (decisão de 26/09); a `046` rebasa sobre ela e retira só a cláusula do publicado (`R-8`) |
+| divergência com a `045` | `validation.py`, `views.py`, a `FR-739` de lá | a `045` entra antes (decisão de 26/09); na página do Edital publicado ficam só os fatos de uma lista fechada, e o da Etapa sem Evento é o único (`D-003`, `R-5`) |
 | `SC-191` da `037` parecer violada | `test_cronograma_publico.py` | o lado da gestão passa a ler a conferência no domínio e a fase derivada; a tela publicada não acusa, e portanto não diverge (`R-7`) |
 | a barreira de produção não ser exercida | `test_configuracao_producao.py` | um caso novo carrega o módulo de produção com a variável ligada e espera `ImproperlyConfigured` nomeando-a |
 | Edital de produção com a fonte de demonstração | base de produção | consulta de [data-model.md](data-model.md) antes da implantação — fora do alcance da suíte |

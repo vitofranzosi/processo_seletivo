@@ -302,7 +302,10 @@ sorteio da suíte continuam rodando sem rede.
 - **FR-755**: Os achados da validação de publicabilidade MUST ser apresentados somente enquanto o
   Edital está antes da publicação — em elaboração, em revisão ou homologado. Em Edital publicado,
   encerrado ou cancelado, nenhuma superfície — a tela do Edital, o assistente em modo de leitura, a
-  previsão de recusa dos atos — MUST apresentar achado dela (`D-003`).
+  previsão de recusa dos atos — MUST apresentar impeditivo, nem aviso que fale do ato de publicar. A
+  única exceção são os avisos que descrevem **fato do conteúdo publicado** e que outra spec manda
+  dizer ali, nomeados numa lista fechada — hoje só o da Etapa sem Evento (`045`, `FR-739`, `UX-086`)
+  (`D-003`).
 - **FR-756**: A validação de publicabilidade MUST ser consultada somente pelos atos que conferem
   conteúdo normativo — submissão, publicação e Retificação, esta com o próprio ato — e pelas
   superfícies que os antecipam antes da publicação. Nenhuma operação sobre Processo publicado MUST
@@ -469,6 +472,14 @@ o publicado. Fica a segunda. A primeira repetiria na tela do Edital o que a conf
 já faz no momento em que importa (`027`, `FR-336`), e daria à tela do Edital publicado uma lista de
 advertências que ninguém pode resolver ali. A correção é um ponto só: a montagem das pendências, que
 as duas superfícies compartilham.
+
+**Os fatos ficam; o gate sai.** Decidido pelo usuário em 26/09, depois de a `045` mesclada mostrar que
+a `FR-739` dela **exige** o aviso da Etapa sem Evento na página do Edital publicado — e que a
+convergência de 20/09 (§21) vetou silenciá-lo: *"eles reportam fato verdadeiro sobre conteúdo
+publicado"*. A primeira redação desta decisão tirava tudo, e o fato deixaria de ser dito em qualquer
+superfície depois da publicação. O que sai é o que é juízo de publicabilidade — o *"Impede"*, o
+*"será publicado"*, o *"corrija antes de publicar"*. O que fica é o fato, e só o que uma spec mandou
+dizer ali, por nome: a lista não se estende por semelhança.
 
 ### D-004 — A fonte de demonstração sai do vocabulário de produção
 

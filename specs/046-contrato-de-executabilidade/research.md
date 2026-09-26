@@ -97,13 +97,22 @@ um"* — ficaria no meio.
 
 ## R-5 — O Edital publicado: um ponto, e ele é `_pendencias`
 
-**Decisão**: `_pendencias` (`interface/views.py:816`) devolve lista vazia quando o Edital não está em
-`EM_ELABORACAO`, `EM_REVISAO` ou `HOMOLOGADO`, **antes** de montar o snapshot. As três chamadas
-(`detalhe`, `compor_etapa`, `praticar_ato`) passam a respeitar a regra sem mudança própria.
+**Decisão**: `_pendencias` (`interface/views.py:816`), quando o Edital não está em `EM_ELABORACAO`,
+`EM_REVISAO` ou `HOMOLOGADO`, devolve **só** os achados cujo código está numa lista fechada de fatos
+do conteúdo publicado — `FATOS_DO_CONTEUDO_PUBLICADO = {"stage_without_schedule_event"}`, ao lado de
+`_pendencias`. As três chamadas (`detalhe`, `compor_etapa`, `praticar_ato`) passam a respeitar a regra
+sem mudança própria.
 
-**Antes de montar o snapshot, e não depois de validar**: o snapshot de um Edital publicado sai do
-relacional, que guarda o estado do dia da publicação e não a versão vigente. Não montá-lo é também a
-consulta que deixa de acontecer em toda abertura da tela de um Edital publicado.
+**Por que lista, e não "todo aviso"** (`D-003`): o aviso `schedule_event_in_past` diz *"o Edital será
+publicado com esta data"* — é aviso, e é juízo de publicabilidade. Filtrar por severidade deixaria o
+texto falso que o protótipo reproduziu. A lista nomeia o que uma spec mandou dizer na página publicada,
+e cresce por decisão, não por semelhança.
+
+**O relacional, e o que isso custa**: a página do Edital publicado continua montando o snapshot do
+relacional, que guarda o estado do dia da publicação. Para o único fato da lista não faz diferença —
+`scheduleEventId` é estrutural (`026`) e nenhuma Retificação o muda, como a `R-5` da `045` já
+registrou. Um fato que a Retificação alcance não pode entrar na lista sem trocar a fonte para a versão
+vigente.
 
 **A varredura da `FR-756`**: um teste que percorre `backend/processo_seletivo/**/*.py` e prende a lista
 fechada de quem chama `validate_for_publication(` — o do [contrato](contracts/o-gate-da-publicacao.md),
@@ -218,8 +227,11 @@ Atenção depois"* — apontam na mesma direção desta. Quem mesclar depois aju
 
 **Decidido pelo usuário em 26/09: a `045` entra antes.** A implementação desta feature parte da `main`
 com a `045` já mesclada, e a `T021` de lá terá deixado na suíte um caso que afirma o aviso
-`stage_without_schedule_event` em *"Validação do conteúdo"* de um Edital publicado. A `046` retira
-**só essa cláusula** do caso, e mantém as demais (etapa *Etapas*, Revisão, Edital em elaboração); o
-aviso da `045` continua existindo, e passa a aparecer onde a `DP-03` o pôs — antes de publicar.
+`stage_without_schedule_event` em *"Validação do conteúdo"* de um Edital publicado. **E a leitura da `045` mesclada corrigiu esta seção**: a cláusula não era de teste, era a `FR-739`
+de lá, que exige o aviso na página do Edital publicado, com o veto da convergência (§21) por trás. O
+usuário decidiu em 26/09 — *"fatos ficam, gate sai"* (`D-003`, `R-5`) —, e o caso da `T021` da `045`
+(`test_compor.py::test_o_edital_publicado_diz_a_etapa_sem_evento_na_validacao_do_conteudo`)
+**continua valendo sem mudança**. A `046` acrescenta a ele a contraprova: na mesma página, nenhum
+impeditivo e nenhum aviso de publicabilidade.
 
 O resto não conflita: as funções novas são vizinhas, e nenhuma lê o que a outra muda.
