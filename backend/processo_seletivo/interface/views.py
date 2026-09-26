@@ -5930,9 +5930,16 @@ def _corte_do_marco(edital, marco_id, marco, *, lista_id=None):
     """
     if not (marco or {}).get("cutRule"):
         return {"corte_obsoleto": False, "causas_do_corte": []}
+    # **O marco removido chega aqui com a regra que tinha** (046): `estado_do_marco` devolve o marco
+    # histórico, para a tela do ato que a norma vigente já não conhece (`015`, `E2E15-010`). Ele não
+    # tem faixa vigente a mostrar, e resolver o Perfil pela norma vigente devolvia 404 — a tela do
+    # ato histórico quebrava justamente quando o marco cortava, que a `046` tornou o caso comum.
+    perfil, _ = _marco_publicado(edital, marco_id)
+    if perfil is None:
+        return {"corte_obsoleto": False, "causas_do_corte": []}
     estado = estado_do_corte(
         edital=edital,
-        perfil_id=_perfil_do_marco(edital, marco_id),
+        perfil_id=perfil["id"],
         marco_id=marco_id,
         lista_id=lista_id,
     )

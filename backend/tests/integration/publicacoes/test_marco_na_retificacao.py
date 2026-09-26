@@ -14,7 +14,7 @@ cada reordenação, e a identidade que ela usa para endereçar deixaria de desig
 import pytest
 
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from tests.fixtures.edital import actor_headers
+from tests.fixtures.edital import actor_headers, corte_que_nao_governa
 from tests.fixtures.publicacao import (
     create_retification,
     publish_original,
@@ -48,6 +48,8 @@ def publicado(api_client, manager_headers, process_payload):
     perfil = next(item for item in rascunho["profiles"] if item["id"] == PERFIL["B"])
     perfil["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",

@@ -1468,6 +1468,7 @@ def validate_for_publication(
     findings.extend(_coerencia_da_forma_da_ordem(snapshot))
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
+    findings.extend(_perfil_sem_corte(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
@@ -1763,6 +1764,54 @@ def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+def _nenhum_marco_corta(perfil) -> bool:
+    """O Perfil tem marco, e nenhum deles declara regra de corte (046, `FR-752`).
+
+    A truthiness é a de `_marco_sem_regra_de_corte`: regra que declara não governar Etapa alguma
+    **é** regra declarada. Perfil sem marco nenhum não entra — é a recusa da `FR-457`, e empilhar
+    duas sobre a mesma causa esconde a que resolve.
+    """
+    marcos_do_perfil = _marcos_bem_formados(perfil)
+    return bool(marcos_do_perfil) and not any(marco.get("cutRule") for marco in marcos_do_perfil)
+
+
+def _perfil_sem_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Perfil em que nenhum marco corta classifica, e ninguém dele é convocado (046, `FR-752`).
+
+    **A invariante é do Perfil, e não do marco** (046, `D-002`). A `D-G1` de 19/09 mandava impedir
+    todo marco sem regra de corte, contando que *"não governa Etapa alguma"* fosse a declaração de
+    quem não corta. Não é: aquela declaração continua sendo regra de corte, com alvo. O marco que
+    legitimamente não corta — o preliminar de um Perfil que corta no final — não tem outra forma de
+    existir senão a ausência, e a tela a oferece por extenso (*"Este marco não corta"*). O que o
+    sistema sabe no ato de publicar é outra coisa: se **nenhum** marco do Perfil corta, não há
+    faixa, e a convocação só chama dentro de faixa.
+
+    **Só na publicação**, pela mesma razão de `_perfil_sem_marco`: a Retificação do acervo sem
+    corte continua aceita (032, `FR-460`; 046, `FR-754`).
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if not _nenhum_marco_corta(perfil):
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_without_cut_rule",
+                message=(
+                    f"Nenhum marco do Perfil '{rotulo}' declara regra de corte: sem corte não há "
+                    "faixa, e a convocação não alcança ninguém deste Perfil. Declare a regra em ao "
+                    "menos um marco, na etapa Classificação — ela pode declarar que não governa "
+                    "Etapa alguma."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/classificationMilestones",
+            )
+        )
+    return findings
+
+
 def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     """Marco sem regra de corte classifica e não convoca — e isso passa a ser dito (032, FR-461).
 
@@ -1774,8 +1823,12 @@ def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFin
     positivo no Edital mais simples e mais comum do acervo, e ruído treina a pessoa a ignorar a
     família inteira — que é o oposto do que o Princípio IV pede.
 
-    **Aviso, e não impedimento.** Marco que não corta é legítimo, e a `014` fechou isso por
-    escrito. O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
+    **Aviso, e não impedimento — quando outro marco do Perfil corta.** Marco que não corta é
+    legítimo, e a `014` fechou isso por escrito. O Perfil em que **nenhum** marco corta é outra
+    coisa, e é recusa de `_perfil_sem_corte` (046, `FR-752`); a `D-G1` de 19/09, que mandava tornar
+    este aviso impeditivo por marco, foi substituída pela `D-002` da `046`.
+
+    O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
     seguinte recebe todos os habilitados"* — verdade, e a metade menos importante. A consequência
     que importa é a outra ponta da cadeia, e a mensagem a nomeia inteira.
 
@@ -1787,6 +1840,11 @@ def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFin
         return []
     findings = []
     for perfil in _perfis_bem_formados(snapshot):
+        # **O Perfil em que nenhum marco corta tem um relato só** (046, `FR-753`): a recusa de
+        # `_perfil_sem_corte`, que diz o que resolve. Um aviso por marco em cima dela seria a
+        # mesma causa três vezes, e a que resolve ficaria no meio.
+        if _nenhum_marco_corta(perfil):
+            continue
         for marco in _marcos_bem_formados(perfil):
             if marco.get("cutRule"):
                 continue

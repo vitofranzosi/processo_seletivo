@@ -33,7 +33,7 @@ from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
-from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.edital import PROFILE_ID, corte_que_nao_governa
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
 from tests.fixtures.recursos import deferir_corrigindo
@@ -50,6 +50,8 @@ def cenario(gestor, api_client, manager_headers, process_payload):
     etapa["weight"] = "1.0000"
     rascunho["profiles"][0]["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",

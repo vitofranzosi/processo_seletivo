@@ -212,31 +212,43 @@ def test_perfil_com_marco_nao_produz_achado():
 # O `ACH-46`: a tela dizia "sem ele, a Etapa seguinte recebe todos os habilitados", que é verdade e
 # é a metade menos importante. A consequência que importa — sem corte **não há convocação** — nunca
 # era dita.
+#
+# **Desde a `046`, o aviso é do marco sem corte num Perfil que corta** (Cenário D). O Perfil em que
+# nenhum marco corta é recusa própria (`FR-752`), e os casos abaixo dão ao marco sem corte um
+# vizinho que corta — o preliminar e o final, que é a forma em que o marco sem corte é legítimo.
+
+PRELIMINAR = "aaaaaaaa-0000-4000-8000-000000000329"
+
+
+def preliminar_sem_corte():
+    return marco(id=PRELIMINAR, code="CLASS-PRE", name="Classificação preliminar", cutRule=None)
 
 
 def test_marco_sem_regra_de_corte_e_aviso_e_nao_impedimento():
     achado = achados(
-        snapshot(perfil(classificationMilestones=[marco(cutRule=None)])),
+        snapshot(perfil(classificationMilestones=[preliminar_sem_corte(), marco()])),
         "milestone_without_cut_rule",
     )
 
     assert len(achado) == 1
     assert achado[0].severity == Severity.WARNING, (
-        "avisar, e não impedir: o marco sem corte é legítimo"
+        "avisar, e não impedir: o marco sem corte num Perfil que corta é legítimo"
     )
 
 
 def test_o_aviso_do_corte_nomeia_a_cadeia_inteira_ate_a_convocacao():
     """`FR-461`: corte → geração → faixa → convocação. A última é a que ninguém dizia."""
     achado = achados(
-        snapshot(perfil(classificationMilestones=[marco(cutRule=None)])),
+        snapshot(perfil(classificationMilestones=[preliminar_sem_corte(), marco()])),
         "milestone_without_cut_rule",
     )[0]
 
-    assert "CLASS-TUT" in achado.message, "qual marco"
+    assert "CLASS-PRE" in achado.message, "qual marco"
     for elo in ("geração", "faixa", "convocação"):
         assert elo in achado.message, f"a cadeia precisa nomear {elo}"
-    assert achado.path == (f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/cutRule")
+    assert achado.path == (
+        f"/profiles/id={PERFIL}/classificationMilestones/id={PRELIMINAR}/cutRule"
+    )
 
 
 def test_a_regra_que_declara_nao_governar_etapa_nao_recebe_aviso():
@@ -250,6 +262,69 @@ def test_a_regra_que_declara_nao_governar_etapa_nao_recebe_aviso():
     conteudo = snapshot(perfil(classificationMilestones=[marco(cutRule=dict(CORTE_SEM_ETAPA))]))
 
     assert achados(conteudo, "milestone_without_cut_rule") == []
+    assert achados(conteudo, "profile_without_cut_rule") == []
+
+
+# --- FR-752 a FR-754 · o Perfil em que nenhum marco corta (046) --------------------------------
+#
+# A invariante é do Perfil, e não do marco (`D-002` da `046`): se nenhum marco corta, não há faixa,
+# e a convocação só chama dentro de faixa. A `D-G1`, que mandava impedir cada marco sem corte, foi
+# substituída — o marco que legitimamente não corta não tem outra forma de existir.
+
+
+def test_perfil_em_que_nenhum_marco_corta_impede_a_publicacao():
+    conteudo = snapshot(perfil(classificationMilestones=[marco(cutRule=None)]))
+
+    achado = achados(conteudo, "profile_without_cut_rule")
+
+    assert len(achado) == 1
+    assert achado[0].severity == Severity.BLOCKING_ERROR
+    assert achado[0].path == f"/profiles/id={PERFIL}/classificationMilestones"
+
+
+def test_a_recusa_do_perfil_sem_corte_nomeia_perfil_falta_consequencia_e_etapa():
+    """`SC-280`: a entidade, o que falta, por que impede a execução, e onde se corrige."""
+    achado = achados(
+        snapshot(perfil(classificationMilestones=[marco(cutRule=None)])),
+        "profile_without_cut_rule",
+    )[0]
+
+    assert "DOC-INFO" in achado.message, "a entidade, pelo código que quem compõe digitou"
+    assert "regra de corte" in achado.message, "o que falta"
+    assert "convocação" in achado.message, "por que isso impede a execução"
+    assert "Classificação" in achado.message, "e em que etapa do assistente se corrige"
+
+
+def test_o_perfil_sem_corte_tem_um_relato_so():
+    """`FR-753`: a recusa do Perfil, e nenhum aviso por marco em cima dela."""
+    conteudo = snapshot(
+        perfil(classificationMilestones=[preliminar_sem_corte(), marco(cutRule=None)])
+    )
+
+    assert len(achados(conteudo, "profile_without_cut_rule")) == 1
+    assert achados(conteudo, "milestone_without_cut_rule") == []
+
+
+def test_o_perfil_sem_marco_nao_recebe_tambem_a_recusa_do_corte():
+    """A causa é a ausência de marco (`FR-457`); empilhar a do corte esconderia a que resolve."""
+    conteudo = snapshot(perfil(classificationMilestones=[]))
+
+    assert achados(conteudo, "profile_without_milestone")
+    assert achados(conteudo, "profile_without_cut_rule") == []
+
+
+def test_basta_um_marco_que_corte():
+    """O Cenário D do briefing: o marco sem corte num Perfil que corta continua publicável."""
+    conteudo = snapshot(perfil(classificationMilestones=[preliminar_sem_corte(), marco()]))
+
+    assert achados(conteudo, "profile_without_cut_rule") == []
+
+
+def test_o_perfil_sem_corte_nao_e_cobrado_na_retificacao():
+    """`FR-754`: a Retificação do acervo sem corte continua aceita (`032`, `FR-460`)."""
+    conteudo = snapshot(perfil(classificationMilestones=[marco(cutRule=None)]))
+
+    assert achados(conteudo, "profile_without_cut_rule", ato=ATO_DE_RETIFICACAO) == []
 
 
 # --- FR-459 · nada disto alcança a Retificação do acervo ---------------------------------------

@@ -558,6 +558,18 @@ def perfil_de_sorteio(numero):
                     # que faz a `021` funcionar desde a `030`: o método continua publicado antes do
                     # congelamento, e a resolução o encontra — só que declarado uma vez.
                     "drawMethod": None,
+                    # **Corta, e não governa Etapa** (046, `FR-752`): Perfil em que nenhum marco
+                    # corta não convoca ninguém, e deixou de ser publicável. É a forma do 69/2026 —
+                    # a regra existe e não muda quem participa de nada. O alvo é o quadro inteiro
+                    # deste Perfil, 30 da ampla e 10 da reservada.
+                    "cutRule": {
+                        "targetKind": "FIXED",
+                        "targetCount": 40,
+                        "surplusCount": 0,
+                        "tieOutcome": "STRICT",
+                        "governedStage": "NONE",
+                        "continuation": "NONE",
+                    },
                 }
             ],
         }

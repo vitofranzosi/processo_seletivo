@@ -40,6 +40,28 @@ convergência de 20/09 (§21) vetou silenciá-lo. O `R-8` o tratava como uma cl�
 requisito. Levado ao usuário em 26/09, que escolheu *"fatos ficam, gate sai"*: ver `D-003` na spec,
 a `FR-755` e o `R-5`.
 
+## O que a implementação encontrou
+
+- **A tela do marco removido devolvia 404 quando o marco cortava** (US2, T020). `ordenacao` passa o
+  marco **histórico** a `_corte_do_marco`, que resolvia o Perfil pela norma vigente — onde o marco
+  removido já não existe. A tela do ato histórico (`015`, `E2E15-010`) quebrava justamente para o
+  marco com regra de corte, e nenhuma fixture o exercitava, porque nenhuma declarava corte. A `046`
+  torna o corte obrigatório em todo Perfil, e com isso o caso comum: corrigido em
+  `interface/views.py::_corte_do_marco` — marco fora da norma vigente não tem faixa vigente a
+  mostrar —, e `tests/interface/test_marco_removido.py` passou a prendê-lo, com o marco agora
+  cortando.
+- **As fontes de Perfil sem corte eram mais que as quatro fixtures do `R-7`**: além de
+  `divulgacao.py` e `sorteio.py`, sete arquivos de teste declaram o marco no próprio corpo
+  (`test_calculo`, `test_imutabilidade_do_ato`, `test_calculo_vigencia`, `test_marco_na_retificacao`,
+  `authorization/test_classificacao`, `performance/test_ordenacao`, `acceptance/test_ordenacao`) e
+  `unit/editais/test_marco_classificatorio`. `selecao.py` e `supervisao.py`, que o `R-7` suspeitava,
+  já usavam `marco_minimo`, que corta. O ajudante `corte_que_nao_governa` (em
+  `tests/fixtures/edital.py`) é a fonte única dessa regra nas fixtures.
+- **Cinco casos exercitam a ausência de propósito**, e publicam como acervo: o marco de sorteio sem
+  corte e o marco sem regra de `test_corte.py`, o cenário sem regra de `test_ocupacao.py`, a emissão
+  recusada de `test_emissao_do_corte.py` e a não regressão da `FR-214` em
+  `test_progressao_com_corte.py`.
+
 ## Os percursos (T040)
 
 *Preenchido no fecho.*
