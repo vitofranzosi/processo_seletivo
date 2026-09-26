@@ -884,6 +884,10 @@ ul.documentos>li>*:first-child{padding-left:1rem;overflow-wrap:anywhere}
 ul.documentos>li>*:last-child{padding-right:1rem}
 ul.documentos>li:last-child>*{border-bottom:0}
 ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
+/* A instrução do Edital embaixo do nome, e não em coluna própria: ela é a condição do requisito, e
+   quem percorre a lista a lê junto dele. */
+ul.documentos .requisito{flex-direction:column;align-items:flex-start;gap:.15rem}
+ul.documentos .instrucao{font-size:.8125rem;color:var(--texto-fraco)}
 @media (max-width:34rem){
   ul.documentos{grid-template-columns:minmax(0,1fr) auto}
   ul.documentos .modelo{grid-column:1/-1;padding:0 1rem}
