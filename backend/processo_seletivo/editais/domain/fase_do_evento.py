@@ -14,16 +14,13 @@ ORM: é o que as duas superfícies têm na mão. Nada aqui grava.
 from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.editais.domain import calendario
+from processo_seletivo.editais.domain.cronograma import CANCELADO
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
     ENCERRADO,
     FUTURO,
     periodo_de_inscricoes,
 )
-
-# O único estado que o Evento declara (045, `FR-736`). É o valor do modelo, escrito por extenso
-# porque o domínio não importa modelo — `cronograma.STATUS_DECLARAVEIS` já o escreve assim.
-CANCELADO = "CANCELADO"
 
 # A fase do período de inscrições sai do **estado do período**, e não da régua geral: sem
 # término, o período segue aberto (FR-347), e a régua geral o venceria pelo início (045, `R-3`).

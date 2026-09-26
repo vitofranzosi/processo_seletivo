@@ -12,7 +12,8 @@ class ScheduleValidationError(RecusaDeCampo):
 # uma segunda fonte para o que as datas já dizem, que a Constituição (Princípio II) recusa.
 # `PLANEJADO` continua aceito porque é o valor que o próprio sistema grava como *não cancelado*: o
 # cliente que devolve o que leu não pode ser recusado por isso.
-STATUS_DECLARAVEIS = frozenset({"PLANEJADO", "CANCELADO"})
+CANCELADO = "CANCELADO"
+STATUS_DECLARAVEIS = frozenset({"PLANEJADO", CANCELADO})
 RECUSA_DA_FASE_DECLARADA = "A fase do Evento é derivada das datas; só o cancelamento é declarado."
 
 

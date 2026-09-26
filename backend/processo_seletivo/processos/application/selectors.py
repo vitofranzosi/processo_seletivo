@@ -100,6 +100,7 @@ def desfechos(editais):
     **Uma consulta, e só quando há estado final**: a vitrine chama isto uma vez para todos os
     cartões, e o número de idas ao banco não cresce com eles.
     """
+    # `(alcance, operação, agregado)`: de quem é o desfecho, qual foi, e onde procurar o ato.
     aplicaveis = {}
     for edital in editais:
         if edital.status in (Edital.Status.ENCERRADO, Edital.Status.CANCELADO):
@@ -109,8 +110,9 @@ def desfechos(editais):
             ProcessoSeletivo.Status.CANCELADO,
         ):
             aplicaveis[edital.id] = (PROCESSO, str(edital.processo.status), edital.processo_id)
+    resultado = {edital.id: None for edital in editais}
     if not aplicaveis:
-        return {edital.id: None for edital in editais}
+        return resultado
 
     instantes = {}
     for agregado, operacao, ocorrido in (
@@ -125,17 +127,10 @@ def desfechos(editais):
         # transição —, e a ordem existe para não depender disso.
         instantes[(agregado, operacao)] = ocorrido
 
-    return {
-        edital.id: (
-            Desfecho(
-                alcance=aplicaveis[edital.id][0],
-                operacao=aplicaveis[edital.id][1],
-                em=instantes.get(
-                    (aplicaveis[edital.id][2], OPERACAO_DO_DESFECHO[aplicaveis[edital.id][1]])
-                ),
-            )
-            if edital.id in aplicaveis
-            else None
+    for edital_id, (alcance, operacao, agregado) in aplicaveis.items():
+        resultado[edital_id] = Desfecho(
+            alcance=alcance,
+            operacao=operacao,
+            em=instantes.get((agregado, OPERACAO_DO_DESFECHO[operacao])),
         )
-        for edital in editais
-    }
+    return resultado
