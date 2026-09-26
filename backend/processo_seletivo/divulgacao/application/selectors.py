@@ -131,13 +131,24 @@ def historico_publico_do_edital(edital):
     Por isso não é `historico_do_marco`, que também traz o ato com o autor — e a página pública
     não carrega o que não mostra.
 
-    Duas consultas: as publicações e, por `prefetch`, as sucessoras que dizem qual é a vigente.
+    Duas consultas: as publicações e, por `prefetch`, as sucessoras que dizem qual é a vigente. A
+    cadeia fica ligada em memória, e subi-la depois não consulta nada.
     """
     linhas = list(
         PublicacaoResultado.objects.filter(edital=edital)
         .prefetch_related("sucessoras")
         .order_by("-publicado_em")
     )
+    # **A cadeia já está na mão, e quem a sobe não deve reconsultá-la** (revisão do #193). O prazo
+    # de recurso de cada vigente sobe `publicacao_anterior` até a primeira publicação do ato, e
+    # cada degrau era uma ida ao banco. Ligar o cache da relação às linhas já carregadas deixa a
+    # subida de graça, e o custo da página constante no tamanho da cadeia.
+    por_id = {publicacao.id: publicacao for publicacao in linhas}
+    anterior = PublicacaoResultado._meta.get_field("publicacao_anterior")
+    for publicacao in linhas:
+        if publicacao.publicacao_anterior_id in por_id:
+            anterior.set_cached_value(publicacao, por_id[publicacao.publicacao_anterior_id])
+
     grupos = {}
     for publicacao in linhas:
         grupos.setdefault((publicacao.marco_id, publicacao.lista_id), []).append(publicacao)

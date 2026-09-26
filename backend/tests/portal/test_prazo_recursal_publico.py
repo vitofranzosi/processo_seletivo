@@ -35,7 +35,7 @@ def montar(gestor, api_client, manager_headers, process_payload, *, seed, janela
         janela_recursal=janela,
     )
     cenario["inscricoes"] = pontuar(
-        cenario, gestor, ["90.0000", "70.0000"], primeiro=900 + seed, sufixo=str(seed)
+        cenario, gestor, ["90.0000", "70.0000"], primeiro=900 + 2 * seed, sufixo=str(seed)
     )
     cenario["ato"] = emitir(cenario, gestor, chave=f"emitir-047-{seed}")
     return cenario
@@ -195,3 +195,65 @@ def test_nenhuma_acao_de_recorrer_em_caso_algum(
 
     assert "<form" not in corpo
     assert "recorrer" not in re.sub(r"recorre pela", "", corpo.lower())
+
+
+# --- O custo da cadeia (revisão do #193) -------------------------------------------------------
+
+
+def consultas(client, url):
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    with CaptureQueriesContext(connection) as capturadas:
+        assert client.get(url).status_code == 200
+    return [item["sql"] for item in capturadas.captured_queries]
+
+
+def as_publicacoes(sqls):
+    return [sql for sql in sqls if 'FROM "divulgacao_publicacaoresultado"' in sql]
+
+
+def test_a_lista_do_edital_nao_consulta_a_cadeia_degrau_por_degrau(
+    client, gestor, api_client, manager_headers, process_payload
+):
+    """O prazo da lista sobe a cadeia até a primeira publicação do ato; a cadeia já está carregada.
+
+    Com uma publicação ou com duas na mesma cadeia, a página do Edital lê as publicações do mesmo
+    jeito: o que cresce é o resultado, e não o número de idas ao banco.
+    """
+    curta = montar(gestor, api_client, manager_headers, process_payload, seed=79)
+    publicar_o_ato(curta, chave="publicar-047-79")
+
+    longa = montar(gestor, api_client, manager_headers, process_payload, seed=80)
+    publicar_o_ato(longa, chave="publicar-047-80")
+    with patch("django.utils.timezone.now", return_value=depois_do_prazo()):
+        publicar_o_ato(longa, natureza="DEFINITIVA", chave="publicar-047-80-def", declaracao="")
+
+    com_uma = as_publicacoes(
+        consultas(client, reverse("portal:selecao", args=[curta["edital"].id]))
+    )
+    com_duas = as_publicacoes(
+        consultas(client, reverse("portal:selecao", args=[longa["edital"].id]))
+    )
+
+    assert len(com_duas) == len(com_uma), com_duas
+
+
+def test_a_pagina_do_resultado_sobe_a_cadeia_uma_vez(
+    client, gestor, api_client, manager_headers, process_payload
+):
+    """A âncora do prazo e a lista das anteriores sobem a mesma cadeia; a segunda não reconsulta."""
+    cenario = montar(gestor, api_client, manager_headers, process_payload, seed=85)
+    preliminar = publicar_o_ato(cenario, chave="publicar-047-85")
+    so_uma = as_publicacoes(consultas(client, reverse("portal:resultado", args=[preliminar.id])))
+    with patch("django.utils.timezone.now", return_value=depois_do_prazo()):
+        definitiva = publicar_o_ato(
+            cenario, natureza="DEFINITIVA", chave="publicar-047-85-def", declaracao=""
+        )
+
+    com_anterior = as_publicacoes(
+        consultas(client, reverse("portal:resultado", args=[definitiva.id]))
+    )
+
+    # Um degrau a mais custa, no máximo, a leitura da publicação anterior — uma vez.
+    assert len(com_anterior) <= len(so_uma) + 1, com_anterior
