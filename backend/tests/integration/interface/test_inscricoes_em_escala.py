@@ -11,6 +11,7 @@ O que estes testes prendem é isso, e mais uma coisa que não se vê: o custo da
 """
 
 import re
+from datetime import timedelta
 
 import pytest
 from django.db import connection
@@ -22,9 +23,14 @@ from processo_seletivo.inscricoes.application.consulta import POR_PAGINA
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.candidato import MODALIDADE_AC, MODALIDADE_PPP, PERFIL_DOCENTE, PERFIL_TECNICO
+from tests.fixtures.edital import identificador
+from tests.fixtures.selecao import publicar_selecao, rascunho_aberto_com_documentos
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+# A "Ampla concorrência" do Técnico: mesmo nome da do Docente, outra identidade.
+MODALIDADE_AC_DO_TECNICO = identificador(407, 0)
 
 
 @pytest.fixture
@@ -149,6 +155,53 @@ def test_o_filtro_por_modalidade_responde_a_pergunta_da_cota(gestor, selecao, te
     assert reservada[0].protocolo in corpo
     for inscricao in ampla:
         assert inscricao.protocolo not in corpo
+
+
+def opcoes_de_concorrencia(corpo):
+    """O texto de cada opção do seletor, com o espaço do template normalizado."""
+    seletor = corpo[corpo.index('<select id="modalidade"') : corpo.index("</select>")]
+    opcoes = re.findall(r"<option[^>]*>(.*?)</option>", seletor, re.S)
+    return [" ".join(texto.split()) for texto in opcoes]
+
+
+def test_a_opcao_de_concorrencia_diz_de_qual_perfil_e(gestor, selecao, tela):
+    """A Modalidade é do Perfil, e duas "Ampla concorrência" são duas opções distintas.
+
+    O seletor mostrava as duas com o mesmo texto, e a contagem entre parênteses era a única pista
+    de qual era qual (doc/achado-filtro-de-concorrencia-sem-perfil.md). O nome do Perfil, e não o
+    código, porque é assim que os cartões e a coluna Perfil desta tela o identificam.
+    """
+    inscrever(selecao, 2, perfil=PERFIL_TECNICO, modalidade=MODALIDADE_AC_DO_TECNICO)
+
+    opcoes = opcoes_de_concorrencia(gestor.get(tela).content.decode())
+
+    assert opcoes == [
+        "Todas",
+        "Professor de Informática · Ampla concorrência (0)",
+        "Professor de Informática · Pessoas pretas, pardas e indígenas (0)",
+        "Técnico de Laboratório · Ampla concorrência (2)",
+    ]
+
+
+def test_com_um_perfil_so_a_opcao_nao_repete_o_nome_dele(
+    gestor, raiz_de_arquivos, api_client, manager_headers, process_payload
+):
+    """Mesma condição que decide se os cartões por Perfil aparecem.
+
+    Com um Perfil só não há ambiguidade a desfazer, e o prefixo repetiria a mesma palavra em
+    todas as linhas.
+    """
+    rascunho = rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1))
+    rascunho["profiles"] = rascunho["profiles"][:1]
+    edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+
+    corpo = gestor.get(reverse("interface:inscricoes", args=[edital.id])).content.decode()
+
+    assert opcoes_de_concorrencia(corpo) == [
+        "Todas",
+        "Ampla concorrência (0)",
+        "Pessoas pretas, pardas e indígenas (0)",
+    ]
 
 
 def test_os_contadores_nao_mudam_com_o_filtro(gestor, selecao, tela):

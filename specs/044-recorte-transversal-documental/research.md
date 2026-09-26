@@ -307,7 +307,8 @@ de `documentRequirements`. É artefato de outra feature, e não é reescrita aqu
 ## R-014 — O que fica fora, e onde está registrado
 
 - **`ValorDeFato` sem gatilho** (R-005). É registro para a fila.
-- **Filtro de concorrência** da consulta administrativa (spec, Riscos e lacunas).
+- **Filtro de concorrência** da consulta administrativa (spec, Riscos e lacunas). Corrigido à parte,
+  fora desta feature: `doc/achado-filtro-de-concorrencia-sem-perfil.md`.
 - **O "O que mudou" do recorte exato**, e a **instrução na Mesa / o facultativo na Revisão**: fila
   das diretas. A segunda já está no PR #167 (`claude/instrucao-e-facultativo`), que mexe em
   `mesa.py` e `mesa_inscricao.html`. Quem for mergeado depois resolve o conflito preservando a
