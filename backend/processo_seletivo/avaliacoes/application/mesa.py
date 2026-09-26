@@ -128,6 +128,11 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         {
             "id": str(requisito["id"]),
             "nome": requisito.get("name", ""),
+            # A instrução que o candidato leu ao enviar — "Apenas para quem concorre na
+            # modalidade PcD." Sem ela, a autodeclaração ausente de quem concorre em ampla e a de
+            # quem concorre em PcD se liam iguais na Mesa, e quem avalia não tinha como saber qual
+            # das duas faltava de fato (conferência de 25/09/2026).
+            "instrucoes": (requisito.get("instructions") or "").strip(),
             "obrigatorio": requisito.get("required", True),
             "enviado": enviados.get(str(requisito["id"])),
             "tamanho": (
