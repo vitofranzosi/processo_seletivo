@@ -906,7 +906,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Relações: AX-1, AX-9, objeto que nasce só pelo método.
 - Confiança: alta.
 
-### PR #172 (aberto) — O filtro de concorrência diz de qual Perfil é cada Modalidade
+### PR #172 (mesclado) — O filtro de concorrência diz de qual Perfil é cada Modalidade
 - Origem: `gh pr view 172` (26/09, `claude/filtro-de-concorrencia-com-perfil`); registra
   `doc/achado-filtro-de-concorrencia-sem-perfil.md` (novo no PR).
 - O que fecha: defeito de rótulo na consulta "Inscrições recebidas" do Gestor — com dois Perfis,
@@ -918,10 +918,10 @@ aparece no campo "Impacto atual" de cada bloco.
   Perfil e se repete por nome) — a mesma ambiguidade que AX-17 viu no PDF e que o seletor da
   composição já resolve com "LP01 — … · PcD". Deixa registrado, fora do escopo, que o seletor não
   se restringe ao Perfil escolhido.
-- Estado atual: **IMPLEMENTADO, MAS NÃO VALIDADO** (PR aberto; o próprio corpo diz que a combinação
-  com a #168 "só o CI viu")
+- Estado atual: **RESOLVIDO** (mesclado em 26/09 (`8e6fb4a`); `make lint check test-pg` sobre o commit mesclado deu
+  7833 passando e 11 pulados)
 - Grupo do resíduo: **C** (o que sobra — seletor que ignora o Perfil ativo)
-- Próxima ação sugerida: merge é do usuário; nada deste lote o bloqueia.
+- Próxima ação sugerida: nenhuma.
 - Confiança: alta.
 
 ### H-1, H-2, H-3 — Hipóteses não confirmadas de 15/09
@@ -988,7 +988,7 @@ aparece no campo "Impacto atual" de cada bloco.
 | Avulso — igualdade da soma | desconto da ampla declarada | RESOLVIDO (027 FR-317) | — | nenhuma |
 | Avulso — anexo sem destinatário | lista pública sem finalidade | NÃO IMPLEMENTADO | C | nenhuma |
 | Decisão — mutabilidade | contrato + guardião | RESOLVIDO (026) | — | nenhuma |
-| PR #172 | Filtro de concorrência com Perfil | IMPLEMENTADO, MAS NÃO VALIDADO (PR aberto) | C | merge do usuário |
+| PR #172 | Filtro de concorrência com Perfil | RESOLVIDO (mesclado em 26/09) | C | nenhuma |
 | H-1…H-3 | Hipóteses de 15/09 | DUPLICADO / ABSORVIDO (AX-3, AX-5/6, AX-15) | — | nenhuma |
 | Divergências sem achado | 7 itens de 15/09 | SUPERADO / OBSOLETO (item 7 absorvido pelo estudo §9-bis) | — | nenhuma |
 
