@@ -92,6 +92,10 @@ valem, e até quando se pode recorrer. Hoje ela sabe só a primeira metade disso
   O usuário aceitou a recomendação ("pode seguir").
 - Q: O motivo registrado no ato de encerramento ou de cancelamento é exibido publicamente? → A: Não.
   A página diz o desfecho e a data (`D-006`, `FR-764`). O usuário aceitou a recomendação.
+- Q: A decisão T-013 da `017` proíbe a página pública do resultado de consultar a versão
+  consolidada, e o prazo que a interposição aplica sai dela. Emendar a T-013 ou mostrar o prazo só
+  na página do Edital? → A: Emendar a T-013, e só para a versão consolidada (`D-008`). Decidido pelo
+  usuário na implementação.
 
 ---
 
@@ -454,6 +458,20 @@ página acompanha sem mudar de requisito (ver *Achados*). É por isso que as sup
 discordar (`SC-284`). A `FR-055` da `017`
 permitia apresentar o prazo (MAY). Esta spec o torna obrigatório na página pública do resultado, e
 mantém a outra metade: nenhuma ação transacional.
+
+### D-008 — A página do resultado passa a ler a versão consolidada, e só ela
+
+A T-013 da `017` fechou a página pública do resultado a quatro tabelas: `Inscricao`,
+`PosicaoNaOrdem`, `SituacaoDivulgada` e `VersaoConsolidada`. A razão escrita é a minimização de dado
+pessoal: *"uma página que não tem a consulta não tem a linha"*. Três das quatro guardam dado
+individual. A quarta guarda o conteúdo normativo publicado, que é público por definição e que a
+própria API pública já serve (`/api/v1/public/editais/<id>/versao-vigente`).
+
+O prazo recursal que a interposição aplica sai da janela declarada na versão vigente (`D-005`). Para
+dizê-lo na página do resultado (`FR-769`), a T-013 é emendada **só** nessa tabela. As outras três
+continuam proibidas, e o teste que prende a fronteira continua valendo para elas. A página continua
+sem recalcular nada da publicação: a lista, as posições e o documento são os gravados, e o que se
+lê a mais é a norma de um fato diferente, o prazo. Decidido pelo usuário em 26/09/2026.
 
 ### D-006 — O motivo do desfecho não é público
 

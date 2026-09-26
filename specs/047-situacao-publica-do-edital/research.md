@@ -125,6 +125,11 @@ de recursos. A janela é retificável (`mutabilidade.py:357-359`).
 - **Publicação sucedida:** nada. Ela leva à vigente.
 - **`admits: false` e declaração ausente ou não computável:** nada (`FR-771`).
 
+**A fronteira da `017`.** A T-013 da `017` proíbe a página do resultado de consultar
+`VersaoConsolidada`, e `tests/portal/test_resultado_publico.py:197-222` prende isso. A fronteira foi
+emendada só nessa tabela (`D-008`): ela guarda norma pública, e não dado individual. A mesma tarefa
+que mostra o prazo tira a tabela da lista do teste, com a justificativa no comentário.
+
 **Descartado.** *Recalcular no portal com `declaracao_do_marco` e `janela_da_publicacao`
 diretamente.* São as mesmas duas chamadas, mas numa segunda composição delas, e a primeira mudança
 na regra da interposição deixaria a página para trás.
