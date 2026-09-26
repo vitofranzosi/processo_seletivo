@@ -118,3 +118,11 @@ As saídas:
 - **Corrigir agora como `0005`** e deixar a `044` renumerar a dela para `0006` quando for mergeada.
 - **Pôr a correção dentro da `044`.** A própria R-005 a declarou fora de escopo — "registro para a
   fila, não escopo daqui".
+
+## Decisão
+
+Em 25/09/2026, o usuário: **corrigir depois que a `044` for mergeada, como `inscricoes/0006`.** A
+correção é a dos quatro itens acima, sobre `ValorDeFato`.
+
+Fica em aberto se as outras três tabelas da seção anterior — `PosicaoNaOrdem` sem gatilho de
+mutação, `RevisaoEdital` e `GeracaoDeArquivo` sem recusa no modelo — entram na mesma correção.
