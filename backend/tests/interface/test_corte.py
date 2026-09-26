@@ -332,6 +332,7 @@ def corte_sem_regra(client, seletor_ligado, gestor, api_client, manager_headers,
     exercitaria o caminho de hoje em vez do que a feature cria.
     """
     from tests.fixtures.corte import MARCO, montar_cenario_do_corte
+    from tests.fixtures.legado import publicar_como_acervo
 
     edital, _, _ = montar_cenario_do_corte(
         gestor,
@@ -340,6 +341,8 @@ def corte_sem_regra(client, seletor_ligado, gestor, api_client, manager_headers,
         process_payload,
         draft_factory=_sem_regra_de_corte,
         prefixo="corte-037-sem-regra",
+        # O Perfil de marco único sem regra só existe no acervo (046, `FR-752`).
+        publicar=publicar_como_acervo,
     )
     return client, edital, MARCO
 
@@ -449,8 +452,15 @@ def test_o_marco_que_ordena_por_sorteio_diz_que_nao_corta(
     """
     from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
 
+    # **Sem corte, e por isso do acervo** (046, `FR-752`): o marco que não corta num Perfil de marco
+    # único não é mais publicado, e a tela continua precisando responder por ele.
     cenario = certame_sorteado_com_quadro(
-        gestor, api_client, manager_headers, process_payload, prefixo="corte-037-sorteio"
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="corte-037-sorteio",
+        sem_corte=True,
     )
     identificar(client, "carlos", ["gestor"])
 

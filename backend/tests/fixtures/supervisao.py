@@ -100,6 +100,9 @@ def etapa_ligada(seed, *, evento=None, nome="Análise documental", ordem=1, aval
         "order": ordem,
         "eliminatory": True,
         "classificatory": False,
+        # Eliminatória e pontuada: sem nota mínima, a consolidação a recusaria por inteiro, e a
+        # `046` não a publica (`FR-746`). Zero não elimina ninguém.
+        "minimumScore": "0.0000",
         "scheduleEventId": identificador(402, seed) if evento is None else evento,
         **declaracao,
     }

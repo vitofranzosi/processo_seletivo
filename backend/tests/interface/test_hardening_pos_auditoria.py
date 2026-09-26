@@ -760,7 +760,9 @@ def test_a_revisao_mostra_as_duas_pendencias_e_nao_a_primeira(client, seletor_li
 
     assert "Nada pendente" not in corpo
     assert "Professor de Informática" in corpo, "o Perfil que não classifica ninguém"
-    assert "CLASS-TUT" in corpo, "e o marco que classifica e não convoca"
+    # **Desde a `046`, o Perfil, e não o marco** (`FR-752`, `FR-753`): o único marco dele não
+    # corta, e a recusa nomeia o Perfil que não convoca ninguém — um relato só para uma causa.
+    assert "DOC-MAT" in corpo, "e o Perfil que classifica e não convoca"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -782,9 +784,11 @@ def test_as_duas_pendencias_levam_a_classificacao_e_nao_a_perfis(
     achados = {
         item.code: item
         for item in validate_for_publication(conteudo)
-        if item.code in ("profile_without_milestone", "milestone_without_cut_rule")
+        if item.code in ("profile_without_milestone", "profile_without_cut_rule")
     }
-    assert set(achados) == {"profile_without_milestone", "milestone_without_cut_rule"}
+    # O marco sem corte é o único do Perfil: desde a `046` é a recusa do Perfil (`FR-752`), e não
+    # mais o aviso por marco, que não se soma a ela (`FR-753`).
+    assert set(achados) == {"profile_without_milestone", "profile_without_cut_rule"}
 
     for codigo, achado in achados.items():
         etapa, ancora, corrigivel = views._destino(achado.path, codigo)
@@ -858,7 +862,10 @@ LINHA_DO_SORTEIO = "aaaaaaaa-0000-4000-8000-0000000320fa"
 #: não pelo dicionário — os outros três leem `A_FAMILIA` e mudam com ela.
 A_FAMILIA = {
     "profile_without_milestone": ("classificacao", "SEM-MARCO"),
-    "milestone_without_cut_rule": ("classificacao", "CLASS-TUT"),
+    # O corte em branco do único marco do Perfil: era aviso por marco, e desde a `046` é recusa do
+    # Perfil, que nomeia o Perfil (`FR-752`, `D-002`). O aviso por marco continua existindo para o
+    # marco sem corte num Perfil que corta — e aqui não há um.
+    "profile_without_cut_rule": ("classificacao", "COM-COTA"),
     "drawn_milestone_without_method": ("classificacao", "SORT-X"),
 }
 
@@ -1074,16 +1081,15 @@ def test_a_revisao_apresenta_os_tres_e_nao_o_primeiro(client, seletor_ligado, co
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_o_aviso_que_resta_na_familia_nao_impede_a_publicacao(com_os_tres_achados):
-    """A metade que faz dele aviso, e ela é decisão registrada na spec.
+def test_o_corte_em_branco_passou_a_impedir_pelo_perfil(com_os_tres_achados):
+    """O aviso que restava na família virou recusa do Perfil (046, `FR-752`, `D-002`).
 
-    **Eram dois, e é um** (034, `FR-501`): a reserva sem via de apuração deixou de ser advertida
-    porque deixou de existir — o marco computado passou a emitir por recorte. O corte em branco
-    continua advertindo, e pela razão de sempre: se virasse impedimento, Editais reais perderiam a
-    parte da jornada que funciona para eles.
-
-    Os dois impedimentos ficam como estão. É a diferença entre "o Edital tem um defeito que se
-    conserta depois" e "o Edital não pode existir assim", e ela não foi tocada.
+    **Eram dois avisos, depois um, e agora nenhum neste Edital.** A `034` aposentou o da reserva
+    sem via de apuração; a `046` levou o corte em branco para o Perfil. A razão que o mantinha como
+    aviso — *"se virasse impedimento, Editais reais perderiam a parte da jornada que funciona para
+    eles"* — continua valendo para o marco sem corte num Perfil que corta, e por isso o aviso
+    continua existindo ali. Aqui o marco sem corte é o único do Perfil: ninguém dele é convocado, e
+    é isso que a publicação passou a recusar.
     """
     from processo_seletivo.editais.domain.validation import (
         Severity,
@@ -1094,10 +1100,11 @@ def test_o_aviso_que_resta_na_familia_nao_impede_a_publicacao(com_os_tres_achado
     achados = {
         item.code: item.severity
         for item in validate_for_publication(edital_snapshot(com_os_tres_achados))
-        if item.code in A_FAMILIA
+        if item.code in A_FAMILIA or item.code == "milestone_without_cut_rule"
     }
 
-    assert achados["milestone_without_cut_rule"] == Severity.WARNING
+    assert achados["profile_without_cut_rule"] == Severity.BLOCKING_ERROR
+    assert "milestone_without_cut_rule" not in achados, "um relato só para a mesma causa"
     assert "reserved_row_without_ordering" not in achados, (
         "aposentado pela `034`: a reserva em marco computado ganhou via de apuração"
     )

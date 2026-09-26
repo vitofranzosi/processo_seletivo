@@ -10,6 +10,7 @@ from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.ocorrencia import registrar_ocorrencia
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
+from tests.fixtures.edital import corte_que_nao_governa
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
@@ -32,6 +33,8 @@ def test_percurso_inteiro_da_ordem(
     etapa["weight"] = "1.0000"
     rascunho["profiles"][0]["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",

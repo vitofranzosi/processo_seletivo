@@ -104,7 +104,10 @@ def test_emitir_em_marco_sem_regra_de_corte_recusa(
     """Nenhum corte existe sem regra publicada, em 100% das tentativas (SC-058)."""
     draft, pontuada = rascunho(cut=False)
     draft["profiles"][0]["classificationMilestones"][0].pop("cutRule")
-    edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
+    # O marco sem regra num Perfil de marco único só existe no acervo (046, `FR-752`).
+    from tests.fixtures.legado import publicar_como_acervo
+
+    edital = publicar_como_acervo(api_client, manager_headers, process_payload, draft=draft)
 
     with pytest.raises(DomainError) as erro:
         calcular_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)

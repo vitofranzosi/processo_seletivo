@@ -451,6 +451,7 @@ def sem_regra_de_corte(db, gestor, api_client, manager_headers, process_payload,
     `CURRENT` com déficit e a tela chega a oferecer a faixa.
     """
     from tests.fixtures.corte import montar_cenario_do_corte
+    from tests.fixtures.legado import publicar_como_acervo
     from tests.fixtures.ocupacao import rascunho_com_quadro
 
     def monta(cut=None):
@@ -467,6 +468,8 @@ def sem_regra_de_corte(db, gestor, api_client, manager_headers, process_payload,
         process_payload,
         prefixo="ocupacao-032-sem-corte",
         draft_factory=monta,
+        # O marco do acervo (046, `FR-752`): a `FR-463` continua valendo sobre ele.
+        publicar=publicar_como_acervo,
     )
 
 

@@ -1162,3 +1162,7 @@ def test_o_edital_publicado_diz_a_etapa_sem_evento_na_validacao_do_conteudo(
 
     assert "Validação do conteúdo" in pagina
     assert AVISO_DA_ETAPA in pagina
+    # E só o fato: o juízo de publicabilidade saiu do Edital publicado (046, `FR-755`). A seção
+    # continua existindo por causa da lista de fatos, e não porque a validação voltou a correr aqui.
+    assert 'class="p-erro"' not in pagina, "impeditivo de publicação num Edital publicado"
+    assert "será publicado" not in pagina, "aviso que fala do ato de publicar"

@@ -88,7 +88,9 @@ def test_a_conferencia_mostra_o_que_a_012_acrescentou_a_etapa(
     as omitia — justamente o que existe para dizer o que está prestes a ficar imutável.
     """
     rascunho = rascunho_com_etapas()
-    rascunho["stages"][0].update(evaluationsPerRegistration=2, maximumScore="100.0000")
+    # Na segunda Etapa, que não é eliminatória e nenhum marco referencia: a dupla leitura ali é
+    # aviso, e o Edital publica (046, `FR-748`). Na primeira, eliminatória, seria impeditivo.
+    rascunho["stages"][1].update(evaluationsPerRegistration=2, maximumScore="100.0000")
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
     tudo = "\n".join(
