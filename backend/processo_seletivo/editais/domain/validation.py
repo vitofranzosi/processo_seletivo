@@ -1270,12 +1270,17 @@ def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
         if not isinstance(item, dict) or item.get("scheduleEventId"):
             continue
         caminho = _caminho_da_entidade("stages", item, posicao)
+        # **A Etapa nomeada na própria mensagem** (`UX-086`), e o caminho só no `path`. A convenção
+        # deste módulo é escrever o caminho e deixar a tela trocá-lo pelo nome — mas a submissão
+        # pela API devolve a mensagem crua, e quem a lia recebia "A Etapa … em /stages/id=<uuid>".
+        # O caminho continua inequívoco onde ele serve, no `path`, que é o que a tela usa para
+        # levar à etapa do assistente.
+        nome = str(item.get("name") or "").strip() or f"{posicao + 1}ª"
         findings.append(
             ValidationFinding(
                 Severity.WARNING,
                 ETAPA_SEM_EVENTO,
-                "A Etapa não está vinculada a nenhum Evento do Cronograma, em "
-                f"{caminho}/scheduleEventId.",
+                f"A Etapa «{nome}» não está vinculada a nenhum Evento do Cronograma.",
                 f"{caminho}/scheduleEventId",
             )
         )

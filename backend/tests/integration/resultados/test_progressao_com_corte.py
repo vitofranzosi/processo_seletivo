@@ -381,3 +381,44 @@ def test_a_cobertura_conta_so_os_participantes_e_as_duas_formas_concordam(cortad
     )
     assert cobertura.medida.denominador == len(participantes(edital))
     assert cobertura.medida.unidade_legivel == "inscrições"
+
+
+def test_com_o_conteudo_na_mao_a_cobertura_nao_rele_a_versao_vigente(cortado, monkeypatch):
+    """`045`, `FR-742`: uma versão só — as Etapas anteriores, o gate e o corte do mesmo conteúdo.
+
+    Passar só o conteúdo, sem as Etapas, fazia a restrição reler a versão vigente para saber o que
+    vem antes da Entrevista: duas consultas por Etapa, e, com uma Retificação publicada no meio da
+    leitura, Etapas e corte de uma versão com a ordem de outra. A releitura aqui falharia o teste.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
+    from processo_seletivo.resultados.application import prontidao
+
+    edital, _ = cortado
+    conteudo = edital.versoes_consolidadas.latest("materialized_at").content
+    etapa = next(item for item in conteudo["stages"] if str(item["id"]) == ENTREVISTA)
+
+    def releitura(*_, **__):
+        raise AssertionError("a restrição releu a versão vigente com o conteúdo na mão")
+
+    monkeypatch.setattr(prontidao, "conteudo_vigente", releitura)
+
+    assert resumo_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)["inscricoes"] == len(
+        participantes_sem_releitura(edital, conteudo)
+    )
+
+
+def participantes_sem_releitura(edital, conteudo):
+    """Os participantes da Entrevista pela restrição, com as Etapas do mesmo conteúdo."""
+    from uuid import UUID
+
+    vigentes = {UUID(str(item["id"])): item for item in conteudo["stages"]}
+    return set(
+        restringir_a_participantes(
+            Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA),
+            edital=edital,
+            etapa_id=UUID(ENTREVISTA),
+            prefixo="",
+            vigentes=vigentes,
+            conteudo=conteudo,
+        ).values_list("pk", flat=True)
+    )

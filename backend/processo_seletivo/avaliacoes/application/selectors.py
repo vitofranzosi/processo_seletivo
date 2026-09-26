@@ -216,8 +216,11 @@ def resumo_da_etapa(*, edital, etapa, panorama=None, conteudo=None):
     - **com o panorama**, pelo conjunto que ele já materializou — o mesmo que a listagem filtra, e
       sem consulta a mais;
     - **sem ele**, pelas mesmas regras dobradas na agregação (`_so_participantes`). `conteudo` é o
-      publicado, quando quem chama já o leu: a regra do corte precisa dele, e relê-lo custaria duas
-      consultas por Etapa.
+      publicado, quando quem chama já o leu, e dele saem **as duas coisas** que a restrição
+      pergunta: as Etapas anteriores e o gate, e os marcos do corte. Passar só o conteúdo, sem as
+      Etapas, fazia a restrição reler a versão vigente para saber o que vem antes — duas consultas
+      por Etapa, e, com uma Retificação publicada no meio da leitura, Etapas e corte de uma versão
+      com a ordem de outra.
 
     Não há modo "toda inscrição": um parâmetro que deixasse contar a população errada seria a
     segunda verdade que a `FR-742` existe para remover.
@@ -227,8 +230,20 @@ def resumo_da_etapa(*, edital, etapa, panorama=None, conteudo=None):
     if panorama is not None:
         populacao = populacao.filter(id__in=panorama["participantes"])
     else:
+        # **Uma versão só**: as Etapas vigentes saem do mesmo conteúdo que o corte lê. Sem
+        # conteúdo na mão, a restrição lê a versão uma vez e usa para as duas perguntas.
+        vigentes = (
+            None
+            if conteudo is None
+            else {UUID(str(item["id"])): item for item in conteudo.get("stages") or []}
+        )
         populacao = _so_participantes(
-            populacao, edital, UUID(str(etapa["id"])), prefixo="", conteudo=conteudo
+            populacao,
+            edital,
+            UUID(str(etapa["id"])),
+            prefixo="",
+            vigentes=vigentes,
+            conteudo=conteudo,
         )
     por_inscricao = populacao.annotate(
         atribuidas=Count(

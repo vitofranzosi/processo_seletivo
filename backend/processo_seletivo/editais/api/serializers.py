@@ -3,7 +3,12 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
-from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_event
+from processo_seletivo.editais.domain.cronograma import (
+    RECUSA_DA_FASE_DECLARADA,
+    STATUS_DECLARAVEIS,
+    ScheduleValidationError,
+    validate_event,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profile
 
 
@@ -182,12 +187,15 @@ class EventSerializer(serializers.Serializer):
     startAt = serializers.DateTimeField()
     endAt = serializers.DateTimeField(required=False, allow_null=True)
     order = serializers.IntegerField(min_value=0, required=False, default=0)
-    # Os quatro valores continuam **reconhecidos** aqui, e a recusa de dois deles é do domínio
-    # (`validate_event`, 045, `FR-737`): recusados pelo `ChoiceField`, eles voltariam com "não é uma
-    # escolha válida", sem a razão — a fase é derivada das datas, e só o cancelamento se declara.
+    # **Só os dois valores que se declaram** (045, `FR-737`): a fase ordinária é derivada das
+    # datas, e só o cancelamento é declaração. O contrato anuncia exatamente o que aceita — a
+    # interface navegável e os clientes gerados não oferecem o que a API recusaria —, e a escolha
+    # inválida responde com a **mesma** razão do domínio (`validate_event`), e não com o "não é uma
+    # escolha válida" genérico, que não diria por quê.
     status = serializers.ChoiceField(
-        choices=["PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"],
+        choices=sorted(STATUS_DECLARAVEIS),
         required=False,
+        error_messages={"invalid_choice": RECUSA_DA_FASE_DECLARADA},
     )
     # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
     isRegistrationPeriod = serializers.BooleanField(required=False, default=False)

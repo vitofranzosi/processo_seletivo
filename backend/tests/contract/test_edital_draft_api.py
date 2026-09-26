@@ -812,3 +812,15 @@ def test_o_cancelamento_continua_declaravel(api_client, manager_headers, process
     assert set(
         EventoCronograma.objects.filter(cronograma__edital=edital).values_list("status", flat=True)
     ) == {"CANCELADO"}
+
+
+@pytest.mark.contract
+def test_o_contrato_do_evento_so_anuncia_os_estados_que_aceita():
+    """`045`, `FR-737`: o serializer oferece o que a API aceita, e nada além.
+
+    Anunciar `EM_ANDAMENTO` e `CONCLUIDO` para recusá-los depois faria a interface navegável e os
+    clientes gerados oferecerem uma escolha que nunca passa.
+    """
+    from processo_seletivo.editais.api.serializers import EventSerializer
+
+    assert set(EventSerializer().fields["status"].choices) == {"PLANEJADO", "CANCELADO"}

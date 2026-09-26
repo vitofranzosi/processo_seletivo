@@ -36,6 +36,9 @@ def test_a_etapa_sem_evento_e_aviso_na_publicacao():
     assert len(achados) == 1
     assert achados[0].severity == Severity.WARNING
     assert achados[0].path == f"/stages/id={ETAPA}/scheduleEventId"
+    # Nomeada na mensagem, e sem o caminho interno nela: a API devolve a mensagem crua (`UX-086`).
+    assert "«Prova didática»" in achados[0].message
+    assert "/stages/" not in achados[0].message
     # Dita nesses termos, e nunca como atraso ou espera (`UX-086`).
     mensagem = achados[0].message.lower()
     for proibido in ("atras", "aguard", "pendente", "%"):

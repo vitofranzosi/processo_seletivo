@@ -620,8 +620,8 @@ def sinais_da_etapa(edital, conteudo, encaminhar, alcancadas):
     if not (alcancadas[UX_003] or alcancadas[UX_063]):
         return
     for etapa in etapas_do_conteudo(conteudo):
-        # O conteúdo publicado já está na mão, e vai junto: a regra do corte precisa dele para
-        # saber quem participa, e relê-lo custaria duas consultas por Etapa (045, `FR-742`).
+        # O conteúdo publicado já está na mão, e vai junto: dele saem as Etapas anteriores, o gate
+        # e o corte que decidem quem participa — uma versão só, sem reler (045, `FR-742`).
         resumo = resumo_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)
         if alcancadas[UX_003]:
             yield from cobertura_insuficiente(edital, etapa, resumo, encaminhar)
