@@ -97,7 +97,7 @@ dizem o mesmo.
 - [X] T020 [US1] Em `B/editais/application/draft.py`, persistir `modalidade_codigo` em `replace_draft` e relê-lo onde o rascunho vira dicionário. Em `B/editais/api/serializers.py`, `DocumentRequirementSerializer` ganha `modalityCode = CharField(required=False, allow_null=True, max_length=100)`
 - [X] T021 [US1] Versão canônica: `SCHEMA_VERSION = 17` em `B/shared/canonical.py`; `DEGRAUS_DE_DOCUMENTO[17] = {"modalityCode": None}` em `B/publicacoes/domain/elevacao.py`; `Campo("modalityCode", str, admite_nulo=True)` em `DOCUMENTO_EXIGIDO_PUBLICADO` (`B/editais/domain/validation.py`); `_document_requirements` em `B/publicacoes/application/publish_edital.py` escreve o campo. Rodar T010 e as famílias `T/contract/test_elevacao_degrau_*.py`
 - [X] T022 [US1] Em `B/editais/domain/validation.py`, `_coerencia_dos_documentos_exigidos` emite os quatro achados de `research.md` R-007. A coerência de denominação sai numa passada à parte, que agrupa por código referido e emite um achado por código com o caminho em `/profiles`. A mensagem de `_recorte_que_o_documento_publicado_alarga` ganha a terceira saída (`contracts/recorte-transversal.md` §4)
-- [X] T023 [US1] Em `B/interface/views.py`, `DESTINO_POR_CODIGO` manda `modality_code_name_divergent` para a etapa Perfis; os outros três seguem o destino de `documentRequirements`
+- [X] T023 [US1] Em `B/interface/views.py`, `DESTINO_POR_CODIGO` manda `modality_code_name_divergent` para a etapa Perfis; os outros três seguem o destino de `documentRequirements` — *feito sem linha nova: o achado aponta `/profiles`, e o roteamento por coleção já o leva a Perfis*
 - [X] T024 [P] [US1] Em `B/publicacoes/infrastructure/pdf.py`, a chave do grupo em `_documentos_exigidos` passa a `(profileId, modalityId, modalityCode)`, e `_titulo_do_grupo` escreve o título por código com a denominação de qualquer Perfil que o tem (`R-008`)
 - [X] T025 [P] [US1] Em `B/interface/revisao.py`, `_alcance` descreve o recorte por código com a mesma frase do PDF
 - [X] T026 [US1] Em `B/interface/forms.py`:
@@ -105,7 +105,7 @@ dizem o mesmo.
   - `ler_inscricao` separa `codigo:` de UUID;
   - `documentos_do_edital` e `documentos_persistidos` passam `modalityCode` nos dois sentidos (`R-009`)
 - [X] T027 [US1] Em `B/interface/templates/interface/_documento.html`, os dois `<optgroup>` ("Em todos os Perfis", depois "Modalidade de um Perfil"), com a opção selecionada restaurada a partir de `modalityCode` ou `modalityId`, e `{% recusa_de %}` para `modalityCode`. Conferir que o fragmento de linha nova (`B/interface/views.py`, `fragmento_documento`) recebe o mesmo alcance
-- [ ] T028 [US1] Rodar T010 a T016 e as famílias de T001. Demonstrar pela interface os passos 1 a 6 do cenário A de `quickstart.md`
+- [X] T028 [US1] Rodar T010 a T016 e as famílias de T001. Demonstrar pela interface os passos 1 a 6 do cenário A de `quickstart.md`
 
 **Checkpoint**: a US1 está completa e demonstrável sozinha. O MVP.
 
@@ -226,12 +226,12 @@ antigo não muda.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T060 [P] Em `B/processos/management/commands/seed_demo.py`, as inscrições postas em `SUBMETIDA` gravam a lista por `gravar_lista_exigida`, com `gravada_em = submitted_at` (`R-012`). Re-semear um banco de demonstração e abrir uma inscrição na Mesa: nenhum aviso de reconstrução
-- [ ] T061 [P] Em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, `DocumentoExigidoPublicado` ganha `modalityCode` **dentro** de `required`, como `attachmentId`, e a descrição passa às cinco formas. Rodar `T/contract/test_forma_publicada.py`, que exige `required == properties` (`contracts/recorte-transversal.md` §1)
-- [ ] T062 [P] Em `AGENTS.md`, "eram 18, são **33**" passa a **34**
-- [ ] T063 Criar `specs/044-recorte-transversal-documental/rastreabilidade.md`: uma linha para **cada** identificador em negrito da spec (`FR-700` a `FR-729`, `UX-080` a `UX-083`, `SC-260` a `SC-268`), **e uma para cada caso-limite** da seção Edge Cases, com o teste que o prende. `SC-260` e `SC-261` são demonstração (`quickstart.md`, cenário C), e a linha diz isso
-- [ ] T064 Rodar `cd backend && uv run pytest tests/test_citacoes_de_requisito.py tests/test_sem_dado_pessoal_da_amostra.py` e corrigir antes de empurrar
-- [ ] T065 Demonstrar o cenário C de `quickstart.md` (o 140/2025) e anotar no PR as contagens de `SC-260` e `SC-261`
+- [X] T060 [P] Em `B/processos/management/commands/seed_demo.py`, as inscrições postas em `SUBMETIDA` gravam a lista por `gravar_lista_exigida`, com `gravada_em = submitted_at` (`R-012`). Re-semear um banco de demonstração e abrir uma inscrição na Mesa: nenhum aviso de reconstrução
+- [X] T061 [P] Em `specs/001-processo-seletivo-editais/contracts/openapi.yaml`, `DocumentoExigidoPublicado` ganha `modalityCode` **dentro** de `required`, como `attachmentId`, e a descrição passa às cinco formas. Rodar `T/contract/test_forma_publicada.py`, que exige `required == properties` (`contracts/recorte-transversal.md` §1)
+- [X] T062 [P] Em `AGENTS.md`, "eram 18, são **33**" passa a **34**
+- [X] T063 Criar `specs/044-recorte-transversal-documental/rastreabilidade.md`: uma linha para **cada** identificador em negrito da spec (`FR-700` a `FR-729`, `UX-080` a `UX-083`, `SC-260` a `SC-268`), **e uma para cada caso-limite** da seção Edge Cases, com o teste que o prende. `SC-260` e `SC-261` são demonstração (`quickstart.md`, cenário C), e a linha diz isso
+- [X] T064 Rodar `cd backend && uv run pytest tests/test_citacoes_de_requisito.py tests/test_sem_dado_pessoal_da_amostra.py` e corrigir antes de empurrar
+- [ ] T065 Demonstrar o cenário C de `quickstart.md` (o 140/2025) e anotar no PR as contagens de `SC-260` e `SC-261` — **não feito nesta sessão**: recompor 16 Perfis pela interface não cabia no percurso; ver `rastreabilidade.md`, SC-260 e SC-261
 - [ ] T066 Rodar `cd backend && make lint check test-pg POSTGRES_USER=<superusuário> DB_NAME=<banco da worktree>`, sem editar nada durante a suíte. Registrar passando/pulados no PR
 - [ ] T067 Registrar, fora do escopo, os dois achados de `research.md` R-014: `ValorDeFato` sem gatilho, e o filtro de concorrência da consulta que repete a modalidade por Perfil
 
