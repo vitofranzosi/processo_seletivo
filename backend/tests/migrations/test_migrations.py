@@ -92,9 +92,13 @@ TRIGGERS_POR_APP = {
     ),
     # A lista exigida da 044: append-only, e a coerência que prende a lista ao envio — a inscrição
     # enviada, a versão que ela aceitou, o instante do ato (FR-714, FR-715).
+    # O `ValorDeFato` da 015 chega depois dela, pela `0006`: era append-only só pelo privilégio, e a
+    # ausência do gatilho não reprovava nada, porque `inscricoes` ainda não estava nesta lista
+    # (`doc/achado-valor-de-fato-sem-gatilho.md`).
     "inscricoes": (
         "item_da_lista_exigida_append_only",
         "item_da_lista_exigida_coerente",
+        "valor_de_fato_append_only",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -752,7 +756,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se
         # recalcularem (044, FR-714, FR-715, D4).
-        "inscricoes": 5,
+        # **Sobe para 6 com a correção do `ValorDeFato`**: a `inscricoes/0006` dá à tabela da 015 o
+        # gatilho append-only que ela nunca teve. Não cria coluna nem percorre linha: fecha a camada
+        # que faltava a uma tabela que já estava em `TABELAS_APPEND_ONLY`
+        # (`doc/achado-valor-de-fato-sem-gatilho.md`, decidido em 25/09 para depois da 044).
+        "inscricoes": 6,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o
