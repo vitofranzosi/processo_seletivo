@@ -45,7 +45,7 @@ avaliações a Etapa declara não é contagem que se filtra — é propriedade d
 {% endcomment %}
 <dl class="ficha">
   <div><dt>Avaliações por inscrição</dt><dd class="destaque">{{ resumo.previstas }}</dd></div>
-  <div><dt>Inscrições submetidas</dt><dd>{{ resumo.inscricoes }}</dd></div>
+  <div><dt>Participantes desta Etapa</dt><dd>{{ resumo.inscricoes }}</dd></div>
 </dl>
 
 <nav class="filtros-da-mesa" aria-label="Filtrar por cobertura">
@@ -53,7 +53,7 @@ avaliações a Etapa declara não é contagem que se filtra — é propriedade d
     <strong>{{ resumo.inscricoes }}</strong> <span>todas</span></a>
   <a href="?cobertura=sem_nenhum" {% if cobertura == "sem_nenhum" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.sem_nenhum }}</strong> <span>sem nenhum avaliador</span></a>
-  <a href="?cobertura=incompleta" {% if cobertura == "incompleta" %}aria-current="page"{% endif %}>
+  <a href="?cobertura=carente" {% if cobertura == "carente" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.carentes }}</strong> <span>sem avaliador suficiente</span></a>
   <a href="?cobertura=avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.sem_conclusao }}</strong> <span>com avaliação pendente</span></a>
@@ -292,7 +292,8 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       <select id="cobertura" name="cobertura">
         <option value="">Todas</option>
         <option value="sem_nenhum" {% if cobertura == "sem_nenhum" %}selected{% endif %}>Sem nenhum avaliador</option>
-        <option value="incompleta" {% if cobertura == "incompleta" %}selected{% endif %}>Sem avaliador suficiente</option>
+        <option value="carente" {% if cobertura == "carente" %}selected{% endif %}>Sem avaliador suficiente</option>
+        <option value="incompleta" {% if cobertura == "incompleta" %}selected{% endif %}>Com parte dos avaliadores</option>
         <option value="completa" {% if cobertura == "completa" %}selected{% endif %}>Completas</option>
         {% comment %}
         Este é sobre **progresso**, e não sobre cobertura: ter avaliador não é ter avaliação, e

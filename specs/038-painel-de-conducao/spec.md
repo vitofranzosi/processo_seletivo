@@ -167,7 +167,9 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
   encaminhamento leva à Etapa.
 - **UX-064** — **Recurso aguardando julgamento com julgador disponível.** O Edital é nomeado. *É a
   negação da condição do `UX-005`*, e os dois nascem do mesmo cálculo: nenhuma peça cai nos dois. O
-  encaminhamento leva aos recursos daquele Edital.
+  encaminhamento leva aos recursos daquele Edital. *Ampliado pela `FR-732` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026): *aguardando decisão* —
+  admissibilidade ou julgamento —, com a fase dita na mensagem (`UX-085`).
 - **UX-065** — **Recorte com ordem vigente e ocupação não apurada.** O recorte e o marco são
   nomeados. O encaminhamento leva à ocupação daquele recorte.
 - **UX-066** — **Ato de ordenação emitido e não divulgado.** O marco é nomeado. *Não é
@@ -196,8 +198,11 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
 
 - **FR-560**: A Atenção MUST sinalizar **trabalho de avaliação pendente** — distribuído e não
   concluído —, nomeando Etapa e Edital. *Distinto da cobertura, que o `UX-003` já mede.*
-- **FR-561**: A Atenção MUST sinalizar **recurso aguardando julgamento** quando **há julgador
-  disponível**. O caso da comissão inteira impedida continua sendo o `UX-005`: **um fato, um sinal**.
+- **FR-561**: ~~A Atenção MUST sinalizar **recurso aguardando julgamento** quando **há julgador
+  disponível**. O caso da comissão inteira impedida continua sendo o `UX-005`: **um fato, um
+  sinal**.~~ **SUBSTITUÍDA pela `FR-732` da [`045`](../045-conducao-confiavel-processo/spec.md)**,
+  em 26/09/2026: a peça recém-interposta ficava invisível na condução até alguém a admitir. A
+  condição passou a *aguardando decisão* — admissibilidade ou julgamento —, e a partição continua.
 - **FR-562**: A Atenção MUST sinalizar **ato emitido e não publicado**, levando à publicação daquele
   resultado.
 - **FR-563**: A Atenção MUST sinalizar **recorte com ordem vigente e ocupação não apurada**, levando
@@ -208,10 +213,12 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
 
 ### O que esta feature corrige e o que ela não faz
 
-- **FR-565**: A `FR-024` da `022` MUST ser **explicitamente substituída**, e o requisito sucessor
+- **FR-565**: **SUBSTITUÍDA pela `FR-744` da [`045`](../045-conducao-confiavel-processo/spec.md)**,
+  em 26/09/2026 — o catálogo encolheu para oito, sem o `UX-001` e o `UX-002`. O texto de 19/09 fica:
+  ~~A `FR-024` da `022` MUST ser **explicitamente substituída**, e o requisito sucessor
   MUST nomear as **dez** espécies vigentes: `UX-001` a `UX-005` da `022`, o `UX-046` que a `027`
   acrescentou sem revisá-la, e o `UX-063` a `UX-066` desta feature. *Requisito que diz cinco onde há
-  seis não fecha catálogo nenhum — e esta feature levaria a distância de uma para cinco.*
+  seis não fecha catálogo nenhum — e esta feature levaria a distância de uma para cinco.*~~
 - **FR-566**: Nenhuma **capacidade de autorização** nova, nenhuma **ajuda instrucional** nova nos
   cartões, nenhum conteúdo publicado reescrito, e nada apagado.
 - **FR-567**: Nenhum **estado novo** MUST ser calculado. Esta feature **reúne e encaminha** o que o

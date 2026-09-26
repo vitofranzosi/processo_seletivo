@@ -112,13 +112,13 @@ coisa que ela não pode ver.
   <ul class="marcos">
     {% for marco in item.proximos_marcos %}
     {% comment %}
-    O estado do Evento aparece como **declaração**, e a tela não o corrige nem o arbitra contra as
-    datas (FR-023, D-004). Quando os dois discordam, quem diz isso é o sinal de UX-002.
+    A fase do marco é a do relógio (045, FR-735, UX-088), e não o estado declarado: ele nascia
+    planejado e ficava. Só o marco em curso ganha marca; o futuro, a data já diz.
     {% endcomment %}
     <li>
       <strong>{{ marco.descricao }}</strong>
       — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
-      {% if marco.declarado %}<span class="marca">declarado {{ marco.declarado_legivel }}</span>{% endif %}
+      {% if marco.em_andamento %}<span class="marca">em andamento</span>{% endif %}
     </li>
     {% endfor %}
   </ul>
@@ -129,6 +129,9 @@ coisa que ela não pode ver.
   FR-559: sinal ausente não ocupa espaço, e não há seção permanente por espécie. A região encolhe a
   **uma linha** quando não há nada a sinalizar, mas não some — sumir não distinguiria "nada a
   sinalizar" de "a página não carregou". É a mesma forma que a Supervisão usa, e o mesmo parcial.
+
+  A linha tem duas formas desde a 045 (FR-730): a global só para quem alcança o catálogo inteiro, a
+  relativa para quem alcança parte. Quem escolhe é `frase_de_ausencia`, sobre o alcance do leitor.
   {% endcomment %}
   {% if atencao_visivel %}
   <h3>Atenção</h3>
@@ -137,7 +140,7 @@ coisa que ela não pode ver.
     {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
   </ul>
   {% else %}
-  <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  <p class="nenhuma">{{ ausencia }}</p>
   {% endif %}
   {% endif %}
 </section>

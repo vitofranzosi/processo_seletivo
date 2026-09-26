@@ -20,20 +20,36 @@ pytestmark = [pytest.mark.django_db, pytest.mark.authorization]
 
 
 @pytest.fixture
-def cenario(raiz_de_arquivos, gestor, processo_a, edital_com_documentos, comissao_de_a, etapa_a1):
+def cenario(
+    raiz_de_arquivos,
+    gestor,
+    processo_com_documentos,
+    edital_com_documentos,
+    comissao_com_documentos,
+    etapa_a1,
+):
     """João avalia a inscrição 0001; Ana avalia a 0002. Cada uma com um documento."""
-    ana = constituir(gestor, processo_a, [("ana", Funcao.MEMBRO)], prefixo="doc")["ana"]
+    ana = constituir(gestor, processo_com_documentos, [("ana", Funcao.MEMBRO)], prefixo="doc")[
+        "ana"
+    ]
     alocacao_do_joao = alocar_em(
-        gestor, processo_a, comissao_de_a["joao"], edital_com_documentos, etapa_a1
+        gestor,
+        processo_com_documentos,
+        comissao_com_documentos["joao"],
+        edital_com_documentos,
+        etapa_a1,
     )
-    alocar_em(gestor, processo_a, ana, edital_com_documentos, etapa_a1)
+    alocar_em(gestor, processo_com_documentos, ana, edital_com_documentos, etapa_a1)
     do_joao, da_ana = inscrever(
         edital_com_documentos, 2, documentos=[identificador(DOCUMENTO_A, 0)]
     )
-    for chave, membro, inscricao in (("j", comissao_de_a["joao"], do_joao), ("a", ana, da_ana)):
+    for chave, membro, inscricao in (
+        ("j", comissao_com_documentos["joao"], do_joao),
+        ("a", ana, da_ana),
+    ):
         distribuir(
             actor=gestor,
-            processo_id=processo_a.id,
+            processo_id=processo_com_documentos.id,
             edital_id=edital_com_documentos.id,
             etapa_id=etapa_a1,
             membro_ids=[membro.id],
@@ -83,18 +99,26 @@ def test_inscricao_de_outro_avaliador_e_inexistente(
 
 
 def test_alocado_sem_atribuicao_nao_abre_inscricao_alguma(
-    client, seletor_ligado, gestor, processo_a, edital_com_documentos, etapa_a1, cenario
+    client,
+    seletor_ligado,
+    gestor,
+    processo_com_documentos,
+    edital_com_documentos,
+    etapa_a1,
+    cenario,
 ):
     """SC-003: alocação abre a porta da Etapa, e não as inscrições dela (FR-023)."""
     from tests.fixtures.comissao import constituir as constituir_outro
 
-    constituir_outro(gestor, processo_a, [("bruno", Funcao.MEMBRO)], prefixo="sem-atrib")
+    constituir_outro(
+        gestor, processo_com_documentos, [("bruno", Funcao.MEMBRO)], prefixo="sem-atrib"
+    )
     alocar_em(
         gestor,
-        processo_a,
-        constituir_outro(gestor, processo_a, [("bruno", Funcao.MEMBRO)], prefixo="sem-atrib")[
-            "bruno"
-        ],
+        processo_com_documentos,
+        constituir_outro(
+            gestor, processo_com_documentos, [("bruno", Funcao.MEMBRO)], prefixo="sem-atrib"
+        )["bruno"],
         edital_com_documentos,
         etapa_a1,
         chave="bruno-a1",
@@ -111,7 +135,13 @@ def test_alocado_sem_atribuicao_nao_abre_inscricao_alguma(
 
 
 def test_remover_a_alocacao_revoga_o_acesso_ao_documento(
-    client, seletor_ligado, gestor, processo_a, edital_com_documentos, etapa_a1, cenario
+    client,
+    seletor_ligado,
+    gestor,
+    processo_com_documentos,
+    edital_com_documentos,
+    etapa_a1,
+    cenario,
 ):
     """SC-010, na inscrição: a primeira condição falha, e a Atribuição fica inerte (FR-046)."""
     identificar(client, "joao", [])
@@ -122,7 +152,7 @@ def test_remover_a_alocacao_revoga_o_acesso_ao_documento(
 
     remover_alocacao(
         actor=gestor,
-        processo_id=processo_a.id,
+        processo_id=processo_com_documentos.id,
         alocacao_id=cenario["alocacao_do_joao"].id,
         idempotency_key="tirar-joao",
         correlation_id="teste",

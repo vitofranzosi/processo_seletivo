@@ -124,10 +124,20 @@ def _publicada(**extra):
 
 
 def _recusas(etapa):
-    from processo_seletivo.editais.domain.validation import validate_for_publication
+    """Os **impeditivos** sobre a Etapa — e só eles.
+
+    Filtrava por caminho e não por severidade, e passou a contar aviso como recusa quando a `045`
+    acrescentou o da Etapa sem Evento: a fixture declara `scheduleEventId: None`, que é publicável
+    e legítimo, e agora é aviso. Recusa é o que impede.
+    """
+    from processo_seletivo.editais.domain.validation import Severity, validate_for_publication
 
     achados = validate_for_publication({"schemaVersion": 6, "stages": [etapa]})
-    return {achado.path: achado.message for achado in achados if achado.path.startswith("/stages")}
+    return {
+        achado.path: achado.message
+        for achado in achados
+        if achado.path.startswith("/stages") and achado.severity == Severity.BLOCKING_ERROR
+    }
 
 
 def test_a_decisoria_sem_rotulo_e_recusada():

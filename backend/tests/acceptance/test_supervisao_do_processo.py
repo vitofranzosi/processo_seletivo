@@ -37,8 +37,10 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
     """O percurso inteiro, pelo canal de quem preside — e nenhum número vindo de lugar nenhum novo.
 
     Todo valor apresentado é reproduzível a partir dos registros das donas (`FR-005`): a soma é a
-    das inscrições de cada Edital, o prazo é o Evento marcado do cronograma publicado, e o sinal é
-    a Etapa que o próprio Edital publicou sem marco.
+    das inscrições de cada Edital, e o prazo é o Evento marcado do cronograma publicado.
+
+    **A Etapa sem marco deixou de ser sinal da condução** (045, `FR-739`): ela é dita onde tem
+    remédio, na validação do conteúdo do Edital — e é lá que o percurso a procura.
     """
     primeiro = publish_original(
         api_client,
@@ -52,8 +54,8 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
             11,
             etapas=[
                 etapa_ligada(11, nome="Análise documental"),
-                # A segunda Etapa não declara Evento: é publicável e legítimo, e é o sinal que a
-                # presidência precisa ver sem abrir a composição.
+                # A segunda Etapa não declara Evento: é publicável e legítimo. Desde a `045` é
+                # **aviso** da validação do conteúdo, e não sinal da Atenção.
                 {
                     "id": "00000000-0000-0000-0000-000000000560",
                     "name": "Prova didática",
@@ -62,7 +64,6 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
                     "classificatory": True,
                 },
             ],
-            status_do_periodo="EM_ANDAMENTO",
         ),
     )
     processo = primeiro.processo
@@ -74,9 +75,7 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
         year=2026,
         title="Edital de técnicos",
         chave="aceitacao-022-segundo",
-        draft=rascunho_com_periodo(
-            SEGUNDO_SEED, etapas=[etapa_ligada(SEGUNDO_SEED)], status_do_periodo="EM_ANDAMENTO"
-        ),
+        draft=rascunho_com_periodo(SEGUNDO_SEED, etapas=[etapa_ligada(SEGUNDO_SEED)]),
     )
     constituir(gestor, processo, [("maria", Funcao.PRESIDENTE)], prefixo="aceitacao-022")
     submeter(primeiro, 8, seed=11)
@@ -104,18 +103,28 @@ def test_quem_preside_ve_situacao_volume_prazo_e_impedimento_numa_tela_so(
     assert "Inscrições de" in lido
     assert "Encerra em" in lido
 
-    # E se existe condição que impede o próximo ato.
-    assert "está sem marco no cronograma" in lido
-    assert reverse("interface:retificar", args=[primeiro.id]) in resposta.content.decode()
+    # E a Etapa sem marco **não** é condição de condução (045, `FR-739`): nenhuma Retificação a
+    # resolve, e o painel que a mostrava para sempre ensinava a ignorá-lo.
+    assert "sem marco no cronograma" not in lido
+    assert reverse("interface:retificar", args=[primeiro.id]) not in resposta.content.decode()
+
+    # Ela é dita na validação do conteúdo do Edital publicado, como aviso — e não como impedimento.
+    detalhe = texto(client.get(reverse("interface:detalhe", args=[primeiro.id])).content.decode())
+    assert "não está vinculada a nenhum Evento do Cronograma" in detalhe
 
 
 def test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apresenta():
-    """`SC-200` e `FR-565`: as duas listas são **a mesma**, e a conferência é contando as duas.
+    """`SC-274` e `FR-744` (045): as duas listas são **a mesma**, conferidas contando as duas.
 
-    **Por duas features elas não foram.** A `FR-024` desta spec dizia *"exclusivamente os sinais
+    **Por duas features elas não foram.** A `FR-024` da `022` dizia *"exclusivamente os sinais
     definidos em `UX-001` a `UX-005`"*, e a `027` acrescentou o `UX-046` sem revisá-la: um catálogo
-    fechado que não fechava o que existia. A `038` levaria a distância de uma espécie para cinco, e
-    por isso emendou o requisito em vez de acrescentar mais uma divergência ao lado.
+    fechado que não fechava o que existia. A `038` a substituiu pela `FR-565`, com dez espécies; a
+    `045` tirou duas, e substituiu a `FR-565` pela `FR-744`, com oito.
+
+    **O teste lê o requisito vigente, e não o mais antigo.** O bloco da `FR-024` guarda o texto
+    riscado de 09/09 e a tabela de 19/09 — é o que aquelas decisões decidiram, e não se apaga. Lê-lo
+    como catálogo acusaria o `UX-001` riscado como espécie viva. O que continua cobrado dele é que
+    diga que foi substituído.
 
     **Este teste lê a spec, e não uma cópia dela.** Conferir contra uma lista escrita aqui provaria
     que o teste concorda consigo mesmo — que é exatamente o que deixou o requisito envelhecer por
@@ -127,9 +136,11 @@ def test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apres
 
     # `parents[3]` é a raiz do repositório: este arquivo está em `backend/tests/acceptance/`.
     raiz = Path(__file__).resolve().parents[3]
-    spec = raiz / "specs" / "022-supervisao-do-processo" / "spec.md"
-    requisito = re.search(r"- \*\*FR-024\*\*:(.+?)(?=\n- \*\*FR-025\*\*)", spec.read_text(), re.S)
-    assert requisito is not None, "a FR-024 não foi encontrada onde o catálogo é fechado"
+    vigente = raiz / "specs" / "045-conducao-confiavel-processo" / "spec.md"
+    requisito = re.search(
+        r"- \*\*FR-744\*\*:(.+?)(?=\n- \*\*FR-745\*\*)", vigente.read_text(), re.S
+    )
+    assert requisito is not None, "a FR-744 não foi encontrada onde o catálogo é fechado"
 
     # **Por extenso, e nunca por faixa.** Aceitar `UX-001` a `UX-005` como cinco nomes faria o
     # teste concordar com uma faixa que cresce sozinha — e foi exatamente assim que o requisito
@@ -141,6 +152,17 @@ def test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apres
         f"só no requisito {sorted(nomeadas - set(supervisao.ESPECIES))}, "
         f"só no produto {sorted(set(supervisao.ESPECIES) - nomeadas)}"
     )
-    assert "SUBSTITUÍDA" in requisito.group(1), (
+
+    # E a cadeia de substituição continua legível a partir da origem: quem abre a `022` chega à
+    # `038`, e quem abre a `038` chega à `045`.
+    origem = (raiz / "specs" / "022-supervisao-do-processo" / "spec.md").read_text()
+    bloco = re.search(r"- \*\*FR-024\*\*:(.+?)(?=\n- \*\*FR-025\*\*)", origem, re.S)
+    assert bloco is not None, "a FR-024 da 022 não foi encontrada"
+    assert "SUBSTITUÍDA" in bloco.group(1), (
         "a FR-024 precisa dizer que foi substituída, e não apenas mudar de conteúdo"
+    )
+    assert "FR-744" in bloco.group(1), "a FR-024 precisa apontar o requisito vigente"
+    intermediaria = (raiz / "specs" / "038-painel-de-conducao" / "spec.md").read_text()
+    assert re.search(r"- \*\*FR-565\*\*:.+?SUBSTITUÍDA.+?FR-744", intermediaria, re.S), (
+        "a FR-565 da 038 precisa dizer que foi substituída pela FR-744"
     )

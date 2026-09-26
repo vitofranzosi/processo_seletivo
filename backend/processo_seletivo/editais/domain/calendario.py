@@ -69,6 +69,37 @@ def instante_vencido(
     return termino if termino is not None else inicio
 
 
+# As três fases ordinárias de um Evento (045, `FR-735`). São os valores que o modelo já nomeava —
+# `PLANEJADO`, `EM_ANDAMENTO`, `CONCLUIDO` — e que ninguém declarava: o campo nascia planejado e
+# ficava. A fase passa a ser lida do relógio, e o quarto valor, `CANCELADO`, continua sendo o
+# único declarado, decidido por quem chama antes de perguntar a fase.
+PLANEJADO, EM_ANDAMENTO, CONCLUIDO = "PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO"
+
+
+def fase(inicio: datetime | None, termino: datetime | None, *, agora: datetime) -> str | None:
+    """Em que fase o Evento está no instante da leitura — pela régua deste módulo, e nenhuma outra.
+
+    **Lê `vencido`, e não o reescreve** (037, `FR-547`). A régua virou módulo para que o selo e a
+    Revisão não discordassem sobre o mesmo Evento; uma terceira função com a mesma pergunta seria o
+    defeito que ela removeu. Por isso o *concluído* é, literalmente, o vencido — inclusive o Evento
+    pontual, que vence pelo início.
+
+    **O período de inscrições não passa por aqui.** Sem término, ele segue **aberto** pela régua do
+    período (`inscricoes/domain/periodo.py`, FR-347), que decide se o sistema recebe inscrição —
+    enquanto esta régua o venceria pelo início. Quem lê a fase dele pergunta ao período.
+
+    **Sem início, não há fase.** A conferência de forma já acusa o Evento assim; inventar-lhe uma
+    fase seria o sistema criando o estado que as datas não dão.
+    """
+    if inicio is None:
+        return None
+    if vencido(inicio, termino, agora=agora):
+        return CONCLUIDO
+    if agora < inicio:
+        return PLANEJADO
+    return EM_ANDAMENTO
+
+
 def ano_do_evento(instante: datetime) -> int:
     """O ano em que o Evento corre, lido na zona institucional.
 

@@ -60,12 +60,23 @@ def levar_a_publicacao(
     mesma com outro conteúdo é conflito — corretamente.
     """
     preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"], key=chave)
-    api_client.put(
+    gravado = api_client.put(
         f"/api/v1/admin/editais/{edital.id}/rascunho",
         draft or complete_draft(),
         format="json",
         **{**preparer, "HTTP_IF_MATCH": f'"{edital.revision}"'},
     )
+    # **A recusa do rascunho também é lida aqui**, pela mesma razão da submissão logo abaixo: sem
+    # ela, um 4xx do `PUT` era engolido, a submissão corria sobre o rascunho **anterior** e a falha
+    # aparecia adiante com uma causa que não era a verdadeira — "Ao menos um Perfil é obrigatório"
+    # quando o que houve foi identificador repetido entre dois Editais.
+    #
+    # Ela escondia também um defeito de fixture: `edital_a` e `edital_com_documentos` criavam o
+    # Processo pela mesma chave de idempotência, a segunda criação reencenava a primeira e o `PUT`
+    # dela voltava 409 em silêncio — em 31 casos da `012` (045, `R-9`). Separadas as fixtures, a
+    # asserção vale sem exceção: um Edital que chega aqui fora da elaboração é defeito de quem o
+    # trouxe, e não caso a tolerar.
+    assert gravado.status_code < 400, gravado.content
     if anexos:
         from tests.fixtures.anexos import criar_anexo
 

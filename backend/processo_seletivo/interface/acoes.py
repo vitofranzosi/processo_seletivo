@@ -21,13 +21,14 @@ descobrir.
 
 from dataclasses import dataclass
 
+from django.db.models import Exists, OuterRef
 from django.urls import reverse
 
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.recursos.application import admitir as recursos_admitir
-from processo_seletivo.recursos.models import Recurso
+from processo_seletivo.recursos.models import DecisaoRecurso, JuizoDeAdmissibilidade, Recurso
 from processo_seletivo.shared.api.problems import DomainError
 
 # Os nomes são os que `base.html` já define: `.botao` sozinho é a ação primária, e as duas
@@ -117,13 +118,15 @@ def _navegacao(edital, ator):
         )
     # Quem julga recurso não tinha por onde chegar ao próprio trabalho: a tela existia e nada
     # apontava para ela. O avaliador tem "Minhas Etapas" no cabeçalho de toda página; o julgador
-    # não tem equivalente, e o recurso corre contra prazo. O total no rótulo pela mesma razão das
-    # inscrições — decide se vale abrir.
+    # não tem equivalente. O total no rótulo pela mesma razão das inscrições — decide se vale abrir.
+    #
+    # **O número é de trabalho, e não de histórico** (045, `FR-734`). Ele contava toda peça já
+    # recebida, decididas inclusive, e um julgador com a fila vazia lia "Recursos recebidos (7)". A
+    # tela para onde a ação leva continua listando todas; o rótulo é o que diz o que espera.
     if edital.status in ESTADOS_COM_INSCRICOES and ator.can(recursos_admitir.PERMISSAO):
-        recebidos = Recurso.objects.filter(inscricao__edital=edital).count()
         yield Acao(
             "recursos",
-            f"Recursos recebidos ({recebidos})",
+            f"Recursos aguardando decisão ({recursos_aguardando_decisao(edital)})",
             reverse("interface:recursos", args=[edital.id]),
         )
     # A exportação de matrículas (031). **Sem porta, a capacidade não é entregue** — Princípio VI:
@@ -311,3 +314,21 @@ def proximo_passo(edital, ator, *, segregacao=False):
     # ele mesmo tendo trabalho a fazer antes.
     meus = {acao.chave for acao in do_edital(edital, ator)}
     return {"papel": papel, "ato": ato, "sou_eu": chave in meus, "observacao": ""}
+
+
+def recursos_aguardando_decisao(edital):
+    """Quantas peças do Edital esperam decisão — sem juízo, ou admitidas e sem decisão.
+
+    **Uma consulta, e nenhuma peça materializada.** A lista de Processos monta ações para vários
+    Editais, e trazer cada peça para contá-la em Python seria custo por linha numa tela que não
+    mostra peça nenhuma. As duas condições são as mesmas que a situação da peça usa
+    (`recursos/application/selectors.py`, `_situacao`): sem juízo, aguarda admissibilidade;
+    admitida e sem decisão, aguarda julgamento; o resto está decidido.
+    """
+    juizo = JuizoDeAdmissibilidade.objects.filter(recurso_id=OuterRef("pk"))
+    decisao = DecisaoRecurso.objects.filter(recurso_id=OuterRef("pk"))
+    return (
+        Recurso.objects.filter(inscricao__edital=edital)
+        .filter(~Exists(juizo) | (Exists(juizo.filter(admitido=True)) & ~Exists(decisao)))
+        .count()
+    )

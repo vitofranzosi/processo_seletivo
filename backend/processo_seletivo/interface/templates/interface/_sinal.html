@@ -1,19 +1,26 @@
 {% comment %}
-A forma **única** dos cinco (UX-006). O que muda entre eles é o conteúdo, não a estrutura — é o que
+A forma **única** das espécies (UX-006). O que muda entre elas é o conteúdo, não a estrutura — é o que
 mantém o catálogo fechado legível e a região uniforme.
 
 Sem campo de gravidade, e a ausência é decisão (D-002): os cinco são igualmente acionáveis, e
 introduzir severidade pediria uma ordenação que o domínio não determina e que viraria juízo da tela.
 
 A medida é par ou nada (FR-032): ou vêm numerador e denominador, ou não vem medida. Não existe
-percentual solto, e a forma que chega aqui já garante isso — o template não tem como quebrá-lo.
+percentual solto, e a forma que chega aqui já garante isso — o template não tem como quebrá-lo. E
+ela diz o que conta (045, UX-087): "2 de 4" não dizia se eram inscrições, recursos ou recortes.
+
+Sem caminho, o sinal diz a quem pedir (045, FR-740) — a frase vem pronta do mecanismo único, e só
+existe quando o ato não é do leitor. Com caminho, não há frase: "peça a alguém" a quem tem o
+formulário à frente é falso.
 {% endcomment %}
 <li class="sinal">
   <p class="mensagem">{{ sinal.mensagem }}</p>
   {% if sinal.medida %}
-  <p class="medida">{{ sinal.medida.numerador }} de {{ sinal.medida.denominador }}</p>
+  <p class="medida">{{ sinal.medida.numerador }} de {{ sinal.medida.denominador }}{% if sinal.medida.unidade %} {{ sinal.medida.unidade_legivel }}{% endif %}</p>
   {% endif %}
   {% if sinal.destino %}
   <a class="acao" href="{{ sinal.destino.url }}">{{ sinal.destino.rotulo }}</a>
+  {% elif sinal.conducao %}
+  <p class="ajuda">{{ sinal.conducao }}</p>
   {% endif %}
 </li>

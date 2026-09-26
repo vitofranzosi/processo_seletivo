@@ -61,7 +61,10 @@ EVENTO_DO_PERIODO = {
     "startAt": "2026-10-01T09:00:00-03:00",
     "endAt": "2026-10-20T23:59:00-03:00",
     "order": 1,
-    "status": "EM_ANDAMENTO",
+    # O único estado que um Evento **declara** (045, `FR-737`). Era `EM_ANDAMENTO`, e a API passou
+    # a recusá-lo: a fase ordinária é derivada das datas. O que este teste prende — o estado que a
+    # tela não oferece sobrevive a ela — continua valendo para o único que ainda se declara.
+    "status": "CANCELADO",
     "isRegistrationPeriod": True,
 }
 
@@ -354,7 +357,26 @@ def test_regravar_o_cronograma_preserva_o_que_a_tela_nao_oferece(client, seletor
     periodo = EventoCronograma.objects.get(pk=INSCRICOES)
     assert periodo.end_at.astimezone(ZONA).day == 21, "a correção que a tela oferece vale"
     assert periodo.is_registration_period is True, "a marca que a tela não oferece sobrevive"
-    assert periodo.status == "EM_ANDAMENTO", "o estado que a tela não oferece sobrevive"
+    assert periodo.status == "CANCELADO", "o estado que a tela não oferece sobrevive"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_regravar_normaliza_a_fase_que_a_api_gravava_antes_da_045(client, seletor_ligado, edital):
+    """`045`, `FR-737`: o rascunho antigo não trava a tela por um valor que ninguém digitou nela.
+
+    Antes da `045` a API aceitava `EM_ANDAMENTO`; o domínio passou a recusá-lo, e a tela reenvia o
+    estado guardado a cada gravação. Sem a normalização, o rascunho que a API gravou ficaria
+    impossível de salvar pela tela. O valor vira `PLANEJADO` — *não cancelado* —, que é tudo o
+    que a leitura ainda considera; o rascunho não foi publicado, e nada publicado é reescrito.
+    """
+    EventoCronograma.objects.filter(pk=INSCRICOES).update(status="EM_ANDAMENTO")
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(_etapa(edital, "inscricao"), {"periodo-inscricoes": INSCRICOES})
+
+    assert resposta.status_code == 302, resposta.content
+    assert EventoCronograma.objects.get(pk=INSCRICOES).status == "PLANEJADO"
 
 
 @pytest.mark.django_db(transaction=True)

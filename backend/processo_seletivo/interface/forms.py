@@ -14,6 +14,7 @@ from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import duplicacao, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
+from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1327,7 +1328,16 @@ def eventos_persistidos(edital):
             "startAt": evento.start_at,
             "endAt": evento.end_at,
             "order": evento.order,
-            "status": evento.status,
+            # **Só o cancelamento viaja** (045, `FR-737`). Um rascunho gravado pela API antes da
+            # `045` pode guardar `EM_ANDAMENTO` ou `CONCLUIDO`, que o domínio passou a recusar; a
+            # pessoa nunca os digitou nesta tela, e recusar a gravação por eles seria travá-la num
+            # valor que a leitura nem considera mais. O rascunho não foi publicado: normalizar aqui
+            # não reescreve ato nenhum.
+            "status": (
+                evento.status
+                if evento.status == EventoCronograma.Status.CANCELADO
+                else EventoCronograma.Status.PLANEJADO
+            ),
             "isRegistrationPeriod": evento.is_registration_period,
             # **E o local pelo mesmo motivo.** É o terceiro campo a entrar nesta lista pela lição
             # que a E2E17-001 deixou: campo omitido aqui volta ao padrão do modelo na gravação

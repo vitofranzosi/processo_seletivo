@@ -182,7 +182,9 @@ def rascunho_rico():
                 # carrega o que a origem publicou, qualquer que seja o valor.
                 "endAt": (timezone.now() + timedelta(days=30)).isoformat(),
                 "order": 1,
-                "status": "CONCLUIDO",
+                # Sem `status`: desde a `045` a fase ordinária não se declara pela API, e o
+                # `CONCLUIDO` que a origem precisa carregar é gravado antes da submissão, no ORM —
+                # como um Edital publicado antes da `045` o teria (`_vincular_anexo_e_fechar_…`).
                 "isRegistrationPeriod": True,
                 "location": "Campus Vitória",
             },
@@ -235,6 +237,10 @@ def _vincular_anexo_e_fechar_cronograma(edital):
     """O que só existe **antes** da submissão: o vínculo com o Anexo e o estado dos Eventos."""
     anexo = edital.anexos.order_by("order").first()
     edital.documentos_exigidos.filter(key="diploma").update(anexo=anexo)
+    # **O estado dos Eventos entra aqui, e não no rascunho** (045, `FR-737`): a API passou a recusar
+    # a fase declarada. O que estes testes precisam é de uma origem que **publicou** um estado
+    # cumprido — o acervo anterior à `045` tem esses Editais —, para provar que a cópia reinicia.
+    edital.cronograma.eventos.filter(id=EVENTO_INSCRICAO).update(status="CONCLUIDO")
 
 
 @pytest.fixture
