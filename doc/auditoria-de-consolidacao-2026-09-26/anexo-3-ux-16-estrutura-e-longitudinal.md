@@ -23,7 +23,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Evidência no código atual: `editais/domain/validation.py:1706-1751` — `_marco_sem_regra_de_corte` emite `milestone_without_cut_rule` com `Severity.WARNING` (`:1735-1736`) e a mensagem nomeia a cadeia inteira; `interface/views.py:2855-2868` — "O destino do corte não pende mais da regra de corte (037, FR-538)"; `ocupacao/application/selectors.py:216` — `faixaDisponivel` falso quando não há regra. Testes: `tests/interface/test_corte.py`, `tests/interface/test_destinos_do_edital.py`, `tests/unit/editais/test_executabilidade.py`.
 - Estado atual: RESOLVIDO
 - Ainda faz sentido?: não como achado — as três partes da 13.1 estão no código. O que sobra é a decisão `D-G1` (aviso → impedimento), que é trabalho criado por governança, não resíduo do achado.
-- Lacuna residual: nenhuma do achado; `D-G1` não executada (a mensagem continua `WARNING`) — lote 4.
+- Lacuna residual: nenhuma do achado; `D-G1` não executada (a mensagem continua `WARNING`) — lote 4. **Desfecho (26/09):** executada pela `046` (#188), por Perfil.
 - Grupo do resíduo: —
 - Impacto atual: quem ignora o aviso ainda publica um marco que classifica e não convoca; é exatamente o risco que `D-G1` quis fechar.
 - Próxima ação sugerida: nenhuma aqui; `D-G1` segue no lote 4.
@@ -349,7 +349,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Evidência no código atual: `classificacao/application/emissao.py:20-47` (ordem por recorte); `interface/views.py:2855-2868` (corte sempre oferecido); `sorteios/domain/substituicao.py:113-136` (referência derivável conferida na composição).
 - Estado atual: RESOLVIDO
 - Ainda faz sentido?: não como raiz. Bordas que ainda não fecham a cauda são de **modelo**, não da cadeia: cascata de grupos (ACH-59) e barema (ACH-56).
-- Lacuna residual: nenhuma da raiz; `D-G1` (aviso → impedimento) segue com o lote 4.
+- Lacuna residual: nenhuma da raiz; `D-G1` (aviso → impedimento) segue com o lote 4. **Desfecho (26/09):** executada pela `046` (#188), por Perfil.
 - Grupo do resíduo: —
 - Impacto atual: nenhum para as três famílias percorridas.
 - Próxima ação sugerida: nenhuma.
@@ -452,6 +452,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Estado atual: PARCIALMENTE RESOLVIDO
 - Ainda faz sentido?: sim. As quatro evidências de 16/09 fecharam; a classe não: ainda se publica, em ato imutável, Etapa com duas avaliações que nunca consolida.
 - Lacuna residual: Etapa com `evaluationsPerRegistration > 1` publicável sem regra de combinação (lote 7); `D-G1` (lote 4).
+- **Desfecho (26/09):** as duas fechadas pela `046` (#188). A Etapa que não consolida é impeditiva quando o fluxo exige o Resultado, e a `D-G1` foi executada por Perfil. Resta a regra de combinação de avaliações, só com Edital real de dupla leitura (B).
 - Grupo do resíduo: A (a instância das duas avaliações publica um ato que não se executa — mesma natureza que fez ACH-49/50 serem S4)
 - Impacto atual: Edital publicado com Etapa que não consolida; saída só por Retificação.
 - Próxima ação sugerida: corrigir — pela via do achado avulso (lote 7).
@@ -652,7 +653,7 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 
 | ID | título | estado | grupo | próxima ação |
 |---|---|---|---|---|
-| ACH-46 | convocação inalcançável sem corte | RESOLVIDO | — | nenhuma (`D-G1` no lote 4) |
+| ACH-46 | convocação inalcançável sem corte | RESOLVIDO | — | nenhuma (`D-G1` executada pela `046`) |
 | ACH-47 | reserva sem apuração por recorte | RESOLVIDO | — | nenhuma |
 | ACH-48 | sorteio sem Etapa recusado | RESOLVIDO | — | nenhuma |
 | ACH-49 | Edital sem marco publicável | RESOLVIDO | — | nenhuma |
@@ -677,12 +678,12 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 | E-4 | fontes normativas sem confronto | NÃO IMPLEMENTADO | B | validar (lote 5) |
 | E-5 | explicação desgrudada do campo | RESOLVIDO | — | nenhuma |
 | E-6 | visão global do Processo vivo | DUPLICADO / ABSORVIDO (`N-01`…`N-08`) | B | nenhuma aqui (lote 6) |
-| E-7 | validação de executabilidade | PARCIALMENTE RESOLVIDO | A | corrigir (duas avaliações, lote 7) |
+| E-7 | validação de executabilidade | RESOLVIDO (046, #188) | B (a regra de combinação, só com Edital real) | nenhuma agora |
 | REAV-§8 | sete recusas em 404 | DUPLICADO / ABSORVIDO (`D-G2`) | B | nenhuma aqui (lote 4) |
 | REAV-§13 | Retificação sem Modalidade; sorteio 10/10 | DUPLICADO / ABSORVIDO (`D-G5`, `D-G3`) | A | nenhuma aqui (lote 4) |
 | REAV-§4.4 | fragmento sem autorização | RESOLVIDO | — | nenhuma |
 | REAV-§16 | guarda de citações aceita ID só anunciado | NÃO IMPLEMENTADO | C | nenhuma |
-| LONG-1 | duas avaliações sem regra de combinação | DUPLICADO / ABSORVIDO (avulso, lote 7) | A | nenhuma aqui |
+| LONG-1 | duas avaliações sem regra de combinação | DUPLICADO / ABSORVIDO (avulso, lote 7) | B (fechado pela 046; resta a regra de combinação) | nenhuma aqui |
 | LONG-2 | heteroidentificação | NÃO IMPLEMENTADO | B | criar spec após L-2 |
 | LONG-3 | barema e cascata | DUPLICADO / ABSORVIDO (ACH-56, ACH-59) | B | — |
 | LONG-4 | notificação a ator interno | NÃO IMPLEMENTADO | C | nenhuma agora |
@@ -699,16 +700,16 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 
 | Estado | Quantos |
 |---|---|
-| RESOLVIDO | 14 |
+| RESOLVIDO | 15 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
-| PARCIALMENTE RESOLVIDO | 6 |
+| PARCIALMENTE RESOLVIDO | 5 |
 | NÃO IMPLEMENTADO | 13 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 1 |
 | DUPLICADO / ABSORVIDO | 8 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 (como rótulo de bloco; a sub-leitura "recorrente sem anexo" do ACH-43 é contradita por `D-011`/`FR-007` da `018`) |
 
-Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 3** (E-7, REAV-§13/`D-G5`, LONG-1 — os dois últimos com dono em outro lote), **B = 13**, **C = 10**.
+Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 1** (REAV-§13/`D-G5`, com dono em outro lote), **B = 15** — E-7 e LONG-1 passaram de A a B com a `046` (#188), e o que resta deles é a regra de combinação, **C = 10**.
 
 ## (3) Achados NOVOS encontrados de passagem
 
