@@ -1,7 +1,8 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-04`, decididas em 26/09** com a proposta que abriu a
-[`045`](../specs/045-conducao-confiavel-processo/spec.md). Este documento organiza as alternativas e
+**Situação: abertas, menos a `DP-01` a `DP-04` e a `DP-06`, decididas em 26/09** — as quatro primeiras com
+a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
+[`046`](../specs/046-contrato-de-executabilidade/spec.md). Este documento organiza as alternativas e
 recomenda; **quem decide é o usuário**.
 Nenhuma spec das que dependem destas decisões começa antes delas. Quando uma for tomada, a seção dela
 ganha um bloco **"O que foi decidido"**, como a
@@ -322,6 +323,16 @@ defeito de momento.
 
 - **B**, se a resposta for "não usamos".
 - **C** só com um Edital real de dupla leitura na mão.
+
+### O que foi decidido
+
+Em 26/09/2026, o usuário escolheu uma quarta forma, ao especificar a
+[`046`](../specs/046-contrato-de-executabilidade/spec.md): **impeditivo na publicação quando o fluxo
+publicado exige o Resultado da Etapa, e aviso quando não exige**. O Resultado é exigido quando a Etapa
+é eliminatória ou é referenciada por marco — enumerada, governada por regra de corte, ou Etapa de
+habilitação de sorteio. A recusa da `013` de 03/09 continua respeitada: nenhuma Etapa decisória precisa
+ser eliminatória para publicar, desde que nada no fluxo dependa do Resultado dela. A `A` fica no
+`como-preencher`; a `C` continua dependendo de Edital real de dupla leitura. Ver a `D-001` da `046`.
 
 ---
 

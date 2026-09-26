@@ -6,7 +6,6 @@ era a prova; quem estava decidindo se valia a pena, não. Era exatamente o inver
 da informação, e não havia dado novo a produzir: só faltava mostrar.
 """
 
-import re
 from datetime import timedelta
 
 import pytest
@@ -311,22 +310,39 @@ def test_o_periodo_em_curso_e_acontecendo_agora_dos_dois_lados(
     assert 'class="marco em_curso"' in publica
     assert "Período de inscrições" in publica
 
-    # E o lado da gestão, sobre o **mesmo** Edital e na mesma requisição: a conferência de
-    # conteúdo deixou de acusá-lo. As outras advertências do Cronograma não mudam — o que se
-    # afirma é a ausência **desta**, e não a ausência de qualquer uma.
-    identificar(client, "ana.gestora", ["gestor"])
-    gestao = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
-
-    acusados = re.findall(r"O Evento &#x27;([^&]+)&#x27;[^<]*já passou", gestao) or re.findall(
-        r"O Evento '([^']+)'[^<]*já passou", gestao
+    # E o lado da gestão, sobre o **mesmo** Edital e no mesmo instante. **A tela do Edital publicado
+    # não é mais onde a conferência se lê** (046, `FR-755`): ela deixou de julgar o Edital publicado
+    # como se ele ainda fosse publicar, e não acusa Evento nenhum — de modo que não pode divergir do
+    # candidato. A concordância da `FR-549a` passa a ser afirmada onde a gestão ainda **diz** a
+    # situação do Evento: a conferência do conteúdo publicado, e a fase que o pulso deriva (`045`).
+    from processo_seletivo.editais.domain.validation import (
+        ATO_DE_PUBLICACAO,
+        validate_for_publication,
     )
+    from processo_seletivo.interface.supervisao import fase_do_evento
+    from processo_seletivo.publicacoes.application.selectors import effective_version
 
-    # **A contraprova de que a conferência está sendo lida**, e não simplesmente ausente da tela:
-    # a Homologação do mesmo Cronograma começou há trinta dias e terminou há vinte, e continua
-    # acusada. Sem esta linha, o caso passaria com a página vazia.
-    assert "Homologação das inscrições" in acusados, (
-        f"a conferência do Cronograma não chegou à tela da gestão: {acusados}"
+    conteudo = effective_version(edital_id=edital.id).content
+    acusados = [
+        item.message
+        for item in validate_for_publication(conteudo, ato=ATO_DE_PUBLICACAO, agora=agora)
+        if item.code == "schedule_event_in_past"
+    ]
+
+    # **A contraprova de que a conferência está sendo lida**, e não simplesmente vazia: a
+    # Homologação do mesmo Cronograma começou há trinta dias e terminou há vinte, e continua
+    # acusada. Sem esta linha, o caso passaria com a lista vazia.
+    assert any("Homologação das inscrições" in frase for frase in acusados), (
+        f"a conferência do Cronograma não leu o conteúdo publicado: {acusados}"
     )
-    assert "Período de inscrições" not in acusados, (
+    assert not any("Período de inscrições" in frase for frase in acusados), (
         "a gestão continua chamando de vencido o Evento que a página pública diz estar em curso"
     )
+    periodo = next(e for e in conteudo["schedule"] if e.get("isRegistrationPeriod") is True)
+    assert fase_do_evento(periodo, conteudo, agora) == "EM_ANDAMENTO", (
+        "o pulso da gestão não diz em curso o período que o candidato vê em curso"
+    )
+
+    identificar(client, "ana.gestora", ["gestor"])
+    gestao = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    assert "já passou" not in gestao, "a tela do Edital publicado voltou a julgá-lo (`RC-32`)"

@@ -316,11 +316,11 @@ def opcoes_do_metodo():
     from processo_seletivo.sorteios.domain.chave import ALGORITMOS
     from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
     from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
-    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+    from processo_seletivo.sorteios.infrastructure.fontes import fontes_publicadas
 
     return {
         "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
-        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
+        "drawMethod/source": tuple((nome, nome) for nome in sorted(fontes_publicadas())),
         "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
         "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
     }

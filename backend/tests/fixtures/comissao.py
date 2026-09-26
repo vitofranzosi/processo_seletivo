@@ -99,10 +99,19 @@ def publicar_processo_com_etapas(
     com_documentos=False,
     anexos=0,
     antes_de_submeter=None,
+    como_acervo=False,
     **declaracao,
 ):
-    """Cria, elabora, submete, homologa e publica — pelo canal administrativo, como a 009 faz."""
-    return publish_original(
+    """Cria, elabora, submete, homologa e publica — pelo canal administrativo, como a 009 faz.
+
+    `como_acervo` publica o Edital que a `046` recusa — Etapa que a consolidação não conclui —
+    como o acervo o tem: publicado antes dela (`tests/fixtures/legado.py`,
+    `sem_as_regras_da_046`).
+    """
+    publicar = publish_original
+    if como_acervo:
+        from tests.fixtures.legado import publicar_como_acervo as publicar
+    return publicar(
         api_client,
         manager_headers,
         process_payload,
