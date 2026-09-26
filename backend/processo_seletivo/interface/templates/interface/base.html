@@ -888,15 +888,6 @@ ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
    quem percorre a lista a lê junto dele. */
 ul.documentos .requisito{flex-direction:column;align-items:flex-start;gap:.15rem}
 ul.documentos .instrucao{font-size:.8125rem;color:var(--texto-fraco)}
-/* A razao da exigencia (044): a quem o documento foi pedido, na mesma voz baixa da instrucao. */
-ul.documentos .razao,ul.nao-se-aplicam .razao{font-size:.8125rem;color:var(--texto-fraco)}
-h3#nao-se-aplicam{margin:1.25rem 0 .5rem;font-size:1rem}
-ul.nao-se-aplicam{list-style:none;margin:0;padding:0;border:1px dashed var(--borda);border-radius:6px}
-ul.nao-se-aplicam>li{display:flex;flex-direction:column;gap:.15rem;padding:.6rem 1rem;
-  border-bottom:1px solid var(--fundo)}
-ul.nao-se-aplicam>li:last-child{border-bottom:0}
-.aviso-da-lista{margin:0 0 .75rem;padding:.6rem .8rem;border-left:3px solid var(--borda);
-  background:var(--fundo)}
 @media (max-width:34rem){
   ul.documentos{grid-template-columns:minmax(0,1fr) auto}
   ul.documentos .modelo{grid-column:1/-1;padding:0 1rem}

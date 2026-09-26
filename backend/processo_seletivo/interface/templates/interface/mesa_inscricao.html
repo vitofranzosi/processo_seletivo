@@ -1,4 +1,5 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
 {% block conteudo %}
 <div class="pagina-da-inscricao">
