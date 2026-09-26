@@ -222,12 +222,12 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - Evento sem início: sem fase e não é próximo.
 
   Usar o padrão de `tests/fixtures/legado.py` para produzir o conteúdo antigo.
-- [ ] T033 Rodar `tests/integration/portal/test_leitura_sem_escrita.py`, `manage.py migrate --check` e `make preparar` (`N de 34`): nada escrito e nada migrado (`FR-774`, `SC-286`).
-- [ ] T034 Escrever `specs/047-situacao-publica-do-edital/rastreabilidade.md` (**NOVO**):
+- [X] T033 Rodar `tests/integration/portal/test_leitura_sem_escrita.py`, `manage.py migrate --check` e `make preparar` (`N de 34`): nada escrito e nada migrado (`FR-774`, `SC-286`).
+- [X] T034 Escrever `specs/047-situacao-publica-do-edital/rastreabilidade.md` (**NOVO**):
   - uma linha por `FR-760` a `FR-776`, por `SC-282` a `SC-287` e **por caso-limite da spec**, cada uma com o teste que a prende;
   - uma linha para cada identificador em negrito do cabeçalho *Faixa de identificadores*;
   - as decisões `D-001` a `D-007` com onde se verificam.
-- [ ] T035 Percorrer os sete percursos do `quickstart.md` pelo navegador, com `PORTAL`/`INTERFACE` locais em `localhost`, e registrar o resultado e as capturas em `rastreabilidade.md`: o percurso 1 contra o "antes" da T002. **Use preset desktop para agir** (viewport emulado desalinha cliques).
+- [X] T035 Percorrer os sete percursos do `quickstart.md` pelo navegador, com `PORTAL`/`INTERFACE` locais em `localhost`, e registrar o resultado e as capturas em `rastreabilidade.md`: o percurso 1 contra o "antes" da T002. **Use preset desktop para agir** (viewport emulado desalinha cliques).
 - [ ] T036 Em `doc/auditoria-de-consolidacao-2026-09-26.md`:
   - marcar o RC-48 como resolvido pela 047;
   - registrar a parte do portal do RC-80;
