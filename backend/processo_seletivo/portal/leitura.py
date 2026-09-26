@@ -224,14 +224,14 @@ SITUACAO_DO_CARTAO = {
 
 # A marca do Edital que acabou. **Diz de quem é o fim**, e por isso é mais longa que as quatro de
 # cima: "Encerrada" já é a marca do período que terminou, e o cartão do Edital encerrado precisa
-# se distinguir dele (`FR-763`). O Processo cancelado não tem chave de uso real — cancelá-lo exige
-# todos os Editais em estado final, e o desfecho do Edital vence —, e fica aqui para que um estado
-# inesperado não caia na marca do período.
+# se distinguir dele (`FR-763`).
+#
+# **Só o desfecho do Edital tem marca.** O do Processo não fecha o recebimento de inscrições
+# (`Desfecho.do_edital`): um Edital publicado de Processo encerrado segue a marca do próprio
+# período, e o encerramento do Processo é dito como fato, abaixo dela (`_periodo.html`).
 MARCA_DO_DESFECHO = {
-    ("EDITAL", "CANCELADO"): ("cancelado", "Edital cancelado"),
-    ("EDITAL", "ENCERRADO"): ("encerrado_edital", "Edital encerrado"),
-    ("PROCESSO", "ENCERRADO"): ("encerrado_processo", "Processo encerrado"),
-    ("PROCESSO", "CANCELADO"): ("cancelado", "Processo cancelado"),
+    "CANCELADO": ("cancelado", "Edital cancelado"),
+    "ENCERRADO": ("encerrado_edital", "Edital encerrado"),
 }
 
 
@@ -242,21 +242,22 @@ def situacao_publica(periodo, desfecho):
     com ela. Até a 047, um Edital cancelado dentro do período anunciava *"Aberta — faltam 19
     dias"*: a marca lia só o período, e o cancelamento não chegava à página (`FR-761`).
     """
-    if desfecho is not None:
-        return MARCA_DO_DESFECHO[(desfecho.alcance, desfecho.operacao)]
+    if desfecho is not None and desfecho.do_edital:
+        return MARCA_DO_DESFECHO[desfecho.operacao]
     return periodo.estado, SITUACAO_DO_CARTAO.get(periodo.estado, "")
 
 
 def estado_na_vitrine(periodo, desfecho):
     """O estado que decide grupo, ordem e filtro da vitrine (`FR-763`, `R-3`).
 
-    O Edital com desfecho vai para *"Inscrições encerradas"* qualquer que seja o período: o sistema
-    não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). Pelo período, um Edital
+    O Edital com desfecho **próprio** vai para *"Inscrições encerradas"* qualquer que seja o
+    período: o sistema não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). O de
+    Processo encerrado fica onde o período o põe, porque continua recebendo. Pelo período, um Edital
     encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou. Não é um
     quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão já diz de
     quem é o fim.
     """
-    return ENCERRADO if desfecho is not None else periodo.estado
+    return ENCERRADO if desfecho is not None and desfecho.do_edital else periodo.estado
 
 
 # ---------------------------------------------------------------------------

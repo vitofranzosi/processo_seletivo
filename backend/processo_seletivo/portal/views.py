@@ -332,7 +332,7 @@ def _selecao_da_vitrine(versao, agora, desfecho=None):
         "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
         "dias_restantes": (
             _dias_ate(periodo.fim, agora)
-            if periodo.estado == "aberto" and desfecho is None
+            if periodo.estado == "aberto" and not (desfecho and desfecho.do_edital)
             else None
         ),
         # A marca da situação, no cartão (024, FR-145). Sem ela, a situação de uma seleção sem
@@ -388,6 +388,8 @@ def selecao(request, edital_id):
     # **O desfecho vence o período** (047, `FR-760` a `FR-762`, `D-003`). Até aqui a página lia só
     # o período, e um Edital cancelado dentro dele anunciava *"Aberta — faltam 19 dias"*.
     contexto["desfecho"] = desfechos([versao.edital])[versao.edital_id]
+    # Só o desfecho do próprio Edital fecha o recebimento; o do Processo é dito como fato.
+    contexto["encerra_o_edital"] = bool(contexto["desfecho"] and contexto["desfecho"].do_edital)
     iniciadas = _inscricoes_iniciadas(request, edital_id)
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
@@ -400,7 +402,7 @@ def selecao(request, edital_id):
     # agora ou depois, e "faltam 3 dias" decide isso melhor do que uma data.
     contexto["dias_restantes"] = (
         _dias_ate(contexto["periodo"].fim, timezone.now())
-        if contexto["periodo"].estado == "aberto" and contexto["desfecho"] is None
+        if contexto["periodo"].estado == "aberto" and not contexto["encerra_o_edital"]
         else None
     )
     contexto["recebe_inscricoes"] = recebe_inscricoes(
@@ -432,10 +434,11 @@ def selecao(request, edital_id):
     # É a mesma função que serve as duas telas, e não uma segunda leitura do mesmo dado.
     contexto["cronograma"] = leitura.cronograma(versao.content, timezone.now())
     # **O que acontece agora e o que vem depois** (047, `FR-767`, `FR-768`), no cabeçalho, onde a
-    # pessoa decide. Só sem desfecho: de um Edital que acabou não há próximo a anunciar.
+    # pessoa decide. Só sem desfecho do Edital: de um Edital que acabou não há próximo a anunciar,
+    # e o de Processo encerrado continua correndo pelo próprio cronograma.
     contexto["agora_e_proximo"] = (
         leitura.agora_e_proximo(versao.content, timezone.now())
-        if contexto["desfecho"] is None
+        if not contexto["encerra_o_edital"]
         else None
     )
     # **O histórico normativo** (024, FR-129 a FR-133). Pela Constituição, Edital publicado só muda

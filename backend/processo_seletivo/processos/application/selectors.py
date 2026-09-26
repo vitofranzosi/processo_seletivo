@@ -72,6 +72,18 @@ class Desfecho:
     operacao: str
     em: datetime | None
 
+    @property
+    def do_edital(self):
+        """O desfecho é do próprio Edital — e só esse fecha o recebimento de inscrições.
+
+        **O do Processo não fecha** (047, correção da revisão). Encerrar o Processo não exige os
+        Editais em estado final, e `recebe_inscricoes` lê o status do Edital: um Edital publicado de
+        Processo encerrado continua recebendo inscrição dentro do período. A página diz o fato do
+        encerramento, e não o que o sistema não faz. Fazer o encerramento do Processo bloquear
+        inscrições é decisão de domínio, registrada na spec como pendente para outra feature.
+        """
+        return self.alcance == EDITAL
+
 
 def desfechos(editais):
     """`{edital_id: Desfecho | None}` — o desfecho aplicável a cada Edital (047, `D-003`).
@@ -82,8 +94,8 @@ def desfechos(editais):
     `last_changed_at` seria a data da última transição, sobrescrita a cada uma.
 
     **Precedência**: o desfecho do Edital vence o do Processo, porque é o mais específico. Sem
-    ele, o Processo encerrado ou cancelado vale para o Edital publicado: a partir dele nenhum
-    Edital do Processo muda (`finalizacao.ensure_processo_accepts_changes`).
+    ele, o do Processo é devolvido para ser **dito como fato**, e não para decidir a situação das
+    inscrições (`Desfecho.do_edital`).
 
     **Uma consulta, e só quando há estado final**: a vitrine chama isto uma vez para todos os
     cartões, e o número de idas ao banco não cresce com eles.

@@ -247,19 +247,36 @@ def test_o_filtro_de_abertas_nao_devolve_o_encerrado(
 # --- O Processo --------------------------------------------------------------------------------
 
 
-def test_processo_encerrado_com_edital_publicado_diz_o_encerramento_do_processo(
+def test_processo_encerrado_com_edital_aberto_diz_o_fato_e_continua_recebendo(
     client, api_client, manager_headers, process_payload
 ):
-    """`FR-762`: sem desfecho do Edital, vale o do Processo."""
+    """A regressão da revisão do #193: o Processo encerrado não fecha o Edital publicado.
+
+    Encerrar o Processo não exige os Editais em estado final, e `recebe_inscricoes` lê o status do
+    Edital: dentro do período, o sistema continua recebendo inscrição. A primeira versão da US1
+    dizia *"Processo seletivo encerrado… Não recebe inscrições"* e tirava o Edital das abertas —
+    a página afirmava o que o sistema não faz. Agora ela diz o fato e a data (`FR-760`), e o Edital
+    segue o próprio estado e período (`FR-761`, `FR-763`). Fazer o encerramento do Processo
+    bloquear inscrições é decisão de domínio, pendente e registrada na spec.
+    """
     edital = publicar(api_client, manager_headers, process_payload)
     encerrar_processo(edital)
     assert Edital.objects.get(pk=edital.id).status == Edital.Status.PUBLICADO
 
-    topo = cabecalho(pagina(client, edital))
+    corpo = pagina(client, edital)
+    topo = cabecalho(corpo)
 
-    assert "Processo encerrado" in topo
+    assert "Processo seletivo encerrado" in topo
     assert data_do_ato(edital.processo_id, "ENCERRAR") in topo
-    assert "Faltam" not in topo
+    assert "Não recebe inscrições" not in topo
+    assert "Aberta" in topo, "a marca continua sendo a do período"
+    assert "Faltam" in topo
+    assert "Inscrever-se nesta vaga" in corpo, "o sistema recebe inscrição, e a página o oferece"
+
+    vitrine = client.get(reverse("portal:vitrine")).content.decode()
+    assert grupo_do_cartao(vitrine, edital) == "Inscrições abertas"
+    abertas = client.get(reverse("portal:vitrine"), {"situacao": "aberto"}).content.decode()
+    assert cartao(abertas, edital) is not None
 
 
 def test_o_desfecho_do_edital_vence_o_do_processo(

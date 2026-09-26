@@ -10,8 +10,11 @@ do vocabulário do portal, e o que o contrato fixa é o fato dito.
 |---|---|---|
 | Edital cancelado | cancelado, com a data do ato | *Aberta*, *Em breve*, prazo restante |
 | Edital encerrado | encerrado, com a data do ato | *Aberta*, *Em breve*, prazo restante |
-| Processo encerrado, Edital publicado | Processo encerrado, com a data do ato | *Aberta*, *Em breve*, prazo restante |
-| sem desfecho | a marca do período, como hoje: *Aberta*, *Em breve*, *Encerrada* ou *Consulta* | — |
+| sem desfecho do Edital | a marca do período, como hoje: *Aberta*, *Em breve*, *Encerrada* ou *Consulta* | — |
+
+**Processo encerrado com Edital publicado**: a marca é a do período, e abaixo da frase do período a
+página diz *"Processo seletivo encerrado em …"*, como fato. Ela nunca diz *"não recebe inscrições"*
+por causa disso, porque o sistema continua recebendo (`D-003`, `FR-762`).
 
 Ato sem data encontrada: o desfecho é dito sem data. O motivo e o autor **nunca** são ditos.
 
@@ -20,14 +23,15 @@ Ato sem data encontrada: o desfecho é dito sem data. O motivo e o autor **nunca
 | Edital | Aparece? | Grupo |
 |---|---|---|
 | cancelado | não (inalterado) | — |
-| encerrado, ou de Processo encerrado | sim | *Inscrições encerradas*, qualquer que seja o período: nunca *Inscrições abertas* nem *Próximas seleções* (`FR-763`) |
+| encerrado | sim | *Inscrições encerradas*, qualquer que seja o período: nunca *Inscrições abertas* nem *Próximas seleções* (`FR-763`) |
+| de Processo encerrado, publicado | sim | pelo período, porque continua recebendo |
 | sem desfecho | sim | pelo período (inalterado) |
 
 ## Agora e próximo (cabeçalho da página)
 
 | Condição | A página diz |
 |---|---|
-| há desfecho | nada |
+| há desfecho do Edital | nada |
 | há Eventos em andamento | cada um, com a descrição publicada |
 | há Evento planejado | o de início mais próximo (e os que empatam), com descrição e data |
 | nenhum dos dois | nada — nunca *"em análise"* |
