@@ -1,10 +1,11 @@
 """O Edital publicado não é julgado como se ainda fosse publicar (046, `FR-755`, `SC-278`).
 
 **O `RC-32` da auditoria de consolidação**, reproduzido em 26/09/2026: a tela de um Edital
-`PUBLICADO` cujo período de inscrições já terminou dizia *"Impede — O período de inscrições encerrou…
-corrija a data do Evento na etapa Cronograma antes de publicar"*, e avisava que *"o Edital será
-publicado com esta data"*. Nada disso bloqueava operação — os atos de submeter e publicar não existem
-num Edital publicado —, mas a tela instruía a corrigir antes de publicar o que já é ato imutável.
+`PUBLICADO` cujo período de inscrições já terminou dizia *"Impede — O período de inscrições
+encerrou… corrija a data do Evento na etapa Cronograma antes de publicar"*, e avisava que *"o
+Edital será publicado com esta data"*. Nada disso bloqueava operação — os atos de submeter e
+publicar não existem num Edital publicado —, mas a tela instruía a corrigir antes de publicar o que
+já é ato imutável.
 
 **Os fatos ficam; o gate sai** (`D-003`). A Etapa sem Evento é fato sobre o conteúdo publicado, e a
 `045` a levou para esta página (`FR-739`); ela continua dita. O que some é o juízo de

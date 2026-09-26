@@ -260,11 +260,11 @@ REGRAS_DA_046 = ("_etapa_sem_resultado", "_perfil_sem_corte")
 def sem_as_regras_da_046():
     """O instante do acervo: a publicação anterior à `046`, com todo o resto da aferição de pé.
 
-    **Por que não `publicar_sem_aferir`.** Aquele rebaixa a versão canônica e insere a Publicação à
-    mão — o que estes casos não querem: eles precisam do Edital **de hoje**, só que com uma Etapa que
-    a consolidação recusa ou um Perfil que nenhum marco corta. Depois da `046`, esse Edital só existe
-    no acervo; é ele que a Mesa distribui, que a consolidação recusa, e que a Retificação precisa
-    continuar alcançando (`research.md`, `R-7`).
+    **Por que não `publicar_sem_aferir`.** Aquele rebaixa a versão canônica e insere a Publicação
+    à mão — o que estes casos não querem: eles precisam do Edital **de hoje**, só que com uma Etapa
+    que a consolidação recusa ou um Perfil que nenhum marco corta. Depois da `046`, esse Edital só
+    existe no acervo; é ele que a Mesa distribui, que a consolidação recusa, e que a Retificação
+    precisa continuar alcançando (`research.md`, `R-7`).
 
     **O `patch` é da validação, e só dela**, e só enquanto o bloco dura: a submissão e a publicação
     passam pelos mesmos comandos, idempotência e trilha de sempre.
@@ -275,8 +275,8 @@ def sem_as_regras_da_046():
                 mock.patch(
                     f"processo_seletivo.editais.domain.validation.{nome}",
                     return_value=[],
-                    # Até as duas existirem (T021, T031): o bloco precisa valer antes da regra, que é
-                    # a ordem do portão 2 das tarefas. Sai quando a segunda entrar.
+                    # Até as duas existirem (T021, T031): o bloco precisa valer antes da regra,
+                    # que é a ordem do portão 2 das tarefas. Sai quando a segunda entrar.
                     create=True,
                 )
             )
