@@ -185,7 +185,7 @@ EVENTO_PUBLICADO = (
     Campo("location", str),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
-    # `_um_periodo_de_inscricoes`, porque a forma confere um campo por vez.
+    # `_periodo_de_inscricoes`, porque a forma confere um campo por vez.
     Campo("isRegistrationPeriod", bool),
 )
 

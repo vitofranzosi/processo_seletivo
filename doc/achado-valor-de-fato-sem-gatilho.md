@@ -3,6 +3,8 @@
 Encontrado em 25/09/2026, a partir do que a `044` registrou em `research.md` (R-005 e R-014) ao
 decidir as camadas da lista exigida gravada no envio.
 
+> **Situação: corrigido em 26/09/2026** — ver *O que foi feito*, no fim.
+>
 > **Não vira escopo por estar escrito aqui.** O que se registra é uma tabela histórica protegida
 > por menos do que o projeto diz proteger, o que isso custa, e o que corrigir exigiria. Priorizar é
 > do usuário.
@@ -127,3 +129,24 @@ correção é a dos quatro itens acima, sobre `ValorDeFato`.
 As outras três tabelas da seção anterior — `PosicaoNaOrdem` sem gatilho de mutação,
 `RevisaoEdital` e `GeracaoDeArquivo` sem recusa no modelo — **ficam só registradas**, fora da
 correção.
+
+## O que foi feito
+
+Em 26/09/2026, depois que a `044` entrou na `main` pelo #173, com a `inscricoes/0005`. Os quatro
+itens de *O que corrigir exigiria*:
+
+1. **`inscricoes/migrations/0006_valor_de_fato_append_only.py`**: a função
+   `reject_frozen_fact_mutation` e o gatilho `valor_de_fato_append_only`, `BEFORE UPDATE OR DELETE`,
+   no molde da `0005`. Só no PostgreSQL, com caminho reverso, e sem percorrer linha.
+2. **`ValorDeFato.save`/`delete`** recusam fora da criação, com "append-only" na mensagem. A tabela
+   passa a estar no conjunto que `_recusa_mutacao` reconhece. O `bulk_create` do envio não passa por
+   `save`.
+3. **Os guardiões**: `"inscricoes": 5 → 6` no guardião da `022`, com a justificativa ao lado, e
+   `valor_de_fato_append_only` em `TRIGGERS_POR_APP`. `inscricoes` já estava em `APPS`, desde a
+   `044`. Em `tests/integration/test_imutabilidade_do_historico.py`, três casos: `update()` e
+   `delete()` diretos no QuerySet recusados pelo gatilho, e `save()`/`delete()` recusados pelo
+   modelo. Contraprova feita: sem a migration e sem a guarda, os três reprovam.
+4. **A linha 138 da descoberta-018** foi corrigida, com a data em que deixou de valer.
+
+A contagem de tabelas append-only não muda: a tabela já estava em `TABELAS_APPEND_ONLY`, e o
+`provisionar_papeis` continua em 34 de 34.

@@ -4,6 +4,10 @@
 trigger é condicional ao estado final. `AtoAdministrativo` e `RevisaoEdital` nascem imutáveis e a
 trigger é absoluta. Cada teste ataca pelo caminho que a aplicação não fiscaliza — `update()` e
 `delete()` diretos no QuerySet —, que é como o histórico seria reescrito sem querer.
+
+O `ValorDeFato` da 015 entrou aqui pela `inscricoes/0006`: estava em `TABELAS_APPEND_ONLY`, mas sem
+trigger e sem recusa no modelo, e um `update()` como os de baixo passava em silêncio
+(`doc/achado-valor-de-fato-sem-gatilho.md`).
 """
 
 import pytest
@@ -101,6 +105,48 @@ def test_revisao_de_edital_e_append_only(api_client, manager_headers, process_pa
 
     with pytest.raises(DatabaseError, match="append-only"), transaction.atomic():
         RevisaoEdital.objects.filter(pk=revisao.pk).update(prepared_by="outra-pessoa")
+
+
+@pytest.fixture
+def valor_congelado(api_client, selecao, candidatos_registrados):
+    """Um fato declarado por Retificação e congelado no envio, como em `test_fatos_congelados`."""
+    from processo_seletivo.inscricoes.models import ValorDeFato
+    from tests.integration.inscricoes.test_fatos_congelados import (
+        NASCIMENTO,
+        declarar_fato,
+        enviar,
+        pronta,
+    )
+
+    declarar_fato(api_client, selecao, NASCIMENTO, "NASCIMENTO", "DATA")
+    enviada = enviar(pronta(selecao), {NASCIMENTO: "1990-05-20"})
+    return ValorDeFato.objects.get(inscricao=enviada, fato_id=NASCIMENTO)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_valor_de_fato_nao_pode_ser_alterado(valor_congelado):
+    """O valor que a classificação leu não se reescreve — nem por quem tem privilégio."""
+    from processo_seletivo.inscricoes.models import ValorDeFato
+
+    with pytest.raises(DatabaseError, match="append-only"), transaction.atomic():
+        ValorDeFato.objects.filter(pk=valor_congelado.pk).update(valor_data="2000-01-01")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_valor_de_fato_nao_pode_ser_apagado(valor_congelado):
+    from processo_seletivo.inscricoes.models import ValorDeFato
+
+    with pytest.raises(DatabaseError, match="append-only"), transaction.atomic():
+        ValorDeFato.objects.filter(pk=valor_congelado.pk).delete()
+    assert ValorDeFato.objects.filter(pk=valor_congelado.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_valor_de_fato_recusa_no_modelo_antes_do_banco(valor_congelado):
+    with pytest.raises(TypeError, match="append-only"):
+        valor_congelado.save()
+    with pytest.raises(TypeError, match="append-only"):
+        valor_congelado.delete()
 
 
 @pytest.mark.django_db(transaction=True)

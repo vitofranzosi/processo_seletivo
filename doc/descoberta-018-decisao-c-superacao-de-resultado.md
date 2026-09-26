@@ -135,7 +135,8 @@ banco e privilégio negado:
 | `ResultadoEtapa` | `save`/`delete` (`resultados/models.py`), trigger `resultado_etapa_append_only` (`BEFORE UPDATE OR DELETE`, migration `0001`), papel |
 | `AtoDeOrdenacao`, `PosicaoNaOrdem` | `save`/`delete` (`classificacao/models.py`), papel |
 | `PublicacaoResultado`, `SituacaoDivulgada`, `DocumentoDoResultado` | `save`/`delete` (`divulgacao/models.py`), papel |
-| `ConclusaoAvaliacao`, `RegistroAuditoria`, `AtoAdministrativo`, `VersaoConsolidada`, `ValorDeFato` | papel + modelo |
+| `ConclusaoAvaliacao`, `RegistroAuditoria`, `AtoAdministrativo`, `VersaoConsolidada` | papel + modelo (em 06/09; as quatro ganharam gatilho depois) |
+| `ValorDeFato` | **só o papel** até 26/09 — esta linha dizia "papel + modelo", e o modelo não recusava. As três camadas desde a `inscricoes/0006` ([achado](achado-valor-de-fato-sem-gatilho.md)) |
 
 **Não** são imutáveis, e é importante para C: `Avaliacao` (transita `RASCUNHO ⇄ CONCLUIDA` por
 `reabrir`) e `Atribuicao` (tem `ativo`, que o impedimento desliga). O regime append-only começa
