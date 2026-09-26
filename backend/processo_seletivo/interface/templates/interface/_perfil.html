@@ -1,6 +1,11 @@
 {% load interface_extras %}<fieldset class="linha perfil">
   <legend>Perfil de Vaga</legend>
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
+  {% if perfil.marcos_em_transito %}<input type="hidden" name="perfil-{{ indice }}-marcosEmTransito" value="{{ perfil.marcos_em_transito }}">{% endif %}
+  {% if duplicado %}
+  {% comment %}O anúncio da cópia (043, FR-637, FR-645, FR-650): o que ela é, o que leva sem desenhar, e o que ficou só na origem.{% endcomment %}
+  <p class="aviso" role="status">Perfil {{ perfil.code }} criado a partir de {{ duplicado.origem }}.{% if duplicado.marcos %} Leva {{ duplicado.marcos }} {{ duplicado.marcos|plural:"marco,marcos" }} de classificação, que se {{ duplicado.marcos|plural:"edita,editam" }} na etapa Classificação depois de gravar.{% endif %}{% if duplicado.documentos %} {{ duplicado.documentos }} {{ duplicado.documentos|plural:"documento exigido restrito,documentos exigidos restritos" }} a {{ duplicado.origem }} não {{ duplicado.documentos|plural:"foi replicado,foram replicados" }} para este Perfil.{% endif %}</p>
+  {% endif %}
   {% comment %}
   Quatro bandas, e não oito linhas: identidade, o trabalho, o texto longo, a quantidade.
 
@@ -16,7 +21,7 @@
     <p class="campo curto">
       <label for="perfil-{{ indice }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
       <input type="text" id="perfil-{{ indice }}-code" name="perfil-{{ indice }}-code"
-             value="{{ perfil.code|default:'' }}" required aria-required="true">
+             value="{{ perfil.code|default:'' }}" required aria-required="true"{% if duplicado %} autofocus{% endif %}>
     </p>
     {% comment %}Sem `largo`: com `flex 2` ela pedia 725 px, o teto de leitura a cortava em 685 e o vão aparecia no meio da linha.{% endcomment %}
     <p class="campo">
@@ -290,6 +295,7 @@
             hx-get="{% url 'interface:fragmento-fato' indice %}"
             hx-target="#fatos-{{ indice }}" hx-swap="beforeend">Acrescentar fato</button>
   </section>
+  {% if editavel and edital %}{% include "interface/_duplicar_perfil.html" with codigo="" localidade="" erro="" aberto=False %}{% endif %}
   <p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
