@@ -176,3 +176,44 @@ def rascunho_aberto_com_documentos(agora):
     rascunho["schedule"][0]["isRegistrationPeriod"] = True
     rascunho["documentRequirements"] = documentos_exigidos()
     return rascunho
+
+
+# O recorte transversal (044): a PPP também no Perfil técnico, com identidade própria, e a
+# autodeclaração pedida de quem concorre em PPP **em todos os Perfis**. É o 903/2026 em miniatura —
+# o mesmo código em dois Perfis, objetos distintos, um documento só.
+MODALIDADE_PPP_TECNICO = identificador(461, 0)
+
+
+def rascunho_com_ppp_nos_dois_perfis(agora):
+    rascunho = rascunho_aberto_com_documentos(agora)
+    tecnico = rascunho["profiles"][1]
+    tecnico["competitionModalities"] = [
+        *tecnico["competitionModalities"],
+        {
+            "id": MODALIDADE_PPP_TECNICO,
+            "code": "PPP",
+            "name": "Pessoas pretas, pardas e indígenas",
+            "normativeRule": {
+                "id": identificador(462, 0),
+                "foundation": "Lei 12.990/2014",
+                "version": "2014-06-09",
+                "percentage": "20.0000",
+                "rounding": {"modo": "PARA_CIMA"},
+            },
+        },
+    ]
+    # Com lista reservada declarada, a linha geral deixa de ser derivada, e o quadro é escrito.
+    tecnico["vacancyTable"] = [
+        {"id": identificador(463, 0), "modalityId": None, "immediateVacancies": 0},
+        {
+            "id": identificador(464, 0),
+            "modalityId": MODALIDADE_PPP_TECNICO,
+            "immediateVacancies": 0,
+        },
+    ]
+    documento = next(
+        item for item in rascunho["documentRequirements"] if item["id"] == DOCUMENTO_DA_MODALIDADE
+    )
+    documento.pop("modalityId", None)
+    documento["modalityCode"] = "PPP"
+    return rascunho

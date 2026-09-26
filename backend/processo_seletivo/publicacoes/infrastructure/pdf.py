@@ -20,6 +20,7 @@ from django.utils import timezone
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
@@ -1970,7 +1971,7 @@ def _nomes_do_alcance(snapshot):
     return perfis, modalidades
 
 
-def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
+def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo=None, snapshot=None):
     """O cabeçalho que diz **a quem** aquele bloco de documentos se dirige.
 
     A aplicabilidade é dado estruturado; aqui ela vira a frase que o candidato lê para saber se
@@ -1978,6 +1979,15 @@ def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
     exigido de todo mundo — que é exatamente o erro que a lista única de documentos produz nos
     Editais escritos à mão.
     """
+    if codigo:
+        # O recorte transversal (044, FR-712): um grupo por código, sem Perfil. O título é o que o
+        # PDF já imprimia para "Todos os Perfis + Modalidade" — a diferença é que agora ele é
+        # verdadeiro, porque o portal aplica pelo mesmo critério. A denominação é a de qualquer
+        # Perfil que tem o código: a publicação impede que sejam duas.
+        return (
+            "Dos candidatos concorrentes na modalidade "
+            f"{denominacao_do_codigo(snapshot or {}, codigo)}:"
+        )
     if perfil_id is None and modalidade_id is None:
         return "De todos os candidatos:"
     if modalidade_id is None:
@@ -2034,12 +2044,16 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
     perfis, modalidades = _nomes_do_alcance(snapshot)
     grupos = {}
     for requisito in sorted(requisitos, key=lambda item: item.get("order", 0)):
-        chave = (requisito.get("profileId"), requisito.get("modalityId"))
+        chave = (
+            requisito.get("profileId"),
+            requisito.get("modalityId"),
+            requisito.get("modalityCode") or None,
+        )
         grupos.setdefault(chave, []).append(requisito)
-    for (perfil_id, modalidade_id), documentos in grupos.items():
+    for (perfil_id, modalidade_id, codigo), documentos in grupos.items():
         with composicao.bloco():
             composicao.escrever(
-                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades),
+                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo, snapshot),
                 tamanho=CORPO_TEXTO,
                 fonte=NEGRITO,
                 antes=ANTES_DE_BLOCO,

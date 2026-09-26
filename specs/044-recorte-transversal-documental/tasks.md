@@ -70,41 +70,41 @@ dizem o mesmo.
 
 ### Testes
 
-- [ ] T010 [P] [US1] Criar `T/contract/test_elevacao_degrau_17.py` no molde de `T/contract/test_elevacao_degrau_9.py`. Conteúdo da versão 16 elevado ganha `modalityCode: null` em cada documento; o conteúdo literal não muda; elevar duas vezes é idempotente (`R-002`, `FR-725`)
-- [ ] T011 [P] [US1] Em `T/unit/editais/test_validacao_inscricao.py`, testes dos achados. Um para cada:
+- [X] T010 [P] [US1] Criar `T/contract/test_elevacao_degrau_17.py` no molde de `T/contract/test_elevacao_degrau_9.py`. Conteúdo da versão 16 elevado ganha `modalityCode: null` em cada documento; o conteúdo literal não muda; elevar duas vezes é idempotente (`R-002`, `FR-725`)
+- [X] T011 [P] [US1] Em `T/unit/editais/test_validacao_inscricao.py`, testes dos achados. Um para cada:
   - `document_requirement_scope_conflict`;
   - `document_requirement_modality_code_unknown`;
   - `document_requirement_modality_code_general`, com a ampla declarada em um Perfil só;
   - `modality_code_name_divergent`: **um** achado com 16 Perfis e 1 divergente, e com 8 contra 8; nenhum com as denominações iguais; nenhum com código repetido e sem documento transversal (`D-001`); diferença de maiúscula acusa, espaço nas pontas não (`D-005`); percentual diferente não acusa (`FR-707`).
 
   Mais a mensagem da #161 com as três saídas (`FR-706`, `FR-707`, `FR-708`, `SC-266`, `contracts/recorte-transversal.md` §3 e §4)
-- [ ] T012 [P] [US1] Criar `T/unit/editais/test_documentos_recusas.py`, com as recusas na gravação: `modalityCode` com Perfil, com Modalidade exata, código inexistente, código da ampla. Cada recusa tem `campo="modalityCode"` (`FR-702` a `FR-704`). E a recusa vinda da **etapa Perfis**: declarar ampla, ou remover de todos os Perfis, a Modalidade de um código referido é recusado com mensagem que nomeia o documento. Seguir o precedente de `modalityId` ao reportar na tela (`FR-724`, `D-010`)
-- [ ] T013 [P] [US1] Em `T/unit/publicacoes/test_pdf_documentos_exigidos.py`: dois documentos com o mesmo código saem num grupo só, *"Dos candidatos concorrentes na modalidade {denominação}:"*, sem Perfil; o facultativo leva *"(facultativo)"*; os grupos exatos não mudam (`FR-712`, `FR-713`)
-- [ ] T014 [P] [US1] Em `T/interface/test_compor_inscricao.py`, testes do seletor:
+- [X] T012 [P] [US1] Criar `T/unit/editais/test_documentos_recusas.py`, com as recusas na gravação: `modalityCode` com Perfil, com Modalidade exata, código inexistente, código da ampla. Cada recusa tem `campo="modalityCode"` (`FR-702` a `FR-704`). E a recusa vinda da **etapa Perfis**: declarar ampla, ou remover de todos os Perfis, a Modalidade de um código referido é recusado com mensagem que nomeia o documento. Seguir o precedente de `modalityId` ao reportar na tela (`FR-724`, `D-010`)
+- [X] T013 [P] [US1] Em `T/unit/publicacoes/test_pdf_documentos_exigidos.py`: dois documentos com o mesmo código saem num grupo só, *"Dos candidatos concorrentes na modalidade {denominação}:"*, sem Perfil; o facultativo leva *"(facultativo)"*; os grupos exatos não mudam (`FR-712`, `FR-713`)
+- [X] T014 [P] [US1] Em `T/interface/test_compor_inscricao.py`, testes do seletor:
   - o grupo "Em todos os Perfis" vem antes dos pares, com o rótulo de `UX-080` e a contagem "n de N";
   - a ampla declarada não aparece;
   - o valor `codigo:PcD` grava `modalityCode="PcD"` e `modalityId=None`;
   - Perfil + código é recusado com a mensagem ancorada no campo, preservando o que foi digitado;
   - o fragmento de linha nova conhece os códigos
-- [ ] T015 [P] [US1] Em `T/integration/inscricoes/test_submissao.py` (ou num arquivo novo vizinho, se ele passar de tamanho razoável), com um Edital publicado de C1 e C2 e o laudo em "PcD em todos os Perfis": o PcD do C2 é recusado sem o laudo (`missing_required_documents`) e envia com ele; o AC não recebe o pedido; o cartão público dos dois Perfis anuncia o laudo; trocar a modalidade do rascunho de PcD para AC descarta o laudo anexado, e de AC para PcD passa a pedi-lo; um Perfil C3 com PcD, acrescentado por Retificação, passa a pedir o laudo sem linha nova (`FR-709` a `FR-711`, `SC-262`)
-- [ ] T016 [P] [US1] Em `T/unit/editais/test_reaproveitamento.py`: `modalityCode` atravessa o `remapear` sem mudança; e, num Edital novo sem Perfil com aquele código, a publicação acusa `document_requirement_modality_code_unknown` (`R-012`)
+- [X] T015 [P] [US1] Em `T/integration/inscricoes/test_submissao.py` (ou num arquivo novo vizinho, se ele passar de tamanho razoável), com um Edital publicado de C1 e C2 e o laudo em "PcD em todos os Perfis": o PcD do C2 é recusado sem o laudo (`missing_required_documents`) e envia com ele; o AC não recebe o pedido; o cartão público dos dois Perfis anuncia o laudo; trocar a modalidade do rascunho de PcD para AC descarta o laudo anexado, e de AC para PcD passa a pedi-lo; um Perfil C3 com PcD, acrescentado por Retificação, passa a pedir o laudo sem linha nova (`FR-709` a `FR-711`, `SC-262`)
+- [X] T016 [P] [US1] Em `T/unit/editais/test_reaproveitamento.py`: `modalityCode` atravessa o `remapear` sem mudança; e, num Edital novo sem Perfil com aquele código, a publicação acusa `document_requirement_modality_code_unknown` (`R-012`)
 
 ### Implementação
 
-- [ ] T017 [US1] Em `B/editais/models/documentos.py`, acrescentar `modalidade_codigo` (`CharField(max_length=100, null=True, blank=True)`) e a restrição `ck_documento_recorte_exclusivo`. Criar `B/editais/migrations/0022_documento_modalidade_codigo.py` (`data-model.md` §1 e §5)
-- [ ] T018 [US1] Em `T/migrations/test_migrations.py`, subir `"editais": 21 → 22` nos guardiões da `017` e da `022`, com a justificativa ao lado, no tom das existentes (`R-013`)
-- [ ] T019 [US1] Em `B/editais/domain/documentos.py`, `_validate_aplicabilidade` recusa as quatro situações de T012 na gravação. Para a ampla, lê `generalCompetitionModalityId` dos Perfis do payload
-- [ ] T020 [US1] Em `B/editais/application/draft.py`, persistir `modalidade_codigo` em `replace_draft` e relê-lo onde o rascunho vira dicionário. Em `B/editais/api/serializers.py`, `DocumentRequirementSerializer` ganha `modalityCode = CharField(required=False, allow_null=True, max_length=100)`
-- [ ] T021 [US1] Versão canônica: `SCHEMA_VERSION = 17` em `B/shared/canonical.py`; `DEGRAUS_DE_DOCUMENTO[17] = {"modalityCode": None}` em `B/publicacoes/domain/elevacao.py`; `Campo("modalityCode", str, admite_nulo=True)` em `DOCUMENTO_EXIGIDO_PUBLICADO` (`B/editais/domain/validation.py`); `_document_requirements` em `B/publicacoes/application/publish_edital.py` escreve o campo. Rodar T010 e as famílias `T/contract/test_elevacao_degrau_*.py`
-- [ ] T022 [US1] Em `B/editais/domain/validation.py`, `_coerencia_dos_documentos_exigidos` emite os quatro achados de `research.md` R-007. A coerência de denominação sai numa passada à parte, que agrupa por código referido e emite um achado por código com o caminho em `/profiles`. A mensagem de `_recorte_que_o_documento_publicado_alarga` ganha a terceira saída (`contracts/recorte-transversal.md` §4)
-- [ ] T023 [US1] Em `B/interface/views.py`, `DESTINO_POR_CODIGO` manda `modality_code_name_divergent` para a etapa Perfis; os outros três seguem o destino de `documentRequirements`
-- [ ] T024 [P] [US1] Em `B/publicacoes/infrastructure/pdf.py`, a chave do grupo em `_documentos_exigidos` passa a `(profileId, modalityId, modalityCode)`, e `_titulo_do_grupo` escreve o título por código com a denominação de qualquer Perfil que o tem (`R-008`)
-- [ ] T025 [P] [US1] Em `B/interface/revisao.py`, `_alcance` descreve o recorte por código com a mesma frase do PDF
-- [ ] T026 [US1] Em `B/interface/forms.py`:
+- [X] T017 [US1] Em `B/editais/models/documentos.py`, acrescentar `modalidade_codigo` (`CharField(max_length=100, null=True, blank=True)`) e a restrição `ck_documento_recorte_exclusivo`. Criar `B/editais/migrations/0022_documento_modalidade_codigo.py` (`data-model.md` §1 e §5)
+- [X] T018 [US1] Em `T/migrations/test_migrations.py`, subir `"editais": 21 → 22` nos guardiões da `017` e da `022`, com a justificativa ao lado, no tom das existentes (`R-013`)
+- [X] T019 [US1] Em `B/editais/domain/documentos.py`, `_validate_aplicabilidade` recusa as quatro situações de T012 na gravação. Para a ampla, lê `generalCompetitionModalityId` dos Perfis do payload
+- [X] T020 [US1] Em `B/editais/application/draft.py`, persistir `modalidade_codigo` em `replace_draft` e relê-lo onde o rascunho vira dicionário. Em `B/editais/api/serializers.py`, `DocumentRequirementSerializer` ganha `modalityCode = CharField(required=False, allow_null=True, max_length=100)`
+- [X] T021 [US1] Versão canônica: `SCHEMA_VERSION = 17` em `B/shared/canonical.py`; `DEGRAUS_DE_DOCUMENTO[17] = {"modalityCode": None}` em `B/publicacoes/domain/elevacao.py`; `Campo("modalityCode", str, admite_nulo=True)` em `DOCUMENTO_EXIGIDO_PUBLICADO` (`B/editais/domain/validation.py`); `_document_requirements` em `B/publicacoes/application/publish_edital.py` escreve o campo. Rodar T010 e as famílias `T/contract/test_elevacao_degrau_*.py`
+- [X] T022 [US1] Em `B/editais/domain/validation.py`, `_coerencia_dos_documentos_exigidos` emite os quatro achados de `research.md` R-007. A coerência de denominação sai numa passada à parte, que agrupa por código referido e emite um achado por código com o caminho em `/profiles`. A mensagem de `_recorte_que_o_documento_publicado_alarga` ganha a terceira saída (`contracts/recorte-transversal.md` §4)
+- [X] T023 [US1] Em `B/interface/views.py`, `DESTINO_POR_CODIGO` manda `modality_code_name_divergent` para a etapa Perfis; os outros três seguem o destino de `documentRequirements`
+- [X] T024 [P] [US1] Em `B/publicacoes/infrastructure/pdf.py`, a chave do grupo em `_documentos_exigidos` passa a `(profileId, modalityId, modalityCode)`, e `_titulo_do_grupo` escreve o título por código com a denominação de qualquer Perfil que o tem (`R-008`)
+- [X] T025 [P] [US1] Em `B/interface/revisao.py`, `_alcance` descreve o recorte por código com a mesma frase do PDF
+- [X] T026 [US1] Em `B/interface/forms.py`:
   - `alcance_da_aplicabilidade` devolve também os códigos (rótulo, "n de N", fora a ampla, pela coluna `PerfilVaga.modalidade_ampla_concorrencia`);
   - `ler_inscricao` separa `codigo:` de UUID;
   - `documentos_do_edital` e `documentos_persistidos` passam `modalityCode` nos dois sentidos (`R-009`)
-- [ ] T027 [US1] Em `B/interface/templates/interface/_documento.html`, os dois `<optgroup>` ("Em todos os Perfis", depois "Modalidade de um Perfil"), com a opção selecionada restaurada a partir de `modalityCode` ou `modalityId`, e `{% recusa_de %}` para `modalityCode`. Conferir que o fragmento de linha nova (`B/interface/views.py`, `fragmento_documento`) recebe o mesmo alcance
+- [X] T027 [US1] Em `B/interface/templates/interface/_documento.html`, os dois `<optgroup>` ("Em todos os Perfis", depois "Modalidade de um Perfil"), com a opção selecionada restaurada a partir de `modalityCode` ou `modalityId`, e `{% recusa_de %}` para `modalityCode`. Conferir que o fragmento de linha nova (`B/interface/views.py`, `fragmento_documento`) recebe o mesmo alcance
 - [ ] T028 [US1] Rodar T010 a T016 e as famílias de T001. Demonstrar pela interface os passos 1 a 6 do cenário A de `quickstart.md`
 
 **Checkpoint**: a US1 está completa e demonstrável sozinha. O MVP.

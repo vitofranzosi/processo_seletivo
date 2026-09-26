@@ -372,6 +372,12 @@ CAMPOS_DOCUMENTO = [
     ("order", "Ordem", INTEIRO),
     ("profileId", "Exigido apenas do Perfil", REFERENCIA),
     ("modalityId", "Exigido apenas da modalidade", REFERENCIA),
+    # O recorte transversal (044, FR-722, R-010). Campo próprio, e não o mesmo seletor da
+    # composição: cada campo daqui vira uma alteração com caminho próprio, e a gramática não tem
+    # alteração que escreva dois caminhos. Trocar de exato para transversal são duas alterações no
+    # mesmo ato — `modalityId` vazio e o código aqui —, e a exclusividade é conferida sobre o
+    # conteúdo que resulta delas.
+    ("modalityCode", "Modalidade em todos os Perfis", REFERENCIA),
     # O modelo que o Edital fornece (020, FR-020). Sem este campo, remover um Anexo apontado por um
     # requisito seria irrealizável pelo canal do ator: a regra da referência pendurada recusaria o
     # ato, e a tela não ofereceria o campo que precisa mudar junto.
@@ -574,7 +580,12 @@ def _arquivo_de_hoje(descricao, identificador):
 # O que a opção vazia de um campo de referência **significa**, por chave. Fora daqui vale "sem
 # restrição", que é o que `documentRequirements` quer dizer; na linha do quadro, o vazio é a ampla
 # concorrência, e o rótulo genérico diria o oposto do que a linha afirma (025, E2E25-006).
-ROTULO_DO_VAZIO = {"vacancyTable": {"modalityId": "Ampla concorrência"}}
+ROTULO_DO_VAZIO = {
+    "vacancyTable": {"modalityId": "Ampla concorrência"},
+    # "Sem restrição" diria que o documento vale para todos, e não é o que o vazio deste campo diz:
+    # diz só que ele não recorta **por código** — os outros dois campos podem estar recortando.
+    "documentRequirements": {"modalityCode": "Não recorta por código"},
+}
 
 
 def _grupo(
@@ -657,7 +668,39 @@ def opcoes_de_aplicabilidade(conteudo):
         for anexo in conteudo.get("attachments") or []
         if anexo.get("id")
     ]
-    return {"profileId": perfis, "modalityId": modalidades, "attachmentId": anexos}
+    return {
+        "profileId": perfis,
+        "modalityId": modalidades,
+        "modalityCode": _codigos_em_todos_os_perfis(conteudo),
+        "attachmentId": anexos,
+    }
+
+
+def _codigos_em_todos_os_perfis(conteudo):
+    """As opções do recorte transversal, do conteúdo publicado, fora a ampla (044, UX-080, FR-704).
+
+    O mesmo rótulo da composição, com o alcance: *"Pessoas com Deficiência (PcD) — em todos os
+    Perfis que a têm (16 de 16)"*. O código declarado ampla em qualquer Perfil não é oferecido.
+    """
+    perfis = [perfil for perfil in conteudo.get("profiles") or [] if perfil.get("id")]
+    por_codigo, amplas = {}, set()
+    for perfil in perfis:
+        for modalidade in perfil.get("competitionModalities") or []:
+            codigo = str(modalidade.get("code") or "").strip()
+            if not codigo:
+                continue
+            if str(perfil.get("generalCompetitionModalityId") or "") == str(modalidade.get("id")):
+                amplas.add(codigo)
+            item = por_codigo.setdefault(codigo, [modalidade.get("name") or codigo, 0])
+            item[1] += 1
+    return [
+        (
+            codigo,
+            f"{denominacao} ({codigo}) — em todos os Perfis que a têm ({quantos} de {len(perfis)})",
+        )
+        for codigo, (denominacao, quantos) in sorted(por_codigo.items())
+        if codigo not in amplas
+    ]
 
 
 def opcoes_da_linha_nova(conteudo):
@@ -976,6 +1019,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 # pedia, e o que fazer com essas pessoas é decisão normativa, não de tela.
                 removivel=False,
                 opcoes=aplicabilidade,
+                rotulos_do_vazio=ROTULO_DO_VAZIO["documentRequirements"],
                 tipo="Documento exigido",
                 nome=nome,
             )

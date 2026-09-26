@@ -280,3 +280,17 @@ def test_a_razao_do_perfil_nomeia_o_perfil():
     assert (
         razao_legivel(veredito, conteudo) == "Não se aplica: pedido de quem concorre ao Perfil C1"
     )
+
+
+def test_perfil_acrescentado_depois_com_o_codigo_recebe_o_documento_sem_linha_nova():
+    """Por composição, Retificação ou duplicação: o recorte alcança quem tem o código."""
+    c3 = {
+        "id": "c3",
+        "code": "C3",
+        "competitionModalities": [_modalidade("c3-pcd", "PcD", "Pessoas com Deficiência")],
+    }
+    conteudo = _conteudo([IDENTIDADE, LAUDO_TRANSVERSAL], [C1, C2, c3])
+
+    escolhidos = aplicaveis(conteudo, profile_id="c3", modality_id="c3-pcd")
+
+    assert [item["id"] for item in escolhidos] == ["d-id", "d-laudo"]

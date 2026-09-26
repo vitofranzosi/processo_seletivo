@@ -402,6 +402,8 @@ def _document_requirements(edital: Edital) -> list[dict]:
             ),
             # O Anexo que serve de modelo, ou `null` para "não fornece modelo" (020, FR-020).
             "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
+            # O recorte transversal, ou `null` para "não recorta por código" (044, FR-700).
+            "modalityCode": documento.modalidade_codigo or None,
         }
         for documento in edital.documentos_exigidos.all()
     ]

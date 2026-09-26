@@ -1309,7 +1309,10 @@ def ler_inscricao(dados):
                 # Vazio é "não restringe", e é a ausência dos dois que faz o requisito valer para
                 # todos. `None` e não `""`: o command grava chave estrangeira.
                 "profileId": _texto(dados, f"{base}-profileId") or None,
-                "modalityId": _texto(dados, f"{base}-modalityId") or None,
+                # O seletor da modalidade carrega as duas formas (044, R-009): o valor `codigo:X` é
+                # a modalidade de código X em todos os Perfis; um UUID é a Modalidade de um Perfil.
+                # Um seletor só é o que torna as duas exclusivas — não há como escolher ambas.
+                **_modalidade_escolhida(_texto(dados, f"{base}-modalityId")),
                 # A tela ainda não oferece o campo; a chave viaja vazia para que `_preservando`
                 # tenha onde encaixar o que já estava gravado (020, FR-020).
                 "attachmentId": _texto(dados, f"{base}-attachmentId") or None,
@@ -1330,6 +1333,16 @@ def ler_inscricao(dados):
     }
 
 
+PREFIXO_DO_CODIGO = "codigo:"
+
+
+def _modalidade_escolhida(valor):
+    """`modalityId` e `modalityCode` a partir do valor do seletor único da modalidade."""
+    if valor.startswith(PREFIXO_DO_CODIGO):
+        return {"modalityId": None, "modalityCode": valor[len(PREFIXO_DO_CODIGO) :] or None}
+    return {"modalityId": valor or None, "modalityCode": None}
+
+
 def documentos_do_edital(edital):
     """As linhas de Documento Exigido, no formato do formulário."""
     return [
@@ -1342,6 +1355,7 @@ def documentos_do_edital(edital):
             "order": documento.order,
             "profileId": "" if documento.perfil_id is None else str(documento.perfil_id),
             "modalityId": "" if documento.modalidade_id is None else str(documento.modalidade_id),
+            "modalityCode": documento.modalidade_codigo,
             "attachmentId": "" if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.order_by("order")
@@ -1372,6 +1386,9 @@ def documentos_persistidos(edital):
             "order": documento.order,
             "profileId": None if documento.perfil_id is None else str(documento.perfil_id),
             "modalityId": None if documento.modalidade_id is None else str(documento.modalidade_id),
+            # Sem ele, gravar qualquer outra etapa apagaria o recorte transversal em silêncio: as
+            # linhas são recriadas a cada gravação (044).
+            "modalityCode": documento.modalidade_codigo or None,
             "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.order_by("order")
@@ -1409,6 +1426,44 @@ def alcance_da_aplicabilidade(edital):
             }
         )
     return perfis
+
+
+def modalidades_em_todos_os_perfis(edital):
+    """As opções do recorte transversal: uma por código do Edital, fora a ampla (044, UX-080).
+
+    O rótulo diz o alcance — *"Pessoas com Deficiência (PcD) — em todos os Perfis que a têm (16 de
+    16)"* —, porque "em todos os Perfis" num Edital em que só três têm a modalidade prometeria mais
+    do que o documento faz. **O código declarado ampla em qualquer Perfil não aparece** (FR-704): a
+    ampla concorrência é a linha geral, e não recorta documento. A denominação é a do primeiro
+    Perfil que tem o código; se houver duas, a publicação as acusa (FR-706).
+    """
+    perfis = list(edital.perfis.prefetch_related("modalidades").order_by("code"))
+    total = len(perfis)
+    por_codigo = {}
+    amplas = set()
+    for perfil in perfis:
+        for modalidade in perfil.modalidades.all():
+            codigo = (modalidade.code or "").strip()
+            if not codigo:
+                continue
+            if perfil.modalidade_ampla_concorrencia and str(
+                perfil.modalidade_ampla_concorrencia
+            ) == str(modalidade.id):
+                amplas.add(codigo)
+            item = por_codigo.setdefault(codigo, {"denominacao": modalidade.name, "perfis": 0})
+            item["perfis"] += 1
+    return [
+        {
+            "valor": f"{PREFIXO_DO_CODIGO}{codigo}",
+            "codigo": codigo,
+            "rotulo": (
+                f"{item['denominacao'] or codigo} ({codigo}) — em todos os Perfis que a têm "
+                f"({item['perfis']} de {total})"
+            ),
+        }
+        for codigo, item in sorted(por_codigo.items())
+        if codigo not in amplas
+    ]
 
 
 # ---------------------------------------------------------------------------

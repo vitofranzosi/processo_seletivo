@@ -157,3 +157,57 @@ def test_sem_documento_exigido_a_secao_nao_e_composta():
     texto = _texto(_snapshot([]))
 
     assert "DOCUMENTOS EXIGIDOS" not in texto.upper()
+
+
+# ---------------------------------------------------------------------------
+# 044 — um grupo por código, sem Perfil
+# ---------------------------------------------------------------------------
+
+
+def _com_pcd_nos_perfis(snapshot):
+    for indice, perfil in enumerate(snapshot["profiles"][:2]):
+        perfil["competitionModalities"] = [
+            *(perfil.get("competitionModalities") or []),
+            {
+                "id": f"00000000-0000-0000-0000-0000000044c{indice}",
+                "code": "PcD",
+                "name": "Pessoas com Deficiencia",
+            },
+        ]
+    return snapshot
+
+
+def _transversal(documento, **campos):
+    return {**documento, "profileId": None, "modalityId": None, "modalityCode": "PcD", **campos}
+
+
+def test_documentos_do_mesmo_codigo_saem_num_grupo_so_sem_perfil():
+    documentos = [
+        DOCUMENTOS[0],
+        _transversal(DOCUMENTOS[1]),
+        _transversal(
+            {**DOCUMENTOS[1], "id": DOCUMENTO["A"][:-1] + "9", "key": "autodeclaracao"},
+            name="Autodeclaracao PcD",
+            order=3,
+            required=False,
+        ),
+    ]
+
+    texto = _texto(_com_pcd_nos_perfis(_snapshot(documentos)))
+
+    assert texto.count("Dos candidatos concorrentes na modalidade Pessoas com Deficiencia:") == 1
+    assert "Laudo comprobatorio" in texto
+    assert "Autodeclaracao PcD (facultativo)" in texto
+    assert "Dos candidatos ao perfil" not in texto
+
+
+def test_o_grupo_exato_continua_como_estava_ao_lado_do_transversal():
+    documentos = [
+        dict(DOCUMENTOS[0], profileId=PERFIL["A"], modalityId=None),
+        _transversal(DOCUMENTOS[1]),
+    ]
+
+    texto = _texto(_com_pcd_nos_perfis(_snapshot(documentos)))
+
+    assert "Dos candidatos ao perfil P1" in texto
+    assert "Dos candidatos concorrentes na modalidade Pessoas com Deficiencia:" in texto

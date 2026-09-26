@@ -264,9 +264,9 @@ class SectionSerializer(serializers.Serializer):
 class DocumentRequirementSerializer(serializers.Serializer):
     """O que o Edital exige do candidato.
 
-    `profileId` e `modalityId` ausentes ou nulos significam "não restringe" — é a ausência que
-    produz as quatro combinações de aplicabilidade, e por isso os dois são anuláveis em vez de
-    obrigatórios com valor especial.
+    `profileId`, `modalityId` e `modalityCode` ausentes ou nulos significam "não restringe" — é a
+    ausência que produz as cinco formas de aplicabilidade (044), e por isso os três são anuláveis em
+    vez de obrigatórios com valor especial.
     """
 
     id = serializers.UUIDField()
@@ -280,6 +280,11 @@ class DocumentRequirementSerializer(serializers.Serializer):
     # O Anexo que serve de modelo. Ausente e nulo significam a mesma coisa — "não fornece modelo" —
     # como em `profileId` e `modalityId`.
     attachmentId = serializers.UUIDField(required=False, allow_null=True)
+    # O recorte transversal (044): a Modalidade deste código em todos os Perfis que a têm. Ausente e
+    # nulo significam "não recorta por código", como nos dois identificadores acima.
+    modalityCode = serializers.CharField(
+        required=False, allow_null=True, allow_blank=False, max_length=100
+    )
 
 
 class EditalDraftSerializer(serializers.Serializer):
