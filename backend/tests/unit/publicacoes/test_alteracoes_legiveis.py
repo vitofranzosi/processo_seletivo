@@ -192,3 +192,20 @@ def test_o_recorte_transversal_vira_linha_com_o_campo_e_sem_valor():
         "operacao": "alterado",
     }
     assert DOCUMENTO not in str(linha), "nenhum identificador interno"
+
+
+@pytest.mark.parametrize(
+    ("campo", "rotulo"),
+    [("profileId", "Exigido apenas do Perfil"), ("modalityId", "Exigido apenas da modalidade")],
+)
+def test_o_recorte_exato_tambem_vira_linha(campo, rotulo):
+    """A conferência de 25/09: a Retificação declarou 7 alterações, e o portal mostrou 6.
+
+    A que faltava era a do laudo, que passou a valer só no C1 — a mais consequente para quem se
+    inscreve, e a única que o resumo calava, porque o dicionário conhecia `modalityCode` e não os
+    dois campos do recorte exato. O rótulo é o da tela da gestão, para que quem retifica e quem se
+    inscreve leiam o mesmo nome.
+    """
+    linha = alteracao_legivel(BASE, Alteracao(f"/documentRequirements/id={DOCUMENTO}/{campo}"))
+
+    assert linha == {"onde": "Documento exigido “Diploma”", "campo": rotulo, "operacao": "alterado"}

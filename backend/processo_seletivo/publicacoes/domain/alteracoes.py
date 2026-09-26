@@ -92,9 +92,13 @@ CAMPOS = {
         "required": "Obrigatoriedade",
         "order": "Ordem",
         "attachmentId": "Modelo",
-        # O recorte transversal (044, FR-721). O campo é nomeado, e não o valor, como toda linha
-        # deste resumo (D-008). `profileId` e `modalityId` continuam fora: a correção deles é da
-        # fila das diretas, e não desta feature.
+        # O recorte, nas três formas: o exato por Perfil e por Modalidade, e o transversal da 044
+        # (FR-721). O campo é nomeado, e não o valor, como toda linha deste resumo (D-008). Os dois
+        # primeiros ficaram fora até 26/09, e o resumo calava justamente a alteração que mais pesa
+        # para quem se inscreve: a conferência de 25/09 retificou o laudo para valer só no C1, e o
+        # portal listou 6 das 7 alterações. Os rótulos são os da tela da gestão.
+        "profileId": "Exigido apenas do Perfil",
+        "modalityId": "Exigido apenas da modalidade",
         "modalityCode": "Modalidade em todos os Perfis",
     },
     "competitionModalities": {"code": "Código", "name": "Denominação"},
