@@ -1,7 +1,9 @@
-# Decisão pendente — o recorte do documento exigido
+# Decisão — o recorte do documento exigido
 
-**Situação: aberta.** Este documento organiza as alternativas e recomenda; quem decide é o usuário.
-Nenhuma spec começa antes da decisão.
+**Situação: decidida em 25/09/2026 — recomendações aceitas pelo usuário.** O texto das alternativas
+fica como estava: é o registro do que foi pesado. A tabela final passa a dizer o que foi decidido, e
+a spec [`044-recorte-transversal-documental`](../specs/044-recorte-transversal-documental/spec.md)
+a cita sem rediscuti-la.
 
 Evidência: [estudo de esforço](estudo-esforco-de-cadastro-2026-09-21.md) §5.9,
 [achado do portal](achado-documento-condicional-no-portal.md) (#160),
@@ -149,18 +151,20 @@ E2. O lote é outra spec, que não depende desta.
 
 ---
 
-## O que falta decidir
+## O que foi decidido
 
-| # | Pergunta | Recomendação |
+Em 25/09/2026, o usuário aceitou as recomendações acima, uma a uma.
+
+| # | Pergunta | Decisão |
 |---|---|---|
-| D1 | Como identificar a mesma Modalidade em todos os Perfis? | Código, com IMPEDE de coerência só da denominação |
-| D1a | O recorte transversal alcança a ampla concorrência? | Não: proibir o código da Modalidade declarada ampla |
-| D2 | Como tratar condição sobre o candidato? | Opção 1 agora, com as duas correções; opção 2 em spec própria |
-| D3 | Exceção negativa? | Não; recorte exato como escape |
-| D4 | Congelar na inscrição a lista exigida? | Sim |
-| D5 | O que entra na primeira spec? | Só o recorte transversal e o congelamento da lista |
+| D1 | Como identificar a mesma Modalidade em todos os Perfis? | Pelo **código**, com IMPEDE de coerência que cobre só a denominação, nunca percentual ou fundamento |
+| D1a | O recorte transversal alcança a ampla concorrência? | **Não**: o código da Modalidade declarada ampla não pode ser recorte transversal |
+| D2 | Como tratar condição sobre o candidato? | **Opção 1** como estado assumido, com as duas correções na fila das diretas; a opção 2 fica para spec própria, depois |
+| D3 | Exceção negativa? | **Não**. O recorte exato Perfil × Modalidade continua como escape; a combinação que a #161 recusa continua recusada, e a mensagem ganha a saída "use a modalidade em todos os Perfis" |
+| D4 | Congelar na inscrição a lista exigida? | **Sim**: no envio, a lista com a razão de cada documento; a Mesa e a consulta administrativa passam a lê-la |
+| D5 | O que entra na primeira spec? | **Só** o recorte transversal e a lista gravada; a aplicação em lote é outra spec |
 
-Duas correções não dependem de nada disto e podem ir para a fila das diretas:
+Duas correções não dependem de nada disto e vão para a fila das diretas:
 
 - "O que mudou" passar a listar a mudança de recorte do documento.
 - A instrução do documento chegar à Mesa, e o facultativo manter a marca na Revisão.
