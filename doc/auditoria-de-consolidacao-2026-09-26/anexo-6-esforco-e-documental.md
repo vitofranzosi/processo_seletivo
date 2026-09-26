@@ -281,14 +281,14 @@ a lacuna. Única tarefa aberta na branch: T065 (demonstrar SC-260/SC-261 no 140/
 - Origem: conferência §3 e §7 (25/09); 044 `spec.md:609-611` (registrado sem escopo).
 - Problema original: o filtro lista "Ampla Concorrência" e "Pessoas com Deficiência" duas vezes, uma por Perfil, sem dizer de qual.
 - Recomendação original: registrado como defeito de tela independente.
-- Rastro posterior: **PR aberto #172** (`claude/filtro-de-concorrencia-com-perfil`) — prefixa o nome do Perfil quando há mais de um, com teste em `tests/integration/interface/test_inscricoes_em_escala.py` e `doc/achado-filtro-de-concorrencia-sem-perfil.md`.
-- Evidência no código atual (main): `interface/templates/interface/inscricoes.html:53-57` — a opção é `{{ item.nome }} ({{ item.quantas }})`, sem Perfil.
-- Estado atual: IMPLEMENTADO, MAS NÃO VALIDADO (correção em PR aberto, não mesclado)
+- Rastro posterior: **PR #172**, mesclado em 26/09 (`8e6fb4a`) — prefixa o nome do Perfil quando há mais de um, com teste em `tests/integration/interface/test_inscricoes_em_escala.py` e `doc/achado-filtro-de-concorrencia-sem-perfil.md`.
+- Evidência no código atual (main): `interface/templates/interface/inscricoes.html:64` — a opção leva `{{ item.perfil }} · ` antes do nome da Modalidade quando o Edital tem mais de um Perfil.
+- Estado atual: RESOLVIDO
 - Ainda faz sentido?: sim — correção pequena e certa.
-- Lacuna residual: mesclar o #172.
+- Lacuna residual: o seletor não se restringe ao Perfil escolhido, registrado em `doc/achado-filtro-de-concorrencia-sem-perfil.md`.
 - Grupo do resíduo: C
 - Impacto atual: baixo (gestão; a contagem desambigua).
-- Próxima ação sugerida: validar e mesclar o #172 (decisão do usuário).
+- Próxima ação sugerida: nenhuma.
 - Relações: mesma causa do §7.2 (Modalidade é do Perfil, e a tela esquece de dizer de qual).
 - Confiança: alta.
 
@@ -779,7 +779,7 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | conferência §1/§3 · D2 diretas · #167 | instrução na Mesa; facultativo na Revisão | RESOLVIDO (i, #167) — resíduo: cartão público sem marca (iii) | C | corrigir (opcional) |
 | E6 (candidato) · D2 | sexo/idade/vínculo sem forma | CONTRADITO POR DECISÃO POSTERIOR (D2, `doc/decisao-recorte-documental.md`) | B | nenhuma até reabrir D2 |
 | conferência · D4.3 | "O que mudou" omite recorte do documento | NÃO IMPLEMENTADO (iii; decidido, não feito) | A | corrigir (direta) |
-| conferência §3/§7 · 044 riscos | filtro de concorrência sem Perfil | IMPLEMENTADO, MAS NÃO VALIDADO (PR #172) | C | validar e mesclar #172 |
+| conferência §3/§7 · 044 riscos | filtro de concorrência sem Perfil | RESOLVIDO (PR #172, mesclado em 26/09) | C | nenhuma |
 | conferência §3–§5 | lista da Mesa sem Perfil; sem juízo por documento | NÃO IMPLEMENTADO | C | nenhuma (reavaliar após 044) |
 | §6.2 · §6.4 · §8 · A2 · E1 · frente 2 | sem reuso dentro do Edital | PARCIALMENTE RESOLVIDO (043; TF-1 iii) | B | spec TF-1 só com evidência |
 | E2 | o comum do Edital mora no Perfil | NÃO IMPLEMENTADO (decisão pendente; Modalidade fechada pela Constituição) | B | decisão do usuário |
