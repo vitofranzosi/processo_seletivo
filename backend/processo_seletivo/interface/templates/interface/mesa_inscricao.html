@@ -87,7 +87,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   <ul class="documentos">
     {% for documento in documentos %}
     <li>
-      <span class="requisito">{{ documento.nome }}</span>
+      <span class="requisito">{{ documento.nome }}{% if documento.instrucoes %}<span class="instrucao">{{ documento.instrucoes }}</span>{% endif %}</span>
       <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% endif %}</span>
       {% comment %}
       O modelo que o Edital fornecia **na versão que esta inscrição aceitou** (020, FR-050). Não é
