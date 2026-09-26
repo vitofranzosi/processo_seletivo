@@ -20,11 +20,16 @@ A publicação ganha quatro recusas (exclusividade, código inexistente, ampla, 
 denominação), e a da #161 ganha a terceira saída. O documento publicado agrupa por código. A versão
 canônica sobe para 17, com o degrau que lê o conteúdo antigo como "não recorta por código".
 
-**O planejamento corrigiu a spec em três pontos**, registrados nela como `D-008` e `D-009` e na
-redação de `FR-720`/`FR-727`:
-- o resumo público nomeia o campo e não o valor, como já faz com todos;
-- a Retificação não junta linhas, porque não remove documento;
-- a divergência da #161 também se registra na lista **gravada**.
+**O planejamento e a análise corrigiram a spec**, sempre por escrito nela:
+- o resumo público nomeia o campo e não o valor, como já faz com todos (`D-008`);
+- a Retificação não junta linhas, porque não remove documento (`D-009`);
+- a divergência da #161 também se registra na lista **gravada**, e só para quem concorre na
+  modalidade de mesma denominação (`FR-727`);
+- a tela do portal que a lista alimenta é a da inscrição enviada, e não o "acompanhamento", que não
+  lista documentos. E ela não anuncia a reconstrução, porque mostra só o que foi enviado (`FR-720`,
+  `FR-726`);
+- a gravação do rascunho recusa o código inalcançável e o da ampla, no precedente do `modalityId`
+  (`D-010`, `FR-724`).
 
 ## Technical Context
 
@@ -53,13 +58,15 @@ lê a lista de uma inscrição numa consulta.
 
 **Constraints**:
 - nenhum documento publicado regenerado (`FR-725`);
-- nenhuma lista escrita para inscrição antiga (`D-004`), garantido pelo `BEFORE INSERT`;
+- nenhuma lista escrita para inscrição antiga (`D-004`). Isso é garantido pela **aplicação**, e não
+  pelo banco: só o ato de envio grava, nenhuma migration preenche, e um teste prende as duas coisas
+  (`R-005` explica por que o gatilho não alcança);
 - nenhuma permissão nova (`FR-728`);
 - nenhum dado pessoal novo;
 - conflito previsto com o PR #167 em `mesa.py` e `mesa_inscricao.html`, resolvido preservando a
   instrução.
 
-**Scale/Scope**: 30 requisitos funcionais, 4 de interface, 9 critérios de sucesso, 9 decisões. Cerca
+**Scale/Scope**: 30 requisitos funcionais, 4 de interface, 9 critérios de sucesso, 10 decisões. Cerca
 de 20 módulos tocados, a maior parte com mudança pequena. O centro de gravidade são três arquivos:
 `editais/domain/documentos.py`, `inscricoes/application/lista_exigida.py` (novo) e a migration da
 tabela.
@@ -71,7 +78,7 @@ tabela.
 | Princípio | Como esta feature o atende | Verificado por |
 |---|---|---|
 | **I — Linguagem ubíqua** | *Modalidade*, *Perfil*, *Documento Exigido* e *código* são os do domínio. O termo novo, **lista exigida**, nomeia uma coisa nova: o que foi pedido a uma inscrição, que não é o Documento Exigido do Edital. "Não se aplica" é estado com nome, e não ausência de linha | revisão de texto; `UX-081` |
-| **II — Integridade normativa** | O recorte tem **uma** regra de aplicabilidade para o portal, o envio, a lista e o PDF (`FR-705`, `R-003`). A Constituição pede *"reproduzir os documentos exigidos para cada Inscrição"*, e é o que a lista gravada faz. Publicação imutável: nada regenerado, degrau de elevação só no fluxo de Retificação (`R-002`) | `test_elevacao_degrau_17`; testes de lista depois de Retificação (`SC-264`) |
+| **II — Integridade normativa** | O recorte tem **uma** regra de aplicabilidade para o cartão, o rascunho, o envio, a lista e a reconstrução (`FR-705`, `R-003`). O PDF agrupa pelo mesmo campo (`R-008`). A Constituição pede *"reproduzir os documentos exigidos para cada Inscrição"*, e é o que a lista gravada faz. Publicação imutável: nada regenerado, degrau de elevação só no fluxo de Retificação (`R-002`) | `test_elevacao_degrau_17`; testes de lista depois de Retificação (`SC-264`) |
 | **III — Segurança e dados pessoais** | Nenhuma permissão nova. A lista é lida por quem já lê os documentos da inscrição. Nenhum dado pessoal novo: a razão é recorte do **Edital**. A auditoria não repete a lista (`FR-728`, `FR-729`, §LGPD da spec) | testes de autorização existentes da Mesa e da consulta |
 | **IV — Regras explícitas** | As recusas moram no domínio e na publicação (`R-007`), com a restrição de banco como segunda barreira (`ck_documento_recorte_exclusivo`). Concorrência: a lista é gravada na transação do ato, sob o `FOR SHARE` do Edital que já conflita com a publicação da Retificação. O `BEFORE INSERT` prende a versão da lista à versão aceita | testes de publicação; teste do gatilho de coerência |
 | **V — Qualidade e simplicidade** | Um campo, uma tabela, um degrau, sem entidade nova no conteúdo. Descartada a categoria declarada no Edital (D1 da decisão). A tabela nova se justifica pela Constituição, e não por conveniência | `research.md` |
@@ -83,7 +90,7 @@ tabela.
    `ValorDeFato`, gravado no mesmo ato, é protegido só por privilégio. A lista segue as duas camadas que
    o CLAUDE.md descreve (`R-005`). A falta do gatilho em `ValorDeFato` vai para
    registro, e não para esta feature.
-2. **A spec mudou durante o plano.** As três correções acima estão escritas na spec, com decisão
+2. **A spec mudou durante o plano.** As correções acima estão escritas na spec, com decisão
    numerada, e não só aqui. É o que o Princípio V pede: divergência resolvida explicitamente.
 
 ## Project Structure
@@ -92,7 +99,7 @@ tabela.
 
 ```text
 specs/044-recorte-transversal-documental/
-├── spec.md              # 30 FRs, 4 UXs, 9 SCs, D-001 a D-009
+├── spec.md              # 30 FRs, 4 UXs, 9 SCs, D-001 a D-010
 ├── plan.md              # este arquivo
 ├── research.md          # Fase 0: R-001 a R-014
 ├── data-model.md        # Fase 1: o campo, a tabela, o degrau
@@ -175,7 +182,7 @@ A US4 não tem fase própria: ela é a reconstrução (fase 3) mais o predicado 
 | Risco | Mitigação |
 |---|---|
 | O merge com o PR #167 conflita em `mesa.py` e `mesa_inscricao.html` | quem for mergeado depois preserva a instrução; a `044` não a remove |
-| Os 12 chamadores de `aplicaveis` mudam de assinatura | a troca é mecânica e acontece de uma vez; o tipo do primeiro argumento muda de lista para dicionário, e um chamador esquecido falha no primeiro teste que o exercita |
+| Os seis chamadores diretos de `aplicaveis` mudam de assinatura | a troca é mecânica e acontece de uma vez; o tipo do primeiro argumento muda de lista para dicionário, e um chamador esquecido falha no primeiro teste que o exercita |
 | Suíte longa com migration nova | conferir `migrate --check` antes de investigar falha estranha; banco de teste por worktree |
 | Guardiões de contagem de migration | `R-013` lista cada um, com o número novo e a justificativa |
 

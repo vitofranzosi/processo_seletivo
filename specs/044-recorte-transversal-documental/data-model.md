@@ -45,8 +45,8 @@ Lidas por presença de campo, sem linguagem de condição:
 | Regra | Onde vale | Requisito |
 |---|---|---|
 | exclusivo com Perfil e Modalidade exata | gravação, publicação, banco | `FR-702` |
-| algum Perfil tem o código | gravação, publicação, Retificação | `FR-703`, `FR-724` |
-| nenhum Perfil declara ampla a Modalidade do código | gravação, publicação, Retificação | `FR-704` |
+| algum Perfil tem o código | gravação (em qualquer etapa), publicação, Retificação | `FR-703`, `FR-724`, `D-010` |
+| nenhum Perfil declara ampla a Modalidade do código | gravação (em qualquer etapa), publicação, Retificação | `FR-704`, `D-010` |
 | uma denominação só por código referido | publicação, Retificação | `FR-706`, `FR-707`, `D-001`, `D-005` |
 
 ### Mutabilidade
@@ -93,6 +93,9 @@ Uma linha por Documento Exigido da versão aceita, gravada no ato do envio.
 | Gatilho | `item_da_lista_exigida_coerente`: `BEFORE INSERT` exige inscrição `SUBMETIDA`, `versao_id = versao_aceita_id` e `gravada_em = submitted_at` |
 | Modelo | `save` recusa fora da adição; `delete` recusa, com "append-only" na mensagem |
 
+O `BEFORE INSERT` **não** impede o preenchimento retroativo: quem copiar `submitted_at` para
+`gravada_em` passa. Essa garantia é da aplicação (`research.md`, R-005).
+
 ### O que ela não guarda
 
 Nome, instrução e obrigatoriedade **textual** do documento. A versão aceita é imutável e está na
@@ -136,9 +139,9 @@ Composta a partir do recorte e dos nomes da versão aceita:
 |---|---|
 | `TODOS` | pedido de todos os candidatos |
 | `PERFIL` | pedido de quem concorre ao Perfil {Perfil} |
-| `PERFIL_E_MODALIDADE` | pedido de quem concorre ao Perfil {Perfil} em {Modalidade} |
+| `PERFIL_E_MODALIDADE` | pedido de quem concorre ao Perfil {Perfil} em {denominação} |
 | `MODALIDADE_EM_TODOS_OS_PERFIS` | pedido de quem concorre em {denominação}, em todos os Perfis |
-| `TODOS_COM_MODALIDADE_DE_UM_PERFIL` | pedido de quem concorre ao Perfil {Perfil} em {Modalidade} |
+| `TODOS_COM_MODALIDADE_DE_UM_PERFIL` | pedido de quem concorre ao Perfil {Perfil} em {denominação} |
 
 No "não se aplica", a frase vem precedida de *"Não se aplica:"*, e diz a quem o documento era
 pedido. Com `divergente_do_publicado`, acrescenta-se *"— o Edital publicado o exigia de todo

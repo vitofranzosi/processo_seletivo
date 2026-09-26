@@ -286,9 +286,9 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 - **Código que nenhum Perfil tem.** O documento seria inalcançável: a gravação é recusada, como já é
   recusado o recorte exato que aponta Modalidade inexistente.
 - **Perfil acrescentado depois, por composição, por Retificação ou por duplicação (`043`).** Se ele
-  tiver a Modalidade do código, o documento transversal passa a valer nele sem nenhuma linha nova. O
-  aviso da `043` sobre os documentos *restritos ao Perfil de origem* não conta os transversais, porque
-  eles não são restritos a Perfil nenhum.
+  tiver a Modalidade do código, o documento transversal passa a valer nele sem nenhuma linha nova.
+  Fica registrado, para a `043`, que um documento transversal não é *restrito ao Perfil de origem*:
+  esta spec não cobra nada da outra.
 - **"Partir de um Edital anterior".** O recorte transversal é copiado pelo código. Se o Edital novo
   não tiver Perfil com aquele código, a publicação o acusa como inalcançável. Nada é remapeado em
   silêncio.
@@ -402,8 +402,9 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 - **FR-723**: Uma Retificação NÃO PODE alterar a lista exigida de inscrição já enviada. As inscrições
   enviadas depois dela DEVEM gravar a lista da versão que aceitaram.
 - **FR-724**: Remover de todos os Perfis a Modalidade de um código usado por recorte transversal DEVE
-  ser impedido, na publicação e na Retificação, como documento inalcançável. Remover de alguns
-  Perfis DEVE ser permitido.
+  ser impedido, como documento inalcançável: na gravação do rascunho, na publicação e na
+  Retificação. Remover de alguns Perfis DEVE ser permitido. Quando a recusa vem da gravação da etapa
+  Perfis, a mensagem DEVE nomear o documento que ficaria inalcançável (`D-010`).
 
 ### Antes da feature
 
@@ -411,11 +412,12 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
   publicada continua sendo lida como foi publicada.
 - **FR-726**: Inscrição enviada antes desta feature não tem lista exigida, e NÃO DEVE ganhar uma
   escrita depois do envio (`D-004`). A Mesa, a consulta administrativa e a inscrição enviada no
-  portal DEVEM
-  **reconstruí-la** a partir da versão aceita, pela regra única (`FR-705`), e DEVEM dizer que ela foi
-  reconstruída.
+  portal DEVEM **reconstruí-la** a partir da versão aceita, pela regra única (`FR-705`). A Mesa e a
+  consulta administrativa DEVEM dizer que ela foi reconstruída. O portal lista só os documentos que
+  o candidato enviou, e a reconstrução não muda o que ele mostra, por isso ele não traz o aviso.
 - **FR-727**: Quando a versão aceita tiver o recorte "Todos os Perfis" + Modalidade de um Perfil, e
-  o Perfil da inscrição tiver Modalidade de mesma denominação, a Mesa DEVE mostrar o documento como
+  a inscrição concorrer, no seu Perfil, em Modalidade de mesma denominação, a Mesa DEVE mostrar o
+  documento como
   *não pedido pelo portal, exigido pelo Edital publicado* (`D-007`). Vale para a lista reconstruída
   **e** para a gravada. Um Edital publicado antes da #161 pode continuar recebendo inscrições depois
   desta feature, e a lista dessas inscrições é gravada sobre a mesma versão ambígua.
@@ -432,11 +434,15 @@ Cada caso abaixo é requisito, e a rastreabilidade o cobra como os `FR-`.
 
 - **UX-080** — **A opção de recorte transversal diz o alcance.** A opção mostra a denominação, o
   código e quantos Perfis têm aquela Modalidade (*"Pessoas com Deficiência (PcD) — em todos os Perfis
-  que a têm (16 de 16)"*). Fica separada dos pares Perfil × Modalidade, e antes deles.
-- **UX-081** — **A razão se lê como frase.** Na Mesa e na consulta administrativa, a razão é escrita para quem
-  lê: *"pedido de todos os candidatos"*, *"pedido de quem concorre ao Perfil C1"*, *"pedido de quem
-  concorre em Pessoas com Deficiência, em todos os Perfis"*, *"pedido de quem concorre ao Perfil C1 em
-  PPIQ"*. O "não se aplica" diz a quem o documento era pedido.
+  que a têm (16 de 16)"*). Fica separada dos pares Perfil × Modalidade, e antes deles. Os rótulos
+  são fixos: na composição, o grupo **"Em todos os Perfis"** vem antes do grupo **"Modalidade de um
+  Perfil"**; na Retificação, o campo se chama **"Modalidade em todos os Perfis"**. O resumo público
+  usa esse mesmo rótulo.
+- **UX-081** — **A razão se lê como frase.** Na Mesa e na consulta administrativa, a razão é escrita
+  para quem lê: *"pedido de todos os candidatos"*, *"pedido de quem concorre ao Perfil C1"*, *"pedido
+  de quem concorre em Pessoas com Deficiência, em todos os Perfis"*, *"pedido de quem concorre ao
+  Perfil C1 em Pretos, Pardos, Indígenas e Quilombolas"*. A Modalidade é nomeada pela
+  **denominação**, e nunca pelo código. O "não se aplica" diz a quem o documento era pedido.
 - **UX-082** — **"Não se aplica" não compete com o que foi pedido.** Os documentos que não se aplicam
   aparecem depois dos pedidos, e se distinguem deles sem depender só de cor.
 - **UX-083** — **A lista reconstruída se anuncia.** Na inscrição anterior à feature, a Mesa diz, uma
@@ -564,6 +570,16 @@ mesma lógica. Esta feature não reabre isso. O caso do 140/2025, um documento "
 todos" por linha, cabe inteiro, porque é **trocar o recorte da linha que já existe**. Um Edital
 publicado com o mesmo documento repetido por Perfil (N linhas exatas) não se reduz a uma linha por
 Retificação: pode tornar uma delas transversal, mas as outras ficam. Isso fica em Riscos e lacunas.
+
+### D-010 — a gravação recusa o que tornaria o documento inalcançável, como já faz
+
+Acrescentada na análise de consistência. O rascunho valida os documentos contra os Perfis **de cada
+gravação**, e hoje já recusa, em qualquer etapa, o documento cuja Modalidade exata deixou de existir.
+O recorte transversal segue o mesmo precedente para o código que nenhum Perfil tem e para o código
+declarado ampla (`FR-703`, `FR-704`, `FR-724`). O custo é conhecido: a etapa Perfis pode ser recusada
+por causa de um documento. Por isso a mensagem nomeia o documento, e não só o campo. A coerência de
+denominação continua só na publicação (`research.md`, R-007): renomear é edição em curso, e travar a
+gravação a cada renomeação seria travar o trabalho no meio.
 
 ## LGPD
 

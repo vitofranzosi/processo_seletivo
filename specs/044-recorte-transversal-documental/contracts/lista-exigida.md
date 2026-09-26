@@ -15,7 +15,9 @@
 - **O quê:** uma linha por Documento Exigido da versão que o envio registra como aceita, com
   situação, recorte e divergência (`data-model.md`, §2).
 - **Garantias no banco:** as linhas não se alteram nem se apagam (privilégio + gatilho). Toda linha
-  inserida pertence a uma inscrição `SUBMETIDA`, da versão aceita por ela, no instante do envio.
+  inserida pertence a uma inscrição `SUBMETIDA`, da versão aceita por ela, com o instante do envio.
+- **Garantia da aplicação, e não do banco:** nenhuma lista é escrita para inscrição enviada antes da
+  feature (`D-004`). Só o ato de envio e a semente gravam (`research.md`, R-005).
 - **Idempotência:** o reenvio com a mesma chave não chega à gravação. A unicidade
   `(inscricao, requisito_id)` é a segunda barreira.
 - **Auditoria:** nenhum evento próprio. O evento `SUBMETER`, que já existe, cobre o ato (`FR-729`).
@@ -52,7 +54,8 @@ Documentos pedidos
                                                não apresentado
 
 Não se aplicam a esta inscrição
-  Autodeclaração étnico-racial   Não se aplica: pedido de quem concorre ao Perfil C1 em PPIQ
+  Autodeclaração étnico-racial   Não se aplica: pedido de quem concorre ao Perfil C1 em Pretos,
+                                 Pardos, Indígenas e Quilombolas
 ```
 
 - Os pedidos vêm primeiro. Os que não se aplicam vêm depois, sob um título próprio, e se distinguem
@@ -90,3 +93,5 @@ Não se aplicam a esta inscrição
 - A página da inscrição enviada e o comprovante tiram as linhas da lista. Continuam mostrando só os
   documentos **enviados**, como hoje.
 - O código de verificação não muda: ele é calculado sobre os arquivos, e não sobre a lista.
+- **Sem aviso de reconstrução.** O portal mostra só o que o candidato enviou, e a reconstrução não
+  muda isso (`FR-726`).

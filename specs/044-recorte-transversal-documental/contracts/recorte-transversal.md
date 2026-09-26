@@ -16,10 +16,13 @@
 modalityCode: { type: [string, 'null'] }
 ```
 
-- **Opcional na leitura pública.** A consulta pública serve o conteúdo **literal** de cada versão, e
-  as versões publicadas antes da versão canônica 17 não têm o campo. Ausente e `null` significam a
-  mesma coisa: não recorta por código. `required` não o inclui.
-- **Presente em toda versão publicada a partir da 17**, com `null` quando não recorta.
+- **Obrigatório no esquema, como todo campo do conteúdo publicado.** `required` o inclui:
+  `tests/contract/test_forma_publicada.py` exige que não haja campo opcional no conteúdo publicado, e
+  o `attachmentId` do degrau 9 entrou do mesmo jeito. Obrigatório quer dizer presente, com `null`
+  quando não recorta.
+- **O literal antigo.** A consulta pública serve o conteúdo **literal** de cada versão, e as versões
+  publicadas antes da versão canônica 17 não têm o campo, como já não têm `attachmentId` as de antes
+  da 9. Quem lê trata ausente e `null` do mesmo modo: não recorta por código.
 - `specs/001-processo-seletivo-editais/contracts/openapi.yaml` ganha a propriedade, e a descrição do
   esquema passa de "quatro combinações" para as cinco formas.
 
@@ -89,7 +92,7 @@ Exigido apenas da modalidade
   ── Em todos os Perfis ──
   Pessoas com Deficiência (PcD) — em todos os Perfis que a têm (16 de 16)
   Pretos, Pardos, Indígenas e Quilombolas (PPIQ) — em todos os Perfis que a têm (16 de 16)
-  ── Num Perfil só ──
+  ── Modalidade de um Perfil ──
   LP01 — Letras · PcD — Pessoas com Deficiência
   …
 ```

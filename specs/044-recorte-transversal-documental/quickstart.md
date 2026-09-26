@@ -43,7 +43,7 @@ no percurso. O shell só aparece para subir o servidor e ler o código de acesso
 
    | Inscrição | Identidade | Laudo | Autodeclaração étnico-racial |
    |---|---|---|---|
-   | PcD no C2 | apresentado, "pedido de todos os candidatos" | apresentado, "pedido de quem concorre em Pessoas com Deficiência, em todos os Perfis" | "Não se aplica: pedido de quem concorre ao Perfil C1 em PPIQ" |
+   | PcD no C2 | apresentado, "pedido de todos os candidatos" | apresentado, "pedido de quem concorre em Pessoas com Deficiência, em todos os Perfis" | "Não se aplica: pedido de quem concorre ao Perfil C1 em Pretos, Pardos, Indígenas e Quilombolas" |
    | AC no C1 | apresentado | "Não se aplica: pedido de quem concorre em Pessoas com Deficiência, em todos os Perfis" | "Não se aplica: …" |
 
    Nenhum aviso de lista reconstruída.
@@ -117,7 +117,7 @@ As famílias novas ou tocadas:
 
 | Família | O que prova |
 |---|---|
-| `tests/unit/editais/test_documentos*.py` | as cinco formas, a regra do código, o veredito, o predicado da divergência |
+| `tests/unit/inscricoes/test_aplicabilidade.py`, `tests/unit/editais/test_documentos_recusas.py` | as cinco formas, a regra do código, o veredito, o predicado da divergência, as recusas na gravação |
 | `tests/unit/editais/test_validacao_inscricao.py` | os cinco achados, um por código, a mensagem com três saídas |
 | `tests/contract/test_elevacao_degrau_17.py` | o conteúdo da 16 é lido como `modalityCode: null`, e o literal não muda |
 | `tests/unit/publicacoes/test_pdf_documentos_exigidos.py` | um grupo por código |

@@ -69,7 +69,9 @@ recálculo que `D-003` recusa. Com o veredito completo, o portal (que só quer o
 resolvida **no Perfil da inscrição**, tem aquele código (`FR-701`). Candidato sem modalidade: não se
 aplica.
 
-**Os chamadores.** São doze, levantados um a um. Os do rascunho continuam sobre a versão vigente:
+**Os chamadores.** `aplicaveis` tem seis chamadas diretas em produção (`portal/views.py`, duas;
+`rascunho.py`, três; `submissao.py`, uma), e `requisitos_da_inscricao` espalha a regra por mais
+nove pontos. Os do rascunho continuam sobre a versão vigente:
 `_documentos_anunciados`, os descartes por troca de modalidade, `_requisito_aplicavel`,
 `documentos_que_a_retificacao_invalida`, `pendencias_para_enviar` e `_conferir_documentos`. Os da
 inscrição enviada passam a ler a lista (R-006). Todos trocam `aplicaveis(requisitos, …)` por
@@ -108,8 +110,20 @@ disciplina de aplicação:
 - *a versão da lista é a que o envio registrou* (`FR-714`, o caso-limite do envio concorrente com a
   Retificação);
 - *nada se grava para rascunho*;
-- *nada se grava depois do envio* (`D-004`). O instante tem de ser o do ato, e um preenchimento
-  retroativo não tem como satisfazê-lo.
+- *o instante da lista é o do ato*.
+
+**O que o gatilho não garante: o preenchimento retroativo (`D-004`).** Quem copiar `submitted_at` para
+`gravada_em` passa pelas três conferências. A análise de consistência apontou isso, e as duas saídas
+de banco foram pesadas e descartadas:
+- *Exigir que a inscrição tenha sido alterada na mesma transação* (`xmin` da linha contra a transação
+  corrente). `_gravar_o_ato` grava dentro de um `atomic()` aninhado, que é um *savepoint*: o `xmin`
+  seria o da subtransação, e não o da transação de fora. A conferência recusaria o próprio envio.
+- *Cortar pelo instante da migration* (recusar inscrição enviada antes dela). A semente e as fixtures
+  põem `submitted_at` no passado de propósito (o `--dias-atras` do `seed_demo`), e seriam recusadas.
+
+A garantia fica na aplicação, e é dita assim: só `enviar_inscricao` e a semente chamam a gravação,
+nenhuma migration a chama, e um teste prende as duas coisas. É menos que as duas camadas das
+demais regras desta tabela, e o plano o diz em vez de fingir o contrário.
 
 **Por que duas camadas, se o precedente tem uma.** `ValorDeFato`, os fatos congelados no mesmo ato,
 é protegido só pelo privilégio. Não tem gatilho nem guarda de modelo. O CLAUDE.md descreve as
@@ -149,8 +163,15 @@ ato.
 
 **O comprovante não muda (`FR-720`).** Ele lista só os documentos enviados, e o código de
 verificação é calculado sobre `DocumentoSubmetido`, fora do recorte. Trocar a fonte das linhas não
-muda o que ele imprime. Muda só que uma Retificação futura deixa de poder tirar da tela um documento
-que a pessoa mandou.
+muda o que ele imprime.
+
+**Do que a lista protege, dito com precisão.** Os quatro leitores já leem a `versao_aceita`, que é
+imutável: uma Retificação posterior **não** muda o que eles mostram, com ou sem lista. O que a lista
+protege é a mudança da **regra** no código, como a que esta própria feature faz em `aplicaveis`. Foi
+esse o motivo da decisão de 25/09 (D4): *"Sem ela, qualquer mudança de recorte de D1 muda
+retroativamente a leitura das inscrições antigas."* Por isso o teste que prova a lista grava uma
+linha diferente do que a regra de hoje calcularia, e confere que a Mesa mostra a linha. Um teste que
+só retifica e compara passaria sem a feature.
 
 **Orçamento de consultas.** A lista "Inscrições recebidas" tem um teste que exige o **mesmo** número
 de consultas com 5 e com 300 inscrições (`tests/integration/interface/test_inscricoes_em_escala.py`).
@@ -165,8 +186,8 @@ consulta por linha.
 | Regra | Na gravação do rascunho | Na publicação e na Retificação | Código do achado |
 |---|---|---|---|
 | `modalityCode` com `profileId` ou `modalityId` (`FR-702`) | recusa, `campo="modalityCode"` | IMPEDE | `document_requirement_scope_conflict` |
-| código que nenhum Perfil tem (`FR-703`, `FR-724`) | recusa | IMPEDE | `document_requirement_modality_code_unknown` |
-| código declarado ampla em algum Perfil (`FR-704`) | recusa | IMPEDE | `document_requirement_modality_code_general` |
+| código que nenhum Perfil tem (`FR-703`, `FR-724`) | recusa, em qualquer etapa (`D-010`) | IMPEDE | `document_requirement_modality_code_unknown` |
+| código declarado ampla em algum Perfil (`FR-704`) | recusa, em qualquer etapa (`D-010`) | IMPEDE | `document_requirement_modality_code_general` |
 | denominações diferentes para o código (`FR-706`) | — | IMPEDE, **um por código** | `modality_code_name_divergent` |
 | "Todos os Perfis" + Modalidade de um Perfil (`FR-708`) | — (como hoje) | IMPEDE, mensagem com 3 saídas | `document_requirement_modality_scope_ambiguous` |
 
@@ -204,7 +225,9 @@ o seletor "Exigido apenas da modalidade" ganha dois `<optgroup>`:
 - **Em todos os Perfis**, antes: uma opção por código presente no Edital, fora os declarados ampla em
   algum Perfil. O rótulo é o de `UX-080`: *"Pessoas com Deficiência (PcD) — em todos os Perfis que a
   têm (16 de 16)"*. O valor é `codigo:<código>`.
-- **Num Perfil só**, depois: os pares Perfil × Modalidade de hoje, com o valor UUID de hoje.
+- **Modalidade de um Perfil**, depois: os pares Perfil × Modalidade de hoje, com o valor UUID de
+  hoje. O rótulo não diz "Num Perfil só" porque, com o Perfil em "Todos", o par produz a forma que a
+  #161 recusa, e o rótulo não pode prometer o contrário.
 
 `alcance_da_aplicabilidade` (`interface/forms.py`) passa a devolver também os códigos. `ler_inscricao`
 separa pelo prefixo: `codigo:` vai para `modalityCode`, UUID vai para `modalityId`.
@@ -258,8 +281,10 @@ de `documentRequirements`. É artefato de outra feature, e não é reescrita aqu
 
 - **API.** `DocumentRequirementSerializer` (`editais/api/serializers.py`) ganha `modalityCode =
   CharField(required=False, allow_null=True, max_length=100)`. `specs/001-…/contracts/openapi.yaml`
-  lista os campos de `DocumentRequirement` como obrigatórios na resposta, e ganha `modalityCode` (o
-  contrato da API é atualizado junto, como a Constituição exige).
+  ganha `modalityCode` em `DocumentoExigidoPublicado`, **dentro** de `required`.
+  `tests/contract/test_forma_publicada.py` exige que no conteúdo publicado não haja campo opcional
+  (*"obrigatório aqui significa presente, e não preenchido"*), e o degrau 9 pôs `attachmentId` ali
+  pelo mesmo caminho.
 - **Reuso.** `remapear` já copia os campos que não são identidade (`**documento`), e o código não é
   identidade. Atravessa sem mudança. O teste do reuso ganha a asserção de que ele atravessa.
 - **Semente.** `seed_demo` põe inscrições em `SUBMETIDA` escrevendo `versao_aceita` direto. Ele
