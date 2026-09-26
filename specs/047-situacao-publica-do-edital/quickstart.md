@@ -58,7 +58,7 @@ lacuna e siga (protocolo da `034`).
 1. Com um Edital de inscrições encerradas e dois Eventos futuros, abra a página.
 
 **Esperado**
-- o próximo Evento aparece no cabeçalho, com descrição e data, sem rolar até o cronograma;
+- o próximo Evento aparece no cabeçalho, com descrição e data, antes da seção do cronograma;
 - sem Evento futuro nem em curso, nada é dito, e nunca *"em análise"*.
 
 ## 5 — O prazo de recurso sem se identificar (`SC-284`, `FR-769` a `FR-771`)
@@ -72,6 +72,7 @@ lacuna e siga (protocolo da `034`).
 - o resultado mostra o período de interposição, com as duas datas, aberto;
 - a lista de vigentes mostra *recurso até* a data de encerramento;
 - a data é igual à do acompanhamento;
+- encerrado o Edital pela gestão com o prazo ainda em curso, a página do resultado continua dizendo o prazo;
 - o definitivo diz o **mesmo** prazo, e não um prazo novo;
 - não há botão de recorrer;
 - num marco sem janela, nada é dito sobre recurso.

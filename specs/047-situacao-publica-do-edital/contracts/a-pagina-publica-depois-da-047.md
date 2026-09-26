@@ -20,7 +20,7 @@ Ato sem data encontrada: o desfecho é dito sem data. O motivo e o autor **nunca
 | Edital | Aparece? | Grupo |
 |---|---|---|
 | cancelado | não (inalterado) | — |
-| encerrado, ou de Processo encerrado | sim | *Inscrições encerradas*, qualquer que seja o período |
+| encerrado, ou de Processo encerrado | sim | *Inscrições encerradas*, qualquer que seja o período: nunca *Inscrições abertas* nem *Próximas seleções* (`FR-763`) |
 | sem desfecho | sim | pelo período (inalterado) |
 
 ## Agora e próximo (cabeçalho da página)

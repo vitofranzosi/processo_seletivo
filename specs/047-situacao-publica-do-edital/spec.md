@@ -287,7 +287,10 @@ um, como tem para os `FR-`.
 - **FR-762**: Havendo desfecho do Edital e do Processo, a página MUST dizer o do Edital. Havendo só
   o do Processo, MUST dizer o do Processo (`D-003`).
 - **FR-763**: A vitrine MUST continuar excluindo o Edital cancelado e MUST continuar listando o
-  encerrado, que passa a ser distinguido, no cartão, do Edital apenas com inscrições encerradas.
+  encerrado, que passa a ser distinguido, no cartão, do Edital apenas com inscrições encerradas. O
+  Edital com desfecho MUST NOT ser agrupado sob inscrições abertas nem sob próximas seleções,
+  qualquer que seja o período declarado: ele fica entre as de inscrições encerradas, porque o
+  sistema não recebe mais inscrição dele.
 - **FR-764**: A página pública MUST NOT exibir o motivo registrado no ato de encerramento ou de
   cancelamento. Diz o desfecho e a data, e nada além (`D-006`).
 
@@ -377,8 +380,9 @@ Nenhuma entidade nova. A spec lê:
 - **SC-286**: A feature entrega **zero** campos novos de situação, **zero** migrations de dado e
   **zero** linhas de conteúdo publicado alteradas. **Todos** os Editais consultáveis antes continuam
   abrindo.
-- **SC-287**: Numa página de Edital com inscrições encerradas, uma pessoa de fora responde *"o que
-  acontece agora ou depois?"* sem abrir o PDF e sem rolar até o cronograma.
+- **SC-287**: Numa página de Edital com inscrições encerradas e Evento futuro, a resposta a *"o que
+  acontece agora ou depois?"* — a descrição e a data do próximo Evento — está no cabeçalho da
+  página, **antes** da seção do cronograma na ordem do documento, e fora do PDF.
 
 ---
 

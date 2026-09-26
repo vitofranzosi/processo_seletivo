@@ -85,6 +85,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - o Evento com término em curso sai `class="marco em_curso"` com *Acontecendo agora*;
   - o Evento com `status: "CANCELADO"`, declarado pelo rascunho da API, sai `class="marco cancelado"`, com *cancelado* em texto e sem *Acontecendo agora*;
   - **para os quatro tipos, a classe do portal corresponde a `supervisao.fase_do_evento`** no mesmo `agora` (`SC-283`);
+  - o período de inscrições com `status: "CANCELADO"` e prazo em curso **não** sai `cancelado`: sai pela régua do período (`em_curso`, com a marca *Aberta*), porque o sistema continua recebendo inscrição e a página não pode contradizê-lo. É o caso-limite *"Período de inscrições marcado como cancelado"* e a exceção do `FR-766`. O comentário do teste aponta o achado registrado na spec;
   - o mesmo, no acompanhamento do candidato.
 - [ ] T008 [US2] Em `backend/processo_seletivo/portal/leitura.py` (**EXISTENTE**):
   - apagar `_situacao_do_evento` (linhas 62-89);
@@ -111,7 +112,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 - [ ] T011 [P] [US1] Escrever os testes em `backend/tests/integration/portal/test_desfecho_publico.py` (**NOVO**). Finalizar por `processos/application/finalizacao.py` (`cancel_edital`, `close_edital`, `close_process`), como `tests/integration/processos/test_finalizacao_concorrente.py` faz. Casos:
   - Edital cancelado com período em curso: a página diz *cancelado* e a data do ato, sem *Aberta* nem *Faltam* (`FR-760`, `FR-761`);
   - cancelado com período por abrir: sem *Em breve* nem *começam em*;
-  - Edital encerrado: página e cartão da vitrine dizem *encerrado*, e o cartão está no grupo *Inscrições encerradas* mesmo com o período declarado ainda em curso (`FR-763`, `R-3`);
+  - Edital encerrado: página e cartão da vitrine dizem *encerrado*, e o cartão está no grupo *Inscrições encerradas* mesmo com o período declarado ainda em curso; o mesmo com o período ainda por abrir, que nunca vai para *Próximas seleções* (`FR-763`, `R-3`);
   - Processo encerrado com Edital publicado: a página diz o encerramento do Processo (`FR-762`);
   - precedência: o Edital encerrado de um Processo depois cancelado diz o desfecho do **Edital** (`D-003`);
   - o motivo digitado no ato **não** aparece no HTML (`FR-764`);
@@ -119,7 +120,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - o cancelado continua fora da vitrine e responde 200 pelo endereço;
   - cronograma, documentos e resultados continuam na página com desfecho.
 - [ ] T012 [US1] Em `backend/processo_seletivo/processos/application/selectors.py` (**EXISTENTE**), criar `desfechos(editais)`. Recebe Editais com `processo` carregado e devolve `{edital_id: Desfecho | None}` pela precedência de `data-model.md`. A data vem do `AtoAdministrativo` mais recente de operação `ENCERRAR`/`CANCELAR` do agregado aplicável, lido numa **única** consulta, e só quando algum estado é final. Sem ato encontrado, `em=None` (`research.md`, `R-2`). Definir `Desfecho` como dataclass congelada no mesmo módulo.
-- [ ] T013 [P] [US1] Criar `backend/tests/unit/processos/test_desfechos.py` (**NOVO**), ou acrescentar ao teste de selectors existente se houver:
+- [ ] T013 [P] [US1] Criar `backend/tests/unit/processos/test_desfechos.py` (**NOVO**; a pasta existe e não tem teste de selectors):
   - uma consulta para N Editais finais e zero para N Editais publicados;
   - a precedência;
   - o ato ausente devolve `em=None`.
@@ -133,7 +134,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - `backend/processo_seletivo/portal/templates/portal/_cartao_da_selecao.html`.
 
   CSS das três chaves novas em `base.html`.
-- [ ] T017 [P] [US1] Em `backend/tests/portal/` (**EXISTENTE**, arquivo de consultas da vitrine; criar `test_consultas_da_vitrine.py` se não houver), medir que a vitrine com 1 e com 5 Editais encerrados emite o **mesmo** número de consultas (`R-7`).
+- [ ] T017 [P] [US1] Criar `backend/tests/portal/test_consultas_da_vitrine.py` (**NOVO**; hoje nenhum teste mede as consultas da vitrine) e medir, com `CaptureQueriesContext`, que a vitrine com 1 e com 5 Editais encerrados emite o **mesmo** número de consultas (`R-7`).
 
 **Checkpoint**: nenhuma página de Edital com desfecho afirma inscrição aberta.
 
@@ -152,6 +153,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - nenhum Evento pendente: nenhum bloco, e o HTML não contém *em análise*;
   - o Evento cancelado nunca é próximo;
   - Edital com desfecho: nenhum bloco;
+  - o bloco aparece **antes** da seção do cronograma na ordem do HTML (`SC-287`), e não depende do PDF;
   - Retificação publicada com vigência **futura** que antecipa um Evento: o próximo é o da versão vigente, e não o da Retificação (edge case).
 - [ ] T019 [US3] Em `backend/processo_seletivo/portal/leitura.py`, criar `agora_e_proximo(conteudo, agora)` sobre `marcos_pendentes`. Devolve `{"em_andamento": [...], "proximos": [...]}` com nome e início. O período de inscrições **não** entra em `em_andamento`, porque a marca e a faixa já o dizem (contrato).
 - [ ] T020 [US3] Em `backend/processo_seletivo/portal/views.py`, `selecao`: pôr `agora_e_proximo` no contexto, e só quando não houver desfecho.
@@ -175,10 +177,11 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - definitiva do **mesmo** ato, publicada depois do encerramento (a definitiva com prazo aberto é recusada pela `018`): o prazo dito é o da primeira publicação;
   - marco sem janela, e com `admits: false`: nenhuma menção a recurso;
   - publicação sucedida: nenhuma menção a prazo;
+  - **Edital encerrado pela gestão com o prazo ainda em curso** (`close_edital`): a página do resultado continua dizendo o prazo aberto, com a mesma data de `situacao_do_prazo`. É o caso-limite *"Edital com desfecho e janela recursal ainda aberta"*: o desfecho não apaga a norma aplicada a ato já publicado, e a projeção não decide por conta própria o que o domínio de recursos aceita;
   - nenhuma ação de recorrer em caso algum. O teste existente `test_a_pagina_nao_oferece_acao_de_recurso` continua.
 - [ ] T023 [US4] Em `backend/processo_seletivo/recursos/application/selectors.py` (**EXISTENTE**), criar `janela_da_publicacao_divulgada(publicacao)`: o conteúdo vigente do Edital, `declaracao_do_marco(conteudo, publicacao.marco_id)` e `janela_da_publicacao(publicacao, declaracao)`. Devolve `(abre, fecha)` ou `None`. A docstring diz que ela é **a** conta da interposição, e por que a norma é a vigente (`research.md`, `R-5`; `D-005`).
 - [ ] T024 [US4] Em `backend/processo_seletivo/recursos/application/interpor.py` (**EXISTENTE**, `_janelas_pertinentes`, linhas 164-205), fazer o ramo `publicacao is not None` chamar `janela_da_publicacao_divulgada`. O ramo do `ResultadoEtapa` não muda. Rodar os testes de `tests/portal/test_parecer_do_titular.py` e os de interposição (`grep -rl interpor tests/`): **devem continuar verdes sem edição**.
-- [ ] T025 [US4] Em `backend/processo_seletivo/portal/views.py`:
+- [ ] T025 [US4] Em `backend/processo_seletivo/portal/views.py` (`FR-769`, `FR-770`):
   - `resultado`: quando `not foi_sucedida`, pôr no contexto a janela e se ela está aberta no instante da leitura;
   - `selecao`: anotar cada item de `resultados_divulgados` com `fecha_em` só quando o prazo estiver aberto.
 - [ ] T026 [US4] Em `backend/processo_seletivo/portal/templates/portal/resultado.html` e no trecho de resultados divulgados de `selecao.html`, dizer o período em texto, com dia, mês, ano e hora do encerramento na zona institucional. Pode dizer, sem link de ação, que a interposição é feita na área do candidato (`FR-771`, MAY). Comentário no template: o prazo é o da interposição, e a página não o recalcula.
@@ -197,7 +200,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - preliminar sucedido por definitivo: a página do Edital lista o definitivo como vigente e, em *Publicações anteriores* do mesmo marco e lista, o preliminar com natureza, data e link para o endereço dele;
   - a página do definitivo lista o preliminar como anterior;
   - cadeia de três: ordem, e só a última vigente;
-  - duas listas no mesmo marco (fixture de `tests/fixtures/recortes.py` ou `sorteio.py`, conforme a que produz duas listas divulgadas): o histórico de uma não aparece sob a outra;
+  - duas listas no mesmo marco (`montar_cenario_7_1_2` e `emitir_recorte(lista_id=...)` de `tests/fixtures/recortes.py`, publicando cada lista e sucedendo só uma): o histórico de uma não aparece sob a outra;
   - definitivo que corrigiu por recurso (`deferir_corrigindo` de `tests/fixtures/recursos.py`): a causa continua dita, sem natureza nova;
   - nenhum identificador de ator no HTML (`FR-776`);
   - **no máximo duas navegações** da página do Edital até o preliminar (`SC-285`), afirmado pela presença do link na primeira página.
@@ -218,7 +221,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - Evento sem início: sem fase e não é próximo.
 
   Usar o padrão de `tests/fixtures/legado.py` para produzir o conteúdo antigo.
-- [ ] T033 Rodar `tests/integration/portal/test_leitura_sem_escrita.py`, `manage.py migrate --check` e `make preparar` (`N de 34`): nada escrito e nada migrado (`SC-286`).
+- [ ] T033 Rodar `tests/integration/portal/test_leitura_sem_escrita.py`, `manage.py migrate --check` e `make preparar` (`N de 34`): nada escrito e nada migrado (`FR-774`, `SC-286`).
 - [ ] T034 Escrever `specs/047-situacao-publica-do-edital/rastreabilidade.md` (**NOVO**):
   - uma linha por `FR-760` a `FR-776`, por `SC-282` a `SC-287` e **por caso-limite da spec**, cada uma com o teste que a prende;
   - uma linha para cada identificador em negrito do cabeçalho *Faixa de identificadores*;
