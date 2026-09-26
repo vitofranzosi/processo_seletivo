@@ -232,8 +232,8 @@ antigo não muda.
 - [X] T063 Criar `specs/044-recorte-transversal-documental/rastreabilidade.md`: uma linha para **cada** identificador em negrito da spec (`FR-700` a `FR-729`, `UX-080` a `UX-083`, `SC-260` a `SC-268`), **e uma para cada caso-limite** da seção Edge Cases, com o teste que o prende. `SC-260` e `SC-261` são demonstração (`quickstart.md`, cenário C), e a linha diz isso
 - [X] T064 Rodar `cd backend && uv run pytest tests/test_citacoes_de_requisito.py tests/test_sem_dado_pessoal_da_amostra.py` e corrigir antes de empurrar
 - [ ] T065 Demonstrar o cenário C de `quickstart.md` (o 140/2025) e anotar no PR as contagens de `SC-260` e `SC-261` — **não feito nesta sessão**: recompor 16 Perfis pela interface não cabia no percurso; ver `rastreabilidade.md`, SC-260 e SC-261
-- [ ] T066 Rodar `cd backend && make lint check test-pg POSTGRES_USER=<superusuário> DB_NAME=<banco da worktree>`, sem editar nada durante a suíte. Registrar passando/pulados no PR
-- [ ] T067 Registrar, fora do escopo, os dois achados de `research.md` R-014: `ValorDeFato` sem gatilho, e o filtro de concorrência da consulta que repete a modalidade por Perfil
+- [X] T066 Rodar `cd backend && make lint check test-pg POSTGRES_USER=<superusuário> DB_NAME=<banco da worktree>`, sem editar nada durante a suíte. Registrar passando/pulados no PR — *7747 passando, 11 pulados, em 26/09/2026*
+- [X] T067 Registrar, fora do escopo, os dois achados de `research.md` R-014: `ValorDeFato` sem gatilho, e o filtro de concorrência da consulta que repete a modalidade por Perfil
 
 ---
 
