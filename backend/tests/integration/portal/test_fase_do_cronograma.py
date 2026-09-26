@@ -191,3 +191,59 @@ def test_o_acompanhamento_le_a_mesma_regua(client, enviada, selecao):
         assert f'class="marco {leitura.situacao_do_evento(evento, conteudo, agora)}"' in linha(
             bloco, nome
         )
+
+
+class RelogioQueAnda:
+    """O `timezone` de `portal/views.py`, com um `now()` que avança uma hora a cada chamada.
+
+    É o jeito determinístico de expor duas leituras do relógio na mesma requisição: se a view
+    pergunta a hora duas vezes, recebe duas horas diferentes. Todo o resto delega ao módulo real.
+    """
+
+    def __init__(self, inicio):
+        self.proxima = inicio
+
+    def now(self):
+        atual, self.proxima = self.proxima, self.proxima + timedelta(hours=1)
+        return atual
+
+    def __getattr__(self, nome):
+        return getattr(timezone, nome)
+
+
+def test_a_pagina_julga_tudo_no_mesmo_instante(
+    client, api_client, manager_headers, process_payload
+):
+    """A revisão do #193: a view chamava `timezone.now()` para cada pedaço da página.
+
+    O período de inscrições abre meia hora depois do instante da leitura. Julgado num instante só,
+    a marca diz *"Em breve"* e a linha do período no cronograma diz *por vir*. Com um relógio por
+    pedaço, a marca era julgada antes da abertura e o cronograma depois dela, e a mesma página
+    dizia *"Em breve"* no alto e *"Acontecendo agora"* logo abaixo.
+    """
+    from unittest.mock import patch
+
+    agora = timezone.now()
+    rascunho = rascunho_de_selecao()
+    rascunho["schedule"] = [
+        {
+            "id": identificador(475, 0),
+            "type": "Inscrições",
+            "description": "Período de inscrições",
+            "startAt": (agora + timedelta(minutes=30)).isoformat(),
+            "endAt": (agora + timedelta(days=10)).isoformat(),
+            "order": 0,
+            "isRegistrationPeriod": True,
+        }
+    ]
+    edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+
+    # O relógio começa **depois** de publicar: antes disso a versão ainda não vigorava, e a página
+    # responderia 404 por outra razão.
+    with patch("processo_seletivo.portal.views.timezone", RelogioQueAnda(timezone.now())):
+        corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert "Em breve" in corpo
+    assert 'class="marco futuro"' in linha(corpo, "Período de inscrições")
+    principal = re.search(r"<main[^>]*>(.*)</main>", corpo, re.S).group(1)
+    assert "Acontecendo agora" not in principal
