@@ -1,4 +1,4 @@
-"""Os cinco sinais: cada um nasce da sua condição, e some quando ela se desfaz.
+"""Os sinais: cada um nasce da sua condição, e some quando ela se desfaz.
 
 A contraprova é metade de cada teste. Um sinal que aparece e nunca some é indistinguível de uma
 seção fixa, e é exatamente o que `D-001` recusa.
@@ -35,143 +35,63 @@ def das_especies(sinais, especie):
 
 
 # ---------------------------------------------------------------------------
-# `UX-001` — Etapa sem marco no cronograma
+# `UX-001` e `UX-002` saíram do catálogo (045, `FR-738`, `FR-739`)
+#
+# Os casos que os prendiam foram apagados junto com eles, e cada um tem sucessor: a Etapa sem marco
+# é aviso da validação do conteúdo (`tests/unit/editais/test_etapa_sem_evento.py`), e a fase do
+# Evento é derivada (`tests/unit/editais/test_calendario.py`). A tabela-verdade do `UX-002` não
+# tem sucessor porque não há mais o que comparar: declarado e relógio deixaram de ser duas fontes.
+# O que sobra dela é a garantia de que o sinal espúrio não volta — o caso logo abaixo.
 # ---------------------------------------------------------------------------
 
 
-def test_etapa_sem_evento_vinculado_produz_o_sinal(
-    processo_a, edital_a, edital_c, comissao_de_a, presidenta
+def test_cronograma_normal_nao_produz_sinal_algum(
+    api_client, manager_headers, processo_a, edital_a, comissao_de_a, presidenta
 ):
-    """`FR-026` e `SC-008`: dito **nesses termos**, e nunca como atraso ou progresso zero.
+    """`045`, `FR-738` — o teste 6 da proposta: nenhum `UX-002` espúrio.
 
-    A Etapa sem referência a Evento é publicável e legítima — a validação recusa referência a
-    Evento inexistente, e **admite ausência de referência**. Transformá-la em impeditivo mudaria o
-    que o sistema aceita publicar, o que é decisão normativa e não cabe a um painel.
+    Um Edital publicado **como a tela o publica** — todo Evento `PLANEJADO`, porque nada escreve
+    outro valor —, com um Evento encerrado, um em curso e um futuro. Antes da `045` isso produzia
+    um sinal permanente por Evento cujo início já tinha passado, apontando para uma Retificação que
+    não alcança o campo. Agora não produz nada: a fase vem do relógio, e não há o que divergir.
     """
-    achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_001)
-
-    # A Etapa `Prova didática` do Edital A não declara `scheduleEventId`; a `Análise documental`
-    # declara, e não produz sinal.
-    assert [sinal.alvo for sinal in achados] == ["Prova didática"]
-    unico = achados[0]
-    assert unico.edital.id == edital_a.id
-    assert "sem marco no cronograma" in unico.mensagem
-    for proibido in ("atrasad", "aguardando", "progresso", "0 %", "0%"):
-        assert proibido not in unico.mensagem.lower()
-    assert unico.medida is None
-
-
-def test_etapa_com_evento_vinculado_nao_produz_o_sinal(
-    processo_a, edital_a, edital_c, comissao_de_a, presidenta
-):
-    """A contraprova: o Edital C tem uma Etapa só, e ela aponta o Evento do período."""
-    achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_001)
-
-    assert edital_c.id not in {sinal.edital.id for sinal in achados}
-
-
-# ---------------------------------------------------------------------------
-# `UX-002` — declarado × posição temporal (a tabela-verdade de `T-005`)
-# ---------------------------------------------------------------------------
-
-# As três posições, em ids distintos por combinação. Combinação omitida é a que ninguém testa.
-COMBINACOES = [
-    ("PLANEJADO", "antes", False, 411),
-    ("PLANEJADO", "dentro", True, 412),
-    ("PLANEJADO", "depois", True, 413),
-    ("EM_ANDAMENTO", "antes", True, 414),
-    ("EM_ANDAMENTO", "dentro", False, 415),
-    ("EM_ANDAMENTO", "depois", True, 416),
-    ("CONCLUIDO", "antes", True, 417),
-    ("CONCLUIDO", "dentro", True, 418),
-    ("CONCLUIDO", "depois", False, 419),
-    ("CANCELADO", "depois", False, 420),
-]
-SEM_TERMINO = 421
-
-
-def _janela(agora, posicao):
-    if posicao == "antes":
-        return agora + timedelta(days=10), agora + timedelta(days=11)
-    if posicao == "dentro":
-        return agora - timedelta(days=1), agora + timedelta(days=1)
-    return agora - timedelta(days=11), agora - timedelta(days=10)
-
-
-@pytest.fixture
-def edital_da_tabela_verdade(api_client, manager_headers, processo_a):
-    """Um Edital cujo cronograma percorre a tabela-verdade inteira de `T-005`."""
     agora = timezone.now()
-    eventos = [
-        evento_do_periodo(
-            7,
-            inicio=agora - timedelta(days=2),
-            fim=agora + timedelta(days=2),
-            status="EM_ANDAMENTO",
-        )
-    ]
-    for ordem, (declarado, posicao, _, base) in enumerate(COMBINACOES, start=2):
-        inicio, fim = _janela(agora, posicao)
-        eventos.append(
-            evento_simples(
-                7,
-                base=base,
-                descricao=f"{declarado} {posicao}",
-                inicio=inicio,
-                fim=fim,
-                ordem=ordem,
-                status=declarado,
-            )
-        )
-    # Sem término declarado: marco instantâneo, forma normal do dado, e por isso nunca divergente.
-    eventos.append(
-        evento_simples(
-            7,
-            base=SEM_TERMINO,
-            descricao="EM_ANDAMENTO sem término",
-            inicio=agora - timedelta(days=3),
-            ordem=len(COMBINACOES) + 2,
-            status="EM_ANDAMENTO",
-        )
-    )
-    return publicar_no_processo(
+    publicar_no_processo(
         api_client,
         manager_headers,
         processo_a,
         number="07",
-        title="Tabela-verdade",
-        chave="supervisao-tabela-verdade",
-        draft=rascunho_com_periodo(7, eventos=eventos, etapas=[etapa_ligada(7)]),
+        title="Cronograma normal",
+        chave="supervisao-cronograma-normal",
+        draft=rascunho_com_periodo(
+            7,
+            eventos=[
+                evento_do_periodo(
+                    7, inicio=agora - timedelta(days=2), fim=agora + timedelta(days=2)
+                ),
+                evento_simples(
+                    7,
+                    base=470,
+                    descricao="Prova já aplicada",
+                    inicio=agora - timedelta(days=10),
+                    fim=agora - timedelta(days=9),
+                ),
+                evento_simples(
+                    7,
+                    base=471,
+                    descricao="Resultado por vir",
+                    inicio=agora + timedelta(days=20),
+                    ordem=3,
+                ),
+            ],
+            etapas=[etapa_ligada(7)],
+        ),
     )
 
+    especies = {sinal.especie for sinal in supervisao.sinais(processo_a, presidenta)}
 
-def test_a_tabela_verdade_inteira_de_ux_002(
-    processo_a, edital_a, comissao_de_a, presidenta, edital_da_tabela_verdade
-):
-    """`FR-027` e `SC-009`: as seis que produzem sinal, as três coerentes e as duas exclusões.
-
-    Nem o `status` nem a posição é corrigido: os dois são apresentados, e a tela não afirma qual
-    deles vale.
-    """
-    achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_002)
-
-    divergentes = {
-        sinal.alvo for sinal in achados if sinal.edital.id == edital_da_tabela_verdade.id
-    }
-    esperados = {f"{d} {p}" for d, p, produz, _ in COMBINACOES if produz}
-    assert divergentes == esperados
-    assert "EM_ANDAMENTO sem término" not in divergentes
-
-
-def test_ux_002_apresenta_as_duas_informacoes_sem_arbitrar(
-    processo_a, edital_a, comissao_de_a, presidenta, edital_da_tabela_verdade
-):
-    """`UX-002`: na forma *declarado X · prazo encerrado em D*."""
-    achados = das_especies(supervisao.sinais(processo_a, presidenta), supervisao.UX_002)
-
-    encerrado = next(sinal for sinal in achados if sinal.alvo == "PLANEJADO depois")
-    assert "declarado planejado" in encerrado.mensagem
-    assert "prazo encerrado em" in encerrado.mensagem
+    assert "UX-002" not in especies
+    assert "UX-001" not in especies
 
 
 # ---------------------------------------------------------------------------
@@ -1009,22 +929,25 @@ def test_edital_parado_por_ato_nao_aponta_trabalho_pendente(peca, quem_divulga, 
 
 @pytest.mark.django_db(transaction=True)
 def test_o_edital_parado_nao_silencia_as_especies_anteriores(peca, quem_divulga):
-    """**A assimetria é deliberada**: só as quatro da `038` se calam.
+    """**A assimetria é deliberada**: só as espécies de trabalho pendente se calam.
 
-    O `UX-001` e o `UX-002` falam do **conteúdo publicado**, que um Edital encerrado continua tendo
-    e continua podendo Retificar; o `UX-004` fala de ordem que envelheceu, e ela envelhece depois
-    do encerramento como antes. Silenciá-las mudaria o comportamento de seis sinais que ninguém
-    pediu para mudar — e é o defeito que a correção mais facilmente introduziria.
+    O `UX-004` fala de ordem que envelheceu, e ela envelhece depois do encerramento como antes — e
+    reemitir a ordem continua possível enquanto o **Processo** não termina (045, `R-7`). Silenciá-lo
+    mudaria o comportamento de um sinal que ninguém pediu para mudar.
+
+    *A `038` escreveu este caso sobre o `UX-001`*, que disparava de brinde pela Etapa sem Evento do
+    cenário; ele saiu do catálogo (045), e o caso passou a montar o que prova: o ato obsoleto.
     """
     from processo_seletivo.processos.models import Edital
 
     processo = peca["cenario"]["processo"]
+    deferir(peca)
     antigas = {
         sinal.especie
         for sinal in supervisao.sinais(processo, quem_divulga)
         if sinal.especie not in supervisao.TRABALHO_PENDENTE
     }
-    assert antigas, "sem espécie anterior disparando, este teste não provaria a preservação"
+    assert supervisao.UX_004 in antigas, "sem ato obsoleto, este teste não provaria a preservação"
 
     Edital.objects.filter(pk=peca["cenario"]["edital"].pk).update(status=Edital.Status.ENCERRADO)
 
@@ -1035,3 +958,121 @@ def test_o_edital_parado_nao_silencia_as_especies_anteriores(peca, quem_divulga)
     }
 
     assert depois == antigas, "o encerramento moveu uma espécie que não é de trabalho pendente"
+
+
+# ---------------------------------------------------------------------------
+# O recurso aparece desde que chega (045, US2)
+#
+# **A `038` lia só a peça admitida.** Um recurso recém-interposto ficava invisível na condução, para
+# todo papel, justamente até alguém o admitir — e só o admitia quem o encontrava por outro caminho.
+# A convergência de 20/09 interpôs um às 00h37 e o painel não mudou em superfície nenhuma.
+# ---------------------------------------------------------------------------
+
+
+def segunda_peca(peca, *, protocolo="REC-2026-SEGUNDA1"):
+    """Uma peça **recém-interposta**, sem juízo, sobre a segunda inscrição do cenário."""
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.fixtures.recursos import interpor
+
+    cenario = peca["cenario"]
+    outra = cenario["inscricoes"][1]
+    return outra, interpor(
+        inscricao=outra,
+        versao=peca["recurso"].versao,
+        resultado=ResultadoEtapa.vigentes.get(inscricao=outra, etapa_id=cenario["etapa"]),
+        protocolo=protocolo,
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_recurso_recem_interposto_produz_o_sinal_na_admissibilidade(peca, presidenta):
+    """`045`, `FR-732` e `UX-085` — o teste 2 da proposta.
+
+    A peça admitida do cenário é julgada antes, para que só a nova espere: sem juízo nenhum, ela já
+    é trabalho de quem julga, e o sinal diz em que fase está.
+    """
+    deferir(peca)
+    segunda_peca(peca)
+
+    achados = das_especies(
+        supervisao.sinais(peca["cenario"]["processo"], presidenta), supervisao.UX_064
+    )
+
+    assert len(achados) == 1
+    assert "aguardando admissibilidade" in achados[0].mensagem
+    assert achados[0].medida == supervisao.Medida(numerador=1, denominador=1)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_admitida_a_peca_o_mesmo_sinal_passa_a_dizer_julgamento(peca, presidenta):
+    """`045`, `FR-732`: a admissão troca a fase dita, e não o número de sinais."""
+    from tests.fixtures.recursos import admitir
+
+    deferir(peca)
+    _, nova = segunda_peca(peca)
+    processo = peca["cenario"]["processo"]
+    assert (
+        "admissibilidade"
+        in das_especies(supervisao.sinais(processo, presidenta), supervisao.UX_064)[0].mensagem
+    )
+
+    admitir(nova)
+
+    achados = das_especies(supervisao.sinais(processo, presidenta), supervisao.UX_064)
+    assert len(achados) == 1
+    assert "aguardando julgamento" in achados[0].mensagem
+
+
+@pytest.mark.django_db(transaction=True)
+def test_com_pecas_nas_duas_fases_a_mensagem_diz_as_duas(peca, presidenta):
+    """`UX-085`: uma peça admitida e outra recém-chegada contam no mesmo sinal, e ele diz ambas.
+
+    Dizer só uma das fases faria quem abre a tela procurar a fila errada.
+    """
+    segunda_peca(peca)
+
+    achados = das_especies(
+        supervisao.sinais(peca["cenario"]["processo"], presidenta), supervisao.UX_064
+    )
+
+    assert len(achados) == 1
+    assert "admissibilidade ou julgamento" in achados[0].mensagem
+    assert achados[0].medida == supervisao.Medida(numerador=2, denominador=2)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_na_admissibilidade_a_comissao_impedida_continua_sendo_o_ux_005(peca, presidenta):
+    """`045`, `FR-732`: a partição da `038` vale nas duas fases — **um fato, um sinal**.
+
+    Admitir confere o impedimento sobre o Resultado atacado, sem Etapa — o mesmo alcance que
+    `impedidos_por_recurso` já usa. Por isso a peça recém-chegada, com a comissão inteira
+    impedida, é `UX-005`, e nunca `UX-064`.
+    """
+    deferir(peca)
+    outra, _ = segunda_peca(peca)
+    impedir(outra, "maria")
+
+    sinais = supervisao.sinais(peca["cenario"]["processo"], presidenta)
+
+    travadas = das_especies(sinais, supervisao.UX_005)
+    assert len(travadas) == 1
+    assert "aguardando admissibilidade" in travadas[0].mensagem
+    assert das_especies(sinais, supervisao.UX_064) == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_peca_inadmitida_ou_julgada_nao_compoe_sinal(peca, presidenta):
+    """`045`, `FR-733` — o teste 3 da proposta: decidida, a peça sai da fila.
+
+    As duas formas de decidir: julgar a peça admitida, e não admitir a recém-chegada.
+    """
+    from tests.fixtures.recursos import admitir
+
+    deferir(peca)
+    _, nova = segunda_peca(peca)
+    admitir(nova, admitido=False, motivo="Intempestivo.")
+
+    sinais = supervisao.sinais(peca["cenario"]["processo"], presidenta)
+
+    assert das_especies(sinais, supervisao.UX_064) == []
+    assert das_especies(sinais, supervisao.UX_005) == []

@@ -1119,3 +1119,46 @@ def test_o_fragmento_sem_o_parametro_continua_desenhando_listas_vazias(client, s
     resposta = client.get(reverse("interface:fragmento-marco", args=[PERFIL]), {"indice": "0"})
 
     assert resposta.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# A Etapa sem Evento é aviso de composição (045, `FR-739`, `UX-086`)
+#
+# Era o `UX-001` da Atenção, e apontava para uma Retificação que não alcança o vínculo. Passou a ser
+# dita onde se corrige sem custo — na composição —, como **aviso**, e continua dita no Edital
+# publicado, na validação do conteúdo.
+# ---------------------------------------------------------------------------
+
+AVISO_DA_ETAPA = "não está vinculada a nenhum Evento do Cronograma"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_sem_evento_e_aviso_na_etapa_e_na_revisao(client, seletor_ligado, edital):
+    """Aparece como *"Aviso"*, e nunca *"Impede"*: a ausência é publicável e legítima."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    resposta = client.post(etapa(edital, "etapas"), etapas_form())
+    assert resposta.status_code == 302, resposta.content
+
+    for nome in ("etapas", "revisao"):
+        pagina = client.get(etapa(edital, nome)).content.decode()
+        assert AVISO_DA_ETAPA in pagina, f"a etapa {nome} não diz a Etapa sem Evento"
+        trecho = pagina[: pagina.index(AVISO_DA_ETAPA)]
+        assert trecho.rfind("p-aviso") > trecho.rfind("p-erro"), "dita como impedimento"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_edital_publicado_diz_a_etapa_sem_evento_na_validacao_do_conteudo(
+    client, seletor_ligado, edital_a
+):
+    """O Edital da amostra publica a *Prova didática* sem Evento: o fato continua dito, fora da
+    Atenção, na página do próprio Edital."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = client.get(reverse("interface:detalhe", args=[edital_a.id])).content.decode()
+
+    assert "Validação do conteúdo" in pagina
+    assert AVISO_DA_ETAPA in pagina

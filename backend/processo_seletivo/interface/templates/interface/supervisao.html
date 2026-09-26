@@ -110,13 +110,13 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
     <ul class="marcos">
       {% for marco in item.proximos_marcos %}
       {% comment %}
-      FR-023 e D-004: o estado do Evento aparece como **declaração**, e a tela não o corrige nem o
-      arbitra contra as datas. Quando os dois discordam, quem diz isso é o sinal de UX-002.
+      A fase do marco é a do relógio (045, FR-735, UX-088), e não o estado declarado: ele nascia
+      planejado e ficava. Só o marco em curso ganha marca; o futuro, a data já diz.
       {% endcomment %}
       <li>
         <strong>{{ marco.descricao }}</strong>
         — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
-        {% if marco.declarado %}<span class="marca">declarado {{ marco.declarado_legivel }}</span>{% endif %}
+        {% if marco.em_andamento %}<span class="marca">em andamento</span>{% endif %}
       </li>
       {% endfor %}
     </ul>
@@ -130,14 +130,14 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
   {% comment %}
   D-001 e FR-025: sinal ausente não ocupa espaço, e não há seção permanente por sinal. A região
   encolhe a uma linha, mas não some — sumir não distinguiria "nada a sinalizar" de "a página não
-  carregou".
+  carregou". A linha é global ou relativa ao alcance do leitor (045, FR-730).
   {% endcomment %}
   {% if sinais %}
   <ul class="sinais">
     {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
   </ul>
   {% else %}
-  <p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>
+  <p class="nenhuma">{{ ausencia }}</p>
   {% endif %}
 </section>
 {% endblock %}

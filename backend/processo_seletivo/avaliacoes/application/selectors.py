@@ -37,6 +37,11 @@ POR_PAGINA = 25
 SEM_NENHUM = "sem_nenhum"
 INCOMPLETA = "incompleta"
 COMPLETA = "completa"
+# **O filtro do número "sem avaliador suficiente"** (045, `FR-742`). O número é `carentes` — toda
+# inscrição com menos avaliadores que o previsto, **inclusive zero** —, e o link dele levava a
+# `incompleta`, que exclui quem não tem avaliador nenhum: a lista aberta pelo número era menor que
+# o número. `carente` é o conjunto que o número conta; `incompleta` continua para quem o usa.
+CARENTE = "carente"
 # E o quarto filtro, que não é sobre cobertura e sim sobre **progresso**: quais inscrições ainda
 # não têm todas as avaliações **concluídas**. É a pergunta da véspera do resultado, e ela não se
 # respondia — cobertura fala de atribuição, e ter avaliador não é ter avaliação.
@@ -150,6 +155,8 @@ def inscricoes_da_etapa(
         consulta = consulta.filter(atribuidas=0)
     elif cobertura == INCOMPLETA:
         consulta = consulta.filter(atribuidas__gt=0, atribuidas__lt=previstas)
+    elif cobertura == CARENTE:
+        consulta = consulta.filter(atribuidas__lt=previstas)
     elif cobertura == COMPLETA:
         consulta = consulta.filter(atribuidas__gte=previstas)
     elif cobertura == AVALIACAO_PENDENTE:
@@ -190,7 +197,7 @@ def _recorte_da_prontidao(panorama, prontidao):
     }
 
 
-def resumo_da_etapa(*, edital, etapa, panorama=None):
+def resumo_da_etapa(*, edital, etapa, panorama=None, conteudo=None):
     """O que falta, em três números — antes do detalhe (FR-014).
 
     Uma consulta agregada sobre as inscrições submetidas, e não um laço sobre elas: com mil
@@ -199,32 +206,65 @@ def resumo_da_etapa(*, edital, etapa, panorama=None):
     **A 013 acrescenta dimensões a este mesmo resumo**, e não um painel ao lado dele: cobertura,
     conclusão e prontidão são perguntas sobre a mesma população, e contá-las em lugares diferentes
     daria dois números para a mesma Etapa (013, D-004, FR-009).
+
+    **A população é a dos participantes da Etapa** (045, `FR-742`). O resumo contava toda inscrição
+    submetida do Edital — eliminada antes, à espera da Etapa anterior, fora do corte —, enquanto a
+    lista logo abaixo dele mostrava só os participantes: *"2 de 5 sem avaliador suficiente"* sobre
+    uma lista de quatro. Quem não pode ser distribuído ali ficava "carente" para sempre, no painel e
+    na própria distribuição. Agora as duas contam o mesmo conjunto, da mesma fonte:
+
+    - **com o panorama**, pelo conjunto que ele já materializou — o mesmo que a listagem filtra, e
+      sem consulta a mais;
+    - **sem ele**, pelas mesmas regras dobradas na agregação (`_so_participantes`). `conteudo` é o
+      publicado, quando quem chama já o leu, e dele saem **as duas coisas** que a restrição
+      pergunta: as Etapas anteriores e o gate, e os marcos do corte. Passar só o conteúdo, sem as
+      Etapas, fazia a restrição reler a versão vigente para saber o que vem antes — duas consultas
+      por Etapa, e, com uma Retificação publicada no meio da leitura, Etapas e corte de uma versão
+      com a ordem de outra.
+
+    Não há modo "toda inscrição": um parâmetro que deixasse contar a população errada seria a
+    segunda verdade que a `FR-742` existe para remover.
     """
     previstas = avaliacoes_previstas(etapa)
-    por_inscricao = (
-        Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
-        .annotate(
-            atribuidas=Count(
-                "atribuicoes",
-                filter=Q(atribuicoes__etapa_id=etapa["id"], atribuicoes__ativo=True),
-                distinct=True,
-            ),
-            concluidas=Count(
-                "atribuicoes",
-                filter=Q(
-                    atribuicoes__etapa_id=etapa["id"],
-                    atribuicoes__ativo=True,
-                    atribuicoes__avaliacao__estado=Avaliacao.Estado.CONCLUIDA,
-                ),
-                distinct=True,
-            ),
+    populacao = Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
+    if panorama is not None:
+        populacao = populacao.filter(id__in=panorama["participantes"])
+    else:
+        # **Uma versão só**: as Etapas vigentes saem do mesmo conteúdo que o corte lê. Sem
+        # conteúdo na mão, a restrição lê a versão uma vez e usa para as duas perguntas.
+        vigentes = (
+            None
+            if conteudo is None
+            else {UUID(str(item["id"])): item for item in conteudo.get("stages") or []}
         )
-        .aggregate(
-            total=Count("id"),
-            sem_nenhum=Count("id", filter=Q(atribuidas=0)),
-            completas=Count("id", filter=Q(atribuidas__gte=previstas)),
-            avaliadas=Count("id", filter=Q(concluidas__gte=previstas)),
+        populacao = _so_participantes(
+            populacao,
+            edital,
+            UUID(str(etapa["id"])),
+            prefixo="",
+            vigentes=vigentes,
+            conteudo=conteudo,
         )
+    por_inscricao = populacao.annotate(
+        atribuidas=Count(
+            "atribuicoes",
+            filter=Q(atribuicoes__etapa_id=etapa["id"], atribuicoes__ativo=True),
+            distinct=True,
+        ),
+        concluidas=Count(
+            "atribuicoes",
+            filter=Q(
+                atribuicoes__etapa_id=etapa["id"],
+                atribuicoes__ativo=True,
+                atribuicoes__avaliacao__estado=Avaliacao.Estado.CONCLUIDA,
+            ),
+            distinct=True,
+        ),
+    ).aggregate(
+        total=Count("id"),
+        sem_nenhum=Count("id", filter=Q(atribuidas=0)),
+        completas=Count("id", filter=Q(atribuidas__gte=previstas)),
+        avaliadas=Count("id", filter=Q(concluidas__gte=previstas)),
     )
     total = por_inscricao["total"]
     completas = por_inscricao["completas"]

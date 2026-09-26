@@ -141,7 +141,7 @@ def test_quem_julga_recurso_chega_a_tela_de_recursos(client, seletor_ligado, pub
     corpo = client.get(reverse("interface:detalhe", args=[publicado.id])).content.decode()
 
     assert reverse("interface:recursos", args=[publicado.id]) in corpo
-    assert "Recursos recebidos" in corpo
+    assert "Recursos aguardando decisão" in corpo
 
 
 @pytest.mark.django_db
@@ -1103,3 +1103,43 @@ def test_o_aviso_que_resta_na_familia_nao_impede_a_publicacao(com_os_tres_achado
     )
     assert achados["profile_without_milestone"] == Severity.BLOCKING_ERROR
     assert achados["drawn_milestone_without_method"] == Severity.BLOCKING_ERROR
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_acao_de_recursos_conta_so_as_pecas_que_aguardam_decisao(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """`045`, `FR-734`: o número da ação é de trabalho, e não de histórico.
+
+    Ele contava toda peça recebida — decididas inclusive —, e nenhum teste conferia o número: só a
+    palavra. Aqui há duas peças, uma admitida e esperando julgamento, outra não admitida. A fila
+    tem **uma**, e é isso que a lista de Processos e o cartão do Edital dizem.
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.fixtures.recursos import admitir, interpor
+    from tests.fixtures.recursos_us4 import cenario_julgavel
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=151, codigo="0511"
+    )
+    cenario = peca["cenario"]
+    outra = cenario["inscricoes"][1]
+    admitir(
+        interpor(
+            inscricao=outra,
+            versao=peca["recurso"].versao,
+            resultado=ResultadoEtapa.vigentes.get(inscricao=outra, etapa_id=cenario["etapa"]),
+            protocolo="REC-2026-INADMIT1",
+        ),
+        admitido=False,
+        motivo="Intempestivo.",
+    )
+
+    identificar(client, "marta.julgadora", ["julgador"])
+    lista = client.get(reverse("interface:lista")).content.decode()
+    cartao = client.get(reverse("interface:detalhe", args=[cenario["edital"].id])).content.decode()
+
+    assert "Recursos aguardando decisão (1)" in lista
+    assert "Recursos aguardando decisão (1)" in cartao
+    assert "Recursos recebidos" not in cartao

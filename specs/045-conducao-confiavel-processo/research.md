@@ -260,3 +260,68 @@ dia decidiu.
 **E as fixtures que passam a emitir o aviso não quebram**: `comissao.py:50-56`, `snapshot.py:329-339`,
 o seed e ~10 arquivos com `scheduleEventId: None` só conferem impeditivos ou filtram por código.
 Conferido arquivo a arquivo pelo mapeamento; nenhum teste afirma *"Nada pendente"* nem zero avisos.
+
+---
+
+## R-9 — O que a `T003` revelou: duas fixtures que colidem por idempotência
+
+**Encontrado na implementação**, e registrado — não corrigido, porque não é desta feature.
+
+> **Resolvido fora da `045`, pelo #189 (26/09/2026) — e medido, o registro abaixo erra em dois
+> pontos:** eram **31** casos, e não 29; e o Edital sem documentos era a **exceção** (2 casos), não
+> a regra. O texto original fica como estava, porque é o que se sabia quando foi escrito; a
+> correção e o que ela muda para esta feature estão em *Desfecho*, no fim desta seção.
+
+Ao passar a conferir o `PUT` do rascunho, `levar_a_publicacao` reprovou **29 casos** em três arquivos
+de documento (`tests/authorization/test_documento_da_mesa.py`, `tests/integration/avaliacoes/test_documento.py`,
+`tests/integration/inscricoes/test_consulta_administrativa_intocada.py`). A causa é anterior à `045`:
+
+- `edital_a` e `edital_com_documentos` (`tests/conftest.py`) criam o Processo com o **mesmo**
+  `process_payload` e a **mesma** chave de idempotência. Usadas no mesmo teste, a segunda criação
+  **reencena** a primeira e devolve o Edital **já publicado**.
+- O `PUT` do rascunho com documentos recebia **409** (*"Somente Edital em elaboração pode ser
+  editado"*) e era engolido; a submissão, a homologação e a publicação reencenavam por idempotência.
+- **Efeito**: nesses testes, `edital_com_documentos` é o `edital_a` — **sem os documentos exigidos**
+  que o nome promete. Os testes passam, mas não sobre o cenário que declaram.
+
+**O que esta feature fez**: a asserção da `T003` vale só quando o Edital estava em elaboração antes
+do `PUT` — o caso em que o rascunho podia ser aceito, e em que a recusa da fase declarada tem de
+aparecer. O caso de reencenação continua passando em silêncio, como antes, com o comentário no
+ajudante apontando para cá.
+
+**O que fica para decisão**: separar a chave de idempotência das duas fixtures faria
+`edital_com_documentos` ser, de fato, outro Edital com documentos — e pode mudar o que esses 29 casos
+provam. É trabalho de revisão dos testes da `012`, e não escopo aqui.
+
+### Desfecho — o que a medição mostrou, e o que a correção fez
+
+**A contagem era 31.** Com a asserção incondicional e as fixtures antigas, **todos** os casos dos
+três arquivos caem, com o mesmo 409. Em todos havia um Edital só — dois no caso que também pede
+`edital_b`.
+
+**E o "efeito" acima só valia para dois deles.** O pytest instancia as fixtures na ordem dos
+argumentos, e qual rascunho sobrevivia dependia disso:
+
+- **29 casos** pedem `edital_com_documentos` antes de `cenario`. Ele nasce primeiro, com os dois
+  requisitos, e quem reencena é o `edital_a` — o Edital tinha documentos, e o 409 engolido era o do
+  rascunho sem eles.
+- **2 casos** — `test_alocado_sem_atribuicao_nao_abre_inscricao_alguma` e
+  `test_remover_a_alocacao_revoga_o_acesso_ao_documento`, em `test_documento_da_mesa.py` — pedem
+  `processo_a` antes. Só neles o Edital "com documentos" não tinha requisito nenhum, e o arquivo
+  servido não correspondia a requisito algum do Edital.
+
+O defeito real, portanto, não era "os testes rodam sem documentos": era que **o cenário dependia da
+ordem dos argumentos**, e reordená-los mudaria em silêncio o que 29 casos provam.
+
+**O que o #189 fez** (`c1cf2cf`): `edital_com_documentos` ganhou Processo, código (`PS-2026-012`) e
+chave de idempotência próprios, com `processo_com_documentos` e `comissao_com_documentos` ao lado; os
+três arquivos passaram a usá-los. As duas fixtures não convivem — a semente continua `0` —, e juntas
+o `PUT` recusa com a causa verdadeira (*"Identificadores já vinculados a outro contêiner"*). Os 31
+casos passam sem mudança de asserção: os 29 agora correm sobre o Edital com documentos por
+construção, e os 2 da Mesa passam a provar a recusa e a revogação sobre um documento que o Edital de
+fato exige.
+
+**O que muda aqui**: a asserção da `T003` pode ser **incondicional**. O #189 já a traz assim, e
+mesclá-lo com esta branch dá um único conflito, em `backend/tests/fixtures/publicacao.py` — resolva
+pela forma do #189, que remove o `em_elaboracao` e o comentário que aponta para esta seção. Medido
+sobre a mescla, resolvida desse modo: `7882 passed, 11 skipped`.

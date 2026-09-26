@@ -154,6 +154,7 @@ from processo_seletivo.interface import (
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
+from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
 from processo_seletivo.interface.templatetags import interface_extras
 from processo_seletivo.portal.arquivos import copia_verificada, entregar
 from processo_seletivo.processos.application.commands import (
@@ -3958,6 +3959,9 @@ def processo_detalhe(request, processo_id):
             # As mesmas chamadas da Supervisão — lidas, nunca recalculadas.
             "pulso": supervisao_do_processo.pulso(processo),
             "atencao_visivel": alguma,
+            # A linha de ausência sai do mesmo `alcancadas` que decide a região (045, `FR-730`):
+            # global só para quem alcança o catálogo inteiro, relativa para quem alcança parte.
+            "ausencia": supervisao_do_processo.frase_de_ausencia(alcancadas),
             "sinais": (
                 supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas)
                 if alguma
@@ -4023,6 +4027,9 @@ def supervisao(request, processo_id):
     processo = _processo_do_ator(ator, processo_id)
     if supervisao_do_processo.pode_supervisionar(ator, processo) is None:
         raise Http404
+    # Lido uma vez: é dele que saem os sinais **e** a linha de ausência, e as duas coisas não
+    # podem consultar alcances diferentes (045, `FR-730`).
+    alcancadas = supervisao_do_processo.alcance(ator, processo)
     return render(
         request,
         "interface/supervisao.html",
@@ -4031,7 +4038,11 @@ def supervisao(request, processo_id):
             "pulso": supervisao_do_processo.pulso(processo),
             # Os sinais recebem o ator, e o Pulso não: a supressão por alcance é **por sinal**,
             # porque é o sinal que tem destino (FR-004, FR-004a).
-            "sinais": supervisao_do_processo.sinais(processo, ator),
+            "sinais": supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas),
+            # A Supervisão só abre para a gestão, e a gestão sozinha **não** alcança o catálogo
+            # inteiro — recursos e divulgação têm porta própria. Aqui a frase global é de quem
+            # acumula papéis, e é o comportamento certo.
+            "ausencia": supervisao_do_processo.frase_de_ausencia(alcancadas),
         },
     )
 
@@ -4350,19 +4361,8 @@ def _registrar_divergencia(ator, documento, request):
 # pedir "o papel de presidente" mandaria pedir o que não existe.
 # ---------------------------------------------------------------------------
 
-# A base de quem propõe Retificação, e a condução que ela produz (037, `FR-541`, `FR-543`).
-#
-# **A frase é produzida, e não redigida.** Imitar o texto numa tela nova derrotaria a guarda que a
-# `033` deixou — existe uma maneira de dizer isto, e ela é pública exatamente para que não nasça
-# uma segunda. A forma é a **cheia**, com a oração do ato (`FR-543a`), e ela nomeia a permissão e
-# nunca uma pessoa (`FR-543b`).
-#
-# **Aviso, e não recusa** (`FR-543d`): é dita em telas onde ninguém tentou operação alguma — ao
-# lado de "Conteúdo imutável", e ao lado da recusa do corte que fala de outra coisa.
-BASE_DE_RETIFICAR = base_de_permissao("retificar")
-CONDUCAO_DA_RETIFICACAO = frase_do_aviso(
-    (BASE_DE_RETIFICAR,), acao="A Retificação", que="a proponha"
-)
+# A base de quem propõe Retificação e a condução dela moraram aqui até a `045`: a Atenção passou a
+# dizê-la também, e as duas vivem em `interface/conducao.py`, importadas no topo deste módulo.
 # E a de quem compõe (037, `FR-542`). **O percurso da `T011` é que a autorizou a existir**: ele
 # reproduziu o Gestor da reauditoria e mediu que o caminho até os Perfis existe, leva à etapa, e
 # termina numa tela de leitura — *"Você não tem a permissão `edital:elaborar`"*. O que falta ali é
@@ -6326,6 +6326,18 @@ def ocupacao(request, edital_id, marco_id):
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
+                # **Quem lê e não apura sabe a quem pedir** (045, `FR-740`). A auditoria abre a
+                # ocupação pelo `UX-065` e encontrava só "Ocupação ainda não apurada", sem botão e
+                # sem dizer de quem é o ato. Pelo mecanismo único, das mesmas bases da ordenação.
+                "conducao_para_emitir": (
+                    ""
+                    if pode_emitir
+                    else frase_do_aviso(
+                        BASES_DA_GESTAO_DA_COMISSAO,
+                        acao="Apurar a ocupação deste marco",
+                        que="a apure",
+                    )
+                ),
                 "resultado": request.session.pop("resultado_da_ocupacao", None),
                 # **Qual das duas ações aconteceu**, e não só que algo deu certo. As duas voltam
                 # para esta tela, e um aviso único dizia "Apuração emitida" depois de causar a
@@ -6949,6 +6961,15 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 # auditoria —, e quem só publica recebe 404 lá. Oferecer o caminho a essa pessoa
                 # é oferecer um beco, e foi o que a auditoria da 017 encontrou (E2E17-002).
                 "pode_ver_a_classificacao": _pode_ver_a_classificacao(ator, edital),
+                # **O ato sucessor não é de quem publica** (045, `FR-740`). A prévia bloqueia o ato
+                # obsoleto e manda emitir o sucessor na classificação — tela que quem só publica
+                # não abre, e cujo link por isso some. Sem esta frase, a pessoa recebia a instrução
+                # e nenhum caminho nem a quem pedir.
+                "conducao_do_sucessor": frase_do_aviso(
+                    BASES_DA_GESTAO_DA_COMISSAO,
+                    acao="Emitir o ato sucessor",
+                    que="o emita",
+                ),
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "autoridades": autoridades.CATALOGO,
@@ -8064,6 +8085,18 @@ def sorteio(request, edital_id, marco_id):
                 # multiplica.
                 "recortes": _com_o_corte(edital, estado["marco"], estado["recortes"]),
                 "pode_emitir": pode_emitir,
+                # **Quem lê e não conduz o sorteio sabe a quem pedir** (045, `FR-740`). A tela
+                # escondia todo formulário de quem não emite, e a auditoria que chegava pelo
+                # `UX-004` não descobria de quem era o ato. Pelo mecanismo, como na ordenação.
+                "conducao_para_emitir": (
+                    ""
+                    if pode_emitir
+                    else frase_do_aviso(
+                        BASES_DA_GESTAO_DA_COMISSAO,
+                        acao="Conduzir o sorteio deste marco",
+                        que="o conduza",
+                    )
+                ),
                 # **Quem publica o resultado não é necessariamente quem conduz o sorteio**
                 # (`017`, FR-025): a capacidade é própria, e oferecer o caminho a quem receberia
                 # 403 seria oferecer um beco. Com ela, o passo seguinte fica **na tela em que o

@@ -7,27 +7,25 @@ que ninguém verifica é uma intenção: este teste é o que a torna cobrável.
 from processo_seletivo.interface import supervisao
 
 
-def test_a_enumeracao_tem_exatamente_dez_especies():
-    """`FR-565`: acrescentar uma décima primeira quebra aqui, antes de chegar à tela.
+def test_a_enumeracao_tem_exatamente_oito_especies():
+    """`FR-744` (045): uma nona espécie quebra aqui, antes de chegar à tela — e uma a menos também.
 
     O número é escrito à mão de propósito. Derivá-lo da própria enumeração faria o teste concordar
     com qualquer tamanho — que é o oposto de fechar um catálogo.
 
-    **O guarda já ficou vermelho duas vezes, e as duas por serviço prestado.** A sexta chegou pela
-    `027` — o `UX-046`, do acervo que publica vaga imediata e não publica a linha do quadro. As
-    quatro desta leva são da `038`, e levam a Atenção à cauda do certame: `UX-063`, avaliação
-    distribuída e não concluída; `UX-064`, recurso aguardando julgamento com julgador disponível;
-    `UX-065`, recorte com ordem vigente e ocupação não apurada; `UX-066`, ato de ordenação vigente
-    sem divulgação vigente. Fechar o catálogo nunca foi proibir que ele cresça; foi exigir que
-    crescer seja uma decisão escrita.
+    **O guarda já ficou vermelho três vezes, e as três por serviço prestado.** A sexta espécie
+    chegou pela `027` — o `UX-046`. As quatro da `038` levaram a Atenção à cauda do certame:
+    `UX-063`, `UX-064`, `UX-065` e `UX-066`. E a `045` **tirou duas**: o `UX-001`, a Etapa sem
+    marco, que passou a aviso da validação do conteúdo, onde tem remédio; e o `UX-002`, que
+    comparava o `status` declarado com o relógio, e deixou de ter o que comparar quando a fase
+    passou a ser derivada. Fechar o catálogo nunca foi proibir que ele mude; foi exigir que mudar
+    seja uma decisão escrita.
 
-    **A `FR-024` da `022` dizia cinco enquanto o produto tinha seis**, porque a `027` não a
-    revisou. Quem a substitui é a `FR-565`, e é por ela que este teste passa a citar.
+    **A `FR-024` da `022` dizia cinco enquanto o produto tinha seis**, porque a `027` não a revisou.
+    A `038` a substituiu pela `FR-565`, e a `045` substituiu a `FR-565` pela `FR-744`.
     """
-    assert len(supervisao.ESPECIES) == 10
+    assert len(supervisao.ESPECIES) == 8
     assert supervisao.ESPECIES == (
-        supervisao.UX_001,
-        supervisao.UX_002,
         supervisao.UX_003,
         supervisao.UX_004,
         supervisao.UX_005,

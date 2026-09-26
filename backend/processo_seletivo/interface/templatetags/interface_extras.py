@@ -335,6 +335,9 @@ def enumeradas_sem_peso(etapas_classificatorias, marco):
 RESUMO_DAS_REPETIDAS = {
     "schedule_event_in_past": "{n} Eventos com data que já passou",
     "schedule_event_year_mismatch": "{n} Eventos que começam em ano diferente do ano do Edital",
+    # A Etapa sem Evento (045, `FR-739`): o seed e muitos Editais reais têm mais de uma, e dez
+    # linhas iguais empurrariam os impedimentos para fora da Revisão, como os avisos de data.
+    "stage_without_schedule_event": "{n} Etapas sem vínculo com o Cronograma",
 }
 
 
