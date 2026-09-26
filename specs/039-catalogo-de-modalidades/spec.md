@@ -8,6 +8,29 @@
 
 **Input**: A conversa de generalidade de 19/09: *"o sistema deve ser genérico o suficiente para permitir editais tanto de alunos quanto de bolsistas"*, *"permitindo que o operador possa configurar o edital se assim desejar"*. Reescrita depois de medir que o modelo barato era o caminho errado.
 
+> **Nota de 26/09/2026, ao mesclar na `main`.** Esta spec foi escrita em 19 e 20/09 e ficou numa
+> branch local até esta data. No intervalo, três fatos passaram a pesar contra o centro dela. Ficam
+> registrados aqui, e o destino da feature fica com quem governa o backlog:
+>
+> - **A Constituição** diz que *"Cotas DEVEM ser definidas por Perfil e, quando necessário, versionar
+>   modalidade, fundamento, percentual, cálculo, arredondamento, distribuição e vigência"*. Esta spec
+>   não discute a cláusula, e o `FR-568` põe fundamento e percentual no Edital.
+> - **A decisão de 25/09** ([`doc/decisao-recorte-documental.md`](../../doc/decisao-recorte-documental.md)),
+>   aceita pelo usuário, lê a cláusula como impedimento: mover a propriedade da Modalidade para o
+>   Edital *"está fora de questão"*. É o contrário da `D-001`.
+> - **A `044-recorte-transversal-documental`** foi escrita sobre essa decisão e declara que não move a
+>   Modalidade para o Edital. Pelo código da Modalidade (`FR-700`, `FR-701`), ela especifica o que o
+>   `FR-571` pede, sem trocar a Modalidade de nível. A implementação estava no PR #173, ainda aberto
+>   nesta data.
+>
+> A decisão de 25/09 **não** alcança a `D-G5`, a Retificação que acrescenta Modalidade (US2). Ela
+> segue não executada: a tela da Retificação ainda declara que Modalidades não são definidas ali. E
+> esta spec a amarra ao catálogo (`D-003`). Se o catálogo cair, a `D-G5` precisa de outro caminho, e
+> essa é a pergunta que fica aberta.
+>
+> A spec entra na `main` como registro, e para que a faixa que a `040` pulou por reserva — do
+> `FR-568` ao `FR-580`, do `SC-201` ao `SC-205`, `UX-067` e `UX-068` — passe a existir.
+
 ## O problema
 
 **A Modalidade de Concorrência nasce dentro do Perfil de Vaga.** Um Edital com 16 polos tem
