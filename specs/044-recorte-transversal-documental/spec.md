@@ -606,9 +606,11 @@ documento.
   Retificação (`D-009`). Tornar uma das N linhas transversal, com as outras N−1 ainda lá, faria o
   candidato daquela modalidade ver o documento duas vezes no Perfil que a linha exata alcança. O
   caso não apareceu na amostra, onde o atalho usado foi o "facultativo para todos". Fica registrado.
-- **Filtro de concorrência da consulta administrativa** repete "Pessoas com Deficiência" uma vez por
-  Perfil, sem nomeá-lo (conferência, §3). É defeito de tela independente desta feature, e fica
-  registrado, sem virar escopo.
+- **Filtro de concorrência da consulta administrativa** repetia "Pessoas com Deficiência" uma vez por
+  Perfil, sem nomeá-lo (conferência, §3). Era defeito de tela independente desta feature, e foi
+  corrigido à parte, sem virar escopo dela: a opção passou a trazer o nome do Perfil
+  (`doc/achado-filtro-de-concorrencia-sem-perfil.md`). O que continua aberto está registrado lá: com
+  um Perfil escolhido, o seletor ainda oferece as Modalidades dos outros.
 
 ## Out of Scope
 

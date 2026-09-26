@@ -233,7 +233,7 @@ antigo não muda.
 - [ ] T064 Rodar `cd backend && uv run pytest tests/test_citacoes_de_requisito.py tests/test_sem_dado_pessoal_da_amostra.py` e corrigir antes de empurrar
 - [ ] T065 Demonstrar o cenário C de `quickstart.md` (o 140/2025) e anotar no PR as contagens de `SC-260` e `SC-261`
 - [ ] T066 Rodar `cd backend && make lint check test-pg POSTGRES_USER=<superusuário> DB_NAME=<banco da worktree>`, sem editar nada durante a suíte. Registrar passando/pulados no PR
-- [ ] T067 Registrar, fora do escopo, os dois achados de `research.md` R-014: `ValorDeFato` sem gatilho, e o filtro de concorrência da consulta que repete a modalidade por Perfil
+- [ ] T067 Registrar, fora do escopo, o achado de `research.md` R-014 que continua aberto: `ValorDeFato` sem gatilho. O filtro de concorrência da consulta, que repetia a modalidade por Perfil, saiu desta tarefa: foi registrado e corrigido à parte (`doc/achado-filtro-de-concorrencia-sem-perfil.md`)
 
 ---
 

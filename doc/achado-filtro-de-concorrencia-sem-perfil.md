@@ -2,8 +2,8 @@
 
 **Data:** 2026-09-25
 **Origem:** [conferência do envio e da análise documental](conferencia-envio-e-analise-documental.md),
-§3 e §7, e a `044` (*Riscos e lacunas*, na branch `claude/044-recorte-transversal-documental`), que o
-registrou como defeito de tela independente e fora do escopo dela.
+§3 e §7, e a `044` (*Riscos e lacunas*, R-014 e a tarefa T067), que o registrou como defeito de tela
+independente e fora do escopo dela. Os três passaram a apontar para este documento.
 **Natureza:** rótulo ambíguo. O filtro funciona; quem filtra é que não sabe em qual opção clicar.
 **Situação:** **corrigido** em 2026-09-25, por decisão do usuário: o nome do Perfil no rótulo, e só
 o rótulo. A restrição do seletor ao Perfil ativo ficou registrada, fora do escopo.
