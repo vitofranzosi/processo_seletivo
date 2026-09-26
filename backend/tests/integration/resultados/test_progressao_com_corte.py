@@ -31,6 +31,7 @@ from processo_seletivo.resultados.application.prontidao import (
 )
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
 from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.legado import publicar_como_acervo
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
 
@@ -85,7 +86,10 @@ def rascunho(*, com_regra=True, alvo=2):
 def montar(gestor, api_client, manager_headers, process_payload, *, com_regra=True, prefixo="p"):
     """Quatro inscritos, três pontuados e a ordem emitida — sem o corte ainda."""
     draft, pontuada = rascunho(com_regra=com_regra)
-    edital = publish_original(api_client, manager_headers, process_payload, draft=draft)
+    # Sem regra, o Perfil é o do acervo (046, `FR-752`): a não regressão da `FR-214` é sobre o
+    # Edital publicado antes da `014`, que existe e continua sendo conduzido.
+    publicar = publish_original if com_regra else publicar_como_acervo
+    edital = publicar(api_client, manager_headers, process_payload, draft=draft)
     membros = constituir(
         gestor,
         edital.processo,

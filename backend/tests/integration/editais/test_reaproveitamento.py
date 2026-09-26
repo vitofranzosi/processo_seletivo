@@ -26,6 +26,7 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.conftest import ator_institucional
+from tests.fixtures.legado import publicar_como_acervo
 from tests.fixtures.publicacao import publish_original
 from tests.fixtures.sorteio import METODO
 
@@ -246,7 +247,9 @@ def _vincular_anexo_e_fechar_cronograma(edital):
 @pytest.fixture
 def origem(db, api_client, manager_headers, process_payload):
     """Edital publicado, rico, com um Anexo que um requisito usa como modelo."""
-    return publish_original(
+    # A origem rica tem dupla leitura numa Etapa enumerada: depois da `046`, é Edital do acervo
+    # (`FR-746`) — e reaproveitar do acervo é o caso que a cópia precisa continuar alcançando.
+    return publicar_como_acervo(
         api_client,
         manager_headers,
         process_payload,
@@ -1159,7 +1162,6 @@ def test_a_troca_nao_toca_em_nenhuma_das_duas_origens(
 ):
     """Substituir é copiar de novo: as duas origens continuam sendo lidas e nunca escritas."""
     from tests.fixtures.edital import complete_draft
-    from tests.fixtures.publicacao import publish_original
 
     outra = publish_original(
         api_client,

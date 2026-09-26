@@ -170,8 +170,21 @@ def test_a_pontuada_com_rotulo_e_recusada():
 
 
 def test_a_pontuada_sem_nota_nenhuma_e_legitima():
-    """Limite não declarado é o que FR-066 chama de ausência, e não falta."""
-    assert _recusas(_publicada()) == {}
+    """Limite não declarado é o que FR-066 chama de ausência, e não falta.
+
+    **Na Etapa não eliminatória** (046, `FR-746`). A legitimidade da `FR-066` é a do limite que
+    não decide nada; numa Etapa eliminatória, a nota mínima ausente é o que a consolidação recusa
+    por inteiro, e é o caso irmão logo abaixo.
+    """
+    assert _recusas(_publicada(eliminatory=False)) == {}
+
+
+def test_a_pontuada_eliminatoria_sem_nota_minima_nao_publica():
+    """O caso irmão: eliminatória e sem nota mínima, ninguém seria eliminado por ela (046)."""
+    recusas = _recusas(_publicada())
+
+    assert list(recusas) == ["/stages/id=00000000-0000-0000-0000-0000000000a1"]
+    assert "não publicou nota mínima" in next(iter(recusas.values()))
 
 
 def test_rotulo_em_branco_nao_conta_como_publicado():

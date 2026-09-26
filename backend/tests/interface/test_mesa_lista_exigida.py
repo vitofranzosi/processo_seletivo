@@ -43,6 +43,8 @@ def cenario(gestor, api_client, manager_headers):
         seed=SEED,
         com_documentos=True,
         avaliacoes=2,
+        # Duas avaliações por inscrição: depois da `046`, só existe no acervo (`FR-746`).
+        como_acervo=True,
         maxima="100.0000",
     )
     etapa = identificador(ETAPA_A1, SEED)

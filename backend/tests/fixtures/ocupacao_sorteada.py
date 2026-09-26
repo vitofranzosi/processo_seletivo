@@ -58,7 +58,15 @@ def regra_de_corte_do_sorteio(*, etapa_governada, alvo=2, excedente=0):
 
 
 def rascunho_sorteado_com_quadro(
-    *, geral=2, ppi=1, pcd=1, reversao=None, ampla_declarada=None, com_corte=False, excedente=0
+    *,
+    geral=2,
+    ppi=1,
+    pcd=1,
+    reversao=None,
+    ampla_declarada=None,
+    com_corte=False,
+    excedente=0,
+    sem_corte=False,
 ):
     """O rascunho do certame de cotas, com quadro publicado e reversão opcional.
 
@@ -71,6 +79,12 @@ def rascunho_sorteado_com_quadro(
 
     rascunho = rascunho_com_etapas()
     marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    if sem_corte:
+        # O marco do acervo, sem regra nenhuma: depois da `046` ele só existe publicado antes dela
+        # (`FR-752`), e quem o pede publica como acervo (`certame_sorteado_com_quadro`).
+        for perfil in rascunho["profiles"]:
+            if str(perfil["id"]) == PROFILE_ID:
+                perfil["classificationMilestones"][0].pop("cutRule", None)
     if com_corte:
         # A Etapa governada é a **primeira** — a que o marco não enumera —, porque a enumerada é a
         # que produz a ordem. Governar a própria Etapa da ordem faria o corte alimentar o que o
@@ -140,9 +154,11 @@ def certame_sorteado_com_quadro(
     from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
     from tests.fixtures.comissao import constituir, inscrever
     from tests.fixtures.edital import PROFILE_ID
+    from tests.fixtures.legado import publicar_como_acervo
     from tests.fixtures.publicacao import publish_original
 
-    edital = publish_original(
+    publicar = publicar_como_acervo if quadro.get("sem_corte") else publish_original
+    edital = publicar(
         api_client,
         manager_headers,
         process_payload,

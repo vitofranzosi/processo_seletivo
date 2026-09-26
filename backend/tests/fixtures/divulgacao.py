@@ -21,7 +21,7 @@ from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from tests.conftest import ator_institucional
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
-from tests.fixtures.edital import identificador
+from tests.fixtures.edital import corte_que_nao_governa, identificador
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
 
@@ -98,6 +98,10 @@ def rascunho_com_marco(
             "normalization": "NENHUMA",
             "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
             "tiebreakers": criterios or [],
+            # O marco final corta sem governar Etapa (046, `FR-752`): sem ele, o Perfil não
+            # convocaria ninguém e não seria publicado. O intermediário continua sem corte — é o
+            # Cenário D, o marco que legitimamente não corta num Perfil que corta.
+            "cutRule": corte_que_nao_governa(),
         }
     ]
     if janela_recursal is not None:

@@ -36,6 +36,7 @@ from .base import (
     PORTAL_IDENTIDADE_DEMO,
     REST_FRAMEWORK,
     SECRET_KEY,
+    SORTEIO_FONTE_DE_DEMONSTRACAO,
 )
 
 # Módulo inteiro, não uma classe: qualquer adaptador de desenvolvimento que nasça ao lado do
@@ -102,6 +103,17 @@ _exigir(
     "PORTAL_IDENTIDADE_DEMO",
     "o provedor de identidade de demonstração deixa qualquer pessoa declarar-se candidato e não "
     "pode existir em produção.",
+)
+
+# A terceira barreira de demonstração (046, `FR-758`). A fonte de demonstração do sorteio tem
+# semente fixa: um Edital que a declarasse publicaria um sorteio cujo resultado se conhece antes
+# da extração. Em produção ela não pertence ao vocabulário de fontes, e esta guarda impede que uma
+# variável de ambiente a traga de volta.
+_exigir(
+    not SORTEIO_FONTE_DE_DEMONSTRACAO,
+    "SORTEIO_FONTE_DE_DEMONSTRACAO",
+    "a fonte de demonstração do sorteio tem semente fixa, e um sorteio publicado com ela seria "
+    "previsível; ela não pode existir em produção.",
 )
 
 # Onde os documentos do candidato ficam (FR-051 da 009). Três exigências, e cada uma cobre um
