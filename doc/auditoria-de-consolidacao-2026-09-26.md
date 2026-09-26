@@ -6,7 +6,8 @@
 a 044) e do #172 (`8e6fb4a`). Mudaram RC-51 a RC-54, RC-56 e RC-101, as contagens da §1 e dos anexos 5 e 6,
 e todas as passagens deste documento e desses dois anexos que tratavam os três PRs como abertos. Depois,
 no mesmo dia, o #183 (`8e7c698`) corrigiu o `ValorDeFato`, e o RC-101 passou a RESOLVIDO, com as contagens,
-o anexo 6 e as decisões nº 19 e nº 21 do anexo 7. O inventário da §2 e a reconciliação entre lotes
+o anexo 6 e as decisões nº 19 e nº 21 do anexo 7. Por fim, o #185 (`29e637f`) corrigiu o RC-39, e o
+cruzamento que ele pedia revelou uma unidade nova, o RC-111. O inventário da §2 e a reconciliação entre lotes
 registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
 `bb774d9`.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
@@ -48,23 +49,23 @@ posterior, specs, evidência com `caminho:linha`, estado, pertinência, resíduo
 Os sete lotes produziram **~300 linhas de rastreabilidade**, a partir de 21 fontes, e elas se
 sobrepõem. As **34 linhas** que os próprios lotes marcaram como DUPLICADO / ABSORVIDO, e todas as
 repetições entre relatórios, foram fundidas na unidade que as absorve. O resultado são **110 unidades
-consolidadas** na matriz da §3. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
+consolidadas** na matriz da §3, e 111 desde 26/09, quando o RC-111 entrou. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
 consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha registra o que foi fundido nela.
 
 | Estado | Unidades |
 |---|---:|
-| RESOLVIDO | 28 |
+| RESOLVIDO | 29 |
 | RESOLVIDO POR OUTRO CAMINHO | 3 |
 | PARCIALMENTE RESOLVIDO | 11 |
 | NÃO IMPLEMENTADO | 48 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 5 |
 | SUPERADO / OBSOLETO | 3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 12 |
-| **Total** | **110** |
+| **Total** | **111** |
 
 Lido pela pergunta da auditoria:
 
-- **31** unidades estão resolvidas, pelo caminho recomendado ou por outro.
+- **32** unidades estão resolvidas, pelo caminho recomendado ou por outro.
 - **15** foram eliminadas por decisão consciente (12) ou por obsolescência (3) e **não devem voltar ao
   backlog** (§7).
 - **70** carregam algum resíduo. São 64 unidades abertas, parciais ou não validadas, mais seis resolvidas
@@ -79,9 +80,9 @@ Lido pela pergunta da auditoria:
 - **Validação antes de trabalho.** Das 11 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
   entraram na `main` pelo #173, e o RC-54, que é C, pelo #172, os três em 26/09. **Três exigem percurso pela tela** antes de qualquer spec:
   RC-08, RC-58 e, entre as B, RC-32. E **uma depende do Ifes**: RC-92.
-- **O que sobra de fato como trabalho novo de grupo A são oito unidades**: RC-29, RC-37, RC-38, RC-39,
-  RC-72, RC-78, RC-79 e RC-80. Quatro delas são o painel da `038` e a Retificação. O RC-101, que foi a
-  nona enquanto esteve desbloqueado, foi corrigido pelo #183 em 26/09.
+- **O que sobra de fato como trabalho novo de grupo A são oito unidades**: RC-29, RC-37, RC-38, RC-72,
+  RC-78, RC-79, RC-80 e RC-111. Quatro delas são o painel da `038` e a Retificação. O RC-101 e o RC-39
+  foram corrigidos em 26/09, pelo #183 e pelo #185, e a correção do RC-39 revelou o RC-111.
 
 **O fato que mais pesa.** Desde a auditoria de convergência de 20/09, **as três recomendações
 prioritárias dela não receberam trabalho nem decisão registrada**. São elas: fechar a `038`, derivar o
@@ -100,7 +101,7 @@ outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), s�
 | RC-29 | Etapa com **duas avaliações** publica ato que **nunca consolida**, e há dois irmãos com o mesmo defeito de momento | A | `validation.py:234` · `regra.py:57-95` |
 | RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito | A `[VALIDAR]` | `convocar.py:100-152` · nenhum consumidor de `reserveLimit` |
 | RC-72 | **"Fonte de demonstração"** do sorteio pode ser escolhida e publicada em produção | A | `fontes/__init__.py:83-92` · `production.py` sem guarda |
-| RC-39 | O **"O que mudou"** público omite a mudança de recorte do documento, contra a `FR-130` da `024` | A | `alteracoes.py:89-95` |
+| RC-111 | O **"O que mudou"** público cala **45 dos 84 campos retificáveis** — percentual da cota, quadro de vagas, prazo recursal, método do sorteio —, contra a `FR-130` da `024`. O RC-39, um deles, foi corrigido pelo #185 | A | `alteracoes.py` (`CAMPOS`, `COLECOES`) · `doc/achado-o-que-mudou-cala-campos-retificaveis.md` |
 | RC-52/53 | Recorte transversal e lista exigida gravada: **integrados pelo #173 em 26/09**, com a Mesa percorrida; falta só recompor o 140/2025 (T065) | — `[VALIDAR]` | `documentos.py:206-290` · `mesa.py:135` · `inscricoes/0005` |
 | RC-101 | `ValorDeFato` era append-only **por uma camada só**: **corrigido pelo #183 em 26/09**, com gatilho e guarda de modelo | — | `papeis.py:39` · `inscricoes/models.py:137-183` |
 | RC-08 | Restaurar o rascunho local **perde coleções aninhadas e regrava a perda**, contra a `FR-020` da `002` | A `[VALIDAR]` | `rascunho.js:81-133` (inalterado desde 08/09) |
@@ -123,9 +124,10 @@ integridade era o RC-101, uma tabela protegida por uma camada só, sem dano obse
 2. **Publicar o que não se executa até o fim**: cinco unidades A. As duas avaliações, o cadastro de
    reserva, a Modalidade que não se acrescenta, a fonte de demonstração e os objetos que "podem nascer"
    sem porta. É a mesma doença que a `032` atacou, em pontos que ela não cobriu.
-3. **Trabalho decidido e não feito**: uma unidade A, o "O que mudou" que a decisão de 25/09 mandou
-   para a fila das diretas e ninguém pegou. As outras duas foram feitas em 26/09: a `044` entrou pelo
-   #173, e o `ValorDeFato` foi corrigido pelo #183.
+3. **O resumo público que cala**: uma unidade A, o RC-111. O "O que mudou" omite a maior parte do que
+   uma Retificação pode mudar, e o contador diz menos do que o ato fez. Este foco era o "trabalho
+   decidido e não feito" — a `044`, o `ValorDeFato` e o "O que mudou" do recorte —, e os três foram
+   feitos em 26/09, pelo #173, pelo #183 e pelo #185. Corrigir o último revelou a classe.
 4. **Implantação**: autenticação, correio, retenção e Registro Acadêmico. É dívida real, mas com
    dependência externa.
 
@@ -135,7 +137,7 @@ lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 o
 ### Próxima onda recomendada
 
 - **Onda A — fechar o que já foi decidido e o que afirma o que não sabe.** Fechar a `038` (RC-78, RC-79,
-  RC-80, RC-81, RC-82); o RC-39; a varredura "publica e não
+  RC-80, RC-81, RC-82); a varredura "publica e não
   executa" (RC-29, RC-30, RC-72, RC-32). É pequena e média, quase toda com decisão já tomada.
 - **Onda B — Edital publicado com conserto e oferta executável até o fim.** Uma Retificação que acrescenta
   o que o contrato já permite (RC-37 + RC-38) e o cadastro de reserva convocável (RC-58), este depois
@@ -168,7 +170,7 @@ deles deve ser lido sozinho.
 | 12 | [`docs/visao-sistema/index.html`](../docs/visao-sistema/index.html) | 20/09 | o sistema reconstruído do código | repete N-*, D-G*, C7; acrescenta 4 itens | — | vencido em N-03 |
 | 13 | [`estudo-esforco-de-cadastro-2026-09-21.md`](estudo-esforco-de-cadastro-2026-09-21.md) + [diário](diario-estudo-esforco-2026-09-21.md) | 21/09 (revisto em 25/09) | esforço de autoria em 5 Editais; fidelidade do PDF | §5.1–5.12, A/M/B, E1–E11, "três decisões" | E2, E5, E10, TF-1, estado de revisão do reuso | grupos A/B/C do §12 corrigidos em 25/09 |
 | 14 | [`achado-documento-condicional-no-portal.md`](achado-documento-condicional-no-portal.md) | 25/09 | reproduz AX-14 pela tela | — | virou a 044 | contenção por #161; 044 mesclada pelo #173 em 26/09 |
-| 15 | [`conferencia-envio-e-analise-documental.md`](conferencia-envio-e-analise-documental.md) | 25/09 | envio e análise do documento condicional | — | "O que mudou" sem recorte | resíduo RC-39 sem dono |
+| 15 | [`conferencia-envio-e-analise-documental.md`](conferencia-envio-e-analise-documental.md) | 25/09 | envio e análise do documento condicional | — | "O que mudou" sem recorte | resíduo RC-39, feito pelo #185 em 26/09 |
 | 16 | [`inventario-supervisao-do-processo.md`](inventario-supervisao-do-processo.md) | 09/09 | o que a supervisão deveria ver | Parte 3 | status do Evento "declarado" | premissa contradita pelo contrato da 026 (RC-80) |
 | 17 | 15 achados avulsos `doc/achado-*.md` | 08–25/09 | um defeito ou lacuna cada | — | vários | ver RC-13, RC-26, RC-29, RC-33, RC-38, RC-41, RC-52, RC-74, RC-103, RC-108 |
 | 18 | registros de decisão: `decisao-*.md`, `descoberta-*.md`, `decisoes-pre-vertical.md`, `briefing-*.md` | 03–25/09 | decisões de domínio e de escopo | D-1…D-4, decisão C da 018, D1–D5 do recorte | — | usados para o rótulo CONTRADITO (anexo 7, Parte 2) |
@@ -246,7 +248,8 @@ quando indicado.
 | RC-36 | E2E-001/002/021 · E2E14-005 · E2E17 §13 | devolução e cancelamento; retificar a espécie do alvo; objetos sem tela | 026 (razão normativa) | anexo 1 | RESOLVIDO | não | — | nenhuma | 1 |
 | RC-37 | **D-G5** · REAV §13 · convergência §20.3 · 039 US2 | Edital publicado sem a ampla (ou sem uma cota) **não tem conserto** → Retificação que acrescenta Modalidade, com cinco restrições | nenhuma na main; a US2 da 039, não mesclada, a absorvia | `interface/retificacao.py:1054` (`SECOES_QUE_ACRESCENTAM = {perfis, cronograma, anexos}`); `retificar.html:158-159` | NÃO IMPLEMENTADO | sim — "a coisa mais grave da lista" (19/09 e 20/09) | Edital sem correção possível · **A** | spec (junto de RC-38) | 4, 3, 5 |
 | RC-38 | G16-001 · achado objeto que nasce só pelo método · NOVO-1 do lote 1 · NOVO-3 do lote 5 | o contrato diz que janela recursal, corte e reversão **podem nascer** por Retificação, mas a tela só mostra os campos se o objeto já existe; critério de desempate **se remove e não se acrescenta** | 026 FR-313 | `mutabilidade.py:515-548`; `retificacao.py:764,852,859,925-936`; `tests/interface/test_retificar_reversao.py:84` prende a ausência | NÃO IMPLEMENTADO | sim | Edital sem prazo recursal não o ganha pela tela · **A** (janela) / B (corte, reversão, critério) | spec única com RC-37: "a Retificação acrescenta o que o contrato já permite" | 1, 5 |
-| RC-39 | conferência 25/09 · decisão D4.3 | a Retificação declarou 7 alterações e o portal mostrou 6; faltou a do laudo que passou a valer só no C1 | 024 FR-130 (MUST identificar o alterado); a 044 exclui de propósito | `publicacoes/domain/alteracoes.py:89-95` (sem `profileId`/`modalityId`); `:14` (caminho não reconhecido não produz linha) | NÃO IMPLEMENTADO | sim — decidido em 25/09 "para a fila das diretas", sem dono | o candidato não é avisado · **A** | corrigir (duas entradas no dicionário); cruzar `CAMPOS` com o contrato | 6, 7 |
+| RC-39 | conferência 25/09 · decisão D4.3 | a Retificação declarou 7 alterações e o portal mostrou 6; faltou a do laudo que passou a valer só no C1 | 024 FR-130 (MUST identificar o alterado); a 044 exclui de propósito | **feito pelo #185** (`29e637f`, 26/09): `profileId` e `modalityId` do Documento Exigido em `CAMPOS`, com os rótulos da gestão; `tests/integration/portal/test_historico_publico.py` | RESOLVIDO | sim — decidido em 25/09 "para a fila das diretas" | o cruzamento com o contrato, que era a outra metade da próxima ação, virou o RC-111 · — | nenhuma | 6, 7 |
+| RC-111 | achado de 26/09, do cruzamento pedido no RC-39 e numa incerteza do lote 6 | o "O que mudou" cala 45 dos 84 campos retificáveis: percentual e fundamento da cota, quadro de vagas, prazo recursal, método do sorteio, regra de corte → rótulos para os 45, leitura de campo composto e um guardião que ligue o contrato ao dicionário | 024 FR-130; 026 (o contrato) | `publicacoes/domain/alteracoes.py` (`CAMPOS`, `COLECOES`; o tradutor lê um segmento depois da entidade); `tests/integration/portal/test_historico_publico.py` (`mais_uma_vaga` retifica duas coisas, e o portal lista uma); `doc/achado-o-que-mudou-cala-campos-retificaveis.md` | NÃO IMPLEMENTADO | sim — contradiz a FR-130 da `024`, e cala justamente o que mais pesa para quem se inscreve | o candidato não é avisado da maior parte do que uma Retificação muda · **A** | decisão do usuário: priorizar; se for só dicionário e guardião, sem spec | 6 |
 | RC-40 | E-3 · 13.4 · LONG-5 · ACH-31 · ACH-32 · E2E-018 | duas gramáticas → **uma tabela** de vocabulário; `REPLACE` na tela do ato; bloco do sorteio num marco que não sorteia | 024 D-009; `7b04cb3` unificou a gestão | `views.py:3387-3408` × `alteracoes.py:24-52` (já divergem: "Modalidade" × "Modalidade de concorrência") | PARCIALMENTE RESOLVIDO | parcialmente | deriva silenciosa entre gestão e portal · C | unificar a tabela ao tocar essas telas | 3, 2 |
 
 ### 3.5 Reaproveitamento
@@ -383,7 +386,8 @@ cada uma.
 | RC-110 | Edital grande (46/2026) · P-8 | forma completa do Edital grande; inscrição que nasce fora do sistema | fora do alvo (`doc/achados-editais-externos.md`) | — | CONTRADITO POR DECISÃO POSTERIOR | não | falta registrar se o 76/2026 também sai do alvo · — | decisão de alvo | 1 |
 
 A numeração da §3 não é contínua por domínio: as linhas acima reaproveitam os números RC-88 a RC-91,
-que tinham ficado vagos, e seguem em RC-104 a RC-110. São 110 unidades, sem número repetido.
+que tinham ficado vagos, e seguem em RC-104 a RC-110. São 110 unidades, sem número repetido. O RC-111
+entrou em 26/09, depois da auditoria, e mora na §3.4, ao lado do RC-39 que o revelou.
 
 ### Onde os lotes discordaram, e o que vale
 
@@ -517,7 +521,8 @@ executável. → RC-58.
 A decisão do recorte documental listou correções diretas. Duas foram feitas, no `#167`. A terceira — o
 **"O que mudou" listar a mudança de recorte** — não foi. A `044` a exclui de propósito ("continuam fora:
 a correção deles é da fila das diretas"). → RC-39. Ela contradiz a FR-130 da `024` e é a mais recente
-candidata a se perder.
+candidata a se perder. **Desfecho:** feita pelo #185 em 26/09; o cruzamento com o contrato revelou que
+ela era um caso de uma classe maior (RC-111).
 
 ### 6.7 Um achado dado como fechado sem teste
 
@@ -625,7 +630,7 @@ executável. É por isso que ela não aparece aqui como uma spec.
 | **Composição e autoria** | explicação no lugar, densidade, duplicar Perfil, quadro único, correções de 25/09 | **RC-08** rascunho local (A); RC-09, RC-10, RC-11 diretas; RC-12 teto; RC-13 decisão E2 | RC-14, RC-15, RC-16 |
 | **Documento publicado** | tabelas, cabeçalho, método do sorteio | RC-20 número; RC-21 anexos citados; RC-22 hora; RC-23 fecho; RC-24 seções (decisão) | RC-25 (decisão E10), RC-26 |
 | **Validação antes de publicar** | executabilidade (032), documento × execução (#161) | **RC-29** duas avaliações (A); RC-30 D-G1; RC-31 entre Perfis; RC-32 validação em Edital publicado | RC-34 |
-| **Retificação** | contrato, vocabulário da gestão | **RC-37** Modalidade (A); **RC-38** o que "pode nascer" (A/B); **RC-39** "O que mudou" (A) | RC-40 |
+| **Retificação** | contrato, vocabulário da gestão, "O que mudou" do recorte (RC-39, #185) | **RC-37** Modalidade (A); **RC-38** o que "pode nascer" (A/B); **RC-111** "O que mudou" cala 45 campos (A) | RC-40 |
 | **Reaproveitamento** | referências, cronograma, segundo Edital | RC-42 guardião; RC-43 estado de revisão | — |
 | **Portal e inscrição** | parecer, notícia do eliminado, facultativo na Revisão | RC-47 título e vagas; RC-48 prazo recursal público; RC-49 prazo no rascunho; RC-46 validar | RC-50 |
 | **Documentos exigidos e Mesa** | contenção #161, instrução na Mesa, recorte transversal e lista gravada (RC-52, RC-53, #173), filtro de concorrência (RC-54, #172) | RC-55 submodalidade | resíduo do RC-54, RC-56 |
@@ -676,24 +681,18 @@ antes.
   pequena. E sem ela, as próximas features serão conduzidas por um instrumento que não é confiável.
 - **Justifica uma futura spec** — curta, ou emenda da `038`.
 
-**B-2 · O que dependia da `044`**
-- **Problema.** O "O que mudou" omite a mudança de recorte do documento. O recorte transversal e a lista
-  gravada, que eram o centro desta evolução, entraram com o #173, e o `ValorDeFato` foi corrigido pelo
-  #183, os dois em 26/09.
+**B-2 · O que dependia da `044` — concluída em 26/09**
+- **Problema.** Eram três: o recorte transversal e a lista gravada (a `044`), o `ValorDeFato` e o "O que
+  mudou" do recorte. Entraram pelo #173, pelo #183 e pelo #185, os três em 26/09.
 - **Origem.** Estudo de 21/09 §5.9/E6; AX-10, AX-14 e AX-17; a conferência e a decisão de 25/09; o PR
   #171.
 - **Situação atual.** A `044` está na `main` (#173, `47876ad`, CI verde), e a Mesa foi percorrida pela
   tela depois do merge (`0c4e6b0`). O #171 entrou como registro, e a correção veio no #183
   (`inscricoes/0006`, gatilho e guarda de modelo).
-- **Lacuna residual.** RC-39 ("O que mudou" sem o recorte), que é independente e barato. Da `044` fica
-  só a T065 (recompor o 140/2025), que é medição, e não lacuna.
-- **Escopo mínimo.**
-  - As duas entradas de `alteracoes.py`.
+- **Lacuna residual.** Nenhuma desta evolução. Da `044` fica só a T065 (recompor o 140/2025), que é
+  medição, e não lacuna. A correção do "O que mudou" revelou o RC-111, que não é desta evolução e espera
+  decisão.
 - **Fora de escopo.** Submodalidade (RC-55) e condição sobre o candidato (decisão D2).
-- **Dependências.** Nenhuma.
-- **Natureza.** transparência.
-- **Por que P1.** É pequeno e já decidido, e a FR-130 da `024` é violada hoje.
-- **Não precisa de spec nova.**
 
 **B-3 · O que o Edital publica e não executa: a varredura que a `032` não fez**
 - **Problema.** Três coisas publicam o que o sistema não sabe executar ou auditar, e uma afirma um
@@ -903,7 +902,7 @@ antes.
 ## 11. Dependências entre as evoluções restantes
 
 ```
-B-2 (a 044, mesclada pelo #173) ──► B-2b (RC-101, ValorDeFato: `0006`, mesclada pelo #183)
+B-2 (a 044, mesclada pelo #173) ──► B-2b (RC-101, ValorDeFato: `0006`, mesclada pelo #183) — concluída
       └─────────────► B-9 (o aviso de percentual mora ao lado do confronto de denominação)
 
 B-1 ─ decisão da doutrina do `status` ──► N-06 ──► N-05 ──► N-04
@@ -922,7 +921,7 @@ B-7 (autenticação) ─► RC-87 (antecipar a falta de julgador) · B-21 (e-mai
 RC-64 (alcance da Etapa) ─► RC-65 (heteroidentificação) · barema
 ```
 
-**O que pode ser feito isoladamente, hoje:** B-6, B-8, B-11, B-12 (a leitura), o RC-39 dentro da B-2,
+**O que pode ser feito isoladamente, hoje:** B-6, B-8, B-11, B-12 (a leitura),
 a barreira da fonte de demonstração dentro da B-3, e a B-20.
 
 **O que é melhor resolver junto:**
@@ -938,7 +937,7 @@ a barreira da fonte de demonstração dentro da B-3, e a B-20.
 Os agrupamentos saem das dependências e da natureza, não da ordem dos relatórios.
 
 **Onda A — fechar o que já foi decidido e o que afirma o que não sabe**
-B-1 (fechar a 038) · B-2 (o "O que mudou"; a 044 e o ValorDeFato já entraram) · B-3 (o que publica e não executa) ·
+B-1 (fechar a 038) · B-2 (concluída em 26/09) · B-3 (o que publica e não executa) ·
 B-6 (rascunho, se confirmar).
 *Critério da onda:* a decisão já existe ou a correção é pequena; todas atacam um instrumento que hoje
 afirma mais do que sabe — o painel, a validação, o documento ou o rascunho. Ao fim dela, as condicionantes
