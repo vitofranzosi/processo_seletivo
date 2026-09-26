@@ -60,12 +60,28 @@ def levar_a_publicacao(
     mesma com outro conteúdo é conflito — corretamente.
     """
     preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"], key=chave)
-    api_client.put(
+    em_elaboracao = edital.status == Edital.Status.EM_ELABORACAO
+    gravado = api_client.put(
         f"/api/v1/admin/editais/{edital.id}/rascunho",
         draft or complete_draft(),
         format="json",
         **{**preparer, "HTTP_IF_MATCH": f'"{edital.revision}"'},
     )
+    # **A recusa do rascunho também é lida aqui** (045, T003), pela mesma razão da submissão logo
+    # abaixo: sem ela um 400 do `PUT` era engolido, a submissão corria sobre o rascunho
+    # **anterior**, e a falha aparecia como `blocking_findings` — com uma causa que não era a
+    # verdadeira. A `045` passou a recusar a fase declarada, e fixtures que a mandavam falhariam
+    # assim.
+    #
+    # **Só onde o rascunho podia ser aceito.** Há fixtures que chegam aqui com um Edital que já
+    # saiu da elaboração: `edital_a` e `edital_com_documentos` criam o Processo com o mesmo payload
+    # e a mesma chave de idempotência, e a segunda criação **reencena** a primeira — devolve o
+    # Edital já publicado, o `PUT` recebe 409 e o resto da cadeia reencena por idempotência. É
+    # defeito anterior à `045`, registrado em `specs/045-conducao-confiavel-processo/research.md`
+    # (`R-9`) e não corrigido aqui; cobrar a asserção nesse caso derrubaria 29 casos que não são
+    # desta feature.
+    if em_elaboracao:
+        assert gravado.status_code < 400, gravado.content
     if anexos:
         from tests.fixtures.anexos import criar_anexo
 

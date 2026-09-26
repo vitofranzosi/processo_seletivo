@@ -1235,6 +1235,53 @@ def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+# A Etapa que não referencia Evento nenhum (045, `FR-739`, `UX-086`). Código **próprio**, e não o
+# `field_constraint_violated` da referência inexistente: `advertencias_do_ato` descarta aviso cujo
+# código coincida com o de um impeditivo, e o invariante da declaração única prende que os dois
+# conjuntos não se cruzem.
+ETAPA_SEM_EVENTO = "stage_without_schedule_event"
+
+
+def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Etapa sem vínculo com o Cronograma — aviso de composição, e nunca recusa.
+
+    **Aviso, porque a ausência é publicável e legítima** (`022`, `FR-026`): a validação recusa a
+    referência a Evento **inexistente** e admite a ausência de referência. Torná-la impeditiva
+    mudaria o que o sistema aceita publicar, e esta feature não decide isso.
+
+    **Era sinal da Atenção, e saiu de lá** (045, `D-003`). Na condução ele apontava para uma
+    Retificação que não alcança o vínculo — `scheduleEventId` é estrutural (`026`) —, e aparecia
+    para sempre, sobre um fato que ninguém podia mudar. Seis dos quinze sinais do gestor, em 20/09.
+    O momento em que a ausência se corrige sem custo é a composição, e é aqui que ela é dita.
+
+    **Só no ato de publicação.** Na Retificação o aviso seria o mesmo beco com outra roupa: o
+    vínculo não se retifica, e a tela da Retificação não o oferece.
+
+    A ausência é dita nesses termos, e **nunca** como atraso, espera ou progresso zero: a Etapa não
+    tem situação temporal a receber (`022`, `UX-001`, cuja regra de apresentação vem para cá).
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    findings = []
+    for posicao, item in enumerate(itens):
+        if not isinstance(item, dict) or item.get("scheduleEventId"):
+            continue
+        caminho = _caminho_da_entidade("stages", item, posicao)
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                ETAPA_SEM_EVENTO,
+                "A Etapa não está vinculada a nenhum Evento do Cronograma, em "
+                f"{caminho}/scheduleEventId.",
+                f"{caminho}/scheduleEventId",
+            )
+        )
+    return findings
+
+
 def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     """Uma passagem, três conferências (FR-020 e FR-022).
 
@@ -1407,6 +1454,7 @@ def validate_for_publication(
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))

@@ -759,3 +759,56 @@ def test_requisito_que_a_tela_nao_representa_e_recusado_na_borda(
 
     assert resposta.status_code == 422, resposta.content
     assert "requirements.1" in resposta.json()["detail"]
+
+
+def _rascunho_com_estado(status):
+    rascunho = complete_draft()
+    rascunho["schedule"] = [{**evento, "status": status} for evento in rascunho["schedule"]]
+    return rascunho
+
+
+@pytest.mark.django_db
+@pytest.mark.contract
+@pytest.mark.parametrize("fase", ["EM_ANDAMENTO", "CONCLUIDO"])
+def test_a_fase_ordinaria_nao_se_declara(api_client, manager_headers, process_payload, fase):
+    """`045`, `FR-737`: a fase do Evento é derivada das datas, e o rascunho recusa declará-la.
+
+    Aceitar e nunca ler seria guardar uma segunda fonte para o que as datas já dizem — a divergência
+    que produziu o `UX-002` permanente. A recusa diz a razão, e nada é gravado.
+    """
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    edital = Edital.objects.get()
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _rascunho_com_estado(fase),
+        format="json",
+        **{**actor_headers("preparador", ["edital:elaborar"]), "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code in (400, 422), resposta.content
+    assert "derivada das datas" in resposta.content.decode()
+    edital.refresh_from_db()
+    assert edital.revision == 1, "a recusa não grava nada"
+
+
+@pytest.mark.django_db
+@pytest.mark.contract
+def test_o_cancelamento_continua_declaravel(api_client, manager_headers, process_payload):
+    """`045`, `FR-736`: `CANCELADO` é o único estado que o Evento declara, e continua aceito."""
+    from processo_seletivo.editais.models.cronograma import EventoCronograma
+
+    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
+    edital = Edital.objects.get()
+
+    resposta = api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        _rascunho_com_estado("CANCELADO"),
+        format="json",
+        **{**actor_headers("preparador", ["edital:elaborar"]), "HTTP_IF_MATCH": '"1"'},
+    )
+
+    assert resposta.status_code == 200, resposta.content
+    assert set(
+        EventoCronograma.objects.filter(cronograma__edital=edital).values_list("status", flat=True)
+    ) == {"CANCELADO"}

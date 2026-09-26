@@ -260,8 +260,5 @@ def edital_c(db, api_client, manager_headers, processo_a):
         draft=rascunho_com_periodo(
             SEGUNDO_SEED,
             etapas=[etapa_ligada(SEGUNDO_SEED)],
-            # Coerente de propósito: um período em curso declarado `PLANEJADO` **é** divergência
-            # temporal, e a fixture padrão não pode produzir um sinal de brinde a todo teste.
-            status_do_periodo="EM_ANDAMENTO",
         ),
     )

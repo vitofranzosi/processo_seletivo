@@ -182,6 +182,9 @@ class EventSerializer(serializers.Serializer):
     startAt = serializers.DateTimeField()
     endAt = serializers.DateTimeField(required=False, allow_null=True)
     order = serializers.IntegerField(min_value=0, required=False, default=0)
+    # Os quatro valores continuam **reconhecidos** aqui, e a recusa de dois deles é do domínio
+    # (`validate_event`, 045, `FR-737`): recusados pelo `ChoiceField`, eles voltariam com "não é uma
+    # escolha válida", sem a razão — a fase é derivada das datas, e só o cancelamento se declara.
     status = serializers.ChoiceField(
         choices=["PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"],
         required=False,

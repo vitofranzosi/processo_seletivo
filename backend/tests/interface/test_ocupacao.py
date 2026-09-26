@@ -630,3 +630,22 @@ def test_o_recorte_da_ampla_continua_apuravel(client, seletor_ligado, cenario, g
 
     assert "Ampla concorrência (linha geral do quadro)" in pagina
     assert "A ocupar" in pagina, "e ela apurou, com os quatro números"
+
+
+def test_quem_le_e_nao_apura_sabe_a_quem_pedir(client, seletor_ligado, cenario):
+    """`045`, `FR-740` — o teste 8 da proposta, na tela a que o `UX-065` leva a auditoria.
+
+    A auditoria abre a ocupação para consultar, e encontrava só *"Ocupação ainda não apurada"* —
+    sem botão, e sem dizer de quem é o ato. A gestão, que apura, recebe o botão e **não** a frase:
+    "peça a alguém" a quem tem o formulário à frente é falso (037, `FR-544`).
+    """
+    edital, _, _ = cenario
+
+    identificar(client, "aud", ["auditor"])
+    da_auditoria = abrir(client, edital).content.decode()
+    identificar(client, "carlos", ["gestor"])
+    da_gestao = abrir(client, edital).content.decode()
+
+    assert "Apurar a ocupação deste marco depende" in da_auditoria
+    assert "Peça a alguém com a permissão de gerir a comissão" in da_auditoria
+    assert "Apurar a ocupação deste marco depende" not in da_gestao

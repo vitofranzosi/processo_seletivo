@@ -116,6 +116,13 @@ Consequência direta: *"todo o trabalho está concluído mas a Etapa não foi fo
 
 ### D-004 — O `status` do Evento continua declarado; a divergência é o sinal
 
+> **SUBSTITUÍDA pela [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026 (`FR-735`).
+> A fase ordinária do Evento passou a ser **derivada** das datas e do relógio, e `CANCELADO` ficou
+> como o único estado declarado. O que esta decisão temia — derivar **atraso** e produzir alarme
+> falso — não aconteceu por derivar; aconteceu por **não** derivar: o `status` nascia `PLANEJADO`,
+> ninguém o declarava, e o sinal que comparava declarado e relógio ficou permanente em todo Edital
+> composto pela tela. O texto abaixo é o que se decidiu em 09/09, e fica.
+
 `EventoCronograma.status` é preenchido à mão e nasce `PLANEJADO`. Derivar atraso dele produziria um
 muro de alarme falso no dia em que ninguém o mantiver; substituí-lo por derivação das datas
 apagaria uma declaração que alguém fez de propósito.
@@ -464,8 +471,10 @@ que a supervisão não apresenta em si mesma os registros contados.
 - **FR-021**: O sistema MUST apresentar os próximos marcos de cada Edital, em ordem cronológica.
 - **FR-022**: Edital sem cronograma, e cronograma sem período de inscrições marcado, MUST ser
   declarados como tais.
-- **FR-023**: O sistema MUST NOT alterar a semântica declarada do estado de um Evento de cronograma
-  (`D-004`).
+- **FR-023**: ~~O sistema MUST NOT alterar a semântica declarada do estado de um Evento de
+  cronograma (`D-004`).~~ **SUBSTITUÍDA pela `FR-735` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026: a fase ordinária é derivada,
+  e só o cancelamento se declara.
 
 #### Atenção — catálogo fechado
 
@@ -497,24 +506,35 @@ que a supervisão não apresenta em si mesma os registros contados.
   | `UX-066` | ato de ordenação vigente sem divulgação vigente | `038` |
 
   Quem conta é `supervisao.ESPECIES`; o guarda que prende o número é
-  `tests/unit/interface/test_supervisao.py::test_a_enumeracao_tem_exatamente_dez_especies`, e quem
-  compara **esta tabela** com o produto é
+  `tests/unit/interface/test_supervisao.py`, e quem compara o requisito vigente com o produto é
   `tests/acceptance/test_supervisao_do_processo.py::test_o_requisito_que_fecha_o_catalogo_nomeia_as_especies_que_o_produto_apresenta`.
+
+  **E a `FR-565` também foi SUBSTITUÍDA**, pela `FR-744` da
+  [`045`](../045-conducao-confiavel-processo/spec.md), em 26/09/2026. O catálogo **encolheu** para
+  oito: o `UX-001` passou a aviso da validação do conteúdo, onde tem remédio, e o `UX-002` perdeu o
+  que comparar quando a fase do Evento passou a ser derivada. A tabela acima é a de 19/09, e fica —
+  é o que aquela decisão decidiu. O catálogo vigente é o da `FR-744`, e é ela que o guarda lê.
 
   **O resto desta seção continua vigente.** A `FR-025` a `FR-033` não foram tocadas: o que mudou
   foi a lista, e não as regras de apresentação, de ausência ou de encaminhamento.
 - **FR-025**: Sinal ausente MUST NOT ocupar espaço; a ausência de todos MUST ser declarada em uma
   única linha, e o sistema MUST NOT manter seção permanente por sinal (`D-001`).
 - **FR-026**: O sistema MUST identificar Etapa sem Evento de cronograma vinculado, e MUST NOT
-  atribuir a ela situação temporal, progresso ou atraso.
-- **FR-027**: O sistema MUST identificar Evento cujo estado declarado seja incompatível com sua
-  posição temporal observável, apresentando **as duas informações** sem arbitrar entre elas.
+  atribuir a ela situação temporal, progresso ou atraso. *Mantida; mudou a superfície* — desde a
+  `FR-739` da [`045`](../045-conducao-confiavel-processo/spec.md) (26/09/2026), a identificação é
+  **aviso da validação do conteúdo**, e não sinal da Atenção.
+- **FR-027**: ~~O sistema MUST identificar Evento cujo estado declarado seja incompatível com sua
+  posição temporal observável, apresentando **as duas informações** sem arbitrar entre elas.~~
+  **SUBSTITUÍDA pela `FR-738` da [`045`](../045-conducao-confiavel-processo/spec.md)**, em
+  26/09/2026: com a fase derivada, declarado e posição não têm como discordar, e o sinal saiu.
 - **FR-028**: O sistema MUST identificar a existência de Etapa cuja cobertura de avaliação seja
   insuficiente, nomeando a Etapa e o Edital.
 - **FR-029**: O sistema MUST identificar ato de ordenação vigente marcado como obsoleto, usando o
   cálculo já existente na feature dona.
 - **FR-030**: O sistema MUST identificar a existência de recurso aguardando julgamento para o qual
-  nenhum membro ativo da comissão do Processo esteja desimpedido.
+  nenhum membro ativo da comissão do Processo esteja desimpedido. *Ampliada pela `FR-732` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026): *aguardando decisão* —
+  admissibilidade **ou** julgamento.
 - **FR-030a**: A mensagem MUST se limitar ao impedimento verificável e MUST NOT afirmar que o
   julgamento é impossível, porque a titularidade da permissão de julgar não é determinável pelo
   sistema (`D-008`).
@@ -523,7 +543,10 @@ que a supervisão não apresenta em si mesma os registros contados.
   sobre o produto de recursos por membros (`D-008`).
 - **FR-032**: Todo percentual apresentado MUST vir acompanhado de numerador e denominador.
 - **FR-033**: Unidade de trabalho esperada e não distribuída MUST ser apresentada como pendente, e
-  MUST NOT ser retirada do denominador.
+  MUST NOT ser retirada do denominador. *Refinada pela `FR-742` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026): esperada é a unidade de quem
+  **segue na Etapa** — a inscrição eliminada antes, à espera da Etapa anterior ou fora do corte não
+  é trabalho esperado ali.
 - **FR-034**: O sistema MUST NOT classificar, ordenar ou qualificar o desempenho de membros da
   comissão, nem apresentar carga individual de trabalho.
 
@@ -538,16 +561,21 @@ que a supervisão não apresenta em si mesma os registros contados.
 ### Requisitos de apresentação
 
 - **UX-001** — **Etapa sem marco no cronograma.** A Etapa é nomeada com o seu Edital, e a ausência
-  é dita nesses termos — nunca como *aguardando*, *atrasada* ou percentual zero.
-- **UX-002** — **Divergência entre estado declarado e posição temporal.** As duas informações
-  aparecem juntas, na forma *declarado X · prazo encerrado em D*, sem que a tela afirme qual vale.
+  é dita nesses termos — nunca como *aguardando*, *atrasada* ou percentual zero. *Deixou de ser
+  espécie da Atenção na [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026, `FR-739`);
+  a regra de apresentação continua valendo, levada ao aviso da validação (`UX-086`).
+- **UX-002** — ~~**Divergência entre estado declarado e posição temporal.** As duas informações
+  aparecem juntas, na forma *declarado X · prazo encerrado em D*, sem que a tela afirme qual vale.~~
+  **RETIRADO pela `FR-738` da [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026.
 - **UX-003** — **Cobertura de avaliação insuficiente.** A Etapa e o Edital são nomeados, com
   numerador e denominador, e o encaminhamento leva à distribuição daquela Etapa.
 - **UX-004** — **Ato de ordenação vigente obsoleto.** O marco é nomeado, e o encaminhamento leva à
   ordenação, onde a divergência já é diagnosticada.
 - **UX-005** — **Recurso sem membro desimpedido.** A mensagem nomeia a condição — *todos os
   membros da comissão estão impedidos de julgar estes recursos* — e não a quantidade pendente
-  isolada; o encaminhamento leva aos recursos daquele Edital.
+  isolada; o encaminhamento leva aos recursos daquele Edital. *Ampliado pela `FR-732` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026): a peça que aguarda
+  admissibilidade também conta, e a mensagem diz a fase (`UX-085`).
 - **UX-006** — Pulso e Atenção são regiões visualmente distintas. A Atenção não mantém seção por
   sinal: sinal ausente não ocupa espaço, e a ausência de todos é **uma linha declarada** — a região
   encolhe, mas não some. Sumir não distinguiria *nada a sinalizar* de *a página não carregou*

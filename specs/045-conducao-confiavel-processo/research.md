@@ -260,3 +260,30 @@ dia decidiu.
 **E as fixtures que passam a emitir o aviso não quebram**: `comissao.py:50-56`, `snapshot.py:329-339`,
 o seed e ~10 arquivos com `scheduleEventId: None` só conferem impeditivos ou filtram por código.
 Conferido arquivo a arquivo pelo mapeamento; nenhum teste afirma *"Nada pendente"* nem zero avisos.
+
+---
+
+## R-9 — O que a `T003` revelou: duas fixtures que colidem por idempotência
+
+**Encontrado na implementação**, e registrado — não corrigido, porque não é desta feature.
+
+Ao passar a conferir o `PUT` do rascunho, `levar_a_publicacao` reprovou **29 casos** em três arquivos
+de documento (`tests/authorization/test_documento_da_mesa.py`, `tests/integration/avaliacoes/test_documento.py`,
+`tests/integration/inscricoes/test_consulta_administrativa_intocada.py`). A causa é anterior à `045`:
+
+- `edital_a` e `edital_com_documentos` (`tests/conftest.py`) criam o Processo com o **mesmo**
+  `process_payload` e a **mesma** chave de idempotência. Usadas no mesmo teste, a segunda criação
+  **reencena** a primeira e devolve o Edital **já publicado**.
+- O `PUT` do rascunho com documentos recebia **409** (*"Somente Edital em elaboração pode ser
+  editado"*) e era engolido; a submissão, a homologação e a publicação reencenavam por idempotência.
+- **Efeito**: nesses testes, `edital_com_documentos` é o `edital_a` — **sem os documentos exigidos**
+  que o nome promete. Os testes passam, mas não sobre o cenário que declaram.
+
+**O que esta feature fez**: a asserção da `T003` vale só quando o Edital estava em elaboração antes
+do `PUT` — o caso em que o rascunho podia ser aceito, e em que a recusa da fase declarada tem de
+aparecer. O caso de reencenação continua passando em silêncio, como antes, com o comentário no
+ajudante apontando para cá.
+
+**O que fica para decisão**: separar a chave de idempotência das duas fixtures faria
+`edital_com_documentos` ser, de fato, outro Edital com documentos — e pode mudar o que esses 29 casos
+provam. É trabalho de revisão dos testes da `012`, e não escopo aqui.

@@ -341,3 +341,43 @@ def test_a_recusa_de_distribuir_quem_ficou_fora_diz_o_corte_e_nao_a_eliminacao(c
 
     assert "fora do corte" in recusa
     assert "eliminadas" not in recusa
+
+
+# --- 045 · a cobertura conta quem participa (FR-742) ------------------------------------------
+
+
+def test_a_cobertura_conta_so_os_participantes_e_as_duas_formas_concordam(cortado):
+    """`045`, `FR-742` — o teste 7 da proposta, sobre o cenário que tem as três populações de fora.
+
+    Na Entrevista há quem a faixa alcançou, quem ficou fora do corte e quem ainda aguarda a Etapa
+    anterior. O resumo contava **toda** inscrição submetida, e a Atenção dizia *"N de total"* sobre
+    uma lista que mostrava só os participantes. Agora o denominador é o de participantes — e as
+    duas formas da mesma regra dão o mesmo número: a da distribuição, que tem o panorama na mão, e
+    a do painel, que dobra as regras na agregação.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
+    from processo_seletivo.interface import supervisao
+    from tests.conftest import ator_institucional
+
+    edital, inscricoes = cortado
+    conteudo = edital.versoes_consolidadas.latest("materialized_at").content
+    etapa = next(item for item in conteudo["stages"] if str(item["id"]) == ENTREVISTA)
+    visao = panorama_da_etapa(edital=edital, etapa=etapa)
+
+    pela_distribuicao = resumo_da_etapa(edital=edital, etapa=etapa, panorama=visao)
+    pelo_painel = resumo_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)
+
+    assert contagens(visao)["total"] == len(inscricoes) > 2, "sem gente de fora, não prova nada"
+    assert (
+        pela_distribuicao["inscricoes"] == pelo_painel["inscricoes"] == len(participantes(edital))
+    )
+
+    cobertura = next(
+        sinal
+        for sinal in supervisao.sinais(
+            edital.processo, ator_institucional("carlos", "comissao:gerir")
+        )
+        if sinal.especie == supervisao.UX_003 and sinal.alvo == "Entrevista"
+    )
+    assert cobertura.medida.denominador == len(participantes(edital))
+    assert cobertura.medida.unidade_legivel == "inscrições"
