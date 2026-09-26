@@ -393,6 +393,18 @@ def test_perfil_que_nao_declara_ampla_continua_sem_declarar():
     assert copiado["profiles"][0]["generalCompetitionModalityId"] is None
 
 
+def test_o_recorte_transversal_atravessa_o_remapeamento_sem_mudar():
+    """O código não é identidade (044, R-012): a PcD do Edital novo tem o mesmo código."""
+    conteudo = conteudo_publicado()
+    documento = conteudo["documentRequirements"][0]
+    documento.update({"profileId": None, "modalityId": None, "modalityCode": "PcD"})
+
+    copia = remapear(conteudo, mapa_de_identidades(conteudo))
+
+    assert copia["documentRequirements"][0]["modalityCode"] == "PcD"
+    assert payload_do_conteudo(copia)["documentRequirements"][0]["modalityCode"] == "PcD"
+
+
 def test_a_etapa_que_o_corte_alimenta_aponta_a_etapa_do_destino():
     """A mesma classe da ampla concorrência declarada, numa posição que a fixture não declarava.
 

@@ -16,6 +16,7 @@ elabora; o que este módulo garante é que nenhuma delas fique de fora.
 from datetime import datetime
 
 from processo_seletivo.editais.domain import secoes as catalogo
+from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.interface.forms import ZONA
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
@@ -173,7 +174,7 @@ def _nomes_do_alcance(snapshot):
 
 
 def _alcance(documento, snapshot):
-    """A quem o documento se aplica, nas quatro combinações que a ausência dos dois `id` produz.
+    """A quem o documento se aplica, nas cinco formas que a ausência dos campos produz (044).
 
     É a informação mais fácil de ler errado do bloco: um laudo exigido só de uma modalidade parece
     exigido de todo mundo quando a lista não diz de quem é. O documento publicado já resolve isso
@@ -181,6 +182,10 @@ def _alcance(documento, snapshot):
     lista de itens e não tem grupos.
     """
     perfil_id, modalidade_id = documento.get("profileId"), documento.get("modalityId")
+    if documento.get("modalityCode"):
+        # A mesma frase do documento publicado (044, R-008), para a conferência dizer o que ele diz.
+        denominacao = denominacao_do_codigo(snapshot, documento["modalityCode"])
+        return f"candidatos concorrentes na modalidade {denominacao}, em todos os Perfis"
     if perfil_id is None and modalidade_id is None:
         return "todos os candidatos"
     perfis, modalidades = _nomes_do_alcance(snapshot)

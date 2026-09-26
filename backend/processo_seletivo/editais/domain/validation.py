@@ -36,6 +36,10 @@ from processo_seletivo.editais.domain.calendario import (
     instante_vencido,
     vencido,
 )
+from processo_seletivo.editais.domain.documentos import (
+    perfis_que_o_documento_publicado_alcanca,
+    rotulo_da_modalidade,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
 from processo_seletivo.inscricoes.domain.periodo import (
@@ -185,9 +189,9 @@ EVENTO_PUBLICADO = (
     Campo("isRegistrationPeriod", bool),
 )
 
-# Os dois identificadores são anuláveis por semântica: `null` é "não restringe". É a ausência
-# deles que produz as quatro combinações de aplicabilidade, e declará-los assim é o que impede
-# uma quinta forma de existir no conteúdo publicado.
+# Os dois identificadores e o código são anuláveis por semântica: `null` é "não restringe". É a
+# ausência deles que produz as cinco formas de aplicabilidade (044), e declará-los assim é o que
+# impede uma sexta forma de existir no conteúdo publicado — nenhum valor especial, nenhum operador.
 DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("key", str),
@@ -201,6 +205,9 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     # do **Anexo**, e nunca a do artefato: o artefato é o que aquela versão diz que o Anexo é, e
     # trocá-lo por Retificação não pode obrigar a reescrever o requisito que o cita.
     Campo("attachmentId", str, admite_nulo=True, formato="uuid"),
+    # O recorte transversal (044): o **código** da Modalidade, em todos os Perfis que a têm. Texto,
+    # e não identidade — é o código que as Modalidades de Perfis diferentes têm em comum.
+    Campo("modalityCode", str, admite_nulo=True),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -2183,6 +2190,11 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
         caminho = f"/documentRequirements/{indice}"
         perfil_id = documento.get("profileId")
         modalidade_id = documento.get("modalityId")
+        if documento.get("modalityCode"):
+            achado = _recorte_por_codigo(documento, perfis, caminho)
+            if achado is not None:
+                findings.append(achado)
+            continue
         if perfil_id is not None and str(perfil_id) not in perfis:
             findings.append(
                 _impeditivo(
@@ -2215,12 +2227,98 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
             achado = _recorte_que_o_documento_publicado_alarga(documento, perfis, caminho)
             if achado is not None:
                 findings.append(achado)
+    findings.extend(_denominacoes_do_codigo(requisitos, perfis))
     return findings
 
 
-def _rotulo_da_modalidade(modalidade: dict) -> str:
-    """O que o documento publicado escreve: o nome, e o código quando não há nome."""
-    return str(modalidade.get("name") or modalidade.get("code") or "").strip()
+def _recorte_por_codigo(documento: dict, perfis: dict, caminho: str) -> ValidationFinding | None:
+    """As três recusas do recorte transversal sobre o conteúdo que passa a vigorar (044, R-007).
+
+    A gravação do rascunho já as faz, e aqui elas valem de novo porque uma Retificação alcança o
+    Perfil e a Modalidade sem passar pela gravação: remover o código do último Perfil, ou declarar
+    ampla a Modalidade dele, deixaria o documento sem ninguém a quem ser pedido (FR-724, FR-704).
+    """
+    nome = documento.get("name", "")
+    codigo = str(documento.get("modalityCode")).strip()
+    if documento.get("profileId") is not None or documento.get("modalityId") is not None:
+        return _impeditivo(
+            "document_requirement_scope_conflict",
+            f"O Documento Exigido '{nome}' recorta pela modalidade '{codigo}' em todos os Perfis, "
+            "e declara também um Perfil ou a modalidade de um Perfil. Escolha um recorte só.",
+            caminho,
+        )
+    com_o_codigo = [
+        (perfil, modalidade)
+        for perfil in perfis.values()
+        for modalidade in perfil.get("competitionModalities") or []
+        if str(modalidade.get("code") or "").strip() == codigo
+    ]
+    if not com_o_codigo:
+        return _impeditivo(
+            "document_requirement_modality_code_unknown",
+            f"O Documento Exigido '{nome}' é pedido de quem concorre na modalidade '{codigo}', mas "
+            "nenhum Perfil deste Edital tem modalidade com esse código. Ele não seria pedido a "
+            "ninguém.",
+            caminho,
+        )
+    for perfil, modalidade in com_o_codigo:
+        ampla = perfil.get("generalCompetitionModalityId")
+        if ampla and str(ampla) == str(modalidade.get("id")):
+            return _impeditivo(
+                "document_requirement_modality_code_general",
+                f"O Documento Exigido '{nome}' é pedido de quem concorre na modalidade '{codigo}', "
+                "mas ela é a ampla concorrência no Perfil "
+                f"'{perfil.get('code') or perfil.get('name') or ''}'. A ampla concorrência não "
+                "recorta documento.",
+                caminho,
+            )
+    return None
+
+
+def _denominacoes_do_codigo(requisitos: list, perfis: dict) -> list[ValidationFinding]:
+    """O mesmo código, a mesma denominação — onde o Edital afirma que é a mesma modalidade (FR-706).
+
+    **Só para código referido por documento transversal** (D-001): um Edital que não usa o recorte
+    não afirma identidade nenhuma entre Perfis. **Só a denominação** (FR-707): percentual e
+    fundamento são da cota, e a cota é por Perfil. **Um achado por código**, e não por Perfil
+    divergente: com 16 Perfis num empate de 8 a 8, oito achados diriam oito problemas onde há um.
+
+    A comparação apara as pontas e mais nada (D-005). O documento publicado imprime **uma**
+    denominação no título do grupo, e não pode escolher entre duas que diferem por uma maiúscula.
+    O caminho aponta os Perfis, porque é lá que se corrige.
+    """
+    referidos = []
+    for documento in requisitos:
+        if isinstance(documento, dict) and documento.get("modalityCode"):
+            codigo = str(documento["modalityCode"]).strip()
+            if codigo not in referidos:
+                referidos.append(codigo)
+    findings = []
+    for codigo in referidos:
+        por_denominacao = {}
+        for perfil in perfis.values():
+            for modalidade in perfil.get("competitionModalities") or []:
+                if str(modalidade.get("code") or "").strip() != codigo:
+                    continue
+                denominacao = str(modalidade.get("name") or "").strip()
+                rotulo = perfil.get("code") or perfil.get("name") or ""
+                por_denominacao.setdefault(denominacao, []).append(rotulo)
+        if len(por_denominacao) < 2:
+            continue
+        partes = "; ".join(
+            f"'{denominacao}' em {', '.join(sorted(rotulos))}"
+            for denominacao, rotulos in sorted(por_denominacao.items())
+        )
+        findings.append(
+            _impeditivo(
+                "modality_code_name_divergent",
+                f"A modalidade '{codigo}' tem denominações diferentes entre os Perfis: {partes}. "
+                "Um documento é pedido dela em todos os Perfis, e o Edital publicado precisa "
+                "nomeá-la de um jeito só. Iguale a denominação nos Perfis.",
+                "/profiles",
+            )
+        )
+    return findings
 
 
 def _recorte_que_o_documento_publicado_alarga(
@@ -2238,39 +2336,26 @@ def _recorte_que_o_documento_publicado_alarga(
     recorte sozinho, ao acrescentar Perfis a uma origem que tinha um só.
 
     **Só quando o nome se repete.** Se nenhum outro Perfil tem modalidade com aquele nome, o grupo
-    publicado alcança exatamente quem o portal alcança, e não há o que acusar.
+    publicado alcança exatamente quem o portal alcança, e não há o que acusar. A pergunta mora em
+    `documentos.py` porque a lista exigida da `044` a faz também (R-004).
+
+    **A saída que a `044` acrescenta** vem em segundo lugar na mensagem, porque é a que o Edital da
+    amostra quer dizer: "todo candidato PcD" — a modalidade daquele código em todos os Perfis.
     """
-    dono, modalidade = next(
-        (
-            (perfil, item)
-            for perfil in perfis.values()
-            for item in perfil.get("competitionModalities") or []
-            if str(item.get("id")) == str(documento.get("modalityId"))
-        ),
-        (None, None),
-    )
-    if dono is None:
+    dono, modalidade, outros = perfis_que_o_documento_publicado_alcanca(documento, perfis)
+    if dono is None or not outros:
         return None
-    rotulo = _rotulo_da_modalidade(modalidade)
-    outros = [
-        perfil
-        for perfil in perfis.values()
-        if perfil is not dono
-        and any(
-            _rotulo_da_modalidade(item) == rotulo
-            for item in perfil.get("competitionModalities") or []
-        )
-    ]
-    if not rotulo or not outros:
-        return None
+    rotulo = rotulo_da_modalidade(modalidade)
+    codigo = str(modalidade.get("code") or "").strip()
     perfil_dono = dono.get("code") or dono.get("name") or ""
     return _impeditivo(
         "document_requirement_modality_scope_ambiguous",
         f"O Documento Exigido '{documento.get('name', '')}' vale para todos os Perfis, mas "
         f"está restrito à modalidade '{rotulo}' do Perfil '{perfil_dono}'. O Edital publicado o "
         f"exigiria de todo candidato em '{rotulo}', e a inscrição o pediria só no Perfil "
-        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento — ou, para exigi-lo "
-        "também nos outros Perfis, repita-o com a modalidade de cada um.",
+        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento, ou use a modalidade "
+        f"'{rotulo}' ({codigo}) em todos os Perfis — ou, para exigi-lo em Perfis escolhidos, "
+        "repita-o com a modalidade de cada um.",
         caminho,
     )
 

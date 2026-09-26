@@ -977,12 +977,24 @@ components:
     DocumentoExigidoPublicado:
       type: object
       description: >-
-        O que o Edital exige que o candidato apresente na inscrição. `profileId` e `modalityId`
-        são anuláveis por semântica: `null` significa "não restringe", e é a ausência dos dois que
-        faz o requisito valer para todos. As quatro combinações de aplicabilidade — todos, Perfil,
-        modalidade, Perfil e modalidade — se leem daí, e não há uma quinta forma nem operador.
+        O que o Edital exige que o candidato apresente na inscrição. `profileId`, `modalityId` e
+        `modalityCode` são anuláveis por semântica: `null` significa "não restringe", e é a
+        ausência dos três que faz o requisito valer para todos. As cinco formas de aplicabilidade —
+        todos, Perfil, Perfil e modalidade, modalidade de um Perfil, e a modalidade de um código em
+        todos os Perfis que a têm (044) — se leem daí, e não há sexta forma nem operador.
       required:
-        [id, key, name, instructions, required, order, profileId, modalityId, attachmentId]
+        [
+          id,
+          key,
+          name,
+          instructions,
+          required,
+          order,
+          profileId,
+          modalityId,
+          attachmentId,
+          modalityCode,
+        ]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         key: { type: string }
@@ -997,6 +1009,11 @@ components:
         # Aponta a identidade do Anexo, e nunca a do artefato: substituir o artefato por
         # Retificação não pode obrigar a reescrever todo requisito que o cita.
         attachmentId: { type: [string, 'null'], format: uuid }
+        # O recorte transversal (044): o **código** da Modalidade, em todos os Perfis que a têm.
+        # Texto, e não identidade: o que as Modalidades de Perfis diferentes têm em comum é o
+        # código. Versões publicadas antes da versão canônica 17 não trazem o campo no literal, como
+        # as anteriores à 9 não trazem `attachmentId`; ausente e `null` dizem o mesmo.
+        modalityCode: { type: [string, 'null'] }
     AnexoPublicado:
       type: object
       description: >-

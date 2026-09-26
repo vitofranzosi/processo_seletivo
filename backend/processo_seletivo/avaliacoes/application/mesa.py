@@ -21,8 +21,12 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.previsao import decisoria, pontuacao_maxima, rotulos
-from processo_seletivo.editais.domain.documentos import modelo_do_requisito
-from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
+from processo_seletivo.editais.domain.documentos import (
+    OBRIGATORIO,
+    modelo_do_requisito,
+    razao_legivel,
+)
+from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.publicacoes.application import selectors
@@ -124,21 +128,29 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         str(documento.requirement_id): documento
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
+    # **A lista gravada no envio**, e não o recorte refeito agora (044, FR-718). No 903/2026 a Mesa
+    # recalculava, e herdou o erro do portal: o laudo que ele dispensou sumiu também daqui, e o
+    # analista indeferiu por um documento que o sistema nunca pediu. Inscrição enviada antes da
+    # `044` não tem lista gravada, e a lista é reconstruída — e a tela diz que foi (FR-726).
+    lista = lista_exigida(inscricao, conteudo)
     documentos = [
         {
-            "id": str(requisito["id"]),
-            "nome": requisito.get("name", ""),
+            "id": str(veredito.requisito["id"]),
+            "nome": veredito.requisito.get("name", ""),
             # A instrução que o candidato leu ao enviar — "Apenas para quem concorre na
             # modalidade PcD." Sem ela, a autodeclaração ausente de quem concorre em ampla e a de
             # quem concorre em PcD se liam iguais na Mesa, e quem avalia não tinha como saber qual
             # das duas faltava de fato (conferência de 25/09/2026).
-            "instrucoes": (requisito.get("instructions") or "").strip(),
-            "obrigatorio": requisito.get("required", True),
-            "enviado": enviados.get(str(requisito["id"])),
+            "instrucoes": (veredito.requisito.get("instructions") or "").strip(),
+            "obrigatorio": veredito.situacao == OBRIGATORIO,
+            # A quem o documento foi pedido, em frase (UX-081): é o que dá a quem analisa o que
+            # antes só se sabia conhecendo o Edital de cor.
+            "razao": razao_legivel(veredito, conteudo),
+            "enviado": enviados.get(str(veredito.requisito["id"])),
             "tamanho": (
                 None
-                if enviados.get(str(requisito["id"])) is None
-                else tamanho_legivel(enviados[str(requisito["id"])].tamanho)
+                if enviados.get(str(veredito.requisito["id"])) is None
+                else tamanho_legivel(enviados[str(veredito.requisito["id"])].tamanho)
             ),
             # O modelo que estava valendo **sob a versão que a inscrição aceitou** (020, FR-048,
             # FR-050). Não é o vigente: uma Retificação pode ter substituído o formulário depois,
@@ -148,11 +160,22 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
             # O que o sistema **não** afirma, e a tela não pode sugerir: que foi este o arquivo
             # que o candidato baixou. Ele pode ter baixado sob outra versão, e os bytes devolvidos
             # não dizem de onde vieram. Conformidade é juízo de quem avalia (D-004, FR-049).
-            "modelo": modelo_do_requisito(conteudo, requisito),
+            "modelo": modelo_do_requisito(conteudo, veredito.requisito),
         }
         # A lista é a dos **requisitos**, e não a dos arquivos: requisito sem arquivo aparece como
         # requisito sem arquivo, que é informação para quem avalia — e não uma linha que some.
-        for requisito in requisitos_da_inscricao(conteudo, inscricao)
+        for veredito in lista.pedidos
+    ]
+    # O que não se aplicava, com a razão (FR-717, UX-082). Antes, sumia — e com ele o que o
+    # portal dispensou por erro. Agora é estado com nome, abaixo do que foi pedido.
+    nao_se_aplicam = [
+        {
+            "id": str(veredito.requisito["id"]),
+            "nome": veredito.requisito.get("name", ""),
+            "razao": razao_legivel(veredito, conteudo),
+            "divergente": veredito.divergente_do_publicado,
+        }
+        for veredito in lista.nao_se_aplicam
     ]
     perfil, modalidade = _perfil_e_modalidade(conteudo, inscricao)
     # A regra que vale **agora**, e a que a Avaliação vai gravar. A versão da inscrição governa o
@@ -191,6 +214,8 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,
         "documentos": documentos,
+        "nao_se_aplicam": nao_se_aplicam,
+        "lista_reconstruida": lista.reconstruida,
     }
 
 

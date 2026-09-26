@@ -176,3 +176,19 @@ def test_nenhuma_saida_carrega_enderecamento_estrutural():
         assert "/" not in texto
         assert "id=" not in texto
         assert PERFIL not in texto and EVENTO not in texto and MODALIDADE not in texto
+
+
+def test_o_recorte_transversal_vira_linha_com_o_campo_e_sem_valor():
+    """A 044 (FR-721, D-008): nomeado, como toda linha — e não descartado em silêncio.
+
+    A tela emite `REPLACE` para as três operações sobre o campo (passar a recortar, deixar de
+    recortar, trocar o código), e as três se leem igual: o campo mudou.
+    """
+    linha = alteracao_legivel(BASE, Alteracao(f"/documentRequirements/id={DOCUMENTO}/modalityCode"))
+
+    assert linha == {
+        "onde": "Documento exigido “Diploma”",
+        "campo": "Modalidade em todos os Perfis",
+        "operacao": "alterado",
+    }
+    assert DOCUMENTO not in str(linha), "nenhum identificador interno"

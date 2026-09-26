@@ -144,7 +144,12 @@ from uuid import UUID
 # formas incompatíveis e as duas são normais: o 69/2026 (7.2) convoca por publicação; o 77, o 58 e o
 # 59 (8.3) por mensagem individual, com o prazo contado do recebimento. Escolher uma por omissão
 # decidiria norma no lugar do Edital — e a `019` recusa convocar sem declaração.
-SCHEMA_VERSION = 16
+#
+# **O degrau 17 é o recorte transversal do Documento Exigido** (044, R-002). `modalityCode` nulo diz
+# "não recorta por código", e é verdade sobre todo documento publicado antes: a capacidade não
+# existia. Conversão sem invenção, no molde do degrau 9 — aditiva, dentro de uma coleção que já
+# existe, com a ausência de significado declarado.
+SCHEMA_VERSION = 17
 
 
 def _default(value):

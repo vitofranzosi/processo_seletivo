@@ -1,4 +1,5 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
 {% block conteudo %}
 <div class="pagina-da-inscricao">
@@ -84,11 +85,19 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   este sistema e uma pasta compartilhada: requisito sem arquivo aparece como requisito sem
   arquivo, que é informação para quem avalia — e não uma linha que some.
   {% endcomment %}
+  {% comment %}
+  A lista reconstruída se anuncia uma vez, acima dela (044, UX-083). A inscrição foi enviada antes
+  de o sistema gravar o que pedia, e o que se vê aqui é o recorte da versão aceita refeito agora —
+  o analista precisa saber que não é o registro do envio.
+  {% endcomment %}
+  {% if lista_reconstruida %}
+  <p class="aviso-da-lista">Esta inscrição foi enviada antes de o sistema gravar a lista de documentos pedidos. A lista abaixo foi reconstruída a partir da versão do Edital que ela aceitou.</p>
+  {% endif %}
   <ul class="documentos">
     {% for documento in documentos %}
     <li>
-      <span class="requisito">{{ documento.nome }}{% if documento.instrucoes %}<span class="instrucao">{{ documento.instrucoes }}</span>{% endif %}</span>
-      <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% endif %}</span>
+      <span class="requisito">{{ documento.nome }}{% if documento.instrucoes %}<span class="instrucao">{{ documento.instrucoes }}</span>{% endif %}{% if documento.razao %}<span class="razao">{{ documento.razao }}</span>{% endif %}</span>
+      <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% else %}<span class="marca">facultativo</span>{% endif %}</span>
       {% comment %}
       O modelo que o Edital fornecia **na versão que esta inscrição aceitou** (020, FR-050). Não é
       o vigente: uma Retificação pode ter substituído o formulário depois, e conferir o que voltou
@@ -140,6 +149,21 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     </li>
     {% endfor %}
   </ul>
+
+  {% comment %}
+  O que não se aplicava a esta inscrição, e a quem era pedido (044, FR-717, UX-082). Antes sumia, e
+  com ele o que o portal dispensou por erro de recorte. Vem depois dos pedidos, sob título próprio,
+  e se distingue pelo texto, e não só pela cor.
+  {% endcomment %}
+  {% if nao_se_aplicam %}
+  <h3 id="nao-se-aplicam">Não se aplicam a esta inscrição</h3>
+  <ul class="nao-se-aplicam" aria-labelledby="nao-se-aplicam">
+    {% for documento in nao_se_aplicam %}
+    <li><span class="requisito">{{ documento.nome }}</span>
+      <span class="razao">{{ documento.razao }}</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 
   {% comment %}
   FR-028: não existe download em lote, exportação do acervo nem navegação por inscrição alheia.

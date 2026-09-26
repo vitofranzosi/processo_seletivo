@@ -56,12 +56,26 @@ class DocumentoExigido(models.Model):
         on_delete=models.SET_NULL,
         related_name="requisitos",
     )
+    # O recorte transversal (044): a Modalidade deste **código** em todos os Perfis que a têm. É
+    # texto, e não chave estrangeira, porque não há uma Modalidade só a apontar — o PcD do C1 e o
+    # PcD do C2 são objetos distintos, e o que eles têm em comum é o código, que é estrutural.
+    # Mesmo tamanho de `ModalidadeConcorrencia.code`, e `""` quando não recorta por código, pela
+    # mesma convenção de `instructions`: uma segunda forma de ausência para texto faria o rascunho
+    # admitir duas. No conteúdo publicado a ausência é `null`, como no degrau 17.
+    modalidade_codigo = models.CharField(max_length=100, blank=True, default="")
 
     class Meta:
         ordering = ["order", "id"]
         constraints = [
             models.UniqueConstraint(fields=["edital", "key"], name="uq_documento_edital_key"),
             models.UniqueConstraint(fields=["edital", "order"], name="uq_documento_edital_order"),
+            # Cinco formas, mutuamente exclusivas (044, D-006). A recusa com mensagem é do domínio;
+            # esta é a segunda barreira, a que não depende de a aplicação lembrar.
+            models.CheckConstraint(
+                condition=models.Q(modalidade_codigo="")
+                | models.Q(perfil__isnull=True, modalidade__isnull=True),
+                name="ck_documento_recorte_exclusivo",
+            ),
         ]
 
     def __str__(self):
