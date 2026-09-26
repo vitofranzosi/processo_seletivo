@@ -491,6 +491,12 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("documentRequirements", "profileId"): retificavel(),
     ("documentRequirements", "modalityId"): retificavel(),
     ("documentRequirements", "attachmentId"): retificavel(),
+    # O recorte transversal (044, D-002). Diz **quem deve apresentar**, da mesma natureza de
+    # `profileId` e `modalityId`, que já se retificam: uma Retificação pode mudar a quem o
+    # documento é pedido nas inscrições futuras. O que protege as inscrições já enviadas é a lista
+    # exigida gravada no envio, e não o congelamento deste campo. E o valor que ele aponta — o
+    # código da Modalidade — já é estrutural, de modo que o recorte não se desfaz por renomeação.
+    ("documentRequirements", "modalityCode"): retificavel(),
 }
 
 

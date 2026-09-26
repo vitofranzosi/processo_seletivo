@@ -265,7 +265,7 @@ def _documentos_inaplicaveis(conteudo, inscricao, modalidade_nova) -> list[str]:
     depois = {
         str(requisito["id"])
         for requisito in aplicaveis(
-            conteudo.get("documentRequirements") or [],
+            conteudo,
             profile_id=str(inscricao.profile_id),
             modality_id=str(modalidade_nova) if modalidade_nova else None,
         )
@@ -328,7 +328,7 @@ def requisitos_da_inscricao(conteudo, inscricao) -> list[dict]:
     respondam a mesma coisa — três leituras da mesma função, e não três interpretações.
     """
     return aplicaveis(
-        conteudo.get("documentRequirements") or [],
+        conteudo,
         profile_id=str(inscricao.profile_id),
         modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
     )
@@ -470,7 +470,7 @@ def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> lis
     depois = {
         str(requisito["id"])
         for requisito in aplicaveis(
-            conteudo.get("documentRequirements") or [],
+            conteudo,
             profile_id=str(inscricao.profile_id),
             modality_id=str(modality_id) if modality_id else None,
         )

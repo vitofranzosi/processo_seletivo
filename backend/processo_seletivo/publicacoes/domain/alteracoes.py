@@ -92,6 +92,10 @@ CAMPOS = {
         "required": "Obrigatoriedade",
         "order": "Ordem",
         "attachmentId": "Modelo",
+        # O recorte transversal (044, FR-721). O campo é nomeado, e não o valor, como toda linha
+        # deste resumo (D-008). `profileId` e `modalityId` continuam fora: a correção deles é da
+        # fila das diretas, e não desta feature.
+        "modalityCode": "Modalidade em todos os Perfis",
     },
     "competitionModalities": {"code": "Código", "name": "Denominação"},
 }

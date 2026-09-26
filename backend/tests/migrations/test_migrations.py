@@ -27,6 +27,8 @@ APPS = (
     # A contestação da 018: três tabelas append-only e **duas** de coerência — uma por tabela que
     # precisa dela, porque o gatilho é por tabela e uma trigger não valida linha de outra.
     "recursos",
+    # A lista exigida da 044: uma tabela append-only, e a coerência dela contra a inscrição enviada.
+    "inscricoes",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -87,6 +89,12 @@ TRIGGERS_POR_APP = {
         "decisao_recurso_coerente",
         "ato_de_instrucao_append_only",
         "ato_de_instrucao_coerente",
+    ),
+    # A lista exigida da 044: append-only, e a coerência que prende a lista ao envio — a inscrição
+    # enviada, a versão que ela aceitou, o instante do ato (FR-714, FR-715).
+    "inscricoes": (
+        "item_da_lista_exigida_append_only",
+        "item_da_lista_exigida_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -573,7 +581,13 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # produzida passa a ser declarado em vez de inferido da presença do método do sorteio, e a
         # inferência não distinguia "não sorteia" de "sorteia e ainda não declarei o método". A
         # coluna nasce vazia e a migration não percorre linha publicada (030, FR-413, SC-142).
-        "editais": 21,
+        #
+        # **Sobe para 22 com a 044**: a `editais/0022` acrescenta `modalidade_codigo` ao Documento
+        # Exigido — o recorte pela Modalidade de um código em todos os Perfis — e a restrição que o
+        # torna exclusivo com Perfil e Modalidade exata. É elaboração pela razão das anteriores: a
+        # quem o documento é pedido é declarado pelo Edital. A coluna nasce vazia e a migration não
+        # percorre linha publicada (044, FR-700, D-006).
+        "editais": 22,
         "publicacoes": 8,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
@@ -727,8 +741,18 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # produzida passa a ser declarado em vez de inferido da presença do método do sorteio, e a
         # inferência não distinguia "não sorteia" de "sorteia e ainda não declarei o método". A
         # coluna nasce vazia e a migration não percorre linha publicada (030, FR-413, SC-142).
-        "editais": 21,
-        "inscricoes": 4,
+        #
+        # **Sobe para 22 com a 044**: a `editais/0022` acrescenta `modalidade_codigo` ao Documento
+        # Exigido — o recorte pela Modalidade de um código em todos os Perfis — e a restrição que o
+        # torna exclusivo com Perfil e Modalidade exata. É elaboração pela razão das anteriores: a
+        # quem o documento é pedido é declarado pelo Edital. A coluna nasce vazia e a migration não
+        # percorre linha publicada (044, FR-700, D-006).
+        "editais": 22,
+        # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
+        # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
+        # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se
+        # recalcularem (044, FR-714, FR-715, D4).
+        "inscricoes": 5,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o

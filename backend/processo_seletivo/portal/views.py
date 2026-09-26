@@ -32,7 +32,11 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
-from processo_seletivo.editais.domain.documentos import aplicaveis, modelo_do_requisito
+from processo_seletivo.editais.domain.documentos import (
+    OBRIGATORIO,
+    aplicaveis,
+    modelo_do_requisito,
+)
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
 from processo_seletivo.identidade.application import desafio as desafio_de_acesso
@@ -43,6 +47,7 @@ from processo_seletivo.identidade.application.mensagem import (
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
 from processo_seletivo.identidade.models import DesafioDeAcesso
+from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
 from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
@@ -231,16 +236,15 @@ def _documentos_anunciados(conteudo, perfil):
     naquele Perfil, e o que cada modalidade acrescenta. É a mesma função de aplicabilidade que
     decide o que a inscrição pede — três leituras da mesma regra, e não três interpretações.
     """
-    exigidos = conteudo.get("documentRequirements") or []
     perfil_id = str(perfil.get("id"))
-    sempre = aplicaveis(exigidos, profile_id=perfil_id, modality_id=None)
+    sempre = aplicaveis(conteudo, profile_id=perfil_id, modality_id=None)
     nomes_de_sempre = {str(item.get("id")) for item in sempre}
     por_modalidade = []
     for modalidade in perfil.get("competitionModalities") or []:
         com_ela = [
             item.get("name", "")
             for item in aplicaveis(
-                exigidos, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
+                conteudo, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
             )
             if str(item.get("id")) not in nomes_de_sempre
         ]
@@ -1571,6 +1575,29 @@ def congeladas_ou_derivadas(cabecalho):
     return [unica] if unica else []
 
 
+def _requisitos_pedidos(conteudo, inscricao):
+    """O que foi pedido: a lista gravada, se a inscrição foi enviada; a regra vigente, se não (044).
+
+    Enviada, a página e o comprovante leem a mesma lista que a Mesa e a consulta administrativa
+    (FR-720). O portal mostra só o que a pessoa enviou, e a reconstrução de uma inscrição anterior à
+    `044` não muda isso — por isso ele não traz o aviso de lista reconstruída (FR-726).
+
+    A obrigatoriedade vem junto, e da **situação gravada**, e não do `required` do conteúdo: hoje
+    os dois coincidem, porque a situação foi calculada dele no envio — mas a lista existe para o dia
+    em que a regra mudar, e nesse dia o portal contaria como faltante o que a Mesa e a consulta
+    mostram como facultativo.
+    """
+    if inscricao.status == Inscricao.Status.SUBMETIDA:
+        return [
+            (veredito.requisito, veredito.situacao == OBRIGATORIO)
+            for veredito in lista_exigida(inscricao, conteudo).pedidos
+        ]
+    return [
+        (requisito, requisito.get("required", True))
+        for requisito in requisitos_da_inscricao(conteudo, inscricao)
+    ]
+
+
 def _documentos(conteudo, inscricao):
     """Cada requisito aplicável, com o arquivo que já chegou para ele — e o que falta.
 
@@ -1582,14 +1609,14 @@ def _documentos(conteudo, inscricao):
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
     linhas = []
-    for requisito in requisitos_da_inscricao(conteudo, inscricao):
+    for requisito, obrigatorio in _requisitos_pedidos(conteudo, inscricao):
         documento = enviados.get(str(requisito["id"]))
         linhas.append(
             {
                 "id": str(requisito["id"]),
                 "nome": requisito.get("name", ""),
                 "instrucao": requisito.get("instructions", ""),
-                "obrigatorio": requisito.get("required", True),
+                "obrigatorio": obrigatorio,
                 "enviado": documento,
                 # Tamanho e resumo criptográfico vão para o comprovante (D9): são o que permite a
                 # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.

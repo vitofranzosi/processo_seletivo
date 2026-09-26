@@ -1395,6 +1395,9 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "momentos_do_requerimento": MOMENTOS_DO_REQUERIMENTO,
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
+            "transversais": (
+                forms.modalidades_em_todos_os_perfis(edital) if etapa == "inscricao" else []
+            ),
             "anexos_do_edital": (forms.anexos_do_edital(edital) if etapa == "inscricao" else []),
             # As listas que o marco e o critério escolhem. Só no passo da classificação: montá-las
             # em toda tela custaria duas consultas por render sem servir a nenhuma delas.
@@ -2175,6 +2178,7 @@ def fragmento_documento(request, edital_id):
             "documento": {"id": str(uuid4()), "required": True},
             "indice": _indice_de_linha(request),
             "alcance": forms.alcance_da_aplicabilidade(edital),
+            "transversais": forms.modalidades_em_todos_os_perfis(edital),
             "anexos_do_edital": forms.anexos_do_edital(edital),
         },
     )
