@@ -69,3 +69,17 @@ previu esta mudança, porque não leu a `017` inteira. Leu só as asserções so
 sem as três tabelas de dado individual (`D-008`), e `test_sorteio_na_pagina_do_edital.py:138`
 continua em duas consultas ao sorteio. A página do resultado custa uma consulta por degrau da cadeia
 para listar as anteriores, como a `R-7` previu, e a janela já subia a mesma cadeia para achar a âncora.
+
+## O "depois" (T037)
+
+`ruff check`, `ruff format --check` e `make check` verdes. `make test-pg`: **1 falha, 8042
+passando, 11 pulados**, em 743,96 s. A falha era `tests/performance/test_resultado_publico.py::
+test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas`, que fixava em 3 as consultas da
+página do resultado e pedia justificativa para a próxima. A quarta consulta é a versão consolidada
+vigente, que dá o prazo de recurso (`D-008`). O teto passou a 4, com a justificativa no teste, e o
+caso passou (4 de 4 no arquivo). Com isso, a suíte fica em **8043 passando e 11 pulados**: 78 casos
+a mais que o "antes" (7965), nenhum pulado a mais.
+
+Casos existentes que mudaram, todos registrados acima: a docstring de `test_o_periodo_em_curso…`
+(US2), o recorte de `test_a_ordem_e_a_publicada…` (US3), `test_a_vitrine_do_edital_anuncia_so_a_vigente`
+(US5), `TABELAS_PROIBIDAS` (US4, `D-008`) e o teto de consultas acima.

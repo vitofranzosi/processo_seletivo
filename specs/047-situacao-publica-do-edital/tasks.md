@@ -234,7 +234,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - registrar os dois achados que esta investigação acrescentou (Edital cancelado *"Aberta"* e resultado sucedido sem caminho público), com o PR.
 
   Em PR **separado** de documentação, como os #182, #184 e #186 fizeram.
-- [ ] T037 `cd backend && make lint check test-pg DB_NAME=<banco-da-worktree>`: `ruff check` **e** `ruff format --check`. Comparar a contagem com a do "antes" da T002, e explicar a diferença caso a caso em `antes-da-047.md`.
+- [X] T037 `cd backend && make lint check test-pg DB_NAME=<banco-da-worktree>`: `ruff check` **e** `ruff format --check`. Comparar a contagem com a do "antes" da T002, e explicar a diferença caso a caso em `antes-da-047.md`.
 
 ---
 
