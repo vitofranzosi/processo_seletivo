@@ -420,6 +420,13 @@ def selecao(request, edital_id):
     # inscrever. Quem já se inscreveu via o calendário; quem estava decidindo se valia a pena, não.
     # É a mesma função que serve as duas telas, e não uma segunda leitura do mesmo dado.
     contexto["cronograma"] = leitura.cronograma(versao.content, timezone.now())
+    # **O que acontece agora e o que vem depois** (047, `FR-767`, `FR-768`), no cabeçalho, onde a
+    # pessoa decide. Só sem desfecho: de um Edital que acabou não há próximo a anunciar.
+    contexto["agora_e_proximo"] = (
+        leitura.agora_e_proximo(versao.content, timezone.now())
+        if contexto["desfecho"] is None
+        else None
+    )
     # **O histórico normativo** (024, FR-129 a FR-133). Pela Constituição, Edital publicado só muda
     # por Retificação — e o portal mostrava o conteúdo vigente sem nenhum sinal de que ele tivesse
     # mudado. Quem leu na semana passada e voltou hoje lia outra coisa e não tinha como saber.

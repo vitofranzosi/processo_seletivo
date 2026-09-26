@@ -20,8 +20,10 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.editais.domain import calendario
 from processo_seletivo.editais.domain.fase_do_evento import (
+    descricao_do_evento,
     esta_cancelado,
     fase_publica_do_evento,
+    marcos_pendentes,
 )
 from processo_seletivo.inscricoes.domain.periodo import ABERTO, ENCERRADO, FUTURO, NAO_DESIGNADO
 from processo_seletivo.shared.texto import dobrar
@@ -89,6 +91,49 @@ def situacao_do_evento(evento, conteudo, agora):
     if fase is not None:
         return CLASSE_DA_FASE[fase]
     return CANCELADO if esta_cancelado(evento) else ""
+
+
+# ---------------------------------------------------------------------------
+# Agora e próximo (047, `FR-767`, `FR-768`)
+# ---------------------------------------------------------------------------
+
+
+def agora_e_proximo(conteudo, agora):
+    """O que está em andamento e o que vem depois, lidos da lista de marcos da gestão.
+
+    **A lista é a do pulso** (`marcos_pendentes`), e não uma terceira leitura do cronograma: a
+    gestão e a página pública respondem à mesma pergunta com a mesma resposta.
+
+    **O período de inscrições não entra.** A marca e a frase do período já o dizem, com prazo e
+    tudo; repeti-lo aqui seria a mesma informação duas vezes no mesmo cabeçalho. Quando o próximo
+    Evento **é** o período, o bloco não diz próximo nenhum — o que viria depois dele não é o
+    próximo, e anunciá-lo inverteria a ordem do que acontece.
+
+    **Nada é inventado para preencher o vazio** (`FR-768`): sem Evento pendente, as duas listas
+    vêm vazias e a tela omite o bloco. Nunca *"em análise"*: nenhum fato registra essa fase.
+    """
+    pendentes = marcos_pendentes(conteudo, agora)
+    em_andamento = [
+        {"nome": descricao_do_evento(evento), "inicio": inicio, "fim": fim}
+        for evento, inicio, fim, fase in pendentes
+        if fase == calendario.EM_ANDAMENTO and evento.get("isRegistrationPeriod") is not True
+    ]
+    planejados = [item for item in pendentes if item[3] == calendario.PLANEJADO]
+    proximos = []
+    if planejados:
+        primeiro = planejados[0][1]
+        # Os que empatam no início são ditos todos, na ordem publicada (caso-limite da 047): a
+        # lista do pulso desempata pelo nome, e o Edital pode ter declarado outra ordem.
+        empatados = sorted(
+            (item for item in planejados if item[1] == primeiro),
+            key=lambda item: item[0].get("order") or 0,
+        )
+        if not any(evento.get("isRegistrationPeriod") is True for evento, *_ in empatados):
+            proximos = [
+                {"nome": descricao_do_evento(evento), "inicio": inicio, "fim": fim}
+                for evento, inicio, fim, _ in empatados
+            ]
+    return {"em_andamento": em_andamento, "proximos": proximos}
 
 
 # ---------------------------------------------------------------------------

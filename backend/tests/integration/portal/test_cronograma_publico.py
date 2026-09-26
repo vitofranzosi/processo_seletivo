@@ -102,7 +102,10 @@ def test_a_ordem_e_a_publicada_e_nao_a_cronologica(
         api_client, manager_headers, process_payload, rascunho=rascunho_com_tres_eventos(agora)
     )
 
+    # **Só a seção do cronograma.** Desde a 047 o cabeçalho diz o próximo Evento (`FR-767`), e a
+    # prova aparece ali antes de aparecer na lista; a ordem que este caso afirma é a da lista.
     corpo = corpo_da_selecao(client, edital)
+    corpo = corpo[corpo.index('class="marco') :]
 
     posicoes = [
         corpo.index("Homologação das inscrições"),

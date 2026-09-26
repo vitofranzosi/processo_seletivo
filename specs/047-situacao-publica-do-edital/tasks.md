@@ -146,7 +146,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 **Independent Test**: quickstart, percurso 4.
 
-- [ ] T018 [P] [US3] Escrever os testes em `backend/tests/integration/portal/test_agora_e_proximo.py` (**NOVO**):
+- [X] T018 [P] [US3] Escrever os testes em `backend/tests/integration/portal/test_agora_e_proximo.py` (**NOVO**):
   - inscrições encerradas e três Eventos futuros: o próximo é o de início mais próximo;
   - dois Eventos empatados no início: os dois aparecem, na ordem publicada;
   - um Evento com término em curso: aparece como em andamento;
@@ -155,9 +155,9 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - Edital com desfecho: nenhum bloco;
   - o bloco aparece **antes** da seção do cronograma na ordem do HTML (`SC-287`), e não depende do PDF;
   - Retificação publicada com vigência **futura** que antecipa um Evento: o próximo é o da versão vigente, e não o da Retificação (edge case).
-- [ ] T019 [US3] Em `backend/processo_seletivo/portal/leitura.py`, criar `agora_e_proximo(conteudo, agora)` sobre `marcos_pendentes`. Devolve `{"em_andamento": [...], "proximos": [...]}` com nome e início. O período de inscrições **não** entra em `em_andamento`, porque a marca e a faixa já o dizem (contrato).
-- [ ] T020 [US3] Em `backend/processo_seletivo/portal/views.py`, `selecao`: pôr `agora_e_proximo` no contexto, e só quando não houver desfecho.
-- [ ] T021 [US3] Em `backend/processo_seletivo/portal/templates/portal/selecao.html`, acrescentar o bloco no cabeçalho, depois do `_periodo.html`. Omitir o bloco inteiro quando as duas listas forem vazias (a decisão *ausência nunca vira afirmação*, da `024`).
+- [X] T019 [US3] Em `backend/processo_seletivo/portal/leitura.py`, criar `agora_e_proximo(conteudo, agora)` sobre `marcos_pendentes`. Devolve `{"em_andamento": [...], "proximos": [...]}` com nome e início. O período de inscrições **não** entra em `em_andamento`, porque a marca e a faixa já o dizem (contrato).
+- [X] T020 [US3] Em `backend/processo_seletivo/portal/views.py`, `selecao`: pôr `agora_e_proximo` no contexto, e só quando não houver desfecho.
+- [X] T021 [US3] Em `backend/processo_seletivo/portal/templates/portal/selecao.html`, acrescentar o bloco no cabeçalho, depois do `_periodo.html`. Omitir o bloco inteiro quando as duas listas forem vazias (a decisão *ausência nunca vira afirmação*, da `024`).
 
 **Checkpoint**: a página responde *"o que acontece agora ou depois"* sem rolar até o cronograma.
 

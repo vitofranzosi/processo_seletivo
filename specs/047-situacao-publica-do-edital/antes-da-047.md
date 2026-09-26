@@ -50,3 +50,10 @@ registro.
 **Nenhum**, como a `R-8` previa. Os nove arquivos da tabela passaram sem edição de asserção depois da
 US2. Só a docstring de `test_o_periodo_em_curso_e_acontecendo_agora_dos_dois_lados` mudou, porque
 dizia que a régua do portal continuava própria.
+
+**Um caso mudou de escopo na US3, e não de expectativa.**
+`test_cronograma_publico.py::test_a_ordem_e_a_publicada_e_nao_a_cronologica` procurava as
+descrições dos Eventos na página inteira. Com o cabeçalho dizendo o próximo Evento (`FR-767`), a
+prova passou a aparecer ali antes da lista, e `corpo.index` achava o cabeçalho. O caso agora recorta
+a seção do cronograma; a ordem que ele afirma é a mesma. A `R-8` não previu isso, porque mediu só
+as asserções sobre classes do cronograma, e não as buscas por texto na página inteira.

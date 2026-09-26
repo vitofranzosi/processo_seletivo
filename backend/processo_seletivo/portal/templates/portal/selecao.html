@@ -25,6 +25,23 @@ que decide se vale continuar lendo, e precisa ser encontrada sem leitura.
 
   {% include "portal/_periodo.html" with dias_restantes=dias_restantes %}
 
+  {% comment %}
+  **Agora e próximo** (047, FR-767, FR-768). Sai da lista de marcos que o pulso da gestão lê, e não
+  de texto digitado. O período de inscrições não aparece aqui, porque a frase acima já o diz. Sem
+  Evento pendente, o bloco inteiro some: dizer "em análise" afirmaria uma fase que nenhum fato
+  registrou.
+  {% endcomment %}
+  {% if agora_e_proximo.em_andamento or agora_e_proximo.proximos %}
+  <div class="agora-e-proximo">
+    {% for evento in agora_e_proximo.em_andamento %}
+    <p><span class="rotulo-do-momento">Acontecendo agora:</span> {{ evento.nome }}{% if evento.fim %}, até {{ evento.fim|date:"d/m/Y" }}{% endif %}.</p>
+    {% endfor %}
+    {% for evento in agora_e_proximo.proximos %}
+    <p><span class="rotulo-do-momento">Próximo:</span> {{ evento.nome }}, em {{ evento.inicio|date:"d/m/Y" }}.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if descricao %}<p class="descricao">{{ descricao }}</p>{% endif %}
 
   <p class="acoes-da-selecao">
