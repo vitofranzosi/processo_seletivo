@@ -7,7 +7,9 @@ a 044) e do #172 (`8e6fb4a`). Mudaram RC-51 a RC-54, RC-56 e RC-101, as contagen
 e todas as passagens deste documento e desses dois anexos que tratavam os três PRs como abertos. Depois,
 no mesmo dia, o #183 (`8e7c698`) corrigiu o `ValorDeFato`, e o RC-101 passou a RESOLVIDO, com as contagens,
 o anexo 6 e as decisões nº 19 e nº 21 do anexo 7. Por fim, o #185 (`29e637f`) corrigiu o RC-39, e o
-cruzamento que ele pedia revelou uma unidade nova, o RC-111. O inventário da §2 e a reconciliação entre lotes
+cruzamento que ele pedia revelou uma unidade nova, o RC-111. E o #187 (`ee894ab`), a `045`, fechou a
+B-1: RC-78 a RC-82 passaram a RESOLVIDO e o RC-84 a PARCIALMENTE RESOLVIDO, com as contagens, o mapa, a
+B-1, a Onda A, o mapa por domínio, o grafo, a §13 e o anexo 4. O inventário da §2 e a reconciliação entre lotes
 registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
 `bb774d9`.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
@@ -54,10 +56,10 @@ consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha regi
 
 | Estado | Unidades |
 |---|---:|
-| RESOLVIDO | 29 |
+| RESOLVIDO | 34 |
 | RESOLVIDO POR OUTRO CAMINHO | 3 |
-| PARCIALMENTE RESOLVIDO | 11 |
-| NÃO IMPLEMENTADO | 48 |
+| PARCIALMENTE RESOLVIDO | 12 |
+| NÃO IMPLEMENTADO | 42 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 5 |
 | SUPERADO / OBSOLETO | 3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 12 |
@@ -65,38 +67,40 @@ consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha regi
 
 Lido pela pergunta da auditoria:
 
-- **32** unidades estão resolvidas, pelo caminho recomendado ou por outro.
+- **37** unidades estão resolvidas, pelo caminho recomendado ou por outro.
 - **15** foram eliminadas por decisão consciente (12) ou por obsolescência (3) e **não devem voltar ao
   backlog** (§7).
-- **70** carregam algum resíduo. São 64 unidades abertas, parciais ou não validadas, mais seis resolvidas
-  que deixaram uma sobra: RC-02, RC-45, RC-54, RC-72, RC-87 e RC-102. Separadas por natureza:
+- **67** carregam algum resíduo. São 59 unidades abertas, parciais ou não validadas, mais oito resolvidas
+  que deixaram uma sobra: RC-02, RC-45, RC-54, RC-72, RC-80, RC-81, RC-87 e RC-102. Separadas por
+  natureza:
 
 | Grupo | Unidades | O que são |
 |---|---:|---|
-| **A** — lacuna real | **11** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
-| **B** — evolução relevante | **35** | ganho claro, sem defeito |
-| **C** — opcional | **24** | polimento e higiene |
+| **A** — lacuna real | **8** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
+| **B** — evolução relevante | **33** | ganho claro, sem defeito |
+| **C** — opcional | **26** | polimento e higiene |
 
-- **Validação antes de trabalho.** Das 11 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
+- **Validação antes de trabalho.** Das 8 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
   entraram na `main` pelo #173, e o RC-54, que é C, pelo #172, os três em 26/09. **Três exigem percurso pela tela** antes de qualquer spec:
   RC-08, RC-58 e, entre as B, RC-32. E **uma depende do Ifes**: RC-92.
-- **O que sobra de fato como trabalho novo de grupo A são oito unidades**: RC-29, RC-37, RC-38, RC-72,
-  RC-78, RC-79, RC-80 e RC-111. Quatro delas são o painel da `038` e a Retificação. O RC-101 e o RC-39
+- **O que sobra de fato como trabalho novo de grupo A são cinco unidades**: RC-29, RC-37, RC-38, RC-72
+  e RC-111. As três do painel da `038` — RC-78, RC-79 e RC-80 — foram fechadas pela `045` (#187) em 26/09. O RC-101 e o RC-39
   foram corrigidos em 26/09, pelo #183 e pelo #185, e a correção do RC-39 revelou o RC-111.
 
 **O fato que mais pesa.** Desde a auditoria de convergência de 20/09, **as três recomendações
 prioritárias dela não receberam trabalho nem decisão registrada**. São elas: fechar a `038`, derivar o
 `status` do Evento e a `D-G5`. O esforço foi para a visão institucional (`040`–`042`), para o estudo de
 esforço e sua onda de correções, para a `043` e para a `044`. Foi trabalho real e bem feito, mas em
-outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), só a `C3` fechou.**
+outra direção. **Das sete condicionantes de saída do piloto (`C1`–`C7`), só a `C3` fechou.** *Desfecho:
+em 26/09, a `045` (#181 e #187) fechou a `C1`, a `C2`, a `C4`, a `C5` e a `C6`; resta a `C7`.*
 
 ### Mapa residual — só o que merece atenção
 
 | | Unidade | Grupo | Onde está a prova |
 |---|---|---|---|
-| RC-78 | O painel afirma **"Nenhuma condição de atenção"** a quem só enxerga parte do Processo | A | `processo_detalhe.html:140` · `views.py:3946-3960` |
-| RC-79 | Recurso **aguardando admissibilidade** não produz sinal | A | `supervisao.py:1165` |
-| RC-80 | `schedule.status` é declarado **derivado** e nada o deriva, gerando `UX-002` permanente; `UX-001`/`UX-002` levam a uma Retificação que não os resolve | A | `mutabilidade.py:432` · `supervisao.py:1273` |
+| RC-78 | O painel afirmava **"Nenhuma condição de atenção"** a quem só enxerga parte do Processo: **corrigido pela `045` (#187) em 26/09**, com a ausência relativa ao alcance | — | `supervisao.py` (`frase_de_ausencia`) |
+| RC-79 | Recurso **aguardando admissibilidade** não produzia sinal: **corrigido pela `045` (#187) em 26/09** — `UX-064`/`UX-005` cobrem as duas fases | — | `supervisao.py` (`sinais_do_recurso`) · `acoes.py` |
+| RC-80 | `schedule.status` declarado **derivado** que nada derivava, e `UX-001`/`UX-002` levando a uma Retificação que não os resolvia: **corrigido pela `045` (#187) em 26/09** — a fase é derivada, o `UX-002` saiu, o `UX-001` virou aviso de composição | — | `calendario.py` (`fase`) · `validation.py` (`stage_without_schedule_event`) |
 | RC-37 | A Retificação **não acrescenta Modalidade**: Edital publicado sem conserto (`D-G5`, decidida em 19/09) | A | `retificacao.py:1054` |
 | RC-29 | Etapa com **duas avaliações** publica ato que **nunca consolida**, e há dois irmãos com o mesmo defeito de momento | A | `validation.py:234` · `regra.py:57-95` |
 | RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito | A `[VALIDAR]` | `convocar.py:100-152` · nenhum consumidor de `reserveLimit` |
@@ -137,7 +141,7 @@ lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 o
 ### Próxima onda recomendada
 
 - **Onda A — fechar o que já foi decidido e o que afirma o que não sabe.** Fechar a `038` (RC-78, RC-79,
-  RC-80, RC-81, RC-82); a varredura "publica e não
+  RC-80, RC-81, RC-82 — *feito pela `045`, #187, em 26/09*); a varredura "publica e não
   executa" (RC-29, RC-30, RC-72, RC-32). É pequena e média, quase toda com decisão já tomada.
 - **Onda B — Edital publicado com conserto e oferta executável até o fim.** Uma Retificação que acrescenta
   o que o contrato já permite (RC-37 + RC-38) e o cadastro de reserva convocável (RC-58), este depois
@@ -171,7 +175,7 @@ deles deve ser lido sozinho.
 | 13 | [`estudo-esforco-de-cadastro-2026-09-21.md`](estudo-esforco-de-cadastro-2026-09-21.md) + [diário](diario-estudo-esforco-2026-09-21.md) | 21/09 (revisto em 25/09) | esforço de autoria em 5 Editais; fidelidade do PDF | §5.1–5.12, A/M/B, E1–E11, "três decisões" | E2, E5, E10, TF-1, estado de revisão do reuso | grupos A/B/C do §12 corrigidos em 25/09 |
 | 14 | [`achado-documento-condicional-no-portal.md`](achado-documento-condicional-no-portal.md) | 25/09 | reproduz AX-14 pela tela | — | virou a 044 | contenção por #161; 044 mesclada pelo #173 em 26/09 |
 | 15 | [`conferencia-envio-e-analise-documental.md`](conferencia-envio-e-analise-documental.md) | 25/09 | envio e análise do documento condicional | — | "O que mudou" sem recorte | resíduo RC-39, feito pelo #185 em 26/09 |
-| 16 | [`inventario-supervisao-do-processo.md`](inventario-supervisao-do-processo.md) | 09/09 | o que a supervisão deveria ver | Parte 3 | status do Evento "declarado" | premissa contradita pelo contrato da 026 (RC-80) |
+| 16 | [`inventario-supervisao-do-processo.md`](inventario-supervisao-do-processo.md) | 09/09 | o que a supervisão deveria ver | Parte 3 | status do Evento "declarado" | premissa contradita pelo contrato da 026 (RC-80); a `045` derivou a fase em 26/09 |
 | 17 | 15 achados avulsos `doc/achado-*.md` | 08–25/09 | um defeito ou lacuna cada | — | vários | ver RC-13, RC-26, RC-29, RC-33, RC-38, RC-41, RC-52, RC-74, RC-103, RC-108 |
 | 18 | registros de decisão: `decisao-*.md`, `descoberta-*.md`, `decisoes-pre-vertical.md`, `briefing-*.md` | 03–25/09 | decisões de domínio e de escopo | D-1…D-4, decisão C da 018, D1–D5 do recorte | — | usados para o rótulo CONTRADITO (anexo 7, Parte 2) |
 | 19 | PRs abertos #171, #172, #173 e issue #117 | 15–26/09 | — | — | — | #173 = a 044 implementada; #171 bloqueado por ela. **Os três mesclados em 26/09**; o #171 era só o registro, e a correção (RC-101) veio no #183, no mesmo dia |
@@ -333,13 +337,13 @@ quando indicado.
 | RC | IDs antigos | Problema original → recomendação | Specs · implementação | Evidência atual | Estado | Faz sentido? | Resíduo · grupo | Próxima ação | Anexo |
 |---|---|---|---|---|---|---|---|---|---|
 | RC-77 | ACH-25 · E-6 · 13.6 · 13/09 §9.7 · 11.3 · E2E-013 | a visão global some quando o Processo fica vivo | 038 (painel); 040–042 (visão **entre** Processos, declaram não tocar a Atenção) | `supervisao.py:1391-1398` (lista plana); `visao_geral.html:350-369` ("O que esta página não mede") | PARCIALMENTE RESOLVIDO | sim, pelos componentes abaixo | B | remedir depois de RC-78…82 | 4, 3 |
-| RC-78 | **N-01** · C1 · convergência §22 Q4/Q12 | "Nenhuma condição de atenção neste Processo" é dita a quem alcança uma espécie e não vê as outras | 022 FR-004, 038 FR-559 | `processo_detalhe.html:139-141`; `supervisao.html:139-141`; `views.py:3946-3960`; `supervisao.py:1302-1337` | NÃO IMPLEMENTADO | sim — é o único ponto em que o produto quebra a ausência honesta | falso "tudo em dia" assim que houver segregação de funções · **A** | corrigir (texto + condição) | 4 |
-| RC-79 | **N-02** · C2 · NOVO-2 do lote 4 | recurso **aguardando admissibilidade** não produz sinal; "Recursos recebidos (N)" conta também os já decididos | 038 FR-561 (escrito só para "aguardando julgamento") | `supervisao.py:1162-1167`; `interface/acoes.py:120-127` | NÃO IMPLEMENTADO | sim — "vale mais do que sorteio e matrícula juntos" (20/09) | a peça com prazo fica invisível exatamente enquanto o prazo corre · **A** | spec curta ou emenda da 038: espécie nova × ampliar `UX-064` | 4 |
-| RC-80 | **N-05 · N-06** · C5 · C6 · §17 E-4 · inventário 09/09 (e) · ACH-08 (deslocado) | `schedule.status` é `derivado()` e nada o deriva: fica PLANEJADO para sempre, gera `UX-002` permanente, e `UX-001`/`UX-002` levam a uma Retificação que não alcança a causa | 026, 022 D-004, 038 | `editais/domain/mutabilidade.py:432`; `editais/models/cronograma.py:29`; `supervisao.py:635-662, 1273-1274`; `mutabilidade.py:447` (`scheduleEventId` estrutural) | NÃO IMPLEMENTADO | sim — mas há **duas doutrinas** no repositório (declarado, no inventário de 09/09 × derivado, na 026), e o `UX-001` não se resolve derivando | 9 dos 15 sinais do gestor são ruído ou beco · **A** | spec curta: escolher a doutrina, derivar; decidir a natureza do `UX-001` | 4 |
-| RC-81 | **N-04** · C4 | sinal sem caminho não diz a quem pedir | 037 (o padrão "peça a alguém" já existe no Edital) | `_sinal.html:16-18`; `supervisao.py:1240-1259` | NÃO IMPLEMENTADO | sim, depois de RC-80 | B | corrigir depois de RC-80 | 4 |
-| RC-82 | **N-07** · ACH-27 (deslocado) | "2 de 5 sem avaliador suficiente" conta quem foi eliminado antes | 013, 022 | `supervisao.py:686`; `avaliacoes/application/selectors.py:193-238` | NÃO IMPLEMENTADO | sim | o número contradiz a lista logo abaixo · B | corrigir (com RC-80) | 4, 2 |
+| RC-78 | **N-01** · C1 · convergência §22 Q4/Q12 | "Nenhuma condição de atenção neste Processo" é dita a quem alcança uma espécie e não vê as outras | 022 FR-004, 038 FR-559; **045 FR-730, FR-731** (#187, `ee894ab`) | `interface/supervisao.py` (`frase_de_ausencia`, só do alcance do leitor); `processo_detalhe.html` e `supervisao.html` (`{{ ausencia }}`) | RESOLVIDO | sim | — | nenhuma | 4 |
+| RC-79 | **N-02** · C2 · NOVO-2 do lote 4 | recurso **aguardando admissibilidade** não produz sinal; "Recursos recebidos (N)" conta também os já decididos | 038 FR-561; **045 FR-732 a FR-734** (#187) — decidido ampliar o `UX-064` e o `UX-005` (DP-02) | `interface/supervisao.py` (`sinais_do_recurso`, `AGUARDANDO_DECISAO`); `interface/acoes.py` (`recursos_aguardando_decisao`) | RESOLVIDO | sim | — | nenhuma | 4 |
+| RC-80 | **N-05 · N-06** · C5 · C6 · §17 E-4 · inventário 09/09 (e) · ACH-08 (deslocado) | `schedule.status` é `derivado()` e nada o deriva: fica PLANEJADO para sempre, gera `UX-002` permanente, e `UX-001`/`UX-002` levam a uma Retificação que não alcança a causa | 026, 022 D-004 (**substituída**); **045 FR-735 a FR-739** (#187) — decidido derivar (DP-01) e levar o `UX-001` à composição (DP-03) | `editais/domain/calendario.py` (`fase`); `interface/supervisao.py` (`fase_do_evento`, `UX-002` retirado); `editais/domain/cronograma.py` (só `PLANEJADO` e `CANCELADO` na entrada); `editais/domain/validation.py` (`stage_without_schedule_event`) | RESOLVIDO | sim | o portal do candidato tem regra própria de fase, e ele e o PDF não filtram `CANCELADO` — registrado na 045, *Out of Scope* · C | nenhuma nesta frente | 4 |
+| RC-81 | **N-04** · C4 | sinal sem caminho não diz a quem pedir | 037 (o padrão "peça a alguém" já existe no Edital); **045 FR-740, FR-741** (#187) | `_sinal.html` (`sinal.conducao`); `interface/conducao.py`; sorteio, ocupação e prévia com `frase_do_aviso`; `supervisao.py` (`situacao_admite_retificacao`) | RESOLVIDO | sim | o `UX-065` em recorte sem quadro e o `UX-004` num Processo em estado final — registrados na 045 (`research.md`, R-7) · C | nenhuma nesta frente | 4 |
+| RC-82 | **N-07** · ACH-27 (deslocado) | "2 de 5 sem avaliador suficiente" conta quem foi eliminado antes | 013, 022 FR-033 (**refinada**); **045 FR-742** (#187) | `avaliacoes/application/selectors.py` (`resumo_da_etapa` sobre participantes; filtro `carente`) | RESOLVIDO | sim | — | nenhuma | 4, 2 |
 | RC-83 | N-03 · C3 | "Abrir a Supervisão" oferecido a quem a Supervisão recusa | `4ec1cbb` | `processo_detalhe.html:72`; `tests/interface/test_supervisao.py:533-569` | RESOLVIDO | não | — | nenhuma | 4 |
-| RC-84 | N-10 · §7 (prazo em três formas) · §8 ("7 de 7" sem unidade; "sem marco" sem consequência) | exportação vazia recarrega sem mensagem; "Faltam 19 dias" × "2 semanas, 5 dias" × só a data | 031, 038 | `views.py:4186-4187`; `supervisao.html:102` (`timeuntil`); `_sinal.html:13-15` | NÃO IMPLEMENTADO | parcialmente | polimento · C | junto de RC-80/RC-82 | 4 |
+| RC-84 | N-10 · §7 (prazo em três formas) · §8 ("7 de 7" sem unidade; "sem marco" sem consequência) | exportação vazia recarrega sem mensagem; "Faltam 19 dias" × "2 semanas, 5 dias" × só a data | 031, 038; **045 FR-743** (#187) — a unidade da medida | `_sinal.html` (`unidade_legivel`: "7 de 7 inscrições"); `views.py:4186-4187`; `supervisao.html:102` (`timeuntil`) | PARCIALMENTE RESOLVIDO | parcialmente | as três formas de prazo e a exportação vazia sem mensagem ficaram fora da 045 · C | nenhuma agora | 4 |
 | RC-85 | §6 sorteio fora do painel · §6/§13 matrícula fora do painel | sorteio vencido e requerimentos pendentes sem sinal | 038 D-002 registrou a exclusão | `supervisao.py:495-506` | NÃO IMPLEMENTADO | não agora — a convergência recomendou **não** ampliar o painel antes de limpar o ruído | C | medir no piloto | 4 |
 | RC-86 | §18 custo de consulta | ~17 consultas por Edital publicado; linear | 022, 038; 040 tem custo fixo de 5 | `supervisao.py:1364-1384` | IMPLEMENTADO, MAS NÃO VALIDADO | parcialmente | medição única, não otimização · C | validar com 10+ Editais | 4 |
 | RC-87 | §16 responsabilidade · presidência única (08/09) | nomear responsável individual no painel?; piso de identidades não dito | 038 FR-564; decisão 018 §5 | `supervisao.py:1141-1145` | RESOLVIDO | não — manter a decisão | antecipar a falta de julgador depende de RC-92 · C | nenhuma | 4, 7 |
@@ -449,7 +453,7 @@ Para cada um: o que foi feito, o que não foi e por que o resto importa.
 | RC-43 reuso | o banner nomeia o texto | estado "a revisar"; ocorrência do sorteio herdada; o banner conta seções com texto | prosa de outro certame vira ato imutável; o aviso que nunca some deixa de ser lido |
 | RC-45 facultativo | Mesa e Revisão | o cartão público da vaga | o candidato vê o facultativo como exigido antes de entrar |
 | RC-66 atos em um clique | todos, menos um | "Remover da comissão" | inativa em cascata as alocações da pessoa |
-| RC-77 visão global | Processo e Supervisão concordam; a visão entre Processos existe | a condução dentro do Processo (RC-78…82) | ver §6 |
+| RC-77 visão global | Processo e Supervisão concordam; a visão entre Processos existe; e, desde a `045`, a condução dentro do Processo (RC-78…82) | remedir | ver §6 |
 
 ---
 
@@ -610,7 +614,7 @@ também o mapa da consolidação arquitetural.
 | **`035` sorteio executável** | ACH-51; ACH-55; a outra metade do E-1 | — | — | RC-72, RC-74 |
 | **`036` instrução do recurso** | ACH-43; ACH-42; 13/09 #5 | — | "conceder documentos ao julgador" | — |
 | **`037` quatro becos** | ACH-02; ACH-30; ACH-08; ACH-16; ACH-46 (c); os QW 2–5 do longitudinal | — | — | — |
-| **`038` painel de condução** | inventário de 09/09 (a, b) | E-6 / ACH-25 | — | RC-78…82 (os defeitos da própria feature) |
+| **`038` painel de condução** | inventário de 09/09 (a, b) | E-6 / ACH-25 | — | RC-78…82 (os defeitos da própria feature), fechados pela `045` (#187) |
 | **`043` duplicar Perfil** | E-3 (exp.) no que é digitação | estudo E1/§6.4; ACH-61; atribuições por polo; AX-1/7/11 família (d) | — | TF-1 |
 | **`044` recorte transversal (#173)** | estudo §5.9/E6; conferência D4; FR-727; custo do AX-14 | AX-10; AX-17 | a primeira forma do AX-17 | o **primeiro confronto entre Perfis** do sistema (denominação) — o passo inicial de RC-31 |
 | **`#161` (`01d9163`, sem spec)** | AX-14 e AX-17 na integridade; achado do portal §3 | — | — | a 044 |
@@ -639,7 +643,7 @@ executável. É por isso que ela não aparece aqui como uma spec.
 | **Resultado e divulgação** | prévia exemplar, publicador com caminho | — | RC-69, RC-70 |
 | **Sorteio** | executável ponta a ponta, vocabulário fechado | **RC-72** fonte de demonstração (A); RC-73 recortes; RC-74 gatilho da fonte real | — |
 | **Recursos** | instrução, parecer, tempestividade | RC-76 datas (parte viável em RC-48) | — |
-| **Condução** | Processo = Supervisão; visão entre Processos | **RC-78, RC-79, RC-80** (A); RC-81, RC-82; RC-77 remedir | RC-84, RC-85, RC-86 |
+| **Condução** | Processo = Supervisão; visão entre Processos; ausência, recurso, Cronograma e medida confiáveis (RC-78…82, `045`) | RC-77 remedir | RC-84 (prazo e exportação), RC-85, RC-86 |
 | **Identidade e implantação** | barreira de produção | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico | RC-94 D-G2, RC-96 |
 | **Integridade e engenharia** | append-only 34/34, contrato de mutabilidade, `ValorDeFato` nas três camadas (RC-101, #183) | — | RC-102, RC-103 |
 
@@ -657,13 +661,18 @@ antes.
 
 ### P1 — fechamento necessário
 
-**B-1 · Fechar a `038`: a condução que não afirma o que não mediu**
+**B-1 · Fechar a `038`: a condução que não afirma o que não mediu — concluída em 26/09**
 - **Problema.** O painel diz "nada a fazer" a quem só vê parte do Processo. O recurso que acabou de chegar
   é invisível. Nove dos quinze sinais do gestor são ruído permanente ou beco.
 - **Origem.** Convergência de 20/09: C1, C2, C4, C5, C6; N-01, N-02, N-04…N-07. E-6 (16/09). Inventário de
   09/09 (e).
-- **Situação atual.** O painel e a Supervisão concordam e o N-03 foi fechado. Nada mais mudou desde 20/09.
-- **Lacuna residual.** RC-78, RC-79, RC-80, RC-81 e RC-82, mais a unidade da medida (RC-84).
+- **Situação atual.** *Desfecho:* a `045` (spec no #181, implementação no #187, `ee894ab`) fechou RC-78 a
+  RC-82 e a unidade da medida do RC-84, com as decisões DP-01 a DP-04 registradas. O catálogo da Atenção
+  encolheu de dez espécies para oito. Antes dela: o painel e a Supervisão concordavam e o N-03 estava
+  fechado, e nada mais tinha mudado desde 20/09.
+- **Lacuna residual.** Nenhuma desta evolução. Ficaram registrados, na `045`, a regra própria de fase do
+  portal, o `CANCELADO` sem filtro no portal e no PDF, o `UX-065` em recorte sem quadro e o `UX-004` num
+  Processo em estado final; e, do RC-84, as formas de prazo e a exportação vazia.
 - **Escopo mínimo.**
   - A frase de ausência relativa ao alcance do leitor.
   - A admissibilidade no sinal do recurso.
@@ -905,8 +914,8 @@ antes.
 B-2 (a 044, mesclada pelo #173) ──► B-2b (RC-101, ValorDeFato: `0006`, mesclada pelo #183) — concluída
       └─────────────► B-9 (o aviso de percentual mora ao lado do confronto de denominação)
 
-B-1 ─ decisão da doutrina do `status` ──► N-06 ──► N-05 ──► N-04
-   └─ decisão espécie × `UX-064` ───────► N-02
+B-1 ─ decisão da doutrina do `status` ──► N-06 ──► N-05 ──► N-04 — concluída pela 045 (#187)
+   └─ decisão espécie × `UX-064` ───────► N-02 — concluída pela 045 (#187)
    └─ depois de limpo ─► RC-77 (remedir) ─► RC-85 (sorteio e matrícula no painel?) ─► B-21 (notificação)
 
 B-3 (D-G1 impeditiva) ─► RC-34 (a fronteira avisos × Atenção fica menor)
@@ -937,7 +946,7 @@ a barreira da fonte de demonstração dentro da B-3, e a B-20.
 Os agrupamentos saem das dependências e da natureza, não da ordem dos relatórios.
 
 **Onda A — fechar o que já foi decidido e o que afirma o que não sabe**
-B-1 (fechar a 038) · B-2 (concluída em 26/09) · B-3 (o que publica e não executa) ·
+B-1 (concluída em 26/09, pela `045`) · B-2 (concluída em 26/09) · B-3 (o que publica e não executa) ·
 B-6 (rascunho, se confirmar).
 *Critério da onda:* a decisão já existe ou a correção é pequena; todas atacam um instrumento que hoje
 afirma mais do que sabe — o painel, a validação, o documento ou o rascunho. Ao fim dela, as condicionantes
@@ -979,6 +988,9 @@ usuário. As do item 9 e a Diretoria do item 12 já tinham registro próprio e a
 3. **O `UX-001` em Edital publicado**: sinal sem destino, dito como fato estrutural, ou aviso de
    composição fora da Atenção (RC-80)? → DP-03
 4. **O adiamento da B-1 foi deliberado?** Se foi, falta o registro. Se não foi, é o primeiro item. → DP-04
+
+   *As quatro acima foram decididas em 26/09, com a proposta que abriu a `045`* — o registro está no
+   bloco "O que foi decidido" de cada uma.
 5. **Cadastro de reserva está no alvo do piloto?** E qual é a semântica de `reserveLimit`: limite
    executável ou texto normativo (RC-58)? → DP-05
 6. **O Cefor usa dupla leitura?** Isso decide se o RC-29 fica só no aviso ou ganha spec de combinação. → DP-06
