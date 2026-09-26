@@ -275,9 +275,6 @@ def sem_as_regras_da_046():
                 mock.patch(
                     f"processo_seletivo.editais.domain.validation.{nome}",
                     return_value=[],
-                    # Até as duas existirem (T021, T031): o bloco precisa valer antes da regra,
-                    # que é a ordem do portão 2 das tarefas. Sai quando a segunda entrar.
-                    create=True,
                 )
             )
         yield

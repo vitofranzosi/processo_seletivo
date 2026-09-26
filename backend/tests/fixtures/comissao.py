@@ -16,11 +16,19 @@ DOCUMENTO_A = 420
 DOCUMENTO_B = 421
 
 
-def etapas(seed=0, *, avaliacoes=None, maxima=None, minima=None, decisoria=False):
+def etapas(seed=0, *, avaliacoes=None, maxima=None, minima="0.0000", decisoria=False):
     """As duas Etapas dos cenários. `avaliacoes` e `maxima` declaram o que a `012` acrescentou.
 
     Ficam opcionais de propósito: a maioria dos testes fala de Etapa **sem** declaração, que é o
     caso do Edital publicado antes do incremento — e é ali que a leitura da ausência vale.
+
+    **A nota mínima nasce `"0.0000"`, e não ausente** (046, `FR-746`). A *Análise documental* é
+    pontuada e eliminatória, e sem nota mínima a consolidação a recusa por inteiro — é o Edital que
+    a `046` deixou de publicar, e esta fixture o publicava por padrão. Zero não elimina ninguém e
+    não torna parecer obrigatório (012, `FR-033`): nada do que a Mesa e a distribuição exercitam
+    muda.
+    Quem precisa da Etapa sem nota mínima declara `minima=None` e publica como acervo
+    (`publicar_processo_com_etapas(..., como_acervo=True)`).
     """
     declaracao = {}
     if avaliacoes is not None:
