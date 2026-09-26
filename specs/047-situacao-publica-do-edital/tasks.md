@@ -216,7 +216,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 ## Phase 8: Polish, legado e fechamento
 
-- [ ] T032 [P] Escrever `backend/tests/integration/portal/test_legado_da_projecao.py` (**NOVO**):
+- [X] T032 [P] Escrever `backend/tests/integration/portal/test_legado_da_projecao.py` (**NOVO**):
   - Edital com conteúdo publicado sem `appealWindow` e sem `location`: a página abre, e nenhum prazo é inventado (`FR-775`);
   - Edital com Evento cujo `status` publicado é `EM_ANDAMENTO`, aceito pela API antes da `045`: a fase vem das datas;
   - Evento sem início: sem fase e não é próximo.

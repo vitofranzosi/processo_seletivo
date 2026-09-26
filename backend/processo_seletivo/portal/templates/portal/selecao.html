@@ -33,11 +33,15 @@ que decide se vale continuar lendo, e precisa ser encontrada sem leitura.
   {% endcomment %}
   {% if agora_e_proximo.em_andamento or agora_e_proximo.proximos %}
   <div class="agora-e-proximo">
+    {% comment %}
+    A data vai no rótulo, e o nome fecha a frase: a descrição é a que o Edital publicou, e costuma
+    trazer a própria pontuação — escrever depois dela produzia "turno único., em 01/10".
+    {% endcomment %}
     {% for evento in agora_e_proximo.em_andamento %}
-    <p><span class="rotulo-do-momento">Acontecendo agora:</span> {{ evento.nome }}{% if evento.fim %}, até {{ evento.fim|date:"d/m/Y" }}{% endif %}.</p>
+    <p><span class="rotulo-do-momento">Acontecendo agora{% if evento.fim %}, até {{ evento.fim|date:"d/m/Y" }}{% endif %}:</span> {{ evento.nome }}</p>
     {% endfor %}
     {% for evento in agora_e_proximo.proximos %}
-    <p><span class="rotulo-do-momento">Próximo:</span> {{ evento.nome }}, em {{ evento.inicio|date:"d/m/Y" }}.</p>
+    <p><span class="rotulo-do-momento">Próximo, em {{ evento.inicio|date:"d/m/Y" }}:</span> {{ evento.nome }}</p>
     {% endfor %}
   </div>
   {% endif %}

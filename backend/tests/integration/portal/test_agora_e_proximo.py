@@ -82,7 +82,7 @@ def test_o_proximo_e_o_de_inicio_mais_proximo(client, api_client, manager_header
 
     corpo, trecho = bloco(client, edital)
 
-    assert "Próximo:" in trecho
+    assert "Próximo, em" in trecho
     assert "Prova escrita" in trecho
     assert "Entrevista" not in trecho and "Resultado preliminar" not in trecho
     assert "Período de inscrições" not in trecho, "o período já é dito pela frase do período"
@@ -135,7 +135,7 @@ def test_o_evento_em_curso_aparece_como_acontecendo_agora(
 
     _, trecho = bloco(client, edital)
 
-    assert "Acontecendo agora:" in trecho
+    assert "Acontecendo agora, até" in trecho
     assert "Prova escrita" in trecho
 
 
