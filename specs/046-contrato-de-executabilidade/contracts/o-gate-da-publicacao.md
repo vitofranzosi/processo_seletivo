@@ -45,9 +45,14 @@ stage_result_unreachable
   <consequência do consumidor>. Corrija-a na etapa Etapas<, ou retire-a do marco <código> na etapa
   Classificação>.
 
-stage_without_result
+stage_without_result — no ato de publicação
   A Etapa '<nome>' não terá Resultado: <frase de impedimento_da_regra>. Nada neste Edital depende
-  dele, e por isso a publicação não é impedida.
+  dele, e por isso a publicação não é impedida. Para que ela tenha Resultado, corrija-a na etapa
+  Etapas.
+
+stage_without_result — no ato de Retificação
+  A Etapa '<nome>' não terá Resultado: <frase de impedimento_da_regra>. <consequência do consumidor,
+  ou "Nada neste Edital depende dele">. Para que ela tenha Resultado, retifique a própria Etapa.
 
 profile_without_cut_rule
   Nenhum marco do Perfil '<code ou nome>' declara regra de corte: sem corte não há faixa, e a

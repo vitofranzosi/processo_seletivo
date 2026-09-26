@@ -277,8 +277,12 @@ sorteio da suíte continuam rodando sem rede.
   receber **aviso**, e não impeditivo, dizendo que ela não terá Resultado e por quê.
 - **FR-749**: A recusa e o aviso MUST nomear a Etapa pelo nome publicado, dizer o que falta (a frase
   da regra da consolidação), por que isso impede a execução (quem precisa do Resultado: o caráter
-  eliminatório, ou o marco que a referencia, por código) e em que etapa do assistente a correção é
-  feita — Etapas, ou Classificação quando a correção é retirar a referência (`032`, `FR-458`).
+  eliminatório, ou o marco que a referencia, por código — ou, quando nada o exige, que nada depende
+  dele) e onde a correção é feita. No ato de publicação, a etapa do assistente — Etapas, ou
+  Classificação quando a correção é retirar a referência (`032`, `FR-458`). No ato de Retificação,
+  que não passa pelo assistente e não retifica a enumeração do marco, a Retificação da própria Etapa.
+  A frase MUST dizer o lugar por extenso: a confirmação da Retificação exibe só a frase, e o caminho
+  do achado não chega a quem lê.
 - **FR-750**: O `como-preencher` da etapa Etapas MUST dizer que mais de uma avaliação por inscrição
   exige regra de combinação que o sistema não publica, e que a Etapa assim configurada não se
   consolida. O cartão da Etapa MUST NOT ganhar texto visível novo.

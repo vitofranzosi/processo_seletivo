@@ -1896,16 +1896,26 @@ def _etapa_sem_resultado(snapshot: dict, *, ato: str) -> list[ValidationFinding]
                 severity=Severity.WARNING,
                 code="stage_without_result",
                 message=(
-                    f"A Etapa '{nome}' não terá Resultado: {motivo}."
+                    f"A Etapa '{nome}' não terá Resultado: {motivo}. "
                     + (
-                        f" {consequencia}."
+                        f"{consequencia}. "
                         if consequencia
-                        else " Nada neste Edital depende dele"
+                        else "Nada neste Edital depende dele"
                         + (
-                            ", e por isso a publicação não é impedida."
+                            ", e por isso a publicação não é impedida. "
                             if ato == ATO_DE_PUBLICACAO
-                            else "."
+                            else ". "
                         )
+                    )
+                    # **Onde se corrige, também no aviso** (046, `FR-749`). A confirmação da
+                    # Retificação exibe só a frase, e o caminho do achado não chega a quem lê.
+                    # Na publicação, a correção é na etapa Etapas do assistente; na Retificação não
+                    # há assistente, e a Etapa enumerada não sai do marco — a enumeração não é
+                    # retificável (`mutabilidade`) —, de modo que resta retificar a própria Etapa.
+                    + (
+                        "Para que ela tenha Resultado, corrija-a na etapa Etapas."
+                        if ato == ATO_DE_PUBLICACAO
+                        else "Para que ela tenha Resultado, retifique a própria Etapa."
                     )
                 ),
                 path=caminho,

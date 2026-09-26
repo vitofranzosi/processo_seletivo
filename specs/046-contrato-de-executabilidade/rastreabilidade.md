@@ -6,7 +6,7 @@ se ainda fosse publicar.*
 
 **Verificação final** (26/09/2026, sobre a `main` em `7f5db4a`, com a `045` mesclada): `make preparar`
 em **`34 de 34`**; `make lint check` — `ruff check` e `ruff format --check` limpos, `manage.py check`
-sem problemas, `makemigrations --check` sem mudança —; `make test-pg` com **7962 passando e 11
+sem problemas, `makemigrations --check` sem mudança —; `make test-pg` com **7965 passando e 11
 pulados**, zero falhas. O "antes" era 7882 e 11 ([antes-do-gate.md](antes-do-gate.md)); a diferença
 são os casos desta feature.
 
@@ -22,7 +22,7 @@ promessa é negativa — algo que não pode ter acontecido — e se confere lend
 | **FR-746** | `editais/domain/validation.py`: `_etapa_sem_resultado` e `_quem_exige_o_resultado` — `stage_result_unreachable` quando a Etapa é eliminatória, enumerada, governada por corte ou de habilitação do sorteio | `test_a_publicacao_acusa_se_e_so_se_a_consolidacao_recusaria` (24 casos), `test_a_etapa_eliminatoria_de_dupla_leitura_e_recusada_e_a_de_uma_publica`, `test_a_mesma_decisoria_enumerada_por_marco_e_recusada`, `test_a_pontuada_eliminatoria_sem_nota_minima_nao_publica` |
 | **FR-747** | a função **importa** `impedimento_da_regra` e `eliminatoria` de `resultados/domain/regra.py`; nenhum predicado reescrito (leitura do diff) | a tabela-verdade é parametrizada **pela regra**: `test_a_publicacao_acusa_se_e_so_se_a_consolidacao_recusaria`; e a frase citada sem reescrita, `test_a_frase_e_a_da_regra_e_nomeia_etapa_consumidor_e_onde_corrigir` |
 | **FR-748** | `stage_without_result`, aviso, quando nada exige o Resultado | `test_a_etapa_sem_efeito_decidido_e_fora_de_todo_marco_publica_com_aviso`, `test_a_decisoria_sem_efeito_fora_de_marco_avisa_e_publica`, `test_a_conferencia_mostra_o_que_a_012_acrescentou_a_etapa` |
-| **FR-749** | as frases do contrato: Etapa pelo nome, a frase da regra, o consumidor, a etapa do assistente | `test_a_frase_e_a_da_regra_e_nomeia_etapa_consumidor_e_onde_corrigir`, `test_a_eliminatoria_diz_que_ninguem_seria_eliminado`, `test_a_etapa_eliminatoria_de_dupla_leitura_e_recusada_e_a_de_uma_publica` (o destino é a etapa *Etapas*) |
+| **FR-749** | as frases do contrato: Etapa pelo nome, a frase da regra, o consumidor (ou que nada depende do Resultado), e onde se corrige — a etapa do assistente na publicação, a Retificação da Etapa na Retificação | `test_a_frase_e_a_da_regra_e_nomeia_etapa_consumidor_e_onde_corrigir`, `test_a_eliminatoria_diz_que_ninguem_seria_eliminado`, `test_o_aviso_tambem_diz_os_quatro_elementos` (3: o aviso da publicação e os dois da Retificação), `test_a_retificacao_que_nao_toca_a_etapa_e_aceita_e_adverte_na_confirmacao` (o lugar chega à tela), `test_a_etapa_eliminatoria_de_dupla_leitura_e_recusada_e_a_de_uma_publica` |
 | **FR-750** | `compor_etapas.html`, o `<dt>`/`<dd>` de *Avaliações por inscrição* no `como-preencher`; `_etapa.html` intocado | `test_o_como_preencher_explica_a_dupla_leitura_e_o_cartao_nao` |
 | **FR-751** | `stage_without_result` no ato de Retificação, sempre advertência; dois códigos, e `advertencias_do_ato` intocada | `test_na_retificacao_e_sempre_advertencia`, `test_os_dois_codigos_nunca_saem_juntos_para_a_mesma_etapa`, `test_a_retificacao_que_nao_toca_a_etapa_e_aceita_e_adverte_na_confirmacao` (pela tela), `test_a_retificacao_que_volta_a_uma_avaliacao_faz_a_advertencia_sumir` |
 | **FR-752** | `_perfil_sem_corte` e `_nenhum_marco_corta` — `profile_without_cut_rule`, só na publicação | `test_perfil_em_que_nenhum_marco_corta_impede_a_publicacao`, `test_a_recusa_do_perfil_sem_corte_nomeia_perfil_falta_consequencia_e_etapa`, `test_o_perfil_de_marco_unico_sem_corte_e_recusado_na_revisao_e_na_submissao`, `test_a_revisao_mostra_as_duas_pendencias_e_nao_a_primeira` |
@@ -43,7 +43,7 @@ promessa é negativa — algo que não pode ter acontecido — e se confere lend
 | **SC-277** | `tests/interface/test_perfil_sem_corte.py` | marco único sem corte recusado na submissão; com o segundo marco que corta, publicado com **um** aviso |
 | **SC-278** | `tests/interface/test_edital_publicado_sem_pendencias.py` — a tela e as nove etapas do assistente | zero impeditivos e zero avisos de publicabilidade no publicado, encerrado e cancelado, com a validação sem rodar; o fato da `045` dito; o impeditivo em elaboração |
 | **SC-279** | `test_fonte_fora_de_producao.py` e `test_configuracao_producao.py` | zero opções em produção; recusa nos quatro atos e na execução; boot recusado; a suíte sorteia |
-| **SC-280** | uma asserção por elemento da frase em cada código novo: `test_a_frase_e_a_da_regra_…`, `test_a_eliminatoria_diz_…`, `test_a_recusa_do_perfil_sem_corte_nomeia_…` | 100% |
+| **SC-280** | uma asserção por elemento da frase em cada código novo, **recusa e aviso**: `test_a_frase_e_a_da_regra_…`, `test_a_eliminatoria_diz_…`, `test_o_aviso_tambem_diz_os_quatro_elementos`, `test_a_recusa_do_perfil_sem_corte_nomeia_…` | 100% |
 | **SC-281** | leitura do diff: nenhum arquivo em `*/migrations/`; `make preparar` em `34 de 34` | zero migrations, zero linhas publicadas alteradas |
 
 ## 3. Correlação com a auditoria
@@ -68,3 +68,7 @@ Ver a spec, *"Correlação com a auditoria de consolidação"*. Em resumo, pelo 
   fatos depois, e o gate continuava rodando sobre o Edital publicado. Passou a derivar cada fato pela
   sua função (`fatos_do_conteudo_publicado`), e um caso prende o estado. A mesma revisão encheu a
   contraprova do ator sem permissão, que publicava sem pendência nenhuma na tela.
+- **Uma segunda revisão, no mesmo dia, achou o aviso `stage_without_result` sem dizer onde se
+  corrigir** — a `FR-749` o exige, e a confirmação da Retificação exibe só a frase. O aviso passou a
+  dizê-lo nos dois atos, a `FR-749` passou a nomear o lugar de cada um por extenso, e os testes
+  passaram a conferir os quatro elementos também no aviso.

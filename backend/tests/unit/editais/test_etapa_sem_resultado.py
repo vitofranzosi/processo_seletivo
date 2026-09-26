@@ -194,3 +194,32 @@ def test_os_dois_codigos_nunca_saem_juntos_para_a_mesma_etapa():
             for ato in (ATO_DE_PUBLICACAO, ATO_DE_RETIFICACAO):
                 codigos = [achado.code for achado in _da_etapa(_conteudo(forma, situacao), ato)]
                 assert len(codigos) <= 1, (forma, situacao, ato, codigos)
+
+
+@pytest.mark.parametrize(
+    "forma, situacao, ato, onde",
+    [
+        # Na publicação, só a Etapa que nada exige recebe aviso — as outras são recusa.
+        ("decisoria_nao_eliminatoria", "nenhuma", ATO_DE_PUBLICACAO, "corrija-a na etapa Etapas"),
+        # Na Retificação, toda Etapa que não se consolida recebe aviso, exigida ou não.
+        ("decisoria_nao_eliminatoria", "nenhuma", ATO_DE_RETIFICACAO, "retifique a própria Etapa"),
+        ("duas_avaliacoes", "enumerada", ATO_DE_RETIFICACAO, "retifique a própria Etapa"),
+    ],
+)
+def test_o_aviso_tambem_diz_os_quatro_elementos(forma, situacao, ato, onde):
+    """`FR-749` e `SC-280` valem para o aviso, e não só para a recusa.
+
+    A confirmação da Retificação exibe só a frase: o caminho do achado não chega a quem lê, e um
+    aviso que não diz onde se corrige deixa a pessoa com o problema e sem o caminho. Na Retificação
+    não há assistente, e a enumeração do marco não se retifica — o caminho é a própria Etapa.
+    """
+    conteudo = _conteudo(forma, situacao)
+    _, motivo = impedimento_da_regra(conteudo["stages"][0])
+    avisos = [achado for achado in _da_etapa(conteudo, ato) if achado.code == AVISA]
+    assert len(avisos) == 1, "a premissa: nesta combinação o ato avisa, e não recusa"
+
+    frase = avisos[0].message
+    assert "Prova de títulos" in frase, "a entidade"
+    assert motivo in frase, "o que falta, na frase da consolidação"
+    assert "Nada neste Edital depende dele" in frase or "CLASS-TUT" in frase, "por que importa"
+    assert onde in frase, "e onde se corrige"

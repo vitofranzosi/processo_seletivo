@@ -53,6 +53,7 @@ def test_a_retificacao_que_nao_toca_a_etapa_e_aceita_e_adverte_na_confirmacao(
         reverse("interface:retificacao-ato", args=[em_elaboracao.id, "submeter"])
     ).content.decode()
     assert COMBINAR in confirmacao, "e chega à tela de confirmação"
+    assert "retifique a própria Etapa" in confirmacao, "dizendo onde se corrige (FR-749)"
 
 
 def test_a_retificacao_que_volta_a_uma_avaliacao_faz_a_advertencia_sumir(api_client, do_acervo):
