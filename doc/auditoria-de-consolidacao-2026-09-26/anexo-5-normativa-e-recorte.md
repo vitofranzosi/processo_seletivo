@@ -13,6 +13,9 @@ toca este lote foi: `01d9163` (IMPEDE do recorte "Todos os Perfis" + Modalidade 
 de 25/09 sobre o recorte documental (`doc/decisao-recorte-documental.md`) e a spec 044 — mesclada
 na main só como spec/plan/tasks; a **implementação** está em `origin/claude/044-recorte-transversal-documental`
 (PR #173, aberto, fora da main), e é tratada como IMPLEMENTADO, MAS NÃO VALIDADO onde toca um achado.
+**Atualização de 26/09:** o #173 foi mesclado (`47876ad`) com o CI verde, e a Mesa foi percorrida pela
+tela depois (`0c4e6b0`). Os blocos que tocam a 044 — ela própria, AX-7, AX-10, AX-14/17, E-3 e E-4 — e a
+contagem da §2 foram revistos; o que eles dizem da branch é a leitura de antes do merge.
 
 **Rótulo "integridade × custo de autoria"** — pedido para AX-1, AX-5, AX-6, AX-7, AX-14 e AX-16 —
 aparece no campo "Impacto atual" de cada bloco.
@@ -229,9 +232,9 @@ aparece no campo "Impacto atual" de cada bloco.
   043 §2 idem; 043 implementada duplica Modalidades com regra normativa.
 - Specs relacionadas: 025, 027, 039 (rascunho), 043, 044.
 - Implementação encontrada: 043 (duplicar Perfil copia as 4 Modalidades e as regras — alívio de
-  digitação); 044 para o recorte transversal do documento (a parte 5 → 5n) — **implementada só na
-  branch/PR #173, fora da main**, e com IMPEDE de coerência que cobre só a denominação. Nenhuma
-  conferência de percentual/fundamento entre Perfis, nem na main nem na branch.
+  digitação); 044 para o recorte transversal do documento (a parte 5 → 5n) — **mesclada pelo #173
+  em 26/09**, com IMPEDE de coerência que cobre só a denominação. Nenhuma conferência de
+  percentual/fundamento entre Perfis.
 - Evidência no código atual: `editais/models/perfis.py:110-119` (`ModalidadeConcorrencia.perfil`,
   `uq_modalidade_perfil_code`) e `:376-378` (`RegraNormativa` 1:1); `editais/domain/validation.py:2563`
   (`_divergencia_do_percentual`, linha a linha) e `:1188` (`_faixa_do_percentual`, faixa do valor) —
@@ -253,7 +256,7 @@ aparece no campo "Impacto atual" de cada bloco.
   mesma lei) e **custo de autoria/retificação** no resto; a 043 reduz o segundo e, por cópia exata,
   a chance do primeiro.
 - Próxima ação sugerida: corrigir (aviso de divergência entre Perfis de mesmo código), se o usuário
-  aceitar; a 044 (branch, PR #173) já introduz o IMPEDE de coerência da **denominação** por código
+  aceitar; a 044 (mesclada pelo #173) já introduz o IMPEDE de coerência da **denominação** por código
   (`_denominacoes_do_codigo`) — o aviso de percentual/fundamento caberia ao lado, como AVISO.
 - Relações: E-4 (fontes sem confronto); AX-1/AX-11 (mesmo mecanismo); AX-14 (caso extremo);
   D-G5 (acrescentar Modalidade a Edital publicado — ver bloco da 039); PR #172 é sintoma na gestão.
@@ -339,8 +342,8 @@ aparece no campo "Impacto atual" de cada bloco.
   (`avaliacoes/application/mesa.py`, `interface/templates/interface/mesa_inscricao.html`) e a
   Revisão do portal mantém a marca "(facultativo)" (`portal/templates/portal/revisao.html`), testes
   `tests/portal/test_revisao_marca_o_facultativo.py` e `tests/interface/test_mesa_modelo_exigido.py`.
-  044 fará "obrigatório para todo PcD" caber numa linha — **implementada só na branch/PR #173, fora
-  da main** (IMPLEMENTADO, MAS NÃO VALIDADO; ver bloco da 044).
+  A 044 faz "obrigatório para todo PcD" caber numa linha — **mesclada pelo #173 em 26/09** (ver
+  bloco da 044).
 - Evidência no código atual: `editais/models/documentos.py:21-64` inalterado (`required`, `perfil`,
   `modalidade`; nenhum campo de natureza nem de condição); `pdf.py:2021` (`_documentos_exigidos`)
   continua agrupando só por alcance.
@@ -349,12 +352,12 @@ aparece no campo "Impacto atual" de cada bloco.
   exatamente o que a 044 fecha — e está decidida. A condição sobre a pessoa foi **adiada por decisão**
   (D2). O que sobra da recomendação original é a natureza "título pontuável", que pertence ao barema
   (AX-4) e não a documentos.
-- Lacuna residual: até a 044, documento obrigatório de modalidade continua saindo facultativo ou em
-  5n linhas; título pontuável sem forma.
+- Lacuna residual: título pontuável sem forma, e condição sobre a pessoa (D2). O que era de
+  modalidade entrou com a 044.
 - Grupo do resíduo: **B** (resolvido pela 044 no que é modalidade; o resto depende de AX-4)
 - Impacto atual: candidato lê obrigatório como facultativo (integridade do comunicado ao candidato),
   mitigado pela marca e pela instrução na Mesa.
-- Próxima ação sugerida: validar e mesclar a 044 (PR #173 — decisão do usuário); nada novo além dela.
+- Próxima ação sugerida: nenhuma além do AX-4 e da D2.
 - Relações: AX-14 (mesmo recorte), AX-4, estudo §13/E6, decisão D2.
 - Confiança: alta.
 
@@ -440,8 +443,7 @@ aparece no campo "Impacto atual" de cada bloco.
   903/2026: PDF exige o laudo de todo PcD, portal só o pede no C1; conferência do envio 25/09
   (analista indeferiu por documento que o sistema nunca pediu); **`01d9163` (#161, 25/09)** fecha a
   contradição por IMPEDE; decisão 25/09 D1/D3; **044** (recorte transversal por código + lista gravada
-  no envio) especificada na main e **implementada só na branch** `origin/claude/044-…` (PR #173,
-  aberto).
+  no envio) especificada na main e mesclada pelo #173 em 26/09.
 - Specs relacionadas: 009, 025 (R-006 recusou casar por nome), 044.
 - Implementação encontrada: a família (d)/(c) — conferência de publicação que recusa o recorte cujo
   alcance publicado (por **nome**) é mais largo que o executado (por **identidade**).
@@ -466,21 +468,20 @@ aparece no campo "Impacto atual" de cada bloco.
     (`interface/retificacao.py:368-379`), então Edital do acervo com a contradição tem saída no mesmo
     ato de Retificação.
 - Estado atual: **RESOLVIDO** quanto à contradição documento × execução (pela família (d), não pela
-  (a) do AX-17); a amplificação 5 → 5n está **absorvida pela 044** — IMPLEMENTADO, MAS NÃO VALIDADO, **fora
-  da main** (PR #173); na main o custo 5n continua.
-- Ainda faz sentido?: a parte de integridade, não — está fechada e testada. A parte de custo, sim, e
-  já tem decisão, spec e implementação pendente de merge (044/PR #173). A ajuda da etapa Documentos
-  só fica verdadeira quando a 044 entrar na main.
-- Lacuna residual: (i) custo 5n até a 044; (ii) o IMPEDE depende de igualdade de **rótulo** — duas
+  (a) do AX-17); a amplificação 5 → 5n foi **absorvida pela 044**, mesclada pelo #173 em 26/09.
+- Ainda faz sentido?: não. A integridade está fechada e testada, e o custo caiu com a 044. A ajuda da
+  etapa Documentos passou a descrever uma opção que existe.
+- Lacuna residual: (i) o custo 5n, **fechado pela 044**; (ii) o IMPEDE depende de igualdade de **rótulo** — duas
   Modalidades de mesmo sentido com nomes diferentes ("PcD" × "Pessoa com Deficiência") escapam, e o
   PDF continua sugerindo alcance amplo (a 044 D1 resolve por código + coerência de denominação);
   (iii) Editais publicados antes de 25/09 com o recorte contraditório continuam dizendo o que
   disseram (imutáveis) — se existirem.
-- Grupo do resíduo: **B** (custo, via 044) — o grave (A) foi fechado.
+- Grupo do resíduo: — (o custo, que era B, fechou com a 044; resta conferir o acervo, (iii), que é
+  validação e não lacuna) — o grave (A) já estava fechado.
 - Impacto atual: era **integridade do que se publica** (o mais grave do lote: ato normativo e regra
   aplicada divergiam, e a fração de prejudicados crescia com n). Hoje é **custo de autoria**.
-- Próxima ação sugerida: validar e mesclar a 044 (PR #173, decisão do usuário); validar se há Edital
-  publicado antes de 25/09 com o recorte contraditório (ver Incertezas).
+- Próxima ação sugerida: validar se há Edital publicado antes de 25/09 com o recorte contraditório
+  (ver Incertezas).
 - Relações: AX-7 (caso extremo), AX-10, E-4 ("três leituras da mesma Modalidade": portal por
   identidade, PDF por nome, #161 por nome/código — `doc/decisao-recorte-documental.md`); PR #172
   (mesma ambiguidade, na consulta do Gestor).
@@ -574,9 +575,9 @@ aparece no campo "Impacto atual" de cada bloco.
   `tests/unit/editais/test_duplicacao.py`, `tests/interface/test_duplicar_perfil.py`,
   `tests/authorization/test_duplicar_perfil.py`.
 - Estado atual: **PARCIALMENTE RESOLVIDO**
-- Ainda faz sentido?: o que falta já tem dono: documentos (044 — implementada na branch/PR #173, fora
-  da main) e propagação em massa (spec futura registrada na 043 §5).
-- Lacuna residual: 5n documentos; editar depois continua sendo editar n.
+- Ainda faz sentido?: o que falta já tem dono: a propagação em massa (spec futura registrada na 043
+  §5). Os documentos, a outra metade, entraram com a 044 (#173, 26/09).
+- Lacuna residual: editar depois continua sendo editar n.
 - Grupo do resíduo: **B**
 - Impacto atual: custo de autoria (reduzido de ~33 para ~6 interações por Perfil, estimativa da 043).
 - Próxima ação sugerida: nenhuma além da 044.
@@ -713,8 +714,8 @@ aparece no campo "Impacto atual" de cada bloco.
   × Evento de recurso; término de inscrições × designação; numeração exibida = a do documento.
 - Rastro posterior: reavaliação 18/09 ("🔴 intocados"); convergência 20/09 ("ABERTO"; `N-05`/`N-06`
   como casos novos, do lote da convergência); 25/09 — **primeiro confronto cruzado entregue**
-  (`01d9163`, documento × execução) e o segundo implementado **fora da main** (044 FR-706,
-  `_denominacoes_do_codigo`, denominação entre Perfis — branch/PR #173, não validado).
+  (`01d9163`, documento × execução) e o segundo pela 044 (FR-706,
+  `_denominacoes_do_codigo`, denominação entre Perfis — mesclada pelo #173 em 26/09).
 - Specs relacionadas: 025, 027, 034, 044.
 - Evidência no código atual, por membro:
   - **ACH-41** (janela do marco × Evento de recurso): `editais/domain/validation.py:1497-1533` só
@@ -969,14 +970,14 @@ aparece no campo "Impacto atual" de cada bloco.
 | AX-7 (+E-1) | Modalidade/regra 4n; 3% × 30% sem conferência | CONTRADITO POR DECISÃO POSTERIOR (`decisao-recorte-documental.md`, 043 §2, 044 §3) | B | corrigir: AVISO de percentual/fundamento divergente por código |
 | AX-8 | Número do Edital com duas fontes na capa | NÃO IMPLEMENTADO | B | corrigir: conferência título × número/ano |
 | AX-9 | Teto de inscrições executado e não publicado (nem declarável na composição) | NÃO IMPLEMENTADO | B | corrigir: renderizar; decidir campo na etapa Inscrição |
-| AX-10 | "Documentos exigidos" funde naturezas | PARCIALMENTE RESOLVIDO (`a2b1e1f`; 044 fora da main) | B | validar/mesclar 044 |
+| AX-10 | "Documentos exigidos" funde naturezas | PARCIALMENTE RESOLVIDO (`a2b1e1f`; 044, #173) | B | nenhuma além do AX-4 e da D2 |
 | AX-11 | Fatos declarados por Perfil | PARCIALMENTE RESOLVIDO (043) | C | nenhuma (entrar no aviso do AX-1) |
 | AX-12 | Remissão a anexo sem conferência (materializada no estudo) | NÃO IMPLEMENTADO | B | corrigir: AVISO de remissão `ANEXO X` sem rótulo |
 | AX-13 | Cabeçalho de alcance só com nome | RESOLVIDO (`c0403a9`) | — | nenhuma |
-| AX-14 / AX-17 (+E-2) | Documento publicado "toda a modalidade" × execução por Perfil | RESOLVIDO (`01d9163`, IMPEDE); custo 5n absorvido pela 044 | B | validar/mesclar 044; checar acervo pré-25/09 |
+| AX-14 / AX-17 (+E-2) | Documento publicado "toda a modalidade" × execução por Perfil | RESOLVIDO (`01d9163`, IMPEDE); custo 5n fechado pela 044 (#173) | — | checar acervo pré-25/09 |
 | AX-15 | Submodalidades de PPIQ | NÃO IMPLEMENTADO (fora da 044 por decisão) | B | nenhuma agora |
 | AX-16 | Restaurar rascunho local perde coleções aninhadas | NÃO IMPLEMENTADO | **A** | validar pela tela e corrigir (ou restringir a salvaguarda) |
-| E-3 | Custo de autoria sem duplicar | PARCIALMENTE RESOLVIDO (043) | B | nenhuma além da 044 |
+| E-3 | Custo de autoria sem duplicar | PARCIALMENTE RESOLVIDO (043; documentos pela 044) | B | nenhuma; a propagação em massa é spec futura (043 §5) |
 | 039 | Catálogo de Modalidades / alcance declarável (branch local) | CONTRADITO POR DECISÃO POSTERIOR | B (peças órfãs: D-G5, alcance da Etapa) | usuário registrar encerramento e destino das peças |
 | 044 | Recorte transversal + lista gravada | RESOLVIDO (#173, mesclado em 26/09) | — | T065, se a medição for pedida |
 | ACH-41 (E-4) | Janela recursal do marco × Evento de recurso | NÃO IMPLEMENTADO | **A** | criar spec: designar Evento de recurso + AVISO |
@@ -1010,7 +1011,7 @@ se decompõe nos quatro membros).
 | DUPLICADO / ABSORVIDO | 1 | H-1…H-3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 | AX-7 (estrutural), 039 |
 
-Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 15 · **C** = 9 · sem resíduo = 6 (a 044 passou de B a sem resíduo em 26/09).
+Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 14 · **C** = 9 · sem resíduo = 7 (a 044 e o AX-14/17 passaram de B a sem resíduo em 26/09).
 
 Leitura dos 17 AX de 15/09 contra a varredura de 19/09 ("0 fechados"): hoje **3 fechados**
 (AX-13, AX-14, AX-17), **3 parciais** (AX-1, AX-10, AX-11), **1 contradito por decisão** (AX-7) e
@@ -1039,7 +1040,7 @@ divergirem (AX-14) fechou em 25/09, na main.
    não têm spec nem registro de destino. A branch local continua parecendo trabalho em curso.
 5. **Existe PR para a 044.** `gh` mostra o **#173** aberto (26/09 03:21 UTC) sobre
    `claude/044-recorte-transversal-documental`, com `test` pendente — a premissa "sem PR aberto"
-   recebida durante a auditoria já não vale.
+   recebida durante a auditoria já não vale. Ele foi mesclado no mesmo dia (`47876ad`).
 
 ## 4. Incertezas que exigem validação humana
 
@@ -1062,6 +1063,7 @@ divergirem (AX-14) fechou em 25/09, na main.
 5. **Divergência de percentual entre Perfis é legítima na prática?** A decisão de 25/09 diz que pode
    ser; a amostra (estudo §13/E2) não mostrou nenhum caso. Define se o AVISO do AX-7 vale o custo.
 6. **044 / PR #173 não foi executada aqui.** Leitura de diff apenas; a suíte "7747 passando" é a
-   medição do autor (`56649d4`), e o CI `test` estava pendente.
+   medição do autor (`56649d4`), e o CI `test` estava pendente. **Desfecho:** mesclado em 26/09 com o
+   CI verde, e a Mesa percorrida pela tela depois (`0c4e6b0`). Falta a T065.
 7. **ACH-41 como A** assume que o candidato lê as duas datas na mesma tela (medido pela interface em
    16/09, não reverificado). O item é primariamente do lote de 16/09; aqui só a checagem de código.

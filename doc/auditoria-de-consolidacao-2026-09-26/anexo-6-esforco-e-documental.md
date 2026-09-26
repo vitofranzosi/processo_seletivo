@@ -27,6 +27,11 @@ PR aberto.** Para os achados que a 044 cobre, conferi o código da branch com `g
 (sem checkout) e classifiquei como **IMPLEMENTADO, MAS NÃO VALIDADO** — a `main` de hoje continua com
 a lacuna. Única tarefa aberta na branch: T065 (demonstrar SC-260/SC-261 no 140/2025).
 
+**Atualização de 26/09:** a 044 foi mesclada pelo #173 (`47876ad`) com o CI verde, e a Mesa foi percorrida
+pela tela depois (`0c4e6b0`). O #171 foi mesclado como registro, sem a correção. Os blocos que tocam os
+dois — §5.9, #161, D4 e ValorDeFato —, a tabela-resumo e as contagens foram revistos; o que dizem da
+branch é a leitura de antes do merge.
+
 ---
 
 ## Parte 1 — Atritos da composição (§5, §11 M/B), o que 25/09 fechou e o que sobrou
@@ -204,12 +209,12 @@ a lacuna. Única tarefa aberta na branch: T065 (demonstrar SC-260/SC-261 no 140/
 - Specs relacionadas: 044 FR-708 (acrescentar a terceira saída "use a modalidade em todos os Perfis") e FR-727 (a Mesa denunciar a divergência em inscrições anteriores à #161).
 - Implementação encontrada: `_recorte_que_o_documento_publicado_alarga`.
 - Evidência no código atual: `editais/domain/validation.py:2225-2275` — compara `_rotulo_da_modalidade` do dono com os outros Perfis; mensagem com as duas saídas (`:2269-2274`); teste `tests/unit/editais/test_validacao_inscricao.py:102` e ajuste em `tests/integration/inscricoes/test_regressoes_da_entrega_6.py`.
-- Estado atual: PARCIALMENTE RESOLVIDO
-- Ainda faz sentido?: parcialmente — a divergência não se publica mais; o que falta é da 044: (a) a terceira saída na mensagem (depende do recorte transversal existir); (b) Editais **já publicados** antes da #161 com o recorte ambíguo continuam recebendo inscrições e a Mesa não sinaliza o documento que o portal dispensou (FR-727).
-- Lacuna residual: (a) e (b), ambos na 044. **(ii) para a 044** — e ambos **implementados, mas não validados, fora da main**: na branch da 044, a mensagem ganha a terceira saída ("'{rotulo}' ({codigo}) em todos os Perfis — ou, para exigi-lo em Perfis escolhidos…", `editais/domain/validation.py:2357` da branch), e a lista carrega `divergente_do_publicado` (`inscricoes/application/lista_exigida.py:64,106` da branch; teste `test_a_divergencia_da_161_aparece_na_lista_reconstruida`). A Mesa não foi percorrida no navegador (rastreabilidade SC-262).
-- Grupo do resíduo: A — para (b), enquanto houver Edital ambíguo publicado; a amostra real (903/2026) é de teste, então o impacto em produção depende de existir algum.
+- Estado atual: RESOLVIDO — atualizado em 26/09: (a) e (b) entraram na main com o #173.
+- Ainda faz sentido?: não — a divergência não se publica mais, e o que faltava era da 044, que entrou: (a) a terceira saída na mensagem (depende do recorte transversal existir); (b) Editais **já publicados** antes da #161 com o recorte ambíguo continuam recebendo inscrições e a Mesa não sinaliza o documento que o portal dispensou (FR-727).
+- Lacuna residual: nenhuma de implementação. (a) e (b) eram **(ii) para a 044**, e entraram na main com o #173 em 26/09. Como foram lidos na branch, antes do merge: a mensagem ganha a terceira saída ("'{rotulo}' ({codigo}) em todos os Perfis — ou, para exigi-lo em Perfis escolhidos…", `editais/domain/validation.py:2357` da branch), e a lista carrega `divergente_do_publicado` (`inscricoes/application/lista_exigida.py:64,106` da branch; teste `test_a_divergencia_da_161_aparece_na_lista_reconstruida`). A Mesa foi percorrida pela tela depois do merge (`0c4e6b0`).
+- Grupo do resíduo: — (era A enquanto (a) e (b) estavam fora da main; resta saber se há Edital ambíguo publicado, que é validação, e a Mesa agora o denuncia)
 - Impacto atual: baixo para Editais novos; médio para os publicados antes de 25/09 com esse recorte (desconhecido quantos).
-- Próxima ação sugerida: validar e mesclar a branch da 044; conferir se há Edital publicado com o recorte ambíguo.
+- Próxima ação sugerida: conferir se há Edital publicado com o recorte ambíguo `[VALIDAR]`.
 - Relações: AX-14 ("documento publicado × execução se contradizem", 15/09 — mesma forma, outro objeto); E-4 (validação cruzada entre fontes).
 - Confiança: alta (código); média para o impacto em produção.
 
@@ -699,19 +704,19 @@ Itens de baixo impacto, conferidos um a um, em blocos curtos.
 
 ## Parte 6 — PR #171, questões estruturais restantes e o complemento de investigação
 
-### PR #171 · `doc/achado-valor-de-fato-sem-gatilho.md` (só na branch do PR) — `ValorDeFato` é append-only por uma camada só
+### PR #171 · `doc/achado-valor-de-fato-sem-gatilho.md` (na main desde 26/09) — `ValorDeFato` é append-only por uma camada só
 - Origem: PR aberto #171 (`claude/achado-valor-de-fato-sem-gatilho`, 25–26/09, só documentação), nascido de `research.md` R-005/R-014 da 044; memória `valor-de-fato-corrigir-depois-da-044`.
 - Problema original: `inscricoes_valordefato` (fatos congelados no envio, entrada da classificação) está em `TABELAS_APPEND_ONLY`, mas **não tem** gatilho `BEFORE UPDATE OR DELETE` nem recusa em `save`/`delete`; quem conecta com privilégio (migration de dados, shell com credencial de migração, suíte como superusuário) reescreve em silêncio. Nenhum guardião vê.
 - Recomendação original: gatilho + guarda de modelo como `inscricoes/0006`, **depois** da 044, para não abrir duas pontas no grafo de migrations. `PosicaoNaOrdem`, `RevisaoEdital`, `GeracaoDeArquivo` (duas camadas de três) ficam só registradas, por decisão do usuário.
 - Rastro posterior: decisão do usuário de 25/09 (no corpo do PR e na memória) — corrigir depois da 044.
 - Specs relacionadas: 015 (fatos declarados, D-2); 044 (dona da `0005`).
 - Evidência no código atual: `backend/processo_seletivo/seguranca/papeis.py:39` (na lista append-only); `backend/processo_seletivo/inscricoes/models.py:137-183` — `ValorDeFato` sem `save`/`delete` sobrescritos (só `Meta` e `__str__`); `inscricoes/migrations/0004_valor_de_fato.py` sem `RunSQL`; `backend/tests/migrations/test_migrations.py:34-91` — `TRIGGERS_POR_APP` sem a chave `inscricoes`; única escrita é o `bulk_create` do envio, `inscricoes/application/submissao.py:368`. Na branch da 044, `ValorDeFato` continua igual (a 044 dá três camadas só à tabela nova).
-- Estado atual: NÃO IMPLEMENTADO (achado registrado em PR aberto; correção decidida e adiada)
+- Estado atual: NÃO IMPLEMENTADO (achado registrado, e mesclado pelo #171 em 26/09; correção decidida, e livre desde que a `0005` entrou com o #173)
 - Ainda faz sentido?: sim — contradiz a regra de engenharia do projeto ("duas camadas independentes, e nenhuma delas é contornável", `CLAUDE.md`; docstring de `papeis.py`) e o Princípio II (`constitution.md:65-75`: regras e entradas históricas reproduzíveis). Custo baixo, molde pronto (`recursos/migrations/0002_ato_de_instrucao.py`). Não há dano observado.
 - Lacuna residual: gatilho e guarda de modelo; o guardião de `test_imutabilidade_do_historico.py:200` só confere uma direção.
 - Grupo do resíduo: A
 - Impacto atual: baixo na prática (ninguém escreve fora do envio), alto em garantia.
-- Próxima ação sugerida: corrigir — **depois que a implementação da 044 chegar à main** (ver Incertezas: o #168 mesclado era só a spec, e a `0005` não está na main).
+- Próxima ação sugerida: corrigir — `inscricoes/0006`. A implementação da 044 chegou à main pelo #173, com a `0005`.
 - Relações: 044 R-005/R-014; `doc/descoberta-018-decisao-c-superacao-de-resultado.md:138` (descreve "papel + modelo", errado para menos).
 - Confiança: alta.
 
@@ -774,7 +779,7 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | §5.10 · M11 · QW11 | campo dependente não se limpa | RESOLVIDO (servidor já descartava; #162) | — | nenhuma |
 | §5.12 · M8 · M14 · QW6 · QW13 | Revisão soterra o IMPEDE; âncora do ano | PARCIALMENTE RESOLVIDO (colapso por Evento i; por Perfil e severidade iii; âncora decisão) | B | corrigir (direta) + decisão FR-344 |
 | §5.9 · A7 · E6 (modalidade) · Caso 5 · frente 1 · D1/D1a/D3 | "todo PcD" sem forma; obrigatórios como facultativos | RESOLVIDO (ii, #173, mesclado em 26/09) | — | T065, se a medição for pedida |
-| portal §3 · #161 | "Todos os Perfis" + Modalidade de um Perfil diverge | PARCIALMENTE RESOLVIDO (i contenção; resíduo ii na branch) | A | validar e mesclar a 044 |
+| portal §3 · #161 | "Todos os Perfis" + Modalidade de um Perfil diverge | RESOLVIDO (i contenção; ii, #173, mesclado em 26/09) | — | conferir o acervo `[VALIDAR]` |
 | conferência §3/§6 · D4 | Mesa recalcula; sem "não se aplica"; nada registra o pedido | RESOLVIDO (ii, #173, mesclado em 26/09; Mesa percorrida) | — | nenhuma |
 | conferência §1/§3 · D2 diretas · #167 | instrução na Mesa; facultativo na Revisão | RESOLVIDO (i, #167) — resíduo: cartão público sem marca (iii) | C | corrigir (opcional) |
 | E6 (candidato) · D2 | sexo/idade/vínculo sem forma | CONTRADITO POR DECISÃO POSTERIOR (D2, `doc/decisao-recorte-documental.md`) | B | nenhuma até reabrir D2 |
@@ -806,7 +811,7 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | B6 | Anexos sem "Salvar rascunho" | SUPERADO / OBSOLETO (ações imediatas por desenho) | — | nenhuma |
 | B7 | papéis pela string técnica | SUPERADO / OBSOLETO (seletor é de demonstração) | — | nenhuma |
 | B8 | cancelamento impedido sem dizer por quê | SUPERADO / OBSOLETO (explicação existe desde a 038) | — | nenhuma |
-| PR #171 | ValorDeFato append-only por uma camada | NÃO IMPLEMENTADO (decidido, adiado para depois da 044) | A | corrigir após a 044 na main |
+| PR #171 | ValorDeFato append-only por uma camada | NÃO IMPLEMENTADO (decidido; a 044 já está na main) | A | corrigir: `inscricoes/0006` |
 | E11 | ficha de avaliação sem forma | DUPLICADO / ABSORVIDO (AX-4) | B | lote do AX-4 |
 | §15 três decisões | redação×transcrição; comum+condicional; seções | PARCIALMENTE RESOLVIDO (documental decidido; 1 e 3 pendentes) | B | levar ao usuário |
 | §14 · §15 complemento | lacunas de investigação | PARCIALMENTE RESOLVIDO (portal e análise feitos) | C | validar (N→N+1, Retificação, anexos) |
@@ -815,9 +820,9 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 
 | Estado | Quantos |
 |---|---:|
-| RESOLVIDO | 10 |
+| RESOLVIDO | 11 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
-| PARCIALMENTE RESOLVIDO | 7 |
+| PARCIALMENTE RESOLVIDO | 6 |
 | NÃO IMPLEMENTADO | 20 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 3 |
@@ -827,8 +832,8 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 Dos 20 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
 termo constitucional (B9/FR-007 da 023, A6/FR-465–466 da 032, §7.2/Constituição, e a parte "âncora"
 do §5.12/FR-344) — a revisão de 25/09 os registrou e não os tomou. Resíduo por grupo, nos itens ainda
-abertos: **A = 3** (contenção #161, "O que mudou" sem o recorte, ValorDeFato; o recorte transversal e a
-lista gravada saíram em 26/09, com o merge do #173); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
+abertos: **A = 2** ("O que mudou" sem o recorte, ValorDeFato; o recorte transversal, a contenção #161 e
+a lista gravada saíram em 26/09, com o merge do #173); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
 
 Separação pedida — **(i) corrigido em 25/09**: §5.1, §5.4, §5.5, §5.8, §5.10, Alvo do §5.6, colapso
 por Evento do §5.12, banner do reuso, tabela do documento (B1), contenção #161, instrução na Mesa e
@@ -851,7 +856,7 @@ autoridade com portaria/local/data, B3, B5, M16.
    mesclado** (`bb774d9`), mas era só a spec; a `inscricoes/0005` está na branch da 044, não na main.
    Quem ler "#168 mesclado" e escrever a `0006` agora criaria a ponta dupla no grafo que a decisão quis
    evitar. A memória manda conferir `git log origin/main -- …/0005*`, o que protege — mas o texto do PR
-   não.
+   não. **Desfecho:** a `0005` entrou na main com o #173 em 26/09, e a ambiguidade deixou de importar.
 3. **A justificativa do M4 no código não se sustenta por inteiro.** `interface/views.py:2470-2475` diz
    que atualizar o rótulo exigiria espelhar por JavaScript, "que a CSP desta interface não admite"; o
    mesmo cartão já reconstrói o quadro por `hx-get` + `hx-include="closest fieldset"` sem JS inline
