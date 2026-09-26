@@ -173,29 +173,29 @@ que a Mesa mostra.
 
 ### Testes
 
-- [ ] T048 [P] [US3] Em `T/interface/test_retificar_documentos.py`:
+- [X] T048 [P] [US3] Em `T/interface/test_retificar_documentos.py`:
   - o campo "Modalidade em todos os Perfis" aparece com as opções do conteúdo publicado, fora a ampla;
   - escolher código gera `REPLACE` em `/documentRequirements/id=…/modalityCode`;
   - trocar de exato para transversal no mesmo ato publica;
   - código fabricado é recusado;
   - documento continua não removível (`FR-722`, `D-009`)
-- [ ] T049 [P] [US3] Em `T/unit/editais/test_validacao_inscricao.py`, no conteúdo **resultante** de uma Retificação:
+- [X] T049 [P] [US3] Em `T/unit/editais/test_validacao_inscricao.py`, no conteúdo **resultante** de uma Retificação:
   - renomear PcD em um Perfil impede, e em todos passa;
   - declarar ampla a Modalidade do código impede;
   - remover o código de todos os Perfis impede, e de alguns passa (`FR-704`, `FR-706`, `FR-724`)
-- [ ] T050 [P] [US3] Em `T/unit/publicacoes/test_alteracoes_legiveis.py`, as três operações sobre `modalityCode` (passar a recortar, deixar de recortar, trocar o código) chegam da tela como `REPLACE` e viram, as três, a linha *Documento exigido "X" — Modalidade em todos os Perfis — alterado*, sem valor e sem identificador (`FR-721`, `SC-267`, `D-008`)
+- [X] T050 [P] [US3] Em `T/unit/publicacoes/test_alteracoes_legiveis.py`, as três operações sobre `modalityCode` (passar a recortar, deixar de recortar, trocar o código) chegam da tela como `REPLACE` e viram, as três, a linha *Documento exigido "X" — Modalidade em todos os Perfis — alterado*, sem valor e sem identificador (`FR-721`, `SC-267`, `D-008`)
 
 ### Implementação
 
-- [ ] T051 [US3] Em `B/editais/domain/mutabilidade.py`, `("documentRequirements", "modalityCode"): retificavel()`, com comentário que dá a razão de `D-002`
-- [ ] T052 [US3] Em `B/interface/retificacao.py`:
+- [X] T051 [US3] Em `B/editais/domain/mutabilidade.py`, `("documentRequirements", "modalityCode"): retificavel()`, com comentário que dá a razão de `D-002`
+- [X] T052 [US3] Em `B/interface/retificacao.py`:
   - `CAMPOS_DOCUMENTO` ganha `("modalityCode", "Modalidade em todos os Perfis", REFERENCIA)`;
   - `opcoes_de_aplicabilidade` devolve os códigos do conteúdo publicado, fora a ampla, com o rótulo de `UX-080`;
   - `ROTULO_DO_VAZIO` do campo diz "Não recorta por código".
 
   Rodar `T/interface/test_campos_vem_do_contrato.py`
-- [ ] T053 [US3] Em `B/publicacoes/domain/alteracoes.py`, `CAMPOS["documentRequirements"]["modalityCode"] = "Modalidade em todos os Perfis"`. `profileId` e `modalityId` continuam fora (fila das diretas)
-- [ ] T054 [US3] Rodar T048 a T050. Demonstrar o cenário B de `quickstart.md` pela interface
+- [X] T053 [US3] Em `B/publicacoes/domain/alteracoes.py`, `CAMPOS["documentRequirements"]["modalityCode"] = "Modalidade em todos os Perfis"`. `profileId` e `modalityId` continuam fora (fila das diretas)
+- [X] T054 [US3] Rodar T048 a T050. Demonstrar o cenário B de `quickstart.md` pela interface
 
 **Checkpoint**: um Edital já publicado com "facultativo para todos" passa a exigir o laudo do PcD por
 Retificação, e as inscrições anteriores não mudam.
@@ -211,14 +211,14 @@ antigo não muda.
 
 ### Testes
 
-- [ ] T055 [P] [US4] Em `T/interface/test_mesa.py` (ou o arquivo de T033), com fixture de versão publicada com "Todos os Perfis" + "C1 · PcD" e inscrição PcD no C2 **sem** linhas: o aviso de reconstrução uma vez, acima da lista (`UX-083`); o laudo em "Não se aplica", com o acréscimo *"o Edital publicado o exigia de todo candidato em Pessoas com Deficiência"* (`FR-727`, `SC-265`)
-- [ ] T056 [P] [US4] No mesmo cenário, mas com a inscrição enviada **depois** da feature sob a mesma versão: a linha gravada tem `divergente_do_publicado=True`, e a Mesa mostra o mesmo acréscimo, sem o aviso de reconstrução (`FR-727`, segunda frase)
-- [ ] T057 [P] [US4] Em `T/unit/publicacoes/test_identidade_imutavel.py` (ou vizinho): o documento e o `content_hash` de uma publicação da versão 16 são os mesmos depois da feature; a consulta pública serve o literal, sem `modalityCode` (`FR-725`, `SC-265`)
+- [X] T055 [P] [US4] Em `T/interface/test_mesa.py` (ou o arquivo de T033), com fixture de versão publicada com "Todos os Perfis" + "C1 · PcD" e inscrição PcD no C2 **sem** linhas: o aviso de reconstrução uma vez, acima da lista (`UX-083`); o laudo em "Não se aplica", com o acréscimo *"o Edital publicado o exigia de todo candidato em Pessoas com Deficiência"* (`FR-727`, `SC-265`)
+- [X] T056 [P] [US4] No mesmo cenário, mas com a inscrição enviada **depois** da feature sob a mesma versão: a linha gravada tem `divergente_do_publicado=True`, e a Mesa mostra o mesmo acréscimo, sem o aviso de reconstrução (`FR-727`, segunda frase)
+- [X] T057 [P] [US4] Em `T/unit/publicacoes/test_identidade_imutavel.py` (ou vizinho): o documento e o `content_hash` de uma publicação da versão 16 são os mesmos depois da feature; a consulta pública serve o literal, sem `modalityCode` (`FR-725`, `SC-265`)
 
 ### Implementação
 
-- [ ] T058 [US4] Conferir que T043 a T046 cobrem a reconstrução e a divergência nas três telas, e completar o que faltar em `B/interface/templates/interface/mesa_inscricao.html` e `B/interface/templates/interface/inscricao_detalhe.html`
-- [ ] T059 [US4] Rodar T055 a T057. Se o banco do estudo estiver disponível, demonstrar o cenário D de `quickstart.md` com a inscrição `INS-2026-WTBAMDBH`
+- [X] T058 [US4] Conferir que T043 a T046 cobrem a reconstrução e a divergência nas três telas, e completar o que faltar em `B/interface/templates/interface/mesa_inscricao.html` e `B/interface/templates/interface/inscricao_detalhe.html`
+- [X] T059 [US4] Rodar T055 a T057. Se o banco do estudo estiver disponível, demonstrar o cenário D de `quickstart.md` com a inscrição `INS-2026-WTBAMDBH`
 
 **Checkpoint**: nenhuma inscrição antiga some da Mesa, e a do C2 do 903 deixa de ser lida em silêncio.
 

@@ -228,3 +228,39 @@ def test_a_divergencia_da_161_aparece_na_lista_reconstruida(selecao, candidatos_
         "Edital publicado o exigia de todo candidato em Pessoas com Deficiência. O portal não o "
         "pediu a esta inscrição."
     )
+
+
+def test_a_divergencia_gravada_aparece_sem_aviso_de_reconstrucao():
+    """O 903 continua recebendo inscrições depois da 044: a lista é gravada sobre a versão ambígua,
+    e a divergência vai junto (FR-727, segunda frase)."""
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    c1 = {
+        "id": "c1",
+        "code": "C1",
+        "competitionModalities": [
+            {"id": "c1-pcd", "code": "PcD", "name": "Pessoas com Deficiência"}
+        ],
+    }
+    laudo = {"id": "laudo", "key": "laudo", "name": "Laudo médico (PcD)", "order": 1}
+    conteudo = {"profiles": [c1], "documentRequirements": [laudo]}
+    inscricao = Inscricao(profile_id="00000000-0000-0000-0000-0000000000c2")
+    linha = ItemDaListaExigida(
+        requisito_id="00000000-0000-0000-0000-0000000000aa",
+        chave="laudo",
+        situacao="NAO_SE_APLICA",
+        forma_do_recorte="TODOS_COM_MODALIDADE_DE_UM_PERFIL",
+        modalidade_id="00000000-0000-0000-0000-0000000000bb",
+        divergente_do_publicado=True,
+    )
+    conteudo["profiles"][0]["competitionModalities"][0]["id"] = str(linha.modalidade_id)
+    laudo["id"] = str(linha.requisito_id)
+
+    lista = lista_exigida(inscricao, conteudo, itens=[linha])
+
+    (veredito,) = lista.itens
+    assert lista.reconstruida is False
+    assert veredito.divergente_do_publicado is True
+    assert "o Edital publicado o exigia de todo candidato em Pessoas com Deficiência" in (
+        documentos.razao_legivel(veredito, conteudo)
+    )
