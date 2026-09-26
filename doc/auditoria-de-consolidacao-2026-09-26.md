@@ -962,32 +962,37 @@ varreduras oportunistas quando se tocar nas telas envolvidas.
 ## 13. Incertezas que precisam de validação humana
 
 ### Decisões que só o usuário pode tomar
-1. **Doutrina do `status` do Evento.** O inventário de 09/09 o trata como declarado; o contrato da `026`,
-   como derivado. A interface não oferece o campo, e qualquer das duas escolhas fecha o ruído (RC-80).
-2. **Admissibilidade no painel**: espécie nova, ou `UX-064` cobrindo as duas situações (RC-79)?
+
+**Registradas em [`decisoes-pendentes-da-consolidacao.md`](decisoes-pendentes-da-consolidacao.md)**, cada uma
+com o que já está fixado, as opções com as consequências e uma recomendação — a decisão fica com o
+usuário. As do item 9 e a Diretoria do item 12 já tinham registro próprio e aparecem lá só como índice.
+
+1. **Doutrina do `status` do Evento.** A `022` (D-004) o trata como declarado; o contrato da `026`,
+   como derivado. A interface não oferece o campo, e qualquer das duas escolhas fecha o ruído (RC-80). → DP-01
+2. **Admissibilidade no painel**: espécie nova, ou `UX-064` cobrindo as duas situações (RC-79)? → DP-02
 3. **O `UX-001` em Edital publicado**: sinal sem destino, dito como fato estrutural, ou aviso de
-   composição fora da Atenção (RC-80)?
-4. **O adiamento da B-1 foi deliberado?** Se foi, falta o registro. Se não foi, é o primeiro item.
+   composição fora da Atenção (RC-80)? → DP-03
+4. **O adiamento da B-1 foi deliberado?** Se foi, falta o registro. Se não foi, é o primeiro item. → DP-04
 5. **Cadastro de reserva está no alvo do piloto?** E qual é a semântica de `reserveLimit`: limite
-   executável ou texto normativo (RC-58)?
-6. **O Cefor usa dupla leitura?** Isso decide se o RC-29 fica só no aviso ou ganha spec de combinação.
-7. **A `D-G2` continua valendo**, agora que a interface não oferece mais os três caminhos (RC-94)?
+   executável ou texto normativo (RC-58)? → DP-05
+6. **O Cefor usa dupla leitura?** Isso decide se o RC-29 fica só no aviso ou ganha spec de combinação. → DP-06
+7. **A `D-G2` continua valendo**, agora que a interface não oferece mais os três caminhos (RC-94)? → DP-07
 8. **A `039` está encerrada?** Registrar, e dizer onde ficam a `D-G5` (RC-37) e o alcance da Etapa
    (RC-64). A decisão de 25/09 foi de produto, ou só uma leitura do texto constitucional? A memória
-   "a Constituição preserva valor, não campo" mostra que a distinção já importou uma vez.
-9. **Decisões pendentes do estudo de 21/09**:
+   "a Constituição preserva valor, não campo" mostra que a distinção já importou uma vez. → DP-08
+9. **Decisões pendentes do estudo de 21/09** (já registradas no próprio estudo, §12 e §15):
    - E10 (redação × transcrição);
    - E5 (seções);
    - E2 (conteúdo comum não-cota);
    - FR-344 (âncora do ano);
    - FR-465/466 (remeter o método);
    - casas decimais no marco de sorteio.
-10. **A `D-011` continua?** Admitir prova nova no recurso é pergunta normativa, não lacuna de UX.
+10. **A `D-011` continua?** Admitir prova nova no recurso é pergunta normativa, não lacuna de UX. → DP-09
 11. **Quais famílias entram no alvo**: prova de títulos (barema), PPI com heteroidentificação, cascata
-    (14/2026), submodalidade (140/2025).
-12. **Papel próprio de Diretoria** (pendente desde a `040`) e **convenção do campo `Status`** das specs.
+    (14/2026), submodalidade (140/2025). → DP-10
+12. **Papel próprio de Diretoria** (pendente desde a `040`) (já registrado na `040`, D-008) e **convenção do campo `Status`** das specs. → DP-12
 13. **O escopo de trabalho por Perfil** (RC-61) pode ser decidido: o Edital real multipolo que a
-    convergência pedia já foi cadastrado.
+    convergência pedia já foi cadastrado. → DP-11
 
 ### Verificações que exigem percurso ou ambiente
 - **RC-08** (AX-16), **RC-32** (o "Impede" falso em Edital publicado), **RC-58** (convocar a reserva),
