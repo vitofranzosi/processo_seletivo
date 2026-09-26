@@ -148,7 +148,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Lacuna residual: decisão de fronteira; nenhum código até lá.
 - Grupo do resíduo: C
 - Impacto atual: quem conduz pelo painel não vê avisos de composição; precisa abrir cada Edital.
-- Próxima ação sugerida: nenhuma (aguarda decisão de governança; revisitar após D-G1)
+- Próxima ação sugerida: nenhuma (aguarda decisão de governança; revisitar após D-G1 — *executada pela `046` em 26/09*)
 - Relações: D-G1; E-4; N-05 (UX-001 talvez pertença a este lado da fronteira).
 - Confiança: alta.
 
@@ -247,6 +247,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Evidência no código atual: `editais/domain/validation.py:1706-1747` — `severity=Severity.WARNING`, `code="milestone_without_cut_rule"`, docstring "Aviso, e não impedimento"; teste prende o aviso: `tests/interface/test_hardening_pos_auditoria.py:1100` (`== Severity.WARNING`). Atenuante: a regra de corte **pode nascer por Retificação** (`editais/domain/mutabilidade.py:515-520`), então o Edital publicado sem ela tem conserto.
 - Estado atual: NÃO IMPLEMENTADO
 - Ainda faz sentido?: sim, é decisão tomada e barata (trocar severidade na publicação, manter aviso na Retificação do acervo). O atenuante rebaixa a urgência.
+- **Desfecho (26/09):** executada pela `046` (#188, `064228c`), na forma da `D-002` de lá: o impeditivo é do **Perfil** em que nenhum marco corta, porque *"não governa Etapa alguma"* continua sendo regra de corte, com alvo, e não serve de declaração a quem não corta. O marco sem corte num Perfil que corta continua com aviso, e a Retificação do acervo não é cobrada.
 - Lacuna residual: severidade `BLOCKING_ERROR` no ato de publicação + ajuste do teste que prende o aviso.
 - Grupo do resíduo: B
 - Impacto atual: Edital publicado "classifica e não convoca" até alguém retificar.
@@ -264,7 +265,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Evidência no código atual: publicação recusa marco de sorteio sem método (`editais/domain/validation.py:1752`, FR-467, só no ato de publicação); o método só aceita fonte do vocabulário fechado (`editais/domain/perfis.py:526-541` → `sorteios/infrastructure/fontes/__init__.py:83-92`). O reaproveitamento copia o `drawMethod` (`editais/domain/reaproveitamento.py:156-161, 310-320`) e o Edital reaproveitado passa de novo pela publicação, então a "cláusula antiga" estruturada não escapa: sem método, é recusado. O que escapa é **prosa** das Seções copiadas (família E-3/E-4, outro lote).
 - Estado atual: RESOLVIDO POR OUTRO CAMINHO
 - Ainda faz sentido?: parcialmente — a spec da D-G3 como tal é desnecessária no produto; o resíduo é (a) o vocabulário de fontes aceitar **"Fonte de demonstração"** em qualquer ambiente (ver NOVO-1) e (b) a redação dos Editais, que é ato institucional, não de software.
-- Lacuna residual: NOVO-1; texto de Seção reaproveitada que contradiga o método estruturado.
+- Lacuna residual: NOVO-1; texto de Seção reaproveitada que contradiga o método estruturado. **Desfecho (26/09):** o NOVO-1 foi fechado pela `046` (#188).
 - Grupo do resíduo: B (pelo NOVO-1)
 - Impacto atual: baixo para o modelo; o NOVO-1 é o furo.
 - Próxima ação sugerida: corrigir (NOVO-1); registrar a D-G3 como atendida pela 021/032
@@ -625,8 +626,8 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | C7 | Autenticação institucional real | NÃO IMPLEMENTADO | A | criar spec (depende do provedor) |
 | ACH-25 · E-6 | Visão global do Processo vivo | PARCIALMENTE RESOLVIDO | B | validar (remedir após fixes) |
 | D-G2 · sete recusas | 403 para `criar_edital`, `reaproveitar`, `supervisao` | NÃO IMPLEMENTADO | C | criar spec curta (se mantida) |
-| D-G1 | FR-461 impeditiva | NÃO IMPLEMENTADO | B | criar spec curta |
-| D-G3 | Fonte pública externa do sorteio / reaproveitamento | RESOLVIDO POR OUTRO CAMINHO | B (NOVO-1) | corrigir NOVO-1 |
+| D-G1 | FR-461 impeditiva | RESOLVIDO (046, #188 — por Perfil) | — | nenhuma |
+| D-G3 | Fonte pública externa do sorteio / reaproveitamento | RESOLVIDO POR OUTRO CAMINHO | — (NOVO-1 fechado pela 046, #188) | nenhuma |
 | D-G4 | Peso da Etapa | RESOLVIDO | — | nenhuma |
 | D-G5 | Retificação acrescenta Modalidade | NÃO IMPLEMENTADO | A | criar spec (rascunho na 039) |
 | §6 sorteio | Sorteio fora do painel | NÃO IMPLEMENTADO | C | nenhuma |
@@ -652,23 +653,23 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | Estado | Nº |
 |---|---|
-| RESOLVIDO | 10 |
+| RESOLVIDO | 11 |
 | RESOLVIDO POR OUTRO CAMINHO | 1 |
 | PARCIALMENTE RESOLVIDO | 2 |
-| NÃO IMPLEMENTADO | 16 |
+| NÃO IMPLEMENTADO | 15 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 5** (E-6, D-G1, D-G3/NOVO-1, prazo recursal público, RA) · **C = 14**, mais as sobras registradas de N-04 e N-06. Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
+Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 3** (E-6, prazo recursal público, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188) · **C = 14**, mais as sobras registradas de N-04 e N-06. Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
 
 Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7.
-Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores (com furo NOVO-1); **D-G1, D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).
+Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; **D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).
 
 ## 3. Achados NOVOS encontrados de passagem
 
-- **NOVO-1 — "Fonte de demonstração" é fonte publicável em produção.** `sorteios/infrastructure/fontes/__init__.py:83-92` registra o falso sem condição de ambiente; `interface/forms.py:318-322` o oferece no seletor da composição (`sorted(FONTES)`); `editais/domain/perfis.py:526-541` o aceita; `config/settings/production.py` não o recusa (as 14 guardas cobrem segredo, hosts, HTTPS, banco, seletores e autenticação, não a fonte). O falso devolve material fixo `12345 67890 11223 44556 77889` (`sorteios/infrastructure/fontes/loteria_federal.py:150-162`) — semente previsível e não externa. Um Edital publicado em produção pode sortear com ela. É o furo que resta na D-G3 e no FR-076 da 021. Atenuante: o nome aparece no manifesto e na tela pública. Saída provável: a mesma barreira de produção que já existe para os seletores de identidade (sem quebrar `seed_demo`). Grupo B.
+- **NOVO-1 — "Fonte de demonstração" é fonte publicável em produção.** `sorteios/infrastructure/fontes/__init__.py:83-92` registra o falso sem condição de ambiente; `interface/forms.py:318-322` o oferece no seletor da composição (`sorted(FONTES)`); `editais/domain/perfis.py:526-541` o aceita; `config/settings/production.py` não o recusa (as 14 guardas cobrem segredo, hosts, HTTPS, banco, seletores e autenticação, não a fonte). O falso devolve material fixo `12345 67890 11223 44556 77889` (`sorteios/infrastructure/fontes/loteria_federal.py:150-162`) — semente previsível e não externa. Um Edital publicado em produção pode sortear com ela. É o furo que resta na D-G3 e no FR-076 da 021. Atenuante: o nome aparece no manifesto e na tela pública. Saída provável: a mesma barreira de produção que já existe para os seletores de identidade (sem quebrar `seed_demo`). Grupo B. **Desfecho (26/09):** fechado pela `046` (#188) — a fonte saiu do vocabulário de produção, que o seletor, a validação e a execução leem, e a barreira de boot foi acrescentada; o `seed_demo` continua sorteando.
 - **NOVO-2 — "Recursos recebidos (N)" conta recursos decididos.** *Resolvido pela `045` (#187, 26/09): o
   rótulo é "Recursos aguardando decisão (N)" e conta só as pendentes.* `interface/acoes.py:120-127` usa `Recurso.objects.filter(inscricao__edital=edital).count()`; o comentário justifica o número porque "o recurso corre contra prazo", mas o total não distingue pendente de decidido — e é a única recuperação de N-02. Grupo C.
 - **Refinamento de N-06 (não é achado novo, é premissa corrigida):** o inventário de 09/09 trata o status do Evento como declarado à mão, o contrato da 026 o chama de derivado, e a interface não oferece o campo nem na composição nem na Retificação — só a API o aceita (`editais/api/serializers.py:186`). O conserto começa por escolher a doutrina.
@@ -680,7 +681,7 @@ Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores (com f
 3. **N-06 — derivar ou declarar?** Duas doutrinas escritas se contradizem (inventário 09/09 × contrato 026). A escolha é do usuário, e qualquer uma basta.
 4. **N-05 — o destino do UX-001** em Edital publicado (Etapa sem Evento é estrutural e legítima): sinal sem destino, ou sair da Atenção para a validação? Decisão de fronteira ligada a N-08.
 5. **E-6 "parcialmente resolvido"** conta a 040 como a metade "conjunto" da visão global. Se a E-6 for lida só como condução dentro do Processo, o estado seria NÃO IMPLEMENTADO desde 20/09.
-6. **NOVO-1**: confirmar se algum controle fora do repositório (processo de implantação, revisão de Edital) já impede declarar a fonte de demonstração em produção.
+6. **NOVO-1**: confirmar se algum controle fora do repositório (processo de implantação, revisão de Edital) já impede declarar a fonte de demonstração em produção. *Desde a `046` o repositório a impede; resta consultar a base de produção antes da implantação.*
 7. **Nada foi reproduzido em execução** (regra do lote): N-01, N-02, N-07 e o custo de consulta foram confirmados só pela leitura de código e testes, sem percorrer a interface.
 8. **RA**: a validação depende do sistema de destino e do setor dono; não cabe ao software sozinho.
 
