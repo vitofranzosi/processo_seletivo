@@ -158,13 +158,39 @@ def edital_a(db, api_client, manager_headers, process_payload):
 
 
 @pytest.fixture
-def edital_com_documentos(db, raiz_de_arquivos, api_client, manager_headers, process_payload):
-    """O mesmo Processo A, com Documentos Exigidos — a `012` abre a inscrição por requisito."""
+def edital_com_documentos(db, raiz_de_arquivos, api_client, manager_headers):
+    """Um Processo próprio, com Documentos Exigidos — a `012` abre a inscrição por requisito.
+
+    **Processo, código e chave próprios, e não os do Processo A.** Esta fixture se dizia "o mesmo
+    Processo A" e criava o Processo com o payload e a chave de idempotência de `edital_a`. Num
+    teste que usava as duas — e bastava `processo_a` —, a segunda criação **reencenava** a
+    primeira, devolvia o Edital já publicado, e o `PUT` do rascunho dela voltava 409 em silêncio.
+    Havia um Edital só, e **qual** dos dois rascunhos ele carregava dependia da ordem dos
+    argumentos do teste: com `processo_a` pedido antes, saía sem requisito nenhum (045, `R-9`).
+
+    A semente continua `0`, para que `etapa_a1` e `DOCUMENTO_A` sirvam aos dois — e é por isso que
+    esta fixture **não convive** com `edital_a` no mesmo teste: Perfil e Evento têm identificador
+    global, e o rascunho da segunda é recusado ("Identificadores já vinculados a outro
+    contêiner"). A recusa é alta, que é o que se quer; quem precisa da Comissão sobre este Edital
+    usa `comissao_com_documentos`.
+    """
     from tests.fixtures.comissao import publicar_processo_com_etapas
 
     return publicar_processo_com_etapas(
-        api_client, manager_headers, process_payload, com_documentos=True
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": "mvp-test-key-0012"},
+        {
+            "institutionalCode": "PS-2026-012",
+            "title": "Processo com Documentos Exigidos",
+            "firstEdital": {"number": "12", "year": 2026, "title": "Edital com Documentos"},
+        },
+        com_documentos=True,
     )
+
+
+@pytest.fixture
+def processo_com_documentos(edital_com_documentos):
+    return edital_com_documentos.processo
 
 
 @pytest.fixture
@@ -219,6 +245,16 @@ def comissao_de_a(gestor, processo_a):
     from tests.fixtures.comissao import constituir
 
     return constituir(gestor, processo_a, [("maria", "PRESIDENTE"), ("joao", "MEMBRO")])
+
+
+@pytest.fixture
+def comissao_com_documentos(gestor, processo_com_documentos):
+    """A mesma composição de `comissao_de_a`, sobre o Processo de `edital_com_documentos`."""
+    from tests.fixtures.comissao import constituir
+
+    return constituir(
+        gestor, processo_com_documentos, [("maria", "PRESIDENTE"), ("joao", "MEMBRO")]
+    )
 
 
 @pytest.fixture

@@ -26,13 +26,20 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 @pytest.fixture
-def cenario(raiz_de_arquivos, gestor, processo_a, edital_com_documentos, comissao_de_a, etapa_a1):
-    membro = comissao_de_a["joao"]
-    alocar_em(gestor, processo_a, membro, edital_com_documentos, etapa_a1)
+def cenario(
+    raiz_de_arquivos,
+    gestor,
+    processo_com_documentos,
+    edital_com_documentos,
+    comissao_com_documentos,
+    etapa_a1,
+):
+    membro = comissao_com_documentos["joao"]
+    alocar_em(gestor, processo_com_documentos, membro, edital_com_documentos, etapa_a1)
     inscricao = inscrever(edital_com_documentos, 1, documentos=[identificador(DOCUMENTO_A, 0)])[0]
     distribuir(
         actor=gestor,
-        processo_id=processo_a.id,
+        processo_id=processo_com_documentos.id,
         edital_id=edital_com_documentos.id,
         etapa_id=etapa_a1,
         membro_ids=[membro.id],
