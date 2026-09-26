@@ -5,13 +5,14 @@ command. O que existe aqui é conversão de tipo e agrupamento de campos indexad
 mensagens que tornam um erro de conversão compreensível antes de chegar ao domínio.
 """
 
+import json
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
-from processo_seletivo.editais.domain import secoes
+from processo_seletivo.editais.domain import duplicacao, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -572,7 +573,7 @@ def ler_perfis(dados):
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
                 # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
                 "declaredFacts": _fatos(dados, f"fato-{indice}"),
-                "classificationMilestones": _marcos(dados, f"marco-{indice}"),
+                "classificationMilestones": _marcos_do_perfil(dados, indice),
                 # Travessia 1 de 4. As outras três são `perfis_persistidos`, `perfis_do_edital` e
                 # a recriação em `draft.replace_draft`: `replace_draft` apaga e recria tudo, e uma
                 # coleção do Perfil que falte em qualquer uma delas **some** na gravação da etapa
@@ -581,6 +582,50 @@ def ler_perfis(dados):
             }
         )
     return perfis
+
+
+def _marcos_do_perfil(dados, indice):
+    """Os marcos que viajam com o Perfil nesta etapa — quase sempre nenhum.
+
+    A etapa Perfis não desenha marco: eles são da Classificação, e a gravação os **preserva** do
+    que está gravado (`PRESERVADO_DA_ETAPA`). A exceção é o Perfil criado por duplicação e ainda não
+    gravado (043, R-003): ele não tem par gravado de onde preservar, e leva os marcos da origem num
+    campo oculto, na forma do contrato. `_preservando` deixa atravessar o que Perfil novo traz, e é
+    por isso que a gravação não precisou mudar.
+
+    **É a quinta travessia dos marcos**, ao lado das quatro que a `025` nomeou (R-009). Como elas,
+    a que faltar apaga em silêncio — e esta faltaria na recusa, que devolve o digitado.
+
+    **O campo diz também quais marcos têm identidade derivada**, e a leitura a deriva de novo do
+    Código e da denominação **digitados agora**: quem corrige o Código da cópia no cartão antes de
+    gravar publicaria, sem isso, o marco com o Código de antes da correção (FR-644).
+    """
+    bruto = _texto(dados, f"perfil-{indice}-marcosEmTransito")
+    if not bruto:
+        return _marcos(dados, f"marco-{indice}")
+    try:
+        transito = json.loads(bruto)
+        marcos, derivados = transito["marcos"], transito["derivados"]
+        legivel = (
+            isinstance(marcos, list)
+            and all(isinstance(marco, dict) for marco in marcos)
+            and isinstance(derivados, list)
+            and len(derivados) == len(marcos)
+            and all(isinstance(par, list) and len(par) == 2 for par in derivados)
+        )
+    except (json.JSONDecodeError, TypeError, KeyError):
+        legivel = False
+    if not legivel:
+        raise ValueError(
+            "Os marcos de classificação que este Perfil trouxe da duplicação não puderam ser "
+            "lidos. Remova este Perfil e duplique a origem de novo."
+        )
+    return duplicacao.rederivar(
+        marcos,
+        [(bool(codigo), bool(nome)) for codigo, nome in derivados],
+        codigo=_texto(dados, f"perfil-{indice}-code"),
+        nome=_texto(dados, f"perfil-{indice}-name"),
+    )
 
 
 def ler_eventos(dados):
@@ -1081,6 +1126,15 @@ def _marco_para_o_formulario(marco):
             for criterio in sorted(marco.criterios.all(), key=lambda item: item.ordem)
         ],
     }
+
+
+def marcos_persistidos(perfil):
+    """Os marcos de um Perfil gravado, no formato do contrato do rascunho, ordenados por código.
+
+    Pública porque a duplicação (043) precisa deles fora deste módulo. Ordena em memória, e não por
+    `order_by`, para aproveitar o `prefetch` de quem chama.
+    """
+    return [_marco_persistido(marco) for marco in sorted(perfil.marcos.all(), key=lambda m: m.code)]
 
 
 def _marco_persistido(marco):

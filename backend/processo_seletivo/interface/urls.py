@@ -108,6 +108,12 @@ urlpatterns = [
         views.fragmento_modalidade,
         name="fragmento-modalidade",
     ),
+    # Duplicar lê o Perfil de índice `indice` da tela e devolve outro (043).
+    path(
+        "fragmentos/perfil/<str:indice>/duplicar",
+        views.fragmento_perfil_duplicado,
+        name="fragmento-perfil-duplicado",
+    ),
     path(
         "fragmentos/perfil/<str:indice>/quadro",
         views.fragmento_quadro,

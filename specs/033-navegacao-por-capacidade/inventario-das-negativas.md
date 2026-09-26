@@ -187,6 +187,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7211 | `realizar_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 7243 | `anular_o_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 5105 | `_recorte_pedido` | sim | não | objeto inexistente | **acrescentada pela `034`** — `?lista=` que não corresponde a Modalidade alguma do Perfil (`FR-499`). Recorte inexistente e recorte vazio são coisas diferentes: confundi-los esconde erro de digitação, e a `FR-492a` fez da ordem vazia um estado legítimo justamente para que a distinção exista. Não é escopo nem autorização — a porta do Edital já filtrou os dois antes |
+| 1961 | `fragmento_perfil_duplicado` | sim | não | objeto inexistente | **acrescentada pela `043`** — pedido sem o parâmetro `edital`: não há Edital de que duplicar. O escopo vem **depois**, por `_edital_do_fragmento` (404, como a tela), e a autorização por `pode_compor`, que responde **403** — quem alcança o Edital e não o compõe já sabe que ele existe (`043`, R-006) |
 
 ---
 
