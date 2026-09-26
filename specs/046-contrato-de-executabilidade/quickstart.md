@@ -51,10 +51,12 @@ Hoje: nada.
    designado e **termina em poucos minutos** (memória *mesa pelo navegador com prazo de minutos*).
 2. Depois do término, como **Auditor**, abra a tela do Edital.
 
-**Esperado**: nenhuma seção *"Validação do conteúdo"*. Hoje: *"Impede — O período de inscrições
-encerrou… corrija… antes de publicar"*.
+**Esperado**: nenhum *"Impede"* e nenhum aviso que fale do ato de publicar; se o Edital tem Etapa
+sem Evento, só o aviso dela na seção *"Validação do conteúdo"* (`045`, `FR-739`). Hoje: *"Impede — O
+período de inscrições encerrou… corrija… antes de publicar"*.
 
-3. Abra cada etapa do assistente pelo link da composição. **Esperado**: nenhuma pendência.
+3. Abra cada etapa do assistente pelo link da composição. **Esperado**: nenhum juízo de
+   publicabilidade; o mesmo aviso da Etapa sem Evento, se houver.
 4. Como alguém com a permissão de retificar, inicie uma Retificação e vá à confirmação.
    **Esperado**: as advertências do ato de Retificação continuam lá, como hoje.
 

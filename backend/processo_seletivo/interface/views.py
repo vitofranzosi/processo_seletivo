@@ -132,6 +132,7 @@ from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapeada
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
+    fatos_do_conteudo_publicado,
     validate_for_publication,
 )
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
@@ -821,14 +822,6 @@ ANTES_DA_PUBLICACAO = frozenset(
     {Edital.Status.EM_ELABORACAO, Edital.Status.EM_REVISAO, Edital.Status.HOMOLOGADO}
 )
 
-# **Os fatos que continuam ditos depois da publicação — por nome, e só por decisão** (046).
-# A `045` levou a Etapa sem Evento da Atenção para esta página (`FR-739`, `UX-086`), e a
-# convergência de 20/09 vetou silenciá-la: é fato verdadeiro sobre o conteúdo publicado. A lista
-# não é "todo aviso": `schedule_event_in_past` também é aviso, e diz *"o Edital será publicado com
-# esta data"*, que é juízo de publicabilidade. E só entra fato que a Retificação não alcança: a
-# página lê o relacional, que guarda o estado do dia da publicação, e não a versão vigente.
-FATOS_DO_CONTEUDO_PUBLICADO = frozenset({"stage_without_schedule_event"})
-
 
 def _pendencias(edital, *, agora=None, ator=None):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
@@ -861,10 +854,17 @@ def _pendencias(edital, *, agora=None, ator=None):
     conduzir = ator is not None and falta_permissao_para_compor(edital, ator)
     snapshot = edital_snapshot(edital)
     grupos, campos = nomes_dos_caminhos(snapshot)
-    antes_da_publicacao = edital.status in ANTES_DA_PUBLICACAO
-    for item in validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=agora):
-        if not antes_da_publicacao and item.code not in FATOS_DO_CONTEUDO_PUBLICADO:
-            continue
+    # **Fora da elaboração, o gate não roda** (046, `FR-755`, `FR-756`): o Edital publicado é ato
+    # imutável, e perguntar se ele pode ser publicado produzia o *"Impede"* do `RC-32`. O que fica
+    # são os fatos do conteúdo publicado que uma spec mandou dizer ali, derivados cada um pela sua
+    # função — e não a validação inteira filtrada depois, que executaria no Edital publicado cada
+    # regra nova de publicação.
+    achados = (
+        validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=agora)
+        if edital.status in ANTES_DA_PUBLICACAO
+        else fatos_do_conteudo_publicado(snapshot)
+    )
+    for item in achados:
         etapa, ancora, corrigivel = _destino(item.path, item.code)
         pendencias.append(
             {

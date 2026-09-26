@@ -149,3 +149,25 @@ def test_encerrado_e_cancelado_se_leem_como_o_publicado(
 
     assert PERIODO_ENCERRADO not in detalhe
     assert AVISO_DA_ETAPA in detalhe
+
+
+def test_o_edital_publicado_nao_executa_a_validacao_de_publicabilidade(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """`FR-756`: nenhuma leitura do Edital publicado depende do gate — nem para filtrá-lo depois.
+
+    A primeira versão desta correção rodava a validação inteira e filtrava os fatos em seguida: o
+    texto sumia, e cada regra nova de publicação continuava executando em toda abertura de um
+    Edital publicado. A varredura de `test_quem_consulta_a_publicabilidade.py` controla **quem**
+    chama, e não **em que estado** — é este caso que controla o estado.
+    """
+    edital = _publicado(api_client, manager_headers, process_payload)
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    with mock.patch(
+        "processo_seletivo.interface.views.validate_for_publication",
+        side_effect=AssertionError("o gate rodou sobre um Edital publicado"),
+    ):
+        paginas = _paginas(client, edital)
+
+    assert AVISO_DA_ETAPA in paginas["detalhe"], "e o fato continua dito"

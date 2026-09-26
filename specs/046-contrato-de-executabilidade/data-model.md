@@ -16,7 +16,7 @@ instante; nada dela é gravado, e o hash do conteúdo não muda.
 |---|---|---|
 | Etapa que a regra da consolidação recusa (`resultados/domain/regra.py`) | publicável sem achado; a recusa aparecia só na Mesa, depois do ato | **impeditivo** se o Resultado é exigido; **aviso** se não é; **advertência** na Retificação (`FR-746`, `FR-748`, `FR-751`) |
 | Ausência de `cutRule` em todos os marcos de um Perfil | um aviso por marco (`032`, `FR-461`) | **impeditivo** por Perfil, sem os avisos por marco (`FR-752`, `FR-753`) |
-| Pendências de publicação de um Edital fora da elaboração | calculadas sobre o relacional e exibidas | **não calculadas** (`FR-755`) |
+| Pendências de publicação de um Edital fora da elaboração | a validação de publicabilidade inteira, sobre o relacional, exibida | **não calculadas**: a validação não roda; só os fatos da lista (`fatos_do_conteudo_publicado`) são derivados, cada um pela sua função (`FR-755`, `FR-756`) |
 | Vocabulário de fontes do sorteio | fixo, com a demonstração, em todo ambiente | **por ambiente**: sem a demonstração em produção (`FR-757`) |
 
 ## A configuração nova

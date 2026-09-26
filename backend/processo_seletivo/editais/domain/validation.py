@@ -1287,6 +1287,25 @@ def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+# **Os fatos do conteúdo publicado que continuam ditos depois da publicação** (046, `FR-755`,
+# `D-003`). Por nome, e só por decisão: a `045` levou a Etapa sem Evento da Atenção para a página
+# do Edital (`FR-739`, `UX-086`), e a convergência de 20/09 vetou silenciá-la. Cada entrada é a
+# função que **deriva** o fato, e não um código a filtrar da validação inteira: o Edital publicado
+# não passa pela validação de publicabilidade (`FR-756`), nem para ser filtrado depois. Só entra
+# fato que a Retificação não alcança — quem o lê monta o conteúdo do relacional, que guarda o estado
+# do dia da publicação, e não a versão vigente.
+FATOS_DO_CONTEUDO_PUBLICADO = {ETAPA_SEM_EVENTO: _etapa_sem_evento}
+
+
+def fatos_do_conteudo_publicado(snapshot: dict) -> list[ValidationFinding]:
+    """Os fatos da lista, e nada do juízo de publicabilidade (046, `FR-755`, `FR-756`)."""
+    return [
+        achado
+        for derivar in FATOS_DO_CONTEUDO_PUBLICADO.values()
+        for achado in derivar(snapshot, ato=ATO_DE_PUBLICACAO)
+    ]
+
+
 def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     """Uma passagem, três conferências (FR-020 e FR-022).
 

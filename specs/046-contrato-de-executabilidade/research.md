@@ -98,10 +98,18 @@ um"* — ficaria no meio.
 ## R-5 — O Edital publicado: um ponto, e ele é `_pendencias`
 
 **Decisão**: `_pendencias` (`interface/views.py:816`), quando o Edital não está em `EM_ELABORACAO`,
-`EM_REVISAO` ou `HOMOLOGADO`, devolve **só** os achados cujo código está numa lista fechada de fatos
-do conteúdo publicado — `FATOS_DO_CONTEUDO_PUBLICADO = {"stage_without_schedule_event"}`, ao lado de
-`_pendencias`. As três chamadas (`detalhe`, `compor_etapa`, `praticar_ato`) passam a respeitar a regra
-sem mudança própria.
+`EM_REVISAO` ou `HOMOLOGADO`, **não executa** a validação de publicabilidade: chama
+`fatos_do_conteudo_publicado`, que deriva cada fato da lista fechada pela função que o produz —
+`FATOS_DO_CONTEUDO_PUBLICADO = {"stage_without_schedule_event": _etapa_sem_evento}`, em
+`editais/domain/validation.py`. As três chamadas (`detalhe`, `compor_etapa`, `praticar_ato`) passam a
+respeitar a regra sem mudança própria.
+
+**Derivar, e não filtrar** — corrigido na revisão de 26/09. A primeira versão rodava a validação
+inteira e filtrava os códigos da lista depois: o texto falso sumia, mas cada regra nova de publicação
+continuava executando em toda abertura de Edital publicado, contra a `FR-756` e contra o *"não
+calculadas"* do [modelo](data-model.md). A varredura por chamador não pegava isso, porque controla
+**quem** chama e não **em que estado**; um caso da interface passou a prender o estado, fazendo a
+validação falhar se for chamada sobre Edital publicado.
 
 **Por que lista, e não "todo aviso"** (`D-003`): o aviso `schedule_event_in_past` diz *"o Edital será
 publicado com esta data"* — é aviso, e é juízo de publicabilidade. Filtrar por severidade deixaria o

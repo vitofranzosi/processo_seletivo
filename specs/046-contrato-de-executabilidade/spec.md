@@ -175,23 +175,26 @@ com o aviso da `032` sobre o primeiro.
 
 ### User Story 3 - O Edital publicado não é julgado como se ainda fosse publicar (Priority: P3)
 
-Quem abre um Edital publicado, encerrado ou cancelado não lê pendência de publicação nenhuma — nem
-*"Impede"*, nem *"o Edital será publicado"*. Antes da publicação, nada muda.
+Quem abre um Edital publicado, encerrado ou cancelado não lê juízo de publicabilidade nenhum — nem
+*"Impede"*, nem *"o Edital será publicado"*. Os fatos do conteúdo publicado que outra spec manda
+dizer ali continuam ditos (`D-003`). Antes da publicação, nada muda.
 
 **Why this priority**: é informação falsa em ato imutável, e ela instrui a pessoa a *"corrigir antes
 de publicar"* o que já foi publicado. Não impede operação (verificado), e por isso vem depois das
 duas primeiras.
 
 **Independent Test**: publicar um Edital com período de inscrições designado, avançar o relógio para
-depois do término e abrir a tela do Edital e a Revisão do assistente; conferir que nenhuma pendência
-aparece. Refazer com o mesmo conteúdo em elaboração e conferir que o impeditivo aparece.
+depois do término e abrir a tela do Edital e a Revisão do assistente; conferir que nenhum impeditivo
+nem aviso de publicabilidade aparece, e que o aviso da Etapa sem Evento, havendo uma, continua.
+Refazer com o mesmo conteúdo em elaboração e conferir que o impeditivo aparece.
 
 **Acceptance Scenarios**:
 
 1. **Given** um Edital publicado cujo período de inscrições já encerrou, **When** qualquer pessoa abre
-   a tela dele, **Then** não há seção *"Validação do conteúdo"*, nem marcador *"Impede"*.
+   a tela dele, **Then** não há marcador *"Impede"*, nem aviso que fale do ato de publicar; se uma
+   Etapa não tem Evento, o aviso dela continua na seção *"Validação do conteúdo"* (`045`, `FR-739`).
 2. **Given** o mesmo Edital, **When** alguém abre qualquer etapa do assistente em modo de leitura,
-   **Then** nenhuma pendência de publicação aparece.
+   **Then** nenhum juízo de publicabilidade aparece.
 3. **Given** um Edital em elaboração, em revisão ou homologado com o mesmo conteúdo, **When** alguém
    abre a tela ou o assistente, **Then** o impeditivo aparece exatamente como hoje.
 4. **Given** um Edital publicado, **When** alguém inicia uma Retificação dele, **Then** a confirmação
@@ -340,8 +343,9 @@ sorteio da suíte continuam rodando sem rede.
   o mesmo Perfil com um segundo marco que corta é publicado, e o marco sem corte recebe **um** aviso,
   e não dois.
 - **SC-278**: Num Edital publicado com o período de inscrições encerrado, a tela do Edital e as nove
-  etapas do assistente exibem **zero** pendências de publicação; o mesmo conteúdo em elaboração exibe
-  o impeditivo nas duas superfícies.
+  etapas do assistente exibem **zero** impeditivos e **zero** avisos de publicabilidade, e a validação
+  de publicabilidade **não é executada**; os fatos da lista de `D-003` continuam ditos; o mesmo
+  conteúdo em elaboração exibe o impeditivo nas duas superfícies.
 - **SC-279**: Com a configuração de produção carregada, a fonte de demonstração aparece em **zero**
   opções e é recusada nos quatro atos (gravação, submissão, publicação, Retificação) e na observação
   da ocorrência; a configuração de produção que a reinclui não sobe; e a suíte, em desenvolvimento,

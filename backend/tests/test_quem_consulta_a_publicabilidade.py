@@ -29,8 +29,8 @@ QUEM_PERGUNTA = {
         "a Retificação recusa pelo próprio ato, e a confirmação dela adverte com ele"
     ),
     "interface/views.py": (
-        "`_pendencias` antecipa o ato antes da publicação; depois dela, só os fatos da lista "
-        "`FATOS_DO_CONTEUDO_PUBLICADO`"
+        "`_pendencias` antecipa o ato, e só antes da publicação; depois dela, os fatos vêm de "
+        "`fatos_do_conteudo_publicado`, que não passa pelo gate"
     ),
 }
 
