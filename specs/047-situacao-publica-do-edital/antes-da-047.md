@@ -44,3 +44,9 @@ código antes desta medição.**
 
 É o comportamento que a US1 corrige (`FR-760`, `FR-761`), e a comparação final (T035) é contra este
 registro.
+
+## Casos que mudaram de expectativa (T010)
+
+**Nenhum**, como a `R-8` previa. Os nove arquivos da tabela passaram sem edição de asserção depois da
+US2. Só a docstring de `test_o_periodo_em_curso_e_acontecendo_agora_dos_dois_lados` mudou, porque
+dizia que a régua do portal continuava própria.

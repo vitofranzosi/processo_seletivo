@@ -5,6 +5,11 @@ o Cronograma passou a ser mostrado em dois lugares — a área de quem já se in
 pública de quem ainda decide —, e duplicar o cálculo da situação do Evento criaria duas verdades
 sobre "em curso". A `011` registrou o mesmo defeito com duas ordenações por nome no mesmo arquivo.
 
+**A fase do Evento não é mais decidida aqui** (047, `FR-765`). Este módulo tinha régua própria, que
+comparava o dia em UTC e não conhecia o Evento cancelado, enquanto a gestão lia outra, a da `045`.
+Eram duas verdades sobre o mesmo cronograma, uma de cada lado. A régua agora mora no domínio
+(`editais/domain/fase_do_evento.py`), e aqui ela só é traduzida para a marcação da tela.
+
 Aqui não há regra de domínio nova. O que existe é leitura: conteúdo publicado entra, estrutura de
 tela sai. Nada neste módulo grava, e nada aqui sabe quem está lendo.
 """
@@ -13,6 +18,11 @@ from urllib.parse import urlencode
 
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.editais.domain import calendario
+from processo_seletivo.editais.domain.fase_do_evento import (
+    esta_cancelado,
+    fase_publica_do_evento,
+)
 from processo_seletivo.inscricoes.domain.periodo import ABERTO, ENCERRADO, FUTURO, NAO_DESIGNADO
 from processo_seletivo.shared.texto import dobrar
 
@@ -37,7 +47,7 @@ def cronograma(conteudo, agora):
     for evento in sorted(conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0):
         inicio = parse_datetime(evento.get("startAt") or "")
         fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
-        situacao = _situacao_do_evento(inicio, fim, evento.get("isRegistrationPeriod"), agora)
+        situacao = situacao_do_evento(evento, conteudo, agora)
         eventos.append(
             {
                 "nome": evento.get("description") or evento.get("type") or "",
@@ -54,39 +64,36 @@ def cronograma(conteudo, agora):
     return eventos
 
 
+# A fase do domínio, dita com as classes que a marcação já usava (047, `R-1`). As três primeiras são
+# as da `010` e da `024`, letra por letra: testes afirmam sobre `class="marco em_curso"`, e o CSS
+# depende delas. A quarta nasce com a 047.
+CLASSE_DA_FASE = {
+    calendario.PLANEJADO: "futuro",
+    calendario.EM_ANDAMENTO: "em_curso",
+    calendario.CONCLUIDO: "concluido",
+}
+CANCELADO = "cancelado"
+
+
+def situacao_do_evento(evento, conteudo, agora):
+    """A classe da linha do Evento: a fase da régua única, ou `cancelado`, ou nada.
+
+    **O cancelado é dito, e não tem fase** (`FR-766`): anunciar *"acontecendo agora"* ou uma data
+    por vir de um Evento que saiu do cronograma é afirmar o que não vai acontecer. O período de
+    inscrições é a exceção, e ela é da régua, não daqui (`fase_publica_do_evento`).
+
+    **Sem início, nada**: a conferência de forma já acusa o Evento assim, e inventar-lhe uma fase
+    seria a tela criando o que as datas não dão.
+    """
+    fase = fase_publica_do_evento(evento, conteudo, agora)
+    if fase is not None:
+        return CLASSE_DA_FASE[fase]
+    return CANCELADO if esta_cancelado(evento) else ""
+
+
 # ---------------------------------------------------------------------------
 # O histórico normativo (024, FR-129 a FR-133)
 # ---------------------------------------------------------------------------
-
-
-def _situacao_do_evento(inicio, fim, e_periodo_de_inscricoes, agora):
-    """Concluído, em curso ou por vir — e o caso do Evento **sem término declarado**.
-
-    **O defeito que esta função corrige.** A regra herdada mandava tudo o que não era futuro nem
-    concluído para "em curso", e Evento sem `endAt` nunca satisfaz "concluído": uma prova de um dia
-    ficava "acontecendo agora" para sempre. Num Edital encerrado em agosto, a página anunciava a
-    prova de 16/08 e o resultado de 10/09 como se estivessem acontecendo — em setembro.
-
-    Passava despercebido enquanto a situação era só peso de fonte. A etiqueta da `024` a pôs em
-    palavras, e palavra errada é afirmação errada sobre o Edital.
-
-    **A exceção é o período de inscrições**, e ela não é arbitrária: `periodo_de_inscricoes` decide
-    que período sem término declarado segue aberto, porque inventar um fechamento seria o sistema
-    criando prazo que o Edital não fixou. Se o cronograma dissesse "concluído" ali, a mesma página
-    afirmaria duas coisas contrárias sobre a mesma data — a tarja dizendo "inscrições abertas" e a
-    linha logo abaixo dizendo que acabou.
-    """
-    if inicio is not None and agora < inicio:
-        return "futuro"
-    if fim is not None:
-        return "concluido" if agora > fim else "em_curso"
-    if e_periodo_de_inscricoes:
-        return "em_curso"
-    # Sem término, o Evento é uma **data marcada**, e não um período: dura o dia que o Edital
-    # declarou. Depois disso ele aconteceu, e dizer o contrário é afirmar um fato que não é.
-    if inicio is not None and agora.date() > inicio.date():
-        return "concluido"
-    return "em_curso"
 
 
 def atos_publicados(edital_id):

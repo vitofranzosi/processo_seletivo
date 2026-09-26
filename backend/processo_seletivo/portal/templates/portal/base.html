@@ -556,6 +556,13 @@ details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display
    neutro — o mesmo do "Nada registrado ainda" —, e o cronograma dizia com duas aparências o
    que tem três significados. Passado que aconteceu é afirmação, e não ausência. */
 .linha-do-tempo .marco.concluido{border-left-color:var(--sucesso)}
+/* O quarto estado (047, FR-766): o Evento que o Edital cancelou. Riscado, e dito em texto pela
+   etiqueta ao lado do nome, porque o traço sozinho não chega a quem lê com leitor de tela. */
+.linha-do-tempo .marco.cancelado .rotulo{font-weight:400;color:var(--texto-fraco);
+  text-decoration:line-through}
+.linha-do-tempo .cancelado-texto{display:inline-block;margin-left:.5rem;font-size:.75rem;
+  font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco);
+  text-decoration:none}
 /* "Acontecendo agora" no evento em curso (024, UX-019). O peso da fonte e a cor da borda diziam
    qual era o evento corrente, e nenhum dos dois chega a quem lê com leitor de tela — nem a quem
    não distingue a cor. A etiqueta diz em texto o que o desenho dizia sozinho. */

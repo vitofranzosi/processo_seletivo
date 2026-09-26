@@ -290,9 +290,10 @@ def test_o_periodo_em_curso_e_acontecendo_agora_dos_dois_lados(
     instante e sobre o mesmo dado. Não era erro de cálculo compartilhado — são **duas leituras
     independentes**, e cada uma lia certo pela régua que tinha.
 
-    **Unificá-las não é escopo** (`FR-549a`): `portal/leitura.py` deriva a situação por conta
-    própria e continua derivando. O que se exige é que as duas passem a dizer a mesma coisa — e é
-    por isso que este caso afirma os **dois** lados na mesma requisição, e não a régua.
+    A `037` (`FR-549a`) exigiu só a concordância, e deixou as duas réguas de pé. A `047` as
+    unificou (`FR-765`): `portal/leitura.py` passou a ler a régua do domínio. O caso continua
+    afirmando os **dois** lados na mesma requisição, porque é o desfecho que importa, e não o
+    código compartilhado — `test_fase_do_cronograma.py` estende a mesma prova a cada Evento.
     """
     from django.urls import reverse
 

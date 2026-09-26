@@ -80,24 +80,24 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 **Independent Test**: quickstart, percurso 3.
 
-- [ ] T007 [P] [US2] Escrever os testes em `backend/tests/integration/portal/test_fase_do_cronograma.py` (**NOVO**), publicando pelo helper `publicar_selecao` de `tests/fixtures/selecao.py`:
+- [X] T007 [P] [US2] Escrever os testes em `backend/tests/integration/portal/test_fase_do_cronograma.py` (**NOVO**), publicando pelo helper `publicar_selecao` de `tests/fixtures/selecao.py`:
   - o Evento sem término iniciado há uma hora sai `class="marco concluido"`;
   - o Evento com término em curso sai `class="marco em_curso"` com *Acontecendo agora*;
   - o Evento com `status: "CANCELADO"`, declarado pelo rascunho da API, sai `class="marco cancelado"`, com *cancelado* em texto e sem *Acontecendo agora*;
   - **para os quatro tipos, a classe do portal corresponde a `supervisao.fase_do_evento`** no mesmo `agora` (`SC-283`);
   - o período de inscrições com `status: "CANCELADO"` e prazo em curso **não** sai `cancelado`: sai pela régua do período (`em_curso`, com a marca *Aberta*), porque o sistema continua recebendo inscrição e a página não pode contradizê-lo. É o caso-limite *"Período de inscrições marcado como cancelado"* e a exceção do `FR-766`. O comentário do teste aponta o achado registrado na spec;
   - o mesmo, no acompanhamento do candidato.
-- [ ] T008 [US2] Em `backend/processo_seletivo/portal/leitura.py` (**EXISTENTE**):
+- [X] T008 [US2] Em `backend/processo_seletivo/portal/leitura.py` (**EXISTENTE**):
   - apagar `_situacao_do_evento` (linhas 62-89);
   - fazer `cronograma(conteudo, agora)` chamar `fase_do_evento`, traduzindo `PLANEJADO→futuro`, `EM_ANDAMENTO→em_curso`, `CONCLUIDO→concluido` e o cancelado para `cancelado`. O Evento sem início fica sem classe de fase;
   - reescrever a docstring do módulo: a régua deixou de ser dele.
-- [ ] T009 [US2] Em `backend/processo_seletivo/portal/templates/portal/_cronograma.html` (**EXISTENTE**), acrescentar o estado `cancelado`:
+- [X] T009 [US2] Em `backend/processo_seletivo/portal/templates/portal/_cronograma.html` (**EXISTENTE**), acrescentar o estado `cancelado`:
   - rótulo em texto *cancelado*, nunca só por cor (UX-019);
   - sem `aria-current`;
   - o nome do Evento e as datas publicadas continuam.
 
   Em `backend/processo_seletivo/portal/templates/portal/base.html`, acrescentar a regra CSS de `.marco.cancelado`, sem alterar as demais.
-- [ ] T010 [US2] Rodar `test_cronograma_publico.py`, `test_acompanhamento.py`, `test_acessibilidade_do_portal.py` e `test_fase_do_cronograma.py`. Se algum caso existente mudar de expectativa, registrar em `antes-da-047.md` qual e por quê **antes** de editá-lo. A `R-8` previu zero.
+- [X] T010 [US2] Rodar `test_cronograma_publico.py`, `test_acompanhamento.py`, `test_acessibilidade_do_portal.py` e `test_fase_do_cronograma.py`. Se algum caso existente mudar de expectativa, registrar em `antes-da-047.md` qual e por quê **antes** de editá-lo. A `R-8` previu zero.
 
 **Checkpoint**: portal e gestão leem a mesma fase, e o cancelado não se anuncia.
 
