@@ -41,6 +41,7 @@ Parte 1 não mudam: nenhum dos seus itens era da 044.
 - Evidência no código atual: `backend/processo_seletivo/interface/templates/interface/_etapa.html:157-167` — `<input type="number" min="1">`, ajuda oculta só "Vazio: uma avaliação por inscrição."; `compor_etapas.html` (`como-preencher`) não menciona o campo; `backend/processo_seletivo/editais/domain/validation.py:234` — única conferência é `Campo("evaluationsPerRegistration", int, admite_nulo=True, minimo=1)`; `backend/processo_seletivo/editais/domain/etapas.py:42-48` só recusa < 1; `backend/processo_seletivo/resultados/domain/regra.py:71-76` devolve `REGRA_DE_COMBINACAO_AUSENTE` para `previstas > 1`; `backend/processo_seletivo/resultados/application/prontidao.py:94` (o segundo beco); `backend/processo_seletivo/avaliacoes/application/distribuicao.py:622` (distribuição honra o campo). Teste que prende a recusa: `backend/tests/integration/resultados/test_prontidao.py:67` (`test_etapa_de_leitura_multipla_impede_a_etapa_inteira`). Nenhum teste cobre aviso na publicação.
 - Estado atual: **NÃO IMPLEMENTADO**
 - Ainda faz sentido?: sim, na forma barata. Uma nuance que o achado não viu: o briefing de 03/09 (`doc/briefing-revisao-012-013-formas-de-conclusao.md`, "A última pergunta") recusou, para a Etapa decisória não eliminatória, "proibir na elaboração o que o Edital poderia legitimamente publicar". Pelo mesmo critério, a saída coerente é **aviso** na Revisão/validação (não impeditivo), ou retirar o campo da tela enquanto não houver regra de combinação — não um IMPEDE que proíba norma legítima. A direção 3 (regra de combinação como norma) só se justifica com Edital real de dupla leitura na mão.
+- **Desfecho (26/09):** resolvido pela `046` (#188) — impeditivo quando o fluxo exige o Resultado (Etapa eliminatória ou referenciada por marco), aviso quando não exige, advertência na Retificação, e o `como-preencher` da etapa Etapas explica o campo. Os dois irmãos do NOVO-1 também. A nuance da D-008 foi respeitada: nenhuma Etapa decisória precisa ser eliminatória para publicar, desde que nada no fluxo dependa do Resultado dela. Resta a direção 3, a regra de combinação, só com Edital real.
 - Lacuna residual: nada avisa, antes do ato imutável, que o valor > 1 torna a Etapa inconsolidável; o trabalho de avaliadores é gasto antes de o sistema dizer que não sabe usá-lo.
 - Grupo do resíduo: **A** (a direção 1/2 — fluxo oferecido pela tela que produz Edital publicado inexequível, contra o propósito escrito da 032); a direção 3 é **C** até haver evidência.
 - Impacto atual: baixo em frequência (padrão é vazio = 1), alto em severidade quando ocorre (S3/S4: Edital publicado cuja Etapa não conclui).
@@ -262,42 +263,42 @@ Nuance registrada pelo usuário (memória `constituicao-preserva-valor-nao-campo
 | ID | Título | Estado | Grupo | Próxima ação |
 |---|---|---|---|---|
 | achado-atribuicoes-repetidas-por-polo | texto comum copiado por polo (Princípio II) | PARCIALMENTE RESOLVIDO (cabeçalho `c0403a9`; digitação pela 043) | B | criar spec — antes, decisão E2 do usuário; TF-1 da 043 é o passo barato |
-| achado-duas-avaliacoes-sem-regra-de-combinacao | `evaluationsPerRegistration` > 1 publica Etapa inconsolidável | NÃO IMPLEMENTADO | A (aviso/microcópia); C (regra de combinação) | corrigir — aviso na validação + `como-preencher`; não IMPEDE (ver D-008) |
+| achado-duas-avaliacoes-sem-regra-de-combinacao | `evaluationsPerRegistration` > 1 publica Etapa inconsolidável | RESOLVIDO (046, #188) | C (regra de combinação, só com Edital real) | nenhuma agora — a `046` decidiu IMPEDE quando o fluxo exige o Resultado, e aviso quando não exige |
 | achado-etapa-governada-nao-remapeada | `cutRule.governedStage` não remapeado na cópia | RESOLVIDO (`643e865`, `de123ea`) | C (só a classe) | nenhuma |
 | achado-faixa-de-sucesso-do-sorteio | faixa única para quatro comandos | RESOLVIDO (PR #97; = E-01/E-02) | — | nenhuma |
 | achado-fonte-real-do-sorteio-sem-gatilho | E2E da fonte real sem execução periódica | NÃO IMPLEMENTADO (só a contagem de pulados foi atualizada) | B | criar workflow agendado não bloqueante |
 | achado-grade-dos-cartoes | colunas não coincidem entre linhas | NÃO IMPLEMENTADO | C | nenhuma |
 | achado-suite-em-sqlite | modo padrão da suíte vermelho, CI cego *(ferramenta)* | NÃO IMPLEMENTADO (mitigado por documentação) | C | corrigir (fazer `make test` exigir PostgreSQL) |
 | achado-teste-com-data-em-utc | classe de asserção de data em UTC *(teste)* | PARCIALMENTE RESOLVIDO (instância `a6443f5`) | C | nenhuma (opcional: varredura) |
-| Issue #117 | `advertencias_do_ato` subtrai por código | NÃO IMPLEMENTADO (premissa ainda vale) | C (B se D-G1 condicionar severidade ao ato) | corrigir junto com a D-G1 |
+| Issue #117 | `advertencias_do_ato` subtrai por código | NÃO IMPLEMENTADO (premissa ainda vale) | C | nenhuma agora — a `046` executou a D-G1 sem precisar dela, com dois códigos |
 | Status: Draft | 41 de 44 specs com estado declarado errado *(higiene)* | NÃO IMPLEMENTADO (piorou: 32/39 → 38/44 Draft) | C | corrigir cabeçalhos (convenção é do usuário) |
 
 ## Contagens por estado (Parte 1, 10 itens)
 
 | Estado | Qtde |
 |---|---|
-| RESOLVIDO | 2 |
+| RESOLVIDO | 3 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
 | PARCIALMENTE RESOLVIDO | 2 |
-| NÃO IMPLEMENTADO | 6 |
+| NÃO IMPLEMENTADO | 5 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 0 (a faixa do sorteio é duplicata de E-01/E-02, mas foi classificada pelo estado: resolvida) |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos: A = 1 · B = 2 · C = 6 · — = 1.
+Resíduos: A = 0 · B = 2 · C = 7 · — = 1. *O A era o achado das duas avaliações, fechado pela `046` (#188); o que resta dele é a regra de combinação (C).*
 
-Decisões (Parte 2): 25 registradas. Com trabalho criado **não executado**: D-G1, D-G2, D-G3 (regra do reuso), D-G5, recorte documental (opção 2; a 044 entrou pelo #173 e o "O que mudou" do recorte pelo #185), D-4 (barema adiado), nome social (029), TF-1/TF-2 (043), pergunta 3 da presidência única, papel de Diretoria (040).
+Decisões (Parte 2): 25 registradas. Com trabalho criado **não executado**: D-G2, D-G3 (regra do reuso), D-G5, recorte documental (opção 2; a 044 entrou pelo #173 e o "O que mudou" do recorte pelo #185), D-4 (barema adiado), nome social (029), TF-1/TF-2 (043), pergunta 3 da presidência única, papel de Diretoria (040). A D-G1, que abria a lista, foi executada pela `046` (#188) em 26/09.
 
 ## Achados NOVOS encontrados de passagem
 
-- **NOVO-1 — os dois impedimentos irmãos da regra também só aparecem depois da publicação.** `resultados/domain/regra.py:57-95` põe três impedimentos da **Etapa inteira** lado a lado: prever > 1 avaliação (o achado de 21/09), Etapa **pontuada eliminatória sem nota mínima** e Etapa **decisória não eliminatória**. A validação de publicação não confere nenhum dos três: `editais/domain/validation.py:228` só tipa `eliminatory`, e nenhum ponto de `editais/` ou `publicacoes/` chama `impedimento_da_regra` (só `resultados/application/prontidao.py:504` e `recursos/domain/consequencia.py:71`). O escopo da 032 (FR-457…472) é o marco classificatório, não a Etapa. Um Edital com Etapa eliminatória pontuada sem nota mínima publica e só se descobre inconsolidável na prontidão. Ressalva: para a decisória não eliminatória, o briefing de 03/09 recusou exigir `eliminatory` na elaboração — um **aviso** na Revisão é compatível com essa decisão; um IMPEDE não. Grupo A/B (mesmo mecanismo do achado de 21/09, que só olhou um dos três). Confiança média-alta: li o código, não conferi a tela da Revisão no navegador.
+- **NOVO-1 — os dois impedimentos irmãos da regra também só aparecem depois da publicação.** `resultados/domain/regra.py:57-95` põe três impedimentos da **Etapa inteira** lado a lado: prever > 1 avaliação (o achado de 21/09), Etapa **pontuada eliminatória sem nota mínima** e Etapa **decisória não eliminatória**. A validação de publicação não confere nenhum dos três: `editais/domain/validation.py:228` só tipa `eliminatory`, e nenhum ponto de `editais/` ou `publicacoes/` chama `impedimento_da_regra` (só `resultados/application/prontidao.py:504` e `recursos/domain/consequencia.py:71`). O escopo da 032 (FR-457…472) é o marco classificatório, não a Etapa. Um Edital com Etapa eliminatória pontuada sem nota mínima publica e só se descobre inconsolidável na prontidão. Ressalva: para a decisória não eliminatória, o briefing de 03/09 recusou exigir `eliminatory` na elaboração — um **aviso** na Revisão é compatível com essa decisão; um IMPEDE não. Grupo A/B (mesmo mecanismo do achado de 21/09, que só olhou um dos três). Confiança média-alta: li o código, não conferi a tela da Revisão no navegador. **Desfecho (26/09):** os três impedimentos passaram a ser conferidos na publicação pela `046` (#188), que pergunta a `impedimento_da_regra` em vez de copiá-la.
 - **NOVO-2 — a 044 está implementada, mas fora da main e sem PR.** `origin/claude/044-recorte-transversal-documental` tem 8 commits (`bccfda0` → `56649d4`, este de 25/09 23:28, cinco minutos depois do merge do #168 às 23:23) com a implementação completa (migration `inscricoes/0005_item_da_lista_exigida.py`, `modalityCode`, lista gravada no envio, Retificação). O #168 mesclou só spec/plano/tarefas, e a lista de PRs abertos tem só #171 e #172. Consequência: a correção do `ValorDeFato` (memória de 25/09) espera "o merge da 044 (#168)" — a condição literal (#168 mesclado) está satisfeita, mas a real (migration `0005` na main) não. O briefing deste lote ("a 044 está só especificada") vale só para a main. **Desfecho (26/09):** a 044 entrou pelo #173, e a correção do `ValorDeFato` veio no #183.
 - **NOVO-3 — contagens da suíte divergem entre os documentos.** `README.md:206-214` diz 201 pulados / 33 falhas no SQLite e "5402 passando e 2 pulados" no PostgreSQL; o comentário de `backend/Makefile:36-37` diz 182 / 21; `CLAUDE.md:52-72` (21/09) diz 243 / 35 e 7594 / 11. Higiene (C), mas é justamente o sinal que o `CLAUDE.md` pede para vigiar ("desconfie se mudarem").
 
 ## Incertezas que exigem validação humana
 
-1. **Dupla leitura existe no Cefor?** Decide a severidade do achado de duas avaliações e se a direção 3 (regra de combinação como norma) merece spec. Também: aviso (compatível com a D-008 do briefing de 03/09) ou IMPEDE?
+1. **Dupla leitura existe no Cefor?** Decide a severidade do achado de duas avaliações e se a direção 3 (regra de combinação como norma) merece spec. Também: aviso (compatível com a D-008 do briefing de 03/09) ou IMPEDE? **Respondida em 26/09, ao especificar a `046`:** IMPEDE quando o fluxo exige o Resultado, aviso quando não exige (`DP-06`); a direção 3 continua esperando Edital real.
 2. **A 044 da branch vai para a main, e por qual PR?** Isso destrava a correção do `ValorDeFato` e a D4 do recorte documental. Confirmar se a memória "depois do merge do #168" quis dizer a implementação. **Respondida em 26/09:** pelo #173, e a correção do `ValorDeFato` veio depois, no #183.
 3. **Decisão E2** (onde mora o conteúdo comum aos Perfis: atribuições, carga, remuneração, requisitos) continua sem dono: nem a decisão do recorte documental (D5) nem a 043 a tomam. O veto "não abstrair polo sem Edital real" (convergência §21) já tem o Edital real.
 4. **Workflow agendado para a fonte real:** frequência, âncora (extração congelada × última) e destino da falha são escolhas do usuário.
