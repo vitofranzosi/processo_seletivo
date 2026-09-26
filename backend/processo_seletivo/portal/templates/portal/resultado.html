@@ -64,6 +64,22 @@ nada é dito — nem "não cabe recurso", que afirmaria o que o Edital talvez nu
 </p>
 {% endif %}
 
+{% comment %}
+**As publicações que esta sucedeu** (047, FR-773). A sucedida já levava à vigente; a vigente não
+levava de volta, e o histórico só era alcançável por quem tinha guardado o endereço.
+{% endcomment %}
+{% if anteriores %}
+<details class="publicacoes-anteriores">
+  <summary>Publicações anteriores deste resultado ({{ anteriores|length }})</summary>
+  <ul>
+    {% for anterior in anteriores %}
+    <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.natureza_rotulo }}</a>
+      <span class="meta">publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+
 <p><a href="{% url 'portal:selecao' edital_id %}">Ver o {{ cabecalho.edital }}</a></p>
 
 <h2 id="titulo-do-resultado">Resultado</h2>

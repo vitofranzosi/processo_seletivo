@@ -148,13 +148,24 @@ def test_quem_conhece_so_o_edital_chega_a_publicacao_vigente(client, cenario, pu
 
 
 def test_a_vitrine_do_edital_anuncia_so_a_vigente(client, cenario, publicada):
-    """Anunciar a sucedida como atual ofereceria como vigente o que já não é."""
+    """Anunciar a sucedida como atual ofereceria como vigente o que já não é.
+
+    **Desde a 047 a sucedida está na página, e não como atual** (`FR-772`, `D-007`): o link dela
+    vive só no histórico recolhido da lista, dito em texto como sucedido. Antes a página a omitia
+    por inteiro, e o preliminar só era alcançável por quem tinha guardado o endereço. O que este
+    caso prende continua o mesmo — a sucedida nunca é anunciada entre as vigentes.
+    """
     sucessora = publicar_o_ato(cenario, chave="publicar-0762-d", natureza="DEFINITIVA")
 
     corpo = _conteudo(client.get(reverse("portal:selecao", args=[cenario["edital"].id])))
+    historico = re.search(r'<details class="publicacoes-anteriores">.*?</details>', corpo, re.S)
+    anunciado = corpo.replace(historico.group(0), "") if historico else corpo
 
-    assert reverse("portal:resultado", args=[sucessora.id]) in corpo
-    assert reverse("portal:resultado", args=[publicada.id]) not in corpo
+    assert reverse("portal:resultado", args=[sucessora.id]) in anunciado
+    assert reverse("portal:resultado", args=[publicada.id]) not in anunciado
+    assert historico is not None
+    assert reverse("portal:resultado", args=[publicada.id]) in historico.group(0)
+    assert "sucedido" in historico.group(0)
 
 
 def test_abrir_a_pagina_nao_recalcula_a_ordem(client, cenario, publicada, api_client, monkeypatch):

@@ -93,6 +93,22 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
       quando encerrou, e a lista fica com o que decide agir.
       {% endcomment %}
       {% if item.recurso_ate %}<span class="prazo-recursal">recurso até {{ item.recurso_ate|date:"d/m/Y" }} às {{ item.recurso_ate|date:"H\hi" }}</span>{% endif %}
+      {% comment %}
+      **O histórico desta lista, recolhido** (047, FR-772, D-007). O vigente vem primeiro, e o que
+      ele sucedeu fica a um clique, dito em texto como sucedido (017, FR-052): preservar não é
+      anunciar, e o histórico nunca aparece como o que vale.
+      {% endcomment %}
+      {% if item.anteriores %}
+      <details class="publicacoes-anteriores">
+        <summary>Publicações anteriores ({{ item.anteriores|length }})</summary>
+        <ul>
+          {% for anterior in item.anteriores %}
+          <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.natureza_rotulo }} — {{ anterior.marco }}</a>
+            <span class="meta">publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>

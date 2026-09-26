@@ -57,3 +57,15 @@ descrições dos Eventos na página inteira. Com o cabeçalho dizendo o próximo
 prova passou a aparecer ali antes da lista, e `corpo.index` achava o cabeçalho. O caso agora recorta
 a seção do cronograma; a ordem que ele afirma é a mesma. A `R-8` não previu isso, porque mediu só
 as asserções sobre classes do cronograma, e não as buscas por texto na página inteira.
+
+**Um caso mudou de expectativa na US5, por decisão da spec.**
+`test_resultado_publico.py::test_a_vitrine_do_edital_anuncia_so_a_vigente` afirmava que o endereço da
+publicação sucedida não aparecia na página do Edital. A `FR-772` e a `D-007` põem a sucedida na
+página, recolhida sob a vigente e dita como sucedida. O caso passou a afirmar a intenção escrita na
+docstring dele: a sucedida nunca aparece entre as vigentes, e aparece no histórico. A `R-8` não
+previu esta mudança, porque não leu a `017` inteira. Leu só as asserções sobre o cronograma.
+
+**As medições de consultas (T031) não mudaram.** `test_resultado_publico.py:205` continua passando
+sem as três tabelas de dado individual (`D-008`), e `test_sorteio_na_pagina_do_edital.py:138`
+continua em duas consultas ao sorteio. A página do resultado custa uma consulta por degrau da cadeia
+para listar as anteriores, como a `R-7` previu, e a janela já subia a mesma cadeia para achar a âncora.

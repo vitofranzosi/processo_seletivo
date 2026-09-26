@@ -118,21 +118,65 @@ def situacoes_do_candidato(inscricao):
     return sorted(resumos, key=lambda item: (item["marco_codigo"], item["marco"]))
 
 
-def vigentes_do_edital(edital):
-    """As publicações vigentes dos marcos do Edital — a descobribilidade pela vitrine (FR-050)."""
+def historico_publico_do_edital(edital):
+    """As vigentes do Edital, cada uma com as publicações que ela sucedeu (047, `FR-772`).
+
+    **Substitui `vigentes_do_edital`, que devolvia só a primeira metade da cadeia** (017, `FR-050`).
+    A página pública anunciava só as vigentes, e o preliminar que o definitivo sucedeu continuava
+    existindo no endereço dele (017, `FR-043`, `FR-048`) sem caminho nenhum até lá: só quem o tinha
+    guardado o encontrava. Duas funções para as vigentes seriam duas respostas à mesma pergunta.
+
+    **Por marco e por lista** (a decisão do eixo da lista, da `021`): a cadeia da PPI não é a da
+    ampla concorrência, e juntá-las faria a sucessão de uma lista aparecer como histórico da outra.
+    Por isso não é `historico_do_marco`, que também traz o ato com o autor — e a página pública
+    não carrega o que não mostra.
+
+    Duas consultas: as publicações e, por `prefetch`, as sucessoras que dizem qual é a vigente.
+    """
     linhas = list(
-        PublicacaoResultado.objects.filter(edital=edital, sucessoras__isnull=True).order_by(
-            "publicado_em"
-        )
+        PublicacaoResultado.objects.filter(edital=edital)
+        .prefetch_related("sucessoras")
+        .order_by("-publicado_em")
     )
-    return [
-        {
-            "publicacao": publicacao,
-            "natureza_rotulo": publicacao.get_natureza_display(),
-            **_rotulos(publicacao),
-        }
-        for publicacao in linhas
-    ]
+    grupos = {}
+    for publicacao in linhas:
+        grupos.setdefault((publicacao.marco_id, publicacao.lista_id), []).append(publicacao)
+
+    vigentes = []
+    for cadeia in grupos.values():
+        vigente = next((item for item in cadeia if not item.sucessoras.all()), None)
+        if vigente is None:
+            continue
+        vigentes.append(
+            {
+                **_linha_publica(vigente),
+                "anteriores": [_linha_publica(item) for item in cadeia if item is not vigente],
+            }
+        )
+    return sorted(vigentes, key=lambda item: item["publicacao"].publicado_em)
+
+
+def anteriores_da_cadeia(publicacao):
+    """As publicações que esta sucedeu, da mais recente para a mais antiga (047, `FR-773`).
+
+    A direção inversa da `FR-044` da `017`: a sucedida já levava à vigente, e a vigente não levava
+    de volta. A cadeia é linear — cada publicação sucede no máximo uma —, e é curta: preliminar,
+    definitiva, correção.
+    """
+    anteriores = []
+    corrente = publicacao.publicacao_anterior
+    while corrente is not None:
+        anteriores.append(_linha_publica(corrente))
+        corrente = corrente.publicacao_anterior
+    return anteriores
+
+
+def _linha_publica(publicacao):
+    return {
+        "publicacao": publicacao,
+        "natureza_rotulo": publicacao.get_natureza_display(),
+        **_rotulos(publicacao),
+    }
 
 
 def _rotulos(publicacao):
@@ -186,11 +230,12 @@ def divulgacao_do_ato(*, edital, marco_id, ato, lista_id=None, historico=None):
 
 
 __all__ = [
+    "anteriores_da_cadeia",
     "divulgacao_do_ato",
     "documento_do_resultado",
     "historico_do_marco",
+    "historico_publico_do_edital",
     "publicacao_por_id",
     "situacoes_do_candidato",
     "vigente_do_marco",
-    "vigentes_do_edital",
 ]

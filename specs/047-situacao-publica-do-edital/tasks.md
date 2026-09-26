@@ -197,7 +197,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 **Independent Test**: quickstart, percurso 6.
 
-- [ ] T027 [P] [US5] Escrever os testes em `backend/tests/portal/test_historico_de_resultados.py` (**NOVO**):
+- [X] T027 [P] [US5] Escrever os testes em `backend/tests/portal/test_historico_de_resultados.py` (**NOVO**):
   - preliminar sucedido por definitivo: a página do Edital lista o definitivo como vigente e, em *Publicações anteriores* do mesmo marco e lista, o preliminar com natureza, data e link para o endereço dele;
   - a página do definitivo lista o preliminar como anterior;
   - cadeia de três: ordem, e só a última vigente;
@@ -205,10 +205,10 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - definitivo que corrigiu por recurso (`deferir_corrigindo` de `tests/fixtures/recursos.py`): a causa continua dita, sem natureza nova;
   - nenhum identificador de ator no HTML (`FR-776`);
   - **no máximo duas navegações** da página do Edital até o preliminar (`SC-285`), afirmado pela presença do link na primeira página.
-- [ ] T028 [US5] Em `backend/processo_seletivo/divulgacao/application/selectors.py` (**EXISTENTE**), criar `historico_publico_do_edital(edital)`: todas as publicações do Edital, `prefetch_related("sucessoras")`, agrupadas por `(marco_id, lista_id)`, com natureza, data, `_rotulos` e `vigente`. Sem `ato` e sem autor (`research.md`, `R-6`). Criar também `anteriores_da_cadeia(publicacao)`, que sobe `publicacao_anterior` e devolve a lista ordenada.
-- [ ] T029 [US5] Em `backend/processo_seletivo/portal/views.py`, fazer `selecao` montar os vigentes **e** o histórico a partir de `historico_publico_do_edital`, com uma consulta só, em lugar da consulta de `vigentes_do_edital`, sem mudar o que a seção de vigentes mostra. Fazer `resultado` pôr `anteriores_da_cadeia` no contexto.
-- [ ] T030 [US5] Em `selecao.html`, sob cada vigente com anteriores, acrescentar `<details>` *Publicações anteriores*, com a sucedida rotulada em texto (FR-052 da `017`: não só por cor). Em `resultado.html`, acrescentar a lista *Publicações anteriores deste resultado*, quando houver.
-- [ ] T031 [P] [US5] Atualizar a medição de consultas de `tests/portal/test_resultado_publico.py:212` e `tests/portal/test_sorteio_na_pagina_do_edital.py:143` **somente** se o número mudar, com a justificativa no comentário do teste. O número tem de ser constante no tamanho da cadeia (`R-7`).
+- [X] T028 [US5] Em `backend/processo_seletivo/divulgacao/application/selectors.py` (**EXISTENTE**), criar `historico_publico_do_edital(edital)`: todas as publicações do Edital, `prefetch_related("sucessoras")`, agrupadas por `(marco_id, lista_id)`, com natureza, data, `_rotulos` e `vigente`. Sem `ato` e sem autor (`research.md`, `R-6`). Criar também `anteriores_da_cadeia(publicacao)`, que sobe `publicacao_anterior` e devolve a lista ordenada.
+- [X] T029 [US5] Em `backend/processo_seletivo/portal/views.py`, fazer `selecao` montar os vigentes **e** o histórico a partir de `historico_publico_do_edital`, com uma consulta só, em lugar da consulta de `vigentes_do_edital`, sem mudar o que a seção de vigentes mostra. Fazer `resultado` pôr `anteriores_da_cadeia` no contexto.
+- [X] T030 [US5] Em `selecao.html`, sob cada vigente com anteriores, acrescentar `<details>` *Publicações anteriores*, com a sucedida rotulada em texto (FR-052 da `017`: não só por cor). Em `resultado.html`, acrescentar a lista *Publicações anteriores deste resultado*, quando houver.
+- [X] T031 [P] [US5] Atualizar a medição de consultas de `tests/portal/test_resultado_publico.py:212` e `tests/portal/test_sorteio_na_pagina_do_edital.py:143` **somente** se o número mudar, com a justificativa no comentário do teste. O número tem de ser constante no tamanho da cadeia (`R-7`).
 
 **Checkpoint**: o preliminar sucedido está a um clique da página do Edital.
 

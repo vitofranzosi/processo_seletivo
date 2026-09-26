@@ -24,10 +24,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.divulgacao.application.selectors import (
+    anteriores_da_cadeia,
     documento_do_resultado,
+    historico_publico_do_edital,
     situacoes_do_candidato,
     vigente_do_marco,
-    vigentes_do_edital,
 )
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
@@ -409,7 +410,10 @@ def selecao(request, edital_id):
     # conhecer a seleção, e é onde procura o resultado: sem isto, só chegaria à divulgação quem já
     # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
     # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
-    contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
+    # **E o histórico de cada uma, recolhido** (047, `FR-772`): as vigentes continuam em destaque, e
+    # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
+    # quem tinha guardado o endereço dele.
+    contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). O conteúdo vigente já
     # está carregado, e a conta é a mesma da página do resultado e da interposição.
     agora = timezone.now()
@@ -2282,6 +2286,8 @@ def resultado(request, publicacao_id):
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
             "prazo": prazo,
+            # A direção inversa da `FR-044` da 017 (047, `FR-773`): a vigente leva às anteriores.
+            "anteriores": anteriores_da_cadeia(publicacao),
             # **Não nasce natureza nova** (FR-087). A definitiva que corrige outra é apresentada
             # pela **causa** — a decisão que a motivou —, derivada da cadeia. Uma natureza
             # `DEFINITIVA_RETIFICADA` seria terceiro valor no enum, mais um par na regra de não
