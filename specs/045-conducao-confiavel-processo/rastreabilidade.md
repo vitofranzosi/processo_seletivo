@@ -3,6 +3,11 @@
 **Frase que governa**: *todo sinal exibido é verdadeiro, toda ausência afirmada respeita o alcance
 do observador, e todo trabalho pendente que a Supervisão acompanha é visível.*
 
+**Verificação final** (26/09/2026, depois de integrar a `main` com o #183 e o #184): `make lint check
+test-pg` — `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas, **7877
+passando e 11 pulados**, zero falhas. O "antes" era 7837 e 11; a diferença é a desta feature mais os
+casos que o #183 trouxe.
+
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança.
 
