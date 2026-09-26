@@ -30,7 +30,8 @@ a lacuna. Única tarefa aberta na branch: T065 (demonstrar SC-260/SC-261 no 140/
 **Atualização de 26/09:** a 044 foi mesclada pelo #173 (`47876ad`) com o CI verde, e a Mesa foi percorrida
 pela tela depois (`0c4e6b0`). O #171 foi mesclado como registro, sem a correção. Os blocos que tocam os
 dois — §5.9, #161, D4 e ValorDeFato —, a tabela-resumo e as contagens foram revistos; o que dizem da
-branch é a leitura de antes do merge.
+branch é a leitura de antes do merge. Depois, no mesmo dia, o #183 corrigiu o `ValorDeFato`, e o bloco
+dele passou a RESOLVIDO.
 
 ---
 
@@ -711,12 +712,12 @@ Itens de baixo impacto, conferidos um a um, em blocos curtos.
 - Rastro posterior: decisão do usuário de 25/09 (no corpo do PR e na memória) — corrigir depois da 044.
 - Specs relacionadas: 015 (fatos declarados, D-2); 044 (dona da `0005`).
 - Evidência no código atual: `backend/processo_seletivo/seguranca/papeis.py:39` (na lista append-only); `backend/processo_seletivo/inscricoes/models.py:137-183` — `ValorDeFato` sem `save`/`delete` sobrescritos (só `Meta` e `__str__`); `inscricoes/migrations/0004_valor_de_fato.py` sem `RunSQL`; `backend/tests/migrations/test_migrations.py:34-91` — `TRIGGERS_POR_APP` sem a chave `inscricoes`; única escrita é o `bulk_create` do envio, `inscricoes/application/submissao.py:368`. Na branch da 044, `ValorDeFato` continua igual (a 044 dá três camadas só à tabela nova).
-- Estado atual: NÃO IMPLEMENTADO (achado registrado, e mesclado pelo #171 em 26/09; correção decidida, e livre desde que a `0005` entrou com o #173)
+- Estado atual: RESOLVIDO — atualizado em 26/09: o #183 (`8e7c698`) fez a correção decidida. Evidência na main: `inscricoes/migrations/0006_valor_de_fato_append_only.py` (gatilho `valor_de_fato_append_only`); `ValorDeFato.save`/`delete` em `inscricoes/models.py`; `tests/integration/test_imutabilidade_do_historico.py`. A evidência acima é a de antes dele.
 - Ainda faz sentido?: sim — contradiz a regra de engenharia do projeto ("duas camadas independentes, e nenhuma delas é contornável", `CLAUDE.md`; docstring de `papeis.py`) e o Princípio II (`constitution.md:65-75`: regras e entradas históricas reproduzíveis). Custo baixo, molde pronto (`recursos/migrations/0002_ato_de_instrucao.py`). Não há dano observado.
-- Lacuna residual: gatilho e guarda de modelo; o guardião de `test_imutabilidade_do_historico.py:200` só confere uma direção.
-- Grupo do resíduo: A
-- Impacto atual: baixo na prática (ninguém escreve fora do envio), alto em garantia.
-- Próxima ação sugerida: corrigir — `inscricoes/0006`. A implementação da 044 chegou à main pelo #173, com a `0005`.
+- Lacuna residual: nenhuma nesta tabela. O guardião de `test_imutabilidade_do_historico.py` continua conferindo uma direção só, por causa de `RevisaoEdital`, e as outras três tabelas com duas camadas de três ficam registradas, por decisão.
+- Grupo do resíduo: —
+- Impacto atual: nenhum.
+- Próxima ação sugerida: nenhuma.
 - Relações: 044 R-005/R-014; `doc/descoberta-018-decisao-c-superacao-de-resultado.md:138` (descreve "papel + modelo", errado para menos).
 - Confiança: alta.
 
@@ -811,7 +812,7 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | B6 | Anexos sem "Salvar rascunho" | SUPERADO / OBSOLETO (ações imediatas por desenho) | — | nenhuma |
 | B7 | papéis pela string técnica | SUPERADO / OBSOLETO (seletor é de demonstração) | — | nenhuma |
 | B8 | cancelamento impedido sem dizer por quê | SUPERADO / OBSOLETO (explicação existe desde a 038) | — | nenhuma |
-| PR #171 | ValorDeFato append-only por uma camada | NÃO IMPLEMENTADO (decidido; a 044 já está na main) | A | corrigir: `inscricoes/0006` |
+| PR #171 | ValorDeFato append-only por uma camada | RESOLVIDO (#183, `inscricoes/0006`, 26/09) | — | nenhuma |
 | E11 | ficha de avaliação sem forma | DUPLICADO / ABSORVIDO (AX-4) | B | lote do AX-4 |
 | §15 três decisões | redação×transcrição; comum+condicional; seções | PARCIALMENTE RESOLVIDO (documental decidido; 1 e 3 pendentes) | B | levar ao usuário |
 | §14 · §15 complemento | lacunas de investigação | PARCIALMENTE RESOLVIDO (portal e análise feitos) | C | validar (N→N+1, Retificação, anexos) |
@@ -820,20 +821,20 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 
 | Estado | Quantos |
 |---|---:|
-| RESOLVIDO | 11 |
+| RESOLVIDO | 12 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
 | PARCIALMENTE RESOLVIDO | 6 |
-| NÃO IMPLEMENTADO | 20 |
+| NÃO IMPLEMENTADO | 19 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 3 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 |
 
-Dos 20 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
+Dos 19 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
 termo constitucional (B9/FR-007 da 023, A6/FR-465–466 da 032, §7.2/Constituição, e a parte "âncora"
 do §5.12/FR-344) — a revisão de 25/09 os registrou e não os tomou. Resíduo por grupo, nos itens ainda
-abertos: **A = 2** ("O que mudou" sem o recorte, ValorDeFato; o recorte transversal, a contenção #161 e
-a lista gravada saíram em 26/09, com o merge do #173); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
+abertos: **A = 1** ("O que mudou" sem o recorte; o recorte transversal, a contenção #161 e a lista
+gravada saíram em 26/09 com o merge do #173, e o ValorDeFato com o #183); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
 
 Separação pedida — **(i) corrigido em 25/09**: §5.1, §5.4, §5.5, §5.8, §5.10, Alvo do §5.6, colapso
 por Evento do §5.12, banner do reuso, tabela do documento (B1), contenção #161, instrução na Mesa e

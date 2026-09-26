@@ -702,7 +702,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Próxima ação sugerida: demonstrar a T065, se a medição for pedida.
 - Relações: AX-7, AX-10, AX-14/17, E-4; PR #172 e `doc/achado-filtro-de-concorrencia-sem-perfil.md`
   (a 044 registrou o defeito do seletor como fora de escopo); memória
-  `valor-de-fato-corrigir-depois-da-044.md` (a correção do `ValorDeFato` espera esta migration `0005`).
+  `valor-de-fato-corrigir-depois-da-044.md` (a correção do `ValorDeFato` esperava esta migration `0005`, e veio no #183 em 26/09).
 - Confiança: alta quanto ao que está na branch; baixa quanto a funcionar (não executado).
 
 ### E-4 (raiz) — Fontes normativas que ninguém confronta: ACH-41, ACH-13, ACH-18, AX-7 e "três nomes para duas coisas"
