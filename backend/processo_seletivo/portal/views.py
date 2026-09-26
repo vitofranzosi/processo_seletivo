@@ -231,16 +231,15 @@ def _documentos_anunciados(conteudo, perfil):
     naquele Perfil, e o que cada modalidade acrescenta. É a mesma função de aplicabilidade que
     decide o que a inscrição pede — três leituras da mesma regra, e não três interpretações.
     """
-    exigidos = conteudo.get("documentRequirements") or []
     perfil_id = str(perfil.get("id"))
-    sempre = aplicaveis(exigidos, profile_id=perfil_id, modality_id=None)
+    sempre = aplicaveis(conteudo, profile_id=perfil_id, modality_id=None)
     nomes_de_sempre = {str(item.get("id")) for item in sempre}
     por_modalidade = []
     for modalidade in perfil.get("competitionModalities") or []:
         com_ela = [
             item.get("name", "")
             for item in aplicaveis(
-                exigidos, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
+                conteudo, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
             )
             if str(item.get("id")) not in nomes_de_sempre
         ]

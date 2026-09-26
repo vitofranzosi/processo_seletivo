@@ -95,7 +95,7 @@ def documentos_que_a_retificacao_invalida(inscricao, versao):
     aplicaveis_agora = {
         str(requisito["id"])
         for requisito in aplicaveis(
-            versao.content.get("documentRequirements") or [],
+            versao.content,
             profile_id=str(inscricao.profile_id),
             modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
         )

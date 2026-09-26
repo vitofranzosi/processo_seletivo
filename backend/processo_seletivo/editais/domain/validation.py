@@ -36,6 +36,10 @@ from processo_seletivo.editais.domain.calendario import (
     instante_vencido,
     vencido,
 )
+from processo_seletivo.editais.domain.documentos import (
+    perfis_que_o_documento_publicado_alcanca,
+    rotulo_da_modalidade,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
 from processo_seletivo.inscricoes.domain.periodo import (
@@ -2218,11 +2222,6 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
     return findings
 
 
-def _rotulo_da_modalidade(modalidade: dict) -> str:
-    """O que o documento publicado escreve: o nome, e o código quando não há nome."""
-    return str(modalidade.get("name") or modalidade.get("code") or "").strip()
-
-
 def _recorte_que_o_documento_publicado_alarga(
     documento: dict, perfis: dict, caminho: str
 ) -> ValidationFinding | None:
@@ -2238,39 +2237,26 @@ def _recorte_que_o_documento_publicado_alarga(
     recorte sozinho, ao acrescentar Perfis a uma origem que tinha um só.
 
     **Só quando o nome se repete.** Se nenhum outro Perfil tem modalidade com aquele nome, o grupo
-    publicado alcança exatamente quem o portal alcança, e não há o que acusar.
+    publicado alcança exatamente quem o portal alcança, e não há o que acusar. A pergunta mora em
+    `documentos.py` porque a lista exigida da `044` a faz também (R-004).
+
+    **A saída que a `044` acrescenta** vem em segundo lugar na mensagem, porque é a que o Edital da
+    amostra quer dizer: "todo candidato PcD" — a modalidade daquele código em todos os Perfis.
     """
-    dono, modalidade = next(
-        (
-            (perfil, item)
-            for perfil in perfis.values()
-            for item in perfil.get("competitionModalities") or []
-            if str(item.get("id")) == str(documento.get("modalityId"))
-        ),
-        (None, None),
-    )
-    if dono is None:
+    dono, modalidade, outros = perfis_que_o_documento_publicado_alcanca(documento, perfis)
+    if dono is None or not outros:
         return None
-    rotulo = _rotulo_da_modalidade(modalidade)
-    outros = [
-        perfil
-        for perfil in perfis.values()
-        if perfil is not dono
-        and any(
-            _rotulo_da_modalidade(item) == rotulo
-            for item in perfil.get("competitionModalities") or []
-        )
-    ]
-    if not rotulo or not outros:
-        return None
+    rotulo = rotulo_da_modalidade(modalidade)
+    codigo = str(modalidade.get("code") or "").strip()
     perfil_dono = dono.get("code") or dono.get("name") or ""
     return _impeditivo(
         "document_requirement_modality_scope_ambiguous",
         f"O Documento Exigido '{documento.get('name', '')}' vale para todos os Perfis, mas "
         f"está restrito à modalidade '{rotulo}' do Perfil '{perfil_dono}'. O Edital publicado o "
         f"exigiria de todo candidato em '{rotulo}', e a inscrição o pediria só no Perfil "
-        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento — ou, para exigi-lo "
-        "também nos outros Perfis, repita-o com a modalidade de cada um.",
+        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento, ou use a modalidade "
+        f"'{rotulo}' ({codigo}) em todos os Perfis — ou, para exigi-lo em Perfis escolhidos, "
+        "repita-o com a modalidade de cada um.",
         caminho,
     )
 
