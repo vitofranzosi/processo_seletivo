@@ -94,13 +94,21 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
     <li class="requisito {% if linha.enviado %}completo{% endif %}">
       <p class="nome">
         <span class="marca" aria-hidden="true">{% if linha.enviado %}✓{% else %}○{% endif %}</span>
-        {{ linha.nome }}
+        <span>{{ linha.nome }}{% if not linha.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</span>
       </p>
+      {% comment %}
+      **A marca é a mesma da tela anterior, e some ali se sumir aqui.** Sem ela, o facultativo que a
+      pessoa escolheu não mandar saía como "Ainda não enviado.", na mesma grafia de alerta do
+      obrigatório que falta — a Revisão dizia que faltava algo que não falta (conferência de
+      25/09/2026, doc/conferencia-envio-e-analise-documental.md).
+      {% endcomment %}
       {% if linha.enviado %}
       <p class="arquivo"><a href="{% url 'portal:documento-do-candidato' inscricao.id linha.id %}"
         target="_blank" rel="noopener">{{ linha.enviado.nome_original }}</a></p>
-      {% else %}
+      {% elif linha.obrigatorio %}
       <p class="recusa">Ainda não enviado.</p>
+      {% else %}
+      <p class="ajuda">Não enviado.</p>
       {% endif %}
     </li>
     {% endfor %}
