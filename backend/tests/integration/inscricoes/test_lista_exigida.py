@@ -19,7 +19,7 @@ from processo_seletivo.inscricoes.application.rascunho import (
 )
 from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 from processo_seletivo.inscricoes.models import ItemDaListaExigida
-from processo_seletivo.portal.views import _requisitos_pedidos
+from processo_seletivo.portal.views import _documentos, _requisitos_pedidos
 from tests.fixtures.candidato import JOAO, MARIA, MODALIDADE_AC, PERFIL_DOCENTE, pdf
 from tests.fixtures.publicacao import retify
 from tests.fixtures.selecao import (
@@ -151,8 +151,15 @@ def test_quem_le_mostra_a_lista_gravada_e_nao_a_regra_de_hoje(
     linha = _linhas(selecao, [enviada])[0]
     assert (linha["recebidos"], linha["esperados"]) == (1, 1), "a consulta conta pela lista"
 
-    pedidos = [str(item["id"]) for item in _requisitos_pedidos(conteudo, enviada)]
+    pedidos = [str(item["id"]) for item, _obrigatorio in _requisitos_pedidos(conteudo, enviada)]
     assert pedidos == [DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL], "o portal lê a mesma lista"
+    # Os ids sozinhos não discriminam: são os que a regra também daria. O que discrimina é a
+    # obrigatoriedade — o conteúdo diz obrigatório, a lista diz facultativo, e o portal conta pela
+    # lista, como a consulta acima.
+    portal = _documentos(conteudo, enviada)
+    obrigatorios = {linha["id"]: linha["obrigatorio"] for linha in portal["linhas"]}
+    assert obrigatorios[DOCUMENTO_DO_PERFIL] is False, "o portal lê a situação, e não o conteúdo"
+    assert portal["total"] == 1, "o portal conta os obrigatórios pela lista, como a consulta"
 
 
 def test_inscricao_sem_lista_gravada_e_reconstruida_e_diz_que_foi(

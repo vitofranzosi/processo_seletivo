@@ -32,7 +32,11 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
-from processo_seletivo.editais.domain.documentos import aplicaveis, modelo_do_requisito
+from processo_seletivo.editais.domain.documentos import (
+    OBRIGATORIO,
+    aplicaveis,
+    modelo_do_requisito,
+)
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
 from processo_seletivo.identidade.application import desafio as desafio_de_acesso
@@ -1577,10 +1581,21 @@ def _requisitos_pedidos(conteudo, inscricao):
     Enviada, a página e o comprovante leem a mesma lista que a Mesa e a consulta administrativa
     (FR-720). O portal mostra só o que a pessoa enviou, e a reconstrução de uma inscrição anterior à
     `044` não muda isso — por isso ele não traz o aviso de lista reconstruída (FR-726).
+
+    A obrigatoriedade vem junto, e da **situação gravada**, e não do `required` do conteúdo: hoje
+    os dois coincidem, porque a situação foi calculada dele no envio — mas a lista existe para o dia
+    em que a regra mudar, e nesse dia o portal contaria como faltante o que a Mesa e a consulta
+    mostram como facultativo.
     """
     if inscricao.status == Inscricao.Status.SUBMETIDA:
-        return [veredito.requisito for veredito in lista_exigida(inscricao, conteudo).pedidos]
-    return requisitos_da_inscricao(conteudo, inscricao)
+        return [
+            (veredito.requisito, veredito.situacao == OBRIGATORIO)
+            for veredito in lista_exigida(inscricao, conteudo).pedidos
+        ]
+    return [
+        (requisito, requisito.get("required", True))
+        for requisito in requisitos_da_inscricao(conteudo, inscricao)
+    ]
 
 
 def _documentos(conteudo, inscricao):
@@ -1594,14 +1609,14 @@ def _documentos(conteudo, inscricao):
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
     linhas = []
-    for requisito in _requisitos_pedidos(conteudo, inscricao):
+    for requisito, obrigatorio in _requisitos_pedidos(conteudo, inscricao):
         documento = enviados.get(str(requisito["id"]))
         linhas.append(
             {
                 "id": str(requisito["id"]),
                 "nome": requisito.get("name", ""),
                 "instrucao": requisito.get("instructions", ""),
-                "obrigatorio": requisito.get("required", True),
+                "obrigatorio": obrigatorio,
                 "enviado": documento,
                 # Tamanho e resumo criptográfico vão para o comprovante (D9): são o que permite a
                 # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.
