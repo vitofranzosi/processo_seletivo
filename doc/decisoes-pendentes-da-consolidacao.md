@@ -1,6 +1,8 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas.** Este documento organiza as alternativas e recomenda; **quem decide é o usuário**.
+**Situação: abertas, menos a `DP-01` a `DP-04`, decididas em 26/09** com a proposta que abriu a
+[`045`](../specs/045-conducao-confiavel-processo/spec.md). Este documento organiza as alternativas e
+recomenda; **quem decide é o usuário**.
 Nenhuma spec das que dependem destas decisões começa antes delas. Quando uma for tomada, a seção dela
 ganha um bloco **"O que foi decidido"**, como a
 [decisão do recorte documental](decisao-recorte-documental.md) ganhou em 25/09. Ela não é apagada nem
@@ -85,6 +87,18 @@ Retificação que cancela o Evento — é outra pergunta, que só vale abrir qua
 **Se decidida:** a spec curta da B-1 registra que a D-004 da `022` foi substituída, e o `UX-002` é
 reescrito ou retirado do catálogo, com a `FR-565` da `038`.
 
+### O que foi decidido
+
+Em 26/09/2026, o usuário escolheu a **A**, na proposta que abriu a
+[`045`](../specs/045-conducao-confiavel-processo/spec.md): *"a fase ordinária de um Evento será
+derivada de suas datas e do instante corrente"*, sem controle manual para planejado, em andamento ou
+encerrado, e `CANCELADO` continua declarável. A `D-004` da `022` fica expressamente substituída.
+
+Ao especificar, a conferência contra o código acrescentou duas coisas: o `UX-002` é **retirado**, e
+não reescrito — derivada a fase, declarado e relógio não têm como discordar —; e a derivação usa a
+régua do vencido da `037` e, para o período de inscrições, a régua do próprio período. Ver a `D-001`
+da `045`.
+
 ---
 
 ## DP-02 — O recurso aguardando admissibilidade entra no painel como espécie nova, ou o `UX-064` passa a cobrir as duas fases?
@@ -126,6 +140,14 @@ Para quem conduz, é o mesmo fato: uma peça espera decisão de quem tem `recurs
 as fases mora na tela do recurso, que já a faz bem. Espécies separadas multiplicariam o catálogo por uma
 diferença que não muda quem age nem onde.
 
+### O que foi decidido
+
+Em 26/09/2026, o usuário deixou a escolha ao critério *"a solução de menor complexidade que preserve
+clareza para o operador"*, evitando dois sinais para a mesma peça. É a **A**: o `UX-064` e o `UX-005`
+passam a cobrir *aguardando decisão*, e a mensagem diz a fase. O contador *"Recursos recebidos (N)"*
+passa a contar só as pendentes. Ver a `D-002` da
+[`045`](../specs/045-conducao-confiavel-processo/spec.md).
+
 ---
 
 ## DP-03 — O `UX-001` em Edital publicado é condição de Atenção?
@@ -164,6 +186,18 @@ painel de condução que mostra, para sempre, um fato sobre o qual ninguém pode
 ignorá-lo. É o que a convergência mediu: 6 dos 15 sinais do gestor eram `UX-001`. A C é possível, mas é
 mudança de contrato para um caso que nenhum Edital da amostra pediu.
 
+### O que foi decidido
+
+Em 26/09/2026, o usuário escolheu a **A**: *"quando uma condição pertence à composição/publicação e não
+possui correção operacional naquele momento, ela não deve ser apresentada na Atenção"*, e a informação
+vai para a superfície de composição e revisão, como aviso. Sem inventar Retificação para dar destino
+ao sinal.
+
+A conferência contra o código mostrou que o aviso **não existe** hoje — a validação confere a Etapa
+que referencia Evento inexistente, e não a que não referencia nenhum —, e que o mesmo princípio alcança
+o `UX-046` num Edital que já parou. Ver a `D-003` da
+[`045`](../specs/045-conducao-confiavel-processo/spec.md).
+
 ---
 
 ## DP-04 — O adiamento de "fechar a `038`" foi deliberado?
@@ -192,6 +226,13 @@ a operação institucional. Fechar a `038` é condição de saída do piloto (C1
 
 A B-1 é pequena e já tem quase todo o diagnóstico escrito. Com a DP-01, a DP-02 e a DP-03 decididas, ela
 cabe numa spec curta.
+
+### O que foi decidido
+
+Em 26/09/2026, o usuário abriu a B-1 como a spec seguinte — a
+[`045`](../specs/045-conducao-confiavel-processo/spec.md), *"Condução confiável do Processo vivo"* —,
+com o objetivo de fechar as condicionantes `C1`, `C2`, `C4`, `C5` e `C6`. É a **B** na prática. A
+proposta não diz se o adiamento desde 20/09 foi deliberado, e este registro não o afirma.
 
 ---
 
