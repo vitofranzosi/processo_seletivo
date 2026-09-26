@@ -22,7 +22,12 @@ from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.models_retificacao import Retificacao
 from tests.fixtures.edital import identificador
 from tests.fixtures.publicacao import create_retification, retify
-from tests.fixtures.selecao import LINHA_GERAL_DO_DOCENTE, publicar_selecao
+from tests.fixtures.selecao import (
+    DOCUMENTO_DA_MODALIDADE,
+    LINHA_GERAL_DO_DOCENTE,
+    publicar_selecao,
+    rascunho_aberto_com_documentos,
+)
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -217,3 +222,38 @@ def test_so_retificacao_publicada_entra_no_historico(
     assert Retificacao.objects.get(edital=edital).status == Retificacao.Status.EM_ELABORACAO
     assert len(atos) == 1, "a Retificação em elaboração entrou no histórico"
     assert "Edital e documentos" not in pagina
+
+
+def test_a_mudanca_de_recorte_do_documento_aparece_no_que_mudou(
+    client, api_client, manager_headers, process_payload, raiz_de_arquivos
+):
+    """FR-130 no caso que a conferência de 25/09 encontrou calado.
+
+    Uma Retificação restringiu o laudo ao Perfil C1, e o portal contou 6 das 7 alterações: a que
+    faltava era essa, a que decide a quem o documento é pedido. O contador do resumo e a linha
+    precisam dizer que ela aconteceu.
+    """
+    edital = publicar_selecao(
+        api_client,
+        manager_headers,
+        process_payload,
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/documentRequirements/id={DOCUMENTO_DA_MODALIDADE}/profileId",
+                "operation": "REPLACE",
+                "newValue": str(PERFIL),
+            }
+        ],
+        suffix="recorte",
+    )
+
+    pagina = corpo(client, edital)
+
+    assert "O que mudou (1)" in pagina
+    assert "Documento exigido “Autodeclaração étnico-racial”" in pagina
+    assert "Exigido apenas do Perfil" in pagina
