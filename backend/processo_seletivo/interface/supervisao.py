@@ -15,7 +15,6 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
 from processo_seletivo.avaliacoes.models import Impedimento
@@ -32,7 +31,13 @@ from processo_seletivo.divulgacao.application.selectors import (
     historico_do_marco,
 )
 from processo_seletivo.editais.domain import calendario
-from processo_seletivo.editais.models.cronograma import EventoCronograma
+from processo_seletivo.editais.domain.fase_do_evento import (
+    descricao_do_evento,
+    eventos_do_conteudo,
+    fase_do_evento,
+    instantes_do_evento,
+    marcos_pendentes,
+)
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
     ENCERRADO,
@@ -269,12 +274,6 @@ def etapas_do_conteudo(conteudo):
     return sorted(etapas, key=lambda etapa: (etapa.get("order") or 0, etapa.get("name") or ""))
 
 
-def eventos_do_conteudo(conteudo):
-    """Os Eventos da versão publicada, na ordem do cronograma."""
-    eventos = [item for item in (conteudo or {}).get("schedule") or [] if isinstance(item, dict)]
-    return sorted(eventos, key=lambda evento: (evento.get("order") or 0))
-
-
 def leitura_dos_editais(processo):
     """`[(edital, conteudo|None)]` — uma leitura da versão vigente por Edital, e nunca por Etapa."""
     return [(edital, conteudo_ou_nada(edital)) for edital in editais_do_processo(processo)]
@@ -348,75 +347,23 @@ def periodo_do_edital(conteudo, agora):
     )
 
 
-# A fase do período de inscrições sai do **estado do período**, e não da régua geral: sem
-# término, o período segue aberto (FR-347), e a régua geral o venceria pelo início (045, `R-3`).
-FASE_DO_PERIODO = {
-    FUTURO: calendario.PLANEJADO,
-    ABERTO: calendario.EM_ANDAMENTO,
-    ENCERRADO: calendario.CONCLUIDO,
-}
-
-
-def fase_do_evento(evento, conteudo, agora):
-    """A fase ordinária de um Evento publicado, ou `None` para o cancelado e o sem início.
-
-    **O `status` publicado só responde se o Evento foi cancelado** (045, `FR-736`). Qualquer outro
-    valor — o `PLANEJADO` que todo Evento carrega, ou um `EM_ANDAMENTO` que a API aceitava antes
-    — é lido como *não cancelado*, e a fase vem das datas. O conteúdo publicado não é reescrito.
-
-    **Duas réguas, e nenhuma nova**: a do período de inscrições para o Evento marcado como tal, e
-    a do vencido (`calendario.fase`) para os demais.
-    """
-    if evento.get("status") == EventoCronograma.Status.CANCELADO:
-        return None
-    if evento.get("isRegistrationPeriod") is True:
-        return FASE_DO_PERIODO.get(periodo_de_inscricoes(conteudo, agora).estado)
-    inicio, fim = instantes_do_evento(evento)
-    return calendario.fase(inicio, fim, agora=agora)
-
-
 def marcos_do_edital(edital, conteudo, agora):
     """Os marcos que ainda vêm, em ordem cronológica e sem os cancelados (`FR-021`).
 
-    **O marco em curso ainda é próximo.** O corte é a fase **concluída**, e não o início: tirar da
-    lista o que está acontecendo esconderia justamente o prazo que corre.
-
-    **E o corte é o da régua, e não um quarto critério** (045, `R-3`). A lista cortava por
-    `término or início <= agora` — com `<=` onde a régua usa `<`, e tirando da lista o período de
-    inscrições sem término no instante em que ele abria, enquanto o período continuava recebendo
-    inscrição. Passa a sair o marco concluído, e só ele.
-
-    `CANCELADO` sai da leitura temporal: o Evento deixou o cronograma efetivo, e cobrar prazo dele
-    seria cobrar de quem já foi cancelado.
+    A lista é a de `fase_do_evento.marcos_pendentes`, que desceu para o domínio com a régua (047,
+    `R-1`, `R-4`): o portal lê a mesma lista para dizer o que acontece agora e o que vem depois, e
+    duas listas seriam duas respostas para a mesma pergunta. Aqui ela só ganha a forma de `Marco`.
     """
-    marcos = []
-    for evento in eventos_do_conteudo(conteudo):
-        fase = fase_do_evento(evento, conteudo, agora)
-        if fase is None or fase == calendario.CONCLUIDO:
-            continue
-        inicio, fim = instantes_do_evento(evento)
-        marcos.append(
-            Marco(
-                edital=edital,
-                descricao=descricao_do_evento(evento),
-                inicio=inicio,
-                fim=fim,
-                fase=fase,
-            )
+    return tuple(
+        Marco(
+            edital=edital,
+            descricao=descricao_do_evento(evento),
+            inicio=inicio,
+            fim=fim,
+            fase=fase,
         )
-    marcos.sort(key=lambda marco: (marco.inicio or marco.fim, marco.descricao))
-    return tuple(marcos)
-
-
-def descricao_do_evento(evento):
-    return evento.get("description") or evento.get("type") or ""
-
-
-def instantes_do_evento(evento):
-    """`(início, término)` do Evento publicado. O término é anulável, e a ausência é legítima."""
-    inicio = parse_datetime(evento.get("startAt") or "")
-    fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
-    return inicio, fim
+        for evento, inicio, fim, fase in marcos_pendentes(conteudo, agora)
+    )
 
 
 def serie_do_edital(edital, periodo, agora):

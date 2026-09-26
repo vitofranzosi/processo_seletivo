@@ -38,13 +38,13 @@ equivalência é o modo de criar a terceira.
 
 ## Phase 1: Setup e medição do "antes"
 
-- [ ] T001 Preparar a worktree em `backend/`:
+- [X] T001 Preparar a worktree em `backend/`:
   - copiar `backend/.env` do checkout principal (**gitignorado**, ausente aqui);
   - trocar `DB_NAME` e `POSTGRES_DB` por nome próprio desta worktree;
   - `uv sync --extra dev`;
   - `make preparar`, conferindo **`N de 34`** com N diferente de zero;
   - `manage.py migrate --check`.
-- [ ] T002 Medir e gravar o "antes" em `specs/047-situacao-publica-do-edital/antes-da-047.md` (**NOVO**), **antes de qualquer edição**:
+- [X] T002 Medir e gravar o "antes" em `specs/047-situacao-publica-do-edital/antes-da-047.md` (**NOVO**), **antes de qualquer edição**:
   - a contagem da suíte (`make test-pg`);
   - o número de casos de cada arquivo que a `R-8` nomeia: `tests/integration/portal/test_cronograma_publico.py`, `tests/integration/portal/test_acompanhamento.py`, `tests/interface/test_acessibilidade_do_portal.py`, `tests/integration/supervisao/test_pulso.py`, `tests/interface/test_supervisao.py`, `tests/portal/test_resultado_publico.py`, `tests/portal/test_sorteio_na_pagina_do_edital.py`, `tests/integration/portal/test_historico_publico.py`, `tests/integration/portal/test_leitura_sem_escrita.py`;
   - o número de consultas que `test_resultado_publico.py:212` e `test_sorteio_na_pagina_do_edital.py:143` medem hoje;
@@ -58,10 +58,10 @@ equivalência é o modo de criar a terceira.
 
 O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
-- [ ] T003 Criar `backend/processo_seletivo/editais/domain/fase_do_evento.py` (**NOVO**) com `eventos_do_conteudo`, `instantes_do_evento`, `descricao_do_evento`, `FASE_DO_PERIODO` e `fase_do_evento`, **movidos** de `backend/processo_seletivo/interface/supervisao.py:272-275, 353-375, 411-419`. As assinaturas são as mesmas. A docstring do módulo diz por que ele saiu da gestão (`research.md`, `R-1`), no tom de `editais/domain/calendario.py`.
-- [ ] T004 Acrescentar a `fase_do_evento.py` a função `marcos_pendentes(conteudo, agora)`: os Eventos de fase não concluída e não cancelados, na ordem de `marcos_do_edital`, como tuplas `(evento, inicio, fim, fase)`. Reescrever `marcos_do_edital` em `backend/processo_seletivo/interface/supervisao.py` sobre ela, montando `Marco` como hoje (`research.md`, `R-4`).
-- [ ] T005 Fazer `backend/processo_seletivo/interface/supervisao.py` reimportar os nomes movidos pela T003, para que `supervisao.fase_do_evento` e os demais continuem respondendo, e apagar as definições locais. Rodar `tests/integration/supervisao/test_pulso.py` e `tests/interface/test_supervisao.py`: **devem continuar verdes sem edição**.
-- [ ] T006 [P] Criar `backend/tests/unit/editais/test_fase_do_evento.py` (**NOVO**) com a tabela-verdade da régua, cada caso em três instantes (antes, durante, depois):
+- [X] T003 Criar `backend/processo_seletivo/editais/domain/fase_do_evento.py` (**NOVO**) com `eventos_do_conteudo`, `instantes_do_evento`, `descricao_do_evento`, `FASE_DO_PERIODO` e `fase_do_evento`, **movidos** de `backend/processo_seletivo/interface/supervisao.py:272-275, 353-375, 411-419`. As assinaturas são as mesmas. A docstring do módulo diz por que ele saiu da gestão (`research.md`, `R-1`), no tom de `editais/domain/calendario.py`.
+- [X] T004 Acrescentar a `fase_do_evento.py` a função `marcos_pendentes(conteudo, agora)`: os Eventos de fase não concluída e não cancelados, na ordem de `marcos_do_edital`, como tuplas `(evento, inicio, fim, fase)`. Reescrever `marcos_do_edital` em `backend/processo_seletivo/interface/supervisao.py` sobre ela, montando `Marco` como hoje (`research.md`, `R-4`).
+- [X] T005 Fazer `backend/processo_seletivo/interface/supervisao.py` reimportar os nomes movidos pela T003, para que `supervisao.fase_do_evento` e os demais continuem respondendo, e apagar as definições locais. Rodar `tests/integration/supervisao/test_pulso.py` e `tests/interface/test_supervisao.py`: **devem continuar verdes sem edição**.
+- [X] T006 [P] Criar `backend/tests/unit/editais/test_fase_do_evento.py` (**NOVO**) com a tabela-verdade da régua, cada caso em três instantes (antes, durante, depois):
   - Evento com término;
   - Evento sem término (concluído a partir do **instante** de início, `D-004`);
   - período de inscrições sem término (em andamento);
