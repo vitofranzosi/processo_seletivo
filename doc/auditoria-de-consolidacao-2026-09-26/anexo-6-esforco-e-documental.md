@@ -30,8 +30,8 @@ a lacuna. Única tarefa aberta na branch: T065 (demonstrar SC-260/SC-261 no 140/
 **Atualização de 26/09:** a 044 foi mesclada pelo #173 (`47876ad`) com o CI verde, e a Mesa foi percorrida
 pela tela depois (`0c4e6b0`). O #171 foi mesclado como registro, sem a correção. Os blocos que tocam os
 dois — §5.9, #161, D4 e ValorDeFato —, a tabela-resumo e as contagens foram revistos; o que dizem da
-branch é a leitura de antes do merge. Depois, no mesmo dia, o #183 corrigiu o `ValorDeFato`, e o bloco
-dele passou a RESOLVIDO.
+branch é a leitura de antes do merge. Depois, no mesmo dia, o #183 corrigiu o `ValorDeFato` e o #185 o
+"O que mudou" do recorte, e os dois blocos passaram a RESOLVIDO.
 
 ---
 
@@ -274,12 +274,12 @@ dele passou a RESOLVIDO.
 - Rastro posterior: decidido em 25/09 para a fila das diretas; **não feito**. A 044 o exclui de propósito (`spec.md:111-113`, `:620`) e só cobre o campo novo (FR-721; na branch da 044, `alteracoes.py` ganha `"modalityCode"` com o comentário "`profileId` e `modalityId` continuam fora: a correção deles é da fila das diretas"). **(iii) sem dono.**
 - Specs relacionadas: 024 FR-130 (`specs/024-descoberta-e-transparencia-no-portal/spec.md:365-366`: "Cada Retificação exibida MUST trazer … a identificação do que foi alterado").
 - Evidência no código atual: `publicacoes/domain/alteracoes.py:89-95` — os campos do Documento Exigido são só nome, instruções, obrigatoriedade, ordem e modelo; `:14` — "Caminho não reconhecido não produz linha" (a omissão é silenciosa por desenho, D-009 da 024).
-- Estado atual: NÃO IMPLEMENTADO
-- Ainda faz sentido?: sim — contradiz FR-130 da 024 e a decisão de 25/09; e é barato (duas entradas no dicionário com rótulo do domínio). O desenho da 024 (dizer o campo, não o valor) já basta.
-- Lacuna residual: acrescentar `profileId` e `modalityId` do Documento Exigido ao `CAMPOS`.
-- Grupo do resíduo: A
-- Impacto atual: médio — o candidato não é avisado de que o documento passou a valer (ou deixou de valer) para ele; o documento da Retificação tem a mudança, o resumo não.
-- Próxima ação sugerida: corrigir (fila das diretas).
+- Estado atual: RESOLVIDO — atualizado em 26/09: o #185 (`29e637f`) pôs `profileId` ("Exigido apenas do Perfil") e `modalityId` ("Exigido apenas da modalidade") em `CAMPOS`, com teste no portal.
+- Ainda faz sentido?: sim — contradizia a FR-130 da 024 e a decisão de 25/09.
+- Lacuna residual: nenhuma neste campo. O cruzamento sugerido abaixo foi feito, e 45 dos 84 campos retificáveis também não produzem linha: é unidade nova, o RC-111 da auditoria (`doc/achado-o-que-mudou-cala-campos-retificaveis.md`).
+- Grupo do resíduo: —
+- Impacto atual: nenhum neste campo.
+- Próxima ação sugerida: nenhuma.
 - Relações: 024 D-009; 044 FR-721 (mesmo mecanismo para o campo novo). Vale conferir se outros campos retificáveis também faltam no dicionário (não verifiquei).
 - Confiança: alta.
 
@@ -784,7 +784,7 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | conferência §3/§6 · D4 | Mesa recalcula; sem "não se aplica"; nada registra o pedido | RESOLVIDO (ii, #173, mesclado em 26/09; Mesa percorrida) | — | nenhuma |
 | conferência §1/§3 · D2 diretas · #167 | instrução na Mesa; facultativo na Revisão | RESOLVIDO (i, #167) — resíduo: cartão público sem marca (iii) | C | corrigir (opcional) |
 | E6 (candidato) · D2 | sexo/idade/vínculo sem forma | CONTRADITO POR DECISÃO POSTERIOR (D2, `doc/decisao-recorte-documental.md`) | B | nenhuma até reabrir D2 |
-| conferência · D4.3 | "O que mudou" omite recorte do documento | NÃO IMPLEMENTADO (iii; decidido, não feito) | A | corrigir (direta) |
+| conferência · D4.3 | "O que mudou" omite recorte do documento | RESOLVIDO (#185, 26/09) | — | nenhuma; a classe é o RC-111 |
 | conferência §3/§7 · 044 riscos | filtro de concorrência sem Perfil | RESOLVIDO (PR #172, mesclado em 26/09) | C | nenhuma |
 | conferência §3–§5 | lista da Mesa sem Perfil; sem juízo por documento | NÃO IMPLEMENTADO | C | nenhuma (reavaliar após 044) |
 | §6.2 · §6.4 · §8 · A2 · E1 · frente 2 | sem reuso dentro do Edital | PARCIALMENTE RESOLVIDO (043; TF-1 iii) | B | spec TF-1 só com evidência |
@@ -821,27 +821,28 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 
 | Estado | Quantos |
 |---|---:|
-| RESOLVIDO | 12 |
+| RESOLVIDO | 13 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
 | PARCIALMENTE RESOLVIDO | 6 |
-| NÃO IMPLEMENTADO | 19 |
+| NÃO IMPLEMENTADO | 18 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 3 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 |
 
-Dos 19 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
+Dos 18 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
 termo constitucional (B9/FR-007 da 023, A6/FR-465–466 da 032, §7.2/Constituição, e a parte "âncora"
 do §5.12/FR-344) — a revisão de 25/09 os registrou e não os tomou. Resíduo por grupo, nos itens ainda
-abertos: **A = 1** ("O que mudou" sem o recorte; o recorte transversal, a contenção #161 e a lista
-gravada saíram em 26/09 com o merge do #173, e o ValorDeFato com o #183); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
+abertos: **A = 0** (o recorte transversal, a contenção #161 e a lista gravada saíram em 26/09 com o
+merge do #173, o ValorDeFato com o #183 e o "O que mudou" do recorte com o #185; a classe que este
+último revelou é unidade nova, o RC-111 da auditoria); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
 
 Separação pedida — **(i) corrigido em 25/09**: §5.1, §5.4, §5.5, §5.8, §5.10, Alvo do §5.6, colapso
 por Evento do §5.12, banner do reuso, tabela do documento (B1), contenção #161, instrução na Mesa e
 facultativo na Revisão (#167), duplicar Perfil (043). **(ii) para a 044** (mesclada pelo
 #173 em 26/09): recorte transversal, terceira saída da #161, divergência nas inscrições antigas, lista
 gravada, "não se aplica", Mesa/consulta/portal lendo a lista. **(iii) sem dono**: M4, M12, §5.12 por
-Perfil e por severidade, "O que mudou" com `profileId`/`modalityId`, cartão público sem marca de
+Perfil e por severidade, "O que mudou" com `profileId`/`modalityId` (feito pelo #185), cartão público sem marca de
 facultativo, estado de revisão do reuso (E9) e sorteio herdado (A4), hora inventada, total de vagas,
 autoridade com portaria/local/data, B3, B5, M16.
 
@@ -877,7 +878,8 @@ autoridade com portaria/local/data, B3, B5, M16.
   composição (larguras e fios); não gerei nem olhei um PDF grande.
 - **"O que mudou" pode omitir outros campos retificáveis além de `profileId`/`modalityId`.** Só conferi o
   Documento Exigido em `publicacoes/domain/alteracoes.py:89-95`; vale cruzar o dicionário `CAMPOS` com a
-  matriz de mutabilidade.
+  matriz de mutabilidade. **Desfecho (26/09):** cruzado — 45 dos 84 campos retificáveis não produzem
+  linha. É o RC-111 da auditoria.
 - **B8 tem evidência fina** (não está no diário) e **B6** foi julgado pelo template, sem percurso.
 - **M7 depende de configuração**: o catálogo de autoridades é código com cargos no campo `nome`; se a
   produção vai trazer nomes de pessoas (e com que processo de troca) é decisão do Cefor.
