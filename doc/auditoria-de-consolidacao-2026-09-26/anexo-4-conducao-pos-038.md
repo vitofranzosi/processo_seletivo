@@ -10,6 +10,10 @@ commit**: `4ec1cbb` (fix N-03) — `git log --since=2026-09-19` sobre esses cami
 expressamente que **não tocam** a região de Atenção (`specs/040-visao-institucional-dos-processos/spec.md:34-37`,
 `:76-80`, `:214`). Portanto, das sete condicionantes C1–C7, **só a C3 fechou**.
 
+> **Desfecho, 26/09:** a `045` (spec no #181, implementação no #187, `ee894ab`) fechou C1, C2, C4, C5 e
+> C6 e o N-07, e deu unidade à medida (§8). Os blocos abaixo mantêm o que foi medido em 25/09 e ganham o
+> estado de agora; resta a C7.
+
 ---
 
 ### C1 · N-01 — "Nenhuma condição de atenção" afirma ausência global a partir de leitura parcial (+ "a vista parcial não se declara", §22-Q4)
@@ -20,12 +24,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 022 (FR-004, FR-025), 038 (FR-558, FR-559).
 - Implementação encontrada: nenhuma mudança.
 - Evidência no código atual: `backend/processo_seletivo/interface/views.py:3946-3960` — `atencao_visivel = any(alcancadas.values())`; basta alcançar uma espécie para a região aparecer. `interface/templates/interface/processo_detalhe.html:139-141` e `supervisao.html:139-141` — `<p class="nenhuma">Nenhuma condição de atenção neste Processo.</p>`, sem qualificação. `interface/supervisao.py:1302-1337` — `alcance` concede `UX_066` só com `resultado:publicar` e `UX_005/UX_064` só com a permissão de recurso: o publicador alcança uma espécie, o gestor não alcança três. O teste `tests/interface/test_supervisao.py:592-604` prende a frase como está; o caso de zero espécies (`:533-569`) está coberto, o de "alcança uma, nenhuma dispara" não.
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-730/FR-731 (#187, 26/09): a frase é global só para quem alcança o catálogo inteiro, relativa para quem alcança parte, e sai só do alcance do leitor (`supervisao.frase_de_ausencia`)
 - Ainda faz sentido?: sim — é o único ponto em que o padrão mais forte do produto (ausência honesta) é quebrado, e a 040 mostra que o próprio produto já sabe fazê-lo ("O que esta página não mede", `visao_geral.html:350-369`).
-- Lacuna residual: a frase de ausência precisa dizer que é relativa ao alcance do leitor (ou nomear o que não é mostrado), sem revelar o que foi suprimido. Mudança de texto + condição no template; nenhum cálculo novo.
-- Grupo do resíduo: A
+- Lacuna residual: nenhuma.
+- Grupo do resíduo: —
 - Impacto atual: baixo com equipe de 2–3 pessoas que acumulam papéis (quem acumula não recebe a frase falsa); vira falso "tudo em dia" assim que houver segregação de funções — que é exatamente o que a operação institucional exige.
-- Próxima ação sugerida: corrigir (cabe em fix pequeno com revisão do FR-559; decidir a redação)
+- Próxima ação sugerida: nenhuma
 - Relações: C1; E-6/ACH-25 (vista parcial); raiz = supressão por sinal (FR-004) sem declaração de parcialidade.
 - Confiança: alta — código e template lidos, nenhum commit desde 20/09.
 
@@ -37,12 +41,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 038 FR-561 (escrito só para "aguardando julgamento"), FR-565 (catálogo fechado), 018.
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/supervisao.py:1162-1167` — `recursos_do_edital(edital, situacao=recursos_selectors.AGUARDANDO_JULGAMENTO)`. O estado existe e é derivável: `recursos/application/selectors.py:24,30,105-110` (`AGUARDANDO_ADMISSIBILIDADE`). A recuperação lateral: `interface/acoes.py:120-127` mostra "Recursos recebidos (N)" ao julgador — mas N conta **todos** os recursos do Edital, inclusive decididos (`Recurso.objects.filter(inscricao__edital=edital).count()`), então não diz quantos esperam.
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-732 a FR-734 (#187, 26/09): `UX-064` e `UX-005` cobrem a admissibilidade e o julgamento, com a fase na mensagem (DP-02); a ação conta só as peças pendentes
 - Ainda faz sentido?: sim — a regra de impedimento vale igualmente para admitir e julgar (`doc/descoberta-conducao-por-presidencia-unica.md` §2.2, `recursos/application/admitir.py:54`), então a mesma partição UX-005/UX-064 serve; o custo é um filtro. Não contradiz FR escrito (FR-561 é estreito), mas deixa a cauda que a 038 promete cobrir incompleta.
-- Lacuna residual: incluir `AGUARDANDO_ADMISSIBILIDADE` na leitura de pendentes (ou espécie própria), com revisão do FR-561/FR-565; opcionalmente fazer o contador da lista contar só pendentes.
-- Grupo do resíduo: A
+- Lacuna residual: nenhuma.
+- Grupo do resíduo: —
 - Impacto atual: o recurso tempestivo não aparece no painel exatamente enquanto o prazo de resposta institucional corre; mitigado pelo contador da lista de Processos, que porém não distingue pendente de decidido.
-- Próxima ação sugerida: criar spec curta (ou emenda da 038) — decisão embutida: espécie nova × ampliar UX-064
+- Próxima ação sugerida: nenhuma
 - Relações: C2; §6 "admissibilidade fora do painel"; §22 Q8; inventário 09/09 (recursos).
 - Confiança: alta.
 
@@ -71,12 +75,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 038 FR-564 (não nomear pessoa), FR-566, 037 ("peça a alguém…").
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/templates/interface/_sinal.html:16-18` — link só `{% if sinal.destino %}`, sem ramo alternativo. `interface/supervisao.py:1240-1259` (`admite_encaminhamento`) devolve `None` para UX-001/002/046 quando falta `retificacao:elaborar`, e nada substitui o caminho.
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-740/FR-741 (#187, 26/09): o `UX-046` sem caminho diz a quem pedir pelo mecanismo da 037, e sai da Atenção onde ninguém pode retificar; sorteio, ocupação e prévia dizem a quem pedir a quem só consulta
 - Ainda faz sentido?: parcialmente — sim para UX-046 (Retificação resolve) e para quando o Processo/Edital não admite o ato; para UX-001/UX-002, dizer "peça a quem retifica" encaminharia a pessoa a um ato que não resolve (N-05). O resíduo só é limpo depois de N-05/N-06.
-- Lacuna residual: frase de capacidade no sinal sem destino, reaproveitando a redação da 037; nenhum dado novo.
-- Grupo do resíduo: B
+- Lacuna residual: o `UX-065` em recorte sem quadro e o `UX-004` num Processo em estado final, medidos e registrados na 045 (`research.md`, R-7).
+- Grupo do resíduo: C
 - Impacto atual: sinais que parecem acionáveis e não são para o leitor; com papéis acumulados o impacto some.
-- Próxima ação sugerida: corrigir (depois de N-05/N-06)
+- Próxima ação sugerida: nenhuma nesta frente
 - Relações: C4; §16 (a decisão de não nomear pessoa segue certa — FR-564 intacto, `supervisao.py:1141-1145`).
 - Confiança: alta.
 
@@ -88,12 +92,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 026 (contrato de mutabilidade), 022 (FR-027, D-004 — "as duas informações são apresentadas, nenhuma é arbitrada"), 038.
 - Implementação encontrada: nenhuma derivação.
 - Evidência no código atual: `editais/domain/mutabilidade.py:432` — `("schedule", "status"): derivado()`. `editais/models/cronograma.py:29` — `default=Status.PLANEJADO`. A composição **não expõe** o campo (`interface/templates/interface/_evento.html` não tem input de status; `interface/forms.py:1330` só o preserva) e a Retificação não o oferece (derivado). Publicação congela o valor do modelo: `publicacoes/application/publish_edital.py:293`. Nenhuma escrita de `EM_ANDAMENTO`/`CONCLUIDO` fora de enum e serializer (`rg` sobre `processo_seletivo`; só `editais/api/serializers.py:186` aceita o valor pela API). `interface/supervisao.py:635-662` + `COERENTES` `:546-552`: todo Evento com término cujo início já passou vira `UX-002`.
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-735 a FR-738 (#187, 26/09): doutrina escolhida — a fase é derivada (DP-01), pela régua do vencido e pela do período; `CANCELADO` é o único estado declarado; o `UX-002` saiu do catálogo
 - Ainda faz sentido?: sim, com uma correção de diagnóstico: há **duas doutrinas** no repositório. O inventário de 09/09 (`doc/inventario-supervisao-do-processo.md:257-262, 443-446`) trata o status como **declarado à mão** e recomenda "não agora" derivá-lo; o contrato da 026 o chama de **derivado**. Pela interface ninguém consegue declará-lo, então ele não é nem declarado nem derivado — é constante. Qualquer das duas saídas (derivar na leitura; ou tirar o status da comparação/do conteúdo) fecha o ruído; manter as duas doutrinas não.
-- Lacuna residual: decidir a doutrina (derivado × declarado) e aplicá-la; se derivado, `UX-002` passa a disparar só em contradição real (Evento cancelado/datas incoerentes).
-- Grupo do resíduo: A
+- Lacuna residual: o portal do candidato tem regra própria de fase, e ele e o PDF não filtram `CANCELADO` — registrados na 045, *Out of Scope*.
+- Grupo do resíduo: C
 - Impacto atual: um `UX-002` por Evento com término já iniciado, em todo Edital publicado pela interface — ruído permanente que treina a ignorar a região; a página do Processo também exibe "declarado planejado" nos próximos marcos (`processo_detalhe.html:121`).
-- Próxima ação sugerida: criar spec curta (decisão de doutrina + derivação)
+- Próxima ação sugerida: nenhuma nesta frente
 - Relações: C6; E-4 (fonte declarada derivada que nada deriva); causa de N-05 (parte UX-002); ACH-08 deslocado (§14).
 - Confiança: alta — leitura de modelo, form, template, publicação e sinal.
 
@@ -105,12 +109,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 022 FR-035/FR-036, 038 FR-557, 026.
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/supervisao.py:1222-1223` (rótulos) e `:1273-1274` (`reverse("interface:retificar")`) inalterados; `editais/domain/mutabilidade.py:447` — `("stages", "scheduleEventId"): estrutural()`; `interface/retificacao.py:1054` — `SECOES_QUE_ACRESCENTAM` não inclui Etapas. O próprio código diz que Etapa sem marco "é publicável e legítimo" (`supervisao.py:604-615`).
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-738/FR-739 (#187, 26/09): o `UX-002` saiu com a derivação, e o `UX-001` virou aviso da validação do conteúdo, só no ato de publicação (DP-03); nenhum sinal leva mais à Retificação por Cronograma
 - Ainda faz sentido?: sim, e a parte UX-001 **não se resolve com N-06**: uma Etapa publicada sem Evento continuará sem Evento para sempre (estrutural, sem acréscimo de Etapa), e o sinal aponta uma tela que nunca a corrige. Precisa decisão: UX-001 em Edital publicado é condição de Atenção (então sem destino, dito como fato estrutural) ou só aviso de composição (então sai do painel e vira validação — ver N-08/D-G1)?
-- Lacuna residual: parte UX-002 — some com N-06; parte UX-001 — decisão sobre o destino/natureza do sinal.
-- Grupo do resíduo: A
+- Lacuna residual: nenhuma.
+- Grupo do resíduo: —
 - Impacto atual: para quem tem `retificacao:elaborar`, dois de cada três sinais levam a um beco (Previsibilidade caiu 1 ponto por isso em 20/09).
-- Próxima ação sugerida: criar spec (junto com N-06)
+- Próxima ação sugerida: nenhuma
 - Relações: C5; N-06 (causa de UX-002); N-04; E-4; §21 respeitado (os campos continuam fora da Retificação).
 - Confiança: alta.
 
@@ -122,12 +126,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 013 (panorama/prontidão), 022 FR-028/FR-033, 038.
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/supervisao.py:686` chama `resumo_da_etapa(edital=edital, etapa=etapa)` sem `panorama`; `avaliacoes/application/selectors.py:193-238` agrega sobre `Inscricao.status=SUBMETIDA` inteiro (`carentes = total - completas`, `:227`). A listagem, ao contrário, filtra por participantes (`selectors.py:174-190`, `_recorte_da_prontidao`), e a tela mostra "eliminadas antes" (`distribuicao.html:127-129`). Mesmo com `panorama`, `carentes` continuaria sobre o total — o panorama só acrescenta contagens.
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: RESOLVIDO — `045` FR-742 (#187, 26/09): `resumo_da_etapa` conta participantes, pela mesma fonte da distribuição; o número e a lista usam o mesmo filtro (`carente`)
 - Ainda faz sentido?: sim — número que contradiz a lista logo abaixo, em Etapas posteriores à primeira (qualquer Edital com corte).
-- Lacuna residual: `carentes`/`sem_conclusao` sobre participantes (ou medida explícita "de N participantes"), nas duas superfícies ao mesmo tempo (é uma leitura só).
-- Grupo do resíduo: B
+- Lacuna residual: nenhuma.
+- Grupo do resíduo: —
 - Impacto atual: sobrestima o trabalho faltante a partir da 2ª Etapa; induz a alocar avaliador para quem já saiu.
-- Próxima ação sugerida: corrigir
+- Próxima ação sugerida: nenhuma
 - Relações: ACH-27 (16/09, outro lote) — o deslocamento para dentro da distribuição continua; Processo↔Supervisão seguem concordando.
 - Confiança: alta (lógica lida; não reproduzido em execução).
 
@@ -377,12 +381,12 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Specs relacionadas: 022 FR-032 (medida é par), 038.
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/templates/interface/_sinal.html:13-15` — `{{ numerador }} de {{ denominador }}` sem unidade (a `Medida` não carrega unidade, `supervisao.py:175-…`); `interface/supervisao.py:624-627` — "está sem marco no cronograma."; `interface/templates/interface/identificar.html:55-56` — `papel.1|join:", "` (permissões cruas).
-- Estado atual: NÃO IMPLEMENTADO
+- Estado atual: PARCIALMENTE RESOLVIDO — a unidade da medida entrou pela `045` FR-743 (#187, 26/09): "7 de 7 inscrições"; o "sem marco" deixou a Atenção com o `UX-001`
 - Ainda faz sentido?: parcialmente — unidade na medida sim (barato); o seletor é demonstração e desaparece com C7.
-- Lacuna residual: unidade da medida por espécie ("inscrições sem cobertura de N submetidas"); consequência de UX-001 depende da decisão de N-05.
+- Lacuna residual: o seletor que lista permissões cruas (desaparece com C7).
 - Grupo do resíduo: C
 - Impacto atual: pequeno, cognitivo.
-- Próxima ação sugerida: corrigir (junto de N-05/N-07)
+- Próxima ação sugerida: nenhuma agora
 - Relações: N-05, N-07, N-09, C7.
 - Confiança: alta.
 
@@ -608,13 +612,13 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | ID | Título | Estado | Grupo | Próxima ação |
 |---|---|---|---|---|
-| C1 · N-01 | Frase de ausência absoluta sobre leitura parcial; vista parcial não se declara | NÃO IMPLEMENTADO | A | corrigir |
-| C2 · N-02 | Recurso aguardando admissibilidade sem sinal | NÃO IMPLEMENTADO | A | criar spec curta / emenda da 038 |
+| C1 · N-01 | Frase de ausência absoluta sobre leitura parcial; vista parcial não se declara | RESOLVIDO (045, #187) | — | nenhuma |
+| C2 · N-02 | Recurso aguardando admissibilidade sem sinal | RESOLVIDO (045, #187) | — | nenhuma |
 | C3 · N-03 · `4ec1cbb` | Link "Abrir a Supervisão" sem guarda | RESOLVIDO | — | nenhuma |
-| C4 · N-04 | Sinal sem caminho não diz a quem pedir | NÃO IMPLEMENTADO | B | corrigir (após N-05/N-06) |
-| C6 · N-06 | `schedule.status` derivado que nada deriva → UX-002 permanente | NÃO IMPLEMENTADO | A | criar spec (decidir doutrina) |
-| C5 · N-05 | UX-001/UX-002 encaminham à Retificação que não os resolve | NÃO IMPLEMENTADO | A | criar spec (com N-06; decidir UX-001) |
-| N-07 · ACH-27 | Contador de cobertura inclui eliminados antes | NÃO IMPLEMENTADO | B | corrigir |
+| C4 · N-04 | Sinal sem caminho não diz a quem pedir | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
+| C6 · N-06 | `schedule.status` derivado que nada deriva → UX-002 permanente | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
+| C5 · N-05 | UX-001/UX-002 encaminham à Retificação que não os resolve | RESOLVIDO (045, #187) | — | nenhuma |
+| N-07 · ACH-27 | Contador de cobertura inclui eliminados antes | RESOLVIDO (045, #187) | — | nenhuma |
 | N-08 | Avisos de validação fora da Atenção | NÃO IMPLEMENTADO | C | nenhuma (fronteira a decidir) |
 | N-09 | `cand:…` e UUIDs na tela do recurso | NÃO IMPLEMENTADO | C | corrigir (polish) |
 | N-10 | Exportação vazia sem mensagem | NÃO IMPLEMENTADO | C | corrigir |
@@ -629,7 +633,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | §6/§13 matrícula | Matrícula fora do painel | NÃO IMPLEMENTADO | C | nenhuma (medir no piloto) |
 | §7 prazo | Prazo restante em três formas | NÃO IMPLEMENTADO | C | corrigir (polish) |
 | §7 recurso público | Prazo recursal ausente da página pública do resultado | NÃO IMPLEMENTADO | B | corrigir |
-| §8 glossário | "7 de 7" sem unidade; "sem marco" sem consequência; seletor cru | NÃO IMPLEMENTADO | C | corrigir |
+| §8 glossário | "7 de 7" sem unidade; "sem marco" sem consequência; seletor cru | PARCIALMENTE RESOLVIDO (045, #187) | C | nenhuma agora |
 | §13 · §18 RA | Registro Acadêmico sem validação no destino | IMPLEMENTADO, MAS NÃO VALIDADO | B | validar |
 | §18 custo | ~17 consultas por Edital no painel | IMPLEMENTADO, MAS NÃO VALIDADO | C | validar |
 | §18 observabilidade | Sem métrica de condução | NÃO IMPLEMENTADO | C | nenhuma |
@@ -648,24 +652,25 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | Estado | Nº |
 |---|---|
-| RESOLVIDO | 4 |
+| RESOLVIDO | 10 |
 | RESOLVIDO POR OUTRO CAMINHO | 1 |
-| PARCIALMENTE RESOLVIDO | 1 |
-| NÃO IMPLEMENTADO | 23 |
+| PARCIALMENTE RESOLVIDO | 2 |
+| NÃO IMPLEMENTADO | 16 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos por grupo: **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) · **B = 7** (N-04, N-07, E-6, D-G1, D-G3/NOVO-1, prazo recursal público, RA) · **C = 14**.
+Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 5** (E-6, D-G1, D-G3/NOVO-1, prazo recursal público, RA) · **C = 14**, mais as sobras registradas de N-04 e N-06. Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
 
-Condicionantes C1–C7 de 20/09: **1 de 7 fechada** (C3). As demais estão exatamente como em 20/09.
+Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7.
 Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores (com furo NOVO-1); **D-G1, D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).
 
 ## 3. Achados NOVOS encontrados de passagem
 
 - **NOVO-1 — "Fonte de demonstração" é fonte publicável em produção.** `sorteios/infrastructure/fontes/__init__.py:83-92` registra o falso sem condição de ambiente; `interface/forms.py:318-322` o oferece no seletor da composição (`sorted(FONTES)`); `editais/domain/perfis.py:526-541` o aceita; `config/settings/production.py` não o recusa (as 14 guardas cobrem segredo, hosts, HTTPS, banco, seletores e autenticação, não a fonte). O falso devolve material fixo `12345 67890 11223 44556 77889` (`sorteios/infrastructure/fontes/loteria_federal.py:150-162`) — semente previsível e não externa. Um Edital publicado em produção pode sortear com ela. É o furo que resta na D-G3 e no FR-076 da 021. Atenuante: o nome aparece no manifesto e na tela pública. Saída provável: a mesma barreira de produção que já existe para os seletores de identidade (sem quebrar `seed_demo`). Grupo B.
-- **NOVO-2 — "Recursos recebidos (N)" conta recursos decididos.** `interface/acoes.py:120-127` usa `Recurso.objects.filter(inscricao__edital=edital).count()`; o comentário justifica o número porque "o recurso corre contra prazo", mas o total não distingue pendente de decidido — e é a única recuperação de N-02. Grupo C.
+- **NOVO-2 — "Recursos recebidos (N)" conta recursos decididos.** *Resolvido pela `045` (#187, 26/09): o
+  rótulo é "Recursos aguardando decisão (N)" e conta só as pendentes.* `interface/acoes.py:120-127` usa `Recurso.objects.filter(inscricao__edital=edital).count()`; o comentário justifica o número porque "o recurso corre contra prazo", mas o total não distingue pendente de decidido — e é a única recuperação de N-02. Grupo C.
 - **Refinamento de N-06 (não é achado novo, é premissa corrigida):** o inventário de 09/09 trata o status do Evento como declarado à mão, o contrato da 026 o chama de derivado, e a interface não oferece o campo nem na composição nem na Retificação — só a API o aceita (`editais/api/serializers.py:186`). O conserto começa por escolher a doutrina.
 
 ## 4. Incertezas que exigem validação humana
