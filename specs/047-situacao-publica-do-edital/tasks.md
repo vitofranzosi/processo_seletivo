@@ -109,7 +109,7 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
 
 **Independent Test**: quickstart, percursos 1 e 2.
 
-- [ ] T011 [P] [US1] Escrever os testes em `backend/tests/integration/portal/test_desfecho_publico.py` (**NOVO**). Finalizar por `processos/application/finalizacao.py` (`cancel_edital`, `close_edital`, `close_process`), como `tests/integration/processos/test_finalizacao_concorrente.py` faz. Casos:
+- [X] T011 [P] [US1] Escrever os testes em `backend/tests/integration/portal/test_desfecho_publico.py` (**NOVO**). Finalizar por `processos/application/finalizacao.py` (`cancel_edital`, `close_edital`, `close_process`), como `tests/integration/processos/test_finalizacao_concorrente.py` faz. Casos:
   - Edital cancelado com período em curso: a página diz *cancelado* e a data do ato, sem *Aberta* nem *Faltam* (`FR-760`, `FR-761`);
   - cancelado com período por abrir: sem *Em breve* nem *começam em*;
   - Edital encerrado: página e cartão da vitrine dizem *encerrado*, e o cartão está no grupo *Inscrições encerradas* mesmo com o período declarado ainda em curso; o mesmo com o período ainda por abrir, que nunca vai para *Próximas seleções* (`FR-763`, `R-3`);
@@ -119,22 +119,22 @@ O que a US2 e a US3 leem. Nenhum comportamento muda nesta fase.
   - o `actor_subject` do ato **não** aparece no HTML (`FR-776`);
   - o cancelado continua fora da vitrine e responde 200 pelo endereço;
   - cronograma, documentos e resultados continuam na página com desfecho.
-- [ ] T012 [US1] Em `backend/processo_seletivo/processos/application/selectors.py` (**EXISTENTE**), criar `desfechos(editais)`. Recebe Editais com `processo` carregado e devolve `{edital_id: Desfecho | None}` pela precedência de `data-model.md`. A data vem do `AtoAdministrativo` mais recente de operação `ENCERRAR`/`CANCELAR` do agregado aplicável, lido numa **única** consulta, e só quando algum estado é final. Sem ato encontrado, `em=None` (`research.md`, `R-2`). Definir `Desfecho` como dataclass congelada no mesmo módulo.
-- [ ] T013 [P] [US1] Criar `backend/tests/unit/processos/test_desfechos.py` (**NOVO**; a pasta existe e não tem teste de selectors):
+- [X] T012 [US1] Em `backend/processo_seletivo/processos/application/selectors.py` (**EXISTENTE**), criar `desfechos(editais)`. Recebe Editais com `processo` carregado e devolve `{edital_id: Desfecho | None}` pela precedência de `data-model.md`. A data vem do `AtoAdministrativo` mais recente de operação `ENCERRAR`/`CANCELAR` do agregado aplicável, lido numa **única** consulta, e só quando algum estado é final. Sem ato encontrado, `em=None` (`research.md`, `R-2`). Definir `Desfecho` como dataclass congelada no mesmo módulo.
+- [X] T013 [P] [US1] Criar `backend/tests/unit/processos/test_desfechos.py` (**NOVO**; a pasta existe e não tem teste de selectors):
   - uma consulta para N Editais finais e zero para N Editais publicados;
   - a precedência;
   - o ato ausente devolve `em=None`.
-- [ ] T014 [US1] Em `backend/processo_seletivo/portal/leitura.py`, criar `situacao_publica(periodo, desfecho)`, que devolve `(chave, rotulo)`. Com desfecho, as chaves são `cancelado`, `encerrado_edital` e `encerrado_processo`; sem desfecho, a marca de `SITUACAO_DO_CARTAO`, inalterada. Fazer `agrupar_por_situacao` mandar o Edital com desfecho para o grupo `ENCERRADO`.
-- [ ] T015 [US1] Em `backend/processo_seletivo/portal/views.py`:
+- [X] T014 [US1] Em `backend/processo_seletivo/portal/leitura.py`, criar `situacao_publica(periodo, desfecho)`, que devolve `(chave, rotulo)`. Com desfecho, as chaves são `cancelado`, `encerrado_edital` e `encerrado_processo`; sem desfecho, a marca de `SITUACAO_DO_CARTAO`, inalterada. Fazer `agrupar_por_situacao` mandar o Edital com desfecho para o grupo `ENCERRADO`.
+- [X] T015 [US1] Em `backend/processo_seletivo/portal/views.py`:
   - `selecao`: calcular `desfechos([versao.edital])`, usar `situacao_publica` para `situacao_rotulo` e para a classe da marca, e zerar `dias_restantes` quando houver desfecho;
   - `vitrine` e `_selecao_da_vitrine`: calcular `desfechos` **uma vez** para todos os Editais listados, e usar o resultado no rótulo, na classe e no grupo.
-- [ ] T016 [US1] Nos templates, dizer o desfecho **com a data**, na zona institucional, e nenhuma frase de prazo quando ele existir:
+- [X] T016 [US1] Nos templates, dizer o desfecho **com a data**, na zona institucional, e nenhuma frase de prazo quando ele existir:
   - `backend/processo_seletivo/portal/templates/portal/selecao.html`: a classe da marca passa a vir da situação pública, e não de `periodo.estado`;
   - `backend/processo_seletivo/portal/templates/portal/_periodo.html`;
   - `backend/processo_seletivo/portal/templates/portal/_cartao_da_selecao.html`.
 
   CSS das três chaves novas em `base.html`.
-- [ ] T017 [P] [US1] Criar `backend/tests/portal/test_consultas_da_vitrine.py` (**NOVO**; hoje nenhum teste mede as consultas da vitrine) e medir, com `CaptureQueriesContext`, que a vitrine com 1 e com 5 Editais encerrados emite o **mesmo** número de consultas (`R-7`).
+- [X] T017 [P] [US1] Criar `backend/tests/portal/test_consultas_da_vitrine.py` (**NOVO**; hoje nenhum teste mede as consultas da vitrine) e medir, com `CaptureQueriesContext`, que a vitrine com 1 e com 5 Editais encerrados emite o **mesmo** número de consultas (`R-7`).
 
 **Checkpoint**: nenhuma página de Edital com desfecho afirma inscrição aberta.
 

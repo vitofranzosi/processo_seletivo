@@ -129,6 +129,12 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 /* A encerrada não é apagada: Edital encerrado continua sendo ato normativo publicado, e sumir com
    ele visualmente diria "descartado" onde o certo é "não recebe mais inscrição". */
 .marca-situacao.encerrado{background:var(--cinza-fundo);color:var(--texto-fraco)}
+/* O Edital que acabou (047, FR-760, FR-763). O encerrado tem o desenho da encerrada, porque os dois
+   são registro consultável; a palavra da marca é que os distingue. O cancelado se destaca: é
+   interrupção, e quem chega pelo endereço precisa vê-lo antes de ler qualquer outra coisa. */
+.marca-situacao.encerrado_edital,.marca-situacao.encerrado_processo{background:var(--cinza-fundo);
+  color:var(--texto-fraco)}
+.marca-situacao.cancelado{background:var(--vermelho-fundo);color:var(--vermelho)}
 .acao-aparente{display:inline-block;padding:.5rem .9rem;border-radius:4px;background:var(--verde);
   color:var(--branco);font-weight:600;font-size:.9375rem}
 .selecao:hover .acao-aparente{background:var(--verde-escuro)}
@@ -285,6 +291,7 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .situacao.aberto{color:var(--sucesso)}
 .situacao.futuro{color:var(--amarelo)}
 .situacao.encerrado{color:var(--texto-fraco);font-weight:400}
+.situacao.desfecho{color:var(--texto)}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);padding:.75rem 1rem;

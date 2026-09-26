@@ -7,7 +7,19 @@ O prazo restante existe porque uma data sozinha não informa urgência: "até 20
 são a mesma informação e produzem decisões diferentes. `dias_restantes` só é passado onde faz
 sentido calculá-lo; sem ele, o bloco continua dizendo a data.
 {% endcomment %}
-{% if periodo.estado == "aberto" %}
+{% comment %}
+**O desfecho vence o período** (047, FR-760, FR-761). Um Edital cancelado dentro do prazo dizia
+"Inscrições abertas… Faltam 19 dias" — a frase lia só o período. Com desfecho, nenhuma frase de
+prazo é escrita: as datas continuam no cronograma, como Evento publicado, e ninguém lê nelas um
+convite. O motivo registrado no ato não é dito (FR-764).
+{% endcomment %}
+{% if desfecho %}
+<p class="situacao desfecho">
+  {% if desfecho.alcance == "PROCESSO" %}Processo seletivo{% else %}Edital{% endif %}
+  {% if desfecho.operacao == "CANCELADO" %}cancelado{% else %}encerrado{% endif %}{% if desfecho.em %}
+  em {{ desfecho.em|date:"d/m/Y" }}{% endif %}. Não recebe inscrições.
+</p>
+{% elif periodo.estado == "aberto" %}
 <p class="situacao aberto">
   Inscrições abertas{% if periodo.inicio %} desde {{ periodo.inicio|date:"d/m/Y" }}{% endif %}{% if periodo.fim %},
   até {{ periodo.fim|date:"d/m/Y" }} às {{ periodo.fim|date:"H\hi" }}{% endif %}.

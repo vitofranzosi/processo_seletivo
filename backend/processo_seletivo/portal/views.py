@@ -78,6 +78,7 @@ from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
+from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
@@ -273,10 +274,14 @@ def vitrine(request):
     quem lê, e não a de criação de quem publicou.
     """
     agora = timezone.now()
-    selecoes = [_selecao_da_vitrine(versao, agora) for versao in selectors.selecoes_publicas()]
+    versoes = list(selectors.selecoes_publicas())
+    # **O desfecho de todos os cartões numa leitura só** (047, `R-2`, `R-7`): uma consulta aos atos,
+    # e só quando algum Edital ou Processo está em estado final.
+    finais = desfechos([versao.edital for versao in versoes])
+    selecoes = [_selecao_da_vitrine(versao, agora, finais[versao.edital_id]) for versao in versoes]
     selecoes.sort(
         key=lambda item: (
-            leitura.ORDEM_DAS_SITUACOES.get(item["periodo"].estado, len(leitura.GRUPOS)),
+            leitura.ORDEM_DAS_SITUACOES.get(item["estado"], len(leitura.GRUPOS)),
             item["periodo"].fim or item["periodo"].inicio or agora,
         )
     )
@@ -308,7 +313,7 @@ def vitrine(request):
     )
 
 
-def _selecao_da_vitrine(versao, agora):
+def _selecao_da_vitrine(versao, agora, desfecho=None):
     """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
 
     Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
@@ -317,16 +322,25 @@ def _selecao_da_vitrine(versao, agora):
     dados = _selecao(versao)
     perfis = versao.content.get("profiles") or []
     periodo = dados["periodo"]
+    chave, rotulo = leitura.situacao_publica(periodo, desfecho)
     return {
         **dados,
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
         "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
         "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
-        "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
+        "dias_restantes": (
+            _dias_ate(periodo.fim, agora)
+            if periodo.estado == "aberto" and desfecho is None
+            else None
+        ),
         # A marca da situação, no cartão (024, FR-145). Sem ela, a situação de uma seleção sem
         # período designado não era dita em lugar nenhum: `_periodo.html` não escreve prazo para
-        # ela — corretamente —, e o cartão ficava mudo sobre o que ela é.
-        "situacao_rotulo": leitura.SITUACAO_DO_CARTAO.get(periodo.estado, ""),
+        # ela — corretamente —, e o cartão ficava mudo sobre o que ela é. Com a 047, o desfecho
+        # vence o período na marca, no grupo, na ordem e no filtro (`FR-763`).
+        "situacao_chave": chave,
+        "situacao_rotulo": rotulo,
+        "desfecho": desfecho,
+        "estado": leitura.estado_na_vitrine(periodo, desfecho),
         # O instante **do que está sendo mostrado**, que é por onde "mais recentes" ordena
         # (FR-140, T-006).
         "vigente_desde": versao.valid_from,
@@ -369,6 +383,9 @@ def selecao(request, edital_id):
     except DomainError as exc:
         raise Http404 from exc
     contexto = _selecao(versao)
+    # **O desfecho vence o período** (047, `FR-760` a `FR-762`, `D-003`). Até aqui a página lia só
+    # o período, e um Edital cancelado dentro dele anunciava *"Aberta — faltam 19 dias"*.
+    contexto["desfecho"] = desfechos([versao.edital])[versao.edital_id]
     iniciadas = _inscricoes_iniciadas(request, edital_id)
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
@@ -381,7 +398,7 @@ def selecao(request, edital_id):
     # agora ou depois, e "faltam 3 dias" decide isso melhor do que uma data.
     contexto["dias_restantes"] = (
         _dias_ate(contexto["periodo"].fim, timezone.now())
-        if contexto["periodo"].estado == "aberto"
+        if contexto["periodo"].estado == "aberto" and contexto["desfecho"] is None
         else None
     )
     contexto["recebe_inscricoes"] = recebe_inscricoes(
@@ -415,7 +432,9 @@ def selecao(request, edital_id):
     contexto["atos_recentes"] = list(reversed(contexto["atos"]))
     # A marca de situação também aqui, e não só no cartão da vitrine: quem chega pelo endereço
     # direto — de um e-mail, de um compartilhamento — nunca passou pela vitrine (FR-145).
-    contexto["situacao_rotulo"] = leitura.SITUACAO_DO_CARTAO.get(contexto["periodo"].estado, "")
+    contexto["situacao_chave"], contexto["situacao_rotulo"] = leitura.situacao_publica(
+        contexto["periodo"], contexto["desfecho"]
+    )
     # A pergunta que o histórico responde é "mudou?", e quem responde é a natureza do ato — não a
     # contagem deles. Uma segunda Publicação sem Retificação faria a contagem dizer que sim.
     contexto["houve_retificacao"] = any(

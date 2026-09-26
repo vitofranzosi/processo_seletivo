@@ -149,7 +149,7 @@ def agrupar_por_situacao(selecoes):
     """
     por_estado = {}
     for selecao in selecoes:
-        por_estado.setdefault(selecao["periodo"].estado, []).append(selecao)
+        por_estado.setdefault(selecao["estado"], []).append(selecao)
     return [
         {"estado": estado, "titulo": titulo, "selecoes": por_estado[estado]}
         for estado, titulo in GRUPOS
@@ -171,6 +171,47 @@ SITUACAO_DO_CARTAO = {
     # há é um Edital que não recebe inscrição por este sistema, e continua consultável (FR-149).
     NAO_DESIGNADO: "Consulta",
 }
+
+
+# ---------------------------------------------------------------------------
+# O desfecho vence o período (047, `FR-760` a `FR-763`, `D-003`)
+# ---------------------------------------------------------------------------
+
+# A marca do Edital que acabou. **Diz de quem é o fim**, e por isso é mais longa que as quatro de
+# cima: "Encerrada" já é a marca do período que terminou, e o cartão do Edital encerrado precisa
+# se distinguir dele (`FR-763`). O Processo cancelado não tem chave de uso real — cancelá-lo exige
+# todos os Editais em estado final, e o desfecho do Edital vence —, e fica aqui para que um estado
+# inesperado não caia na marca do período.
+MARCA_DO_DESFECHO = {
+    ("EDITAL", "CANCELADO"): ("cancelado", "Edital cancelado"),
+    ("EDITAL", "ENCERRADO"): ("encerrado_edital", "Edital encerrado"),
+    ("PROCESSO", "ENCERRADO"): ("encerrado_processo", "Processo encerrado"),
+    ("PROCESSO", "CANCELADO"): ("cancelado", "Processo cancelado"),
+}
+
+
+def situacao_publica(periodo, desfecho):
+    """`(chave, rótulo)` da marca da seleção: o desfecho, quando há, e senão a do período.
+
+    **O desfecho vence** porque o período descreve a norma e o desfecho descreve o que aconteceu
+    com ela. Até a 047, um Edital cancelado dentro do período anunciava *"Aberta — faltam 19
+    dias"*: a marca lia só o período, e o cancelamento não chegava à página (`FR-761`).
+    """
+    if desfecho is not None:
+        return MARCA_DO_DESFECHO[(desfecho.alcance, desfecho.operacao)]
+    return periodo.estado, SITUACAO_DO_CARTAO.get(periodo.estado, "")
+
+
+def estado_na_vitrine(periodo, desfecho):
+    """O estado que decide grupo, ordem e filtro da vitrine (`FR-763`, `R-3`).
+
+    O Edital com desfecho vai para *"Inscrições encerradas"* qualquer que seja o período: o sistema
+    não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). Pelo período, um Edital
+    encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou. Não é um
+    quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão já diz de
+    quem é o fim.
+    """
+    return ENCERRADO if desfecho is not None else periodo.estado
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +289,7 @@ def filtrar(selecoes, consulta):
     if consulta["unidade"]:
         resultado = [s for s in resultado if s["unidade"] == consulta["unidade"]]
     if consulta["situacao"]:
-        resultado = [s for s in resultado if s["periodo"].estado == consulta["situacao"]]
+        resultado = [s for s in resultado if s["estado"] == consulta["situacao"]]
     if consulta["perfil"]:
         resultado = [s for s in resultado if consulta["perfil"] in s["perfis"]]
     if consulta["busca"]:
