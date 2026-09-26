@@ -261,6 +261,7 @@ só um requisito alheio. A correção é a tradução das duas chaves, e o teste
 `test_a_recusa_devolve_os_fatos_e_a_reversao_digitados` prende o caminho da recusa, independente da
 duplicação. Foi a comparação das três cópias gravadas contra a origem (`SC-233`) que o revelou.
 
-**Registrado também**: o reuso de Edital inteiro (`023`) não remapeia `cutRule.governedStage`
-(ver data-model). Esse **não** foi corrigido aqui — não afeta a duplicação, que mantém a Etapa — e
-ficou como tarefa separada para decisão do usuário.
+**Registrado também**: o reuso de Edital inteiro (`023`) não remapeava `cutRule.governedStage`.
+**Não** foi corrigido aqui — ficou como tarefa separada — e foi corrigido à parte, no #169, antes do
+merge desta feature: `remapear` passou a trocar a Etapa governada, e a duplicação herda a troca
+pelo mesmo mapa estendido (a Etapa do Edital mapeia para si mesma).

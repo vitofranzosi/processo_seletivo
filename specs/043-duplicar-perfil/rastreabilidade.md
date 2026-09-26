@@ -67,8 +67,10 @@ identificador, nenhuma ferramenta a cobra, e por isso ela tem tabela própria aq
 
 - **R-012** — a reexibição após recusa perdia fatos e reversão, para qualquer Perfil. **Corrigido**,
   porque a cópia passa pelo mesmo caminho: `interface/…::test_a_recusa_devolve_os_fatos_e_a_reversao_digitados`.
-- **`cutRule.governedStage` no reuso da `023`** — não remapeado. **Não** corrigido: não afeta a
-  duplicação; registrado como tarefa separada para decisão do usuário.
+- **`cutRule.governedStage` no reuso da `023`** — não remapeado. **Não** corrigido aqui; foi
+  corrigido à parte no #169. Depois do merge, a duplicação passa a recusar Etapa governada que não
+  seja do Edital, como as demais referências:
+  `unit/…::test_etapa_governada_que_nao_e_do_edital_estoura`.
 
 ## Medição e demonstração
 

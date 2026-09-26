@@ -286,8 +286,24 @@ def test_as_etapas_do_edital_continuam_as_mesmas():
     assert marco["stages"] == [ETAPA_TITULOS]
     assert marco["drawMethod"]["qualifyingStageId"] == ETAPA_TITULOS
     assert marco["tiebreakers"][0]["parameters"]["stageId"] == ETAPA_TITULOS
-    # `remapear` não alcança a Etapa governada; aqui isso é o certo — ela é do mesmo Edital.
+    # `remapear` troca a Etapa governada (#169), e a do Edital mapeia para si mesma.
     assert marco["cutRule"]["governedStage"] == ETAPA_DOCUMENTAL
+
+
+def test_etapa_governada_que_nao_e_do_edital_estoura():
+    origem = perfil_de_origem()
+    alheia = "00000000-0000-4000-8000-0000000430fe"
+    origem["classificationMilestones"][0]["cutRule"]["governedStage"] = alheia
+
+    with pytest.raises(ReferenciaNaoMapeada):
+        duplicar(origem)
+
+
+def test_corte_que_nao_governa_etapa_atravessa_intocado():
+    origem = perfil_de_origem()
+    origem["classificationMilestones"][0]["cutRule"]["governedStage"] = "NONE"
+
+    assert duplicar(origem)["classificationMilestones"][0]["cutRule"]["governedStage"] == "NONE"
 
 
 def test_etapa_que_nao_e_do_edital_estoura_em_vez_de_atravessar():

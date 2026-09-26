@@ -40,7 +40,7 @@ Saída: um Perfil na mesma forma.
 | `classificationMilestones[].code`, `.name` | derivados do Perfil novo **se** derivados da origem; senão iguais | `FR-644` · `R-005` |
 | `classificationMilestones[].stages[]` | **iguais** — Etapas do Edital | `FR-642` |
 | `classificationMilestones[].drawMethod.qualifyingStageId` | **igual** — Etapa do Edital | `FR-642` |
-| `classificationMilestones[].cutRule.governedStage` | **igual** — Etapa do Edital, ou o sentinela de *nenhuma*. `remapear` não o troca, e aqui isso é o certo; no reuso da `023` não é — achado registrado à parte em 25/09 | `FR-642` |
+| `classificationMilestones[].cutRule.governedStage` | **igual** — Etapa do Edital, ou o sentinela de *nenhuma*. `remapear` a troca desde o #169, e aqui a Etapa do Edital mapeia para si mesma; Etapa de fora estoura | `FR-642` |
 | demais campos do marco (forma da ordem, operação, normalização, arredondamento, janela recursal, método de sorteio, regra de corte) | iguais | `FR-639` |
 | `tiebreakers[].id` | **novo** | `FR-640` |
 | `tiebreakers[].parameters.factId` | o fato **da cópia** correspondente | `FR-641` |
