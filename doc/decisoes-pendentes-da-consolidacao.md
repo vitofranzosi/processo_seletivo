@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, e o item 2 da `DP-08`, decidido na mesma data** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, e a `DP-14`, decidida em 27/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -691,6 +691,68 @@ também o de duas ou mais.
 
 É o que a FR-039 já prevê, e não pede nada a quem compõe. O Perfil sem linha geral com vagas, com tudo em
 cota, continua sem ampla. As inscrições já enviadas não mudam.
+
+### O que foi decidido
+
+Em 27/09/2026, o usuário escolheu a **A**, como passo 0 da ordem adotada na mesma data. A inscrição
+oferece a ampla concorrência como recorte nulo sempre que o Perfil tiver vaga imediata na linha geral do
+quadro e não declarar Modalidade de ampla; declarando uma, é ela que se usa (FR-039, 2ª frase). O Perfil
+sem vaga na linha geral continua sem ampla.
+
+**Três pontas pediram decisão na correção**, e foram decididas na mesma data:
+
+1. **A ampla vem marcada.** No Perfil que a oferece ao lado de cotas, o rascunho nasce na ampla, e o
+   cotista troca pela cota. O nulo é a ausência de reserva, que a FR-039 manda apresentar como ampla; exigir
+   escolha explícita pediria uma coluna nova, porque no banco "não escolheu" e "escolheu a ampla" são o
+   mesmo nulo. No Perfil que **declara** a ampla, a escolha continua obrigatória, como antes.
+2. **"Com vagas" é vaga imediata.** O Perfil só de cadastro reserva, com a linha geral em zero, uma cota e
+   nenhuma ampla declarada, continua assumindo a cota. É a letra desta decisão, e o caso fica registrado
+   como achado abaixo; a família já tem a convocação fora do sistema pela `DP-05`.
+3. **Os rascunhos abertos com a cota assumida ficam como estão.** Não há como distinguir a cota assumida da
+   escolhida, e não há produção. A cota gravada continua sendo a escolha, e a tela passa a oferecer a
+   ampla ao lado. É a regra que a `048` já fixou para o caso-limite: *"a pessoa pode trocá-la pela ampla, e
+   nada a troca por ela"*.
+
+**O que foi feito.** `oferece_a_ampla_sem_modalidade` decide a oferta, e `modalidade_assumida` e
+`_modalidade_escolhida` passam a consultá-la (`inscricoes/application/rascunho.py`). A mesma regra
+responde à tela, à gravação, ao envio e ao POST forjado. A tela do candidato põe *"Ampla concorrência"* à
+frente das cotas, e a revisão, o comprovante e a página pública da seleção passam a nomeá-la. Os
+requisitos restaurados são os da `009`: FR-038, FR-039, FR-040, o cenário 2 da US4 (*"escolho concorrer
+sem reserva"*), SC-005 e SC-006. Classificação, sorteio, corte e ocupação não mudaram, porque já liam o
+recorte nulo como a ampla: as fixtures deles já montavam inscrições nulas em Perfil com cota, gravadas
+direto no banco, e por isso nunca passaram pela porta que as recusava.
+
+**O caso-limite da `048`** (*"Rascunho de inscrição aberto"*) continua valendo onde a assunção é
+legítima, o Perfil com tudo em cota, e o teste dele passou a montar esse Perfil. Com vaga na linha geral,
+nada é assumido, e o caso não se forma.
+
+**O texto de `_perfil.html` não muda.** *"Nenhuma — a ampla concorrência é só a linha geral do quadro"*
+era a promessa que a inscrição não cumpria, e agora cumpre.
+
+**Achados, fora do escopo.** Registro, não escopo.
+
+- **A-14.1 · A tela de Modalidade única trava quem já enviou o documento da cota.** Sem campo de
+  Modalidade na tela, a view calcula o descarte contra `None` (`portal/views.py`, em `inscricao`, na
+  chamada a `descartes_por_mudanca_de_modalidade`), e *"Revisar inscrição"* abre *"Mudar de modalidade
+  descarta documentos"*. Confirmar leva a `discard_not_confirmed`, porque `gravar_dados` assume a
+  Modalidade única e não vê descarte algum. Reproduzido em 27/09. Vem de antes desta correção, e depois
+  dela só alcança o Perfil com tudo em cota.
+- **A-14.2 · A advertência da FR-325 soa para a forma agora correta.** `general_competition_modality_undeclared`
+  (`editais/domain/validation.py`, `_ampla_por_declarar`) avisa todo Perfil que declara Modalidade sem
+  apontar a ampla, e manda declarar *"qual delas é a da ampla concorrência"*. Para o Perfil que só declara
+  cotas, que é o caso que esta decisão resolve, não há qual apontar.
+- **A-14.3 · A gestão não nomeia nem conta a ampla sem Modalidade.** A lista e o detalhe das inscrições
+  (`inscricoes/application/consulta.py`, `_nome_no_conteudo`) e a Mesa (`avaliacoes/application/mesa.py`)
+  mostram a Modalidade em branco; a contagem por Modalidade descarta o nulo, e o filtro não o alcança
+  (`_contagens`, `_filtrar`). A FR-067 e a FR-068 da `009` pedem a Modalidade. Já valia para o Perfil sem
+  Modalidade, e passa a ser o caso comum.
+- **A-14.4 · A Modalidade única que nasce por Retificação é atribuída em silêncio no envio.** Se uma
+  Retificação zera a linha geral, ou dá a primeira Modalidade a um Perfil sem vaga na linha geral, o
+  rascunho no nulo é recusado até o reconhecimento; depois dele, o envio grava a Modalidade única que
+  `_modalidade_escolhida` devolve (`inscricoes/application/submissao.py`, eixo 5), com os documentos
+  conferidos contra a inscrição sem ela. Vem de antes, pela `048`, e esta correção o estreita.
+- **A-14.5 · O Perfil só de cadastro reserva com cota continua pondo todo inscrito na cota.** É a
+  consequência declarada do item 2 acima.
 
 ---
 

@@ -198,8 +198,12 @@ def test_o_rascunho_de_modalidade_unica_nao_envia_em_silencio(
     Com uma só, a inscrição a assume sem perguntar, e **grava**. Depois da Retificação, o envio é
     recusado até a pessoa reconhecer a versão nova (009, FR-058); reconhecida, a Modalidade gravada
     continua sendo a escolha — trocá-la pela ampla é da pessoa. A primeira redação da spec dizia
-    que a escolha passaria a ser exigida, e este caso mostrou que não: assumir sem perguntar é o
-    achado A-1 da `048`.
+    que a escolha passaria a ser exigida, e este caso mostrou que não.
+
+    **Com tudo em cota**, e não com vaga na linha geral. Assumir a cota ao lado de uma linha geral
+    com vaga era o achado A-1, corrigido pela DP-14: ali a ampla sem Modalidade é oferecida, nada é
+    assumido, e o caso-limite não se forma (`test_ampla_sem_modalidade.py`). Ele sobrevive onde a
+    assunção é legítima — o Perfil sem ampla nenhuma.
     """
     rascunho = rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1))
     docente = rascunho["profiles"][0]
@@ -208,8 +212,8 @@ def test_o_rascunho_de_modalidade_unica_nao_envia_em_silencio(
     ]
     docente["generalCompetitionModalityId"] = None
     docente["vacancyTable"] = [
-        {"id": identificador(408, 0), "modalityId": None, "immediateVacancies": 1},
-        {"id": identificador(409, 0), "modalityId": MODALIDADE_PPP, "immediateVacancies": 1},
+        {"id": identificador(408, 0), "modalityId": None, "immediateVacancies": 0},
+        {"id": identificador(409, 0), "modalityId": MODALIDADE_PPP, "immediateVacancies": 2},
     ]
     edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
     joao = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
