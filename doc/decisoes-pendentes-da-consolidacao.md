@@ -447,6 +447,9 @@ critério de desempate. O usuário decidiu também que a Modalidade acrescentada
 uma, inclusive cota**, porque a auditoria define o problema como a ausência *"da ampla ou de uma
 cota"*, e limitar à ampla deixaria parte do `RC-37` aberta.
 
+**Executado:** a `048` foi mesclada pelo #197 (`0113b782`) em 26/09, e a auditoria registra o `RC-37`
+como RESOLVIDO.
+
 Os itens 1 (encerrar a `039`) e 3 (o alcance da Etapa) **continuam abertos**.
 
 ---
@@ -665,6 +668,10 @@ A tela sugere não declarar a ampla (*"Nenhuma — a ampla concorrência é só 
 `interface/templates/interface/_perfil.html:195`), e a inscrição só oferece as Modalidades declaradas
 (`inscricoes/application/rascunho.py:280`). Com uma cota, todo inscrito vira cotista; com duas ou mais,
 quem não é cotista não tem o que escolher. A inscrição congela a Modalidade no envio, e não há desfazer.
+
+É o **RC-128** da auditoria, que a `048` registrou como A-1 e que recomenda agir na composição, impedindo
+ou advertindo mais forte — a opção B abaixo. O RC-128 cobre só o Perfil de uma cota; esta decisão cobre
+também o de duas ou mais.
 
 ### O que já está fixado
 

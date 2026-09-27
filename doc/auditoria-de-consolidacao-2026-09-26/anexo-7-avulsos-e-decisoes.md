@@ -288,7 +288,7 @@ Nuance registrada pelo usuário (memória `constituicao-preserva-valor-nao-campo
 
 Resíduos: A = 0 · B = 2 · C = 7 · — = 1. *O A era o achado das duas avaliações, fechado pela `046` (#188); o que resta dele é a regra de combinação (C).*
 
-Decisões (Parte 2): 25 registradas. Com trabalho criado **não executado**: D-G2, D-G3 (regra do reuso), D-G5, recorte documental (opção 2; a 044 entrou pelo #173 e o "O que mudou" do recorte pelo #185), D-4 (barema adiado), nome social (029), TF-1/TF-2 (043), pergunta 3 da presidência única, papel de Diretoria (040). A D-G1, que abria a lista, foi executada pela `046` (#188) em 26/09.
+Decisões (Parte 2): 25 registradas. Com trabalho criado **não executado**: D-G2, D-G3 (regra do reuso), recorte documental (opção 2; a 044 entrou pelo #173 e o "O que mudou" do recorte pelo #185), D-4 (barema adiado), nome social (029), TF-1/TF-2 (043), pergunta 3 da presidência única, papel de Diretoria (040). A D-G1, que abria a lista, foi executada pela `046` (#188) em 26/09, e a D-G5 pela `048` (#197), no mesmo dia.
 
 ## Achados NOVOS encontrados de passagem
 
