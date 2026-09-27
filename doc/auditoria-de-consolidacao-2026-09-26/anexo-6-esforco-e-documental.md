@@ -276,7 +276,7 @@ branch é a leitura de antes do merge. Depois, no mesmo dia, o #183 corrigiu o `
 - Evidência no código atual: `publicacoes/domain/alteracoes.py:89-95` — os campos do Documento Exigido são só nome, instruções, obrigatoriedade, ordem e modelo; `:14` — "Caminho não reconhecido não produz linha" (a omissão é silenciosa por desenho, D-009 da 024).
 - Estado atual: RESOLVIDO — atualizado em 26/09: o #185 (`29e637f`) pôs `profileId` ("Exigido apenas do Perfil") e `modalityId` ("Exigido apenas da modalidade") em `CAMPOS`, com teste no portal.
 - Ainda faz sentido?: sim — contradizia a FR-130 da 024 e a decisão de 25/09.
-- Lacuna residual: nenhuma neste campo. O cruzamento sugerido abaixo foi feito, e 45 dos 84 campos retificáveis também não produzem linha: é unidade nova, o RC-111 da auditoria (`doc/achado-o-que-mudou-cala-campos-retificaveis.md`).
+- Lacuna residual: nenhuma neste campo. O cruzamento sugerido abaixo foi feito, e 45 dos 84 campos retificáveis também não produzem linha: é unidade nova, o RC-111 da auditoria (`doc/achado-o-que-mudou-cala-campos-retificaveis.md`). *Desfecho (27/09): o RC-111 foi feito pelo #201, com um guardião que liga o dicionário ao contrato de mutabilidade.*
 - Grupo do resíduo: —
 - Impacto atual: nenhum neste campo.
 - Próxima ação sugerida: nenhuma.
@@ -879,7 +879,8 @@ autoridade com portaria/local/data, B3, B5, M16.
 - **"O que mudou" pode omitir outros campos retificáveis além de `profileId`/`modalityId`.** Só conferi o
   Documento Exigido em `publicacoes/domain/alteracoes.py:89-95`; vale cruzar o dicionário `CAMPOS` com a
   matriz de mutabilidade. **Desfecho (26/09):** cruzado — 45 dos 84 campos retificáveis não produzem
-  linha. É o RC-111 da auditoria.
+  linha. É o RC-111 da auditoria. **Desfecho (27/09):** feito pelo #201, no passo 0 da ordem adotada
+  naquela data — todo campo retificável, e todo objeto que nasce por Retificação, vira linha.
 - **B8 tem evidência fina** (não está no diário) e **B6** foi julgado pelo template, sem percurso.
 - **M7 depende de configuração**: o catálogo de autoridades é código com cargos no campo `nome`; se a
   produção vai trazer nomes de pessoas (e com que processo de troca) é decisão do Cefor.

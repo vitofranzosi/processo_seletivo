@@ -33,7 +33,16 @@ nas decisões pendentes. E a DP-05 foi decidida em 26/09, depois
 de o RC-58 ser conferido no código: o cadastro de reserva fica **fora do piloto**, e a publicação de
 Perfil só de reserva passou a avisar, na Revisão, que a convocação é externa. O RC-58 continua NÃO
 IMPLEMENTADO, e as contagens não mudam; mudaram o mapa, as ondas, a matriz, a B-5, o mapa por domínio,
-a §13 e o anexo 1. O inventário da §2 e a reconciliação entre lotes
+a §13 e o anexo 1. E, em 27/09, o passo 0 da ordem adotada naquela data — as correções diretas, sem
+spec e contra requisito escrito, da [reavaliação de 27/09](reavaliacao-pos-consolidacao-2026-09-27.md)
+e das [decisões pendentes](decisoes-pendentes-da-consolidacao.md#depois-da-reavaliação-de-2709) — entrou
+em cinco PRs: o #201 (`81d03ee3`), o #202 (`5eec0fae`), o #203 (`5b3a6e78`), o #204 (`7cf6cbd0`) e o
+#205 (`f6efe0dd`), este com as sobras. O RC-111 e o RC-128 passaram a RESOLVIDO e o RC-124 a
+PARCIALMENTE RESOLVIDO; os PRs registraram oito unidades novas, do RC-131 ao RC-138 — três delas
+corrigidas nas sobras —, e o RC-40 ganhou evidência. Mudaram as contagens, o mapa, a topologia, as
+ondas, a §3.1, a §3.3, a §3.4, a §3.6, a §3.8, a §3.14, a §3.15, a §5, a §6.6, o mapa por domínio, a B-2, a
+B-4, a B-5, a B-7, o grafo, a §12, a §13, o anexo 6 e, nas decisões pendentes, as remissões da
+`DP-14`, da `DP-19` e do passo 0. O inventário da §2 e a reconciliação entre lotes
 registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
 `bb774d9`.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
@@ -45,7 +54,10 @@ o servidor, nem um percurso pela interface. Quando uma conclusão depende de per
 posterior, specs, evidência com `caminho:linha`, estado, pertinência, resíduo e confiança —, em
 [`auditoria-de-consolidacao-2026-09-26/`](auditoria-de-consolidacao-2026-09-26/). Desde 26/09, a mesma
 pasta guarda as revisões da `045` e da `046` (anexos 8 e 9), que são a evidência do RC-114 ao RC-127. A
-evidência do RC-128 ao RC-130 é a seção *Achados registrados* da spec da `048`.
+evidência do RC-128 ao RC-130 é a seção *Achados registrados* da spec da `048`. A do RC-131 ao RC-138
+está nos PRs do passo 0 e onde eles a registraram: a `DP-14` (A-14.1 a A-14.5) e a `DP-19` das
+decisões pendentes, e dois achados em `doc/` — a porta da convocação pela ocupação e o recorte que a
+convocação não conferia.
 
 > **A pergunta.** De tudo que já foi identificado nas auditorias anteriores, o que ainda representa uma
 > lacuna real do sistema hoje?
@@ -79,34 +91,35 @@ sobrepõem. As **34 linhas** que os próprios lotes marcaram como DUPLICADO / AB
 repetições entre relatórios, foram fundidas na unidade que as absorve. O resultado são **110 unidades
 consolidadas** na matriz da §3, e 121 desde 26/09: o RC-111 entrou com o #185, o RC-112 e o RC-113 com a `046` (#188), o RC-114 e o RC-115 com o PR corretivo de 26/09, que os fechou ao registrá-los, e o RC-116 a RC-121 com a `047` (#193), que fechou os dois primeiros ao registrá-los. E 127 depois disso: os itens menores das revisões da
 `045` e da `046` viraram o RC-122 ao RC-127. E 130 depois da `048` (#197), que registrou o RC-128 ao
-RC-130. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
+RC-130. E 138 depois do passo 0 da ordem de 27/09 (#201 a #205), que registrou o RC-131 ao RC-138 e
+fechou três deles nas sobras. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
 consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha registra o que foi fundido nela.
 
 | Estado | Unidades |
 |---|---:|
-| RESOLVIDO | 45 |
+| RESOLVIDO | 50 |
 | RESOLVIDO POR OUTRO CAMINHO | 3 |
-| PARCIALMENTE RESOLVIDO | 12 |
-| NÃO IMPLEMENTADO | 50 |
+| PARCIALMENTE RESOLVIDO | 13 |
+| NÃO IMPLEMENTADO | 52 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 5 |
 | SUPERADO / OBSOLETO | 3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 12 |
-| **Total** | **130** |
+| **Total** | **138** |
 
 Lido pela pergunta da auditoria:
 
-- **48** unidades estão resolvidas, pelo caminho recomendado ou por outro.
+- **53** unidades estão resolvidas, pelo caminho recomendado ou por outro.
 - **15** foram eliminadas por decisão consciente (12) ou por obsolescência (3) e **não devem voltar ao
   backlog** (§7).
-- **76** carregam algum resíduo. São 67 unidades abertas, parciais ou não validadas, mais nove resolvidas
+- **79** carregam algum resíduo. São 70 unidades abertas, parciais ou não validadas, mais nove resolvidas
   que deixaram uma sobra: RC-02, RC-29, RC-45, RC-48, RC-54, RC-80, RC-81, RC-87 e RC-102. O RC-113, o
-  RC-114, o RC-115, o RC-116, o RC-117, o RC-37 e o RC-38 fecharam sem sobra; o RC-113 deixou uma nota,
-  que não é unidade (§3.4). Separadas por natureza:
+  RC-114, o RC-115, o RC-116, o RC-117, o RC-37, o RC-38, o RC-111, o RC-128, o RC-131, o RC-133 e o
+  RC-138 fecharam sem sobra; o RC-113 deixou uma nota, que não é unidade (§3.4). Separadas por natureza:
 
 | Grupo | Unidades | O que são |
 |---|---:|---|
-| **A** — lacuna real | **6** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
-| **B** — evolução relevante | **38** | ganho claro, sem defeito |
+| **A** — lacuna real | **5** | contradizem requisito escrito, deixam fluxo incompleto ou publicam o que não executam |
+| **B** — evolução relevante | **42** | ganho claro, sem defeito |
 | **C** — opcional | **32** | polimento e higiene |
 
 *A conta da `047` (#193): o RC-48 sai do B e entra no C, pela sobra da prévia da divulgação; o RC-118,
@@ -119,12 +132,19 @@ RC-123, o RC-125, o RC-126 e o RC-127 no C. Eram 7 · 34 · 28; são 7 · 36 · 
 *A conta da `048` (#197): o RC-37 e o RC-38 saem do A, sem sobra; o RC-130 entra no A, e o RC-128 e o
 RC-129 no B. Eram 7 · 36 · 32; são 6 · 38 · 32.*
 
-- **Validação antes de trabalho.** Das 6 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
+*A conta do passo 0 da ordem de 27/09 (#201 a #205): o RC-111 sai do A e o RC-128 sai do B, os dois
+sem sobra; o RC-124 continua no B, parcial; o RC-132, o RC-134, o RC-135, o RC-136 e o RC-137 entram
+no B, e o RC-131, o RC-133 e o RC-138 fecharam nos PRs que os registraram. Eram 6 · 38 · 32; são
+5 · 42 · 32. Os grupos das oito unidades novas são leitura desta atualização, e não do usuário.*
+
+- **Validação antes de trabalho.** Das 5 unidades A, **nenhuma está mais em PR aberto**: RC-52 e RC-53
   entraram na `main` pelo #173, e o RC-54, que é C, pelo #172, os três em 26/09. **Três exigem percurso pela tela** antes de qualquer spec:
   RC-08, RC-58 e RC-112. O RC-32, que era a terceira, foi percorrido e corrigido pela `046`; o RC-113,
   que era a quarta, foi reproduzido por teste e corrigido pelo PR corretivo de 26/09. E
   **uma depende do Ifes**: RC-92. *O RC-130, registrado pela `048`, também é `[VALIDAR]`, mas não pede
-  a tela: a porta é da API, e um teste de integração a decide.*
+  a tela: a porta é da API, e um teste de integração a decide.* *Depois do passo 0 de 27/09, as cinco
+  são RC-08, RC-58, RC-92, RC-112 e RC-130: o RC-111 fechou pelo #201. Das oito unidades que o passo 0
+  registrou, nenhuma é A; a única `[VALIDAR]` é o RC-134, lido no código e não reproduzido.*
 - **O que sobra de fato como trabalho novo de grupo A são três unidades**: RC-37, RC-38 e RC-111. O
   RC-29 e o RC-72 foram fechados pela `046` (#188) em 26/09; dos dois que ela registrou, o RC-112
   espera percurso antes de spec, e o RC-113 foi fechado pelo PR corretivo de 26/09, que também registrou
@@ -137,6 +157,11 @@ RC-129 no B. Eram 7 · 36 · 32; são 6 · 38 · 32.*
   nascimento que a Retificação passou a fazer é mais uma alteração que o "O que mudou" não descreve.
   Das três unidades que ela registrou, uma é A — o RC-130, a API que troca campo não retificável
   substituindo o objeto inteiro — e duas são B (RC-128, RC-129).*
+  *O passo 0 da ordem de 27/09 fechou o RC-111 (#201): o dicionário do "O que mudou" passou a ser
+  chaveado como o contrato de mutabilidade, com um guardião que sintetiza um caminho para cada campo
+  retificável e cada objeto que nasce, e que reprovava 49 casos no tradutor anterior. Das três unidades
+  de trabalho novo de grupo A de 26/09, não resta nenhuma. O mesmo passo fechou o RC-128 pela `DP-14`
+  (#202), que cobriu também o Perfil de duas ou mais cotas.*
 
 **O fato que mais pesa.** Desde a auditoria de convergência de 20/09, **as três recomendações
 prioritárias dela não receberam trabalho nem decisão registrada**. São elas: fechar a `038`, derivar o
@@ -163,7 +188,7 @@ RC-113, que ela registrou sem validar.*
 | RC-29 | Etapa com **duas avaliações** — e os dois irmãos — publicava ato que **nunca consolida**: **corrigido pela `046` (#188) em 26/09**, impeditivo quando o fluxo exige o Resultado; resta a regra de combinação, só com Edital real | B (a regra de combinação) | `validation.py` (`_etapa_sem_resultado`) |
 | RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito. **Conferido no código em 26/09**: publicar, classificar e divulgar funcionam; só a convocação falha. A DP-05 o deixou **fora do piloto**, com aviso na Revisão (`reserve_only_convocation_external`) | spec própria quando houver Edital de reserva no alvo | `convocar.py` (`_recusar_por_deficit`) · `validation.py` (`_reserva_convocada_fora`) · nenhum consumidor de `reserveLimit` |
 | RC-72 | **"Fonte de demonstração"** do sorteio podia ser publicada em produção: **fechado pela `046` (#188) em 26/09** — fora do vocabulário de produção, com barreira de boot | — | `fontes/__init__.py` (`fontes_publicadas`) · `production.py` |
-| RC-111 | O **"O que mudou"** público cala **45 dos 84 campos retificáveis** — percentual da cota, quadro de vagas, prazo recursal, método do sorteio —, contra a `FR-130` da `024`. O RC-39, um deles, foi corrigido pelo #185. **Ampliado pela `048` (#197)**: os nascimentos também se calam — no percurso dela, cinco alterações e *"O que mudou (1)"* | A | `alteracoes.py` (`CAMPOS`, `COLECOES`) · `doc/achado-o-que-mudou-cala-campos-retificaveis.md` |
+| RC-111 | O **"O que mudou"** público calava **45 dos 84 campos retificáveis** — percentual da cota, quadro de vagas, prazo recursal, método do sorteio —, contra a `FR-130` da `024`, e, desde a `048`, os nascimentos: **corrigido pelo #201 em 27/09**, com o dicionário chaveado como o contrato e um guardião que o liga a ele (reprovava 49 casos antes) | — | `alteracoes.py` (`CAMPOS`, `COLECOES`, `FORMA_DA_COLECAO`) · `test_alteracoes_legiveis.py` (`test_todo_campo_retificavel_do_contrato_vira_linha`) |
 | RC-112 | A Ocorrência numa Etapa que nunca consolida **trava a Etapa seguinte** para quem não tem Resultado — registrado pela `046` | A `[VALIDAR]` | `ocorrencia.py:14-20` · `prontidao.py:150-154` |
 | RC-113 | Corte que **não governa Etapa** não convocava ninguém — a forma do 69/2026 —, registrado pela `046`: **reproduzido por teste e corrigido pelo PR corretivo de 26/09**, com um dono só para a habilitação pelo corte | — | `ocupacao/application/selectors.py` (`habilitadas_pelo_corte`) · `convocacao/application/selectors.py` (`contexto_do_recorte`) |
 | RC-114 | A validação da `046` **recusava** a Etapa decisória não eliminatória só **enumerada** num marco — *"ninguém é posicionado por ele"* —, quando ela é porta e o marco posiciona (`FR-074` da `015`): **registrado e corrigido pelo PR corretivo de 26/09** | — | `validation.py` (`_quem_exige_o_resultado`, que pergunta a `e_porta`) |
@@ -173,10 +198,17 @@ RC-113, que ela registrou sem validar.*
 | RC-08 | Restaurar o rascunho local **perde coleções aninhadas e regrava a perda**, contra a `FR-020` da `002` | A `[VALIDAR]` | `rascunho.js:81-133` (inalterado desde 08/09) |
 | RC-38 | Janela recursal, corte e reversão "podiam nascer" por Retificação, **mas a tela não oferecia o caminho**, e o critério de desempate se removia sem se acrescentar: **corrigido pela `048` (#197) em 26/09** — os quatro objetos que podem nascer têm caminho pela tela, a janela nasce só concedendo, o corte nasce recusado sobre Etapa com Resultado, e a tela do corte deixa de terminar num beco | — | `retificacao.py` (`NASCIMENTOS`, `CAMPOS_DA_REVERSAO`, `NOVO_CRITERIO`) · `changes.py` (`recusar_janela_que_nasce_sem_recurso`) · `retificacoes.py` (`_recusar_corte_sobre_etapa_com_resultado`) |
 | RC-130 | A API **troca campo não retificável** substituindo o objeto inteiro que o contém — a espécie do alvo, a Etapa governada e a continuação de um corte, o tipo de um critério, a espécie do cadastro reserva —, contra o contrato da `026`; registrado pela `048`, sem teste que o exercite | A `[VALIDAR]` | `publicacoes/domain/changes.py` (`apply_change`) |
-| RC-128 | O Perfil que publica **uma cota só** põe todo candidato nela: a inscrição a assume sem perguntar, e o não-cotista concorre como cotista — registrado pela `048` | B `[VALIDAR]` | `inscricoes/application/rascunho.py` (`modalidade_assumida`) · `validation.py` (`_ampla_por_declarar`, só aviso) |
+| RC-128 | O Perfil que publica **uma cota só** punha todo candidato nela, e o de duas cotas não deixava o não-cotista escolher — registrado pela `048`: **corrigido pelo #202 em 27/09**, pela `DP-14` (opção A): com vaga imediata na linha geral e sem Modalidade de ampla, a inscrição oferece a ampla como recorte nulo, e ela vem marcada | — | `inscricoes/application/rascunho.py` (`oferece_a_ampla_sem_modalidade`) · `test_ampla_sem_modalidade.py` |
+| RC-134 | A **Modalidade única que nasce por Retificação é gravada em silêncio no envio**, e os documentos são conferidos contra a inscrição sem ela — registrado pela `DP-14` (A-14.4) | B `[VALIDAR]` | `inscricoes/application/submissao.py` (eixo 5, `_modalidade_escolhida`; eixos 6–7 sobre a inscrição travada) |
+| RC-135 | O Perfil **só de cadastro reserva com uma cota** continua pondo todo inscrito nela — a letra da `DP-14` (A-14.5), numa família fora do piloto | B (com o RC-58) | `rascunho.py` (`oferece_a_ampla_sem_modalidade` exige vaga imediata) |
+| RC-132 | A advertência da **ampla por declarar** soa para o Perfil só de cotas, a forma que a `DP-14` tornou correta, e manda declarar *"qual delas é a da ampla"* — registrado pela `DP-14` (A-14.2), mantido por decisão do usuário | B (revisar a `FR-325`) | `validation.py` (`_ampla_por_declarar`, `general_competition_modality_undeclared`) |
+| RC-131/133 | A tela de **Modalidade única travava** quem já enviara o documento da cota (A-14.1), e a **gestão não nomeava, não contava nem filtrava** a ampla sem Modalidade (A-14.3): **registrados pelo #202 e corrigidos pelo #205 em 27/09** | — | `rascunho.py` (`descartes_por_mudanca_de_modalidade`, `nome_da_modalidade`, `o_nulo_e_a_ampla`) |
+| RC-137 | **A ocupação não aponta para a convocação**: o link reprovou a varredura da `UX-034` da `016`, que proíbe o termo na tela, e quem termina a apuração volta à página do Edital — registrado pelo #204 | B (emendar a `UX-034`) | `tests/test_vocabulario_da_ocupacao.py` · `doc/achado-porta-da-convocacao-pela-ocupacao.md` |
+| RC-138 | A **convocação não conferia o recorte**: `?lista=` inexistente respondia 200, contra a `FR-499` da `034` — **registrado pelo #204 e corrigido pelo #205 em 27/09** | — | `interface/views.py` (`convocacao`, `convocar_view` por `_recorte_pedido`) |
+| RC-136 | **Marcar na composição os campos que não se corrigem depois de publicados** não tem requisito escrito, e dois textos apontam contra (026 §7, 030 `FR-428`) — saiu do passo 0 como a `DP-19` | B (decisão) | `decisoes-pendentes-da-consolidacao.md` (`DP-19`) · `interface/retificacao.py` (`exclusoes_do_tipo`) |
 | RC-129 | A **reversão muda e a apuração não fica obsoleta**: nenhuma causa de obsolescência compara a reversão — registrado pela `048` | B | `ocupacao/application/selectors.py` (`causas_de_obsolescencia`, as cinco da `FR-263`) |
 | RC-92 | **Autenticação institucional real** | A (depende do Ifes) | `seguranca/api/authentication.py:7-23` |
-| RC-124 | **O caminho de produção não está no repositório**: só a imagem de desenvolvimento, e `wsgi`/`asgi` caem em `development` sem `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração ligada e nenhuma barreira de produção | B (implantação) | `config/wsgi.py:5` · `config/asgi.py:5` · `Dockerfile:8-10` |
+| RC-124 | **O caminho de produção não está no repositório**: só a imagem de desenvolvimento, e nenhum servidor de produção nas dependências. `wsgi`/`asgi` caíam em `development` sem `DJANGO_SETTINGS_MODULE`: **corrigido pelo #204 em 27/09** — o padrão é a produção, que recusa subir mal configurada; resta o artefato de implantação | B (implantação) | `Dockerfile:8-10` · `pyproject.toml` · `config/wsgi.py` · `tests/test_configuracao_producao.py` |
 | RC-32 | A tela do Edital **publicado** mostrava **"Impede — corrija antes de publicar"**: **corrigido pela `046` (#188) em 26/09**, e percorrido | — | `views.py` (`_pendencias`) |
 | RC-47 | Portal: página da seleção com o título do Processo e **sem as vagas por Modalidade** | B | `selecao.html:2,23,144` |
 | RC-48 | A página pública do resultado **não dizia o prazo recursal**: **corrigido pela `047` (#193) em 26/09**, com o prazo que a interposição aplica; resta a data-limite na prévia da divulgação, que é gestão | C (a prévia) | `recursos/application/selectors.py` (`janela_da_publicacao_divulgada`) · `resultado.html` |
@@ -208,7 +240,12 @@ integridade era o RC-101, uma tabela protegida por uma camada só, sem dano obse
    (RC-114). *A `048` (#197) fechou em 26/09 a Modalidade que não se acrescentava e os objetos sem
    porta (RC-37, RC-38): o Edital publicado com omissão passou a ter conserto pela tela. O que ela
    registrou é da mesma família, e menor: o Perfil de uma cota só, que põe todo candidato nela
-   (RC-128), e a apuração que não se diz obsoleta quando a reversão muda (RC-129).*
+   (RC-128), e a apuração que não se diz obsoleta quando a reversão muda (RC-129).* *O passo 0 de
+   27/09 fechou o RC-128 pela `DP-14` (#202): a ampla passou a ser oferecida na inscrição, e a promessa
+   da composição — *"a ampla concorrência é só a linha geral do quadro"* — passou a ser cumprida. O que
+   ele registrou é a borda dessa correção: a Modalidade única que nasce por Retificação e é gravada em
+   silêncio (RC-134), o Perfil só de reserva com uma cota (RC-135) e a advertência que soa para a forma
+   agora correta (RC-132).*
 3. **O resumo público que cala**: uma unidade A, o RC-111. O "O que mudou" omite a maior parte do que
    uma Retificação pode mudar, e o contador diz menos do que o ato fez. Este foco era o "trabalho
    decidido e não feito" — a `044`, o `ValorDeFato` e o "O que mudou" do recorte —, e os três foram
@@ -221,10 +258,14 @@ integridade era o RC-101, uma tabela protegida por uma camada só, sem dano obse
    ato divulgado que uma Retificação encurta (RC-121).* *A `048` (#197) ampliou o RC-111: tudo que ela
    faz nascer é mais uma alteração que o "O que mudou" cala. E registrou, do lado de quem retifica, o
    RC-130: a API troca, pela substituição do objeto inteiro, campo que o contrato declara não
-   retificável.*
+   retificável.* *Este foco fechou em 27/09: o #201 corrigiu o RC-111, e o guardião liga o dicionário
+   ao contrato, de modo que o campo retificável novo sem linha reprova no dia em que nasce. Ficam os
+   rótulos anteriores que divergem da tela da Retificação, que são do RC-40, e o RC-130, que é de quem
+   retifica e não do que se publica.*
 4. **Implantação**: autenticação, correio, retenção, Registro Acadêmico e o próprio caminho de
    produção (RC-124). É dívida real, mas com
-   dependência externa.
+   dependência externa. *O #204 fechou em 27/09 a parte do RC-124 que era correção direta: `wsgi` e
+   `asgi` caem na produção. O artefato de implantação continua fora do repositório.*
 
 O que **não** apareceu como dívida: avaliação, resultado, classificação, sorteio executável, recurso do
 lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 os apontavam, e fecharam.
@@ -245,6 +286,20 @@ lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 o
   documento (RC-20, RC-21, RC-12, RC-31), o reuso com estado de revisão (RC-45) e as diretas da
   composição (RC-09, RC-10, RC-11).
 - **Trilha paralela de implantação**: RC-92, RC-93 e RC-94, que dependem do Ifes.
+
+*Desde 27/09, a ordem de trabalho é a que o usuário adotou depois da reavaliação daquela data, e está
+nas [decisões pendentes](decisoes-pendentes-da-consolidacao.md#depois-da-reavaliação-de-2709): passo 0,
+correções diretas; passo 0,5, o teste operacional; depois, padrões e inferência, operar por marco,
+convocação como fluxo, documento por marco e caminho de produção. As ondas acima continuam como leitura
+desta auditoria, e não como a ordem. O passo 0 foi feito no mesmo dia, em cinco PRs:*
+
+| PR | O que fez | Unidades |
+|---|---|---|
+| #201 | o "O que mudou" completo contra o contrato, com guardião; o item dos campos definitivos saiu do passo como a `DP-19` | RC-111 resolvido; RC-136 registrado; RC-40 ganhou evidência |
+| #202 | a ampla na inscrição como recorte nulo (`DP-14`, opção A) | RC-128 resolvido; A-14.1 a A-14.5 registrados (RC-131 a RC-135) |
+| #203 | a consolidação como uma decisão humana: todas as prontas da Etapa numa confirmação, a conferência fixando o conjunto (`013` FR-018, SC-002) | nenhuma — o item vem da reavaliação, e não de unidade desta auditoria |
+| #204 | a porta da convocação na página do Edital, com navegação entre recortes (`033` FR-473); o `?lista=` do `UX-004`, com a supervisão passando a ler os recortes reservados do marco computado; a ajuda e o anúncio do duplicar (`043`); `wsgi`/`asgi` na produção | RC-124 parcial; RC-137 e RC-138 registrados |
+| #205 | as sobras: A-14.1, A-14.3 e o recorte da convocação | RC-131, RC-133 e RC-138 resolvidos |
 
 ---
 
@@ -310,6 +365,7 @@ quando indicado.
 | RC-14 | AX-5 · AX-6 · P-5 · H-1/H-2 · ACH-52 · estudo §7.3 · B4 | Curso, Área, Campus e turma sem forma | 040 G-004 registra o limite | `editais/models/perfis.py:9-95` | NÃO IMPLEMENTADO | parcialmente | custo de leitura, não integridade · C | nenhuma isolada (junto de RC-64) | 5, 3, 1 |
 | RC-15 | estudo §5.6 · M5 · QW5 | Casas decimais, Arredondamento e Alvo num marco de sorteio | #162 escondeu o Alvo | `_marco.html:156-167` | PARCIALMENTE RESOLVIDO | parcialmente | decisão de domínio sobre o que a publicação exige · C | decisão do usuário | 6 |
 | RC-16 | ACH-03/15 · ACH-05 · ACH-07 · ACH-11 · ACH-13/34 · ACH-14 · ACH-19 · estudo B5 · M9 · §7.1 · B10 · E2E14 §4 | microcópia e acabamento da composição (selos, "Chave" inventada, "marcado", Cronograma sem painel etc.) | parte em 030/037 | ver anexos 2 e 6, item a item | PARCIALMENTE RESOLVIDO | parcialmente | polimento · C | varredura de polish, sem spec | 2, 6, 1 |
+| RC-136 | reavaliação de 27/09, §D.2 item 6 e §D.3 · `DP-19` (27/09) | *"uns 15 campos não se corrigem depois de publicados, e nada avisa na composição"* → marcá-los na composição, como selo de estado; estava no passo 0 | nenhum requisito o exige: o que existe é da **tela de Retificação** (026 `FR-312`, `SC-102`), e está atendido; a 026, §7, põe a composição fora do escopo, e a 030 `FR-428` proíbe ajuda visível nos cartões; saiu do passo 0 no #201, por decisão do usuário | `tests/interface/test_retificar_exclusoes.py` (a Retificação já exclui o que não se corrige); `tests/interface/test_medida_dos_campos.py::test_nenhum_cartao_do_assistente_carrega_ajuda_visivel`; `interface/retificacao.py` (`exclusoes_do_tipo`, a fonte que uma marcação derivaria); nenhum cartão mostrou o selo em momento algum (`DP-19`, conferência contra o histórico) | NÃO IMPLEMENTADO | sim, como decisão — é requisito novo, e decidir se o selo é ajuda decide se a `FR-428` precisa de emenda | o operador só descobre na Retificação o que não pode corrigir · B (decisão) | **decisão do usuário** (`DP-19`): se for requisito, spec, com a marcação derivada do contrato e não de uma lista | — |
 
 ### 3.2 Documento publicado (PDF)
 
@@ -341,7 +397,8 @@ quando indicado.
 | RC-34 | N-08 · §6 da convergência | os avisos de composição do Edital não chegam à Atenção | 038 FR-565 (catálogo fechado) | `supervisao.py:495-506` | NÃO IMPLEMENTADO | parcialmente | a convergência mandou **não** juntar sem decidir a fronteira · C | nenhuma; revisitar depois de RC-30 — *feito pela `046` (#188), a fronteira pode ser revisitada* | 4 |
 | RC-122 | revisão da `046`, D3 (26/09) | o assistente de um Edital **publicado** continua falando como se ele fosse ser submetido: a Revisão diz "O que falta para submeter" e "Nada pendente — o Edital pode ser submetido" e oferece "Ir para" a correção de um vínculo que não se retifica; o Cronograma diz "Corrigir as datas abaixo é o que a conclui" → a cura do RC-32 também no assistente: dizer o que vale para o ato em que o Edital está | 046 (o RC-32 fechou a tela do Edital, e não o assistente) | `interface/templates/interface/compor_revisao.html:5,9`; `interface/templates/interface/compor_cronograma.html:17-22`; `interface/views.py:1296` | NÃO IMPLEMENTADO | sim | manda o operador a um ato que não existe mais para aquele Edital · B | corrigir (direta) | 9 |
 | RC-126 | revisões da `045` (D5, D6) e da `046` (D6 e resíduos), 26/09 | casos-limite residuais das duas features: rascunho gravado pela API com `EM_ANDAMENTO` publica sem regravar (a leitura ignora o valor); conteúdo malformado vindo de Retificação pode dar 500 em vez de 422; nota mínima 0 satisfaz a regra da eliminatória sem eliminar ninguém. O período de inscrições `CANCELADO`, que a revisão da `045` viu aparecer aberto no Pulso, **não entra aqui**: é a mesma causa — `periodo_de_inscricoes` ignora o `status` do Evento — do RC-119, que a `047` registrou no #196 com a consequência mais grave, a de continuar recebendo inscrição | 045, 046 | anexos 8 e 9 | NÃO IMPLEMENTADO | parcialmente — dois dos três só se alcançam pela API | C | nenhuma isolada; revisitar se o piloto os encontrar | 8, 9 |
-| RC-128 | `048`, *Achados registrados*, A-1 (26/09) | quando o Perfil publica exatamente uma Modalidade e ela é cota, a inscrição a assume sem perguntar: o não-cotista concorre como cotista e recebe a lista de documentos da cota → impedir, ou advertir mais forte, na composição | 009 (a Modalidade única não se pergunta: `FR-038`, `FR-040`); 027 `FR-325` (`_ampla_por_declarar`, aviso e não recusa); a `048` dá o conserto depois da publicação — acrescentar a ampla —, e não impede a publicação | `inscricoes/application/rascunho.py` (`modalidade_assumida`: uma Modalidade publicada é a de todo mundo no Perfil); `editais/domain/validation.py` (`_ampla_por_declarar`, advertência) | NÃO IMPLEMENTADO | sim, se confirmado — lido no código, não percorrido; é a `D-G5` com outra forma, e a auditoria não a tinha | o não-cotista vira cotista em silêncio, e a correção só vem se alguém notar · B `[VALIDAR]` | validar pela tela; depois, decidir se o Perfil de uma cota só publica — a decisão é a `DP-14` (27/09), que cobre também o Perfil de duas ou mais cotas, onde o não-cotista não tem o que escolher | — |
+| RC-128 | `048`, *Achados registrados*, A-1 (26/09) | quando o Perfil publica exatamente uma Modalidade e ela é cota, a inscrição a assume sem perguntar: o não-cotista concorre como cotista e recebe a lista de documentos da cota → impedir, ou advertir mais forte, na composição | 009 (a Modalidade única não se pergunta: `FR-038`, `FR-040`); 027 `FR-325` (`_ampla_por_declarar`, aviso e não recusa); a `048` dá o conserto depois da publicação — acrescentar a ampla —, e não impede a publicação; **`DP-14`, opção A, decidida em 27/09, e #202** (`5eec0fae`), sem spec e sem requisito novo | `inscricoes/application/rascunho.py` (`oferece_a_ampla_sem_modalidade`, consultada por `modalidade_assumida` e `_modalidade_escolhida`: com vaga imediata na linha geral e sem Modalidade de ampla, a inscrição oferece a ampla como recorte nulo, marcada; uma regra só para a tela, a gravação, o envio e o POST forjado); `portal/templates/portal/inscricao.html` e `portal/static/portal/modalidade.js`; `tests/integration/inscricoes/test_ampla_sem_modalidade.py` (`test_uma_cota_com_vaga_na_linha_geral_nao_assume_a_cota`, `test_o_nao_cotista_envia_pela_ampla_sem_modalidade`, `test_duas_cotas_com_vaga_na_linha_geral_o_nao_cotista_tem_o_que_escolher`, `test_tudo_em_cota_continua_sem_ampla`, `test_a_inscricao_na_ampla_tem_a_forma_que_o_sorteio_ja_le`) | RESOLVIDO | sim — **corrigido pelo #202 em 27/09**, pela `DP-14` (opção A), e percorrido pelo portal no preview: a ampla marcada com dois documentos, a cota trazendo a autodeclaração, e o comprovante com `modality_id` nulo. Não pela composição, como a recomendação dizia: a `009` (`FR-039`) já permitia oferecer a ausência de reserva como a ampla, e restaurá-la não pede nada a quem compõe. Restaura a `FR-038`, a `FR-039`, a `FR-040`, o cenário 2 da US4, a `SC-005` e a `SC-006` da `009` | — (enquanto aberto, B). *A borda da correção virou unidade própria: a Modalidade única que nasce por Retificação (RC-134), o Perfil só de reserva com uma cota (RC-135) e a advertência da ampla por declarar (RC-132); e a tela de Modalidade única e a gestão, que o #205 corrigiu (RC-131, RC-133)* · — | nenhuma | — |
+| RC-132 | `DP-14`, achado A-14.2 (27/09) | `general_competition_modality_undeclared` avisa todo Perfil que declara Modalidade sem apontar a ampla, e manda declarar *"qual delas é a da ampla concorrência"*; para o Perfil só de cotas, a forma que a `DP-14` tornou correta, não há qual apontar → calar a advertência ali, ou reescrevê-la | 027 `FR-325` (*"Perfil que declara Modalidade e não declara qual delas é a da ampla concorrência MUST produzir advertência própria"*), `FR-327`, `FR-328`; o A11 do `quickstart` da `027` (a Modalidade chamada "Ampla concorrência" sem ser apontada); 025 `R-006` (não casar nome) | `editais/domain/validation.py` (`_ampla_por_declarar`, `Severity.WARNING`) | NÃO IMPLEMENTADO | sim, como decisão — **examinado em 27/09 e mantido como registro, por decisão do usuário**: o Perfil só de cotas cumpre a condição da `FR-325` ao pé da letra, e o sistema não o distingue do caso-armadilha sem casar nome; reescrever só a mensagem a deixaria soando, como pendência na Revisão e na confirmação | a pendência que soa em todo Perfil de cotas pede ao operador uma Modalidade de ampla que não é necessária · B | revisar a `FR-325` da `027`, o que é spec | — |
 
 ### 3.4 Retificação
 
@@ -352,12 +409,12 @@ quando indicado.
 | RC-37 | **D-G5** · REAV §13 · convergência §20.3 · 039 US2 | Edital publicado sem a ampla (ou sem uma cota) **não tem conserto** → Retificação que acrescenta Modalidade, com cinco restrições | a US2 da 039, não mesclada, a absorvia; **048 FR-777 a FR-782** (#197, `0113b782`) — qualquer Modalidade, inclusive cota (`D-001` de lá, decidida pelo usuário) | `interface/retificacao.py` (`NOVA_MODALIDADE`, `_modalidade_nova`: a declaração da ampla ou a linha da cota no mesmo ato); `editais/domain/perfis.py` (`validar_modalidade`, a regra da composição, ao conferir e no ato); `retificar.html` (a frase *"ainda não são definidas por aqui"* saiu); as cinco restrições provadas retificando de fato: `tests/integration/inscricoes/test_modalidade_acrescentada_por_retificacao.py` (o não-cotista se inscreve, e quem já enviou não muda) e `test_ordem_por_recorte.py::test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla` | RESOLVIDO | sim — percorrido pela tela na `048` (`percursos.md`), menos o Perfil sem a ampla, que o `seed_demo` não tem e o teste de ponta a ponta cobre | — (enquanto aberto, **A**). *Limites deliberados, que não são sobra: a Modalidade de um Perfil acrescentado no mesmo ato, e o Documento Exigido que passe a pedi-la, entram na Retificação seguinte* · — | nenhuma | 4, 3, 5 |
 | RC-38 | G16-001 · achado objeto que nasce só pelo método · NOVO-1 do lote 1 · NOVO-3 do lote 5 | o contrato diz que janela recursal, corte e reversão **podem nascer** por Retificação, mas a tela só mostra os campos se o objeto já existe; critério de desempate **se remove e não se acrescenta** | 026 FR-313; **048 FR-784 a FR-794** (#197, `0113b782`), com a `D-002` (o corte não nasce sobre Etapa governada que já tem Resultado), a `D-003` (a janela nasce só concedendo) e a `D-004` (o critério entra) de lá | `interface/retificacao.py` (`NASCIMENTOS`, conferido contra `PODE_PASSAR_A_EXISTIR` na carga do módulo; `CAMPOS_DA_REVERSAO` sempre oferecida; `NOVO_CRITERIO`); `publicacoes/domain/changes.py` (`recusar_janela_que_nasce_sem_recurso`, no ato e não em `apply_changes`); `publicacoes/application/retificacoes.py` (`_recusar_corte_sobre_etapa_com_resultado`, na elaboração e na publicação); `tests/contract/test_mutabilidade.py::test_todo_objeto_que_pode_nascer_tem_caminho_pela_tela` (4 de 4; era `xfail` estrito); `tests/interface/test_corte.py::test_o_caminho_da_regra_termina_na_regra_daquele_marco`; `test_retificar_reversao.py` passou a prender a presença | RESOLVIDO | sim — janela, reversão e critério percorridos pela tela na `048` (`percursos.md`); o corte só por teste, porque os marcos do `seed_demo` já cortam | — (enquanto aberto, **A** pela janela). *A `048` registrou, fora dele, a apuração que não fica obsoleta quando a reversão muda (RC-129) e a porta do objeto inteiro pela API (RC-130); a janela de ato divulgado que segue a vigente é o RC-121, e ela só concede* · — | nenhuma | 1, 5 |
 | RC-39 | conferência 25/09 · decisão D4.3 | a Retificação declarou 7 alterações e o portal mostrou 6; faltou a do laudo que passou a valer só no C1 | 024 FR-130 (MUST identificar o alterado); a 044 exclui de propósito | **feito pelo #185** (`29e637f`, 26/09): `profileId` e `modalityId` do Documento Exigido em `CAMPOS`, com os rótulos da gestão; `tests/integration/portal/test_historico_publico.py` | RESOLVIDO | sim — decidido em 25/09 "para a fila das diretas" | o cruzamento com o contrato, que era a outra metade da próxima ação, virou o RC-111 · — | nenhuma | 6, 7 |
-| RC-111 | achado de 26/09, do cruzamento pedido no RC-39 e numa incerteza do lote 6 | o "O que mudou" cala 45 dos 84 campos retificáveis: percentual e fundamento da cota, quadro de vagas, prazo recursal, método do sorteio, regra de corte → rótulos para os 45, leitura de campo composto e um guardião que ligue o contrato ao dicionário | 024 FR-130; 026 (o contrato) | `publicacoes/domain/alteracoes.py` (`CAMPOS`, `COLECOES`; o tradutor lê um segmento depois da entidade); `tests/integration/portal/test_historico_publico.py` (`mais_uma_vaga` retifica duas coisas, e o portal lista uma); `doc/achado-o-que-mudou-cala-campos-retificaveis.md` | NÃO IMPLEMENTADO | sim — contradiz a FR-130 da `024`, e cala justamente o que mais pesa para quem se inscreve. *A `048` (#197) o ampliou: a Modalidade acrescentada, a declaração da ampla, a linha do quadro, a janela, o corte e a reversão que nascem também se calam — no percurso dela, cinco alterações e "O que mudou (1)" (achado A-4 de lá)* | o candidato não é avisado da maior parte do que uma Retificação muda · **A** | decisão do usuário: priorizar; se for só dicionário e guardião, sem spec | 6 |
+| RC-111 | achado de 26/09, do cruzamento pedido no RC-39 e numa incerteza do lote 6 | o "O que mudou" cala 45 dos 84 campos retificáveis: percentual e fundamento da cota, quadro de vagas, prazo recursal, método do sorteio, regra de corte → rótulos para os 45, leitura de campo composto e um guardião que ligue o contrato ao dicionário | 024 FR-130; 026 (o contrato); **#201** (`81d03ee3`, 27/09), passo 0 da ordem de 27/09, sem spec e sem requisito novo | `publicacoes/domain/alteracoes.py` (`CAMPOS` e `COLECOES` chaveados por `(coleção, caminho relativo)`, como o contrato; o aninhamento lido de `FORMA_DA_COLECAO`, até o critério de desempate dentro do marco dentro do Perfil; o resto do caminho lido inteiro, e por isso `normativeRule/percentage`, `appealWindow/durationDays` e `drawMethod/source` deixam de calar; a linha do quadro em `COLECOES`, nomeada pela lista que aponta); `tests/unit/publicacoes/test_alteracoes_legiveis.py::test_todo_campo_retificavel_do_contrato_vira_linha` (um caminho sintetizado para cada par retificável e cada objeto de `PODE_PASSAR_A_EXISTIR`; contra o tradutor anterior, reprovava 49 casos — os 45 do achado e os quatro que nascem); `tests/integration/portal/test_historico_publico.py` (`mais_uma_vaga` afirma "O que mudou (2)"); `doc/achado-o-que-mudou-cala-campos-retificaveis.md` (*O que foi feito em 27/09*) | RESOLVIDO | sim — contradizia a FR-130 da `024`, e calava justamente o que mais pesa para quem se inscreve; a `048` (#197) o tinha ampliado com os nascimentos. **Percorrido no preview** do #201: a Retificação de quatro campos — o fundamento da cota, o prazo recursal, o rótulo de um fato e o teto por candidato —, de que a `main` não mostrava nenhum, passou a mostrar os quatro. O silêncio para caminho desconhecido (`D-009` da `024`) ficou, e a parte da regra da cota que não se retifica continua sem linha, de propósito | — (enquanto aberto, **A**). *Os rótulos anteriores ficaram, mesmo onde divergem da tela da Retificação ("Obrigatoriedade" × "Obrigatório", "Denominação" × "Nome da Etapa"): é a deriva do RC-40, e o guardião cobra a linha, e não o nome* · — | nenhuma | 6 |
 | RC-112 | `046`, *Achados registrados*, A-1 (26/09) | a Ocorrência (ausência) é aceita em Etapa que nunca consolida e produz `ELIMINADA`; um único Resultado ativa a exigência de habilitação na Etapa seguinte, e quem não tem Resultado ali fica *aguardando a anterior* para sempre | 013 (Ocorrência); a `046` o deixou fora do gate, por ser condição operacional | `resultados/application/ocorrencia.py:14-20`; `resultados/application/prontidao.py:150-154` | NÃO IMPLEMENTADO | sim, se confirmado — lido no código, não percorrido | fluxo que trava depois de um ato legítimo · **A** `[VALIDAR]` | validar por percurso; depois, decidir se o portão da habilitação considera Resultado por Ocorrência numa Etapa inconsolidável | 7 |
 | RC-113 | `046`, *Achados registrados*, A-2 (26/09) | a convocação lia a habilitação na Etapa **governada** pelo corte; o corte que declara `governedStage: NONE` — legítimo pela `FR-224` da `014` — deixava as habilitadas vazias (`habilitadas_na_etapa(None)`), a apuração contava `ocupadas: 0` e a fila de convocação saía vazia — o 69/2026, que segundo a `032` "sorteia, publica, convoca", não convocaria → com `NONE` declarado, quem progrediu na faixa é habilitado | 014 FR-224, 019, 032; **PR corretivo de 26/09** | `ocupacao/application/selectors.py` (`habilitadas_pelo_corte`, dono único, que a apuração em `ocupacao/application/emissao.py`, `ocupantes_da_ampla` e `contexto_do_recorte` em `convocacao/application/selectors.py` leem); `tests/integration/convocacao/test_corte_sem_etapa_governada.py` (reproduziu `ocupadas: 0` e a fila vazia antes da correção) | RESOLVIDO | sim — **confirmado por teste que percorre a apuração e a convocação**, e não só lido; o `[VALIDAR]` fechou | — (nota, e não unidade: o recorte **sem corte algum** continua lendo o vazio, de propósito — responder de passagem seria decidir que marco sem corte seleciona a ordem inteira) · — | nenhuma | 4 |
 | RC-114 | revisão da `046`, D1 (26/09) | `_quem_exige_o_resultado` contava a **enumeração por marco** como consumo do Resultado para toda forma de Etapa, e recusava publicar a decisória não eliminatória só enumerada — *"ninguém é posicionado por ele"*; falso para a decisória, que é porta, e não parcela: `combinar` a salta e a ordem posiciona normalmente → a enumeração da porta deixa de contar | 013 FR-047, 015 FR-074, 046 FR-746 (refinada); **PR corretivo de 26/09** | `editais/domain/validation.py` (`_quem_exige_o_resultado` pergunta a `e_porta`, de `classificacao/domain/combinacao.py`, a mesma função que `combinar` usa); `tests/integration/classificacao/test_porta_decisoria_enumerada.py` (publica, e a ordem posiciona); `tests/interface/test_etapa_sem_resultado.py` (o teste da `046` que afirmava a recusa lia só a própria tela, e foi emendado) | RESOLVIDO | sim — proibia na composição o que a `FR-047` da `013` (03/09) decidiu não proibir; governada por corte ou designada para o sorteio, a decisória continua recusada | — (enquanto aberto, **A**: recusa de publicação de Edital legítimo) · — | nenhuma | 7, 3 |
 | RC-115 | revisão da `045`, D1 (26/09) | a docstring de `alcance_no_edital` dizia que o recurso *"continua podendo ser decidido"* no Edital encerrado ou cancelado, mas o `UX-064` estava em `TRABALHO_PENDENTE` e se calava; nem a admissibilidade nem o julgamento consultam o estado do Edital → o recurso pendente com julgador livre sumia da Atenção, e o da comissão inteira impedida (`UX-005`) ficava → tirar o `UX-064` do conjunto | 038 (o caso-limite do Edital parado e o `UX-064`, refinados), 045 (*Edge Cases*, refinado); **PR corretivo de 26/09** | `interface/supervisao.py` (`TRABALHO_PENDENTE` sem o `UX-064`); `tests/integration/supervisao/test_sinais.py` (`test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide`, parametrizado por ENCERRADO e CANCELADO, que também pratica a admissibilidade e o julgamento depois do encerramento) | RESOLVIDO | sim — o recurso é direito de quem o interpôs, e não trabalho que a instituição decidiu não concluir | — (enquanto aberto, **A**: um direito do candidato sumia da condução) · — | nenhuma | 4 |
-| RC-40 | E-3 · 13.4 · LONG-5 · ACH-31 · ACH-32 · E2E-018 | duas gramáticas → **uma tabela** de vocabulário; `REPLACE` na tela do ato; bloco do sorteio num marco que não sorteia | 024 D-009; `7b04cb3` unificou a gestão | `views.py:3387-3408` × `alteracoes.py:24-52` (já divergem: "Modalidade" × "Modalidade de concorrência") | PARCIALMENTE RESOLVIDO | parcialmente | deriva silenciosa entre gestão e portal · C | unificar a tabela ao tocar essas telas | 3, 2 |
+| RC-40 | E-3 · 13.4 · LONG-5 · ACH-31 · ACH-32 · E2E-018 | duas gramáticas → **uma tabela** de vocabulário; `REPLACE` na tela do ato; bloco do sorteio num marco que não sorteia | 024 D-009; `7b04cb3` unificou a gestão | `views.py:3387-3408` × `alteracoes.py:24-52` (já divergem: "Modalidade" × "Modalidade de concorrência"). *Desde o #201 (27/09), os rótulos acrescentados ao portal são cópia dos de `interface/retificacao.py` — domínio não importa de `interface`, e a docstring de `alteracoes.py` diz que a cópia é o preço da fronteira —; os anteriores continuam divergindo, e o achado do RC-111 os registra* | PARCIALMENTE RESOLVIDO | parcialmente | deriva silenciosa entre gestão e portal, agora menor e declarada; nenhum guardião compara os nomes · C | unificar a tabela ao tocar essas telas | 3, 2 |
 | RC-125 | issue #117 (15/09) · revisão da `046` | `advertencias_do_ato` subtrai os impeditivos **por código**, e não pelo par (código, caminho); o RC-30 foi dado como RESOLVIDO pela `046`, e a #117, que andava junto dele, ficou sem unidade — continua OPEN | 027 FR-336, 028, 046 | `publicacoes/application/retificacoes.py:583-587` | NÃO IMPLEMENTADO | parcialmente — nenhum código tem severidade dupla hoje, e a `046` condicionou a severidade ao ato com códigos distintos, o que não disparou o caso | C | corrigir: a chave pelo par, ou um teste que prenda "um código, uma severidade" | 7, 9 |
 | RC-130 | `048`, *Achados registrados*, A-6 (26/09) | a gramática recusa o campo não retificável endereçado sozinho, mas aceita pela API o `REPLACE` do objeto que o contém: uma regra de corte pode ter a espécie do alvo, a Etapa governada e a continuação trocadas; um critério de desempate, o tipo; um Perfil, a espécie do cadastro reserva → fechar a porta, sem pôr a guarda em `apply_changes` | 026 (o contrato, que declara esses campos não retificáveis com razão normativa); a primeira redação da `048` a fechava com uma guarda genérica, e o parecer de 26/09 a tirou do escopo, por ser porta anterior e não nascer dos achados da auditoria | `publicacoes/domain/changes.py` (`apply_change`); nenhum teste a exercita; a `048` não a usa para trocar — só oferece os campos de nascimento quando o objeto está ausente | NÃO IMPLEMENTADO | sim, se confirmado — lido no código, não exercitado | o contrato de mutabilidade vale pela tela e não pela API, e o que ele protege é o que a Constituição declara imutável · **A** `[VALIDAR]` | validar com um teste de integração pela API; se confirmar, a guarda mora no ato de Retificação, porque `apply_changes` também reproduz atos já publicados (`research.md` da `048`, `R-1`) | — |
 
@@ -384,6 +441,10 @@ quando indicado.
 | RC-117 | `047`, investigação de 26/09 (o quarto fato) | o resultado sucedido pelo definitivo **sumia** da página do Edital: a `017` preservou o endereço (FR-043, FR-048), e não o caminho, e a página da vigente não levava às anteriores → toda publicação divulgada alcançável pela página do Edital, as sucedidas como histórico do marco e da lista | 017 FR-043, FR-048; **047 FR-772, FR-773** (#193) | `divulgacao/application/selectors.py` (`historico_publico_do_edital`, `anteriores_da_cadeia`); `selecao.html`; `resultado.html`; `tests/portal/test_historico_de_resultados.py` | RESOLVIDO | sim — provado por teste; o percurso pela tela não o alcançou, porque o `seed_demo` não sucede publicação (percurso 6 da `047`) | — (enquanto aberto, B) · — | nenhuma | — |
 | RC-118 | revisão de código do #193 (26/09) · `047`, *Achados registrados* | `close_process` exige só o Processo ativo, e não os Editais em estado final; `recebe_inscricoes` lê o status do Edital: um Edital publicado de Processo encerrado **continua recebendo inscrição** dentro do período → decidir se encerrar o Processo fecha o recebimento dos Editais dele — exigindo-os finais, ou fazendo a regra do recebimento ler o Processo | 001 FR-034 (só o cancelamento do Processo exige os Editais finais); **047 FR-762 e `D-003` emendada** — a página diz o encerramento do Processo como fato, e o Edital segue o próprio estado e período | `processos/domain/finalizacao.py` (`ensure_processo_can_be_closed` lê só o status do Processo); `inscricoes/domain/periodo.py` (`recebe_inscricoes`: status do Edital e período); `tests/integration/portal/test_desfecho_publico.py` (`test_processo_encerrado_com_edital_aberto_diz_o_fato_e_continua_recebendo` prende o comportamento de hoje) | NÃO IMPLEMENTADO | sim, como decisão — a assimetria entre encerrar e cancelar o Processo pode ser deliberada, e não há registro dela | Processo encerrado com Edital que recebe inscrição · B | **decisão do usuário**; depois, outra feature | — |
 | RC-119 | `047`, *Achados registrados* (26/09) | `periodo_de_inscricoes` e `recebe_inscricoes` ignoram o `status` do Evento: o período marcado `CANCELADO` **continua recebendo inscrição**; só a API declara `CANCELADO`, e o campo é derivado no contrato da `026`, não retificável → decidir se o período cancelado fecha o recebimento | 028 FR-347 (régua do período); 026 (`status` derivado); a `047` fez o portal seguir a régua do período na linha dele, para não contradizer o que o sistema recebe | `inscricoes/domain/periodo.py` (nenhuma das duas funções lê `status`); `editais/domain/fase_do_evento.py` (`fase_publica_do_evento`); `tests/integration/portal/test_fase_do_cronograma.py::test_o_periodo_marcado_como_cancelado_segue_a_regua_do_periodo`; `tests/unit/editais/test_fase_do_evento.py::test_periodo_cancelado_a_gestao_le_o_cancelamento_e_o_portal_le_o_periodo` | NÃO IMPLEMENTADO | parcialmente — só a API produz o caso; é regra de domínio da inscrição, e não projeção | período cancelado que recebe inscrição, e a gestão e o portal dizendo coisas diferentes da linha dele · C | decidir junto do RC-118: o que, além do estado do Edital e do período, fecha o recebimento | 4 |
+| RC-131 | `DP-14`, achado A-14.1 (27/09) | sem campo de Modalidade na tela de Modalidade única, a view calculava o descarte contra `None`: quem já enviara o documento da cota via *"Mudar de modalidade descarta documentos"* ao clicar em *"Revisar inscrição"*, e confirmar dava `discard_not_confirmed`, porque `gravar_dados` assumia a cota e não via descarte nenhum → comparar com a Modalidade que será gravada | 009 `FR-031`, `FR-041`; registrado pelo #202, que o reproduziu e o achou anterior a ele; **corrigido pelo #205** (`f6efe0dd`, 27/09), nas sobras do passo 0 | `inscricoes/application/rascunho.py` (`descartes_por_mudanca_de_modalidade` compara com `_modalidade_escolhida`, e não com o vazio do formulário); `tests/integration/inscricoes/test_ampla_sem_modalidade.py::test_a_modalidade_unica_avanca_com_o_documento_da_cota_ja_enviado` | RESOLVIDO | sim — **percorrido no preview** do #205: a candidata com a autodeclaração enviada chega à Revisão sem a tela de descarte. Depois do #202 só alcançava o Perfil com tudo em cota, e antes dele todo Perfil de uma Modalidade | — (enquanto aberto, **A**: a candidata não conseguia avançar) · — | nenhuma | — |
+| RC-133 | `DP-14`, achado A-14.3 (27/09) | a lista e o detalhe das inscrições e a Mesa mostravam em branco a Modalidade da inscrição na ampla sem Modalidade; a contagem por Modalidade descartava o nulo, e o filtro não o alcançava — já valia para o Perfil sem Modalidade, e o #202 o tornou o caso comum → nomear, contar e filtrar o nulo onde ele é a ampla | 009 `FR-067`, `FR-068`; **corrigido pelo #205** (27/09) | `inscricoes/application/rascunho.py` (`o_nulo_e_a_ampla`, `nome_da_modalidade`), lidos por `inscricoes/application/consulta.py` e `avaliacoes/application/mesa.py`; o filtro `ampla:<Perfil>`, conferido pela mesma regra que gera a opção; `test_ampla_sem_modalidade.py` (`test_a_lista_da_gestao_nomeia_conta_e_filtra_a_ampla`, `test_a_mesa_nomeia_a_ampla`, `test_a_gestao_nao_nomeia_o_nulo_onde_ele_e_escolha_por_fazer`, `test_o_filtro_forjado_nao_chama_de_ampla_a_escolha_por_fazer`) | RESOLVIDO | sim — percorrido no preview do #205 (a lista, o seletor com *"Ampla concorrência (1)"*, o filtro e o detalhe). Onde o nulo é escolha por fazer — a ampla declarada ao lado de uma cota, ou duas cotas sem vaga na linha geral —, continua sem nome, de propósito; e o portal mantém a `FR-038`: no Perfil sem Modalidade, a revisão continua sem a linha | — (enquanto aberto, B) · — | nenhuma | — |
+| RC-134 | `DP-14`, achado A-14.4 (27/09) | se uma Retificação zera a linha geral, ou dá a primeira Modalidade a um Perfil sem vaga na linha geral, o rascunho no recorte nulo é recusado até o reconhecimento; depois dele, o envio grava a Modalidade única que `_modalidade_escolhida` devolve, e os documentos são conferidos contra a inscrição ainda sem ela → decidir o que acontece com o rascunho da ampla quando a ampla deixa de existir | 009 `FR-040` (os documentos seguem a Modalidade), `FR-059` (o reconhecimento da versão); 048 (o caso-limite do rascunho aberto); vem de antes, pela `048`, e o #202 o estreitou | `inscricoes/application/submissao.py` (eixo 5, `_modalidade_escolhida` sobre `travada.modality_id`; eixos 6 e 7, `_conferir_documentos` e `pendencias_para_enviar`, sobre a inscrição travada, cuja Modalidade ainda é nula; a gravação, em `_gravar_o_ato`, com a Modalidade devolvida); `inscricoes/application/rascunho.py` (`requisitos_da_inscricao` lê `inscricao.modality_id`) | NÃO IMPLEMENTADO | sim, se confirmado — lido no código, não reproduzido; exige uma Retificação que retire a ampla de um Perfil com inscrição aberta | a pessoa que se inscrevia na ampla passa a concorrer na cota sem escolher, e a obrigatoriedade dos documentos da cota não é conferida no envio · B `[VALIDAR]` | validar por teste; depois, decidir entre recusar o envio até a escolha e conferir os documentos contra a Modalidade que será gravada | — |
+| RC-135 | `DP-14`, achado A-14.5 (27/09) | o Perfil só de cadastro reserva, com a linha geral em zero, uma cota e nenhuma ampla declarada, continua assumindo a cota para todo inscrito — o não-cotista concorre como cotista, que é o RC-128 nesta família | 009 `FR-039`; **`DP-14`, item 2** das pontas decididas em 27/09 (*"com vagas" é vaga imediata*), que o registrou como consequência declarada; `DP-05` (a família fora do piloto, com a convocação externa) | `inscricoes/application/rascunho.py` (`oferece_a_ampla_sem_modalidade` exige `immediateVacancies > 0` na linha geral); `test_ampla_sem_modalidade.py::test_tudo_em_cota_continua_sem_ampla` (o caso vizinho, com vaga só na cota) | NÃO IMPLEMENTADO | sim, quando a família entrar no alvo — é a letra de uma decisão tomada, e não descuido | o não-cotista vira cotista em silêncio num Edital de reserva · B | nenhuma agora; decidir junto do RC-58, quando houver Edital de reserva no alvo (`DP-05`) | — |
 
 ### 3.7 Documentos exigidos e análise documental
 
@@ -404,6 +465,8 @@ quando indicado.
 | RC-58 | **P-1 · P-2 · P-3** · estudo M15 · E8 · NOVO-6 do lote 1 · NOVO-1 do lote 3 | Edital **só de cadastro de reserva** publica "0 vagas" e **não convoca**: convocar exige vaga faltante apurada; o **"Cadastro Reserva limitado em N"** sai publicado e **nada o aplica**; não há prazo de validade | `reserveType`/`reserveLimit` existem desde a 001 e a 040 trata "vagas 0 — zero legítimo"; **DP-05 (26/09): fora do piloto**, com aviso na Revisão | `convocacao/application/convocar.py:100-152`; nenhuma ocorrência de `reserveType`/`reserveLimit` em `ocupacao/`, `convocacao/` ou `classificacao/`; `pdf.py:1683-1685` imprime o limite | NÃO IMPLEMENTADO | sim — é a mesma doença do ACH-47, "aceita, publica e não executa", numa família da amostra (140/2025, 173/2025) | fluxo incompleto para um tipo de Edital que o produto aceita · conferido no código em 26/09: publicar, classificar e divulgar funcionam, só convocar falha · fora do piloto pela DP-05 | spec própria quando houver Edital de reserva escolhido para operação — ver a DP-05 | 1, 3, 6 |
 | RC-59 | ACH-59 · cascata 14/2026 · LONG-3 | grupos 1→2→3 são ordem de chamada, não reserva; os avisos empurram para repartir | a decisão do encadeamento já nomeou a forma (`callRules`) | `validation.py:2480`; nenhuma prioridade entre listas | NÃO IMPLEMENTADO | sim, quando a família entrar no alvo | B | nenhuma agora | 3, 1 |
 | RC-129 | `048`, *Achados registrados*, A-2 (26/09) | nenhuma causa de obsolescência compara a reversão, e a apuração emitida sob a declaração anterior continua *"vigente"* depois de uma Retificação que a muda → uma causa a mais, ou o registro de que a reversão não obsoleta | 016 `FR-263` (as causas nomeadas; a reversão não está entre elas); a `048` faz a reversão nascer, e com isso amplia o caso — que já valia para quem retifica a espécie | `ocupacao/application/selectors.py` (`causas_de_obsolescencia`) | NÃO IMPLEMENTADO | sim — lido no código, não percorrido | a apuração diz vigente um número calculado sob outra norma · B | decidir, e corrigir junto da próxima mudança na ocupação | — |
+| RC-137 | #204, *O que ficou de fora* · `doc/achado-porta-da-convocacao-pela-ocupacao.md` (27/09) | a reavaliação de 27/09 pedia a porta da convocação *"a partir da ocupação e da página do Edital"*; a da ocupação, um link *"Abrir a convocação deste recorte"* por recorte apurado, reprovou a varredura da `016` e saiu → emendar a `UX-034` para separar **nomear a tela vizinha** de **afirmar fato da `019`**, com a mesma exceção dita na varredura | 016 `UX-034` (*"Termo de convocação MUST NOT aparecer nesta feature"*) e `FR-258`; 033 `FR-473`; a porta pela página do Edital entrou no #204, e a convocação ganhou a navegação entre recortes | `interface/templates/interface/ocupacao.html` (nenhum link à convocação); `tests/test_vocabulario_da_ocupacao.py` (a varredura de `convoca[çc]`); o simétrico existe: a convocação aponta para a ocupação (*"Ir para a apuração de ocupação"*) | NÃO IMPLEMENTADO | sim — o link não afirmaria nenhum fato proibido, mas a letra da `UX-034` proíbe o termo, e o link saiu por decisão tomada na sessão | quem termina a apuração, que é o passo em que a convocação é pedida, volta à página do Edital, abre a convocação do marco e escolhe o recorte de novo · B | emendar a `UX-034` da `016`, o que é spec; o passo 3 da ordem de 27/09 (convocação como fluxo) é onde ela cabe | — |
+| RC-138 | #204, *O que ficou de fora* · `doc/achado-convocacao-nao-normaliza-o-recorte.md` (27/09) | a ordenação e o corte reduzem o `?lista=` à grafia canônica por `_recorte_pedido`, e a convocação só conferia se o valor era uma identidade: o recorte que o Perfil não tem respondia **200**, com a tela vazia de um recorte inexistente, e a Modalidade apontada como ampla abria um recorte à parte, onde convocar era recusado → a mesma porta das outras duas telas | 034 `FR-499`, `FR-503`; **corrigido pelo #205** (27/09) | `interface/views.py` (`convocacao` e `convocar_view` por `_recorte_pedido`; `convocacao_historico` procura primeiro a série gravada pela identidade pedida, e só sem série recorre à norma vigente); `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` (três linhas novas); `tests/interface/test_navegacao_entre_recortes.py` (`test_a_convocacao_tambem_responde_404_ao_recorte_que_nao_existe`, `test_a_convocacao_le_a_modalidade_apontada_como_ampla_como_a_ampla`); `tests/interface/test_historico_da_convocacao.py` (a Retificação real que remove a Modalidade depois da convocação) | RESOLVIDO | sim — percorrido no preview do #205: 404 na tela e no histórico para o recorte inexistente, 200 para a ampla e a PPI. A revisão do #205 corrigiu a primeira versão, que normalizava também o histórico e escondia, depois de uma Retificação, a série que explica os atos | — (enquanto aberto, C: só se chegava pelo endereço) · — | nenhuma | — |
 
 ### 3.9 Comissão, alocação, distribuição e avaliação
 
@@ -470,13 +533,13 @@ quando indicado.
 | RC-95 | §13 · §18 · condição de saída do piloto | exportação para o Registro Acadêmico nunca importada no destino | 029, 031 | `interface/views.py:4152-4247` | IMPLEMENTADO, MAS NÃO VALIDADO | sim | responsabilidade compartilhada com o sistema de destino · B | validar com o setor dono | 4 |
 | RC-96 | Escala / T059 · T063 (375 px) | 2719 vagas; medição no Cefor; telas estreitas | — | anexo 1 | IMPLEMENTADO, MAS NÃO VALIDADO | parcialmente | C | validar na infraestrutura real | 1 |
 | RC-97 | E2E-019 · E2E-014 | todos veem todos os Processos do escopo; "Ou entre por outro nome" | FR-003 da 002 | anexo 1 | SUPERADO / OBSOLETO | não | — | nenhuma | 1 |
-| RC-124 | resíduo do RC-72 (revisão da `046`) · conferência de 26/09 | **o caminho de produção não está no repositório**: a única imagem é de desenvolvimento ("Não é imagem de produção"), não há servidor WSGI de produção entre as dependências, e `wsgi.py` e `asgi.py` caem em `config.settings.development` quando falta `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração do sorteio ligada e **nenhuma** barreira de produção executada; e a ocorrência de demonstração já registrada é devolvida sem consultar o vocabulário → falha segura (o padrão de `wsgi` e `asgi` ser a produção, que recusa subir mal configurada; o `manage.py` fica em desenvolvimento) e um artefato de implantação | 003 FR-016…018; 046 (a barreira da fonte) | `backend/config/wsgi.py:5`; `backend/config/asgi.py:5`; `backend/config/settings/development.py:3,7`; `Dockerfile:8-10`; `backend/pyproject.toml` (sem servidor de produção); `sorteios/application/ocorrencia.py:61-66` | NÃO IMPLEMENTADO | sim | a barreira existe e se pula pela omissão de uma variável · B | decisão de infraestrutura (quem empacota e serve o sistema) + correção direta dos padrões | 9 |
+| RC-124 | resíduo do RC-72 (revisão da `046`) · conferência de 26/09 | **o caminho de produção não está no repositório**: a única imagem é de desenvolvimento ("Não é imagem de produção"), não há servidor WSGI de produção entre as dependências, e `wsgi.py` e `asgi.py` caem em `config.settings.development` quando falta `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração do sorteio ligada e **nenhuma** barreira de produção executada; e a ocorrência de demonstração já registrada é devolvida sem consultar o vocabulário → falha segura (o padrão de `wsgi` e `asgi` ser a produção, que recusa subir mal configurada; o `manage.py` fica em desenvolvimento) e um artefato de implantação | 003 FR-016…018; 046 (a barreira da fonte); **#204** (`7cf6cbd0`, 27/09), passo 0 da ordem de 27/09 — os padrões | **feito:** `backend/config/wsgi.py` e `backend/config/asgi.py` (`setdefault` para `config.settings.production`, com o comentário da decisão; o `manage.py` continua em `development`, e o `runserver`, o compose, o CI e o `pytest-django` não mudam); `backend/tests/test_configuracao_producao.py` (`test_sem_a_variavel_o_servidor_carrega_a_producao`, `test_sem_a_variavel_e_mal_configurado_o_servidor_recusa_subir`, `test_manage_py_continua_em_desenvolvimento`, em subprocesso). **Continua:** `Dockerfile:8-10` (*"Não é imagem de produção"*); `backend/pyproject.toml` (sem servidor de produção); `sorteios/application/ocorrencia.py:61-66` (a ocorrência já registrada devolvida sem consultar o vocabulário) | PARCIALMENTE RESOLVIDO | sim | a barreira não se pula mais pela omissão da variável; falta o artefato de implantação — quem empacota e serve o sistema — e a ocorrência de demonstração anterior à barreira · B | decisão de infraestrutura (quem empacota e serve o sistema), que é o passo 5 da ordem de 27/09 | 9 |
 
 ### 3.15 Integridade de dados, engenharia e documentação
 
 | RC | IDs antigos | Problema original → recomendação | Specs · implementação | Evidência atual | Estado | Faz sentido? | Resíduo · grupo | Próxima ação | Anexo |
 |---|---|---|---|---|---|---|---|---|---|
-| RC-98 | contrato de mutabilidade (13–14/09) | campo publicado sem natureza declarada → invariante com guardião | 026 | `tests/contract/test_mutabilidade.py:303,339`; o contrato cresceu de 123 para 139 entradas | RESOLVIDO | não | o "retificável" não garante canal de exibição (RC-12) nem porta de acréscimo (RC-38, aberta pela `048`, #197); e a `048` registrou que o "não retificável" não vale para o objeto inteiro pela API (RC-130) | nenhuma | 5 |
+| RC-98 | contrato de mutabilidade (13–14/09) | campo publicado sem natureza declarada → invariante com guardião | 026 | `tests/contract/test_mutabilidade.py:303,339`; o contrato cresceu de 123 para 139 entradas | RESOLVIDO | não | o "retificável" não garante canal de exibição (RC-12) nem porta de acréscimo (RC-38, aberta pela `048`, #197); e a `048` registrou que o "não retificável" não vale para o objeto inteiro pela API (RC-130). *Desde o #201 (27/09), o "retificável" garante uma linha no "O que mudou" do portal, cobrada por guardião (RC-111)* | nenhuma | 5 |
 | RC-99 | ACH-06 · ACH-12 · ACH-20 · B6 · B7 · B8 · E2E15-015 · LONG-§10.10 | `name` em inglês; desempate por idade; vigência densa; Anexos sem "Salvar rascunho"; papéis crus no seletor; cancelamento "sem dizer por quê"; a 037 "em deriva" | — | ver os anexos 2, 3 e 6 | SUPERADO / OBSOLETO | não | — | nenhuma | 2, 3, 6 |
 | RC-100 | NOVO-2 do lote 2 · NOVO-2 do lote 3 · longitudinal preâmbulo item 6 | "`_marco.html` com 42 controles, e cresceu" | — | 13 dos 42 são `hidden`; os visíveis foram de 28 para 29, e na chegada são 6 | SUPERADO / OBSOLETO | não | a medição do longitudinal é que estava errada | corrigir o texto do longitudinal, se desejado | 2, 3 |
 | RC-101 | PR #171 · achado ValorDeFato · memória "corrigir depois da 044" | `inscricoes_valordefato` está na lista append-only, mas sem gatilho e sem recusa no modelo | 015 D-2; a correção foi **decidida para depois da `0005` da 044**, que entrou com o #173; **feita pelo #183** (`8e7c698`, 26/09) | `inscricoes/migrations/0006_valor_de_fato_append_only.py` (gatilho `valor_de_fato_append_only`); `ValorDeFato.save`/`delete` em `inscricoes/models.py`; `tests/integration/test_imutabilidade_do_historico.py` | RESOLVIDO | sim — contradizia a regra de duas camadas independentes | `PosicaoNaOrdem`, `RevisaoEdital` e `GeracaoDeArquivo` seguem com duas camadas de três, só registradas por decisão · — | nenhuma | 6, 7 |
@@ -513,7 +576,13 @@ propósito, porque cada uma tem domínio claro: o RC-116 a RC-119 moram na §3.6
 inscrição; o RC-120, na §3.2, com o documento publicado; e o RC-121, na §3.12, com os recursos. São 121,
 sem número repetido. As seis das revisões da `045` e da `046`, do RC-122 ao RC-127, seguem a mesma regra,
 e as três da `048` (#197) também: o RC-128 mora na §3.3, com a validação que o impediria; o RC-129, na
-§3.8, com a ocupação; e o RC-130, na §3.4, com a Retificação. São 130, sem número repetido.
+§3.8, com a ocupação; e o RC-130, na §3.4, com a Retificação. São 130, sem número repetido. As oito
+do passo 0 da ordem de 27/09 (#201 a #205) seguem a mesma regra, numeradas a partir do 131 porque o
+maior da `main` era o 130: o RC-136 mora na §3.1, com a composição; o RC-132, na §3.3, ao lado do
+RC-128 que o revelou; o RC-131, o RC-133, o RC-134 e o RC-135, na §3.6, com a inscrição; e o RC-137 e
+o RC-138, na §3.8, com a convocação. A numeração segue a dos registros, e não a posição na matriz:
+os cinco achados da `DP-14` na ordem dela (A-14.1 a A-14.5 são o RC-131 ao RC-135), depois a `DP-19`
+(RC-136) e os dois achados do #204 (RC-137 e RC-138). São 138, sem número repetido.
 
 ### Onde os lotes discordaram, e o que vale
 
@@ -576,6 +645,7 @@ Para cada um: o que foi feito, o que não foi e por que o resto importa.
 | RC-45 facultativo | Mesa e Revisão | o cartão público da vaga | o candidato vê o facultativo como exigido antes de entrar |
 | RC-66 atos em um clique | todos, menos um | "Remover da comissão" | inativa em cascata as alocações da pessoa |
 | RC-77 visão global | Processo e Supervisão concordam; a visão entre Processos existe; e, desde a `045`, a condução dentro do Processo (RC-78…82) | remedir | ver §6 |
+| RC-124 caminho de produção | `wsgi` e `asgi` caem na produção, que recusa subir mal configurada (#204, 27/09) | o artefato de implantação — imagem, servidor de produção, quem serve o sistema —; a ocorrência de demonstração registrada antes da barreira | a falha segura cobre a variável esquecida, e não a implantação que ainda não existe |
 
 ---
 
@@ -657,7 +727,8 @@ A decisão do recorte documental listou correções diretas. Duas foram feitas, 
 **"O que mudou" listar a mudança de recorte** — não foi. A `044` a exclui de propósito ("continuam fora:
 a correção deles é da fila das diretas"). → RC-39. Ela contradiz a FR-130 da `024` e é a mais recente
 candidata a se perder. **Desfecho:** feita pelo #185 em 26/09; o cruzamento com o contrato revelou que
-ela era um caso de uma classe maior (RC-111).
+ela era um caso de uma classe maior (RC-111). E a classe foi feita pelo #201 em 27/09, no passo 0 da
+ordem adotada naquela data, com o guardião que teria impedido o caso original.
 
 ### 6.7 Um achado dado como fechado sem teste
 
@@ -762,20 +833,20 @@ executável. É por isso que ela não aparece aqui como uma spec.
 
 | Domínio | Resolvido | Pendências (A/B) | Oportunidades (C) |
 |---|---|---|---|
-| **Composição e autoria** | explicação no lugar, densidade, duplicar Perfil, quadro único, correções de 25/09 | **RC-08** rascunho local (A); RC-09, RC-10, RC-11 diretas; RC-12 teto; RC-13 decisão E2; RC-122 o assistente de Edital publicado | RC-14, RC-15, RC-16 |
+| **Composição e autoria** | explicação no lugar, densidade, duplicar Perfil, quadro único, correções de 25/09 | **RC-08** rascunho local (A); RC-09, RC-10, RC-11 diretas; RC-12 teto; RC-13 decisão E2; RC-122 o assistente de Edital publicado; RC-136 os campos definitivos na composição (decisão, `DP-19`) | RC-14, RC-15, RC-16 |
 | **Documento publicado** | tabelas, cabeçalho, método do sorteio | RC-20 número; RC-21 anexos citados; RC-22 hora; RC-23 fecho; RC-24 seções (decisão); **RC-120** cancelamento sem Publicação (decisão) | RC-25 (decisão E10), RC-26 |
-| **Validação antes de publicar** | executabilidade (032), documento × execução (#161), o gate da `046` — Etapa que não consolida, Perfil que não convoca, Edital publicado sem juízo de publicabilidade (RC-29, RC-30, RC-32, #188); a porta decisória enumerada que publica (RC-114, PR corretivo de 26/09) | RC-31 entre Perfis; **RC-112** Ocorrência que trava a Etapa seguinte (A, validar); RC-128 Perfil de uma cota só (validar) | RC-34 |
-| **Retificação** | contrato, vocabulário da gestão, "O que mudou" do recorte (RC-39, #185); a Modalidade, a janela, o corte, a reversão e o critério que se acrescentam pela tela (RC-37, RC-38, `048`, #197) | **RC-111** "O que mudou" cala 45 campos e os nascimentos (A); **RC-130** o objeto inteiro que troca campo não retificável pela API (A, validar) | RC-40, RC-125 (#117) |
+| **Validação antes de publicar** | executabilidade (032), documento × execução (#161), o gate da `046` — Etapa que não consolida, Perfil que não convoca, Edital publicado sem juízo de publicabilidade (RC-29, RC-30, RC-32, #188); a porta decisória enumerada que publica (RC-114, PR corretivo de 26/09) | RC-31 entre Perfis; **RC-112** Ocorrência que trava a Etapa seguinte (A, validar); RC-132 a advertência da ampla por declarar no Perfil só de cotas (revisar a `FR-325`) | RC-34 |
+| **Retificação** | contrato, vocabulário da gestão, "O que mudou" do recorte (RC-39, #185); a Modalidade, a janela, o corte, a reversão e o critério que se acrescentam pela tela (RC-37, RC-38, `048`, #197); o "O que mudou" completo contra o contrato, com guardião (RC-111, #201) | **RC-130** o objeto inteiro que troca campo não retificável pela API (A, validar) | RC-40, RC-125 (#117) |
 | **Reaproveitamento** | referências, cronograma, segundo Edital | RC-42 guardião; RC-43 estado de revisão | — |
-| **Portal e inscrição** | parecer, notícia do eliminado, facultativo na Revisão; o desfecho do Edital, a fase do Evento na régua da gestão, o prazo recursal público e o histórico dos resultados (RC-116, a sobra do RC-80 no portal, RC-48, RC-117, `047`, #193) | RC-47 título e vagas; RC-49 prazo no rascunho; RC-46 validar; **RC-118** encerramento do Processo que não fecha inscrições (decisão) | RC-50; RC-119 período cancelado que recebe; a sobra do RC-48 (a prévia da divulgação) |
+| **Portal e inscrição** | parecer, notícia do eliminado, facultativo na Revisão; o desfecho do Edital, a fase do Evento na régua da gestão, o prazo recursal público e o histórico dos resultados (RC-116, a sobra do RC-80 no portal, RC-48, RC-117, `047`, #193); a ampla oferecida na inscrição (RC-128, `DP-14`, #202), a tela de Modalidade única que não trava e a gestão que nomeia a ampla (RC-131, RC-133, #205) | RC-47 título e vagas; RC-49 prazo no rascunho; RC-46 validar; **RC-118** encerramento do Processo que não fecha inscrições (decisão); RC-134 a Modalidade única gravada em silêncio no envio (validar); RC-135 o Perfil só de reserva com uma cota (com o RC-58) | RC-50; RC-119 período cancelado que recebe; a sobra do RC-48 (a prévia da divulgação) |
 | **Documentos exigidos e Mesa** | contenção #161, instrução na Mesa, recorte transversal e lista gravada (RC-52, RC-53, #173), filtro de concorrência (RC-54, #172) | RC-55 submodalidade | resíduo do RC-54, RC-56 |
-| **Oferta, ocupação e convocação** | ordem por recorte, cauda completa; o corte sem Etapa governada que convoca (RC-113, PR corretivo de 26/09 — o recorte sem corte algum continua lendo o vazio, nota e não unidade) | **RC-58** cadastro de reserva (fora do piloto pela DP-05, com aviso; spec quando houver Edital no alvo); RC-59 cascata; RC-129 a apuração que a reversão não obsoleta | — |
+| **Oferta, ocupação e convocação** | ordem por recorte, cauda completa; o corte sem Etapa governada que convoca (RC-113, PR corretivo de 26/09 — o recorte sem corte algum continua lendo o vazio, nota e não unidade); a porta da convocação na página do Edital, com navegação entre recortes, e a convocação que confere o recorte (#204, RC-138, #205) | **RC-58** cadastro de reserva (fora do piloto pela DP-05, com aviso; spec quando houver Edital no alvo); RC-59 cascata; RC-129 a apuração que a reversão não obsoleta; RC-137 a ocupação sem porta para a convocação (emendar a `UX-034`) | — |
 | **Comissão e avaliação** | mesa, distribuição, impedimentos, julgador | RC-61 Perfil/polo; RC-62 Mesa após Resultado; RC-63 validar; RC-64 barema e alcance; RC-65 heteroidentificação | RC-66, RC-67 |
-| **Resultado e divulgação** | prévia exemplar, publicador com caminho | — | RC-69, RC-70 |
+| **Resultado e divulgação** | prévia exemplar, publicador com caminho; a consolidação de todas as prontas numa confirmação (#203, sem unidade) | — | RC-69, RC-70 |
 | **Sorteio** | executável ponta a ponta, vocabulário fechado, fonte de demonstração fora de produção (RC-72, #188) | RC-73 recortes; RC-74 gatilho da fonte real | — |
 | **Recursos** | instrução, parecer, tempestividade; o prazo dito na página pública, igual ao que a interposição aplica (RC-48, `047`) | RC-76 datas (a parte viável foi feita pela `047`, no RC-48); **RC-121** a janela que uma Retificação encurta (decisão) | — |
 | **Condução** | Processo = Supervisão; visão entre Processos; ausência, recurso, Cronograma e medida confiáveis (RC-78…82, `045`); o recurso pendente que não se cala no Edital parado (RC-115, PR corretivo de 26/09) | RC-77 remedir | RC-84 (prazo e exportação), RC-85, RC-86, RC-123 |
-| **Identidade e implantação** | barreira de produção | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico; RC-124 caminho de produção | RC-94 D-G2, RC-96 |
+| **Identidade e implantação** | barreira de produção; `wsgi` e `asgi` caindo nela (#204, parte do RC-124) | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico; RC-124 o artefato de implantação | RC-94 D-G2, RC-96 |
 | **Integridade e engenharia** | append-only 34/34, contrato de mutabilidade, `ValorDeFato` nas três camadas (RC-101, #183) | — | RC-102, RC-103, RC-127 |
 
 ---
@@ -834,7 +905,7 @@ antes.
   (`inscricoes/0006`, gatilho e guarda de modelo).
 - **Lacuna residual.** Nenhuma desta evolução. Da `044` fica só a T065 (recompor o 140/2025), que é
   medição, e não lacuna. A correção do "O que mudou" revelou o RC-111, que não é desta evolução e espera
-  decisão.
+  decisão. *Feito pelo #201 em 27/09, no passo 0 da ordem adotada naquela data.*
 - **Fora de escopo.** Submodalidade (RC-55) e condição sobre o candidato (decisão D2).
 
 **B-3 · O que o Edital publica e não executa: a varredura que a `032` não fez — concluída em 26/09**
@@ -893,7 +964,9 @@ antes.
 - **Lacuna residual.** Nenhuma desta evolução. A implementação registrou o RC-128 (o Perfil de uma cota
   só), o RC-129 (a apuração que a reversão não obsoleta) e o RC-130 (o objeto inteiro que troca campo não
   retificável pela API), e ampliou o RC-111: os nascimentos também se calam no "O que mudou". A `039`
-  continua sem encerramento registrado (`DP-08`, item 1).
+  continua sem encerramento registrado (`DP-08`, item 1). *No passo 0 de 27/09, o RC-111 fechou pelo
+  #201, com os nascimentos no guardião, e o RC-128 pela `DP-14` (#202), que registrou a borda dele como
+  o RC-131 ao RC-135. Dos três da `048`, restam o RC-129 e o RC-130.*
 - **Escopo mínimo.**
   - Acrescentar Modalidade a um Perfil de Edital publicado, com as cinco restrições da `D-G5`.
   - Acrescentar a janela recursal.
@@ -916,7 +989,8 @@ antes.
   fictício; só a convocação falha, com `sem_deficit`. A DP-05 deixou a família **fora do piloto**, e a
   publicação passou a avisar na Revisão que a convocação é externa.
 - **Lacuna residual.** RC-58, adiado: a spec nasce quando houver Edital de reserva no alvo, com o
-  escopo que a DP-05 registra.
+  escopo que a DP-05 registra. *Desde 27/09, também o RC-135: a `DP-14` não oferece a ampla no Perfil
+  só de reserva, e com uma cota todo inscrito continua nela. Os dois se decidem juntos.*
 - **Escopo mínimo.**
   - **Primeiro, validar pela tela**: publicar um Edital com 0 vagas imediatas e cadastro de reserva,
     classificar e tentar convocar.
@@ -948,7 +1022,9 @@ antes.
 
 **B-7 · Autenticação institucional real, com correio e retenção** — *P1 de implantação, trilha paralela*
 - **Origem.** C7 (20/09); T056 da `002`; G1–G4/G22 e E2E-020 (02/09).
-- **Lacuna residual.** RC-92, RC-93 e RC-124.
+- **Lacuna residual.** RC-92, RC-93 e RC-124. *Do RC-124, o padrão de `wsgi` e `asgi` foi feito pelo
+  #204 em 27/09, como correção direta do passo 0; resta quem empacota e serve o sistema, que é o passo
+  5 da ordem adotada naquela data.*
 - **Escopo mínimo.**
   - O adaptador contra o provedor do Ifes (gestão), separado do candidato.
   - SMTP institucional com redundância para o código de acesso.
@@ -1100,12 +1176,13 @@ B-3 — concluída pela 046 (#188) ─► RC-34 (a fronteira avisos × Atenção
                                  └► RC-114 (a porta decisória enumerada, da revisão da 046) — corrigido em 26/09
 
 B-4 (Retificação acrescenta) ─ independente da 039 (contradita); faz fronteira com RC-73 (recortes do sorteio) — concluída pela 048 (#197)
-   └► RC-111 (o "O que mudou") — ampliado: os nascimentos também se calam
-   └► RC-128 (Perfil de uma cota só) ─ validar ─► decisão de composição
+   └► RC-111 (o "O que mudou") — ampliado: os nascimentos também se calam; resolvido pelo #201 (27/09)
+   └► RC-128 (Perfil de uma cota só) — resolvido pela DP-14 (#202, 27/09), na inscrição e não na composição
    └► RC-129 (a reversão que não obsoleta a apuração) ─ decisão ─► uma causa a mais, ou o registro
    └► RC-130 (o objeto inteiro pela API) ─ validar por teste ─► guarda no ato de Retificação, não em apply_changes
 
 B-5 (cadastro de reserva) ─ validar ─► decisão de alvo ─► spec; toca RC-30 (corte) e a ocupação
+   └► RC-135 (o Perfil só de reserva com uma cota, da DP-14) ─ decide-se junto
 
 B-7 (autenticação) ─► RC-87 (antecipar a falta de julgador) · B-21 (e-mail interno) · a produção
 
@@ -1116,6 +1193,16 @@ B-8 (portal) ─ RC-48 — concluído pela 047 (#193); restam RC-47 e RC-49
    └► RC-121 (janela encurtada por Retificação) ─ decisão do domínio de recursos (018); toca a B-4
 
 RC-64 (alcance da Etapa) ─► RC-65 (heteroidentificação) · barema
+
+Passo 0 da ordem de 27/09 (#201 a #205) — concluído
+   └► RC-111 (#201) · RC-128 (#202, DP-14) — resolvidos
+   └► RC-131 (A-14.1) · RC-133 (A-14.3) — registrados pelo #202, corrigidos pelo #205
+   └► RC-138 (o recorte da convocação) — registrado pelo #204, corrigido pelo #205
+   └► RC-132 (A-14.2, a advertência da ampla por declarar) ─ revisar a FR-325 da 027 ─► spec
+   └► RC-134 (A-14.4, a Modalidade única nascida por Retificação) ─ validar por teste ─► decisão
+   └► RC-136 (DP-19, os campos definitivos na composição) ─ decisão ─► spec, se for requisito; toca a FR-428 da 030
+   └► RC-137 (a ocupação sem porta para a convocação) ─ emendar a UX-034 da 016 ─► passo 3 (convocação como fluxo)
+   └► RC-124 — wsgi e asgi feitos pelo #204; o artefato de implantação ─► passo 5 (caminho de produção)
 ```
 
 **O que pode ser feito isoladamente, hoje:** B-6, B-8, B-11, B-12 (a leitura),
@@ -1160,6 +1247,12 @@ bloqueiam as ondas.
 
 **Depois, e só com decisão de alvo:** B-17 (as famílias). Polish e higiene (B-18, B-19, B-20) entram como
 varreduras oportunistas quando se tocar nas telas envolvidas.
+
+*Desde 27/09, a ordem de trabalho é a que o usuário adotou depois da reavaliação daquela data
+([decisões pendentes](decisoes-pendentes-da-consolidacao.md#depois-da-reavaliação-de-2709)), e não
+estas ondas, que ficam como leitura desta auditoria. O passo 0 dela, as correções diretas, foi
+concluído no mesmo dia (#201 a #205; ver a tabela no fim da §1). Das unidades desta auditoria, ele
+fechou o RC-111 e o RC-128 e a parte direta do RC-124; nenhuma das ondas acima foi concluída por ele.*
 
 ---
 
@@ -1235,6 +1328,8 @@ e ainda não têm bloco em `decisoes-pendentes-da-consolidacao.md`.*
     e a inscrição põe todo candidato na cota (RC-128). Depois de validado pela tela, as saídas são
     impedir na composição, advertir de forma que não se confunda com o aviso comum, ou perguntar ao
     candidato. A `048` deu o conserto depois da publicação, e não o impedimento antes.
+    *Decidida em 27/09 como a `DP-14`, opção A — nenhuma das três saídas acima: a inscrição oferece a
+    ampla como recorte nulo, e a composição não muda — e feita pelo #202 no passo 0.*
 19. **A reversão retificada torna obsoleta a apuração?** Hoje não: nenhuma das cinco causas da `FR-263`
     compara a reversão (RC-129). Uma causa a mais, ou o registro de que a apuração emitida continua
     valendo — e a `048` ampliou o caso, porque a reversão agora também nasce.
@@ -1242,6 +1337,22 @@ e ainda não têm bloco em `decisoes-pendentes-da-consolidacao.md`.*
     por ser anterior a ela (RC-130). Confirmada por teste, é A: o contrato protege pela tela o que a API
     deixa trocar. A `048` deixou escrito onde a guarda **não** pode morar — em `apply_changes`, que
     também reproduz atos já publicados.
+
+*As quatro abaixo foram registradas pelo passo 0 da ordem de 27/09 (#201 a #205). A primeira tem
+bloco próprio em `decisoes-pendentes-da-consolidacao.md`; as outras três estão nos achados da `DP-14` e
+em `doc/`.*
+
+21. **Marcar na composição os campos que não se corrigem depois de publicados é requisito novo?**
+    (RC-136) Não há requisito escrito a restaurar, e a `026` §7 e a `FR-428` da `030` apontam contra;
+    decidir se o selo é ajuda decide se a `FR-428` precisa de emenda. → `DP-19`
+22. **A advertência da ampla por declarar deve calar no Perfil só de cotas?** (RC-132) A `FR-325` da
+    `027`, ao pé da letra, a exige, e o sistema não distingue esse Perfil do caso-armadilha sem casar
+    nome. O usuário a manteve como registro em 27/09; calar pede revisar a `FR-325`, o que é spec.
+23. **A ocupação pode nomear a convocação num link?** (RC-137) A `UX-034` da `016` proíbe o termo, e
+    não só a afirmação de fato da `019`. Emendá-la para separar as duas coisas é spec.
+24. **O que acontece com o rascunho da ampla quando uma Retificação retira a ampla?** (RC-134) Hoje o
+    envio grava a Modalidade única em silêncio. Depois de validado por teste: recusar até a escolha, ou
+    conferir os documentos contra a Modalidade que será gravada.
 
 ### Verificações que exigem percurso ou ambiente
 - **RC-08** (AX-16), **RC-58** (convocar a reserva), **RC-63** (E2E18-001) e **RC-46** (019 §4.2): todos
@@ -1256,7 +1367,11 @@ e ainda não têm bloco em `decisoes-pendentes-da-consolidacao.md`.*
   *O RC-37 e o RC-38, fechados pela `048` (#197), foram percorridos pela tela com identidades
   segregadas — Modalidade, critério, janela e reversão num ato só (`percursos.md` de lá) —, menos o
   Perfil sem a ampla e o corte que nasce, que o `seed_demo` não produz e que testes de ponta a ponta
-  cobrem. O RC-128, o RC-129 e o RC-130, que ela registrou, foram só lidos.*
+  cobrem. O RC-128, o RC-129 e o RC-130, que ela registrou, foram só lidos.
+  *Depois (27/09): o RC-111 e o RC-128 foram percorridos no preview dos PRs que os fecharam (#201, com
+  uma Retificação de quatro campos a mais sobre o `seed_demo`; #202, pelo portal, até o comprovante com
+  `modality_id` nulo), e o RC-131, o RC-133 e o RC-138 no do #205. O RC-134 foi só lido. O RC-132, o
+  RC-135, o RC-136 e o RC-137 não pedem percurso: são decisões, ou a letra de uma decisão tomada.**
 - **PR #173**: mesclado em 26/09 com o CI verde (7831 passando, 11 pulados), e a Mesa percorrida pela
   tela depois (`0c4e6b0`). Falta a T065, o 140/2025 recomposto.
 - **Acervo publicado antes do #161** com "Todos os Perfis + Modalidade de um só": só a base real responde.

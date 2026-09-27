@@ -618,6 +618,13 @@ tela, uma repetição ou um conceito a retirar.
 - **O dicionário do "O que mudou" completo**, com um guardião contra o contrato de mutabilidade
   (RC-111). Feito em 27/09; ver o [achado](achado-o-que-mudou-cala-campos-retificaveis.md).
 
+*Desfecho (27/09): o passo 0 foi feito no mesmo dia. A ampla, pelo #202; a porta da convocação pela
+página do Edital, o `?lista=` do `UX-004`, a ajuda do duplicar e `wsgi`/`asgi`, pelo #204; a
+consolidação, pelo #203; o "O que mudou", pelo #201; e as sobras, pelo #205. A ordem das etapas do
+duplicar não mudou, e a porta pela ocupação saiu, barrada pela `UX-034` da `016`
+([achado](achado-porta-da-convocacao-pela-ocupacao.md); RC-137 da auditoria). O registro por unidade
+está na [auditoria de consolidação](auditoria-de-consolidacao-2026-09-26.md), no fim da §1.*
+
 **Os campos sem consumidor não são passo próprio.** `calculation`, `rounding`, `distribution` e
 `callRules` da regra normativa, e o `reserveLimit` do Perfil, se decidem na spec que os consumiria: o
 `reserveLimit` com a `DP-05`; os três primeiros com o quadro de vagas sugerido pelo percentual, no passo 1;
@@ -732,7 +739,7 @@ era a promessa que a inscrição não cumpria, e agora cumpre.
 
 **Achados, fora do escopo.** Registro, não escopo.
 
-- **A-14.1 · A tela de Modalidade única trava quem já enviou o documento da cota.** Sem campo de
+- **A-14.1 · A tela de Modalidade única trava quem já enviou o documento da cota.** *(RC-131 da auditoria.)* Sem campo de
   Modalidade na tela, a view calcula o descarte contra `None` (`portal/views.py`, em `inscricao`, na
   chamada a `descartes_por_mudanca_de_modalidade`), e *"Revisar inscrição"* abre *"Mudar de modalidade
   descarta documentos"*. Confirmar leva a `discard_not_confirmed`, porque `gravar_dados` assume a
@@ -741,7 +748,7 @@ era a promessa que a inscrição não cumpria, e agora cumpre.
   **Corrigido em 27/09, nas sobras do passo 0:** `descartes_por_mudanca_de_modalidade` compara com a
   Modalidade que `gravar_dados` vai gravar (`_modalidade_escolhida`), e não com o vazio do formulário.
   Restaura a FR-031 e a FR-041 da `009`.
-- **A-14.2 · A advertência da FR-325 soa para a forma agora correta.** `general_competition_modality_undeclared`
+- **A-14.2 · A advertência da FR-325 soa para a forma agora correta.** *(RC-132 da auditoria.)* `general_competition_modality_undeclared`
   (`editais/domain/validation.py`, `_ampla_por_declarar`) avisa todo Perfil que declara Modalidade sem
   apontar a ampla, e manda declarar *"qual delas é a da ampla concorrência"*. Para o Perfil que só declara
   cotas, que é o caso que esta decisão resolve, não há qual apontar.
@@ -753,7 +760,7 @@ era a promessa que a inscrição não cumpria, e agora cumpre.
   `R-006` da `025` recusa. Calar a advertência ali pede revisar a FR-325, o que é spec; reescrever só a
   mensagem a deixaria soando, como pendência na Revisão e na confirmação (FR-327, FR-328), para a forma
   correta.
-- **A-14.3 · A gestão não nomeia nem conta a ampla sem Modalidade.** A lista e o detalhe das inscrições
+- **A-14.3 · A gestão não nomeia nem conta a ampla sem Modalidade.** *(RC-133 da auditoria.)* A lista e o detalhe das inscrições
   (`inscricoes/application/consulta.py`, `_nome_no_conteudo`) e a Mesa (`avaliacoes/application/mesa.py`)
   mostram a Modalidade em branco; a contagem por Modalidade descarta o nulo, e o filtro não o alcança
   (`_contagens`, `_filtrar`). A FR-067 e a FR-068 da `009` pedem a Modalidade. Já valia para o Perfil sem
@@ -767,12 +774,12 @@ era a promessa que a inscrição não cumpria, e agora cumpre.
   mesma regra que gera a opção: o endereço forjado para onde o nulo não é a ampla não filtra. O portal
   mantém o que é dele: no Perfil sem Modalidade, a revisão continua sem a linha, porque nada foi
   perguntado (FR-038). Restaura a FR-067 e a FR-068 da `009`.
-- **A-14.4 · A Modalidade única que nasce por Retificação é atribuída em silêncio no envio.** Se uma
+- **A-14.4 · A Modalidade única que nasce por Retificação é atribuída em silêncio no envio.** *(RC-134 da auditoria.)* Se uma
   Retificação zera a linha geral, ou dá a primeira Modalidade a um Perfil sem vaga na linha geral, o
   rascunho no nulo é recusado até o reconhecimento; depois dele, o envio grava a Modalidade única que
   `_modalidade_escolhida` devolve (`inscricoes/application/submissao.py`, eixo 5), com os documentos
   conferidos contra a inscrição sem ela. Vem de antes, pela `048`, e esta correção o estreita.
-- **A-14.5 · O Perfil só de cadastro reserva com cota continua pondo todo inscrito na cota.** É a
+- **A-14.5 · O Perfil só de cadastro reserva com cota continua pondo todo inscrito na cota.** *(RC-135 da auditoria.)* É a
   consequência declarada do item 2 acima.
 
 ---
@@ -855,7 +862,7 @@ teste calibra esses números antes das specs estruturais.
 ## DP-19 — Marcar na composição os campos que não se corrigem depois de publicados é requisito novo?
 
 *Registrada em 27/09, ao executar o passo 0. Saiu dele por decisão do usuário: o passo 0 é "sem spec,
-contra requisito escrito", e este item não tem requisito.*
+contra requisito escrito", e este item não tem requisito. É o RC-136 da auditoria.*
 
 ### O fato
 
