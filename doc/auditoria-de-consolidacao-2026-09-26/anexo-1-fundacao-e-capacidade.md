@@ -74,6 +74,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Implementação encontrada: ativação derivada da publicação do primeiro Edital, com `AtoAdministrativo` próprio e motivo.
 - Evidência no código atual: `publicacoes/application/publish_edital.py:789-835` (`_ativar_o_processo_na_primeira_publicacao`). Testes que citam E2E-005: `tests/interface/test_processo.py`, `tests/interface/test_lista.py`.
 - Estado atual: RESOLVIDO
+- **Desfecho posterior (26/09):** a `047` (#193) partiu deste bloco e achou o vizinho: o *Ativo* continua sem consequência pública, e **o desfecho também não tinha** — o Edital cancelado dentro do período aparecia no portal como *"Aberta — faltam N dias"*, e o encerrado não dizia nada. É o RC-116 da auditoria, registrado e corrigido pela `047` (FR-760 a FR-764; `desfechos` em `processos/application/selectors.py`; `tests/integration/portal/test_desfecho_publico.py`). O *Ativo* continua fora, de propósito (`D-002` de lá). O estado deste bloco não muda.
 - Ainda faz sentido?: não.
 - Lacuna residual: nenhuma
 - Grupo do resíduo: —
