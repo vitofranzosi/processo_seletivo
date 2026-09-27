@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, e a `DP-14`, decidida em 27/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, e a `DP-13` e a `DP-14`, decididas em 27/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -801,6 +801,66 @@ do Edital".
   escala.
 - **O "O que mudou" público ganha N linhas iguais** por gesto na Retificação. Não é defeito: cada
   Alteração continua registrada, que é o que a reavaliação pediu. Mas é ruído para quem lê o portal.
+
+### O que foi decidido
+
+Em 27/09/2026, o usuário aprovou a **D**, na forma de **uma regra única**, e autorizou o gesto também na
+Retificação. A análise acima fica como estava. Ela passa a ser o inventário que justifica a regra, e
+não uma lista de políticas.
+
+**A regra.**
+
+> Nos destinos selecionados, "aplicar a todos" substitui integralmente a declaração correspondente, na
+> fronteira que a spec define para cada unidade. Se ela não existir e puder nascer, cria uma cópia
+> independente. Fica fora do alcance o destino sem correspondência inequívoca, ou em que o contrato
+> não permite criar nem substituir a unidade inteira. O marco inteiro não é unidade substituível: ele
+> só é criado onde falta. Antes da confirmação, a prévia mostra cada criação, substituição, ausência de
+> mudança ou exclusão, com o motivo.
+
+**As exceções são três, e só três:**
+
+1. não há correspondente seguro;
+2. o contrato não permite criar ou substituir;
+3. a ação opera sobre um item, e não sobre a coleção inteira. Aplicar a cota PcD não apaga a cota
+   racial que só aquele Perfil declara.
+
+**O que a regra fixa, além do texto.**
+
+- **O marco.** Com um marco no Perfil, a correspondência é segura, e a janela, o corte, os critérios e
+  os campos do marco se aplicam a ele. O que fica de fora é **o marco inteiro**, que não se substitui:
+  substituí-lo trocaria as Etapas medidas e campos que não se retificam. Com dois ou mais marcos no
+  Perfil, falta correspondência, e tudo o que mora neles fica fora do alcance.
+- **A atomicidade na Retificação.** A substituição é campo a campo, e nunca pela troca do objeto inteiro,
+  que é a porta registrada como A-6 da `048`. Se qualquer diferença alcançar campo não retificável, o
+  destino **inteiro** fica fora do alcance, sem aplicação parcial.
+- **A quantidade fixa do corte vai junto.** É a consequência da regra única, e **substitui** o que a
+  tabela acima propunha (não propagar por padrão). A compensação é a prévia: quando o corte tiver
+  quantidade fixa, a prévia DEVE destacar em separado a quantidade anterior e a aplicada em cada Perfil,
+  e o destino pode ser excluído antes da confirmação. Não há exceção escondida para preservar o
+  desenho anterior. Quem aplica escolhe a regra completa e vê a consequência.
+- **Estrutura nova** parte da mesma hipótese, mas só entra no alcance quando a spec declarar a unidade
+  dela e o contrato autorizar. É o negar por padrão, e o contrato continua sendo a fonte única
+  (FR-803 da `048`).
+- **O ganho em simplicidade tem limite.** A regra normativa e os testes comuns ficam menores. Os casos por
+  estrutura continuam necessários para provar as fronteiras e as exceções.
+
+**O que a próxima spec declara por escrito.**
+
+- **A leitura da FR-802 da `048`.** Ela impede criar espécie nova e genérica de alteração. Não impede uma
+  interface em lote que produza várias alterações já admitidas, cada uma validada pelo contrato e
+  registrada no mesmo ato.
+- **A fronteira com a FR-421 da `030`.** O padrão só preenche o vazio. "Aplicar a todos" substitui, e só
+  por gesto com prévia.
+- **A fronteira de cada unidade.** Três casos já estão abertos:
+  - a Modalidade não leva a linha dela no quadro, porque a quantidade é do Perfil;
+  - fica por decidir se a declaração de "esta é a ampla" vai junto, porque ela é valor do Perfil, e
+    aplicá-la pode desmarcar outra Modalidade do destino;
+  - a Modalidade equivalente sob outro código ("PcD" e "DEF") não cai em nenhuma exceção, e só a
+    prévia a protege, mostrando as Modalidades que cada destino já tem.
+
+**A primeira spec** é a da lista acima, [*O que entraria na primeira spec*](#o-que-entraria-na-primeira-spec),
+com o gesto valendo na composição e na Retificação. O que a spec herda continua registrado, e não
+decidido.
 
 ---
 
