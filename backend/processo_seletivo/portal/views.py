@@ -24,10 +24,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.divulgacao.application.selectors import (
+    anteriores_da_cadeia,
     documento_do_resultado,
+    historico_publico_do_edital,
     situacoes_do_candidato,
     vigente_do_marco,
-    vigentes_do_edital,
 )
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
@@ -78,9 +79,11 @@ from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
+from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
+    janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
 )
@@ -112,8 +115,12 @@ RESERVA = {
 }
 
 
-def _selecao(versao):
+def _selecao(versao, agora=None):
     """O que a página precisa saber, tirado do conteúdo publicado e de mais nada.
+
+    `agora` é o instante da leitura inteira, quando quem chama já o fixou (047): o período dito
+    aqui e o cronograma, o prazo e o próximo Evento ditos pela página precisam ser julgados no
+    mesmo instante, ou discordam entre si na fronteira de um Evento.
 
     A unidade vem do Edital porque escopo institucional é identificação do ato, não conteúdo
     normativo — não está no snapshot e não deveria estar.
@@ -121,7 +128,7 @@ def _selecao(versao):
     conteudo = versao.content
     return {
         "edital_id": versao.edital_id,
-        "periodo": periodo_de_inscricoes(conteudo, timezone.now()),
+        "periodo": periodo_de_inscricoes(conteudo, agora or timezone.now()),
         "processo_codigo": conteudo.get("processoCode", ""),
         "processo_titulo": conteudo.get("processoTitle", ""),
         "unidade": versao.edital.institution_scope.upper(),
@@ -273,10 +280,14 @@ def vitrine(request):
     quem lê, e não a de criação de quem publicou.
     """
     agora = timezone.now()
-    selecoes = [_selecao_da_vitrine(versao, agora) for versao in selectors.selecoes_publicas()]
+    versoes = list(selectors.selecoes_publicas())
+    # **O desfecho de todos os cartões numa leitura só** (047, `R-2`, `R-7`): uma consulta aos atos,
+    # e só quando algum Edital ou Processo está em estado final.
+    finais = desfechos([versao.edital for versao in versoes])
+    selecoes = [_selecao_da_vitrine(versao, agora, finais[versao.edital_id]) for versao in versoes]
     selecoes.sort(
         key=lambda item: (
-            leitura.ORDEM_DAS_SITUACOES.get(item["periodo"].estado, len(leitura.GRUPOS)),
+            leitura.ORDEM_DAS_SITUACOES.get(item["estado"], len(leitura.GRUPOS)),
             item["periodo"].fim or item["periodo"].inicio or agora,
         )
     )
@@ -308,25 +319,34 @@ def vitrine(request):
     )
 
 
-def _selecao_da_vitrine(versao, agora):
+def _selecao_da_vitrine(versao, agora, desfecho=None):
     """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
 
     Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
     a página da seleção mostra, lido do mesmo lugar.
     """
-    dados = _selecao(versao)
+    dados = _selecao(versao, agora)
     perfis = versao.content.get("profiles") or []
     periodo = dados["periodo"]
+    chave, rotulo = leitura.situacao_publica(periodo, desfecho)
     return {
         **dados,
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
         "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
         "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
-        "dias_restantes": _dias_ate(periodo.fim, agora) if periodo.estado == "aberto" else None,
+        "dias_restantes": (
+            _dias_ate(periodo.fim, agora)
+            if periodo.estado == "aberto" and not (desfecho and desfecho.do_edital)
+            else None
+        ),
         # A marca da situação, no cartão (024, FR-145). Sem ela, a situação de uma seleção sem
         # período designado não era dita em lugar nenhum: `_periodo.html` não escreve prazo para
-        # ela — corretamente —, e o cartão ficava mudo sobre o que ela é.
-        "situacao_rotulo": leitura.SITUACAO_DO_CARTAO.get(periodo.estado, ""),
+        # ela — corretamente —, e o cartão ficava mudo sobre o que ela é. Com a 047, o desfecho
+        # vence o período na marca, no grupo, na ordem e no filtro (`FR-763`).
+        "situacao_chave": chave,
+        "situacao_rotulo": rotulo,
+        "desfecho": desfecho,
+        "estado": leitura.estado_na_vitrine(periodo, desfecho),
         # O instante **do que está sendo mostrado**, que é por onde "mais recentes" ordena
         # (FR-140, T-006).
         "vigente_desde": versao.valid_from,
@@ -364,11 +384,22 @@ def selecao(request, edital_id):
     Continua abrindo depois de encerrada e depois de cancelada (FR-017): o que foi publicado
     permanece legível. O que muda com o cancelamento é deixar de ser anunciado na vitrine.
     """
+    # **Um instante para a leitura inteira** (047, revisão do #193). A versão vigente, o período, o
+    # prazo restante, o recebimento, o prazo de recurso, o cronograma e o próximo Evento eram
+    # julgados cada um no seu `timezone.now()`: na fronteira de um Evento, a marca dizia "Em breve"
+    # e o cronograma logo abaixo "Acontecendo agora". A Constituição (II) pede referência temporal
+    # consistente.
+    agora = timezone.now()
     try:
-        versao = selectors.selecao_publica(edital_id=edital_id)
+        versao = selectors.selecao_publica(edital_id=edital_id, at=agora)
     except DomainError as exc:
         raise Http404 from exc
-    contexto = _selecao(versao)
+    contexto = _selecao(versao, agora)
+    # **O desfecho vence o período** (047, `FR-760` a `FR-762`, `D-003`). Até aqui a página lia só
+    # o período, e um Edital cancelado dentro dele anunciava *"Aberta — faltam 19 dias"*.
+    contexto["desfecho"] = desfechos([versao.edital])[versao.edital_id]
+    # Só o desfecho do próprio Edital fecha o recebimento; o do Processo é dito como fato.
+    contexto["encerra_o_edital"] = bool(contexto["desfecho"] and contexto["desfecho"].do_edital)
     iniciadas = _inscricoes_iniciadas(request, edital_id)
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
@@ -380,18 +411,26 @@ def selecao(request, edital_id):
     # A urgência também aqui, e não só na vitrine: é nesta página que a pessoa decide se começa
     # agora ou depois, e "faltam 3 dias" decide isso melhor do que uma data.
     contexto["dias_restantes"] = (
-        _dias_ate(contexto["periodo"].fim, timezone.now())
-        if contexto["periodo"].estado == "aberto"
+        _dias_ate(contexto["periodo"].fim, agora)
+        if contexto["periodo"].estado == "aberto" and not contexto["encerra_o_edital"]
         else None
     )
     contexto["recebe_inscricoes"] = recebe_inscricoes(
-        status=versao.edital.status, conteudo=versao.content, agora=timezone.now()
+        status=versao.edital.status, conteudo=versao.content, agora=agora
     )
     # **A descobribilidade do resultado** (FR-050, SC-018). Esta é a página que alguém já abre para
     # conhecer a seleção, e é onde procura o resultado: sem isto, só chegaria à divulgação quem já
     # tivesse o endereço dela. Só as **vigentes** — uma publicação sucedida continua consultável
     # pelo endereço dela, e anunciá-la aqui ofereceria como atual o que já não é.
-    contexto["resultados_divulgados"] = vigentes_do_edital(versao.edital)
+    # **E o histórico de cada uma, recolhido** (047, `FR-772`): as vigentes continuam em destaque, e
+    # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
+    # quem tinha guardado o endereço dele.
+    contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
+    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). O conteúdo vigente já
+    # está carregado, e a conta é a mesma da página do resultado e da interposição.
+    for item in contexto["resultados_divulgados"]:
+        janela = janela_da_publicacao_divulgada(item["publicacao"], conteudo=versao.content)
+        item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
     # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
@@ -402,7 +441,13 @@ def selecao(request, edital_id):
     # publicado e já era renderizado — mas só no acompanhamento, isto é, **depois** de a pessoa se
     # inscrever. Quem já se inscreveu via o calendário; quem estava decidindo se valia a pena, não.
     # É a mesma função que serve as duas telas, e não uma segunda leitura do mesmo dado.
-    contexto["cronograma"] = leitura.cronograma(versao.content, timezone.now())
+    contexto["cronograma"] = leitura.cronograma(versao.content, agora)
+    # **O que acontece agora e o que vem depois** (047, `FR-767`, `FR-768`), no cabeçalho, onde a
+    # pessoa decide. Só sem desfecho do Edital: de um Edital que acabou não há próximo a anunciar,
+    # e o de Processo encerrado continua correndo pelo próprio cronograma.
+    contexto["agora_e_proximo"] = (
+        leitura.agora_e_proximo(versao.content, agora) if not contexto["encerra_o_edital"] else None
+    )
     # **O histórico normativo** (024, FR-129 a FR-133). Pela Constituição, Edital publicado só muda
     # por Retificação — e o portal mostrava o conteúdo vigente sem nenhum sinal de que ele tivesse
     # mudado. Quem leu na semana passada e voltou hoje lia outra coisa e não tinha como saber.
@@ -415,7 +460,9 @@ def selecao(request, edital_id):
     contexto["atos_recentes"] = list(reversed(contexto["atos"]))
     # A marca de situação também aqui, e não só no cartão da vitrine: quem chega pelo endereço
     # direto — de um e-mail, de um compartilhamento — nunca passou pela vitrine (FR-145).
-    contexto["situacao_rotulo"] = leitura.SITUACAO_DO_CARTAO.get(contexto["periodo"].estado, "")
+    contexto["situacao_chave"], contexto["situacao_rotulo"] = leitura.situacao_publica(
+        contexto["periodo"], contexto["desfecho"]
+    )
     # A pergunta que o histórico responde é "mudou?", e quem responde é a natureza do ato — não a
     # contagem deles. Uma segunda Publicação sem Retificação faria a contagem dizer que sim.
     contexto["houve_retificacao"] = any(
@@ -2230,6 +2277,15 @@ def resultado(request, publicacao_id):
         if foi_sucedida
         else None
     )
+    # **O prazo de recurso, na página que o público abre** (047, `FR-769`). É a conta que a
+    # interposição aplica, e não outra: a data dita aqui é a data em que o sistema deixa de aceitar
+    # a peça. Só na vigente — a sucedida leva à vigente, e é lá que o prazo se lê.
+    prazo = None
+    if not foi_sucedida:
+        janela = janela_da_publicacao_divulgada(publicacao)
+        if janela is not None:
+            abre, fecha = janela
+            prazo = {"abre": abre, "fecha": fecha, "aberto": timezone.now() <= fecha}
     return render(
         request,
         "portal/resultado.html",
@@ -2239,6 +2295,9 @@ def resultado(request, publicacao_id):
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
+            "prazo": prazo,
+            # A direção inversa da `FR-044` da 017 (047, `FR-773`): a vigente leva às anteriores.
+            "anteriores": anteriores_da_cadeia(publicacao),
             # **Não nasce natureza nova** (FR-087). A definitiva que corrige outra é apresentada
             # pela **causa** — a decisão que a motivou —, derivada da cadeia. Uma natureza
             # `DEFINITIVA_RETIFICADA` seria terceiro valor no enum, mais um par na regra de não

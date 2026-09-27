@@ -35,8 +35,9 @@ lacuna e siga (protocolo da `034`).
 
 **Esperado**
 - o cartão fica em *Inscrições encerradas*, com a marca *encerrado* e a data;
-- no Processo encerrado, a página diz o encerramento do Processo;
-- nos dois casos, nenhum próximo Evento.
+- no Processo encerrado, a página diz *"Processo seletivo encerrado em …"*, e, se o período ainda
+  corre, continua dizendo *Aberta*, o prazo e o convite de inscrição: o sistema continua recebendo;
+- no Edital encerrado, nenhum próximo Evento.
 
 ## 3 — O cronograma diz a mesma fase dos dois lados (`SC-283`, `FR-765`, `FR-766`)
 

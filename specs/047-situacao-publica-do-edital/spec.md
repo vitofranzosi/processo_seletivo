@@ -122,8 +122,10 @@ foi encerrado.
    nem prazo restante.
 2. **Given** um Edital encerrado, **When** alguém abre a página ou vê o cartão na vitrine, **Then**
    lê que o Edital foi encerrado, com a data, distinto de *"inscrições encerradas"*.
-3. **Given** um Edital publicado cujo Processo foi encerrado, **When** alguém abre a página,
-   **Then** lê o encerramento do Processo, com a data.
+3. **Given** um Edital publicado cujo Processo foi encerrado, com o período de inscrições em
+   curso, **When** alguém abre a página, **Then** lê o encerramento do Processo, com a data, como
+   fato; e continua lendo *"Aberta"*, o prazo e o convite de inscrição, porque o sistema continua
+   recebendo (`D-003`).
 4. **Given** qualquer dos três, **When** alguém lê o restante da página, **Then** cronograma,
    documentos, resultados e histórico continuam lá, como registro.
 5. **Given** um Edital cancelado, **When** alguém consulta a vitrine, **Then** ele continua fora
@@ -253,8 +255,11 @@ um, como tem para os `FR-`.
   final (`processos/domain/finalizacao.py:41-55`). A página diz o desfecho **do Edital**, que é o
   mais específico.
 - **Processo encerrado com Edital ainda publicado.** O encerramento do Processo é permitido sem
-  exigir estado final dos Editais. A página diz o encerramento do Processo, porque a partir dele
-  nenhum Edital dele muda (`D-003`).
+  exigir estado final dos Editais, e `recebe_inscricoes` lê o status do Edital: dentro do período,
+  o sistema continua recebendo inscrição. A página diz o encerramento do Processo como fato, com a
+  data, e o Edital segue a marca, o grupo e o filtro do próprio período (`D-003`). A primeira versão
+  desta spec mandava o desfecho do Processo fechar a situação pública, e a revisão do #193 mostrou
+  que a página passava a dizer *"não recebe inscrições"* de um Edital que recebia.
 - **Edital com desfecho e janela recursal ainda aberta.** A página do resultado continua dizendo o
   prazo. O desfecho administrativo não apaga a norma aplicada a um ato já publicado, e a decisão de
   receber ou não a peça continua com o domínio de recursos, que esta spec não toca.
@@ -285,14 +290,16 @@ um, como tem para os `FR-`.
   encerrado ou cancelado, a página pública do Edital, e todo cartão que mostre a situação dele, MUST
   dizer esse desfecho e a data do ato que o registrou. A data MUST vir do registro imutável do ato,
   e nunca de campo que muda a cada transição.
-- **FR-761**: Em Edital com desfecho, a página MUST NOT afirmar inscrições abertas, prazo restante
-  nem início futuro de inscrições. As datas do período continuam legíveis como Evento do
-  cronograma.
+- **FR-761**: Em Edital com desfecho **do próprio Edital**, a página MUST NOT afirmar inscrições
+  abertas, prazo restante nem início futuro de inscrições. As datas do período continuam legíveis
+  como Evento do cronograma.
 - **FR-762**: Havendo desfecho do Edital e do Processo, a página MUST dizer o do Edital. Havendo só
-  o do Processo, MUST dizer o do Processo (`D-003`).
+  o do Processo, MUST dizê-lo como fato, com a data, e MUST NOT afirmar por causa dele que o Edital
+  não recebe inscrições: a situação das inscrições continua sendo a do estado do Edital e do
+  período (`D-003`).
 - **FR-763**: A vitrine MUST continuar excluindo o Edital cancelado e MUST continuar listando o
   encerrado, que passa a ser distinguido, no cartão, do Edital apenas com inscrições encerradas. O
-  Edital com desfecho MUST NOT ser agrupado sob inscrições abertas nem sob próximas seleções,
+  Edital com desfecho próprio MUST NOT ser agrupado sob inscrições abertas nem sob próximas seleções,
   qualquer que seja o período declarado: ele fica entre as de inscrições encerradas, porque o
   sistema não recebe mais inscrição dele.
 - **FR-764**: A página pública MUST NOT exibir o motivo registrado no ato de encerramento ou de
@@ -420,9 +427,18 @@ enum de situação é persistido nem calculado.
 
 O período de inscrições descreve a norma. O desfecho descreve o que aconteceu com ela. Quando os dois
 concorrem, o desfecho vence, porque dizer *"Aberta"* de um Edital cancelado é afirmar o falso. Entre
-o desfecho do Edital e o do Processo, vence o do Edital. Sem ele, vale o do Processo encerrado: a
-partir dele nenhum Edital do Processo muda (`processos/domain/finalizacao.py:70-75`), e a página não
-pode continuar sugerindo execução em curso.
+o desfecho do Edital e o do Processo, vence o do Edital.
+
+**O desfecho do Processo é fato, e não situação das inscrições** (emendado depois da revisão do
+#193). A primeira versão deste texto dizia que, sem desfecho do Edital, o do Processo encerrado
+valia para ele, porque *"a partir dele nenhum Edital do Processo muda"*. Isso é verdade para as
+alterações do Edital (`processos/domain/finalizacao.py:70-75`), e não para o recebimento de
+inscrições: `recebe_inscricoes` lê o status do Edital, e um Edital publicado de Processo encerrado
+continua recebendo dentro do período. A página passou a dizer *"não recebe inscrições"* de um Edital
+que recebia, o defeito que esta feature existe para remover. A regra do recebimento não muda aqui:
+a página diz o encerramento do Processo, com a data, e o Edital segue o próprio estado e período.
+Se o encerramento do Processo deve bloquear inscrições é decisão de domínio, pendente e registrada
+em *Achados*.
 
 ### D-004 — Uma régua de fase para o portal, a da gestão
 
@@ -607,6 +623,12 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
   `recebe_inscricoes` ignoram o `status` do Evento (`inscricoes/domain/periodo.py`). Só a API declara
   `CANCELADO`, e o campo não é retificável (é *derivado* no contrato da `026`). Decidir se um período
   cancelado fecha o recebimento é regra de domínio da inscrição, e não projeção.
+- **O encerramento do Processo não bloqueia inscrições.** `close_process` exige só o Processo
+  ativo, e não os Editais em estado final; `recebe_inscricoes` lê o status do Edital. Um Edital
+  publicado de Processo encerrado continua recebendo inscrição dentro do período. A 047 projeta isso
+  como é (`D-003`, `FR-762`). **Decisão pendente, para outra feature**: encerrar o Processo deve
+  fechar o recebimento dos Editais dele — exigindo-os em estado final, ou fazendo a regra do
+  recebimento ler o Processo? Registrado pela revisão do #193, e não implementado.
 - **O cancelamento do Edital não gera Publicação.** A Constituição pede que o cancelamento preserve
   *"Publicações e histórico"*, e o domínio registra ato administrativo e auditoria, sem documento
   público. Se o Cefor precisa do ato de cancelamento publicado pelo sistema, é spec própria.

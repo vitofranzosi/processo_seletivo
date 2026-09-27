@@ -64,7 +64,10 @@ transação desde 29/08, e o caso existe só para não fabricar data.
 **Decisão.** `portal/leitura.py` ganha `situacao_publica(periodo, desfecho)`, que devolve a chave e
 o rótulo da marca:
 
-- **com desfecho:** chave `encerrado_edital`, `cancelado` ou `encerrado_processo`, e rótulo do
+- **com desfecho do próprio Edital:** chave `encerrado_edital` ou `cancelado`, e rótulo do
+  desfecho. O desfecho do Processo não tem marca: ele é dito como fato abaixo da frase do período,
+  porque não fecha o recebimento (emenda da revisão do #193, `D-003`). Antes da emenda, a chave
+  `encerrado_processo` existia, e a lista seguia assim:
   desfecho. Não há chave para o Processo cancelado, porque cancelá-lo exige todos os Editais em
   estado final, e o desfecho do Edital vence;
 - **sem desfecho:** a marca de hoje (`SITUACAO_DO_CARTAO`), sem mudança.

@@ -42,7 +42,9 @@ O portal traduz para `futuro`, `em_curso`, `concluido` e `cancelado` (`R-1`).
 ```text
 Edital CANCELADO ─┐
 Edital ENCERRADO ─┴─► desfecho do Edital
-                  └─ senão: Processo ENCERRADO/CANCELADO ─► desfecho do Processo
+                  └─ senão: Processo ENCERRADO/CANCELADO ─► desfecho do Processo, dito como
+                                                              fato; marca, grupo e prazo
+                                                              seguem o período
                            └─ senão: marca do período (inalterada)
 ```
 

@@ -7,7 +7,18 @@ O prazo restante existe porque uma data sozinha não informa urgência: "até 20
 são a mesma informação e produzem decisões diferentes. `dias_restantes` só é passado onde faz
 sentido calculá-lo; sem ele, o bloco continua dizendo a data.
 {% endcomment %}
-{% if periodo.estado == "aberto" %}
+{% comment %}
+**O desfecho vence o período** (047, FR-760, FR-761). Um Edital cancelado dentro do prazo dizia
+"Inscrições abertas… Faltam 19 dias" — a frase lia só o período. Com desfecho, nenhuma frase de
+prazo é escrita: as datas continuam no cronograma, como Evento publicado, e ninguém lê nelas um
+convite. O motivo registrado no ato não é dito (FR-764).
+{% endcomment %}
+{% if desfecho.do_edital %}
+<p class="situacao desfecho">
+  Edital {% if desfecho.operacao == "CANCELADO" %}cancelado{% else %}encerrado{% endif %}{% if desfecho.em %}
+  em {{ desfecho.em|date:"d/m/Y" }}{% endif %}. Não recebe inscrições.
+</p>
+{% elif periodo.estado == "aberto" %}
 <p class="situacao aberto">
   Inscrições abertas{% if periodo.inicio %} desde {{ periodo.inicio|date:"d/m/Y" }}{% endif %}{% if periodo.fim %},
   até {{ periodo.fim|date:"d/m/Y" }} às {{ periodo.fim|date:"H\hi" }}{% endif %}.
@@ -21,4 +32,13 @@ sentido calculá-lo; sem ele, o bloco continua dizendo a data.
 <p class="situacao futuro">Inscrições começam em {{ periodo.inicio|date:"d/m/Y" }}{% if periodo.inicio %} às {{ periodo.inicio|date:"H\hi" }}{% endif %}{% if periodo.fim %} e vão até {{ periodo.fim|date:"d/m/Y" }}{% endif %}.</p>
 {% elif periodo.estado == "encerrado" %}
 <p class="situacao encerrado">Inscrições encerradas em {{ periodo.fim|date:"d/m/Y" }}.</p>
+{% endif %}
+{% comment %}
+**O encerramento do Processo é fato, e não situação das inscrições** (047, correção da revisão).
+Encerrar o Processo não fecha o Edital publicado, e o sistema continua recebendo inscrição dele
+dentro do período: dizer "não recebe inscrições" seria a página afirmando o que o sistema não faz.
+A frase do período, acima, continua sendo a do período; aqui só se diz o que aconteceu, e quando.
+{% endcomment %}
+{% if desfecho and not desfecho.do_edital %}
+<p class="situacao desfecho">Processo seletivo {% if desfecho.operacao == "CANCELADO" %}cancelado{% else %}encerrado{% endif %}{% if desfecho.em %} em {{ desfecho.em|date:"d/m/Y" }}{% endif %}.</p>
 {% endif %}

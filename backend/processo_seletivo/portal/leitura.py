@@ -5,6 +5,11 @@ o Cronograma passou a ser mostrado em dois lugares — a área de quem já se in
 pública de quem ainda decide —, e duplicar o cálculo da situação do Evento criaria duas verdades
 sobre "em curso". A `011` registrou o mesmo defeito com duas ordenações por nome no mesmo arquivo.
 
+**A fase do Evento não é mais decidida aqui** (047, `FR-765`). Este módulo tinha régua própria, que
+comparava o dia em UTC e não conhecia o Evento cancelado, enquanto a gestão lia outra, a da `045`.
+Eram duas verdades sobre o mesmo cronograma, uma de cada lado. A régua agora mora no domínio
+(`editais/domain/fase_do_evento.py`), e aqui ela só é traduzida para a marcação da tela.
+
 Aqui não há regra de domínio nova. O que existe é leitura: conteúdo publicado entra, estrutura de
 tela sai. Nada neste módulo grava, e nada aqui sabe quem está lendo.
 """
@@ -13,6 +18,13 @@ from urllib.parse import urlencode
 
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.editais.domain import calendario
+from processo_seletivo.editais.domain.fase_do_evento import (
+    descricao_do_evento,
+    esta_cancelado,
+    fase_publica_do_evento,
+    marcos_pendentes,
+)
 from processo_seletivo.inscricoes.domain.periodo import ABERTO, ENCERRADO, FUTURO, NAO_DESIGNADO
 from processo_seletivo.shared.texto import dobrar
 
@@ -37,7 +49,7 @@ def cronograma(conteudo, agora):
     for evento in sorted(conteudo.get("schedule") or [], key=lambda item: item.get("order") or 0):
         inicio = parse_datetime(evento.get("startAt") or "")
         fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
-        situacao = _situacao_do_evento(inicio, fim, evento.get("isRegistrationPeriod"), agora)
+        situacao = situacao_do_evento(evento, conteudo, agora)
         eventos.append(
             {
                 "nome": evento.get("description") or evento.get("type") or "",
@@ -54,39 +66,79 @@ def cronograma(conteudo, agora):
     return eventos
 
 
+# A fase do domínio, dita com as classes que a marcação já usava (047, `R-1`). As três primeiras são
+# as da `010` e da `024`, letra por letra: testes afirmam sobre `class="marco em_curso"`, e o CSS
+# depende delas. A quarta nasce com a 047.
+CLASSE_DA_FASE = {
+    calendario.PLANEJADO: "futuro",
+    calendario.EM_ANDAMENTO: "em_curso",
+    calendario.CONCLUIDO: "concluido",
+}
+CANCELADO = "cancelado"
+
+
+def situacao_do_evento(evento, conteudo, agora):
+    """A classe da linha do Evento: a fase da régua única, ou `cancelado`, ou nada.
+
+    **O cancelado é dito, e não tem fase** (`FR-766`): anunciar *"acontecendo agora"* ou uma data
+    por vir de um Evento que saiu do cronograma é afirmar o que não vai acontecer. O período de
+    inscrições é a exceção, e ela é da régua, não daqui (`fase_publica_do_evento`).
+
+    **Sem início, nada**: a conferência de forma já acusa o Evento assim, e inventar-lhe uma fase
+    seria a tela criando o que as datas não dão.
+    """
+    fase = fase_publica_do_evento(evento, conteudo, agora)
+    if fase is not None:
+        return CLASSE_DA_FASE[fase]
+    return CANCELADO if esta_cancelado(evento) else ""
+
+
+# ---------------------------------------------------------------------------
+# Agora e próximo (047, `FR-767`, `FR-768`)
+# ---------------------------------------------------------------------------
+
+
+def agora_e_proximo(conteudo, agora):
+    """O que está em andamento e o que vem depois, lidos da lista de marcos da gestão.
+
+    **A lista é a do pulso** (`marcos_pendentes`), e não uma terceira leitura do cronograma: a
+    gestão e a página pública respondem à mesma pergunta com a mesma resposta.
+
+    **O período de inscrições não entra.** A marca e a frase do período já o dizem, com prazo e
+    tudo; repeti-lo aqui seria a mesma informação duas vezes no mesmo cabeçalho. Quando o próximo
+    Evento **é** o período, o bloco não diz próximo nenhum — o que viria depois dele não é o
+    próximo, e anunciá-lo inverteria a ordem do que acontece.
+
+    **Nada é inventado para preencher o vazio** (`FR-768`): sem Evento pendente, as duas listas
+    vêm vazias e a tela omite o bloco. Nunca *"em análise"*: nenhum fato registra essa fase.
+    """
+    pendentes = marcos_pendentes(conteudo, agora)
+    em_andamento = [
+        {"nome": descricao_do_evento(evento), "inicio": inicio, "fim": fim}
+        for evento, inicio, fim, fase in pendentes
+        if fase == calendario.EM_ANDAMENTO and evento.get("isRegistrationPeriod") is not True
+    ]
+    planejados = [item for item in pendentes if item[3] == calendario.PLANEJADO]
+    proximos = []
+    if planejados:
+        primeiro = planejados[0][1]
+        # Os que empatam no início são ditos todos, na ordem publicada (caso-limite da 047): a
+        # lista do pulso desempata pelo nome, e o Edital pode ter declarado outra ordem.
+        empatados = sorted(
+            (item for item in planejados if item[1] == primeiro),
+            key=lambda item: item[0].get("order") or 0,
+        )
+        if not any(evento.get("isRegistrationPeriod") is True for evento, *_ in empatados):
+            proximos = [
+                {"nome": descricao_do_evento(evento), "inicio": inicio, "fim": fim}
+                for evento, inicio, fim, _ in empatados
+            ]
+    return {"em_andamento": em_andamento, "proximos": proximos}
+
+
 # ---------------------------------------------------------------------------
 # O histórico normativo (024, FR-129 a FR-133)
 # ---------------------------------------------------------------------------
-
-
-def _situacao_do_evento(inicio, fim, e_periodo_de_inscricoes, agora):
-    """Concluído, em curso ou por vir — e o caso do Evento **sem término declarado**.
-
-    **O defeito que esta função corrige.** A regra herdada mandava tudo o que não era futuro nem
-    concluído para "em curso", e Evento sem `endAt` nunca satisfaz "concluído": uma prova de um dia
-    ficava "acontecendo agora" para sempre. Num Edital encerrado em agosto, a página anunciava a
-    prova de 16/08 e o resultado de 10/09 como se estivessem acontecendo — em setembro.
-
-    Passava despercebido enquanto a situação era só peso de fonte. A etiqueta da `024` a pôs em
-    palavras, e palavra errada é afirmação errada sobre o Edital.
-
-    **A exceção é o período de inscrições**, e ela não é arbitrária: `periodo_de_inscricoes` decide
-    que período sem término declarado segue aberto, porque inventar um fechamento seria o sistema
-    criando prazo que o Edital não fixou. Se o cronograma dissesse "concluído" ali, a mesma página
-    afirmaria duas coisas contrárias sobre a mesma data — a tarja dizendo "inscrições abertas" e a
-    linha logo abaixo dizendo que acabou.
-    """
-    if inicio is not None and agora < inicio:
-        return "futuro"
-    if fim is not None:
-        return "concluido" if agora > fim else "em_curso"
-    if e_periodo_de_inscricoes:
-        return "em_curso"
-    # Sem término, o Evento é uma **data marcada**, e não um período: dura o dia que o Edital
-    # declarou. Depois disso ele aconteceu, e dizer o contrário é afirmar um fato que não é.
-    if inicio is not None and agora.date() > inicio.date():
-        return "concluido"
-    return "em_curso"
 
 
 def atos_publicados(edital_id):
@@ -142,7 +194,7 @@ def agrupar_por_situacao(selecoes):
     """
     por_estado = {}
     for selecao in selecoes:
-        por_estado.setdefault(selecao["periodo"].estado, []).append(selecao)
+        por_estado.setdefault(selecao["estado"], []).append(selecao)
     return [
         {"estado": estado, "titulo": titulo, "selecoes": por_estado[estado]}
         for estado, titulo in GRUPOS
@@ -164,6 +216,48 @@ SITUACAO_DO_CARTAO = {
     # há é um Edital que não recebe inscrição por este sistema, e continua consultável (FR-149).
     NAO_DESIGNADO: "Consulta",
 }
+
+
+# ---------------------------------------------------------------------------
+# O desfecho vence o período (047, `FR-760` a `FR-763`, `D-003`)
+# ---------------------------------------------------------------------------
+
+# A marca do Edital que acabou. **Diz de quem é o fim**, e por isso é mais longa que as quatro de
+# cima: "Encerrada" já é a marca do período que terminou, e o cartão do Edital encerrado precisa
+# se distinguir dele (`FR-763`).
+#
+# **Só o desfecho do Edital tem marca.** O do Processo não fecha o recebimento de inscrições
+# (`Desfecho.do_edital`): um Edital publicado de Processo encerrado segue a marca do próprio
+# período, e o encerramento do Processo é dito como fato, abaixo dela (`_periodo.html`).
+MARCA_DO_DESFECHO = {
+    "CANCELADO": ("cancelado", "Edital cancelado"),
+    "ENCERRADO": ("encerrado_edital", "Edital encerrado"),
+}
+
+
+def situacao_publica(periodo, desfecho):
+    """`(chave, rótulo)` da marca da seleção: o desfecho, quando há, e senão a do período.
+
+    **O desfecho vence** porque o período descreve a norma e o desfecho descreve o que aconteceu
+    com ela. Até a 047, um Edital cancelado dentro do período anunciava *"Aberta — faltam 19
+    dias"*: a marca lia só o período, e o cancelamento não chegava à página (`FR-761`).
+    """
+    if desfecho is not None and desfecho.do_edital:
+        return MARCA_DO_DESFECHO[desfecho.operacao]
+    return periodo.estado, SITUACAO_DO_CARTAO.get(periodo.estado, "")
+
+
+def estado_na_vitrine(periodo, desfecho):
+    """O estado que decide grupo, ordem e filtro da vitrine (`FR-763`, `R-3`).
+
+    O Edital com desfecho **próprio** vai para *"Inscrições encerradas"* qualquer que seja o
+    período: o sistema não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). O de
+    Processo encerrado fica onde o período o põe, porque continua recebendo. Pelo período, um Edital
+    encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou. Não é um
+    quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão já diz de
+    quem é o fim.
+    """
+    return ENCERRADO if desfecho is not None and desfecho.do_edital else periodo.estado
 
 
 # ---------------------------------------------------------------------------
@@ -241,7 +335,7 @@ def filtrar(selecoes, consulta):
     if consulta["unidade"]:
         resultado = [s for s in resultado if s["unidade"] == consulta["unidade"]]
     if consulta["situacao"]:
-        resultado = [s for s in resultado if s["periodo"].estado == consulta["situacao"]]
+        resultado = [s for s in resultado if s["estado"] == consulta["situacao"]]
     if consulta["perfil"]:
         resultado = [s for s in resultado if consulta["perfil"] in s["perfis"]]
     if consulta["busca"]:
