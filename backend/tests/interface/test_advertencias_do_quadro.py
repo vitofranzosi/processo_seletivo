@@ -192,3 +192,27 @@ def test_a_revisao_mostra_o_total_e_o_que_o_quadro_reparte(client, seletor_ligad
     ).content.decode()
 
     assert re.search(r"80 vaga\(s\) imediata\(s\)[^<]*·[^<]*o quadro reparte 80", corpo)
+
+
+# --- RC-58 · Perfil só de cadastro de reserva (DP-05) ------------------------------------------
+
+
+def test_a_revisao_diz_que_a_reserva_e_convocada_fora_do_sistema(client, seletor_ligado, edital):
+    """A DP-05 deixou a família fora do piloto: o sistema classifica e não convoca, e diz isso.
+
+    Sem o aviso, a Revisão dizia "Nada pendente" e o operador descobria na tela de convocação,
+    depois do resultado, que toda chamada seria recusada por falta de vaga apurada.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    dados = com_ampla_apontada(
+        total="0", quantidades=("0", "", ""), **{"perfil-0-reserveType": "UNLIMITED"}
+    )
+    assert compor(client, edital, dados).status_code == 302, "zero com reserva é legítimo"
+
+    assert advertencias(edital, "reserve_only_convocation_external")
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital.id, "revisao"])
+    ).content.decode()
+
+    assert "Nada pendente" not in corpo
+    assert "a convocação dos classificados será feita fora dele" in corpo

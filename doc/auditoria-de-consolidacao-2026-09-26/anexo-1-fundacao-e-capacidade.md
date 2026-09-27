@@ -927,6 +927,9 @@ alvo que o sistema hoje não conduz por causa dela.
 - Grupo do resíduo: B
 - Impacto atual: Editais de cadastro de reserva terminam no resultado publicado; a convocação corre fora, ou por Retificação de vagas a cada chamada.
 - Próxima ação sugerida: criar spec (junto da P-3)
+- Desfecho (26/09): a DP-05 deixou a família **fora do piloto**. A publicação de Perfil só de reserva
+  passou a avisar, na Revisão, que a convocação é externa (`reserve_only_convocation_external`). A spec
+  nasce quando houver Edital de reserva escolhido para operação, com o escopo registrado na DP-05.
 - Relações: P-3; estudo de 21/09 §5.1 (tipo de cadastro reserva inalcançável — outro lote).
 - Confiança: média-alta — li as guardas da convocação; não percorri o contorno pela Retificação.
 
