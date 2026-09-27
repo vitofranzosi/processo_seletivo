@@ -83,3 +83,26 @@ Retificação e some do resumo, e nenhuma das duas pontas reprova.
 Só o RC-39. `profileId` ("Exigido apenas do Perfil") e `modalityId` ("Exigido apenas da
 modalidade") do Documento Exigido entraram em `CAMPOS`, com os rótulos da tela da gestão. Há um
 teste de unidade e um de integração no portal, com contraprova.
+
+## O que foi feito em 27/09
+
+O resto da classe, no passo 0 da ordem adotada naquela data
+([decisões pendentes](decisoes-pendentes-da-consolidacao.md#depois-da-reavaliação-de-2709)):
+
+1. **O dicionário passou a ser chaveado como o contrato**, por `(coleção, caminho relativo)`, com os
+   rótulos da tela da Retificação. O tradutor desce pelas coleções aninhadas — até o critério de
+   desempate, dentro do marco, dentro do Perfil — e lê o que sobra do caminho **inteiro**. A linha do
+   quadro de vagas entrou em `COLECOES`, com o nome da lista de concorrência que ela aponta.
+2. **O guardião**: `test_todo_campo_retificavel_do_contrato_vira_linha` sintetiza um caminho para cada
+   par retificável e exige linha. Contra o tradutor anterior ele reprova **49** casos: os 45 desta
+   tabela e os quatro objetos que nascem por Retificação — regra de corte, janela recursal, método do
+   sorteio do marco e reversão —, que também calavam e que o guardião passou a cobrar.
+3. **O contador**: `mais_uma_vaga` afirma "O que mudou (2)".
+
+Duas correções vieram junto, porque o tradutor passava por elas: o Fato declarado era nomeado pelo
+**tipo** (`Fato declarado “DATA”`), e passou a ser pelo rótulo; o critério de desempate, que não tem
+nome, passou a ser nomeado pela ordem.
+
+**O que não mudou**: os rótulos que já existiam, mesmo onde divergem da tela da Retificação
+("Obrigatoriedade" × "Obrigatório", "Denominação" × "Nome da Etapa"). Unificá-los é outra conversa, e
+o guardião não a cobra.

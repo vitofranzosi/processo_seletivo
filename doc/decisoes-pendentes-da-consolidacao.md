@@ -49,6 +49,7 @@ registro criaria duas verdades:
 | DP-16 | O não atendimento pode ser registrado em lote? | passo 3 | um gesto, N registros com autor |
 | DP-17 | A automação explícita entra na Constituição? | passo 1 | emenda ao Princípio IV, só o invariante |
 | DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
+| DP-19 | Marcar na composição os campos que não se corrigem depois de publicados é requisito novo? | passo 0 → fora dele | decidir em spec; conciliar com a `026` §7 e a `FR-428` da `030` |
 
 ---
 
@@ -612,10 +613,10 @@ tela, uma repetição ou um conceito a retirar.
 - **A ordem e a ajuda do duplicar.** Os marcos só vêm se a origem já os tiver gravados, e a ajuda promete
   o contrário.
 - **`wsgi` e `asgi` caindo na produção**, que recusa subir mal configurada (RC-124).
-- **Os campos definitivos visíveis na composição**, como selo de estado: um teste proíbe ajuda visível
-  nos cartões do assistente (`test_nenhum_cartao_do_assistente_carrega_ajuda_visivel`).
+- ~~**Os campos definitivos visíveis na composição**, como selo de estado~~ — **saiu do passo 0 em
+  27/09**: não há requisito escrito a restaurar. Ver a `DP-19`.
 - **O dicionário do "O que mudou" completo**, com um guardião contra o contrato de mutabilidade
-  (RC-111).
+  (RC-111). Feito em 27/09; ver o [achado](achado-o-que-mudou-cala-campos-retificaveis.md).
 
 **Os campos sem consumidor não são passo próprio.** `calculation`, `rounding`, `distribution` e
 `callRules` da regra normativa, e o `reserveLimit` do Perfil, se decidem na spec que os consumiria: o
@@ -766,3 +767,41 @@ teste calibra esses números antes das specs estruturais.
 - **Onde:** em ambiente local, sem autenticação, com datas futuras, porque não há cadastro retroativo de
   Edital.
 - **Quem:** a decidir.
+
+---
+
+## DP-19 — Marcar na composição os campos que não se corrigem depois de publicados é requisito novo?
+
+*Registrada em 27/09, ao executar o passo 0. Saiu dele por decisão do usuário: o passo 0 é "sem spec,
+contra requisito escrito", e este item não tem requisito.*
+
+### O fato
+
+A reavaliação de 27/09 diz que *"uns 15 campos não se corrigem depois de publicados, e nada avisa na
+composição"* (§D.2, item 6) e propõe *"marcados na composição"* (§D.3). A lista de correções diretas
+diz que elas *"restauram requisito escrito ou fecham uma porta que falta"*, sem dizer qual das duas
+cada item é. Para este, a conferência de 27/09 contra as specs e o histórico deu:
+
+- **Nenhum requisito o exige.** O que existe sobre campos que não se corrigem é da **tela de
+  Retificação**, e está atendido: a `FR-312` e o `SC-102` da `026`, conferidos por
+  `tests/interface/test_retificar_exclusoes.py`. A `D1` da `044` diz que o código da Modalidade é
+  estrutural, e não pede nada à composição.
+- **Nada foi removido.** Nenhum cartão do assistente mostrou, em momento algum, que um campo não se
+  corrige depois de publicado. O commit que introduziu o teste da ajuda visível (`0268d022`) só
+  escondeu *"Identificação estável, sem espaços"* da chave do documento, e o texto continua apontado por
+  `aria-describedby`. Os demais textos sobre isso nas parciais são `{% comment %}`.
+- **Dois textos escritos apontam contra.** A `026`, §7: *"A tela de composição do Edital. Nada aqui muda
+  a elaboração"*. A `FR-428` da `030`: a composição NÃO DEVE apresentar texto de ajuda visível dentro
+  dos cartões — é o que `test_nenhum_cartao_do_assistente_carrega_ajuda_visivel` guarda. O "selo de
+  estado" do passo 0 era a forma de passar por ela, e isso já é decidir sobre ela.
+
+### O que ficaria por decidir numa spec
+
+- **Se o selo é ajuda.** Um marcador por campo, derivado do contrato, é estado do campo ou explicação
+  dele? A resposta decide se a `FR-428` precisa de emenda.
+- **Quais naturezas.** `NAO_RETIFICAVEL` tem razão escrita; `ESTRUTURAL` (o código do Perfil e o da
+  Modalidade) não tem, e é justamente o caso que a reavaliação cita.
+- **Onde a razão mora.** No cartão, no `como-preencher` da etapa (como a `FR-428` já manda fazer com o
+  conceito), ou só na Revisão, antes de publicar — que é onde a `DP-03` pôs o aviso do `UX-001`.
+- **A fonte única.** Derivar do contrato, como a Retificação já faz em `exclusoes_do_tipo`, e não de
+  uma lista na composição — a lição da `026` sobre listas que envelhecem.
