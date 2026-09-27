@@ -1,8 +1,9 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-04` e a `DP-06`, decididas em 26/09, e o item 2 da `DP-08`, decidido na mesma data** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, e o item 2 da `DP-08`, decidido na mesma data** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
-[`046`](../specs/046-contrato-de-executabilidade/spec.md). Este documento organiza as alternativas e
+[`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
+cadastro de reserva. Este documento organiza as alternativas e
 recomenda; **quem decide é o usuário**.
 Nenhuma spec das que dependem destas decisões começa antes delas. Quando uma for tomada, a seção dela
 ganha um bloco **"O que foi decidido"**, como a
@@ -300,6 +301,42 @@ classificar e tentar convocar. Se a lacuna se confirmar:
 - **A com 2**, se a família estiver no alvo. É o menor passo que torna o limite verdadeiro sem redesenhar
   o corte. A convocação da reserva é spec própria.
 - **B**, se não estiver.
+
+### O que foi decidido
+
+Em 26/09/2026, o usuário escolheu **B para o piloto atual**, depois de a lacuna ser conferida no
+código. A conferência mostrou que configurar, publicar, classificar, apurar e divulgar o resultado já
+funcionam com 0 vagas imediatas e reserva, sem número fictício. O que falha é só a convocação: com zero
+vagas publicadas, a apuração nunca tem déficit, e toda chamada é recusada com `sem_deficit`. Por isso
+foi recusada a proposta de uma spec "cadastro de reserva executável", que especificaria o que já
+funciona.
+
+**Por que B, e não A.** Tirar a recusa do déficit não tornaria a família executável. Uma convocação
+correta da reserva depende ainda de duas capacidades ausentes: a **validade** do Edital e a sua
+prorrogação (P-3), e a **ordem de chamada entre modalidades** quando não há quadro quantitativo (P-1).
+E os Editais de referência, o 140/2025 sobretudo, trazem heteroidentificação, barema e outras regras
+que também estão fora do alvo.
+
+**O que foi feito.** A publicação de Perfil com 0 vagas imediatas e reserva `LIMITED` ou `UNLIMITED`
+avisa na Revisão que a classificação e o resultado correm no sistema e a convocação corre fora dele
+(`reserve_only_convocation_external`, em `editais/domain/validation.py`). É advertência, e só no ato de
+publicação.
+
+**Quando A voltar.** A spec nasce quando houver um Edital de cadastro de reserva escolhido para
+operação, e não antes. O nome dela é *"Convocar do cadastro de reserva, na ordem publicada e dentro da
+validade"*, e não "publicar com zero vagas". O escopo mínimo:
+
+- a necessidade superveniente de convocação como **fato operacional** auditável e append-only, e não
+  como Retificação das vagas;
+- o consumo dessa necessidade pela ocupação e pela convocação que já existem;
+- a validade e a prorrogação do Edital (P-3);
+- a ordem de chamada entre modalidades (P-1, P-2);
+- o limite da reserva.
+
+**Sobre o `reserveLimit`, a opção 2 foi recusada como solução definitiva.** Só avisar a divergência
+deixa publicáveis duas normas contraditórias. Se o limite significa a quantidade máxima de suplentes, ele
+e o corte têm uma fonte só: ou um deriva do outro, ou a divergência impede a publicação. A escolha
+entre as duas é da spec que A abrir.
 
 ---
 
