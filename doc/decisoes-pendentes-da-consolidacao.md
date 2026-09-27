@@ -738,15 +738,35 @@ era a promessa que a inscrição não cumpria, e agora cumpre.
   descarta documentos"*. Confirmar leva a `discard_not_confirmed`, porque `gravar_dados` assume a
   Modalidade única e não vê descarte algum. Reproduzido em 27/09. Vem de antes desta correção, e depois
   dela só alcança o Perfil com tudo em cota.
+  **Corrigido em 27/09, nas sobras do passo 0:** `descartes_por_mudanca_de_modalidade` compara com a
+  Modalidade que `gravar_dados` vai gravar (`_modalidade_escolhida`), e não com o vazio do formulário.
+  Restaura a FR-031 e a FR-041 da `009`.
 - **A-14.2 · A advertência da FR-325 soa para a forma agora correta.** `general_competition_modality_undeclared`
   (`editais/domain/validation.py`, `_ampla_por_declarar`) avisa todo Perfil que declara Modalidade sem
   apontar a ampla, e manda declarar *"qual delas é a da ampla concorrência"*. Para o Perfil que só declara
   cotas, que é o caso que esta decisão resolve, não há qual apontar.
+  **Examinado em 27/09 e mantido como registro, por decisão do usuário.** A correção esbarra no texto da
+  FR-325 da `027`: *"Perfil que declara Modalidade e não declara qual delas é a da ampla concorrência
+  MUST produzir advertência própria"*. O Perfil só de cotas cumpre essa condição ao pé da letra, e o
+  sistema não o distingue do caso-armadilha que a advertência existe para pegar — a Modalidade chamada
+  "Ampla concorrência" sem ser apontada, o A11 do `quickstart` da `027` — sem casar nome, o que a
+  `R-006` da `025` recusa. Calar a advertência ali pede revisar a FR-325, o que é spec; reescrever só a
+  mensagem a deixaria soando, como pendência na Revisão e na confirmação (FR-327, FR-328), para a forma
+  correta.
 - **A-14.3 · A gestão não nomeia nem conta a ampla sem Modalidade.** A lista e o detalhe das inscrições
   (`inscricoes/application/consulta.py`, `_nome_no_conteudo`) e a Mesa (`avaliacoes/application/mesa.py`)
   mostram a Modalidade em branco; a contagem por Modalidade descarta o nulo, e o filtro não o alcança
   (`_contagens`, `_filtrar`). A FR-067 e a FR-068 da `009` pedem a Modalidade. Já valia para o Perfil sem
   Modalidade, e passa a ser o caso comum.
+  **Corrigido em 27/09, nas sobras do passo 0:** `nome_da_modalidade` (`inscricoes/application/rascunho.py`)
+  é a regra, e a lista, o detalhe e a Mesa passaram a lê-la. O nulo tem nome, e entra na contagem e no
+  filtro, **onde ele é a ampla** (`o_nulo_e_a_ampla`): no Perfil sem Modalidade nenhuma, que é o caso
+  anterior à DP-14, e no que oferece a ampla sem Modalidade ao lado das cotas. Onde é escolha por
+  fazer — ampla declarada ao lado de cota, ou duas cotas sem vaga na linha geral —, continua sem nome.
+  O filtro leva o Perfil junto (`ampla:<Perfil>`), porque o nulo existe em todo Perfil, e confere a
+  mesma regra que gera a opção: o endereço forjado para onde o nulo não é a ampla não filtra. O portal
+  mantém o que é dele: no Perfil sem Modalidade, a revisão continua sem a linha, porque nada foi
+  perguntado (FR-038). Restaura a FR-067 e a FR-068 da `009`.
 - **A-14.4 · A Modalidade única que nasce por Retificação é atribuída em silêncio no envio.** Se uma
   Retificação zera a linha geral, ou dá a primeira Modalidade a um Perfil sem vaga na linha geral, o
   rascunho no nulo é recusado até o reconhecimento; depois dele, o envio grava a Modalidade única que
