@@ -16,8 +16,8 @@ B-3, o mapa por domínio, o grafo, a §13 e os anexos 3, 4 e 7. E o PR corretivo
 da revisão da `045` e da `046`, fechou o RC-113, confirmado por teste e não só lido, e registrou duas
 unidades que nasceram e fecharam nele, o RC-114 e o RC-115; mudaram as contagens, o mapa, a topologia,
 a B-1, a B-3, o mapa por domínio, o grafo, a §13 e os anexos 3, 4 e 7. E, depois do merge desse PR,
-os itens menores das revisões da `045` e da `046` viraram seis unidades, do RC-116 ao RC-121, nenhuma de
-grupo A; mudaram as contagens, o mapa residual (o RC-118), o mapa por domínio, a B-7, a B-11, a B-18, a
+os itens menores das revisões da `045` e da `046` viraram seis unidades, do RC-122 ao RC-127, nenhuma de
+grupo A — numeradas a partir do 122 porque o #196, aberto em paralelo pela `047`, toma o 116 ao 121; mudaram as contagens, o mapa residual (o RC-124), o mapa por domínio, a B-7, a B-11, a B-18, a
 B-20 e a §13, e as duas revisões entraram como anexos 8 e 9. O inventário da §2 e a reconciliação entre lotes
 registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
 `bb774d9`.
@@ -29,7 +29,7 @@ o servidor, nem um percurso pela interface. Quando uma conclusão depende de per
 **Anexos:** as sete matrizes por lote, com o bloco completo de cada achado — origem, recomendação, rastro
 posterior, specs, evidência com `caminho:linha`, estado, pertinência, resíduo e confiança —, em
 [`auditoria-de-consolidacao-2026-09-26/`](auditoria-de-consolidacao-2026-09-26/). Desde 26/09, a mesma
-pasta guarda as revisões da `045` e da `046` (anexos 8 e 9), que são a evidência do RC-114 ao RC-121.
+pasta guarda as revisões da `045` e da `046` (anexos 8 e 9), que são a evidência do RC-114 ao RC-127.
 
 > **A pergunta.** De tudo que já foi identificado nas auditorias anteriores, o que ainda representa uma
 > lacuna real do sistema hoje?
@@ -62,7 +62,7 @@ Os sete lotes produziram **~300 linhas de rastreabilidade**, a partir de 21 font
 sobrepõem. As **34 linhas** que os próprios lotes marcaram como DUPLICADO / ABSORVIDO, e todas as
 repetições entre relatórios, foram fundidas na unidade que as absorve. O resultado são **110 unidades
 consolidadas** na matriz da §3, e 115 desde 26/09: o RC-111 entrou com o #185, o RC-112 e o RC-113 com a `046` (#188), e o RC-114 e o RC-115 com o PR corretivo de 26/09, que os fechou ao registrá-los. E 121 depois disso:
-os itens menores das revisões da `045` e da `046` viraram o RC-116 ao RC-121. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
+os itens menores das revisões da `045` e da `046` viraram o RC-122 ao RC-127. Por isso nenhuma unidade leva o rótulo DUPLICADO / ABSORVIDO: a
 consolidação é a própria fusão, e a coluna "IDs antigos" de cada linha registra o que foi fundido nela.
 
 | Estado | Unidades |
@@ -136,7 +136,7 @@ RC-113, que ela registrou sem validar.*
 | RC-08 | Restaurar o rascunho local **perde coleções aninhadas e regrava a perda**, contra a `FR-020` da `002` | A `[VALIDAR]` | `rascunho.js:81-133` (inalterado desde 08/09) |
 | RC-38 | Janela recursal, corte e reversão "podem nascer" por Retificação, **mas a tela não oferece o caminho** | A (janela) / B | `mutabilidade.py:515-548` · `retificacao.py:764,852,859` |
 | RC-92 | **Autenticação institucional real** | A (depende do Ifes) | `seguranca/api/authentication.py:7-23` |
-| RC-118 | **O caminho de produção não está no repositório**: só a imagem de desenvolvimento, e `wsgi`/`asgi` caem em `development` sem `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração ligada e nenhuma barreira de produção | B (implantação) | `config/wsgi.py:5` · `config/asgi.py:5` · `Dockerfile:8-10` |
+| RC-124 | **O caminho de produção não está no repositório**: só a imagem de desenvolvimento, e `wsgi`/`asgi` caem em `development` sem `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração ligada e nenhuma barreira de produção | B (implantação) | `config/wsgi.py:5` · `config/asgi.py:5` · `Dockerfile:8-10` |
 | RC-32 | A tela do Edital **publicado** mostrava **"Impede — corrija antes de publicar"**: **corrigido pela `046` (#188) em 26/09**, e percorrido | — | `views.py` (`_pendencias`) |
 | RC-47/48 | Portal: página da seleção com o título do Processo, **sem as vagas por Modalidade** e **sem o prazo recursal** na página pública do resultado | B | `selecao.html:2,23,144` · `resultado.html` |
 | RC-30 | `D-G1`: **executada pela `046` (#188) em 26/09**, por Perfil e não por marco (`D-002` de lá) | — | `validation.py` (`_perfil_sem_corte`) |
@@ -166,7 +166,7 @@ integridade era o RC-101, uma tabela protegida por uma camada só, sem dano obse
    decidido e não feito" — a `044`, o `ValorDeFato` e o "O que mudou" do recorte —, e os três foram
    feitos em 26/09, pelo #173, pelo #183 e pelo #185. Corrigir o último revelou a classe.
 4. **Implantação**: autenticação, correio, retenção, Registro Acadêmico e o próprio caminho de
-   produção (RC-118). É dívida real, mas com
+   produção (RC-124). É dívida real, mas com
    dependência externa.
 
 O que **não** apareceu como dívida: avaliação, resultado, classificação, sorteio executável, recurso do
@@ -279,8 +279,8 @@ quando indicado.
 | RC-32 | ACH-29 · NOVO-1 do lote 2 | a validação de publicação continuava na tela do Edital **publicado**, e exibia **"Impede — o período de inscrições encerrou… antes de publicar"** | 028; **046 FR-755, FR-756** (#188, `064228c`) | `interface/views.py` (`_pendencias`: fora da elaboração, só `fatos_do_conteudo_publicado`); `tests/interface/test_edital_publicado_sem_pendencias.py`; `tests/test_quem_consulta_a_publicabilidade.py` | RESOLVIDO | sim — **reproduzido e percorrido** na `046`, e o `[VALIDAR]` fechou; os fatos que a `045` manda dizer ali ficam (046 `D-003`) | — | nenhuma | 2 |
 | RC-33 | achado igualdade da soma · achado ampla não remapeada (instância) | a soma não lia a ampla declarada | 027 FR-317 | `validation.py:2401-2418` | RESOLVIDO | não | — | nenhuma | 5 |
 | RC-34 | N-08 · §6 da convergência | os avisos de composição do Edital não chegam à Atenção | 038 FR-565 (catálogo fechado) | `supervisao.py:495-506` | NÃO IMPLEMENTADO | parcialmente | a convergência mandou **não** juntar sem decidir a fronteira · C | nenhuma; revisitar depois de RC-30 — *feito pela `046` (#188), a fronteira pode ser revisitada* | 4 |
-| RC-116 | revisão da `046`, D3 (26/09) | o assistente de um Edital **publicado** continua falando como se ele fosse ser submetido: a Revisão diz "O que falta para submeter" e "Nada pendente — o Edital pode ser submetido" e oferece "Ir para" a correção de um vínculo que não se retifica; o Cronograma diz "Corrigir as datas abaixo é o que a conclui" → a cura do RC-32 também no assistente: dizer o que vale para o ato em que o Edital está | 046 (o RC-32 fechou a tela do Edital, e não o assistente) | `interface/templates/interface/compor_revisao.html:5,9`; `interface/templates/interface/compor_cronograma.html:17-22`; `interface/views.py:1296` | NÃO IMPLEMENTADO | sim | manda o operador a um ato que não existe mais para aquele Edital · B | corrigir (direta) | 9 |
-| RC-120 | revisões da `045` (D5, D6) e da `046` (D6 e resíduos), 26/09 | casos-limite residuais das duas features: rascunho gravado pela API com `EM_ANDAMENTO` publica sem regravar (a leitura ignora o valor); período de inscrições `CANCELADO` — só a API o produz — aparece aberto no cabeçalho do Pulso, porque `periodo_de_inscricoes` não lê o `status`; conteúdo malformado vindo de Retificação pode dar 500 em vez de 422; nota mínima 0 satisfaz a regra da eliminatória sem eliminar ninguém | 045, 046 | `inscricoes/domain/periodo.py` (`periodo_de_inscricoes`); `interface/supervisao.py` (`periodo_do_edital`); anexos 8 e 9 | NÃO IMPLEMENTADO | parcialmente — três dos quatro só se alcançam pela API | C | nenhuma isolada; revisitar se o piloto os encontrar | 8, 9 |
+| RC-122 | revisão da `046`, D3 (26/09) | o assistente de um Edital **publicado** continua falando como se ele fosse ser submetido: a Revisão diz "O que falta para submeter" e "Nada pendente — o Edital pode ser submetido" e oferece "Ir para" a correção de um vínculo que não se retifica; o Cronograma diz "Corrigir as datas abaixo é o que a conclui" → a cura do RC-32 também no assistente: dizer o que vale para o ato em que o Edital está | 046 (o RC-32 fechou a tela do Edital, e não o assistente) | `interface/templates/interface/compor_revisao.html:5,9`; `interface/templates/interface/compor_cronograma.html:17-22`; `interface/views.py:1296` | NÃO IMPLEMENTADO | sim | manda o operador a um ato que não existe mais para aquele Edital · B | corrigir (direta) | 9 |
+| RC-126 | revisões da `045` (D5, D6) e da `046` (D6 e resíduos), 26/09 | casos-limite residuais das duas features: rascunho gravado pela API com `EM_ANDAMENTO` publica sem regravar (a leitura ignora o valor); conteúdo malformado vindo de Retificação pode dar 500 em vez de 422; nota mínima 0 satisfaz a regra da eliminatória sem eliminar ninguém. O período de inscrições `CANCELADO`, que a revisão da `045` viu aparecer aberto no Pulso, **não entra aqui**: é a mesma causa — `periodo_de_inscricoes` ignora o `status` do Evento — do RC-119, que a `047` registrou no #196 com a consequência mais grave, a de continuar recebendo inscrição | 045, 046 | anexos 8 e 9 | NÃO IMPLEMENTADO | parcialmente — dois dos três só se alcançam pela API | C | nenhuma isolada; revisitar se o piloto os encontrar | 8, 9 |
 
 ### 3.4 Retificação
 
@@ -297,7 +297,7 @@ quando indicado.
 | RC-114 | revisão da `046`, D1 (26/09) | `_quem_exige_o_resultado` contava a **enumeração por marco** como consumo do Resultado para toda forma de Etapa, e recusava publicar a decisória não eliminatória só enumerada — *"ninguém é posicionado por ele"*; falso para a decisória, que é porta, e não parcela: `combinar` a salta e a ordem posiciona normalmente → a enumeração da porta deixa de contar | 013 FR-047, 015 FR-074, 046 FR-746 (refinada); **PR corretivo de 26/09** | `editais/domain/validation.py` (`_quem_exige_o_resultado` pergunta a `e_porta`, de `classificacao/domain/combinacao.py`, a mesma função que `combinar` usa); `tests/integration/classificacao/test_porta_decisoria_enumerada.py` (publica, e a ordem posiciona); `tests/interface/test_etapa_sem_resultado.py` (o teste da `046` que afirmava a recusa lia só a própria tela, e foi emendado) | RESOLVIDO | sim — proibia na composição o que a `FR-047` da `013` (03/09) decidiu não proibir; governada por corte ou designada para o sorteio, a decisória continua recusada | — (enquanto aberto, **A**: recusa de publicação de Edital legítimo) · — | nenhuma | 7, 3 |
 | RC-115 | revisão da `045`, D1 (26/09) | a docstring de `alcance_no_edital` dizia que o recurso *"continua podendo ser decidido"* no Edital encerrado ou cancelado, mas o `UX-064` estava em `TRABALHO_PENDENTE` e se calava; nem a admissibilidade nem o julgamento consultam o estado do Edital → o recurso pendente com julgador livre sumia da Atenção, e o da comissão inteira impedida (`UX-005`) ficava → tirar o `UX-064` do conjunto | 038 (o caso-limite do Edital parado e o `UX-064`, refinados), 045 (*Edge Cases*, refinado); **PR corretivo de 26/09** | `interface/supervisao.py` (`TRABALHO_PENDENTE` sem o `UX-064`); `tests/integration/supervisao/test_sinais.py` (`test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide`, parametrizado por ENCERRADO e CANCELADO, que também pratica a admissibilidade e o julgamento depois do encerramento) | RESOLVIDO | sim — o recurso é direito de quem o interpôs, e não trabalho que a instituição decidiu não concluir | — (enquanto aberto, **A**: um direito do candidato sumia da condução) · — | nenhuma | 4 |
 | RC-40 | E-3 · 13.4 · LONG-5 · ACH-31 · ACH-32 · E2E-018 | duas gramáticas → **uma tabela** de vocabulário; `REPLACE` na tela do ato; bloco do sorteio num marco que não sorteia | 024 D-009; `7b04cb3` unificou a gestão | `views.py:3387-3408` × `alteracoes.py:24-52` (já divergem: "Modalidade" × "Modalidade de concorrência") | PARCIALMENTE RESOLVIDO | parcialmente | deriva silenciosa entre gestão e portal · C | unificar a tabela ao tocar essas telas | 3, 2 |
-| RC-119 | issue #117 (15/09) · revisão da `046` | `advertencias_do_ato` subtrai os impeditivos **por código**, e não pelo par (código, caminho); o RC-30 foi dado como RESOLVIDO pela `046`, e a #117, que andava junto dele, ficou sem unidade — continua OPEN | 027 FR-336, 028, 046 | `publicacoes/application/retificacoes.py:583-587` | NÃO IMPLEMENTADO | parcialmente — nenhum código tem severidade dupla hoje, e a `046` condicionou a severidade ao ato com códigos distintos, o que não disparou o caso | C | corrigir: a chave pelo par, ou um teste que prenda "um código, uma severidade" | 7, 9 |
+| RC-125 | issue #117 (15/09) · revisão da `046` | `advertencias_do_ato` subtrai os impeditivos **por código**, e não pelo par (código, caminho); o RC-30 foi dado como RESOLVIDO pela `046`, e a #117, que andava junto dele, ficou sem unidade — continua OPEN | 027 FR-336, 028, 046 | `publicacoes/application/retificacoes.py:583-587` | NÃO IMPLEMENTADO | parcialmente — nenhum código tem severidade dupla hoje, e a `046` condicionou a severidade ao ato com códigos distintos, o que não disparou o caso | C | corrigir: a chave pelo par, ou um teste que prenda "um código, uma severidade" | 7, 9 |
 
 ### 3.5 Reaproveitamento
 
@@ -390,7 +390,7 @@ quando indicado.
 | RC-85 | §6 sorteio fora do painel · §6/§13 matrícula fora do painel | sorteio vencido e requerimentos pendentes sem sinal | 038 D-002 registrou a exclusão | `supervisao.py:495-506` | NÃO IMPLEMENTADO | não agora — a convergência recomendou **não** ampliar o painel antes de limpar o ruído | C | medir no piloto | 4 |
 | RC-86 | §18 custo de consulta | ~17 consultas por Edital publicado; linear | 022, 038; 040 tem custo fixo de 5 | `supervisao.py:1364-1384` | IMPLEMENTADO, MAS NÃO VALIDADO | parcialmente | medição única, não otimização · C | validar com 10+ Editais | 4 |
 | RC-87 | §16 responsabilidade · presidência única (08/09) | nomear responsável individual no painel?; piso de identidades não dito | 038 FR-564; decisão 018 §5 | `supervisao.py:1141-1145` | RESOLVIDO | não — manter a decisão | antecipar a falta de julgador depende de RC-92 · C | nenhuma | 4, 7 |
-| RC-117 | revisões da `045` (D2, D9) e da `046` (D4), 26/09 | recusas e avisos que não dizem a quem pedir, ou dizem errado: a prévia bloqueada por reingresso pendente manda o Publicador "Consolide o resultado dessa inscrição na Etapa e emita o ato sucessor" sem dizer a quem pedir; o aviso da Etapa sem Evento nomeia a Etapa e não o Edital (`UX-086`); o sorteio diz "que o conduza" onde o contrato pedia "que o emita"; na `046`, "ninguém é posicionado por ele" para Etapa enumerada num marco de **sorteio**, cuja ordem vem da semente, e "retire-a do marco" para Etapa que o corte só **governa** | 045 FR-740, `UX-086`; 046 | `divulgacao/domain/publicabilidade.py:85-87`; `editais/domain/validation.py` (`_quem_exige_o_resultado`, `_etapa_sem_resultado`, a mensagem de `stage_without_schedule_event`) | NÃO IMPLEMENTADO | sim | microcópia · C | corrigir, numa varredura só | 8, 9 |
+| RC-123 | revisões da `045` (D2, D9) e da `046` (D4), 26/09 | recusas e avisos que não dizem a quem pedir, ou dizem errado: a prévia bloqueada por reingresso pendente manda o Publicador "Consolide o resultado dessa inscrição na Etapa e emita o ato sucessor" sem dizer a quem pedir; o aviso da Etapa sem Evento nomeia a Etapa e não o Edital (`UX-086`); o sorteio diz "que o conduza" onde o contrato pedia "que o emita"; na `046`, "ninguém é posicionado por ele" para Etapa enumerada num marco de **sorteio**, cuja ordem vem da semente, e "retire-a do marco" para Etapa que o corte só **governa** | 045 FR-740, `UX-086`; 046 | `divulgacao/domain/publicabilidade.py:85-87`; `editais/domain/validation.py` (`_quem_exige_o_resultado`, `_etapa_sem_resultado`, a mensagem de `stage_without_schedule_event`) | NÃO IMPLEMENTADO | sim | microcópia · C | corrigir, numa varredura só | 8, 9 |
 
 ### 3.14 Identidade, autorização e implantação
 
@@ -402,7 +402,7 @@ quando indicado.
 | RC-95 | §13 · §18 · condição de saída do piloto | exportação para o Registro Acadêmico nunca importada no destino | 029, 031 | `interface/views.py:4152-4247` | IMPLEMENTADO, MAS NÃO VALIDADO | sim | responsabilidade compartilhada com o sistema de destino · B | validar com o setor dono | 4 |
 | RC-96 | Escala / T059 · T063 (375 px) | 2719 vagas; medição no Cefor; telas estreitas | — | anexo 1 | IMPLEMENTADO, MAS NÃO VALIDADO | parcialmente | C | validar na infraestrutura real | 1 |
 | RC-97 | E2E-019 · E2E-014 | todos veem todos os Processos do escopo; "Ou entre por outro nome" | FR-003 da 002 | anexo 1 | SUPERADO / OBSOLETO | não | — | nenhuma | 1 |
-| RC-118 | resíduo do RC-72 (revisão da `046`) · conferência de 26/09 | **o caminho de produção não está no repositório**: a única imagem é de desenvolvimento ("Não é imagem de produção"), não há servidor WSGI de produção entre as dependências, e `wsgi.py` e `asgi.py` caem em `config.settings.development` quando falta `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração do sorteio ligada e **nenhuma** barreira de produção executada; e a ocorrência de demonstração já registrada é devolvida sem consultar o vocabulário → falha segura (o padrão de `wsgi` e `asgi` ser a produção, que recusa subir mal configurada; o `manage.py` fica em desenvolvimento) e um artefato de implantação | 003 FR-016…018; 046 (a barreira da fonte) | `backend/config/wsgi.py:5`; `backend/config/asgi.py:5`; `backend/config/settings/development.py:3,7`; `Dockerfile:8-10`; `backend/pyproject.toml` (sem servidor de produção); `sorteios/application/ocorrencia.py:61-66` | NÃO IMPLEMENTADO | sim | a barreira existe e se pula pela omissão de uma variável · B | decisão de infraestrutura (quem empacota e serve o sistema) + correção direta dos padrões | 9 |
+| RC-124 | resíduo do RC-72 (revisão da `046`) · conferência de 26/09 | **o caminho de produção não está no repositório**: a única imagem é de desenvolvimento ("Não é imagem de produção"), não há servidor WSGI de produção entre as dependências, e `wsgi.py` e `asgi.py` caem em `config.settings.development` quando falta `DJANGO_SETTINGS_MODULE` — `DEBUG=True`, a fonte de demonstração do sorteio ligada e **nenhuma** barreira de produção executada; e a ocorrência de demonstração já registrada é devolvida sem consultar o vocabulário → falha segura (o padrão de `wsgi` e `asgi` ser a produção, que recusa subir mal configurada; o `manage.py` fica em desenvolvimento) e um artefato de implantação | 003 FR-016…018; 046 (a barreira da fonte) | `backend/config/wsgi.py:5`; `backend/config/asgi.py:5`; `backend/config/settings/development.py:3,7`; `Dockerfile:8-10`; `backend/pyproject.toml` (sem servidor de produção); `sorteios/application/ocorrencia.py:61-66` | NÃO IMPLEMENTADO | sim | a barreira existe e se pula pela omissão de uma variável · B | decisão de infraestrutura (quem empacota e serve o sistema) + correção direta dos padrões | 9 |
 
 ### 3.15 Integridade de dados, engenharia e documentação
 
@@ -414,7 +414,7 @@ quando indicado.
 | RC-101 | PR #171 · achado ValorDeFato · memória "corrigir depois da 044" | `inscricoes_valordefato` está na lista append-only, mas sem gatilho e sem recusa no modelo | 015 D-2; a correção foi **decidida para depois da `0005` da 044**, que entrou com o #173; **feita pelo #183** (`8e7c698`, 26/09) | `inscricoes/migrations/0006_valor_de_fato_append_only.py` (gatilho `valor_de_fato_append_only`); `ValorDeFato.save`/`delete` em `inscricoes/models.py`; `tests/integration/test_imutabilidade_do_historico.py` | RESOLVIDO | sim — contradizia a regra de duas camadas independentes | `PosicaoNaOrdem`, `RevisaoEdital` e `GeracaoDeArquivo` seguem com duas camadas de três, só registradas por decisão · — | nenhuma | 6, 7 |
 | RC-102 | spec 039 (branch local) | catálogo de Modalidades no Edital; alcance declarável | nunca mesclada; sem registro explícito de abandono | `git log main..claude/spec-039-alcance` | CONTRADITO POR DECISÃO POSTERIOR | não, o catálogo; **sim** as duas peças que ela absorvia (D-G5 → RC-37; alcance da Etapa → RC-64) | risco de governança: parece trabalho em curso · C | registrar o encerramento e apagar ou arquivar a branch | 5 |
 | RC-103 | Status Draft (41 de 44 specs com estado errado) · README (`31 de 31`; tabela até a 025; "5402 passando") · contagens divergentes · manual atrás do código · suíte em SQLite · testes em UTC · teste CSRF instável · `seed_demo --numero` · guarda de citações (`UX-062`) · derivação duplicada de `pode_retificar` · grade dos cartões | higiene de documentação, teste e ferramenta | — | `README.md:73, 206-214`; `backend/Makefile:36-37`; `tests/integration/identidade/test_adicionar_credencial.py:46-52`; `processos/management/commands/seed_demo.py:579-582`; `interface/views.py:6320` | NÃO IMPLEMENTADO | parcialmente | nada disso afeta produção · C | uma varredura de higiene; a convenção de `Status` é decisão do usuário | 7, 4, 3, 1 |
-| RC-121 | revisões da `045` (D3, D4, D7, D8) e da `046` (D5), 26/09 | testes e textos que ficaram atrás do código: a regra "aguardando decisão" escrita duas vezes, em Python e em SQL, e o teste do contador não cobre a peça recém-interposta nem a julgada; a SC-273 só vale para o `UX-003`; testes que passariam com o defeito (o do cronograma normal confere identificadores que o código já não produz; a unidade da medida fica fora da comparação; nenhuma inscrição eliminada no teste de equivalência); a tabela-verdade da SC-275 confere a D-001 contra uma cópia dela mesma; textos da `022` que contradizem a `045` sem marca (a nota da D-002, a clarificação do status declarado, os cenários 1–2 da US3); `tests/fixtures/supervisao.py` com o parâmetro `status` que a T016 mandava tirar | 022, 045, 046 | `recursos/application/selectors.py` (`_situacao`) × `interface/acoes.py:319-334` (`recursos_aguardando_decisao`); anexos 8 e 9 | NÃO IMPLEMENTADO | sim, como higiene — o risco é o próximo defeito passar verde | C | varredura de higiene, junto do RC-103 | 8, 9 |
+| RC-127 | revisões da `045` (D3, D4, D7, D8) e da `046` (D5), 26/09 | testes e textos que ficaram atrás do código: a regra "aguardando decisão" escrita duas vezes, em Python e em SQL, e o teste do contador não cobre a peça recém-interposta nem a julgada; a SC-273 só vale para o `UX-003`; testes que passariam com o defeito (o do cronograma normal confere identificadores que o código já não produz; a unidade da medida fica fora da comparação; nenhuma inscrição eliminada no teste de equivalência); a tabela-verdade da SC-275 confere a D-001 contra uma cópia dela mesma; textos da `022` que contradizem a `045` sem marca (a nota da D-002, a clarificação do status declarado, os cenários 1–2 da US3); `tests/fixtures/supervisao.py` com o parâmetro `status` que a T016 mandava tirar | 022, 045, 046 | `recursos/application/selectors.py` (`_situacao`) × `interface/acoes.py:319-334` (`recursos_aguardando_decisao`); anexos 8 e 9 | NÃO IMPLEMENTADO | sim, como higiene — o risco é o próximo defeito passar verde | C | varredura de higiene, junto do RC-103 | 8, 9 |
 
 ### 3.16 Recomendações contraditas por decisão posterior
 
@@ -684,10 +684,10 @@ executável. É por isso que ela não aparece aqui como uma spec.
 
 | Domínio | Resolvido | Pendências (A/B) | Oportunidades (C) |
 |---|---|---|---|
-| **Composição e autoria** | explicação no lugar, densidade, duplicar Perfil, quadro único, correções de 25/09 | **RC-08** rascunho local (A); RC-09, RC-10, RC-11 diretas; RC-12 teto; RC-13 decisão E2; RC-116 o assistente de Edital publicado | RC-14, RC-15, RC-16 |
+| **Composição e autoria** | explicação no lugar, densidade, duplicar Perfil, quadro único, correções de 25/09 | **RC-08** rascunho local (A); RC-09, RC-10, RC-11 diretas; RC-12 teto; RC-13 decisão E2; RC-122 o assistente de Edital publicado | RC-14, RC-15, RC-16 |
 | **Documento publicado** | tabelas, cabeçalho, método do sorteio | RC-20 número; RC-21 anexos citados; RC-22 hora; RC-23 fecho; RC-24 seções (decisão) | RC-25 (decisão E10), RC-26 |
 | **Validação antes de publicar** | executabilidade (032), documento × execução (#161), o gate da `046` — Etapa que não consolida, Perfil que não convoca, Edital publicado sem juízo de publicabilidade (RC-29, RC-30, RC-32, #188); a porta decisória enumerada que publica (RC-114, PR corretivo de 26/09) | RC-31 entre Perfis; **RC-112** Ocorrência que trava a Etapa seguinte (A, validar) | RC-34 |
-| **Retificação** | contrato, vocabulário da gestão, "O que mudou" do recorte (RC-39, #185) | **RC-37** Modalidade (A); **RC-38** o que "pode nascer" (A/B); **RC-111** "O que mudou" cala 45 campos (A) | RC-40, RC-119 (#117) |
+| **Retificação** | contrato, vocabulário da gestão, "O que mudou" do recorte (RC-39, #185) | **RC-37** Modalidade (A); **RC-38** o que "pode nascer" (A/B); **RC-111** "O que mudou" cala 45 campos (A) | RC-40, RC-125 (#117) |
 | **Reaproveitamento** | referências, cronograma, segundo Edital | RC-42 guardião; RC-43 estado de revisão | — |
 | **Portal e inscrição** | parecer, notícia do eliminado, facultativo na Revisão | RC-47 título e vagas; RC-48 prazo recursal público; RC-49 prazo no rascunho; RC-46 validar | RC-50 |
 | **Documentos exigidos e Mesa** | contenção #161, instrução na Mesa, recorte transversal e lista gravada (RC-52, RC-53, #173), filtro de concorrência (RC-54, #172) | RC-55 submodalidade | resíduo do RC-54, RC-56 |
@@ -696,9 +696,9 @@ executável. É por isso que ela não aparece aqui como uma spec.
 | **Resultado e divulgação** | prévia exemplar, publicador com caminho | — | RC-69, RC-70 |
 | **Sorteio** | executável ponta a ponta, vocabulário fechado, fonte de demonstração fora de produção (RC-72, #188) | RC-73 recortes; RC-74 gatilho da fonte real | — |
 | **Recursos** | instrução, parecer, tempestividade | RC-76 datas (parte viável em RC-48) | — |
-| **Condução** | Processo = Supervisão; visão entre Processos; ausência, recurso, Cronograma e medida confiáveis (RC-78…82, `045`); o recurso pendente que não se cala no Edital parado (RC-115, PR corretivo de 26/09) | RC-77 remedir | RC-84 (prazo e exportação), RC-85, RC-86, RC-117 |
-| **Identidade e implantação** | barreira de produção | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico; RC-118 caminho de produção | RC-94 D-G2, RC-96 |
-| **Integridade e engenharia** | append-only 34/34, contrato de mutabilidade, `ValorDeFato` nas três camadas (RC-101, #183) | — | RC-102, RC-103, RC-121 |
+| **Condução** | Processo = Supervisão; visão entre Processos; ausência, recurso, Cronograma e medida confiáveis (RC-78…82, `045`); o recurso pendente que não se cala no Edital parado (RC-115, PR corretivo de 26/09) | RC-77 remedir | RC-84 (prazo e exportação), RC-85, RC-86, RC-123 |
+| **Identidade e implantação** | barreira de produção | **RC-92** autenticação (A); RC-93 correio e retenção; RC-95 Registro Acadêmico; RC-124 caminho de produção | RC-94 D-G2, RC-96 |
+| **Integridade e engenharia** | append-only 34/34, contrato de mutabilidade, `ValorDeFato` nas três camadas (RC-101, #183) | — | RC-102, RC-103, RC-127 |
 
 ---
 
@@ -852,14 +852,14 @@ antes.
 
 **B-7 · Autenticação institucional real, com correio e retenção** — *P1 de implantação, trilha paralela*
 - **Origem.** C7 (20/09); T056 da `002`; G1–G4/G22 e E2E-020 (02/09).
-- **Lacuna residual.** RC-92, RC-93 e RC-118.
+- **Lacuna residual.** RC-92, RC-93 e RC-124.
 - **Escopo mínimo.**
   - O adaptador contra o provedor do Ifes (gestão), separado do candidato.
   - SMTP institucional com redundância para o código de acesso.
   - A política de retenção e descarte de documentos.
   - Uma decisão escrita sobre rascunhos visíveis à gestão.
   - O caminho de produção: quem empacota e serve o sistema, e `wsgi`/`asgi` caindo na produção, e não
-    no desenvolvimento, quando falta a variável (RC-118).
+    no desenvolvimento, quando falta a variável (RC-124).
 - **Dependências.** **Externas**: o provedor e a política institucional. Aparece também em RC-67 e RC-87,
   que dependem de ligar identidade a papel.
 - **Natureza.** operação e segurança.
@@ -920,7 +920,7 @@ antes.
 
 **B-11 · Diretas da composição e da Revisão**
 - RC-09 (rótulos defasados até gravar), RC-10 (colapso por Perfil e severidade primeiro) e RC-11 (caixas
-  de marcação no lugar do `select multiple`); e RC-116 (o assistente de um Edital publicado ainda fala
+  de marcação no lugar do `select multiple`); e RC-122 (o assistente de um Edital publicado ainda fala
   como se ele fosse ser submetido).
 - **Natureza.** UX.
 - **Por que P2.** O ganho é maior justamente nos Editais multipolo, que são 4 dos 5 da amostra.
@@ -967,13 +967,13 @@ antes.
   comum aos Perfis e TF-1 (RC-13, RC-07). **Cada uma espera uma decisão de alvo**, e juntas formam o que um
   dia pode ser a spec de "alcance da Etapa".
 - **B-18 · Varredura de polish.** RC-69 e RC-40 (identificadores de máquina e tabela única de
-  vocabulário); RC-70, RC-84, RC-66, RC-50, RC-16, RC-26, RC-45 (cartão público), RC-56, RC-117 (a quem pedir, e frases erradas) e
-  RC-120 (casos-limite só alcançáveis pela API).
+  vocabulário); RC-70, RC-84, RC-66, RC-50, RC-16, RC-26, RC-45 (cartão público), RC-56, RC-123 (a quem pedir, e frases erradas) e
+  RC-126 (casos-limite só alcançáveis pela API).
 - **B-19 · Governança pendente de execução, de baixo impacto.** RC-94 (`D-G2`) e RC-34 (fronteira
   avisos × Atenção, depois da B-3).
 - **B-20 · Higiene de engenharia e documentação.** RC-103 (Status das specs, README, manual, contagens,
   `make test` sem PostgreSQL, testes em UTC, teste do CSRF, `seed_demo --numero`, guarda de citações,
-  derivação duplicada), RC-121 (testes e textos atrás da `045` e da `046`), RC-119 (a #117) e RC-102
+  derivação duplicada), RC-127 (testes e textos atrás da `045` e da `046`), RC-125 (a #117) e RC-102
   (encerrar a branch da `039`). **Uma** varredura, sem spec. A convenção de
   `Status` é decisão do usuário.
 - **B-21 · Notificação a ator interno** (RC-67): só depois da B-1 e da B-7.
@@ -1091,7 +1091,7 @@ usuário. As do item 9 e a Diretoria do item 12 já tinham registro próprio e a
 12. **Papel próprio de Diretoria** (pendente desde a `040`) (já registrado na `040`, D-008) e **convenção do campo `Status`** das specs. → DP-12
 13. **O escopo de trabalho por Perfil** (RC-61) pode ser decidido: o Edital real multipolo que a
     convergência pedia já foi cadastrado. → DP-11
-14. **Quem empacota e serve o sistema em produção** (RC-118): o repositório só tem a imagem de
+14. **Quem empacota e serve o sistema em produção** (RC-124): o repositório só tem a imagem de
     desenvolvimento. É decisão de infraestrutura, na trilha do Ifes, junto da autenticação e do correio.
 
 ### Verificações que exigem percurso ou ambiente
