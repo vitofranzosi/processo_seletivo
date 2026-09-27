@@ -2239,9 +2239,13 @@ def _fatos_do_perfil(conteudo, inscricao):
 def _modalidade_da_inscricao(conteudo, inscricao):
     perfil = _perfil_do_conteudo(conteudo, inscricao.profile_id)
     if inscricao.modality_id is None:
-        # Nomeada só onde foi escolha: no Perfil sem Modalidade nenhuma, a linha continua ausente,
-        # como sempre esteve (FR-038).
-        return NOME_DA_AMPLA if len(_modalidades_ofertadas(conteudo, perfil)) > 1 else ""
+        # Nomeada só onde a ampla sem Modalidade é uma das opções. Contar as opções não basta: com
+        # a ampla declarada ao lado de uma cota, ou com duas cotas sem vaga na linha geral, também
+        # há duas, e ali o nulo é escolha ainda não feita — nomeá-la afirmaria na revisão uma
+        # concorrência que a pessoa não escolheu. No Perfil sem Modalidade nenhuma, a linha
+        # continua ausente, como sempre esteve (FR-038).
+        ofertadas = _modalidades_ofertadas(conteudo, perfil)
+        return NOME_DA_AMPLA if any(opcao["id"] == "" for opcao in ofertadas) else ""
     return next(
         (
             modalidade.get("name", "")

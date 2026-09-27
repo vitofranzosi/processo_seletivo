@@ -292,6 +292,55 @@ def test_a_revisao_nomeia_a_ampla(client, publicar):
     assert "<dt>Concorrência</dt><dd>Ampla concorrência</dd>" in corpo
 
 
+@pytest.mark.parametrize(
+    "rascunho",
+    [
+        pytest.param(
+            lambda: rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+            id="ampla-declarada-e-cota",
+        ),
+        pytest.param(lambda: _so_cotas(pcd=True, linha_geral=0), id="duas-cotas-sem-linha-geral"),
+    ],
+)
+def test_a_revisao_nao_nomeia_a_ampla_onde_o_nulo_e_escolha_por_fazer(client, publicar, rascunho):
+    """Duas opções e nenhuma delas a ampla sem Modalidade: o nulo ainda não é escolha.
+
+    Contar opções confundia os dois casos com o de cima, e a revisão afirmava *"Ampla
+    concorrência"* a quem não tinha escolhido nada — e o requerimento repetiria a afirmação.
+    """
+    edital = publicar(rascunho())
+    inscricao = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    assert inscricao.modality_id is None, "a contraprova: nada foi escolhido nem assumido"
+    identificar(client, JOAO)
+
+    corpo = client.get(reverse("portal:revisao", args=[inscricao.id])).content.decode()
+
+    assert "<dt>Concorrência</dt>" not in corpo
+
+
+def test_o_asterisco_so_acompanha_a_escolha_obrigatoria(client, publicar):
+    """Com a ampla sem Modalidade já marcada, o campo não é `required`, e o rótulo não o finge."""
+    rotulo = '<label for="modalidade">Modalidade <span class="obrigatorio"'
+    identificar(client, JOAO)
+    so_cotas = publicar(_so_cotas())
+    rascunho = abrir_inscricao(identidade=JOAO, edital_id=so_cotas.id, profile_id=PERFIL_DOCENTE)
+
+    corpo = client.get(reverse("portal:inscricao", args=[rascunho.id])).content.decode()
+
+    assert '<label for="modalidade">Modalidade</label>' in corpo
+    assert rotulo not in corpo
+
+
+def test_o_asterisco_continua_onde_o_vazio_e_recusa(client, publicar):
+    edital = publicar(rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)))
+    rascunho = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    identificar(client, JOAO)
+
+    corpo = client.get(reverse("portal:inscricao", args=[rascunho.id])).content.decode()
+
+    assert '<label for="modalidade">Modalidade <span class="obrigatorio"' in corpo
+
+
 def test_a_pagina_da_selecao_anuncia_a_ampla(client, publicar):
     edital = publicar(_so_cotas())
 

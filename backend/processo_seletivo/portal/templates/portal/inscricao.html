@@ -65,7 +65,7 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
     <p class="ajuda">Escolha como você concorre nesta vaga. A escolha decide quais documentos
       serão pedidos a você.</p>
     <p class="campo">
-      <label for="modalidade">Modalidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <label for="modalidade">Modalidade{% if escolha_obrigatoria %} <span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</label>
       {% comment %}
       A opção vazia tem dois sentidos, e o Perfil decide qual. Quando ele oferece a ampla sem
       Modalidade — só cotas declaradas e vaga na linha geral —, ela **é** a ampla concorrência: vem
