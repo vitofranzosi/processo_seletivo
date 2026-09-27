@@ -74,3 +74,43 @@ def test_o_custo_de_decidir_nao_cresce_com_a_selecao(gestor, api_client, manager
 
     por_linha = (len(muitas_consultas) - len(poucas_consultas)) / (300 - 3)
     assert por_linha <= 3, (len(poucas_consultas), len(muitas_consultas))
+
+
+def test_mil_prontas_consolidam_numa_confirmacao_pela_tela(
+    client, settings, gestor, api_client, manager_headers
+):
+    """O teto de SC-002 pelo caminho da presidência, e não só pelo comando.
+
+    O comando já consolidava mil num envio; a tela não chegava lá. A seleção era da página, e a
+    confirmação levava um campo por inscrição — e o Django recusa com 400 o envio de mais de mil
+    campos, de modo que mil prontas morriam antes do ato (medido em 27/09). Uma conferência e uma
+    confirmação, e as mil viram Resultado.
+    """
+    import re
+
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1523, codigo="1523"
+    )
+    semear_prontas(cenario, TETO, primeiro=1)
+    identificar(client, "maria", ["gestor"])
+    rota = reverse(
+        "interface:consolidar-resultados", args=[cenario["edital"].id, cenario["primeira"]]
+    )
+
+    conferencia = client.post(rota, {"alcance": "prontas", "chave_idempotencia": "teto-tela"})
+    assert conferencia.status_code == 200
+    declaradas = re.search(r'name="inscricoes" value="([^"]*)"', conferencia.content.decode())
+    assert len(declaradas.group(1).split()) == TETO
+
+    confirmacao = client.post(
+        rota,
+        {"confirmar": "1", "chave_idempotencia": "teto-tela", "inscricoes": declaradas.group(1)},
+    )
+
+    assert confirmacao.status_code == 302
+    assert ResultadoEtapa.objects.filter(edital=cenario["edital"]).count() == TETO

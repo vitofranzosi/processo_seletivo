@@ -10,6 +10,7 @@ import json
 import logging
 import re
 import secrets
+from collections import Counter
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -4927,13 +4928,24 @@ def consolidar_resultados(request, edital_id, etapa_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
-    marcadas = request.POST.getlist("inscricao_id")
+    # **As identidades viajam num campo só**, e não num por inscrição. A conferência de todas as
+    # prontas devolve centenas delas, e o Django recusa com 400 o envio de mais de mil campos
+    # (`DATA_UPLOAD_MAX_NUMBER_FIELDS`): medido em 27/09, a confirmação de mil inscrições morria
+    # antes de chegar aqui, que é exatamente o teto que a SC-002 promete. As caixas da listagem
+    # continuam chegando como `inscricao_id`, porque ali são no máximo uma página.
+    marcadas = request.POST.getlist("inscricao_id") + request.POST.get("inscricoes", "").split()
     chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    todas_as_prontas = request.POST.get("alcance") == "prontas"
     if request.POST.get("confirmar") != "1":
         try:
-            _etapa, consolidaveis, recusas = consolidacao_app.prever(
-                edital=edital, etapa_id=etapa_id, inscricao_ids=marcadas
-            )
+            if todas_as_prontas:
+                _etapa, consolidaveis, recusas = consolidacao_app.prever_as_prontas(
+                    edital=edital, etapa_id=etapa_id
+                )
+            else:
+                _etapa, consolidaveis, recusas = consolidacao_app.prever(
+                    edital=edital, etapa_id=etapa_id, inscricao_ids=marcadas
+                )
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
@@ -4952,6 +4964,13 @@ def consolidar_resultados(request, edital_id, etapa_id):
                     "etapa": etapa,
                     "consolidaveis": consolidaveis,
                     "recusas": recusas,
+                    "todas_as_prontas": todas_as_prontas,
+                    # Centenas de linhas não se conferem uma a uma: o total por consequência é
+                    # o que a presidência compara com o que esperava da Etapa, antes de descer
+                    # à tabela. Sai do mesmo plano que o ato relê, e não de uma contagem à parte.
+                    "por_consequencia": sorted(
+                        Counter(item.efeito for item in consolidaveis).items()
+                    ),
                     "chave_idempotencia": chave,
                 },
             )
@@ -5288,6 +5307,7 @@ def distribuicao(request, edital_id, etapa_id):
                 "consolidacao": request.session.pop("resultado_da_consolidacao", None),
                 "erro_da_consolidacao": request.session.pop("erro_da_consolidacao", None),
                 "chave_consolidacao": uuid4().hex,
+                "chave_consolidacao_das_prontas": uuid4().hex,
                 "chave_idempotencia": uuid4().hex,
                 "chave_remocao": uuid4().hex,
                 "chave_rodizio": uuid4().hex,

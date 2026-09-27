@@ -140,6 +140,30 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
   {% endif %}
 </nav>
 
+{% comment %}
+**Uma decisão, um ato — quantas forem as prontas.** A consolidação saía só da seleção da listagem,
+e a seleção é da página: com 600 prontas eram 24 rodadas de filtrar, marcar, conferir e confirmar
+para o que a presidência decide uma vez (013, FR-018, SC-002 — "sem interação por inscrição"). A
+listagem continua paginada, porque mil linhas não se leem numa tela; o que deixa de ser paginado é
+o alcance do ato.
+
+O botão fica logo depois do número que ele consolida, e leva à mesma conferência de dois passos: ela
+declara cada inscrição e a consequência antes de o ato acontecer, e é ali que ele se confirma. A
+frase diz o que sai do ato antes do clique, pela mesma razão que a do rodapé da tabela (030,
+FR-422).
+{% endcomment %}
+{% if resumo.prontas and not bloqueio_da_etapa %}
+<form method="post" action="{% url 'interface:consolidar-resultados' edital.id etapa.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="alcance" value="prontas">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_consolidacao_das_prontas }}">
+  <p class="definicoes"><dfn>Consolidar</dfn> transforma as avaliações concluídas no
+    <strong>Resultado da Etapa</strong> de cada inscrição, e não se desfaz. Antes de confirmar, a
+    próxima tela mostra cada uma e a consequência dela.</p>
+  <p class="acoes"><button type="submit" class="botao">{% if resumo.prontas == 1 %}Consolidar a inscrição pronta{% else %}Consolidar as {{ resumo.prontas }} prontas{% endif %}</button></p>
+</form>
+{% endif %}
+
 <section aria-labelledby="carga">
   <h2 id="carga">Quem está alocado</h2>
   {% if carga %}
