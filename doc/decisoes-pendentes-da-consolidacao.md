@@ -664,6 +664,144 @@ prévia. Para coleção (Modalidades, critérios de desempate), decidir sobre os
 não como princípio abstrato. Na Retificação, "acrescentar a ampla a 16 Perfis num gesto" encosta na
 FR-802 da `048`, que veda mecanismo novo de acréscimo: precisa de decisão declarada na spec.
 
+### A análise por estrutura
+
+*Pedida pelo usuário em 27/09, para a decisão ser tomada antes da spec do passo 1. Conferida contra a
+`main` em `f6efe0dd`. É análise, e nada aqui foi decidido. Os ganhos são estimativas pelos custos
+unitários do [anexo A da reavaliação](reavaliacao-pos-consolidacao-2026-09-27/anexo-A-composicao.md), e
+não medições: quem os calibra é o teste operacional da `DP-18`.*
+
+**Três fatos do código mudam a pergunta.**
+
+1. **A identidade entre Perfis não é a mesma em toda estrutura.** A Modalidade e o fato têm código único
+   no Perfil (`uq_modalidade_perfil_code`, `uq_fato_perfil_code`, em `editais/models/perfis.py`), e o
+   código da Modalidade já é identidade do Edital desde a `044`. O marco também tem código único no
+   Perfil (`uq_marco_perfil_code`), mas esse código é **derivado do Perfil** (FR-420 da `030`, D-004 da
+   `043`): o marco do LP01 chama-se `LP01`, o do LP02, `LP02`. E o marco não tem campo de posição. Com um
+   marco por Perfil, o correspondente é "o marco do Perfil"; com dois, não há correspondente. O critério
+   de desempate se identifica pela `ordem`, única no marco (`uq_criterio_marco_ordem`), e a ordem é a
+   norma. **Isso corrige a recomendação acima num ponto**: o marco não é valor único. É coleção por
+   Perfil, e só os campos dele são valores únicos.
+2. **O maior ganho não tem conflito nenhum.** No fluxo linear do assistente, os Perfis chegam à
+   Classificação sem marco (anexo A, §5.2). Materializar o marco onde não há marco rende ~370 das ~400
+   interações do 140/2025, e ali o destino não declara nada. A pergunta desta DP pesa na correção e na
+   Retificação. O marco aplicado aos Perfis sem marco também torna indiferente a ordem de compor e
+   duplicar, que o passo 0 só pôde explicar na ajuda.
+3. **A duplicação remapeia por identidade, e "aplicar a todos" teria de remapear por código.**
+   `duplicar_perfil` (`editais/domain/duplicacao.py`) mapeia as identidades da origem para identidades
+   novas. Propagar para um Perfil que já existe exige achar, no destino, o fato e a Modalidade **de mesmo
+   código**. Nos Perfis nascidos por duplicação os códigos coincidem. Nos compostos do zero podem não
+   coincidir, e a correspondência falha. Ela precisa falhar alto, como a FR-641 da `043` já exige para
+   referência sem contraparte.
+
+**Dois textos escritos que a spec precisa enfrentar, e não um.**
+
+- **A FR-802 da `048`**: *"A feature MUST NOT criar mecanismo de acréscimo além dos dois que existem"*.
+  A letra vincula a `048`, e o que ela protege é o domínio: nenhuma espécie nova de Alteração e nenhum
+  acréscimo genérico. Na Retificação, o gesto de aplicar a todos produz N Alterações dos dois caminhos que
+  já existem, o nascimento de objeto e o acréscimo de item a coleção, e só sobre as duas coleções que a
+  `048` nomeou, a Modalidade e o critério. Tudo sai num ato só, com a mesma versão, o mesmo documento e o
+  mesmo histórico (FR-795), conferido no mesmo resumo *antes → depois* (FR-800) e contra o contrato de
+  mutabilidade como fonte única (FR-803). Nessa leitura, o gesto é de interface e não esbarra na
+  FR-802, e a spec do passo 1 o declara. Se o usuário ler a FR-802 como vedando também o gesto, a
+  Retificação sai da primeira spec, e com ela os ~160 e os ~110 do 140/2025 da tabela abaixo.
+- **A FR-421 da `030`**: *"Valor padrão e valor derivado NÃO DEVEM ser aplicados a conteúdo já
+  declarado de Edital existente, inclusive durante Retificação"*. Aplicar a todos substitui conteúdo já
+  declarado. A leitura possível é que o valor aplicado não é padrão nem derivado, porque quem aplica o
+  declara, com o alcance à vista. Mas o passo 1 traz os padrões na mesma spec, e a fronteira precisa
+  ficar escrita: **o padrão só preenche o vazio; aplicar a todos substitui, e só por gesto com
+  prévia.** Código e denominação do marco nunca são substituídos. O código é estrutural, e a
+  denominação, onde o destino já a tem, foi declarada ou derivada para ele.
+
+**A tabela.** "Destino" é o Perfil (ou o marco dele) que recebe o valor. "Fora do alcance" quer dizer
+que a prévia nomeia o destino e o motivo, e o gesto não o toca. Nunca é exclusão silenciosa.
+
+| Estrutura | Forma | O que o destino pode ter · como se identifica | Efeito proposto | Risco das alternativas | Onde vale · contrato | Ganho estimado: 28/2026 · 140/2025 |
+|---|---|---|---|---|---|---|
+| **Marco, como objeto** | coleção por Perfil (quase sempre um) | nenhum marco (o fluxo linear), um ou vários · é "o marco do Perfil"; o código difere entre Perfis e não há posição | **acrescentar onde falta**, com código e denominação derivados do destino e os critérios remapeados pelo código do fato; destino com marco fica **fora do alcance**, e se corrige pelas linhas abaixo | substituir o marco inteiro apaga marco divergente e troca as Etapas medidas, que são o que o marco é · acrescentar onde já há marco dá dois marcos finais no Perfil, e duplica sentido · recusar onde há marco perde só o que as linhas de campo cobrem | só composição: marco novo não nasce por Retificação (inventário da `048`), e `stages` não se retifica | ~63 → ~12 · **~400 → ~30**; se o marco leva o corte, somem os dois IMPEDE por Perfil, o da `032` e o da `046`. No multicampi de 66, ~1.650 → ~30 |
+| **Campos do marco**: forma da ordem, Etapas que entram, combinação, arredondamento | valor único por marco | valor declarado, igual ou diferente · o marco como acima; Perfil com dois marcos fica fora | **substituir**, com *antes → depois* por destino; destino igual não gera alteração | recusar quando há valor tira toda a correção, porque sempre há · substituir apaga divergência deliberada: a prévia a mostra, e o gesto deixa excluir o destino | ambas. Na Retificação, `stages` é não retificável e sai; nos demais, a ordem emitida de cada marco alcançado fica obsoleta e recomputável, N de uma vez, e a prévia as conta | pequeno isolado, 1–2 por marco: ~7 → ~4 · ~16 → ~4. O ganho está na linha anterior |
+| **Janela recursal** | valor único por marco: três campos, e o objeto pode faltar | janela declarada ou ausente | **substituir** onde há; **nascer** onde falta | recusar onde há perde a correção do prazo · substituir encurta, em N marcos, o prazo de ato já divulgado (A-3 da `048`, multiplicado) | ambas. Na Retificação, nasce só concedendo (D-003 da `048`): *"não admite"* sobre marco sem janela fica fora. A prévia aponta os marcos com ato já divulgado | composição: dentro da primeira linha. Retificação: ~14 → ~4 · ~32 → ~4 |
+| **Regra de corte** | valor único por marco: seis campos, e o objeto pode faltar (ausente é IMPEDE desde a `046`) | regra declarada ou ausente | **substituir** onde há; **nascer** onde falta. A quantidade fixa (alvo `FIXED`) **não** se propaga por padrão | a quantidade fixa depende das vagas do Perfil: propagá-la iguala Perfis que diferem de propósito · recusar onde há perde a correção | ambas. Na Retificação, espécie do alvo, Etapa governada e continuação não se trocam onde a regra existe, e só nascem. O nascimento leva a guarda da D-002 da `048`: marco com Resultado na Etapa governada fica fora, e a guarda corre de novo na publicação (FR-789) | composição: dentro da primeira linha. Nascimento por Retificação: ~42 → ~9 · ~96 → ~9 |
+| **Critérios de desempate** | coleção ordenada por marco, em que a ordem é a norma | nenhum critério, a mesma lista ou outra · o item, pela `ordem`; o equivalente entre Perfis, por tipo + Etapa (do Edital) ou tipo + código do fato (do Perfil) | **substituir a lista inteira**, como unidade: é o que o Edital declara (*"o desempate se dará da seguinte forma: a), b), c)"*, 6.3.2 do 140/2025). Lista idêntica não gera alteração. Fato sem correspondente de mesmo código deixa o Perfil fora | acrescentar põe "mais idoso" duas vezes, ou um critério fora da ordem · substituir item a item por posição casa critérios diferentes que estão na mesma ordem · recusar onde há critério perde a G-001 da `043` e a Retificação | ambas. Na Retificação, tipo, parâmetro e ausência não se retificam no lugar: substituir é remover e acrescentar, e os dois caminhos existem desde a `048` (FR-792). A ordem emitida fica obsoleta em cada marco (FR-794). Fato novo não nasce por Retificação | 0: o 28/2026 sorteia, sem critério · composição: 240 das ~400 da primeira linha; correção depois de duplicado, ~80 → ~8; Retificação que troca um critério nos 16, **~110 → ~10** |
+| **Forma de convocação** | valor único por Perfil, de lista fechada; vazio é "não declarou" | vazio, a mesma forma ou a outra | **substituir** | recusar onde há valor perde a Retificação · substituir iguala Perfis que convocam de jeitos diferentes; nenhum dos dois Editais faz isso (28/2026 por e-mail, 10.3; 140/2025 por publicação, 10.6) | ambas; retificável | marginal. Composição: 0, porque a cópia a leva. Retificação: 7 → ~4 · 16 → ~4 |
+| **Reversão** | valor único por Perfil, que só existe com Modalidade e quadro | vazio ou uma das duas espécies | **substituir**; **nascer** onde falta; destino sem quadro fica fora, como a validação já recusa | as da forma de convocação · a apuração não fica obsoleta quando a reversão muda (A-2 da `048`), agora em N Perfis de uma vez | ambas; nasce pela FR-791 | marginal, como a linha anterior |
+| **Modalidade**, com a regra normativa e a declaração da ampla | coleção por Perfil | sem o código, com o código, ou com Modalidade equivalente sob outro código ("PcD" e "DEF") · pelo **código**. A equivalência sob outro código o sistema não reconhece sem casar nome, o que a R-006 da `025` recusa | **uma Modalidade por vez, e não o conjunto**: acrescentar onde o código falta; substituir os campos onde existe (denominação, descrição, fundamento, versão, percentual), nunca o código; nunca remover. A declaração da ampla aponta a Modalidade do destino de mesmo código. A linha da cota no quadro não se propaga, porque a quantidade é do Perfil | sincronizar o conjunto remove a cota que o destino não tem de propósito, ou a que só ele tem · acrescentar sempre duplica a cota que o destino declarou sob outro código: a prévia mostra, por destino, as Modalidades que ele já tem · recusar onde o código existe perde a correção (G-001 da `043`) | ambas. Na Retificação, acrescentar é a FR-777 da `048` N vezes: é o caso da FR-802. A regra normativa não nasce em Modalidade já publicada (D-001 da `048`), e o destino com o código e sem regra fica fora. O recorte novo nasce sem ordem (FR-781). O documento da Modalidade nova continua na Retificação seguinte | composição: 0 no fluxo com duplicar; Modalidade esquecida na origem, ~40 → ~10 · ~100 → ~10, mais uma quantidade de quadro por Perfil se for cota. Retificação: ver abaixo |
+| **Documentos Exigidos** | entidade do Edital, com recorte | nada: o documento não pertence ao Perfil | **nenhum gesto novo.** O "aplicar a todos" do documento já existe, e é o recorte: *"Todos os Perfis"* e o código da Modalidade (`044`) | materializar por Perfil desfaria o 112 → 7 da `044` e voltaria às cópias que precisam ser mantidas iguais (anexo A, §5.1). O que sobra, documento para um subconjunto de Perfis (o item f do 140/2025, *"de acordo com a função pleiteada"*), é pergunta de recorte | nenhum; e documento novo não nasce por Retificação (inventário da `048`) | 0 · 0 sobre o que já existe |
+
+**A Retificação da Modalidade mudou de valor com a `DP-14`.** O caso-tipo da reavaliação, "acrescentar a
+ampla a 16 Perfis", custava ~160 interações. Desde a correção da `DP-14`, o Perfil com vaga imediata na
+linha geral já oferece a ampla sem Modalidade declarada, e esse caso deixou de precisar de Retificação.
+No 28/2026 (40 vagas, 28 na linha geral), o ganho da ampla é ~0. Continua valendo onde não há vaga
+imediata, que é o cadastro reserva: no 140/2025, se a ampla tivesse sido esquecida, seria **~160 → ~13**.
+A cota esquecida continua valendo nos dois: ~70 → ~20 · ~160 → ~13, mais as quantidades do quadro onde
+houver vaga. Renomear a denominação ligada a documento transversal, hoje N edições obrigatórias
+(FR-706 da `044`), cai para uma.
+
+**Fora da tabela, de propósito.**
+
+- **O quadro de vagas.** A quantidade é do Perfil, e a divergência é a regra. O caminho do passo 1 é o
+  quadro sugerido pelo percentual, que é outra frente.
+- **O método próprio do sorteio no marco.** Ele existe para divergir. O comum já é O(1), e propagar uma
+  divergência para todos é sinal de que o comum está errado, e é ele que se corrige.
+- **Os textos do Perfil** (denominação, atribuições, requisitos, carga horária, remuneração). São valores
+  únicos, e substituir seria trivial. Mas é onde a divergência deliberada é regra: o 140/2025 tem 4
+  blocos de requisito para 16 Perfis. Na Retificação, cairia de 16 para ~4 edições por campo.
+- **Os fatos declarados.** Entram como dependência do critério, pelo código. Fazer o fato nascer é a
+  "língua do Edital" do passo 1 (*"maior idade" cria o fato*), e não este gesto.
+
+### Recomendação por estrutura
+
+- **Marco:** materializar só onde falta. O destino que já tem marco fica fora do alcance, e se corrige
+  pelos campos.
+- **Campos do marco, janela e corte:** substituir, e fazer nascer onde falta. A Retificação obedece às
+  exclusões do contrato e às guardas da `048`. A quantidade fixa do corte não vai por padrão.
+- **Critérios de desempate:** substituir a lista inteira. O fato é achado pelo código, e o Perfil sem ele
+  fica fora do alcance.
+- **Forma de convocação e reversão:** substituir. O ganho é marginal. Entram se o teto da spec
+  permitir, e são as primeiras a sair.
+- **Modalidade:** uma por vez, pelo código: acrescentar ou substituir campos, nunca remover e nunca
+  sincronizar o conjunto.
+- **Documentos:** nenhum gesto. O recorte da `044` já é o "aplicar a todos" deles.
+
+**Em todas:** materialização, não herança. Cada destino recebe o seu valor, e nada guarda vínculo com a
+origem (D-005 e D-006 da `043`). Nenhuma divergência vence em silêncio, que é a pergunta que a D-005 da
+`043` deixou: a prévia mostra cada uma, e quem aplica exclui o destino que diverge de propósito. O
+alcance padrão é "todos os demais", e não é o único.
+
+### O que entraria na primeira spec
+
+1. **O marco, com os critérios, para os Perfis sem marco**, na composição. É o ganho grande, e não tem
+   conflito.
+2. **A lista de critérios de desempate**, na composição e na Retificação.
+3. **A Modalidade pelo código**, com a declaração da ampla, na composição e na Retificação.
+4. **A janela recursal e a regra de corte**, inclusive o nascimento, na composição e na Retificação.
+5. **A prévia do alcance, comum a todas (`DP-17`).** Por destino, um de quatro efeitos: *nasce*,
+   *substitui* (*antes → depois*), *sem mudança* ou *fora do alcance*, com o motivo. Na Retificação,
+   ela mostra também as consequências: as ordens que ficam obsoletas, os recortes que nascem sem ordem e
+   os marcos com ato já divulgado cuja janela muda. Na Retificação ela é a conferência que já existe
+   (FR-800), agrupada, e não uma prévia em PDF (item 7 da avaliação da `048`).
+6. **As duas declarações escritas**: a leitura da FR-802 da `048` e a fronteira com a FR-421 da `030`.
+7. **A exclusão de destino no próprio gesto.**
+
+Os campos restantes do marco, a forma de convocação e a reversão entram se couberem. São baratos
+depois da prévia, e rendem pouco.
+
+**Fica fora:** documentos; quadro de vagas; método próprio do sorteio; textos do Perfil; substituir
+marco inteiro; remover Modalidade ou sincronizar o conjunto; fazer o fato nascer, que vai com a "língua
+do Edital".
+
+**O que a spec herda, registrado e não decidido aqui.**
+
+- **Onde a materialização acontece na composição.** Na tela, como o duplicar (D-001 da `043`), mantém
+  um só caminho de gravação, mas o rascunho local não recupera marcos (G-006 da `043`). No servidor,
+  cria um segundo caminho para o rascunho. É pergunta de plano, e pesa mais aqui do que pesou no
+  duplicar, porque a etapa Classificação grava por substituição (`replace_draft`), com os marcos de
+  todos os Perfis num formulário só.
+- **A A-2 e a A-3 da `048` passam a ser multiplicadas por N** num gesto. Não mudam de natureza, só de
+  escala.
+- **O "O que mudou" público ganha N linhas iguais** por gesto na Retificação. Não é defeito: cada
+  Alteração continua registrada, que é o que a reavaliação pediu. Mas é ruído para quem lê o portal.
+
 ---
 
 ## DP-14 — Quando a inscrição oferece a ampla concorrência?
