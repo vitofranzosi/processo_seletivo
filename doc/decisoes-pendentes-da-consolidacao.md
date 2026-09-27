@@ -13,6 +13,10 @@ reescrita.
 identificadores `RC-nn` e `B-nn` são os de lá. Os fatos citados foram conferidos contra a `main` em
 `bb774d9`.
 
+**As `DP-13` a `DP-18` têm outra origem:** a reavaliação de 27/09 e a avaliação da priorização dela.
+Estão em [Depois da reavaliação de 27/09](#depois-da-reavaliação-de-2709), junto com o critério e a
+ordem adotados naquela data, e foram conferidas contra a `main` em `8dd4f942`.
+
 **Duas famílias de decisão não são repetidas aqui**, porque já têm registro próprio, e um segundo
 registro criaria duas verdades:
 
@@ -38,6 +42,12 @@ registro criaria duas verdades:
 | DP-10 | Quais famílias de Edital entram no alvo? | RC-55 · RC-59 · RC-64 · RC-65 · B-17 | nenhuma agora; decidir por família, com Edital na mão |
 | DP-11 | A comissão local enxerga só o seu Perfil ou polo? | RC-61 · B-12 | não agora; coluna e filtro de Perfil já |
 | DP-12 | O campo `Status` das specs é mantido ou abolido? | RC-103 | abolir o campo e manter um índice só |
+| DP-13 | "Aplicar a todos": o que acontece com o que o Perfil de destino já declarava? | passo 1 · TF-1 da `043` | declarar o efeito por tipo de estrutura, com prévia |
+| DP-14 | Quando a inscrição oferece a ampla concorrência? | passo 0 · A-1 da `048` | sempre que o Perfil tiver linha geral com vagas |
+| DP-15 | Documento público por marco? | passo 4 | não agora; se vier, documento que reúne os atos |
+| DP-16 | O não atendimento pode ser registrado em lote? | passo 3 | um gesto, N registros com autor |
+| DP-17 | A automação explícita entra na Constituição? | passo 1 | emenda ao Princípio IV, só o invariante |
+| DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
 
 ---
 
@@ -504,3 +514,211 @@ de que o campo mente.
 
 O estado real já é recuperável pelo git. Uma fonte só, conferida, é a regra que o projeto aplica a todo
 o resto. O README, que também está atrasado (a tabela para na `025`), passa a ter quem o vigie.
+
+---
+
+## Depois da reavaliação de 27/09
+
+*Origem: a [reavaliação pós-consolidação](reavaliacao-pos-consolidacao-2026-09-27.md) e a avaliação da
+priorização dela, em 27/09. Os fatos foram conferidos contra a `main` em `8dd4f942`.*
+
+### O que foi adotado
+
+**O critério.** Sobe na fila o que reduz três coisas: as decisões que o operador toma, o que ele precisa
+saber do modelo interno e as operações que ele repete para executar um Edital real. Uma lacuna que
+responda "sim" a qualquer destas perguntas passa à frente de autenticação, de refinamento do sorteio e
+de cobertura de caso específico:
+
+1. O sistema poderia inferir isso, em vez de perguntar?
+2. O Edital declara isso uma vez, e o sistema pede N vezes?
+3. O operador está decidindo, ou só materializando o que o sistema já sabe?
+4. Quando o Edital dobra, esse trabalho dobra?
+
+O contrapeso é a `DP-17`: o que o sistema inferir, derivar ou materializar fica visível antes do ato
+irreversível, com a origem e o alcance. Aqui um padrão errado não fica no rascunho; ele é publicado e só
+sai por Retificação pública. E, antes de acrescentar capacidade, a pergunta é se há uma decisão, uma
+tela, uma repetição ou um conceito a retirar.
+
+**Duas consequências para as specs que vierem.**
+
+- **Padrões não reduzem a validação.** A Retificação, a API e as exceções continuam produzindo qualquer
+  configuração, e os validadores continuam necessários. O que diminui é o que o operador vê.
+- **"Aplicar a todos" é materialização, não herança.** Um gesto grava N valores nos Perfis, e o conteúdo
+  publicado continua por Perfil. Herdar no conteúdo publicado faria uma Retificação do padrão alterar N
+  Perfis sem dizer, e mexeria na `024`, na `027` e na `048`. É outra mudança, e não está na fila.
+
+**A ordem.**
+
+| Passo | O quê | Forma | Depende de |
+|---|---|---|---|
+| 0 | Correções diretas (lista abaixo) | sem spec, contra requisito escrito | `DP-14`, só para a ampla |
+| 0,5 | Teste operacional assistido, com o 28/2026 | fora do código | `DP-18` |
+| 1 | Padrões e inferência, e "aplicar a todos" na composição e na Retificação | spec | `DP-13`, `DP-17` |
+| 2 | Operar por marco: um gesto processa os N recortes, e o ato público continua por recorte | spec | — |
+| 3 | Convocação como fluxo: convocar e comunicar num ato, e derivar o que é derivável | spec | `DP-16` |
+| 4 | Documento público por marco | spec, só se o setor precisar | `DP-15` |
+| 5 | Caminho de produção | spec e decisão institucional | vira P0 quando houver data de piloto |
+
+**O passo 0, com o cuidado de cada item.**
+
+- **A ampla na inscrição** (`inscricoes/application/rascunho.py:280`). A FR-039 da `009` já permite, e a
+  `048` registra o defeito como achado A-1. É preciso revisitar o caso-limite da `048` que parte do
+  comportamento de hoje: o rascunho com Modalidade assumida num Perfil que passa de uma para duas.
+- **A porta da convocação**, a partir da ocupação e da página do Edital. Hoje só se chega pelo endereço.
+- **O `?lista=` do `UX-004`**, para que o destino abra o recorte certo.
+- **A consolidação como uma decisão humana**, quantos blocos técnicos o servidor precisar. A `013` não
+  exige página, mas o ato trava as N inscrições numa transação só: medir com ~600 antes, ou processar em
+  blocos sob uma confirmação.
+- **A ordem e a ajuda do duplicar.** Os marcos só vêm se a origem já os tiver gravados, e a ajuda promete
+  o contrário.
+- **`wsgi` e `asgi` caindo na produção**, que recusa subir mal configurada (RC-124).
+- **Os campos definitivos visíveis na composição**, como selo de estado: um teste proíbe ajuda visível
+  nos cartões do assistente (`test_nenhum_cartao_do_assistente_carrega_ajuda_visivel`).
+- **O dicionário do "O que mudou" completo**, com um guardião contra o contrato de mutabilidade
+  (RC-111).
+
+**Os campos sem consumidor não são passo próprio.** `calculation`, `rounding`, `distribution` e
+`callRules` da regra normativa, e o `reserveLimit` do Perfil, se decidem na spec que os consumiria: o
+`reserveLimit` com a `DP-05`; os três primeiros com o quadro de vagas sugerido pelo percentual, no passo 1;
+o `callRules` com a convocação, no passo 3. O que ficar sem consumidor deixa de ser pedido na composição,
+e não é apagado do esquema: os Editais publicados guardam o valor.
+
+**O sorteio.** Não se redesenha a semente. Se o setor adotar nos próximos Editais a semente que o
+sistema prevê, a divergência com os Editais atuais deixa de ser problema de software, e essa adoção é
+decisão do setor. O que entra no passo 1 é a configuração: o instante tirado do Evento do Cronograma, a
+prosa gerada da regra escolhida e a pergunta de empate que não ocorre retirada.
+
+---
+
+## DP-13 — "Aplicar a todos": o que acontece com o que o Perfil de destino já declarava?
+
+*Decide antes da spec do passo 1. É a pergunta que a [`043`](../specs/043-duplicar-perfil/spec.md)
+deixou aberta (TF-1 e D-005).*
+
+### O problema
+
+Propagar um valor para Perfis que já existem esbarra no que eles já declaram. A resposta muda o valor da
+operação: é na manutenção e na Retificação que ela mais rende, e é ali que o destino quase sempre já tem
+valor.
+
+### As opções
+
+- **A. Sobrescrever sempre.**
+- **B. Acrescentar sempre.** Numa coleção, pode duplicar sentido: dois critérios equivalentes, duas
+  Modalidades para a mesma cota.
+- **C. Recusar quando o destino já tem valor.** Tira da operação justamente o caso da Retificação.
+- **D. Declarar o efeito por tipo de estrutura**, com prévia dos Perfis afetados antes da confirmação.
+
+### Recomendação: **D**
+
+Para valor único (marco, forma de convocação, janela recursal), substituir o correspondente, com a
+prévia. Para coleção (Modalidades, critérios de desempate), decidir sobre os objetos concretos da spec, e
+não como princípio abstrato. Na Retificação, "acrescentar a ampla a 16 Perfis num gesto" encosta na
+FR-802 da `048`, que veda mecanismo novo de acréscimo: precisa de decisão declarada na spec.
+
+---
+
+## DP-14 — Quando a inscrição oferece a ampla concorrência?
+
+*Decide antes da correção da ampla, no passo 0.*
+
+### O problema
+
+A tela sugere não declarar a ampla (*"Nenhuma — a ampla concorrência é só a linha geral do quadro"*,
+`interface/templates/interface/_perfil.html:195`), e a inscrição só oferece as Modalidades declaradas
+(`inscricoes/application/rascunho.py:280`). Com uma cota, todo inscrito vira cotista; com duas ou mais,
+quem não é cotista não tem o que escolher. A inscrição congela a Modalidade no envio, e não há desfazer.
+
+### O que já está fixado
+
+- **FR-039 da `009`:** a ausência de reserva PODE ser apresentada como ampla concorrência sem entidade
+  gravada; havendo Modalidade equivalente declarada, ela DEVE ser usada.
+- **O recorte nulo já é a ampla** na divulgação e no sorteio (`divulgacao/models.py:50`).
+
+### As opções
+
+- **A. Oferecer a ampla sempre que o Perfil tiver linha geral com vagas**, como recorte nulo. Se houver
+  Modalidade de ampla declarada, usar essa.
+- **B. Impedir a publicação** de Perfil com cota e sem ampla declarada, dizendo a consequência na
+  inscrição.
+- **C. Manter e só avisar**, como hoje.
+
+### Recomendação: **A**
+
+É o que a FR-039 já prevê, e não pede nada a quem compõe. O Perfil sem linha geral com vagas, com tudo em
+cota, continua sem ampla. As inscrições já enviadas não mudam.
+
+---
+
+## DP-15 — Documento público por marco?
+
+*Decide na spec do passo 4, se ela vier.*
+
+Hoje há uma publicação raiz por marco **e por lista** (`divulgacao/models.py:53`), e o recurso republica
+só o recorte que ele alcança. O Edital real publica um "Resultado preliminar".
+
+- **A. Manter um documento por recorte.**
+- **B. Um documento do marco que reúne os N atos**, que continuam por recorte.
+- **C. Um ato único por marco**, com a republicação depois de recurso redesenhada.
+
+**Recomendação: A**, até o setor mostrar a necessidade. Se ela vier, B antes de C, porque B não mexe na
+unidade do ato.
+
+---
+
+## DP-16 — O não atendimento pode ser registrado em lote?
+
+*Decide na spec do passo 3.*
+
+Dos sete desfechos, o não atendimento vem "do vencimento informado"
+(`convocacao/domain/nomes.py:30-33`). Aceite, indeferimento, regularização e desistência são decisões
+sobre uma pessoa. O requerimento de matrícula do portal consulta a convocação, mas nenhum desfecho sai
+dele.
+
+- **A. Unitário**, como hoje.
+- **B. Um gesto registra o não atendimento de todos os vencidos**: N registros, cada um com autor.
+- **C. Derivado, sem ato.**
+
+**Recomendação: B.** Tira a repetição e preserva a autoria de cada registro. C apaga o autor.
+
+---
+
+## DP-17 — A automação explícita entra na Constituição?
+
+*Decide antes da spec do passo 1, porque é ela a primeira a inferir e a materializar.*
+
+A proposta é de um invariante, sem forma de tela:
+
+> **Decisões derivadas e ações em lote permanecem explícitas.** Quando o sistema inferir, derivar ou
+> materializar valores em nome do operador, DEVE tornar visíveis, antes do ato irreversível, o resultado
+> e a sua origem. Quando uma ação humana produzir efeitos sobre múltiplos objetos, DEVE tornar explícito
+> o alcance antes da confirmação. A automação NÃO DEVE ocultar consequências nem eliminar a autoria.
+
+- **A. Emenda à Constituição**, como expansão do Princípio IV (Regras Explícitas). Pela seção
+  *Governance*, é MINOR (`1.2.0`), com Sync Impact Report e aprovação institucional.
+- **B. Só nas specs**, repetido em cada uma.
+
+**Recomendação: A**, só com o invariante. As formas, como o que a Revisão mostra e a prévia dos Perfis
+afetados, ficam nas specs.
+
+---
+
+## DP-18 — Quem faz o teste operacional, e quando?
+
+*Decide o passo 0,5.*
+
+Só dois números de esforço da reavaliação foram medidos; os demais são estimativas por custo unitário. O
+teste calibra esses números antes das specs estruturais.
+
+- **Quando:** depois do passo 0. Antes dele, o teste mediria defeitos já conhecidos.
+- **O quê:** o 28/2026, o Edital médio da amostra, que só tem estimativa (~250–310 interações hoje).
+  Primeiro a composição; depois um marco com poucas inscrições montadas à mão, porque o `seed_demo` não
+  produz o certame.
+- **Como:** uma pessoa do setor compõe, e quem observa não ajuda, porque a dúvida é o dado. Registram-se
+  o tempo, as interações e cada dificuldade num de quatro tipos: **repetição** ("já fiz isso"),
+  **hesitação** ("não sei qual escolher"), **consulta externa** (voltar ao PDF, perguntar a alguém) e
+  **recuperação de erro** ("configurei e só descobri depois"). A repetição mede esforço mecânico; as
+  outras três, carga cognitiva.
+- **Onde:** em ambiente local, sem autenticação, com datas futuras, porque não há cadastro retroativo de
+  Edital.
+- **Quem:** a decidir.

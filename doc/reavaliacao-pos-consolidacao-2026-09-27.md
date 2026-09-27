@@ -345,6 +345,13 @@ derivações da `045` e da `047`.
 Cada item segue o formato **problema → evidência → intervenção mínima → ganho**. Nada aqui é spec
 numerada.
 
+> **Depois da avaliação desta priorização, em 27/09, a ordem mudou.** A ampla saiu da fila de specs e
+> virou correção; operar por marco foi partido em duas, e a metade que não mexe no ato público veio antes
+> da convocação; e entrou um teste operacional antes de qualquer spec estrutural. A ordem adotada, o
+> critério e as decisões que ela abriu estão em
+> [decisões pendentes, "Depois da reavaliação"](decisoes-pendentes-da-consolidacao.md#depois-da-reavaliação-de-2709).
+> O texto abaixo fica como estava, salvo a correção marcada no item 4.
+
 ### 1. Declarar uma vez no Edital o que o Edital declara uma vez, e materializar por Perfil
 
 - **Problema.** Marco, critérios de desempate, forma de convocação, reversão e janela recursal são
@@ -396,7 +403,11 @@ numerada.
 - **Intervenção mínima.** A inscrição oferece a ampla sempre que o Perfil tiver linha geral com vagas —
   um recorte nulo escolhível. **Ou**, se isso contrariar alguma decisão, a publicação impede com a
   consequência dita na inscrição.
-- **Decisão necessária.** Quem decide é o usuário, porque toca a FR-039 e a FR-040 da `009`.
+- **Decisão necessária** — *corrigido em 27/09*. A primeira redação dizia que a correção dependia de
+  decisão por tocar a FR-039 e a FR-040 da `009`. Não depende: a FR-039 já permite apresentar a ausência
+  de reserva como ampla concorrência sem entidade gravada, e a `048` registra o defeito como achado A-1
+  (*"Assumir sem perguntar é o achado A-1, e não desta feature"*). O que resta decidir é a condição em
+  que a ampla é oferecida (`DP-14`).
 - **Ganho.** Elimina a armadilha de maior consequência e a decisão que o operador não tem como acertar,
   e torna a `048` exceção, e não rotina.
 
@@ -496,7 +507,8 @@ Restauram requisito escrito ou fecham uma porta que falta:
 9. **As últimas specs simplificaram o produto?** Simplificaram o que o sistema **afirma**, e aumentaram o
    que o operador precisa **entender**. Três padrões merecem ser reconsiderados:
    - validar na publicação em vez de nascer certo;
-   - consertar depois em vez de prevenir, com a `048` item a item e o lote proibido;
+   - consertar depois em vez de prevenir, com a `048` item a item, sem lote, e a FR-802 vedando
+     mecanismo novo de acréscimo;
    - estrutura publicada sem consumidor (`callRules`, `reserveLimit`).
 
    Não é over-engineering generalizado. É o custo acumulado de resolver cada achado no ponto em que ele
