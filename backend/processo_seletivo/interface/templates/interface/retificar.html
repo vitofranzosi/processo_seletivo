@@ -156,7 +156,25 @@ o navegador as trata como qualquer sumário.
               hx-get="{% url 'interface:fragmento-retificacao-perfil' %}"
               hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
       <span class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação
-        for publicada. Modalidades de Concorrência ainda não são definidas por aqui.</span>
+        for publicada. As Modalidades dele entram na Retificação seguinte.</span>
+    </p>
+    {% comment %}
+    A Modalidade acrescentada a um Perfil que já existe (048, a `D-G5`). Até aqui esta ajuda dizia
+    que Modalidades "ainda não são definidas por aqui", e um Perfil publicado sem a ampla
+    concorrência não tinha conserto.
+    {% endcomment %}
+    <div id="novas-modalidades">
+      {% for linha in novas_modalidades %}
+      {% include "interface/_retificacao_modalidade.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-modalidade' edital.id %}"
+              hx-target="#novas-modalidades"
+              hx-swap="beforeend">Acrescentar Modalidade de Concorrência</button>
+      <span class="ajuda">A Modalidade passa a valer para as inscrições feitas depois de a
+        Retificação ser publicada; as já enviadas continuam com a Modalidade que declararam.</span>
     </p>
     {% comment %}
     O acréscimo de linha do quadro mora na mesma seção dos Perfis, junto das linhas que ele
@@ -176,6 +194,24 @@ o navegador as trata como qualquer sumário.
         de vagas</button>
       <span class="ajuda">A linha diz quantas vagas cabem numa lista de concorrência do Perfil. A
         opção "Ampla concorrência" é a linha geral, e o Perfil tem no máximo uma.</span>
+    </p>
+    {% comment %}
+    O critério de desempate acrescentado (048). Até aqui a tela removia critério e não acrescentava:
+    trocar o critério errado reduzia a regra de desempate, e não a corrigia.
+    {% endcomment %}
+    <div id="novos-criterios">
+      {% for linha in novos_criterios %}
+      {% include "interface/_retificacao_criterio.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-criterio' edital.id %}"
+              hx-target="#novos-criterios"
+              hx-swap="beforeend">Acrescentar critério de desempate</button>
+      <span class="ajuda">O critério entra no marco escolhido quando a Retificação for publicada,
+        na ordem de aplicação informada. Para trocar um critério, remova o antigo e acrescente o
+        novo no mesmo ato.</span>
     </p>
     {% elif secao.id == 'cronograma' %}
     <div id="novos-eventos">

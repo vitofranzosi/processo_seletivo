@@ -19,7 +19,7 @@ problema de representação (FR-019).
 
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
@@ -243,6 +243,12 @@ CAMPOS_DA_JANELA = [
     ("appealWindow/durationDays", "Prazo em dias", INTEIRO),
     ("appealWindow/unit", "Contagem do prazo", REFERENCIA),
 ]
+# A janela que **nasce** (048, D-003): só o prazo. A pergunta "admite recurso?" tem uma resposta
+# admitida no nascimento — a janela que nasce concede —, e perguntá-la seria oferecer o que a
+# guarda do ato recusa. A contagem também tem uma só. As duas vêm do complemento em `NASCIMENTOS`.
+CAMPOS_DO_NASCIMENTO_DA_JANELA = [
+    ("appealWindow/durationDays", "Prazo de recurso, em dias corridos", INTEIRO),
+]
 # A única contagem que o cálculo interpreta. Lista de um, e a lista existe mesmo assim: é ela que
 # torna o campo uma escolha conferida, e não texto livre que publicaria prazo incontável.
 UNIDADES_DO_PRAZO = (("DIAS_CORRIDOS", "Dias corridos"),)
@@ -324,6 +330,31 @@ DESFECHOS_DO_EMPATE = (
     ("ADMITS_SURPLUS", "Todos os empatados progridem"),
     ("STRICT", "A faixa para no alvo"),
 )
+# A regra de corte que **nasce** (048, FR-788): os seis campos, e com eles os três que a lista de
+# alteração acima deixa de fora. A razão da exclusão lá é sobre **mudar** o que já foi declarado
+# — a espécie do alvo trocada é outra regra, a Etapa governada trocada move quem continua —, e
+# nascer não muda nada. Os três são escolha conferida contra a lista, e nunca texto: é o que a
+# exclusão temia, e o que a tela de composição já faz.
+#
+# As palavras são as da tela de composição (`_marco.html`), para quem retifica escolher entre o que
+# já leu ao declarar.
+CAMPOS_DO_NASCIMENTO_DO_CORTE = [
+    ("cutRule/targetKind", "Quantos progridem", REFERENCIA),
+    ("cutRule/targetCount", "Alvo (só na quantidade fixa)", INTEIRO),
+    ("cutRule/surplusCount", "Suplentes alcançados na mesma faixa", INTEIRO),
+    ("cutRule/tieOutcome", "Empate na última posição", REFERENCIA),
+    ("cutRule/governedStage", "Etapa que o corte alimenta", REFERENCIA),
+    ("cutRule/continuation", "Faixa seguinte", REFERENCIA),
+]
+ESPECIES_DO_ALVO = (
+    ("FIXED", "Uma quantidade fixa, publicada abaixo"),
+    ("FROM_VACANCY_TABLE", "Quantas vagas o quadro publicar no recorte"),
+)
+POLITICAS_DE_CONTINUACAO = (
+    ("ALLOWED", "Admite continuar além da faixa publicada"),
+    ("NONE", "Não admite: a faixa é o que foi publicado"),
+)
+SEM_ETAPA_GOVERNADA = ("NONE", "Não governa Etapa alguma")
 # **O tipo do fato não está aqui, e a ausência é a regra.** Um fato declarado como data que virasse
 # número não é o mesmo fato: reinterpretar o valor já congelado seria o sistema decidindo o que a
 # pessoa quis dizer. Mudar o tipo é remover um fato e acrescentar outro, e o que foi congelado sob
@@ -449,6 +480,73 @@ def _conferir_que_nada_se_oferece_sem_decisao():
 _conferir_que_nada_se_oferece_sem_decisao()
 
 
+# O que a tela oferece **quando o objeto está ausente**, por objeto que pode nascer (048, FR-803).
+#
+# `(coleção, objeto) → (campos, complemento fixo)`. Os campos são os que a pessoa preenche; o
+# complemento é o que o nascimento declara sem perguntar, porque só tem uma resposta admitida — a
+# janela que nasce concede (D-003 da 048), e perguntar "admite?" seria oferecer o que se recusa.
+#
+# **As listas de alteração não servem ao nascimento**, e a razão é diferente em cada objeto. A regra
+# de corte nasce com três campos que depois não se trocam — espécie do alvo, Etapa governada,
+# continuação —, e a guarda acima, com razão, não os admite numa lista de alteração. A janela
+# nasceria pelo booleano da tela, que é um `select` com "Não" pré-selecionado: oferecido para objeto
+# ausente, toda Retificação faria nascer uma janela "não admite" que ninguém pediu.
+#
+# O registro começa vazio e cada objeto entra com a história que o oferece.
+NASCIMENTOS: dict[tuple[str, str], tuple[list, dict]] = {
+    ("classificationMilestones", "appealWindow"): (
+        CAMPOS_DO_NASCIMENTO_DA_JANELA,
+        {"admits": True, "unit": UNIDADES_DO_PRAZO[0][0]},
+    ),
+    ("classificationMilestones", "cutRule"): (CAMPOS_DO_NASCIMENTO_DO_CORTE, {}),
+}
+
+
+def _problemas_do_nascimento(registro):
+    """O que está errado num registro de nascimento — vazio quando nada está.
+
+    **A decisão de oferecer campo não retificável no nascimento é declarada aqui**, e não uma
+    exceção silenciosa à guarda de cima: o objeto tem de ser um dos que o contrato deixa nascer, e
+    todo campo tem de estar no contrato, dentro do objeto, e não ser derivado nem estrutural. Nascer
+    não é alterar — a razão dos campos não retificáveis é sobre mudar o que já foi declarado.
+    """
+    problemas = []
+    for (colecao, objeto), (campos, _complemento) in registro.items():
+        pode, _razao = mutabilidade.PODE_PASSAR_A_EXISTIR.get((colecao, objeto), (False, ""))
+        if not pode:
+            problemas.append(f"({colecao}, {objeto}) não pode nascer por Retificação")
+        for caminho, *_ in campos:
+            decisao = mutabilidade.CONTRATO.get((colecao, caminho))
+            if not caminho.startswith(f"{objeto}/"):
+                problemas.append(f"({colecao}, {caminho}) não pertence a {objeto}")
+            elif decisao is None:
+                problemas.append(f"({colecao}, {caminho}) não está no contrato")
+            elif decisao.natureza in (
+                mutabilidade.Natureza.DERIVADO,
+                mutabilidade.Natureza.ESTRUTURAL,
+            ):
+                problemas.append(f"({colecao}, {caminho}) está classificado {decisao.natureza}")
+    return problemas
+
+
+def _conferir_o_registro_de_nascimento():
+    """Levanta na carga do módulo, pela razão de `_conferir_que_nada_se_oferece_sem_decisao`."""
+    problemas = _problemas_do_nascimento(NASCIMENTOS)
+    if problemas:
+        raise RuntimeError(
+            "o registro de nascimento da Retificação oferece o que o contrato não admite:\n  "
+            + "\n  ".join(problemas)
+        )
+
+
+_conferir_o_registro_de_nascimento()
+
+
+def complemento_do_nascimento(colecao, objeto):
+    """O que o nascimento de `objeto` declara sem perguntar — vazio quando nada."""
+    return dict(NASCIMENTOS.get((colecao, objeto), ((), {}))[1])
+
+
 LISTA = "lista"
 # Um Perfil ou Evento acrescentado entra no snapshot publicado; precisa nascer com a mesma
 # forma que `edital_snapshot` produz, e não com um subconjunto que a consulta pública quebraria.
@@ -492,6 +590,66 @@ NOVO_EVENTO = [
     # datas do Evento que já o designa.
     ("location", "Local", TEXTO),
 ]
+# Uma Modalidade de Concorrência acrescentada a um Perfil publicado (048, FR-777, a `D-G5`). Até a
+# 048 a tela dizia, com todas as letras, que Modalidades "ainda não são definidas por aqui" — e um
+# Perfil publicado sem a ampla concorrência não recebia inscrição de quem não é cotista, sem
+# conserto que não fosse cancelar e republicar.
+#
+# Os campos são os da composição (`interface/forms._modalidades`), mais duas decisões que precisam
+# vir **no mesmo ato** e que os seletores de hoje não alcançam, porque leem o conteúdo vigente e a
+# Modalidade nova ainda não está nele:
+#
+# - **ser a ampla concorrência do Perfil** — caixa de marcação, e não o `select` Sim/Não: desmarcada
+#   ela não é enviada, e nada se declara por estar pré-selecionado (048, FR-785);
+# - **as vagas da cota** — a linha do quadro dela. A ampla não tem linha própria: as vagas dela são
+#   as da linha geral, e a publicação recusa a Modalidade ampla com linha.
+#
+# A identidade nasce no fragmento porque as três alterações que a linha emite a citam — a própria
+# Modalidade, a declaração da ampla e a linha do quadro —, e ela precisa ser a mesma ao conferir e
+# ao confirmar.
+NOVA_MODALIDADE = [
+    ("id", "", OCULTO),
+    ("profileId", "Perfil", REFERENCIA),
+    ("code", "Código", TEXTO),
+    ("name", "Denominação", TEXTO),
+    ("description", "Descrição", TEXTO),
+    ("foundation", "Fundamento normativo", TEXTO),
+    ("version", "Versão do fundamento", TEXTO),
+    ("percentage", "Percentual (%)", DECIMAL),
+    ("general", "É a ampla concorrência deste Perfil", BOOLEANO),
+    ("immediateVacancies", "Vagas imediatas da cota", INTEIRO),
+]
+# Um critério de desempate acrescentado por Retificação (048, FR-792). Até a 048 a tela removia
+# critério e não acrescentava, e trocar o critério errado era impossível: ela reduzia a regra de
+# desempate, e não a corrigia (NOVO-3 do lote 5 da auditoria de consolidação).
+#
+# **O marco é uma escolha só, e carrega o Perfil junto** (`perfil|marco`): o caminho da Alteração
+# passa pelos dois, e dois `select` encadeados deixariam escolher um marco de outro Perfil. O alvo é
+# outra escolha só, como na composição (`_criterio.html`): Etapa classificatória do Edital ou fato
+# declarado, e é o tipo que decide qual dos dois o critério consome.
+#
+# A identidade nasce no fragmento, como a do Anexo: o critério não é citado por outra alteração do
+# mesmo ato, mas confirmar de novo precisa produzir o mesmo ato (020).
+NOVO_CRITERIO = [
+    ("id", "", OCULTO),
+    ("milestone", "Marco", REFERENCIA),
+    ("type", "O que o critério compara", REFERENCIA),
+    ("target", "Etapa ou fato comparado", REFERENCIA),
+    ("whenMissing", "Quando o valor não existe", REFERENCIA),
+    ("order", "Ordem de aplicação", INTEIRO),
+]
+# As palavras da tela de composição (`_criterio.html`).
+TIPOS_DE_CRITERIO = (
+    ("MAIOR_PONTUACAO_NA_ETAPA", "Maior pontuação numa Etapa"),
+    ("MAIOR_VALOR_DE_FATO", "Maior valor de um fato declarado"),
+    ("MENOR_VALOR_DE_FATO", "Menor valor de um fato declarado"),
+)
+QUANDO_O_VALOR_NAO_EXISTE = (
+    ("ULTIMO_NO_CRITERIO", "Fica por último neste critério"),
+    ("CRITERIO_NAO_SE_APLICA", "O critério não se aplica"),
+)
+_POR_ETAPA = "MAIOR_PONTUACAO_NA_ETAPA"
+_SEPARADOR = "|"
 # Um Anexo acrescentado por Retificação. O arquivo entra como os demais — enviado antes, citado
 # pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
 # um SHA-256 (020, FR-031, FR-035).
@@ -728,6 +886,263 @@ def opcoes_da_linha_nova(conteudo):
     }
 
 
+def objeto_legivel(valor):
+    """O objeto que nasce, ou o item acrescentado, dito por extenso — ou vazio, se não for um deles.
+
+    Serve às telas de conferência do ato (048, FR-800), que leem a alteração gravada e não o
+    formulário: um `cutRule` inteiro, sem `name` nem `code`, chegava a quem homologa e a quem assina
+    como "—". As palavras são as mesmas que a tela de Retificação ofereceu ao declarar.
+    """
+    if not isinstance(valor, dict):
+        return ""
+    if "targetKind" in valor:
+        partes = []
+        for chave, rotulo, opcoes in (
+            ("targetKind", "Quantos progridem", ESPECIES_DO_ALVO),
+            ("targetCount", "Alvo", ()),
+            ("surplusCount", "Suplentes", ()),
+            ("tieOutcome", "Empate", DESFECHOS_DO_EMPATE),
+            ("continuation", "Faixa seguinte", POLITICAS_DE_CONTINUACAO),
+        ):
+            if valor.get(chave) is not None:
+                partes.append(f"{rotulo}: {dict(opcoes).get(valor[chave], valor[chave])}")
+        return "; ".join(partes)
+    if "admits" in valor and "durationDays" in valor:
+        if not valor.get("admits"):
+            return "Não admite recurso"
+        return f"Admite recurso em {valor.get('durationDays')} dia(s) corrido(s)"
+    if set(valor) == {"kind"}:
+        return dict(ESPECIES_DE_REVERSAO).get(valor["kind"], valor["kind"])
+    if "immediateVacancies" in valor and "modalityId" in valor:
+        # A linha do quadro acrescentada: sem isto, a tela do ato a dizia "—" — defeito anterior à
+        # 048, que ela torna mais visível, porque a cota acrescentada leva a linha junto.
+        return f"{valor.get('immediateVacancies')} vaga(s)"
+    if "whenMissing" in valor and "order" in valor:
+        tipo = dict(TIPOS_DE_CRITERIO).get(valor.get("type"), valor.get("type"))
+        return f"{valor.get('order')} — {tipo}"
+    return ""
+
+
+def opcoes_da_modalidade_nova(conteudo):
+    """Os Perfis a que a Modalidade pode ser acrescentada — os do conteúdo **vigente** (048)."""
+    return {"profileId": opcoes_de_aplicabilidade(conteudo)["profileId"]}
+
+
+def _identidade_derivada(modalidade_id, parte):
+    """Identidade estável de algo que a Modalidade acrescentada leva consigo.
+
+    Derivada, e não sorteada: `diferencas` roda ao conferir e de novo ao confirmar, e uma identidade
+    nova a cada chamada mudaria o ato sob a mesma chave de idempotência — a segunda tentativa seria
+    recusada por conflito em vez de devolver a primeira (a razão que já decidiu o Anexo, 020).
+    """
+    return str(uuid5(NAMESPACE_URL, f"retificacao/modalidade/{modalidade_id}/{parte}"))
+
+
+def _modalidade_nova(valores, conteudo, codigos_por_perfil):
+    """As alterações que uma Modalidade acrescentada emite, e as linhas do resumo — ou a recusa.
+
+    Valida com `validar_modalidade`, a mesma função que a aplicação chama de novo no ato (048,
+    FR-778): a recusa vem **ao conferir**. `codigos_por_perfil` carrega os códigos vigentes de cada
+    Perfil mais os das Modalidades acrescentadas antes, neste mesmo ato.
+    """
+    from processo_seletivo.editais.domain.perfis import ProfileValidationError, validar_modalidade
+
+    perfil_id = valores.get("profileId")
+    if not perfil_id:
+        raise ValueError("Perfil: diga a que Perfil a Modalidade se acrescenta.")
+    identidade = str(valores.get("id") or uuid4())
+    regra = None
+    if valores.get("foundation") or valores.get("version") or valores.get("percentage"):
+        # Como a composição monta (`interface/forms._modalidades`): a regra existe quando há o que
+        # ela declare, e os quatro parâmetros opacos nascem vazios, como o modelo os cria.
+        regra = {
+            "id": _identidade_derivada(identidade, "normativeRule"),
+            "foundation": valores.get("foundation") or "",
+            "version": valores.get("version") or "",
+            "percentage": valores.get("percentage"),
+            "calculation": {},
+            "rounding": {},
+            "distribution": {},
+            "callRules": {},
+            "effectiveFrom": None,
+        }
+    modalidade = {
+        "id": identidade,
+        "code": valores.get("code") or "",
+        "name": valores.get("name") or "",
+        "description": valores.get("description") or "",
+        "normativeRule": regra,
+    }
+    codigos = codigos_por_perfil.setdefault(perfil_id, set())
+    try:
+        validar_modalidade(modalidade, codigos_do_perfil=codigos)
+    except ProfileValidationError as exc:
+        raise ValueError(f"Modalidade acrescentada: {exc}") from exc
+    codigos.add(modalidade["code"])
+    vagas = valores.get("immediateVacancies")
+    ampla = bool(valores.get("general"))
+    if ampla and vagas is not None:
+        raise ValueError(
+            f"Modalidade {modalidade['code']}: a ampla concorrência não tem linha própria — as "
+            "vagas dela são as da linha geral do quadro. Deixe as vagas em branco, ou desmarque a "
+            "ampla."
+        )
+    base = f"/profiles/id={perfil_id}"
+    grupo = f"Modalidade {modalidade['code']}"
+    alteracoes = [
+        {
+            "targetPath": f"{base}/competitionModalities/-",
+            "operation": "ADD",
+            "newValue": modalidade,
+        }
+    ]
+    resumo = [
+        {
+            "grupo": grupo,
+            "rotulo": "Acréscimo",
+            "antes": "—",
+            "depois": f"{modalidade['code']} — {modalidade['name']}".strip(" —"),
+        }
+    ]
+    if ampla:
+        alteracoes.append(
+            {
+                "targetPath": f"{base}/generalCompetitionModalityId",
+                "operation": "REPLACE",
+                "newValue": identidade,
+            }
+        )
+        resumo.append(
+            {
+                "grupo": grupo,
+                "rotulo": "Ampla concorrência do Perfil",
+                "antes": "—",
+                "depois": modalidade["name"] or modalidade["code"],
+            }
+        )
+    if vagas is not None:
+        alteracoes.append(
+            {
+                "targetPath": f"{base}/vacancyTable/-",
+                "operation": "ADD",
+                "newValue": {
+                    "id": _identidade_derivada(identidade, "vacancyTable"),
+                    "modalityId": identidade,
+                    "immediateVacancies": vagas,
+                },
+            }
+        )
+        resumo.append(
+            {
+                "grupo": f"Linha do quadro {modalidade['code']}",
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": f"{vagas} vaga(s)",
+            }
+        )
+    return alteracoes, resumo
+
+
+def _codigos_que_continuam(conteudo, removidos):
+    """Os códigos das Modalidades vigentes de cada Perfil, fora as marcadas para remover."""
+    codigos = {}
+    for perfil in conteudo.get("profiles") or []:
+        base = f"/profiles/id={perfil.get('id')}"
+        codigos[perfil.get("id")] = {
+            modalidade.get("code")
+            for modalidade in perfil.get("competitionModalities") or []
+            if f"{base}/competitionModalities/id={modalidade.get('id')}" not in removidos
+        }
+    return codigos
+
+
+def opcoes_do_criterio_novo(conteudo):
+    """O que o critério acrescentado pode escolher — lido do conteúdo **vigente** (048).
+
+    O alvo junta as Etapas classificatórias do Edital, que são as que a composição oferece, e os
+    fatos de **todos** os Perfis, rotulados pelo Perfil: a conferência de que o fato é do Perfil do
+    marco escolhido acontece em `diferencas`, porque só ali se sabe qual marco foi escolhido.
+    """
+    marcos, fatos = [], []
+    for perfil in conteudo.get("profiles") or []:
+        do_perfil = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        for marco in perfil.get("classificationMilestones") or []:
+            if perfil.get("id") and marco.get("id"):
+                nome = marco.get("name") or marco.get("code") or ""
+                marcos.append((f"{perfil['id']}{_SEPARADOR}{marco['id']}", f"{do_perfil} · {nome}"))
+        for fato in perfil.get("declaredFacts") or []:
+            if fato.get("id"):
+                rotulo = fato.get("label") or fato.get("code") or ""
+                fatos.append((f"fato{_SEPARADOR}{fato['id']}", f"Fato: {do_perfil} · {rotulo}"))
+    etapas = [
+        (f"etapa{_SEPARADOR}{etapa['id']}", f"Pontuação na Etapa {etapa.get('name', '')}")
+        for etapa in conteudo.get("stages") or []
+        if etapa.get("id") and etapa.get("classificatory")
+    ]
+    return {
+        "milestone": tuple(marcos),
+        "type": TIPOS_DE_CRITERIO,
+        "target": tuple(etapas + fatos),
+        "whenMissing": QUANDO_O_VALOR_NAO_EXISTE,
+    }
+
+
+def _criterio_novo(valores, conteudo, ordens_por_marco):
+    """O critério que a linha declara, com o caminho em que ele entra — ou a recusa que o impede.
+
+    Valida com `validar_criterio`, a mesma função que a aplicação chama no ato (048, FR-793): a
+    recusa vem **ao conferir**, e não só ao confirmar. `ordens_por_marco` carrega as ordens que
+    **continuam** em cada marco — as vigentes, menos as dos critérios marcados para remover, mais as
+    dos acrescentados antes neste mesmo ato.
+    """
+    from processo_seletivo.editais.domain.perfis import ProfileValidationError, validar_criterio
+
+    escolhido = valores.get("milestone") or ""
+    if _SEPARADOR not in escolhido:
+        raise ValueError("Marco: diga a que marco o critério de desempate se acrescenta.")
+    perfil_id, marco_id = escolhido.split(_SEPARADOR, 1)
+    tipo = valores.get("type")
+    especie, _, alvo = (valores.get("target") or "").partition(_SEPARADOR)
+    if especie == "fato":
+        perfil = next(p for p in conteudo.get("profiles") or [] if p.get("id") == perfil_id)
+        if alvo not in {str(f.get("id")) for f in perfil.get("declaredFacts") or []}:
+            raise ValueError(
+                "Etapa ou fato comparado: o fato escolhido não é declarado pelo Perfil deste marco."
+            )
+    parametros = {}
+    if alvo and (especie == "etapa") == (tipo == _POR_ETAPA):
+        parametros = {"stageId": alvo} if especie == "etapa" else {"factId": alvo}
+    criterio = {
+        "id": str(valores.get("id") or uuid4()),
+        "order": valores.get("order"),
+        "type": tipo,
+        "parameters": parametros,
+        "whenMissing": valores.get("whenMissing"),
+    }
+    ordens = ordens_por_marco.setdefault(marco_id, set())
+    try:
+        validar_criterio(criterio, ordens_do_marco=ordens)
+    except ProfileValidationError as exc:
+        raise ValueError(f"Critério de desempate acrescentado: {exc}") from exc
+    ordens.add(criterio["order"])
+    caminho = f"/profiles/id={perfil_id}/classificationMilestones/id={marco_id}/tiebreakers/-"
+    return caminho, criterio
+
+
+def _ordens_que_continuam(conteudo, removidos):
+    """As ordens dos critérios vigentes de cada marco, fora os marcados para remover."""
+    ordens = {}
+    for perfil in conteudo.get("profiles") or []:
+        for marco in perfil.get("classificationMilestones") or []:
+            base = f"/profiles/id={perfil.get('id')}/classificationMilestones/id={marco.get('id')}"
+            ordens[str(marco.get("id"))] = {
+                criterio.get("order")
+                for criterio in marco.get("tiebreakers") or []
+                if f"{base}/tiebreakers/id={criterio.get('id')}" not in removidos
+            }
+    return ordens
+
+
 def _referenciar(grupos):
     """Dá a cada grupo e a cada campo o nome pelo qual o formulário os chama.
 
@@ -813,8 +1228,12 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 f"Perfil {nome_do_perfil}",
                 caminho,
                 perfil,
-                CAMPOS_PERFIL
-                + (CAMPOS_DA_REVERSAO if isinstance(perfil.get("vacancyReversion"), dict) else []),
+                # **Sempre**, e não só quando o Perfil já reverte (048, FR-791). A espécie é o único
+                # campo da reversão, e ela nasce inteira no mesmo campo que a corrige: o vazio é
+                # "este Edital não reverte", e nada nasce enquanto ele fica ali. Até a 048 o campo
+                # só aparecia com o objeto declarado, e o Perfil publicado sem reversão não tinha
+                # como declará-la pela tela (G16-001).
+                CAMPOS_PERFIL + CAMPOS_DA_REVERSAO,
                 tipo="Perfil",
                 nome=nome_do_perfil,
                 # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
@@ -902,14 +1321,25 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     base_do_marco,
                     marco,
                     CAMPOS_MARCO
-                    + (CAMPOS_DO_CORTE if isinstance(marco.get("cutRule"), dict) else [])
+                    + (
+                        CAMPOS_DO_CORTE
+                        if isinstance(marco.get("cutRule"), dict)
+                        # Ausente, a regra **nasce** inteira (048, FR-788): é o destino do caminho
+                        # que a tela do corte oferece ao marco sem regra (FR-790).
+                        else CAMPOS_DO_NASCIMENTO_DO_CORTE
+                    )
                     # **Só quando o objeto existe**, como os campos do corte: endereçar caminho
                     # para dentro de objeto ausente é recusado pela gramática, e a Retificação que
                     # *cria* a janela é acréscimo de declaração — o contrato diz que ela pode
                     # nascer, e por qual caminho (FR-313).
                     + (CAMPOS_DA_FORMA_DA_ORDEM if "orderProduction" in marco else [])
                     + (CAMPOS_DO_ARREDONDAMENTO if isinstance(marco.get("rounding"), dict) else [])
-                    + (CAMPOS_DA_JANELA if isinstance(marco.get("appealWindow"), dict) else [])
+                    + (
+                        CAMPOS_DA_JANELA
+                        if isinstance(marco.get("appealWindow"), dict)
+                        # Ausente, a janela **nasce** pelo prazo (048, FR-786).
+                        else CAMPOS_DO_NASCIMENTO_DA_JANELA
+                    )
                     # **Sempre**, e não só quando o marco já sorteia (026, FR-313, corrigido na
                     # segunda revisão do PR #114).
                     #
@@ -928,6 +1358,18 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                     nome=nome_do_marco,
                     opcoes={
                         "cutRule/tieOutcome": DESFECHOS_DO_EMPATE,
+                        "cutRule/targetKind": ESPECIES_DO_ALVO,
+                        "cutRule/continuation": POLITICAS_DE_CONTINUACAO,
+                        # **Todas** as Etapas do Edital, como na composição (014, FR-224): a Etapa
+                        # que o corte alimenta não precisa ser uma das que o marco mede.
+                        "cutRule/governedStage": (
+                            SEM_ETAPA_GOVERNADA,
+                            *(
+                                (str(etapa.get("id")), etapa.get("name", ""))
+                                for etapa in conteudo.get("stages") or []
+                                if etapa.get("id")
+                            ),
+                        ),
                         "orderProduction": FORMAS_DA_ORDEM,
                         "operation": COMBINACOES,
                         "normalization": NORMALIZACOES,
@@ -956,9 +1398,20 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                         # que ele provoca é o mínimo: a regra sem desfecho não publica, e a recusa
                         # nomeia o marco.
                         "cutRule/tieOutcome": "Não declarado — a publicação será impedida",
+                        # Os três abaixo só existem no nascimento.
+                        "cutRule/targetKind": "Não declarada — este marco continua sem cortar",
+                        "cutRule/governedStage": "Não declarada — a publicação será impedida",
+                        "cutRule/continuation": "Não declarada — a publicação será impedida",
                         # Aqui o vazio **apaga a contagem declarada**, e uma janela sem unidade não
                         # é computável: o candidato leria um prazo que ninguém sabe contar.
                         "appealWindow/unit": "Não declarada — o prazo deixa de ser computável",
+                        # Só existe no nascimento: com a janela declarada, o prazo em branco é o
+                        # que a validação da janela já recusa.
+                        "appealWindow/durationDays": (
+                            ""
+                            if isinstance(marco.get("appealWindow"), dict)
+                            else "Em branco — este marco continua sem prever recurso"
+                        ),
                         "rounding/mode": "Não declarado — a publicação será impedida",
                         "orderProduction": "Não declarada — lida como o Edital sempre a leu",
                         "operation": "Não declarada — a publicação será impedida",
@@ -1418,7 +1871,9 @@ def _linhas_novas(dados, prefixo, campos, opcoes=None):
         vazia = True
         for chave, rotulo, tipo in campos:
             bruto = (dados.get(f"novo-{prefixo}-{indice}-{chave}") or "").strip()
-            if bruto:
+            # A identidade oculta nasce preenchida no fragmento, e não é a pessoa que a escreve:
+            # contá-la faria a linha deixada em branco parecer declarada (048).
+            if bruto and tipo != OCULTO:
                 vazia = False
             if tipo == LISTA:
                 valores[chave] = [linha.strip() for linha in bruto.splitlines() if linha.strip()]
@@ -1672,8 +2127,18 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             # quis criar objeto nenhum. Preenchido pela metade **vai** — e é a publicação que
             # recusa o método incompleto, com a mensagem que nomeia o campo que falta.
             if _declarou_algo(declarado):
+                # O complemento entra **depois** de saber que alguém declarou algo, e nunca antes:
+                # entrando antes, ele próprio contaria como declaração, e todo objeto ausente
+                # nasceria a cada Retificação (048, FR-785).
+                complemento = complemento_do_nascimento(
+                    COLECAO_DO_TIPO.get(grupo["tipo"], ""), caminho.rsplit("/", 1)[-1]
+                )
                 alteracoes.append(
-                    {"targetPath": caminho, "operation": "REPLACE", "newValue": declarado}
+                    {
+                        "targetPath": caminho,
+                        "operation": "REPLACE",
+                        "newValue": {**complemento, **declarado},
+                    }
                 )
 
     for grupo in grupos_removidos:
@@ -1707,6 +2172,16 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 "depois": valores.get("name") or "novo Perfil",
             }
         )
+
+    # As Modalidades acrescentadas vêm **antes** das linhas do quadro, e é só ordem de leitura: cada
+    # alteração nomeia a entidade de que fala, e a linha da cota nova já sai daqui, junto dela.
+    codigos_por_perfil = _codigos_que_continuam(conteudo, set(removidos))
+    for valores in _linhas_novas(
+        dados, "modalidade", NOVA_MODALIDADE, opcoes_da_modalidade_nova(conteudo)
+    ):
+        emitidas, linhas = _modalidade_nova(valores, conteudo, codigos_por_perfil)
+        alteracoes.extend(emitidas)
+        resumo.extend(linhas)
 
     # Uma vez, e não uma por linha: `opcoes_da_linha_nova` percorre todos os Perfis, Modalidades e
     # Anexos do conteúdo vigente, e ele não muda dentro do laço.
@@ -1759,6 +2234,24 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 "rotulo": "Acréscimo",
                 "antes": "—",
                 "depois": f"{quantidade} vaga(s)",
+            }
+        )
+
+    opcoes_do_criterio = opcoes_do_criterio_novo(conteudo)
+    ordens_por_marco = _ordens_que_continuam(conteudo, set(removidos))
+    for valores in _linhas_novas(dados, "criterio", NOVO_CRITERIO, opcoes_do_criterio):
+        caminho, criterio = _criterio_novo(valores, conteudo, ordens_por_marco)
+        alteracoes.append({"targetPath": caminho, "operation": "ADD", "newValue": criterio})
+        resumo.append(
+            {
+                "grupo": "Critério de desempate "
+                + dict(opcoes_do_criterio["milestone"]).get(valores.get("milestone"), ""),
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": (
+                    f"{criterio['order']} — {dict(TIPOS_DE_CRITERIO).get(criterio['type'], '')}"
+                    f": {dict(opcoes_do_criterio['target']).get(valores.get('target'), '')}"
+                ),
             }
         )
 

@@ -388,6 +388,60 @@ def test_o_marco_sem_regra_recebe_o_caminho_da_regra_e_nao_o_da_classificacao(co
     )
 
 
+def _o_destino_oferece_a_regra_do_marco(client, edital, marco, pagina):
+    """Segue o caminho da tela do corte e confere o que há no fim dele (048, `FR-790`, `SC-291`).
+
+    O caso acima prende o **endereço**; este prende o **destino**. Até a 048 o endereço estava certo
+    e o destino não oferecia campo nenhum da regra para o marco sem regra — o beco que a `FR-539a`
+    existia para fechar, reaberto um passo adiante.
+    """
+    from processo_seletivo.interface.retificacao import campos_editaveis
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    destino = reverse("interface:retificar", args=[edital.id])
+    assert f'href="{destino}"' in pagina
+    retificar = client.get(destino)
+    assert retificar.status_code == 200
+    corpo = retificar.content.decode()
+    assert "Quantos progridem" in corpo
+    assert "Uma quantidade fixa, publicada abaixo" in corpo
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    do_marco = next(
+        grupo
+        for grupo in campos_editaveis(vigente.content)
+        if grupo["tipo"] == "Marco" and grupo["caminho"].endswith(f"id={marco}")
+    )
+    oferecidos = {campo["caminho"].rsplit("/cutRule/", 1)[-1] for campo in do_marco["campos"]}
+    assert {"targetKind", "governedStage", "continuation"} <= oferecidos
+
+
+def test_o_caminho_da_regra_termina_na_regra_daquele_marco(corte_sem_regra):
+    client, edital, marco = corte_sem_regra
+    identificar(client, "carlos", ["gestor", "elaborador"])
+
+    _o_destino_oferece_a_regra_do_marco(client, edital, marco, _abrir_corte(client, edital, marco))
+
+
+def test_o_marco_por_sorteio_tambem_chega_a_regra(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
+
+    cenario = certame_sorteado_com_quadro(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="corte-048-sorteio",
+        sem_corte=True,
+    )
+    identificar(client, "carlos", ["gestor", "elaborador"])
+    edital, marco = cenario["edital"], cenario["marco"]
+
+    _o_destino_oferece_a_regra_do_marco(client, edital, marco, _abrir_corte(client, edital, marco))
+
+
 def test_o_marco_com_regra_e_sem_ordem_continua_indo_para_a_classificacao(
     client, seletor_ligado, gestor, api_client, manager_headers, process_payload
 ):

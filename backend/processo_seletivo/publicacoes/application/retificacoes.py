@@ -24,6 +24,7 @@ from processo_seletivo.publicacoes.domain.changes import (
     IdentidadeNaoEnderecavel,
     SeletorInvalido,
     apply_changes,
+    recusar_janela_que_nasce_sem_recurso,
 )
 from processo_seletivo.publicacoes.domain.conflicts import (
     DUPLICATE_KEY,
@@ -189,12 +190,13 @@ def _no_effective_change():
     )
 
 
-def _apply_declared_changes(base, changes):
+def _apply_declared_changes(edital, base, changes):
     """Aplica sobre a base declarada e exige efeito prático (FR-026) e precondições (FR-036)."""
     try:
         content, _ = apply_changes(base, changes, publication_id="draft")
     except ValueError as exc:
         raise _recusa_de_caminho(exc) from exc
+    _recusar_o_que_o_ato_acrescenta(edital, base, content)
     _reject_stale_changes(base, changes)
     # Depois das precondições, porque quando as duas valem a precondição é mais acionável: ela diz
     # "outra pessoa publicou no intervalo", enquanto esta diz "o que você mandou está incompleto".
@@ -204,6 +206,127 @@ def _apply_declared_changes(base, changes):
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
+
+
+def _recusar_o_que_o_ato_acrescenta(edital, base, content):
+    """O que este ato faz nascer ou acrescenta vale o que a composição exigiria (048).
+
+    **Mora no ato, e não em `apply_changes`**, que também reproduz atos já publicados em
+    `consolidate`: uma guarda lá julgaria atos que foram válidos quando praticados. Aqui ela alcança
+    só a Retificação que está sendo elaborada ou publicada — e por isso roda nas duas, porque entre
+    uma e outra o mundo muda.
+    """
+    try:
+        recusar_janela_que_nasce_sem_recurso(base, content)
+    except ValueError as exc:
+        raise _recusa_de_caminho(exc) from exc
+    _recusar_corte_sobre_etapa_com_resultado(edital, base, content)
+    _recusar_criterio_que_a_composicao_recusaria(base, content)
+    _recusar_modalidade_que_a_composicao_recusaria(base, content)
+
+
+def _recusar_modalidade_que_a_composicao_recusaria(base, content):
+    """A Modalidade que o ato acrescenta vale o que a composição exigiria dela (048, FR-778).
+
+    Pela mesma razão do critério, logo abaixo: a tela confere ao conferir, e esta é a mesma função
+    no ato. Antes dela a API publicava Modalidade só com `id` e `code`. **Só a acrescentada**.
+    """
+    from processo_seletivo.editais.domain.perfis import ProfileValidationError, validar_modalidade
+
+    antes = {
+        str(modalidade.get("id"))
+        for perfil in base.get("profiles") or []
+        for modalidade in perfil.get("competitionModalities") or []
+    }
+    for perfil in content.get("profiles") or []:
+        modalidades = perfil.get("competitionModalities") or []
+        for modalidade in modalidades:
+            if str(modalidade.get("id")) in antes:
+                continue
+            outros = {m.get("code") for m in modalidades if m.get("id") != modalidade.get("id")}
+            try:
+                validar_modalidade(modalidade, codigos_do_perfil=outros)
+            except ProfileValidationError as exc:
+                raise DomainError(
+                    "added_entity_invalid",
+                    f"Modalidade acrescentada ao Perfil '{perfil.get('code') or perfil.get('id')}'"
+                    f": {exc}",
+                    422,
+                ) from exc
+
+
+def _recusar_criterio_que_a_composicao_recusaria(base, content):
+    """O critério que o ato acrescenta vale o que a composição exigiria dele (048, FR-793).
+
+    A tela já o confere ao conferir; esta é a mesma função, no ato, para a confirmação, a publicação
+    e a API. **Só o acrescentado** — identidade presente depois e ausente antes —, e nunca o
+    conteúdo inteiro: julgar o acervo pela regra de hoje o tornaria irretificável em qualquer campo.
+    """
+    from processo_seletivo.editais.domain.perfis import ProfileValidationError, validar_criterio
+
+    antes = {
+        str(criterio.get("id"))
+        for marco in _marcos(base).values()
+        for criterio in marco.get("tiebreakers") or []
+    }
+    for marco in _marcos(content).values():
+        criterios = marco.get("tiebreakers") or []
+        for criterio in criterios:
+            if str(criterio.get("id")) in antes:
+                continue
+            outras = {c.get("order") for c in criterios if c.get("id") != criterio.get("id")}
+            try:
+                validar_criterio(criterio, ordens_do_marco=outras)
+            except ProfileValidationError as exc:
+                raise DomainError(
+                    "added_entity_invalid",
+                    f"Critério de desempate acrescentado ao marco "
+                    f"'{marco.get('name') or marco.get('code')}': {exc}",
+                    422,
+                ) from exc
+
+
+def _marcos(conteudo):
+    """Cada marco do conteúdo, pela identidade do Perfil e do marco."""
+    return {
+        (perfil.get("id"), marco.get("id")): marco
+        for perfil in conteudo.get("profiles") or []
+        for marco in perfil.get("classificationMilestones") or []
+    }
+
+
+def _recusar_corte_sobre_etapa_com_resultado(edital, base, content):
+    """A regra de corte não nasce governando Etapa que já foi avaliada (048, FR-789).
+
+    É a razão que o contrato já dá para não retificar `cutRule/governedStage` — *"corrigi-lo depois
+    de o corte ter sido aplicado moveria, em silêncio, quem continua"* — aplicada ao nascimento: a
+    regra nascida sobre uma Etapa com Resultado, quando o corte fosse emitido, tiraria dela quem já
+    foi avaliado. Regra que não governa Etapa não tem esse efeito, e passa.
+
+    **Consulta `resultados`, e por importação local**: `resultados/models.py` importa
+    `publicacoes.models_retificacao`, e a importação no topo faria ciclo. O seletor é o que já lê
+    pela vigência — uma leitura nova por `ResultadoEtapa.objects` reprovaria o guarda de quem lê
+    fora dela, e toda cadeia de Resultado tem raiz vigente.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.resultados.application.selectors import ha_resultado_em
+
+    antes = _marcos(base)
+    nomes = {str(etapa.get("id")): etapa.get("name", "") for etapa in content.get("stages") or []}
+    for chave, marco in _marcos(content).items():
+        regra = marco.get("cutRule")
+        if chave not in antes or antes[chave].get("cutRule") or not isinstance(regra, dict):
+            continue
+        etapa = faixa.etapa_governada(regra)
+        if etapa and ha_resultado_em(edital=edital, etapa_id=etapa):
+            raise DomainError(
+                "cut_rule_born_over_evaluated_stage",
+                f"O marco '{marco.get('name') or marco.get('code')}' passaria a cortar, e a "
+                f"Etapa '{nomes.get(etapa, etapa)}', que o corte governaria, já tem Resultado "
+                "registrado: o corte excluiria dela quem já foi avaliado. Declare a regra sem "
+                "governar Etapa, ou governando uma Etapa ainda sem Resultado.",
+                422,
+            )
 
 
 def _replace_changes(retificacao, changes, base_content):
@@ -263,7 +386,7 @@ def create_retification(*, actor, edital_id, data, idempotency_key, correlation_
         )
         alteracoes = elevar_alteracoes(data["changes"])
         conteudo = conteudo_base(base)
-        _apply_declared_changes(conteudo, alteracoes)
+        _apply_declared_changes(edital, conteudo, alteracoes)
         _replace_changes(retificacao, alteracoes, conteudo)
         record_event(
             actor=actor,
@@ -296,7 +419,7 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
                 raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
         alteracoes = elevar_alteracoes(data["changes"])
         conteudo = conteudo_base(base)
-        _apply_declared_changes(conteudo, alteracoes)
+        _apply_declared_changes(item.edital, conteudo, alteracoes)
         compare_and_swap(
             Retificacao.objects,
             pk=item.pk,
@@ -688,6 +811,7 @@ def publish_retification(
         _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
         content, _ = apply_changes(base_publicacao, changes, publication_id="pending")
+        _recusar_o_que_o_ato_acrescenta(edital, base_publicacao, content)
         canonical = canonical_bytes(content)
         # O documento consolidado usa a mesma composição e a autoridade da própria Publicação
         # da Retificação (`008`, FR-043).

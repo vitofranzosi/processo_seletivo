@@ -1,0 +1,40 @@
+<fieldset class="linha criterio-novo">
+  <legend><span class="nome">Critério de desempate a acrescentar</span></legend>
+  {% comment %}
+  As palavras são as da composição (`_criterio.html`). O marco é uma escolha só e carrega o Perfil
+  junto, porque o caminho da Alteração passa pelos dois; o alvo é uma escolha só, e é o tipo que
+  decide se o critério consome a Etapa ou o fato (048).
+  {% endcomment %}
+  <div class="campos">
+    {% for campo in campos %}
+    {% if campo.tipo == 'oculto' %}
+    {% comment %}
+    A identidade do critério, nascida no fragmento: confirmar de novo — duplo clique, F5 — produz o
+    mesmo ato, e não um conflito de idempotência (020).
+    {% endcomment %}
+    <input type="hidden" name="novo-criterio-{{ indice }}-{{ campo.chave }}" value="{{ campo.valor }}">
+    {% else %}
+    <p class="campo{% if campo.tipo == 'inteiro' %} curto{% else %} largo{% endif %}">
+      <label for="nc-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'referencia' %}
+      <select id="nc-{{ indice }}-{{ campo.chave }}"
+              name="novo-criterio-{{ indice }}-{{ campo.chave }}">
+        <option value="">Escolha</option>
+        {% for identificador, rotulo in campo.opcoes %}
+        <option value="{{ identificador }}"{% if campo.valor == identificador %} selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <input id="nc-{{ indice }}-{{ campo.chave }}"
+             name="novo-criterio-{{ indice }}-{{ campo.chave }}"
+             type="number" min="1" step="1" value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar este critério</button>
+  </p>
+</fieldset>

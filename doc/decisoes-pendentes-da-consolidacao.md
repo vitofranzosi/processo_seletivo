@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-04` e a `DP-06`, decididas em 26/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-04` e a `DP-06`, decididas em 26/09, e o item 2 da `DP-08`, decidido na mesma data** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md). Este documento organiza as alternativas e
 recomenda; **quem decide é o usuário**.
@@ -391,6 +391,16 @@ encerrada.**
 2. **A `D-G5` vai para a B-4** — "a Retificação acrescenta o que o contrato já permite" —, junto da janela
    recursal, do corte, da reversão e do critério de desempate.
 3. **O alcance da Etapa vai para a B-17**, com o barema e a heteroidentificação, e espera a DP-10.
+
+### O que foi decidido
+
+**Só o item 2**, em 26/09/2026, ao especificar a [`048`](../specs/048-retificacao-que-acrescenta/spec.md):
+a `D-G5` foi para a B-4, e a `048` a executa junto da janela recursal, do corte, da reversão e do
+critério de desempate. O usuário decidiu também que a Modalidade acrescentada pode ser **qualquer
+uma, inclusive cota**, porque a auditoria define o problema como a ausência *"da ampla ou de uma
+cota"*, e limitar à ampla deixaria parte do `RC-37` aberta.
+
+Os itens 1 (encerrar a `039`) e 3 (o alcance da Etapa) **continuam abertos**.
 
 ---
 

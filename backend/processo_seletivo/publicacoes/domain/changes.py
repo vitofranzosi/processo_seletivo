@@ -440,6 +440,50 @@ def apply_changes(base, changes, *, publication_id):
     return result, provenance
 
 
+RAZAO_DA_JANELA_QUE_NASCE = (
+    "A Retificação concede prazo de recurso onde não havia, e não o retira: a janela que nasce "
+    "precisa admitir recurso. Declarar que o marco não admite recurso onde o Edital calava faria a "
+    "interposição recusar o que antes era juízo de tempestividade."
+)
+
+
+def recusar_janela_que_nasce_sem_recurso(base, resultado):
+    """A janela recursal que nasce por Retificação concede (048, D-003, FR-787).
+
+    **Não é chamada por `apply_changes`, e a ausência é o ponto.** `apply_changes` também é o motor
+    de `consolidation.consolidate`, que reproduz atos já publicados para materializar versões. Uma
+    guarda ali julgaria atos que foram válidos quando praticados: um nascimento assim, feito pela
+    API antes desta guarda, passaria a recusar a própria história — e toda Retificação futura
+    daquele Edital. Quem a chama é o ato de Retificação, na elaboração e na publicação.
+
+    **Compara o antes e o depois, e não cada alteração**, porque a sequência `REMOVE` + `ADD` faz a
+    segunda parecer nascimento. Pela mesma razão, a janela que **já existia** e é alterada não é
+    julgada aqui: é alteração de valor, e segue a regra de hoje.
+    """
+    antes = _janelas(base)
+    for chave, janela in _janelas(resultado).items():
+        # Só o marco que já existia: o marco inteiro acrescentado pela API declara a janela junto
+        # com ele, e isso é composição do marco, e não nascimento da janela num marco publicado.
+        if chave not in antes or antes[chave] is not None or not isinstance(janela, dict):
+            continue
+        perfil, marco = chave
+        if janela.get("admits") is not True:
+            raise CampoNaoRetificavel(
+                f"/profiles/id={perfil}/classificationMilestones/id={marco}/appealWindow cria uma "
+                "janela que não admite recurso onde o Edital não declarava janela. "
+                + RAZAO_DA_JANELA_QUE_NASCE
+            )
+
+
+def _janelas(conteudo):
+    """A janela de cada marco, por identidade do Perfil e do marco; `None` quando ausente."""
+    return {
+        (perfil.get("id"), marco.get("id")): marco.get("appealWindow")
+        for perfil in conteudo.get("profiles") or []
+        for marco in perfil.get("classificationMilestones") or []
+    }
+
+
 def _primeiro_que_nasceu(content, ausentes_no_inicio):
     """O caminho que era nulo e passou a carregar declaração — se houver.
 

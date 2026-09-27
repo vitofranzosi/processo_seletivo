@@ -79,8 +79,10 @@ def test_a_retificacao_nao_acrescenta_marco_e_por_isso_nao_deriva_nada(publicado
     """A garantia é estrutural, e este teste a declara.
 
     Nada em `interface/retificacao` cria marco: a tela alcança os campos do que já existe, e o
-    fragmento que acrescenta linha existe para Perfil, Evento, Anexo e linha do quadro — nunca para
-    marco. É por isso que padrão e derivação não têm por onde entrar numa Retificação.
+    fragmento que acrescenta linha existe para Perfil, Evento, Anexo, linha do quadro e — desde a
+    `048` — critério de desempate e Modalidade, nunca para marco. Os dois da `048` acrescentam só o
+    que a pessoa preenche, sem padrão nenhum. É por isso que padrão e derivação não têm por onde
+    entrar numa Retificação.
 
     Se um dia alguém acrescentar esse fragmento, é aqui que a suíte cai — e é essa a razão de o
     teste existir.
@@ -96,4 +98,6 @@ def test_a_retificacao_nao_acrescenta_marco_e_por_isso_nao_deriva_nada(publicado
         "fragmento-retificacao-evento",
         "fragmento-retificacao-anexo",
         "fragmento-retificacao-linha-do-quadro",
+        "fragmento-retificacao-criterio",
+        "fragmento-retificacao-modalidade",
     }

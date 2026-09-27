@@ -130,6 +130,8 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 2085 | `fragmento_etapa` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2161 | `fragmento_retificacao_linha_do_quadro` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2164 | `fragmento_retificacao_linha_do_quadro` | sim | não | objeto inexistente | Edital sem versão base — ausência de conteúdo |
+| 2667 | `fragmento_retificacao_criterio` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo, e o Edital sem versão base não tem conteúdo — mesma porta da linha do quadro (048) |
+| 2646 | `fragmento_retificacao_modalidade` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo, e o Edital sem versão base não tem conteúdo — mesma porta da linha do quadro (048) |
 | 2200 | `fragmento_remover` | sim | não | objeto inexistente | alvo de remoção fora do formato da rota |
 | 2239 | `_edital_com_previa` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2343 | `detalhe` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |

@@ -354,6 +354,50 @@ def test_retificacao_da_regra_obsoleta_sem_resultado_novo(cenario, gestor, api_c
     assert [item["tipo"] for item in estado["divergencias"]] == ["regra_alterada"]
 
 
+def _criterio_acrescentado(etapa_id, ordem):
+    return {
+        "targetPath": (
+            f"/profiles/id={PROFILE_ID}/classificationMilestones/id={MARCO}/tiebreakers/-"
+        ),
+        "operation": "ADD",
+        "newValue": {
+            "id": "00000000-0000-4000-8000-000000048451",
+            "order": ordem,
+            "type": "MAIOR_PONTUACAO_NA_ETAPA",
+            "parameters": {"stageId": etapa_id},
+            "whenMissing": "ULTIMO_NO_CRITERIO",
+        },
+    }
+
+
+def test_acrescentar_criterio_obsoleta_a_ordem_como_a_remocao_ja_fazia(cenario, gestor, api_client):
+    """048, FR-794: o critério acrescentado muda a regra do marco, e o ato vigente fica obsoleto e
+    recomputável — pela mesma causa que a remoção de um critério sempre produziu."""
+    edital, etapa, _ = cenario
+    ato = _emitir_cenario(cenario, gestor)
+
+    retify(api_client, edital, [_criterio_acrescentado(etapa["id"], 1)], suffix="criterio-048")
+    estado = estado_do_marco(edital=edital, marco_id=MARCO)
+
+    assert estado["vigente"] == ato
+    assert estado["obsoleto"] is True
+    assert estado["recomputavel"] is True
+    assert [item["tipo"] for item in estado["divergencias"]] == ["regra_alterada"]
+
+
+def test_o_criterio_acrescentado_pela_api_vale_o_que_a_composicao_exigiria(cenario, api_client):
+    """048, FR-793: a validação da composição corre no ato, e alcança quem não passa pela tela."""
+    from tests.fixtures.publicacao import create_retification
+
+    edital, etapa, _ = cenario
+    invalido = _criterio_acrescentado(etapa["id"], 0)
+
+    recusa = create_retification(api_client, edital, [invalido], esperar=422, suffix="c048")
+
+    assert recusa["code"] == "added_entity_invalid"
+    assert "número inteiro a partir de 1" in recusa["detail"]
+
+
 def test_resultado_tardio_do_universo_obsoleta_e_nao_substitui_o_vigente(cenario, gestor):
     edital, etapa, inscricoes = cenario
     ato = _emitir_cenario(cenario, gestor)
