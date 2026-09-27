@@ -42,6 +42,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Implementação encontrada: nenhuma.
 - Evidência no código atual: `interface/supervisao.py:1162-1167` — `recursos_do_edital(edital, situacao=recursos_selectors.AGUARDANDO_JULGAMENTO)`. O estado existe e é derivável: `recursos/application/selectors.py:24,30,105-110` (`AGUARDANDO_ADMISSIBILIDADE`). A recuperação lateral: `interface/acoes.py:120-127` mostra "Recursos recebidos (N)" ao julgador — mas N conta **todos** os recursos do Edital, inclusive decididos (`Recurso.objects.filter(inscricao__edital=edital).count()`), então não diz quantos esperam.
 - Estado atual: RESOLVIDO — `045` FR-732 a FR-734 (#187, 26/09): `UX-064` e `UX-005` cobrem a admissibilidade e o julgamento, com a fase na mensagem (DP-02); a ação conta só as peças pendentes
+- **Desfecho posterior (26/09):** a revisão da `045` encontrou o `UX-064` ainda em `TRABALHO_PENDENTE`, calado no Edital encerrado ou cancelado, enquanto a docstring de `alcance_no_edital` dizia que a peça *"continua podendo ser decidida"* — e continua: nem a admissibilidade nem o julgamento consultam o estado do Edital. O recurso com julgador livre sumia da Atenção, e o da comissão inteira impedida (`UX-005`) ficava. É o RC-115 da auditoria, registrado e corrigido pelo PR corretivo de 26/09 (o `UX-064` saiu do conjunto; `test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide`, em `tests/integration/supervisao/test_sinais.py`). A C2 foi dada como fechada antes dele.
 - Ainda faz sentido?: sim — a regra de impedimento vale igualmente para admitir e julgar (`doc/descoberta-conducao-por-presidencia-unica.md` §2.2, `recursos/application/admitir.py:54`), então a mesma partição UX-005/UX-064 serve; o custo é um filtro. Não contradiz FR escrito (FR-561 é estreito), mas deixa a cauda que a 038 promete cobrir incompleta.
 - Lacuna residual: nenhuma.
 - Grupo do resíduo: —
@@ -247,7 +248,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Evidência no código atual: `editais/domain/validation.py:1706-1747` — `severity=Severity.WARNING`, `code="milestone_without_cut_rule"`, docstring "Aviso, e não impedimento"; teste prende o aviso: `tests/interface/test_hardening_pos_auditoria.py:1100` (`== Severity.WARNING`). Atenuante: a regra de corte **pode nascer por Retificação** (`editais/domain/mutabilidade.py:515-520`), então o Edital publicado sem ela tem conserto.
 - Estado atual: NÃO IMPLEMENTADO
 - Ainda faz sentido?: sim, é decisão tomada e barata (trocar severidade na publicação, manter aviso na Retificação do acervo). O atenuante rebaixa a urgência.
-- **Desfecho (26/09):** executada pela `046` (#188, `064228c`), na forma da `D-002` de lá: o impeditivo é do **Perfil** em que nenhum marco corta, porque *"não governa Etapa alguma"* continua sendo regra de corte, com alvo, e não serve de declaração a quem não corta. O marco sem corte num Perfil que corta continua com aviso, e a Retificação do acervo não é cobrada.
+- **Desfecho (26/09):** executada pela `046` (#188, `064228c`), na forma da `D-002` de lá: o impeditivo é do **Perfil** em que nenhum marco corta, porque *"não governa Etapa alguma"* continua sendo regra de corte, com alvo, e não serve de declaração a quem não corta. O marco sem corte num Perfil que corta continua com aviso, e a Retificação do acervo não é cobrada. *Depois (26/09): o corte que declara não governar Etapa passou a chegar à apuração e à convocação — antes, `habilitadas_na_etapa(None)` devolvia vazio e ninguém era chamável. É o RC-113 da auditoria, que a `046` registrou e o PR corretivo de 26/09 reproduziu por teste e corrigiu (`habilitadas_pelo_corte`). O recorte sem corte algum continua lendo o vazio, e não foi decidido ali.*
 - Lacuna residual: severidade `BLOCKING_ERROR` no ato de publicação + ajuste do teste que prende o aviso.
 - Grupo do resíduo: B
 - Impacto atual: Edital publicado "classifica e não convoca" até alguém retificar.
@@ -614,7 +615,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | ID | Título | Estado | Grupo | Próxima ação |
 |---|---|---|---|---|
 | C1 · N-01 | Frase de ausência absoluta sobre leitura parcial; vista parcial não se declara | RESOLVIDO (045, #187) | — | nenhuma |
-| C2 · N-02 | Recurso aguardando admissibilidade sem sinal | RESOLVIDO (045, #187) | — | nenhuma |
+| C2 · N-02 | Recurso aguardando admissibilidade sem sinal | RESOLVIDO (045, #187; o `UX-064` calado no Edital parado, RC-115, corrigido pelo PR corretivo de 26/09) | — | nenhuma |
 | C3 · N-03 · `4ec1cbb` | Link "Abrir a Supervisão" sem guarda | RESOLVIDO | — | nenhuma |
 | C4 · N-04 | Sinal sem caminho não diz a quem pedir | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
 | C6 · N-06 | `schedule.status` derivado que nada deriva → UX-002 permanente | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
@@ -664,7 +665,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 3** (E-6, prazo recursal público, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188) · **C = 14**, mais as sobras registradas de N-04 e N-06. Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
 
-Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7.
+Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7. *A C2 foi atravessada depois de dada como fechada: o RC-115, que a revisão da `045` encontrou, foi corrigido pelo PR corretivo de 26/09, e a contagem não muda.*
 Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; **D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).
 
 ## 3. Achados NOVOS encontrados de passagem

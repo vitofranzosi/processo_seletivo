@@ -495,8 +495,15 @@ ESPECIES = (
     UX_066,
 )
 
-# As quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém retoma.
-TRABALHO_PENDENTE = frozenset({UX_063, UX_064, UX_065, UX_066})
+# Três das quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém
+# retoma, e que ninguém retoma num Edital que parou por ato.
+#
+# **O `UX-064` não está aqui** (RC-115). A `045` o deixou no conjunto e escreveu, em
+# `alcance_no_edital`, que o recurso *"continua podendo ser decidido"* — e continua: nem a
+# admissibilidade nem o julgamento consultam o estado do Edital. Calado, ele sumia da Atenção
+# enquanto o `UX-005`, a negação dele sobre a mesma peça, ficava; e o recurso é direito de quem o
+# interpôs, e não trabalho que a instituição decidiu não concluir.
+TRABALHO_PENDENTE = frozenset({UX_063, UX_065, UX_066})
 
 # Os dois estados em que o Edital **parou por ato**. Depois deles não há trabalho a retomar: o que
 # parou, parou porque alguém o encerrou ou o cancelou, e apontar avaliação pendente num Edital
@@ -509,16 +516,16 @@ def alcance_no_edital(alcancadas, edital):
 
     **Só as espécies de trabalho pendente são retiradas, e a assimetria é deliberada** (`038`). O
     `UX-004` fala de ordem que envelheceu, e ela envelhece depois do encerramento como antes — e
-    reemitir a ordem continua possível enquanto o **Processo** não termina; o `UX-005` fala de peça
-    que continua podendo ser decidida (045, `research.md`, `R-7`).
+    reemitir a ordem continua possível enquanto o **Processo** não termina; o `UX-005` e o `UX-064`
+    falam de peça que continua podendo ser decidida (045, `research.md`, `R-7`; RC-115).
 
     *A premissa que a `038` escreveu aqui para o `UX-001` e o `UX-002` — "um Edital encerrado
     continua podendo Retificar" — era falsa*: a Retificação só incide sobre Edital publicado. Os
     dois saíram do catálogo, e o `UX-046`, que leva à Retificação, sai da Atenção onde ela não é
     possível (`admite_encaminhamento`, 045, `FR-741`).
 
-    As quatro da `038` são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho não se
-    retoma num Edital que parou por ato.
+    As três da `038` que sobram são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho
+    não se retoma num Edital que parou por ato.
     """
     if edital.status not in EDITAL_PAROU_POR_ATO:
         return alcancadas
@@ -1083,8 +1090,9 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
         # precisar de um terceiro caso.
         return
     for edital in editais:
-        # A fila é por Edital, e o estado dele também: um Edital encerrado não tem decisão a
-        # retomar, mas continua tendo peça cuja comissão está impedida — que é fato do `UX-005`.
+        # A fila é por Edital, e o estado dele também — mas nenhuma das duas espécies se cala pelo
+        # estado: a peça pendente de um Edital encerrado continua decidível (RC-115). A chamada
+        # fica para que a regra tenha um lugar só, e não uma exceção escrita aqui.
         deste = alcance_no_edital(alcancadas, edital)
         if not (deste[UX_005] or deste[UX_064]):
             continue

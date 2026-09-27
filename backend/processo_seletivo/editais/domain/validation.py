@@ -1795,14 +1795,30 @@ def _quem_exige_o_resultado(snapshot: dict) -> dict:
     **O marco de sorteio que enumera Etapa também conta**, embora a ordem dele nasça da semente
     (`faixa.etapa_governada`): distinguir aqui exigiria ler a forma da ordem, e errar pelo lado que
     recusa custa a quem compõe retirar a Etapa do marco — que está ao alcance dele.
+
+    **A Etapa decisória enumerada não conta** (RC-114). Ela é porta, e não parcela (015,
+    `FR-074`): a combinação a salta, e quem não tem Resultado nela não é eliminado por ela — o marco
+    posiciona do mesmo jeito. A primeira redação a contava, e recusava dizendo *"ninguém é
+    posicionado"*, o que só é verdade para a pontuada. A pergunta é feita a `e_porta`, a mesma que
+    `combinar` faz, pela razão que `_etapa_sem_resultado` dá para a regra: duas cópias divergem.
+    Governada ou designada para o sorteio, a decisória continua exigida — ali o Resultado ausente
+    deixa, de fato, ninguém convocado ou sorteado.
     """
     from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.classificacao.domain.combinacao import e_porta
 
+    publicadas = {
+        str(etapa.get("id")): etapa
+        for etapa in snapshot.get("stages") or []
+        if isinstance(etapa, dict)
+    }
     exigidas = {}
     for perfil in _perfis_bem_formados(snapshot):
         for marco in _marcos_bem_formados(perfil):
             nomeado = _marco_nomeado(marco)
             for etapa in marco.get("stages") or []:
+                if e_porta(publicadas.get(str(etapa)) or {}):
+                    continue
                 exigidas.setdefault(
                     str(etapa), f"o marco {nomeado} a enumera, e ninguém é posicionado por ele"
                 )

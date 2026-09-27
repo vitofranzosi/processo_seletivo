@@ -120,7 +120,9 @@ def contexto_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     etapa = corte.etapa_governada_id if corte is not None else None
-    habilitadas = ocupacao_selectors.habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+    habilitadas = ocupacao_selectors.habilitadas_pelo_corte(
+        edital=edital, corte=corte, progrediram=ordem
+    )
     # A concorrência concomitante, lida **pela `016`** e não por uma segunda conta: quem ocupa vaga
     # de ampla é titular dela, e essa definição tem um dono só (`FR-252`, `UX-035`).
     concomitantes = (

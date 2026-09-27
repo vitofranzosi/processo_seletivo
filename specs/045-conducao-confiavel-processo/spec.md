@@ -250,6 +250,10 @@ Cada um destes é requisito, e ganha linha própria na matriz de rastreabilidade
   (`research.md`, `R-7`): o `UX-004` e o `UX-005` num Edital encerrado **não** têm o defeito —
   reemitir a ordem e julgar o recurso continuam possíveis enquanto o Processo não estiver em estado
   final. O `UX-065` em recorte sem quadro tem, e ficou registrado.
+  *Refinado em 26/09, depois do merge (RC-115): a medição valia para o `UX-064` também — ele é a
+  negação do `UX-005` sobre a mesma peça —, mas o código o deixou entre as espécies caladas no
+  Edital parado, e o comentário ao lado afirmava o contrário. A peça com julgador livre sumia da
+  Atenção enquanto a da comissão impedida ficava. O `UX-064` saiu de `TRABALHO_PENDENTE`.*
 
 ---
 

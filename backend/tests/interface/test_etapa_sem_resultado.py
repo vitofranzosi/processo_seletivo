@@ -103,9 +103,15 @@ def test_a_decisoria_sem_efeito_fora_de_marco_avisa_e_publica(
     assert publicado.status == Edital.Status.PUBLICADO
 
 
-def test_a_mesma_decisoria_enumerada_por_marco_e_recusada(
+def test_a_mesma_decisoria_enumerada_por_marco_avisa_e_publica(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
+    """Enumerada, a decisória é porta, e o marco posiciona sem Resultado nela (RC-114).
+
+    *Este teste afirmava a recusa, e lia só a própria tela* — confirmava que a Revisão dizia
+    "erro", e não que a classificação falharia. Ela não falha:
+    `tests/integration/classificacao/test_porta_decisoria_enumerada.py` o percorre.
+    """
     rascunho = rascunho_com_etapas()
     segunda = rascunho["stages"][1]
     segunda.update(forma="DECISORIA", rotuloFavoravel="Apto", rotuloDesfavoravel="Inapto")
@@ -117,8 +123,11 @@ def test_a_mesma_decisoria_enumerada_por_marco_e_recusada(
 
     revisao = _pagina(client, edital, "revisao")
 
-    assert _severidade_de(revisao, NAO_TERA_RESULTADO) == "erro"
-    assert "retire-a do marco na etapa Classificação" in revisao, "a outra correção possível"
+    assert _severidade_de(revisao, NAO_TERA_RESULTADO) == "aviso"
+    assert "retire-a do marco" not in revisao, "retirá-la não é correção de nada"
+
+    publicado = levar_a_publicacao(api_client, edital, draft=rascunho)
+    assert publicado.status == Edital.Status.PUBLICADO
 
 
 def test_o_como_preencher_explica_a_dupla_leitura_e_o_cartao_nao(
