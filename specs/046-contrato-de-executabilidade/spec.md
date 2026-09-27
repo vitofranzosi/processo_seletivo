@@ -63,6 +63,8 @@ direção. Os dois primeiros foram levados ao usuário e decididos em 26/09 (`D-
    consolidar. Impedir a publicação dela seria proibir o que um Edital pode legitimamente publicar — a
    recusa exata que a `013` registrou em 03/09 (`FR-047`). **O impeditivo é para a Etapa cujo Resultado
    o fluxo exige; a outra recebe aviso** (`D-001`).
+   *Refinado em 26/09, depois do merge (RC-114): a enumeração só consome o Resultado da Etapa
+   **pontuada** — ver o refinamento da `D-001`.*
 2. **O Cenário C do briefing já está implementado.** Todo marco que **declara** regra de corte sem
    informação suficiente para determinar o limite já é recusado na publicação desde a `014`: espécie
    do alvo ausente, alvo fixo sem número, alvo derivado sem linha do quadro, desfecho de empate,
@@ -129,9 +131,10 @@ Repetir com a mesma Etapa **não** eliminatória e fora de todo marco, e conferi
 2. **Given** uma Etapa pontuada, eliminatória e sem nota mínima, **When** alguém submete o Edital,
    **Then** o ato é recusado pela mesma razão que a consolidação daria.
 3. **Given** uma Etapa decisória **não** eliminatória enumerada num marco, **When** alguém submete o
-   Edital, **Then** o ato é recusado; e **Given** a mesma Etapa fora de todo marco, de toda regra de
-   corte e de todo método de sorteio, **When** alguém submete, **Then** o ato passa, com aviso de que
-   a Etapa não terá Resultado.
+   Edital, **Then** ~~o ato é recusado~~ o ato passa, com aviso — *refinado em 26/09 (RC-114): a
+   decisória enumerada é porta, e só recusa se governada ou designada para o sorteio*; e **Given**
+   a mesma Etapa fora de todo marco, de toda regra de corte e de todo método de sorteio, **When**
+   alguém submete, **Then** o ato passa, com aviso de que a Etapa não terá Resultado.
 4. **Given** uma Etapa com uma avaliação, eliminatória e com nota mínima — ou decisória e eliminatória
    —, **When** alguém submete, **Then** nenhum achado desta família aparece (Cenário B).
 5. **Given** a Revisão de um Edital em elaboração com uma Etapa assim, **When** quem compõe a abre,
@@ -270,6 +273,9 @@ sorteio da suíte continuam rodando sem rede.
   exige o Resultado dela**. O fluxo exige o Resultado da Etapa que é eliminatória, ou que é
   referenciada por algum marco do Edital: enumerada no marco, governada por regra de corte, ou
   designada Etapa de habilitação de método de sorteio, próprio do marco ou comum ao Edital (`D-001`).
+  *Refinado em 26/09, depois do merge (RC-114): "enumerada no marco" vale para a Etapa que não é
+  porta. A decisória enumerada não é parcela da combinação, e o marco posiciona sem Resultado nela —
+  ver o refinamento da `D-001`.*
 - **FR-747**: A razão da recusa MUST sair da **mesma** regra que a consolidação aplica, e a publicação
   MUST NOT reescrever nenhum dos três predicados. Uma Etapa MUST ser acusada na publicação se, e
   somente se, a consolidação a recusaria.
@@ -459,6 +465,14 @@ progressão só exclui quem tem Resultado `ELIMINADA` —, e o Edital passaria a
 critério que publicou. Uma Etapa enumerada que nunca consolida deixa o Perfil sem ninguém posicionado.
 Os dois são impossibilidade conhecida no instante da publicação, e aviso não impede ato imutável.
 
+*Refinada em 26/09 (RC-114).* A frase *"uma Etapa enumerada que nunca consolida deixa o Perfil sem
+ninguém posicionado"* só vale para a pontuada: sem a pontuação, `combinar` devolve `SEM_PONTUACAO`. A
+decisória enumerada é porta, e não parcela (`015`, `FR-074`): a combinação a salta, quem não tem
+Resultado nela não é eliminado por ela, e o consumidor *"combinação do marco"* abaixo não a alcança.
+Contá-la recusava o que a `FR-047` da `013` decidiu não proibir. A leitura pergunta a `e_porta`, a
+mesma função que `combinar` usa. A regra passou a contar a enumeração só quando a Etapa não é porta; a revisão pós-merge
+mostrou que o teste da tela que prendia a recusa lia a Revisão, e não a classificação.
+
 **Os quatro consumidores** são os que o código tem, e nenhum outro: a exclusão por eliminação
 (`prontidao.py:147`), a combinação do marco (`classificacao/domain/combinacao.py:115-125`), a
 habilitação na Etapa governada (`convocacao/application/selectors.py:119-121`) e a Etapa de habilitação
@@ -548,3 +562,7 @@ Registro, não escopo (governança é do usuário). Os dois foram lidos no códi
   Lido assim, o 69/2026 — *"sorteia, publica, convoca e manda comparecer"*, segundo a `032` — não
   convocaria ninguém. Nenhum teste de convocação exercita corte sem Etapa governada. Se confirmado,
   `FR-752` continua certo (o Perfil sem corte nunca convoca), mas deixa de ser suficiente.
+  *Confirmado e corrigido em 26/09 (RC-113), depois do merge.* Reproduzido por teste — `ocupadas: 0`
+  e fila vazia —, e corrigido por um dono só, `habilitadas_pelo_corte`, que a apuração, os ocupantes
+  da ampla e a fila leem: com `NONE` declarado, quem progrediu na faixa é quem segue (`014`,
+  `FR-224`). O recorte sem corte algum continua lendo o vazio, e não foi decidido aqui.

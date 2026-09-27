@@ -130,7 +130,10 @@ def test_a_publicacao_acusa_se_e_so_se_a_consolidacao_recusaria(forma, situacao)
     recusaria = impedimento_da_regra(etapa) is not None
     # Exigida pelo marco que a referencia, ou pelo próprio caráter eliminatório — que a Etapa
     # pontuada sem nota mínima tem por definição, e por isso nunca fica "sem consumidor".
-    exigida = situacao != "nenhuma" or etapa["eliminatory"]
+    # **Menos a decisória só enumerada** (RC-114): ela é porta, e o marco posiciona sem Resultado
+    # nela — `tests/integration/classificacao/test_porta_decisoria_enumerada.py` o percorre.
+    porta_enumerada = situacao == "enumerada" and etapa["forma"] == "DECISORIA"
+    exigida = (situacao != "nenhuma" and not porta_enumerada) or etapa["eliminatory"]
 
     codigos = {achado.code for achado in _da_etapa(conteudo)}
 

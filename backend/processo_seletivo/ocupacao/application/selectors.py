@@ -398,6 +398,29 @@ def habilitadas_na_etapa(*, edital, etapa_id):
     }
 
 
+def habilitadas_pelo_corte(*, edital, corte, progrediram):
+    """Quem o recorte conta como habilitado, lido pela Etapa que o corte **declarou** governar.
+
+    **O corte que declara não governar Etapa é legítimo** (014, `FR-224`): é o marco terminal —
+    a forma do 69/2026, que sorteia, publica e convoca. Sem Etapa governada não há Resultado
+    posterior a exigir, e quem progrediu na faixa é quem segue. A leitura anterior perguntava a
+    `habilitadas_na_etapa(None)`, que devolve vazio, e ninguém ocupava nem era chamável — sem
+    recusa nenhuma que dissesse por quê (RC-113).
+
+    **Só o `NONE` declarado muda, e não a ausência de corte.** Recorte sem corte algum continua
+    lendo o vazio, como lia: o que ele deveria ler não é a pergunta do RC-113, e responder de
+    passagem seria decidir que marco sem corte seleciona a ordem inteira.
+
+    Um dono só, e não três condicionais: a apuração, os ocupantes da ampla e a fila de convocação
+    fazem a mesma pergunta, e uma resposta divergente entre elas faria a fila chamar quem a
+    apuração não conta — ou o inverso.
+    """
+    if corte is not None and corte.etapa_governada_id is None:
+        return set(progrediram)
+    etapa = corte.etapa_governada_id if corte is not None else None
+    return habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+
+
 def _quantidade(linha):
     """A quantidade da linha publicada, ou `None` quando não há linha.
 
@@ -492,8 +515,7 @@ def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
     progrediram, corte, empates = progrediram_em_ordem(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=None
     )
-    etapa = corte.etapa_governada_id if corte is not None else None
-    habilitadas = habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+    habilitadas = habilitadas_pelo_corte(edital=edital, corte=corte, progrediram=progrediram)
     linha = linha_do_quadro(versao.content, perfil_id=perfil_id, lista_id=None)
     if linha is None:
         # Sem linha geral publicada não há quantidade de ampla, e portanto ninguém a ocupa. É a
@@ -563,6 +585,7 @@ __all__ = [
     "dentro_da_faixa",
     "progrediram_em_ordem",
     "habilitadas_na_etapa",
+    "habilitadas_pelo_corte",
     "historico_do_recorte",
     "movimentos_lidos_por",
     "ocupacao_do_recorte",

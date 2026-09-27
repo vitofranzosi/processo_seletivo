@@ -148,6 +148,11 @@ coincidem.
   mostrar, e a ausência é dita.
 - **Edital encerrado ou cancelado.** Não produz sinal de trabalho pendente — o que parou, parou por
   ato.
+  *Refinado em 26/09/2026 (RC-115): o recurso pendente não é trabalho que parou por
+  ato. Nem a admissibilidade nem o julgamento consultam o estado do Edital, e a peça continua
+  decidível; o `UX-064` deixou de se calar no Edital encerrado ou cancelado, como o `UX-005` já não
+  se calava. As outras três espécies de trabalho pendente — `UX-063`, `UX-065`, `UX-066` — seguem
+  caladas.*
 - **Ator que alcança o Processo e nenhum dos destinos.** Lê o estado e não recebe caminho algum.
 - **Avaliação pendente em Etapa cuja distribuição ainda não houve.** São dois sinais diferentes, e o
   `UX-003` já cobre o segundo: a feature não pode fazer os dois dispararem pelo mesmo fato.
@@ -170,6 +175,8 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
   encaminhamento leva aos recursos daquele Edital. *Ampliado pela `FR-732` da
   [`045`](../045-conducao-confiavel-processo/spec.md)* (26/09/2026): *aguardando decisão* —
   admissibilidade ou julgamento —, com a fase dita na mensagem (`UX-085`).
+  *Refinado em 26/09/2026 (RC-115)*: aparece também no Edital encerrado ou cancelado — a peça
+  continua decidível ali (ver *Edital encerrado ou cancelado*, em *Edge Cases*).
 - **UX-065** — **Recorte com ordem vigente e ocupação não apurada.** O recorte e o marco são
   nomeados. O encaminhamento leva à ocupação daquele recorte.
 - **UX-066** — **Ato de ordenação emitido e não divulgado.** O marco é nomeado. *Não é

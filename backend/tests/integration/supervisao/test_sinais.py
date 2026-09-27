@@ -960,6 +960,52 @@ def test_o_edital_parado_nao_silencia_as_especies_anteriores(peca, quem_divulga)
     assert depois == antigas, "o encerramento moveu uma espécie que não é de trabalho pendente"
 
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("estado", ["ENCERRADO", "CANCELADO"])
+def test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide(peca, presidenta, estado):
+    """O recurso pendente não é trabalho que a instituição decidiu não concluir (RC-115).
+
+    **A `045` escreveu a premissa e a contradisse no mesmo lugar.** O comentário de
+    `alcance_no_edital` dizia que o recurso *"continua podendo ser decidido"* — e nem a
+    admissibilidade nem o julgamento consultam o estado do Edital —, mas o `UX-064` estava entre as
+    espécies caladas. Num Edital encerrado a peça com julgador livre sumia da Atenção, enquanto a
+    peça com a comissão inteira impedida, pelo `UX-005`, continuava nela: o mesmo recurso aparecia
+    ou não conforme o impedimento de quem o julgaria.
+
+    O teste percorre as duas metades: o sinal continua, e o ato que ele aponta se pratica — nas
+    duas fases, a admissibilidade da peça nova e o julgamento da admitida.
+    """
+    from processo_seletivo.processos.models import Edital
+    from processo_seletivo.recursos.application.admitir import admitir
+    from processo_seletivo.recursos.application.selectors import assinatura_do_estado_da_peca
+    from tests.fixtures.recursos_us4 import julgador
+
+    processo = peca["cenario"]["processo"]
+    _, nova = segunda_peca(peca)
+    Edital.objects.filter(pk=peca["cenario"]["edital"].pk).update(
+        status=getattr(Edital.Status, estado)
+    )
+
+    achados = das_especies(supervisao.sinais(processo, presidenta), supervisao.UX_064)
+    assert len(achados) == 1, "a peça com julgador livre continua na Atenção"
+    assert "admissibilidade ou julgamento" in achados[0].mensagem
+    assert achados[0].medida == supervisao.Medida(numerador=2, denominador=2)
+
+    admitir(
+        actor=julgador(),
+        recurso_id=nova.id,
+        admitido=False,
+        motivo="Intempestivo.",
+        assinatura_do_estado=assinatura_do_estado_da_peca(nova),
+        idempotency_key=f"rc-115-admitir-{estado}",
+    )
+    deferir(peca)
+
+    assert das_especies(supervisao.sinais(processo, presidenta), supervisao.UX_064) == [], (
+        "decididas as duas, nada mais espera — e o sinal sai por isso, e não pelo estado"
+    )
+
+
 # ---------------------------------------------------------------------------
 # O recurso aparece desde que chega (045, US2)
 #

@@ -75,6 +75,7 @@ Não têm identificador, e nenhuma ferramenta os cobra. Cada um tem a sua linha.
 | Participante sem avaliador nenhum | `test_inscricao_sem_avaliador_e_carente_e_permanece_no_denominador`, `test_o_numero_sem_avaliador_suficiente_abre_uma_lista_do_mesmo_tamanho` |
 | `UX-046` num Edital que parou por ato | `test_onde_ninguem_pode_retificar_o_sinal_nao_e_condicao_de_atencao` |
 | Outra espécie com o mesmo defeito | medido no plano (`research.md`, `R-7`) e registrado na spec; **nenhum teste**, por decisão — é registro, não escopo |
+| *Refinamento de 26/09 (RC-115)*: o `UX-064` num Edital que parou por ato continua — a peça é decidível | `test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide` (encerrado **e** cancelado; admite e julga depois do encerramento) |
 
 ## 5. Os nove testes de regressão da proposta
 

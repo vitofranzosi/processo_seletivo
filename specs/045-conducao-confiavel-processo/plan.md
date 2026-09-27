@@ -69,6 +69,8 @@ Completa em [research.md](research.md). Cinco coisas que a spec não sabia:
    impedido, **já** conduz — a análise corrigiu a primeira leitura, que a contava como lacuna.
 5. **O `UX-004` e o `UX-005` num Edital encerrado estão certos** (`R-7`): o ato continua possível
    enquanto o Processo não termina. O `UX-065` em recorte sem quadro não está, e ficou registrado.
+   *Refinado em 26/09, depois do merge (RC-115): o mesmo vale para o `UX-064`, a outra metade da
+   partição do recurso — e o código o calava no Edital parado. Corrigido; ver a spec, *Edge Cases*.*
 
 ## Ordem de entrega
 

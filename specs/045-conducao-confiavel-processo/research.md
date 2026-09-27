@@ -220,6 +220,8 @@ candidatos, e a medição os absolve: nenhum serviço de `classificacao/`, `recu
 consulta o estado do **Edital** — reemitir a ordem e julgar o recurso continuam possíveis enquanto o
 **Processo** não estiver em estado final. A assimetria da `038` está certa para eles; o que estava
 errado era a premissa escrita para o `UX-001` e o `UX-002`, que saem.
+*Refinado em 26/09, depois do merge (RC-115): o mesmo vale para o `UX-064`, a outra metade da
+partição do recurso — e o código o calava no Edital parado. Corrigido; ver a spec, *Edge Cases*.*
 
 **Achados, registrados e não tomados** (entram na spec, *Out of Scope*):
 
