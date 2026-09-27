@@ -165,6 +165,18 @@ urlpatterns = [
         views.fragmento_retificacao_linha_do_quadro,
         name="fragmento-retificacao-linha-do-quadro",
     ),
+    # A Modalidade acrescentada (048), escopada ao Edital pela mesma razão.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/modalidade",
+        views.fragmento_retificacao_modalidade,
+        name="fragmento-retificacao-modalidade",
+    ),
+    # O critério de desempate acrescentado (048), escopado ao Edital pela mesma razão.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/criterio",
+        views.fragmento_retificacao_criterio,
+        name="fragmento-retificacao-criterio",
+    ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já
     # significa "passo do compositor" em `editais/<uuid>/compor/<slug:etapa>` (D-009, D-015).

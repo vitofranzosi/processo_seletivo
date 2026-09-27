@@ -54,6 +54,124 @@ def validate_normative_rule(rule: dict) -> None:
         )
 
 
+MODALIDADE_REPETIDA = "Modalidades de Concorrência não podem se repetir no Perfil."
+CRITERIO_COM_ORDEM_REPETIDA = (
+    "Critérios de desempate não podem compartilhar a mesma ordem: "
+    "a ordem é a norma, e duas na mesma posição exigiriam desempatar o desempate."
+)
+CRITERIO_SEM_ALVO = (
+    "Todo critério de desempate deve declarar o que compara: uma Etapa ou um fato declarado."
+)
+CRITERIO_SEM_COMPORTAMENTO_NA_AUSENCIA = (
+    "Todo critério de desempate deve declarar o que fazer quando o valor "
+    "que ele consome não existe."
+)
+
+
+def validar_modalidade(modalidade: dict, *, codigos_do_perfil) -> None:
+    """A Modalidade que uma Retificação acrescenta vale o que a composição exigiria dela (048).
+
+    **As exigências da composição estão em dois lugares, e esta função junta os dois.** A forma
+    — código e denominação preenchidos, fundamento e versão juntos quando há regra — é do
+    serializer da API; a unicidade do código e a faixa do percentual são de `validate_profile`. A
+    Retificação não atravessa nenhum dos dois: ela escreve no conteúdo canônico, e a publicação não
+    confere unicidade de código (`validation.py`: "a Retificação não passa por
+    `validate_profiles`"). Sem esta função, a API publicava Modalidade só com `id` e `code`.
+
+    **Só para o que o ato acrescenta**, e nunca sobre o conteúdo inteiro: julgar o acervo pela regra
+    de hoje tornaria irretificável, em qualquer campo, o Edital que publicou dado antigo imperfeito.
+
+    `codigos_do_perfil` são os códigos das **demais** Modalidades do Perfil: as vigentes e as que o
+    mesmo ato já acrescentou antes desta.
+    """
+    identidade = modalidade.get("id", "")
+    codigo = str(modalidade.get("code") or "").strip()
+    if not codigo:
+        raise ProfileValidationError(
+            "Toda Modalidade de Concorrência precisa de código.",
+            campo="code",
+            identidade=identidade,
+        )
+    if codigo in {str(outro).strip() for outro in codigos_do_perfil}:
+        raise ProfileValidationError(
+            f"{MODALIDADE_REPETIDA} O Perfil já tem uma Modalidade com o código {codigo}: use "
+            "outro código.",
+            campo="code",
+            identidade=identidade,
+        )
+    if not str(modalidade.get("name") or "").strip():
+        raise ProfileValidationError(
+            f"Modalidade {codigo}: informe a denominação.",
+            campo="name",
+            identidade=identidade,
+        )
+    regra = modalidade.get("normativeRule")
+    if regra:
+        if not str(regra.get("foundation") or "").strip():
+            raise ProfileValidationError(
+                f"Modalidade {codigo}: a Regra Normativa precisa do fundamento. Sem regra, deixe "
+                "fundamento, versão e percentual em branco.",
+                campo="foundation",
+                identidade=identidade,
+            )
+        if not str(regra.get("version") or "").strip():
+            raise ProfileValidationError(
+                f"Modalidade {codigo}: o fundamento declarado precisa da versão.",
+                campo="version",
+                identidade=identidade,
+            )
+        validate_normative_rule(regra)
+
+
+def validar_criterio(criterio: dict, *, ordens_do_marco) -> None:
+    """O critério que uma Retificação acrescenta vale o que a composição exigiria dele (048).
+
+    Junta, pela mesma razão de `validar_modalidade`, o vocabulário do serializer da API e as regras
+    de `validate_classification_milestones`, com as mesmas frases. O vocabulário vem de quem o
+    executa, `classificacao/domain/desempate`. Se o alvo existe no Edital — a Etapa, o fato — é
+    conferido pela publicação sobre o conteúdo resultante, e não aqui.
+
+    `ordens_do_marco` são as ordens dos critérios que **continuam** no marco depois do ato:
+    remover um critério e acrescentar outro na mesma posição é a troca que esta função existe para
+    permitir.
+    """
+    from processo_seletivo.classificacao.domain import desempate
+
+    identidade = criterio.get("id", "")
+    ordem = criterio.get("order")
+    if not isinstance(ordem, int) or isinstance(ordem, bool) or ordem < 1:
+        raise ProfileValidationError(
+            "A ordem de aplicação do critério de desempate é um número inteiro a partir de 1.",
+            campo="order",
+            identidade=identidade,
+        )
+    if ordem in set(ordens_do_marco):
+        raise ProfileValidationError(
+            CRITERIO_COM_ORDEM_REPETIDA, campo="order", identidade=identidade
+        )
+    tipo = criterio.get("type")
+    por_etapa = {desempate.MAIOR_PONTUACAO_NA_ETAPA}
+    por_fato = {desempate.MAIOR_VALOR_DE_FATO, desempate.MENOR_VALOR_DE_FATO}
+    if tipo not in por_etapa | por_fato:
+        raise ProfileValidationError(
+            "O critério de desempate precisa dizer o que compara: a pontuação numa Etapa, ou o "
+            "valor de um fato declarado.",
+            campo="type",
+            identidade=identidade,
+        )
+    parametros = criterio.get("parameters") or {}
+    alvo = parametros.get("stageId") if tipo in por_etapa else parametros.get("factId")
+    if not alvo:
+        raise ProfileValidationError(CRITERIO_SEM_ALVO, campo="parameters", identidade=identidade)
+    if criterio.get("whenMissing") not in {
+        desempate.ULTIMO_NO_CRITERIO,
+        desempate.CRITERIO_NAO_SE_APLICA,
+    }:
+        raise ProfileValidationError(
+            CRITERIO_SEM_COMPORTAMENTO_NA_AUSENCIA, campo="whenMissing", identidade=identidade
+        )
+
+
 def validate_profile(profile: dict, *, modalidades_do_edital: set[str] | None = None) -> None:
     """As regras que se decidem olhando um Perfil só.
 
@@ -96,7 +214,7 @@ def validate_profile(profile: dict, *, modalidades_do_edital: set[str] | None = 
     modalities = profile.get("competitionModalities", [])
     modality_codes = [item["code"] for item in modalities]
     if len(modality_codes) != len(set(modality_codes)):
-        raise ProfileValidationError("Modalidades de Concorrência não podem se repetir no Perfil.")
+        raise ProfileValidationError(MODALIDADE_REPETIDA)
     for modality in modalities:
         rule = modality.get("normativeRule")
         if rule:
@@ -332,24 +450,15 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
         criterios = marco.get("tiebreakers", [])
         ordens = [criterio.get("order") for criterio in criterios]
         if len(ordens) != len(set(ordens)):
-            raise ProfileValidationError(
-                "Critérios de desempate não podem compartilhar a mesma ordem: "
-                "a ordem é a norma, e duas na mesma posição exigiriam desempatar o desempate."
-            )
+            raise ProfileValidationError(CRITERIO_COM_ORDEM_REPETIDA)
         for criterio in criterios:
             # A ausência é declarada, nunca inferida: o silêncio não vira zero nem último lugar
             # — ele impede a publicação da regra (FR-018).
             parametros = criterio.get("parameters") or {}
             if not (parametros.get("stageId") or parametros.get("factId")):
-                raise ProfileValidationError(
-                    "Todo critério de desempate deve declarar o que compara: uma Etapa ou um fato "
-                    "declarado."
-                )
+                raise ProfileValidationError(CRITERIO_SEM_ALVO)
             if not criterio.get("whenMissing"):
-                raise ProfileValidationError(
-                    "Todo critério de desempate deve declarar o que fazer quando o valor "
-                    "que ele consome não existe."
-                )
+                raise ProfileValidationError(CRITERIO_SEM_COMPORTAMENTO_NA_AUSENCIA)
         _validar_janela_recursal(marco.get("appealWindow"))
         _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
         _validar_regra_de_corte(marco.get("cutRule"))
