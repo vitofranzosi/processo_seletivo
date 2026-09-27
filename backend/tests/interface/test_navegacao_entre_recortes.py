@@ -129,6 +129,30 @@ def test_a_tela_do_corte_tambem_oferece_os_outros_recortes(client, seletor_ligad
     assert all("/corte" in caminho for caminho in caminhos), "o caminho fica na mesma tela"
 
 
+def test_a_tela_da_convocacao_tambem_oferece_os_outros_recortes(client, seletor_ligado, cenario):
+    """A convocação ganhou porta na página do Edital em 27/09 (033, `FR-473`), que abre a ampla.
+
+    Sem a navegação da `FR-497`, os recortes reservados continuavam só pelo endereço, e a tela não
+    dizia em qual recorte se estava. É a única porta para eles: a ocupação não pode nomear a
+    convocação (016, `UX-034`).
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital, rota="interface:convocacao").content.decode()
+
+    assert "Recorte: <strong>Ampla concorrência (linha geral do quadro)</strong>" in pagina
+    caminhos = caminhos_oferecidos(pagina)
+    assert len(caminhos) == 2
+    assert all("/convocacao?lista=" in caminho for caminho in caminhos), (
+        "a mesma tela, outro recorte"
+    )
+    reservado = abrir(client, edital, lista=MODALIDADE_PPI, rota="interface:convocacao")
+    assert (
+        "Recorte: <strong>Pretos, pardos e indígenas (PPI)</strong>" in reservado.content.decode()
+    )
+
+
 def test_as_duas_telas_nomeiam_o_recorte_em_que_se_esta(client, seletor_ligado, cenario):
     """**As duas metades da `FR-497`**: oferecer os outros e dizer em qual se está.
 
@@ -152,10 +176,11 @@ def test_edital_sem_reserva_nao_ganha_navegacao_nova(client, seletor_ligado, sem
     edital, _, _ = sem_reserva
     identificar(client, "carlos", ["gestor"])
 
-    pagina = abrir(client, edital).content.decode()
+    for rota in ("interface:ordenacao", "interface:convocacao"):
+        pagina = abrir(client, edital, rota=rota).content.decode()
 
-    assert caminhos_oferecidos(pagina) == []
-    assert "Recortes deste marco" not in pagina
+        assert caminhos_oferecidos(pagina) == [], rota
+        assert "Recortes deste marco" not in pagina, rota
 
 
 # --- T031 · o recorte sem ordem diz o que falta, e o inexistente é 404 --------------------------

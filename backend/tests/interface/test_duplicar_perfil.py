@@ -436,6 +436,38 @@ def test_sucesso_devolve_o_cartao_da_copia_com_indice_novo_foco_e_anuncio(client
     assert "Perfil TEC-ADM-2 criado a partir de TEC-ADM." in corpo
 
 
+def test_a_copia_de_quem_tem_marco_diz_quantos_leva(client, com_marco):
+    """`FR-650`: os marcos não aparecem na etapa, e o anúncio é o único lugar que os conta."""
+    corpo = _duplicar(client, com_marco, perfis_completos()).content.decode()
+
+    assert "Leva 1 marco de classificação" in corpo
+    assert "Não leva marco de classificação" not in corpo
+
+
+def test_a_copia_de_quem_nao_tem_marco_diz_que_nao_leva_e_por_que(client, com_etapas):
+    """`FR-650` com a `FR-636`: zero também é quantidade, e o silêncio enganava.
+
+    É o fluxo que o assistente sugere — duplicar na etapa Perfis, antes da Classificação —, e nele
+    a origem ainda não tem marco gravado. O anúncio calava, e a ajuda prometia que os marcos vinham.
+    """
+    corpo = _duplicar(client, com_etapas, perfis_completos()).content.decode()
+
+    assert "Leva " not in corpo
+    assert (
+        "Não leva marco de classificação: TEC-ADM ainda não tem marco gravado, e os marcos se "
+        "compõem na etapa Classificação." in corpo
+    )
+
+
+def test_a_ajuda_do_duplicar_nao_promete_marco_que_a_origem_nao_tem(client, com_etapas):
+    """`FR-636`: os marcos vêm do que a origem tem gravado, ou do que ela trouxe de outra cópia."""
+    corpo = " ".join(client.get(_etapa(com_etapas)).content.decode().split())
+
+    assert "Modalidades, quadro, fatos e marcos de classificação" not in corpo
+    assert "Os marcos de classificação vão junto só se este Perfil já os tiver" in corpo
+    assert "Sem isso, a cópia nasce sem marco." in corpo
+
+
 @pytest.mark.parametrize(
     ("codigo", "mensagem"),
     [

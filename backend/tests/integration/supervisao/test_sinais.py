@@ -441,6 +441,92 @@ def test_o_ato_de_uma_lista_de_reserva_tambem_e_alcancado(certame_sorteado, pres
     assert "Pretos, pardos e indígenas" in achados[0].mensagem
 
 
+# `UX-004` — o recorte reservado do marco **computado** (034)
+#
+# A `034` fez o marco computado emitir uma ordem por recorte, e a supervisão continuou perguntando
+# só pela da ampla: a ordem do recorte PPI envelhecia e a Atenção não dizia nada. E, quando
+# dissesse, o destino sem `?lista=` abriria a ordenação da ampla, que não estava obsoleta.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def certame_computado(gestor, api_client, manager_headers, process_payload):
+    """O 7/1/2 da `034`, com a sexta inscrita — a que ficou sem avaliação — também em PPI."""
+    from tests.fixtures.ocupacao import MODALIDADE_PPI
+    from tests.fixtures.recortes import declarar, montar_cenario_7_1_2
+
+    edital, pontuada, inscricoes = montar_cenario_7_1_2(
+        gestor, api_client, manager_headers, process_payload, prefixo="supervisao-034"
+    )
+    declarar(inscricoes[5], MODALIDADE_PPI)
+    return edital, pontuada, inscricoes
+
+
+def eliminar_por_ocorrencia(edital, etapa_id, inscricao):
+    """Um Resultado novo na Etapa que o marco ordena — o fato posterior que envelhece a ordem."""
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    return ResultadoEtapa.objects.create(
+        inscricao=inscricao,
+        edital=edital,
+        versao=effective_version(edital_id=edital.id),
+        etapa_id=etapa_id,
+        origem=ResultadoEtapa.Origem.OCORRENCIA,
+        consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+        motivo="Não compareceu",
+        consolidado_em=timezone.now(),
+        consolidado_por="teste",
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_recorte_reservado_do_marco_computado_e_alcancado_e_o_destino_o_abre(
+    certame_computado, gestor, presidenta
+):
+    """`022` `FR-029` e `UX-004`, com a `034` `FR-491`: os recortes vêm da derivação única.
+
+    O destino leva o recorte (`FR-497`): sem `?lista=`, a ordenação abre a ampla, e quem seguisse o
+    sinal do PPI encontraria uma ordem que não envelheceu.
+    """
+    from django.urls import reverse
+
+    from tests.fixtures.corte import MARCO
+    from tests.fixtures.ocupacao import MODALIDADE_PPI
+    from tests.fixtures.recortes import emitir_recorte
+
+    edital, pontuada, inscricoes = certame_computado
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="supervisao-034-ppi")
+    antes = das_especies(supervisao.sinais(edital.processo, presidenta), supervisao.UX_004)
+    assert antes == [], "o cenário não pode nascer obsoleto — senão o teste abaixo não prova nada"
+
+    eliminar_por_ocorrencia(edital, pontuada["id"], inscricoes[5])
+
+    achados = das_especies(supervisao.sinais(edital.processo, presidenta), supervisao.UX_004)
+    reservados = [sinal for sinal in achados if "Pretos, pardos e indígenas" in sinal.alvo]
+    assert len(reservados) == 1, [sinal.alvo for sinal in achados]
+    ordenacao = reverse("interface:ordenacao", args=[edital.id, MARCO])
+    assert reservados[0].destino.url == f"{ordenacao}?lista={MODALIDADE_PPI}"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_o_recorte_reservado_com_ordem_e_sem_apuracao_tambem_sinaliza(
+    certame_computado, gestor, presidenta
+):
+    """`038` `FR-563` (`UX-065`): a mesma leitura dos recortes serve às três espécies."""
+    from tests.fixtures.ocupacao import MODALIDADE_PPI
+    from tests.fixtures.recortes import emitir_recorte
+
+    edital, _, _ = certame_computado
+    antes = das_especies(supervisao.sinais(edital.processo, presidenta), supervisao.UX_065)
+    assert not [sinal for sinal in antes if "Pretos" in sinal.alvo], "sem ordem não há sinal"
+
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="supervisao-034-ppi-065")
+
+    achados = das_especies(supervisao.sinais(edital.processo, presidenta), supervisao.UX_065)
+    assert [sinal for sinal in achados if "Pretos, pardos e indígenas" in sinal.alvo]
+
+
 # ---------------------------------------------------------------------------
 # `UX-063` — avaliação distribuída e não concluída (038)
 #
