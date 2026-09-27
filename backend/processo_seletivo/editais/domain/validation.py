@@ -2676,6 +2676,7 @@ def _coerencia_do_quadro_de_vagas(
         if not isinstance(perfil, dict):
             continue
         base = _caminho_da_entidade("profiles", perfil, posicao)
+        findings.extend(_reserva_convocada_fora(perfil, base=base, ato=ato))
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
             # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
@@ -2890,6 +2891,42 @@ def _acervo_sem_quadro(perfil, *, base, ato) -> list[ValidationFinding]:
             "ampla concorrência a este Perfil, nesta Retificação, é o ato que declara a "
             "quantidade.",
             f"{base}/vacancyTable",
+        )
+    ]
+
+
+def _reserva_convocada_fora(perfil, *, base, ato) -> list[ValidationFinding]:
+    """Perfil só de cadastro de reserva: o sistema classifica, e a convocação é feita fora dele.
+
+    **O Edital publica, classifica e divulga o resultado — e não convoca.** Convocar exige vaga
+    faltante apurada (`convocar.py`, `_recusar_por_deficit`), e com zero vagas imediatas a apuração
+    nunca tem déficit: toda chamada é recusada. Retificar as vagas a cada chamada seria usar ato
+    normativo para registrar fato operacional. A DP-05 decidiu, em 26/09, que essa família fica
+    fora do piloto; dizê-lo na Revisão é o que impede que o operador descubra meses depois, na tela
+    de convocação (RC-58).
+
+    **Advertência, e só na publicação.** O Edital é legítimo — os 140/2025 e 173/2025 são assim —,
+    e recusá-lo afirmaria o contrário. Na Retificação o aviso repetiria, a cada correção de data,
+    o que já foi dito antes de publicar.
+
+    **Zero sem reserva não entra aqui.** Oferta sem vaga e sem cadastro é outra pergunta, e este
+    aviso a responderia errado.
+    """
+    total = perfil.get("immediateVacancies")
+    if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or total != 0:
+        return []
+    if perfil.get("reserveType") not in ("LIMITED", "UNLIMITED"):
+        return []
+    rotulo = perfil.get("code") or perfil.get("name") or ""
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "reserve_only_convocation_external",
+            f"O Perfil '{rotulo}' oferta só cadastro de reserva, com 0 vaga imediata. A "
+            "classificação e o resultado serão conduzidos no sistema; a convocação dos "
+            "classificados será feita fora dele, porque o sistema só convoca para vaga imediata "
+            "apurada.",
+            f"{base}/immediateVacancies",
         )
     ]
 

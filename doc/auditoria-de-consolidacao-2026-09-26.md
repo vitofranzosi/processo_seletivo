@@ -20,7 +20,11 @@ a B-1, a B-3, o mapa por domínio, o grafo, a §13 e os anexos 3, 4 e 7. E o #19
 do portal, a régua própria de fase e o Evento cancelado que não se dizia cancelado; registrou duas unidades que nasceram
 e fecharam nela, o RC-116 e o RC-117, e quatro que ficam abertas, o RC-118 a RC-121, três delas à
 espera de decisão; mudaram as contagens, o mapa, a topologia, as ondas, a §3.2, a §3.6, a §3.12, a
-§3.13, a §3.15, a B-8, o mapa por domínio, o grafo, a §13 e os anexos 1, 2, 3 e 4. O inventário da §2 e a reconciliação entre lotes
+§3.13, a §3.15, a B-8, o mapa por domínio, o grafo, a §13 e os anexos 1, 2, 3 e 4. E a DP-05 foi
+decidida em 26/09, depois de o RC-58 ser conferido no código: o cadastro de reserva fica **fora do
+piloto**, e a publicação de Perfil só de reserva passou a avisar, na Revisão, que a convocação é externa.
+O RC-58 continua NÃO IMPLEMENTADO, e as contagens não mudam; mudaram o mapa, as ondas, a matriz, a B-5,
+o mapa por domínio, a §13 e o anexo 1. O inventário da §2 e a reconciliação entre lotes
 registram o que as fontes eram, e só ganharam o desfecho. Fora isso, o documento descreve a `main` em
 `bb774d9`.
 **Objeto:** os achados, recomendações e decisões de **21 relatórios e registros** produzidos entre 02/09 e
@@ -131,7 +135,7 @@ RC-113, que ela registrou sem validar.*
 | RC-80 | `schedule.status` declarado **derivado** que nada derivava, e `UX-001`/`UX-002` levando a uma Retificação que não os resolvia: **corrigido pela `045` (#187) em 26/09** — a fase é derivada, o `UX-002` saiu, o `UX-001` virou aviso de composição; a régua própria do portal, que sobrava, **fechada pela `047` (#193)** | — | `calendario.py` (`fase`) · `validation.py` (`stage_without_schedule_event`) · `editais/domain/fase_do_evento.py` |
 | RC-37 | A Retificação **não acrescenta Modalidade**: Edital publicado sem conserto (`D-G5`, decidida em 19/09) | A | `retificacao.py:1054` |
 | RC-29 | Etapa com **duas avaliações** — e os dois irmãos — publicava ato que **nunca consolida**: **corrigido pela `046` (#188) em 26/09**, impeditivo quando o fluxo exige o Resultado; resta a regra de combinação, só com Edital real | B (a regra de combinação) | `validation.py` (`_etapa_sem_resultado`) |
-| RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito | A `[VALIDAR]` | `convocar.py:100-152` · nenhum consumidor de `reserveLimit` |
+| RC-58 | **Cadastro de reserva não é convocável**: convocar exige vaga faltante apurada, e `reserveLimit` publicado não tem efeito. **Conferido no código em 26/09**: publicar, classificar e divulgar funcionam; só a convocação falha. A DP-05 o deixou **fora do piloto**, com aviso na Revisão (`reserve_only_convocation_external`) | spec própria quando houver Edital de reserva no alvo | `convocar.py` (`_recusar_por_deficit`) · `validation.py` (`_reserva_convocada_fora`) · nenhum consumidor de `reserveLimit` |
 | RC-72 | **"Fonte de demonstração"** do sorteio podia ser publicada em produção: **fechado pela `046` (#188) em 26/09** — fora do vocabulário de produção, com barreira de boot | — | `fontes/__init__.py` (`fontes_publicadas`) · `production.py` |
 | RC-111 | O **"O que mudou"** público cala **45 dos 84 campos retificáveis** — percentual da cota, quadro de vagas, prazo recursal, método do sorteio —, contra a `FR-130` da `024`. O RC-39, um deles, foi corrigido pelo #185 | A | `alteracoes.py` (`CAMPOS`, `COLECOES`) · `doc/achado-o-que-mudou-cala-campos-retificaveis.md` |
 | RC-112 | A Ocorrência numa Etapa que nunca consolida **trava a Etapa seguinte** para quem não tem Resultado — registrado pela `046` | A `[VALIDAR]` | `ocorrencia.py:14-20` · `prontidao.py:150-154` |
@@ -196,8 +200,8 @@ lado do candidato e matrícula no lado que sai. As auditorias de 13/09 e 16/09 o
   *A `046` registrou o RC-113, e as revisões das duas encontraram o RC-114 e o RC-115; os três foram
   corrigidos pelo PR corretivo de 26/09.*
 - **Onda B — Edital publicado com conserto e oferta executável até o fim.** Uma Retificação que acrescenta
-  o que o contrato já permite (RC-37 + RC-38) e o cadastro de reserva convocável (RC-58), este depois
-  de validado.
+  o que o contrato já permite (RC-37 + RC-38). O cadastro de reserva convocável (RC-58) saiu da onda:
+  a DP-05 o deixou fora do piloto em 26/09, com aviso na Revisão.
 - **Onda C — candidato e documento.** O portal (RC-47, RC-48, RC-49 — o RC-48 *feito pela `047`,
   #193, em 26/09*), as conferências baratas do
   documento (RC-20, RC-21, RC-12, RC-31), o reuso com estado de revisão (RC-45) e as diretas da
@@ -354,7 +358,7 @@ quando indicado.
 | RC | IDs antigos | Problema original → recomendação | Specs · implementação | Evidência atual | Estado | Faz sentido? | Resíduo · grupo | Próxima ação | Anexo |
 |---|---|---|---|---|---|---|---|---|---|
 | RC-57 | ACH-47 · E-1 · 13.1 · L-1 · R-006 · Q-2 · Q-1 · arco 014/016/019 · PR #85 · G16-002 · O16-002 · L-5/L-6 · P-11 | reserva publicada sem apuração; cauda do processo não fechava | 014, 016, 019, 025, 027, 034, 035 | `classificacao/application/emissao.py:20-47` (ordem por recorte); `editais/domain/recortes.py:33-60` | RESOLVIDO | não | — | nenhuma | 3, 1 |
-| RC-58 | **P-1 · P-2 · P-3** · estudo M15 · E8 · NOVO-6 do lote 1 · NOVO-1 do lote 3 | Edital **só de cadastro de reserva** publica "0 vagas" e **não convoca**: convocar exige vaga faltante apurada; o **"Cadastro Reserva limitado em N"** sai publicado e **nada o aplica**; não há prazo de validade | nenhuma; `reserveType`/`reserveLimit` existem desde a 001 e a 040 trata "vagas 0 — zero legítimo" | `convocacao/application/convocar.py:100-152`; nenhuma ocorrência de `reserveType`/`reserveLimit` em `ocupacao/`, `convocacao/` ou `classificacao/`; `pdf.py:1683-1685` imprime o limite | NÃO IMPLEMENTADO | sim — é a mesma doença do ACH-47, "aceita, publica e não executa", numa família da amostra (140/2025, 173/2025) | fluxo incompleto para um tipo de Edital que o produto aceita · **A** `[VALIDAR]` | validar pela tela e confirmar se a família está no alvo do piloto; depois, spec | 1, 3, 6 |
+| RC-58 | **P-1 · P-2 · P-3** · estudo M15 · E8 · NOVO-6 do lote 1 · NOVO-1 do lote 3 | Edital **só de cadastro de reserva** publica "0 vagas" e **não convoca**: convocar exige vaga faltante apurada; o **"Cadastro Reserva limitado em N"** sai publicado e **nada o aplica**; não há prazo de validade | `reserveType`/`reserveLimit` existem desde a 001 e a 040 trata "vagas 0 — zero legítimo"; **DP-05 (26/09): fora do piloto**, com aviso na Revisão | `convocacao/application/convocar.py:100-152`; nenhuma ocorrência de `reserveType`/`reserveLimit` em `ocupacao/`, `convocacao/` ou `classificacao/`; `pdf.py:1683-1685` imprime o limite | NÃO IMPLEMENTADO | sim — é a mesma doença do ACH-47, "aceita, publica e não executa", numa família da amostra (140/2025, 173/2025) | fluxo incompleto para um tipo de Edital que o produto aceita · conferido no código em 26/09: publicar, classificar e divulgar funcionam, só convocar falha · fora do piloto pela DP-05 | spec própria quando houver Edital de reserva escolhido para operação — ver a DP-05 | 1, 3, 6 |
 | RC-59 | ACH-59 · cascata 14/2026 · LONG-3 | grupos 1→2→3 são ordem de chamada, não reserva; os avisos empurram para repartir | a decisão do encadeamento já nomeou a forma (`callRules`) | `validation.py:2480`; nenhuma prioridade entre listas | NÃO IMPLEMENTADO | sim, quando a família entrar no alvo | B | nenhuma agora | 3, 1 |
 
 ### 3.9 Comissão, alocação, distribuição e avaliação
@@ -711,7 +715,7 @@ executável. É por isso que ela não aparece aqui como uma spec.
 | **Reaproveitamento** | referências, cronograma, segundo Edital | RC-42 guardião; RC-43 estado de revisão | — |
 | **Portal e inscrição** | parecer, notícia do eliminado, facultativo na Revisão; o desfecho do Edital, a fase do Evento na régua da gestão, o prazo recursal público e o histórico dos resultados (RC-116, a sobra do RC-80 no portal, RC-48, RC-117, `047`, #193) | RC-47 título e vagas; RC-49 prazo no rascunho; RC-46 validar; **RC-118** encerramento do Processo que não fecha inscrições (decisão) | RC-50; RC-119 período cancelado que recebe; a sobra do RC-48 (a prévia da divulgação) |
 | **Documentos exigidos e Mesa** | contenção #161, instrução na Mesa, recorte transversal e lista gravada (RC-52, RC-53, #173), filtro de concorrência (RC-54, #172) | RC-55 submodalidade | resíduo do RC-54, RC-56 |
-| **Oferta, ocupação e convocação** | ordem por recorte, cauda completa; o corte sem Etapa governada que convoca (RC-113, PR corretivo de 26/09 — o recorte sem corte algum continua lendo o vazio, nota e não unidade) | **RC-58** cadastro de reserva (A, validar); RC-59 cascata | — |
+| **Oferta, ocupação e convocação** | ordem por recorte, cauda completa; o corte sem Etapa governada que convoca (RC-113, PR corretivo de 26/09 — o recorte sem corte algum continua lendo o vazio, nota e não unidade) | **RC-58** cadastro de reserva (fora do piloto pela DP-05, com aviso; spec quando houver Edital no alvo); RC-59 cascata | — |
 | **Comissão e avaliação** | mesa, distribuição, impedimentos, julgador | RC-61 Perfil/polo; RC-62 Mesa após Resultado; RC-63 validar; RC-64 barema e alcance; RC-65 heteroidentificação | RC-66, RC-67 |
 | **Resultado e divulgação** | prévia exemplar, publicador com caminho | — | RC-69, RC-70 |
 | **Sorteio** | executável ponta a ponta, vocabulário fechado, fonte de demonstração fora de produção (RC-72, #188) | RC-73 recortes; RC-74 gatilho da fonte real | — |
@@ -839,8 +843,12 @@ antes.
 - **Problema.** Um Edital só de cadastro de reserva publica e não convoca, e o limite de suplentes
   publicado não tem efeito.
 - **Origem.** P-1, P-2 e P-3 (07–12/09); estudo M15/E8 (21/09); os NOVOS dos lotes 1 e 3.
-- **Situação atual.** Nada. O #159 tornou o "limitado" publicável.
-- **Lacuna residual.** RC-58.
+- **Situação atual.** O #159 tornou o "limitado" publicável. **Conferido no código em 26/09**: configurar,
+  publicar, classificar, apurar e divulgar o resultado funcionam com 0 vagas e reserva, sem número
+  fictício; só a convocação falha, com `sem_deficit`. A DP-05 deixou a família **fora do piloto**, e a
+  publicação passou a avisar na Revisão que a convocação é externa.
+- **Lacuna residual.** RC-58, adiado: a spec nasce quando houver Edital de reserva no alvo, com o
+  escopo que a DP-05 registra.
 - **Escopo mínimo.**
   - **Primeiro, validar pela tela**: publicar um Edital com 0 vagas imediatas e cadastro de reserva,
     classificar e tentar convocar.
@@ -1096,6 +1104,8 @@ usuário. As do item 9 e a Diretoria do item 12 já tinham registro próprio e a
    bloco "O que foi decidido" de cada uma.
 5. **Cadastro de reserva está no alvo do piloto?** E qual é a semântica de `reserveLimit`: limite
    executável ou texto normativo (RC-58)? → DP-05
+   *Decidida em 26/09: fora do piloto, com aviso na Revisão; a convocação da reserva é spec própria,
+   quando houver Edital de reserva escolhido para operação.*
 6. **O Cefor usa dupla leitura?** Isso decide se o RC-29 fica só no aviso ou ganha spec de combinação. → DP-06
    *Decidida em 26/09, ao especificar a `046`: impeditivo quando o fluxo exige o Resultado, aviso quando
    não exige; a spec de combinação continua esperando Edital real.* *Refinada pelo PR corretivo de
