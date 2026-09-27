@@ -24,9 +24,12 @@ chaveado como o contrato, por `(coleção, caminho relativo)`, e `test_alteracoe
 um caminho para cada par retificável e exige linha: campo novo sem tradução reprova no dia em que
 nasce, e não no dia em que alguém o procura no portal.
 
-**Os rótulos são os da tela da Retificação** (`interface/retificacao.py`), para que quem retifica e
-quem se inscreve leiam o mesmo nome. O módulo não os importa de lá: domínio não importa de
-`interface`, e a cópia é o preço dessa fronteira.
+**Os rótulos acrescentados em 27/09 são os da tela da Retificação** (`interface/retificacao.py`),
+para que quem retifica e quem se inscreve leiam o mesmo nome. Os anteriores ficaram como estavam, e
+alguns divergem da tela — "Denominação" × "Nome da Etapa", "Obrigatoriedade" × "Obrigatório". O
+guardião cobra a existência da linha, e não o nome; unificá-los está registrado no achado. O módulo
+não importa os rótulos de lá: domínio não importa de `interface`, e a cópia é o preço dessa
+fronteira.
 """
 
 from processo_seletivo.editais.domain import mutabilidade
