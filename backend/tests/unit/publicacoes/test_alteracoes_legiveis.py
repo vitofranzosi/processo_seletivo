@@ -14,7 +14,9 @@ from dataclasses import dataclass
 
 import pytest
 
+from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.publicacoes.domain.alteracoes import alteracao_legivel, alteracoes_legiveis
+from processo_seletivo.publicacoes.domain.colecoes import FORMA_DA_COLECAO
 
 PERFIL = "11111111-1111-4111-8111-111111111111"
 EVENTO = "22222222-2222-4222-8222-222222222222"
@@ -23,6 +25,12 @@ ANEXO = "44444444-4444-4444-8444-444444444444"
 SECAO = "55555555-5555-4555-8555-555555555555"
 DOCUMENTO = "66666666-6666-4666-8666-666666666666"
 MODALIDADE = "77777777-7777-4777-8777-777777777777"
+COTA = "88888888-8888-4888-8888-888888888888"
+LINHA_GERAL = "99999999-9999-4999-8999-999999999999"
+LINHA_DA_COTA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+MARCO = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+CRITERIO = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+FATO = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 
 
 @dataclass
@@ -41,7 +49,25 @@ BASE = {
             "id": PERFIL,
             "name": "Professor de Informática",
             "immediateVacancies": 2,
-            "competitionModalities": [{"id": MODALIDADE, "name": "Ampla concorrência"}],
+            "competitionModalities": [
+                {"id": MODALIDADE, "name": "Ampla concorrência"},
+                {"id": COTA, "name": "Pessoas pretas e pardas", "normativeRule": {}},
+            ],
+            "vacancyTable": [
+                {"id": LINHA_GERAL, "modalityId": None, "immediateVacancies": 1},
+                {"id": LINHA_DA_COTA, "modalityId": COTA, "immediateVacancies": 1},
+            ],
+            "declaredFacts": [
+                {"id": FATO, "code": "nascimento", "label": "Data de nascimento", "type": "DATA"}
+            ],
+            "classificationMilestones": [
+                {
+                    "id": MARCO,
+                    "name": "Resultado final",
+                    "stages": [ETAPA],
+                    "tiebreakers": [{"id": CRITERIO, "order": 1}],
+                }
+            ],
         }
     ],
     "schedule": [{"id": EVENTO, "description": "Período de inscrições"}],
@@ -209,3 +235,174 @@ def test_o_recorte_exato_tambem_vira_linha(campo, rotulo):
     linha = alteracao_legivel(BASE, Alteracao(f"/documentRequirements/id={DOCUMENTO}/{campo}"))
 
     assert linha == {"onde": "Documento exigido “Diploma”", "campo": rotulo, "operacao": "alterado"}
+
+
+# ------------------------------------------------ o dicionário acompanha o contrato (RC-111)
+
+
+def _caminho_sintetico(colecao, caminho):
+    """Um caminho concreto para o par do contrato: a forma da gramática, com cada `*` trocado por
+    um seletor de identidade que o conteúdo-base não tem — o elemento sem nome lido é o caso mais
+    pobre, e é nele que a linha ainda precisa existir."""
+    forma = FORMA_DA_COLECAO[colecao].replace("*", "id=00000000-0000-4000-8000-000000000000")
+    return f"{forma}/{caminho}"
+
+
+RETIFICAVEIS = sorted(
+    (colecao, caminho)
+    for (colecao, caminho), decisao in mutabilidade.CONTRATO.items()
+    if decisao.natureza is mutabilidade.Natureza.RETIFICAVEL
+)
+NASCEM = sorted(
+    (colecao, objeto)
+    for (colecao, objeto), (pode, _razao) in mutabilidade.PODE_PASSAR_A_EXISTIR.items()
+    if pode
+)
+
+
+@pytest.mark.parametrize(("colecao", "caminho"), RETIFICAVEIS + NASCEM)
+def test_todo_campo_retificavel_do_contrato_vira_linha(colecao, caminho):
+    """O guardião que faltava (024, FR-130): cada Retificação exibida traz o que foi alterado.
+
+    O silêncio do tradutor é deliberado para o caminho que ninguém sabe ler — e é por isso que o
+    que se sabe ler precisa cobrir o que o contrato deixa retificar. Sem este teste, um campo
+    novo entrava no contrato, passava na Retificação e sumia do resumo público, sem que nenhuma
+    das duas pontas reprovasse: foi assim que 45 dos 84 campos retificáveis ficaram calados até
+    27/09 (`doc/achado-o-que-mudou-cala-campos-retificaveis.md`).
+
+    Os objetos que **nascem** por Retificação entram junto: nascer é `REPLACE` sobre o `null`
+    publicado, e o ato que só declara a regra de corte mostraria "O que mudou" vazio.
+    """
+    lida = alteracao_legivel({}, Alteracao(_caminho_sintetico(colecao, caminho)))
+
+    assert lida is not None, (
+        f"({colecao}, {caminho}) é retificável e o resumo público não o traduz: "
+        "acrescente o rótulo em publicacoes/domain/alteracoes.py, com o nome da tela da "
+        "Retificação"
+    )
+    assert lida["campo"], "a linha precisa nomear o campo, e não só a entidade"
+    assert "/" not in lida["campo"] and "id=" not in lida["onde"]
+
+
+def test_o_guardiao_enxerga_os_campos_compostos():
+    """Contraprova: o teste acima não passa por acaso. Os pares compostos — os que o tradutor
+    antigo não sabia ler, porque lia um segmento só — estão entre os que ele percorre."""
+    compostos = {caminho for _colecao, caminho in RETIFICAVEIS if "/" in caminho}
+
+    assert {"normativeRule/percentage", "appealWindow/durationDays", "drawMethod/source"} <= (
+        compostos
+    )
+    assert ("vacancyTable", "immediateVacancies") in RETIFICAVEIS
+
+
+@pytest.mark.parametrize(
+    ("caminho", "onde", "campo"),
+    [
+        (
+            f"/profiles/id={PERFIL}/competitionModalities/id={COTA}/normativeRule/percentage",
+            "Perfil “Professor de Informática” — Modalidade de concorrência “Pessoas pretas e "
+            "pardas”",
+            "Percentual (%)",
+        ),
+        (
+            f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/appealWindow/durationDays",
+            "Perfil “Professor de Informática” — Marco de classificação “Resultado final”",
+            "Prazo em dias",
+        ),
+        (
+            f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}"
+            "/drawMethod/normalization/rule",
+            "Perfil “Professor de Informática” — Marco de classificação “Resultado final”",
+            "Regra de normalização",
+        ),
+        ("/drawMethod/source", "O Edital", "Fonte pública da semente"),
+        ("/maxInscricoesPorCandidato", "O Edital", "Teto de inscrições por candidato"),
+    ],
+)
+def test_o_campo_composto_se_le_pelo_caminho_inteiro(caminho, onde, campo):
+    """`normativeRule` sozinho não diz se mudou o percentual ou o fundamento.
+
+    O tradutor lia um segmento depois da entidade, e o percentual da cota — o que mais pesa para
+    quem se inscreve por ela — não virava linha.
+    """
+    assert alteracao_legivel(BASE, Alteracao(caminho)) == {
+        "onde": onde,
+        "campo": campo,
+        "operacao": "alterado",
+    }
+
+
+@pytest.mark.parametrize(
+    ("linha", "nome"),
+    [(LINHA_GERAL, "Ampla concorrência"), (LINHA_DA_COTA, "Pessoas pretas e pardas")],
+)
+def test_a_linha_do_quadro_se_chama_pela_lista_de_concorrencia(linha, nome):
+    """A linha não tem nome: ela é a lista a que dá vagas. A geral é a sem Modalidade, e é assim
+    que a tela da Retificação a chama."""
+    lida = alteracao_legivel(
+        BASE, Alteracao(f"/profiles/id={PERFIL}/vacancyTable/id={linha}/immediateVacancies")
+    )
+
+    assert lida == {
+        "onde": f"Perfil “Professor de Informática” — Linha do quadro de vagas “{nome}”",
+        "campo": "Vagas imediatas",
+        "operacao": "alterado",
+    }
+
+
+def test_o_criterio_de_desempate_nomeia_os_tres_niveis():
+    """Dois níveis de coleção aninhada: o critério mora no marco, que mora no Perfil."""
+    lida = alteracao_legivel(
+        BASE,
+        Alteracao(
+            f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/tiebreakers/id={CRITERIO}"
+            "/order"
+        ),
+    )
+
+    assert lida == {
+        "onde": "Perfil “Professor de Informática” — Marco de classificação “Resultado final” — "
+        "Critério de desempate nº 1",
+        "campo": "Ordem de aplicação",
+        "operacao": "alterado",
+    }
+
+
+def test_o_fato_declarado_se_chama_pelo_rotulo_e_nao_pelo_tipo():
+    """O tipo é `DATA` ou `INTEIRO` — vocabulário nosso, e não o nome que o candidato lê."""
+    lida = alteracao_legivel(
+        BASE, Alteracao(f"/profiles/id={PERFIL}/declaredFacts/id={FATO}", operation="REMOVE")
+    )
+
+    assert lida == {
+        "onde": "Perfil “Professor de Informática” — Fato declarado “Data de nascimento”",
+        "campo": "",
+        "operacao": "removido",
+    }
+
+
+def test_o_objeto_que_nasce_vira_linha():
+    """A regra de corte que nasce por Retificação (048) é `REPLACE` sobre o `null` publicado."""
+    lida = alteracao_legivel(
+        BASE, Alteracao(f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/cutRule")
+    )
+
+    assert lida["campo"] == "Regra de corte"
+
+
+@pytest.mark.parametrize(
+    "caminho",
+    [
+        # A parte da regra que não se retifica continua sem linha: completar o dicionário não é
+        # traduzir por prefixo.
+        f"/profiles/id={PERFIL}/competitionModalities/id={COTA}/normativeRule/calculation",
+        f"/profiles/id={PERFIL}/competitionModalities/id={COTA}/normativeRule",
+        # `stages` do marco é campo, e não a coleção de Etapas do Edital: não se desce nele.
+        f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/stages",
+        f"/profiles/id={PERFIL}/classificationMilestones/id={MARCO}/stages/id={ETAPA}/name",
+        "/drawMethod/inventado",
+    ],
+)
+def test_o_composto_desconhecido_continua_calado(caminho):
+    """D-009, do outro lado: o campo composto só vira linha pelo caminho inteiro declarado."""
+    assert alteracao_legivel(BASE, Alteracao(caminho)) is None

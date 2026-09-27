@@ -86,6 +86,11 @@ def test_o_historico_mostra_cada_ato_com_data_justificativa_e_o_que_mudou(
     # O que mudou, em termos do Edital — e não em termos do sistema.
     assert "Perfil “Professor de Informática”" in pagina
     assert "Vagas imediatas" in pagina
+    # **As duas alterações do ato, e não a primeira** (RC-111). O contador dizia "(1)": a linha
+    # do quadro de vagas não tinha tradução, e o resumo a calava sem que nada na tela avisasse. O
+    # teste conferia que a primeira aparecia e não conferia o contador.
+    assert "O que mudou (2)" in pagina
+    assert "Linha do quadro de vagas “Ampla concorrência”" in pagina
     # O documento de **cada** ato continua alcançável, a partir da própria linha: dois atos, dois
     # links para `public-document`.
     assert pagina.count("/publicacoes/") == 3, "abertura, retificação e o botão do Edital no topo"
