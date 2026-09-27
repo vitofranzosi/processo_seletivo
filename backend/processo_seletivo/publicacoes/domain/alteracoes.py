@@ -14,9 +14,24 @@ confere valores; quem se candidata precisa saber **que** as vagas daquele Perfil
 **Caminho não reconhecido não produz linha.** É a `D-009` aplicada ao caso mais fácil de errar:
 inventar um rótulo genérico para um caminho que não se sabe ler afirmaria algo sobre o Edital. Uma
 alteração a menos na lista é honesta; uma linha que diz a coisa errada, não.
+
+**O silêncio tem um custo, e ele é cobrado contra o contrato.** Calar o desconhecido só é honesto
+se o conhecido cobrir o que uma Retificação pode alterar. Até 27/09 não cobria: 45 dos 84 campos
+que `editais/domain/mutabilidade` declara retificáveis não viravam linha — o percentual da cota, o
+quadro de vagas, o prazo recursal, o método do sorteio —, e o contador dizia "(1)" onde o ato
+alterara dois campos (`doc/achado-o-que-mudou-cala-campos-retificaveis.md`). O dicionário agora é
+chaveado como o contrato, por `(coleção, caminho relativo)`, e `test_alteracoes_legiveis` sintetiza
+um caminho para cada par retificável e exige linha: campo novo sem tradução reprova no dia em que
+nasce, e não no dia em que alguém o procura no portal.
+
+**Os rótulos são os da tela da Retificação** (`interface/retificacao.py`), para que quem retifica e
+quem se inscreve leiam o mesmo nome. O módulo não os importa de lá: domínio não importa de
+`interface`, e a cópia é o preço dessa fronteira.
 """
 
-from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
+from processo_seletivo.editais.domain import mutabilidade
+from processo_seletivo.publicacoes.domain.changes import resolve_path
+from processo_seletivo.publicacoes.domain.colecoes import FORMA_DA_COLECAO
 
 # A posição de acréscimo da gramática: `/attachments/-` é "no fim desta coleção".
 ACRESCIMO = "-"
@@ -25,7 +40,8 @@ OPERACOES = {"ADD": "acrescentado", "REPLACE": "alterado", "REMOVE": "removido"}
 
 # Como cada coleção normativa se chama numa página pública, e por qual campo cada elemento dela se
 # reconhece. O nome do elemento vem do **conteúdo-base** — é o que aquela versão dizia, que é o que
-# quem lê precisa reconhecer.
+# quem lê precisa reconhecer. `None` no campo do nome é elemento sem nome próprio, e quem o nomeia é
+# `_nome_proprio`.
 COLECOES = {
     "profiles": ("Perfil", "name"),
     "schedule": ("Evento do cronograma", "description"),
@@ -34,10 +50,32 @@ COLECOES = {
     "attachments": ("Anexo", "label"),
     "documentRequirements": ("Documento exigido", "name"),
     "competitionModalities": ("Modalidade de concorrência", "name"),
-    "declaredFacts": ("Fato declarado", "type"),
+    # Pelo rótulo, e não pelo tipo: o tipo é `DATA` ou `INTEIRO`, vocabulário nosso, e nomeava o
+    # fato como "Fato declarado “DATA”" em todo acréscimo e remoção.
+    "declaredFacts": ("Fato declarado", "label"),
     "classificationMilestones": ("Marco de classificação", "name"),
-    "tiebreakers": ("Critério de desempate", "name"),
+    # O critério não tem nome: o que o distingue dos vizinhos é a ordem em que se aplica.
+    "tiebreakers": ("Critério de desempate", None),
+    # A linha também não: ela é a lista de concorrência a que dá vagas, e o nome vem da Modalidade
+    # que ela aponta — ou da ampla, que é a linha sem Modalidade (025, D-002).
+    "vacancyTable": ("Linha do quadro de vagas", None),
 }
+
+
+# Quais coleções moram dentro de qual, lido da forma que a gramática de endereçamento declara. Sem
+# isto, um campo do elemento que se chame como uma coleção — `stages` do marco, que é lista de
+# identidades — seria lido como descida para dentro dela.
+def _filhas():
+    """`{coleção que contém (None para o Edital): {coleções dentro dela}}`."""
+    filhas = {}
+    for colecao, forma in FORMA_DA_COLECAO.items():
+        nomes = [segmento for segmento in forma.strip("/").split("/") if segmento != "*"]
+        if nomes:
+            filhas.setdefault(nomes[-2] if len(nomes) > 1 else None, set()).add(colecao)
+    return filhas
+
+
+_FILHAS = _filhas()
 
 # Os campos, por coleção. O que não estiver aqui não vira linha — ver a docstring do módulo.
 CAMPOS = {
@@ -53,6 +91,11 @@ CAMPOS = {
         "duties": "Atribuições",
         "workload": "Carga horária",
         "compensation": "Remuneração",
+        "generalCompetitionModalityId": "Modalidade que é a ampla concorrência",
+        "callForm": "Forma de comunicar a convocação",
+        "vacancyReversion/kind": "Gatilho da reversão de vaga reservada",
+        # O objeto que nasce por Retificação (016, D-007): `REPLACE` sobre o `null` publicado.
+        "vacancyReversion": "Reversão de vaga reservada",
     },
     "schedule": {
         "type": "Tipo",
@@ -101,7 +144,53 @@ CAMPOS = {
         "modalityId": "Exigido apenas da modalidade",
         "modalityCode": "Modalidade em todos os Perfis",
     },
-    "competitionModalities": {"code": "Código", "name": "Denominação"},
+    "competitionModalities": {
+        "code": "Código",
+        "name": "Denominação",
+        "description": "Descrição",
+        # A regra da cota tem quatro partes que se retificam e quatro que não (026). O caminho
+        # inteiro é a chave: `normativeRule` sozinho não diria qual das quatro mudou.
+        "normativeRule/percentage": "Percentual (%)",
+        "normativeRule/foundation": "Fundamento normativo",
+        "normativeRule/version": "Versão do fundamento",
+        "normativeRule/effectiveFrom": "Vigente desde",
+    },
+    "vacancyTable": {
+        "immediateVacancies": "Vagas imediatas",
+        "modalityId": "Lista de concorrência",
+    },
+    "declaredFacts": {"label": "Rótulo exibido ao candidato"},
+    "classificationMilestones": {
+        "name": "Denominação do marco",
+        "orderProduction": "Como a ordem é produzida",
+        "operation": "Como as pontuações se combinam",
+        "normalization": "Normalização antes de combinar",
+        "rounding/scale": "Casas decimais da pontuação",
+        "rounding/mode": "Como arredondar",
+        "appealWindow/admits": "Admite recurso",
+        "appealWindow/durationDays": "Prazo em dias",
+        "appealWindow/unit": "Contagem do prazo",
+        "drawMethod/algorithm": "Algoritmo do sorteio",
+        "drawMethod/source": "Fonte pública da semente",
+        "drawMethod/occurrence": "Ocorrência que fixará a semente",
+        "drawMethod/occurrenceAt": "Quando a ocorrência acontece",
+        "drawMethod/derivation": "Como a ocorrência decorre da data programada",
+        "drawMethod/normalization/rule": "Regra de normalização",
+        "drawMethod/normalization/text": "Normalização, como se publica",
+        "drawMethod/substitutionRule/rule": "Regra de substituição",
+        "drawMethod/substitutionRule/text": "Substituição, como se publica",
+        "drawMethod/qualifyingStageId": "Etapa que habilita ao sorteio",
+        "cutRule/targetCount": "Quantos progridem",
+        "cutRule/surplusCount": "Suplentes alcançados na mesma faixa",
+        "cutRule/tieOutcome": "Empate na última posição",
+        # Os objetos que nascem por Retificação (048, FR-785; 021, FR-014): um `REPLACE` sobre o
+        # `null` publicado, com o objeto inteiro. Os nomes são os da tela de composição, que é
+        # onde a Retificação que os faz nascer manda a pessoa ler.
+        "cutRule": "Regra de corte",
+        "appealWindow": "Recurso contra o resultado",
+        "drawMethod": "Método do sorteio",
+    },
+    "tiebreakers": {"order": "Ordem de aplicação"},
 }
 
 # Os campos de topo do Edital: alterados sem passar por coleção nenhuma.
@@ -112,7 +201,22 @@ CAMPOS_DO_EDITAL = {
     "year": "Ano",
     "processoTitle": "Título do Processo",
     "processoCode": "Código do Processo",
+    "maxInscricoesPorCandidato": "Teto de inscrições por candidato",
+    "matriculationRequest/declarationText": "Declaração do Requerimento de Matrícula",
+    # O método comum ao Edital (030, FR-429): nove campos, espelhando os do marco.
+    "drawMethod/algorithm": "Algoritmo do sorteio comum",
+    "drawMethod/source": "Fonte pública da semente",
+    "drawMethod/occurrence": "Ocorrência que fixará a semente",
+    "drawMethod/occurrenceAt": "Quando a ocorrência acontece",
+    "drawMethod/derivation": "Como a ocorrência decorre da data programada",
+    "drawMethod/normalization/rule": "Regra de normalização",
+    "drawMethod/normalization/text": "Normalização, como se publica",
+    "drawMethod/substitutionRule/rule": "Regra de substituição",
+    "drawMethod/substitutionRule/text": "Substituição, como se publica",
 }
+
+# A mesma raiz com o nome que o contrato lhe dá, para que um dicionário só responda pelas duas.
+CAMPOS[mutabilidade.RAIZ] = CAMPOS_DO_EDITAL
 
 
 def alteracao_legivel(conteudo_base, alteracao):
@@ -120,6 +224,11 @@ def alteracao_legivel(conteudo_base, alteracao):
 
     `alteracao` é qualquer objeto com `target_path` e `operation` — a `AlteracaoNormativa`
     persistida serve, e um par simples também, o que mantém o módulo testável sem banco.
+
+    O caminho se lê em duas partes: **onde** — a descida pelas coleções, uma entidade por nível,
+    de `/profiles/id=…` até `/tiebreakers/id=…` — e **qual campo**, que é o que sobra, lido
+    inteiro. Ler só o primeiro segmento do que sobra calava os campos compostos: `normativeRule`
+    sozinho não diz se mudou o percentual ou o fundamento.
     """
     caminho = (getattr(alteracao, "target_path", "") or "").strip()
     operacao = OPERACOES.get(getattr(alteracao, "operation", ""), "alterado")
@@ -127,39 +236,24 @@ def alteracao_legivel(conteudo_base, alteracao):
         return None
 
     segmentos = caminho.strip("/").split("/")
-    colecao = segmentos[0]
+    nomes = []
+    colecao = mutabilidade.RAIZ
+    contem = conteudo_base
+    pai = None
+    while len(segmentos) >= 2 and segmentos[0] in _FILHAS.get(pai, ()) and segmentos[0] in COLECOES:
+        colecao, seletor, *segmentos = segmentos
+        nomes.append(_nome_da_entidade(contem, colecao, seletor))
+        contem = _elemento(contem, colecao, seletor)
+        pai = colecao
 
-    if len(segmentos) == 1:
-        rotulo = CAMPOS_DO_EDITAL.get(colecao)
-        if rotulo is None:
-            return None
-        return {"onde": "O Edital", "campo": rotulo, "operacao": operacao}
+    # O elemento inteiro: ele entrou ou saiu do Edital.
+    if nomes and not segmentos:
+        return {"onde": " — ".join(nomes), "campo": "", "operacao": operacao}
 
-    if colecao not in COLECOES:
-        return None
-
-    onde = _nome_da_entidade(conteudo_base, segmentos[:2], colecao)
-    resto = segmentos[2:]
-
-    # A coleção inteira: o elemento entrou ou saiu do Edital.
-    if not resto:
-        return {"onde": onde, "campo": "", "operacao": operacao}
-
-    # Coleção aninhada — a Modalidade dentro do Perfil, o desempate dentro do marco. Nomeia-se a
-    # entidade de fora e a de dentro: "Perfil «Professor» — Modalidade de concorrência «PPP»".
-    if resto[0] in COLECOES and len(resto) >= 2:
-        interna = _nome_da_entidade(
-            resolve_path(conteudo_base, "/" + "/".join(segmentos[:2])), resto[:2], resto[0]
-        )
-        campo = _rotulo_do_campo(resto[0], resto[2]) if len(resto) > 2 else ""
-        if campo is None:
-            return None
-        return {"onde": f"{onde} — {interna}", "campo": campo, "operacao": operacao}
-
-    campo = _rotulo_do_campo(colecao, resto[0])
+    campo = _rotulo_do_campo(colecao, "/".join(segmentos))
     if campo is None:
         return None
-    return {"onde": onde, "campo": campo, "operacao": operacao}
+    return {"onde": " — ".join(nomes) or "O Edital", "campo": campo, "operacao": operacao}
 
 
 def alteracoes_legiveis(conteudo_base, alteracoes):
@@ -175,21 +269,47 @@ def _rotulo_do_campo(colecao, campo):
     return CAMPOS.get(colecao, {}).get(campo)
 
 
-def _nome_da_entidade(conteudo, segmentos, colecao):
-    """`Perfil «Professor de Informática»`, lido do conteúdo-base.
+def _elemento(conteudo, colecao, seletor):
+    """O elemento no conteúdo-base, ou `None` quando ele não está lá — acrescentado agora, ou
+    conteúdo-base sem ele."""
+    if seletor == ACRESCIMO or not isinstance(conteudo, dict):
+        return None
+    valor = resolve_path(conteudo, f"/{colecao}/{seletor}")
+    return valor if isinstance(valor, dict) else None
+
+
+def _nome_da_entidade(conteudo, colecao, seletor):
+    """`Perfil “Professor de Informática”`, lido do conteúdo-base.
 
     O rótulo vem daquela versão, e não do banco: é o que o Edital dizia quando a Retificação foi
     escrita, que é o que quem lê o histórico precisa reconhecer. Sem nome legível — porque o
     elemento está sendo acrescentado agora, ou porque o conteúdo-base não o tem — devolve só o
     tipo, que já diz mais do que um UUID.
+
+    `conteudo` é quem **contém** a coleção: o Edital para o Perfil, o Perfil para a Modalidade.
     """
     rotulo, campo_do_nome = COLECOES[colecao]
-    if segmentos[1] == ACRESCIMO:
+    elemento = _elemento(conteudo, colecao, seletor)
+    if elemento is None:
         return rotulo
-    if not isinstance(conteudo, dict):
-        return rotulo
-    valor = resolve_path(conteudo, "/" + "/".join(segmentos))
-    if valor is ABSENT or not isinstance(valor, dict):
-        return rotulo
-    nome = (valor.get(campo_do_nome) or "").strip()
+    if campo_do_nome is None:
+        return _nome_proprio(conteudo, colecao, elemento, rotulo)
+    nome = str(elemento.get(campo_do_nome) or "").strip()
     return f"{rotulo} “{nome}”" if nome else rotulo
+
+
+def _nome_proprio(conteudo, colecao, elemento, rotulo):
+    """O nome do elemento que não tem campo de nome."""
+    if colecao == "tiebreakers":
+        ordem = elemento.get("order")
+        return f"{rotulo} nº {ordem}" if isinstance(ordem, int) else rotulo
+    # A linha do quadro: o nome da Modalidade que ela aponta, procurada no mesmo Perfil. Sem
+    # Modalidade, ela é a linha geral — e é assim que a tela da Retificação a chama.
+    modalidade = elemento.get("modalityId")
+    if modalidade is None:
+        return f"{rotulo} “Ampla concorrência”"
+    for candidata in conteudo.get("competitionModalities") or []:
+        if isinstance(candidata, dict) and str(candidata.get("id")) == str(modalidade):
+            nome = str(candidata.get("name") or "").strip()
+            return f"{rotulo} “{nome}”" if nome else rotulo
+    return rotulo
