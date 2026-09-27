@@ -81,11 +81,18 @@
           que reverter.</dd>
         <dt>Como a convocação é comunicada</dt>
         <dd>Sem esta declaração o sistema recusa convocar: ele não escolhe a forma por você.</dd>
-        {% comment %}Duplicar (043): a explicação vive aqui, e não no cartão — ela não muda de um Perfil para o outro.{% endcomment %}
+        {% comment %}
+        Duplicar (043): a explicação vive aqui, e não no cartão — ela não muda de um Perfil para o
+        outro. **Os marcos vêm do que a origem tem gravado** (FR-636): a redação anterior prometia
+        levá-los sempre, e no fluxo que o assistente sugere a origem ainda não passou pela etapa
+        Classificação, de modo que as cópias nasciam sem marco e nada o dizia.
+        {% endcomment %}
         <dt>Duplicar este Perfil</dt>
-        <dd>Cria, logo abaixo, um Perfil com tudo o que este tem — Modalidades, quadro, fatos e
-          marcos de classificação —, pedindo só o Código e a Localidade do novo. Nada é gravado até
-          você gravar a etapa. Documentos exigidos restritos a este Perfil não são copiados.</dd>
+        <dd>Cria, logo abaixo, um Perfil com tudo o que este tem — Modalidades, quadro e fatos —,
+          pedindo só o Código e a Localidade do novo. Os marcos de classificação vão junto só se
+          este Perfil já os tiver — gravados na etapa Classificação, ou trazidos do Perfil de que
+          ele é cópia. Sem isso, a cópia nasce sem marco. Nada é gravado até você gravar a etapa.
+          Documentos exigidos restritos a este Perfil não são copiados.</dd>
       </dl>
     </details>
     <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>

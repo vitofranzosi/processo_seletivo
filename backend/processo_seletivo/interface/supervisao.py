@@ -756,11 +756,18 @@ def sorteado(ato):
 def listas_do_marco(perfil, marco, conteudo=None):
     """Os recortes daquele marco: `[(lista_id, nome)]`, ampla concorrência primeiro.
 
-    **Só o sorteio emite ato por lista** (`021`, `D-006`): um marco de cotas produz três atos raiz
-    — ampla, e uma por modalidade de reserva —, e perguntar pelo "ato vigente do marco" sem dizer
-    de qual lista devolveria um dos três pela ordem de emissão. Um marco computado tem um recorte
-    só, e percorrer as modalidades dele custaria uma consulta por modalidade para não encontrar ato
-    nenhum.
+    Um marco de cotas produz um ato raiz por recorte — ampla, e um por modalidade de reserva —, e
+    perguntar pelo "ato vigente do marco" sem dizer de qual lista devolveria um dos três pela ordem
+    de emissão.
+
+    **O marco computado também emite por recorte, desde a `034`** (`FR-490`), e os recortes dele
+    vêm da derivação única (`FR-491`). Esta função ficou de antes dela, e respondia só a ampla: o
+    ato do recorte reservado envelhecia, ficava sem apuração ou sem divulgação, e a Atenção não o
+    via (reavaliação de 27/09, anexo B §8). O nome da ampla continua vazio, que é o que mantém o
+    alvo dela igual ao nome do marco.
+
+    **O sorteio fica com a leitura dele** (`034`, `FR-491a`, `D-004`): dá recorte próprio à
+    Modalidade declarada como ampla, e os atos já emitidos nela precisam continuar alcançáveis.
 
     `conteudo` é o da versão vigente, e existe porque a pergunta "este marco sorteia" passou a ter
     resolução própria (030, FR-429): o marco pode referenciar o método comum do Edital, e ler só a
@@ -768,6 +775,7 @@ def listas_do_marco(perfil, marco, conteudo=None):
     Edital publicado antes desta feature carrega, e sobre ele a resposta é a mesma.
     """
     from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 
     sorteia = (
         marcos.marco_ordena_por_sorteio(
@@ -777,7 +785,12 @@ def listas_do_marco(perfil, marco, conteudo=None):
         else bool(marco.get("drawMethod"))
     )
     if not sorteia:
-        return [(None, "")]
+        if conteudo is None:
+            return [(None, "")]
+        return [
+            (lista, rotulo if lista else "")
+            for lista, rotulo in recortes_do_perfil(conteudo, perfil_id=perfil.get("id"))
+        ]
     return [(None, "")] + [
         (modalidade.get("id"), modalidade.get("name") or "")
         for modalidade in perfil.get("competitionModalities") or []
@@ -983,7 +996,7 @@ def atos_obsoletos(
         # computado, e o sorteio é onde uma ordem sorteada se refaz — com relação nova e
         # ocorrência nova. Mandar um sorteio para a ordenação levaria a uma tela que oferece
         # recalcular o que só uma semente nova produz.
-        destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato)),
+        destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato), lista=lista_id),
     )
 
 
@@ -1206,15 +1219,22 @@ def admite_encaminhamento(processo, especie, edital, ator):
     )
 
 
-def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None):
+def destino_de(
+    processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None, lista=None
+):
     """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
     if not admite_encaminhamento(processo, especie, edital, ator):
         return None
     caminhos = {
         UX_003: lambda: reverse("interface:distribuicao", args=[edital.id, referencia]),
-        UX_004: lambda: reverse(
-            "interface:sorteio" if sorteio else "interface:ordenacao",
-            args=[edital.id, referencia],
+        # **O recorte vai no endereço da ordenação**, que sem `?lista=` abre a ampla (`034`,
+        # `FR-497`): sem ele, o sinal do recorte PPI aterrissaria na ordem da ampla, que não está
+        # obsoleta, e quem chegasse não veria divergência nenhuma. O sorteio não o leva porque a
+        # tela dele mostra os recortes do marco juntos.
+        UX_004: lambda: (
+            reverse("interface:sorteio", args=[edital.id, referencia])
+            if sorteio
+            else _com_recorte(reverse("interface:ordenacao", args=[edital.id, referencia]), lista)
         ),
         UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
         UX_046: lambda: reverse("interface:retificar", args=[edital.id]),
@@ -1236,6 +1256,11 @@ def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio
     }
     rotulo = ROTULOS_DO_DESTINO.get((especie, "sorteio") if sorteio else especie)
     return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
+
+
+def _com_recorte(endereco, lista):
+    """O endereço da tela no recorte pedido — a mesma gramática de `_navegacao_do_recorte`."""
+    return f"{endereco}?lista={lista}" if lista else endereco
 
 
 def alcance(ator, processo):
@@ -1320,9 +1345,9 @@ def sinais(processo, ator, *, alcancadas=None):
     if alcancadas is None:
         alcancadas = alcance(ator, processo)
 
-    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None):
+    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None, lista=None):
         return destino_de(
-            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato
+            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato, lista=lista
         )
 
     leitura = leitura_dos_editais(processo)

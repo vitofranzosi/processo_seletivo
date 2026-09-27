@@ -2958,6 +2958,16 @@ def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
         destinos.append(
             {"rotulo": "ocupação", "url": reverse("interface:ocupacao", args=[edital.id, marco_id])}
         )
+        # **A convocação não tinha porta** (033, `FR-473`): só se chegava a ela digitando o
+        # endereço. A porta é a mesma da ocupação — `_edital_para_classificar` na consulta —, de
+        # modo que quem vê um destino abre o outro (`FR-476`). Sem `?lista=` ela abre a ampla, e a
+        # navegação entre recortes da própria tela leva aos demais.
+        destinos.append(
+            {
+                "rotulo": "convocação",
+                "url": reverse("interface:convocacao", args=[edital.id, marco_id]),
+            }
+        )
     # **A divulgação de cada ato emitido** — o destino que a tela não oferecia a ninguém. Ela
     # depende do ato **existir**: marco sem ato não tem o que divulgar, e oferecer um caminho que
     # termina em nada é o mesmo defeito que este bloco existe para evitar, com outra roupa.
@@ -6564,6 +6574,9 @@ def convocacao(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "lista_id": lista_id,
+                **_navegacao_do_recorte(
+                    edital, marco_id, rota="interface:convocacao", atual=lista_id
+                ),
                 "leitura": leitura,
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e

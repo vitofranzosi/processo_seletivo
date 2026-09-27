@@ -18,6 +18,21 @@ Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (F
   concorrência, ou uma Modalidade de Concorrência declarada. <dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
   colocado ao último que o alvo alcançou.</p>
 
+{% if recortes %}
+{% comment %}
+A navegação entre os recortes do marco, a mesma do corte e da ordenação (034, FR-497), e pela mesma
+razão: sem ela, quem chega pela página do Edital cai na ampla concorrência e não tem como saber que
+há outros recortes, nem em qual está. A lista e os endereços vêm da view.
+{% endcomment %}
+<nav aria-label="Recortes deste marco" class="recortes">
+  <p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
+  <ul class="abas">
+    {% for recorte in recortes %}
+    <li>{% if recorte.atual %}<span aria-current="true">{{ recorte.rotulo }}</span>{% else %}<a href="{{ recorte.href }}">{{ recorte.rotulo }}</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
 {% comment %}
