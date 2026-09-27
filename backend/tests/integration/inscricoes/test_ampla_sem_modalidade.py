@@ -210,6 +210,28 @@ def test_tudo_em_cota_continua_sem_ampla(publicar):
     assert str(_gravar(JOAO, rascunho, "").modality_id) == MODALIDADE_PPP
 
 
+def test_a_modalidade_unica_avanca_com_o_documento_da_cota_ja_enviado(client, publicar):
+    """A-14.1: a tela sem o campo não anuncia descarte, e avançar leva à revisão (FR-031, FR-041).
+
+    O vazio do formulário era comparado como se fosse a ampla, e a confirmação oferecia descartar
+    o documento da cota que a gravação, assumindo a cota, mantinha: confirmar dava
+    `discard_not_confirmed`, e a pessoa não saía da tela.
+    """
+    edital = publicar(_so_cotas(linha_geral=0))
+    rascunho = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    _anexar(MARIA, rascunho, DOCUMENTO_DA_MODALIDADE)
+    identificar(client, MARIA)
+    endereco = reverse("portal:inscricao", args=[rascunho.id])
+
+    resposta = client.post(endereco, {"telefone": ""})
+
+    assert resposta.status_code == 302, "nenhuma confirmação de descarte no caminho"
+    assert resposta["Location"] == reverse("portal:revisao", args=[rascunho.id])
+    rascunho.refresh_from_db()
+    assert str(rascunho.modality_id) == MODALIDADE_PPP
+    assert rascunho.documentos.filter(requirement_id=DOCUMENTO_DA_MODALIDADE).exists()
+
+
 def test_a_inscricao_na_ampla_tem_a_forma_que_o_sorteio_ja_le(publicar):
     """O recorte nulo alcança os dois; o da cota, só quem a declarou (`projecao.elegiveis`)."""
     edital = publicar(_so_cotas())
@@ -347,3 +369,159 @@ def test_a_pagina_da_selecao_anuncia_a_ampla(client, publicar):
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
     assert "Concorrência: Ampla concorrência; Pessoas pretas, pardas e indígenas" in corpo
+
+
+# ---------------------------------------------------------------------------
+# O que a gestão vê (FR-067, FR-068) — A-14.3 da DP-14
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def gestao(client, settings):
+    from tests.interface.conftest import identificar as identificar_na_gestao
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    identificar_na_gestao(client, "bruno.gestor", ["gestor"])
+    return client
+
+
+def _joao_na_ampla_e_maria_na_cota(edital):
+    joao = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    joao = _enviar(
+        JOAO,
+        _anexar(JOAO, _gravar(JOAO, joao, ""), DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL),
+        "gestao-joao",
+    )
+    maria = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    maria = _enviar(
+        MARIA,
+        _anexar(
+            MARIA,
+            _gravar(MARIA, maria, MODALIDADE_PPP),
+            DOCUMENTO_DE_TODOS,
+            DOCUMENTO_DO_PERFIL,
+            DOCUMENTO_DA_MODALIDADE,
+        ),
+        "gestao-maria",
+    )
+    return joao, maria
+
+
+def test_a_lista_da_gestao_nomeia_conta_e_filtra_a_ampla(gestao, publicar):
+    """A coluna, a contagem e o filtro alcançam o nulo onde ele é a ampla (FR-067)."""
+    edital = publicar(_so_cotas())
+    joao, maria = _joao_na_ampla_e_maria_na_cota(edital)
+    tela = reverse("interface:inscricoes", args=[edital.id])
+
+    corpo = gestao.get(tela).content.decode()
+    filtrada = gestao.get(f"{tela}?modalidade=ampla:{PERFIL_DOCENTE}").content.decode()
+
+    assert "<td>Ampla concorrência</td>" in corpo, "a coluna não fica em branco"
+    assert f'<option value="ampla:{PERFIL_DOCENTE}" >' in corpo
+    assert "Ampla concorrência (1)</option>" in corpo, "o nulo entra na contagem"
+    assert joao.protocolo in filtrada and maria.protocolo not in filtrada
+
+
+def test_o_detalhe_da_gestao_nomeia_a_ampla(gestao, publicar):
+    """FR-068: a concorrência aparece no detalhe, como no comprovante do candidato."""
+    edital = publicar(_so_cotas())
+    joao, _ = _joao_na_ampla_e_maria_na_cota(edital)
+
+    corpo = gestao.get(reverse("interface:inscricao-recebida", args=[joao.id])).content.decode()
+
+    assert "<dt>Concorrência</dt><dd>Ampla concorrência</dd>" in corpo
+
+
+def test_a_gestao_nao_nomeia_o_nulo_onde_ele_e_escolha_por_fazer(gestao, publicar):
+    """A contraprova: com a ampla declarada, o nulo do rascunho não é opção nem tem nome."""
+    edital = publicar(rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)))
+    abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+
+    corpo = gestao.get(reverse("interface:inscricoes", args=[edital.id])).content.decode()
+
+    assert 'value="ampla:' not in corpo
+    assert "<td>—</td>" in corpo, "o rascunho sem escolha continua em branco"
+
+
+def test_a_mesa_nomeia_a_ampla(publicar):
+    """FR-068 na Mesa: o avaliador lê Perfil e concorrência, e não um traço sem explicação."""
+    from processo_seletivo.avaliacoes.application.mesa import _perfil_e_modalidade
+
+    edital = publicar(_so_cotas())
+    joao, maria = _joao_na_ampla_e_maria_na_cota(edital)
+    conteudo = joao.versao_aceita.content
+
+    assert _perfil_e_modalidade(conteudo, joao)[1] == "Ampla concorrência"
+    assert _perfil_e_modalidade(conteudo, maria)[1] == "Pessoas pretas, pardas e indígenas"
+
+
+def _sem_modalidade():
+    """O Perfil docente sem Modalidade nenhuma: só a linha geral, e nenhum documento de cota."""
+    rascunho = rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1))
+    docente = rascunho["profiles"][0]
+    docente["competitionModalities"] = []
+    docente["generalCompetitionModalityId"] = None
+    docente["vacancyTable"] = [
+        {"id": identificador(408, 0), "modalityId": None, "immediateVacancies": 2}
+    ]
+    rascunho["documentRequirements"] = [
+        documento
+        for documento in rascunho["documentRequirements"]
+        if documento["id"] != DOCUMENTO_DA_MODALIDADE
+    ]
+    return rascunho
+
+
+def test_a_gestao_nomeia_a_ampla_no_perfil_sem_modalidade(gestao, client, publicar):
+    """O caso original do A-14.3: o Perfil sem Modalidade já mostrava a concorrência em branco.
+
+    Ao candidato, nada muda: nada lhe foi perguntado, e a revisão continua sem a linha (FR-038).
+    """
+    edital = publicar(_sem_modalidade())
+    joao = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    joao = _enviar(
+        JOAO,
+        _anexar(JOAO, _gravar(JOAO, joao, ""), DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL),
+        "sem-modalidade-joao",
+    )
+    tela = reverse("interface:inscricoes", args=[edital.id])
+
+    corpo = gestao.get(tela).content.decode()
+    filtrada = gestao.get(f"{tela}?modalidade=ampla:{PERFIL_DOCENTE}").content.decode()
+    detalhe = gestao.get(reverse("interface:inscricao-recebida", args=[joao.id])).content.decode()
+
+    assert "<td>Ampla concorrência</td>" in corpo
+    assert "Ampla concorrência (1)</option>" in corpo
+    assert joao.protocolo in filtrada
+    assert "<dt>Concorrência</dt><dd>Ampla concorrência</dd>" in detalhe
+
+
+def test_a_revisao_do_perfil_sem_modalidade_continua_sem_a_linha(client, publicar):
+    """A contraprova do lado do candidato: FR-038, e não a regra da gestão."""
+    edital = publicar(_sem_modalidade())
+    rascunho = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    identificar(client, JOAO)
+
+    corpo = client.get(reverse("portal:revisao", args=[rascunho.id])).content.decode()
+
+    assert "<dt>Concorrência</dt>" not in corpo
+
+
+def test_o_filtro_forjado_nao_chama_de_ampla_a_escolha_por_fazer(gestao, publicar):
+    """Duas cotas sem vaga na linha geral: o nulo é escolha por fazer, e `ampla:` não o recorta.
+
+    O filtro confere a mesma regra que gera a opção. O que não passa não filtra, como o
+    identificador que não é UUID — e a lista continua com as duas.
+    """
+    edital = publicar(_so_cotas(pcd=True, linha_geral=0))
+    joao = abrir_inscricao(identidade=JOAO, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    maria = abrir_inscricao(identidade=MARIA, edital_id=edital.id, profile_id=PERFIL_DOCENTE)
+    _gravar(MARIA, maria, MODALIDADE_PPP)
+    tela = reverse("interface:inscricoes", args=[edital.id])
+
+    corpo = gestao.get(tela).content.decode()
+    forjada = gestao.get(f"{tela}?modalidade=ampla:{PERFIL_DOCENTE}").content.decode()
+
+    assert joao.modality_id is None, "a premissa: o rascunho sem escolha"
+    assert 'value="ampla:' not in corpo, "a opção não é oferecida"
+    assert forjada.count("Em preenchimento</td>") == 2, "e o endereço forjado não a inventa"

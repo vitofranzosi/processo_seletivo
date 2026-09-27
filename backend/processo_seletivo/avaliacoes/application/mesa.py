@@ -27,6 +27,7 @@ from processo_seletivo.editais.domain.documentos import (
     razao_legivel,
 )
 from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.publicacoes.application import selectors
@@ -254,15 +255,12 @@ def _perfil_e_modalidade(conteudo, inscricao):
         ),
         {},
     )
-    modalidade = next(
-        (
-            item.get("name", "")
-            for item in perfil.get("competitionModalities") or []
-            if str(item.get("id")) == str(inscricao.modality_id)
-        ),
-        "",
+    # O nulo tem nome onde é a ampla sem Modalidade, como no comprovante do candidato (A-14.3;
+    # FR-068 da 009): em branco, o avaliador não sabia se a pessoa concorria na ampla ou se faltava
+    # dado.
+    return perfil.get("name", ""), nome_da_modalidade(
+        conteudo, inscricao.profile_id, inscricao.modality_id
     )
-    return perfil.get("name", ""), modalidade
 
 
 def documento_para_avaliar(*, ator, edital, etapa_id, inscricao_id, requirement_id):

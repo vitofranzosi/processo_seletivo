@@ -115,6 +115,41 @@ def modalidade_assumida(conteudo, profile_id) -> str | None:
     return str(modalidades[0]["id"]) if len(modalidades) == 1 else None
 
 
+def o_nulo_e_a_ampla(conteudo, profile_id) -> bool:
+    """Se, naquele Perfil, a inscrição sem Modalidade concorre na ampla — e não está por escolher.
+
+    Duas formas, e só elas: o Perfil sem Modalidade nenhuma, onde não há outra lista a que
+    concorrer, e o que oferece a ampla sem Modalidade ao lado das cotas (DP-14). Com a ampla
+    declarada ao lado de uma cota, ou com duas cotas sem vaga na linha geral, o nulo é escolha
+    ainda não feita — e chamá-lo de ampla afirmaria uma concorrência que a pessoa não escolheu.
+    """
+    return not modalidades_publicadas(conteudo, profile_id) or oferece_a_ampla_sem_modalidade(
+        conteudo, profile_id
+    )
+
+
+def nome_da_modalidade(conteudo, profile_id, modality_id) -> str:
+    """Como a inscrição concorre, em palavras, para quem a consulta ou avalia.
+
+    Antes, a lista, o detalhe e a Mesa mostravam em branco a inscrição na ampla — no Perfil sem
+    Modalidade desde sempre, e no que só declara cotas desde a DP-14, onde ela passou a ser o caso
+    comum (A-14.3; FR-067, FR-068). O nulo tem nome onde **é** a ampla (`o_nulo_e_a_ampla`).
+
+    O portal lê a mesma regra, com uma diferença que é dele: no Perfil sem Modalidade nenhuma, a
+    revisão não mostra a linha, porque ao candidato nada foi perguntado (FR-038).
+    """
+    if modality_id is None:
+        return NOME_DA_AMPLA if o_nulo_e_a_ampla(conteudo, profile_id) else ""
+    return next(
+        (
+            modalidade.get("name", "")
+            for modalidade in modalidades_publicadas(conteudo, profile_id)
+            if str(modalidade["id"]) == str(modality_id)
+        ),
+        "",
+    )
+
+
 def _perfil_publicado(conteudo, profile_id):
     return next(
         (
@@ -517,7 +552,18 @@ def descartes_por_mudanca_de_modalidade(conteudo, inscricao, modality_id) -> lis
     Existe para que a confirmação possa **enumerar** o que se perde antes de perder (FR-031).
     Descartar em silêncio e reaproveitar em silêncio são os dois erros simétricos; a lista é o que
     permite não cometer nenhum dos dois.
+
+    **A modalidade comparada é a que `gravar_dados` vai gravar, e não a que veio no formulário.**
+    A tela de Modalidade única não tem o campo, e o vazio que chega dela era comparado como se
+    fosse a ampla: quem já enviara o documento da cota via a confirmação de um descarte que a
+    gravação, assumindo a cota, não fazia — e confirmar dava `discard_not_confirmed`, sem saída
+    (A-14.1 da DP-14; FR-031, FR-041). A recusa do que não se pode gravar é de `gravar_dados`, e
+    aqui não há descarte a anunciar para ela.
     """
+    try:
+        modality_id = _modalidade_escolhida(conteudo, inscricao.profile_id, modality_id)
+    except DomainError:
+        return []
     if str(modality_id or "") == str(inscricao.modality_id or ""):
         return []
     depois = {

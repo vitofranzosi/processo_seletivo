@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from tests.fixtures.corte import MARCO
 from tests.fixtures.recortes import (
+    MODALIDADE_AMPLA_DECLARADA,
     MODALIDADE_PCD,
     MODALIDADE_PPI,
     emitir_recorte,
@@ -222,6 +223,53 @@ def test_recorte_que_nao_e_modalidade_do_perfil_responde_404(client, seletor_lig
     alheia = "cccccccc-0000-4000-8000-0000000004ff"
     assert abrir(client, edital, lista=alheia).status_code == 404
     assert abrir(client, edital, lista=alheia, rota="interface:corte").status_code == 404
+
+
+def test_a_convocacao_tambem_responde_404_ao_recorte_que_nao_existe(
+    client, seletor_ligado, cenario
+):
+    """`FR-499` na terceira tela do marco, que respondia 200 com a tela vazia.
+
+    Um recorte sem ninguém chamado e sem apuração se lê como "ainda não começou" — o engano que a
+    `FR-499` existe para impedir. O comando é fechado junto: o formulário antigo chega a ele sem
+    passar pela tela.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+    alheia = "cccccccc-0000-4000-8000-0000000004ff"
+
+    assert abrir(client, edital, lista=alheia, rota="interface:convocacao").status_code == 404
+    historico = abrir(client, edital, lista=alheia, rota="interface:convocacao-historico")
+    assert historico.status_code == 404
+    convocar = client.post(
+        reverse("interface:convocar", args=[edital.id, MARCO]),
+        {"lista": alheia, "inscricao": alheia, "especie": "chamada", "fundamento": "x"},
+    )
+    assert convocar.status_code == 404
+    assert (
+        abrir(client, edital, lista=MODALIDADE_PPI, rota="interface:convocacao").status_code == 200
+    )
+
+
+def test_a_convocacao_le_a_modalidade_apontada_como_ampla_como_a_ampla(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """`FR-503`: a grafia-armadilha não abre recorte próprio, sem apuração, na convocação."""
+    edital, _, _ = montar_cenario_7_1_2(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="navegacao-034-armadilha",
+        com_ampla_declarada=True,
+    )
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(
+        client, edital, lista=MODALIDADE_AMPLA_DECLARADA, rota="interface:convocacao"
+    ).content.decode()
+
+    assert "Recorte: <strong>Ampla concorrência (linha geral do quadro)</strong>" in pagina
 
 
 def test_recorte_que_nem_identidade_e_continua_respondendo_404(client, seletor_ligado, cenario):

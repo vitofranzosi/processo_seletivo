@@ -6581,7 +6581,10 @@ def convocacao(request, edital_id, marco_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     perfil_id = _perfil_do_marco(edital, marco_id)
-    lista_id = _identidade_ou_404(request.GET.get("lista"))
+    # A mesma porta da ordenação e do corte (034, FR-499, FR-503): recorte que o Perfil não tem é
+    # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
+    # ampla é a ampla, e não um recorte à parte, sem apuração, onde convocar é recusado.
+    lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
     leitura = leitura_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
@@ -6652,6 +6655,16 @@ def convocacao_historico(request, edital_id, marco_id):
     convocacoes = convocacoes_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
+    if not convocacoes:
+        # **A série gravada vem antes da norma vigente.** Os atos guardam o recorte pela identidade
+        # do dia em que foram praticados, e uma Retificação que depois removesse a Modalidade, ou a
+        # apontasse como a ampla, faria a normalização esconder a série que explica aqueles atos.
+        # Só onde não há série alguma a pergunta é pela norma de agora, e aí o recorte inexistente
+        # é 404, e a grafia-armadilha é a ampla (034, FR-499, FR-503).
+        lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
+        convocacoes = convocacoes_do_recorte(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        )
     em_vigor = {c.id for c in vigentes(convocacoes)}
     # **A posição nova do reclassificado é derivada, e aparece no histórico** (019, `FR-291`). Ela
     # não é coluna: guardá-la exigiria `UPDATE` numa tabela append-only, e cada chamada seguinte a
@@ -6696,7 +6709,9 @@ def convocar_view(request, edital_id, marco_id):
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return redirect(reverse("interface:identificar"))
-    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    # Normalizado também aqui, e não só na tela: o formulário antigo, ou forjado, chega ao comando
+    # sem passar por ela — o mesmo cuidado da emissão da ordem (034, FR-499).
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     try:
         request.session["resultado_da_convocacao"] = convocar(

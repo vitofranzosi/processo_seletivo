@@ -56,6 +56,8 @@ from processo_seletivo.inscricoes.application.rascunho import (
     anexar_documento,
     descartes_por_mudanca_de_modalidade,
     gravar_dados,
+    modalidades_publicadas,
+    nome_da_modalidade,
     oferece_a_ampla_sem_modalidade,
     remover_documento,
     requisitos_da_inscricao,
@@ -2237,23 +2239,13 @@ def _fatos_do_perfil(conteudo, inscricao):
 
 
 def _modalidade_da_inscricao(conteudo, inscricao):
-    perfil = _perfil_do_conteudo(conteudo, inscricao.profile_id)
-    if inscricao.modality_id is None:
-        # Nomeada só onde a ampla sem Modalidade é uma das opções. Contar as opções não basta: com
-        # a ampla declarada ao lado de uma cota, ou com duas cotas sem vaga na linha geral, também
-        # há duas, e ali o nulo é escolha ainda não feita — nomeá-la afirmaria na revisão uma
-        # concorrência que a pessoa não escolheu. No Perfil sem Modalidade nenhuma, a linha
-        # continua ausente, como sempre esteve (FR-038).
-        ofertadas = _modalidades_ofertadas(conteudo, perfil)
-        return NOME_DA_AMPLA if any(opcao["id"] == "" for opcao in ofertadas) else ""
-    return next(
-        (
-            modalidade.get("name", "")
-            for modalidade in perfil.get("competitionModalities") or []
-            if str(modalidade.get("id")) == str(inscricao.modality_id)
-        ),
-        "",
-    )
+    # A regra mora em `nome_da_modalidade`, e não aqui: a gestão lê a mesma inscrição, e duas
+    # regras deixariam a Mesa em branco onde o comprovante diz "Ampla concorrência". O que fica
+    # aqui é o que é só do candidato: no Perfil sem Modalidade nenhuma, nada lhe foi perguntado, e
+    # a linha continua ausente, como sempre esteve (FR-038).
+    if not modalidades_publicadas(conteudo, inscricao.profile_id):
+        return ""
+    return nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
 
 
 # ---------------------------------------------------------------------------
