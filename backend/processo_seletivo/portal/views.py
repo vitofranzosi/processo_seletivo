@@ -51,10 +51,12 @@ from processo_seletivo.identidade.models import DesafioDeAcesso
 from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
 from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
+    NOME_DA_AMPLA,
     abrir_inscricao,
     anexar_documento,
     descartes_por_mudanca_de_modalidade,
     gravar_dados,
+    oferece_a_ampla_sem_modalidade,
     remover_documento,
     requisitos_da_inscricao,
 )
@@ -177,7 +179,7 @@ def etapas_ate(atual: int) -> list[dict]:
     ]
 
 
-def _perfil(perfil):
+def _perfil(perfil, conteudo):
     vagas = perfil.get("immediateVacancies") or 0
     return {
         "codigo": perfil.get("code", ""),
@@ -197,8 +199,10 @@ def _perfil(perfil):
         "carga_horaria": (perfil.get("workload") or "").strip(),
         "remuneracao": (perfil.get("compensation") or "").strip(),
         "oferta": _oferta(vagas, perfil.get("reserveType"), perfil.get("reserveLimit")),
+        # A ampla sem Modalidade entra na lista pelo mesmo critério que a inscrição a oferece
+        # (FR-039): anunciar só a cota diria ao não-cotista que a vaga não é para ele.
         "modalidades": [
-            modalidade.get("name", "") for modalidade in perfil.get("competitionModalities") or []
+            modalidade["nome"] for modalidade in _modalidades_ofertadas(conteudo, perfil)
         ],
     }
 
@@ -501,7 +505,7 @@ def _inscricoes_iniciadas(request, edital_id):
 def _perfil_da_vitrine(perfil, iniciadas, conteudo):
     registro = iniciadas.get(str(perfil.get("id")))
     return {
-        **_perfil(perfil),
+        **_perfil(perfil, conteudo),
         "documentos_anunciados": _documentos_anunciados(conteudo, perfil),
         "id": str(perfil.get("id")),
         # O convite muda de texto conforme o estado: `Inscrever-se nesta vaga` para quem chega,
@@ -1315,6 +1319,7 @@ def inscricao(request, inscricao_id):
                 return redirect(reverse("portal:revisao", args=[registro.id]))
             except DomainError as exc:
                 erros.append(exc.detail)
+    modalidades = _modalidades_ofertadas(conteudo, perfil, registro)
     return render(
         request,
         "portal/inscricao.html",
@@ -1324,8 +1329,10 @@ def inscricao(request, inscricao_id):
             "perfil": _perfil_legivel(perfil),
             "telefone_no_campo": telefone_no_campo,
             "cpf_do_candidato": formatar_cpf(registro.cpf),
-            "modalidades": _modalidades_ofertadas(perfil),
-            "modalidade_unica": _modalidade_unica(perfil),
+            "modalidades": modalidades,
+            # Sem a ampla sem Modalidade entre as opções, o vazio é recusa, e não resposta.
+            "escolha_obrigatoria": all(modalidade["id"] for modalidade in modalidades),
+            "modalidade_unica": _modalidade_unica(conteudo, perfil),
             "identidade": identidade,
             "guardado": guardado,
             "erros": erros,
@@ -1729,24 +1736,34 @@ def _perfil_legivel(perfil):
     return {"nome": perfil.get("name", ""), "codigo": perfil.get("code", "")}
 
 
-def _modalidade_unica(perfil):
+def _modalidade_unica(conteudo, perfil):
     """A modalidade que o Perfil declara sozinha — informada, e não perguntada (FR-038)."""
-    modalidades = _modalidades_ofertadas(perfil)
+    modalidades = _modalidades_ofertadas(conteudo, perfil)
     return modalidades[0] if len(modalidades) == 1 else None
 
 
-def _modalidades_ofertadas(perfil):
-    """As modalidades daquele Perfil, e nenhuma inventada (FR-039).
+def _modalidades_ofertadas(conteudo, perfil, inscricao=None):
+    """As opções de concorrência daquele Perfil, e nenhuma inventada (FR-039).
 
-    Duas consequências da mesma regra: um Perfil sem modalidade declarada não faz nascer "ampla
-    concorrência" nenhuma — a pergunta simplesmente não é feita —, e um Perfil que **declara**
-    ampla concorrência oferece a dele, sem que o sistema acrescente uma segunda com o mesmo
-    significado ao lado.
+    Três consequências da mesma regra: um Perfil sem modalidade declarada não pergunta nada — a
+    ampla é a condição de todos, e a pergunta simplesmente não é feita (FR-038); um Perfil que
+    **declara** a ampla oferece a dele, sem que o sistema acrescente uma segunda com o mesmo
+    significado ao lado; e um Perfil que declara só cotas, com vaga na linha geral, oferece a ampla
+    **sem Modalidade**, que é o recorte nulo (DP-14). Antes desta, quem não era cotista não tinha
+    o que escolher — ou era assumido cotista, quando a cota era uma só.
+
+    A opção da ampla sem Modalidade tem valor vazio, e é o que o servidor lê como ausência de
+    reserva (`_modalidade_escolhida`). Por isso ela vem marcada num rascunho sem modalidade: é o
+    que ele é.
     """
-    return [
+    atual = "" if inscricao is None or inscricao.modality_id is None else str(inscricao.modality_id)
+    declaradas = [
         {"id": str(modalidade.get("id")), "nome": modalidade.get("name", "")}
         for modalidade in perfil.get("competitionModalities") or []
     ]
+    if declaradas and oferece_a_ampla_sem_modalidade(conteudo, perfil.get("id")):
+        declaradas = [{"id": "", "nome": NOME_DA_AMPLA}, *declaradas]
+    return [{**opcao, "selecionada": opcao["id"] == atual} for opcao in declaradas]
 
 
 @require_http_methods(["POST"])
@@ -2220,9 +2237,15 @@ def _fatos_do_perfil(conteudo, inscricao):
 
 
 def _modalidade_da_inscricao(conteudo, inscricao):
-    if inscricao.modality_id is None:
-        return ""
     perfil = _perfil_do_conteudo(conteudo, inscricao.profile_id)
+    if inscricao.modality_id is None:
+        # Nomeada só onde a ampla sem Modalidade é uma das opções. Contar as opções não basta: com
+        # a ampla declarada ao lado de uma cota, ou com duas cotas sem vaga na linha geral, também
+        # há duas, e ali o nulo é escolha ainda não feita — nomeá-la afirmaria na revisão uma
+        # concorrência que a pessoa não escolheu. No Perfil sem Modalidade nenhuma, a linha
+        # continua ausente, como sempre esteve (FR-038).
+        ofertadas = _modalidades_ofertadas(conteudo, perfil)
+        return NOME_DA_AMPLA if any(opcao["id"] == "" for opcao in ofertadas) else ""
     return next(
         (
             modalidade.get("name", "")

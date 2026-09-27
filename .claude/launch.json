@@ -229,6 +229,16 @@
       ],
       "port": 8048,
       "url": "http://localhost:8048"
+    },
+    {
+      "name": "ampla-dp14",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_ampla_demo DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= DJANGO_ALLOWED_HOSTS=localhost,ampla.localhost INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-ampla uv run python manage.py runserver 8049"
+      ],
+      "port": 8049,
+      "url": "http://ampla.localhost:8049"
     }
   ]
 }

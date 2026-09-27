@@ -32,6 +32,10 @@ from processo_seletivo.shared.concurrency import compare_and_swap
 ABRIR = "inscricao:abrir"
 GRAVAR = "inscricao:gravar"
 
+# Como o candidato lê o recorte nulo. Não é o rótulo da gestão (`recortes.ROTULO_DA_AMPLA`), que
+# nomeia a linha geral do quadro para quem conduz o certame: quem se inscreve não conhece o quadro.
+NOME_DA_AMPLA = "Ampla concorrência"
+
 
 def ator_do_candidato(identidade, edital) -> Actor:
     """O ator que a idempotência e a auditoria pedem, sem uma permissão sequer.
@@ -56,6 +60,43 @@ def modalidades_publicadas(conteudo, profile_id) -> list[dict]:
     ]
 
 
+def oferece_a_ampla_sem_modalidade(conteudo, profile_id) -> bool:
+    """O Perfil recebe inscrição na ampla concorrência pelo recorte nulo (009, FR-039; DP-14).
+
+    **A ampla é a linha geral do quadro**, e é o recorte nulo que a classificação, o sorteio, o
+    corte e a ocupação já leem como tal (`editais/domain/recortes.py`). A composição diz a quem
+    compõe que não precisa declará-la como Modalidade (`_perfil.html`) — e a inscrição, até aqui, só
+    oferecia as declaradas: num Perfil com uma cota, todo inscrito era assumido cotista; com duas ou
+    mais, quem não era cotista não tinha o que escolher. É o A-1 da `048` e o RC-128 da auditoria.
+
+    Duas condições, e cada uma exclui um caso que não é defeito:
+
+    - **nenhuma Modalidade declarada como a ampla**: havendo uma, é ela que se usa, e nenhuma outra
+      nasce ao lado com o mesmo significado (FR-039, 2ª frase);
+    - **linha geral com vaga imediata**: o Perfil com tudo em cota não tem ampla, e oferecê-la seria
+      inscrever alguém num recorte sem vaga. O Perfil só de cadastro reserva, com a linha geral em
+      zero, também fica sem ela: é a letra da DP-14, confirmada em 27/09, e o caso está registrado
+      lá como achado.
+
+    **Ausência de linha não é zero** (025, FR-159), mas também não é vaga: o Perfil que não publica
+    a linha geral não declarou ampla nenhuma, e o sistema não a inventa.
+    """
+    perfil = _perfil_publicado(conteudo, profile_id) or {}
+    if perfil.get("generalCompetitionModalityId"):
+        return False
+    geral = next(
+        (
+            linha
+            for linha in perfil.get("vacancyTable") or []
+            if isinstance(linha, dict) and not linha.get("modalityId")
+        ),
+        {},
+    )
+    vagas = geral.get("immediateVacancies")
+    # `bool` é `int` em Python; a publicação já o recusa, e aqui ele não vira vaga por acidente.
+    return isinstance(vagas, int) and not isinstance(vagas, bool) and vagas > 0
+
+
 def modalidade_assumida(conteudo, profile_id) -> str | None:
     """A modalidade que não se pergunta.
 
@@ -63,7 +104,13 @@ def modalidade_assumida(conteudo, profile_id) -> str | None:
     Perguntar seria pedir à pessoa que confirme o óbvio, e deixar em branco seria pior: a
     aplicabilidade dos documentos depende dela, e uma inscrição sem modalidade num Perfil que só
     tem uma deixaria de pedir o que aquela modalidade exige (FR-038, FR-040).
+
+    **Mas uma cota ao lado da ampla são duas opções**, e a ampla é o recorte nulo: nesse Perfil
+    nada é assumido, e o rascunho nasce na ampla — a ausência de reserva (FR-039), que a pessoa
+    troca pela cota se for cotista (DP-14, decidido em 27/09).
     """
+    if oferece_a_ampla_sem_modalidade(conteudo, profile_id):
+        return None
     modalidades = modalidades_publicadas(conteudo, profile_id)
     return str(modalidades[0]["id"]) if len(modalidades) == 1 else None
 
@@ -280,24 +327,30 @@ def _documentos_inaplicaveis(conteudo, inscricao, modalidade_nova) -> list[str]:
 def _modalidade_escolhida(conteudo, profile_id, modality_id):
     """Qual modalidade fica gravada — e quando a ausência dela é recusa.
 
-    Três casos, e a diferença entre eles é o que separa "não perguntar o óbvio" de "aceitar
+    Quatro casos, e a diferença entre eles é o que separa "não perguntar o óbvio" de "aceitar
     inscrição incompleta":
 
     - **nenhuma publicada**: não há o que escolher, e escolher seria inventar (FR-039);
-    - **uma publicada**: é assumida, com ou sem envio do formulário — a pergunta não existe;
-    - **duas ou mais**: a escolha é obrigatória. Deixar em branco pareceria inofensivo e não é:
-      a aplicabilidade dos documentos depende dela, e o candidato deixaria de receber o que a sua
-      modalidade exige, sem que nada acusasse (FR-040).
+    - **a ampla sem Modalidade ao lado das declaradas**: a ausência de modalidade **é** a escolha
+      da ampla concorrência, e é a resposta de quem não marcou cota (FR-039; DP-14);
+    - **uma publicada, e nenhuma ampla ao lado**: é assumida, com ou sem envio do formulário — a
+      pergunta não existe;
+    - **duas ou mais, sem a ampla sem Modalidade**: a escolha é obrigatória. Deixar em branco
+      pareceria inofensivo e não é: a aplicabilidade dos documentos depende dela, e o candidato
+      deixaria de receber o que a sua modalidade exige, sem que nada acusasse (FR-040).
 
     A tela só oferece as do Perfil; esta função é o que responde ao POST forjado, e é onde a regra
-    vale.
+    vale. Identificador de outro Perfil é recusado nos dois casos em que há escolha.
     """
     modalidades = modalidades_publicadas(conteudo, profile_id)
     if not modalidades:
         return None
-    if len(modalidades) == 1:
+    ampla = oferece_a_ampla_sem_modalidade(conteudo, profile_id)
+    if len(modalidades) == 1 and not ampla:
         return str(modalidades[0]["id"])
     if not modality_id:
+        if ampla:
+            return None
         raise DomainError(
             "modality_required",
             "Escolha como você concorre nesta vaga.",

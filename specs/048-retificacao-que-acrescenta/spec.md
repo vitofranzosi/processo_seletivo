@@ -303,7 +303,9 @@ Estes casos são requisitos. Cada um tem linha na matriz de rastreabilidade.
   gravada no rascunho, e continua sendo a escolha dele depois do reconhecimento — a pessoa pode
   trocá-la pela ampla, e nada a troca por ela. *Corrigido na implementação*: a primeira redação dizia
   que a escolha passaria a ser exigida, e o teste mostrou que a assumida fica gravada. Assumir sem
-  perguntar é o achado A-1, e não desta feature.
+  perguntar é o achado A-1, e não desta feature. *Revisitado em 27/09*: com a `DP-14`, o Perfil com
+  vaga na linha geral oferece a ampla sem Modalidade, e nada é assumido; o caso-limite continua valendo
+  para o Perfil com tudo em cota, e é esse que o teste monta.
 - **Janela que nasce depois da divulgação.** O prazo conta da divulgação do ato, pela regra que já
   existe. A spec não reabre prazo nem move a âncora, e uma janela que nasce já vencida não concede
   prazo a ato já divulgado.
@@ -537,6 +539,8 @@ Registro, não escopo: governança é do usuário. Todos foram lidos no código 
   (`inscricoes/application/rascunho.py:59`), e o não-cotista concorre como cotista e recebe a lista de
   documentos da cota. É o caso da `D-G5` com outra forma, e não está na auditoria. A correção da
   Retificação o conserta depois da publicação. Impedir que ele se publique é regra de composição.
+  *Corrigido em 27/09 pela `DP-14`, opção A*: com vaga na linha geral, a inscrição oferece a ampla sem
+  Modalidade ([decisões pendentes](../../doc/decisoes-pendentes-da-consolidacao.md#dp-14--quando-a-inscrição-oferece-a-ampla-concorrência)).
 - **A-2 · A reversão muda e a apuração não fica obsoleta.** Nenhuma causa de obsolescência compara a
   reversão (`ocupacao/application/selectors.py:80-163`), e uma apuração emitida sob a declaração
   anterior continua *"vigente"*. Vale já hoje para quem retifica a espécie, e esta feature só a amplia.
