@@ -614,7 +614,13 @@ def test_an_identity_conflict_that_only_appears_at_publication_is_refused(api_cl
             {
                 "targetPath": f"/profiles/id={P1}/competitionModalities/-",
                 "operation": "ADD",
-                "newValue": {"id": "00000000-0000-0000-0000-0000000005ee", "code": "NOVA"},
+                # A denominação entrou com a `048`: a Modalidade acrescentada vale o que a
+                # composição exigiria dela, e este caso só fala do endereçamento.
+                "newValue": {
+                    "id": "00000000-0000-0000-0000-0000000005ee",
+                    "code": "NOVA",
+                    "name": "Nova",
+                },
             }
         ],
         base=base,

@@ -2607,6 +2607,71 @@ def fragmento_retificacao_anexo(request):
     )
 
 
+def _campos_do_fragmento_de_retificacao(request, edital_id, definicoes, opcoes_de):
+    """Os campos de uma linha a acrescentar, com as opções lidas do conteúdo **vigente** do Edital.
+
+    `None` quando o Edital não é alcançável — quem chama responde 404, como o fragmento da linha do
+    quadro sempre respondeu.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    base = _base_da_composicao(edital, None) if edital is not None else None
+    if base is None:
+        return None
+    opcoes = opcoes_de(conteudo_base(base))
+    return [
+        {**campo, "opcoes": tuple(opcoes.get(campo["chave"], ()))}
+        for campo in _campos_de(definicoes)
+    ]
+
+
+@require_http_methods(["GET"])
+def fragmento_retificacao_modalidade(request, edital_id):
+    """Uma Modalidade a acrescentar a um Perfil publicado (048, FR-777, a `D-G5`).
+
+    Escopado ao Edital: os Perfis que ela pode escolher saem do conteúdo vigente **daquele** Edital,
+    como na linha do quadro.
+    """
+    if identidade.ator_da_sessao(request) is None:
+        return redirect(reverse("interface:identificar"))
+    campos = _campos_do_fragmento_de_retificacao(
+        request,
+        edital_id,
+        retificacao_ui.NOVA_MODALIDADE,
+        retificacao_ui.opcoes_da_modalidade_nova,
+    )
+    if campos is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_retificacao_modalidade.html",
+        {"indice": _indice_de_linha(request), "campos": campos},
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_retificacao_criterio(request, edital_id):
+    """Um critério de desempate a acrescentar por Retificação (048, FR-792).
+
+    Escopado ao Edital, como o da linha do quadro, e pela mesma razão: o marco, a Etapa e o fato que
+    ele escolhe saem do conteúdo vigente **daquele** Edital.
+    """
+    if identidade.ator_da_sessao(request) is None:
+        return redirect(reverse("interface:identificar"))
+    campos = _campos_do_fragmento_de_retificacao(
+        request, edital_id, retificacao_ui.NOVO_CRITERIO, retificacao_ui.opcoes_do_criterio_novo
+    )
+    if campos is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_retificacao_criterio.html",
+        {"indice": _indice_de_linha(request), "campos": campos},
+    )
+
+
 @require_http_methods(["GET"])
 def fragmento_retificacao_linha_do_quadro(request, edital_id):
     """Uma linha do quadro a acrescentar por Retificação (025, FR-171).
@@ -3299,6 +3364,20 @@ def retificar(request, edital_id):
                 retificacao_ui.NOVA_LINHA_DO_QUADRO,
                 opcoes=retificacao_ui.opcoes_da_linha_nova(projecao),
             ),
+            # A Modalidade e o critério acrescentados voltam com as opções pela mesma razão da linha
+            # do quadro (048).
+            "novas_modalidades": retificacao_ui.novas_para_formulario(
+                dados or {},
+                "modalidade",
+                retificacao_ui.NOVA_MODALIDADE,
+                opcoes=retificacao_ui.opcoes_da_modalidade_nova(projecao),
+            ),
+            "novos_criterios": retificacao_ui.novas_para_formulario(
+                dados or {},
+                "criterio",
+                retificacao_ui.NOVO_CRITERIO,
+                opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
+            ),
             "resumo": resumo,
             "erros": erros,
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
@@ -3369,6 +3448,9 @@ def _resumo_de_linha(valor):
         return interface_extras.instante(valor) if _PARECE_INSTANTE.match(valor) else valor
     if not isinstance(valor, dict):
         return valor
+    nascido = retificacao_ui.objeto_legivel(valor)
+    if nascido:
+        return nascido
     for chave in ("code", "type", "name", "description"):
         if valor.get(chave):
             return valor[chave]
@@ -3412,6 +3494,14 @@ CAMPO_EM_PORTUGUES = {
     (colecao, nome.rsplit("/", 1)[-1]): rotulo
     for colecao, lista in CAMPOS_POR_COLECAO.items()
     for nome, rotulo, *_ in lista
+} | {
+    # O objeto que **nasce** por Retificação é endereçado inteiro (048): o caminho termina no nome
+    # dele, e não num campo. Sem o nome em português, a tela onde o ato é assinado diria o marco e
+    # nada mais.
+    ("classificationMilestones", "cutRule"): "Regra de corte",
+    ("classificationMilestones", "appealWindow"): "Janela recursal",
+    ("classificationMilestones", "drawMethod"): "Método do sorteio",
+    ("profiles", "vacancyReversion"): "Reversão de vaga reservada",
 }
 
 

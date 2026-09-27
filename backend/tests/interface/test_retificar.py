@@ -527,3 +527,103 @@ def test_retificar_alcanca_as_secoes_institucionais_novas(
         campo["caminho"] for grupo in ui.campos_editaveis(base.content) for campo in grupo["campos"]
     }
     assert caminho in editaveis
+
+
+# --------------------------------------------------------------------------------------------
+# SC-294 (048): retificar um texto emite um texto
+# --------------------------------------------------------------------------------------------
+
+
+def _o_que_o_formulario_envia(html):
+    """Os pares nome → valor que um navegador enviaria deste formulário, sem ninguém tocar em nada.
+
+    **Lido da marcação, e não montado à mão**, porque o defeito que isto guarda mora na marcação: um
+    `select` sem opção vazia, ou um booleano com "Não" pré-selecionado, envia um valor que ninguém
+    escolheu — e um campo de nascimento assim faria toda Retificação criar um objeto (048, FR-785).
+    Caixa de marcação desmarcada não é enviada, como no navegador.
+    """
+    from html.parser import HTMLParser
+
+    class Formulario(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.pares, self._select, self._primeira = {}, None, None
+
+        def handle_starttag(self, tag, attrs):
+            atributos = dict(attrs)
+            nome = atributos.get("name")
+            if tag == "input" and nome:
+                tipo = atributos.get("type", "text")
+                if tipo in ("checkbox", "radio") and "checked" not in atributos:
+                    return
+                if tipo not in ("file", "submit", "button"):
+                    self.pares[nome] = atributos.get("value", "")
+            elif tag == "select" and nome:
+                self._select, self._primeira = nome, None
+            elif tag == "option" and self._select:
+                valor = atributos.get("value", "")
+                if self._primeira is None:
+                    self._primeira = valor
+                if "selected" in atributos:
+                    self.pares[self._select] = valor
+            elif tag == "textarea" and nome:
+                self._textarea = nome
+                self.pares[nome] = ""
+
+        def handle_data(self, data):
+            if getattr(self, "_textarea", None):
+                self.pares[self._textarea] += data
+
+        def handle_endtag(self, tag):
+            if tag == "select" and self._select:
+                self.pares.setdefault(self._select, self._primeira or "")
+                self._select = None
+            elif tag == "textarea":
+                self._textarea = None
+
+    leitor = Formulario()
+    leitor.feed(html)
+    return leitor.pares
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_retificar_so_um_texto_emite_so_um_texto(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """SC-294: marcos sem janela e sem corte, Perfil sem reversão — e a descrição, só ela, muda."""
+    from processo_seletivo.interface.retificacao import campos_editaveis
+    from tests.fixtures.legado import publicar_como_acervo
+    from tests.fixtures.snapshot import rascunho_completo
+
+    rascunho = rascunho_completo()
+    for perfil in rascunho["profiles"]:
+        perfil["vacancyReversion"] = None
+        for marco in perfil.get("classificationMilestones") or []:
+            marco["appealWindow"] = None
+            marco["cutRule"] = None
+    edital = publicar_como_acervo(
+        api_client, manager_headers, process_payload, draft=rascunho, anexos=1
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    tela = client.get(reverse("interface:retificar", args=[edital.id])).content.decode()
+    descricao = next(
+        campo["referencia"]
+        for grupo in campos_editaveis(vigente.content)
+        for campo in grupo["campos"]
+        if campo["caminho"] == "/description"
+    )
+
+    enviados = _o_que_o_formulario_envia(tela)
+    assert f"campo:{descricao}" in enviados, "a contraprova: o formulário foi lido"
+    enviados[f"campo:{descricao}"] = "Descrição corrigida por Retificação."
+    resposta = client.post(
+        reverse("interface:retificar", args=[edital.id]),
+        {**enviados, "justificativa": "Correção de redação.", "confirmar": "1"},
+    )
+
+    assert resposta.status_code == 302, resposta.content.decode()
+    assert [alteracao.target_path for alteracao in Retificacao.objects.get().alteracoes.all()] == [
+        "/description"
+    ]
