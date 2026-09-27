@@ -31,6 +31,19 @@ promete o que se pretende, e aquela responde pelo que foi feito.
 {% if consolidaveis %}
 <section aria-labelledby="alcance" class="consequencias">
   <h2 id="alcance">O que será consolidado — {{ consolidaveis|length }} inscriç{{ consolidaveis|length|pluralize:"ão,ões" }}</h2>
+  {% comment %}
+  **O alcance pode ser a Etapa inteira**, e não a página que a listagem mostrava: a página é da
+  leitura, e não da decisão (013, FR-018, SC-002). A frase diz de onde veio o conjunto, porque
+  "600 inscrições" depois de uma tela de 25 linhas é justamente o número que precisa ser lido
+  antes do clique — e diz também quem não entra, para que ninguém procure aqui quem aguarda
+  reavaliação.
+  {% endcomment %}
+  {% if todas_as_prontas %}
+  <p class="ajuda">São todas as inscrições desta Etapa que estão prontas para consolidar, e não só
+    as da página que a listagem mostrava. Quem aguarda reavaliação determinada por recurso não entra
+    neste conjunto: é consolidada pela seleção, uma a uma.</p>
+  {% endif %}
+  <p><strong>{% for efeito, quantas in por_consequencia %}{{ quantas }} {{ efeito|lower }}{{ quantas|pluralize }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>.</p>
   <div class="tabela-rolavel">
     <table class="tabela">
       <caption class="oculto">Inscrições que virarão Resultado</caption>
@@ -84,12 +97,13 @@ promete o que se pretende, e aquela responde pelo que foi feito.
   {% csrf_token %}
   <input type="hidden" name="confirmar" value="1">
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
-  {% for item in consolidaveis %}
-  <input type="hidden" name="inscricao_id" value="{{ item.inscricao.id }}">
-  {% endfor %}
-  {% for recusa in recusas %}
-  <input type="hidden" name="inscricao_id" value="{{ recusa.inscricao.id }}">
-  {% endfor %}
+  {% comment %}
+  **Um campo só para todas as identidades.** Um por inscrição passava do limite de mil campos por
+  envio que o Django impõe, e a confirmação de mil prontas voltava 400 antes de chegar ao ato. O
+  conjunto é o que esta tela declarou, e não "as prontas do instante do ato": consolidar quem ficou
+  pronto depois desta leitura seria decidir sobre quem a presidência não viu (FR-018, FR-022).
+  {% endcomment %}
+  <input type="hidden" name="inscricoes" value="{% for item in consolidaveis %}{{ item.inscricao.id }} {% endfor %}{% for recusa in recusas %}{{ recusa.inscricao.id }} {% endfor %}">
   <p class="salvar">
     {% if consolidaveis %}
     <button type="submit" class="botao perigoso">Consolidar {{ consolidaveis|length }} inscriç{{ consolidaveis|length|pluralize:"ão,ões" }}</button>
