@@ -96,6 +96,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Estado atual: RESOLVIDO — `045` FR-735 a FR-738 (#187, 26/09): doutrina escolhida — a fase é derivada (DP-01), pela régua do vencido e pela do período; `CANCELADO` é o único estado declarado; o `UX-002` saiu do catálogo
 - Ainda faz sentido?: sim, com uma correção de diagnóstico: há **duas doutrinas** no repositório. O inventário de 09/09 (`doc/inventario-supervisao-do-processo.md:257-262, 443-446`) trata o status como **declarado à mão** e recomenda "não agora" derivá-lo; o contrato da 026 o chama de **derivado**. Pela interface ninguém consegue declará-lo, então ele não é nem declarado nem derivado — é constante. Qualquer das duas saídas (derivar na leitura; ou tirar o status da comparação/do conteúdo) fecha o ruído; manter as duas doutrinas não.
 - Lacuna residual: o portal do candidato tem regra própria de fase, e ele e o PDF não filtram `CANCELADO` — registrados na 045, *Out of Scope*.
+- **Desfecho posterior (26/09):** a `047` (#193, FR-765, FR-766) fechou a parte do portal. A régua desceu de `interface/supervisao.py` para `editais/domain/fase_do_evento.py`, e o portal a lê — a página pública e o acompanhamento dizem a fase que a gestão diz, e o Evento cancelado é dito cancelado (`tests/integration/portal/test_fase_do_cronograma.py`). A régua antiga do portal comparava o dia em UTC, e não o instante na zona institucional. Resta o PDF, que não filtra `CANCELADO`. A `047` registrou ainda que o período de inscrições marcado como cancelado continua recebendo inscrição, porque a regra do recebimento não lê o `status` do Evento (RC-119 da auditoria, C); a linha dele no portal segue a régua do período, para não contradizer o que o sistema recebe.
 - Grupo do resíduo: C
 - Impacto atual: um `UX-002` por Evento com término já iniciado, em todo Edital publicado pela interface — ruído permanente que treina a ignorar a região; a página do Processo também exibe "declarado planejado" nos próximos marcos (`processo_detalhe.html:121`).
 - Próxima ação sugerida: nenhuma nesta frente
@@ -367,6 +368,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Implementação encontrada: nenhuma na página pública.
 - Evidência no código atual: `portal/templates/portal/resultado.html` — nenhuma ocorrência de recurso/prazo/janela exceto a causa de correção (`:38-41`); `portal/templates/portal/acompanhamento.html:160` mostra "Cabe recurso contra este resultado até …" ao candidato identificado.
 - Estado atual: NÃO IMPLEMENTADO
+- **Desfecho (26/09):** RESOLVIDO pela `047` (#193, FR-769 a FR-771). A página pública do resultado vigente diz o período de interposição — abertura, encerramento, aberto ou encerrado —, sem ação de recorrer; a lista de resultados da página do Edital diz *"recurso até"*. O período é o que a interposição aplica: a mesma função, `janela_da_publicacao_divulgada` (`recursos/application/selectors.py`), sobre a norma vigente (`D-005` de lá), e a T-013 da `017` foi emendada só para a versão consolidada (`D-008`). Teste: `tests/portal/test_prazo_recursal_publico.py`. É o RC-48 da auditoria.
 - Ainda faz sentido?: sim — FR-055 autoriza (MAY) e a janela já é computada (018 FR-022); quem chega pela lista pública, ou quem não conseguiu entrar na área do candidato, não sabe que há prazo correndo.
 - Lacuna residual: exibir a janela (início/fim) do marco na página pública, sem ação.
 - Grupo do resíduo: B
@@ -618,7 +620,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | C2 · N-02 | Recurso aguardando admissibilidade sem sinal | RESOLVIDO (045, #187; o `UX-064` calado no Edital parado, RC-115, corrigido pelo PR corretivo de 26/09) | — | nenhuma |
 | C3 · N-03 · `4ec1cbb` | Link "Abrir a Supervisão" sem guarda | RESOLVIDO | — | nenhuma |
 | C4 · N-04 | Sinal sem caminho não diz a quem pedir | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
-| C6 · N-06 | `schedule.status` derivado que nada deriva → UX-002 permanente | RESOLVIDO (045, #187) | C (sobra registrada) | nenhuma |
+| C6 · N-06 | `schedule.status` derivado que nada deriva → UX-002 permanente | RESOLVIDO (045, #187) | C (sobra registrada; a do portal fechada pela 047, #193, resta o PDF) | nenhuma |
 | C5 · N-05 | UX-001/UX-002 encaminham à Retificação que não os resolve | RESOLVIDO (045, #187) | — | nenhuma |
 | N-07 · ACH-27 | Contador de cobertura inclui eliminados antes | RESOLVIDO (045, #187) | — | nenhuma |
 | N-08 | Avisos de validação fora da Atenção | NÃO IMPLEMENTADO | C | nenhuma (fronteira a decidir) |
@@ -634,7 +636,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | §6 sorteio | Sorteio fora do painel | NÃO IMPLEMENTADO | C | nenhuma |
 | §6/§13 matrícula | Matrícula fora do painel | NÃO IMPLEMENTADO | C | nenhuma (medir no piloto) |
 | §7 prazo | Prazo restante em três formas | NÃO IMPLEMENTADO | C | corrigir (polish) |
-| §7 recurso público | Prazo recursal ausente da página pública do resultado | NÃO IMPLEMENTADO | B | corrigir |
+| §7 recurso público | Prazo recursal ausente da página pública do resultado | RESOLVIDO (047, #193) | — | nenhuma |
 | §8 glossário | "7 de 7" sem unidade; "sem marco" sem consequência; seletor cru | PARCIALMENTE RESOLVIDO (045, #187) | C | nenhuma agora |
 | §13 · §18 RA | Registro Acadêmico sem validação no destino | IMPLEMENTADO, MAS NÃO VALIDADO | B | validar |
 | §18 custo | ~17 consultas por Edital no painel | IMPLEMENTADO, MAS NÃO VALIDADO | C | validar |
@@ -654,16 +656,16 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | Estado | Nº |
 |---|---|
-| RESOLVIDO | 11 |
+| RESOLVIDO | 12 |
 | RESOLVIDO POR OUTRO CAMINHO | 1 |
 | PARCIALMENTE RESOLVIDO | 2 |
-| NÃO IMPLEMENTADO | 15 |
+| NÃO IMPLEMENTADO | 14 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 3** (E-6, prazo recursal público, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188) · **C = 14**, mais as sobras registradas de N-04 e N-06. Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
+Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 2** (E-6, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188), e o prazo recursal público pela `047` (#193) · **C = 14**, mais as sobras registradas de N-04 e N-06 (a de N-06 reduzida ao PDF pela `047`). Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
 
 Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7. *A C2 foi atravessada depois de dada como fechada: o RC-115, que a revisão da `045` encontrou, foi corrigido pelo PR corretivo de 26/09, e a contagem não muda.*
 Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; **D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).

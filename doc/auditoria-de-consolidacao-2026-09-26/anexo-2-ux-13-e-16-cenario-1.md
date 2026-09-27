@@ -282,6 +282,7 @@ eu os confirmo com checagem pontual.
 - Implementação encontrada: só a metade do acompanhamento.
 - Evidência no código atual: `portal/templates/portal/acompanhamento.html:160` ("Cabe recurso… até"); `portal/templates/portal/resultado.html` sem menção a prazo (só às correções por recurso, `:40-41`); `divulgacao/infrastructure/documento.py` — o documento da divulgação cita decisões de recurso (`:113-126`) e não a janela.
 - Estado atual: **PARCIALMENTE RESOLVIDO**
+- **Desfecho (26/09):** RESOLVIDO pela `047` (#193, FR-769 a FR-771) — a página pública do resultado vigente diz o período de interposição, abertura e encerramento, e se está aberto; a lista de resultados da página do Edital diz *"recurso até"*. O prazo é calculado pela mesma função que a interposição usa (`janela_da_publicacao_divulgada`, em `recursos/application/selectors.py`), sobre a norma vigente (`tests/portal/test_prazo_recursal_publico.py`). Sobra o **documento** do resultado, que continua sem a janela (`divulgacao/infrastructure/documento.py`), e a data-limite na prévia da divulgação, do `ACH-41` do lote 3 (C). É o RC-48 da auditoria. A `047` registrou também que uma Retificação pode encurtar a janela de ato já divulgado, sem decisão escrita (RC-121).
 - Ainda faz sentido?: sim — o resultado preliminar é ato público e o prazo de recurso é o que a pessoa (ou quem a representa) precisa ler ali; quem não se inscreveu pelo portal ou só lê a relação pública não o encontra.
 - Lacuna residual: página pública e documento do resultado preliminar não declaram a janela recursal.
 - Grupo do resíduo: B
@@ -1006,6 +1007,7 @@ retomada ali com o estado de hoje. Abaixo, os achados `ACH-01`…`ACH-45`.
 - Estado atual: **NÃO IMPLEMENTADO**
 - Ainda faz sentido?: sim — a tempestividade é calculada pela janela do marco (`recursos/application/selectors.py`, `_tempestividade`), e quem confiar no Cronograma perde o prazo. Mas o confronto exige primeiro saber qual Evento é o de recurso, e hoje isso não é dado.
 - Lacuna residual: confronto janela × Evento (ou derivar o Evento de recurso da janela), e aviso na publicação do resultado.
+- **Desfecho (26/09):** continua NÃO IMPLEMENTADO. A `047` (#193) fez a página pública do resultado dizer a data autoritativa, a da janela do marco (RC-48 da auditoria), e deixou o confronto com o Evento fora, porque exige modelar o vínculo (RC-76).
 - Grupo do resíduo: B
 - Impacto atual: médio quando ocorre (prazo perdido); frequência depende de como os Editais declaram o Cronograma.
 - Próxima ação sugerida: criar spec (é a `E-4`, do outro lote — aqui só a confirmação)
@@ -1082,7 +1084,8 @@ retomada ali com o estado de hoje. Abaixo, os achados `ACH-01`…`ACH-45`.
 
 Nota ao bloco 13/09 QW12: a `017` **admite** e não obriga a apresentação do prazo na página pública
 (`specs/017-*/spec.md` FR-055: "Se a versão citada declarar prazo recursal, a informação normativa
-existente **pode** ser apresentada") — por isso B, e não A.
+existente **pode** ser apresentada") — por isso B, e não A. *Desfecho (26/09): a `047` (#193) tornou
+a apresentação obrigatória na página pública do resultado (FR-769), e o bloco passou a RESOLVIDO.*
 
 ---
 
@@ -1105,7 +1108,7 @@ existente **pode** ser apresentada") — por isso B, e não A.
 | 13/09 QW3/4/5/8 | Tokens em inglês, navegação Anexos, link do Edital, texto obsoleto | RESOLVIDO | — | nenhuma |
 | 13/09 QW7 · §9.8 | Publicar resultado numa tela de auditoria | RESOLVIDO POR OUTRO CAMINHO | — | nenhuma |
 | 13/09 QW10 | "Ativar Processo" | RESOLVIDO POR OUTRO CAMINHO | — | nenhuma |
-| 13/09 QW12 | Prazo recursal fora da página pública do resultado | PARCIALMENTE RESOLVIDO | B | criar spec curta |
+| 13/09 QW12 | Prazo recursal fora da página pública do resultado | RESOLVIDO (047, #193) | C (o documento do resultado; a prévia da divulgação) | nenhuma agora |
 | 13/09 QW13 | E-mail com "Concorrência:" vazio | NÃO IMPLEMENTADO | C | corrigir |
 | 13/09 P2/P3 (seis) | Nome na distribuição, parecer, Mesa→Edital, empate residual, prosa de projeto, interstício | RESOLVIDO | — | nenhuma |
 | 13/09 P2 | Candidato não vê vagas por modalidade | NÃO IMPLEMENTADO | B | criar spec curta |
@@ -1147,7 +1150,7 @@ existente **pode** ser apresentada") — por isso B, e não A.
 | ACH-38 | Presidência sem "peça a alguém" | RESOLVIDO | — | nenhuma |
 | ACH-39 | Tabela de resultados antecedentes só em UUID | NÃO IMPLEMENTADO | C | corrigir |
 | ACH-40 | Publicador sem caminho | RESOLVIDO | — | nenhuma |
-| ACH-41 | Duas datas-limite do recurso | NÃO IMPLEMENTADO | B | criar spec (`E-4`) |
+| ACH-41 | Duas datas-limite do recurso | NÃO IMPLEMENTADO | B | criar spec (`E-4`); a data da janela já aparece na página pública do resultado (047, #193) |
 | ACH-42 | Parecer não chega ao candidato | RESOLVIDO | — | nenhuma |
 | ACH-43 | Julgador sem a prova | RESOLVIDO | — | nenhuma |
 | ACH-44 | "o meu resultado" na gestão | NÃO IMPLEMENTADO | C | corrigir |
@@ -1157,22 +1160,24 @@ existente **pode** ser apresentada") — por isso B, e não A.
 
 | Estado | Blocos |
 |---|---:|
-| RESOLVIDO | 21 |
+| RESOLVIDO | 22 |
 | RESOLVIDO POR OUTRO CAMINHO | 4 |
-| PARCIALMENTE RESOLVIDO | 9 |
+| PARCIALMENTE RESOLVIDO | 8 |
 | NÃO IMPLEMENTADO | 20 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 3 |
 | DUPLICADO / ABSORVIDO | 5 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos dos 29 blocos abertos (9 parciais + 20 não implementados): **A 0 · B 4 · C 23 · — 2**
-(os dois "—" são `ACH-05` e `ACH-22`, cujo resto não se recomenda). Nenhum resíduo deste lote contradiz requisito escrito nem impede a finalidade: o
+Resíduos dos 28 blocos abertos (8 parciais + 20 não implementados): **A 0 · B 3 · C 23 · — 2**
+(os dois "—" são `ACH-05` e `ACH-22`, cujo resto não se recomenda). *Em 26/09 eram 29 blocos abertos,
+com B 4: o 13/09 QW12 passou a RESOLVIDO pela `047` (#193), e a sobra dele é C.* Nenhum resíduo deste lote contradiz requisito escrito nem impede a finalidade: o
 que estava nessa classe (`ACH-40`, `ACH-43`, `ACH-42`, 13/09 #1, #2, #4, #5) fechou.
 
 **Os quatro B**: `ACH-29` (validação de publicação exibida em Edital publicado, agora com
 impeditivo falso), `ACH-41` (duas datas de recurso — é `E-4`), 13/09 QW12 (prazo recursal fora da
-divulgação pública) e 13/09 P2 (vagas por modalidade fora da página da vaga).
+divulgação pública) e 13/09 P2 (vagas por modalidade fora da página da vaga). *Desfecho (26/09): o
+13/09 QW12 foi fechado pela `047` (#193); restam três.*
 
 ## (3) Achados NOVOS encontrados de passagem
 

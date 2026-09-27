@@ -283,6 +283,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Estado atual: NÃO IMPLEMENTADO
 - Ainda faz sentido?: parcialmente. A recomendação original **não é executável como escrita**: não existe relação declarada entre um Evento do Cronograma e um marco (tipo é texto livre), e a janela só vira data no instante da publicação do resultado. Casar por texto é justamente o que o longitudinal §14.2 proíbe. O que continua valendo: (a) na **prévia de divulgação** do resultado, dizer a data-limite que aquele ato abrirá, para quem publica comparar com o Cronograma; (b) se um dia o Evento ganhar vínculo tipado com o marco, aí sim confrontar.
 - Lacuna residual: a contradição continua possível e silenciosa; o candidato vê as duas datas.
+- **Desfecho (26/09):** continua NÃO IMPLEMENTADO. A `047` (#193) fez a parte do portal que a auditoria separou no RC-48: a página pública do resultado diz o prazo que a interposição aplica, com a mesma função (`janela_da_publicacao_divulgada`), e quem chega sem se identificar lê a data autoritativa. A (a) deste bloco, a data-limite na **prévia de divulgação** para quem publica, não foi feita — é gestão, e a `047` é do portal —, e a (b) continua dependendo da decisão de modelo. A `047` registrou ainda que a janela segue a norma vigente e é retificável, e que encurtá-la depois de um resultado divulgado não tem decisão escrita (RC-121 da auditoria).
 - Grupo do resíduo: B
 - Impacto atual: risco de candidato perder prazo confiando no Cronograma publicado; ocorre quando a divulgação se desloca do planejado — caso comum.
 - Próxima ação sugerida: criar spec pequena para (a); (b) depende de decisão de modelo (lote 5, E-4).
@@ -668,7 +669,7 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 | ACH-60 | trabalho sem Perfil/polo | NÃO IMPLEMENTADO | B | corrigir (coluna/filtro) + decisão (escopo) |
 | ACH-61 | escala da composição multipolo | PARCIALMENTE RESOLVIDO | C | nenhuma |
 | ACH-40 | publicador sem caminho | RESOLVIDO | — | nenhuma |
-| ACH-41 | duas datas-limite de recurso | NÃO IMPLEMENTADO | B | criar spec pequena (prévia da divulgação) |
+| ACH-41 | duas datas-limite de recurso | NÃO IMPLEMENTADO | B | criar spec pequena (prévia da divulgação); a página pública do resultado já diz o prazo (047, #193) |
 | ACH-42 | parecer não chegava ao candidato | RESOLVIDO | — | nenhuma |
 | ACH-43 | julgador sem a prova | RESOLVIDO | — | nenhuma (anexo do recorrente: contradito por `D-011`/`FR-007` da 018) |
 | ACH-02/30/38/35/39/31/45/08/10/16 | demais itens do top 10 | DUPLICADO / ABSORVIDO (lote 2) | — | nenhuma aqui |
@@ -719,7 +720,7 @@ Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 1** (R
 ## (4) Incertezas que exigem validação humana
 
 1. **ACH-54** — o comportamento vem do código (`previa.py:43-50`); não percorri a tela para confirmar que o recorte da AC declarada aparece e aceita congelar/sortear num Edital real de hoje.
-2. **ACH-41 / E-4** — a recomendação original pressupõe um vínculo entre Evento do Cronograma e marco que o modelo não tem (tipo do Evento é texto livre). Decidir se o caminho é mostrar a data-limite na prévia da divulgação ou modelar o vínculo é escolha de produto.
+2. **ACH-41 / E-4** — a recomendação original pressupõe um vínculo entre Evento do Cronograma e marco que o modelo não tem (tipo do Evento é texto livre). Decidir se o caminho é mostrar a data-limite na prévia da divulgação ou modelar o vínculo é escolha de produto. *Em 26/09 a `047` (#193) fez uma terceira coisa, que não depende da escolha: a página pública do resultado diz a data autoritativa. A escolha continua aberta.*
 3. **ACH-60** — escopo de trabalho por Perfil é decisão de governança (a convergência pede Edital real multipolo antes); a coluna/filtro de Perfil na distribuição é leitura e eu a recomendaria sem essa decisão — confirmar se a governança concorda em separar as duas.
 4. **ACH-43 / `D-011`** — admitir prova nova no recurso é pergunta normativa; a convergência a listou como "ABERTO", e a spec `018` a recusa por requisito. Quem governa deve dizer se `D-011` continua valendo.
 5. **ACH-56 / ACH-59 / LONG-2** — as três dependem de quais famílias da amostra entram no alvo (14/2026, 173/2025, Editais com PPI e heteroidentificação). Não é verificável em código.
