@@ -452,7 +452,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Estado atual: PARCIALMENTE RESOLVIDO
 - Ainda faz sentido?: sim. As quatro evidências de 16/09 fecharam; a classe não: ainda se publica, em ato imutável, Etapa com duas avaliações que nunca consolida.
 - Lacuna residual: Etapa com `evaluationsPerRegistration > 1` publicável sem regra de combinação (lote 7); `D-G1` (lote 4).
-- **Desfecho (26/09):** as duas fechadas pela `046` (#188). A Etapa que não consolida é impeditiva quando o fluxo exige o Resultado, e a `D-G1` foi executada por Perfil. Resta a regra de combinação de avaliações, só com Edital real de dupla leitura (B).
+- **Desfecho (26/09):** as duas fechadas pela `046` (#188). A Etapa que não consolida é impeditiva quando o fluxo exige o Resultado, e a `D-G1` foi executada por Perfil. Resta a regra de combinação de avaliações, só com Edital real de dupla leitura (B). *Depois (26/09): a `046` contava a enumeração por marco como exigência também para a decisória, que é porta, e recusava Edital legítimo; o PR corretivo de 26/09 a corrigiu (RC-114 da auditoria).*
 - Grupo do resíduo: A (a instância das duas avaliações publica um ato que não se executa — mesma natureza que fez ACH-49/50 serem S4)
 - Impacto atual: Edital publicado com Etapa que não consolida; saída só por Retificação.
 - Próxima ação sugerida: corrigir — pela via do achado avulso (lote 7).
