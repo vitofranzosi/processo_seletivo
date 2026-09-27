@@ -503,6 +503,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Grupo do resíduo: B
 - Impacto atual: Edital publicado sem janela recursal fica sem prazo computável até o fim (a definitiva cai no ramo da declaração escrita); sem reversão, a vaga reservada não reverte.
 - Próxima ação sugerida: criar spec (ou incremento da 026) para os três "podem nascer" na tela
+- **Desfecho (26/09):** RESOLVIDO pela `048` (#197, FR-784 a FR-791). A reversão é oferecida sempre, com *"Nenhum"* dizendo que o Perfil não reverte (`CAMPOS_DA_REVERSAO`), e `tests/interface/test_retificar_reversao.py` passou a prender a **presença** (`test_o_campo_aparece_onde_o_objeto_nao_existe`). A janela e o corte nascem por um registro de nascimento conferido contra `PODE_PASSAR_A_EXISTIR` na carga do módulo (`NASCIMENTOS`, em `interface/retificacao.py`); a janela nasce só concedendo, e o corte não nasce governando Etapa que já tem Resultado. `tests/contract/test_mutabilidade.py::test_todo_objeto_que_pode_nascer_tem_caminho_pela_tela` conta 4 de 4. A `048` registrou uma sobra vizinha, que não é deste bloco: a apuração não fica obsoleta quando a reversão muda (RC-129 da auditoria).
 - Relações: E2E-004, E2E14-005; E2E18-005 (a janela que sumia); contrato 026.
 - Confiança: alta.
 
@@ -1179,7 +1180,7 @@ Blocos com dois estados distintos aparecem em duas linhas.
 | E2E15-015 | eliminados antes fora do universo do ato | SUPERADO / OBSOLETO | — | nenhuma |
 | E2E15 opp. (a) | teto de inscrições fora do assistente | DUPLICADO / ABSORVIDO (AX-9) | B | ver AX-9 |
 | E2E15 opp. (b) | `reproduzir_ato` sem rota | CONTRADITO POR DECISÃO POSTERIOR (Clarifications da 015) | C | nenhuma |
-| G16-001 | declarar reversão (e corte, e janela) por Retificação | PARCIALMENTE RESOLVIDO | B | criar spec |
+| G16-001 | declarar reversão (e corte, e janela) por Retificação | RESOLVIDO (048, #197) | — | nenhuma |
 | G16-002 | reversão/concomitância em certame calculado | DUPLICADO / ABSORVIDO (ACH-47 / 034) | — | nenhuma |
 | O16-001 | trilha do Edital sem atos da condução | PARCIALMENTE RESOLVIDO | C | nenhuma |
 | O16-002 | linha de quadro para a AC declarada | RESOLVIDO POR OUTRO CAMINHO (027) | — | nenhuma |
@@ -1231,9 +1232,9 @@ Blocos com dois estados distintos aparecem em duas linhas.
 
 | Estado | Quantidade |
 |---|---:|
-| RESOLVIDO | 15 |
+| RESOLVIDO | 16 |
 | RESOLVIDO POR OUTRO CAMINHO | 2 |
-| PARCIALMENTE RESOLVIDO | 9 |
+| PARCIALMENTE RESOLVIDO | 8 |
 | NÃO IMPLEMENTADO | 25 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
 | SUPERADO / OBSOLETO | 4 |
@@ -1241,10 +1242,11 @@ Blocos com dois estados distintos aparecem em duas linhas.
 | CONTRADITO POR DECISÃO POSTERIOR | 8 |
 
 Resíduos por grupo (coluna "grupo" da tabela): **A = 1** (T056 — implantação; o G3 do bloco
-G1–G4 é o mesmo item); **B = 14**, mais 3 linhas mistas (G1–G4 "B, A no G3"; E2E-016 "C/B"; P-4
+G1–G4 é o mesmo item); **B = 13**, mais 3 linhas mistas (G1–G4 "B, A no G3"; E2E-016 "C/B"; P-4
 "B/C") — os B incluem itens que moram em outro lote (ACH-56, ACH-59, AX-9, AX-15); **C = 28**;
 **— = 31** (sem resíduo). Dos 25 "NÃO IMPLEMENTADO", 16 são C — quase todos polimento ou pergunta de
-domínio sem Edital no alvo que a exija —, 5 são B, 1 é A.
+domínio sem Edital no alvo que a exija —, 5 são B, 1 é A. *Em 26/09 eram 15 RESOLVIDO, 9 parciais e
+B = 14: o G16-001 passou a RESOLVIDO pela `048` (#197), sem sobra.*
 
 ## 3. Achados NOVOS encontrados de passagem
 
@@ -1254,7 +1256,8 @@ domínio sem Edital no alvo que a exija —, 5 são B, 1 é A.
    qual caminho"); `interface/retificacao.py:764,852,859` só desenha os campos quando o objeto já
    existe, e `tests/interface/test_retificar_reversao.py:84` prende essa ausência. Resultado: um Edital
    publicado sem janela recursal não ganha prazo computável pela interface — só pela API. É o
-   G16-001 generalizado; Princípio VI.
+   G16-001 generalizado; Princípio VI. *Desfecho (26/09): fechado pela `048` (#197) — os três nascem
+   pela tela, e o teste da reversão passou a prender a presença (RC-38 da auditoria).*
 2. **A recusa da reabertura manda ao lugar errado quando há reavaliação determinada.**
    `avaliacoes/application/avaliacao.py:366-369` diz que "o julgamento de recurso o supera por um
    Resultado novo" — o julgamento já aconteceu e, nessa espécie, não cria sucessor; o caminho real

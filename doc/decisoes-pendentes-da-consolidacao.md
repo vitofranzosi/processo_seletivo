@@ -400,6 +400,9 @@ critério de desempate. O usuário decidiu também que a Modalidade acrescentada
 uma, inclusive cota**, porque a auditoria define o problema como a ausência *"da ampla ou de uma
 cota"*, e limitar à ampla deixaria parte do `RC-37` aberta.
 
+**Executado:** a `048` foi mesclada pelo #197 (`0113b782`) em 26/09, e a auditoria registra o `RC-37`
+como RESOLVIDO.
+
 Os itens 1 (encerrar a `039`) e 3 (o alcance da Etapa) **continuam abertos**.
 
 ---

@@ -305,6 +305,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Grupo do resíduo: A
 - Impacto atual: uma omissão de Modalidade na publicação impede a inscrição de não-cotistas (ou de cotistas) até o fim do certame; único remédio é cancelar e republicar.
 - Próxima ação sugerida: criar spec (decidir se entra como US da 039 ou isolada)
+- **Desfecho (26/09):** RESOLVIDO pela `048` (#197, FR-777 a FR-782), isolada da `039` e junto da B-4, como o item 2 da `DP-08` decidiu. A Modalidade acrescentada pode ser qualquer uma, inclusive cota (`D-001` de lá, decidida pelo usuário), e leva no mesmo ato a declaração da ampla ou a linha do quadro da cota; a frase *"ainda não são definidas por aqui"* saiu de `retificar.html`. As cinco restrições estão provadas retificando de fato, e não emitindo recorte à mão: versões anteriores consultáveis e efeito só pela nova (`FR-796`, `FR-797`), validação dos dependentes sobre o conteúdo retificado (`FR-780`), nenhuma inscrição nem ordem reescrita e o recorte novo sem ordem (`FR-781`) — `tests/integration/inscricoes/test_modalidade_acrescentada_por_retificacao.py` e `test_ordem_por_recorte.py::test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla`. A `048` registrou, de passagem, o caso vizinho do Perfil de uma cota só, que põe todo candidato nela (RC-128 da auditoria).
 - Relações: E-4 (três grafias da ampla); `ampla-concorrencia-tem-duas-grafias`.
 - Confiança: alta.
 
@@ -632,7 +633,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | D-G1 | FR-461 impeditiva | RESOLVIDO (046, #188 — por Perfil) | — | nenhuma |
 | D-G3 | Fonte pública externa do sorteio / reaproveitamento | RESOLVIDO POR OUTRO CAMINHO | — (NOVO-1 fechado pela 046, #188) | nenhuma |
 | D-G4 | Peso da Etapa | RESOLVIDO | — | nenhuma |
-| D-G5 | Retificação acrescenta Modalidade | NÃO IMPLEMENTADO | A | criar spec (rascunho na 039) |
+| D-G5 | Retificação acrescenta Modalidade | RESOLVIDO (048, #197) | — | nenhuma |
 | §6 sorteio | Sorteio fora do painel | NÃO IMPLEMENTADO | C | nenhuma |
 | §6/§13 matrícula | Matrícula fora do painel | NÃO IMPLEMENTADO | C | nenhuma (medir no piloto) |
 | §7 prazo | Prazo restante em três formas | NÃO IMPLEMENTADO | C | corrigir (polish) |
@@ -656,19 +657,19 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | Estado | Nº |
 |---|---|
-| RESOLVIDO | 12 |
+| RESOLVIDO | 13 |
 | RESOLVIDO POR OUTRO CAMINHO | 1 |
 | PARCIALMENTE RESOLVIDO | 2 |
-| NÃO IMPLEMENTADO | 14 |
+| NÃO IMPLEMENTADO | 13 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos por grupo, depois da `045`: **A = 2** (C7, D-G5) · **B = 2** (E-6, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188), e o prazo recursal público pela `047` (#193) · **C = 14**, mais as sobras registradas de N-04 e N-06 (a de N-06 reduzida ao PDF pela `047`). Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
+Resíduos por grupo, depois da `045`: **A = 1** (C7; a D-G5 fechada pela `048`, #197) · **B = 2** (E-6, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188), e o prazo recursal público pela `047` (#193) · **C = 14**, mais as sobras registradas de N-04 e N-06 (a de N-06 reduzida ao PDF pela `047`). Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
 
 Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7. *A C2 foi atravessada depois de dada como fechada: o RC-115, que a revisão da `045` encontrou, foi corrigido pelo PR corretivo de 26/09, e a contagem não muda.*
-Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; **D-G2 e D-G5 não executadas e sem spec na main** (D-G5 tem rascunho na branch não mesclada `claude/spec-039-alcance`).
+Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; D-G5 executada pela `048` (#197), isolada da `039`; **a D-G2 continua não executada e sem spec na main**.
 
 ## 3. Achados NOVOS encontrados de passagem
 

@@ -60,6 +60,7 @@ aparece no campo "Impacto atual" de cada bloco.
   cada bloco), mas não a detecção.
 - Próxima ação sugerida: criar spec curta (aviso de divergência entre Perfis + acréscimo de critério
   na Retificação) ou decidir e registrar que acrescentar critério é só API.
+- **Desfecho (26/09):** a lacuna (ii) fechou pela `048` (#197, FR-792 a FR-794, `D-004` de lá): o critério de desempate se acrescenta pela tela, com a validação da composição ao conferir e no ato (`editais/domain/perfis.py`, `validar_criterio`), e remover um e acrescentar outro no mesmo ato corrige o sentido publicado. A ordem já emitida do marco fica obsoleta, como já ficava na remoção. Continua PARCIALMENTE RESOLVIDO pela (i), a conferência entre Perfis, que é o RC-31 da auditoria — B.
 - Relações: mesmo mecanismo de AX-11 e AX-7 (E-1); raiz E-4 (fontes sem confronto) e estudo §13/E2.
   Sintoma de "o comum do certame mora no Perfil".
 - Confiança: alta — leitura direta de contrato, tela e validação.
@@ -633,6 +634,10 @@ aparece no campo "Impacto atual" de cada bloco.
 - Impacto atual: nenhum no produto; risco de governança — a branch parece trabalho em curso e não é.
 - Próxima ação sugerida: o usuário registrar que a 039 está encerrada (ou apagar a branch local) e
   dizer onde ficam D-G5 e o alcance da Etapa.
+- **Desfecho (26/09):** das duas peças órfãs, a D-G5 teve destino e foi executada: o item 2 da `DP-08`
+  a pôs na B-4, e a `048` (#197) a implementou como `ADD` com a Modalidade continuando no Perfil, como
+  este bloco previa. Continuam abertos o encerramento da 039 e o alcance da Etapa (itens 1 e 3 da
+  `DP-08`); o grupo continua B, por uma peça.
 - Relações: AX-7, AX-14, AX-4, D-G5, "três nomes para duas coisas" (FR-572 da 039).
 - Confiança: alta quanto ao conteúdo; média quanto ao motivo (inferido — sem registro explícito).
 
@@ -837,6 +842,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Grupo do resíduo: **B** (janela recursal); **C** (corte, reversão)
 - Impacto atual: correção de Edital publicado depende de API para esses três.
 - Próxima ação sugerida: decisão do usuário por objeto, como o achado pede.
+- **Desfecho (26/09):** RESOLVIDO pela `048` (#197), que tomou a primeira das duas saídas do achado para os três objetos: os campos em branco, com o rótulo do vazio (`FR-799`). O usuário decidiu por objeto, como o achado pedia — a janela nasce só concedendo (`D-003` de lá), o corte nasce com guarda sobre a Etapa que já tem Resultado (`D-002`), e a reversão nasce sem regra nova. O registro de nascimento (`NASCIMENTOS`, em `interface/retificacao.py`) é conferido contra `PODE_PASSAR_A_EXISTIR` na carga do módulo, e `tests/contract/test_mutabilidade.py::test_todo_objeto_que_pode_nascer_tem_caminho_pela_tela` conta 4 de 4.
 - Relações: AX-1 (acrescentar critério também só pela API); D-G5 (Modalidade).
 - Confiança: alta.
 
@@ -902,7 +908,9 @@ aparece no campo "Impacto atual" de cada bloco.
 - Estado atual: **RESOLVIDO**
 - Ainda faz sentido?: não como pendência. Dois resíduos pertencem a outros blocos: a natureza
   "retificável" não garante canal de exibição (AX-9, família (b)), nem caminho de **acréscimo** na
-  tela (AX-1 e o achado do "objeto que nasce só pelo método").
+  tela (AX-1 e o achado do "objeto que nasce só pelo método"). *O segundo fechou pela `048` (#197) em
+  26/09. A mesma feature registrou que o "não retificável" do contrato não vale para o objeto inteiro
+  substituído pela API (RC-130 da auditoria).*
 - Lacuna residual: nenhuma própria.
 - Grupo do resíduo: —
 - Próxima ação sugerida: nenhuma.
@@ -961,7 +969,7 @@ aparece no campo "Impacto atual" de cada bloco.
 
 | ID | Título | Estado | Grupo | Próxima ação |
 |---|---|---|---|---|
-| AX-1 | Sentido do desempate divergente; `type` irretificável; acréscimo de critério só pela API | PARCIALMENTE RESOLVIDO (043 duplica) | B | spec curta: aviso de divergência entre Perfis + acrescentar critério na Retificação (ou registrar "só API") |
+| AX-1 | Sentido do desempate divergente; `type` irretificável; acréscimo de critério só pela API | PARCIALMENTE RESOLVIDO (043 duplica; o acréscimo de critério pela 048, #197) | B | spec curta: aviso de divergência entre Perfis |
 | AX-2 | Requisito × documento comprobatório: duas prosas sem vínculo | NÃO IMPLEMENTADO | C | nenhuma (orientação de redação) |
 | AX-3 | Catálogo de Seções fechado (8 seções viram parágrafo) | NÃO IMPLEMENTADO | B | decisão do usuário (estudo §15, decisão 3) |
 | AX-4 | Barema inexistente; Etapa sem alcance por Perfil/curso | NÃO IMPLEMENTADO | B | spec quando priorizado (039 a registrou como "candidata seguinte") |
@@ -978,7 +986,7 @@ aparece no campo "Impacto atual" de cada bloco.
 | AX-15 | Submodalidades de PPIQ | NÃO IMPLEMENTADO (fora da 044 por decisão) | B | nenhuma agora |
 | AX-16 | Restaurar rascunho local perde coleções aninhadas | NÃO IMPLEMENTADO | **A** | validar pela tela e corrigir (ou restringir a salvaguarda) |
 | E-3 | Custo de autoria sem duplicar | PARCIALMENTE RESOLVIDO (043; documentos pela 044) | B | nenhuma; a propagação em massa é spec futura (043 §5) |
-| 039 | Catálogo de Modalidades / alcance declarável (branch local) | CONTRADITO POR DECISÃO POSTERIOR | B (peças órfãs: D-G5, alcance da Etapa) | usuário registrar encerramento e destino das peças |
+| 039 | Catálogo de Modalidades / alcance declarável (branch local) | CONTRADITO POR DECISÃO POSTERIOR | B (peça órfã: alcance da Etapa; a D-G5 executada pela 048, #197) | usuário registrar o encerramento e o destino do alcance da Etapa |
 | 044 | Recorte transversal + lista gravada | RESOLVIDO (#173, mesclado em 26/09) | — | T065, se a medição for pedida |
 | ACH-41 (E-4) | Janela recursal do marco × Evento de recurso | NÃO IMPLEMENTADO | **A** | criar spec: designar Evento de recurso + AVISO |
 | ACH-13 (E-4) | Período de inscrições: "marcado" × designado na etapa 6 | NÃO IMPLEMENTADO | C | microcópia |
@@ -987,7 +995,7 @@ aparece no campo "Impacto atual" de cada bloco.
 | E-4 (raiz, agregado) | Fontes sem confronto | PARCIALMENTE RESOLVIDO | A/B/C por membro | caso a caso (ver membros) |
 | Avulso — ampla não remapeada | Referência que atravessa o reuso | PARCIALMENTE RESOLVIDO (repetiu-se em 25/09: `governedStage`) | B | teste guardião "campo do contrato ⇒ fixture rica" |
 | Avulso — objeto sem forma | `classificationInformation`/`callInformation` | NÃO IMPLEMENTADO (decisão aberta) | C | nenhuma |
-| Avulso — objeto que nasce só pelo método | corte, janela, reversão sem caminho na tela | NÃO IMPLEMENTADO | B (janela) / C | decisão do usuário por objeto |
+| Avulso — objeto que nasce só pelo método | corte, janela, reversão sem caminho na tela | RESOLVIDO (048, #197) | — | nenhuma |
 | Avulso — igualdade da soma | desconto da ampla declarada | RESOLVIDO (027 FR-317) | — | nenhuma |
 | Avulso — anexo sem destinatário | lista pública sem finalidade | NÃO IMPLEMENTADO | C | nenhuma |
 | Decisão — mutabilidade | contrato + guardião | RESOLVIDO (026) | — | nenhuma |
@@ -1002,16 +1010,16 @@ se decompõe nos quatro membros).
 
 | Estado | Nº | Quais |
 |---|---:|---|
-| RESOLVIDO | 6 | AX-13, AX-14/17, igualdade da soma, decisão de mutabilidade, 044 (#173), PR #172 |
+| RESOLVIDO | 7 | AX-13, AX-14/17, igualdade da soma, decisão de mutabilidade, 044 (#173), PR #172, objeto que nasce só pelo método (048, #197) |
 | RESOLVIDO POR OUTRO CAMINHO | 0 | — (o AX-14/17 fechou pela família (d) que ele próprio listava) |
 | PARCIALMENTE RESOLVIDO | 6 | AX-1, AX-10, AX-11, E-3, "três nomes", ampla não remapeada |
-| NÃO IMPLEMENTADO | 16 | AX-2, AX-3, AX-4, AX-5, AX-6, AX-8, AX-9, AX-12, AX-15, AX-16, ACH-41, ACH-13, ACH-18, objeto sem forma, objeto que nasce só pelo método, anexo sem destinatário |
+| NÃO IMPLEMENTADO | 15 | AX-2, AX-3, AX-4, AX-5, AX-6, AX-8, AX-9, AX-12, AX-15, AX-16, ACH-41, ACH-13, ACH-18, objeto sem forma, anexo sem destinatário |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 | — (os dois, 044 e PR #172, foram mesclados em 26/09) |
 | SUPERADO / OBSOLETO | 1 | divergências sem achado |
 | DUPLICADO / ABSORVIDO | 1 | H-1…H-3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 | AX-7 (estrutural), 039 |
 
-Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 14 · **C** = 9 · sem resíduo = 7 (a 044 e o AX-14/17 passaram de B a sem resíduo em 26/09).
+Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 13 · **C** = 9 · sem resíduo = 8 (a 044 e o AX-14/17 passaram de B a sem resíduo em 26/09, e o objeto que nasce só pelo método, que era B pela janela, com a `048`, #197).
 
 Leitura dos 17 AX de 15/09 contra a varredura de 19/09 ("0 fechados"): hoje **3 fechados**
 (AX-13, AX-14, AX-17), **3 parciais** (AX-1, AX-10, AX-11), **1 contradito por decisão** (AX-7) e
@@ -1034,10 +1042,13 @@ divergirem (AX-14) fechou em 25/09, na main.
    por padrão (`interface/retificacao.py:586`, `:925-936`); os `ADD` são só Perfil, linha do quadro,
    Anexo e Evento. A razão normativa de `("tiebreakers","type")` ("remove-se e acrescenta-se") tem
    metade do caminho na tela — removendo sem acrescentar, a tela permite **reduzir** a regra de
-   desempate de um Perfil, e não corrigi-la.
+   desempate de um Perfil, e não corrigi-la. *Desfecho (26/09): fechado pela `048` (#197) — o critério
+   se acrescenta pela tela (RC-38 da auditoria).*
 4. **A 039 deixou duas peças sem dono.** Com o catálogo superado, a D-G5 (acrescentar Modalidade por
    Retificação), que ela absorvia, e o alcance da Etapa, que ela adiou para a "candidata seguinte",
    não têm spec nem registro de destino. A branch local continua parecendo trabalho em curso.
+   *Desfecho (26/09): a D-G5 foi para a B-4 (item 2 da `DP-08`) e foi executada pela `048` (#197); o
+   alcance da Etapa e o encerramento da branch continuam sem registro.*
 5. **Existe PR para a 044.** `gh` mostra o **#173** aberto (26/09 03:21 UTC) sobre
    `claude/044-recorte-transversal-documental`, com `test` pendente — a premissa "sem PR aberto"
    recebida durante a auditoria já não vale. Ele foi mesclado no mesmo dia (`47876ad`).

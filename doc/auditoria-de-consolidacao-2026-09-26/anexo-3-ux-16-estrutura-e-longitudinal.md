@@ -484,6 +484,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Evidência no código atual: `interface/retificacao.py:1054` — `SECOES_QUE_ACRESCENTAM = frozenset({"perfis", "cronograma", "anexos"})`; `interface/templates/interface/retificar.html:159` — "Modalidades de Concorrência ainda não são definidas por aqui."
 - Estado atual: DUPLICADO / ABSORVIDO — em `D-G5` e `D-G3` (lote 4). Checagem pontual: `D-G5` não executada.
 - Grupo do resíduo: A para `D-G5` (Edital publicado sem conserto possível — convergência §20 item 3), a confirmar no lote 4; `D-G3` é governança.
+- **Desfecho (26/09):** a `D-G5` foi executada pela `048` (#197): a Retificação acrescenta Modalidade a Perfil publicado, e o Perfil de cotas sem a ampla passa a receber o não-cotista (`tests/integration/inscricoes/test_modalidade_acrescentada_por_retificacao.py`). O resíduo A deste bloco fechou; a `D-G3` já estava atendida.
 - Próxima ação sugerida: nenhuma aqui.
 - Confiança: alta (pontual).
 
@@ -681,7 +682,7 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 | E-6 | visão global do Processo vivo | DUPLICADO / ABSORVIDO (`N-01`…`N-08`) | B | nenhuma aqui (lote 6) |
 | E-7 | validação de executabilidade | RESOLVIDO (046, #188) | B (a regra de combinação, só com Edital real) | nenhuma agora |
 | REAV-§8 | sete recusas em 404 | DUPLICADO / ABSORVIDO (`D-G2`) | B | nenhuma aqui (lote 4) |
-| REAV-§13 | Retificação sem Modalidade; sorteio 10/10 | DUPLICADO / ABSORVIDO (`D-G5`, `D-G3`) | A | nenhuma aqui (lote 4) |
+| REAV-§13 | Retificação sem Modalidade; sorteio 10/10 | DUPLICADO / ABSORVIDO (`D-G5`, `D-G3`) | — (a `D-G5` executada pela 048, #197) | nenhuma |
 | REAV-§4.4 | fragmento sem autorização | RESOLVIDO | — | nenhuma |
 | REAV-§16 | guarda de citações aceita ID só anunciado | NÃO IMPLEMENTADO | C | nenhuma |
 | LONG-1 | duas avaliações sem regra de combinação | DUPLICADO / ABSORVIDO (avulso, lote 7) | B (fechado pela 046; resta a regra de combinação) | nenhuma aqui |
@@ -710,7 +711,7 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 | DUPLICADO / ABSORVIDO | 8 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 (como rótulo de bloco; a sub-leitura "recorrente sem anexo" do ACH-43 é contradita por `D-011`/`FR-007` da `018`) |
 
-Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 1** (REAV-§13/`D-G5`, com dono em outro lote), **B = 15** — E-7 e LONG-1 passaram de A a B com a `046` (#188), e o que resta deles é a regra de combinação, **C = 10**.
+Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 0** — o REAV-§13/`D-G5`, que era o único, fechou com a `048` (#197) —, **B = 15** — E-7 e LONG-1 passaram de A a B com a `046` (#188), e o que resta deles é a regra de combinação, **C = 10**.
 
 ## (3) Achados NOVOS encontrados de passagem
 
