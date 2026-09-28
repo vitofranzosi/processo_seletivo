@@ -10,6 +10,7 @@ conteúdo publicado, no documento e na submissão.
 round-trip: o valor gravado volta no campo, e reenviar a etapa sem tocá-lo não o perde.
 """
 
+import re
 from datetime import timedelta
 from html.parser import HTMLParser
 
@@ -334,6 +335,21 @@ class TestARevisao:
         corpo = elaboradora.get(_url(em_elaboracao, "revisao")).content.decode()
 
         assert FRASE_DE_UM in corpo
+
+    def test_cada_bloco_da_revisao_tem_nome_proprio(self, elaboradora, em_elaboracao):
+        """Três blocos voltam para a etapa Inscrição, e o `id` do título não pode ser a etapa.
+
+        Era: com o teto declarado, o bloco dele e o dos Documentos Exigidos tinham o mesmo `id`, e
+        a seção dos documentos era anunciada com o título do teto.
+        """
+        declarar_teto(elaboradora, em_elaboracao, "1")
+
+        corpo = elaboradora.get(_url(em_elaboracao, "revisao")).content.decode()
+
+        ids = re.findall(r'\bid="([^"]+)"', corpo)
+        assert len(ids) == len(set(ids)), sorted({i for i in ids if ids.count(i) > 1})
+        for rotulo in re.findall(r'aria-labelledby="([^"]+)"', corpo):
+            assert f'id="{rotulo}"' in corpo
 
 
 def _pronta(edital, perfil):
