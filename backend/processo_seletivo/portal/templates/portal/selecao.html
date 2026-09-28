@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% block titulo %}{{ processo_titulo }}{% endblock %}
+{% block titulo %}{{ titulo|default:processo_titulo }}{% endblock %}
 {% load arquivos_do_candidato %}
 {% block conteudo %}
 {% comment %}
@@ -20,8 +20,14 @@ que decide se vale continuar lendo, e precisa ser encontrada sem leitura.
   {% if situacao_rotulo %}
   <p class="marca-situacao {{ situacao_chave }}">{{ situacao_rotulo }}</p>
   {% endif %}
-  <h1>{{ processo_titulo }}</h1>
-  <p class="sub">{% if processo_codigo %}{{ processo_codigo }} · {% endif %}Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
+  {% comment %}
+  **O título é o do Edital** (009, FR-014; 001, FR-007). Era o do Processo, e o do Edital não aparecia
+  em lugar nenhum da página: num Processo que reúne Editais de objetos diferentes — o unificado anual
+  do Cefor —, todas as páginas tinham o mesmo nome (RC-47). O Processo segue dito logo abaixo, como a
+  quem o Edital pertence.
+  {% endcomment %}
+  <h1>{{ titulo|default:processo_titulo }}</h1>
+  <p class="sub">{% if titulo %}{{ processo_titulo }}{% if processo_codigo %} ({{ processo_codigo }}){% endif %}{% elif processo_codigo %}{{ processo_codigo }}{% endif %}{% if titulo or processo_codigo %} · {% endif %}Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
 
   {% include "portal/_periodo.html" with dias_restantes=dias_restantes %}
 
