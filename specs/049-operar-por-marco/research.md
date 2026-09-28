@@ -132,8 +132,14 @@ lista própria (`FR-491a`) — não entra no indicador nem no alcance. A diverg�
 
 **Decisão.** A conferência da publicação recebe a natureza e a autoridade, e afere cada recorte com
 `aferir_publicabilidade(..., natureza=...)`, como a prévia. Entra no alcance o recorte cujo ato
-vigente não está divulgado **naquela natureza** e cuja aferição não impede. Na definitiva sem janela
-computável, a declaração é pedida uma vez, e cada `publicar_resultado` a recebe e a grava. O
+vigente não está divulgado **naquela natureza** e cuja aferição não impede. Na definitiva, a
+declaração é pedida uma vez, e vai só às publicações cujo ato não tem janela computável.
+
+*Revisto em 28/09, depois do merge da `main` com a RC-121:* a janela deixou de ser do marco
+(`janela_declarada`, removida) e passou a ser do ato (`janela_do_ato`), porque o ato divulgado segue
+a versão que cita. Num mesmo marco, um ato pode ter janela e outro não, e a declaração enviada ao
+primeiro seria recusada pelo comando. A pergunta é feita por recorte, na conferência e de novo na
+gravação. O
 preliminar pedido sobre recorte com definitiva fica fora, com a razão da ordem das naturezas.
 
 **Ato de recorte vazio** (`D-003`): a projeção de um ato sem posições é uma lista vazia, e o

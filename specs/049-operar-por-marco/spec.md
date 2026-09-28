@@ -339,9 +339,10 @@ Os casos-limite são requisitos: cada um tem requisito ou decisão que o cobre.
   a cada publicação do alcance. Entram no alcance os recortes cujo ato vigente ainda não está
   divulgado na natureza escolhida; a publicação de cada um continua um ato próprio, com documento e
   página pública próprios (`D-004`).
-- **FR-827**: Na definitiva, onde o Edital não declara janela recursal computável, o gesto MUST pedir a
-  declaração de encerramento do prazo uma vez e gravá-la em cada publicação do alcance. Onde a janela
-  é computável, MUST recusá-la, como a prévia de hoje.
+- **FR-827**: Na definitiva, o gesto MUST pedir uma vez a declaração de encerramento do prazo quando
+  algum ato do alcance não tiver janela recursal computável, e MUST gravá-la só nas publicações
+  desses atos. A janela é **do ato** — a da versão que ele cita, salvo o que a vigente concede
+  (RC-121, 28/09) —, e a conferência MUST dizer, por recorte, quais publicações levam a declaração.
 - **FR-828**: A conferência da publicação MUST mostrar, por recorte, os avisos e os impedimentos que a
   prévia de hoje mostraria para aquele ato, na natureza escolhida.
 

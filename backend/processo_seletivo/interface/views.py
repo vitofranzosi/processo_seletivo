@@ -7526,10 +7526,9 @@ def gesto_do_marco(request, edital_id, marco_id, operacao):
                     "natureza": natureza,
                     "natureza_rotulo": dict(Natureza.choices).get(natureza, ""),
                     "autoridade": autoridades.escolher(autoridade),
-                    "exige_declaracao": (
-                        operacao == conducao_do_marco.PUBLICAR
-                        and conducao_do_marco.exige_declaracao(edital, marco_id, natureza)
-                    ),
+                    # **Por recorte, e não por marco** (RC-121): o campo aparece quando algum ato
+                    # do alcance não tem janela computável, e cada item diz se a leva.
+                    "exige_declaracao": any(item["com_declaracao"] for item in a_praticar),
                     # **A chave nasce na conferência**, e não na confirmação: gerada a cada POST,
                     # um duplo clique seria um gesto novo, e os recortes seriam praticados de novo
                     # sob chaves novas — é a razão que o corte já registra (`R-5`).

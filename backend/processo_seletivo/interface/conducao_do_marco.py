@@ -393,8 +393,19 @@ def alcance(edital, conteudo, perfil, marco, operacao, *, natureza="", autoridad
     return _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade)
 
 
-def _item(lista_id, rotulo, situacao, *, razao="", resumo="", assinatura="", vazio=False):
+def _item(
+    lista_id,
+    rotulo,
+    situacao,
+    *,
+    razao="",
+    resumo="",
+    assinatura="",
+    vazio=False,
+    com_declaracao=False,
+):
     return {
+        "com_declaracao": com_declaracao,
         "lista_id": lista_id,
         "campo": lista_para_o_formulario(lista_id),
         "rotulo": rotulo,
@@ -567,14 +578,21 @@ def conferir_natureza_e_autoridade(natureza, autoridade):
         )
 
 
-def exige_declaracao(edital, marco_id, natureza):
-    """A declaração de encerramento do prazo: só na definitiva, e só sem janela computável."""
-    from processo_seletivo.recursos.domain.janela import janela_declarada
+def exige_declaracao(ato, marco_id, natureza):
+    """A declaração de encerramento do prazo: só na definitiva, e só onde **aquele ato** não tem
+    janela computável.
 
-    return (
-        natureza == Natureza.DEFINITIVA
-        and janela_declarada(edital=edital, marco_id=marco_id) is None
-    )
+    **Por ato, e não por marco** (RC-121, decisão de 28/09). A janela de um ato é a da versão que
+    ele cita, salvo o que a vigente concede — e, num mesmo marco, o ato de um recorte pode citar
+    uma versão e o de outro, outra. Perguntar ao marco daria uma resposta só para atos que podem
+    discordar: a declaração iria a quem tem janela, e o comando a recusaria ali.
+
+    A pergunta é a mesma que `publicar_resultado` faz, pela mesma função, lida pelo módulo para que
+    as duas nunca divirjam.
+    """
+    from processo_seletivo.recursos.domain import janela as janela_recursal
+
+    return natureza == Natureza.DEFINITIVA and janela_recursal.janela_do_ato(ato, marco_id) is None
 
 
 def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade):
@@ -637,6 +655,9 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
         ]
         if afericao.nivel == AVISO:
             partes.append("sucede a divulgação vigente deste recorte")
+        com_declaracao = exige_declaracao(ato, marco_id, natureza)
+        if com_declaracao:
+            partes.append("leva a declaração de encerramento do prazo")
         itens.append(
             _item(
                 lista_id,
@@ -647,6 +668,7 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
                     ato=ato, publicacao_anterior=sucede, projecao=projecao
                 ),
                 vazio=not projecao["situacoes"],
+                com_declaracao=com_declaracao,
             )
         )
     return itens
@@ -849,6 +871,11 @@ def _publicar(
     ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
     if ato is None:
         raise DomainError("sem_ato_vigente", SEM_ORDEM, 409)
+    # **A declaração vai só a quem a exige** (RC-121): o ato com janela computável a recusaria,
+    # porque ali o sistema verifica o prazo. A pergunta é refeita aqui, e não lida da conferência,
+    # pela mesma razão de toda assinatura deste gesto: o que vale é o mundo da gravação.
+    if not exige_declaracao(ato, marco_id, natureza):
+        declaracao = ""
     publicar_resultado(
         actor=ator,
         processo_id=edital.processo_id,
@@ -860,8 +887,8 @@ def _publicar(
         confirmacao_da_previa=assinatura,
         idempotency_key=chave,
         correlation_id=correlacao,
-        # Uma vez para o marco, gravada em cada publicação (`FR-827`): o comando decide se ela é
-        # exigida, recusada ou gravada, e o gesto apenas a transporta — como a prévia de hoje.
+        # Uma vez para o marco, gravada em cada publicação que a exige (`FR-827`): o comando decide
+        # se ela é exigida, recusada ou gravada, e o gesto apenas a transporta — como a prévia.
         declaracao_de_encerramento=declaracao,
     )
     return reverse("interface:publicacoes-do-marco", args=[edital.id, marco_id])

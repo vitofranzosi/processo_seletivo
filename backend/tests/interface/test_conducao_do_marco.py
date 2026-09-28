@@ -535,6 +535,43 @@ def test_a_definitiva_pede_a_declaracao_uma_vez_e_a_grava_em_cada_uma(client, ce
     }
 
 
+def test_a_declaracao_vai_so_ao_ato_que_nao_tem_janela(client, cenario, monkeypatch):
+    """`FR-827` depois da RC-121: a janela é do ato, e num marco um ato pode tê-la e outro não.
+
+    O ato do PPI passa a ter janela computável — como teria se citasse uma versão que a declara.
+    A declaração é pedida porque os outros dois a exigem, e **não** vai ao do PPI: o comando a
+    recusaria ali, e o gesto perderia um recorte por uma frase que não era dele.
+    """
+    from processo_seletivo.recursos.domain import janela as janela_recursal
+
+    edital, _ = cenario
+    ordenar_tudo(client, edital)
+    publicar(client)
+    confirmar(client, edital, "publicar", _conferir_publicacao(client, edital))
+    original = janela_recursal.janela_do_ato
+
+    def com_janela_no_ppi(ato, marco_id, **kwargs):
+        if str(ato.lista_id or "") == MODALIDADE_PPI:
+            return {"dias": 5, "unidade": "DIAS_CORRIDOS"}
+        return original(ato, marco_id, **kwargs)
+
+    monkeypatch.setattr(janela_recursal, "janela_do_ato", com_janela_no_ppi)
+
+    pagina = _conferir_publicacao(client, edital, natureza="DEFINITIVA")
+    assert pagina.count("leva a declaração de encerramento do prazo") == 2
+    confirmar(
+        client, edital, "publicar", pagina, declaracao_de_encerramento="Prazo encerrado em 25/09."
+    )
+
+    definitivas = PublicacaoResultado.objects.filter(edital=edital, natureza=Natureza.DEFINITIVA)
+    assert definitivas.count() == 3
+    fundamentos = {
+        str(item.lista_id or ""): item.prazo_encerrado_fundamento for item in definitivas
+    }
+    assert fundamentos[MODALIDADE_PPI] == ""
+    assert fundamentos[""] == fundamentos[MODALIDADE_PCD] == "Prazo encerrado em 25/09."
+
+
 def test_preliminar_depois_da_definitiva_fica_de_fora(client, cenario):
     edital, _ = cenario
     ordenar_tudo(client, edital)
