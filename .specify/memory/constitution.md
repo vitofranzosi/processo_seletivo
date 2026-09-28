@@ -62,8 +62,8 @@ Sync Impact Report
   pela do passo 1. Único item a decidir: dizer, na conferência da Revisão da `044`, o número de
   Perfis que cada documento transversal alcança, como a opção de recorte já diz. É requisito novo, e
   não correção de requisito escrito; fica registrado na `DP-17` como proposta, sem escopo atribuído.
-- Aprovação institucional: pendente de confirmação pelo usuário no PR que introduz esta emenda. A
-  Governance exige a aprovação antes da adoção: até lá, vale a 1.1.1.
+- Aprovação institucional: 1.2.0 aprovada pelo usuário em 2026-09-28, no PR #219 que introduz
+  esta emenda, conforme exigido pela Governance.
 - Follow-up TODOs: nenhum placeholder adiado.
 
 Relatório da emenda anterior (1.1.1), preservado:

@@ -1042,8 +1042,9 @@ invariante, e sem forma de tela. A [Constituição](../.specify/memory/constitut
 sentido: o título vira sentença normativa (*"DEVEM permanecer explícitas"*), e uma frase final diz
 que a forma da exposição é definida nas especificações, que é o "sem forma de tela" da decisão.
 
-**A aprovação institucional está pendente**, e a Governance a exige antes da adoção. Ela é do usuário,
-e fica indicada no PR da emenda. Até lá, vale a 1.1.1.
+**A aprovação institucional foi dada pelo usuário em 28/09/2026**, no PR da emenda
+([#219](https://github.com/vitofranzosi/processo_seletivo/pull/219)), como a Governance exige antes
+da adoção.
 
 **O que a conferência das specs existentes deu**, registrado por inteiro no Sync Impact Report da
 Constituição:
