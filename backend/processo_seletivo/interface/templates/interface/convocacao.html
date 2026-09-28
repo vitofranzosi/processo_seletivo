@@ -101,7 +101,7 @@ que espécie, e o primeiro que fica de fora e por quê (UX-102). Cada valor deri
 (UX-101). O botão repete o número. Nenhum ato é praticado ao abrir esta tela.
 {% endcomment %}
 {% if pode_emitir %}
-<section aria-labelledby="titulares" class="resumo">
+<section aria-labelledby="titulares">
   <h2 id="titulares">Convocar os titulares num ato só</h2>
   {% if titulares.impedimento %}
   {% if titulares.impedimento.codigo == "forma_de_comunicacao_nao_declarada" %}
@@ -270,7 +270,7 @@ Os dois gestos sobre chamadas já praticadas (050, US3 e FR-874). Só aparecem q
 alcançar: um botão sobre zero convocações seria um ato vazio.
 {% endcomment %}
 {% if pode_emitir and vencidos.linhas %}
-<section aria-labelledby="vencidos" class="resumo">
+<section aria-labelledby="vencidos">
   <h2 id="vencidos">Não atendimento das convocações vencidas</h2>
   <p><strong>{{ vencidos.linhas|length }} {{ vencidos.linhas|length|plural:"convocação teve,convocações tiveram" }} o vencimento decorrido sem desfecho.</strong> Registrar o não atendimento cria um desfecho para cada uma, com o seu nome como autor — igual ao registrado um a um.</p>
   <ol class="consequencias">
@@ -298,7 +298,7 @@ alcançar: um botão sobre zero convocações seria um ato vazio.
 {% endif %}
 
 {% if pode_emitir and pendentes.linhas %}
-<section aria-labelledby="pendentes" class="resumo">
+<section aria-labelledby="pendentes">
   <h2 id="pendentes">Comunicações que ainda não saíram</h2>
   <p><strong>{{ pendentes.linhas|length }} {{ pendentes.linhas|length|plural:"convocação está,convocações estão" }} sem comunicação enviada</strong>, e o prazo delas não começou a correr.</p>
   <ol class="consequencias">
