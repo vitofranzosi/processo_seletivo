@@ -30,6 +30,9 @@ convite. O motivo registrado no ato não é dito (FR-764).
 </p>
 {% elif periodo.estado == "futuro" %}
 <p class="situacao futuro">Inscrições começam em {{ periodo.inicio|date:"d/m/Y" }}{% if periodo.inicio %} às {{ periodo.inicio|date:"H\hi" }}{% endif %}{% if periodo.fim %} e vão até {{ periodo.fim|date:"d/m/Y" }}{% endif %}.</p>
+{% elif periodo.cancelado %}
+{% comment %}O período cancelado não recebe inscrição (RC-119), e não "encerrou em" data nenhuma.{% endcomment %}
+<p class="situacao encerrado">Período de inscrições cancelado. Não recebe inscrições.</p>
 {% elif periodo.estado == "encerrado" %}
 <p class="situacao encerrado">Inscrições encerradas em {{ periodo.fim|date:"d/m/Y" }}.</p>
 {% endif %}

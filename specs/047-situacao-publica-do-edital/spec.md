@@ -268,7 +268,10 @@ um, como tem para os `FR-`.
 - **Período de inscrições marcado como cancelado.** Fora do escopo, e registrado (ver *Achados*):
   a régua do período ignora o cancelamento e o sistema continua recebendo inscrição. Esta spec não
   muda o que o sistema recebe, e a projeção não pode contradizê-lo. A linha do período segue a régua
-  do período, e a exceção do `FR-766` vale para ela.
+  do período, e a exceção do `FR-766` vale para ela. *Desde 28/09 (RC-119, decisão do usuário), a
+  régua do período lê o cancelamento, e o período cancelado não recebe inscrição: a projeção
+  continua sem contradizer o sistema, e por isso a exceção deixou de existir — a linha é dita
+  cancelada pela regra geral do `FR-766`, e a marca da página diz que o período foi cancelado.*
 - **Evento sem início** no conteúdo publicado: não recebe fase e não é candidato a próximo Evento.
 - **Dois Eventos com o mesmo início** como próximos: os dois são ditos, na ordem publicada.
 - **Retificação publicada com vigência futura.** O cronograma que vale para *agora* e *próximo* é o
@@ -625,7 +628,8 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
 - **Período de inscrições cancelado continua recebendo inscrição.** `periodo_de_inscricoes` e
   `recebe_inscricoes` ignoram o `status` do Evento (`inscricoes/domain/periodo.py`). Só a API declara
   `CANCELADO`, e o campo não é retificável (é *derivado* no contrato da `026`). Decidir se um período
-  cancelado fecha o recebimento é regra de domínio da inscrição, e não projeção.
+  cancelado fecha o recebimento é regra de domínio da inscrição, e não projeção. *Decidido em 28/09
+  (RC-119): fecha.*
 - **O encerramento do Processo não bloqueia inscrições.** `close_process` exige só o Processo
   ativo, e não os Editais em estado final; `recebe_inscricoes` lê o status do Edital. Um Edital
   publicado de Processo encerrado continua recebendo inscrição dentro do período. A 047 projeta isso

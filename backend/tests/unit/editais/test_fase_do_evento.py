@@ -88,17 +88,16 @@ def test_sem_inicio_nao_tem_fase(agora):
     assert fase_do_evento(lido, conteudo(lido), agora) is None
 
 
-def test_periodo_cancelado_a_gestao_le_o_cancelamento_e_o_portal_le_o_periodo():
-    """A única diferença entre as duas leituras, e ela é nomeada (047, caso-limite).
+def test_periodo_cancelado_a_gestao_e_o_portal_leem_o_cancelamento():
+    """A diferença nomeada da 047 deixou de existir com o RC-119 (decisão de 28/09).
 
-    A gestão diz o que foi declarado (045 `FR-736`). O portal não pode dizer *cancelado* de um
-    período em que o sistema continua recebendo inscrição, porque a marca da mesma página diz
-    *aberta* pela mesma régua.
+    O portal lia a régua do período porque o sistema continuava recebendo inscrição do período
+    cancelado. Desde que ele não recebe, as duas leituras dizem o que foi declarado.
     """
     lido = evento("inscricoes", termino=TERMINO, periodo=True, status="CANCELADO")
 
     assert fase_do_evento(lido, conteudo(lido), DURANTE) is None
-    assert fase_publica_do_evento(lido, conteudo(lido), DURANTE) == EM_ANDAMENTO
+    assert fase_publica_do_evento(lido, conteudo(lido), DURANTE) is None
 
 
 @pytest.mark.parametrize("agora", [ANTES, DURANTE, DEPOIS])

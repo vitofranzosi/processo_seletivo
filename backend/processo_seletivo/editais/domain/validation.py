@@ -2379,7 +2379,9 @@ def _periodo_de_inscricoes_encerrado(
     if marcados != 1:
         return []
     periodo = periodo_de_inscricoes(snapshot, agora)
-    if periodo.estado != ENCERRADO or periodo.fim is None:
+    # O período cancelado também está encerrado (RC-119), mas não pela data: dizer que ele
+    # "encerrou em" um término futuro seria falso, e este achado é sobre o término (`FR-346`).
+    if periodo.estado != ENCERRADO or periodo.fim is None or periodo.cancelado:
         return []
     designado = evento_designado(snapshot) or {}
     posicao = next(
