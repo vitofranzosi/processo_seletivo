@@ -8,7 +8,9 @@ prazo, e reconhecê-la não leva a lugar nenhum.
 {% if fechada %}
 <div class="aviso" role="status">
   <p><strong>
-    {% if fechada.estado == "encerrado" and fechada.fim %}
+    {% if fechada.cancelado %}
+    O período de inscrições foi cancelado.
+    {% elif fechada.estado == "encerrado" and fechada.fim %}
     O período de inscrições terminou em {{ fechada.fim|date:"d/m/Y" }} às {{ fechada.fim|date:"H\hi" }}.
     {% else %}
     Esta seleção não está recebendo inscrições.

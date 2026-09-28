@@ -76,11 +76,12 @@ class Desfecho:
     def do_edital(self):
         """O desfecho é do próprio Edital — e só esse fecha o recebimento de inscrições.
 
-        **O do Processo não fecha** (047, correção da revisão). Encerrar o Processo não exige os
-        Editais em estado final, e `recebe_inscricoes` lê o status do Edital: um Edital publicado de
-        Processo encerrado continua recebendo inscrição dentro do período. A página diz o fato do
-        encerramento, e não o que o sistema não faz. Fazer o encerramento do Processo bloquear
-        inscrições é decisão de domínio, registrada na spec como pendente para outra feature.
+        **O do Processo não fecha** (047, correção da revisão). `recebe_inscricoes` lê o status do
+        Edital, e não o do Processo. Até 28/09 o encerramento do Processo não exigia os Editais em
+        estado final, e um Edital publicado de Processo encerrado continuava recebendo inscrição
+        dentro do período; a página diz o fato do encerramento, e não o que o sistema não faz.
+        Desde a decisão de 28/09 sobre o RC-118, encerrar o Processo exige os Editais finais, e o
+        caso só sobrevive no Processo encerrado antes dela — que é para quem esta regra continua.
         """
         return self.alcance == EDITAL
 

@@ -71,21 +71,16 @@ def fase_do_evento(evento, conteudo, agora):
 
 
 def fase_publica_do_evento(evento, conteudo, agora):
-    """A fase que o **portal** diz: a mesma de `fase_do_evento`, com uma exceção nomeada (047).
+    """A fase que o **portal** diz: a mesma de `fase_do_evento` (047, `FR-765`, `FR-766`).
 
-    **O período de inscrições marcado como cancelado segue a régua do período.** A régua do período
-    ignora o `status`, e o sistema continua recebendo inscrição dele (`recebe_inscricoes`). Na
-    página pública, a marca da seleção diz *aberta* pela mesma régua; dizer *cancelado* na linha do
-    cronograma faria a página afirmar duas coisas contrárias sobre a mesma data, e a segunda seria
-    falsa para quem tenta se inscrever. A gestão continua lendo o cancelamento primeiro (045,
-    `FR-736`), porque lá o assunto é o que foi declarado.
-
-    A pergunta de fundo — se um período cancelado deveria fechar o recebimento — é regra da
-    inscrição, e não projeção; está registrada na spec da `047`, e esta função muda junto quando
-    ela for respondida.
+    **Até 28/09 havia uma exceção, e ela saiu com a razão dela.** O período de inscrições marcado
+    como cancelado seguia a régua do período, e não o cancelamento, porque o sistema continuava
+    recebendo inscrição dele: dizer *cancelado* na linha do cronograma faria a página afirmar o
+    contrário do que a inscrição fazia. Desde a decisão do usuário sobre o RC-119, o período
+    cancelado não recebe (`inscricoes/domain/periodo.py`), e a linha dele é dita cancelada como a
+    de qualquer Evento — a regra geral do `FR-766`, sem a exceção que o caso-limite da `047`
+    abria. A função continua existindo porque é o nome que o portal chama.
     """
-    if evento.get("isRegistrationPeriod") is True:
-        return FASE_DO_PERIODO.get(periodo_de_inscricoes(conteudo, agora).estado)
     return fase_do_evento(evento, conteudo, agora)
 
 
