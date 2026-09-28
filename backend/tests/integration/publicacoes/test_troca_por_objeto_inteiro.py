@@ -109,21 +109,19 @@ def test_o_objeto_inteiro_nao_troca_campo_que_nao_se_retifica(api_client, edital
     # O que, por quê e o que fazer (FR-801 da `048`): o campo e os dois valores, a razão escrita no
     # contrato e o caminho que continua aberto.
     assert campo in recusa["detail"]
-    assert "não altera no lugar" in recusa["detail"]
+    assert "não altera este campo no lugar" in recusa["detail"]
     assert "cada um pelo próprio caminho" in recusa["detail"]
     assert _vigente(edital) == antes, "nada foi retificado"
 
 
 def test_a_recusa_diz_a_razao_do_contrato(api_client, edital):
     """A razão vem do contrato, campo a campo, e não de uma frase fixa desta guarda."""
-    antes = _vigente(edital)
+    trocado = _com(_marco(_vigente(edital))["cutRule"], governedStage=ETAPA["B"])
 
     recusa = create_retification(
         api_client,
         edital,
-        [{"targetPath": CORTE, "operation": "REPLACE", "newValue": TROCAS[
-            "a Etapa governada do corte"
-        ][1](antes)}],
+        [{"targetPath": CORTE, "operation": "REPLACE", "newValue": trocado}],
         esperar=422,
     )
 
