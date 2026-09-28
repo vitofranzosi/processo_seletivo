@@ -388,7 +388,11 @@ function montar({
         recibo.dataset.rascunhoSalvo = rascunhoSalvo;
         return recibo;
       }
-      return seletor.startsWith("#") ? new Elemento("div") : null;
+      // `#id` também alcança o que o teste montou: `rascunho.js` procura a lista pelo seletor
+      // que o formulário declara, e a restauração precisa ser observada nessa mesma lista.
+      if (!seletor.startsWith("#")) return null;
+      const id = seletor.slice(1);
+      return Object.prototype.hasOwnProperty.call(porId, id) ? porId[id] : new Elemento("div");
     },
     querySelectorAll: (seletor) => (seletor === "[data-ordenavel]" ? ordenaveis : []),
     createElement: (tag) => new Elemento(tag),

@@ -3,7 +3,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#perfis" data-fragmento="{% url 'interface:fragmento-perfil' %}"{% endif %}>
+      data-lista="#perfis"{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="perfis-titulo">
     <h2 id="perfis-titulo">Perfis de Vaga</h2>

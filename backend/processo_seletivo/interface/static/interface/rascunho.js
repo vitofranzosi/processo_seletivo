@@ -14,6 +14,15 @@
    no cliente (`Date.now()`) e o servidor renumera ao reexibir. Comparar nomes acusaria
    diferença logo depois de um salvamento bem-sucedido.
 
+   A restauração, ao contrário, é pela forma exata da lista: o HTML dela e os valores por nome.
+   Ela recriava cada linha pedindo o fragmento vazio ao servidor e preenchendo só os campos de
+   três segmentos (`perfil-3-code`), de modo que as coleções aninhadas — Modalidades, linhas do
+   quadro, fatos, os marcos em trânsito da cópia — não voltavam, o HTML inserido não passava
+   pelo htmx e o autosave regravava a perda por cima do que ainda estava guardado. Percorrido
+   pela tela em 28/09 (RC-08 da auditoria de consolidação): três Modalidades antes, nenhuma
+   depois de "Restaurar". Guardar a lista inteira devolve o que a pessoa via, com qualquer
+   profundidade de aninhamento, sem uma regra de reconstrução por tipo de linha.
+
    O rascunho expira (FR-022 da 003). O conteúdo de um Edital em elaboração fica no computador
    de quem preencheu, que num órgão público costuma ser compartilhado, e `localStorage` não
    caduca sozinho: sem prazo, o preenchimento de meses atrás continuaria lá, oferecido a quem
@@ -57,7 +66,6 @@
   var CHAVE = PREFIXO + form.dataset.rascunho;
   var VALIDADE_MS = 24 * 60 * 60 * 1000;
   var lista = document.querySelector(form.dataset.lista);
-  var fragmento = form.dataset.fragmento;
   var IGNORADOS = ["csrfmiddlewaretoken", "destino"];
 
   function guarda() {
@@ -101,35 +109,44 @@
     return JSON.stringify(a) === JSON.stringify(b);
   }
 
-  function preencher(linha, valores) {
-    Array.prototype.forEach.call(linha.querySelectorAll("[name]"), function (campo) {
-      var partes = campo.name.match(/^[a-z]+-\d+-(\w+)$/);
-      if (!partes || valores[partes[1]] === undefined) return;
-      var valor = valores[partes[1]];
-      // Marcação não se restaura escrevendo no `value`. No rádio, `value` é **a opção que o
-      // controle representa**, e não a escolha: escrever nele fazia os dois rádios do grupo
-      // passarem a valer "DECISORIA", de modo que nenhuma opção se distinguia da outra — a tela
-      // parava de reagir ao clique e o formulário submetia a forma errada, marcasse quem marcasse.
-      // Na caixa, o que se guarda é "marcada ou não", e vazio é desmarcada.
-      if (campo.type === "radio") campo.checked = campo.value === valor;
-      else if (campo.type === "checkbox") campo.checked = valor !== "";
-      else campo.value = valor;
+  /* O que a restauração precisa, e que `ler` descarta de propósito: a estrutura da lista e o
+     valor de cada campo pelo nome exato. O `innerHTML` traz a estrutura mas não o digitado — o
+     valor que a pessoa escreve é propriedade do controle, e não atributo —, e por isso os dois
+     vão juntos. Os nomes batem na volta porque a lista volta com os mesmos índices. */
+  function capturar() {
+    var valores = {};
+    Array.prototype.forEach.call(form.elements, function (campo) {
+      if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0) return;
+      if (campo.type === "radio" && !campo.checked) return;
+      (valores[campo.name] = valores[campo.name] || []).push(valorDe(campo));
     });
+    return { html: lista ? lista.innerHTML : null, valores: valores };
   }
 
-  async function restaurar(dados) {
-    if (lista) {
-      lista.replaceChildren();
-      for (var i = 0; i < dados.linhas.length; i++) {
-        var resposta = await fetch(fragmento + "?indice=" + (Date.now() + i));
-        if (!resposta.ok) break;
-        lista.insertAdjacentHTML("beforeend", await resposta.text());
-        preencher(lista.lastElementChild, dados.linhas[i]);
-      }
+  function restaurar(copia) {
+    if (lista && copia.html !== null) {
+      lista.innerHTML = copia.html;
+      // Sem isto os botões da lista restaurada — acrescentar Modalidade, remover Perfil — ficam
+      // inertes: o htmx só liga o que ele mesmo inseriu ou o que lhe mandam processar.
+      if (window.htmx) window.htmx.process(lista);
     }
-    Object.keys(dados.simples).forEach(function (nome) {
-      var campo = form.elements[nome];
-      if (campo) campo.value = dados.simples[nome];
+    var usados = {};
+    Array.prototype.forEach.call(form.elements, function (campo) {
+      var guardados = copia.valores[campo.name];
+      if (!guardados) return;
+      // Marcação não se restaura escrevendo no `value`. No rádio, `value` é **a opção que o
+      // controle representa**, e não a escolha: escrever nele fazia os dois rádios do grupo
+      // passarem a valer "DECISORIA", de modo que nenhuma opção se distinguia da outra. Na caixa,
+      // o que se guarda é "marcada ou não", e vazio é desmarcada.
+      if (campo.type === "radio") {
+        campo.checked = guardados.indexOf(campo.value) >= 0;
+        return;
+      }
+      var posicao = usados[campo.name] || 0;
+      usados[campo.name] = posicao + 1;
+      if (posicao >= guardados.length) return;
+      if (campo.type === "checkbox") campo.checked = guardados[posicao] !== "";
+      else campo.value = guardados[posicao];
     });
     var primeiro = form.querySelector("input:not([type=hidden]), select, textarea");
     if (primeiro) primeiro.focus();
@@ -149,7 +166,16 @@
     // Igual ao que o servidor já tem: não há nada por enviar, e guardar só criaria um aviso
     // falso na próxima visita.
     if (mesmo(atual, renderizado)) armazem.removeItem(CHAVE);
-    else armazem.setItem(CHAVE, JSON.stringify({ em: new Date().toISOString(), dados: atual }));
+    else {
+      var registro = { em: new Date().toISOString(), dados: atual, copia: capturar() };
+      try {
+        armazem.setItem(CHAVE, JSON.stringify(registro));
+      } catch (erro) {
+        // Cota estourada: a cópia anterior ficaria no lugar, mais velha que a tela, e seria
+        // oferecida como se fosse o último preenchimento. Melhor não oferecer nada.
+        armazem.removeItem(CHAVE);
+      }
+    }
     marcar();
   }
 
@@ -187,10 +213,9 @@
     descarta.textContent = "Descartar";
 
     restaura.addEventListener("click", function () {
-      restaurar(guardado.dados).then(function () {
-        caixa.remove();
-        marcar();
-      });
+      restaurar(guardado.copia);
+      caixa.remove();
+      marcar();
     });
     descarta.addEventListener("click", function () {
       if (armazem) armazem.removeItem(CHAVE);
@@ -207,8 +232,11 @@
     if (bruto) {
       try {
         var guardado = JSON.parse(bruto);
-        if (vencido(guardado) || mesmo(guardado.dados, renderizado)) armazem.removeItem(CHAVE);
-        else oferecer(guardado);
+        // Sem `copia` é a forma anterior do registro, a que só sabia restaurar perdendo as
+        // coleções aninhadas: oferecê-la repetiria o defeito que a forma nova corrige.
+        if (vencido(guardado) || !guardado.copia || mesmo(guardado.dados, renderizado)) {
+          armazem.removeItem(CHAVE);
+        } else oferecer(guardado);
       } catch (erro) {
         armazem.removeItem(CHAVE);
       }

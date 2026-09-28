@@ -8,7 +8,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { Armazem, Formulario, carregar, linha, montar } = require("./dom.js");
+const { Armazem, Elemento, Formulario, carregar, linha, montar } = require("./dom.js");
 
 const SCRIPT = path.join(
   __dirname,
@@ -20,7 +20,7 @@ const UM_DIA = 24 * 60 * 60 * 1000;
 function formulario() {
   return new Formulario(
     [linha("perfil", 0, { id: "p1", code: "P1", name: "Renderizado pelo servidor" })],
-    { rascunho: "edital:perfis:ana", lista: "#perfis", fragmento: "/fragmentos/perfil" }
+    { rascunho: "edital:perfis:ana", lista: "#perfis" }
   );
 }
 
@@ -37,6 +37,7 @@ function guardado(idadeMs, opcoes = {}) {
       simples: {},
       linhas: [{ id: "p1", code: "P1", name: "O que a pessoa digitou e não enviou" }],
     },
+    copia: { html: "", valores: {} },
   });
 }
 
@@ -142,10 +143,8 @@ test("sem recibo, o rascunho recente continua sendo oferecido", () => {
    sobrescrevia o escolhido, de modo que o guardado era sempre a última opção da lista. Mudar de
    opção nem marcava o formulário como não enviado, porque o lido não mudava.
 
-   O que estes testes NÃO alcançam é a outra metade, `preencher`, que restaurava escrevendo no
-   `value` do rádio — e `value`, no rádio, é a opção que ele **representa**, não a escolhida. O
-   caminho de restauração precisa de `fetch` e de uma lista de verdade, que este shim não tem; ele
-   foi verificado no navegador, reproduzindo o defeito e conferindo a correção. */
+   A outra metade — restaurar escrevendo no `value` do rádio, que é a opção que ele
+   **representa** e não a escolhida — está coberta mais abaixo, junto da restauração da lista. */
 
 const ETAPAS = "ps:rascunho:edital:etapas:ana";
 
@@ -161,7 +160,7 @@ function comGrupo(marcada) {
         ],
       }),
     ],
-    { rascunho: "edital:etapas:ana", lista: "#etapas", fragmento: "/fragmentos/etapa" }
+    { rascunho: "edital:etapas:ana", lista: "#etapas" }
   );
 }
 
@@ -192,4 +191,178 @@ test("marcar a segunda opção é o que faz o rascunho registrar a segunda", asy
 
 test("grupo sem opção marcada não inventa escolha nenhuma", async () => {
   assert.equal("forma" in (await gravado(comGrupo(null))), false);
+});
+
+test("registro da forma anterior, sem a cópia da lista, é descartado e não oferecido", () => {
+  const anterior = JSON.parse(guardado(60_000));
+  delete anterior.copia;
+
+  assert.equal(carregarCom(JSON.stringify(anterior)).removeuORascunho, true);
+});
+
+/* A restauração das coleções aninhadas — RC-08 da auditoria de consolidação, FR-020 da 002.
+
+   A restauração recriava cada Perfil pedindo o fragmento vazio ao servidor e preenchia só os
+   campos de três segmentos. `modalidade-0-7-code` tem quatro: caía no balaio dos simples, era
+   procurado pelo nome antigo numa linha que já tinha outro índice, e sumia. Percorrido na tela em
+   28/09: três Modalidades antes de "Restaurar", nenhuma depois, e o autosave regravando a perda.
+
+   O shim não tem HTML. `ListaDoFormulario` faz o papel de `innerHTML` com a mesma assimetria do
+   navegador — serializa os **atributos** e não o que foi digitado, que é propriedade do controle —,
+   e é essa assimetria que obriga o script a guardar os valores ao lado da estrutura. */
+
+/** A lista `#perfis`: o `innerHTML` dela é a estrutura das linhas do formulário. */
+class ListaDoFormulario extends Elemento {
+  constructor(formulario) {
+    super("div");
+    this.formulario = formulario;
+  }
+
+  get innerHTML() {
+    return JSON.stringify(
+      this.formulario.linhas.map((umaLinha) => ({
+        classes: umaLinha.classes,
+        campos: umaLinha.filhos.map((campo) => ({ ...campo.atributos, marcado: campo.marcadoNoHtml })),
+      }))
+    );
+  }
+
+  set innerHTML(html) {
+    this.formulario.linhas = JSON.parse(html).map((descrita) => {
+      const umaLinha = new Elemento("fieldset");
+      umaLinha.classes = descrita.classes;
+      umaLinha.filhos = descrita.campos.map(({ marcado, ...atributos }) => {
+        const campo = new Elemento("input", atributos);
+        campo.checked = Boolean(marcado);
+        campo.marcadoNoHtml = Boolean(marcado);
+        campo.parentNode = umaLinha;
+        return campo;
+      });
+      return umaLinha;
+    });
+  }
+}
+
+/** O Perfil como o servidor o renderiza: gravado, sem Modalidade nenhuma, reserva "NONE". */
+function perfilDoServidor() {
+  const formulario = new Formulario(
+    [
+      linha("perfil", 0, {
+        id: "p1",
+        name: "Renderizado pelo servidor",
+        reserveType: [
+          { type: "radio", value: "NONE", checked: true },
+          { type: "radio", value: "LIMITED", checked: false },
+        ],
+      }),
+    ],
+    { rascunho: "edital:perfis:ana", lista: "#perfis" }
+  );
+  // O que o HTML traz marcado é o que o servidor renderizou, e não o que a pessoa clicou depois.
+  formulario.elements.forEach((campo) => (campo.marcadoNoHtml = campo.checked));
+  return formulario;
+}
+
+/** Monta a tela com a lista observável e devolve os elementos que o script criar. */
+function abrir(formulario, armazem) {
+  const lista = new ListaDoFormulario(formulario);
+  montar({ formulario, armazem, porId: { perfis: lista } });
+  const processadas = [];
+  globalThis.window.htmx = { process: (no) => processadas.push(no) };
+  const criados = [];
+  const criar = globalThis.document.createElement;
+  globalThis.document.createElement = (tag) => {
+    const elemento = criar(tag);
+    criados.push(elemento);
+    return elemento;
+  };
+  carregar(SCRIPT);
+  return { lista, processadas, criados };
+}
+
+function campo(formulario, nome) {
+  return formulario.elements.find((item) => item.name === nome && item.type !== "radio");
+}
+
+function escolhido(formulario, nome) {
+  const marcado = formulario.elements.find((item) => item.name === nome && item.checked);
+  return marcado ? marcado.value : null;
+}
+
+const esperar = () => new Promise((pronto) => setTimeout(pronto, 450));
+
+/** Preenche, na primeira visita, um Perfil com uma Modalidade que o servidor ainda não conhece. */
+async function preencherSemEnviar(armazem) {
+  const formulario = perfilDoServidor();
+  abrir(formulario, armazem);
+  // "Acrescentar Modalidade": a linha nasce do fragmento com quatro segmentos no nome, e o valor
+  // digitado depois é propriedade, não atributo.
+  const modalidade = linha("modalidade", "0-7", { code: "", percentage: "" });
+  modalidade.filhos.forEach((item) => (item.marcadoNoHtml = false));
+  formulario.linhas.push(modalidade);
+  campo(formulario, "modalidade-0-7-code").value = "PPP";
+  campo(formulario, "modalidade-0-7-percentage").value = "25";
+  campo(formulario, "perfil-0-name").value = "O que a pessoa digitou";
+  formulario.elements.find((item) => item.value === "NONE").checked = false;
+  formulario.elements.find((item) => item.value === "LIMITED").checked = true;
+  formulario.disparar("input");
+  await esperar();
+}
+
+/** A segunda visita: a sessão caiu, a tela volta como o servidor a tem, e a pessoa restaura. */
+function voltarERestaurar(armazem) {
+  const formulario = perfilDoServidor();
+  const tela = abrir(formulario, armazem);
+  const botao = tela.criados.find((item) => item.textContent === "Restaurar o que eu havia digitado");
+  assert.ok(botao, "o preenchimento não enviado precisa ser oferecido");
+  botao.disparar("click");
+  return { formulario, ...tela };
+}
+
+test("restaurar devolve a Modalidade acrescentada e o que foi digitado nela", async () => {
+  const armazem = new Armazem();
+  await preencherSemEnviar(armazem);
+
+  const { formulario } = voltarERestaurar(armazem);
+
+  assert.equal(campo(formulario, "modalidade-0-7-code")?.value, "PPP");
+  assert.equal(campo(formulario, "modalidade-0-7-percentage")?.value, "25");
+  assert.equal(campo(formulario, "perfil-0-name").value, "O que a pessoa digitou");
+});
+
+test("restaurar devolve a opção escolhida no rádio, e não a que o servidor marcou", async () => {
+  const armazem = new Armazem();
+  await preencherSemEnviar(armazem);
+
+  const { formulario } = voltarERestaurar(armazem);
+
+  assert.equal(escolhido(formulario, "perfil-0-reserveType"), "LIMITED");
+  const opcoes = formulario.elements.filter((item) => item.name === "perfil-0-reserveType");
+  assert.deepEqual(
+    opcoes.map((item) => item.value),
+    ["NONE", "LIMITED"],
+    "o valor de cada opção continua sendo a opção que ela representa"
+  );
+});
+
+test("a lista restaurada passa pelo htmx, e os botões dela não ficam inertes", async () => {
+  const armazem = new Armazem();
+  await preencherSemEnviar(armazem);
+
+  const { lista, processadas } = voltarERestaurar(armazem);
+
+  assert.deepEqual(processadas, [lista]);
+});
+
+test("o autosave depois de restaurar guarda a Modalidade, e não regrava a perda", async () => {
+  const armazem = new Armazem();
+  await preencherSemEnviar(armazem);
+  const { formulario } = voltarERestaurar(armazem);
+
+  // No navegador é a mutação da lista que agenda a gravação; o shim não observa mutação.
+  formulario.disparar("change");
+  await esperar();
+
+  const regravado = JSON.parse(armazem.getItem(CHAVE));
+  assert.deepEqual(regravado.copia.valores["modalidade-0-7-code"], ["PPP"]);
 });

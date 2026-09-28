@@ -6,8 +6,8 @@ o conteúdo se perde.
 
 O comportamento em si é JavaScript e exige navegador — está verificado manualmente e descrito
 em quickstart.md. O que dá para prender aqui é o contrato entre o template e o script: sem
-estes atributos ele não tem como saber o que guardar, sob que chave, nem como reconstruir as
-linhas.
+estes atributos ele não tem como saber o que guardar, sob que chave, nem qual lista guardar
+inteira para reconstruí-la.
 """
 
 import re
@@ -19,8 +19,8 @@ from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import identificar
 
 ETAPAS = [
-    ("perfis", "#perfis", "fragmentos/perfil"),
-    ("cronograma", "#eventos", "fragmentos/evento"),
+    ("perfis", "#perfis"),
+    ("cronograma", "#eventos"),
 ]
 
 
@@ -36,16 +36,18 @@ def corpo_da_etapa(client, edital, etapa):
 
 @pytest.mark.django_db
 @pytest.mark.integration
-@pytest.mark.parametrize(("etapa", "lista", "fragmento"), ETAPAS)
+@pytest.mark.parametrize(("etapa", "lista"), ETAPAS)
 def test_formulario_declara_o_que_o_rascunho_local_precisa(
-    client, seletor_ligado, edital, etapa, lista, fragmento
+    client, seletor_ligado, edital, etapa, lista
 ):
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = corpo_da_etapa(client, edital, etapa)
 
     assert f'data-rascunho="{edital.id}:{etapa}:ana.elaboradora"' in corpo
     assert f'data-lista="{lista}"' in corpo
-    assert f'data-fragmento="/gestao/{fragmento}"' in corpo
+    # A restauração deixou de pedir o fragmento vazio ao servidor: ele recriava a linha sem as
+    # coleções aninhadas (RC-08). Um atributo sem consumidor convidaria a voltar a usá-lo.
+    assert "data-fragmento=" not in corpo
     assert "interface/rascunho.js" in corpo
 
 
