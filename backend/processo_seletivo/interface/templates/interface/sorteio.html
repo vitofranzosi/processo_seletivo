@@ -211,6 +211,15 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
 
 <section aria-labelledby="titulo-recortes">
   <h2 id="titulo-recortes">Recortes deste marco</h2>
+  {% comment %}
+  **Uma vez, e não por recorte**: o período é do Edital, e vale para as três listas. É a frase da
+  recusa, lida da mesma função — duas redações do mesmo impedimento divergem no dia em que uma
+  delas muda —, e o botão de congelar some enquanto ela vale, como o de distribuir some na Mesa.
+  {% endcomment %}
+  {% if inscricoes_em_curso and pode_emitir %}
+  <p class="aviso" role="status"><strong>Ainda não é possível publicar a relação.</strong>
+    {{ inscricoes_em_curso.detail }}</p>
+  {% endif %}
   {% for recorte in recortes %}
   <article class="recorte">
     <h3>{{ recorte.nome }}</h3>
@@ -385,7 +394,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     nasce de relação nova, e ela é publicada aqui. Escondê-lo tornava a anulação — corrigida no
     domínio — inalcançável pela tela, o que a Constituição §VI não admite.
     {% endcomment %}
-    {% if pode_emitir and metodo and recorte.projetados %}
+    {% if pode_emitir and metodo and recorte.projetados and not inscricoes_em_curso %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
       {% csrf_token %}
       <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-relacao-{{ recorte.lista_id }}">

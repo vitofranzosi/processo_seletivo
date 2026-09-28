@@ -310,8 +310,10 @@ Modalidade, telefone, um PDF qualquer por documento → *Revisar* → as duas de
 Leva ~2 minutos por pessoa. Nenhum nome, e-mail ou CPF real.
 
 **5. Esperar o período terminar.** Não comece antes — ver o
-[achado da relação](achado-relacao-do-sorteio-congela-com-inscricoes-abertas.md): o sistema deixa
-congelar o universo do sorteio com as inscrições abertas, e a pessoa pode fazê-lo sem saber.
+[achado da relação](achado-relacao-do-sorteio-congela-com-inscricoes-abertas.md): o sistema deixava
+congelar o universo do sorteio com as inscrições abertas, e a pessoa podia fazê-lo sem saber. *Corrigido
+em 27/09: sobre uma `main` com a correção, a tela do sorteio diz até quando esperar e não oferece o
+botão.*
 
 **6. Entregar.** Saia, identifique-se como `operador.teste` com **Gestor** e **Publicador**, e pare em
 `/gestao/`. O Gestor conduz os atos da comissão (sorteio, emissão, corte, apuração, convocação); o
@@ -359,7 +361,7 @@ igual; só não há ensaio que diga o que esperar.
 | # | Operação | O que acontece | Marca provável |
 |---|---|---|---|
 | Q1 | Relação | A tela do sorteio lista **quatro** recortes: *"Todos os inscritos"* e as três Modalidades. O de *"Ampla concorrência (AC)"* tem só quem **declarou** AC, e o item 8.7 manda sortear a ampla com todos. É o RC-73, já conhecido: o recorte certo é o primeiro, e o quarto sobra | H |
-| Q2 | Relação | Congelar com o período aberto é aceito ([achado](achado-relacao-do-sorteio-congela-com-inscricoes-abertas.md)). Não acontece se a parte 2 começar depois do término, como manda a §5.1 | E |
+| Q2 | Relação | Congelar com o período aberto era aceito ([achado](achado-relacao-do-sorteio-congela-com-inscricoes-abertas.md), corrigido em 27/09: agora a tela recusa e diz até quando esperar). Não acontece se a parte 2 começar depois do término, como manda a §5.1 | E |
 | Q3 | Distribuição | Depois da consolidação, nem a página do Processo, nem a do Edital, nem *Minhas Etapas*, nem a Supervisão tinham link para a distribuição; a porta encontrada no ensaio foi a *Alocação por Etapa* | H |
 | Q4 | Ocupação | O inscrito PPI sorteado dentro das vagas da ampla ocupa a ampla (item 8.8), e a PPI fica com **déficit 1** e ninguém na fila. O Edital manda reverter (4.3); a tela oferece *"Pedir a faixa seguinte com este déficit"*. O ensaio parou aqui | H |
 | Q5 | Convocação | O vencimento é digitado (o sistema não conta dias úteis) e o fundamento é obrigatório, a cada pessoa | R |
@@ -434,6 +436,7 @@ Dois achados saíram do ensaio. Nenhum bloqueia, os dois estão registrados e ne
   congela — nem o método do sorteio, nem os marcos. O guardião dela só compara coleções-raiz em lista.
 - [A relação do sorteio se congela com o período de inscrições aberto](achado-relacao-do-sorteio-congela-com-inscricoes-abertas.md):
   a `021` põe o término no *Given*, e nada o exige; a distribuição, sobre o mesmo universo, recusa.
+  *Decidido e corrigido em 27/09: a publicação da relação recusa como a distribuição.*
 
 ### 6.4 O que o ensaio deixou no banco
 

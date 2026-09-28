@@ -4,8 +4,9 @@
 [teste operacional assistido](roteiro-teste-operacional-assistido-28-2026.md), contra a `main` em
 `f6efe0dd`.
 
-**Estado**: **registrado, não corrigido.** Não bloqueia nada — é o contrário: o sistema deixa fazer o
-que deveria recusar. A decisão de corrigir é do usuário.
+**Estado**: **decidido e corrigido em 27/09/2026**, antes da spec do passo 1. Ver
+[a decisão e a correção](#a-decisão-e-a-correção-2709), no fim. Até aqui, o texto é o registro como
+foi feito.
 
 ---
 
@@ -48,3 +49,48 @@ a impediria. O roteiro manda começar a parte 2 **depois** do término.
   reabertura teria dois.
 
 Nada foi corrigido. Registro, não escopo.
+
+---
+
+## A decisão e a correção (27/09)
+
+**A decisão é do usuário, em 27/09/2026**: recusar publicar e congelar a relação enquanto o período
+de inscrições do Edital estiver em curso, como a distribuição já recusa.
+
+**O apoio.** A User Story 1 da [`021`](../specs/021-sorteio-publico-auditavel/spec.md) — *"Encerradas
+as inscrições, quem conduz o certame publica a relação"* — e o cenário 1 dela, que parte de *"período
+encerrado"*. A `D-002` da mesma spec chama a relação de *"compromisso do universo"*, e um universo que
+ainda cresce não se compromete. Nenhum FR novo: a pré-condição que estava no *Given* passou a ser
+conferida no comando.
+
+**As duas perguntas que ficaram abertas acima.**
+
+- **Recusa ou aviso.** Recusa. O caso da segunda chamada não existe no sistema de hoje: toda relação é
+  projeção das inscrições **submetidas** do recorte (`sorteios/domain/projecao.py`), com ou sem Etapa
+  de habilitação, e por isso toda relação depende do período. A Etapa de habilitação também não abre
+  exceção: o resultado dela depende de distribuir, e distribuir já espera o período.
+- **Qual período.** O Evento designado como período de inscrições (`inscricoes/domain/periodo.py`),
+  que é o único que o sistema conhece e o mesmo que a distribuição lê. Um Edital com reabertura
+  retificaria o término desse Evento, e a regra acompanha.
+
+**A correção.**
+
+- `sorteios/application/relacao.py::publicar_relacao` chama `recusa_por_inscricoes_em_curso`, a mesma
+  função da distribuição, sobre o conteúdo da versão vigente, depois de conferir o método. Vale também
+  para a relação **sucessora**: suceder com o período aberto repetiria o defeito.
+- A função (`avaliacoes/domain/conjunto.py`) ganhou o parâmetro `consequencia`, porque o que cada ato
+  deixa para trás é outro. A regra, o código `inscricoes_em_curso`, o status **409** e a saída por
+  Retificação são os mesmos. A mensagem diz até quando esperar, o que se perderia e o que fazer:
+
+  > As inscrições ficam abertas até 27/09/2026 às 19:20. Congelar a relação agora deixaria fora do
+  > sorteio quem se inscrever depois; publique-a depois do término. Antecipar o término publicado é
+  > ato de Retificação; encerrar o Edital é outro ato, mais amplo e irreversível.
+
+- **A tela anuncia antes do clique**, como a Mesa faz com a distribuição: `sorteios/application/previa.py`
+  devolve a mesma recusa, e `interface/sorteio.html` a mostra uma vez, acima dos recortes, e não
+  oferece o botão de congelar enquanto ela vale.
+- **409, e não 404 nem 403**: não entra no inventário de negativas da `033`.
+
+**Testes**: `backend/tests/integration/sorteios/test_relacao_espera_o_periodo.py` (recusa, mensagem,
+prévia e a contraprova depois do encerramento), `backend/tests/interface/test_sorteio_espera_o_periodo.py`
+(a tela) e o caso novo de `backend/tests/unit/avaliacoes/test_conjunto.py`.
