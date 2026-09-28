@@ -4,6 +4,7 @@
 {% include "portal/_etapas.html" %}
 <h1>Revisar e enviar</h1>
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}</p>
+{% include "portal/_rascunho_fechado.html" %}
 
 {% if erros %}
 {% comment %}
@@ -24,7 +25,7 @@ que falta — um resumo que só descreve o erro obriga a procurá-lo.
 </div>
 {% endif %}
 
-{% if retificado %}
+{% if retificado and not fechada %}
 {% comment %}
 FR-059: o envio não acontece em silêncio depois de uma Retificação. O aviso vem antes das
 declarações porque concordar com o Edital é parte do ato — pedir a concordância depois seria
@@ -116,7 +117,10 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
   <p><a href="{% url 'portal:inscricao' inscricao.id %}">Editar</a></p>
 </section>
 
-{% if pendencias %}
+{% if fechada %}
+{% comment %} Nem pendência, nem formulário de envio: com o prazo fechado, nenhum dos dois leva a
+lugar nenhum, e o aviso do alto já diz por quê. {% endcomment %}
+{% elif pendencias %}
 <div class="erro" role="alert">
   <p>Falta enviar: {{ pendencias|join:", " }}.</p>
 </div>

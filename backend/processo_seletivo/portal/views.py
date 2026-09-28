@@ -960,7 +960,7 @@ def _conteudos_publicados(inscricoes):
     return conteudos
 
 
-def _item_da_lista(registro, conteudo):
+def _item_da_lista(registro, conteudo, agora):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -971,6 +971,7 @@ def _item_da_lista(registro, conteudo):
     tomar por ela.
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
+    fechada = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
     else:
@@ -980,6 +981,8 @@ def _item_da_lista(registro, conteudo):
         # bastava; com três processos abertos ao mesmo tempo — que é a situação normal de um
         # instituto — ele deixa de identificar qualquer coisa.
         processo = conteudo.get("processoTitle", "")
+        if not enviada:
+            fechada = _rascunho_fechado(registro, conteudo, agora)
     return {
         "id": registro.id,
         "perfil": perfil["nome"],
@@ -987,8 +990,27 @@ def _item_da_lista(registro, conteudo):
         "edital": edital,
         "enviada": enviada,
         "protocolo": registro.protocolo,
-        "acao": "Acompanhar" if enviada else "Continuar inscrição",
+        # O rascunho que o prazo fechou não se continua: se consulta (009, FR-032). "Continuar"
+        # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
+        "fechada": fechada,
+        "acao": "Acompanhar"
+        if enviada
+        else "Consultar inscrição"
+        if fechada
+        else "Continuar inscrição",
     }
+
+
+def _rascunho_fechado(registro, conteudo, agora):
+    """O período, quando o rascunho já não pode ser enviado; `None` enquanto pode (009, FR-032).
+
+    A pergunta é a mesma que o domínio faz ao gravar, anexar e enviar — `recebe_inscricoes` —, e não
+    uma releitura do período: um Edital cancelado dentro do prazo também fecha o rascunho, e a tela
+    que dissesse "continue" contrariaria a recusa logo adiante.
+    """
+    if recebe_inscricoes(status=registro.edital.status, conteudo=conteudo, agora=agora):
+        return None
+    return periodo_de_inscricoes(conteudo, agora)
 
 
 @require_http_methods(["GET", "POST"])
@@ -1182,15 +1204,19 @@ def inscricoes(request):
     if identidade is None:
         return redirect(reverse("portal:acesso"))
     minhas = list(
-        Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
+        Inscricao.objects.filter(identity_subject=identidade.subject)
+        .select_related("edital")
+        .order_by("-created_at")
     )
     conteudos = _conteudos_publicados(minhas)
+    agora = timezone.now()
     return render(
         request,
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id)) for registro in minhas
+                _item_da_lista(registro, conteudos.get(registro.edital_id), agora)
+                for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
             # alguma e com um endereço que consta de participação anterior de outra identidade. A
@@ -1322,12 +1348,14 @@ def inscricao(request, inscricao_id):
             except DomainError as exc:
                 erros.append(exc.detail)
     modalidades = _modalidades_ofertadas(conteudo, perfil, registro)
+    agora = timezone.now()
     return render(
         request,
         "portal/inscricao.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(versao),
+            "selecao": _selecao(versao, agora),
+            "fechada": _rascunho_fechado(registro, conteudo, agora),
             "perfil": _perfil_legivel(perfil),
             "telefone_no_campo": telefone_no_campo,
             "cpf_do_candidato": formatar_cpf(registro.cpf),
@@ -2044,12 +2072,14 @@ def revisao(request, inscricao_id):
                 erros.append(exc.detail)
                 registro.refresh_from_db()
                 retificado = edital_foi_retificado(registro, versao)
+    agora = timezone.now()
     return render(
         request,
         "portal/revisao.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(versao),
+            "selecao": _selecao(versao, agora),
+            "fechada": _rascunho_fechado(registro, conteudo, agora),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,
