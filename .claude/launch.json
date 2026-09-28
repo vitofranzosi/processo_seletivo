@@ -239,6 +239,16 @@
       ],
       "port": 8049,
       "url": "http://ampla.localhost:8049"
+    },
+    {
+      "name": "revisao-classificacao",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_revisao_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8050"
+      ],
+      "port": 8050,
+      "url": "http://localhost:8050"
     }
   ]
 }

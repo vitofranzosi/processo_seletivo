@@ -9,15 +9,47 @@ Aqui a fonte é `edital_snapshot`, o mesmo conteúdo que a submissão congela. U
 aparece na Revisão porque está no snapshot, e não porque foi lembrada — o que faz a classe de
 defeito desaparecer em vez de ser corrigida uma vez.
 
+**A promessa valia só para a raiz, e o defeito voltou uma camada abaixo.** O guardião comparava as
+listas de entidades da raiz, e o método comum do sorteio (um dicionário) e os marcos (uma coleção
+dentro do Perfil) escaparam dele por construção: a Revisão congelava a Classificação inteira sem
+mostrá-la, enquanto a prévia do PDF, na mesma tela, a imprimia. Por isso a declaração passou a ser
+**campo a campo**, em `LIDOS` e `NAO_MOSTRADOS`, na grafia do contrato de mutabilidade — cuja
+completude a `026` já guarda contra o snapshot. Campo novo sem destino aqui reprova no dia em que
+nasce.
+
 **Não é o snapshot cru na tela.** Cada coleção tem uma leitura curta, no vocabulário de quem
 elabora; o que este módulo garante é que nenhuma delas fique de fora.
 """
 
 from datetime import datetime
 
+from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
+from processo_seletivo.editais.domain.mutabilidade import RAIZ
+from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.interface.forms import ZONA
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+    criterio_com_a_ausencia,
+    forma_de_convocacao_por_extenso,
+    por_identificador,
+)
+
+# **As frases do marco são as do documento, lidas do mesmo lugar.** Reescrevê-las aqui daria à
+# conferência uma segunda grafia da regra — e é na primeira divergência entre as duas que quem
+# submete confere uma coisa e publica outra. `divulgacao` já importa do PDF pela mesma razão.
+from processo_seletivo.publicacoes.infrastructure.pdf import (
+    FORMA_DA_ORDEM,
+    NORMALIZACAO_DO_MARCO,
+    TIPO_DO_FATO,
+    _arredondamento,
+    _combinacao,
+    _enumerar,
+    _janela_recursal,
+    _origem_do_metodo,
+    _regra_de_corte,
+    _valor_do_campo_do_metodo,
+)
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
@@ -43,6 +75,16 @@ def _perfil(perfil, _snapshot):
     ]
     if perfil.get("locality"):
         linhas.append(f"Localidade: {perfil['locality']}")
+    # O que o documento imprime sobre a vaga e a conferência não lia. Impressos só quando
+    # declarados, como no documento: ausência é "não declarou", e não um valor padrão.
+    for rotulo, chave in (
+        ("Descrição", "description"),
+        ("Carga horária", "workload"),
+        ("Remuneração", "compensation"),
+        ("Atribuições", "duties"),
+    ):
+        if perfil.get(chave):
+            linhas.append(f"{rotulo}: {perfil[chave]}")
     for requisito in perfil.get("requirements") or []:
         linhas.append(f"Requisito: {requisito}")
     for modalidade in perfil.get("competitionModalities") or []:
@@ -54,7 +96,17 @@ def _perfil(perfil, _snapshot):
             partes.append(regra["foundation"])
             if regra.get("version"):
                 partes.append(f"versão {regra['version']}")
+        if regra.get("effectiveFrom"):
+            # A data como foi declarada, sem conversão de fuso: vigência é dia, e levar
+            # `2014-06-09T00:00Z` para o horário de Brasília a publicaria como 08/06.
+            partes.append(f"vigente desde {_dia(regra['effectiveFrom'])}")
+        # A descrição que só repete o nome não é informação: é o que o catálogo grava quando
+        # ninguém escreveu outra, e imprimi-la dobraria a linha sem dizer nada.
+        if modalidade.get("description") and modalidade["description"] != modalidade.get("name"):
+            partes.append(modalidade["description"])
         linhas.append("Modalidade: " + " · ".join(partes))
+    if perfil.get("competitionModalities"):
+        linhas.append(f"Ampla concorrência: {_ampla(perfil)}")
     # O quadro de vagas, na ordem declarada e com a linha geral primeiro. Quem submete precisa ver
     # os números que vai congelar — e o quadro é o que separa o certame de existir como documento.
     denominacoes = {
@@ -79,7 +131,54 @@ def _perfil(perfil, _snapshot):
             + ", ".join(sem_linha)
             + " — a ocupação e a convocação não terão quantidade a apurar nesse(s) recorte(s)."
         )
+    # A reversão e a forma de comunicar a convocação: duas das declarações que mais pesam na
+    # operação, e que depois da publicação só se corrigem por Retificação. A reversão só é dita
+    # onde há lista reservada que pudesse reverter — num Perfil só de ampla, "não reverte" seria
+    # resposta a uma pergunta que o Perfil não coloca.
+    especie = (perfil.get("vacancyReversion") or {}).get("kind")
+    if especie or set(denominacoes) - {str(perfil.get("generalCompetitionModalityId"))}:
+        linhas.append(
+            "Reverter vaga reservada não preenchida para a ampla concorrência: "
+            + REVERSAO.get(especie, especie or "não")
+        )
+    # A ausência é dita, e não omitida: a `019` recusa convocar quem não declarou a forma, e é
+    # aqui que quem submete ainda pode declará-la sem Retificação.
+    linhas.append(
+        f"Como a convocação é comunicada: {forma_de_convocacao_por_extenso(perfil.get('callForm'))}"
+    )
+    # Os fatos, com o código: é por ele que os critérios de desempate os alcançam, e é ele que
+    # identifica o mesmo fato em dois Perfis.
+    for fato in perfil.get("declaredFacts") or []:
+        tipo = TIPO_DO_FATO.get(fato.get("type"), fato.get("type") or "")
+        linhas.append(
+            f"Fato exigido do candidato: {fato.get('label') or fato.get('code', '')} "
+            f"({tipo}, código {fato.get('code', '')})"
+        )
     return {"titulo": f"{perfil.get('code', '')} — {perfil.get('name', '')}", "linhas": linhas}
+
+
+# A reversão na grafia das opções da composição, e não a do documento: a do documento é frase
+# normativa inteira, e a conferência lê o que foi escolhido.
+REVERSAO = {
+    "ON_EXHAUSTION": "só quando a lista reservada esgota",
+    "ON_BALANCE": "a quantidade que ficou sem preencher",
+}
+
+
+def _dia(valor):
+    try:
+        return datetime.fromisoformat(str(valor)).strftime("%d/%m/%Y")
+    except ValueError:
+        return str(valor)
+
+
+def _ampla(perfil):
+    """Qual Modalidade é a ampla concorrência, com as palavras da composição (014, D-014)."""
+    ampla = str(perfil.get("generalCompetitionModalityId") or "")
+    for modalidade in perfil.get("competitionModalities") or []:
+        if ampla and str(modalidade.get("id")) == ampla:
+            return f"{modalidade.get('code', '')} — {modalidade.get('name', '')}"
+    return "nenhuma Modalidade — a ampla concorrência é só a linha geral do quadro"
 
 
 def _vagas_e_quadro(perfil):
@@ -118,9 +217,16 @@ def _evento(evento, _snapshot):
     periodo = f"Início: {_instante(evento.get('startAt')) or '—'}"
     if evento.get("endAt"):
         periodo += f" · Término: {_instante(evento['endAt'])}"
+    linhas = [evento.get("description", ""), periodo]
+    if evento.get("location"):
+        linhas.append(f"Onde acontece: {evento['location']}")
+    # Decidido na etapa Inscrição, e dito aqui porque é propriedade do Evento no que se congela:
+    # é por ela que o portal abre e fecha as inscrições.
+    if evento.get("isRegistrationPeriod"):
+        linhas.append("É o período de inscrições deste Edital")
     return {
         "titulo": f"{evento.get('order', '')}. {evento.get('type', '')}",
-        "linhas": [evento.get("description", ""), periodo],
+        "linhas": linhas,
     }
 
 
@@ -255,22 +361,444 @@ def _anexo(anexo, snapshot):
     }
 
 
-# Coleção do conteúdo publicado → como se lê, e onde se corrige. Um teste confere que toda
-# coleção-raiz de entidades do snapshot está declarada aqui: é o que impede a Revisão de
-# envelhecer de novo.
-COLECOES = (
-    ("profiles", "Perfis de Vaga", "perfis", _perfil),
-    ("schedule", "Cronograma", "cronograma", _evento),
-    ("stages", "Etapas de Avaliação", "etapas", _etapa),
+# O que as opções do corte escolhem, com as palavras da composição. **Sem "faixa"**: a tela da
+# Classificação define o termo antes de usá-lo (030, FR-424), e esta não tem onde defini-lo.
+EMPATE_NO_CORTE = {
+    "ADMITS_SURPLUS": "todos os empatados progridem",
+    "STRICT": "o corte para no alvo",
+}
+CONTINUACAO_DO_CORTE = {
+    "ALLOWED": "admite chamar além dos que o corte publicar",
+    "NONE": "não admite — o corte é o que foi publicado",
+}
+
+
+def _leitura_do_marco(marco, perfil, snapshot):
+    """Os pares `(rótulo, valor)` que um marco declara, na ordem em que o documento os imprime.
+
+    **A frase é a do documento** (`_combinacao`, `_regra_de_corte`, `_janela_recursal`): é a
+    mesma regra, e duas redações dela seriam duas normas. O que a conferência acrescenta é o que o
+    documento cala e quem submete precisa ver — o silêncio dito como silêncio ("nada declarado"),
+    o empate na última posição, a continuação e a Etapa que habilita ao sorteio.
+
+    **Sem a denominação e sem o código**, que viajam à parte: os dois nascem do Perfil (030,
+    FR-420), e deixá-los aqui faria dois marcos com a mesma regra parecerem diferentes só porque
+    moram em Perfis diferentes — que é justamente o que o agrupamento existe para não fazer.
+    """
+    etapas = por_identificador(snapshot.get("stages"))
+    fatos = por_identificador(perfil.get("declaredFacts"))
+    # A mesma pergunta que a tela e a validação fazem, com o método comum resolvido: um marco que
+    # referencia o método do Edital sorteia, e quem lesse só a chave dele diria que não.
+    sorteia = regras_do_marco.marco_ordena_por_sorteio(
+        snapshot, perfil_id=perfil.get("id"), marco_id=marco.get("id")
+    )
+    pares = []
+    if FORMA_DA_ORDEM.get(marco.get("orderProduction")):
+        pares.append(("Ordem", FORMA_DA_ORDEM[marco["orderProduction"]]))
+    if not sorteia:
+        # Sob sorteio a combinação não é impressa, e pela razão do documento (032, FR-468): a
+        # ordem não vem de nota, e mostrá-la afirmaria um método que o marco não usa.
+        pares.append(("Combinação", _combinacao(marco, etapas) or "nenhuma Etapa enumerada"))
+        if NORMALIZACAO_DO_MARCO.get(marco.get("normalization")):
+            pares.append(("Normalização", NORMALIZACAO_DO_MARCO[marco["normalization"]]))
+    if arredondamento := _arredondamento(marco):
+        pares.append(("Arredondamento", arredondamento))
+    if sorteia:
+        pares.append(("Sorteio", f"método {_origem_do_metodo(snapshot, marco)}"))
+        proprio = marco.get("drawMethod") or {}
+        # Só o método **próprio**: o comum já está no alto do bloco, uma vez. E só com ele
+        # declarado — o instante vazio sai do PDF como "—", que é verdadeiro e passaria pelo
+        # filtro, imprimindo "Quando: —" em todo marco que referencia o comum.
+        if proprio:
+            pares.extend(
+                (f"Sorteio — {rotulo}", valor)
+                for campo, _, rotulo in CAMPOS_DO_METODO
+                if (valor := _valor_do_campo_do_metodo(campo, proprio))
+            )
+        habilita = etapas.get(str(proprio.get("qualifyingStageId") or ""))
+        pares.append(
+            (
+                "Etapa que habilita a participar do sorteio",
+                habilita.get("name", "")
+                if habilita
+                else "nenhuma — entram todas as inscrições submetidas",
+            )
+        )
+    pares.append(("Recurso", _janela_recursal(marco) or "nada declarado"))
+    regra = marco.get("cutRule")
+    if isinstance(regra, dict):
+        # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.
+        pares.append(("Corte", _regra_de_corte(marco, etapas) or "declarado sem alvo"))
+        if regra.get("governedStage") == "NONE":
+            pares.append(("Etapa que o corte alimenta", "nenhuma"))
+        if regra.get("tieOutcome"):
+            pares.append(
+                (
+                    "Empate na última posição",
+                    EMPATE_NO_CORTE.get(regra["tieOutcome"], regra["tieOutcome"]),
+                )
+            )
+        if regra.get("continuation"):
+            pares.append(
+                (
+                    "Continuação",
+                    CONTINUACAO_DO_CORTE.get(regra["continuation"], regra["continuation"]),
+                )
+            )
+    else:
+        pares.append(("Corte", "este marco não corta"))
+    criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)
+    pares.extend(
+        (f"Desempate, {indice}º", criterio_com_a_ausencia(criterio, etapas, fatos))
+        for indice, criterio in enumerate(criterios, start=1)
+    )
+    return tuple(pares)
+
+
+def _quem(codigos):
+    if len(codigos) == 1:
+        return f"Perfil {codigos[0]}"
+    return f"{len(codigos)} Perfis: {_enumerar(codigos)}"
+
+
+def _denominacao(grupo):
+    """A denominação do grupo, dita uma vez quando ela é a mesma, ou quando segue a derivada.
+
+    A derivada (030, FR-420) repete o nome do Perfil — "Classificação final — Professor de
+    Matemática" —, e listá-la Perfil a Perfil devolveria à tela o muro que o agrupamento tirou.
+    """
+    nomes = [nome for _, nome, _ in grupo["membros"]]
+    if len(set(nomes)) == 1:
+        return nomes[0] or "—"
+    if all(nome == derivada for _, nome, derivada in grupo["membros"]):
+        return "Classificação final — o nome de cada Perfil"
+    return "; ".join(f"{codigo}: {nome or '—'}" for codigo, nome, _ in grupo["membros"])
+
+
+def _marcos_agrupados(snapshot):
+    """Os marcos, agrupados pelo que declaram — e o que diverge, dito como divergência.
+
+    **Por que agrupar.** Num Edital de 16 Perfis são 16 marcos, e em quase todos a regra é a mesma:
+    ler 16 vezes o mesmo corte não é conferir, é procurar a diferença a olho. O agrupamento faz o
+    que a Revisão já faz com Evento e Etapa, que são do Edital e aparecem uma vez: o que é igual
+    aparece uma vez, com os Perfis a que se aplica.
+
+    **O que diverge é nomeado, e não só separado.** O grupo mais numeroso de cada posição é a
+    referência; cada outro diz em que rótulos difere dela. Um grupo à parte, sem essa linha,
+    mandaria quem confere comparar duas listas de dez linhas para achar a única que mudou.
+
+    **Por posição, e não pelo Edital inteiro.** Um Perfil com dois marcos — o que corta para a
+    entrevista e o que classifica ao final — tem dois marcos que não se comparam entre si; o
+    primeiro de um Perfil se compara com o primeiro dos outros.
+    """
+    grupos = {}
+    for perfil in snapshot.get("profiles") or []:
+        _, derivada = regras_do_marco.identidade_derivada(
+            codigo_do_perfil=perfil.get("code"), nome_do_perfil=perfil.get("name")
+        )
+        for posicao, marco in enumerate(perfil.get("classificationMilestones") or []):
+            pares = _leitura_do_marco(marco, perfil, snapshot)
+            grupo = grupos.setdefault(
+                (posicao, pares), {"posicao": posicao, "pares": pares, "membros": []}
+            )
+            grupo["membros"].append((perfil.get("code", ""), marco.get("name", ""), derivada))
+    varios = any(grupo["posicao"] for grupo in grupos.values())
+    itens = []
+    for posicao in sorted({grupo["posicao"] for grupo in grupos.values()}):
+        da_posicao = [grupo for grupo in grupos.values() if grupo["posicao"] == posicao]
+        # `sorted` é estável: no empate de tamanho, vale a ordem dos Perfis.
+        da_posicao.sort(key=lambda grupo: -len(grupo["membros"]))
+        referencia = da_posicao[0]
+        for grupo in da_posicao:
+            codigos = [codigo for codigo, _, _ in grupo["membros"]]
+            titulo = _quem(codigos)
+            if varios:
+                titulo = f"{posicao + 1}º marco — {titulo}"
+            item = {
+                "titulo": titulo,
+                "linhas": [f"Denominação: {_denominacao(grupo)}"]
+                + [f"{rotulo}: {valor}" for rotulo, valor in grupo["pares"]],
+            }
+            if grupo is not referencia:
+                diferentes = _divergencias(grupo["pares"], referencia["pares"])
+                quantos = len(referencia["membros"])
+                de_quem = (
+                    f"do marco de {quantos} Perfis"
+                    if quantos > 1
+                    else f"do marco do Perfil {referencia['membros'][0][0]}"
+                )
+                item["diverge"] = f"Diverge {de_quem} em: {_enumerar(diferentes)}."
+            itens.append(item)
+    return itens
+
+
+def _divergencias(pares, referencia):
+    """Os rótulos cujo valor difere entre as duas leituras, ou que só uma delas tem."""
+    proprios, outros = dict(pares), dict(referencia)
+    return [
+        rotulo
+        for rotulo in dict.fromkeys([*proprios, *outros])
+        if proprios.get(rotulo) != outros.get(rotulo)
+    ]
+
+
+def _classificacao(snapshot):
+    """O método comum do sorteio, os marcos de cada Perfil e os Perfis que não têm marco.
+
+    Não é coleção-raiz, e é por isso que escapou: o método comum é um dicionário da raiz, e os
+    marcos moram dentro de cada Perfil. O bloco existe porque a etapa existe — é na
+    `classificacao` que tudo isto se corrige.
+    """
+    itens = []
+    comum = snapshot.get("drawMethod")
+    if isinstance(comum, dict) and comum:
+        itens.append(
+            {
+                "titulo": "Método do sorteio comum a este Edital",
+                "linhas": [
+                    f"{rotulo}: {valor}"
+                    for campo, _, rotulo in CAMPOS_DO_METODO
+                    if (valor := _valor_do_campo_do_metodo(campo, comum))
+                ],
+            }
+        )
+    itens.extend(_marcos_agrupados(snapshot))
+    sem_marco = [
+        perfil.get("code", "")
+        for perfil in snapshot.get("profiles") or []
+        if not perfil.get("classificationMilestones")
+    ]
+    if sem_marco:
+        itens.append(
+            {
+                "titulo": "Sem marco classificatório",
+                "linhas": [
+                    f"{_quem(sem_marco)} — "
+                    + ("não produz" if len(sem_marco) == 1 else "não produzem")
+                    + " ordem, e não há o que ocupar."
+                ],
+            }
+        )
+    return itens
+
+
+def _cada(chave, leitura):
+    """A leitura item a item de uma coleção-raiz."""
+    return lambda snapshot: [leitura(item, snapshot) for item in snapshot.get(chave) or []]
+
+
+# Bloco da conferência → como se lê, e onde se corrige. A ordem é a do assistente.
+BLOCOS = (
+    ("Perfis de Vaga", "perfis", _cada("profiles", _perfil)),
+    ("Cronograma", "cronograma", _cada("schedule", _evento)),
+    ("Etapas de Avaliação", "etapas", _cada("stages", _etapa)),
+    # Depois das Etapas porque é a ordem do assistente: o marco enumera Etapas, e é na etapa
+    # `classificacao` que ele se corrige.
+    ("Classificação", "classificacao", _classificacao),
     # Estava no snapshot que a submissão congela e não estava aqui: quem revisava homologava
     # sem ver o que o Edital exigiria do candidato. Entre Etapas e Conteúdo porque é a ordem
     # do assistente, e a etapa é `inscricao` — é lá que se corrige.
-    ("documentRequirements", "Documentos Exigidos", "inscricao", _documento),
+    ("Documentos Exigidos", "inscricao", _cada("documentRequirements", _documento)),
     # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
     # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
-    ("attachments", "Anexos do Edital", "anexos", _anexo),
-    ("sections", "Conteúdo do Edital", "conteudo", _secao),
+    ("Anexos do Edital", "anexos", _cada("attachments", _anexo)),
+    ("Conteúdo do Edital", "conteudo", _cada("sections", _secao)),
 )
+
+
+# **O que a conferência lê, campo a campo**, na grafia `(coleção, caminho)` do contrato de
+# mutabilidade. Com `NAO_MOSTRADOS`, é uma partição do contrato — e o contrato, a `026` já o
+# prende ao snapshot. É assim que um campo novo reprova aqui no dia em que nasce, e não quando
+# alguém nota que a tela não o mostra.
+#
+# **"Lido" é "a conferência o mostra ou o resolve"**: `stages` do marco não aparece como lista,
+# e sim na combinação, com o nome e o peso de cada Etapa — e, sob sorteio, nem assim, como no
+# documento (032, FR-468); `scheduleEventId` aparece nas datas do Evento.
+_METODO_LIDO = (
+    "algorithm",
+    "source",
+    "occurrence",
+    "occurrenceAt",
+    "derivation",
+    "normalization/text",
+    "substitutionRule/text",
+)
+_LIDOS_POR_COLECAO = {
+    RAIZ: (
+        "number",
+        "year",
+        "title",
+        "description",
+        "processoCode",
+        "processoTitle",
+        "maxInscricoesPorCandidato",
+        "matriculationRequest/moment",
+        "matriculationRequest/declarationText",
+        *(f"drawMethod/{campo}" for campo in _METODO_LIDO),
+    ),
+    "profiles": (
+        "code",
+        "name",
+        "description",
+        "requirements",
+        "immediateVacancies",
+        "reserveType",
+        "reserveLimit",
+        "locality",
+        "duties",
+        "workload",
+        "compensation",
+        "generalCompetitionModalityId",
+        "vacancyReversion/kind",
+        "callForm",
+    ),
+    "competitionModalities": (
+        "code",
+        "name",
+        "description",
+        "normativeRule/foundation",
+        "normativeRule/version",
+        "normativeRule/percentage",
+        "normativeRule/effectiveFrom",
+    ),
+    "vacancyTable": ("modalityId", "immediateVacancies"),
+    "declaredFacts": ("code", "label", "type"),
+    "classificationMilestones": (
+        "name",
+        "orderProduction",
+        "stages",
+        "operation",
+        "normalization",
+        "rounding/scale",
+        "rounding/mode",
+        "appealWindow/admits",
+        "appealWindow/durationDays",
+        # A frase diz "dias corridos", e é a única contagem que a validação admite.
+        "appealWindow/unit",
+        *(f"drawMethod/{campo}" for campo in _METODO_LIDO),
+        "drawMethod/qualifyingStageId",
+        "cutRule/targetKind",
+        "cutRule/targetCount",
+        "cutRule/surplusCount",
+        "cutRule/tieOutcome",
+        "cutRule/governedStage",
+        "cutRule/continuation",
+    ),
+    "tiebreakers": (
+        "order",
+        "type",
+        "parameters/stageId",
+        "parameters/factId",
+        "whenMissing",
+    ),
+    "schedule": (
+        "type",
+        "description",
+        "startAt",
+        "endAt",
+        "order",
+        "location",
+        "isRegistrationPeriod",
+    ),
+    "stages": (
+        "order",
+        "scheduleEventId",
+        "name",
+        "weight",
+        "minimumScore",
+        "maximumScore",
+        "evaluationsPerRegistration",
+        "eliminatory",
+        "classificatory",
+        "forma",
+        "rotuloFavoravel",
+        "rotuloDesfavoravel",
+    ),
+    "sections": ("title", "order", "type", "content", "source"),
+    # A ordem é a da lista: o conteúdo publica os Anexos na ordem editorial, e a conferência os
+    # mostra nela.
+    "attachments": ("label", "order"),
+    "documentRequirements": (
+        "name",
+        "instructions",
+        "required",
+        "order",
+        "profileId",
+        "modalityId",
+        "attachmentId",
+        "modalityCode",
+    ),
+}
+LIDOS = frozenset(
+    (colecao, caminho) for colecao, caminhos in _LIDOS_POR_COLECAO.items() for caminho in caminhos
+)
+
+_IDENTIDADE = (
+    "identidade: é o que as outras declarações referenciam, e a conferência a mostra resolvida no "
+    "nome de quem é referenciado"
+)
+_REGRA_DO_METODO = (
+    "o identificador que a máquina aplica; a conferência mostra a frase publicada (`text`), que "
+    "é o que o documento imprime e o que a pessoa lê"
+)
+_SEM_CONSUMIDOR = (
+    "a composição não o pede e nenhum consumidor o lê; decide-se na spec que o consumiria (ordem "
+    "adotada em 27/09, passos 1 e 3)"
+)
+_OPACO = (
+    "objeto opaco (026): a composição não o escreve, só o preserva, e o documento não o imprime"
+)
+
+#: O que a conferência **não** mostra, e por quê. Cada entrada é decisão escrita: "esqueci" não
+#: cabe numa razão.
+NAO_MOSTRADOS = {
+    (RAIZ, "schemaVersion"): (
+        "a versão do formato canônico diz como o conteúdo se lê, e não o que o Edital declara"
+    ),
+    (RAIZ, "editalId"): _IDENTIDADE,
+    (RAIZ, "processoId"): _IDENTIDADE,
+    (RAIZ, "drawMethod/normalization/rule"): _REGRA_DO_METODO,
+    (RAIZ, "drawMethod/substitutionRule/rule"): _REGRA_DO_METODO,
+    ("profiles", "id"): _IDENTIDADE,
+    ("profiles", "classificationInformation"): _OPACO,
+    ("profiles", "callInformation"): _OPACO,
+    ("competitionModalities", "id"): _IDENTIDADE,
+    ("competitionModalities", "normativeRule/id"): _IDENTIDADE,
+    ("competitionModalities", "normativeRule/calculation"): _SEM_CONSUMIDOR,
+    ("competitionModalities", "normativeRule/rounding"): _SEM_CONSUMIDOR,
+    ("competitionModalities", "normativeRule/distribution"): _SEM_CONSUMIDOR,
+    ("competitionModalities", "normativeRule/callRules"): _SEM_CONSUMIDOR,
+    ("vacancyTable", "id"): _IDENTIDADE,
+    ("declaredFacts", "id"): _IDENTIDADE,
+    ("classificationMilestones", "id"): _IDENTIDADE,
+    ("classificationMilestones", "code"): (
+        "nasce do código do Perfil (030, FR-420), e a conferência agrupa os marcos pelo Perfil a "
+        "que pertencem"
+    ),
+    ("classificationMilestones", "drawMethod/normalization/rule"): _REGRA_DO_METODO,
+    ("classificationMilestones", "drawMethod/substitutionRule/rule"): _REGRA_DO_METODO,
+    ("tiebreakers", "id"): _IDENTIDADE,
+    ("schedule", "id"): _IDENTIDADE,
+    ("schedule", "status"): (
+        "derivado das datas e do instante corrente (045, D-001); a conferência mostra as datas, "
+        "que são a declaração"
+    ),
+    ("stages", "id"): _IDENTIDADE,
+    ("sections", "id"): _IDENTIDADE,
+    ("sections", "key"): "identidade da seção no catálogo; a conferência mostra o título",
+    ("attachments", "id"): _IDENTIDADE,
+    ("attachments", "artifactId"): (
+        "o endereço dos bytes, que a conferência entrega pelo caminho de abrir o arquivo (020, "
+        "FR-018), e não imprime"
+    ),
+    ("attachments", "artifactHash"): (
+        "o resumo dos bytes, derivado deles: conferir é abrir o arquivo, e não ler o resumo"
+    ),
+    ("documentRequirements", "id"): _IDENTIDADE,
+    ("documentRequirements", "key"): (
+        "identidade do documento exigido; a conferência mostra o nome"
+    ),
+}
 
 
 # Os dois momentos, ditos como quem revisa precisa lê-los. **Não é o código**: `AT_ENROLLMENT` não
@@ -316,6 +844,21 @@ def _requerimento_de_matricula(snapshot):
     ]
 
 
+def _identificacao(snapshot):
+    linhas = [
+        snapshot.get("title") or "—",
+        snapshot.get("description") or "sem descrição",
+    ]
+    if snapshot.get("processoCode") or snapshot.get("processoTitle"):
+        codigo = snapshot.get("processoCode") or "—"
+        linhas.append(f"Processo {codigo} — {snapshot.get('processoTitle') or '—'}")
+    # Só quando declarado: ausência é "sem teto", e é o caso de quase todo Edital. O rótulo é o
+    # da Retificação, que é onde ele se corrige depois de publicado.
+    if snapshot.get("maxInscricoesPorCandidato") is not None:
+        linhas.append(f"Teto de inscrições por candidato: {snapshot['maxInscricoesPorCandidato']}")
+    return linhas
+
+
 def blocos(snapshot):
     """O Edital inteiro, na ordem em que se elabora, com o caminho de volta para cada etapa."""
     conferencia = [
@@ -325,22 +868,12 @@ def blocos(snapshot):
             "itens": [
                 {
                     "titulo": f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}",
-                    "linhas": [
-                        snapshot.get("title") or "—",
-                        snapshot.get("description") or "sem descrição",
-                    ],
+                    "linhas": _identificacao(snapshot),
                 }
             ],
         }
     ]
     conferencia.extend(_requerimento_de_matricula(snapshot))
-    for chave, titulo, etapa, leitura in COLECOES:
-        itens = snapshot.get(chave) or []
-        conferencia.append(
-            {
-                "titulo": titulo,
-                "etapa": etapa,
-                "itens": [leitura(item, snapshot) for item in itens],
-            }
-        )
+    for titulo, etapa, leitura in BLOCOS:
+        conferencia.append({"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)})
     return conferencia
