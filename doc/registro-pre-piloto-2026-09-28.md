@@ -178,3 +178,34 @@ mudar nenhuma decisão:
 - **RC-21** — o rótulo que abre pelo identificador (*"IV — Formulário"*) não contava como o Anexo IV.
 - **As pendências de seção** iam todas para a etapa Conteúdo, inclusive os impeditivos de
   topologia do catálogo, que ela não corrige (`FR-007`); só os dois avisos de texto vão para lá agora.
+
+## O teto de inscrições no portal (RC-12, 28/09/2026)
+
+Dois resíduos do RC-12, vistos pelo navegador ao verificar o PR 224: o portal não dizia o teto — só
+o documento o dizia —, e continuava oferecendo *"Inscrever-se nesta vaga"* em outra vaga depois de
+o teto atingido. A pessoa abria o rascunho, preenchia, revisava, e só no *"Enviar inscrição"*
+recebia a recusa (`registration_limit_reached`). Nenhuma spec do portal (`009`, `024`, `047`)
+decidia a apresentação; a `015` (`FR-063` a `FR-066`) e a D-3 decidem a regra. As quatro escolhas
+são do usuário, feitas no mesmo dia, e viraram correção direta, sem spec nova:
+
+- **Onde se diz o teto.** Na página da seleção, sob *"Vagas"*, e na revisão da inscrição, junto do
+  envio. A frase é a do documento (`teto_de_inscricoes`), e só existe quando o Edital declara teto.
+- **A outra vaga, com o teto atingido.** O convite dá lugar à frase *"Limite atingido: você já
+  enviou N inscrição(ões) neste Edital."* Sem botão, e sem rascunho novo.
+- **O rascunho já aberto.** Continua oferecido (*"Continuar inscrição"*), com a linha que diz que
+  ele não poderá ser enviado; na revisão, o aviso toma o lugar do botão de envio, como o do prazo
+  encerrado (RC-49). O rascunho não muda de estado nem se apaga: rascunho não consome direito
+  (`FR-064`), e uma Retificação que suba o teto o devolve ao envio (`FR-066`).
+- **A recusa de abrir rascunho fica só na tela.** `abrir_inscricao` não recusa: a `FR-064` regula o
+  envio, e recusar a abertura seria regra que nenhuma spec escreveu. Um `POST` direto à rota de
+  inscrever ainda abre o rascunho, e o envio o recusa.
+
+A condição que a tela lê é a mesma que o envio aplica (`teto_atingido`, em
+`inscricoes/application/submissao.py`), sobre o conteúdo **vigente**. Na página da seleção ela não
+custa consulta: o conteúdo e as inscrições da pessoa já estavam carregados. Na revisão custa uma
+contagem, e só quando o Edital declara teto. Testes em
+`tests/integration/portal/test_teto_no_portal.py`.
+
+Fica de fora, e continua registrado: a Retificação aceita teto `0` ou negativo, e com `0` a
+página diria *"Limite atingido: você já enviou 0 inscrições"* — a mesma recusa universal que o envio
+já produz, agora dita antes.
