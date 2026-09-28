@@ -17,7 +17,7 @@ ordem dela: a ampla primeiro. `lista_id` nulo é a ampla (`FR-812`).
 | `feito` | ato vigente, não obsoleto | geração vigente, não obsoleta | apuração vigente, sem causa de obsolescência | publicação vigente **do ato vigente**; diz a natureza |
 | `obsoleto` | `estado_do_marco(...)["obsoleto"]` | `estado_do_corte(...)["obsoleto"]` | `causas_de_obsolescencia(apuração)` não vazia | `divulgacao_do_ato(...)["defasadas"]`: o público lê um ato anterior |
 | `falta` | sem ato vigente | sem geração vigente | sem apuração vigente | ato vigente nunca divulgado |
-| `nao_se_aplica` | — | marco sem `cutRule` | — | sem ato vigente não há o que publicar: a célula diz *"falta a ordem"* e conta como falta |
+| `nao_se_aplica` | — | marco sem `cutRule` | recorte sem linha no quadro e sem apuração | sem ato vigente não há o que publicar: a célula diz *"falta a ordem"* e conta como falta |
 
 Na tela do marco o estado é completo; no resumo da página do Edital é só presença (`R-6`).
 *Ninguém concorreu* é nota da célula da ordem, e não estado: a ordem vazia está `feito`.
@@ -33,7 +33,6 @@ Um item por recorte do marco:
 | `razao` | por que está fora ou impedido — a frase do domínio, quando é recusa dele |
 | `resumo` | o que será praticado: posições e sem posição (ordem); alcançados pela faixa (corte); vagas publicadas e ordem lida (apuração); cabeçalho, posições e avisos (publicação) |
 | `assinatura` | só em `praticar`; é o que a confirmação devolve (`R-3`, `R-4`) |
-| `vazio` | ninguém concorreu (`D-003`) |
 
 Regras: `fora` quando o recorte já tem o ato (vigente, obsoleto ou não); `impedido` quando o domínio
 recusa agora (cálculo, publicabilidade, falta de quadro, falta de ordem); `praticar` nos demais.

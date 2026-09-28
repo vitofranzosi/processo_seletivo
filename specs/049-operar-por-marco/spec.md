@@ -293,7 +293,8 @@ Os casos-limite são requisitos: cada um tem requisito ou decisão que o cobre.
   cada recorte em quatro operações: ordem, corte, apuração e publicação.
 - **FR-811**: O estado de cada operação num recorte MUST ser um destes, lido dos atos vigentes: *feito*;
   *obsoleto*, quando o sistema já sabe que o ato ficou para trás; *falta*; e *não se aplica*, quando o
-  marco não declara a operação, como o corte sem regra. Na publicação, *feito* MUST dizer a natureza,
+  marco não declara a operação, como o corte sem regra, ou quando o recorte não tem linha no quadro
+  de vagas e por isso não há quantidade a apurar. Na publicação, *feito* MUST dizer a natureza,
   preliminar ou definitiva, e o estado MUST distinguir *falta* de *o público lê um ato anterior*.
 - **FR-812**: Os recortes do indicador e do alcance MUST vir da derivação única
   (`editais/domain/recortes.py`), com os mesmos rótulos e na mesma ordem. A feature MUST NOT criar

@@ -47,7 +47,7 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 )
 from processo_seletivo.classificacao.application.emissao_do_corte import emitir_corte
 from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
-from processo_seletivo.classificacao.models import AtoDeOrdenacao, Corte, PosicaoNaOrdem
+from processo_seletivo.classificacao.models import AtoDeOrdenacao, Corte
 from processo_seletivo.divulgacao.application.publicar import (
     assinatura_da_previa,
     publicar_resultado,
@@ -58,7 +58,7 @@ from processo_seletivo.divulgacao.application.selectors import (
     vigente_do_marco,
 )
 from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulgacao
-from processo_seletivo.divulgacao.domain.publicabilidade import AVISO
+from processo_seletivo.divulgacao.domain.publicabilidade import AVISO, natureza_regride
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza, PublicacaoResultado
 from processo_seletivo.editais.domain import marcos
@@ -69,6 +69,7 @@ from processo_seletivo.ocupacao.application.selectors import (
     causas_de_obsolescencia,
 )
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import ProcessoSeletivo
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.autoridades import escolher
@@ -123,11 +124,12 @@ def marco_publicado(edital, marco_id):
 
     **A norma vigente, e não a histórica** (`FR-813`): o marco que uma Retificação removeu não tem
     recortes a operar, e os atos dele continuam alcançáveis pelas telas de histórico de hoje.
+
+    **Uma varredura só**: `views._marco_publicado` delega a esta, e as telas de recorte e a do
+    marco respondem "que marco é este" pelo mesmo caminho. Edital sem versão publicada recusa com a
+    recusa de `effective_version`, como sempre recusou — quem quer 404 a traduz.
     """
-    try:
-        conteudo = effective_version(edital_id=edital.id).content
-    except DomainError:
-        return None, None, None
+    conteudo = effective_version(edital_id=edital.id).content
     alvo = str(marco_id)
     for perfil in conteudo.get("profiles") or []:
         for marco in perfil.get("classificationMilestones") or []:
@@ -148,11 +150,6 @@ def sorteia(conteudo, perfil, marco):
 
 def corta(marco):
     return bool((marco or {}).get("cutRule"))
-
-
-def lista_do_formulario(valor):
-    """O recorte como o formulário o traz: `ampla` é o nulo."""
-    return None if valor in (None, "", AMPLA) else str(valor)
 
 
 def lista_para_o_formulario(lista_id):
@@ -179,6 +176,7 @@ def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pod
     marco_id = str(marco["id"])
     perfil_id = perfil["id"]
     do_sorteio = sorteia(conteudo, perfil, marco)
+    versao = effective_version(edital_id=edital.id)
     com_corte = corta(marco)
     # A cadeia de publicações é do marco, e não do recorte: uma leitura para todas as listas.
     historico = historico_do_marco(edital=edital, marco_id=marco_id)
@@ -191,13 +189,13 @@ def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pod
                 "rotulo": rotulo,
                 "celulas": {
                     ORDENAR: _celula_da_ordem(
-                        edital, marco_id, lista_id, ato, do_sorteio, pode_classificar
+                        edital, marco, lista_id, ato, versao, do_sorteio, pode_classificar
                     ),
                     CORTAR: _celula_do_corte(
                         edital, perfil_id, marco_id, lista_id, com_corte, pode_classificar
                     ),
                     APURAR: _celula_da_apuracao(
-                        edital, perfil_id, marco_id, lista_id, pode_classificar
+                        edital, conteudo, perfil_id, marco_id, lista_id, pode_classificar
                     ),
                     PUBLICAR: _celula_da_publicacao(
                         edital, marco_id, lista_id, ato, historico, pode_publicar
@@ -209,10 +207,10 @@ def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pod
 
 
 def _totais(linhas):
-    """Por operação: quantos feitos, de quantos se aplicam, e se o marco está completo nela.
+    """Por operação: quantos feitos, de quantos se aplicam.
 
-    **Completo é nenhum em falta e nenhum obsoleto** (`FR-814`). Contar o obsoleto como feito
-    faria o marco parecer pronto com uma ordem que o sistema já sabe estar para trás.
+    **Só *feito* conta** (`FR-814`): contar o obsoleto faria o marco parecer pronto com uma ordem
+    que o sistema já sabe estar para trás.
     """
     totais = {}
     for operacao in OPERACOES:
@@ -222,7 +220,6 @@ def _totais(linhas):
             "feitos": sum(1 for estado in aplicaveis if estado == FEITO),
             "aplicaveis": len(aplicaveis),
             "se_aplica": bool(aplicaveis),
-            "completo": bool(aplicaveis) and all(estado == FEITO for estado in aplicaveis),
         }
     return totais
 
@@ -231,7 +228,8 @@ def _com_lista(endereco, lista_id):
     return f"{endereco}?lista={lista_id}" if lista_id else endereco
 
 
-def _celula_da_ordem(edital, marco_id, lista_id, ato, do_sorteio, pode_classificar):
+def _celula_da_ordem(edital, marco, lista_id, ato, versao, do_sorteio, pode_classificar):
+    marco_id = str(marco["id"])
     # **O marco de sorteio leva à tela do sorteio** (`FR-815`): lá a ordem se refaz com relação e
     # ocorrência novas, e a tela da ordenação ofereceria recalcular o que só uma semente produz.
     rota = "interface:sorteio" if do_sorteio else "interface:ordenacao"
@@ -241,17 +239,33 @@ def _celula_da_ordem(edital, marco_id, lista_id, ato, do_sorteio, pode_classific
     nota = ""
     # **Ninguém concorreu é nota, e não estado** (`D-003`): a ordem vazia está feita, e dizê-la
     # como pendência mandaria emitir de novo o que já existe.
-    if not PosicaoNaOrdem.objects.filter(ato=ato).exists():
+    if not ato.posicoes.exists():
         nota = "ninguém concorreu"
-    try:
-        obsoleto = estado_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)["obsoleto"]
-    except DomainError:
-        obsoleto = False
     return {
-        "estado": OBSOLETO if obsoleto else FEITO,
+        "estado": OBSOLETO if _ordem_obsoleta(edital, marco, lista_id, ato, versao) else FEITO,
         "nota": nota,
         "url": url if pode_classificar else "",
     }
+
+
+def _ordem_obsoleta(edital, marco, lista_id, ato, versao):
+    """A obsolescência da ordem, pelas duas passagens da Supervisão (`UX-004`, `T-003`).
+
+    `estado_do_marco` recalcula a ordem inteira, e a tela do marco é reaberta a cada gesto. O
+    filtro barato — versão citada diferente da vigente, ou Resultado mais novo que o ato — é o que
+    a Supervisão já usa, e é conservador por construção: admite candidato que a confirmação
+    descarta, e nunca o contrário. Só o candidato paga o recálculo.
+    """
+    from processo_seletivo.interface.supervisao import candidato_a_obsoleto
+
+    if not candidato_a_obsoleto(edital, ato, marco, versao):
+        return False
+    try:
+        return estado_do_marco(edital=edital, marco_id=str(marco["id"]), lista_id=lista_id)[
+            "obsoleto"
+        ]
+    except DomainError:
+        return False
 
 
 def _celula_do_corte(edital, perfil_id, marco_id, lista_id, com_corte, pode_classificar):
@@ -268,16 +282,25 @@ def _celula_do_corte(edital, perfil_id, marco_id, lista_id, com_corte, pode_clas
     return {"estado": situacao, "nota": "", "url": url if pode_classificar else ""}
 
 
-def _celula_da_apuracao(edital, perfil_id, marco_id, lista_id, pode_classificar):
-    url = reverse("interface:ocupacao", args=[edital.id, marco_id])
+def _celula_da_apuracao(edital, conteudo, perfil_id, marco_id, lista_id, pode_classificar):
+    url = reverse("interface:ocupacao", args=[edital.id, marco_id]) if pode_classificar else ""
     vigente = apuracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
+    if (
+        vigente is None
+        and linha_do_quadro(conteudo, perfil_id=perfil_id, lista_id=lista_id) is None
+    ):
+        # **Sem linha no quadro não há quantidade a apurar, e isso não é falta** (`FR-811`). Contado
+        # como falta, o recorte deixava a apuração do marco incompleta para sempre, e o gesto de
+        # apurar continuava oferecido para sempre impedir. É o `NO_VACANCY_TABLE` da tela da
+        # ocupação, que diz o caminho — a Retificação do Perfil —, e é para lá que a célula leva.
+        return {"estado": NAO_SE_APLICA, "nota": "sem quadro de vagas publicado", "url": url}
     if vigente is None:
         situacao = FALTA
     else:
         situacao = OBSOLETO if causas_de_obsolescencia(vigente) else FEITO
-    return {"estado": situacao, "nota": "", "url": url if pode_classificar else ""}
+    return {"estado": situacao, "nota": "", "url": url}
 
 
 def _celula_da_publicacao(edital, marco_id, lista_id, ato, historico, pode_publicar):
@@ -382,8 +405,15 @@ def alcance(edital, conteudo, perfil, marco, operacao, *, natureza="", autoridad
     motivo único para N sucessões diria a mesma razão para fatos diferentes.
 
     Recusa o gesto inteiro, com `DomainError`, só quando **o marco** não o admite: ordenar um marco
-    de sorteio, cortar um marco sem regra, publicar sem natureza ou sem autoridade.
+    de sorteio, cortar um marco sem regra, publicar sem natureza ou sem autoridade — ou quando o
+    Processo, em estado final, não admite mais ato da comissão.
     """
+    if operacao in DA_GESTAO:
+        # **A recusa que vale para o marco inteiro é dita na conferência** (`FR-818`). Os três
+        # comandos da comissão recusam o Processo em estado final, recorte a recorte; sem esta
+        # pergunta, a conferência prometia "Emitir 3 ordens" e a confirmação devolvia três recusas
+        # iguais. É a mesma função que `comando_de_comissao` chama, e não uma segunda regra.
+        ensure_processo_accepts_changes(edital.processo)
     if operacao == ORDENAR:
         return _alcance_da_ordem(edital, conteudo, perfil, marco)
     if operacao == CORTAR:
@@ -401,7 +431,6 @@ def _item(
     razao="",
     resumo="",
     assinatura="",
-    vazio=False,
     com_declaracao=False,
 ):
     return {
@@ -413,7 +442,6 @@ def _item(
         "razao": razao,
         "resumo": resumo,
         "assinatura": assinatura,
-        "vazio": vazio,
     }
 
 
@@ -453,7 +481,6 @@ def _alcance_da_ordem(edital, conteudo, perfil, marco):
                     else f"{com_posicao} com posição, {sem_posicao} sem posição"
                 ),
                 assinatura=assinatura_da_proposta(proposta, ato_vigente=None),
-                vazio=vazio,
             )
         )
     return itens
@@ -488,7 +515,6 @@ def _alcance_do_corte(edital, conteudo, perfil, marco):
                 PRATICAR,
                 resumo=f"{proposta['progrediram']} na faixa, {proposta['fora']} fora dela",
                 assinatura=assinatura_do_corte(proposta, geracao=[]),
-                vazio=not proposta["itens"],
             )
         )
     return itens
@@ -618,11 +644,7 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
             )
             continue
         sucede = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
-        if (
-            sucede is not None
-            and sucede.natureza == Natureza.DEFINITIVA
-            and natureza == Natureza.PRELIMINAR
-        ):
+        if natureza_regride(sucede, natureza):
             itens.append(
                 _item(
                     lista_id,
@@ -667,7 +689,6 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
                 assinatura=assinatura_da_previa(
                     ato=ato, publicacao_anterior=sucede, projecao=projecao
                 ),
-                vazio=not projecao["situacoes"],
                 com_declaracao=com_declaracao,
             )
         )
@@ -693,6 +714,30 @@ def chave_do_recorte(chave, operacao, lista_id):
 def correlacao_do_gesto(chave):
     """O que liga os N atos de um gesto na trilha (`FR-825`)."""
     return f"gesto-{chave}"
+
+
+RECORTE_AUSENTE = (
+    "Este recorte já não é do marco na norma vigente — uma Retificação o retirou depois da "
+    "conferência. Nada foi praticado nele."
+)
+
+
+def recortes_ausentes(campos):
+    """Os pedidos que a derivação de agora não conhece, como desfechos recusados (`FR-824`).
+
+    Nada é praticado neles, e o gesto segue nos demais: a recusa de um não pode deixar os outros
+    sem ato, que é a mesma promessa da `FR-823` vista pelo lado do formulário.
+    """
+    return [
+        {
+            "lista_id": campo,
+            "rotulo": "Recorte retirado do marco",
+            "feito": False,
+            "razao": RECORTE_AUSENTE,
+            "url": "",
+        }
+        for campo in campos
+    ]
 
 
 def praticar(
@@ -918,9 +963,9 @@ __all__ = [
     "correlacao_do_gesto",
     "exige_declaracao",
     "indicador_do_marco",
-    "lista_do_formulario",
     "marco_publicado",
     "praticar",
+    "recortes_ausentes",
     "recortes_do_marco",
     "resumo_dos_marcos",
     "verbo_da_confirmacao",

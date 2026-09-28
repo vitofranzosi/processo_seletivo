@@ -6116,16 +6116,12 @@ def _marco_publicado(edital, marco_id):
 
     Devolver em vez de recusar porque nem todo chamador quer 404: a tela do marco removido existe
     justamente para o marco que a norma vigente já não conhece (`015`, `E2E15-010`).
-    """
-    from processo_seletivo.publicacoes.application.selectors import effective_version
 
-    conteudo = effective_version(edital_id=edital.id).content
-    alvo = str(marco_id)
-    for perfil in conteudo.get("profiles") or []:
-        for marco in perfil.get("classificationMilestones") or []:
-            if str(marco.get("id")) == alvo:
-                return perfil, marco
-    return None, None
+    **A busca mora em `conducao_do_marco.marco_publicado`** (049): a tela do marco precisava da
+    mesma pergunta com o conteúdo junto, e duas varreduras iguais divergiriam na primeira mudança.
+    """
+    _, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    return perfil, marco_publicado
 
 
 def _e_marco_de_sorteio(edital, marco_id):
@@ -7200,9 +7196,11 @@ def _naturezas_oferecidas(sucede):
     existência de uma preliminar inventaria uma etapa que o Edital não declarou. O que se retira é
     a `PRELIMINAR` depois de uma definitiva — a ordem entre naturezas tem sentido único (D-007).
     """
-    if sucede is not None and sucede.natureza == Natureza.DEFINITIVA:
-        return [(Natureza.DEFINITIVA.value, Natureza.DEFINITIVA.label)]
-    return [(valor, rotulo) for valor, rotulo in Natureza.choices]
+    from processo_seletivo.divulgacao.domain.publicabilidade import natureza_regride
+
+    return [
+        (valor, rotulo) for valor, rotulo in Natureza.choices if not natureza_regride(sucede, valor)
+    ]
 
 
 @require_http_methods(["POST"])
@@ -7331,10 +7329,28 @@ def _marco_do_edital(edital, marco_id):
     O marco que uma Retificação removeu não tem recortes a operar: os atos dele continuam nas telas
     de histórico de hoje, que o alcançam pela identidade gravada.
     """
-    conteudo, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    try:
+        conteudo, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    except DomainError as recusa:
+        # Edital sem versão publicada: não há marco a conduzir, e o 404 é o do objeto que falta.
+        raise Http404 from recusa
     if marco_publicado is None:
         raise Http404
     return conteudo, perfil, marco_publicado
+
+
+def _chave_do_gesto(pedida):
+    """A chave que a conferência gerou — 32 dígitos hexadecimais — ou uma nova.
+
+    **A forma é conferida porque ela vira coluna.** A chave de cada recorte e a correlação da trilha
+    são derivadas dela, e têm limite de tamanho: uma chave longa vinda de um formulário adulterado
+    estourava a coluna no meio do laço, com `DataError`, que não é recusa de domínio — o gesto
+    parava em 500 depois de gravar parte dos recortes, e o desfecho não chegava à tela. Uma chave
+    nova perde a idempotência só de quem a adulterou; os comandos continuam recusando o que já foi
+    feito.
+    """
+    pedida = (pedida or "").strip()
+    return pedida if re.fullmatch(r"[0-9a-f]{32}", pedida) else uuid4().hex
 
 
 def _chave_do_desfecho(marco_id):
@@ -7439,24 +7455,31 @@ def marco(request, edital_id, marco_id):
 
 
 def _itens_confirmados(request, conteudo, perfil):
-    """Os recortes que o formulário devolveu, **na ordem da derivação**, cada um com a assinatura.
+    """Os recortes que o formulário devolveu, **na ordem da derivação**, e os que deixaram de ser.
 
-    Só o que a conferência mostrou volta aqui (`SC-303`), e o que não for recorte do marco pela
-    derivação única é 404 **antes de praticar qualquer um**: um recorte forjado no formulário
-    recusaria o gesto no meio, depois de metade dele gravada, e a recusa do que foi pedido errado
-    não pode deixar trabalho pela metade.
+    Devolve `(itens, ausentes)`: os recortes do marco pedidos, cada um com a assinatura, e os
+    identificadores pedidos que a derivação de agora já não conhece.
+
+    **Só o que a conferência mostrou é praticado** (`SC-303`), e o que não é recorte do marco
+    **agora** nunca é praticado. Ele não derruba o gesto: entre a conferência e o clique, uma
+    Retificação pode ter retirado uma Modalidade, e o 404 do gesto inteiro deixava sem ato os
+    recortes que continuavam válidos, com um "não encontrado" que não explicava nada. O ausente
+    volta como recusado, com a razão. O que nem identidade é continua 404: não é recorte de marco
+    nenhum, e não há recusa a nomear.
     """
     derivados = conducao_do_marco.recortes_do_marco(conteudo, perfil)
-    pedidos = set(request.POST.getlist("recorte"))
+    pedidos = []
+    for valor in request.POST.getlist("recorte"):
+        campo = valor if valor == conducao_do_marco.AMPLA else _identidade_ou_404(valor)
+        if campo not in pedidos:
+            pedidos.append(campo)
     validos = {conducao_do_marco.lista_para_o_formulario(lista) for lista, _ in derivados}
-    if not pedidos <= validos:
-        raise Http404
-    itens = []
-    for lista, rotulo in derivados:
-        campo = conducao_do_marco.lista_para_o_formulario(lista)
-        if campo in pedidos:
-            itens.append((lista, rotulo, request.POST.get(f"assinatura_{campo}", "")))
-    return itens
+    itens = [
+        (lista, rotulo, request.POST.get(f"assinatura_{campo}", ""))
+        for lista, rotulo in derivados
+        if (campo := conducao_do_marco.lista_para_o_formulario(lista)) in pedidos
+    ]
+    return itens, [campo for campo in pedidos if campo not in validos]
 
 
 @require_http_methods(["POST"])
@@ -7537,15 +7560,15 @@ def gesto_do_marco(request, edital_id, marco_id, operacao):
             )
         )
 
-    itens = _itens_confirmados(request, conteudo, perfil)
-    desfechos = conducao_do_marco.praticar(
+    itens, ausentes = _itens_confirmados(request, conteudo, perfil)
+    desfechos = conducao_do_marco.recortes_ausentes(ausentes) + conducao_do_marco.praticar(
         ator=ator,
         edital=edital,
         perfil=perfil,
         marco=marco_publicado,
         operacao=operacao,
         itens=itens,
-        chave=request.POST.get("chave") or uuid4().hex,
+        chave=_chave_do_gesto(request.POST.get("chave")),
         natureza=natureza,
         autoridade=autoridade,
         declaracao=request.POST.get("declaracao_de_encerramento", ""),

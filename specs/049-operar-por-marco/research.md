@@ -46,8 +46,10 @@ recorte compõe hoje:
 | Apuração | **nova**, no coordenador — ver `R-4` | o coordenador, sob a trava |
 
 O formulário da confirmação carrega um par *(recorte, assinatura)* por recorte do alcance, e só esses
-recortes são praticados (`SC-303`). Um recorte que o formulário traga e que não seja recorte do marco
-pela derivação única é recusado com 404, como na tela de hoje (`normalizar_recorte`).
+recortes são praticados (`SC-303`). Um recorte que o formulário traga e que já não seja recorte do
+marco pela derivação única não é praticado: volta no desfecho como recusado, com a razão, e o gesto
+segue nos demais. *Revisto no code review de 28/09: a primeira versão respondia 404 ao gesto inteiro,
+e uma Retificação entre a conferência e o clique deixava sem ato os recortes que continuavam válidos.*
 
 **Por quê.** As três assinaturas já existem e já cobrem o mundo que muda entre ler e confirmar (a
 ordem, o ato vigente, a geração, a cadeia de publicações). Recompô-las no coordenador seria uma

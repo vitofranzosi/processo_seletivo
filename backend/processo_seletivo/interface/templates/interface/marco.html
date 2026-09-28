@@ -31,7 +31,7 @@ uma vez, e o indicador é a verdade que sobrevive a ela (`FR-823`, `FR-824`).
   <h2 id="desfecho-titulo">{{ desfecho.nome }}: {{ desfecho.feitos }} feito{{ desfecho.feitos|pluralize }}, {{ desfecho.recusados }} recusado{{ desfecho.recusados|pluralize }}</h2>
   <ul>
     {% for item in desfecho.itens %}
-    <li>{% if item.feito %}<strong>Feito</strong> — {{ item.rotulo }}. <a href="{{ item.url }}">Ver o ato</a>{% else %}<strong>Recusado</strong> — {{ item.rotulo }}: {{ item.razao }} <a href="{{ item.url }}">Abrir este recorte</a>{% endif %}</li>
+    <li>{% if item.feito %}<strong>Feito</strong> — {{ item.rotulo }}. <a href="{{ item.url }}">Ver o ato</a>{% else %}<strong>Recusado</strong> — {{ item.rotulo }}: {{ item.razao }}{% if item.url %} <a href="{{ item.url }}">Abrir este recorte</a>{% endif %}{% endif %}</li>
     {% endfor %}
   </ul>
 </section>

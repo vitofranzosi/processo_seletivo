@@ -31,8 +31,9 @@ volta com a recusa.
 
 Para cada `recorte` do formulário, na ordem da derivação:
 
-1. o recorte é normalizado pela derivação única; o que não for recorte do marco é 404 (o gesto
-   inteiro, antes de praticar qualquer um);
+1. o recorte é conferido contra a derivação única de agora: o que não é identidade é 404; o que é
+   identidade e não é mais recorte do marco — uma Retificação o retirou depois da conferência —
+   volta no desfecho como recusado, sem nada praticado nele, e o gesto segue nos demais;
 2. o comando é chamado com a chave `marco:<chave>:<operacao>:<recorte>`, o `correlation_id`
    `gesto-<chave>`, a assinatura do recorte e motivo vazio;
 3. `DomainError` vira desfecho `recusado` com `detail`; sucesso vira `feito`.
@@ -56,6 +57,7 @@ Cada marco do bloco de marcos classificatórios ganha:
 
 | Situação | Onde | Frase |
 |---|---|---|
+| Processo em estado final (ordenar, cortar, apurar) | conferência | a frase de `ensure_processo_accepts_changes` |
 | Alcance vazio | conferência | *"Não há recorte a praticar neste marco."* e os grupos *fora* e *impedidos* |
 | Marco de sorteio, `ordenar` | conferência | *"A ordem deste marco nasce do sorteio público…"* (a do domínio) |
 | Marco sem regra de corte, `cortar` | conferência | *"Este marco não declara regra de corte."* |

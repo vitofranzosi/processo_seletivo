@@ -179,6 +179,12 @@ def test_ordem_obsoleta_nao_e_contada_como_feita(client, cenario, gestor, monkey
     """`FR-811`, `FR-814`: obsoleto não é feito, e o marco não fica completo com ele."""
     edital, _ = cenario
     emitir_recorte(edital, gestor, chave="marco-049-obsoleta")
+    # **O mapeamento da célula, e não a obsolescência em si**: esta, a Supervisão já prova, e o
+    # teste do corte e da apuração abaixo a exercita sem substituição. O filtro barato é substituído
+    # junto porque é ele que decide se o recálculo chega a ser pedido.
+    from processo_seletivo.interface import supervisao
+
+    monkeypatch.setattr(supervisao, "candidato_a_obsoleto", lambda *_: True)
     monkeypatch.setattr(
         conducao_do_marco,
         "estado_do_marco",
@@ -445,8 +451,12 @@ def test_depois_de_parar_no_meio_a_conferencia_so_traz_o_que_falta(client, cenar
     assert "Emitir 2 ordens" in seguinte
 
 
-def test_recorte_forjado_e_404_antes_de_praticar_qualquer_um(client, cenario):
-    """`SC-303`: o que não é recorte do marco recusa o gesto inteiro, e nada é gravado."""
+def test_recorte_que_o_marco_nao_tem_nao_e_praticado_e_os_outros_sao(client, cenario):
+    """`SC-303`, e o review de 28/09: o recorte ausente é recusado, e não derruba o gesto inteiro.
+
+    É o caso da Retificação que retira uma Modalidade entre a conferência e o clique — e o do
+    formulário adulterado. Nos dois, nada é praticado no ausente, e os válidos recebem o ato.
+    """
     edital, _ = cenario
     gerir(client)
     pagina = conferir(client, edital, "ordenar").content.decode()
@@ -457,7 +467,58 @@ def test_recorte_forjado_e_404_antes_de_praticar_qualquer_um(client, cenario):
         reverse("interface:gesto-do-marco", args=[edital.id, MARCO, "ordenar"]), dados
     )
 
+    assert resposta.status_code == 302
+    assert AtoDeOrdenacao.objects.filter(edital=edital).count() == 3
+    assert not AtoDeOrdenacao.objects.filter(
+        lista_id="00000000-0000-4000-8000-000000000888"
+    ).exists()
+    marco = tela(client, edital).content.decode()
+    assert "3 feitos, 1 recusado" in marco
+    assert "Recorte retirado do marco" in marco
+
+
+def test_o_que_nem_identidade_e_continua_404(client, cenario):
+    edital, _ = cenario
+    gerir(client)
+    pagina = conferir(client, edital, "ordenar").content.decode()
+    dados = formulario_da_confirmacao(pagina)
+    dados["recorte"].append("nao-e-uuid")
+
+    resposta = client.post(
+        reverse("interface:gesto-do-marco", args=[edital.id, MARCO, "ordenar"]), dados
+    )
+
     assert resposta.status_code == 404
+    assert not AtoDeOrdenacao.objects.filter(edital=edital).exists()
+
+
+def test_chave_adulterada_nao_derruba_o_gesto(client, cenario):
+    """Review de 28/09: a chave vira coluna, e uma longa estourava no meio do laço com 500."""
+    edital, _ = cenario
+    gerir(client)
+    pagina = conferir(client, edital, "ordenar").content.decode()
+
+    resposta = confirmar(client, edital, "ordenar", pagina, chave="x" * 200)
+
+    assert resposta.status_code == 302
+    assert AtoDeOrdenacao.objects.filter(edital=edital).count() == 3
+    assert "3 feitos, 0 recusados" in tela(client, edital).content.decode()
+
+
+def test_processo_em_estado_final_recusa_na_conferencia(client, cenario):
+    """Review de 28/09: a recusa do marco inteiro é dita antes, e não em N recusas iguais."""
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    edital, _ = cenario
+    ProcessoSeletivo.objects.filter(pk=edital.processo_id).update(
+        status=ProcessoSeletivo.Status.ENCERRADO
+    )
+    gerir(client)
+
+    resposta = conferir(client, edital, "ordenar")
+
+    assert resposta.status_code == 302
+    assert "estado final" in tela(client, edital).content.decode()
     assert not AtoDeOrdenacao.objects.filter(edital=edital).exists()
 
 
@@ -748,3 +809,39 @@ def test_onde_nada_falta_o_gesto_nao_e_oferecido(client, cenario):
 
     assert "Ordenar o marco…" not in pagina
     assert "Cortar o marco…" in pagina and "Apurar a ocupação do marco…" in pagina
+
+
+def test_corte_e_apuracao_envelhecem_quando_a_ordem_e_sucedida(client, cenario, gestor):
+    """`FR-811` sem monkeypatch: suceder a ordem da ampla envelhece o corte e a apuração dela."""
+    edital, _ = cenario
+    ordenar_tudo(client, edital)
+    confirmar(client, edital, "cortar", conferir(client, edital, "cortar").content.decode())
+    confirmar(client, edital, "apurar", conferir(client, edital, "apurar").content.decode())
+
+    emitir_recorte(edital, gestor, chave="marco-049-envelhece", motivo="Recurso deferido.")
+
+    pagina = tela(client, edital).content.decode()
+    assert estados(pagina, "cortar") == ["obsoleto", "feito", "feito"]
+    assert estados(pagina, "apurar") == ["obsoleto", "feito", "feito"]
+
+
+def test_recorte_sem_quadro_nao_conta_como_falta_na_apuracao(client, cenario, monkeypatch):
+    """Review de 28/09: sem linha no quadro não há o que apurar, e o marco pode ficar completo."""
+    edital, _ = cenario
+    ordenar_tudo(client, edital)
+    original = conducao_do_marco.linha_do_quadro
+
+    def sem_linha_para_o_ppi(conteudo, *, perfil_id, lista_id):
+        if lista_id == MODALIDADE_PPI:
+            return None
+        return original(conteudo, perfil_id=perfil_id, lista_id=lista_id)
+
+    monkeypatch.setattr(conducao_do_marco, "linha_do_quadro", sem_linha_para_o_ppi)
+    confirmar(client, edital, "apurar", conferir(client, edital, "apurar").content.decode())
+
+    pagina = tela(client, edital).content.decode()
+
+    assert estados(pagina, "apurar") == ["feito", "feito", "nao_se_aplica"]
+    assert "sem quadro de vagas publicado" in pagina
+    assert "apuração 2 de 2" in pagina
+    assert "Apurar a ocupação do marco…" not in pagina

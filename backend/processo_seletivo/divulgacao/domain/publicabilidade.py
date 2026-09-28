@@ -190,6 +190,22 @@ AVISO_DE_SUCESSAO = (
 )
 
 
+def natureza_regride(anterior, natureza):
+    """Se publicar `natureza` sobre a publicação `anterior` inverteria a ordem das naturezas.
+
+    **A ordem tem sentido único** (017, `D-007`): um resultado preliminar não sucede um definitivo.
+    A pergunta vivia escrita três vezes — no comando, nas naturezas que a prévia oferece e no gesto
+    por marco da `049` —, e três cópias de uma regra de domínio divergem na primeira que mudar.
+    """
+    from processo_seletivo.divulgacao.models import Natureza
+
+    return (
+        anterior is not None
+        and anterior.natureza == Natureza.DEFINITIVA
+        and str(natureza) == Natureza.PRELIMINAR
+    )
+
+
 def reingressos_pendentes(*, edital, marco, at=None):
     """As inscrições reabilitadas por recurso e ainda sem Resultado numa Etapa que o marco enumera.
 
@@ -487,6 +503,7 @@ def _janela_aberta(*, edital, marco_id, marco, at, lista_id=None):
 
 
 __all__ = [
+    "natureza_regride",
     "ADMITE_SUCESSOR",
     "AVISO",
     "Afericao",
