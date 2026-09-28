@@ -56,7 +56,8 @@ def conteudo_na_versao(versao):
 
 def test_o_degrau_9_existe_nos_dois_niveis_e_grafa_a_ausencia():
     assert DEGRAUS_DA_RAIZ[9] == {"attachments": []}
-    assert DEGRAUS_DE_DOCUMENTO == {9: {"attachmentId": None}}
+    # `[9]`, e não a tabela inteira: o degrau 17 chegou com a `044`, e este teste é sobre o **9**.
+    assert DEGRAUS_DE_DOCUMENTO[9] == {"attachmentId": None}
     # `>=`, e não `==`: o degrau 10 chegou com a 021, e este teste é sobre o **9** continuar
     # convertendo o que converte. É a mesma relaxação que o teste do degrau 8 fez quando o 9
     # nasceu — travar a versão vigente aqui faria cada degrau novo reprovar o anterior.

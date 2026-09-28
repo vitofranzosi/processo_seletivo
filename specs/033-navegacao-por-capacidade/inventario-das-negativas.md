@@ -130,6 +130,8 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 2085 | `fragmento_etapa` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2161 | `fragmento_retificacao_linha_do_quadro` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2164 | `fragmento_retificacao_linha_do_quadro` | sim | não | objeto inexistente | Edital sem versão base — ausência de conteúdo |
+| 2667 | `fragmento_retificacao_criterio` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo, e o Edital sem versão base não tem conteúdo — mesma porta da linha do quadro (048) |
+| 2646 | `fragmento_retificacao_modalidade` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo, e o Edital sem versão base não tem conteúdo — mesma porta da linha do quadro (048) |
 | 2200 | `fragmento_remover` | sim | não | objeto inexistente | alvo de remoção fora do formato da rota |
 | 2239 | `_edital_com_previa` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
 | 2343 | `detalhe` | sim | não | escopo institucional ∪ inexistente | `obter_edital` filtra por escopo |
@@ -187,6 +189,10 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7211 | `realizar_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 7243 | `anular_o_sorteio` | sim | não | propagação de 404 do domínio | idem |
 | 5105 | `_recorte_pedido` | sim | não | objeto inexistente | **acrescentada pela `034`** — `?lista=` que não corresponde a Modalidade alguma do Perfil (`FR-499`). Recorte inexistente e recorte vazio são coisas diferentes: confundi-los esconde erro de digitação, e a `FR-492a` fez da ordem vazia um estado legítimo justamente para que a distinção exista. Não é escopo nem autorização — a porta do Edital já filtrou os dois antes |
+| 1961 | `fragmento_perfil_duplicado` | sim | não | objeto inexistente | **acrescentada pela `043`** — pedido sem o parâmetro `edital`: não há Edital de que duplicar. O escopo vem **depois**, por `_edital_do_fragmento` (404, como a tela), e a autorização por `pode_compor`, que responde **403** — quem alcança o Edital e não o compõe já sabe que ele existe (`043`, R-006) |
+| 6587 | `convocacao` | sim | não | objeto inexistente | **acrescentada pelo passo 0 da ordem de 27/09** — o 404 é o de `_recorte_pedido`, que a tela passou a usar no lugar de `_identidade_ou_404`: `?lista=` que não corresponde a Modalidade alguma do Perfil respondia 200, com a tela vazia de um recorte que não existe (`034`, `FR-499`; `doc/achado-convocacao-nao-normaliza-o-recorte.md`). A porta do Edital já filtrou escopo e autorização antes |
+| 6664 | `convocacao_historico` | sim | não | objeto inexistente | idem, **só quando não há série gravada** para a identidade pedida: a série antiga continua acessível depois de uma Retificação que remova a Modalidade, como o `ocupacao-historico` com o marco removido |
+| 6714 | `convocar_view` | sim | não | objeto inexistente | idem — o comando, que o formulário antigo alcança sem passar pela tela, como na emissão da ordem |
 
 ---
 

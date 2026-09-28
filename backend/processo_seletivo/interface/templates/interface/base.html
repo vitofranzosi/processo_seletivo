@@ -578,6 +578,8 @@ tbody tr:has(input[type=radio]:checked){background:var(--verde-claro)}
 .pendencias ul{margin:0;padding-left:0;list-style:none}
 .pendencias li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
 .pendencias li:last-child{border-bottom:none}
+.pendencias details.repetidas>summary{cursor:pointer}
+.pendencias details.repetidas>ul{margin:.35rem 0 0 1.25rem}
 .marcador{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;
   padding:.1rem .45rem;border-radius:3px;margin-right:.5rem;letter-spacing:.03em}
 .p-erro .marcador{background:var(--vermelho-fundo);color:var(--vermelho)}
@@ -882,6 +884,10 @@ ul.documentos>li>*:first-child{padding-left:1rem;overflow-wrap:anywhere}
 ul.documentos>li>*:last-child{padding-right:1rem}
 ul.documentos>li:last-child>*{border-bottom:0}
 ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
+/* A instrução do Edital embaixo do nome, e não em coluna própria: ela é a condição do requisito, e
+   quem percorre a lista a lê junto dele. */
+ul.documentos .requisito{flex-direction:column;align-items:flex-start;gap:.15rem}
+ul.documentos .instrucao{font-size:.8125rem;color:var(--texto-fraco)}
 @media (max-width:34rem){
   ul.documentos{grid-template-columns:minmax(0,1fr) auto}
   ul.documentos .modelo{grid-column:1/-1;padding:0 1rem}
@@ -1043,7 +1049,8 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
 fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
 fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
 fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
-fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada{
+fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada,
+fieldset.marco:has(select[name$="-cutTargetKind"] option[value="FIXED"]:not(:checked)) .so-fixo{
   display:none}
 /* ── Retificação de Edital publicado ───────────────────────────────────────────────────────────
    Um Edital institucional rende sessenta linhas editáveis e vários metros de rolagem. Tudo aqui
@@ -1079,7 +1086,8 @@ fieldset.linha>legend .nome{font-size:.9375rem;text-transform:none;letter-spacin
 
 /* A linha que ainda **não** integra o Edital tem a borda tracejada: ela é uma proposta dentro de
    um formulário cheio de conteúdo vigente, e nada a distinguia dos cartões que já valem. */
-fieldset.linha.perfil-novo,fieldset.linha.evento-novo,fieldset.linha.anexo-novo{
+fieldset.linha.perfil-novo,fieldset.linha.evento-novo,fieldset.linha.anexo-novo,
+fieldset.linha.criterio-novo,fieldset.linha.modalidade-nova{
   border-style:dashed}
 /* Modalidade, Fato, Marco e Critério pertencem ao Perfil imediatamente acima. Na lista plana eram
    irmãos dele, e descobrir de quem era cada um exigia ler o sufixo do nome. */

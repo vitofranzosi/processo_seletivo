@@ -108,6 +108,12 @@ urlpatterns = [
         views.fragmento_modalidade,
         name="fragmento-modalidade",
     ),
+    # Duplicar lê o Perfil de índice `indice` da tela e devolve outro (043).
+    path(
+        "fragmentos/perfil/<str:indice>/duplicar",
+        views.fragmento_perfil_duplicado,
+        name="fragmento-perfil-duplicado",
+    ),
     path(
         "fragmentos/perfil/<str:indice>/quadro",
         views.fragmento_quadro,
@@ -158,6 +164,18 @@ urlpatterns = [
         "fragmentos/retificacao/<uuid:edital_id>/linha-do-quadro",
         views.fragmento_retificacao_linha_do_quadro,
         name="fragmento-retificacao-linha-do-quadro",
+    ),
+    # A Modalidade acrescentada (048), escopada ao Edital pela mesma razão.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/modalidade",
+        views.fragmento_retificacao_modalidade,
+        name="fragmento-retificacao-modalidade",
+    ),
+    # O critério de desempate acrescentado (048), escopado ao Edital pela mesma razão.
+    path(
+        "fragmentos/retificacao/<uuid:edital_id>/criterio",
+        views.fragmento_retificacao_criterio,
+        name="fragmento-retificacao-criterio",
     ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já

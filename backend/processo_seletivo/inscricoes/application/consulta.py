@@ -15,7 +15,19 @@ from uuid import UUID
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 
-from processo_seletivo.inscricoes.application.rascunho import requisitos_da_inscricao
+from processo_seletivo.editais.domain.documentos import (
+    NAO_SE_APLICA,
+    OBRIGATORIO,
+    aplicabilidade,
+    razao_legivel,
+)
+from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida, listas_exigidas
+from processo_seletivo.inscricoes.application.rascunho import (
+    NOME_DA_AMPLA,
+    nome_da_modalidade,
+    o_nulo_e_a_ampla,
+    requisitos_da_inscricao,
+)
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
@@ -45,15 +57,15 @@ def _nome_no_conteudo(conteudo, inscricao):
         ),
         {},
     )
-    modalidade = next(
-        (
-            item.get("name", "")
-            for item in perfil.get("competitionModalities") or []
-            if str(item.get("id")) == str(inscricao.modality_id)
-        ),
-        "",
+    return perfil.get("name", ""), nome_da_modalidade(
+        conteudo, inscricao.profile_id, inscricao.modality_id
     )
-    return perfil.get("name", ""), modalidade
+
+
+# O filtro da ampla sem Modalidade leva o Perfil junto: o recorte nulo existe em todo Perfil, e só
+# nomeia a ampla onde ela é uma das opções. Sem o Perfil, o filtro juntaria a ampla de um com a
+# escolha por fazer de outro.
+PREFIXO_DA_AMPLA = "ampla:"
 
 
 POR_PAGINA = 25
@@ -84,7 +96,13 @@ def consulta_de_inscricoes(
     vigente = selectors.selecao_publica(edital_id=edital.id)
     consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
     contagens = _contagens(edital, vigente)
-    filtrada = _filtrar(consulta, busca=busca, perfil=perfil, modalidade=modalidade)
+    filtrada = _filtrar(
+        consulta,
+        busca=busca,
+        perfil=perfil,
+        modalidade=modalidade,
+        conteudo=vigente.content if vigente is not None else {},
+    )
     recebidas = _pagina(filtrada.filter(status=Inscricao.Status.SUBMETIDA), pagina)
     rascunhos = _pagina(filtrada.filter(status=Inscricao.Status.RASCUNHO), pagina_rascunhos)
     # Uma vez por requisição, e não uma por seção: a coincidência é do Edital inteiro, e as duas
@@ -131,7 +149,7 @@ def _identificador(valor):
         return None
 
 
-def _filtrar(consulta, *, busca, perfil, modalidade):
+def _filtrar(consulta, *, busca, perfil, modalidade, conteudo=None):
     """Perfil e modalidade por identificador, e não por nome.
 
     A denominação vive no conteúdo publicado, e não em coluna: filtrar por ela exigiria varrer o
@@ -141,7 +159,16 @@ def _filtrar(consulta, *, busca, perfil, modalidade):
     """
     if perfil and (identificador := _identificador(perfil)) is not None:
         consulta = consulta.filter(profile_id=identificador)
-    if modalidade and (identificador := _identificador(modalidade)) is not None:
+    if modalidade and str(modalidade).startswith(PREFIXO_DA_AMPLA):
+        # A ampla sem Modalidade é o nulo **daquele Perfil** (A-14.3; FR-067), e só onde a regra
+        # que gera a opção o reconhece como ampla (`o_nulo_e_a_ampla`). Sem a conferência, um
+        # endereço forjado para o Perfil de duas cotas sem vaga na linha geral listaria como ampla
+        # os rascunhos com a escolha por fazer. O que não passa não filtra, como o identificador
+        # que não é UUID (`_identificador`).
+        identificador = _identificador(modalidade[len(PREFIXO_DA_AMPLA) :])
+        if identificador is not None and o_nulo_e_a_ampla(conteudo or {}, identificador):
+            consulta = consulta.filter(profile_id=identificador, modality_id__isnull=True)
+    elif modalidade and (identificador := _identificador(modalidade)) is not None:
         consulta = consulta.filter(modality_id=identificador)
     texto = (busca or "").strip()
     if texto:
@@ -183,6 +210,15 @@ def _contagens(edital, vigente):
 
     por_perfil = agrupar("profile_id")
     por_modalidade = agrupar("modality_id")
+    # O nulo, por Perfil: é a ampla sem Modalidade, que a contagem por `modality_id` descartava
+    # junto com o `None` (A-14.3; FR-067).
+    nulas_por_perfil = {
+        str(identificador): quantas
+        for identificador, quantas in enviadas.filter(modality_id__isnull=True)
+        .values_list("profile_id")
+        .annotate(quantas=Count("id"))
+        .values_list("profile_id", "quantas")
+    }
     return {
         "total": totais["recebidas"],
         "total_rascunhos": totais["rascunhos"],
@@ -197,16 +233,39 @@ def _contagens(edital, vigente):
             for perfil in perfis
         ],
         "por_modalidade": [
-            {
-                "id": str(modalidade.get("id")),
-                "nome": modalidade.get("name", ""),
-                "perfil": perfil.get("name", ""),
-                "quantas": por_modalidade.get(str(modalidade.get("id")), 0),
-            }
+            opcao
             for perfil in perfis
-            for modalidade in perfil.get("competitionModalities") or []
+            for opcao in _opcoes_de_concorrencia(conteudo, perfil, por_modalidade, nulas_por_perfil)
         ],
     }
+
+
+def _opcoes_de_concorrencia(conteudo, perfil, por_modalidade, nulas_por_perfil):
+    """As opções de concorrência do Perfil como o candidato as viu, a ampla sem Modalidade à frente.
+
+    A mesma regra que nomeia a inscrição (`o_nulo_e_a_ampla`): onde o nulo é a ampla — no Perfil sem
+    Modalidade, ou no que a oferece ao lado das cotas —, ele é contado e filtrável; onde é escolha
+    por fazer, não vira opção.
+    """
+    identificador = str(perfil.get("id"))
+    opcoes = [
+        {
+            "id": str(modalidade.get("id")),
+            "nome": modalidade.get("name", ""),
+            "perfil": perfil.get("name", ""),
+            "quantas": por_modalidade.get(str(modalidade.get("id")), 0),
+        }
+        for modalidade in perfil.get("competitionModalities") or []
+    ]
+    if o_nulo_e_a_ampla(conteudo, identificador):
+        ampla = {
+            "id": f"{PREFIXO_DA_AMPLA}{identificador}",
+            "nome": NOME_DA_AMPLA,
+            "perfil": perfil.get("name", ""),
+            "quantas": nulas_por_perfil.get(identificador, 0),
+        }
+        opcoes = [ampla, *opcoes]
+    return opcoes
 
 
 def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
@@ -229,6 +288,12 @@ def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
         enviados.setdefault(documento.inscricao_id, set()).add(str(documento.requirement_id))
     if coincidentes is None:
         coincidentes = _cpfs_coincidentes(edital)
+    # As listas exigidas das inscrições **enviadas** desta página, numa consulta só (044, FR-719,
+    # R-006). O rascunho continua recalculando sobre a vigente: ele ainda não pediu nada a ninguém.
+    enviadas = [
+        inscricao for inscricao in inscricoes if inscricao.status == Inscricao.Status.SUBMETIDA
+    ]
+    listas = listas_exigidas(enviadas, lambda inscricao: _conteudo_da_inscricao(inscricao, vigente))
     linhas = []
     for inscricao in inscricoes:
         # **A versão de cada inscrição, e não a vigente para todas.** Uma inscrição enviada
@@ -237,11 +302,18 @@ def _linhas(edital, inscricoes, *, vigente=None, coincidentes=None):
         # reescrito na tela de quem confere (princípio II).
         conteudo = _conteudo_da_inscricao(inscricao, vigente)
         perfil, modalidade = _nome_no_conteudo(conteudo, inscricao)
-        obrigatorios = [
-            str(requisito["id"])
-            for requisito in requisitos_da_inscricao(conteudo, inscricao)
-            if requisito.get("required", True)
-        ]
+        if inscricao.pk in listas:
+            obrigatorios = [
+                str(veredito.requisito["id"])
+                for veredito in listas[inscricao.pk].itens
+                if veredito.situacao == OBRIGATORIO
+            ]
+        else:
+            obrigatorios = [
+                str(requisito["id"])
+                for requisito in requisitos_da_inscricao(conteudo, inscricao)
+                if requisito.get("required", True)
+            ]
         recebidos = enviados.get(inscricao.id, set())
         linhas.append(
             {
@@ -319,22 +391,54 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         str(documento.requirement_id): documento
         for documento in DocumentoSubmetido.objects.filter(inscricao=inscricao)
     }
+    # Enviada, a lista é a gravada no envio, com os três estados e a razão (044, FR-719). Em
+    # rascunho, o que a versão vigente pede agora — nada foi pedido ainda.
+    lista = (
+        lista_exigida(inscricao, conteudo)
+        if inscricao.status == Inscricao.Status.SUBMETIDA
+        else None
+    )
+    vereditos = (
+        lista.pedidos
+        if lista is not None
+        else [
+            veredito
+            for veredito in aplicabilidade(
+                conteudo,
+                profile_id=str(inscricao.profile_id),
+                modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
+            )
+            if veredito.situacao != NAO_SE_APLICA
+        ]
+    )
     documentos = [
         {
-            "id": str(requisito["id"]),
-            "nome": requisito.get("name", ""),
-            "obrigatorio": requisito.get("required", True),
-            "enviado": enviados.get(str(requisito["id"])),
+            "id": str(veredito.requisito["id"]),
+            "nome": veredito.requisito.get("name", ""),
+            "obrigatorio": veredito.situacao == OBRIGATORIO,
+            "razao": razao_legivel(veredito, conteudo) if lista is not None else "",
+            "enviado": enviados.get(str(veredito.requisito["id"])),
             # O tamanho legível acompanha o nome porque dois arquivos com o mesmo nome quase nunca
             # têm o mesmo tamanho; o resumo, que vem do próprio documento, decide quando têm.
             "tamanho": (
                 None
-                if enviados.get(str(requisito["id"])) is None
-                else tamanho_legivel(enviados[str(requisito["id"])].tamanho)
+                if enviados.get(str(veredito.requisito["id"])) is None
+                else tamanho_legivel(enviados[str(veredito.requisito["id"])].tamanho)
             ),
         }
-        for requisito in requisitos_da_inscricao(conteudo, inscricao)
+        for veredito in vereditos
     ]
+    nao_se_aplicam = (
+        []
+        if lista is None
+        else [
+            {
+                "nome": veredito.requisito.get("name", ""),
+                "razao": razao_legivel(veredito, conteudo),
+            }
+            for veredito in lista.nao_se_aplicam
+        ]
+    )
     return {
         "inscricao": inscricao,
         "perfil": perfil,
@@ -347,6 +451,8 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         "cpf": mascarar_cpf(inscricao.cpf),
         "versao": versao,
         "documentos": documentos,
+        "nao_se_aplicam": nao_se_aplicam,
+        "lista_reconstruida": lista is not None and lista.reconstruida,
         # **O Requerimento de Matrícula, sob a mesma permissão e na mesma tela** (029, `US4`).
         # `None` quando o certame não coleta, e o dossiê não desenha bloco nenhum.
         #

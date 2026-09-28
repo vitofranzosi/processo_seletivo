@@ -36,6 +36,10 @@ from processo_seletivo.editais.domain.calendario import (
     instante_vencido,
     vencido,
 )
+from processo_seletivo.editais.domain.documentos import (
+    perfis_que_o_documento_publicado_alcanca,
+    rotulo_da_modalidade,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
 from processo_seletivo.inscricoes.domain.periodo import (
@@ -181,13 +185,13 @@ EVENTO_PUBLICADO = (
     Campo("location", str),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
-    # `_um_periodo_de_inscricoes`, porque a forma confere um campo por vez.
+    # `_periodo_de_inscricoes`, porque a forma confere um campo por vez.
     Campo("isRegistrationPeriod", bool),
 )
 
-# Os dois identificadores são anuláveis por semântica: `null` é "não restringe". É a ausência
-# deles que produz as quatro combinações de aplicabilidade, e declará-los assim é o que impede
-# uma quinta forma de existir no conteúdo publicado.
+# Os dois identificadores e o código são anuláveis por semântica: `null` é "não restringe". É a
+# ausência deles que produz as cinco formas de aplicabilidade (044), e declará-los assim é o que
+# impede uma sexta forma de existir no conteúdo publicado — nenhum valor especial, nenhum operador.
 DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("key", str),
@@ -201,6 +205,9 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     # do **Anexo**, e nunca a do artefato: o artefato é o que aquela versão diz que o Anexo é, e
     # trocá-lo por Retificação não pode obrigar a reescrever o requisito que o cita.
     Campo("attachmentId", str, admite_nulo=True, formato="uuid"),
+    # O recorte transversal (044): o **código** da Modalidade, em todos os Perfis que a têm. Texto,
+    # e não identidade — é o código que as Modalidades de Perfis diferentes têm em comum.
+    Campo("modalityCode", str, admite_nulo=True),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -1228,6 +1235,77 @@ def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+# A Etapa que não referencia Evento nenhum (045, `FR-739`, `UX-086`). Código **próprio**, e não o
+# `field_constraint_violated` da referência inexistente: `advertencias_do_ato` descarta aviso cujo
+# código coincida com o de um impeditivo, e o invariante da declaração única prende que os dois
+# conjuntos não se cruzem.
+ETAPA_SEM_EVENTO = "stage_without_schedule_event"
+
+
+def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Etapa sem vínculo com o Cronograma — aviso de composição, e nunca recusa.
+
+    **Aviso, porque a ausência é publicável e legítima** (`022`, `FR-026`): a validação recusa a
+    referência a Evento **inexistente** e admite a ausência de referência. Torná-la impeditiva
+    mudaria o que o sistema aceita publicar, e esta feature não decide isso.
+
+    **Era sinal da Atenção, e saiu de lá** (045, `D-003`). Na condução ele apontava para uma
+    Retificação que não alcança o vínculo — `scheduleEventId` é estrutural (`026`) —, e aparecia
+    para sempre, sobre um fato que ninguém podia mudar. Seis dos quinze sinais do gestor, em 20/09.
+    O momento em que a ausência se corrige sem custo é a composição, e é aqui que ela é dita.
+
+    **Só no ato de publicação.** Na Retificação o aviso seria o mesmo beco com outra roupa: o
+    vínculo não se retifica, e a tela da Retificação não o oferece.
+
+    A ausência é dita nesses termos, e **nunca** como atraso, espera ou progresso zero: a Etapa não
+    tem situação temporal a receber (`022`, `UX-001`, cuja regra de apresentação vem para cá).
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    findings = []
+    for posicao, item in enumerate(itens):
+        if not isinstance(item, dict) or item.get("scheduleEventId"):
+            continue
+        caminho = _caminho_da_entidade("stages", item, posicao)
+        # **A Etapa nomeada na própria mensagem** (`UX-086`), e o caminho só no `path`. A convenção
+        # deste módulo é escrever o caminho e deixar a tela trocá-lo pelo nome — mas a submissão
+        # pela API devolve a mensagem crua, e quem a lia recebia "A Etapa … em /stages/id=<uuid>".
+        # O caminho continua inequívoco onde ele serve, no `path`, que é o que a tela usa para
+        # levar à etapa do assistente.
+        nome = str(item.get("name") or "").strip() or f"{posicao + 1}ª"
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                ETAPA_SEM_EVENTO,
+                f"A Etapa «{nome}» não está vinculada a nenhum Evento do Cronograma.",
+                f"{caminho}/scheduleEventId",
+            )
+        )
+    return findings
+
+
+# **Os fatos do conteúdo publicado que continuam ditos depois da publicação** (046, `FR-755`,
+# `D-003`). Por nome, e só por decisão: a `045` levou a Etapa sem Evento da Atenção para a página
+# do Edital (`FR-739`, `UX-086`), e a convergência de 20/09 vetou silenciá-la. Cada entrada é a
+# função que **deriva** o fato, e não um código a filtrar da validação inteira: o Edital publicado
+# não passa pela validação de publicabilidade (`FR-756`), nem para ser filtrado depois. Só entra
+# fato que a Retificação não alcança — quem o lê monta o conteúdo do relacional, que guarda o estado
+# do dia da publicação, e não a versão vigente.
+FATOS_DO_CONTEUDO_PUBLICADO = {ETAPA_SEM_EVENTO: _etapa_sem_evento}
+
+
+def fatos_do_conteudo_publicado(snapshot: dict) -> list[ValidationFinding]:
+    """Os fatos da lista, e nada do juízo de publicabilidade (046, `FR-755`, `FR-756`)."""
+    return [
+        achado
+        for derivar in FATOS_DO_CONTEUDO_PUBLICADO.values()
+        for achado in derivar(snapshot, ato=ATO_DE_PUBLICACAO)
+    ]
+
+
 def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     """Uma passagem, três conferências (FR-020 e FR-022).
 
@@ -1400,6 +1478,7 @@ def validate_for_publication(
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     findings.extend(_topologia_das_secoes(snapshot))
     findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
@@ -1408,6 +1487,8 @@ def validate_for_publication(
     findings.extend(_coerencia_da_forma_da_ordem(snapshot))
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
+    findings.extend(_perfil_sem_corte(snapshot, ato=ato))
+    findings.extend(_etapa_sem_resultado(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
@@ -1703,6 +1784,210 @@ def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+def _quem_exige_o_resultado(snapshot: dict) -> dict:
+    """`{identidade da Etapa: frase do consumidor}` para toda Etapa que um marco referencia.
+
+    **Só declaração publicada, e nenhuma leitura de execução** (046, `D-001`): as três maneiras de
+    um marco consumir o Resultado de uma Etapa — enumerá-la, governá-la pelo corte, ou designá-la
+    Etapa de habilitação do sorteio. A quarta, o caráter eliminatório, é da própria Etapa, e quem a
+    lê é `_etapa_sem_resultado`.
+
+    **O marco de sorteio que enumera Etapa também conta**, embora a ordem dele nasça da semente
+    (`faixa.etapa_governada`): distinguir aqui exigiria ler a forma da ordem, e errar pelo lado que
+    recusa custa a quem compõe retirar a Etapa do marco — que está ao alcance dele.
+
+    **A Etapa decisória enumerada não conta** (RC-114). Ela é porta, e não parcela (015,
+    `FR-074`): a combinação a salta, e quem não tem Resultado nela não é eliminado por ela — o marco
+    posiciona do mesmo jeito. A primeira redação a contava, e recusava dizendo *"ninguém é
+    posicionado"*, o que só é verdade para a pontuada. A pergunta é feita a `e_porta`, a mesma que
+    `combinar` faz, pela razão que `_etapa_sem_resultado` dá para a regra: duas cópias divergem.
+    Governada ou designada para o sorteio, a decisória continua exigida — ali o Resultado ausente
+    deixa, de fato, ninguém convocado ou sorteado.
+    """
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.classificacao.domain.combinacao import e_porta
+
+    publicadas = {
+        str(etapa.get("id")): etapa
+        for etapa in snapshot.get("stages") or []
+        if isinstance(etapa, dict)
+    }
+    exigidas = {}
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            nomeado = _marco_nomeado(marco)
+            for etapa in marco.get("stages") or []:
+                if e_porta(publicadas.get(str(etapa)) or {}):
+                    continue
+                exigidas.setdefault(
+                    str(etapa), f"o marco {nomeado} a enumera, e ninguém é posicionado por ele"
+                )
+            governada = faixa.etapa_governada(marco.get("cutRule"))
+            if governada:
+                exigidas.setdefault(
+                    str(governada),
+                    f"o corte do marco {nomeado} a governa, e ninguém é convocado por ele",
+                )
+            metodo = (
+                marcos.metodo_que_governa(
+                    snapshot, perfil_id=perfil.get("id"), marco_id=marco["id"]
+                )
+                if marco.get("id")
+                else None
+            )
+            habilitacao = (metodo or {}).get("qualifyingStageId")
+            if habilitacao:
+                exigidas.setdefault(
+                    str(habilitacao),
+                    f"o sorteio do marco {nomeado} só admite quem habilitou nela, e ninguém "
+                    "entra na relação",
+                )
+    return exigidas
+
+
+def _etapa_sem_resultado(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Etapa que a consolidação nunca concluirá, sob o fluxo que o Edital publica (046, `FR-746`).
+
+    **A regra não é escrita aqui: é perguntada** (`FR-747`). `impedimento_da_regra` é a função
+    pura que a consolidação aplica — mais de uma avaliação sem regra de combinação; pontuada,
+    eliminatória e sem nota mínima; decisória e não eliminatória —, e a frase que ela devolve é a
+    que a recusa cita. Copiar os três predicados para cá faria as duas respostas divergirem na
+    primeira mudança. A importação é local, como as de `classificacao` e `ocupacao` neste módulo, e
+    não fere a nota de `avaliacoes/domain/formas.py`: esta função não lê forma nem sentido —
+    pergunta a quem lê.
+
+    **Impeditivo só quando o fluxo exige o Resultado** (046, `D-001`). A `013` recusou, em 03/09,
+    *"exigir caráter eliminatório de toda Etapa decisória, proibindo na elaboração o que um Edital
+    poderia legitimamente publicar"* (`FR-047`). A Etapa cujo Resultado nada consome não trava
+    coisa alguma se nunca consolidar, e recebe aviso. A que é eliminatória, ou que um marco
+    referencia, é impossibilidade conhecida no ato de publicar: a primeira seguiria sem eliminar
+    ninguém, a segunda deixaria o marco sem ninguém.
+
+    **Dois códigos, e não um em duas severidades** (046, `R-3`). Na Retificação a família é só
+    advertência (032, `FR-460`), e `advertencias_do_ato` subtrai os códigos que impediriam a
+    publicação: com um código só, a advertência da Retificação sumiria justamente na Etapa exigida.
+    """
+    from processo_seletivo.resultados.domain.regra import eliminatoria, impedimento_da_regra
+
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    exigidas = None
+    findings = []
+    for posicao, etapa in enumerate(itens):
+        if not isinstance(etapa, dict):
+            continue
+        impedimento = impedimento_da_regra(etapa)
+        if impedimento is None:
+            continue
+        _, motivo = impedimento
+        nome = etapa.get("name") or etapa.get("id") or ""
+        caminho = _caminho_da_entidade("stages", etapa, posicao)
+        if exigidas is None:
+            exigidas = _quem_exige_o_resultado(snapshot)
+        consumidor = (
+            "ela é eliminatória, e ninguém é eliminado por ela: o Edital seguiria sem o critério "
+            "que publicou"
+            if eliminatoria(etapa)
+            else exigidas.get(str(etapa.get("id")))
+        )
+        consequencia = f"{consumidor[0].upper()}{consumidor[1:]}" if consumidor else ""
+        if consumidor and ato == ATO_DE_PUBLICACAO:
+            onde = "Corrija-a na etapa Etapas"
+            if not eliminatoria(etapa):
+                onde += ", ou retire-a do marco na etapa Classificação"
+            findings.append(
+                ValidationFinding(
+                    severity=Severity.BLOCKING_ERROR,
+                    code="stage_result_unreachable",
+                    message=(
+                        f"A Etapa '{nome}' não terá Resultado: {motivo}. {consequencia}. {onde}."
+                    ),
+                    path=caminho,
+                )
+            )
+            continue
+        findings.append(
+            ValidationFinding(
+                severity=Severity.WARNING,
+                code="stage_without_result",
+                message=(
+                    f"A Etapa '{nome}' não terá Resultado: {motivo}. "
+                    + (
+                        f"{consequencia}. "
+                        if consequencia
+                        else "Nada neste Edital depende dele"
+                        + (
+                            ", e por isso a publicação não é impedida. "
+                            if ato == ATO_DE_PUBLICACAO
+                            else ". "
+                        )
+                    )
+                    # **Onde se corrige, também no aviso** (046, `FR-749`). A confirmação da
+                    # Retificação exibe só a frase, e o caminho do achado não chega a quem lê.
+                    # Na publicação, a correção é na etapa Etapas do assistente; na Retificação não
+                    # há assistente, e a Etapa enumerada não sai do marco — a enumeração não é
+                    # retificável (`mutabilidade`) —, de modo que resta retificar a própria Etapa.
+                    + (
+                        "Para que ela tenha Resultado, corrija-a na etapa Etapas."
+                        if ato == ATO_DE_PUBLICACAO
+                        else "Para que ela tenha Resultado, retifique a própria Etapa."
+                    )
+                ),
+                path=caminho,
+            )
+        )
+    return findings
+
+
+def _nenhum_marco_corta(perfil) -> bool:
+    """O Perfil tem marco, e nenhum deles declara regra de corte (046, `FR-752`).
+
+    A truthiness é a de `_marco_sem_regra_de_corte`: regra que declara não governar Etapa alguma
+    **é** regra declarada. Perfil sem marco nenhum não entra — é a recusa da `FR-457`, e empilhar
+    duas sobre a mesma causa esconde a que resolve.
+    """
+    marcos_do_perfil = _marcos_bem_formados(perfil)
+    return bool(marcos_do_perfil) and not any(marco.get("cutRule") for marco in marcos_do_perfil)
+
+
+def _perfil_sem_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Perfil em que nenhum marco corta classifica, e ninguém dele é convocado (046, `FR-752`).
+
+    **A invariante é do Perfil, e não do marco** (046, `D-002`). A `D-G1` de 19/09 mandava impedir
+    todo marco sem regra de corte, contando que *"não governa Etapa alguma"* fosse a declaração de
+    quem não corta. Não é: aquela declaração continua sendo regra de corte, com alvo. O marco que
+    legitimamente não corta — o preliminar de um Perfil que corta no final — não tem outra forma de
+    existir senão a ausência, e a tela a oferece por extenso (*"Este marco não corta"*). O que o
+    sistema sabe no ato de publicar é outra coisa: se **nenhum** marco do Perfil corta, não há
+    faixa, e a convocação só chama dentro de faixa.
+
+    **Só na publicação**, pela mesma razão de `_perfil_sem_marco`: a Retificação do acervo sem
+    corte continua aceita (032, `FR-460`; 046, `FR-754`).
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if not _nenhum_marco_corta(perfil):
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_without_cut_rule",
+                message=(
+                    f"Nenhum marco do Perfil '{rotulo}' declara regra de corte: sem corte não há "
+                    "faixa, e a convocação não alcança ninguém deste Perfil. Declare a regra em ao "
+                    "menos um marco, na etapa Classificação — ela pode declarar que não governa "
+                    "Etapa alguma."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/classificationMilestones",
+            )
+        )
+    return findings
+
+
 def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     """Marco sem regra de corte classifica e não convoca — e isso passa a ser dito (032, FR-461).
 
@@ -1714,8 +1999,12 @@ def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFin
     positivo no Edital mais simples e mais comum do acervo, e ruído treina a pessoa a ignorar a
     família inteira — que é o oposto do que o Princípio IV pede.
 
-    **Aviso, e não impedimento.** Marco que não corta é legítimo, e a `014` fechou isso por
-    escrito. O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
+    **Aviso, e não impedimento — quando outro marco do Perfil corta.** Marco que não corta é
+    legítimo, e a `014` fechou isso por escrito. O Perfil em que **nenhum** marco corta é outra
+    coisa, e é recusa de `_perfil_sem_corte` (046, `FR-752`); a `D-G1` de 19/09, que mandava tornar
+    este aviso impeditivo por marco, foi substituída pela `D-002` da `046`.
+
+    O que a auditoria mediu (`ACH-46`) foi o silêncio: a tela dizia *"sem ele, a Etapa
     seguinte recebe todos os habilitados"* — verdade, e a metade menos importante. A consequência
     que importa é a outra ponta da cadeia, e a mensagem a nomeia inteira.
 
@@ -1727,6 +2016,11 @@ def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFin
         return []
     findings = []
     for perfil in _perfis_bem_formados(snapshot):
+        # **O Perfil em que nenhum marco corta tem um relato só** (046, `FR-753`): a recusa de
+        # `_perfil_sem_corte`, que diz o que resolve. Um aviso por marco em cima dela seria a
+        # mesma causa três vezes, e a que resolve ficaria no meio.
+        if _nenhum_marco_corta(perfil):
+            continue
         for marco in _marcos_bem_formados(perfil):
             if marco.get("cutRule"):
                 continue
@@ -2183,6 +2477,11 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
         caminho = f"/documentRequirements/{indice}"
         perfil_id = documento.get("profileId")
         modalidade_id = documento.get("modalityId")
+        if documento.get("modalityCode"):
+            achado = _recorte_por_codigo(documento, perfis, caminho)
+            if achado is not None:
+                findings.append(achado)
+            continue
         if perfil_id is not None and str(perfil_id) not in perfis:
             findings.append(
                 _impeditivo(
@@ -2210,7 +2509,142 @@ def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding
                     caminho,
                 )
             )
+            continue
+        if perfil_id is None:
+            achado = _recorte_que_o_documento_publicado_alarga(documento, perfis, caminho)
+            if achado is not None:
+                findings.append(achado)
+    findings.extend(_denominacoes_do_codigo(requisitos, perfis))
     return findings
+
+
+def _recorte_por_codigo(documento: dict, perfis: dict, caminho: str) -> ValidationFinding | None:
+    """As três recusas do recorte transversal sobre o conteúdo que passa a vigorar (044, R-007).
+
+    A gravação do rascunho já as faz, e aqui elas valem de novo porque uma Retificação alcança o
+    Perfil e a Modalidade sem passar pela gravação: remover o código do último Perfil, ou declarar
+    ampla a Modalidade dele, deixaria o documento sem ninguém a quem ser pedido (FR-724, FR-704).
+    """
+    nome = documento.get("name", "")
+    codigo = str(documento.get("modalityCode")).strip()
+    if documento.get("profileId") is not None or documento.get("modalityId") is not None:
+        return _impeditivo(
+            "document_requirement_scope_conflict",
+            f"O Documento Exigido '{nome}' recorta pela modalidade '{codigo}' em todos os Perfis, "
+            "e declara também um Perfil ou a modalidade de um Perfil. Escolha um recorte só.",
+            caminho,
+        )
+    com_o_codigo = [
+        (perfil, modalidade)
+        for perfil in perfis.values()
+        for modalidade in perfil.get("competitionModalities") or []
+        if str(modalidade.get("code") or "").strip() == codigo
+    ]
+    if not com_o_codigo:
+        return _impeditivo(
+            "document_requirement_modality_code_unknown",
+            f"O Documento Exigido '{nome}' é pedido de quem concorre na modalidade '{codigo}', mas "
+            "nenhum Perfil deste Edital tem modalidade com esse código. Ele não seria pedido a "
+            "ninguém.",
+            caminho,
+        )
+    for perfil, modalidade in com_o_codigo:
+        ampla = perfil.get("generalCompetitionModalityId")
+        if ampla and str(ampla) == str(modalidade.get("id")):
+            return _impeditivo(
+                "document_requirement_modality_code_general",
+                f"O Documento Exigido '{nome}' é pedido de quem concorre na modalidade '{codigo}', "
+                "mas ela é a ampla concorrência no Perfil "
+                f"'{perfil.get('code') or perfil.get('name') or ''}'. A ampla concorrência não "
+                "recorta documento.",
+                caminho,
+            )
+    return None
+
+
+def _denominacoes_do_codigo(requisitos: list, perfis: dict) -> list[ValidationFinding]:
+    """O mesmo código, a mesma denominação — onde o Edital afirma que é a mesma modalidade (FR-706).
+
+    **Só para código referido por documento transversal** (D-001): um Edital que não usa o recorte
+    não afirma identidade nenhuma entre Perfis. **Só a denominação** (FR-707): percentual e
+    fundamento são da cota, e a cota é por Perfil. **Um achado por código**, e não por Perfil
+    divergente: com 16 Perfis num empate de 8 a 8, oito achados diriam oito problemas onde há um.
+
+    A comparação apara as pontas e mais nada (D-005). O documento publicado imprime **uma**
+    denominação no título do grupo, e não pode escolher entre duas que diferem por uma maiúscula.
+    O caminho aponta os Perfis, porque é lá que se corrige.
+    """
+    referidos = []
+    for documento in requisitos:
+        if isinstance(documento, dict) and documento.get("modalityCode"):
+            codigo = str(documento["modalityCode"]).strip()
+            if codigo not in referidos:
+                referidos.append(codigo)
+    findings = []
+    for codigo in referidos:
+        por_denominacao = {}
+        for perfil in perfis.values():
+            for modalidade in perfil.get("competitionModalities") or []:
+                if str(modalidade.get("code") or "").strip() != codigo:
+                    continue
+                denominacao = str(modalidade.get("name") or "").strip()
+                rotulo = perfil.get("code") or perfil.get("name") or ""
+                por_denominacao.setdefault(denominacao, []).append(rotulo)
+        if len(por_denominacao) < 2:
+            continue
+        partes = "; ".join(
+            f"'{denominacao}' em {', '.join(sorted(rotulos))}"
+            for denominacao, rotulos in sorted(por_denominacao.items())
+        )
+        findings.append(
+            _impeditivo(
+                "modality_code_name_divergent",
+                f"A modalidade '{codigo}' tem denominações diferentes entre os Perfis: {partes}. "
+                "Um documento é pedido dela em todos os Perfis, e o Edital publicado precisa "
+                "nomeá-la de um jeito só. Iguale a denominação nos Perfis.",
+                "/profiles",
+            )
+        )
+    return findings
+
+
+def _recorte_que_o_documento_publicado_alarga(
+    documento: dict, perfis: dict, caminho: str
+) -> ValidationFinding | None:
+    """Todos os Perfis, com a modalidade de um só: o Edital e a inscrição diriam coisas diferentes.
+
+    Cada Perfil tem as suas Modalidades, e a inscrição aplica o recorte **pela identidade** — o
+    documento restrito ao PcD do C1 nunca é pedido ao PcD do C2. O documento publicado, sem Perfil
+    declarado, escreve o grupo **pelo nome**: *"Dos candidatos concorrentes na modalidade Pessoas
+    com Deficiência"*. Com outro Perfil tendo modalidade de mesmo nome, o ato publicado exige o
+    documento de todos eles e o portal o pede de um só. Foi o que a conferência do portal mostrou:
+    um candidato PcD do C2 enviou a inscrição sem o laudo que o Edital dizia exigir dele
+    (doc/achado-documento-condicional-no-portal.md). "Partir de um Edital anterior" produz esse
+    recorte sozinho, ao acrescentar Perfis a uma origem que tinha um só.
+
+    **Só quando o nome se repete.** Se nenhum outro Perfil tem modalidade com aquele nome, o grupo
+    publicado alcança exatamente quem o portal alcança, e não há o que acusar. A pergunta mora em
+    `documentos.py` porque a lista exigida da `044` a faz também (R-004).
+
+    **A saída que a `044` acrescenta** vem em segundo lugar na mensagem, porque é a que o Edital da
+    amostra quer dizer: "todo candidato PcD" — a modalidade daquele código em todos os Perfis.
+    """
+    dono, modalidade, outros = perfis_que_o_documento_publicado_alcanca(documento, perfis)
+    if dono is None or not outros:
+        return None
+    rotulo = rotulo_da_modalidade(modalidade)
+    codigo = str(modalidade.get("code") or "").strip()
+    perfil_dono = dono.get("code") or dono.get("name") or ""
+    return _impeditivo(
+        "document_requirement_modality_scope_ambiguous",
+        f"O Documento Exigido '{documento.get('name', '')}' vale para todos os Perfis, mas "
+        f"está restrito à modalidade '{rotulo}' do Perfil '{perfil_dono}'. O Edital publicado o "
+        f"exigiria de todo candidato em '{rotulo}', e a inscrição o pediria só no Perfil "
+        f"'{perfil_dono}'. Declare o Perfil '{perfil_dono}' no documento, ou use a modalidade "
+        f"'{rotulo}' ({codigo}) em todos os Perfis — ou, para exigi-lo em Perfis escolhidos, "
+        "repita-o com a modalidade de cada um.",
+        caminho,
+    )
 
 
 def _coerencia_do_quadro_de_vagas(
@@ -2242,6 +2676,7 @@ def _coerencia_do_quadro_de_vagas(
         if not isinstance(perfil, dict):
             continue
         base = _caminho_da_entidade("profiles", perfil, posicao)
+        findings.extend(_reserva_convocada_fora(perfil, base=base, ato=ato))
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
             # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
@@ -2456,6 +2891,42 @@ def _acervo_sem_quadro(perfil, *, base, ato) -> list[ValidationFinding]:
             "ampla concorrência a este Perfil, nesta Retificação, é o ato que declara a "
             "quantidade.",
             f"{base}/vacancyTable",
+        )
+    ]
+
+
+def _reserva_convocada_fora(perfil, *, base, ato) -> list[ValidationFinding]:
+    """Perfil só de cadastro de reserva: o sistema classifica, e a convocação é feita fora dele.
+
+    **O Edital publica, classifica e divulga o resultado — e não convoca.** Convocar exige vaga
+    faltante apurada (`convocar.py`, `_recusar_por_deficit`), e com zero vagas imediatas a apuração
+    nunca tem déficit: toda chamada é recusada. Retificar as vagas a cada chamada seria usar ato
+    normativo para registrar fato operacional. A DP-05 decidiu, em 26/09, que essa família fica
+    fora do piloto; dizê-lo na Revisão é o que impede que o operador descubra meses depois, na tela
+    de convocação (RC-58).
+
+    **Advertência, e só na publicação.** O Edital é legítimo — os 140/2025 e 173/2025 são assim —,
+    e recusá-lo afirmaria o contrário. Na Retificação o aviso repetiria, a cada correção de data,
+    o que já foi dito antes de publicar.
+
+    **Zero sem reserva não entra aqui.** Oferta sem vaga e sem cadastro é outra pergunta, e este
+    aviso a responderia errado.
+    """
+    total = perfil.get("immediateVacancies")
+    if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or total != 0:
+        return []
+    if perfil.get("reserveType") not in ("LIMITED", "UNLIMITED"):
+        return []
+    rotulo = perfil.get("code") or perfil.get("name") or ""
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "reserve_only_convocation_external",
+            f"O Perfil '{rotulo}' oferta só cadastro de reserva, com 0 vaga imediata. A "
+            "classificação e o resultado serão conduzidos no sistema; a convocação dos "
+            "classificados será feita fora dele, porque o sistema só convoca para vaga imediata "
+            "apurada.",
+            f"{base}/immediateVacancies",
         )
     ]
 

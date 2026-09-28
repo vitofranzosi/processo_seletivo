@@ -27,6 +27,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
+from processo_seletivo.interface.forms import _regra_de_corte
 from tests.interface.conftest import compor_rascunho, identificar
 from tests.interface.test_compor import PERFIL, etapa, etapas_form, eventos, perfis
 
@@ -109,6 +110,17 @@ def test_a_etapa_decisoria_nao_grava_a_nota_que_a_forma_proibe(client, elaborand
     assert (gravada.rotulo_favoravel, gravada.rotulo_desfavoravel) == ("Deferido", "Indeferido")
 
 
+def test_o_alvo_so_viaja_na_quantidade_fixa():
+    """A espécie derivada tira o alvo do quadro de vagas: o número digitado antes não vai junto."""
+    base = "marco-0-0"
+    regra = _regra_de_corte(
+        {f"{base}-cutTargetKind": "FROM_VACANCY_TABLE", f"{base}-cutTargetCount": "30"}, base
+    )
+
+    assert regra["targetKind"] == "FROM_VACANCY_TABLE"
+    assert regra["targetCount"] is None
+
+
 def test_forma_desconhecida_continua_alcancavel_pela_validacao(client, elaborando):
     """A leitura não normaliza `forma`: trocá-la por PONTUADA esconderia o envio forjado."""
     client.post(etapa(elaborando, "etapas"), etapas_form(**{"etapa-0-forma": "SORTEIO"}))
@@ -152,6 +164,15 @@ def test_o_prazo_do_recurso_mora_dentro_da_opcao_que_o_pede(client, com_etapas):
     assert corpo.index('class="campos dependentes so-admite"') < corpo.index(
         'value="nao_declarada"'
     )
+
+
+def test_o_alvo_mora_no_campo_que_so_a_quantidade_fixa_mostra(client, com_etapas):
+    """Sob "não corta" e sob "o que o quadro publicar", "Alvo" era uma caixa que nada lia."""
+    corpo = marco_de(client, com_etapas)
+
+    campo = re.search(r'<p class="campo curto so-fixo">(.*?)</p>', corpo, re.S)
+    assert campo, "o alvo não carrega a classe que a folha esconde"
+    assert re.search(r'name="marco-[^"]*-cutTargetCount"', campo.group(1))
 
 
 def test_as_opcoes_nao_usam_mais_a_classe_da_marca_de_filtrar(client, com_etapas):
@@ -213,6 +234,7 @@ def folha(client, seletor_ligado):
         ('input[name$="-forma"][value="PONTUADA"]:checked', ".so-decisoria"),
         ('input[name$="-appealDeclaration"]:checked:not([value="admite"])', ".so-admite"),
         ('input[name$="-reserveType"]:checked:not([value="LIMITED"])', ".so-limitada"),
+        ('select[name$="-cutTargetKind"] option[value="FIXED"]:not(:checked)', ".so-fixo"),
     ],
 )
 def test_a_folha_esconde_o_que_a_escolha_marcada_torna_inaplicavel(folha, marcada, escondido):
@@ -225,7 +247,7 @@ def test_a_folha_nunca_esconde_por_padrao(folha):
     Uma regra `\\.so-admite{display:none}` solta inverteria isso: o campo sumiria para sempre em
     navegador sem suporte, e a opção que o pede não teria como trazê-lo de volta.
     """
-    for classe in ("so-pontuada", "so-decisoria", "so-admite", "so-limitada"):
+    for classe in ("so-pontuada", "so-decisoria", "so-admite", "so-limitada", "so-fixo"):
         # `\n` na classe de caracteres, e não só `^`: sem ela a guarda passava por cima de uma
         # regra escrita em linha própria — que é exatamente como alguém a escreveria.
         assert not re.search(rf"(?:^|[\n,;\}}])\s*\.{classe}\s*\{{", folha), classe

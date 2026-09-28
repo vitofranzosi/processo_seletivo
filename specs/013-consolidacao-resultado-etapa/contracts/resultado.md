@@ -31,10 +31,28 @@ E uma que **muda de conteúdo sem mudar de caminho**:
 
 ### `POST .../distribuicao/<etapa_id>/consolidar`
 
+Dois passos: o primeiro, sem `confirmar`, só declara o alcance — o que vira Resultado, com que
+consequência, e o que fica de fora e por quê —; o segundo, com `confirmar=1`, pratica o ato.
+
 ```text
-inscricao_id     um ou vários
+inscricao_id     um ou vários — a seleção da listagem, no máximo uma página
+inscricoes       as identidades separadas por espaço, num campo só — o que a conferência devolve
+alcance          opcional, só no primeiro passo: `prontas`
+confirmar        `1` no segundo passo
 idempotency_key  obrigatório
 ```
+
+**`alcance=prontas` é a Etapa inteira, e não a página da listagem** (FR-018, SC-002). O conjunto
+sai do mesmo panorama que conta as prontas da tela, e não inclui o cumprimento de decisão de
+reavaliação (018, FR-068), que continua pela seleção. Ele é resolvido **no primeiro passo**: a
+conferência declara as identidades e a confirmação as devolve em `inscricoes`, de modo que o ato
+consolida o conjunto que a presidência viu, e não o das prontas no instante do ato — é o que mantém
+a mesma chave sobre o mesmo conteúdo (FR-021, FR-022).
+
+**`inscricoes` é um campo só porque a conferência pode declarar mil identidades.** Um campo por
+inscrição passava do limite de mil campos por envio do Django, e a confirmação voltava 400 antes de
+chegar ao ato — justamente no teto de SC-002. Os dois campos podem vir juntos, e o conjunto
+consolidado é a união deles.
 
 Uma submissão, N Resultados. Não há campo de pontuação, de consequência nem de justificativa: a
 presidência confirma um cálculo, não o informa (FR-016, FR-017). Um corpo que trouxesse nota seria
@@ -42,7 +60,8 @@ recusado como campo desconhecido, e não ignorado silenciosamente.
 
 Seleção vazia é **erro sobre o pedido** — `selecao_vazia`, 422 —, e não um lote de zero itens: a
 tela não deveria tê-lo oferecido, e responder "0 consolidadas" afirmaria um ato que não aconteceu.
-É a mesma classificação que a distribuição da 012 faz.
+É a mesma classificação que a distribuição da 012 faz. Pela mesma razão, `alcance=prontas` numa
+Etapa sem nenhuma pronta é `nada_pronto`, 422, e não uma conferência vazia.
 
 ### `GET .../distribuicao/<etapa_id>/resultados`
 
@@ -96,6 +115,7 @@ Recusa **do pedido inteiro**, que impede qualquer criação (FR-019):
 | código | status | quando |
 |---|---|---|
 | `selecao_vazia` | 422 | nenhuma inscrição enviada |
+| `nada_pronto` | 422 | `alcance=prontas` numa Etapa sem inscrição pronta para consolidar |
 | `regra_de_combinacao_ausente` | 422 | a Etapa prevê mais de uma avaliação (FR-015) |
 | `regra_insuficiente` | 422 | Etapa eliminatória sem nota mínima publicada (FR-011) |
 | `inscricao_nao_consolidavel` | 422 | id enviado que não é inscrição submetida deste Edital |

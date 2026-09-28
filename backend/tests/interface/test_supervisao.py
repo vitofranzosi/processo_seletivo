@@ -178,7 +178,7 @@ def test_a_ausencia_de_periodo_em_curso_e_declarada(
 
 @pytest.fixture
 def processo_limpo(gestor, api_client, manager_headers):
-    """Um Processo em que nenhuma das cinco condições se verifica.
+    """Um Processo em que nenhuma condição de atenção se verifica.
 
     Ele é montado do zero, e não obtido apagando o que sobra de outro: **nada é excluído** neste
     sistema, e um teste que apagasse um Edital estaria provando o contrário do que a Constituição
@@ -196,7 +196,7 @@ def processo_limpo(gestor, api_client, manager_headers):
             "title": "Processo sem condição de atenção",
             "firstEdital": {"number": "90", "year": 2026, "title": "Edital limpo"},
         },
-        draft=rascunho_com_periodo(9, etapas=[etapa_ligada(9)], status_do_periodo="EM_ANDAMENTO"),
+        draft=rascunho_com_periodo(9, etapas=[etapa_ligada(9)]),
     )
     constituir(gestor, edital.processo, [("maria", "PRESIDENTE")], prefixo="limpo")
     return edital.processo
@@ -252,24 +252,8 @@ def test_a_mensagem_de_recurso_sem_membro_desimpedido_nao_afirma_impossibilidade
         assert proibido not in atencao.lower()
 
 
-@pytest.fixture
-def edital_divergente(api_client, manager_headers, processo_a):
-    """Um Edital cujo período corre e continua declarado planejado — divergência de `UX-002`."""
-    from tests.fixtures.supervisao import publicar_no_processo, rascunho_com_periodo
-
-    return publicar_no_processo(
-        api_client,
-        manager_headers,
-        processo_a,
-        number="08",
-        title="Período em curso, declarado planejado",
-        chave="supervisao-divergente",
-        draft=rascunho_com_periodo(8, status_do_periodo="PLANEJADO"),
-    )
-
-
 def test_os_sinais_do_edital_conduzem_as_telas_donas(
-    client, seletor_ligado, processo_a, edital_a, edital_c, edital_divergente, comissao_de_a
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
 ):
     """`FR-035`: cada sinal leva à feature dona, já no ponto em que a situação se resolve.
 
@@ -282,11 +266,10 @@ def test_os_sinais_do_edital_conduzem_as_telas_donas(
 
     atencao = regiao(abrir(client, processo_a, papeis=["elaborador"]), "atencao-titulo")
 
-    # **A Retificação, e não o compositor.** Os dois primeiros sinais nascem do conteúdo publicado,
-    # e o compositor é a coleção de elaboração: para um Edital publicado ele é somente leitura, e
-    # depois de uma Retificação mostra outro conteúdo.
-    assert reverse("interface:retificar", args=[edital_a.id]) in atencao
-    assert reverse("interface:retificar", args=[edital_divergente.id]) in atencao
+    # **Nenhum sinal de Cronograma, nem para quem pode retificar** (045, `FR-738`, `FR-739`). Os
+    # dois que levavam à Retificação — a Etapa sem marco e o estado declarado — saíram: o
+    # primeiro é aviso de composição, o segundo não tem mais o que comparar.
+    assert reverse("interface:retificar", args=[edital_a.id]) not in atencao
     assert reverse("interface:compor-etapa", args=[edital_a.id, "etapas"]) not in atencao
     assert (
         reverse("interface:distribuicao", args=[edital_c.id, identificador(ETAPA_C1, SEGUNDO_SEED)])
@@ -371,84 +354,10 @@ def test_a_supervisao_nao_lista_os_registros_que_conta(
         assert str(inscricao.id) not in corpo
 
 
-def test_o_encaminhamento_de_conteudo_publicado_abre_onde_ele_se_corrige(
-    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
-):
-    """`FR-035`: o destino é seguido, e não só escrito no `href`.
-
-    O compositor passaria neste teste até a última linha: ele responde 200. O que ele **não** faz é
-    corrigir — para um Edital publicado ele é somente leitura, e o que ele exibe é a coleção de
-    elaboração, que diverge do conteúdo vigente depois de uma Retificação. Um teste que só
-    conferisse o endereço não distinguiria as duas telas, e foi por isso que o destino errado
-    passou despercebido.
-    """
-    from processo_seletivo.interface import supervisao as leitura
-    from tests.conftest import ator_institucional
-
-    ator = ator_institucional("maria", "retificacao:elaborar")
-    sinal = next(
-        item
-        for item in leitura.sinais(processo_a, ator)
-        if item.especie == leitura.UX_001 and item.edital.id == edital_a.id
-    )
-
-    identificar(client, "maria", ["elaborador"])
-    destino = client.get(sinal.destino.url)
-
-    assert destino.status_code == 200
-    pagina = destino.content.decode()
-    # A tela do ato que corrige conteúdo publicado — e não uma leitura dele.
-    assert f"Retificar Edital {edital_a.number}/{edital_a.year}" in pagina
-    assert 'name="justificativa"' in pagina
-    # E ela edita o conteúdo **vigente**, que é o que produziu o sinal: a Etapa nomeada está lá.
-    assert sinal.alvo in pagina
-
-
-def test_sem_a_permissao_de_retificar_o_sinal_fica_e_o_caminho_nao(
-    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
-):
-    """`FR-036`: a supervisão decide **se oferece**, e não se autoriza.
-
-    Quem preside sem poder elaborar Retificação continua vendo a condição — ela é dele —, e não
-    recebe um formulário cujo envio seria recusado. O sinal não é suprimido: a tela de destino é
-    legível por quem alcança o Edital, e `FR-004` fala de alcance, não de permissão de ato.
-    """
-    from processo_seletivo.interface import supervisao as leitura
-    from tests.conftest import ator_institucional
-
-    sinais = leitura.sinais(processo_a, ator_institucional("maria"))
-
-    do_edital = [item for item in sinais if item.especie == leitura.UX_001]
-    assert do_edital, "o sinal continua sendo apresentado"
-    assert all(item.destino is None for item in do_edital)
-
-    atencao = texto(regiao(abrir(client, processo_a), "atencao-titulo"))
-    assert "está sem marco no cronograma" in atencao
-    assert "Retificar" not in atencao
-
-
-def test_edital_nao_publicado_nao_recebe_encaminhamento_de_retificacao(
-    processo_a, edital_a, edital_c, comissao_de_a
-):
-    """Retificação incide sobre Edital publicado; encerrado não admite o ato (`FR-036`).
-
-    O conteúdo vigente permanece — e por isso o sinal permanece —, mas o caminho levaria a uma
-    recusa de estado, que é o beco que a `007` passou uma feature inteira tirando.
-    """
-    from processo_seletivo.interface import supervisao as leitura
-    from processo_seletivo.processos.models import Edital
-    from tests.conftest import ator_institucional
-
-    ator = ator_institucional("maria", "retificacao:elaborar")
-    antes = [item for item in leitura.sinais(processo_a, ator) if item.especie == leitura.UX_001]
-    assert antes and all(item.destino is not None for item in antes)
-
-    Edital.objects.filter(pk=edital_a.pk).update(status=Edital.Status.ENCERRADO)
-
-    depois = [item for item in leitura.sinais(processo_a, ator) if item.especie == leitura.UX_001]
-    do_encerrado = [item for item in depois if item.edital.id == edital_a.id]
-    assert do_encerrado, "o sinal continua: o conteúdo publicado não muda porque o Edital encerrou"
-    assert all(item.destino is None for item in do_encerrado)
+# O encaminhamento do conteúdo publicado à Retificação — e a supressão do caminho a quem não a
+# pratica ou onde ela não é possível — era provado aqui sobre o `UX-001`. Ele saiu do catálogo
+# (045), e a mesma prova vive sobre o `UX-046`, a única espécie que ainda leva à Retificação:
+# `tests/integration/supervisao/test_sinal_do_acervo_sem_quadro.py`.
 
 
 # ---------------------------------------------------------------------------
@@ -513,14 +422,11 @@ def test_o_processo_e_a_supervisao_dizem_a_mesma_coisa_do_mesmo_edital(
     assert "4 inscrições recebidas no Processo" in do_processo
     assert "4 inscrições recebidas no Processo" in pulso_da_supervisao
 
-    # **O que vem**: cada marco que a Supervisão anuncia é anunciado aqui também.
-    marcos = re.findall(
-        r"declarado (?:planejado|em andamento|concluído|cancelado)", pulso_da_supervisao
-    )
+    # **O que vem**: cada marco que a Supervisão anuncia é anunciado aqui também. O marco se conta
+    # pela data depois do travessão — desde a `045` ele não carrega mais *"declarado …"*.
+    marcos = re.findall(r"— \d{2}/\d{2}/\d{4}", pulso_da_supervisao)
     assert marcos, "sem marco na Supervisão, este teste não provaria a igualdade"
-    assert len(
-        re.findall(r"declarado (?:planejado|em andamento|concluído|cancelado)", do_processo)
-    ) == len(marcos)
+    assert len(re.findall(r"— \d{2}/\d{2}/\d{4}", do_processo)) == len(marcos)
 
     # A série tem o mesmo equivalente textual nas duas — é o mesmo parcial, lido do mesmo Pulso.
     for valores in re.findall(r"Valores da série — \d+ dias?", pulso_da_supervisao):
@@ -577,11 +483,12 @@ def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
     Sem este caso, o teste acima passaria igualmente sobre uma região que nunca mostra Atenção
     nenhuma — e a `US1` teria entregue meia tela para todo mundo.
     """
+    submeter(edital_c, 2, seed=SEGUNDO_SEED)
     corpo = abrir_o_processo(client, processo_a)
     conducao = regiao(corpo, "conducao-titulo")
 
     assert "Atenção" in texto(conducao)
-    assert "sem marco no cronograma" in texto(conducao)
+    assert "sem avaliador suficiente" in texto(conducao)
 
     # **A contraprova do caminho**, pela mesma razão que esta função existe: sem ela, o caso acima
     # passaria sobre uma região que nunca oferece a Supervisão a ninguém — e apagar o link seria
@@ -602,3 +509,135 @@ def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(
 
     assert "Nenhuma condição de atenção" in texto(conducao)
     assert '<li class="sinal"' not in conducao
+
+
+# ---------------------------------------------------------------------------
+# A ausência respeita o alcance de quem lê (045, US1)
+#
+# **A frase global era dita a quem só enxerga parte.** A convergência de 20/09 mediu: a publicadora
+# lia *"Nenhuma condição de atenção neste Processo"* no mesmo instante em que o gestor via quinze
+# condições. Os casos abaixo prendem as duas metades — a relativa para quem alcança parte, a
+# global só para quem alcança tudo — e a garantia que torna a correção segura: a frase não muda
+# com o que o leitor não alcança.
+# ---------------------------------------------------------------------------
+
+
+def atencao_do_processo(corpo):
+    """O trecho da Atenção na página do Processo — do título dela ao fim da região de condução.
+
+    Na página do Processo a Atenção não é `<section>` própria: é um bloco da região de condução,
+    depois do pulso. Comparar a região inteira misturaria a Atenção com as contagens do pulso,
+    que mudam a cada inscrição — e o teste do vazamento compararia a coisa errada.
+    """
+    conducao = regiao(corpo, "conducao-titulo")
+    assert "<h3>Atenção</h3>" in conducao, "a região da Atenção não foi apresentada"
+    return conducao.split("<h3>Atenção</h3>", 1)[1]
+
+
+def edital_do(processo):
+    return processo.editais.get()
+
+
+@pytest.mark.parametrize(
+    ("subject", "papeis"),
+    [("pedro", ["publicador"]), ("ana", ["julgador"]), ("maria", [])],
+    ids=["publicador", "julgador", "presidencia"],
+)
+def test_quem_alcanca_parte_das_especies_le_a_ausencia_relativa(
+    client, seletor_ligado, processo_limpo, subject, papeis
+):
+    """`045`, `FR-730` e `UX-084` — o teste 1 da proposta.
+
+    Os três alcançam **parte** do catálogo: a publicadora só a divulgação, o julgador só os
+    recursos, e a presidência tudo **menos** esses dois. Nenhum deles leu o Processo inteiro, e a
+    frase diz isso sem dizer o que ficou de fora.
+    """
+    from processo_seletivo.interface.supervisao import AUSENCIA_GLOBAL, AUSENCIA_RELATIVA
+
+    atencao = texto(atencao_do_processo(abrir_o_processo(client, processo_limpo, subject, papeis)))
+
+    assert AUSENCIA_RELATIVA in atencao
+    assert AUSENCIA_GLOBAL not in atencao
+
+
+def test_a_frase_nao_muda_com_o_que_o_leitor_nao_alcanca(client, seletor_ligado, processo_limpo):
+    """`045`, `FR-731` — o teste 9 da proposta: **nenhum vazamento entre papéis**.
+
+    A publicadora lê o Processo; depois aparece uma condição que só a gestão alcança — inscrição
+    sem avaliador, o `UX-003` —; ela lê de novo. **O trecho da Atenção precisa ser o mesmo, letra
+    por letra.** Se a frase variasse com o que existe fora do alcance, ela seria o canal por onde
+    a supressão se revela: *"há algo que você não vê"* é exatamente o que a supressão silenciosa
+    existe para não dizer.
+
+    A contraprova vem da presidência: sem ela, o teste passaria igualmente sobre um cenário em que a
+    condição nunca chegou a existir.
+    """
+    antes = atencao_do_processo(abrir_o_processo(client, processo_limpo, "pedro", ["publicador"]))
+
+    submeter(edital_do(processo_limpo), 2, seed=9)
+
+    presidencia = texto(atencao_do_processo(abrir_o_processo(client, processo_limpo)))
+    assert "sem avaliador suficiente" in presidencia, "a condição fora do alcance não existe"
+
+    depois = atencao_do_processo(abrir_o_processo(client, processo_limpo, "pedro", ["publicador"]))
+    assert depois == antes
+
+
+def test_quem_alcanca_todas_as_especies_le_a_ausencia_global(
+    client, seletor_ligado, processo_limpo
+):
+    """`045`, `FR-730`: a frase global continua existindo — e é de quem leu tudo.
+
+    Nenhum papel sozinho alcança o catálogo; a presidência que também julga recurso e publica
+    resultado alcança. Na equipe inicial de duas ou três pessoas isso vai acontecer, e está certo:
+    essa pessoa de fato leu cada espécie.
+    """
+    from processo_seletivo.interface.supervisao import AUSENCIA_GLOBAL
+
+    atencao = texto(
+        atencao_do_processo(
+            abrir_o_processo(client, processo_limpo, "maria", ["gestor", "julgador", "publicador"])
+        )
+    )
+
+    assert AUSENCIA_GLOBAL in atencao
+
+
+def test_na_supervisao_a_presidencia_sozinha_le_a_ausencia_relativa(
+    client, seletor_ligado, processo_limpo
+):
+    """`045`, `FR-730`: a mesma escolha vale na Supervisão, que só abre para a gestão.
+
+    E a gestão sozinha **não** alcança o catálogo inteiro — recursos e divulgação têm porta
+    própria. Antes desta feature, esta era a tela que mais dizia *"tudo em dia"* a quem não via
+    tudo.
+    """
+    from processo_seletivo.interface.supervisao import AUSENCIA_GLOBAL, AUSENCIA_RELATIVA
+
+    atencao = texto(regiao(abrir(client, processo_limpo), "atencao-titulo"))
+
+    assert AUSENCIA_RELATIVA in atencao
+    assert AUSENCIA_GLOBAL not in atencao
+
+
+def test_o_edital_parado_nao_torna_parcial_a_leitura_de_quem_alcanca_tudo(
+    client, seletor_ligado, processo_limpo
+):
+    """`045`, caso-limite *"O alcance muda com o estado do Edital"*.
+
+    Encerrado o Edital, as espécies de trabalho pendente deixam de ser lidas nele (`038`). Isso é o
+    **estado** respondendo, e não o leitor deixando de ver: quem alcança tudo continua lendo a
+    frase global. A escolha olha o alcance do leitor, e só ele.
+    """
+    from processo_seletivo.interface.supervisao import AUSENCIA_GLOBAL
+    from processo_seletivo.processos.models import Edital
+
+    Edital.objects.filter(pk=edital_do(processo_limpo).pk).update(status=Edital.Status.ENCERRADO)
+
+    atencao = texto(
+        atencao_do_processo(
+            abrir_o_processo(client, processo_limpo, "maria", ["gestor", "julgador", "publicador"])
+        )
+    )
+
+    assert AUSENCIA_GLOBAL in atencao

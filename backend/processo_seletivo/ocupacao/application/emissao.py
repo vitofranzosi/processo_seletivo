@@ -104,7 +104,9 @@ def emitir_apuracao(
             edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
         )
         etapa = corte.etapa_governada_id if corte is not None else None
-        habilitadas = selectors.habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+        habilitadas = selectors.habilitadas_pelo_corte(
+            edital=edital, corte=corte, progrediram=progrediram
+        )
         # **Os efeitos que a `019` registrou, congelados como os movimentos já são** (`FR-244`).
         # Reproduzir esta apuração é reler **estes** ids, e não os efeitos de hoje: sem o
         # congelamento, uma apuração antiga relida devolveria o número que o mundo virou depois.

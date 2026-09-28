@@ -15,6 +15,7 @@ from django.db import IntegrityError, connection, transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.documentos import aplicaveis
+from processo_seletivo.inscricoes.application.lista_exigida import gravar_lista_exigida
 from processo_seletivo.inscricoes.application.rascunho import (
     _apagar_depois_do_commit,
     _modalidade_escolhida,
@@ -95,7 +96,7 @@ def documentos_que_a_retificacao_invalida(inscricao, versao):
     aplicaveis_agora = {
         str(requisito["id"])
         for requisito in aplicaveis(
-            versao.content.get("documentRequirements") or [],
+            versao.content,
             profile_id=str(inscricao.profile_id),
             modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
         )
@@ -245,6 +246,9 @@ def enviar_inscricao(
         # valores seria classificável sobre fato que ninguém declarou.
         _congelar(travada, valores, versao=versao, agora=agora)
         travada.refresh_from_db()
+        # A lista do que foi pedido, na mesma transação e sob a mesma versão e o mesmo instante do
+        # ato (044, FR-714). Depois do `refresh`, porque é a modalidade **gravada** que decide.
+        gravar_lista_exigida(travada, versao=versao, agora=agora)
         record_event(
             actor=ator,
             permission=SUBMETER,

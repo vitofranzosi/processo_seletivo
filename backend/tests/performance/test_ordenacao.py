@@ -12,7 +12,7 @@ from processo_seletivo.classificacao.application.calculo import calcular_ordem
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.comissao import rascunho_com_etapas
-from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.edital import PROFILE_ID, corte_que_nao_governa
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 from tests.performance.escala import escala
@@ -32,6 +32,8 @@ def edital_em_escala(api_client, manager_headers, process_payload):
     etapa["weight"] = "1.0000"
     rascunho["profiles"][0]["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",
@@ -136,6 +138,8 @@ def edital_em_escala_com_cota(api_client, manager_headers, process_payload):
     perfil = rascunho["profiles"][0]
     perfil["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",

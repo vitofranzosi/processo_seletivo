@@ -28,6 +28,11 @@ processo; nada aqui afirma nada sobre a pessoa.
     {% if evento.situacao == "em_curso" %}<span class="agora">Acontecendo agora</span>{% endif %}
   </span>
   {% comment %}
+  **O cancelado é dito em texto, fora do nome riscado** (047, FR-766). A data publicada continua
+  abaixo, porque ela é o que o Edital declarou; o que muda é que ninguém lê nela um compromisso.
+  {% endcomment %}
+  {% if evento.situacao == "cancelado" %}<span class="cancelado-texto">Cancelado</span>{% endif %}
+  {% comment %}
   **Com o ano** (024, FR-126). `d/m` bastava na área do candidato, onde o assunto é a inscrição que
   a pessoa acabou de enviar e o ano é o corrente por construção. Na página pública não: alguém
   consulta um Edital encerrado meses ou anos depois, e "15/10" sozinho não diz de quando. O

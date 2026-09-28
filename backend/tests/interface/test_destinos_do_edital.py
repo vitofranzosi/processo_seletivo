@@ -115,6 +115,9 @@ def test_a_presidencia_sem_publicar_nao_perde_destino_nenhum(client, seletor_lig
         # continua sendo "nenhum a menos", e ela não é desfeita por um a mais.
         reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
+        # **A convocação entrou em 27/09** (`FR-473`): só se chegava a ela pelo endereço. Um a
+        # mais, pela mesma razão do corte.
+        reverse("interface:convocacao", args=[edital.id, marco]),
     ]
 
     assert _urls(_destinos(client, edital)) == esperados
@@ -150,6 +153,8 @@ def test_quem_preside_e_publica_ve_a_uniao_sem_repetir(client, seletor_ligado, c
         # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
         reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
+        # Acrescentada em 27/09 (`FR-473`) — ver o caso da presidência, acima.
+        reverse("interface:convocacao", args=[edital.id, marco]),
         _divulgacao(certame),
     ]
     assert len(urls) == len(set(urls)), f"destino repetido na união dos dois eixos: {urls}"
@@ -184,7 +189,26 @@ def test_a_auditoria_continua_lendo_o_que_lia(client, seletor_ligado, certame):
         # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
         reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
+        # Acrescentada em 27/09 (`FR-473`) — ver o caso da presidência, acima.
+        reverse("interface:convocacao", args=[edital.id, marco]),
     ]
+
+
+@pytest.mark.parametrize(("subject", "papeis"), [("maria", []), ("iris", ["auditor"])])
+def test_a_convocacao_oferecida_abre_para_quem_a_ve(
+    client, seletor_ligado, certame, subject, papeis
+):
+    """`FR-476` do lado da porta nova: o destino só vale se a tela abrir para quem o recebeu.
+
+    A convocação guarda a mesma porta da ocupação, e é por isso que os dois destinos andam juntos.
+    Se um dia divergirem, este caso é o que acusa o beco.
+    """
+    edital, marco = certame["edital"], certame["marco"]
+    identificar(client, subject, papeis)
+    convocacao = reverse("interface:convocacao", args=[edital.id, marco])
+
+    assert convocacao in _urls(_destinos(client, edital))
+    assert client.get(convocacao).status_code == 200
 
 
 # --- as duas ausências que não são recusa ------------------------------------------------------

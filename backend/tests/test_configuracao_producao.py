@@ -72,6 +72,16 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
     assert producao.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] == [INSTITUCIONAL]
 
 
+def test_producao_nasce_sem_a_fonte_de_demonstracao():
+    """Sem variável nenhuma, a fonte de demonstração está fora do vocabulário (046, `FR-757`).
+
+    O padrão é o que decide, e não a recusa: se a base nascesse com ela ligada, produção só subiria
+    com uma variável a mais declarando o contrário — e a barreira viraria uma armadilha de
+    implantação em vez de uma garantia.
+    """
+    assert _carregar().SORTEIO_FONTE_DE_DEMONSTRACAO is False
+
+
 @pytest.mark.parametrize(
     ("alteracoes", "variavel"),
     [
@@ -100,6 +110,9 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
         # Os dois eixos de identidade têm a mesma barreira, e o do candidato não é menos grave:
         # uma inscrição atribuída a quem se declarou candidato não vale nada.
         ({"PORTAL_IDENTIDADE_DEMO": "true"}, "PORTAL_IDENTIDADE_DEMO"),
+        # A terceira demonstração (046, `FR-758`): a fonte do sorteio de semente fixa. Um sorteio
+        # publicado com ela teria o resultado conhecido antes da extração.
+        ({"SORTEIO_FONTE_DE_DEMONSTRACAO": "true"}, "SORTEIO_FONTE_DE_DEMONSTRACAO"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": None}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": "arquivos-dos-candidatos"}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         (
@@ -195,3 +208,59 @@ def test_deploy_check_nao_aponta_nada_no_modulo_de_producao():
     )
     assert resultado.returncode == 0, resultado.stderr
     assert "no issues" in resultado.stdout + resultado.stderr
+
+
+# --- RC-124 · o padrão de `wsgi` e `asgi` é a produção ----------------------------------------
+
+
+def _processo(argumentos, **ambiente):
+    """Um Python novo, com o ambiente **montado** — a razão é a de `test_deploy_check_...`, acima.
+
+    Sem `DJANGO_SETTINGS_MODULE` de propósito: é a falta dela que estes casos exercitam.
+    """
+    import subprocess
+    import sys
+
+    return subprocess.run(
+        [sys.executable, *argumentos],
+        cwd=RAIZ_DO_CODIGO,
+        env={
+            **{
+                chave: os.environ[chave]
+                for chave in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
+                if chave in os.environ
+            },
+            **ambiente,
+        },
+        capture_output=True,
+        text=True,
+    )
+
+
+_QUAL_MODULO = "from django.conf import settings; print(settings.SETTINGS_MODULE, settings.DEBUG)"
+
+
+@pytest.mark.parametrize("modulo", ["config.wsgi", "config.asgi"])
+def test_sem_a_variavel_o_servidor_carrega_a_producao(modulo):
+    """`FR-016` e RC-124: sem a variável, o servidor sobe em produção, e não em `development`."""
+    resultado = _processo(["-c", f"import {modulo}; {_QUAL_MODULO}"], **AMBIENTE_MINIMO)
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.split() == ["config.settings.production", "False"]
+
+
+@pytest.mark.parametrize("modulo", ["config.wsgi", "config.asgi"])
+def test_sem_a_variavel_e_mal_configurado_o_servidor_recusa_subir(modulo):
+    """A contraprova: era aqui que ele subia em `development`, com `DEBUG` e sem barreira alguma."""
+    resultado = _processo(["-c", f"import {modulo}"])
+
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured: DJANGO_SECRET_KEY" in resultado.stderr
+
+
+def test_manage_py_continua_em_desenvolvimento():
+    """O ambiente local não muda: quem roda `manage.py` sem a variável continua em `development`."""
+    resultado = _processo(["manage.py", "shell", "--verbosity", "0", "-c", _QUAL_MODULO])
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.split() == ["config.settings.development", "True"]

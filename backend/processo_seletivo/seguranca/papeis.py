@@ -113,6 +113,11 @@ TABELAS_APPEND_ONLY = (
     # quem não teria permissão para ele. Reescrevê-lo mudaria, sem rastro, quem autorizou quem a ver
     # o quê; apagá-lo deixaria o acesso exercido sem fato que o justifique (036, FR-529, FR-533).
     "recursos_atodeinstrucao",
+    # A lista exigida da inscrição: o que foi pedido a ela, documento a documento, gravado no envio
+    # (044, FR-715). É a reprodução que a Constituição pede dos documentos exigidos de cada
+    # Inscrição; reescrevê-la mudaria, depois do fato, o que se pediu a alguém — e é contra ela que
+    # quem analisa decide se faltou documento.
+    "inscricoes_itemdalistaexigida",
 )
 
 

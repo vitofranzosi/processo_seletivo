@@ -142,6 +142,13 @@ confirmação adicional (D-001, FR-004, FR-006).
   {% endcomment %}
   {% if publicabilidade.admite_sucessor and pode_ver_a_classificacao %}
   <p><a class="botao" href="{% url 'interface:ordenacao' edital.id marco_id %}">Ir para a classificação do marco</a></p>
+  {% elif publicabilidade.admite_sucessor %}
+  {% comment %}
+  **Sem o caminho, a quem pedir** (045, FR-740). Quem só publica não abre a classificação, e o link
+  some; a instrução acima continuava mandando emitir o sucessor lá. A frase é do mecanismo único.
+  {% endcomment %}
+  <p class="ajuda">{{ conducao_do_sucessor }} A presidência não é papel: ela vem da composição da
+  comissão.</p>
   {% endif %}
 </section>
 {% endif %}

@@ -310,3 +310,21 @@ def test_o_endereco_que_nao_abre_responde_institucionalmente(client, seletor_lig
     assert "Cefor" in corpo
     assert "URLconf" not in corpo, "a lista de rotas não é resposta a ninguém"
     assert "Raised by" not in corpo
+
+
+def test_sem_o_caminho_da_classificacao_a_previa_diz_a_quem_pedir_o_sucessor(
+    client, seletor_ligado, com_a_regra_mudada
+):
+    """`045`, `FR-740`: a instrução de emitir o sucessor chegava a quem não abre a classificação.
+
+    O link some para quem só publica — corretamente, porque a porta responde 404 —, e a instrução
+    continuava mandando emitir lá. Sem caminho, a prévia diz a quem pedir; com caminho, não diz.
+    """
+    identificar(client, "paula.publicadora", ["publicador"])
+    sem_caminho = client.get(_previa(com_a_regra_mudada)).content.decode()
+    identificar(client, "paula.publicadora", ["publicador", "auditor"])
+    com_caminho = client.get(_previa(com_a_regra_mudada)).content.decode()
+
+    assert "Emitir o ato sucessor depende" in sem_caminho
+    assert "Peça a alguém com a permissão de gerir a comissão" in sem_caminho
+    assert "Emitir o ato sucessor depende" not in com_caminho

@@ -450,6 +450,9 @@ def replace_draft(
                     order=requirement.get("order", 0),
                     perfil_id=requirement.get("profileId"),
                     modalidade_id=requirement.get("modalityId"),
+                    # O recorte transversal (044). Pela mesma razão do Anexo abaixo, ele precisa
+                    # viajar em toda gravação: as linhas são recriadas a cada etapa.
+                    modalidade_codigo=requirement.get("modalityCode") or "",
                     # O modelo que o Edital fornece (020, FR-020). Estar aqui não é detalhe: as
                     # linhas são apagadas e recriadas a cada gravação de etapa, e um campo que não
                     # viaje no payload volta nulo — o vínculo morreria em silêncio, sem erro e sem

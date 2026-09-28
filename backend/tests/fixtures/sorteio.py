@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from processo_seletivo.shared.canonical import canonical_sha256
 from processo_seletivo.sorteios.models import ParticipanteHabilitado, RelacaoDeHabilitados
+from tests.fixtures.edital import corte_que_nao_governa
 
 MARCO = "00000000-0000-4000-8000-000000000821"
 LINHA_GERAL_DO_SORTEIO = "00000000-0000-0000-0000-0000000007f1"
@@ -72,6 +73,9 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
                 # tempo, o eixo perdido em `_janela_aberta` (018, FR-030; 021, FR-068).
                 "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
                 "drawMethod": METODO if metodo is None else metodo,
+                # Corta sem governar Etapa (046, `FR-752`): um Perfil em que nenhum marco corta
+                # não é publicado. Quem precisa de outra regra — `ocupacao_sorteada` — a troca.
+                "cutRule": corte_que_nao_governa(),
             }
         ]
     return rascunho

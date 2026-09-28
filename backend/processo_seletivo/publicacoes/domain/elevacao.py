@@ -116,6 +116,10 @@ DEGRAUS_DA_RAIZ = {
 # que ele deixe de mandar (020, FR-020).
 DEGRAUS_DE_DOCUMENTO = {
     9: {"attachmentId": None},
+    # **O degrau 17 é o recorte transversal** (044, R-002). `modalityCode` nulo diz "não recorta
+    # pelo código da Modalidade", e é o que todo requisito publicado antes afirma: recortava por
+    # Perfil, por Modalidade de um Perfil, ou por nada.
+    17: {"modalityCode": None},
 }
 
 COLECAO_DE_DOCUMENTOS = "documentRequirements"

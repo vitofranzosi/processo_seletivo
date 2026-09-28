@@ -12,7 +12,7 @@ from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.fixtures.comissao import inscrever, rascunho_com_etapas
-from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.edital import PROFILE_ID, corte_que_nao_governa
 from tests.fixtures.publicacao import publish_original
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
@@ -31,6 +31,8 @@ def cenario(api_client, manager_headers, process_payload):
     marco = uuid.uuid4()
     rascunho["profiles"][0]["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": str(marco),
             "code": "FINAL",
             "name": "Classificação final",

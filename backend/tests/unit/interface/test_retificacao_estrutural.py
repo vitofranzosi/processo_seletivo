@@ -14,6 +14,7 @@ from itertools import permutations
 
 import pytest
 
+from processo_seletivo.editais.domain.validation import EVENTO_PUBLICADO
 from processo_seletivo.interface import retificacao
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from tests.fixtures.snapshot import EVENTO, PERFIL, evento, perfil
@@ -191,6 +192,65 @@ def test_evento_acrescentado_continua_a_ordem_existente(conteudo):
 
     assert [e["order"] for e in resultado["schedule"]] == [1, 2, 3]
     assert resultado["schedule"][-1]["type"] == "Resultado"
+
+
+def test_evento_acrescentado_nasce_com_a_forma_declarada(conteudo):
+    """O gêmeo do guarda do Perfil, e faltava.
+
+    A comparação é com `EVENTO_PUBLICADO`, e não com o Evento vizinho da fixture: a fixture já tinha
+    `location` e `isRegistrationPeriod`, e o teste acima, que olhava só a ordem, passava com o
+    Evento acrescentado sem nenhum dos dois — que a elaboração do ato recusava.
+    """
+    resultado, _, _ = aplicar(
+        conteudo,
+        {
+            "novo-evento-3-type": "Resultado",
+            "novo-evento-3-description": "Divulgação",
+            "novo-evento-3-startAt": "2026-12-01T09:00",
+        },
+    )
+
+    acrescentado = resultado["schedule"][-1]
+    assert set(acrescentado) == {campo.nome for campo in EVENTO_PUBLICADO}
+    assert acrescentado["location"] == "", "local vazio é 'não declarado' (021, D-008)"
+    assert acrescentado["isRegistrationPeriod"] is False
+
+
+def test_evento_acrescentado_declara_o_local_no_mesmo_ato(conteudo):
+    """Sem o campo, o local só chegaria numa segunda Retificação — o ato não alcança o Evento que
+    ele mesmo acrescenta, porque a identidade nasce no servidor. A conferência mostra o local em
+    linha própria: é o que a pessoa candidata vai seguir para comparecer."""
+    resultado, _, resumo = aplicar(
+        conteudo,
+        {
+            "novo-evento-3-type": "PROVA",
+            "novo-evento-3-description": "Prova prática",
+            "novo-evento-3-startAt": "2026-12-01T09:00",
+            "novo-evento-3-location": "  Laboratório 2, Campus Serra  ",
+        },
+    )
+
+    assert resultado["schedule"][-1]["location"] == "Laboratório 2, Campus Serra"
+    assert {"grupo": "Evento PROVA", "rotulo": "Local", "antes": "—"}.items() <= next(
+        item for item in resumo if item["rotulo"] == "Local"
+    ).items()
+
+
+def test_evento_acrescentado_nao_nasce_marcado_como_periodo_de_inscricoes(conteudo):
+    """A marca fica fora do acréscimo por decisão, e o formulário não é fronteira: um POST
+    fabricado com o campo não pode fazer o Evento nascer disputando a designação."""
+    resultado, _, _ = aplicar(
+        conteudo,
+        {
+            "novo-evento-3-type": "INSCRICAO",
+            "novo-evento-3-description": "Inscrições, segunda chamada",
+            "novo-evento-3-startAt": "2026-12-01T09:00",
+            "novo-evento-3-isRegistrationPeriod": "on",
+        },
+    )
+
+    assert "isRegistrationPeriod" not in {chave for chave, *_ in retificacao.NOVO_EVENTO}
+    assert resultado["schedule"][-1]["isRegistrationPeriod"] is False
 
 
 def test_nada_marcado_nem_acrescentado_nao_produz_alteracao(conteudo):

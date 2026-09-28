@@ -84,30 +84,57 @@ FONTES = {
     "Loteria Federal": (
         "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.LoteriaFederal"
     ),
-    # O falso, endereçável por nome: é o que permite ao `seed_demo` e ao roteiro do `quickstart`
-    # rodarem sem rede, **sem** que a escolha do adaptador dependa de configuração de ambiente.
-    "Fonte de demonstração": (
-        "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.FonteDeTeste"
-    ),
 }
+
+# O falso, endereçável por nome: é o que permite ao `seed_demo`, ao roteiro do `quickstart` e à
+# suíte sortearem sem rede. **Fora de `FONTES`, e só no vocabulário onde a configuração o liga**
+# (046, `FR-757`): a semente dele é fixa, e um Edital de produção que o declarasse publicaria um
+# sorteio cujo resultado se conhece antes da extração (`RC-72`).
+FONTE_DE_DEMONSTRACAO = (
+    "Fonte de demonstração",
+    "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.FonteDeTeste",
+)
+
+
+def fontes_publicadas():
+    """O vocabulário de fontes **deste ambiente**: nome publicado → adaptador.
+
+    **Lido a cada chamada, e não montado no import**: um dicionário congelado no primeiro import não
+    responderia a `override_settings`, e os casos que exercitam produção dentro da suíte veriam o
+    vocabulário do ambiente de teste.
+
+    **O ambiente decide se o nome existe, e nunca para onde ele aponta.** A escolha do adaptador
+    continua sendo pelo nome que o Edital publicou (021, FR-076); o que a configuração faz é tirar
+    da lista, em produção, um nome que nenhum Edital real pode declarar. A composição oferece, a
+    validação aceita e a execução roda a partir desta mesma função — uma fonte só para as três.
+    """
+    from django.conf import settings
+
+    vocabulario = dict(FONTES)
+    if getattr(settings, "SORTEIO_FONTE_DE_DEMONSTRACAO", False):
+        nome, caminho = FONTE_DE_DEMONSTRACAO
+        vocabulario[nome] = caminho
+    return vocabulario
 
 
 def fonte_declarada(nome):
     """O adaptador que executa a fonte **que o Edital declarou**, e não o que o ambiente escolheu.
 
     A configuração continua existindo para o que é operação — tempo limite, tentativas —, e deixou
-    de decidir *de onde* a semente vem: isso é norma publicada.
+    de decidir *de onde* a semente vem: isso é norma publicada. O que ela decide é só se o nome
+    pertence ao vocabulário deste ambiente (`fontes_publicadas`).
     """
-    caminho = FONTES.get(nome)
+    vocabulario = fontes_publicadas()
+    caminho = vocabulario.get(nome)
     if caminho is None:
         raise DomainError(
             "draw_source_not_supported",
             f"Fonte não publicada por este sistema: {nome!r}. "
-            f"As publicadas são: {', '.join(sorted(FONTES))}.",
+            f"As publicadas são: {', '.join(sorted(vocabulario))}.",
             422,
             campo="source",
         )
     return import_string(caminho)()
 
 
-__all__ = ["FONTES", "FonteExterna", "Observacao", "fonte_declarada"]
+__all__ = ["FonteExterna", "Observacao", "fonte_declarada", "fontes_publicadas"]

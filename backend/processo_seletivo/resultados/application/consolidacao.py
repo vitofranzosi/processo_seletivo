@@ -89,8 +89,12 @@ def _inscricoes_da_selecao(edital, ids, panorama):
     para consolidar quem foi eliminado numa Etapa anterior não é o caminho normal esbarrando numa
     regra, é uma seleção que a tela não deveria ter oferecido (FR-007).
     """
+    # **Na ordem do protocolo**, porque a conferência de uma Etapa inteira são centenas de linhas,
+    # e quem a lê procura uma inscrição pelo número que o candidato tem na mão.
     inscricoes = list(
-        Inscricao.objects.filter(pk__in=ids, edital=edital, status=Inscricao.Status.SUBMETIDA)
+        Inscricao.objects.filter(
+            pk__in=ids, edital=edital, status=Inscricao.Status.SUBMETIDA
+        ).order_by("protocolo", "id")
     )
     if len(inscricoes) != len(set(ids)):
         raise DomainError(
@@ -225,11 +229,18 @@ def _planejar(etapa, panorama, inscricoes):
     return consolidaveis, recusas
 
 
+NADA_PRONTO = "Nenhuma inscrição desta Etapa está pronta para consolidar agora."
+
+
 def _plano_do_lote(edital, etapa_id, ids):
     """`(etapa, consolidáveis, recusas)` para aquela seleção, na Etapa vigente.
 
     **Uma leitura do panorama, antes do laço.** Elegíveis, Resultados existentes e conjuntos da
     progressão saem daqui; dentro do laço não há consulta nenhuma.
+
+    `ids=None` é o alcance **todas as prontas da Etapa**, e ele sai do mesmo panorama que conta o
+    "N prontas para consolidar" da tela: um segundo critério para o mesmo conjunto daria ao botão um
+    número e à conferência outro.
     """
     etapa, vigentes, conteudo = _etapa_vigente_ou_404(edital, etapa_id)
     panorama = panorama_da_etapa(
@@ -240,6 +251,18 @@ def _plano_do_lote(edital, etapa_id, ids):
         # Bloqueio da **Etapa inteira** é erro do pedido: nenhuma inscrição dela pode ser
         # consolidada, e recusar linha a linha repetiria a mesma frase mil vezes (FR-015).
         raise DomainError(bloqueio[0], bloqueio[1].capitalize() + ".", 422)
+    if ids is None:
+        # **Só as prontas**, e não também o cumprimento de decisão de reavaliação, que o panorama
+        # classifica à parte e que também é consolidável. Cada um desses sucede um Resultado
+        # protegido por recurso (FR-068), e chegar a ele pelo botão de um número que não o conta
+        # seria consolidá-lo sem que ninguém o tivesse pedido; ele continua pela seleção.
+        ids = [
+            identidade
+            for identidade, (estado, _motivo) in panorama["estados"].items()
+            if estado == PRONTA
+        ]
+        if not ids:
+            raise DomainError("nada_pronto", NADA_PRONTO, 422)
     inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
     return (etapa, *_planejar(etapa, panorama, inscricoes))
 
@@ -268,6 +291,25 @@ def prever(*, edital, etapa_id, inscricao_ids):
     por quem chegou até esta leitura.
     """
     return _plano_do_lote(edital, etapa_id, _selecao_exigida(inscricao_ids))
+
+
+def prever_as_prontas(*, edital, etapa_id):
+    """O alcance de consolidar **todas as prontas da Etapa**, e não as da página da listagem.
+
+    A página de 25 é da leitura, e não do ato: a confirmação já declara o alcance, e declarar 600
+    não protege menos que declarar 25 — só pedia 24 atos da presidência para uma decisão só (013,
+    FR-018, SC-002). O que esta leitura fixa são as **identidades**: a conferência as mostra, a
+    confirmação as devolve, e o ato consolida essas, e não "as que estiverem prontas" no instante
+    dele. Resolver o conjunto de novo no ato consolidaria quem ficou pronto entre as duas telas sem
+    que a presidência o tivesse visto — e a mesma chave, sobre outro conjunto, deixaria de ser a
+    repetição do mesmo ato (FR-021, FR-022).
+
+    **Um ato, e não blocos.** Medido em 27/09 contra PostgreSQL: 600 inscrições consolidam em
+    ~0,21 s, e a trava do Processo fica presa o mesmo tanto; 2719, o maior recorte da amostra, em
+    ~0,85 s. O custo é linear — um Resultado e um evento por linha — e cabe numa transação com
+    folga, de modo que dividi-la só abriria a janela em que metade da decisão existe.
+    """
+    return _plano_do_lote(edital, etapa_id, None)
 
 
 def consolidar(
@@ -351,4 +393,13 @@ def consolidar(
         return declarado
 
 
-__all__ = ["ATO", "CONSOLIDAR", "Consolidavel", "Recusa", "consolidar", "prever"]
+__all__ = [
+    "ATO",
+    "CONSOLIDAR",
+    "NADA_PRONTO",
+    "Consolidavel",
+    "Recusa",
+    "consolidar",
+    "prever",
+    "prever_as_prontas",
+]

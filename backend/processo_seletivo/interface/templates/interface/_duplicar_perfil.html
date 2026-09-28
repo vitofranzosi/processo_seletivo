@@ -1,0 +1,36 @@
+{% comment %}
+Duplicar este Perfil (043). Pede só o que muda entre Perfis irmãos, Código e Localidade (D-003), e
+devolve a cópia logo abaixo do cartão de origem.
+
+**Os dois campos ficam fora do formulário da etapa** (R-007): `form` aponta um identificador que
+não é o do formulário. Dentro dele, o rascunho local agruparia `duplicar-3-code` com `perfil-3-code`
+e restauraria o Código do Perfil vazio; e os campos viajariam na gravação da etapa. O `hx-include`
+os nomeia pelo `id`.
+
+Este bloco é também o que volta sozinho na recusa, com a mensagem no campo: por isso o `id` no
+`details` e o `open` quando houve erro. E volta **fora de banda** no sucesso (`oob`): sem isso, o
+diálogo da origem ficava aberto, com a recusa anterior e o Código da cópia ainda digitados — visto
+no navegador, na demonstração.
+{% endcomment %}
+<details class="como-preencher" id="duplicar-{{ indice }}"{% if aberto %} open{% endif %}{% if oob %} hx-swap-oob="outerHTML"{% endif %}>
+  <summary>Duplicar este Perfil</summary>
+  <div class="campos">
+    <p class="campo curto">
+      <label for="duplicar-{{ indice }}-codigo">Código do novo Perfil <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="duplicar-{{ indice }}-codigo" name="duplicar-codigo"
+             form="duplicar-{{ indice }}-fora" value="{{ codigo|default:'' }}" aria-required="true"
+             {% if erro and erro_no_codigo %}aria-invalid="true" aria-describedby="duplicar-{{ indice }}-recusa" autofocus{% endif %}>
+      {% if erro and erro_no_codigo %}<span class="recusa" role="alert" id="duplicar-{{ indice }}-recusa">{{ erro }}</span>{% endif %}
+    </p>
+    <p class="campo">
+      <label for="duplicar-{{ indice }}-localidade">Localidade do novo Perfil</label>
+      <input type="text" id="duplicar-{{ indice }}-localidade" name="duplicar-localidade"
+             form="duplicar-{{ indice }}-fora" value="{{ localidade|default:'' }}">
+      {% if erro and not erro_no_codigo %}<span class="recusa" role="alert" id="duplicar-{{ indice }}-recusa">{{ erro }}</span>{% endif %}
+    </p>
+  </div>
+  <button type="button" class="acao"
+          hx-get="{% url 'interface:fragmento-perfil-duplicado' indice %}?edital={{ edital.id }}"
+          hx-include="closest fieldset, #perfis [name^='perfil-'][name$='-code'], #duplicar-{{ indice }}-codigo, #duplicar-{{ indice }}-localidade"
+          hx-target="closest fieldset" hx-swap="afterend">Criar a cópia</button>
+</details>

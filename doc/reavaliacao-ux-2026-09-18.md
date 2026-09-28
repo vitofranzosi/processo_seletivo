@@ -696,6 +696,14 @@ publicação como advertência.
 
 **Cria**: spec curta. A distinção existe; falta o aviso virar impedimento.
 
+> **Substituída em 26/09/2026, na forma, pela `D-002` da
+> [`046`](../specs/046-contrato-de-executabilidade/spec.md)** — decisão do usuário. A conferência
+> contra o código mostrou que *"não governa Etapa alguma"* continua sendo regra de corte, com alvo, e
+> por isso não serve de declaração a quem não corta: aplicada por marco, esta decisão obrigaria o
+> marco preliminar de um Perfil que corta no final a inventar um alvo. O impeditivo passou a ser do
+> **Perfil** em que nenhum marco corta, e o aviso da `FR-461` continua para o marco sem corte num
+> Perfil que corta. O texto acima fica como foi escrito.
+
 ### D-G2 — a fronteira entre `403` e `404`, e ela não é em bloco
 
 **Registrada por**: `033`, §8 — o inventário das sete recusas fora das portas.

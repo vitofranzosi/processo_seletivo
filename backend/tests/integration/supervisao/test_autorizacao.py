@@ -140,33 +140,23 @@ def test_quem_nao_alcanca_os_recursos_nao_ve_o_sinal_nem_a_supressao(
     assert "Inscrições por Edital" in corpo
 
 
-def test_processo_cancelado_le_e_nao_oferece_o_que_a_situacao_nao_admite(
+def test_processo_cancelado_continua_legivel(
     client, seletor_ligado, processo_a, edital_a, comissao_de_a
 ):
-    """`FR-036`: a supervisão continua legível, e o beco não é oferecido.
+    """`FR-036`: a supervisão de um Processo em estado final continua legível.
 
-    Processo em estado final não admite alteração dos seus Editais — é o domínio que diz —, e
-    encaminhar para a composição seria mandar quem lê a uma tela onde não há o que fazer. A `007`
-    passou uma feature inteira tirando exatamente isso.
+    *A metade "não oferece o que a situação não admite" era provada aqui sobre o `UX-001`*, que
+    saiu do catálogo (045). Ela vive agora sobre o `UX-046`, a única espécie que ainda leva à
+    Retificação — e com uma regra mais forte: onde a Retificação não é possível, o sinal nem é
+    condição de Atenção (045, `FR-741`), em
+    `tests/integration/supervisao/test_sinal_do_acervo_sem_quadro.py`.
     """
-    from processo_seletivo.interface import supervisao
-    from tests.conftest import ator_institucional
-
-    # Quem preside **e** pode elaborar Retificação: é essa a combinação que recebe o caminho, e
-    # sem ela o teste não distinguiria "a situação não admite" de "este ator não pratica o ato".
-    presidenta = ator_institucional("maria", "retificacao:elaborar")
-    antes = supervisao.sinais(processo_a, presidenta)
-    assert [sinal.especie for sinal in antes] == [supervisao.UX_001]
-    assert antes[0].destino is not None
-
     ProcessoSeletivo.objects.filter(pk=processo_a.pk).update(
         status=ProcessoSeletivo.Status.CANCELADO
     )
-    processo_a.refresh_from_db()
 
     identificar(client, "maria", [])
-    assert client.get(url(processo_a)).status_code == 200
+    resposta = client.get(url(processo_a))
 
-    depois = supervisao.sinais(processo_a, presidenta)
-    assert [sinal.especie for sinal in depois] == [supervisao.UX_001]
-    assert depois[0].destino is None, "o encaminhamento que a situação não admite não é oferecido"
+    assert resposta.status_code == 200
+    assert "Atenção" in resposta.content.decode()

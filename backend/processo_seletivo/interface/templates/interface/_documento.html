@@ -52,17 +52,34 @@
       {% if recusado_perfil %}<span class="recusa" role="alert">{{ recusado_perfil }}</span>{% endif %}
       <span class="oculto" id="ajuda-alcance-{{ indice }}">Deixe em "todos" quando o documento vale para qualquer candidato.</span>
     </p>
-    <p class="campo">
+    {% comment %}
+    Um seletor só para as duas formas de recortar por modalidade (044, R-009): a de um código em
+    todos os Perfis, antes, e a de um Perfil, depois. Um só é o que as torna exclusivas. O grupo de
+    baixo não se chama "Num Perfil só" porque, com o Perfil em "Todos", o par é a forma que a #161
+    recusa na publicação — e o rótulo não pode prometer o contrário.
+    {% endcomment %}
+    <p class="campo" id="documento-{{ indice }}-modalityCode">
       <label for="documento-{{ indice }}-modalityId">Exigido apenas da modalidade</label>
       {% recusa_de recusas "documento" indice "modalityId" as recusado_modalidade %}
+      {% recusa_de recusas "documento" indice "modalityCode" as recusado_codigo %}
       <select id="documento-{{ indice }}-modalityId" name="documento-{{ indice }}-modalityId"
-              {% if recusado_modalidade %}aria-invalid="true"{% endif %}>
+              {% if recusado_modalidade or recusado_codigo %}aria-invalid="true"{% endif %}>
         <option value="">Todas as modalidades</option>
-        {% for perfil in alcance %}{% for modalidade in perfil.modalidades %}
-        <option value="{{ modalidade.id }}" {% if documento.modalityId == modalidade.id %}selected{% endif %}>{{ perfil.rotulo }} · {{ modalidade.rotulo }}</option>
-        {% endfor %}{% endfor %}
+        {% if transversais %}
+        <optgroup label="Em todos os Perfis">
+          {% for opcao in transversais %}
+          <option value="{{ opcao.valor }}" {% if documento.modalityCode == opcao.codigo %}selected{% endif %}>{{ opcao.rotulo }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endif %}
+        <optgroup label="Modalidade de um Perfil">
+          {% for perfil in alcance %}{% for modalidade in perfil.modalidades %}
+          <option value="{{ modalidade.id }}" {% if documento.modalityId == modalidade.id %}selected{% endif %}>{{ perfil.rotulo }} · {{ modalidade.rotulo }}</option>
+          {% endfor %}{% endfor %}
+        </optgroup>
       </select>
       {% if recusado_modalidade %}<span class="recusa" role="alert">{{ recusado_modalidade }}</span>{% endif %}
+      {% if recusado_codigo %}<span class="recusa" role="alert">{{ recusado_codigo }}</span>{% endif %}
     </p>
   </div>
   {% comment %}

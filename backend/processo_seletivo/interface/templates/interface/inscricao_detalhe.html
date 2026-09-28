@@ -1,4 +1,5 @@
 {% extends "interface/base.html" %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -88,11 +89,15 @@
   sistema e uma pasta de arquivos: requisito sem arquivo aparece como requisito sem arquivo, que
   é informação — não uma linha que some (FR-068).
   {% endcomment %}
+  {% if lista_reconstruida %}
+  <p class="aviso-da-lista">Esta inscrição foi enviada antes de o sistema gravar a lista de documentos pedidos. A lista abaixo foi reconstruída a partir da versão do Edital que ela aceitou.</p>
+  {% endif %}
   <ul class="requisitos-apresentados">
     {% for documento in documentos %}
     <li>
       <p class="requisito-nome"><strong>{{ documento.nome }}</strong>
         {% if not documento.obrigatorio %}<span class="ajuda">(facultativo)</span>{% endif %}</p>
+      {% if documento.razao %}<p class="ajuda">{{ documento.razao }}</p>{% endif %}
       {% if documento.enviado %}
       <p>{{ documento.enviado.nome_original }}
         <span class="ajuda">· {{ documento.tamanho }}
@@ -117,5 +122,18 @@
     </li>
     {% endfor %}
   </ul>
+  {% comment %}
+  O que não se aplicava a esta inscrição, e a quem era pedido (044, FR-719). Antes sumia da
+  conferência, e com ele o que o portal dispensou por erro de recorte.
+  {% endcomment %}
+  {% if nao_se_aplicam %}
+  <h3 id="nao-se-aplicam">Não se aplicam a esta inscrição</h3>
+  <ul class="nao-se-aplicam" aria-labelledby="nao-se-aplicam">
+    {% for documento in nao_se_aplicam %}
+    <li><span class="requisito">{{ documento.nome }}</span>
+      <span class="razao">{{ documento.razao }}</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 </section>
 {% endblock %}

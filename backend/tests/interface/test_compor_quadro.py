@@ -1017,6 +1017,31 @@ def test_o_seletor_declara_a_reacao_no_html(client, seletor_ligado, composto):
     assert "js:" not in seletor
 
 
+def test_remover_uma_modalidade_reconstroi_o_quadro(client, seletor_ligado, composto):
+    """Removida a última lista reservada, a seção ficava dizendo "Este Perfil declara lista
+    reservada" até a próxima gravação — `junto=` levava a linha, e só a linha."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    corpo = tela(client, composto)
+
+    ancora = re.search(r'<div id="quadro-0"[^>]*>', corpo).group(0)
+    assert reverse("interface:fragmento-quadro", args=[0]) in ancora
+    # O botão removido sai da página, e o htmx dispara o evento no primeiro ancestral que ficou:
+    # é a lista, e não o botão, que o quadro escuta.
+    assert 'hx-trigger="htmx:afterRequest from:#modalidades-0"' in ancora
+    assert 'hx-include="closest fieldset"' in ancora
+    # Acrescentar fica fora da lista: o quadro dele chega fora de banda, e reconstruí-lo por cima
+    # seria um segundo pedido para o mesmo resultado.
+    inicio = corpo.index('<div id="modalidades-0">')
+    profundidade, posicao = 0, inicio
+    for marca in re.finditer(r"<div\b|</div>", corpo[inicio:]):
+        profundidade += 1 if marca.group(0) == "<div" else -1
+        if profundidade == 0:
+            posicao = inicio + marca.end()
+            break
+    assert "Acrescentar Modalidade" not in corpo[inicio:posicao]
+    assert "Acrescentar Modalidade" in corpo[posicao:]
+
+
 # --- A composição que se explica (030, FR-417) ----------------------------------------------
 
 

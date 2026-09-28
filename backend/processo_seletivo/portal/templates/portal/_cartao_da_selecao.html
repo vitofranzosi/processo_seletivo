@@ -19,7 +19,7 @@ O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elem
   Cor **e** palavra: quem não distingue as cores lê a mesma coisa (UX-019).
   {% endcomment %}
   {% if selecao.situacao_rotulo %}
-  <p class="marca-situacao {{ selecao.periodo.estado }}">{{ selecao.situacao_rotulo }}</p>
+  <p class="marca-situacao {{ selecao.situacao_chave }}">{{ selecao.situacao_rotulo }}</p>
   {% endif %}
   {% comment %}
   A consulta viaja no link (024, FR-144). Sem isto, abrir uma seleção e voltar devolvia a pessoa ao
@@ -48,7 +48,7 @@ O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elem
   </p>
   {% endif %}
 
-  {% include "portal/_periodo.html" with periodo=selecao.periodo dias_restantes=selecao.dias_restantes %}
+  {% include "portal/_periodo.html" with periodo=selecao.periodo dias_restantes=selecao.dias_restantes desfecho=selecao.desfecho %}
 
   {% comment %}
   **Toda seleção tem caminho visível** (024, FR-148).
@@ -59,7 +59,7 @@ O cartão inteiro é alvo do toque; o link é um só, estendido pelo pseudo-elem
   o que muda é ele parecer o que é.
   {% endcomment %}
   <p class="convite-da-vitrine">
-    {% if selecao.periodo.estado == "aberto" %}
+    {% if selecao.estado == "aberto" %}
     <span class="acao-aparente">Ver vagas e inscrever-se</span>
     {% else %}
     <span class="acao-aparente discreta">Ver a seleção</span>

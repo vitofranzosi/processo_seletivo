@@ -65,11 +65,14 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
     <p class="ajuda">Escolha como você concorre nesta vaga. A escolha decide quais documentos
       serão pedidos a você.</p>
     <p class="campo">
-      <label for="modalidade">Modalidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <label for="modalidade">Modalidade{% if escolha_obrigatoria %} <span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</label>
       {% comment %}
-      A opção vazia não é uma modalidade inventada: quando o Edital declara ampla concorrência, é
-      a dele que aparece na lista (FR-039). E ela não é aceita como resposta — o servidor recusa,
-      porque a aplicabilidade dos documentos depende desta escolha.
+      A opção vazia tem dois sentidos, e o Perfil decide qual. Quando ele oferece a ampla sem
+      Modalidade — só cotas declaradas e vaga na linha geral —, ela **é** a ampla concorrência: vem
+      primeiro e marcada, porque é o que um rascunho sem modalidade é, e o servidor a lê como
+      ausência de reserva (FR-039; DP-14). Nos demais, é só o convite a escolher: quando o Edital
+      declara a ampla, é a dele que aparece na lista, e o vazio é recusado pelo servidor, porque a
+      aplicabilidade dos documentos depende desta escolha.
       {% endcomment %}
       {% comment %}
       `data-guardar` liga o campo ao script que submete a escolha na hora, com `acao=guardar`: a
@@ -78,10 +81,10 @@ e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
       ("a escolha decide quais documentos serão pedidos") passa a valer nos dois casos: com script,
       na hora; sem script, no passo seguinte.
       {% endcomment %}
-      <select id="modalidade" name="modalidade" required aria-required="true" data-guardar>
-        <option value="">Selecione a modalidade</option>
+      <select id="modalidade" name="modalidade" {% if escolha_obrigatoria %}required aria-required="true"{% endif %} data-guardar>
+        {% if escolha_obrigatoria %}<option value="">Selecione a modalidade</option>{% endif %}
         {% for modalidade in modalidades %}
-        <option value="{{ modalidade.id }}" {% if inscricao.modality_id|stringformat:"s" == modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>
+        <option value="{{ modalidade.id }}" {% if modalidade.selecionada %}selected{% endif %}>{{ modalidade.nome }}</option>
         {% endfor %}
       </select>
     </p>

@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
 from tests.fixtures.comissao import inscrever, rascunho_com_etapas
-from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.edital import PROFILE_ID, corte_que_nao_governa
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
@@ -26,6 +26,8 @@ def edital_com_marco(api_client, manager_headers, process_payload):
     etapa["weight"] = "1.0000"
     rascunho["profiles"][0]["classificationMilestones"] = [
         {
+            # Corta sem governar Etapa (046, `FR-752`): não muda quem participa de nada.
+            "cutRule": corte_que_nao_governa(),
             "id": MARCO,
             "code": "FINAL",
             "name": "Classificação final",

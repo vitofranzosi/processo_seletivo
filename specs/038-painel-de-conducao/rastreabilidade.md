@@ -40,7 +40,7 @@ revisão e prendidos por teste:
 | Caso-limite | O que faltava | O que o prende |
 |---|---|---|
 | *"Ator que alcança o Processo e nenhum dos destinos. **Lê o estado** e não recebe caminho algum."* | a região inteira pendia de `pode_supervisionar`: quem alcançava o Processo e não a Supervisão não lia **estado nenhum** | `test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho` |
-| *"**Edital encerrado ou cancelado.** Não produz sinal de trabalho pendente — o que parou, parou por ato."* | "publicado" queria dizer apenas *tem conteúdo vigente*, e um Edital encerrado continua tendo: as quatro espécies seguiam montadas, **com destino** | `test_edital_parado_por_ato_nao_aponta_trabalho_pendente` (encerrado **e** cancelado) e `test_o_edital_parado_nao_silencia_as_especies_anteriores` |
+| *"**Edital encerrado ou cancelado.** Não produz sinal de trabalho pendente — o que parou, parou por ato."* | "publicado" queria dizer apenas *tem conteúdo vigente*, e um Edital encerrado continua tendo: as quatro espécies seguiam montadas, **com destino** | `test_edital_parado_por_ato_nao_aponta_trabalho_pendente` (encerrado **e** cancelado) e `test_o_edital_parado_nao_silencia_as_especies_anteriores`; *refinado em 26/09 (RC-115)*: o `UX-064` não se cala — `test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide` |
 
 A segunda correção é **assimétrica de propósito**: `alcance_no_edital` retira apenas as quatro
 espécies de trabalho pendente. As seis anteriores continuam como estavam — o `UX-001` e o `UX-002`

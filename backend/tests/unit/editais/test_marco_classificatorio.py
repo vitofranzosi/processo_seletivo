@@ -12,6 +12,7 @@ sobra como caso real de não recomputabilidade é a remoção do **marco** (FR-0
 import pytest
 
 from processo_seletivo.editais.domain.validation import blocking_findings, validate_for_publication
+from tests.fixtures.edital import corte_que_nao_governa
 from tests.fixtures.snapshot import ETAPA, FATO, PERFIL, conteudo_normativo
 
 MARCO = "00000000-0000-0000-0000-000000000541"
@@ -68,6 +69,8 @@ def conteudo_com_marco(
             "normalization": "NENHUMA",
             "rounding": ARREDONDAMENTO if rounding is None else rounding,
             "tiebreakers": [criterio()] if criterios is None else criterios,
+            # Corta sem governar Etapa (046, `FR-752`): sem regra, o Perfil não publica.
+            "cutRule": corte_que_nao_governa(),
         }
     ]
     return conteudo

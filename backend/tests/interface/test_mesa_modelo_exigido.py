@@ -84,6 +84,8 @@ def cenario(gestor, api_client, manager_headers):
         seed=SEED,
         com_documentos=True,
         avaliacoes=2,
+        # Duas avaliações por inscrição: depois da `046`, só existe no acervo (`FR-746`).
+        como_acervo=True,
         maxima="100.0000",
         anexos=1,
         antes_de_submeter=vincular,
@@ -182,6 +184,22 @@ def test_o_modelo_que_a_mesa_abre_tem_os_bytes_daquela_versao(
     assert baixado.status_code == 200
     assert baixado.content == bytes(ArtefatoAnexo.objects.get(pk=antigo.id).bytes)
     assert baixado.content != bytes(ArtefatoAnexo.objects.get(pk=novo.id).bytes)
+
+
+def test_a_instrucao_do_edital_chega_a_mesa(client, seletor_ligado, cenario, gestor):
+    """A condição do requisito vinha escrita na instrução, e a Mesa não a mostrava.
+
+    Na conferência de 25/09/2026, a autodeclaração "apenas para quem concorre na modalidade PcD"
+    faltava igual na inscrição de ampla e na de PcD, e quem avaliava não tinha como distinguir as
+    duas ausências (doc/conferencia-envio-e-analise-documental.md).
+    """
+    inscricoes = inscricoes_de(cenario, 1, primeiro=9140)
+    distribuir_para(cenario, gestor, ["joao"], inscricoes, chave="instrucao")
+    identificar(client, "joao", [])
+
+    corpo = abrir_mesa(client, cenario, inscricoes[0])
+
+    assert '<span class="instrucao">Frente e verso, em arquivo único.</span>' in corpo
 
 
 # O que a superfície do modelo tem permissão de dizer. É lista de **permitidos**, e não de

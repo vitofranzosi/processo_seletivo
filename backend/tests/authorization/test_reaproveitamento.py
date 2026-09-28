@@ -25,9 +25,11 @@ pytestmark = [pytest.mark.django_db]
 
 @pytest.fixture
 def origem(api_client, manager_headers, process_payload):
-    from tests.fixtures.publicacao import publish_original
+    from tests.fixtures.legado import publicar_como_acervo
 
-    return publish_original(
+    # A origem rica tem dupla leitura numa Etapa enumerada: depois da `046`, é Edital do acervo
+    # (`FR-746`) — e reaproveitar do acervo é o caso que a cópia precisa continuar alcançando.
+    return publicar_como_acervo(
         api_client, manager_headers, process_payload, draft=rascunho_rico(), anexos=1
     )
 

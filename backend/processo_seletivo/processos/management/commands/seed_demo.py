@@ -558,6 +558,18 @@ def perfil_de_sorteio(numero):
                     # que faz a `021` funcionar desde a `030`: o método continua publicado antes do
                     # congelamento, e a resolução o encontra — só que declarado uma vez.
                     "drawMethod": None,
+                    # **Corta, e não governa Etapa** (046, `FR-752`): Perfil em que nenhum marco
+                    # corta não convoca ninguém, e deixou de ser publicável. É a forma do 69/2026 —
+                    # a regra existe e não muda quem participa de nada. O alvo é o quadro inteiro
+                    # deste Perfil, 30 da ampla e 10 da reservada.
+                    "cutRule": {
+                        "targetKind": "FIXED",
+                        "targetCount": 40,
+                        "surplusCount": 0,
+                        "tieOutcome": "STRICT",
+                        "governedStage": "NONE",
+                        "continuation": "NONE",
+                    },
                 }
             ],
         }
@@ -1113,6 +1125,7 @@ class Command(BaseCommand):
         que dependesse de rede não rodaria numa máquina sem internet, e o roteiro do `quickstart`
         deixaria de ser executável (R-005).
         """
+        from processo_seletivo.inscricoes.application.lista_exigida import gravar_lista_exigida
         from processo_seletivo.inscricoes.models import Inscricao
         from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
         from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
@@ -1165,6 +1178,10 @@ class Command(BaseCommand):
                 declaracoes_aceitas_em=agora,
             )
             inscricao.refresh_from_db()
+            # A lista do que foi pedido, como o envio grava (044): com a versão e o instante do
+            # envio, que é o que o gatilho de coerência exige. Sem ela a demonstração mostraria só
+            # listas reconstruídas, e a Mesa anunciaria em todas uma reconstrução que não houve.
+            gravar_lista_exigida(inscricao, versao=versao, agora=agora)
             self._dar_acesso(inscricao)
 
         relacao = publicar_relacao(
@@ -1229,6 +1246,7 @@ class Command(BaseCommand):
             publicar_resultado,
         )
         from processo_seletivo.divulgacao.domain.conteudo import compor
+        from processo_seletivo.inscricoes.application.lista_exigida import gravar_lista_exigida
         from processo_seletivo.inscricoes.models import Inscricao
         from processo_seletivo.resultados.application.consolidacao import consolidar
 
@@ -1328,6 +1346,10 @@ class Command(BaseCommand):
                 declaracoes_aceitas_em=agora,
             )
             inscricao.refresh_from_db()
+            # A lista do que foi pedido, como o envio grava (044): com a versão e o instante do
+            # envio, que é o que o gatilho de coerência exige. Sem ela a demonstração mostraria só
+            # listas reconstruídas, e a Mesa anunciaria em todas uma reconstrução que não houve.
+            gravar_lista_exigida(inscricao, versao=versao, agora=agora)
             self._dar_acesso(inscricao)
             inscricoes.append(inscricao)
 

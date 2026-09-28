@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 
 # O que o conteúdo publicado carrega e o rascunho não grava. Não é conveniência: `replace_draft`
@@ -158,6 +159,26 @@ def remapear(conteudo, mapa):
                     **metodo,
                     "qualifyingStageId": trocar(
                         metodo["qualifyingStageId"], "drawMethod.qualifyingStageId"
+                    ),
+                }
+            # **A Etapa que o corte alimenta**, e o custo do esquecimento é o da ampla concorrência
+            # declarada: a regra copiada governava a Etapa do Edital **anterior**, a gravação não
+            # confere a referência, e só a publicação acusava — com uma pendência que quem
+            # reaproveitou não causou (achado-etapa-governada-nao-remapeada.md).
+            #
+            # O sentinela atravessa intocado: `NONE` é a declaração de que o corte não governa Etapa
+            # alguma (D-012), e não identidade. Passá-lo por `trocar` recusaria a cópia de todo
+            # Edital com marco terminal.
+            regra_de_corte = marco.get("cutRule")
+            if regra_de_corte and regra_de_corte.get("governedStage") not in (
+                None,
+                "",
+                faixa.SEM_ETAPA_GOVERNADA,
+            ):
+                novo_marco["cutRule"] = {
+                    **regra_de_corte,
+                    "governedStage": trocar(
+                        regra_de_corte["governedStage"], "cutRule.governedStage"
                     ),
                 }
             criterios = []

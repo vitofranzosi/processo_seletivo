@@ -77,7 +77,15 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
              name="campo:{{ campo.referencia }}"
              type="{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %}number{% elif campo.tipo == 'instante' %}datetime-local{% else %}text{% endif %}"
              {% if campo.tipo == 'decimal' %}step="0.0001"{% endif %}
+             {% if campo.rotulo_do_vazio %}aria-describedby="vazio-{{ campo.referencia }}"{% endif %}
              value="{{ campo.valor }}">
+      {% comment %}
+      O que o vazio significa, no campo que faz nascer uma declaração (048, FR-799). No `select` o
+      rótulo é a própria opção vazia; aqui não há opção, e a frase vai ao lado.
+      {% endcomment %}
+      {% if campo.rotulo_do_vazio %}
+      <span class="ajuda" id="vazio-{{ campo.referencia }}">{{ campo.rotulo_do_vazio }}.</span>
+      {% endif %}
       {% endif %}
     </p>
     {% endfor %}

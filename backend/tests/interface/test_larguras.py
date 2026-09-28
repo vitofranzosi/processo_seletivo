@@ -279,7 +279,7 @@ def test_os_numeros_da_distribuicao_sao_o_filtro(
     # **seja** o filtro, e não que o endereço exista em algum canto.
     controle = re.search(r'<nav class="filtros-da-mesa"[^>]*>(.*?)</nav>', corpo, re.S)
     assert controle, "a distribuição tem o controle de cobertura"
-    for alvo in ("?cobertura=sem_nenhum", "?cobertura=incompleta", "?cobertura=avaliacao_pendente"):
+    for alvo in ("?cobertura=sem_nenhum", "?cobertura=carente", "?cobertura=avaliacao_pendente"):
         assert alvo in controle.group(1), alvo
 
 

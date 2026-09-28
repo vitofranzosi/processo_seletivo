@@ -127,9 +127,22 @@ TELAS_CRITICAS = [
     ("interface:identificar", None),
 ]
 NAO_NATIVOS = re.compile(
-    r"<(?!a\b|button\b|input\b|select\b|textarea\b|main\b)[a-z]+[^>]*\s(?:onclick|hx-get|hx-post)=",
+    r"<(?!a\b|button\b|input\b|select\b|textarea\b|main\b)[a-z]+[^>]*\s(?:onclick|hx-get|hx-post)=[^>]*>",
     re.IGNORECASE,
 )
+# **O que reage a outro elemento não é controle.** O quadro do Perfil se reconstrói quando uma
+# Modalidade é removida: ninguém clica nele, e não há o que o teclado alcançar — quem é acionado é
+# o botão da Modalidade, que é nativo. O que a guarda procura é o `div` que a pessoa aciona, e esse
+# nunca declara `from:`.
+REACAO_A_OUTRO_ELEMENTO = re.compile(r'hx-trigger="[^"]*\bfrom:[^"]*"')
+
+
+def controles_nao_nativos(corpo):
+    return [
+        tag.group(0)
+        for tag in NAO_NATIVOS.finditer(corpo)
+        if "onclick" in tag.group(0) or not REACAO_A_OUTRO_ELEMENTO.search(tag.group(0))
+    ]
 
 
 @pytest.mark.parametrize(
@@ -144,7 +157,7 @@ def test_controles_sao_nativos(template):
     """
     corpo = (BASE.parent / template).read_text()
 
-    assert not NAO_NATIVOS.search(corpo), "controle interativo fora de elemento nativo"
+    assert not controles_nao_nativos(corpo), "controle interativo fora de elemento nativo"
     # `<a(?=[\s>])` e não `<a`: sem isso, <article> casa e o teste acusa o que não existe.
     assert not re.search(r"<a(?=[\s>])(?![^>]*\bhref=)[^>]*>", corpo), (
         "âncora sem href não recebe foco"
@@ -432,9 +445,21 @@ _BLOCO_DE_ESTILO = re.compile(
 _INCLUI = re.compile(r'\{%\s*include\s+"[\w/]+/([\w.\-]+)"')
 
 
+_INCLUSAO = re.compile(r"""\{%\s*include\s+["']([^"']+)["']\s*%\}""")
+
+
 def _estilo_proprio(template):
+    """O bloco de estilo da página, com os `include` de dentro dele resolvidos.
+
+    A `044` pôs num parcial as regras que só a Mesa e o detalhe da consulta usam, incluído pelo
+    bloco das duas: no `base.html` elas iam em toda página, e a tela de distribuição passou do teto
+    de bytes. Sem resolver o `include`, as classes dessas duas páginas seriam acusadas de órfãs.
+    """
     achado = _BLOCO_DE_ESTILO.search(template.read_text())
-    return achado.group(1) if achado else ""
+    if not achado:
+        return ""
+    raiz = template.parent.parent
+    return _INCLUSAO.sub(lambda inclusao: (raiz / inclusao.group(1)).read_text(), achado.group(1))
 
 
 def folha_da_pagina(template, da_base, pasta):

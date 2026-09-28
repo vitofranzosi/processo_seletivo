@@ -3,20 +3,31 @@ FR-027: a pendência aponta para onde se resolve — e diz quando não há onde,
 caminho que não termina em lugar nenhum. O domínio já informa o campo de cada achado; a tela só
 precisa não descartar essa informação.
 {% endcomment %}
+{% load interface_extras %}
+{% comment %}
+**As advertências que se repetem por Evento chegam dobradas** (estudo de esforço, §12, itens 6 e
+13): onze linhas iguais de "já passou" empurravam os impedimentos para fora da tela. Dobradas, e
+não descartadas — cada uma continua lá dentro, com a frase e o caminho dela. `details` porque abre
+por teclado e anuncia o estado sem script.
+{% endcomment %}
 <ul>
-  {% for item in itens %}
-  <li class="p-{{ item.severidade }}">
-    <span class="marcador">{% if item.severidade == 'erro' %}Impede{% else %}Aviso{% endif %}</span>
-    {{ item.mensagem }}
-    {% if com_link %}
-      {% if item.corrigivel %}
-      <a href="{% url 'interface:compor-etapa' edital.id item.etapa %}{{ item.ancora }}"
-         class="acao">Ir para {{ item.rotulo_etapa }}</a>
-      {% elif item.motivo %}
-      <span class="ajuda">Não corrigível aqui: {{ item.motivo }}.</span>
-      {% endif %}
-    {% endif %}
+  {% for entrada in itens|agrupar_repetidas %}
+  {% if entrada.itens %}
+  <li class="p-{{ entrada.severidade }}">
+    <details class="repetidas">
+      <summary><span class="marcador">Aviso</span> {{ entrada.resumo }}</summary>
+      <ul>
+        {% for item in entrada.itens %}
+        <li class="p-{{ item.severidade }}">{% include "interface/_pendencia.html" %}</li>
+        {% endfor %}
+      </ul>
+    </details>
   </li>
+  {% else %}
+  {% with item=entrada.item %}
+  <li class="p-{{ item.severidade }}">{% include "interface/_pendencia.html" %}</li>
+  {% endwith %}
+  {% endif %}
   {% endfor %}
 </ul>
 {% comment %}
@@ -37,7 +48,6 @@ A frase vem pronta da view, produzida pelo mecanismo único (FR-543) na forma ch
 nomeia a permissão e nunca uma pessoa (FR-543b), e só existe para quem não pode compor — dizer
 "peça a alguém" a quem tem o formulário à frente é falso (FR-544).
 {% endcomment %}
-{% load interface_extras %}
 {% with conducao=itens|conducao_da_lista %}
 {% if conducao %}<p class="ajuda">{{ conducao }}</p>{% endif %}
 {% endwith %}

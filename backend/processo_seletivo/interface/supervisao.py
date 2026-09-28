@@ -8,14 +8,13 @@ Ele fica fora de `views.py` de propósito. Aqui vivem as derivações, e mantê-
 montagem de contexto é o que permite testá-las como domínio de leitura, sem requisição.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
 from processo_seletivo.avaliacoes.models import Impedimento
@@ -31,7 +30,14 @@ from processo_seletivo.divulgacao.application.selectors import (
     divulgacao_do_ato,
     historico_do_marco,
 )
-from processo_seletivo.editais.models.cronograma import EventoCronograma
+from processo_seletivo.editais.domain import calendario
+from processo_seletivo.editais.domain.fase_do_evento import (
+    descricao_do_evento,
+    eventos_do_conteudo,
+    fase_do_evento,
+    instantes_do_evento,
+    marcos_pendentes,
+)
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
     ENCERRADO,
@@ -39,6 +45,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
     periodo_de_inscricoes,
 )
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
 from processo_seletivo.ocupacao.application.selectors import apuracao_vigente
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 from processo_seletivo.processos.models import Edital
@@ -67,17 +74,6 @@ SITUACOES_DO_PERIODO = (FUTURO, ABERTO, ENCERRADO)
 # chegou e não designou o período.
 SEM_CRONOGRAMA = "sem-cronograma"
 SEM_PERIODO = "sem-periodo"
-
-# Como o Evento **declara** o próprio estado, dito para quem lê a tela. Não é vocabulário novo:
-# são os quatro valores que `EventoCronograma.Status` já declara. Fica aqui, e não no filtro
-# compartilhado de situações, porque ali o mesmo nome significa a situação do Edital e do Processo —
-# e "Concluído" de um Evento não é "Encerrado" de um Edital.
-DECLARACOES = {
-    EventoCronograma.Status.PLANEJADO: "planejado",
-    EventoCronograma.Status.EM_ANDAMENTO: "em andamento",
-    EventoCronograma.Status.CONCLUIDO: "concluído",
-    EventoCronograma.Status.CANCELADO: "cancelado",
-}
 
 # A janela da leitura recente (`FR-013`). Vinte e quatro horas **abertas no início**: a submissão de
 # exatamente 24 h fica de fora, porque incluí-la contaria um dia e um instante.
@@ -119,13 +115,15 @@ class Marco:
     descricao: str
     inicio: datetime | None
     fim: datetime | None
-    # O `status` do Evento, apresentado como **declaração** e nunca corrigido (`FR-023`, `D-004`).
-    declarado: str
+    # A fase **derivada** do relógio (045, `FR-735`), e não mais o `status` declarado: ele nascia
+    # planejado e ficava, e a tela escrevia *"declarado planejado"* ao lado de todo marco de todo
+    # Edital composto pela tela. Só *planejado* e *em andamento* chegam aqui — o concluído sai.
+    fase: str
 
     @property
-    def declarado_legivel(self) -> str:
-        """O estado declarado em português, ou o próprio código quando ele não é dos quatro."""
-        return DECLARACOES.get(self.declarado, self.declarado)
+    def em_andamento(self) -> bool:
+        """O marco em curso é o único que ganha marca: o futuro, a data já diz (`UX-088`)."""
+        return self.fase == calendario.EM_ANDAMENTO
 
 
 @dataclass(frozen=True)
@@ -181,6 +179,21 @@ class Medida:
 
     numerador: int
     denominador: int
+    # **O que se conta** (045, `FR-743`, `UX-087`). *"2 de 5"* não dizia se eram inscrições,
+    # avaliações ou recortes. Declarada por quem monta o sinal — é da espécie, e não do template —,
+    # no singular; o plural sai do denominador. Fora da comparação: duas medidas do mesmo par são a
+    # mesma medida, e a unidade é como ela se lê.
+    unidade: str = field(default="", compare=False)
+
+    @property
+    def unidade_legivel(self) -> str:
+        return self.unidade if self.denominador == 1 else PLURAIS.get(self.unidade, self.unidade)
+
+
+# As unidades que as medidas da Atenção contam. Poucas e fixas: uma tabela lê melhor que uma regra
+# de plural, e "inscrição" → "inscrições" não sai de acrescentar um `s`.
+INSCRICAO, RECURSO, RECORTE = "inscrição", "recurso", "recorte"
+PLURAIS = {INSCRICAO: "inscrições", RECURSO: "recursos", RECORTE: "recortes"}
 
 
 @dataclass(frozen=True)
@@ -202,10 +215,14 @@ class Sinal:
     alvo: str
     mensagem: str
     medida: Medida | None = None
-    # Ausente quando a situação do Processo não admite o encaminhamento (`FR-036`). Sinal cujo
-    # **destino o ator não alcança** não chega a ser montado (`FR-004`), e por isso a ausência aqui
-    # nunca significa supressão por alcance.
+    # Ausente quando o leitor não pratica o ato para onde o sinal encaminharia (`FR-036`). Sinal
+    # cujo **destino o ator não alcança** não chega a ser montado (`FR-004`), e por isso a ausência
+    # aqui nunca significa supressão por alcance.
     destino: Destino | None = None
+    # **A quem pedir**, quando o sinal fica sem caminho porque o ato não é do leitor (045,
+    # `FR-740`). Vazio quando há caminho: dizer "peça a alguém" a quem tem o formulário à frente é
+    # falso (037, `FR-544`). Sai do mecanismo único (`interface/conducao.py`), nunca redigido aqui.
+    conducao: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -255,12 +272,6 @@ def etapas_do_conteudo(conteudo):
     """As Etapas da versão publicada, em ordem, como a versão as declara."""
     etapas = [item for item in (conteudo or {}).get("stages") or [] if isinstance(item, dict)]
     return sorted(etapas, key=lambda etapa: (etapa.get("order") or 0, etapa.get("name") or ""))
-
-
-def eventos_do_conteudo(conteudo):
-    """Os Eventos da versão publicada, na ordem do cronograma."""
-    eventos = [item for item in (conteudo or {}).get("schedule") or [] if isinstance(item, dict)]
-    return sorted(eventos, key=lambda evento: (evento.get("order") or 0))
 
 
 def leitura_dos_editais(processo):
@@ -339,43 +350,20 @@ def periodo_do_edital(conteudo, agora):
 def marcos_do_edital(edital, conteudo, agora):
     """Os marcos que ainda vêm, em ordem cronológica e sem os cancelados (`FR-021`).
 
-    **O marco em curso ainda é próximo.** O corte é o término, e não o início: tirar da lista o que
-    está acontecendo esconderia justamente o prazo que corre.
-
-    `CANCELADO` sai da leitura temporal pela mesma razão que sai de `UX-002` — o Evento deixou o
-    cronograma efetivo, e cobrar prazo dele seria cobrar de quem já foi cancelado.
+    A lista é a de `fase_do_evento.marcos_pendentes`, que desceu para o domínio com a régua (047,
+    `R-1`, `R-4`): o portal lê a mesma lista para dizer o que acontece agora e o que vem depois, e
+    duas listas seriam duas respostas para a mesma pergunta. Aqui ela só ganha a forma de `Marco`.
     """
-    marcos = []
-    for evento in eventos_do_conteudo(conteudo):
-        if evento.get("status") == EventoCronograma.Status.CANCELADO:
-            continue
-        inicio, fim = instantes_do_evento(evento)
-        termina = fim or inicio
-        if termina is None or termina <= agora:
-            continue
-        marcos.append(
-            Marco(
-                edital=edital,
-                descricao=descricao_do_evento(evento),
-                inicio=inicio,
-                fim=fim,
-                # Apresentado como declaração, e nunca corrigido (`FR-023`, `D-004`).
-                declarado=evento.get("status") or "",
-            )
+    return tuple(
+        Marco(
+            edital=edital,
+            descricao=descricao_do_evento(evento),
+            inicio=inicio,
+            fim=fim,
+            fase=fase,
         )
-    marcos.sort(key=lambda marco: (marco.inicio or marco.fim, marco.descricao))
-    return tuple(marcos)
-
-
-def descricao_do_evento(evento):
-    return evento.get("description") or evento.get("type") or ""
-
-
-def instantes_do_evento(evento):
-    """`(início, término)` do Evento publicado. O término é anulável, e a ausência é legítima."""
-    inicio = parse_datetime(evento.get("startAt") or "")
-    fim = parse_datetime(evento.get("endAt") or "") if evento.get("endAt") else None
-    return inicio, fim
+        for evento, inicio, fim, fase in marcos_pendentes(conteudo, agora)
+    )
 
 
 def serie_do_edital(edital, periodo, agora):
@@ -464,8 +452,12 @@ def pulso(processo, *, agora=None):
 # teste nomeado acima.
 # ---------------------------------------------------------------------------
 
-UX_001 = "UX-001"
-UX_002 = "UX-002"
+# **O `UX-001` e o `UX-002` saíram do catálogo** (045, `FR-738`, `FR-739`, `FR-744`). O primeiro —
+# a Etapa sem marco no cronograma — é imperfeição de **composição**, e passou a aviso da validação
+# do conteúdo, onde tem remédio; na condução ele levava a uma Retificação que não alcança o vínculo.
+# O segundo comparava o `status` declarado com o relógio, e o `status` deixou de ser declarado: a
+# fase é derivada, e declarado e relógio não têm mais como discordar. Os identificadores não são
+# reaproveitados — citados em spec e em teste, voltariam a significar outra coisa.
 UX_003 = "UX-003"
 UX_004 = "UX-004"
 UX_005 = "UX-005"
@@ -493,8 +485,6 @@ UX_065 = "UX-065"
 UX_066 = "UX-066"
 
 ESPECIES = (
-    UX_001,
-    UX_002,
     UX_003,
     UX_004,
     UX_005,
@@ -505,8 +495,15 @@ ESPECIES = (
     UX_066,
 )
 
-# As quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém retoma.
-TRABALHO_PENDENTE = frozenset({UX_063, UX_064, UX_065, UX_066})
+# Três das quatro espécies da `038` falam de **trabalho pendente** — coisa parada que alguém
+# retoma, e que ninguém retoma num Edital que parou por ato.
+#
+# **O `UX-064` não está aqui** (RC-115). A `045` o deixou no conjunto e escreveu, em
+# `alcance_no_edital`, que o recurso *"continua podendo ser decidido"* — e continua: nem a
+# admissibilidade nem o julgamento consultam o estado do Edital. Calado, ele sumia da Atenção
+# enquanto o `UX-005`, a negação dele sobre a mesma peça, ficava; e o recurso é direito de quem o
+# interpôs, e não trabalho que a instituição decidiu não concluir.
+TRABALHO_PENDENTE = frozenset({UX_063, UX_065, UX_066})
 
 # Os dois estados em que o Edital **parou por ato**. Depois deles não há trabalho a retomar: o que
 # parou, parou porque alguém o encerrou ou o cancelou, e apontar avaliação pendente num Edital
@@ -517,14 +514,18 @@ EDITAL_PAROU_POR_ATO = frozenset({Edital.Status.ENCERRADO, Edital.Status.CANCELA
 def alcance_no_edital(alcancadas, edital):
     """O alcance do ator **neste** Edital — o geral, menos o que o estado dele já respondeu.
 
-    **Só as espécies novas são retiradas, e a assimetria é deliberada** (`038`). As seis anteriores
-    continuam exatamente como estavam: o `UX-001` e o `UX-002` falam do **conteúdo publicado**, que
-    um Edital encerrado continua tendo e continua podendo Retificar; o `UX-004` fala de ordem que
-    envelheceu, e ela envelhece depois do encerramento como antes. Silenciá-las aqui mudaria o
-    comportamento de seis sinais que ninguém pediu para mudar.
+    **Só as espécies de trabalho pendente são retiradas, e a assimetria é deliberada** (`038`). O
+    `UX-004` fala de ordem que envelheceu, e ela envelhece depois do encerramento como antes — e
+    reemitir a ordem continua possível enquanto o **Processo** não termina; o `UX-005` e o `UX-064`
+    falam de peça que continua podendo ser decidida (045, `research.md`, `R-7`; RC-115).
 
-    As quatro da `038` são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho não se
-    retoma num Edital que parou por ato.
+    *A premissa que a `038` escreveu aqui para o `UX-001` e o `UX-002` — "um Edital encerrado
+    continua podendo Retificar" — era falsa*: a Retificação só incide sobre Edital publicado. Os
+    dois saíram do catálogo, e o `UX-046`, que leva à Retificação, sai da Atenção onde ela não é
+    possível (`admite_encaminhamento`, 045, `FR-741`).
+
+    As três da `038` que sobram são outra coisa: cada uma aponta trabalho a **retomar**, e trabalho
+    não se retoma num Edital que parou por ato.
     """
     if edital.status not in EDITAL_PAROU_POR_ATO:
         return alcancadas
@@ -533,42 +534,12 @@ def alcance_no_edital(alcancadas, edital):
     }
 
 
-# As três posições determináveis do instante da leitura dentro de um Evento. A quarta —
-# indeterminada — é a ausência de término, e ela não é posição: é a impossibilidade de haver um
-# "depois" (`T-005`).
-ANTES_DO_INICIO = "antes"
-DENTRO_DO_INTERVALO = "dentro"
-DEPOIS_DO_TERMINO = "depois"
-
-# As três combinações coerentes da tabela-verdade de `T-005`. O que **não** está aqui, e não é
-# excluído pelas duas regras acima, diverge — e escrever as coerentes em vez das divergentes é o
-# que impede uma combinação de ficar implícita.
-COERENTES = frozenset(
-    {
-        (EventoCronograma.Status.PLANEJADO, ANTES_DO_INICIO),
-        (EventoCronograma.Status.EM_ANDAMENTO, DENTRO_DO_INTERVALO),
-        (EventoCronograma.Status.CONCLUIDO, DEPOIS_DO_TERMINO),
-    }
-)
-
-# Como cada posição é dita ao lado da declaração, na forma de `UX-002`: *declarado X · prazo …*.
-FRASES_DA_POSICAO = {
-    ANTES_DO_INICIO: "prazo começa em",
-    DENTRO_DO_INTERVALO: "prazo em curso até",
-    DEPOIS_DO_TERMINO: "prazo encerrado em",
-}
-
-
 def rotulo_do_edital(edital):
     return f"{edital.number}/{edital.year}"
 
 
 def nome_da_etapa(etapa):
     return etapa.get("name") or str(etapa.get("id") or "")
-
-
-def _dia(instante):
-    return instante.astimezone(ZONA).strftime("%d/%m/%Y") if instante is not None else ""
 
 
 def _citado(texto):
@@ -580,86 +551,6 @@ def _citado(texto):
     faz ao citar uma frase dentro de outra.
     """
     return (texto or "").strip().rstrip(".;,")
-
-
-def posicao_temporal(inicio, fim, agora):
-    """Onde o instante da leitura cai dentro do Evento, ou `None` quando não é determinável.
-
-    Sem término declarado só *antes* e *dentro* seriam determináveis, e nenhum dos dois basta
-    sozinho para acusar incoerência: Evento sem término é marco instantâneo, forma normal do dado.
-    Tratar a ausência como divergência encheria o painel de sinal sobre o que é legítimo.
-    """
-    if fim is None:
-        return None
-    if inicio is not None and agora < inicio:
-        return ANTES_DO_INICIO
-    if agora > fim:
-        return DEPOIS_DO_TERMINO
-    return DENTRO_DO_INTERVALO
-
-
-# --- `UX-001` — Etapa sem marco no cronograma -----------------------------------------------
-
-
-def etapas_sem_marco(edital, conteudo, encaminhar):
-    """Etapa que não referencia Evento algum (`FR-026`).
-
-    É publicável e legítimo — a validação recusa referência a Evento **inexistente** e admite a
-    ausência de referência —, e por isso vira sinal e não impeditivo: transformá-lo em erro de
-    publicação mudaria o que o sistema aceita publicar, decisão normativa que não cabe a um painel
-    (`T-006`).
-
-    A ausência é dita nesses termos, e **nunca** como atraso, espera ou progresso zero: a Etapa não
-    tem situação temporal alguma a receber, e atribuir-lhe uma seria inventar o estado que `D-003`
-    recusa criar.
-    """
-    for etapa in etapas_do_conteudo(conteudo):
-        if etapa.get("scheduleEventId"):
-            continue
-        nome = nome_da_etapa(etapa)
-        yield Sinal(
-            especie=UX_001,
-            edital=edital,
-            alvo=nome,
-            mensagem=(
-                f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
-                f"está sem marco no cronograma."
-            ),
-            destino=encaminhar(UX_001, edital),
-        )
-
-
-# --- `UX-002` — declarado × posição temporal ------------------------------------------------
-
-
-def divergencias_temporais(edital, conteudo, agora, encaminhar):
-    """Evento cujo estado declarado é incompatível com a posição observável (`FR-027`).
-
-    **As duas informações são apresentadas, e nenhuma é arbitrada** (`FR-023`, `D-004`): a tela não
-    corrige o `status` nem recalcula as datas. Quando os dois discordam, quem discorda é o
-    cronograma, e quem decide é quem preside.
-    """
-    for evento in eventos_do_conteudo(conteudo):
-        declarado = evento.get("status")
-        if declarado == EventoCronograma.Status.CANCELADO or declarado not in DECLARACOES:
-            continue
-        inicio, fim = instantes_do_evento(evento)
-        posicao = posicao_temporal(inicio, fim, agora)
-        if posicao is None or (declarado, posicao) in COERENTES:
-            continue
-        descricao = descricao_do_evento(evento)
-        referencia = inicio if posicao == ANTES_DO_INICIO else fim
-        yield Sinal(
-            especie=UX_002,
-            edital=edital,
-            alvo=descricao,
-            mensagem=(
-                f"{_citado(descricao)}, do Edital {rotulo_do_edital(edital)}: "
-                f"declarado {DECLARACOES[declarado]} · "
-                f"{FRASES_DA_POSICAO[posicao]} {_dia(referencia)}."
-            ),
-            destino=encaminhar(UX_002, edital),
-        )
 
 
 # --- A Etapa: **uma leitura, duas perguntas** (`UX-003` e `UX-063`) --------------------------
@@ -683,7 +574,9 @@ def sinais_da_etapa(edital, conteudo, encaminhar, alcancadas):
     if not (alcancadas[UX_003] or alcancadas[UX_063]):
         return
     for etapa in etapas_do_conteudo(conteudo):
-        resumo = resumo_da_etapa(edital=edital, etapa=etapa)
+        # O conteúdo publicado já está na mão, e vai junto: dele saem as Etapas anteriores, o gate
+        # e o corte que decidem quem participa — uma versão só, sem reler (045, `FR-742`).
+        resumo = resumo_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)
         if alcancadas[UX_003]:
             yield from cobertura_insuficiente(edital, etapa, resumo, encaminhar)
         if alcancadas[UX_063]:
@@ -697,6 +590,10 @@ def cobertura_insuficiente(edital, etapa, resumo, encaminhar):
     A unidade sem nenhum avaliador é carente e permanece no denominador — retirá-la faria a
     cobertura parecer completa justamente onde ela não começou (`FR-033`).
 
+    **O denominador é de participantes** (045, `FR-742`): a inscrição eliminada antes, à espera da
+    Etapa anterior ou fora do corte não é trabalho esperado aqui, e contá-la dizia *"2 de 5"* sobre
+    uma lista de quatro. Quem escolhe a população é o resumo, e não este sinal.
+
     O `resumo` chega pronto de `sinais_da_etapa`, que o lê uma vez para as duas espécies.
     """
     if not resumo["carentes"]:
@@ -706,7 +603,9 @@ def cobertura_insuficiente(edital, etapa, resumo, encaminhar):
         especie=UX_003,
         edital=edital,
         alvo=nome,
-        medida=Medida(numerador=resumo["carentes"], denominador=resumo["inscricoes"]),
+        medida=Medida(
+            numerador=resumo["carentes"], denominador=resumo["inscricoes"], unidade=INSCRICAO
+        ),
         mensagem=(
             f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, "
             f"tem inscrição sem avaliador suficiente."
@@ -739,7 +638,7 @@ def avaliacao_parada(edital, etapa, resumo, encaminhar):
         especie=UX_063,
         edital=edital,
         alvo=nome,
-        medida=Medida(numerador=paradas, denominador=resumo["completas"]),
+        medida=Medida(numerador=paradas, denominador=resumo["completas"], unidade=INSCRICAO),
         mensagem=(
             f"A Etapa {_citado(nome)}, do Edital {rotulo_do_edital(edital)}, tem avaliação "
             f"distribuída e não concluída."
@@ -781,17 +680,24 @@ def acervo_sem_quadro(edital, conteudo, encaminhar):
         if not sem_linha:
             continue
         rotulo = perfil.get("code") or perfil.get("name") or f"Perfil {posicao + 1}"
+        destino = encaminhar(UX_046, edital)
         yield Sinal(
             especie=UX_046,
             edital=edital,
             alvo=rotulo,
-            medida=Medida(numerador=sem_linha, denominador=recortes),
+            medida=Medida(numerador=sem_linha, denominador=recortes, unidade=RECORTE),
+            # **A mensagem não repete a medida** (045, `UX-087`): ela dizia "para 1 de 2
+            # recorte(s)", e a medida logo abaixo dizia "1 de 2" de novo. O número fica na medida,
+            # com a unidade; a frase diz o que ele significa.
             mensagem=(
                 f"O Perfil {_citado(rotulo)}, do Edital {rotulo_do_edital(edital)}, publica "
-                f"{total} vaga(s) imediata(s) e não publica quantidade para {sem_linha} "
-                f"de {recortes} recorte(s): a ocupação e a convocação não têm o que apurar neles."
+                f"{total} vaga(s) imediata(s) e não publica quantidade para todos os seus "
+                f"recortes: a ocupação e a convocação não têm o que apurar nos que ficaram sem."
             ),
-            destino=encaminhar(UX_046, edital),
+            destino=destino,
+            # Sem caminho aqui é **falta de permissão**, e nunca situação: onde a Retificação não
+            # é possível o sinal nem é montado (`situacao_admite_retificacao`, 045, `FR-741`).
+            conducao="" if destino is not None else CONDUCAO_DA_RETIFICACAO,
         )
 
 
@@ -850,11 +756,18 @@ def sorteado(ato):
 def listas_do_marco(perfil, marco, conteudo=None):
     """Os recortes daquele marco: `[(lista_id, nome)]`, ampla concorrência primeiro.
 
-    **Só o sorteio emite ato por lista** (`021`, `D-006`): um marco de cotas produz três atos raiz
-    — ampla, e uma por modalidade de reserva —, e perguntar pelo "ato vigente do marco" sem dizer
-    de qual lista devolveria um dos três pela ordem de emissão. Um marco computado tem um recorte
-    só, e percorrer as modalidades dele custaria uma consulta por modalidade para não encontrar ato
-    nenhum.
+    Um marco de cotas produz um ato raiz por recorte — ampla, e um por modalidade de reserva —, e
+    perguntar pelo "ato vigente do marco" sem dizer de qual lista devolveria um dos três pela ordem
+    de emissão.
+
+    **O marco computado também emite por recorte, desde a `034`** (`FR-490`), e os recortes dele
+    vêm da derivação única (`FR-491`). Esta função ficou de antes dela, e respondia só a ampla: o
+    ato do recorte reservado envelhecia, ficava sem apuração ou sem divulgação, e a Atenção não o
+    via (reavaliação de 27/09, anexo B §8). O nome da ampla continua vazio, que é o que mantém o
+    alvo dela igual ao nome do marco.
+
+    **O sorteio fica com a leitura dele** (`034`, `FR-491a`, `D-004`): dá recorte próprio à
+    Modalidade declarada como ampla, e os atos já emitidos nela precisam continuar alcançáveis.
 
     `conteudo` é o da versão vigente, e existe porque a pergunta "este marco sorteia" passou a ter
     resolução própria (030, FR-429): o marco pode referenciar o método comum do Edital, e ler só a
@@ -862,6 +775,7 @@ def listas_do_marco(perfil, marco, conteudo=None):
     Edital publicado antes desta feature carrega, e sobre ele a resposta é a mesma.
     """
     from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 
     sorteia = (
         marcos.marco_ordena_por_sorteio(
@@ -871,7 +785,12 @@ def listas_do_marco(perfil, marco, conteudo=None):
         else bool(marco.get("drawMethod"))
     )
     if not sorteia:
-        return [(None, "")]
+        if conteudo is None:
+            return [(None, "")]
+        return [
+            (lista, rotulo if lista else "")
+            for lista, rotulo in recortes_do_perfil(conteudo, perfil_id=perfil.get("id"))
+        ]
     return [(None, "")] + [
         (modalidade.get("id"), modalidade.get("name") or "")
         for modalidade in perfil.get("competitionModalities") or []
@@ -1077,7 +996,7 @@ def atos_obsoletos(
         # computado, e o sorteio é onde uma ordem sorteada se refaz — com relação nova e
         # ocorrência nova. Mandar um sorteio para a ordenação levaria a uma tela que oferece
         # recalcular o que só uma semente nova produz.
-        destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato)),
+        destino=encaminhar(UX_004, edital, marco_id, sorteio=sorteado(ato), lista=lista_id),
     )
 
 
@@ -1127,8 +1046,31 @@ def impedidos_por_recurso(pendentes):
     return impedidos
 
 
+# As duas fases em que uma peça **espera decisão** de quem tem a permissão de julgar (`045`,
+# `FR-732`). Admitir e julgar exigem a mesma permissão e a mesma regra de impedimento, e para quem
+# conduz as duas são o mesmo fato — por isso uma espécie cobre as duas, e a mensagem diz qual.
+AGUARDANDO_DECISAO = (
+    recursos_selectors.AGUARDANDO_ADMISSIBILIDADE,
+    recursos_selectors.AGUARDANDO_JULGAMENTO,
+)
+
+
+def fase_das_pecas(situacoes):
+    """A fase que a mensagem nomeia, para as peças que **aquele** sinal conta (`UX-085`).
+
+    Um sinal pode contar peças nas duas fases; dizer só uma delas faria quem abre a tela procurar a
+    fase errada. A distinção fina continua sendo da tela dos recursos: aqui ela só é nomeada.
+    """
+    fases = set(situacoes)
+    if fases == {recursos_selectors.AGUARDANDO_ADMISSIBILIDADE}:
+        return "admissibilidade"
+    if fases == {recursos_selectors.AGUARDANDO_JULGAMENTO}:
+        return "julgamento"
+    return "decisão — admissibilidade ou julgamento"
+
+
 def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
-    """As peças pendentes, **partidas em dois desfechos por um cálculo só** (`FR-561`, `038`).
+    """As peças que esperam decisão, **partidas em dois desfechos por um cálculo só** (`FR-561`).
 
     **Um fato, um sinal.** A peça cujos membros estão todos impedidos é o `UX-005`; a que tem ao
     menos um livre é o `UX-064`. A partição é por construção — as duas listas saem do **mesmo**
@@ -1138,11 +1080,18 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
     mudança na regra de impedimento moveria um sinal e deixaria o outro para trás, e os dois
     passariam a discordar sobre a mesma peça sem que nada ficasse vermelho.
 
-    **A mensagem se limita ao que verifica.** Julgar exige também a permissão sistêmica de julgar
+    **A peça recém-interposta também espera** (`045`, `FR-732`). A `038` lia só as admitidas, e o
+    recurso ficava invisível na condução, para todo papel, justamente até alguém o admitir — e só
+    o admitia quem o achava por outro caminho. A mesma partição vale para a admissibilidade sem
+    mudar o cálculo: admitir confere o impedimento **sem** Etapa, sobre o Resultado atacado
+    (`recursos/application/admitir.py`), que é exatamente o alcance de `impedidos_por_recurso`.
+
+    **A mensagem se limita ao que verifica.** Decidir exige também a permissão sistêmica de julgar
     recurso, e o sistema não sabe quem a possui: os papéis vêm da sessão, e não há registro que
-    ligue identidade a papel. Afirmar que o julgamento é impossível seria afirmar o que os dados
-    não sustentam — alguém de fora da comissão pode detê-la (`FR-030a`, `T-004`). Pela mesma razão
-    o `UX-064` diz que **há** recurso esperando, e não quem deveria julgá-lo (`FR-564`).
+    ligue identidade a papel. Afirmar que a decisão é impossível seria afirmar o que os dados não
+    sustentam — alguém de fora da comissão pode detê-la (`FR-030a`, `T-004`). Pela mesma razão o
+    `UX-064` diz que **há** recurso esperando, e não quem deveria decidi-lo (`FR-564`). E não diz
+    prazo: o domínio não modela prazo de resposta, e o sinal não o inventa.
     """
     if not (alcancadas[UX_005] or alcancadas[UX_064]):
         return
@@ -1154,17 +1103,21 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
         # precisar de um terceiro caso.
         return
     for edital in editais:
-        # A fila é por Edital, e o estado dele também: um Edital encerrado não tem julgamento a
-        # retomar, mas continua tendo peça cuja comissão está impedida — que é fato do `UX-005`.
+        # A fila é por Edital, e o estado dele também — mas nenhuma das duas espécies se cala pelo
+        # estado: a peça pendente de um Edital encerrado continua decidível (RC-115). A chamada
+        # fica para que a regra tenha um lugar só, e não uma exceção escrita aqui.
         deste = alcance_no_edital(alcancadas, edital)
         if not (deste[UX_005] or deste[UX_064]):
             continue
-        pendentes = [
-            linha["recurso"]
-            for linha in recursos_selectors.recursos_do_edital(
-                edital, situacao=recursos_selectors.AGUARDANDO_JULGAMENTO
-            )
+        # **Uma leitura, as duas fases**: `recursos_do_edital` já traz toda peça do Edital e
+        # filtra em Python, de modo que pedir as duas situações não custa consulta a mais.
+        linhas = [
+            linha
+            for linha in recursos_selectors.recursos_do_edital(edital)
+            if linha["situacao"] in AGUARDANDO_DECISAO
         ]
+        pendentes = [linha["recurso"] for linha in linhas]
+        situacao = {linha["recurso"].id: linha["situacao"] for linha in linhas}
         impedidos = impedidos_por_recurso(pendentes)
         # O **mesmo** conjunto responde as duas perguntas, e é a razão de ele ser calculado aqui e
         # não dentro de cada desfecho.
@@ -1172,28 +1125,30 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
         travadas = [peca for peca in pendentes if not livres[peca.id]]
         soltas = [peca for peca in pendentes if livres[peca.id]]
         if deste[UX_005] and travadas:
+            fase = fase_das_pecas(situacao[peca.id] for peca in travadas)
             yield Sinal(
                 especie=UX_005,
                 edital=edital,
                 alvo=rotulo_do_edital(edital),
                 mensagem=(
-                    f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} para "
-                    f"o qual todos os membros da comissão estão impedidos de julgar."
+                    f"Há recurso aguardando {fase} no Edital {rotulo_do_edital(edital)} para o "
+                    f"qual todos os membros da comissão estão impedidos de julgar."
                 ),
                 destino=encaminhar(UX_005, edital),
             )
         if deste[UX_064] and soltas:
+            fase = fase_das_pecas(situacao[peca.id] for peca in soltas)
             yield Sinal(
                 especie=UX_064,
                 edital=edital,
                 alvo=rotulo_do_edital(edital),
                 # A medida é **esperando sobre pendentes**: as travadas estão no denominador
-                # porque também aguardam julgamento, e retirá-las faria o número dizer que o
-                # Edital tem menos recurso parado do que tem.
-                medida=Medida(numerador=len(soltas), denominador=len(pendentes)),
+                # porque também aguardam decisão, e retirá-las faria o número dizer que o Edital
+                # tem menos recurso parado do que tem.
+                medida=Medida(numerador=len(soltas), denominador=len(pendentes), unidade=RECURSO),
                 mensagem=(
-                    f"Há recurso aguardando julgamento no Edital {rotulo_do_edital(edital)} com "
-                    f"membro da comissão desimpedido para julgá-lo."
+                    f"Há recurso aguardando {fase} no Edital {rotulo_do_edital(edital)} com "
+                    f"membro da comissão desimpedido para decidi-lo."
                 ),
                 destino=encaminhar(UX_064, edital),
             )
@@ -1207,7 +1162,7 @@ def sinais_do_recurso(processo, editais, encaminhar, alcancadas):
 # final o domínio recusa alteração dos seus Editais, e um Edital que não está publicado não admite
 # Retificação: nos dois casos oferecer o caminho seria oferecer um beco — o mesmo que a `007`
 # passou uma feature inteira tirando (`FR-036`).
-ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_001, UX_002, UX_046})
+ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL = frozenset({UX_046})
 
 # A permissão que **pratica** a Retificação. Ela não decide se o sinal aparece — a tela de destino
 # é legível por quem alcança o Edital —, e sim se o caminho é oferecido: o catálogo de ações do
@@ -1219,8 +1174,6 @@ PERMISSAO_DE_RETIFICAR = "retificacao:elaborar"
 # (`FR-035`, `D-009`). O rótulo diz o que se vai encontrar lá, e não o que se vai fazer: a decisão
 # de agir é de quem chega.
 ROTULOS_DO_DESTINO = {
-    UX_001: "Retificar as Etapas do Edital",
-    UX_002: "Retificar o cronograma do Edital",
     UX_003: "Abrir a distribuição da Etapa",
     UX_004: "Abrir a ordenação do marco",
     # O rótulo do mesmo sinal quando o ato veio de sorteio: "ordenação" nomearia uma tela que
@@ -1237,45 +1190,51 @@ ROTULOS_DO_DESTINO = {
 }
 
 
+def situacao_admite_retificacao(processo, edital):
+    """Se **alguém** pode retificar este Edital agora — a situação, e não a permissão.
+
+    Processo em estado final não admite alteração dos seus Editais, e Retificação incide sobre
+    Edital **publicado**. Faltando qualquer das duas, ninguém pratica o ato, e o sinal que leva a
+    ele é condição sem destino operacional: não pertence à Atenção (045, `FR-741`, `D-003`).
+
+    **Separada da permissão de propósito.** As duas caíam no mesmo `None` de
+    `admite_encaminhamento`, e a Atenção não distinguia *"este leitor não pratica o ato"* — que
+    pede a condução, a quem pedir — de *"ninguém pratica o ato"* — que não pede nada, porque não
+    há a quem pedir.
+    """
+    return processo.status not in PROCESSO_FINAL and edital.status == Edital.Status.PUBLICADO
+
+
 def admite_encaminhamento(processo, especie, edital, ator):
-    """Se a **situação** admite o ato para onde o sinal encaminharia, e se há quem o pratique.
+    """Se a **situação** admite o ato para onde o sinal encaminharia, e se este ator o pratica.
 
     Não é autorização — quem recusa continua sendo a tela de destino (`FR-036`). É a mesma
     distinção que o catálogo de ações do Edital já pratica: prever a recusa é conveniência; decidir
     a autorização é da dona.
-
-    As três condições da Retificação são as que o próprio domínio impõe: Processo em estado final
-    não admite alteração dos seus Editais, Retificação incide sobre Edital **publicado**, e
-    elaborá-la exige a permissão. Faltando qualquer uma, o sinal continua aparecendo e o caminho
-    não é oferecido — que é o mesmo tratamento do Processo cancelado, e não a supressão de
-    `FR-004`.
     """
     if especie not in ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL:
         return True
-    return (
-        processo.status not in PROCESSO_FINAL
-        and edital.status == Edital.Status.PUBLICADO
-        and bool(ator and ator.can(PERMISSAO_DE_RETIFICAR))
+    return situacao_admite_retificacao(processo, edital) and bool(
+        ator and ator.can(PERMISSAO_DE_RETIFICAR)
     )
 
 
-def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None):
+def destino_de(
+    processo, especie, edital, referencia=None, *, ator=None, sorteio=False, ato=None, lista=None
+):
     """A tela dona daquele sinal, ou `None` quando a situação não admite o encaminhamento."""
     if not admite_encaminhamento(processo, especie, edital, ator):
         return None
     caminhos = {
-        # **A Retificação, e não o compositor.** `UX-001` e `UX-002` nascem do conteúdo
-        # **publicado**, e o compositor é a coleção de **elaboração**: para um Edital publicado ele
-        # é somente leitura, e depois de uma Retificação ele mostra outro conteúdo — quem seguisse
-        # o caminho chegaria a uma tela onde não se corrige nada e onde o defeito pode nem
-        # aparecer. A Retificação edita o conteúdo vigente, que é exatamente o que produziu o
-        # sinal, e é o ato que a norma exige para mudá-lo.
-        UX_001: lambda: reverse("interface:retificar", args=[edital.id]),
-        UX_002: lambda: reverse("interface:retificar", args=[edital.id]),
         UX_003: lambda: reverse("interface:distribuicao", args=[edital.id, referencia]),
-        UX_004: lambda: reverse(
-            "interface:sorteio" if sorteio else "interface:ordenacao",
-            args=[edital.id, referencia],
+        # **O recorte vai no endereço da ordenação**, que sem `?lista=` abre a ampla (`034`,
+        # `FR-497`): sem ele, o sinal do recorte PPI aterrissaria na ordem da ampla, que não está
+        # obsoleta, e quem chegasse não veria divergência nenhuma. O sorteio não o leva porque a
+        # tela dele mostra os recortes do marco juntos.
+        UX_004: lambda: (
+            reverse("interface:sorteio", args=[edital.id, referencia])
+            if sorteio
+            else _com_recorte(reverse("interface:ordenacao", args=[edital.id, referencia]), lista)
         ),
         UX_005: lambda: reverse("interface:recursos", args=[edital.id]),
         UX_046: lambda: reverse("interface:retificar", args=[edital.id]),
@@ -1299,6 +1258,11 @@ def destino_de(processo, especie, edital, referencia=None, *, ator=None, sorteio
     return Destino(rotulo=rotulo or ROTULOS_DO_DESTINO[especie], url=caminhos[especie]())
 
 
+def _com_recorte(endereco, lista):
+    """O endereço da tela no recorte pedido — a mesma gramática de `_navegacao_do_recorte`."""
+    return f"{endereco}?lista={lista}" if lista else endereco
+
+
 def alcance(ator, processo):
     """Quais espécies este ator alcança — **uma decisão por espécie**, e não uma na porta.
 
@@ -1306,13 +1270,11 @@ def alcance(ator, processo):
     que existe um sinal suprimido diria a quem não pode vê-lo que **há** algo para ver, que é
     vazamento por agregação.
 
-    Quatro das cinco linhas coincidem com a própria porta da supervisão, e escrevê-las assim mesmo
-    é o ponto: o dia em que a tela dona mudar de porta, o lugar de mudar é este.
+    Escrever cada linha por extenso, mesmo quando coincide com a porta vizinha, é o ponto: o dia
+    em que a tela dona mudar de porta, o lugar de mudar é este.
     """
     gere = pode_gerir_comissao(ator, processo) is not None
     return {
-        UX_001: pode_supervisionar(ator, processo) is not None,
-        UX_002: pode_supervisionar(ator, processo) is not None,
         UX_003: gere,
         UX_004: gere or bool(ator and ator.can("auditoria:consultar")),
         UX_005: bool(ator and ator.can(recursos_admitir.PERMISSAO)),
@@ -1337,38 +1299,61 @@ def alcance(ator, processo):
     }
 
 
+# As duas formas da linha de ausência (`045`, `UX-084`). A relativa é a variante da global, e não
+# outra frase: quem lê as duas precisa reconhecer que falam da mesma coisa, com alcance diferente.
+AUSENCIA_GLOBAL = "Nenhuma condição de atenção neste Processo."
+AUSENCIA_RELATIVA = "Nenhuma condição de atenção entre as que você acompanha neste Processo."
+
+
+def frase_de_ausencia(alcancadas):
+    """A linha que a Atenção diz quando não tem sinal, ou `None` quando a região não aparece.
+
+    **"Não encontrei no que consigo ver" não é "não existe"** (`045`, `FR-730`, `D-004`). A frase
+    global era dita a quem alcança uma espécie e não vê as outras — a publicadora lia *"nenhuma
+    condição neste Processo"* enquanto o gestor via quinze. Ela passa a ser de quem alcança o
+    catálogo inteiro; e nenhum papel sozinho o alcança, de modo que é frase de quem acumula papéis.
+
+    **Só o alcance entra, e é isso que fecha o vazamento** (`FR-731`). A escolha é tomada sobre
+    permissões, antes de sinal algum ser montado: não há caminho de dado entre o que o leitor não
+    alcança e a frase que ele lê, e por isso ela é a mesma havendo ou não o que ele não vê. Nem
+    `alcance_no_edital` entra: o estado do Edital retira espécies do **Edital**, e não do leitor —
+    quem alcança tudo, num Processo de Editais encerrados, leu tudo o que havia para ler.
+    """
+    if not any(alcancadas.values()):
+        return None
+    return AUSENCIA_GLOBAL if all(alcancadas.values()) else AUSENCIA_RELATIVA
+
+
 # --- A região inteira ------------------------------------------------------------------------
 
 
-def sinais(processo, ator, *, agora=None, alcancadas=None):
+def sinais(processo, ator, *, alcancadas=None):
     """Os sinais deste Processo, na ordem do catálogo — e nada além deles.
 
-    A ordem é a de `ESPECIES`, e não uma de gravidade: os cinco são igualmente acionáveis, e
-    ordená-los por severidade pediria um juízo que o domínio não determina (`D-002`).
+    A ordem é a de `ESPECIES`, e não uma de gravidade: as espécies são igualmente acionáveis, e
+    ordená-las por severidade pediria um juízo que o domínio não determina (`D-002`).
 
     O sinal que o ator não alcança **não é montado** (`FR-004`): a detecção nem chega a rodar, o
     que é ao mesmo tempo a supressão silenciosa e a leitura mais barata.
+
+    **Nenhum sinal lê o relógio desde a `045`**: o único que o lia era o `UX-002`, que comparava o
+    `status` declarado com a posição no tempo. Por isso `agora` saiu da assinatura.
     """
-    agora = agora or timezone.now()
     # `alcancadas` entra pronto quando quem chama já o leu. A página do Processo precisa saber,
     # **antes** de montar a região, se este ator alcança alguma espécie — e `pode_gerir_comissao`
     # consulta a comissão, de modo que recalculá-lo aqui custaria a mesma leitura duas vezes.
     if alcancadas is None:
         alcancadas = alcance(ator, processo)
 
-    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None):
+    def encaminhar(especie, edital, referencia=None, *, sorteio=False, ato=None, lista=None):
         return destino_de(
-            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato
+            processo, especie, edital, referencia, ator=ator, sorteio=sorteio, ato=ato, lista=lista
         )
 
     leitura = leitura_dos_editais(processo)
     publicados = [(edital, conteudo) for edital, conteudo in leitura if conteudo is not None]
     achados = []
     for edital, conteudo in publicados:
-        if alcancadas[UX_001]:
-            achados += list(etapas_sem_marco(edital, conteudo, encaminhar))
-        if alcancadas[UX_002]:
-            achados += list(divergencias_temporais(edital, conteudo, agora, encaminhar))
         # **As leituras partilhadas recebem o alcance inteiro, e não um `if` na chamada** (`038`).
         # Cada uma serve a duas espécies com uma consulta só, e decidir aqui qual delas o ator
         # alcança obrigaria a escolher entre ler duas vezes e suprimir demais. A supressão continua
@@ -1380,7 +1365,10 @@ def sinais(processo, ator, *, agora=None, alcancadas=None):
         achados += list(
             sinais_do_marco(edital, conteudo, versao_vigente_do_edital(edital), encaminhar, deste)
         )
-        if deste[UX_046]:
+        # **Onde ninguém pode retificar, o `UX-046` não é condição de Atenção** (045, `FR-741`):
+        # Edital encerrado ou cancelado, ou Processo em estado final. O fato continua no conteúdo
+        # publicado; o que sai é a pendência que nenhuma tela resolve.
+        if deste[UX_046] and situacao_admite_retificacao(processo, edital):
             achados += list(acervo_sem_quadro(edital, conteudo, encaminhar))
     achados += list(
         sinais_do_recurso(processo, [edital for edital, _ in publicados], encaminhar, alcancadas)
@@ -1400,11 +1388,6 @@ def sinais(processo, ator, *, agora=None, alcancadas=None):
 
 
 __all__ = [
-    "ANTES_DO_INICIO",
-    "COERENTES",
-    "DECLARACOES",
-    "DENTRO_DO_INTERVALO",
-    "DEPOIS_DO_TERMINO",
     "ENCAMINHAMENTOS_QUE_ALTERAM_O_EDITAL",
     "PERMISSAO_DE_RETIFICAR",
     "ESPECIES",
@@ -1412,8 +1395,8 @@ __all__ = [
     "ROTULOS_DO_DESTINO",
     "TRABALHO_PENDENTE",
     "alcance_no_edital",
-    "UX_001",
-    "UX_002",
+    "AGUARDANDO_DECISAO",
+    "fase_das_pecas",
     "UX_003",
     "UX_004",
     "UX_005",
@@ -1442,13 +1425,21 @@ __all__ = [
     "instantes_do_evento",
     "leitura_dos_editais",
     "listas_do_marco",
+    "fase_do_evento",
     "marcos_do_edital",
     "periodo_do_edital",
     "pode_supervisionar",
     "admite_encaminhamento",
+    "situacao_admite_retificacao",
+    "INSCRICAO",
+    "RECURSO",
+    "RECORTE",
+    "PLURAIS",
     "alcance",
+    "AUSENCIA_GLOBAL",
+    "AUSENCIA_RELATIVA",
+    "frase_de_ausencia",
     "destino_de",
-    "posicao_temporal",
     "pulso",
     "serie_do_edital",
     "sorteado",

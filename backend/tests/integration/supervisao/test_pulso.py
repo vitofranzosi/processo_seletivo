@@ -286,3 +286,100 @@ def test_edital_sem_cronograma_vigente_e_declarado_como_tal(
     assert em_elaboracao.ausencia == supervisao.SEM_CRONOGRAMA
     assert em_elaboracao.periodo is None
     assert em_elaboracao.proximos_marcos == ()
+
+
+# ---------------------------------------------------------------------------
+# A fase do marco é derivada (045, US3)
+#
+# **O pulso escrevia "declarado planejado" ao lado de todo marco** de todo Edital composto pela
+# tela: nada escrevia outro valor. A fase passa a vir do relógio — a régua do vencido para os
+# Eventos comuns, a do período para o período de inscrições —, e o `status` publicado só responde
+# se o Evento foi cancelado.
+# ---------------------------------------------------------------------------
+
+
+def _instante(delta):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    return (timezone.now() + timedelta(days=delta)).isoformat()
+
+
+def _marcos(*eventos):
+    """Os marcos de um conteúdo publicado montado à mão — a forma que o `effective_version` guarda.
+
+    Montado à mão, e não publicado pela API, porque um dos casos é exatamente o que a API passou a
+    recusar: conteúdo **já publicado** com fase declarada, que a `045` não reescreve.
+    """
+    from django.utils import timezone
+
+    return supervisao.marcos_do_edital(None, {"schedule": list(eventos)}, timezone.now())
+
+
+def test_o_periodo_sem_termino_continua_nos_marcos_em_andamento():
+    """`045`, `FR-735` — o caso-limite *"Período de inscrições sem término"*.
+
+    A régua geral venceria o Evento pelo início; a do período o mantém **aberto**, e é ela que
+    decide se o sistema recebe inscrição. A lista cortava por `término or início <= agora`, e
+    tirava o período dos próximos marcos no instante em que ele abria.
+    """
+    marcos = _marcos(
+        {
+            "description": "Inscrições",
+            "startAt": _instante(-3),
+            "endAt": None,
+            "isRegistrationPeriod": True,
+            "status": "PLANEJADO",
+        }
+    )
+
+    assert [marco.descricao for marco in marcos] == ["Inscrições"]
+    assert marcos[0].em_andamento
+
+
+def test_o_evento_pontual_sai_dos_marcos_quando_vence():
+    """`045`, `FR-735` — o caso-limite *"Evento sem término"*: pontual vence pelo início."""
+    marcos = _marcos(
+        {"description": "Resultado já divulgado", "startAt": _instante(-1), "endAt": None},
+        {"description": "Resultado por vir", "startAt": _instante(2), "endAt": None},
+    )
+
+    assert [marco.descricao for marco in marcos] == ["Resultado por vir"]
+    assert not marcos[0].em_andamento
+
+
+def test_o_cancelado_nao_aparece_mesmo_com_datas_em_curso():
+    """`045`, `FR-736` — o teste 5 da proposta: `CANCELADO` prevalece sobre a derivação."""
+    marcos = _marcos(
+        {
+            "description": "Sessão que não haverá",
+            "startAt": _instante(-1),
+            "endAt": _instante(1),
+            "status": "CANCELADO",
+        }
+    )
+
+    assert marcos == ()
+
+
+def test_fase_declarada_em_conteudo_ja_publicado_e_lida_como_nao_cancelado():
+    """`045`, caso-limite *"Edital publicado antes desta feature"*.
+
+    A API aceitava `EM_ANDAMENTO` antes da `045`, e o conteúdo publicado com ele não é reescrito.
+    A leitura o trata como *não cancelado*: um Evento futuro é **planejado**, digam o que disserem
+    as letras guardadas.
+    """
+    evento = {
+        "description": "Prova",
+        "startAt": _instante(5),
+        "endAt": _instante(6),
+        "status": "EM_ANDAMENTO",
+    }
+    conteudo = {"schedule": [evento]}
+
+    from django.utils import timezone
+
+    assert supervisao.fase_do_evento(evento, conteudo, timezone.now()) == "PLANEJADO"
+    assert [marco.descricao for marco in _marcos(evento)] == ["Prova"]
+    assert evento["status"] == "EM_ANDAMENTO", "a leitura não reescreve o conteúdo"

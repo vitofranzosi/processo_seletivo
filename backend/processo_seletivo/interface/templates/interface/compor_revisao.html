@@ -26,6 +26,13 @@
       {% for item in bloco.itens %}
       <li>
         <strong>{{ item.titulo }}</strong>
+        {% comment %}
+        O que difere do grupo mais comum da Classificação, antes das linhas: é a razão de o grupo
+        estar separado, e quem confere não deveria ter de achá-la comparando duas listas. Em negrito,
+        e não com regra nova na folha: a folha é inline em toda página, e a da distribuição mede o
+        próprio tamanho (`test_escala_da_mesa`).
+        {% endcomment %}
+        {% if item.diverge %}<span class="detalhe"><strong>{{ item.diverge }}</strong></span>{% endif %}
         {% for linha in item.linhas %}{% if linha %}<span class="detalhe">{{ linha }}</span>{% endif %}{% endfor %}
         {% comment %}
         Os bytes do anexo, e não só a linha que diz que ele existe: conferir o que não se pode abrir

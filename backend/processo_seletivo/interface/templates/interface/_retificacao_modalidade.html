@@ -1,0 +1,48 @@
+<fieldset class="linha modalidade-nova">
+  <legend><span class="nome">Modalidade de Concorrência a acrescentar</span></legend>
+  {% comment %}
+  Os campos da composição (`_modalidade.html`), mais as duas decisões que só se tomam no mesmo ato:
+  se ela é a ampla concorrência do Perfil, e, sendo cota, quantas vagas ela tem. A ampla não tem
+  linha própria — as vagas dela são as da linha geral —, e por isso as duas se excluem (048).
+
+  "É a ampla" é caixa de marcação, e não o `select` Sim/Não das linhas vigentes: desmarcada ela não
+  é enviada, e nada se declara por estar pré-selecionado.
+  {% endcomment %}
+  <div class="campos">
+    {% for campo in campos %}
+    {% if campo.tipo == 'oculto' %}
+    <input type="hidden" name="novo-modalidade-{{ indice }}-{{ campo.chave }}" value="{{ campo.valor }}">
+    {% elif campo.tipo == 'booleano' %}
+    <p class="campo">
+      <input type="checkbox" id="nm-{{ indice }}-{{ campo.chave }}"
+             name="novo-modalidade-{{ indice }}-{{ campo.chave }}" value="1"
+             {% if campo.valor == '1' %}checked{% endif %}>
+      <label for="nm-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+    </p>
+    {% else %}
+    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% endif %}">
+      <label for="nm-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'referencia' %}
+      <select id="nm-{{ indice }}-{{ campo.chave }}"
+              name="novo-modalidade-{{ indice }}-{{ campo.chave }}">
+        <option value="">Escolha o Perfil</option>
+        {% for identificador, rotulo in campo.opcoes %}
+        <option value="{{ identificador }}"{% if campo.valor == identificador %} selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <input id="nm-{{ indice }}-{{ campo.chave }}"
+             name="novo-modalidade-{{ indice }}-{{ campo.chave }}"
+             type="{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %}number{% else %}text{% endif %}"
+             {% if campo.tipo == 'decimal' %}step="0.0001"{% elif campo.tipo == 'inteiro' %}min="0" step="1"{% endif %}
+             value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar esta Modalidade</button>
+  </p>
+</fieldset>

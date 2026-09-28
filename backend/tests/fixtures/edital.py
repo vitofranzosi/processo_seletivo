@@ -41,6 +41,25 @@ def identidade_do_marco(perfil_id):
     return str(uuid5(NAMESPACE_URL, f"marco:{perfil_id}"))
 
 
+def corte_que_nao_governa(alvo=1):
+    """A regra de corte que não governa Etapa alguma — a que não mexe em participação.
+
+    **Por que as fixtures de marco a declaram** (046, `FR-752`): Perfil em que nenhum marco corta
+    não é mais publicado, porque ninguém dele pode ser convocado. Esta é a declaração que torna o
+    Perfil publicável **sem mudar quem participa de nada**: `faixa.etapa_governada` devolve `None`,
+    e sem corte emitido o conjunto de participantes é o de antes (014, `FR-214`). É também a forma
+    do 69/2026, o Edital mais simples da amostra.
+    """
+    return {
+        "targetKind": "FIXED",
+        "targetCount": alvo,
+        "surplusCount": 0,
+        "tieOutcome": "STRICT",
+        "governedStage": "NONE",
+        "continuation": "NONE",
+    }
+
+
 def marco_minimo(identidade, *, codigo="M1", nome="Sorteio público"):
     """O marco que torna um Perfil **publicável**, e o mínimo que a `032` exige dele.
 
@@ -75,14 +94,7 @@ def marco_minimo(identidade, *, codigo="M1", nome="Sorteio público"):
         "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
         "tiebreakers": [],
         "drawMethod": dict(DRAW_METHOD),
-        "cutRule": {
-            "targetKind": "FIXED",
-            "targetCount": 1,
-            "surplusCount": 0,
-            "tieOutcome": "STRICT",
-            "governedStage": "NONE",
-            "continuation": "NONE",
-        },
+        "cutRule": corte_que_nao_governa(),
     }
 
 

@@ -129,6 +129,11 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 /* A encerrada não é apagada: Edital encerrado continua sendo ato normativo publicado, e sumir com
    ele visualmente diria "descartado" onde o certo é "não recebe mais inscrição". */
 .marca-situacao.encerrado{background:var(--cinza-fundo);color:var(--texto-fraco)}
+/* O Edital que acabou (047, FR-760, FR-763). O encerrado tem o desenho da encerrada, porque os dois
+   são registro consultável; a palavra da marca é que os distingue. O cancelado se destaca: é
+   interrupção, e quem chega pelo endereço precisa vê-lo antes de ler qualquer outra coisa. */
+.marca-situacao.encerrado_edital{background:var(--cinza-fundo);color:var(--texto-fraco)}
+.marca-situacao.cancelado{background:var(--vermelho-fundo);color:var(--vermelho)}
 .acao-aparente{display:inline-block;padding:.5rem .9rem;border-radius:4px;background:var(--verde);
   color:var(--branco);font-weight:600;font-size:.9375rem}
 .selecao:hover .acao-aparente{background:var(--verde-escuro)}
@@ -285,6 +290,18 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .situacao.aberto{color:var(--sucesso)}
 .situacao.futuro{color:var(--amarelo)}
 .situacao.encerrado{color:var(--texto-fraco);font-weight:400}
+.situacao.desfecho{color:var(--texto)}
+/* Agora e próximo, logo abaixo da frase do período (047, FR-767). Texto corrido, sem caixa: é
+   informação do cabeçalho, e não um aviso que disputa com a situação. */
+.agora-e-proximo p{margin:.25rem 0}
+.agora-e-proximo .rotulo-do-momento{font-weight:600}
+/* O prazo recursal (047, FR-769, FR-770): texto, e não botão — a página não oferece ação. */
+.prazo-recursal{margin:.5rem 0}
+.resultados-divulgados .prazo-recursal{display:block;margin:.1rem 0 0;font-size:.875rem}
+/* O histórico recolhido de um resultado (047, FR-772, FR-773). Discreto de propósito: é registro
+   consultável, e não o que vale. */
+.publicacoes-anteriores{margin:.35rem 0 0;font-size:.875rem}
+.publicacoes-anteriores ul{margin:.25rem 0 0;padding-left:1.1rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
 .erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);padding:.75rem 1rem;
@@ -556,6 +573,13 @@ details.integridade .resumos{list-style:none;margin:.75rem 0 0;padding:0;display
    neutro — o mesmo do "Nada registrado ainda" —, e o cronograma dizia com duas aparências o
    que tem três significados. Passado que aconteceu é afirmação, e não ausência. */
 .linha-do-tempo .marco.concluido{border-left-color:var(--sucesso)}
+/* O quarto estado (047, FR-766): o Evento que o Edital cancelou. Riscado, e dito em texto pela
+   etiqueta ao lado do nome, porque o traço sozinho não chega a quem lê com leitor de tela. */
+.linha-do-tempo .marco.cancelado .rotulo{font-weight:400;color:var(--texto-fraco);
+  text-decoration:line-through}
+.linha-do-tempo .cancelado-texto{display:inline-block;margin-left:.5rem;font-size:.75rem;
+  font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco);
+  text-decoration:none}
 /* "Acontecendo agora" no evento em curso (024, UX-019). O peso da fonte e a cor da borda diziam
    qual era o evento corrente, e nenhum dos dois chega a quem lê com leitor de tela — nem a quem
    não distingue a cor. A etiqueta diz em texto o que o desenho dizia sozinho. */

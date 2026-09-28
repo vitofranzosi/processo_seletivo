@@ -15,7 +15,9 @@
   if (!campo || !campo.form) return;
 
   campo.addEventListener("change", function () {
-    if (!campo.value) return;
+    // O vazio só é resposta quando é a ampla concorrência, e aí o campo não é `required`; nos
+    // demais é o convite a escolher, e guardá-lo seria pedir ao servidor uma recusa.
+    if (!campo.value && campo.required) return;
     var acao = document.createElement("input");
     acao.type = "hidden";
     acao.name = "acao";

@@ -8,7 +8,15 @@ em janeiro, que é o defeito que a SC-118 existe para impedir.
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from processo_seletivo.editais.domain.calendario import ano_do_evento, instante_vencido, vencido
+from processo_seletivo.editais.domain.calendario import (
+    CONCLUIDO,
+    EM_ANDAMENTO,
+    PLANEJADO,
+    ano_do_evento,
+    fase,
+    instante_vencido,
+    vencido,
+)
 
 VITORIA = ZoneInfo("America/Sao_Paulo")
 AGORA = datetime(2026, 9, 15, 12, 0, tzinfo=VITORIA)
@@ -118,3 +126,36 @@ def test_o_ano_de_um_instante_gravado_em_utc_tambem_e_lido_em_vitoria():
 
 def test_o_primeiro_horario_do_ano_em_vitoria_e_do_ano_novo():
     assert ano_do_evento(datetime(2027, 1, 1, 0, 30, tzinfo=VITORIA)) == 2027
+
+
+# --- fase (045, `FR-735`) ------------------------------------------------------------------------
+#
+# **O teste 4 da proposta**: a fase ordinária é derivada, e nenhum Evento fica planejado para sempre
+# porque ninguém o declarou. Os casos seguem a régua do vencido acima — a fase é leitura dela.
+
+
+def test_com_termino_a_fase_percorre_as_tres():
+    assert fase(em(days=1), em(days=5), agora=AGORA) == PLANEJADO
+    assert fase(em(days=-1), em(days=5), agora=AGORA) == EM_ANDAMENTO
+    assert fase(em(days=-5), em(days=-1), agora=AGORA) == CONCLUIDO
+
+
+def test_o_evento_pontual_nunca_fica_em_andamento_para_sempre():
+    """Sem término, vence pelo início (037, `FR-546`): é planejado antes, concluído depois."""
+    assert fase(em(hours=1), None, agora=AGORA) == PLANEJADO
+    assert fase(em(hours=-1), None, agora=AGORA) == CONCLUIDO
+
+
+def test_no_instante_exato_a_fase_segue_o_menor_estrito_da_regua():
+    """No instante do início o Evento começou e não venceu — em andamento, e não concluído.
+
+    É o `<` estrito de `vencido`: a fase não pode dizer *concluído* no mesmo segundo em que o
+    impedimento de inscrição diz *ainda aberto*.
+    """
+    assert fase(AGORA, em(days=1), agora=AGORA) == EM_ANDAMENTO
+    assert fase(em(days=-1), AGORA, agora=AGORA) == EM_ANDAMENTO
+
+
+def test_sem_inicio_nao_ha_fase():
+    """A fase não é inventada: a conferência de forma já acusa o Evento sem início."""
+    assert fase(None, em(days=1), agora=AGORA) is None

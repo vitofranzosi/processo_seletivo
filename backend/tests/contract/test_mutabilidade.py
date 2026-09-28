@@ -407,3 +407,87 @@ def test_reclassificar_nao_reescreve_conteudo_publicado(conteudo_maximo):
         assert conteudo_maximo == antes
     finally:
         CONTRATO[chave] = original
+
+
+# --------------------------------------------------------------------------------------------
+# O nascimento pela tela (048)
+# --------------------------------------------------------------------------------------------
+
+_PERFIL = "11111111-1111-4111-8111-111111111111"
+_MARCO = "22222222-2222-4222-8222-222222222222"
+
+
+def _conteudo_sem_nenhum_objeto_que_pode_nascer():
+    """Um Perfil sem reversão, com um marco sem janela, sem corte e sem método."""
+    return {
+        "profiles": [
+            {
+                "id": _PERFIL,
+                "code": "P1",
+                "name": "Perfil",
+                "competitionModalities": [],
+                "vacancyTable": [],
+                "declaredFacts": [],
+                "vacancyReversion": None,
+                "classificationMilestones": [{"id": _MARCO, "code": "M1", "stages": []}],
+            }
+        ],
+    }
+
+
+@pytest.mark.contract
+def test_o_registro_de_nascimento_recusa_o_que_o_contrato_nao_deixa_nascer():
+    """FR-803: oferecer campo no nascimento é decisão declarada e conferida, e não exceção."""
+    from processo_seletivo.interface import retificacao
+
+    campo = [("normativeRule/foundation", "Fundamento", retificacao.TEXTO)]
+    problemas = retificacao._problemas_do_nascimento(
+        {("competitionModalities", "normativeRule"): (campo, {})}
+    )
+    assert problemas == ["(competitionModalities, normativeRule) não pode nascer por Retificação"]
+
+
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    ("caminho", "problema"),
+    [
+        ("appealWindow/inventado", "não está no contrato"),
+        ("cutRule/targetCount", "não pertence a appealWindow"),
+    ],
+)
+def test_o_registro_de_nascimento_recusa_campo_fora_do_contrato_ou_do_objeto(caminho, problema):
+    from processo_seletivo.interface import retificacao
+
+    problemas = retificacao._problemas_do_nascimento(
+        {("classificationMilestones", "appealWindow"): ([(caminho, "X", retificacao.TEXTO)], {})}
+    )
+    assert len(problemas) == 1
+    assert problema in problemas[0]
+
+
+@pytest.mark.contract
+def test_todo_objeto_que_pode_nascer_tem_caminho_pela_tela():
+    """SC-290 — o contrato diz que quatro objetos podem nascer, e a tela oferecia um só.
+
+    O guarda é pela tela montada, e não pelas listas: um objeto tem caminho quando o formulário de
+    um conteúdo em que ele está **ausente** oferece ao menos um campo dentro dele.
+    """
+    from processo_seletivo.editais.domain.mutabilidade import PODE_PASSAR_A_EXISTIR
+    from processo_seletivo.interface import retificacao
+
+    caminhos = [
+        campo["caminho"]
+        for grupo in retificacao.campos_editaveis(_conteudo_sem_nenhum_objeto_que_pode_nascer())
+        for campo in grupo["campos"]
+    ]
+    base = {
+        "profiles": f"/profiles/id={_PERFIL}",
+        "classificationMilestones": f"/profiles/id={_PERFIL}/classificationMilestones/id={_MARCO}",
+    }
+    sem_caminho = sorted(
+        f"({colecao}, {objeto})"
+        for (colecao, objeto), (pode, _razao) in PODE_PASSAR_A_EXISTIR.items()
+        if pode
+        and not any(caminho.startswith(f"{base[colecao]}/{objeto}/") for caminho in caminhos)
+    )
+    assert sem_caminho == [], "pode nascer e a tela não oferece:\n  " + "\n  ".join(sem_caminho)

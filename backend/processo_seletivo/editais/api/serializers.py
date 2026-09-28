@@ -3,7 +3,12 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
-from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_event
+from processo_seletivo.editais.domain.cronograma import (
+    RECUSA_DA_FASE_DECLARADA,
+    STATUS_DECLARAVEIS,
+    ScheduleValidationError,
+    validate_event,
+)
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_profile
 
 
@@ -182,9 +187,15 @@ class EventSerializer(serializers.Serializer):
     startAt = serializers.DateTimeField()
     endAt = serializers.DateTimeField(required=False, allow_null=True)
     order = serializers.IntegerField(min_value=0, required=False, default=0)
+    # **Só os dois valores que se declaram** (045, `FR-737`): a fase ordinária é derivada das
+    # datas, e só o cancelamento é declaração. O contrato anuncia exatamente o que aceita — a
+    # interface navegável e os clientes gerados não oferecem o que a API recusaria —, e a escolha
+    # inválida responde com a **mesma** razão do domínio (`validate_event`), e não com o "não é uma
+    # escolha válida" genérico, que não diria por quê.
     status = serializers.ChoiceField(
-        choices=["PLANEJADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"],
+        choices=sorted(STATUS_DECLARAVEIS),
         required=False,
+        error_messages={"invalid_choice": RECUSA_DA_FASE_DECLARADA},
     )
     # Ausente significa "não é o período de inscrições", que é a verdade para quase todo Evento.
     isRegistrationPeriod = serializers.BooleanField(required=False, default=False)
@@ -264,9 +275,9 @@ class SectionSerializer(serializers.Serializer):
 class DocumentRequirementSerializer(serializers.Serializer):
     """O que o Edital exige do candidato.
 
-    `profileId` e `modalityId` ausentes ou nulos significam "não restringe" — é a ausência que
-    produz as quatro combinações de aplicabilidade, e por isso os dois são anuláveis em vez de
-    obrigatórios com valor especial.
+    `profileId`, `modalityId` e `modalityCode` ausentes ou nulos significam "não restringe" — é a
+    ausência que produz as cinco formas de aplicabilidade (044), e por isso os três são anuláveis em
+    vez de obrigatórios com valor especial.
     """
 
     id = serializers.UUIDField()
@@ -280,6 +291,11 @@ class DocumentRequirementSerializer(serializers.Serializer):
     # O Anexo que serve de modelo. Ausente e nulo significam a mesma coisa — "não fornece modelo" —
     # como em `profileId` e `modalityId`.
     attachmentId = serializers.UUIDField(required=False, allow_null=True)
+    # O recorte transversal (044): a Modalidade deste código em todos os Perfis que a têm. Ausente e
+    # nulo significam "não recorta por código", como nos dois identificadores acima.
+    modalityCode = serializers.CharField(
+        required=False, allow_null=True, allow_blank=False, max_length=100
+    )
 
 
 class EditalDraftSerializer(serializers.Serializer):

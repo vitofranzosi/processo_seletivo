@@ -353,25 +353,75 @@ def test_a_ordem_vazia_nunca_e_automatica(gestor, api_client, manager_headers, p
 # --- T022 · Os dois casos de borda --------------------------------------------------------------
 
 
-def test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla(cenario, gestor):
-    """`FR-494a`: o recorte novo nasce sem ordem, e a ordem da ampla **continua vigente**.
+def test_modalidade_acrescentada_depois_nao_obsoleta_a_ordem_da_ampla(cenario, gestor, api_client):
+    """`FR-494a`: o recorte novo nasce sem ordem, e as ordens vigentes **continuam vigentes**.
 
-    A razão é a `FR-492`, e não uma escolha nova: o universo da ampla é todo mundo, e acrescentar
-    uma Modalidade não retira nem acrescenta ninguém a ele. A ordem que foi emitida continua sendo a
-    daquele universo, sob a norma que o ato citou.
+    A razão é a `FR-492`, e não uma escolha nova: o universo da ampla é todo mundo, e o de cada cota
+    é quem a declarou; acrescentar uma Modalidade não retira nem acrescenta ninguém a eles. A ordem
+    que foi emitida continua sendo a daquele universo, sob a norma que o ato citou.
 
-    *A Retificação em si é exercitada pelo percurso do `quickstart` 5.2; o que se prende aqui é a
-    regra de vigência — que o ato da ampla não ganha sucessor nem obsolescência por causa de um
-    recorte que passou a existir.*
+    **Retificando de fato** (048, `SC-289`). A primeira redação deste caso emitia outro recorte à
+    mão e remetia a Retificação ao percurso 5.2 do `quickstart` da `034` — que nunca foi
+    executável, porque a tela não acrescentava Modalidade. Com a `048` ela acrescenta, e o caso
+    passa a exercer o caminho inteiro: a Retificação publicada, e as ordens da ampla e de uma cota
+    que não se movem.
     """
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from tests.fixtures.publicacao import retify
+
     edital, _, _ = cenario
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="034-antes-da-nova")
     da_ampla = ato_vigente(edital=edital, marco_id=MARCO, lista_id=None)
+    da_ppi = ato_vigente(edital=edital, marco_id=MARCO, lista_id=MODALIDADE_PPI)
+    modalidades_antes = dict(
+        Inscricao.objects.filter(edital=edital).values_list("id", "modality_id")
+    )
+    nova = "00000000-0000-4000-8000-000000048201"
 
-    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PCD, chave="034-nova-modalidade")
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/profiles/id={PROFILE_ID}/competitionModalities/-",
+                "operation": "ADD",
+                "newValue": {
+                    "id": nova,
+                    "code": "EP",
+                    "name": "Escola pública",
+                    "description": "",
+                    "normativeRule": None,
+                },
+            },
+            {
+                "targetPath": f"/profiles/id={PROFILE_ID}/vacancyTable/-",
+                "operation": "ADD",
+                "newValue": {
+                    "id": "00000000-0000-4000-8000-000000048202",
+                    "modalityId": nova,
+                    "immediateVacancies": 0,
+                },
+            },
+        ],
+        suffix="nova-modalidade-048",
+    )
 
-    da_ampla.refresh_from_db()
-    assert not da_ampla.sucessores.exists()
+    for ato in (da_ampla, da_ppi):
+        ato.refresh_from_db()
+        assert not ato.sucessores.exists()
     assert ato_vigente(edital=edital, marco_id=MARCO, lista_id=None).id == da_ampla.id
+    assert ato_vigente(edital=edital, marco_id=MARCO, lista_id=MODALIDADE_PPI).id == da_ppi.id
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    assert nova in {
+        str(recorte[0]) for recorte in recortes_do_perfil(vigente, perfil_id=PROFILE_ID)
+    }, "o recorte novo existe na versão vigente"
+    assert ato_vigente(edital=edital, marco_id=MARCO, lista_id=nova) is None, "e nasce sem ordem"
+    assert (
+        dict(Inscricao.objects.filter(edital=edital).values_list("id", "modality_id"))
+        == modalidades_antes
+    ), "nenhuma inscrição enviada mudou de Modalidade"
 
 
 def test_o_empate_residual_atravessa_quando_o_par_inteiro_esta_no_recorte(

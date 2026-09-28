@@ -4,6 +4,7 @@ Mil inscrições não cabem numa tela, e a pergunta operacional quase nunca é "
 não têm ninguém". Daí paginação e filtro serem requisito, e não conforto (FR-049).
 """
 
+import re
 from math import ceil
 
 import pytest
@@ -42,7 +43,8 @@ def test_a_tela_diz_o_que_falta_antes_do_detalhe(presidente, tela, edital_a, ban
     # Os números são o filtro: ler a contagem num cartão para depois procurá-la num `select` é
     # pedir duas vezes a mesma coisa.
     assert "sem avaliador suficiente" in corpo
-    assert "cobertura=incompleta" in corpo
+    # O número leva ao conjunto que ele conta — inclusive quem não tem avaliador nenhum (045).
+    assert "cobertura=carente" in corpo
     assert "Avaliações por inscrição" in corpo
 
 
@@ -353,3 +355,42 @@ def test_a_tela_declara_o_que_a_consolidacao_produz_antes_da_acao(
     # faria a mesma coisa ter duas palavras conforme onde se lê.
     assert "Resultado da Etapa" in corpo[declaracao:acao]
     assert "imutável" in corpo[declaracao:acao]
+
+
+def test_o_numero_sem_avaliador_suficiente_abre_uma_lista_do_mesmo_tamanho(
+    presidente, tela, edital_a, banca, gestor, etapa_a1
+):
+    """`045`, `FR-742`: o número e a lista para onde ele leva contam o **mesmo** conjunto.
+
+    O número conta toda inscrição com menos avaliadores que o previsto — inclusive quem não tem
+    nenhum —, e o link levava a um filtro que excluía quem não tem nenhum: a lista aberta pelo
+    número era menor que o número. Aqui, duas das três ficam sem avaliador, e a lista tem duas.
+    """
+    from processo_seletivo.avaliacoes.application.distribuicao import distribuir
+
+    inscricoes = inscrever(edital_a, 3)
+    distribuir(
+        actor=gestor,
+        processo_id=edital_a.processo_id,
+        edital_id=edital_a.id,
+        etapa_id=etapa_a1,
+        membro_ids=[banca.id],
+        inscricao_ids=[inscricoes[0].id],
+        idempotency_key="carente",
+        correlation_id="teste",
+    )
+
+    corpo = presidente.get(tela).content.decode()
+    numero = re.search(r'href="\?cobertura=carente"[^>]*>\s*<strong>(\d+)</strong>', corpo)
+    assert numero, "o número não leva ao filtro que ele conta"
+    # Só os protocolos: o ajudante recolhe também o nome de quem já avalia a linha.
+    listados = [
+        item
+        for item in protocolos_listados(
+            presidente.get(f"{tela}?cobertura=carente").content.decode()
+        )
+        if item.startswith("INS-")
+    ]
+
+    assert len(listados) == int(numero.group(1)) == 2
+    assert inscricoes[0].protocolo not in listados

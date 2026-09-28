@@ -733,3 +733,31 @@ def _conclusoes_por_avaliacao(modelo, avaliacao_ids):
     ):
         agrupadas.setdefault(conclusao.avaliacao_id, []).append(conclusao)
     return agrupadas
+
+
+def janela_da_publicacao_divulgada(publicacao, *, conteudo=None):
+    """`(abre, fecha)` do prazo de recurso contra uma publicação de resultado, ou `None` (047).
+
+    **É a conta da interposição, e não uma cópia dela.** A interposição, o acompanhamento do
+    candidato e a página pública do resultado leem esta função, e por isso as três superfícies não
+    têm como anunciar datas diferentes para o mesmo prazo (`FR-769`, `SC-284`). Antes da 047, o
+    ramo *publicação* de `interpor._janelas_pertinentes` fazia esta conta por dentro, e só quem
+    já se identificara via o prazo.
+
+    **A norma é a da versão vigente**, como a interposição sempre leu (`D-005`): o prazo dito ao
+    público é o que o sistema aplica a quem recorre. Que uma Retificação da janela alcance ato já
+    divulgado é pergunta do domínio de recursos, registrada na spec da 047; se a regra mudar, muda
+    aqui, e as três superfícies acompanham juntas.
+
+    `conteudo` é o conteúdo vigente, quando quem chama já o tem na mão — a página do Edital, que
+    lê vários resultados de uma vez. Sem ele, a função o lê.
+
+    `None` quando não há janela declarada, quando ela não é computável, ou quando o Edital declarou
+    que não cabe recurso: nos três casos o sistema **não inventa prazo** (`FR-771`).
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+    from processo_seletivo.recursos.domain.janela import declaracao_do_marco, janela_da_publicacao
+
+    if conteudo is None:
+        conteudo = conteudo_vigente(publicacao.edital)
+    return janela_da_publicacao(publicacao, declaracao_do_marco(conteudo, publicacao.marco_id))

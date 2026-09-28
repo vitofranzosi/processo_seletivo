@@ -181,6 +181,8 @@ def edital_com_dupla(db, api_client, manager_headers):
         },
         seed=2,
         avaliacoes=2,
+        # Duas avaliações por inscrição: depois da `046`, só existe no acervo (`FR-746`).
+        como_acervo=True,
         maxima="100.0000",
     )
 

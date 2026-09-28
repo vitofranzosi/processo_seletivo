@@ -244,7 +244,7 @@ def test_a_ausencia_depois_da_hora_e_definitiva_e_a_cadeia_avanca(congelado):
 
 def test_a_fonte_declarada_determina_o_adaptador_consultado():
     """FR-076: `source` deixou de ser texto livre, e o adaptador deixou de ignorá-lo."""
-    from processo_seletivo.sorteios.infrastructure.fontes import FONTES, fonte_declarada
+    from processo_seletivo.sorteios.infrastructure.fontes import fonte_declarada, fontes_publicadas
     from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import (
         FonteDeTeste,
         LoteriaFederal,
@@ -252,7 +252,7 @@ def test_a_fonte_declarada_determina_o_adaptador_consultado():
 
     assert isinstance(fonte_declarada("Loteria Federal"), LoteriaFederal)
     assert isinstance(fonte_declarada("Fonte de demonstração"), FonteDeTeste)
-    assert "Random.org" not in FONTES
+    assert "Random.org" not in fontes_publicadas()
     with pytest.raises(DomainError, match="draw_source_not_supported"):
         fonte_declarada("Random.org")
 

@@ -60,6 +60,9 @@ def montar_etapa_de_leitura_unica(
         maxima="100.0000",
         minima=NOTA_MINIMA,
         decisoria=decisoria,
+        # A leitura múltipla é o Edital que a `046` deixou de publicar (`FR-746`): a Etapa é
+        # eliminatória e a consolidação a recusa. Ele existe no acervo, e é dele que o cenário fala.
+        como_acervo=avaliacoes > 1,
     )
     processo = edital.processo
     pessoas = [("maria", Funcao.PRESIDENTE)] + [(nome, Funcao.MEMBRO) for nome in avaliadores]

@@ -75,16 +75,23 @@ def test_o_custo_em_consultas_nao_cresce_com_o_numero_de_posicoes(
 def test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas(
     client, gestor, api_client, manager_headers, process_payload
 ):
-    """A publicação e a cadeia: duas leituras, e o teto existe para que uma terceira apareça."""
+    """A publicação, a cadeia e a norma do prazo: o teto existe para que a próxima leitura apareça.
+
+    **A quarta consulta é a versão consolidada vigente** (047, `D-008`, `FR-769`). A página passou a
+    dizer o prazo de recurso, e o prazo é o que a interposição aplica, lido da janela declarada na
+    versão vigente. A T-013 da 017 foi emendada só nessa tabela, que guarda norma pública; o custo
+    continua constante no número de posições, que é o que o caso acima prende.
+    """
     publicacao = _publicar_com(
         gestor, api_client, manager_headers, process_payload, quantas=3, seed=72, codigo="0772"
     )
 
     quantidade = _consultas_da_pagina(client, publicacao)
 
-    assert quantidade <= 3, (
-        f"a página custou {quantidade} consultas: são a publicação e a cadeia das sucessoras, "
-        "e uma terceira leitura precisa ser justificada"
+    assert quantidade <= 4, (
+        f"a página custou {quantidade} consultas: são a publicação, a cadeia das sucessoras e a "
+        "versão vigente que dá o prazo de recurso (047, D-008), e uma quinta leitura precisa ser "
+        "justificada"
     )
 
 

@@ -247,3 +247,19 @@ def test_o_detalhe_do_edital_leva_ao_sorteio(certame, client):
     assert f'"{ordenacao}"' not in corpo, (
         "o marco que sorteia não abre a tela do cálculo por Etapas"
     )
+
+
+def test_quem_le_e_nao_conduz_o_sorteio_sabe_a_quem_pedir(certame, client):
+    """`045`, `FR-740` — o teste 8 da proposta, na tela a que o `UX-004` leva a auditoria.
+
+    Todo formulário da tela é de quem emite, e ela os escondia sem dizer de quem eram. A
+    presidência, que conduz, recebe os formulários e **não** a frase (037, `FR-544`).
+    """
+    identificar(client, "aud", ["auditor"])
+    da_auditoria = _tela(client, certame)
+    identificar(client, "maria", [])
+    da_presidencia = _tela(client, certame)
+
+    assert "Conduzir o sorteio deste marco depende" in da_auditoria
+    assert "Peça a alguém com a permissão de gerir a comissão" in da_auditoria
+    assert "Conduzir o sorteio deste marco depende" not in da_presidencia

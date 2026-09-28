@@ -20,6 +20,7 @@ from django.utils import timezone
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
@@ -747,10 +748,18 @@ class Composicao:
                 continue
 
             if item[0] == "fecha_linha":
-                if quadro is not None and "inicio" in quadro:
-                    quadro["linhas"].append((quadro["inicio"], y))
+                if quadro is not None:
+                    # **A linha que a quebra levou para a página seguinte começou na anterior**, e
+                    # a quebra recomeça o quadro sem o início dela. Descartá-la aqui tirava da grade
+                    # a primeira linha da página nova — e com ela o fio abaixo, que fundia duas
+                    # linhas do Cronograma num bloco só (estudo de esforço, §12, item 14). Nesta
+                    # página ela começa onde terminou a anterior, que é o cabeçalho repetido.
+                    inicio = quadro.pop("inicio", None)
+                    if inicio is None:
+                        inicio = quadro["linhas"][-1][1] if quadro["linhas"] else y
+                    quadro["linhas"].append((inicio, y))
                     if len(quadro["linhas"]) == 1 and cabecalho_ativo:
-                        quadro["cabecalho"] = (quadro["inicio"], y)
+                        quadro["cabecalho"] = (inicio, y)
                 indice += 1
                 continue
 
@@ -920,8 +929,14 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     medida sem teto, uma descrição longa soma além da página e empurra as colunas seguintes para
     fora do papel — o documento sai sem as datas, e nada acusa.
 
-    O excesso é tirado sempre da coluna mais larga, e não distribuído: quem estoura a linha é a
-    célula longa, e encolher a coluna do `Nº` para acomodá-la não ajudaria ninguém.
+    O excesso é tirado só das colunas longas, e não distribuído: quem estoura a linha é a célula
+    longa, e encolher a coluna do `Nº` para acomodá-la não ajudaria ninguém.
+
+    **Longas no plural** (estudo de esforço, §12, item 7). A regra anterior tirava tudo da mais
+    larga, e quando nem ela no piso bastava — Evento **e** Onde longos, no Cronograma do 78/2026 —
+    todas encolhiam na mesma proporção: o `Nº` saía cortado pela borda e cada data ocupava três
+    linhas. Agora cada coluna curta recebe o que pede, e as longas repartem em partes iguais o que
+    sobrou; "curta" é a que cabe na parte igual de quem ainda não foi atendido.
     """
     colunas = len(linhas[0])
     naturais = [
@@ -932,16 +947,19 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
         + PADDING_DA_COLUNA
         for c in range(colunas)
     ]
-    piso = largura("MMMM", tamanho, REGULAR) + PADDING_DA_COLUNA
-    while sum(naturais) > disponivel:
-        maior = max(range(colunas), key=lambda c: naturais[c])
-        sobra = disponivel - (sum(naturais) - naturais[maior])
-        if sobra < piso:
-            # Nem encolhendo a maior cabe: todas cedem na mesma proporção, e o refluxo por célula
-            # cuida do resto. É o caso extremo, e sair da página não é alternativa.
-            fator = disponivel / sum(naturais)
-            return [n * fator for n in naturais]
-        naturais[maior] = sobra
+    if sum(naturais) > disponivel:
+        longas, restante = set(range(colunas)), disponivel
+        while True:
+            parte = restante / len(longas)
+            curtas = [c for c in longas if naturais[c] <= parte]
+            if not curtas:
+                break
+            for c in curtas:
+                longas.remove(c)
+                restante -= naturais[c]
+        # Sem curta nenhuma, todas repartem por igual e o refluxo por célula cuida do resto: é o
+        # caso extremo, e sair da página não é alternativa.
+        return [restante / len(longas) if c in longas else naturais[c] for c in range(colunas)]
     sobra = disponivel - sum(naturais)
     if sobra > 0:
         # A folga é distribuída **em proporção**, e não entregue à coluna mais larga. Num quadro de
@@ -1953,7 +1971,7 @@ def _nomes_do_alcance(snapshot):
     return perfis, modalidades
 
 
-def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
+def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo=None, snapshot=None):
     """O cabeçalho que diz **a quem** aquele bloco de documentos se dirige.
 
     A aplicabilidade é dado estruturado; aqui ela vira a frase que o candidato lê para saber se
@@ -1961,6 +1979,15 @@ def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades):
     exigido de todo mundo — que é exatamente o erro que a lista única de documentos produz nos
     Editais escritos à mão.
     """
+    if codigo:
+        # O recorte transversal (044, FR-712): um grupo por código, sem Perfil. O título é o que o
+        # PDF já imprimia para "Todos os Perfis + Modalidade" — a diferença é que agora ele é
+        # verdadeiro, porque o portal aplica pelo mesmo critério. A denominação é a de qualquer
+        # Perfil que tem o código: a publicação impede que sejam duas.
+        return (
+            "Dos candidatos concorrentes na modalidade "
+            f"{denominacao_do_codigo(snapshot or {}, codigo)}:"
+        )
     if perfil_id is None and modalidade_id is None:
         return "De todos os candidatos:"
     if modalidade_id is None:
@@ -2017,12 +2044,16 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
     perfis, modalidades = _nomes_do_alcance(snapshot)
     grupos = {}
     for requisito in sorted(requisitos, key=lambda item: item.get("order", 0)):
-        chave = (requisito.get("profileId"), requisito.get("modalityId"))
+        chave = (
+            requisito.get("profileId"),
+            requisito.get("modalityId"),
+            requisito.get("modalityCode") or None,
+        )
         grupos.setdefault(chave, []).append(requisito)
-    for (perfil_id, modalidade_id), documentos in grupos.items():
+    for (perfil_id, modalidade_id, codigo), documentos in grupos.items():
         with composicao.bloco():
             composicao.escrever(
-                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades),
+                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo, snapshot),
                 tamanho=CORPO_TEXTO,
                 fonte=NEGRITO,
                 antes=ANTES_DE_BLOCO,

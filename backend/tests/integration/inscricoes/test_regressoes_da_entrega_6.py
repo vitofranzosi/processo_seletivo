@@ -19,6 +19,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, MODALIDADE_PPP, identificar, pdf
+from tests.fixtures.edital import identificador
 from tests.fixtures.publicacao import create_retification, publish_retification
 from tests.fixtures.selecao import (
     DOCUMENTO_DA_MODALIDADE,
@@ -46,17 +47,19 @@ def _completar(inscricao, modalidade=MODALIDADE_AC):
     return inscricao
 
 
-def _retificar(api_client, edital, caminho, valor, sufixo):
+def _retificar(api_client, edital, caminho, valor, sufixo, *mais):
+    """Uma Retificação de `REPLACE`s; `mais` são pares `(caminho, valor)` do mesmo ato."""
     retificacao = create_retification(
         api_client,
         edital,
         [
             {
-                "targetPath": caminho,
+                "targetPath": alvo,
                 "operation": "REPLACE",
-                "newValue": valor,
+                "newValue": novo,
                 "expectedPreviousHash": "",
             }
+            for alvo, novo in ((caminho, valor), *mais)
         ],
         suffix=sufixo,
     )
@@ -132,12 +135,16 @@ def test_documento_que_deixou_de_ser_exigido_e_listado_e_descartado(
 ):
     """Sem isto: envio recusado por documento inaplicável, e nenhuma tela oferece removê-lo."""
     completa = _completar(inscricao_de_maria, modalidade=MODALIDADE_PPP)
+    # O Perfil vai junto: a ampla concorrência existe nos dois Perfis desta seleção, e restringir
+    # a ela sem dizer de qual deixaria o Edital exigindo o documento de todo candidato em AC
+    # enquanto o portal o pediria só aos do Docente — o recorte que a publicação passou a recusar.
     versao = _retificar(
         api_client,
         selecao,
         f"/documentRequirements/id={DOCUMENTO_DA_MODALIDADE}/modalityId",
         MODALIDADE_AC,
         "restringe",
+        (f"/documentRequirements/id={DOCUMENTO_DA_MODALIDADE}/profileId", identificador(401, 0)),
     )
 
     a_descartar = documentos_que_a_retificacao_invalida(completa, versao)

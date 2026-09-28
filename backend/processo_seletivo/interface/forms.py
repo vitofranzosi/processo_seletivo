@@ -5,14 +5,16 @@ command. O que existe aqui é conversão de tipo e agrupamento de campos indexad
 mensagens que tornam um erro de conversão compreensível antes de chegar ao domínio.
 """
 
+import json
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
-from processo_seletivo.editais.domain import secoes
+from processo_seletivo.editais.domain import duplicacao, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
+from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -314,11 +316,11 @@ def opcoes_do_metodo():
     from processo_seletivo.sorteios.domain.chave import ALGORITMOS
     from processo_seletivo.sorteios.domain.normalizacao import REGRAS as NORMALIZACOES
     from processo_seletivo.sorteios.domain.substituicao import REGRAS as SUBSTITUICOES
-    from processo_seletivo.sorteios.infrastructure.fontes import FONTES
+    from processo_seletivo.sorteios.infrastructure.fontes import fontes_publicadas
 
     return {
         "drawMethod/algorithm": tuple((nome, nome) for nome in sorted(ALGORITMOS)),
-        "drawMethod/source": tuple((nome, nome) for nome in sorted(FONTES)),
+        "drawMethod/source": tuple((nome, nome) for nome in sorted(fontes_publicadas())),
         "drawMethod/normalization/rule": tuple((nome, nome) for nome in sorted(NORMALIZACOES)),
         "drawMethod/substitutionRule/rule": tuple((nome, nome) for nome in sorted(SUBSTITUICOES)),
     }
@@ -572,7 +574,7 @@ def ler_perfis(dados):
                 "competitionModalities": _modalidades(dados, f"modalidade-{indice}"),
                 # Pelo mesmo esquema de prefixo composto: `marco-3-…` pertence ao `perfil-3`.
                 "declaredFacts": _fatos(dados, f"fato-{indice}"),
-                "classificationMilestones": _marcos(dados, f"marco-{indice}"),
+                "classificationMilestones": _marcos_do_perfil(dados, indice),
                 # Travessia 1 de 4. As outras três são `perfis_persistidos`, `perfis_do_edital` e
                 # a recriação em `draft.replace_draft`: `replace_draft` apaga e recria tudo, e uma
                 # coleção do Perfil que falte em qualquer uma delas **some** na gravação da etapa
@@ -581,6 +583,50 @@ def ler_perfis(dados):
             }
         )
     return perfis
+
+
+def _marcos_do_perfil(dados, indice):
+    """Os marcos que viajam com o Perfil nesta etapa — quase sempre nenhum.
+
+    A etapa Perfis não desenha marco: eles são da Classificação, e a gravação os **preserva** do
+    que está gravado (`PRESERVADO_DA_ETAPA`). A exceção é o Perfil criado por duplicação e ainda não
+    gravado (043, R-003): ele não tem par gravado de onde preservar, e leva os marcos da origem num
+    campo oculto, na forma do contrato. `_preservando` deixa atravessar o que Perfil novo traz, e é
+    por isso que a gravação não precisou mudar.
+
+    **É a quinta travessia dos marcos**, ao lado das quatro que a `025` nomeou (R-009). Como elas,
+    a que faltar apaga em silêncio — e esta faltaria na recusa, que devolve o digitado.
+
+    **O campo diz também quais marcos têm identidade derivada**, e a leitura a deriva de novo do
+    Código e da denominação **digitados agora**: quem corrige o Código da cópia no cartão antes de
+    gravar publicaria, sem isso, o marco com o Código de antes da correção (FR-644).
+    """
+    bruto = _texto(dados, f"perfil-{indice}-marcosEmTransito")
+    if not bruto:
+        return _marcos(dados, f"marco-{indice}")
+    try:
+        transito = json.loads(bruto)
+        marcos, derivados = transito["marcos"], transito["derivados"]
+        legivel = (
+            isinstance(marcos, list)
+            and all(isinstance(marco, dict) for marco in marcos)
+            and isinstance(derivados, list)
+            and len(derivados) == len(marcos)
+            and all(isinstance(par, list) and len(par) == 2 for par in derivados)
+        )
+    except (json.JSONDecodeError, TypeError, KeyError):
+        legivel = False
+    if not legivel:
+        raise ValueError(
+            "Os marcos de classificação que este Perfil trouxe da duplicação não puderam ser "
+            "lidos. Remova este Perfil e duplique a origem de novo."
+        )
+    return duplicacao.rederivar(
+        marcos,
+        [(bool(codigo), bool(nome)) for codigo, nome in derivados],
+        codigo=_texto(dados, f"perfil-{indice}-code"),
+        nome=_texto(dados, f"perfil-{indice}-name"),
+    )
 
 
 def ler_eventos(dados):
@@ -1083,6 +1129,15 @@ def _marco_para_o_formulario(marco):
     }
 
 
+def marcos_persistidos(perfil):
+    """Os marcos de um Perfil gravado, no formato do contrato do rascunho, ordenados por código.
+
+    Pública porque a duplicação (043) precisa deles fora deste módulo. Ordena em memória, e não por
+    `order_by`, para aproveitar o `prefetch` de quem chama.
+    """
+    return [_marco_persistido(marco) for marco in sorted(perfil.marcos.all(), key=lambda m: m.code)]
+
+
 def _marco_persistido(marco):
     return {
         "id": str(marco.id),
@@ -1273,7 +1328,16 @@ def eventos_persistidos(edital):
             "startAt": evento.start_at,
             "endAt": evento.end_at,
             "order": evento.order,
-            "status": evento.status,
+            # **Só o cancelamento viaja** (045, `FR-737`). Um rascunho gravado pela API antes da
+            # `045` pode guardar `EM_ANDAMENTO` ou `CONCLUIDO`, que o domínio passou a recusar; a
+            # pessoa nunca os digitou nesta tela, e recusar a gravação por eles seria travá-la num
+            # valor que a leitura nem considera mais. O rascunho não foi publicado: normalizar aqui
+            # não reescreve ato nenhum.
+            "status": (
+                evento.status
+                if evento.status == EventoCronograma.Status.CANCELADO
+                else EventoCronograma.Status.PLANEJADO
+            ),
             "isRegistrationPeriod": evento.is_registration_period,
             # **E o local pelo mesmo motivo.** É o terceiro campo a entrar nesta lista pela lição
             # que a E2E17-001 deixou: campo omitido aqui volta ao padrão do modelo na gravação
@@ -1309,7 +1373,10 @@ def ler_inscricao(dados):
                 # Vazio é "não restringe", e é a ausência dos dois que faz o requisito valer para
                 # todos. `None` e não `""`: o command grava chave estrangeira.
                 "profileId": _texto(dados, f"{base}-profileId") or None,
-                "modalityId": _texto(dados, f"{base}-modalityId") or None,
+                # O seletor da modalidade carrega as duas formas (044, R-009): o valor `codigo:X` é
+                # a modalidade de código X em todos os Perfis; um UUID é a Modalidade de um Perfil.
+                # Um seletor só é o que torna as duas exclusivas — não há como escolher ambas.
+                **_modalidade_escolhida(_texto(dados, f"{base}-modalityId")),
                 # A tela ainda não oferece o campo; a chave viaja vazia para que `_preservando`
                 # tenha onde encaixar o que já estava gravado (020, FR-020).
                 "attachmentId": _texto(dados, f"{base}-attachmentId") or None,
@@ -1330,6 +1397,16 @@ def ler_inscricao(dados):
     }
 
 
+PREFIXO_DO_CODIGO = "codigo:"
+
+
+def _modalidade_escolhida(valor):
+    """`modalityId` e `modalityCode` a partir do valor do seletor único da modalidade."""
+    if valor.startswith(PREFIXO_DO_CODIGO):
+        return {"modalityId": None, "modalityCode": valor[len(PREFIXO_DO_CODIGO) :] or None}
+    return {"modalityId": valor or None, "modalityCode": None}
+
+
 def documentos_do_edital(edital):
     """As linhas de Documento Exigido, no formato do formulário."""
     return [
@@ -1342,6 +1419,7 @@ def documentos_do_edital(edital):
             "order": documento.order,
             "profileId": "" if documento.perfil_id is None else str(documento.perfil_id),
             "modalityId": "" if documento.modalidade_id is None else str(documento.modalidade_id),
+            "modalityCode": documento.modalidade_codigo,
             "attachmentId": "" if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.order_by("order")
@@ -1372,6 +1450,9 @@ def documentos_persistidos(edital):
             "order": documento.order,
             "profileId": None if documento.perfil_id is None else str(documento.perfil_id),
             "modalityId": None if documento.modalidade_id is None else str(documento.modalidade_id),
+            # Sem ele, gravar qualquer outra etapa apagaria o recorte transversal em silêncio: as
+            # linhas são recriadas a cada gravação (044).
+            "modalityCode": documento.modalidade_codigo or None,
             "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
         }
         for documento in edital.documentos_exigidos.order_by("order")
@@ -1409,6 +1490,44 @@ def alcance_da_aplicabilidade(edital):
             }
         )
     return perfis
+
+
+def modalidades_em_todos_os_perfis(edital):
+    """As opções do recorte transversal: uma por código do Edital, fora a ampla (044, UX-080).
+
+    O rótulo diz o alcance — *"Pessoas com Deficiência (PcD) — em todos os Perfis que a têm (16 de
+    16)"* —, porque "em todos os Perfis" num Edital em que só três têm a modalidade prometeria mais
+    do que o documento faz. **O código declarado ampla em qualquer Perfil não aparece** (FR-704): a
+    ampla concorrência é a linha geral, e não recorta documento. A denominação é a do primeiro
+    Perfil que tem o código; se houver duas, a publicação as acusa (FR-706).
+    """
+    perfis = list(edital.perfis.prefetch_related("modalidades").order_by("code"))
+    total = len(perfis)
+    por_codigo = {}
+    amplas = set()
+    for perfil in perfis:
+        for modalidade in perfil.modalidades.all():
+            codigo = (modalidade.code or "").strip()
+            if not codigo:
+                continue
+            if perfil.modalidade_ampla_concorrencia and str(
+                perfil.modalidade_ampla_concorrencia
+            ) == str(modalidade.id):
+                amplas.add(codigo)
+            item = por_codigo.setdefault(codigo, {"denominacao": modalidade.name, "perfis": 0})
+            item["perfis"] += 1
+    return [
+        {
+            "valor": f"{PREFIXO_DO_CODIGO}{codigo}",
+            "codigo": codigo,
+            "rotulo": (
+                f"{item['denominacao'] or codigo} ({codigo}) — em todos os Perfis que a têm "
+                f"({item['perfis']} de {total})"
+            ),
+        }
+        for codigo, item in sorted(por_codigo.items())
+        if codigo not in amplas
+    ]
 
 
 # ---------------------------------------------------------------------------

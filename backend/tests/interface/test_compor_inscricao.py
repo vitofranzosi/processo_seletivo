@@ -240,3 +240,107 @@ def test_o_vinculo_com_o_modelo_sobrevive_a_gravar_outra_etapa(
 
     documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
     assert documento.anexo_id == anexo.id
+
+
+# ---------------------------------------------------------------------------
+# 044 — o seletor oferece a modalidade em todos os Perfis
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_seletor_oferece_o_codigo_antes_dos_pares_e_sem_a_ampla(
+    client, seletor_ligado, edital_com_perfis
+):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis),
+    )
+
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"])
+    ).content.decode()
+
+    assert 'label="Em todos os Perfis"' in corpo
+    assert 'label="Modalidade de um Perfil"' in corpo
+    assert corpo.index('label="Em todos os Perfis"') < corpo.index(
+        'label="Modalidade de um Perfil"'
+    )
+    assert "(PPP) — em todos os Perfis que a têm (1 de 2)" in corpo
+    assert 'value="codigo:AC"' not in corpo, "a ampla declarada não recorta documento"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_escolher_o_codigo_grava_o_recorte_transversal(client, seletor_ligado, edital_com_perfis):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis, **{"documento-0-modalityId": "codigo:PPP"}),
+    )
+
+    assert resposta.status_code == 302
+    documento = DocumentoExigido.objects.get(edital=edital_com_perfis, key="identificacao")
+    assert documento.modalidade_codigo == "PPP"
+    assert documento.modalidade_id is None
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"])
+    ).content.decode()
+    assert 'value="codigo:PPP" selected' in corpo, "a escolha volta marcada"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_perfil_com_codigo_e_recusado_preservando_o_digitado(
+    client, seletor_ligado, edital_com_perfis
+):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    resposta = client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(
+            edital_com_perfis,
+            **{
+                "documento-0-modalityId": "codigo:PPP",
+                "documento-0-profileId": identificador(401, 0),
+            },
+        ),
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.content.decode()
+    assert "Escolha um recorte só" in corpo
+    assert "documento-0-modalityCode" in corpo, "a recusa se ancora no seletor da modalidade"
+    assert "Diploma de graduação" in corpo
+    assert DocumentoExigido.objects.filter(edital=edital_com_perfis).count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_gravar_outra_etapa_preserva_o_recorte_transversal(
+    client, seletor_ligado, edital_com_perfis
+):
+    """As linhas são recriadas a cada gravação: o código precisa viajar junto."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    client.post(
+        reverse("interface:compor-etapa", args=[edital_com_perfis.id, "inscricao"]),
+        _campos(edital_com_perfis, **{"documento-0-modalityId": "codigo:PPP"}),
+    )
+
+    from processo_seletivo.interface import forms
+
+    assert forms.documentos_persistidos(edital_com_perfis)[0]["modalityCode"] == "PPP"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_linha_nova_conhece_os_codigos(client, seletor_ligado, edital_com_perfis):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(
+        reverse("interface:fragmento-documento", args=[edital_com_perfis.id])
+    ).content.decode()
+
+    assert 'value="codigo:PPP"' in corpo

@@ -20,8 +20,25 @@ const PERFIL = { code: "P1", name: "Perfil", immediateVacancies: "1", reserveTyp
 const EVENTO = { type: "INSCRICAO", description: "Inscrições", startAt: "2026-09-01T09:00",
                  endAt: "" };
 
+/* O tipo de reserva como `_perfil.html` o renderiza: **três rádios com o mesmo `name`**, na ordem
+   de `reservas`, e só o escolhido marcado. A fixture montava um campo único com o valor escolhido
+   — e era o primeiro campo com aquele sufixo. O script lia o primeiro, e passava. Na tela, o
+   primeiro rádio é sempre `NONE`: "limitado" era inalcançável e estes testes diziam o contrário. */
+function reserva(escolhido) {
+  return ["NONE", "LIMITED", "UNLIMITED"].map((valor) => ({
+    value: valor,
+    type: "radio",
+    checked: valor === escolhido,
+  }));
+}
+
+function perfil(campos) {
+  const juntos = { ...PERFIL, ...campos };
+  return { ...juntos, reserveType: reserva(juntos.reserveType) };
+}
+
 function comPerfis(...perfis) {
-  return new Formulario(perfis.map((campos, i) => linha("perfil", i, { ...PERFIL, ...campos })));
+  return new Formulario(perfis.map((campos, i) => linha("perfil", i, perfil(campos))));
 }
 
 function comEventos(...eventos) {
@@ -57,6 +74,13 @@ test("reserva inexistente com limite preenchido é recusada e diz o que fazer", 
 
   assert.match(form.mensagemDe("reserveLimit"), /inexistente não admite limite/);
   assert.match(form.mensagemDe("reserveLimit"), /Apague o valor ou mude o tipo/);
+});
+
+test("reserva ilimitada sem limite é aceita", () => {
+  const form = validar(comPerfis({ reserveType: "UNLIMITED", reserveLimit: "" }));
+
+  assert.equal(form.mensagemDe("reserveLimit"), "");
+  assert.equal(form.checkValidity(), true);
 });
 
 test("reserva ilimitada com limite preenchido é recusada", () => {
@@ -135,7 +159,7 @@ test("linha inserida já inválida é pega no envio, mesmo sem nenhum `input`", 
   const form = comPerfis({});
   montar({ formulario: form });
   carregar(SCRIPT);
-  form.linhas.push(linha("perfil", 1, { ...PERFIL, reserveType: "LIMITED", reserveLimit: "" }));
+  form.linhas.push(linha("perfil", 1, perfil({ reserveType: "LIMITED", reserveLimit: "" })));
 
   assert.equal(form.disparar("submit").impedido, true);
   // `mensagemDe` acha o primeiro campo com o sufixo; a linha inválida é a segunda.

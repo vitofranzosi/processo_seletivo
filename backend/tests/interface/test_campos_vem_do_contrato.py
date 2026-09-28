@@ -105,14 +105,15 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
 
 
 def test_a_conta_fecha_com_a_matriz():
-    """83 retificáveis, e 83 com tela. O número está na matriz e no contrato.
+    """84 retificáveis, e 84 com tela. O número está na matriz e no contrato.
 
     Era 73 com a `029` — o texto da declaração de veracidade — e chegou a 83 com a `030`, que
     acrescentou `orderProduction` ao marco e os nove campos do método do sorteio comum ao Edital.
+    84 com a `044`: o recorte transversal do Documento Exigido, `modalityCode` (D-002).
 
 
     Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
     importam" — todos.
     """
-    assert len(_retificaveis()) == 83
+    assert len(_retificaveis()) == 84
     assert _retificaveis() <= _oferecidos()

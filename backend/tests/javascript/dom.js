@@ -11,7 +11,8 @@
    aproximação; tratá-lo como o navegador seria a mesma confusão de um teste que verifica a si
    mesmo. */
 
-const CAMPOS_POR_SUFIXO = /^\[name\$="-(.+)"\]$/;
+// `:checked` opcional: o tipo de reserva é um grupo de rádios, e o script precisa do marcado.
+const CAMPOS_POR_SUFIXO = /^\[name\$="-([^"]+)"\](:checked)?$/;
 
 class Elemento {
   constructor(tag, atributos = {}) {
@@ -145,7 +146,13 @@ class Elemento {
     }
     const sufixo = CAMPOS_POR_SUFIXO.exec(seletor);
     if (!sufixo) return null;
-    return this.filhos.find((filho) => filho.name && filho.name.endsWith("-" + sufixo[1])) || null;
+    const soMarcado = Boolean(sufixo[2]);
+    return (
+      this.filhos.find(
+        (filho) =>
+          filho.name && filho.name.endsWith("-" + sufixo[1]) && (!soMarcado || filho.checked)
+      ) || null
+    );
   }
 
   querySelectorAll(seletor) {

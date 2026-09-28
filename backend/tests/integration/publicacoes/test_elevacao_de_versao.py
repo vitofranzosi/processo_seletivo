@@ -465,14 +465,19 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: contagem lida do próprio módulo acompanharia em silêncio o degrau que ela existe para acusar,
 #: que é o mesmo defeito que `CHAVES_DO_MARCO_ANTES_DA_FEATURE` registra em
 #: `tests/unit/editais/test_forma_da_ordem.py`.
+#:
+#: **Muda com a `044`, de propósito**, e a spec dela diz o que o acervo passa a afirmar (R-002): o
+#: degrau 17 escreve `modalityCode: null` em todo Documento Exigido — "não recorta pelo código da
+#: Modalidade" —, que é verdade sobre todo documento publicado antes, porque a capacidade não
+#: existia. A elevação só roda no fluxo de Retificação; o literal publicado não muda (FR-725).
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 16,
+    "SCHEMA_VERSION": 17,
     "DEGRAUS": (5, 6),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),
     "DEGRAUS_DE_EVENTO": (11,),
-    "DEGRAUS_DE_DOCUMENTO": (9,),
+    "DEGRAUS_DE_DOCUMENTO": (9, 17),
 }
 
 

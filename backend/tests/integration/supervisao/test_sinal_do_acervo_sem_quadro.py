@@ -143,3 +143,71 @@ def test_o_perfil_do_acervo_com_zero_vagas_tambem_aparece(
 
     assert len(sinais) == 1, "o Perfil de zero vaga sem quadro não pode ficar invisível"
     assert "publica 0 vaga(s) imediata(s)" in sinais[0].mensagem
+
+
+# ---------------------------------------------------------------------------
+# O sinal que fica diz a quem pedir (045, US4)
+# ---------------------------------------------------------------------------
+
+
+def test_quem_nao_retifica_recebe_a_quem_pedir(do_acervo, supervisora):
+    """`045`, `FR-740` — o teste 8 da proposta: sem caminho, o sinal diz a permissão e o que pedir.
+
+    Era a frase solta que a convergência de 20/09 contou nove vezes na Atenção do gestor. Sai do
+    mecanismo único, e não é redigida no painel.
+    """
+    from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
+
+    sinal = do_quadro(do_acervo.processo, supervisora)[0]
+
+    assert sinal.destino is None
+    assert sinal.conducao == CONDUCAO_DA_RETIFICACAO
+
+
+def test_quem_retifica_recebe_o_caminho_e_nao_a_frase(do_acervo):
+    """037, `FR-544`: "peça a alguém" a quem tem o formulário à frente é falso."""
+    quem_retifica = ator_institucional("bruno", "comissao:gerir", "retificacao:elaborar")
+
+    sinal = do_quadro(do_acervo.processo, quem_retifica)[0]
+
+    assert sinal.destino is not None
+    assert sinal.conducao == ""
+
+
+@pytest.mark.parametrize("estado", ["ENCERRADO", "CANCELADO"])
+def test_onde_ninguem_pode_retificar_o_sinal_nao_e_condicao_de_atencao(
+    do_acervo, supervisora, estado
+):
+    """`045`, `FR-741` e `D-003`: Retificação só incide sobre Edital publicado.
+
+    Num Edital encerrado ou cancelado ninguém pratica o ato, e não há a quem pedir: o sinal que
+    apontava para ele ficava para sempre, sem caminho e sem frase. O fato continua no conteúdo
+    publicado; o que sai é a pendência que nenhuma tela resolve.
+    """
+    from processo_seletivo.processos.models import Edital
+
+    quem_retifica = ator_institucional("bruno", "comissao:gerir", "retificacao:elaborar")
+    Edital.objects.filter(pk=do_acervo.pk).update(status=getattr(Edital.Status, estado))
+
+    assert do_quadro(do_acervo.processo, supervisora) == []
+    assert do_quadro(do_acervo.processo, quem_retifica) == []
+
+
+def test_num_processo_em_estado_final_o_sinal_nao_e_condicao_de_atencao(do_acervo, supervisora):
+    """`045`, `FR-741`: Processo em estado final não admite alteração dos seus Editais."""
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    ProcessoSeletivo.objects.filter(pk=do_acervo.processo_id).update(
+        status=ProcessoSeletivo.Status.CANCELADO
+    )
+    do_acervo.processo.refresh_from_db()
+
+    assert do_quadro(do_acervo.processo, supervisora) == []
+
+
+def test_a_medida_diz_o_que_conta(do_acervo, supervisora):
+    """`045`, `FR-743`, `UX-087`: *"1 de 1 recorte"*, e a mensagem não repete os números."""
+    sinal = do_quadro(do_acervo.processo, supervisora)[0]
+
+    assert sinal.medida.unidade_legivel == "recorte"
+    assert "1 de 1" not in sinal.mensagem

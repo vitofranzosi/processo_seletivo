@@ -903,6 +903,69 @@ def test_os_tres_campos_do_perfil_sobrevivem_a_gravacao_de_outra_etapa(
 
 
 @pytest.mark.django_db(transaction=True)
+def test_os_rotulos_da_etapa_decisoria_se_anunciam_obrigatorios(client, seletor_ligado, edital):
+    """Sem marca, pareciam opcionais pela convenção do cartão — e impediam a submissão.
+
+    O estudo de esforço encontrou os dois só na Revisão, como IMPEDE. A marca é a mesma do resto
+    do produto: `*` visual escondido do leitor de tela, e `aria-required` para quem o usa.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    corpo = client.get(reverse("interface:fragmento-etapa", args=[edital.id])).content.decode()
+
+    for rotulo in ("favorável", "desfavorável"):
+        assert re.search(
+            rf'Rótulo do resultado {rotulo} <span class="obrigatorio" aria-hidden="true">\*</span>',
+            corpo,
+        ), rotulo
+    campos = re.findall(r'<input[^>]*name="etapa-\d+-rotulo(?:Des)?[Ff]avoravel"[^>]*>', corpo)
+    assert len(campos) == 2
+    assert all('aria-required="true"' in campo for campo in campos)
+    # `required` não: escondido na Etapa pontuada, travaria o envio sem a pessoa ver por quê.
+    assert not any(re.search(r"\srequired[\s>]", campo) for campo in campos)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_dois_eventos_de_mesmo_tipo_e_data_se_distinguem_no_seletor(client, seletor_ligado, edital):
+    """O mesmo "Resultado · 26/11/2025 00:00" duas vezes: a Etapa não sabia qual escolhia.
+
+    O Cronograma do 140/2025 publica o resultado dos recursos e o resultado após recursos no mesmo
+    dia, com o mesmo tipo. Só "tipo · data", as duas opções saíam idênticas. A descrição vem junto,
+    como a tela de Inscrição já fazia com o seu seletor.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(
+        client,
+        edital,
+        perfis={
+            "perfil-0-id": PERFIL,
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "1",
+            "perfil-0-reserveType": "NONE",
+        },
+        eventos={
+            "evento-0-id": EVENTO,
+            "evento-0-type": "Resultado",
+            "evento-0-description": "Resultado dos recursos",
+            "evento-0-startAt": "2027-11-26T00:00",
+            "evento-0-order": "1",
+            "evento-1-id": "aaaaaaaa-0000-4000-8000-00000000e0a2",
+            "evento-1-type": "Resultado",
+            "evento-1-description": "Resultado após recursos",
+            "evento-1-startAt": "2027-11-26T00:00",
+            "evento-1-order": "2",
+        },
+    )
+
+    corpo = client.get(reverse("interface:fragmento-etapa", args=[edital.id])).content.decode()
+    opcoes = re.findall(r'<option value="[0-9a-f-]{36}"[^>]*>([^<]*)</option>', corpo)
+
+    assert len(opcoes) == len(set(opcoes)) == 2
+    assert "Resultado · 26/11/2027 00:00 — Resultado dos recursos" in opcoes
+
+
+@pytest.mark.django_db(transaction=True)
 def test_o_seletor_de_evento_mostra_a_data_que_a_etapa_herda(client, seletor_ligado, edital):
     """FR-036, e o teste que faltava.
 
@@ -937,7 +1000,7 @@ def test_o_seletor_de_evento_mostra_a_data_que_a_etapa_herda(client, seletor_lig
     resposta = client.get(reverse("interface:fragmento-etapa", args=[edital.id]))
     corpo = resposta.content.decode()
 
-    assert "Prova didática · 10/04/2027 14:00" in corpo
+    assert "Prova didática · 10/04/2027 14:00 — Aplicação da prova" in corpo
     # E nenhuma opção fica sem texto — foi assim que o defeito passou.
     assert not re.search(r'<option value="[0-9a-f-]{36}"[^>]*>\s*</option>', corpo), (
         "opção de Evento sem texto"
@@ -1056,3 +1119,50 @@ def test_o_fragmento_sem_o_parametro_continua_desenhando_listas_vazias(client, s
     resposta = client.get(reverse("interface:fragmento-marco", args=[PERFIL]), {"indice": "0"})
 
     assert resposta.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# A Etapa sem Evento é aviso de composição (045, `FR-739`, `UX-086`)
+#
+# Era o `UX-001` da Atenção, e apontava para uma Retificação que não alcança o vínculo. Passou a ser
+# dita onde se corrige sem custo — na composição —, como **aviso**, e continua dita no Edital
+# publicado, na validação do conteúdo.
+# ---------------------------------------------------------------------------
+
+AVISO_DA_ETAPA = "não está vinculada a nenhum Evento do Cronograma"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_etapa_sem_evento_e_aviso_na_etapa_e_na_revisao(client, seletor_ligado, edital):
+    """Aparece como *"Aviso"*, e nunca *"Impede"*: a ausência é publicável e legítima."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    resposta = client.post(etapa(edital, "etapas"), etapas_form())
+    assert resposta.status_code == 302, resposta.content
+
+    for nome in ("etapas", "revisao"):
+        pagina = client.get(etapa(edital, nome)).content.decode()
+        assert AVISO_DA_ETAPA in pagina, f"a etapa {nome} não diz a Etapa sem Evento"
+        trecho = pagina[: pagina.index(AVISO_DA_ETAPA)]
+        assert trecho.rfind("p-aviso") > trecho.rfind("p-erro"), "dita como impedimento"
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_edital_publicado_diz_a_etapa_sem_evento_na_validacao_do_conteudo(
+    client, seletor_ligado, edital_a
+):
+    """O Edital da amostra publica a *Prova didática* sem Evento: o fato continua dito, fora da
+    Atenção, na página do próprio Edital."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = client.get(reverse("interface:detalhe", args=[edital_a.id])).content.decode()
+
+    assert "Validação do conteúdo" in pagina
+    assert AVISO_DA_ETAPA in pagina
+    # E só o fato: o juízo de publicabilidade saiu do Edital publicado (046, `FR-755`). A seção
+    # continua existindo por causa da lista de fatos, e não porque a validação voltou a correr aqui.
+    assert 'class="p-erro"' not in pagina, "impeditivo de publicação num Edital publicado"
+    assert "será publicado" not in pagina, "aviso que fala do ato de publicar"
