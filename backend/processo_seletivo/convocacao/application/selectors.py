@@ -336,6 +336,9 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         }
         for convocacao in vigentes_do_recorte
     ]
+    # **Na ordem em que foram chamadas, e o protocolo desempata** (050). As do mesmo gesto nascem
+    # com o mesmo instante, e o desempate pelo identificador embaralhava a lista a cada gesto.
+    linhas.sort(key=lambda linha: (linha["convocacao"].criado_em, linha["inscricao"]["protocolo"]))
     # **Quem conduz o certame não reconhece ninguém por UUID.** O percurso conduzido encontrou a
     # fila, os dois seletores e o histórico inteiro escritos em identificador — tecnicamente exato e
     # operacionalmente inútil: a pessoa que vai convocar precisa conferir contra a lista publicada,
@@ -355,6 +358,17 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # emissão por publicação pede onde se publicou, e a individual não tem esse campo.
         "formaPorPublicacao": _forma_do_recorte(vigentes_do_recorte) == FORMA_POR_PUBLICACAO,
         "convocadas": len(vigentes_do_recorte),
+        # **Quantas chamadas em cada estado**, para a tela dizer onde agir antes da lista (050). São
+        # contagens de chamadas, e não de vagas: a contagem de ocupação continua sendo da `016`.
+        "porEstado": {
+            estado: sum(1 for linha in linhas if linha["estado"] == estado)
+            for estado in (
+                nomes.CONVOCADO_PRAZO_NAO_INICIADO,
+                nomes.CONVOCADO_PRAZO_EM_CURSO,
+                nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+                nomes.DESFECHADO,
+            )
+        },
         "respondidas": sum(1 for linha in linhas if linha["desfecho"] is not None),
         "esgotou": fila.esgotou(contexto["fila"]),
     }

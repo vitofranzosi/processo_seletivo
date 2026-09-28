@@ -55,7 +55,13 @@ def desfechar(
     resultado_sucessor=None,
     motivo="",
 ):
-    """Registra o desfecho, escreve o efeito na porta, e devolve o que o ato declarou."""
+    """Registra o desfecho, escreve o efeito na porta, e devolve o que o ato declarou.
+
+    **E emite a apuração seguinte, quando a única coisa que mudou foi este desfecho** (050,
+    `D-005`). Antes da `050`, a apuração vigente envelhecia aqui e a convocação seguinte era
+    recusada até alguém abrir a tela da ocupação e emitir outra — um passo à mão que não decidia
+    nada.
+    """
     payload = {
         "convocacao": str(convocacao_id),
         "especie": (especie or "").strip(),
@@ -70,72 +76,175 @@ def desfechar(
         if ctx.repetido:
             return ctx.desfecho_anterior
         convocacao = _convocacao_do_processo(ctx.processo, convocacao_id)
-        especie = _especie(especie)
-        texto = (fundamento or "").strip()
-        if not texto:
-            raise DomainError(
-                nomes.FUNDAMENTO_OBRIGATORIO,
-                "Declare o fundamento do desfecho.",
-                422,
-                campo="fundamento",
-            )
-        _recusar_convocacao_sucedida(convocacao)
-        anterior = _vigente_da_convocacao(convocacao)
-        texto_do_motivo = (motivo or "").strip()
-        if anterior is not None and not texto_do_motivo:
-            raise DomainError(
-                nomes.DESFECHO_JA_REGISTRADO,
-                "Esta convocação já tem desfecho registrado. Um fato posterior — o cancelamento "
-                "por inércia de quem havia aceitado, por exemplo — o sucede, e a sucessão exige "
-                "motivo; o desfecho anterior continua legível.",
-                409,
-            )
-        _recusar_desfecho_incompativel(convocacao, especie=especie)
-        _recusar_nao_atendimento_prematuro(convocacao, especie=especie, agora=ctx.now)
-        _recusar_inercia_sem_ocupacao(convocacao, especie=especie, agora=ctx.now)
-        atestado = _atestado(especie, atestado_id, convocacao)
-        # **O identificador do desfecho nasce antes dele**, e a ordem é a mesma que a `016` usa para
-        # o movimento de vaga: o Resultado sucessor precisa citar o desfecho que o produziu, e o
-        # desfecho precisa citar o Resultado. Gerar o id primeiro quebra o ovo sem afrouxar
-        # constraint nenhuma — as duas linhas nascem completas, na mesma transação.
-        identidade = uuid4()
-        if especie == nomes.REGULARIZACAO and resultado_sucessor is None:
-            resultado_sucessor = _suceder_o_resultado(
-                convocacao, desfecho_id=identidade, actor=actor, agora=ctx.now, fundamento=texto
-            )
-
-        efeito = porta_de_efeitos.registrar_efeito(
-            edital=convocacao.edital,
-            perfil_id=convocacao.perfil_id,
-            marco_id=convocacao.marco_id,
-            lista_id=convocacao.lista_id,
-            inscricao_id=convocacao.inscricao_id,
-            especie=nomes.EFEITO_POR_DESFECHO[especie],
-            fundamento=texto,
-            # **O ato de origem é o desfecho, e não a convocação** — é ele que produz o efeito, e
-            # é o que o rótulo ao lado diz. Apontar para a convocação faria a trilha da `016` citar
-            # a chamada como causa de uma exclusão que ela não causou: quem convoca não exclui
-            # ninguém, e a mesma chamada pode ter um desfecho sucedido por outro.
-            ato_de_origem_id=identidade,
-            rotulo_da_origem=ROTULO_DA_ORIGEM,
-            registrado_por=str(getattr(actor, "subject", actor)),
-            registrado_em=ctx.now,
-        )
-        desfecho = DesfechoDaConvocacao(
-            id=identidade,
-            convocacao=convocacao,
+        desfecho = registrar(
+            ctx,
+            convocacao,
+            actor=actor,
             especie=especie,
-            fundamento=texto,
-            atestado=atestado,
+            fundamento=fundamento,
+            atestado_id=atestado_id,
             resultado_sucessor=resultado_sucessor,
-            efeito=efeito,
-            desfecho_anterior=anterior,
-            motivo_da_sucessao=texto_do_motivo if anterior is not None else "",
-            registrado_por=str(getattr(actor, "subject", actor)),
-            registrado_em=ctx.now,
+            motivo=motivo,
         )
-        desfecho.save()
-        return _concluir(ctx, desfecho, actor, correlation_id, idempotency_key)
+        auditar_desfecho(ctx, desfecho, actor, correlation_id, idempotency_key)
+        seguinte = apuracao_seguinte(
+            ctx, convocacao, actor=actor, quantos=1, correlation_id=correlation_id
+        )
+        declarado = {**declarado_do_desfecho(desfecho), **seguinte}
+        ctx.concluir_sem_resultado(201, declarado)
+        return declarado
+
+
+def registrar(
+    ctx,
+    convocacao,
+    *,
+    actor,
+    especie,
+    fundamento,
+    atestado_id=None,
+    resultado_sucessor=None,
+    motivo="",
+):
+    """O registro de **um** desfecho, com as recusas, o efeito e a linha — e nada além disso.
+
+    **Um caminho só para o desfecho individual e para o gesto dos vencidos** (050, `D-013`). O gesto
+    chama esta função N vezes dentro da sua transação; um segundo caminho de registro poderia
+    divergir deste na primeira regra nova, e a `FR-880` exige que o desfecho do gesto seja
+    indistinguível do individual.
+    """
+    especie = _especie(especie)
+    texto = (fundamento or "").strip()
+    if not texto:
+        raise DomainError(
+            nomes.FUNDAMENTO_OBRIGATORIO,
+            "Declare o fundamento do desfecho.",
+            422,
+            campo="fundamento",
+        )
+    _recusar_convocacao_sucedida(convocacao)
+    anterior = _vigente_da_convocacao(convocacao)
+    texto_do_motivo = (motivo or "").strip()
+    if anterior is not None and not texto_do_motivo:
+        raise DomainError(
+            nomes.DESFECHO_JA_REGISTRADO,
+            "Esta convocação já tem desfecho registrado. Um fato posterior — o cancelamento "
+            "por inércia de quem havia aceitado, por exemplo — o sucede, e a sucessão exige "
+            "motivo; o desfecho anterior continua legível.",
+            409,
+        )
+    _recusar_desfecho_incompativel(convocacao, especie=especie)
+    _recusar_nao_atendimento_prematuro(convocacao, especie=especie, agora=ctx.now)
+    _recusar_inercia_sem_ocupacao(convocacao, especie=especie, agora=ctx.now)
+    atestado = _atestado(especie, atestado_id, convocacao)
+    # **O identificador do desfecho nasce antes dele**, e a ordem é a mesma que a `016` usa para
+    # o movimento de vaga: o Resultado sucessor precisa citar o desfecho que o produziu, e o
+    # desfecho precisa citar o Resultado. Gerar o id primeiro quebra o ovo sem afrouxar
+    # constraint nenhuma — as duas linhas nascem completas, na mesma transação.
+    identidade = uuid4()
+    if especie == nomes.REGULARIZACAO and resultado_sucessor is None:
+        resultado_sucessor = _suceder_o_resultado(
+            convocacao, desfecho_id=identidade, actor=actor, agora=ctx.now, fundamento=texto
+        )
+
+    efeito = porta_de_efeitos.registrar_efeito(
+        edital=convocacao.edital,
+        perfil_id=convocacao.perfil_id,
+        marco_id=convocacao.marco_id,
+        lista_id=convocacao.lista_id,
+        inscricao_id=convocacao.inscricao_id,
+        especie=nomes.EFEITO_POR_DESFECHO[especie],
+        fundamento=texto,
+        # **O ato de origem é o desfecho, e não a convocação** — é ele que produz o efeito, e
+        # é o que o rótulo ao lado diz. Apontar para a convocação faria a trilha da `016` citar
+        # a chamada como causa de uma exclusão que ela não causou: quem convoca não exclui
+        # ninguém, e a mesma chamada pode ter um desfecho sucedido por outro.
+        ato_de_origem_id=identidade,
+        rotulo_da_origem=ROTULO_DA_ORIGEM,
+        registrado_por=str(getattr(actor, "subject", actor)),
+        registrado_em=ctx.now,
+    )
+    desfecho = DesfechoDaConvocacao(
+        id=identidade,
+        convocacao=convocacao,
+        especie=especie,
+        fundamento=texto,
+        atestado=atestado,
+        resultado_sucessor=resultado_sucessor,
+        efeito=efeito,
+        desfecho_anterior=anterior,
+        motivo_da_sucessao=texto_do_motivo if anterior is not None else "",
+        registrado_por=str(getattr(actor, "subject", actor)),
+        registrado_em=ctx.now,
+    )
+    desfecho.save()
+    return desfecho
+
+
+def apuracao_seguinte(ctx, convocacao, *, actor, quantos, correlation_id):
+    """Emite a apuração seguinte do recorte, quando a única causa de obsolescência é o desfecho.
+
+    **Três condições, e cada uma protege uma coisa** (050, `D-005`):
+
+    - **só `efeito_posterior`**: uma apuração obsoleta por ordem sucedida, corte novo, quadro
+      retificado ou movimento de vaga é um fato que alguém precisa ver na ocupação, e não algo que o
+      desfecho deva varrer para baixo do tapete (`FR-884`);
+    - **sem mover vaga**: se a conta cederia vaga pela reversão, nada é gravado, e a emissão com o
+      movimento continua sendo ato de quem está na tela da ocupação (`FR-885`, `FR-270`);
+    - **num *savepoint***: a recusa da emissão não desfaz o desfecho. O desfecho é decisão sobre uma
+      pessoa, e uma conta que não fecha não pode impedi-lo — ela fica obsoleta, como antes.
+
+    Devolve o que entra no declarado do ato: `apuracaoSeguinte` ou `apuracaoPendente`.
+    """
+    from django.db import transaction
+
+    from processo_seletivo.ocupacao.application import selectors as ocupacao_selectors
+    from processo_seletivo.ocupacao.application.emissao import emitir_sucessora_por_efeito
+    from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
+
+    apuracao = ocupacao_selectors.apuracao_vigente(
+        edital=convocacao.edital,
+        perfil_id=convocacao.perfil_id,
+        marco_id=convocacao.marco_id,
+        lista_id=convocacao.lista_id,
+    )
+    causas = {c["causa"] for c in ocupacao_selectors.causas_de_obsolescencia(apuracao, at=ctx.now)}
+    if not causas:
+        return {"apuracaoSeguinte": None, "apuracaoPendente": None}
+    if causas - {nomes_da_ocupacao.CAUSA_EFEITO_POSTERIOR}:
+        return _pendente(
+            nomes.OUTRA_CAUSA_DE_OBSOLESCENCIA,
+            "A apuração deste recorte já estava obsoleta por outra causa: emita a seguinte na "
+            "ocupação, onde a causa é dita.",
+        )
+    try:
+        with transaction.atomic():
+            declarado = emitir_sucessora_por_efeito(
+                actor=actor,
+                permissao=ctx.base.permissao,
+                edital=convocacao.edital,
+                perfil_id=convocacao.perfil_id,
+                marco_id=convocacao.marco_id,
+                lista_id=convocacao.lista_id,
+                motivo=(
+                    f"Efeito de {quantos} desfecho(s) de convocação registrado(s) no mesmo ato."
+                ),
+                now=ctx.now,
+                correlation_id=correlation_id,
+            )
+    except DomainError as recusa:
+        return _pendente(recusa.code, recusa.detail)
+    if declarado is None:
+        return _pendente(
+            nomes.MOVERIA_VAGA,
+            "A apuração seguinte moveria vaga deste recorte para a ampla concorrência, pela "
+            "reversão que o Edital declarou: emita-a na ocupação, onde o movimento é ato próprio.",
+        )
+    return {"apuracaoSeguinte": declarado, "apuracaoPendente": None}
+
+
+def _pendente(codigo, detalhe):
+    return {"apuracaoSeguinte": None, "apuracaoPendente": {"codigo": codigo, "detalhe": detalhe}}
 
 
 def _suceder_o_resultado(convocacao, *, desfecho_id, actor, agora, fundamento):
@@ -358,7 +467,7 @@ def _atestado(especie, atestado_id, convocacao):
     return atestado
 
 
-def _concluir(ctx, desfecho, actor, correlation_id, idempotency_key):
+def auditar_desfecho(ctx, desfecho, actor, correlation_id, idempotency_key=""):
     convocacao = desfecho.convocacao
     auditar(
         actor=actor,
@@ -375,14 +484,15 @@ def _concluir(ctx, desfecho, actor, correlation_id, idempotency_key):
         ),
         idempotency_key=idempotency_key,
     )
-    declarado = {
+
+
+def declarado_do_desfecho(desfecho):
+    return {
         "id": str(desfecho.id),
-        "convocacao": str(convocacao.id),
+        "convocacao": str(desfecho.convocacao_id),
         "especie": desfecho.especie,
         "efeito": desfecho.efeito.especie,
     }
-    ctx.concluir_sem_resultado(201, declarado)
-    return declarado
 
 
 def _convocacao_do_processo(processo, convocacao_id):
@@ -396,4 +506,4 @@ def _convocacao_do_processo(processo, convocacao_id):
     return convocacao
 
 
-__all__ = ["desfechar"]
+__all__ = ["apuracao_seguinte", "auditar_desfecho", "desfechar", "registrar"]

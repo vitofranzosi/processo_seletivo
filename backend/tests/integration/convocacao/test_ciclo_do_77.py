@@ -16,7 +16,6 @@ from processo_seletivo.convocacao.application import selectors
 from processo_seletivo.convocacao.application.desfechar import desfechar as registrar_desfecho
 from processo_seletivo.convocacao.domain import nomes
 from processo_seletivo.ocupacao.application import selectors as ocupacao_selectors
-from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
 from tests.fixtures.convocacao import apurar, convocar
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
@@ -81,16 +80,16 @@ def test_o_ciclo_inteiro_do_77(cenario_do_77, gestor):
     # 3. A segunda desiste. **Aqui o número antigo não se movia** — e é a vaga que vagou.
     desfechar(edital, gestor, segunda["id"], nomes.DESISTENCIA_EXPRESSA, "77-desiste-2")
 
-    assert nomes_da_ocupacao.CAUSA_EFEITO_POSTERIOR in [
-        c["causa"]
-        for c in ocupacao_selectors.causas_de_obsolescencia(
+    # **Desde a `050`, a apuração seguinte sai com o desfecho** (`D-005` da `050`): a anterior não
+    # é reescrita — é sucedida —, e ninguém precisa ir à ocupação para a suplente ser chamável.
+    assert (
+        ocupacao_selectors.causas_de_obsolescencia(
             ocupacao_selectors.apuracao_vigente(
                 edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
             )
         )
-    ], "a apuração vigente passa a aparecer obsoleta, e não é reescrita"
-
-    apurar(edital, gestor, chave="77-apura-3", motivo="Desistência registrada")
+        == []
+    ), "a apuração seguinte já foi emitida pelo desfecho"
 
     assert numeros(edital) == (2, 1, 1), "uma desistência, uma vaga a menos ocupada"
 

@@ -1,0 +1,5 @@
+{% load interface_extras %}{% comment %}
+O que a comunicação fez no gesto (050, UX-103): quantas saíram, quantas falharam e quantas esperam a
+publicação. Nunca "recebida" nem "entregue" (UX-039): o sistema sabe que enviou. **A recusa diz o
+motivo**, e não só que houve: "1 recusa" não diz a quem conduz o que fazer, e a frase da recusa diz.
+{% endcomment %}{% if resultado.aguardandoPublicacao %}O prazo {{ resultado.aguardandoPublicacao|plural:"desta convocação,destas convocações" }} ainda não corre: este Edital comunica por publicação — publique a lista e registre onde, em “Comunicações que ainda não saíram”.{% else %}{{ resultado.enviadas|default:0 }} {{ resultado.enviadas|default:0|plural:"comunicação enviada,comunicações enviadas" }}{% if resultado.falhas %}, {{ resultado.falhas }} {{ resultado.falhas|plural:"falhou,falharam" }} — a convocação continua praticada, o prazo não começou, e a emissão pode ser feita de novo em “Comunicações que ainda não saíram”{% endif %}.{% for codigo, recusa in resultado.recusas.items %} {{ recusa.quantas }} não {{ recusa.quantas|plural:"saiu,saíram" }}, e o prazo não começou: {{ recusa.detalhe }}{% endfor %}{% endif %}

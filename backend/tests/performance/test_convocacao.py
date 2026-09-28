@@ -155,3 +155,32 @@ def test_a_tela_do_recorte_abre_abaixo_do_teto_com_mil_participantes(cenario):
         f"a tela do recorte levou {decorrido:.3f}s com 1.000 convocações, contra teto de "
         f"{TETO_EM_SEGUNDOS}s"
     )
+
+
+def test_as_previas_da_050_nao_crescem_com_as_convocacoes_do_recorte(cenario):
+    """`SC-326`, `FR-888`: as prévias dos três gestos custam o mesmo com 5 e com 85 chamadas.
+
+    **85 é o maior recorte do 28/2026.** As prévias saem da mesma leitura do recorte que a tela já
+    faz; o que se prende aqui é que nada nelas volte a perguntar ao banco pessoa a pessoa — a
+    primeira versão de `previa_das_pendentes` lia a versão de cada convocação, uma a uma.
+    """
+    from processo_seletivo.convocacao.application import fluxo
+
+    edital, _, _ = cenario
+
+    def custo():
+        recorte = {"edital": edital, "perfil_id": PROFILE_ID, "marco_id": MARCO, "lista_id": None}
+        with CaptureQueriesContext(connection) as consultas:
+            leitura = selectors.leitura_do_recorte(**recorte)
+            fluxo.previa_dos_titulares(**recorte, leitura=leitura)
+            fluxo.previa_dos_vencidos(**recorte, leitura=leitura)
+            pendentes = fluxo.previa_das_pendentes(**recorte, leitura=leitura)
+        return len(consultas), len(pendentes["linhas"])
+
+    semear(edital, 5)
+    com_cinco, pendentes_com_cinco = custo()
+    semear(edital, 80, desde=5)
+    com_oitenta_e_cinco, pendentes_com_oitenta_e_cinco = custo()
+
+    assert (pendentes_com_cinco, pendentes_com_oitenta_e_cinco) == (5, 85)
+    assert com_oitenta_e_cinco <= com_cinco + 2, (com_cinco, com_oitenta_e_cinco)

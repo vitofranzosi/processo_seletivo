@@ -327,6 +327,24 @@ urlpatterns = [
         views.convocar_view,
         name="convocar",
     ),
+    # Os três gestos da `050`, que alcançam N pessoas do recorte num ato só. Pendem do recorte, e
+    # não de uma convocação, porque o alcance deles é o recorte: os titulares ainda não chamados, as
+    # convocações vencidas, e as comunicações que ainda não saíram.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/titulares",
+        views.convocar_titulares_view,
+        name="convocar-titulares",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/vencidos",
+        views.nao_atendimento_dos_vencidos_view,
+        name="nao-atendimento-dos-vencidos",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/pendentes",
+        views.emitir_pendentes_view,
+        name="emitir-pendentes",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/historico",
         views.convocacao_historico,

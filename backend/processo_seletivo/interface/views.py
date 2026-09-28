@@ -6631,6 +6631,7 @@ def convocacao(request, edital_id, marco_id):
     da apuração — e pela mesma razão: um ato praticado por abrir uma página é um ato que ninguém
     decidiu praticar.
     """
+    from processo_seletivo.convocacao.application import fluxo
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
@@ -6641,9 +6642,20 @@ def convocacao(request, edital_id, marco_id):
     # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
     # ampla é a ampla, e não um recorte à parte, sem apuração, onde convocar é recusado.
     lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
+    agora = timezone.now()
     leitura = leitura_do_recorte(
-        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
     )
+    # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
+    # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
+    recorte = {
+        "edital": edital,
+        "perfil_id": perfil_id,
+        "marco_id": marco_id,
+        "lista_id": lista_id,
+        "at": agora,
+        "leitura": leitura,
+    }
     return marcar_como_privada(
         render(
             request,
@@ -6657,6 +6669,9 @@ def convocacao(request, edital_id, marco_id):
                     edital, marco_id, rota="interface:convocacao", atual=lista_id
                 ),
                 "leitura": leitura,
+                # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
+                # quem só consulta, e calculá-las ali seria trabalho sem leitor.
+                **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -6759,8 +6774,14 @@ def convocacao_historico(request, edital_id, marco_id):
 
 @require_http_methods(["POST"])
 def convocar_view(request, edital_id, marco_id):
-    """Pratica a convocação e volta à leitura, pelo padrão POST-redirect-GET."""
-    from processo_seletivo.convocacao.application.convocar import convocar
+    """Pratica a convocação, comunica no mesmo ato, e volta à leitura (050, `FR-870`, `FR-871`).
+
+    **Espécie e fundamento não vêm do formulário.** A espécie sai da posição da pessoa, e o
+    fundamento do Edital e dos atos que sustentam a chamada; o que vem é o vencimento — digitado ou
+    tirado de um Evento do Cronograma — e o complemento opcional. A espécie ainda chega no
+    formulário de regularizar, como campo oculto, e o comando a confere contra a derivada.
+    """
+    from processo_seletivo.convocacao.application.fluxo import convocar_e_comunicar
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
@@ -6770,26 +6791,153 @@ def convocar_view(request, edital_id, marco_id):
     lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     try:
-        request.session["resultado_da_convocacao"] = convocar(
-            actor=ator,
-            processo_id=edital.processo_id,
-            edital_id=edital.id,
-            perfil_id=_perfil_do_marco(edital, marco_id),
-            marco_id=marco_id,
-            lista_id=lista_id,
-            inscricao_id=_identidade_ou_404(request.POST.get("inscricao")),
-            especie=request.POST.get("especie") or "",
-            fundamento=request.POST.get("fundamento") or "",
-            vencimento=_instante_ou_none(request.POST.get("vencimento")),
-            motivo=(request.POST.get("motivo") or "").strip(),
-            justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
-            idempotency_key=request.POST.get("chave") or uuid4().hex,
-            correlation_id=f"interface-convocacao-{edital_id}",
+        request.session["resultado_da_convocacao"] = _serializavel(
+            convocar_e_comunicar(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                perfil_id=_perfil_do_marco(edital, marco_id),
+                marco_id=marco_id,
+                lista_id=lista_id,
+                inscricao_id=_identidade_ou_404(request.POST.get("inscricao")),
+                especie=request.POST.get("especie") or "",
+                vencimento=_instante_ou_none(request.POST.get("vencimento")),
+                evento_id=(request.POST.get("evento") or "").strip(),
+                complemento=request.POST.get("complemento") or "",
+                motivo=(request.POST.get("motivo") or "").strip(),
+                justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
+                idempotency_key=request.POST.get("chave") or uuid4().hex,
+                correlation_id=f"interface-convocacao-{edital_id}",
+                endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            )
         )
         request.session["acao_da_convocacao"] = "convocacao"
     except DomainError as erro:
         request.session["erro_da_convocacao"] = erro.detail
     return redirect(destino)
+
+
+def _previas_da_convocacao(fluxo, recorte, leitura):
+    """As prévias dos gestos da `050` e o que a chamada individual mostra antes do ato."""
+    return {
+        "titulares": fluxo.previa_dos_titulares(**recorte),
+        "vencidos": fluxo.previa_dos_vencidos(**recorte),
+        "pendentes": fluxo.previa_das_pendentes(**recorte),
+        # O fundamento de cada espécie (`FR-870`): a espécie depende de quem for escolhido.
+        "fundamentos": fluxo.fundamentos_por_especie(
+            edital=recorte["edital"],
+            perfil_id=recorte["perfil_id"],
+            lista_id=recorte["lista_id"],
+            apuracao=leitura["apuracao"],
+            at=recorte["at"],
+        ),
+        **_fila_com_especie(leitura),
+    }
+
+
+def _fila_com_especie(leitura):
+    """A fila com a espécie de cada pessoa, e quais espécies ela tem (050, `UX-101`).
+
+    **As espécies presentes decidem quais fundamentos a chamada individual mostra**: depois do gesto
+    dos titulares, a fila costuma ter só suplentes, e o fundamento da vaga inicial ao lado era um
+    parágrafo inteiro sobre uma chamada que ninguém ali pode receber.
+    """
+    from processo_seletivo.convocacao.domain.especie import derivada
+
+    fila = [
+        {
+            **pessoa,
+            "especie": derivada(
+                pessoa["id"],
+                ocupando=leitura["ocupando"],
+                alcancados=leitura["alcancados"],
+                regularizaveis=(),
+            ),
+        }
+        for pessoa in leitura["fila"]
+    ]
+    return {"fila_rotulada": fila, "especies_na_fila": {pessoa["especie"] for pessoa in fila}}
+
+
+def _serializavel(valor):
+    """O declarado de um gesto, pronto para a sessão: instantes e identidades viram texto."""
+    return json.loads(json.dumps(valor, cls=DjangoJSONEncoder))
+
+
+def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar):
+    """O esqueleto comum dos três gestos da `050`: autorizar, praticar, e voltar ao recorte.
+
+    **`alcance_mudou` volta à tela, e a tela recalcula a prévia** (`UX-104`): quem confirmou vê o
+    alcance de agora ao lado da recusa, e não um formulário vazio.
+    """
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    comum = {
+        "actor": ator,
+        "processo_id": edital.processo_id,
+        "edital_id": edital.id,
+        "perfil_id": _perfil_do_marco(edital, marco_id),
+        "marco_id": marco_id,
+        "lista_id": lista_id,
+        "alcance_confirmado": request.POST.get("alcance") or "",
+        "idempotency_key": request.POST.get("chave") or uuid4().hex,
+    }
+    try:
+        request.session["resultado_da_convocacao"] = _serializavel(praticar(**comum))
+        request.session["acao_da_convocacao"] = acao
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def convocar_titulares_view(request, edital_id, marco_id):
+    """Convoca num ato só os titulares que a prévia declarou (050, `FR-860`)."""
+    from processo_seletivo.convocacao.application.fluxo import convocar_titulares
+
+    def praticar(**comum):
+        return convocar_titulares(
+            **comum,
+            vencimento=_instante_ou_none(request.POST.get("vencimento")),
+            evento_id=(request.POST.get("evento") or "").strip(),
+            complemento=request.POST.get("complemento") or "",
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="titulares", praticar=praticar)
+
+
+@require_http_methods(["POST"])
+def nao_atendimento_dos_vencidos_view(request, edital_id, marco_id):
+    """Registra o não atendimento de todas as convocações vencidas (050, `FR-877`, `DP-16`)."""
+    from processo_seletivo.convocacao.application.fluxo import (
+        registrar_nao_atendimento_dos_vencidos,
+    )
+
+    def praticar(**comum):
+        return registrar_nao_atendimento_dos_vencidos(
+            **comum, complemento=request.POST.get("complemento") or ""
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="vencidos", praticar=praticar)
+
+
+@require_http_methods(["POST"])
+def emitir_pendentes_view(request, edital_id, marco_id):
+    """Emite as comunicações pendentes do recorte, pessoa a pessoa (050, `FR-874`, `FR-876`)."""
+    from processo_seletivo.convocacao.application.fluxo import emitir_pendentes
+
+    def praticar(**comum):
+        return emitir_pendentes(
+            **comum,
+            referencia_da_publicacao=request.POST.get("referencia_da_publicacao") or "",
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="pendentes", praticar=praticar)
 
 
 @require_http_methods(["POST"])
