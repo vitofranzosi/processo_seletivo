@@ -121,7 +121,7 @@ continua recebendo.
 Encontrados ao implementar as decisões acima e as correções diretas da DP-20, em 28/09. Registro,
 não escopo: nenhum foi corrigido.
 
-- **O teto de inscrições continua sem campo na composição** (RC-12). *Feito pelo PR_TETO, em 28/09:
+- **O teto de inscrições continua sem campo na composição** (RC-12). *Feito pelo PR 224, em 28/09:
   o campo "Inscrições por candidato neste Edital" na seção Período da etapa Inscrição, vazio = sem
   limite, mínimo 1, com a recusa no comando (`editais/application/teto.py`) e não só no formulário;
   a Revisão o mostra num bloco que volta para a Inscrição, com a frase do documento — e o `id` do

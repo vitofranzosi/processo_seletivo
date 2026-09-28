@@ -1318,7 +1318,7 @@ Processo só sai no bloco de verificação. É o certo para a amostra, que não 
 
 *Os itens 1 a 3 foram feitos em 28/09, no PR das correções antes do piloto, com a decisão do item 3
 tomada pelo usuário no mesmo dia (aviso, sem impeditivo). O campo do teto na composição veio
-depois, no mesmo dia, pelo PR_TETO — ver o registro pré-piloto de 28/09, "Achados da implementação".*
+depois, no mesmo dia, pelo PR 224 — ver o registro pré-piloto de 28/09, "Achados da implementação".*
 4. **O nome próprio no catálogo de autoridades**, quando o Cefor o fornecer. As *Assumptions* da
    `008` já dizem que o bloco o exibe sem mudança. Enquanto não houver, o fecho continua dizendo um
    cargo onde o leitor espera um nome.
