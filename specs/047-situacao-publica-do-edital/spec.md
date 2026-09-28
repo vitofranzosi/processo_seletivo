@@ -259,7 +259,9 @@ um, como tem para os `FR-`.
   o sistema continua recebendo inscrição. A página diz o encerramento do Processo como fato, com a
   data, e o Edital segue a marca, o grupo e o filtro do próprio período (`D-003`). A primeira versão
   desta spec mandava o desfecho do Processo fechar a situação pública, e a revisão do #193 mostrou
-  que a página passava a dizer *"não recebe inscrições"* de um Edital que recebia.
+  que a página passava a dizer *"não recebe inscrições"* de um Edital que recebia. *Desde 28/09
+  (RC-118), encerrar o Processo exige os Editais em estado final (`FR-034` da `001`, emendada), e
+  este caso só existe no Processo encerrado antes disso — para o qual o `FR-762` continua valendo.*
 - **Edital com desfecho e janela recursal ainda aberta.** A página do resultado continua dizendo o
   prazo. O desfecho administrativo não apaga a norma aplicada a um ato já publicado, e a decisão de
   receber ou não a peça continua com o domínio de recursos, que esta spec não toca.
@@ -438,7 +440,8 @@ continua recebendo dentro do período. A página passou a dizer *"não recebe in
 que recebia, o defeito que esta feature existe para remover. A regra do recebimento não muda aqui:
 a página diz o encerramento do Processo, com a data, e o Edital segue o próprio estado e período.
 Se o encerramento do Processo deve bloquear inscrições é decisão de domínio, pendente e registrada
-em *Achados*.
+em *Achados*. *Decidida pelo usuário em 28/09 (RC-118): o encerramento passa a exigir os Editais em
+estado final, como o cancelamento; a regra do recebimento continua lendo só o Edital e o período.*
 
 ### D-004 — Uma régua de fase para o portal, a da gestão
 
@@ -628,7 +631,8 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
   publicado de Processo encerrado continua recebendo inscrição dentro do período. A 047 projeta isso
   como é (`D-003`, `FR-762`). **Decisão pendente, para outra feature**: encerrar o Processo deve
   fechar o recebimento dos Editais dele — exigindo-os em estado final, ou fazendo a regra do
-  recebimento ler o Processo? Registrado pela revisão do #193, e não implementado.
+  recebimento ler o Processo? Registrado pela revisão do #193, e não implementado. *Decidido em
+  28/09 (RC-118): exigindo-os em estado final.*
 - **O cancelamento do Edital não gera Publicação.** A Constituição pede que o cancelamento preserve
   *"Publicações e histórico"*, e o domínio registra ato administrativo e auditoria, sem documento
   público. Se o Cefor precisa do ato de cancelamento publicado pelo sistema, é spec própria.

@@ -1,8 +1,9 @@
 """Atos do ciclo de vida do Processo Seletivo.
 
 Ativação e desfecho são atos administrativos explícitos: não decorrem da situação dos Editais
-(FR-005). O cancelamento é o único que depende deles, e por isso é o único cujo impedimento a
-tela precisa mostrar antes da tentativa.
+(FR-005). Os dois desfechos dependem deles — o cancelamento desde a `001` (FR-034), o encerramento
+desde a decisão de 28/09 sobre o RC-118 —, e por isso são os dois cujo impedimento a tela precisa
+mostrar antes da tentativa.
 """
 
 from dataclasses import dataclass
@@ -46,8 +47,11 @@ ATOS = {
         command=close_process,
         irreversivel=True,
         rotulo_motivo="Motivo do encerramento",
+        depende_dos_editais=True,
         consequencias=[
             "O Processo passa a Encerrado, registrando a conclusão regular do certame.",
+            "Exige que cada Edital já esteja Encerrado ou Cancelado: encerrar o Processo não "
+            "encerra os Editais dele.",
             "Seus Editais deixam de aceitar qualquer alteração, inclusive Retificação.",
             "Publicações, documentos e histórico permanecem disponíveis na consulta pública.",
         ],
