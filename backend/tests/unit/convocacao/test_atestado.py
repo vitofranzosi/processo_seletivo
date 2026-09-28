@@ -88,14 +88,25 @@ class TestODecursoNaoCancelaNada:
 
         Quem acrescentar um `cancelar_por_decurso` não é barrado ao escrevê-lo — é barrado quando
         alguém perder a vaga por um relógio, que é o modo de falha mais tardio possível.
+
+        **Desde a `050`, o módulo exporta mais que `desfechar`**, e a regra continua a mesma: toda
+        função que registra desfecho recebe **quem** o registra. O gesto dos vencidos (`DP-16`,
+        opção B) é um ato de uma pessoa sobre N convocações, e não o relógio agindo — a opção C,
+        que derivaria o não atendimento sem ato, foi recusada porque apagaria o autor.
         """
+        import inspect
+
         from processo_seletivo.convocacao.application import desfechar as modulo
+        from processo_seletivo.convocacao.application import fluxo
 
         exportado = set(getattr(modulo, "__all__", ()))
 
-        assert exportado == {"desfechar"}
+        assert "desfechar" in exportado
+        for nome in exportado:
+            assert "actor" in inspect.signature(getattr(modulo, nome)).parameters, nome
         for proibido in ("cancelar_por_decurso", "expirar", "vencer", "decorrer"):
             assert not hasattr(modulo, proibido)
+            assert not hasattr(fluxo, proibido)
 
     def test_a_inercia_nao_se_mede_pelo_vencimento_da_convocacao(self):
         """`D-011`: são dois desfechos, e o que os separa é o fato que cada um olha.

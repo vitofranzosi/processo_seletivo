@@ -128,7 +128,12 @@ def apurar(edital, gestor, *, chave="convocacao-019-apurar", motivo="", lista_id
 
 
 def convocar(edital, gestor, inscricao, **kwargs):
-    """Pratica a convocação com os valores do cenário, e o que o chamador quiser sobrescrever."""
+    """Pratica a convocação com os valores do cenário, e o que o chamador quiser sobrescrever.
+
+    **Sem espécie por padrão** (050, `D-008`): ela é derivada da posição. A fixture fixava
+    `VAGA_INICIAL`, e com isso qualquer teste que chamasse um suplente sem dizer a espécie gravava
+    um fato falso sem que nada acusasse.
+    """
     argumentos = {
         "actor": gestor,
         "processo_id": edital.processo_id,
@@ -136,7 +141,6 @@ def convocar(edital, gestor, inscricao, **kwargs):
         "perfil_id": PROFILE_ID,
         "marco_id": MARCO,
         "inscricao_id": getattr(inscricao, "id", inscricao),
-        "especie": "VAGA_INICIAL",
         "fundamento": "No interesse da Administração, item 8.2 do Edital 77/2026.",
         "idempotency_key": "convocacao-019-convocar",
         "correlation_id": "teste-convocacao-019",

@@ -190,3 +190,26 @@ CONVOCADO_PRAZO_NAO_INICIADO = "CONVOCADO_PRAZO_NAO_INICIADO"
 CONVOCADO_PRAZO_EM_CURSO = "CONVOCADO_PRAZO_EM_CURSO"
 CONVOCADO_VENCIMENTO_DECORRIDO = "CONVOCADO_VENCIMENTO_DECORRIDO"
 DESFECHADO = "DESFECHADO"
+
+# --- Os gestos da `050` -------------------------------------------------------------------------
+# **A confirmação carrega a assinatura do que a prévia declarou**, e o comando a recalcula sob a
+# trava (`D-007` da `050`). Divergindo, nada é gravado: um ato que alcança N pessoas não pode
+# alcançar outras N que ninguém viu — é o contrapeso da `DP-17`.
+ALCANCE_MUDOU = "alcance_mudou"
+
+# **A espécie é consequência da posição, e não escolha** (`D-004` e `D-008` da `050`). Até a `050`,
+# o formulário deixava chamar um suplente *"para vaga inicial"*, e o ato append-only guardava um
+# fato falso. A recusa alcança a API e o formulário forjado; a tela deixou de perguntar.
+ESPECIE_DIVERGENTE_DA_POSICAO = "especie_divergente_da_posicao"
+
+# **Gesto sem ninguém no alcance é recusado, e não um ato vazio.** A tela não oferece o botão nesse
+# caso; quem chega aqui chegou por formulário velho, e gravar "zero convocados" num ato seria
+# afirmar uma chamada que não houve.
+NENHUM_TITULAR_A_CONVOCAR = "nenhum_titular_a_convocar"
+NENHUMA_CONVOCACAO_VENCIDA = "nenhuma_convocacao_vencida"
+NENHUMA_COMUNICACAO_PENDENTE = "nenhuma_comunicacao_pendente"
+
+# **Por que a apuração seguinte não saiu junto com o desfecho** (`D-005` da `050`). Não são recusas:
+# o desfecho está gravado, e o que se diz é por que o número novo continua sendo ato da ocupação.
+OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
+MOVERIA_VAGA = "moveria_vaga"

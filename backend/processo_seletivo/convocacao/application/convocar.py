@@ -19,6 +19,7 @@ from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
+from processo_seletivo.convocacao.domain import especie as especie_da_posicao
 from processo_seletivo.convocacao.domain import fila, nomes
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.ocupacao.domain.apuracao import chave_da_inscricao
@@ -40,7 +41,6 @@ def convocar(
     perfil_id,
     marco_id,
     inscricao_id,
-    especie,
     fundamento,
     idempotency_key,
     correlation_id,
@@ -48,8 +48,18 @@ def convocar(
     vencimento=None,
     motivo="",
     justifica_precedencia=False,
+    razao_adicional="",
+    especie="",
+    fundamento_por_especie=None,
 ):
-    """Pratica a convocação e devolve o que ela declarou. Recusa antes de gravar qualquer coisa."""
+    """Pratica a convocação e devolve o que ela declarou. Recusa antes de gravar qualquer coisa.
+
+    **A espécie é derivada da posição** (050, `D-008`). Informá-la continua possível — é o que a API
+    da `019` sempre recebeu —, mas a informada que diverge da derivada é recusada; vazia, vale a
+    derivada. `razao_adicional` entra na trilha: é por onde a `050` registra a origem do vencimento.
+    `fundamento_por_especie(especie, apuracao)`, quando vem, deriva o fundamento **sob a trava**,
+    depois de a espécie ser conhecida — é o caminho da chamada individual da `050`.
+    """
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
@@ -72,9 +82,9 @@ def convocar(
         marco = identificador(marco_id)
         lista = identificador(lista_id) if lista_id else None
         inscricao = identificador(inscricao_id)
-        especie = _especie(especie)
+        informada = _especie(especie) if (especie or "").strip() else ""
         texto_do_fundamento = (fundamento or "").strip()
-        if not texto_do_fundamento:
+        if not texto_do_fundamento and fundamento_por_especie is None:
             # O *"no interesse da Administração"* do 77/2026 entra aqui, e é o que faz a chamada
             # ser ato motivado em vez de linha numa planilha.
             raise DomainError(
@@ -117,6 +127,19 @@ def convocar(
             )
 
         anterior = _em_aberto_da_pessoa(contexto, inscricao)
+        derivada = especie_da_posicao.derivada(
+            inscricao,
+            ocupando=contexto["ocupando"],
+            alcancados=contexto["alcancados"],
+            regularizaveis=contexto["regularizaveis"],
+        )
+        if derivada is None and anterior is not None:
+            # **Corrigir não muda a posição da pessoa.** Quem tem chamada em aberto saiu da fila dos
+            # regularizáveis justamente por ter sido chamado, e a espécie da raiz é a dela.
+            derivada = anterior.especie
+        # Sem espécie derivável, a pessoa não é chamável por nenhuma: as recusas abaixo dizem por
+        # quê, e a espécie de trabalho só decide qual delas se aplica.
+        especie = informada or derivada or nomes.SUPLENCIA
         texto_do_motivo = (motivo or "").strip()
         if anterior is not None and not texto_do_motivo:
             raise DomainError(
@@ -152,7 +175,21 @@ def convocar(
             apuracao=apuracao,
             sucede=anterior,
         )
+        # **Depois das recusas de ordem e de vaga, e a ordem é deliberada.** Quem convoca alguém
+        # fora da faixa "para vaga inicial" precisa ouvir que a pessoa está fora da faixa — a
+        # espécie errada é o sintoma, e não o problema.
+        if informada and derivada and informada != derivada:
+            raise DomainError(
+                nomes.ESPECIE_DIVERGENTE_DA_POSICAO,
+                "A espécie informada não é a que a posição desta pessoa determina: "
+                f"{_ESPECIE_POR_EXTENSO[derivada]}. A espécie é consequência da posição na fila, "
+                "e não escolha.",
+                422,
+                campo="especie",
+            )
 
+        if fundamento_por_especie is not None:
+            texto_do_fundamento = fundamento_por_especie(especie, apuracao)
         versao = effective_version(edital_id=edital.id, at=ctx.now)
         # **A sucessora copia o número da raiz que corrige**; a chamada nova recebe o seguinte. É
         # a diferença entre corrigir um ato e praticar outro, dita por dado.
@@ -189,7 +226,15 @@ def convocar(
             idempotency_key,
             precedencia_justificada=bool(justifica_precedencia)
             and bool(fila.precedencia(contexto["fila"], inscricao)),
+            razao_adicional=razao_adicional,
         )
+
+
+_ESPECIE_POR_EXTENSO = {
+    nomes.VAGA_INICIAL: "para vaga inicial",
+    nomes.SUPLENCIA: "para vaga que vagou",
+    nomes.PARA_REGULARIZAR: "para regularizar o indeferimento",
+}
 
 
 def _especie(valor):
@@ -430,7 +475,38 @@ def _recusar_reabilitado_a_frente(contexto, *, inscricao):
 
 
 def _concluir(
-    ctx, convocacao, actor, correlation_id, idempotency_key, *, precedencia_justificada=False
+    ctx,
+    convocacao,
+    actor,
+    correlation_id,
+    idempotency_key,
+    *,
+    precedencia_justificada=False,
+    razao_adicional="",
+):
+    _auditar(
+        ctx,
+        convocacao,
+        actor,
+        correlation_id,
+        idempotency_key,
+        precedencia_justificada=precedencia_justificada,
+        razao_adicional=razao_adicional,
+    )
+    declarado = declarado_da_convocacao(convocacao)
+    ctx.concluir_sem_resultado(201, declarado)
+    return declarado
+
+
+def _auditar(
+    ctx,
+    convocacao,
+    actor,
+    correlation_id,
+    idempotency_key,
+    *,
+    precedencia_justificada=False,
+    razao_adicional="",
 ):
     auditar(
         actor=actor,
@@ -462,10 +538,14 @@ def _concluir(
                 if precedencia_justificada
                 else ""
             )
+            + (f" {razao_adicional}" if razao_adicional else "")
         ),
         idempotency_key=idempotency_key,
     )
-    declarado = {
+
+
+def declarado_da_convocacao(convocacao):
+    return {
         "id": str(convocacao.id),
         "inscricao": str(convocacao.inscricao_id),
         "especie": convocacao.especie,
@@ -474,8 +554,105 @@ def _concluir(
         if convocacao.convocacao_anterior_id
         else None,
     }
-    ctx.concluir_sem_resultado(201, declarado)
-    return declarado
+
+
+def convocar_em_sequencia(
+    ctx,
+    *,
+    actor,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    inscricoes,
+    fundamento,
+    vencimento,
+    correlation_id,
+    razao_adicional="",
+):
+    """Pratica N convocações, na ordem, **dentro da transação de quem chama** (050, `FR-860`).
+
+    **As mesmas recusas da chamada individual, pessoa a pessoa** (`FR-864`): ordem vigente,
+    apuração ausente ou obsoleta, chamada em aberto, faixa, precedência e vaga. O contexto do
+    recorte é lido **uma vez** (`FR-888`), e a cada convocação praticada ele é atualizado em memória
+    — a pessoa sai da fila e passa a ter chamada em aberto —, que é exatamente o que uma nova
+    leitura diria. Uma recusa de qualquer uma sobe e desfaz o ato inteiro: o gesto é um ato, e não
+    grava metade.
+
+    **Sem precedência justificada e sem sucessão.** Os dois são exceções que uma pessoa decide sobre
+    outra, e continuam exclusivos da chamada individual (`FR-861`).
+    """
+    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if ato is None:
+        raise DomainError(
+            nomes.ORDEM_NAO_VIGENTE,
+            "Este recorte não tem ordem vigente: não há de onde tirar quem é o próximo.",
+            409,
+        )
+    contexto = selectors.contexto_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=ctx.now
+    )
+    apuracao = contexto["apuracao"]
+    if apuracao is None:
+        raise DomainError(
+            nomes.APURACAO_AUSENTE,
+            "Este recorte não tem apuração de ocupação emitida: não há vaga faltante conhecida "
+            "para a qual convocar.",
+            409,
+        )
+    if contexto["causasDeObsolescencia"]:
+        raise DomainError(
+            nomes.APURACAO_OBSOLETA,
+            "A apuração vigente deste recorte já se sabe para trás "
+            f"({', '.join(contexto['causasDeObsolescencia'])}): emita a apuração seguinte antes "
+            "de convocar.",
+            409,
+        )
+    versao = effective_version(edital_id=edital.id, at=ctx.now)
+    praticadas = []
+    for inscricao in inscricoes:
+        if _em_aberto_da_pessoa(contexto, inscricao) is not None:
+            raise DomainError(
+                nomes.CONVOCACAO_VIGENTE_EXISTENTE,
+                "Uma das pessoas do gesto já tem convocação aguardando desfecho neste recorte.",
+                409,
+            )
+        especie = especie_da_posicao.derivada(
+            inscricao,
+            ocupando=contexto["ocupando"],
+            alcancados=contexto["alcancados"],
+            regularizaveis=contexto["regularizaveis"],
+        )
+        _recusar_por_ordem(contexto, inscricao=inscricao, sucede=None)
+        _recusar_por_deficit(
+            contexto, especie=especie, inscricao=inscricao, apuracao=apuracao, sucede=None
+        )
+        convocacao = Convocacao(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            inscricao_id=inscricao,
+            especie=especie,
+            vencimento=vencimento,
+            fundamento=fundamento,
+            apuracao=apuracao,
+            ato_de_ordenacao_id=ato.id,
+            corte_id=contexto["corte"].id if contexto["corte"] is not None else None,
+            versao=versao,
+            chamada=_proxima_chamada(contexto, inscricao=inscricao),
+            criado_por=str(getattr(actor, "subject", actor)),
+            criado_em=ctx.now,
+        )
+        convocacao.save()
+        _auditar(ctx, convocacao, actor, correlation_id, "", razao_adicional=razao_adicional)
+        # **O que uma releitura diria, sem relê-la.** A pessoa sai da fila e passa a ter chamada
+        # em aberto; a próxima do gesto é, a partir daqui, a primeira da fila.
+        alvo = chave_da_inscricao(inscricao)
+        contexto["fila"] = [i for i in contexto["fila"] if chave_da_inscricao(i) != alvo]
+        contexto["emAberto"] = {*contexto["emAberto"], inscricao}
+        praticadas.append(convocacao)
+    return praticadas
 
 
 def _edital_do_processo(processo, edital_id):
