@@ -3,7 +3,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#documentos" data-fragmento="{% url 'interface:fragmento-documento' edital.id %}"{% endif %}>
+      data-lista="#documentos"{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="inscricao-periodo">
     <h2 id="inscricao-periodo">Período de inscrições</h2>

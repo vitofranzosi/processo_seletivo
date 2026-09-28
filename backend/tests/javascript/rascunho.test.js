@@ -8,7 +8,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { Armazem, Formulario, carregar, linha, montar } = require("./dom.js");
+const { Armazem, Elemento, Formulario, carregar, linha, montar } = require("./dom.js");
 
 const SCRIPT = path.join(
   __dirname,
@@ -37,6 +37,13 @@ function guardado(idadeMs, opcoes = {}) {
       simples: {},
       linhas: [{ id: "p1", code: "P1", name: "O que a pessoa digitou e não enviou" }],
     },
+    campos: Object.prototype.hasOwnProperty.call(opcoes, "campos")
+      ? opcoes.campos
+      : [
+          ["perfil-0-id", "p1"],
+          ["perfil-0-code", "P1"],
+          ["perfil-0-name", "O que a pessoa digitou e não enviou"],
+        ],
   });
 }
 
@@ -142,10 +149,9 @@ test("sem recibo, o rascunho recente continua sendo oferecido", () => {
    sobrescrevia o escolhido, de modo que o guardado era sempre a última opção da lista. Mudar de
    opção nem marcava o formulário como não enviado, porque o lido não mudava.
 
-   O que estes testes NÃO alcançam é a outra metade, `preencher`, que restaurava escrevendo no
-   `value` do rádio — e `value`, no rádio, é a opção que ele **representa**, não a escolhida. O
-   caminho de restauração precisa de `fetch` e de uma lista de verdade, que este shim não tem; ele
-   foi verificado no navegador, reproduzindo o defeito e conferindo a correção. */
+   A outra metade, `preencher`, restaurava escrevendo no `value` do rádio — e `value`, no rádio, é
+   a opção que ele **representa**, não a escolhida. Ela deixou de existir com o RC-08: quem
+   remonta a tela é o servidor, e a marcação volta como volta de uma recusa. */
 
 const ETAPAS = "ps:rascunho:edital:etapas:ana";
 
@@ -192,4 +198,126 @@ test("marcar a segunda opção é o que faz o rascunho registrar a segunda", asy
 
 test("grupo sem opção marcada não inventa escolha nenhuma", async () => {
   assert.equal("forma" in (await gravado(comGrupo(null))), false);
+});
+
+/* RC-08 da auditoria de consolidação (AX-16 de 15/09) — restaurar perdia o que era aninhado.
+
+   A restauração remontava cada linha a partir do fragmento **vazio** do Perfil e casava os nomes
+   pela forma de três segmentos: Modalidade, fato, linha do quadro e marcos em trânsito não tinham
+   onde cair e sumiam em silêncio; o HTML inserido não passava pelo htmx, e os botões de acrescentar
+   ficavam inertes; e o autosave regravava o que restou por cima do guardado. Medido pela tela em
+   28/09: `PPIQ` guardada, zero campos de Modalidade restaurados, `PPIQ` fora do armazenamento logo
+   depois.
+
+   Agora o guardado leva os campos **como o formulário os enviaria**, e restaurar é enviá-los ao
+   servidor pedindo só reexibição. O que estes testes provam é o lado do script — o que é guardado
+   e o que é enviado; o lado do servidor está em `tests/interface/test_rascunho_local.py`. */
+
+function comModalidade() {
+  const csrf = new Elemento("fieldset");
+  const token = new Elemento("input", { name: "csrfmiddlewaretoken", value: "tok", type: "hidden" });
+  token.parentNode = csrf;
+  csrf.filhos.push(token);
+  csrf.classes = [];
+  return new Formulario(
+    [
+      csrf,
+      linha("perfil", 0, { id: "p1", code: "LP99", name: "Professor de Libras" }),
+      linha("modalidade", "0-31", { code: "PPIQ", percentage: "30" }),
+      linha("perfil", 0, {
+        reserveType: [
+          { type: "radio", value: "NONE", checked: true },
+          { type: "radio", value: "LIMITED", checked: false },
+        ],
+      }),
+    ],
+    { rascunho: "edital:perfis:ana", lista: "#perfis" }
+  );
+}
+
+test("o guardado leva os campos aninhados com o nome com que o formulário os envia", async () => {
+  const formulario = comModalidade();
+  const armazem = new Armazem();
+  montar({ formulario, armazem });
+  carregar(SCRIPT);
+  formulario.elements.find((campo) => campo.name === "modalidade-0-31-code").value = "PPIQ2";
+  formulario.disparar("input");
+  await new Promise((pronto) => setTimeout(pronto, 450));
+
+  const campos = JSON.parse(armazem.getItem(CHAVE)).campos;
+  assert.deepEqual(
+    campos.filter(([nome]) => nome.startsWith("modalidade-")),
+    [
+      ["modalidade-0-31-code", "PPIQ2"],
+      ["modalidade-0-31-percentage", "30"],
+    ]
+  );
+  // O rádio vai como o navegador o envia — só o marcado —, e o token não é guardado: ele é da
+  // sessão em que a página foi aberta, e restaurar usa o da tela atual.
+  assert.deepEqual(
+    campos.filter(([nome]) => nome.endsWith("-reserveType")),
+    [["perfil-0-reserveType", "NONE"]]
+  );
+  assert.equal(
+    campos.some(([nome]) => nome === "csrfmiddlewaretoken"),
+    false
+  );
+});
+
+/** Carrega com um guardado, e devolve o que o script criou — o botão e o envio. */
+function restaurando(bruto, { restaurado = false } = {}) {
+  const armazem = new Armazem({ [CHAVE]: bruto });
+  montar({ formulario: comModalidade(), armazem, restaurado });
+  globalThis.window.location = { pathname: "/gestao/editais/e/compor/perfis" };
+  const criados = [];
+  const criar = globalThis.document.createElement;
+  globalThis.document.createElement = (tag) => {
+    const elemento = criar(tag);
+    if (tag === "form") elemento.submit = () => (elemento.enviado = true);
+    criados.push(elemento);
+    return elemento;
+  };
+  carregar(SCRIPT);
+  const botao = criados.find((e) => e.textContent === "Restaurar o que eu havia digitado");
+  return { armazem, criados, botao };
+}
+
+test("restaurar envia ao servidor o que foi guardado, com os aninhados", () => {
+  const campos = [
+    ["perfil-0-code", "LP99"],
+    ["modalidade-0-31-code", "PPIQ"],
+    ["fato-0-52-code", "NASCIMENTO"],
+    ["perfil-0-marcosEmTransito", "[]"],
+  ];
+  const { criados, botao } = restaurando(guardado(60_000, { campos }));
+  botao.disparar("click");
+
+  const envio = criados.find((e) => e.tagName === "form");
+  assert.equal(envio.enviado, true);
+  assert.equal(envio.getAttribute("method"), "post");
+  // O caminho, e não o endereço inteiro: `?salvo=` na tela atual faria a resposta trazer um recibo
+  // de gravação que não aconteceu.
+  assert.equal(envio.getAttribute("action"), "/gestao/editais/e/compor/perfis");
+  const enviados = envio.filhos.map((campo) => [campo.getAttribute("name"), campo.value]);
+  assert.deepEqual(enviados, [
+    ["csrfmiddlewaretoken", "tok"],
+    ["restaurar", "1"],
+    ...campos,
+  ]);
+});
+
+test("guardado sem os campos de envio é descartado, e não oferecido pela metade", () => {
+  const { armazem, botao } = restaurando(guardado(60_000, { campos: undefined }));
+
+  assert.equal(botao, undefined);
+  assert.equal(armazem.getItem(CHAVE), null);
+});
+
+test("a tela restaurada não oferece de novo, e não apaga o guardado", () => {
+  const { armazem, botao } = restaurando(guardado(60_000), { restaurado: true });
+
+  // O que está na tela ainda não chegou ao servidor: apagar o guardado aqui seria a perda de
+  // antes, só que um passo depois.
+  assert.equal(botao, undefined);
+  assert.notEqual(armazem.getItem(CHAVE), null);
 });

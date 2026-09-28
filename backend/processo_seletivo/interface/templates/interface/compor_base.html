@@ -44,6 +44,16 @@ Quem lia as duas frases juntas não tinha como saber qual delas era verdade.
   >Rascunho salvo — {{ salvo }}.</p>{% endif %}
 
 {% comment %}
+A tela que volta de "Restaurar o que eu havia digitado" (RC-08). O servidor a remonta sem gravar, e
+por isso ela precisa dizer as duas coisas: que o preenchimento voltou, e que ainda não chegou.
+`data-rascunho-restaurado` é o que impede o script de tomar o restaurado pelo que o servidor tem —
+tomá-lo apagaria o guardado, e a perda voltaria um passo depois.
+{% endcomment %}
+{% if restaurado %}<p class="aviso" role="status" data-rascunho-restaurado>
+  <strong>Preenchimento restaurado deste navegador.</strong> Ele ainda não foi enviado: salve o
+  rascunho para que o servidor o receba.</p>{% endif %}
+
+{% comment %}
 **O que a gravação reafirmou, dito por extenso** (027, FR-322). Saída a última lista reservada do
 Perfil, a repartição deixa de existir: a ampla concorrência volta a ser a vaga imediata inteira, e o
 número que estava declarado na linha é substituído. A derivação está certa — com uma lista de

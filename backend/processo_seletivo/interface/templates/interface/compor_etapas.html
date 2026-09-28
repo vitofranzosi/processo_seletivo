@@ -3,7 +3,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#etapas-avaliacao" data-fragmento="{% url 'interface:fragmento-etapa' edital.id %}"{% endif %}>
+      data-lista="#etapas-avaliacao"{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="etapas-titulo">
     <h2 id="etapas-titulo">Etapas de Avaliação</h2>
