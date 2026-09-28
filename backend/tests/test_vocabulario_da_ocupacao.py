@@ -52,6 +52,16 @@ PROIBIDOS = {
     r"chamada de suplente": "suplência e chamada são da 019",
 }
 
+# **A única exceção, e ela é dita por extenso** (`UX-034` da `016`, emendada em 28/09/2026 pelo
+# RC-137). O link que **nomeia a tela vizinha** não afirma que alguém foi convocado: ele leva à
+# tela onde isso se decide. Admiti-lo pela palavra abriria a brecha que a varredura existe para
+# fechar, e por isso a exceção é o elemento inteiro — este texto, e só ele, dentro de um link cujo
+# destino é a rota da convocação. Mudar o texto, a rota ou acrescentar qualquer outra palavra do
+# termo em volta volta a reprovar.
+NOMEIA_A_TELA_VIZINHA = re.compile(
+    r"<a href=\"\{% url 'interface:convocacao' [^\"]*\">Abrir a convocação deste recorte</a>"
+)
+
 SEM_COMENTARIO = re.compile(
     r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}|^\s*#.*$|\"\"\".*?\"\"\"",
     re.S | re.M,
@@ -63,9 +73,14 @@ def visivel(caminho):
     return SEM_COMENTARIO.sub(" ", caminho.read_text())
 
 
+def afirmado(caminho):
+    """O que a varredura de termos lê: o visível, menos a exceção nomeada da `UX-034`."""
+    return NOMEIA_A_TELA_VIZINHA.sub(" ", visivel(caminho))
+
+
 @pytest.mark.parametrize("caminho", DA_016, ids=lambda item: item.name)
 def test_nenhuma_superficie_da_016_afirma_o_que_ela_nao_conhece(caminho):
-    corpo = visivel(caminho).lower()
+    corpo = afirmado(caminho).lower()
     achados = [
         f"{termo!r} — {porque}" for termo, porque in PROIBIDOS.items() if re.search(termo, corpo)
     ]
@@ -158,3 +173,46 @@ def test_a_varredura_descarta_comentario_e_docstring(tmp_path):
     corpo = visivel(arquivo).lower()
 
     assert [termo for termo in PROIBIDOS if re.search(termo, corpo)] == []
+
+
+def test_a_excecao_da_tela_vizinha_e_o_link_inteiro_e_nada_alem(tmp_path):
+    """A exceção do RC-137 não vira brecha: só o link exato, para a rota exata, sai da leitura.
+
+    Cada variação abaixo é um jeito de escrever o termo que a `UX-034` continua proibindo: o mesmo
+    texto fora de link, o mesmo texto apontando para outra tela, outro texto para a mesma tela, e a
+    frase que afirma o fato ao lado do link admitido.
+    """
+    admitido = (
+        "<a href=\"{% url 'interface:convocacao' edital.id marco_id %}\">"
+        "Abrir a convocação deste recorte</a>"
+    )
+    casos = {
+        "o link admitido": (admitido, []),
+        "o texto fora de link": ("<p>Abrir a convocação deste recorte</p>", [r"convoca[çc]"]),
+        "o texto para outra rota": (
+            admitido.replace("interface:convocacao", "interface:ocupacao"),
+            [r"convoca[çc]"],
+        ),
+        # O nome da rota também casa: fora do link inteiro admitido, ele volta a ser lido.
+        "outro texto para a rota": (
+            admitido.replace("Abrir a convocação deste recorte", "Ver os convocados"),
+            [r"convoca[çc]", r"convocad"],
+        ),
+        "o fato ao lado do link": (
+            admitido + "<p>3 candidatos foram convocados.</p>",
+            [r"convocad"],
+        ),
+    }
+    for nome, (html, esperado) in casos.items():
+        arquivo = tmp_path / "sintetico.html"
+        arquivo.write_text(html, encoding="utf-8")
+        corpo = afirmado(arquivo).lower()
+        assert [termo for termo in PROIBIDOS if re.search(termo, corpo)] == esperado, nome
+
+
+def test_a_ocupacao_usa_a_excecao_e_ela_existe_so_ali():
+    """A exceção é da tela da ocupação; os módulos Python da `016` continuam sem ela."""
+    assert NOMEIA_A_TELA_VIZINHA.search(visivel(TEMPLATES / "ocupacao.html"))
+    for caminho in DA_016:
+        if caminho.name != "ocupacao.html":
+            assert not NOMEIA_A_TELA_VIZINHA.search(visivel(caminho)), caminho.name

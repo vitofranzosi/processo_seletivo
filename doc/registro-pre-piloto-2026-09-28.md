@@ -21,7 +21,7 @@ tocou nelas. A auditoria não foi editada: este registro é a leitura dela no di
 ## O que foi decidido
 
 **Em 28/09/2026, pelo usuário**, depois deste registro. Quatro das cinco unidades que ficaram para
-decisão foram decididas; o RC-76 e o RC-22 continuam como estão abaixo. Registrado aqui antes da
+decisão foram decididas com código; o RC-76 e o RC-22, sem código, em *As decisões sem código*, abaixo. Registrado aqui antes da
 implementação, e conferido contra o requisito escrito antes de cada uma.
 
 | RC | O que foi decidido | Requisito escrito que a decisão toca | Conferência |
@@ -30,6 +30,26 @@ implementação, e conferido contra o requisito escrito antes de cada uma.
 | RC-121 | A janela recursal de ato **já divulgado** segue a versão do Edital **que o ato citou**, e não a vigente — **salvo o que a vigente concede**: a Retificação que faz a janela nascer, ou que a alonga, alcança o ato divulgado; a que encurta ou retira, não. | `018`, caso-limite *"Retificação que altera a duração da janela depois de publicado o resultado"*; `047`, `D-005` e `FR-769` (a página acompanha a operação); **`048`**, caso-limite *"Janela que nasce depois da divulgação"* e `FR-797`; **`026`**, US3 e `SC-099` | **contrariava a `048` e a `026`**, e foi perguntado duas vezes no mesmo dia. Na primeira, sobre a `048`, o usuário manteve a versão citada *sem exceção*. Na segunda, diante da `026` — o prazo publicado curto demais que se corrige por Retificação e alcança quem já teve o resultado divulgado —, escolheu **"citada, salvo se concede"**, que preserva a `026` e a `048` e é a regra final. O caso-limite da `018`, que dizia que a Retificação *"não recalcula prazo já em curso"*, foi emendado para o lado que concede |
 | RC-119 | O período de inscrições cujo Evento está **`CANCELADO`** não recebe inscrição. | `045`, `FR-736` (o `CANCELADO` prevalece sobre a derivação; portal e documento ficaram fora de escopo, sem regra contrária); `047`, caso-limite *"Período de inscrições marcado como cancelado"* (a projeção segue o que o sistema recebe) | não contraria: nenhum requisito dizia que o período cancelado recebe, e a `047` manda a página acompanhar |
 | RC-118 | **Encerrar o Processo exige os Editais em estado final** — encerrado ou cancelado —, como o cancelamento já exige. | `001`, `FR-034` (a exigência escrita só para o cancelamento, sem vedar a do encerramento); `047`, `FR-762` e `D-003` (dizem o encerramento do Processo como fato e registram a exigência como *"decisão pendente"*) | não contraria: a `FR-762` continua valendo para o Processo encerrado antes desta regra, e a `D-003` da `047` deixou a pergunta para outra feature |
+
+### As decisões sem código (28/09/2026)
+
+**Tomadas pelo usuário no mesmo dia, em outra sessão, e registradas pelo PR 221.** São decisões de
+quando e onde, e nenhuma pede código agora:
+
+- **RC-22** — a hora continua obrigatória no Evento; rever junto com a spec do documento (a `DP-20`).
+  Até lá, vale a instrução abaixo: o operador declara a hora que o Edital real pratica, e não `00:00`.
+- **RC-76** — depois do piloto, com o Evento de recurso designado. Até lá, o operador confere à mão
+  que o Cronograma publicado e a janela declarada dizem a mesma coisa.
+- **RC-120** — o cancelamento do Edital continua sem Publicação. Agora não.
+- **RC-94** — as três rotas que devolvem 404 a quem vê o objeto sem ter a capacidade (`D-G2`) vão
+  junto com a preparação para produção.
+- **RC-136** — marcar na composição o que não se corrige depois de publicado entra na spec de padrões
+  e *"aplicar a todos"* (`DP-13`), e não como correção isolada.
+
+**O RC-121 teve as duas respostas, e vale a desta tabela.** Na sessão do PR 221 o usuário respondeu
+à mesma pergunta, diante só da `026`, que a versão citada valia sem exceção e que a `026` fosse
+emendada. Quando o PR 221 foi refeito sobre a `main`, já com o PR 220, ele confirmou a regra deste
+registro — *"citada, salvo se concede"* —, e o PR 221 não mexeu no RC-121.
 
 ## RC-76 — o prazo de recurso da tela diverge do Cronograma
 
@@ -126,7 +146,9 @@ não escopo: nenhum foi corrigido.
   Retificação depois de publicado (`interface/retificacao.py`). A auditoria pede *"decidir o campo
   na etapa Inscrição"*, e a decisão não foi tomada. Até lá, o Edital do piloto que precise de teto o
   recebe por Retificação, e o documento da Retificação o publica.
-- **A gestão diz o período cancelado pelas datas** (RC-119). A régua do período passou a tratá-lo
+- **A gestão diz o período cancelado pelas datas** (RC-119). *Corrigido pelo PR 221, junto com o
+  cartão da vitrine, que dizia "Encerrada": as quatro frases passaram a dizer "Período de inscrições
+  cancelado".* A régua do período passou a tratá-lo
   como encerrado, e o recebimento, a distribuição e o portal concordam. Mas três linhas da gestão
   montam a frase do período a partir das datas: o Pulso do Processo (*"Inscrições até dd/mm"*), a
   supervisão (*"Inscrições de … a …"*) e a linha do Edital no painel (*"Inscrições encerradas até
@@ -137,3 +159,22 @@ não escopo: nenhum foi corrigido.
   publica vê o campo da declaração aparecer ou sumir sem saber por quê. É apresentação, e o caso
   exige uma Retificação da janela entre a emissão do ato e a publicação dele.
 
+## Depois da revisão de código do PR 221 (28/09/2026)
+
+A revisão do PR 221, refeita contra o código do PR 220, achou o que segue, e o PR 221 corrigiu sem
+mudar nenhuma decisão:
+
+- **RC-62** — a conclusão travava só a Atribuição, e a Ocorrência e a consolidação gravam o
+  Resultado sob o `FOR UPDATE` do Processo: as duas transações podiam comitar juntas, e o par
+  contraditório voltava à trilha. A conclusão passou a travar o Processo em `FOR SHARE` antes da
+  Atribuição. E a Mesa diz a recusa **antes** do clique, com a frase do comando, e não oferece
+  *"Concluir avaliação"* a quem já tem Resultado; o rascunho continua oferecido.
+- **RC-119** — publicar com o período designado declarado cancelado passava sem achado, e o Edital
+  nascia sem receber inscrição. Passou a ser **impedido**, com código próprio
+  (`registration_period_cancelled`), pela razão da `028`, `FR-346`; o do vencido não foi reusado,
+  porque a `FR-347` o proíbe com término futuro.
+- **RC-20** — o zero à esquerda (o número `7` e o título *"Edital 07/2026"*) fazia o documento
+  anunciar o ato duas vezes; e o ano no título não terminava onde terminava (*"07/20261"*).
+- **RC-21** — o rótulo que abre pelo identificador (*"IV — Formulário"*) não contava como o Anexo IV.
+- **As pendências de seção** iam todas para a etapa Conteúdo, inclusive os impeditivos de
+  topologia do catálogo, que ela não corrige (`FR-007`); só os dois avisos de texto vão para lá agora.

@@ -216,6 +216,7 @@ SITUACAO_DO_CARTAO = {
     # há é um Edital que não recebe inscrição por este sistema, e continua consultável (FR-149).
     NAO_DESIGNADO: "Consulta",
 }
+MARCA_DO_PERIODO_CANCELADO = "Período cancelado"
 
 
 # ---------------------------------------------------------------------------
@@ -244,6 +245,11 @@ def situacao_publica(periodo, desfecho):
     """
     if desfecho is not None and desfecho.do_edital:
         return MARCA_DO_DESFECHO[desfecho.operacao]
+    # **O período cancelado é encerrado para o grupo, e não para a etiqueta** (RC-119, revisão do
+    # PR 221). A régua o lê como `ENCERRADO` — ele não recebe, e vai para as encerradas —, mas
+    # "Encerrada" no cartão e "cancelado" na página seriam duas coisas ditas da mesma seleção.
+    if getattr(periodo, "cancelado", False):
+        return periodo.estado, MARCA_DO_PERIODO_CANCELADO
     return periodo.estado, SITUACAO_DO_CARTAO.get(periodo.estado, "")
 
 
