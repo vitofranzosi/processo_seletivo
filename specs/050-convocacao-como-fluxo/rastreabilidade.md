@@ -3,7 +3,7 @@
 **Frase que governa**: *o que é formalização vira gesto por recorte, com um registro por pessoa e o
 alcance declarado antes; o que é decisão sobre uma pessoa continua por pessoa.*
 
-**Verificação final**: ver a seção 5.
+**Verificação final**: ver a seção 5 — 8497 passando e 11 pulados, e a única falha, do README, corrigida.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -96,4 +96,9 @@ estão em `tests/integration/convocacao/test_titulares_em_lote.py` (**TL**),
 
 ## 5. Verificação final
 
-Preenchida na entrega (T029), com os números da execução.
+**`make lint check`**: `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas,
+`makemigrations --check` sem mudança. **`make DB_NAME=ps050t test-pg`** (28/09/2026): **8497 passando,
+11 pulados, 1 falha** — `test_readme_acompanha_o_codigo`, porque a pasta `050` não estava na tabela de
+incrementos do README. A linha entrou no commit seguinte, e esse teste, as citações e as duas telas da
+convocação foram rodados de novo: 37 passando. Os 11 pulados são os mesmos da linha de base do
+`CLAUDE.md`: 9 pares do vocabulário, a recusa por vendor e o E2E da Caixa.

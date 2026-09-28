@@ -62,8 +62,8 @@ Caminhos relativos a `backend/`. `P` = `processo_seletivo/`.
 - [X] T026 [P] Incluir `fluxo.py`, `especie.py`, `fundamento.py` e `alcance.py` na lista `DA_019` de `tests/test_vocabulario_da_convocacao.py`.
 - [X] T027 [P] Registrar a decisão da `DP-16` em `doc/decisoes-pendentes-da-consolidacao.md` (bloco *"O que foi decidido"*, índice e situação).
 - [X] T028 [P] Escrever `specs/050-convocacao-como-fluxo/rastreabilidade.md`, com uma linha por requisito, critério, UX e caso-limite.
-- [ ] T029 `make lint check` e `make DB_NAME=ps050 test-pg`; conferir falhas e pulados contra a linha de base do `CLAUDE.md`.
-- [ ] T030 Percurso no preview (quickstart), com captura de tela como prova.
+- [X] T029 `make lint check` e `make DB_NAME=ps050 test-pg`; conferir falhas e pulados contra a linha de base do `CLAUDE.md`.
+- [X] T030 Percurso no preview (quickstart), com captura de tela como prova.
 
 ## Dependencies
 
