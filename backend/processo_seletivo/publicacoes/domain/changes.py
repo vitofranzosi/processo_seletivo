@@ -35,6 +35,7 @@ caminho já publicado deixava de nomear a entidade que nomeava sem que o ato a t
 Vigiar a topologia antes e depois alcança os dois, e os que eu não pensei.
 """
 
+import json
 import re
 from copy import deepcopy
 
@@ -473,6 +474,67 @@ def recusar_janela_que_nasce_sem_recurso(base, resultado):
                 "janela que não admite recurso onde o Edital não declarava janela. "
                 + RAZAO_DA_JANELA_QUE_NASCE
             )
+
+
+def recusar_troca_de_campo_nao_retificavel(base, resultado):
+    """Na Retificação, a substituição é campo a campo, e nunca troca pelo objeto inteiro (RC-130).
+
+    `apply_change` recusa o campo não retificável **endereçado**, e só ele: o `REPLACE` da regra de
+    corte, do critério ou do Perfil inteiro chega com caminho legítimo, e trazia dentro a espécie do
+    alvo, a Etapa governada, o tipo do critério ou a espécie do cadastro reserva trocados. A `DP-13`
+    decidiu a regra, e a `048` registrou a porta como A-6.
+
+    **Não é chamada por `apply_changes`**, pela razão que a janela acima já escreveu: aquele motor
+    reproduz atos publicados, e uma troca feita pela API antes desta guarda passaria a recusar a
+    própria história (`R-1` da `048`). Quem a chama é o ato de Retificação.
+
+    **Compara o antes e o depois de cada elemento que existe nos dois**, e não cada alteração:
+    `REMOVE` seguido de `ADD` com a mesma identidade é a mesma troca, escrita de outro jeito. O
+    elemento que o ato acrescenta ou retira não é julgado aqui — a topologia já exige que isso
+    aconteça só por caminho que o endereça. E o campo que **passa a existir** também não: é o
+    nascimento do objeto que o contém, e quem decide se ele nasce é o contrato (FR-313 da `026`).
+
+    **O objeto que some inteiro também não é julgado; o campo que some do objeto que fica, sim.**
+    Remover a regra de corte é decisão normativa da `014` (T082): a faixa deixa de governar, e a
+    Etapa volta a receber todos os habilitados. A primeira redação julgava os campos da regra
+    removida como se tivessem virado "ausente", e recusava esse caminho — a suíte acusou. Já sumir
+    com a Etapa governada de um corte que continua existindo muda quem progride tanto quanto
+    trocá-la.
+    """
+    antes = colecoes.elementos(base)
+    for caminho, (forma, depois) in sorted(colecoes.elementos(resultado).items()):
+        if caminho not in antes:
+            continue
+        anterior = antes[caminho][1]
+        for campo, razao in colecoes.NAO_RETIFICAVEIS_POR_ELEMENTO.get(forma, ()):
+            publicado, novo = _no_elemento(anterior, campo), _no_elemento(depois, campo)
+            if publicado is ABSENT or publicado == novo:
+                continue
+            if not isinstance(_no_elemento(depois, campo[:-1]), dict):
+                continue
+            raise CampoNaoRetificavel(
+                f"{caminho}/{'/'.join(colecoes.escapar(p) for p in campo)} passaria de "
+                f"{_legivel(publicado)} para {_legivel(novo)}. A Retificação não altera este campo "
+                f"no lugar, nem pela substituição do objeto que o contém. {razao} Para corrigir os "
+                "demais campos, enderece cada um pelo próprio caminho e mantenha este com o valor "
+                "publicado."
+            )
+
+
+def _no_elemento(elemento, campo):
+    """O valor do campo dentro do elemento, ou `ABSENT` quando algum nível não existe."""
+    valor = elemento
+    for segmento in campo:
+        if not isinstance(valor, dict) or segmento not in valor:
+            return ABSENT
+        valor = valor[segmento]
+    return valor
+
+
+def _legivel(valor):
+    if valor is ABSENT:
+        return "ausente"
+    return json.dumps(valor, ensure_ascii=False, sort_keys=True)
 
 
 def _janelas(conteudo):

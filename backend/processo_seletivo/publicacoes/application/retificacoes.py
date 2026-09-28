@@ -25,6 +25,7 @@ from processo_seletivo.publicacoes.domain.changes import (
     SeletorInvalido,
     apply_changes,
     recusar_janela_que_nasce_sem_recurso,
+    recusar_troca_de_campo_nao_retificavel,
 )
 from processo_seletivo.publicacoes.domain.conflicts import (
     DUPLICATE_KEY,
@@ -196,6 +197,7 @@ def _apply_declared_changes(edital, base, changes):
         content, _ = apply_changes(base, changes, publication_id="draft")
     except ValueError as exc:
         raise _recusa_de_caminho(exc) from exc
+    _recusar_troca_pelo_objeto_inteiro(base, content)
     _recusar_o_que_o_ato_acrescenta(edital, base, content)
     _reject_stale_changes(base, changes)
     # Depois das precondições, porque quando as duas valem a precondição é mais acionável: ela diz
@@ -206,6 +208,20 @@ def _apply_declared_changes(edital, base, changes):
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
+
+
+def _recusar_troca_pelo_objeto_inteiro(base, content):
+    """O campo que não se retifica não muda nem pela substituição do objeto que o contém (RC-130).
+
+    Mora no ato, com as guardas do que o ato acrescenta, e pela mesma razão: `apply_changes` também
+    reproduz atos já publicados, e a guarda lá recusaria a história. Roda na elaboração, na edição
+    e na publicação — a tela nunca a alcança, porque só monta o objeto inteiro quando ele está
+    ausente, e nascer não é trocar.
+    """
+    try:
+        recusar_troca_de_campo_nao_retificavel(base, content)
+    except ValueError as exc:
+        raise _recusa_de_caminho(exc) from exc
 
 
 def _recusar_o_que_o_ato_acrescenta(edital, base, content):
@@ -811,6 +827,7 @@ def publish_retification(
         _reject_stale_changes(_content_in_force(edital, effective_at), changes)
         _assert_effective_change(edital, item, effective_at, edital.next_publication_order)
         content, _ = apply_changes(base_publicacao, changes, publication_id="pending")
+        _recusar_troca_pelo_objeto_inteiro(base_publicacao, content)
         _recusar_o_que_o_ato_acrescenta(edital, base_publicacao, content)
         canonical = canonical_bytes(content)
         # O documento consolidado usa a mesma composição e a autoridade da própria Publicação
