@@ -460,8 +460,9 @@ tem a porta dela. Os atos gravados pelo gesto são os mesmos de hoje, com o mesm
 
 ## Assumptions
 
-- A `DP-17` é tratada como regra desta feature, esteja ou não já na Constituição quando ela for
-  mesclada: o alcance é declarado antes da confirmação, e a automação não elimina a autoria.
+- A `DP-17` entrou na Constituição 1.2.0, no Princípio IV, em 28/09 (#219), enquanto esta feature
+  estava aberta: o alcance é declarado antes da confirmação, e a automação não elimina a autoria.
+  A feature foi escrita contra a proposta, e o texto aprovado não a muda.
 - O número de recortes por marco é pequeno, até ~5 nos Editais da amostra. Um gesto pratica os atos
   em sequência na mesma requisição, sem fila de trabalho.
 - As telas por recorte continuam sendo o lugar da sucessão, do histórico e do ato isolado.

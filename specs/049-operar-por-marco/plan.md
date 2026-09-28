@@ -51,7 +51,7 @@ Python 3.13 · Django 5.2 · PostgreSQL · htmx, templates do servidor.
 | **II · Publicação é ato imutável** | o gesto não sucede nada: só pratica o primeiro ato de cada recorte; o documento continua por recorte | `D-002`, `D-004`, `R-3` |
 | **II · Uma fonte autoritativa** | recortes pela derivação única; assinaturas das telas de hoje; nenhum segundo caminho de gravação | `FR-812`, `FR-820`, `R-3` |
 | **III · Negar por padrão; LGPD** | cada gesto pela porta do ato unitário; a tela do marco só oferece o que a pessoa pratica; o comando reautoriza sob a trava; nenhum dado pessoal novo na tela do marco | `FR-829`, `FR-830`, `R-7` |
-| **IV · Regras explícitas / DP-17** | alcance declarado recorte a recorte antes da confirmação; o que fica fora diz por quê | `FR-818`, `FR-819`, `UX-092` |
+| **IV · Regras explícitas; decisões derivadas e ações em lote (1.2.0, DP-17)** | alcance declarado recorte a recorte antes da confirmação; o que fica fora diz por quê | `FR-818`, `FR-819`, `UX-092` |
 | **IV · Concorrência** | assinatura por recorte conferida na gravação; transação por recorte; chave por recorte | `FR-821`, `FR-822`, `R-3` a `R-5` |
 | **V · Simplicidade** | um laço sobre comandos existentes; nenhuma fila, nenhum estado novo | `R-1` |
 | **VI · Completude de jornada** | a página do Edital leva à tela do marco; cada célula leva à tela do recorte | `UX-090`, `UX-091` |
