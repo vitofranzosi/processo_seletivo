@@ -1499,6 +1499,8 @@ def validate_for_publication(
     findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
+    findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
+    findings.extend(_secao_com_redacao_padrao(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     return findings
 
@@ -2377,7 +2379,9 @@ def _periodo_de_inscricoes_encerrado(
     if marcados != 1:
         return []
     periodo = periodo_de_inscricoes(snapshot, agora)
-    if periodo.estado != ENCERRADO or periodo.fim is None:
+    # O período cancelado também está encerrado (RC-119), mas não pela data: dizer que ele
+    # "encerrou em" um término futuro seria falso, e este achado é sobre o término (`FR-346`).
+    if periodo.estado != ENCERRADO or periodo.fim is None or periodo.cancelado:
         return []
     designado = evento_designado(snapshot) or {}
     posicao = next(
@@ -2452,6 +2456,113 @@ def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:
                     _caminho_da_entidade("documentRequirements", documento, indice),
                 )
             )
+    return findings
+
+
+# A remissão a anexo no texto: a palavra em qualquer caixa, o numeral romano **só em maiúsculas**,
+# como os Editais o escrevem, ou arábico. Aceitar o romano em minúsculas faria "anexo civil" ou
+# "anexo dim" virarem remissão.
+_REMISSAO_A_ANEXO = re.compile(r"(?i:\banexos?)\s+(?P<rotulo>[IVXLCDM]+|\d+)\b")
+ANEXO_CITADO_SEM_ROTULO = "attachment_cited_without_label"
+
+
+def _secoes_textuais(snapshot: dict):
+    """`(posição, seção)` das textuais do conteúdo, na ordem em que o documento as imprime."""
+    itens = snapshot.get("sections")
+    if not isinstance(itens, list):
+        return []
+    return [
+        (posicao, item)
+        for posicao, item in enumerate(itens)
+        if isinstance(item, dict) and item.get("type") == TEXTUAL
+    ]
+
+
+def _anexo_citado_sem_rotulo(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """ "ANEXO IV" citado no texto, e nenhum Anexo publicado com esse rótulo (RC-21, DP-20).
+
+    **Aviso, e nunca impeditivo — decidido pelo usuário em 28/09.** A remissão casa também o
+    *"Anexo III da Resolução…"*, que é de outro ato, e o sistema não tem como distinguir as duas: um
+    impeditivo recusaria o Edital certo. Nenhum requisito da `020` cobre a remissão no texto; a
+    `FR-006` de lá proíbe derivar ou renumerar o rótulo, e não proíbe conferi-lo — o que esta regra
+    faz é só ler.
+
+    **Por que importa.** O RC-21 se materializou no estudo de 21/09: o 140/2025 citava o ANEXO IV e
+    não o publicava. Desde 28/09 o PDF do sistema é o documento oficial do piloto, e a remissão a um
+    anexo que não existe é norma que manda o candidato a lugar nenhum.
+
+    **Só no ato de publicação**, como a Etapa sem Evento: a Revisão é onde a correção não custa
+    nada. Na Retificação o aviso não foi pedido, e fica fora.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    publicados = set()
+    for anexo in snapshot.get("attachments") or []:
+        if isinstance(anexo, dict) and isinstance(anexo.get("label"), str):
+            publicados.update(
+                achado["rotulo"] for achado in _REMISSAO_A_ANEXO.finditer(anexo["label"])
+            )
+    findings = []
+    for posicao, secao in _secoes_textuais(snapshot):
+        vistos = set()
+        for achado in _REMISSAO_A_ANEXO.finditer(str(secao.get("content") or "")):
+            rotulo = achado["rotulo"]
+            if rotulo in publicados or rotulo in vistos:
+                continue
+            vistos.add(rotulo)
+            titulo = str(secao.get("title") or secao.get("key") or "").strip()
+            findings.append(
+                ValidationFinding(
+                    Severity.WARNING,
+                    ANEXO_CITADO_SEM_ROTULO,
+                    f"A seção «{titulo}» cita o ANEXO {rotulo}, e nenhum Anexo deste Edital tem "
+                    "esse rótulo: o documento mandaria o candidato a um anexo que não publica. "
+                    "Se a remissão é a este Edital, inclua o Anexo na etapa Anexos ou corrija o "
+                    "texto na etapa Conteúdo; se é a anexo de outro ato, o aviso não impede a "
+                    "publicação.",
+                    f"{_caminho_da_entidade('sections', secao, posicao)}/content",
+                )
+            )
+    return findings
+
+
+SECAO_COM_REDACAO_PADRAO = "section_default_text"
+
+
+def _secao_com_redacao_padrao(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Seção textual que vai ao ato com a redação padrão do catálogo, sem revisão (DP-20, §1).
+
+    **Aviso, e nunca impeditivo — decidido pelo usuário em 28/09.** A seção textual não se esvazia
+    (`006`, `FR-041`), e apagar o campo devolve o padrão (`interface/forms.py`, `ler_secoes`): toda
+    seção que ninguém tocou é publicada com a redação do catálogo. E a redação padrão afirma norma —
+    a de "Critérios de Classificação" fala de pontuação num Edital por sorteio, a de "Apresentação"
+    fala pela instituição e não pela autoridade que pratica o ato. Com o PDF como documento oficial
+    do piloto, o que ninguém revisou é publicado como norma. A tela dizia só *"revise antes de
+    submeter"*, ao lado do campo, e a Revisão não dizia nada.
+
+    **O padrão pode valer como está**, e por isso não impede: o aviso diz o fato, e quem conhece o
+    Edital decide. A comparação é com o catálogo **de hoje**, e é o certo antes da publicação — que
+    é o único ato em que ela roda.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    padroes = {secao.key: secao.default_text.strip() for secao in CATALOGO if not secao.gerada}
+    findings = []
+    for posicao, secao in _secoes_textuais(snapshot):
+        padrao = padroes.get(secao.get("key"))
+        if not padrao or str(secao.get("content") or "").strip() != padrao:
+            continue
+        titulo = str(secao.get("title") or secao.get("key") or "").strip()
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                SECAO_COM_REDACAO_PADRAO,
+                f"A seção «{titulo}» será publicada com a redação padrão do catálogo, que ninguém "
+                "revisou neste Edital. O documento é o ato oficial: confira se ela vale para este "
+                "Edital e, se não valer, redija-a na etapa Conteúdo.",
+                f"{_caminho_da_entidade('sections', secao, posicao)}/content",
+            )
+        )
     return findings
 
 

@@ -386,8 +386,8 @@ def test_com_janela_computavel_a_declaracao_e_recusada(peca, monkeypatch):
         idempotency_key="indeferir-janela",
     )
     monkeypatch.setattr(
-        "processo_seletivo.recursos.domain.janela.janela_declarada",
-        lambda **_: {"dias": 5, "unidade": "DIAS_CORRIDOS"},
+        "processo_seletivo.recursos.domain.janela.janela_do_ato",
+        lambda *_: {"dias": 5, "unidade": "DIAS_CORRIDOS"},
     )
 
     with pytest.raises(DomainError) as recusa:

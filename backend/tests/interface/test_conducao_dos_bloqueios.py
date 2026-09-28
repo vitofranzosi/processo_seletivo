@@ -216,8 +216,11 @@ def test_quem_pode_compor_nao_recebe_a_frase_de_pedir(client, seletor_ligado, ed
 
 #: A lista de pendências **com a condução que vem logo depois dela** — é ali que a frase mora, e
 #: é ali que se confere que ela não nomeia ninguém.
+# **Até a condução, e não até o primeiro `</ul>`.** Os avisos repetidos chegam dobrados numa lista
+# aninhada, e desde que a Revisão avisa a redação padrão das seções (DP-20) toda Revisão tem um
+# grupo: parar no primeiro fechamento cortava a lista no meio, antes da frase que o teste lê.
 _PENDENCIAS = re.compile(
-    r"<ul>.*?Ao menos um Perfil é obrigatório.*?</ul>\s*(?:<p class=\"ajuda\">.*?</p>)?",
+    r"<ul>.*?Ao menos um Perfil é obrigatório.*?</ul>\s*<p class=\"ajuda\">.*?</p>",
     re.DOTALL,
 )
 

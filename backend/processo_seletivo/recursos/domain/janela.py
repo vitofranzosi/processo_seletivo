@@ -82,15 +82,51 @@ def computavel(declaracao):
     return {"dias": duracao, "unidade": UNIDADE_ADMISSIVEL}
 
 
-def janela_declarada(*, edital, marco_id, at=None):
-    """A janela computável do marco na norma vigente, ou `None`.
+def declaracao_aplicavel(citada, vigente):
+    """A declaração que governa o prazo de um ato divulgado: a citada, salvo se a vigente concede.
 
-    Lê a **versão vigente** porque a pergunta é sobre a norma de agora: quem publica hoje publica
-    sob a regra de hoje. A janela de uma peça já interposta é outra coisa, e está gravada nela.
+    **Decidido pelo usuário em 28/09, em duas perguntas** (RC-121; o registro está em
+    `doc/registro-pre-piloto-2026-09-28.md`, *O que foi decidido*). A janela recursal de ato já
+    divulgado segue a versão do Edital que o ato citou, e não a vigente: uma Retificação que
+    **encurte** ou **retire** a janela não alcança o prazo de resultado já divulgado. Antes, a
+    interposição lia a vigente, e encurtar alcançava.
+    A Retificação que **concede** alcança: a janela que nasce onde o ato citava silêncio ou negativa
+    (a `048`, caso-limite *"Janela que nasce depois da divulgação"*), e o prazo maior do que o
+    citado (a `026`, US3 e `SC-099`: o prazo publicado curto demais se corrige, e o candidato lê a
+    data nova). É a razão que o contrato já dava para a janela ser retificável — conceder é menos
+    grave do que retirar — tornada regra dos dois lados.
+
+    Função pura sobre os dois objetos `appealWindow`; quem os lê do conteúdo é quem chama.
+    """
+    nova = computavel(vigente)
+    if nova is None:
+        return citada
+    antiga = computavel(citada)
+    if antiga is None or nova["dias"] > antiga["dias"]:
+        return vigente
+    return citada
+
+
+def janela_do_ato(ato, marco_id, *, vigente=None):
+    """A janela computável que governa o ato, pela versão que ele cita e pela vigente (RC-121).
+
+    **O ato, e não a publicação**, porque a janela conta da publicação que divulgou o ato pela
+    primeira vez (`ancora`), e toda publicação da cadeia até ela divulga o mesmo ato — a versão
+    citada é uma só. Serve também ao ato que ainda vai ser divulgado: a declaração que a definitiva
+    exige depende da janela que vai valer para ele depois, e ela sai daqui, pela mesma regra.
+
+    `vigente` é o conteúdo vigente, quando quem chama já o tem; sem ele, a função o lê.
     """
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 
-    return computavel(declaracao_do_marco(conteudo_vigente(edital, at=at), marco_id))
+    if vigente is None:
+        vigente = conteudo_vigente(ato.edital)
+    return computavel(
+        declaracao_aplicavel(
+            declaracao_do_marco(ato.versao.content, marco_id),
+            declaracao_do_marco(vigente, marco_id),
+        )
+    )
 
 
 def contar(*, abertura, dias):
@@ -142,7 +178,8 @@ __all__ = [
     "ancora",
     "computavel",
     "contar",
+    "declaracao_aplicavel",
     "declaracao_do_marco",
     "janela_da_publicacao",
-    "janela_declarada",
+    "janela_do_ato",
 ]

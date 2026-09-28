@@ -59,3 +59,23 @@ redação não previu.
   exigida que precede outra.
 - Até a implementação, o risco continua operacional. Ele só aparece se alguém registrar uma
   Ocorrência numa Etapa que não consolida e que precede outra.
+
+## Implementação (28/09)
+
+Feita no PR das correções antes do piloto, sem estender a decisão:
+
+- **A pergunta "pode produzir habilitação" é `impedimento_da_regra`** — o impedimento que a
+  consolidação aplica à Etapa inteira e que a `046` consulta para publicar, sem segunda redação.
+  Toda Etapa que ele não impede produz `HABILITADA` para alguém. O impedimento do corte obsoleto
+  ficou fora: é transitório, e o caminho dele é emitir a geração sucessora.
+- **O lugar é o gate, e só ele**: `_exige_habilitacao_da_anterior`, em
+  `resultados/application/prontidao.py`, usado pela listagem e pela rota individual.
+- **A letra foi emendada junto**: a Regra 2 da `D-003` e a `FR-004` da `013`, e a `FR-042` que as
+  repete.
+- **A Etapa que passa a poder habilitar depois** — por Retificação que lhe dê regra — acorda o gate
+  na vigência da versão nova, e a Regra 2 já diz o que acontece com a Atribuição criada enquanto
+  ele dormia. Isso ficou escrito na emenda; nada além foi decidido.
+- **O teste** é a reprodução de 28/09, invertida
+  (`tests/integration/resultados/test_ocorrencia_em_etapa_inconsolidavel.py`): os dois cenários
+  falham sem a mudança, e um terceiro prende que a Etapa que pode habilitar continua acordando o
+  gate.

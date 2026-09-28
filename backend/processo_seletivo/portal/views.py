@@ -89,6 +89,7 @@ from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
+    conteudos_citados,
     janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
@@ -434,10 +435,16 @@ def selecao(request, edital_id):
     # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
     # quem tinha guardado o endereço dele.
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
-    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). O conteúdo vigente já
-    # está carregado, e a conta é a mesma da página do resultado e da interposição.
+    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
+    # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
+    # está carregada (RC-121); as citadas são lidas de uma vez para todos.
+    citados = conteudos_citados([item["publicacao"] for item in contexto["resultados_divulgados"]])
     for item in contexto["resultados_divulgados"]:
-        janela = janela_da_publicacao_divulgada(item["publicacao"], conteudo=versao.content)
+        janela = janela_da_publicacao_divulgada(
+            item["publicacao"],
+            conteudo=citados.get(item["publicacao"].ato_id) or {},
+            vigente=versao.content,
+        )
         item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
