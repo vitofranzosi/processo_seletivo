@@ -17,7 +17,7 @@ corrigido. Nenhuma spec nova e nenhum requisito novo.
 | RC-63 | **não se reproduz** — a reavaliação se cumpre pelas telas | a mensagem da recusa corrigida (`FR-111` da `018`); lacunas de orientação registradas |
 | RC-86 | **medido**: linear, sem termo superlinear | registrado; otimizar é decisão |
 | RC-103 | higiene | texto e teste feitos; o que muda comportamento ficou para decisão |
-| RC-127 | higiene | testes e texto feitos; `D4` fica para decisão |
+| RC-127 | higiene | testes e texto feitos; `D4` decidido: estreitar a `SC-273` ([registro](decisao-sc273-estreitada.md)) |
 
 ---
 
@@ -266,7 +266,7 @@ defeito que ele guarda** no código, vendo-o falhar, e desfazendo a mutação.
 | `D5` (`046`) — a tabela-verdade da `SC-275` copiava a regra | aberto | `exigida` sai de uma tabela escrita à mão a partir dos consumidores; o cenário de habilitação próprio passou a ser publicável; o método comum, que nunca carrega Etapa de habilitação, virou teste separado; guarda contra cenário impossível | sim — tirar qualquer consumidor de `_quem_exige_o_resultado` |
 | `D8` — textos da `022` contradizendo a `045` sem marca | aberto | marcas datadas de substituição: a nota da `D-002`, a clarificação do status do Evento, os cenários 1–2 da US3 e a `SC-009` | — |
 | `D8` — `status` na fixture de supervisão | aberto | parâmetros sem chamador removidos; o que o pulso usa ficou, com a docstring certa | — |
-| `D4` — a `SC-273` só vale para o `UX-003` | aberto | **nada** — fechar pede filtro novo nas telas de destino ou estreitar o critério, e as duas coisas são decisão | — |
+| `D4` — a `SC-273` só vale para o `UX-003` | aberto | **nada no código** — decidido em 28/09 estreitar o critério ([registro](decisao-sc273-estreitada.md)); a emenda da spec e a extensão à `FR-742` ficam em aberto | — |
 
 **Dois achados do caminho, registrados:**
 
