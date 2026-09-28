@@ -115,3 +115,25 @@ registrou a pergunta como *"decisão pendente, para outra feature"*. É o item 1
 exige, ou fazer a regra do recebimento ler o Processo. Até lá, o operador do piloto não deve
 encerrar um Processo com Edital ainda recebendo inscrição: a página diz o encerramento, e o sistema
 continua recebendo.
+
+## Achados da implementação
+
+Encontrados ao implementar as decisões acima e as correções diretas da DP-20, em 28/09. Registro,
+não escopo: nenhum foi corrigido.
+
+- **O teto de inscrições continua sem campo na composição** (RC-12). O documento passou a
+  publicá-lo, e a Revisão já o dizia; mas o valor só nasce pelo ORM, pelo `seed_demo` ou por
+  Retificação depois de publicado (`interface/retificacao.py`). A auditoria pede *"decidir o campo
+  na etapa Inscrição"*, e a decisão não foi tomada. Até lá, o Edital do piloto que precise de teto o
+  recebe por Retificação, e o documento da Retificação o publica.
+- **A gestão diz o período cancelado pelas datas** (RC-119). A régua do período passou a tratá-lo
+  como encerrado, e o recebimento, a distribuição e o portal concordam. Mas três linhas da gestão
+  montam a frase do período a partir das datas: o Pulso do Processo (*"Inscrições até dd/mm"*), a
+  supervisão (*"Inscrições de … a …"*) e a linha do Edital no painel (*"Inscrições encerradas até
+  dd/mm"*). Nenhuma diz que o período foi cancelado. O cronograma da gestão já o diz, desde a `045`
+  (`FR-736`), e o caso só se produz pela API.
+- **A prévia da divulgação e a publicação leem a janela do ato pela mesma regra, mas a prévia não
+  diz qual versão a fundamenta** (RC-121). Quando a versão citada e a vigente divergem, a pessoa que
+  publica vê o campo da declaração aparecer ou sumir sem saber por quê. É apresentação, e o caso
+  exige uma Retificação da janela entre a emissão do ato e a publicação dele.
+
