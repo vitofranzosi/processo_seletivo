@@ -34,10 +34,24 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | Módulo | Responsabilidade |
 |---|---|
 | `processos` | Processo Seletivo, Edital, atos administrativos e desfecho |
-| `editais` | Perfis de Vaga, vagas, modalidades, Cronograma e validação |
-| `publicacoes` | Publicação, Retificação, versões consolidadas e consulta pública |
+| `editais` | Perfis de Vaga, quadro de vagas, Modalidades, Cronograma, Etapas, documentos exigidos, Anexos e validação |
+| `publicacoes` | Publicação, Retificação, versões consolidadas, documento publicado e consulta pública |
+| `identidade` | Identidade do candidato e acesso sem senha, por código enviado ao e-mail |
+| `inscricoes` | Inscrição, documentos submetidos e fatos declarados pelo candidato |
+| `comissoes` | Comissão do Processo e alocação dos membros às Etapas |
+| `avaliacoes` | Atribuição, avaliação e impedimento |
+| `resultados` | Resultado da Etapa |
+| `classificacao` | Ordem classificatória e corte entre Etapas |
 | `sorteios` | Relação de habilitados congelada, ocorrência da fonte externa e o sorteio auditável |
-| `seguranca` | Ator autenticado, permissões e autorização por objeto |
+| `ocupacao` | Apuração da ocupação e movimento de vagas entre listas de concorrência |
+| `divulgacao` | Publicação de resultado, situação individual divulgada e o documento dela |
+| `recursos` | Recurso, juízo de admissibilidade, instrução e decisão |
+| `convocacao` | Convocação, chamada, suplência e desfecho |
+| `requerimentos` | Requerimento de Matrícula e base local de referência de CEP |
+| `matriculas` | Exportação para o Registro Acadêmico — registra a geração, e não guarda o arquivo |
+| `interface` | Interface administrativa, em `/gestao/` |
+| `portal` | Consulta pública e área do candidato, em `/selecoes/` |
+| `seguranca` | Ator autenticado, permissões, autorização por objeto e papéis do banco |
 | `auditoria` | Registro append-only e idempotência |
 | `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
 
@@ -70,12 +84,14 @@ O que acontece nessa ordem, e por que ela é essa: o PostgreSQL sobe e é espera
 então a aplicação **provisiona os papéis, aplica as migrations e provisiona de novo**. A segunda
 passada não é redundância — papel e privilégio padrão precisam existir antes de qualquer tabela, e
 privilégio *sobre* tabela só pode ser concedido depois que ela existe. Ela é a que tranca. O
-terminal mostra `31 de 31 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
-deu certo.
+terminal mostra `34 de 34 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
+deu certo. O segundo número cresce a cada tabela append-only nova; o que denuncia a passada perdida
+é o primeiro vir `0`.
 
-Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não
-`127.0.0.1`: o padrão de `DJANGO_ALLOWED_HOSTS` recusa o segundo. Em <http://localhost:8025> fica a
-caixa de entrada do coletor de e-mail, por onde se lê o código de acesso do portal do candidato.
+Quando o terminal parar, o sistema está em <http://localhost:8000>. Prefira `localhost`: o
+`.env.example` aceita também `127.0.0.1`, mas o padrão do código, sem `.env`, aceita só o primeiro —
+e é `localhost` que o `seed_demo` imprime. Em <http://localhost:8025> fica a caixa de entrada do
+coletor de e-mail, por onde se lê o código de acesso do portal do candidato.
 
 Para ter o que olhar, popule a demonstração (o container já está de pé, então `exec`):
 
@@ -86,9 +102,10 @@ docker compose exec app python manage.py seed_demo
 Editar o código no seu editor recarrega o servidor: a árvore `backend/` é montada de dentro do
 host. Para começar do zero — banco, volumes e tudo —, `docker compose down --volumes`.
 
-**Isto é ambiente de desenvolvimento.** Segredo fraco, `DEBUG` ligado e o seletor de identidade,
-que deixa qualquer pessoa declarar quem é. `config.settings.production` recusa iniciar com
-qualquer um dos três.
+**Isto é ambiente de desenvolvimento.** Segredo fraco, `DEBUG` ligado e três substitutos de
+demonstração: o seletor de identidade da gestão e o provedor de identidade do portal, que deixam
+qualquer pessoa declarar quem é, e a fonte de sorteio de semente fixa. `config.settings.production`
+desliga o `DEBUG` e recusa iniciar com a chave fraca ou com qualquer um dos três substitutos.
 
 ## Como rodar nativamente
 
@@ -129,11 +146,21 @@ aplicá-la e oculta as senhas.
 cd backend && make runserver
 ```
 
+A base local de referência de CEP, que o Requerimento de Matrícula consulta, **não entra no
+`preparar`**, e de propósito: são 379 MB que não cabem em cada máquina de desenvolvimento nem em
+cada banco de teste. Sem ela nada bloqueia: o candidato digita o endereço inteiro, o código IBGE do
+município fica vazio, e o envio conclui. Quem precisa dela roda `make ceps` uma vez, com o arquivo da base em `CEPS_ZIP`; a
+origem do arquivo, a atualização mensal e a conferência estão em
+[`doc/runbook-base-de-cep.md`](doc/runbook-base-de-cep.md).
+
 ### Ver o sistema no ar
 
-Há duas superfícies. A **consulta pública** é anônima: basta abrir as URLs no navegador. A
-**interface administrativa** fica em `/gestao/` e conduz o fluxo inteiro — criar Processo e Edital,
-compor Perfis e Cronograma, submeter, homologar, publicar, retificar e consultar a auditoria.
+Há duas superfícies. O **portal**, em `/selecoes/`, é onde o público consulta Editais, resultados
+e sorteios sem autenticação, e onde o candidato entra com código enviado ao e-mail para se
+inscrever, recorrer e requerer matrícula. A **interface administrativa** fica em `/gestao/` e conduz
+o fluxo inteiro — criar Processo e Edital, compor Perfis e Cronograma, submeter, homologar,
+publicar, retificar, avaliar, classificar, divulgar resultados, julgar recursos, convocar, exportar
+matrículas e consultar a auditoria.
 
 A interface exige identidade. Enquanto o diretório institucional não está integrado, o seletor de
 identidade a substitui — e **só existe fora de produção**, onde `config.settings.production` recusa
@@ -146,11 +173,23 @@ distintos em cada etapa:
 cd backend && make seed
 ```
 
-O comando imprime os identificadores criados e as URLs prontas: versão vigente, histórico e
-Retificação. Ele cria um Edital publicado com dois Perfis e três Eventos, mais duas Retificações —
-uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o que mostrar. Não
-há como recriá-la sobre o mesmo código: apagar a demonstração exigiria excluir Publicações, o que a
-Constituição proíbe e as triggers de imutabilidade recusam. Use outro `--codigo`.
+O comando imprime os identificadores criados e as URLs prontas. Cada Edital mostra um momento do
+certame, porque inscrição aberta e resultado divulgado não cabem no mesmo:
+
+- o **primeiro**, publicado e com inscrições abertas, traz Anexos, o Requerimento de Matrícula
+  declarado e duas Retificações — uma já vigente e outra com vigência futura —, para que a consulta temporal tenha o
+  que mostrar;
+- o **segundo**, com inscrições encerradas, percorre avaliação, classificação, resultado
+  divulgado, corte, ocupação, convocação e Requerimento de Matrícula;
+- o **terceiro** ordena por sorteio, com a relação congelada, a ocorrência observada e o sorteio
+  verificável;
+- o **quarto**, reaproveitado do segundo num Processo do ano seguinte, fica em elaboração: o
+  Cronograma copiado já venceu, e o sistema recusa publicá-lo.
+
+`--dias-atras N` roda a demonstração como se tivesse ocorrido há N dias, para exibir um prazo
+recursal já encerrado. Não há como recriá-la sobre o mesmo código: apagar a demonstração exigiria
+excluir Publicações, o que a Constituição proíbe e as triggers de imutabilidade recusam. Use outro
+`--codigo` — e, para o quarto Edital, outro `--numero` ou `--ano`.
 
 O portal do candidato envia código de acesso por e-mail. No compose há um coletor de SMTP junto:
 a mensagem chega em <http://localhost:8025>, e é de lá que se lê o código. Nativamente o backend de
@@ -160,22 +199,35 @@ preciso garimpá-la no log.
 ## Antes de receber dado pessoal real
 
 A `009` abriu o sistema para inscrições, e com elas entram nome, CPF, e-mail, telefone e documentos
-comprobatórios. Três precondições, nenhuma delas de código:
+comprobatórios; a `029` acrescentou endereço e os dados do Requerimento de Matrícula, e a `031` os
+entrega ao Registro Acadêmico num arquivo que o sistema monta e não guarda. Precondições, nenhuma
+delas de código:
 
-- **política institucional de retenção e descarte** — a feature minimiza a coleta e não implementa
+- **política institucional de retenção e descarte** — o sistema minimiza a coleta e não implementa
   expurgo automático; sem a política, o acervo só cresce, inclusive com rascunhos que ninguém
   enviou;
-- **provedor de identidade real** no lugar do de demonstração, que deixa qualquer pessoa declarar
-  quem é (produção recusa subir com ele ligado);
+- **autenticação institucional real** na gestão, no lugar do seletor de identidade, que deixa
+  qualquer pessoa declarar quem é (produção recusa subir com ele ligado). O candidato já não se
+  declara: desde a `010`, prova o controle do endereço de e-mail — o que exige um servidor de
+  correio que entregue;
 - **raiz privada de arquivos** declarada, absoluta, fora da árvore do código, com backup e
   restrição de acesso no sistema operacional.
 
 ## Produção
 
 `config.settings.production` trata cada pressuposto de segurança como precondição de
-inicialização: chave secreta fraca ou ausente, `DJANGO_ALLOWED_HOSTS` vazio ou `*`, HTTPS
-desligado, banco sem senha, seletor de identidade ligado ou o adaptador provisório de
-autenticação impedem o processo de subir, com mensagem que nomeia a variável a corrigir.
+inicialização, e recusa subir com mensagem que nomeia a variável a corrigir:
+
+- chave secreta fraca ou ausente, `DJANGO_ALLOWED_HOSTS` vazio ou `*`, HTTPS ou HSTS desligados,
+  banco sem senha;
+- qualquer substituto de demonstração ligado — seletor de identidade da gestão, provedor de
+  identidade do portal, fonte de sorteio de semente fixa;
+- raiz de arquivos do candidato ausente, relativa ou dentro da árvore do código;
+- backend de e-mail que não entrega (console, arquivo, memória ou nulo) ou remetente vazio — sem
+  entrega, o código de acesso iria para o log do servidor;
+- `PORTAL_ATRAS_DE_PROXY` não declarado, porque o limite de solicitações por origem depende da
+  topologia, e `PORTAL_ATENDIMENTO` vazio, porque duas telas do candidato mandam procurá-lo;
+- `API_AUTHENTICATION_CLASSES` ausente ou apontando para o adaptador provisório.
 
 O adaptador `InstitutionalBearerAuthentication` aceita `subject|escopo|permissões` sem assinatura
 — qualquer cliente declara a própria identidade **e as próprias permissões**. Por isso
@@ -204,14 +256,19 @@ docker compose exec app make lint check test-pg
 ```
 
 `test-pg` e não `test`: **a suíte precisa do PostgreSQL.** Sem variável nenhuma ela cai para
-SQLite, e nesse modo não é confiável — 201 testes são pulados e **33 falham**, todos em casos que
-deveriam ter sido pulados e não foram: uns executam SQL que só o PostgreSQL entende, outros esperam
-mensagem de constraint que o SQLite não escreve, outros ainda contam com gatilho e trancamento de
-linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
+SQLite, e nesse modo não é confiável — em 2026-09-28, 253 testes foram pulados e **35 falharam**,
+todos em casos que deveriam ter sido pulados e não foram: uns executam SQL que só o PostgreSQL
+entende, outros esperam mensagem de constraint que o SQLite não escreve, outros ainda contam com
+gatilho e trancamento de linha que ele não tem. O total nem é reprodutível entre duas execuções do
+mesmo commit. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
 [`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md) — e mede 21, que era o número de
-09/09.
+09/09; a repartição atual está no [`AGENTS.md`](AGENTS.md).
 
-Contra PostgreSQL a suíte fecha em 5402 passando e 2 pulados — os dois deliberados, e nomeados em
+Contra PostgreSQL a suíte fecha em **8364 passando e 11 pulados** (medido em 2026-09-28), e leva
+entre 12 e 18 minutos — o [`AGENTS.md`](AGENTS.md) explica onde o tempo vai. Os onze pulados são
+deliberados: nove pares *termo × template* que `test_vocabulario_da_composicao.py` pula quando a
+tela não usa aquele termo, a recusa por vendor que só aparece fora do PostgreSQL, e o E2E contra o
+serviço real da Caixa — os dois últimos nomeados em
 [`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
@@ -274,9 +331,10 @@ implantado, e a Regra Normativa é registrada mas ainda não aplicada — detalh
 acima.
 
 O projeto seguiu bastante além dela: a interface administrativa, o portal do candidato, a inscrição,
-a avaliação, a classificação, a publicação de resultados e os recursos são incrementos próprios,
-listados abaixo. O estado de cada um está na pasta do incremento, e não aqui — este parágrafo
-descreve a `001`.
+a avaliação, a classificação, a publicação de resultados, os recursos, o sorteio, a convocação, o
+Requerimento de Matrícula e a condução do Processo publicado são incrementos próprios, listados
+abaixo. O estado de cada um está na pasta do incremento, e não aqui — este parágrafo descreve a
+`001`. Auditorias, achados e decisões que atravessam incrementos ficam em [`doc/`](doc/).
 
 ## Documentação
 
@@ -323,6 +381,29 @@ Incrementos, na ordem em que foram especificados:
 | [`023`](specs/023-criar-a-partir-de-edital-anterior/spec.md) | criar Edital a partir de Edital anterior |
 | [`024`](specs/024-descoberta-e-transparencia-no-portal/spec.md) | descoberta e transparência no portal público |
 | [`025`](specs/025-quadro-de-vagas-por-modalidade/spec.md) | quadro de vagas por modalidade |
+| [`026`](specs/026-contrato-de-mutabilidade-normativa/spec.md) | contrato de mutabilidade normativa |
+| [`027`](specs/027-estrutural-de-vagas/spec.md) | estrutural de vagas numa declaração só |
+| [`028`](specs/028-cronograma-reaproveitado-vencido/spec.md) | Cronograma reaproveitado não nasce publicável |
+| [`029`](specs/029-requerimento-de-matricula/spec.md) | Requerimento de Matrícula |
+| [`030`](specs/030-composicao-que-se-explica/spec.md) | composição que se explica |
+| [`031`](specs/031-exportacao-de-matriculas/spec.md) | exportação de matrículas para o Registro Acadêmico |
+| [`032`](specs/032-executabilidade-antes-de-publicar/spec.md) | executabilidade antes de publicar |
+| [`033`](specs/033-navegacao-por-capacidade/spec.md) | navegação por capacidade |
+| [`034`](specs/034-ordem-por-recorte/spec.md) | ordem por recorte em marco computado |
+| [`035`](specs/035-sorteio-executavel/spec.md) | sorteio executável |
+| [`036`](specs/036-instrucao-do-recurso/spec.md) | instrução do recurso |
+| [`037`](specs/037-quatro-becos-conhecidos/spec.md) | quatro becos que o sistema já conhecia |
+| [`038`](specs/038-painel-de-conducao/spec.md) | painel de condução do Processo vivo |
+| [`039`](specs/039-catalogo-de-modalidades/spec.md) | catálogo de Modalidades do Edital |
+| [`040`](specs/040-visao-institucional-dos-processos/spec.md) | visão institucional dos Processos |
+| [`041`](specs/041-perfil-na-visao-institucional/spec.md) | Perfil de Vaga na visão institucional |
+| [`042`](specs/042-hierarquia-do-detalhe-do-perfil/spec.md) | hierarquia do detalhe do Perfil |
+| [`043`](specs/043-duplicar-perfil/spec.md) | duplicar Perfil |
+| [`044`](specs/044-recorte-transversal-documental/spec.md) | recorte transversal do documento exigido |
+| [`045`](specs/045-conducao-confiavel-processo/spec.md) | condução confiável do Processo vivo |
+| [`046`](specs/046-contrato-de-executabilidade/spec.md) | contrato de executabilidade do Processo publicado |
+| [`047`](specs/047-situacao-publica-do-edital/spec.md) | situação pública e histórico oficial do Edital |
+| [`048`](specs/048-retificacao-que-acrescenta/spec.md) | Retificação que acrescenta |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 
