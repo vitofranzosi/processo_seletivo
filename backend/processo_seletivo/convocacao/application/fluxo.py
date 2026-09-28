@@ -31,7 +31,7 @@ from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao, exigir_base_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
-from processo_seletivo.convocacao.application.comunicar import comunicar, forma_declarada
+from processo_seletivo.convocacao.application.comunicar import comunicar
 from processo_seletivo.convocacao.application.convocar import (
     convocar,
     convocar_em_sequencia,
@@ -52,6 +52,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_PUBLICACAO,
     FORMAS_DE_CONVOCACAO,
 )
+from processo_seletivo.publicacoes.models import VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
 
 GESTO_TITULARES = "convocacao:convocar_titulares"
@@ -592,8 +593,12 @@ def previa_das_pendentes(*, edital, perfil_id, marco_id, lista_id=None, at=None,
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=at
     )
     linhas = list(alcance.pendentes(leitura["linhas"]).alcancadas)
-    formas = {forma_declarada(linha["convocacao"]) for linha in linhas}
-    forma = next((f for f in formas if f is not None), None)
+    # **A forma é a da versão que cada convocação citou** — a mesma leitura de `forma_declarada` —,
+    # mas as versões são lidas por conjunto: uma consulta por pessoa seria o crescimento que a
+    # `FR-888` proíbe, e o recorte cita, quase sempre, uma versão só.
+    versoes = VersaoConsolidada.objects.in_bulk({linha["convocacao"].versao_id for linha in linhas})
+    formas = {forma_vigente(versoes[linha["convocacao"].versao_id], perfil_id) for linha in linhas}
+    forma = next((f for f in sorted(formas, key=str) if f is not None), None)
     return {
         "linhas": linhas,
         "forma": forma,

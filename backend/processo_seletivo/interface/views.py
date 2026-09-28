@@ -6790,7 +6790,7 @@ def _especies_da_fila(leitura):
     from processo_seletivo.convocacao.domain.especie import derivada
 
     return {
-        str(pessoa["id"]): derivada(
+        pessoa["id"]: derivada(
             pessoa["id"],
             ocupando=leitura["ocupando"],
             alcancados=leitura["alcancados"],

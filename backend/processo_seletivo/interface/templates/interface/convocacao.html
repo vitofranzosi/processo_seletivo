@@ -41,8 +41,11 @@ A mensagem de sucesso nomeia **o ato praticado**, e nao "deu certo". Foi o defei
 "Apuracao emitida" (UX-036).
 {% endcomment %}
 {% if resultado %}
-{% if acao == "convocacao" %}<p class="sucesso" role="status" tabindex="-1">Convocação praticada. O ato é imutável; corrigi-lo é sucedê-lo com motivo, e a anterior continua legível.</p>
-{% elif acao == "desfecho" %}<p class="sucesso" role="status" tabindex="-1">Desfecho registrado. A apuração vigente passa a aparecer obsoleta, e o número novo sai na apuração seguinte.</p>
+{% if acao == "convocacao" %}<p class="sucesso" role="status" tabindex="-1">Convocação praticada. O ato é imutável; corrigi-lo é sucedê-lo com motivo, e a anterior continua legível. {% include "interface/_resultado_da_comunicacao.html" %}</p>
+{% elif acao == "titulares" %}<p class="sucesso" role="status" tabindex="-1">{{ resultado.convocadas|length }} {{ resultado.convocadas|length|plural:"convocação praticada,convocações praticadas" }} num ato só, uma por pessoa. {% include "interface/_resultado_da_comunicacao.html" %}</p>
+{% elif acao == "pendentes" %}<p class="sucesso" role="status" tabindex="-1">{% include "interface/_resultado_da_comunicacao.html" %}</p>
+{% elif acao == "desfecho" or acao == "vencidos" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "vencidos" %}{{ resultado.desfechos|length }} {{ resultado.desfechos|length|plural:"desfecho de não atendimento registrado,desfechos de não atendimento registrados" }}, um por convocação vencida.{% else %}Desfecho registrado.{% endif %}
+  {% if resultado.apuracaoSeguinte %}A apuração seguinte deste recorte foi emitida no mesmo ato: {{ resultado.apuracaoSeguinte.faltando }} a ocupar.{% elif resultado.apuracaoPendente %}A apuração seguinte não saiu com {% if acao == "vencidos" %}eles{% else %}ele{% endif %}: {{ resultado.apuracaoPendente.detalhe }} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ir para a ocupação</a>.{% endif %}</p>
 {% elif acao == "atestado" %}<p class="sucesso" role="status" tabindex="-1">Atestado de fato externo registrado. Ele não cancela matrícula: registre o desfecho de inércia citando-o.</p>
 {% elif acao == "comunicacao" %}
 {% if resultado.resultado == "FALHA" %}<p class="aviso" role="status" tabindex="-1">A emissão da comunicação falhou. <strong>A convocação continua praticada</strong>, e o prazo não começou a correr: emita de novo.</p>
@@ -92,6 +95,54 @@ acrescenta sao quantidades de **chamadas** — convocadas e respondidas —, que
 A fila, e o teto dela e a faixa que a `014` alcancou. Esgotada, esta tela **nao oferece botao**: a
 faixa seguinte e ato da `014`, e um controle aqui prometeria o que esta feature nao pode cumprir.
 {% endcomment %}
+{% comment %}
+O gesto dos titulares (050, US1). **O alcance vem antes do botão** (UX-100): quem, em que ordem, com
+que espécie, e o primeiro que fica de fora e por quê (UX-102). Cada valor derivado diz de onde veio
+(UX-101). O botão repete o número. Nenhum ato é praticado ao abrir esta tela.
+{% endcomment %}
+{% if pode_emitir %}
+<section aria-labelledby="titulares" class="resumo">
+  <h2 id="titulares">Convocar os titulares num ato só</h2>
+  {% if titulares.impedimento %}
+  {% if titulares.impedimento.codigo == "forma_de_comunicacao_nao_declarada" %}
+  <p class="aviso" role="status">{{ titulares.impedimento.detalhe }}{% if pode_retificar %} <a href="{% url 'interface:retificar' edital.id %}">Abrir a Retificação deste Edital</a>.{% endif %}</p>
+  {% else %}
+  <p class="nota">Não há gesto a praticar agora: {{ titulares.impedimento.detalhe }}</p>
+  {% endif %}
+  {% elif not titulares.pessoas %}
+  <p class="nota">Nenhum titular ainda não chamado neste recorte.{% if titulares.parada %} A próxima da fila, {{ titulares.parada.protocolo }} — {{ titulares.parada.nome }}, {% if titulares.parada.motivo == "reabilitado" %}foi posta à frente por decisão de recurso e não está entre as vagas da apuração: chamá-la é a chamada individual, abaixo.{% else %}é suplente: chamar a vaga que vagou é a chamada individual, abaixo.{% endif %}{% endif %}</p>
+  {% else %}
+  <p><strong>{{ titulares.pessoas|length }} {{ titulares.pessoas|length|plural:"pessoa será convocada,pessoas serão convocadas" }}</strong>, uma convocação para cada, na ordem da fila:</p>
+  <ol class="consequencias">
+    {% for pessoa in titulares.pessoas %}
+    <li>{{ pessoa.protocolo }} — {{ pessoa.nome }} · para vaga inicial <span class="ajuda">(da posição na fila: está entre as vagas da apuração vigente)</span></li>
+    {% endfor %}
+  </ol>
+  {% if titulares.parada %}
+  <p class="nota">Fica de fora {{ titulares.parada.protocolo }} — {{ titulares.parada.nome }}: {% if titulares.parada.motivo == "reabilitado" %}a decisão de recurso a pôs à frente, e ela não está entre as vagas da apuração; o gesto para nela, e chamá-la é a chamada individual.{% else %}é suplente. O gesto convoca só titulares; chamar a vaga que vagou é a chamada individual, abaixo.{% endif %}</p>
+  {% endif %}
+  <dl class="meta">
+    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação no endereço eletrônico do certame — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
+    <dt>Fundamento</dt><dd>{{ titulares.fundamento }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
+  </dl>
+  <form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-titulares">
+    <input type="hidden" name="alcance" value="{{ titulares.assinatura }}">
+    <p><strong>Convocar é irreversível.</strong> Nasce uma convocação por pessoa, imutável e com o seu nome como autor; corrigir qualquer uma é sucedê-la com motivo, uma a uma.</p>
+    {% include "interface/_vencimento_da_convocacao.html" with prefixo="titulares" eventos=titulares.eventos %}
+    <p class="campo">
+      <label for="complemento-titulares">Complemento do fundamento (opcional)</label>
+      <textarea id="complemento-titulares" name="complemento" rows="2" aria-describedby="ajuda-complemento-titulares"></textarea>
+      <span class="ajuda" id="ajuda-complemento-titulares">Entra depois do fundamento derivado, igual em todas as convocações deste ato.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}</button></p>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
 <section aria-labelledby="fila" class="resumo">
   <h2 id="fila">Quem pode ser chamado</h2>
   {% if leitura.esgotou %}
@@ -122,37 +173,29 @@ faixa seguinte e ato da `014`, e um controle aqui prometeria o que esta feature 
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-convocar">
-    <p><strong>Convocar é irreversível.</strong> O ato é imutável e fica na trilha do certame; corrigi-lo é sucedê-lo com motivo, e a convocação anterior continua legível.</p>
+    <p><strong>Convocar é irreversível.</strong> O ato é imutável e fica na trilha do certame; corrigi-lo é sucedê-lo com motivo, e a convocação anterior continua legível. A comunicação sai no mesmo ato.</p>
+    {% comment %}
+    **A espécie não é perguntada** (050, FR-867): ela vem da posição da pessoa, e aparece ao lado do
+    nome. O fundamento também não é digitado: é derivado, e aparece por extenso antes do botão
+    (FR-870, UX-101). O que se informa é o vencimento, e um complemento opcional.
+    {% endcomment %}
     <p class="campo">
       <label for="inscricao">Inscrição a convocar</label>
       <select id="inscricao" name="inscricao" required>
-        {% for inscricao in leitura.fila %}
-        <option value="{{ inscricao.id }}">{{ inscricao.protocolo }} — {{ inscricao.nome }}{% if forloop.first %} (próxima da fila){% endif %}</option>
-        {% endfor %}
+        {% for inscricao in leitura.fila %}{% with especie=especies_da_fila|dicionario_simples:inscricao.id %}
+        <option value="{{ inscricao.id }}">{{ inscricao.protocolo }} — {{ inscricao.nome }} · {% if especie == "VAGA_INICIAL" %}para vaga inicial{% else %}para vaga que vagou{% endif %}{% if forloop.first %} (próxima da fila){% endif %}</option>
+        {% endwith %}{% endfor %}
       </select>
+      <span class="ajuda">A espécie ao lado do nome vem da posição na fila: quem está entre as vagas da apuração é chamado para vaga inicial; os demais, para vaga que vagou.</span>
     </p>
+    <dl class="meta">
+      <dt>Fundamento, para vaga inicial</dt><dd>{{ fundamentos.VAGA_INICIAL }}</dd>
+      <dt>Fundamento, para vaga que vagou</dt><dd>{{ fundamentos.SUPLENCIA }}</dd>
+    </dl>
+    {% include "interface/_vencimento_da_convocacao.html" with prefixo="individual" eventos=titulares.eventos %}
     <p class="campo">
-      <label for="especie">Espécie da convocação</label>
-      <select id="especie" name="especie" required>
-        <option value="VAGA_INICIAL">Para vaga inicial</option>
-        <option value="SUPLENCIA">Para vaga que vagou</option>
-        <option value="PARA_REGULARIZAR">Para regularizar o indeferimento</option>
-      </select>
-    </p>
-    {% comment %}
-    O vencimento e **informado**, e o sistema nao o calcula: nao ha calendario de feriados aqui, e
-    calcular "2 dias uteis" seria inventar um (R-004, D-011). Vazio significa que o Edital nao
-    publica prazo — nao um prazo de zero.
-    {% endcomment %}
-    <p class="campo">
-      <label for="vencimento">Vencimento do prazo</label>
-      <input type="datetime-local" id="vencimento" name="vencimento" aria-describedby="ajuda-vencimento">
-      <span class="ajuda" id="ajuda-vencimento">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela — o sistema não conta dias úteis nem mantém calendário de feriados. Deixe em branco se o Edital não publica prazo.</span>
-    </p>
-    <p class="campo">
-      <label for="fundamento">Fundamento</label>
-      <textarea id="fundamento" name="fundamento" rows="3" required aria-describedby="ajuda-fundamento"></textarea>
-      <span class="ajuda" id="ajuda-fundamento">O que motiva esta chamada — por exemplo, o item do Edital que a autoriza. Sem fundamento a convocação não é ato administrativo.</span>
+      <label for="complemento-individual">Complemento do fundamento (opcional)</label>
+      <textarea id="complemento-individual" name="complemento" rows="2"></textarea>
     </p>
     <p class="campo">
       <label><input type="checkbox" name="justifica_precedencia" value="1"> Convocar à frente de quem ainda não foi chamado</label>
@@ -198,22 +241,16 @@ classificado antes do primeiro.
         {% endfor %}
       </select>
     </p>
-    <p class="campo">
-      <label for="vencimento-regularizar">Vencimento do prazo</label>
-      <input type="datetime-local" id="vencimento-regularizar" name="vencimento" aria-describedby="ajuda-venc-reg">
-      <span class="ajuda" id="ajuda-venc-reg">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>.</span>
-    </p>
+    {% include "interface/_vencimento_da_convocacao.html" with prefixo="regularizar" eventos=titulares.eventos %}
     {% comment %}
-    **A ajuda dizia "por exemplo, o 8.2 do Edital 77/2026".** É prosa de projeto: o 77/2026 é o
-    Edital da amostra com que esta feature foi escrita, e quem preenche este campo não tem como
-    consultá-lo — o exemplo pedia para copiar um item de um certame alheio. A citação continua
-    registrada no comentário da seção acima, que é o lugar dela; o que fica na tela é o que decide
-    o campo.
+    O fundamento é derivado (050, FR-870): a faixa alcançou a pessoa, o Resultado dela está
+    indeferido, e a apuração registra vaga faltante. O item do Edital que autoriza a regularização,
+    quando a pessoa quiser citá-lo, vai no complemento.
     {% endcomment %}
+    <dl class="meta"><dt>Fundamento</dt><dd>{{ fundamentos.PARA_REGULARIZAR }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd></dl>
     <p class="campo">
-      <label for="fundamento-regularizar">Fundamento</label>
-      <textarea id="fundamento-regularizar" name="fundamento" rows="3" required aria-describedby="ajuda-fund-reg"></textarea>
-      <span class="ajuda" id="ajuda-fund-reg">O item do Edital deste certame que autoriza a regularização, e o que dele decorre para esta pessoa.</span>
+      <label for="complemento-regularizar">Complemento do fundamento (opcional)</label>
+      <textarea id="complemento-regularizar" name="complemento" rows="2"></textarea>
     </p>
     <p class="acoes"><button type="submit" class="botao">Convocar para regularizar</button></p>
   </form>
@@ -228,6 +265,66 @@ ficar indistinguivel do silencio da pessoa (R-009).
 
 Nenhuma linha aqui diz recebido, lido ou entregue (UX-039). O sistema registra que **enviou**.
 {% endcomment %}
+{% comment %}
+Os dois gestos sobre chamadas já praticadas (050, US3 e FR-874). Só aparecem quando há o que
+alcançar: um botão sobre zero convocações seria um ato vazio.
+{% endcomment %}
+{% if pode_emitir and vencidos.linhas %}
+<section aria-labelledby="vencidos" class="resumo">
+  <h2 id="vencidos">Não atendimento das convocações vencidas</h2>
+  <p><strong>{{ vencidos.linhas|length }} {{ vencidos.linhas|length|plural:"convocação teve,convocações tiveram" }} o vencimento decorrido sem desfecho.</strong> Registrar o não atendimento cria um desfecho para cada uma, com o seu nome como autor — igual ao registrado um a um.</p>
+  <ol class="consequencias">
+    {% for linha in vencidos.linhas %}
+    <li>{{ linha.inscricao.protocolo }} — {{ linha.inscricao.nome }} · enviada em {{ linha.enviadaEm|date:"d/m/Y H:i" }}, vencimento {{ linha.convocacao.vencimento|date:"d/m/Y H:i" }}</li>
+    {% endfor %}
+  </ol>
+  {% if vencidos.fora.emCurso or vencidos.fora.naoIniciado or vencidos.fora.semVencimento %}
+  <p class="nota">Ficam de fora{% if vencidos.fora.emCurso %}: {{ vencidos.fora.emCurso }} com o prazo em curso{% endif %}{% if vencidos.fora.naoIniciado %}; {{ vencidos.fora.naoIniciado }} com o prazo não iniciado, porque a comunicação não foi enviada com sucesso{% endif %}{% if vencidos.fora.semVencimento %}; {{ vencidos.fora.semVencimento }} sem vencimento, porque o Edital não publica prazo — registre essas uma a uma{% endif %}.</p>
+  {% endif %}
+  <dl class="meta"><dt>Fundamento</dt><dd>{{ vencidos.fundamento }} <span class="ajuda">(derivado)</span></dd></dl>
+  <form method="post" action="{% url 'interface:nao-atendimento-dos-vencidos' edital.id marco_id %}" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-vencidos">
+    <input type="hidden" name="alcance" value="{{ vencidos.assinatura }}">
+    <p class="campo">
+      <label for="complemento-vencidos">Complemento do fundamento (opcional)</label>
+      <textarea id="complemento-vencidos" name="complemento" rows="2"></textarea>
+    </p>
+    <p><strong>Registrar o desfecho é irreversível.</strong> Cada pessoa sai de quem ocupa vaga neste recorte, e a vaga volta à fila.</p>
+    <p class="acoes"><button type="submit" class="botao">Registrar o não atendimento {{ vencidos.linhas|length|plural:"da,das" }} {{ vencidos.linhas|length }}</button></p>
+  </form>
+</section>
+{% endif %}
+
+{% if pode_emitir and pendentes.linhas %}
+<section aria-labelledby="pendentes" class="resumo">
+  <h2 id="pendentes">Comunicações que ainda não saíram</h2>
+  <p><strong>{{ pendentes.linhas|length }} {{ pendentes.linhas|length|plural:"convocação está,convocações estão" }} sem comunicação enviada</strong>, e o prazo delas não começou a correr.</p>
+  <ol class="consequencias">
+    {% for linha in pendentes.linhas %}
+    <li>{{ linha.inscricao.protocolo }} — {{ linha.inscricao.nome }}{% if linha.comunicacoes %} · a emissão anterior falhou{% endif %}</li>
+    {% endfor %}
+  </ol>
+  <form method="post" action="{% url 'interface:emitir-pendentes' edital.id marco_id %}" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-pendentes">
+    <input type="hidden" name="alcance" value="{{ pendentes.assinatura }}">
+    {% if pendentes.porPublicacao %}
+    <p class="campo">
+      <label for="publicacao-pendentes">Onde e quando a lista foi publicada</label>
+      <input type="text" id="publicacao-pendentes" name="referencia_da_publicacao" required aria-describedby="ajuda-publicacao-pendentes">
+      <span class="ajuda" id="ajuda-publicacao-pendentes">O sistema não publica no site do certame. Publique a lista acima e diga onde e quando — por exemplo, “site do Cefor, 13/09/2026”. O prazo de todas corre a partir dela.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} {{ pendentes.linhas|length }}</button></p>
+    {% else %}
+    <p class="acoes"><button type="submit" class="botao">Emitir {{ pendentes.linhas|length }} {{ pendentes.linhas|length|plural:"comunicação,comunicações" }}</button></p>
+    {% endif %}
+  </form>
+</section>
+{% endif %}
+
 <section aria-labelledby="chamadas" class="resumo">
   <h2 id="chamadas">Chamadas praticadas</h2>
   {% if not leitura.linhas %}

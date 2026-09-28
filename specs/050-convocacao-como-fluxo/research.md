@@ -115,8 +115,8 @@ hora. O vencimento escolhido é o mesmo para as N convocações. A origem — *"
 coluna nova: a trilha é append-only e já é onde a proveniência de cada ato é lida.
 
 **Vencimento passado recusa o gesto antes de gravar** (`FR-269b`), com o código que a emissão já usa
-(`vencimento_anterior_ao_envio`). Na chamada individual, a recusa continua acontecendo no envio, como
-hoje; o fluxo novo a antecipa quando a forma é mensagem individual.
+(`vencimento_anterior_ao_envio`). Na chamada individual pela tela, o fluxo novo a antecipa antes de
+convocar, qualquer que seja a forma; a `convocar` da API continua recusando no envio, como na `019`.
 
 ---
 

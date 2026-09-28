@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, e a `DP-13` e a `DP-14`, decididas em 27/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, e a `DP-16`, decidida em 28/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -46,7 +46,7 @@ registro criaria duas verdades:
 | DP-13 | "Aplicar a todos": o que acontece com o que o Perfil de destino já declarava? | passo 1 · TF-1 da `043` | declarar o efeito por tipo de estrutura, com prévia |
 | DP-14 | Quando a inscrição oferece a ampla concorrência? | passo 0 · A-1 da `048` | sempre que o Perfil tiver linha geral com vagas |
 | DP-15 | Documento público por marco? | passo 4 | não agora; se vier, documento que reúne os atos |
-| DP-16 | O não atendimento pode ser registrado em lote? | passo 3 | um gesto, N registros com autor |
+| DP-16 | O não atendimento pode ser registrado em lote? | passo 3 | um gesto, N registros com autor — **decidida em 28/09: B** |
 | DP-17 | A automação explícita entra na Constituição? | passo 1 | emenda ao Princípio IV, só o invariante |
 | DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
 | DP-19 | Marcar na composição os campos que não se corrigem depois de publicados é requisito novo? | passo 0 → fora dele | decidir em spec; conciliar com a `026` §7 e a `FR-428` da `030` |
@@ -1013,6 +1013,26 @@ dele.
 - **C. Derivado, sem ato.**
 
 **Recomendação: B.** Tira a repetição e preserva a autoria de cada registro. C apaga o autor.
+
+### O que foi decidido
+
+Em 28/09/2026, o usuário escolheu a **B**, ao abrir a spec do passo 3 — a
+[`050`](../specs/050-convocacao-como-fluxo/spec.md), antecipada para antes do piloto. Um gesto registra o
+não atendimento de todas as convocações do recorte com o vencimento decorrido e sem desfecho, e grava
+**um desfecho por convocação**, cada um com autor, fundamento, efeito na ocupação e linha própria na
+trilha — indistinguível do registrado um a um, porque passa pelo mesmo registro.
+
+**O que fica de fora do gesto, e por quê.** A convocação com o prazo em curso; a com o prazo não
+iniciado, porque a comunicação não saiu e o prazo não correu; e a sem vencimento, porque o Edital não
+publica prazo e não há vencido a reconhecer — essa continua individual, como antes. Aceite,
+indeferimento, regularização, desistência, reclassificação e inércia continuam individuais: são decisão
+sobre uma pessoa.
+
+**O que veio junto, na mesma spec.** A convocação dos titulares num ato só, com a comunicação saindo do
+próprio ato; espécie e fundamento derivados, e o vencimento informado uma vez por ato, digitado ou
+tirado de um Evento do Cronograma; e a apuração seguinte emitida pelo próprio desfecho quando nada além
+dele mudou e a conta não move vaga. As três outras escolhas da clarificação — só titulares no gesto,
+vencimento uma vez por ato, publicação registrada num segundo gesto — estão na spec.
 
 ---
 

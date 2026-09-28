@@ -45,6 +45,15 @@ DA_019 = [
     RAIZ / "convocacao/application/selectors.py",
     RAIZ / "convocacao/domain/fila.py",
     RAIZ / "convocacao/domain/prazo.py",
+    # A `050`: os gestos, a espécie, o fundamento derivado e o alcance falam pela mesma feature, e o
+    # fundamento vai para um ato append-only — a frase que ele escreve não pode prometer vaga nem
+    # afirmar recebimento.
+    TEMPLATES / "_resultado_da_comunicacao.html",
+    TEMPLATES / "_vencimento_da_convocacao.html",
+    RAIZ / "convocacao/application/fluxo.py",
+    RAIZ / "convocacao/domain/especie.py",
+    RAIZ / "convocacao/domain/fundamento.py",
+    RAIZ / "convocacao/domain/alcance.py",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a

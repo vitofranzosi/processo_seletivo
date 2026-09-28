@@ -1,0 +1,25 @@
+{% comment %}
+O vencimento do ato, **uma vez para todas as pessoas dele** (050, FR-866): tirado do fim de um Evento
+do Cronograma publicado, ou digitado. O sistema não conta dias úteis nem mantém calendário de feriados
+(R-004): o que entra aqui é a data e a hora. Vazio significa que o Edital não publica prazo — nunca um
+prazo de zero. A origem escolhida vai para a trilha de cada convocação.
+{% endcomment %}
+<fieldset class="campo">
+  <legend>Vencimento do prazo</legend>
+  {% if eventos %}
+  <p class="campo">
+    <label for="evento-{{ prefixo }}">Do Cronograma publicado</label>
+    <select id="evento-{{ prefixo }}" name="evento">
+      <option value="">Nenhum — informar a data abaixo</option>
+      {% for evento in eventos %}
+      <option value="{{ evento.id }}">Fim do Evento «{{ evento.rotulo }}» — {{ evento.fim|date:"d/m/Y H:i" }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% endif %}
+  <p class="campo">
+    <label for="vencimento-{{ prefixo }}">{% if eventos %}Ou a data e a hora{% else %}Data e hora{% endif %}</label>
+    <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}">
+    <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+  </p>
+</fieldset>
