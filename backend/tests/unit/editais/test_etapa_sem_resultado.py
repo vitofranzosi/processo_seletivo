@@ -9,6 +9,11 @@ nenhum — e a consolidação recusava a Etapa inteira depois, sobre um ato que 
 e só se**, ela recusaria e o fluxo publicado exige o Resultado. Um caso escrito à mão ("duas
 avaliações impede") passaria mesmo com a publicação reescrevendo a regra — que é o defeito que
 este arquivo existe para impedir.
+
+**A exigência, ao contrário, é escrita à mão** — `NAO_EXIGEM`, abaixo. Ela não tem uma regra única
+a quem perguntar: são quatro consumidores em quatro módulos, e a função que a publicação usa para
+achá-los é justamente o que está sob teste. Recalculá-la aqui com a mesma lógica aprovaria qualquer
+erro dela, desde que copiado dos dois lados.
 """
 
 import pytest
@@ -81,14 +86,19 @@ def _conteudo(forma, situacao):
     elif situacao == "governada":
         marcos = [marco(stages=[OUTRA], cutRule=dict(CORTE, governedStage=ETAPA))]
     elif situacao == "habilitacao_propria":
+        # A Etapa de habilitação precisa estar entre as que o marco enumera — é o que a elaboração
+        # confere (`_validar_etapa_de_habilitacao`). Designá-la sem enumerá-la montava um Edital que
+        # `draw_method_invalid` recusa, e o caso afirmava sobre conteúdo que não se publica.
         marcos = [
             de_sorteio(
-                stages=[OUTRA],
+                stages=[ETAPA, OUTRA],
                 drawMethod={**METODO, "qualifyingStageId": ETAPA},
                 cutRule=dict(CORTE, governedStage="NONE"),
             )
         ]
     elif situacao == "habilitacao_comum":
+        # Fora da tabela-verdade: o método comum não admite Etapa de habilitação, e o conteúdo é
+        # recusado antes da pergunta — ver `test_a_habilitacao_no_metodo_comum_...`.
         marcos = [
             de_sorteio(stages=[OUTRA], drawMethod=None, cutRule=dict(CORTE, governedStage="NONE"))
         ]
@@ -111,14 +121,37 @@ def _da_etapa(conteudo, ato=ATO_DE_PUBLICACAO):
     ]
 
 
+#: As cinco situações de exigência da `SC-275`, todas montáveis num Edital que se publica.
 SITUACOES = (
     "eliminatoria",
     "enumerada",
     "governada",
     "habilitacao_propria",
-    "habilitacao_comum",
     "nenhuma",
 )
+
+#: As células `(situação, forma)` em que **nada** lê o Resultado da Etapa. Derivadas dos quatro
+#: consumidores que a `D-001` da `046` enumera, um a um, e não da função que a publicação usa:
+#:
+#: - a exclusão por eliminação lê a Etapa eliminatória — e a pontuada sem nota mínima é
+#:   eliminatória por definição, de modo que ela não aparece aqui em situação nenhuma;
+#: - a combinação do marco lê a Etapa enumerada que **não** é porta — a decisória enumerada é
+#:   porta (RC-114), e o marco posiciona sem Resultado nela
+#:   (`tests/integration/classificacao/test_porta_decisoria_enumerada.py`);
+#: - a convocação lê a Etapa governada pelo corte, de qualquer forma;
+#: - o sorteio lê a Etapa de habilitação, de qualquer forma — e é por isso que a decisória
+#:   designada para ele é exigida mesmo enumerada no mesmo marco.
+#:
+#: Na situação `eliminatoria` toda forma passa a ser eliminatória, e é exigida por isso.
+NAO_EXIGEM = {
+    ("nenhuma", "consolidavel"),
+    ("nenhuma", "duas_avaliacoes"),
+    ("nenhuma", "decisoria_nao_eliminatoria"),
+    ("enumerada", "decisoria_nao_eliminatoria"),
+}
+
+#: Os achados de método que tornariam o cenário impublicável por outra razão.
+METODO_INVALIDO = {"draw_method_invalid", "common_draw_method_invalid"}
 
 
 @pytest.mark.parametrize("situacao", SITUACOES)
@@ -128,13 +161,10 @@ def test_a_publicacao_acusa_se_e_so_se_a_consolidacao_recusaria(forma, situacao)
     conteudo = _conteudo(forma, situacao)
     etapa = conteudo["stages"][0]
     recusaria = impedimento_da_regra(etapa) is not None
-    # Exigida pelo marco que a referencia, ou pelo próprio caráter eliminatório — que a Etapa
-    # pontuada sem nota mínima tem por definição, e por isso nunca fica "sem consumidor".
-    # **Menos a decisória só enumerada** (RC-114): ela é porta, e o marco posiciona sem Resultado
-    # nela — `tests/integration/classificacao/test_porta_decisoria_enumerada.py` o percorre.
-    porta_enumerada = situacao == "enumerada" and etapa["forma"] == "DECISORIA"
-    exigida = (situacao != "nenhuma" and not porta_enumerada) or etapa["eliminatory"]
+    exigida = (situacao, forma) not in NAO_EXIGEM
 
+    todos = {achado.code for achado in validate_for_publication(conteudo)}
+    assert not todos & METODO_INVALIDO, "o cenário precisa ser um Edital que se publica"
     codigos = {achado.code for achado in _da_etapa(conteudo)}
 
     if not recusaria:
@@ -143,6 +173,20 @@ def test_a_publicacao_acusa_se_e_so_se_a_consolidacao_recusaria(forma, situacao)
         assert codigos == {IMPEDE}
     else:
         assert codigos == {AVISA}
+
+
+def test_a_habilitacao_no_metodo_comum_e_recusada_antes_de_ser_consumidor():
+    """A `FR-746` nomeia a Etapa de habilitação do método *"comum ao Edital"*, e ela não se publica.
+
+    O método comum não admite o décimo campo (`validate_common_draw_method`): qual Etapa habilita
+    depende do que cada marco enumera. Por isso a situação não entra na tabela-verdade — o conteúdo
+    é recusado pela validação do método, e o que a exigência diria dele não chega a importar.
+    """
+    conteudo = _conteudo("consolidavel", "habilitacao_comum")
+
+    codigos = {achado.code for achado in validate_for_publication(conteudo)}
+
+    assert "common_draw_method_invalid" in codigos
 
 
 def test_a_etapa_sem_efeito_decidido_e_fora_de_todo_marco_publica_com_aviso():

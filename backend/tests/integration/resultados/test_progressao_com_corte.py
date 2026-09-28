@@ -34,6 +34,7 @@ from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.legado import publicar_como_acervo
 from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.publicacao import publish_original
+from tests.fixtures.resultado import montar_tres_etapas
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
@@ -385,6 +386,100 @@ def test_a_cobertura_conta_so_os_participantes_e_as_duas_formas_concordam(cortad
     )
     assert cobertura.medida.denominador == len(participantes(edital))
     assert cobertura.medida.unidade_legivel == "inscrições"
+
+
+def eliminar_na_primeira(gestor, api_client, manager_headers, *, seed, pontuacoes):
+    """Três Etapas, e a primeira consolidada com as notas dadas — abaixo de 60, eliminada.
+
+    `pontuacoes` sem nota é inscrição sem conclusão, e fica fora do lote: não tem Resultado.
+    """
+    cenario = montar_tres_etapas(gestor, api_client, manager_headers, seed=seed, codigo=str(seed))
+    inscricoes = inscrever(cenario["edital"], len(pontuacoes), primeiro=1)
+    distribuir_para(cenario, gestor, ["joao"], inscricoes, chave=f"lote-{seed}")
+    avaliadas = []
+    for inscricao, pontuacao in zip(inscricoes, pontuacoes, strict=True):
+        if pontuacao is not None:
+            concluir_como(cenario, "joao", inscricao, pontuacao=pontuacao)
+            avaliadas.append(inscricao.id)
+    consolidar(
+        actor=gestor,
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["primeira"],
+        inscricao_ids=avaliadas,
+        idempotency_key=f"eliminar-{seed}",
+        correlation_id="teste-045",
+    )
+    return cenario, inscricoes
+
+
+def test_com_eliminada_antes_as_duas_formas_da_cobertura_continuam_concordando(
+    gestor, api_client, manager_headers
+):
+    """`045`, `FR-742`: a população de fora que o cenário do corte não tem — a eliminada antes.
+
+    O caso acima prova a concordância com quem ficou fora do corte e com quem aguarda a Etapa
+    anterior, e ninguém ali foi eliminado: a regra da eliminação podia divergir entre o panorama e
+    a agregação sem que ele percebesse. Aqui ela está nas duas Etapas seguintes, e na terceira é a
+    única regra em jogo — a do meio não produziu Resultado, e a exigência de habilitação dorme.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import resumo_da_etapa
+
+    cenario, _ = eliminar_na_primeira(
+        gestor, api_client, manager_headers, seed=1745, pontuacoes=["75", "40", None]
+    )
+    edital = cenario["edital"]
+    conteudo = edital.versoes_consolidadas.latest("materialized_at").content
+
+    for chave in ("segunda", "terceira"):
+        etapa = next(item for item in conteudo["stages"] if str(item["id"]) == str(cenario[chave]))
+        visao = panorama_da_etapa(edital=edital, etapa=etapa)
+
+        pela_distribuicao = resumo_da_etapa(edital=edital, etapa=etapa, panorama=visao)
+        pelo_painel = resumo_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)
+
+        assert contagens(visao)["eliminadas_antes"] == 1, "sem eliminada, não prova nada"
+        assert (
+            pela_distribuicao["inscricoes"]
+            == pelo_painel["inscricoes"]
+            == len(visao["participantes"])
+        ), chave
+
+
+def test_todos_eliminados_na_primeira_a_etapa_seguinte_nao_cobra_cobertura(
+    gestor, api_client, manager_headers
+):
+    """O caso-limite *"0 de 0"* com gente submetida: todos eliminados antes, e nenhum `UX-003`.
+
+    `test_sem_inscricao_submetida_nao_ha_cobertura_a_cobrar` chega a zero por não haver inscrição;
+    aqui há duas, e nenhuma participa da Etapa seguinte. Contada a população inteira, como antes
+    da `045`, as duas seriam carentes de avaliador para sempre numa Etapa onde ninguém pode ser
+    distribuído.
+    """
+    from processo_seletivo.interface import supervisao
+    from tests.conftest import ator_institucional
+
+    cenario, inscricoes = eliminar_na_primeira(
+        gestor, api_client, manager_headers, seed=1746, pontuacoes=["40", "50"]
+    )
+    edital = cenario["edital"]
+    conteudo = edital.versoes_consolidadas.latest("materialized_at").content
+    segunda = next(
+        item for item in conteudo["stages"] if str(item["id"]) == str(cenario["segunda"])
+    )
+    assert contagens(panorama_da_etapa(edital=edital, etapa=segunda))["eliminadas_antes"] == len(
+        inscricoes
+    ), "a precondição: ninguém sobra para a Etapa seguinte"
+
+    cobertura = [
+        sinal
+        for sinal in supervisao.sinais(
+            edital.processo, ator_institucional("carlos", "comissao:gerir")
+        )
+        if sinal.especie == supervisao.UX_003 and sinal.edital.id == edital.id
+    ]
+
+    assert cobertura == []
 
 
 def test_com_o_conteudo_na_mao_a_cobertura_nao_rele_a_versao_vigente(cortado, monkeypatch):

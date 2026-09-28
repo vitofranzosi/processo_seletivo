@@ -92,7 +92,11 @@ Cinco sinais, definidos em `UX-001` a `UX-005`. **Sinal novo exige revisão dest
 
 > **A decisão continua de pé; o número envelheceu.** O catálogo é fechado e cresce por decisão
 > escrita — foi o que aconteceu duas vezes, e as duas vezes o guarda ficou vermelho antes da tela.
-> A lista vigente tem **dez** espécies e está na `FR-024` emendada, logo abaixo. Este parágrafo
+> ~~A lista vigente tem **dez** espécies e está na `FR-024` emendada, logo abaixo.~~
+> **SUBSTITUÍDA pela `FR-744` da [`045`](../045-conducao-confiavel-processo/spec.md)**, em
+> 26/09/2026: o catálogo encolheu, também por decisão escrita, e a lista vigente tem **oito**
+> espécies, nomeadas por extenso na `FR-744`. A tabela de dez, na `FR-024` emendada logo abaixo, é
+> a de 19/09. Este parágrafo
 > guarda o número de 09/09/2026, quando eram cinco, porque é o que a decisão decidiu naquele dia.
 
 O identificador importa por uma razão mecânica: a varredura de citações reconhece `FR-`, `SC-`,
@@ -261,8 +265,11 @@ precisamente o que o sistema existe para tornar desnecessário.
   aberto pela `013` (progressão entre Etapas, ocupação de vagas, notificação e convocação).
 - **P: Etapa passa a ter ciclo de vida?** → **Não nesta feature** (`D-003`). Criar lifecycle para
   alimentar uma tela é inversão de dependência; se houver necessidade normativa, é feature própria.
-- **P: o `status` do Evento deixa de ser declarado?** → **Não** (`D-004`). Declarado e temporal
-  convivem, e a divergência entre eles é o sinal.
+- **P: o `status` do Evento deixa de ser declarado?** → ~~**Não** (`D-004`). Declarado e temporal
+  convivem, e a divergência entre eles é o sinal.~~ **SUBSTITUÍDA pela `FR-735` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026: a resposta se inverteu —
+  a fase ordinária passou a ser derivada das datas, e `CANCELADO` é o único estado que ainda se
+  declara (`FR-736`).
 - **P: o painel mostra percentual global do Processo?** → **Não** (`D-006`). *N de M Etapas
   concluídas* mais o progresso da Etapa corrente é interpretável e auditável; um percentual único
   não é.
@@ -340,10 +347,14 @@ a nomeia; desfazê-la e conferir que o sinal desaparece sem deixar seção vazia
 
 **Acceptance Scenarios**:
 
-1. **Given** uma Etapa sem Evento de cronograma vinculado, **When** a supervisão é aberta,
-   **Then** ela aparece como **sem marco no cronograma** — e não como atrasada, aguardando ou 0 %.
-2. **Given** um Evento declarado `PLANEJADO` cujo prazo já encerrou, **When** a supervisão é aberta,
-   **Then** o sinal apresenta **as duas informações**, sem afirmar qual delas é a verdadeira.
+1. ~~**Given** uma Etapa sem Evento de cronograma vinculado, **When** a supervisão é aberta,
+   **Then** ela aparece como **sem marco no cronograma** — e não como atrasada, aguardando ou 0 %.~~
+   **RETIRADO pela `FR-739` da [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026:
+   a Etapa sem Evento deixou a Atenção e passou a aviso da validação do conteúdo.
+2. ~~**Given** um Evento declarado `PLANEJADO` cujo prazo já encerrou, **When** a supervisão é aberta,
+   **Then** o sinal apresenta **as duas informações**, sem afirmar qual delas é a verdadeira.~~
+   **RETIRADO pela `FR-738` da [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026:
+   com a fase derivada, declarado e prazo não têm como divergir, e o sinal saiu do catálogo.
 3. **Given** uma Etapa com inscrições sem avaliador suficiente, **When** a supervisão é aberta,
    **Then** o sinal nomeia a Etapa e a quantidade, com numerador e denominador.
 4. **Given** um ato de ordenação vigente tornado obsoleto por entrada nova, **When** a supervisão é
@@ -671,8 +682,10 @@ Levantados durante o inventário. Governança é do usuário; ficam como registr
   um único Edital.
 - **SC-008**: Uma Etapa sem Evento vinculado é apresentada como sem marco no cronograma, e nunca
   como atrasada, aguardando ou com progresso zero.
-- **SC-009**: Um Evento declarado como planejado com prazo encerrado produz um sinal que apresenta
-  as duas informações, sem que a tela afirme qual delas vale.
+- **SC-009**: ~~Um Evento declarado como planejado com prazo encerrado produz um sinal que apresenta
+  as duas informações, sem que a tela afirme qual delas vale.~~ **RETIRADO pela `FR-738` da
+  [`045`](../045-conducao-confiavel-processo/spec.md)**, em 26/09/2026: o `UX-002` saiu do catálogo,
+  e o critério não tem mais o que medir.
 - **SC-010**: Existindo recurso pendente e nenhum membro ativo desimpedido, a supervisão nomeia a
   condição; bastando um membro desimpedido, ela não a apresenta.
 - **SC-011**: Com todas as condições de atenção ausentes, a região de atenção ocupa uma linha e não

@@ -1120,11 +1120,14 @@ def test_a_acao_de_recursos_conta_so_as_pecas_que_aguardam_decisao(
     """`045`, `FR-734`: o número da ação é de trabalho, e não de histórico.
 
     Ele contava toda peça recebida — decididas inclusive —, e nenhum teste conferia o número: só a
-    palavra. Aqui há duas peças, uma admitida e esperando julgamento, outra não admitida. A fila
-    tem **uma**, e é isso que a lista de Processos e o cartão do Edital dizem.
+    palavra. O caso percorre as quatro situações de uma peça, porque o filtro que conta é SQL
+    escrito à parte da situação que a tela dos recursos mostra, e cada ramo dele pode sair sozinho:
+    a recém-interposta e a admitida contam; a não admitida e a julgada, não. Conferir só o estado
+    final deixava de fora justamente os dois ramos que a `045` acrescentou e corrigiu.
     """
+    from processo_seletivo.recursos.models import DecisaoRecurso
     from processo_seletivo.resultados.models import ResultadoEtapa
-    from tests.fixtures.recursos import admitir, interpor
+    from tests.fixtures.recursos import admitir, decidir, interpor
     from tests.fixtures.recursos_us4 import cenario_julgavel
 
     peca = cenario_julgavel(
@@ -1132,21 +1135,37 @@ def test_a_acao_de_recursos_conta_so_as_pecas_que_aguardam_decisao(
     )
     cenario = peca["cenario"]
     outra = cenario["inscricoes"][1]
-    admitir(
-        interpor(
-            inscricao=outra,
-            versao=peca["recurso"].versao,
-            resultado=ResultadoEtapa.vigentes.get(inscricao=outra, etapa_id=cenario["etapa"]),
-            protocolo="REC-2026-INADMIT1",
-        ),
-        admitido=False,
-        motivo="Intempestivo.",
+    recem_chegada = interpor(
+        inscricao=outra,
+        versao=peca["recurso"].versao,
+        resultado=ResultadoEtapa.vigentes.get(inscricao=outra, etapa_id=cenario["etapa"]),
+        protocolo="REC-2026-INADMIT1",
     )
 
     identificar(client, "marta.julgadora", ["julgador"])
-    lista = client.get(reverse("interface:lista")).content.decode()
-    cartao = client.get(reverse("interface:detalhe", args=[cenario["edital"].id])).content.decode()
 
+    def rotulos():
+        lista = client.get(reverse("interface:lista")).content.decode()
+        cartao = client.get(
+            reverse("interface:detalhe", args=[cenario["edital"].id])
+        ).content.decode()
+        return lista, cartao
+
+    # A recém-interposta, sem juízo, já espera — e a admitida do cenário também.
+    lista, cartao = rotulos()
+    assert "Recursos aguardando decisão (2)" in lista
+    assert "Recursos aguardando decisão (2)" in cartao
+
+    admitir(recem_chegada, admitido=False, motivo="Intempestivo.")
+
+    lista, cartao = rotulos()
     assert "Recursos aguardando decisão (1)" in lista
     assert "Recursos aguardando decisão (1)" in cartao
     assert "Recursos recebidos" not in cartao
+
+    # Julgada a admitida, a fila esvazia; o rótulo continua, porque a tela continua listando.
+    decidir(peca["recurso"], especie=DecisaoRecurso.Especie.INDEFERIDO)
+
+    lista, cartao = rotulos()
+    assert "Recursos aguardando decisão (0)" in lista
+    assert "Recursos aguardando decisão (0)" in cartao
