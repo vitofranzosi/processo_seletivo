@@ -1,5 +1,74 @@
 <!--
 Sync Impact Report
+- Version change: 1.1.1 -> 1.2.0
+- Motivo do MINOR: expansão material do princípio IV. Nenhum princípio foi removido ou redefinido,
+  e nenhuma garantia anterior foi enfraquecida: o invariante acrescenta obrigação a toda operação
+  que infere, deriva, materializa ou age em lote, e não retira nenhuma.
+- Origem: a `DP-17` de `doc/decisoes-pendentes-da-consolidacao.md`, decidida pelo usuário em
+  2026-09-28 — opção A, emenda ao princípio IV, só o invariante e sem forma de tela. A pergunta nasceu
+  da reavaliação de 2026-09-27, cujo critério põe à frente o que o sistema pode inferir, declarar uma
+  vez ou materializar em N objetos. O invariante é o contrapeso desse critério: aqui um padrão errado
+  não fica no rascunho, é publicado, e só sai por Retificação pública.
+- Added sections: nenhuma
+- Modified principles:
+  - IV. Regras Explícitas e Consistência Operacional (título mantido) — parágrafo novo, "Decisões
+    derivadas e ações em lote DEVEM permanecer explícitas", e o racional estendido.
+- Removed sections: nenhuma
+- Relação com o texto vigente: a seção "Fluxo de Desenvolvimento e Critérios de Qualidade" já exigia
+  "confirmação e consequências inequívocas" em operação irreversível. O invariante acrescenta o que
+  ela não dizia — a origem do que o sistema produziu, o alcance do que uma ação multiplica, e a
+  autoria que a automação não pode apagar — e vale também antes de ato irreversível que não é
+  confirmação de tela, como a publicação de conteúdo composto com valores derivados.
+- Templates dependentes: não modificados. `plan-template.md` deriva os portões da Constituição em
+  tempo de execução ("Gates determined based on constitution file"); `spec-template.md`,
+  `tasks-template.md` e `checklist-template.md` não enumeram princípios.
+- Impacto nas especificações e implementações existentes (conferido contra a `main` em `28b3815b`):
+  - `013` (consolidação; lote de uma decisão só desde o #203): conforme. A conferência declara o
+    alcance antes do ato — o conjunto é a Etapa inteira e não a página, com o total por consequência
+    e o que fica de fora e por quê — e o ato consolida o conjunto que a presidência viu, e não o das
+    prontas no instante do ato (`contracts/resultado.md` §2; `consolidacao_confirmar.html`;
+    `test_consolidar_todas_as_prontas.py`). A origem é o cálculo que o Edital publica: a presidência
+    confirma um cálculo, não o informa (FR-016 da `013`). A autoria fica por registro: um evento por
+    Resultado e a identidade de quem consolidou (FR-021 e FR-025 da `013`). Observação, sem
+    adequação: a conferência prévia está escrita no contrato da spec, e não num FR.
+  - `043` (duplicar Perfil; materializa a cópia): conforme. Duplicar não grava nada por si
+    (FR-638); a cópia aparece ao lado da origem (FR-637), diz quantos documentos não foram
+    replicados (FR-645) e quantos marcos leva (FR-650), e chega à publicação pela mesma Revisão e
+    pelas mesmas validações de qualquer Perfil (FR-647). A origem é o gesto do próprio operador, e a
+    autoria é a da gravação da etapa. A `D-006` (nenhum vínculo "duplicado de") recusa guardar
+    vínculo com a origem, e não a autoria: o invariante não o exige. O código e a denominação de
+    marco re-derivados do Perfil (FR-644) aparecem como valor do campo, e não marcados como
+    derivados — é forma, e fica para a spec que tocar a tela. A propagação a Perfis existentes
+    (TF-1) não foi entregue e é a spec do passo 1: nasce sob este invariante (`DP-13`).
+  - `044` (recorte transversal; uma declaração alcança N Perfis): conforme na regra. O alcance é
+    declarado por regra — "em todos os Perfis que têm a Modalidade" — e a opção de recorte diz o
+    número (UX-080). Lacuna registrada, e não corrigida aqui: a conferência da Revisão repete a
+    regra, e não o número nem os Perfis (`interface/revisao.py`, `_alcance`), e o conjunto se
+    resolve na leitura, de modo que o número visto ao declarar pode envelhecer até a publicação.
+  - `045` (fase do Evento derivada; `DP-01`): conforme, e fora do núcleo do invariante: a derivação
+    não precede ato irreversível nem produz efeito em lote, e a tela a apresenta como derivada e
+    nunca como declaração de ninguém (UX-088).
+  - Conformes, sem adequação, pelos requisitos que já tinham: `023` (FR-004a, FR-002a e o aviso
+    persistente da origem, FR-014); `016` (a reversão nomeada com origem, destino e quantidade,
+    UX-033 e FR-248); `030` (o que a consolidação produz, antes de acionada, FR-422; padrão e
+    derivado não se aplicam a conteúdo já declarado, FR-421); `048` (a conferência antes da
+    confirmação, FR-800).
+  - Decisões em aberto que o invariante alcança: a `DP-16` — a opção C, "derivado, sem ato", elimina
+    a autoria do não atendimento e passa a pedir justificativa aprovada; a recomendada, B, já é "um
+    gesto, N registros com autor". A regra da `DP-13` (prévia de cada criação, substituição, ausência
+    de mudança ou exclusão, com o motivo) é a primeira forma que o invariante recebe.
+- Plano de adequação: dispensado para as especificações concluídas, pela conformidade acima; o
+  invariante incide com força plena sobre as especificações abertas a partir da adoção, a começar
+  pela do passo 1. Único item a decidir: dizer, na conferência da Revisão da `044`, o número de
+  Perfis que cada documento transversal alcança, como a opção de recorte já diz. É requisito novo, e
+  não correção de requisito escrito; fica registrado na `DP-17` como proposta, sem escopo atribuído.
+- Aprovação institucional: 1.2.0 aprovada pelo usuário em 2026-09-28, no PR #219 que introduz
+  esta emenda, conforme exigido pela Governance.
+- Follow-up TODOs: nenhum placeholder adiado.
+
+Relatório da emenda anterior (1.1.1), preservado:
+
+Sync Impact Report
 - Version change: 1.0.0 -> 1.1.0 -> 1.1.1
 - Motivo do MINOR (1.1.0): princípio novo acrescentado; nenhum princípio existente foi removido ou
   redefinido, e nenhuma garantia anterior foi enfraquecida.
@@ -130,8 +199,16 @@ transacionalmente consistentes. Especificações e planos DEVEM tratar riscos de
 perda de atualização, versão publicada incorreta, duplicidade, classificação inconsistente,
 julgamento conflitante ou uso de dados obsoletos, com controles proporcionais ao risco.
 
+Decisões derivadas e ações em lote DEVEM permanecer explícitas. Quando o sistema inferir, derivar
+ou materializar valores em nome do operador, DEVE tornar visíveis, antes do ato irreversível, o
+resultado e a sua origem. Quando uma ação humana produzir efeitos sobre múltiplos objetos, DEVE
+tornar explícito o alcance antes da confirmação. A automação NÃO DEVE ocultar consequências nem
+eliminar a autoria. A forma dessa exposição DEVE ser definida nas respectivas especificações.
+
 Racional: decisões críticas precisam ser uniformes, atômicas e resistentes a requisições inválidas
-ou concorrentes.
+ou concorrentes. O que o sistema infere ou multiplica em nome de alguém só é decisão dessa pessoa
+quando ela vê, antes do ato, o que decide, de onde veio e sobre quanto recai; publicado, o erro só
+sai por Retificação pública.
 
 ### V. Qualidade, Rastreabilidade e Simplicidade
 
@@ -264,4 +341,4 @@ Planos e revisões de implementação DEVEM conter verificação constitucional.
 justificativa aprovada DEVE bloquear o incremento. A conformidade DEVE ser reavaliada em cada
 análise de consistência e antes da conclusão de funcionalidade.
 
-**Version**: 1.1.1 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-30
+**Version**: 1.2.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-09-28

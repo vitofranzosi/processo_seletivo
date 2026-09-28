@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, e a `DP-13` e a `DP-14`, decididas em 27/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, e a `DP-17`, decidida em 28/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -1033,6 +1033,38 @@ A proposta é de um invariante, sem forma de tela:
 
 **Recomendação: A**, só com o invariante. As formas, como o que a Revisão mostra e a prévia dos Perfis
 afetados, ficam nas specs.
+
+### O que foi decidido
+
+Em 28/09/2026, o usuário escolheu a **A**: emenda ao Princípio IV (Regras Explícitas), só com o
+invariante, e sem forma de tela. A [Constituição](../.specify/memory/constitution.md) passa à
+**1.2.0** (MINOR, expansão material), com o texto da proposta ajustado ao estilo dela, sem mudar o
+sentido: o título vira sentença normativa (*"DEVEM permanecer explícitas"*), e uma frase final diz
+que a forma da exposição é definida nas especificações, que é o "sem forma de tela" da decisão.
+
+**A aprovação institucional foi dada pelo usuário em 28/09/2026**, no PR da emenda
+([#219](https://github.com/vitofranzosi/processo_seletivo/pull/219)), como a Governance exige antes
+da adoção.
+
+**O que a conferência das specs existentes deu**, registrado por inteiro no Sync Impact Report da
+Constituição:
+
+- **Conformes, sem adequação:** a `013` (a conferência do lote declara o alcance e o total por
+  consequência, e o ato consolida o conjunto conferido; um evento e um autor por Resultado), a `043`
+  (duplicar não grava por si, e a cópia chega à publicação pela mesma Revisão), a `045` (a fase é
+  derivada e dita como derivada, sem ato irreversível), a `023`, a `016`, a `030` e a `048`.
+- **Uma lacuna, registrada e não corrigida:** na `044`, a conferência da Revisão diz o alcance do
+  documento transversal pela regra (*"em todos os Perfis"*), e não pelo número, que a opção de recorte
+  diz (UX-080). O conjunto se resolve na leitura, e o número visto ao declarar pode envelhecer até a
+  publicação. Mostrar *"n de N Perfis"* na Revisão é requisito novo, e não correção direta: fica como
+  proposta, sem escopo atribuído.
+- **Uma decisão em aberto que o invariante alcança:** a opção **C** da `DP-16`, *"derivado, sem
+  ato"*, elimina a autoria do não atendimento, e passa a precisar de justificativa aprovada. A
+  recomendada, **B**, já cumpre o invariante.
+
+**O que isso significa para a spec do passo 1.** Ela é a primeira sob o invariante, e é nela que ele
+ganha forma: a prévia da regra da `DP-13`, com cada criação, substituição, ausência de mudança ou
+exclusão, e o motivo.
 
 ---
 
