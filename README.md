@@ -40,6 +40,20 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `seguranca` | Ator autenticado, permissões e autorização por objeto |
 | `auditoria` | Registro append-only e idempotência |
 | `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
+| `interface` | Interface administrativa da gestão: composição, Retificação e condução do Processo |
+| `portal` | Portal do candidato: vitrine, inscrição, acompanhamento e recurso |
+| `identidade` | Identidade do candidato, acesso por código e reconciliação com a participação anterior |
+| `inscricoes` | Inscrição, documentos enviados e período de inscrições |
+| `comissoes` | Comissão, alocação por Etapa e impedimentos |
+| `avaliacoes` | Distribuição, Mesa de avaliação e conclusão |
+| `resultados` | Resultado da Etapa: consolidação, Ocorrência e progressão entre Etapas |
+| `classificacao` | Corte, ordenação e o ato de classificação |
+| `ocupacao` | Ocupação de vagas entre as listas de concorrência |
+| `divulgacao` | Publicação de resultados e a porta da definitividade |
+| `recursos` | Recurso, instrução, admissibilidade e julgamento |
+| `convocacao` | Convocação, chamada e suplência |
+| `requerimentos` | Requerimento de Matrícula |
+| `matriculas` | Exportação de matrículas para o Registro Acadêmico |
 
 Operações de workflow são commands explícitos e transacionais. O controle otimista usa `ETag` /
 `If-Match`; commands irreversíveis exigem `Idempotency-Key`. Erros usam `application/problem+json`.
@@ -70,8 +84,9 @@ O que acontece nessa ordem, e por que ela é essa: o PostgreSQL sobe e é espera
 então a aplicação **provisiona os papéis, aplica as migrations e provisiona de novo**. A segunda
 passada não é redundância — papel e privilégio padrão precisam existir antes de qualquer tabela, e
 privilégio *sobre* tabela só pode ser concedido depois que ela existe. Ela é a que tranca. O
-terminal mostra `31 de 31 tabelas append-only estão sem UPDATE nem DELETE para o runtime` quando
-deu certo.
+terminal mostra `N de N tabelas append-only estão sem UPDATE nem DELETE para o runtime`, com os dois
+números iguais, quando deu certo. O total cresce a cada tabela append-only nova — por isso nenhum
+número vai escrito aqui —, e o que denuncia a segunda passada que não rodou é o primeiro vir `0`.
 
 Quando o terminal parar, o sistema está em <http://localhost:8000> — use `localhost`, e não
 `127.0.0.1`: o padrão de `DJANGO_ALLOWED_HOSTS` recusa o segundo. Em <http://localhost:8025> fica a
@@ -204,15 +219,16 @@ docker compose exec app make lint check test-pg
 ```
 
 `test-pg` e não `test`: **a suíte precisa do PostgreSQL.** Sem variável nenhuma ela cai para
-SQLite, e nesse modo não é confiável — 201 testes são pulados e **33 falham**, todos em casos que
-deveriam ter sido pulados e não foram: uns executam SQL que só o PostgreSQL entende, outros esperam
-mensagem de constraint que o SQLite não escreve, outros ainda contam com gatilho e trancamento de
-linha que ele não tem. O CI não enxerga isso, porque só roda contra PostgreSQL. O achado está em
-[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md) — e mede 21, que era o número de
-09/09.
+SQLite, e nesse modo não é confiável — uma parte dos casos falha, em vez de ser pulada: uns executam
+SQL que só o PostgreSQL entende, outros esperam mensagem de constraint que o SQLite não escreve,
+outros ainda contam com gatilho e trancamento de linha que ele não tem. O CI não enxerga isso,
+porque só roda contra PostgreSQL. O achado original está em
+[`doc/achado-suite-em-sqlite.md`](doc/achado-suite-em-sqlite.md).
 
-Contra PostgreSQL a suíte fecha em 5402 passando e 2 pulados — os dois deliberados, e nomeados em
-[`doc/achado-fonte-real-do-sorteio-sem-gatilho.md`](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
+Contra PostgreSQL a suíte fecha sem falha, e os pulados são deliberados. **As contagens medidas dos
+dois modos, e a repartição das causas, ficam num lugar só: o [`AGENTS.md`](AGENTS.md).** Este
+arquivo as repetia com números de semanas antes, e o README, o `Makefile` e as instruções dos
+agentes chegaram a dizer três coisas diferentes ao mesmo tempo.
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
 sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste:
@@ -309,7 +325,7 @@ Incrementos, na ordem em que foram especificados:
 | [`010`](specs/010-area-do-candidato/spec.md) | área do candidato e acesso sem senha |
 | [`011`](specs/011-comissao-alocacao/spec.md) | comissão e alocação por Etapa |
 | [`012`](specs/012-mesa-de-avaliacao/spec.md) | mesa de avaliação |
-| [`012`](specs/012-013-revisao-formas-de-conclusao/spec.md) | revisão de compatibilidade 012–013 |
+| [`012-013`](specs/012-013-revisao-formas-de-conclusao/spec.md) | revisão de compatibilidade 012–013 |
 | [`013`](specs/013-consolidacao-resultado-etapa/spec.md) | consolidação do Resultado da Etapa |
 | [`014`](specs/014-corte-e-progressao-entre-etapas/spec.md) | corte e progressão entre Etapas |
 | [`015`](specs/015-ordenacao-e-classificacao/spec.md) | ordenação e classificação |
@@ -323,6 +339,29 @@ Incrementos, na ordem em que foram especificados:
 | [`023`](specs/023-criar-a-partir-de-edital-anterior/spec.md) | criar Edital a partir de Edital anterior |
 | [`024`](specs/024-descoberta-e-transparencia-no-portal/spec.md) | descoberta e transparência no portal público |
 | [`025`](specs/025-quadro-de-vagas-por-modalidade/spec.md) | quadro de vagas por modalidade |
+| [`026`](specs/026-contrato-de-mutabilidade-normativa/spec.md) | contrato de mutabilidade normativa |
+| [`027`](specs/027-estrutural-de-vagas/spec.md) | estrutural de vagas — uma declaração só |
+| [`028`](specs/028-cronograma-reaproveitado-vencido/spec.md) | Cronograma reaproveitado não nasce publicável |
+| [`029`](specs/029-requerimento-de-matricula/spec.md) | Requerimento de Matrícula |
+| [`030`](specs/030-composicao-que-se-explica/spec.md) | a composição que se explica |
+| [`031`](specs/031-exportacao-de-matriculas/spec.md) | exportação de matrículas |
+| [`032`](specs/032-executabilidade-antes-de-publicar/spec.md) | executabilidade antes de publicar |
+| [`033`](specs/033-navegacao-por-capacidade/spec.md) | navegação por capacidade |
+| [`034`](specs/034-ordem-por-recorte/spec.md) | ordem por recorte em marco computado |
+| [`035`](specs/035-sorteio-executavel/spec.md) | sorteio executável |
+| [`036`](specs/036-instrucao-do-recurso/spec.md) | instrução do recurso |
+| [`037`](specs/037-quatro-becos-conhecidos/spec.md) | quatro becos que o sistema já conhece |
+| [`038`](specs/038-painel-de-conducao/spec.md) | painel de condução do Processo vivo |
+| [`039`](specs/039-catalogo-de-modalidades/spec.md) | catálogo de Modalidades do Edital — só especificada, não implementada |
+| [`040`](specs/040-visao-institucional-dos-processos/spec.md) | visão institucional dos Processos Seletivos |
+| [`041`](specs/041-perfil-na-visao-institucional/spec.md) | o Perfil de Vaga na visão institucional |
+| [`042`](specs/042-hierarquia-do-detalhe-do-perfil/spec.md) | a hierarquia do detalhe do Perfil |
+| [`043`](specs/043-duplicar-perfil/spec.md) | duplicar Perfil |
+| [`044`](specs/044-recorte-transversal-documental/spec.md) | recorte transversal do documento exigido |
+| [`045`](specs/045-conducao-confiavel-processo/spec.md) | condução confiável do Processo vivo |
+| [`046`](specs/046-contrato-de-executabilidade/spec.md) | contrato de executabilidade do Processo publicado |
+| [`047`](specs/047-situacao-publica-do-edital/spec.md) | situação pública e histórico oficial do Edital |
+| [`048`](specs/048-retificacao-que-acrescenta/spec.md) | a Retificação acrescenta o que o contrato já permite |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

@@ -1214,6 +1214,15 @@ procedimento; aparece uma vez só, em caixa de limitação conhecida ao fim de C
 *"⛔ Não utilize esta opção nesta versão do sistema"*, e repetida em uma linha em `G-03`. Não
 inventar procedimento e não sugerir contorno: **não há** contorno. Ver também §H.16.
 
+> *Nota de 28/09/2026 — o diagnóstico acima não se confirmou.* Percorrido pelas telas da gestão
+> (RC-63 da auditoria de consolidação de 26/09): julgada a reavaliação, a organização da Etapa
+> nomeia a pendência, a distribuição aceita um avaliador **diferente** do que concluiu a original, a
+> Mesa conclui, e a consolidação cria o Resultado sucessor citando a decisão — depois disso a
+> reavaliação deixa de barrar a publicação definitiva. A reabertura continua recusada por regra, e
+> é ela que não é o caminho; a recusa agora diz qual é. O registro, com o que a tela ainda não
+> orienta, está em `doc/validacao-de-unidades-pre-piloto-2026-09-28.md`. Quem for escrever C-19
+> precisa refazer esta decisão editorial a partir da tela atual.
+
 **H.3 · A consulta pública histórica não tem tela.**
 O sistema sabe responder "qual era o conteúdo vigente em tal data" e "quais Retificações houve",
 mas **só pela API**. A página pública da seleção mostra apenas o vigente e não lista Retificações.
@@ -1233,16 +1242,28 @@ passiva: quem não abrir a página não fica sabendo. *No manual:* alerta em C-1
 A feature existiria na 014, que não foi construída. Quem passa para a Etapa seguinte é quem tem
 Resultado Habilitada; não há "aprovar os N primeiros". *No manual:* `G-03`.
 
+> *Nota de 28/09/2026 — o código andou depois desta seção.* A `014` foi construída: o corte existe
+> e tem tela (`interface:corte`), e a progressão entre Etapas passa por ele. Esta limitação não vale
+> mais, e quem for escrever C-14 ou `G-03` precisa partir da tela atual.
+
 **H.7 · O ciclo termina na publicação definitiva.**
 Não existem homologação do resultado final, nomeação, convocação ou posse. E o sistema **não
 orienta** quando encerrar o Edital em relação ao resultado. *No manual:* C-21 diz o que o
 encerramento faz e declara que o momento é decisão institucional, não do sistema.
+
+> *Nota de 28/09/2026 — o código andou depois desta seção.* A convocação, a chamada e a suplência
+> existem desde a `019` (`interface:convocacao`), e o Requerimento de Matrícula e a exportação para o
+> Registro Acadêmico desde a `029` e a `031`. O ciclo não termina mais na publicação definitiva.
 
 **H.8 · O caminho da presidência até distribuir e consolidar não é anunciado.**
 Achado E2E15-016, aberto: "Minhas Etapas" do presidente diz que ele não tem Etapas atribuídas, e o
 caminho real (Alocação por Etapa → Distribuir → painel da Etapa) só se descobre explorando. *No
 manual:* **nada** — C-14 simplesmente abre nomeando o caminho, e a lacuna deixa de existir para
 quem lê. Fica no backlog de produto (§H.16).
+
+> *Nota de 28/09/2026 — corrigido no produto.* "Minhas Etapas" de quem preside e não avalia agora
+> diz que presidir não atribui trabalho de avaliação e aponta **Gerir comissão** e **Alocação por
+> Etapa** (`interface/templates/interface/minhas_etapas.html`). O E2E15-016 não está mais aberto.
 
 **H.9 · O rascunho não avisa que o período encerrou.**
 Achado E2E15-007, aberto: com as inscrições encerradas, a revisão do rascunho ainda convida a
