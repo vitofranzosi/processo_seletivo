@@ -25,13 +25,15 @@ RAIZ = Path(__file__).resolve().parents[1]
 VIEWS = RAIZ / "processo_seletivo/interface/views.py"
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 
-#: As seis portas de autorização da gestão. Literal **e** verificada: o detector abaixo cobre a
-#: porta que nascer depois, e esta lista é o que dá nome às que já existem.
+#: As sete portas de autorização da gestão — a sétima, da tela do marco, veio com a `049`. Literal
+#: **e** verificada: o detector abaixo cobre a porta que nascer depois, e esta lista é o que dá
+#: nome às que já existem.
 PORTAS = (
     "_edital_para_classificar",
     "_edital_para_publicar",
     "_etapa_para_auditar",
     "_etapa_para_distribuir",
+    "_marco_para_conduzir",
     "_peca_para_julgar",
     "_processo_para_gerir",
 )

@@ -404,6 +404,19 @@ urlpatterns = [
         views.publicacoes_do_marco,
         name="publicacoes-do-marco",
     ),
+    # A condução do marco (049). Pende do **marco**, e não do recorte: é a unidade do gesto e do
+    # indicador (`D-001`). O GET mostra o estado de cada recorte e não grava nada; o POST confere o
+    # alcance, e só com `confirmar` pratica — um ato por recorte, pelo comando de hoje.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao",
+        views.marco,
+        name="marco",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao/<str:operacao>",
+        views.gesto_do_marco,
+        name="gesto-do-marco",
+    ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
         views.conclusoes_preservadas,
