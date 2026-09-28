@@ -1,4 +1,5 @@
 {% extends "interface/compor_base.html" %}
+{% load interface_extras %}
 {% block etapa_titulo %}Inscrição{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
@@ -25,6 +26,24 @@
       <span class="ajuda" id="ajuda-periodo">Sem Evento designado, o Edital é publicado normalmente
         e apenas não recebe inscrições.</span>
     </p>
+    {% comment %}
+    O teto de inscrições por candidato (015, FR-063; RC-12). Nesta seção, e não numa própria: é a
+    mesma decisão do período, como este Edital recebe inscrição. Vazio é sem limite, e é o padrão —
+    o campo nasce vazio, sem número sugerido. O `min` é conforto de quem digita; a recusa que vale
+    é a do comando, `editais/application/teto.py`.
+    {% endcomment %}
+    {% with recusado_teto=recusas|dicionario_simples:"teto-inscricoes" %}
+    <p class="campo curto">
+      <label for="teto-inscricoes">Inscrições por candidato neste Edital</label>
+      <input type="number" min="1" step="1" inputmode="numeric" id="teto-inscricoes"
+             name="teto-inscricoes" value="{{ teto_de_inscricoes }}"
+             aria-describedby="ajuda-teto{% if recusado_teto %} recusa-teto-inscricoes{% endif %}"
+             {% if recusado_teto %}aria-invalid="true"{% endif %}>
+      {% if recusado_teto %}<span class="recusa" role="alert" id="recusa-teto-inscricoes">{{ recusado_teto }}</span>{% endif %}
+      <span class="ajuda" id="ajuda-teto">Deixe em branco para não limitar. Conta só a inscrição
+        enviada: rascunho abandonado não consome.</span>
+    </p>
+    {% endwith %}
   </section>
   <section aria-labelledby="inscricao-documentos">
     <h2 id="inscricao-documentos">Documentos exigidos</h2>

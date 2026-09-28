@@ -52,6 +52,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     _origem_do_metodo,
     _regra_de_corte,
     _valor_do_campo_do_metodo,
+    teto_de_inscricoes,
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
@@ -837,11 +838,30 @@ def _identificacao(snapshot):
     if snapshot.get("processoCode") or snapshot.get("processoTitle"):
         codigo = snapshot.get("processoCode") or "—"
         linhas.append(f"Processo {codigo} — {snapshot.get('processoTitle') or '—'}")
-    # Só quando declarado: ausência é "sem teto", e é o caso de quase todo Edital. O rótulo é o
-    # da Retificação, que é onde ele se corrige depois de publicado.
-    if snapshot.get("maxInscricoesPorCandidato") is not None:
-        linhas.append(f"Teto de inscrições por candidato: {snapshot['maxInscricoesPorCandidato']}")
     return linhas
+
+
+def _teto_de_inscricoes(snapshot):
+    """Quantas inscrições cada candidato pode enviar, na frase do documento (RC-12).
+
+    **Na etapa Inscrição, e não na Identificação.** Era lá que a linha morava enquanto o teto não
+    tinha campo na composição, e o caminho de volta levava a uma tela onde ele não se corrigia.
+    Desde que se declara junto do período, o bloco leva para lá.
+
+    **A frase é a do PDF**, e não um rótulo com o número: quem confere antes de publicar lê o que o
+    candidato vai ler. O bloco some sem teto, como o do Requerimento de Matrícula — sem limite é o
+    padrão, e o documento também não diz nada.
+    """
+    frase = teto_de_inscricoes(snapshot)
+    if frase is None:
+        return []
+    return [
+        {
+            "titulo": "Inscrições por candidato",
+            "etapa": "inscricao",
+            "itens": [{"titulo": frase, "linhas": []}],
+        }
+    ]
 
 
 def blocos(snapshot):
@@ -858,6 +878,7 @@ def blocos(snapshot):
             ],
         }
     ]
+    conferencia.extend(_teto_de_inscricoes(snapshot))
     conferencia.extend(_requerimento_de_matricula(snapshot))
     for titulo, etapa, leitura in BLOCOS:
         conferencia.append({"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)})
