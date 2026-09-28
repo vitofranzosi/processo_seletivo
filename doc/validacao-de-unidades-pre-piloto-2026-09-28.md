@@ -12,7 +12,7 @@ corrigido. Nenhuma spec nova e nenhum requisito novo.
 | RC | Veredito | O que foi feito |
 |---|---|---|
 | RC-08 | **confirmado defeito**, contra a `FR-020` da `002` | corrigido |
-| RC-112 | **confirmado defeito**, e pede decisão | registrado aqui, não corrigido |
+| RC-112 | **confirmado defeito**, e pedia decisão | registrado aqui, não corrigido; decidida a leitura 2 ([registro](decisao-rc112-portao-da-habilitacao.md)) |
 | RC-46 | **não se reproduz** com inscrição criada pelo portal | resíduo latente registrado |
 | RC-63 | **não se reproduz** — a reavaliação se cumpre pelas telas | a mensagem da recusa corrigida (`FR-111` da `018`); lacunas de orientação registradas |
 | RC-86 | **medido**: linear, sem termo superlinear | registrado; otimizar é decisão |
@@ -99,6 +99,10 @@ publicação, como risco operacional. Corrigir é escolher entre leituras, e iss
    Ocorrência (`resultados/application/ocorrencia.py:14-20`).
 
 O teste de reprodução não entrou no PR: prender o comportamento atual seria prender o defeito.
+
+**Decidido em 28/09/2026: leitura 2.** O portão fica dormente enquanto a Etapa anterior não puder
+produzir habilitação. O registro, com o que a decisão preserva e o que deixa para o incremento que
+a implementar, está em [`decisao-rc112-portao-da-habilitacao.md`](decisao-rc112-portao-da-habilitacao.md).
 
 ---
 
