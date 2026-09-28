@@ -65,15 +65,20 @@ se repetiram ao rodar os mesmos arquivos isolados, e não há plugin de ordem al
 de modo que há acoplamento entre casos que só aparece aqui. Não investigue por este caminho: a
 repartição acima é o que importa, e nenhuma das três colunas é defeito de produto.
 
-**Ao atualizar estes números, atualize as falhas e os pulados junto — e desconfie se mudarem.**
-Entre 09/20 e 09/21 o total subiu **115** casos, e as duas outras contagens ficaram onde estavam:
-35 e 243. É o que se espera, porque as três causas são do vendor e não do produto, e teste novo
-não entra nelas. Uma delas mexendo é sinal de que alguém escreveu SQL de PostgreSQL num caminho
-que antes não tinha — e aí vale investigar, ao contrário do total.
+**Ao atualizar estes números, atualize as falhas e os pulados junto — e desconfie se as falhas
+mudarem.** As três causas são do vendor e não do produto, e teste novo bem escrito não entra
+nelas: falha mexendo é sinal de que alguém escreveu SQL de PostgreSQL num caminho que antes não
+tinha. Os pulados são outra coisa: **sobem sempre que entra teste que só o PostgreSQL verifica**, e
+é o esperado. Entre 09/21 e 09/28 foram de 243 a 253, e os dez foram conferidos um a um — cinco da
+lista exigida da `044` (`test_lista_exigida_imutavel.py` e `test_lista_exigida_concorrencia.py`),
+dois em `test_database_permissions.py`, parametrizado por `TABELAS_APPEND_ONLY`, que ganhou uma
+tabela, e três em `test_imutabilidade_do_historico.py`, do gatilho que o `ValorDeFato` recebeu.
 
-**Entre 09/21 e 09/28 uma delas mexeu, e ninguém investigou ainda.** As falhas ficaram em 35, mas
-os pulados foram de 243 a 253, e dentro da terceira linha um erro de constraint crua virou gatilho
-ausente. Está registrado, não explicado.
+**Para saber de onde veio uma diferença, compare listas, não totais.** Rode `pytest -q -rs` nos dois
+commits e agrupe os `SKIPPED` por arquivo e motivo, sem o número da linha, que muda entre eles. As
+falhas se comparam classificando cada uma pela mensagem. Foi assim que se viu que a repartição
+anterior desta tabela, de 09/21, dizia 5 e 3 onde o mesmo commit tinha 6 e 2 — erro de
+classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
