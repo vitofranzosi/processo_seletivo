@@ -1,18 +1,17 @@
-"""RC-112 da auditoria de consolidação (`A-1` da `046`) — a Ocorrência que trava a Etapa seguinte.
+"""RC-112 da auditoria de consolidação (`A-1` da `046`): a Ocorrência não trava a Etapa seguinte.
 
-**Este arquivo prende o comportamento de hoje, e não o desejado.** O desejado não está decidido:
-o `FR-004` da `013` manda exatamente o que acontece aqui — basta um Resultado na Etapa anterior
-para exigir habilitação nela —, e a `D-003` justifica o gate com o caso que ele não cobre ("sem
-ele, Etapa anterior de leitura múltipla [...] deixaria a Etapa seguinte permanentemente sem
-participantes").
-Os dois textos se contradizem só quando a Ocorrência entra, e a escolha entre eles é do usuário
-(`doc/achado-ocorrencia-trava-a-etapa-seguinte.md`). Decidida, este arquivo muda junto.
+**Este arquivo prendia o comportamento anterior, e passou a afirmar o decidido.** Até 28/09 ele
+provava a trava: o `FR-004` da `013` mandava exigir habilitação a partir do primeiro Resultado da
+Etapa anterior, e a Ocorrência é Resultado. Numa Etapa que não consolida, uma única ausência
+acordava a exigência de uma habilitação que ninguém mais podia obter. O usuário decidiu, em 28/09,
+que o portão fica dormente diante de Etapa que não pode habilitar
+(`doc/decisao-rc112-portao-da-habilitacao.md`), e o `FR-004` foi emendado junto.
 
-A cadeia, nos dois cenários: a Etapa anterior não se consolida — a regra a recusa por inteiro —, a
-Ocorrência passa mesmo assim (`013`, `D-1`, item 6: "Uma Etapa impedida de consolidar continua
-podendo registrar que alguém não compareceu") e produz `ELIMINADA`; o primeiro Resultado acorda a
-exigência de habilitação, e ninguém mais pode obter `HABILITADA` ali, porque o único outro caminho
-é a consolidação, que continua recusando.
+A reprodução é a mesma, nos dois cenários da validação: a Etapa anterior não se consolida — a regra
+a recusa por inteiro —, a Ocorrência passa mesmo assim (`013`, `D-1`, item 6) e produz `ELIMINADA`.
+O que muda é o depois: quem faltou sai da Etapa seguinte (a Regra 1, que continua absoluta), e quem
+compareceu continua nela. O terceiro teste prende o que a decisão preserva: em Etapa que **pode**
+habilitar, a Ocorrência continua acordando o portão, como a Regra 2 sempre disse.
 """
 
 import pytest
@@ -20,7 +19,7 @@ import pytest
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.ocorrencia import registrar_ocorrencia
-from processo_seletivo.resultados.application.prontidao import participacao
+from processo_seletivo.resultados.application.prontidao import participa_da_etapa, participacao
 from processo_seletivo.shared.api.problems import DomainError
 from tests.conftest import ator_institucional
 from tests.fixtures.comissao import ETAPA_A1, ETAPA_A2, constituir, inscrever, rascunho_com_etapas
@@ -98,26 +97,67 @@ def percorrer(cenario, presidente, *, codigo_da_recusa):
     )
     assert desfecho["feitas"] == 1
 
-    # O primeiro Resultado acordou a exigência de habilitação, e quem compareceu fica esperando uma
-    # habilitação que a Etapa anterior não tem como produzir.
+    # O primeiro Resultado não acorda a exigência: a Etapa anterior não pode habilitar ninguém, e
+    # exigir dela uma habilitação é impossível por construção (decisão de 28/09, RC-112). Quem
+    # faltou sai pela Regra 1; quem compareceu continua na Etapa seguinte.
     participantes, eliminadas, aguardando = participacao(edital=edital, etapa_id=cenario["segunda"])
     assert faltante.id in eliminadas
-    assert aguardando == {i.id for i in demais}
-    assert participantes == set()
+    assert faltante.id not in participantes
+    assert aguardando == set()
+    assert {i.id for i in demais} <= participantes
+
+    # A rota individual pergunta pelo mesmo gate, e não pode discordar da listagem.
+    for inscricao in demais:
+        assert participa_da_etapa(
+            edital=edital, etapa_id=cenario["segunda"], inscricao_id=inscricao.id
+        )
+    assert not participa_da_etapa(
+        edital=edital, etapa_id=cenario["segunda"], inscricao_id=faltante.id
+    )
 
 
-def test_edital_novo_decisoria_nao_eliminatoria_trava_a_seguinte(
+def test_edital_novo_decisoria_nao_eliminatoria_nao_trava_a_seguinte(
     gestor, api_client, manager_headers, presidente
 ):
     cenario = edital_com_decisoria_nao_eliminatoria(gestor, api_client, manager_headers, seed=1120)
     percorrer(cenario, presidente, codigo_da_recusa="regra_insuficiente")
 
 
-def test_acervo_de_leitura_multipla_trava_a_seguinte(
+def test_acervo_de_leitura_multipla_nao_trava_a_seguinte(
     gestor, api_client, manager_headers, presidente
 ):
-    """O caso que a `D-003` nomeia: o gate existe para este Edital, e a Ocorrência o desarma."""
+    """O caso que a `D-003` nomeia: o gate existe para este Edital, e a Ocorrência não o desarma."""
     cenario = montar_etapa_de_leitura_unica(
         gestor, api_client, manager_headers, seed=1121, codigo="1121", avaliacoes=2
     )
     percorrer(cenario, presidente, codigo_da_recusa="regra_de_combinacao_ausente")
+
+
+def test_etapa_que_pode_habilitar_continua_acordando_o_portao(
+    gestor, api_client, manager_headers, presidente
+):
+    """O que a decisão preserva: onde a Etapa pode habilitar, nada muda.
+
+    Leitura única, consolidável. A Ocorrência de um acorda a exigência, e quem compareceu espera a
+    consolidação da anterior — que aqui existe, e é o caminho.
+    """
+    cenario = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1122, codigo="1122"
+    )
+    edital = cenario["edital"]
+    faltante, *demais = inscrever(edital, 3, primeiro=1)
+    registrar_ocorrencia(
+        actor=presidente,
+        processo_id=cenario["processo"].id,
+        edital_id=edital.id,
+        etapa_id=cenario["etapa"],
+        inscricao_ids=[faltante.id],
+        motivo="não compareceu",
+        idempotency_key=f"o-{edital.id}",
+        correlation_id="rc-112",
+    )
+
+    participantes, eliminadas, aguardando = participacao(edital=edital, etapa_id=cenario["segunda"])
+    assert faltante.id in eliminadas
+    assert aguardando == {i.id for i in demais}
+    assert participantes == set()

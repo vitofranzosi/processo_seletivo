@@ -24,7 +24,7 @@ redefine seus conceitos:
   013 é um acréscimo a esse resumo, não um segundo painel concorrente;
 - Participante nasce do universo de inscrições `SUBMETIDA` do Edital. A partir da segunda Etapa,
   esta feature subtrai quem foi eliminado em Etapa anterior e, depois que a imediatamente anterior
-  produzir Resultado, exige habilitação nela — as duas regras de D-003;
+  produzir Resultado, exige habilitação nela, se ela puder habilitar — as duas regras de D-003;
 - Avaliação possui apenas `RASCUNHO` e `CONCLUIDA`, e conclui em **uma de duas formas** publicadas
   pela Etapa: `PONTUADA`, com pontuação total, ou `DECISORIA`, com sentido `FAVORAVEL` ou
   `DESFAVORAVEL` (012, D-008). Nas duas há parecer, e a forma sob a qual se concluiu fica gravada na
@@ -121,6 +121,18 @@ ela começa a produzir Resultado.** É aqui, e somente aqui, que o gate incide:
   passaria da primeira Etapa.
 - A partir do primeiro Resultado da Etapa anterior, participa a inscrição submetida que possua
   Resultado `HABILITADA` nela, segundo a ordem publicada vigente.
+- **Diante de Etapa anterior que não pode habilitar, a exigência fica dormente, haja ou não
+  Resultado nela** (emendado em 28/09, pela [decisão do usuário sobre o
+  RC-112](../../doc/decisao-rc112-portao-da-habilitacao.md)). "Não pode habilitar" é o impedimento
+  que a consolidação aplica à Etapa inteira pela regra publicada (D-001, D-008) — o mesmo que a
+  `046` consulta para publicar. A redação anterior dizia só *"a partir do primeiro Resultado"*, e
+  a Ocorrência da D-1, que é Resultado e é aceita em Etapa que não consolida, acordava por ela a
+  exigência de uma habilitação que ninguém mais podia obter: quem compareceu ficava aguardando para
+  sempre, o caso que o item acima diz que o gate existe para evitar. A Regra 1 não muda — quem
+  recebeu a Ocorrência sai de todas as Etapas seguintes —, e na Etapa que pode habilitar o gate
+  continua ligando com o primeiro Resultado. Se uma Retificação der regra à Etapa que não a tinha,
+  o gate acorda na vigência da versão nova, e o item seguinte já diz o que acontece com a
+  Atribuição criada enquanto ele dormia; nada além disso foi decidido.
 - Com a exigência vigente, ausência do Resultado anterior mantém a inscrição em “aguardando Etapa
   anterior”; ela não conta como participante pronta, não pode ser distribuída e não concede acesso
   por Atribuição que tenha sido criada antecipadamente. Atribuição criada enquanto a exigência
@@ -505,10 +517,12 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
 - **FR-003**: Inscrição com Resultado `ELIMINADA` em QUALQUER Etapa anterior pela ordem publicada
   vigente NÃO DEVE participar de nenhuma Etapa posterior, independentemente de a Etapa
   imediatamente anterior já possuir Resultado.
-- **FR-004**: Etapa posterior cuja Etapa imediatamente anterior já possua ao menos um Resultado DEVE
-  exigir, além disso, Resultado `HABILITADA` nessa Etapa imediatamente anterior. Enquanto ela não
-  possuir nenhum Resultado, a Etapa posterior DEVE conservar o conjunto da 012 — todas as inscrições
-  submetidas — menos as excluídas por FR-003.
+- **FR-004**: Etapa posterior cuja Etapa imediatamente anterior já possua ao menos um Resultado **e
+  possa habilitar** DEVE exigir, além disso, Resultado `HABILITADA` nessa Etapa imediatamente
+  anterior. Enquanto ela não possuir nenhum Resultado, ou se a regra publicada a impedir de
+  consolidar (D-003, Regra 2), a Etapa posterior DEVE conservar o conjunto da 012 — todas as
+  inscrições submetidas — menos as excluídas por FR-003. *Emendado em 28/09 pela decisão do usuário
+  sobre o RC-112 (`doc/decisao-rc112-portao-da-habilitacao.md`).*
 - **FR-005**: Inscrição excluída por FR-003 ou por FR-004 NÃO DEVE ser distribuível, contabilizada
   como participante, listada na Mesa, acessível na inscrição de trabalho, alcançável na entrega de
   documento nem oferecida pela navegação de próxima pendente.
@@ -631,7 +645,8 @@ comissão; consultar o Resultado e reproduzir total, consequência, fonte normat
   publicado nem nova regra de Retificação.
 - **FR-042**: Distribuição e Mesa da primeira Etapa DEVEM conservar o comportamento da 012 para
   toda inscrição submetida; nas seguintes, acrescentam-se apenas a exclusão por eliminação anterior
-  e, depois do primeiro Resultado da Etapa imediatamente anterior, a exigência de habilitação. Nada
+  e, depois do primeiro Resultado da Etapa imediatamente anterior que possa habilitar, a exigência
+  de habilitação (FR-004). Nada
   mais muda, e a distribuição, a Mesa, a inscrição de trabalho, o documento e a próxima pendente
   conservam todo o resto do comportamento da 012.
 - **FR-043**: A 013 NÃO DEVE alterar conteúdo, estado ou autoria de Avaliação, Atribuição,

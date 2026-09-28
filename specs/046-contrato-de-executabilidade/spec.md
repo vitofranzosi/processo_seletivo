@@ -556,6 +556,10 @@ Registro, não escopo (governança é do usuário). Os dois foram lidos no códi
   seguinte (`prontidao.py:150-154`), e todos os que não têm Resultado ali ficam *aguardando a anterior*
   para sempre. É condição operacional — depende de alguém registrar uma ausência —, e por isso não
   entra no gate.
+  *Confirmado em 28/09 (RC-112), decidido pelo usuário no mesmo dia e corrigido depois:* o portão
+  fica dormente diante de Etapa que não pode habilitar, e a `FR-004` da `013` foi emendada junto
+  ([decisão](../../doc/decisao-rc112-portao-da-habilitacao.md)). A publicação não mudou: o aviso
+  *"Nada neste Edital depende dele"* voltou a ser verdadeiro.
 - **A-2 · Corte que não governa Etapa pode não convocar ninguém** `[VALIDAR]`. A convocação lê a
   habilitação na Etapa governada pelo corte vigente (`convocacao/application/selectors.py:119-121`), e
   `habilitadas_na_etapa` devolve conjunto vazio quando não há Etapa (`ocupacao/application/selectors.py:381-388`).
