@@ -182,7 +182,9 @@ porque não se entendeu o campo é **H**, e a volta ao PDF é o sintoma.
 **Voltas entre etapas** ganham linha própria, com o motivo. Uma volta de Inscrição para Anexos e de
 Anexos para Inscrição, para ligar o modelo ao documento, é **R** (a ordem do assistente a provocou); uma
 volta da Revisão para a Classificação, para conferir o marco, tem como causa o
-[achado da Revisão](achado-revisao-nao-mostra-a-classificacao.md), e isso vai escrito.
+[achado da Revisão](achado-revisao-nao-mostra-a-classificacao.md), e isso vai escrito. *O achado foi
+corrigido em 27/09: se o teste rodar sobre uma `main` que já tem a correção, a Revisão mostra a
+Classificação, e uma volta dessas passa a ter outra causa, que vai escrita.*
 
 ### 3.2 A unidade de interação
 
