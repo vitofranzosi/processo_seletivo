@@ -44,7 +44,10 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     TIPO_DO_FATO,
     _arredondamento,
     _combinacao,
+    _continuacao_do_corte,
+    _empate_no_corte,
     _enumerar,
+    _habilitacao_ao_sorteio,
     _janela_recursal,
     _origem_do_metodo,
     _regra_de_corte,
@@ -361,25 +364,16 @@ def _anexo(anexo, snapshot):
     }
 
 
-# O que as opções do corte escolhem, com as palavras da composição. **Sem "faixa"**: a tela da
-# Classificação define o termo antes de usá-lo (030, FR-424), e esta não tem onde defini-lo.
-EMPATE_NO_CORTE = {
-    "ADMITS_SURPLUS": "todos os empatados progridem",
-    "STRICT": "o corte para no alvo",
-}
-CONTINUACAO_DO_CORTE = {
-    "ALLOWED": "admite chamar além dos que o corte publicar",
-    "NONE": "não admite — o corte é o que foi publicado",
-}
-
-
 def _leitura_do_marco(marco, perfil, snapshot):
     """Os pares `(rótulo, valor)` que um marco declara, na ordem em que o documento os imprime.
 
-    **A frase é a do documento** (`_combinacao`, `_regra_de_corte`, `_janela_recursal`): é a
-    mesma regra, e duas redações dela seriam duas normas. O que a conferência acrescenta é o que o
-    documento cala e quem submete precisa ver — o silêncio dito como silêncio ("nada declarado"),
-    o empate na última posição, a continuação e a Etapa que habilita ao sorteio.
+    **A frase é a do documento** (`_combinacao`, `_regra_de_corte`, `_janela_recursal`,
+    `_empate_no_corte`, `_continuacao_do_corte`, `_habilitacao_ao_sorteio`): é a mesma regra, e
+    duas redações dela seriam duas normas. O empate, a continuação e a habilitação tinham aqui
+    redação própria enquanto o documento os calava; o documento passou a imprimi-los, e as frases
+    moram lá. O que a conferência ainda acrescenta é o silêncio dito como silêncio ("nada
+    declarado") e a Etapa que o corte alimenta quando não há nenhuma — que o documento cala de
+    propósito, e quem submete precisa ver.
 
     **Sem a denominação e sem o código**, que viajam à parte: os dois nascem do Perfil (030,
     FR-420), e deixá-los aqui faria dois marcos com a mesma regra parecerem diferentes só porque
@@ -415,13 +409,11 @@ def _leitura_do_marco(marco, perfil, snapshot):
                 for campo, _, rotulo in CAMPOS_DO_METODO
                 if (valor := _valor_do_campo_do_metodo(campo, proprio))
             )
-        habilita = etapas.get(str(proprio.get("qualifyingStageId") or ""))
         pares.append(
             (
-                "Etapa que habilita a participar do sorteio",
-                habilita.get("name", "")
-                if habilita
-                else "nenhuma — entram todas as inscrições submetidas",
+                "Habilitação",
+                _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas)
+                or "Etapa declarada que não existe neste Edital",
             )
         )
     pares.append(("Recurso", _janela_recursal(marco) or "nada declarado"))
@@ -429,22 +421,15 @@ def _leitura_do_marco(marco, perfil, snapshot):
     if isinstance(regra, dict):
         # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.
         pares.append(("Corte", _regra_de_corte(marco, etapas) or "declarado sem alvo"))
+        # Logo depois do corte, e sem par quando não declarados: "essa quantidade" é a que ele
+        # acabou de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado"
+        # aqui leria como o silêncio legítimo do recurso, que não é.
+        if empate := _empate_no_corte(marco):
+            pares.append(("Empate no corte", empate))
+        if continuacao := _continuacao_do_corte(marco):
+            pares.append(("Continuação", continuacao))
         if regra.get("governedStage") == "NONE":
             pares.append(("Etapa que o corte alimenta", "nenhuma"))
-        if regra.get("tieOutcome"):
-            pares.append(
-                (
-                    "Empate na última posição",
-                    EMPATE_NO_CORTE.get(regra["tieOutcome"], regra["tieOutcome"]),
-                )
-            )
-        if regra.get("continuation"):
-            pares.append(
-                (
-                    "Continuação",
-                    CONTINUACAO_DO_CORTE.get(regra["continuation"], regra["continuation"]),
-                )
-            )
     else:
         pares.append(("Corte", "este marco não corta"))
     criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)

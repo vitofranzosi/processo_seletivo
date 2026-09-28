@@ -82,19 +82,37 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
 
 
 def certame_de_sorteio(
-    gestor, api_client, manager_headers, process_payload, *, quantos=3, metodo=None
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    quantos=3,
+    metodo=None,
+    periodo_aberto=False,
 ):
     """Um Edital publicado com marco de sorteio, comissão presidida e inscrições submetidas.
 
     É o ponto de partida de quase todo teste da feature. A presidência entra porque os comandos do
     sorteio passam por `comando_de_comissao`, e a base suficiente é a presidência deste Processo.
+
+    `periodo_aberto` designa o período de inscrições e o deixa **correndo** — o cenário em que
+    congelar a relação é recusado (021, US1). Sem ele, o cronograma não designa período, e a regra
+    não se aplica.
     """
+    from datetime import timedelta
+
     from processo_seletivo.comissoes.domain.funcoes import Funcao
     from tests.fixtures.comissao import constituir, inscrever, rascunho_com_etapas
     from tests.fixtures.edital import PROFILE_ID
     from tests.fixtures.publicacao import publish_original
 
     rascunho = rascunho_com_etapas()
+    if periodo_aberto:
+        evento = rascunho["schedule"][0]
+        evento["isRegistrationPeriod"] = True
+        evento["startAt"] = (timezone.now() - timedelta(days=1)).isoformat()
+        evento["endAt"] = (timezone.now() + timedelta(days=2)).isoformat()
     marco_com_metodo(
         rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"], metodo=metodo
     )

@@ -113,3 +113,19 @@ sete campos tem rótulo próprio e nenhum fica sem uso.
 e nunca a semente: no dia da publicação ela ainda não existe. Quem publica a semente é o documento
 do resultado do sorteio, que já o faz (`Algoritmo`, `Semente`), e a verificação pública compara os
 dois.
+
+---
+
+## Três linhas acrescentadas depois (27/09/2026)
+
+O documento imprimia quatro dos seis campos da Regra de Corte, e não dizia sobre quem o sorteio corre
+([achado](../../../doc/achado-documento-cala-parte-do-corte.md)). Entraram, sem chave nova no conteúdo
+canônico:
+
+- **`Empate no corte`** e **`Continuação`**, logo depois de `Corte` e só com ele — é a `FR-185` da
+  `014`, que pede a Regra de Corte no documento;
+- **`Habilitação`**, no fim do bloco `Sorteio`, depois dos sete. Não é campo do método comum, e fica
+  fora da comparação que nomeia a divergência.
+
+A ordem do bloco acima continua a mesma; as linhas novas só se somam a ela. Documento já publicado não
+muda (`FR-469`).

@@ -11,6 +11,7 @@ import pytest
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.domain.conjunto import (
+    CONGELAR_A_RELACAO,
     conjunto_fechado,
     recusa_por_inscricoes_em_curso,
 )
@@ -99,3 +100,15 @@ def test_sem_evento_designado_a_regra_nao_se_aplica():
 @pytest.mark.parametrize("conteudo", [{}, {"schedule": []}, {"schedule": [{}]}])
 def test_conteudo_sem_cronograma_nao_bloqueia(conteudo):
     assert recusa_por_inscricoes_em_curso(conteudo, AGORA) is None
+
+
+def test_a_relacao_do_sorteio_recebe_a_mesma_recusa_com_a_propria_consequencia():
+    """A regra é uma só (021, US1); o que muda é o que o ato deixaria para trás."""
+    conteudo = cronograma(inicio=AGORA - timedelta(days=2), fim=AGORA + timedelta(days=3))
+
+    recusa = recusa_por_inscricoes_em_curso(conteudo, AGORA, consequencia=CONGELAR_A_RELACAO)
+
+    assert recusa.code == "inscricoes_em_curso"
+    assert "07/09/2026" in str(recusa.detail)
+    assert "fora do sorteio quem se inscrever depois" in str(recusa.detail)
+    assert "sem avaliador" not in str(recusa.detail)

@@ -8243,6 +8243,8 @@ def sorteio(request, edital_id, marco_id):
                 # externa uma falha da declaração, e mandava esperar por algo que não viria.
                 "recusa_da_ocorrencia": estado["recusa_da_ocorrencia"],
                 "ocorre_em": estado["ocorre_em"],
+                # A recusa de congelar com o período correndo, anunciada antes do clique (021, US1).
+                "inscricoes_em_curso": estado["inscricoes_em_curso"],
                 # **Com o estado do corte de cada um** (014, UX-029). Esta é a tela que já reúne
                 # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se

@@ -20,6 +20,12 @@ entre ver e confirmar deixaria a proposta válida sobre um conjunto que voltou a
 
 **A ausência de prazo não é prazo aberto.** Edital sem Evento designado não recebe inscrição por
 este sistema, e não há o que esperar: a regra não se aplica, e distribuir é admitido.
+
+**A relação do sorteio parte do mesmo fato, e passou a esperar pelo mesmo fechamento** (021, US1).
+Ela é o compromisso do universo: congelada com o período correndo, deixava de fora quem se
+inscrevesse depois, e a única saída era um segundo ato público — a relação sucessora, com motivo
+escrito — para corrigir o primeiro. A regra é a mesma, e por isso mora num lugar só; o que muda é
+o que o ato deixaria para trás, e é isso que `consequencia` diz.
 """
 
 from django.utils import timezone
@@ -51,7 +57,15 @@ def conjunto_fechado(conteudo, agora):
     return periodo_de_inscricoes(conteudo, agora).estado not in EM_CURSO
 
 
-def recusa_por_inscricoes_em_curso(conteudo, agora):
+#: O que cada ato deixaria para trás, dito na recusa dele. A distribuição é o caso original.
+DISTRIBUIR = "Distribuir agora deixaria sem avaliador quem se inscrever depois."
+CONGELAR_A_RELACAO = (
+    "Congelar a relação agora deixaria fora do sorteio quem se inscrever depois; publique-a "
+    "depois do término."
+)
+
+
+def recusa_por_inscricoes_em_curso(conteudo, agora, *, consequencia=DISTRIBUIR):
     """A recusa, ou `None` — e ela diz **quando** o conjunto fecha, não só que está aberto.
 
     Quem distribui está tentando começar o trabalho da comissão. Dizer "não pode" sem dizer até
@@ -75,6 +89,6 @@ def recusa_por_inscricoes_em_curso(conteudo, agora):
         detalhe = "As inscrições estão abertas e o Edital não declarou término"
     return DomainError(
         "inscricoes_em_curso",
-        (f"{detalhe}. Distribuir agora deixaria sem avaliador quem se inscrever depois. {SAIDA}"),
+        f"{detalhe}. {consequencia} {SAIDA}",
         409,
     )
