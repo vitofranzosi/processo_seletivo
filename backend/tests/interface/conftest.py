@@ -293,3 +293,31 @@ def campos_declarados():
     from tests.fixtures.requerimento import campos_de_exemplo
 
     return campos_de_exemplo()
+
+
+@pytest.fixture
+def tres_perfis(client, seletor_ligado, edital):
+    """Três Perfis gravados e uma Etapa classificatória — o Edital do "aplicar a todos" (051).
+
+    Os dois primeiros declaram o fato que o desempate compara; o terceiro não, e é o destino fora do
+    alcance. Os dados moram em `test_aplicar_a_todos`, que é quem os descreve.
+    """
+    from tests.interface.test_aplicar_a_todos import _perfis_no_formulario, _url
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    resposta = client.post(_url(edital, "perfis"), _perfis_no_formulario())
+    assert resposta.status_code == 302, resposta.content
+    edital.refresh_from_db()
+    resposta = client.post(
+        _url(edital, "etapas"),
+        {
+            "etapa-0-id": ETAPA_CLASSIFICATORIA,
+            "etapa-0-name": "Prova de títulos",
+            "etapa-0-order": "1",
+            "etapa-0-weight": "1",
+            "etapa-0-classificatory": "on",
+        },
+    )
+    assert resposta.status_code == 302, resposta.content
+    edital.refresh_from_db()
+    return edital

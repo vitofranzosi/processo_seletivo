@@ -92,27 +92,6 @@ def _url(edital, etapa="classificacao"):
     return reverse("interface:compor-etapa", args=[edital.id, etapa])
 
 
-@pytest.fixture
-def tres_perfis(client, seletor_ligado, edital):
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.post(_url(edital, "perfis"), _perfis_no_formulario())
-    assert resposta.status_code == 302, resposta.content
-    edital.refresh_from_db()
-    resposta = client.post(
-        _url(edital, "etapas"),
-        {
-            "etapa-0-id": ETAPA_CLASSIFICATORIA,
-            "etapa-0-name": "Prova de títulos",
-            "etapa-0-order": "1",
-            "etapa-0-weight": "1",
-            "etapa-0-classificatory": "on",
-        },
-    )
-    assert resposta.status_code == 302, resposta.content
-    edital.refresh_from_db()
-    return edital
-
-
 def _impressao(corpo):
     return re.search(r'name="aplicar_impressao" value="([0-9a-f]+)"', corpo).group(1)
 

@@ -355,3 +355,43 @@ def _frase_do_alcance(contagem):
 def quantos_destinos(perfis_na_tela):
     """O número do rótulo do botão: os demais Perfis (UX-110)."""
     return max(len(perfis_na_tela) - 1, 0)
+
+
+def preencher_quadro(perfis):
+    """`(perfis, preenchidas)` — as linhas vazias de lista reservada com a sugestão (051, FR-932).
+
+    Só a linha **vazia**, e só quando a sugestão é um número: o que alguém digitou é decisão, e a
+    faixa sem arredondamento declarado não escolhe por ninguém. Não grava — devolve o formulário,
+    e gravar continua sendo *Salvar*. `preenchidas` é `[(código do Perfil, quantas)]`, para a frase.
+    """
+    from uuid import uuid4
+
+    from processo_seletivo.editais.domain import quadro
+    from processo_seletivo.editais.domain.perfis import listas_reservadas
+
+    novos, preenchidas = [], []
+    for perfil in perfis:
+        reservadas = listas_reservadas(perfil)
+        linhas = [dict(linha) for linha in perfil.get("vacancyTable") or []]
+        com_linha = {str(linha.get("modalityId")) for linha in linhas if linha.get("modalityId")}
+        quantas = 0
+        for modalidade in perfil.get("competitionModalities") or []:
+            identidade = str(modalidade.get("id") or "")
+            if identidade not in reservadas or identidade in com_linha:
+                continue
+            regra = modalidade.get("normativeRule") or {}
+            sugestao = quadro.sugestao(
+                percentual=regra.get("percentage"),
+                vagas_imediatas=perfil.get("immediateVacancies"),
+                rounding=regra.get("rounding"),
+            )
+            if sugestao is None or sugestao.valor is None:
+                continue
+            linhas.append(
+                {"id": str(uuid4()), "modalityId": identidade, "immediateVacancies": sugestao.valor}
+            )
+            quantas += 1
+        if quantas:
+            preenchidas.append((perfil.get("code") or "", quantas))
+        novos.append({**perfil, "vacancyTable": linhas})
+    return novos, preenchidas

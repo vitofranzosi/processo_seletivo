@@ -1048,6 +1048,28 @@ def _eventos_do_cronograma(edital):
     return list(cronograma.eventos.all()) if cronograma is not None else []
 
 
+def eventos_do_sorteio(edital):
+    """Os Eventos do Cronograma como instantes que o método do sorteio pode escolher (051, FR-929).
+
+    **O instante já estava declarado em outro lugar**, e o operador o redigitava em RFC 3339, com
+    fuso. O valor de cada opção é o próprio instante, no fuso institucional e no formato que o
+    método publica — a escolha grava exatamente o que se digitaria, e a Revisão diz de que Evento
+    ele veio.
+    """
+    if edital is None:
+        return []
+    return [
+        {
+            "instante": timezone.localtime(evento.start_at).isoformat(timespec="seconds"),
+            "rotulo": (
+                f"{evento.description} — "
+                f"{timezone.localtime(evento.start_at).strftime('%d/%m/%Y %H:%M')}"
+            ),
+        }
+        for evento in _eventos_do_cronograma(edital)
+    ]
+
+
 def _vencidos_entre(eventos, *, agora):
     """Quais daqueles Eventos já passaram, pelo predicado do domínio."""
     return [evento for evento in eventos if vencido(evento.start_at, evento.end_at, agora=agora)]
@@ -1263,9 +1285,22 @@ def compor_etapa(request, edital_id, etapa):
 
     editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
-    erros, digitados, restaurado, previa = [], None, False, None
+    erros, digitados, restaurado, previa, quadro_preenchido = [], None, False, None, None
 
     if (
+        request.method == "POST"
+        and etapa == "perfis"
+        and editavel
+        and request.POST.get("preencher_quadro")
+    ):
+        # **Preencher pelo percentual** (051, FR-932): as linhas vazias de lista reservada recebem a
+        # sugestão, e a tela volta com o formulário preenchido — sem gravar. O alcance é dito na
+        # frase, e a confirmação é o *Salvar* de sempre.
+        try:
+            digitados, quadro_preenchido = aplicacao_ui.preencher_quadro(_ler_etapa(request, etapa))
+        except ValueError as exc:
+            erros.append(_recusa(exc, None, etapa))
+    elif (
         request.method == "POST"
         and etapa in ETAPAS_DO_GESTO
         and editavel
@@ -1344,7 +1379,21 @@ def compor_etapa(request, edital_id, etapa):
     vencidos = _vencidos_entre(eventos_do_cronograma, agora=agora) if etapa == "cronograma" else []
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
-    conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
+    snapshot_da_revisao = edital_snapshot(edital) if etapa == "revisao" else None
+    conferencia = (
+        revisao.blocos(
+            snapshot_da_revisao,
+            # Os gestos de aplicar a todos deste Edital, em ordem: é deles que a Revisão tira a
+            # origem do que foi materializado (051, FR-934, FR-935).
+            RegistroAuditoria.objects.filter(
+                aggregate_id=edital.id, operation="APLICAR_A_TODOS"
+            ).order_by("occurred_at"),
+        )
+        if etapa == "revisao"
+        else []
+    )
+    # O que não se corrige depois de publicado, antes do botão de submeter (051, FR-936, UX-115).
+    definitivos = revisao.definitivos(snapshot_da_revisao) if etapa == "revisao" else []
     anexos = _anexos_da_etapa(edital) if etapa == "anexos" else []
     recusa_de_anexo = request.session.pop("anexos_recusa", None) if etapa == "anexos" else None
     # **Consumido em qualquer etapa, e não só na dos Perfis.** "Avançar" grava uma etapa e abre a
@@ -1397,6 +1446,7 @@ def compor_etapa(request, edital_id, etapa):
             # quantos Perfis ela alcançou — a notícia do que acabou de acontecer.
             "previa": previa,
             "aplicado": request.GET.get("aplicado", ""),
+            "quadro_preenchido": quadro_preenchido,
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
@@ -1432,6 +1482,7 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "classificacao"
                 else {}
             ),
+            "eventos_do_sorteio": (eventos_do_sorteio(edital) if etapa == "classificacao" else []),
             "tem_metodo_comum": (
                 bool(forms.metodo_comum_do_formulario(request.POST))
                 if etapa == "classificacao" and digitados is not None
@@ -1499,6 +1550,7 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
+            "definitivos": definitivos,
             "pendencias": pendencias,
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
             # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
@@ -1786,6 +1838,11 @@ def _reexibir_modalidade(modalidade):
         "foundation": regra.get("foundation", ""),
         "version": regra.get("version", ""),
         "percentage": "" if percentual is None else f"{percentual:f}",
+        "rounding": (
+            forms.FORA_DA_LISTA
+            if forms.FORA_DA_LISTA in (regra.get("rounding") or {})
+            else forms.arredondamento_para_o_formulario(regra.get("rounding"))
+        ),
     }
 
 
@@ -2074,6 +2131,10 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         conteudo[colecao] = _preservando(
             digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
         )
+        if etapa == "perfis":
+            conteudo[colecao] = _preservando_a_regra(
+                conteudo[colecao], forms.perfis_persistidos(edital)
+            )
     gravar = (
         replace_draft
         if gesto is None
@@ -2102,6 +2163,49 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+#: Os campos da regra normativa que a etapa Perfis não desenha (051, FR-933, R-007). A fusão de
+#: `_preservando` é por Perfil, e não desce na Modalidade: sem esta, gravar a etapa zerava o que a
+#: API ou o reuso de Edital (023) tinham gravado neles.
+CAMPOS_DA_REGRA_SEM_TELA = ("calculation", "distribution", "callRules", "effectiveFrom")
+
+
+def _preservando_a_regra(perfis, persistidos):
+    """As regras digitadas com os campos sem tela do que está gravado, pela identidade da regra.
+
+    O arredondamento entra quando a tela o devolveu como *"fora da lista"*: é o marcador de que o
+    gravado não é da lista fechada, e que ele deve ficar como está.
+    """
+    gravadas = {
+        str((modalidade.get("normativeRule") or {}).get("id")): modalidade["normativeRule"]
+        for perfil in persistidos
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("normativeRule")
+    }
+    resultado = []
+    for perfil in perfis:
+        modalidades = []
+        for modalidade in perfil.get("competitionModalities") or []:
+            regra = modalidade.get("normativeRule")
+            gravada = gravadas.get(str((regra or {}).get("id")))
+            if regra and gravada:
+                regra = {
+                    **regra,
+                    **{
+                        campo: gravada[campo]
+                        for campo in CAMPOS_DA_REGRA_SEM_TELA
+                        if campo in gravada and campo not in regra
+                    },
+                }
+                if forms.FORA_DA_LISTA in (regra.get("rounding") or {}):
+                    regra["rounding"] = gravada.get("rounding") or {}
+                modalidade = {**modalidade, "normativeRule": regra}
+            elif regra and forms.FORA_DA_LISTA in (regra.get("rounding") or {}):
+                modalidade = {**modalidade, "normativeRule": {**regra, "rounding": {}}}
+            modalidades.append(modalidade)
+        resultado.append({**perfil, "competitionModalities": modalidades})
+    return resultado
 
 
 def _preservando(digitados, persistidos, campos):
@@ -2537,6 +2641,7 @@ def fragmento_marco(request, indice):
             # Quantos Perfis o Edital tem: o botão de aplicar aos demais só existe com destino
             # (051, UX-110).
             "quantos_perfis": edital.perfis.count() if edital else 0,
+            "eventos_do_sorteio": eventos_do_sorteio(edital),
             # **O cartão precisa saber se o Edital declara método comum** (030, FR-429): sem isto
             # o fragmento diria "ainda não declarado" sobre um marco que referencia o comum, e a
             # tela inteira — que sabe — passaria a contradizer o pedaço dela que o htmx troca.
@@ -2593,6 +2698,7 @@ def fragmento_marco_recomposto(request, indice, sub):
             "indice": indice,
             "sub": sub,
             "quantos_perfis": edital.perfis.count() if edital else 0,
+            "eventos_do_sorteio": eventos_do_sorteio(edital),
             # Como no fragmento que cria a linha, e pela mesma razão: o pedaço trocado não pode
             # saber menos do que a tela que o contém (030, FR-429).
             "tem_metodo_comum": bool(edital.metodo_de_sorteio_comum) if edital else False,
@@ -2752,7 +2858,8 @@ def fragmento_etapa(request, edital_id):
         request,
         "interface/_etapa.html",
         {
-            "etapa_linha": {"id": str(uuid4())},
+            # `nova`: a caixa "Eliminatória" da forma decisória nasce marcada (051, FR-931).
+            "etapa_linha": {"id": str(uuid4()), "nova": True},
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
             "edital": edital,

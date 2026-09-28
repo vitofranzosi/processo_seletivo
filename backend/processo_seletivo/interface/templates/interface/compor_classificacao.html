@@ -105,8 +105,17 @@
       </p>
       <p class="campo">
         <label for="edital-draw-occurrenceAt">Quando a ocorrência acontece</label>
+      {% if eventos_do_sorteio %}
+      <select id="edital-draw-occurrenceEvent" name="edital-draw-occurrenceEvent"
+              aria-label="Tirar o instante de um Evento do Cronograma">
+        <option value="">Outro instante, digitado ao lado</option>
+        {% for evento in eventos_do_sorteio %}
+        <option value="{{ evento.instante }}"{% if evento.instante == metodo_comum.drawOccurrenceAt %} selected{% endif %}>{{ evento.rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
         <input type="text" id="edital-draw-occurrenceAt" name="edital-draw-occurrenceAt"
-               value="{{ metodo_comum.drawOccurrenceAt }}" placeholder="2026-11-20T20:00:00-03:00">
+               value="{% if not metodo_comum.drawOccurrenceAt|instante_de_evento:eventos_do_sorteio %}{{ metodo_comum.drawOccurrenceAt }}{% endif %}" placeholder="2026-11-20T20:00:00-03:00">
       </p>
       <p class="campo">
         <label for="edital-draw-derivation">Como a ocorrência decorre da data programada</label>

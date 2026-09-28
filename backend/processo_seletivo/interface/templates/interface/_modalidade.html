@@ -1,4 +1,4 @@
-<fieldset class="linha modalidade">
+{% load interface_extras %}<fieldset class="linha modalidade">
   <legend>Modalidade de Concorrência</legend>
   {% comment %}
   Os dois identificadores viajam ocultos. O da Regra existe mesmo antes de a Regra existir: a
@@ -47,6 +47,26 @@
              aria-describedby="ajuda-versao-{{ indice }}-{{ sub }}" placeholder="AAAA-MM-DD">
       <span class="oculto" id="ajuda-versao-{{ indice }}-{{ sub }}">Exigida sempre que houver
         fundamento: sem ela, a norma aplicada não fica identificada.</span>
+    </p>
+    {% comment %}
+    **O arredondamento da reserva** (051, FR-933). Existia no esquema sem ser pedido e sem ninguém
+    que o lesse; passou a governar a quantidade que o quadro sugere quando o percentual não dá
+    número inteiro. Opcional: sem ele, a sugestão mostra a faixa e não preenche.
+    {% endcomment %}
+    <p class="campo">
+      <label for="modalidade-{{ indice }}-{{ sub }}-rounding">Arredondamento da reserva</label>
+      {% arredondamentos_da_reserva as arredondamentos %}
+      <select id="modalidade-{{ indice }}-{{ sub }}-rounding"
+              name="modalidade-{{ indice }}-{{ sub }}-rounding"
+              aria-describedby="ajuda-arredondamento-{{ indice }}-{{ sub }}">
+        <option value="">Não declarado</option>
+        {% for valor, rotulo in arredondamentos %}
+        <option value="{{ valor }}" {% if modalidade.rounding == valor %}selected{% endif %}>{{ rotulo|capfirst }}</option>
+        {% endfor %}
+        {% if modalidade.rounding == "FORA_DA_LISTA" %}<option value="FORA_DA_LISTA" selected>Declarado fora da lista — preservado</option>{% endif %}
+      </select>
+      <span class="oculto" id="ajuda-arredondamento-{{ indice }}-{{ sub }}">Decide a quantidade
+        que o quadro de vagas sugere quando o percentual não dá número inteiro.</span>
     </p>
   </div>
   {% comment %}

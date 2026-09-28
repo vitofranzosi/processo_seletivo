@@ -131,6 +131,22 @@
       </div>
     </fieldset>
     {% endif %}
+    {% comment %}
+    **O quadro sugerido pelo percentual** (051, FR-932). Cada linha já mostra a conta; este gesto
+    põe a sugestão nas linhas vazias de todos os Perfis, e não grava — a tela volta preenchida, e a
+    frase diz quantas linhas mudaram. Linha digitada não é tocada.
+    {% endcomment %}
+    {% if editavel %}
+    <p><button type="submit" class="acao" name="preencher_quadro" value="1" formnovalidate>Preencher
+      pelo percentual as linhas vazias do quadro</button></p>
+    {% endif %}
+    {% if quadro_preenchido is not None %}
+    <p class="aviso" role="status">{% if quadro_preenchido %}Preenchidas pela sugestão do
+      percentual: {% for codigo, quantas in quadro_preenchido %}{{ quantas }} linha(s) em
+      {{ codigo }}{% if not forloop.last %}; {% endif %}{% endfor %}. Nada foi gravado: confira e
+      salve.{% else %}Nenhuma linha vazia com sugestão: as que faltam dependem do arredondamento da
+      reserva, ou já estão declaradas.{% endif %}</p>
+    {% endif %}
     <div id="perfis">
       {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
     </div>

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
-from processo_seletivo.editais.domain import duplicacao, secoes
+from processo_seletivo.editais.domain import duplicacao, quadro, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -112,15 +112,41 @@ def _modalidades(dados, prefixo):
             "name": _texto(dados, f"{base}-name"),
             "description": _texto(dados, f"{base}-description"),
         }
-        if fundamento or _texto(dados, f"{base}-version") or _texto(dados, f"{base}-percentage"):
+        arredondamento = _texto(dados, f"{base}-rounding")
+        if (
+            fundamento
+            or _texto(dados, f"{base}-version")
+            or _texto(dados, f"{base}-percentage")
+            or arredondamento
+        ):
             modalidade["normativeRule"] = {
                 "id": _texto(dados, f"{base}-ruleId"),
                 "foundation": fundamento,
                 "version": _texto(dados, f"{base}-version"),
                 "percentage": _decimal(dados, f"{base}-percentage"),
+                # O arredondamento da reserva (051, FR-933): a lista fechada vira `{"mode": …}`; o
+                # marcador de "fora da lista" viaja como está, e a gravação da etapa o troca pelo
+                # valor gravado — que é o que ele pede para preservar.
+                "rounding": (
+                    {"mode": arredondamento}
+                    if arredondamento in quadro.ARREDONDAMENTOS
+                    else {FORA_DA_LISTA: True}
+                    if arredondamento == FORA_DA_LISTA
+                    else {}
+                ),
             }
         modalidades.append(modalidade)
     return modalidades
+
+
+#: O valor da escolha que diz "o arredondamento gravado não é da lista; preserve-o" (051, FR-933).
+FORA_DA_LISTA = "FORA_DA_LISTA"
+
+
+def arredondamento_para_o_formulario(rounding):
+    """O valor que a escolha do arredondamento mostra: `""`, um modo da lista ou `FORA_DA_LISTA`."""
+    modo = quadro.modo_declarado(rounding)
+    return FORA_DA_LISTA if modo is None else modo
 
 
 def _fatos(dados, prefixo):
@@ -334,11 +360,25 @@ def _metodo_de_sorteio(dados, base):
     do Perfil é que recusa a metade, nomeando o que falta — o formulário devolveria silêncio, e
     silêncio sobre método é o que faz a escolha voltar para a mesa no dia do sorteio (FR-015).
     """
+    from processo_seletivo.sorteios.domain import prosa
+
     valores = {campo: _texto(dados, f"{base}-draw-{campo}") for campo in CAMPOS_SIMPLES_DO_METODO}
+    # **O instante escolhido entre os Eventos do Cronograma** (051, FR-929). O valor da escolha é o
+    # próprio instante, em RFC 3339 — nenhuma consulta aqui, e o forjado passa pela validação de
+    # formato de sempre. O digitado vale sobre o escolhido: é assim que se diverge do Cronograma.
+    valores["occurrenceAt"] = valores["occurrenceAt"] or _texto(
+        dados, f"{base}-draw-occurrenceEvent"
+    )
     regra_normalizacao = _texto(dados, f"{base}-draw-normalizationRule")
-    texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText")
     regra_substituicao = _texto(dados, f"{base}-draw-substitutionRule")
-    texto_substituicao = _texto(dados, f"{base}-draw-substitutionText")
+    # **A frase gerada da regra, quando ninguém escreveu outra** (051, FR-930). Só no vazio, e só
+    # com a regra escolhida: sem regra não há de onde gerar, e o digitado é decisão de quem compôs.
+    texto_normalizacao = _texto(dados, f"{base}-draw-normalizationText") or prosa.da_regra(
+        regra_normalizacao
+    )
+    texto_substituicao = _texto(dados, f"{base}-draw-substitutionText") or prosa.da_regra(
+        regra_substituicao
+    )
     etapa_de_habilitacao = _texto(dados, f"{base}-draw-qualifyingStageId")
     preenchidos = [
         *valores.values(),
@@ -696,7 +736,14 @@ def ler_etapas(dados):
                 "name": _texto(dados, f"{base}-name"),
                 "order": _inteiro(dados, f"{base}-order", 0),
                 "weight": _decimal(dados, f"{base}-weight"),
-                "eliminatory": _marcado(dados, f"{base}-eliminatory"),
+                # A caixa da forma escolhida (051, FR-931): a da decisória nasce marcada na Etapa
+                # nova, e a da pontuada não. Sem o marcador, o envio é de antes das duas caixas.
+                "eliminatory": _marcado(
+                    dados,
+                    f"{base}-eliminatoryDecisoria"
+                    if decisoria and _texto(dados, f"{base}-caraterPorForma")
+                    else f"{base}-eliminatory",
+                ),
                 "classificatory": _marcado(dados, f"{base}-classificatory"),
                 "minimumScore": (None if decisoria else _decimal(dados, f"{base}-minimumScore")),
                 # As duas do incremento da `012`. Vazio é "não declarado", e o assistente precisa
@@ -735,6 +782,7 @@ def _modalidade_para_o_formulario(modalidade):
         "foundation": regra.foundation if regra else "",
         "version": regra.version if regra else "",
         "percentage": "" if regra is None or regra.percentage is None else f"{regra.percentage:f}",
+        "rounding": arredondamento_para_o_formulario(regra.rounding if regra else {}),
     }
 
 
@@ -911,6 +959,7 @@ def quadro_do_formulario(perfil):
         digitada = digitadas.get(chave)
         nome = modalidade.get("name") or ""
         codigo = modalidade.get("code") or ""
+        regra = modalidade.get("normativeRule") or {}
         linhas.append(
             {
                 "id": (digitada or {}).get("id") or str(uuid4()),
@@ -918,6 +967,11 @@ def quadro_do_formulario(perfil):
                 "rotulo": f"{nome} ({codigo})" if nome or codigo else "Modalidade sem denominação",
                 "geral": False,
                 "immediateVacancies": (digitada or {}).get("immediateVacancies", ""),
+                "sugestao": quadro.sugestao(
+                    percentual=regra.get("percentage"),
+                    vagas_imediatas=perfil.get("immediateVacancies"),
+                    rounding=regra.get("rounding"),
+                ),
             }
         )
     return linhas
@@ -976,6 +1030,7 @@ def _quadro_para_o_formulario(perfil):
         if modalidade.id == perfil.modalidade_ampla_concorrencia:
             continue
         gravada = gravadas.get(str(modalidade.id))
+        regra = getattr(modalidade, "regra_normativa", None)
         linhas.append(
             {
                 "id": str(gravada.id) if gravada else str(uuid4()),
@@ -983,6 +1038,16 @@ def _quadro_para_o_formulario(perfil):
                 "rotulo": f"{modalidade.name} ({modalidade.code})",
                 "geral": False,
                 "immediateVacancies": gravada.vagas_imediatas if gravada else "",
+                # A quantidade que o percentual produz (051, FR-932): sugestão, e não valor.
+                "sugestao": (
+                    quadro.sugestao(
+                        percentual=regra.percentage,
+                        vagas_imediatas=perfil.immediate_vacancies,
+                        rounding=regra.rounding,
+                    )
+                    if regra is not None
+                    else None
+                ),
             }
         )
     return linhas
