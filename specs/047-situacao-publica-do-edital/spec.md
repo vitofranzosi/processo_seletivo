@@ -648,6 +648,7 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
   prazo de recurso desse resultado. Pode ser a intenção, já que conceder prazo é menos grave do que
   retirá-lo, como o próprio contrato registra (`mutabilidade.py:527-530`). Mas não há decisão escrita
   para o caso de **encurtar**. É pergunta do domínio de recursos (`018`), e a 047 projeta o que ele
-  aplicar (`D-005`).
+  aplicar (`D-005`). *Decidido em 28/09 (RC-121): a janela de ato divulgado segue a versão que o
+  ato citou, salvo o que a vigente concede; a página acompanhou, como a `D-005` previa.*
 - **A API pública de histórico** (`/api/v1/public/editais/<id>/historico`) não é linkada pelo portal.
   Não é defeito, e fica registrado para quem for tratar a API.

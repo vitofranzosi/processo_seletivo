@@ -14,10 +14,13 @@ repetiria o mesmo engano da implementação.
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from processo_seletivo.recursos.domain.janela import (
     ancora,
     computavel,
     contar,
+    declaracao_aplicavel,
     declaracao_do_marco,
 )
 from processo_seletivo.shared.tempo import ZONA
@@ -196,3 +199,36 @@ def test_a_ancora_para_no_ato_diferente_mais_recente():
     assert ancora(republicada) is nova
     assert contar(abertura=ancora(republicada).publicado_em, dias=5)[1] > em("2026-09-14T00:00")
     assert timedelta(days=1) > timedelta(0)
+
+
+# ---------------------------------------------------------------------------
+# RC-121 — a janela de ato divulgado: a citada, salvo o que a vigente concede
+# ---------------------------------------------------------------------------
+
+CINCO = {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}
+DEZ = {"admits": True, "durationDays": 10, "unit": "DIAS_CORRIDOS"}
+NEGADA = {"admits": False}
+
+
+@pytest.mark.parametrize(
+    ("citada", "vigente", "aplicavel"),
+    [
+        # Encurtar ou retirar não alcança o ato já divulgado.
+        (DEZ, CINCO, DEZ),
+        (CINCO, None, CINCO),
+        (CINCO, NEGADA, CINCO),
+        (NEGADA, None, NEGADA),
+        # Alongar, ou fazer a janela nascer, alcança (026 SC-099; 048, caso-limite).
+        (CINCO, DEZ, DEZ),
+        (None, CINCO, CINCO),
+        (NEGADA, CINCO, CINCO),
+        # Igual: nada muda, e a citada responde.
+        (CINCO, dict(CINCO), CINCO),
+        (None, None, None),
+    ],
+)
+def test_a_declaracao_aplicavel_e_a_citada_salvo_o_que_a_vigente_concede(
+    citada, vigente, aplicavel
+):
+    """Decisão do usuário de 28/09 sobre o RC-121, nas duas perguntas que a fecharam."""
+    assert declaracao_aplicavel(citada, vigente) == aplicavel

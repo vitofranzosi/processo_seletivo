@@ -189,7 +189,7 @@ from processo_seletivo.recursos.application import admitir as recursos_admitir
 from processo_seletivo.recursos.application import julgar as recursos_julgar
 from processo_seletivo.recursos.application import selectors as recursos_selectors
 from processo_seletivo.recursos.domain.elegibilidade import RAZOES, impedimento
-from processo_seletivo.recursos.domain.janela import janela_declarada
+from processo_seletivo.recursos.domain.janela import janela_do_ato
 from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
@@ -7160,7 +7160,8 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 ),
                 # O campo da declaração só existe onde ela é exigida: onde há janela computável o
                 # sistema verifica, e oferecer o campo ali ensinaria a preenchê-lo sempre (FR-086).
-                "exige_declaracao": janela_declarada(edital=edital, marco_id=marco_id) is None,
+                # A janela é a da versão que o ato cita (RC-121), a mesma que a publicação confere.
+                "exige_declaracao": janela_do_ato(ato, marco_id) is None,
                 "chave_idempotencia": uuid4().hex,
                 "erro": erro,
             },

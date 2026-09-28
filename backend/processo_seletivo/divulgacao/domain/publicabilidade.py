@@ -461,12 +461,25 @@ def _janela_aberta(*, edital, marco_id, marco, at, lista_id=None):
     from django.utils import timezone
 
     from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
-    from processo_seletivo.recursos.domain.janela import computavel, janela_da_publicacao
+    from processo_seletivo.recursos.application.selectors import conteudo_citado
+    from processo_seletivo.recursos.domain.janela import (
+        declaracao_aplicavel,
+        declaracao_do_marco,
+        janela_da_publicacao,
+    )
 
-    if computavel((marco or {}).get("appealWindow")) is None:
-        return None
     vigente = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
-    computada = janela_da_publicacao(vigente, (marco or {}).get("appealWindow"))
+    if vigente is None:
+        return None
+    # **A janela que impede a definitiva é a que a interposição aplica**: a da versão que o ato
+    # divulgado citou, salvo o que a vigente concede (RC-121, decisão de 28/09). Com duas leituras,
+    # uma Retificação da janela faria a definitiva ser liberada por um prazo e o recurso ser aceito
+    # por outro. A regra é uma só, `declaracao_aplicavel`; o `marco` recebido é o do conteúdo
+    # vigente, e entra como a declaração vigente.
+    declaracao = declaracao_aplicavel(
+        declaracao_do_marco(conteudo_citado(vigente), marco_id), (marco or {}).get("appealWindow")
+    )
+    computada = janela_da_publicacao(vigente, declaracao)
     if computada is None:
         return None
     _, fecha = computada

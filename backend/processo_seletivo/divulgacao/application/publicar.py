@@ -207,7 +207,7 @@ def publicar_resultado(
             )
 
         declaracao = _declaracao_exigida(
-            edital=edital, marco_id=marco_id, natureza=natureza, texto=declaracao_de_encerramento
+            ato=ato, marco_id=marco_id, natureza=natureza, texto=declaracao_de_encerramento
         )
 
         conteudo = conteudo_divulgado(
@@ -305,7 +305,7 @@ def _narrativa_do_ato(conteudo, ato, anterior):
     return ", ".join(partes) + "."
 
 
-def _declaracao_exigida(*, edital, marco_id, natureza, texto):
+def _declaracao_exigida(*, ato, marco_id, natureza, texto):
     """A declaração expressa, exigida **somente** onde não há janela computável (FR-085, FR-086).
 
     Onde o Edital declara a janela, o sistema verifica: pedir a declaração ali seria pedir à pessoa
@@ -322,7 +322,7 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
         MENSAGENS,
         STATUS,
     )
-    from processo_seletivo.recursos.domain.janela import janela_declarada
+    from processo_seletivo.recursos.domain.janela import janela_do_ato
 
     texto = (texto or "").strip()
     if natureza != Natureza.DEFINITIVA:
@@ -330,7 +330,8 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
         # acabou. Aceitá-la aqui gravaria uma afirmação sem objeto.
         return ""
 
-    computavel = janela_declarada(edital=edital, marco_id=marco_id) is not None
+    # A janela que vai valer para este ato depois de divulgado: a da versão que ele cita (RC-121).
+    computavel = janela_do_ato(ato, marco_id) is not None
     if computavel and texto:
         raise DomainError(
             DECLARACAO_RECUSADA, MENSAGENS[DECLARACAO_RECUSADA], STATUS[DECLARACAO_RECUSADA]
