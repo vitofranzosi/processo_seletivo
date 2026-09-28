@@ -224,6 +224,7 @@ def concluir(
                 "Esta avaliação já foi concluída. A reabertura é ato da presidência.",
                 409,
             )
+        _recusar_se_ja_ha_resultado(edital, etapa_id, inscricao_id)
         versao, etapa = _versao_e_etapa(edital, etapa_id, agora)
         # **Obrigatório, e não opcional.** Deixá-lo cair quando ausente permitiria concluir sem
         # reconhecimento apenas omitindo o campo do envio — desligar FR-073 pelo cliente.
@@ -308,6 +309,51 @@ def concluir(
         )
         avaliacao.refresh_from_db()
         return avaliacao, nova
+
+
+def _recusar_se_ja_ha_resultado(edital, etapa_id, inscricao_id):
+    """A Mesa não conclui avaliação de quem já tem Resultado na Etapa (RC-62).
+
+    **Decidido pelo usuário em 28/09** (`doc/registro-pre-piloto-2026-09-28.md`, *O que foi
+    decidido*). A `012` e a `013` não escreviam a regra, e a Mesa aceitava: a conclusão tardia não
+    alterava o Resultado — ele é imutável —, ficava inelegível, e deixava na trilha um par
+    contraditório, a avaliação dizendo uma coisa e o Resultado outra. O caso comum é a Ocorrência:
+    a presidência registra que alguém faltou, e o avaliador conclui depois, sobre quem já foi
+    eliminado.
+
+    **A exceção é a reavaliação determinada por recurso, ainda não cumprida** (018, `FR-066`,
+    `FR-068`). Ela é justamente avaliar quem tem Resultado vigente na própria Etapa, e recusá-la
+    tornaria a decisão do julgador inexequível. A pergunta é a mesma que a consolidação faz, pelo
+    mesmo selector.
+
+    Lido dentro da transação que grava, depois da trava da Atribuição, pelo `vigentes`: um
+    Resultado superado por recurso não conta, porque histórico não produz efeito (018, `FR-061`).
+    Import local pela razão de sempre: `resultados` e `recursos` leem este app.
+    """
+    from processo_seletivo.recursos.application.selectors import reavaliacao_pendente_do_par
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    resultado = (
+        ResultadoEtapa.vigentes.filter(edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id)
+        .select_related("inscricao", "edital")
+        .first()
+    )
+    if resultado is None:
+        return
+    if reavaliacao_pendente_do_par(resultado.inscricao_id, resultado.etapa_id) is not None:
+        return
+    protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
+    raise DomainError(
+        "inscricao_ja_tem_resultado",
+        # O quê, por quê e o que fazer — e a nota não entra, pela mesma razão da reabertura
+        # (013, FR-033): quem lê a recusa não é necessariamente quem pode vê-la.
+        f"A inscrição {protocolo} já tem Resultado na Etapa {_nome_da_etapa(resultado)} "
+        f"(Resultado {resultado.id}), e esta avaliação não pode ser concluída: concluída agora, "
+        "ela não mudaria o Resultado e ficaria registrada contradizendo-o. Se o Resultado "
+        "precisa ser corrigido, o caminho é o recurso: a reavaliação que ele determinar é "
+        "concluída aqui.",
+        409,
+    )
 
 
 def _motivo(atribuicao):

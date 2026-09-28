@@ -252,10 +252,11 @@ def estado_na_vitrine(periodo, desfecho):
 
     O Edital com desfecho **próprio** vai para *"Inscrições encerradas"* qualquer que seja o
     período: o sistema não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). O de
-    Processo encerrado fica onde o período o põe, porque continua recebendo. Pelo período, um Edital
-    encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou. Não é um
-    quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão já diz de
-    quem é o fim.
+    Processo encerrado fica onde o período o põe, porque continua recebendo — caso que, desde a
+    decisão de 28/09 sobre o RC-118, só existe no Processo encerrado antes dela. Pelo período, um
+    Edital encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou.
+    Não é um quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão
+    já diz de quem é o fim.
     """
     return ENCERRADO if desfecho is not None and desfecho.do_edital else periodo.estado
 

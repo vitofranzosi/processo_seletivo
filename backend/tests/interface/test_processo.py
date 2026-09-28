@@ -7,7 +7,9 @@ o que impede e permitir alcançar cada pendência — antes da tentativa, não d
 import pytest
 from django.urls import reverse
 
+from processo_seletivo.processos.application.finalizacao import cancel_edital
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+from processo_seletivo.seguranca.domain import Actor
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
 
@@ -73,7 +75,8 @@ def test_impedimento_do_cancelamento_e_mostrado_antes_da_tentativa(client, selet
     identificar(client, "marcia.gestora", GESTOR)
 
     detalhe = client.get(reverse("interface:processo-detalhe", args=[processo.id])).content.decode()
-    assert "O cancelamento do Processo está impedido" in detalhe
+    # Ativo, o Processo tem os dois desfechos impedidos pelo mesmo Edital (RC-118, 28/09).
+    assert "O encerramento e o cancelamento do Processo estão impedidos" in detalhe
     assert f"{edital.number}/{edital.year}" in detalhe
     assert reverse("interface:detalhe", args=[edital.id]) in detalhe, "link para a pendência"
 
@@ -130,6 +133,24 @@ def test_ativar_e_encerrar_seguem_o_fluxo_ordinario(client, seletor_ligado, sem_
     assert "Encerrar Processo" in corpo
     assert "Ativar Processo" not in corpo, "não se ativa o que já está ativo"
 
+    # **O encerramento exige os Editais em estado final** (RC-118, decisão de 28/09), e a tela o
+    # diz antes da tentativa, como já dizia do cancelamento: o Edital em elaboração é nomeado, e
+    # não há botão de confirmar.
+    confirmar = client.get(reverse("interface:processo-ato", args=[processo.id, "encerrar"]))
+    texto = confirmar.content.decode()
+    assert "O encerramento do Processo exige que cada Edital esteja Encerrado ou Cancelado" in texto
+    assert "09/2028" in texto
+    assert "Confirmar: Encerrar Processo" not in texto
+
+    edital = processo.editais.get()
+    cancel_edital(
+        actor=Actor("marcia.gestora", "cefor", frozenset({"edital:cancelar"})),
+        edital_id=edital.id,
+        expected_revision=edital.revision,
+        reason="Não será publicado",
+        idempotency_key="ui-cancelar-edital-0009",
+        correlation_id="rc-118",
+    )
     assert ato(client, processo, "encerrar", "Certame concluído").status_code == 302
     processo.refresh_from_db()
     assert processo.status == ProcessoSeletivo.Status.ENCERRADO

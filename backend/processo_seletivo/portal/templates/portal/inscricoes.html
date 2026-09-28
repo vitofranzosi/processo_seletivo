@@ -27,7 +27,7 @@ para esta apagava a cor de estado daquela. Nome próprio no lugar de disputa de 
     <span class="situacao enviada">✓ Inscrição enviada</span>
     <span class="codigo">{{ inscricao.protocolo }}</span>
     {% elif inscricao.fechada %}
-    <span class="situacao">Inscrição não enviada · {% if inscricao.fechada.estado == "encerrado" and inscricao.fechada.fim %}Inscrições encerradas em {{ inscricao.fechada.fim|date:"d/m/Y" }}{% else %}Seleção sem inscrições abertas{% endif %}</span>
+    <span class="situacao">Inscrição não enviada · {% if inscricao.fechada.cancelado %}Período de inscrições cancelado{% elif inscricao.fechada.estado == "encerrado" and inscricao.fechada.fim %}Inscrições encerradas em {{ inscricao.fechada.fim|date:"d/m/Y" }}{% else %}Seleção sem inscrições abertas{% endif %}</span>
     {% else %}
     <span class="situacao">Inscrição não enviada</span>
     {% endif %}

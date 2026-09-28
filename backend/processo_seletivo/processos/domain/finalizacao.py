@@ -30,11 +30,32 @@ def _reject(detail):
     return DomainError("invalid_state", detail, 409)
 
 
-def ensure_processo_can_be_closed(processo):
+def ensure_processo_can_be_closed(processo, pendentes=()):
+    """O encerramento exige os Editais em estado final, como o cancelamento (RC-118).
+
+    **Decidido pelo usuário em 28/09** (`doc/registro-pre-piloto-2026-09-28.md`, *O que foi
+    decidido*). Até então só o cancelamento exigia (`FR-034`), e o encerramento passava com Edital
+    publicado: a regra do recebimento lê o Edital e o período, e não o Processo, de modo que o
+    Edital de um Processo encerrado continuava recebendo inscrição. A `047` dizia o encerramento
+    como fato e deixou a pergunta pendente (`D-003`). A saída escolhida é a do cancelamento, e não
+    fazer o recebimento ler o Processo: o desfecho de cada Edital continua sendo ato próprio.
+    """
     if processo.status in PROCESSO_FINAL:
         raise _reject("Processo em estado final não admite nova transição.")
     if processo.status not in PROCESSO_ENCERRAVEL:
         raise _reject("Somente Processo ativo pode ser encerrado.")
+    if pendentes:
+        raise DomainError(
+            "editais_pendentes",
+            "Encerre ou cancele cada Edital antes de encerrar o Processo, porque encerrar o "
+            "Processo não encerra os Editais dele, e um Edital publicado continuaria recebendo "
+            "inscrição. Faltam: " + _numeros(pendentes),
+            409,
+        )
+
+
+def _numeros(editais):
+    return ", ".join(f"{edital.number}/{edital.year}" for edital in editais)
 
 
 def ensure_processo_can_be_cancelled(processo, pendentes):
@@ -46,8 +67,7 @@ def ensure_processo_can_be_cancelled(processo, pendentes):
     if pendentes:
         raise DomainError(
             "editais_pendentes",
-            "Cancele ou encerre cada Edital antes de cancelar o Processo: "
-            + ", ".join(f"{edital.number}/{edital.year}" for edital in pendentes),
+            "Cancele ou encerre cada Edital antes de cancelar o Processo: " + _numeros(pendentes),
             409,
         )
 
@@ -81,5 +101,5 @@ def ensure_edital_accepts_changes(edital):
 
 
 def pending_editais(processo):
-    """Editais que ainda impedem o cancelamento do Processo, em ordem estável."""
+    """Editais que ainda impedem o cancelamento e o encerramento do Processo, em ordem estável."""
     return list(processo.editais.exclude(status__in=EDITAL_FINAL).order_by("year", "number", "id"))

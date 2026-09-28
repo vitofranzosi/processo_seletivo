@@ -857,6 +857,42 @@ ORGAO = (
 )
 
 
+# "Edital", o número e o ano no começo do título, com ou sem o "Nº" e as grafias dele. O que vem
+# depois é o objeto, separado por travessão, hífen, dois-pontos ou vírgula.
+_ATO_NO_TITULO = re.compile(
+    r"^\s*edital\s+(?:n\s*(?:º|°|o|\.º|\.°|\.)?\.?\s*)?(?P<numero>[^\s/]+)\s*/\s*(?P<ano>\d{4})"
+    r"(?P<resto>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_SEPARADOR_DO_OBJETO = " \t—–-:,."
+
+
+def anuncio_do_ato(snapshot):
+    """`EDITAL Nº <número>/<ano> — <título>`: o ato sai sempre de `number` e `year` (008, FR-006).
+
+    **O RC-20 da auditoria de 26/09, corrigido pela DP-20.** A versão anterior imprimia o
+    **título** no lugar do ato sempre que ele abria por "Edital", para o anúncio não repetir o ato.
+    Mas o título é texto livre e se retifica, e `number`/`year` são a identidade do Edital
+    (`uq_edital_scope_number_year`), a mesma que o rodapé e a verificação de integridade imprimem.
+    No Edital 140/2025 do estudo de 21/09, a capa dizia um número e o rodapé outro; com o título
+    *"Edital de seleção…"*, a capa não dizia número nenhum. Desde 28/09 o PDF é o documento oficial
+    do piloto, e o ato que ele anuncia é o ato.
+
+    **O título que repete exatamente o ato perde o prefixo**, para a abertura continuar uma sentença
+    só, como nos Editais de referência. "Exatamente" é o mesmo número e o mesmo ano, em qualquer
+    grafia do "Nº": um título que abre por outro número não é repetição, e sai inteiro depois do ato
+    — é assim que a divergência fica à vista, em vez de escondida.
+    """
+    titulo = str(snapshot.get("title", "")).strip()
+    numero = str(snapshot.get("number", "")).strip()
+    ano = str(snapshot.get("year", "")).strip()
+    ato = f"EDITAL Nº {numero}/{ano}"
+    repeticao = _ATO_NO_TITULO.match(titulo)
+    if repeticao and repeticao["numero"] == numero and repeticao["ano"] == ano:
+        titulo = repeticao["resto"].lstrip(_SEPARADOR_DO_OBJETO)
+    return f"{ato} — {titulo}" if titulo else ato
+
+
 def _cabecalho(composicao, snapshot):
     """A abertura de um ato administrativo (FR-005 a FR-007).
 
@@ -877,16 +913,12 @@ def _cabecalho(composicao, snapshot):
     # Ato e objeto numa frase só, em negrito e caixa alta, como nos três Editais de referência.
     # Separá-los em linhas de corpos diferentes é o que fazia o documento parecer capa de
     # relatório: lá, o que identifica o ato é uma sentença, não um título.
-    titulo = str(snapshot.get("title", "")).strip()
-    ato = f"EDITAL Nº {snapshot.get('number', '')}/{snapshot.get('year', '')}"
-    # **Uma linha só.** Nos três Editais de referência o ato e o objeto são uma sentença. Quando o
-    # título já abre por "Edital" — que é como se costuma escrevê-lo —, ele **é** essa sentença, e
-    # imprimir os dois faria o documento anunciar o mesmo ato duas vezes.
-    anuncio = (
-        titulo if titulo.upper().startswith("EDITAL") else (f"{ato} — {titulo}" if titulo else ato)
-    )
     composicao.escrever(
-        anuncio.upper(), tamanho=CORPO_ATO, fonte=NEGRITO, antes=24, alinhamento=CENTRO
+        anuncio_do_ato(snapshot).upper(),
+        tamanho=CORPO_ATO,
+        fonte=NEGRITO,
+        antes=24,
+        alinhamento=CENTRO,
     )
     if snapshot.get("description"):
         composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True)
@@ -2232,13 +2264,52 @@ def _secoes(composicao, snapshot):
         if corpo is not None:
             corpo(composicao, snapshot, numero, tabelas)
         else:
-            for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
+            paragrafos = _paragrafos(secao.get("content", "")) + _norma_da_secao(secao, snapshot)
+            for indice, paragrafo in enumerate(paragrafos):
                 composicao.escrever(
                     paragrafo,
                     tamanho=CORPO_TEXTO,
                     antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
                     justificar=True,
                 )
+
+
+# A seção textual onde a norma da inscrição que o sistema executa é publicada.
+SECAO_DA_INSCRICAO = "inscricao"
+
+
+def teto_de_inscricoes(snapshot):
+    """A frase do teto de inscrições por candidato, ou `None` sem teto (015, FR-063).
+
+    **O RC-12 da auditoria de 26/09, corrigido pela DP-20.** O teto era executado na submissão
+    (`inscricoes/application/submissao.py`, `_conferir_o_teto`), estava no conteúdo publicado e não
+    saía no documento: a norma que recusa a segunda inscrição de alguém não era lida por ninguém
+    antes da recusa. Desde 28/09 o PDF é o documento oficial do piloto, e norma executada sem
+    publicação é norma que o candidato não teve como conhecer.
+
+    A ausência significa *sem limite* (FR-063), e sem limite não há o que dizer: o documento não
+    inventa uma frase para o que o Edital não declarou. Conta só a inscrição enviada (FR-064), e a
+    frase diz isso, porque o rascunho abandonado não consome o direito.
+    """
+    teto = snapshot.get("maxInscricoesPorCandidato")
+    if not isinstance(teto, int) or isinstance(teto, bool):
+        return None
+    if teto == 1:
+        return "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+    return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
+
+
+def _norma_da_secao(secao, snapshot):
+    """Os parágrafos que o sistema acrescenta a uma seção textual, depois do texto de quem redigiu.
+
+    **Na seção, e não num cabeçalho próprio.** O catálogo é fixo (006, FR-034), e uma seção nova só
+    para uma frase mudaria a numeração de todo documento. A frase vem **depois** do texto, e nunca
+    no lugar dele: o que o autor escreveu continua sendo o que abre a seção.
+    """
+    if secao.get("key") != SECAO_DA_INSCRICAO:
+        return []
+    frase = teto_de_inscricoes(snapshot)
+    return [frase] if frase else []
 
 
 def _autoridade(composicao, autoridade):

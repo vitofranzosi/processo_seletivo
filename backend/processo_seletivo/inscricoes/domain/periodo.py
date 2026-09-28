@@ -13,6 +13,8 @@ from datetime import datetime
 
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.editais.domain.cronograma import CANCELADO
+
 FUTURO, ABERTO, ENCERRADO, NAO_DESIGNADO = "futuro", "aberto", "encerrado", "nao-designado"
 
 
@@ -21,6 +23,10 @@ class Periodo:
     estado: str
     inicio: datetime | None = None
     fim: datetime | None = None
+    # O período declarado cancelado no conteúdo publicado. O estado dele é `ENCERRADO` — não
+    # recebe mais nada —, e a marca existe para quem o diz não escrever "encerradas em" com uma
+    # data que ainda não chegou.
+    cancelado: bool = False
 
     @property
     def aberto(self) -> bool:
@@ -50,12 +56,22 @@ def periodo_de_inscricoes(conteudo: dict, agora: datetime) -> Periodo:
 
     Sem término declarado o período segue aberto, porque é o que o Evento diz — inventar um
     fechamento seria o sistema criando prazo que o Edital não fixou.
+
+    **O período declarado cancelado está encerrado, quaisquer que sejam as datas** (RC-119,
+    decidido pelo usuário em 28/09 — `doc/registro-pre-piloto-2026-09-28.md`). A régua lia só as
+    datas, e o período marcado `CANCELADO` continuava recebendo inscrição. O `CANCELADO` é a única
+    declaração do Evento, e prevalece sobre a derivação (045, `FR-736`); aqui, que é a regra do
+    recebimento, ele passa a prevalecer também. Encerrado, e não um quinto estado: a pergunta que a
+    régua responde é se ainda pode chegar inscrição, e a resposta é a mesma do prazo vencido — a
+    distribuição e a relação do sorteio, que esperam o conjunto fechar, leem daqui.
     """
     designado = evento_designado(conteudo)
     if designado is None:
         return Periodo(NAO_DESIGNADO)
     inicio = parse_datetime(designado.get("startAt") or "")
     fim = parse_datetime(designado.get("endAt") or "") if designado.get("endAt") else None
+    if designado.get("status") == CANCELADO:
+        return Periodo(ENCERRADO, inicio, fim, cancelado=True)
     if inicio is not None and agora < inicio:
         return Periodo(FUTURO, inicio, fim)
     if fim is not None and agora > fim:

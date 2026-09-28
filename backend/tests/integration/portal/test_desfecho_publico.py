@@ -20,8 +20,10 @@ from processo_seletivo.processos.application.finalizacao import (
     close_edital,
     close_process,
 )
+from processo_seletivo.processos.domain import finalizacao as finalizacao_do_processo
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.seguranca.domain import Actor
+from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -247,20 +249,52 @@ def test_o_filtro_de_abertas_nao_devolve_o_encerrado(
 # --- O Processo --------------------------------------------------------------------------------
 
 
+def test_encerrar_o_processo_com_edital_publicado_e_recusado(
+    api_client, manager_headers, process_payload
+):
+    """RC-118, decidido pelo usuário em 28/09: encerrar exige os Editais em estado final.
+
+    Era o caminho pelo qual o Edital de um Processo encerrado continuava recebendo inscrição. A
+    recusa diz o que falta, por quê e o que fazer, e o Processo continua ativo.
+    """
+    edital = publicar(api_client, manager_headers, process_payload)
+
+    with pytest.raises(DomainError) as recusa:
+        encerrar_processo(edital)
+
+    assert recusa.value.code == "editais_pendentes"
+    assert recusa.value.status == 409
+    assert f"{edital.number}/{edital.year}" in recusa.value.detail
+    assert "continuaria recebendo inscrição" in recusa.value.detail
+    assert "Encerre ou cancele cada Edital" in recusa.value.detail
+    processo = ProcessoSeletivo.objects.get(pk=edital.processo_id)
+    assert processo.status == ProcessoSeletivo.Status.ATIVO
+
+
 def test_processo_encerrado_com_edital_aberto_diz_o_fato_e_continua_recebendo(
-    client, api_client, manager_headers, process_payload
+    client, api_client, manager_headers, process_payload, monkeypatch
 ):
     """A regressão da revisão do #193: o Processo encerrado não fecha o Edital publicado.
 
-    Encerrar o Processo não exige os Editais em estado final, e `recebe_inscricoes` lê o status do
-    Edital: dentro do período, o sistema continua recebendo inscrição. A primeira versão da US1
-    dizia *"Processo seletivo encerrado… Não recebe inscrições"* e tirava o Edital das abertas —
-    a página afirmava o que o sistema não faz. Agora ela diz o fato e a data (`FR-760`), e o Edital
-    segue o próprio estado e período (`FR-761`, `FR-763`). Fazer o encerramento do Processo
-    bloquear inscrições é decisão de domínio, pendente e registrada na spec.
+    **Desde 28/09 este estado só existe no acervo** (RC-118): encerrar o Processo passou a exigir
+    os Editais em estado final, e o teste acima prende a recusa. O Processo encerrado antes disso,
+    com Edital publicado, continua existindo, e a página continua precisando dizê-lo — por isso o
+    cenário é montado com o encerramento como era, sem a exigência.
+
+    `recebe_inscricoes` lê o status do Edital: dentro do período, o sistema continua recebendo
+    inscrição. A primeira versão da US1 dizia *"Processo seletivo encerrado… Não recebe
+    inscrições"* e tirava o Edital das abertas — a página afirmava o que o sistema não faz. Agora
+    ela diz o fato e a data (`FR-760`), e o Edital segue o próprio estado e período (`FR-761`,
+    `FR-763`).
     """
     edital = publicar(api_client, manager_headers, process_payload)
+    monkeypatch.setattr(
+        finalizacao_do_processo,
+        "ensure_processo_can_be_closed",
+        lambda processo, pendentes=(): None,
+    )
     encerrar_processo(edital)
+    monkeypatch.undo()
     assert Edital.objects.get(pk=edital.id).status == Edital.Status.PUBLICADO
 
     corpo = pagina(client, edital)

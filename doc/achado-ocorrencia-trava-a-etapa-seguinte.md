@@ -8,7 +8,8 @@ achado `A-1` — lido no código, não percorrido. Registrado na
 **Validado em**: 28/09/2026, contra a `main` em `d65f0136`, por teste de integração
 ([`test_ocorrencia_em_etapa_inconsolidavel.py`](../backend/tests/integration/resultados/test_ocorrencia_em_etapa_inconsolidavel.py)).
 
-**Estado**: **confirmado, e não corrigido.** O comportamento é o que o `FR-004` da `013` manda ao pé
+**Estado**: **corrigido em 28/09**, pela decisão abaixo (a implementação está descrita no fim dela).
+Até então: **confirmado, e não corrigido.** O comportamento é o que o `FR-004` da `013` manda ao pé
 da letra; o que ele contraria é a justificativa da `D-003`, não um requisito. Corrigir é escolher entre
 os dois textos, e a escolha é do usuário.
 
