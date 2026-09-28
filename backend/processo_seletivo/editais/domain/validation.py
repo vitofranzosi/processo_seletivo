@@ -1497,6 +1497,7 @@ def validate_for_publication(
     findings.extend(_ano_dos_eventos(snapshot, ato=ato))
     findings.extend(_declaracao_do_requerimento(snapshot, ato=ato))
     findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
+    findings.extend(_periodo_de_inscricoes_cancelado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
@@ -2399,6 +2400,49 @@ def _periodo_de_inscricoes_encerrado(
     ]
 
 
+def _periodo_de_inscricoes_cancelado(
+    snapshot: dict, *, ato: str, agora: datetime
+) -> list[ValidationFinding]:
+    """Publicar com o período de inscrições declarado cancelado é publicar sem inscrição (RC-119).
+
+    Desde 28/09/2026 o período `CANCELADO` não recebe inscrição (`inscricoes/domain/periodo.py`), e
+    publicá-lo assim é o caso que a `028`, `FR-346`, impede para o período vencido: um certame que
+    ninguém pode disputar. **Código próprio, e não o do vencido**: a `FR-347` proíbe produzir aquele
+    impedimento com término futuro — que é o normal aqui —, e a `FR-348` pede um código por achado.
+
+    A mesma leitura do portal, pela mesma razão do achado do vencido, e o mesmo recuo com marca
+    ambígua: quem responde ali é o impeditivo que já existia.
+
+    **O que fazer** tem dois caminhos, e a frase diz os dois: o cancelamento só se declara pela API
+    (`045`, `FR-736`), e é por ela que se retira; ou o período designado passa a ser outro Evento,
+    na etapa Inscrição.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    marcados = sum(
+        1
+        for _, evento in _eventos_bem_formados(snapshot)
+        if evento.get("isRegistrationPeriod") is True
+    )
+    if marcados != 1 or not periodo_de_inscricoes(snapshot, agora).cancelado:
+        return []
+    designado = evento_designado(snapshot) or {}
+    posicao = next(
+        (posicao for posicao, evento in _eventos_bem_formados(snapshot) if evento is designado),
+        0,
+    )
+    return [
+        _impeditivo(
+            "registration_period_cancelled",
+            f"O Evento '{_nome_do_evento(designado)}', designado como período de inscrições, está "
+            "declarado cancelado, e período cancelado não recebe inscrição: publicado assim, o "
+            "Edital não receberá inscrição alguma. Designe outro Evento como período na etapa "
+            "Inscrição, ou retire a declaração de cancelamento pela API antes de publicar.",
+            f"{_caminho_da_entidade('schedule', designado, posicao)}/status",
+        )
+    ]
+
+
 def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:
     """O que impede publicar um Edital cujos anexos não estão de pé (020, FR-005, FR-023).
 
@@ -2464,6 +2508,12 @@ def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:
 # "anexo dim" virarem remissão.
 _REMISSAO_A_ANEXO = re.compile(r"(?i:\banexos?)\s+(?P<rotulo>[IVXLCDM]+|\d+)\b")
 ANEXO_CITADO_SEM_ROTULO = "attachment_cited_without_label"
+# O rótulo que **abre** pelo identificador — "IV — Formulário", "2. Declaração", "IV" — também é o
+# Anexo IV ou o 2: o autor não é obrigado a repetir a palavra no rótulo de um Anexo, e sem isto a
+# remissão certa ao "ANEXO IV" recebia o aviso (revisão do PR 221).
+_ROTULO_QUE_ABRE_PELO_IDENTIFICADOR = re.compile(
+    r"^\s*(?P<rotulo>[IVXLCDM]+|\d+)(?=\s*(?:[—–\-.:)]|$))"
+)
 
 
 def _secoes_textuais(snapshot: dict):
@@ -2502,6 +2552,9 @@ def _anexo_citado_sem_rotulo(snapshot: dict, *, ato: str) -> list[ValidationFind
             publicados.update(
                 achado["rotulo"] for achado in _REMISSAO_A_ANEXO.finditer(anexo["label"])
             )
+            abre = _ROTULO_QUE_ABRE_PELO_IDENTIFICADOR.match(anexo["label"])
+            if abre:
+                publicados.add(abre["rotulo"])
     findings = []
     for posicao, secao in _secoes_textuais(snapshot):
         vistos = set()

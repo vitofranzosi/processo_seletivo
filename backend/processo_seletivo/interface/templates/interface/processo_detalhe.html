@@ -94,6 +94,7 @@ coisa que ela não pode ver.
     {{ item.rascunhos }} em preenchimento.
     {% if item.ausencia == "sem-cronograma" %}Sem cronograma vigente.
     {% elif item.ausencia == "sem-periodo" %}O cronograma não marca período de inscrições.
+    {% elif item.periodo.cancelado %}Período de inscrições cancelado.
     {% else %}Inscrições até
       {% if item.periodo.fim %}{{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
     {% endif %}

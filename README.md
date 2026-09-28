@@ -414,6 +414,7 @@ Incrementos, na ordem em que foram especificados:
 | [`046`](specs/046-contrato-de-executabilidade/spec.md) | contrato de executabilidade do Processo publicado |
 | [`047`](specs/047-situacao-publica-do-edital/spec.md) | situação pública e histórico oficial do Edital |
 | [`048`](specs/048-retificacao-que-acrescenta/spec.md) | Retificação que acrescenta |
+| [`049`](specs/049-operar-por-marco/spec.md) | condução do resultado por marco: indicador e gestos sobre todos os recortes |
 | [`050`](specs/050-convocacao-como-fluxo/spec.md) | a convocação como fluxo: titulares num ato, não atendimento dos vencidos num gesto |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.

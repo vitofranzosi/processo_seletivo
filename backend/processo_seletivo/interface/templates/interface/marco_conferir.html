@@ -1,0 +1,86 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferir — {{ nome }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:marco' edital.id marco.id %}">{{ marco.name }}</a> ›
+  <span aria-current="page">Conferir</span>
+</nav>
+
+<h1>Confira antes de confirmar</h1>
+<p class="sub">{{ nome }} — {{ marco.name }}, {{ perfil.name }}, Edital {{ edital.number }}/{{ edital.year }}</p>
+{% if operacao == "publicar" %}
+<p class="sub">Natureza: <strong>{{ natureza_rotulo }}</strong> · Autoridade signatária: <strong>{{ autoridade.nome }} — {{ autoridade.cargo }}</strong></p>
+{% endif %}
+
+{% comment %}
+**O alcance é declarado recorte a recorte, antes da confirmação** (049, `FR-818`; `DP-17`). Um
+gesto que produz efeito sobre vários objetos tem de dizer sobre quais, e o que fica de fora tem de
+dizer por quê — senão a pessoa confirma um número, e não um conjunto.
+
+Os três grupos têm título próprio (`UX-092`): o que será praticado, o que fica de fora porque já
+está feito, e o que o domínio impede agora. Esta tela não grava nada.
+{% endcomment %}
+<p class="ajuda">Cada recorte abaixo recebe um <strong>ato próprio e imutável</strong>, com você
+  como autor, pelo mesmo caminho da tela do recorte. Se um deles for recusado na gravação — porque
+  mudou desde esta leitura —, os outros são praticados assim mesmo, e a tela seguinte diz qual foi
+  e por quê.</p>
+
+<section aria-labelledby="praticar-titulo" class="consequencias{% if a_praticar %} irreversivel{% endif %}">
+  <h2 id="praticar-titulo">Serão praticados ({{ a_praticar|length }})</h2>
+  {% if a_praticar %}
+  <ul>{% for item in a_praticar %}<li><strong>{{ item.rotulo }}</strong> — {{ item.resumo }}</li>{% endfor %}</ul>
+  {% else %}
+  <p>Não há recorte a praticar neste marco.</p>
+  {% endif %}
+</section>
+
+{% if fora %}
+<section aria-labelledby="fora-titulo" class="consequencias">
+  <h2 id="fora-titulo">Ficam de fora ({{ fora|length }})</h2>
+  <ul>{% for item in fora %}<li><strong>{{ item.rotulo }}</strong> — {{ item.razao }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if impedidos %}
+<section aria-labelledby="impedidos-titulo" class="consequencias">
+  <h2 id="impedidos-titulo">Impedidos ({{ impedidos|length }})</h2>
+  <ul>{% for item in impedidos %}<li><strong>{{ item.rotulo }}</strong> — {{ item.razao }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if a_praticar %}
+<form method="post" action="{% url 'interface:gesto-do-marco' edital.id marco.id operacao %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave }}">
+  {% comment %}
+  **Um par recorte × assinatura por recorte a praticar, e só esses** (`R-3`, `SC-303`). A
+  assinatura é a mesma que a tela do recorte compõe, e é o comando que a confere: o recorte que
+  mudou entre esta leitura e o clique é recusado lá, com a razão, e não praticado sobre o estado novo.
+  {% endcomment %}
+  {% for item in a_praticar %}
+  <input type="hidden" name="recorte" value="{{ item.campo }}">
+  <input type="hidden" name="assinatura_{{ item.campo }}" value="{{ item.assinatura }}">
+  {% endfor %}
+  {% if operacao == "publicar" %}
+  <input type="hidden" name="natureza" value="{{ natureza }}">
+  <input type="hidden" name="autoridade" value="{{ autoridade.chave }}">
+  {% if exige_declaracao %}
+  <p class="campo">
+    <label for="declaracao_de_encerramento">Declaração de encerramento do prazo recursal</label>
+    <textarea id="declaracao_de_encerramento" name="declaracao_de_encerramento" rows="3" required aria-describedby="ajuda-declaracao"></textarea>
+    <span class="ajuda" id="ajuda-declaracao">Onde o ato não tem janela recursal que o sistema possa verificar, quem afirma que o prazo encerrou é você. A declaração é gravada em cada publicação marcada acima com ela.</span>
+  </p>
+  {% endif %}
+  {% endif %}
+  <p class="salvar">
+    <button type="submit" class="botao perigoso">{{ verbo }}</button>
+    <a href="{% url 'interface:marco' edital.id marco.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
+<p><a href="{% url 'interface:marco' edital.id marco.id %}" class="acao">Voltar ao marco</a></p>
+{% endif %}
+{% endblock %}

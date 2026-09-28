@@ -1367,3 +1367,20 @@ Requerimento de Matrícula; o total de vagas, se o usuário o quiser; e a emenda
 versão de catálogo (a propriedade 3 acima), e o acervo fica com duas formas de documento. O teste
 operacional da `DP-18` é o lugar barato para conferir esta lista: gerar o PDF do 28/2026 e compará-lo
 ao original, item por item, antes de escrever a spec.
+
+### O que foi decidido
+
+Em 28/09/2026, o usuário decidiu três das escolhas acima. A análise fica como estava.
+
+- **E10 = B** — transcrição com conferência na homologação. O setor continua redigindo fora do
+  sistema, e quem homologa confere a prévia contra o original, pela lista do item 3. Nada no código.
+- **E5 = B** — o catálogo ampliado pelas famílias que o piloto vai operar, com a seção textual
+  opcional e **sem redação padrão que afirme norma**. É spec, a *"O Edital do sistema como ato
+  oficial"* da recomendação, e o prazo dela continua o de cima: antes da primeira publicação real.
+- **Avisos na Revisão = sim** — os dois do item 3 da recomendação, sem impeditivo: *"ANEXO X"* citado
+  sem rótulo correspondente (RC-21), e seção textual que vai ao ato com a redação padrão, sem revisão
+  (a propriedade 1). Implementados pelo PR 220, com o RC-20 e o RC-12.
+
+**Ficam pendentes, com o Cefor**: como o ato é assinado no piloto (o item 5 da recomendação) e o nome
+próprio de quem assina no catálogo de autoridades (o item 4). Nenhum dos dois se resolve no código
+antes da resposta do Cefor.
