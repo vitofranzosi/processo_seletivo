@@ -130,4 +130,5 @@ concordância no singular de *"não produz ordem"*.
   não o vigente. É anterior a este achado, e não foi tocado.
 - **O documento cala parte do que a Revisão agora mostra**: o empate na última posição, a continuação
   do corte e a Etapa que habilita ao sorteio. Ver o
-  [achado do documento](achado-documento-cala-parte-do-corte.md).
+  [achado do documento](achado-documento-cala-parte-do-corte.md). *Corrigido em 27/09: o documento
+  passou a imprimi-los, e a Revisão lê as frases dele.*

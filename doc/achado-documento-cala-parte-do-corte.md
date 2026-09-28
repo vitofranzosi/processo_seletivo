@@ -3,8 +3,8 @@
 **Encontrado em**: 27/09/2026, ao corrigir o [achado da Revisão](achado-revisao-nao-mostra-a-classificacao.md),
 contra a `main` em `ac5552ad`.
 
-**Estado**: **registrado, não corrigido.** A regra daquela correção era não mexer no documento
-publicado. A decisão de corrigir é do usuário, e a correção muda o que se publica daqui em diante.
+**Estado**: **corrigido em 27/09/2026**, antes da spec do passo 1, por decisão do usuário. Ver
+[a correção](#a-correção-2709), no fim. Até aqui, o texto é o registro como foi feito.
 
 ---
 
@@ -56,3 +56,61 @@ não concorda com o número. A Revisão mostra a mesma frase, porque a reusa.
   mostra.
 
 Registro, não escopo.
+
+---
+
+## A correção (27/09)
+
+**Os requisitos.**
+
+- **Empate e continuação**: a `FR-185` da [`014`](../specs/014-corte-e-progressao-entre-etapas/spec.md),
+  que pede a Regra de Corte *"no documento gerado, na seção do marco a que pertence"*. Os dois campos
+  são os que a `FR-181` e a `FR-226` mandam declarar.
+- **A Etapa que habilita ao sorteio**: nenhum FR a enumera — a `FR-465` da
+  [`032`](../specs/032-executabilidade-antes-de-publicar/spec.md) lista os sete campos do método, e ela
+  é o décimo. O que a sustenta é a Constituição, §VI: *"O PDF DEVE [...] corresponder exatamente à
+  versão homologada"*, e o documento calava quem participa do sorteio que ele publica. O `R-012` da
+  [`021`](../specs/021-sorteio-publico-auditavel/research.md) chama a Etapa de *"declarada no Edital"*.
+- **O plural** de *"os 1 (um) primeiros"*, na mesma frase da `FR-185`.
+
+Nenhum requisito novo, nenhuma chave nova no conteúdo canônico.
+
+**O que o documento passou a imprimir** (`backend/processo_seletivo/publicacoes/infrastructure/pdf.py`),
+na seção do marco:
+
+```text
+  Corte:            Progridem os 10 (dez) primeiros desta ordem.
+  Empate no corte:  Havendo empate na última posição, progridem todos os empatados, ainda que
+                    excedam essa quantidade.        ← ou: essa quantidade não é excedida.
+  Continuação:      Poderá haver chamada, nesta ordem, além dos que este corte publicar.
+                                                    ← ou: Não haverá chamada além dos que …
+```
+
+E, no bloco *Sorteio*, depois dos sete campos do método:
+
+```text
+    Habilitação:    participam apenas as inscrições habilitadas na Etapa Prova didática
+                                                    ← ou: participam todas as inscrições submetidas
+```
+
+- **O empate e a continuação só saem com a frase do corte**, porque *"essa quantidade"* é a dela. A
+  regra sem alvo não imprime nenhuma das três.
+- **A habilitação é lida do método que governa** (`marcos.metodo_que_governa`), que é o que
+  `sorteios/application/relacao.py` lê ao projetar a relação. O marco que referencia o método comum
+  sorteia todas as submetidas, e o documento o diz. Ela continua **fora** da comparação que nomeia a
+  divergência entre o método próprio e o comum (`_publica_a_mesma_norma`).
+- **Alvo de um**: *"Progride o 1 (um) primeiro desta ordem."*; com suplentes, o verbo volta ao plural.
+
+**Um lugar só.** As frases moram em `pdf.py` (`_empate_no_corte`, `_continuacao_do_corte`,
+`_habilitacao_ao_sorteio`), e a Revisão as importa, como já importava `_regra_de_corte`. A redação
+própria que a Revisão tinha (*"todos os empatados progridem"*, *"admite chamar além…"*,
+*"Etapa que habilita a participar do sorteio"*) saiu. Os rótulos também passaram a ser os do documento:
+*Empate no corte*, *Continuação*, *Habilitação*. O que a Revisão ainda mostra e o documento não é o que
+ele cala de propósito: *"Etapa que o corte alimenta: nenhuma"* e o silêncio dito como silêncio.
+
+**O acervo.** Documento publicado não se regenera (Princípio II, `FR-469` da `032`): os Editais já
+publicados continuam com o documento que tinham. A prévia de um Edital antigo, se gerada de novo,
+mostra as linhas novas. Para ver pelo navegador, re-semeie o banco.
+
+**Testes**: `backend/tests/unit/publicacoes/test_pdf_classificacao.py` (bloco *"O documento dizia parte
+do corte"*) e as asserções da Classificação em `backend/tests/unit/interface/test_revisao.py`.

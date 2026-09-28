@@ -1206,10 +1206,14 @@ def _regra_de_corte(marco, etapas):
     **O marco terminal não imprime nada sobre Etapa**: ele corta para a análise e para a chamada, e
     escrever "não alimenta Etapa alguma" no Edital afirmaria ao candidato uma tecnicalidade do
     sistema, e não uma norma do certame.
+
+    O empate e a continuação, que completam a regra, têm frase própria logo abaixo
+    (`_empate_no_corte`, `_continuacao_do_corte`).
     """
     regra = marco.get("cutRule")
     if not isinstance(regra, dict):
         return ""
+    um_so = False
     if regra.get("targetKind") == "FROM_VACANCY_TABLE":
         quantos = "os primeiros desta ordem, até o número de vagas ofertadas no recorte"
     else:
@@ -1218,7 +1222,10 @@ def _regra_de_corte(marco, etapas):
             return ""
         extenso = POR_EXTENSO.get(alvo)
         numero = f"{alvo} ({extenso})" if extenso else str(alvo)
-        quantos = f"os {numero} primeiros desta ordem"
+        # "Progridem os 1 (um) primeiros" saía do alvo fixo de um, e a Revisão repetia a frase.
+        um_so = alvo == 1
+        quantos = f"o {numero} primeiro" if um_so else f"os {numero} primeiros"
+        quantos = f"{quantos} desta ordem"
     # A guarda da ausência é explícita, e não um `or ""` depois do `str()`: `str(None)` é a string
     # `"None"`, que é verdadeira — o `or` nunca dispararia, e bastaria existir uma Etapa de `id`
     # igual a `"None"` para o documento nomear a Etapa errada.
@@ -1226,14 +1233,91 @@ def _regra_de_corte(marco, etapas):
     destino = etapas.get(str(governada)) if governada else None
     nome = destino.get("name") if isinstance(destino, dict) else ""
     para = f" para {nome}" if nome else ""
-    frase = f"Progridem{para} {quantos}"
     excedente = regra.get("surplusCount")
-    if isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0:
+    com_suplentes = isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0
+    verbo = "Progride" if um_so and not com_suplentes else "Progridem"
+    frase = f"{verbo}{para} {quantos}"
+    if com_suplentes:
         extenso = POR_EXTENSO.get(excedente)
         numero = f"{excedente} ({extenso})" if extenso else str(excedente)
         plural = "suplentes" if excedente != 1 else "suplente"
         frase = f"{frase}, mais {numero} {plural}"
     return f"{frase}."
+
+
+# **O empate e a continuação são a outra metade da Regra de Corte** (014, FR-185), e o documento
+# imprimia só a primeira: dos seis campos de `faixa.CAMPOS_DA_REGRA`, quatro. Os dois que faltavam
+# mudam quem continua no certame — com alvo de 10 e três empatados na 10ª posição, um Edital leva
+# doze e o outro não emite o corte —, e quem lesse só o documento não reconstituía a regra que o
+# sistema aplica. A Revisão lê as mesmas frases daqui: duas redações da mesma regra seriam duas
+# normas, e a conferência diria uma coisa enquanto o Edital publica outra.
+#
+# **A frase segue a do corte, e a pressupõe**: "essa quantidade" é a que o par `Corte` acabou de
+# dizer. Alvo mais suplentes, e não só o alvo — é a última posição da faixa emitida que o empate
+# atravessa (FR-195, FR-196).
+EMPATE_NO_CORTE = {
+    "ADMITS_SURPLUS": (
+        "Havendo empate na última posição, progridem todos os empatados, ainda que excedam essa "
+        "quantidade."
+    ),
+    "STRICT": "Havendo empate na última posição, essa quantidade não é excedida.",
+}
+CONTINUACAO_DO_CORTE = {
+    "ALLOWED": "Poderá haver chamada, nesta ordem, além dos que este corte publicar.",
+    "NONE": "Não haverá chamada além dos que este corte publicar.",
+}
+
+
+def _empate_no_corte(marco):
+    """A frase do desfecho do empate que atravessa a faixa, ou `""` (014, FR-181, FR-185).
+
+    Valor fora do vocabulário não é impresso: a publicação o recusa (FR-182), e numa prévia de
+    rascunho escrever a chave crua poria no papel um identificador de máquina.
+    """
+    regra = marco.get("cutRule")
+    return EMPATE_NO_CORTE.get(regra.get("tieOutcome"), "") if isinstance(regra, dict) else ""
+
+
+def _continuacao_do_corte(marco):
+    """A frase da continuação além da faixa publicada, ou `""` (014, FR-226, FR-185)."""
+    regra = marco.get("cutRule")
+    return (
+        CONTINUACAO_DO_CORTE.get(regra.get("continuation"), "") if isinstance(regra, dict) else ""
+    )
+
+
+def _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+    """Quem participa do sorteio deste marco, na frase do Edital (021, R-012).
+
+    **Lida do método que governa**, e não da chave do marco: é o que a publicação da relação lê
+    (`sorteios/application/relacao.py`), e o documento não pode descrever um universo e a relação
+    projetar outro. Só o método próprio a carrega — o comum não tem como saber quais Etapas cada
+    marco enumera —, e o marco que referencia o comum sorteia todas as inscrições submetidas.
+
+    **A ausência é impressa, e não calada**, ao contrário do método incompleto em prévia: sem Etapa
+    de habilitação, entram todas as submetidas — é norma, e é a que decide quem é sorteado. O
+    Princípio VI pede o PDF correspondendo à versão homologada, e a `FR-465` o método que governa;
+    nenhuma das duas se cumpre com o documento calando o universo do sorteio.
+
+    Etapa declarada que não resolve não é impressa como "todas": afirmaria um universo maior do que
+    o declarado. A publicação recusa essa referência (`_validar_etapa_de_habilitacao`), e a prévia
+    de um rascunho assim sai sem a linha.
+    """
+    identidade = marco.get("id")
+    metodo = (
+        regras_do_marco.metodo_que_governa(
+            snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+        )
+        if identidade
+        else None
+    ) or marco.get("drawMethod")
+    declarada = (metodo or {}).get("qualifyingStageId")
+    if not declarada:
+        return "participam todas as inscrições submetidas"
+    etapa = etapas.get(str(declarada))
+    if not isinstance(etapa, dict) or not etapa.get("name"):
+        return ""
+    return f"participam apenas as inscrições habilitadas na Etapa {etapa['name']}"
 
 
 #: Como a ordem do marco nasce, em português (032, FR-464). A ausência não entra: marco do acervo
@@ -1258,7 +1342,9 @@ def _publica_a_mesma_norma(proprio, comum):
 
     **E o critério é o que o leitor vê.** O documento imprime os sete; anunciar uma divergência que
     ele não mostra manda quem lê procurar no papel uma diferença que não está lá — num documento
-    normativo e imutável, que é onde o erro não tem conserto. Comparar pelo **valor impresso**, e
+    normativo e imutável, que é onde o erro não tem conserto. A Etapa de habilitação também sai no
+    papel (`_habilitacao_ao_sorteio`), e continua fora da comparação: ela **especifica** o que o
+    comum não tem como dizer, e não o contraria. Comparar pelo **valor impresso**, e
     não pela chave crua, é o que amarra a afirmação ao artefato: o documento não diz que diverge
     aquilo que ele mesmo mostra igual.
     """
@@ -1417,6 +1503,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 # O bloco do método, entre o arredondamento e o recurso — a ordem é a que
                 # `contracts/marco-no-documento.md` fixa, e ela faz parte do contrato.
                 if sorteia and (metodo := _metodo_do_marco(snapshot, perfil, marco)):
+                    # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
+                    # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
+                    if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+                        metodo = [*metodo, ["Habilitação", habilitacao]]
                     composicao.escrever(
                         "Sorteio",
                         tamanho=CORPO_TEXTO,
@@ -1433,6 +1523,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 corte = _regra_de_corte(marco, etapas)
                 if corte:
                     posteriores.append(["Corte", corte])
+                    if empate := _empate_no_corte(marco):
+                        posteriores.append(["Empate no corte", empate])
+                    if continuacao := _continuacao_do_corte(marco):
+                        posteriores.append(["Continuação", continuacao])
                 _pares(composicao, posteriores, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
