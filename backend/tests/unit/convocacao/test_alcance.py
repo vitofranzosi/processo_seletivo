@@ -91,3 +91,35 @@ class TestAssinatura:
         assert alcance.assinatura(**self.BASE, identidades=["1"]) != alcance.assinatura(
             **outra, identidades=["1"]
         )
+
+
+class TestVencimento:
+    """Code review da `050`: uma origem só para o vencimento do ato."""
+
+    VERSAO = SimpleNamespace(
+        content={
+            "schedule": [
+                {"id": "e1", "type": "Matrícula", "endAt": "2026-10-10T17:00:00-03:00"},
+                {"id": "e2", "type": "Resultado", "endAt": None},
+            ]
+        }
+    )
+
+    def test_o_evento_e_a_data_juntos_sao_recusados(self):
+        from datetime import UTC, datetime
+
+        import pytest
+
+        from processo_seletivo.convocacao.application.fluxo import resolver_vencimento
+        from processo_seletivo.shared.api.problems import DomainError
+
+        with pytest.raises(DomainError) as recusa:
+            resolver_vencimento(
+                versao=self.VERSAO, vencimento=datetime(2026, 10, 1, tzinfo=UTC), evento_id="e1"
+            )
+        assert recusa.value.code == "vencimento_com_duas_origens"
+
+    def test_o_evento_sem_fim_nao_e_origem(self):
+        from processo_seletivo.convocacao.application.fluxo import eventos_do_cronograma
+
+        assert [evento["id"] for evento in eventos_do_cronograma(self.VERSAO)] == ["e1"]

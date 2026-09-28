@@ -6631,19 +6631,9 @@ def convocacao(request, edital_id, marco_id):
                     edital, marco_id, rota="interface:convocacao", atual=lista_id
                 ),
                 "leitura": leitura,
-                "titulares": fluxo.previa_dos_titulares(**recorte),
-                "vencidos": fluxo.previa_dos_vencidos(**recorte),
-                "pendentes": fluxo.previa_das_pendentes(**recorte),
-                # O fundamento de cada espécie, para a chamada individual mostrar antes do ato o que
-                # vai gravar (`FR-870`): a espécie depende de quem for escolhido no seletor.
-                "fundamentos": fluxo.fundamentos_por_especie(
-                    edital=edital,
-                    perfil_id=perfil_id,
-                    lista_id=lista_id,
-                    apuracao=leitura["apuracao"],
-                    at=agora,
-                ),
-                "especies_da_fila": _especies_da_fila(leitura),
+                # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
+                # quem só consulta, e calculá-las ali seria trabalho sem leitor.
+                **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -6787,6 +6777,24 @@ def convocar_view(request, edital_id, marco_id):
     except DomainError as erro:
         request.session["erro_da_convocacao"] = erro.detail
     return redirect(destino)
+
+
+def _previas_da_convocacao(fluxo, recorte, leitura):
+    """As prévias dos gestos da `050` e o que a chamada individual mostra antes do ato."""
+    return {
+        "titulares": fluxo.previa_dos_titulares(**recorte),
+        "vencidos": fluxo.previa_dos_vencidos(**recorte),
+        "pendentes": fluxo.previa_das_pendentes(**recorte),
+        # O fundamento de cada espécie (`FR-870`): a espécie depende de quem for escolhido.
+        "fundamentos": fluxo.fundamentos_por_especie(
+            edital=recorte["edital"],
+            perfil_id=recorte["perfil_id"],
+            lista_id=recorte["lista_id"],
+            apuracao=leitura["apuracao"],
+            at=recorte["at"],
+        ),
+        "especies_da_fila": _especies_da_fila(leitura),
+    }
 
 
 def _especies_da_fila(leitura):

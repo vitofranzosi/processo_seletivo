@@ -336,6 +336,9 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         }
         for convocacao in vigentes_do_recorte
     ]
+    # **Na ordem em que foram chamadas, e o protocolo desempata** (050). As do mesmo gesto nascem
+    # com o mesmo instante, e o desempate pelo identificador embaralhava a lista a cada gesto.
+    linhas.sort(key=lambda linha: (linha["convocacao"].criado_em, linha["inscricao"]["protocolo"]))
     # **Quem conduz o certame não reconhece ninguém por UUID.** O percurso conduzido encontrou a
     # fila, os dois seletores e o histórico inteiro escritos em identificador — tecnicamente exato e
     # operacionalmente inútil: a pessoa que vai convocar precisa conferir contra a lista publicada,

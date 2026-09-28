@@ -33,6 +33,7 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
 from processo_seletivo.convocacao.application.comunicar import comunicar
 from processo_seletivo.convocacao.application.convocar import (
+    _edital_do_processo,
     convocar,
     convocar_em_sequencia,
     declarado_da_convocacao,
@@ -45,7 +46,6 @@ from processo_seletivo.convocacao.application.desfechar import (
 )
 from processo_seletivo.convocacao.domain import alcance, fundamento, nomes, prazo
 from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
-from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_MENSAGEM_INDIVIDUAL,
@@ -110,6 +110,15 @@ def resolver_vencimento(*, versao, vencimento=None, evento_id=""):
     **Uma vez por ato.** O Evento escolhido tem precedência sobre a data digitada, porque é o que o
     Edital publicou; sem nenhum dos dois, o Edital não publica prazo, e vazio continua sendo isso.
     """
+    if evento_id and vencimento is not None:
+        # **Uma origem só.** Escolher o Evento e digitar uma data por cima deixava o Evento vencer
+        # em silêncio, e o prazo que N pessoas recebiam não era o que a tela mostrava por último.
+        raise DomainError(
+            "vencimento_com_duas_origens",
+            "Escolha o Evento do Cronograma ou digite a data — não os dois.",
+            422,
+            campo="vencimento",
+        )
     if evento_id:
         for evento in eventos_do_cronograma(versao):
             if evento["id"] == str(evento_id):
@@ -183,13 +192,6 @@ def _conferir(previa, assinatura):
             "agora antes de confirmar.",
             409,
         )
-
-
-def _edital_do_processo(processo_id, edital_id):
-    edital = Edital.objects.filter(processo_id=processo_id, id=identificador(edital_id)).first()
-    if edital is None:
-        raise DomainError("edital_nao_encontrado", "Edital não encontrado.", 404)
-    return edital
 
 
 def correlacao_do_gesto(chave):
@@ -289,7 +291,7 @@ def convocar_titulares(
         if ctx.repetido:
             declarado = ctx.desfecho_anterior
         else:
-            edital = _edital_do_processo(ctx.processo.id, edital_id)
+            edital = _edital_do_processo(ctx.processo, edital_id)
             perfil, marco = identificador(perfil_id), identificador(marco_id)
             lista = identificador(lista_id) if lista_id else None
             previa = previa_dos_titulares(
@@ -344,7 +346,15 @@ def convocar_titulares(
 
 
 def comunicar_cada(
-    *, actor, processo_id, convocacoes, forma, chave, endereco_do_portal="", referencia=""
+    *,
+    actor,
+    processo_id,
+    convocacoes,
+    forma,
+    chave,
+    endereco_do_portal="",
+    referencia="",
+    correlacao=None,
 ):
     """Uma emissão por convocação, pelo `comunicar` de sempre, com a chave derivada do gesto.
 
@@ -365,12 +375,16 @@ def comunicar_cada(
                 processo_id=processo_id,
                 convocacao_id=convocacao_id,
                 idempotency_key=f"{chave}:comunicar:{convocacao_id}",
-                correlation_id=correlacao_do_gesto(chave),
+                correlation_id=correlacao or correlacao_do_gesto(chave),
                 endereco_do_portal=endereco_do_portal,
                 referencia_da_publicacao=referencia,
             )
         except DomainError as recusa:
-            recusas[recusa.code] = recusas.get(recusa.code, 0) + 1
+            # **O motivo viaja junto da contagem**: "1 recusa" não diz a quem conduz o que fazer, e
+            # a frase da recusa diz — a forma não declarada aponta a Retificação, o estado
+            # indeterminado manda conferir o histórico.
+            anterior = recusas.get(recusa.code) or {"quantas": 0, "detalhe": recusa.detail}
+            recusas[recusa.code] = {**anterior, "quantas": anterior["quantas"] + 1}
             continue
         if emitida.get("resultado") == "ENVIADA":
             enviadas += 1
@@ -426,6 +440,9 @@ def convocar_e_comunicar(
     derivá-lo antes, fora dela, gravaria o texto de uma apuração que outra pessoa pode ter sucedido
     no meio do caminho.
     """
+    # **Autorizar antes de trabalhar** (Princípio III), como o `comunicar` faz: sem isto, quem não
+    # tem base saberia, pela recusa, se o Edital e o Evento existem.
+    exigir_base_de_comissao(actor=actor, processo_id=processo_id)
     edital = _edital_do_processo(processo_id, edital_id)
     versao = effective_version(edital_id=edital.id)
     instante, origem = resolver_vencimento(
@@ -475,6 +492,7 @@ def convocar_e_comunicar(
             forma=forma,
             chave=idempotency_key,
             endereco_do_portal=endereco_do_portal,
+            correlacao=correlation_id,
         ),
     }
 
@@ -545,7 +563,7 @@ def registrar_nao_atendimento_dos_vencidos(
     ) as ctx:
         if ctx.repetido:
             return ctx.desfecho_anterior
-        edital = _edital_do_processo(ctx.processo.id, edital_id)
+        edital = _edital_do_processo(ctx.processo, edital_id)
         previa = previa_dos_vencidos(
             edital=edital,
             perfil_id=identificador(perfil_id),
@@ -592,15 +610,28 @@ def previa_das_pendentes(*, edital, perfil_id, marco_id, lista_id=None, at=None,
     leitura = leitura or selectors.leitura_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=at
     )
-    linhas = list(alcance.pendentes(leitura["linhas"]).alcancadas)
+    candidatas = list(alcance.pendentes(leitura["linhas"]).alcancadas)
+    # **Emissão em estado indeterminado não é pendente** (spec, *Edge Cases*). A guarda do
+    # `comunicar` vale para a mesma chave, e este gesto usa uma chave nova por pessoa: sem este
+    # filtro, a reserva que ficou aberta depois de a mensagem sair — ou a que está saindo agora,
+    # noutra requisição — seria atropelada, e a pessoa receberia a mesma convocação duas vezes.
+    indeterminadas = _com_emissao_indeterminada(linha["convocacao"].id for linha in candidatas)
+    linhas = [linha for linha in candidatas if linha["convocacao"].id not in indeterminadas]
     # **A forma é a da versão que cada convocação citou** — a mesma leitura de `forma_declarada` —,
     # mas as versões são lidas por conjunto: uma consulta por pessoa seria o crescimento que a
     # `FR-888` proíbe, e o recorte cita, quase sempre, uma versão só.
     versoes = VersaoConsolidada.objects.in_bulk({linha["convocacao"].versao_id for linha in linhas})
     formas = {forma_vigente(versoes[linha["convocacao"].versao_id], perfil_id) for linha in linhas}
-    forma = next((f for f in sorted(formas, key=str) if f is not None), None)
+    # **Publicação vence**, e não a ordem alfabética: com uma Retificação no meio, o recorte pode
+    # ter pendentes das duas formas, e a referência de onde se publicou precisa ser pedida sempre
+    # que houver uma por publicação. A individual ignora a referência, de modo que pedi-la não a
+    # atrapalha.
+    forma = next(
+        (f for f in (FORMA_POR_PUBLICACAO, FORMA_POR_MENSAGEM_INDIVIDUAL) if f in formas), None
+    )
     return {
         "linhas": linhas,
+        "indeterminadas": len(indeterminadas),
         "forma": forma,
         "porPublicacao": forma == FORMA_POR_PUBLICACAO,
         "assinatura": alcance.assinatura(
@@ -611,6 +642,28 @@ def previa_das_pendentes(*, edital, perfil_id, marco_id, lista_id=None, at=None,
             identidades=[linha["convocacao"].id for linha in linhas],
         ),
     }
+
+
+def _com_emissao_indeterminada(convocacoes):
+    """As convocações cuja emissão reservou a chave e nunca registrou o que aconteceu.
+
+    **Por conteúdo, e não por chave**: a reserva guarda o resumo da carga que o `comunicar` usa, e a
+    carga é a identidade da convocação. Qualquer reserva aberta sobre ela — de quem quer que seja —
+    significa que uma mensagem pode ter saído sem registro.
+    """
+    from processo_seletivo.auditoria.models import IdempotencyRecord
+    from processo_seletivo.convocacao.application.comunicar import ATO as ATO_DE_COMUNICAR
+    from processo_seletivo.shared.canonical import canonical_sha256
+
+    por_resumo = {canonical_sha256({"convocacao": str(c)}): c for c in convocacoes}
+    if not por_resumo:
+        return set()
+    abertas = IdempotencyRecord.objects.filter(
+        operation=ATO_DE_COMUNICAR,
+        response_status__isnull=True,
+        request_hash__in=list(por_resumo),
+    ).values_list("request_hash", flat=True)
+    return {por_resumo[resumo] for resumo in abertas}
 
 
 def emitir_pendentes(

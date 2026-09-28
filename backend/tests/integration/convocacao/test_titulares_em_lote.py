@@ -218,3 +218,105 @@ def test_quem_nao_tem_base_de_comissao_recebe_404(cenario_do_77, sem_nada):
             idempotency_key="sem-base",
         )
     assert recusa.value.status == 404
+
+
+def test_emissao_em_estado_indeterminado_fica_fora_das_pendentes(cenario_do_77, gestor):
+    """Code review da `050`: a reserva aberta de uma emissão não é atropelada pelo gesto."""
+    from processo_seletivo.auditoria.models import IdempotencyRecord
+    from processo_seletivo.convocacao.application.comunicar import ATO
+    from processo_seletivo.shared.canonical import canonical_sha256
+
+    edital, _, _ = cenario_do_77
+    with mock.patch(
+        "processo_seletivo.convocacao.application.comunicar.send_mail",
+        side_effect=ConnectionError("smtp"),
+    ):
+        convocadas = confirmar(edital, gestor, previa(edital)["assinatura"])["convocadas"]
+    # A emissão que reservou a chave e caiu antes de registrar o que aconteceu.
+    IdempotencyRecord.objects.create(
+        institution_scope=gestor.institution_scope,
+        actor_subject=gestor.subject,
+        operation=ATO,
+        key="reserva-que-ficou-aberta",
+        request_hash=canonical_sha256({"convocacao": convocadas[0]["id"]}),
+    )
+
+    pendentes = fluxo.previa_das_pendentes(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+
+    assert [str(linha["convocacao"].id) for linha in pendentes["linhas"]] == [convocadas[1]["id"]]
+    assert pendentes["indeterminadas"] == 1
+
+
+def test_a_recusa_da_emissao_chega_com_o_motivo(cenario_sem_forma, gestor):
+    """Code review da `050`: "1 recusa" não diz o que fazer; a frase da recusa diz."""
+    edital, _, _ = cenario_sem_forma
+    pessoa = previa(edital)["pessoas"][0]["id"]
+
+    resultado = fluxo.convocar_e_comunicar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        inscricao_id=pessoa,
+        idempotency_key="individual-sem-forma",
+        correlation_id="teste-individual",
+        vencimento=VENCIMENTO,
+    )
+
+    recusa = resultado["recusas"][nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA]
+    assert recusa["quantas"] == 1
+    assert "Retificação" in recusa["detalhe"]
+
+
+def test_a_comunicacao_individual_fica_na_correlacao_do_proprio_ato(cenario_do_77, gestor):
+    """Code review da `050`: a chamada individual não é gesto em lote, e a trilha não a diz lote."""
+    edital, _, _ = cenario_do_77
+
+    fluxo.convocar_e_comunicar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        perfil_id=PROFILE_ID,
+        marco_id=MARCO,
+        inscricao_id=previa(edital)["pessoas"][0]["id"],
+        idempotency_key="individual-correlacao",
+        correlation_id="interface-convocacao-teste",
+        vencimento=VENCIMENTO,
+    )
+
+    assert set(
+        RegistroAuditoria.objects.filter(
+            operation__in=["CONVOCACAO_CONVOCAR", "CONVOCACAO_COMUNICAR"]
+        ).values_list("correlation_id", flat=True)
+    ) == {"interface-convocacao-teste"}
+
+
+def test_convocacao_desfechada_nao_e_comunicada(cenario_do_77, gestor):
+    """Code review da `050`: a mensagem diria "você foi convocada" a quem já respondeu."""
+    from processo_seletivo.convocacao.application.comunicar import comunicar
+    from processo_seletivo.convocacao.application.desfechar import desfechar
+
+    edital, _, _ = cenario_do_77
+    convocada = convocar(edital, gestor, previa(edital)["pessoas"][0]["id"], idempotency_key="d")
+    desfechar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        convocacao_id=convocada["id"],
+        especie=nomes.DESISTENCIA_EXPRESSA,
+        fundamento="Desistiu antes de ser comunicada.",
+        idempotency_key="d-desiste",
+        correlation_id="teste",
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        comunicar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            convocacao_id=convocada["id"],
+            idempotency_key="d-comunica",
+            correlation_id="teste",
+        )
+
+    assert recusa.value.code == nomes.CONVOCACAO_DESFECHADA
+    assert len(mail.outbox) == 0

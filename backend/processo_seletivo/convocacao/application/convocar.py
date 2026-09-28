@@ -230,10 +230,11 @@ def convocar(
         )
 
 
+# **Os rótulos do modelo, e não uma segunda grafia**: renomear a espécie na tela e esquecer a recusa
+# faria as duas dizerem coisas diferentes.
 _ESPECIE_POR_EXTENSO = {
-    nomes.VAGA_INICIAL: "para vaga inicial",
-    nomes.SUPLENCIA: "para vaga que vagou",
-    nomes.PARA_REGULARIZAR: "para regularizar o indeferimento",
+    valor: rotulo[:1].lower() + rotulo[1:]
+    for valor, rotulo in Convocacao._meta.get_field("especie").choices
 }
 
 

@@ -170,6 +170,7 @@ def comunicar(
             409,
         )
     agora = timezone.now()
+    _recusar_convocacao_desfechada(convocacao)
     _recusar_vencimento_anterior_ao_envio(convocacao, agora=agora)
 
     referencia = (referencia_da_publicacao or "").strip()
@@ -274,6 +275,24 @@ def _convocacao_do_processo_id(processo_id, convocacao_id, *, actor):
     if convocacao is None:
         raise DomainError("convocacao_nao_encontrada", "Convocação não encontrada.", 404)
     return convocacao
+
+
+def _recusar_convocacao_desfechada(convocacao):
+    """Chamada com desfecho não se comunica (050).
+
+    **A mensagem diria "você foi convocada" a quem já respondeu**, ou a quem a Administração já deu
+    por não atendida. O gesto das comunicações pendentes confere o alcance fora da trava, e o
+    desfecho registrado entre a conferência e o envio passava; a recusa aqui, logo antes de reservar
+    a chave, é a última porta antes da caixa de entrada da pessoa.
+    """
+    from processo_seletivo.convocacao.application.selectors import desfecho_de
+
+    if desfecho_de(convocacao) is not None:
+        raise DomainError(
+            nomes.CONVOCACAO_DESFECHADA,
+            "Esta convocação já tem desfecho registrado: não há o que comunicar.",
+            409,
+        )
 
 
 def _recusar_vencimento_anterior_ao_envio(convocacao, *, agora):

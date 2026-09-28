@@ -284,7 +284,7 @@ def test_a_tela_nao_afirma_numero_de_ocupacao_diferente_do_apurado(
 
     assert "A apuração deste recorte está obsoleta" in pagina
     assert "um desfecho de convocação mudou quem ocupa vaga" in pagina
-    assert f"<dt>Ocupadas</dt><dd>{vigente.ocupadas}</dd>" in pagina, (
+    assert f"<li><strong>{vigente.ocupadas}</strong>Ocupadas</li>" in pagina, (
         "o número exibido é o que a apuração vigente apurou, e não um recalculado pela tela"
     )
 

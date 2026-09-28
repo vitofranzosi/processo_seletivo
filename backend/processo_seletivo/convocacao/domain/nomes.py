@@ -209,6 +209,9 @@ NENHUM_TITULAR_A_CONVOCAR = "nenhum_titular_a_convocar"
 NENHUMA_CONVOCACAO_VENCIDA = "nenhuma_convocacao_vencida"
 NENHUMA_COMUNICACAO_PENDENTE = "nenhuma_comunicacao_pendente"
 
+# Comunicar uma chamada que já teve desfecho diria "você foi convocada" a quem já respondeu.
+CONVOCACAO_DESFECHADA = "convocacao_desfechada"
+
 # **Por que a apuração seguinte não saiu junto com o desfecho** (`D-005` da `050`). Não são recusas:
 # o desfecho está gravado, e o que se diz é por que o número novo continua sendo ato da ocupação.
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
