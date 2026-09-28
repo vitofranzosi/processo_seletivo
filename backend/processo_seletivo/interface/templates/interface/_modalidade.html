@@ -64,6 +64,12 @@
     deixaria os dois se afastarem em silêncio — e o silêncio seria a confirmação subcontando o que
     se perde, que é o oposto do que a FR-038 promete.
     {% endcomment %}
+    {% comment %}
+    **"Aplicar aos demais Perfis", pelo código** (051, FR-924, UX-110): nasce onde o código falta,
+    substitui os campos onde ele existe, e nunca remove Modalidade nem toca o quadro do destino.
+    {% endcomment %}
+    {% if quantos_perfis and quantos_perfis > 1 %}<button type="submit" class="acao" name="aplicar"
+            value="modalidade:{{ indice }}:{{ sub }}" formnovalidate>Aplicar aos demais Perfis ({{ quantos_perfis|add:"-1" }})</button>{% endif %}
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}?junto={{ alvo }}"
             data-junto="{{ alvo }}"

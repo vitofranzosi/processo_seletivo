@@ -380,6 +380,14 @@ def aplicar_marcos(perfis, efeitos, incluidos):
 CAMPOS_DA_REGRA = ("foundation", "version", "percentage", "rounding")
 
 
+def _campo_da_regra(regra, campo):
+    """O campo da regra da origem, com o vazio de cada tipo: `rounding` é objeto, os demais não."""
+    valor = copy.deepcopy(regra.get(campo))
+    if valor is None and campo == "rounding":
+        return {}
+    return valor
+
+
 def _regra_normalizada(regra):
     if not regra:
         return None
@@ -451,7 +459,7 @@ def efeitos_da_modalidade(perfis, *, origem, indice, nova=uuid.uuid4):
                     {
                         **copy.deepcopy(regra_atual),
                         **{
-                            campo: copy.deepcopy(regra_da_origem.get(campo))
+                            campo: _campo_da_regra(regra_da_origem, campo)
                             for campo in CAMPOS_DA_REGRA
                         },
                         "id": regra_atual.get("id") or str(nova()),
@@ -468,7 +476,7 @@ def efeitos_da_modalidade(perfis, *, origem, indice, nova=uuid.uuid4):
                 "normativeRule": (
                     {
                         **{
-                            campo: copy.deepcopy(regra_da_origem.get(campo))
+                            campo: _campo_da_regra(regra_da_origem, campo)
                             for campo in CAMPOS_DA_REGRA
                         },
                         "id": str(nova()),

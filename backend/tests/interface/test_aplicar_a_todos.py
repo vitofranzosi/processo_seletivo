@@ -285,3 +285,108 @@ def test_perfis_intocados_fora_da_unidade(client, tres_perfis):
 
     depois = {p.id: (p.locality, p.name, p.immediate_vacancies) for p in PerfilVaga.objects.all()}
     assert antes == depois
+
+
+# ---- a etapa Perfis: a Modalidade pelo código e o controle do Edital (US2) -----------------------
+
+PCD = {
+    "modalidade-0-0-id": "aaaaaaaa-0000-4000-8000-000000051d01",
+    "modalidade-0-0-ruleId": "aaaaaaaa-0000-4000-8000-000000051d11",
+    "modalidade-0-0-code": "PCD",
+    "modalidade-0-0-name": "Pessoa com deficiência",
+    "modalidade-0-0-percentage": "5",
+    "modalidade-0-0-foundation": "Lei 13.146/2015",
+    "modalidade-0-0-version": "2015-07-06",
+}
+
+
+def test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro(client, tres_perfis):
+    from processo_seletivo.editais.models.perfis import ModalidadeConcorrencia
+
+    formulario = _perfis_no_formulario(**PCD)
+    previa = client.post(_url(tres_perfis, "perfis"), {**formulario, "aplicar": "modalidade:0:0"})
+
+    assert previa.status_code == 200
+    corpo = _texto(previa)
+    assert "Aplicar a Modalidade aos demais Perfis" in corpo
+    assert "2 nascem" in corpo
+    assert "Já declara: nenhuma" in corpo
+    assert not ModalidadeConcorrencia.objects.filter(perfil_id=P2).exists()
+
+    resposta = client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "confirmar_aplicacao": "modalidade:0:0",
+            "aplicar_destino": ["1", "2"],
+            "aplicar_impressao": _impressao(previa.content.decode()),
+        },
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    for perfil in (P2, P3):
+        modalidade = ModalidadeConcorrencia.objects.get(perfil_id=perfil)
+        assert modalidade.code == "PCD"
+        assert str(modalidade.id) != PCD["modalidade-0-0-id"]
+        assert modalidade.regra_normativa.percentage == 5
+        assert (
+            not PerfilVaga.objects.get(pk=perfil)
+            .quadro_de_vagas.filter(modalidade=modalidade)
+            .exists()
+        )
+    registro = RegistroAuditoria.objects.get(operation="APLICAR_A_TODOS")
+    assert registro.detalhe["origem"]["modalidade"] == "PCD"
+    assert {item["perfil"] for item in registro.detalhe["destinos"]} == {P2, P3}
+
+
+def test_a_forma_de_convocacao_declarada_uma_vez_vai_a_todos(client, tres_perfis):
+    formulario = _perfis_no_formulario()
+    previa = client.post(
+        _url(tres_perfis, "perfis"),
+        {**formulario, "edital-callForm": "INDIVIDUAL_MESSAGE", "aplicar": "edital:callForm"},
+    )
+    assert "3 nascem" in _texto(previa)
+
+    resposta = client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "edital-callForm": "INDIVIDUAL_MESSAGE",
+            "confirmar_aplicacao": "edital:callForm",
+            "aplicar_destino": ["0", "1", "2"],
+            "aplicar_impressao": _impressao(previa.content.decode()),
+        },
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    assert set(PerfilVaga.objects.values_list("forma_de_convocacao", flat=True)) == {
+        "INDIVIDUAL_MESSAGE"
+    }
+    corpo = client.get(_url(tres_perfis, "perfis")).content.decode()
+    assert re.search(r'<option value="INDIVIDUAL_MESSAGE" selected>', corpo)
+
+
+def test_o_perfil_novo_nasce_com_a_forma_que_todos_declaram(client, tres_perfis):
+    PerfilVaga.objects.update(forma_de_convocacao="PUBLICATION")
+
+    corpo = client.get(
+        reverse("interface:fragmento-perfil") + f"?edital={tres_perfis.id}"
+    ).content.decode()
+
+    assert re.search(r'<option value="PUBLICATION" selected>', corpo)
+
+
+def test_a_reversao_deixa_fora_o_perfil_sem_lista_reservada(client, tres_perfis):
+    formulario = _perfis_no_formulario(**PCD)
+    previa = client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "edital-vacancyReversion": "ON_BALANCE",
+            "aplicar": "edital:vacancyReversion",
+        },
+    )
+
+    corpo = _texto(previa)
+    assert "1 nasce, 2 ficam fora do alcance" in corpo
+    assert "não declara lista reservada" in corpo

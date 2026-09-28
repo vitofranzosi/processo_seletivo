@@ -1404,6 +1404,9 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "perfis": perfis,
             "quantos_perfis": len(perfis or []),
+            # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
+            # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
+            "comuns": _comuns(perfis, request.POST) if etapa == "perfis" else {},
             # O prefixo dos campos do primeiro marco desta tela — `marco-<perfil>-0` (030,
             # FR-426, FR-427). **Vazio significa que não há marco**, e é o que faz o bloco de
             # ajuda da etapa não ser apresentado: ajuda sobre campos que ninguém tem à frente é
@@ -1901,6 +1904,23 @@ def _linhas_gerais_rederivadas(etapa, digitados):
     return reafirmadas
 
 
+def _comuns(perfis, dados):
+    """Os valores do controle do Edital: o escolhido neste envio, senão o que os Perfis concordam.
+
+    `varia` diz se os Perfis divergem — o controle mostra isso em vez de um valor, porque "não
+    declarado" seria falso sobre um Edital em que metade dos Perfis declara.
+    """
+    comuns = {}
+    for campo in regra_da_aplicacao.CAMPOS_DO_PERFIL:
+        valores = {regra_da_aplicacao._valor_do_campo(perfil, campo) for perfil in perfis or []}
+        chave = f"edital-{campo}"
+        comuns[campo] = (
+            dados.get(chave) if chave in dados else regra_da_aplicacao.valor_comum(perfis, campo)
+        )
+        comuns[f"{campo}_varia"] = len(valores) > 1
+    return comuns
+
+
 #: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
 #: Modalidade, a forma de convocação e a reversão, dos Perfis.
 ETAPAS_DO_GESTO = ("classificacao", "perfis")
@@ -2136,6 +2156,15 @@ def fragmento_perfil(request):
     # nasceu: sem o diálogo. É o que acontece na restauração do rascunho local, que pede o
     # fragmento sem ele.
     edital, ator = _edital_do_fragmento(request, com_ator=True)
+    # **A forma de convocação que todos os Perfis declaram iguais** (051, FR-926): o Edital a
+    # declara uma vez, e o Perfil novo não precisa que ela seja declarada de novo. Divergindo, nada:
+    # escolher uma das formas seria decidir pelo operador. A reversão não vem junto — o Perfil
+    # novo não tem lista reservada, e ela só existe onde há uma.
+    forma_comum = (
+        regra_da_aplicacao.valor_comum(forms.perfis_do_edital(edital), "callForm")
+        if edital is not None and edital.perfis.exists()
+        else ""
+    )
     return render(
         request,
         "interface/_perfil.html",
@@ -2143,6 +2172,7 @@ def fragmento_perfil(request):
             "perfil": {
                 "id": identidade_nova,
                 "reserveType": "NONE",
+                "callForm": forma_comum,
                 "quadro": forms.quadro_do_formulario({"id": identidade_nova}),
                 "tem_lista_reservada": False,
             },
