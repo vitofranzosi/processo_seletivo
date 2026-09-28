@@ -589,6 +589,13 @@ cartão leva ao lugar onde a resposta que o revela é dada.
             hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
   </section>
   <p class="remover">
+    {% comment %}
+    **"Aplicar aos demais Perfis"** (051, UX-110). Um envio do formulário, e não um fragmento: a
+    prévia precisa do que está digitado em todos os cartões, e a gravação é a da etapa (R-001).
+    `formnovalidate` porque pedir a prévia não é gravar — quem cobra o que falta é a gravação.
+    {% endcomment %}
+    {% if quantos_perfis and quantos_perfis > 1 %}<button type="submit" class="acao" name="aplicar"
+            value="marco:{{ indice }}:{{ sub }}" formnovalidate>Aplicar aos demais Perfis ({{ quantos_perfis|add:"-1" }})</button>{% endif %}
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este marco</button>

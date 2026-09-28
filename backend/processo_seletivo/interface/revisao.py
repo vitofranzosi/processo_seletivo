@@ -24,6 +24,7 @@ elabora; o que este módulo garante é que nenhuma delas fique de fora.
 from datetime import datetime
 
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain import quadro
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.mutabilidade import RAIZ
@@ -166,6 +167,19 @@ REVERSAO = {
     "ON_EXHAUSTION": "só quando a lista reservada esgota",
     "ON_BALANCE": "a quantidade que ficou sem preencher",
 }
+
+
+#: Os rótulos dos dois valores do Perfil que o controle do Edital aplica (051, FR-926) — os mesmos
+#: com que `_perfil` os lê, para que a prévia e a conferência digam a mesma coisa.
+ROTULO_DO_CAMPO_DO_PERFIL = {
+    "callForm": "Como a convocação é comunicada",
+    "vacancyReversion": "Reverter vaga reservada não preenchida para a ampla concorrência",
+}
+
+
+def arredondamento_da_reserva(rounding):
+    """O arredondamento da regra normativa em palavras (051, FR-933)."""
+    return quadro.em_palavras(rounding)
 
 
 def _dia(valor):

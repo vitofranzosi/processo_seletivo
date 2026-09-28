@@ -49,6 +49,43 @@ REGRA_DE_ETAPA_UNICA = {"operation": "MEDIA_PONDERADA", "normalization": "NENHUM
 #: linha, e não na releitura do que já foi declarado. Retificação não o vê chegar por conta própria.
 ARREDONDAMENTO_PADRAO = {"scale": 2, "mode": "MEIO_PARA_CIMA"}
 
+#: O corte com que nasce o marco **único** de um Perfil (051, FR-927).
+#:
+#: **O operador declarava um corte para dizer que não corta.** Sem corte não há faixa, e sem faixa
+#: não há convocação (014); desde a `046`, Perfil sem corte não publica. O que o Edital escreve no
+#: marco final — *"serão convocados os classificados até o número de vagas"* — é exatamente isto:
+#: quantas vagas o quadro publicar, sem suplente na mesma emissão, e sem Etapa depois dele.
+#:
+#: **Só os três campos que têm resposta de contexto.** O desfecho do empate e a faixa seguinte
+#: continuam sem padrão (014, FR-182 e FR-226): as duas saídas fáceis afirmariam norma que ninguém
+#: escreveu. O cartão os pergunta, e a publicação os cobra, como sempre.
+#:
+#: **Marco novo, e nunca marco existente** (030, FR-421): nasce no fragmento que cria o cartão, e só
+#: quando o Perfil não tem outro marco na tela — o segundo marco de um Perfil costuma ser o
+#: intermediário, que corta para outra Etapa, e o padrão ali seria a afirmação errada.
+CORTE_PADRAO = {
+    "targetKind": "FROM_VACANCY_TABLE",
+    "targetCount": None,
+    "surplusCount": 0,
+    "governedStage": "NONE",
+}
+
+
+def e_o_corte_padrao(regra) -> bool:
+    """A regra de corte declara, nos três campos que o padrão preenche, o que ele preencheria?
+
+    Serve à Revisão, que diz a origem do valor (051, FR-934): coincidir com o padrão é o que se
+    pode afirmar sem registro, e é o que quem confere precisa saber — que ninguém escolheu isto, ou
+    que escolheu o mesmo que o sistema escolheria.
+    """
+    if not isinstance(regra, dict):
+        return False
+    return (
+        regra.get("targetKind") == CORTE_PADRAO["targetKind"]
+        and int(regra.get("surplusCount") or 0) == CORTE_PADRAO["surplusCount"]
+        and regra.get("governedStage") == CORTE_PADRAO["governedStage"]
+    )
+
 
 def identidade_derivada(*, codigo_do_perfil, nome_do_perfil, codigos_em_uso=()):
     """`(code, name)` iniciais do marco, derivados do Perfil a que ele pertence (FR-420).

@@ -111,6 +111,7 @@ from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulg
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.editais.application import anexos as anexos_command
+from processo_seletivo.editais.application.aplicacao import gravar_aplicacao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.application.reaproveitamento import (
@@ -126,6 +127,7 @@ from processo_seletivo.editais.application.reaproveitamento import (
 from processo_seletivo.editais.application.requerimento import (
     atualizar_requerimento_de_matricula,
 )
+from processo_seletivo.editais.domain import aplicacao as regra_da_aplicacao
 from processo_seletivo.editais.domain import duplicacao, marcos
 from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
@@ -154,6 +156,7 @@ from processo_seletivo.interface import (
     identidade,
     revisao,
 )
+from processo_seletivo.interface import aplicacao as aplicacao_ui
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -1260,9 +1263,22 @@ def compor_etapa(request, edital_id, etapa):
 
     editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
-    erros, digitados, restaurado = [], None, False
+    erros, digitados, restaurado, previa = [], None, False, None
 
-    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS and request.POST.get("restaurar"):
+    if (
+        request.method == "POST"
+        and etapa in ETAPAS_DO_GESTO
+        and editavel
+        and (pedido := aplicacao_ui.pedido(request.POST)) is not None
+    ):
+        # **"Aplicar aos demais Perfis"** (051). O gesto é um envio da etapa, e não um caminho
+        # próprio de gravação (R-001): a prévia devolve esta mesma tela com o digitado, e só a
+        # confirmação grava — pela gravação da etapa, com o registro do gesto na mesma transação.
+        digitados, previa, destino = _gesto(request, ator, edital, etapa, pedido, erros)
+        if destino:
+            return redirect(destino)
+        edital.refresh_from_db()
+    elif request.method == "POST" and etapa in ETAPAS_GRAVAVEIS and request.POST.get("restaurar"):
         # **Reexibir o rascunho local, sem gravar nada** (RC-08; FR-020 da 002). A leitura é a
         # mesma da recusa, logo abaixo, e é por isso que a Modalidade, o fato, a linha do quadro e
         # os marcos em trânsito voltam: remontá-los no navegador perdia tudo que era aninhado. Não
@@ -1377,12 +1393,17 @@ def compor_etapa(request, edital_id, etapa):
             # uma etapa e abre outra, então nem sempre é a etapa desta tela.
             "salvo_chave": request.GET.get("salvo", ""),
             "restaurado": restaurado,
+            # A prévia do gesto, quando este envio a pediu (051, FR-916); e, depois da confirmação,
+            # quantos Perfis ela alcançou — a notícia do que acabou de acontecer.
+            "previa": previa,
+            "aplicado": request.GET.get("aplicado", ""),
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
                 else {"title": edital.title, "description": edital.description}
             ),
             "perfis": perfis,
+            "quantos_perfis": len(perfis or []),
             # O prefixo dos campos do primeiro marco desta tela — `marco-<perfil>-0` (030,
             # FR-426, FR-427). **Vazio significa que não há marco**, e é o que faz o bloco de
             # ajuda da etapa não ser apresentado: ajuda sobre campos que ninguém tem à frente é
@@ -1880,8 +1901,97 @@ def _linhas_gerais_rederivadas(etapa, digitados):
     return reafirmadas
 
 
-def _gravar_etapa(request, ator, edital, etapa, digitados):
-    """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
+#: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
+#: Modalidade, a forma de convocação e a reversão, dos Perfis.
+ETAPAS_DO_GESTO = ("classificacao", "perfis")
+
+
+def _gesto(request, ator, edital, etapa, pedido, erros):
+    """`(digitados, prévia, destino)` de um envio que pede ou confirma o gesto (051).
+
+    Nada é gravado sem confirmação, e a confirmação só grava se a prévia de agora for a que foi
+    mostrada (FR-919): a impressão cobre todos os destinos, e qualquer mudança na tela ou no banco
+    entre as duas faz a tela mostrar a prévia nova, com a razão.
+    """
+    try:
+        digitados = _ler_etapa(request, etapa)
+    except ValueError as exc:
+        erros.append(_recusa(exc, None, etapa))
+        return None, None, None
+    if pedido.cancelar:
+        return digitados, None, None
+    try:
+        efeitos, perfis, origem, na_tela = aplicacao_ui.efeitos(
+            pedido, etapa=etapa, digitados=digitados, dados=request.POST, edital=edital
+        )
+    except aplicacao_ui.PedidoInvalido:
+        erros.append(
+            {
+                "mensagem": (
+                    "A origem pedida não está nesta tela. Recarregue a etapa e peça a aplicação "
+                    "de novo."
+                ),
+                "ancora": "",
+            }
+        )
+        return digitados, None, None
+    recusa = ""
+    if pedido.confirmar:
+        if regra_da_aplicacao.assinatura(efeitos) != pedido.impressao:
+            recusa = (
+                "O que estava na tela mudou depois da prévia. Confira a prévia de agora antes de "
+                "aplicar."
+            )
+        elif not regra_da_aplicacao.alcancados(efeitos, pedido.incluidos):
+            recusa = "Nenhum Perfil está marcado para receber a aplicação."
+    if not pedido.confirmar or recusa:
+        return (
+            digitados,
+            aplicacao_ui.previa(
+                pedido,
+                efeitos,
+                perfis,
+                edital=edital,
+                dados=request.POST,
+                recusa=recusa,
+                valor=na_tela,
+            ),
+            None,
+        )
+    novos = aplicacao_ui.aplicar(pedido, efeitos, perfis, dados=request.POST)
+    try:
+        if etapa == "perfis":
+            _conferir_marcos_em_transito(edital, novos)
+        _gravar_etapa(
+            request,
+            ator,
+            edital,
+            etapa,
+            novos,
+            gesto={
+                "registro": aplicacao_ui.registro(
+                    pedido, efeitos, perfis, etapa=etapa, origem=origem
+                ),
+                "razao": aplicacao_ui.razao(pedido, efeitos, origem=origem),
+            },
+        )
+    except (ValueError, DomainError) as exc:
+        erros.append(_recusa(exc, novos, etapa))
+        return novos, None, None
+    quantos = len(regra_da_aplicacao.alcancados(efeitos, pedido.incluidos))
+    return (
+        novos,
+        None,
+        f"{reverse('interface:compor-etapa', args=[edital.id, etapa])}"
+        f"?salvo={etapa}&aplicado={quantos}",
+    )
+
+
+def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
+    """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro.
+
+    Com `gesto` (051), grava pelo mesmo `replace_draft` e registra o gesto na mesma transação.
+    """
     if etapa == "identificacao":
         # A identificação não é conteúdo do rascunho: tem ato próprio, com auditoria própria.
         return update_edital_identification(
@@ -1944,7 +2054,14 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         conteudo[colecao] = _preservando(
             digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
         )
-    return replace_draft(
+    gravar = (
+        replace_draft
+        if gesto is None
+        else lambda **gravacao: gravar_aplicacao(
+            registro=gesto["registro"], razao=gesto["razao"], **gravacao
+        )
+    )
+    return gravar(
         actor=ator,
         edital_id=edital.id,
         expected_revision=edital.revision,
@@ -2330,7 +2447,7 @@ def _etapas_governaveis(edital):
     ]
 
 
-def _marco_novo(edital, indice):
+def _marco_novo(edital, indice, *, marcos_na_tela=0):
     """O marco recém-acrescentado, já com o que o sistema sabe responder por ele (030).
 
     **Identidade primeiro**, pela mesma razão da modalidade: a gravação preserva o `id` recebido, e
@@ -2343,8 +2460,22 @@ def _marco_novo(edital, indice):
 
     **Só no marco novo.** Nada disto alcança marco já declarado, nem em Retificação (FR-421): esta
     função só é chamada pelo fragmento que cria a linha.
+
+    **E o corte, quando é o único marco do Perfil** (051, FR-927). `marcos_na_tela` conta os cartões
+    que o Perfil já tem **na tela**, e não os gravados: o segundo marco acrescentado antes de gravar
+    o primeiro é o intermediário, e nasceria com o corte do final se a conta fosse a do banco.
     """
     novo = {"id": str(uuid4()), **marcos.ARREDONDAMENTO_PADRAO}
+    if not marcos_na_tela:
+        padrao = marcos.CORTE_PADRAO
+        novo.update(
+            {
+                "cutTargetKind": padrao["targetKind"],
+                "cutTargetCount": "",
+                "cutSurplusCount": padrao["surplusCount"],
+                "cutGovernedStage": padrao["governedStage"],
+            }
+        )
     perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
     if perfil is None:
         return novo
@@ -2368,9 +2499,14 @@ def fragmento_marco(request, indice):
         request,
         "interface/_marco_acrescentado.html",
         {
-            "marco": _marco_novo(edital, indice),
+            "marco": _marco_novo(
+                edital, indice, marcos_na_tela=len(forms._indices(request.GET, f"marco-{indice}"))
+            ),
             "indice": indice,
             "sub": sub,
+            # Quantos Perfis o Edital tem: o botão de aplicar aos demais só existe com destino
+            # (051, UX-110).
+            "quantos_perfis": edital.perfis.count() if edital else 0,
             # **O cartão precisa saber se o Edital declara método comum** (030, FR-429): sem isto
             # o fragmento diria "ainda não declarado" sobre um marco que referencia o comum, e a
             # tela inteira — que sabe — passaria a contradizer o pedaço dela que o htmx troca.
@@ -2426,6 +2562,7 @@ def fragmento_marco_recomposto(request, indice, sub):
             "marco": _reexibir_marco(marco),
             "indice": indice,
             "sub": sub,
+            "quantos_perfis": edital.perfis.count() if edital else 0,
             # Como no fragmento que cria a linha, e pela mesma razão: o pedaço trocado não pode
             # saber menos do que a tela que o contém (030, FR-429).
             "tem_metodo_comum": bool(edital.metodo_de_sorteio_comum) if edital else False,
@@ -3907,6 +4044,9 @@ MOMENTOS_DO_REQUERIMENTO = (
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
+    # O gesto que materializa uma declaração em vários Perfis (051, FR-921). A frase da trilha diz
+    # a unidade, a origem e quantos Perfis ela alcançou.
+    "APLICAR_A_TODOS": "Aplicação a vários Perfis",
     "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
     # A declaração do Requerimento de Matrícula (029). Sem rótulo, a trilha exibiria o código cru
     # a quem responde *"quando o Edital passou a pedir isto?"*.

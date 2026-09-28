@@ -4,6 +4,7 @@
 {% block etapa %}
 <form method="post" id="formulario">
   {% csrf_token %}
+  {% if previa %}{% include "interface/_previa_da_aplicacao.html" %}{% endif %}
 <section aria-labelledby="titulo-classificacao">
   <h2 id="titulo-classificacao">Marcos classificatórios</h2>
   {% comment %}
@@ -166,6 +167,8 @@
     </div>
     <button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-marco' perfil.id %}?edital={{ edital.id }}"
+            {% comment %}Os cartões que o Perfil já tem na tela: o único nasce com o corte padrão, e o segundo não (051, FR-927).{% endcomment %}
+            hx-include="#marcos-{{ perfil.id }}"
             hx-target="#marcos-{{ perfil.id }}" hx-swap="beforeend">Acrescentar marco</button>
   </fieldset>
   {% endfor %}
