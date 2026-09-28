@@ -590,20 +590,21 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
 
     assert "Ministério da Educação" in texto
     assert "Instituto Federal do Espírito Santo" in texto
-    # O ato e o objeto são **uma** sentença, como nos três alvos: o título do cenário já abre por
-    # "Edital", então é ele que anuncia o ato — imprimir os dois anunciaria o mesmo ato duas vezes.
-    assert "EDITAL 07/2026 — PROFESSOR SUBSTITUTO" in texto
+    # O ato e o objeto são **uma** sentença, como nos três alvos. O ato sai de `number`/`year`
+    # (FR-006, RC-20); o título do cenário repete exatamente o ato, e por isso perde o prefixo —
+    # imprimir os dois anunciaria o mesmo ato duas vezes.
+    assert "EDITAL Nº 07/2026 — PROFESSOR SUBSTITUTO" in texto
     assert texto.count("EDITAL") == 1
 
     # A ordem: identificação institucional antes do ato, ato antes de qualquer conteúdo normativo.
     ministerio = linhas.index("Ministério da Educação")
-    ato = linhas.index("EDITAL 07/2026 — PROFESSOR SUBSTITUTO")
+    ato = linhas.index("EDITAL Nº 07/2026 — PROFESSOR SUBSTITUTO")
     primeira_secao = next(i for i, linha in enumerate(linhas) if linha.startswith("1. "))
     assert ministerio < ato < primeira_secao
 
     # O ato é negrito e caixa alta; a identificação do órgão é o **maior** texto da página.
     assert any(
-        linha.startswith("EDITAL 07/2026") and fonte == "F2"
+        linha.startswith("EDITAL Nº 07/2026") and fonte == "F2"
         for linha, fonte, _, _ in linhas_desenhadas(documento(snapshot(), HASH))
     )
     corpo = next(
@@ -619,6 +620,60 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     # **Calibração corrigida pelo Edital 146/2025**: a primeira redação tinha isto ao contrário, e
     # era o que fazia a abertura parecer nota de rodapé sob um título de relatório.
     assert institucional > corpo
+
+
+@pytest.mark.parametrize(
+    ("titulo", "anuncio"),
+    [
+        # O título que repete exatamente o ato perde o prefixo, em qualquer grafia do "Nº".
+        ("Edital Nº 07/2026: Professor Substituto", "EDITAL Nº 07/2026 — PROFESSOR SUBSTITUTO"),
+        ("EDITAL N° 07/2026", "EDITAL Nº 07/2026"),
+        # O título que não abre pelo ato sai inteiro, depois do ato.
+        ("Professor Substituto", "EDITAL Nº 07/2026 — PROFESSOR SUBSTITUTO"),
+        (
+            "Edital de seleção de professor substituto",
+            "EDITAL Nº 07/2026 — EDITAL DE SELEÇÃO DE PROFESSOR SUBSTITUTO",
+        ),
+        # O caso do 140/2025 no estudo de 21/09: o título diz outro número. A capa não pode trocar
+        # o ato pelo título — a divergência fica à vista, e o ato é o do rodapé.
+        ("Edital 140/2025 — Tutor", "EDITAL Nº 07/2026 — EDITAL 140/2025 — TUTOR"),
+    ],
+)
+def test_o_ato_sai_sempre_do_numero_e_do_ano(titulo, anuncio):
+    """RC-20, pela DP-20: o ato é `EDITAL Nº <número>/<ano>` (008, FR-006), nunca o título.
+
+    Antes, o título que abria por "Edital" substituía o ato, e o documento podia se identificar
+    com um número na capa e outro no rodapé — ou com nenhum.
+    """
+    linhas = [
+        linha for linha, _, _, _ in linhas_desenhadas(documento(snapshot(title=titulo), HASH))
+    ]
+    assert anuncio in linhas
+
+
+def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
+    """RC-12, pela DP-20: o teto executado na submissão é publicado no documento (015, FR-063)."""
+    sem_teto = texto_de(documento(snapshot(), HASH))
+    assert "inscrição enviada" not in sem_teto
+    assert "inscrições enviadas" not in sem_teto
+
+    um = [
+        linha
+        for linha, _, _, _ in linhas_desenhadas(
+            documento(snapshot(maxInscricoesPorCandidato=1), HASH)
+        )
+    ]
+    frase = "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+    assert frase in um
+    # Dentro da seção "Da Inscrição", depois do texto de quem redigiu, e antes da seção seguinte.
+    inicio = next(i for i, linha in enumerate(um) if linha.endswith(". DA INSCRIÇÃO"))
+    seguinte = next(
+        i for i, linha in enumerate(um) if i > inicio and linha[:1].isdigit() and ". " in linha
+    )
+    assert inicio < um.index(frase) < seguinte
+
+    dois = texto_de(documento(snapshot(maxInscricoesPorCandidato=2), HASH))
+    assert "no máximo 2 inscrições enviadas neste Edital" in dois
 
 
 def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
