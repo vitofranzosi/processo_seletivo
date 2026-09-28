@@ -311,9 +311,19 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       </span>
     </p>
 
+    {% comment %}
+    RC-62: a inscricao que ja tem Resultado nesta Etapa nao tem a conclusao oferecida, e a tela diz
+    por que antes do clique, com a frase do comando. O rascunho continua: ele nao e ato, e e o que
+    fica se um recurso vier a determinar reavaliacao.
+    {% endcomment %}
+    {% if impedimento_de_concluir %}
+    <p class="aviso" role="status" id="impedimento-de-concluir">{{ impedimento_de_concluir }}</p>
+    {% endif %}
     <p class="acoes">
       <button type="submit" class="acao">Salvar sem concluir</button>
+      {% if not impedimento_de_concluir %}
       <button type="submit" class="botao" formaction="{% url 'interface:mesa-avaliacao-concluir' edital.id etapa_id inscricao.id %}">Concluir avaliação</button>
+      {% endif %}
     </p>
   </form>
   {% endif %}

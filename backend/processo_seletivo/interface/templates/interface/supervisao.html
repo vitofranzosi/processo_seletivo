@@ -95,6 +95,8 @@ quem navega por marcos salte de uma para a outra sem varrer a página (UX-006).
     <p class="nenhuma">Este Edital não tem cronograma vigente: não há prazo nem marco a apresentar.</p>
     {% elif item.ausencia == "sem-periodo" %}
     <p class="nenhuma">O cronograma deste Edital não marca nenhum Evento como período de inscrições.</p>
+    {% elif item.periodo.cancelado %}
+    <p>Período de inscrições cancelado: o Edital não recebe inscrição.</p>
     {% else %}
     <p>
       Inscrições de {{ item.periodo.inicio|date:"d/m/Y, H\hi" }}

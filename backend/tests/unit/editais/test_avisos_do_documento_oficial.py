@@ -6,6 +6,8 @@ publicada. Duas coisas iam ao ato sem ninguém dizer: a remissão a um anexo que
 são **aviso**: a remissão pode ser a anexo de outro ato, e o padrão pode valer como está.
 """
 
+import pytest
+
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.editais.domain.validation import (
     ANEXO_CITADO_SEM_ROTULO,
@@ -73,6 +75,19 @@ def test_a_remissao_a_anexo_que_nao_existe_e_aviso_na_publicacao():
 def test_o_rotulo_do_anexo_pode_ser_escrito_em_qualquer_caixa():
     conteudo = _conteudo(anexos=["Anexo II: autodeclaração"], inscricao="Conforme o ANEXO II.")
     assert _com_codigo(validate_for_publication(conteudo), ANEXO_CITADO_SEM_ROTULO) == []
+
+
+@pytest.mark.parametrize("rotulo", ["IV — Formulário de inscrição", "IV. Formulário", "IV"])
+def test_o_rotulo_que_abre_pelo_identificador_conta_como_o_anexo(rotulo):
+    """Revisão do PR 221: o autor não é obrigado a repetir a palavra "Anexo" no rótulo."""
+    conteudo = _conteudo(anexos=[rotulo], inscricao="Preencha o ANEXO IV.")
+    assert _com_codigo(validate_for_publication(conteudo), ANEXO_CITADO_SEM_ROTULO) == []
+
+
+def test_rotulo_que_so_comeca_por_letra_romana_nao_e_identificador():
+    """ "Modelo de declaração" abre por M, e não é o Anexo M."""
+    conteudo = _conteudo(anexos=["Modelo de declaração"], inscricao="Preencha o ANEXO IV.")
+    assert len(_com_codigo(validate_for_publication(conteudo), ANEXO_CITADO_SEM_ROTULO)) == 1
 
 
 def test_numeral_em_minusculas_nao_e_remissao():

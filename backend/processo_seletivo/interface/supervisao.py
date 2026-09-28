@@ -97,6 +97,8 @@ class PeriodoDeInscricoes:
     fim: datetime | None
     situacao: str
     restante: timedelta | None = None
+    # O período declarado cancelado não recebe (RC-119); a tela o diz, e não as datas.
+    cancelado: bool = False
 
     @property
     def em_curso(self) -> bool:
@@ -341,7 +343,11 @@ def periodo_do_edital(conteudo, agora):
     restante = lido.fim - agora if lido.fim is not None and lido.estado != ENCERRADO else None
     return (
         PeriodoDeInscricoes(
-            inicio=lido.inicio, fim=lido.fim, situacao=lido.estado, restante=restante
+            inicio=lido.inicio,
+            fim=lido.fim,
+            situacao=lido.estado,
+            restante=restante,
+            cancelado=lido.cancelado,
         ),
         "",
     )

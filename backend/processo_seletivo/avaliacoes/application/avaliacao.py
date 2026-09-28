@@ -13,6 +13,8 @@ produziria uma Avaliação que afirma obedecer a uma regra contra a qual nunca f
 do que não registrar versão alguma.
 """
 
+from django.db import connection
+
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
@@ -214,6 +216,8 @@ def concluir(
     """
     atribuicao = _autorizar(ator, edital, etapa_id, inscricao_id)
     with command_context() as agora:
+        # **O Processo antes da Atribuição**, e na ordem dos comandos da comissão (RC-62).
+        _travar_o_processo_para_concluir(edital)
         # A trava é aqui, e não só na gravação: é a conclusão que a remoção comum não pode
         # atropelar (FR-092).
         atribuicao = _travar_e_reautorizar(ator, edital, etapa_id, atribuicao)
@@ -311,6 +315,33 @@ def concluir(
         return avaliacao, nova
 
 
+def _travar_o_processo_para_concluir(edital):
+    """`FOR SHARE` no Processo, para que nenhum Resultado nasça entre a conferência e a conclusão.
+
+    **Sem esta trava a guarda do RC-62 tinha uma janela.** A Ocorrência e a consolidação gravam o
+    Resultado sob o `FOR UPDATE` do Processo (`comando_de_comissao`), e a conclusão travava só a
+    Atribuição: as duas transações liam "sem Resultado" uma da outra e comitavam, e o par
+    contraditório que a guarda existe para impedir voltava à trilha. Com o Processo em `FOR SHARE`,
+    a conclusão espera o ato da presidência terminar e lê o Resultado dele.
+
+    **`FOR SHARE`, e não `FOR UPDATE`**: avaliadores não se bloqueiam entre si — a Mesa de uma Etapa
+    tem vários concluindo ao mesmo tempo —, e a trava conflita só com o ato que grava Resultado. É o
+    idioma de `requerimentos/application/preencher.py`. E **antes** da Atribuição, na ordem em que
+    os comandos da comissão travam: Processo, depois as linhas dele. A ordem inversa deixaria a
+    conclusão e um ato da presidência que toque a Atribuição esperando um pelo outro.
+
+    Fora do PostgreSQL é no-op, como as outras travas `FOR SHARE` do repositório: o SQLite
+    serializa a escrita inteira, e a corrida que ela impede não existe lá.
+    """
+    if connection.vendor != "postgresql":
+        return
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id FROM processos_processoseletivo WHERE id = %s FOR SHARE",
+            [str(edital.processo_id)],
+        )
+
+
 def _recusar_se_ja_ha_resultado(edital, etapa_id, inscricao_id):
     """A Mesa não conclui avaliação de quem já tem Resultado na Etapa (RC-62).
 
@@ -326,8 +357,23 @@ def _recusar_se_ja_ha_resultado(edital, etapa_id, inscricao_id):
     tornaria a decisão do julgador inexequível. A pergunta é a mesma que a consolidação faz, pelo
     mesmo selector.
 
-    Lido dentro da transação que grava, depois da trava da Atribuição, pelo `vigentes`: um
-    Resultado superado por recurso não conta, porque histórico não produz efeito (018, `FR-061`).
+    Lido dentro da transação que grava, depois das travas do Processo e da Atribuição, pelo
+    `vigentes`: um Resultado superado por recurso não conta, porque histórico não produz efeito
+    (018, `FR-061`). A frase é a de `impedimento_de_concluir`, que a tela da Mesa também lê.
+    """
+    frase = impedimento_de_concluir(edital, etapa_id, inscricao_id)
+    if frase is not None:
+        raise DomainError("inscricao_ja_tem_resultado", frase, 409)
+
+
+def impedimento_de_concluir(edital, etapa_id, inscricao_id):
+    """A frase da recusa do RC-62 para este par, ou `None` quando a conclusão é admitida.
+
+    **Uma pergunta para o comando e para a tela** (revisão do PR 221). A Mesa oferecia "Concluir
+    avaliação" e a recusa só aparecia depois do clique, com o parecer inteiro escrito — o sistema
+    sabia de antemão, e dizia depois. A tela passa a dizê-lo antes, por esta função, e não por uma
+    segunda redação dela que pudesse divergir.
+
     Import local pela razão de sempre: `resultados` e `recursos` leem este app.
     """
     from processo_seletivo.recursos.application.selectors import reavaliacao_pendente_do_par
@@ -339,20 +385,18 @@ def _recusar_se_ja_ha_resultado(edital, etapa_id, inscricao_id):
         .first()
     )
     if resultado is None:
-        return
+        return None
     if reavaliacao_pendente_do_par(resultado.inscricao_id, resultado.etapa_id) is not None:
-        return
+        return None
     protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
-    raise DomainError(
-        "inscricao_ja_tem_resultado",
-        # O quê, por quê e o que fazer — e a nota não entra, pela mesma razão da reabertura
-        # (013, FR-033): quem lê a recusa não é necessariamente quem pode vê-la.
+    # O quê, por quê e o que fazer — e a nota não entra, pela mesma razão da reabertura
+    # (013, FR-033): quem lê a recusa não é necessariamente quem pode vê-la.
+    return (
         f"A inscrição {protocolo} já tem Resultado na Etapa {_nome_da_etapa(resultado)} "
         f"(Resultado {resultado.id}), e esta avaliação não pode ser concluída: concluída agora, "
         "ela não mudaria o Resultado e ficaria registrada contradizendo-o. Se o Resultado "
         "precisa ser corrigido, o caminho é o recurso: a reavaliação que ele determinar é "
-        "concluída aqui.",
-        409,
+        "concluída aqui."
     )
 
 

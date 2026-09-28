@@ -861,10 +861,23 @@ ORGAO = (
 # depois é o objeto, separado por travessão, hífen, dois-pontos ou vírgula.
 _ATO_NO_TITULO = re.compile(
     r"^\s*edital\s+(?:n\s*(?:º|°|o|\.º|\.°|\.)?\.?\s*)?(?P<numero>[^\s/]+)\s*/\s*(?P<ano>\d{4})"
-    r"(?P<resto>.*)$",
+    # O ano termina ali: "Edital 07/20261" não é o ato de 2026 seguido de "1".
+    r"(?!\d)(?P<resto>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 _SEPARADOR_DO_OBJETO = " \t—–-:,."
+
+
+def _mesmo_numero(escrito, declarado):
+    """O número do título é o do ato, contado o zero à esquerda como grafia (revisão do PR 221).
+
+    O número `7` e o título "Edital 07/2026" são o mesmo ato, e a comparação de texto os separava:
+    o documento oficial abria com "EDITAL Nº 7/2026 — EDITAL 07/2026 — …". O não numérico — "07-A" —
+    continua comparado como foi escrito, e "17" nunca passa por "7".
+    """
+    if escrito.isdigit() and declarado.isdigit():
+        return int(escrito) == int(declarado)
+    return escrito == declarado
 
 
 def anuncio_do_ato(snapshot):
@@ -888,7 +901,7 @@ def anuncio_do_ato(snapshot):
     ano = str(snapshot.get("year", "")).strip()
     ato = f"EDITAL Nº {numero}/{ano}"
     repeticao = _ATO_NO_TITULO.match(titulo)
-    if repeticao and repeticao["numero"] == numero and repeticao["ano"] == ano:
+    if repeticao and _mesmo_numero(repeticao["numero"], numero) and repeticao["ano"] == ano:
         titulo = repeticao["resto"].lstrip(_SEPARADOR_DO_OBJETO)
     return f"{ato} — {titulo}" if titulo else ato
 

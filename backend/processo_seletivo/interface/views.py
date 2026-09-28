@@ -671,10 +671,6 @@ DESTINO_DA_PENDENCIA = {
     "/schedule": ("inscricao", "#inscricao-periodo", True),
     "documentRequirements": ("inscricao", "#inscricao-documentos", True),
     "attachments": ("anexos", "#anexos-lista", True),
-    # As seções textuais, que a etapa Conteúdo redige. Até a DP-20 nenhum achado apontava para
-    # elas; os dois avisos de 28/09 — anexo citado sem rótulo e redação padrão sem revisão — são os
-    # primeiros, e sem esta linha apareceriam como não corrigíveis.
-    "sections": ("conteudo", "#conteudo-titulo", True),
     # O marco vive **dentro** do Perfil, e por isso a busca por coleção o mandava para `perfis`:
     # toda pendência de marco terminava numa tela sem marco nenhum, que é a única do assistente
     # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
@@ -693,7 +689,17 @@ DESTINO_DA_PENDENCIA = {
 # está a duas telas dali. É a única exceção, e por isso é por código do achado, e não por caminho.
 DESTINO_POR_CODIGO = {
     "milestone_stage_without_weight": ("etapas", "#etapas-titulo", True),
+    # O período declarado cancelado se desfaz onde o período se designa (RC-119).
+    "registration_period_cancelled": ("inscricao", "#inscricao-periodo", True),
 }
+
+# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09), e só eles. Mapear a coleção
+# `sections` inteira para a etapa Conteúdo — como a primeira redação fazia — tornava "corrigíveis"
+# ali os impeditivos de topologia do catálogo, seção ausente, alheia, título ou ordem trocados, que
+# a tela não corrige: a pendência oferecia um caminho que não existe, que é o que a `FR-007`
+# proíbe. Achado da revisão do PR 221.
+DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_default_text"})
 
 
 def _destino(caminho, codigo=""):
@@ -708,6 +714,13 @@ def _destino(caminho, codigo=""):
     """
     if codigo in DESTINO_POR_CODIGO:
         return DESTINO_POR_CODIGO[codigo]
+    if caminho.startswith("/sections"):
+        # Só os dois avisos do texto se corrigem na etapa Conteúdo. O resto do que se diz sobre uma
+        # seção é topologia do catálogo, que nenhuma etapa corrige — e a busca por segmento, abaixo,
+        # mandava `/sections/id=…/title` para a Identificação, porque `title` ali é o do Edital.
+        if codigo in CODIGOS_DO_TEXTO_DA_SECAO:
+            return DESTINO_DO_TEXTO_DA_SECAO
+        return (None, "", False)
     if caminho in DESTINO_DA_PENDENCIA:
         return DESTINO_DA_PENDENCIA[caminho]
     # Do mais específico para o mais geral: o marco é a coleção mais profunda do caminho, e a
@@ -5411,6 +5424,12 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 "valores": _valores_da_avaliacao(
                     request.session.pop("digitado_na_avaliacao", None),
                     contexto.get("avaliacao"),
+                ),
+                # **A recusa certa, dita antes do clique** (RC-62, revisão do PR 221). Sem isto a
+                # tela oferecia "Concluir avaliação" a quem já tem Resultado nesta Etapa, e a recusa
+                # só vinha depois de o parecer estar escrito. A frase é a do comando, e não outra.
+                "impedimento_de_concluir": avaliacao_app.impedimento_de_concluir(
+                    edital, etapa_id, inscricao_id
                 ),
             },
         )

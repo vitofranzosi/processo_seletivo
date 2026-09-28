@@ -25,8 +25,8 @@ precise alcançar a linha de cima, e **sem** `:has()`.
   <td><span class="situacao s-{{ linha.edital.status }}">{{ linha.edital.status|situacao }}</span></td>
   <td>
     {% if linha.periodo.estado %}
-      {% if linha.periodo.estado == "aberto" %}Inscrições abertas{% elif linha.periodo.estado == "futuro" %}Inscrições ainda não abriram{% else %}Inscrições encerradas{% endif %}
-      {% if linha.periodo.fim %}<span class="prazo">até {{ linha.periodo.fim|date:"d/m/Y" }}</span>{% endif %}
+      {% if linha.periodo.estado == "aberto" %}Inscrições abertas{% elif linha.periodo.estado == "futuro" %}Inscrições ainda não abriram{% elif linha.periodo.cancelado %}Período de inscrições cancelado{% else %}Inscrições encerradas{% endif %}
+      {% if linha.periodo.fim and not linha.periodo.cancelado %}<span class="prazo">até {{ linha.periodo.fim|date:"d/m/Y" }}</span>{% endif %}
     {% else %}
       <span class="ausente" title="{{ linha.periodo.motivo }}">—</span>
       <span class="motivo-da-ausencia">{{ linha.periodo.motivo }}</span>

@@ -1776,3 +1776,19 @@ def test_o_marco_terminal_nao_afirma_tecnicalidade_no_edital():
 
 def test_o_marco_que_nao_corta_nao_imprime_nada():
     assert _corte(None) == ""
+
+
+@pytest.mark.parametrize(
+    ("numero", "titulo", "anuncio"),
+    [
+        # Revisão do PR 221: o zero à esquerda não faz de "07" outro ato que "7".
+        ("7", "Edital 07/2026 — Tutores", "EDITAL Nº 7/2026 — TUTORES"),
+        ("07", "Edital 7/2026 — Tutores", "EDITAL Nº 07/2026 — TUTORES"),
+        # E não afrouxa "outro número": 17 não é 7, e o ano termina onde termina.
+        ("7", "Edital 17/2026 — Tutores", "EDITAL Nº 7/2026 — EDITAL 17/2026 — TUTORES"),
+        ("07", "Edital 07/20261", "EDITAL Nº 07/2026 — EDITAL 07/20261"),
+    ],
+)
+def test_o_zero_a_esquerda_nao_duplica_o_ato(numero, titulo, anuncio):
+    pdf = documento(snapshot(number=numero, title=titulo), HASH)
+    assert anuncio in [linha for linha, fonte, _, _ in linhas_desenhadas(pdf) if fonte == "F2"]
