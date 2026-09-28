@@ -170,6 +170,7 @@ alcançar: um botão sobre zero convocações seria um ato vazio.
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-vencidos">
     <input type="hidden" name="alcance" value="{{ vencidos.assinatura }}">
     <p><strong>Registrar o desfecho é irreversível.</strong> Cada pessoa sai de quem ocupa vaga neste recorte, e a vaga volta à fila.</p>
+    <p class="nota">Se nada além destes desfechos mudou a apuração deste recorte, a apuração seguinte é emitida no mesmo ato, com o seu nome como autor e estes desfechos como motivo. Se a conta mover vaga para a ampla concorrência, ela fica para a tela da ocupação.</p>
     <p class="campo">
       <label for="complemento-vencidos">Complemento do fundamento <span class="opcional">(opcional)</span></label>
       <textarea id="complemento-vencidos" name="complemento" rows="2"></textarea>
@@ -413,6 +414,13 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
       <input type="hidden" name="chave" value="{{ chave_idempotencia }}-desfecho-{{ forloop.counter }}">
       <p><strong>Registrar o desfecho é irreversível.</strong> Há um desfecho por convocação, e ele muda quem ocupa vaga neste recorte.</p>
+      {% comment %}
+      **A consequência que o sistema materializa é dita antes do ato** (Constituição 1.2.0,
+      Princípio IV; 050, FR-890). O desfecho emite a apuração seguinte quando nada além dele mudou
+      (D-005): sem esta frase, o número novo apareceria depois do clique, como efeito que ninguém
+      anunciou.
+      {% endcomment %}
+      <p class="nota">Se nada além deste desfecho mudou a apuração deste recorte, a apuração seguinte é emitida no mesmo ato, com o seu nome como autor e este desfecho como motivo. Se a conta mover vaga para a ampla concorrência, ela fica para a tela da ocupação.</p>
       {% comment %}
       **Sem desfecho pré-escolhido** (050, polimento). O seletor nascia em "Aceite", e um ato
       irreversível não pode ter resposta padrão: quem registra escolhe, ou o formulário não envia.

@@ -229,3 +229,16 @@ def test_o_suplente_so_e_chamado_pela_chamada_individual_com_especie_derivada(
 
     assert "Nenhum titular ainda não chamado neste recorte" in pagina
     assert "para vaga que vagou (próxima da fila)" in pagina
+
+
+def test_a_confirmacao_do_desfecho_anuncia_a_apuracao_seguinte(
+    client, seletor_ligado, cenario_da_tela, gestor
+):
+    """`FR-890`, Constituição 1.2.0 (Princípio IV): o que o desfecho materializa é dito antes."""
+    edital, _, _ = cenario_da_tela
+    convocar(edital, gestor, previa(edital)["pessoas"][0]["id"], idempotency_key="anuncia")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital)
+
+    assert "a apuração seguinte é emitida no mesmo ato, com o seu nome como autor" in pagina

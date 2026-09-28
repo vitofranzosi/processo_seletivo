@@ -389,6 +389,11 @@ Estes casos são requisitos. Cada um tem linha na matriz de rastreabilidade.
 
 ### O que vale para todos
 
+- **FR-890**: A confirmação de todo desfecho — o individual e o gesto dos vencidos — MUST declarar,
+  antes do ato, que a apuração seguinte será emitida por ele quando nada além dele tiver mudado, com
+  o autor e o motivo que ela levará, e que a apuração que moveria vaga fica para a ocupação. É a forma
+  que esta spec dá, para a `D-005`, ao invariante do Princípio IV da Constituição 1.2.0.
+
 - **FR-886**: Nenhum gesto desta feature MUST alterar ou excluir registro: tudo o que nasce é
   append-only, e corrigir continua sendo suceder, pessoa a pessoa, com motivo (`FR-272`).
 - **FR-887**: Os gestos desta feature MUST exigir a mesma permissão e a mesma verificação de escopo que

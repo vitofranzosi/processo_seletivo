@@ -3,7 +3,7 @@
 **Frase que governa**: *o que é formalização vira gesto por recorte, com um registro por pessoa e o
 alcance declarado antes; o que é decisão sobre uma pessoa continua por pessoa.*
 
-**Verificação final**: 8534 passando, 11 pulados, zero falhas — ver a seção 5.
+**Verificação final**: 8540 passando, 11 pulados, zero falhas — ver a seção 5.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -48,6 +48,7 @@ estão em `tests/integration/convocacao/test_titulares_em_lote.py` (**TL**),
 | **FR-887** | os gestos passam por `comando_de_comissao` ou `exigir_base_de_comissao` | TL `test_quem_nao_tem_base_de_comissao_recebe_404` |
 | **FR-888** | as prévias saem da leitura do recorte; as versões das pendentes, por conjunto; `convocar_em_sequencia` lê o contexto uma vez | `performance/test_convocacao.py::test_as_previas_da_050_nao_crescem_com_as_convocacoes_do_recorte` |
 | **FR-889** | nada muda na recusa `sem_deficit`; o gesto só alcança quem ocupa pela contagem (leitura do diff) | `test_fila_so_de_titulares_alcanca_todos_sem_parada`, `test_deficit.py` |
+| **FR-890** | `convocacao.html`: a frase na confirmação do desfecho individual e na do gesto dos vencidos | `test_convocacao_em_fluxo.py::test_a_confirmacao_do_desfecho_anuncia_a_apuracao_seguinte` |
 
 ## 2. Critérios de sucesso
 
@@ -96,9 +97,9 @@ estão em `tests/integration/convocacao/test_titulares_em_lote.py` (**TL**),
 
 ## 5. Verificação final
 
-**`make lint check`** limpo: `ruff check`, `ruff format --check`, `manage.py check` e
-`makemigrations --check` sem mudança. **`make DB_NAME=ps050t test-pg`** (28/09/2026, depois do merge da
-`main` com o #220): **8534 passando e 11 pulados, zero falhas**. Os 11 pulados são os mesmos da linha de
-base do `CLAUDE.md`: 9 pares do vocabulário, a recusa por vendor e o E2E da Caixa. Na primeira
-execução, antes do merge, a única falha foi `test_readme_acompanha_o_codigo`: a pasta `050` faltava na
-tabela de incrementos do README.
+**`make lint check`** limpo. **`make DB_NAME=ps050t test-pg`** (28/09/2026, com as correções do code
+review e o polimento da tela): **8540 passando e 11 pulados, zero falhas** — os 11 pulados são os da
+linha de base do `CLAUDE.md`. Depois dela entraram só a `FR-890` (uma frase na confirmação do
+desfecho, com o seu teste) e o merge da `main` com a Constituição 1.2.0, que traz documentos; os
+testes alcançados — citações, README, dado pessoal da amostra, acessibilidade, vocabulário e as duas
+telas da convocação — foram rodados de novo e passam.

@@ -46,7 +46,7 @@ movimento de vaga (`test_dependencia_da_convocacao.py`); vocabulário da `019` v
 | I. Publicação imutável | Não toca conteúdo publicado; lê a versão vigente e a cita em cada ato. |
 | II. Fonte única | Nenhuma entidade de lote (`D-011`); espécie e fundamento derivados de uma função só; o registro do desfecho em lote é o mesmo do individual (`D-013`). |
 | III. Negar por padrão | Os gestos passam por `comando_de_comissao`, com a mesma base; nenhuma permissão nova (`FR-887`). |
-| IV. Regras explícitas | Recusas nomeadas, com código; o alcance é declarado e assinado antes da confirmação (`DP-17`); a apuração seguinte só é emitida onde a regra é inequívoca (`D-005`). |
+| IV. Regras explícitas | Recusas nomeadas, com código; o alcance é declarado e assinado antes da confirmação; a apuração seguinte só é emitida onde a regra é inequívoca (`D-005`). **O invariante da 1.2.0** (28/09, `DP-17`): o que é derivado — espécie, fundamento, vencimento, forma — aparece com a origem antes do ato (`UX-101`); o alcance de cada gesto é declarado e assinado (`FR-862`, `FR-863`, `FR-879`); cada registro tem autor (`FR-880`); e a apuração que o desfecho materializa é anunciada na confirmação (`FR-890`). A projeção numérica da apuração seguinte não é mostrada antes do ato: a forma escolhida é a frase, e o número aparece no resultado. |
 | Nada é excluído / append-only | Só `INSERT`; corrigir continua sendo suceder, pessoa a pessoa. |
 | Auditoria | Uma linha de trilha por registro, com o autor do gesto e a correlação do gesto. |
 
