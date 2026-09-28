@@ -519,23 +519,20 @@ def test_a_definitiva_pede_a_declaracao_uma_vez_e_a_grava_em_cada_uma(client, ce
     confirmar(client, edital, "publicar", _conferir_publicacao(client, edital))
 
     pagina = _conferir_publicacao(client, edital, natureza="DEFINITIVA")
-    if "declaracao_de_encerramento" in pagina:
-        confirmar(
-            client,
-            edital,
-            "publicar",
-            pagina,
-            declaracao_de_encerramento="O prazo recursal encerrou em 25/09.",
-        )
-        definitivas = PublicacaoResultado.objects.filter(
-            edital=edital, natureza=Natureza.DEFINITIVA
-        )
-        assert definitivas.count() == 3
-        assert {item.prazo_encerrado_fundamento for item in definitivas} == {
-            "O prazo recursal encerrou em 25/09."
-        }
-    else:
-        assert "Impedidos (3)" in pagina or "Publicar 3 resultados" in pagina
+    assert "declaracao_de_encerramento" in pagina, "o marco do cenário não declara janela"
+    confirmar(
+        client,
+        edital,
+        "publicar",
+        pagina,
+        declaracao_de_encerramento="O prazo recursal encerrou em 25/09.",
+    )
+
+    definitivas = PublicacaoResultado.objects.filter(edital=edital, natureza=Natureza.DEFINITIVA)
+    assert definitivas.count() == 3
+    assert {item.prazo_encerrado_fundamento for item in definitivas} == {
+        "O prazo recursal encerrou em 25/09."
+    }
 
 
 def test_preliminar_depois_da_definitiva_fica_de_fora(client, cenario):
@@ -703,3 +700,14 @@ def test_repetir_a_apuracao_nao_recusa_nem_apura_de_novo(client, cenario):
 
     assert ApuracaoDeOcupacao.objects.filter(edital=edital).count() == 3
     assert "3 feitos, 0 recusados" in tela(client, edital).content.decode()
+
+
+def test_onde_nada_falta_o_gesto_nao_e_oferecido(client, cenario):
+    """Percurso de 28/09: num marco completo, os botões levavam à conferência vazia."""
+    edital, _ = cenario
+    ordenar_tudo(client, edital)
+
+    pagina = tela(client, edital).content.decode()
+
+    assert "Ordenar o marco…" not in pagina
+    assert "Cortar o marco…" in pagina and "Apurar a ocupação do marco…" in pagina

@@ -7336,12 +7336,25 @@ def _chave_do_desfecho(marco_id):
     return f"desfecho_do_gesto_{marco_id}"
 
 
-def _gestos_oferecidos(conteudo, perfil, marco_publicado, pode):
+def _gestos_oferecidos(conteudo, perfil, marco_publicado, pode, indicador):
     """Os gestos que **esta pessoa** pratica neste marco — e nenhum outro (`FR-829`).
 
     Ordenar não é oferecido em marco de sorteio, e cortar não é oferecido em marco sem regra
     (`FR-817`): oferecer e recusar depois do clique é a ação que sempre falha, que a `034` proibiu.
+
+    **E nenhum gesto é oferecido onde nada falta.** O gesto só pratica o primeiro ato de cada
+    recorte (`D-002`); com todos feitos — ou obsoletos, cuja sucessão é na tela do recorte —, a
+    conferência diria sempre "não há recorte a praticar". O percurso de 28/09 mostrou os três
+    botões ao pé de um marco completo, e cada um levava a essa mesma frase.
     """
+    faltam = {
+        operacao
+        for operacao in conducao_do_marco.OPERACOES
+        if any(
+            linha["celulas"][operacao]["estado"] == conducao_do_marco.FALTA
+            for linha in indicador["linhas"]
+        )
+    }
     gestos = []
     if pode["emitir"]:
         if not conducao_do_marco.sorteia(conteudo, perfil, marco_publicado):
@@ -7351,7 +7364,11 @@ def _gestos_oferecidos(conteudo, perfil, marco_publicado, pode):
         gestos.append(conducao_do_marco.APURAR)
     if pode["publicar"]:
         gestos.append(conducao_do_marco.PUBLICAR)
-    return [{"operacao": item, "nome": conducao_do_marco.NOMES[item]} for item in gestos]
+    return [
+        {"operacao": item, "nome": conducao_do_marco.NOMES[item]}
+        for item in gestos
+        if item in faltam
+    ]
 
 
 @require_http_methods(["GET"])
@@ -7367,6 +7384,14 @@ def marco(request, edital_id, marco_id):
     if ator is None:
         return redirect(reverse("interface:identificar"))
     conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
+    indicador = conducao_do_marco.indicador_do_marco(
+        edital,
+        conteudo,
+        perfil,
+        marco_publicado,
+        pode_classificar=pode["classificar"],
+        pode_publicar=pode["publicar"],
+    )
     return marcar_como_privada(
         render(
             request,
@@ -7377,15 +7402,8 @@ def marco(request, edital_id, marco_id):
                 "perfil": perfil,
                 "marco": marco_publicado,
                 "sorteia": conducao_do_marco.sorteia(conteudo, perfil, marco_publicado),
-                "indicador": conducao_do_marco.indicador_do_marco(
-                    edital,
-                    conteudo,
-                    perfil,
-                    marco_publicado,
-                    pode_classificar=pode["classificar"],
-                    pode_publicar=pode["publicar"],
-                ),
-                "gestos": _gestos_oferecidos(conteudo, perfil, marco_publicado, pode),
+                "indicador": indicador,
+                "gestos": _gestos_oferecidos(conteudo, perfil, marco_publicado, pode, indicador),
                 "naturezas": list(Natureza.choices),
                 "autoridades": autoridades.CATALOGO,
                 # **Quem não pratica sabe a quem pedir**, pelo mecanismo único (`FR-829`; 037,
