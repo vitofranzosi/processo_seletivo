@@ -3,7 +3,13 @@
 **Frase que governa**: *um gesto humano processa os N recortes de um marco; o ato continua por
 recorte, com autor; e o que foi feito, o que foi recusado e o que falta ficam à vista.*
 
-**Verificação final**: ver o fim deste arquivo.
+**Verificação final** (28/09/2026, sobre a `main` em `28b3815b`): `make DB_NAME=ps049 lint check
+test-pg` — `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas,
+`makemigrations --check` sem mudança —; **8465 passando e 11 pulados**, zero falhas. Os 11 pulados
+são os deliberados de sempre; os 101 casos a mais são os 37 desta feature e os parametrizados que
+ela alcança. A primeira rodada completa pegou duas falhas que os testes da feature não viam — uma
+classe sem regra na folha e a pasta fora da tabela de incrementos do README —, corrigidas antes
+desta.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Os testes estão todos em
 `backend/tests/interface/test_conducao_do_marco.py`, salvo onde outro arquivo é dito. Onde a linha

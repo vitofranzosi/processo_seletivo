@@ -80,7 +80,7 @@ Caminhos relativos à raiz do repositório.
 
 - [X] T022 [P] Matriz `specs/049-operar-por-marco/rastreabilidade.md`, requisito a requisito
 - [X] T023 [P] Revisar comentários: explicam por quê, citam só identificadores definidos
-- [ ] T024 `cd backend && make DB_NAME=ps049 lint check test-pg`, com `ruff format --check`; a suíte existente das telas por recorte é a prova da `FR-831`
+- [X] T024 `cd backend && make DB_NAME=ps049 lint check test-pg`, com `ruff format --check`; a suíte existente das telas por recorte é a prova da `FR-831`
 - [X] T025 Percurso do [quickstart](quickstart.md) pelo preview, com um Edital de vários Perfis e cotas; capturas como prova, e a contagem das confirmações por marco (`SC-300`)
 
 ## Dependencies
