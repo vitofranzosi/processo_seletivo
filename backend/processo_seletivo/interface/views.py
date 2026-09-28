@@ -6793,23 +6793,32 @@ def _previas_da_convocacao(fluxo, recorte, leitura):
             apuracao=leitura["apuracao"],
             at=recorte["at"],
         ),
-        "especies_da_fila": _especies_da_fila(leitura),
+        **_fila_com_especie(leitura),
     }
 
 
-def _especies_da_fila(leitura):
-    """`{inscricao_id: espécie}` da fila e dos regularizáveis — o que o seletor mostra."""
+def _fila_com_especie(leitura):
+    """A fila com a espécie de cada pessoa, e quais espécies ela tem (050, `UX-101`).
+
+    **As espécies presentes decidem quais fundamentos a chamada individual mostra**: depois do gesto
+    dos titulares, a fila costuma ter só suplentes, e o fundamento da vaga inicial ao lado era um
+    parágrafo inteiro sobre uma chamada que ninguém ali pode receber.
+    """
     from processo_seletivo.convocacao.domain.especie import derivada
 
-    return {
-        pessoa["id"]: derivada(
-            pessoa["id"],
-            ocupando=leitura["ocupando"],
-            alcancados=leitura["alcancados"],
-            regularizaveis=[p["id"] for p in leitura["regularizaveis"]],
-        )
-        for pessoa in [*leitura["fila"], *leitura["regularizaveis"]]
-    }
+    fila = [
+        {
+            **pessoa,
+            "especie": derivada(
+                pessoa["id"],
+                ocupando=leitura["ocupando"],
+                alcancados=leitura["alcancados"],
+                regularizaveis=(),
+            ),
+        }
+        for pessoa in leitura["fila"]
+    ]
+    return {"fila_rotulada": fila, "especies_na_fila": {pessoa["especie"] for pessoa in fila}}
 
 
 def _serializavel(valor):

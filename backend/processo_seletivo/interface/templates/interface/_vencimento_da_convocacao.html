@@ -3,10 +3,13 @@ O vencimento do ato, **uma vez para todas as pessoas dele** (050, FR-866): tirad
 do Cronograma publicado, ou digitado. O sistema não conta dias úteis nem mantém calendário de feriados
 (R-004): o que entra aqui é a data e a hora. Vazio significa que o Edital não publica prazo — nunca um
 prazo de zero. A origem escolhida vai para a trilha de cada convocação.
+
+Com Eventos a escolher, as duas origens vão num grupo; sem eles, o campo é um só, e um quadro com
+legenda em volta dele era uma moldura dentro de outra (050, segunda rodada).
 {% endcomment %}
+{% if eventos %}
 <fieldset class="campo">
   <legend>Vencimento do prazo</legend>
-  {% if eventos %}
   <p class="campo">
     <label for="evento-{{ prefixo }}">Do Cronograma publicado</label>
     <select id="evento-{{ prefixo }}" name="evento">
@@ -16,10 +19,16 @@ prazo de zero. A origem escolhida vai para a trilha de cada convocação.
       {% endfor %}
     </select>
   </p>
-  {% endif %}
   <p class="campo">
-    <label for="vencimento-{{ prefixo }}">{% if eventos %}Ou a data e a hora{% else %}Data e hora{% endif %}</label>
+    <label for="vencimento-{{ prefixo }}">Ou a data e a hora</label>
     <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}">
     <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
   </p>
 </fieldset>
+{% else %}
+<p class="campo">
+  <label for="vencimento-{{ prefixo }}">Vencimento do prazo</label>
+  <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}">
+  <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+</p>
+{% endif %}
