@@ -671,6 +671,10 @@ DESTINO_DA_PENDENCIA = {
     "/schedule": ("inscricao", "#inscricao-periodo", True),
     "documentRequirements": ("inscricao", "#inscricao-documentos", True),
     "attachments": ("anexos", "#anexos-lista", True),
+    # As seções textuais, que a etapa Conteúdo redige. Até a DP-20 nenhum achado apontava para
+    # elas; os dois avisos de 28/09 — anexo citado sem rótulo e redação padrão sem revisão — são os
+    # primeiros, e sem esta linha apareceriam como não corrigíveis.
+    "sections": ("conteudo", "#conteudo-titulo", True),
     # O marco vive **dentro** do Perfil, e por isso a busca por coleção o mandava para `perfis`:
     # toda pendência de marco terminava numa tela sem marco nenhum, que é a única do assistente
     # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
