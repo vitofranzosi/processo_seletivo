@@ -60,6 +60,10 @@ def sem_ato(gestor, api_client, manager_headers, process_payload):
     )
 
 
+def _conducao(certame):
+    return reverse("interface:marco", args=[certame["edital"].id, certame["marco"]])
+
+
 def _divulgacao(certame):
     return reverse(
         "interface:previa-de-publicacao",
@@ -92,7 +96,13 @@ def test_o_publicador_puro_nao_ve_o_que_nao_e_dele(client, seletor_ligado, certa
     """
     identificar(client, "paula.publicadora", ["publicador"])
 
-    assert _urls(_destinos(client, certame["edital"])) == [_divulgacao(certame)]
+    assert _urls(_destinos(client, certame["edital"])) == [
+        # **A tela do marco é dela também** (049, `FR-830`): é por lá que se publica o marco
+        # inteiro num gesto, e a porta dela aceita `resultado:publicar`. Os gestos da comissão não
+        # aparecem lá para quem só publica — o que não é dela continua fora.
+        _conducao(certame),
+        _divulgacao(certame),
+    ]
 
 
 # --- FR-475 · a contraprova que mais importa ---------------------------------------------------
@@ -110,6 +120,9 @@ def test_a_presidencia_sem_publicar_nao_perde_destino_nenhum(client, seletor_lig
 
     esperados = [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # **A condução do marco entrou com a `049`** (`UX-090`): um a mais, logo depois do
+        # principal, e pela mesma razão do corte e da convocação abaixo.
+        reverse("interface:marco", args=[edital.id, marco]),
         # **O corte entrou na lista com a `037`** (`FR-538`), e o marco deste cenário é justamente
         # o que não declara regra de corte — era dele que o caminho sumia. A promessa deste caso
         # continua sendo "nenhum a menos", e ela não é desfeita por um a mais.
@@ -150,6 +163,8 @@ def test_quem_preside_e_publica_ve_a_uniao_sem_repetir(client, seletor_ligado, c
 
     assert urls == [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # Acrescentada pela `049` (`UX-090`) — ver o caso da presidência, acima.
+        reverse("interface:marco", args=[edital.id, marco]),
         # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
         reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),
@@ -186,6 +201,8 @@ def test_a_auditoria_continua_lendo_o_que_lia(client, seletor_ligado, certame):
 
     assert _urls(_destinos(client, edital)) == [
         reverse("interface:ordenacao", args=[edital.id, marco]),
+        # Acrescentada pela `049` (`UX-090`) — ver o caso da presidência, acima.
+        reverse("interface:marco", args=[edital.id, marco]),
         # Acrescentado pela `037` (`FR-538`) — ver o caso da presidência, acima.
         reverse("interface:corte", args=[edital.id, marco]),
         reverse("interface:ocupacao", args=[edital.id, marco]),

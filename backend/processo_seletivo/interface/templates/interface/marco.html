@@ -1,0 +1,110 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Condução do marco — {{ marco.name }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">{{ marco.name }}</span>
+</nav>
+
+<h1>{{ marco.name }}</h1>
+<p class="sub">{{ perfil.name }} — Edital {{ edital.number }}/{{ edital.year }}. Os recortes deste marco, o que já foi feito em cada um e o que falta.</p>
+<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
+  concorrência, ou uma Modalidade de Concorrência declarada. Cada recorte tem a sua ordem, a sua
+  faixa, a sua apuração e o seu resultado publicado.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível conferir:</strong> {{ erro }}</p>{% endif %}
+
+{% if desfecho %}
+{% comment %}
+**A contagem vem primeiro, e os recusados antes dos feitos** (049, `UX-093`). Quem acabou de
+confirmar um gesto precisa saber, numa leitura, se ele terminou inteiro — e o que pede ação é o
+recusado. Os feitos continuam gravados, e o indicador abaixo os mostra de novo: esta seção aparece
+uma vez, e o indicador é a verdade que sobrevive a ela (`FR-823`, `FR-824`).
+{% endcomment %}
+<section aria-labelledby="desfecho-titulo" class="consequencias" tabindex="-1" autofocus>
+  <h2 id="desfecho-titulo">{{ desfecho.nome }}: {{ desfecho.feitos }} feito{{ desfecho.feitos|pluralize }}, {{ desfecho.recusados }} recusado{{ desfecho.recusados|pluralize }}</h2>
+  <ul>
+    {% for item in desfecho.itens %}
+    <li>{% if item.feito %}<strong>Feito</strong> — {{ item.rotulo }}. <a href="{{ item.url }}">Ver o ato</a>{% else %}<strong>Recusado</strong> — {{ item.rotulo }}: {{ item.razao }} <a href="{{ item.url }}">Abrir este recorte</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<p class="imutavel">Abrir esta tela <strong>não pratica nada</strong>. Cada célula diz o estado do ato vigente daquele recorte, e leva à tela onde ele se faz.</p>
+
+{% comment %}
+**Uma linha por recorte e uma coluna por operação** (049, `UX-091`). Os recortes vêm da derivação
+única, na ordem dela — a ampla primeiro —, e os rótulos são os que o Edital publica. A célula só é
+link para quem abre aquela tela: oferecer o que se vai recusar é o beco que a `033` fechou.
+
+*Obsoleto* não é *feito*: é o ato que o sistema já sabe estar para trás, e contá-lo como feito faria
+o marco parecer pronto (`FR-814`).
+{% endcomment %}
+<section aria-labelledby="indicador-titulo">
+  <h2 id="indicador-titulo">Recortes deste marco</h2>
+  <table class="indicador-do-marco">
+    <caption class="sub">Feitos por operação:
+      ordem {{ indicador.totais.ordenar.feitos }} de {{ indicador.totais.ordenar.aplicaveis }} ·
+      {% if indicador.totais.cortar.se_aplica %}corte {{ indicador.totais.cortar.feitos }} de {{ indicador.totais.cortar.aplicaveis }} · {% endif %}
+      apuração {{ indicador.totais.apurar.feitos }} de {{ indicador.totais.apurar.aplicaveis }} ·
+      publicação {{ indicador.totais.publicar.feitos }} de {{ indicador.totais.publicar.aplicaveis }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Recorte</th>
+        <th scope="col">Ordem{% if sorteia %}<span class="detalhe">pelo sorteio</span>{% endif %}</th>
+        <th scope="col">Corte</th>
+        <th scope="col">Apuração</th>
+        <th scope="col">Publicação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for linha in indicador.linhas %}
+      <tr>
+        <th scope="row">{{ linha.rotulo }}</th>
+        {% for operacao, celula in linha.celulas.items %}
+        <td data-operacao="{{ operacao }}" data-estado="{{ celula.estado }}">{% if celula.url %}<a href="{{ celula.url }}">{% endif %}{% if celula.estado == "feito" %}Feito{% elif celula.estado == "obsoleto" %}<strong>Obsoleto</strong>{% elif celula.estado == "falta" %}<strong>Falta</strong>{% else %}Não se aplica{% endif %}{% if celula.url %}</a>{% endif %}{% if celula.nota %}<span class="detalhe">{{ celula.nota }}</span>{% endif %}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% if conducao_para_emitir %}<p class="ajuda">{{ conducao_para_emitir }} A presidência não é papel: ela vem da composição da comissão.</p>{% endif %}
+{% if conducao_para_publicar %}<p class="ajuda">{{ conducao_para_publicar }}</p>{% endif %}
+
+{% if gestos %}
+{% comment %}
+**Cada gesto tem duas fases, e esta é a primeira** (049, `FR-818`). O botão abaixo não pratica ato
+nenhum: ele abre a conferência, que diz recorte a recorte o que será feito, o que fica de fora e o
+que está impedido. Só a confirmação, lá, pratica — um ato por recorte, cada um com o seu autor.
+{% endcomment %}
+<section aria-labelledby="gestos-titulo">
+  <h2 id="gestos-titulo">Conduzir o marco inteiro</h2>
+  <p class="ajuda">Cada ação pratica o ato em todos os recortes que ainda não o têm, e só neles. Antes de gravar, a conferência mostra o alcance recorte a recorte. Suceder um ato já emitido continua na tela do recorte, com motivo.</p>
+  {% for gesto in gestos %}
+  <form method="post" action="{% url 'interface:gesto-do-marco' edital.id marco.id gesto.operacao %}" class="conferencia">
+    {% csrf_token %}
+    {% if gesto.operacao == "publicar" %}
+    <p class="campo">
+      <label for="natureza">Natureza do resultado</label>
+      <select id="natureza" name="natureza" required>
+        {% for valor, rotulo in naturezas %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+      </select>
+    </p>
+    <p class="campo">
+      <label for="autoridade">Autoridade signatária</label>
+      <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
+        {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>{% endfor %}
+      </select>
+      <span id="ajuda-autoridade" class="ajuda">A mesma para todas as publicações deste gesto. Nome e cargo ficam gravados em cada uma.</span>
+    </p>
+    {% endif %}
+    <button type="submit" class="botao">{{ gesto.nome }}…</button>
+  </form>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

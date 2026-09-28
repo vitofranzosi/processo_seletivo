@@ -147,7 +147,12 @@ permanecem preservados.</p>
 {% if marcos_classificatorios %}
 <section aria-labelledby="classificacao-titulo" class="cartao">
   <h2 id="classificacao-titulo">Classificação</h2>
-  <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico.</p>
+  <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico. Em <em>conduzir o marco</em>, os recortes dele aparecem juntos, com o que falta em cada um.</p>
+  {% comment %}
+  **O resumo é presença, e não estado completo** (049, `UX-090`): quantos recortes têm ato vigente
+  em cada operação. A obsolescência é um recálculo por recorte, e aqui se listam todos os marcos;
+  ela aparece inteira na tela do marco, e continua sinalizada na Supervisão.
+  {% endcomment %}
   {% comment %}
   **A lista é derivada por destino, e a derivação é da view** (033, `FR-473`, `FR-476`).
 
@@ -161,7 +166,7 @@ permanecem preservados.</p>
   mudança de qualquer um dos lados. O que restou para o template é o que é dele: **como** cada
   destino aparece.
   {% endcomment %}
-  <ul class="resumo-lista">{% for item in marcos_classificatorios %}<li>{% for destino in item.destinos %}{% if destino.principal %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a> <span class="quando">{{ item.perfil.name }}{% if destino.nota %} — {{ destino.nota }}{% endif %}</span>{% else %}{% if not forloop.first %} · {% endif %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a>{% endif %}{% endfor %}{% if not item.destinos.0.principal %} <span class="quando">{{ item.marco.name }} — {{ item.perfil.name }}</span>{% endif %}</li>{% endfor %}</ul>
+  <ul class="resumo-lista">{% for item in marcos_classificatorios %}<li>{% for destino in item.destinos %}{% if destino.principal %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a> <span class="quando">{{ item.perfil.name }}{% if destino.nota %} — {{ destino.nota }}{% endif %}</span>{% else %}{% if not forloop.first %} · {% endif %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a>{% endif %}{% endfor %}{% if not item.destinos.0.principal %} <span class="quando">{{ item.marco.name }} — {{ item.perfil.name }}</span>{% endif %}{% if item.resumo %}<br><span class="quando">Recortes: {{ item.resumo.recortes }} · com ordem {{ item.resumo.ordem }}{% if item.resumo.corte is not None %} · com corte {{ item.resumo.corte }}{% endif %} · apurados {{ item.resumo.apuracao }} · publicados {{ item.resumo.publicacao }}</span>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 

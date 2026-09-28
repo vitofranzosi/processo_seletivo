@@ -149,6 +149,7 @@ from processo_seletivo.interface import (
     atos,
     atos_processo,
     atos_retificacao,
+    conducao_do_marco,
     forms,
     identidade,
     revisao,
@@ -3042,6 +3043,10 @@ def _marcos_publicados(edital, ator=None):
             ],
         )
 
+    # **O resumo por marco é presença, e numa leitura só** (049, `UX-090`, `R-6`): quatro consultas
+    # para o Edital inteiro, e não uma por recorte. O que envelheceu aparece inteiro na tela do
+    # marco, e continua sinalizado na Supervisão.
+    resumo = conducao_do_marco.resumo_dos_marcos(edital, conteudo)
     itens = []
     for perfil in perfis_com_marcos:
         for marco in perfil["classificationMilestones"]:
@@ -3051,8 +3056,26 @@ def _marcos_publicados(edital, ator=None):
                 pode_classificar=pode_classificar,
                 atos_vigentes=atos_por_marco.get(str(marco.get("id")), ()),
             )
-            if destinos:
-                itens.append({"perfil": perfil, "marco": marco, "destinos": destinos})
+            if not destinos:
+                continue
+            # **A tela do marco é destino de quem classifica ou publica** (049, `FR-830`): a
+            # mesma pergunta que decidiu os destinos acima, e não uma porta nova. Entra logo depois
+            # do principal, porque é por ela que se conduz o marco inteiro.
+            destinos.insert(
+                1 if destinos[0].get("principal") else 0,
+                {
+                    "rotulo": "conduzir o marco",
+                    "url": reverse("interface:marco", args=[edital.id, marco.get("id")]),
+                },
+            )
+            itens.append(
+                {
+                    "perfil": perfil,
+                    "marco": marco,
+                    "destinos": destinos,
+                    "resumo": resumo.get(str(marco.get("id"))),
+                }
+            )
     return itens
 
 
@@ -7250,6 +7273,270 @@ def publicacoes_do_marco(request, edital_id, marco_id):
             },
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# A condução do marco (049). Uma tela por marco, com o indicador recorte × operação e quatro gestos.
+#
+# **As portas não se fundem aqui** (`R-7`). A tela abre para quem abre qualquer tela de recorte
+# daquele marco; os gestos de ordenar, cortar e apurar passam pela porta da gestão da comissão, e o
+# de publicar pela de `resultado:publicar` — quem emite o ato não ganha, por tê-lo emitido, o poder
+# de divulgá-lo (017, FR-025).
+# ---------------------------------------------------------------------------
+
+
+def _marco_para_conduzir(request, edital_id):
+    """A porta da tela do marco: classificar, auditar **ou** publicar resultado (049, `FR-830`).
+
+    É a união das duas famílias de porta que as telas de recorte já têm, e não uma terceira: quem
+    abre a ordenação, o corte ou a ocupação daquele marco abre esta; quem abre a divulgação também.
+    Quem não abre nenhuma delas recebe a recusa explicada, com as bases que teriam servido — e o
+    404 fica com o Edital de outra unidade, que é indistinguível do inexistente (`FR-487`).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, {}
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    pode_classificar = _pode_ver_a_classificacao(ator, edital)
+    pode_publicar = ator.can("resultado:publicar")
+    require_authorization_base(
+        pode_classificar or pode_publicar,
+        bases=(*BASES_DA_GESTAO_OU_AUDITORIA, BASE_DE_PUBLICAR_RESULTADO),
+    )
+    return (
+        ator,
+        edital,
+        {
+            "classificar": pode_classificar,
+            "emitir": pode_gerir_comissao(ator, edital.processo) is not None,
+            "publicar": pode_publicar,
+        },
+    )
+
+
+def _marco_do_edital(edital, marco_id):
+    """`(conteudo, perfil, marco)` pela norma vigente, ou 404 (`FR-813`).
+
+    O marco que uma Retificação removeu não tem recortes a operar: os atos dele continuam nas telas
+    de histórico de hoje, que o alcançam pela identidade gravada.
+    """
+    conteudo, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    if marco_publicado is None:
+        raise Http404
+    return conteudo, perfil, marco_publicado
+
+
+def _chave_do_desfecho(marco_id):
+    return f"desfecho_do_gesto_{marco_id}"
+
+
+def _gestos_oferecidos(conteudo, perfil, marco_publicado, pode):
+    """Os gestos que **esta pessoa** pratica neste marco — e nenhum outro (`FR-829`).
+
+    Ordenar não é oferecido em marco de sorteio, e cortar não é oferecido em marco sem regra
+    (`FR-817`): oferecer e recusar depois do clique é a ação que sempre falha, que a `034` proibiu.
+    """
+    gestos = []
+    if pode["emitir"]:
+        if not conducao_do_marco.sorteia(conteudo, perfil, marco_publicado):
+            gestos.append(conducao_do_marco.ORDENAR)
+        if conducao_do_marco.corta(marco_publicado):
+            gestos.append(conducao_do_marco.CORTAR)
+        gestos.append(conducao_do_marco.APURAR)
+    if pode["publicar"]:
+        gestos.append(conducao_do_marco.PUBLICAR)
+    return [{"operacao": item, "nome": conducao_do_marco.NOMES[item]} for item in gestos]
+
+
+@require_http_methods(["GET"])
+def marco(request, edital_id, marco_id):
+    """O indicador do marco e os gestos, sem constituir ato algum (049, `UX-091`).
+
+    **Abrir a tela não pratica nada**, como a ordem, o corte e a ocupação: o gesto tem duas fases,
+    e a primeira — a conferência — também não grava. O desfecho do último gesto aparece uma vez,
+    pelo padrão POST-redirect-GET; perdida a sessão, o indicador continua dizendo o que foi feito,
+    porque ele lê os atos gravados (`R-10`).
+    """
+    ator, edital, pode = _marco_para_conduzir(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/marco.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": perfil,
+                "marco": marco_publicado,
+                "sorteia": conducao_do_marco.sorteia(conteudo, perfil, marco_publicado),
+                "indicador": conducao_do_marco.indicador_do_marco(
+                    edital,
+                    conteudo,
+                    perfil,
+                    marco_publicado,
+                    pode_classificar=pode["classificar"],
+                    pode_publicar=pode["publicar"],
+                ),
+                "gestos": _gestos_oferecidos(conteudo, perfil, marco_publicado, pode),
+                "naturezas": list(Natureza.choices),
+                "autoridades": autoridades.CATALOGO,
+                # **Quem não pratica sabe a quem pedir**, pelo mecanismo único (`FR-829`; 037,
+                # `FR-543a`) — e cada frase só existe para quem não tem aquele eixo.
+                "conducao_para_emitir": (
+                    ""
+                    if pode["emitir"]
+                    else frase_do_aviso(
+                        BASES_DA_GESTAO_DA_COMISSAO,
+                        acao="Ordenar, cortar e apurar o marco",
+                        que="os pratique",
+                    )
+                ),
+                "conducao_para_publicar": (
+                    ""
+                    if pode["publicar"]
+                    else frase_do_aviso(
+                        (BASE_DE_PUBLICAR_RESULTADO,),
+                        acao="Publicar o resultado do marco",
+                        que="o publique",
+                    )
+                ),
+                "desfecho": request.session.pop(_chave_do_desfecho(marco_id), None),
+                "erro": request.session.pop(f"erro_do_gesto_{marco_id}", None),
+            },
+        )
+    )
+
+
+def _itens_confirmados(request, conteudo, perfil):
+    """Os recortes que o formulário devolveu, **na ordem da derivação**, cada um com a assinatura.
+
+    Só o que a conferência mostrou volta aqui (`SC-303`), e o que não for recorte do marco pela
+    derivação única é 404 **antes de praticar qualquer um**: um recorte forjado no formulário
+    recusaria o gesto no meio, depois de metade dele gravada, e a recusa do que foi pedido errado
+    não pode deixar trabalho pela metade.
+    """
+    derivados = conducao_do_marco.recortes_do_marco(conteudo, perfil)
+    pedidos = set(request.POST.getlist("recorte"))
+    validos = {conducao_do_marco.lista_para_o_formulario(lista) for lista, _ in derivados}
+    if not pedidos <= validos:
+        raise Http404
+    itens = []
+    for lista, rotulo in derivados:
+        campo = conducao_do_marco.lista_para_o_formulario(lista)
+        if campo in pedidos:
+            itens.append((lista, rotulo, request.POST.get(f"assinatura_{campo}", "")))
+    return itens
+
+
+@require_http_methods(["POST"])
+def gesto_do_marco(request, edital_id, marco_id, operacao):
+    """Confere o alcance e, com `confirmar`, pratica um ato por recorte (049, `FR-816` a `FR-825`).
+
+    **Duas fases, como a emissão da ordem de hoje.** Sem `confirmar`, a resposta é a conferência:
+    o alcance recorte a recorte, e nada gravado (`FR-818`). Com `confirmar`, cada recorte devolvido
+    pelo formulário é praticado pelo comando de hoje, na sua transação, e o desfecho vai para a
+    sessão e volta à tela do marco.
+
+    **A porta é a do ato unitário** (`FR-829`, `R-7`): publicar pela de `resultado:publicar`, os
+    outros três pela da gestão da comissão. Nenhum gesto abre por uma porta mais larga que a do ato
+    que ele pratica.
+    """
+    if operacao not in conducao_do_marco.OPERACOES:
+        raise Http404
+    if operacao == conducao_do_marco.PUBLICAR:
+        ator, edital, _ = _edital_para_publicar(request, edital_id)
+    else:
+        ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
+    destino = reverse("interface:marco", args=[edital.id, marco_id])
+    natureza = request.POST.get("natureza", "")
+    autoridade = request.POST.get("autoridade", "")
+
+    if request.POST.get("confirmar") != "1":
+        try:
+            itens = conducao_do_marco.alcance(
+                edital,
+                conteudo,
+                perfil,
+                marco_publicado,
+                operacao,
+                natureza=natureza,
+                autoridade=autoridade,
+            )
+        except DomainError as recusa:
+            request.session[f"erro_do_gesto_{marco_id}"] = recusa.detail
+            return redirect(destino)
+        grupos = {
+            situacao: [item for item in itens if item["situacao"] == situacao]
+            for situacao in (
+                conducao_do_marco.PRATICAR,
+                conducao_do_marco.FORA,
+                conducao_do_marco.IMPEDIDO,
+            )
+        }
+        a_praticar = grupos[conducao_do_marco.PRATICAR]
+        return marcar_como_privada(
+            render(
+                request,
+                "interface/marco_conferir.html",
+                {
+                    "processo": edital.processo,
+                    "edital": edital,
+                    "perfil": perfil,
+                    "marco": marco_publicado,
+                    "operacao": operacao,
+                    "nome": conducao_do_marco.NOMES[operacao],
+                    "a_praticar": a_praticar,
+                    "fora": grupos[conducao_do_marco.FORA],
+                    "impedidos": grupos[conducao_do_marco.IMPEDIDO],
+                    "verbo": conducao_do_marco.verbo_da_confirmacao(operacao, len(a_praticar)),
+                    "natureza": natureza,
+                    "natureza_rotulo": dict(Natureza.choices).get(natureza, ""),
+                    "autoridade": autoridades.escolher(autoridade),
+                    "exige_declaracao": (
+                        operacao == conducao_do_marco.PUBLICAR
+                        and conducao_do_marco.exige_declaracao(edital, marco_id, natureza)
+                    ),
+                    # **A chave nasce na conferência**, e não na confirmação: gerada a cada POST,
+                    # um duplo clique seria um gesto novo, e os recortes seriam praticados de novo
+                    # sob chaves novas — é a razão que o corte já registra (`R-5`).
+                    "chave": uuid4().hex,
+                },
+            )
+        )
+
+    itens = _itens_confirmados(request, conteudo, perfil)
+    desfechos = conducao_do_marco.praticar(
+        ator=ator,
+        edital=edital,
+        perfil=perfil,
+        marco=marco_publicado,
+        operacao=operacao,
+        itens=itens,
+        chave=request.POST.get("chave") or uuid4().hex,
+        natureza=natureza,
+        autoridade=autoridade,
+        declaracao=request.POST.get("declaracao_de_encerramento", ""),
+    )
+    request.session[_chave_do_desfecho(marco_id)] = {
+        "operacao": operacao,
+        "nome": conducao_do_marco.NOMES[operacao],
+        "feitos": sum(1 for item in desfechos if item["feito"]),
+        "recusados": sum(1 for item in desfechos if not item["feito"]),
+        # **Os recusados primeiro** (`UX-093`): o que pede ação vem antes do que já está feito.
+        "itens": sorted(desfechos, key=lambda item: item["feito"]),
+    }
+    return redirect(destino)
 
 
 @require_http_methods(["GET"])
