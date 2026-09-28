@@ -3,12 +3,16 @@
 **Frase que governa**: *um gesto humano processa os N recortes de um marco; o ato continua por
 recorte, com autor; e o que foi feito, o que foi recusado e o que falta ficam à vista.*
 
-**Verificação final** (28/09/2026, sobre a `main` em `28b3815b`): `make DB_NAME=ps049 lint check
-test-pg` — `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas,
-`makemigrations --check` sem mudança —; **8465 passando e 11 pulados**, zero falhas. Os 11 pulados
-são os deliberados de sempre, e 37 dos casos são os desta feature. A primeira rodada completa pegou duas falhas que os testes da feature não viam — uma
-classe sem regra na folha e a pasta fora da tabela de incrementos do README —, corrigidas antes
-desta.
+**Verificação final** (28/09/2026, com a `main` em `1c4e6f6d` mesclada): `make DB_NAME=ps049 lint
+check test-pg` — `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas,
+`makemigrations --check` sem mudança —; **8502 passando e 11 pulados**, zero falhas. Os 11 pulados
+são os deliberados de sempre, e 38 dos casos são os desta feature.
+
+**Duas rodadas antes desta falharam, e o registro fica.** A primeira completa pegou uma classe sem
+regra na folha e a pasta fora da tabela de incrementos do README. Depois, o CI do PR quebrou em 6
+casos que a suíte local não via: a branch estava atrás da `main`, e o #220 (RC-121) tinha removido
+`janela_declarada`, que o gesto de publicar importava. A janela passou a ser do ato, e a `FR-827`
+foi revista para isso.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Os testes estão todos em
 `backend/tests/interface/test_conducao_do_marco.py`, salvo onde outro arquivo é dito. Onde a linha
