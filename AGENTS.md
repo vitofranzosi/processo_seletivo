@@ -44,16 +44,20 @@ arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, co
 ## As armadilhas caras
 
 **O modo padrão da suíte não é confiável — rode contra PostgreSQL.** Sem variável nenhuma, a
-suíte cai para SQLite: **35 falham, ~7326 passam e 243 são puladas** (medido em 2026-09-21).
-Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado original
-([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a primeira,
-quando eram 21:
+suíte cai para SQLite: **35 falham, ~8087 passam, 253 são puladas e 1 erro** (medido em
+2026-09-28). Todas deveriam ter sido puladas e não foram, e a causa se reparte em três — o achado
+original ([doc/achado-suite-em-sqlite.md](doc/achado-suite-em-sqlite.md), de 09/09) nomeava só a
+primeira, quando eram 21:
 
 | Quantas | Por que |
 |---|---|
 | 14 | SQL que só o PostgreSQL entende — `near "DISABLE": syntax error`, de `ALTER TABLE ... DISABLE TRIGGER` |
 | 9 | a mensagem do SQLite não nomeia a constraint, e o `pytest.raises(match=...)` não casa |
-| 11 | garantia que o SQLite não tem — gatilho ausente (`DID NOT RAISE`, 5), transação que não tranca (3) e erro de constraint que escapa cru (3) |
+| 11 | garantia que o SQLite não tem — gatilho ausente (`DID NOT RAISE`, 6), transação que não tranca (3) e erro de constraint que escapa cru (2) |
+
+A 35ª falha e o erro são de outra natureza: conexão do SQLite que ninguém fechou, acusada pelo
+`ResourceWarning` — que o `pyproject.toml` promove a erro — no caso que por acaso estiver rodando
+quando o coletor de lixo passa. É o acoplamento do parágrafo seguinte.
 
 **O total neste modo não é reprodutível, e o `~` acima é literal**: duas execuções seguidas de um
 mesmo commit, em 09/20, deram 7211 e 7212 passando, com 1 e 2 erros. Cinco falhas do `portal` não
@@ -61,15 +65,24 @@ se repetiram ao rodar os mesmos arquivos isolados, e não há plugin de ordem al
 de modo que há acoplamento entre casos que só aparece aqui. Não investigue por este caminho: a
 repartição acima é o que importa, e nenhuma das três colunas é defeito de produto.
 
-**Ao atualizar estes números, atualize as falhas e os pulados junto — e desconfie se mudarem.**
-Entre 09/20 e 09/21 o total subiu **115** casos, e as duas outras contagens ficaram onde estavam:
-35 e 243. É o que se espera, porque as três causas são do vendor e não do produto, e teste novo
-não entra nelas. Uma delas mexendo é sinal de que alguém escreveu SQL de PostgreSQL num caminho
-que antes não tinha — e aí vale investigar, ao contrário do total.
+**Ao atualizar estes números, atualize as falhas e os pulados junto — e desconfie se as falhas
+mudarem.** As três causas são do vendor e não do produto, e teste novo bem escrito não entra
+nelas: falha mexendo é sinal de que alguém escreveu SQL de PostgreSQL num caminho que antes não
+tinha. Os pulados são outra coisa: **sobem sempre que entra teste que só o PostgreSQL verifica**, e
+é o esperado. Entre 09/21 e 09/28 foram de 243 a 253, e os dez foram conferidos um a um — cinco da
+lista exigida da `044` (`test_lista_exigida_imutavel.py` e `test_lista_exigida_concorrencia.py`),
+dois em `test_database_permissions.py`, parametrizado por `TABELAS_APPEND_ONLY`, que ganhou uma
+tabela, e três em `test_imutabilidade_do_historico.py`, do gatilho que o `ValorDeFato` recebeu.
+
+**Para saber de onde veio uma diferença, compare listas, não totais.** Rode `pytest -q -rs` nos dois
+commits e agrupe os `SKIPPED` por arquivo e motivo, sem o número da linha, que muda entre eles. As
+falhas se comparam classificando cada uma pela mensagem. Foi assim que se viu que a repartição
+anterior desta tabela, de 09/21, dizia 5 e 3 onde o mesmo commit tinha 6 e 2 — erro de
+classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **7594 passando e 11 pulados** (medido em 2026-09-21). Os onze
+Contra PostgreSQL a suíte fecha em **8364 passando e 11 pulados** (medido em 2026-09-28). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
@@ -80,11 +93,15 @@ Para chegar lá é preciso o **par**:
 `TEST_DB_ENGINE=postgresql` **e** `DB_USER`. Só o primeiro cai para SQLite; só o segundo tenta
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 
-**A suíte leva ~12 minutos, e a preparação do banco não tem nada com isso.** Criar o banco de teste
-e aplicar as 80 migrations custa **~2 segundos** — medido em 2026-09-20, isolando a preparação com
-`--reuse-db` sobre um caso só. O custo está nos **791 casos que declaram `transaction=True`**, em 292
-dos 609 arquivos de teste: eles não podem terminar em `ROLLBACK`, e o Django limpa truncando as
-tabelas depois de cada um. São ~10% dos casos, e é o décimo caro. Não é desleixo de quem os
+**A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 83 — custa
+**~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
+custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
+declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
+não podem terminar em `ROLLBACK`, e o Django limpa truncando as tabelas depois de cada um. A versão
+anterior deste parágrafo contava as declarações (791, em 09/20) como se fossem casos e concluía
+"~10%"; uma marca de classe ou de módulo alcança todos os casos abaixo dela, e é por isso que os
+dois números divergem por um fator de três. Não é desleixo de quem os
 escreveu: é consequência de as garantias deste sistema morarem no banco — gatilho append-only,
 privilégio ausente e `select_for_update` que realmente tranca não são observáveis dentro de uma
 transação que vai ser desfeita.

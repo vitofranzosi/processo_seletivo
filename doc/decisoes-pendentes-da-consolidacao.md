@@ -23,7 +23,7 @@ registro criaria duas verdades:
 
 | Decisão | Onde já está registrada |
 |---|---|
-| Redação no sistema ou transcrição (E10) · conteúdo comum aos Perfis (E2) · conjunto de seções do documento (E5) | [estudo de esforço](estudo-esforco-de-cadastro-2026-09-21.md) §15, "Três decisões, antes de qualquer spec" (a E6 já foi decidida em 25/09) |
+| Redação no sistema ou transcrição (E10) · conteúdo comum aos Perfis (E2) · conjunto de seções do documento (E5) | [estudo de esforço](estudo-esforco-de-cadastro-2026-09-21.md) §15, "Três decisões, antes de qualquer spec" (a E6 já foi decidida em 25/09). *Desde 28/09, as opções e o custo da E5 e da E10 estão na [`DP-20`](#dp-20--o-pdf-do-sistema-vale-como-edital-oficial-o-que-ele-precisa-ter-e-com-quais-seções); a pergunta continua registrada no estudo, e a decisão, quando vier, entra na `DP-20`.* |
 | Âncora da regra do ano (FR-344) · remeter o método comum do sorteio (FR-465/466) · Casas decimais e Arredondamento no marco de sorteio | [estudo de esforço](estudo-esforco-de-cadastro-2026-09-21.md) §12, itens 5, 10 e 13 — "não é quick win… registrado aqui, não tomado" |
 | Papel próprio de Diretoria | [spec 040](../specs/040-visao-institucional-dos-processos/spec.md), D-008 e G-010; comentário em `interface/identidade.py:66-70` |
 
@@ -50,6 +50,7 @@ registro criaria duas verdades:
 | DP-17 | A automação explícita entra na Constituição? | passo 1 | emenda ao Princípio IV, só o invariante |
 | DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
 | DP-19 | Marcar na composição os campos que não se corrigem depois de publicados é requisito novo? | passo 0 → fora dele | decidir em spec; conciliar com a `026` §7 e a `FR-428` da `030` |
+| DP-20 | O PDF do sistema vale como Edital oficial: o que ele precisa ter, e com quais seções? (E5 · E10) | RC-20, RC-21, RC-23 a RC-26 | o RC-20 e o teto já, como correção; assinatura e E10 antes; fecho e seções numa spec só |
 
 ---
 
@@ -1092,3 +1093,221 @@ cada item é. Para este, a conferência de 27/09 contra as specs e o histórico 
   conceito), ou só na Revisão, antes de publicar — que é onde a `DP-03` pôs o aviso do `UX-001`.
 - **A fonte única.** Derivar do contrato, como a Retificação já faz em `exclusoes_do_tipo`, e não de
   uma lista na composição — a lição da `026` sobre listas que envelhecem.
+
+---
+
+## DP-20 — O PDF do sistema vale como Edital oficial: o que ele precisa ter, e com quais seções?
+
+*Registrada em 28/09, depois de o usuário decidir, na mesma data, que no piloto o PDF gerado pelo
+sistema **será o documento oficial do Edital**, sem documento próprio do setor em paralelo. Com isso,
+o documento deixou de ser acabamento: o que ele omite, erra ou inventa passa a ser norma publicada, e
+só sai por Retificação pública. É o único domínio da [auditoria de
+consolidação](auditoria-de-consolidacao-2026-09-26.md) (§9, "Documento publicado") sem passo na
+[ordem de 27/09](#depois-da-reavaliação-de-2709): o passo 4 é o documento **de resultado** por marco
+(`DP-15`), e não o do Edital. O `RC-22` (a hora "às 00h") está em outra sessão, e aqui só é citado.
+Conferida contra a `main` em `d65f0136`. É análise; nada foi decidido nem mudado no código.*
+
+### De onde vem
+
+- **A auditoria de 26/09**, §3.2: o RC-20, o RC-21, o RC-23, o RC-24, o RC-25 e o RC-26; a B-9
+  ("conferências baratas do documento") e a B-16 ("hora, fecho e seções").
+- **O [estudo de esforço](estudo-esforco-de-cadastro-2026-09-21.md)** de 21/09: §9 e §9-bis
+  (original × PDF gerado nos cinco Editais), §13/E5 e E10, §15 ("três decisões, antes de qualquer
+  spec").
+- **As specs**: a `006` (catálogo de seções, `FR-034` a `FR-041`), a `008` (composição institucional,
+  `FR-005` a `FR-044`) e a `020` (anexos).
+- **O renderizador**, `publicacoes/infrastructure/pdf.py`, e o catálogo, `editais/domain/secoes.py`.
+- **Os Editais da amostra**, lidos de novo em 28/09 com `pdftotext -layout`: os **quinze** do Cefor
+  que têm texto extraível — 78/2026, 59/2026, 77/2026, 158/2024 e 58/2026 (FIC); 57/2026, 28/2026,
+  149/2024 e 35/2026 (pós-graduação e aperfeiçoamento); 140/2025, 173/2025, 14/2026 e 146/2025
+  (seleção de bolsista UAB/FAPES); 69/2026 e 76/2026 (chamada pública de curso técnico). O 62/2026 e
+  o 73/2026 são imagem, sem texto. Nenhum dado pessoal foi copiado para cá.
+
+### O que o sistema imprime hoje, em ordem
+
+`render_edital_pdf` compõe, nesta ordem: brasão; órgão em quatro linhas (constante, `ORGAO`); o
+**anúncio do ato**; a descrição do Edital; o preâmbulo (a seção `apresentacao`, sem número); as
+seções numeradas do catálogo, pulando a gerada cuja coleção está vazia; o bloco "Autoridade
+responsável pelo ato"; e a verificação de integridade, com o SHA-256.
+
+O catálogo (`secoes.py`) é fixo desde a `006`, com **12 entradas** — 7 textuais, contando a
+apresentação, e 5 geradas. Materializado, o documento sai com o preâmbulo e até 11 seções:
+
+> 1. Disposições Preliminares · 2. Requisitos Gerais de Participação · 3. Da Inscrição ·
+> 4. Documentos Exigidos para a Inscrição *(gerada)* · 5. Perfis de Vaga *(gerada)* ·
+> 6. Etapas de Avaliação *(gerada)* · 7. Critérios de Classificação · 8. Cronograma *(gerada)* ·
+> 9. Dos Recursos · 10. Anexos *(gerada: só os rótulos)* · 11. Disposições Finais
+
+Três propriedades do código que o documento oficial herda, e que nenhum RC registra por inteiro:
+
+1. **Seção textual não se esvazia, e a intocada publica a redação padrão.** A `FR-041` da `006`
+   recusa seção textual sem conteúdo (`_topologia_das_secoes`), e `ler_secoes`
+   (`interface/forms.py`) só grava o texto que difere do padrão: apagar o campo devolve o padrão. A
+   Revisão não avisa quando uma seção vai ao ato com a redação do catálogo, que nunca ninguém revisou;
+   a tela diz só *"Redação institucional padrão — revise antes de submeter"*. E a redação padrão
+   afirma norma: a de "Critérios de Classificação" diz que a classificação *"observará a pontuação
+   obtida nas Etapas de Avaliação, respeitados os pesos e as notas mínimas… e as reservas de vaga"* —
+   falso num Edital por sorteio, que é o caso do 28/2026, o Edital do teste operacional (`DP-18`). A
+   de "Apresentação" abre por *"O Instituto Federal do Espírito Santo… torna pública"*, e não pela
+   autoridade que pratica o ato, como os quinze Editais fazem.
+2. **O texto é parágrafo corrido.** A seção textual não tem tabela, subitem numerado nem negrito.
+   O Quadro 1 do 28/2026 (a matriz curricular) não tem como ser escrito, e o "4.1" que o autor
+   digitar no texto é número dele, e não do documento.
+3. **O catálogo é conferido também depois de publicado.** A mesma `_topologia_das_secoes` roda na
+   Retificação e compara `order`, `title` e `type` com o catálogo **vigente**. Mudar o catálogo
+   depois de o primeiro Edital real ser publicado faz a Retificação dele ser recusada, a menos que o
+   catálogo passe a ter versão. É por isso que a E5 tem **prazo**: antes da primeira publicação do
+   piloto, mudar o catálogo é barato; depois, pede versão de catálogo, e o acervo passa a ter duas
+   formas de documento, porque documento publicado não se regenera.
+
+### 1. Os RCs, classificados
+
+| RC | O que é | Classificação | Requisito escrito, ou a pergunta |
+|---|---|---|---|
+| **RC-20** | A capa imprime o **título** no lugar do ato sempre que o título abre por "Edital" (`pdf.py`, `_cabecalho`); o rodapé e a verificação usam `number`/`year`. O documento pode se identificar com dois números, ou com nenhum, se o título abrir por "Edital de seleção…" | **Correção direta** | `FR-006` da `008`: *"O ato — `EDITAL Nº <número>/<ano>` — DEVE ser destacado"*; `SC-001`, o ato na primeira página. `number` e `year` são a identidade do Edital (`uq_edital_scope_number_year`) e não se retificam; o `title` se retifica. O teste `backend/tests/unit/publicacoes/test_pdf.py:593` prende a leitura atual (`"EDITAL 07/2026 — PROFESSOR SUBSTITUTO"`, `count("EDITAL") == 1`) e é emendado no mesmo commit; a fixture de bytes é refeita junto (`FR-044` da `008`). *O aviso "título × número" na Revisão (B-9) é complemento sem requisito, e opcional depois da correção.* |
+| **RC-21** | "ANEXO IV" citado no texto sem anexo publicado com esse rótulo; nada confere | **Precisa de decisão** (pequena) | Nenhum requisito da `020` cobre a remissão no texto; a `FR-006` de lá proíbe derivar ou renumerar rótulo, e não proíbe conferir. **Pergunta:** aviso ou impeditivo? A remissão casa também "Anexo III da Resolução…", de outro ato, e por isso o impeditivo erraria. |
+| **RC-22** | a hora "às 00h" | *fora desta DP* | outra sessão |
+| **RC-23** | O fecho imprime *"Autoridade responsável pelo ato"*, o **nome** do catálogo e o cargo; sem local, data, portaria de nomeação nem assinatura | **Precisa de decisão** | A letra vigente **proíbe** parte do que falta: `FR-036` da `008`, *"O bloco de autoridade NÃO DEVE conter praça nem data"*; `FR-033` e `FR-037`, registro e não assinatura. O catálogo (`publicacoes/domain/autoridades.py`) tem designação de cargo no campo de nome (*"Diretora do Cefor"*) e identificadores de exemplo; as *Assumptions* da `008` preveem trocá-lo por nome próprio como trabalho editorial, sem mudança no bloco. A portaria não existe na `Publicacao` nem no catálogo. **Perguntas:** como o ato é assinado; e o fecho leva local, data, nome e portaria? |
+| **RC-24** | 12 seções fixas; a amostra tem 7 a 22; o que não cabe vira parágrafo em caixa alta dentro de outra seção; a inscrição e os documentos vêm antes dos Perfis | **Precisa de decisão** (E5) | Contra a letra: `FR-034` da `006` (*"O conjunto de seções e a ordem… são definidos pelo sistema; quem elabora… NÃO acrescenta, remove nem reordena"*), `FR-041` (textual não fica vazia) e o *Out of Scope* da `008` (*"subseção arbitrária, tipo novo de seção"*). A opção A abaixo só muda a ordem, que a `FR-034` deixa ao sistema; a B e a C mudam spec. |
+| **RC-25** | 0 de 7 atos normativos no documento em dois Editais; nada percebe | **Precisa de decisão** (E10) | Nenhum requisito. É processo do Cefor: quem redige, onde, e quem confere. |
+| **RC-26** | Quatro coisas: o **total de vagas** não sai; a **numeração** da tela Conteúdo (1 a 12, pela ordem do catálogo) não é a do PDF (preâmbulo sem número, geradas vazias puladas); o **requisito** do Perfil e a **instrução** do documento exigido são dois textos livres que já se contradisseram (AX-2); o anexo sem destinatário | **Precisa de decisão**, em partes | Total e numeração: nenhum requisito, a favor ou contra; são decisões pequenas, e a numeração muda de qualquer jeito com a E5. Requisito × documento: modelagem, com a E2 (B-17). Anexo sem destinatário: registrado em 08/09 como não defeito ([achado](achado-anexo-sem-destinatario.md)), e continua não sendo. |
+
+**Duas unidades vizinhas entram na mesma conta**, porque são norma que o documento oficial cala:
+
+- **RC-12, o teto de inscrições por candidato.** Executado (`submissao.py`), no conteúdo publicado
+  (`maxInscricoesPorCandidato`) e ausente do PDF. **Correção direta** contra a `FR-063` da `015`:
+  *"O Edital MUST poder publicar um teto de inscrições por candidato"*. A B-9 já o junta ao RC-20.
+- **A declaração do Requerimento de Matrícula** (`matriculationRequest`), que a `029` registrou
+  como limite, e não como esquecimento (Q-10): quem lê o Edital não vê a declaração que vai aceitar.
+  **Decisão**, e pequena.
+
+### 2. As opções para a E5 e a E10
+
+#### E5 — o conjunto de seções do documento
+
+O que a amostra mostra. As seções numeradas, por família:
+
+| Família | Editais | Seções | O que se repete |
+|---|---|---:|---|
+| FIC | 78, 59, 77, 158, 58 | 10–11 | Informações gerais sobre o curso · Público-alvo · Requisitos para inscrição · Das vagas · Inscrição · Do processo seletivo · Recurso · Matrícula · [Acesso e informações] · Certificado · Disposições finais |
+| Pós e aperfeiçoamento | 57, 28, 149, 35 | 13–15 | as da FIC, mais **Verificação da autodeclaração**, **Procedimento complementar** (heteroidentificação), **Homologação da matrícula** e **Entrevista PcD** |
+| Bolsista UAB/FAPES | 140, 173, 14, 146 | 12–22 | Disposições preliminares · Funções · Requisitos · Vagas · Inscrição · Prova de títulos / Entrevista · Recursos · Verificação · Classificação final · **Convocação** · **Mobilidade entre perfis** · **Curso de formação** · **Vinculação à UAB / Pagamento da bolsa** · **Prazo de validade** · Disposições finais |
+| Chamada pública técnica | 69, 76 | 7–8 | Sobre o curso · Requisitos · Inscrição · Classificação · Preenchimento das vagas · Disposições finais |
+
+Três regularidades valem para os quinze: **a oferta vem antes da inscrição**; há **Disposições
+finais com os casos omissos**; e há **cronograma em tabela** — em doze deles, como **anexo** (I ou II),
+depois do fecho, e não como seção do corpo. No 28/2026, o Edital do teste operacional, **8 das 15 seções
+não têm lugar** no catálogo: Público-alvo, as duas de verificação, Matrícula, Acesso ao curso,
+Homologação da matrícula, Certificado e Entrevista PcD.
+
+| | A. Reordenar e aparar | B. Catálogo ampliado, com textuais opcionais | C. Seções acrescentáveis por quem elabora |
+|---|---|---|---|
+| **O que é** | O catálogo continua com 12 entradas. Perfis passam para antes da Inscrição; a redação padrão que afirma norma sai, ou vira aviso na Revisão enquanto não for revisada. | O catálogo ganha as seções que se repetem nas famílias da amostra (Público-alvo, Verificação da autodeclaração, Convocação, Matrícula, Certificado, Prazo de validade, Informações sobre o curso…). A textual passa a poder ficar **vazia**, e vazia não sai no documento, como a gerada. As novas nascem **sem** redação padrão. | O autor acrescenta seção textual, com título e posição, entre as do catálogo. As geradas continuam fixas. |
+| **O que muda na letra** | nada de requisito; só a ordem, que a `FR-034` já deixa ao sistema | a `FR-041` da `006` (textual sem conteúdo deixa de ser impeditivo) | a `FR-034` e a `FR-041` da `006`, o *Out of Scope* da `008`, a gramática da Retificação (`ADD /sections/-`, hoje recusado pela topologia) e o contrato da `026` |
+| **Custo** | Pequeno: a ordem no catálogo, a fixture de bytes, os testes que prendem a numeração. Sem spec, se o usuário decidir a ordem. | Médio: uma spec curta. Catálogo, validação, tela Conteúdo (de 7 para ~15 caixas de texto, e a tela precisa dizer quais a família usa), numeração, reuso. | Grande: identidade da seção (hoje `uuid5` sobre a chave do catálogo), Retificação, "O que mudou", reuso, numeração. E reabre o que a `006` recusou de propósito: *"É o que separa um documento institucional estruturado de um construtor de documentos"*. |
+| **Risco** | Não resolve a falta de lugar: a matrícula do 28/2026 continua dentro de "Disposições finais". | Cada família nova pede entrada nova no catálogo — uma linha de código revisada, e não uma escolha do autor. A família de bolsista tem seções idiossincráticas (Mobilidade, Curso de formação), que caberiam numa entrada "Outras disposições". | A norma que o sistema executa foge para texto livre ao lado da estrutura que a executa: é a família (a) do AX-3, *"resolve a publicação e deixa a norma inexecutável"*. |
+| **RCs que fecha** | RC-24 só na ordem (M10); RC-26 na numeração, se a tela passar a mostrar o número do PDF | **RC-24** para as quatro famílias da amostra; RC-26 na numeração; e a redação padrão que afirma norma deixa de sair sem revisão | RC-24 inteiro; RC-26 na numeração |
+
+**Três escolhas atravessam as três opções**, e cabem na mesma decisão:
+
+- **Cronograma: seção ou anexo?** Doze dos quinze o publicam como anexo (I ou II), depois do fecho. No
+  sistema, "Anexo" é arquivo à parte (`020`, D-002), com rótulo digitado pelo autor, e um "Anexo I"
+  gerado colidiria com o "ANEXO I" que o autor escrever. Manter como seção não tira validade de nada.
+- **Redação padrão das textuais.** Continua existindo? Se continuar, a Revisão avisa quando uma seção
+  vai ao ato sem revisão, e a de "Critérios de Classificação" deixa de afirmar pontuação.
+- **A tela mostra o número que o PDF vai imprimir**, derivado da mesma regra (`_materializaveis`), e
+  não a ordem do catálogo.
+
+#### E10 — redação no sistema ou transcrição
+
+O estudo mediu a transcrição: um PDF pronto redigitado. Nos dois Editais transcritos de memória, 0 de 7
+atos normativos chegaram ao documento; no transcrito com conferência, 11 de 13. **A decisão de 28/09
+não responde a E10**: ela diz que o PDF do sistema é o oficial, e não onde o texto nasce.
+
+| | A. Redação no sistema | B. Transcrição, com conferência humana registrada | C. Transcrição, com conferência assistida |
+|---|---|---|---|
+| **O que é** | O texto normativo é escrito na tela Conteúdo, e não existe original em Word. | O setor continua redigindo no Word, e o texto é transcrito. Antes de homologar, alguém confere a prévia contra o original, com a lista do item 3 abaixo. A homologação já exige uma segunda pessoa, e é o ponto natural. | Como B, e o original é anexado ao rascunho, sem ser publicado. A Revisão lista os atos normativos (Lei, Decreto, Portaria, Resolução nº…) e os "ANEXO X" citados no original que o texto composto não cita. |
+| **Custo** | Nenhum no código. No processo, o setor passa a redigir em caixa de texto sem tabela, subitem ou negrito, e isso depende da E5: sem lugar, a norma vai para a seção errada. | Nenhum no código, ou um texto de declaração na homologação, se o usuário quiser o registro no ato. | Spec curta a média: armazenar arquivo não público, extrair texto de PDF e DOCX — o renderizador foi escrito sem dependência externa, e ler esses formatos pede uma —, conferir e avisar. |
+| **Risco que sobra** | a redação padrão publicada sem revisão; a prosa herdada no reuso (RC-43) | a conferência depende de quem confere, e o sistema não sabe se ela aconteceu | pega a citação perdida, e não o parágrafo perdido |
+| **RCs que fecha** | **RC-25**, por definição: sem fonte, não há fidelidade a perder. O RC-43 continua | RC-25 pelo processo, e não pelo produto | RC-25 na parte medida, as citações; ajuda no RC-21 |
+
+*Excluída pela decisão de 28/09:* o Word continuar como o ato oficial e o PDF do sistema como
+extrato — a família (d) do AX-3.
+
+### 3. O mínimo indispensável para o PDF valer como documento oficial no piloto
+
+**Não há, no repositório nem na amostra, norma do Ifes que liste o conteúdo obrigatório de um
+Edital.** O que está abaixo é o que os quinze Editais têm **sem exceção**, ou o que o próprio sistema
+executa e por isso precisa estar publicado. Confirmar a lista é do Cefor `[VALIDAR com o Cefor]`.
+
+| Elemento | Na amostra | O que o PDF do sistema faz | | Caminho |
+|---|---|---|---|---|
+| Número do ato na abertura, com o objeto | 15 de 15 | Troca o ato pelo título quando ele abre por "Edital" | **erra** (RC-20) | correção direta |
+| Autoridade que pratica o ato, no preâmbulo (*"A Diretora do Cefor… torna público / faz saber"*) | 15 de 15 | Preâmbulo é texto livre; o padrão fala pela instituição, sem a autoridade | **inventa**, se não for revisado | E5 (redação padrão) |
+| A oferta antes da inscrição | 15 de 15 | Inscrição e documentos (3, 4) antes dos Perfis (5) | **erra** a ordem (RC-24) | E5 |
+| As seções da família | 7 a 22 | 11, fixas; no 28/2026, 8 de 15 sem lugar | **omite** a estrutura (RC-24) | E5 |
+| Cronograma, com as datas como declaradas | 15 de 15 | Tabela como seção 8; hora "às 00h" onde ninguém a declarou | **inventa** a hora (RC-22, outra sessão) | outra sessão |
+| Disposições finais, com os casos omissos | 15 de 15 | Seção existe; o padrão manda os omissos à *"autoridade responsável"*; os que conferi nomeiam a comissão, o setor de seleção ou a Coordenadoria Geral de Ensino | **inventa**, se não for revisado | E5 (redação padrão) |
+| Remissão a anexo que exista | anexos citados de 2 a 39 vezes por Edital | Lista os rótulos; não confere o texto | pode **errar** (RC-21) | decisão pequena |
+| Local e data do ato | 15 de 15 | Não imprime: a `FR-036` da `008` proíbe | **omite** (RC-23) | decisão; emendar a `FR-036` |
+| Nome de quem assina | 15 de 15 | Imprime a designação do cargo no lugar do nome (*"Diretora do Cefor"*) | **inventa** um nome que não é nome (RC-23) | dado do Cefor no catálogo (*Assumptions* da `008`) |
+| Ato de nomeação de quem assina | 15 de 15 | Não existe no modelo | **omite** (RC-23) | decisão; campo na `Publicacao` |
+| Como o ato é assinado | nenhum dos 15 traz marca de assinatura eletrônica no texto extraído | Declara-se *"registro, não assinatura"* (`FR-033`, `FR-037`) | pergunta aberta | **decisão institucional**, antes de tudo |
+| O teto de inscrições por candidato | onde o Edital o declara | Executa e não publica | **omite** (RC-12) | correção direta (`FR-063` da `015`) |
+| A declaração do Requerimento de Matrícula | onde o Edital a exige | Exige o aceite e não publica | **omite** (`029`, Q-10) | decisão pequena |
+| O documento consolidado se diz retificado, e de quando | arquivos "retificado em dd/mm" e anexos "(RETIFICADO)" | O consolidado da Retificação sai igual ao original, sem data nem marca; só o SHA-256 os distingue | **omite** | com o fecho: a data do ato |
+| A legislação que o Edital cita | 3 a 13 atos, nos cinco do estudo | Depende de quem transcreve; nada confere | **omite** sem aviso (RC-25) | E10 |
+
+**Dois fatos técnicos que baixam o custo do fecho.** A data do ato **existe** no momento da
+composição, nos dois fluxos: `published_at=now` em `publish_edital.py` e em `retificacoes.py`, a poucas
+linhas de `render_edital_pdf`. Ela chegaria ao compositor pelo mesmo caminho da autoridade, como
+contexto do ato e fora do conteúdo (`FR-034` da `008`), e o hash do conteúdo não muda. O obstáculo da
+`FR-036` é de decisão, e não de engenharia. E a unidade já é constante do compositor (`ORGAO`); o local
+seria outra constante, e não um cadastro.
+
+**Uma letra da `008` que o renderizador já não segue, e não deve voltar a seguir.** A `SC-001` pede
+o Processo na primeira página, entre o ato e o título. Desde a `008`, `_cabecalho` não o imprime: o
+Processo só sai no bloco de verificação. É o certo para a amostra, que não nomeia Processo algum
+(estudo, §7.1). A spec que vier emenda a `SC-001` para dizer o que o documento já faz.
+
+### 4. Recomendação
+
+**Pode ir já, como correção direta, sem spec** (o passo 0 de 27/09 é o precedente):
+
+1. **O RC-20.** O ato sai sempre de `number`/`year` (`FR-006` da `008`), seguido do título; o título
+   que repete exatamente o ato perde o prefixo, para o anúncio continuar uma sentença só. Emendar o
+   `test_pdf.py:593` e refazer a fixture no mesmo commit.
+2. **O RC-12.** O teto por candidato no documento (`FR-063` da `015`), onde a B-9 já o pôs.
+
+**Pode ir já, sem spec, com uma decisão de uma linha do usuário:**
+
+3. **Avisos na Revisão**, e nenhum impeditivo: "ANEXO X" citado sem rótulo correspondente (RC-21); e
+   seção textual que vai ao ato com a redação padrão, sem revisão (a propriedade 1 acima).
+4. **O nome próprio no catálogo de autoridades**, quando o Cefor o fornecer. As *Assumptions* da
+   `008` já dizem que o bloco o exibe sem mudança. Enquanto não houver, o fecho continua dizendo um
+   cargo onde o leitor espera um nome.
+
+**Decidir antes da spec, nesta ordem:**
+
+5. **Como o ato é assinado no piloto** `[VALIDAR com o Cefor]`. Se a Diretora assinar o PDF fora do
+   sistema, o documento assinado é outro arquivo, e o sistema publica um que ninguém assinou; se o
+   Cefor aceitar o PDF com o registro de autoria e o SHA-256, a `FR-037` fica como está. É a pergunta
+   que decide se o documento vale, e nenhuma linha de código a responde.
+6. **A E10.** Recomendo **B** para o piloto: transcrição com conferência na homologação, pela lista do
+   item 3. Custa zero no código e aproveita a segunda pessoa que a homologação já exige. A **C** só se
+   o teste operacional mostrar perda de citação mesmo com a conferência. A **A** é o destino, e só é
+   viável depois da E5, porque sem lugar a norma vai para a seção errada.
+7. **A E5.** Recomendo **B**: o catálogo ampliado pelas famílias que o piloto vai operar, com textual
+   opcional e sem redação padrão que afirme norma; a oferta antes da inscrição; a tela com o número do
+   PDF; o cronograma como seção. A **A** não fecha o que o 28/2026 precisa. A **C** reabre a recusa
+   da `006`, e o custo dela só se paga se aparecer uma família que B não acomoda.
+
+**Uma spec só, depois dessas decisões**, *"O Edital do sistema como ato oficial"*, com: o catálogo
+da E5; o fecho (emenda à `FR-036`: local e data do ato, como contexto, fora do conteúdo; a portaria de
+nomeação registrada na `Publicacao`); o consolidado da Retificação datado; a declaração do
+Requerimento de Matrícula; o total de vagas, se o usuário o quiser; e a emenda da `SC-001`.
+
+**O prazo.** Antes da **primeira publicação real do piloto**. Depois dela, mudar o catálogo pede
+versão de catálogo (a propriedade 3 acima), e o acervo fica com duas formas de documento. O teste
+operacional da `DP-18` é o lugar barato para conferir esta lista: gerar o PDF do 28/2026 e compará-lo
+ao original, item por item, antes de escrever a spec.

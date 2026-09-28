@@ -1,0 +1,19 @@
+{% comment %}
+**O rascunho que o prazo fechou diz que fechou** (009, FR-032): enviar não pode mais, e a inscrição
+fica para consulta. O domínio já recusava gravar, anexar e enviar; a tela não dizia, e a pessoa
+descobria o encerramento pela recusa — depois de preencher (RC-49, achado E2E15-007). Vem antes de
+qualquer convite, inclusive o de reconhecer uma Retificação: é a Retificação que costuma fechar o
+prazo, e reconhecê-la não leva a lugar nenhum.
+{% endcomment %}
+{% if fechada %}
+<div class="aviso" role="status">
+  <p><strong>
+    {% if fechada.estado == "encerrado" and fechada.fim %}
+    O período de inscrições terminou em {{ fechada.fim|date:"d/m/Y" }} às {{ fechada.fim|date:"H\hi" }}.
+    {% else %}
+    Esta seleção não está recebendo inscrições.
+    {% endif %}
+  </strong>
+    Esta inscrição não foi enviada e não pode mais ser. Ela continua disponível só para consulta.</p>
+</div>
+{% endif %}

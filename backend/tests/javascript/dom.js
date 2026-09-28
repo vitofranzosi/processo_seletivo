@@ -350,6 +350,9 @@ function montar({
   // O recibo do servidor: a chave do rascunho que ele acabou de receber. `null` é a tela que
   // não vem de um salvamento, que é o caso comum.
   rascunhoSalvo = null,
+  // A tela que o servidor devolveu ao restaurar o guardado (RC-08): o que está nela veio do
+  // navegador, e não do servidor.
+  restaurado = false,
 } = {}) {
   const ouvintes = {};
   documento = {
@@ -382,17 +385,14 @@ function montar({
     },
     querySelector: (seletor) => {
       if (seletor === "[data-nao-enviado]") return null;
+      if (seletor === "[data-rascunho-restaurado]") return restaurado ? new Elemento("p") : null;
       if (seletor === "[data-rascunho-salvo]") {
         if (rascunhoSalvo === null) return null;
         const recibo = new Elemento("p");
         recibo.dataset.rascunhoSalvo = rascunhoSalvo;
         return recibo;
       }
-      // `#id` também alcança o que o teste montou: `rascunho.js` procura a lista pelo seletor
-      // que o formulário declara, e a restauração precisa ser observada nessa mesma lista.
-      if (!seletor.startsWith("#")) return null;
-      const id = seletor.slice(1);
-      return Object.prototype.hasOwnProperty.call(porId, id) ? porId[id] : new Elemento("div");
+      return seletor.startsWith("#") ? new Elemento("div") : null;
     },
     querySelectorAll: (seletor) => (seletor === "[data-ordenavel]" ? ordenaveis : []),
     createElement: (tag) => new Elemento(tag),

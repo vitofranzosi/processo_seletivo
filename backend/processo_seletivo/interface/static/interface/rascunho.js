@@ -14,22 +14,24 @@
    no cliente (`Date.now()`) e o servidor renumera ao reexibir. Comparar nomes acusaria
    diferença logo depois de um salvamento bem-sucedido.
 
-   A restauração, ao contrário, é pela forma exata da lista: o HTML dela e os valores por nome.
-   Ela recriava cada linha pedindo o fragmento vazio ao servidor e preenchendo só os campos de
-   três segmentos (`perfil-3-code`), de modo que as coleções aninhadas — Modalidades, linhas do
-   quadro, fatos, os marcos em trânsito da cópia — não voltavam, o HTML inserido não passava
-   pelo htmx e o autosave regravava a perda por cima do que ainda estava guardado. Percorrido
-   pela tela em 28/09 (RC-08 da auditoria de consolidação): três Modalidades antes, nenhuma
-   depois de "Restaurar". Guardar a lista inteira devolve o que a pessoa via, com qualquer
-   profundidade de aninhamento, sem uma regra de reconstrução por tipo de linha.
-
    O rascunho expira (FR-022 da 003). O conteúdo de um Edital em elaboração fica no computador
    de quem preencheu, que num órgão público costuma ser compartilhado, e `localStorage` não
    caduca sozinho: sem prazo, o preenchimento de meses atrás continuaria lá, oferecido a quem
    sentar na máquina depois. Um dia é mais que suficiente para o caso que justifica guardar —
    sessão expirada, conexão caída, navegador fechado por engano — e curto o bastante para não
    virar arquivo. Vencido, é apagado sem ser oferecido: restaurar um preenchimento antigo sobre
-   um Edital que mudou no servidor trocaria uma perda por outra. */
+   um Edital que mudou no servidor trocaria uma perda por outra.
+
+   **Quem remonta a tela restaurada é o servidor, e não este script** (RC-08, AX-16 de 15/09). A
+   restauração recriava cada linha a partir do fragmento vazio da linha de topo e casava os nomes
+   pela forma `prefixo-índice-campo`: tudo que era aninhado — a Modalidade, o fato, a linha do
+   quadro, os marcos em trânsito da cópia — não tinha onde cair e sumia em silêncio; o HTML inserido
+   não passava pelo htmx, e "Acrescentar Modalidade" deixava de responder; e o autosave seguinte
+   regravava o que restou por cima do guardado, tornando a perda irreversível. Remontar no navegador
+   exigiria saber, para cada coleção de cada etapa, que fragmento a cria — uma segunda cópia da
+   estrutura do formulário, que envelheceria a cada coleção nova. O servidor já sabe reexibir
+   exatamente o que foi digitado, porque é o que ele faz depois de uma recusa: restaurar é enviar-lhe
+   os campos guardados pedindo só isso. */
 (function () {
   var PREFIXO = "ps:rascunho:";
 
@@ -109,51 +111,58 @@
     return JSON.stringify(a) === JSON.stringify(b);
   }
 
-  /* O que a restauração precisa, e que `ler` descarta de propósito: a estrutura da lista e o
-     valor de cada campo pelo nome exato. O `innerHTML` traz a estrutura mas não o digitado — o
-     valor que a pessoa escreve é propriedade do controle, e não atributo —, e por isso os dois
-     vão juntos. Os nomes batem na volta porque a lista volta com os mesmos índices. */
-  function capturar() {
-    var valores = {};
+  /* Os campos como o navegador os enviaria: rádio e caixa só quando marcados, na ordem do
+     formulário, com os nomes exatos. `ler` não serve para isto — ele descarta o prefixo e o índice,
+     que é o que o torna comparável ao renderizado, e é justamente o que o servidor precisa para
+     saber de que Perfil é cada Modalidade. */
+  function campos() {
+    var pares = [];
     Array.prototype.forEach.call(form.elements, function (campo) {
-      if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0) return;
-      if (campo.type === "radio" && !campo.checked) return;
-      (valores[campo.name] = valores[campo.name] || []).push(valorDe(campo));
+      if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0 || campo.disabled) return;
+      if (campo.type === "submit" || campo.type === "button" || campo.type === "file") return;
+      if ((campo.type === "radio" || campo.type === "checkbox") && !campo.checked) return;
+      pares.push([campo.name, campo.value]);
     });
-    return { html: lista ? lista.innerHTML : null, valores: valores };
+    return pares;
   }
 
-  function restaurar(copia) {
-    if (lista && copia.html !== null) {
-      lista.innerHTML = copia.html;
-      // Sem isto os botões da lista restaurada — acrescentar Modalidade, remover Perfil — ficam
-      // inertes: o htmx só liga o que ele mesmo inseriu ou o que lhe mandam processar.
-      if (window.htmx) window.htmx.process(lista);
-    }
-    var usados = {};
-    Array.prototype.forEach.call(form.elements, function (campo) {
-      var guardados = copia.valores[campo.name];
-      if (!guardados) return;
-      // Marcação não se restaura escrevendo no `value`. No rádio, `value` é **a opção que o
-      // controle representa**, e não a escolha: escrever nele fazia os dois rádios do grupo
-      // passarem a valer "DECISORIA", de modo que nenhuma opção se distinguia da outra. Na caixa,
-      // o que se guarda é "marcada ou não", e vazio é desmarcada.
-      if (campo.type === "radio") {
-        campo.checked = guardados.indexOf(campo.value) >= 0;
-        return;
-      }
-      var posicao = usados[campo.name] || 0;
-      usados[campo.name] = posicao + 1;
-      if (posicao >= guardados.length) return;
-      if (campo.type === "checkbox") campo.checked = guardados[posicao] !== "";
-      else campo.value = guardados[posicao];
+  function oculto(nome, valor) {
+    var campo = document.createElement("input");
+    campo.type = "hidden";
+    campo.setAttribute("name", nome);
+    campo.value = valor;
+    return campo;
+  }
+
+  /* Um envio de página inteira, e não um `fetch` que troca pedaços: a tela que volta é a que o
+     servidor renderiza, com o htmx processando tudo no carregamento — nada fica inerte.
+
+     Para o **caminho** da etapa, sem a consulta: `?salvo=` na tela atual faria a resposta trazer o
+     recibo de uma gravação que não aconteceu, e o recibo apaga o guardado. */
+  function restaurar(guardado) {
+    var envio = document.createElement("form");
+    envio.setAttribute("method", "post");
+    envio.setAttribute("action", window.location.pathname);
+    envio.hidden = true;
+    var token = Array.prototype.find.call(form.elements, function (campo) {
+      return campo.name === "csrfmiddlewaretoken";
     });
-    var primeiro = form.querySelector("input:not([type=hidden]), select, textarea");
-    if (primeiro) primeiro.focus();
+    if (token) envio.append(oculto(token.name, token.value));
+    envio.append(oculto("restaurar", "1"));
+    guardado.campos.forEach(function (par) {
+      envio.append(oculto(par[0], par[1]));
+    });
+    document.body.append(envio);
+    envio.submit();
   }
 
   var armazem = guarda();
-  var renderizado = ler();
+  /* Na tela restaurada, o renderizado **não** é o que o servidor tem: é o guardado, reexibido.
+     Tomá-lo como referência faria o guardado parecer igual à tela e ser apagado, e o marcador
+     dizer que nada falta enviar — quando tudo falta. Sem referência, a tela se declara não enviada
+     e cada alteração regrava o guardado inteiro, até a pessoa salvar e o recibo o apagar. */
+  var restaurado = document.querySelector("[data-rascunho-restaurado]");
+  var renderizado = restaurado ? null : ler();
   var marcador = document.querySelector("[data-nao-enviado]");
 
   function marcar() {
@@ -166,16 +175,11 @@
     // Igual ao que o servidor já tem: não há nada por enviar, e guardar só criaria um aviso
     // falso na próxima visita.
     if (mesmo(atual, renderizado)) armazem.removeItem(CHAVE);
-    else {
-      var registro = { em: new Date().toISOString(), dados: atual, copia: capturar() };
-      try {
-        armazem.setItem(CHAVE, JSON.stringify(registro));
-      } catch (erro) {
-        // Cota estourada: a cópia anterior ficaria no lugar, mais velha que a tela, e seria
-        // oferecida como se fosse o último preenchimento. Melhor não oferecer nada.
-        armazem.removeItem(CHAVE);
-      }
-    }
+    else
+      armazem.setItem(
+        CHAVE,
+        JSON.stringify({ em: new Date().toISOString(), dados: atual, campos: campos() })
+      );
     marcar();
   }
 
@@ -213,9 +217,7 @@
     descarta.textContent = "Descartar";
 
     restaura.addEventListener("click", function () {
-      restaurar(guardado.copia);
-      caixa.remove();
-      marcar();
+      restaurar(guardado);
     });
     descarta.addEventListener("click", function () {
       if (armazem) armazem.removeItem(CHAVE);
@@ -227,16 +229,17 @@
     form.parentNode.insertBefore(caixa, form);
   }
 
-  if (armazem) {
+  if (armazem && !restaurado) {
     var bruto = armazem.getItem(CHAVE);
     if (bruto) {
       try {
         var guardado = JSON.parse(bruto);
-        // Sem `copia` é a forma anterior do registro, a que só sabia restaurar perdendo as
-        // coleções aninhadas: oferecê-la repetiria o defeito que a forma nova corrige.
-        if (vencido(guardado) || !guardado.copia || mesmo(guardado.dados, renderizado)) {
+        // Sem `campos` é o formato de antes do RC-08, que só a restauração defeituosa sabia ler.
+        // Oferecê-lo seria oferecer a perda de novo; e ele tem no máximo um dia.
+        var legivel = Array.isArray(guardado.campos);
+        if (vencido(guardado) || !legivel || mesmo(guardado.dados, renderizado))
           armazem.removeItem(CHAVE);
-        } else oferecer(guardado);
+        else oferecer(guardado);
       } catch (erro) {
         armazem.removeItem(CHAVE);
       }
