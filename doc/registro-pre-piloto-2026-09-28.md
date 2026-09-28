@@ -18,6 +18,19 @@ tocou nelas. A auditoria não foi editada: este registro é a leitura dela no di
 | RC-62 | aberto | nenhum | decisão curta — abaixo |
 | RC-118 | aberto | o requisito escrito **permite** o comportamento de hoje | decisão — abaixo |
 
+## O que foi decidido
+
+**Em 28/09/2026, pelo usuário**, depois deste registro. Quatro das cinco unidades que ficaram para
+decisão foram decididas; o RC-76 e o RC-22 continuam como estão abaixo. Registrado aqui antes da
+implementação, e conferido contra o requisito escrito antes de cada uma.
+
+| RC | O que foi decidido | Requisito escrito que a decisão toca | Conferência |
+|---|---|---|---|
+| RC-62 | A Mesa **recusa** concluir avaliação de inscrição que já tem Resultado na Etapa, **salvo** a reavaliação determinada por recurso (`018`) ainda pendente. | `012` e `013` não escrevem a regra; `018`, `FR-066` e `FR-068` (a reavaliação pendente é derivada, e a consolidação que a cumpre é a exceção) | não contraria: a exceção é exatamente a da `018` |
+| RC-121 | A janela recursal de ato **já divulgado** segue a versão do Edital **que o ato citou**, e não a vigente. | `018`, caso-limite *"Retificação que altera a duração da janela depois de publicado o resultado"* (a favor); `047`, `D-005` e `FR-769` (a página acompanha a operação, sem mudar de requisito); **`048`, caso-limite *"Janela que nasce depois da divulgação"* e `FR-797`** | **contrariava a `048`**, que fazia a janela nascida por Retificação alcançar o ato já divulgado. Perguntado ao usuário no mesmo dia, que manteve a decisão **sem exceção**: a janela que nasce depois também não alcança o ato já divulgado. A `048` foi emendada junto |
+| RC-119 | O período de inscrições cujo Evento está **`CANCELADO`** não recebe inscrição. | `045`, `FR-736` (o `CANCELADO` prevalece sobre a derivação; portal e documento ficaram fora de escopo, sem regra contrária); `047`, caso-limite *"Período de inscrições marcado como cancelado"* (a projeção segue o que o sistema recebe) | não contraria: nenhum requisito dizia que o período cancelado recebe, e a `047` manda a página acompanhar |
+| RC-118 | **Encerrar o Processo exige os Editais em estado final** — encerrado ou cancelado —, como o cancelamento já exige. | `001`, `FR-034` (a exigência escrita só para o cancelamento, sem vedar a do encerramento); `047`, `FR-762` e `D-003` (dizem o encerramento do Processo como fato e registram a exigência como *"decisão pendente"*) | não contraria: a `FR-762` continua valendo para o Processo encerrado antes desta regra, e a `D-003` da `047` deixou a pergunta para outra feature |
+
 ## RC-76 — o prazo de recurso da tela diverge do Cronograma
 
 **Conferido.** A janela é relativa ao ato que divulgou o resultado
