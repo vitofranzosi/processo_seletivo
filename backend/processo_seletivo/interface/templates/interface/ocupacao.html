@@ -111,6 +111,16 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
 
   {% if recorte.estado != "NO_VACANCY_TABLE" and recorte.estado != "NOT_APPRAISED" %}
   <p class="acoes"><a href="{% url 'interface:ocupacao-historico' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">Ver o histórico deste recorte</a></p>
+  {% comment %}
+  A porta da convocacao pela ocupacao, por recorte apurado (RC-137, decidido em 28/09/2026). E o passo
+  do fluxo em que a convocacao e pedida: sem apuracao ela recusa, e a apuracao acontece aqui. Antes,
+  quem terminava de apurar voltava a pagina do Edital, abria a convocacao do marco e escolhia o
+  recorte de novo. O link nomeia a tela vizinha e nao afirma fato da 019: e a excecao que a UX-034
+  da 016 passou a escrever, e a varredura a admite por extenso, so neste texto e so para esta rota.
+  A mesma porta da ocupacao guarda a convocacao (`_edital_para_classificar`), e por isso o link nao
+  leva ninguem a uma negativa.
+  {% endcomment %}
+  <p class="acoes"><a href="{% url 'interface:convocacao' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">Abrir a convocação deste recorte</a></p>
   {% endif %}
 
   {% comment %}

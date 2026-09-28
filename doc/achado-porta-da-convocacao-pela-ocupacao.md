@@ -38,3 +38,11 @@ por isso não coube numa correção direta.
 
 O simétrico já existe e não esbarra em nada: a convocação aponta para a ocupação (*"Ir para a apuração
 de ocupação"*), porque a `019` conhece a `016`, e não o contrário.
+
+## Decidido e feito (28/09/2026)
+
+O usuário decidiu a emenda proposta acima (RC-137). A `UX-034` da `016` passou a separar nomear a
+tela vizinha de afirmar fato da `019`, e admite um elemento só: o link *"Abrir a convocação deste
+recorte"*, com destino na rota da convocação. A varredura (`tests/test_vocabulario_da_ocupacao.py`)
+tem a mesma exceção por extenso — o elemento inteiro, com esse texto e essa rota —, e um teste afirma
+que cada variação dela continua reprovando. O link voltou à ocupação, por recorte apurado.
