@@ -33,9 +33,11 @@ lint:
 test:
 	uv run pytest
 
-# A suíte de verdade. O alvo `test` acima cai para SQLite, e nesse modo 182 casos são pulados e 21
-# falham — ver `doc/achado-suite-em-sqlite.md`. Aqui ela roda contra o PostgreSQL, conectando com o
-# superusuário porque criar o banco de teste é privilégio que a role de runtime não tem.
+# A suíte de verdade. O alvo `test` acima cai para SQLite, e nesse modo parte dos casos falha em vez
+# de ser pulada — as contagens medidas e as três causas estão no `AGENTS.md`, e em nenhum outro
+# lugar, porque este comentário as repetia e envelheceu. Aqui ela roda contra o PostgreSQL,
+# conectando com o superusuário porque criar o banco de teste é privilégio que a role de runtime
+# não tem.
 # `DB_RUNTIME_USER` é o que precisa ser sobrescrito, e não `DB_USER`: as settings preferem o
 # primeiro, e mexer só no segundo não muda conexão nenhuma.
 test-pg:

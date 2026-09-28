@@ -202,6 +202,36 @@ def test_quem_concluiu_a_original_nao_conclui_a_reavaliacao(determinada):
         concluir_como(cenario, original, determinada["inscricao"], pontuacao="99.0000", revisao=1)
 
 
+def test_a_recusa_da_reabertura_nomeia_o_caminho_da_reavaliacao(determinada):
+    """A recusa continua (FR-111), e com a reavaliação pendente ela nomeia o ato que existe.
+
+    A frase geral manda ao "julgamento de recurso" — que, aqui, é o ato que já aconteceu e que
+    determinou reavaliar. Foi essa frase que levou o percurso de 07/09 a declarar a reavaliação
+    inexequível (E2E18-001), quando o caminho — distribuir a outro avaliador, avaliar, consolidar —
+    existia e está provado nos testes acima.
+    """
+    from processo_seletivo.avaliacoes.application.avaliacao import reabrir
+    from processo_seletivo.shared.api.problems import DomainError
+
+    original = determinada["superado"]
+    with pytest.raises(DomainError) as recusa:
+        reabrir(
+            actor=_gestor(),
+            processo_id=determinada["cenario"]["edital"].processo_id,
+            avaliacao_id=original.avaliacao_id,
+            motivo="Cumprir a reavaliação determinada.",
+            expected_revision=2,
+            idempotency_key="reabrir-com-reavaliacao",
+            correlation_id="reavaliacao",
+        )
+
+    assert recusa.value.code == "avaliacao_fundamenta_resultado"
+    assert "o julgamento de recurso o supera" not in recusa.value.detail
+    assert "já foi julgado e determinou reavaliação" in recusa.value.detail
+    assert "distribuindo a inscrição a outro avaliador" in recusa.value.detail
+    assert str(original.id) in recusa.value.detail
+
+
 def _segundo_avaliador(cenario):
     """Um avaliador diverso do que concluiu a original, alocado na Etapa."""
     from processo_seletivo.comissoes.models import Funcao

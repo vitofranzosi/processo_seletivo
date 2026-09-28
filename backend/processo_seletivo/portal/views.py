@@ -1,13 +1,15 @@
-"""O canal público: quem é de fora encontra a seleção e decide se quer participar.
+"""O canal público: quem é de fora encontra a seleção, se inscreve e acompanha o que enviou.
 
-Duas telas na entrega 1 — a vitrine e o detalhe —, e as duas leem **exclusivamente** a versão
-consolidada vigente (FR-011). Nenhuma view daqui consulta `PerfilVaga`, `ModalidadeConcorrencia`
-ou qualquer tabela de elaboração: o que o candidato lê é o que foi publicado, e é isso que torna
-reproduzível, depois, sob qual regra cada pessoa se inscreveu.
+A vitrine e o detalhe do Edital leem **exclusivamente** a versão consolidada vigente (FR-011).
+Nenhuma view daqui consulta `PerfilVaga`, `ModalidadeConcorrencia` ou qualquer tabela de
+elaboração: o que o candidato lê é o que foi publicado, e é isso que torna reproduzível, depois,
+sob qual regra cada pessoa se inscreveu.
 
-O que **ainda não** existe aqui, e é da entrega 2: situação das inscrições e convite por vaga.
-Os dois dependem da designação do período, que o Edital ainda não sabe fazer. A US1 se completa
-lá; esta entrega é a fatia navegável dela.
+Este cabeçalho dizia que a situação das inscrições e o convite por vaga "ainda não" existiam. Eles
+chegaram ainda na `009`, com a designação do período (`inscricoes/domain/periodo.py`), e o texto
+ficou negando o que o módulo faz. Desde então ele passou a hospedar também o acesso sem senha, a
+inscrição, o acompanhamento, o recurso e a situação pública do Edital — cada um documentado na
+própria view.
 """
 
 import json

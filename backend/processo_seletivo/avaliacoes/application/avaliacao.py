@@ -353,6 +353,21 @@ def _recusar_se_fundamenta_resultado(avaliacao):
         return
     protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
     nome_da_etapa = _nome_da_etapa(resultado)
+    if _reavaliacao_pendente(resultado):
+        raise DomainError(
+            "avaliacao_fundamenta_resultado",
+            # **Com a reavaliação determinada, "o julgamento de recurso" é o ato que já houve.** A
+            # frase geral mandava a presidência a um julgamento que tinha acabado de acontecer — e
+            # foi ela que levou o percurso de 07/09 a concluir que a reavaliação era inexequível
+            # (E2E18-001), quando o caminho existia. O ato que existe é o que a FR-067 e a FR-068
+            # descrevem: distribuir a outro avaliador, avaliar e consolidar.
+            f"Esta avaliação fundamenta o Resultado da Etapa {nome_da_etapa} para a inscrição "
+            f"{protocolo} (Resultado {resultado.id}) e não pode ser reaberta. O recurso contra "
+            "esse Resultado já foi julgado e determinou reavaliação: ela se cumpre distribuindo a "
+            "inscrição a outro avaliador da Etapa, que conclui uma nova avaliação, e consolidando "
+            "em seguida. O Resultado novo cita a decisão, e este continua como está.",
+            409,
+        )
     raise DomainError(
         "avaliacao_fundamenta_resultado",
         # **Nomeia os três**: inscrição, Etapa e o Resultado protetor. "Existe um Resultado" manda
@@ -369,6 +384,17 @@ def _recusar_se_fundamenta_resultado(avaliacao):
         "novo, sem alterar este.",
         409,
     )
+
+
+def _reavaliacao_pendente(resultado):
+    """Há reavaliação determinada, e ainda não cumprida, para o par deste Resultado?
+
+    A pergunta pontual que a consolidação já faz, e pelo mesmo selector. Import local pela mesma
+    razão das outras funções daqui: `recursos` lê este app.
+    """
+    from processo_seletivo.recursos.application.selectors import reavaliacao_pendente_do_par
+
+    return reavaliacao_pendente_do_par(resultado.inscricao_id, resultado.etapa_id) is not None
 
 
 def _nome_da_etapa(resultado):

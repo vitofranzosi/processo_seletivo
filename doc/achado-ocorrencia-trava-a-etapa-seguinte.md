@@ -12,6 +12,11 @@ achado `A-1` — lido no código, não percorrido. Registrado na
 da letra; o que ele contraria é a justificativa da `D-003`, não um requisito. Corrigir é escolher entre
 os dois textos, e a escolha é do usuário.
 
+**Decidido depois, no mesmo dia:** o usuário escolheu a leitura em que o portão da habilitação fica
+dormente diante de Etapa que não pode habilitar. A decisão, o que ela preserva e o que ela não
+decide estão em [`decisao-rc112-portao-da-habilitacao.md`](decisao-rc112-portao-da-habilitacao.md),
+que passa a ser a fonte. Este registro fica como a evidência da validação.
+
 ---
 
 ## O que se viu
