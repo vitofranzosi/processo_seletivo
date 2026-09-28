@@ -1242,9 +1242,22 @@ def compor_etapa(request, edital_id, etapa):
 
     editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
-    erros, digitados = [], None
+    erros, digitados, restaurado = [], None, False
 
-    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
+    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS and request.POST.get("restaurar"):
+        # **Reexibir o rascunho local, sem gravar nada** (RC-08; FR-020 da 002). A leitura é a
+        # mesma da recusa, logo abaixo, e é por isso que a Modalidade, o fato, a linha do quadro e
+        # os marcos em trânsito voltam: remontá-los no navegador perdia tudo que era aninhado. Não
+        # grava porque restaurar põe na tela, e quem envia continua sendo a pessoa — o guardado
+        # pode ser mais velho que o servidor. Pede a mesma permissão de compor: reexibir não
+        # escreve, mas a tela que volta é a do formulário editável.
+        if editavel:
+            try:
+                digitados = _ler_etapa(request, etapa)
+                restaurado = True
+            except ValueError as exc:
+                erros.append(_recusa(exc, digitados, etapa))
+    elif request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
         if not editavel:
             erros.append(
                 {
@@ -1345,6 +1358,7 @@ def compor_etapa(request, edital_id, etapa):
             # local precisa para apagar exatamente o que o servidor passou a ter. "Avançar" grava
             # uma etapa e abre outra, então nem sempre é a etapa desta tela.
             "salvo_chave": request.GET.get("salvo", ""),
+            "restaurado": restaurado,
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
