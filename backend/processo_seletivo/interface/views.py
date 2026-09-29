@@ -160,6 +160,7 @@ from processo_seletivo.interface import (
     revisao,
 )
 from processo_seletivo.interface import aplicacao as aplicacao_ui
+from processo_seletivo.interface import aplicacao_na_retificacao as gesto_na_retificacao
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -177,11 +178,11 @@ from processo_seletivo.processos.application.selectors import (
 )
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+from processo_seletivo.publicacoes.application.aplicacao import criar_retificacao_com_gestos
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
     conteudo_base,
-    create_retification,
 )
 from processo_seletivo.publicacoes.application.selectors import (
     effective_version,
@@ -190,6 +191,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     participantes_do_edital,
 )
 from processo_seletivo.publicacoes.domain import autoridades
+from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import admitir as recursos_admitir
@@ -3880,6 +3882,14 @@ def retificar(request, edital_id):
     projecao = conteudo_base(base)
 
     erros, resumo = [], []
+    # Os gestos de "aplicar a todos" declarados na tela (051, R-011). Lidos **antes** de tudo o que
+    # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou.
+    gestos = (
+        gesto_na_retificacao.declarados(dados, retificacao_ui.campos_editaveis(projecao))
+        if dados is not None
+        else []
+    )
+    calculados, consequencias, todas, proposto = [], [], [], projecao
     if request.method == "POST":
         if not ator.can("retificacao:elaborar"):
             erros.append("Você não tem a permissão para elaborar Retificações.")
@@ -3896,34 +3906,89 @@ def retificar(request, edital_id):
                     resumo_do_artefato=_resumo_pendente(ator),
                     descricao_do_artefato=_descricao_do_artefato,
                 )
-                if not alteracoes:
+                # **O gesto lê o conteúdo proposto**, e não o vigente: quem corrige o prazo no
+                # primeiro marco pede para aplicar aquele prazo (R-011). O que o digitado não
+                # consegue montar é recusado aqui, com a frase da gramática.
+                if gestos:
+                    proposto, _ = apply_changes(projecao, alteracoes, publication_id="conferencia")
+                calculados, recusas = gesto_na_retificacao.calcular(
+                    gestos,
+                    proposto,
+                    alteracoes,
+                    tem_resultado=lambda etapa: resultado_selectors.ha_resultado_em(
+                        edital=edital, etapa_id=etapa
+                    ),
+                )
+                erros.extend(recusas)
+                gestos = [calculado.gesto for calculado in calculados]
+                todas = alteracoes + [
+                    alteracao for calculado in calculados for alteracao in calculado.alteracoes
+                ]
+                if not todas and not calculados:
                     erros.append(
                         "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
                         "conteúdo para ter efeito."
                     )
                 elif request.POST.get("confirmar") == "1":
-                    nova, _ = create_retification(
-                        actor=ator,
-                        edital_id=edital.id,
-                        data={
-                            "baseSnapshotId": base.id,
-                            "justification": (request.POST.get("justificativa") or "").strip(),
-                            "changes": alteracoes,
-                            **_vigencia(request.POST),
-                        },
-                        idempotency_key=request.POST.get("chave_idempotencia", ""),
-                        correlation_id=request.correlation_id,
-                    )
-                    return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
+                    # **A confirmação carrega a identidade do que foi mostrado** (FR-919): se a
+                    # conferência de agora não é a que a pessoa viu, nada é criado, e a tela volta
+                    # com a de agora.
+                    if any(calculado.divergiu for calculado in calculados):
+                        erros.append(gesto_na_retificacao.DIVERGIU)
+                    elif vazios := [c for c in calculados if c.sem_destino]:
+                        erros.extend(
+                            f"Nenhum Perfil marcado para aplicar {gesto_na_retificacao.rotulo(c)}:"
+                            " marque um Perfil ou desfaça o gesto."
+                            for c in vazios
+                        )
+                    elif not todas:
+                        erros.append(
+                            "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
+                            "conteúdo para ter efeito."
+                        )
+                    else:
+                        nova, _ = criar_retificacao_com_gestos(
+                            gestos=[gesto_na_retificacao.registro(c) for c in calculados],
+                            actor=ator,
+                            edital_id=edital.id,
+                            data={
+                                "baseSnapshotId": base.id,
+                                "justification": (request.POST.get("justificativa") or "").strip(),
+                                "changes": todas,
+                                **_vigencia(request.POST),
+                            },
+                            idempotency_key=request.POST.get("chave_idempotencia", ""),
+                            correlation_id=request.correlation_id,
+                        )
+                        return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
             except ValueError as exc:
                 erros.append(str(exc))
             except DomainError as exc:
                 erros.append(exc.detail)
+        # **As consequências só para a tela que volta**, e nunca antes de criar: quem confirmou foi
+        # redirecionado, e ler ordens e divulgações para ele seria trabalho que ninguém lê (FR-941).
+        # O proposto já traz as Alterações digitadas; basta somar as dos gestos. E conteúdo que nem
+        # se monta não é aconselhado aqui: a recusa é do ato, que a diz ao criar — como antes desta
+        # feature, quando a conferência não montava o conteúdo.
+        if todas:
+            if proposto is projecao:
+                partida, faltam = projecao, todas
+            else:
+                partida = proposto
+                faltam = [a for calculado in calculados for a in calculado.alteracoes]
+            try:
+                resultante, _ = apply_changes(partida, faltam, publication_id="conferencia")
+                consequencias = gesto_na_retificacao.consequencias(edital, projecao, resultante)
+            except ValueError:
+                consequencias = []
 
     grupos = retificacao_ui.reexibir(
         retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),
         dados,
     )
+    if ator.can("retificacao:elaborar"):
+        gesto_na_retificacao.anotar_botoes(grupos, projecao)
+    blocos = gesto_na_retificacao.blocos(calculados, projecao)
     return render(
         request,
         "interface/retificar.html",
@@ -3971,6 +4036,14 @@ def retificar(request, edital_id):
                 opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
             ),
             "resumo": resumo,
+            # Os gestos declarados (051): os valores voltam ocultos no formulário, e cada um que
+            # pôde ser calculado ganha o seu bloco na conferência, agrupado (FR-941).
+            "gestos_declarados": [gesto.valor for gesto in gestos],
+            "gestos": blocos,
+            "consequencias": consequencias,
+            "alteracoes_do_ato": len(todas),
+            "alteracoes_dos_gestos": sum(bloco["alteracoes"] for bloco in blocos),
+            "alteracoes_digitadas": len(todas) - sum(bloco["alteracoes"] for bloco in blocos),
             "erros": erros,
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
             "vigencia": (request.POST.get("vigencia") or "") if dados else "",
