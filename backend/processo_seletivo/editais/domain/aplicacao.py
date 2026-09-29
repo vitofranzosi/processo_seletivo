@@ -25,6 +25,7 @@ import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 
 from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain.perfis import listas_reservadas
@@ -231,9 +232,17 @@ def _marco_no_destino(origem_marco, criterios, *, base, nova):
         "id": base["id"],
         "code": base["code"],
         "name": base["name"],
-        # O método próprio não viaja; o guardado no destino, se houver, é dele (FR-922).
-        "drawMethod": copy.deepcopy(base.get("drawMethod")) if base.get("drawMethod") else None,
+        "drawMethod": None,
     }
+    # O método próprio não viaja (FR-922). O que o destino **guarda** num marco de pontuação é dele
+    # (030, FR-418), e fica — mas só enquanto o marco continuar não sorteando: se a origem o faz
+    # sortear, o guardado passaria a governar a ordem como método próprio, e o destino sortearia
+    # por outro algoritmo sem que a prévia o dissesse. Aí ele sai, e o marco segue o método comum.
+    guardado = base.get("drawMethod")
+    if guardado and not regras_do_marco.ordena_por_sorteio(
+        novo.get("orderProduction") or "", metodo_declarado=True
+    ):
+        novo["drawMethod"] = copy.deepcopy(guardado)
     novo["tiebreakers"] = [{**item, "id": str(nova())} for item in criterios]
     return novo
 
@@ -388,12 +397,25 @@ def _campo_da_regra(regra, campo):
     return valor
 
 
+def _percentual(valor):
+    """O percentual numa grafia só: o formulário lê `5`, o conteúdo publicado guarda `5.0000`, e as
+    duas impressões precisam coincidir para a Revisão reconhecer o valor gravado (FR-935)."""
+    if valor in (None, ""):
+        return ""
+    try:
+        return format(Decimal(str(valor)).normalize(), "f")
+    except InvalidOperation:
+        return str(valor)
+
+
 def _regra_normalizada(regra):
     if not regra:
         return None
-    return {
+    normalizada = {
         campo: regra.get(campo) or ({} if campo == "rounding" else "") for campo in CAMPOS_DA_REGRA
     }
+    normalizada["percentage"] = _percentual(regra.get("percentage"))
+    return normalizada
 
 
 def unidade_da_modalidade(modalidade, perfil):

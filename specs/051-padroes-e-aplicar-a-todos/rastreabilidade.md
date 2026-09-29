@@ -7,7 +7,7 @@ diz de onde veio cada valor.*
 **Entrega**: este PR leva a P1 — US1 a US4. A US5 (Retificação, P2) fica para o PR seguinte, por
 decisão do plano (`research.md`, R-009); as linhas dela estão marcadas **PR seguinte**.
 
-**Verificação final**: 8752 passando, 11 pulados, zero falhas — ver a seção 4.
+**Verificação final**: 8755 passando, 11 pulados, zero falhas — ver a seção 4.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -34,7 +34,7 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 | **FR-919** | `aplicacao.assinatura`; `views._gesto` confere antes de gravar | TA `test_a_assinatura_e_estavel_e_muda_quando_o_efeito_muda`; TT `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar` |
 | **FR-920** | `editais/application/aplicacao.gravar_aplicacao` — `replace_draft` e trilha em `transaction.atomic` | TT `test_a_confirmacao_grava_o_marco_no_destino_e_registra_o_gesto`, `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar` |
 | **FR-921** | `RegistroAuditoria.detalhe` (migration `auditoria/0003`); `interface/aplicacao.registro`, `razao`; `OPERACOES["APLICAR_A_TODOS"]` | TT `test_a_confirmacao_grava_o_marco_no_destino_e_registra_o_gesto`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
-| **FR-922** | `aplicacao.unidade_do_marco`, `metodo_proprio` | TA `test_ausencia_na_origem_e_aplicada_como_ausencia`, `test_metodo_proprio_de_sorteio_deixa_fora`, `test_metodo_guardado_em_marco_de_pontuacao_nao_e_proprio_e_fica_com_o_destino` |
+| **FR-922** | `aplicacao.unidade_do_marco`, `metodo_proprio` | TA `test_ausencia_na_origem_e_aplicada_como_ausencia`, `test_metodo_proprio_de_sorteio_deixa_fora`, `test_metodo_guardado_em_marco_de_pontuacao_nao_e_proprio_e_fica_com_o_destino`, `test_metodo_guardado_sai_quando_a_origem_faz_o_destino_sortear` |
 | **FR-923** | `efeitos_do_marco` — lista inteira; idêntica fica com a identidade do destino | TA `test_a_lista_de_criterios_e_substituida_inteira`, `test_substitui_os_campos_e_mantem_identidade_codigo_e_denominacao` |
 | **FR-924** | `efeitos_da_modalidade`, `aplicar_modalidades`; botão em `_modalidade.html` | TA `test_nasce_onde_o_codigo_falta_e_lista_o_que_o_destino_tem`, `test_nunca_remove_nem_toca_o_quadro`; TT `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
 | **FR-925** | `efeitos_da_modalidade` — `ampla` antes → depois | TA `test_a_ampla_da_origem_substitui_a_do_destino`, `test_a_origem_que_nao_e_a_ampla_desmarca_o_destino_que_a_apontava` |
@@ -47,7 +47,7 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 | **FR-932** | `editais/domain/quadro.sugestao`; `placeholder` e conta em `_linha_do_quadro.html`; `aplicacao.preencher_quadro` | TQ (6 casos); TP `test_o_arredondamento_e_gravado_e_volta_na_tela`, `test_preencher_pelo_percentual_poe_a_sugestao_e_nao_grava` |
 | **FR-933** | `rounding` em `_modalidade.html` e `forms._modalidades`; `views._preservando_a_regra`; comentário de `mutabilidade.OPACOS` | TP `test_gravar_os_perfis_preserva_os_campos_da_regra_que_a_tela_nao_desenha`, `test_o_arredondamento_fora_da_lista_e_preservado`; TQ `test_fora_da_lista_e_preservado_e_nao_sugere` |
 | **FR-934** | `interface/origens.py` (comparação); `revisao._leitura_do_marco`, `_perfil`, `_etapa`, `_classificacao` | TR `test_o_marco_aplicado_aparece_com_a_origem_e_o_autor`, `test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_com_a_origem` |
-| **FR-935** | `origens.gestos_por_destino`, `gesto_do_marco`, `gesto_da_modalidade`, `gesto_do_campo` | TR `test_o_marco_editado_depois_deixa_de_ser_atribuido_ao_gesto` |
+| **FR-935** | `origens.gestos_por_destino`, `gesto_do_marco`, `gesto_da_modalidade`, `gesto_do_campo` | TR `test_o_marco_editado_depois_deixa_de_ser_atribuido_ao_gesto`, `test_a_modalidade_aplicada_aparece_com_a_origem`; TA `test_o_percentual_do_formulario_e_o_do_conteudo_publicado_tem_a_mesma_impressao` |
 | **FR-936** | `origens.campos_definitivos`; `revisao.definitivos`; `compor_revisao.html` | TR `test_os_campos_definitivos_aparecem_antes_de_submeter`, `test_o_bloco_dos_definitivos_cobre_o_contrato` |
 | **FR-937** | nenhum cartão ganhou texto sobre isso (leitura do diff) | TR `test_nenhum_cartao_da_composicao_ganhou_o_aviso`; `tests/interface/test_medida_dos_campos.py::test_nenhum_cartao_do_assistente_carrega_ajuda_visivel` |
 | **FR-938** | **PR seguinte** (US5) | — |
@@ -109,7 +109,7 @@ primeiro ganhou teste (`test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_
 
 `cd backend && make lint check test-pg DB_NAME=ps_051`, em 28/09/2026, sobre a `main` em `850e00b6`
 mesclada: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer, e
-a suíte contra PostgreSQL com **8752 passando e 11 pulados**, zero falhas — os mesmos 11 pulados
+a suíte contra PostgreSQL com **8755 passando e 11 pulados**, zero falhas — os mesmos 11 pulados
 deliberados que o `CLAUDE.md` descreve.
 
 **O que a suíte achou no caminho, e onde foi corrigido.** A `FR-943` recusou a publicação de todo

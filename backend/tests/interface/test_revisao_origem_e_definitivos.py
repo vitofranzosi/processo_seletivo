@@ -162,3 +162,24 @@ def test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_com_a_origem(client,
         "Como a convocação é comunicada: por mensagem individual à pessoa convocada "
         "(aplicado pelo Edital, por ana.elaboradora, em"
     ) in corpo
+
+
+def test_a_modalidade_aplicada_aparece_com_a_origem(client, tres_perfis):
+    """A impressão do percentual digitado (`5`) precisa casar com a do publicado (`5.0000`)."""
+    from tests.interface.test_aplicar_a_todos import PCD, _perfis_no_formulario
+
+    formulario = _perfis_no_formulario(**PCD)
+    previa = client.post(_url(tres_perfis, "perfis"), {**formulario, "aplicar": "modalidade:0:0"})
+    client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "confirmar_aplicacao": "modalidade:0:0",
+            "aplicar_destino": ["1", "2"],
+            "aplicar_impressao": _impressao(previa.content.decode()),
+        },
+    )
+
+    corpo = _texto(client.get(_url(tres_perfis, "revisao")))
+
+    assert corpo.count("(aplicado a partir do Perfil LP01, por ana.elaboradora, em") == 2

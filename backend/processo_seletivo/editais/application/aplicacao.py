@@ -32,7 +32,9 @@ def gravar_aplicacao(*, registro, razao, **gravacao):
             now=timezone.now(),
             correlation_id=gravacao["correlation_id"],
             previous_state=edital.status,
-            previous_revision=edital.revision,
+            # A revisão que o gesto encontrou, e não a que ele deixou: é o que encadeia este
+            # registro com o `ALTERAR_RASCUNHO` da mesma gravação.
+            previous_revision=gravacao["expected_revision"],
             reason=razao,
             detalhe=registro,
         )

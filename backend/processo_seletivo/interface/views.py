@@ -1058,7 +1058,7 @@ def _eventos_do_cronograma(edital):
     return list(cronograma.eventos.all()) if cronograma is not None else []
 
 
-def eventos_do_sorteio(edital):
+def eventos_do_sorteio(edital, eventos=None):
     """Os Eventos do Cronograma como instantes que o método do sorteio pode escolher (051, FR-929).
 
     **O instante já estava declarado em outro lugar**, e o operador o redigitava em RFC 3339, com
@@ -1076,7 +1076,8 @@ def eventos_do_sorteio(edital):
                 f"{timezone.localtime(evento.start_at).strftime('%d/%m/%Y %H:%M')}"
             ),
         }
-        for evento in _eventos_do_cronograma(edital)
+        # `eventos` é o que a página já leu, quando leu: uma consulta por página (028, FR-341).
+        for evento in (_eventos_do_cronograma(edital) if eventos is None else eventos)
     ]
 
 
@@ -1492,7 +1493,11 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "classificacao"
                 else {}
             ),
-            "eventos_do_sorteio": (eventos_do_sorteio(edital) if etapa == "classificacao" else []),
+            "eventos_do_sorteio": (
+                eventos_do_sorteio(edital, eventos_do_cronograma)
+                if etapa == "classificacao"
+                else []
+            ),
             "tem_metodo_comum": (
                 bool(forms.metodo_comum_do_formulario(request.POST))
                 if etapa == "classificacao" and digitados is not None
@@ -2157,13 +2162,11 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         ]
     else:
         colecao = COLECAO_DA_ETAPA[etapa]
-        conteudo[colecao] = _preservando(
-            digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
-        )
+        # O gravado, lido uma vez: a fusão por Perfil e a da regra normativa comparam com ele.
+        persistidos = conteudo[colecao]
+        conteudo[colecao] = _preservando(digitados, persistidos, PRESERVADO_DA_ETAPA.get(etapa, ()))
         if etapa == "perfis":
-            conteudo[colecao] = _preservando_a_regra(
-                conteudo[colecao], forms.perfis_persistidos(edital)
-            )
+            conteudo[colecao] = _preservando_a_regra(conteudo[colecao], persistidos)
     gravar = (
         replace_draft
         if gesto is None

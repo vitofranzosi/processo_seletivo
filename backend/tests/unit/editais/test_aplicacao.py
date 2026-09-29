@@ -11,6 +11,7 @@ entrega.
 import copy
 import itertools
 import uuid
+from decimal import Decimal
 
 import pytest
 
@@ -209,6 +210,18 @@ class TestMarco:
         assert efeito.efeito == SUBSTITUI
         assert efeito.depois["drawMethod"] == guardado
 
+    def test_metodo_guardado_sai_quando_a_origem_faz_o_destino_sortear(self):
+        """O guardado governaria a ordem como método próprio, e a prévia não o diria."""
+        origem = _marco("LP01", orderProduction="POR_SORTEIO", drawMethod=None)
+        destino = _marco("LP02", drawMethod={"algorithm": "outro", "source": "outra"})
+        perfis = [_perfil("LP01", marcos=[origem]), _perfil("LP02", marcos=[destino])]
+
+        (efeito,) = aplicacao.efeitos_do_marco(perfis, origem="perfil-LP01", sub=0)
+
+        assert efeito.efeito == SUBSTITUI
+        assert efeito.depois["drawMethod"] is None
+        assert not aplicacao.metodo_proprio(efeito.depois)
+
     def test_quantidade_fixa_e_destacada(self):
         fixo = {"targetKind": "FIXED", "targetCount": 30}
         origem = _marco("LP01")
@@ -356,6 +369,16 @@ class TestModalidade:
         assert efeitos[0].ampla == ("AC", "")
         _, depois = aplicacao.aplicar_modalidades([origem, destino], efeitos, {"1"})
         assert depois["generalCompetitionModalityId"] is None
+
+    def test_o_percentual_do_formulario_e_o_do_conteudo_publicado_tem_a_mesma_impressao(self):
+        """O formulário lê `5`; o conteúdo publicado guarda `5.0000` (FR-935)."""
+        digitada = _modalidade("PCD", "m1", percentual=Decimal("5"))
+        publicada = _modalidade("PCD", "m1", percentual="5.0000")
+        perfil = _perfil("LP01")
+
+        assert aplicacao.impressao(
+            aplicacao.unidade_da_modalidade(digitada, perfil)
+        ) == aplicacao.impressao(aplicacao.unidade_da_modalidade(publicada, perfil))
 
     def test_igual_nao_muda(self):
         origem = _perfil("LP01", competitionModalities=[_modalidade("PCD", "m1")])
