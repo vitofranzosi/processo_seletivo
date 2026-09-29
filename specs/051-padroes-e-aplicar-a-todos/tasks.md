@@ -70,8 +70,8 @@
 
 ## Phase 7: Polish
 
-- [ ] T027 `rastreabilidade.md` requisito a requisito, com FR-938–FR-942 e SC-347 marcados *PR seguinte*; README (tabela de specs); `make lint check test-pg DB_NAME=ps_051`
-- [ ] T028 (SC-340) Percurso no preview com a estrutura do 28/2026 e a contagem de interações antes e depois (`quickstart.md`)
+- [X] T027 `rastreabilidade.md` requisito a requisito, com FR-938–FR-942 e SC-347 marcados *PR seguinte*; README (tabela de specs); `make lint check test-pg DB_NAME=ps_051`
+- [X] T028 (SC-340) Percurso no preview com a estrutura do 28/2026 e a contagem de interações antes e depois (`quickstart.md`)
 
 ## Phase 8: User Story 5 — Retificação (P2) — PR seguinte
 

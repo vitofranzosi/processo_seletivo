@@ -82,7 +82,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **8364 passando e 11 pulados** (medido em 2026-09-28). Os onze
+Contra PostgreSQL a suíte fecha em **8752 passando e 11 pulados** (medido em 2026-09-28, na `051`). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
@@ -94,7 +94,7 @@ Para chegar lá é preciso o **par**:
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 
 **A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 83 — custa
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 84 — custa
 **~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
 custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
 declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles

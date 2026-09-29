@@ -7,7 +7,7 @@ diz de onde veio cada valor.*
 **Entrega**: este PR leva a P1 — US1 a US4. A US5 (Retificação, P2) fica para o PR seguinte, por
 decisão do plano (`research.md`, R-009); as linhas dela estão marcadas **PR seguinte**.
 
-**Verificação final**: ver a seção 4.
+**Verificação final**: 8752 passando, 11 pulados, zero falhas — ver a seção 4.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -107,4 +107,17 @@ primeiro ganhou teste (`test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_
 
 ## 4. Verificação
 
-*(preenchida ao fim da suíte)*
+`cd backend && make lint check test-pg DB_NAME=ps_051`, em 28/09/2026, sobre a `main` em `850e00b6`
+mesclada: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer, e
+a suíte contra PostgreSQL com **8752 passando e 11 pulados**, zero falhas — os mesmos 11 pulados
+deliberados que o `CLAUDE.md` descreve.
+
+**O que a suíte achou no caminho, e onde foi corrigido.** A `FR-943` recusou a publicação de todo
+construtor de fixture que publica Perfil com corte e sem forma — 201 falhas e 779 erros na primeira
+rodada, todos pela mesma causa. A regra ficou; mudaram as fixtures: os construtores canônicos
+(`complete_draft`, `rascunho_de_selecao`, `rascunho_com_periodo`, `rascunho_publicavel`, o
+construtor do snapshot), o `seed_demo` e os roteiros pela tela declaram a forma; o acervo publica no
+instante do acervo (`tests/fixtures/legado.py`), que passou a neutralizar também a regra da `051`; e o
+cenário *"sem forma"* da `019` é esse acervo. Dois guardiões pegaram coisa real: o cartão do marco
+novo passava dos dez controles da SC-138 da `030` (o bloco do corte padrão nasce fechado desde então),
+e a spec citava decisões de outras features pelo número local.
