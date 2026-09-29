@@ -8,7 +8,7 @@ oitenta linhas de marcação em cada uma seria pedir que as sete divergissem.
 agora é composta de duas partes — a categoria e o nome. Sem o atributo, "Remover Modalidade
 AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
 {% endcomment %}
-<fieldset class="linha{% if grupo.aninhado %} aninhada{% endif %}" data-linha data-nome="{{ grupo.titulo }}">
+<fieldset class="linha{% if grupo.aninhado %} aninhada{% endif %}" data-linha data-nome="{{ grupo.titulo }}" id="cartao-{{ grupo.referencia }}">
   <legend data-rotulo="{{ grupo.titulo }}">
     {% if grupo.tipo and grupo.tipo != grupo.nome %}<span class="categoria">{{ grupo.tipo }}</span>{% endif %}
     <span class="nome">{{ grupo.nome }}</span>
@@ -90,6 +90,19 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
     </p>
     {% endfor %}
   </div>
+  {% comment %}
+  "Aplicar aos demais Perfis" (051, UX-110): um envio do formulário, que declara o gesto e devolve a
+  conferência com ele. Não grava nada — a confirmação é Criar Retificação (R-011). O alcance está no
+  rótulo do grupo, dito uma vez; cada botão diz a unidade, e o nome acessível dele diz as duas.
+  {% endcomment %}
+  {% if grupo.gestos %}
+  <p class="acrescentar">
+    <span>{{ grupo.aplicar_aos_demais }}</span>
+    {% for gesto in grupo.gestos %}<button type="submit" class="botao secundario" name="aplicar"
+            value="{{ gesto.valor }}" aria-label="{{ gesto.rotulo }}" formnovalidate>{{ gesto.curto }}</button>
+    {% endfor %}
+  </p>
+  {% endif %}
   {% if grupo.removivel %}
   {% comment %}
   A explicação de o que a marcação faz vive uma vez, no topo da tela, e não uma vez por linha:

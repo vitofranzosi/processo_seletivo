@@ -36,6 +36,23 @@ Só preenchida em `operation = "APLICAR_A_TODOS"`. Ver [contrato](contracts/regi
 `{"mode": "PARA_CIMA" | "MEIO_PARA_CIMA" | "PARA_BAIXO"}` ou `{}`. Qualquer outra forma é preservada e
 lida como *"declarado fora da lista"*. Não retificável, como o contrato já diz.
 
+## Efeito na Retificação (não persistido) — P2
+
+O mesmo efeito, com o que a Retificação precisa: em vez do valor a gravar, as **Alterações** que ele
+produz no destino.
+
+| Campo | Tipo | Regra |
+|---|---|---|
+| `perfil`, `codigo`, `denominacao`, `efeito`, `motivo` | como acima | `FORA` nomeia o campo quando é o contrato que recusa (`FR-939`) |
+| `alteracoes` | lista de `{targetPath, operation, newValue}` | só das espécies que existem (`FR-938`, R-012) |
+| `mudancas` | lista de `(coleção, campo, antes, depois)` | o que a conferência diz, com os rótulos da tela |
+| `impressao` | SHA-256 das Alterações | o que a assinatura cobre e o registro guarda |
+
+O registro do gesto confirmado na Retificação é uma linha `APLICAR_A_TODOS` com o agregado
+Retificação e `detalhe.etapa = "retificacao"` (R-016).
+
 ## Transições
 
 Nenhuma. O Edital continua em elaboração antes e depois do gesto; o gesto é uma gravação de rascunho.
+Na Retificação, o gesto não cria estado: sai no ato de Retificação em elaboração, e só a publicação
+dele muda o conteúdo vigente.

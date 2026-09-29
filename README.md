@@ -416,7 +416,7 @@ Incrementos, na ordem em que foram especificados:
 | [`048`](specs/048-retificacao-que-acrescenta/spec.md) | Retificação que acrescenta |
 | [`049`](specs/049-operar-por-marco/spec.md) | condução do resultado por marco: indicador e gestos sobre todos os recortes |
 | [`050`](specs/050-convocacao-como-fluxo/spec.md) | a convocação como fluxo: titulares num ato, não atendimento dos vencidos num gesto |
-| [`051`](specs/051-padroes-e-aplicar-a-todos/spec.md) | padrões do Edital e "aplicar a todos" na composição, com a prévia do alcance e a origem na Revisão (a Retificação em lote fica para o PR seguinte) |
+| [`051`](specs/051-padroes-e-aplicar-a-todos/spec.md) | padrões do Edital e "aplicar a todos" na composição, com a prévia do alcance e a origem na Revisão, e na Retificação, campo a campo, num ato só e com a conferência agrupada |
 | [`052`](specs/052-perfis-visao-do-conjunto/spec.md) | Perfis de Vaga: a tabela do conjunto e um cartão à vista por vez, sobre o mesmo formulário |
 | [`053`](specs/053-classificacao-visao-do-conjunto/spec.md) | Classificação: a tabela dos Perfis com os marcos, a origem do "aplicar a todos" e um Perfil à vista por vez, sobre o mesmo formulário |
 | [`054`](specs/054-edital-como-ato-oficial/spec.md) | O Edital do sistema como ato oficial: o catálogo de 22 seções das famílias do Cefor, sem redação padrão; o fecho com local, data e ato de nomeação; o consolidado datado; a declaração do Requerimento; o total de vagas |
