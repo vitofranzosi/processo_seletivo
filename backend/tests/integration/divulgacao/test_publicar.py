@@ -51,7 +51,9 @@ def test_a_publicacao_nasce_com_autor_instante_e_signatario(cenario):
 
     assert publicacao.publicado_por == "paula.publicadora"
     assert publicacao.publicado_em is not None
-    assert publicacao.signatario_nome == "Diretora do Cefor"
+    # Desde a `054` o catálogo não traz designação no lugar do nome (FR-992): o nome fica vazio
+    # até o Cefor fornecê-lo, e quem assinou se lê pelo cargo.
+    assert publicacao.signatario_nome == ""
     assert publicacao.signatario_cargo.startswith("Diretora-Geral")
     assert publicacao.signatario_id is not None
     assert publicacao.publicacao_anterior is None, "a primeira divulgação do marco é a raiz"

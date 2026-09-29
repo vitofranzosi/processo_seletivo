@@ -1,9 +1,11 @@
-"""Os dois avisos da Revisão que a DP-20 pediu, sem impeditivo (decisão do usuário de 28/09).
+"""Os dois avisos da Revisão sobre o texto das seções, sem impeditivo.
 
 Desde 28/09 o PDF do sistema é o documento oficial do piloto, e o que ele cala ou inventa é norma
-publicada. Duas coisas iam ao ato sem ninguém dizer: a remissão a um anexo que o Edital não publica
-(RC-21) e a seção textual com a redação padrão do catálogo, que ninguém revisou (DP-20, §1). As duas
-são **aviso**: a remissão pode ser a anexo de outro ato, e o padrão pode valer como está.
+publicada. A DP-20 pediu dois avisos (decisão do usuário de 28/09): a remissão a um anexo que o
+Edital não publica (RC-21) e a seção com a redação padrão do catálogo, que ninguém revisou. A `054`
+tirou a redação padrão do catálogo (FR-983), e o segundo aviso perdeu o objeto: no lugar dele entrou
+o das duas seções que todo Edital do Cefor tem, quando vão vazias (FR-986). Os dois são **aviso**:
+a remissão pode ser a anexo de outro ato, e publicar sem preâmbulo é estranho, e não inválido.
 """
 
 import pytest
@@ -13,7 +15,7 @@ from processo_seletivo.editais.domain.validation import (
     ANEXO_CITADO_SEM_ROTULO,
     ATO_DE_PUBLICACAO,
     ATO_DE_RETIFICACAO,
-    SECAO_COM_REDACAO_PADRAO,
+    SECAO_UNIVERSAL_VAZIA,
     Severity,
     blocking_findings,
     validate_for_publication,
@@ -21,7 +23,7 @@ from processo_seletivo.editais.domain.validation import (
 
 
 def _secoes(**redigidas):
-    """O catálogo inteiro, com o padrão onde nada foi redigido — como `_sections` o publica."""
+    """O catálogo inteiro, vazio onde nada foi redigido — como `_sections` o publica."""
     return [
         {
             "id": f"00000000-0000-0000-0000-{secao.order:012d}",
@@ -32,7 +34,7 @@ def _secoes(**redigidas):
             **(
                 {"source": secao.source}
                 if secao.gerada
-                else {"content": redigidas.get(secao.key.replace("-", "_"), secao.default_text)}
+                else {"content": redigidas.get(secao.key.replace("-", "_"), "")}
             ),
         }
         for secao in secoes.CATALOGO
@@ -69,7 +71,8 @@ def test_a_remissao_a_anexo_que_nao_existe_e_aviso_na_publicacao():
     assert achados[0].severity == Severity.WARNING
     assert "ANEXO IV" in achados[0].message
     assert "«Da Inscrição»" in achados[0].message
-    assert achados[0].path == "/sections/id=00000000-0000-0000-0000-000000000004/content"
+    # A Inscrição é a 7ª do catálogo desde a `054` (FR-980).
+    assert achados[0].path == "/sections/id=00000000-0000-0000-0000-000000000007/content"
 
 
 def test_o_rotulo_do_anexo_pode_ser_escrito_em_qualquer_caixa():
@@ -111,31 +114,40 @@ def test_na_retificacao_a_remissao_nao_e_conferida():
     assert _com_codigo(achados, ANEXO_CITADO_SEM_ROTULO) == []
 
 
-# --- DP-20, §1 · redação padrão sem revisão ----------------------------------------------------
+# --- 054, FR-986 · as seções universais vazias -------------------------------------------------
 
 
-def test_cada_secao_com_a_redacao_padrao_recebe_um_aviso():
-    achados = _com_codigo(validate_for_publication(_conteudo()), SECAO_COM_REDACAO_PADRAO)
+def test_apresentacao_e_disposicoes_finais_vazias_recebem_um_aviso_cada():
+    achados = _com_codigo(validate_for_publication(_conteudo()), SECAO_UNIVERSAL_VAZIA)
 
-    textuais = [secao for secao in secoes.CATALOGO if not secao.gerada]
-    assert len(achados) == len(textuais)
+    assert len(achados) == 2
     assert {achado.severity for achado in achados} == {Severity.WARNING}
-    assert any("«Critérios de Classificação»" in achado.message for achado in achados)
+    assert any("«Apresentação»" in achado.message for achado in achados)
+    assert any("«Disposições Finais»" in achado.message for achado in achados)
 
 
-def test_a_secao_redigida_nao_recebe_o_aviso():
-    conteudo = _conteudo(classificacao="A classificação será por sorteio eletrônico.")
-    achados = _com_codigo(validate_for_publication(conteudo), SECAO_COM_REDACAO_PADRAO)
+def test_as_demais_vazias_nao_avisam():
+    """Dezesseis avisos por Edital seriam o aviso que se aprende a ignorar."""
+    conteudo = _conteudo(
+        apresentacao="A Diretora do Cefor faz saber.", disposicoes_finais="Casos omissos."
+    )
+    assert _com_codigo(validate_for_publication(conteudo), SECAO_UNIVERSAL_VAZIA) == []
 
-    assert not any("«Critérios de Classificação»" in achado.message for achado in achados)
-    assert len(achados) == len([secao for secao in secoes.CATALOGO if not secao.gerada]) - 1
 
-
-def test_a_redacao_padrao_nunca_impede_e_so_e_dita_na_publicacao():
+def test_a_secao_universal_vazia_nunca_impede_e_so_e_dita_na_publicacao():
     achados = validate_for_publication(_conteudo(), ato=ATO_DE_PUBLICACAO)
-    assert not _com_codigo(blocking_findings(achados), SECAO_COM_REDACAO_PADRAO)
+    assert not _com_codigo(blocking_findings(achados), SECAO_UNIVERSAL_VAZIA)
     retificacao = validate_for_publication(_conteudo(), ato=ATO_DE_RETIFICACAO)
-    assert _com_codigo(retificacao, SECAO_COM_REDACAO_PADRAO) == []
+    assert _com_codigo(retificacao, SECAO_UNIVERSAL_VAZIA) == []
+
+
+def test_o_aviso_da_redacao_padrao_nao_existe_mais():
+    """FR-986: sem redação padrão no catálogo, o aviso de 28/09 perdeu o objeto e saiu."""
+    from processo_seletivo.editais.domain import validation
+
+    assert not hasattr(validation, "SECAO_COM_REDACAO_PADRAO")
+    codigos = {achado.code for achado in validate_for_publication(_conteudo())}
+    assert "section_default_text" not in codigos
 
 
 def test_os_codigos_novos_nao_coincidem_com_impeditivo_nenhum():
@@ -143,4 +155,4 @@ def test_os_codigos_novos_nao_coincidem_com_impeditivo_nenhum():
     conteudo = _conteudo(inscricao="Conforme o ANEXO IV.")
     achados = validate_for_publication(conteudo)
     impeditivos = {achado.code for achado in blocking_findings(achados)}
-    assert not ({ANEXO_CITADO_SEM_ROTULO, SECAO_COM_REDACAO_PADRAO} & impeditivos)
+    assert not ({ANEXO_CITADO_SEM_ROTULO, SECAO_UNIVERSAL_VAZIA} & impeditivos)

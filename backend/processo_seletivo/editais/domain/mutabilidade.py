@@ -459,10 +459,10 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("sections", "id"): estrutural(),
     ("sections", "key"): estrutural(),
     ("sections", "title"): nao_retificavel(
-        "As seções do Edital são um catálogo institucional, e não escolha deste Edital: "
-        "título, ordem e espécie são os mesmos em todo Edital do Cefor, e é isso que torna um "
-        "Edital legível por quem já leu outro. Corrigi-los aqui mudaria este Edital em relação aos "
-        "demais. O que este Edital escreve é o conteúdo, e esse se corrige."
+        "As seções do Edital vêm do catálogo institucional, e não são escolha deste Edital: "
+        "título, ordem e espécie são os do catálogo com que ele foi publicado, e é isso que torna "
+        "um Edital legível por quem já leu outro. O que este Edital escreve é o conteúdo, e esse "
+        "se corrige — inclusive o de uma seção que foi publicada vazia."
     ),
     ("sections", "order"): nao_retificavel(
         "Mesma razão: é a ordem do catálogo institucional, e não deste Edital."

@@ -23,6 +23,10 @@ class SignatorySerializer(serializers.Serializer):
     authorityId = serializers.UUIDField()
     name = serializers.CharField(min_length=1, max_length=255)
     role = serializers.CharField(min_length=1, max_length=255)
+    # O ato de nomeação de quem assina (054, FR-991): opcional, porque o catálogo pode não o ter.
+    appointment = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, default=""
+    )
 
 
 class PublicacaoRequestSerializer(serializers.Serializer):

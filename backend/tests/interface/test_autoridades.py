@@ -30,7 +30,9 @@ def test_o_catalogo_guarda_nome_cargo_e_identificador_e_nada_alem():
     """FR-044: o identificador é necessário — `Publicacao.signatory_id` o exige — e é o teto."""
     campos = {campo for autoridade in autoridades.CATALOGO for campo in vars(autoridade)}
 
-    assert campos == {"chave", "identificador", "nome", "cargo"}
+    # O ato de nomeação entrou com a `054` (FR-991): é dado público de atribuição pública, como
+    # nome e cargo, e é o que o fecho do ato imprime.
+    assert campos == {"chave", "identificador", "nome", "cargo", "ato_de_nomeacao"}
     for proibido in ("cpf", "matricula", "email", "telefone", "endereco", "foto"):
         assert proibido not in campos
 

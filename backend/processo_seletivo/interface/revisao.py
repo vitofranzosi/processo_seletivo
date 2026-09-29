@@ -36,6 +36,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     forma_de_convocacao_por_extenso,
     por_identificador,
 )
+from processo_seletivo.publicacoes.infrastructure import pdf
 
 # **As frases do marco são as do documento, lidas do mesmo lugar.** Reescrevê-las aqui daria à
 # conferência uma segunda grafia da regra — e é na primeira divergência entre as duas que quem
@@ -390,7 +391,7 @@ def _documento(documento, snapshot):
     }
 
 
-def _secao(secao, _snapshot):
+def _secao(secao, snapshot):
     if secao.get("type") == catalogo.GERADA:
         origem = {
             "profiles": "Perfis",
@@ -404,7 +405,16 @@ def _secao(secao, _snapshot):
         detalhe = f"Composta a partir de {origem.get(secao.get('source'), secao.get('source'))}."
     else:
         detalhe = secao.get("content", "")
-    return {"titulo": f"{secao.get('order', '')}. {secao.get('title', '')}", "linhas": [detalhe]}
+    # **O número é o do documento** (054, FR-985), e não a ordem do catálogo: com 22 seções e as
+    # textuais vazias, a ordem diria "16" onde o documento imprime "9", e quem homologa confere a
+    # prévia contra o original pela numeração (E10 = B).
+    numero = pdf.numeracao(snapshot).get(secao.get("key"))
+    titulo = str(secao.get("title", ""))
+    if numero is None:
+        return {"titulo": titulo, "linhas": ["Vazia — não sai no documento."]}
+    if numero == 0:
+        return {"titulo": f"{titulo} (preâmbulo, sem número)", "linhas": [detalhe]}
+    return {"titulo": f"{numero}. {titulo}", "linhas": [detalhe]}
 
 
 def _anexo(anexo, snapshot):

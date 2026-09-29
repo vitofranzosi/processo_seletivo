@@ -41,6 +41,7 @@ os cerca muda na entrega 3).
 
 import json
 import re
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -69,10 +70,17 @@ AUTORIDADE = AutoridadeSignataria(
 )
 
 
+# A data do ato, pela mesma razão (054, FR-990): é contexto do ato, obrigatório no publicado.
+DATA_DO_ATO = date.fromisoformat(
+    json.loads((FIXTURES / "contexto_publicado.json").read_text(encoding="utf-8"))["data_do_ato"]
+)
+
+
 def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
-    """Compõe como a publicação compõe — em modo publicado, com a autoridade da fixture."""
+    """Compõe como a publicação compõe — em modo publicado, com a autoridade e a data da fixture."""
     if modo == MODO_PUBLICADO:
         kwargs.setdefault("autoridade", AUTORIDADE)
+        kwargs.setdefault("data_do_ato", DATA_DO_ATO)
     return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
 
 
@@ -117,10 +125,11 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     fora = False
     corpo = []
     for linha in pagina:
-        # O fechamento do ato começa na autoridade signatária: dali em diante é metadado do ato,
-        # que só o publicado tem. Antes dela, os dois modos têm de coincidir linha a linha.
+        # O fechamento do ato começa no local e data (054, FR-989) e segue pela autoridade
+        # signatária: dali em diante é metadado do ato, que só o publicado tem. Antes dele, os dois
+        # modos têm de coincidir linha a linha.
         if linha == AUTORIDADE.nome or linha.startswith(
-            ("Autoridade responsável pelo ato", "Verificação de integridade")
+            ("Vitória (ES), ", "Autoridade responsável pelo ato", "Verificação de integridade")
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as

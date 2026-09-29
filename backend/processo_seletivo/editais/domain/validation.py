@@ -41,7 +41,7 @@ from processo_seletivo.editais.domain.documentos import (
     rotulo_da_modalidade,
 )
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
-from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
+from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL, Secao
 from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.inscricoes.domain.periodo import (
     ENCERRADO,
@@ -458,22 +458,53 @@ def _impeditivo(codigo, mensagem, caminho):
     return ValidationFinding(Severity.BLOCKING_ERROR, codigo, mensagem, caminho)
 
 
-def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
-    """O catálogo fixo tem de continuar valendo **depois** da publicação (FR-041).
+def _topologia_de_referencia(topologia):
+    """As seções contra as quais conferir, como entradas do catálogo.
+
+    Sem referência, é o catálogo vigente. Com ela — a lista de seções do conteúdo original de um
+    Edital publicado —, cada item vira uma entrada com os mesmos campos, para que a comparação
+    abaixo seja uma só.
+    """
+    if topologia is None:
+        return {secao.key: secao for secao in CATALOGO}
+    return {
+        item.get("key"): Secao(
+            key=item.get("key"),
+            title=item.get("title"),
+            order=item.get("order"),
+            type=item.get("type"),
+            source=item.get("source", ""),
+        )
+        for item in topologia
+        if isinstance(item, dict)
+    }
+
+
+def _topologia_das_secoes(snapshot: dict, topologia=None) -> list[ValidationFinding]:
+    """A topologia das seções tem de continuar valendo **depois** da publicação (FR-041 da 006).
 
     A forma declarada confere um campo por vez e não expressa coerência entre campos. Sem esta
     verificação, uma Retificação faria sobre o conteúdo publicado o que a interface impede:
-    acrescentar seção com `ADD /sections/-`, remover uma do catálogo, trocar `type`, `order`,
-    `title` ou origem, esvaziar uma textual ou dar conteúdo a uma gerada. O catálogo valeria na
-    elaboração e deixaria de valer exatamente onde mais importa.
+    acrescentar seção com `ADD /sections/-`, remover uma, trocar `type`, `order`, `title` ou origem,
+    ou dar conteúdo a uma gerada. A estrutura valeria na elaboração e deixaria de valer exatamente
+    onde mais importa.
 
-    Só o `content` das seções textuais pode variar.
+    **Contra o quê se confere** (054, FR-987 e FR-988). Na elaboração e na publicação, contra o
+    catálogo vigente. Na Retificação, contra a `topologia` do conteúdo original do Edital — e não
+    contra o catálogo, que muda: conferida contra ele, a mudança do catálogo de 12 para 22 seções
+    trancaria a Retificação de todo Edital publicado antes dela, e a próxima mudança trancaria o
+    acervo de novo. A topologia do original é a de todas as versões do Edital, porque nenhuma
+    Retificação a altera, e é por isso que ela serve de referência sem que nada precise ser gravado.
+
+    Só o `content` das seções textuais varia — e pode ser vazio desde a `054` (FR-982): a textual
+    vazia não sai no documento, e continua no conteúdo para que uma Retificação possa dar-lhe texto
+    sem acrescentar seção.
     """
     itens = snapshot.get("sections")
     if not isinstance(itens, list):
         return []  # A forma declarada já reporta coleção que não é lista.
 
-    esperado = {secao.key: secao for secao in CATALOGO}
+    esperado = _topologia_de_referencia(topologia)
     presentes = [item.get("key") for item in itens if isinstance(item, dict)]
     findings = []
     for chave in sorted(set(presentes) - set(esperado)):
@@ -531,11 +562,12 @@ def _topologia_das_secoes(snapshot: dict) -> list[ValidationFinding]:
                         f"{caminho}/content",
                     )
                 )
-        elif not (isinstance(item.get("content"), str) and item["content"].strip()):
+        elif not isinstance(item.get("content"), str):
             findings.append(
                 _impeditivo(
                     CAMPO_AUSENTE,
-                    f"A seção textual precisa de conteúdo em {caminho}/content.",
+                    f"A seção textual precisa de conteúdo em texto, ainda que vazio, em "
+                    f"{caminho}/content.",
                     f"{caminho}/content",
                 )
             )
@@ -1453,7 +1485,11 @@ ATO_DE_RETIFICACAO = "retificacao"
 
 
 def validate_for_publication(
-    snapshot: dict, *, ato: str = ATO_DE_PUBLICACAO, agora: datetime | None = None
+    snapshot: dict,
+    *,
+    ato: str = ATO_DE_PUBLICACAO,
+    agora: datetime | None = None,
+    topologia: list | None = None,
 ) -> list[ValidationFinding]:
     """Os achados do conteúdo, classificados pelo ato que está sendo conferido.
 
@@ -1467,6 +1503,10 @@ def validate_for_publication(
     Quem grava passa o `now` da própria transação — é o que a Constituição pede no Princípio II,
     *"operações relacionadas DEVEM compartilhar referência temporal consistente na mesma
     transação"* —, e o padrão `None` lê o relógio, errando de novo pelo lado que acusa.
+
+    **`topologia` é a das seções do Edital já publicado** (`054`, FR-988), e só a Retificação a
+    passa. Omitida, a topologia é conferida contra o catálogo vigente, que é o certo para o que
+    ainda não foi publicado.
     """
     agora = agora or datetime.now(ZONA)
     findings = []
@@ -1505,7 +1545,7 @@ def validate_for_publication(
         )
     for colecao, forma in COLECOES_PUBLICADAS:
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
-    findings.extend(_topologia_das_secoes(snapshot))
+    findings.extend(_topologia_das_secoes(snapshot, topologia))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
@@ -1532,7 +1572,7 @@ def validate_for_publication(
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
-    findings.extend(_secao_com_redacao_padrao(snapshot, ato=ato))
+    findings.extend(_secao_universal_vazia(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     return findings
 
@@ -2646,40 +2686,43 @@ def _anexo_citado_sem_rotulo(snapshot: dict, *, ato: str) -> list[ValidationFind
     return findings
 
 
-SECAO_COM_REDACAO_PADRAO = "section_default_text"
+SECAO_UNIVERSAL_VAZIA = "section_universal_empty"
+
+# As duas seções que os quinze Editais da amostra do Cefor têm **sem exceção** (DP-20, §3): o
+# preâmbulo, em que a autoridade pratica o ato — "A Diretora do Cefor [...] faz saber" —, e as
+# disposições finais, com os casos omissos.
+SECOES_UNIVERSAIS = ("apresentacao", "disposicoes-finais")
 
 
-def _secao_com_redacao_padrao(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
-    """Seção textual que vai ao ato com a redação padrão do catálogo, sem revisão (DP-20, §1).
+def _secao_universal_vazia(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """A Apresentação ou as Disposições Finais vão ao ato vazias (054, FR-986).
 
-    **Aviso, e nunca impeditivo — decidido pelo usuário em 28/09.** A seção textual não se esvazia
-    (`006`, `FR-041`), e apagar o campo devolve o padrão (`interface/forms.py`, `ler_secoes`): toda
-    seção que ninguém tocou é publicada com a redação do catálogo. E a redação padrão afirma norma —
-    a de "Critérios de Classificação" fala de pontuação num Edital por sorteio, a de "Apresentação"
-    fala pela instituição e não pela autoridade que pratica o ato. Com o PDF como documento oficial
-    do piloto, o que ninguém revisou é publicado como norma. A tela dizia só *"revise antes de
-    submeter"*, ao lado do campo, e a Revisão não dizia nada.
+    **Substitui o aviso da redação padrão sem revisão** (PR 220), que perdeu o objeto: desde a `054`
+    o catálogo não tem redação padrão (FR-983), a textual nasce vazia e a vazia não sai no
+    documento. O risco mudou de lado — do texto que ninguém escreveu indo ao ato para a seção que
+    ninguém escreveu faltando nele —, e o aviso acompanhou.
 
-    **O padrão pode valer como está**, e por isso não impede: o aviso diz o fato, e quem conhece o
-    Edital decide. A comparação é com o catálogo **de hoje**, e é o certo antes da publicação — que
-    é o único ato em que ela roda.
+    **Só as duas universais, e não toda seção vazia.** O catálogo tem as seções das quatro famílias
+    da amostra, e cada Edital usa as suas: avisar as vazias seria avisar dezesseis vezes por Edital,
+    e o aviso que aparece sempre é o que se aprende a ignorar.
+
+    **Aviso, e nunca impeditivo**, como os dois de 28/09: publicar sem preâmbulo é estranho, e não é
+    inválido. **Só no ato de publicação**: na Retificação o texto se corrige pela própria
+    Retificação, e o aviso não foi pedido.
     """
     if ato != ATO_DE_PUBLICACAO:
         return []
-    padroes = {secao.key: secao.default_text.strip() for secao in CATALOGO if not secao.gerada}
     findings = []
     for posicao, secao in _secoes_textuais(snapshot):
-        padrao = padroes.get(secao.get("key"))
-        if not padrao or str(secao.get("content") or "").strip() != padrao:
+        if secao.get("key") not in SECOES_UNIVERSAIS or str(secao.get("content") or "").strip():
             continue
         titulo = str(secao.get("title") or secao.get("key") or "").strip()
         findings.append(
             ValidationFinding(
                 Severity.WARNING,
-                SECAO_COM_REDACAO_PADRAO,
-                f"A seção «{titulo}» será publicada com a redação padrão do catálogo, que ninguém "
-                "revisou neste Edital. O documento é o ato oficial: confira se ela vale para este "
-                "Edital e, se não valer, redija-a na etapa Conteúdo.",
+                SECAO_UNIVERSAL_VAZIA,
+                f"A seção «{titulo}» está vazia e não sairá no documento, e todos os Editais do "
+                "Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.",
                 f"{_caminho_da_entidade('sections', secao, posicao)}/content",
             )
         )

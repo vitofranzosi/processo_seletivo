@@ -39,10 +39,12 @@ que o torna falso, nunca antes e nunca depois:
 """
 
 import re
+from datetime import date
 
 import pytest
 
 from processo_seletivo.publicacoes.infrastructure.pdf import (
+    MODO_PUBLICADO,
     AutoridadeSignataria,
     render_edital_pdf,
 )
@@ -54,13 +56,18 @@ HASH = "a" * 64
 # esconderia os poucos casos em que ela é o assunto do teste — esses chamam `render_edital_pdf`
 # diretamente.
 AUTORIDADE_DA_SUITE = AutoridadeSignataria(nome="Reitora do Ifes", cargo="Reitora")
+# Desde a `054` a data do ato é contexto obrigatório do publicado, como a autoridade (FR-990).
+DATA_DA_SUITE = date(2026, 9, 29)
 
 
 def documento(conteudo, content_hash=HASH, *, modo=None, **kwargs):
-    """Compõe como a publicação compõe, com a autoridade que esta suíte usa."""
+    """Compõe como a publicação compõe, com a autoridade e a data que esta suíte usa."""
     if modo is not None:
+        if modo == MODO_PUBLICADO and "autoridade" in kwargs:
+            kwargs.setdefault("data_do_ato", DATA_DA_SUITE)
         return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
     kwargs.setdefault("autoridade", AUTORIDADE_DA_SUITE)
+    kwargs.setdefault("data_do_ato", DATA_DA_SUITE)
     return render_edital_pdf(conteudo, content_hash, **kwargs)
 
 
@@ -106,11 +113,37 @@ def linhas_desenhadas(pdf: bytes) -> list[tuple[str, str, float, float]]:
     ]
 
 
+# O preâmbulo como os quinze Editais da amostra o escrevem: a autoridade pratica o ato.
+PREAMBULO = (
+    "A Diretora do Centro de Referência em Formação e em Educação a Distância do Instituto Federal "
+    "do Espírito Santo, no uso de suas atribuições legais, torna pública a realização do processo "
+    "seletivo regido por este Edital."
+)
+
+
+def _texto_transcrito(secao):
+    """Um parágrafo longo o bastante para quebrar e ser justificado, em minúsculas.
+
+    Minúsculas porque há teste que procura o operador `Do` do brasão no fluxo da página, e um
+    título como "Do Certificado" no texto o acharia onde não há imagem.
+    """
+    if secao.key == "apresentacao":
+        return PREAMBULO
+    return (
+        f"Texto da seção {secao.title.lower()}, transcrito do Edital de origem e conferido na "
+        "homologação contra o documento que o setor redigiu."
+    )
+
+
 def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
     """As seções do catálogo, como `edital_snapshot` as materializa.
 
     O documento é composto a partir delas: sem `sections` não há o que compor. Construí-las aqui a
     partir do catálogo, e não à mão, é o que impede que este arquivo e o snapshot real divirjam.
+
+    **Cada textual com um texto próprio**, como um Edital transcrito por inteiro: desde a `054` o
+    catálogo não tem redação padrão (FR-983), e a textual vazia não sai no documento (FR-982). Os
+    testes que precisam da vazia a esvaziam.
     """
     from processo_seletivo.editais.domain import secoes as catalogo
 
@@ -121,7 +154,7 @@ def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
             "title": secao.title,
             "order": secao.order,
             "type": secao.type,
-            **({"source": secao.source} if secao.gerada else {"content": secao.default_text}),
+            **({"source": secao.source} if secao.gerada else {"content": _texto_transcrito(secao)}),
         }
         for secao in catalogo.CATALOGO
     ]
@@ -416,10 +449,12 @@ def test_documento_segue_a_ordem_das_secoes_do_conteudo():
             # **Forma atualizada pela `008`**: a Apresentação virou preâmbulo — sem número e
             # sem cabeçalho —, como o ato enunciativo dos Editais de referência. O que ela diz
             # continua no documento; o que sai é o título dela.
+            # **E pela `054`**: a oferta vem antes da inscrição, como nos quinze Editais da
+            # amostra (FR-980).
             "DISPOSIÇÕES PRELIMINARES",
             "REQUISITOS GERAIS DE PARTICIPAÇÃO",
-            "DA INSCRIÇÃO",
             "PERFIS DE VAGA",
+            "DA INSCRIÇÃO",
             "ETAPAS DE AVALIAÇÃO",
             "CRITÉRIOS DE CLASSIFICAÇÃO",
             "CRONOGRAMA",
@@ -610,7 +645,7 @@ def test_a_primeira_pagina_identifica_a_instituicao_o_ato_e_o_objeto():
     corpo = next(
         tamanho
         for linha, _, tamanho, _ in linhas_desenhadas(documento(snapshot(), HASH))
-        if linha.startswith("O Instituto Federal")
+        if linha.startswith("A Diretora do Centro")
     )
     institucional = next(
         tamanho
@@ -727,8 +762,6 @@ def test_a_numeracao_nao_e_persistida_no_texto_da_secao():
     from processo_seletivo.editais.domain import secoes as catalogo
 
     for secao in catalogo.CATALOGO:
-        if not secao.gerada:
-            assert not secao.default_text.lstrip().startswith(("1.", "2.", "3.", "4.", "5."))
         assert not secao.title[0].isdigit()
 
 
@@ -1121,9 +1154,10 @@ def test_o_documento_publicado_exibe_a_autoridade_registrada_na_publicacao():
     # pé de um Edital lê-se como rubrica, e este documento não tem rubrica (FR-036).
     assert "Autoridade responsável pelo ato" in texto
     assert AUTORIDADE[0] in texto
-    # Sem praça e sem data: os dois exigiriam conceitos que o sistema não tem (FR-036).
-    assert "Vitória" not in texto
-    assert not re.search(r"\bde \d{4}\.", texto)
+    # **Com local e data desde a `054`** (FR-989, emenda à FR-036 da 008): os quinze Editais da
+    # amostra os têm, e o PDF é o ato oficial. Chegam como contexto do ato, como a autoridade.
+    assert "Vitória (ES), 29 de setembro de 2026." in texto
+    assert texto.index("Vitória (ES)") < texto.index("Autoridade responsável pelo ato")
 
 
 def test_compor_publicado_sem_autoridade_e_recusado():
@@ -1397,7 +1431,9 @@ def test_o_texto_normativo_alcanca_as_duas_margens():
     ultimas = [
         linha
         for linha, _, _, _ in linhas_desenhadas(pdf)
-        if linha.startswith(("Distância, torna pública", "aplicável e os princípios"))
+        # Os fins dos parágrafos do cenário (054: o preâmbulo e o texto transcrito das seções).
+        if linha.endswith(("regido por este Edital.", "que o setor redigiu."))
+        and not linha.startswith(("A Diretora", "Texto da seção"))
     ]
     assert ultimas, "o cenário deveria ter parágrafos de duas linhas"
     for ultima in ultimas:
@@ -1493,13 +1529,15 @@ def test_a_apresentacao_e_preambulo_e_nao_a_primeira_secao():
     linhas = [linha for linha, _, _, _ in linhas_desenhadas(pdf)]
 
     # O conteúdo da Apresentação continua no documento; o que sai é o cabeçalho dela.
-    assert "O Instituto Federal do Espírito Santo, por meio do Centro de Referência" in texto
+    assert "A Diretora do Centro de Referência em Formação" in texto
     assert "APRESENTAÇÃO" not in texto
     assert "1. APRESENTAÇÃO" not in texto
 
     # A numeração começa na seção seguinte, e o preâmbulo vem antes dela.
     assert "1. DISPOSIÇÕES PRELIMINARES" in texto
-    preambulo = next(i for i, linha in enumerate(linhas) if linha.startswith("O Instituto Federal"))
+    preambulo = next(
+        i for i, linha in enumerate(linhas) if linha.startswith("A Diretora do Centro")
+    )
     assert preambulo < linhas.index("1. DISPOSIÇÕES PRELIMINARES")
 
     # E o preâmbulo é texto normativo: justificado como o resto do corpo.
@@ -1507,7 +1545,7 @@ def test_a_apresentacao_e_preambulo_e_nao_a_primeira_secao():
         texto_da_linha.replace(b"\\(", b"(").decode("cp1252")
         for _, _, _, _, texto_da_linha in JUSTIFICADA.findall(conteudo_das_paginas(pdf))
     }
-    assert any(linha.startswith("O Instituto Federal") for linha in justificadas)
+    assert any(linha.startswith("A Diretora do Centro") for linha in justificadas)
 
 
 def test_suprimir_o_preambulo_nao_abre_lacuna_na_numeracao():

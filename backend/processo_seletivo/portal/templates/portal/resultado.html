@@ -43,7 +43,7 @@ resolvem numa emissão só, e nomear um deles omitiria quem recorreu e teve raz�
 
 <p class="meta">
   Publicado em {{ publicacao.publicado_em|date:"d/m/Y" }} às {{ publicacao.publicado_em|date:"H:i" }}.
-  Assinado por {{ cabecalho.signatario_nome }} — {{ cabecalho.signatario_cargo }}.
+  Assinado por {% if cabecalho.signatario_nome %}{{ cabecalho.signatario_nome }} — {% endif %}{{ cabecalho.signatario_cargo }}.
 </p>
 
 {% comment %}

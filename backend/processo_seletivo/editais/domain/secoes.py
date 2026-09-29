@@ -7,8 +7,8 @@ documentos.
 **Por que declaração em código, e não linhas de tabela.** A estrutura passaria a depender do estado
 do banco, e um Edital criado antes de uma mudança de catálogo ficaria estruturalmente diferente sem
 que nada registrasse a diferença. Declarado, o catálogo é revisável em diff, dispensa migration para
-mudar a redação institucional inicial, e a ausência de uma seção obrigatória deixa de ser estado
-alcançável.
+mudar, e a ausência de uma seção do catálogo no conteúdo deixa de ser estado alcançável. A seção
+**vazia** é alcançável, e é outra coisa: está no conteúdo, e não sai no documento (054, FR-982).
 
 **A identidade é determinística.** A seção precisa ter identidade **antes de existir linha em
 `SecaoEdital`** — a gerada nunca tem linha, e a textual só passa a ter depois da primeira edição.
@@ -30,8 +30,16 @@ TEXTUAL = "TEXT"
 class Secao:
     """Uma entrada do catálogo.
 
-    `source` nomeia a coleção que origina o conteúdo de uma seção gerada; `default_text` é a
-    redação institucional inicial de uma textual. Cada tipo usa um, e nunca os dois.
+    `source` nomeia a coleção que origina o conteúdo de uma seção gerada; a textual não tem origem,
+    e o texto dela é o que quem elabora escreveu para o Edital.
+
+    **Sem redação padrão** (054, FR-983). A entrada carregava um `default_text`, que ia ao ato
+    sempre que ninguém tocava a seção. Toda redação padrão afirmava alguma norma — a de "Critérios
+    de Classificação" falava de pontuação num Edital por sorteio, a de "Disposições Finais" mandava
+    os omissos a uma "autoridade responsável" que os Editais do Cefor não nomeiam assim —, e desde
+    28/09 o PDF é o ato oficial: norma que ninguém escreveu passava a ser publicada. Com a E10 = B
+    da `DP-20`, o texto nasce no Word do setor e é transcrito, e o padrão não poupava trabalho a
+    ninguém. A textual nasce vazia, e vazia não sai no documento.
     """
 
     key: str
@@ -39,131 +47,73 @@ class Secao:
     order: int
     type: str
     source: str = ""
-    default_text: str = ""
 
     @property
     def gerada(self) -> bool:
         return self.type == GERADA
 
 
+def _textual(key, title, order):
+    return Secao(key=key, title=title, order=order, type=TEXTUAL)
+
+
+def _gerada(key, title, order, source):
+    return Secao(key=key, title=title, order=order, type=GERADA, source=source)
+
+
+# **O catálogo da 054** (FR-980, D-001): a união das seções que se repetem nas quatro famílias da
+# amostra do Cefor — FIC, pós-graduação e aperfeiçoamento, bolsista UAB/FAPES, chamada pública
+# técnica —, na ordem que os quinze Editais seguem, **a oferta antes da inscrição**. Eram 12
+# entradas, e no 28/2026, o Edital do teste operacional, 8 das 15 seções não tinham lugar.
+#
+# **As chaves das 12 de antes não mudaram** (FR-981): a linha de `SecaoEdital` e a identidade
+# `uuid5` são pela chave, e é isso que mantém o texto já escrito num rascunho na seção em que foi
+# escrito. Só a `order` mudou — e ela não é gravada no rascunho, é lida daqui.
+#
+# **Mudar este catálogo depois da primeira publicação real não tranca o acervo** — a Retificação
+# confere a topologia contra a do Edital publicado, e não contra esta lista (054, D-003) —, mas
+# deixa o acervo com duas formas de documento, porque documento publicado não se regenera. É por
+# isso que ele foi decidido antes do piloto.
 CATALOGO: tuple[Secao, ...] = (
-    Secao(
-        key="apresentacao",
-        title="Apresentação",
-        order=1,
-        type=TEXTUAL,
-        default_text=(
-            "O Instituto Federal do Espírito Santo, por meio do Centro de Referência em Formação "
-            "e em Educação a Distância, torna pública a realização do processo seletivo regido "
-            "por este Edital."
-        ),
-    ),
-    Secao(
-        key="disposicoes-preliminares",
-        title="Disposições Preliminares",
-        order=2,
-        type=TEXTUAL,
-        default_text=(
-            "O presente Edital estabelece as normas do processo seletivo, cuja execução observará "
-            "a legislação aplicável e os princípios que regem a Administração Pública."
-        ),
-    ),
-    Secao(
-        key="requisitos-gerais",
-        title="Requisitos Gerais de Participação",
-        order=3,
-        type=TEXTUAL,
-        default_text=(
-            "Poderá participar do processo seletivo quem atender às condições estabelecidas neste "
-            "Edital e aos requisitos específicos do Perfil de Vaga pretendido, comprovados na "
-            "forma e nos prazos aqui previstos."
-        ),
-    ),
-    Secao(
-        key="inscricao",
-        title="Da Inscrição",
-        order=4,
-        type=TEXTUAL,
-        default_text=(
-            "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos "
-            "prazos do Cronograma, e implica conhecimento e aceitação das condições aqui "
-            "estabelecidas."
-        ),
-    ),
+    # O preâmbulo: sai sem número, logo abaixo do anúncio do ato (008, FR-010). Nos quinze Editais
+    # da amostra ele abre pela autoridade que pratica o ato — "A Diretora do Cefor [...] faz saber".
+    _textual("apresentacao", "Apresentação", 1),
+    _textual("disposicoes-preliminares", "Disposições Preliminares", 2),
+    _textual("informacoes-gerais", "Informações Gerais sobre o Curso", 3),
+    _textual("publico-alvo", "Público-Alvo", 4),
+    _textual("requisitos-gerais", "Requisitos Gerais de Participação", 5),
+    _gerada("perfis", "Perfis de Vaga", 6, "profiles"),
+    _textual("inscricao", "Da Inscrição", 7),
     # Gerada, e ao lado da textual `inscricao` em vez de dentro dela: uma entrada do catálogo é
     # textual **ou** gerada, e o híbrido pediria um terceiro tipo para atender um caso. O que a
     # seção enuncia — os documentos que o candidato precisa apresentar — deriva dos dados
     # estruturados, como Perfis, Etapas e Cronograma já derivam (FR-010 da 009).
-    Secao(
-        key="documentos-exigidos",
-        title="Documentos Exigidos para a Inscrição",
-        order=5,
-        type=GERADA,
-        source="documentRequirements",
+    _gerada(
+        "documentos-exigidos", "Documentos Exigidos para a Inscrição", 8, "documentRequirements"
     ),
-    Secao(
-        key="perfis",
-        title="Perfis de Vaga",
-        order=6,
-        type=GERADA,
-        source="profiles",
-    ),
-    Secao(
-        key="etapas",
-        title="Etapas de Avaliação",
-        order=7,
-        type=GERADA,
-        source="stages",
-    ),
-    Secao(
-        key="classificacao",
-        title="Critérios de Classificação",
-        order=8,
-        type=TEXTUAL,
-        default_text=(
-            "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os "
-            "pesos e as notas mínimas declarados neste Edital e as reservas de vaga previstas."
-        ),
-    ),
-    Secao(
-        key="cronograma",
-        title="Cronograma",
-        order=9,
-        type=GERADA,
-        source="schedule",
-    ),
-    Secao(
-        key="recursos",
-        title="Dos Recursos",
-        order=10,
-        type=TEXTUAL,
-        # **Remete, e não afirma por todos** (018, FR-113). O padrão dizia "caberá recurso contra
-        # os resultados divulgados", e desde que o marco pode declarar que **não** admite recurso
-        # essa frase põe o documento em contradição consigo mesmo: a seção prometendo o que o marco
-        # nega, no mesmo ato publicado. Remeter é verdade nos três estados — declarada, negada e
-        # não declarada —, e o texto continua editável para o Edital que precise dizer mais.
-        default_text=(
-            "Caberá recurso contra os resultados divulgados nos casos e prazos que este Edital "
-            "declara para cada marco classificatório, pelos meios nele indicados."
-        ),
-    ),
-    Secao(
-        key="anexos",
-        title="Anexos",
-        order=11,
-        type=GERADA,
-        source="attachments",
-    ),
-    Secao(
-        key="disposicoes-finais",
-        title="Disposições Finais",
-        order=12,
-        type=TEXTUAL,
-        default_text=(
-            "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, "
-            "observada a legislação aplicável."
-        ),
-    ),
+    # A verificação da autodeclaração étnico-racial (a heteroidentificação) e a da deficiência, que
+    # o 28/2026 separa em duas seções (6 e 7), são a mesma matéria — a elegibilidade às vagas
+    # reservadas — para públicos diferentes: uma entrada, e o texto transcrito as separa.
+    _textual("verificacao-autodeclaracao", "Da Verificação da Autodeclaração", 9),
+    # Depois da verificação, e não depois do certificado como no 28/2026: as duas são matéria da
+    # reserva de vagas, e a entrevista acontece antes do início do curso.
+    _textual("atendimento-pcd", "Do Atendimento à Pessoa com Deficiência", 10),
+    _gerada("etapas", "Etapas de Avaliação", 11, "stages"),
+    _textual("classificacao", "Critérios de Classificação", 12),
+    # Seção, e não anexo, embora doze dos quinze o publiquem como Anexo I: no sistema, anexo é
+    # arquivo à parte com rótulo do autor (020, D-002), e um "Anexo I" gerado colidiria com o que o
+    # autor escrever.
+    _gerada("cronograma", "Cronograma", 13, "schedule"),
+    _textual("recursos", "Dos Recursos", 14),
+    _textual("convocacao", "Da Convocação", 15),
+    # Onde o documento publica a declaração do Requerimento de Matrícula (054, FR-996).
+    _textual("matricula", "Da Matrícula", 16),
+    _textual("acesso-ao-curso", "Do Acesso ao Curso", 17),
+    _textual("homologacao-matricula", "Da Homologação da Matrícula", 18),
+    _textual("certificado", "Do Certificado", 19),
+    _textual("prazo-de-validade", "Do Prazo de Validade", 20),
+    _gerada("anexos", "Anexos", 21, "attachments"),
+    _textual("disposicoes-finais", "Disposições Finais", 22),
 )
 
 POR_CHAVE = {secao.key: secao for secao in CATALOGO}

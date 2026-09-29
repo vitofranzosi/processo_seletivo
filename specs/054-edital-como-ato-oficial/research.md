@@ -18,8 +18,8 @@ identidade da seção em todo rascunho, e o título atual diz a mesma matéria.
 
 **O mapa do 28/2026** (base da verificação): 1 Informações gerais → `informacoes-gerais`;
 2 Público-alvo → `publico-alvo`; 3 Requisitos → `requisitos-gerais`; 4 Vagas → `perfis` (gerada);
-5 Inscrições → `inscricao` + `documentos-exigidos` (gerada); 6 e 7 Verificação da autodeclaração →
-`verificacao-autodeclaracao`; 8 Processo seletivo → `classificacao` (e `etapas`, gerada, se houver
+5 Inscrições → `inscricao` + `documentos-exigidos` (gerada); 6 e 7, as verificações da autodeclaração
+étnico-racial e da deficiência → `verificacao-autodeclaracao`; 8 Processo seletivo → `classificacao` (e `etapas`, gerada, se houver
 Etapa); 9 Recurso → `recursos`; 10 Matrícula → `matricula`; 11 Acesso ao curso → `acesso-ao-curso`;
 12 Homologação da matrícula → `homologacao-matricula`; 13 Certificado → `certificado`; 14 Entrevista
 PcD → `atendimento-pcd`; 15 Disposições finais → `disposicoes-finais`; Anexo I Cronograma →
@@ -178,9 +178,15 @@ função exportável, testada com `node --test`.
 ## R-015 — A fixture de bytes
 
 **Decisão.** `autoridade_publicada.json` passa a carregar também `ato_de_nomeacao` e ganha, ao lado,
-`contexto_publicado.json` com a data do ato; o `snapshot_publicado.json` é refeito pelo catálogo novo
-(22 seções, textuais com o texto que já tinham e as novas vazias); o gerador lê os três e o PDF é
-refeito no mesmo commit, com a diferença conferida por `pdftotext`.
+`contexto_publicado.json` com a data do ato; o gerador lê os três e o PDF é refeito no mesmo commit,
+com a diferença conferida por `pdftotext` — **só o fecho mudou**: o local e a data, e o ato de
+nomeação abaixo do nome.
+
+**O `snapshot_publicado.json` fica como está**, e a decisão mudou na implementação. Ele é um
+conteúdo publicado na forma canônica 12, com o catálogo de 12 seções e as redações padrão de então:
+é exatamente o acervo que a `D-003` promete continuar compondo e retificando. Refazê-lo pelo catálogo
+novo trocaria essa evidência por uma que ninguém precisava — o catálogo novo está provado pelos
+testes da `054`.
 
 ## R-016 — O banco de demonstração
 

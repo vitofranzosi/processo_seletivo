@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.publicacoes.domain.autoridades import quem_assinou
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
@@ -259,7 +260,7 @@ def participantes_do_edital(edital):
         "publicou": publicacao.published_by if publicacao else "",
         "publicou_em": publicacao.published_at if publicacao else None,
         "signatario": (
-            f"{publicacao.signatory_name} — {publicacao.signatory_role}" if publicacao else ""
+            quem_assinou(publicacao.signatory_name, publicacao.signatory_role) if publicacao else ""
         ),
     }
 

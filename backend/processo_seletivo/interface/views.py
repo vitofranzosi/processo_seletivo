@@ -700,13 +700,13 @@ DESTINO_POR_CODIGO = {
     "registration_period_cancelled": ("inscricao", "#inscricao-periodo", True),
 }
 
-# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09), e só eles. Mapear a coleção
-# `sections` inteira para a etapa Conteúdo — como a primeira redação fazia — tornava "corrigíveis"
-# ali os impeditivos de topologia do catálogo, seção ausente, alheia, título ou ordem trocados, que
-# a tela não corrige: a pendência oferecia um caminho que não existe, que é o que a `FR-007`
-# proíbe. Achado da revisão do PR 221.
+# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09; o segundo trocado pela `054`,
+# FR-986), e só eles. Mapear a coleção `sections` inteira para a etapa Conteúdo — como a primeira
+# redação fazia — tornava "corrigíveis" ali os impeditivos de topologia do catálogo, seção ausente,
+# alheia, título ou ordem trocados, que a tela não corrige: a pendência oferecia um caminho que não
+# existe, que é o que a `FR-007` proíbe. Achado da revisão do PR 221.
 DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
-CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_default_text"})
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_universal_empty"})
 
 
 def _destino(caminho, codigo=""):
@@ -1474,8 +1474,9 @@ def compor_etapa(request, edital_id, etapa):
     # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
-    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004).
-    snapshot_da_etapa = edital_snapshot(edital) if etapa == "classificacao" else None
+    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004) — e,
+    # na etapa Conteúdo, para o número que cada seção terá no documento (054, FR-985).
+    snapshot_da_etapa = edital_snapshot(edital) if etapa in ("classificacao", "conteudo") else None
     pendencias = _pendencias(edital, agora=agora, ator=ator, snapshot=snapshot_da_etapa)
     # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
     # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
@@ -1711,9 +1712,9 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.etapas_do_edital(edital)
             ),
             "secoes": (
-                _reexibir_secoes(edital, digitados)
+                _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
-                else forms.secoes_do_edital(edital)
+                else forms.secoes_do_edital(edital, snapshot_da_etapa)
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
@@ -2050,12 +2051,15 @@ def _reexibir_modalidade(modalidade):
     }
 
 
-def _reexibir_secoes(edital, digitadas):
-    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário."""
+def _reexibir_secoes(edital, digitadas, snapshot=None):
+    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário.
+
+    O número continua o do conteúdo gravado; o script da etapa o refaz sobre o que está nos campos.
+    """
     texto = {item["key"]: item["content"] for item in digitadas}
     return [
         {**secao, "content": texto.get(secao["key"], secao["content"])}
-        for secao in forms.secoes_do_edital(edital)
+        for secao in forms.secoes_do_edital(edital, snapshot)
     ]
 
 
@@ -3804,6 +3808,7 @@ def _executar(ato, request, ator, edital):
             "authorityId": str(autoridade.identificador),
             "name": autoridade.nome,
             "role": autoridade.cargo,
+            "appointment": autoridade.ato_de_nomeacao,
         }
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
@@ -4313,6 +4318,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
                 "authorityId": str(autoridade.identificador),
                 "name": autoridade.nome,
                 "role": autoridade.cargo,
+                "appointment": autoridade.ato_de_nomeacao,
             }
         atos_retificacao.executar(ato, request, ator, item, signatario)
     except DomainError as exc:

@@ -395,9 +395,9 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
 As 22 entradas de `FR-980` são a união das seções que se repetem nas quatro famílias da `DP-20` (FIC;
 pós-graduação e aperfeiçoamento; bolsista UAB/FAPES; chamada pública técnica), com títulos que servem a
 todas. Onde duas famílias dão nomes diferentes à mesma matéria — *"Informações gerais sobre o curso"*
-e *"Sobre o curso"* —, a entrada é uma. As duas verificações da autodeclaração do 28/2026 (a da
-veracidade e o procedimento complementar) cabem numa entrada: são a mesma matéria em dois tempos, e o
-texto transcrito as separa em parágrafos. As seções idiossincráticas da família de bolsista —
+e *"Sobre o curso"* —, a entrada é uma. As duas verificações do 28/2026 — a da autodeclaração
+étnico-racial e a da deficiência — cabem numa entrada: são a mesma matéria, a elegibilidade às vagas
+reservadas, para públicos diferentes, e o texto transcrito as separa. As seções idiossincráticas da família de bolsista —
 Mobilidade entre perfis, Curso de formação, Pagamento da bolsa — não entram: a família está fora do
 piloto (`DP-05`), e cada uma delas caberia num Edital só.
 
