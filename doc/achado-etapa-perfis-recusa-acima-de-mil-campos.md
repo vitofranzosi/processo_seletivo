@@ -2,7 +2,7 @@
 
 Encontrado em 29/09/2026, medindo a escala da etapa Perfis para a
 [análise das coleções repetidas](analise-ux-colecoes-repetidas-2026-09-29.md), na branch da `051`
-(PR 226).
+(PR 226, mergeado no mesmo dia — os números valem para a `main`).
 
 > **Situação: aberto.**
 >
@@ -42,9 +42,6 @@ existe*) tem 66.
 **A Classificação tem o mesmo teto, mais baixo por item.** Cada marco envia ~28 campos, mais 5 por
 critério de desempate (contado no navegador sobre um marco novo). Dezesseis Perfis com um marco de
 três critérios ficam em ~700; dois marcos por Perfil passam de mil.
-
-Na `main` a conta é a mesma menos um campo por Modalidade (o arredondamento é da `051`); o teto fica
-na mesma faixa.
 
 ## O que a pessoa vê
 

@@ -1,8 +1,8 @@
 # Coleções que crescem: N formulários abertos contra a visão do conjunto
 
 **Data**: 2026-09-29 · **Natureza**: análise de arquitetura de interação — nada foi implementado.
-**Base**: a branch da `051` (`claude/nova-051-edital-patterns-499aa7`, PR 226, ainda aberto), porque é
-ela que tem a tela da captura. As medições são do sistema rodando, num banco próprio
+**Base**: a branch da `051` (`claude/nova-051-edital-patterns-499aa7`, PR 226), porque é ela que tem
+a tela da captura; o PR foi mergeado no mesmo dia, e as medições valem para a `main`. As medições são do sistema rodando, num banco próprio
 (`ps_ux_colecoes`), com o Edital em elaboração do `seed_demo` multiplicado pelo mesmo POST da etapa.
 
 ---
@@ -31,8 +31,8 @@ A hipótese se confirma, e o problema é maior do que a captura mostra.
   editar próximo"* vira **"Próximo Perfil"**, sem ida ao servidor. A gravação por registro é um
   modelo que este sistema não tem, de propósito.
 - **Mínimo viável**: a legenda com o código (vale sem JavaScript, é uma linha), a tabela, o editor
-  único e o tratamento dos campos inválidos escondidos. Merece spec própria — **depois do merge da
-  `051`**, que mexe nos mesmos três templates.
+  único e o tratamento dos campos inválidos escondidos. Merece spec própria, sobre a `main` que já
+  tem a `051` — que mexe nos mesmos três templates.
 - **Não é regra universal.** O problema aparece quando o item tem subcoleção e a etapa grava o
   conjunto inteiro: Perfis e Classificação. O Cronograma já é quase uma tabela editável (216 px por
   Evento, contra 1.898 por Perfil) e pede densidade, não mestre-detalhe; Etapas, Anexos, Conteúdo e a
@@ -499,7 +499,7 @@ telas **A** por atributos `data-`, e só se extrai quando a segunda tela entrar.
 | **Lógica de domínio no JS** | A coluna Quadro refazendo a soma | A tabela ecoa campos; o que é regra (a soma, o impeditivo) vem das pendências, calculadas no servidor. |
 | **Guardiões da suíte** | Classe nova sem regra na folha reprova `test_acessibilidade`; o teto de bytes da folha; a varredura de vocabulário com lista literal | Estender seletores existentes (`tabela-de-perfis`); medir o teto antes; incluir a tela na lista da varredura. |
 | **Manual e roteiros** | `doc/manual` e o roteiro assistido descrevem os cartões | Atualizar na mesma spec. |
-| **Concorrência com a `051`** | A `051` (PR 226) edita `compor_perfis.html`, `_perfil.html` e `_modalidade.html` | Começar depois do merge. |
+| **Base desatualizada** | A `051` (PR 226, já mergeado) editou `compor_perfis.html`, `_perfil.html` e `_modalidade.html` | Partir da `main` atual. |
 | **O teto de mil campos** | Continua lá: esconder não reduz o envio | Registro próprio (§3); fora desta proposta. |
 
 ---
@@ -526,8 +526,8 @@ Classificação e o Cronograma. Tudo isso se mede depois do primeiro uso.
 
 **Sim, merece spec própria** — ela muda o que o operador vê em todas as composições de mais de um
 Perfil, tem requisitos de acessibilidade verificáveis e um modo de falha silencioso (§7) que precisa
-de critério de aceite escrito. Não merece ser nota de tarefa da `051`: a `051` está fechada em escopo
-e o PR está aberto.
+de critério de aceite escrito. Não merece ser nota de tarefa da `051`: a `051` fechou o escopo dela e já
+foi mergeada.
 
 - **Nome sugerido**: *Perfis de Vaga: a visão do conjunto e um editor por vez*.
 - **Objetivo**: que a etapa Perfis responda primeiro *"o que já está cadastrado, e onde há problema"*,
