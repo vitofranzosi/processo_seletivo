@@ -154,6 +154,21 @@ def gesto_do_marco(alcance, perfil):
     return registro if atual == impressao else None
 
 
+def origem_dos_marcos(perfis, alcance):
+    """`{id do Perfil: frase}` — os marcos que ainda são o que um gesto gravou (053, FR-964).
+
+    **A mesma regra e a mesma frase da Revisão**, para a linha da etapa Classificação: é
+    `gesto_do_marco` que decide — a impressão do gravado ainda é a do gesto, e o Perfil tem um marco
+    só —, e é `frase_do_gesto` que diz. Uma segunda leitura da origem divergiria desta na primeira
+    mudança, e a tela afirmaria o que a Revisão nega.
+    """
+    origens = {}
+    for perfil in perfis or []:
+        if (gesto := gesto_do_marco(alcance, perfil)) is not None:
+            origens[str(perfil.get("id"))] = frase_do_gesto(gesto)
+    return origens
+
+
 def gesto_da_modalidade(alcance, perfil, modalidade):
     achado = alcance.get(("modalidade", str(perfil.get("id")), modalidade.get("code") or ""))
     if achado is None:

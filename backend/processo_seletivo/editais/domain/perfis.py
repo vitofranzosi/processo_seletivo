@@ -427,9 +427,19 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
     inteiro, e mora em `validate_for_publication`. O que se verifica é o que se decide olhando só o
     Perfil: identidade legível, ordem sem empate e comportamento declarado para valor ausente.
     """
-    codes = [marco.get("code") for marco in milestones]
-    if len(codes) != len(set(codes)):
-        raise ProfileValidationError("Marcos classificatórios não podem repetir código no Perfil.")
+    # **Cada recusa diz de que marco ou critério é, e em que campo** (053, FR-973). A mensagem é a
+    # mesma de sempre; o que se acrescenta é o que `validar_criterio` já dava à Retificação (048), e
+    # o que faltava à composição: sem a identidade, a tela não tinha como ancorar a recusa, e com um
+    # Perfil à vista por vez o operador não acharia o marco recusado. Não atravessa a API.
+    vistos = set()
+    for marco in milestones:
+        if marco.get("code") in vistos:
+            raise ProfileValidationError(
+                "Marcos classificatórios não podem repetir código no Perfil.",
+                campo="code",
+                identidade=marco.get("id", ""),
+            )
+        vistos.add(marco.get("code"))
     for marco in milestones:
         # **A exigência de Etapa é condicionada à forma da ordem** (030, FR-432). Ela valia para
         # todo marco porque não havia como distinguir quem sorteia de quem pontua — a forma era
@@ -445,23 +455,41 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
         ):
             raise ProfileValidationError(
                 "Um marco classificatório que ordena pela pontuação deve enumerar ao menos uma "
-                "Etapa: sem Etapa não há pontuação a combinar, e a ordem não sai."
+                "Etapa: sem Etapa não há pontuação a combinar, e a ordem não sai.",
+                campo="stages",
+                identidade=marco.get("id", ""),
             )
         criterios = marco.get("tiebreakers", [])
-        ordens = [criterio.get("order") for criterio in criterios]
-        if len(ordens) != len(set(ordens)):
-            raise ProfileValidationError(CRITERIO_COM_ORDEM_REPETIDA)
+        ordens = set()
+        for criterio in criterios:
+            if criterio.get("order") in ordens:
+                raise ProfileValidationError(
+                    CRITERIO_COM_ORDEM_REPETIDA, campo="order", identidade=criterio.get("id", "")
+                )
+            ordens.add(criterio.get("order"))
         for criterio in criterios:
             # A ausência é declarada, nunca inferida: o silêncio não vira zero nem último lugar
             # — ele impede a publicação da regra (FR-018).
             parametros = criterio.get("parameters") or {}
             if not (parametros.get("stageId") or parametros.get("factId")):
-                raise ProfileValidationError(CRITERIO_SEM_ALVO)
+                raise ProfileValidationError(
+                    CRITERIO_SEM_ALVO, campo="parameters", identidade=criterio.get("id", "")
+                )
             if not criterio.get("whenMissing"):
-                raise ProfileValidationError(CRITERIO_SEM_COMPORTAMENTO_NA_AUSENCIA)
-        _validar_janela_recursal(marco.get("appealWindow"))
-        _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
-        _validar_regra_de_corte(marco.get("cutRule"))
+                raise ProfileValidationError(
+                    CRITERIO_SEM_COMPORTAMENTO_NA_AUSENCIA,
+                    campo="whenMissing",
+                    identidade=criterio.get("id", ""),
+                )
+        try:
+            _validar_janela_recursal(marco.get("appealWindow"))
+            _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
+            _validar_regra_de_corte(marco.get("cutRule"))
+        except ProfileValidationError as exc:
+            # Os três blocos não sabem de que marco são; quem os chama sabe.
+            if not exc.identidade:
+                exc.identidade = str(marco.get("id") or "")
+            raise
 
 
 def validate_common_draw_method(metodo, *, conferir_forma_da_ocorrencia=True) -> None:
