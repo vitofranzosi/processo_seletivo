@@ -1,8 +1,8 @@
 """Aplicar uma declaração de um Perfil aos demais — a regra única da `DP-13` (051).
 
 **Materialização, e não herança** (FR-910). Cada destino recebe um valor próprio, com identidade
-própria, e nada guarda vínculo com a origem (`D-005` e `D-006` da `043`). Herdar no conteúdo
-publicado faria uma Retificação do padrão alterar N Perfis sem dizer.
+própria, e nada guarda vínculo com a origem — como a cópia da `043`, que não registra de onde veio.
+Herdar no conteúdo publicado faria uma Retificação do padrão alterar N Perfis sem dizer.
 
 **A regra, uma só.** Nos destinos selecionados, o gesto substitui integralmente a declaração
 correspondente, na fronteira de cada unidade; se ela não existir e puder nascer, nasce uma cópia
@@ -561,7 +561,7 @@ def aplicar_modalidades(perfis, efeitos, incluidos):
 CAMPOS_DO_PERFIL = ("callForm", "vacancyReversion")
 
 
-def _valor_do_campo(perfil, campo):
+def valor_do_campo(perfil, campo):
     valor = perfil.get(campo)
     if campo == "vacancyReversion":
         return ((valor or {}).get("kind") or "") if isinstance(valor, dict) else (valor or "")
@@ -584,7 +584,7 @@ def efeitos_do_campo_do_perfil(perfis, *, campo, valor):
             "codigo": perfil.get("code") or "",
             "denominacao": perfil.get("name") or "",
         }
-        antes = _valor_do_campo(perfil, campo)
+        antes = valor_do_campo(perfil, campo)
         if campo == "vacancyReversion" and valor and not listas_reservadas(perfil):
             efeitos.append(
                 Efeito(
@@ -633,7 +633,7 @@ def valor_comum(perfis, campo):
     É o que o Perfil novo recebe, e o que o controle do Edital mostra: a forma de convocação *do
     Edital* não é campo do Edital (`D-003` da spec), e sim o que os Perfis dele concordam em dizer.
     """
-    valores = {_valor_do_campo(perfil, campo) for perfil in perfis}
+    valores = {valor_do_campo(perfil, campo) for perfil in perfis}
     if len(valores) == 1:
         return next(iter(valores))
     return ""

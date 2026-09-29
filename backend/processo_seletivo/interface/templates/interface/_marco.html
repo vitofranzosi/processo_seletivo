@@ -514,7 +514,7 @@ cartão leva ao lugar onde a resposta que o revela é dada.
   Os quatro campos sem padrao ficam visiveis mesmo vazios, e quem cobra e a publicacao. O rascunho
   pode estar pela metade; o Edital publicado nao.
   {% endcomment %}
-  <details class="bloco-do-marco"{% if marco|declarou:"cut" %} open{% endif %}>
+  <details class="bloco-do-marco"{% if marco|declarou:"cut" and not marco.corte_padrao %} open{% endif %}>
     <summary>Regra de corte
       <span class="resumo-do-bloco">{% if marco.cutTargetKind == "FIXED" %}quantidade fixa{% if marco.cutTargetCount %} de {{ marco.cutTargetCount }}{% endif %}{% elif marco.cutTargetKind == "FROM_VACANCY_TABLE" %}o que o quadro de vagas publicar{% elif marco|declarou:"cut" %}começada, e sem dizer quantos progridem{% else %}este marco não corta{% endif %}</span></summary>
   <fieldset class="campos">

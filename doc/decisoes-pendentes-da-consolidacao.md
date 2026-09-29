@@ -1146,6 +1146,15 @@ cada item é. Para este, a conferência de 27/09 contra as specs e o histórico 
 - **A fonte única.** Derivar do contrato, como a Retificação já faz em `exclusoes_do_tipo`, e não de
   uma lista na composição — a lição da `026` sobre listas que envelhecem.
 
+### O que foi decidido
+
+Em 28/09/2026, no pedido da spec do passo 1 ([`051`](../specs/051-padroes-e-aplicar-a-todos/spec.md)),
+o usuário escolheu **a Revisão, antes de publicar**: os campos que não se corrigem depois de
+publicados ficam visíveis ali, e não nos cartões. Com isso a `FR-428` da `030` não precisou de emenda
+(o selo não chegou a existir), e as quatro perguntas acima se responderam na spec: as naturezas são a
+não retificável e os **códigos** entre as estruturais; a razão mora na Revisão, a do contrato; e a
+fonte é o contrato (`FR-936`, `FR-937`, `SC-346` da `051`).
+
 ---
 
 ## DP-20 — O PDF do sistema vale como Edital oficial: o que ele precisa ter, e com quais seções?

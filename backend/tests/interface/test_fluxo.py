@@ -55,6 +55,8 @@ PERFIS = {
     "perfil-0-name": "Perfil",
     "perfil-0-immediateVacancies": "1",
     "perfil-0-reserveType": "NONE",
+    # O marco abaixo corta, e quem corta declara como convoca (051, FR-943).
+    "perfil-0-callForm": "PUBLICATION",
 }
 # O marco que a `032` tornou obrigatório para publicar (`FR-457`): sem ele o Perfil acima não
 # classifica ninguém, e a submissão é recusada antes de chegar ao ato.

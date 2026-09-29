@@ -49,10 +49,11 @@ def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=Non
     perfil["immediateVacancies"] = geral + (ppi or 0)
     if reversao is not None:
         perfil["vacancyReversion"] = {"kind": reversao}
-    # A forma de comunicar a convocação (019, degrau 15). **Ausente significa "não declarou"**, e é
-    # o que todo cenário anterior à `019` afirma — nunca "convoca por publicação".
+    # A forma de comunicar a convocação (019, degrau 15). `None` fica com a do rascunho de base,
+    # que a declara desde a `051` (FR-943: quem corta declara como convoca). **`""` é "não
+    # declarou"** — o acervo anterior à `019`, que só se publica no instante do acervo.
     if forma is not None:
-        perfil["callForm"] = forma
+        perfil["callForm"] = forma or None
     return base, pontuada
 
 

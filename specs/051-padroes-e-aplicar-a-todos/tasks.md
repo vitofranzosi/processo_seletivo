@@ -10,13 +10,13 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente: `.env` com `DB_NAME=ps_051`, `uv sync --extra dev`, `make check`
+- [X] T001 Conferir o ambiente: `.env` com `DB_NAME=ps_051`, `uv sync --extra dev`, `make check`
 
 ## Phase 2: Foundational
 
-- [ ] T002 Coluna `detalhe` (JSONField nula) em `processo_seletivo/auditoria/models.py`, migration `processo_seletivo/auditoria/migrations/0003_registroauditoria_detalhe.py`, parâmetro `detalhe=None` em `record_event` (`processo_seletivo/auditoria/application.py`); subir a contagem de `auditoria` com a justificativa em `tests/migrations/test_migrations.py`
-- [ ] T003 [P] `CORTE_PADRAO` e `corte_padrao()` em `processo_seletivo/editais/domain/marcos.py`
-- [ ] T004 Medir quantos testes publicam Perfil com corte e sem `callForm` (grep em `tests/` e rodar `validate_for_publication` sobre as fixtures) antes de escrever a `FR-943`
+- [X] T002 Coluna `detalhe` (JSONField nula) em `processo_seletivo/auditoria/models.py`, migration `processo_seletivo/auditoria/migrations/0003_registroauditoria_detalhe.py`, parâmetro `detalhe=None` em `record_event` (`processo_seletivo/auditoria/application.py`); subir a contagem de `auditoria` com a justificativa em `tests/migrations/test_migrations.py`
+- [X] T003 [P] `CORTE_PADRAO` e `corte_padrao()` em `processo_seletivo/editais/domain/marcos.py`
+- [X] T004 Medir quantos testes publicam Perfil com corte e sem `callForm` (grep em `tests/` e rodar `validate_for_publication` sobre as fixtures) antes de escrever a `FR-943`
 
 ## Phase 3: User Story 1 — o marco aplicado aos demais (P1) 🎯 MVP
 
@@ -24,13 +24,13 @@
 
 **Independent Test**: 7 Perfis sem marco; compor o do primeiro; prévia com 6 *nasce*; confirmar; 7 marcos independentes com código derivado e critérios nos fatos do próprio Perfil.
 
-- [ ] T005 [P] [US1] Testes unitários da regra única para o marco (FR-910–914, FR-917, FR-922, FR-923) em `tests/unit/editais/test_aplicacao.py`: nasce (código/denominação derivados; critério remapeado por código e tipo), substitui (campos; id/code/name mantidos; lista de critérios inteira), sem mudança, fora (dois marcos; fato ausente; fato de outro tipo; método próprio na origem ou no destino), quantidade fixa destacada, ausência aplicada como ausência, impressão estável
-- [ ] T006 [US1] `processo_seletivo/editais/domain/aplicacao.py`: `Efeito`, `unidade_do_marco`, `impressao`, `efeitos_do_marco(perfis, *, origem, sub)`, `aplicar(perfis, efeitos, incluidos)`, `assinatura(efeitos)`
-- [ ] T007 [US1] (FR-920, FR-921) `processo_seletivo/editais/application/aplicacao.py::gravar_aplicacao`: `replace_draft` + `record_event(operation="APLICAR_A_TODOS", reason, detalhe)` numa transação
-- [ ] T008 [US1] (UX-112) `processo_seletivo/interface/aplicacao.py`: a prévia em palavras (mudanças com os rótulos da Revisão, frase do alcance), leitura de `aplicar`/`confirmar_aplicacao`/`aplicar_destino`/`aplicar_impressao`
-- [ ] T009 [US1] (FR-916, FR-918–FR-920, SC-343) `compor_etapa` em `processo_seletivo/interface/views.py`: prévia, cancelar, confirmar (impressão, nenhum destino, recusa do domínio), redirecionamento com `aplicado`
-- [ ] T010 [US1] (UX-110, UX-111, UX-113) `processo_seletivo/interface/templates/interface/_previa_da_aplicacao.html` (novo), botão no `_marco.html`, inclusão em `compor_classificacao.html`, confirmação de `aplicado` em `compor_base.html` (ou onde o `salvo` aparece)
-- [ ] T011 [US1] (SC-341, SC-342, SC-343) Testes de interface em `tests/interface/test_aplicar_a_todos.py`: a prévia não grava; confirmar grava e registra na trilha; excluído intocado; divergência recusa sem gravar; Edital de um Perfil não oferece o botão; sem permissão, recusa
+- [X] T005 [P] [US1] Testes unitários da regra única para o marco (FR-910–914, FR-917, FR-922, FR-923) em `tests/unit/editais/test_aplicacao.py`: nasce (código/denominação derivados; critério remapeado por código e tipo), substitui (campos; id/code/name mantidos; lista de critérios inteira), sem mudança, fora (dois marcos; fato ausente; fato de outro tipo; método próprio na origem ou no destino), quantidade fixa destacada, ausência aplicada como ausência, impressão estável
+- [X] T006 [US1] `processo_seletivo/editais/domain/aplicacao.py`: `Efeito`, `unidade_do_marco`, `impressao`, `efeitos_do_marco(perfis, *, origem, sub)`, `aplicar(perfis, efeitos, incluidos)`, `assinatura(efeitos)`
+- [X] T007 [US1] (FR-920, FR-921) `processo_seletivo/editais/application/aplicacao.py::gravar_aplicacao`: `replace_draft` + `record_event(operation="APLICAR_A_TODOS", reason, detalhe)` numa transação
+- [X] T008 [US1] (UX-112) `processo_seletivo/interface/aplicacao.py`: a prévia em palavras (mudanças com os rótulos da Revisão, frase do alcance), leitura de `aplicar`/`confirmar_aplicacao`/`aplicar_destino`/`aplicar_impressao`
+- [X] T009 [US1] (FR-916, FR-918–FR-920, SC-343) `compor_etapa` em `processo_seletivo/interface/views.py`: prévia, cancelar, confirmar (impressão, nenhum destino, recusa do domínio), redirecionamento com `aplicado`
+- [X] T010 [US1] (UX-110, UX-111, UX-113) `processo_seletivo/interface/templates/interface/_previa_da_aplicacao.html` (novo), botão no `_marco.html`, inclusão em `compor_classificacao.html`, confirmação de `aplicado` em `compor_base.html` (ou onde o `salvo` aparece)
+- [X] T011 [US1] (SC-341, SC-342, SC-343) Testes de interface em `tests/interface/test_aplicar_a_todos.py`: a prévia não grava; confirmar grava e registra na trilha; excluído intocado; divergência recusa sem gravar; Edital de um Perfil não oferece o botão; sem permissão, recusa
 
 ## Phase 4: User Story 2 — o que o Edital declara uma vez (P1)
 
@@ -38,11 +38,11 @@
 
 **Independent Test**: 7 Perfis sem PcD; aplicar a PcD do primeiro; 6 *nasce* com as Modalidades de cada destino listadas; quadro intocado.
 
-- [ ] T012 [P] [US2] (FR-924, FR-925, FR-926) Testes unitários em `tests/unit/editais/test_aplicacao.py`: Modalidade nasce/substitui/sem mudança; nunca remove; linha do quadro intocada; ampla substituída e desmarcada; forma de convocação; reversão fora sem lista reservada
-- [ ] T013 [US2] `efeitos_da_modalidade`, `efeitos_do_campo_do_perfil` em `processo_seletivo/editais/domain/aplicacao.py`
-- [ ] T014 [US2] Etapa Perfis em `views.py`/`interface/aplicacao.py`: o gesto sobre `ler_perfis`, gravando pelo caminho da etapa Perfis
-- [ ] T015 [US2] Controle do Edital em `compor_perfis.html` (forma de convocação, reversão, botão), botão no `_modalidade.html`; o Perfil novo nasce com a forma e a reversão comuns (`fragmento_perfil`)
-- [ ] T016 [US2] Testes de interface em `tests/interface/test_aplicar_a_todos.py`: Modalidade e controle do Edital, ponta a ponta
+- [X] T012 [P] [US2] (FR-924, FR-925, FR-926) Testes unitários em `tests/unit/editais/test_aplicacao.py`: Modalidade nasce/substitui/sem mudança; nunca remove; linha do quadro intocada; ampla substituída e desmarcada; forma de convocação; reversão fora sem lista reservada
+- [X] T013 [US2] `efeitos_da_modalidade`, `efeitos_do_campo_do_perfil` em `processo_seletivo/editais/domain/aplicacao.py`
+- [X] T014 [US2] Etapa Perfis em `views.py`/`interface/aplicacao.py`: o gesto sobre `ler_perfis`, gravando pelo caminho da etapa Perfis
+- [X] T015 [US2] Controle do Edital em `compor_perfis.html` (forma de convocação, reversão, botão), botão no `_modalidade.html`; o Perfil novo nasce com a forma e a reversão comuns (`fragmento_perfil`)
+- [X] T016 [US2] Testes de interface em `tests/interface/test_aplicar_a_todos.py`: Modalidade e controle do Edital, ponta a ponta
 
 ## Phase 5: User Story 3 — padrões (P1)
 
@@ -50,13 +50,13 @@
 
 **Independent Test**: marco de sorteio único publica sem empate, sem instante e sem prosa digitados, com o corte do padrão.
 
-- [ ] T017 [P] [US3] (FR-915, FR-927) `_marco_novo` com o corte padrão quando o Perfil não tem marco na tela; o fragmento inclui os cartões do Perfil (`_marco.html`/`compor_classificacao.html` `hx-include`)
-- [ ] T018 [P] [US3] (FR-928) Empate: `_marco.html` não desenha o campo sob sorteio (mantém oculto o valor declarado); `_regra_de_corte_do_marco` em `validation.py` não o exige sob sorteio
-- [ ] T019 [P] [US3] (FR-929, FR-930) `processo_seletivo/sorteios/domain/prosa.py` (frase por regra); `forms._metodo_de_sorteio` preenche o texto vazio; lista de Eventos no método comum e no do marco, com o instante como valor
-- [ ] T020 [P] [US3] (FR-931) `_etapa.html` e `forms.ler_etapas`: *"Eliminatória"* no bloco da decisória, marcado na Etapa nova
-- [ ] T021 [P] [US3] (FR-932, FR-933) `processo_seletivo/editais/domain/quadro.py::sugestao`; `rounding` na Modalidade (`_modalidade.html`, `forms._modalidades`, `_modalidade_para_o_formulario`); `placeholder` e descrição na linha do quadro; gesto *Preencher pelo percentual*; preservação dos opacos da regra na gravação da etapa Perfis (R-007); comentário de `OPACOS`
-- [ ] T022 [US3] `FR-943` em `validation.py` (`profile_cuts_without_call_form`), com a âncora da pendência na etapa Perfis; ajustar as fixtures medidas em T004
-- [ ] T023 [US3] (SC-344, SC-345) Testes em `tests/interface/test_padroes_da_composicao.py` e `tests/unit/editais/test_quadro_sugerido.py`; um teste de que nenhum padrão alcança conteúdo publicado (`SC-344`)
+- [X] T017 [P] [US3] (FR-915, FR-927) `_marco_novo` com o corte padrão quando o Perfil não tem marco na tela; o fragmento inclui os cartões do Perfil (`_marco.html`/`compor_classificacao.html` `hx-include`)
+- [X] T018 [P] [US3] (FR-928) Empate: `_marco.html` não desenha o campo sob sorteio (mantém oculto o valor declarado); `_regra_de_corte_do_marco` em `validation.py` não o exige sob sorteio
+- [X] T019 [P] [US3] (FR-929, FR-930) `processo_seletivo/sorteios/domain/prosa.py` (frase por regra); `forms._metodo_de_sorteio` preenche o texto vazio; lista de Eventos no método comum e no do marco, com o instante como valor
+- [X] T020 [P] [US3] (FR-931) `_etapa.html` e `forms.ler_etapas`: *"Eliminatória"* no bloco da decisória, marcado na Etapa nova
+- [X] T021 [P] [US3] (FR-932, FR-933) `processo_seletivo/editais/domain/quadro.py::sugestao`; `rounding` na Modalidade (`_modalidade.html`, `forms._modalidades`, `_modalidade_para_o_formulario`); `placeholder` e descrição na linha do quadro; gesto *Preencher pelo percentual*; preservação dos opacos da regra na gravação da etapa Perfis (R-007); comentário de `OPACOS`
+- [X] T022 [US3] `FR-943` em `validation.py` (`profile_cuts_without_call_form`), com a âncora da pendência na etapa Perfis; ajustar as fixtures medidas em T004
+- [X] T023 [US3] (SC-344, SC-345) Testes em `tests/interface/test_padroes_da_composicao.py` e `tests/unit/editais/test_quadro_sugerido.py`; um teste de que nenhum padrão alcança conteúdo publicado (`SC-344`)
 
 ## Phase 6: User Story 4 — a Revisão (P1)
 
@@ -64,9 +64,9 @@
 
 **Independent Test**: marco aplicado a 6 Perfis e padrões; a Revisão diz a origem; editar um marco à mão tira a atribuição; o bloco lista os campos não retificáveis e estruturais.
 
-- [ ] T024 [US4] (FR-934, FR-935, UX-114) `revisao.blocos(snapshot, contexto=None)`: origens por comparação e pelo registro do gesto; a view passa Eventos e linhas `APLICAR_A_TODOS`
-- [ ] T025 [US4] (FR-936, FR-937, UX-115) Bloco *"O que não se corrige depois de publicado"*, derivado do `CONTRATO`, em `revisao.py` e `compor_revisao.html` antes do botão de submeter
-- [ ] T026 [US4] Guardiões de `LIDOS`/`NAO_MOSTRADOS` (o `rounding` da regra passa a ser lido); testes em `tests/interface/test_revisao_origem_e_definitivos.py`, inclusive o guardião de completude do bloco contra o contrato (`SC-346`)
+- [X] T024 [US4] (FR-934, FR-935, UX-114) `revisao.blocos(snapshot, contexto=None)`: origens por comparação e pelo registro do gesto; a view passa Eventos e linhas `APLICAR_A_TODOS`
+- [X] T025 [US4] (FR-936, FR-937, UX-115) Bloco *"O que não se corrige depois de publicado"*, derivado do `CONTRATO`, em `revisao.py` e `compor_revisao.html` antes do botão de submeter
+- [X] T026 [US4] Guardiões de `LIDOS`/`NAO_MOSTRADOS` (o `rounding` da regra passa a ser lido); testes em `tests/interface/test_revisao_origem_e_definitivos.py`, inclusive o guardião de completude do bloco contra o contrato (`SC-346`)
 
 ## Phase 7: Polish
 

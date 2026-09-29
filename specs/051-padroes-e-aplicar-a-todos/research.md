@@ -11,7 +11,7 @@ identificando a origem). O servidor lê a etapa inteira pelo leitor de sempre (`
 recusa — e a prévia no alto. Nada é gravado. A confirmação é outro `submit` (`name="confirmar_aplicacao"`),
 que relê a etapa, recalcula, confere a impressão e grava.
 
-**Rationale**: é o que a `D-001` da spec pede e o que a `D-001` da `043` já justificou: um só caminho de
+**Rationale**: é o que a `D-001` da spec pede e o que a `FR-638` da `043` já justificou: um só caminho de
 gravação, porque `replace_draft` apaga o que o formulário não reenviar. A etapa Classificação grava os
 marcos de todos os Perfis num formulário só, e o gesto precisa ver o que está na tela, inclusive o marco
 ainda não gravado da origem. Sem JavaScript novo: a CSP não admite `hx-vals` com `js:`.
@@ -63,7 +63,7 @@ duas camadas, já tem autor e instante, e já é o lugar da autoria (Princípio 
 eliminar a autoria"*). Uma coluna nula não muda nenhuma linha existente.
 
 **Alternatives considered**: *tabela própria em `editais`* — gatilho e privilégio novos para guardar o
-que a trilha guarda; *registro dentro do rascunho* — viraria conteúdo, e a `D-006` da `043` recusa
+que a trilha guarda; *registro dentro do rascunho* — viraria conteúdo, e a `043` recusou por escrito
 proveniência no conteúdo; *texto em `reason`* — é o que a trilha exibe, e JSON ali seria ruído na tela.
 
 ## R-005 — Padrões: onde cada um nasce

@@ -86,7 +86,7 @@ e as exceções continuam produzindo qualquer configuração, e os validadores c
   preenche (`FR-932`, `FR-933`).
 - Q: O Perfil que corta e não declara forma de convocação é cobrado na publicação? → A: **Impede
   publicar** (`FR-943`). Com a forma declarada uma vez no Edital, cumprir custa um gesto; é a porta
-  que a `050` (`D-002`) deixou para depois do ato imutável.
+  que a `050` deixou para depois do ato imutável (o gesto dela recusa convocar sem forma).
 
 ---
 
@@ -318,7 +318,7 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
 ### A regra única (`DP-13`)
 
 - **FR-910**: "Aplicar a todos" MUST ser **materialização**: o gesto grava em cada destino um valor
-  próprio, com identidade própria, e nada guarda vínculo com a origem (`D-005` e `D-006` da `043`). O
+  próprio, com identidade própria, e nada guarda vínculo com a origem, como a cópia da `043`, que não registra de onde veio. O
   conteúdo publicado MUST continuar por Perfil, e nenhum destino MUST herdar valor de outro objeto no
   conteúdo publicado.
 - **FR-911**: Nos destinos selecionados, o gesto MUST substituir integralmente a declaração
@@ -379,8 +379,9 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
   de apontá-la. A prévia MUST mostrar o *antes → depois* da ampla de cada destino.
 - **FR-926**: **Forma de convocação** e **reversão**. A etapa Perfis MUST oferecê-las num controle do
   Edital, que as aplica aos Perfis pela prévia desta feature; a reversão MUST deixar fora do alcance o
-  Perfil sem lista reservada. O Perfil novo MUST nascer com a forma de convocação e a reversão que
-  **todos** os Perfis do Edital declaram iguais, e sem nenhuma quando divergem.
+  Perfil sem lista reservada. O Perfil novo MUST nascer com a forma de convocação que **todos** os
+  Perfis do Edital declaram igual, e sem nenhuma quando divergem. A reversão não nasce com ele: o
+  Perfil novo não tem lista reservada, e a reversão só existe onde há uma.
 
 ### Os padrões (§D.3 da reavaliação)
 
@@ -423,14 +424,15 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
 - **FR-934**: A Revisão MUST mostrar, junto de cada valor que coincide com o que um padrão, uma
   derivação ou um gesto de aplicação produziria, a origem desse valor: *"padrão do sistema"*, o Evento
   de onde veio, a regra de onde a prosa foi gerada, a sugestão pelo percentual, a forma de convocação
-  e a reversão que o Perfil novo recebeu dos demais, ou o Perfil de onde foi aplicado, com quem e
+  que o Perfil novo recebeu dos demais, ou o Perfil de onde foi aplicado, com quem e
   quando.
 - **FR-935**: A origem *"aplicado a partir de"* MUST valer só enquanto o valor do destino for o que o
   gesto gravou; editado depois, a Revisão MUST deixar de atribuí-lo ao gesto.
 - **FR-936**: A Revisão MUST reunir, antes da submissão, os campos que **não se corrigem depois de
-  publicados** — os de natureza não retificável e os estruturais do contrato de mutabilidade —, com o
-  valor que este Edital declara em cada um e a razão escrita no contrato. A lista MUST ser derivada do
-  contrato, e não de uma lista própria.
+  publicados** — os de natureza não retificável do contrato de mutabilidade, menos os objetos opacos
+  que a composição não pede, e, entre os estruturais, os **códigos** que quem compõe declara (a
+  identidade interna não é mostrada) —, com o valor que este Edital declara em cada um e a razão
+  escrita no contrato. A lista MUST ser derivada do contrato, e não de uma lista própria.
 - **FR-937**: Nenhum cartão da composição MUST passar a trazer ajuda visível sobre isso (`FR-428` da
   `030`).
 
@@ -444,7 +446,7 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
   MUST ficar fora do alcance, com o campo nomeado; MUST NOT haver aplicação parcial.
 - **FR-940**: O nascimento por Retificação MUST obedecer às guardas da `048`: a janela nasce só
   concedendo (`FR-787`); o corte nasce com a guarda da Etapa com Resultado (`FR-789`); a regra normativa
-  não nasce em Modalidade publicada (`D-001` da `048`).
+  não nasce em Modalidade publicada, que o contrato de mutabilidade já recusa.
 - **FR-941**: O gesto MUST produzir **um** ato de Retificação, com uma versão, um documento e o mesmo
   histórico (`FR-795` da `048`), e a conferência antes da confirmação (`FR-800` da `048`) MUST agrupar as
   Alterações do gesto e declarar as consequências: as ordens que ficam obsoletas, os recortes que nascem
@@ -517,17 +519,17 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
 
 ### D-001 — A materialização acontece no envio da etapa, e não num segundo caminho
 
-O gesto lê o que está **digitado** na etapa — como o duplicar (`D-002` da `043`) —, mostra a prévia e,
+O gesto lê o que está **digitado** na etapa — como o duplicar da `043`, que copia o digitado —, mostra a prévia e,
 confirmado, grava pela mesma gravação por substituição da etapa. Gravar no servidor por um caminho
 próprio daria duas maneiras de um marco entrar no rascunho, e a gravação seguinte da etapa apagaria o
-que o formulário não reenviasse (a mesma razão da `D-001` da `043`).
+que o formulário não reenviasse (a mesma razão da `FR-638` da `043`).
 
 ### D-002 — A origem de um padrão é lida por comparação; a de um gesto, pelo registro do gesto
 
 O padrão e a derivação são funções do contexto: a Revisão sabe se o corte é o padrão, se o instante é
 o de um Evento e se a prosa é a da regra, comparando. O gesto não é função do contexto, e por isso é
 registrado; a Revisão atribui o valor ao gesto só enquanto ele for o valor gravado pelo gesto. Nenhum
-registro de proveniência entra no conteúdo publicado (`D-006` da `043`).
+registro de proveniência entra no conteúdo publicado, como a `043` já tinha decidido para a cópia.
 
 ### D-003 — A forma de convocação do Edital não é campo do Edital
 

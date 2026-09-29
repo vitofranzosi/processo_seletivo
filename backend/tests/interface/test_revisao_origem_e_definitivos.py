@@ -137,3 +137,28 @@ def test_nenhum_cartao_da_composicao_ganhou_o_aviso(client, tres_perfis):
     for etapa in ("perfis", "classificacao", "etapas"):
         corpo = client.get(_url(tres_perfis, etapa)).content.decode()
         assert "não se corrige depois de publicado" not in corpo
+
+
+def test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_com_a_origem(client, tres_perfis):
+    """O defeito que o percurso no navegador achou: a Revisão quebrava ao ler o gesto do Edital."""
+    from tests.interface.test_aplicar_a_todos import _perfis_no_formulario
+
+    formulario = {**_perfis_no_formulario(), "edital-callForm": "INDIVIDUAL_MESSAGE"}
+    previa = client.post(_url(tres_perfis, "perfis"), {**formulario, "aplicar": "edital:callForm"})
+    assert "Aplicar a forma de convocação a todos os Perfis" in _texto(previa)
+    client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "confirmar_aplicacao": "edital:callForm",
+            "aplicar_destino": ["0", "1", "2"],
+            "aplicar_impressao": _impressao(previa.content.decode()),
+        },
+    )
+
+    corpo = _texto(client.get(_url(tres_perfis, "revisao")))
+
+    assert (
+        "Como a convocação é comunicada: por mensagem individual à pessoa convocada "
+        "(aplicado pelo Edital, por ana.elaboradora, em"
+    ) in corpo

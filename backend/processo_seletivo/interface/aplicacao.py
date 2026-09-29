@@ -330,6 +330,8 @@ def previa(item, efeitos_calculados, perfis, *, edital, dados, recusa="", valor=
     return {
         "valor": valor or item.valor,
         "unidade": NOME_DA_UNIDADE.get(item.unidade, item.unidade),
+        # O controle do Edital não tem Perfil de origem: todos são destino.
+        "alcance": "a todos os Perfis" if item.valor.startswith("edital:") else "aos demais Perfis",
         "linhas": linhas,
         "frase": _frase_do_alcance(contagem),
         "aplicaveis": aplicaveis,

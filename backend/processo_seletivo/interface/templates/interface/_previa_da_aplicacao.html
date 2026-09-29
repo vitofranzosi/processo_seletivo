@@ -10,7 +10,7 @@ que a confirmação precisa reencontrar; se o que está na tela mudar entre as d
 recusada e esta seção volta com a prévia de agora.
 {% endcomment %}
 <section aria-labelledby="previa-titulo" class="consequencias" id="previa-da-aplicacao">
-  <h2 id="previa-titulo">Aplicar {{ previa.unidade }} aos demais Perfis</h2>
+  <h2 id="previa-titulo">Aplicar {{ previa.unidade }} {{ previa.alcance }}</h2>
   {% if previa.recusa %}<p class="aviso" role="alert">{{ previa.recusa }}</p>{% endif %}
   <p role="status">{{ previa.frase }}. Nada foi gravado ainda. Desmarque o Perfil que diverge de
     propósito.</p>

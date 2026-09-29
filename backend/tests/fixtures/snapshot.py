@@ -265,7 +265,8 @@ def rascunho_publicavel():
         # Pela mesma assimetria: opcional no rascunho, presente no publicado (014, FR-231).
         perfil_.pop("generalCompetitionModalityId", None)
         perfil_.pop("vacancyReversion", None)
-        perfil_.pop("callForm", None)
+        # A forma de convocação **fica** (051, FR-943): o marco deste rascunho corta, e quem corta
+        # sem declarar como convoca não publica. O rascunho a aceita desde a `019`.
         # **Mas a ampla concorrência é declarada** (027, FR-317). Quem compõe um Perfil com uma
         # Modalidade chamada "AC" e não diz que ela é a da ampla publica um Edital cujo total não
         # governa recorte nenhum — o sistema não a reconhece pelo nome, e a `025` recusou por

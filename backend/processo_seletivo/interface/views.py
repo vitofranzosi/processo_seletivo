@@ -1969,7 +1969,7 @@ def _comuns(perfis, dados):
     """
     comuns = {}
     for campo in regra_da_aplicacao.CAMPOS_DO_PERFIL:
-        valores = {regra_da_aplicacao._valor_do_campo(perfil, campo) for perfil in perfis or []}
+        valores = {regra_da_aplicacao.valor_do_campo(perfil, campo) for perfil in perfis or []}
         chave = f"edital-{campo}"
         comuns[campo] = (
             dados.get(chave) if chave in dados else regra_da_aplicacao.valor_comum(perfis, campo)
@@ -2608,6 +2608,10 @@ def _marco_novo(edital, indice, *, marcos_na_tela=0):
                 "cutTargetCount": "",
                 "cutSurplusCount": padrao["surplusCount"],
                 "cutGovernedStage": padrao["governedStage"],
+                # O bloco nasce **fechado**: o resumo já diz o que foi declarado (*"o que o quadro
+                # de vagas publicar"*), e abri-lo poria cinco controles na chegada do cartão que a
+                # `030` mediu para caber em menos de dez (SC-138).
+                "corte_padrao": True,
             }
         )
     perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
