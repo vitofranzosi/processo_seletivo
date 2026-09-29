@@ -67,4 +67,8 @@ números na seção 3. **Leitura do diff** é promessa negativa, que se confere 
 
 ## 4. Verificação
 
-`make lint check` e `make test-pg DB_NAME=ps_052` — números na descrição do PR.
+`make lint check`: verde. `make test-pg DB_NAME=ps_052`, em 29/09/2026: **8795 passando, 11 pulados**
+(os onze deliberados do `AGENTS.md`), zero falhas, em 865 s. Entre eles, sem mudança, as suítes da
+`027` (`test_compor_quadro.py`), da `043` (`test_duplicar_perfil.py`), da `051`
+(`test_aplicar_a_todos.py`, `test_padroes_da_composicao.py`) e do rascunho local
+(`test_rascunho_local.py`, `rascunho.test.js`) — a `SC-353`.
