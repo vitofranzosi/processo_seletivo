@@ -156,6 +156,7 @@ from processo_seletivo.interface import (
     conducao_do_marco,
     forms,
     identidade,
+    origens,
     revisao,
 )
 from processo_seletivo.interface import aplicacao as aplicacao_ui
@@ -847,7 +848,7 @@ ANTES_DA_PUBLICACAO = frozenset(
 )
 
 
-def _pendencias(edital, *, agora=None, ator=None):
+def _pendencias(edital, *, agora=None, ator=None, snapshot=None):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
 
     **`agora` é recebido, e não lido aqui, quando a página também desenha o selo das etapas**
@@ -876,7 +877,9 @@ def _pendencias(edital, *, agora=None, ator=None):
     # Edital×ator, e repeti-lo por pendência custaria uma consulta de permissão por linha sem
     # poder responder diferente em nenhuma delas.
     conduzir = ator is not None and falta_permissao_para_compor(edital, ator)
-    snapshot = edital_snapshot(edital)
+    # Recebido de quem já o montou para outra leitura da mesma tela — a origem dos marcos, na
+    # Classificação (053) —, e montado aqui quando não.
+    snapshot = snapshot if snapshot is not None else edital_snapshot(edital)
     grupos, campos = nomes_dos_caminhos(snapshot)
     # **Fora da elaboração, o gate não roda** (046, `FR-755`, `FR-756`): o Edital publicado é ato
     # imutável, e perguntar se ele pode ser publicado produzia o *"Impede"* do `RC-32`. O que fica
@@ -1024,6 +1027,11 @@ def _recusa(exc, digitados, etapa):
     # Campo de **raiz** do Edital não tem linha: o controle é um só, e a âncora é o `id` dele.
     if campo in CONTROLE_DO_CAMPO_DE_RAIZ and not identidade:
         return {"mensagem": mensagem, "ancora": CONTROLE_DO_CAMPO_DE_RAIZ[campo]}
+    if etapa == "classificacao" and identidade and isinstance(digitados, dict):
+        return {
+            "mensagem": mensagem,
+            "ancora": _ancora_na_classificacao(digitados, campo, identidade),
+        }
     prefixo = PREFIXO_DA_ETAPA.get(etapa, "")
     if not (campo and identidade and prefixo):
         return {"mensagem": mensagem, "ancora": ""}
@@ -1063,6 +1071,47 @@ def _recusa(exc, digitados, etapa):
             if str(do_quadro.get("modalityId") or "") == recorte:
                 return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
+
+
+#: Os campos do marco e do critério que o cartão **sempre** desenha com `id` (053, R-006). Os demais
+#: podem não estar na tela — o método sob pontuação, a combinação com uma Etapa, as Etapas sem Etapa
+#: classificatória —, e a recusa sobre eles aponta o cartão do marco, que sempre está.
+CONTROLE_DO_MARCO = {
+    "code": "code",
+    "name": "name",
+    "orderProduction": "orderProduction",
+    "rounding": "scale",
+    "scale": "scale",
+    "mode": "mode",
+}
+CONTROLE_DO_CRITERIO = {
+    "order": "order",
+    "type": "type",
+    "parameters": "target",
+    "whenMissing": "whenMissing",
+}
+
+
+def _ancora_na_classificacao(digitados, campo, identidade):
+    """O `id` do elemento recusado na tela que a Classificação devolve (053, FR-973).
+
+    `digitados` é `{Perfil: [marcos]}`, e a tela devolvida desenha cada marco na posição em que ele
+    veio — `sub` é o índice na lista —, e cada critério também. É por isso que a posição aqui é a
+    do `id` lá. A recusa que nomeia o Perfil aponta o cartão dele.
+    """
+    for perfil, do_perfil in digitados.items():
+        if str(perfil) == identidade:
+            return f"cartao-{perfil}"
+        for sub, marco in enumerate(do_perfil or []):
+            cartao = f"marco-{perfil}-{sub}"
+            if str(marco.get("id") or "") == identidade:
+                controle = CONTROLE_DO_MARCO.get(campo)
+                return f"{cartao}-{controle}" if controle else cartao
+            for n, criterio in enumerate(marco.get("tiebreakers") or []):
+                if str(criterio.get("id") or "") == identidade:
+                    controle = CONTROLE_DO_CRITERIO.get(campo)
+                    return f"criterio-{perfil}-{sub}-{n}-{controle}" if controle else cartao
+    return ""
 
 
 def _eventos_do_cronograma(edital):
@@ -1425,7 +1474,9 @@ def compor_etapa(request, edital_id, etapa):
     # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
-    pendencias = _pendencias(edital, agora=agora, ator=ator)
+    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004).
+    snapshot_da_etapa = edital_snapshot(edital) if etapa == "classificacao" else None
+    pendencias = _pendencias(edital, agora=agora, ator=ator, snapshot=snapshot_da_etapa)
     # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
     # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
     # A lista é pedida — e não um booleano — porque a frase diz **quantos** Eventos a mantêm assim.
@@ -1519,19 +1570,36 @@ def compor_etapa(request, edital_id, etapa):
             "quantos_perfis": len(perfis or []),
             # O que a vista do conjunto não sabe sozinha (052, R-003, R-004): quantas pendências da
             # etapa cada Perfil tem por objeto, e quais Perfis a tela devolve diferentes do gravado.
+            # A Classificação (053) recebe as mesmas duas coisas: o achado de marco nomeia o Perfil
+            # antes do marco, e é ao Perfil que ele vai (R-008).
             "pendencias_por_perfil": (
                 _pendencias_por_perfil(_pendencias_da_etapa(pendencias, etapa))
-                if etapa == "perfis"
+                if etapa in ETAPAS_DA_VISTA
                 else {}
             ),
             # A tela voltou de um envio que não gravou: o que ela traz no alto — a prévia, a
             # recusa, o aviso do preenchimento — é a notícia, e o cartão reaberto não a tira de
             # vista (052, R-007).
-            "devolvido": etapa == "perfis" and digitados is not None,
+            "devolvido": etapa in ETAPAS_DA_VISTA and digitados is not None,
             "perfis_alterados": (
                 forms.perfis_alterados(digitados, forms.perfis_persistidos(edital))
                 if etapa == "perfis" and digitados is not None
+                else _marcos_alterados(digitados, edital)
+                if etapa == "classificacao" and digitados is not None
                 else set()
+            ),
+            # De onde veio o marco de cada Perfil, pela regra e com a frase da Revisão (053, R-004).
+            "origem_dos_marcos": (
+                origens.origem_dos_marcos(
+                    snapshot_da_etapa.get("profiles"),
+                    origens.gestos_por_destino(
+                        RegistroAuditoria.objects.filter(
+                            aggregate_id=edital.id, operation="APLICAR_A_TODOS"
+                        ).order_by("occurred_at")
+                    ),
+                )
+                if etapa == "classificacao"
+                else {}
             ),
             # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
             # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
@@ -1888,6 +1956,43 @@ def _reexibir_classificacao(edital, marcos_por_perfil):
     return perfis
 
 
+def _impressao_dos_marcos(marcos):
+    """Os marcos como o cartão os desenha, normalizados para comparar (053, R-005).
+
+    **Pela mesma `_reexibir_marco` dos dois lados**: é ela que desenha o cartão depois de uma
+    recusa, e o que ela não desenha não entra na comparação — o falso positivo que a 052 pagou
+    comparando campos que o cartão não mostra. A normalização é a do que a gravação e a leitura
+    escrevem diferente: inteiro e texto, `None` e vazio, a ordem das Etapas, dos marcos e dos
+    critérios.
+    """
+
+    def normal(valor):
+        if isinstance(valor, list):
+            return sorted(normal(item) for item in valor)
+        if isinstance(valor, dict):
+            return sorted((chave, normal(item)) for chave, item in valor.items())
+        return "" if valor is None else str(valor)
+
+    return sorted(normal(_reexibir_marco(marco)) for marco in marcos or [])
+
+
+def _marcos_alterados(digitados, edital):
+    """Os Perfis cujos marcos a tela devolve diferentes do gravado (053, FR-967).
+
+    Só quando a tela volta do digitado — recusa, prévia, cancelamento, restauração —, que é quando o
+    valor inicial dos campos já não é o gravado e a tela, sozinha, não teria como saber.
+    """
+    gravados = {
+        str(perfil.id): forms.marcos_persistidos(perfil)
+        for perfil in edital.perfis.prefetch_related("marcos__criterios")
+    }
+    return {
+        str(perfil)
+        for perfil, do_perfil in (digitados or {}).items()
+        if _impressao_dos_marcos(do_perfil) != _impressao_dos_marcos(gravados.get(str(perfil)))
+    }
+
+
 def _reexibir_marco(marco):
     arredondamento = marco.get("rounding") or {}
     return {
@@ -2090,6 +2195,10 @@ def _escolhas_pendentes_na_tela(edital, digitados, controle):
         gravados if digitados is None else digitados, controle, gravados=gravados
     )
 
+
+#: As etapas com a vista do conjunto e um Perfil por vez: a dos Perfis (052) e a da Classificação
+#: (053).
+ETAPAS_DA_VISTA = ("perfis", "classificacao")
 
 #: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
 #: Modalidade, a forma de convocação e a reversão, dos Perfis.

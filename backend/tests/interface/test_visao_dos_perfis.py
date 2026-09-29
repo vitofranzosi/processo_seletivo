@@ -29,14 +29,14 @@ from tests.interface.test_aplicar_a_todos import P1, P2, P3, _perfis_no_formular
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
-SCRIPT = (
-    Path(__file__).resolve().parents[2]
-    / "processo_seletivo"
-    / "interface"
-    / "static"
-    / "interface"
-    / "perfis.js"
-)
+ESTATICOS = Path(__file__).resolve().parents[2] / "processo_seletivo" / "interface" / "static"
+# A vista saiu do `perfis.js` para o script comum quando a Classificação entrou (053, R-001): a
+# garantia de que ela não mexe no envio vale para os três, e varrer só o `perfis.js` a teria
+# deixado passar em silêncio pelo arquivo onde a montagem agora mora.
+SCRIPTS = [
+    ESTATICOS / "interface" / nome
+    for nome in ("vista-do-conjunto.js", "perfis.js", "classificacao.js")
+]
 
 
 class _Formulario(HTMLParser):
@@ -323,13 +323,14 @@ def test_a_etapa_aberta_do_banco_nao_diz_que_devolveu(client, tres_perfis):
 # --- O formulário é o mesmo (FR-950, SC-350) --------------------------------------------------
 
 
-def test_o_script_nao_cria_remove_nem_renomeia_campo():
+@pytest.mark.parametrize("script", SCRIPTS, ids=lambda caminho: caminho.name)
+def test_o_script_nao_cria_remove_nem_renomeia_campo(script):
     """A vista esconde; ela nunca mexe no que o formulário envia.
 
     Varredura do fonte, e não execução: o que se prende é a ausência de toda operação que mudaria
     o envio — criar controle, dar nome, clonar, remover ou mover cartão.
     """
-    fonte = SCRIPT.read_text()
+    fonte = script.read_text()
     codigo = re.sub(r"/\*.*?\*/|//[^\n]*", "", fonte, flags=re.S)
 
     assert not re.search(r'createElement\(\s*"(input|select|textarea|form|option)"', codigo)
@@ -338,8 +339,9 @@ def test_o_script_nao_cria_remove_nem_renomeia_campo():
     assert "cloneNode" not in codigo
     assert not re.search(r"\.remove\(\)", codigo)
     assert "removeChild" not in codigo
-    # Os botões da vista são `type=button`: nenhum deles envia.
-    assert codigo.count('.type = "button"') >= 2
+    # Os botões da vista são `type=button`: nenhum deles envia. Só o script comum cria botão.
+    if re.search(r'(createElement|elemento)\(\s*"button"', codigo):
+        assert codigo.count('.type = "button"') >= 2
 
 
 def test_a_tabela_rola_dentro_do_proprio_conteiner(client, tres_perfis):

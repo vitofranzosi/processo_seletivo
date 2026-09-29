@@ -11,6 +11,7 @@ restauração que é do servidor (RC-08).
 """
 
 import re
+from pathlib import Path
 
 import pytest
 from django.urls import reverse
@@ -22,6 +23,8 @@ from tests.interface.conftest import identificar
 ETAPAS = [
     ("perfis", "#perfis"),
     ("cronograma", "#eventos"),
+    # A etapa de cartões mais longos, que ficou sem ele até a vista do conjunto (053, FR-979).
+    ("classificacao", "#classificacao-perfis"),
 ]
 
 
@@ -221,3 +224,29 @@ def test_restaurar_pede_quem_pode_compor(
 
     assert "data-rascunho-restaurado" not in corpo
     assert 'value="PPIQ"' not in corpo
+
+
+def test_a_lista_de_escolha_multipla_e_guardada_opcao_por_opcao():
+    """As Etapas que o marco enumera voltam todas da restauração (053, FR-979).
+
+    Medido no preview: o `rascunho.js` guardava cada campo pelo `value`, que numa lista de escolha
+    múltipla é só a primeira opção marcada. Nenhuma etapa com rascunho tinha lista múltipla até a
+    Classificação ganhar o dela, e a tela restaurada voltava com uma Etapa a menos em cada marco —
+    que a gravação seguinte apagaria sem aviso.
+
+    **Varredura do fonte, e não execução**: o shim de `tests/javascript/dom.js` não tem lista de
+    escolha múltipla, e o comportamento foi verificado no navegador (quickstart.md da 053, passo 8).
+    O que se prende aqui é que as duas leituras do script — a que guarda para restaurar e a que
+    compara com o renderizado — tratam a lista múltipla pelas opções.
+    """
+    fonte = (
+        Path(__file__).resolve().parents[2]
+        / "processo_seletivo"
+        / "interface"
+        / "static"
+        / "interface"
+        / "rascunho.js"
+    ).read_text()
+
+    assert fonte.count('campo.type === "select-multiple"') >= 2
+    assert "opcao.selected" in fonte
