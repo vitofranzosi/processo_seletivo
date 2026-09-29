@@ -5,14 +5,22 @@ Na Retificação a prévia é a conferência que já existe, agrupada por gesto 
 destino, na ordem dos Perfis, com um de quatro efeitos e o que muda campo a campo. Fora do alcance não
 tem caixa — o gesto não o toca, e oferecer marcá-lo seria prometer o que a regra recusa.
 
+**O efeito é uma palavra, e o porquê mora na coluna do que muda.** O motivo de quem fica fora é a frase
+mais longa da tabela, e na coluna do efeito ele a alargava para todas as linhas, espremendo o que muda
+nas que mudam. A linha sem mudança vem atenuada e a que fica fora ganha fundo: numa conferência de 66
+Perfis, o olho acha as duas sem ler linha por linha.
+
 A seção mora **fora** do formulário, junto da tabela do que foi digitado, e os controles se ligam a ele
 pelo atributo `form`: a caixa, a impressão e o desfazer atravessam o envio seguinte como qualquer
 campo. Se o que está na tela mudar entre a conferência e *Criar Retificação*, a impressão não confere,
 e nada é criado.
 {% endcomment %}
-<section class="cartao conferencia" aria-labelledby="gesto-{{ forloop.counter }}">
+<section class="cartao conferencia gesto" aria-labelledby="gesto-{{ forloop.counter }}">
   <h3 id="gesto-{{ forloop.counter }}">{{ gesto.titulo }}</h3>
-  <p role="status">{{ gesto.frase }}. Desmarque o Perfil que diverge de propósito.</p>
+  <p role="status">{{ gesto.frase }}.
+    {% if gesto.aplicaveis %}Desmarque o Perfil que diverge de propósito.{% else %}Nenhum Perfil
+    recebe Alteração por este gesto.{% endif %}
+    <a href="#{{ gesto.ancora }}">Ir ao cartão de origem ({{ gesto.origem }})</a></p>
   <div class="rolagem">
   <table>
     <thead><tr>
@@ -21,18 +29,19 @@ e nada é criado.
     </tr></thead>
     <tbody>
       {% for linha in gesto.linhas %}
-      <tr>
+      <tr{% if linha.classe %} class="{{ linha.classe }}"{% endif %}>
         <td>{% if linha.aplicavel %}<input type="checkbox" form="formulario-da-retificacao"
                name="gesto_destino:{{ gesto.valor }}"
                id="gesto-{{ forloop.parentloop.counter }}-destino-{{ forloop.counter }}"
                value="{{ linha.perfil }}" {% if linha.marcado %}checked{% endif %}>
           <label for="gesto-{{ forloop.parentloop.counter }}-destino-{{ forloop.counter }}"
                  class="oculto">Aplicar a {{ linha.codigo }}</label>{% endif %}</td>
-        <th scope="row">{{ linha.codigo }} — {{ linha.denominacao }}</th>
-        <td>{{ linha.efeito_em_palavras }}{% if linha.motivo %}: {{ linha.motivo }}{% endif %}</td>
+        <th scope="row">{{ linha.codigo }}<span class="detalhe">{{ linha.denominacao }}</span></th>
+        <td class="efeito">{{ linha.efeito_em_palavras }}</td>
         <td>
-          {% if linha.quantidade_fixa %}<p><strong>Quantidade fixa do corte:
-            {{ linha.quantidade_fixa.0|default_if_none:"não declarada" }} → {{ linha.quantidade_fixa.1|default_if_none:"—" }}</strong></p>{% endif %}
+          {% if linha.motivo %}{{ linha.motivo }}{% endif %}
+          {% if linha.quantidade_fixa %}<p class="{% if linha.quantidade_fixa_muda %}quantidade-que-muda{% else %}nota{% endif %}">Quantidade fixa do corte:
+            {{ linha.quantidade_fixa.0|default_if_none:"não declarada" }} → {{ linha.quantidade_fixa.1|default_if_none:"—" }}</p>{% endif %}
           {% if linha.mostra_ja_declara %}<p class="nota">Já declara: {{ linha.ja_declara }}</p>{% endif %}
           {% if linha.mudancas %}<ul>{% for rotulo, antes, depois in linha.mudancas %}
             <li>{{ rotulo }}: <span class="antes">{{ antes }}</span> → <span class="depois">{{ depois }}</span></li>{% endfor %}</ul>{% endif %}

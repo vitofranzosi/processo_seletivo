@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass
 
 from processo_seletivo.editais.domain import aplicacao as regra_da_composicao
+from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.interface import aplicacao as aplicacao_da_composicao
 from processo_seletivo.interface import retificacao as tela
 from processo_seletivo.interface import revisao
@@ -41,18 +42,44 @@ def _prefixo(texto):
     return texto[:1].upper() + texto[1:]
 
 
+def _sem_artigo(texto):
+    """ "a janela recursal" → "janela recursal": o texto curto do botão, sob o rótulo do grupo."""
+    artigo, _, resto = texto.partition(" ")
+    return resto if artigo in {"a", "o", "as", "os"} else texto
+
+
+def _nome_no_cartao(unidade, grupo):
+    """O nome da unidade como o cartão a diz — a Modalidade, pelo código dela."""
+    nome = regra.NOME_DA_UNIDADE[unidade]
+    if unidade == regra.MODALIDADE:
+        codigo = (grupo.get("nome") or "").split(" — ")[0].strip()
+        return f"{nome} {codigo}".strip()
+    return nome
+
+
 def anotar_botoes(grupos, conteudo):
-    """Dá a cada cartão de origem os botões do gesto — ou nenhum, sem outro Perfil (UX-110)."""
+    """Dá a cada cartão de origem os botões do gesto — ou nenhum, sem outro Perfil (UX-110).
+
+    **O alcance mora no rótulo do grupo, e não em cada botão.** O marco tem quatro unidades, e
+    quatro vezes *"… aos demais Perfis (6)"* num cartão só era o mesmo texto lido quatro vezes para
+    dizer uma coisa. O botão mostra a unidade — *"Janela recursal"* — e o nome acessível continua
+    inteiro, com a unidade e o alcance: quem ouve a página não tem o rótulo do grupo ao lado, e o
+    texto visível está contido nele, como a WCAG pede (2.5.3).
+    """
     quantos = len([p for p in conteudo.get("profiles") or [] if isinstance(p, dict)]) - 1
     for grupo in grupos:
         unidades = UNIDADES_DO_CARTAO.get(grupo.get("tipo"), ()) if quantos > 0 else ()
-        grupo["gestos"] = [
-            {
-                "valor": f"{unidade}:{grupo['referencia']}",
-                "rotulo": f"Aplicar {regra.NOME_DA_UNIDADE[unidade]} aos demais Perfis ({quantos})",
-            }
-            for unidade in unidades
-        ]
+        grupo["aplicar_aos_demais"] = f"Aplicar aos demais Perfis ({quantos}):"
+        grupo["gestos"] = []
+        for unidade in unidades:
+            nome = _nome_no_cartao(unidade, grupo)
+            grupo["gestos"].append(
+                {
+                    "valor": f"{unidade}:{grupo['referencia']}",
+                    "curto": _prefixo(_sem_artigo(nome)),
+                    "rotulo": f"Aplicar {nome} aos demais Perfis ({quantos})",
+                }
+            )
     return grupos
 
 
@@ -362,25 +389,35 @@ def _motivo(efeito, rotulos):
     rotulos, _ = rotulos
     if not efeito.campo_fora:
         return efeito.motivo
+    # Os dois valores logo depois do campo, e a razão do contrato por último, como frase própria:
+    # quem lê decide pelo *aqui* e pelo *na origem*, e a razão explica por que não há conserto.
     colecao, campo, antes, depois = efeito.campo_fora
     _rotulo, tipo, opcoes = rotulos.get((colecao, campo), (campo, "", ()))
+    nome = regra.NOME_DO_CAMPO.get((colecao, campo), campo)
+    razao = mutabilidade.CONTRATO[(colecao, campo)].razao
     return (
-        f"{efeito.motivo} (aqui: {_legivel(antes, tipo, opcoes)}; na origem: "
-        f"{_legivel(depois, tipo, opcoes)})"
-    )
-
-
-def _titulo(calculado):
-    origem = calculado.origem
-    unidade = _prefixo(regra.NOME_DA_UNIDADE[calculado.gesto.unidade])
-    if origem.get("modalidade"):
-        return f"{unidade} {origem['modalidade']}, do Perfil {origem['codigo']}, aos demais Perfis"
-    return f"{unidade} do Perfil {origem['codigo']} aos demais Perfis"
+        f"{nome} difere da origem (aqui: {_legivel(antes, tipo, opcoes)}; na origem: "
+        f"{_legivel(depois, tipo, opcoes)}), e não se corrige por Retificação. {razao}"
+    ).strip()
 
 
 def rotulo(calculado):
-    """Como a recusa nomeia o gesto: pelo título do bloco dele na conferência."""
-    return _titulo(calculado)
+    """O gesto num sintagma — *"a janela recursal do Perfil POLO01"* —, para título e recusa."""
+    origem = calculado.origem
+    unidade = regra.NOME_DA_UNIDADE[calculado.gesto.unidade]
+    if origem.get("modalidade"):
+        return f"{unidade} {origem['modalidade']} do Perfil {origem['codigo']}"
+    return f"{unidade} do Perfil {origem['codigo']}"
+
+
+def _titulo(calculado):
+    """O título do bloco, com o verbo do botão que o declarou."""
+    return f"Aplicar {rotulo(calculado)} aos demais Perfis"
+
+
+#: A linha que não pede atenção é atenuada, e a que ficou fora ganha fundo: numa conferência de 66
+#: Perfis, o olho precisa achar o que muda e o que o gesto não alcança sem ler linha por linha.
+CLASSE_DA_LINHA = {regra.SEM_MUDANCA: "sem-efeito", regra.FORA: "fora-do-alcance"}
 
 
 def blocos(calculados, conteudo):
@@ -398,11 +435,14 @@ def blocos(calculados, conteudo):
                     "codigo": efeito.codigo,
                     "denominacao": efeito.denominacao,
                     "efeito_em_palavras": aplicacao_da_composicao.EFEITO_EM_PALAVRAS[efeito.efeito],
-                    "motivo": _motivo(efeito, rotulos),
+                    "motivo": _prefixo(_motivo(efeito, rotulos)),
+                    "classe": CLASSE_DA_LINHA.get(efeito.efeito, ""),
                     "aplicavel": aplicavel,
                     "marcado": aplicavel and efeito.perfil in calculado.incluidos,
                     "mudancas": _mudancas(efeito, conteudo, rotulos, etapas) if aplicavel else [],
                     "quantidade_fixa": efeito.quantidade_fixa,
+                    "quantidade_fixa_muda": bool(efeito.quantidade_fixa)
+                    and efeito.quantidade_fixa[0] != efeito.quantidade_fixa[1],
                     "ja_declara": ", ".join(efeito.ja_declara) or "nenhuma",
                     "mostra_ja_declara": calculado.gesto.unidade == regra.MODALIDADE,
                 }
@@ -415,6 +455,9 @@ def blocos(calculados, conteudo):
             {
                 "valor": calculado.gesto.valor,
                 "titulo": _titulo(calculado),
+                "ancora": f"cartao-{calculado.gesto.grupo.get('referencia', '')}",
+                "origem": calculado.origem.get("codigo") or "",
+                "aplicaveis": contagem[regra.NASCE] + contagem[regra.SUBSTITUI],
                 "frase": aplicacao_da_composicao._frase_do_alcance(contagem),
                 "linhas": linhas,
                 "alteracoes": len(calculado.alteracoes),

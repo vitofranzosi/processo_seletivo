@@ -3828,8 +3828,8 @@ def retificar(request, edital_id):
                         erros.append(gesto_na_retificacao.DIVERGIU)
                     elif vazios := [c for c in calculados if c.sem_destino]:
                         erros.extend(
-                            f"Nenhum Perfil marcado em {gesto_na_retificacao.rotulo(c)}: marque "
-                            "um Perfil ou desfaça o gesto."
+                            f"Nenhum Perfil marcado para aplicar {gesto_na_retificacao.rotulo(c)}:"
+                            " marque um Perfil ou desfaça o gesto."
                             for c in vazios
                         )
                     elif not todas:
@@ -3933,6 +3933,8 @@ def retificar(request, edital_id):
             "gestos": blocos,
             "consequencias": consequencias,
             "alteracoes_do_ato": len(todas),
+            "alteracoes_dos_gestos": sum(bloco["alteracoes"] for bloco in blocos),
+            "alteracoes_digitadas": len(todas) - sum(bloco["alteracoes"] for bloco in blocos),
             "erros": erros,
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
             "vigencia": (request.POST.get("vigencia") or "") if dados else "",

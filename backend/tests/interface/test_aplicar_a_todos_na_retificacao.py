@@ -129,7 +129,14 @@ def test_o_botao_diz_a_unidade_e_quantos_perfis_alcanca(client, seletor_ligado, 
     assert "Aplicar a janela recursal aos demais Perfis (2)" in corpo
     assert "Aplicar os critérios de desempate aos demais Perfis (2)" in corpo
     assert "Aplicar a forma de convocação aos demais Perfis (2)" in corpo
-    assert "Aplicar a Modalidade aos demais Perfis (2)" in corpo
+    assert "Aplicar a Modalidade AC aos demais Perfis (2)" in corpo
+    # O alcance é dito uma vez, no rótulo do grupo; o botão mostra a unidade, e o nome acessível
+    # dele contém o texto visível (WCAG 2.5.3).
+    assert "Aplicar aos demais Perfis (2):" in corpo
+    assert re.search(
+        r'aria-label="Aplicar a janela recursal aos demais Perfis \(2\)"[^>]*>Janela recursal<',
+        corpo,
+    )
 
 
 def test_quem_nao_elabora_nao_recebe_o_gesto(client, seletor_ligado, publicado):
@@ -152,11 +159,19 @@ def test_declarar_mostra_a_conferencia_agrupada_e_nao_cria_nada(client, seletor_
 
     corpo = resposta.content.decode()
     assert resposta.status_code == 200
-    assert "A janela recursal do Perfil P1 aos demais Perfis" in corpo
+    assert "Aplicar a janela recursal do Perfil P1 aos demais Perfis" in corpo
     assert "2 mudam" in corpo
     assert 'Prazo em dias: <span class="antes">2</span> → <span class="depois">3</span>' in corpo
     assert "Criar Retificação (3 Alterações)" in corpo, "o botão repete o número (UX-113)"
     assert "appealWindow" not in corpo, "o caminho normativo não chega ao HTML (FR-019)"
+    # O bloco leva de volta ao cartão de onde o gesto saiu, para declarar o próximo.
+    ancora = re.search(r'href="#(cartao-g\d+)">Ir ao cartão de origem \(P1\)', corpo)
+    assert ancora and f'id="{ancora.group(1)}"' in corpo
+    lido = " ".join(corpo.split())
+    assert "1 Alteração do que foi digitado, na tabela, e 2 dos gestos, abaixo dela." in lido
+    # O envio seguinte vai ao endereço sem âncora: depois de um "Ir ao cartão de origem", a tela
+    # que volta abre no alto, na conferência, e não rolada até o cartão.
+    assert f'action="{reverse("interface:retificar", args=[edital.id])}" data-conferido' in corpo
     assert not Retificacao.objects.filter(edital=edital).exists()
 
 
@@ -187,7 +202,7 @@ def test_prazo_e_forma_de_convocacao_para_todos_num_ato_so(client, seletor_ligad
     segunda = client.post(
         url, _juntar(digitado, _do_gesto(primeira, janela), {"aplicar": convocacao})
     ).content.decode()
-    assert "A forma de convocação do Perfil P1 aos demais Perfis" in segunda
+    assert "Aplicar a forma de convocação do Perfil P1 aos demais Perfis" in segunda
     resposta = _confirmar(
         client, edital, digitado, _do_gesto(segunda, janela), _do_gesto(segunda, convocacao)
     )
@@ -311,9 +326,10 @@ def test_o_destino_com_campo_nao_retificavel_fica_inteiro_fora(
     corpo = client.post(url, {**digitado, "aplicar": valor}).content.decode()
 
     assert "1 muda, 1 fica fora do alcance" in corpo
-    assert "a espécie do alvo do corte difere da origem, e não se corrige por Retificação" in corpo
     assert (
-        "aqui: Quantas vagas o quadro publicar no recorte; na origem: Uma quantidade fixa" in corpo
+        "A espécie do alvo do corte difere da origem (aqui: Quantas vagas o quadro publicar no "
+        "recorte; na origem: Uma quantidade fixa, publicada abaixo), e não se corrige por "
+        "Retificação." in corpo
     )
     assert _confirmar(client, edital, digitado, _do_gesto(corpo, valor)).status_code == 302
     caminhos = [a.target_path for a in Retificacao.objects.get(edital=edital).alteracoes.all()]
@@ -427,5 +443,10 @@ def test_o_gesto_sem_alteracao_nao_oferece_criar(client, seletor_ligado, publica
         reverse("interface:retificar", args=[edital.id]), {**_formulario(vigente), "aplicar": valor}
     ).content.decode()
 
-    assert "2 ficam como estão" in corpo
+    lido = " ".join(corpo.split())
+    assert "2 ficam como estão" in lido
+    assert "Nenhum Perfil recebe Alteração por este gesto." in lido
+    assert "Desmarque o Perfil" not in lido, "não há caixa para desmarcar"
+    assert "Nenhuma Alteração a criar ainda." in lido
+    assert "O que vai mudar (0)" not in corpo
     assert 'name="confirmar"' not in corpo

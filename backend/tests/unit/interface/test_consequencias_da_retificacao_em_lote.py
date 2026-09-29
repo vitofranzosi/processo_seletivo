@@ -116,7 +116,10 @@ def test_o_arredondamento_da_reserva_se_diz_como_a_sugestao_do_quadro_o_diz():
 
     linha = _bloco(conteudo, "modalidade", alvo=ppi["id"])["P2"]
 
-    assert linha["motivo"].endswith("(aqui: não declarado; na origem: a fração vira vaga)")
+    assert linha["motivo"].startswith(
+        "O arredondamento da reserva difere da origem (aqui: não declarado; na origem: a fração "
+        "vira vaga), e não se corrige por Retificação."
+    )
 
 
 def test_o_corte_que_nasce_usa_as_palavras_do_nascimento():

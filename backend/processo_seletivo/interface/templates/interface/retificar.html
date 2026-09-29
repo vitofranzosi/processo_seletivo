@@ -1,5 +1,36 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Retificar Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}
+/* O "aplicar a todos" na conferência (051). Aqui, e não em `base.html`: a folha de lá conta no teto
+   de bytes da distribuição, e estas regras só servem a esta tela.
+   O efeito é uma palavra e não quebra; a linha sem mudança vem atenuada e a que fica fora ganha
+   fundo, para o olho achar as duas entre dezenas de Perfis. As larguras são fixas e iguais em todo
+   bloco, para as colunas de um gesto alinharem com as do outro. */
+.gesto table{table-layout:fixed}
+.gesto thead th:nth-child(1){width:5.5rem}
+.gesto thead th:nth-child(2){width:13rem}
+.gesto thead th:nth-child(3){width:9rem}
+.gesto .efeito{white-space:nowrap}
+.gesto tr.sem-efeito{color:var(--texto-fraco)}
+.gesto tr.fora-do-alcance{background:var(--cinza-fundo)}
+.gesto .quantidade-que-muda,.gesto td>.nota{margin:0 0 .35rem}
+.gesto .quantidade-que-muda{font-weight:600}
+/* No celular a linha empilha — a caixa à esquerda, e o Perfil, o efeito e o que muda um sob o
+   outro —, como a lista de documentos da mesa faz: rolar a tabela de lado escondia justamente as
+   duas colunas que a conferência existe para mostrar. */
+@media (max-width:34rem){
+  .gesto thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .gesto tr{display:grid;grid-template-columns:1.75rem minmax(0,1fr);column-gap:.5rem;
+    padding:.6rem 0;border-bottom:1px solid var(--borda)}
+  .gesto tr>*,.gesto tr>th[scope=row]{display:block;border:0;padding:.1rem 0;min-width:0}
+  .gesto tr>td:first-child{grid-row:span 3}
+  .gesto tr>:nth-child(n+3){grid-column:2}
+}
+/* O cartão de origem, alcançado pelo link do bloco: com respiro acima da legenda, e realçado, para o
+   olho achar onde chegou numa página de sessenta cartões iguais. */
+#formulario-da-retificacao fieldset.linha{scroll-margin-top:1.5rem}
+#formulario-da-retificacao fieldset.linha:target{outline:2px solid var(--verde);outline-offset:2px}
+{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
@@ -30,7 +61,17 @@ corrige é o caminho que não termina.
 
 {% if resumo or gestos or consequencias %}
 <section aria-labelledby="resumo-titulo" class="consequencias">
-  <h2 id="resumo-titulo">O que vai mudar ({% if gestos %}{{ alteracoes_do_ato }}{% else %}{{ resumo|length }}{% endif %})</h2>
+  <h2 id="resumo-titulo">O que vai mudar{% if gestos %}{% if alteracoes_do_ato %} ({{ alteracoes_do_ato }}){% endif %}{% else %} ({{ resumo|length }}){% endif %}</h2>
+  {% comment %}
+  Com gesto, o número do título soma o que foi digitado e o que os gestos aplicam — e a tabela abaixo
+  mostra só o digitado. Sem esta frase, "14" sobre uma tabela de duas linhas parece erro de conta.
+  {% endcomment %}
+  {% if gestos %}
+  <p class="nota">{% if alteracoes_do_ato %}{{ alteracoes_digitadas }}
+    Alteraç{{ alteracoes_digitadas|pluralize:"ão,ões" }} do que foi digitado, na tabela, e
+    {{ alteracoes_dos_gestos }} dos gestos, abaixo dela.{% else %}Nenhuma Alteração a criar
+    ainda.{% endif %}</p>
+  {% endif %}
   {% if resumo %}
   <div class="rolagem">
   <table>
@@ -103,7 +144,13 @@ o navegador as trata como qualquer sumário.
   </ul>
 </nav>
 
-<form method="post" enctype="multipart/form-data" id="formulario-da-retificacao">
+{% comment %}
+O `action` explícito e sem fragmento: sem ele o envio ia para o endereço da barra, que depois de
+um "Ir para" ou de um "Ir ao cartão de origem" termina em âncora — e a tela que volta, com a
+conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou de pedir para ver.
+{% endcomment %}
+<form method="post" enctype="multipart/form-data" id="formulario-da-retificacao"
+      action="{% url 'interface:retificar' edital.id %}"{% if resumo or gestos %} data-conferido{% endif %}>
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
