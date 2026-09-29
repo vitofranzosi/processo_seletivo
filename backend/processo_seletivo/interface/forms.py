@@ -1142,6 +1142,90 @@ def perfis_persistidos(edital):
     ]
 
 
+def perfis_alterados(digitados, gravados):
+    """As identidades dos Perfis que a tela devolve diferentes do gravado (052, FR-949, R-004).
+
+    Só quando a tela volta de um envio que não gravou — recusa, prévia, preenchimento,
+    restauração —, porque ali o valor inicial de cada campo já é o digitado, e a tela não tem mais
+    com o que comparar. Compara **só o que o cartão mostra**: o que ele não desenha (os marcos, a
+    descrição da Modalidade, os textos que só o contrato escreve) ele também não tem como mudar, e
+    comparar isso acusaria alteração num Perfil em que ninguém tocou. Perfil sem par gravado é
+    alterado: ainda não existe no rascunho.
+    """
+    por_identidade = {str(perfil["id"]): _o_que_o_cartao_mostra(perfil) for perfil in gravados}
+    return {
+        str(perfil["id"])
+        for perfil in digitados
+        if por_identidade.get(str(perfil["id"])) != _o_que_o_cartao_mostra(perfil)
+    }
+
+
+def _o_que_o_cartao_mostra(perfil):
+    """O Perfil na forma em que a leitura do formulário e a gravação escrevem igual.
+
+    As duas escrevem diferente o que é o mesmo valor — o percentual `25` volta `25.0000`, o vazio é
+    `""` de um lado e `None` do outro, as vagas não declaradas são `0` na tela —, e a comparação
+    sem isto acusaria alteração em todo Perfil devolvido.
+    """
+
+    def texto(valor):
+        return (valor or "").strip() if isinstance(valor, str) or valor is None else str(valor)
+
+    def percentual(valor):
+        return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
+
+    reserva = perfil.get("reserveType") or "NONE"
+    return (
+        tuple(
+            texto(perfil.get(campo))
+            for campo in (
+                "code",
+                "name",
+                "locality",
+                "description",
+                "workload",
+                "compensation",
+                "duties",
+                "generalCompetitionModalityId",
+                "callForm",
+            )
+        ),
+        tuple(linha.strip() for linha in perfil.get("requirements") or [] if linha.strip()),
+        perfil.get("immediateVacancies") or 0,
+        reserva,
+        perfil.get("reserveLimit") if reserva == "LIMITED" else None,
+        texto((perfil.get("vacancyReversion") or {}).get("kind")),
+        tuple(
+            sorted(
+                (
+                    texto(modalidade.get("id")),
+                    texto(modalidade.get("code")),
+                    texto(modalidade.get("name")),
+                    percentual((modalidade.get("normativeRule") or {}).get("percentage")),
+                    texto((modalidade.get("normativeRule") or {}).get("foundation")),
+                    texto((modalidade.get("normativeRule") or {}).get("version")),
+                    arredondamento_para_o_formulario(
+                        (modalidade.get("normativeRule") or {}).get("rounding")
+                    ),
+                )
+                for modalidade in perfil.get("competitionModalities") or []
+            )
+        ),
+        tuple(
+            sorted(
+                (texto(linha.get("modalityId")), linha.get("immediateVacancies"))
+                for linha in perfil.get("vacancyTable") or []
+            )
+        ),
+        tuple(
+            sorted(
+                tuple(texto(fato.get(campo)) for campo in ("id", "code", "label", "type"))
+                for fato in perfil.get("declaredFacts") or []
+            )
+        ),
+    )
+
+
 def _linha_persistida(linha):
     return {
         "id": str(linha.id),

@@ -911,6 +911,24 @@ def _pendencias(edital, *, agora=None, ator=None):
     return pendencias
 
 
+# O caminho do achado de forma nomeia a entidade: `/profiles/id=<uuid>/…` (ver `_destino`).
+PERFIL_DO_CAMINHO = re.compile(r"^/profiles/id=([^/]+)")
+
+
+def _pendencias_por_perfil(pendencias):
+    """`{id do Perfil: quantas}` — as pendências da etapa que têm um Perfil por objeto (052, R-003).
+
+    Contadas sobre a lista que a etapa já mostra, e não sobre a validação inteira: a linha da
+    tabela não pode dizer uma pendência que o bloco da etapa não diz. A que é sobre o conjunto dos
+    Perfis (`profiles`, sem identidade) não é de linha nenhuma, e fica só no bloco (FR-948).
+    """
+    contagem = {}
+    for item in pendencias:
+        if encontrado := PERFIL_DO_CAMINHO.match(item.get("campo") or ""):
+            contagem[encontrado.group(1)] = contagem.get(encontrado.group(1), 0) + 1
+    return contagem
+
+
 def _pendencias_da_etapa(pendencias, etapa):
     """As que a pessoa consegue resolver sem sair desta tela."""
     return [item for item in pendencias if item["etapa"] == etapa and item["corrigivel"]]
@@ -1499,6 +1517,22 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "perfis": perfis,
             "quantos_perfis": len(perfis or []),
+            # O que a vista do conjunto não sabe sozinha (052, R-003, R-004): quantas pendências da
+            # etapa cada Perfil tem por objeto, e quais Perfis a tela devolve diferentes do gravado.
+            "pendencias_por_perfil": (
+                _pendencias_por_perfil(_pendencias_da_etapa(pendencias, etapa))
+                if etapa == "perfis"
+                else {}
+            ),
+            # A tela voltou de um envio que não gravou: o que ela traz no alto — a prévia, a
+            # recusa, o aviso do preenchimento — é a notícia, e o cartão reaberto não a tira de
+            # vista (052, R-007).
+            "devolvido": etapa == "perfis" and digitados is not None,
+            "perfis_alterados": (
+                forms.perfis_alterados(digitados, forms.perfis_persistidos(edital))
+                if etapa == "perfis" and digitados is not None
+                else set()
+            ),
             # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
             # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
             "comuns": _comuns(perfis, controle_do_edital) if etapa == "perfis" else {},

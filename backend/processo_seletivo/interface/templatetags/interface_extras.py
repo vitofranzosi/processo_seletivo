@@ -92,6 +92,22 @@ def plural(quantidade, formas):
 
 
 @register.filter
+def legenda_do_perfil(perfil):
+    """`Perfil LP03 — Vitória`: o que distingue um cartão dos outros (052, FR-944).
+
+    A legenda era *"Perfil de Vaga"* em todos, e o código morava no valor de um campo — que a busca
+    do navegador não encontra e que o leitor de tela, navegando por grupos, anunciava sete vezes
+    igual. A localidade vem antes da denominação porque é ela que distingue os polos; sem polo, a
+    denominação é o que resta. Sem código, o Perfil ainda não tem nome a dar.
+    """
+    codigo = (perfil.get("code") or "").strip()
+    if not codigo:
+        return "Perfil novo"
+    complemento = (perfil.get("locality") or "").strip() or (perfil.get("name") or "").strip()
+    return f"Perfil {codigo} — {complemento}" if complemento else f"Perfil {codigo}"
+
+
+@register.filter
 def marcado(dados, referencia):
     """A marcação de remoção precisa voltar marcada depois do POST, como os campos digitados."""
     return bool(dados and dados.get(f"remover:{referencia}"))
