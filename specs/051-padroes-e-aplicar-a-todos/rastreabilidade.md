@@ -147,7 +147,8 @@ preparo de `tests/integration/avaliacoes/test_documento.py::test_a_ordem_e_suger
 `no_effective_version` — *"Não havia conteúdo vigente para este Edital no instante consultado"* — ao
 alocar membro de comissão num Edital recém-publicado. O caso não passa por código desta feature
 (comissões e avaliações sobre a versão vigente), passou isolado quatro vezes, e a segunda rodada da
-suíte inteira, sem mudança nenhuma, fechou limpa. Fica o registro, para quem o vir de novo.
+suíte inteira, sem mudança nenhuma, fechou limpa. O registro, com a hipótese e como confirmá-la,
+está em [doc/achado-versao-vigente-intermitente-no-test-documento.md](../../doc/achado-versao-vigente-intermitente-no-test-documento.md).
 
 **A P1**:
 
