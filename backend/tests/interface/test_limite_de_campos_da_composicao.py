@@ -396,6 +396,8 @@ def test_o_envio_acima_do_limite_volta_como_pagina_da_gestao(client, maior_edita
     assert "mais campos do que o sistema aceita num envio só, que são 100" in corpo
     # O que fazer: não perder o digitado, e o que pedir a quem.
     assert "botão Voltar do navegador" in corpo
+    # O rascunho local sobrevive, mas restaurá-lo é reenviar tudo: a ajuda não o promete já.
+    assert "só poderá ser restaurado depois que o limite for ampliado" in corpo
     assert "ampliação do limite de envio a quem administra o sistema no Cefor" in corpo
     # A volta é para a etapa, e não só para a lista.
     assert f'href="http://testserver{url}"' in corpo

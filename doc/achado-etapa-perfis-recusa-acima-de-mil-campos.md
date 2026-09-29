@@ -115,11 +115,16 @@ casos reprovam; com o de agora, Perfis e Classificação gravam o envio de volta
 à view. E o envio que ainda passar do limite volta como página da gestão — status 413, o que
 aconteceu, o número do limite e o que fazer —, também com `DEBUG` ligado (`interface/erros.py`).
 
+**O que a pessoa vê, corrigido.** A seção de cima diz que a Classificação não declara o rascunho
+local. Deixou de ser verdade com a `053` (FR-979, D-007), mergeada no mesmo dia: todas as etapas da
+composição que gravam coleção o declaram. A Retificação não tem rascunho local.
+
 **Continuam abertos**, fora deste escopo:
 
-- **A Classificação não declara o rascunho local.** Se o limite for passado ali, o que foi digitado
-  depois da última gravação fica só no que o *Voltar* do navegador restaurar. A recusa diz isso, mas
-  não o resolve.
+- **O rascunho local guarda, mas não devolve, enquanto o limite estiver passado.** Restaurá-lo é
+  reenviar o formulário inteiro (`rascunho.js`, `restaurar`), e o reenvio passa do mesmo limite. O
+  guardado sobrevive — só a gravação o apaga — e volta a servir quando o limite for ampliado, dentro
+  do dia em que vale. A recusa diz exatamente isso.
 - **O corpo em bytes, depois da aplicação.** A Classificação do maior Edital envia ~472 KB, dentro
   dos 2,5 MB de `DATA_UPLOAD_MAX_MEMORY_SIZE`, que o guardião também confere. Um proxy à frente da
   aplicação tem limite próprio — o do nginx, por padrão, é 1 MB —, e o repositório não declara

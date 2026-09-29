@@ -127,10 +127,16 @@ class EnvioAcimaDoLimiteMiddleware:
                     f"Nada foi gravado. Esta tela enviou {_o_que_passou(exception)}, e o envio foi "
                     "recusado antes de ser lido."
                 ),
+                # **O rascunho local guarda, mas não devolve**: restaurá-lo é reenviar o formulário
+                # inteiro (`rascunho.js`), e o reenvio passa do mesmo limite. Ele sobrevive à recusa
+                # — só a gravação o apaga — e volta a servir quando o limite for ampliado, dentro do
+                # dia em que vale. Dizer só "o rascunho preserva" faria a pessoa tentar restaurar e
+                # receber esta página de novo.
                 "ajuda": (
                     "Para não perder o que digitou, volte com o botão Voltar do navegador, sem "
-                    "recarregar a página; na etapa Perfis, o rascunho guardado neste navegador "
-                    "também o preserva. Depois, peça a ampliação do limite de envio a quem "
+                    "recarregar a página. Nas etapas da composição, o rascunho guardado neste "
+                    "navegador também o preserva por um dia, mas só poderá ser restaurado depois "
+                    "que o limite for ampliado. Peça a ampliação do limite de envio a quem "
                     "administra o sistema no Cefor, dizendo o Edital e a tela: até lá, esta tela "
                     "não consegue gravar."
                 ),
