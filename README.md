@@ -418,6 +418,7 @@ Incrementos, na ordem em que foram especificados:
 | [`050`](specs/050-convocacao-como-fluxo/spec.md) | a convocação como fluxo: titulares num ato, não atendimento dos vencidos num gesto |
 | [`051`](specs/051-padroes-e-aplicar-a-todos/spec.md) | padrões do Edital e "aplicar a todos" na composição, com a prévia do alcance e a origem na Revisão, e na Retificação, campo a campo, num ato só e com a conferência agrupada |
 | [`052`](specs/052-perfis-visao-do-conjunto/spec.md) | Perfis de Vaga: a tabela do conjunto e um cartão à vista por vez, sobre o mesmo formulário |
+| [`053`](specs/053-classificacao-visao-do-conjunto/spec.md) | Classificação: a tabela dos Perfis com os marcos, a origem do "aplicar a todos" e um Perfil à vista por vez, sobre o mesmo formulário |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

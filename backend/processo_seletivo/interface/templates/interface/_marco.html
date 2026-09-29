@@ -22,6 +22,12 @@ da etapa apontam quando o campo que explicam pode não estar na tela (030, FR-42
 revelação progressiva, um link para o método do sorteio pode não ter destino, e levar ao
 cartão leva ao lugar onde a resposta que o revela é dada.
 {% endcomment %}
+{% comment %}
+**As frases curtas da linha moram aqui** (053, R-003): `data-resumo-*` na forma da ordem, no corte e
+no recurso, e `data-metodo-do-marco` no bloco do método. São as frases do `resumo-do-bloco` de cada
+bloco, e a tabela da etapa as lê do valor escolhido — o vocabulário continua num lugar só, e o
+cartão não ganha texto visível nenhum (FR-428 da 030).
+{% endcomment %}
 <fieldset class="linha marco" id="marco-{{ indice }}-{{ sub }}">
   <legend>Marco classificatório</legend>
   {% comment %}
@@ -55,6 +61,8 @@ cartão leva ao lugar onde a resposta que o revela é dada.
               hx-include="closest fieldset"
               hx-target="closest fieldset"
               hx-swap="outerHTML"
+              data-resumo-nenhuma="forma não escolhida" data-resumo-por_pontuacao="pela pontuação"
+              data-resumo-por_sorteio="por sorteio"
               aria-describedby="ajuda-forma-da-ordem-{{ indice }}-{{ sub }}">
         <option value="">Escolha como a ordem é produzida</option>
         <option value="POR_PONTUACAO" {% if marco.orderProduction == "POR_PONTUACAO" %}selected{% endif %}>Pela pontuação combinada das Etapas</option>
@@ -207,7 +215,7 @@ cartão leva ao lugar onde a resposta que o revela é dada.
       negativa é norma publicada, e recusa a interposição nomeando-a.</span>
     <p class="opcao">
       <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
-             name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite"
+             name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite" data-resumo="admite"
              {% if marco.appealDeclaration == "admite" %}checked{% endif %}>
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite">Admite recurso, no prazo abaixo</label>
     </p>
@@ -235,12 +243,14 @@ cartão leva ao lugar onde a resposta que o revela é dada.
     <p class="opcao">
       <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_admite"
+             data-resumo="não admite por esta via"
              {% if marco.appealDeclaration == "nao_admite" %}checked{% endif %}>
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite">Não admite recurso por esta via</label>
     </p>
     <p class="opcao">
       <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_declarada"
+             data-resumo="nada declarado"
              {% if marco.appealDeclaration != "admite" and marco.appealDeclaration != "nao_admite" %}checked{% endif %}>
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada">Não declarar nada sobre recurso</label>
     </p>
@@ -271,7 +281,9 @@ cartão leva ao lugar onde a resposta que o revela é dada.
   <details class="bloco-do-marco"{% if marco|declarou:"draw" %} open{% endif %}>
     <summary>Método do sorteio
       <span class="resumo-do-bloco">{% if marco|declarou:"draw" %}{% if tem_metodo_comum %}próprio — diverge do comum do Edital{% else %}declarado{% endif %}{% elif tem_metodo_comum %}o comum deste Edital{% else %}ainda não declarado{% endif %}</span></summary>
-  <fieldset class="campos" aria-describedby="ajuda-sorteio-{{ indice }}-{{ sub }}">
+  <fieldset class="campos" data-metodo-do-marco data-resumo-proprio="método próprio"
+            data-resumo-comum="método comum" data-resumo-nenhum="sem método declarado"
+            aria-describedby="ajuda-sorteio-{{ indice }}-{{ sub }}">
     <legend class="oculto">Método do sorteio, se este marco ordena por sorteio</legend>
     <span class="oculto" id="ajuda-sorteio-{{ indice }}-{{ sub }}">Declarado aqui, o método é
       conteúdo publicado do Edital: alterá-lo depois exige Retificação, e nunca implantação de
@@ -522,6 +534,8 @@ cartão leva ao lugar onde a resposta que o revela é dada.
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTargetKind">Quantos progridem</label>
         <select id="marco-{{ indice }}-{{ sub }}-cutTargetKind" name="marco-{{ indice }}-{{ sub }}-cutTargetKind"
+                data-resumo-nenhuma="este marco não corta" data-resumo-fixed="quantidade fixa"
+                data-resumo-from_vacancy_table="o que o quadro de vagas publicar"
                 aria-describedby="ajuda-corte-{{ indice }}-{{ sub }}">
           <option value="">Este marco não corta</option>
           <option value="FIXED" {% if marco.cutTargetKind == "FIXED" %}selected{% endif %}>Uma quantidade fixa, publicada abaixo</option>

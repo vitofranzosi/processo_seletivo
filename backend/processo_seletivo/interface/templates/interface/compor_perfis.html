@@ -1,20 +1,6 @@
 {% extends "interface/compor_base.html" %}{% load interface_extras %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
-{% block estilo_da_pagina %}
-/* A vista do conjunto (052). Aqui, e não em `base.html`: a folha de lá conta no teto de bytes da
-   distribuição, e estas regras só servem a esta etapa. As classes nascem no `perfis.js`. */
-/* `position:relative` é o que prende a rolagem da tabela ao contêiner (UX-121): sem ele, o texto
-   oculto das células — `position:absolute` — tem a página por referência, e alargava a página
-   inteira a 817 px numa tela de 375, medido. */
-.visao-dos-perfis .tabela-rolavel{position:relative}
-.visao-dos-perfis table{font-size:.9rem}
-.visao-dos-perfis th,.visao-dos-perfis td{padding:.5rem .75rem;vertical-align:top}
-.visao-dos-perfis td.numero{text-align:right;font-variant-numeric:tabular-nums}
-.visao-dos-perfis tr[aria-current] th,.visao-dos-perfis tr[aria-current] td{background:var(--verde-claro)}
-.visao-dos-perfis .situacao-pendente{color:var(--amarelo);font-weight:600}
-.editor-do-perfil{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:1.25rem 0 .5rem}
-.editor-do-perfil h3{margin:0;flex:1 1 20rem;font-size:1.05rem}
-.editor-do-perfil h3:focus{outline:2px solid var(--verde);outline-offset:2px}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_vista.html" %}
 {% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
@@ -194,5 +180,6 @@
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/validacao.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
+<script src="{% static 'interface/vista-do-conjunto.js' %}" defer></script>
 <script src="{% static 'interface/perfis.js' %}" defer></script>
 {% endblock %}

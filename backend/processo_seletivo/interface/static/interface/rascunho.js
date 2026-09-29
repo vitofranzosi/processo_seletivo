@@ -74,7 +74,22 @@
     return armazenamento(CHAVE + ":teste");
   }
 
+  /* A lista de escolha múltipla — as Etapas que o marco enumera — vale pelas opções marcadas, e não
+     pelo `value`, que é só a primeira delas. Guardar o `value` perdia as demais em silêncio, e a
+     tela restaurada gravaria o marco com uma Etapa a menos (053, medido no preview: nenhuma etapa
+     com rascunho tinha lista múltipla até a Classificação ganhar o dela). */
+  function escolhidas(campo) {
+    return [].filter
+      .call(campo.options, function (opcao) {
+        return opcao.selected;
+      })
+      .map(function (opcao) {
+        return opcao.value;
+      });
+  }
+
   function valorDe(campo) {
+    if (campo.type === "select-multiple") return escolhidas(campo);
     return campo.type === "checkbox" ? (campo.checked ? campo.value : "") : campo.value;
   }
 
@@ -121,6 +136,12 @@
       if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0 || campo.disabled) return;
       if (campo.type === "submit" || campo.type === "button" || campo.type === "file") return;
       if ((campo.type === "radio" || campo.type === "checkbox") && !campo.checked) return;
+      if (campo.type === "select-multiple") {
+        escolhidas(campo).forEach(function (valor) {
+          pares.push([campo.name, valor]);
+        });
+        return;
+      }
       pares.push([campo.name, campo.value]);
     });
     return pares;

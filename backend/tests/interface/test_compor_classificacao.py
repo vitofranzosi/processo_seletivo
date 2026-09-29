@@ -66,7 +66,8 @@ def test_get_oferece_so_etapas_classificatorias(client, com_etapas):
 
     assert resposta.status_code == 200
     assert "Marcos classificatórios" in corpo
-    assert '<form method="post" id="formulario">' in corpo
+    # A tag não fecha aqui: o formulário declara o rascunho local das demais etapas (053, FR-979).
+    assert '<form method="post" id="formulario"' in corpo
     assert 'name="destino" value="classificacao"' in corpo
     assert f'hx-get="/gestao/fragmentos/perfil/{PERFIL}/marco' in corpo
     assert f'hx-target="#marcos-{PERFIL}"' in corpo

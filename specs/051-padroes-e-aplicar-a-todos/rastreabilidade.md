@@ -7,7 +7,7 @@ diz de onde veio cada valor.*
 **Entrega**: o #226 levou a P1 — US1 a US4. O segundo PR leva a US5 (Retificação, P2), por decisão do
 plano (`research.md`, R-009); as linhas dela apontam os arquivos e os testes da P2.
 
-**Verificação final**: 8853 passando, 11 pulados, zero falhas na P2 (8763 na P1) — ver a seção 4.
+**Verificação final**: 8880 passando, 11 pulados, zero falhas na P2 mesclada à `main` com a `053` (8763 na P1) — ver a seção 4.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -139,10 +139,11 @@ valores (*"aqui: Quantas vagas o quadro publicar no recorte; na origem: Uma quan
 
 **A P2**: `cd backend && make lint check test-pg DB_NAME=ps_051p2`, em 29/09/2026, sobre a `main` em
 `0598a9f3`: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer,
-e a suíte contra PostgreSQL com **8850 passando e 11 pulados**, zero falhas — os 8763 da P1 mais os 87
-casos novos, e os mesmos 11 pulados deliberados. Depois da revisão de código e do polish da tela, a
-suíte inteira sobre o último commit fechou em **8853 passando e 11 pulados**, zero falhas (1050s): os
-3 casos a mais são os da revisão, e os pulados são os mesmos.
+e a suíte contra PostgreSQL com **8850 passando e 11 pulados**, zero falhas — a `main` em `0598a9f3`,
+que já trazia a P1 e a `052`, mais os **47 casos da P2**, e os mesmos 11 pulados deliberados. Depois da
+revisão de código e do polish da tela, **8853 passando e 11 pulados** (1050s): os 3 casos a mais são os
+da revisão, e a P2 fecha com **50**. Mesclada à `main` com a `053` (#230), que entrou depois da base
+desta branch, a suíte inteira fechou em **8880 passando e 11 pulados**, zero falhas (1103s).
 
 **Uma intermitência, registrada e não investigada.** A primeira rodada da P2 deu 8849 e **1 erro**, no
 preparo de `tests/integration/avaliacoes/test_documento.py::test_a_ordem_e_sugerida_e_nao_imposta`:
