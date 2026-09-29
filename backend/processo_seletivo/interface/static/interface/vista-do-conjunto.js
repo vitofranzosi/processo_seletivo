@@ -500,6 +500,14 @@
       destino.scrollIntoView({ block: "center" });
       if (destino.focus) destino.focus();
     });
+
+    /* O que a tela pode pedir depois de montada: reler todas as linhas, quando muda algo que elas
+       leem e que mora fora dos cartões — o método comum do sorteio, na Classificação (053). */
+    return {
+      atualizarTodas: function () {
+        cartoes().forEach(atualizar);
+      },
+    };
   }
 
   var api = {

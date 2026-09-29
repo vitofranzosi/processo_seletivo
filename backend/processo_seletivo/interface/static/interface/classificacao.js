@@ -171,7 +171,7 @@
     };
   }
 
-  vista.montar({
+  var montada = vista.montar({
     formulario: formulario,
     lista: lista,
     lugar: lugar,
@@ -203,4 +203,14 @@
       };
     },
   });
+
+  /* **O método comum mora fora dos cartões, e a linha o lê.** A forma da ordem de um marco de
+     sorteio diz se ele usa o método comum; declarar ou apagar o comum no bloco do alto muda essa
+     frase em todas as linhas, e a vista só escuta o que acontece dentro da lista (FR-963; achado do
+     code review do PR 230). */
+  function aoMudarOMetodoComum(evento) {
+    if (/^edital-draw-/.test(evento.target.name || "")) montada.atualizarTodas();
+  }
+  formulario.addEventListener("input", aoMudarOMetodoComum);
+  formulario.addEventListener("change", aoMudarOMetodoComum);
 })();
