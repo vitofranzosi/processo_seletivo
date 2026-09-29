@@ -132,6 +132,7 @@ from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapeada
+from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     fatos_do_conteudo_publicado,
@@ -983,7 +984,7 @@ PREFIXO_DA_ETAPA = {
 #: O controle de cada campo de raiz que o assistente recusa junto do campo (FR-033). Só o teto, que
 #: é o que o RC-12 acrescentou; os do Requerimento de Matrícula seguem como a 029 os deixou, com a
 #: recusa no resumo da etapa.
-CONTROLE_DO_CAMPO_DE_RAIZ = {teto_command.CAMPO: "teto-inscricoes"}
+CONTROLE_DO_CAMPO_DE_RAIZ = {CAMPO_DO_TETO: "teto-inscricoes"}
 
 
 def _recusa(exc, digitados, etapa):

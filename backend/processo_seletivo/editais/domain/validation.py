@@ -42,11 +42,13 @@ from processo_seletivo.editais.domain.documentos import (
 )
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
+from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.inscricoes.domain.periodo import (
     ENCERRADO,
     evento_designado,
     periodo_de_inscricoes,
 )
+from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA
 
 
@@ -1235,6 +1237,24 @@ def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _faixa_do_teto(snapshot: dict) -> list[ValidationFinding]:
+    """O teto de inscrições por candidato vale também **depois** da publicação (015, FR-063).
+
+    A mesma razão de `_faixa_do_percentual`, e o mesmo remédio. A composição recusa teto abaixo de
+    1 (`editais/application/teto.py`), mas a Retificação convertia o campo por `int()` e publicava
+    `0` ou negativo — e com `0` o envio recusa a primeira inscrição de todo mundo, sob um Edital que
+    anuncia o período aberto (RC-12, registro pré-piloto de 28/09). A regra é a de
+    `teto_declarado`, invocada aqui e não reescrita.
+
+    A ausência é *sem limite* (FR-063) e passa: retificar o teto para vazio é retirá-lo.
+    """
+    try:
+        teto_declarado(snapshot.get("maxInscricoesPorCandidato"))
+    except DomainError as exc:
+        return [_impeditivo(RESTRICAO_VIOLADA, exc.detail, "maxInscricoesPorCandidato")]
+    return []
+
+
 # A Etapa que não referencia Evento nenhum (045, `FR-739`, `UX-086`). Código **próprio**, e não o
 # `field_constraint_violated` da referência inexistente: `advertencias_do_ato` descarta aviso cujo
 # código coincida com o de um impeditivo, e o invariante da declaração única prende que os dois
@@ -1480,6 +1500,7 @@ def validate_for_publication(
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_faixa_do_teto(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))

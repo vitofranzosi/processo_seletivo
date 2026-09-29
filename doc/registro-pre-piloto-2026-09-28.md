@@ -148,7 +148,8 @@ não escopo: nenhum foi corrigido.
   título de cada bloco passou a ser o índice, porque três blocos voltam para a Inscrição e se
   nomeavam todos pelo primeiro. A cópia da `023` continua sem copiá-lo. Três coisas vistas ao
   fazê-lo, registradas e não corrigidas: a Retificação aceita teto `0` ou negativo
-  (`interface/retificacao.py`, o `int()` do tipo inteiro), e com `0` a submissão recusa todo mundo;
+  (`interface/retificacao.py`, o `int()` do tipo inteiro), e com `0` a submissão recusa todo mundo
+  (corrigido pelo PR 227 — ver *"A Retificação do teto"*, abaixo);
   o portal não diz o teto — nem a página da seleção, nem a revisão da inscrição, só o documento — e
   continua oferecendo *Inscrever-se* em outra vaga depois de o teto ser atingido, de modo que a
   pessoa preenche a segunda inscrição e só descobre a recusa ao enviar (corrigido pelo PR 225 —
@@ -219,6 +220,26 @@ custa consulta: o conteúdo e as inscrições da pessoa já estavam carregados. 
 contagem, e só quando o Edital declara teto. Testes em
 `tests/integration/portal/test_teto_no_portal.py`.
 
-Fica de fora, e continua registrado: a Retificação aceita teto `0` ou negativo, e com `0` a
-página diria *"Limite atingido: você já enviou 0 inscrições"* — a mesma recusa universal que o envio
-já produz, agora dita antes.
+Ficou de fora, e foi corrigido em seguida (ver abaixo): a Retificação aceitava teto `0` ou
+negativo, e com `0` a página diria *"Limite atingido: você já enviou 0 inscrições"* — a mesma recusa
+universal que o envio já produzia, agora dita antes.
+
+## A Retificação do teto (RC-12, PR 227, 28/09/2026)
+
+Pedido pelo usuário depois do PR 225. Correção direta, sem decisão nova: a regra é a que o PR 224
+fixou para a composição — inteiro a partir de 1, e vazio é *sem limite* (`FR-063`). A Retificação
+convertia o campo por `int()` e publicava `0` ou negativo.
+
+A recusa não está na tela da Retificação, e sim na conferência de publicação
+(`validate_for_publication`, `_faixa_do_teto`), que invoca a mesma `teto_declarado` da composição —
+o remédio da `_faixa_do_percentual`, que já fazia isso pela cota. Por ali passa todo conteúdo que a
+Retificação faz vigorar, venha da tela ou da API. A regra saiu de `editais/application/teto.py` para
+`editais/domain/teto.py`, porque a conferência é domínio e não importa aplicação; o comando da
+composição continua chamando a mesma função.
+
+Retificar o teto para vazio continua valendo: é retirá-lo. Testes em
+`tests/interface/test_retificar_teto.py`.
+
+Um efeito a saber: um Edital que já tivesse publicado teto `0` ou negativo teria **toda** Retificação
+seguinte recusada até que a própria Retificação corrija o teto, porque a conferência vale sobre o
+conteúdo inteiro que passaria a vigorar. Nenhum Edital do piloto está nesse caso.

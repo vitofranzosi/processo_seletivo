@@ -19,11 +19,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
-from processo_seletivo.editais.application.teto import (
-    OPERACAO,
-    atualizar_teto_de_inscricoes,
-    teto_declarado,
-)
+from processo_seletivo.editais.application.teto import OPERACAO, atualizar_teto_de_inscricoes
+from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.inscricoes.application.rascunho import (
     abrir_inscricao,
     anexar_documento,
