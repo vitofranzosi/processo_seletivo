@@ -4,17 +4,20 @@
 Perfil com a prévia do alcance; o que o sistema sabe vira padrão que só preenche o vazio; e a Revisão
 diz de onde veio cada valor.*
 
-**Entrega**: este PR leva a P1 — US1 a US4. A US5 (Retificação, P2) fica para o PR seguinte, por
-decisão do plano (`research.md`, R-009); as linhas dela estão marcadas **PR seguinte**.
+**Entrega**: o #226 levou a P1 — US1 a US4. O segundo PR leva a US5 (Retificação, P2), por decisão do
+plano (`research.md`, R-009); as linhas dela apontam os arquivos e os testes da P2.
 
-**Verificação final**: 8763 passando, 11 pulados, zero falhas — ver a seção 4.
+**Verificação final**: 8850 passando, 11 pulados, zero falhas na P2 (8763 na P1) — ver a seção 4.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
 estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/test_quadro_sugerido.py`
 (**TQ**), `tests/interface/test_aplicar_a_todos.py` (**TT**),
 `tests/interface/test_padroes_da_composicao.py` (**TP**) e
-`tests/interface/test_revisao_origem_e_definitivos.py` (**TR**).
+`tests/interface/test_revisao_origem_e_definitivos.py` (**TR**). Os da P2 estão em
+`tests/unit/publicacoes/test_aplicacao_na_retificacao.py` (**TAR**),
+`tests/interface/test_aplicar_a_todos_na_retificacao.py` (**TRL**) e
+`tests/unit/interface/test_consequencias_da_retificacao_em_lote.py` (**TC**).
 
 ---
 
@@ -28,12 +31,12 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 | **FR-913** | `_marco_no_destino` mantém `id`/`code`/`name` do destino; `identidade_derivada` no que nasce | TA `test_substitui_os_campos_e_mantem_identidade_codigo_e_denominacao`, `test_nasce_onde_falta_com_identidade_do_destino_e_o_fato_do_destino`, `test_substitui_os_campos_e_nunca_o_codigo_nem_a_identidade` |
 | **FR-914** | `_criterios_no_destino` (código e tipo do fato) | TA `test_fato_ausente_deixa_fora_e_nomeia_o_fato`, `test_fato_de_mesmo_codigo_e_outro_tipo_nao_corresponde` |
 | **FR-915** | os padrões nascem no fragmento do cartão novo (`views._marco_novo`, `fragmento_etapa`) ou no vazio do leitor (`forms._metodo_de_sorteio`); nenhum na Retificação (leitura do diff: `interface/retificacao.py` intocado) | TP `test_o_segundo_marco_na_tela_nasce_sem_corte`, `test_a_prosa_vazia_e_gerada_da_regra_e_a_digitada_vale` |
-| **FR-916** | `interface/aplicacao.previa`; `_previa_da_aplicacao.html` | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
+| **FR-916** | `interface/aplicacao.previa`; `_previa_da_aplicacao.html`; na Retificação, `aplicacao_na_retificacao.blocos` e `_gesto_na_retificacao.html` (TRL `test_declarar_mostra_a_conferencia_agrupada_e_nao_cria_nada`) | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
 | **FR-917** | `aplicacao._quantidade_fixa`; linha própria na prévia | TA `test_quantidade_fixa_e_destacada` |
-| **FR-918** | caixas `aplicar_destino`; `aplicacao.alcancados` | TA `test_aplicar_toca_so_os_incluidos_e_aplicaveis`; TT `test_o_destino_fora_do_alcance_nao_e_tocado_mesmo_forjado`, `test_sem_destino_marcado_nada_e_gravado` |
-| **FR-919** | `aplicacao.assinatura`; `views._gesto` confere antes de gravar | TA `test_a_assinatura_e_estavel_e_muda_quando_o_efeito_muda`; TT `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar` |
+| **FR-918** | caixas `aplicar_destino`; `aplicacao.alcancados`; na Retificação, `gesto_destino:<gesto>` (TAR `test_so_os_marcados_e_aplicaveis_entram_no_ato`; TRL `test_o_destino_desmarcado_fica_intocado`, `test_nenhum_destino_marcado_e_recusado`) | TA `test_aplicar_toca_so_os_incluidos_e_aplicaveis`; TT `test_o_destino_fora_do_alcance_nao_e_tocado_mesmo_forjado`, `test_sem_destino_marcado_nada_e_gravado` |
+| **FR-919** | `aplicacao.assinatura`; `views._gesto` confere antes de gravar; na Retificação, `Calculado.divergiu` antes de *Criar Retificação* (TAR `test_a_assinatura_muda_quando_o_valor_da_origem_muda`, `test_a_identidade_do_que_nasce_e_estavel`; TRL `test_a_confirmacao_sobre_tela_que_mudou_e_recusada`) | TA `test_a_assinatura_e_estavel_e_muda_quando_o_efeito_muda`; TT `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar` |
 | **FR-920** | `editais/application/aplicacao.gravar_aplicacao` — `replace_draft` e trilha em `transaction.atomic` | TT `test_a_confirmacao_grava_o_marco_no_destino_e_registra_o_gesto`, `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar` |
-| **FR-921** | `RegistroAuditoria.detalhe` (migration `auditoria/0003`); `interface/aplicacao.registro`, `razao`; `OPERACOES["APLICAR_A_TODOS"]` | TT `test_a_confirmacao_grava_o_marco_no_destino_e_registra_o_gesto`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
+| **FR-921** | `RegistroAuditoria.detalhe` (migration `auditoria/0003`); `interface/aplicacao.registro`, `razao`; `OPERACOES["APLICAR_A_TODOS"]`; na Retificação, uma linha por gesto com o agregado Retificação (R-016; TRL `test_prazo_e_forma_de_convocacao_para_todos_num_ato_so`, `test_a_repeticao_da_confirmacao_nao_registra_de_novo`) | TT `test_a_confirmacao_grava_o_marco_no_destino_e_registra_o_gesto`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
 | **FR-922** | `aplicacao.unidade_do_marco`, `metodo_proprio` | TA `test_ausencia_na_origem_e_aplicada_como_ausencia`, `test_metodo_proprio_de_sorteio_deixa_fora`, `test_metodo_guardado_em_marco_de_pontuacao_nao_e_proprio_e_fica_com_o_destino`, `test_metodo_guardado_sai_quando_a_origem_faz_o_destino_sortear` |
 | **FR-923** | `efeitos_do_marco` — lista inteira; idêntica fica com a identidade do destino | TA `test_a_lista_de_criterios_e_substituida_inteira`, `test_substitui_os_campos_e_mantem_identidade_codigo_e_denominacao` |
 | **FR-924** | `efeitos_da_modalidade`, `aplicar_modalidades`; botão em `_modalidade.html` | TA `test_nasce_onde_o_codigo_falta_e_lista_o_que_o_destino_tem`, `test_nunca_remove_nem_toca_o_quadro`; TT `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
@@ -50,19 +53,19 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 | **FR-935** | `origens.gestos_por_destino`, `gesto_do_marco`, `gesto_da_modalidade`, `gesto_do_campo` | TR `test_o_marco_editado_depois_deixa_de_ser_atribuido_ao_gesto`, `test_a_modalidade_aplicada_aparece_com_a_origem`; TA `test_o_percentual_do_formulario_e_o_do_conteudo_publicado_tem_a_mesma_impressao` |
 | **FR-936** | `origens.campos_definitivos`; `revisao.definitivos`; `compor_revisao.html` | TR `test_os_campos_definitivos_aparecem_antes_de_submeter`, `test_o_bloco_dos_definitivos_cobre_o_contrato` |
 | **FR-937** | nenhum cartão ganhou texto sobre isso (leitura do diff) | TR `test_nenhum_cartao_da_composicao_ganhou_o_aviso`; `tests/interface/test_medida_dos_campos.py::test_nenhum_cartao_do_assistente_carrega_ajuda_visivel` |
-| **FR-938** | **PR seguinte** (US5) | — |
-| **FR-939** | **PR seguinte** (US5) | — |
-| **FR-940** | **PR seguinte** (US5) | — |
-| **FR-941** | **PR seguinte** (US5) | — |
-| **FR-942** | **PR seguinte** (US5). A leitura da `FR-802` da `048` está escrita na spec e no `research.md` | — |
+| **FR-938** | `publicacoes/domain/aplicacao.py` — uma função por unidade (R-012), só `REPLACE` de campo, nascimento de objeto e remoção e acréscimo de item; os botões por cartão em `interface/aplicacao_na_retificacao.anotar_botoes` e `_retificacao_linha.html`. **A ausência na origem não se aplica** (R-013): decisão de plano dentro da FR-938, que só admite as espécies que existem | TAR `test_a_janela_corrigida_vira_uma_alteracao_por_destino`, `test_o_criterio_trocado_vira_remocao_e_acrescimo_com_o_fato_do_destino`, `test_so_a_ordem_diferente_vira_replace_da_ordem`, `test_a_modalidade_substitui_campo_a_campo_e_mantem_os_opacos`, `test_a_modalidade_nasce_pelo_acrescimo_sem_linha_do_quadro`, `test_a_ampla_da_origem_vai_ao_destino`, `test_a_forma_de_convocacao_nasce_substitui_ou_fica`, `test_a_reversao_nasce_pelo_objeto_e_fica_fora_sem_lista_reservada`, `test_a_origem_sem_janela_nao_tem_o_que_aplicar`, `test_as_alteracoes_do_gesto_se_aplicam_ao_conteudo`; TRL `test_o_criterio_trocado_vira_remocao_e_acrescimo_em_cada_destino`, `test_a_origem_sem_a_declaracao_nao_tem_o_que_aplicar` |
+| **FR-939** | `aplicacao._campo_a_campo`: a natureza de cada campo é lida de `mutabilidade.CONTRATO`, e todos são julgados antes de qualquer Alteração valer | TAR `test_campo_nao_retificavel_diferente_deixa_o_destino_inteiro_fora`, `test_as_etapas_diferentes_deixam_o_destino_fora`, `test_o_arredondamento_da_reserva_diferente_deixa_fora`, `test_o_campo_que_falta_no_destino_nao_nasce`; TRL `test_o_destino_com_campo_nao_retificavel_fica_inteiro_fora` |
+| **FR-940** | `aplicacao._janela` (nasce concedendo), `_corte` (`tem_resultado`, a guarda da FR-789 dita antes da confirmação), `_modalidade` (a regra não nasce em Modalidade publicada); as guardas do ato continuam em `create_retification` | TAR `test_a_janela_nasce_so_concedendo`, `test_o_corte_nasce_inteiro_e_nao_sobre_etapa_com_resultado`, `test_a_regra_normativa_nao_nasce_em_modalidade_publicada` |
+| **FR-941** | `views.retificar` cria **um** ato com as Alterações digitadas e as de cada gesto (`publicacoes/application/aplicacao.criar_retificacao_com_gestos`); `_gesto_na_retificacao.html` agrupa; `aplicacao_na_retificacao.consequencias` (R-015) | TRL `test_prazo_e_forma_de_convocacao_para_todos_num_ato_so` (um ato, publicado, uma versão), `test_declarar_mostra_a_conferencia_agrupada_e_nao_cria_nada`; TC `test_a_janela_muda_em_marco_ordenado_e_divulgado`, `test_o_corte_nao_obsoleta_a_ordem`, `test_a_cota_que_nasce_em_perfil_ordenado_nasce_sem_ordem`, `test_sem_ordem_nem_divulgacao_nada_a_dizer` |
+| **FR-942** | a leitura da `FR-802` da `048` no docstring de `publicacoes/domain/aplicacao.py` (R-017), além da spec; nenhuma espécie de Alteração nova nem mudança em `publicacoes/domain/changes.py` (leitura do diff) | TAR `test_as_alteracoes_do_gesto_se_aplicam_ao_conteudo` (o motor de sempre aplica o que o gesto produz); TRL: toda confirmação passa por `create_retification` e as guardas dele |
 | **FR-943** | `validation._perfil_que_corta_sem_forma_de_convocacao`; fixtures canônicas declaram a forma | TP `test_perfil_que_corta_sem_forma_de_convocacao_nao_publica`, `test_com_a_forma_declarada_publica`, `test_a_retificacao_do_acervo_sem_forma_nao_e_recusada_por_isso` |
 
 | `UX-` | Onde | O que o prende |
 |---|---|---|
-| **UX-110** | botões em `_marco.html` e `_modalidade.html`, só com `quantos_perfis > 1` | TT `test_o_botao_diz_quantos_perfis_alcanca`, `test_edital_de_um_perfil_nao_oferece_o_gesto` |
+| **UX-110** | botões em `_marco.html` e `_modalidade.html`, só com `quantos_perfis > 1`; na Retificação, um por unidade no cartão de origem (TRL `test_o_botao_diz_a_unidade_e_quantos_perfis_alcanca`, `test_quem_nao_elabora_nao_recebe_o_gesto`) | TT `test_o_botao_diz_quantos_perfis_alcanca`, `test_edital_de_um_perfil_nao_oferece_o_gesto` |
 | **UX-111** | `_previa_da_aplicacao.html`: ordem dos Perfis, caixa marcada, *fora* sem caixa | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada` |
 | **UX-112** | `interface/aplicacao._mudancas_do_marco` usa `revisao._leitura_do_marco` | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada` (o código e as frases do documento) |
-| **UX-113** | `_frase_do_alcance`; o número no botão | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
+| **UX-113** | `_frase_do_alcance`; o número no botão; na Retificação, *Criar Retificação (N Alterações)* (TRL `test_declarar_mostra_a_conferencia_agrupada_e_nao_cria_nada`) | TT `test_a_previa_declara_cada_perfil_e_nao_grava_nada`, `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
 | **UX-114** | a origem entre parênteses ou na linha *"Origem"*, em texto | TR `test_o_marco_aplicado_aparece_com_a_origem_e_o_autor` |
 | **UX-115** | seção antes de `.navegacao-etapa` em `compor_revisao.html` | TR `test_os_campos_definitivos_aparecem_antes_de_submeter` |
 
@@ -72,12 +75,12 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 |---|---|---|
 | **SC-340** | percurso no preview, estrutura do 28/2026, antes (`main`) e depois (este branch) — seção 3 | **81 → 16** na Classificação (−80%) |
 | **SC-341** | TA `test_aplicar_toca_so_os_incluidos_e_aplicaveis`: aplicar custa o gesto e a confirmação, qualquer que seja N | curva plana |
-| **SC-342** | TA `test_aplicar_toca_so_os_incluidos_e_aplicaveis`, `test_nada_fora_da_unidade_muda_no_destino`; TT `test_o_destino_fora_do_alcance_nao_e_tocado_mesmo_forjado`, `test_perfis_intocados_fora_da_unidade` | coberto |
-| **SC-343** | TT `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar`, `test_sem_destino_marcado_nada_e_gravado` | coberto |
+| **SC-342** | TA `test_aplicar_toca_so_os_incluidos_e_aplicaveis`, `test_nada_fora_da_unidade_muda_no_destino`; TT `test_o_destino_fora_do_alcance_nao_e_tocado_mesmo_forjado`, `test_perfis_intocados_fora_da_unidade`; na Retificação, TRL `test_o_destino_desmarcado_fica_intocado`, `test_o_destino_com_campo_nao_retificavel_fica_inteiro_fora` | coberto |
+| **SC-343** | TT `test_a_confirmacao_sobre_tela_que_mudou_e_recusada_sem_gravar`, `test_sem_destino_marcado_nada_e_gravado`; TRL `test_a_confirmacao_sobre_tela_que_mudou_e_recusada` | coberto |
 | **SC-344** | a suíte inteira, que confere o conteúdo, o documento e a validação dos Editais publicados; TP `test_a_retificacao_do_acervo_sem_forma_nao_e_recusada_por_isso` | ver a seção 4 |
 | **SC-345** | percurso no preview: o marco de sorteio pede 6 respostas contra 10 (empate, espécie do alvo, Etapa governada e a abertura do bloco do corte saíram); o método comum, 8 contra 10 | −4 por marco, −2 no método |
 | **SC-346** | TR `test_o_bloco_dos_definitivos_cobre_o_contrato` | coberto |
-| **SC-347** | **PR seguinte** (US5) | — |
+| **SC-347** | TRL `test_prazo_e_forma_de_convocacao_para_todos_num_ato_so`; percurso no preview — seção 3b. **Leitura**: trocar um critério é remoção e acréscimo (US5, cenário 1; FR-792 da `048`), duas Alterações por destino — o *"N Alterações"* da SC conta destinos alterados num ato, e não linhas do ato | **17 → 6** para 7 polos (prazo e forma); constante em N |
 
 ## 3. O percurso no preview — a estrutura do 28/2026
 
@@ -105,7 +108,48 @@ campos que não se corrigem depois de publicados.
 do controle do Edital (um renome incompleto), e o bloco dos definitivos colava o valor na razão. O
 primeiro ganhou teste (`test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_com_a_origem`).
 
+## 3b. O percurso no preview — a Retificação em lote (P2)
+
+Banco próprio (`ps_051p2`) semeado pelo roteiro `scratchpad/semear_7_polos.py` da sessão: um Edital
+**publicado** de 7 polos com o marco do Edital máximo — prazo recursal de 2 dias, corte de quantidade
+fixa, convocação por publicação —, e o POLO07 cortando pelo quadro. O **antes** usou só os controles que
+a tela já tinha (os mesmos da `main`); o **depois**, os gestos. Contou-se cada clique, escolha ou campo
+preenchido, do Edital publicado à Retificação criada.
+
+| Passo | Antes | Depois |
+|---|---:|---:|
+| Prazo recursal de 2 para 3 dias nos 7 polos | 7 (um campo por marco) | 2 (o do POLO01 e *Aplicar a janela recursal aos demais Perfis (6)*) |
+| Forma de convocação nos 7 polos | 7 (uma escolha por Perfil) | 2 (a do POLO01 e *Aplicar a forma de convocação aos demais Perfis (6)*) |
+| Conferir | 1 (*Ver o que vai mudar*) | 0 (o gesto já devolve a conferência) |
+| Justificativa e *Criar Retificação* | 2 | 2 |
+| **Total** | **17** | **6** |
+
+Com N Perfis, o antes é 2N + 3 e o depois continua 6. As duas conferências chegaram ao mesmo ato: 14
+Alterações, uma por Perfil e campo. A Retificação criada foi submetida, homologada e publicada pela
+tela: uma versão nova e um documento, com os 7 polos em 3 dias e mensagem individual, e duas linhas
+`APLICAR_A_TODOS` na trilha, uma por gesto, com a Retificação como agregado.
+
+**O destino fora**, no mesmo percurso: com os suplentes do POLO01 em 2, *Aplicar a regra de corte aos
+demais Perfis (6)* deu *"5 mudam, 1 fica fora do alcance"* — o POLO07, com *"a espécie do alvo do
+corte difere da origem, e não se corrige por Retificação"*, a razão escrita no contrato e os dois
+valores (*"aqui: Quantas vagas o quadro publicar no recorte; na origem: Uma quantidade fixa"*).
+*Desfazer este gesto* o tirou do ato antes da confirmação.
+
 ## 4. Verificação
+
+**A P2**: `cd backend && make lint check test-pg DB_NAME=ps_051p2`, em 29/09/2026, sobre a `main` em
+`0598a9f3`: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer,
+e a suíte contra PostgreSQL com **8850 passando e 11 pulados**, zero falhas — os 8763 da P1 mais os 87
+casos novos, e os mesmos 11 pulados deliberados.
+
+**Uma intermitência, registrada e não investigada.** A primeira rodada da P2 deu 8849 e **1 erro**, no
+preparo de `tests/integration/avaliacoes/test_documento.py::test_a_ordem_e_sugerida_e_nao_imposta`:
+`no_effective_version` — *"Não havia conteúdo vigente para este Edital no instante consultado"* — ao
+alocar membro de comissão num Edital recém-publicado. O caso não passa por código desta feature
+(comissões e avaliações sobre a versão vigente), passou isolado quatro vezes, e a segunda rodada da
+suíte inteira, sem mudança nenhuma, fechou limpa. Fica o registro, para quem o vir de novo.
+
+**A P1**:
 
 `cd backend && make lint check test-pg DB_NAME=ps_051`, em 29/09/2026, depois da escolha pendente, sobre a `main` em `850e00b6`
 mesclada: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer, e

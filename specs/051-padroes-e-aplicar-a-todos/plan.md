@@ -107,6 +107,7 @@ backend/processo_seletivo/
 ├── interface/forms.py                   # prosa, instante do Evento, rounding, Etapa decisória, preservação
 ├── interface/revisao.py                 # origens; bloco dos campos definitivos
 ├── publicacoes/domain/aplicacao.py      # P2 — NOVO: os efeitos na Retificação, em Alterações (pura)
+├── publicacoes/application/aplicacao.py # P2 — NOVO: criar a Retificação com o registro de cada gesto
 ├── interface/aplicacao_na_retificacao.py # P2 — NOVO: os gestos declarados, a conferência, as consequências
 ├── interface/views.py                   # P2 — retificar: declarar, desfazer, conferir, criar com os gestos
 └── interface/templates/interface/
@@ -122,7 +123,8 @@ backend/tests/
 ├── interface/test_padroes_da_composicao.py
 ├── interface/test_revisao_origem_e_definitivos.py
 ├── unit/publicacoes/test_aplicacao_na_retificacao.py   # P2 — a regra, unidade a unidade
-└── interface/test_aplicar_a_todos_na_retificacao.py    # P2 — a tela, o ato, o registro
+├── interface/test_aplicar_a_todos_na_retificacao.py    # P2 — a tela, o ato, o registro
+└── unit/interface/test_consequencias_da_retificacao_em_lote.py  # P2 — as consequências
 ```
 
 **Structure Decision**: o monólito existente. A regra mora em `editais/domain` (pura), a gravação em
