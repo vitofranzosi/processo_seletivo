@@ -90,6 +90,17 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
     </p>
     {% endfor %}
   </div>
+  {% comment %}
+  "Aplicar aos demais Perfis" (051, UX-110): um envio do formulário, que declara o gesto e devolve a
+  conferência com ele. Não grava nada — a confirmação é Criar Retificação (R-011).
+  {% endcomment %}
+  {% if grupo.gestos %}
+  <p class="acrescentar">
+    {% for gesto in grupo.gestos %}<button type="submit" class="botao secundario" name="aplicar"
+            value="{{ gesto.valor }}" formnovalidate>{{ gesto.rotulo }}</button>
+    {% endfor %}
+  </p>
+  {% endif %}
   {% if grupo.removivel %}
   {% comment %}
   A explicação de o que a marcação faz vive uma vez, no topo da tela, e não uma vez por linha:

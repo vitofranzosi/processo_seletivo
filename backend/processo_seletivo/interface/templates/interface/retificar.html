@@ -28,9 +28,10 @@ corrige é o caminho que não termina.
 
 {% include "interface/_erros.html" with titulo_da_recusa="Não foi possível prosseguir:" %}
 
-{% if resumo %}
+{% if resumo or gestos or consequencias %}
 <section aria-labelledby="resumo-titulo" class="consequencias">
-  <h2 id="resumo-titulo">O que vai mudar ({{ resumo|length }})</h2>
+  <h2 id="resumo-titulo">O que vai mudar ({% if gestos %}{{ alteracoes_do_ato }}{% else %}{{ resumo|length }}{% endif %})</h2>
+  {% if resumo %}
   <div class="rolagem">
   <table>
     <thead><tr>
@@ -49,6 +50,20 @@ corrige é o caminho que não termina.
     </tbody>
   </table>
   </div>
+  {% endif %}
+  {% comment %}
+  Os gestos de "aplicar a todos" (051, FR-941): as Alterações de cada um agrupadas, destino a
+  destino, e não misturadas às digitadas — é o que deixa conferir o alcance antes de confirmar.
+  {% endcomment %}
+  {% for gesto in gestos %}
+  {% include "interface/_gesto_na_retificacao.html" with gesto=gesto %}
+  {% endfor %}
+  {% if consequencias %}
+  <h3>O que mais este ato provoca</h3>
+  <ul>
+    {% for frase in consequencias %}<li>{{ frase }}</li>{% endfor %}
+  </ul>
+  {% endif %}
 </section>
 {% endif %}
 
@@ -96,6 +111,11 @@ o navegador as trata como qualquer sumário.
   linha, uma Publicação no intervalo faria a mesma referência apontar para outro item.
   {% endcomment %}
   <input type="hidden" name="base" value="{{ base.id }}">
+  {% comment %}
+  Os gestos declarados atravessam as idas e voltas até a confirmação (051, R-011), na ordem em que
+  foram declarados; a caixa de cada destino e a impressão moram no bloco do gesto, na conferência.
+  {% endcomment %}
+  {% for valor in gestos_declarados %}<input type="hidden" name="gesto" value="{{ valor }}">{% endfor %}
 
   {% for secao in secoes %}
   <section class="secao-da-retificacao" id="s-{{ secao.id }}" aria-labelledby="t-{{ secao.id }}">
@@ -275,9 +295,9 @@ o navegador as trata como qualquer sumário.
   {% endcomment %}
   <p class="navegacao-etapa barra-de-acoes">
     <button type="submit" class="botao secundario" formnovalidate>Ver o que vai mudar</button>
-    {% if resumo and pode_elaborar %}
-    <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação</button>
-    {% endif %}
+    {% if pode_elaborar %}{% if resumo or gestos %}
+    <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação{% if gestos %} ({{ alteracoes_do_ato }} Alterações){% endif %}</button>
+    {% endif %}{% endif %}
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
   </p>
 </form>

@@ -15,10 +15,12 @@ padrão e a derivação; pelo registro do gesto, para o materializado (R-004). O
 cartão novo ou preenchem o vazio na leitura do formulário, e nunca alcançam conteúdo publicado nem
 Retificação (`FR-915`).
 
-**Entrega em dois PRs.** Este leva a P1 — US1 a US4, a composição inteira e a Revisão. A US5, o gesto
-na Retificação, fica para o seguinte: reusa a função pura e a prévia, e o que muda é a tradução de cada
-efeito em Alterações da `048` e a guarda de campo não retificável, que merecem revisão própria
-(R-009).
+**Entrega em dois PRs.** O primeiro (#226) levou a P1 — US1 a US4, a composição inteira e a Revisão.
+O segundo leva a US5, o gesto na Retificação (R-009): reusa a regra pura da P1 — a correspondência pelo
+código, o fato pelo código e pelo tipo, os quatro efeitos, a impressão e a assinatura — e acrescenta a
+tradução de cada efeito em Alterações da `048`, campo a campo, com a natureza de cada campo lida do
+contrato de mutabilidade (R-012). Na Retificação a prévia **é** a conferência que já existe, agrupada
+por gesto e com as consequências do ato, e a confirmação é o *Criar Retificação* de sempre (R-011).
 
 ## Technical Context
 
@@ -55,13 +57,18 @@ mutabilidade como fonte única; o guardião da Revisão (`LIDOS`/`NAO_MOSTRADOS`
 | III. Auditoria | Cada gesto é uma linha da trilha, append-only, com autor, instante, origem e destinos (`FR-921`). |
 | IV. Regras explícitas — **o invariante da 1.2.0** | O gesto declara o alcance e o efeito por destino antes da confirmação, e a confirmação carrega a impressão do que foi mostrado (`FR-916`–`FR-919`); todo valor padrão, derivado ou materializado aparece na Revisão com a origem (`FR-934`, `FR-935`); os campos que não se corrigem depois aparecem antes da submissão (`FR-936`). A validação continua no domínio: o gesto grava pelo `replace_draft`, que valida como sempre. |
 | V. Simplicidade | Uma função pura por unidade, uma prévia comum, um caminho de gravação. Sem herança, sem tabela de proveniência. |
-| Nada é excluído | O gesto nunca remove Modalidade, e o marco só é criado onde falta. |
+| Nada é excluído | O gesto nunca remove Modalidade, e o marco só é criado onde falta. Na Retificação, a ausência na origem não se aplica: nada publicado some em lote (R-013). |
 
 **Gate: passa.** A migration é a única estrutura nova, e é coluna nula numa tabela append-only que já
 existe.
 
 **Reavaliação depois do desenho: passa.** A `FR-943` é regra impeditiva nova, e o custo dela — Editais de
 teste que cortam sem forma — é medido antes de escrever (tarefa T004), como a memória da `046` manda.
+
+**A P2: passa.** Nenhuma migration, nenhuma espécie de Alteração e nenhum canal novo: o gesto produz,
+em cada destino, as Alterações que a tela já produz à mão — e cada uma passa pelas guardas do ato de
+sempre (`FR-802` e `FR-803` da `048`, lidas na `FR-942` e no R-017). A autoria fica: o ato tem autor, e
+o gesto, registro na trilha (R-016).
 
 ## Project Structure
 
@@ -99,16 +106,23 @@ backend/processo_seletivo/
 ├── interface/views.py                   # compor_etapa: prévia, confirmação, preencher quadro
 ├── interface/forms.py                   # prosa, instante do Evento, rounding, Etapa decisória, preservação
 ├── interface/revisao.py                 # origens; bloco dos campos definitivos
+├── publicacoes/domain/aplicacao.py      # P2 — NOVO: os efeitos na Retificação, em Alterações (pura)
+├── interface/aplicacao_na_retificacao.py # P2 — NOVO: os gestos declarados, a conferência, as consequências
+├── interface/views.py                   # P2 — retificar: declarar, desfazer, conferir, criar com os gestos
 └── interface/templates/interface/
     ├── _previa_da_aplicacao.html        # NOVO
     ├── _marco.html, _modalidade.html, _etapa.html, _linha_do_quadro.html
     ├── compor_perfis.html, compor_classificacao.html, compor_revisao.html
+    ├── retificar.html, _retificacao_linha.html          # P2 — os botões e o bloco do gesto
+    └── _gesto_na_retificacao.html                        # P2 — NOVO
 backend/tests/
 ├── unit/editais/test_aplicacao.py       # a regra única, unidade a unidade
 ├── unit/editais/test_quadro_sugerido.py
 ├── interface/test_aplicar_a_todos.py    # prévia, exclusão, divergência, gravação, trilha
 ├── interface/test_padroes_da_composicao.py
-└── interface/test_revisao_origem_e_definitivos.py
+├── interface/test_revisao_origem_e_definitivos.py
+├── unit/publicacoes/test_aplicacao_na_retificacao.py   # P2 — a regra, unidade a unidade
+└── interface/test_aplicar_a_todos_na_retificacao.py    # P2 — a tela, o ato, o registro
 ```
 
 **Structure Decision**: o monólito existente. A regra mora em `editais/domain` (pura), a gravação em

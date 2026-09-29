@@ -6,7 +6,7 @@
 **Tests**: pedidos. Cada requisito tem teste que falha sem o código (é o que a
 [rastreabilidade](rastreabilidade.md) prende). Caminhos relativos a `backend/`.
 
-**Entrega**: este PR leva as Fases 1 a 7 (P1). A Fase 8 (US5, P2) é do PR seguinte (R-009).
+**Entrega**: o #226 levou as Fases 1 a 7 (P1). A Fase 8 (US5, P2) é do segundo PR (R-009).
 
 ## Phase 1: Setup
 
@@ -73,12 +73,21 @@
 - [X] T027 `rastreabilidade.md` requisito a requisito, com FR-938–FR-942 e SC-347 marcados *PR seguinte*; README (tabela de specs); `make lint check test-pg DB_NAME=ps_051`
 - [X] T028 (SC-340) Percurso no preview com a estrutura do 28/2026 e a contagem de interações antes e depois (`quickstart.md`)
 
-## Phase 8: User Story 5 — Retificação (P2) — PR seguinte
+## Phase 8: User Story 5 — Retificação (P2) — segundo PR
 
-- [ ] T029 [US5] (FR-938) Traduzir efeitos em Alterações da `048` em `interface/retificacao.py` (substituir campo a campo; critérios por `REMOVE` + `ADD`; nascimentos de `NASCIMENTOS`)
-- [ ] T030 [US5] Destino inteiro fora quando uma diferença alcança campo não retificável (`FR-939`); guardas da `048` (`FR-940`)
-- [ ] T031 [US5] Conferência agrupada com as consequências (`FR-941`), um ato só; a leitura da `FR-802` escrita no módulo (`FR-942`)
-- [ ] T032 [US5] Testes de integração da Retificação em lote
+**Goal**: o gesto na Retificação, campo a campo, num ato só, com a conferência agrupada e as
+consequências; o destino que alcança campo não retificável fica inteiro fora.
+
+**Independent Test**: Edital publicado de 7 Perfis; retificar a janela do primeiro de 2 para 3 dias,
+*Aplicar a janela recursal aos demais Perfis (6)*; a conferência mostra 6 *mudam* e os marcos com
+resultado divulgado; *Criar Retificação*; 7 Alterações num ato só.
+
+- [ ] T029 [P] [US5] (FR-938, FR-939, FR-940, SC-342) Testes unitários da regra na Retificação em `tests/unit/publicacoes/test_aplicacao_na_retificacao.py`, unidade a unidade (R-012): nasce, substitui, sem mudança e fora; o campo não retificável diferente deixa o destino **inteiro** fora e nomeia o campo; a janela que nasce só concedendo; o corte que nasceria sobre Etapa com Resultado; a regra normativa que não nasce; a ausência na origem recusada (R-013); o destino já alterado no ato fica fora (R-014); critérios por remoção e acréscimo, com o fato pelo código e pelo tipo; identidades derivadas e impressão estável
+- [ ] T030 [US5] `processo_seletivo/publicacoes/domain/aplicacao.py`: `efeitos(conteudo, unidade=, perfil=, alvo=, …)` devolvendo, por destino, o efeito e as Alterações; natureza de cada campo lida de `mutabilidade.CONTRATO`; a leitura da `FR-802` no docstring (FR-942, R-017)
+- [ ] T031 [US5] `processo_seletivo/interface/aplicacao_na_retificacao.py`: os gestos declarados no formulário, os botões por cartão (UX-110), o bloco da conferência em palavras (FR-916, FR-918, UX-111 a UX-113), as consequências do ato (FR-941, R-015)
+- [ ] T032 [US5] `views.retificar`, `retificar.html`, `_retificacao_linha.html` e `_gesto_na_retificacao.html` (novo): declarar, desfazer, conferir e confirmar com a impressão (FR-919); criar **um** ato com as Alterações digitadas e as dos gestos, e registrar cada gesto na mesma transação (FR-921, FR-941, R-016) em `processo_seletivo/editais/application/aplicacao.py`
+- [ ] T033 [US5] (SC-343, SC-347) Testes de integração em `tests/interface/test_aplicar_a_todos_na_retificacao.py`: a janela em N Perfis vira N+1 Alterações num ato; o critério trocado vira remoção e acréscimo por destino (FR-792); o destino com campo não retificável diferente fica fora e nada dele entra no ato; as guardas da `048`; o destino desmarcado fica intocado; a divergência entre conferência e confirmação é recusada sem criar; as consequências nomeadas; o registro na trilha; publicar dá uma versão e um documento
+- [ ] T034 [US5] (SC-347) Percurso no preview — Edital publicado de vários Perfis, prazo recursal e forma de convocação num ato só, e um destino fora por campo não retificável — com a contagem de interações antes (`main`) e depois; `rastreabilidade.md` com FR-938 a FR-942 e SC-347; `make lint check test-pg DB_NAME=ps_051p2`
 
 ## Dependencies & Execution Order
 
@@ -86,7 +95,8 @@
 - US1 (Fase 3) antes de US2 (Fase 4): US2 reusa `Efeito`, a prévia e a gravação.
 - US3 é independente de US1/US2, salvo T021 (etapa Perfis, junto de T014–T015 no mesmo template).
 - US4 depende de US1–US3 (lê o registro e os padrões).
-- US5 depende de US1–US2.
+- US5 depende de US1–US2: reusa `Efeito`, a correspondência pelo código, o fato pelo código e pelo tipo, a impressão e a assinatura.
+- Na US5, T029 antes de T030; T030 antes de T031; T031 antes de T032; T033 e T034 por último.
 
 ## Parallel Opportunities
 
