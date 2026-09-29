@@ -111,6 +111,7 @@ from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulg
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.editais.application import anexos as anexos_command
+from processo_seletivo.editais.application import teto as teto_command
 from processo_seletivo.editais.application.aplicacao import gravar_aplicacao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
@@ -982,6 +983,12 @@ PREFIXO_DA_ETAPA = {
 }
 
 
+#: O controle de cada campo de raiz que o assistente recusa junto do campo (FR-033). Só o teto, que
+#: é o que o RC-12 acrescentou; os do Requerimento de Matrícula seguem como a 029 os deixou, com a
+#: recusa no resumo da etapa.
+CONTROLE_DO_CAMPO_DE_RAIZ = {teto_command.CAMPO: "teto-inscricoes"}
+
+
 def _recusa(exc, digitados, etapa):
     """A recusa do domínio, com a âncora do campo quando ele é conhecido (FR-033).
 
@@ -995,6 +1002,9 @@ def _recusa(exc, digitados, etapa):
     campo = getattr(exc, "campo", "")
     identidade = getattr(exc, "identidade", "")
     mensagem = getattr(exc, "detail", None) or str(exc)
+    # Campo de **raiz** do Edital não tem linha: o controle é um só, e a âncora é o `id` dele.
+    if campo in CONTROLE_DO_CAMPO_DE_RAIZ and not identidade:
+        return {"mensagem": mensagem, "ancora": CONTROLE_DO_CAMPO_DE_RAIZ[campo]}
     prefixo = PREFIXO_DA_ETAPA.get(etapa, "")
     if not (campo and identidade and prefixo):
         return {"mensagem": mensagem, "ancora": ""}
@@ -1522,6 +1532,13 @@ def compor_etapa(request, edital_id, etapa):
                 else edital.requerimento_declaracao
             ),
             "momentos_do_requerimento": MOMENTOS_DO_REQUERIMENTO,
+            # A mesma regra, para o teto (RC-12): recusado, volta o texto digitado — um "0" que
+            # sumisse do campo deixaria a pessoa sem saber o que a mensagem recusou.
+            "teto_de_inscricoes": (
+                digitados["teto"]
+                if etapa == "inscricao" and digitados is not None
+                else edital.max_inscricoes_por_candidato or ""
+            ),
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
             "transversais": (
                 forms.modalidades_em_todos_os_perfis(edital) if etapa == "inscricao" else []
@@ -2101,6 +2118,18 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]
         ]
+        # **O teto, primeiro de tudo** (RC-12). É coluna de raiz, como o requerimento logo abaixo,
+        # e pelo mesmo ato próprio. Vem antes dos outros dois porque é o único destes campos que o
+        # formulário deixa digitar à vontade: a recusa dele interrompe a gravação antes que
+        # qualquer outra coisa seja escrita.
+        teto_command.atualizar_teto_de_inscricoes(
+            actor=ator,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            teto=digitados["teto"],
+            correlation_id=request.correlation_id,
+        )
+        edital.refresh_from_db()
         # **Ato próprio, e antes do `replace_draft`** (029, T045). Os dois campos são de **raiz** do
         # Edital, e `replace_draft` não os carrega: passar por ele apagaria as coleções que ele
         # substitui sem gravar nenhum dos dois. O ato próprio também tem auditoria própria, com o
@@ -4192,6 +4221,8 @@ OPERACOES = {
     # A declaração do Requerimento de Matrícula (029). Sem rótulo, a trilha exibiria o código cru
     # a quem responde *"quando o Edital passou a pedir isto?"*.
     "ALTERAR_REQUERIMENTO": "Alteração do Requerimento de Matrícula",
+    # O teto de inscrições por candidato (RC-12). A razão diz o valor, e o rótulo diz o que ele é.
+    teto_command.OPERACAO: "Alteração das inscrições por candidato",
     # A cópia de configuração de outro Edital (023). Sem esta entrada a trilha exibiria o
     # código cru, e `US3` ficaria atendida no banco e não no canal do ator.
     "REAPROVEITAR_EDITAL": "Criação a partir de Edital anterior",

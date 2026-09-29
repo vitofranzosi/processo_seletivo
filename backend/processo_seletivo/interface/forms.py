@@ -1449,6 +1449,10 @@ def ler_inscricao(dados):
         )
     return {
         "periodo": _texto(dados, "periodo-inscricoes"),
+        # **O texto como veio, e não o inteiro** (RC-12). Quem converte e recusa é o comando: a
+        # leitura aqui não pode falhar antes dele, ou a regra do teto passaria a morar no
+        # formulário. E, recusado, é o texto digitado que volta ao campo.
+        "teto": _texto(dados, "teto-inscricoes"),
         "documentos": _renumerar(documentos),
         # **O Requerimento de Matrícula entra nesta etapa, e não numa nova** (029, `T-003`). É aqui
         # que quem elabora decide o que se pede ao candidato — o período e os Documentos Exigidos já
