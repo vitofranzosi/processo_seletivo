@@ -3775,8 +3775,12 @@ def retificar(request, edital_id):
     erros, resumo = [], []
     # Os gestos de "aplicar a todos" declarados na tela (051, R-011). Lidos **antes** de tudo o que
     # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou.
-    gestos = gesto_na_retificacao.declarados(dados, retificacao_ui.campos_editaveis(projecao))
-    calculados, consequencias, todas = [], [], []
+    gestos = (
+        gesto_na_retificacao.declarados(dados, retificacao_ui.campos_editaveis(projecao))
+        if dados is not None
+        else []
+    )
+    calculados, consequencias, todas, proposto = [], [], [], projecao
     if request.method == "POST":
         if not ator.can("retificacao:elaborar"):
             erros.append("Você não tem a permissão para elaborar Retificações.")
@@ -3796,7 +3800,6 @@ def retificar(request, edital_id):
                 # **O gesto lê o conteúdo proposto**, e não o vigente: quem corrige o prazo no
                 # primeiro marco pede para aplicar aquele prazo (R-011). O que o digitado não
                 # consegue montar é recusado aqui, com a frase da gramática.
-                proposto = projecao
                 if gestos:
                     proposto, _ = apply_changes(projecao, alteracoes, publication_id="conferencia")
                 calculados, recusas = gesto_na_retificacao.calcular(
@@ -3812,9 +3815,6 @@ def retificar(request, edital_id):
                 todas = alteracoes + [
                     alteracao for calculado in calculados for alteracao in calculado.alteracoes
                 ]
-                if todas:
-                    resultante, _ = apply_changes(projecao, todas, publication_id="conferencia")
-                    consequencias = gesto_na_retificacao.consequencias(edital, projecao, resultante)
                 if not todas and not calculados:
                     erros.append(
                         "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
@@ -3856,6 +3856,22 @@ def retificar(request, edital_id):
                 erros.append(str(exc))
             except DomainError as exc:
                 erros.append(exc.detail)
+        # **As consequências só para a tela que volta**, e nunca antes de criar: quem confirmou foi
+        # redirecionado, e ler ordens e divulgações para ele seria trabalho que ninguém lê (FR-941).
+        # O proposto já traz as Alterações digitadas; basta somar as dos gestos. E conteúdo que nem
+        # se monta não é aconselhado aqui: a recusa é do ato, que a diz ao criar — como antes desta
+        # feature, quando a conferência não montava o conteúdo.
+        if todas:
+            if proposto is projecao:
+                partida, faltam = projecao, todas
+            else:
+                partida = proposto
+                faltam = [a for calculado in calculados for a in calculado.alteracoes]
+            try:
+                resultante, _ = apply_changes(partida, faltam, publication_id="conferencia")
+                consequencias = gesto_na_retificacao.consequencias(edital, projecao, resultante)
+            except ValueError:
+                consequencias = []
 
     grupos = retificacao_ui.reexibir(
         retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),

@@ -414,3 +414,18 @@ def test_o_gesto_forjado_para_cartao_de_outra_especie_e_descartado(
     ).content.decode()
 
     assert f'name="gesto" value="{valor}"' not in corpo
+
+
+def test_o_gesto_sem_alteracao_nao_oferece_criar(client, seletor_ligado, publicado):
+    """Os destinos já declaram o prazo da origem: *"Criar Retificação (0 Alterações)"* seria a
+    recusa oferecida como ação."""
+    edital, vigente = publicado
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    valor = f"janela:{_grupo(vigente, 'Marco')['referencia']}"
+
+    corpo = client.post(
+        reverse("interface:retificar", args=[edital.id]), {**_formulario(vigente), "aplicar": valor}
+    ).content.decode()
+
+    assert "2 ficam como estão" in corpo
+    assert 'name="confirmar"' not in corpo

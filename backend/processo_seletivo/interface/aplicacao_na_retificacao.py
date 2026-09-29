@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from processo_seletivo.editais.domain import aplicacao as regra_da_composicao
 from processo_seletivo.interface import aplicacao as aplicacao_da_composicao
 from processo_seletivo.interface import retificacao as tela
+from processo_seletivo.interface import revisao
 from processo_seletivo.publicacoes.domain import aplicacao as regra
 
 #: As unidades de cada cartão (R-012), na ordem em que os botões aparecem.
@@ -203,14 +204,25 @@ def registro(calculado):
 # ---- a conferência em palavras -------------------------------------------------------------------
 
 
+#: O tipo de apresentação do arredondamento da reserva: objeto opaco, lido pela sugestão do quadro.
+ARREDONDAMENTO_DA_RESERVA = "arredondamento_da_reserva"
+
+
 def _apresentacao(conteudo):
-    """`(coleção, campo) → (rótulo, tipo, opções)` — as palavras da própria tela de Retificação."""
+    """`(rótulos, rótulos do nascimento, etapas)` — as palavras da própria tela de Retificação.
+
+    Cada mapa é `(coleção, campo) → (rótulo, tipo, opções)`. **Dois**, porque a tela diz o mesmo
+    campo de dois jeitos: a regra de corte que já existe chama o alvo de *"Quantos progridem"*, e a
+    que nasce reserva essas palavras para a espécie do alvo e chama o número de *"Alvo (só na
+    quantidade fixa)"*. A conferência usa as palavras que a pessoa leu no campo (UX-112).
+    """
     marcos = (
         tela.CAMPOS_MARCO
         + tela.CAMPOS_DA_FORMA_DA_ORDEM
         + tela.CAMPOS_DO_ARREDONDAMENTO
-        + tela.CAMPOS_DA_JANELA
         + tela.CAMPOS_DO_NASCIMENTO_DO_CORTE
+        + tela.CAMPOS_DO_CORTE
+        + tela.CAMPOS_DA_JANELA
     )
     etapas = tuple(
         (str(etapa.get("id")), etapa.get("name") or "")
@@ -239,11 +251,6 @@ def _apresentacao(conteudo):
     ):
         for campo, rotulo, tipo in lista:
             rotulos[(colecao, campo)] = (rotulo, tipo, opcoes.get(campo, ()))
-    rotulos[(regra.MARCOS, "cutRule/targetCount")] = (
-        "Alvo (só na quantidade fixa)",
-        tela.INTEIRO,
-        (),
-    )
     rotulos[(regra.MARCOS, "stages")] = (
         tela.ROTULO_DO_EXCLUIDO[(regra.MARCOS, "stages")],
         "",
@@ -251,7 +258,7 @@ def _apresentacao(conteudo):
     )
     rotulos[(regra.MODALIDADES, "normativeRule/rounding")] = (
         tela.ROTULO_DO_EXCLUIDO[(regra.MODALIDADES, "normativeRule/rounding")],
-        "",
+        ARREDONDAMENTO_DA_RESERVA,
         (),
     )
     rotulos[(regra.PERFIS, "vacancyReversion")] = (
@@ -259,10 +266,20 @@ def _apresentacao(conteudo):
         tela.REFERENCIA,
         tela.ESPECIES_DE_REVERSAO,
     )
-    return rotulos, dict(etapas)
+    do_nascimento = {
+        (regra.MARCOS, campo): (rotulo, tipo, opcoes.get(campo, ()))
+        for campo, rotulo, tipo in (
+            tela.CAMPOS_DO_NASCIMENTO_DO_CORTE + tela.CAMPOS_DO_NASCIMENTO_DA_JANELA
+        )
+    }
+    return rotulos, do_nascimento, dict(etapas)
 
 
 def _legivel(valor, tipo, opcoes):
+    if tipo == ARREDONDAMENTO_DA_RESERVA:
+        # Objeto opaco, e `{}` é "não declarado" — e não "fora da lista": a leitura é a da sugestão
+        # do quadro, a mesma que a Revisão e a prévia da composição usam (FR-933).
+        return revisao.arredondamento_da_reserva(valor)
     if valor is None or valor == "" or valor is regra._AUSENTE:
         return "nada declarado"
     if isinstance(valor, bool) or tipo == tela.BOOLEANO:
@@ -296,6 +313,9 @@ def _criterios_em_palavras(criterios, conteudo, etapas):
 
 
 def _mudancas(efeito, conteudo, rotulos, etapas):
+    rotulos, do_nascimento = rotulos
+    if efeito.efeito == regra.NASCE:
+        rotulos = {**rotulos, **do_nascimento}
     linhas = []
     for colecao, campo, antes, depois in efeito.mudancas:
         if campo == "tiebreakers":
@@ -339,6 +359,7 @@ def _mudancas(efeito, conteudo, rotulos, etapas):
 
 
 def _motivo(efeito, rotulos):
+    rotulos, _ = rotulos
     if not efeito.campo_fora:
         return efeito.motivo
     colecao, campo, antes, depois = efeito.campo_fora
@@ -364,7 +385,8 @@ def rotulo(calculado):
 
 def blocos(calculados, conteudo):
     """O que a conferência desenha para cada gesto (FR-916, FR-918, UX-111 a UX-113)."""
-    rotulos, etapas = _apresentacao(conteudo)
+    rotulos, do_nascimento, etapas = _apresentacao(conteudo)
+    rotulos = (rotulos, do_nascimento)
     resultado = []
     for calculado in calculados:
         linhas = []
@@ -428,6 +450,7 @@ def consequencias(edital, vigente, resultante):
         if antes is None:
             continue
         marcos_de_antes = _por_id(antes.get("classificationMilestones"))
+        reservadas_novas = _modalidades_reservadas_novas(antes, perfil)
         com_ordem = []
         for marco in perfil.get("classificationMilestones") or []:
             anterior = marcos_de_antes.get(str(marco.get("id")))
@@ -439,8 +462,7 @@ def consequencias(edital, vigente, resultante):
             janela_mudou = (anterior.get("appealWindow") or None) != (
                 marco.get("appealWindow") or None
             )
-            nova_reservada = _modalidades_reservadas_novas(antes, perfil)
-            if not (regra_mudou or janela_mudou or nova_reservada):
+            if not (regra_mudou or janela_mudou or reservadas_novas):
                 continue
             tem_ato = any(
                 ato_vigente(edital=edital, marco_id=marco.get("id"), lista_id=lista)
@@ -461,7 +483,7 @@ def consequencias(edital, vigente, resultante):
                     f"O marco {nome}, do Perfil {perfil.get('code')}, já tem resultado divulgado, "
                     f"e a janela recursal dele muda: {_janela(anterior)} → {_janela(marco)}."
                 )
-        for codigo in _modalidades_reservadas_novas(antes, perfil):
+        for codigo in reservadas_novas:
             if com_ordem:
                 frases.append(
                     f"O recorte da Modalidade {codigo}, que nasce no Perfil {perfil.get('code')}, "

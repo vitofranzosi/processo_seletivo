@@ -295,9 +295,13 @@ o navegador as trata como qualquer sumário.
   {% endcomment %}
   <p class="navegacao-etapa barra-de-acoes">
     <button type="submit" class="botao secundario" formnovalidate>Ver o que vai mudar</button>
-    {% if pode_elaborar %}{% if resumo or gestos %}
+    {% comment %}
+    Só com Alteração a criar: o gesto cujos destinos já declaram o valor da origem não produz nenhuma,
+    e oferecer "Criar Retificação (0 Alterações)" seria oferecer a recusa.
+    {% endcomment %}
+    {% if pode_elaborar and alteracoes_do_ato %}
     <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação{% if gestos %} ({{ alteracoes_do_ato }} Alterações){% endif %}</button>
-    {% endif %}{% endif %}
+    {% endif %}
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
   </p>
 </form>

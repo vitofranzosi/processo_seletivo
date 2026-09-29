@@ -87,3 +87,48 @@ def test_sem_ordem_nem_divulgacao_nada_a_dizer(respostas):
     resultante = copy.deepcopy(vigente)
     _marco(resultante, 1)["appealWindow"]["durationDays"] = 3
     assert gesto.consequencias(None, vigente, resultante) == []
+
+
+# ---- a conferência em palavras (UX-112) ---------------------------------------------------------
+
+
+def _bloco(conteudo, unidade, *, alvo):
+    from processo_seletivo.publicacoes.domain import aplicacao as regra
+
+    efeitos = regra.efeitos(
+        conteudo, unidade=unidade, perfil=conteudo["profiles"][0]["id"], alvo=alvo
+    )
+    calculado = gesto.Calculado(
+        gesto=gesto.Gesto(f"{unidade}:g1", unidade, {}, True, frozenset(), ""),
+        efeitos=efeitos,
+        incluidos=frozenset(e.perfil for e in efeitos),
+        alteracoes=[],
+        origem={"perfil": conteudo["profiles"][0]["id"], "codigo": "P1"},
+    )
+    return {linha["codigo"]: linha for linha in gesto.blocos([calculado], conteudo)[0]["linhas"]}
+
+
+def test_o_arredondamento_da_reserva_se_diz_como_a_sugestao_do_quadro_o_diz():
+    """`{}` é "não declarado", e não "declarado fora da lista" (FR-933)."""
+    conteudo = _conteudo()
+    ppi = conteudo["profiles"][0]["competitionModalities"][1]
+    ppi["normativeRule"]["rounding"] = {"mode": "PARA_CIMA"}
+
+    linha = _bloco(conteudo, "modalidade", alvo=ppi["id"])["P2"]
+
+    assert linha["motivo"].endswith("(aqui: não declarado; na origem: a fração vira vaga)")
+
+
+def test_o_corte_que_nasce_usa_as_palavras_do_nascimento():
+    """O mesmo campo tem dois rótulos na tela: *"Quantos progridem"* muda de sentido ao nascer."""
+    conteudo = _conteudo()
+    _marco(conteudo, 2)["cutRule"] = None
+    _marco(conteudo, 1)["cutRule"]["surplusCount"] = 1
+
+    linhas = _bloco(conteudo, "corte", alvo=_id("c", 1))
+    nasce = dict((rotulo, depois) for rotulo, _, depois in linhas["P2"]["mudancas"])
+    muda = dict((rotulo, depois) for rotulo, _, depois in linhas["P3"]["mudancas"])
+
+    assert nasce["Quantos progridem"] == "Quantas vagas o quadro publicar no recorte"
+    assert "Alvo (só na quantidade fixa)" in nasce
+    assert muda == {"Suplentes alcançados na mesma faixa": "1"}
