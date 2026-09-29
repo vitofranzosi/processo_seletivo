@@ -38,8 +38,9 @@ def montar_cenario_da_convocacao(
     """Edital publicado com quadro, ordem, corte, Resultados **e apuração vigente**.
 
     **A forma declarada é a mensagem individual**, que é a dos Editais 77, 58 e 59 (item 8.3) — os
-    que esta feature existe para conduzir. `forma=None` monta o Edital que **não declarou**, e é o
-    que a recusa `forma_de_comunicacao_nao_declarada` existe para proteger.
+    que esta feature existe para conduzir. `forma=""` monta o Edital que **não declarou**, e é o
+    que a recusa `forma_de_comunicacao_nao_declarada` existe para proteger — desde a `051`
+    (FR-943) ele só se publica no instante do acervo, `sem_as_regras_da_046`.
 
     Devolve `(edital, etapa_pontuada, inscricoes)` — a mesma forma que a `014` e a `016` usam, para
     que quem leia os três arquivos reconheça o cenário.

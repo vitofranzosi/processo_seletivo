@@ -396,3 +396,22 @@ def conducao_da_lista(itens):
         if item.get("conducao"):
             return item["conducao"]
     return ""
+
+
+@register.filter
+def instante_de_evento(valor, eventos):
+    """O instante é o de um dos Eventos oferecidos? (051, FR-929)
+
+    Quando é, o campo de texto fica vazio e a escolha fica marcada: mostrar o mesmo instante nos
+    dois lugares faria o digitado — que vale sobre o escolhido — prender o valor antigo quando
+    alguém trocasse o Evento.
+    """
+    return bool(valor) and any(evento["instante"] == valor for evento in eventos or [])
+
+
+@register.simple_tag
+def arredondamentos_da_reserva():
+    """As escolhas do arredondamento da regra normativa, da lista fechada do domínio (051)."""
+    from processo_seletivo.editais.domain.quadro import ARREDONDAMENTOS
+
+    return list(ARREDONDAMENTOS.items())

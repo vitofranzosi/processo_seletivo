@@ -20,6 +20,7 @@ def record_event(
     idempotency_key="",
     new_state=_UNSET,
     new_revision=_UNSET,
+    detalhe=None,
 ):
     return RegistroAuditoria.objects.create(
         occurred_at=now,
@@ -36,4 +37,5 @@ def record_event(
         reason=reason,
         correlation_id=correlation_id,
         idempotency_key=idempotency_key,
+        detalhe=detalhe,
     )

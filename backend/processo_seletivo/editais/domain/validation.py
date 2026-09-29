@@ -822,7 +822,16 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
         return []
     nomeado = _marco_nomeado(marco)
     findings = _forma_do_alvo(regra, caminho=caminho, nomeado=nomeado)
-    if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
+    # **Sob sorteio, o empate na última posição não existe** (051, FR-928): a ordem sorteada é
+    # total, e ninguém divide posição com ninguém. Cobrar a declaração era cobrar a resposta a uma
+    # pergunta sem efeito — e o cartão já não a faz. Declarada, continua conferida: um valor fora
+    # do vocabulário é erro em qualquer marco.
+    sorteia = marcos.ordena_por_sorteio(
+        marco.get("orderProduction") or "", metodo_declarado=bool(marco.get("drawMethod"))
+    )
+    if (not sorteia or regra.get("tieOutcome")) and (
+        regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE
+    ):
         findings.append(
             _impeditivo(
                 "cut_rule_sem_desfecho_de_empate",
@@ -1509,6 +1518,7 @@ def validate_for_publication(
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
     findings.extend(_perfil_sem_corte(snapshot, ato=ato))
+    findings.extend(_perfil_que_corta_sem_forma_de_convocacao(snapshot, ato=ato))
     findings.extend(_etapa_sem_resultado(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
@@ -2007,6 +2017,42 @@ def _perfil_sem_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
                     "Etapa alguma."
                 ),
                 path=f"/profiles/id={perfil.get('id', '')}/classificationMilestones",
+            )
+        )
+    return findings
+
+
+def _perfil_que_corta_sem_forma_de_convocacao(snapshot, *, ato):
+    """Perfil que corta e não diz como convoca não convoca ninguém (051, FR-943).
+
+    **O defeito aparecia depois do ato imutável.** A forma não declarada publicava sem achado, e a
+    convocação — a primeira operação que precisa dela — recusava, mandando retificar (019; 050,
+    `D-002`). Quem corta vai convocar: a faixa existe para isso. Declarada uma vez no Edital
+    (FR-926), cumprir custa um gesto, e a pergunta volta para antes da publicação, onde ainda é
+    rascunho.
+
+    **Só na publicação**, pela mesma razão de `_perfil_sem_corte`: o acervo publicado sem forma
+    continua retificável, e a Retificação não é o lugar de cobrar o que a composição deixou passar.
+    O Perfil que não corta fica de fora — ele não convoca, e cobrar a forma dele seria cobrar a
+    resposta a uma pergunta que ele não coloca.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if _nenhum_marco_corta(perfil) or perfil.get("callForm"):
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_cuts_without_call_form",
+                message=(
+                    f"O Perfil '{rotulo}' corta e não declara como a convocação é comunicada: a "
+                    "convocação dele seria recusada depois de publicado. Declare a forma na etapa "
+                    "Perfis de Vaga — uma vez para todos os Perfis, no controle do Edital."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/callForm",
             )
         )
     return findings

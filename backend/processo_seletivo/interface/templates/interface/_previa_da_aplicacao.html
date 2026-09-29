@@ -1,0 +1,51 @@
+{% comment %}
+**A prévia do "aplicar a todos"** (051, FR-916, UX-111, UX-113). É a forma que a Constituição 1.2.0
+deixou para as specs: o alcance e o efeito em cada Perfil, antes da confirmação, e nada gravado até
+ela. Mora **dentro** do formulário da etapa porque a confirmação reenvia o digitado inteiro — a
+gravação é a da etapa, e o que não for reenviado seria apagado (R-001).
+
+Uma linha por Perfil, na ordem dos Perfis, com um de quatro efeitos. *Fora do alcance* não tem caixa:
+o gesto não o toca, e oferecer marcá-lo seria prometer o que a regra recusa. A impressão oculta é o
+que a confirmação precisa reencontrar; se o que está na tela mudar entre as duas, a confirmação é
+recusada e esta seção volta com a prévia de agora.
+{% endcomment %}
+<section aria-labelledby="previa-titulo" class="consequencias" id="previa-da-aplicacao">
+  <h2 id="previa-titulo">Aplicar {{ previa.unidade }} {{ previa.alcance }}</h2>
+  {% if previa.recusa %}<p class="aviso" role="alert">{{ previa.recusa }}</p>{% endif %}
+  <p role="status">{{ previa.frase }}. Nada foi gravado ainda. Desmarque o Perfil que diverge de
+    propósito.</p>
+  <div class="rolagem">
+  <table>
+    <thead><tr>
+      <th scope="col">Aplicar</th><th scope="col">Perfil</th>
+      <th scope="col">Efeito</th><th scope="col">O que muda</th>
+    </tr></thead>
+    <tbody>
+      {% for linha in previa.linhas %}
+      <tr>
+        <td>{% if linha.aplicavel %}<input type="checkbox" name="aplicar_destino"
+               id="aplicar-destino-{{ forloop.counter }}" value="{{ linha.perfil }}"
+               {% if linha.marcado %}checked{% endif %}>
+          <label for="aplicar-destino-{{ forloop.counter }}" class="oculto">Aplicar a {{ linha.codigo }}</label>{% endif %}</td>
+        <th scope="row">{{ linha.codigo }} — {{ linha.denominacao }}</th>
+        <td>{{ linha.efeito_em_palavras }}{% if linha.motivo %}: {{ linha.motivo }}{% endif %}</td>
+        <td>
+          {% if linha.quantidade_fixa %}<p><strong>Quantidade fixa do corte:
+            {{ linha.quantidade_fixa.0|default_if_none:"não declarada" }} → {{ linha.quantidade_fixa.1|default_if_none:"—" }}</strong></p>{% endif %}
+          {% if linha.mostra_ja_declara %}<p class="nota">Já declara: {{ linha.ja_declara }}</p>{% endif %}
+          {% if linha.mudancas %}<ul>{% for rotulo, antes, depois in linha.mudancas %}
+            <li>{{ rotulo }}: <span class="antes">{{ antes }}</span> → <span class="depois">{{ depois }}</span></li>{% endfor %}</ul>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <input type="hidden" name="aplicar_impressao" value="{{ previa.impressao }}">
+  <p>
+    {% if previa.aplicaveis %}<button type="submit" class="acao" name="confirmar_aplicacao"
+            value="{{ previa.valor }}" formnovalidate>Aplicar aos Perfis marcados ({{ previa.aplicaveis }})</button>{% endif %}
+    <button type="submit" class="acao" name="cancelar_aplicacao" value="{{ previa.valor }}"
+            formnovalidate>Não aplicar</button>
+  </p>
+</section>

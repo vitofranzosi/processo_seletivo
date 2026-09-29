@@ -24,10 +24,12 @@ elabora; o que este módulo garante é que nenhuma delas fique de fora.
 from datetime import datetime
 
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain import quadro
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.mutabilidade import RAIZ
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
+from processo_seletivo.interface import origens
 from processo_seletivo.interface.forms import ZONA
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     criterio_com_a_ausencia,
@@ -57,6 +59,16 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
+
+#: Onde as leituras acham o alcance dos gestos (051, FR-934). O snapshot chega a cada leitura por
+#: `_cada`, e é ele que viaja; a chave vive numa cópia rasa feita em `blocos`, e nunca no conteúdo.
+_ALCANCE = "__alcance_dos_gestos__"
+
+
+def _alcance_dos_gestos(snapshot):
+    return (snapshot or {}).get(_ALCANCE) or {}
+
+
 CARATER = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
 
 
@@ -66,7 +78,7 @@ def _instante(valor):
     return datetime.fromisoformat(str(valor)).astimezone(ZONA).strftime("%d/%m/%Y %H:%M")
 
 
-def _perfil(perfil, _snapshot):
+def _perfil(perfil, snapshot):
     linhas = [
         # **O total e o quadro na mesma linha** (027, FR-326, UX-043). A Revisão dizia
         # "2 vaga(s) imediata(s)" e nunca mencionava o quadro: quem submetia lia o número que o
@@ -108,7 +120,17 @@ def _perfil(perfil, _snapshot):
         # ninguém escreveu outra, e imprimi-la dobraria a linha sem dizer nada.
         if modalidade.get("description") and modalidade["description"] != modalidade.get("name"):
             partes.append(modalidade["description"])
-        linhas.append("Modalidade: " + " · ".join(partes))
+        # O arredondamento da reserva, quando declarado (051, FR-933): é ele que decide quantas
+        # vagas a sugestão do quadro propõe, e não se corrige depois de publicado.
+        if regra.get("rounding"):
+            partes.append(f"arredondamento: {quadro.em_palavras(regra['rounding'])}")
+        gesto = origens.gesto_da_modalidade(_alcance_dos_gestos(snapshot), perfil, modalidade)
+        linhas.append(
+            origens.com_origem(
+                "Modalidade: " + " · ".join(partes),
+                origens.frase_do_gesto(gesto) if gesto else "",
+            )
+        )
     if perfil.get("competitionModalities"):
         linhas.append(f"Ampla concorrência: {_ampla(perfil)}")
     # O quadro de vagas, na ordem declarada e com a linha geral primeiro. Quem submete precisa ver
@@ -124,7 +146,24 @@ def _perfil(perfil, _snapshot):
             if linha.get("modalityId")
             else "Ampla concorrência"
         )
-        linhas.append(f"Quadro: {recorte} — {linha.get('immediateVacancies', 0)} vaga(s)")
+        modalidade_da_linha = next(
+            (
+                item
+                for item in perfil.get("competitionModalities") or []
+                if str(item.get("id")) == str(linha.get("modalityId"))
+            ),
+            None,
+        )
+        linhas.append(
+            origens.com_origem(
+                f"Quadro: {recorte} — {linha.get('immediateVacancies', 0)} vaga(s)",
+                origens.da_linha_do_quadro(
+                    linha.get("immediateVacancies"), modalidade_da_linha, perfil
+                )
+                if modalidade_da_linha
+                else "",
+            )
+        )
     sem_linha = _listas_sem_linha(perfil, denominacoes)
     if sem_linha:
         # Dito aqui, e não só na lista de pendências: quem lê o bloco do Perfil precisa ver, ao
@@ -141,14 +180,25 @@ def _perfil(perfil, _snapshot):
     # resposta a uma pergunta que o Perfil não coloca.
     especie = (perfil.get("vacancyReversion") or {}).get("kind")
     if especie or set(denominacoes) - {str(perfil.get("generalCompetitionModalityId"))}:
+        gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "vacancyReversion")
         linhas.append(
-            "Reverter vaga reservada não preenchida para a ampla concorrência: "
-            + REVERSAO.get(especie, especie or "não")
+            origens.com_origem(
+                "Reverter vaga reservada não preenchida para a ampla concorrência: "
+                + REVERSAO.get(especie, especie or "não"),
+                origens.frase_do_gesto(gesto) if gesto else "",
+            )
         )
     # A ausência é dita, e não omitida: a `019` recusa convocar quem não declarou a forma, e é
     # aqui que quem submete ainda pode declará-la sem Retificação.
+    gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "callForm")
     linhas.append(
-        f"Como a convocação é comunicada: {forma_de_convocacao_por_extenso(perfil.get('callForm'))}"
+        origens.com_origem(
+            "Como a convocação é comunicada: "
+            + forma_de_convocacao_por_extenso(perfil.get("callForm")),
+            origens.frase_do_gesto(gesto)
+            if gesto
+            else origens.da_forma_de_convocacao(perfil, (snapshot or {}).get("profiles") or []),
+        )
     )
     # Os fatos, com o código: é por ele que os critérios de desempate os alcançam, e é ele que
     # identifica o mesmo fato em dois Perfis.
@@ -167,6 +217,19 @@ REVERSAO = {
     "ON_EXHAUSTION": "só quando a lista reservada esgota",
     "ON_BALANCE": "a quantidade que ficou sem preencher",
 }
+
+
+#: Os rótulos dos dois valores do Perfil que o controle do Edital aplica (051, FR-926) — os mesmos
+#: com que `_perfil` os lê, para que a prévia e a conferência digam a mesma coisa.
+ROTULO_DO_CAMPO_DO_PERFIL = {
+    "callForm": "Como a convocação é comunicada",
+    "vacancyReversion": "Reverter vaga reservada não preenchida para a ampla concorrência",
+}
+
+
+def arredondamento_da_reserva(rounding):
+    """O arredondamento da regra normativa em palavras (051, FR-933)."""
+    return quadro.em_palavras(rounding)
 
 
 def _dia(valor):
@@ -236,7 +299,12 @@ def _evento(evento, _snapshot):
 
 def _etapa(etapa, snapshot):
     caracteres = [rotulo for chave, rotulo in CARATER if etapa.get(chave)]
-    linhas = ["Caráter: " + (" e ".join(caracteres) if caracteres else "não informado")]
+    linhas = [
+        origens.com_origem(
+            "Caráter: " + (" e ".join(caracteres) if caracteres else "não informado"),
+            origens.da_etapa(etapa),
+        )
+    ]
     if etapa.get("weight") is not None:
         linhas.append(f"Peso: {etapa['weight']}")
     if etapa.get("minimumScore") is not None:
@@ -397,7 +465,12 @@ def _leitura_do_marco(marco, perfil, snapshot):
         if NORMALIZACAO_DO_MARCO.get(marco.get("normalization")):
             pares.append(("Normalização", NORMALIZACAO_DO_MARCO[marco["normalization"]]))
     if arredondamento := _arredondamento(marco):
-        pares.append(("Arredondamento", arredondamento))
+        pares.append(
+            (
+                "Arredondamento",
+                origens.com_origem(arredondamento, origens.do_arredondamento_do_marco(marco)),
+            )
+        )
     if sorteia:
         pares.append(("Sorteio", f"método {_origem_do_metodo(snapshot, marco)}"))
         proprio = marco.get("drawMethod") or {}
@@ -406,7 +479,7 @@ def _leitura_do_marco(marco, perfil, snapshot):
         # filtro, imprimindo "Quando: —" em todo marco que referencia o comum.
         if proprio:
             pares.extend(
-                (f"Sorteio — {rotulo}", valor)
+                (f"Sorteio — {rotulo}", _com_origem_do_metodo(campo, valor, proprio, snapshot))
                 for campo, _, rotulo in CAMPOS_DO_METODO
                 if (valor := _valor_do_campo_do_metodo(campo, proprio))
             )
@@ -421,7 +494,14 @@ def _leitura_do_marco(marco, perfil, snapshot):
     regra = marco.get("cutRule")
     if isinstance(regra, dict):
         # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.
-        pares.append(("Corte", _regra_de_corte(marco, etapas) or "declarado sem alvo"))
+        pares.append(
+            (
+                "Corte",
+                origens.com_origem(
+                    _regra_de_corte(marco, etapas) or "declarado sem alvo", origens.do_corte(regra)
+                ),
+            )
+        )
         # Logo depois do corte, e sem par quando não declarados: "essa quantidade" é a que ele
         # acabou de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado"
         # aqui leria como o silêncio legítimo do recurso, que não é.
@@ -439,6 +519,17 @@ def _leitura_do_marco(marco, perfil, snapshot):
         for indice, criterio in enumerate(criterios, start=1)
     )
     return tuple(pares)
+
+
+def _com_origem_do_metodo(campo, valor, metodo, snapshot):
+    """O campo do método com a origem, quando ela é derivada: o Evento, ou a frase da regra."""
+    if campo == "occurrenceAt":
+        return origens.com_origem(
+            valor, origens.do_instante(metodo.get("occurrenceAt"), (snapshot or {}).get("schedule"))
+        )
+    if campo in ("normalization", "substitutionRule"):
+        return origens.com_origem(valor, origens.da_prosa(metodo.get(campo)))
+    return valor
 
 
 def _quem(codigos):
@@ -488,6 +579,11 @@ def _marcos_agrupados(snapshot):
                 (posicao, pares), {"posicao": posicao, "pares": pares, "membros": []}
             )
             grupo["membros"].append((perfil.get("code", ""), marco.get("name", ""), derivada))
+            gesto = origens.gesto_do_marco(_alcance_dos_gestos(snapshot), perfil)
+            if gesto is not None:
+                grupo.setdefault("gestos", {}).setdefault(gesto.pk, (gesto, []))[1].append(
+                    perfil.get("code", "")
+                )
     varios = any(grupo["posicao"] for grupo in grupos.values())
     itens = []
     for posicao in sorted({grupo["posicao"] for grupo in grupos.values()}):
@@ -503,7 +599,13 @@ def _marcos_agrupados(snapshot):
             item = {
                 "titulo": titulo,
                 "linhas": [f"Denominação: {_denominacao(grupo)}"]
-                + [f"{rotulo}: {valor}" for rotulo, valor in grupo["pares"]],
+                + [f"{rotulo}: {valor}" for rotulo, valor in grupo["pares"]]
+                # A origem do materializado (051, FR-934, FR-935): quem o gesto alcançou e ainda
+                # tem o valor que ele gravou. O que foi editado depois não aparece aqui.
+                + [
+                    f"Origem: {_enumerar(codigos)} — {origens.frase_do_gesto(gesto)}"
+                    for gesto, codigos in (grupo.get("gestos") or {}).values()
+                ],
             }
             if grupo is not referencia:
                 diferentes = _divergencias(grupo["pares"], referencia["pares"])
@@ -542,7 +644,7 @@ def _classificacao(snapshot):
             {
                 "titulo": "Método do sorteio comum a este Edital",
                 "linhas": [
-                    f"{rotulo}: {valor}"
+                    f"{rotulo}: {_com_origem_do_metodo(campo, valor, comum, snapshot)}"
                     for campo, _, rotulo in CAMPOS_DO_METODO
                     if (valor := _valor_do_campo_do_metodo(campo, comum))
                 ],
@@ -864,8 +966,14 @@ def _teto_de_inscricoes(snapshot):
     ]
 
 
-def blocos(snapshot):
-    """O Edital inteiro, na ordem em que se elabora, com o caminho de volta para cada etapa."""
+def blocos(snapshot, registros=None):
+    """O Edital inteiro, na ordem em que se elabora, com o caminho de volta para cada etapa.
+
+    `registros` são as linhas `APLICAR_A_TODOS` da trilha deste Edital, em ordem de ocorrência
+    (051): é delas que sai a origem do que um gesto materializou.
+    """
+    if registros:
+        snapshot = {**snapshot, _ALCANCE: origens.gestos_por_destino(registros)}
     conferencia = [
         {
             "titulo": "Identificação",
@@ -883,3 +991,71 @@ def blocos(snapshot):
     for titulo, etapa, leitura in BLOCOS:
         conferencia.append({"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)})
     return conferencia
+
+
+# ---- o que não se corrige depois de publicado (051, FR-936, a DP-19) ----------------------------
+
+_ESPECIE_DO_ALVO = {
+    "FIXED": "uma quantidade fixa",
+    "FROM_VACANCY_TABLE": "quantas vagas o quadro publicar",
+}
+_CONTINUACAO = {
+    "ALLOWED": "admite continuar além da faixa publicada",
+    "NONE": "a faixa é o que foi publicado",
+}
+_TIPO_DO_CRITERIO = {
+    "MAIOR_PONTUACAO_NA_ETAPA": "a maior pontuação numa Etapa",
+    "MAIOR_VALOR_DE_FATO": "o maior valor de um fato",
+    "MENOR_VALOR_DE_FATO": "o menor valor de um fato",
+}
+_QUANDO_FALTA = {
+    "ULTIMO_NO_CRITERIO": "fica por último no critério",
+    "CRITERIO_NAO_SE_APLICA": "o critério não se aplica",
+}
+
+
+def _valor_definitivo(colecao, caminho, valor, snapshot):
+    """O valor de um campo definitivo como quem confere o lê — nunca o enum, nunca a identidade."""
+    etapas = por_identificador(snapshot.get("stages"))
+
+    def etapa(identidade):
+        return (etapas.get(str(identidade)) or {}).get("name") or "Etapa que não existe"
+
+    if caminho == "matriculationRequest/moment":
+        return _QUANDO.get(valor, str(valor))
+    if (colecao, caminho) == ("profiles", "reserveType"):
+        return RESERVA.get(valor, str(valor))
+    if caminho == "normativeRule/rounding":
+        return quadro.em_palavras(valor)
+    if (colecao, caminho) == ("declaredFacts", "type"):
+        return TIPO_DO_FATO.get(valor, str(valor))
+    if (colecao, caminho) == ("classificationMilestones", "stages"):
+        return ", ".join(etapa(item) for item in valor) or "nenhuma"
+    if caminho == "cutRule/targetKind":
+        return _ESPECIE_DO_ALVO.get(valor, str(valor))
+    if caminho == "cutRule/governedStage":
+        return "nenhuma" if valor == "NONE" else etapa(valor)
+    if caminho == "cutRule/continuation":
+        return _CONTINUACAO.get(valor, str(valor))
+    if (colecao, caminho) == ("tiebreakers", "type"):
+        return _TIPO_DO_CRITERIO.get(valor, str(valor))
+    if caminho == "parameters/stageId":
+        return etapa(valor)
+    if caminho == "parameters/factId":
+        for perfil in snapshot.get("profiles") or []:
+            for fato in perfil.get("declaredFacts") or []:
+                if str(fato.get("id")) == str(valor):
+                    return fato.get("code") or "—"
+        return "fato que não existe"
+    if caminho == "whenMissing":
+        return _QUANDO_FALTA.get(valor, str(valor))
+    return str(valor)
+
+
+def definitivos(snapshot):
+    """Os campos que este Edital declara e que não se corrigem depois de publicados (FR-936)."""
+    from processo_seletivo.interface.retificacao import ROTULO_DO_EXCLUIDO
+
+    return origens.campos_definitivos(
+        snapshot, rotulos=ROTULO_DO_EXCLUIDO, em_palavras=_valor_definitivo
+    )

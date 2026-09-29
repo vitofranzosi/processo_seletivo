@@ -126,6 +126,11 @@ def complete_draft(seed=0):
                 "classificationMilestones": [
                     marco_minimo(identidade_do_marco(identificador(401, seed)))
                 ],
+                # **O marco corta, e quem corta declara como convoca** (051, FR-943): sem a forma,
+                # a convocação deste Perfil seria recusada depois de publicado, e desde a `051` a
+                # publicação recusa antes. Por publicação porque é a forma que não pede endereço de
+                # ninguém — a fixture mínima não tem candidato a quem mandar mensagem.
+                "callForm": "PUBLICATION",
             }
         ],
         "schedule": [

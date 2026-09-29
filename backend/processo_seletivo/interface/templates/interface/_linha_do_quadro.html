@@ -39,6 +39,7 @@
     <input type="number" min="0" id="linha-{{ indice }}-{{ sub }}-immediateVacancies"
            name="linha-{{ indice }}-{{ sub }}-immediateVacancies"
            value="{{ linha.immediateVacancies|default_if_none:'' }}"
+           {% if linha.sugestao.valor is not None %}placeholder="{{ linha.sugestao.valor }}"{% endif %}
            {% if recusado_quantidade or recusado_recorte %}aria-invalid="true"{% endif %}
            aria-describedby="ajuda-linha-{{ indice }}-{{ sub }}{% if recusado_quantidade %} recusa-linha-{{ indice }}-{{ sub }}-immediateVacancies{% endif %}{% if recusado_recorte %} recusa-linha-{{ indice }}-{{ sub }}-modalityId{% endif %}">
     {% if recusado_quantidade %}<span class="recusa" role="alert" id="recusa-linha-{{ indice }}-{{ sub }}-immediateVacancies">{{ recusado_quantidade }}</span>{% endif %}
@@ -54,7 +55,10 @@
       da ampla concorrência: o recorte de que todos os inscritos participam, inclusive quem
       concorre por reserva. É dela que a ocupação e a convocação tiram a quantidade a
       apurar.{% else %}Quantas vagas cabem nesta lista de concorrência. Em branco: quantidade não
-      declarada — que não é o mesmo que zero.{% endif %}</span>
+      declarada — que não é o mesmo que zero.{% if linha.sugestao %} Pelo percentual:
+      {{ linha.sugestao.conta }}{% if linha.sugestao.valor is not None %}, sugestão
+      {{ linha.sugestao.valor }}{% else %}, entre {{ linha.sugestao.piso }} e
+      {{ linha.sugestao.teto }} — declare o arredondamento da reserva para a sugestão escolher{% endif %}.{% endif %}{% endif %}</span>
   </p>
   {% endif %}
 </div>
