@@ -15,10 +15,15 @@
   <p class="ajuda">Este é o conteúdo que a submissão registra como versão candidata à Publicação.
     É lido do próprio conteúdo normativo — o mesmo que gera o documento.</p>
 
+  {% comment %}
+  O `id` é o índice do bloco, e não a etapa: três blocos voltam para a etapa Inscrição — o teto, o
+  Requerimento de Matrícula e os Documentos Exigidos —, e com a etapa no `id` as seções se
+  nomeavam todas pelo primeiro título (RC-12).
+  {% endcomment %}
   {% for bloco in conferencia %}
-  <section class="cartao conferencia" aria-labelledby="bloco-{{ bloco.etapa }}">
+  <section class="cartao conferencia" aria-labelledby="bloco-{{ forloop.counter }}">
     <header>
-      <h3 id="bloco-{{ bloco.etapa }}">{{ bloco.titulo }} ({{ bloco.itens|length }})</h3>
+      <h3 id="bloco-{{ forloop.counter }}">{{ bloco.titulo }} ({{ bloco.itens|length }})</h3>
       <a href="{% url 'interface:compor-etapa' edital.id bloco.etapa %}" class="acao">Revisar</a>
     </header>
     {% if bloco.itens %}

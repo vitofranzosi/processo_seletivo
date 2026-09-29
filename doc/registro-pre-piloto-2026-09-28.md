@@ -141,7 +141,20 @@ continua recebendo.
 Encontrados ao implementar as decisões acima e as correções diretas da DP-20, em 28/09. Registro,
 não escopo: nenhum foi corrigido.
 
-- **O teto de inscrições continua sem campo na composição** (RC-12). O documento passou a
+- **O teto de inscrições continua sem campo na composição** (RC-12). *Feito pelo PR 224, em 28/09:
+  o campo "Inscrições por candidato neste Edital" na seção Período da etapa Inscrição, vazio = sem
+  limite, mínimo 1, com a recusa no comando (`editais/application/teto.py`) e não só no formulário;
+  a Revisão o mostra num bloco que volta para a Inscrição, com a frase do documento — e o `id` do
+  título de cada bloco passou a ser o índice, porque três blocos voltam para a Inscrição e se
+  nomeavam todos pelo primeiro. A cópia da `023` continua sem copiá-lo. Três coisas vistas ao
+  fazê-lo, registradas e não corrigidas: a Retificação aceita teto `0` ou negativo
+  (`interface/retificacao.py`, o `int()` do tipo inteiro), e com `0` a submissão recusa todo mundo;
+  o portal não diz o teto — nem a página da seleção, nem a revisão da inscrição, só o documento — e
+  continua oferecendo *Inscrever-se* em outra vaga depois de o teto ser atingido, de modo que a
+  pessoa preenche a segunda inscrição e só descobre a recusa ao enviar (corrigido pelo PR 225 —
+  ver *"O teto de inscrições no portal"*, abaixo); e, na composição, uma recusa
+  logo depois de salvar aparece junto da faixa "Rascunho salvo", porque o formulário posta para a
+  URL que ainda carrega `?salvo=`.* O documento passou a
   publicá-lo, e a Revisão já o dizia; mas o valor só nasce pelo ORM, pelo `seed_demo` ou por
   Retificação depois de publicado (`interface/retificacao.py`). A auditoria pede *"decidir o campo
   na etapa Inscrição"*, e a decisão não foi tomada. Até lá, o Edital do piloto que precise de teto o
@@ -179,7 +192,7 @@ mudar nenhuma decisão:
 - **As pendências de seção** iam todas para a etapa Conteúdo, inclusive os impeditivos de
   topologia do catálogo, que ela não corrige (`FR-007`); só os dois avisos de texto vão para lá agora.
 
-## O teto de inscrições no portal (RC-12, 28/09/2026)
+## O teto de inscrições no portal (RC-12, PR 225, 28/09/2026)
 
 Dois resíduos do RC-12, vistos pelo navegador ao verificar o PR 224: o portal não dizia o teto — só
 o documento o dizia —, e continuava oferecendo *"Inscrever-se nesta vaga"* em outra vaga depois de
