@@ -42,6 +42,8 @@ Quem lia as duas frases juntas não tinha como saber qual delas era verdade.
 {% if salvo %}<p class="sucesso" role="status"
   {% if ator %}data-rascunho-salvo="{{ edital.id }}:{{ salvo_chave }}:{{ ator.subject }}"{% endif %}
   >Rascunho salvo — {{ salvo }}.</p>{% endif %}
+{% if aplicado %}<p class="sucesso" role="status">Aplicado a {{ aplicado }} Perfil(is). A Revisão
+  mostra de onde veio cada valor.</p>{% endif %}
 
 {% comment %}
 A tela que volta de "Restaurar o que eu havia digitado" (RC-08). O servidor a remonta sem gravar, e

@@ -158,10 +158,12 @@ def perfil(identificador, sigla, nome, *, modalidades=(), requisitos=(), fatos=(
         # vaga reservada" — que é o que todo Edital publicado antes do degrau afirma —, e nunca
         # "reverte do jeito comum" (016, D-007, FR-245).
         "vacancyReversion": None,
-        # A da versão 15, pela mesma razão: `None` significa "este Edital não declarou como comunica
-        # a convocação" — que é o que todo Edital publicado antes do degrau afirma —, e nunca
-        # "convoca por publicação" (019, D-009, FR-287).
-        "callForm": None,
+        # A da versão 15. `None` significa "este Edital não declarou como comunica a convocação" —
+        # o que todo Edital publicado antes do degrau afirma —, e nunca "convoca por publicação"
+        # (019, D-009, FR-287). **O construtor a declara desde a `051`** (FR-943): o marco dele
+        # corta, e quem corta sem forma não publica. O acervo sem forma continua a um `None` de
+        # distância, para quem o testa.
+        "callForm": "PUBLICATION",
     }
 
 
@@ -263,7 +265,8 @@ def rascunho_publicavel():
         # Pela mesma assimetria: opcional no rascunho, presente no publicado (014, FR-231).
         perfil_.pop("generalCompetitionModalityId", None)
         perfil_.pop("vacancyReversion", None)
-        perfil_.pop("callForm", None)
+        # A forma de convocação **fica** (051, FR-943): o marco deste rascunho corta, e quem corta
+        # sem declarar como convoca não publica. O rascunho a aceita desde a `019`.
         # **Mas a ampla concorrência é declarada** (027, FR-317). Quem compõe um Perfil com uma
         # Modalidade chamada "AC" e não diz que ela é a da ampla publica um Edital cujo total não
         # governa recorte nenhum — o sistema não a reconhece pelo nome, e a `025` recusou por

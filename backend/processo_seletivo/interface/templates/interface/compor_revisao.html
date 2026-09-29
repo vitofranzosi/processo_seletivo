@@ -54,6 +54,29 @@
   {% endfor %}
 </section>
 
+{% comment %}
+**O que não se corrige depois de publicado** (051, FR-936, UX-115; a `DP-19`). Antes do botão de
+submeter, porque é a última tela em que corrigi-los ainda é editar o rascunho — depois, só por outro
+Edital. Derivado do contrato de mutabilidade, com a razão escrita nele; nenhum cartão da composição
+ganhou selo (`FR-428` da `030`), e é por isso que o aviso mora aqui.
+{% endcomment %}
+{% if definitivos %}
+{# `conferencia` é o que faz cada linha ir para a sua: a folha quebra o `.detalhe` só dentro dela. #}
+<section aria-labelledby="definitivos-titulo" class="consequencias irreversivel conferencia">
+  <h2 id="definitivos-titulo">O que não se corrige depois de publicado ({{ definitivos|length }})</h2>
+  <p>Estes campos não se corrigem por Retificação. Confira-os agora, enquanto ainda são
+    rascunho.</p>
+  <ul class="resumo-lista">
+    {% for item in definitivos %}
+    <li>
+      <strong>{{ item.titulo }}</strong>
+      {% for linha in item.linhas %}<span class="detalhe">{{ linha }}</span>{% endfor %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <p class="navegacao-etapa">
   <a href="{% url 'interface:compor-etapa' edital.id anterior %}" class="acao">‹ Voltar</a>
   {% comment %}

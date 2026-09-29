@@ -88,6 +88,11 @@ def perfis(numero, *, janela_recursal="declarada"):
             "reserveType": "LIMITED",
             "reserveLimit": 6,
             "locality": "Campus Serra",
+            # **Como a convocação é comunicada** (051, FR-943). O marco deste Perfil corta, e quem
+            # corta sem declarar a forma deixou de ser publicável: a demonstração convocaria e a
+            # comunicação seria recusada depois. Por mensagem individual porque é a forma que o
+            # correio local da demonstração entrega.
+            "callForm": "INDIVIDUAL_MESSAGE",
             # O marco classificatório da 015: a combinação das duas Etapas pontuadas, com o
             # desempate declarado sobre os fatos que `_declarar_fatos_e_teto` cria. Ele existe aqui
             # porque sem marco não há ordem a emitir — e sem ordem emitida não há resultado a
@@ -194,6 +199,11 @@ def perfis(numero, *, janela_recursal="declarada"):
             "immediateVacancies": 0,
             "reserveType": "UNLIMITED",
             "locality": "Campus Vitória",
+            # **Como a convocação é comunicada** (051, FR-943). O marco deste Perfil corta, e quem
+            # corta sem declarar a forma deixou de ser publicável: a demonstração convocaria e a
+            # comunicação seria recusada depois. Por mensagem individual porque é a forma que o
+            # correio local da demonstração entrega.
+            "callForm": "INDIVIDUAL_MESSAGE",
             # **O marco do cadastro de reserva** (032, FR-457). Este Perfil não tinha marco
             # nenhum, e a demonstração publicava um Perfil que não classificava ninguém — o
             # mesmo defeito que a auditoria de 16/09/2026 encontrou em Edital real, semeado
@@ -489,6 +499,11 @@ def perfil_de_sorteio(numero):
             "reserveType": "NONE",
             "reserveLimit": None,
             "locality": "Polo Serra",
+            # **Como a convocação é comunicada** (051, FR-943). O marco deste Perfil corta, e quem
+            # corta sem declarar a forma deixou de ser publicável: a demonstração convocaria e a
+            # comunicação seria recusada depois. Por mensagem individual porque é a forma que o
+            # correio local da demonstração entrega.
+            "callForm": "INDIVIDUAL_MESSAGE",
             "duties": "Curso técnico subsequente.",
             "workload": "1.200 horas",
             "compensation": "Gratuito",

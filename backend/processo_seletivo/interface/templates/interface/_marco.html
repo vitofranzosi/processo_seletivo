@@ -343,9 +343,22 @@ cartão leva ao lugar onde a resposta que o revela é dada.
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt">Quando a ocorrência acontece</label>
+      {% comment %}
+      **O instante tirado de um Evento do Cronograma** (051, FR-929): a escolha grava o início do
+      Evento, e o texto, quando preenchido, vale sobre ela — é assim que se diverge.
+      {% endcomment %}
+      {% if eventos_do_sorteio %}
+      <select id="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent" name="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent"
+              aria-label="Tirar o instante de um Evento do Cronograma">
+        <option value="">Outro instante, digitado ao lado</option>
+        {% for evento in eventos_do_sorteio %}
+        <option value="{{ evento.instante }}"{% if evento.instante == marco.drawOccurrenceAt %} selected{% endif %}>{{ evento.rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
       <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
              name="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
-             value="{{ marco.drawOccurrenceAt }}" placeholder="2026-11-20T20:00:00-03:00"
+             value="{% if not marco.drawOccurrenceAt|instante_de_evento:eventos_do_sorteio %}{{ marco.drawOccurrenceAt }}{% endif %}" placeholder="2026-11-20T20:00:00-03:00"
              aria-describedby="ajuda-quando-{{ indice }}-{{ sub }}">
       <span class="oculto" id="ajuda-quando-{{ indice }}-{{ sub }}">Com fuso, como
         2026-11-20T20:00:00-03:00. É este instante que separa "a fonte ainda não publicou" de "a
@@ -501,7 +514,7 @@ cartão leva ao lugar onde a resposta que o revela é dada.
   Os quatro campos sem padrao ficam visiveis mesmo vazios, e quem cobra e a publicacao. O rascunho
   pode estar pela metade; o Edital publicado nao.
   {% endcomment %}
-  <details class="bloco-do-marco"{% if marco|declarou:"cut" %} open{% endif %}>
+  <details class="bloco-do-marco"{% if marco|declarou:"cut" and not marco.corte_padrao %} open{% endif %}>
     <summary>Regra de corte
       <span class="resumo-do-bloco">{% if marco.cutTargetKind == "FIXED" %}quantidade fixa{% if marco.cutTargetCount %} de {{ marco.cutTargetCount }}{% endif %}{% elif marco.cutTargetKind == "FROM_VACANCY_TABLE" %}o que o quadro de vagas publicar{% elif marco|declarou:"cut" %}começada, e sem dizer quantos progridem{% else %}este marco não corta{% endif %}</span></summary>
   <fieldset class="campos">
@@ -536,6 +549,14 @@ cartão leva ao lugar onde a resposta que o revela é dada.
         <span class="oculto" id="ajuda-suplentes-{{ indice }}-{{ sub }}">Entram na mesma emissão do
           alvo: quem o Edital manda analisar para chamada imediata é analisado junto.</span>
       </p>
+      {% comment %}
+      **Sob sorteio a pergunta sai** (051, FR-928): a ordem sorteada não empata, e a resposta não
+      teria efeito nenhum. O valor já declarado viaja oculto — preservá-lo é o que impede a gravação
+      de apagar o que um Edital anterior declarou.
+      {% endcomment %}
+      {% if marco|ordena_por_sorteio %}
+      <input type="hidden" name="marco-{{ indice }}-{{ sub }}-cutTieOutcome" value="{{ marco.cutTieOutcome|default:'' }}">
+      {% else %}
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTieOutcome">Empate na última posição</label>
         <select id="marco-{{ indice }}-{{ sub }}-cutTieOutcome" name="marco-{{ indice }}-{{ sub }}-cutTieOutcome"
@@ -547,6 +568,7 @@ cartão leva ao lugar onde a resposta que o revela é dada.
         <span class="oculto" id="ajuda-empate-{{ indice }}-{{ sub }}">Não há padrão: sem esta
           declaração o Edital não publica.</span>
       </p>
+      {% endif %}
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutGovernedStage">Etapa que o corte alimenta</label>
         <select id="marco-{{ indice }}-{{ sub }}-cutGovernedStage" name="marco-{{ indice }}-{{ sub }}-cutGovernedStage"
@@ -589,6 +611,13 @@ cartão leva ao lugar onde a resposta que o revela é dada.
             hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
   </section>
   <p class="remover">
+    {% comment %}
+    **"Aplicar aos demais Perfis"** (051, UX-110). Um envio do formulário, e não um fragmento: a
+    prévia precisa do que está digitado em todos os cartões, e a gravação é a da etapa (R-001).
+    `formnovalidate` porque pedir a prévia não é gravar — quem cobra o que falta é a gravação.
+    {% endcomment %}
+    {% if quantos_perfis and quantos_perfis > 1 %}<button type="submit" class="acao" name="aplicar"
+            value="marco:{{ indice }}:{{ sub }}" formnovalidate>Aplicar aos demais Perfis ({{ quantos_perfis|add:"-1" }})</button>{% endif %}
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este marco</button>

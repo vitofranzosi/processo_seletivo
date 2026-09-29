@@ -76,6 +76,8 @@ def rascunho_com_periodo(seed, *, inicio=None, fim=None, eventos=None, etapas=No
                 "competitionModalities": [],
                 # O marco que torna o Perfil publicável (032, FR-457).
                 "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(seed)))],
+                # Quem corta declara como convoca (051, FR-943): sem a forma, o Perfil não publica.
+                "callForm": "PUBLICATION",
             }
         ],
         "schedule": eventos or [evento_do_periodo(seed, inicio=inicio, fim=fim)],

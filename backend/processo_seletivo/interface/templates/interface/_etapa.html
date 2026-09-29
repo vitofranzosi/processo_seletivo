@@ -170,12 +170,26 @@
     FR-037: as duas marcações não tinham rótulo de grupo. Flutuavam desalinhadas ao lado de Peso e
     Nota mínima, e para quem usa leitor de tela eram duas caixas sem o conceito que as une.
     {% endcomment %}
+    {% comment %}
+    **"Eliminatória" é uma caixa por forma** (051, FR-931). A Etapa decisória que não elimina é a
+    única combinação que a consolidação sempre recusa (`impedimento_da_regra`), e ela era a de
+    nascimento: a caixa vinha desmarcada para as duas formas. O padrão certo depende da forma, que
+    se escolhe no navegador sem ida ao servidor — por isso são duas caixas, cada uma no bloco da
+    sua forma, e a da decisória nasce marcada na Etapa nova. `caraterPorForma` diz à leitura que
+    as duas existem; envio sem ele é lido como sempre foi.
+    {% endcomment %}
     <fieldset class="campo caracter">
       <legend>Caráter</legend>
-      <label for="etapa-{{ indice }}-eliminatory">
+      <input type="hidden" name="etapa-{{ indice }}-caraterPorForma" value="1">
+      <label for="etapa-{{ indice }}-eliminatory" class="so-pontuada">
         <input type="checkbox" id="etapa-{{ indice }}-eliminatory"
                name="etapa-{{ indice }}-eliminatory"
                {% if etapa_linha.eliminatory %}checked{% endif %}> Eliminatória
+      </label>
+      <label for="etapa-{{ indice }}-eliminatoryDecisoria" class="so-decisoria">
+        <input type="checkbox" id="etapa-{{ indice }}-eliminatoryDecisoria"
+               name="etapa-{{ indice }}-eliminatoryDecisoria"
+               {% if etapa_linha.nova or etapa_linha.eliminatory %}checked{% endif %}> Eliminatória
       </label>
       <label for="etapa-{{ indice }}-classificatory">
         <input type="checkbox" id="etapa-{{ indice }}-classificatory"
