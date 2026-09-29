@@ -7,7 +7,7 @@ diz de onde veio cada valor.*
 **Entrega**: este PR leva a P1 — US1 a US4. A US5 (Retificação, P2) fica para o PR seguinte, por
 decisão do plano (`research.md`, R-009); as linhas dela estão marcadas **PR seguinte**.
 
-**Verificação final**: 8755 passando, 11 pulados, zero falhas — ver a seção 4.
+**Verificação final**: 8763 passando, 11 pulados, zero falhas — ver a seção 4.
 
 Cada linha aponta o lugar do código e o teste **pelo nome**. Onde a linha diz *"leitura do diff"*, a
 promessa é negativa — algo que não pode ter acontecido — e se confere lendo a mudança. Os testes novos
@@ -38,7 +38,7 @@ estão em `tests/unit/editais/test_aplicacao.py` (**TA**), `tests/unit/editais/t
 | **FR-923** | `efeitos_do_marco` — lista inteira; idêntica fica com a identidade do destino | TA `test_a_lista_de_criterios_e_substituida_inteira`, `test_substitui_os_campos_e_mantem_identidade_codigo_e_denominacao` |
 | **FR-924** | `efeitos_da_modalidade`, `aplicar_modalidades`; botão em `_modalidade.html` | TA `test_nasce_onde_o_codigo_falta_e_lista_o_que_o_destino_tem`, `test_nunca_remove_nem_toca_o_quadro`; TT `test_a_modalidade_nasce_nos_demais_pelo_codigo_e_nao_toca_o_quadro` |
 | **FR-925** | `efeitos_da_modalidade` — `ampla` antes → depois | TA `test_a_ampla_da_origem_substitui_a_do_destino`, `test_a_origem_que_nao_e_a_ampla_desmarca_o_destino_que_a_apontava` |
-| **FR-926** | controle *"Declarado uma vez para todos os Perfis"* em `compor_perfis.html`; `views._comuns`; `fragmento_perfil` com `valor_comum` | TA `test_forma_de_convocacao_nasce_substitui_e_nao_muda`, `test_valor_comum_so_quando_todos_concordam`; TT `test_a_forma_de_convocacao_declarada_uma_vez_vai_a_todos`, `test_o_perfil_novo_nasce_com_a_forma_que_todos_declaram`, `test_a_reversao_deixa_fora_o_perfil_sem_lista_reservada` |
+| **FR-926** | controle *"Declarado uma vez para todos os Perfis"* em `compor_perfis.html`; `views._comuns`; `fragmento_perfil` com `valor_comum` | TA `test_forma_de_convocacao_nasce_substitui_e_nao_muda`, `test_valor_comum_so_quando_todos_concordam`; TT `test_a_forma_de_convocacao_declarada_uma_vez_vai_a_todos`, `test_o_perfil_novo_nasce_com_a_forma_que_todos_declaram`, `test_a_reversao_deixa_fora_o_perfil_sem_lista_reservada`; a escolha pendente (`interface/aplicacao.escolhas_pendentes`): TT `test_salvar_com_a_escolha_do_edital_pendente_nao_grava`, `test_as_duas_escolhas_pendentes_sao_ditas_cada_uma_no_seu_controle`, `test_o_controle_intocado_nao_impede_mudar_um_perfil_no_cartao`, `test_a_escolha_que_os_cartoes_ja_declaram_nao_esta_pendente`, `test_confirmar_uma_escolha_nao_apaga_a_outra`, `test_o_botao_do_controle_diz_que_confere`, `test_a_reversao_que_so_falta_onde_nao_cabe_nao_esta_pendente` |
 | **FR-927** | `marcos.CORTE_PADRAO`; `views._marco_novo(marcos_na_tela=)`; `hx-include` do botão | TP `test_o_marco_unico_nasce_com_o_corte_padrao`, `test_o_segundo_marco_na_tela_nasce_sem_corte` |
 | **FR-928** | `validation._regra_de_corte_do_marco`; `_marco.html` oculta a pergunta sob sorteio | TP `test_o_marco_de_sorteio_publica_sem_o_empate`, `test_o_marco_de_pontuacao_continua_exigindo_o_empate`, `test_o_empate_declarado_fora_do_vocabulario_continua_recusado_no_sorteio`, `test_o_cartao_de_sorteio_nao_pergunta_o_empate_e_preserva_o_declarado` |
 | **FR-929** | `views.eventos_do_sorteio`; `occurrenceEvent` em `forms._metodo_de_sorteio`; filtro `instante_de_evento` | TP `test_o_instante_escolhido_no_cronograma_e_gravado_e_o_digitado_vale`, `test_a_classificacao_oferece_os_eventos_do_cronograma` |
@@ -107,9 +107,9 @@ primeiro ganhou teste (`test_a_forma_de_convocacao_aplicada_pelo_edital_aparece_
 
 ## 4. Verificação
 
-`cd backend && make lint check test-pg DB_NAME=ps_051`, em 28/09/2026, sobre a `main` em `850e00b6`
+`cd backend && make lint check test-pg DB_NAME=ps_051`, em 29/09/2026, depois da escolha pendente, sobre a `main` em `850e00b6`
 mesclada: `ruff check` e `ruff format --check` limpos, `check` sem pendência nem migration por fazer, e
-a suíte contra PostgreSQL com **8755 passando e 11 pulados**, zero falhas — os mesmos 11 pulados
+a suíte contra PostgreSQL com **8763 passando e 11 pulados**, zero falhas — os mesmos 11 pulados
 deliberados que o `CLAUDE.md` descreve.
 
 **O que a suíte achou no caminho, e onde foi corrigido.** A `FR-943` recusou a publicação de todo

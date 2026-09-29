@@ -359,6 +359,40 @@ def quantos_destinos(perfis_na_tela):
     return max(len(perfis_na_tela) - 1, 0)
 
 
+#: O rótulo de cada controle do Edital, para o resumo da recusa — o mesmo do `<label>` da tela.
+ROTULO_DO_CONTROLE = {
+    "callForm": "Como a convocação é comunicada",
+    "vacancyReversion": "Reverter vaga reservada não preenchida para a ampla concorrência",
+}
+
+
+def escolhas_pendentes(perfis, dados, *, gravados):
+    """`{campo: valor}` dos controles do Edital cuja escolha ainda não chegou aos Perfis (051).
+
+    O controle não é campo do Edital: é origem de um gesto, e o gesto só grava depois da prévia
+    (FR-916). *Salvar* que o ignorasse descartaria a escolha em silêncio, e *Salvar* que a aplicasse
+    pularia a prévia — por isso a escolha pendente impede a gravação e fica na tela.
+
+    **Escolha** é o controle diferente do que ele mostrava ao abrir a etapa, o comum dos `gravados`:
+    sem isso, quem muda um Perfil no cartão teria a gravação recusada por um controle em que não
+    tocou. **Pendente** é a escolha que a prévia ainda teria o que fazer — algum Perfil nasce ou é
+    substituído. O Perfil fora do alcance não conta: sem lista reservada, a reversão nunca o
+    alcançaria, e a recusa seria perpétua.
+    """
+    pendentes = {}
+    for campo in regra.CAMPOS_DO_PERFIL:
+        chave = f"edital-{campo}"
+        if chave not in dados:
+            continue
+        escolhido = dados.get(chave) or ""
+        if escolhido == regra.valor_comum(gravados, campo):
+            continue
+        efeitos_do_controle = regra.efeitos_do_campo_do_perfil(perfis, campo=campo, valor=escolhido)
+        if any(item.efeito in (regra.NASCE, regra.SUBSTITUI) for item in efeitos_do_controle):
+            pendentes[campo] = escolhido
+    return pendentes
+
+
 def preencher_quadro(perfis):
     """`(perfis, preenchidas)` — as linhas vazias de lista reservada com a sugestão (051, FR-932).
 

@@ -170,6 +170,11 @@ confirmar; conferir a PcD nos 7, cada uma com identidade própria, e o quadro de
    cota sob outro código.
 3. **Given** um destino que já declara `PCD` com outro percentual, **Then** a prévia diz *"substitui"*
    com o percentual *antes → depois*; o código não muda, e a linha do quadro do destino não é tocada.
+4. **Given** a forma de convocação e a reversão escolhidas no controle do Edital e não conferidas,
+   **When** quem elabora clica *Salvar* ou *Avançar*, **Then** nada é gravado, a tela volta com tudo
+   que estava nela e com *"Esta escolha ainda não foi aplicada. Confira o alcance antes de
+   confirmar."* junto de cada um dos dois controles; **When** confere e confirma a forma, **Then** a
+   reversão escolhida continua no controle, com o mesmo aviso.
 4. **Given** um destino com uma Modalidade que a origem não tem, **Then** ela continua lá depois da
    confirmação: a ação opera sobre uma Modalidade, e não sobre o conjunto.
 
@@ -381,7 +386,11 @@ divulgado, publicar a Retificação, e conferir 7 Alterações num ato só.
   Edital, que as aplica aos Perfis pela prévia desta feature; a reversão MUST deixar fora do alcance o
   Perfil sem lista reservada. O Perfil novo MUST nascer com a forma de convocação que **todos** os
   Perfis do Edital declaram igual, e sem nenhuma quando divergem. A reversão não nasce com ele: o
-  Perfil novo não tem lista reservada, e a reversão só existe onde há uma.
+  Perfil novo não tem lista reservada, e a reversão só existe onde há uma. O botão do controle MUST
+  dizer que confere (*"Conferir aplicação a todos os Perfis"*), porque abre a prévia. A escolha no
+  controle que a prévia ainda teria o que aplicar MUST impedir *Salvar* e *Avançar*, sem gravar, com
+  o formulário inteiro de volta e o aviso junto do controle; nenhuma prévia MUST abrir sozinha. A
+  escolha de um controle MUST continuar na tela depois de confirmado o gesto do outro.
 
 ### Os padrões (§D.3 da reavaliação)
 

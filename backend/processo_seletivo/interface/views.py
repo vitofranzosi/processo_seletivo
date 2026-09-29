@@ -1297,6 +1297,7 @@ def compor_etapa(request, edital_id, etapa):
     editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
     erros, digitados, restaurado, previa, quadro_preenchido = [], None, False, None, None
+    pendentes = None
 
     if (
         request.method == "POST"
@@ -1357,6 +1358,29 @@ def compor_etapa(request, edital_id, etapa):
             except ValueError as exc:
                 erros.append(_recusa(exc, digitados, etapa))
             else:
+                # **A escolha do Edital ainda não aplicada impede gravar** (051, FR-916, FR-926).
+                # Aplicá-la aqui pularia a prévia; ignorá-la a descartaria em silêncio sob um botão
+                # chamado *Salvar*. A tela volta inteira, e conferir continua sendo o gesto do
+                # controle. Nenhuma prévia abre sozinha: com as duas escolhas pendentes, abrir uma
+                # delas inventaria uma ordem entre elas.
+                pendentes = (
+                    aplicacao_ui.escolhas_pendentes(
+                        digitados, request.POST, gravados=forms.perfis_persistidos(edital)
+                    )
+                    if etapa == "perfis"
+                    else {}
+                )
+                erros.extend(
+                    {
+                        "mensagem": (
+                            f"{aplicacao_ui.ROTULO_DO_CONTROLE[campo]}: a escolha ainda não foi "
+                            "aplicada aos Perfis."
+                        ),
+                        "ancora": f"edital-{campo}",
+                    }
+                    for campo in pendentes
+                )
+            if not erros:
                 try:
                     # **Antes de gravar**, porque a gravação é quem sobrescreve: a derivação
                     # reafirma a linha geral com o total, e quem digitou outro número precisa saber
@@ -1412,6 +1436,15 @@ def compor_etapa(request, edital_id, etapa):
     # sessão esperando uma visita futura, onde surgiria já obsoleto, falando de uma gravação que
     # ninguém lembra. Notícia do que acabou de acontecer não sobrevive à próxima tela (FR-322).
     rederivadas = request.session.pop("quadro_rederivado", None)
+    # O controle do Edital como o envio o trouxe; depois de um gesto confirmado, a escolha do outro
+    # controle, que o redirecionamento perderia (051) — ver `_gesto`.
+    controle_do_edital = (
+        request.POST
+        if request.method == "POST"
+        else request.session.pop("escolhas_do_edital", None) or {}
+        if etapa == "perfis"
+        else {}
+    )
     perfis = (
         _reexibir_perfis(digitados)
         if etapa == "perfis" and digitados is not None
@@ -1467,7 +1500,16 @@ def compor_etapa(request, edital_id, etapa):
             "quantos_perfis": len(perfis or []),
             # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
             # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
-            "comuns": _comuns(perfis, request.POST) if etapa == "perfis" else {},
+            "comuns": _comuns(perfis, controle_do_edital) if etapa == "perfis" else {},
+            # A escolha do controle que a prévia ainda teria o que fazer: o aviso junto dele diz
+            # que ela não foi aplicada, e *Salvar* a recusa (051, FR-916).
+            "pendentes": (
+                pendentes
+                if pendentes is not None
+                else _escolhas_pendentes_na_tela(edital, digitados, controle_do_edital)
+                if etapa == "perfis"
+                else {}
+            ),
             # O prefixo dos campos do primeiro marco desta tela — `marco-<perfil>-0` (030,
             # FR-426, FR-427). **Vazio significa que não há marco**, e é o que faz o bloco de
             # ajuda da etapa não ser apresentado: ajuda sobre campos que ninguém tem à frente é
@@ -2000,6 +2042,20 @@ def _comuns(perfis, dados):
     return comuns
 
 
+def _escolhas_pendentes_na_tela(edital, digitados, controle):
+    """As escolhas pendentes do controle do Edital, sobre o que esta tela mostra (051).
+
+    Na forma do conteúdo, e não na do formulário: é nela que a reversão enxerga a lista reservada,
+    e a tela aberta sem envio desenha o gravado.
+    """
+    if not controle:
+        return {}
+    gravados = forms.perfis_persistidos(edital)
+    return aplicacao_ui.escolhas_pendentes(
+        gravados if digitados is None else digitados, controle, gravados=gravados
+    )
+
+
 #: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
 #: Modalidade, a forma de convocação e a reversão, dos Perfis.
 ETAPAS_DO_GESTO = ("classificacao", "perfis")
@@ -2058,6 +2114,21 @@ def _gesto(request, ator, edital, etapa, pedido, erros):
             None,
         )
     novos = aplicacao_ui.aplicar(pedido, efeitos, perfis, dados=request.POST)
+    # **A outra escolha do Edital sobrevive à confirmação.** A forma de convocação e a reversão
+    # podem ter mudado juntas, e confirmar uma delas — ou a Modalidade — grava e redireciona: sem
+    # guardá-la, a outra sumiria da tela em silêncio. A do próprio gesto não volta, porque o que
+    # ficou de fora dele foi excluído na prévia, de propósito.
+    escolhas = (
+        {
+            f"edital-{campo}": valor
+            for campo, valor in aplicacao_ui.escolhas_pendentes(
+                novos, request.POST, gravados=forms.perfis_persistidos(edital)
+            ).items()
+            if pedido.valor != f"edital:{campo}"
+        }
+        if etapa == "perfis"
+        else {}
+    )
     try:
         if etapa == "perfis":
             _conferir_marcos_em_transito(edital, novos)
@@ -2078,6 +2149,8 @@ def _gesto(request, ator, edital, etapa, pedido, erros):
         erros.append(_recusa(exc, novos, etapa))
         return novos, None, None
     quantos = len(regra_da_aplicacao.alcancados(efeitos, pedido.incluidos))
+    if escolhas:
+        request.session["escolhas_do_edital"] = escolhas
     return (
         novos,
         None,

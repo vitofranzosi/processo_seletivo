@@ -369,3 +369,144 @@ def test_a_reversao_deixa_fora_o_perfil_sem_lista_reservada(client, tres_perfis)
     corpo = _texto(previa)
     assert "1 nasce, 2 ficam fora do alcance" in corpo
     assert "não declara lista reservada" in corpo
+
+
+# **A escolha do Edital que não passou pela prévia** (051, FR-916). O controle é origem de um gesto,
+# e não campo: *Salvar* que o ignorasse a descartaria em silêncio, e *Salvar* que o aplicasse
+# pularia a prévia. Por isso a escolha pendente impede gravar, e fica na tela com o aviso.
+AVISO_PENDENTE = "Esta escolha ainda não foi aplicada. Confira o alcance antes de confirmar."
+
+
+@pytest.mark.parametrize("botao", [{}, {"destino": "classificacao"}], ids=["salvar", "avancar"])
+def test_salvar_com_a_escolha_do_edital_pendente_nao_grava(client, tres_perfis, botao):
+    revisao = tres_perfis.revision
+    resposta = client.post(
+        _url(tres_perfis, "perfis"),
+        {**_perfis_no_formulario(**PCD), "edital-callForm": "INDIVIDUAL_MESSAGE", **botao},
+    )
+
+    assert resposta.status_code == 200
+    tres_perfis.refresh_from_db()
+    assert tres_perfis.revision == revisao
+    assert set(PerfilVaga.objects.values_list("forma_de_convocacao", flat=True)) == {""}
+    corpo = _texto(resposta)
+    assert AVISO_PENDENTE in corpo
+    assert 'href="#edital-callForm"' in corpo
+    # O formulário inteiro volta: a escolha e a Modalidade que ainda não estava gravada.
+    assert re.search(r'<option value="INDIVIDUAL_MESSAGE" selected>', corpo)
+    assert 'value="Pessoa com deficiência"' in corpo
+    # Nenhuma prévia abre sozinha.
+    assert 'name="aplicar_impressao"' not in corpo
+
+
+def test_as_duas_escolhas_pendentes_sao_ditas_cada_uma_no_seu_controle(client, tres_perfis):
+    resposta = client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **_perfis_no_formulario(**PCD),
+            "edital-callForm": "PUBLICATION",
+            "edital-vacancyReversion": "ON_BALANCE",
+        },
+    )
+
+    corpo = _texto(resposta)
+    assert 'id="pendente-edital-callForm"' in corpo
+    assert 'id="pendente-edital-vacancyReversion"' in corpo
+    assert corpo.count(AVISO_PENDENTE) == 2
+    assert 'name="aplicar_impressao"' not in corpo
+
+
+def test_o_controle_intocado_nao_impede_mudar_um_perfil_no_cartao(client, tres_perfis):
+    """Quem muda um Perfil no cartão não toca o controle, que continua mostrando o comum."""
+    PerfilVaga.objects.update(forma_de_convocacao="PUBLICATION")
+    formulario = _perfis_no_formulario(
+        **{
+            "perfil-0-callForm": "INDIVIDUAL_MESSAGE",
+            "perfil-1-callForm": "PUBLICATION",
+            "perfil-2-callForm": "PUBLICATION",
+        }
+    )
+
+    resposta = client.post(
+        _url(tres_perfis, "perfis"), {**formulario, "edital-callForm": "PUBLICATION"}
+    )
+
+    assert resposta.status_code == 302, resposta.content
+    assert sorted(PerfilVaga.objects.values_list("forma_de_convocacao", flat=True)) == [
+        "INDIVIDUAL_MESSAGE",
+        "PUBLICATION",
+        "PUBLICATION",
+    ]
+
+
+def test_a_escolha_que_os_cartoes_ja_declaram_nao_esta_pendente(client, tres_perfis):
+    formulario = _perfis_no_formulario(
+        **{f"perfil-{posicao}-callForm": "PUBLICATION" for posicao in range(3)}
+    )
+
+    resposta = client.post(
+        _url(tres_perfis, "perfis"), {**formulario, "edital-callForm": "PUBLICATION"}
+    )
+
+    assert resposta.status_code == 302, resposta.content
+
+
+def test_confirmar_uma_escolha_nao_apaga_a_outra(client, tres_perfis):
+    """A forma e a reversão mudaram juntas; confirmar a forma grava e redireciona, e a reversão
+    escolhida continua na tela, com o aviso — em vez de sumir com o redirecionamento."""
+    formulario = {
+        **_perfis_no_formulario(**PCD),
+        "edital-callForm": "INDIVIDUAL_MESSAGE",
+        "edital-vacancyReversion": "ON_BALANCE",
+    }
+    previa = client.post(_url(tres_perfis, "perfis"), {**formulario, "aplicar": "edital:callForm"})
+    resposta = client.post(
+        _url(tres_perfis, "perfis"),
+        {
+            **formulario,
+            "confirmar_aplicacao": "edital:callForm",
+            "aplicar_destino": ["0", "1", "2"],
+            "aplicar_impressao": _impressao(previa.content.decode()),
+        },
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    corpo = _texto(client.get(resposta["Location"]))
+
+    assert re.search(r'<option value="ON_BALANCE" selected>', corpo)
+    assert 'id="pendente-edital-vacancyReversion"' in corpo
+    assert 'id="pendente-edital-callForm"' not in corpo
+    # A notícia é de uma tela só: recarregar não a traz de volta.
+    recarregada = _texto(client.get(_url(tres_perfis, "perfis")))
+    assert 'id="pendente-edital-vacancyReversion"' not in recarregada
+
+
+def test_o_botao_do_controle_diz_que_confere(client, tres_perfis):
+    corpo = _texto(client.get(_url(tres_perfis, "perfis")))
+
+    assert corpo.count("Conferir aplicação a todos os Perfis") == 2
+    assert "Aplicar a todos os Perfis" not in corpo
+    assert AVISO_PENDENTE not in corpo
+
+
+def test_a_reversao_que_so_falta_onde_nao_cabe_nao_esta_pendente():
+    """O Perfil sem lista reservada fica fora do alcance, e nunca a receberia: contá-lo tornaria a
+    recusa perpétua depois de aplicada a reversão a todos os que a admitem."""
+    from processo_seletivo.interface.aplicacao import escolhas_pendentes
+
+    com_lista = {
+        "code": "LP01",
+        "competitionModalities": [{"id": "m1", "code": "PCD"}],
+        "vacancyReversion": {"kind": "ON_BALANCE"},
+    }
+    sem_lista = {"code": "LP02", "competitionModalities": []}
+    perfis = [com_lista, sem_lista]
+
+    assert (
+        escolhas_pendentes(perfis, {"edital-vacancyReversion": "ON_BALANCE"}, gravados=perfis) == {}
+    )
+    assert escolhas_pendentes(
+        [{**com_lista, "vacancyReversion": None}, sem_lista],
+        {"edital-vacancyReversion": "ON_BALANCE"},
+        gravados=perfis,
+    ) == {"vacancyReversion": "ON_BALANCE"}

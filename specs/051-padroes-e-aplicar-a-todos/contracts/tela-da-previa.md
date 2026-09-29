@@ -11,6 +11,12 @@ inteiro da etapa e **um** dos campos abaixo:
 | `aplicar` | `modalidade:<indice do Perfil>:<indice da Modalidade>` | perfis | a Modalidade, pelo código |
 | `aplicar` | `edital:callForm` · `edital:vacancyReversion` | perfis | o valor do controle do Edital |
 
+O botão do controle do Edital diz *"Conferir aplicação a todos os Perfis"*. *Salvar* ou *Avançar* com
+o controle escolhido e não conferido devolve 200, sem gravar, com o formulário reexibido, um item por
+controle no resumo da recusa (âncora `edital-<campo>`) e o aviso junto do controle
+(`pendente-edital-<campo>`); nenhuma prévia é aberta. Confirmado um gesto da etapa, a escolha pendente
+do outro controle volta na tela seguinte ao redirecionamento, uma vez (FR-926).
+
 **Resposta**: 200, a tela da etapa com o digitado reexibido e a seção *"Aplicar aos demais Perfis"* no
 alto, com:
 

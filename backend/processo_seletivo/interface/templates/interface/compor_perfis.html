@@ -103,6 +103,9 @@
     e-mail"* (28/2026, 10.3). Não é campo do Edital (`D-003` da spec): é um controle que aplica o
     valor aos Perfis, pela mesma prévia do marco e da Modalidade. Só com mais de um Perfil — com
     um, o cartão já é o lugar.
+
+    Por isso o botão diz *conferir*, e não *aplicar*: ele abre a prévia, e a escolha que não passou
+    por ela impede *Salvar* e *Avançar*, com o aviso junto do controle — `escolhas_pendentes`.
     {% endcomment %}
     {% if editavel and perfis|length > 1 %}
     <fieldset class="linha" id="declarado-uma-vez">
@@ -110,23 +113,25 @@
       <div class="campos">
         <p class="campo">
           <label for="edital-callForm">Como a convocação é comunicada</label>
-          <select id="edital-callForm" name="edital-callForm">
+          <select id="edital-callForm" name="edital-callForm"{% if pendentes.callForm is not None %} aria-describedby="pendente-edital-callForm"{% endif %}>
             <option value="">{% if comuns.callForm_varia %}Varia entre os Perfis{% else %}Não declarado{% endif %}</option>
             <option value="PUBLICATION" {% if comuns.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação no endereço eletrônico do certame</option>
             <option value="INDIVIDUAL_MESSAGE" {% if comuns.callForm == "INDIVIDUAL_MESSAGE" %}selected{% endif %}>Por mensagem individual à pessoa convocada</option>
           </select>
           <button type="submit" class="acao" name="aplicar" value="edital:callForm"
-                  formnovalidate>Aplicar a todos os Perfis</button>
+                  formnovalidate>Conferir aplicação a todos os Perfis</button>
+          {% if pendentes.callForm is not None %}<span class="recusa" role="alert" id="pendente-edital-callForm">Esta escolha ainda não foi aplicada. Confira o alcance antes de confirmar.</span>{% endif %}
         </p>
         <p class="campo">
           <label for="edital-vacancyReversion">Reverter vaga reservada não preenchida para a ampla concorrência</label>
-          <select id="edital-vacancyReversion" name="edital-vacancyReversion">
+          <select id="edital-vacancyReversion" name="edital-vacancyReversion"{% if pendentes.vacancyReversion is not None %} aria-describedby="pendente-edital-vacancyReversion"{% endif %}>
             <option value="">{% if comuns.vacancyReversion_varia %}Varia entre os Perfis{% else %}Não reverte{% endif %}</option>
             <option value="ON_EXHAUSTION" {% if comuns.vacancyReversion == "ON_EXHAUSTION" %}selected{% endif %}>Só quando a lista reservada esgota</option>
             <option value="ON_BALANCE" {% if comuns.vacancyReversion == "ON_BALANCE" %}selected{% endif %}>A quantidade que ficou sem preencher</option>
           </select>
           <button type="submit" class="acao" name="aplicar" value="edital:vacancyReversion"
-                  formnovalidate>Aplicar a todos os Perfis</button>
+                  formnovalidate>Conferir aplicação a todos os Perfis</button>
+          {% if pendentes.vacancyReversion is not None %}<span class="recusa" role="alert" id="pendente-edital-vacancyReversion">Esta escolha ainda não foi aplicada. Confira o alcance antes de confirmar.</span>{% endif %}
         </p>
       </div>
     </fieldset>
