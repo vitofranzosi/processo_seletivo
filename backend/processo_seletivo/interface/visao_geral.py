@@ -128,6 +128,8 @@ class SituacaoDoPeriodo:
     estado: str
     inicio: datetime | None = None
     fim: datetime | None = None
+    # O período declarado cancelado é `ENCERRADO` para o filtro, e dito cancelado na linha (RC-119).
+    cancelado: bool = False
 
     @property
     def aberto(self) -> bool:
@@ -483,7 +485,9 @@ def situacao_do_periodo(conteudo, agora):
     lido = periodo_de_inscricoes(conteudo, agora)
     if not lido.designado:
         return Ausencia(NAO_DISPONIVEL, "o cronograma não designou período de inscrições")
-    return SituacaoDoPeriodo(estado=lido.estado, inicio=lido.inicio, fim=lido.fim)
+    return SituacaoDoPeriodo(
+        estado=lido.estado, inicio=lido.inicio, fim=lido.fim, cancelado=lido.cancelado
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -330,6 +330,29 @@ def test_o_link_do_historico_so_aparece_onde_ha_apuracao(client, seletor_ligado,
     assert "Ver o histórico deste recorte" in depois
 
 
+def test_a_convocacao_do_recorte_so_e_oferecida_onde_ha_apuracao(
+    client, seletor_ligado, cenario, gestor
+):
+    """RC-137: quem termina de apurar vai à convocação daquele recorte sem voltar ao Edital.
+
+    Só onde há apuração, pela razão do histórico acima: sem ela a convocação recusa. E o destino é
+    a convocação **do recorte**, e não a do marco — a ampla sem `lista`, e a reservada com ela.
+    """
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+
+    antes = abrir(client, edital).content.decode()
+    assert "Abrir a convocação deste recorte" not in antes
+
+    apurar(edital, gestor)
+    depois = abrir(client, edital).content.decode()
+
+    destino = reverse("interface:convocacao", args=[edital.id, MARCO])
+    assert f'<a href="{destino}">Abrir a convocação deste recorte</a>' in depois
+    # A mesma porta: quem vê a ocupação abre a convocação, e o link não leva a uma negativa.
+    assert client.get(destino).status_code == 200
+
+
 def test_o_historico_sobrevive_a_retificacao_que_remove_o_marco(
     client, seletor_ligado, cenario, gestor, api_client
 ):

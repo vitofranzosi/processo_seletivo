@@ -348,7 +348,11 @@ incompatíveis.
 - **FR-034**: Cancelar Processo, Edital ou Retificação DEVE exigir autorização, motivo, responsável,
   data e ato correspondente quando aplicável, sem excluir Publicações ou histórico. O cancelamento
   do Processo DEVE ser bloqueado enquanto qualquer de seus Editais não estiver Encerrado ou
-  Cancelado e NÃO DEVE cancelar Editais automaticamente.
+  Cancelado e NÃO DEVE cancelar Editais automaticamente. O encerramento do Processo DEVE ser
+  bloqueado pela mesma condição, e NÃO DEVE encerrar Editais automaticamente. *O encerramento foi
+  acrescentado em 28/09, pela decisão do usuário sobre o RC-118
+  (`doc/registro-pre-piloto-2026-09-28.md`): sem ele, o Edital publicado de um Processo encerrado
+  continuava recebendo inscrição.*
 - **FR-035**: Encerramento e cancelamento DEVEM impedir novas transições incompatíveis, mantendo
   disponíveis as consultas históricas autorizadas.
 - **FR-036**: Operações concorrentes DEVEM impedir perda de atualização, alteração baseada em versão

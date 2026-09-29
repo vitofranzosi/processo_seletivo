@@ -63,6 +63,8 @@ def rascunho_de_selecao(seed=0):
                     marco_minimo(identidade_do_marco(identificador(401, seed)), codigo="DOC-SORT")
                 ],
                 "generalCompetitionModalityId": identificador(403, seed),
+                # Quem corta declara como convoca (051, FR-943): sem a forma, o Perfil não publica.
+                "callForm": "PUBLICATION",
                 "vacancyTable": [
                     {
                         "id": identificador(408, seed),
@@ -95,6 +97,7 @@ def rascunho_de_selecao(seed=0):
                     marco_minimo(identidade_do_marco(identificador(406, seed)), codigo="TEC-SORT")
                 ],
                 "generalCompetitionModalityId": identificador(407, seed),
+                "callForm": "PUBLICATION",
             },
         ],
         "schedule": [

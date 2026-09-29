@@ -314,14 +314,22 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
     assert "Ordem: por sorteio" in tudo
     assert "Sorteio: método próprio deste marco — diverge do comum deste Edital" in tudo
     assert "Sorteio — Ocorrência: 5901" in tudo
-    assert "Etapa que habilita a participar do sorteio: Prova didática" in tudo
+    assert (
+        "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in tudo
+    )
     assert (
         "Recurso: Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do "
         "resultado." in tudo
     )
     assert "Corte: Progridem os 3 (três) primeiros desta ordem, mais 1 (um) suplente." in tudo
-    assert "Empate na última posição: todos os empatados progridem" in tudo
-    assert "Continuação: admite chamar além dos que o corte publicar" in tudo
+    # As frases do documento, e não uma redação própria da conferência (014, FR-185).
+    assert (
+        "Empate no corte: Havendo empate na última posição, progridem todos os empatados, ainda "
+        "que excedam essa quantidade." in tudo
+    )
+    assert (
+        "Continuação: Poderá haver chamada, nesta ordem, além dos que este corte publicar." in tudo
+    )
     assert "Etapa que o corte alimenta: nenhuma" in tudo
     assert (
         "Desempate, 2º: maior valor declarado em Meses de experiência; sem o valor, o critério "
@@ -357,6 +365,8 @@ def test_marcos_iguais_em_perfis_diferentes_aparecem_uma_vez():
     # O comum aparece uma vez, no alto do bloco — e nenhum campo dele se repete no marco. O
     # instante vazio do PDF é "—", e passava pelo filtro como valor declarado.
     assert not [linha for linha in marcos[0]["linhas"] if linha.startswith("Sorteio —")]
+    # A habilitação é do marco, e não do método comum: quem referencia o comum sorteia todos.
+    assert "Habilitação: participam todas as inscrições submetidas" in marcos[0]["linhas"]
     assert "Denominação: Classificação final — o nome de cada Perfil" in marcos[0]["linhas"]
     assert "diverge" not in marcos[0]
 

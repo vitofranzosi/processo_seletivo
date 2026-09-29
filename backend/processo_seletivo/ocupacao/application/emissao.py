@@ -61,167 +61,229 @@ def emitir_apuracao(
         if ctx.repetido:
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
-        perfil = identificador(perfil_id)
-        marco = identificador(marco_id)
-        lista = identificador(lista_id) if lista_id else None
-
-        # **A ordem tem de ser a vigente** (`FR-243`): apurar sobre ordem sucedida contaria
-        # ocupação de uma ordem que o próprio sistema já sabe estar para trás.
-        ato = ato_vigente(edital=edital, marco_id=marco, lista_id=lista)
-        if ato is None:
-            raise DomainError(
-                "ordem_nao_vigente",
-                "Este recorte não tem ordem vigente: não há ocupação a apurar.",
-                409,
-            )
-
-        versao = effective_version(edital_id=edital.id, at=ctx.now)
-        linha = linha_do_quadro(versao.content, perfil_id=perfil, lista_id=lista)
-        if linha is None:
-            # **Ausência de quadro não é zero** (`FR-242`, `UX-032`). Edital publicado antes do
-            # degrau 12 não declarou quantidade nenhuma, e apurar ali afirmaria o que ele não disse.
-            raise DomainError(
-                "sem_quadro_publicado",
-                "Este Edital não publicou quadro de vagas para este recorte: não há quantidade "
-                "declarada a apurar. A quantidade é declarada por Retificação do Perfil, "
-                "acrescentando a linha deste recorte ao quadro de vagas.",
-                409,
-            )
-
-        vigente = selectors.apuracao_vigente(
-            edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
-        )
-        texto_do_motivo = (motivo or "").strip()
-        if vigente and not texto_do_motivo:
-            raise DomainError(
-                "motivo_da_sucessao_obrigatorio",
-                "Declare o motivo da sucessão da apuração vigente.",
-                422,
-                campo="motivo",
-            )
-
-        progrediram, corte, empates = selectors.progrediram_em_ordem(
-            edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
-        )
-        etapa = corte.etapa_governada_id if corte is not None else None
-        habilitadas = selectors.habilitadas_pelo_corte(
-            edital=edital, corte=corte, progrediram=progrediram
-        )
-        # **Os efeitos que a `019` registrou, congelados como os movimentos já são** (`FR-244`).
-        # Reproduzir esta apuração é reler **estes** ids, e não os efeitos de hoje: sem o
-        # congelamento, uma apuração antiga relida devolveria o número que o mundo virou depois.
-        efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
-            edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
-        )
-
-        movimentos = selectors._movimentos_que_alcancam(
-            edital=edital, perfil=perfil, marco=marco, lista=lista
-        )
-        lidos = [
-            (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
-            for m in movimentos
-        ]
-        # **A concorrência concomitante é exclusão, e não transferência** (`FR-252`). Num recorte
-        # reservado, quem já ocupou pela ampla não é computado aqui — item 8.9 do 28/2026, que diz
-        # "não constarão na lista de classificados como autodeclarados, abrindo vaga para o próximo
-        # suplente autodeclarado". A vaga reservada **continua sendo da reserva**, e o que muda é
-        # que ele não a ocupou.
-        ocupantes_da_ampla = (
-            selectors.ocupantes_da_ampla(
-                edital=edital, perfil_id=perfil, marco_id=marco, versao=versao
-            )
-            if lista is not None
-            else set()
-        )
-        try:
-            publicadas, efetivas, ocupadas = calculo.apurar(
-                publicadas=_quantidade(linha),
-                progrediram_em_ordem=progrediram,
-                habilitadas=habilitadas,
-                movimentos_lidos=lidos,
-                ocupantes_da_ampla=ocupantes_da_ampla,
-                efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
-                empates_residuais=empates,
-            )
-        except calculo.EmpateNaFronteiraDoAlvo as erro:
-            # **Recusar é o desfecho, e não escolher** (019, `R-002`). A mensagem nomeia a posição
-            # e o tamanho do empate porque o caminho de saída existe e é da `015`: julgar o
-            # desempate. Sem os dois números, quem lê não sabe quantos julgar.
-            raise DomainError(
-                erro.codigo,
-                f"Um empate residual não julgado na posição {erro.posicao}, com {erro.quantas} "
-                "participantes, atravessa a fronteira das vagas deste recorte: não há como "
-                "determinar quem é titular sem o desempate julgado.",
-                409,
-            ) from erro
-
-        # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
-        # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
-        # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
-        especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
-        cede = (
-            movimento_de_vaga.quantidade_que_a_cota_cede(
-                especie=especie_da_reversao,
-                efetivas=efetivas,
-                ocupadas=ocupadas,
-                ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
-                    edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
-                ),
-            )
-            if lista is not None
-            else 0
-        )
-        identidade_do_movimento = uuid4() if cede else None
-        if cede:
-            efetivas -= cede
-
-        apuracao = ApuracaoDeOcupacao(
+        apuracao, movimento = _apurar(
+            actor=actor,
             edital=edital,
-            perfil_id=perfil,
-            marco_id=marco,
-            lista_id=lista,
-            ato=ato,
-            corte=corte,
-            versao=versao,
-            apuracao_anterior=vigente,
-            motivo_da_sucessao=texto_do_motivo,
-            publicadas=publicadas,
-            efetivas=efetivas,
-            ocupadas=ocupadas,
-            linha_do_quadro_id=linha.get("id"),
-            universo={
-                "rowId": str(linha.get("id")) if linha.get("id") else None,
-                "immediateVacancies": publicadas,
-                "vacancyReversion": _declaracao(versao.content, perfil_id=perfil),
-                "governedStage": str(etapa) if etapa else None,
-                "orderId": str(ato.id),
-                "cutId": str(corte.id) if corte is not None else None,
-                # **Os ids, e não "os movimentos de hoje"**: reproduzir é reler estes
-                # (`FR-244`). Sem o congelamento, uma apuração antiga relida devolveria o número
-                # que o mundo virou depois, e não o que ela apurou.
-                "movimentosLidos": [str(m.id) for m in movimentos]
-                + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
-                "efeitosLidos": [str(e.id) for e in efeitos],
-            },
-            emitida_por=str(getattr(actor, "subject", actor)),
-            emitida_em=ctx.now,
-        )
-        apuracao.save()
-        movimento = (
-            movimento_de_vaga.gravar_reversao(
-                identidade=identidade_do_movimento,
-                apuracao=apuracao,
-                quantidade=cede,
-                origem_lista_id=lista,
-                publicadas=publicadas,
-                especie=especie_da_reversao,
-                registrado_por=str(getattr(actor, "subject", actor)),
-                registrado_em=ctx.now,
-            )
-            if cede
-            else None
+            perfil=identificador(perfil_id),
+            marco=identificador(marco_id),
+            lista=identificador(lista_id) if lista_id else None,
+            motivo=motivo,
+            now=ctx.now,
         )
         return _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, movimento=movimento)
+
+
+def emitir_sucessora_por_efeito(
+    *, actor, permissao, edital, perfil_id, marco_id, lista_id, motivo, now, correlation_id
+):
+    """Emite a apuração sucessora **dentro** da transação de quem chama, sem mover vaga (050).
+
+    **É a mesma apuração que a tela emite**, pela mesma conta, com o mesmo autor de quem praticou o
+    ato que a pediu e com o motivo que ele declarou. O que muda é que ela não abre transação nem
+    trava o Processo: quem chama já os tem, e a idempotência é a do ato que a pediu.
+
+    **Devolve `None` quando a conta moveria vaga** pela reversão declarada, e nada é gravado. As
+    recusas da emissão (`ordem_nao_vigente`, `sem_quadro_publicado`, empate na fronteira) sobem como
+    sobem na tela, e quem chama decide o que fazer com elas.
+
+    O nome não cita convocação, e é de propósito: esta feature não conhece esse fato (`UX-034`). Ela
+    sabe que um efeito entrou pela porta e que alguém pediu o número seguinte.
+    """
+    apuracao, _ = _apurar(
+        actor=actor,
+        edital=edital,
+        perfil=perfil_id,
+        marco=marco_id,
+        lista=lista_id,
+        motivo=motivo,
+        now=now,
+        movimento_admitido=False,
+    )
+    if apuracao is None:
+        return None
+    auditar(
+        actor=actor,
+        permissao=permissao,
+        operation=APURAR,
+        aggregate=apuracao,
+        now=now,
+        correlation_id=correlation_id,
+        reason=_razao(apuracao),
+    )
+    return _declarado(apuracao)
+
+
+def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admitido=True):
+    """O cálculo e a gravação da apuração, dentro da transação de quem chama.
+
+    **Uma conta só, para os dois caminhos** (050, `D-005`): a emissão pela tela da ocupação e a
+    sucessora que o desfecho de convocação produz. Duas contas divergiriam na primeira regra nova —
+    e a pergunta "quantas vagas faltam" tem de continuar tendo uma resposta só.
+
+    Com `movimento_admitido=False`, a apuração que cederia vaga pela reversão **não é gravada**, e a
+    função devolve `(None, None)`. Mover quantidade entre recortes é ato que alguém pratica nesta
+    tela, e não efeito colateral de outro ato.
+    """
+
+    # **A ordem tem de ser a vigente** (`FR-243`): apurar sobre ordem sucedida contaria
+    # ocupação de uma ordem que o próprio sistema já sabe estar para trás.
+    ato = ato_vigente(edital=edital, marco_id=marco, lista_id=lista)
+    if ato is None:
+        raise DomainError(
+            "ordem_nao_vigente",
+            "Este recorte não tem ordem vigente: não há ocupação a apurar.",
+            409,
+        )
+
+    versao = effective_version(edital_id=edital.id, at=now)
+    linha = linha_do_quadro(versao.content, perfil_id=perfil, lista_id=lista)
+    if linha is None:
+        # **Ausência de quadro não é zero** (`FR-242`, `UX-032`). Edital publicado antes do
+        # degrau 12 não declarou quantidade nenhuma, e apurar ali afirmaria o que ele não disse.
+        raise DomainError(
+            "sem_quadro_publicado",
+            "Este Edital não publicou quadro de vagas para este recorte: não há quantidade "
+            "declarada a apurar. A quantidade é declarada por Retificação do Perfil, "
+            "acrescentando a linha deste recorte ao quadro de vagas.",
+            409,
+        )
+
+    vigente = selectors.apuracao_vigente(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
+    texto_do_motivo = (motivo or "").strip()
+    if vigente and not texto_do_motivo:
+        raise DomainError(
+            "motivo_da_sucessao_obrigatorio",
+            "Declare o motivo da sucessão da apuração vigente.",
+            422,
+            campo="motivo",
+        )
+
+    progrediram, corte, empates = selectors.progrediram_em_ordem(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
+    etapa = corte.etapa_governada_id if corte is not None else None
+    habilitadas = selectors.habilitadas_pelo_corte(
+        edital=edital, corte=corte, progrediram=progrediram
+    )
+    # **Os efeitos que a `019` registrou, congelados como os movimentos já são** (`FR-244`).
+    # Reproduzir esta apuração é reler **estes** ids, e não os efeitos de hoje: sem o
+    # congelamento, uma apuração antiga relida devolveria o número que o mundo virou depois.
+    efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
+
+    movimentos = selectors._movimentos_que_alcancam(
+        edital=edital, perfil=perfil, marco=marco, lista=lista
+    )
+    lidos = [
+        (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
+        for m in movimentos
+    ]
+    # **A concorrência concomitante é exclusão, e não transferência** (`FR-252`). Num recorte
+    # reservado, quem já ocupou pela ampla não é computado aqui — item 8.9 do 28/2026, que diz
+    # "não constarão na lista de classificados como autodeclarados, abrindo vaga para o próximo
+    # suplente autodeclarado". A vaga reservada **continua sendo da reserva**, e o que muda é
+    # que ele não a ocupou.
+    ocupantes_da_ampla = (
+        selectors.ocupantes_da_ampla(edital=edital, perfil_id=perfil, marco_id=marco, versao=versao)
+        if lista is not None
+        else set()
+    )
+    try:
+        publicadas, efetivas, ocupadas = calculo.apurar(
+            publicadas=_quantidade(linha),
+            progrediram_em_ordem=progrediram,
+            habilitadas=habilitadas,
+            movimentos_lidos=lidos,
+            ocupantes_da_ampla=ocupantes_da_ampla,
+            efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
+            empates_residuais=empates,
+        )
+    except calculo.EmpateNaFronteiraDoAlvo as erro:
+        # **Recusar é o desfecho, e não escolher** (019, `R-002`). A mensagem nomeia a posição
+        # e o tamanho do empate porque o caminho de saída existe e é da `015`: julgar o
+        # desempate. Sem os dois números, quem lê não sabe quantos julgar.
+        raise DomainError(
+            erro.codigo,
+            f"Um empate residual não julgado na posição {erro.posicao}, com {erro.quantas} "
+            "participantes, atravessa a fronteira das vagas deste recorte: não há como "
+            "determinar quem é titular sem o desempate julgado.",
+            409,
+        ) from erro
+
+    # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
+    # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
+    # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
+    especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
+    cede = (
+        movimento_de_vaga.quantidade_que_a_cota_cede(
+            especie=especie_da_reversao,
+            efetivas=efetivas,
+            ocupadas=ocupadas,
+            ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
+                edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
+            ),
+        )
+        if lista is not None
+        else 0
+    )
+    if cede and not movimento_admitido:
+        # **Nada é gravado**: a apuração que moveria vaga não nasce por este caminho. Quem a pediu
+        # sem movimento recebe `None`, e a emissão com o movimento continua sendo o ato da tela.
+        return None, None
+    identidade_do_movimento = uuid4() if cede else None
+    if cede:
+        efetivas -= cede
+
+    apuracao = ApuracaoDeOcupacao(
+        edital=edital,
+        perfil_id=perfil,
+        marco_id=marco,
+        lista_id=lista,
+        ato=ato,
+        corte=corte,
+        versao=versao,
+        apuracao_anterior=vigente,
+        motivo_da_sucessao=texto_do_motivo,
+        publicadas=publicadas,
+        efetivas=efetivas,
+        ocupadas=ocupadas,
+        linha_do_quadro_id=linha.get("id"),
+        universo={
+            "rowId": str(linha.get("id")) if linha.get("id") else None,
+            "immediateVacancies": publicadas,
+            "vacancyReversion": _declaracao(versao.content, perfil_id=perfil),
+            "governedStage": str(etapa) if etapa else None,
+            "orderId": str(ato.id),
+            "cutId": str(corte.id) if corte is not None else None,
+            # **Os ids, e não "os movimentos de hoje"**: reproduzir é reler estes
+            # (`FR-244`). Sem o congelamento, uma apuração antiga relida devolveria o número
+            # que o mundo virou depois, e não o que ela apurou.
+            "movimentosLidos": [str(m.id) for m in movimentos]
+            + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
+            "efeitosLidos": [str(e.id) for e in efeitos],
+        },
+        emitida_por=str(getattr(actor, "subject", actor)),
+        emitida_em=now,
+    )
+    apuracao.save()
+    movimento = (
+        movimento_de_vaga.gravar_reversao(
+            identidade=identidade_do_movimento,
+            apuracao=apuracao,
+            quantidade=cede,
+            origem_lista_id=lista,
+            publicadas=publicadas,
+            especie=especie_da_reversao,
+            registrado_por=str(getattr(actor, "subject", actor)),
+            registrado_em=now,
+        )
+        if cede
+        else None
+    )
+    return apuracao, movimento
 
 
 def _declaracao(conteudo, *, perfil_id):
@@ -249,36 +311,32 @@ def _quantidade(linha):
     )
 
 
-def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None):
-    auditar(
-        actor=actor,
-        permissao=ctx.base.permissao,
-        operation=APURAR,
-        aggregate=apuracao,
-        now=ctx.now,
-        correlation_id=correlation_id,
-        # **O que a `FR-259` exige entra na razão, e não só no agregado.** Ator, ação e instante o
-        # registro genérico já guarda; recorte, ordem citada e as quantidades são desta feature, e
-        # sem eles a auditoria não reconstrói o número sem abrir o banco.
-        reason=(
-            f"Ocupação do marco {apuracao.marco_id}, Perfil {apuracao.perfil_id}, "
-            f"lista {apuracao.lista_id or 'ampla concorrência'}: {apuracao.publicadas} publicadas, "
-            f"{apuracao.efetivas} efetivas, {apuracao.ocupadas} ocupadas, "
-            f"{apuracao.faltando} a ocupar, sobre a ordem {apuracao.ato_id}."
-            + (
-                f" Motivo da sucessão: {apuracao.motivo_da_sucessao}"
-                if apuracao.motivo_da_sucessao
-                else ""
-            )
-            + (
-                f" Reversão: {movimento.quantidade} vaga(s) para a ampla concorrência."
-                if movimento is not None
-                else ""
-            )
-        ),
-        idempotency_key=idempotency_key,
+def _razao(apuracao, movimento=None):
+    """**O que a `FR-259` exige entra na razão, e não só no agregado.**
+
+    Ator, ação e instante o registro genérico já guarda; recorte, ordem citada e as quantidades são
+    desta feature, e sem eles a auditoria não reconstrói o número sem abrir o banco.
+    """
+    return (
+        f"Ocupação do marco {apuracao.marco_id}, Perfil {apuracao.perfil_id}, "
+        f"lista {apuracao.lista_id or 'ampla concorrência'}: {apuracao.publicadas} publicadas, "
+        f"{apuracao.efetivas} efetivas, {apuracao.ocupadas} ocupadas, "
+        f"{apuracao.faltando} a ocupar, sobre a ordem {apuracao.ato_id}."
+        + (
+            f" Motivo da sucessão: {apuracao.motivo_da_sucessao}"
+            if apuracao.motivo_da_sucessao
+            else ""
+        )
+        + (
+            f" Reversão: {movimento.quantidade} vaga(s) para a ampla concorrência."
+            if movimento is not None
+            else ""
+        )
     )
-    declarado = {
+
+
+def _declarado(apuracao, movimento=None):
+    return {
         "id": str(apuracao.id),
         "publicadas": apuracao.publicadas,
         "efetivas": apuracao.efetivas,
@@ -287,6 +345,20 @@ def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, moviment
         "universo": apuracao.universo,
         "reverteu": movimento.quantidade if movimento is not None else 0,
     }
+
+
+def _concluir(ctx, apuracao, actor, correlation_id, idempotency_key, *, movimento=None):
+    auditar(
+        actor=actor,
+        permissao=ctx.base.permissao,
+        operation=APURAR,
+        aggregate=apuracao,
+        now=ctx.now,
+        correlation_id=correlation_id,
+        reason=_razao(apuracao, movimento),
+        idempotency_key=idempotency_key,
+    )
+    declarado = _declarado(apuracao, movimento)
     ctx.concluir_sem_resultado(201, declarado)
     return declarado
 
@@ -298,4 +370,4 @@ def _edital_do_processo(processo, edital_id):
         raise DomainError("edital_nao_encontrado", "Edital não encontrado.", 404) from erro
 
 
-__all__ = ["emitir_apuracao"]
+__all__ = ["emitir_apuracao", "emitir_sucessora_por_efeito"]

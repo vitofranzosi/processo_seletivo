@@ -735,29 +735,61 @@ def _conclusoes_por_avaliacao(modelo, avaliacao_ids):
     return agrupadas
 
 
-def janela_da_publicacao_divulgada(publicacao, *, conteudo=None):
+def conteudos_citados(publicacoes):
+    """`{ato_id: conteúdo}` da versão que cada ato divulgado citou — uma consulta (RC-121).
+
+    A página do Edital lê o prazo de vários resultados de uma vez, e cada um cita a sua versão: uma
+    leitura por resultado seria a consulta por linha que os orçamentos recusam. As versões distintas
+    são poucas, e o conteúdo de cada uma vem uma vez por ato.
+    """
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+
+    identidades = {publicacao.ato_id for publicacao in publicacoes}
+    if not identidades:
+        return {}
+    return dict(
+        AtoDeOrdenacao.objects.filter(pk__in=identidades).values_list("id", "versao__content")
+    )
+
+
+def conteudo_citado(publicacao):
+    """O conteúdo da versão que o ato divulgado por esta publicação citou (RC-121)."""
+    return conteudos_citados([publicacao]).get(publicacao.ato_id) or {}
+
+
+def janela_da_publicacao_divulgada(publicacao, *, conteudo=None, vigente=None):
     """`(abre, fecha)` do prazo de recurso contra uma publicação de resultado, ou `None` (047).
 
     **É a conta da interposição, e não uma cópia dela.** A interposição, o acompanhamento do
-    candidato e a página pública do resultado leem esta função, e por isso as três superfícies não
-    têm como anunciar datas diferentes para o mesmo prazo (`FR-769`, `SC-284`). Antes da 047, o
-    ramo *publicação* de `interpor._janelas_pertinentes` fazia esta conta por dentro, e só quem
-    já se identificara via o prazo.
+    candidato, a página pública do resultado e a conferência da definitiva leem esta função, e por
+    isso não têm como dizer datas diferentes para o mesmo prazo (`FR-769`, `SC-284`).
 
-    **A norma é a da versão vigente**, como a interposição sempre leu (`D-005`): o prazo dito ao
-    público é o que o sistema aplica a quem recorre. Que uma Retificação da janela alcance ato já
-    divulgado é pergunta do domínio de recursos, registrada na spec da 047; se a regra mudar, muda
-    aqui, e as três superfícies acompanham juntas.
+    **A norma é a da versão que o ato citou, salvo o que a vigente concede** — decisão do usuário
+    de 28/09 sobre o RC-121 (`recursos/domain/janela.py`, `declaracao_aplicavel`). Até então era só
+    a vigente, e a `047` registrou que, se a regra mudasse, mudaria aqui e as superfícies
+    acompanhariam juntas (`D-005`): é o que aconteceu. Encurtar ou retirar a janela por Retificação
+    não alcança o ato já divulgado; fazê-la nascer ou alongá-la, alcança.
 
-    `conteudo` é o conteúdo vigente, quando quem chama já o tem na mão — a página do Edital, que
-    lê vários resultados de uma vez. Sem ele, a função o lê.
+    `conteudo` é o conteúdo **citado pelo ato desta publicação**, e `vigente` o do Edital agora,
+    quando quem chama já os tem na mão — a página do Edital, que lê vários resultados de uma vez.
+    Sem eles, a função os lê.
 
     `None` quando não há janela declarada, quando ela não é computável, ou quando o Edital declarou
     que não cabe recurso: nos três casos o sistema **não inventa prazo** (`FR-771`).
     """
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
-    from processo_seletivo.recursos.domain.janela import declaracao_do_marco, janela_da_publicacao
+    from processo_seletivo.recursos.domain.janela import (
+        declaracao_aplicavel,
+        declaracao_do_marco,
+        janela_da_publicacao,
+    )
 
     if conteudo is None:
-        conteudo = conteudo_vigente(publicacao.edital)
-    return janela_da_publicacao(publicacao, declaracao_do_marco(conteudo, publicacao.marco_id))
+        conteudo = conteudo_citado(publicacao)
+    if vigente is None:
+        vigente = conteudo_vigente(publicacao.edital)
+    declaracao = declaracao_aplicavel(
+        declaracao_do_marco(conteudo, publicacao.marco_id),
+        declaracao_do_marco(vigente, publicacao.marco_id),
+    )
+    return janela_da_publicacao(publicacao, declaracao)

@@ -259,14 +259,19 @@ um, como tem para os `FR-`.
   o sistema continua recebendo inscrição. A página diz o encerramento do Processo como fato, com a
   data, e o Edital segue a marca, o grupo e o filtro do próprio período (`D-003`). A primeira versão
   desta spec mandava o desfecho do Processo fechar a situação pública, e a revisão do #193 mostrou
-  que a página passava a dizer *"não recebe inscrições"* de um Edital que recebia.
+  que a página passava a dizer *"não recebe inscrições"* de um Edital que recebia. *Desde 28/09
+  (RC-118), encerrar o Processo exige os Editais em estado final (`FR-034` da `001`, emendada), e
+  este caso só existe no Processo encerrado antes disso — para o qual o `FR-762` continua valendo.*
 - **Edital com desfecho e janela recursal ainda aberta.** A página do resultado continua dizendo o
   prazo. O desfecho administrativo não apaga a norma aplicada a um ato já publicado, e a decisão de
   receber ou não a peça continua com o domínio de recursos, que esta spec não toca.
 - **Período de inscrições marcado como cancelado.** Fora do escopo, e registrado (ver *Achados*):
   a régua do período ignora o cancelamento e o sistema continua recebendo inscrição. Esta spec não
   muda o que o sistema recebe, e a projeção não pode contradizê-lo. A linha do período segue a régua
-  do período, e a exceção do `FR-766` vale para ela.
+  do período, e a exceção do `FR-766` vale para ela. *Desde 28/09 (RC-119, decisão do usuário), a
+  régua do período lê o cancelamento, e o período cancelado não recebe inscrição: a projeção
+  continua sem contradizer o sistema, e por isso a exceção deixou de existir — a linha é dita
+  cancelada pela regra geral do `FR-766`, e a marca da página diz que o período foi cancelado.*
 - **Evento sem início** no conteúdo publicado: não recebe fase e não é candidato a próximo Evento.
 - **Dois Eventos com o mesmo início** como próximos: os dois são ditos, na ordem publicada.
 - **Retificação publicada com vigência futura.** O cronograma que vale para *agora* e *próximo* é o
@@ -438,7 +443,8 @@ continua recebendo dentro do período. A página passou a dizer *"não recebe in
 que recebia, o defeito que esta feature existe para remover. A regra do recebimento não muda aqui:
 a página diz o encerramento do Processo, com a data, e o Edital segue o próprio estado e período.
 Se o encerramento do Processo deve bloquear inscrições é decisão de domínio, pendente e registrada
-em *Achados*.
+em *Achados*. *Decidida pelo usuário em 28/09 (RC-118): o encerramento passa a exigir os Editais em
+estado final, como o cancelamento; a regra do recebimento continua lendo só o Edital e o período.*
 
 ### D-004 — Uma régua de fase para o portal, a da gestão
 
@@ -622,13 +628,15 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
 - **Período de inscrições cancelado continua recebendo inscrição.** `periodo_de_inscricoes` e
   `recebe_inscricoes` ignoram o `status` do Evento (`inscricoes/domain/periodo.py`). Só a API declara
   `CANCELADO`, e o campo não é retificável (é *derivado* no contrato da `026`). Decidir se um período
-  cancelado fecha o recebimento é regra de domínio da inscrição, e não projeção.
+  cancelado fecha o recebimento é regra de domínio da inscrição, e não projeção. *Decidido em 28/09
+  (RC-119): fecha.*
 - **O encerramento do Processo não bloqueia inscrições.** `close_process` exige só o Processo
   ativo, e não os Editais em estado final; `recebe_inscricoes` lê o status do Edital. Um Edital
   publicado de Processo encerrado continua recebendo inscrição dentro do período. A 047 projeta isso
   como é (`D-003`, `FR-762`). **Decisão pendente, para outra feature**: encerrar o Processo deve
   fechar o recebimento dos Editais dele — exigindo-os em estado final, ou fazendo a regra do
-  recebimento ler o Processo? Registrado pela revisão do #193, e não implementado.
+  recebimento ler o Processo? Registrado pela revisão do #193, e não implementado. *Decidido em
+  28/09 (RC-118): exigindo-os em estado final.*
 - **O cancelamento do Edital não gera Publicação.** A Constituição pede que o cancelamento preserve
   *"Publicações e histórico"*, e o domínio registra ato administrativo e auditoria, sem documento
   público. Se o Cefor precisa do ato de cancelamento publicado pelo sistema, é spec própria.
@@ -640,6 +648,7 @@ Encontrados nesta investigação. São reais, e nenhum pertence a esta feature.
   prazo de recurso desse resultado. Pode ser a intenção, já que conceder prazo é menos grave do que
   retirá-lo, como o próprio contrato registra (`mutabilidade.py:527-530`). Mas não há decisão escrita
   para o caso de **encurtar**. É pergunta do domínio de recursos (`018`), e a 047 projeta o que ele
-  aplicar (`D-005`).
+  aplicar (`D-005`). *Decidido em 28/09 (RC-121): a janela de ato divulgado segue a versão que o
+  ato citou, salvo o que a vigente concede; a página acompanhou, como a `D-005` previa.*
 - **A API pública de histórico** (`/api/v1/public/editais/<id>/historico`) não é linkada pelo portal.
   Não é defeito, e fica registrado para quem for tratar a API.

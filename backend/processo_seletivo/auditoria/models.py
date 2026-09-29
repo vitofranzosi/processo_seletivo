@@ -19,6 +19,11 @@ class RegistroAuditoria(models.Model):
     reason = models.TextField(blank=True)
     correlation_id = models.CharField(max_length=100)
     idempotency_key = models.CharField(max_length=128, blank=True)
+    # O que um gesto em lote alcançou, para ser lido depois (051, FR-921, FR-935). A trilha exibe
+    # `reason`, que é a frase; isto é o que a Revisão precisa para dizer de onde veio um valor
+    # materializado **e se ele ainda é o gravado**. Nulo em toda outra operação: ato singular não
+    # tem alcance a registrar.
+    detalhe = models.JSONField(null=True, blank=True)
 
     class Meta:
         indexes = [models.Index(fields=["aggregate_type", "aggregate_id", "occurred_at"])]

@@ -86,6 +86,7 @@ def montar_cenario_do_corte(
     pontuacoes=("90.0000", "80.0000", "70.0000"),
     draft_factory=None,
     publicar=None,
+    emitir_a_ordem=True,
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
@@ -137,6 +138,11 @@ def montar_cenario_do_corte(
         idempotency_key=f"{prefixo}-consolidar",
         correlation_id="teste-corte-014",
     )
+    # `emitir_a_ordem` existe para quem precisa do marco **inteiro** sem ordem — a condução por
+    # marco da `049` emite a da ampla junto com as reservadas, num gesto, e um cenário que já a
+    # trouxesse emitida deixaria de fora o recorte que todo marco tem.
+    if not emitir_a_ordem:
+        return edital, pontuada, inscricoes
     emitir_ordem(
         actor=gestor,
         processo_id=edital.processo_id,

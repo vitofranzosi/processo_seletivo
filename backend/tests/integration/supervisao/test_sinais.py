@@ -54,9 +54,14 @@ def test_cronograma_normal_nao_produz_sinal_algum(
     outro valor —, com um Evento encerrado, um em curso e um futuro. Antes da `045` isso produzia
     um sinal permanente por Evento cujo início já tinha passado, apontando para uma Retificação que
     não alcança o campo. Agora não produz nada: a fase vem do relógio, e não há o que divergir.
+
+    **"Nada" é sobre o Edital inteiro, e não sobre as duas espécies retiradas.** Conferir só a
+    ausência de `UX-002` e `UX-001` passaria com qualquer outra espécie nascendo do mesmo cenário —
+    e um sinal espúrio com outro nome é o mesmo defeito. Os sinais dos outros Editais do Processo
+    ficam fora: o que o caso diz é deste cronograma.
     """
     agora = timezone.now()
-    publicar_no_processo(
+    edital = publicar_no_processo(
         api_client,
         manager_headers,
         processo_a,
@@ -88,10 +93,11 @@ def test_cronograma_normal_nao_produz_sinal_algum(
         ),
     )
 
-    especies = {sinal.especie for sinal in supervisao.sinais(processo_a, presidenta)}
+    deste = [
+        sinal for sinal in supervisao.sinais(processo_a, presidenta) if sinal.edital.id == edital.id
+    ]
 
-    assert "UX-002" not in especies
-    assert "UX-001" not in especies
+    assert deste == []
 
 
 # ---------------------------------------------------------------------------
@@ -113,6 +119,9 @@ def test_inscricao_sem_avaliador_e_carente_e_permanece_no_denominador(
 
     do_c = next(sinal for sinal in achados if sinal.edital.id == edital_c.id)
     assert do_c.medida == supervisao.Medida(numerador=4, denominador=4)
+    # A unidade fica fora da igualdade de `Medida` (`compare=False`), e por isso é conferida à
+    # parte: sem esta linha, trocar a unidade da espécie não reprovaria nada (045, `FR-743`).
+    assert do_c.medida.unidade == supervisao.INSCRICAO
     assert do_c.alvo == "Análise documental"
     assert f"{edital_c.number}/{edital_c.year}" in do_c.mensagem
 
@@ -581,6 +590,7 @@ def test_avaliacao_distribuida_e_nao_concluida_produz_o_sinal(banca, gestor, pre
     assert "distribuída e não concluída" in unico.mensagem
     # A medida é **paradas sobre distribuídas** — as três receberam avaliador, nenhuma concluiu.
     assert unico.medida == supervisao.Medida(numerador=3, denominador=3)
+    assert unico.medida.unidade == supervisao.INSCRICAO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -684,6 +694,7 @@ def test_recurso_com_julgador_disponivel_produz_o_sinal(peca, presidenta):
     assert "desimpedido" in unico.mensagem
     # Uma peça pendente, e ela tem julgador.
     assert unico.medida == supervisao.Medida(numerador=1, denominador=1)
+    assert unico.medida.unidade == supervisao.RECURSO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1076,6 +1087,7 @@ def test_edital_parado_por_ato_continua_apontando_o_recurso_que_se_decide(peca, 
     assert len(achados) == 1, "a peça com julgador livre continua na Atenção"
     assert "admissibilidade ou julgamento" in achados[0].mensagem
     assert achados[0].medida == supervisao.Medida(numerador=2, denominador=2)
+    assert achados[0].medida.unidade == supervisao.RECURSO
 
     admitir(
         actor=julgador(),
@@ -1133,6 +1145,7 @@ def test_recurso_recem_interposto_produz_o_sinal_na_admissibilidade(peca, presid
     assert len(achados) == 1
     assert "aguardando admissibilidade" in achados[0].mensagem
     assert achados[0].medida == supervisao.Medida(numerador=1, denominador=1)
+    assert achados[0].medida.unidade == supervisao.RECURSO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1170,6 +1183,7 @@ def test_com_pecas_nas_duas_fases_a_mensagem_diz_as_duas(peca, presidenta):
     assert len(achados) == 1
     assert "admissibilidade ou julgamento" in achados[0].mensagem
     assert achados[0].medida == supervisao.Medida(numerador=2, denominador=2)
+    assert achados[0].medida.unidade == supervisao.RECURSO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1208,3 +1222,64 @@ def test_peca_inadmitida_ou_julgada_nao_compoe_sinal(peca, presidenta):
 
     assert das_especies(sinais, supervisao.UX_064) == []
     assert das_especies(sinais, supervisao.UX_005) == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_contagem_da_acao_e_a_situacao_da_peca_dizem_o_mesmo(peca, presidenta):
+    """`045`, `FR-733` e `FR-734`: "aguardando decisão" está escrito duas vezes, e não diverge.
+
+    **A situação da peça é Python** (`recursos/application/selectors.py`, `_situacao`) e é ela que
+    compõe o `UX-064`; **o número da ação é SQL** (`interface/acoes.py`,
+    `recursos_aguardando_decisao`), porque a lista de Processos não pode materializar peça para
+    contá-la. São duas escritas da mesma regra, e nada além deste caso as amarra: um ramo mudado
+    num lado só faria o rótulo e a Atenção contarem filas diferentes sem que nada ficasse vermelho.
+
+    O caso anda pelos quatro ramos — recém-interposta, admitida e sem decisão, não admitida,
+    admitida e julgada — e em cada passo compara as três leituras.
+    """
+    from processo_seletivo.interface import acoes
+    from processo_seletivo.recursos.application import selectors as recursos_selectors
+    from tests.fixtures.recursos import admitir
+
+    edital = peca["cenario"]["edital"]
+    processo = peca["cenario"]["processo"]
+
+    def as_tres_leituras():
+        pela_situacao = sum(
+            1
+            for linha in recursos_selectors.recursos_do_edital(edital)
+            if linha["situacao"] in supervisao.AGUARDANDO_DECISAO
+        )
+        pela_acao = acoes.recursos_aguardando_decisao(edital)
+        achados = [
+            sinal
+            for sinal in das_especies(supervisao.sinais(processo, presidenta), supervisao.UX_064)
+            if sinal.edital.id == edital.id
+        ]
+        return pela_situacao, pela_acao, achados
+
+    def confere(esperado):
+        pela_situacao, pela_acao, achados = as_tres_leituras()
+        assert pela_situacao == esperado
+        assert pela_acao == pela_situacao, "o SQL da ação e a situação da peça se separaram"
+        if esperado == 0:
+            assert achados == [], "fila vazia não é sinal"
+        else:
+            assert len(achados) == 1
+            # Maria está livre em todas as peças deste cenário: o denominador é a fila inteira.
+            assert achados[0].medida.denominador == pela_situacao
+
+    # Admitida e sem decisão.
+    confere(1)
+
+    # Recém-interposta, sem juízo nenhum.
+    _, nova = segunda_peca(peca)
+    confere(2)
+
+    # Não admitida: decidida pela admissibilidade.
+    admitir(nova, admitido=False, motivo="Intempestivo.")
+    confere(1)
+
+    # Admitida e julgada.
+    deferir(peca)
+    confere(0)

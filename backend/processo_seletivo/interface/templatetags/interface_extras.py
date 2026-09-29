@@ -338,6 +338,10 @@ RESUMO_DAS_REPETIDAS = {
     # A Etapa sem Evento (045, `FR-739`): o seed e muitos Editais reais têm mais de uma, e dez
     # linhas iguais empurrariam os impedimentos para fora da Revisão, como os avisos de data.
     "stage_without_schedule_event": "{n} Etapas sem vínculo com o Cronograma",
+    # A redação padrão sem revisão (DP-20): o Edital intocado tem sete, e sete linhas iguais
+    # empurrariam os impedimentos para fora da Revisão.
+    "section_default_text": "{n} seções com a redação padrão, sem revisão",
+    "attachment_cited_without_label": "{n} remissões a anexo sem rótulo correspondente",
 }
 
 
@@ -392,3 +396,22 @@ def conducao_da_lista(itens):
         if item.get("conducao"):
             return item["conducao"]
     return ""
+
+
+@register.filter
+def instante_de_evento(valor, eventos):
+    """O instante é o de um dos Eventos oferecidos? (051, FR-929)
+
+    Quando é, o campo de texto fica vazio e a escolha fica marcada: mostrar o mesmo instante nos
+    dois lugares faria o digitado — que vale sobre o escolhido — prender o valor antigo quando
+    alguém trocasse o Evento.
+    """
+    return bool(valor) and any(evento["instante"] == valor for evento in eventos or [])
+
+
+@register.simple_tag
+def arredondamentos_da_reserva():
+    """As escolhas do arredondamento da regra normativa, da lista fechada do domínio (051)."""
+    from processo_seletivo.editais.domain.quadro import ARREDONDAMENTOS
+
+    return list(ARREDONDAMENTOS.items())

@@ -111,6 +111,8 @@ from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulg
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.editais.application import anexos as anexos_command
+from processo_seletivo.editais.application import teto as teto_command
+from processo_seletivo.editais.application.aplicacao import gravar_aplicacao
 from processo_seletivo.editais.application.draft import replace_draft
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.application.reaproveitamento import (
@@ -126,11 +128,13 @@ from processo_seletivo.editais.application.reaproveitamento import (
 from processo_seletivo.editais.application.requerimento import (
     atualizar_requerimento_de_matricula,
 )
+from processo_seletivo.editais.domain import aplicacao as regra_da_aplicacao
 from processo_seletivo.editais.domain import duplicacao, marcos
 from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapeada
+from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     fatos_do_conteudo_publicado,
@@ -149,10 +153,12 @@ from processo_seletivo.interface import (
     atos,
     atos_processo,
     atos_retificacao,
+    conducao_do_marco,
     forms,
     identidade,
     revisao,
 )
+from processo_seletivo.interface import aplicacao as aplicacao_ui
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -189,7 +195,7 @@ from processo_seletivo.recursos.application import admitir as recursos_admitir
 from processo_seletivo.recursos.application import julgar as recursos_julgar
 from processo_seletivo.recursos.application import selectors as recursos_selectors
 from processo_seletivo.recursos.domain.elegibilidade import RAZOES, impedimento
-from processo_seletivo.recursos.domain.janela import janela_declarada
+from processo_seletivo.recursos.domain.janela import janela_do_ato
 from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
@@ -689,7 +695,17 @@ DESTINO_DA_PENDENCIA = {
 # está a duas telas dali. É a única exceção, e por isso é por código do achado, e não por caminho.
 DESTINO_POR_CODIGO = {
     "milestone_stage_without_weight": ("etapas", "#etapas-titulo", True),
+    # O período declarado cancelado se desfaz onde o período se designa (RC-119).
+    "registration_period_cancelled": ("inscricao", "#inscricao-periodo", True),
 }
+
+# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09), e só eles. Mapear a coleção
+# `sections` inteira para a etapa Conteúdo — como a primeira redação fazia — tornava "corrigíveis"
+# ali os impeditivos de topologia do catálogo, seção ausente, alheia, título ou ordem trocados, que
+# a tela não corrige: a pendência oferecia um caminho que não existe, que é o que a `FR-007`
+# proíbe. Achado da revisão do PR 221.
+DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_default_text"})
 
 
 def _destino(caminho, codigo=""):
@@ -704,6 +720,13 @@ def _destino(caminho, codigo=""):
     """
     if codigo in DESTINO_POR_CODIGO:
         return DESTINO_POR_CODIGO[codigo]
+    if caminho.startswith("/sections"):
+        # Só os dois avisos do texto se corrigem na etapa Conteúdo. O resto do que se diz sobre uma
+        # seção é topologia do catálogo, que nenhuma etapa corrige — e a busca por segmento, abaixo,
+        # mandava `/sections/id=…/title` para a Identificação, porque `title` ali é o do Edital.
+        if codigo in CODIGOS_DO_TEXTO_DA_SECAO:
+            return DESTINO_DO_TEXTO_DA_SECAO
+        return (None, "", False)
     if caminho in DESTINO_DA_PENDENCIA:
         return DESTINO_DA_PENDENCIA[caminho]
     # Do mais específico para o mais geral: o marco é a coleção mais profunda do caminho, e a
@@ -961,6 +984,12 @@ PREFIXO_DA_ETAPA = {
 }
 
 
+#: O controle de cada campo de raiz que o assistente recusa junto do campo (FR-033). Só o teto, que
+#: é o que o RC-12 acrescentou; os do Requerimento de Matrícula seguem como a 029 os deixou, com a
+#: recusa no resumo da etapa.
+CONTROLE_DO_CAMPO_DE_RAIZ = {CAMPO_DO_TETO: "teto-inscricoes"}
+
+
 def _recusa(exc, digitados, etapa):
     """A recusa do domínio, com a âncora do campo quando ele é conhecido (FR-033).
 
@@ -974,6 +1003,9 @@ def _recusa(exc, digitados, etapa):
     campo = getattr(exc, "campo", "")
     identidade = getattr(exc, "identidade", "")
     mensagem = getattr(exc, "detail", None) or str(exc)
+    # Campo de **raiz** do Edital não tem linha: o controle é um só, e a âncora é o `id` dele.
+    if campo in CONTROLE_DO_CAMPO_DE_RAIZ and not identidade:
+        return {"mensagem": mensagem, "ancora": CONTROLE_DO_CAMPO_DE_RAIZ[campo]}
     prefixo = PREFIXO_DA_ETAPA.get(etapa, "")
     if not (campo and identidade and prefixo):
         return {"mensagem": mensagem, "ancora": ""}
@@ -1025,6 +1057,29 @@ def _eventos_do_cronograma(edital):
     """
     cronograma = getattr(edital, "cronograma", None)
     return list(cronograma.eventos.all()) if cronograma is not None else []
+
+
+def eventos_do_sorteio(edital, eventos=None):
+    """Os Eventos do Cronograma como instantes que o método do sorteio pode escolher (051, FR-929).
+
+    **O instante já estava declarado em outro lugar**, e o operador o redigitava em RFC 3339, com
+    fuso. O valor de cada opção é o próprio instante, no fuso institucional e no formato que o
+    método publica — a escolha grava exatamente o que se digitaria, e a Revisão diz de que Evento
+    ele veio.
+    """
+    if edital is None:
+        return []
+    return [
+        {
+            "instante": timezone.localtime(evento.start_at).isoformat(timespec="seconds"),
+            "rotulo": (
+                f"{evento.description} — "
+                f"{timezone.localtime(evento.start_at).strftime('%d/%m/%Y %H:%M')}"
+            ),
+        }
+        # `eventos` é o que a página já leu, quando leu: uma consulta por página (028, FR-341).
+        for evento in (_eventos_do_cronograma(edital) if eventos is None else eventos)
+    ]
 
 
 def _vencidos_entre(eventos, *, agora):
@@ -1242,9 +1297,49 @@ def compor_etapa(request, edital_id, etapa):
 
     editavel = pode_compor(edital, ator)
     anterior, proxima = _vizinhas(etapa)
-    erros, digitados = [], None
+    erros, digitados, restaurado, previa, quadro_preenchido = [], None, False, None, None
+    pendentes = None
 
-    if request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
+    if (
+        request.method == "POST"
+        and etapa == "perfis"
+        and editavel
+        and request.POST.get("preencher_quadro")
+    ):
+        # **Preencher pelo percentual** (051, FR-932): as linhas vazias de lista reservada recebem a
+        # sugestão, e a tela volta com o formulário preenchido — sem gravar. O alcance é dito na
+        # frase, e a confirmação é o *Salvar* de sempre.
+        try:
+            digitados, quadro_preenchido = aplicacao_ui.preencher_quadro(_ler_etapa(request, etapa))
+        except ValueError as exc:
+            erros.append(_recusa(exc, None, etapa))
+    elif (
+        request.method == "POST"
+        and etapa in ETAPAS_DO_GESTO
+        and editavel
+        and (pedido := aplicacao_ui.pedido(request.POST)) is not None
+    ):
+        # **"Aplicar aos demais Perfis"** (051). O gesto é um envio da etapa, e não um caminho
+        # próprio de gravação (R-001): a prévia devolve esta mesma tela com o digitado, e só a
+        # confirmação grava — pela gravação da etapa, com o registro do gesto na mesma transação.
+        digitados, previa, destino = _gesto(request, ator, edital, etapa, pedido, erros)
+        if destino:
+            return redirect(destino)
+        edital.refresh_from_db()
+    elif request.method == "POST" and etapa in ETAPAS_GRAVAVEIS and request.POST.get("restaurar"):
+        # **Reexibir o rascunho local, sem gravar nada** (RC-08; FR-020 da 002). A leitura é a
+        # mesma da recusa, logo abaixo, e é por isso que a Modalidade, o fato, a linha do quadro e
+        # os marcos em trânsito voltam: remontá-los no navegador perdia tudo que era aninhado. Não
+        # grava porque restaurar põe na tela, e quem envia continua sendo a pessoa — o guardado
+        # pode ser mais velho que o servidor. Pede a mesma permissão de compor: reexibir não
+        # escreve, mas a tela que volta é a do formulário editável.
+        if editavel:
+            try:
+                digitados = _ler_etapa(request, etapa)
+                restaurado = True
+            except ValueError as exc:
+                erros.append(_recusa(exc, digitados, etapa))
+    elif request.method == "POST" and etapa in ETAPAS_GRAVAVEIS:
         if not editavel:
             erros.append(
                 {
@@ -1264,6 +1359,29 @@ def compor_etapa(request, edital_id, etapa):
             except ValueError as exc:
                 erros.append(_recusa(exc, digitados, etapa))
             else:
+                # **A escolha do Edital ainda não aplicada impede gravar** (051, FR-916, FR-926).
+                # Aplicá-la aqui pularia a prévia; ignorá-la a descartaria em silêncio sob um botão
+                # chamado *Salvar*. A tela volta inteira, e conferir continua sendo o gesto do
+                # controle. Nenhuma prévia abre sozinha: com as duas escolhas pendentes, abrir uma
+                # delas inventaria uma ordem entre elas.
+                pendentes = (
+                    aplicacao_ui.escolhas_pendentes(
+                        digitados, request.POST, gravados=forms.perfis_persistidos(edital)
+                    )
+                    if etapa == "perfis"
+                    else {}
+                )
+                erros.extend(
+                    {
+                        "mensagem": (
+                            f"{aplicacao_ui.ROTULO_DO_CONTROLE[campo]}: a escolha ainda não foi "
+                            "aplicada aos Perfis."
+                        ),
+                        "ancora": f"edital-{campo}",
+                    }
+                    for campo in pendentes
+                )
+            if not erros:
                 try:
                     # **Antes de gravar**, porque a gravação é quem sobrescreve: a derivação
                     # reafirma a linha geral com o total, e quem digitou outro número precisa saber
@@ -1297,7 +1415,21 @@ def compor_etapa(request, edital_id, etapa):
     vencidos = _vencidos_entre(eventos_do_cronograma, agora=agora) if etapa == "cronograma" else []
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
-    conferencia = revisao.blocos(edital_snapshot(edital)) if etapa == "revisao" else []
+    snapshot_da_revisao = edital_snapshot(edital) if etapa == "revisao" else None
+    conferencia = (
+        revisao.blocos(
+            snapshot_da_revisao,
+            # Os gestos de aplicar a todos deste Edital, em ordem: é deles que a Revisão tira a
+            # origem do que foi materializado (051, FR-934, FR-935).
+            RegistroAuditoria.objects.filter(
+                aggregate_id=edital.id, operation="APLICAR_A_TODOS"
+            ).order_by("occurred_at"),
+        )
+        if etapa == "revisao"
+        else []
+    )
+    # O que não se corrige depois de publicado, antes do botão de submeter (051, FR-936, UX-115).
+    definitivos = revisao.definitivos(snapshot_da_revisao) if etapa == "revisao" else []
     anexos = _anexos_da_etapa(edital) if etapa == "anexos" else []
     recusa_de_anexo = request.session.pop("anexos_recusa", None) if etapa == "anexos" else None
     # **Consumido em qualquer etapa, e não só na dos Perfis.** "Avançar" grava uma etapa e abre a
@@ -1305,6 +1437,15 @@ def compor_etapa(request, edital_id, etapa):
     # sessão esperando uma visita futura, onde surgiria já obsoleto, falando de uma gravação que
     # ninguém lembra. Notícia do que acabou de acontecer não sobrevive à próxima tela (FR-322).
     rederivadas = request.session.pop("quadro_rederivado", None)
+    # O controle do Edital como o envio o trouxe; depois de um gesto confirmado, a escolha do outro
+    # controle, que o redirecionamento perderia (051) — ver `_gesto`.
+    controle_do_edital = (
+        request.POST
+        if request.method == "POST"
+        else request.session.pop("escolhas_do_edital", None) or {}
+        if etapa == "perfis"
+        else {}
+    )
     perfis = (
         _reexibir_perfis(digitados)
         if etapa == "perfis" and digitados is not None
@@ -1345,12 +1486,31 @@ def compor_etapa(request, edital_id, etapa):
             # local precisa para apagar exatamente o que o servidor passou a ter. "Avançar" grava
             # uma etapa e abre outra, então nem sempre é a etapa desta tela.
             "salvo_chave": request.GET.get("salvo", ""),
+            "restaurado": restaurado,
+            # A prévia do gesto, quando este envio a pediu (051, FR-916); e, depois da confirmação,
+            # quantos Perfis ela alcançou — a notícia do que acabou de acontecer.
+            "previa": previa,
+            "aplicado": request.GET.get("aplicado", ""),
+            "quadro_preenchido": quadro_preenchido,
             "identificacao": (
                 digitados
                 if etapa == "identificacao" and digitados is not None
                 else {"title": edital.title, "description": edital.description}
             ),
             "perfis": perfis,
+            "quantos_perfis": len(perfis or []),
+            # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
+            # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
+            "comuns": _comuns(perfis, controle_do_edital) if etapa == "perfis" else {},
+            # A escolha do controle que a prévia ainda teria o que fazer: o aviso junto dele diz
+            # que ela não foi aplicada, e *Salvar* a recusa (051, FR-916).
+            "pendentes": (
+                pendentes
+                if pendentes is not None
+                else _escolhas_pendentes_na_tela(edital, digitados, controle_do_edital)
+                if etapa == "perfis"
+                else {}
+            ),
             # O prefixo dos campos do primeiro marco desta tela — `marco-<perfil>-0` (030,
             # FR-426, FR-427). **Vazio significa que não há marco**, e é o que faz o bloco de
             # ajuda da etapa não ser apresentado: ajuda sobre campos que ninguém tem à frente é
@@ -1375,6 +1535,11 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.metodo_comum_para_exibicao(edital)
                 if etapa == "classificacao"
                 else {}
+            ),
+            "eventos_do_sorteio": (
+                eventos_do_sorteio(edital, eventos_do_cronograma)
+                if etapa == "classificacao"
+                else []
             ),
             "tem_metodo_comum": (
                 bool(forms.metodo_comum_do_formulario(request.POST))
@@ -1415,6 +1580,13 @@ def compor_etapa(request, edital_id, etapa):
                 else edital.requerimento_declaracao
             ),
             "momentos_do_requerimento": MOMENTOS_DO_REQUERIMENTO,
+            # A mesma regra, para o teto (RC-12): recusado, volta o texto digitado — um "0" que
+            # sumisse do campo deixaria a pessoa sem saber o que a mensagem recusou.
+            "teto_de_inscricoes": (
+                digitados["teto"]
+                if etapa == "inscricao" and digitados is not None
+                else edital.max_inscricoes_por_candidato or ""
+            ),
             "alcance": forms.alcance_da_aplicabilidade(edital) if etapa == "inscricao" else [],
             "transversais": (
                 forms.modalidades_em_todos_os_perfis(edital) if etapa == "inscricao" else []
@@ -1443,6 +1615,7 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
+            "definitivos": definitivos,
             "pendencias": pendencias,
             # A tela de revisão mostra tudo; as demais, só o que se resolve nelas — pendência
             # exibida onde não há como agir vira ruído que a pessoa aprende a ignorar.
@@ -1730,6 +1903,11 @@ def _reexibir_modalidade(modalidade):
         "foundation": regra.get("foundation", ""),
         "version": regra.get("version", ""),
         "percentage": "" if percentual is None else f"{percentual:f}",
+        "rounding": (
+            forms.FORA_DA_LISTA
+            if forms.FORA_DA_LISTA in (regra.get("rounding") or {})
+            else forms.arredondamento_para_o_formulario(regra.get("rounding"))
+        ),
     }
 
 
@@ -1848,8 +2026,145 @@ def _linhas_gerais_rederivadas(etapa, digitados):
     return reafirmadas
 
 
-def _gravar_etapa(request, ator, edital, etapa, digitados):
-    """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro."""
+def _comuns(perfis, dados):
+    """Os valores do controle do Edital: o escolhido neste envio, senão o que os Perfis concordam.
+
+    `varia` diz se os Perfis divergem — o controle mostra isso em vez de um valor, porque "não
+    declarado" seria falso sobre um Edital em que metade dos Perfis declara.
+    """
+    comuns = {}
+    for campo in regra_da_aplicacao.CAMPOS_DO_PERFIL:
+        valores = {regra_da_aplicacao.valor_do_campo(perfil, campo) for perfil in perfis or []}
+        chave = f"edital-{campo}"
+        comuns[campo] = (
+            dados.get(chave) if chave in dados else regra_da_aplicacao.valor_comum(perfis, campo)
+        )
+        comuns[f"{campo}_varia"] = len(valores) > 1
+    return comuns
+
+
+def _escolhas_pendentes_na_tela(edital, digitados, controle):
+    """As escolhas pendentes do controle do Edital, sobre o que esta tela mostra (051).
+
+    Na forma do conteúdo, e não na do formulário: é nela que a reversão enxerga a lista reservada,
+    e a tela aberta sem envio desenha o gravado.
+    """
+    if not controle:
+        return {}
+    gravados = forms.perfis_persistidos(edital)
+    return aplicacao_ui.escolhas_pendentes(
+        gravados if digitados is None else digitados, controle, gravados=gravados
+    )
+
+
+#: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
+#: Modalidade, a forma de convocação e a reversão, dos Perfis.
+ETAPAS_DO_GESTO = ("classificacao", "perfis")
+
+
+def _gesto(request, ator, edital, etapa, pedido, erros):
+    """`(digitados, prévia, destino)` de um envio que pede ou confirma o gesto (051).
+
+    Nada é gravado sem confirmação, e a confirmação só grava se a prévia de agora for a que foi
+    mostrada (FR-919): a impressão cobre todos os destinos, e qualquer mudança na tela ou no banco
+    entre as duas faz a tela mostrar a prévia nova, com a razão.
+    """
+    try:
+        digitados = _ler_etapa(request, etapa)
+    except ValueError as exc:
+        erros.append(_recusa(exc, None, etapa))
+        return None, None, None
+    if pedido.cancelar:
+        return digitados, None, None
+    try:
+        efeitos, perfis, origem, na_tela = aplicacao_ui.efeitos(
+            pedido, etapa=etapa, digitados=digitados, dados=request.POST, edital=edital
+        )
+    except aplicacao_ui.PedidoInvalido:
+        erros.append(
+            {
+                "mensagem": (
+                    "A origem pedida não está nesta tela. Recarregue a etapa e peça a aplicação "
+                    "de novo."
+                ),
+                "ancora": "",
+            }
+        )
+        return digitados, None, None
+    recusa = ""
+    if pedido.confirmar:
+        if regra_da_aplicacao.assinatura(efeitos) != pedido.impressao:
+            recusa = (
+                "O que estava na tela mudou depois da prévia. Confira a prévia de agora antes de "
+                "aplicar."
+            )
+        elif not regra_da_aplicacao.alcancados(efeitos, pedido.incluidos):
+            recusa = "Nenhum Perfil está marcado para receber a aplicação."
+    if not pedido.confirmar or recusa:
+        return (
+            digitados,
+            aplicacao_ui.previa(
+                pedido,
+                efeitos,
+                perfis,
+                edital=edital,
+                dados=request.POST,
+                recusa=recusa,
+                valor=na_tela,
+            ),
+            None,
+        )
+    novos = aplicacao_ui.aplicar(pedido, efeitos, perfis, dados=request.POST)
+    # **A outra escolha do Edital sobrevive à confirmação.** A forma de convocação e a reversão
+    # podem ter mudado juntas, e confirmar uma delas — ou a Modalidade — grava e redireciona: sem
+    # guardá-la, a outra sumiria da tela em silêncio. A do próprio gesto não volta, porque o que
+    # ficou de fora dele foi excluído na prévia, de propósito.
+    escolhas = (
+        {
+            f"edital-{campo}": valor
+            for campo, valor in aplicacao_ui.escolhas_pendentes(
+                novos, request.POST, gravados=forms.perfis_persistidos(edital)
+            ).items()
+            if pedido.valor != f"edital:{campo}"
+        }
+        if etapa == "perfis"
+        else {}
+    )
+    try:
+        if etapa == "perfis":
+            _conferir_marcos_em_transito(edital, novos)
+        _gravar_etapa(
+            request,
+            ator,
+            edital,
+            etapa,
+            novos,
+            gesto={
+                "registro": aplicacao_ui.registro(
+                    pedido, efeitos, perfis, etapa=etapa, origem=origem
+                ),
+                "razao": aplicacao_ui.razao(pedido, efeitos, origem=origem),
+            },
+        )
+    except (ValueError, DomainError) as exc:
+        erros.append(_recusa(exc, novos, etapa))
+        return novos, None, None
+    quantos = len(regra_da_aplicacao.alcancados(efeitos, pedido.incluidos))
+    if escolhas:
+        request.session["escolhas_do_edital"] = escolhas
+    return (
+        novos,
+        None,
+        f"{reverse('interface:compor-etapa', args=[edital.id, etapa])}"
+        f"?salvo={etapa}&aplicado={quantos}",
+    )
+
+
+def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
+    """Grava uma seção preservando a outra: replace_draft substitui o rascunho inteiro.
+
+    Com `gesto` (051), grava pelo mesmo `replace_draft` e registra o gesto na mesma transação.
+    """
     if etapa == "identificacao":
         # A identificação não é conteúdo do rascunho: tem ato próprio, com auditoria própria.
         return update_edital_identification(
@@ -1882,6 +2197,18 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]
         ]
+        # **O teto, primeiro de tudo** (RC-12). É coluna de raiz, como o requerimento logo abaixo,
+        # e pelo mesmo ato próprio. Vem antes dos outros dois porque é o único destes campos que o
+        # formulário deixa digitar à vontade: a recusa dele interrompe a gravação antes que
+        # qualquer outra coisa seja escrita.
+        teto_command.atualizar_teto_de_inscricoes(
+            actor=ator,
+            edital_id=edital.id,
+            expected_revision=edital.revision,
+            teto=digitados["teto"],
+            correlation_id=request.correlation_id,
+        )
+        edital.refresh_from_db()
         # **Ato próprio, e antes do `replace_draft`** (029, T045). Os dois campos são de **raiz** do
         # Edital, e `replace_draft` não os carrega: passar por ele apagaria as coleções que ele
         # substitui sem gravar nenhum dos dois. O ato próprio também tem auditoria própria, com o
@@ -1909,10 +2236,19 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         ]
     else:
         colecao = COLECAO_DA_ETAPA[etapa]
-        conteudo[colecao] = _preservando(
-            digitados, conteudo[colecao], PRESERVADO_DA_ETAPA.get(etapa, ())
+        # O gravado, lido uma vez: a fusão por Perfil e a da regra normativa comparam com ele.
+        persistidos = conteudo[colecao]
+        conteudo[colecao] = _preservando(digitados, persistidos, PRESERVADO_DA_ETAPA.get(etapa, ()))
+        if etapa == "perfis":
+            conteudo[colecao] = _preservando_a_regra(conteudo[colecao], persistidos)
+    gravar = (
+        replace_draft
+        if gesto is None
+        else lambda **gravacao: gravar_aplicacao(
+            registro=gesto["registro"], razao=gesto["razao"], **gravacao
         )
-    return replace_draft(
+    )
+    return gravar(
         actor=ator,
         edital_id=edital.id,
         expected_revision=edital.revision,
@@ -1933,6 +2269,49 @@ def _gravar_etapa(request, ator, edital, etapa, digitados):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+#: Os campos da regra normativa que a etapa Perfis não desenha (051, FR-933, R-007). A fusão de
+#: `_preservando` é por Perfil, e não desce na Modalidade: sem esta, gravar a etapa zerava o que a
+#: API ou o reuso de Edital (023) tinham gravado neles.
+CAMPOS_DA_REGRA_SEM_TELA = ("calculation", "distribution", "callRules", "effectiveFrom")
+
+
+def _preservando_a_regra(perfis, persistidos):
+    """As regras digitadas com os campos sem tela do que está gravado, pela identidade da regra.
+
+    O arredondamento entra quando a tela o devolveu como *"fora da lista"*: é o marcador de que o
+    gravado não é da lista fechada, e que ele deve ficar como está.
+    """
+    gravadas = {
+        str((modalidade.get("normativeRule") or {}).get("id")): modalidade["normativeRule"]
+        for perfil in persistidos
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("normativeRule")
+    }
+    resultado = []
+    for perfil in perfis:
+        modalidades = []
+        for modalidade in perfil.get("competitionModalities") or []:
+            regra = modalidade.get("normativeRule")
+            gravada = gravadas.get(str((regra or {}).get("id")))
+            if regra and gravada:
+                regra = {
+                    **regra,
+                    **{
+                        campo: gravada[campo]
+                        for campo in CAMPOS_DA_REGRA_SEM_TELA
+                        if campo in gravada and campo not in regra
+                    },
+                }
+                if forms.FORA_DA_LISTA in (regra.get("rounding") or {}):
+                    regra["rounding"] = gravada.get("rounding") or {}
+                modalidade = {**modalidade, "normativeRule": regra}
+            elif regra and forms.FORA_DA_LISTA in (regra.get("rounding") or {}):
+                modalidade = {**modalidade, "normativeRule": {**regra, "rounding": {}}}
+            modalidades.append(modalidade)
+        resultado.append({**perfil, "competitionModalities": modalidades})
+    return resultado
 
 
 def _preservando(digitados, persistidos, campos):
@@ -1987,6 +2366,15 @@ def fragmento_perfil(request):
     # nasceu: sem o diálogo. É o que acontece na restauração do rascunho local, que pede o
     # fragmento sem ele.
     edital, ator = _edital_do_fragmento(request, com_ator=True)
+    # **A forma de convocação que todos os Perfis declaram iguais** (051, FR-926): o Edital a
+    # declara uma vez, e o Perfil novo não precisa que ela seja declarada de novo. Divergindo, nada:
+    # escolher uma das formas seria decidir pelo operador. A reversão não vem junto — o Perfil
+    # novo não tem lista reservada, e ela só existe onde há uma.
+    forma_comum = (
+        regra_da_aplicacao.valor_comum(forms.perfis_do_edital(edital), "callForm")
+        if edital is not None and edital.perfis.exists()
+        else ""
+    )
     return render(
         request,
         "interface/_perfil.html",
@@ -1994,6 +2382,7 @@ def fragmento_perfil(request):
             "perfil": {
                 "id": identidade_nova,
                 "reserveType": "NONE",
+                "callForm": forma_comum,
                 "quadro": forms.quadro_do_formulario({"id": identidade_nova}),
                 "tem_lista_reservada": False,
             },
@@ -2298,7 +2687,7 @@ def _etapas_governaveis(edital):
     ]
 
 
-def _marco_novo(edital, indice):
+def _marco_novo(edital, indice, *, marcos_na_tela=0):
     """O marco recém-acrescentado, já com o que o sistema sabe responder por ele (030).
 
     **Identidade primeiro**, pela mesma razão da modalidade: a gravação preserva o `id` recebido, e
@@ -2311,8 +2700,26 @@ def _marco_novo(edital, indice):
 
     **Só no marco novo.** Nada disto alcança marco já declarado, nem em Retificação (FR-421): esta
     função só é chamada pelo fragmento que cria a linha.
+
+    **E o corte, quando é o único marco do Perfil** (051, FR-927). `marcos_na_tela` conta os cartões
+    que o Perfil já tem **na tela**, e não os gravados: o segundo marco acrescentado antes de gravar
+    o primeiro é o intermediário, e nasceria com o corte do final se a conta fosse a do banco.
     """
     novo = {"id": str(uuid4()), **marcos.ARREDONDAMENTO_PADRAO}
+    if not marcos_na_tela:
+        padrao = marcos.CORTE_PADRAO
+        novo.update(
+            {
+                "cutTargetKind": padrao["targetKind"],
+                "cutTargetCount": "",
+                "cutSurplusCount": padrao["surplusCount"],
+                "cutGovernedStage": padrao["governedStage"],
+                # O bloco nasce **fechado**: o resumo já diz o que foi declarado (*"o que o quadro
+                # de vagas publicar"*), e abri-lo poria cinco controles na chegada do cartão que a
+                # `030` mediu para caber em menos de dez (SC-138).
+                "corte_padrao": True,
+            }
+        )
     perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
     if perfil is None:
         return novo
@@ -2336,9 +2743,15 @@ def fragmento_marco(request, indice):
         request,
         "interface/_marco_acrescentado.html",
         {
-            "marco": _marco_novo(edital, indice),
+            "marco": _marco_novo(
+                edital, indice, marcos_na_tela=len(forms._indices(request.GET, f"marco-{indice}"))
+            ),
             "indice": indice,
             "sub": sub,
+            # Quantos Perfis o Edital tem: o botão de aplicar aos demais só existe com destino
+            # (051, UX-110).
+            "quantos_perfis": edital.perfis.count() if edital else 0,
+            "eventos_do_sorteio": eventos_do_sorteio(edital),
             # **O cartão precisa saber se o Edital declara método comum** (030, FR-429): sem isto
             # o fragmento diria "ainda não declarado" sobre um marco que referencia o comum, e a
             # tela inteira — que sabe — passaria a contradizer o pedaço dela que o htmx troca.
@@ -2394,6 +2807,8 @@ def fragmento_marco_recomposto(request, indice, sub):
             "marco": _reexibir_marco(marco),
             "indice": indice,
             "sub": sub,
+            "quantos_perfis": edital.perfis.count() if edital else 0,
+            "eventos_do_sorteio": eventos_do_sorteio(edital),
             # Como no fragmento que cria a linha, e pela mesma razão: o pedaço trocado não pode
             # saber menos do que a tela que o contém (030, FR-429).
             "tem_metodo_comum": bool(edital.metodo_de_sorteio_comum) if edital else False,
@@ -2553,7 +2968,8 @@ def fragmento_etapa(request, edital_id):
         request,
         "interface/_etapa.html",
         {
-            "etapa_linha": {"id": str(uuid4())},
+            # `nova`: a caixa "Eliminatória" da forma decisória nasce marcada (051, FR-931).
+            "etapa_linha": {"id": str(uuid4()), "nova": True},
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
             "edital": edital,
@@ -3028,6 +3444,10 @@ def _marcos_publicados(edital, ator=None):
             ],
         )
 
+    # **O resumo por marco é presença, e numa leitura só** (049, `UX-090`, `R-6`): quatro consultas
+    # para o Edital inteiro, e não uma por recorte. O que envelheceu aparece inteiro na tela do
+    # marco, e continua sinalizado na Supervisão.
+    resumo = conducao_do_marco.resumo_dos_marcos(edital, conteudo)
     itens = []
     for perfil in perfis_com_marcos:
         for marco in perfil["classificationMilestones"]:
@@ -3037,8 +3457,26 @@ def _marcos_publicados(edital, ator=None):
                 pode_classificar=pode_classificar,
                 atos_vigentes=atos_por_marco.get(str(marco.get("id")), ()),
             )
-            if destinos:
-                itens.append({"perfil": perfil, "marco": marco, "destinos": destinos})
+            if not destinos:
+                continue
+            # **A tela do marco é destino de quem classifica ou publica** (049, `FR-830`): a
+            # mesma pergunta que decidiu os destinos acima, e não uma porta nova. Entra logo depois
+            # do principal, porque é por ela que se conduz o marco inteiro.
+            destinos.insert(
+                1 if destinos[0].get("principal") else 0,
+                {
+                    "rotulo": "conduzir o marco",
+                    "url": reverse("interface:marco", args=[edital.id, marco.get("id")]),
+                },
+            )
+            itens.append(
+                {
+                    "perfil": perfil,
+                    "marco": marco,
+                    "destinos": destinos,
+                    "resumo": resumo.get(str(marco.get("id"))),
+                }
+            )
     return itens
 
 
@@ -3853,10 +4291,15 @@ MOMENTOS_DO_REQUERIMENTO = (
 OPERACOES = {
     "CRIAR": "Criação",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
+    # O gesto que materializa uma declaração em vários Perfis (051, FR-921). A frase da trilha diz
+    # a unidade, a origem e quantos Perfis ela alcançou.
+    "APLICAR_A_TODOS": "Aplicação a vários Perfis",
     "ALTERAR_IDENTIFICACAO": "Alteração da identificação",
     # A declaração do Requerimento de Matrícula (029). Sem rótulo, a trilha exibiria o código cru
     # a quem responde *"quando o Edital passou a pedir isto?"*.
     "ALTERAR_REQUERIMENTO": "Alteração do Requerimento de Matrícula",
+    # O teto de inscrições por candidato (RC-12). A razão diz o valor, e o rótulo diz o que ele é.
+    teto_command.OPERACAO: "Alteração das inscrições por candidato",
     # A cópia de configuração de outro Edital (023). Sem esta entrada a trilha exibiria o
     # código cru, e `US3` ficaria atendida no banco e não no canal do ator.
     "REAPROVEITAR_EDITAL": "Criação a partir de Edital anterior",
@@ -5394,6 +5837,12 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                     request.session.pop("digitado_na_avaliacao", None),
                     contexto.get("avaliacao"),
                 ),
+                # **A recusa certa, dita antes do clique** (RC-62, revisão do PR 221). Sem isto a
+                # tela oferecia "Concluir avaliação" a quem já tem Resultado nesta Etapa, e a recusa
+                # só vinha depois de o parecer estar escrito. A frase é a do comando, e não outra.
+                "impedimento_de_concluir": avaliacao_app.impedimento_de_concluir(
+                    edital, etapa_id, inscricao_id
+                ),
             },
         )
     )
@@ -6075,16 +6524,12 @@ def _marco_publicado(edital, marco_id):
 
     Devolver em vez de recusar porque nem todo chamador quer 404: a tela do marco removido existe
     justamente para o marco que a norma vigente já não conhece (`015`, `E2E15-010`).
-    """
-    from processo_seletivo.publicacoes.application.selectors import effective_version
 
-    conteudo = effective_version(edital_id=edital.id).content
-    alvo = str(marco_id)
-    for perfil in conteudo.get("profiles") or []:
-        for marco in perfil.get("classificationMilestones") or []:
-            if str(marco.get("id")) == alvo:
-                return perfil, marco
-    return None, None
+    **A busca mora em `conducao_do_marco.marco_publicado`** (049): a tela do marco precisava da
+    mesma pergunta com o conteúdo junto, e duas varreduras iguais divergiriam na primeira mudança.
+    """
+    _, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    return perfil, marco_publicado
 
 
 def _e_marco_de_sorteio(edital, marco_id):
@@ -6575,6 +7020,7 @@ def convocacao(request, edital_id, marco_id):
     da apuração — e pela mesma razão: um ato praticado por abrir uma página é um ato que ninguém
     decidiu praticar.
     """
+    from processo_seletivo.convocacao.application import fluxo
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
@@ -6585,9 +7031,20 @@ def convocacao(request, edital_id, marco_id):
     # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
     # ampla é a ampla, e não um recorte à parte, sem apuração, onde convocar é recusado.
     lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
+    agora = timezone.now()
     leitura = leitura_do_recorte(
-        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
     )
+    # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
+    # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
+    recorte = {
+        "edital": edital,
+        "perfil_id": perfil_id,
+        "marco_id": marco_id,
+        "lista_id": lista_id,
+        "at": agora,
+        "leitura": leitura,
+    }
     return marcar_como_privada(
         render(
             request,
@@ -6601,6 +7058,9 @@ def convocacao(request, edital_id, marco_id):
                     edital, marco_id, rota="interface:convocacao", atual=lista_id
                 ),
                 "leitura": leitura,
+                # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
+                # quem só consulta, e calculá-las ali seria trabalho sem leitor.
+                **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -6703,8 +7163,14 @@ def convocacao_historico(request, edital_id, marco_id):
 
 @require_http_methods(["POST"])
 def convocar_view(request, edital_id, marco_id):
-    """Pratica a convocação e volta à leitura, pelo padrão POST-redirect-GET."""
-    from processo_seletivo.convocacao.application.convocar import convocar
+    """Pratica a convocação, comunica no mesmo ato, e volta à leitura (050, `FR-870`, `FR-871`).
+
+    **Espécie e fundamento não vêm do formulário.** A espécie sai da posição da pessoa, e o
+    fundamento do Edital e dos atos que sustentam a chamada; o que vem é o vencimento — digitado ou
+    tirado de um Evento do Cronograma — e o complemento opcional. A espécie ainda chega no
+    formulário de regularizar, como campo oculto, e o comando a confere contra a derivada.
+    """
+    from processo_seletivo.convocacao.application.fluxo import convocar_e_comunicar
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
@@ -6714,26 +7180,153 @@ def convocar_view(request, edital_id, marco_id):
     lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     try:
-        request.session["resultado_da_convocacao"] = convocar(
-            actor=ator,
-            processo_id=edital.processo_id,
-            edital_id=edital.id,
-            perfil_id=_perfil_do_marco(edital, marco_id),
-            marco_id=marco_id,
-            lista_id=lista_id,
-            inscricao_id=_identidade_ou_404(request.POST.get("inscricao")),
-            especie=request.POST.get("especie") or "",
-            fundamento=request.POST.get("fundamento") or "",
-            vencimento=_instante_ou_none(request.POST.get("vencimento")),
-            motivo=(request.POST.get("motivo") or "").strip(),
-            justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
-            idempotency_key=request.POST.get("chave") or uuid4().hex,
-            correlation_id=f"interface-convocacao-{edital_id}",
+        request.session["resultado_da_convocacao"] = _serializavel(
+            convocar_e_comunicar(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                perfil_id=_perfil_do_marco(edital, marco_id),
+                marco_id=marco_id,
+                lista_id=lista_id,
+                inscricao_id=_identidade_ou_404(request.POST.get("inscricao")),
+                especie=request.POST.get("especie") or "",
+                vencimento=_instante_ou_none(request.POST.get("vencimento")),
+                evento_id=(request.POST.get("evento") or "").strip(),
+                complemento=request.POST.get("complemento") or "",
+                motivo=(request.POST.get("motivo") or "").strip(),
+                justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
+                idempotency_key=request.POST.get("chave") or uuid4().hex,
+                correlation_id=f"interface-convocacao-{edital_id}",
+                endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            )
         )
         request.session["acao_da_convocacao"] = "convocacao"
     except DomainError as erro:
         request.session["erro_da_convocacao"] = erro.detail
     return redirect(destino)
+
+
+def _previas_da_convocacao(fluxo, recorte, leitura):
+    """As prévias dos gestos da `050` e o que a chamada individual mostra antes do ato."""
+    return {
+        "titulares": fluxo.previa_dos_titulares(**recorte),
+        "vencidos": fluxo.previa_dos_vencidos(**recorte),
+        "pendentes": fluxo.previa_das_pendentes(**recorte),
+        # O fundamento de cada espécie (`FR-870`): a espécie depende de quem for escolhido.
+        "fundamentos": fluxo.fundamentos_por_especie(
+            edital=recorte["edital"],
+            perfil_id=recorte["perfil_id"],
+            lista_id=recorte["lista_id"],
+            apuracao=leitura["apuracao"],
+            at=recorte["at"],
+        ),
+        **_fila_com_especie(leitura),
+    }
+
+
+def _fila_com_especie(leitura):
+    """A fila com a espécie de cada pessoa, e quais espécies ela tem (050, `UX-101`).
+
+    **As espécies presentes decidem quais fundamentos a chamada individual mostra**: depois do gesto
+    dos titulares, a fila costuma ter só suplentes, e o fundamento da vaga inicial ao lado era um
+    parágrafo inteiro sobre uma chamada que ninguém ali pode receber.
+    """
+    from processo_seletivo.convocacao.domain.especie import derivada
+
+    fila = [
+        {
+            **pessoa,
+            "especie": derivada(
+                pessoa["id"],
+                ocupando=leitura["ocupando"],
+                alcancados=leitura["alcancados"],
+                regularizaveis=(),
+            ),
+        }
+        for pessoa in leitura["fila"]
+    ]
+    return {"fila_rotulada": fila, "especies_na_fila": {pessoa["especie"] for pessoa in fila}}
+
+
+def _serializavel(valor):
+    """O declarado de um gesto, pronto para a sessão: instantes e identidades viram texto."""
+    return json.loads(json.dumps(valor, cls=DjangoJSONEncoder))
+
+
+def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar):
+    """O esqueleto comum dos três gestos da `050`: autorizar, praticar, e voltar ao recorte.
+
+    **`alcance_mudou` volta à tela, e a tela recalcula a prévia** (`UX-104`): quem confirmou vê o
+    alcance de agora ao lado da recusa, e não um formulário vazio.
+    """
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    comum = {
+        "actor": ator,
+        "processo_id": edital.processo_id,
+        "edital_id": edital.id,
+        "perfil_id": _perfil_do_marco(edital, marco_id),
+        "marco_id": marco_id,
+        "lista_id": lista_id,
+        "alcance_confirmado": request.POST.get("alcance") or "",
+        "idempotency_key": request.POST.get("chave") or uuid4().hex,
+    }
+    try:
+        request.session["resultado_da_convocacao"] = _serializavel(praticar(**comum))
+        request.session["acao_da_convocacao"] = acao
+    except DomainError as erro:
+        request.session["erro_da_convocacao"] = erro.detail
+    return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def convocar_titulares_view(request, edital_id, marco_id):
+    """Convoca num ato só os titulares que a prévia declarou (050, `FR-860`)."""
+    from processo_seletivo.convocacao.application.fluxo import convocar_titulares
+
+    def praticar(**comum):
+        return convocar_titulares(
+            **comum,
+            vencimento=_instante_ou_none(request.POST.get("vencimento")),
+            evento_id=(request.POST.get("evento") or "").strip(),
+            complemento=request.POST.get("complemento") or "",
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="titulares", praticar=praticar)
+
+
+@require_http_methods(["POST"])
+def nao_atendimento_dos_vencidos_view(request, edital_id, marco_id):
+    """Registra o não atendimento de todas as convocações vencidas (050, `FR-877`, `DP-16`)."""
+    from processo_seletivo.convocacao.application.fluxo import (
+        registrar_nao_atendimento_dos_vencidos,
+    )
+
+    def praticar(**comum):
+        return registrar_nao_atendimento_dos_vencidos(
+            **comum, complemento=request.POST.get("complemento") or ""
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="vencidos", praticar=praticar)
+
+
+@require_http_methods(["POST"])
+def emitir_pendentes_view(request, edital_id, marco_id):
+    """Emite as comunicações pendentes do recorte, pessoa a pessoa (050, `FR-874`, `FR-876`)."""
+    from processo_seletivo.convocacao.application.fluxo import emitir_pendentes
+
+    def praticar(**comum):
+        return emitir_pendentes(
+            **comum,
+            referencia_da_publicacao=request.POST.get("referencia_da_publicacao") or "",
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+        )
+
+    return _gesto_da_convocacao(request, edital_id, marco_id, acao="pendentes", praticar=praticar)
 
 
 @require_http_methods(["POST"])
@@ -7142,7 +7735,8 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 ),
                 # O campo da declaração só existe onde ela é exigida: onde há janela computável o
                 # sistema verifica, e oferecer o campo ali ensinaria a preenchê-lo sempre (FR-086).
-                "exige_declaracao": janela_declarada(edital=edital, marco_id=marco_id) is None,
+                # A janela é a da versão que o ato cita (RC-121), a mesma que a publicação confere.
+                "exige_declaracao": janela_do_ato(ato, marco_id) is None,
                 "chave_idempotencia": uuid4().hex,
                 "erro": erro,
             },
@@ -7158,9 +7752,11 @@ def _naturezas_oferecidas(sucede):
     existência de uma preliminar inventaria uma etapa que o Edital não declarou. O que se retira é
     a `PRELIMINAR` depois de uma definitiva — a ordem entre naturezas tem sentido único (D-007).
     """
-    if sucede is not None and sucede.natureza == Natureza.DEFINITIVA:
-        return [(Natureza.DEFINITIVA.value, Natureza.DEFINITIVA.label)]
-    return [(valor, rotulo) for valor, rotulo in Natureza.choices]
+    from processo_seletivo.divulgacao.domain.publicabilidade import natureza_regride
+
+    return [
+        (valor, rotulo) for valor, rotulo in Natureza.choices if not natureza_regride(sucede, valor)
+    ]
 
 
 @require_http_methods(["POST"])
@@ -7236,6 +7832,312 @@ def publicacoes_do_marco(request, edital_id, marco_id):
             },
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# A condução do marco (049). Uma tela por marco, com o indicador recorte × operação e quatro gestos.
+#
+# **As portas não se fundem aqui** (`R-7`). A tela abre para quem abre qualquer tela de recorte
+# daquele marco; os gestos de ordenar, cortar e apurar passam pela porta da gestão da comissão, e o
+# de publicar pela de `resultado:publicar` — quem emite o ato não ganha, por tê-lo emitido, o poder
+# de divulgá-lo (017, FR-025).
+# ---------------------------------------------------------------------------
+
+
+def _marco_para_conduzir(request, edital_id):
+    """A porta da tela do marco: classificar, auditar **ou** publicar resultado (049, `FR-830`).
+
+    É a união das duas famílias de porta que as telas de recorte já têm, e não uma terceira: quem
+    abre a ordenação, o corte ou a ocupação daquele marco abre esta; quem abre a divulgação também.
+    Quem não abre nenhuma delas recebe a recusa explicada, com as bases que teriam servido — e o
+    404 fica com o Edital de outra unidade, que é indistinguível do inexistente (`FR-487`).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, {}
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    pode_classificar = _pode_ver_a_classificacao(ator, edital)
+    pode_publicar = ator.can("resultado:publicar")
+    require_authorization_base(
+        pode_classificar or pode_publicar,
+        bases=(*BASES_DA_GESTAO_OU_AUDITORIA, BASE_DE_PUBLICAR_RESULTADO),
+    )
+    return (
+        ator,
+        edital,
+        {
+            "classificar": pode_classificar,
+            "emitir": pode_gerir_comissao(ator, edital.processo) is not None,
+            "publicar": pode_publicar,
+        },
+    )
+
+
+def _marco_do_edital(edital, marco_id):
+    """`(conteudo, perfil, marco)` pela norma vigente, ou 404 (`FR-813`).
+
+    O marco que uma Retificação removeu não tem recortes a operar: os atos dele continuam nas telas
+    de histórico de hoje, que o alcançam pela identidade gravada.
+    """
+    try:
+        conteudo, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    except DomainError as recusa:
+        # Edital sem versão publicada: não há marco a conduzir, e o 404 é o do objeto que falta.
+        raise Http404 from recusa
+    if marco_publicado is None:
+        raise Http404
+    return conteudo, perfil, marco_publicado
+
+
+def _chave_do_gesto(pedida):
+    """A chave que a conferência gerou — 32 dígitos hexadecimais — ou uma nova.
+
+    **A forma é conferida porque ela vira coluna.** A chave de cada recorte e a correlação da trilha
+    são derivadas dela, e têm limite de tamanho: uma chave longa vinda de um formulário adulterado
+    estourava a coluna no meio do laço, com `DataError`, que não é recusa de domínio — o gesto
+    parava em 500 depois de gravar parte dos recortes, e o desfecho não chegava à tela. Uma chave
+    nova perde a idempotência só de quem a adulterou; os comandos continuam recusando o que já foi
+    feito.
+    """
+    pedida = (pedida or "").strip()
+    return pedida if re.fullmatch(r"[0-9a-f]{32}", pedida) else uuid4().hex
+
+
+def _chave_do_desfecho(marco_id):
+    return f"desfecho_do_gesto_{marco_id}"
+
+
+def _gestos_oferecidos(conteudo, perfil, marco_publicado, pode, indicador):
+    """Os gestos que **esta pessoa** pratica neste marco — e nenhum outro (`FR-829`).
+
+    Ordenar não é oferecido em marco de sorteio, e cortar não é oferecido em marco sem regra
+    (`FR-817`): oferecer e recusar depois do clique é a ação que sempre falha, que a `034` proibiu.
+
+    **E nenhum gesto é oferecido onde nada falta.** O gesto só pratica o primeiro ato de cada
+    recorte (`D-002`); com todos feitos — ou obsoletos, cuja sucessão é na tela do recorte —, a
+    conferência diria sempre "não há recorte a praticar". O percurso de 28/09 mostrou os três
+    botões ao pé de um marco completo, e cada um levava a essa mesma frase.
+    """
+    faltam = {
+        operacao
+        for operacao in conducao_do_marco.OPERACOES
+        if any(
+            linha["celulas"][operacao]["estado"] == conducao_do_marco.FALTA
+            for linha in indicador["linhas"]
+        )
+    }
+    gestos = []
+    if pode["emitir"]:
+        if not conducao_do_marco.sorteia(conteudo, perfil, marco_publicado):
+            gestos.append(conducao_do_marco.ORDENAR)
+        if conducao_do_marco.corta(marco_publicado):
+            gestos.append(conducao_do_marco.CORTAR)
+        gestos.append(conducao_do_marco.APURAR)
+    if pode["publicar"]:
+        gestos.append(conducao_do_marco.PUBLICAR)
+    return [
+        {"operacao": item, "nome": conducao_do_marco.NOMES[item]}
+        for item in gestos
+        if item in faltam
+    ]
+
+
+@require_http_methods(["GET"])
+def marco(request, edital_id, marco_id):
+    """O indicador do marco e os gestos, sem constituir ato algum (049, `UX-091`).
+
+    **Abrir a tela não pratica nada**, como a ordem, o corte e a ocupação: o gesto tem duas fases,
+    e a primeira — a conferência — também não grava. O desfecho do último gesto aparece uma vez,
+    pelo padrão POST-redirect-GET; perdida a sessão, o indicador continua dizendo o que foi feito,
+    porque ele lê os atos gravados (`R-10`).
+    """
+    ator, edital, pode = _marco_para_conduzir(request, edital_id)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
+    indicador = conducao_do_marco.indicador_do_marco(
+        edital,
+        conteudo,
+        perfil,
+        marco_publicado,
+        pode_classificar=pode["classificar"],
+        pode_publicar=pode["publicar"],
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/marco.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "perfil": perfil,
+                "marco": marco_publicado,
+                "sorteia": conducao_do_marco.sorteia(conteudo, perfil, marco_publicado),
+                "indicador": indicador,
+                "gestos": _gestos_oferecidos(conteudo, perfil, marco_publicado, pode, indicador),
+                "naturezas": list(Natureza.choices),
+                "autoridades": autoridades.CATALOGO,
+                # **Quem não pratica sabe a quem pedir**, pelo mecanismo único (`FR-829`; 037,
+                # `FR-543a`) — e cada frase só existe para quem não tem aquele eixo.
+                "conducao_para_emitir": (
+                    ""
+                    if pode["emitir"]
+                    else frase_do_aviso(
+                        BASES_DA_GESTAO_DA_COMISSAO,
+                        acao="Ordenar, cortar e apurar o marco",
+                        que="os pratique",
+                    )
+                ),
+                "conducao_para_publicar": (
+                    ""
+                    if pode["publicar"]
+                    else frase_do_aviso(
+                        (BASE_DE_PUBLICAR_RESULTADO,),
+                        acao="Publicar o resultado do marco",
+                        que="o publique",
+                    )
+                ),
+                "desfecho": request.session.pop(_chave_do_desfecho(marco_id), None),
+                "erro": request.session.pop(f"erro_do_gesto_{marco_id}", None),
+            },
+        )
+    )
+
+
+def _itens_confirmados(request, conteudo, perfil):
+    """Os recortes que o formulário devolveu, **na ordem da derivação**, e os que deixaram de ser.
+
+    Devolve `(itens, ausentes)`: os recortes do marco pedidos, cada um com a assinatura, e os
+    identificadores pedidos que a derivação de agora já não conhece.
+
+    **Só o que a conferência mostrou é praticado** (`SC-303`), e o que não é recorte do marco
+    **agora** nunca é praticado. Ele não derruba o gesto: entre a conferência e o clique, uma
+    Retificação pode ter retirado uma Modalidade, e o 404 do gesto inteiro deixava sem ato os
+    recortes que continuavam válidos, com um "não encontrado" que não explicava nada. O ausente
+    volta como recusado, com a razão. O que nem identidade é continua 404: não é recorte de marco
+    nenhum, e não há recusa a nomear.
+    """
+    derivados = conducao_do_marco.recortes_do_marco(conteudo, perfil)
+    pedidos = []
+    for valor in request.POST.getlist("recorte"):
+        campo = valor if valor == conducao_do_marco.AMPLA else _identidade_ou_404(valor)
+        if campo not in pedidos:
+            pedidos.append(campo)
+    validos = {conducao_do_marco.lista_para_o_formulario(lista) for lista, _ in derivados}
+    itens = [
+        (lista, rotulo, request.POST.get(f"assinatura_{campo}", ""))
+        for lista, rotulo in derivados
+        if (campo := conducao_do_marco.lista_para_o_formulario(lista)) in pedidos
+    ]
+    return itens, [campo for campo in pedidos if campo not in validos]
+
+
+@require_http_methods(["POST"])
+def gesto_do_marco(request, edital_id, marco_id, operacao):
+    """Confere o alcance e, com `confirmar`, pratica um ato por recorte (049, `FR-816` a `FR-825`).
+
+    **Duas fases, como a emissão da ordem de hoje.** Sem `confirmar`, a resposta é a conferência:
+    o alcance recorte a recorte, e nada gravado (`FR-818`). Com `confirmar`, cada recorte devolvido
+    pelo formulário é praticado pelo comando de hoje, na sua transação, e o desfecho vai para a
+    sessão e volta à tela do marco.
+
+    **A porta é a do ato unitário** (`FR-829`, `R-7`): publicar pela de `resultado:publicar`, os
+    outros três pela da gestão da comissão. Nenhum gesto abre por uma porta mais larga que a do ato
+    que ele pratica.
+    """
+    if operacao not in conducao_do_marco.OPERACOES:
+        raise Http404
+    if operacao == conducao_do_marco.PUBLICAR:
+        ator, edital, _ = _edital_para_publicar(request, edital_id)
+    else:
+        ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
+    destino = reverse("interface:marco", args=[edital.id, marco_id])
+    natureza = request.POST.get("natureza", "")
+    autoridade = request.POST.get("autoridade", "")
+
+    if request.POST.get("confirmar") != "1":
+        try:
+            itens = conducao_do_marco.alcance(
+                edital,
+                conteudo,
+                perfil,
+                marco_publicado,
+                operacao,
+                natureza=natureza,
+                autoridade=autoridade,
+            )
+        except DomainError as recusa:
+            request.session[f"erro_do_gesto_{marco_id}"] = recusa.detail
+            return redirect(destino)
+        grupos = {
+            situacao: [item for item in itens if item["situacao"] == situacao]
+            for situacao in (
+                conducao_do_marco.PRATICAR,
+                conducao_do_marco.FORA,
+                conducao_do_marco.IMPEDIDO,
+            )
+        }
+        a_praticar = grupos[conducao_do_marco.PRATICAR]
+        return marcar_como_privada(
+            render(
+                request,
+                "interface/marco_conferir.html",
+                {
+                    "processo": edital.processo,
+                    "edital": edital,
+                    "perfil": perfil,
+                    "marco": marco_publicado,
+                    "operacao": operacao,
+                    "nome": conducao_do_marco.NOMES[operacao],
+                    "a_praticar": a_praticar,
+                    "fora": grupos[conducao_do_marco.FORA],
+                    "impedidos": grupos[conducao_do_marco.IMPEDIDO],
+                    "verbo": conducao_do_marco.verbo_da_confirmacao(operacao, len(a_praticar)),
+                    "natureza": natureza,
+                    "natureza_rotulo": dict(Natureza.choices).get(natureza, ""),
+                    "autoridade": autoridades.escolher(autoridade),
+                    # **Por recorte, e não por marco** (RC-121): o campo aparece quando algum ato
+                    # do alcance não tem janela computável, e cada item diz se a leva.
+                    "exige_declaracao": any(item["com_declaracao"] for item in a_praticar),
+                    # **A chave nasce na conferência**, e não na confirmação: gerada a cada POST,
+                    # um duplo clique seria um gesto novo, e os recortes seriam praticados de novo
+                    # sob chaves novas — é a razão que o corte já registra (`R-5`).
+                    "chave": uuid4().hex,
+                },
+            )
+        )
+
+    itens, ausentes = _itens_confirmados(request, conteudo, perfil)
+    desfechos = conducao_do_marco.recortes_ausentes(ausentes) + conducao_do_marco.praticar(
+        ator=ator,
+        edital=edital,
+        perfil=perfil,
+        marco=marco_publicado,
+        operacao=operacao,
+        itens=itens,
+        chave=_chave_do_gesto(request.POST.get("chave")),
+        natureza=natureza,
+        autoridade=autoridade,
+        declaracao=request.POST.get("declaracao_de_encerramento", ""),
+    )
+    request.session[_chave_do_desfecho(marco_id)] = {
+        "operacao": operacao,
+        "nome": conducao_do_marco.NOMES[operacao],
+        "feitos": sum(1 for item in desfechos if item["feito"]),
+        "recusados": sum(1 for item in desfechos if not item["feito"]),
+        # **Os recusados primeiro** (`UX-093`): o que pede ação vem antes do que já está feito.
+        "itens": sorted(desfechos, key=lambda item: item["feito"]),
+    }
+    return redirect(destino)
 
 
 @require_http_methods(["GET"])
@@ -8243,6 +9145,8 @@ def sorteio(request, edital_id, marco_id):
                 # externa uma falha da declaração, e mandava esperar por algo que não viria.
                 "recusa_da_ocorrencia": estado["recusa_da_ocorrencia"],
                 "ocorre_em": estado["ocorre_em"],
+                # A recusa de congelar com o período correndo, anunciada antes do clique (021, US1).
+                "inscricoes_em_curso": estado["inscricoes_em_curso"],
                 # **Com o estado do corte de cada um** (014, UX-029). Esta é a tela que já reúne
                 # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se

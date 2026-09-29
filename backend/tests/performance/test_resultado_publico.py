@@ -81,6 +81,10 @@ def test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas(
     dizer o prazo de recurso, e o prazo é o que a interposição aplica, lido da janela declarada na
     versão vigente. A T-013 da 017 foi emendada só nessa tabela, que guarda norma pública; o custo
     continua constante no número de posições, que é o que o caso acima prende.
+
+    **A quinta é a versão que o ato citou** (RC-121, decisão do usuário de 28/09). A janela de ato
+    já divulgado segue a versão citada, salvo o que a vigente concede, e a regra precisa das duas.
+    É a mesma tabela de norma pública, lida pelo ato, e continua sendo uma consulta só por página.
     """
     publicacao = _publicar_com(
         gestor, api_client, manager_headers, process_payload, quantas=3, seed=72, codigo="0772"
@@ -88,10 +92,10 @@ def test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas(
 
     quantidade = _consultas_da_pagina(client, publicacao)
 
-    assert quantidade <= 4, (
-        f"a página custou {quantidade} consultas: são a publicação, a cadeia das sucessoras e a "
-        "versão vigente que dá o prazo de recurso (047, D-008), e uma quinta leitura precisa ser "
-        "justificada"
+    assert quantidade <= 5, (
+        f"a página custou {quantidade} consultas: são a publicação, a cadeia das sucessoras, a "
+        "versão vigente (047, D-008) e a versão que o ato citou (RC-121), que dão o prazo de "
+        "recurso; uma sexta leitura precisa ser justificada"
     )
 
 

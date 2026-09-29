@@ -80,7 +80,11 @@ exige.
       Depois do envio o formulário some para dentro de um `details` (L6 da auditoria): aberto, cada
       requisito completo ocupava cerca de 850px, e três documentos custavam 2.500px de rolagem para
       quem já tinha terminado. Substituir é exceção; o estado normal é "está enviado".
+
+      Com o prazo fechado não há formulário: o rascunho fica só para consulta (009, FR-032), e um
+      "Enviar" que o domínio recusa seria convite a um ato que não existe mais.
       {% endcomment %}
+      {% if not fechada %}
       {% if linha.enviado %}<details class="envio-de-novo" {% if requisito_recusado == linha.id and erro_do_envio %}open{% endif %}><summary>Substituir ou remover</summary>{% endif %}
       <div class="envio">
         <form hx-post="{% url 'portal:enviar-documento' inscricao.id linha.id %}"
@@ -127,6 +131,7 @@ exige.
         {% endif %}
       </div>
       {% if linha.enviado %}</details>{% endif %}
+      {% endif %}
     </li>
     {% endfor %}
   </ul>

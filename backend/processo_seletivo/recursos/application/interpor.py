@@ -162,20 +162,29 @@ FORA_DO_PRAZO = (
 
 
 def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
-    """As janelas abertas ou fechadas que alcançam este objeto, na norma vigente.
+    """As janelas abertas ou fechadas que alcançam este objeto, na versão que o ato citou.
 
     **Vários marcos podem enumerar a mesma Etapa** (FR-027), e a interposição contra o
     `ResultadoEtapa` é possível enquanto **qualquer** uma delas estiver aberta: prazo que restringe
     direito interpreta-se a favor de quem recorre. Contra a publicação, a janela é a daquele marco,
     e só.
+
+    **A janela de ato divulgado é a da versão que o ato citou, salvo o que a vigente concede**
+    (RC-121, decisão de 28/09): a declaração — se admite, e por quanto — sai de
+    `declaracao_aplicavel`, e a Retificação que encurta ou retira não alcança o ato já divulgado.
+    O vigente continua dizendo **quais** marcos enumeram a Etapa, que é estrutura e não se
+    retifica, e a negativa do marco que ainda não divulgou nada, onde não há ato a citar.
     """
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
     from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
-    from processo_seletivo.recursos.application.selectors import janela_da_publicacao_divulgada
+    from processo_seletivo.recursos.application.selectors import (
+        conteudo_citado,
+        janela_da_publicacao_divulgada,
+    )
     from processo_seletivo.recursos.domain.janela import (
         admite_recurso,
+        declaracao_aplicavel,
         declaracao_do_marco,
-        janela_da_publicacao,
     )
 
     edital = inscricao.edital
@@ -193,18 +202,24 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
 
     janelas, negados = [], []
     for marco_id in marcos:
-        declaracao = declaracao_do_marco(conteudo, marco_id)
-        negados.append(admite_recurso(declaracao) is False)
         # **Contra a publicação, a conta é a mesma que a página pública diz** (047, `FR-769`): uma
         # função só, para que a data anunciada ao público e a data aplicada a quem recorre não
-        # possam divergir. Contra o Resultado da Etapa, o prazo é o do marco vigente, e só a
-        # interposição o lê.
-        computada = (
-            janela_da_publicacao_divulgada(publicacao, conteudo=conteudo)
+        # possam divergir. Contra o Resultado da Etapa, o prazo é o da publicação vigente do marco,
+        # e pela mesma função.
+        divulgada = (
+            publicacao
             if publicacao is not None
-            else janela_da_publicacao(
-                vigente_do_marco(edital=edital, marco_id=marco_id), declaracao
-            )
+            else vigente_do_marco(edital=edital, marco_id=marco_id)
+        )
+        citado = conteudo_citado(divulgada) if divulgada is not None else conteudo
+        declaracao = declaracao_aplicavel(
+            declaracao_do_marco(citado, marco_id), declaracao_do_marco(conteudo, marco_id)
+        )
+        negados.append(admite_recurso(declaracao) is False)
+        computada = (
+            janela_da_publicacao_divulgada(divulgada, conteudo=citado, vigente=conteudo)
+            if divulgada is not None
+            else None
         )
         if computada is not None:
             janelas.append(computada)

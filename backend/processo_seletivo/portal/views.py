@@ -1,13 +1,15 @@
-"""O canal público: quem é de fora encontra a seleção e decide se quer participar.
+"""O canal público: quem é de fora encontra a seleção, se inscreve e acompanha o que enviou.
 
-Duas telas na entrega 1 — a vitrine e o detalhe —, e as duas leem **exclusivamente** a versão
-consolidada vigente (FR-011). Nenhuma view daqui consulta `PerfilVaga`, `ModalidadeConcorrencia`
-ou qualquer tabela de elaboração: o que o candidato lê é o que foi publicado, e é isso que torna
-reproduzível, depois, sob qual regra cada pessoa se inscreveu.
+A vitrine e o detalhe do Edital leem **exclusivamente** a versão consolidada vigente (FR-011).
+Nenhuma view daqui consulta `PerfilVaga`, `ModalidadeConcorrencia` ou qualquer tabela de
+elaboração: o que o candidato lê é o que foi publicado, e é isso que torna reproduzível, depois,
+sob qual regra cada pessoa se inscreveu.
 
-O que **ainda não** existe aqui, e é da entrega 2: situação das inscrições e convite por vaga.
-Os dois dependem da designação do período, que o Edital ainda não sabe fazer. A US1 se completa
-lá; esta entrega é a fatia navegável dela.
+Este cabeçalho dizia que a situação das inscrições e o convite por vaga "ainda não" existiam. Eles
+chegaram ainda na `009`, com a designação do período (`inscricoes/domain/periodo.py`), e o texto
+ficou negando o que o módulo faz. Desde então ele passou a hospedar também o acesso sem senha, a
+inscrição, o acompanhamento, o recurso e a situação pública do Edital — cada um documentado na
+própria view.
 """
 
 import json
@@ -66,8 +68,10 @@ from processo_seletivo.inscricoes.application.submissao import (
     documentos_que_a_retificacao_invalida,
     edital_foi_retificado,
     enviar_inscricao,
+    outras_enviadas_no_edital,
     pendencias_para_enviar,
     reconhecer_versao,
+    teto_atingido,
 )
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
@@ -85,8 +89,10 @@ from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
+from processo_seletivo.publicacoes.infrastructure.pdf import teto_de_inscricoes
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
+    conteudos_citados,
     janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
@@ -411,6 +417,18 @@ def selecao(request, edital_id):
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
         for perfil in versao.content.get("profiles") or []
     ]
+    # **O teto de inscrições por candidato, antes da escolha da vaga** (015, FR-063; RC-12). Só o
+    # documento o dizia, e quem escolhia a segunda vaga descobria a norma pela recusa, no envio. A
+    # frase é a do documento, e não uma segunda redação da mesma norma. Nenhuma consulta nova: o
+    # teto está no conteúdo vigente, já carregado, e as enviadas saem das inscrições que a página
+    # já leu para escrever o convite de cada vaga.
+    contexto["teto"] = teto_de_inscricoes(versao.content)
+    contexto["enviadas"] = sum(
+        1 for registro in iniciadas.values() if registro.status == Inscricao.Status.SUBMETIDA
+    )
+    contexto["teto_atingido"] = contexto["teto"] is not None and teto_atingido(
+        versao.content, enviadas=contexto["enviadas"]
+    )
     # Consultável e recebendo inscrição são decisões diferentes: um Edital cancelado continua
     # legível — o ato publicado não se apaga — e não convida ninguém a se inscrever no que não
     # existe mais.
@@ -432,10 +450,16 @@ def selecao(request, edital_id):
     # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
     # quem tinha guardado o endereço dele.
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
-    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). O conteúdo vigente já
-    # está carregado, e a conta é a mesma da página do resultado e da interposição.
+    # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
+    # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
+    # está carregada (RC-121); as citadas são lidas de uma vez para todos.
+    citados = conteudos_citados([item["publicacao"] for item in contexto["resultados_divulgados"]])
     for item in contexto["resultados_divulgados"]:
-        janela = janela_da_publicacao_divulgada(item["publicacao"], conteudo=versao.content)
+        janela = janela_da_publicacao_divulgada(
+            item["publicacao"],
+            conteudo=citados.get(item["publicacao"].ato_id) or {},
+            vigente=versao.content,
+        )
         item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
@@ -960,7 +984,7 @@ def _conteudos_publicados(inscricoes):
     return conteudos
 
 
-def _item_da_lista(registro, conteudo):
+def _item_da_lista(registro, conteudo, agora):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -971,6 +995,7 @@ def _item_da_lista(registro, conteudo):
     tomar por ela.
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
+    fechada = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
     else:
@@ -980,6 +1005,8 @@ def _item_da_lista(registro, conteudo):
         # bastava; com três processos abertos ao mesmo tempo — que é a situação normal de um
         # instituto — ele deixa de identificar qualquer coisa.
         processo = conteudo.get("processoTitle", "")
+        if not enviada:
+            fechada = _rascunho_fechado(registro, conteudo, agora)
     return {
         "id": registro.id,
         "perfil": perfil["nome"],
@@ -987,8 +1014,27 @@ def _item_da_lista(registro, conteudo):
         "edital": edital,
         "enviada": enviada,
         "protocolo": registro.protocolo,
-        "acao": "Acompanhar" if enviada else "Continuar inscrição",
+        # O rascunho que o prazo fechou não se continua: se consulta (009, FR-032). "Continuar"
+        # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
+        "fechada": fechada,
+        "acao": "Acompanhar"
+        if enviada
+        else "Consultar inscrição"
+        if fechada
+        else "Continuar inscrição",
     }
+
+
+def _rascunho_fechado(registro, conteudo, agora):
+    """O período, quando o rascunho já não pode ser enviado; `None` enquanto pode (009, FR-032).
+
+    A pergunta é a mesma que o domínio faz ao gravar, anexar e enviar — `recebe_inscricoes` —, e não
+    uma releitura do período: um Edital cancelado dentro do prazo também fecha o rascunho, e a tela
+    que dissesse "continue" contrariaria a recusa logo adiante.
+    """
+    if recebe_inscricoes(status=registro.edital.status, conteudo=conteudo, agora=agora):
+        return None
+    return periodo_de_inscricoes(conteudo, agora)
 
 
 @require_http_methods(["GET", "POST"])
@@ -1182,15 +1228,19 @@ def inscricoes(request):
     if identidade is None:
         return redirect(reverse("portal:acesso"))
     minhas = list(
-        Inscricao.objects.filter(identity_subject=identidade.subject).order_by("-created_at")
+        Inscricao.objects.filter(identity_subject=identidade.subject)
+        .select_related("edital")
+        .order_by("-created_at")
     )
     conteudos = _conteudos_publicados(minhas)
+    agora = timezone.now()
     return render(
         request,
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id)) for registro in minhas
+                _item_da_lista(registro, conteudos.get(registro.edital_id), agora)
+                for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
             # alguma e com um endereço que consta de participação anterior de outra identidade. A
@@ -1322,12 +1372,14 @@ def inscricao(request, inscricao_id):
             except DomainError as exc:
                 erros.append(exc.detail)
     modalidades = _modalidades_ofertadas(conteudo, perfil, registro)
+    agora = timezone.now()
     return render(
         request,
         "portal/inscricao.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(versao),
+            "selecao": _selecao(versao, agora),
+            "fechada": _rascunho_fechado(registro, conteudo, agora),
             "perfil": _perfil_legivel(perfil),
             "telefone_no_campo": telefone_no_campo,
             "cpf_do_candidato": formatar_cpf(registro.cpf),
@@ -2044,12 +2096,24 @@ def revisao(request, inscricao_id):
                 erros.append(exc.detail)
                 registro.refresh_from_db()
                 retificado = edital_foi_retificado(registro, versao)
+    agora = timezone.now()
+    # **O teto, dito antes do envio que ele limita** (015, FR-063; RC-12). Atingido, a tela troca o
+    # botão pelo aviso, como faz com o prazo encerrado: a recusa continua sendo do comando, e a
+    # tela apenas a antecipa (Princípio IV). O rascunho fica como está — rascunho não consome
+    # direito (FR-064), e uma Retificação que suba o teto o devolve ao envio. A contagem só existe
+    # quando há teto: sem ele, não há o que contar.
+    teto = teto_de_inscricoes(conteudo)
+    enviadas = outras_enviadas_no_edital(registro) if teto is not None else 0
     return render(
         request,
         "portal/revisao.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(versao),
+            "teto": teto,
+            "enviadas": enviadas,
+            "teto_atingido": teto is not None and teto_atingido(conteudo, enviadas=enviadas),
+            "selecao": _selecao(versao, agora),
+            "fechada": _rascunho_fechado(registro, conteudo, agora),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,

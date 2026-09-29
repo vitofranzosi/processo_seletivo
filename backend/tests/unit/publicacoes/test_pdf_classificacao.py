@@ -663,9 +663,8 @@ def test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha():
     """A Etapa de habilitação é do marco, e o método comum **nunca** a carrega.
 
     Ela não pode, por isso, ser fonte de divergência: um marco que a declara está **especificando**
-    o que o comum não tem como dizer, e não contrariando-o. O documento não a imprime — ela não
-    está entre os sete —, e anunciar divergência por ela mandaria procurar no papel uma diferença
-    que o papel não mostra.
+    o que o comum não tem como dizer, e não contrariando-o. O documento passou a imprimi-la, fora
+    dos sete (abaixo), e ela continua fora da comparação.
     """
     proprio, comum = _metodos_como_a_tela_os_produz()
     proprio = {**proprio, "qualifyingStageId": DIDATICA}
@@ -674,3 +673,103 @@ def test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha():
 
     assert "Método: próprio deste marco" in escrito
     assert "diverge" not in escrito
+    assert "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in (
+        escrito
+    )
+
+
+# ---------------------------------------------------------------------------
+# O documento dizia parte do corte e calava quem entra no sorteio (achado de 27/09/2026)
+# ---------------------------------------------------------------------------
+#
+# **A `FR-185` da `014` pede a Regra de Corte no documento, e ela tem seis campos.** O documento
+# imprimia quatro: faltavam o desfecho do empate na última posição e a continuação — os dois que
+# mudam quem continua no certame. E o sorteio publicava o método sem dizer sobre quem ele corre: a
+# Etapa que habilita a participar dele. A Revisão lê estas mesmas frases (`interface/revisao.py`).
+
+
+def cortado(**regra):
+    return marco(
+        cutRule={
+            "targetKind": "FIXED",
+            "targetCount": 10,
+            "surplusCount": 0,
+            "governedStage": "NONE",
+            **regra,
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("desfecho", "frase"),
+    [
+        (
+            "ADMITS_SURPLUS",
+            "Empate no corte: Havendo empate na última posição, progridem todos os empatados, "
+            "ainda que excedam essa quantidade.",
+        ),
+        (
+            "STRICT",
+            "Empate no corte: Havendo empate na última posição, essa quantidade não é excedida.",
+        ),
+    ],
+)
+def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
+    """`FR-181` declara, `FR-185` publica: com alvo 10 e três empatados na 10ª, um leva doze."""
+    escrito = texto(com_classificacao(marcos=[cortado(tieOutcome=desfecho, continuation="NONE")]))
+
+    assert "Corte: Progridem os 10 (dez) primeiros desta ordem." in escrito
+    assert frase in escrito
+
+
+@pytest.mark.parametrize(
+    ("continuacao", "frase"),
+    [
+        (
+            "ALLOWED",
+            "Continuação: Poderá haver chamada, nesta ordem, além dos que este corte publicar.",
+        ),
+        ("NONE", "Continuação: Não haverá chamada além dos que este corte publicar."),
+    ],
+)
+def test_o_documento_imprime_a_continuacao_do_corte(continuacao, frase):
+    """`FR-226` declara, `FR-185` publica — e depois de publicada ela nem por Retificação muda."""
+    escrito = texto(
+        com_classificacao(marcos=[cortado(tieOutcome="STRICT", continuation=continuacao)])
+    )
+
+    assert frase in escrito
+
+
+def test_o_empate_e_a_continuacao_seguem_o_corte_e_so_ele():
+    """ "Essa quantidade" é a do corte: sem a frase do corte, as duas não têm a que se referir."""
+    sem_corte = texto(com_classificacao())
+    sem_alvo = texto(com_classificacao(marcos=[cortado(targetCount=None, tieOutcome="STRICT")]))
+
+    for escrito in (sem_corte, sem_alvo):
+        assert "Empate no corte" not in escrito
+        assert "Continuação" not in escrito
+
+
+def test_o_alvo_de_um_concorda_com_o_numero():
+    """ "Progridem os 1 (um) primeiros" saía do alvo fixo de um."""
+    um = texto(com_classificacao(marcos=[cortado(targetCount=1, tieOutcome="STRICT")]))
+    com_suplente = texto(
+        com_classificacao(marcos=[cortado(targetCount=1, surplusCount=1, tieOutcome="STRICT")])
+    )
+
+    assert "Corte: Progride o 1 (um) primeiro desta ordem." in um
+    assert "Corte: Progridem o 1 (um) primeiro desta ordem, mais 1 (um) suplente." in com_suplente
+
+
+def test_o_sorteio_sem_etapa_de_habilitacao_diz_que_todas_participam():
+    """A ausência é norma — entram todas as submetidas (021, R-012) —, e o documento a diz."""
+    comum = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+    proprio = documento_de_sorteio(no_marco={**METODO_PROPRIO, "qualifyingStageId": None})
+
+    for escrito in (comum, proprio):
+        assert "Habilitação: participam todas as inscrições submetidas" in escrito
+
+
+def test_a_habilitacao_fica_no_bloco_do_sorteio_e_nao_no_marco_de_pontuacao():
+    assert "Habilitação" not in texto(com_classificacao())

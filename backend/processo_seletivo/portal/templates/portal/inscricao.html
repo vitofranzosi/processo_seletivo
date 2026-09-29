@@ -9,13 +9,14 @@ voltar à página anterior para lembrar.
 {% endcomment %}
 <p class="sub">{{ selecao.processo_titulo }} · Edital {{ selecao.numero }}/{{ selecao.ano }}<br>
   <strong>{{ perfil.nome }}</strong></p>
+{% include "portal/_rascunho_fechado.html" %}
 {% include "portal/_resumo_documentos.html" %}
 {% include "portal/_mensagens.html" %}
 
 {% if guardado %}<p class="situacao aberto" role="status">Seus dados estão guardados. Você pode
   fechar esta página e continuar depois.</p>{% endif %}
-<p class="ajuda">Seus dados e arquivos ficam guardados enquanto as inscrições estiverem abertas.
-  Você pode sair e voltar quantas vezes precisar.</p>
+{% if not fechada %}<p class="ajuda">Seus dados e arquivos ficam guardados enquanto as inscrições estiverem abertas.
+  Você pode sair e voltar quantas vezes precisar.</p>{% endif %}
 {% comment %}
 Recebe o foco depois de uma recusa (L2 da auditoria): quem acionou o botão estava no fim da página,
 e `role=alert` sozinho não anuncia o que já veio no HTML da resposta.
@@ -108,10 +109,12 @@ Ele fica **depois** dos documentos, e é `form=` que permite isso: aninhar formu
 HTML, e enquanto o botão era renderizado antes do bloco a hierarquia visual mandava acioná-lo antes
 de enviar arquivo nenhum — quem obedecia à página era recusado por ela.
 {% endcomment %}
+{% if not fechada %}
 <div class="barra-de-acao">
   <button type="submit" form="dados-da-inscricao" class="principal">Revisar inscrição</button>
   {% include "portal/_ajuda_da_acao.html" %}
 </div>
+{% endif %}
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
 <script src="{% static 'portal/modalidade.js' %}" defer></script>

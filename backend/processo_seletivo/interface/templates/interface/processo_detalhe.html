@@ -94,6 +94,7 @@ coisa que ela não pode ver.
     {{ item.rascunhos }} em preenchimento.
     {% if item.ausencia == "sem-cronograma" %}Sem cronograma vigente.
     {% elif item.ausencia == "sem-periodo" %}O cronograma não marca período de inscrições.
+    {% elif item.periodo.cancelado %}Período de inscrições cancelado.
     {% else %}Inscrições até
       {% if item.periodo.fim %}{{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
     {% endif %}
@@ -220,7 +221,7 @@ coisa que ela não pode ver.
     {% endcomment %}
     {% if pendentes and processo.status != 'CANCELADO' %}
     <details class="aviso">
-      <summary><strong>O cancelamento do Processo está impedido.</strong></summary>
+      <summary><strong>{% if processo.status == 'ATIVO' %}O encerramento e o cancelamento do Processo estão impedidos.{% else %}O cancelamento do Processo está impedido.{% endif %}</strong></summary>
       <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
       <ul class="impedimentos">
         {% for edital in pendentes %}
@@ -228,7 +229,7 @@ coisa que ela não pode ver.
           <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
         {% endfor %}
       </ul>
-      <p class="ajuda">Cancelar o Processo não cancela os Editais: cada um exige ato próprio.</p>
+      <p class="ajuda">Encerrar ou cancelar o Processo não encerra nem cancela os Editais: cada um exige ato próprio.</p>
     </details>
     {% endif %}
   </section>

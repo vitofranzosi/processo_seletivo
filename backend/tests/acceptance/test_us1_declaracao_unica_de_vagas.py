@@ -32,6 +32,8 @@ PERFIL_SEM_COTA = {
     "perfil-0-name": "Professor de Informática",
     "perfil-0-immediateVacancies": "2",
     "perfil-0-reserveType": "NONE",
+    # O marco da travessia corta, e quem corta declara como convoca (051, FR-943).
+    "perfil-0-callForm": "PUBLICATION",
 }
 
 

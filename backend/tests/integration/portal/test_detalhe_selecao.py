@@ -433,3 +433,24 @@ def test_a_volta_limita_o_que_repassa(client, api_client, manager_headers, proce
     assert len(volta) < 500, "o valor atravessou sem limite de tamanho"
     assert "situacao=banana" not in volta, "situação irreconhecível atravessou"
     assert "ordem=prazo" not in volta, "a ordem padrão poluiu o endereço"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_titulo_da_pagina_e_o_do_edital_e_nao_o_do_processo(
+    client, api_client, manager_headers, process_payload
+):
+    """O detalhe apresenta o título (009, FR-014) — e o título é o do Edital (001, FR-007).
+
+    O `<h1>` e o `<title>` diziam o do **Processo**, e o do Edital não aparecia em lugar nenhum da
+    página (RC-47 da auditoria de 26/09). Num Processo que reúne Editais de objetos diferentes — o
+    unificado anual do Cefor —, todas as páginas tinham o mesmo nome. O Processo continua dito, logo
+    abaixo, como a quem o Edital pertence.
+    """
+    edital = publicar_selecao(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert re.search(r"<h1>\s*Primeiro Edital\s*</h1>", corpo)
+    assert re.search(r"<title>\s*Primeiro Edital", corpo)
+    assert "Processo Seletivo 2026" in corpo.split("<main")[1]

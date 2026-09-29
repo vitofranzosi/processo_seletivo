@@ -65,12 +65,24 @@ def test_us7_cancelling_a_published_edital_preserves_its_publications(
 def test_us7_closed_process_keeps_history_and_rejects_incompatible_changes(
     api_client, manager_headers, process_payload
 ):
-    """Cenário 2: histórico permanece consultável e novas alterações são rejeitadas."""
+    """Cenário 2: histórico permanece consultável e novas alterações são rejeitadas.
+
+    **Desde 28/09 o Processo só se encerra com os Editais em estado final** (RC-118): o Edital é
+    encerrado antes, e a alteração incompatível que o cenário tenta é o cancelamento dele.
+    """
     edital = publish_original(api_client, manager_headers, process_payload)
     processo = ProcessoSeletivo.objects.get(pk=edital.processo_id)
     ativar(api_client, manager_headers, processo)
     processo.refresh_from_db()
 
+    ato(
+        api_client,
+        f"/api/v1/admin/editais/{edital.id}/encerramentos",
+        edital.revision,
+        "Etapas concluídas",
+        key="us7-key-0000000004",
+    )
+    edital.refresh_from_db()
     encerrado = ato(
         api_client,
         f"/api/v1/admin/processos/{processo.id}/encerramentos",
@@ -87,7 +99,7 @@ def test_us7_closed_process_keeps_history_and_rejects_incompatible_changes(
 
     bloqueado = ato(
         api_client,
-        f"/api/v1/admin/editais/{edital.id}/encerramentos",
+        f"/api/v1/admin/editais/{edital.id}/cancelamentos",
         edital.revision,
         "Tardio",
         key="us7-key-0000000002",

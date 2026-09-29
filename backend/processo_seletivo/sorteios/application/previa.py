@@ -6,6 +6,12 @@ existe para impedir; antes da semente ela nem existiria. O que a tela precisa mo
 **universo** — quem entra, com que número — e o estado do compromisso de cada recorte.
 """
 
+from django.utils import timezone
+
+from processo_seletivo.avaliacoes.domain.conjunto import (
+    CONGELAR_A_RELACAO,
+    recusa_por_inscricoes_em_curso,
+)
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
@@ -68,6 +74,12 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         # opostas de quem lê: uma manda esperar pela fonte, a outra manda corrigir a declaração.
         "recusa_da_ocorrencia": recusa,
         "metodo_hash": dominio_do_metodo.resumo_do_metodo(metodo) if metodo else "",
+        # **O impedimento anunciado antes de alguém bater nele**, como a distribuição faz: a
+        # publicação da relação é recusada com o período correndo, e a tela oferecia o botão sem
+        # dizer nada. É a mesma recusa, da mesma versão e da mesma função — `None` quando não há.
+        "inscricoes_em_curso": recusa_por_inscricoes_em_curso(
+            versao.content, at or timezone.now(), consequencia=CONGELAR_A_RELACAO
+        ),
         "recortes": [
             _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas)
             for lista_id, nome in listas

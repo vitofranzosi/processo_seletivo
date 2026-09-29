@@ -43,11 +43,20 @@ def codigo(canal):
     return re.search(r"\b(\d{6})\b", canal[-1].body).group(1)
 
 
+def sem_token_csrf(corpo):
+    """A página sem o token CSRF, que é sorteado a cada resposta e não é texto dela.
+
+    Ele tem 64 letras e dígitos, e a tela do código traz dois: vez por outra um deles contém "CPF",
+    e o teste que afirma que a tela não pede o documento falhava sem que nada tivesse mudado.
+    """
+    return re.sub(r'<input type="hidden" name="csrfmiddlewaretoken"[^>]*>', "", corpo)
+
+
 def test_adicionar_pede_codigo_e_nao_pede_cpf(client, dentro, canal):
     resposta = client.post(reverse("portal:conta-adicionar"), {"email": NOVO})
 
     assert resposta["Location"] == reverse("portal:acesso-codigo")
-    corpo = client.get(reverse("portal:acesso-codigo")).content.decode()
+    corpo = sem_token_csrf(client.get(reverse("portal:acesso-codigo")).content.decode())
     assert "CPF" not in corpo
     assert canal[-1].to == [NOVO]
 

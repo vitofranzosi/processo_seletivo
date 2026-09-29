@@ -38,8 +38,9 @@ def montar_cenario_da_convocacao(
     """Edital publicado com quadro, ordem, corte, Resultados **e apuração vigente**.
 
     **A forma declarada é a mensagem individual**, que é a dos Editais 77, 58 e 59 (item 8.3) — os
-    que esta feature existe para conduzir. `forma=None` monta o Edital que **não declarou**, e é o
-    que a recusa `forma_de_comunicacao_nao_declarada` existe para proteger.
+    que esta feature existe para conduzir. `forma=""` monta o Edital que **não declarou**, e é o
+    que a recusa `forma_de_comunicacao_nao_declarada` existe para proteger — desde a `051`
+    (FR-943) ele só se publica no instante do acervo, `sem_as_regras_da_046`.
 
     Devolve `(edital, etapa_pontuada, inscricoes)` — a mesma forma que a `014` e a `016` usam, para
     que quem leia os três arquivos reconheça o cenário.
@@ -128,7 +129,12 @@ def apurar(edital, gestor, *, chave="convocacao-019-apurar", motivo="", lista_id
 
 
 def convocar(edital, gestor, inscricao, **kwargs):
-    """Pratica a convocação com os valores do cenário, e o que o chamador quiser sobrescrever."""
+    """Pratica a convocação com os valores do cenário, e o que o chamador quiser sobrescrever.
+
+    **Sem espécie por padrão** (050, `D-008`): ela é derivada da posição. A fixture fixava
+    `VAGA_INICIAL`, e com isso qualquer teste que chamasse um suplente sem dizer a espécie gravava
+    um fato falso sem que nada acusasse.
+    """
     argumentos = {
         "actor": gestor,
         "processo_id": edital.processo_id,
@@ -136,7 +142,6 @@ def convocar(edital, gestor, inscricao, **kwargs):
         "perfil_id": PROFILE_ID,
         "marco_id": MARCO,
         "inscricao_id": getattr(inscricao, "id", inscricao),
-        "especie": "VAGA_INICIAL",
         "fundamento": "No interesse da Administração, item 8.2 do Edital 77/2026.",
         "idempotency_key": "convocacao-019-convocar",
         "correlation_id": "teste-convocacao-019",

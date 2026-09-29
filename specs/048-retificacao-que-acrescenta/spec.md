@@ -545,7 +545,9 @@ Registro, não escopo: governança é do usuário. Todos foram lidos no código 
   reversão (`ocupacao/application/selectors.py:80-163`), e uma apuração emitida sob a declaração
   anterior continua *"vigente"*. Vale já hoje para quem retifica a espécie, e esta feature só a amplia.
 - **A-3 · A janela de ato já divulgado segue a versão vigente.** Já registrado pela `047`. Esta feature
-  só concede, e por isso não piora o caso de encurtar.
+  só concede, e por isso não piora o caso de encurtar. *Decidido em 28/09 (RC-121): segue a versão
+  que o ato citou, salvo o que a vigente concede — a janela que nasce continua alcançando o ato
+  divulgado, como o caso-limite acima diz, e encurtar deixou de alcançar.*
 - **A-4 · Os nascimentos são silenciosos no portal.** O *"O que mudou"* não descreve linha do quadro,
   declaração da ampla, janela, corte nem reversão. É o `RC-111`.
 - **A-5 · A `039` continua sem encerramento registrado** (`DP-08`, item 1).

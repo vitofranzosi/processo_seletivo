@@ -65,11 +65,26 @@ def test_closing_a_process_returns_the_process_projection(
         format="json",
         **{**manager_headers, "HTTP_IF_MATCH": '"1"', "HTTP_IDEMPOTENCY_KEY": "ativacao-key-00001"},
     )
-    response = act(
+    # O encerramento exige o Edital em estado final (RC-118, decisão de 28/09).
+    recusa = act(
         api_client,
         f"/api/v1/admin/processos/{processo.id}/encerramentos",
         revision=2,
         key="finalizacao-key-0002",
+    )
+    assert recusa.status_code == 409
+    assert recusa.json()["code"] == "editais_pendentes"
+    act(
+        api_client,
+        f"/api/v1/admin/editais/{edital.id}/encerramentos",
+        revision=edital.revision,
+        key="finalizacao-key-0003",
+    )
+    response = act(
+        api_client,
+        f"/api/v1/admin/processos/{processo.id}/encerramentos",
+        revision=2,
+        key="finalizacao-key-0004",
     )
     assert response.status_code == 200
     body = response.json()

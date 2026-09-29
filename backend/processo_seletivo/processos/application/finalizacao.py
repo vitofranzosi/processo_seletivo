@@ -126,9 +126,29 @@ def _finalize_processo(
         return processo, 200
 
 
+def _editais_pendentes_travados(processo):
+    """Os Editais fora de estado final, travados, na ordem em que a recusa os nomeia.
+
+    Locks em ordem estável de id evitam deadlock e fecham a janela TOCTOU entre a verificação dos
+    Editais pendentes e a gravação do desfecho.
+    """
+    pendentes = list(
+        processo.editais.select_for_update()
+        .exclude(status__in=finalizacao.EDITAL_FINAL)
+        .order_by("id")
+    )
+    pendentes.sort(key=lambda edital: (edital.year, edital.number, str(edital.id)))
+    return pendentes
+
+
 def close_process(
     *, actor, processo_id, expected_revision, reason, idempotency_key, correlation_id
 ):
+    """Encerrar exige os Editais em estado final, como cancelar (RC-118, decisão de 28/09)."""
+
+    def check(processo):
+        finalizacao.ensure_processo_can_be_closed(processo, _editais_pendentes_travados(processo))
+
     return _finalize_processo(
         actor=actor,
         processo_id=processo_id,
@@ -139,7 +159,7 @@ def close_process(
         permission="processo:encerrar",
         operation="ENCERRAR",
         target_status=ProcessoSeletivo.Status.ENCERRADO,
-        check=finalizacao.ensure_processo_can_be_closed,
+        check=check,
     )
 
 
@@ -149,15 +169,9 @@ def cancel_process(
     """Bloqueia o cancelamento sob concorrência travando o Processo e depois seus Editais."""
 
     def check(processo):
-        # Locks em ordem estável de id evitam deadlock e fecham a janela TOCTOU entre a
-        # verificação dos Editais pendentes e a gravação do cancelamento.
-        pendentes = list(
-            processo.editais.select_for_update()
-            .exclude(status__in=finalizacao.EDITAL_FINAL)
-            .order_by("id")
+        finalizacao.ensure_processo_can_be_cancelled(
+            processo, _editais_pendentes_travados(processo)
         )
-        pendentes.sort(key=lambda edital: (edital.year, edital.number, str(edital.id)))
-        finalizacao.ensure_processo_can_be_cancelled(processo, pendentes)
 
     return _finalize_processo(
         actor=actor,

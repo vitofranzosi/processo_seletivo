@@ -43,7 +43,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.application.selectors import ato_por_id
 from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
 from processo_seletivo.divulgacao.domain.conteudo import compor, conteudo_divulgado
-from processo_seletivo.divulgacao.domain.publicabilidade import aferir
+from processo_seletivo.divulgacao.domain.publicabilidade import aferir, natureza_regride
 from processo_seletivo.divulgacao.models import (
     DocumentoDoResultado,
     Natureza,
@@ -181,15 +181,14 @@ def publicar_resultado(
             )
 
         anterior = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
-        if anterior is not None and anterior.natureza == Natureza.DEFINITIVA:
-            if natureza == Natureza.PRELIMINAR:
-                raise DomainError(
-                    "publication_nature_regresses",
-                    "Um resultado preliminar não sucede um definitivo: a ordem entre as naturezas "
-                    "tem sentido único.",
-                    422,
-                    campo="natureza",
-                )
+        if natureza_regride(anterior, natureza):
+            raise DomainError(
+                "publication_nature_regresses",
+                "Um resultado preliminar não sucede um definitivo: a ordem entre as naturezas "
+                "tem sentido único.",
+                422,
+                campo="natureza",
+            )
 
         projecao = compor(ato)
         esperada = assinatura_da_previa(ato=ato, publicacao_anterior=anterior, projecao=projecao)
@@ -207,7 +206,7 @@ def publicar_resultado(
             )
 
         declaracao = _declaracao_exigida(
-            edital=edital, marco_id=marco_id, natureza=natureza, texto=declaracao_de_encerramento
+            ato=ato, marco_id=marco_id, natureza=natureza, texto=declaracao_de_encerramento
         )
 
         conteudo = conteudo_divulgado(
@@ -305,7 +304,7 @@ def _narrativa_do_ato(conteudo, ato, anterior):
     return ", ".join(partes) + "."
 
 
-def _declaracao_exigida(*, edital, marco_id, natureza, texto):
+def _declaracao_exigida(*, ato, marco_id, natureza, texto):
     """A declaração expressa, exigida **somente** onde não há janela computável (FR-085, FR-086).
 
     Onde o Edital declara a janela, o sistema verifica: pedir a declaração ali seria pedir à pessoa
@@ -322,7 +321,7 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
         MENSAGENS,
         STATUS,
     )
-    from processo_seletivo.recursos.domain.janela import janela_declarada
+    from processo_seletivo.recursos.domain.janela import janela_do_ato
 
     texto = (texto or "").strip()
     if natureza != Natureza.DEFINITIVA:
@@ -330,7 +329,8 @@ def _declaracao_exigida(*, edital, marco_id, natureza, texto):
         # acabou. Aceitá-la aqui gravaria uma afirmação sem objeto.
         return ""
 
-    computavel = janela_declarada(edital=edital, marco_id=marco_id) is not None
+    # A janela que vai valer para este ato depois de divulgado: a da versão que ele cita (RC-121).
+    computavel = janela_do_ato(ato, marco_id) is not None
     if computavel and texto:
         raise DomainError(
             DECLARACAO_RECUSADA, MENSAGENS[DECLARACAO_RECUSADA], STATUS[DECLARACAO_RECUSADA]

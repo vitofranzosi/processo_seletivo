@@ -5,6 +5,8 @@ A área está vazia, e vazio aqui não é erro — é o estado normal de todo ca
 seguinte ao primeiro acesso.
 """
 
+import re
+
 import pytest
 from django.core import mail
 from django.urls import reverse
@@ -26,15 +28,22 @@ def canal(settings):
 
 def codigo_recebido(caixa):
     """O que a pessoa lê na mensagem — seis dígitos, e nada de link."""
-    import re
-
     return re.search(r"\b(\d{6})\b", caixa[0].body).group(1)
+
+
+def sem_token_csrf(corpo):
+    """A página sem o token CSRF, que é sorteado a cada resposta e não é texto dela.
+
+    Ele tem 64 letras e dígitos, e a tela do código traz dois: vez por outra um deles contém "CPF",
+    e a afirmação de que a tela não pede o documento falhava sem que nada tivesse mudado.
+    """
+    return re.sub(r'<input type="hidden" name="csrfmiddlewaretoken"[^>]*>', "", corpo)
 
 
 def test_percurso_completo_sem_senha_e_sem_cpf(client, canal):
     # 1. Informa o e-mail.
     resposta = client.post(reverse("portal:acesso"), {"email": ENDERECO}, follow=True)
-    corpo = resposta.content.decode()
+    corpo = sem_token_csrf(resposta.content.decode())
     assert "Se este endereço puder ser utilizado" in corpo
     assert "CPF" not in corpo, "candidato novo não informa CPF em momento algum"
 

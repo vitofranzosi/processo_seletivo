@@ -42,11 +42,13 @@ from processo_seletivo.editais.domain.documentos import (
 )
 from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL
+from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.inscricoes.domain.periodo import (
     ENCERRADO,
     evento_designado,
     periodo_de_inscricoes,
 )
+from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA
 
 
@@ -820,7 +822,16 @@ def _regra_de_corte_do_marco(marco, *, perfil, etapas, caminho) -> list[Validati
         return []
     nomeado = _marco_nomeado(marco)
     findings = _forma_do_alvo(regra, caminho=caminho, nomeado=nomeado)
-    if regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE:
+    # **Sob sorteio, o empate na última posição não existe** (051, FR-928): a ordem sorteada é
+    # total, e ninguém divide posição com ninguém. Cobrar a declaração era cobrar a resposta a uma
+    # pergunta sem efeito — e o cartão já não a faz. Declarada, continua conferida: um valor fora
+    # do vocabulário é erro em qualquer marco.
+    sorteia = marcos.ordena_por_sorteio(
+        marco.get("orderProduction") or "", metodo_declarado=bool(marco.get("drawMethod"))
+    )
+    if (not sorteia or regra.get("tieOutcome")) and (
+        regra.get("tieOutcome") not in faixa.DESFECHOS_DE_EMPATE
+    ):
         findings.append(
             _impeditivo(
                 "cut_rule_sem_desfecho_de_empate",
@@ -1235,6 +1246,24 @@ def _faixa_do_percentual(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _faixa_do_teto(snapshot: dict) -> list[ValidationFinding]:
+    """O teto de inscrições por candidato vale também **depois** da publicação (015, FR-063).
+
+    A mesma razão de `_faixa_do_percentual`, e o mesmo remédio. A composição recusa teto abaixo de
+    1 (`editais/application/teto.py`), mas a Retificação convertia o campo por `int()` e publicava
+    `0` ou negativo — e com `0` o envio recusa a primeira inscrição de todo mundo, sob um Edital que
+    anuncia o período aberto (RC-12, registro pré-piloto de 28/09). A regra é a de
+    `teto_declarado`, invocada aqui e não reescrita.
+
+    A ausência é *sem limite* (FR-063) e passa: retificar o teto para vazio é retirá-lo.
+    """
+    try:
+        teto_declarado(snapshot.get("maxInscricoesPorCandidato"))
+    except DomainError as exc:
+        return [_impeditivo(RESTRICAO_VIOLADA, exc.detail, "maxInscricoesPorCandidato")]
+    return []
+
+
 # A Etapa que não referencia Evento nenhum (045, `FR-739`, `UX-086`). Código **próprio**, e não o
 # `field_constraint_violated` da referência inexistente: `advertencias_do_ato` descarta aviso cujo
 # código coincida com o de um impeditivo, e o invariante da declaração única prende que os dois
@@ -1480,6 +1509,7 @@ def validate_for_publication(
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
+    findings.extend(_faixa_do_teto(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
     findings.extend(_coerencia_dos_marcos(snapshot))
     findings.extend(_coerencia_da_janela_recursal(snapshot))
@@ -1488,6 +1518,7 @@ def validate_for_publication(
     findings.extend(_forma_da_ordem_declarada(snapshot, ato=ato))
     findings.extend(_perfil_sem_marco(snapshot, ato=ato))
     findings.extend(_perfil_sem_corte(snapshot, ato=ato))
+    findings.extend(_perfil_que_corta_sem_forma_de_convocacao(snapshot, ato=ato))
     findings.extend(_etapa_sem_resultado(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
@@ -1497,8 +1528,11 @@ def validate_for_publication(
     findings.extend(_ano_dos_eventos(snapshot, ato=ato))
     findings.extend(_declaracao_do_requerimento(snapshot, ato=ato))
     findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
+    findings.extend(_periodo_de_inscricoes_cancelado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
+    findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
+    findings.extend(_secao_com_redacao_padrao(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     return findings
 
@@ -1988,6 +2022,42 @@ def _perfil_sem_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+def _perfil_que_corta_sem_forma_de_convocacao(snapshot, *, ato):
+    """Perfil que corta e não diz como convoca não convoca ninguém (051, FR-943).
+
+    **O defeito aparecia depois do ato imutável.** A forma não declarada publicava sem achado, e a
+    convocação — a primeira operação que precisa dela — recusava, mandando retificar (019; 050,
+    `D-002`). Quem corta vai convocar: a faixa existe para isso. Declarada uma vez no Edital
+    (FR-926), cumprir custa um gesto, e a pergunta volta para antes da publicação, onde ainda é
+    rascunho.
+
+    **Só na publicação**, pela mesma razão de `_perfil_sem_corte`: o acervo publicado sem forma
+    continua retificável, e a Retificação não é o lugar de cobrar o que a composição deixou passar.
+    O Perfil que não corta fica de fora — ele não convoca, e cobrar a forma dele seria cobrar a
+    resposta a uma pergunta que ele não coloca.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    findings = []
+    for perfil in _perfis_bem_formados(snapshot):
+        if _nenhum_marco_corta(perfil) or perfil.get("callForm"):
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        findings.append(
+            ValidationFinding(
+                severity=Severity.BLOCKING_ERROR,
+                code="profile_cuts_without_call_form",
+                message=(
+                    f"O Perfil '{rotulo}' corta e não declara como a convocação é comunicada: a "
+                    "convocação dele seria recusada depois de publicado. Declare a forma na etapa "
+                    "Perfis de Vaga — uma vez para todos os Perfis, no controle do Edital."
+                ),
+                path=f"/profiles/id={perfil.get('id', '')}/callForm",
+            )
+        )
+    return findings
+
+
 def _marco_sem_regra_de_corte(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     """Marco sem regra de corte classifica e não convoca — e isso passa a ser dito (032, FR-461).
 
@@ -2377,7 +2447,9 @@ def _periodo_de_inscricoes_encerrado(
     if marcados != 1:
         return []
     periodo = periodo_de_inscricoes(snapshot, agora)
-    if periodo.estado != ENCERRADO or periodo.fim is None:
+    # O período cancelado também está encerrado (RC-119), mas não pela data: dizer que ele
+    # "encerrou em" um término futuro seria falso, e este achado é sobre o término (`FR-346`).
+    if periodo.estado != ENCERRADO or periodo.fim is None or periodo.cancelado:
         return []
     designado = evento_designado(snapshot) or {}
     posicao = next(
@@ -2391,6 +2463,49 @@ def _periodo_de_inscricoes_encerrado(
             "o Edital não receberá inscrição alguma — corrija a data do Evento na etapa "
             "Cronograma antes de publicar.",
             f"{_caminho_da_entidade('schedule', designado, posicao)}/endAt",
+        )
+    ]
+
+
+def _periodo_de_inscricoes_cancelado(
+    snapshot: dict, *, ato: str, agora: datetime
+) -> list[ValidationFinding]:
+    """Publicar com o período de inscrições declarado cancelado é publicar sem inscrição (RC-119).
+
+    Desde 28/09/2026 o período `CANCELADO` não recebe inscrição (`inscricoes/domain/periodo.py`), e
+    publicá-lo assim é o caso que a `028`, `FR-346`, impede para o período vencido: um certame que
+    ninguém pode disputar. **Código próprio, e não o do vencido**: a `FR-347` proíbe produzir aquele
+    impedimento com término futuro — que é o normal aqui —, e a `FR-348` pede um código por achado.
+
+    A mesma leitura do portal, pela mesma razão do achado do vencido, e o mesmo recuo com marca
+    ambígua: quem responde ali é o impeditivo que já existia.
+
+    **O que fazer** tem dois caminhos, e a frase diz os dois: o cancelamento só se declara pela API
+    (`045`, `FR-736`), e é por ela que se retira; ou o período designado passa a ser outro Evento,
+    na etapa Inscrição.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    marcados = sum(
+        1
+        for _, evento in _eventos_bem_formados(snapshot)
+        if evento.get("isRegistrationPeriod") is True
+    )
+    if marcados != 1 or not periodo_de_inscricoes(snapshot, agora).cancelado:
+        return []
+    designado = evento_designado(snapshot) or {}
+    posicao = next(
+        (posicao for posicao, evento in _eventos_bem_formados(snapshot) if evento is designado),
+        0,
+    )
+    return [
+        _impeditivo(
+            "registration_period_cancelled",
+            f"O Evento '{_nome_do_evento(designado)}', designado como período de inscrições, está "
+            "declarado cancelado, e período cancelado não recebe inscrição: publicado assim, o "
+            "Edital não receberá inscrição alguma. Designe outro Evento como período na etapa "
+            "Inscrição, ou retire a declaração de cancelamento pela API antes de publicar.",
+            f"{_caminho_da_entidade('schedule', designado, posicao)}/status",
         )
     ]
 
@@ -2452,6 +2567,122 @@ def _coerencia_dos_anexos(snapshot: dict) -> list[ValidationFinding]:
                     _caminho_da_entidade("documentRequirements", documento, indice),
                 )
             )
+    return findings
+
+
+# A remissão a anexo no texto: a palavra em qualquer caixa, o numeral romano **só em maiúsculas**,
+# como os Editais o escrevem, ou arábico. Aceitar o romano em minúsculas faria "anexo civil" ou
+# "anexo dim" virarem remissão.
+_REMISSAO_A_ANEXO = re.compile(r"(?i:\banexos?)\s+(?P<rotulo>[IVXLCDM]+|\d+)\b")
+ANEXO_CITADO_SEM_ROTULO = "attachment_cited_without_label"
+# O rótulo que **abre** pelo identificador — "IV — Formulário", "2. Declaração", "IV" — também é o
+# Anexo IV ou o 2: o autor não é obrigado a repetir a palavra no rótulo de um Anexo, e sem isto a
+# remissão certa ao "ANEXO IV" recebia o aviso (revisão do PR 221).
+_ROTULO_QUE_ABRE_PELO_IDENTIFICADOR = re.compile(
+    r"^\s*(?P<rotulo>[IVXLCDM]+|\d+)(?=\s*(?:[—–\-.:)]|$))"
+)
+
+
+def _secoes_textuais(snapshot: dict):
+    """`(posição, seção)` das textuais do conteúdo, na ordem em que o documento as imprime."""
+    itens = snapshot.get("sections")
+    if not isinstance(itens, list):
+        return []
+    return [
+        (posicao, item)
+        for posicao, item in enumerate(itens)
+        if isinstance(item, dict) and item.get("type") == TEXTUAL
+    ]
+
+
+def _anexo_citado_sem_rotulo(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """ "ANEXO IV" citado no texto, e nenhum Anexo publicado com esse rótulo (RC-21, DP-20).
+
+    **Aviso, e nunca impeditivo — decidido pelo usuário em 28/09.** A remissão casa também o
+    *"Anexo III da Resolução…"*, que é de outro ato, e o sistema não tem como distinguir as duas: um
+    impeditivo recusaria o Edital certo. Nenhum requisito da `020` cobre a remissão no texto; a
+    `FR-006` de lá proíbe derivar ou renumerar o rótulo, e não proíbe conferi-lo — o que esta regra
+    faz é só ler.
+
+    **Por que importa.** O RC-21 se materializou no estudo de 21/09: o 140/2025 citava o ANEXO IV e
+    não o publicava. Desde 28/09 o PDF do sistema é o documento oficial do piloto, e a remissão a um
+    anexo que não existe é norma que manda o candidato a lugar nenhum.
+
+    **Só no ato de publicação**, como a Etapa sem Evento: a Revisão é onde a correção não custa
+    nada. Na Retificação o aviso não foi pedido, e fica fora.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    publicados = set()
+    for anexo in snapshot.get("attachments") or []:
+        if isinstance(anexo, dict) and isinstance(anexo.get("label"), str):
+            publicados.update(
+                achado["rotulo"] for achado in _REMISSAO_A_ANEXO.finditer(anexo["label"])
+            )
+            abre = _ROTULO_QUE_ABRE_PELO_IDENTIFICADOR.match(anexo["label"])
+            if abre:
+                publicados.add(abre["rotulo"])
+    findings = []
+    for posicao, secao in _secoes_textuais(snapshot):
+        vistos = set()
+        for achado in _REMISSAO_A_ANEXO.finditer(str(secao.get("content") or "")):
+            rotulo = achado["rotulo"]
+            if rotulo in publicados or rotulo in vistos:
+                continue
+            vistos.add(rotulo)
+            titulo = str(secao.get("title") or secao.get("key") or "").strip()
+            findings.append(
+                ValidationFinding(
+                    Severity.WARNING,
+                    ANEXO_CITADO_SEM_ROTULO,
+                    f"A seção «{titulo}» cita o ANEXO {rotulo}, e nenhum Anexo deste Edital tem "
+                    "esse rótulo: o documento mandaria o candidato a um anexo que não publica. "
+                    "Se a remissão é a este Edital, inclua o Anexo na etapa Anexos ou corrija o "
+                    "texto na etapa Conteúdo; se é a anexo de outro ato, o aviso não impede a "
+                    "publicação.",
+                    f"{_caminho_da_entidade('sections', secao, posicao)}/content",
+                )
+            )
+    return findings
+
+
+SECAO_COM_REDACAO_PADRAO = "section_default_text"
+
+
+def _secao_com_redacao_padrao(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """Seção textual que vai ao ato com a redação padrão do catálogo, sem revisão (DP-20, §1).
+
+    **Aviso, e nunca impeditivo — decidido pelo usuário em 28/09.** A seção textual não se esvazia
+    (`006`, `FR-041`), e apagar o campo devolve o padrão (`interface/forms.py`, `ler_secoes`): toda
+    seção que ninguém tocou é publicada com a redação do catálogo. E a redação padrão afirma norma —
+    a de "Critérios de Classificação" fala de pontuação num Edital por sorteio, a de "Apresentação"
+    fala pela instituição e não pela autoridade que pratica o ato. Com o PDF como documento oficial
+    do piloto, o que ninguém revisou é publicado como norma. A tela dizia só *"revise antes de
+    submeter"*, ao lado do campo, e a Revisão não dizia nada.
+
+    **O padrão pode valer como está**, e por isso não impede: o aviso diz o fato, e quem conhece o
+    Edital decide. A comparação é com o catálogo **de hoje**, e é o certo antes da publicação — que
+    é o único ato em que ela roda.
+    """
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    padroes = {secao.key: secao.default_text.strip() for secao in CATALOGO if not secao.gerada}
+    findings = []
+    for posicao, secao in _secoes_textuais(snapshot):
+        padrao = padroes.get(secao.get("key"))
+        if not padrao or str(secao.get("content") or "").strip() != padrao:
+            continue
+        titulo = str(secao.get("title") or secao.get("key") or "").strip()
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                SECAO_COM_REDACAO_PADRAO,
+                f"A seção «{titulo}» será publicada com a redação padrão do catálogo, que ninguém "
+                "revisou neste Edital. O documento é o ato oficial: confira se ela vale para este "
+                "Edital e, se não valer, redija-a na etapa Conteúdo.",
+                f"{_caminho_da_entidade('sections', secao, posicao)}/content",
+            )
+        )
     return findings
 
 

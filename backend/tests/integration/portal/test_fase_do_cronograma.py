@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.editais.domain.fase_do_evento import fase_do_evento
+from processo_seletivo.inscricoes.domain.periodo import recebe_inscricoes
 from processo_seletivo.portal import leitura
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
@@ -152,12 +153,13 @@ def test_portal_e_gestao_dizem_a_mesma_fase_para_cada_evento(client, publicado):
         assert f'class="marco {esperada}"' in trecho, (evento["description"], fase, trecho)
 
 
-def test_o_periodo_marcado_como_cancelado_segue_a_regua_do_periodo():
-    """Caso-limite da 047: *"Período de inscrições marcado como cancelado"*.
+def test_o_periodo_marcado_como_cancelado_e_dito_cancelado():
+    """Caso-limite da 047, *"Período de inscrições marcado como cancelado"*, depois do RC-119.
 
-    A régua do período ignora o `status`, e o sistema continua recebendo inscrição
-    (`inscricoes/domain/periodo.py`). A página não pode dizer *cancelado* na linha e *aberta* na
-    marca. A pergunta de fundo está registrada na spec da 047, em *Achados*.
+    Até 28/09 a régua do período ignorava o `status`, o sistema continuava recebendo, e a linha
+    seguia a régua para não dizer *cancelado* ao lado de *aberta*. O usuário decidiu que o período
+    cancelado não recebe inscrição (`inscricoes/domain/periodo.py`): a linha passa a ser dita
+    cancelada, pela regra geral do `FR-766`, e a marca da página diz o mesmo.
     """
     agora = timezone.now()
     periodo = {
@@ -171,8 +173,9 @@ def test_o_periodo_marcado_como_cancelado_segue_a_regua_do_periodo():
     }
     conteudo = {"schedule": [periodo]}
 
-    assert leitura.situacao_do_evento(periodo, conteudo, agora) == "em_curso"
-    assert leitura.cronograma(conteudo, agora)[0]["situacao"] == "em_curso"
+    assert leitura.situacao_do_evento(periodo, conteudo, agora) == "cancelado"
+    assert leitura.cronograma(conteudo, agora)[0]["situacao"] == "cancelado"
+    assert not recebe_inscricoes(status="PUBLICADO", conteudo=conteudo, agora=agora)
 
 
 def test_o_acompanhamento_le_a_mesma_regua(client, enviada, selecao):

@@ -311,7 +311,39 @@ def _conferir_o_teto(inscricao, conteudo):
     teto = conteudo.get("maxInscricoesPorCandidato")
     if teto is None:
         return
-    ja_enviadas = (
+    ja_enviadas = outras_enviadas_no_edital(inscricao)
+    if teto_atingido(conteudo, enviadas=ja_enviadas):
+        raise DomainError(
+            "registration_limit_reached",
+            f"Este Edital admite {teto} inscrição(ões) por candidato, e você já enviou "
+            f"{ja_enviadas}.",
+            409,
+        )
+
+
+def teto_atingido(conteudo, *, enviadas):
+    """Se quem já enviou `enviadas` inscrições neste Edital está impedido de enviar outra (D-3).
+
+    **A regra é uma só para o comando e para o portal.** A tela antecipa a recusa — a página da
+    seleção deixa de oferecer outra vaga, e a revisão troca o envio por um aviso —, e a condição
+    que ela lê precisa ser exatamente a que o envio aplica: uma tela que dissesse "pode" onde o
+    comando diz "não" devolveria o defeito que o RC-12 registrou, a recusa descoberta depois de
+    preenchida a inscrição inteira.
+
+    `conteudo` é o da versão **vigente**, como no envio: uma Retificação pode subir ou baixar o teto
+    (FR-066), e é o teto de agora que decide o próximo envio.
+    """
+    teto = conteudo.get("maxInscricoesPorCandidato")
+    return teto is not None and enviadas >= teto
+
+
+def outras_enviadas_no_edital(inscricao):
+    """Quantas **outras** inscrições desta pessoa neste Edital já foram enviadas (FR-064).
+
+    Conta só as submetidas, e exclui a própria: o rascunho que se está enviando não consome o
+    direito que ele mesmo pede.
+    """
+    return (
         Inscricao.objects.filter(
             identity_subject=inscricao.identity_subject,
             edital_id=inscricao.edital_id,
@@ -320,13 +352,6 @@ def _conferir_o_teto(inscricao, conteudo):
         .exclude(pk=inscricao.pk)
         .count()
     )
-    if ja_enviadas >= teto:
-        raise DomainError(
-            "registration_limit_reached",
-            f"Este Edital admite {teto} inscrição(ões) por candidato, e você já enviou "
-            f"{ja_enviadas}.",
-            409,
-        )
 
 
 def _valores_dos_fatos(conteudo, inscricao, informados):

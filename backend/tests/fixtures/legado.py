@@ -172,11 +172,18 @@ def publicar_sem_aferir(
         **{**preparador, "HTTP_IF_MATCH": '"1"'},
     )
     assert gravado.status_code == 200, gravado.content
-    submetido = api_client.post(
-        f"/api/v1/admin/editais/{edital.id}/submissoes",
-        format="json",
-        **{**preparador, "HTTP_IF_MATCH": '"2"'},
-    )
+    # O acervo publicado antes da `051` corta sem declarar como convoca (FR-943); a submissão de
+    # hoje o recusaria por isso, e é só essa regra que o instante do acervo tira do caminho.
+    with ExitStack() as pilha:
+        for nome in REGRAS_DA_051:
+            pilha.enter_context(
+                mock.patch(f"processo_seletivo.editais.domain.validation.{nome}", return_value=[])
+            )
+        submetido = api_client.post(
+            f"/api/v1/admin/editais/{edital.id}/submissoes",
+            format="json",
+            **{**preparador, "HTTP_IF_MATCH": '"2"'},
+        )
     assert submetido.status_code in (200, 201), submetido.content
 
     if degradar is not None:
@@ -255,6 +262,10 @@ def antes_do_quadro(api_client, manager_headers, process_payload, *, draft=None)
 # não descobertas por prefixo: neutralizar mais do que elas esconderia regressão de outra feature.
 REGRAS_DA_046 = ("_etapa_sem_resultado", "_perfil_sem_corte")
 
+# E a da `051` (FR-943), pela mesma razão: o acervo publicado antes dela corta sem declarar como
+# convoca, e é ele que a Retificação e o reaproveitamento precisam continuar alcançando.
+REGRAS_DA_051 = ("_perfil_que_corta_sem_forma_de_convocacao",)
+
 
 @contextmanager
 def sem_as_regras_da_046():
@@ -270,7 +281,7 @@ def sem_as_regras_da_046():
     passam pelos mesmos comandos, idempotência e trilha de sempre.
     """
     with ExitStack() as pilha:
-        for nome in REGRAS_DA_046:
+        for nome in REGRAS_DA_046 + REGRAS_DA_051:
             pilha.enter_context(
                 mock.patch(
                     f"processo_seletivo.editais.domain.validation.{nome}",

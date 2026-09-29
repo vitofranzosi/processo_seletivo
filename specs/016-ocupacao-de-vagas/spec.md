@@ -442,7 +442,13 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
   mudança silenciosa do número da linha geral.
 - **UX-034**: O vocabulário MUST ser "vaga ocupada", "vaga a ocupar" e "revertida". Termo de
   convocação MUST NOT aparecer nesta feature, e a proibição é verificável por varredura, como a
-  `014` já fez com o vocabulário do corte.
+  `014` já fez com o vocabulário do corte. **Uma exceção, e só uma: nomear a tela vizinha não é
+  afirmar fato da `019`.** O link de navegação *"Abrir a convocação deste recorte"*, cujo destino é
+  a tela da convocação, MAY aparecer na ocupação, por recorte apurado; o termo continua proibido em
+  todo o resto do texto, e a `FR-258` não muda. A varredura MUST admitir a exceção por extenso — o
+  elemento inteiro, com esse texto e essa rota —, e não pela palavra, para que ela não vire brecha.
+  *Emendado em 28/09/2026 pelo RC-137, por decisão do usuário
+  ([achado](../../doc/achado-porta-da-convocacao-pela-ocupacao.md)).*
 
 ### Key Entities
 

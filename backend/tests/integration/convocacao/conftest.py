@@ -64,14 +64,19 @@ def cenario_sem_forma(db, gestor, api_client, manager_headers, process_payload, 
     É o estado de todo Edital publicado antes do degrau 15, e a ausência não vira padrão: as duas
     formas da amostra são normais, e escolher uma decidiria norma no lugar do Edital.
     """
-    return montar_cenario_da_convocacao(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        prefixo="convocacao-019-sem-forma",
-        forma=None,
-    )
+    # Publicado no instante do acervo: desde a `051` (FR-943) quem corta sem forma não publica, e
+    # este é o Edital de antes, que a `019` recusa convocar.
+    from tests.fixtures.legado import sem_as_regras_da_046
+
+    with sem_as_regras_da_046():
+        return montar_cenario_da_convocacao(
+            gestor,
+            api_client,
+            manager_headers,
+            process_payload,
+            prefixo="convocacao-019-sem-forma",
+            forma="",
+        )
 
 
 @pytest.fixture

@@ -70,8 +70,8 @@ Não têm identificador, e nenhuma ferramenta os cobra. Cada um tem a sua linha.
 | Edital publicado antes desta feature, com fase declarada | `test_fase_declarada_em_conteudo_ja_publicado_e_lida_como_nao_cancelado` |
 | Recurso admitido | `test_admitida_a_peca_o_mesmo_sinal_passa_a_dizer_julgamento` |
 | O Julgador impedido nesta peça continua vendo o `UX-064` | comportamento da `038`, sem mudança: a condição é do conjunto — `test_recurso_com_julgador_disponivel_produz_o_sinal` |
-| Etapa sem ninguém a avaliar (*"0 de 0"*) | `test_sem_inscricao_submetida_nao_ha_cobertura_a_cobrar` — com todos eliminados antes, a população de participantes é vazia e o caminho é o mesmo: `carentes` zero, sem sinal |
-| Inscrição à espera da Etapa anterior, ou fora do corte | `test_a_cobertura_conta_so_os_participantes_e_as_duas_formas_concordam` |
+| Etapa sem ninguém a avaliar (*"0 de 0"*) | `test_sem_inscricao_submetida_nao_ha_cobertura_a_cobrar` (nenhuma inscrição) e `test_todos_eliminados_na_primeira_a_etapa_seguinte_nao_cobra_cobertura` (inscrições submetidas, todas eliminadas antes: `carentes` zero, sem sinal) |
+| Inscrição eliminada antes, à espera da Etapa anterior, ou fora do corte | `test_a_cobertura_conta_so_os_participantes_e_as_duas_formas_concordam` (as duas últimas), `test_com_eliminada_antes_as_duas_formas_da_cobertura_continuam_concordando` (a primeira) |
 | Participante sem avaliador nenhum | `test_inscricao_sem_avaliador_e_carente_e_permanece_no_denominador`, `test_o_numero_sem_avaliador_suficiente_abre_uma_lista_do_mesmo_tamanho` |
 | `UX-046` num Edital que parou por ato | `test_onde_ninguem_pode_retificar_o_sinal_nao_e_condicao_de_atencao` |
 | Outra espécie com o mesmo defeito | medido no plano (`research.md`, `R-7`) e registrado na spec; **nenhum teste**, por decisão — é registro, não escopo |

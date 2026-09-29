@@ -327,6 +327,24 @@ urlpatterns = [
         views.convocar_view,
         name="convocar",
     ),
+    # Os três gestos da `050`, que alcançam N pessoas do recorte num ato só. Pendem do recorte, e
+    # não de uma convocação, porque o alcance deles é o recorte: os titulares ainda não chamados, as
+    # convocações vencidas, e as comunicações que ainda não saíram.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/titulares",
+        views.convocar_titulares_view,
+        name="convocar-titulares",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/vencidos",
+        views.nao_atendimento_dos_vencidos_view,
+        name="nao-atendimento-dos-vencidos",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/pendentes",
+        views.emitir_pendentes_view,
+        name="emitir-pendentes",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/historico",
         views.convocacao_historico,
@@ -403,6 +421,19 @@ urlpatterns = [
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/publicacoes",
         views.publicacoes_do_marco,
         name="publicacoes-do-marco",
+    ),
+    # A condução do marco (049). Pende do **marco**, e não do recorte: é a unidade do gesto e do
+    # indicador (`D-001`). O GET mostra o estado de cada recorte e não grava nada; o POST confere o
+    # alcance, e só com `confirmar` pratica — um ato por recorte, pelo comando de hoje.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao",
+        views.marco,
+        name="marco",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao/<str:operacao>",
+        views.gesto_do_marco,
+        name="gesto-do-marco",
     ),
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",

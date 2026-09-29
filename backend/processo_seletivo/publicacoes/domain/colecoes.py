@@ -334,6 +334,60 @@ def razao_da_recusa(forma):
     return RAZAO_POR_FORMA.get(forma)
 
 
+def _nao_retificaveis_por_elemento():
+    """Os campos não retificáveis de cada espécie de elemento, com a razão — lidos do contrato.
+
+    A chave é a forma do **elemento** que os contém (`""` para a raiz), e o caminho é relativo a
+    ele, em segmentos: é a pergunta que a troca por objeto inteiro faz. Quem substitui a regra de
+    corte substitui um pedaço do marco, e o que se confere é, marco a marco, se algum desses campos
+    ficou diferente (RC-130; DP-13).
+
+    As exclusões que já têm recusa própria ficam fora pela mesma razão que ficam fora de
+    `CAMPOS_NAO_RETIFICAVEIS`: a topologia das seções recusa com mensagem que nomeia a regra.
+    """
+    por_elemento = {}
+    for (colecao, caminho), decisao in mutabilidade.CONTRATO.items():
+        if (
+            decisao.natureza is not mutabilidade.Natureza.NAO_RETIFICAVEL
+            or colecao not in FORMA_DA_COLECAO
+            or (colecao, caminho) in RECUSADOS_EM_OUTRO_LUGAR
+        ):
+            continue
+        por_elemento.setdefault(FORMA_DA_COLECAO[colecao], []).append(
+            (tuple(caminho.split("/")), decisao.razao)
+        )
+    return {forma: tuple(campos) for forma, campos in por_elemento.items()}
+
+
+NAO_RETIFICAVEIS_POR_ELEMENTO = _nao_retificaveis_por_elemento()
+
+
+def elementos(conteudo):
+    """Cada elemento endereçável do conteúdo, pelo caminho concreto: `(forma, elemento)`.
+
+    A raiz entra com o caminho `""`. É `identidades` com o elemento junto, porque a pergunta aqui
+    não é só se a entidade continua existindo, mas o que ela passou a dizer.
+    """
+    achados = {"": ("", conteudo)}
+    _percorrer_elementos(conteudo, "", "", achados)
+    return achados
+
+
+def _percorrer_elementos(valor, forma, caminho, achados):
+    if isinstance(valor, dict):
+        for chave, sub in valor.items():
+            escapada = escapar(chave)
+            _percorrer_elementos(sub, f"{forma}/{escapada}", f"{caminho}/{escapada}", achados)
+    elif isinstance(valor, list) and tem_chave(forma):
+        for elemento in valor:
+            chave = elemento.get(CAMPO_CHAVE) if isinstance(elemento, dict) else None
+            if not isinstance(chave, str):
+                continue
+            concreto = f"{caminho}/{CAMPO_CHAVE}={chave}"
+            achados[concreto] = (f"{forma}/{CURINGA}", elemento)
+            _percorrer_elementos(elemento, f"{forma}/{CURINGA}", concreto, achados)
+
+
 def e_campo_nao_retificavel(forma):
     """A forma designa um campo que nenhuma Retificação altera no lugar?
 

@@ -114,6 +114,7 @@ def montar_cenario_7_1_2(
     prefixo="recortes-034",
     pontuacoes=("95.0000", "90.0000", "85.0000", "80.0000", "75.0000"),
     autodeclarar=True,
+    emitir_a_ordem=True,
     **quadro,
 ):
     """Edital publicado 7/1/2, ordem da **ampla** emitida, e as autodeclarações gravadas.
@@ -138,6 +139,7 @@ def montar_cenario_7_1_2(
         prefixo=prefixo,
         pontuacoes=pontuacoes,
         draft_factory=monta,
+        emitir_a_ordem=emitir_a_ordem,
     )
     if autodeclarar and not quadro.get("sem_reserva"):
         declarar(inscricoes[1], MODALIDADE_PCD)

@@ -857,6 +857,55 @@ ORGAO = (
 )
 
 
+# "Edital", o número e o ano no começo do título, com ou sem o "Nº" e as grafias dele. O que vem
+# depois é o objeto, separado por travessão, hífen, dois-pontos ou vírgula.
+_ATO_NO_TITULO = re.compile(
+    r"^\s*edital\s+(?:n\s*(?:º|°|o|\.º|\.°|\.)?\.?\s*)?(?P<numero>[^\s/]+)\s*/\s*(?P<ano>\d{4})"
+    # O ano termina ali: "Edital 07/20261" não é o ato de 2026 seguido de "1".
+    r"(?!\d)(?P<resto>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_SEPARADOR_DO_OBJETO = " \t—–-:,."
+
+
+def _mesmo_numero(escrito, declarado):
+    """O número do título é o do ato, contado o zero à esquerda como grafia (revisão do PR 221).
+
+    O número `7` e o título "Edital 07/2026" são o mesmo ato, e a comparação de texto os separava:
+    o documento oficial abria com "EDITAL Nº 7/2026 — EDITAL 07/2026 — …". O não numérico — "07-A" —
+    continua comparado como foi escrito, e "17" nunca passa por "7".
+    """
+    if escrito.isdigit() and declarado.isdigit():
+        return int(escrito) == int(declarado)
+    return escrito == declarado
+
+
+def anuncio_do_ato(snapshot):
+    """`EDITAL Nº <número>/<ano> — <título>`: o ato sai sempre de `number` e `year` (008, FR-006).
+
+    **O RC-20 da auditoria de 26/09, corrigido pela DP-20.** A versão anterior imprimia o
+    **título** no lugar do ato sempre que ele abria por "Edital", para o anúncio não repetir o ato.
+    Mas o título é texto livre e se retifica, e `number`/`year` são a identidade do Edital
+    (`uq_edital_scope_number_year`), a mesma que o rodapé e a verificação de integridade imprimem.
+    No Edital 140/2025 do estudo de 21/09, a capa dizia um número e o rodapé outro; com o título
+    *"Edital de seleção…"*, a capa não dizia número nenhum. Desde 28/09 o PDF é o documento oficial
+    do piloto, e o ato que ele anuncia é o ato.
+
+    **O título que repete exatamente o ato perde o prefixo**, para a abertura continuar uma sentença
+    só, como nos Editais de referência. "Exatamente" é o mesmo número e o mesmo ano, em qualquer
+    grafia do "Nº": um título que abre por outro número não é repetição, e sai inteiro depois do ato
+    — é assim que a divergência fica à vista, em vez de escondida.
+    """
+    titulo = str(snapshot.get("title", "")).strip()
+    numero = str(snapshot.get("number", "")).strip()
+    ano = str(snapshot.get("year", "")).strip()
+    ato = f"EDITAL Nº {numero}/{ano}"
+    repeticao = _ATO_NO_TITULO.match(titulo)
+    if repeticao and _mesmo_numero(repeticao["numero"], numero) and repeticao["ano"] == ano:
+        titulo = repeticao["resto"].lstrip(_SEPARADOR_DO_OBJETO)
+    return f"{ato} — {titulo}" if titulo else ato
+
+
 def _cabecalho(composicao, snapshot):
     """A abertura de um ato administrativo (FR-005 a FR-007).
 
@@ -877,16 +926,12 @@ def _cabecalho(composicao, snapshot):
     # Ato e objeto numa frase só, em negrito e caixa alta, como nos três Editais de referência.
     # Separá-los em linhas de corpos diferentes é o que fazia o documento parecer capa de
     # relatório: lá, o que identifica o ato é uma sentença, não um título.
-    titulo = str(snapshot.get("title", "")).strip()
-    ato = f"EDITAL Nº {snapshot.get('number', '')}/{snapshot.get('year', '')}"
-    # **Uma linha só.** Nos três Editais de referência o ato e o objeto são uma sentença. Quando o
-    # título já abre por "Edital" — que é como se costuma escrevê-lo —, ele **é** essa sentença, e
-    # imprimir os dois faria o documento anunciar o mesmo ato duas vezes.
-    anuncio = (
-        titulo if titulo.upper().startswith("EDITAL") else (f"{ato} — {titulo}" if titulo else ato)
-    )
     composicao.escrever(
-        anuncio.upper(), tamanho=CORPO_ATO, fonte=NEGRITO, antes=24, alinhamento=CENTRO
+        anuncio_do_ato(snapshot).upper(),
+        tamanho=CORPO_ATO,
+        fonte=NEGRITO,
+        antes=24,
+        alinhamento=CENTRO,
     )
     if snapshot.get("description"):
         composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True)
@@ -1206,10 +1251,14 @@ def _regra_de_corte(marco, etapas):
     **O marco terminal não imprime nada sobre Etapa**: ele corta para a análise e para a chamada, e
     escrever "não alimenta Etapa alguma" no Edital afirmaria ao candidato uma tecnicalidade do
     sistema, e não uma norma do certame.
+
+    O empate e a continuação, que completam a regra, têm frase própria logo abaixo
+    (`_empate_no_corte`, `_continuacao_do_corte`).
     """
     regra = marco.get("cutRule")
     if not isinstance(regra, dict):
         return ""
+    um_so = False
     if regra.get("targetKind") == "FROM_VACANCY_TABLE":
         quantos = "os primeiros desta ordem, até o número de vagas ofertadas no recorte"
     else:
@@ -1218,7 +1267,10 @@ def _regra_de_corte(marco, etapas):
             return ""
         extenso = POR_EXTENSO.get(alvo)
         numero = f"{alvo} ({extenso})" if extenso else str(alvo)
-        quantos = f"os {numero} primeiros desta ordem"
+        # "Progridem os 1 (um) primeiros" saía do alvo fixo de um, e a Revisão repetia a frase.
+        um_so = alvo == 1
+        quantos = f"o {numero} primeiro" if um_so else f"os {numero} primeiros"
+        quantos = f"{quantos} desta ordem"
     # A guarda da ausência é explícita, e não um `or ""` depois do `str()`: `str(None)` é a string
     # `"None"`, que é verdadeira — o `or` nunca dispararia, e bastaria existir uma Etapa de `id`
     # igual a `"None"` para o documento nomear a Etapa errada.
@@ -1226,14 +1278,91 @@ def _regra_de_corte(marco, etapas):
     destino = etapas.get(str(governada)) if governada else None
     nome = destino.get("name") if isinstance(destino, dict) else ""
     para = f" para {nome}" if nome else ""
-    frase = f"Progridem{para} {quantos}"
     excedente = regra.get("surplusCount")
-    if isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0:
+    com_suplentes = isinstance(excedente, int) and not isinstance(excedente, bool) and excedente > 0
+    verbo = "Progride" if um_so and not com_suplentes else "Progridem"
+    frase = f"{verbo}{para} {quantos}"
+    if com_suplentes:
         extenso = POR_EXTENSO.get(excedente)
         numero = f"{excedente} ({extenso})" if extenso else str(excedente)
         plural = "suplentes" if excedente != 1 else "suplente"
         frase = f"{frase}, mais {numero} {plural}"
     return f"{frase}."
+
+
+# **O empate e a continuação são a outra metade da Regra de Corte** (014, FR-185), e o documento
+# imprimia só a primeira: dos seis campos de `faixa.CAMPOS_DA_REGRA`, quatro. Os dois que faltavam
+# mudam quem continua no certame — com alvo de 10 e três empatados na 10ª posição, um Edital leva
+# doze e o outro não emite o corte —, e quem lesse só o documento não reconstituía a regra que o
+# sistema aplica. A Revisão lê as mesmas frases daqui: duas redações da mesma regra seriam duas
+# normas, e a conferência diria uma coisa enquanto o Edital publica outra.
+#
+# **A frase segue a do corte, e a pressupõe**: "essa quantidade" é a que o par `Corte` acabou de
+# dizer. Alvo mais suplentes, e não só o alvo — é a última posição da faixa emitida que o empate
+# atravessa (FR-195, FR-196).
+EMPATE_NO_CORTE = {
+    "ADMITS_SURPLUS": (
+        "Havendo empate na última posição, progridem todos os empatados, ainda que excedam essa "
+        "quantidade."
+    ),
+    "STRICT": "Havendo empate na última posição, essa quantidade não é excedida.",
+}
+CONTINUACAO_DO_CORTE = {
+    "ALLOWED": "Poderá haver chamada, nesta ordem, além dos que este corte publicar.",
+    "NONE": "Não haverá chamada além dos que este corte publicar.",
+}
+
+
+def _empate_no_corte(marco):
+    """A frase do desfecho do empate que atravessa a faixa, ou `""` (014, FR-181, FR-185).
+
+    Valor fora do vocabulário não é impresso: a publicação o recusa (FR-182), e numa prévia de
+    rascunho escrever a chave crua poria no papel um identificador de máquina.
+    """
+    regra = marco.get("cutRule")
+    return EMPATE_NO_CORTE.get(regra.get("tieOutcome"), "") if isinstance(regra, dict) else ""
+
+
+def _continuacao_do_corte(marco):
+    """A frase da continuação além da faixa publicada, ou `""` (014, FR-226, FR-185)."""
+    regra = marco.get("cutRule")
+    return (
+        CONTINUACAO_DO_CORTE.get(regra.get("continuation"), "") if isinstance(regra, dict) else ""
+    )
+
+
+def _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+    """Quem participa do sorteio deste marco, na frase do Edital (021, R-012).
+
+    **Lida do método que governa**, e não da chave do marco: é o que a publicação da relação lê
+    (`sorteios/application/relacao.py`), e o documento não pode descrever um universo e a relação
+    projetar outro. Só o método próprio a carrega — o comum não tem como saber quais Etapas cada
+    marco enumera —, e o marco que referencia o comum sorteia todas as inscrições submetidas.
+
+    **A ausência é impressa, e não calada**, ao contrário do método incompleto em prévia: sem Etapa
+    de habilitação, entram todas as submetidas — é norma, e é a que decide quem é sorteado. O
+    Princípio VI pede o PDF correspondendo à versão homologada, e a `FR-465` o método que governa;
+    nenhuma das duas se cumpre com o documento calando o universo do sorteio.
+
+    Etapa declarada que não resolve não é impressa como "todas": afirmaria um universo maior do que
+    o declarado. A publicação recusa essa referência (`_validar_etapa_de_habilitacao`), e a prévia
+    de um rascunho assim sai sem a linha.
+    """
+    identidade = marco.get("id")
+    metodo = (
+        regras_do_marco.metodo_que_governa(
+            snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+        )
+        if identidade
+        else None
+    ) or marco.get("drawMethod")
+    declarada = (metodo or {}).get("qualifyingStageId")
+    if not declarada:
+        return "participam todas as inscrições submetidas"
+    etapa = etapas.get(str(declarada))
+    if not isinstance(etapa, dict) or not etapa.get("name"):
+        return ""
+    return f"participam apenas as inscrições habilitadas na Etapa {etapa['name']}"
 
 
 #: Como a ordem do marco nasce, em português (032, FR-464). A ausência não entra: marco do acervo
@@ -1258,7 +1387,9 @@ def _publica_a_mesma_norma(proprio, comum):
 
     **E o critério é o que o leitor vê.** O documento imprime os sete; anunciar uma divergência que
     ele não mostra manda quem lê procurar no papel uma diferença que não está lá — num documento
-    normativo e imutável, que é onde o erro não tem conserto. Comparar pelo **valor impresso**, e
+    normativo e imutável, que é onde o erro não tem conserto. A Etapa de habilitação também sai no
+    papel (`_habilitacao_ao_sorteio`), e continua fora da comparação: ela **especifica** o que o
+    comum não tem como dizer, e não o contraria. Comparar pelo **valor impresso**, e
     não pela chave crua, é o que amarra a afirmação ao artefato: o documento não diz que diverge
     aquilo que ele mesmo mostra igual.
     """
@@ -1417,6 +1548,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 # O bloco do método, entre o arredondamento e o recurso — a ordem é a que
                 # `contracts/marco-no-documento.md` fixa, e ela faz parte do contrato.
                 if sorteia and (metodo := _metodo_do_marco(snapshot, perfil, marco)):
+                    # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
+                    # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
+                    if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+                        metodo = [*metodo, ["Habilitação", habilitacao]]
                     composicao.escrever(
                         "Sorteio",
                         tamanho=CORPO_TEXTO,
@@ -1433,6 +1568,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 corte = _regra_de_corte(marco, etapas)
                 if corte:
                     posteriores.append(["Corte", corte])
+                    if empate := _empate_no_corte(marco):
+                        posteriores.append(["Empate no corte", empate])
+                    if continuacao := _continuacao_do_corte(marco):
+                        posteriores.append(["Continuação", continuacao])
                 _pares(composicao, posteriores, recuo=32.0)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
@@ -2138,13 +2277,52 @@ def _secoes(composicao, snapshot):
         if corpo is not None:
             corpo(composicao, snapshot, numero, tabelas)
         else:
-            for indice, paragrafo in enumerate(_paragrafos(secao.get("content", ""))):
+            paragrafos = _paragrafos(secao.get("content", "")) + _norma_da_secao(secao, snapshot)
+            for indice, paragrafo in enumerate(paragrafos):
                 composicao.escrever(
                     paragrafo,
                     tamanho=CORPO_TEXTO,
                     antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
                     justificar=True,
                 )
+
+
+# A seção textual onde a norma da inscrição que o sistema executa é publicada.
+SECAO_DA_INSCRICAO = "inscricao"
+
+
+def teto_de_inscricoes(snapshot):
+    """A frase do teto de inscrições por candidato, ou `None` sem teto (015, FR-063).
+
+    **O RC-12 da auditoria de 26/09, corrigido pela DP-20.** O teto era executado na submissão
+    (`inscricoes/application/submissao.py`, `_conferir_o_teto`), estava no conteúdo publicado e não
+    saía no documento: a norma que recusa a segunda inscrição de alguém não era lida por ninguém
+    antes da recusa. Desde 28/09 o PDF é o documento oficial do piloto, e norma executada sem
+    publicação é norma que o candidato não teve como conhecer.
+
+    A ausência significa *sem limite* (FR-063), e sem limite não há o que dizer: o documento não
+    inventa uma frase para o que o Edital não declarou. Conta só a inscrição enviada (FR-064), e a
+    frase diz isso, porque o rascunho abandonado não consome o direito.
+    """
+    teto = snapshot.get("maxInscricoesPorCandidato")
+    if not isinstance(teto, int) or isinstance(teto, bool):
+        return None
+    if teto == 1:
+        return "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+    return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
+
+
+def _norma_da_secao(secao, snapshot):
+    """Os parágrafos que o sistema acrescenta a uma seção textual, depois do texto de quem redigiu.
+
+    **Na seção, e não num cabeçalho próprio.** O catálogo é fixo (006, FR-034), e uma seção nova só
+    para uma frase mudaria a numeração de todo documento. A frase vem **depois** do texto, e nunca
+    no lugar dele: o que o autor escreveu continua sendo o que abre a seção.
+    """
+    if secao.get("key") != SECAO_DA_INSCRICAO:
+        return []
+    frase = teto_de_inscricoes(snapshot)
+    return [frase] if frase else []
 
 
 def _autoridade(composicao, autoridade):

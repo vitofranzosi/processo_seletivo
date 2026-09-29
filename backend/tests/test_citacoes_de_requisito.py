@@ -32,7 +32,18 @@ BACKEND = RAIZ / "backend"
 # `SC-UX-001` vem primeiro na alternância: sem isso o `SC-` casaria sozinho e a família de
 # experiência da `009` seria lida como um `SC` comum, que não existe com aquele número.
 CITACAO = re.compile(r"\b(SC-UX-\d+[a-z]?|(?:FR|SC|UX)-\d+[a-z]?)\b")
-DEFINICAO = re.compile(r"\*\*(SC-UX-\d+[a-z]?|(?:FR|SC|UX)-\d+[a-z]?)\*\*")
+# **Definição é o negrito que abre a linha** — item de lista, célula de tabela ou título —, e não
+# qualquer negrito. Contando todo negrito, o `UX-062` que a `037` só reservou no cabeçalho da faixa
+# ("esta spec abre em ... **UX-062**") passava por requisito definido, e uma citação a ele seria
+# aprovada sem que requisito algum existisse. Medido ao apertar: das 1192 definições que o padrão
+# anterior contava, a única que cai é essa.
+DEFINICAO = re.compile(
+    r"^\s*(?:[-*]\s+|\|\s*|#{2,6}\s+)?\*\*(SC-UX-\d+[a-z]?|(?:FR|SC|UX)-\d+[a-z]?)\*\*", re.M
+)
+# Números reservados e nunca definidos, que as specs citam **como reserva** — citá-los é
+# legítimo; tratá-los como requisito, não. Por isso entram só na conferência de citação, e não na
+# de definição nem na da matriz.
+RESERVADOS = {"UX-062"}
 DECISAO = re.compile(r"\b(D-\d+)\b")
 # O nível do título não importa, e o arquivo é o da feature: a `012` fechou as decisões dela
 # **antes** do planejamento, e por isso elas moram na §5 da spec, em `###`, enquanto a
@@ -83,7 +94,7 @@ def _citacoes_perdidas(arquivo: Path, definidos: set[str]) -> list[str]:
 
 
 def test_nenhuma_citacao_aponta_para_requisito_inexistente():
-    definidos = requisitos_definidos()
+    definidos = requisitos_definidos() | RESERVADOS
 
     perdidas = {
         arquivo.relative_to(RAIZ): faltando
@@ -192,6 +203,19 @@ def test_a_varredura_reconhece_um_identificador_inventado():
     ]
 
     assert achados == [inventado]
+
+
+def test_negrito_no_meio_da_frase_nao_define_requisito():
+    """A reserva de numeração não vira requisito por estar em negrito — o caso do `UX-062`.
+
+    Montado com um número fora de qualquer faixa, e não com o real: o que se prova é o padrão.
+    """
+    reservado = "UX-" + "999"
+    assert DEFINICAO.findall(f"Esta spec abre em **FR-001** e **{reservado}**.") == []
+    assert DEFINICAO.findall(f"- **{reservado}**: a tela DEVE ...") == [reservado]
+    assert DEFINICAO.findall(f"| **{reservado}** | a tela DEVE ... |") == [reservado]
+    assert DEFINICAO.findall(f"### **{reservado}** — título") == [reservado]
+    assert all(reserva not in requisitos_definidos() for reserva in RESERVADOS)
 
 
 def test_a_varredura_alcanca_o_que_promete():

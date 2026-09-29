@@ -20,7 +20,9 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 def ha_resultado_em(*, edital, etapa_id):
     """A Etapa já começou a produzir Resultado?
 
-    É o gate de D-003, e ele incide **apenas** sobre a exigência de habilitação. Enquanto a
+    É metade do gate de D-003, e ele incide **apenas** sobre a exigência de habilitação. A outra
+    metade — a Etapa pode habilitar? — é perguntada antes, em `prontidao.py`, pela decisão de 28/09
+    sobre o RC-112. Enquanto a
     resposta é `False`, a Etapa seguinte conserva o conjunto da 012 — todas as submetidas, menos as
     eliminadas antes —, e é isso que impede esta feature de esvaziar permanentemente a Etapa
     seguinte de um Edital de leitura múltipla, que a V1 não consolida.

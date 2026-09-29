@@ -13,6 +13,10 @@ um (D-014).
 """
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.avaliacoes.domain.conjunto import (
+    CONGELAR_A_RELACAO,
+    recusa_por_inscricoes_em_curso,
+)
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.inscricoes.models import Inscricao
@@ -65,6 +69,16 @@ def publicar_relacao(
         metodo, metodo_hash = dominio_do_metodo.exigir_metodo(
             versao.content, perfil_id=perfil_id, marco_id=marco_id
         )
+        # **O universo fechado antes do compromisso** (US1: "Encerradas as inscrições, quem
+        # conduz o certame publica a relação"). Congelada com o período correndo, a relação deixava
+        # de fora quem se inscrevesse depois, e a saída era um segundo ato público para corrigir o
+        # primeiro. A regra é a da distribuição, e é a mesma função: as duas partem do mesmo fato.
+        # Vale também para a sucessora — uma relação nova com o período aberto repete o defeito.
+        recusa = recusa_por_inscricoes_em_curso(
+            versao.content, ctx.now, consequencia=CONGELAR_A_RELACAO
+        )
+        if recusa is not None:
+            raise recusa
         vigente = _vigente(edital, perfil_id, marco_id, lista_id)
         texto_do_motivo = (motivo or "").strip()
         if vigente is not None and not texto_do_motivo:

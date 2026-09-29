@@ -254,20 +254,29 @@ def test_a_tela_nao_afirma_numero_de_ocupacao_diferente_do_apurado(
     calcular o número novo por conta própria — e passaria a existir duas respostas para *"quantas
     vagas estão ocupadas"*, que é exatamente o que a `Q-1` recusou.
     """
+    from unittest import mock
+
     from processo_seletivo.convocacao.application.desfechar import desfechar
     from processo_seletivo.ocupacao.application.selectors import apuracao_vigente
+    from processo_seletivo.shared.api.problems import DomainError
 
     edital, _, _ = cenario_da_tela
     convocada = convocar(edital, gestor, proximo(edital), idempotency_key="tela-obsoleta")
-    desfechar(
-        actor=gestor,
-        processo_id=edital.processo_id,
-        convocacao_id=convocada["id"],
-        especie=nomes.DESISTENCIA_EXPRESSA,
-        fundamento="Desistência expressa registrada em processo.",
-        idempotency_key="tela-obsoleta-desfecho",
-        correlation_id="teste",
-    )
+    # **Desde a `050`, a janela só existe quando a apuração seguinte não sai com o desfecho**
+    # (`D-005` da `050`): aqui, porque a emissão é recusada. É a janela que a `FR-278a` protege.
+    with mock.patch(
+        "processo_seletivo.ocupacao.application.emissao.emitir_sucessora_por_efeito",
+        side_effect=DomainError("empate_na_fronteira_do_alvo", "Empate não julgado.", 409),
+    ):
+        desfechar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            convocacao_id=convocada["id"],
+            especie=nomes.DESISTENCIA_EXPRESSA,
+            fundamento="Desistência expressa registrada em processo.",
+            idempotency_key="tela-obsoleta-desfecho",
+            correlation_id="teste",
+        )
     vigente = apuracao_vigente(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None)
     identificar(client, "carlos", ["gestor"])
 
@@ -275,7 +284,7 @@ def test_a_tela_nao_afirma_numero_de_ocupacao_diferente_do_apurado(
 
     assert "A apuração deste recorte está obsoleta" in pagina
     assert "um desfecho de convocação mudou quem ocupa vaga" in pagina
-    assert f"<dt>Ocupadas</dt><dd>{vigente.ocupadas}</dd>" in pagina, (
+    assert f"<li><strong>{vigente.ocupadas}</strong>Ocupadas</li>" in pagina, (
         "o número exibido é o que a apuração vigente apurou, e não um recalculado pela tela"
     )
 

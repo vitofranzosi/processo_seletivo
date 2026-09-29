@@ -11,9 +11,9 @@ consulta só, com a versão junto, e a comparação acontece em memória sobre e
 
 **A participação tem duas regras, e elas têm alcances diferentes** (D-003). A eliminação em
 qualquer Etapa anterior exclui sempre; a exigência de habilitação é da imediatamente anterior e só
-vale depois que ela produz Resultado. Enquanto não produz, a Etapa seguinte conserva o conjunto da
-012 — e é isso que impede esta feature de esvaziar permanentemente a Etapa seguinte de um Edital de
-leitura múltipla, que a V1 não consolida.
+vale depois que ela produz Resultado, e só se ela puder habilitar (RC-112, decisão de 28/09). Fora
+disso, a Etapa seguinte conserva o conjunto da 012 — e é isso que impede esta feature de esvaziar
+permanentemente a Etapa seguinte de um Edital de leitura múltipla, que a V1 não consolida.
 """
 
 from collections import namedtuple
@@ -148,8 +148,9 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None, conteudo=None):
     aguardando = set()
     imediata = etapa_anterior(vigentes, etapa_id)
     # O gate, e só ele: a exigência de habilitação fica dormente enquanto a Etapa anterior não
-    # produziu Resultado nenhum. A exclusão por eliminação, acima, não tem gate.
-    if imediata is not None and ha_resultado_em(edital=edital, etapa_id=imediata[0]):
+    # produziu Resultado nenhum, ou não pode produzir habilitação. A exclusão por eliminação, acima,
+    # não tem gate.
+    if _exige_habilitacao_da_anterior(edital, imediata):
         habilitadas = habilitadas_em(edital=edital, etapa_id=imediata[0])
         aguardando = submetidas - eliminadas - habilitadas
     # **A terceira regra, da 014, entra aqui pelo mesmo lugar das duas primeiras.** Quem ficou fora
@@ -370,12 +371,38 @@ def _anteriores_e_gate(edital, etapa_id, vigentes=None):
         vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     imediata = etapa_anterior(vigentes, etapa_id)
-    exigir = (
-        imediata[0]
-        if imediata is not None and ha_resultado_em(edital=edital, etapa_id=imediata[0])
-        else None
-    )
+    exigir = imediata[0] if _exige_habilitacao_da_anterior(edital, imediata) else None
     return anteriores, exigir, conteudo
+
+
+def _exige_habilitacao_da_anterior(edital, imediata):
+    """O gate da Regra 2 de `D-003`: a Etapa imediatamente anterior exige habilitação?
+
+    **Duas perguntas, e a primeira é a que a decisão de 28/09 acrescentou** (RC-112,
+    `doc/decisao-rc112-portao-da-habilitacao.md`). A Ocorrência é Resultado, e é aceita em Etapa
+    que não consolida (`ocorrencia.py`, I-1). Com o gate perguntando só pelo primeiro Resultado,
+    uma ausência registrada numa Etapa assim acordava a exigência de uma habilitação que ninguém
+    mais podia obter, e quem compareceu ficava *"aguardando a Etapa anterior"* para sempre — o
+    oposto do que a `D-003` diz que o gate existe para evitar. Diante de Etapa que não pode
+    habilitar, a exigência fica dormente, haja ou não Resultado nela; a Regra 1 continua absoluta,
+    e quem recebeu a Ocorrência sai das Etapas seguintes como antes.
+
+    **"Pode habilitar" é perguntado à regra, e não reescrito aqui.** `impedimento_da_regra` é o
+    impedimento que a consolidação aplica à Etapa inteira, e o mesmo que a `046` consulta para
+    publicar (`editais/domain/validation.py`, `_etapa_sem_resultado`). Toda Etapa que ele não
+    impede produz `HABILITADA` para alguém: a eliminatória, de quem atinge o critério; a outra, de
+    todos. O impedimento do corte obsoleto fica de fora de propósito: é transitório, e o caminho
+    dele é emitir a geração sucessora, e não mudar a norma.
+
+    Função pura primeiro, consulta depois: a Etapa que não pode habilitar não paga a pergunta de
+    existência, e a que pode paga exatamente o que pagava.
+    """
+    if imediata is None:
+        return False
+    identidade, anterior = imediata
+    if impedimento_da_regra(anterior) is not None:
+        return False
+    return ha_resultado_em(edital=edital, etapa_id=identidade)
 
 
 def restringir_a_participantes(

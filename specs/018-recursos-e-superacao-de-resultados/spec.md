@@ -862,7 +862,10 @@ acaso.
   e não antes. Publicação atrasada não produz prazo vencido antes de existir.
 - **Retificação que altera a duração da janela depois de publicado o resultado**: vale a norma
   vigente citada pela publicação que ancora a janela; a Retificação alcança o conteúdo futuro, e
-  não recalcula prazo já em curso.
+  não recalcula prazo já em curso. *Emendado em 28/09 pela decisão do usuário sobre o RC-121
+  (`doc/registro-pre-piloto-2026-09-28.md`): a Retificação que **concede** — faz a janela nascer ou
+  a alonga — alcança o prazo em curso, como a `026` (US3, `SC-099`) e a `048` já pediam; a que
+  encurta ou retira continua não alcançando.*
 - **Deferimento que habilita quem já estava habilitado, ou que fixa a mesma pontuação**: não é
   piora, e não é correção — o desfecho é indeferimento por ausência de efeito, com motivo escrito.
 - **Recurso contra publicação cujo mérito é a nota**: procede; ataca a publicação e produz efeito no
