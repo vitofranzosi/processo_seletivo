@@ -3,6 +3,10 @@
 {% block estilo_da_pagina %}
 /* A vista do conjunto (052). Aqui, e não em `base.html`: a folha de lá conta no teto de bytes da
    distribuição, e estas regras só servem a esta etapa. As classes nascem no `perfis.js`. */
+/* `position:relative` é o que prende a rolagem da tabela ao contêiner (UX-121): sem ele, o texto
+   oculto das células — `position:absolute` — tem a página por referência, e alargava a página
+   inteira a 817 px numa tela de 375, medido. */
+.visao-dos-perfis .tabela-rolavel{position:relative}
 .visao-dos-perfis table{font-size:.9rem}
 .visao-dos-perfis th,.visao-dos-perfis td{padding:.5rem .75rem;vertical-align:top}
 .visao-dos-perfis td.numero{text-align:right;font-variant-numeric:tabular-nums}

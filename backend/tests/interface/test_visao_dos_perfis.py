@@ -340,3 +340,11 @@ def test_o_script_nao_cria_remove_nem_renomeia_campo():
     assert "removeChild" not in codigo
     # Os botões da vista são `type=button`: nenhum deles envia.
     assert codigo.count('.type = "button"') >= 2
+
+
+def test_a_tabela_rola_dentro_do_proprio_conteiner(client, tres_perfis):
+    """UX-121. O texto oculto das células é `position:absolute`, e sem um contêiner posicionado ele
+    tem a página por referência: medido a 375 px, a página inteira alargava para 817."""
+    corpo = client.get(_url(tres_perfis, "perfis")).content.decode()
+
+    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" in corpo
