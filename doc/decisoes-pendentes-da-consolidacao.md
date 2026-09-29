@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, e a `DP-16` e a `DP-17`, decididas em 28/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, a `DP-16` e a `DP-17`, decididas em 28/09, e a `DP-21`, decidida em 29/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -51,7 +51,7 @@ registro criaria duas verdades:
 | DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
 | DP-19 | Marcar na composição os campos que não se corrigem depois de publicados é requisito novo? | passo 0 → fora dele | decidir em spec; conciliar com a `026` §7 e a `FR-428` da `030` |
 | DP-20 | O PDF do sistema vale como Edital oficial: o que ele precisa ter, e com quais seções? (E5 · E10) | RC-20, RC-21, RC-23 a RC-26 | o RC-20 e o teto já, como correção; assinatura e E10 antes; fecho e seções numa spec só |
-| DP-21 | A composição grava coleções maiores que mil campos? | o Edital multicampi da `051` (66 Perfis); o achado de 29/09 | subir o limite, com valor medido; decidir antes do primeiro Edital acima de ~18 Perfis |
+| DP-21 | A composição grava coleções maiores que mil campos? | o Edital multicampi da `051` (66 Perfis); o achado de 29/09 | **decidida em 29/09: A** — o limite subiu para 13.000, medido |
 
 ---
 
@@ -1398,6 +1398,11 @@ antes da resposta do Cefor.
 ---
 
 ## DP-21 — A composição grava coleções maiores que mil campos?
+
+> **Decidida pelo usuário em 29/09/2026: opção A.** `DATA_UPLOAD_MAX_NUMBER_FIELDS` subiu para
+> 13.000 — o dobro do maior envio medido, a Retificação do Edital de 66 Perfis (6.113 campos) —, com
+> guardião e recusa legível. Os números e o que ficou aberto estão no fim do
+> [achado](achado-etapa-perfis-recusa-acima-de-mil-campos.md).
 
 *Registrada em 29/09, a pedido do usuário, a partir do
 [achado da etapa Perfis](achado-etapa-perfis-recusa-acima-de-mil-campos.md), encontrado ao medir a
