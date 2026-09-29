@@ -13,11 +13,14 @@ isso gravar as outras etapas não o apaga — elas nunca passam por aqui.
 comportamento de todo Edital anterior a este campo. O mínimo é 1: teto zero recusaria a primeira
 inscrição de todo mundo, e um Edital que não recebe inscrição diz isso não designando o período.
 
-**A regra mora aqui, e não só no formulário.** O `min` do HTML é conforto de quem digita; o que
-impede o teto zero de chegar ao conteúdo publicado é esta recusa.
+**A regra mora no comando, e não só no formulário.** O `min` do HTML é conforto de quem digita; o
+que impede o teto zero de chegar ao rascunho é esta recusa. A regra em si está em
+`editais/domain/teto.py`, porque a conferência de publicação a invoca também — é ela que a faz
+valer na Retificação.
 """
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -26,46 +29,6 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 
 OPERACAO = "ALTERAR_TETO_DE_INSCRICOES"
-CAMPO = "max_inscricoes_por_candidato"
-
-#: O maior valor que a coluna guarda — `integer` do PostgreSQL. Sem o limite, um número longo
-#: digitado chegaria ao banco e voltaria como erro 500, e não como recusa junto do campo.
-_MAXIMO_DA_COLUNA = 2_147_483_647
-
-
-def teto_declarado(bruto):
-    """O teto como o conteúdo publicado o guarda: inteiro a partir de 1, ou `None` sem limite."""
-    if bruto is None or (isinstance(bruto, str) and not bruto.strip()):
-        return None
-    if isinstance(bruto, bool):
-        raise _recusa_do_valor()
-    if isinstance(bruto, str):
-        texto = bruto.strip()
-        # `isdecimal`, e não `int()` direto: `int` aceita "+2", "1_0" e dígitos de outras
-        # escritas, e nenhum deles é o que alguém quis dizer num campo de quantidade.
-        if not (texto.isascii() and texto.isdecimal()):
-            raise _recusa_do_valor()
-        bruto = int(texto)
-    if not isinstance(bruto, int) or bruto < 1:
-        raise _recusa_do_valor()
-    if bruto > _MAXIMO_DA_COLUNA:
-        raise DomainError(
-            "field_constraint_violated",
-            "Inscrições por candidato: o número é grande demais. Deixe em branco para não limitar.",
-            422,
-            campo=CAMPO,
-        )
-    return bruto
-
-
-def _recusa_do_valor():
-    return DomainError(
-        "field_constraint_violated",
-        "Inscrições por candidato é um número inteiro a partir de 1. Deixe em branco para não "
-        "limitar.",
-        422,
-        campo=CAMPO,
-    )
 
 
 def atualizar_teto_de_inscricoes(*, actor, edital_id, expected_revision, teto, correlation_id=""):
