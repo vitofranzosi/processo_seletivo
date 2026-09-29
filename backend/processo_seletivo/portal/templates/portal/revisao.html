@@ -120,6 +120,16 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
 {% if fechada %}
 {% comment %} Nem pendência, nem formulário de envio: com o prazo fechado, nenhum dos dois leva a
 lugar nenhum, e o aviso do alto já diz por quê. {% endcomment %}
+{% elif teto_atingido %}
+{% comment %}
+**O teto atingido diz que foi atingido** (015, FR-063; RC-12), antes da pendência e da Retificação
+por reconhecer: nenhuma das duas, resolvida, leva ao envio. A recusa continua sendo do comando, e o
+aviso apenas a antecipa, como o do prazo encerrado. O rascunho não muda de estado nem se apaga.
+{% endcomment %}
+<div class="aviso" role="status">
+  <p><strong>Esta inscrição não pode ser enviada.</strong> {{ teto }} Você já enviou
+    {{ enviadas }}. O rascunho continua guardado.</p>
+</div>
 {% elif pendencias %}
 <div class="erro" role="alert">
   <p>Falta enviar: {{ pendencias|join:", " }}.</p>
@@ -173,7 +183,7 @@ governar o envio, e mostrá-los antes faria a pessoa preencher o que perderia ao
     </p>
   </section>
   <button type="submit" class="principal">Enviar inscrição</button>
-  <p class="ajuda">Depois de enviada, a inscrição não pode ser alterada.</p>
+  <p class="ajuda">Depois de enviada, a inscrição não pode ser alterada.{% if teto %} {{ teto }}{% endif %}</p>
 </form>
 {% endif %}
 {% load static %}<script src="{% static 'portal/recusa.js' %}" defer></script>

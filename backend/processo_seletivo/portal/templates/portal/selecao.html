@@ -137,6 +137,13 @@ documentos, que é a ordem das perguntas de quem decide.
     rótulo de uma seção lida por quem está de fora (Princípio I).
     {% endcomment %}
     <h2 id="vagas-titulo">Vagas</h2>
+    {% comment %}
+    **O teto de inscrições por candidato, onde se escolhe a vaga** (015, FR-063; RC-12). Até 28/09 só
+    o documento o dizia, e quem escolhia uma segunda vaga descobria a norma pela recusa, depois de
+    preencher tudo. A frase é a do documento, e só existe quando o Edital declara o teto: sem ele não
+    há limite, e não há o que dizer.
+    {% endcomment %}
+    {% if teto %}<p class="meta">{{ teto }}</p>{% endif %}
     <ul class="perfis">
       {% for perfil in perfis %}
       {% comment %}
@@ -239,6 +246,20 @@ documentos, que é a ordem das perguntas de quem decide.
             <a class="documento" href="{% url 'portal:comprovante' perfil.inscricao_id %}">Ver comprovante</a></p>
           {% elif perfil.inscricao_id %}
           <p class="convite"><a class="documento" href="{% url 'portal:inscricao' perfil.inscricao_id %}">Continuar inscrição</a></p>
+          {% comment %}
+          O rascunho continua acessível — ele é da pessoa, e uma Retificação que suba o teto o
+          devolve ao envio (FR-064, FR-066) —, mas não promete o que o envio vai recusar.
+          {% endcomment %}
+          {% if teto_atingido and recebe_inscricoes %}
+          <p class="antes-de-entrar">Limite atingido: você já enviou {{ enviadas }} inscriç{{ enviadas|pluralize:"ão,ões" }} neste Edital, e esta não poderá ser enviada.</p>
+          {% endif %}
+          {% elif recebe_inscricoes and teto_atingido %}
+          {% comment %}
+          **Sem convite para o que o envio vai recusar** (RC-12). A página oferecia "Inscrever-se"
+          em outra vaga depois de o teto atingido, e a pessoa abria o rascunho, preenchia, revisava
+          e só no envio recebia a recusa. A tela antecipa o comando; a recusa continua sendo dele.
+          {% endcomment %}
+          <p class="convite"><span class="situacao encerrado">Limite atingido: você já enviou {{ enviadas }} inscriç{{ enviadas|pluralize:"ão,ões" }} neste Edital.</span></p>
           {% elif recebe_inscricoes %}
           <form class="convite" method="post" action="{% url 'portal:inscrever' edital_id perfil.id %}">
             {% csrf_token %}

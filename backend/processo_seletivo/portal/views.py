@@ -68,8 +68,10 @@ from processo_seletivo.inscricoes.application.submissao import (
     documentos_que_a_retificacao_invalida,
     edital_foi_retificado,
     enviar_inscricao,
+    outras_enviadas_no_edital,
     pendencias_para_enviar,
     reconhecer_versao,
+    teto_atingido,
 )
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
@@ -87,6 +89,7 @@ from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
+from processo_seletivo.publicacoes.infrastructure.pdf import teto_de_inscricoes
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
     conteudos_citados,
@@ -414,6 +417,18 @@ def selecao(request, edital_id):
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
         for perfil in versao.content.get("profiles") or []
     ]
+    # **O teto de inscrições por candidato, antes da escolha da vaga** (015, FR-063; RC-12). Só o
+    # documento o dizia, e quem escolhia a segunda vaga descobria a norma pela recusa, no envio. A
+    # frase é a do documento, e não uma segunda redação da mesma norma. Nenhuma consulta nova: o
+    # teto está no conteúdo vigente, já carregado, e as enviadas saem das inscrições que a página
+    # já leu para escrever o convite de cada vaga.
+    contexto["teto"] = teto_de_inscricoes(versao.content)
+    contexto["enviadas"] = sum(
+        1 for registro in iniciadas.values() if registro.status == Inscricao.Status.SUBMETIDA
+    )
+    contexto["teto_atingido"] = contexto["teto"] is not None and teto_atingido(
+        versao.content, enviadas=contexto["enviadas"]
+    )
     # Consultável e recebendo inscrição são decisões diferentes: um Edital cancelado continua
     # legível — o ato publicado não se apaga — e não convida ninguém a se inscrever no que não
     # existe mais.
@@ -2082,11 +2097,21 @@ def revisao(request, inscricao_id):
                 registro.refresh_from_db()
                 retificado = edital_foi_retificado(registro, versao)
     agora = timezone.now()
+    # **O teto, dito antes do envio que ele limita** (015, FR-063; RC-12). Atingido, a tela troca o
+    # botão pelo aviso, como faz com o prazo encerrado: a recusa continua sendo do comando, e a
+    # tela apenas a antecipa (Princípio IV). O rascunho fica como está — rascunho não consome
+    # direito (FR-064), e uma Retificação que suba o teto o devolve ao envio. A contagem só existe
+    # quando há teto: sem ele, não há o que contar.
+    teto = teto_de_inscricoes(conteudo)
+    enviadas = outras_enviadas_no_edital(registro) if teto is not None else 0
     return render(
         request,
         "portal/revisao.html",
         {
             "inscricao": registro,
+            "teto": teto,
+            "enviadas": enviadas,
+            "teto_atingido": teto is not None and teto_atingido(conteudo, enviadas=enviadas),
             "selecao": _selecao(versao, agora),
             "fechada": _rascunho_fechado(registro, conteudo, agora),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
