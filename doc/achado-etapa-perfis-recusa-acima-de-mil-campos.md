@@ -4,10 +4,11 @@ Encontrado em 29/09/2026, medindo a escala da etapa Perfis para a
 [análise das coleções repetidas](analise-ux-colecoes-repetidas-2026-09-29.md), na branch da `051`
 (PR 226, mergeado no mesmo dia — os números valem para a `main`).
 
-> **Situação: aberto.**
->
-> **Não vira escopo por estar escrito aqui.** O que se registra é um teto que a composição tem e
-> que nenhuma spec declara, onde ele fica, e o que cada correção custaria. Escolher é do usuário.
+> **Situação: resolvido em 29/09/2026 pelo caminho 1**, escolhido pelo usuário (DP-21, opção A):
+> `DATA_UPLOAD_MAX_NUMBER_FIELDS` subiu para 13.000, com a conta no comentário de
+> `config/settings/base.py`, um guardião em `tests/interface/test_limite_de_campos_da_composicao.py`
+> e uma recusa legível no lugar do 400. Ver *Conferência contra a `main` e o que foi feito*, no fim.
+> Continuam abertos os dois pontos listados ali.
 
 ## O que se observou
 
@@ -81,3 +82,45 @@ análise — **não reduz o envio**: os Perfis escondidos continuam no formulár
 O caminho 1 também não resolve para sempre — ele move o teto. Mas o volume real mais alto conhecido
 é de dezenas de Perfis, e não de milhares de itens, que foi o que tornou o caminho 2 necessário na
 distribuição.
+
+## Conferência contra a `main` e o que foi feito (29/09)
+
+Os números acima foram medidos na branch da `051`. Conferidos contra a `main` em `f00f7214`, depois da
+`052` e da `053`, lendo o formulário que a tela devolve — e não somando campos à mão:
+
+| Envio | Campos, com o botão | O antigo teto de mil caía em |
+|---|---|---|
+| Perfis — 2 Modalidades, quadro de 2 linhas, sem fato | `4 + 37·N` | 27º Perfil (1.003) — **confirmado** |
+| Perfis — 3 Modalidades, quadro de 3 linhas (a forma do 140/2025) | `4 + 48·N` | 21º Perfil (1.012); o "perto de 18" acima era estimativa |
+| Classificação — 1 marco de 3 critérios por Perfil | `12 + 45·N` | 22º Perfil; 16 Perfis ficam em 732 |
+| Classificação — 2 marcos de 3 critérios por Perfil | `12 + 89·N` | 12º Perfil |
+| Retificação — 3 Modalidades, 1 marco de 2 critérios | `41 + 56·N` | 18º Perfil; 16 Perfis ficam em 937 |
+
+A conta por Perfil na etapa Perfis é `15 + 8·M + 3·L + 4·F` (Modalidades, linhas do quadro, fatos), e
+na Classificação cada marco envia `29 + 5·C` (critérios). A `052` não mudou o envio, como a FR-950 dela
+promete. O que difere da fórmula `2 + 37·N` de cima são os dois controles do Edital que a `051`
+acrescentou, e que só aparecem a partir do segundo Perfil — a medição de cima valia para N = 1.
+
+**A Retificação não tinha sido medida, e é o maior envio da gestão.** Ela envia o Edital publicado
+inteiro. No maior Edital previsto — 66 Perfis, 4 Modalidades, quadro repartido em 4 linhas, 2 fatos,
+2 marcos de 3 critérios, sobre 2 Etapas —, os três envios ficam em 4.425 (Perfis), 5.885
+(Classificação) e **6.113** (Retificação, `41 + 92·N`). Com o teto antigo, a Retificação desse Edital
+morreria a partir do 11º Perfil.
+
+**O que foi feito.** O limite subiu para o dobro do maior dos três, arredondado ao milhar acima:
+13.000. É global — o Django lê o valor ao interpretar o corpo, antes de rota e view, e não oferece
+limite por caminho. O guardião recompõe o maior Edital previsto, lê o formulário das três telas como
+o navegador o enviaria e reprova se algum passar do limite configurado: com o limite de mil, os três
+casos reprovam; com o de agora, Perfis e Classificação gravam o envio de volta, e a Retificação chega
+à view. E o envio que ainda passar do limite volta como página da gestão — status 413, o que
+aconteceu, o número do limite e o que fazer —, também com `DEBUG` ligado (`interface/erros.py`).
+
+**Continuam abertos**, fora deste escopo:
+
+- **A Classificação não declara o rascunho local.** Se o limite for passado ali, o que foi digitado
+  depois da última gravação fica só no que o *Voltar* do navegador restaurar. A recusa diz isso, mas
+  não o resolve.
+- **O corpo em bytes, depois da aplicação.** A Classificação do maior Edital envia ~472 KB, dentro
+  dos 2,5 MB de `DATA_UPLOAD_MAX_MEMORY_SIZE`, que o guardião também confere. Um proxy à frente da
+  aplicação tem limite próprio — o do nginx, por padrão, é 1 MB —, e o repositório não declara
+  servidor de produção onde conferi-lo.
