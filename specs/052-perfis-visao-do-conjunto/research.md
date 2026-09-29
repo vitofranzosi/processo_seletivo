@@ -58,7 +58,7 @@ tabela não pode dizer uma pendência que o bloco não diz.
    Perfil, as Modalidades (código, nome, percentual, fundamento, versão, arredondamento), a ampla, a
    reversão, a forma de convocação, as linhas do quadro e os fatos —, normalizando o que a leitura e a
    gravação escrevem diferente (percentual `25` × `25.0000`, vazio × `None`, ordem). Perfil sem par
-   gravado é alterado. O cartão leva `data-alterado`.
+   gravado é alterado. O cartão leva `data-nao-salvo`.
 2. **Na tela**, o controle cujo valor difere do `defaultValue` (`defaultChecked`, `defaultSelected`), o
    cartão inserido depois do carregamento, e a subcoleção que ganhou ou perdeu item.
 
@@ -72,11 +72,14 @@ MUST produzir zero Perfis alterados — é o teste que prende a normalização.
 
 ## R-005 — As frases curtas moram no template
 
-**Decisão**: cada opção de reserva e de forma de convocação leva `data-resumo` com a frase curta da
-linha (*"limitado"*, *"por publicação"*); o script lê o `data-resumo` do escolhido e, na falta, o
-rótulo. Vagas, localidade e código são o valor do campo.
+**Decisão**: cada rádio de reserva leva `data-resumo` com a frase curta da linha (*"limitado"*); o
+`select` da forma de convocação leva uma `data-resumo-<valor>` por opção (`nenhuma` para o vazio). O
+script lê o que corresponde ao escolhido. Vagas, localidade e código são o valor do campo.
 
 **Por quê**: o vocabulário continua num lugar só, no template, onde a varredura de vocabulário o lê.
+As frases da convocação ficam no `select`, e não nas opções, porque o teste da `051` prende a
+marcação exata de `<option value="PUBLICATION" selected>` — e a `SC-353` pede que nenhum teste dela
+mude.
 
 ## R-006 — A legenda
 

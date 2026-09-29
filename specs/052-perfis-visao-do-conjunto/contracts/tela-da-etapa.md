@@ -20,11 +20,11 @@ teste `test_visao_dos_perfis.py` prende cada um.
 | `fieldset.linha.perfil` | O cartão, como hoje. |
 | `id="cartao-<id do Perfil>"` | Âncora estável: não muda quando o servidor renumera os índices. |
 | `data-pendencias="N"` | Pendências da etapa com `/profiles/id=<id>` no campo (R-003). `0` quando nenhuma. |
-| `data-alterado` (presente ou ausente) | O servidor devolveu este Perfil diferente do gravado (R-004). |
+| `data-nao-salvo` (presente ou ausente) | O servidor devolveu este Perfil diferente do gravado (R-004). |
 | `<legend>` | `Perfil <código> — <localidade ou denominação>`, ou `Perfil novo` (R-006). |
 | `[name$="-code"]`, `-name`, `-locality`, `-immediateVacancies`, `-reserveLimit` | Lidos pelo valor. |
 | `[name$="-reserveType"]` (rádio) com `data-resumo` | Frase curta da reserva. |
-| `select[name$="-callForm"]` com `option[data-resumo]` | Frase curta da convocação. |
+| `select[name$="-callForm"]` com `data-resumo-<valor>` (`nenhuma` para o vazio) | Frase curta da convocação; no `select`, porque a 051 prende a marcação das opções. |
 | `fieldset.modalidade` com `[name$="-code"]` e `[name$="-percentage"]` | As Modalidades da linha. |
 
 ## O que o script cria (e nunca com `name`)

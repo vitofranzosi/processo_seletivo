@@ -82,7 +82,7 @@ backend/processo_seletivo/interface/
 ├── views.py                     # contexto: pendencias_por_perfil, perfis_alterados
 ├── templates/interface/
 │   ├── compor_perfis.html       # a ordem da UX-120, o lugar da tabela, o script, o estilo
-│   └── _perfil.html             # legenda, id do cartão, data-pendencias, data-alterado, data-resumo
+│   └── _perfil.html             # legenda, id do cartão, data-pendencias, data-nao-salvo, data-resumo
 ├── templatetags/interface_extras.py   # legenda_do_perfil — R-006
 └── static/interface/
     └── perfis.js                # a vista: tabela, um cartão por vez, invalid, âncora, foco

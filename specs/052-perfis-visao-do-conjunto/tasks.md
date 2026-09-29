@@ -16,7 +16,7 @@ relativos a `backend/`. **TV** = `tests/interface/test_visao_dos_perfis.py`; **T
 
 - [ ] T002 [P] Filtro `legenda_do_perfil` em `processo_seletivo/interface/templatetags/interface_extras.py` e a legenda em `templates/interface/_perfil.html` (FR-944, R-006); TV da legenda nos três casos, e no fragmento de Perfil novo
 - [ ] T003 [P] `forms.perfis_alterados(digitados, gravados)` em `processo_seletivo/interface/forms.py` (R-004); TV: devolução sem mudança dá conjunto vazio; mudança num campo, numa Modalidade, numa linha do quadro e num fato acusa só aquele Perfil; Perfil sem par gravado é alterado
-- [ ] T004 Contexto da etapa Perfis em `processo_seletivo/interface/views.py`: `pendencias_por_perfil` (R-003) e `perfis_alterados` quando a tela volta do digitado; `_perfil.html` com `id="cartao-…"`, `data-pendencias`, `data-alterado` (contrato); TV
+- [ ] T004 Contexto da etapa Perfis em `processo_seletivo/interface/views.py`: `pendencias_por_perfil` (R-003) e `perfis_alterados` quando a tela volta do digitado; `_perfil.html` com `id="cartao-…"`, `data-pendencias`, `data-nao-salvo` (contrato); TV
 - [ ] T005 `data-resumo` nas opções de reserva e de forma de convocação em `_perfil.html` (R-005); TV
 - [ ] T006 Ordem da etapa em `templates/interface/compor_perfis.html`: `#visao-dos-perfis`, *Acrescentar Perfil*, controle do Edital, preencher, `#perfis` (UX-120, R-008); o `<script>` de `perfis.js`; TV da ordem, do contêiner, e de que nenhum cartão sai do servidor com `hidden` (FR-955)
 

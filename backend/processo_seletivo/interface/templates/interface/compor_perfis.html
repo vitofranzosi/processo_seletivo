@@ -1,5 +1,17 @@
 {% extends "interface/compor_base.html" %}{% load interface_extras %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
+{% block estilo_da_pagina %}
+/* A vista do conjunto (052). Aqui, e não em `base.html`: a folha de lá conta no teto de bytes da
+   distribuição, e estas regras só servem a esta etapa. As classes nascem no `perfis.js`. */
+.visao-dos-perfis table{font-size:.9rem}
+.visao-dos-perfis th,.visao-dos-perfis td{padding:.5rem .75rem;vertical-align:top}
+.visao-dos-perfis td.numero{text-align:right;font-variant-numeric:tabular-nums}
+.visao-dos-perfis tr[aria-current] th,.visao-dos-perfis tr[aria-current] td{background:var(--verde-claro)}
+.visao-dos-perfis .situacao-pendente{color:var(--amarelo);font-weight:600}
+.editor-do-perfil{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:1.25rem 0 .5rem}
+.editor-do-perfil h3{margin:0;flex:1 1 20rem;font-size:1.05rem}
+.editor-do-perfil h3:focus{outline:2px solid var(--verde);outline-offset:2px}
+{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
@@ -98,6 +110,21 @@
     </details>
     <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
     {% comment %}
+    **A vista do conjunto** (052). A tabela é montada pelo `perfis.js`, lendo os cartões — a linha é
+    leitura do cartão, e um segundo desenho dela no servidor envelheceria separado (`D-004` da
+    spec). Sem script o contêiner fica vazio e oculto, e a etapa é a de sempre, com todos os
+    cartões à vista.
+
+    *Acrescentar Perfil* vem logo depois dela, e o que vale para o conjunto — o controle do Edital
+    e o preenchimento pelo percentual — vem entre a tabela e o cartão (`UX-120`).
+    {% endcomment %}
+    <div id="visao-dos-perfis" class="visao-dos-perfis" hidden{% if devolvido %} data-devolvido{% endif %}></div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-perfil' %}?edital={{ edital.id }}"
+            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+    {% endif %}
+    {% comment %}
     **O que o Edital declara uma vez, pedido uma vez** (051, FR-926). A forma de convocação e a
     reversão moram no Perfil, e o Edital as escreve uma vez — *"as convocações serão feitas por
     e-mail"* (28/2026, 10.3). Não é campo do Edital (`D-003` da spec): é um controle que aplica o
@@ -155,11 +182,6 @@
     <div id="perfis">
       {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
     </div>
-    {% if editavel %}
-    <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-perfil' %}?edital={{ edital.id }}"
-            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
-    {% endif %}
   </section>
   {% include "interface/_navegacao_etapa.html" %}
 </form>
@@ -168,4 +190,5 @@
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/validacao.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
+<script src="{% static 'interface/perfis.js' %}" defer></script>
 {% endblock %}
