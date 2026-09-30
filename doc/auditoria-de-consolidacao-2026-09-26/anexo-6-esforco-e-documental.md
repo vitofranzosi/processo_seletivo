@@ -450,6 +450,7 @@ de tabela estão **resolvidos** pelo #164; o quarto (hora) é o mesmo do §9.A.3
 - Grupo do resíduo: B
 - Impacto atual: baixo-médio — toda publicação transcrita de Edital que só data eventos.
 - Próxima ação sugerida: decisão do usuário (é modelagem de instante) antes de spec.
+- **Desfecho (28/09):** decidido pelo usuário, sem código (registro pré-piloto, *As decisões sem código*): a hora continua obrigatória no Evento, e se revê com a spec do documento; até lá, o operador declara a hora que o Edital real pratica. CONTRADITO POR DECISÃO POSTERIOR. A `054`, em curso, o deixa fora. É o RC-22.
 - Relações: §9-bis ("o campo admite menos estados do que a norma" — mesma forma de §5.1 e §5.9).
 - Confiança: alta.
 
@@ -787,14 +788,14 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | conferência · D4.3 | "O que mudou" omite recorte do documento | RESOLVIDO (#185, 26/09) | — | nenhuma; a classe é o RC-111 |
 | conferência §3/§7 · 044 riscos | filtro de concorrência sem Perfil | RESOLVIDO (PR #172, mesclado em 26/09) | C | nenhuma |
 | conferência §3–§5 | lista da Mesa sem Perfil; sem juízo por documento | NÃO IMPLEMENTADO | C | nenhuma (reavaliar após 044) |
-| §6.2 · §6.4 · §8 · A2 · E1 · frente 2 | sem reuso dentro do Edital | PARCIALMENTE RESOLVIDO (043; TF-1 iii) | B | spec TF-1 só com evidência |
+| §6.2 · §6.4 · §8 · A2 · E1 · frente 2 | sem reuso dentro do Edital | PARCIALMENTE RESOLVIDO (043; TF-1 feito pela `051`, #226 e #231) | C | medir a etapa Perfis |
 | E2 | o comum do Edital mora no Perfil | NÃO IMPLEMENTADO (decisão pendente; Modalidade fechada pela Constituição) | B | decisão do usuário |
 | §5.3 · A4 · E4 · §9.A.2 · Caso 2 | reuso herda cláusula de sorteio em prosa | NÃO IMPLEMENTADO (iii) | B | incluir na spec de reuso com revisão |
 | Caso 7 · A8 · QW15 · E9 · frente 3 · B11 | reuso sem estado de revisão | PARCIALMENTE RESOLVIDO (banner i; estado iii) | B | criar spec (pequena) |
 | §5.2 · E3 | Edital encerrado não publica / registro histórico | CONTRADITO POR DECISÃO POSTERIOR (`doc/decisao-sem-carga-retroativa.md`) | — | nenhuma |
 | B9 · QW9 | reuso não copia a Descrição | NÃO IMPLEMENTADO (de propósito, FR-007 da 023) | — | nenhuma |
 | B1 · QW7 · QW14 · §9-bis 1–3 | tabela: Nº cortado, datas quebradas, linhas fundidas | RESOLVIDO (i, #164) | — | nenhuma |
-| §9.A.3 · §9-bis 4 · Caso 3 | hora inventada "às 00h" | NÃO IMPLEMENTADO (iii) | B | decisão (modelo de instante) |
+| §9.A.3 · §9-bis 4 · Caso 3 | hora inventada "às 00h" | CONTRADITO POR DECISÃO POSTERIOR (a hora continua obrigatória, 28/09) | — | nenhuma até reabrir |
 | A6 · QW10 · §9.D · Caso 4 | método do sorteio impresso por marco | NÃO IMPLEMENTADO (de propósito, FR-465/466 da 032) | C | decisão do usuário |
 | M6 | total de vagas ausente | NÃO IMPLEMENTADO (iii) | C | corrigir (opcional) |
 | M7 | cargo sem nome, portaria, local e data | NÃO IMPLEMENTADO (iii) | B | validar com o Cefor; catálogo antes de produção |
@@ -824,18 +825,18 @@ Legenda da origem do fechamento: **(i)** corrigido em 25/09 · **(ii)** delibera
 | RESOLVIDO | 13 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
 | PARCIALMENTE RESOLVIDO | 6 |
-| NÃO IMPLEMENTADO | 18 |
+| NÃO IMPLEMENTADO | 17 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 3 |
 | DUPLICADO / ABSORVIDO | 4 |
-| CONTRADITO POR DECISÃO POSTERIOR | 2 |
+| CONTRADITO POR DECISÃO POSTERIOR | 3 |
 
-Dos 18 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
+Dos 17 "não implementados", **4 são de propósito** porque a recomendação contraria requisito escrito ou
 termo constitucional (B9/FR-007 da 023, A6/FR-465–466 da 032, §7.2/Constituição, e a parte "âncora"
 do §5.12/FR-344) — a revisão de 25/09 os registrou e não os tomou. Resíduo por grupo, nos itens ainda
 abertos: **A = 0** (o recorte transversal, a contenção #161 e a lista gravada saíram em 26/09 com o
 merge do #173, o ValorDeFato com o #183 e o "O que mudou" do recorte com o #185; a classe que este
-último revelou é unidade nova, o RC-111 da auditoria); **B = 16** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 14** (inclui B10 junto com M16 e o resíduo do #167).
+último revelou é unidade nova, o RC-111 da auditoria); **B = 14** (inclui os 4 absorvidos por outros lotes e o resíduo da D2); **C = 15** (inclui B10 junto com M16 e o resíduo do #167). *Em 28/09 e 29/09 eram B = 16 e C = 14: a hora inventada (§9.A.3) foi fechada por decisão, e o reuso dentro do Edital (TF-1) ficou parcial com o resto em C, depois da `051`.*
 
 Separação pedida — **(i) corrigido em 25/09**: §5.1, §5.4, §5.5, §5.8, §5.10, Alvo do §5.6, colapso
 por Evento do §5.12, banner do reuso, tabela do documento (B1), contenção #161, instrução na Mesa e

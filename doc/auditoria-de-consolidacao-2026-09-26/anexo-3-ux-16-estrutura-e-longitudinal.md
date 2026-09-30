@@ -146,6 +146,7 @@ Fontes do lote: `doc/auditoria-exploratoria-ux-2026-09-16.md` (§5-bis em diante
 - Grupo do resíduo: B
 - Impacto atual: páginas diferentes com o mesmo título no portal; candidato cotista não vê quantas vagas há na sua lista sem abrir o PDF.
 - Próxima ação sugerida: corrigir (quick win no portal: `h1` = título do Edital, Processo como contexto; quantidades do quadro ao lado de cada concorrência).
+- **Desfecho (28/09):** a metade do título foi corrigida pelo #215: o `<h1>` e o `<title>` da página da seleção levam o título do Edital, e o Processo vem logo abaixo (`portal/templates/portal/selecao.html`; `test_detalhe_selecao.py::test_o_titulo_da_pagina_e_o_do_edital_e_nao_o_do_processo`). A repartição continua sem chegar ao candidato: `portal/views.py` (`_perfil`) passa só os nomes das Modalidades. PARCIALMENTE RESOLVIDO; o resto é B. É o RC-47.
 - Relações: padrão "repartição não chega ao candidato" (4ª ocorrência em 16/09); longitudinal não o cita.
 - Confiança: alta.
 
@@ -662,7 +663,7 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 | ACH-50 | documento omitia método do sorteio | RESOLVIDO | — | nenhuma |
 | ACH-51 | fonte da semente em texto livre | RESOLVIDO | — | nenhuma |
 | ACH-52 | Perfil com vocabulário de vaga; sem turma | NÃO IMPLEMENTADO | C | nenhuma |
-| ACH-53 | portal com título do Processo; repartição ausente | NÃO IMPLEMENTADO | B | corrigir |
+| ACH-53 | portal com título do Processo; repartição ausente | PARCIALMENTE RESOLVIDO (o título, #215) | B | corrigir (a quantidade por concorrência) |
 | ACH-54 | sorteio oferece recorte à AC declarada; sem vagas por recorte | NÃO IMPLEMENTADO | B | criar spec |
 | ACH-55 | método do sorteio não computável | RESOLVIDO | — | nenhuma |
 | ACH-56 | barema não representável | NÃO IMPLEMENTADO | B | nenhuma agora (D-4) |
@@ -704,14 +705,15 @@ As melhorias de 16/09 estão dentro dos blocos: 13.1 → ACH-46/E-1; 13.2 → AC
 |---|---|
 | RESOLVIDO | 15 |
 | RESOLVIDO POR OUTRO CAMINHO | 0 |
-| PARCIALMENTE RESOLVIDO | 5 |
-| NÃO IMPLEMENTADO | 13 |
+| PARCIALMENTE RESOLVIDO | 6 |
+| NÃO IMPLEMENTADO | 12 |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 1 |
 | DUPLICADO / ABSORVIDO | 8 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 (como rótulo de bloco; a sub-leitura "recorrente sem anexo" do ACH-43 é contradita por `D-011`/`FR-007` da `018`) |
 
-Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 0** — o REAV-§13/`D-G5`, que era o único, fechou com a `048` (#197) —, **B = 15** — E-7 e LONG-1 passaram de A a B com a `046` (#188), e o que resta deles é a regra de combinação, **C = 10**.
+Resíduos por grupo (só abertos/parciais/absorvidos com resíduo): **A = 0** — o REAV-§13/`D-G5`, que era o único, fechou com a `048` (#197) —, **B = 15** — E-7 e LONG-1 passaram de A a B com a `046` (#188), e o que resta deles é a regra de combinação, **C = 10**. *Em 28/09, o ACH-53 passou a PARCIALMENTE
+RESOLVIDO pelo #215, e continua B pela repartição: eram 5 parciais e 13 não implementados.*
 
 ## (3) Achados NOVOS encontrados de passagem
 
