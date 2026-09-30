@@ -415,6 +415,12 @@ títulos, uma altura de controle e o padding de célula.
 - **Ajuste sugerido:** confirmar com Editais reais antes de decidir. Se a convenção se confirmar, uma
   forma canônica de cabeçalho.
 - **Impacto:** médio. **Esforço:** baixo. **Risco:** baixo.
+- **Conferido em 30/09/2026, depois do registro: não é defeito do produto.**
+  - Nos bancos com Editais montados por pessoas (`ps_054_demo`, `ps_teste_operacional_28`), o título
+    não repete o número: "Curso de Pós-Graduação Lato Sensu em Informática na Educação…", "Processo
+    de seleção de cadastro de reserva de Mediadores Pedagógicos…".
+  - Só o `seed_demo` escreve "Edital 01/2026 — …" dentro do título, e é isso que a interface repete.
+  - O item sai dos lotes. Se a demonstração incomodar, o ajuste é no título do seed, não no cabeçalho.
 
 ### D4 — Anexos com três larguras
 
@@ -467,7 +473,8 @@ Avaliação (tirando o F2).
 | 12 | F4, D2, T3 | Revisão em `dl`; glossário recolhido; listas no lugar de caixas | padrão | médio | baixo | baixo | Fazer |
 | 13 | F8 | Formatação pt-BR | sistêmico | médio | médio | baixo | Fazer |
 | 14 | F5, F6 | Mesmo campo, mesmo controle; ordem do Retificar | padrão | médio | médio | médio | Avaliar |
-| 15 | T4, D3, D4, D5 | Alocação, cabeçalhos, Anexos, envio de arquivo | local | baixo a médio | variado | baixo | Se sobrar |
+| 15 | T4, D4, D5 | Alocação, Anexos, envio de arquivo | local | baixo a médio | variado | baixo | Se sobrar |
+| — | D3 | Número repetido no cabeçalho | seed | — | — | — | Não é do produto (ver D3) |
 
 ---
 
