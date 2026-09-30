@@ -161,8 +161,12 @@ Cada uma traz o **critério mensurável** que resolve a dúvida que ela não pre
   comentário: se algum deles afirmava sobre o texto de um comentário, o teste lia documentação como
   se fosse regra. Registre o caso no `research.md` e ajuste o teste para ler o arquivo-fonte, **sem
   mudar o que ele verifica**.
-- **A `055` já converteu a folha da gestão.** Comentário novo nasce como `{% comment %}`. Se você
-  tocar uma folha que ainda tenha `/* … */` documental, a mesma autorização vale para ela.
+- **Confira se a folha da gestão ainda tem `/* … */` documental.** A `055` (PR 242) rodou antes
+  desta autorização e **não converteu**: fechou com 119.884 caracteres, 116 de margem. Se a
+  conversão ainda não estiver na `main`, ela é a **primeira tarefa** da implementação, num commit
+  só dela, antes de qualquer regra mudar. Sem ela, este lote não cabe no teto.
+- Comentário novo nasce como `{% comment %}`. A mesma autorização vale para qualquer outra folha
+  que você tocar.
 - Regras que o lote torna mortas (a linha de ações do cartão, o flex do stepper) saem junto.
 - Estilo que só uma etapa usa vai para o `{% block estilo_da_pagina %}` dela, que não pesa na
   distribuição.
