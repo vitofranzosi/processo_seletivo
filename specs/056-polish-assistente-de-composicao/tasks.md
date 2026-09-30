@@ -64,22 +64,22 @@ FR-1028; SC-388, SC-389, SC-390; UX-138, UX-139).
 
 **Independent Test**: cartões de Cronograma, Etapas, Inscrição e editor do Perfil.
 
-- [ ] T012 [US2] Em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, `rotular`
+- [x] T012 [US2] Em `backend/processo_seletivo/interface/static/interface/ordenacao.js`, `rotular`
   escreve a posição em `[data-ordem]` quando a legenda o tiver ([D-004](research.md)); caso novo em
   `backend/tests/javascript/ordenacao.test.js`; rodar `tests/test_javascript.py`
-- [ ] T013 [US2] Em F`base.html`: `fieldset.linha` posicionado; `fieldset.linha>.acoes-da-linha` no
+- [x] T013 [US2] Em F`base.html`: `fieldset.linha` posicionado; `fieldset.linha>.acoes-da-linha` no
   canto da legenda, e no fluxo abaixo de 48 rem; saem as regras de `.campos>.acoes-da-linha` e da
   reserva de rótulo ([D-003](research.md)); em F`_acoes_da_linha.html` sai `.rotulo-vazio`
-- [ ] T014 [P] [US2] [US3] F`_evento.html`: legenda em duas vozes com `[data-ordem]`; ações depois da
+- [x] T014 [P] [US2] [US3] F`_evento.html`: legenda em duas vozes com `[data-ordem]`; ações depois da
   legenda; Descrição `largo`; "Onde acontece" no fim da faixa, até 20 rem ([D-006](research.md))
-- [ ] T015 [P] [US2] F`_etapa.html`: legenda em duas vozes; ações depois da legenda
-- [ ] T016 [P] [US2] F`_documento.html`: legenda em duas vozes; ações depois da legenda
-- [ ] T017 [P] [US2] F`_modalidade.html`: legenda com o Código; "Aplicar aos demais Perfis" e
+- [x] T015 [P] [US2] F`_etapa.html`: legenda em duas vozes; ações depois da legenda
+- [x] T016 [P] [US2] F`_documento.html`: legenda em duas vozes; ações depois da legenda
+- [x] T017 [P] [US2] F`_modalidade.html`: legenda com o Código; "Aplicar aos demais Perfis" e
   "Remover esta Modalidade" no grupo de ações depois da legenda
-- [ ] T018 [US2] Guardas em `backend/tests/interface/test_polish_da_056.py`: ações logo depois da
+- [x] T018 [US2] Guardas em `backend/tests/interface/test_polish_da_056.py`: ações logo depois da
   legenda nos quatro cartões; nenhum botão dentro da `legend`; `data-rotulo` igual à categoria;
   item sem identificador sem `.nome` vazio; Descrição antes das datas e "Onde acontece" depois
-- [ ] T019 [US2] Medir os quatro cartões (1280 e 375 px), a confirmação de remoção e recapturar o
+- [x] T019 [US2] Medir os quatro cartões (1280 e 375 px), a confirmação de remoção e recapturar o
   envio de Cronograma, Etapas, Inscrição e Perfis
 
 ## Phase 6: User Story 5 — A Revisão em grade (P2)

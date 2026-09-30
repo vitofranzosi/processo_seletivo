@@ -100,3 +100,101 @@ def test_a_secao_gerada_nao_tem_caixa_e_o_caminho_fica_na_frase(conteudo):
     regras = (GESTAO / "compor_conteudo.html").read_text()
     assert "fieldset.secao.gerada{border:0;" in regras
     assert "fieldset.secao{max-width:calc(var(--leitura)" in regras
+
+
+# --- F2 — os cartões de coleção (FR-1023 a FR-1028) --------------------------------------------
+
+CARTOES = {
+    "_evento.html": ("Evento do Cronograma", True),
+    "_etapa.html": ("Etapa de Avaliação", True),
+    "_documento.html": ("Documento exigido", True),
+    "_modalidade.html": ("Modalidade de Concorrência", False),
+}
+
+
+@pytest.mark.parametrize("template", CARTOES)
+def test_as_acoes_moram_na_linha_da_legenda(template):
+    """FR-1023: o grupo é o filho seguinte à `legend`, e a folha o leva para a borda de cima.
+
+    Antes ele era a última coluna da faixa de campos, ou uma faixa só dele — a linha de ações que a
+    auditoria mediu em Etapa, Documento e Modalidade.
+    """
+    corpo = sem_prosa((GESTAO / template).read_text())
+    depois_da_legenda = corpo[corpo.index("</legend>") :]
+    campos = depois_da_legenda.index('<div class="campos">')
+    grupo = re.compile(r"acoes[-_]da[-_]linha")  # a classe, ou o parcial que a desenha
+    assert grupo.search(depois_da_legenda[:campos]), f"{template}: as ações não seguem a legenda"
+    assert not grupo.search(depois_da_legenda[campos:]), f"{template}: o grupo ficou nos campos"
+
+
+@pytest.mark.parametrize("template", CARTOES)
+def test_a_legenda_nomeia_o_item_sem_mudar_a_confirmacao(template):
+    """FR-1024 e FR-1027: categoria, posição e nome; `data-rotulo` é só a categoria.
+
+    `remocao.js` monta "Remover <data-rotulo>? …" — com a categoria, a pergunta é a de antes. E a
+    legenda não leva botão: ela é o nome do grupo de campos.
+    """
+    categoria, ordenavel = CARTOES[template]
+    corpo = (GESTAO / template).read_text()
+    legenda = re.search(r"<legend([^>]*)>(.*?)</legend>", corpo, re.S)
+    assert f'data-rotulo="{categoria}"' in legenda.group(1)
+    assert f'<span class="categoria">{categoria}' in legenda.group(2)
+    assert ("<span data-ordem></span>" in legenda.group(2)) is ordenavel
+    assert '<span class="nome">' in legenda.group(2)
+    assert "{% if" in legenda.group(2), "sem identificador, o nome não é desenhado vazio"
+    assert "<button" not in legenda.group(2)
+
+
+def test_a_folha_leva_o_grupo_para_a_borda_e_o_devolve_em_tela_estreita():
+    """FR-1023 e FR-1026: posicionado ao lado da legenda; abaixo de 60 rem, no fluxo."""
+    assert "position:relative" in regra("fieldset.linha")
+    corpo = regra("fieldset.linha>.acoes-da-linha")
+    assert "position:absolute" in corpo and "right:1rem" in corpo
+    assert re.search(
+        r"@media \(max-width:60rem\)\{fieldset\.linha>\.acoes-da-linha\{position:static", FOLHA
+    )
+    # O que a mudança tornou morto sai junto: a reserva de rótulo e a coluna dentro da faixa.
+    assert ".campos>.acoes-da-linha" not in FOLHA
+    assert "rotulo-vazio" not in FOLHA
+    assert "rotulo-vazio" not in (GESTAO / "_acoes_da_linha.html").read_text()
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_evento_novo_tem_legenda_sem_nome_e_o_gravado_com_o_tipo(client, composto):  # noqa: F811
+    """FR-1024: o Evento recém-acrescentado diz a categoria; o gravado diz também qual é."""
+    novo = client.get(reverse("interface:fragmento-evento"), {"indice": "7"}).content.decode()
+    legenda = re.search(r"<legend[^>]*>(.*?)</legend>", novo, re.S).group(1)
+    assert 'class="nome"' not in legenda
+
+    pagina = client.get(
+        reverse("interface:compor-etapa", args=[composto.id, "cronograma"])
+    ).content.decode()
+    nomes = re.findall(
+        r'<legend data-rotulo="Evento do Cronograma">.*?<span class="nome">(.*?)</span>', pagina
+    )
+    assert nomes, "o Evento gravado não diz qual é"
+
+
+def test_a_faixa_do_evento_poe_as_datas_juntas_e_o_local_no_fim():
+    """FR-1028 e D-006: Tipo, Descrição, Início, Término — e "Onde acontece" depois, curto.
+
+    Uma faixa só (`test_o_evento_cabe_numa_linha`); a quebra de "Onde acontece" para a linha de
+    baixo a 1280 px é da largura, e não de marcação.
+    """
+    corpo = (GESTAO / "_evento.html").read_text()
+    ordem = [
+        corpo.index(f'name="evento-{{{{ indice }}}}-{campo}"')
+        for campo in (
+            "type",
+            "description",
+            "startAt",
+            "endAt",
+            "location",
+        )
+    ]
+    assert ordem == sorted(ordem)
+    assert '<p class="campo largo">\n      <label for="evento-{{ indice }}-description">' in corpo
+    assert '<p class="campo local">' in corpo
+    cronograma = (GESTAO / "compor_cronograma.html").read_text()
+    assert ".campo.local{flex:0 1 20rem}" in cronograma
