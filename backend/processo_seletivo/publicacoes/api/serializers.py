@@ -21,8 +21,15 @@ class TransicaoSerializer(serializers.Serializer):
 
 class SignatorySerializer(serializers.Serializer):
     authorityId = serializers.UUIDField()
-    name = serializers.CharField(min_length=1, max_length=255)
+    # O nome pode vir vazio (054, FR-992): o catálogo de autoridades só tem o cargo enquanto o Cefor
+    # não fornece o nome, e exigi-lo aqui empurraria quem integra pela API a repor a designação do
+    # cargo no lugar do nome — o defeito que a `054` tirou do documento. O cargo continua exigido.
+    name = serializers.CharField(max_length=255, allow_blank=True)
     role = serializers.CharField(min_length=1, max_length=255)
+    # O ato de nomeação de quem assina (054, FR-991): opcional, porque o catálogo pode não o ter.
+    appointment = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, default=""
+    )
 
 
 class PublicacaoRequestSerializer(serializers.Serializer):

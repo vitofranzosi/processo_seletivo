@@ -40,6 +40,7 @@ from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.domain.elevacao import elevar, elevar_alteracoes
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     AutoridadeSignataria,
+    Consolidacao,
     render_edital_pdf,
 )
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
@@ -56,6 +57,7 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, 
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
+from processo_seletivo.shared.tempo import ZONA
 
 
 def _retificacao(actor, retificacao_id):
@@ -204,7 +206,9 @@ def _apply_declared_changes(edital, base, changes):
     # "outra pessoa publicou no intervalo", enquanto esta diz "o que você mandou está incompleto".
     # Antes do efeito prático, porque "não muda nada" é queixa mais fraca que "deixaria um Perfil
     # sem denominação" (FR-002).
-    _assert_well_formed(content, "O conteúdo que esta Retificação produz")
+    _assert_well_formed(
+        content, "O conteúdo que esta Retificação produz", topologia_publicada(edital)
+    )
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
@@ -570,6 +574,20 @@ def _original_version(edital):
     )
 
 
+def topologia_publicada(edital):
+    """As seções do conteúdo original do Edital — a topologia de todas as versões dele (054, D-003).
+
+    Nenhuma Retificação muda a topologia, e por isso a do original é a de qualquer versão: é contra
+    ela, e não contra o catálogo vigente, que a Retificação confere a sua. `None` quando o Edital
+    ainda não tem versão original — a conferência cai então no catálogo, que é o certo para o que
+    nunca foi publicado.
+    """
+    original = _original_version(edital)
+    if original is None:
+        return None
+    return conteudo_base(original).get("sections")
+
+
 def _published_retifications(edital):
     return list(
         Retificacao.objects.filter(edital=edital, status=Retificacao.Status.PUBLICADA)
@@ -653,7 +671,7 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         raise _no_effective_change()
 
 
-def _assert_well_formed(content, contexto):
+def _assert_well_formed(content, contexto, topologia):
     """As invariantes da Publicação valem também para o que a Retificação faz vigorar (FR-006).
 
     `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma, e desde a `005` recusa
@@ -667,7 +685,11 @@ def _assert_well_formed(content, contexto):
     # **Pelo ato de Retificação** (027, FR-323, T-003): a ausência de linha geral é impeditiva ao
     # publicar Edital novo e não o é aqui, porque o acervo inteiro foi publicado antes de a
     # capacidade existir. Recusar aqui prenderia até a Retificação que corrige uma data.
-    errors = blocking_findings(validate_for_publication(content, ato=ATO_DE_RETIFICACAO))
+    # `topologia` é a do conteúdo original do Edital (054, FR-988), lida uma vez por quem chama:
+    # na publicação, o mesmo Edital é conferido uma vez por fronteira de vigência.
+    errors = blocking_findings(
+        validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
+    )
     if errors:
         raise DomainError(
             "blocking_findings",
@@ -719,10 +741,17 @@ def advertencias_do_ato(retificacao):
     # conjunto subtraído e alteraria, em silêncio, o que a confirmação da Retificação mostra.
     # A `028` acrescentou achados condicionados ao ato e reconfirmou a leitura: o que volta para a
     # tela vem da chamada de baixo, e nenhum achado daquela feature existe num ato de Retificação.
-    impeditivos = {item.code for item in blocking_findings(validate_for_publication(content))}
+    # A topologia de referência nas duas chamadas (054, FR-988): sem ela, o Edital publicado sob
+    # um catálogo anterior veria a diferença de catálogo como impeditivo e advertência ao mesmo
+    # tempo, e a confirmação mostraria ruído sobre seções que ninguém tocou.
+    topologia = topologia_publicada(retificacao.edital)
+    impeditivos = {
+        item.code
+        for item in blocking_findings(validate_for_publication(content, topologia=topologia))
+    }
     return [
         item
-        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO)
+        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
         if item.code not in impeditivos
     ]
 
@@ -747,9 +776,11 @@ def _assert_versao_canonica(content, contexto):
         )
 
 
-def _assert_structurally_publishable(content, boundary):
+def _assert_structurally_publishable(content, boundary, topologia):
     _assert_versao_canonica(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
-    _assert_well_formed(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
+    _assert_well_formed(
+        content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}", topologia
+    )
 
 
 def _materialize_affected_versions(retificacao, publication, now):
@@ -763,11 +794,13 @@ def _materialize_affected_versions(retificacao, publication, now):
         }
     )
     publications = {str(item.publication_id): item.publication for item in published}
+    # A topologia do original, uma vez para todas as fronteiras (054, FR-988).
+    topologia = conteudo_base(original).get("sections")
     for boundary in boundaries:
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
         content, provenance = _consolidate(conteudo_base(original), acts)
-        _assert_structurally_publishable(content, boundary)
+        _assert_structurally_publishable(content, boundary, topologia)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
@@ -788,6 +821,33 @@ def _materialize_affected_versions(retificacao, publication, now):
                 for path, publication_id in provenance.items()
             ]
         )
+
+
+def _consolidacao(edital, base, now, effective_at):
+    """As datas que o consolidado declara abaixo do anúncio (054, FR-995, R-010).
+
+    **As Retificações que o documento incorpora são as da versão-base, mais esta.** O documento é
+    composto do conteúdo-base desta Retificação com as mudanças dela, e não do conteúdo em vigor:
+    uma Retificação elaborada sobre a versão original, e publicada depois de outra que mudou campo
+    diferente, passa pela conferência de precondição — que só olha os caminhos que ela altera — e
+    sai sem as mudanças da outra. Tirar as datas das Retificações em vigor faria a marca declarar
+    um ato que o documento não contém. `applied_publications` da versão-base diz exatamente o que
+    ela aplicou. Cada data é a de publicação, que é o ato que o leitor procura.
+    """
+    original = _original_version(edital)
+    anteriores = Publicacao.objects.filter(
+        pk__in=base.applied_publications or [], revisao__isnull=True
+    ).order_by("publication_order")
+    dia = now.astimezone(ZONA).date()
+    vigencia = effective_at.astimezone(ZONA).date()
+    return Consolidacao(
+        publicado_em=original.source_publication.published_at.astimezone(ZONA).date(),
+        retificado_em=tuple(
+            publicacao.published_at.astimezone(ZONA).date() for publicacao in anteriores
+        )
+        + (dia,),
+        vigencia=vigencia if vigencia != dia else None,
+    )
 
 
 def publish_retification(
@@ -835,7 +895,13 @@ def publish_retification(
         pdf = render_edital_pdf(
             content,
             canonical_sha256(content),
-            autoridade=AutoridadeSignataria(nome=signatory["name"], cargo=signatory["role"]),
+            autoridade=AutoridadeSignataria(
+                nome=signatory["name"],
+                cargo=signatory["role"],
+                ato_de_nomeacao=signatory.get("appointment", ""),
+            ),
+            data_do_ato=now.astimezone(ZONA).date(),
+            consolidacao=_consolidacao(edital, item.base_snapshot, now, effective_at),
         )
         publication = Publicacao.objects.create(
             edital=edital,
@@ -850,6 +916,7 @@ def publish_retification(
             signatory_id=signatory["authorityId"],
             signatory_name=signatory["name"],
             signatory_role=signatory["role"],
+            signatory_appointment=signatory.get("appointment", ""),
         )
         DocumentoPublicado.objects.create(
             publicacao=publication, bytes=pdf, document_hash=hashlib.sha256(pdf).hexdigest()

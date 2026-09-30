@@ -11,6 +11,7 @@ guarda.
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -38,12 +39,16 @@ def main():
     # fixture seria um arquivo binário que ninguém consegue reproduzir. Depois da `008`, compor
     # em modo publicado sem autoridade é recusado — o gerador não roda sem ela.
     assinante = json.loads((FIXTURES / "autoridade_publicada.json").read_text(encoding="utf-8"))
+    # A data do ato, desde a `054` (FR-990): contexto obrigatório do publicado, versionada ao lado
+    # pela mesma razão da autoridade.
+    contexto = json.loads((FIXTURES / "contexto_publicado.json").read_text(encoding="utf-8"))
     destino = FIXTURES / "documento_publicado_v1.pdf"
     destino.write_bytes(
         render_edital_pdf(
             snapshot,
             canonical_sha256(snapshot),
             autoridade=AutoridadeSignataria(**assinante),
+            data_do_ato=date.fromisoformat(contexto["data_do_ato"]),
         )
     )
     print(f"{destino.relative_to(RAIZ)}: {destino.stat().st_size} bytes")

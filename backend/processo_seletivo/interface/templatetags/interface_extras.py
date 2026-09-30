@@ -354,9 +354,8 @@ RESUMO_DAS_REPETIDAS = {
     # A Etapa sem Evento (045, `FR-739`): o seed e muitos Editais reais têm mais de uma, e dez
     # linhas iguais empurrariam os impedimentos para fora da Revisão, como os avisos de data.
     "stage_without_schedule_event": "{n} Etapas sem vínculo com o Cronograma",
-    # A redação padrão sem revisão (DP-20): o Edital intocado tem sete, e sete linhas iguais
-    # empurrariam os impedimentos para fora da Revisão.
-    "section_default_text": "{n} seções com a redação padrão, sem revisão",
+    # As duas seções universais vazias (054, FR-986) — no Edital intocado, as duas juntas.
+    "section_universal_empty": "{n} seções que todo Edital do Cefor tem estão vazias",
     "attachment_cited_without_label": "{n} remissões a anexo sem rótulo correspondente",
 }
 

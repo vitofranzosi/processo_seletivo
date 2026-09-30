@@ -108,7 +108,10 @@ def test_o_percurso_inteiro_da_divulgacao(
     # ---- 3. Publicar: nasce o ato, com autor, instante e signatário ----------------------------
     preliminar = PublicacaoResultado.objects.get()
     assert preliminar.publicado_por == "paula.publicadora"
-    assert preliminar.signatario_nome == "Diretora do Cefor"
+    # Desde a `054` o catálogo não traz designação no lugar do nome (FR-992): o nome fica vazio
+    # até o Cefor fornecê-lo, e quem assinou se lê pelo cargo.
+    assert preliminar.signatario_nome == ""
+    assert preliminar.signatario_cargo.startswith("Diretora-Geral do Centro de Referência")
 
     # ---- 4. A página pública: sem sessão nenhuma ------------------------------------------------
     publico = Client()
@@ -116,7 +119,7 @@ def test_o_percurso_inteiro_da_divulgacao(
     assert "Resultado preliminar" in pagina
     assert "Candidata 1501" in pagina and "1501" in pagina
     assert preliminar.publicado_em.astimezone().strftime("%d/%m/%Y") in pagina
-    assert "Diretora do Cefor" in pagina
+    assert "Diretora-Geral do Centro de Referência" in pagina
 
     # E quem só conhece o Edital chega até ela (SC-018).
     vitrine = _conteudo(publico.get(reverse("portal:selecao", args=[cenario["edital"].id])))

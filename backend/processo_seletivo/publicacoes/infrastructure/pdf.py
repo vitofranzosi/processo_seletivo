@@ -13,7 +13,7 @@ anterior codificava em ASCII e destruía todo acento de um documento oficial bra
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 
 from django.utils import timezone
 
@@ -337,6 +337,22 @@ class AutoridadeSignataria:
 
     nome: str
     cargo: str
+    # O ato de nomeação (054, FR-991), vazio quando a Publicação não o registrou.
+    ato_de_nomeacao: str = ""
+
+
+@dataclass(frozen=True)
+class Consolidacao:
+    """As datas que o documento de uma Retificação declara abaixo do anúncio (054, FR-995).
+
+    Contexto do ato, como a autoridade e a data: não entra no snapshot, e o hash do conteúdo não
+    muda por elas. `retificado_em` traz uma data por Retificação que o documento incorpora, esta
+    inclusive, na ordem; `vigencia` só quando a desta começa em outro dia que o da publicação.
+    """
+
+    publicado_em: date
+    retificado_em: tuple
+    vigencia: date | None = None
 
 
 MODO_PUBLICADO = "PUBLISHED"
@@ -906,7 +922,28 @@ def anuncio_do_ato(snapshot):
     return f"{ato} — {titulo}" if titulo else ato
 
 
-def _cabecalho(composicao, snapshot):
+def marca_de_consolidacao(consolidacao):
+    """`Versão consolidada. Publicado em …; retificado em ….` (054, FR-995).
+
+    **Os Editais da amostra marcam a retificação no próprio documento** — o "ANEXO I – CRONOGRAMA
+    (RETIFICADO)" do 59/2026, os arquivos "retificado em 24.08.2026". O consolidado do sistema saía
+    igual ao original, sem data nem marca, distinguível só pelo SHA-256 no pé: quem baixava o
+    documento não sabia que versão tinha em mãos.
+    """
+    datas = [humano.data_por_extenso(data) for data in consolidacao.retificado_em]
+    retificado = (
+        ", em ".join(datas[:-1]) + " e em " + datas[-1] if len(datas) > 1 else "".join(datas)
+    )
+    frase = (
+        f"Versão consolidada. Publicado em "
+        f"{humano.data_por_extenso(consolidacao.publicado_em)}; retificado em {retificado}"
+    )
+    if consolidacao.vigencia is not None:
+        frase += f", com vigência a partir de {humano.data_por_extenso(consolidacao.vigencia)}"
+    return frase + "."
+
+
+def _cabecalho(composicao, snapshot, consolidacao=None):
     """A abertura de um ato administrativo (FR-005 a FR-007).
 
     Calibrado contra os Editais 62/2026 e 73/2026 do Cefor: a hierarquia vem de **peso, caixa alta
@@ -933,6 +970,13 @@ def _cabecalho(composicao, snapshot):
         antes=24,
         alinhamento=CENTRO,
     )
+    if consolidacao is not None:
+        composicao.escrever(
+            marca_de_consolidacao(consolidacao),
+            tamanho=CORPO_TEXTO,
+            antes=ANTES_DE_BLOCO,
+            alinhamento=CENTRO,
+        )
     if snapshot.get("description"):
         composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True)
 
@@ -1024,16 +1068,22 @@ def _tabela(
     tamanho=CORPO_TABELA,
     alinhamentos=None,
     legenda=None,
+    rodape=None,
 ):
     """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
 
     A altura de cada linha é a da célula mais alta — sem isso, uma célula de três linhas
     escreveria por cima da linha seguinte.
+
+    `rodape` é a última linha, em negrito — o total (054, FR-997). Entra na medida das colunas como
+    as demais, para que o número do total caiba na coluna dele.
     """
     if not linhas:
         return
     disponivel = LARGURA - 2 * MARGEM - recuo
-    colunas = _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel)
+    colunas = _larguras_das_colunas(
+        cabecalho, linhas + ([rodape] if rodape else []), tamanho, disponivel
+    )
 
     por_coluna = alinhamentos or [ESQUERDA] * len(linhas[0])
 
@@ -1097,6 +1147,8 @@ def _tabela(
             escrever_linha(cabecalho, NEGRITO, repetir=True, alinhamento=CENTRO)
         for linha in linhas:
             escrever_linha(linha, REGULAR)
+        if rodape:
+            escrever_linha(rodape, NEGRITO)
 
 
 # A grafia publicada vira frase. O documento não imprime `SOMA_PONDERADA` pelo mesmo motivo que
@@ -1845,7 +1897,27 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
         # exatamente a ambiguidade que o Princípio I existe para não ter — e a renomeação da
         # função privada, sozinha, não a alcançava, porque quem lê o Edital lê a legenda.
         legenda=tabelas.legenda("Perfis de vaga"),
+        # **O total de vagas** (054, FR-997). Nenhum lugar do documento somava as vagas, e o leitor
+        # de um Edital com sete polos fazia a conta; o 28/2026 fecha o quadro com "Total de vagas
+        # 280". Só as imediatas: o cadastro reserva não é vaga, e somá-lo diria que há mais vagas
+        # do que o Edital oferece.
+        #
+        # **Sem vaga imediata, não há linha de total.** No Edital só de cadastro de reserva — o
+        # 89/2026, de Mediadores UAB, cadastrado em 30/09 — a linha dizia "Total 0", e o leitor
+        # entendia que o Edital não oferece nada, quando oferece o cadastro. A coluna "Cadastro
+        # reserva" da mesma tabela já diz o que há.
+        rodape=["Total", "", str(total), "", ""] if (total := _total_de_vagas(perfis)) else None,
     )
+
+
+def _total_de_vagas(perfis):
+    total = 0
+    for perfil in perfis:
+        try:
+            total += int(perfil.get("immediateVacancies") or 0)
+        except (TypeError, ValueError):
+            continue
+    return total
 
 
 def _perfis(composicao, snapshot, secao=0, tabelas=None):
@@ -2225,6 +2297,11 @@ def _materializaveis(snapshot):
     Uma seção gerada cuja fonte está vazia não é composta. Um título sobre nada não informa que não
     há nada — informa que alguém esqueceu de preencher, e num Edital sem Etapas de Avaliação isso
     seria falso: a coleção é opcional.
+
+    **A textual vazia também não** (054, FR-982). O catálogo passou a ter as seções das quatro
+    famílias da amostra, e cada Edital usa as suas: a que ninguém escreveu não é seção deste Edital.
+    A exceção é a que carrega norma que o sistema executa (FR-984) — o teto na Inscrição, o
+    Requerimento na Matrícula —, que sai ainda que quem elabora não tenha escrito nada nela.
     """
     materializaveis = []
     for secao in sorted(snapshot.get("sections") or [], key=lambda item: item.get("order", 0)):
@@ -2233,9 +2310,29 @@ def _materializaveis(snapshot):
             if corpo is None or not (snapshot.get(secao.get("source")) or []):
                 continue
             materializaveis.append((secao, corpo))
-        else:
+        elif _paragrafos(secao.get("content", "")) or _norma_da_secao(secao, snapshot):
             materializaveis.append((secao, None))
     return materializaveis
+
+
+def numeracao(snapshot):
+    """O número que cada seção terá no documento: `{chave: número}` (054, FR-985).
+
+    `None` para a seção que não sai; `0` para o preâmbulo, que sai sem número. **Uma regra só**, a
+    que o compositor usa, lida também pela etapa Conteúdo e pela Revisão: eram três numerações — a
+    ordem do catálogo na tela, a mesma ordem na Revisão, e a contagem do que sai no documento —, e
+    com 22 seções e textuais vazias a tela diria "15" para a seção que o documento imprime como "9"
+    (RC-26).
+    """
+    numeros = {secao.get("key"): None for secao in snapshot.get("sections") or []}
+    proximo = 1
+    for secao, _ in _materializaveis(snapshot):
+        if secao.get("key") == SECAO_DE_PREAMBULO:
+            numeros[secao.get("key")] = 0
+            continue
+        numeros[secao.get("key")] = proximo
+        proximo += 1
+    return numeros
 
 
 # A seção que abre o Edital não é seção: é preâmbulo (FR-010). Nos Editais de referência o ato
@@ -2277,11 +2374,13 @@ def _secoes(composicao, snapshot):
         if corpo is not None:
             corpo(composicao, snapshot, numero, tabelas)
         else:
-            paragrafos = _paragrafos(secao.get("content", "")) + _norma_da_secao(secao, snapshot)
-            for indice, paragrafo in enumerate(paragrafos):
+            paragrafos = [(texto, 0.0) for texto in _paragrafos(secao.get("content", ""))]
+            paragrafos += _norma_da_secao(secao, snapshot)
+            for indice, (paragrafo, recuo) in enumerate(paragrafos):
                 composicao.escrever(
                     paragrafo,
                     tamanho=CORPO_TEXTO,
+                    recuo=recuo,
                     antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
                     justificar=True,
                 )
@@ -2312,49 +2411,126 @@ def teto_de_inscricoes(snapshot):
     return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
 
 
+# A seção textual onde a declaração do Requerimento de Matrícula é publicada (054, FR-996, D-006).
+SECAO_DA_MATRICULA = "matricula"
+
+MOMENTO_DO_REQUERIMENTO = {
+    "AT_ENROLLMENT": "no ato da inscrição",
+    "AT_CALL": "quando o candidato for convocado",
+}
+
+# O recuo da declaração transcrita: é texto que o candidato aceitará, e não redação do Edital, e o
+# recuo é o que o separa das frases que o anunciam.
+RECUO_DA_DECLARACAO = 18.0
+
+
+def requerimento_de_matricula(snapshot):
+    """As frases do Requerimento de Matrícula e a declaração, ou `[]` sem Requerimento (FR-996).
+
+    **A Q-10 da `029`, fechada pela `054`.** O candidato aceita a declaração no portal, e o Edital
+    não a publicava: quem lia o ato oficial não via o que teria de declarar. Desde 28/09 o PDF é o
+    documento oficial do piloto, e a declaração é norma do certame.
+
+    **O texto é o do conteúdo publicado, o mesmo campo que o portal exibe para aceite**
+    (`requerimentos/application/preencher.py`, `declaracao_publicada`) — uma fonte só, e por isso a
+    declaração publicada e a aceita não divergem. Só as quebras de linha viram parágrafos.
+
+    Devolve pares `(texto, recuo)`: as frases que anunciam, sem recuo, e a declaração, com ele.
+    """
+    requerimento = snapshot.get("matriculationRequest")
+    if not isinstance(requerimento, dict) or not requerimento.get("moment"):
+        return []
+    momento = MOMENTO_DO_REQUERIMENTO.get(requerimento["moment"], str(requerimento["moment"]))
+    partes = [(f"O Requerimento de Matrícula será enviado {momento}.", 0.0)]
+    declaracao = _paragrafos(requerimento.get("declarationText", ""))
+    if declaracao:
+        partes.append(("Ao enviá-lo, o candidato declarará:", 0.0))
+        partes.extend((paragrafo, RECUO_DA_DECLARACAO) for paragrafo in declaracao)
+    return partes
+
+
 def _norma_da_secao(secao, snapshot):
     """Os parágrafos que o sistema acrescenta a uma seção textual, depois do texto de quem redigiu.
 
     **Na seção, e não num cabeçalho próprio.** O catálogo é fixo (006, FR-034), e uma seção nova só
     para uma frase mudaria a numeração de todo documento. A frase vem **depois** do texto, e nunca
     no lugar dele: o que o autor escreveu continua sendo o que abre a seção.
+
+    Devolve pares `(texto, recuo)`. **Com norma, a seção sai mesmo sem texto do autor** (054,
+    FR-984): a norma que o sistema executa não pode depender de alguém ter escrito na seção.
     """
-    if secao.get("key") != SECAO_DA_INSCRICAO:
-        return []
-    frase = teto_de_inscricoes(snapshot)
-    return [frase] if frase else []
+    if secao.get("key") == SECAO_DA_INSCRICAO:
+        frase = teto_de_inscricoes(snapshot)
+        return [(frase, 0.0)] if frase else []
+    if secao.get("key") == SECAO_DA_MATRICULA:
+        return requerimento_de_matricula(snapshot)
+    return []
 
 
-def _autoridade(composicao, autoridade):
-    """Quem praticou o ato — anunciado como registro, não como assinatura (FR-033).
+def norma_acrescentada(key, snapshot):
+    """O texto que o documento acrescentará à seção `key`, para a tela o mostrar (054, UX-132)."""
+    return [texto for texto, _ in _norma_da_secao({"key": key}, snapshot)]
+
+
+# Onde o Cefor pratica o ato (054, FR-989, D-004). Constante, como a unidade (`ORGAO`): nenhum
+# cadastro de praça é criado para uma linha que é a mesma em todo Edital.
+LOCAL = "Vitória (ES)"
+
+
+def fecho(data_do_ato):
+    """`Vitória (ES), 29 de setembro de 2026.` — o local e a data do ato (054, FR-989)."""
+    return f"{LOCAL}, {humano.data_por_extenso(data_do_ato)}."
+
+
+def _autoridade(composicao, autoridade, data_do_ato):
+    """O fecho do ato: local e data, e quem o praticou — como registro, não como assinatura.
+
+    **Local e data** (054, FR-989, emenda à FR-036 da 008). A `008` os proibia — *"a data do ato não
+    é conteúdo normativo"* —, e os quinze Editais da amostra os têm. Desde 28/09 o PDF é o ato
+    oficial do piloto, e um ato sem data é o defeito mais visível dele. A data não é conteúdo
+    normativo, e continua não sendo: chega como contexto do ato, como a autoridade, e o hash do
+    conteúdo não muda por ela. Alinhada à direita, como nos quinze.
 
     **A rubrica é deliberada.** Um nome centralizado sozinho ao pé de um Edital lê-se como
     assinatura, e este documento não tem assinatura: não há certificado, não há ICP, não há
-    rubrica digitalizada (FR-036). O que ele tem é o registro imutável de quem praticou o ato, que
-    a Publicação guardou. Anunciar isso — "Autoridade responsável pelo ato" — é a diferença entre
-    informar e simular.
+    rubrica digitalizada (FR-037 da 008). Como o ato é assinado é pergunta aberta com o Cefor, e
+    "Autoridade responsável pelo ato" é verdade em qualquer resposta.
 
-    O cargo só é composto quando diz algo além do nome. O catálogo de demonstração traz cargo no
-    campo de nome, e repetir `Reitora do Ifes / Reitora` faria o documento parecer defeituoso onde
-    ele apenas reflete o dado que existe.
+    **O nome, quando houver; o cargo; o ato de nomeação, quando houver** (054, FR-993). O catálogo
+    trazia a designação do cargo no campo de nome — "Diretora do Cefor" —, e o documento a
+    imprimia onde o leitor espera um nome. Sem nome registrado, o cargo sai sozinho, em negrito, na
+    linha do nome; com nome, o cargo vem abaixo, e o ato de nomeação por último.
     """
     composicao.escrever(
-        "Autoridade responsável pelo ato",
-        tamanho=CORPO_NOTA,
-        antes=ANTES_DE_SECAO + 16,
-        alinhamento=CENTRO,
+        fecho(data_do_ato),
+        tamanho=CORPO_TEXTO,
+        antes=ANTES_DE_SECAO + 8,
+        alinhamento=DIREITA,
         junto=True,
     )
     composicao.escrever(
-        autoridade.nome,
-        tamanho=CORPO_TEXTO,
-        fonte=NEGRITO,
-        antes=ANTES_DE_LINHA + 2,
+        "Autoridade responsável pelo ato",
+        tamanho=CORPO_NOTA,
+        antes=ANTES_DE_SECAO + 8,
         alinhamento=CENTRO,
+        junto=True,
     )
+    nome = str(autoridade.nome or "").strip()
     cargo = str(autoridade.cargo or "").strip()
-    if cargo and cargo.casefold() not in str(autoridade.nome or "").casefold():
-        composicao.escrever(cargo, tamanho=CORPO_TEXTO, alinhamento=CENTRO)
+    # O cargo contido no nome não se repete: pela API, quem publica declara nome e cargo, e
+    # `Reitora do Ifes / Reitora` faria o documento parecer defeituoso onde só reflete o dado.
+    linhas = [nome] if nome and cargo.casefold() in nome.casefold() else [nome, cargo]
+    for indice, linha in enumerate(linha for linha in linhas if linha):
+        composicao.escrever(
+            linha,
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO if indice == 0 else REGULAR,
+            antes=ANTES_DE_LINHA + 2 if indice == 0 else 0.0,
+            alinhamento=CENTRO,
+        )
+    ato = str(autoridade.ato_de_nomeacao or "").strip()
+    if ato:
+        composicao.escrever(ato, tamanho=CORPO_TEXTO, alinhamento=CENTRO)
 
 
 def _integridade(composicao, snapshot, content_hash):
@@ -2462,6 +2638,8 @@ def render_edital_pdf(
     content_hash: str,
     modo: str = MODO_PUBLICADO,
     autoridade: AutoridadeSignataria | None = None,
+    data_do_ato: date | None = None,
+    consolidacao: Consolidacao | None = None,
 ) -> bytes:
     """O mesmo documento, em dois modos.
 
@@ -2469,6 +2647,10 @@ def render_edital_pdf(
     `MODO_PREVIA` a seção de integridade não é composta e `content_hash` **não é lido em lugar
     nenhum**: um documento administrativo que parece publicado sem ter sido é risco normativo, e
     depender de o chamador passar vazio seria deixar a garantia com quem não a tem (FR-014).
+
+    `data_do_ato` e `consolidacao` são contexto do ato, como a autoridade (054, FR-990, FR-995), e
+    seguem a mesma regra de presença: a data é obrigatória no publicado e recusada na prévia; a
+    consolidação só existe no documento de uma Retificação, que é sempre publicado.
     """
     if modo not in MODOS:
         raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
@@ -2480,9 +2662,13 @@ def render_edital_pdf(
         raise ValueError("A prévia não decorre de Publicação e não tem autoridade signatária.")
     if not previa and autoridade is None:
         raise ValueError("O documento publicado exige a autoridade signatária do ato.")
+    if previa and (data_do_ato is not None or consolidacao is not None):
+        raise ValueError("A prévia não decorre de Publicação e não tem data nem consolidação.")
+    if not previa and data_do_ato is None:
+        raise ValueError("O documento publicado exige a data do ato.")
 
     composicao = Composicao()
-    _cabecalho(composicao, snapshot)
+    _cabecalho(composicao, snapshot, consolidacao)
     _secoes(composicao, snapshot)
     if not previa:
         # Autoridade e verificação são **um** bloco: quem assinou e a prova do que assinou não se
@@ -2490,7 +2676,7 @@ def render_edital_pdf(
         # página deixa o SHA-256 sozinho na seguinte — que foi o que o primeiro exemplo com dois
         # Perfis mostrou, e que o cenário de referência escondia por caber.
         with composicao.bloco():
-            _autoridade(composicao, autoridade)
+            _autoridade(composicao, autoridade, data_do_ato)
             _integridade(composicao, snapshot, content_hash)
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = edital if previa else f"{edital} · Verificação {content_hash[:16]}…"

@@ -301,10 +301,17 @@ def payload_do_conteudo(conteudo):
         "stages": list(conteudo.get("stages") or []),
         # Só as textuais: a gerada não carrega texto, e persistir o que é derivado criaria dois
         # endereços para o mesmo conteúdo normativo (006, FR-036).
+        #
+        # **E só o texto que alguém escreveu** (054, FR-983). A vazia não vira linha — ausência de
+        # linha é a seção vazia, e a linha vazia seria a segunda grafia do mesmo fato, além de
+        # marcar a etapa Conteúdo como concluída sem texto nenhum. E a redação padrão que o acervo
+        # anterior à `054` publicou não é copiada: ela nunca foi escrita para aquele Edital, e
+        # copiá-la a publicaria como norma deste, agora sem o aviso que a acusava.
         "sections": [
-            {"key": secao["key"], "content": secao.get("content") or ""}
+            {"key": secao["key"], "content": texto}
             for secao in conteudo.get("sections") or []
             if secoes_do_catalogo.e_textual(secao.get("key") or "")
+            and (texto := secoes_do_catalogo.texto_redigido(secao.get("content")))
         ],
         "documentRequirements": list(conteudo.get("documentRequirements") or []),
         # O método do sorteio comum ao Edital (030, FR-429). **Copia-se, e não se remapeia**: os

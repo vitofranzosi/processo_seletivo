@@ -79,7 +79,7 @@ exatamente onde a linha se acrescenta.
               aria-describedby="ajuda-sig-ret">
         <option value="">— escolha a autoridade —</option>
         {% for autoridade in autoridades %}
-        <option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>
+        <option value="{{ autoridade.chave }}">{{ autoridade }}</option>
         {% endfor %}
       </select>
       <span class="ajuda" id="ajuda-sig-ret">Fica registrada na Publicação da Retificação.</span>

@@ -103,7 +103,7 @@ FR-040).
   <div class="campo">
     <label for="autoridade">Autoridade signatária</label>
     <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
-      {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>{% endfor %}
+      {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade }}</option>{% endfor %}
     </select>
     <p id="ajuda-autoridade" class="ajuda">Quem assina institucionalmente o ato. Nome e cargo ficam gravados na publicação.</p>
   </div>

@@ -442,6 +442,9 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
 - **FR-036**: O bloco de autoridade NÃO DEVE conter praça nem data. *Praça não existe no sistema, e
   a data do ato não é conteúdo normativo. Introduzir qualquer um dos dois para poder escrever a
   linha "Vitória (ES), 30 de agosto de 2026" seria criar conceito por motivo tipográfico.*
+  > **Emendado pela `054` (FR-989, 29/09/2026):** com o PDF como ato oficial do piloto, o documento
+  > publicado traz local e data do ato antes do bloco de autoridade — como contexto do ato, fora do
+  > conteúdo, como a própria autoridade. A Publicação passa a registrar o ato de nomeação (FR-991).
 - **FR-037**: NÃO DEVEM ser criados assinatura digital, imagem de assinatura, certificado,
   ICP-Brasil, gov.br, QR code nem carimbo eletrônico. Esta é a representação documental da
   autoridade que já praticou o ato, e nada além.
@@ -495,6 +498,9 @@ compositor, que ganha um parâmetro de contexto do ato.
   órgão, instituição, unidade, ato, Processo e título; órgão, instituição e unidade estão
   centralizados em corpo menor que o do texto; o ato está em negrito, caixa alta e centralizado; e a
   descrição não excede o título em peso nem em corpo.
+  > **Emendado pela `054` (FR-998, 29/09/2026):** a primeira página apresenta órgão, instituição,
+  > unidade, ato e título, **sem o Processo**, que sai só no bloco de verificação — como o documento
+  > faz desde a `008`, e como os Editais da amostra, que não nomeiam Processo algum.
 - **SC-002**: A abertura do Edital aparece sem número e sem cabeçalho; todas as demais seções
   materializadas são numeradas, e a numeração é contínua a partir de 1 — inclusive num Edital em que
   alguma seção gerada não é materializada, e inclusive quando a própria abertura não existe.

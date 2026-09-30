@@ -592,7 +592,13 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # quem o documento é pedido é declarado pelo Edital. A coluna nasce vazia e a migration não
         # percorre linha publicada (044, FR-700, D-006).
         "editais": 22,
-        "publicacoes": 8,
+        # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
+        # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
+        # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
+        # o que ele passa a afirmar. `ADD COLUMN` com padrão constante não reescreve linha nem
+        # dispara o gatilho append-only, e as Publicações anteriores ficam com o campo vazio, que é
+        # verdade — não o registraram (054, FR-991).
+        "publicacoes": 9,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
         #
@@ -772,7 +778,13 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # Perfis declaravam a mesma regra sete vezes. A coluna nasce vazia e a migration não
         # percorre linha publicada (030, FR-429, SC-142).
         "processos": 4,
-        "publicacoes": 8,
+        # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
+        # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
+        # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
+        # o que ele passa a afirmar. `ADD COLUMN` com padrão constante não reescreve linha nem
+        # dispara o gatilho append-only, e as Publicações anteriores ficam com o campo vazio, que é
+        # verdade — não o registraram (054, FR-991).
+        "publicacoes": 9,
         # **Sobe para 2 com a 036**: a `recursos/0002` cria o `AtoDeInstrucao` — o ato pelo qual a
         # autoridade anexa a **um** recurso o parecer atacado e o documento citado, para que quem
         # julga decida com o que se contesta à vista. Não é a 022 tocando o que lê: é outra feature,

@@ -702,13 +702,13 @@ DESTINO_POR_CODIGO = {
     "registration_period_cancelled": ("inscricao", "#inscricao-periodo", True),
 }
 
-# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09), e só eles. Mapear a coleção
-# `sections` inteira para a etapa Conteúdo — como a primeira redação fazia — tornava "corrigíveis"
-# ali os impeditivos de topologia do catálogo, seção ausente, alheia, título ou ordem trocados, que
-# a tela não corrige: a pendência oferecia um caminho que não existe, que é o que a `FR-007`
-# proíbe. Achado da revisão do PR 221.
+# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09; o segundo trocado pela `054`,
+# FR-986), e só eles. Mapear a coleção `sections` inteira para a etapa Conteúdo — como a primeira
+# redação fazia — tornava "corrigíveis" ali os impeditivos de topologia do catálogo, seção ausente,
+# alheia, título ou ordem trocados, que a tela não corrige: a pendência oferecia um caminho que não
+# existe, que é o que a `FR-007` proíbe. Achado da revisão do PR 221.
 DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
-CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_default_text"})
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_universal_empty"})
 
 
 def _destino(caminho, codigo=""):
@@ -980,10 +980,19 @@ ETAPAS_GRAVAVEIS = {
 }
 
 
+def _conteudo_gravado(edital):
+    """A etapa Conteúdo já foi gravada: o registro de auditoria da gravação, pela área (FR-042)."""
+    return RegistroAuditoria.objects.filter(
+        aggregate_id=edital.id,
+        operation="ALTERAR_RASCUNHO",
+        reason=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO)["conteudo"],
+    ).exists()
+
+
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
-# `True` fixo, porque as seções nascem com o texto do catálogo e, tecnicamente, nada falta — então
-# um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse aberto. O
-# sistema afirmava que a pessoa fez algo que ela não fez.
+# `True` fixo, porque as seções nasciam com o texto do catálogo e, tecnicamente, nada faltava —
+# então um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse
+# aberto. O sistema afirmava que a pessoa fez algo que ela não fez.
 #
 # "Aberta" seria o critério errado e caro: exigiria persistir "esta pessoa visitou esta etapa", por
 # Edital e por pessoa — estado novo, sem valor normativo, que ainda afirmaria revisão onde houve
@@ -1200,9 +1209,6 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         "classificacao": CONCLUIDA
         if MarcoClassificatorio.objects.filter(perfil__edital=edital).exists()
         else PENDENTE,
-        # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
-        # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
-        # sem custar estado novo.
         # Como `etapas`: o contrato de inscrição é opcional nesta versão — um Edital pode ser
         # publicado sem receber inscrições pelo sistema —, e "concluída" diz "já tem conteúdo".
         "inscricao": CONCLUIDA
@@ -1211,7 +1217,12 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         # Como `etapas`: Edital sem anexo é legítimo, e "concluída" diz "já tem", não "é
         # obrigatório ter" (FR-024).
         "anexos": CONCLUIDA if edital.anexos.exists() else PENDENTE,
-        "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
+        # "Concluída" é **"gravada ao menos uma vez"** (FR-040 da 007). Até a `054` a linha de
+        # `SecaoEdital` era esse sinal: nascia na primeira edição. Sem redação padrão, gravar a
+        # etapa com todas as seções vazias — o Edital só de dados estruturados, que é legítimo —
+        # não cria linha, e o selo ficaria "pronta para revisar" para sempre (code review do PR
+        # 233). O outro sinal é o que a FR-040 já nomeia: a gravação, que é auditada com a área.
+        "conteudo": CONCLUIDA if edital.secoes.exists() or _conteudo_gravado(edital) else PRONTA,
         "revisao": PENDENTE,
     }
     return [
@@ -1476,8 +1487,9 @@ def compor_etapa(request, edital_id, etapa):
     # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
-    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004).
-    snapshot_da_etapa = edital_snapshot(edital) if etapa == "classificacao" else None
+    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004) — e,
+    # na etapa Conteúdo, para o número que cada seção terá no documento (054, FR-985).
+    snapshot_da_etapa = edital_snapshot(edital) if etapa in ("classificacao", "conteudo") else None
     pendencias = _pendencias(edital, agora=agora, ator=ator, snapshot=snapshot_da_etapa)
     # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
     # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
@@ -1713,9 +1725,9 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.etapas_do_edital(edital)
             ),
             "secoes": (
-                _reexibir_secoes(edital, digitados)
+                _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
-                else forms.secoes_do_edital(edital)
+                else forms.secoes_do_edital(edital, snapshot_da_etapa)
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
@@ -2052,12 +2064,21 @@ def _reexibir_modalidade(modalidade):
     }
 
 
-def _reexibir_secoes(edital, digitadas):
-    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário."""
+def _reexibir_secoes(edital, digitadas, snapshot=None):
+    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário.
+
+    **Textual ausente em `digitadas` é textual que chegou vazia**, e volta vazia. O formulário
+    envia todas as textuais, e `ler_secoes` descarta a vazia; cair no texto gravado devolvia à
+    tela a seção que a pessoa tinha acabado de apagar, e o próximo Salvar a gravaria de novo sem
+    aviso. Desde a `054` esvaziar uma seção a tira do documento (FR-982), e a reexibição não pode
+    desfazer isso (code review do PR 233).
+
+    O número continua o do conteúdo gravado; o script da etapa o refaz sobre o que está nos campos.
+    """
     texto = {item["key"]: item["content"] for item in digitadas}
     return [
-        {**secao, "content": texto.get(secao["key"], secao["content"])}
-        for secao in forms.secoes_do_edital(edital)
+        secao if secao["gerada"] else {**secao, "content": texto.get(secao["key"], "")}
+        for secao in forms.secoes_do_edital(edital, snapshot)
     ]
 
 
@@ -3806,6 +3827,7 @@ def _executar(ato, request, ator, edital):
             "authorityId": str(autoridade.identificador),
             "name": autoridade.nome,
             "role": autoridade.cargo,
+            "appointment": autoridade.ato_de_nomeacao,
         }
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
@@ -4386,6 +4408,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
                 "authorityId": str(autoridade.identificador),
                 "name": autoridade.nome,
                 "role": autoridade.cargo,
+                "appointment": autoridade.ato_de_nomeacao,
             }
         atos_retificacao.executar(ato, request, ator, item, signatario)
     except DomainError as exc:

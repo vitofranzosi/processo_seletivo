@@ -12,20 +12,17 @@ marco acredita no oposto — e as duas são o mesmo ato publicado. O texto da se
 elaborador pode reescrevê-lo; o que não pode é o padrão do sistema afirmar, por conta própria, o que
 o marco talvez negue.
 
-A saída é o padrão **remeter** à declaração de cada marco, em vez de afirmar por todos. A frase
-continua verdadeira nos três estados: declarada, negada e não declarada.
+A saída foi o padrão **remeter** à declaração de cada marco, em vez de afirmar por todos. Desde a
+`054` não há padrão nenhum (FR-983): a seção nasce vazia, e o sistema deixa de afirmar qualquer
+coisa sobre recurso por conta própria — que é a garantia desta regra, levada até o fim.
 """
 
 from processo_seletivo.editais.domain.secoes import POR_CHAVE
 
 
-def test_o_padrao_remete_ao_marco_em_vez_de_afirmar_por_todos():
-    texto = POR_CHAVE["recursos"].default_text
-
-    assert "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma" not in texto
-    assert "marco" in texto.lower(), (
-        "o padrão precisa remeter ao que cada marco classificatório declara"
-    )
+def test_o_sistema_nao_afirma_nada_sobre_recurso_por_conta_propria():
+    """Sem redação padrão, nenhuma frase do sistema pode contradizer o marco."""
+    assert not hasattr(POR_CHAVE["recursos"], "default_text")
 
 
 def test_o_texto_continua_editavel_pelo_elaborador():
