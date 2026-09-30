@@ -47,7 +47,12 @@ quantidades de apuração não são desenhadas — nem como zero, nem como traç
 aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emitir.
 {% endcomment %}
 {% for recorte in recortes %}
-<section aria-labelledby="recorte-{{ forloop.counter }}" class="resumo">
+{% comment %}
+Sem `.resumo` na `section` (055, FR-1000): a classe é a dos blocos de números, e aqui fazia de
+título, números, notas e links itens de uma mesma fileira — os quatro números numa coluna de 70 px
+ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe desenha o que promete.
+{% endcomment %}
+<section aria-labelledby="recorte-{{ forloop.counter }}">
   <h2 id="recorte-{{ forloop.counter }}">{{ recorte.rotulo }}</h2>
 
   {% if recorte.estado == "NO_VACANCY_TABLE" %}
@@ -68,9 +73,9 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
 
   {% elif recorte.estado == "NOT_APPRAISED" %}
   <p class="aviso" role="status">Ocupação ainda não apurada.</p>
-  <dl class="meta">
-    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
-  </dl>
+  <ul class="resumo" aria-label="Vagas publicadas">
+    <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+  </ul>
   <p class="nota">A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas estão ocupadas e quantas faltam só existem depois de uma apuração emitida.</p>
 
   {% else %}
@@ -82,12 +87,12 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     {% endfor %}
   </ul>
   {% endif %}
-  <dl class="meta">
-    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
-    <dt>Efetivas</dt><dd>{{ recorte.efetivas }}</dd>
-    <dt>Ocupadas</dt><dd>{{ recorte.ocupadas }}</dd>
-    <dt>A ocupar</dt><dd>{{ recorte.faltando }}</dd>
-  </dl>
+  <ul class="resumo" aria-label="Vagas, pela apuração vigente">
+    <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+    <li><strong>{{ recorte.efetivas }}</strong>Efetivas</li>
+    <li><strong>{{ recorte.ocupadas }}</strong>Ocupadas</li>
+    <li><strong>{{ recorte.faltando }}</strong>A ocupar</li>
+  </ul>
   {% if recorte.efetivas != recorte.publicadas %}
   <p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>
   {% endif %}
