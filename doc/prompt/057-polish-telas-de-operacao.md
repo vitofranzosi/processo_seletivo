@@ -32,6 +32,10 @@ reabrir**.
   PR são uma sequência só.
 - **Pare apenas nas condições da seção *Quando parar*.** Parar ali significa registrar o motivo em
   `doc/`, entregar o que já estiver verde e dizer o que faltou. Não significa perguntar e esperar.
+- **Meta numérica fora de alcance não amplia o escopo nem interrompe o lote.** Se um critério
+  numérico (altura, largura, posição) não for atingível dentro do escopo, registre em
+  `verificacao.md` o valor inicial, o valor alcançado e a justificativa, e siga para o próximo item.
+  Não amplie o escopo para alcançá-lo e não pare o lote por causa dele.
 - **Achado fora do escopo vira registro, não escopo.** Um arquivo `doc/achado-*.md` no estilo dos
   existentes. Governança é do usuário.
 - **O merge é do usuário.** Abra o PR e pare. Não use `--auto`.
@@ -139,11 +143,27 @@ Cada uma traz o **critério mensurável** que resolve a dúvida que ela não pre
 
 ## AS RESTRIÇÕES QUE O CÓDIGO IMPÕE
 
-**O teto de 120.000 caracteres.**
-- **Meça a margem antes de escrever a primeira regra**: rode o teste isolado e imprima `len(corpo)`.
-- O saldo de bytes deste lote **não pode passar da margem**, e ela é a menor dos três lotes.
-- **Não remova comentários da folha para abrir espaço.** É decisão do usuário, e vira achado se for
-  preciso.
+**O teto de 120.000 caracteres fica.** Ele mede o HTML **inteiro** da distribuição
+(`tests/performance/test_escala_da_mesa.py:326`).
+- **Registre o tamanho da página antes e depois**: rode o teste isolado, imprima `len(corpo)` e
+  grave os dois números em `verificacao.md` e na descrição do PR.
+- **Está autorizado** converter os comentários CSS **puramente documentais** de `/* … */` para
+  `{% comment %}…{% endcomment %}`. A explicação continua no código e deixa de ir no HTML. O texto do
+  comentário é o mesmo; só muda o delimitador.
+- **Não apague documentação e não altere regra CSS só para reduzir tamanho.** Comentário que não é
+  puramente documental (uma regra desativada, por exemplo) fica como está e é listado em
+  `verificacao.md`.
+- Os testes que leem a folha crua já tratam as duas formas como prosa (`sem_prosa` em
+  `tests/interface/test_acessibilidade.py`). Os que leem o `<style>` renderizado deixam de ver o
+  comentário: se algum deles afirmava sobre o texto de um comentário, o teste lia documentação como
+  se fosse regra. Registre o caso no `research.md` e ajuste o teste para ler o arquivo-fonte, **sem
+  mudar o que ele verifica**.
+- **Confira se a folha da gestão ainda tem `/* … */` documental.** A `055` (PR 242) rodou antes
+  desta autorização e **não converteu**: fechou com 119.884 caracteres, 116 de margem. Se a
+  conversão ainda não estiver na `main`, ela é a **primeira tarefa** da implementação, num commit
+  só dela, antes de qualquer regra mudar. Sem ela, este lote não cabe no teto.
+- Comentário novo nasce como `{% comment %}`. A mesma autorização vale para qualquer outra folha
+  que você tocar.
 - Regra que o lote torna morta (cartão de sinal, cartão de evento de auditoria, a faixa verde da
   Atenção) sai junto.
 - Estilo de uma tela só vai para o `{% block estilo_da_pagina %}` dela.
@@ -192,7 +212,7 @@ rem, ch, % ou token.
    - Passe por **375 px** na Lista, no Detalhe, na Alocação e no envio de documento do portal.
    - Screenshots de antes e depois do Detalhe do Edital, da Lista, da Auditoria e da Alocação.
 7. **Commit e PR.**
-   - Na descrição: a tabela antes/depois, o diff vazio das ações, o saldo de bytes contra o teto, e o
+   - Na descrição: a tabela antes/depois, o diff vazio das ações, o tamanho da página da distribuição antes e depois, e o
      total da suíte.
    - **Não faça merge.**
 
@@ -205,7 +225,7 @@ rem, ch, % ou token.
   ação. O item sai do lote, o código dele é revertido, e vira registro.
 - **Uma string do F8 sai da tela** (vai para conteúdo publicado, PDF ou "o que mudou"). Ela fica
   como está, e vira registro.
-- **O teto de 120K não comporta o lote.** Entregue na ordem T2, T1, D2, F8, T3, T4, D5 e registre o
+- **O teto de 120K não comporta o lote**, mesmo com os comentários convertidos. Entregue na ordem T2, T1, D2, F8, T3, T4, D5 e registre o
   que faltou.
 - **Um teste existente exige mudar comportamento, texto ou domínio** para o item passar. O item sai,
   e o conflito vira registro.
@@ -233,7 +253,7 @@ Medido no mesmo banco, a 1280 × 900, antes e depois:
 10. **Portal:** cada documento com uma linha de controles.
 11. **Ações:** a lista por papel é idêntica antes e depois, em toda tela tocada.
 12. **Suíte:** `make lint check test-pg` verde; HTML da distribuição abaixo de 120.000 caracteres,
-    com o saldo declarado.
+    com o tamanho antes e depois registrado.
 
 E o que o teste **não** cobre, deliberadamente:
 - a duplicação do número do Edital no cabeçalho (D3: é do seed);
