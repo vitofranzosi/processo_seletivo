@@ -424,6 +424,7 @@ Incrementos, na ordem em que foram especificados:
 | [`052`](specs/052-perfis-visao-do-conjunto/spec.md) | Perfis de Vaga: a tabela do conjunto e um cartão à vista por vez, sobre o mesmo formulário |
 | [`053`](specs/053-classificacao-visao-do-conjunto/spec.md) | Classificação: a tabela dos Perfis com os marcos, a origem do "aplicar a todos" e um Perfil à vista por vez, sobre o mesmo formulário |
 | [`054`](specs/054-edital-como-ato-oficial/spec.md) | O Edital do sistema como ato oficial: o catálogo de 22 seções das famílias do Cefor, sem redação padrão; o fecho com local, data e ato de nomeação; o consolidado datado; a declaração do Requerimento; o total de vagas |
+| [`055`](specs/055-polish-folha-e-componentes/spec.md) | Polish da folha e dos componentes (lote 1 da auditoria de polish): os números da Ocupação e do Corte em blocos; célula de tabela mais justa; uma altura para botões, ações de barra e controles; títulos em escala; a barra de filtro alinhada pelo topo; a seleção sem o vão do sorteio; campos com a largura do conteúdo |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

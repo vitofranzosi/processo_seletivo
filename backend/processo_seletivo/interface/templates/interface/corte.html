@@ -95,20 +95,19 @@ divergência genérica uma vez.
 {% if proposta %}
 <section aria-labelledby="titulo-faixa">
   <h2 id="titulo-faixa">A faixa calculada</h2>
-  <dl class="resumo">
-    <dt>Alvo declarado</dt>
-    <dd>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicar no recorte{% else %}{{ proposta.regra.targetCount }}{% endif %}</dd>
-    <dt>Alvo apurado</dt>
-    <dd>{{ proposta.alvo }}{% if proposta.origem_do_alvo.rowId %} <span class="ajuda">lido da linha do quadro de vagas deste recorte</span>{% endif %}</dd>
-    <dt>Suplentes</dt>
-    <dd>{{ proposta.excedente }}</dd>
-    <dt>Progridem</dt>
-    <dd>{{ proposta.progrediram }}</dd>
-    <dt>Ficam fora</dt>
-    <dd>{{ proposta.fora }}</dd>
-    <dt>Última posição alcançada</dt>
-    <dd>{% if proposta.ultima_posicao %}{{ proposta.ultima_posicao }}º{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</dd>
-  </dl>
+  {% comment %}
+  Bloco, e não fileira (055, FR-1002, UX-134). Como `dl` numa linha só, cada número ficava à mesma
+  distância do rótulo da esquerda e do da direita — "Alvo declarado 2 Alvo apurado 2" —, e a leitura
+  dependia de contar posições numa tela de ato irreversível. A marcação é a da Convocação.
+  {% endcomment %}
+  <ul class="resumo" aria-label="A faixa calculada, em números">
+    <li><strong>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicar no recorte{% else %}{{ proposta.regra.targetCount }}{% endif %}</strong>Alvo declarado</li>
+    <li><strong>{{ proposta.alvo }}</strong>Alvo apurado{% if proposta.origem_do_alvo.rowId %} <span class="ajuda">lido da linha do quadro de vagas deste recorte</span>{% endif %}</li>
+    <li><strong>{{ proposta.excedente }}</strong>Suplentes</li>
+    <li><strong>{{ proposta.progrediram }}</strong>Progridem</li>
+    <li><strong>{{ proposta.fora }}</strong>Ficam fora</li>
+    <li><strong>{% if proposta.ultima_posicao %}{{ proposta.ultima_posicao }}º{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</strong>Última posição alcançada</li>
+  </ul>
   <div class="tabela-rolavel">
   <table>
     <caption class="oculto">Participantes considerados, com posição, consequência e causa</caption>

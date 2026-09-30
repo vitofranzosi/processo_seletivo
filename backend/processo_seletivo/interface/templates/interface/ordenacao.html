@@ -161,16 +161,16 @@ divergência genérica uma vez.
   <h2 id="titulo-ordem">Ordem calculada{% if recorte_atual %} — {{ recorte_atual.rotulo }}{% endif %}</h2>
   {% if posicoes %}
   <div class="tabela-rolavel">
-  <table>
+  <table class="tabela">
     <caption class="oculto">Participantes com posição classificatória</caption>
-    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Participante</th><th scope="col">Pontuação combinada</th><th scope="col">Modalidade</th></tr></thead>
+    <thead><tr><th scope="col">Posição</th><th scope="col">Inscrição</th><th scope="col">Participante</th><th scope="col" class="numero">Pontuação combinada</th><th scope="col">Modalidade</th></tr></thead>
     <tbody>
     {% for item in posicoes %}
       <tr{% if item.empate_residual %} class="grupo-empatado"{% endif %}>
         <td>{{ item.posicao }}º{% if item.empate_residual %}<span class="situacao s-EM_REVISAO" aria-describedby="sobre-o-que-sobrou">Empate residual</span>{% endif %}</td>
         <td>{{ item.protocolo|default:item.inscricao_id }}</td>
         <td>{{ item.nome }}</td>
-        <td>{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao|pontuacao }}{% endif %}</td>
+        <td class="numero">{% if item.pontuacao is None %}<span class="nenhuma">Não se aplica</span>{% else %}{{ item.pontuacao|pontuacao }}{% endif %}</td>
         <td>{% if item.modalidade_id %}{{ item.modalidade|default:"Modalidade fora da versão vigente" }}{% else %}<span class="nenhuma">Não declarada</span>{% endif %}</td>
       </tr>
     {% endfor %}

@@ -31,7 +31,11 @@ Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (F
 
 <section aria-labelledby="titulo-proveniencia">
   <h2 id="titulo-proveniencia">Proveniência</h2>
-  <dl class="resumo">
+  {% comment %}
+  Rótulo e valor em colunas, e não em blocos (055, D-020): aqui os valores são nomes, datas e
+  identificadores, e não números. Numa fileira, cada um ficava entre dois rótulos, como na faixa.
+  {% endcomment %}
+  <dl class="participantes">
     <dt>Emitido por</dt><dd>{{ corte.emitido_por }}</dd>
     <dt>Emitido em</dt><dd>{{ corte.emitido_em|date:"d/m/Y H:i" }}</dd>
     <dt>Edital</dt><dd>{{ nomes.edital }}</dd>
@@ -48,16 +52,13 @@ Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (F
 
 <section aria-labelledby="titulo-regra">
   <h2 id="titulo-regra">A regra que o governou</h2>
-  <dl class="resumo">
-    <dt>Alvo declarado</dt>
-    <dd>{% if regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicou no recorte{% else %}{{ regra.targetCount }}{% endif %}</dd>
-    <dt>Alvo apurado</dt><dd>{{ universo.target.count }}</dd>
-    <dt>Suplentes</dt><dd>{{ universo.surplus|default:"0" }}</dd>
-    <dt>Empate na última posição</dt>
-    <dd>{% if regra.tieOutcome == "ADMITS_SURPLUS" %}Todos os empatados progridem{% else %}A faixa para no alvo{% endif %}</dd>
-    <dt>Faixa seguinte</dt>
-    <dd>{% if regra.continuation == "ALLOWED" %}Admitida{% else %}Não admitida{% endif %}</dd>
-  </dl>
+  <ul class="resumo" aria-label="A regra, em números">
+    <li><strong>{% if regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicou no recorte{% else %}{{ regra.targetCount }}{% endif %}</strong>Alvo declarado</li>
+    <li><strong>{{ universo.target.count }}</strong>Alvo apurado</li>
+    <li><strong>{{ universo.surplus|default:"0" }}</strong>Suplentes</li>
+    <li><strong>{% if regra.tieOutcome == "ADMITS_SURPLUS" %}Todos os empatados progridem{% else %}A faixa para no alvo{% endif %}</strong>Empate na última posição</li>
+    <li><strong>{% if regra.continuation == "ALLOWED" %}Admitida{% else %}Não admitida{% endif %}</strong>Faixa seguinte</li>
+  </ul>
 </section>
 
 <section aria-labelledby="titulo-reproducao">

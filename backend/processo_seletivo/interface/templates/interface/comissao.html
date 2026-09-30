@@ -1,5 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Comissão — {{ processo.institutional_code }}{% endblock %}
+{% comment %}
+O identificador tem a largura do que se escreve nele (055, FR-1016): vinte e poucos caracteres, e
+não os 1.190 px que ele herdava por não declarar tipo. O Nome fica com a medida de leitura, que os
+campos de texto já têm. Aqui, e não na folha, porque só esta tela o usa — e a folha viaja para a
+distribuição, que não tem margem.
+{% endcomment %}
+{% block estilo_da_pagina %}#identity_subject{max-width:20rem}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
@@ -37,7 +44,7 @@
       Só quem está sem Etapa ({{ sem_etapa }} de {{ total_de_membros }})</label>
   </p>
   <p class="salvar">
-    <button type="submit" class="acao">Filtrar</button>
+    <button type="submit" class="botao">Filtrar</button>
     {% if filtrando %}<a class="acao" href="{% url 'interface:comissao' processo.id %}">Limpar</a>{% endif %}
   </p>
 </form>
@@ -130,13 +137,13 @@
     <p class="campo">
       <label for="identity_subject">Identificador institucional
         <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <input id="identity_subject" name="identity_subject" required aria-required="true"
+      <input id="identity_subject" name="identity_subject" type="text" required aria-required="true"
              aria-describedby="ajuda-subject">
       <span class="ajuda" id="ajuda-subject">É a chave da pessoa no provedor de identidade.</span>
     </p>
     <p class="campo">
       <label for="display_label">Nome para exibição</label>
-      <input id="display_label" name="display_label" aria-describedby="ajuda-label">
+      <input id="display_label" name="display_label" type="text" aria-describedby="ajuda-label">
       <span class="ajuda" id="ajuda-label">Opcional, e apenas para leitura desta lista. Não
         identifica ninguém e não é usado em nenhuma verificação.</span>
     </p>

@@ -239,8 +239,7 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .vagas-da-selecao{grid-area:vagas;min-width:0}
 /* O sorteio **acima** do cronograma na coluna lateral, e logo depois das vagas no celular: quando
    ele existe, é a pergunta mais urgente da página — "a lista já fechou? quando é?" —, e ela vem
-   antes do calendário inteiro (021). Sem sorteio a área fica vazia, e uma linha vazia de altura
-   automática não ocupa nada. */
+   antes do calendário inteiro (021). */
 .sorteio-da-selecao{grid-area:sorteio;min-width:0}
 .cronograma-da-selecao{grid-area:cronograma;min-width:0}
 .documentos-da-selecao{grid-area:documentos;min-width:0}
@@ -251,6 +250,12 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .acoes-do-sorteio li+li{margin-top:.35rem}
 @media (min-width:60rem){
   .corpo-da-selecao{grid-template-columns:minmax(0,1fr) 19rem;
+    grid-template-areas:"vagas cronograma" "documentos cronograma"}
+  /* A área do sorteio só existe quando ele existe (055, FR-1015). Declarada sempre, ela ficava
+     vazia e **não** desaparecia: as Vagas ocupam as duas linhas de cima, e a altura delas se
+     repartia entre a linha do sorteio e a do cronograma — que começava 315 px abaixo do topo das
+     Vagas. Sem `:has`, a grade volta a ser a de antes. */
+  .corpo-da-selecao:has(>.sorteio-da-selecao){
     grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma"}
   /* O título da coluna lateral alinha com o da principal: sem isto, o `margin-top` de `h2` deixava
      os dois em alturas diferentes e a lateral parecia ter escorregado. */
@@ -349,6 +354,9 @@ details.como-converter li{margin-bottom:.4rem}
 .campo label{font-weight:600}
 .campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit;background:var(--branco)}
+/* A altura da consulta da Vitrine, e pela mesma razão que ela registra (055, FR-1012): com o mesmo
+   preenchimento, o `select` e a data saíam com 42 px e o texto com 40, na mesma linha. */
+.campo :is(input,select):not([type=checkbox],[type=radio],[type=file]){height:2.625rem}
 /* Um telefone não precisa de trinta e dois rem: campo com a largura do que se escreve nele diz,
    sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
 .campo.curto{max-width:15rem}
@@ -392,12 +400,17 @@ details.como-converter li{margin-bottom:.4rem}
    e nao ha ponto de quebra escrito a mao para manter. O minimo usa `min()` porque piso rigido em
    tela de 375px empurra a grade para fora e cria rolagem lateral — defeito que esta folha ja
    registrou uma vez. */
-.grade-de-campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));
+.grade-de-campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(16rem,100%),1fr));
   gap:0 1rem;align-items:start}
 .grade-de-campos .campo{max-width:none;margin-bottom:.7rem}
 /* O campo que pede a linha inteira, mesmo dentro da grade: endereco e nome nao cabem em meia
    coluna sem cortar o que a pessoa digitou. */
 .grade-de-campos .campo.largo{grid-column:1/-1}
+/* `auto-fill`, e não `auto-fit` (055, FR-1016): o segundo recolhe as colunas vazias, e o grupo de um
+   campo só esticava esse campo à linha inteira — 1.232 px para um telefone. Com as colunas
+   reservadas, o campo curto fica com uma; e o largo, que continua pedindo a linha, para no tamanho
+   de um nome. */
+.grade-de-campos .largo>:is(input,select){max-width:40rem}
 /* O bloco do que o sistema ja sabe: duas colunas de rotulo e valor, densas, porque ele e
    referencia — a pessoa confere e segue. Ocupava 434px numa tela de conferencia. */
 .ja-sabemos{display:grid;grid-template-columns:auto 1fr;gap:.2rem .75rem;margin:0 0 1.25rem;

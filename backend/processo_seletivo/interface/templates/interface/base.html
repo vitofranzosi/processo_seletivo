@@ -24,8 +24,17 @@ header.topo .identidade a,header.topo .identidade button{color:var(--branco)}
    documento ao lado do formulário. O texto tem medida própria logo abaixo: sem ela, alargar a
    página levaria as linhas de 147 para mais de 200 caracteres. */
 main{max-width:var(--pagina);margin:0 auto;padding:1.5rem}
-h1{font-size:1.6rem;margin:0 0 .25rem;font-weight:600}
-h2{font-size:1.15rem;margin:0;font-weight:600}
+{% comment %}
+A escala dos três níveis (055, FR-1010). Sem regra de h3, ele herdava 1,17em do navegador e saía
+**maior** que o h2 da mesma página — 18,7 px contra 16 no Processo, onde "Atenção" encimava o
+"Onde cada Edital está". As regras por contêiner que punham h2 em 1rem saíram junto (D-008): eram
+elas que davam à Revisão dois h2 irmãos de tamanhos diferentes. Prosa em comentário de Django, e
+não de CSS, porque a tela de distribuição está no teto de caracteres.
+{% endcomment %}
+h1{font-size:1.6rem;margin:0 0 .25rem}
+h2{font-size:1.15rem;margin:0}
+h3{font-size:1rem}
+h1,h2,h3{font-weight:600}
 /* Texto corrido e ajuda de campo em linha curta. Dentro de cartão ou coluna estreita o limite não
    morde — ele só age onde havia largura sobrando. */
 main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
@@ -58,7 +67,7 @@ input[type=date],input[type=datetime-local]{max-width:18rem}
 .acoes-do-painel{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0 0 1.5rem}
 .conferencia{margin-bottom:1rem}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
-.conferencia h3{font-size:1rem;margin:0 0 .5rem}
+.conferencia h3{margin:0 0 .5rem}
 .conferencia .detalhe{display:block;color:var(--texto-fraco);font-size:.875rem}
 /* A tabela de alterações da Retificação diz onde e qual campo, e embaixo o caminho normativo
    para quem audita. Sem isto o campo colava no nome da entidade — "Evento do cronograma
@@ -114,7 +123,7 @@ table{width:100%;border-collapse:collapse}
    confere inscrições pelo celular estava lendo um layout quebrado. */
 .tabela-rolavel{overflow-x:auto}
 caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
-th,td{text-align:left;padding:.7rem 1.25rem;border-bottom:1px solid var(--borda);
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--borda);
   vertical-align:top;font-size:.9375rem}
 thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);background:var(--fundo);font-weight:600}
@@ -172,8 +181,20 @@ tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
 .acao:hover{background:var(--verde-claro)}
 .nenhuma{color:var(--texto-fraco);font-size:.8125rem}
-.botao{background:var(--verde);color:var(--branco);border:none;padding:.6rem 1.1rem;
-  border-radius:4px;font-size:.9375rem;cursor:pointer;text-decoration:none;display:inline-block}
+{% comment %}
+Uma caixa só, de 40 px, para o botão e para a ação que divide a barra com ele (055, FR-1006 e
+FR-1007). Eram três alturas na mesma linha — 26, 38 e 36 px no assistente —, e duas causas: a
+borda que só o secundário tinha, e o `line-height`, que o link herda do corpo e o botão não. Por
+isso `a.botao` tinha 44 px e `button.botao` 42. A entrelinha declarada iguala os dois.
+
+A borda transparente é a borda "da cor do fundo": o fundo pinta por baixo dela, no principal, no
+destrutivo e no `:hover`, sem uma regra de borda por variante (D-003). Fora das três barras, a
+ação de linha continua pequena, que é o que ela é numa tabela.
+{% endcomment %}
+.botao,:is(.navegacao-etapa,.salvar,.filtros) .acao{padding:.5rem 1.1rem;border-radius:4px;
+  font-size:.9375rem;line-height:1.375rem}
+.botao{background:var(--verde);color:var(--branco);border:1px solid transparent;cursor:pointer;
+  text-decoration:none;display:inline-block}
 .botao:hover{background:var(--verde-escuro)}
 .vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;
   padding:2.5rem 1.5rem;text-align:center;color:var(--texto-fraco)}
@@ -198,7 +219,7 @@ tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .colunas{display:flex;gap:1.25rem;flex-wrap:wrap;margin-bottom:1.5rem}
 .cartao{flex:1 1 320px;background:var(--branco);border:1px solid var(--borda);
   border-radius:6px;padding:1rem 1.25rem}
-.cartao h2{font-size:1rem;margin-bottom:.75rem}
+.cartao h2{margin-bottom:.75rem}
 .participantes{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4rem .75rem;
   font-size:.9375rem}
 .participantes dt{color:var(--texto-fraco);font-size:.8125rem}
@@ -208,7 +229,7 @@ tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .lista-acoes{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;
   align-items:flex-start}
 .lista-acoes li{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.botao.perigoso{background:var(--vermelho);color:var(--branco);border:none}
+.botao.perigoso{background:var(--vermelho);color:var(--branco)}
 .botao.perigoso:hover{background:#8a1515}
 /* A mesma advertência na escala de uma ação de linha: `.perigoso` só existia para `.botao`, e
    remover uma pessoa saía com a aparência de uma ação segura (UX-004). */
@@ -245,7 +266,7 @@ tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .grupo-empatado .situacao{display:block;width:max-content;margin-top:.25rem}
 .consequencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
-.consequencias h2{font-size:1rem;margin-bottom:.6rem}
+.consequencias h2{margin-bottom:.6rem}
 .consequencias ul{margin:0;padding-left:1.2rem}
 .consequencias li{margin-bottom:.4rem;font-size:.9375rem}
 .consequencias.irreversivel{border-left:4px solid var(--vermelho);background:var(--vermelho-fundo)}
@@ -444,10 +465,9 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 @media (max-width:60rem){
   .distribuicao-moldura{overflow-x:auto}
 }
-.distribuicao{border-collapse:collapse;width:100%;background:var(--branco);
+.distribuicao{background:var(--branco);
   border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
-.distribuicao th,.distribuicao td{padding:.5rem .75rem;border-bottom:1px solid var(--fundo);
-  text-align:left;vertical-align:middle}
+.distribuicao th,.distribuicao td{border-bottom:1px solid var(--fundo);vertical-align:middle}
 .distribuicao thead th{position:sticky;top:0;background:var(--branco);border-bottom:2px solid var(--borda);
   font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:2;
   box-shadow:0 1px 0 var(--borda);
@@ -554,27 +574,32 @@ tbody tr:has(input[type=radio]:checked){background:var(--verde-claro)}
    alguém unifique a marcação. */
 .filtro,.filtros{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
-  align-items:flex-end}
-.filtro .campo,.filtros .campo,.filtro .salvar{margin:0}
+  align-items:flex-start}
+.filtro .campo,.filtros .campo{margin:0}
 /* `.salvar` é a barra de gravação, e traz consigo filete e rodapé. Dentro do filtro, ela
    desenhava um traço solto acima do "Filtrar" — um separador sem nada para separar. */
 .filtro .salvar{border-top:0;padding:0}
-.filtros .acoes{margin:0}
+{% comment %}
+A barra alinha pelo topo (055, FR-1013, FR-1014): pela base, a ajuda sob um campo o empurrava para
+cima, e na distribuição os dois controles ficavam 22 px desnivelados. O que não tem rótulo desce a
+altura dele — 13 px de fonte vezes 1,5 de entrelinha, mais 4 de margem — e a marca de escolha ganha
+a altura do controle para se centrar nele (D-006).
+{% endcomment %}
+.filtro .salvar,.filtros .acoes,.filtro .escolha{margin:1.46875rem 0 0}
 /* "nome ou identificador" não precisa de 850 px, e o campo esticado empurrava o botão
    para o extremo oposto da tela. */
 /* Só o campo de digitar. A regra pegava também a marca de "Só quem está sem Etapa", que é
    `.campo` e vinha antes na folha: com 26rem de base, a frase dela quebrava uma palavra por
    linha, e a marca ficava solta ao lado de uma coluna de texto. */
 .filtro .campo:not(.escolha),.filtros .campo{flex:0 1 26rem}
-.filtro .escolha{flex:0 0 auto}
-.conferencia-lote{border-collapse:collapse;width:100%;font-size:.9375rem}
+.filtro .escolha{height:2.5rem}
+.conferencia-lote{font-size:.9375rem}
 .conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
-.conferencia-lote th,.conferencia-lote td{text-align:left;padding:.5rem .75rem;
-  border-bottom:1px solid var(--fundo)}
+.conferencia-lote th,.conferencia-lote td{border-bottom:1px solid var(--fundo)}
 .rolagem{overflow-x:auto}
 .pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin-bottom:1.5rem}
-.pendencias h2{font-size:1rem;margin-bottom:.6rem}
+.pendencias h2{margin-bottom:.6rem}
 .pendencias ul{margin:0;padding-left:0;list-style:none}
 .pendencias li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
 .pendencias li:last-child{border-bottom:none}
@@ -705,7 +730,7 @@ dfn{font-style:normal;font-weight:600}
 .acao:disabled{color:var(--texto-fraco);border-color:var(--borda);
   background:var(--cinza-fundo);cursor:not-allowed}
 .acao:disabled:hover{background:var(--cinza-fundo)}
-.botao.secundario{background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde)}
+.botao.secundario{background:var(--branco);color:var(--verde-texto);border-color:var(--verde)}
 /* Ação prevista como recusada: visível, legível e inoperante — FR-024. Contraste mantido
    acima de 4.5:1 para que o motivo ao lado continue lendo-se como informação, não ruído. */
 .botao.desabilitado{background:var(--cinza-fundo);color:#4a4a4a;border:1px solid #9a9a9a;
@@ -776,6 +801,15 @@ input[type=email],input[type=url],input[type=search],input[type=tel],
 input[type=password],select,textarea{
   width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit}
+{% comment %}
+Uma altura para todo controle de uma linha (055, FR-1012). Com o mesmo preenchimento, o `select`
+sai 2 px mais alto que o `input`, e o de data mais ainda: a Comissão tinha 35, 36 e 38 px na
+mesma tela. A negação, e não a lista de tipos, pelo mesmo motivo do comentário acima (D-009).
+`$=box`, e não o nome inteiro do tipo da caixa de marcar: a tela de identificação indisponível tem um
+guardião que recusa essa palavra em qualquer lugar do corpo, e a folha vai junto — é a mesma razão de
+`.escolha input` reconhecer a marca pela classe.
+{% endcomment %}
+select,input:not([type$=box],[type=radio],[type=file]){height:2.5rem}
 textarea{resize:vertical}
 /* `.curto` existia só dentro de `.campo`, e na criação de Processo a classe está no próprio
    controle — a largura declarada no template não tinha efeito. */
@@ -988,7 +1022,7 @@ ul.documentos .entrega.ausente{font-style:italic}
 /* O controle de arquivo da gestão (020). Ficava no desenho do navegador — cinza, em inglês em
    alguns sistemas — ao lado de uma tela inteira desenhada, enquanto o portal já estilizava o dele.
    O `input` continua sendo o que envia e o que recebe foco; o que muda é o botão que ele desenha. */
-input[type="file"].arquivo{font:inherit;color:var(--texto);max-width:100%;}
+input[type="file"].arquivo{font:inherit;color:var(--texto);max-width:100%;width:auto}
 input[type="file"].arquivo::file-selector-button{font:inherit;font-weight:600;cursor:pointer;
   color:var(--verde-texto);background:var(--branco);border:1px solid var(--verde-texto);
   border-radius:6px;padding:.35rem .7rem;margin-right:.6rem}
@@ -1072,8 +1106,7 @@ fieldset.marco:has(select[name$="-cutTargetKind"] option[value="FIXED"]:not(:che
    porque a âncora sem ele encosta o título na borda superior da janela, e a primeira linha da
    seção fica fora de vista logo depois do salto. */
 .secao-da-retificacao{margin:0 0 2rem;scroll-margin-top:1rem}
-.secao-da-retificacao>h2{font-size:1rem;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--texto-fraco);border-bottom:2px solid var(--borda);padding-bottom:.35rem;
+.secao-da-retificacao>h2{color:var(--texto-fraco);border-bottom:2px solid var(--borda);padding-bottom:.35rem;
   margin:0 0 .9rem}
 
 /* A legenda em duas vozes. Sessenta cartões repetem a categoria — "Modalidade", "Seção" — e o que
