@@ -117,6 +117,44 @@ CATALOGO: tuple[Secao, ...] = (
 )
 
 POR_CHAVE = {secao.key: secao for secao in CATALOGO}
+
+# **As redações padrão que o catálogo teve até a `053`**, e que a `054` retirou (FR-983). Ficam
+# aqui porque o acervo as carrega: todo Edital publicado antes da `054` com uma seção que ninguém
+# tocou publicou uma delas — `ler_secoes` nunca gravava o texto igual ao padrão, então, nesse
+# acervo, texto igual a uma delas é exatamente texto que ninguém escreveu. O reuso precisa
+# reconhecê-las, ou copiaria para um Edital novo a norma que ninguém redigiu para ele — a de
+# "Critérios de Classificação" fala de pontuação num Edital por sorteio. A dos Recursos tem duas
+# grafias porque a `018` a reescreveu.
+REDACOES_PADRAO_RETIRADAS = frozenset(
+    {
+        "O Instituto Federal do Espírito Santo, por meio do Centro de Referência em Formação e em "
+        "Educação a Distância, torna pública a realização do processo seletivo regido por este "
+        "Edital.",
+        "O presente Edital estabelece as normas do processo seletivo, cuja execução observará a "
+        "legislação aplicável e os princípios que regem a Administração Pública.",
+        "Poderá participar do processo seletivo quem atender às condições estabelecidas neste "
+        "Edital e aos requisitos específicos do Perfil de Vaga pretendido, comprovados na forma e "
+        "nos prazos aqui previstos.",
+        "A inscrição será realizada exclusivamente pelos meios indicados neste Edital, nos prazos "
+        "do Cronograma, e implica conhecimento e aceitação das condições aqui estabelecidas.",
+        "A classificação observará a pontuação obtida nas Etapas de Avaliação, respeitados os "
+        "pesos e as notas mínimas declarados neste Edital e as reservas de vaga previstas.",
+        "Caberá recurso contra os resultados divulgados, nos prazos do Cronograma, pelos meios "
+        "indicados neste Edital.",
+        "Caberá recurso contra os resultados divulgados nos casos e prazos que este Edital declara "
+        "para cada marco classificatório, pelos meios nele indicados.",
+        "Os casos omissos serão resolvidos pela autoridade responsável pelo processo seletivo, "
+        "observada a legislação aplicável.",
+    }
+)
+
+
+def texto_redigido(conteudo) -> str:
+    """O texto da seção, se alguém o escreveu; vazio para a seção vazia e a redação retirada."""
+    texto = str(conteudo or "").strip()
+    return "" if texto in REDACOES_PADRAO_RETIRADAS else texto
+
+
 CHAVES_TEXTUAIS = frozenset(secao.key for secao in CATALOGO if not secao.gerada)
 
 # O espaço de nomes do `uuid5`. Fixá-lo é o que torna a identidade reproduzível entre execuções e

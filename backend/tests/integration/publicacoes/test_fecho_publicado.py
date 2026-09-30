@@ -65,3 +65,19 @@ def test_sem_ato_de_nomeacao_a_publicacao_o_registra_vazio(
 def test_quem_assinou_nas_telas_nao_deixa_separador_pendurado():
     """FR-994: a Publicação feita pela interface com o catálogo sem nome registra o nome vazio."""
     assert quem_assinou("", "Diretora-Geral do Cefor") == "Diretora-Geral do Cefor"
+
+
+def test_a_api_publica_com_o_nome_vazio_como_a_interface(
+    api_client, manager_headers, process_payload
+):
+    """Code review do PR 233: o catálogo só tem o cargo, e a API não pode exigir o nome.
+
+    Exigi-lo empurraria quem integra a repor a designação do cargo no lugar do nome — o defeito que
+    a FR-992 tirou do documento.
+    """
+    publicacao = _publicacao(
+        api_client, manager_headers, process_payload, {**SIGNATORY, "name": ""}
+    )
+    assert publicacao.signatory_name == ""
+    linhas = texto_de(bytes(publicacao.documento.bytes)).splitlines()
+    assert linhas[linhas.index("Autoridade responsável pelo ato") + 1] == SIGNATORY["role"]

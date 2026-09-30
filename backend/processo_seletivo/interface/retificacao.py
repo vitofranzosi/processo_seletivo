@@ -25,6 +25,7 @@ from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
+from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1511,12 +1512,16 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
             )
         )
 
+    # **O número é o do documento publicado** (054, FR-985), e não a `order` do catálogo: com 22
+    # seções e as textuais vazias, a ordem diria "16" onde o PDF que se retifica imprime "11", e
+    # quem retifica procura a seção pelo número que leu no documento.
+    numeros = pdf.numeracao(conteudo)
     for secao in conteudo.get("sections") or []:
         # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
         # e é lá que se corrige.
         if secao.get("type") == catalogo.GERADA:
             continue
-        nome = f"{secao.get('order', '')} — {secao.get('title', '')}".strip(" —")
+        nome = _nome_da_secao(secao, numeros.get(secao.get("key")))
         grupos.append(
             _grupo(
                 f"Seção {nome}",
@@ -1530,6 +1535,16 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
         )
 
     return _referenciar(grupos)
+
+
+def _nome_da_secao(secao, numero):
+    """`11 — Da Matrícula`, `Apresentação (preâmbulo)` ou `Do Certificado (vazia …)`."""
+    titulo = str(secao.get("title", "")).strip()
+    if numero is None:
+        return f"{titulo} (vazia — não sai no documento)"
+    if numero == 0:
+        return f"{titulo} (preâmbulo)"
+    return f"{numero} — {titulo}"
 
 
 # A que seção da tela cada tipo de linha pertence. Um Edital extenso produz dezenas de cartões

@@ -258,13 +258,16 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
   nem na prévia, nem no publicado —, como a gerada cuja coleção está vazia. *Emenda a `FR-041` da
   `006`: a seção textual sem conteúdo deixa de ser impeditivo.*
 - **FR-983**: Nenhuma seção textual MUST nascer com redação padrão. O Edital novo começa com as seções
-  textuais vazias, e o documento só publica texto que alguém escreveu para ele. *Emenda a `FR-037` da
+  textuais vazias, e o documento só publica texto que alguém escreveu para ele — inclusive no reuso de
+  um Edital publicado, que não copia a seção vazia nem a redação padrão que o acervo anterior à `054`
+  publicou. *Emenda a `FR-037` da
   `006`, que permitia texto inicial institucional.*
 - **FR-984**: A seção textual à qual o sistema acrescenta norma que executa — a frase do teto na
   Inscrição (`015`, FR-063) e a declaração do Requerimento na Matrícula (`FR-996`) — MUST ser composta
   quando houver essa norma, ainda que quem elabora a tenha deixado vazia; o texto de quem elabora,
   quando existir, vem primeiro.
-- **FR-985**: A numeração das seções MUST ser a mesma na etapa Conteúdo, na Revisão e no documento:
+- **FR-985**: A numeração das seções MUST ser a mesma na etapa Conteúdo, na Revisão, na tela da
+  Retificação e no documento:
   derivada da mesma regra, sobre o conteúdo que seria publicado; a seção que não sai no documento não
   recebe número em tela nenhuma. *Fecha a parte "numeração" do RC-26.*
 - **FR-986**: A Revisão MUST avisar, sem impedir, quando a Apresentação ou as Disposições Finais vão

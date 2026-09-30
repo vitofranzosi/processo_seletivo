@@ -391,7 +391,7 @@ def _documento(documento, snapshot):
     }
 
 
-def _secao(secao, snapshot):
+def _secao(secao, numeros):
     if secao.get("type") == catalogo.GERADA:
         origem = {
             "profiles": "Perfis",
@@ -408,7 +408,7 @@ def _secao(secao, snapshot):
     # **O número é o do documento** (054, FR-985), e não a ordem do catálogo: com 22 seções e as
     # textuais vazias, a ordem diria "16" onde o documento imprime "9", e quem homologa confere a
     # prévia contra o original pela numeração (E10 = B).
-    numero = pdf.numeracao(snapshot).get(secao.get("key"))
+    numero = numeros.get(secao.get("key"))
     titulo = str(secao.get("title", ""))
     if numero is None:
         return {"titulo": titulo, "linhas": ["Vazia — não sai no documento."]}
@@ -680,6 +680,12 @@ def _classificacao(snapshot):
     return itens
 
 
+def _secoes_do_documento(snapshot):
+    """As seções com o número do documento, calculado uma vez para todas (054, FR-985)."""
+    numeros = pdf.numeracao(snapshot)
+    return [_secao(secao, numeros) for secao in snapshot.get("sections") or []]
+
+
 def _cada(chave, leitura):
     """A leitura item a item de uma coleção-raiz."""
     return lambda snapshot: [leitura(item, snapshot) for item in snapshot.get(chave) or []]
@@ -700,7 +706,7 @@ BLOCOS = (
     # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
     # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
     ("Anexos do Edital", "anexos", _cada("attachments", _anexo)),
-    ("Conteúdo do Edital", "conteudo", _cada("sections", _secao)),
+    ("Conteúdo do Edital", "conteudo", _secoes_do_documento),
 )
 
 

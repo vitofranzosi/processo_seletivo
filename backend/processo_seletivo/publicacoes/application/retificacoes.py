@@ -206,7 +206,9 @@ def _apply_declared_changes(edital, base, changes):
     # "outra pessoa publicou no intervalo", enquanto esta diz "o que você mandou está incompleto".
     # Antes do efeito prático, porque "não muda nada" é queixa mais fraca que "deixaria um Perfil
     # sem denominação" (FR-002).
-    _assert_well_formed(content, "O conteúdo que esta Retificação produz", edital)
+    _assert_well_formed(
+        content, "O conteúdo que esta Retificação produz", topologia_publicada(edital)
+    )
     if canonical_sha256(content) == canonical_sha256(base):
         raise _no_effective_change()
     return content
@@ -669,7 +671,7 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         raise _no_effective_change()
 
 
-def _assert_well_formed(content, contexto, edital):
+def _assert_well_formed(content, contexto, topologia):
     """As invariantes da Publicação valem também para o que a Retificação faz vigorar (FR-006).
 
     `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma, e desde a `005` recusa
@@ -683,10 +685,10 @@ def _assert_well_formed(content, contexto, edital):
     # **Pelo ato de Retificação** (027, FR-323, T-003): a ausência de linha geral é impeditiva ao
     # publicar Edital novo e não o é aqui, porque o acervo inteiro foi publicado antes de a
     # capacidade existir. Recusar aqui prenderia até a Retificação que corrige uma data.
+    # `topologia` é a do conteúdo original do Edital (054, FR-988), lida uma vez por quem chama:
+    # na publicação, o mesmo Edital é conferido uma vez por fronteira de vigência.
     errors = blocking_findings(
-        validate_for_publication(
-            content, ato=ATO_DE_RETIFICACAO, topologia=topologia_publicada(edital)
-        )
+        validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
     )
     if errors:
         raise DomainError(
@@ -774,10 +776,10 @@ def _assert_versao_canonica(content, contexto):
         )
 
 
-def _assert_structurally_publishable(content, boundary, edital):
+def _assert_structurally_publishable(content, boundary, topologia):
     _assert_versao_canonica(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
     _assert_well_formed(
-        content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}", edital
+        content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}", topologia
     )
 
 
@@ -792,11 +794,13 @@ def _materialize_affected_versions(retificacao, publication, now):
         }
     )
     publications = {str(item.publication_id): item.publication for item in published}
+    # A topologia do original, uma vez para todas as fronteiras (054, FR-988).
+    topologia = conteudo_base(original).get("sections")
     for boundary in boundaries:
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
         content, provenance = _consolidate(conteudo_base(original), acts)
-        _assert_structurally_publishable(content, boundary, retificacao.edital)
+        _assert_structurally_publishable(content, boundary, topologia)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
@@ -819,22 +823,21 @@ def _materialize_affected_versions(retificacao, publication, now):
         )
 
 
-def _consolidacao(edital, now, effective_at):
+def _consolidacao(edital, base, now, effective_at):
     """As datas que o consolidado declara abaixo do anúncio (054, FR-995, R-010).
 
-    **As Retificações que o documento incorpora são as que `_content_in_force` aplica** na vigência
-    desta — as publicadas com vigência até ela —, mais esta. A marca lista exatamente o que o
-    conteúdo composto contém, e cada data é a de publicação, que é o ato que o leitor procura.
+    **As Retificações que o documento incorpora são as da versão-base, mais esta.** O documento é
+    composto do conteúdo-base desta Retificação com as mudanças dela, e não do conteúdo em vigor:
+    uma Retificação elaborada sobre a versão original, e publicada depois de outra que mudou campo
+    diferente, passa pela conferência de precondição — que só olha os caminhos que ela altera — e
+    sai sem as mudanças da outra. Tirar as datas das Retificações em vigor faria a marca declarar
+    um ato que o documento não contém. `applied_publications` da versão-base diz exatamente o que
+    ela aplicou. Cada data é a de publicação, que é o ato que o leitor procura.
     """
     original = _original_version(edital)
-    anteriores = sorted(
-        (
-            item.publication
-            for item in _published_retifications(edital)
-            if item.publication.effective_at <= effective_at
-        ),
-        key=lambda publicacao: publicacao.publication_order,
-    )
+    anteriores = Publicacao.objects.filter(
+        pk__in=base.applied_publications or [], revisao__isnull=True
+    ).order_by("publication_order")
     dia = now.astimezone(ZONA).date()
     vigencia = effective_at.astimezone(ZONA).date()
     return Consolidacao(
@@ -898,7 +901,7 @@ def publish_retification(
                 ato_de_nomeacao=signatory.get("appointment", ""),
             ),
             data_do_ato=now.astimezone(ZONA).date(),
-            consolidacao=_consolidacao(edital, now, effective_at),
+            consolidacao=_consolidacao(edital, item.base_snapshot, now, effective_at),
         )
         publication = Publicacao.objects.create(
             edital=edital,

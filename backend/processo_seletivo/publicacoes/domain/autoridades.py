@@ -63,12 +63,12 @@ CATALOGO: tuple[Autoridade, ...] = (
     Autoridade(
         chave="reitoria",
         identificador=UUID("11111111-1111-4111-8111-111111111111"),
-        cargo="Reitora do Instituto Federal do Espírito Santo",
+        cargo="Reitora",
     ),
     Autoridade(
         chave="pro-reitoria-ensino",
         identificador=UUID("22222222-2222-4222-8222-222222222222"),
-        cargo="Pró-Reitor de Ensino do Instituto Federal do Espírito Santo",
+        cargo="Pró-Reitor de Ensino",
     ),
     Autoridade(
         chave="diretoria-cefor",

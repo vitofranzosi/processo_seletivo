@@ -107,9 +107,10 @@ O guardião de contagem de migrations por app sobe com a justificativa escrita.
 reescrita e o gatilho de `UPDATE` da tabela append-only não dispara. As Publicações existentes ficam
 com o ato de nomeação vazio, que é verdade: não o registraram.
 
-**`name` da API continua obrigatório.** Quem publica pela API declara o assinante; o nome vazio é
-estado do catálogo da interface, enquanto o Cefor não o fornece. Relaxar o contrato da API por isso
-seria abrir um caminho de publicação sem nome para quem tem o nome.
+**`name` da API pode vir vazio**, como na interface — decisão revista no code review do PR 233.
+A primeira redação o mantinha obrigatório, e isso empurrava quem integra pela API, com as autoridades
+do catálogo, a repor a designação do cargo no lugar do nome, que é o defeito que a `FR-992` tirou do
+documento. O cargo continua obrigatório.
 
 ## R-008 — O catálogo de autoridades
 
@@ -135,9 +136,13 @@ incorporada, em ordem, e *"com vigência a partir de …"* quando a vigência de
 As datas incorporadas são as das Retificações publicadas que vigoram na vigência desta
 (`_published_retifications` com `effective_at <= effective_at`), mais a publicação original e esta.
 
-**Por quê.** São as mesmas Retificações que `_content_in_force` aplica para compor o conteúdo desta:
-a marca lista exatamente o que o documento incorpora. A data de cada uma é a de publicação, porque é
-o ato que o leitor procura no Diário.
+**Revisto no code review do PR 233: as datas saem da versão-base.** A primeira redação as tirava
+das Retificações em vigor na vigência desta. Mas o documento é composto do conteúdo-base da
+Retificação com as mudanças dela, e não do conteúdo em vigor: uma Retificação elaborada sobre a
+versão original e publicada depois de outra, que mudou campo diferente, passa pela precondição — que
+só confere os caminhos que ela altera — e sai sem a outra. A marca lê `applied_publications` da
+versão-base, e lista exatamente o que o documento incorpora. A data de cada uma é a de publicação,
+porque é o ato que o leitor procura no Diário.
 
 ## R-011 — A declaração do Requerimento
 
