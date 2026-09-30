@@ -257,6 +257,10 @@ caminhos conhecidamente inseguros — a responsabilidade pela escolha continua d
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
 ```
 
+O passo a passo de implantação numa VM Ubuntu — arquitetura, hardening, backup e restauração,
+atualização, rollback, runbook e checklist de go-live —, com os bloqueadores que ainda impedem a
+entrada em produção, está em [`doc/implantacao-em-producao-ubuntu.md`](doc/implantacao-em-producao-ubuntu.md).
+
 ## Verificação
 
 ```bash
