@@ -87,7 +87,7 @@
 <nav class="trilha-nav" aria-label="Você está em"></nav>
 <article class="pagina" id="pg-inicio" data-camada="entender" data-titulo="Início">
 <section id="inicio">
-  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026</p>
+  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026</p>
   <h1>Sistema de Processos Seletivos e Editais</h1>
   <p class="lead">
     Do Edital ao Registro Acadêmico: como um processo seletivo é montado, conduzido e concluído neste
@@ -1180,8 +1180,10 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <div class="passo-tutorial" id="t-10"><span class="num">10</span>
       <h3>Anexos, texto e Revisão</h3>
       <p class="onde">Passos 7 <em>Anexos</em>, 8 <em>Conteúdo</em> e 9 <em>Revisão</em></p>
-      <p>Anexe os PDFs (o sistema não numera — o rótulo é seu). Revise o texto das sete seções textuais; as
-      geradas (Perfis, Etapas, Cronograma, Documentos, Anexos) se compõem sozinhas. Na Revisão:
+      <p>Anexe os PDFs (o sistema não numera — o rótulo é seu). Transcreva o texto do Edital nas seções
+      textuais que ele tem: são 17 no catálogo, todas nascem vazias, e a vazia não sai no documento. Cada
+      seção mostra, na legenda, o número que terá no documento, ou <em>“vazia — não sai no documento”</em>.
+      As geradas (Perfis, Etapas, Cronograma, Documentos, Anexos) se compõem sozinhas. Na Revisão:
       “O que falta para submeter” (<strong>Impede</strong> e <strong>Aviso</strong>, cada um com “Ir para”),
       “O que será congelado”, “O que não se corrige depois de publicado”, e
       <span class="rotulo-ui">Visualizar Edital</span> — a prévia do PDF, que no piloto <strong>é o documento
@@ -1443,10 +1445,10 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <thead><tr><th>Decisão</th><th>Opções reais</th><th>Onde</th><th>Observações</th></tr></thead>
       <tbody>
         <tr><td>Natureza do resultado</td><td>Preliminar · definitivo</td><td>Publicar resultado</td><td>Definitivo não volta a preliminar.</td></tr>
-        <tr><td>Quem assina</td><td>Catálogo fixo de autoridades signatárias</td><td>Publicar (Edital, Retificação, resultado)</td><td>Não se digita nome.</td></tr>
+        <tr><td>Quem assina</td><td>Catálogo fixo de autoridades signatárias</td><td>Publicar (Edital, Retificação, resultado)</td><td>Não se digita nome. Hoje as entradas têm só o cargo; nome e ato de nomeação entram no catálogo quando o Cefor os fornecer.</td></tr>
         <tr><td>Como a convocação é comunicada</td><td>Por publicação · por mensagem individual (e-mail)</td><td>Cartão do Perfil ou “Declarado uma vez para todos os Perfis”</td><td>Obrigatória quando o Perfil corta.</td></tr>
         <tr><td>Prazo da convocação</td><td>Data e hora, ou fim de um Evento do cronograma; ou sem prazo</td><td>Tela de convocação, por ato</td><td>O prazo corre do envio da comunicação. Sem dias úteis.</td></tr>
-        <tr><td>Texto do Edital</td><td>Sete seções textuais de catálogo fixo; anexos PDF rotulados por você</td><td>Passos <em>Conteúdo</em> e <em>Anexos</em></td><td>Seções novas não existem (catálogo fixo). Aviso quando o texto padrão vai sem revisão.</td></tr>
+        <tr><td>Texto do Edital</td><td>Catálogo fixo de 22 seções: 17 textuais, que nascem vazias, e 5 geradas; anexos PDF rotulados por você</td><td>Passos <em>Conteúdo</em> e <em>Anexos</em></td><td>Quem elabora não acrescenta, remove nem reordena seção. A textual vazia não sai no documento. Aviso quando a Apresentação ou as Disposições Finais vão vazias.</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -2879,7 +2881,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr>
             <td>Anexos e seções</td>
             <td><code>attachment_label_required</code>, <code>attachment_reference_dangling</code></td>
-            <td><code>attachment_duplicate_label</code>, <code>attachment_cited_without_label</code>, <code>section_default_text</code></td>
+            <td><code>attachment_duplicate_label</code>, <code>attachment_cited_without_label</code>, <code>section_universal_empty</code></td>
           </tr>
         </tbody>
       </table>
@@ -3070,7 +3072,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Quando configurar</dt>
         <dd>Passo <span class="rotulo-ui">Inscrição</span>, campo <span class="rotulo-ui">Inscrições por candidato neste Edital</span> (“Deixe em branco para não limitar. Conta só a inscrição enviada: rascunho abandonado não consome.”).</dd>
         <dt>Onde aparece</dt>
-        <dd>No documento publicado (seção “Da Inscrição”), na página pública da seleção e na recusa do envio.</dd>
+        <dd>No documento publicado (seção “Da Inscrição”, que sai com a frase ainda que não tenha texto), na página pública da seleção e na recusa do envio.</dd>
         <dt>O que posso depois de publicar</dt>
         <dd>Retificar o teto. Quem já enviou sob a regra anterior permanece.</dd>
         <dt>O que não posso</dt>
@@ -3094,10 +3096,11 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       retifica. O aceite de cada candidato guarda o resumo do texto que ele leu. Ver
       <a href="#matricula">Matrícula</a>.
     </p>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: a declaração não sai no documento</span>
+    <div class="aviso aviso-nota"><span class="titulo">A declaração sai no documento</span>
       <p>
-        O candidato aceita no portal uma declaração que o Edital publicado não imprime. Está
-        registrada; a correção está em curso numa especificação ainda não mesclada.
+        Desde a spec 054, o documento publica, na seção <em>Da Matrícula</em>, quando o Requerimento
+        é enviado e a declaração por extenso, recuada — do mesmo campo que o portal exibe para
+        aceite. A seção sai ainda que quem elabora não tenha escrito nada nela.
       </p>
     </div>
   </section>
@@ -3146,32 +3149,54 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
 
     <h3>As seções de conteúdo</h3>
     <p>
-      O documento tem um <strong>catálogo fixo de 12 seções</strong>.
+      O documento tem um <strong>catálogo fixo de 22 seções</strong>, desde a spec 054 (eram 12). É a
+      união das seções que se repetem nas quatro famílias da amostra do Cefor, na ordem que os
+      Editais seguem — <strong>a oferta antes da inscrição</strong>. O conjunto e a ordem são do
+      sistema; quem elabora não acrescenta, remove nem reordena seção.
     </p>
     <ul>
       <li>
-        <strong>7 textuais</strong>, cujo texto quem elabora revisa no passo Conteúdo:
-        Apresentação, Disposições Preliminares, Requisitos Gerais de Participação, Da Inscrição,
-        Critérios de Classificação, Dos Recursos, Disposições Finais.
+        <strong>17 textuais</strong>, cujo texto quem elabora transcreve no passo Conteúdo:
+        Apresentação (o preâmbulo, sem número), Disposições Preliminares, Informações Gerais sobre o
+        Curso, Público-Alvo, Requisitos Gerais de Participação, Da Inscrição, Da Verificação da
+        Autodeclaração, Do Atendimento à Pessoa com Deficiência, Critérios de Classificação, Dos
+        Recursos, Da Convocação, Da Matrícula, Do Acesso ao Curso, Da Homologação da Matrícula, Do
+        Certificado, Do Prazo de Validade, Disposições Finais.
       </li>
       <li>
-        <strong>5 geradas</strong> do que foi declarado: Documentos Exigidos, Perfis de Vaga,
-        Etapas de Avaliação, Cronograma, Anexos.
+        <strong>5 geradas</strong> do que foi declarado: Perfis de Vaga, Documentos Exigidos para a
+        Inscrição, Etapas de Avaliação, Cronograma, Anexos.
       </li>
     </ul>
     <p>
-      Seção textual não se esvazia: apagar o texto devolve a redação padrão. A redação padrão
-      que vai ao ato sem revisão gera aviso na Revisão.
+      <strong>Nenhuma seção tem redação padrão.</strong> A textual nasce vazia, e a vazia não sai no
+      documento — nem na prévia, nem no publicado —, como a gerada sem conteúdo; as seguintes são
+      numeradas sem salto. O número de cada seção é um só na etapa Conteúdo, na Revisão, na tela da
+      Retificação e no documento, e na etapa Conteúdo acompanha o que se digita, sem gravar
+      <em>[a validar]</em>. Duas textuais recebem
+      norma que o sistema executa, e saem com ela mesmo sem texto de quem elabora: a Inscrição, com a
+      frase do <a href="#c-teto">teto</a>, e a Matrícula, com a declaração do
+      <a href="#matricula">Requerimento</a>. A tela diz o que será acrescentado, para que não se
+      transcreva duas vezes. A Revisão avisa, sem impedir, quando a Apresentação ou as Disposições
+      Finais vão vazias — as duas seções que os quinze Editais da amostra têm sem exceção.
     </p>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o catálogo não acomoda os Editais reais</span>
+    <p>
+      O reaproveitamento copia só o texto que alguém escreveu: a redação padrão que o acervo
+      anterior à 054 publicou não é copiada para o Edital novo.
+    </p>
+    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o texto da seção é corrido</span>
       <p>
-        Os Editais da amostra têm de 7 a 22 seções. O que não cabe no catálogo vira parágrafo
-        dentro de outra, e o texto é corrido, sem tabela nem subitem numerado. A ampliação do
-        catálogo foi decidida em 28/09 e está em curso, fora desta versão.
+        A seção textual não tem tabela, subitem numerado nem negrito: o quadro de uma matriz
+        curricular, por exemplo, não tem como ser escrito. E o subitem transcrito carrega o número
+        do original, que deixa de casar com o da seção quando o Cronograma, anexo nos Editais do
+        Cefor, entra no corpo como seção: no 28/2026, <em>“9.1 Caberá recurso…”</em> sai sob
+        <strong>10. Dos Recursos</strong>. Registrado na verificação da spec 054, como decisão do
+        usuário.
       </p>
       <p>
-        Mudar o catálogo depois da primeira publicação real exigiria versão de catálogo, porque
-        a Retificação confere as seções contra o catálogo vigente.
+        Mudar o catálogo de novo não tranca o acervo: desde a 054, a Retificação confere as seções
+        contra as do Edital publicado, e não contra o catálogo vigente. Mas o acervo ficaria com
+        duas formas de documento, porque documento publicado não se regenera.
       </p>
     </div>
   </section>
@@ -3356,7 +3381,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <ol class="linha-tempo">
       <li><span class="passo">1 · Confere</span><span class="titulo">O conteúdo atual é o homologado</span><p>Se divergir: “O rascunho diverge da revisão homologada.”</p></li>
       <li><span class="passo">2 · Revalida</span><span class="titulo">Contra o instante da publicação</span><p>Submeter e publicar são atos em instantes distintos. O período que estava aberto pode ter encerrado, e a recusa traz a frase do achado.</p></li>
-      <li><span class="passo">3 · Gera</span><span class="titulo">O documento publicado (PDF)</span><p>Da revisão homologada, com a Autoridade Signatária escolhida.</p></li>
+      <li><span class="passo">3 · Gera</span><span class="titulo">O documento publicado (PDF)</span><p>Da revisão homologada, com a Autoridade Signatária escolhida e a data do ato, no fuso institucional.</p></li>
       <li><span class="passo">4 · Registra</span><span class="titulo">Publicação, documento e Versão Consolidada</span><p>Congela os anexos e registra a primeira versão vigente do Edital.</p></li>
       <li><span class="passo">5 · Consequência</span><span class="titulo">O Processo é ativado, se ainda estava em elaboração</span><p>Com o motivo “Ativação derivada da publicação do primeiro Edital do Processo.” Quem publica não precisa de <code>processo:ativar</code>: é efeito do ato, não um segundo ato.</p></li>
     </ol>
@@ -3364,13 +3389,24 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h3>Autoridade Signatária</h3>
     <p>
       Publicar pede <span class="rotulo-ui">Quem assina institucionalmente este Edital</span>,
-      escolhida num <strong>catálogo fixo</strong>: Reitora do Ifes, Pró-Reitor de Ensino,
-      Diretora do Cefor. Nada se digita. Nome, cargo e identificador ficam gravados na Publicação,
-      e retirar alguém do catálogo não altera o que já foi assinado.
+      escolhida num <strong>catálogo fixo</strong>. Nada se digita. O catálogo distingue o cargo,
+      obrigatório, do nome próprio e do ato de nomeação, opcionais; hoje as três entradas têm só o
+      cargo — Reitora; Pró-Reitor de Ensino; Diretora-Geral do Centro de Referência em Formação e
+      em Educação a Distância —, porque o nome de quem assina é pergunta com o Cefor. Nome, cargo,
+      ato de nomeação e identificador ficam gravados na Publicação, e retirar alguém do catálogo não
+      altera o que já foi assinado.
     </p>
     <p>
-      O documento a apresenta como <em>“Autoridade responsável pelo ato”</em>, que é um registro,
-      e não uma assinatura.
+      O documento publicado termina com o <strong>fecho do ato</strong>: o local e a data por
+      extenso — <em>“Vitória (ES), 29 de setembro de 2026.”</em>, no fuso institucional —, a rubrica
+      <em>“Autoridade responsável pelo ato”</em>, que é um registro e não uma assinatura, e abaixo o
+      nome, quando houver; o cargo; e o ato de nomeação, quando houver. Sem nome, sai o cargo, e nada
+      no lugar do nome. Local e data são contexto do ato, como a autoridade: a prévia não os tem, e o
+      SHA-256 do conteúdo não muda por eles.
+    </p>
+    <p class="miudo">
+      Registrado na verificação da spec 054, a conferir com o nome: o 28/2026 diz <em>“Diretora do
+      Centro…”</em>, e o catálogo, <em>“Diretora-Geral do Centro…”</em>.
     </p>
 
     <div class="conceito" id="c-publicacao">
@@ -3382,7 +3418,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Exemplo</dt>
         <dd>“Publicação original nº 1, publicado em 28/02/2026 10:00”, e depois “Retificação nº 2”.</dd>
         <dt>O que o documento contém</dt>
-        <dd>Brasão e órgão, o anúncio do ato, a descrição, a Apresentação, as seções numeradas (as geradas sem conteúdo são puladas), a autoridade e a verificação de integridade.</dd>
+        <dd>Brasão e órgão, o anúncio do ato, a marca de versão consolidada (só no documento de uma Retificação), a descrição, a Apresentação, as seções numeradas (as vazias são puladas, textuais e geradas, e a numeração segue sem salto), o fecho com local, data e autoridade, e a verificação de integridade. Com mais de um Perfil e alguma vaga imediata, a tabela de Perfis termina numa linha <em>Total</em>, que não soma o cadastro reserva.</dd>
         <dt>O que não posso</dt>
         <dd>
           <ul>
@@ -3474,6 +3510,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
             <li>Remover itens (marcando <span class="rotulo-ui">Remover do Edital</span>).</li>
             <li>Aplicar a todos os Perfis.</li>
             <li>Declarar vigência futura.</li>
+            <li>Dar texto a uma seção publicada vazia, que passa a sair no consolidado, ou esvaziar uma.</li>
           </ul>
         </dd>
         <dt>O que não posso</dt>
@@ -3508,7 +3545,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <p>
             O ato público de uma versão do Edital. Tem documento, autoridade e ordem. Toda
             Retificação publicada <em>gera</em> uma Publicação: o documento dela é o Edital
-            consolidado inteiro.
+            consolidado inteiro, que se declara consolidado logo abaixo do anúncio —
+            <em>“Versão consolidada. Publicado em …; retificado em ….”</em>, com a vigência quando
+            ela começa em outro dia.
           </p>
         </div>
         <div>
@@ -3652,7 +3691,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr><td>Espécie do alvo do corte · Etapa que o corte alimenta · continuação além da faixa</td><td>Decidem quem segue no certame; mudá-los depois do corte moveria, em silêncio, quem continua. Podem <em>nascer</em> junto com a regra</td></tr>
           <tr><td>O que o critério de desempate compara (tipo, Etapa, fato) e “quando o valor não existe”</td><td>Trocar substitui o critério, e os empates já resolvidos ficariam resolvidos por um critério que o Edital não tem mais. Troca-se removendo e acrescentando</td></tr>
           <tr><td>Espécie (“Tipo”) do Evento</td><td>Liga o Cronograma às regras que dependem dele — o período de inscrições, a Etapa vinculada</td></tr>
-          <tr><td>Título, ordem e espécie das seções</td><td>O catálogo é institucional, o mesmo em todo Edital do Cefor; o que o Edital escreve é o texto</td></tr>
+          <tr><td>Título, ordem e espécie das seções</td><td>São os do catálogo com que o Edital foi publicado, e a Retificação confere contra eles, e não contra o catálogo de hoje — é o que mantém retificável o Edital publicado antes de o catálogo mudar; o que o Edital escreve é o texto</td></tr>
           <tr><td>Chave do documento exigido</td><td>É como a inscrição já enviada nomeia o arquivo; trocá-la desligaria o documento do que foi enviado</td></tr>
           <tr><td>Informações de classificação e de convocação do Perfil (objetos livres)</td><td>O domínio não reconhece forma nem semântica para eles, e não sabe o que seria corrigi-los</td></tr>
         </tbody>
@@ -3689,10 +3728,6 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     </div>
     <div class="aviso aviso-nota"><span class="titulo">Outros limites registrados</span>
       <ul>
-        <li>
-          O documento consolidado de uma Retificação sai igual ao original, sem data nem marca
-          de “retificado”; só o SHA-256 os distingue. A correção está em curso.
-        </li>
         <li>
           Um campo <em>estrutural</em> ainda pode mudar pela substituição do objeto inteiro via
           API (o código do Perfil, por exemplo). O campo não retificável já é protegido. A decisão
@@ -7491,9 +7526,12 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <div class="cartao"><span class="etiqueta">Perfil socioeconômico</span><p>Faixa de renda <strong>familiar</strong>, necessidade específica (acolhimento, não é a cota de pessoa com deficiência)</p></div>
       <div class="cartao"><span class="etiqueta">Declaração</span><p>O texto de veracidade publicado pelo Edital, com o <strong>resumo do texto exibido</strong> e a versão guardados — retificar depois não reescreve o que alguém leu</p></div>
     </div>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: a declaração não sai no documento publicado</span>
-      <p>O candidato aceita a declaração de veracidade, mas o PDF do Edital não a publica: quem lê o
-      documento oficial não vê o que vai declarar. A Revisão da gestão a mostra. <span class="selo selo-lacun">Lacuna</span></p>
+    <div class="aviso aviso-nota"><span class="titulo">A declaração sai no documento publicado</span>
+      <p>Desde a spec 054, o PDF do Edital que exige o Requerimento publica, na seção <em>Da
+      Matrícula</em>, <em>“O Requerimento de Matrícula será enviado {no ato da inscrição | quando o
+      candidato for convocado}. Ao enviá-lo, o candidato declarará:”</em> e a declaração por extenso,
+      recuada. O texto vem do mesmo campo que o portal exibe para aceite, e por isso os dois não
+      divergem.</p>
     </div>
 
     <h4>O endereço, e a base local de CEP</h4>
@@ -8968,7 +9006,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Catálogo de capacidades</h1>
-    <p class="lead">O que este sistema consegue modelar hoje — 100 capacidades, cada uma com o selo
+    <p class="lead">O que este sistema consegue modelar hoje — 102 capacidades, cada uma com o selo
     que a cadeia <em>tela → regra → efeito</em> sustenta. Filtre por palavra ou por selo para descobrir,
     em segundos, se o seu cenário é suportado.</p>
   </header>
@@ -9006,7 +9044,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#retificacao">Retificação acrescenta Perfil, cota, linha do quadro, critério, Evento, Anexo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Não acrescenta Etapa, marco nem documento exigido.</td></tr>
 <tr data-marca="nop"><td><a href="#retificacao">Editar uma Retificação devolvida</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Existe no código (API); a tela não reabre as alterações.</td></tr>
 <tr data-marca="parc"><td><a href="#reaproveitar">Criar a partir de Edital anterior</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Não copia teto nem Requerimento, e não avisa.</td></tr>
-<tr data-marca="impl"><td><a href="#composicao">Seções de texto de catálogo fixo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Seções novas: em curso (spec 054, fora desta revisão).</td></tr>
+<tr data-marca="impl"><td><a href="#composicao">Seções de texto de catálogo fixo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>22 seções desde a spec 054, sem redação padrão; a vazia não sai. Quem elabora não acrescenta seção.</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Fecho do ato: local, data e autoridade</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O catálogo tem só o cargo até o Cefor fornecer nome e ato de nomeação.</td></tr>
+<tr data-marca="impl"><td><a href="#retificacao">Documento consolidado da Retificação com data</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>“Versão consolidada”, com a data original e a de cada Retificação.</td></tr>
 <tr data-marca="impl"><td><a href="#anexos">Anexos PDF rotulados e congelados na publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O sistema não numera.</td></tr>
 <tr data-marca="impl"><td><a href="#estrutura">Encerrar e cancelar Processo e Edital</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Processo só encerra com todos os Editais finais.</td></tr>
 <tr data-marca="nop"><td><a href="#cronograma">Cancelar um Evento do cronograma</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só pela API; tem efeito (período cancelado não recebe).</td></tr>
@@ -9111,7 +9151,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       </tbody>
     </table></div>
     <p class="miudo">Fonte: leitura do código em 29/09/2026 (<code>main</code> em <code>3a53b23</code>), cruzada com a matriz de
-    unidades da auditoria de consolidação (<code>doc/auditoria-de-consolidacao-2026-09-26.md</code>). Onde a
+    unidades da auditoria de consolidação (<code>doc/auditoria-de-consolidacao-2026-09-26.md</code>). As
+    linhas da spec 054 foram conferidas em 30/09/2026 (<code>main</code> em <code>86bbf49</code>). Onde a
     cadeia foi lida e não executada, a página de referência diz <em>[a validar]</em>.</p>
   </section>
 
@@ -9297,7 +9338,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="mais"><a href="#distribuicao">Saiba mais →</a></dd>
   <dt id="g-autoridade-signataria" data-letra="A">Autoridade signatária</dt>
   <dd class="def">Quem assina institucionalmente um Edital, uma Retificação ou um resultado — escolhida num catálogo fixo, nunca digitada.</dd>
-  <dd class="ex">Diretora do Cefor.</dd>
+  <dd class="ex">Diretora-Geral do Centro de Referência em Formação e em Educação a Distância — hoje o catálogo tem só o cargo.</dd>
   <dd class="rel"><a href="#g-publicacao">Publicação</a></dd>
   <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-avaliacao" data-letra="A">Avaliação</dt>
@@ -9753,7 +9794,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <p class="lead">
       O que está pronto, o que está pela metade e o que falta, domínio a domínio — e o que a
       confrontação entre código, especificação, interface e documentação encontrou. Lido contra a
-      <code>main</code> de 29/09/2026 (<code>3a53b23a</code>).
+      <code>main</code> de 29/09/2026 (<code>3a53b23a</code>), e acrescido da spec 054 contra a de
+      30/09/2026 (<code>86bbf49</code>).
     </p>
   </header>
   <div class="nesta-pagina"></div>
@@ -9768,10 +9810,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h3>Os números de hoje, contra os de 20/09</h3>
     <div class="numeros">
-      <div><b>54</b><span>pastas de especificação (eram 39); a 054 em PR aberto</span></div>
+      <div><b>55</b><span>pastas de especificação (eram 39), com a 054, mergeada em 30/09</span></div>
       <div><b>34</b><span>tabelas append-only (eram 33)</span></div>
       <div><b>46</b><span>gatilhos de banco (eram 43)</span></div>
-      <div><b>84</b><span>migrations (eram 80)</span></div>
+      <div><b>85</b><span>migrations (eram 80), com a da 054</span></div>
       <div><b>19</b><span>módulos de domínio (sem mudança)</span></div>
       <div><b>351</b><span>arquivos Python de aplicação (eram 330)</span></div>
       <div><b>146</b><span>templates (eram 130)</span></div>
@@ -9801,13 +9843,13 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
             <td><strong><a href="#composicao">Configuração do Edital</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
             <td>Assistente de 9 passos, validação em 3 níveis, prévia do documento. <a href="#padroes">Padrões</a> e <span class="rotulo-ui">Aplicar a todos</span> com prévia; tabela do conjunto e um editor por vez em Perfis e Classificação; <a href="#duplicar-perfil">duplicar Perfil</a>; teto de inscrições declarável; rascunho local que restaura sem perder; a Revisão diz o que não se corrige depois de publicar</td>
-            <td>Granularidade: curso, polo, seções do documento, submodalidades. A Revisão de um Edital já publicado ainda fala em “submeter” e mostra a norma anterior à Retificação</td>
+            <td>Granularidade: curso, polo, submodalidades; a seção textual sem tabela nem subitem numerado. A Revisão de um Edital já publicado ainda fala em “submeter” e mostra a norma anterior à Retificação</td>
           </tr>
           <tr>
             <td><strong><a href="#retificacao">Publicação e Retificação</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Rito de 4 atos, contrato de mutabilidade campo a campo, vigência temporal. A Retificação <strong>acrescenta</strong> Modalidade (inclusive cota), critério de desempate, janela recursal, corte e reversão, e aplica um valor a todos os Perfis de uma vez. O “O que mudou” público cobre todo campo retificável</td>
-            <td>O documento consolidado não se diz retificado; a API ainda troca campo estrutural substituindo o objeto inteiro</td>
+            <td>Rito de 4 atos, contrato de mutabilidade campo a campo, vigência temporal. A Retificação <strong>acrescenta</strong> Modalidade (inclusive cota), critério de desempate, janela recursal, corte e reversão, e aplica um valor a todos os Perfis de uma vez. O “O que mudou” público cobre todo campo retificável. O documento consolidado se declara consolidado, com as datas (054)</td>
+            <td>A API ainda troca campo estrutural substituindo o objeto inteiro</td>
           </tr>
           <tr>
             <td><strong>Inscrição</strong></td>
@@ -9884,8 +9926,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#matricula">Requerimento de Matrícula</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Momento declarado, base local de CEP, versionamento, imutabilidade do enviado</td>
-            <td>O portal só leva a ele pelo rascunho: pedido na convocação, abre apenas pelo endereço. Não aparece na condução do Processo; a declaração que o candidato aceita não é publicada no Edital</td>
+            <td>Momento declarado, base local de CEP, versionamento, imutabilidade do enviado; a declaração publicada no Edital (054)</td>
+            <td>O portal só leva a ele pelo rascunho: pedido na convocação, abre apenas pelo endereço. Não aparece na condução do Processo</td>
           </tr>
           <tr>
             <td><strong><a href="#registro-academico">Exportação acadêmica</a></strong></td>
@@ -9920,8 +9962,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#publicacao">Documento como ato oficial</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos</td>
-            <td>Seções do documento, redação padrão que afirma norma, consolidado datado, fecho: na spec 054, em PR aberto. Assinatura e signatário dependem do Cefor</td>
+            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos. Desde a spec 054 (30/09): 22 seções sem redação padrão, fecho com local e data, consolidado datado, declaração do Requerimento e total de vagas</td>
+            <td>Como o ato é assinado, e o nome de quem assina, dependem do Cefor. A seção textual não tem tabela nem subitem numerado</td>
           </tr>
         </tbody>
       </table>
@@ -9992,6 +10034,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Numeração romana dos anexos (<code>AX-12</code>)</td><td>Nada conferia o “ANEXO IV” citado no texto</td><td>28/09: a Revisão avisa o anexo citado sem rótulo correspondente</td></tr>
           <tr><td>Documento que anunciava alcance amplo e executava um Perfil (<code>AX-14</code>)</td><td>O único caso em que documento publicado e comportamento se contradiziam</td><td>25–26/09, spec 044: o documento exigido por código de Modalidade vale para todos os Perfis que a têm, e a lista pedida é gravada no envio</td></tr>
           <tr><td>“O que mudou” que calava campos</td><td>O resumo público de uma Retificação omitia 45 dos 84 campos retificáveis</td><td>27/09: o dicionário passou a seguir o contrato de mutabilidade, com um guardião que reprova o campo novo sem linha</td></tr>
+          <tr><td>Catálogo de Seções fechado (<code>AX-3</code>)</td><td>No 28/2026, o Edital do teste operacional, 8 das 15 seções não tinham onde morar, e a seção intocada publicava redação padrão que afirmava norma — pontuação num Edital por sorteio</td><td>30/09, spec 054: 22 seções, sem redação padrão; 15 de 15 seções do 28/2026 com lugar</td></tr>
+          <tr><td>Consolidado da Retificação sem data</td><td>Saía igual ao original, sem data nem marca de retificado; só o SHA-256 os distinguia</td><td>30/09, spec 054: <em>“Versão consolidada. Publicado em …; retificado em ….”</em> abaixo do anúncio</td></tr>
+          <tr><td>Declaração do Requerimento não publicada</td><td>O candidato aceitava uma declaração que o Edital não publicava (<code>029</code>, Q-10)</td><td>30/09, spec 054: publicada por extenso na seção Da Matrícula</td></tr>
+          <tr><td>Ato sem local nem data</td><td>O documento oficial terminava sem data, e com o cargo no lugar do nome</td><td>30/09, spec 054: fecho com local e data; o nome sai só quando registrado</td></tr>
           <tr><td>README com <code>31 de 31</code></td><td>O número de tabelas protegidas estava desatualizado</td><td>O README deixou de fixar o número; um teste confere a tabela de incrementos contra <code>specs/</code></td></tr>
         </tbody>
       </table>
@@ -10018,7 +10064,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
             <td>Spec 008, critério de sucesso do documento</td>
             <td>O Processo aparece na primeira página, entre o ato e o título</td>
             <td>O renderizador nunca o imprimiu ali — e é o certo para os Editais reais, que não nomeiam Processo</td>
-            <td>Registrado na auditoria de consolidação; a emenda está na spec 054</td>
+            <td>Emendada pela spec 054 (FR-998): a primeira página sem o Processo</td>
           </tr>
           <tr>
             <td>Spec 046, lista de quem consome o Resultado</td>
@@ -10118,7 +10164,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <table>
         <thead><tr><th>Achado</th><th>O quê</th><th>Estado</th></tr></thead>
         <tbody>
-          <tr><td><code>AX-3</code></td><td>Catálogo de Seções fechado; oito seções de Editais reais sem onde morar</td><td><span class="selo selo-prev">Previsto</span> decidido em 28/09 ampliar o catálogo; spec 054 em PR aberto</td></tr>
+          <tr><td><code>AX-3</code></td><td>Catálogo de Seções fechado; oito seções de Editais reais sem onde morar</td><td><span class="selo selo-parc">Parcial</span> spec 054: catálogo de 22 seções, das quatro famílias da amostra; a seção textual continua sem tabela nem subitem numerado</td></tr>
           <tr><td><code>AX-4</code></td><td>A ficha de avaliação varia por curso; a Etapa é do Edital</td><td><span class="selo selo-lacun">Aberto</span> espera a decisão de quais famílias entram no alvo</td></tr>
           <tr><td><code>AX-5</code></td><td>Curso, Área e Campus ofertante não existem</td><td><span class="selo selo-lacun">Aberto</span></td></tr>
           <tr><td><code>AX-6</code></td><td>O código real é o par <em>(perfil × polo)</em>, e o sistema tem um eixo só</td><td><span class="selo selo-lacun">Aberto</span></td></tr>
@@ -10323,6 +10369,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Percentuais de cota não confrontados entre linhas</strong> (<code>AX-7</code>)</td><td>A Revisão mostra a divergência entre Perfis, e as tabelas de conjunto os põem lado a lado</td><td>Nenhuma validação compara percentual ou desempate de Modalidades de mesmo código</td></tr>
         <tr><td><strong>Fatos e marcos declarados uma vez e gravados N vezes</strong> (<code>AX-11</code>)</td><td>Spec 051: <span class="rotulo-ui">Aplicar a todos</span> materializa o valor em todos os Perfis, com prévia — sem campo no Edital</td><td>O documento imprime o comum N vezes, e nada confere que as cópias continuam iguais</td></tr>
         <tr><td><strong>Documentos exigidos fundem categorias</strong> (<code>AX-10</code>)</td><td>Spec 044: exigência por código de Modalidade em todos os Perfis, e a lista pedida é gravada no envio</td><td>O seletor de Modalidade de cada documento continua uma lista longa (“Modalidade de um Perfil”), sem agrupamento por Perfil</td></tr>
+        <tr><td><strong>Seções do documento</strong> (<code>AX-3</code>)</td><td>Spec 054 (30/09): catálogo de 22 seções, sem redação padrão; a vazia não sai (<code>editais/domain/secoes.py</code>)</td><td>Tabela, subitem numerado e negrito no texto da seção; o subitem transcrito carrega o número do original</td></tr>
         <tr><td><strong>“Qual Edital precisa de atenção?”</strong></td><td>O recurso é agregado por Edital</td><td>Os demais sinais continuam lista plana</td></tr>
       </tbody>
     </table></div>
@@ -10340,7 +10387,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Alocação e distribuição sem Perfil nem polo</strong></td><td>Com 7 polos, a comissão inteira alcança os sete; nenhuma comissão local recebe só o que é dela</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> e <code>alocacoes.html</code> sem “Perfil”</td></tr>
         <tr><td><strong>Integração com o Registro Acadêmico</strong></td><td>A exportação nunca foi importada no destino. É do setor dono do destino</td><td><code>matriculas/domain/colunas.py</code> (34 colunas)</td></tr>
         <tr><td><strong>Polo como eixo próprio; Curso, Área e Campus</strong> (<code>AX-5</code>, <code>AX-6</code>)</td><td>O Edital multipolo real já existe na amostra (140/2025, 28/2026) — a ressalva “não abstrair antes de tê-lo na mão” deixou de valer, e a pergunta continua aberta</td><td><code>editais/models/perfis.py</code></td></tr>
-        <tr><td><strong>Seções do documento</strong> (<code>AX-3</code>)</td><td>Decidido em 28/09 ampliar o catálogo, sem redação padrão que afirme norma; spec 054 em PR aberto</td><td><code>editais/domain/secoes.py</code></td></tr>
         <tr><td><strong>Ficha de avaliação por curso, barema</strong> (<code>AX-4</code>)</td><td>A nota não é conferível contra norma publicada; o barema é somado fora</td><td>nenhuma ocorrência de “barema” no código</td></tr>
         <tr><td><strong>Submodalidades de PPI/PPIQ</strong> (<code>AX-15</code>)</td><td>Excluídas por decisão da spec 044</td><td>—</td></tr>
       </tbody>
@@ -10409,8 +10455,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Revisão de um Edital publicado</td><td>Diz <span class="rotulo-ui">O que falta para submeter</span> e mostra a norma do dia da publicação, não a vigente depois de uma Retificação</td><td><code>compor_revisao.html</code>; as tabelas de elaboração não são reescritas pela Retificação</td></tr>
         <tr><td>Apuração de ocupação</td><td>Uma Retificação da reversão não a torna obsoleta: ela continua “vigente” com um número calculado sob outra norma</td><td><code>ocupacao/application/selectors.py</code> (<code>causas_de_obsolescencia</code>, cinco causas, nenhuma de reversão)</td></tr>
         <tr><td>Prévia da divulgação</td><td>Não diz a data-limite do recurso nem qual versão do Edital fundamenta a janela</td><td>registro pré-piloto de 28/09</td></tr>
-        <tr><td>Documento consolidado da Retificação</td><td>Sai igual ao original, sem data nem marca de retificado; só o SHA-256 os distingue</td><td>na spec 054 (PR aberto)</td></tr>
-        <tr><td>Requerimento de Matrícula</td><td>O candidato aceita uma declaração que o Edital não publica</td><td>na spec 054 (PR aberto)</td></tr>
         <tr><td>Inscrição depois de uma Retificação que dá Modalidade única ao Perfil</td><td>O envio grava a Modalidade sem a pessoa escolher, e os documentos da cota não são conferidos contra ela (a confirmar por percurso)</td><td><code>inscricoes/application/submissao.py</code></td></tr>
       </tbody>
     </table></div>
@@ -10485,7 +10529,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta</td></tr>
         <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; “só se o setor precisar”</td></tr>
         <tr><td><strong>DP-18</strong></td><td>Quem faz o teste operacional com o setor, e quando?</td><td>O roteiro e um ensaio existem; o teste com uma pessoa do setor não</td></tr>
-        <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto, e o nome de quem assina</td><td>Resposta do Cefor. O resto da DP-20 está decidido e na spec 054, em PR aberto</td></tr>
+        <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto, e o nome de quem assina</td><td>Resposta do Cefor. O resto da DP-20 está decidido e executado pela spec 054, mergeada em 30/09</td></tr>
       </tbody>
     </table></div>
     <p class="miudo">
@@ -10614,6 +10658,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tbody>
           <tr><td>20/09/2026</td><td>specs 001–038</td><td>Primeira reconstrução do produto a partir do código.</td></tr>
           <tr><td>29/09/2026</td><td><code>main</code> em <code>3a53b23</code>, specs 001–053</td><td>Reauditoria contra o código; três camadas (entender, operar, consultar); tutorial, catálogo de capacidades, “o que consigo configurar”, impacto de mudanças, receitas, sorteio, Perfis e reservas em profundidade; lacunas revistas uma a uma. Registro em <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>.</td></tr>
+          <tr><td>30/09/2026</td><td><code>main</code> em <code>86bbf49</code>, spec 054</td><td>A spec 054 (o Edital do sistema como ato oficial, PR 233) descrita como entregue: catálogo de 22 seções, fecho, consolidado datado, declaração do Requerimento e total de vagas no documento. Registro no mesmo arquivo.</td></tr>
         </tbody>
       </table>
     </div>
@@ -10624,7 +10669,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>Não validei o <strong>sistema de destino do Registro Acadêmico</strong> — ele não está disponível aqui. O que o sistema produz está descrito; o que acontece depois da importação, não.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
-        <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) estava em PR aberto na data desta revisão e não está descrita como entregue.</li>
+        <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
       </ul>
     </div>
 
@@ -10650,7 +10695,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <p>Visão do Sistema — manual conceitual, tutorial de onboarding, referência de configuração e
   fotografia do estado do sistema de Processos Seletivos e Editais do Cefor/Ifes.</p>
   <p>Reconstruída por leitura do código-fonte em 20/09/2026 e revista, de novo contra o código, em
-  29/09/2026 (<code>main</code> em <code>3a53b23</code>, specs 001 a 053). Onde documentação e código
+  29/09/2026 (<code>main</code> em <code>3a53b23</code>, specs 001 a 053); a spec 054 foi acrescentada
+  em 30/09/2026 (<code>main</code> em <code>86bbf49</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. O registro desta revisão está em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>.</p>
