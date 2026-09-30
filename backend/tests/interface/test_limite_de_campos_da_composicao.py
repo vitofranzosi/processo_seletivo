@@ -21,12 +21,14 @@ lugar do 400 cru (FR-021 da 002; FR-801 da 048).
 """
 
 import uuid
+from datetime import timedelta
 from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 import pytest
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio, PerfilVaga
 from processo_seletivo.processos.models import Edital
@@ -179,6 +181,9 @@ def _etapa(identidade, nome, ordem):
 
 
 def _rascunho():
+    # O período de inscrições é relativo ao relógio: a fixture publica o Edital, e com um término
+    # fixo a publicação passaria a ser recusada por período encerrado no dia seguinte a ele.
+    agora = timezone.now()
     return {
         "profiles": [_perfil(i) for i in range(1, PERFIS + 1)],
         "stages": [_etapa(PROVA, "Prova escrita", 1), _etapa(TITULOS, "Prova de títulos", 2)],
@@ -187,8 +192,8 @@ def _rascunho():
                 "id": _id("evento", "inscricoes"),
                 "type": "Inscrições",
                 "description": "Período de inscrições",
-                "startAt": "2026-11-03T09:00:00-03:00",
-                "endAt": "2026-11-20T23:59:00-03:00",
+                "startAt": (agora - timedelta(days=1)).isoformat(timespec="seconds"),
+                "endAt": (agora + timedelta(days=10)).isoformat(timespec="seconds"),
                 "order": 1,
                 "isRegistrationPeriod": True,
             }
