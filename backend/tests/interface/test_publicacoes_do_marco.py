@@ -58,7 +58,9 @@ def test_as_duas_publicacoes_aparecem_com_a_vigente_identificada(
     assert "Vigente" in linhas[0] and "Resultado definitivo" in linhas[0]
     assert "Sucedida" in linhas[1] and "Resultado preliminar" in linhas[1]
     assert "paula.publicadora" in linhas[0]
-    assert "Diretora do Cefor" in linhas[0]
+    # Pelo cargo, e sem travessão pendurado, desde a `054` (FR-994).
+    assert "Diretora-Geral do Centro de Referência" in linhas[0]
+    assert " — Diretora-Geral" not in linhas[0]
     assert primeira.publicado_em.astimezone().strftime("%d/%m/%Y") in corpo
     assert reverse("portal:resultado", args=[segunda.id]) in corpo
 

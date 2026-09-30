@@ -57,7 +57,7 @@
       </td>
       <td>{{ linha.publicacao.publicado_em|date:"d/m/Y" }} às {{ linha.publicacao.publicado_em|date:"H:i" }}</td>
       <td>{{ linha.publicacao.publicado_por }}</td>
-      <td>{{ linha.publicacao.signatario_nome }} — {{ linha.publicacao.signatario_cargo }}</td>
+      <td>{% if linha.publicacao.signatario_nome %}{{ linha.publicacao.signatario_nome }} — {% endif %}{{ linha.publicacao.signatario_cargo }}</td>
       <td>
         <a href="{% url 'portal:resultado' linha.publicacao.id %}">Página pública</a>
         {% comment %}

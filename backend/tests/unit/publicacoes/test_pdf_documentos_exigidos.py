@@ -11,7 +11,7 @@ import pytest
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.shared.canonical import canonical_sha256
 from tests.fixtures.snapshot import DOCUMENTO, MODALIDADE, PERFIL, rascunho_completo
-from tests.unit.publicacoes.test_pdf import texto_de
+from tests.unit.publicacoes.test_pdf import DATA_DA_SUITE, texto_de
 
 EDITAL_ID = "00000000-0000-0000-0000-0000000005f1"
 
@@ -31,7 +31,7 @@ def _secoes():
             "title": secao.title,
             "order": secao.order,
             "type": secao.type,
-            **({"source": secao.source} if secao.gerada else {"content": secao.default_text}),
+            **({"source": secao.source} if secao.gerada else {"content": secao.title}),
         }
         for secao in catalogo.CATALOGO
     ]
@@ -69,6 +69,7 @@ def _texto(snapshot):
         snapshot,
         canonical_sha256(snapshot),
         autoridade=compositor.AutoridadeSignataria(nome="Diretora", cargo="Diretora-Geral"),
+        data_do_ato=DATA_DA_SUITE,
     )
     return texto_de(documento)
 

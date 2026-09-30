@@ -25,6 +25,7 @@ from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
+from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1511,25 +1512,49 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
             )
         )
 
+    # **O número é o do documento publicado** (054, FR-985), e não a `order` do catálogo: com 22
+    # seções e as textuais vazias, a ordem diria "16" onde o PDF que se retifica imprime "11", e
+    # quem retifica procura a seção pelo número que leu no documento.
+    numeros = pdf.numeracao(conteudo)
     for secao in conteudo.get("sections") or []:
         # Seção gerada não tem conteúdo próprio: ela é composta a partir do dado que a origina,
         # e é lá que se corrige.
         if secao.get("type") == catalogo.GERADA:
             continue
-        nome = f"{secao.get('order', '')} — {secao.get('title', '')}".strip(" —")
-        grupos.append(
-            _grupo(
-                f"Seção {nome}",
-                f"/sections/id={secao.get('id', '')}",
-                secao,
-                CAMPOS_SECAO,
-                removivel=False,
-                tipo="Seção",
-                nome=nome,
-            )
+        numero = numeros.get(secao.get("key"))
+        nome = _nome_da_secao(secao, numero)
+        grupo = _grupo(
+            f"Seção {nome}",
+            f"/sections/id={secao.get('id', '')}",
+            secao,
+            CAMPOS_SECAO,
+            removivel=False,
+            tipo="Seção",
+            nome=nome,
         )
+        # **O estado vai para o campo, e não para o nome.** O título do grupo é reusado como nome
+        # da seção fora desta tela — no resumo da confirmação e nas pendências da Revisão
+        # (`views.nomes_dos_caminhos`) —, e "vazia" no nome rotularia como vazia justamente a
+        # seção que a Retificação está preenchendo (code review do PR 233).
+        grupo["campos"][0]["descricao"] = _estado_da_secao(numero)
+        grupos.append(grupo)
 
     return _referenciar(grupos)
+
+
+def _nome_da_secao(secao, numero):
+    """`11 — Da Matrícula`, pelo número do documento; sem número, só o título."""
+    titulo = str(secao.get("title", "")).strip()
+    return f"{numero} — {titulo}" if numero else titulo
+
+
+def _estado_da_secao(numero):
+    """O que o documento publicado faz hoje com a seção, dito junto do campo (054, FR-985)."""
+    if numero is None:
+        return "vazia, e não sai no documento"
+    if numero == 0:
+        return "sai como preâmbulo, sem número"
+    return f"sai no documento como a seção {numero}"
 
 
 # A que seção da tela cada tipo de linha pertence. Um Edital extenso produz dezenas de cartões

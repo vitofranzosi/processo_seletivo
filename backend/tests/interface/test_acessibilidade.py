@@ -320,7 +320,7 @@ def test_gravar_a_etapa_de_conteudo_a_torna_concluida(client, seletor_ligado, ed
         },
     )
     campos = {
-        f"secao-{s.key}": ("Texto revisto." if s.key == "apresentacao" else s.default_text)
+        f"secao-{s.key}": ("Texto revisto." if s.key == "apresentacao" else "")
         for s in catalogo.CATALOGO
         if not s.gerada
     }

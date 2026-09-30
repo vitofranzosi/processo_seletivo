@@ -1175,8 +1175,22 @@ components:
       required: [authorityId, name, role]
       properties:
         authorityId: { $ref: '#/components/schemas/Id' }
-        name: { type: string, minLength: 1 }
+        # Vazio enquanto o catálogo de autoridades não tiver o nome próprio (054, FR-992).
+        name: { type: string, maxLength: 255 }
         role: { type: string, minLength: 1 }
+        # O ato de nomeação de quem assina (054, FR-991); opcional.
+        appointment: { type: string, maxLength: 255 }
+    # Quem assinou, como a Publicação registrou (054, FR-991, FR-992). O nome pode vir vazio: pela
+    # interface, o catálogo de autoridades só tem o cargo enquanto o Cefor não fornece o nome.
+    SignatarioRegistrado:
+      type: object
+      additionalProperties: false
+      required: [authorityId, name, role, appointment]
+      properties:
+        authorityId: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        role: { type: string, minLength: 1 }
+        appointment: { type: string }
     CriarRetificacaoRequest:
       type: object
       required: [baseSnapshotId, justification, changes]
@@ -1290,7 +1304,7 @@ components:
           properties:
             sourceType: { type: string, enum: [EDITAL, RETIFICACAO] }
             sourceId: { $ref: '#/components/schemas/Id' }
-            signatory: { $ref: '#/components/schemas/SignatorySnapshot' }
+            signatory: { $ref: '#/components/schemas/SignatarioRegistrado' }
             content: { type: object, additionalProperties: true }
             documentUrl: { type: string, format: uri-reference }
     RetificacaoPublicaResponse:

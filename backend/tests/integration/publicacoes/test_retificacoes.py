@@ -15,6 +15,7 @@ from processo_seletivo.publicacoes.models_retificacao import (
 from processo_seletivo.shared.canonical import canonical_sha256
 from tests.fixtures.edital import actor_headers, caminho_evento, caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import SIGNATORY, publish_original, retify
+from tests.unit.publicacoes.test_pdf import texto_de
 
 VAGAS = caminho_perfil("immediateVacancies")
 # **A linha da ampla concorrência acompanha o total** (027, FR-335): num Perfil sem lista reservada
@@ -903,7 +904,7 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
 def test_retification_may_revert_a_previous_one_and_reproduce_the_original_document(
     api_client, manager_headers, process_payload
 ):
-    """Reverter uma Retificação tem efeito normativo e reproduz o documento original.
+    """Reverter uma Retificação tem efeito normativo e reproduz o conteúdo original.
 
     Regressão da unicidade global de `document_hash`: o PDF resultante é
     byte-a-byte igual ao da Publicação original e não pode colidir.
@@ -964,7 +965,17 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         key="retificacao-chave-k2",
     )
     assert published.status_code == 201
-    assert published.data["documentHash"] == original_document_hash
+    # **Desde a `054` o documento da reversão não é mais o original byte a byte** (FR-995): o
+    # consolidado se declara consolidado, com as datas das Retificações que incorpora. O que a
+    # reversão reproduz é o **conteúdo**, e o documento difere do original só pela marca.
+    original = Publicacao.objects.get(edital=edital, publication_order=1)
+    revertida = Publicacao.objects.get(pk=published.data["id"])
+    assert revertida.content_hash == original.content_hash
+    assert published.data["documentHash"] != original_document_hash
+    so_no_revertido = set(texto_de(bytes(revertida.documento.bytes)).splitlines()) - set(
+        texto_de(bytes(original.documento.bytes)).splitlines()
+    )
+    assert any(linha.startswith("Versão consolidada.") for linha in so_no_revertido)
     assert (
         VersaoConsolidada.objects.filter(edital=edital)
         .latest("materialized_at")

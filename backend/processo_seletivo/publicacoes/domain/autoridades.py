@@ -25,38 +25,54 @@ from uuid import UUID
 
 @dataclass(frozen=True)
 class Autoridade:
-    """Nome e cargo no exercício de atribuição pública, e nada além (FR-044).
+    """Cargo, nome e ato de nomeação no exercício de atribuição pública, e nada além (FR-044).
 
     Sem CPF, matrícula, endereço, telefone, e-mail ou foto: é o mínimo que a Constituição já exige
     que o ato normativo registre, e o máximo que este catálogo pode conter.
+
+    **O cargo é obrigatório; o nome e o ato de nomeação, não** (054, FR-992, D-005). O campo de nome
+    trazia a designação do cargo — "Diretora do Cefor" —, e o fecho do documento oficial a imprimia
+    onde o leitor espera um nome: um nome que não é nome. Enquanto o Cefor não fornece o nome de
+    quem assina e a portaria que o nomeou, as entradas ficam só com o cargo, e o fecho diz o cargo.
+    Quando vierem, entram aqui, revisados em diff, e a publicação seguinte os imprime sem outra
+    mudança. A portaria acompanha o nome porque nomeia a pessoa: as duas respostas vêm juntas.
     """
 
     chave: str
     identificador: UUID
-    nome: str
     cargo: str
+    nome: str = ""
+    ato_de_nomeacao: str = ""
 
     def __str__(self):
-        return f"{self.nome} — {self.cargo}"
+        return quem_assinou(self.nome, self.cargo)
+
+
+def quem_assinou(nome, cargo):
+    """`nome — cargo`, ou só o cargo quando não há nome (054, FR-994).
+
+    Uma função, e não a mesma f-string em cada tela: sem nome, a f-string deixava um travessão
+    pendurado — " — Diretora-Geral…" —, e cada tela que a repetisse teria de lembrar a exceção.
+    """
+    nome = str(nome or "").strip()
+    cargo = str(cargo or "").strip()
+    return f"{nome} — {cargo}" if nome and cargo else nome or cargo
 
 
 CATALOGO: tuple[Autoridade, ...] = (
     Autoridade(
         chave="reitoria",
         identificador=UUID("11111111-1111-4111-8111-111111111111"),
-        nome="Reitora do Ifes",
         cargo="Reitora",
     ),
     Autoridade(
         chave="pro-reitoria-ensino",
         identificador=UUID("22222222-2222-4222-8222-222222222222"),
-        nome="Pró-Reitor de Ensino",
         cargo="Pró-Reitor de Ensino",
     ),
     Autoridade(
         chave="diretoria-cefor",
         identificador=UUID("33333333-3333-4333-8333-333333333333"),
-        nome="Diretora do Cefor",
         cargo="Diretora-Geral do Centro de Referência em Formação e em Educação a Distância",
     ),
 )

@@ -11,7 +11,7 @@
 <h1>Confira antes de confirmar</h1>
 <p class="sub">{{ nome }} — {{ marco.name }}, {{ perfil.name }}, Edital {{ edital.number }}/{{ edital.year }}</p>
 {% if operacao == "publicar" %}
-<p class="sub">Natureza: <strong>{{ natureza_rotulo }}</strong> · Autoridade signatária: <strong>{{ autoridade.nome }} — {{ autoridade.cargo }}</strong></p>
+<p class="sub">Natureza: <strong>{{ natureza_rotulo }}</strong> · Autoridade signatária: <strong>{{ autoridade }}</strong></p>
 {% endif %}
 
 {% comment %}

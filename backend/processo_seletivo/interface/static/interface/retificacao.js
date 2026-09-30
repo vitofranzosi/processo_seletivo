@@ -107,7 +107,13 @@
       selo(linha, mudou);
     });
 
-    if (total === 0) contagem.textContent = "Nenhum campo alterado ainda";
+    /* Depois de uma conferência o digitado passa a ser o declarado, e a contagem recomeça do zero.
+       "Nenhum campo alterado ainda" ao lado de "Criar Retificação (14 Alterações)" dizia o
+       contrário do botão: o que zerou foi o que mudou **desde a conferência**, e é isso que se
+       diz — o que o ato leva está na tabela do resumo, que veio do servidor. */
+    if (total === 0 && form.getAttribute("data-conferido") !== null) {
+      contagem.textContent = "Nada alterado desde a conferência";
+    } else if (total === 0) contagem.textContent = "Nenhum campo alterado ainda";
     else if (total === 1) contagem.innerHTML = "<strong>1</strong> campo alterado";
     else contagem.innerHTML = "<strong>" + total + "</strong> campos alterados";
     /* O recorte acompanha a contagem: com "só o que eu alterei" ligado, a linha que acabou de

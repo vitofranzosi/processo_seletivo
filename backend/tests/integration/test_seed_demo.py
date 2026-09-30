@@ -67,7 +67,10 @@ def test_a_demonstracao_chega_ao_resultado_divulgado():
     publicacao = PublicacaoResultado.objects.get(edital=concluido)
     assert publicacao.ato_id == ato.id
     assert publicacao.publicado_por == "paula.publicadora"
-    assert publicacao.signatario_nome == "Diretora do Cefor"
+    # Desde a `054` o catálogo não traz designação no lugar do nome (FR-992): o nome fica vazio
+    # até o Cefor fornecê-lo, e quem assinou se lê pelo cargo.
+    assert publicacao.signatario_nome == ""
+    assert publicacao.signatario_cargo.startswith("Diretora-Geral")
     assert publicacao.documento.bytes, "a demonstração precisa do documento oficial"
 
     # Quatro consideradas, três com posição e uma sem — é o que torna a fronteira visível.

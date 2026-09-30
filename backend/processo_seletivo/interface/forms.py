@@ -15,6 +15,7 @@ from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import duplicacao, quadro, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
+from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -787,34 +788,37 @@ def _modalidade_para_o_formulario(modalidade):
 
 
 def ler_secoes(dados):
-    """Só as textuais, e só as que **mudaram** em relação ao catálogo.
+    """Só as textuais, e só as que têm texto.
 
-    A tela mostra as sete seções e envia as quatro textuais preenchidas; gravar todas criaria linha
-    para seção que ninguém tocou, e a regra "ausência de linha significa texto padrão do catálogo"
-    deixaria de valer no primeiro salvamento desta etapa. O efeito prático seria congelar a redação
-    institucional: corrigir o texto padrão em código não alcançaria mais nenhum Edital que tivesse
-    passado por aqui, e não haveria como distinguir texto revisado de texto intocado.
+    Desde a `054` o catálogo não tem redação padrão (FR-983): ausência de linha é seção vazia, e o
+    campo apagado é a seção esvaziada — `replace_draft` apaga a linha que não é reenviada. Gravar a
+    vazia criaria linha para seção que ninguém escreveu, e duas grafias do mesmo fato.
 
-    A comparação é sobre o texto sem espaço nas bordas: um `\\r\\n` que o navegador acrescenta não é
-    edição.
+    O texto é gravado sem espaço nas bordas: um `\\r\\n` que o navegador acrescenta não é edição.
     """
     editadas = []
     for chave in sorted(secoes.CHAVES_TEXTUAIS):
         digitado = _texto(dados, f"secao-{chave}")
-        padrao = secoes.POR_CHAVE[chave].default_text
-        if digitado and digitado != padrao.strip():
+        if digitado:
             editadas.append({"key": chave, "content": digitado})
     return editadas
 
 
-def secoes_do_edital(edital):
-    """O catálogo inteiro, na ordem, com o texto vigente de cada seção textual.
+def secoes_do_edital(edital, snapshot=None):
+    """O catálogo inteiro, na ordem, com o texto de cada seção textual e o número no documento.
 
     As geradas aparecem para que quem elabora veja a estrutura do documento — e leia, ao lado de
     cada uma, de que dado ela vem. Elas não têm campo de texto: o conteúdo se corrige no dado que
     o origina.
+
+    **O número é o que o documento imprimirá** (054, FR-985), da mesma regra que o compositor usa
+    (`pdf.numeracao`), sobre o conteúdo gravado: `None` para a seção que não sai, `0` para o
+    preâmbulo. A `norma` é o que o documento acrescentará à seção — a frase do teto, a declaração
+    do Requerimento (UX-132) —, para quem elabora não a repetir. Sem `snapshot`, nenhum dos dois é
+    calculado, e a tela cai no que o script da etapa refaz.
     """
     redigidas = {item.key: item.content for item in edital.secoes.all()}
+    numeros = pdf.numeracao(snapshot) if snapshot is not None else {}
     return [
         {
             "key": secao.key,
@@ -824,8 +828,10 @@ def secoes_do_edital(edital):
             "source": secao.source,
             "origem": ORIGEM.get(secao.source, (secao.source, ""))[0],
             "etapa_da_origem": ORIGEM.get(secao.source, ("", ""))[1],
-            "content": redigidas.get(secao.key, secao.default_text),
-            "editada": secao.key in redigidas,
+            "content": redigidas.get(secao.key, ""),
+            "numero": numeros.get(secao.key),
+            "norma": pdf.norma_acrescentada(secao.key, snapshot) if snapshot is not None else [],
+            "preambulo": secao.key == pdf.SECAO_DE_PREAMBULO,
         }
         for secao in secoes.CATALOGO
     ]
@@ -848,7 +854,7 @@ ORIGEM = {
 
 def secoes_persistidas(edital):
     """Seções textuais já editadas, no formato do command — para preservá-las ao salvar outra
-    etapa. Ausência de linha continua significando "texto padrão do catálogo"."""
+    etapa. Ausência de linha significa seção vazia desde a `054` (FR-982)."""
     return [{"key": item.key, "content": item.content} for item in edital.secoes.all()]
 
 
@@ -1140,6 +1146,90 @@ def perfis_persistidos(edital):
             "modalidades__regra_normativa", "marcos__criterios", "quadro_de_vagas"
         ).order_by("code")
     ]
+
+
+def perfis_alterados(digitados, gravados):
+    """As identidades dos Perfis que a tela devolve diferentes do gravado (052, FR-949, R-004).
+
+    Só quando a tela volta de um envio que não gravou — recusa, prévia, preenchimento,
+    restauração —, porque ali o valor inicial de cada campo já é o digitado, e a tela não tem mais
+    com o que comparar. Compara **só o que o cartão mostra**: o que ele não desenha (os marcos, a
+    descrição da Modalidade, os textos que só o contrato escreve) ele também não tem como mudar, e
+    comparar isso acusaria alteração num Perfil em que ninguém tocou. Perfil sem par gravado é
+    alterado: ainda não existe no rascunho.
+    """
+    por_identidade = {str(perfil["id"]): _o_que_o_cartao_mostra(perfil) for perfil in gravados}
+    return {
+        str(perfil["id"])
+        for perfil in digitados
+        if por_identidade.get(str(perfil["id"])) != _o_que_o_cartao_mostra(perfil)
+    }
+
+
+def _o_que_o_cartao_mostra(perfil):
+    """O Perfil na forma em que a leitura do formulário e a gravação escrevem igual.
+
+    As duas escrevem diferente o que é o mesmo valor — o percentual `25` volta `25.0000`, o vazio é
+    `""` de um lado e `None` do outro, as vagas não declaradas são `0` na tela —, e a comparação
+    sem isto acusaria alteração em todo Perfil devolvido.
+    """
+
+    def texto(valor):
+        return (valor or "").strip() if isinstance(valor, str) or valor is None else str(valor)
+
+    def percentual(valor):
+        return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
+
+    reserva = perfil.get("reserveType") or "NONE"
+    return (
+        tuple(
+            texto(perfil.get(campo))
+            for campo in (
+                "code",
+                "name",
+                "locality",
+                "description",
+                "workload",
+                "compensation",
+                "duties",
+                "generalCompetitionModalityId",
+                "callForm",
+            )
+        ),
+        tuple(linha.strip() for linha in perfil.get("requirements") or [] if linha.strip()),
+        perfil.get("immediateVacancies") or 0,
+        reserva,
+        perfil.get("reserveLimit") if reserva == "LIMITED" else None,
+        texto((perfil.get("vacancyReversion") or {}).get("kind")),
+        tuple(
+            sorted(
+                (
+                    texto(modalidade.get("id")),
+                    texto(modalidade.get("code")),
+                    texto(modalidade.get("name")),
+                    percentual((modalidade.get("normativeRule") or {}).get("percentage")),
+                    texto((modalidade.get("normativeRule") or {}).get("foundation")),
+                    texto((modalidade.get("normativeRule") or {}).get("version")),
+                    arredondamento_para_o_formulario(
+                        (modalidade.get("normativeRule") or {}).get("rounding")
+                    ),
+                )
+                for modalidade in perfil.get("competitionModalities") or []
+            )
+        ),
+        tuple(
+            sorted(
+                (texto(linha.get("modalityId")), linha.get("immediateVacancies"))
+                for linha in perfil.get("vacancyTable") or []
+            )
+        ),
+        tuple(
+            sorted(
+                tuple(texto(fato.get(campo)) for campo in ("id", "code", "label", "type"))
+                for fato in perfil.get("declaredFacts") or []
+            )
+        ),
+    )
 
 
 def _linha_persistida(linha):

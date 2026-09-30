@@ -181,6 +181,15 @@ def _autoridade(composicao, cabecalho):
     assinou, e imprimi-lo devolveria ao documento o UUID que a `007` tirou dele.
     """
     composicao.espaco(ENTRE_SECOES)
+    # **Sem nome, o cargo ocupa a linha do nome** (054, FR-992). O catálogo de autoridades deixou de
+    # trazer a designação do cargo no campo de nome, e o nome próprio só entra quando o Cefor o
+    # fornecer: até lá, uma linha em branco e o cargo em corpo de nota pareceriam assinatura
+    # apagada.
+    if not str(cabecalho.get("signatario_nome") or "").strip():
+        composicao.escrever(
+            cabecalho["signatario_cargo"], tamanho=CORPO_TEXTO, fonte=NEGRITO, alinhamento=CENTRO
+        )
+        return
     composicao.escrever(
         cabecalho["signatario_nome"], tamanho=CORPO_TEXTO, fonte=NEGRITO, alinhamento=CENTRO
     )

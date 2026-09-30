@@ -10,13 +10,25 @@
       {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
     </div>
     {% endif %}
-    <p class="ajuda">As seções do Edital, na ordem em que aparecem no documento. O conjunto e a
-      ordem são do sistema; o que se edita aqui é o texto das seções institucionais. As demais são
-      compostas a partir do que você já cadastrou — corrigi-las é corrigir o dado que as origina.</p>
+    <p class="ajuda">As seções do Edital, na ordem e com o número em que saem no documento. O
+      conjunto e a ordem são do sistema; o que se edita aqui é o texto das seções institucionais, e
+      só sai no documento a seção que tiver texto — as vazias não aparecem, e as seguintes são
+      numeradas sem salto. As demais são compostas a partir do que você já cadastrou — corrigi-las é
+      corrigir o dado que as origina.</p>
 
+    {% comment %}
+    O número e o estado moram **na legenda**, e não num parágrafo ao lado (054, UX-133): o campo é
+    nomeado pela legenda, e quem usa leitor de tela ouve "3. Público-Alvo" ou "Público-Alvo (vazia —
+    não sai no documento)" ao chegar nele, como quem vê a tela lê. `data-estado` diz de que depende
+    a seção sair: `sai` e `nao-sai` são fixos (a gerada, e a textual com norma acrescentada), e
+    `texto` depende do que está no campo — é o que `conteudo.js` recalcula enquanto se digita.
+    {% endcomment %}
     {% for secao in secoes %}
-    <fieldset class="linha secao{% if secao.gerada %} gerada{% endif %}">
-      <legend id="titulo-{{ secao.key }}">{{ secao.order }}. {{ secao.title }}</legend>
+    <fieldset class="linha secao{% if secao.gerada %} gerada{% endif %}"
+              data-secao="{{ secao.key }}"
+              data-estado="{% if secao.gerada %}{% if secao.numero is None %}nao-sai{% else %}sai{% endif %}{% elif secao.norma %}sai{% else %}texto{% endif %}"
+              {% if secao.preambulo %}data-preambulo{% endif %}>
+      <legend id="titulo-{{ secao.key }}"><span data-numero>{% if secao.numero %}{{ secao.numero }}. {% endif %}</span>{{ secao.title }}<span data-estado-texto>{% if secao.numero is None %} (vazia — não sai no documento){% elif secao.numero == 0 %} (preâmbulo, sem número){% endif %}</span></legend>
       {% if secao.gerada %}
       <p class="ajuda">Composta automaticamente a partir de <strong>{{ secao.origem }}</strong>.
         Não há texto a redigir: alterar aquele conteúdo altera esta seção.</p>
@@ -29,19 +41,27 @@
       seção" dez vezes seguidas, cada uma sob uma legenda que já diz qual seção é, não informava
       nada — e num leitor de tela dizia menos que o título: agora o campo se anuncia como
       "1. Apresentação", que é o que distingue um dos dez.
+
+      A norma que o documento acrescenta à seção (054, UX-132) é dita aqui, para quem elabora não a
+      transcrever de novo: o teto de inscrições, a declaração do Requerimento de Matrícula.
       {% endcomment %}
       <p class="campo largo">
         <textarea id="secao-{{ secao.key }}" name="secao-{{ secao.key }}" rows="5"
                   {% if not editavel %}disabled{% endif %}
                   aria-labelledby="titulo-{{ secao.key }}"
-                  aria-describedby="ajuda-{{ secao.key }}">{{ secao.content }}</textarea>
-        <span class="ajuda" id="ajuda-{{ secao.key }}">{% if secao.editada %}Texto revisado por
-          quem elabora.{% else %}Redação institucional padrão — revise antes de submeter.{% endif %}</span>
+                  {% if secao.norma %}aria-describedby="ajuda-{{ secao.key }}"{% endif %}>{{ secao.content }}</textarea>
       </p>
+      {% if secao.norma %}
+      <div class="ajuda" id="ajuda-{{ secao.key }}">
+        <p>O documento acrescentará a esta seção, depois do texto, o que o Edital já declara:</p>
+        {% for paragrafo in secao.norma %}<p>{{ paragrafo }}</p>{% endfor %}
+      </div>
+      {% endif %}
       {% endif %}
     </fieldset>
     {% endfor %}
   </section>
   {% include "interface/_navegacao_etapa.html" %}
 </form>
+{% load static %}<script src="{% static 'interface/conteudo.js' %}" defer></script>
 {% endblock %}

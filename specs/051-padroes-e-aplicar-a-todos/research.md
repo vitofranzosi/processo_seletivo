@@ -131,3 +131,125 @@ todos os membros foram alcançados pelo mesmo gesto e continuam com o valor grav
 travessia `(coleção, caminho)` que o guardião do contrato usa, agrupado por campo e por valor igual.
 A razão é a do contrato; o estrutural, que não carrega razão (`Mutabilidade` a proíbe), diz *"é a
 identidade que outras declarações citam"* — que é a definição da própria natureza.
+
+---
+
+## A P2 — o gesto na Retificação (US5)
+
+Conferido contra a `main` em `0598a9f3` (29/09/2026), depois da P1 (#226) e do `RC-130` (#217).
+
+## R-011 — Na Retificação, a prévia é a conferência, e o gesto é uma declaração da tela
+
+**Decision**: o botão do cartão de origem é um `submit` do formulário da Retificação
+(`aplicar=<unidade>:<referência do cartão>`), como na composição (R-001). Ele **declara** o gesto, e a
+tela volta com a conferência — *"O que vai mudar"* — em que as Alterações do gesto aparecem agrupadas,
+destino a destino, com os quatro efeitos, o motivo de quem fica fora e a caixa de inclusão. A
+declaração atravessa as idas e voltas em campos ocultos (`gesto`, `gesto_mostrado:<gesto>`,
+`gesto_impressao:<gesto>`, `gesto_destino:<gesto>`). **A confirmação é o *Criar Retificação* de
+sempre**: ele recalcula, confere a impressão do que foi mostrado (FR-919) e cria **um** ato com as
+Alterações digitadas e as de cada gesto. *Desfazer* retira o gesto da tela.
+
+As Alterações do gesto são calculadas sobre o conteúdo **proposto** — o vigente com as Alterações
+digitadas —, e é dele que sai o valor da origem: quem retifica corrige o prazo no primeiro marco e
+pede para aplicar aquele prazo aos demais.
+
+As identidades que o gesto cria — o critério e a Modalidade que nascem no destino — são **derivadas**
+(`uuid5` da origem e do destino), e não sorteadas: a conferência e a confirmação calculam duas vezes, e
+uma identidade nova a cada chamada mudaria o ato sob a mesma chave de idempotência — a razão que a
+`020` já deu para o Anexo e a `048` para a Modalidade acrescentada.
+
+**Rationale**: é o que a `DP-13` escreveu para a Retificação — *"ela é a conferência que já existe
+(FR-800), agrupada, e não uma prévia em PDF"* — e é o que torna a `SC-347` literal: um gesto
+(*Aplicar*) e uma confirmação (*Criar Retificação*). O caminho de criação continua um só
+(`create_retification`), com as guardas do ato de sempre: o `RC-130`, a janela que nasce concedendo, o
+corte sobre Etapa com Resultado, a Modalidade e o critério que a composição recusaria.
+
+**Alternatives considered**: *reescrever os campos dos destinos no formulário* — a conferência perderia
+o agrupamento e a identidade do que foi mostrado, e o critério trocado não tem campo no destino para
+ser reescrito (é remoção e acréscimo); *um ato por gesto* — N atos, N versões e N documentos, o
+contrário da `FR-941`.
+
+## R-012 — As unidades são os blocos da `FR-938`, e cada uma produz Alterações campo a campo
+
+**Decision**: um botão por unidade, no cartão da origem. **A natureza de cada campo é lida do contrato
+de mutabilidade** (`FR-942`, `FR-803` da `048`): a unidade só enumera os campos, e a pergunta *"este
+campo se retifica?"* é respondida por `mutabilidade.CONTRATO`.
+
+| Unidade | Cartão | Campos | Alterações | Fora do alcance quando |
+|---|---|---|---|---|
+| Janela recursal | Marco | `appealWindow/admits`, `durationDays`, `unit` | `REPLACE` por campo; ausente, nasce inteira (`REPLACE` do objeto) | nasceria sem admitir recurso (`FR-787`) |
+| Regra de corte | Marco | os seis de `cutRule` | `REPLACE` de alvo, suplentes e empate; ausente, nasce inteira | espécie do alvo, Etapa governada ou continuação diferem (não retificáveis); nasceria governando Etapa com Resultado (`FR-789`) |
+| Critérios de desempate | Marco | a lista | `REMOVE` + `ADD` (`FR-792`); `REPLACE` da ordem quando só ela difere | fato sem correspondente de mesmo código e tipo (`FR-914`) |
+| Campos do marco | Marco | forma da ordem, Etapas, combinação, normalização, arredondamento | `REPLACE` por campo | as Etapas diferem (não retificável); o campo falta de um lado; método próprio de sorteio (`FR-922`) |
+| Forma de convocação | Perfil | `callForm` | `REPLACE` | — |
+| Reversão | Perfil | `vacancyReversion/kind` | `REPLACE`; ausente, nasce (`FR-791`) | sem lista reservada |
+| Modalidade | Modalidade | denominação, descrição, fundamento, versão, percentual, arredondamento; a declaração da ampla | `REPLACE` por campo; código ausente, `ADD` da Modalidade (`FR-777`), sem linha do quadro (`FR-924`); ampla, `REPLACE` no Perfil (`FR-925`) | arredondamento diferente (não retificável); regra de um lado só (`FR-940`: não nasce em Modalidade publicada) |
+
+Em todas: o destino com dois ou mais marcos, ou sem marco, fica fora pela regra da composição
+(`FR-912`); e **nenhuma aplicação é parcial** (`FR-939`) — basta um campo não retificável diferente
+para o destino inteiro sair, com o campo nomeado e a razão escrita no contrato.
+
+**Rationale**: a `FR-938` enumera as unidades. Aplicar o marco inteiro, como na composição, levaria
+junto o que ninguém pediu para corrigir — o prazo corrigido nos 16 Perfis carregaria os critérios da
+origem — e poria as Etapas, que não se retificam, em todo gesto. É também o que o *Independent Test*
+mede: 7 Perfis, 7 Alterações, uma por destino e campo.
+
+**Alternatives considered**: *um botão por marco que aplica "o que foi alterado nele"* — casaria com
+*"a mesma alteração"* da US5, mas não aplicaria o valor já publicado na origem aos destinos que
+divergem, que é metade da correção (a `G-001` da `043` depois de publicado).
+
+## R-013 — A ausência na origem não se aplica na Retificação
+
+**Decision**: se a origem não declara a unidade — sem janela, sem corte, sem critério, sem forma de
+convocação, sem reversão —, o gesto é recusado com *"não há o que aplicar"*. E o destino em que aplicar
+**retiraria** uma declaração publicada (o arredondamento que a origem não tem, a regra normativa que
+ela não declara) fica fora do alcance.
+
+**Rationale**: na composição a ausência é aplicada como ausência (`FR-922`), porque o rascunho ainda
+não é norma. Na Retificação, retirar de N Perfis o prazo de recurso ou a forma de convocação
+publicados não é a correção que o gesto existe para fazer, a tela não oferece retirar janela nem corte,
+e nada deve sumir em lote sem que alguém o peça campo a campo.
+
+## R-014 — O destino já alterado no mesmo ato fica fora
+
+**Decision**: o destino em que a unidade já recebeu Alteração neste ato — digitada, ou de um gesto
+anterior — fica fora do alcance, com *"já tem alteração nesta Retificação"* e o campo.
+
+**Rationale**: o ato teria duas Alterações no mesmo caminho, e a última venceria em silêncio. Quem quer
+a edição à mão desmarca o destino; quem quer o gesto desfaz a edição.
+
+## R-015 — As consequências são do ato inteiro, lidas de onde as telas de condução as leem
+
+**Decision**: a conferência declara, sobre o conteúdo que o ato produz (`FR-941`):
+
+- **a ordem que fica obsoleta** — o marco cujo recorte da regra (`classificacao.domain.universo.recorte_da_regra`)
+  muda e que tem ato de ordenação vigente em algum recorte (`ato_vigente`);
+- **o recorte que nasce sem ordem** — a Modalidade reservada que nasce num Perfil cujo marco já tem
+  ato de ordenação vigente (`FR-781` da `048`);
+- **o marco com resultado divulgado cuja janela muda** — `appealWindow` diferente, e publicação vigente
+  no histórico do marco (`divulgacao.application.selectors.historico_do_marco`).
+
+**Do ato inteiro, e não só do gesto**: a correção da origem é a mesma alteração que o gesto leva, e
+contar só os destinos esconderia a consequência no primeiro Perfil. As leituras são as das telas de
+condução, e não uma terceira grafia da mesma pergunta; uma por marco alcançado, e nenhuma por
+participante.
+
+## R-016 — O registro do gesto na Retificação
+
+**Decision**: uma linha `APLICAR_A_TODOS` por gesto confirmado, com o agregado **Retificação** e a
+permissão `retificacao:elaborar`, na mesma transação de `create_retification`; `detalhe` segue o
+contrato do registro, com `etapa = "retificacao"` e a identidade da Retificação. A repetição com a
+mesma chave de idempotência devolve o ato já criado e não registra de novo.
+
+**Rationale**: `FR-921` vale para o gesto, em qualquer tela. O agregado é a Retificação porque é ela o
+ato que o gesto produz; a Revisão da composição lê só as linhas do Edital, e não passa a atribuir a um
+rascunho o que uma Retificação fez.
+
+## R-017 — A leitura da `FR-802` da `048` (`FR-942`)
+
+**Decision**: escrita no docstring de `publicacoes/domain/aplicacao.py`, além da spec. A `FR-802`
+impede espécie nova e genérica de Alteração, e o gesto não cria nenhuma: cada destino recebe
+`REPLACE` de campo retificável, o nascimento de objeto que o contrato deixa nascer, ou a remoção e o
+acréscimo de item às duas coleções que a `048` nomeou (critério e Modalidade). Cada uma passa pelas
+guardas do ato, e todas saem no mesmo ato, com a mesma versão, o mesmo documento e o mesmo histórico
+(`FR-795`).

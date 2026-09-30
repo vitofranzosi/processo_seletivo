@@ -1,5 +1,14 @@
-{% load interface_extras %}<fieldset class="linha perfil">
-  <legend>Perfil de Vaga</legend>
+{% load interface_extras %}{% comment %}
+**O cartão se identifica, e diz à vista do conjunto o que ela não sabe** (052). O `id` usa a
+identidade do Perfil, e não o índice: o servidor renumera os índices ao reexibir, e o endereço que
+reabre o cartão depois de um envio precisa continuar apontando o mesmo Perfil. `data-pendencias` são
+as pendências da etapa que o têm por objeto, contadas no servidor; `data-nao-salvo` diz que o que
+voltou do servidor difere do gravado — a tela não tem como saber, porque ali o valor inicial dos
+campos já é o digitado.
+{% endcomment %}<fieldset class="linha perfil" id="cartao-{{ perfil.id }}"
+          data-pendencias="{{ pendencias_por_perfil|dicionario_simples:perfil.id|default:0 }}"{% if perfil.id in perfis_alterados %}
+          data-nao-salvo{% endif %}>
+  <legend>{{ perfil|legenda_do_perfil }}</legend>
   <input type="hidden" name="perfil-{{ indice }}-id" value="{{ perfil.id }}">
   {% if perfil.marcos_em_transito %}<input type="hidden" name="perfil-{{ indice }}-marcosEmTransito" value="{{ perfil.marcos_em_transito }}">{% endif %}
   {% if duplicado %}
@@ -104,6 +113,7 @@
       <p class="opcao">
         <input type="radio" id="perfil-{{ indice }}-reserveType-{{ valor }}"
                name="perfil-{{ indice }}-reserveType" value="{{ valor }}"
+               data-resumo="{% if valor == "LIMITED" %}limitado{% elif valor == "UNLIMITED" %}ilimitado{% else %}não há{% endif %}"
                {% if perfil.reserveType == valor or not perfil.reserveType and valor == "NONE" %}checked{% endif %}>
         <label for="perfil-{{ indice }}-reserveType-{{ valor }}">{{ rotulo }}</label>
       </p>
@@ -240,8 +250,11 @@
     {% endcomment %}
     <p class="campo">
       <label for="perfil-{{ indice }}-callForm">Como a convocação é comunicada</label>
+      {% comment %}As frases da linha da tabela (052, R-005), no `select` e não nas opções: o vocabulário fica aqui, e não no script.{% endcomment %}
       <select id="perfil-{{ indice }}-callForm"
               name="perfil-{{ indice }}-callForm"
+              data-resumo-nenhuma="não declarada" data-resumo-publication="por publicação"
+              data-resumo-individual_message="por mensagem individual"
               aria-describedby="ajuda-convocacao-{{ indice }}">
         <option value="">Não declarado — este Edital não diz como convoca</option>
         <option value="PUBLICATION" {% if perfil.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação no endereço eletrônico do certame</option>

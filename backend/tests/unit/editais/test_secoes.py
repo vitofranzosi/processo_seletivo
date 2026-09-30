@@ -1,29 +1,39 @@
 """T011 e T012 — o catálogo de Seções, declarado e fixo.
 
 A `007` acrescenta três seções institucionais e renumera a ordem; a `009` acrescenta a décima
-primeira, gerada, com os documentos exigidos do candidato. O que estes testes protegem é que o
+primeira, gerada, com os documentos exigidos do candidato; a `054` o amplia para 22, pelas famílias
+da amostra, e tira a redação padrão. O que estes testes protegem é que o
 catálogo continua sendo **catálogo**: conjunto e ordem definidos pelo sistema (FR-009), e
 identidade derivada da chave — não da posição (D-007).
 """
 
 import uuid
 
-import pytest
-
 from processo_seletivo.editais.domain import secoes
 
-# A ordem declarada no contrato `specs/007-edital-institucional/contracts/institucional.md`, A.3.
+# A ordem declarada pela `054` (FR-980): a união das seções que se repetem nas quatro famílias da
+# amostra do Cefor, a oferta antes da inscrição. As 12 de antes mantêm a chave (FR-981).
 ORDEM_ESPERADA = [
     ("apresentacao", "Apresentação", secoes.TEXTUAL),
     ("disposicoes-preliminares", "Disposições Preliminares", secoes.TEXTUAL),
+    ("informacoes-gerais", "Informações Gerais sobre o Curso", secoes.TEXTUAL),
+    ("publico-alvo", "Público-Alvo", secoes.TEXTUAL),
     ("requisitos-gerais", "Requisitos Gerais de Participação", secoes.TEXTUAL),
+    ("perfis", "Perfis de Vaga", secoes.GERADA),
     ("inscricao", "Da Inscrição", secoes.TEXTUAL),
     ("documentos-exigidos", "Documentos Exigidos para a Inscrição", secoes.GERADA),
-    ("perfis", "Perfis de Vaga", secoes.GERADA),
+    ("verificacao-autodeclaracao", "Da Verificação da Autodeclaração", secoes.TEXTUAL),
+    ("atendimento-pcd", "Do Atendimento à Pessoa com Deficiência", secoes.TEXTUAL),
     ("etapas", "Etapas de Avaliação", secoes.GERADA),
     ("classificacao", "Critérios de Classificação", secoes.TEXTUAL),
     ("cronograma", "Cronograma", secoes.GERADA),
     ("recursos", "Dos Recursos", secoes.TEXTUAL),
+    ("convocacao", "Da Convocação", secoes.TEXTUAL),
+    ("matricula", "Da Matrícula", secoes.TEXTUAL),
+    ("acesso-ao-curso", "Do Acesso ao Curso", secoes.TEXTUAL),
+    ("homologacao-matricula", "Da Homologação da Matrícula", secoes.TEXTUAL),
+    ("certificado", "Do Certificado", secoes.TEXTUAL),
+    ("prazo-de-validade", "Do Prazo de Validade", secoes.TEXTUAL),
     # A `020` acrescenta a relação dos Anexos, e ela é **gerada**: o catálogo lista os anexos que o
     # Edital publica, e quem os declara é a etapa própria, não um texto redigido aqui.
     ("anexos", "Anexos", secoes.GERADA),
@@ -41,34 +51,35 @@ def test_a_ordem_declarada_e_uma_sequencia_sem_buraco():
 
 
 def test_as_posicoes_cumprem_a_leitura_de_um_edital():
-    """FR-008, verificado por posição relativa e não por número mágico."""
+    """FR-008 da 007 e FR-980 da 054, verificados por posição relativa e não por número mágico."""
     posicao = {s.key: s.order for s in secoes.CATALOGO}
 
     assert posicao["apresentacao"] < posicao["perfis"], "a apresentação vem antes dos Perfis"
     assert posicao["requisitos-gerais"] < posicao["inscricao"], (
         "os requisitos gerais vêm antes da inscrição"
     )
+    assert posicao["perfis"] < posicao["inscricao"], (
+        "a oferta vem antes da inscrição, como nos quinze Editais da amostra (054, FR-980)"
+    )
     assert posicao["classificacao"] > posicao["etapas"], (
         "a classificação vem depois das Etapas de Avaliação"
     )
+    assert posicao["disposicoes-finais"] == len(secoes.CATALOGO), "as disposições finais fecham"
 
 
-@pytest.mark.parametrize("chave", ["apresentacao", "requisitos-gerais", "classificacao"])
-def test_as_tres_novas_sao_textuais_com_redacao_inicial(chave):
-    secao = secoes.POR_CHAVE[chave]
-
-    assert secao.type == secoes.TEXTUAL
-    assert not secao.gerada
-    assert secao.default_text.strip(), "seção textual sem redação inicial nasceria vazia"
-    assert not secao.source, "seção textual não declara origem"
-    assert secoes.e_textual(chave)
+def test_nenhuma_secao_tem_redacao_padrao():
+    """FR-983 da 054: a textual nasce vazia, e o documento só publica o que alguém escreveu."""
+    for secao in secoes.CATALOGO:
+        assert not hasattr(secao, "default_text"), secao.key
 
 
-def test_seção_gerada_declara_origem_e_nao_traz_texto():
+def test_secao_textual_nao_declara_origem_e_a_gerada_declara():
     for secao in secoes.CATALOGO:
         if secao.gerada:
             assert secao.source, secao.key
-            assert not secao.default_text, secao.key
+        else:
+            assert not secao.source, secao.key
+            assert secoes.e_textual(secao.key)
 
 
 def test_a_identidade_deriva_da_chave_e_nao_muda_com_a_renumeracao():

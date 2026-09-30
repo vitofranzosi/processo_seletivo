@@ -279,16 +279,21 @@ def test_alterar_a_topologia_de_uma_secao_e_recusado(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_esvaziar_o_conteudo_de_secao_textual_e_recusado(
+def test_esvaziar_o_conteudo_de_secao_textual_e_aceito(
     api_client, manager_headers, process_payload
 ):
+    """054, FR-982 e FR-988: a textual pode ficar vazia, e a Retificação que a esvazia é aceita.
+
+    Era recusado pela `FR-041` da `006`. Desde a `054` a seção vazia está no conteúdo e não sai no
+    documento — e esvaziá-la é mudança normativa legítima, que o "O que mudou" registra como
+    qualquer alteração de texto.
+    """
     edital = _edital_com_etapas(api_client, manager_headers, process_payload)
     caminho = f"/sections/id={_identidade_da_secao(edital, 'recursos')}/content"
 
     resposta = _tentar_publicar(api_client, edital, _replace(edital, caminho, "   "), "s4")
 
-    assert resposta.status_code == 422, resposta.content
-    assert "precisa de conteúdo" in resposta.json()["detail"]
+    assert resposta.status_code == 201, resposta.content
 
 
 @pytest.mark.django_db(transaction=True)

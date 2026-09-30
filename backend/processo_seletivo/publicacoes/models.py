@@ -63,6 +63,10 @@ class Publicacao(models.Model):
     signatory_id = models.UUIDField()
     signatory_name = models.CharField(max_length=255)
     signatory_role = models.CharField(max_length=255)
+    # O ato de nomeação de quem assina — "Portaria nº …, de …" —, copiado do catálogo de autoridades
+    # no momento do ato, como nome e cargo, e imutável como eles (054, FR-991). Vazio nas
+    # Publicações anteriores à `054`, que não o registraram, e enquanto o Cefor não o fornecer.
+    signatory_appointment = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         constraints = [

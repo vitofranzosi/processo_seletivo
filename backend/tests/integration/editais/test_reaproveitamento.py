@@ -334,12 +334,11 @@ def test_a_copia_traz_as_colecoes_da_origem(destino, origem, elaborador):
 
 
 def test_as_secoes_copiadas_sao_as_textuais_do_catalogo(destino, origem, elaborador):
-    """Todas as textuais, e não só a editada — é o efeito colateral que `T-006` declara.
+    """As textuais que alguém escreveu, e só elas — gerada nenhuma entra.
 
-    O conteúdo publicado traz o padrão do catálogo quando não há linha, então a cópia persiste linha
-    para cada textual. É indistinguível do que o assistente produz quando alguém abre e grava a
-    etapa `Conteúdo`, e não altera o documento publicado. Gerada nenhuma entra: `_validar_secoes` as
-    recusa, e com razão.
+    **Emendado pela `054`** (FR-983): a seção vazia não vira linha, e a redação padrão que o acervo
+    anterior à `054` publicou também não — nenhuma das duas foi escrita para o Edital de origem.
+    `tests/unit/editais/test_reuso_das_secoes_da_054.py` prende os dois casos.
     """
     copiado = copiar(destino, origem, elaborador)
 

@@ -156,9 +156,11 @@ from processo_seletivo.interface import (
     conducao_do_marco,
     forms,
     identidade,
+    origens,
     revisao,
 )
 from processo_seletivo.interface import aplicacao as aplicacao_ui
+from processo_seletivo.interface import aplicacao_na_retificacao as gesto_na_retificacao
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -176,11 +178,11 @@ from processo_seletivo.processos.application.selectors import (
 )
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+from processo_seletivo.publicacoes.application.aplicacao import criar_retificacao_com_gestos
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
     conteudo_base,
-    create_retification,
 )
 from processo_seletivo.publicacoes.application.selectors import (
     effective_version,
@@ -189,6 +191,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     participantes_do_edital,
 )
 from processo_seletivo.publicacoes.domain import autoridades
+from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import admitir as recursos_admitir
@@ -699,13 +702,13 @@ DESTINO_POR_CODIGO = {
     "registration_period_cancelled": ("inscricao", "#inscricao-periodo", True),
 }
 
-# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09), e só eles. Mapear a coleção
-# `sections` inteira para a etapa Conteúdo — como a primeira redação fazia — tornava "corrigíveis"
-# ali os impeditivos de topologia do catálogo, seção ausente, alheia, título ou ordem trocados, que
-# a tela não corrige: a pendência oferecia um caminho que não existe, que é o que a `FR-007`
-# proíbe. Achado da revisão do PR 221.
+# **Os dois avisos que se revisam no texto da seção** (DP-20, 28/09; o segundo trocado pela `054`,
+# FR-986), e só eles. Mapear a coleção `sections` inteira para a etapa Conteúdo — como a primeira
+# redação fazia — tornava "corrigíveis" ali os impeditivos de topologia do catálogo, seção ausente,
+# alheia, título ou ordem trocados, que a tela não corrige: a pendência oferecia um caminho que não
+# existe, que é o que a `FR-007` proíbe. Achado da revisão do PR 221.
 DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
-CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_default_text"})
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_universal_empty"})
 
 
 def _destino(caminho, codigo=""):
@@ -847,7 +850,7 @@ ANTES_DA_PUBLICACAO = frozenset(
 )
 
 
-def _pendencias(edital, *, agora=None, ator=None):
+def _pendencias(edital, *, agora=None, ator=None, snapshot=None):
     """FR-008 e FR-027: o que falta para submeter, e onde cada coisa se resolve.
 
     **`agora` é recebido, e não lido aqui, quando a página também desenha o selo das etapas**
@@ -876,7 +879,9 @@ def _pendencias(edital, *, agora=None, ator=None):
     # Edital×ator, e repeti-lo por pendência custaria uma consulta de permissão por linha sem
     # poder responder diferente em nenhuma delas.
     conduzir = ator is not None and falta_permissao_para_compor(edital, ator)
-    snapshot = edital_snapshot(edital)
+    # Recebido de quem já o montou para outra leitura da mesma tela — a origem dos marcos, na
+    # Classificação (053) —, e montado aqui quando não.
+    snapshot = snapshot if snapshot is not None else edital_snapshot(edital)
     grupos, campos = nomes_dos_caminhos(snapshot)
     # **Fora da elaboração, o gate não roda** (046, `FR-755`, `FR-756`): o Edital publicado é ato
     # imutável, e perguntar se ele pode ser publicado produzia o *"Impede"* do `RC-32`. O que fica
@@ -909,6 +914,24 @@ def _pendencias(edital, *, agora=None, ator=None):
             }
         )
     return pendencias
+
+
+# O caminho do achado de forma nomeia a entidade: `/profiles/id=<uuid>/…` (ver `_destino`).
+PERFIL_DO_CAMINHO = re.compile(r"^/profiles/id=([^/]+)")
+
+
+def _pendencias_por_perfil(pendencias):
+    """`{id do Perfil: quantas}` — as pendências da etapa que têm um Perfil por objeto (052, R-003).
+
+    Contadas sobre a lista que a etapa já mostra, e não sobre a validação inteira: a linha da
+    tabela não pode dizer uma pendência que o bloco da etapa não diz. A que é sobre o conjunto dos
+    Perfis (`profiles`, sem identidade) não é de linha nenhuma, e fica só no bloco (FR-948).
+    """
+    contagem = {}
+    for item in pendencias:
+        if encontrado := PERFIL_DO_CAMINHO.match(item.get("campo") or ""):
+            contagem[encontrado.group(1)] = contagem.get(encontrado.group(1), 0) + 1
+    return contagem
 
 
 def _pendencias_da_etapa(pendencias, etapa):
@@ -957,10 +980,19 @@ ETAPAS_GRAVAVEIS = {
 }
 
 
+def _conteudo_gravado(edital):
+    """A etapa Conteúdo já foi gravada: o registro de auditoria da gravação, pela área (FR-042)."""
+    return RegistroAuditoria.objects.filter(
+        aggregate_id=edital.id,
+        operation="ALTERAR_RASCUNHO",
+        reason=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO)["conteudo"],
+    ).exists()
+
+
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
-# `True` fixo, porque as seções nascem com o texto do catálogo e, tecnicamente, nada falta — então
-# um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse aberto. O
-# sistema afirmava que a pessoa fez algo que ela não fez.
+# `True` fixo, porque as seções nasciam com o texto do catálogo e, tecnicamente, nada faltava —
+# então um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse
+# aberto. O sistema afirmava que a pessoa fez algo que ela não fez.
 #
 # "Aberta" seria o critério errado e caro: exigiria persistir "esta pessoa visitou esta etapa", por
 # Edital e por pessoa — estado novo, sem valor normativo, que ainda afirmaria revisão onde houve
@@ -1006,6 +1038,11 @@ def _recusa(exc, digitados, etapa):
     # Campo de **raiz** do Edital não tem linha: o controle é um só, e a âncora é o `id` dele.
     if campo in CONTROLE_DO_CAMPO_DE_RAIZ and not identidade:
         return {"mensagem": mensagem, "ancora": CONTROLE_DO_CAMPO_DE_RAIZ[campo]}
+    if etapa == "classificacao" and identidade and isinstance(digitados, dict):
+        return {
+            "mensagem": mensagem,
+            "ancora": _ancora_na_classificacao(digitados, campo, identidade),
+        }
     prefixo = PREFIXO_DA_ETAPA.get(etapa, "")
     if not (campo and identidade and prefixo):
         return {"mensagem": mensagem, "ancora": ""}
@@ -1045,6 +1082,47 @@ def _recusa(exc, digitados, etapa):
             if str(do_quadro.get("modalityId") or "") == recorte:
                 return {"mensagem": mensagem, "ancora": f"linha-{indice}-{sub}-{campo}"}
     return {"mensagem": mensagem, "ancora": ""}
+
+
+#: Os campos do marco e do critério que o cartão **sempre** desenha com `id` (053, R-006). Os demais
+#: podem não estar na tela — o método sob pontuação, a combinação com uma Etapa, as Etapas sem Etapa
+#: classificatória —, e a recusa sobre eles aponta o cartão do marco, que sempre está.
+CONTROLE_DO_MARCO = {
+    "code": "code",
+    "name": "name",
+    "orderProduction": "orderProduction",
+    "rounding": "scale",
+    "scale": "scale",
+    "mode": "mode",
+}
+CONTROLE_DO_CRITERIO = {
+    "order": "order",
+    "type": "type",
+    "parameters": "target",
+    "whenMissing": "whenMissing",
+}
+
+
+def _ancora_na_classificacao(digitados, campo, identidade):
+    """O `id` do elemento recusado na tela que a Classificação devolve (053, FR-973).
+
+    `digitados` é `{Perfil: [marcos]}`, e a tela devolvida desenha cada marco na posição em que ele
+    veio — `sub` é o índice na lista —, e cada critério também. É por isso que a posição aqui é a
+    do `id` lá. A recusa que nomeia o Perfil aponta o cartão dele.
+    """
+    for perfil, do_perfil in digitados.items():
+        if str(perfil) == identidade:
+            return f"cartao-{perfil}"
+        for sub, marco in enumerate(do_perfil or []):
+            cartao = f"marco-{perfil}-{sub}"
+            if str(marco.get("id") or "") == identidade:
+                controle = CONTROLE_DO_MARCO.get(campo)
+                return f"{cartao}-{controle}" if controle else cartao
+            for n, criterio in enumerate(marco.get("tiebreakers") or []):
+                if str(criterio.get("id") or "") == identidade:
+                    controle = CONTROLE_DO_CRITERIO.get(campo)
+                    return f"criterio-{perfil}-{sub}-{n}-{controle}" if controle else cartao
+    return ""
 
 
 def _eventos_do_cronograma(edital):
@@ -1131,9 +1209,6 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         "classificacao": CONCLUIDA
         if MarcoClassificatorio.objects.filter(perfil__edital=edital).exists()
         else PENDENTE,
-        # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
-        # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
-        # sem custar estado novo.
         # Como `etapas`: o contrato de inscrição é opcional nesta versão — um Edital pode ser
         # publicado sem receber inscrições pelo sistema —, e "concluída" diz "já tem conteúdo".
         "inscricao": CONCLUIDA
@@ -1142,7 +1217,12 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         # Como `etapas`: Edital sem anexo é legítimo, e "concluída" diz "já tem", não "é
         # obrigatório ter" (FR-024).
         "anexos": CONCLUIDA if edital.anexos.exists() else PENDENTE,
-        "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
+        # "Concluída" é **"gravada ao menos uma vez"** (FR-040 da 007). Até a `054` a linha de
+        # `SecaoEdital` era esse sinal: nascia na primeira edição. Sem redação padrão, gravar a
+        # etapa com todas as seções vazias — o Edital só de dados estruturados, que é legítimo —
+        # não cria linha, e o selo ficaria "pronta para revisar" para sempre (code review do PR
+        # 233). O outro sinal é o que a FR-040 já nomeia: a gravação, que é auditada com a área.
+        "conteudo": CONCLUIDA if edital.secoes.exists() or _conteudo_gravado(edital) else PRONTA,
         "revisao": PENDENTE,
     }
     return [
@@ -1407,7 +1487,10 @@ def compor_etapa(request, edital_id, etapa):
     # a página exibir a etapa pendente sem a explicação que diz por quê — a UX-049 exige as duas
     # juntas, e a única forma de garanti-lo é as duas olharem o mesmo relógio.
     agora = timezone.now()
-    pendencias = _pendencias(edital, agora=agora, ator=ator)
+    # O conteúdo canônico, uma vez, para as pendências e para a origem dos marcos (053, R-004) — e,
+    # na etapa Conteúdo, para o número que cada seção terá no documento (054, FR-985).
+    snapshot_da_etapa = edital_snapshot(edital) if etapa in ("classificacao", "conteudo") else None
+    pendencias = _pendencias(edital, agora=agora, ator=ator, snapshot=snapshot_da_etapa)
     # A frase que liga os avisos ao selo, e só na etapa que a exibe (`028`, UX-049). O selo diz
     # PENDENTE; sem isto, quem lê vê os avisos logo abaixo e precisa ligar as duas coisas sozinho.
     # A lista é pedida — e não um booleano — porque a frase diz **quantos** Eventos a mantêm assim.
@@ -1499,6 +1582,39 @@ def compor_etapa(request, edital_id, etapa):
             ),
             "perfis": perfis,
             "quantos_perfis": len(perfis or []),
+            # O que a vista do conjunto não sabe sozinha (052, R-003, R-004): quantas pendências da
+            # etapa cada Perfil tem por objeto, e quais Perfis a tela devolve diferentes do gravado.
+            # A Classificação (053) recebe as mesmas duas coisas: o achado de marco nomeia o Perfil
+            # antes do marco, e é ao Perfil que ele vai (R-008).
+            "pendencias_por_perfil": (
+                _pendencias_por_perfil(_pendencias_da_etapa(pendencias, etapa))
+                if etapa in ETAPAS_DA_VISTA
+                else {}
+            ),
+            # A tela voltou de um envio que não gravou: o que ela traz no alto — a prévia, a
+            # recusa, o aviso do preenchimento — é a notícia, e o cartão reaberto não a tira de
+            # vista (052, R-007).
+            "devolvido": etapa in ETAPAS_DA_VISTA and digitados is not None,
+            "perfis_alterados": (
+                forms.perfis_alterados(digitados, forms.perfis_persistidos(edital))
+                if etapa == "perfis" and digitados is not None
+                else _marcos_alterados(digitados, edital)
+                if etapa == "classificacao" and digitados is not None
+                else set()
+            ),
+            # De onde veio o marco de cada Perfil, pela regra e com a frase da Revisão (053, R-004).
+            "origem_dos_marcos": (
+                origens.origem_dos_marcos(
+                    snapshot_da_etapa.get("profiles"),
+                    origens.gestos_por_destino(
+                        RegistroAuditoria.objects.filter(
+                            aggregate_id=edital.id, operation="APLICAR_A_TODOS"
+                        ).order_by("occurred_at")
+                    ),
+                )
+                if etapa == "classificacao"
+                else {}
+            ),
             # O que os Perfis concordam em declarar, para o controle do Edital na etapa Perfis
             # (051, FR-926). Depois de um envio, o que foi escolhido no controle.
             "comuns": _comuns(perfis, controle_do_edital) if etapa == "perfis" else {},
@@ -1609,9 +1725,9 @@ def compor_etapa(request, edital_id, etapa):
                 else forms.etapas_do_edital(edital)
             ),
             "secoes": (
-                _reexibir_secoes(edital, digitados)
+                _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
-                else forms.secoes_do_edital(edital)
+                else forms.secoes_do_edital(edital, snapshot_da_etapa)
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
@@ -1854,6 +1970,43 @@ def _reexibir_classificacao(edital, marcos_por_perfil):
     return perfis
 
 
+def _impressao_dos_marcos(marcos):
+    """Os marcos como o cartão os desenha, normalizados para comparar (053, R-005).
+
+    **Pela mesma `_reexibir_marco` dos dois lados**: é ela que desenha o cartão depois de uma
+    recusa, e o que ela não desenha não entra na comparação — o falso positivo que a 052 pagou
+    comparando campos que o cartão não mostra. A normalização é a do que a gravação e a leitura
+    escrevem diferente: inteiro e texto, `None` e vazio, a ordem das Etapas, dos marcos e dos
+    critérios.
+    """
+
+    def normal(valor):
+        if isinstance(valor, list):
+            return sorted(normal(item) for item in valor)
+        if isinstance(valor, dict):
+            return sorted((chave, normal(item)) for chave, item in valor.items())
+        return "" if valor is None else str(valor)
+
+    return sorted(normal(_reexibir_marco(marco)) for marco in marcos or [])
+
+
+def _marcos_alterados(digitados, edital):
+    """Os Perfis cujos marcos a tela devolve diferentes do gravado (053, FR-967).
+
+    Só quando a tela volta do digitado — recusa, prévia, cancelamento, restauração —, que é quando o
+    valor inicial dos campos já não é o gravado e a tela, sozinha, não teria como saber.
+    """
+    gravados = {
+        str(perfil.id): forms.marcos_persistidos(perfil)
+        for perfil in edital.perfis.prefetch_related("marcos__criterios")
+    }
+    return {
+        str(perfil)
+        for perfil, do_perfil in (digitados or {}).items()
+        if _impressao_dos_marcos(do_perfil) != _impressao_dos_marcos(gravados.get(str(perfil)))
+    }
+
+
 def _reexibir_marco(marco):
     arredondamento = marco.get("rounding") or {}
     return {
@@ -1911,12 +2064,21 @@ def _reexibir_modalidade(modalidade):
     }
 
 
-def _reexibir_secoes(edital, digitadas):
-    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário."""
+def _reexibir_secoes(edital, digitadas, snapshot=None):
+    """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário.
+
+    **Textual ausente em `digitadas` é textual que chegou vazia**, e volta vazia. O formulário
+    envia todas as textuais, e `ler_secoes` descarta a vazia; cair no texto gravado devolvia à
+    tela a seção que a pessoa tinha acabado de apagar, e o próximo Salvar a gravaria de novo sem
+    aviso. Desde a `054` esvaziar uma seção a tira do documento (FR-982), e a reexibição não pode
+    desfazer isso (code review do PR 233).
+
+    O número continua o do conteúdo gravado; o script da etapa o refaz sobre o que está nos campos.
+    """
     texto = {item["key"]: item["content"] for item in digitadas}
     return [
-        {**secao, "content": texto.get(secao["key"], secao["content"])}
-        for secao in forms.secoes_do_edital(edital)
+        secao if secao["gerada"] else {**secao, "content": texto.get(secao["key"], "")}
+        for secao in forms.secoes_do_edital(edital, snapshot)
     ]
 
 
@@ -2056,6 +2218,10 @@ def _escolhas_pendentes_na_tela(edital, digitados, controle):
         gravados if digitados is None else digitados, controle, gravados=gravados
     )
 
+
+#: As etapas com a vista do conjunto e um Perfil por vez: a dos Perfis (052) e a da Classificação
+#: (053).
+ETAPAS_DA_VISTA = ("perfis", "classificacao")
 
 #: As etapas em que o gesto de aplicar aos demais Perfis existe (051): o marco é da Classificação; a
 #: Modalidade, a forma de convocação e a reversão, dos Perfis.
@@ -3661,6 +3827,7 @@ def _executar(ato, request, ator, edital):
             "authorityId": str(autoridade.identificador),
             "name": autoridade.nome,
             "role": autoridade.cargo,
+            "appointment": autoridade.ato_de_nomeacao,
         }
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
@@ -3737,6 +3904,14 @@ def retificar(request, edital_id):
     projecao = conteudo_base(base)
 
     erros, resumo = [], []
+    # Os gestos de "aplicar a todos" declarados na tela (051, R-011). Lidos **antes** de tudo o que
+    # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou.
+    gestos = (
+        gesto_na_retificacao.declarados(dados, retificacao_ui.campos_editaveis(projecao))
+        if dados is not None
+        else []
+    )
+    calculados, consequencias, todas, proposto = [], [], [], projecao
     if request.method == "POST":
         if not ator.can("retificacao:elaborar"):
             erros.append("Você não tem a permissão para elaborar Retificações.")
@@ -3753,34 +3928,89 @@ def retificar(request, edital_id):
                     resumo_do_artefato=_resumo_pendente(ator),
                     descricao_do_artefato=_descricao_do_artefato,
                 )
-                if not alteracoes:
+                # **O gesto lê o conteúdo proposto**, e não o vigente: quem corrige o prazo no
+                # primeiro marco pede para aplicar aquele prazo (R-011). O que o digitado não
+                # consegue montar é recusado aqui, com a frase da gramática.
+                if gestos:
+                    proposto, _ = apply_changes(projecao, alteracoes, publication_id="conferencia")
+                calculados, recusas = gesto_na_retificacao.calcular(
+                    gestos,
+                    proposto,
+                    alteracoes,
+                    tem_resultado=lambda etapa: resultado_selectors.ha_resultado_em(
+                        edital=edital, etapa_id=etapa
+                    ),
+                )
+                erros.extend(recusas)
+                gestos = [calculado.gesto for calculado in calculados]
+                todas = alteracoes + [
+                    alteracao for calculado in calculados for alteracao in calculado.alteracoes
+                ]
+                if not todas and not calculados:
                     erros.append(
                         "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
                         "conteúdo para ter efeito."
                     )
                 elif request.POST.get("confirmar") == "1":
-                    nova, _ = create_retification(
-                        actor=ator,
-                        edital_id=edital.id,
-                        data={
-                            "baseSnapshotId": base.id,
-                            "justification": (request.POST.get("justificativa") or "").strip(),
-                            "changes": alteracoes,
-                            **_vigencia(request.POST),
-                        },
-                        idempotency_key=request.POST.get("chave_idempotencia", ""),
-                        correlation_id=request.correlation_id,
-                    )
-                    return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
+                    # **A confirmação carrega a identidade do que foi mostrado** (FR-919): se a
+                    # conferência de agora não é a que a pessoa viu, nada é criado, e a tela volta
+                    # com a de agora.
+                    if any(calculado.divergiu for calculado in calculados):
+                        erros.append(gesto_na_retificacao.DIVERGIU)
+                    elif vazios := [c for c in calculados if c.sem_destino]:
+                        erros.extend(
+                            f"Nenhum Perfil marcado para aplicar {gesto_na_retificacao.rotulo(c)}:"
+                            " marque um Perfil ou desfaça o gesto."
+                            for c in vazios
+                        )
+                    elif not todas:
+                        erros.append(
+                            "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
+                            "conteúdo para ter efeito."
+                        )
+                    else:
+                        nova, _ = criar_retificacao_com_gestos(
+                            gestos=[gesto_na_retificacao.registro(c) for c in calculados],
+                            actor=ator,
+                            edital_id=edital.id,
+                            data={
+                                "baseSnapshotId": base.id,
+                                "justification": (request.POST.get("justificativa") or "").strip(),
+                                "changes": todas,
+                                **_vigencia(request.POST),
+                            },
+                            idempotency_key=request.POST.get("chave_idempotencia", ""),
+                            correlation_id=request.correlation_id,
+                        )
+                        return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
             except ValueError as exc:
                 erros.append(str(exc))
             except DomainError as exc:
                 erros.append(exc.detail)
+        # **As consequências só para a tela que volta**, e nunca antes de criar: quem confirmou foi
+        # redirecionado, e ler ordens e divulgações para ele seria trabalho que ninguém lê (FR-941).
+        # O proposto já traz as Alterações digitadas; basta somar as dos gestos. E conteúdo que nem
+        # se monta não é aconselhado aqui: a recusa é do ato, que a diz ao criar — como antes desta
+        # feature, quando a conferência não montava o conteúdo.
+        if todas:
+            if proposto is projecao:
+                partida, faltam = projecao, todas
+            else:
+                partida = proposto
+                faltam = [a for calculado in calculados for a in calculado.alteracoes]
+            try:
+                resultante, _ = apply_changes(partida, faltam, publication_id="conferencia")
+                consequencias = gesto_na_retificacao.consequencias(edital, projecao, resultante)
+            except ValueError:
+                consequencias = []
 
     grupos = retificacao_ui.reexibir(
         retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),
         dados,
     )
+    if ator.can("retificacao:elaborar"):
+        gesto_na_retificacao.anotar_botoes(grupos, projecao)
+    blocos = gesto_na_retificacao.blocos(calculados, projecao)
     return render(
         request,
         "interface/retificar.html",
@@ -3828,6 +4058,14 @@ def retificar(request, edital_id):
                 opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
             ),
             "resumo": resumo,
+            # Os gestos declarados (051): os valores voltam ocultos no formulário, e cada um que
+            # pôde ser calculado ganha o seu bloco na conferência, agrupado (FR-941).
+            "gestos_declarados": [gesto.valor for gesto in gestos],
+            "gestos": blocos,
+            "consequencias": consequencias,
+            "alteracoes_do_ato": len(todas),
+            "alteracoes_dos_gestos": sum(bloco["alteracoes"] for bloco in blocos),
+            "alteracoes_digitadas": len(todas) - sum(bloco["alteracoes"] for bloco in blocos),
             "erros": erros,
             "justificativa": (request.POST.get("justificativa") or "") if dados else "",
             "vigencia": (request.POST.get("vigencia") or "") if dados else "",
@@ -4170,6 +4408,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
                 "authorityId": str(autoridade.identificador),
                 "name": autoridade.nome,
                 "role": autoridade.cargo,
+                "appointment": autoridade.ato_de_nomeacao,
             }
         atos_retificacao.executar(ato, request, ator, item, signatario)
     except DomainError as exc:

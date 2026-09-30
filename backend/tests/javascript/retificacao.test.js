@@ -144,6 +144,24 @@ test("sem tocar em nada, a tela não anuncia alteração nenhuma", () => {
   assert.equal(linha.getAttribute("data-alterado"), null);
 });
 
+test("depois da conferência, a contagem diz que zerou desde ela, e não que nada mudou", () => {
+  const titulo = campo("campo:g1c1", "Edital 51/2026");
+  const form = formularioDaRetificacao([linhaEditavel("Evento 1 — Inscrições", [titulo])]);
+  form.setAttribute("data-conferido", "");
+  const barra = form.querySelector(".barra-de-acoes");
+  barra.filhos = [];
+  barra.appendChild = (no) => {
+    no.parentNode = barra;
+    barra.filhos.push(no);
+    return no;
+  };
+
+  montar({ formulario: form });
+  carregar(SCRIPT);
+
+  assert.equal(barra.filhos[0].textContent, "Nada alterado desde a conferência");
+});
+
 test("o campo alterado marca a si e à linha em que ele está", () => {
   const { form, linha, titulo, contagem } = montarTela();
 

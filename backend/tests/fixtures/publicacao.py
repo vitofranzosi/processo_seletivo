@@ -12,7 +12,14 @@ SIGNATORY = {
 
 
 def publish_original(
-    api_client, manager_headers, process_payload, *, draft=None, anexos=0, antes_de_submeter=None
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    draft=None,
+    anexos=0,
+    antes_de_submeter=None,
+    signatory=None,
 ):
     """Cria Processo e primeiro Edital e o leva até a primeira Publicação.
 
@@ -37,6 +44,7 @@ def publish_original(
         draft=draft,
         anexos=anexos,
         antes_de_submeter=antes_de_submeter,
+        signatory=signatory,
     )
 
 
@@ -48,6 +56,7 @@ def levar_a_publicacao(
     anexos=0,
     antes_de_submeter=None,
     chave="publication-key-0001",
+    signatory=None,
 ):
     """De rascunho a publicado, sobre um Edital que já existe.
 
@@ -120,7 +129,8 @@ def levar_a_publicacao(
     edital.refresh_from_db()
     published = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes",
-        {"signatory": SIGNATORY},
+        # `signatory` é o do ato quando o teste é sobre quem assina (054, FR-991).
+        {"signatory": signatory or SIGNATORY},
         format="json",
         **{
             **actor_headers("publicador", ["edital:publicar"], key=chave),

@@ -28,7 +28,7 @@ SECAO = "/sections/id=00000000-0000-4000-8000-000000000001"
 # --- A pendência de seção vai aonde se corrige ------------------------------------------------
 
 
-@pytest.mark.parametrize("codigo", ["attachment_cited_without_label", "section_default_text"])
+@pytest.mark.parametrize("codigo", ["attachment_cited_without_label", "section_universal_empty"])
 def test_os_dois_avisos_do_texto_da_secao_levam_ao_conteudo(codigo):
     assert views._destino(SECAO, codigo) == ("conteudo", "#conteudo-titulo", True)
     assert views._destino("/sections", codigo) == ("conteudo", "#conteudo-titulo", True)

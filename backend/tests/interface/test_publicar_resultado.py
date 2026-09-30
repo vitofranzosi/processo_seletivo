@@ -103,7 +103,7 @@ def test_a_previa_mostra_o_que_sera_divulgado_e_as_consequencias(client, seletor
 
     assert "prévia" in corpo and "nada foi gravado" in corpo
     assert "Resultado preliminar" in corpo and "Resultado definitivo" in corpo
-    assert "Diretora do Cefor" in corpo
+    assert "Diretora-Geral do Centro de Referência" in corpo  # pelo cargo, desde a `054` (FR-992)
     assert "O que acontece ao confirmar" in corpo
     assert "não se despublica" in corpo
     assert "Candidata 701" in corpo, "a lista exata que será divulgada aparece na prévia"

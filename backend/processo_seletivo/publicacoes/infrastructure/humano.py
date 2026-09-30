@@ -79,3 +79,33 @@ def instante(momento) -> str:
     data = momento.strftime("%d/%m/%Y")
     hora = f"{momento.hour:02d}h" + (f"{momento.minute:02d}" if momento.minute else "")
     return f"{data}, às {hora}"
+
+
+MESES = (
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+)
+
+
+def data_por_extenso(data) -> str:
+    """A data como o fecho de um ato a escreve: `29 de setembro de 2026` (054, D-004).
+
+    **Sem zero à esquerda no dia**, como manda o Manual de Redação da Presidência da República; os
+    Editais da amostra escrevem "07 de abril", e a regra é a do manual, e não o costume. O mês por
+    extenso sai de uma tupla, e não de `strftime("%B")`, que depende do locale do processo — o
+    compromisso deste módulo.
+
+    **Recebe a data, e não o instante.** Qual dia é depende do fuso, e quem chama já sabe o fuso
+    institucional (`shared/tempo.ZONA`): converter aqui seria o erro que `instante` documenta.
+    """
+    return f"{data.day} de {MESES[data.month - 1]} de {data.year}"

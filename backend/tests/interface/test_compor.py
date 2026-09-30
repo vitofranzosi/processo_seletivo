@@ -719,7 +719,7 @@ def test_fragmento_de_modalidade_nasce_com_os_dois_identificadores(client, selet
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_secao_textual_editada_e_gravada_e_reexibida(client, seletor_ligado, edital):
-    """FR-037: o texto institucional nasce padrão e passa a ser o que quem elabora escreveu."""
+    """A seção nasce vazia (054, FR-983) e passa a ser o que quem elabora escreveu."""
     from processo_seletivo.editais.domain import secoes as catalogo
     from processo_seletivo.editais.models.secoes import SecaoEdital
 
@@ -729,9 +729,9 @@ def test_secao_textual_editada_e_gravada_e_reexibida(client, seletor_ligado, edi
     compor_rascunho(client, edital, perfis(), eventos())
     edital.refresh_from_db()
 
-    padrao = catalogo.POR_CHAVE["disposicoes-preliminares"].default_text
     inicial = client.get(etapa(edital, "conteudo")).content.decode()
-    assert padrao in inicial
+    assert "Redação institucional padrão" not in inicial
+    assert "vazia — não sai no documento" in inicial
     assert 'name="secao-cronograma"' not in inicial, "seção gerada não tem texto a redigir"
     assert 'name="secao-disposicoes-preliminares"' in inicial
 
@@ -749,7 +749,6 @@ def test_secao_textual_editada_e_gravada_e_reexibida(client, seletor_ligado, edi
 
     depois = client.get(etapa(edital, "conteudo")).content.decode()
     assert "Redação revisada pela Procuradoria." in depois
-    assert padrao not in depois
 
 
 @pytest.mark.django_db
@@ -770,15 +769,12 @@ def test_secao_textual_sobrevive_a_gravacao_de_outra_etapa(client, seletor_ligad
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
-    client, seletor_ligado, edital
-):
+def test_salvar_conteudo_sem_editar_nada_nao_cria_linha(client, seletor_ligado, edital):
     """O que a demonstração de ponta a ponta revelou, e o `quickstart` não previa.
 
-    A tela mostra as sete seções e envia as quatro textuais preenchidas. Gravar todas criava linha
-    para seção que ninguém tocou, e "ausência de linha significa texto padrão do catálogo" deixava
-    de valer no primeiro salvamento — congelando a redação institucional, de modo que corrigi-la em
-    código não alcançaria nenhum Edital que já tivesse passado por aqui.
+    Gravar todas as seções criava linha para seção que ninguém tocou. Desde a `054` a ausência de
+    linha é a seção vazia (FR-982), e gravar a vazia seria a segunda grafia do mesmo fato: a tela
+    reenvia os campos vazios, e nenhum vira linha.
     """
     from processo_seletivo.editais.domain import secoes as catalogo
     from processo_seletivo.editais.models.secoes import SecaoEdital
@@ -788,9 +784,7 @@ def test_salvar_conteudo_sem_editar_nada_nao_congela_o_texto_do_catalogo(
     edital.refresh_from_db()
 
     # Exatamente o que a tela reenviaria sem nenhuma edição.
-    intocado = {
-        f"secao-{secao.key}": secao.default_text for secao in catalogo.CATALOGO if not secao.gerada
-    }
+    intocado = {f"secao-{secao.key}": "" for secao in catalogo.CATALOGO if not secao.gerada}
     assert client.post(etapa(edital, "conteudo"), intocado).status_code == 302
     assert not SecaoEdital.objects.exists(), "nada foi editado; nada precisa de linha"
 
@@ -843,7 +837,7 @@ def test_texto_de_secao_nova_e_gravado_e_chega_a_previa(client, seletor_ligado, 
     )
 
     campos = {
-        f"secao-{secao.key}": (texto if secao.key == "apresentacao" else secao.default_text)
+        f"secao-{secao.key}": (texto if secao.key == "apresentacao" else "")
         for secao in catalogo.CATALOGO
         if not secao.gerada
     }

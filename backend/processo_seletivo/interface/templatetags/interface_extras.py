@@ -92,6 +92,22 @@ def plural(quantidade, formas):
 
 
 @register.filter
+def legenda_do_perfil(perfil):
+    """`Perfil LP03 — Vitória`: o que distingue um cartão dos outros (052, FR-944).
+
+    A legenda era *"Perfil de Vaga"* em todos, e o código morava no valor de um campo — que a busca
+    do navegador não encontra e que o leitor de tela, navegando por grupos, anunciava sete vezes
+    igual. A localidade vem antes da denominação porque é ela que distingue os polos; sem polo, a
+    denominação é o que resta. Sem código, o Perfil ainda não tem nome a dar.
+    """
+    codigo = (perfil.get("code") or "").strip()
+    if not codigo:
+        return "Perfil novo"
+    complemento = (perfil.get("locality") or "").strip() or (perfil.get("name") or "").strip()
+    return f"Perfil {codigo} — {complemento}" if complemento else f"Perfil {codigo}"
+
+
+@register.filter
 def marcado(dados, referencia):
     """A marcação de remoção precisa voltar marcada depois do POST, como os campos digitados."""
     return bool(dados and dados.get(f"remover:{referencia}"))
@@ -338,9 +354,8 @@ RESUMO_DAS_REPETIDAS = {
     # A Etapa sem Evento (045, `FR-739`): o seed e muitos Editais reais têm mais de uma, e dez
     # linhas iguais empurrariam os impedimentos para fora da Revisão, como os avisos de data.
     "stage_without_schedule_event": "{n} Etapas sem vínculo com o Cronograma",
-    # A redação padrão sem revisão (DP-20): o Edital intocado tem sete, e sete linhas iguais
-    # empurrariam os impedimentos para fora da Revisão.
-    "section_default_text": "{n} seções com a redação padrão, sem revisão",
+    # As duas seções universais vazias (054, FR-986) — no Edital intocado, as duas juntas.
+    "section_universal_empty": "{n} seções que todo Edital do Cefor tem estão vazias",
     "attachment_cited_without_label": "{n} remissões a anexo sem rótulo correspondente",
 }
 

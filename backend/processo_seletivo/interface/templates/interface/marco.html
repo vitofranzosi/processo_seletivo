@@ -105,7 +105,7 @@ que está impedido. Só a confirmação, lá, pratica — um ato por recorte, ca
     <p class="campo">
       <label for="autoridade">Autoridade signatária</label>
       <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
-        {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>{% endfor %}
+        {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade }}</option>{% endfor %}
       </select>
       <span id="ajuda-autoridade" class="ajuda">A mesma para todas as publicações deste gesto. Nome e cargo ficam gravados em cada uma.</span>
     </p>

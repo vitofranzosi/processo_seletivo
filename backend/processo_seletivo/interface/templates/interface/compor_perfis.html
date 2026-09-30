@@ -1,5 +1,7 @@
 {% extends "interface/compor_base.html" %}{% load interface_extras %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_vista.html" %}
+{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
@@ -98,6 +100,21 @@
     </details>
     <p class="contadores" data-contador="#perfis" data-item=".perfil" data-singular="Perfil" data-plural="Perfis"><span><strong>{{ perfis|length }}</strong> {{ perfis|length|plural:"Perfil,Perfis" }}</span></p>
     {% comment %}
+    **A vista do conjunto** (052). A tabela é montada pelo `perfis.js`, lendo os cartões — a linha é
+    leitura do cartão, e um segundo desenho dela no servidor envelheceria separado (`D-004` da
+    spec). Sem script o contêiner fica vazio e oculto, e a etapa é a de sempre, com todos os
+    cartões à vista.
+
+    *Acrescentar Perfil* vem logo depois dela, e o que vale para o conjunto — o controle do Edital
+    e o preenchimento pelo percentual — vem entre a tabela e o cartão (`UX-120`).
+    {% endcomment %}
+    <div id="visao-dos-perfis" class="visao-dos-perfis" hidden{% if devolvido %} data-devolvido{% endif %}></div>
+    {% if editavel %}
+    <button type="button" class="botao secundario"
+            hx-get="{% url 'interface:fragmento-perfil' %}?edital={{ edital.id }}"
+            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+    {% endif %}
+    {% comment %}
     **O que o Edital declara uma vez, pedido uma vez** (051, FR-926). A forma de convocação e a
     reversão moram no Perfil, e o Edital as escreve uma vez — *"as convocações serão feitas por
     e-mail"* (28/2026, 10.3). Não é campo do Edital (`D-003` da spec): é um controle que aplica o
@@ -155,11 +172,6 @@
     <div id="perfis">
       {% for perfil in perfis %}{% include "interface/_perfil.html" with indice=forloop.counter0 %}{% endfor %}
     </div>
-    {% if editavel %}
-    <button type="button" class="botao secundario"
-            hx-get="{% url 'interface:fragmento-perfil' %}?edital={{ edital.id }}"
-            hx-target="#perfis" hx-swap="beforeend">Acrescentar Perfil</button>
-    {% endif %}
   </section>
   {% include "interface/_navegacao_etapa.html" %}
 </form>
@@ -168,4 +180,6 @@
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/validacao.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
+<script src="{% static 'interface/vista-do-conjunto.js' %}" defer></script>
+<script src="{% static 'interface/perfis.js' %}" defer></script>
 {% endblock %}

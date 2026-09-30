@@ -30,6 +30,7 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, 
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
+from processo_seletivo.shared.tempo import ZONA
 
 
 def _decimal_canonico(valor):
@@ -91,10 +92,11 @@ def _sections(edital: Edital) -> list[dict]:
             **(
                 {"source": secao.source}
                 if secao.gerada
-                # Ausência de linha significa "texto padrão do catálogo", e não "seção vazia":
-                # persistir uma linha por seção só para guardar o padrão traria a estrutura de
-                # volta ao banco, que é o que a declaração do catálogo existe para evitar.
-                else {"content": redigidas.get(secao.key, secao.default_text)}
+                # Ausência de linha significa **seção vazia** desde a `054` (FR-982, FR-983): o
+                # catálogo não tem mais redação padrão. A chave `content` sai mesmo vazia — uma
+                # forma só para o fato —, e é por ela que uma Retificação pode dar texto à seção
+                # publicada vazia sem acrescentar seção, que a topologia recusa.
+                else {"content": redigidas.get(secao.key, "")}
             ),
         }
         for secao in secoes.CATALOGO
@@ -729,10 +731,17 @@ def publish_edital(
             )
         # A autoridade é contexto do ato, não conteúdo publicado: ela chega por parâmetro
         # porque o documento é composto **antes** de a `Publicacao` existir (`008`, FR-034).
+        # A data do ato é o `now` desta transação, no fuso institucional (`054`, FR-989): é o dia
+        # em que a Publicação nasce, e não o do relógio do servidor em UTC.
         pdf = render_edital_pdf(
             revisao.content,
             revisao.content_hash,
-            autoridade=AutoridadeSignataria(nome=signatory["name"], cargo=signatory["role"]),
+            autoridade=AutoridadeSignataria(
+                nome=signatory["name"],
+                cargo=signatory["role"],
+                ato_de_nomeacao=signatory.get("appointment", ""),
+            ),
+            data_do_ato=now.astimezone(ZONA).date(),
         )
         document_hash = hashlib.sha256(pdf).hexdigest()
         publication = Publicacao.objects.create(
@@ -748,6 +757,7 @@ def publish_edital(
             signatory_id=signatory["authorityId"],
             signatory_name=signatory["name"],
             signatory_role=signatory["role"],
+            signatory_appointment=signatory.get("appointment", ""),
         )
         document = DocumentoPublicado.objects.create(
             publicacao=publication,

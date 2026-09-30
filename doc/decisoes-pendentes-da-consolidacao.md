@@ -1,6 +1,6 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
-**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, e a `DP-16` e a `DP-17`, decididas em 28/09** — as quatro primeiras com
+**Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, a `DP-16` e a `DP-17`, decididas em 28/09, e a `DP-21`, decidida em 29/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
 cadastro de reserva. Este documento organiza as alternativas e
@@ -51,6 +51,7 @@ registro criaria duas verdades:
 | DP-18 | Quem faz o teste operacional, e quando? | passo 0,5 | depois do passo 0, com o 28/2026 |
 | DP-19 | Marcar na composição os campos que não se corrigem depois de publicados é requisito novo? | passo 0 → fora dele | decidir em spec; conciliar com a `026` §7 e a `FR-428` da `030` |
 | DP-20 | O PDF do sistema vale como Edital oficial: o que ele precisa ter, e com quais seções? (E5 · E10) | RC-20, RC-21, RC-23 a RC-26 | o RC-20 e o teto já, como correção; assinatura e E10 antes; fecho e seções numa spec só |
+| DP-21 | A composição grava coleções maiores que mil campos? | o Edital multicampi da `051` (66 Perfis); o achado de 29/09 | **decidida em 29/09: A** — o limite subiu para 13.000, medido |
 
 ---
 
@@ -1077,7 +1078,7 @@ Constituição:
   documento transversal pela regra (*"em todos os Perfis"*), e não pelo número, que a opção de recorte
   diz (UX-080). O conjunto se resolve na leitura, e o número visto ao declarar pode envelhecer até a
   publicação. Mostrar *"n de N Perfis"* na Revisão é requisito novo, e não correção direta: fica como
-  proposta, sem escopo atribuído.
+  proposta, sem escopo atribuído. *É o RC-156 da auditoria de consolidação, desde 29/09.*
 - **Uma decisão em aberto que o invariante alcança:** a opção **C** da `DP-16`, *"derivado, sem
   ato"*, elimina a autoria do não atendimento, e passa a precisar de justificativa aprovada. A
   recomendada, **B**, já cumpre o invariante.
@@ -1220,6 +1221,11 @@ Três propriedades do código que o documento oficial herda, e que nenhum RC reg
    catálogo passe a ter versão. É por isso que a E5 tem **prazo**: antes da primeira publicação do
    piloto, mudar o catálogo é barato; depois, pede versão de catálogo, e o acervo passa a ter duas
    formas de documento, porque documento publicado não se regenera.
+
+*Na [auditoria de consolidação](auditoria-de-consolidacao-2026-09-26.md), desde 29/09, as três
+propriedades e os outros achados sem número desta DP são unidades: a propriedade 1 é o RC-140, a 2 o
+RC-141 e a 3 o RC-142; a letra da `SC-001` (§3), o RC-143; a declaração do Requerimento de Matrícula,
+o RC-144; e o consolidado da Retificação sem data, o RC-145.*
 
 ### 1. Os RCs, classificados
 
@@ -1393,3 +1399,67 @@ Em 28/09/2026, o usuário decidiu três das escolhas acima. A análise fica como
 **Ficam pendentes, com o Cefor**: como o ato é assinado no piloto (o item 5 da recomendação) e o nome
 próprio de quem assina no catálogo de autoridades (o item 4). Nenhum dos dois se resolve no código
 antes da resposta do Cefor.
+
+---
+
+## DP-21 — A composição grava coleções maiores que mil campos?
+
+> **Decidida pelo usuário em 29/09/2026: opção A.** `DATA_UPLOAD_MAX_NUMBER_FIELDS` subiu para
+> 13.000 — o dobro do maior envio medido, a Retificação do Edital de 66 Perfis (6.113 campos) —, com
+> guardião e recusa legível. Os números e o que ficou aberto estão no fim do
+> [achado](achado-etapa-perfis-recusa-acima-de-mil-campos.md). *É o RC-148 da auditoria de
+> consolidação, resolvido pelo #232.*
+
+*Registrada em 29/09, a pedido do usuário, a partir do
+[achado da etapa Perfis](achado-etapa-perfis-recusa-acima-de-mil-campos.md), encontrado ao medir a
+escala da tela para a [análise das coleções repetidas](analise-ux-colecoes-repetidas-2026-09-29.md).
+A [`052`](../specs/052-perfis-visao-do-conjunto/spec.md) o deixou fora de escopo de propósito: ela
+muda o que se vê, e esconder cartões não diminui o que se envia. Conferida contra a `main` em
+`c02ad739`. É análise; nada foi decidido nem mudado no código.*
+
+### O problema
+
+A etapa Perfis grava a coleção inteira num POST, e o Django recusa com **400**, antes da view,
+qualquer envio com mais de `DATA_UPLOAD_MAX_NUMBER_FIELDS` campos — mil, o padrão, que o projeto não
+altera. Medido: o 27º Perfil de duas Modalidades passa do teto; com três Modalidades e quadro
+repartido, o formato do 140/2025, ele cai para perto de **18 Perfis**. O 140/2025 tem 16; o multicampi
+que a `051` projeta tem **66**. A Classificação tem o mesmo teto, com ~28 campos por marco e 5 por
+critério. A Retificação envia o formulário inteiro do mesmo jeito, e **não foi medida**.
+
+O que a pessoa vê é a página de erro do servidor, sem a tela da etapa e sem dizer o que fazer. Na
+etapa Perfis o rascunho local guarda o digitado; na Classificação, que não o declara, não.
+
+### O que já está fixado
+
+- **A gravação da etapa substitui o rascunho inteiro** (`replace_draft`), e três decisões existem por
+  causa disso: a seção do quadro no cartão (`UX-020`), a cópia que só existe no formulário até
+  gravar (`FR-638`) e o gesto da `051` que lê o digitado e grava pela etapa (a decisão de
+  materialização no envio da `051`). Enquanto elas valem, a etapa envia a coleção inteira.
+- **O mesmo teto já foi contornado uma vez**, na confirmação da distribuição (27/09), fazendo as
+  identidades viajarem num campo só. Lá eram milhares de itens de um campo cada; aqui são dezenas de
+  itens de dezenas de campos.
+
+### As opções
+
+| | A. Subir o limite | B. Serializar a coleção num campo | C. Gravar por Perfil |
+|---|---|---|---|
+| **O que é** | `DATA_UPLOAD_MAX_NUMBER_FIELDS` com um valor medido para o maior Edital previsto, com folga | a tela envia a etapa como um JSON num campo só, como a distribuição | cada Perfil se grava sozinho, por comando próprio |
+| **Custo** | uma linha em `config/settings` e um teste que prenda o valor | alto: a leitura da etapa, a recusa que reexibe o digitado, o rascunho local e os fragmentos do htmx leem por nome de campo; a etapa deixa de funcionar sem JavaScript | alto, e reabre a `UX-020`, a `FR-638` e a decisão de materialização da `051` |
+| **Risco** | o limite é global — vale para o portal também — e existe contra envio gigante; subi-lo move o teto, não o remove | reescreve o caminho mais testado da composição | perde a atomicidade da etapa e a prévia do gesto sobre o digitado |
+| **Resolve** | o multicampi de 66 Perfis, se o valor for medido para ele | qualquer tamanho | qualquer tamanho |
+
+### Recomendação: **A**
+
+Com o valor medido, e não chutado: compor o maior Edital previsto — o multicampi de 66 Perfis, com a
+Classificação —, contar os campos da etapa mais pesada e dobrar. A conta do achado dá ~3,6 mil para os
+Perfis de três Modalidades e quadro; a Classificação, com um marco de três critérios, ~2,9 mil.
+Parsear alguns milhares de campos custa pouco, e o portal continua atrás do seu próprio limite de
+tamanho (`DATA_UPLOAD_MAX_MEMORY_SIZE`). **B** e **C** só se pagam se aparecer Edital na casa das
+centenas de Perfis, que nenhuma família da amostra tem.
+
+**Duas coisas acompanham qualquer opção**: medir a Retificação de um Edital grande, que não foi
+medida; e trocar a página de erro 400 por uma recusa que volte à etapa dizendo o que aconteceu — hoje
+ela sai do assistente sem explicação.
+
+**O prazo.** Antes do primeiro Edital real acima de ~18 Perfis com quadro repartido. Os Editais do
+piloto conhecidos (78/2026, dois Perfis; 28/2026, sete) estão abaixo dele.

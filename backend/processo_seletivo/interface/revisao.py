@@ -36,6 +36,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     forma_de_convocacao_por_extenso,
     por_identificador,
 )
+from processo_seletivo.publicacoes.infrastructure import pdf
 
 # **As frases do marco são as do documento, lidas do mesmo lugar.** Reescrevê-las aqui daria à
 # conferência uma segunda grafia da regra — e é na primeira divergência entre as duas que quem
@@ -390,7 +391,7 @@ def _documento(documento, snapshot):
     }
 
 
-def _secao(secao, _snapshot):
+def _secao(secao, numeros):
     if secao.get("type") == catalogo.GERADA:
         origem = {
             "profiles": "Perfis",
@@ -401,10 +402,25 @@ def _secao(secao, _snapshot):
             # única coleção do catálogo que não tinha nome em português aqui.
             "attachments": "Anexos",
         }
-        detalhe = f"Composta a partir de {origem.get(secao.get('source'), secao.get('source'))}."
+        nome_da_origem = origem.get(secao.get("source"), secao.get("source"))
+        detalhe = f"Composta a partir de {nome_da_origem}."
+        # A gerada que não sai diz **por quê**: a coleção de origem está vazia. "Vazia" sozinho
+        # não distingue texto a transcrever de dado a cadastrar, e é essa a pergunta de quem
+        # homologa diante da seção que falta (code review do PR 233).
+        vazia = f"Nada cadastrado em {nome_da_origem} — não sai no documento."
     else:
         detalhe = secao.get("content", "")
-    return {"titulo": f"{secao.get('order', '')}. {secao.get('title', '')}", "linhas": [detalhe]}
+        vazia = "Vazia — não sai no documento."
+    # **O número é o do documento** (054, FR-985), e não a ordem do catálogo: com 22 seções e as
+    # textuais vazias, a ordem diria "16" onde o documento imprime "9", e quem homologa confere a
+    # prévia contra o original pela numeração (E10 = B).
+    numero = numeros.get(secao.get("key"))
+    titulo = str(secao.get("title", ""))
+    if numero is None:
+        return {"titulo": titulo, "linhas": [vazia]}
+    if numero == 0:
+        return {"titulo": f"{titulo} (preâmbulo, sem número)", "linhas": [detalhe]}
+    return {"titulo": f"{numero}. {titulo}", "linhas": [detalhe]}
 
 
 def _anexo(anexo, snapshot):
@@ -670,6 +686,12 @@ def _classificacao(snapshot):
     return itens
 
 
+def _secoes_do_documento(snapshot):
+    """As seções com o número do documento, calculado uma vez para todas (054, FR-985)."""
+    numeros = pdf.numeracao(snapshot)
+    return [_secao(secao, numeros) for secao in snapshot.get("sections") or []]
+
+
 def _cada(chave, leitura):
     """A leitura item a item de uma coleção-raiz."""
     return lambda snapshot: [leitura(item, snapshot) for item in snapshot.get(chave) or []]
@@ -690,7 +712,7 @@ BLOCOS = (
     # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
     # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
     ("Anexos do Edital", "anexos", _cada("attachments", _anexo)),
-    ("Conteúdo do Edital", "conteudo", _cada("sections", _secao)),
+    ("Conteúdo do Edital", "conteudo", _secoes_do_documento),
 )
 
 

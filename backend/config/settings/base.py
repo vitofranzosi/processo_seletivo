@@ -207,9 +207,34 @@ ARQUIVOS_CANDIDATOS_LIMITE_BYTES = int(
 # digital. Aqui os bytes moram em coluna binária, então o limite protege o banco.
 EDITAL_ANEXOS_LIMITE_BYTES = int(os.getenv("EDITAL_ANEXOS_LIMITE_BYTES", str(5 * 1024 * 1024)))
 
+# **Campos por envio** (`doc/achado-etapa-perfis-recusa-acima-de-mil-campos.md`, DP-21). O padrão do
+# Django é mil, e a composição grava a coleção inteira num POST só (`replace_draft`): o 27º Perfil
+# de duas Modalidades já passava do teto, e o envio morria com 400 antes da view. O valor é medido,
+# e não chutado, sobre o maior Edital previsto — o multicampi da `051`: N = 66 Perfis, cada um com
+# 4 Modalidades, o quadro repartido em 4 linhas, 2 fatos exigidos e 2 marcos de 3 critérios, sobre
+# 2 Etapas. Contado no formulário que a tela devolve, em 29/09/2026:
+#
+#   Perfis         3 + 67·N = 4.425  (67 = 15 do Perfil + 8·4 Modalidades + 3·4 linhas + 4·2 fatos)
+#   Classificação 11 + 89·N = 5.885  (89 = 1 + 44·2 marcos; o marco de 3 critérios envia 44)
+#   Retificação   41 + 92·N = 6.113  (o formulário inteiro do Edital publicado — o mais pesado)
+#
+# O dobro do maior, arredondado ao milhar acima. A folga cobre Modalidade ou marco a mais por Perfil
+# e ~140 Perfis na forma acima; `test_limite_de_campos_da_composicao.py` recompõe esse Edital e
+# reprova se algum dos três envios passar daqui.
+#
+# **Vale para toda rota, e não só para `/gestao/`**: o Django lê este valor ao interpretar o corpo,
+# antes de qualquer rota ou view, e não oferece limite por caminho. O que ele protege — a CPU gasta
+# interpretando um corpo com campos demais — continua limitado: treze mil campos custam ~10 ms, e o
+# corpo segue preso aos 2,5 MB do `DATA_UPLOAD_MAX_MEMORY_SIZE`, que não muda. Constante, e não
+# variável de ambiente, para que o valor em produção seja o que o guardião verificou.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 13_000
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Antes do CSRF, que é quem lê o corpo primeiro: o envio acima do limite de campos morre nessa
+    # leitura, e só daqui ele volta como página da gestão, e não como 400 cru (`erros.py`).
+    "processo_seletivo.interface.erros.EnvioAcimaDoLimiteMiddleware",
     # A interface administrativa autentica por sessão: sem esta verificação os `{% csrf_token %}`
     # dos formulários não são fiscalizados por ninguém e uma página externa pratica atos
     # irreversíveis em nome de quem estiver com a sessão aberta. As views da API são

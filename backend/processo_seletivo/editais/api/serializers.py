@@ -264,8 +264,9 @@ class SectionSerializer(serializers.Serializer):
     deriva. Enviar um identificador aqui abriria a porta para declarar um que não corresponde à
     chave, e não haveria como dizer qual dos dois vale.
 
-    Seção gerada não é enviada, e seção textual ausente significa "conteúdo padrão do catálogo",
-    não "seção vazia". A recusa de chave fora do catálogo é do domínio, que o command atravessa.
+    Seção gerada não é enviada, e **seção textual ausente é seção vazia** desde a `054` (FR-982,
+    FR-983): o catálogo não tem mais redação padrão, e a seção vazia não sai no documento. A
+    recusa de chave fora do catálogo é do domínio, que o command atravessa.
     """
 
     key = serializers.CharField(min_length=1, max_length=60)

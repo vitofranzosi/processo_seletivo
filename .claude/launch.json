@@ -249,6 +249,16 @@
       ],
       "port": 8050,
       "url": "http://localhost:8050"
+    },
+    {
+      "name": "ato-oficial-054",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_054_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8054"
+      ],
+      "port": 8054,
+      "url": "http://localhost:8054"
     }
   ]
 }

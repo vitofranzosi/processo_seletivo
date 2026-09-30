@@ -422,6 +422,8 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   a que dado corresponde e é renderizada a partir dele.
 - **FR-037**: O sistema PODE fornecer texto inicial institucional para as seções textuais, por seed
   ou padrão, e quem elabora DEVE poder alterá-lo antes da publicação.
+  > **Emendado pela `054` (FR-983, 29/09/2026):** o catálogo deixou de ter redação padrão. Com o PDF
+  > como ato oficial do piloto, a textual intocada publicava norma que ninguém escreveu.
 - **FR-038**: As seções DEVEM integrar o snapshot publicado e a prévia e o documento DEVEM respeitar
   sua ordem.
 - **FR-039**: Seções textuais DEVEM ser retificáveis por identidade estável. *A identidade é um
@@ -444,6 +446,9 @@ alteração no documento junto das seções geradas a partir dos dados estrutura
   A forma declarada não alcança isto — ela verifica um campo por vez — e sem a verificação o
   catálogo fixo valeria na elaboração e deixaria de valer exatamente onde mais importa, depois de
   publicado.*
+  > **Emendado pela `054` (FR-982 e FR-988, 29/09/2026):** a seção textual pode ficar vazia, e vazia
+  > não sai no documento; e, na Retificação, a topologia é conferida contra a do conteúdo original
+  > do Edital, e não contra o catálogo vigente, para que mudar o catálogo não tranque o acervo.
 
 ### Revisão e publicação
 

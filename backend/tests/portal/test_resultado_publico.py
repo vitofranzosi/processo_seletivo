@@ -66,7 +66,8 @@ def test_sem_autenticacao_a_pagina_mostra_o_resultado(client, cenario, publicada
     assert MODALIDADE_NOME in corpo
     assert "90,00" in corpo
     assert publicada.publicado_em.astimezone().strftime("%d/%m/%Y") in corpo
-    assert "Diretora do Cefor" in corpo
+    # Pelo cargo, e sem travessão pendurado, desde a `054` (FR-994).
+    assert "Assinado por Diretora-Geral do Centro de Referência" in corpo
 
 
 def test_a_pagina_nao_exibe_uuid_como_informacao(client, publicada):

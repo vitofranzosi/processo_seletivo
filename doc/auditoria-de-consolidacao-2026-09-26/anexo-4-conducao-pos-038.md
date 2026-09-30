@@ -426,6 +426,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 - Grupo do resíduo: C
 - Impacto atual: nenhum observado.
 - Próxima ação sugerida: validar
+- **Desfecho (28/09):** medido contra PostgreSQL com 1, 3, 10, 12 e 20 Editais, de uma e de três Etapas (`doc/validacao-de-unidades-pre-piloto-2026-09-28.md`, #218): ~7 consultas por Edital mais 3 por Etapa, sem termo superlinear — 212 com 20 Editais de uma Etapa. Bate com os ~17 de 20/09. RESOLVIDO; fica, como C, que nenhum requisito limita o custo por Edital e nenhum guardião o prende. É o RC-86.
 - Relações: condição de saída do piloto.
 - Confiança: média — cardinalidade inferida do código, não medida.
 
@@ -640,7 +641,7 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 | §7 recurso público | Prazo recursal ausente da página pública do resultado | RESOLVIDO (047, #193) | — | nenhuma |
 | §8 glossário | "7 de 7" sem unidade; "sem marco" sem consequência; seletor cru | PARCIALMENTE RESOLVIDO (045, #187) | C | nenhuma agora |
 | §13 · §18 RA | Registro Acadêmico sem validação no destino | IMPLEMENTADO, MAS NÃO VALIDADO | B | validar |
-| §18 custo | ~17 consultas por Edital no painel | IMPLEMENTADO, MAS NÃO VALIDADO | C | validar |
+| §18 custo | ~17 consultas por Edital no painel | RESOLVIDO (medido, #218) | C (nenhum guardião por Edital) | nenhuma |
 | §18 observabilidade | Sem métrica de condução | NÃO IMPLEMENTADO | C | nenhuma |
 | §18 fonte real | E2E da Loteria atrás de flag | DUPLICADO / ABSORVIDO (achado-fonte-real-do-sorteio-sem-gatilho) | — | nenhuma aqui |
 | ACH-60 · polo | Organização por Perfil/polo | DUPLICADO / ABSORVIDO (ACH-60, AX-6) | — | nenhuma aqui |
@@ -657,16 +658,16 @@ expressamente que **não tocam** a região de Atenção (`specs/040-visao-instit
 
 | Estado | Nº |
 |---|---|
-| RESOLVIDO | 13 |
+| RESOLVIDO | 14 |
 | RESOLVIDO POR OUTRO CAMINHO | 1 |
 | PARCIALMENTE RESOLVIDO | 2 |
 | NÃO IMPLEMENTADO | 13 |
-| IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
+| IMPLEMENTADO, MAS NÃO VALIDADO | 1 |
 | SUPERADO / OBSOLETO | 0 |
 | DUPLICADO / ABSORVIDO | 4 |
 | CONTRADITO POR DECISÃO POSTERIOR | 0 |
 
-Resíduos por grupo, depois da `045`: **A = 1** (C7; a D-G5 fechada pela `048`, #197) · **B = 2** (E-6, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188), e o prazo recursal público pela `047` (#193) · **C = 14**, mais as sobras registradas de N-04 e N-06 (a de N-06 reduzida ao PDF pela `047`). Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07).
+Resíduos por grupo, depois da `045`: **A = 1** (C7; a D-G5 fechada pela `048`, #197) · **B = 2** (E-6, RA) — a D-G1 e o NOVO-1 da D-G3 foram fechados pela `046` (#188), e o prazo recursal público pela `047` (#193) · **C = 14**, mais as sobras registradas de N-04 e N-06 (a de N-06 reduzida ao PDF pela `047`). Em 25/09 eram **A = 6** (N-01, N-02, N-05, N-06, C7, D-G5) e **B = 7** (com N-04 e N-07). *Em 28/09, o custo de consulta do §18 foi medido pelo #218 e passou a RESOLVIDO, com a sobra C que já tinha: eram 13 resolvidos e 2 não validados. E a D-G2 foi mandada, por decisão, para a preparação da produção.*
 
 Condicionantes C1–C7 de 20/09: **6 de 7 fechadas** — a C3 em `4ec1cbb`, e C1, C2, C4, C5 e C6 pela `045` (#187, 26/09). Resta a C7. *A C2 foi atravessada depois de dada como fechada: o RC-115, que a revisão da `045` encontrou, foi corrigido pelo PR corretivo de 26/09, e a contagem não muda.*
 Decisões D-G1…D-G5: D-G4 encerrada; D-G3 atendida por specs anteriores, e o furo NOVO-1 fechado pela `046`; D-G1 executada pela `046` (#188), por Perfil; D-G5 executada pela `048` (#197), isolada da `039`; **a D-G2 continua não executada e sem spec na main**.

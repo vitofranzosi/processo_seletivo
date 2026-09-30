@@ -89,7 +89,7 @@ a apuração vai alcançar — e os dois em números, para não ter de abrir out
               aria-describedby="ajuda-sig">
         <option value="">— escolha a autoridade —</option>
         {% for autoridade in autoridades %}
-        <option value="{{ autoridade.chave }}">{{ autoridade.nome }} — {{ autoridade.cargo }}</option>
+        <option value="{{ autoridade.chave }}">{{ autoridade }}</option>
         {% endfor %}
       </select>
       <span class="ajuda" id="ajuda-sig">Fica registrada na Publicação e aparece no documento.</span>

@@ -7,9 +7,9 @@ class SecaoEdital(models.Model):
     """Guarda **apenas** o conteúdo redigido das seções textuais.
 
     A estrutura do documento — quais seções existem, em que ordem, de que tipo, com que título —
-    é declaração em `editais/domain/secoes.py`, e não linha de tabela. O Edital que ainda não teve
-    uma seção textual editada simplesmente não tem a linha: o conteúdo é o padrão do catálogo. Uma
-    seção gerada nunca tem linha.
+    é declaração em `editais/domain/secoes.py`, e não linha de tabela. A seção textual sem texto
+    simplesmente não tem a linha: desde a `054` ela é a seção vazia, que não sai no documento
+    (FR-982) — o catálogo não tem mais redação padrão. Uma seção gerada nunca tem linha.
 
     **A chave primária é a mesma identidade do snapshot** — `uuid5` sobre `(edital.id, key)` — para
     que a seção tenha uma identidade só. Gerar aqui um UUID aleatório criaria duas: a que o

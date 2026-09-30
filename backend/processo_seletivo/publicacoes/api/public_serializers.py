@@ -62,6 +62,7 @@ class PublicacaoDetalheSerializer(PublicacaoPublicaSerializer):
             "authorityId": str(obj.signatory_id),
             "name": obj.signatory_name,
             "role": obj.signatory_role,
+            "appointment": obj.signatory_appointment,
         }
 
     def get_content(self, obj):

@@ -159,9 +159,12 @@ def test_o_que_a_conferencia_diz_ler_aparece_na_tela(snapshot_maximo):
 @pytest.mark.integration
 def test_a_conferencia_mostra_cota_etapa_e_texto(api_client, manager_headers, process_payload):
     """O percentual é a informação mais sensível do documento e era a que não aparecia."""
-    edital = publish_original(
-        api_client, manager_headers, process_payload, draft=rascunho_com_etapas()
-    )
+    # O texto da seção é o que alguém escreveu: desde a `054` o catálogo não tem redação padrão.
+    rascunho = rascunho_com_etapas()
+    rascunho["sections"] = [
+        {"key": "disposicoes-preliminares", "content": "O presente Edital estabelece as normas."}
+    ]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
     tudo = "\n".join(
         linha for bloco in blocos for item in bloco["itens"] for linha in item["linhas"]
@@ -177,6 +180,8 @@ def test_a_conferencia_mostra_cota_etapa_e_texto(api_client, manager_headers, pr
     assert "Caráter: eliminatória e classificatória" in tudo
     assert "Peso: 2.0000" in tudo
     assert "O presente Edital estabelece as normas" in tudo, "o texto da seção, não só o título"
+    # E a seção vazia diz que não sai, em vez de mostrar o número do catálogo (054, FR-985).
+    assert "Vazia — não sai no documento." in tudo
 
 
 @pytest.mark.django_db(transaction=True)

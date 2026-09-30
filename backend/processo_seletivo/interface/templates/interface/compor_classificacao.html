@@ -1,12 +1,32 @@
 {% extends "interface/compor_base.html" %}
 {% load interface_extras %}
 {% block etapa_titulo %}Classificação{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_vista.html" %}
+{% endblock %}
 {% block etapa %}
-<form method="post" id="formulario">
+{% comment %}
+**O rascunho local, pelo mecanismo das outras quatro etapas** (053, FR-979, D-007). A etapa de
+cartões mais longos era a única sem ele; com um Perfil à vista por vez, o que se alterou fica fora de
+vista, e perdê-lo numa sessão expirada seria perder sem ver o quê. A metade do servidor já existia: a
+restauração é um envio que devolve o digitado sem gravar, que é o que esta etapa já faz na recusa.
+{% endcomment %}
+<form method="post" id="formulario"
+      {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
+      data-lista="#classificacao-perfis"{% endif %}>
   {% csrf_token %}
   {% if previa %}{% include "interface/_previa_da_aplicacao.html" %}{% endif %}
 <section aria-labelledby="titulo-classificacao">
   <h2 id="titulo-classificacao">Marcos classificatórios</h2>
+  {% comment %}
+  **As pendências que se resolvem aqui** (053, FR-966, D-005). Era a única etapa gravável do
+  assistente sem o bloco: um achado de marco só se lia na Revisão, sete telas adiante. Com a vista do
+  conjunto a linha passou a dizer *"1 pendência"*, e ela não pode dizer o que o bloco não diz.
+  {% endcomment %}
+  {% if pendencias_aqui %}
+  <div class="pendencias" role="status">
+    {% include "interface/_pendencias.html" with itens=pendencias_aqui com_link=False %}
+  </div>
+  {% endif %}
   {% comment %}
   Este passo vem depois das Etapas de propósito: o marco **enumera** Etapas, e seus critérios
   apontam Etapa ou fato declarado. Oferecê-lo antes seria oferecer listas vazias e chamá-las de
@@ -40,6 +60,33 @@
   <div id="ajuda-da-classificacao">
     {% if ancora_do_marco %}{% include "interface/_como_preencher_o_marco.html" with ancora=ancora_do_marco %}{% endif %}
   </div>
+  {% if not etapas_classificatorias %}
+  {% comment %}
+  **O aviso deixou de mandar** (030, FR-432). Ele dizia "declare ao menos uma antes de compor a
+  classificação", e a partir da FR-432 isso é falso para metade dos marcos: o que ordena por
+  sorteio pode não enumerar Etapa alguma, e é o caso do Edital em que o sorteio precede a análise
+  documental. A tela mandava criar uma Etapa artificial para satisfazer uma regra que deixou de
+  existir — e a ajuda do método, logo abaixo, mandava o contrário.
+
+  Continua sendo aviso, e não impedimento: quem ordena pela pontuação precisa mesmo de Etapa, e
+  saber disso aqui é melhor do que descobrir na publicação.
+  {% endcomment %}
+  <div class="aviso" role="status">
+    <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco que ordena
+      <strong>pela pontuação</strong> precisa de ao menos uma — declare-a no passo de Etapas de
+      Avaliação. Um marco que ordena <strong>por sorteio</strong> pode não enumerar nenhuma: é o
+      caso de quem sorteia antes da análise documental.</p>
+  </div>
+  {% endif %}
+  {% comment %}
+  **A vista do conjunto** (053, a mesma da 052). A tabela é montada pelo `classificacao.js`, lendo os
+  cartões — a linha é leitura do cartão, e um segundo desenho dela no servidor envelheceria separado.
+  Sem script o contêiner fica vazio e oculto, e a etapa é a de sempre, com todos os cartões à vista.
+
+  O método do sorteio comum vem entre a tabela e os cartões (`UX-127`): é declaração sobre o
+  conjunto, como o controle do Edital da etapa Perfis, e a tabela é o conjunto.
+  {% endcomment %}
+  <div id="visao-da-classificacao" class="visao-dos-perfis" hidden{% if devolvido %} data-devolvido{% endif %}></div>
   {% comment %}
   **O método do sorteio, declarado uma vez para o Edital** (030, FR-429). Sete Perfis de sorteio
   declaravam a mesma regra sete vezes — mesmo algoritmo, mesma fonte, mesma ocorrência —, porque o
@@ -149,27 +196,23 @@
       </p>
     </fieldset>
   </details>
-  {% if not etapas_classificatorias %}
   {% comment %}
-  **O aviso deixou de mandar** (030, FR-432). Ele dizia "declare ao menos uma antes de compor a
-  classificação", e a partir da FR-432 isso é falso para metade dos marcos: o que ordena por
-  sorteio pode não enumerar Etapa alguma, e é o caso do Edital em que o sorteio precede a análise
-  documental. A tela mandava criar uma Etapa artificial para satisfazer uma regra que deixou de
-  existir — e a ajuda do método, logo abaixo, mandava o contrário.
-
-  Continua sendo aviso, e não impedimento: quem ordena pela pontuação precisa mesmo de Etapa, e
-  saber disso aqui é melhor do que descobrir na publicação.
+  **O cartão se identifica, e diz à vista o que ela não sabe** (053). O `id` usa a identidade do
+  Perfil: o endereço que reabre o cartão depois de um envio precisa continuar apontando o mesmo. Os
+  Perfis não se editam nesta etapa, e a linha não tem campo de onde ler código, denominação e
+  localidade: vêm em `data-`. `data-pendencias` são as pendências da etapa que o têm por objeto — o
+  marco dele incluído, porque o caminho do achado nomeia o Perfil antes do marco —; `data-origem`, o
+  gesto que gravou o marco, pela regra da Revisão; `data-nao-salvo`, que o que voltou do servidor
+  difere do gravado.
   {% endcomment %}
-  <div class="aviso" role="status">
-    <p>Nenhuma Etapa foi publicada como <strong>classificatória</strong>. Um marco que ordena
-      <strong>pela pontuação</strong> precisa de ao menos uma — declare-a no passo de Etapas de
-      Avaliação. Um marco que ordena <strong>por sorteio</strong> pode não enumerar nenhuma: é o
-      caso de quem sorteia antes da análise documental.</p>
-  </div>
-  {% endif %}
+  <div id="classificacao-perfis">
   {% for perfil in perfis %}
-  <fieldset class="linha perfil">
-    <legend>{{ perfil.code }} — {{ perfil.name }}</legend>
+  <fieldset class="linha perfil" id="cartao-{{ perfil.id }}"
+            data-codigo="{{ perfil.code }}" data-denominacao="{{ perfil.name }}" data-localidade="{{ perfil.locality|default:'' }}"
+            data-pendencias="{{ pendencias_por_perfil|dicionario_simples:perfil.id|default:0 }}"{% with origem=origem_dos_marcos|dicionario_simples:perfil.id %}{% if origem %}
+            data-origem="{{ origem }}"{% endif %}{% endwith %}{% if perfil.id in perfis_alterados %}
+            data-nao-salvo{% endif %}>
+    <legend>{{ perfil|legenda_do_perfil }}</legend>
     <input type="hidden" name="perfil_id" value="{{ perfil.id }}">
     <div id="marcos-{{ perfil.id }}">
       {% for marco in perfil.marcos %}{% include "interface/_marco.html" with indice=perfil.id sub=forloop.counter0 %}{% endfor %}
@@ -181,6 +224,7 @@
             hx-target="#marcos-{{ perfil.id }}" hx-swap="beforeend">Acrescentar marco</button>
   </fieldset>
   {% endfor %}
+  </div>
 </section>
 {% include "interface/_navegacao_etapa.html" %}
 </form>
@@ -188,4 +232,7 @@
 <script src="{% static 'interface/assistente.js' %}" defer></script>
 <script src="{% static 'interface/ordenacao.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
+<script src="{% static 'interface/rascunho.js' %}" defer></script>
+<script src="{% static 'interface/vista-do-conjunto.js' %}" defer></script>
+<script src="{% static 'interface/classificacao.js' %}" defer></script>
 {% endblock %}

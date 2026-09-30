@@ -10,7 +10,17 @@ administra o sistema não é permissão nem papel do modelo — não sai do meca
 oração de ato ("que o conceda") criaria uma terceira maneira de pedir o que as outras duas telas já
 pedem de duas.
 {% endcomment %}
+{% comment %}
+**O envio acima do limite traz a própria ajuda** (`erros.EnvioAcimaDoLimiteMiddleware`): ali não há
+acesso a pedir, e o que se pede é outra coisa. E traz a tela de onde veio, quando se sabe qual:
+voltar à lista tirava a pessoa do assistente no meio da etapa.
+{% endcomment %}
+{% if ajuda %}
+<p class="ajuda">{{ ajuda }}</p>
+{% else %}
 <p class="ajuda">Se você acredita que deveria ter acesso, peça acesso a quem administra o sistema no
   Cefor. Nenhuma alteração foi feita.</p>
-<p><a class="botao secundario" href="{% url 'interface:lista' %}">Voltar aos Processos Seletivos</a></p>
+{% endif %}
+<p>{% if reabrir %}<a class="botao secundario" href="{{ reabrir }}">Reabrir a tela como está gravada</a>
+  {% endif %}<a class="botao secundario" href="{% url 'interface:lista' %}">Voltar aos Processos Seletivos</a></p>
 {% endblock %}
