@@ -5,8 +5,11 @@ alcançável por Retificação pela gramática que já existe, e recusar o estad
 publicação — que é onde uma sequência de Retificações produziria o que a elaboração impede.
 """
 
+from datetime import timedelta
+
 import pytest
 from django.db.utils import IntegrityError
+from django.utils import timezone
 
 from processo_seletivo.editais.models import DocumentoExigido, EventoCronograma
 from processo_seletivo.processos.models import Edital
@@ -46,6 +49,13 @@ DOCUMENTOS = [
 
 def _rascunho_com_contrato(**ajustes):
     rascunho = rascunho_de_selecao()
+    # Período aberto em relação ao relógio, e não as datas fixas do `rascunho_de_selecao`: designado
+    # como período de inscrições, o Evento encerrado em 29/09/2026 fazia a publicação recusar o
+    # Edital "que não receberá inscrição alguma" (032) a partir de 30/09, e os quatro casos daqui
+    # quebravam no preparo, sem nada a ver com o que verificam.
+    agora = timezone.now()
+    rascunho["schedule"][0]["startAt"] = (agora - timedelta(days=1)).isoformat()
+    rascunho["schedule"][0]["endAt"] = (agora + timedelta(days=10)).isoformat()
     rascunho["schedule"][0]["isRegistrationPeriod"] = True
     rascunho["documentRequirements"] = [dict(documento) for documento in DOCUMENTOS]
     rascunho.update(ajustes)
