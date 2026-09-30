@@ -273,23 +273,36 @@ ação de linha continua pequena, que é o que ela é numa tabela.
 .consequencias.irreversivel h2{color:var(--vermelho)}
 form.confirmar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.25rem}
-.assistente{display:flex;list-style:none;padding:0;margin:0 0 1.5rem;gap:.4rem;flex-wrap:wrap}
-{% comment %} Cartões de altura igual. O `li` já esticava — `stretch` é o padrão do flex —, mas quem desenha
-   o cartão é o `a`, que tomava só a altura do próprio conteúdo: "Etapas de Avaliação" quebra em
-   duas linhas e ficava mais alto que os vizinhos, com os cinco menores desalinhados ao lado. {% endcomment %}
-.assistente li{flex:1 1 160px;display:flex}
-.assistente a{display:flex;flex-direction:column;width:100%;box-sizing:border-box;
-  padding:.6rem .85rem;border-radius:4px;text-decoration:none;
+{% comment %}
+As nove etapas numa linha (056, FR-1020, FR-1021, D-002). Era `flex:1 1 160px` com quebra: nove de
+160 px não cabem nos 1.232 px da página a 1280, e a fila virava 7 + 2, com as duas últimas
+esticadas a 613 px cada — 174 px de stepper, e o trabalho da etapa só começava em y = 524.
+
+Grade, e não flex, porque a grade quebra em **colunas iguais**: abaixo da largura que comporta as
+nove, a última linha continua com colunas do tamanho das outras, e não esticadas. `auto-fit`, e não
+`auto-fill`, para que numa página mais larga as nove estiquem em vez de deixar coluna vazia.
+{% endcomment %}
+.assistente{display:grid;grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr));
+  list-style:none;padding:0;margin:0 0 1.5rem;gap:.4rem}
+{% comment %} Cartões de altura igual. O `li` já esticava, mas quem desenha o cartão é o `a`, que tomava só
+   a altura do próprio conteúdo: "Etapas de Avaliação" quebra em duas linhas e ficava mais alto que
+   os vizinhos, com os menores desalinhados ao lado. {% endcomment %}
+.assistente li{display:flex}
+{% comment %} O número à esquerda do nome e da situação, e não acima deles: é a linha que o número ocupava
+   sozinho que o stepper deixa de gastar. A linha do nome estica e a da situação fica na base, e
+   por isso as situações das nove continuam alinhadas quando um nome quebra e o vizinho não. {% endcomment %}
+.assistente a{display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;
+  column-gap:.4rem;width:100%;padding:.45rem .6rem;border-radius:4px;text-decoration:none;
   border:1px solid var(--borda);background:var(--branco);color:var(--texto-fraco)}
 .assistente a:hover{border-color:var(--verde)}
-.assistente .numero{display:inline-block;width:1.4rem;height:1.4rem;line-height:1.4rem;
+.assistente .numero{grid-row:1/3;display:inline-block;width:1.4rem;height:1.4rem;line-height:1.4rem;
   text-align:center;border-radius:50%;background:var(--cinza-fundo);color:var(--texto-fraco);
-  font-size:.75rem;font-weight:700;margin-right:.4rem}
-.assistente .nome{font-size:.875rem;font-weight:600}
-{% comment %} `margin-top:auto` empurra o estado para a base do cartão: os seis rótulos ficam na mesma linha
-   independentemente de o nome da etapa ocupar uma ou duas linhas. {% endcomment %}
-.assistente .estado{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;
-  margin-top:auto;padding-top:.15rem}
+  font-size:.75rem;font-weight:700}
+.assistente .nome{font-size:.8125rem;font-weight:600;line-height:1.25}
+{% comment %} A situação continua escrita (FR-1022), e sai da caixa-alta: "PRONTA PARA REVISAR" espaçada
+   pedia ~148 px numa coluna de ~105, quebrava em três linhas e levava o stepper acima de 80 px. A
+   palavra não muda — no HTML ela sempre foi minúscula; a caixa-alta era desta folha. {% endcomment %}
+.assistente .estado{font-size:.75rem;line-height:1.3;padding-top:.1rem}
 .assistente .a-atual a{border-color:var(--verde);background:var(--verde-claro);color:var(--texto)}
 .assistente .a-atual .numero{background:var(--verde);color:var(--branco)}
 .assistente .a-atual .estado{color:var(--verde-texto)}

@@ -1,5 +1,32 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Conteúdo{% endblock %}
+{% comment %}
+O Conteúdo em pouco mais de três telas (056, FR-1029 a FR-1032, D-007). Eram 4.876 px: 22 caixas da
+largura da página para uma área de texto de 685 px, as vazias do tamanho das preenchidas, e as
+geradas em caixas de 121 a 139 px só para dizer de onde vêm. Aqui, e não na folha comum, porque só
+esta etapa desenha seção — e a folha comum vai em toda página.
+
+O cartão tem a medida de leitura **mais** o próprio preenchimento: é a área de texto que mede
+`--leitura`, e a caixa só a contorna. A gerada perde a caixa: não há o que preencher nela, e a
+moldura de campo prometia o contrário.
+
+O título da gerada flutua à esquerda, e a frase corre ao lado dele: é a "faixa curta" da FR-1032,
+sem cortar a frase (D-009). O ritmo de dentro do cartão é mais curto que o dos cartões de campo — a
+seção tem um campo só, e o respiro de `.campo` existe para separar campos uns dos outros.
+
+A marca de estado muda de desenho, e não de texto (D-008): ela é o fim do nome acessível do campo
+("Público-Alvo (vazia — não sai no documento)"), e o `conteudo.js` a reescreve enquanto se digita. O
+que a fazia longa era a caixa-alta espaçada da legenda, que dobrava a largura dela.
+{% endcomment %}
+{% block estilo_da_pagina %}
+fieldset.secao{max-width:calc(var(--leitura) + 2rem + 2px);padding:.5rem 1rem .6rem;margin-bottom:.5rem}
+fieldset.secao .campo{margin:0}
+.secao>legend [data-estado-texto]{text-transform:none;letter-spacing:0;font-weight:400}
+fieldset.secao.gerada{border:0;background:none;padding:0;margin-bottom:.9rem}
+fieldset.secao.gerada>legend{float:left;padding:0;margin-right:.6rem;line-height:1.5rem}
+fieldset.secao.gerada .ajuda{margin:0;font-size:.8125rem;line-height:1.5rem}
+fieldset.secao.gerada .acao{margin-left:.35rem}
+{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario">
   {% csrf_token %}
@@ -30,11 +57,13 @@
               {% if secao.preambulo %}data-preambulo{% endif %}>
       <legend id="titulo-{{ secao.key }}"><span data-numero>{% if secao.numero %}{{ secao.numero }}. {% endif %}</span>{{ secao.title }}<span data-estado-texto>{% if secao.numero is None %} (vazia — não sai no documento){% elif secao.numero == 0 %} (preâmbulo, sem número){% endif %}</span></legend>
       {% if secao.gerada %}
+      {% comment %}
+      O caminho para a origem no fim da frase que a nomeia, e não num parágrafo só dele: era a linha a
+      mais de toda seção gerada. O texto da ajuda é o de antes (D-009).
+      {% endcomment %}
       <p class="ajuda">Composta automaticamente a partir de <strong>{{ secao.origem }}</strong>.
-        Não há texto a redigir: alterar aquele conteúdo altera esta seção.</p>
-      {% if secao.etapa_da_origem %}
-      <p><a class="acao" href="{% url 'interface:compor-etapa' edital.id secao.etapa_da_origem %}">Ir para {{ secao.origem }}</a></p>
-      {% endif %}
+        Não há texto a redigir: alterar aquele conteúdo altera esta seção.{% if secao.etapa_da_origem %}
+        <a class="acao" href="{% url 'interface:compor-etapa' edital.id secao.etapa_da_origem %}">Ir para {{ secao.origem }}</a>{% endif %}</p>
       {% else %}
       {% comment %}
       O campo é nomeado pela **legenda da própria seção**, e não por um rótulo repetido. "Texto da
@@ -46,7 +75,8 @@
       transcrever de novo: o teto de inscrições, a declaração do Requerimento de Matrícula.
       {% endcomment %}
       <p class="campo largo">
-        <textarea id="secao-{{ secao.key }}" name="secao-{{ secao.key }}" rows="5"
+        {% comment %}Vazia nasce com duas linhas; preenchida, com as cinco de antes (FR-1030). A alça de redimensionar continua.{% endcomment %}
+        <textarea id="secao-{{ secao.key }}" name="secao-{{ secao.key }}" rows="{% if secao.content %}5{% else %}2{% endif %}"
                   {% if not editavel %}disabled{% endif %}
                   aria-labelledby="titulo-{{ secao.key }}"
                   {% if secao.norma %}aria-describedby="ajuda-{{ secao.key }}"{% endif %}>{{ secao.content }}</textarea>
