@@ -32,6 +32,10 @@ reabrir**.
   PR são uma sequência só.
 - **Pare apenas nas condições da seção *Quando parar*.** Parar ali significa registrar o motivo em
   `doc/`, entregar o que já estiver verde e dizer o que faltou. Não significa perguntar e esperar.
+- **Meta numérica fora de alcance não amplia o escopo nem interrompe o lote.** Se um critério
+  numérico (altura, largura, posição) não for atingível dentro do escopo, registre em
+  `verificacao.md` o valor inicial, o valor alcançado e a justificativa, e siga para o próximo item.
+  Não amplie o escopo para alcançá-lo e não pare o lote por causa dele.
 - **Achado fora do escopo vira registro, não escopo.** Um arquivo `doc/achado-*.md` no estilo dos
   existentes. Governança é do usuário.
 - **O merge é do usuário.** Abra o PR e pare. Não use `--auto`.
@@ -142,11 +146,23 @@ Cada uma traz o **critério mensurável** que resolve a dúvida que ela não pre
 
 ## AS RESTRIÇÕES QUE O CÓDIGO IMPÕE
 
-**O teto de 120.000 caracteres.**
-- **Meça a margem antes de escrever a primeira regra**: rode o teste isolado e imprima `len(corpo)`.
-- O saldo de bytes deste lote **não pode passar da margem**.
-- **Não remova comentários da folha para abrir espaço.** É decisão do usuário, e vira achado se for
-  preciso.
+**O teto de 120.000 caracteres fica.** Ele mede o HTML **inteiro** da distribuição
+(`tests/performance/test_escala_da_mesa.py:326`).
+- **Registre o tamanho da página antes e depois**: rode o teste isolado, imprima `len(corpo)` e
+  grave os dois números em `verificacao.md` e na descrição do PR.
+- **Está autorizado** converter os comentários CSS **puramente documentais** de `/* … */` para
+  `{% comment %}…{% endcomment %}`. A explicação continua no código e deixa de ir no HTML. O texto do
+  comentário é o mesmo; só muda o delimitador.
+- **Não apague documentação e não altere regra CSS só para reduzir tamanho.** Comentário que não é
+  puramente documental (uma regra desativada, por exemplo) fica como está e é listado em
+  `verificacao.md`.
+- Os testes que leem a folha crua já tratam as duas formas como prosa (`sem_prosa` em
+  `tests/interface/test_acessibilidade.py`). Os que leem o `<style>` renderizado deixam de ver o
+  comentário: se algum deles afirmava sobre o texto de um comentário, o teste lia documentação como
+  se fosse regra. Registre o caso no `research.md` e ajuste o teste para ler o arquivo-fonte, **sem
+  mudar o que ele verifica**.
+- **A `055` já converteu a folha da gestão.** Comentário novo nasce como `{% comment %}`. Se você
+  tocar uma folha que ainda tenha `/* … */` documental, a mesma autorização vale para ela.
 - Regras que o lote torna mortas (a linha de ações do cartão, o flex do stepper) saem junto.
 - Estilo que só uma etapa usa vai para o `{% block estilo_da_pagina %}` dela, que não pesa na
   distribuição.
@@ -191,7 +207,7 @@ comportamento.** Os testes de JS (`backend/tests/javascript/*.test.js`) rodam de
    - Passe por **375 px** no stepper, no Cronograma e no Conteúdo.
    - Screenshots de antes e depois do topo de uma etapa, de um cartão de Evento e do Conteúdo.
 7. **Commit e PR.**
-   - Na descrição: a tabela antes/depois, o diff vazio dos POSTs, o saldo de bytes contra o teto, e o
+   - Na descrição: a tabela antes/depois, o diff vazio dos POSTs, o tamanho da página da distribuição antes e depois, e o
      total da suíte.
    - **Não faça merge.**
 
@@ -202,7 +218,7 @@ comportamento.** Os testes de JS (`backend/tests/javascript/*.test.js`) rodam de
 - **A `055` não está na `main`.** Pare antes do specify.
 - **Um POST muda** (chave ou valor) e a causa não se resolve sem tirar ou renomear campo. O item sai
   do lote, o código dele é revertido, e vira registro.
-- **O teto de 120K não comporta o lote.** Entregue na ordem F1, F3, F2, F4, F5, D4, F6 e registre o
+- **O teto de 120K não comporta o lote**, mesmo com os comentários convertidos. Entregue na ordem F1, F3, F2, F4, F5, D4, F6 e registre o
   que faltou.
 - **Um teste existente exige mudar comportamento, texto ou domínio** para o item passar. O item sai,
   e o conflito vira registro.
@@ -229,7 +245,7 @@ Medido no Edital 76/2027 do seed, a 1280 × 900, antes e depois:
 7. **Anexos:** "Avançar" na mesma posição das outras etapas.
 8. **Gravação:** o POST de "Salvar rascunho" de **cada etapa** é idêntico antes e depois.
 9. **Suíte:** `make lint check test-pg` verde, com os testes de JS; HTML da distribuição abaixo de 120.000
-   caracteres, com o saldo declarado.
+   caracteres, com o tamanho antes e depois registrado.
 
 E o que o teste **não** cobre, deliberadamente:
 - a tabela editável do Cronograma (análise de 29/09, P2);

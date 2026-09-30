@@ -34,6 +34,10 @@ reabrir**.
   PR são uma sequência só.
 - **Pare apenas nas condições da seção *Quando parar*.** Parar ali significa registrar o motivo em
   `doc/`, entregar o que já estiver verde e dizer o que faltou. Não significa perguntar e esperar.
+- **Meta numérica fora de alcance não amplia o escopo nem interrompe o lote.** Se um critério
+  numérico (altura, largura, posição) não for atingível dentro do escopo, registre em
+  `verificacao.md` o valor inicial, o valor alcançado e a justificativa, e siga para o próximo item.
+  Não amplie o escopo para alcançá-lo e não pare o lote por causa dele.
 - **Achado fora do escopo vira registro, não escopo.** Um arquivo `doc/achado-*.md` no estilo dos
   existentes. Governança é do usuário.
 - **O merge é do usuário.** Abra o PR e pare. Não use `--auto`.
@@ -145,16 +149,28 @@ Cada uma traz o **critério mensurável** que resolve a dúvida que ela não pre
 
 ## AS RESTRIÇÕES QUE O CÓDIGO IMPÕE
 
-**O teto de 120.000 caracteres.** A folha da gestão já ocupa ~81,5K do HTML da distribuição, e ~36,8K
-disso são comentários `/* */`.
-- **Meça a margem antes de escrever a primeira regra.** Rode o teste isolado e imprima
-  `len(corpo)`.
-- O saldo de bytes deste lote **não pode passar da margem**.
-- **Não remova comentários da folha para abrir espaço.** Enxugar ou deixar de servir os comentários é
-  decisão do usuário, e fica registrada como achado se for preciso.
-- O caminho é o contrário: G2, D-5 e D-8 **substituem** regras. Apague a regra velha junto, em vez de
-  sobrepor.
-- Comentário novo segue o tom da casa — por quê, não o quê — e é **curto**.
+**O teto de 120.000 caracteres fica.** Ele mede o HTML **inteiro** da distribuição
+(`tests/performance/test_escala_da_mesa.py:326`).
+- **Registre o tamanho da página antes e depois**: rode o teste isolado, imprima `len(corpo)` e
+  grave os dois números em `verificacao.md` e na descrição do PR.
+- **Está autorizado** converter os comentários CSS **puramente documentais** de `/* … */` para
+  `{% comment %}…{% endcomment %}`. A explicação continua no código e deixa de ir no HTML. O texto do
+  comentário é o mesmo; só muda o delimitador.
+- **Não apague documentação e não altere regra CSS só para reduzir tamanho.** Comentário que não é
+  puramente documental (uma regra desativada, por exemplo) fica como está e é listado em
+  `verificacao.md`.
+- Os testes que leem a folha crua já tratam as duas formas como prosa (`sem_prosa` em
+  `tests/interface/test_acessibilidade.py`). Os que leem o `<style>` renderizado deixam de ver o
+  comentário: se algum deles afirmava sobre o texto de um comentário, o teste lia documentação como
+  se fosse regra. Registre o caso no `research.md` e ajuste o teste para ler o arquivo-fonte, **sem
+  mudar o que ele verifica**.
+- **Nesta feature, a conversão é a primeira tarefa da implementação**, num commit só dela, antes de
+  qualquer regra mudar: assim o diff das regras fica legível na revisão. Converta a folha da gestão
+  (`interface/templates/interface/base.html`), que é a que pesa no teto. Em 30/09 ela enviava
+  ~36,8K de comentários em ~81,5K de CSS. As outras folhas ficam para quem as tocar.
+- G2, D-5 e D-8 **substituem** regras: apague a regra velha junto, em vez de sobrepor.
+- Comentário novo nasce como `{% comment %}`, segue o tom da casa — por quê, não o quê — e é
+  **curto**.
 
 **Prosa de comentário não pode ter tag HTML.** Um `<a>` dentro de comentário de CSS quebra a
 varredura de template.
@@ -203,7 +219,7 @@ varredura de template.
      Inscrições.
 7. **Commit e PR.**
    - Mensagens no padrão do repositório.
-   - Na descrição do PR: a tabela antes/depois, o saldo de bytes contra o teto de 120K, e o total da
+   - Na descrição do PR: a tabela antes/depois, o tamanho da página da distribuição antes e depois, e o total da
      suíte (passando/pulados).
    - **Não faça merge**, e não use `--auto`.
 
@@ -211,10 +227,10 @@ varredura de template.
 
 ## QUANDO PARAR
 
-- **O teto de 120K não comporta o lote**, mesmo apagando as regras substituídas. Entregue os itens
-  que couberem, na ordem da matriz da auditoria (G1, G2+G3, G4+G5, depois G6, G7, G8, D1, F7).
-  Registre em `doc/achado-*.md` quanto faltou e a opção dos comentários, e abra o PR com o que ficou
-  verde.
+- **O teto de 120K não comporta o lote**, mesmo com os comentários convertidos e as regras
+  substituídas apagadas. Entregue os itens que couberem, na ordem da matriz da auditoria (G1, G2+G3,
+  G4+G5, depois G6, G7, G8, D1, F7). Registre em `doc/achado-*.md` quanto faltou, e abra o PR com o
+  que ficou verde.
 - **Um teste existente exige mudar comportamento, texto ou domínio** para o item passar. O item sai
   do lote, o teste fica como está, e o conflito vira registro.
 - **Uma medida "depois" piora em outra tela** — linha que quebra, controle cortado em 375 px — e a
@@ -242,7 +258,7 @@ Medido no mesmo banco, a 1280 × 900, antes e depois:
 10. **Comissão:** o Identificador institucional deixa de ter 1.190 px.
 11. **Requerimento do portal:** o Telefone celular deixa de ter 1.232 px.
 12. **Suíte:** `make lint check test-pg` verde. O HTML da distribuição continua abaixo de 120.000
-    caracteres, com o saldo declarado.
+    caracteres, com o tamanho antes e depois registrado.
 
 E o que o teste **não** cobre, deliberadamente:
 - altura do stepper, tamanho do Conteúdo do Edital, coluna de ações da lista e detalhe do Edital —
