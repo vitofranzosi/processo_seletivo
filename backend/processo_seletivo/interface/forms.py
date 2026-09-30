@@ -854,7 +854,7 @@ ORIGEM = {
 
 def secoes_persistidas(edital):
     """Seções textuais já editadas, no formato do command — para preservá-las ao salvar outra
-    etapa. Ausência de linha continua significando "texto padrão do catálogo"."""
+    etapa. Ausência de linha significa seção vazia desde a `054` (FR-982)."""
     return [{"key": item.key, "content": item.content} for item in edital.secoes.all()]
 
 

@@ -1521,30 +1521,40 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
         # e é lá que se corrige.
         if secao.get("type") == catalogo.GERADA:
             continue
-        nome = _nome_da_secao(secao, numeros.get(secao.get("key")))
-        grupos.append(
-            _grupo(
-                f"Seção {nome}",
-                f"/sections/id={secao.get('id', '')}",
-                secao,
-                CAMPOS_SECAO,
-                removivel=False,
-                tipo="Seção",
-                nome=nome,
-            )
+        numero = numeros.get(secao.get("key"))
+        nome = _nome_da_secao(secao, numero)
+        grupo = _grupo(
+            f"Seção {nome}",
+            f"/sections/id={secao.get('id', '')}",
+            secao,
+            CAMPOS_SECAO,
+            removivel=False,
+            tipo="Seção",
+            nome=nome,
         )
+        # **O estado vai para o campo, e não para o nome.** O título do grupo é reusado como nome
+        # da seção fora desta tela — no resumo da confirmação e nas pendências da Revisão
+        # (`views.nomes_dos_caminhos`) —, e "vazia" no nome rotularia como vazia justamente a
+        # seção que a Retificação está preenchendo (code review do PR 233).
+        grupo["campos"][0]["descricao"] = _estado_da_secao(numero)
+        grupos.append(grupo)
 
     return _referenciar(grupos)
 
 
 def _nome_da_secao(secao, numero):
-    """`11 — Da Matrícula`, `Apresentação (preâmbulo)` ou `Do Certificado (vazia …)`."""
+    """`11 — Da Matrícula`, pelo número do documento; sem número, só o título."""
     titulo = str(secao.get("title", "")).strip()
+    return f"{numero} — {titulo}" if numero else titulo
+
+
+def _estado_da_secao(numero):
+    """O que o documento publicado faz hoje com a seção, dito junto do campo (054, FR-985)."""
     if numero is None:
-        return f"{titulo} (vazia — não sai no documento)"
+        return "vazia, e não sai no documento"
     if numero == 0:
-        return f"{titulo} (preâmbulo)"
-    return f"{numero} — {titulo}"
+        return "sai como preâmbulo, sem número"
+    return f"sai no documento como a seção {numero}"
 
 
 # A que seção da tela cada tipo de linha pertence. Um Edital extenso produz dezenas de cartões

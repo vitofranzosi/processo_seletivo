@@ -402,16 +402,22 @@ def _secao(secao, numeros):
             # única coleção do catálogo que não tinha nome em português aqui.
             "attachments": "Anexos",
         }
-        detalhe = f"Composta a partir de {origem.get(secao.get('source'), secao.get('source'))}."
+        nome_da_origem = origem.get(secao.get("source"), secao.get("source"))
+        detalhe = f"Composta a partir de {nome_da_origem}."
+        # A gerada que não sai diz **por quê**: a coleção de origem está vazia. "Vazia" sozinho
+        # não distingue texto a transcrever de dado a cadastrar, e é essa a pergunta de quem
+        # homologa diante da seção que falta (code review do PR 233).
+        vazia = f"Nada cadastrado em {nome_da_origem} — não sai no documento."
     else:
         detalhe = secao.get("content", "")
+        vazia = "Vazia — não sai no documento."
     # **O número é o do documento** (054, FR-985), e não a ordem do catálogo: com 22 seções e as
     # textuais vazias, a ordem diria "16" onde o documento imprime "9", e quem homologa confere a
     # prévia contra o original pela numeração (E10 = B).
     numero = numeros.get(secao.get("key"))
     titulo = str(secao.get("title", ""))
     if numero is None:
-        return {"titulo": titulo, "linhas": ["Vazia — não sai no documento."]}
+        return {"titulo": titulo, "linhas": [vazia]}
     if numero == 0:
         return {"titulo": f"{titulo} (preâmbulo, sem número)", "linhas": [detalhe]}
     return {"titulo": f"{numero}. {titulo}", "linhas": [detalhe]}

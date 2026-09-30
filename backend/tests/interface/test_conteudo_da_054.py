@@ -98,3 +98,40 @@ def test_o_numero_e_o_estado_sao_lidos_com_o_titulo(client, composto):
     html = client.get(_etapa(composto)).content.decode()
     assert 'aria-labelledby="titulo-certificado"' in html
     assert re.search(r'<legend id="titulo-certificado">.*vazia — não sai', html)
+
+
+def test_a_reexibicao_nao_devolve_o_texto_da_secao_que_se_esvaziou(client, composto):
+    """Code review do PR 233: ausente no envio é vazia, e não o texto gravado."""
+    from processo_seletivo.interface.views import _reexibir_secoes
+
+    edital = Edital.objects.get(pk=composto.pk)
+    snapshot = edital_snapshot(edital)
+    reexibidas = {
+        secao["key"]: secao["content"]
+        for secao in _reexibir_secoes(
+            edital, [{"key": "apresentacao", "content": "Outro preâmbulo."}], snapshot
+        )
+    }
+    assert reexibidas["apresentacao"] == "Outro preâmbulo."
+    # Gravada com texto na fixture, e esvaziada neste envio.
+    assert reexibidas["publico-alvo"] == ""
+    assert reexibidas["disposicoes-finais"] == ""
+
+
+def _estado_do_conteudo(client, edital):
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "perfis"]))
+    return next(p for p in resposta.context["progresso"] if p["chave"] == "conteudo")["estado"]
+
+
+def test_gravar_a_etapa_com_tudo_vazio_a_conclui(client, seletor_ligado, edital):
+    """Code review do PR 233: o Edital só de dados estruturados é legítimo (FR-982), e gravar a
+    etapa vazia é o sinal que a FR-040 da 007 pede — a gravação auditada, e não a linha."""
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    compor_rascunho(client, edital, perfis(), eventos())
+    edital.refresh_from_db()
+    assert _estado_do_conteudo(client, edital) == "pronta"
+
+    assert client.post(_etapa(edital), {}).status_code == 302
+    edital.refresh_from_db()
+    assert not edital.secoes.exists()
+    assert _estado_do_conteudo(client, edital) == "concluida"

@@ -980,10 +980,19 @@ ETAPAS_GRAVAVEIS = {
 }
 
 
+def _conteudo_gravado(edital):
+    """A etapa Conteúdo já foi gravada: o registro de auditoria da gravação, pela área (FR-042)."""
+    return RegistroAuditoria.objects.filter(
+        aggregate_id=edital.id,
+        operation="ALTERAR_RASCUNHO",
+        reason=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO)["conteudo"],
+    ).exists()
+
+
 # Três estados, e não dois (FR-040). O terceiro existe por um defeito preciso: `conteudo` era
-# `True` fixo, porque as seções nascem com o texto do catálogo e, tecnicamente, nada falta — então
-# um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse aberto. O
-# sistema afirmava que a pessoa fez algo que ela não fez.
+# `True` fixo, porque as seções nasciam com o texto do catálogo e, tecnicamente, nada faltava —
+# então um Edital recém-criado exibia o passo 5 como **concluído** sem que ninguém o tivesse
+# aberto. O sistema afirmava que a pessoa fez algo que ela não fez.
 #
 # "Aberta" seria o critério errado e caro: exigiria persistir "esta pessoa visitou esta etapa", por
 # Edital e por pessoa — estado novo, sem valor normativo, que ainda afirmaria revisão onde houve
@@ -1200,9 +1209,6 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         "classificacao": CONCLUIDA
         if MarcoClassificatorio.objects.filter(perfil__edital=edital).exists()
         else PENDENTE,
-        # `SecaoEdital` só tem linha depois da primeira edição — ausência de linha significa "texto
-        # padrão do catálogo". Logo `exists()` responde exatamente "esta etapa já foi gravada",
-        # sem custar estado novo.
         # Como `etapas`: o contrato de inscrição é opcional nesta versão — um Edital pode ser
         # publicado sem receber inscrições pelo sistema —, e "concluída" diz "já tem conteúdo".
         "inscricao": CONCLUIDA
@@ -1211,7 +1217,12 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
         # Como `etapas`: Edital sem anexo é legítimo, e "concluída" diz "já tem", não "é
         # obrigatório ter" (FR-024).
         "anexos": CONCLUIDA if edital.anexos.exists() else PENDENTE,
-        "conteudo": CONCLUIDA if edital.secoes.exists() else PRONTA,
+        # "Concluída" é **"gravada ao menos uma vez"** (FR-040 da 007). Até a `054` a linha de
+        # `SecaoEdital` era esse sinal: nascia na primeira edição. Sem redação padrão, gravar a
+        # etapa com todas as seções vazias — o Edital só de dados estruturados, que é legítimo —
+        # não cria linha, e o selo ficaria "pronta para revisar" para sempre (code review do PR
+        # 233). O outro sinal é o que a FR-040 já nomeia: a gravação, que é auditada com a área.
+        "conteudo": CONCLUIDA if edital.secoes.exists() or _conteudo_gravado(edital) else PRONTA,
         "revisao": PENDENTE,
     }
     return [
@@ -2056,11 +2067,17 @@ def _reexibir_modalidade(modalidade):
 def _reexibir_secoes(edital, digitadas, snapshot=None):
     """Após erro, o texto digitado por cima da estrutura do catálogo, que não vem do formulário.
 
+    **Textual ausente em `digitadas` é textual que chegou vazia**, e volta vazia. O formulário
+    envia todas as textuais, e `ler_secoes` descarta a vazia; cair no texto gravado devolvia à
+    tela a seção que a pessoa tinha acabado de apagar, e o próximo Salvar a gravaria de novo sem
+    aviso. Desde a `054` esvaziar uma seção a tira do documento (FR-982), e a reexibição não pode
+    desfazer isso (code review do PR 233).
+
     O número continua o do conteúdo gravado; o script da etapa o refaz sobre o que está nos campos.
     """
     texto = {item["key"]: item["content"] for item in digitadas}
     return [
-        {**secao, "content": texto.get(secao["key"], secao["content"])}
+        secao if secao["gerada"] else {**secao, "content": texto.get(secao["key"], "")}
         for secao in forms.secoes_do_edital(edital, snapshot)
     ]
 

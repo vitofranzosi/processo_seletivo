@@ -32,7 +32,11 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
       <span class="ajuda" id="ajuda-{{ campo.referencia }}">Um requisito por linha. A lista inteira é substituída.</span>
       {% elif campo.tipo == 'texto_longo' %}
       <textarea id="c-{{ campo.referencia }}"
-                name="campo:{{ campo.referencia }}" rows="5">{{ campo.valor }}</textarea>
+                name="campo:{{ campo.referencia }}" rows="5"
+                {% if campo.descricao %}aria-describedby="atual-{{ campo.referencia }}"{% endif %}>{{ campo.valor }}</textarea>
+      {% if campo.descricao %}
+      <span class="ajuda" id="atual-{{ campo.referencia }}">Hoje: {{ campo.descricao }}.</span>
+      {% endif %}
       {% elif campo.tipo == 'referencia' %}
       {% comment %}
       A opção vazia é normativa, e não cortesia — mas **o que ela significa depende da coleção**, e
