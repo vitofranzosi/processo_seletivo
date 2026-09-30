@@ -118,6 +118,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Grupo do resíduo: **B**
 - Impacto atual: fidelidade/legibilidade do documento; não altera execução.
 - Próxima ação sugerida: decisão do usuário (estudo §15, decisão 3) antes de spec.
+- **Desfecho (28/09):** a E5 foi decidida — B, o catálogo ampliado pelas famílias do piloto, sem redação padrão que afirme norma (`DP-20`) —, e é a spec `054`, ainda não mesclada. Continua NÃO IMPLEMENTADO. É o RC-24.
 - Relações: estudo §13/E5 (mesmo achado, outro lote); AX-12 depende dele (remissões a anexos vivem
   nas seções textuais).
 - Confiança: alta.
@@ -290,6 +291,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Impacto atual: integridade do documento publicado (identificação do ato), com gatilho humano
   (colar título do Edital de origem).
 - Próxima ação sugerida: corrigir (conferência de publicação título × número/ano).
+- **Desfecho (28/09):** corrigido pelo #220, pela `DP-20` e contra a FR-006 da `008`: o ato sai sempre de `number`/`year`, e o título que o repete perde o prefixo (`publicacoes/infrastructure/pdf.py`, `anuncio_do_ato`); o #221 fechou o zero à esquerda. A conferência título × número deixou de ser necessária. RESOLVIDO, sem sobra. É o RC-20.
 - Relações: E-4; relação com 023 (reuso induz a colagem).
 - Confiança: alta.
 
@@ -323,6 +325,7 @@ aparece no campo "Impacto atual" de cada bloco.
   capacidade quando não existe.
 - Próxima ação sugerida: corrigir (renderizar o teto na seção de inscrição e no portal) e decidir se
   ganha campo na etapa Inscrição.
+- **Desfecho (28/09):** feito em quatro PRs: o documento pelo #220 (`pdf.py`, `teto_de_inscricoes`), o campo na etapa Inscrição pelo #224, o portal pelo #225 (a frase, e o convite que some além do teto) e a Retificação pelo #227 (a conferência recusa teto abaixo de 1). RESOLVIDO, sem sobra. É o RC-12.
 - Relações: `achado-objeto-normativo-sem-forma.md` (mesmo padrão, lado oposto); 026 (contrato).
 - Confiança: alta.
 
@@ -406,6 +409,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Grupo do resíduo: **B**
 - Impacto atual: integridade referencial do documento publicado.
 - Próxima ação sugerida: corrigir (aviso na Revisão).
+- **Desfecho (28/09):** aviso na Revisão, por decisão de 28/09 na `DP-20` (sem impeditivo, porque a remissão casa também anexo de outro ato): `attachment_cited_without_label`, pelo #220, e o rótulo que abre pelo identificador pelo #221. RESOLVIDO, sem sobra. É o RC-21.
 - Relações: `achado-anexo-sem-destinatario.md` (face oposta); AX-3 (as remissões vivem na prosa).
 - Confiança: alta quanto à ausência; média quanto à frequência.
 
@@ -554,6 +558,7 @@ aparece no campo "Impacto atual" de cada bloco.
 - Próxima ação sugerida: validar pela tela (um Perfil com uma Modalidade, sair sem gravar,
   restaurar) e corrigir — ou, na falta de prioridade, restringir a salvaguarda às etapas sem
   coleção aninhada (família (d) parcial), para ela parar de prometer o que não entrega.
+- **Desfecho (28/09):** reproduzido pela tela duas vezes, de forma independente (#216 e #218), com os números de 15/09, e corrigido pelo #216: a restauração envia o guardado à própria etapa, e o servidor o reexibe sem gravar (`interface/views.py`, o ramo `restaurar`; `tests/interface/test_rascunho_local.py`). RESOLVIDO, sem sobra. É o RC-08.
 - Relações: memória "replace_draft apaga o que não for reenviado" (mesma família, lado do servidor —
   fechado por `PRESERVADO_DA_ETAPA` e `test_round_trip_do_rascunho.py`); E2E-006 (02/09, outro
   defeito da mesma salvaguarda, corrigido).
@@ -971,20 +976,20 @@ aparece no campo "Impacto atual" de cada bloco.
 |---|---|---|---|---|
 | AX-1 | Sentido do desempate divergente; `type` irretificável; acréscimo de critério só pela API | PARCIALMENTE RESOLVIDO (043 duplica; o acréscimo de critério pela 048, #197) | B | spec curta: aviso de divergência entre Perfis |
 | AX-2 | Requisito × documento comprobatório: duas prosas sem vínculo | NÃO IMPLEMENTADO | C | nenhuma (orientação de redação) |
-| AX-3 | Catálogo de Seções fechado (8 seções viram parágrafo) | NÃO IMPLEMENTADO | B | decisão do usuário (estudo §15, decisão 3) |
+| AX-3 | Catálogo de Seções fechado (8 seções viram parágrafo) | NÃO IMPLEMENTADO (E5 = B decidida; a `054`, em curso) | B | a `054` |
 | AX-4 | Barema inexistente; Etapa sem alcance por Perfil/curso | NÃO IMPLEMENTADO | B | spec quando priorizado (039 a registrou como "candidata seguinte") |
 | AX-5 | Curso/Área/Campus inexistentes | NÃO IMPLEMENTADO | C | nenhuma isolada (junto com AX-4) |
 | AX-6 | Código é o par perfil × polo | NÃO IMPLEMENTADO | C | nenhuma (premissa para AX-5) |
 | AX-7 (+E-1) | Modalidade/regra 4n; 3% × 30% sem conferência | CONTRADITO POR DECISÃO POSTERIOR (`decisao-recorte-documental.md`, 043 §2, 044 §3) | B | corrigir: AVISO de percentual/fundamento divergente por código |
-| AX-8 | Número do Edital com duas fontes na capa | NÃO IMPLEMENTADO | B | corrigir: conferência título × número/ano |
-| AX-9 | Teto de inscrições executado e não publicado (nem declarável na composição) | NÃO IMPLEMENTADO | B | corrigir: renderizar; decidir campo na etapa Inscrição |
+| AX-8 | Número do Edital com duas fontes na capa | RESOLVIDO (#220, #221) | — | nenhuma |
+| AX-9 | Teto de inscrições executado e não publicado (nem declarável na composição) | RESOLVIDO (#220, #224, #225, #227) | — | nenhuma |
 | AX-10 | "Documentos exigidos" funde naturezas | PARCIALMENTE RESOLVIDO (`a2b1e1f`; 044, #173) | B | nenhuma além do AX-4 e da D2 |
 | AX-11 | Fatos declarados por Perfil | PARCIALMENTE RESOLVIDO (043) | C | nenhuma (entrar no aviso do AX-1) |
-| AX-12 | Remissão a anexo sem conferência (materializada no estudo) | NÃO IMPLEMENTADO | B | corrigir: AVISO de remissão `ANEXO X` sem rótulo |
+| AX-12 | Remissão a anexo sem conferência (materializada no estudo) | RESOLVIDO (aviso, #220, #221) | — | nenhuma |
 | AX-13 | Cabeçalho de alcance só com nome | RESOLVIDO (`c0403a9`) | — | nenhuma |
 | AX-14 / AX-17 (+E-2) | Documento publicado "toda a modalidade" × execução por Perfil | RESOLVIDO (`01d9163`, IMPEDE); custo 5n fechado pela 044 (#173) | — | checar acervo pré-25/09 |
 | AX-15 | Submodalidades de PPIQ | NÃO IMPLEMENTADO (fora da 044 por decisão) | B | nenhuma agora |
-| AX-16 | Restaurar rascunho local perde coleções aninhadas | NÃO IMPLEMENTADO | **A** | validar pela tela e corrigir (ou restringir a salvaguarda) |
+| AX-16 | Restaurar rascunho local perde coleções aninhadas | RESOLVIDO (#216) | — | nenhuma |
 | E-3 | Custo de autoria sem duplicar | PARCIALMENTE RESOLVIDO (043; documentos pela 044) | B | nenhuma; a propagação em massa é spec futura (043 §5) |
 | 039 | Catálogo de Modalidades / alcance declarável (branch local) | CONTRADITO POR DECISÃO POSTERIOR | B (peça órfã: alcance da Etapa; a D-G5 executada pela 048, #197) | usuário registrar o encerramento e o destino do alcance da Etapa |
 | 044 | Recorte transversal + lista gravada | RESOLVIDO (#173, mesclado em 26/09) | — | T065, se a medição for pedida |
@@ -1010,21 +1015,23 @@ se decompõe nos quatro membros).
 
 | Estado | Nº | Quais |
 |---|---:|---|
-| RESOLVIDO | 7 | AX-13, AX-14/17, igualdade da soma, decisão de mutabilidade, 044 (#173), PR #172, objeto que nasce só pelo método (048, #197) |
+| RESOLVIDO | 11 | AX-8, AX-9, AX-12, AX-13, AX-14/17, AX-16, igualdade da soma, decisão de mutabilidade, 044 (#173), PR #172, objeto que nasce só pelo método (048, #197) |
 | RESOLVIDO POR OUTRO CAMINHO | 0 | — (o AX-14/17 fechou pela família (d) que ele próprio listava) |
 | PARCIALMENTE RESOLVIDO | 6 | AX-1, AX-10, AX-11, E-3, "três nomes", ampla não remapeada |
-| NÃO IMPLEMENTADO | 15 | AX-2, AX-3, AX-4, AX-5, AX-6, AX-8, AX-9, AX-12, AX-15, AX-16, ACH-41, ACH-13, ACH-18, objeto sem forma, anexo sem destinatário |
+| NÃO IMPLEMENTADO | 11 | AX-2, AX-3, AX-4, AX-5, AX-6, AX-15, ACH-41, ACH-13, ACH-18, objeto sem forma, anexo sem destinatário |
 | IMPLEMENTADO, MAS NÃO VALIDADO | 0 | — (os dois, 044 e PR #172, foram mesclados em 26/09) |
 | SUPERADO / OBSOLETO | 1 | divergências sem achado |
 | DUPLICADO / ABSORVIDO | 1 | H-1…H-3 |
 | CONTRADITO POR DECISÃO POSTERIOR | 2 | AX-7 (estrutural), 039 |
 
-Resíduos por grupo: **A** = 2 (AX-16, ACH-41) · **B** = 13 · **C** = 9 · sem resíduo = 8 (a 044 e o AX-14/17 passaram de B a sem resíduo em 26/09, e o objeto que nasce só pelo método, que era B pela janela, com a `048`, #197).
+Resíduos por grupo: **A** = 1 (ACH-41) · **B** = 10 · **C** = 9 · sem resíduo = 12 (em 28/09, o AX-16 saiu do A e o AX-8, o AX-9 e o AX-12 do B, os quatro sem sobra) (a 044 e o AX-14/17 passaram de B a sem resíduo em 26/09, e o objeto que nasce só pelo método, que era B pela janela, com a `048`, #197).
 
 Leitura dos 17 AX de 15/09 contra a varredura de 19/09 ("0 fechados"): hoje **3 fechados**
 (AX-13, AX-14, AX-17), **3 parciais** (AX-1, AX-10, AX-11), **1 contradito por decisão** (AX-7) e
 **10 abertos** (AX-2, 3, 4, 5, 6, 8, 9, 12, 15, 16) — o único que fazia ato publicado e execução
-divergirem (AX-14) fechou em 25/09, na main.
+divergirem (AX-14) fechou em 25/09, na main. *Em 28/09: **7 fechados** — mais o AX-8, o AX-9, o AX-12 e o
+AX-16, pelos PRs #216, #220, #221, #224, #225 e #227 —, 3 parciais, 1 contradito e 6 abertos (AX-2, 3,
+4, 5, 6, 15).*
 
 ## 3. Achados NOVOS encontrados de passagem
 

@@ -390,6 +390,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Grupo do resíduo: B
 - Impacto atual: trilha com par contraditório; nenhum Resultado é alterado (imutável), a avaliação tardia fica inelegível.
 - Próxima ação sugerida: corrigir (decisão curta de governança: aviso ou bloqueio com exceção da reavaliação)
+- **Desfecho (28/09):** decidido pelo usuário — recusar, salvo a reavaliação determinada ainda pendente (`018`, FR-066/FR-068) — e implementado pelo #220 (`avaliacoes/application/avaliacao.py`, `_recusar_se_ja_ha_resultado`, 409 `inscricao_ja_tem_resultado`); o #221 fechou a corrida com a Ocorrência (`FOR SHARE` no Processo) e fez a Mesa dizer a recusa antes do clique. RESOLVIDO, sem sobra. É o RC-62 da auditoria.
 - Relações: E2E18-001 (a exceção legítima); `participa_da_etapa` da 013.
 - Confiança: alta quanto ao código; média quanto à severidade.
 
@@ -407,6 +408,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Grupo do resíduo: B
 - Impacto atual: candidato descobre o encerramento só ao tentar anexar/enviar.
 - Próxima ação sugerida: corrigir
+- **Desfecho (28/09):** corrigido pelo #215 contra a FR-032 da `009`: "Minhas inscrições" diz que as inscrições encerraram e oferece *Consultar inscrição*, e o rascunho e a revisão avisam no alto e deixam de oferecer o que o domínio já recusava (`portal/templates/portal/_rascunho_fechado.html`; `tests/integration/portal/test_rascunho_depois_do_prazo.py`). RESOLVIDO, sem sobra. É o RC-49 da auditoria.
 - Relações: `portal/templates/portal/_periodo.html:22-23` já sabe dizer "Inscrições encerradas em …" — é reuso.
 - Confiança: alta.
 
@@ -620,6 +622,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Grupo do resíduo: B
 - Impacto atual: risco de a presidência concluir, como a auditoria concluiu, que a definitiva está travada para sempre.
 - Próxima ação sugerida: validar (percurso na tela) + corrigir a mensagem
+- **Desfecho (28/09):** percorrido pelas views da gestão, com o papel de quem pratica cada passo (`tests/interface/test_reavaliacao_pelas_telas.py`): o caminho existe, e o percurso de 07/09 tentou só a reabertura, que a FR-111 recusa. A mensagem da recusa passou a nomear o caminho da reavaliação quando ela está pendente (#218). RESOLVIDO; as seis lacunas de orientação que o percurso achou são o RC-155 da auditoria, C. É o RC-63.
 - Relações: E2E15-003 (a guarda que falta precisa excetuar este caso); porta da definitiva (`divulgacao/domain/publicabilidade.py:430-431`).
 - Confiança: média — domínio e testes lidos; a navegação real não foi exercida.
 
@@ -659,6 +662,7 @@ Convenção: "verificado" = li o código/teste citado nesta sessão. Não rodei 
 - Grupo do resíduo: B
 - Impacto atual: potencialmente o candidato não alcança a própria convocação.
 - Próxima ação sugerida: validar
+- **Desfecho (28/09):** não se reproduz com inscrição criada pelo portal (`doc/validacao-de-unidades-pre-piloto-2026-09-28.md`): a segunda entrada cai direto na área. O laço só aparece com inscrições sem identidade de candidato, como as do `seed_demo`, e é o mesmo que os conjuntos da FR-047 da `010` teriam — o convite volta e não leva a lugar nenhum. RESOLVIDO, com essa sobra, C. É o RC-46.
 - Relações: memória "código de acesso exige correio local".
 - Confiança: baixa — não reproduzível por leitura.
 
@@ -1175,8 +1179,8 @@ Blocos com dois estados distintos aparecem em duas linhas.
 | G1–G4/G22 | retenção, SMTP, identidade, rascunhos visíveis | NÃO IMPLEMENTADO | B (A no G3) | criar spec/decisão |
 | E2E14-005 | Retificar espécie do alvo, Etapa governada, continuação | CONTRADITO POR DECISÃO POSTERIOR (026) | — | nenhuma |
 | E2E14 §4 | quickstart da 014 promete recusa | NÃO IMPLEMENTADO | C | corrigir |
-| E2E15-003 | Mesa conclui com Resultado na própria Etapa | NÃO IMPLEMENTADO | B | corrigir (decisão curta) |
-| E2E15-007 | rascunho não avisa prazo encerrado | NÃO IMPLEMENTADO | B | corrigir |
+| E2E15-003 | Mesa conclui com Resultado na própria Etapa | RESOLVIDO (#220, decisão de 28/09) | — | nenhuma |
+| E2E15-007 | rascunho não avisa prazo encerrado | RESOLVIDO (#215) | — | nenhuma |
 | E2E15-012 | 404 técnico na gestão | RESOLVIDO POR OUTRO CAMINHO (E2E17-002) | — | nenhuma |
 | E2E15-013 | anônimo recebe 404 no próprio link | NÃO IMPLEMENTADO | C | corrigir ou nenhuma |
 | E2E15-016 | caminho da presidência não anunciado | RESOLVIDO | — | atualizar o manual |
@@ -1191,10 +1195,10 @@ Blocos com dois estados distintos aparecem em duas linhas.
 | E2E17-007 | segundo Edital no Processo | RESOLVIDO | — | nenhuma |
 | E2E17 §13 | `classificationInformation`/`callInformation` sem tela | CONTRADITO POR DECISÃO POSTERIOR (026, opacos) | C | nenhuma |
 | E2E17 §10.3 | publicação vigente sem selo | RESOLVIDO | — | nenhuma |
-| E2E18-001 | reavaliação determinada "inexequível" | IMPLEMENTADO, MAS NÃO VALIDADO | B | validar + corrigir mensagem |
+| E2E18-001 | reavaliação determinada "inexequível" | RESOLVIDO (não se reproduz; mensagem corrigida pelo #218) | — | nenhuma |
 | E2E18-003 | ids técnicos na peça do recurso | NÃO IMPLEMENTADO | C | corrigir (oportunista) |
 | E2E18-004 | docstring da porta da definitiva | NÃO IMPLEMENTADO | C | corrigir |
-| 019 §4.2 | reconciliação do portal não chega ao CPF | IMPLEMENTADO, MAS NÃO VALIDADO | B | validar |
+| 019 §4.2 | reconciliação do portal não chega ao CPF | RESOLVIDO (não se reproduz, #218) | C (o convite sem identidade) | nenhuma no piloto |
 | POLISH020-015 | `/api/v1/` no endereço do anexo | NÃO IMPLEMENTADO | — | nenhuma |
 | POLISH020-016 | página HTML da versão histórica | PARCIALMENTE RESOLVIDO (024) | C | nenhuma |
 | E2E25 §4 | âncora da referência cruzada; snapshot por Perfil; quadro fora da vitrine | NÃO IMPLEMENTADO | C | nenhuma |
@@ -1235,21 +1239,24 @@ Blocos com dois estados distintos aparecem em duas linhas.
 
 | Estado | Quantidade |
 |---|---:|
-| RESOLVIDO | 16 |
+| RESOLVIDO | 20 |
 | RESOLVIDO POR OUTRO CAMINHO | 2 |
 | PARCIALMENTE RESOLVIDO | 8 |
-| NÃO IMPLEMENTADO | 25 |
-| IMPLEMENTADO, MAS NÃO VALIDADO | 2 |
+| NÃO IMPLEMENTADO | 23 |
+| IMPLEMENTADO, MAS NÃO VALIDADO | 0 |
 | SUPERADO / OBSOLETO | 4 |
 | DUPLICADO / ABSORVIDO | 12 |
 | CONTRADITO POR DECISÃO POSTERIOR | 8 |
 
 Resíduos por grupo (coluna "grupo" da tabela): **A = 1** (T056 — implantação; o G3 do bloco
-G1–G4 é o mesmo item); **B = 13**, mais 3 linhas mistas (G1–G4 "B, A no G3"; E2E-016 "C/B"; P-4
-"B/C") — os B incluem itens que moram em outro lote (ACH-56, ACH-59, AX-9, AX-15); **C = 28**;
-**— = 31** (sem resíduo). Dos 25 "NÃO IMPLEMENTADO", 16 são C — quase todos polimento ou pergunta de
-domínio sem Edital no alvo que a exija —, 5 são B, 1 é A. *Em 26/09 eram 15 RESOLVIDO, 9 parciais e
-B = 14: o G16-001 passou a RESOLVIDO pela `048` (#197), sem sobra.*
+G1–G4 é o mesmo item); **B = 9**, mais 3 linhas mistas (G1–G4 "B, A no G3"; E2E-016 "C/B"; P-4
+"B/C") — os B incluem itens que moram em outro lote (ACH-56, ACH-59, AX-9, AX-15); **C = 29**;
+**— = 34** (sem resíduo). Dos 23 "NÃO IMPLEMENTADO", 16 são C — quase todos polimento ou pergunta de
+domínio sem Edital no alvo que a exija —, 3 são B, 1 é A. *Em 26/09 eram 15 RESOLVIDO, 9 parciais e
+B = 14: o G16-001 passou a RESOLVIDO pela `048` (#197), sem sobra. Antes de 28/09 eram 16 RESOLVIDO, 25 não
+implementados, 2 não validados e B = 13: o E2E15-003 e o E2E15-007 passaram a RESOLVIDO pelo #220 e
+pelo #215, e o E2E18-001 e o 019 §4.2, validados pelo #218, também — o último com uma sobra C. São 20,
+23 e 0, e B = 9.*
 
 ## 3. Achados NOVOS encontrados de passagem
 

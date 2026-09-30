@@ -1078,7 +1078,7 @@ Constituição:
   documento transversal pela regra (*"em todos os Perfis"*), e não pelo número, que a opção de recorte
   diz (UX-080). O conjunto se resolve na leitura, e o número visto ao declarar pode envelhecer até a
   publicação. Mostrar *"n de N Perfis"* na Revisão é requisito novo, e não correção direta: fica como
-  proposta, sem escopo atribuído.
+  proposta, sem escopo atribuído. *É o RC-156 da auditoria de consolidação, desde 29/09.*
 - **Uma decisão em aberto que o invariante alcança:** a opção **C** da `DP-16`, *"derivado, sem
   ato"*, elimina a autoria do não atendimento, e passa a precisar de justificativa aprovada. A
   recomendada, **B**, já cumpre o invariante.
@@ -1221,6 +1221,11 @@ Três propriedades do código que o documento oficial herda, e que nenhum RC reg
    catálogo passe a ter versão. É por isso que a E5 tem **prazo**: antes da primeira publicação do
    piloto, mudar o catálogo é barato; depois, pede versão de catálogo, e o acervo passa a ter duas
    formas de documento, porque documento publicado não se regenera.
+
+*Na [auditoria de consolidação](auditoria-de-consolidacao-2026-09-26.md), desde 29/09, as três
+propriedades e os outros achados sem número desta DP são unidades: a propriedade 1 é o RC-140, a 2 o
+RC-141 e a 3 o RC-142; a letra da `SC-001` (§3), o RC-143; a declaração do Requerimento de Matrícula,
+o RC-144; e o consolidado da Retificação sem data, o RC-145.*
 
 ### 1. Os RCs, classificados
 
@@ -1402,7 +1407,8 @@ antes da resposta do Cefor.
 > **Decidida pelo usuário em 29/09/2026: opção A.** `DATA_UPLOAD_MAX_NUMBER_FIELDS` subiu para
 > 13.000 — o dobro do maior envio medido, a Retificação do Edital de 66 Perfis (6.113 campos) —, com
 > guardião e recusa legível. Os números e o que ficou aberto estão no fim do
-> [achado](achado-etapa-perfis-recusa-acima-de-mil-campos.md).
+> [achado](achado-etapa-perfis-recusa-acima-de-mil-campos.md). *É o RC-148 da auditoria de
+> consolidação, resolvido pelo #232.*
 
 *Registrada em 29/09, a pedido do usuário, a partir do
 [achado da etapa Perfis](achado-etapa-perfis-recusa-acima-de-mil-campos.md), encontrado ao medir a
