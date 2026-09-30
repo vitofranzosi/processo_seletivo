@@ -29,10 +29,11 @@
     </p>
     <p class="campo">
       <label for="documento-{{ indice }}-instructions">Instrução ao candidato</label>
-      <input type="text" id="documento-{{ indice }}-instructions"
-             name="documento-{{ indice }}-instructions" value="{{ documento.instructions|default:'' }}"
-             placeholder="ex.: Frente e verso, em arquivo único."
-             aria-describedby="ajuda-instrucao-{{ indice }}">
+      {% comment %}Área de texto de duas linhas, com o mesmo `name`: a instrução é frase, e o candidato a lê inteira (056, FR-1035).{% endcomment %}
+      <textarea id="documento-{{ indice }}-instructions"
+                name="documento-{{ indice }}-instructions" rows="2"
+                placeholder="ex.: Frente e verso, em arquivo único."
+                aria-describedby="ajuda-instrucao-{{ indice }}">{{ documento.instructions|default:'' }}</textarea>
       <span class="oculto" id="ajuda-instrucao-{{ indice }}">Aparece ao candidato e no Edital publicado.</span>
     </p>
   </div>

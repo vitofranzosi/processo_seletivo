@@ -102,25 +102,25 @@ FR-1028; SC-388, SC-389, SC-390; UX-138, UX-139).
 
 **Goal**: FR-1035, FR-1036; SC-393.
 
-- [ ] T024 [P] [US6] F`_perfil.html` (Descrição) e F`_documento.html` (Instrução) em `textarea`
+- [x] T024 [P] [US6] F`_perfil.html` (Descrição) e F`_documento.html` (Instrução) em `textarea`
   `rows="2"`, mesmo `name`
-- [ ] T025 [US6] `CAMPOS_RAIZ` de `backend/processo_seletivo/interface/retificacao.py`: três campos para
+- [x] T025 [US6] `CAMPOS_RAIZ` de `backend/processo_seletivo/interface/retificacao.py`: três campos para
   `TEXTO_LONGO`; F`_retificacao_linha.html` com 2 linhas para eles ([D-011](research.md))
-- [ ] T026 [US6] Guardas dos cinco campos; medir sem corte no navegador; recapturar o envio de Perfis
+- [x] T026 [US6] Guardas dos cinco campos; medir sem corte no navegador; recapturar o envio de Perfis
   e Inscrição
 
 ## Phase 8: User Story 7 — Anexos (P3)
 
 **Goal**: FR-1037; SC-394.
 
-- [ ] T027 [US7] `.navegacao-etapa{max-width:none}` em F`base.html`; estado vazio de F`compor_anexos.html`
+- [x] T027 [US7] `.navegacao-etapa{max-width:none}` em F`base.html`; estado vazio de F`compor_anexos.html`
   sem a medida de leitura ([D-012](research.md)); guarda; medir "Avançar"
 
 ## Phase 9: User Story 8 — Ordem do Perfil no Retificar (P3, dispensável)
 
 **Goal**: FR-1038.
 
-- [ ] T028 [US8] Filtro que reordena os campos do grupo de Perfil depois da referência atribuída;
+- [x] T028 [US8] Filtro que reordena os campos do grupo de Perfil depois da referência atribuída;
   F`_retificacao_linha.html` o usa ([D-013](research.md)); guarda de que os nomes não mudam e a ordem
   segue a do Compor
 

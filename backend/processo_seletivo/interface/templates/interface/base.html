@@ -348,7 +348,10 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 .erro ol{margin:.4rem 0 0 1.2rem}
 .erro a{color:var(--vermelho);font-weight:600}
 .campo .recusa{display:block;color:var(--vermelho);font-size:.8125rem;margin-top:.25rem}
-.navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
+{% comment %} `max-width:none` porque em Anexos e na Revisão a barra é filha direta de `main`, e `main>p` lhe
+   dava a medida de leitura: "Avançar" parava no meio da tela, a 607 px, e não na borda direita
+   como nas outras etapas, onde a barra mora dentro do formulário (056, FR-1037, D-012). {% endcomment %}
+.navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:none;
   padding:1rem 0 2rem;border-top:1px solid var(--borda);margin-top:1.5rem}
 .navegacao-etapa .botao:last-of-type{margin-left:auto}
 .contadores{display:flex;gap:1rem;margin:0 0 1rem;font-size:.875rem;color:var(--texto-fraco)}

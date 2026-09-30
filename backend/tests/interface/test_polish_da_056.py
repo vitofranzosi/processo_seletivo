@@ -255,3 +255,69 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
     assert (
         ".conferencia .dados-da-inscricao{grid-template-columns:fit-content(16rem) 1fr" in revisao
     )
+
+
+# --- F5 — texto longo em área de texto (FR-1035, FR-1036) --------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("template", "nome"),
+    [
+        ("_perfil.html", "perfil-{{ indice }}-description"),
+        ("_documento.html", "documento-{{ indice }}-instructions"),
+    ],
+)
+def test_o_texto_longo_do_compor_e_area_de_texto_com_o_mesmo_nome(template, nome):
+    """FR-1035: muda o controle, e não o nome — o envio é o mesmo."""
+    corpo = (GESTAO / template).read_text()
+    assert re.search(rf'<textarea id="[^"]+"\s+name="{re.escape(nome)}"[^>]*rows="2"', corpo)
+    assert not re.search(rf'<input[^>]*name="{re.escape(nome)}"', corpo)
+
+
+def test_os_tres_campos_longos_do_retificar_sao_texto_longo():
+    """FR-1036 e D-011: o tipo muda o controle; a conversão dos dois tipos é a mesma."""
+    from processo_seletivo.interface import retificacao
+
+    tipos = {caminho: tipo for caminho, _, tipo in retificacao.CAMPOS_RAIZ}
+    for caminho in ("title", "description", "matriculationRequest/declarationText"):
+        assert tipos[caminho] == retificacao.TEXTO_LONGO, caminho
+        for bruto in ("  Edital de seleção  ", ""):
+            assert retificacao._converter(bruto, retificacao.TEXTO_LONGO, "x") == (
+                retificacao._converter(bruto, retificacao.TEXTO, "x")
+            )
+    linha = (GESTAO / "_retificacao_linha.html").read_text()
+    assert "campo.chave == 'title' or campo.chave == 'description' %}2" in linha
+    assert "campo.chave == 'matriculationRequest/declarationText' %}4" in linha
+
+
+# --- D4 — Anexos com as larguras das outras etapas (FR-1037) -----------------------------------
+
+
+def test_a_navegacao_da_etapa_nao_herda_a_medida_de_leitura():
+    """Em Anexos a barra é filha de `main`, e `main>p` a prendia em 685 px: "Avançar" no meio."""
+    assert "max-width:none" in regra(".navegacao-etapa")
+    anexos = (GESTAO / "compor_anexos.html").read_text()
+    assert "#anexos-lista>.vazio{max-width:none}" in anexos
+
+
+# --- F6 — o Perfil no Retificar na ordem do Compor (FR-1038) -----------------------------------
+
+
+def test_o_perfil_se_desenha_na_ordem_do_compor_sem_renomear_campo():
+    """D-013: a referência é a posição em `CAMPOS_PERFIL`; só a apresentação reordena."""
+    from processo_seletivo.interface.retificacao import CAMPOS_PERFIL, na_ordem_do_compor
+
+    campos = [
+        {"chave": chave, "referencia": f"g2c{indice}"}
+        for indice, (chave, _, _) in enumerate(CAMPOS_PERFIL, 1)
+    ]
+    desenhados = na_ordem_do_compor({"tipo": "Perfil", "campos": campos})
+
+    chaves = [campo["chave"] for campo in desenhados]
+    assert chaves[0] == "name"
+    assert chaves.index("name") < chaves.index("requirements")
+    assert sorted(c["referencia"] for c in desenhados) == sorted(c["referencia"] for c in campos)
+    assert {c["chave"]: c["referencia"] for c in desenhados} == {
+        c["chave"]: c["referencia"] for c in campos
+    }, "nenhum campo troca de nome"
+    assert na_ordem_do_compor({"tipo": "Evento", "campos": campos}) == campos

@@ -453,3 +453,11 @@ def em_trechos(linhas):
         else:
             trechos.append({"pares": pares, "linhas": [linha]})
     return trechos
+
+
+@register.filter
+def campos_na_ordem_do_compor(grupo):
+    """Os campos de uma linha do Retificar na ordem em que se desenham (056, FR-1038)."""
+    from processo_seletivo.interface.retificacao import na_ordem_do_compor
+
+    return na_ordem_do_compor(grupo)

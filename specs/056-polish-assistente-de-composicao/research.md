@@ -225,3 +225,29 @@ primeiro campo de grupos de **seção**, que o filtro não toca.
 **A ordem.** A do editor do Perfil: Denominação, Localidade, Descrição, Carga horária, Remuneração,
 Atribuições, Requisitos, Vagas imediatas, Limite do Cadastro Reserva, Modalidade que é a ampla
 concorrência, Forma de comunicar a convocação. O Código não é retificável e não aparece.
+
+## D-014 — A Declaração do Requerimento tem quatro linhas, e não duas
+
+**Decisão.** No Retificar, Título e Descrição ficam com 2 linhas; a Declaração do Requerimento de
+Matrícula, com 4.
+
+**Por quê.** A 8ª decisão recebida diz "área de texto de 2 linhas", e o critério dela é "nenhum
+desses campos trunca o valor do seed". Os dois não cabem juntos na Declaração: o texto do banco de
+demonstração tem 231 caracteres e, com 2 linhas de 685 px, rolava na vertical. Venceu o critério. O
+número vem do Compor, que desenha a mesma declaração com 4 linhas — "o mesmo campo usa o mesmo
+controle nas duas telas" é a sugestão da própria auditoria (F5).
+
+## D-015 — O `ruleId` da Modalidade sem regra muda a cada render, e a comparação o mascara
+
+**Achado na medição.** Recarregar a etapa Perfis duas vezes, sem mudar nada, dá dois corpos de
+"Salvar rascunho" diferentes: o `modalidade-*-ruleId` da Modalidade que ainda não tem Regra
+Normativa é um identificador novo a cada render. É deliberado e anterior a esta feature — o
+comentário de `_modalidade.html` explica: a identidade da Regra precisa existir antes da Regra, para
+que a gravação a preserve.
+
+**Decisão.** A comparação do envio (D-005) troca o valor de `*-ruleId` por um marcador **nos dois
+lados** antes de comparar, e registra que o fez. Sem isso a etapa Perfis acusaria diferença a cada
+medição, com ou sem a feature.
+
+**Não vira registro.** Não é defeito: enquanto não há Regra, o identificador não designa nada; na
+primeira gravação ele passa a ser o da Regra, e dali em diante é estável.
