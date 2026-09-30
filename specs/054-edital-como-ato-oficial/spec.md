@@ -212,6 +212,8 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
    linha de total com a soma das vagas imediatas.
 4. **Given** um Edital com um Perfil só, **When** é publicado, **Then** nenhuma linha de total é
    acrescentada.
+5. **Given** um Edital com dois Perfis só de cadastro de reserva, **When** é publicado, **Then**
+   nenhuma linha "Total 0" é acrescentada.
 
 ---
 
@@ -325,10 +327,12 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
 
 ### O total de vagas
 
-- **FR-997**: Com mais de um Perfil de Vaga, a tabela de Perfis do documento MUST terminar com uma
-  linha *"Total"*, com a soma das vagas imediatas na coluna de vagas e as demais em branco, como o
-  Quadro 2 do 28/2026. O cadastro reserva não é somado. Com um Perfil só,
-  nenhuma linha é acrescentada: a vaga dele já é o total.
+- **FR-997**: Com mais de um Perfil de Vaga e ao menos uma vaga imediata, a tabela de Perfis do
+  documento MUST terminar com uma linha *"Total"*, com a soma das vagas imediatas na coluna de vagas
+  e as demais em branco, como o Quadro 2 do 28/2026. O cadastro reserva não é somado. Com um Perfil
+  só, nenhuma linha é acrescentada: a vaga dele já é o total. No Edital só de cadastro de reserva, a
+  linha também não sai: "Total 0" diria que o Edital não oferece nada (verificação do Edital 89/2026,
+  30/09).
 
 ### A primeira página (emenda da SC-001 da 008)
 

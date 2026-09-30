@@ -225,3 +225,12 @@ def test_com_mais_de_um_perfil_a_tabela_termina_no_total():
 
 def test_com_um_perfil_nao_ha_linha_de_total():
     assert "Total" not in texto_de(documento(snapshot())).splitlines()
+
+
+def test_sem_vaga_imediata_nao_ha_linha_de_total():
+    """FR-997: no Edital só de cadastro de reserva, "Total 0" diria que ele não oferece nada.
+
+    Visto no Edital 89/2026, de Mediadores UAB, cadastrado em 30/09: dois Perfis só de reserva.
+    """
+    perfis = [{**perfil, "reserveType": "UNLIMITED"} for perfil in _perfis(0, 0)]
+    assert "Total" not in texto_de(documento(snapshot(profiles=perfis))).splitlines()

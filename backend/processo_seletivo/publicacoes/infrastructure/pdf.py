@@ -1901,7 +1901,12 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
         # de um Edital com sete polos fazia a conta; o 28/2026 fecha o quadro com "Total de vagas
         # 280". Só as imediatas: o cadastro reserva não é vaga, e somá-lo diria que há mais vagas
         # do que o Edital oferece.
-        rodape=["Total", "", str(_total_de_vagas(perfis)), "", ""],
+        #
+        # **Sem vaga imediata, não há linha de total.** No Edital só de cadastro de reserva — o
+        # 89/2026, de Mediadores UAB, cadastrado em 30/09 — a linha dizia "Total 0", e o leitor
+        # entendia que o Edital não oferece nada, quando oferece o cadastro. A coluna "Cadastro
+        # reserva" da mesma tabela já diz o que há.
+        rodape=["Total", "", str(total), "", ""] if (total := _total_de_vagas(perfis)) else None,
     )
 
 
