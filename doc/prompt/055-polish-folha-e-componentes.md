@@ -2,8 +2,12 @@
 
 **Prompt de sessão autônoma: da spec ao PR, sem parar para perguntar.** Escrito em 30/09/2026 a
 partir da [auditoria de polish](../auditoria-polish-ui-2026-09-30.md) (PR 240), sobre a `main` em
-`c0f5ad3d`. É o **lote 1 de 3** da proposta de execução da auditoria (§9). Os lotes 2 (assistente de
-composição) e 3 (telas de operação) terão prompt e spec próprios, e **não entram aqui**.
+`c0f5ad3d`. É o **lote 1 de 3** da proposta de execução da auditoria (§9). Os lotes 2 e 3 têm prompt e spec
+próprios, **não entram aqui**, e rodam **depois** desta, porque dividem a mesma folha e o mesmo teto
+de 120.000 caracteres:
+
+- o lote 2 é a [`056`](056-polish-assistente-de-composicao.md), assistente de composição;
+- o lote 3 é a [`057`](057-polish-telas-de-operacao.md), telas de operação.
 
 **A frase que governa:**
 
