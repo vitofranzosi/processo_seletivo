@@ -88,15 +88,15 @@ FR-1028; SC-388, SC-389, SC-390; UX-138, UX-139).
 
 **Independent Test**: texto de cada item igual; nenhuma linha rotulada em `span.detalhe`.
 
-- [ ] T020 [US5] `Rotulada` e `com_origem` que a preserva em
+- [x] T020 [US5] `Rotulada` e `com_origem` que a preserva em
   `backend/processo_seletivo/interface/origens.py`; as linhas rotuladas de
   `backend/processo_seletivo/interface/revisao.py` e de `origens.campos_definitivos` nascem por ela
   ([D-010](research.md))
-- [ ] T021 [US5] Filtro `em_trechos` em `backend/processo_seletivo/interface/templatetags/interface_extras.py`;
+- [x] T021 [US5] Filtro `em_trechos` em `backend/processo_seletivo/interface/templatetags/interface_extras.py`;
   F`compor_revisao.html` desenha os trechos, com o limite da coluna do rótulo no `estilo_da_pagina`
-- [ ] T022 [US5] Guardas: `Rotulada` igual à cadeia; `com_origem` preserva; texto de quem elabora com
+- [x] T022 [US5] Guardas: `Rotulada` igual à cadeia; `com_origem` preserva; texto de quem elabora com
   dois-pontos não vira rótulo; a Revisão renderizada tem `dt` para as linhas rotuladas
-- [ ] T023 [US5] Medir a Revisão e comparar o texto de cada item com o "antes"
+- [x] T023 [US5] Medir a Revisão e comparar o texto de cada item com o "antes"
 
 ## Phase 7: User Story 6 — Texto longo (P2)
 

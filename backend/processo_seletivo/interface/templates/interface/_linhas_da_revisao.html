@@ -1,0 +1,5 @@
+{% load interface_extras %}{% comment %}
+As linhas de um item da Revisão: a rotulada em par de termo e definição, a corrida em texto (056,
+FR-1033). Um parcial porque dois blocos da tela desenham linhas — a conferência e o que não se
+corrige depois de publicado —, e as duas grafias não podem se afastar.
+{% endcomment %}{% for trecho in linhas|em_trechos %}{% if trecho.pares %}<dl class="dados-da-inscricao">{% for linha in trecho.linhas %}<dt>{{ linha.rotulo }}</dt><dd>{{ linha.valor }}</dd>{% endfor %}</dl>{% else %}{% for linha in trecho.linhas %}<span class="detalhe">{{ linha }}</span>{% endfor %}{% endif %}{% endfor %}

@@ -198,3 +198,60 @@ def test_a_faixa_do_evento_poe_as_datas_juntas_e_o_local_no_fim():
     assert '<p class="campo local">' in corpo
     cronograma = (GESTAO / "compor_cronograma.html").read_text()
     assert ".campo.local{flex:0 1 20rem}" in cronograma
+
+
+# --- F4 — a Revisão em grade de rótulo e valor (FR-1033, FR-1034) ------------------------------
+
+
+def test_a_linha_rotulada_e_a_mesma_cadeia():
+    """FR-1034: o texto da linha não muda — é por isso que os testes da Revisão seguem valendo."""
+    from processo_seletivo.interface.origens import Rotulada, com_origem
+
+    linha = Rotulada("Peso", "2.0000")
+    assert linha == "Peso: 2.0000"
+    assert (linha.rotulo, linha.valor) == ("Peso", "2.0000")
+
+    com = com_origem(Rotulada("Caráter", "eliminatória"), "o padrão da Etapa decisória")
+    assert com == "Caráter: eliminatória (o padrão da Etapa decisória)"
+    assert com.rotulo == "Caráter", "a origem vai para o valor, e o rótulo continua"
+    assert com_origem(linha, "") is linha
+
+
+def test_os_trechos_juntam_vizinhos_e_nao_partem_texto_de_quem_elabora():
+    """FR-1033: o dois-pontos da descrição de um Evento não é rótulo; a ordem não muda."""
+    from processo_seletivo.interface.origens import Rotulada
+    from processo_seletivo.interface.templatetags.interface_extras import em_trechos
+
+    linhas = [
+        "Inscrições: pelo sistema, das 9h às 18h",
+        Rotulada("Início", "01/10/2026 09:00"),
+        Rotulada("Onde acontece", "Sala 3"),
+        "",
+        "É o período de inscrições deste Edital",
+    ]
+    trechos = em_trechos(linhas)
+
+    assert [trecho["pares"] for trecho in trechos] == [False, True, False]
+    assert trechos[0]["linhas"] == ["Inscrições: pelo sistema, das 9h às 18h"]
+    assert [linha.rotulo for linha in trechos[1]["linhas"]] == ["Início", "Onde acontece"]
+    assert [linha for trecho in trechos for linha in trecho["linhas"]] == [
+        linha for linha in linhas if linha
+    ]
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
+    """FR-1033: a linha rotulada vira `dt`/`dd`; nenhuma sai em `span` corrido."""
+    corpo = client.get(
+        reverse("interface:compor-etapa", args=[composto.id, "revisao"])
+    ).content.decode()
+
+    assert '<dl class="dados-da-inscricao"><dt>Início</dt>' in corpo
+    corridas = re.findall(r'<span class="detalhe">([^<]*)</span>', corpo)
+    for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
+        assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo
+    revisao = (GESTAO / "compor_revisao.html").read_text()
+    assert (
+        ".conferencia .dados-da-inscricao{grid-template-columns:fit-content(16rem) 1fr" in revisao
+    )

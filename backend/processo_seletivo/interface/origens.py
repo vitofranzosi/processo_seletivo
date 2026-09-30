@@ -107,8 +107,35 @@ def da_etapa(etapa):
     return ""
 
 
+class Rotulada(str):
+    """Uma linha "Rótulo: valor" que sabe onde o rótulo termina (056, FR-1033, D-010).
+
+    **A Revisão marca o rótulo onde a linha nasce, e não o adivinha pelo dois-pontos.** A tela
+    passou a pôr os rótulos numa coluna, e separar pelo primeiro ": " tomaria por rótulo o texto de
+    quem elabora — a descrição de um Evento, o texto de uma seção, a declaração do Requerimento. Só
+    quem compõe a linha sabe que ela tem rótulo.
+
+    **É uma `str`**, e continua sendo a mesma cadeia: `Rotulada("Peso", "2") == "Peso: 2"`. É isso
+    que deixa os testes da Revisão, que comparam linhas, valendo sem mudar — e é o que prova que o
+    conteúdo não mudou (FR-1034).
+    """
+
+    def __new__(cls, rotulo, valor):
+        linha = super().__new__(cls, f"{rotulo}: {valor}")
+        linha.rotulo, linha.valor = rotulo, valor
+        return linha
+
+    def __reduce__(self):
+        return (Rotulada, (self.rotulo, self.valor))
+
+
 def com_origem(texto, origem):
-    return f"{texto} ({origem})" if origem else texto
+    """O valor com a origem entre parênteses; na linha rotulada, a origem vai para o valor."""
+    if not origem:
+        return texto
+    if isinstance(texto, Rotulada):
+        return Rotulada(texto.rotulo, f"{texto.valor} ({origem})")
+    return f"{texto} ({origem})"
 
 
 # ---- pelo registro do gesto ---------------------------------------------------------------------
@@ -296,7 +323,7 @@ def campos_definitivos(snapshot, *, rotulos, em_palavras):
             {
                 "titulo": rotulo,
                 "chave": (colecao, caminho),
-                "linhas": [*linhas, f"Por que não se corrige: {razao}"],
+                "linhas": [*linhas, Rotulada("Por que não se corrige", razao)],
             }
         )
     return itens
