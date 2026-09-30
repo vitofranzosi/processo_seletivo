@@ -126,8 +126,3 @@ documentação continua sendo o de 29/09.
   - o cargo do catálogo ("Diretora-Geral…") diverge do cargo do 28/2026 ("Diretora…").
 - **Com o Cefor:** como o ato é assinado e o nome de quem assina.
 
-## Achado desta atualização (registro, e não escopo)
-
-- O `CLAUDE.md` diz *"as 80 migrations — hoje são 84"*. Na `main` de 30/09 são 85: a 054 acrescentou
-  `publicacoes/0009_ato_de_nomeacao_do_signatario`.
-
