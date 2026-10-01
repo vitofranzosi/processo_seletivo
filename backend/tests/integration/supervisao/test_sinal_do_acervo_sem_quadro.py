@@ -142,7 +142,7 @@ def test_o_perfil_do_acervo_com_zero_vagas_tambem_aparece(
     sinais = do_quadro(edital.processo, supervisora)
 
     assert len(sinais) == 1, "o Perfil de zero vaga sem quadro não pode ficar invisível"
-    assert "publica 0 vaga(s) imediata(s)" in sinais[0].mensagem
+    assert "publica 0 vagas imediatas" in sinais[0].mensagem
 
 
 # ---------------------------------------------------------------------------

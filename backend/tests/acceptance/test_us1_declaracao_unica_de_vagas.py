@@ -103,7 +103,7 @@ def test_a1_a5_a_quantidade_declarada_uma_vez_governa_o_documento_e_a_apuracao(
         reverse("interface:compor-etapa", args=[Edital.objects.get().id, "revisao"])
     )
     assert revisao.status_code == 200
-    assert "2 vaga(s) imediata(s)" in revisao.content.decode()
+    assert "2 vagas imediatas" in revisao.content.decode()
 
     # A5 — publicado, o conteúdo canônico carrega a linha, e o documento a exibe.
     praticar(client, "submeter")

@@ -1,0 +1,18 @@
+{% comment %}
+Uma ação do Edital, com o peso que o grupo lhe dá (057, D-002). `peso` é a classe de botão: vazia
+para a principal, `secundario` para as demais; as terminais trazem o estilo que a própria ação
+declara, e a folha as contorna dentro de `.terminais`.
+
+Ação indisponível aparece **desabilitada com o motivo** (FR-024), não escondida: esconder devolve a
+pessoa ao mesmo beco, só que em silêncio.
+{% endcomment %}
+<li>
+  {% if acao.disponivel %}
+  <a class="botao {{ peso }}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
+  {% if acao.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+  {% else %}
+  <span class="botao desabilitado" aria-disabled="true"
+        aria-describedby="motivo-{{ acao.chave }}">{{ acao.rotulo }}</span>
+  <span class="motivo" id="motivo-{{ acao.chave }}">{{ acao.motivo }}</span>
+  {% endif %}
+</li>

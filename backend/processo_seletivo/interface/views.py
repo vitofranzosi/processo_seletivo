@@ -249,6 +249,8 @@ def lista(request):
             edital.acoes = [
                 acao for acao in acoes.do_edital(edital, ator) if acao.chave != "auditoria"
             ]
+            # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
+            edital.grupo = acoes.da_linha(edital.acoes)
 
     # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
     # preside uma comissão que sua conta não possui papel algum.
@@ -3472,6 +3474,9 @@ def detalhe(request, edital_id):
             "documentos": _documentos_publicados(edital),
             "pendencias": pendencias,
             "acoes": conjunto,
+            # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002): a lista e a
+            # mensagem de ausência continuam saindo de `acoes`, que é o que a FR-023 guarda.
+            "grupo": acoes.hierarquia(conjunto),
             "impedido_por_segregacao": segregacao,
             # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
             # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar

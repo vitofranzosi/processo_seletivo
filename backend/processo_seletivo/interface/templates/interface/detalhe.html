@@ -30,7 +30,8 @@ antes da conclusão regular — o que não é o mesmo que encerramento. Publica�
 permanecem preservados.</p>
 {% endif %}
 
-<div class="colunas">
+{% comment %} Pelo topo (057, FR-1047): esticado pela coluna vizinha, "Quem atuou" tinha 495 px para 236 de conteúdo. {% endcomment %}
+<div class="colunas ao-topo">
   <section aria-labelledby="participantes-titulo" class="cartao">
     <h2 id="participantes-titulo">Quem atuou</h2>
     <dl class="participantes">
@@ -102,25 +103,29 @@ permanecem preservados.</p>
     saem da mesma variável — antes eram regras independentes, e por isso o cartão conseguia
     oferecer uma ação e, na linha seguinte, dizer que não havia nenhuma.
 
-    Ação indisponível aparece **desabilitada com o motivo** (FR-024), não escondida: esconder
-    devolve a pessoa ao mesmo beco, só que em silêncio.
+    **E repartido pelo peso** (057, FR-1043, FR-1044). Eram sete botões, um por linha, e o único
+    preenchido era "Cancelar": o gesto excepcional e destrutivo era o mais forte da tela. Agora a
+    ação que o fluxo pede vem cheia e primeiro, as demais em linha, e as que encerram ou
+    interrompem o Edital vêm por último, separadas por um filete e só contornadas — com o marcador
+    "irreversível" de sempre.
     {% endcomment %}
-    <ul class="lista-acoes">
-      {% for acao in acoes %}
-      <li>
-        {% if acao.disponivel %}
-        <a class="botao {{ acao.estilo }}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
-        {% if acao.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
-        {% else %}
-        <span class="botao desabilitado" aria-disabled="true"
-              aria-describedby="motivo-{{ acao.chave }}">{{ acao.rotulo }}</span>
-        <span class="motivo" id="motivo-{{ acao.chave }}">{{ acao.motivo }}</span>
-        {% endif %}
-      </li>
-      {% empty %}
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-      {% endfor %}
+    {% if grupo %}
+    {% if grupo.principal or grupo.secundarias %}
+    <ul class="lista-acoes em-linha">
+      {% if grupo.principal %}{% include "interface/_acao_do_edital.html" with acao=grupo.principal peso="" %}{% endif %}
+      {% for acao in grupo.secundarias %}{% include "interface/_acao_do_edital.html" with peso="secundario" %}{% endfor %}
     </ul>
+    {% endif %}
+    {% if grupo.terminais %}
+    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Edital">
+      {% for acao in grupo.terminais %}{% include "interface/_acao_do_edital.html" with peso=acao.estilo %}{% endfor %}
+    </ul>
+    {% endif %}
+    {% else %}
+    <ul class="lista-acoes">
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+    </ul>
+    {% endif %}
   </section>
 </div>
 

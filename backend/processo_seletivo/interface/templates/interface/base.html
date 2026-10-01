@@ -113,10 +113,14 @@ table{width:100%;border-collapse:collapse}
 {% comment %} Cada Processo monta a sua própria tabela, e sem largura declarada cada uma se media pelo que
    tinha dentro: em cartões empilhados, "Situação" aparecia em posições diferentes a cada um, e o
    olho que desce a lista precisava reencontrar as colunas. Três têm conteúdo limitado e recebem
-   medida; o título, que é o texto variável, fica com o que sobra. {% endcomment %}
+   medida; o título, que é o texto variável, fica com o que sobra.
+
+   As ações ganharam seis rem (057, FR-1049): em 24, as cinco ações de um Edital publicado quebravam
+   em três linhas e a linha tinha 118 px; em 30, quebram em duas, e quem passa a ditar a altura é o
+   título — 82 px. {% endcomment %}
 .processo table th:nth-child(1){width:7rem}
 .processo table th:nth-child(3){width:8rem}
-.processo table th:nth-child(4){width:24rem}
+.processo table th:nth-child(4){width:30rem}
 .processo table th:first-child{white-space:nowrap}
 {% comment %} Sete colunas não cabem em 375px, e sem um contêiner que role a tabela empurra a **página**
    inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
@@ -337,7 +341,7 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
   color:var(--verde-texto);padding:.3rem .6rem;border:1px solid var(--borda);border-radius:4px}
 .como-preencher>summary:hover{border-color:var(--verde-texto)}
 .como-preencher[open]>summary{margin-bottom:.6rem}
-.como-preencher dl{margin:0;padding:.75rem 1rem;background:var(--branco);
+.como-preencher dl,.como-preencher>.definicoes{margin:0;padding:.75rem 1rem;background:var(--branco);
   border:1px solid var(--borda);border-radius:6px}
 .como-preencher dt{font-size:.8125rem;font-weight:600;margin-bottom:.15rem}
 .como-preencher dd{margin:0 0 .6rem;font-size:.875rem;color:var(--texto-fraco)}
@@ -363,19 +367,23 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 .depois{color:var(--sucesso);font-weight:600}
 .consequencias table{margin-top:.5rem}
 .consequencias th[scope=row]{font-weight:600;font-size:.875rem}
-.auditoria{list-style:none;padding:0;margin:0 0 1.5rem}
-.auditoria li{background:var(--branco);border:1px solid var(--borda);border-left:3px solid var(--verde);
-  border-radius:0 4px 4px 0;padding:.75rem 1rem;margin-bottom:.6rem}
+{% comment %} A trilha é uma sequência que se lê de cima a baixo, e cada ato era um cartão de ~100 px (057,
+   FR-1055, D-012): o filete separa um do outro, e a moldura não acrescentava nada que ele não diga.
+   Cabeça e corpo correm numa linha, como uma entrada de registro — quando, o quê, sobre o quê, por
+   quem e com que base —, e o motivo, quando há, ocupa a linha de baixo inteira. {% endcomment %}
+.auditoria{list-style:none;padding:0;margin:0 0 1.5rem;border-top:1px solid var(--borda)}
+.auditoria li{padding:.5rem 0;border-bottom:1px solid var(--borda);display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:.2rem 1rem}
 .auditoria .cabeca{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap}
 .auditoria .quando{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem;
   color:var(--texto-fraco)}
 .auditoria .operacao{font-size:.9375rem}
 .auditoria .agregado{font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;
   background:var(--verde-claro);color:var(--verde-escuro);padding:.1rem .45rem;border-radius:3px}
-.auditoria .corpo{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.3rem;font-size:.875rem;
+.auditoria .corpo{display:flex;gap:1rem;flex-wrap:wrap;font-size:.875rem;
   color:var(--texto-fraco)}
 .auditoria .transicao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem}
-.auditoria .motivo{margin:.45rem 0 0;font-size:.875rem;font-style:italic;color:var(--texto)}
+.auditoria .motivo{flex-basis:100%;margin:.1rem 0 0;font-size:.875rem;font-style:italic;color:var(--texto)}
 .impedimentos{list-style:none;padding:0;margin:.5rem 0}
 .impedimentos li{padding:.3rem 0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
@@ -418,10 +426,15 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    dizer. No portal a lista nunca começa vazia; aqui, começar do zero é o caso comum. {% endcomment %}
 {% comment %} A região de Atenção da supervisão (022, UX-006). Forma única para os cinco, e sem cor de
    severidade: os sinais são igualmente acionáveis, e pintar uns de vermelho seria a folha
-   decidindo uma ordenação que o domínio não determina. {% endcomment %}
-.sinais{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
-.sinais .sinal{background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--verde);
-  border-radius:0 4px 4px 0;padding:.75rem 1rem}
+   decidindo uma ordenação que o domínio não determina.
+
+   **Uma lista, e não um cartão por sinal** (057, FR-1054, D-011). Eram seis cartões com borda dentro
+   do cartão do Processo, cada um com a faixa **verde** — a cor de "deu certo" para o que pede
+   atenção. A faixa agora é uma só, âmbar como a do aviso, e igual para todos: diz o nome da seção,
+   e não ordena nada. Entre um sinal e outro, um filete. {% endcomment %}
+.sinais{list-style:none;margin:0;padding:0;border-left:4px solid var(--amarelo);background:var(--branco)}
+.sinais .sinal{padding:.6rem 1rem}
+.sinais .sinal+.sinal{border-top:1px solid var(--borda)}
 .sinais .mensagem{margin:0;max-width:var(--leitura)}
 .sinais .medida{margin:.25rem 0 0;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
 .sinais .acao{margin-top:.5rem}
@@ -484,8 +497,11 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 .distribuicao{background:var(--branco);
   border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
 .distribuicao th,.distribuicao td{border-bottom:1px solid var(--fundo);vertical-align:middle}
-.distribuicao thead th{position:sticky;top:0;background:var(--branco);border-bottom:2px solid var(--borda);
-  font-size:.875rem;line-height:1.3;vertical-align:bottom;z-index:2;
+{% comment %} **O cabeçalho inteiro fica fixo, e não cada célula** (057, D-016): com a linha de grupo do Edital
+   em cima, `sticky` em cada `th` com `top:0` sobrepunha as duas linhas. {% endcomment %}
+.distribuicao thead{position:sticky;top:0;z-index:2}
+.distribuicao thead th{background:var(--branco);border-bottom:2px solid var(--borda);
+  font-size:.875rem;line-height:1.3;vertical-align:bottom;padding-inline:.35rem;
   box-shadow:0 1px 0 var(--borda);
   {% comment %} `thead th` global põe versalete em tudo que herda — e âncora herda, botão não. O
      "Distribuir" saía em maiúsculas ao lado de um "todos" em caixa baixa, sem que nenhuma regra
@@ -498,22 +514,31 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    para as marcas que descreve. {% endcomment %}
 .distribuicao thead th:not(.rotulo):not(.num){text-align:center}
 .distribuicao thead th>*{display:block}
-.distribuicao thead th>.acao{margin-inline:auto}
+{% comment %} A altura do cabeçalho é decidida aqui (057, FR-1061): eram 174 px. Entrelinha curta para o nome
+   de duas linhas, e o respiro de cada degrau reduzido ao que ainda os separa. {% endcomment %}
+.distribuicao thead .grupos th[scope=colgroup]{padding-block:.1rem;border-bottom:1px solid var(--fundo);
+  font-weight:600;font-size:.8125rem}
+.distribuicao thead tr+tr th{padding-block:.3rem}
+.distribuicao thead th .situacao{padding-block:.05rem}
 .etapa-medida{justify-content:center}
 .coluna-toda{justify-content:center}
-.etapa-nome{font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:.8125rem}
+.etapa-nome{font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:.8125rem;line-height:1.15}
 {% comment %} As pastilhas voltam a abraçar o próprio conteúdo. Esticadas à largura da coluna por um
    `display:block` herdado, `12/2027` e a contagem liam-se como campos, e não como etiquetas. {% endcomment %}
-.etapa-medida{margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.etapa-medida{margin-top:.15rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .etapa-medida .codigo,.etapa-medida .situacao{display:inline-block}
-.distribuicao thead th>.acao{margin-top:.45rem;width:fit-content}
+{% comment %} 12 rem, e não 14 (057, FR-1061): com nove Etapas, os 32 px eram o que faltava para a matriz caber
+   na coluna de conteúdo a 1.280 px, sem invadir a margem da página. {% endcomment %}
 .distribuicao tbody th{font-weight:600;position:sticky;left:0;background:var(--branco);
-  min-width:14rem;box-shadow:1px 0 0 var(--fundo)}
+  min-width:12rem;box-shadow:1px 0 0 var(--fundo)}
 .distribuicao tbody th .codigo,.distribuicao tbody th .situacao{margin-left:.4rem;font-weight:400}
 .distribuicao tbody tr:hover th,.distribuicao tbody tr:hover td{background:var(--fundo)}
-{% comment %} Estes dois agem na coluna logo abaixo, e não na Etapa: peso de ligação, não de botão. {% endcomment %}
-.coluna-toda{display:flex;gap:.3rem;margin-top:.5rem;align-items:baseline;
+{% comment %} "Todos" e "Nenhum" agem na coluna logo abaixo, e não na Etapa: peso de ligação, não de botão.
+   "Distribuir" divide o bloco com eles desde a 057, em negrito e na linha dele: leva a outra tela, e
+   "Distribuir Todos" numa linha só se lia como um comando. {% endcomment %}
+.coluna-toda{display:flex;flex-wrap:wrap;gap:0 .5rem;margin-top:.2rem;line-height:1.15;align-items:baseline;
   font-size:.75rem;color:var(--texto-fraco)}
+.coluna-toda .destino{display:block;font-weight:600}
 .ligacao{background:none;border:0;padding:0;font:inherit;color:var(--verde-texto);
   text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .ligacao:hover{color:var(--verde-escuro)}
@@ -768,6 +793,20 @@ fieldset.linha>.acoes-da-linha{position:absolute;top:0;right:1rem;margin:0;paddi
   margin:.8rem 0}
 .bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
+{% comment %} O grupo de ações do Edital (057, FR-1043 a FR-1047). Em linha, e não uma por linha: sete botões
+   empilhados empurravam o cartão para 495 px. As que encerram ou interrompem o Edital vêm depois de
+   um filete, **contornadas** em vermelho — o vermelho cheio era o único botão preenchido da tela, e
+   fazia do gesto excepcional o mais forte. Só dentro do grupo: na confirmação do Cancelar, o botão
+   cheio é a ação que a pessoa veio praticar, e fica. {% endcomment %}
+.lista-acoes.em-linha{flex-direction:row;flex-wrap:wrap;align-items:center}
+.terminais{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--borda)}
+.terminais .botao{background:var(--branco);color:var(--vermelho);border-color:var(--vermelho)}
+.terminais .botao:hover{background:var(--vermelho-fundo)}
+.colunas.ao-topo{align-items:flex-start}
+{% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete, e o
+   contador zerado esmaecido — presente, porque "nenhuma" também é resposta. {% endcomment %}
+.acoes>.terminais{margin:0;padding:0 0 0 .5rem;border:0;border-left:1px solid var(--borda)}
+.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
 .salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
 {% comment %} Os recursos (018). A fundamentação e a motivação são texto **escrito por alguém** e lido
    inteiro: ganham a largura de leitura e a moldura que as separa da prosa da tela, para que não
@@ -925,6 +964,9 @@ fieldset.em-colunas>label .ajuda{margin:0}
 .ficha dt{color:var(--texto-fraco);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase}
 .ficha dd{margin:0}
 .ficha .destaque{font-weight:600;font-size:1.05rem}
+{% comment %} A ficha de dois ou três dados — Distribuição, Minha etapa — na largura do conteúdo (057, FR-1057).
+   A da mesa fica larga: divide a altura com a barra do painel, do outro lado. {% endcomment %}
+.ficha.curta{width:fit-content}
 .ausente{color:var(--texto-fraco);font-style:italic}
 
 {% comment %} Um requisito por linha: o nome à esquerda, o que foi entregue à direita. Antes, nome, ação e
@@ -1026,18 +1068,6 @@ ul.documentos .entrega.ausente{font-style:italic}
   .mesa-trabalho.com-documento .painel-documento{position:sticky;top:1rem;
     height:calc(100vh - 5rem)}
 }
-.requisitos-apresentados{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
-.requisitos-apresentados>li{border:1px solid var(--borda);border-radius:4px;padding:.75rem 1rem;
-  background:var(--branco)}
-.requisito-nome{margin:0 0 .25rem}
-.acoes-do-documento{margin:.5rem 0 0;display:flex;gap:.5rem;flex-wrap:wrap}
-{% comment %} O resumo criptográfico do arquivo: 64 caracteres que precisam ser lidos um a um quando alguém
-   confere, e por isso monoespaçados e com quebra em qualquer ponto. {% endcomment %}
-.resumo-do-arquivo{margin:.3rem 0 0;display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
-  font-size:.8125rem;color:var(--texto-fraco)}
-.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem}
-.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  word-break:break-all;line-height:1.4}
 .codigo-de-verificacao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;
   letter-spacing:.03em}
 {% comment %} A coincidência de CPF na listagem do que chegou (010). Por texto **e** por símbolo: quem

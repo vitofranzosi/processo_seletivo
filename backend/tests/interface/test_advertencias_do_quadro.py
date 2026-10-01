@@ -191,7 +191,8 @@ def test_a_revisao_mostra_o_total_e_o_que_o_quadro_reparte(client, seletor_ligad
         reverse("interface:compor-etapa", args=[edital.id, "revisao"])
     ).content.decode()
 
-    assert re.search(r"80 vaga\(s\) imediata\(s\)[^<]*·[^<]*o quadro reparte 80", corpo)
+    # No plural de gente desde a 057 (FR-1058): o "vaga(s)" era a tela escrevendo como máquina.
+    assert re.search(r"80 vagas imediatas[^<]*·[^<]*o quadro reparte 80", corpo)
 
 
 # --- RC-58 · Perfil só de cadastro de reserva (DP-05) ------------------------------------------

@@ -21,6 +21,7 @@ nasce.
 elabora; o que este módulo garante é que nenhuma delas fique de fora.
 """
 
+import re
 from datetime import datetime
 
 from processo_seletivo.editais.domain import marcos as regras_do_marco
@@ -32,6 +33,7 @@ from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.interface import origens
 from processo_seletivo.interface.forms import ZONA
 from processo_seletivo.interface.origens import Rotulada
+from processo_seletivo.interface.templatetags.interface_extras import plural, pontuacao
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     criterio_com_a_ausencia,
     forma_de_convocacao_por_extenso,
@@ -112,11 +114,11 @@ def _perfil(perfil, snapshot):
         regra = modalidade.get("normativeRule") or {}
         partes = [f"{modalidade.get('code', '')} — {modalidade.get('name', '')}"]
         if regra.get("percentage"):
-            partes.append(f"{regra['percentage']}%")
+            partes.append(f"{pontuacao(regra['percentage'])}%")
         if regra.get("foundation"):
             partes.append(regra["foundation"])
             if regra.get("version"):
-                partes.append(f"versão {regra['version']}")
+                partes.append(f"versão {_versao(regra['version'])}")
         if regra.get("effectiveFrom"):
             # A data como foi declarada, sem conversão de fuso: vigência é dia, e levar
             # `2014-06-09T00:00Z` para o horário de Brasília a publicaria como 08/06.
@@ -161,7 +163,7 @@ def _perfil(perfil, snapshot):
         )
         linhas.append(
             origens.com_origem(
-                Rotulada("Quadro", f"{recorte} — {linha.get('immediateVacancies', 0)} vaga(s)"),
+                Rotulada("Quadro", f"{recorte} — {_vagas(linha.get('immediateVacancies', 0))}"),
                 origens.da_linha_do_quadro(
                     linha.get("immediateVacancies"), modalidade_da_linha, perfil
                 )
@@ -178,7 +180,9 @@ def _perfil(perfil, snapshot):
             Rotulada(
                 "Sem linha no quadro",
                 ", ".join(sem_linha)
-                + " — a ocupação e a convocação não terão quantidade a apurar nesse(s) recorte(s).",
+                + " — a ocupação e a convocação não terão quantidade a apurar "
+                + plural(len(sem_linha), "nesse recorte,nesses recortes")
+                + ".",
             )
         )
     # A reversão e a forma de comunicar a convocação: duas das declarações que mais pesam na
@@ -246,6 +250,22 @@ def arredondamento_da_reserva(rounding):
     return quadro.em_palavras(rounding)
 
 
+def _vagas(quantidade, *, imediatas=False):
+    """`1 vaga`, `2 vagas imediatas` — a tela escrevia `vaga(s)` (057, FR-1058)."""
+    texto = f"{quantidade} {plural(quantidade, 'vaga,vagas')}"
+    return f"{texto} {plural(quantidade, 'imediata,imediatas')}" if imediatas else texto
+
+
+def _versao(valor):
+    """A versão da norma, em dd/mm/aaaa quando ela é uma data (057, FR-1058).
+
+    A versão é texto livre de quem declara a norma: "2014-06-09" é a forma que o catálogo grava, mas
+    nada impede "2ª edição". Só a data reconhecível muda de grafia; o resto sai como está.
+    """
+    texto = str(valor)
+    return _dia(texto) if re.fullmatch(r"\d{4}-\d{2}-\d{2}", texto) else texto
+
+
 def _dia(valor):
     try:
         return datetime.fromisoformat(str(valor)).strftime("%d/%m/%Y")
@@ -273,9 +293,9 @@ def _vagas_e_quadro(perfil):
     if not linhas:
         # Acervo: publicado antes de o quadro existir. Ausência é "não declarou", e nunca zero — a
         # frase diz o que falta em vez de inventar um número que o Edital não tem.
-        return f"{total} vaga(s) imediata(s) · o quadro de vagas não é declarado"
+        return f"{_vagas(total, imediatas=True)} · o quadro de vagas não é declarado"
     soma = sum(linha["immediateVacancies"] for linha in linhas)
-    return f"{total} vaga(s) imediata(s) · o quadro reparte {soma}"
+    return f"{_vagas(total, imediatas=True)} · o quadro reparte {soma}"
 
 
 def _listas_sem_linha(perfil, denominacoes):
@@ -320,16 +340,16 @@ def _etapa(etapa, snapshot):
         )
     ]
     if etapa.get("weight") is not None:
-        linhas.append(Rotulada("Peso", etapa["weight"]))
+        linhas.append(Rotulada("Peso", pontuacao(etapa["weight"])))
     if etapa.get("minimumScore") is not None:
-        linhas.append(Rotulada("Nota mínima", etapa["minimumScore"]))
+        linhas.append(Rotulada("Nota mínima", pontuacao(etapa["minimumScore"])))
     # O incremento da `012`. Estavam no formulário e no documento publicado, e faltavam
     # justamente aqui — na tela cuja pergunta é "o que será congelado". Quem submetia congelava
     # dois campos que a conferência não mostrava, e a pontuação máxima é o teto contra o qual
     # cada avaliação da Etapa é validada depois. Impressos só quando declarados, como no
     # documento: ausência é "o Edital não declarou", e não "declarou o padrão".
     if etapa.get("maximumScore") is not None:
-        linhas.append(Rotulada("Pontuação máxima", etapa["maximumScore"]))
+        linhas.append(Rotulada("Pontuação máxima", pontuacao(etapa["maximumScore"])))
     # A forma, e os rótulos só onde eles existem: quem revisa precisa ver que esta Etapa não pontua
     # antes de submeter, e não descobrir isso no documento publicado (D-008).
     if etapa.get("forma") == "DECISORIA":

@@ -1,5 +1,15 @@
 {% extends "interface/base.html" %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}
+{% comment %} O resumo criptográfico do arquivo: 64 caracteres que precisam ser lidos um a um quando alguém
+   confere, e por isso monoespaçados e com quebra em qualquer ponto. Mora aqui, e não na folha comum,
+   porque só esta tela o mostra (057, D-013); os cartões de `.requisitos-apresentados` saíram com a
+   grade da mesa. {% endcomment %}
+.resumo-do-arquivo{display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
+  font-size:.8125rem;color:var(--texto-fraco)}
+.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem}
+.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all;line-height:1.4}
+{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -92,32 +102,41 @@
   {% if lista_reconstruida %}
   <p class="aviso-da-lista">Esta inscrição foi enviada antes de o sistema gravar a lista de documentos pedidos. A lista abaixo foi reconstruída a partir da versão do Edital que ela aceitou.</p>
   {% endif %}
-  <ul class="requisitos-apresentados">
+  {% comment %}
+  **O desenho da mesa do avaliador** (057, FR-1056, D-013): é o mesmo conceito nas duas telas — o
+  requisito e o que chegou para ele —, e aqui cada documento era um cartão de largura total. Uma
+  linha por requisito, numa grade comum: o nome e o que se sabe do arquivo à esquerda, a marca de
+  facultativo numa coluna, as ações à direita. As colunas do modelo e da leitura, que a mesa tem e
+  esta tela não, ficam vazias — como a mesa já faz com o requisito que não fornece modelo.
+  {% endcomment %}
+  <ul class="documentos">
     {% for documento in documentos %}
     <li>
-      <p class="requisito-nome"><strong>{{ documento.nome }}</strong>
-        {% if not documento.obrigatorio %}<span class="ajuda">(facultativo)</span>{% endif %}</p>
-      {% if documento.razao %}<p class="ajuda">{{ documento.razao }}</p>{% endif %}
+      <span class="requisito"><strong>{{ documento.nome }}</strong>
+        {% if documento.razao %}<span class="razao">{{ documento.razao }}</span>{% endif %}
+        {% if documento.enviado %}
+        <span class="instrucao">{{ documento.enviado.nome_original }} · {{ documento.tamanho }}
+          · {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span>
+        {% comment %}
+        O mesmo resumo que vai no comprovante do candidato (D9). O sistema já confere sozinho a cada
+        abertura e recusa o que divergir; isto é o que permite a **quem confere** afirmar o mesmo por
+        fora — comparar o arquivo que tem em mãos com o que foi recebido, sem depender do sistema.
+        {% endcomment %}
+        <span class="resumo-do-arquivo"><span class="rotulo">SHA-256</span>
+          <code>{{ documento.enviado.content_hash }}</code></span>
+        {% endif %}
+      </span>
+      <span class="celula-marca">{% if not documento.obrigatorio %}<span class="marca">facultativo</span>{% endif %}</span>
+      <span class="modelo"></span>
+      <span class="leitura"></span>
       {% if documento.enviado %}
-      <p>{{ documento.enviado.nome_original }}
-        <span class="ajuda">· {{ documento.tamanho }}
-          · {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span></p>
-      {% comment %}
-      O mesmo resumo que vai no comprovante do candidato (D9). O sistema já confere sozinho a cada
-      abertura e recusa o que divergir; isto é o que permite a **quem confere** afirmar o mesmo por
-      fora — comparar o arquivo que tem em mãos com o que foi recebido, sem depender do sistema.
-      {% endcomment %}
-      <p class="resumo-do-arquivo">
-        <span class="rotulo">SHA-256</span>
-        <code>{{ documento.enviado.content_hash }}</code>
-      </p>
-      <p class="acoes-do-documento">
+      <span class="entrega">
         <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}"
            target="_blank" rel="noopener">Visualizar</a>
         <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}?baixar=1">Baixar</a>
-      </p>
+      </span>
       {% else %}
-      <p class="ajuda">Não apresentado.</p>
+      <span class="entrega ausente">Não apresentado.</span>
       {% endif %}
     </li>
     {% endfor %}
