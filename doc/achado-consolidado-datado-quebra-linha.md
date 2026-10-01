@@ -3,7 +3,7 @@
 **Data:** 2026-10-01
 **Origem:** a suíte completa da `057`, rodada depois da meia-noite de 30/09 para 01/10.
 **Natureza:** teste frágil, alheio à `057` (nenhum arquivo de `publicacoes/` foi tocado).
-**Situação:** **aberto** — decidir é do usuário.
+**Situação:** **corrigido** no mesmo PR da `057`, a pedido do usuário.
 
 ## O que se viu
 
@@ -25,7 +25,11 @@ A linha anterior carrega duas datas por extenso, e a largura delas muda com o di
 quebra caía em outro ponto, e o teste passava. A suíte da `057` passou inteira às 23h e falhou às
 8h do dia seguinte com o mesmo código, e o teste reprova sozinho, isolado, no mesmo commit.
 
-## O que resolveria, sem decidir aqui
+## A correção
 
-Comparar o texto com as quebras de linha normalizadas (`" ".join(texto.split())`), como os testes
-do documento que já não dependem da paginação; ou congelar o relógio do teste.
+`_documentos` passou a devolver o texto de cada PDF em linha corrida (`" ".join(texto.split())`),
+como `test_pdf_classificacao.py` já fazia e como um dos testes do próprio arquivo fazia à mão. O que
+se prova continua sendo a frase inteira, com as datas certas; o que deixou de importar é onde o
+compositor quebra a linha. Os outros testes que comparam datas por extenso no PDF
+(`test_fecho_publicado.py`) leem o fecho "Vitória (ES), …", que ocupa uma linha só, e não precisaram
+mudar.

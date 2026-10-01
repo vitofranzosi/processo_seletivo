@@ -110,7 +110,8 @@ Depois das correções da revisão de código, rodada de novo em 01/10: **9.098 
 1 falha alheia** — `test_consolidado_datado.py::test_a_vigencia_em_outro_dia_e_declarada`, que
 procura uma frase do PDF que a quebra de linha passou a partir quando a data virou. Nenhum arquivo
 de `publicacoes/` está no diff; o teste reprova isolado no mesmo commit, e está
-[registrado](../../doc/achado-consolidado-datado-quebra-linha.md). Os testes de JavaScript vêm junto, por
+[registrado](../../doc/achado-consolidado-datado-quebra-linha.md) e depois corrigido, a pedido do
+usuário: o teste compara o texto em linha corrida, e o arquivo passa inteiro (4 de 4). Os testes de JavaScript vêm junto, por
 `tests/test_javascript.py`.
 
 ### Comentários da folha
