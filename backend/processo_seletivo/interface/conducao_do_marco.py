@@ -63,6 +63,7 @@ from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir
 from processo_seletivo.divulgacao.models import Natureza, PublicacaoResultado
 from processo_seletivo.editais.domain import marcos
 from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
 from processo_seletivo.ocupacao.application.selectors import (
     apuracao_vigente,
@@ -578,12 +579,14 @@ def _alcance_da_apuracao(edital, conteudo, perfil, marco):
                 )
             )
             continue
+        publicadas = linha.get("immediateVacancies") or 0
         itens.append(
             _item(
                 lista_id,
                 rotulo,
                 PRATICAR,
-                resumo=f"{linha.get('immediateVacancies') or 0} vaga(s) publicada(s) no quadro",
+                # Só a conferência do gesto lê o resumo (057, FR-1059); nada dele vai para o ato.
+                resumo=f"{contagem(publicadas, 'vaga publicada,vagas publicadas')} no quadro",
                 assinatura=assinatura_da_apuracao(edital, perfil["id"], marco_id, lista_id),
             )
         )
@@ -673,7 +676,7 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
         partes = [
             "ninguém concorreu — a lista vazia é divulgada"
             if not projecao["situacoes"]
-            else f"{posicoes} posição(ões) divulgada(s)"
+            else contagem(posicoes, "posição divulgada,posições divulgadas")
         ]
         if afericao.nivel == AVISO:
             partes.append("sucede a divulgação vigente deste recorte")

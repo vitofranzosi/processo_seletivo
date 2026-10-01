@@ -55,6 +55,10 @@ class Acao:
     # Vazio significa disponível. Preenchido, a tela mostra o controle desabilitado com este texto
     # ao lado — nem oferecido, nem escondido (FR-024).
     motivo: str = ""
+    # O número que o rótulo já carrega, para quem desenha a ação poder esmaecer o zero (057,
+    # FR-1050). Fica fora do rótulo **e** dentro dele: o rótulo é o que os testes e a pessoa leem,
+    # e extrair o número de lá seria parsear texto. `None` é "esta ação não conta nada".
+    quantidade: int | None = None
 
     @property
     def disponivel(self) -> bool:
@@ -115,6 +119,7 @@ def _navegacao(edital, ator):
             # passou a feature inteira tirando.
             f"Inscrições recebidas ({recebidas})",
             reverse("interface:inscricoes", args=[edital.id]),
+            quantidade=recebidas,
         )
     # Quem julga recurso não tinha por onde chegar ao próprio trabalho: a tela existia e nada
     # apontava para ela. O avaliador tem "Minhas Etapas" no cabeçalho de toda página; o julgador
@@ -124,10 +129,12 @@ def _navegacao(edital, ator):
     # recebida, decididas inclusive, e um julgador com a fila vazia lia "Recursos recebidos (7)". A
     # tela para onde a ação leva continua listando todas; o rótulo é o que diz o que espera.
     if edital.status in ESTADOS_COM_INSCRICOES and ator.can(recursos_admitir.PERMISSAO):
+        aguardando = recursos_aguardando_decisao(edital)
         yield Acao(
             "recursos",
-            f"Recursos aguardando decisão ({recursos_aguardando_decisao(edital)})",
+            f"Recursos aguardando decisão ({aguardando})",
             reverse("interface:recursos", args=[edital.id]),
+            quantidade=aguardando,
         )
     # A exportação de matrículas (031). **Sem porta, a capacidade não é entregue** — Princípio VI:
     # *"uma capacidade que o domínio sustenta mas que nenhuma interface alcança NÃO DEVE ser
@@ -220,6 +227,68 @@ def do_edital(edital, ator, *, pendencias=(), segregacao=False):
             )
         )
     return conjunto
+
+
+#: As ações que encerram ou interrompem o Edital (057, FR-1044). Vêm por último, separadas das
+#: demais e contornadas: o gesto excepcional e irreversível não pode ser o mais forte da tela.
+TERMINAIS = ("encerrar", "cancelar")
+
+#: Quem é a ação que o fluxo pede a seguir, em ordem de preferência (057, FR-1043, D-002). Elaborar,
+#: quando existe; depois o ato que **avança** o Edital; e, publicado, o trabalho do dia. Devolver e
+#: revogar a homologação ficam fora: são retrocessos, e nunca o próximo passo.
+PREFERENCIA_DA_PRINCIPAL = ("elaborar", "submeter", "homologar", "publicar", "inscricoes")
+
+#: As ações que se praticam todo dia vêm primeiro na linha da Lista (057, FR-1049).
+FREQUENTES = ("inscricoes", "recursos")
+
+
+@dataclass(frozen=True)
+class Hierarquia:
+    principal: Acao | None
+    secundarias: list
+    terminais: list
+
+    def __bool__(self):
+        return bool(self.principal or self.secundarias or self.terminais)
+
+
+def hierarquia(conjunto):
+    """O mesmo conjunto, repartido pelo peso que cada ação tem na tela (057, D-002).
+
+    **Reparte, e não decide**: nenhuma ação entra nem sai, e o destino de cada uma é o que
+    `do_edital` montou (FR-1064). O que muda é qual delas se desenha cheia, e onde ficam as que
+    encerram ou interrompem o Edital.
+
+    **A preferida impedida não é substituída** (FR-1045). Um Edital homologado que espera outra
+    pessoa para publicar mostraria "Visualizar Edital" como próximo passo, que é justamente a
+    leitura que o motivo ao lado desmente. Ela fica onde está, desabilitada, e nenhuma outra é
+    promovida.
+    """
+    conjunto = list(conjunto)
+    por_chave = {acao.chave: acao for acao in conjunto}
+    principal = next(
+        (por_chave[chave] for chave in PREFERENCIA_DA_PRINCIPAL if chave in por_chave), None
+    )
+    terminais = [acao for acao in conjunto if acao.chave in TERMINAIS]
+    # Por identidade, e não por igualdade: duas `Acao` iguais campo a campo seriam ambas retiradas
+    # de uma parte por estar a outra noutra, e a repartição perderia uma ação (FR-1064).
+    fora = {id(principal), *map(id, terminais)}
+    secundarias = [acao for acao in conjunto if id(acao) not in fora]
+    return Hierarquia(principal, secundarias, terminais)
+
+
+def da_linha(conjunto):
+    """A ordem da linha da Lista: as frequentes primeiro, as terminais à parte (057, FR-1049).
+
+    Na Lista não há ação cheia (D-004): uma por linha seria uma ação principal por Edital, na
+    mesma tela. A regra é a mesma, dita por posição.
+    """
+    conjunto = list(conjunto)
+    frequentes = [acao for chave in FREQUENTES for acao in conjunto if acao.chave == chave]
+    terminais = [acao for acao in conjunto if acao.chave in TERMINAIS]
+    fora = {*map(id, frequentes), *map(id, terminais)}
+    demais = [acao for acao in conjunto if id(acao) not in fora]
+    return Hierarquia(None, frequentes + demais, terminais)
 
 
 # ---------------------------------------------------------------------------

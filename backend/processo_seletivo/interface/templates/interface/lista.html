@@ -1,5 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Processos Seletivos{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
+   só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
+   é resposta. {% endcomment %}
+.acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
+.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
+{% endblock %}
 {% block conteudo %}
 <h1>Processos Seletivos</h1>
 <p class="sub">Processos e Editais do escopo <strong>{{ ator.institution_scope }}</strong>.</p>
@@ -100,8 +107,13 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
           {% if edital.acoes %}
           <div class="acoes">
             {% comment %} A mesma advertência que `detalhe.html` já dá: "Cancelar" e "Encerrar" interrompem
-            o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara. {% endcomment %}
-            {% for acao in edital.acoes %}{% if acao.disponivel %}<a class="acao{% if acao.estilo == 'perigoso' %} perigoso{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
+            o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara.
+
+            **E a mesma ordem** (057, FR-1049, FR-1050): as que se praticam todo dia primeiro, as que
+            encerram ou interrompem por último, num grupo próprio que não se confunde com "Retificar".
+            O contador zerado esmaece sem sumir: "nenhuma inscrição" também é resposta. {% endcomment %}
+            {% for acao in edital.grupo.secundarias %}{% include "interface/_acao_de_linha.html" %}{% endfor %}
+            {% if edital.grupo.terminais %}<span class="acoes terminais">{% for acao in edital.grupo.terminais %}{% include "interface/_acao_de_linha.html" %}{% endfor %}</span>{% endif %}
           </div>
           {% else %}
           <span class="nenhuma">Nenhuma ação disponível para seus papéis</span>

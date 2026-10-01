@@ -92,6 +92,16 @@ def plural(quantidade, formas):
 
 
 @register.filter
+def contagem(quantidade, formas):
+    """`1 vaga`, `3 vagas imediatas`: o número e as palavras no número dele (057, FR-1058).
+
+    A tela escrevia `vaga(s) imediata(s)` em quatro módulos, cada um com a sua grafia; o lugar de
+    resolver o plural é um só, e é este, ao lado de `plural`.
+    """
+    return f"{quantidade} {plural(quantidade, formas)}"
+
+
+@register.filter
 def legenda_do_perfil(perfil):
     """`Perfil LP03 — Vitória`: o que distingue um cartão dos outros (052, FR-944).
 

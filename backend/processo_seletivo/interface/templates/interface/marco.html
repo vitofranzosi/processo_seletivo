@@ -1,5 +1,10 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Condução do marco — {{ marco.name }}, {{ perfil.name }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} Os gestos lado a lado, alinhados pelo botão: o de publicar traz dois campos acima do dele (057, FR-1048). {% endcomment %}
+.gestos{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:flex-end}
+.gestos .conferencia{margin:0}
+{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
@@ -14,9 +19,15 @@ subtítulo dizia qual era qual.
 {% endcomment %}
 <h1>{{ marco.name }} — {{ perfil.name }}</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }}. Os recortes deste marco, o que já foi feito em cada um e o que falta.</p>
-<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
-  concorrência, ou uma Modalidade de Concorrência declarada. Cada recorte tem a sua ordem, a sua
-  faixa, a sua apuração e o seu resultado publicado.</p>
+{% comment %} Recolhido, no mesmo lugar e com o mesmo texto (057, FR-1051, D-009): serve ao primeiro contato e
+   ficava na frente da ação em todos os outros. O rótulo não usa os termos que o bloco define — senão
+   ele seria o primeiro uso, fora do `dfn`. {% endcomment %}
+<details class="como-preencher">
+  <summary>Termos desta tela</summary>
+  <p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
+    concorrência, ou uma Modalidade de Concorrência declarada. Cada recorte tem a sua ordem, a sua
+    faixa, a sua apuração e o seu resultado publicado.</p>
+</details>
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível conferir:</strong> {{ erro }}</p>{% endif %}
 
@@ -92,6 +103,12 @@ que está impedido. Só a confirmação, lá, pratica — um ato por recorte, ca
 <section aria-labelledby="gestos-titulo">
   <h2 id="gestos-titulo">Conduzir o marco inteiro</h2>
   <p class="ajuda">Cada ação pratica o ato em todos os recortes que ainda não o têm, e só neles. Antes de gravar, a conferência mostra o alcance recorte a recorte. Suceder um ato já emitido continua na tela do recorte, com motivo.</p>
+  {% comment %}
+  **Um gesto cheio, e não quatro** (057, FR-1048). Os gestos chegam na ordem das operações — ordem,
+  corte, apuração, publicação —, e o primeiro é o que o marco pede a seguir; os demais são
+  secundários, lado a lado. Quatro botões primários empilhados não diziam por onde começar.
+  {% endcomment %}
+  <div class="gestos">
   {% for gesto in gestos %}
   <form method="post" action="{% url 'interface:gesto-do-marco' edital.id marco.id gesto.operacao %}" class="conferencia">
     {% csrf_token %}
@@ -110,9 +127,10 @@ que está impedido. Só a confirmação, lá, pratica — um ato por recorte, ca
       <span id="ajuda-autoridade" class="ajuda">A mesma para todas as publicações deste gesto. Nome e cargo ficam gravados em cada uma.</span>
     </p>
     {% endif %}
-    <button type="submit" class="botao">{{ gesto.nome }}…</button>
+    <button type="submit" class="botao{% if not forloop.first %} secundario{% endif %}">{{ gesto.nome }}…</button>
   </form>
   {% endfor %}
+  </div>
 </section>
 {% endif %}
 {% endblock %}

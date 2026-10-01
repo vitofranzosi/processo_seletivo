@@ -106,11 +106,14 @@ exige.
               {% if linha.enviado %}Escolher outro PDF{% else %}Escolher arquivo PDF{% endif %}
             </label>
             <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
-          </div>
-          <div class="linha">
+            {% comment %}
+            Na mesma linha do seletor e do nome do arquivo (057, FR-1063): "Enviar" ficava numa
+            segunda linha, com a dica de formato depois dele. A dica vem logo abaixo do seletor, que
+            é o controle que ela explica.
+            {% endcomment %}
             <button type="submit" class="acao">Enviar</button>
-            <span class="ajuda limite" id="ajuda-envio-{{ linha.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
           </div>
+          <span class="ajuda limite" id="ajuda-envio-{{ linha.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
           {% comment %}
           O progresso e o aviso de não fechar a página aparecem enquanto o envio corre (FR-048):
           dez megabytes em rede móvel levam dezenas de segundos, e é nesse silêncio que a pessoa

@@ -1,0 +1,742 @@
+{
+ "ana.gestora": {
+  "/gestao/": [
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/atos/cancelar",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/atos/submeter",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/compor",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/previa",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/atos/cancelar",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/atos/encerrar",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/matriculas",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/recursos",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/retificar",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/atos/cancelar",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/atos/encerrar",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/inscricoes",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/matriculas",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/recursos",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/retificar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/atos/cancelar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/atos/encerrar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/inscricoes",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/recursos",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/retificar",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/alocacoes",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/comissao",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/comissao",
+   "href /gestao/processos/criar",
+   "href /gestao/visao-geral"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/": [
+   "href /api/v1/public/publicacoes/466a4649-712d-44de-b192-72105eaff14c/documento",
+   "href /api/v1/public/publicacoes/5c5907d7-7f3c-40ca-b3d1-49d64171d84f/documento",
+   "href /api/v1/public/publicacoes/f7b7f227-236e-4692-b7de-1f9f854a9549/documento",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/atos/cancelar",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/atos/encerrar",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/auditoria",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/inscricoes",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/ocupacao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/corte",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/ocupacao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/matriculas",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/recursos",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/retificar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/23653151-477d-46c3-bf7b-72ae16eaf939/",
+   "href /gestao/retificacoes/4f8a18f2-f2a5-4435-847d-255389134c17/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/": [
+   "href /api/v1/public/publicacoes/153a023f-b38c-4b9c-acb0-fbe3bca11b0c/documento",
+   "href /api/v1/public/publicacoes/7c088efc-4cad-4a0b-9a01-980c4a3eed77/documento",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/atos/cancelar",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/atos/encerrar",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/auditoria",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/atos/9944c441-9ef5-4f76-81f0-d18911fe6f63/publicar",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/corte",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/ocupacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/matriculas",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/recursos",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/retificar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/ed18cf0f-3013-4053-a525-539282269aa4/"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/": [
+   "href /api/v1/public/publicacoes/28b9fa3f-eb33-42c2-b8c7-a2af7c37d8e9/documento",
+   "href /api/v1/public/publicacoes/a7f38e19-f8d9-4e34-9094-30f3a1403252/documento",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/atos/cancelar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/atos/encerrar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/auditoria",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/inscricoes",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/atos/bc54a171-287b-4938-ba7b-de282bd270ae/publicar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/recursos",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/retificar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/2e7f8896-df27-47bf-8a2f-5de5e42ebf21/"
+  ],
+  "/gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/": [
+   "href /gestao/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/atos/cancelar",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/auditoria",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/compor",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/previa",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/auditoria": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/matriculas": [
+   "form get /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/matriculas",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d1",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d3",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/atos/bc54a171-287b-4938-ba7b-de282bd270ae/publicar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/atos/cancelar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/atos/encerrar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/auditoria",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/comissao",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/editais/criar",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/supervisao"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/supervisao": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d1",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d3",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/atos/bc54a171-287b-4938-ba7b-de282bd270ae/publicar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes": [
+   "botao coluna_nenhum=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d1",
+   "botao coluna_nenhum=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d2",
+   "botao coluna_nenhum=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d3",
+   "botao coluna_nenhum=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d1",
+   "botao coluna_nenhum=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d2",
+   "botao coluna_nenhum=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d3",
+   "botao coluna_nenhum=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d1",
+   "botao coluna_nenhum=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d2",
+   "botao coluna_nenhum=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d3",
+   "botao coluna_todos=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d1",
+   "botao coluna_todos=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d2",
+   "botao coluna_todos=8c7b1024-236d-46f7-9c1e-5ba95edfa7e6:00000000-0000-0000-0051-0000000000d3",
+   "botao coluna_todos=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d1",
+   "botao coluna_todos=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d2",
+   "botao coluna_todos=8cb2a5c6-8dca-477b-a61a-d1dc5421e488:00000000-0000-0000-0001-0000000000d3",
+   "botao coluna_todos=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d1",
+   "botao coluna_todos=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d2",
+   "botao coluna_todos=d73fb630-1440-4d78-859a-a62c50696163:00000000-0000-0000-0026-0000000000d3",
+   "form get /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "form post /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d2",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d3",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d3",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d1",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/distribuicao/00000000-0000-0000-0026-0000000000d3",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/comissao"
+  ],
+  "/gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/alocacoes": [
+   "href /gestao/",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/comissao"
+  ],
+  "/gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/": [
+   "href /gestao/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/compor",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/alocacoes",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/atos/ativar",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/atos/cancelar",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/auditoria",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/comissao",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/editais/criar",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/supervisao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1": [
+   "form get /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1/conclusoes",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1/impedimentos",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1/ocorrencia",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1/resultados",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1/trilha",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "href ?",
+   "href ?cobertura=avaliacao_pendente",
+   "href ?cobertura=carente",
+   "href ?cobertura=sem_nenhum",
+   "href ?prontidao=consolidada",
+   "href ?prontidao=nao-consolidavel",
+   "href ?prontidao=pronta"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1": [
+   "botao chave_idempotencia=<aleatória>",
+   "form get /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/remover",
+   "formaction /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/consolidar",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/conclusoes",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/impedimentos",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/ocorrencia",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/resultados",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1/trilha",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes",
+   "href ?",
+   "href ?cobertura=avaliacao_pendente",
+   "href ?cobertura=carente",
+   "href ?cobertura=sem_nenhum",
+   "href ?prontidao=consolidada",
+   "href ?prontidao=nao-consolidavel",
+   "href ?prontidao=pronta"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/emitir",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/atos/9944c441-9ef5-4f76-81f0-d18911fe6f63",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1?lista=00000000-0000-0000-0051-0000000000e2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao/apurar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao/cortar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao/ordenar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao/publicar",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte?lista=00000000-0000-0000-0051-0000000000e2",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/publicacoes",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1?lista=00000000-0000-0000-0051-0000000000e2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte/emitir",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/cortes/51c4e0d1-5317-4804-a23e-d7791b16d198",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte?lista=00000000-0000-0000-0051-0000000000e2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao/apurar",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao/historico",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1?lista=00000000-0000-0000-0051-0000000000e2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/convocar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/fcdb57eb-37cf-4362-9aed-b9c99e54c5dd/comunicar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/fcdb57eb-37cf-4362-9aed-b9c99e54c5dd/desfecho",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/pendentes",
+   "form post /gestao/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05/atestado",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/historico",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao?lista=00000000-0000-0000-0051-0000000000e2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/emitir",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao": [
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao/apurar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao/cortar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao/ordenar",
+   "form post /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao/publicar",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/corte",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/ocupacao"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/corte": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/ocupacao": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao/historico",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/ocupacao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1": [
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/emitir",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1?lista=00000000-0000-0000-0001-0000000000e2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao": [
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao/apurar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao/cortar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao/ordenar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao/publicar",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte?lista=00000000-0000-0000-0001-0000000000e2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/ocupacao",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1?lista=00000000-0000-0000-0001-0000000000e2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte?lista=00000000-0000-0000-0001-0000000000e2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/ocupacao": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1?lista=00000000-0000-0000-0001-0000000000e2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao/historico",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao?lista=00000000-0000-0000-0001-0000000000e2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/ocupacao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2": [
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/emitir",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao": [
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao/apurar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao/cortar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao/ordenar",
+   "form post /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao/publicar",
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/corte",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/ocupacao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/corte": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/ocupacao": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao/historico",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/ocupacao"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1": [
+   "status 302"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao": [
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao/apurar",
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao/cortar",
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao/publicar",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte?lista=00000000-0000-0000-0026-0000000000e2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/publicacoes",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/sorteio",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/sorteio?lista=00000000-0000-0000-0026-0000000000e2"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte": [
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte/emitir",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte?lista=00000000-0000-0000-0026-0000000000e2"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao": [
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao/apurar",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1?lista=00000000-0000-0000-0026-0000000000e2"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao": [
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao/convocar",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao/historico",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao?lista=00000000-0000-0000-0026-0000000000e2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2": [
+   "status 404"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/conducao": [
+   "status 404"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/corte": [
+   "status 404"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/ocupacao": [
+   "status 404"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/convocacao": [
+   "status 404"
+  ],
+  "/gestao/minhas-etapas": [],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes": [
+   "form get /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes",
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/inscricoes/237e22d8-895d-4b3a-8949-664117773e86/",
+   "href /gestao/inscricoes/323ab227-40f1-4262-b922-31688b6f4e29/",
+   "href /gestao/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05/",
+   "href /gestao/inscricoes/bdf1b5f3-aa17-4b0a-b5ad-7c949fd40f10/",
+   "href /gestao/inscricoes/d1d3e88a-9cc8-4792-bf4d-752c16eea02e/",
+   "href ?",
+   "href ?perfil=00000000-0000-0000-0051-0000000000b1",
+   "href ?perfil=00000000-0000-0000-0051-0000000000b2"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/cortes/51c4e0d1-5317-4804-a23e-d7791b16d198": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/atos/9944c441-9ef5-4f76-81f0-d18911fe6f63"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/historico": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao/historico": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao/historico": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao/historico": [
+   "href /gestao/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/sorteio": [
+   "form post /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/sorteio/relacao",
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/atos/bc54a171-287b-4938-ba7b-de282bd270ae/publicar",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte?lista=00000000-0000-0000-0026-0000000000e1",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte?lista=00000000-0000-0000-0026-0000000000e2",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/retificar",
+   "href /selecoes/sorteio/f009811d-f9f4-4f14-802f-2ec947f6b47d/verificar",
+   "href /selecoes/sorteio/relacoes/7e509ccf-c4e0-403f-9354-116d1d2ad376/"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao/historico": [
+   "href /gestao/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao"
+  ],
+  "/gestao/inscricoes/d1d3e88a-9cc8-4792-bf4d-752c16eea02e/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes"
+  ],
+  "/gestao/inscricoes/bdf1b5f3-aa17-4b0a-b5ad-7c949fd40f10/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes"
+  ],
+  "/gestao/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes"
+  ],
+  "/gestao/inscricoes/323ab227-40f1-4262-b922-31688b6f4e29/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes"
+  ],
+  "/gestao/inscricoes/237e22d8-895d-4b3a-8949-664117773e86/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes"
+  ],
+  "/selecoes/sorteio/relacoes/7e509ccf-c4e0-403f-9354-116d1d2ad376/": [],
+  "/selecoes/sorteio/f009811d-f9f4-4f14-802f-2ec947f6b47d/verificar": [
+   "href /selecoes/sorteio/f009811d-f9f4-4f14-802f-2ec947f6b47d/manifesto.json",
+   "href /selecoes/sorteio/relacoes/7e509ccf-c4e0-403f-9354-116d1d2ad376/",
+   "href /static/portal/sorteio-cli.js"
+  ],
+  "/selecoes/sorteio/f009811d-f9f4-4f14-802f-2ec947f6b47d/manifesto.json": [],
+  "/static/portal/sorteio-cli.js": [
+   "status 404"
+  ]
+ },
+ "joana.avaliadora": {
+  "/gestao/": [
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/previa",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/",
+   "href /gestao/minhas-etapas",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/": [
+   "href /api/v1/public/publicacoes/466a4649-712d-44de-b192-72105eaff14c/documento",
+   "href /api/v1/public/publicacoes/5c5907d7-7f3c-40ca-b3d1-49d64171d84f/documento",
+   "href /api/v1/public/publicacoes/f7b7f227-236e-4692-b7de-1f9f854a9549/documento",
+   "href /gestao/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/23653151-477d-46c3-bf7b-72ae16eaf939/",
+   "href /gestao/retificacoes/4f8a18f2-f2a5-4435-847d-255389134c17/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/": [
+   "href /api/v1/public/publicacoes/153a023f-b38c-4b9c-acb0-fbe3bca11b0c/documento",
+   "href /api/v1/public/publicacoes/7c088efc-4cad-4a0b-9a01-980c4a3eed77/documento",
+   "href /gestao/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/ed18cf0f-3013-4053-a525-539282269aa4/"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/": [
+   "href /api/v1/public/publicacoes/28b9fa3f-eb33-42c2-b8c7-a2af7c37d8e9/documento",
+   "href /api/v1/public/publicacoes/a7f38e19-f8d9-4e34-9094-30f3a1403252/documento",
+   "href /gestao/",
+   "href /gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/",
+   "href /gestao/retificacoes/2e7f8896-df27-47bf-8a2f-5de5e42ebf21/"
+  ],
+  "/gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/": [
+   "href /gestao/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/previa",
+   "href /gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/auditoria": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/matriculas": [
+   "status 403"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/": [
+   "href /gestao/",
+   "href /gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/",
+   "href /gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/",
+   "href /gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/supervisao": [
+   "status 404"
+  ],
+  "/gestao/processos/8918d57e-8e33-491a-9722-c6c33e9f2874/alocacoes": [
+   "status 403"
+  ],
+  "/gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/alocacoes": [
+   "status 403"
+  ],
+  "/gestao/processos/0e1a0775-f439-43c0-94c6-186b459741fa/": [
+   "href /gestao/",
+   "href /gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/distribuicao/00000000-0000-0000-0001-0000000000d1": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/distribuicao/00000000-0000-0000-0051-0000000000d1": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a1/convocacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/marcos/00000000-0000-0000-0051-0000000000a2/convocacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a1/convocacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/8cb2a5c6-8dca-477b-a61a-d1dc5421e488/marcos/00000000-0000-0000-0001-0000000000a2/convocacao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a1/convocacao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/conducao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/corte": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/ocupacao": [
+   "status 403"
+  ],
+  "/gestao/editais/d73fb630-1440-4d78-859a-a62c50696163/marcos/00000000-0000-0000-0026-0000000000a2/convocacao": [
+   "status 403"
+  ],
+  "/gestao/minhas-etapas": [
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d2",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d3"
+  ],
+  "/gestao/editais/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/inscricoes": [
+   "status 403"
+  ],
+  "/gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1": [
+   "href /gestao/minhas-etapas",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1/inscricoes/237e22d8-895d-4b3a-8949-664117773e86",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1/inscricoes/323ab227-40f1-4262-b922-31688b6f4e29",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1/inscricoes/bdf1b5f3-aa17-4b0a-b5ad-7c949fd40f10",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d1/inscricoes/d1d3e88a-9cc8-4792-bf4d-752c16eea02e",
+   "href ?",
+   "href ?filtro=concluidas",
+   "href ?filtro=nao-iniciadas",
+   "href ?filtro=rascunhos"
+  ],
+  "/gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d2": [
+   "href /gestao/minhas-etapas",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d2/inscricoes/237e22d8-895d-4b3a-8949-664117773e86",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d2/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d2/inscricoes/bdf1b5f3-aa17-4b0a-b5ad-7c949fd40f10",
+   "href ?",
+   "href ?filtro=concluidas",
+   "href ?filtro=nao-iniciadas",
+   "href ?filtro=rascunhos"
+  ],
+  "/gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d3": [
+   "href /gestao/minhas-etapas",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d3/inscricoes/237e22d8-895d-4b3a-8949-664117773e86",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d3/inscricoes/4144327b-3a8c-4a31-9f7f-d1c87685eb05",
+   "href /gestao/minhas-etapas/8c7b1024-236d-46f7-9c1e-5ba95edfa7e6/00000000-0000-0000-0051-0000000000d3/inscricoes/bdf1b5f3-aa17-4b0a-b5ad-7c949fd40f10",
+   "href ?",
+   "href ?filtro=concluidas",
+   "href ?filtro=nao-iniciadas",
+   "href ?filtro=rascunhos"
+  ]
+ }
+}
