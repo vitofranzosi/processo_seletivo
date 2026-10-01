@@ -408,8 +408,9 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% if recorte.congelada %}
       <p class="campo">
         <label for="motivo-{{ forloop.counter }}">Motivo da sucessão <span class="obrigatorio" aria-hidden="true">*</span></label>
-        <input type="text" id="motivo-{{ forloop.counter }}" name="motivo" required aria-required="true"
-               aria-describedby="ajuda-motivo-{{ forloop.counter }}">
+        {% comment %} Área de texto, como o motivo de sucessão da Ordenação e do Corte (058, FR-1082). O da anulação, acima, não sucede ato, e fica (D-008). {% endcomment %}
+        <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="3" required aria-required="true"
+                  aria-describedby="ajuda-motivo-{{ forloop.counter }}"></textarea>
         <span class="oculto" id="ajuda-motivo-{{ forloop.counter }}">A relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.</span>
       </p>
       <button type="submit" class="acao">Publicar relação nova, sucedendo a atual</button>

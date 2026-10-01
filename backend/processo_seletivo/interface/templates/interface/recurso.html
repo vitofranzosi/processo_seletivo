@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Recurso {{ peca.protocolo }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -124,7 +124,7 @@ que esta feature não amplia.
   {% endfor %}
 </p>
 {% endif %}
-<p class="meta">{{ instrucao.atos|length }} ato(s) de instrução neste recurso. O alcance vale
+<p class="meta">{{ instrucao.atos|length|contagem:"ato de instrução,atos de instrução" }} neste recurso. O alcance vale
   enquanto o recurso não for decidido.</p>
 {% elif instrucao.encerrado %}
 {% comment %}
@@ -136,7 +136,7 @@ A frase fica **numa linha só** por causa do que a asserção procura: quebrá-l
 "apagado" partiu a frase no HTML e derrubou a regressão — o template não põe espaço onde havia
 quebra, e a busca por substring não encontra o que a pessoa lê inteiro na tela.
 {% endcomment %}
-<p class="ajuda">Houve instrução neste recurso: {{ instrucao.atos|length }} ato(s). O alcance que ela concedia terminou {{ instrucao_razao_do_fim }}, e o registro de que ela houve permanece — nada foi apagado.</p>
+<p class="ajuda">Houve instrução neste recurso: {{ instrucao.atos|length|contagem:"ato,atos" }}. O alcance que ela concedia terminou {{ instrucao_razao_do_fim }}, e o registro de que ela houve permanece — nada foi apagado.</p>
 {% else %}
 <p class="ajuda">Nada foi instruído neste recurso. O parecer atacado e os documentos citados chegam
   por <strong>ato de instrução</strong>, e não por permissão de julgar.

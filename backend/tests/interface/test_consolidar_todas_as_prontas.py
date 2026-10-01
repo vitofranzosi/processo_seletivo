@@ -121,7 +121,7 @@ def test_uma_confirmacao_consolida_todas_as_prontas(client, seletor_ligado, etap
     # Um evento por Resultado, como no lote de sempre (FR-021).
     assert RegistroAuditoria.objects.filter(operation=CONSOLIDAR).count() == PRONTAS
     destino = client.get(resposta["Location"]).content.decode()
-    assert f"<strong>{PRONTAS}</strong> consolidada(s)" in destino
+    assert f"<strong>{PRONTAS}</strong> consolidadas" in destino
 
 
 def test_repetir_a_confirmacao_devolve_o_desfecho_original(client, seletor_ligado, etapa):
@@ -140,7 +140,7 @@ def test_repetir_a_confirmacao_devolve_o_desfecho_original(client, seletor_ligad
     assert RegistroAuditoria.objects.filter(operation=CONSOLIDAR).count() == eventos
     destino = client.get(resposta["Location"]).content.decode()
     # O desfecho original, e não "zero consolidadas" sobre um estado que já mudou (FR-020).
-    assert f"<strong>{PRONTAS}</strong> consolidada(s)" in destino
+    assert f"<strong>{PRONTAS}</strong> consolidadas" in destino
 
 
 def test_o_ato_consolida_o_conjunto_declarado_e_nao_o_do_instante(

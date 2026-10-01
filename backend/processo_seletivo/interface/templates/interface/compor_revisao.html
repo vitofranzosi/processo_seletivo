@@ -5,9 +5,15 @@ A coluna dos rótulos (056, FR-1033, D-010). A grade é a de "Dados da inscriç�
 aqui ela ganha um teto: o rótulo mais longo ("Reverter vaga reservada não preenchida para a ampla
 concorrência") levaria todos os valores do item para o meio da linha. Com o teto, ele quebra dentro
 da coluna dele. O corpo menor é o que as linhas já tinham como `.detalhe`.
+
+**E a mesma largura em todo bloco** (058, FR-1080, D-006). Com `fit-content`, cada bloco media a
+coluna pelo seu rótulo mais longo, e os valores começavam em nove posições diferentes na Revisão do
+76/2027. O teto de 16 rem virou a largura: cabe numa linha todo rótulo comum ("Como a convocação é
+comunicada", o maior, tem 14,3 rem). O `min` só age em tela estreita, para a coluna não tomar o
+cartão.
 {% endcomment %}
 {% block estilo_da_pagina %}
-.conferencia .dados-da-inscricao{grid-template-columns:fit-content(16rem) 1fr;font-size:.875rem;
+.conferencia .dados-da-inscricao{grid-template-columns:min(16rem,40%) 1fr;font-size:.875rem;
   margin:.2rem 0 .1rem}
 {% endblock %}
 {% block etapa %}

@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ processo.institutional_code }}{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
@@ -192,12 +193,36 @@ coisa que ela não pode ver.
     </p>
     {% endif %}
 
-    <ul class="lista-acoes">
-      {% for ato in atos %}
+    {% comment %}
+    A regra que a 057 fixou para o Edital (058, FR-1069, D-001): nenhum ato do Processo é cheio, e os
+    irreversíveis — Encerrar e Cancelar — vêm por último, num grupo próprio depois de um filete, só
+    contornados. Eram os dois únicos botões preenchidos do cartão, verde e vermelho, logo acima do
+    aviso de que estavam impedidos. A repartição é pelo que o próprio ato declara (`irreversivel`), e
+    não por `hierarquia()`: a preferência de lá é a do Edital, e nenhum ato do Processo está nela.
+
+    `regroup` só junta vizinhos, e por isso o conjunto é ordenado antes: os não irreversíveis primeiro,
+    qualquer que seja a ordem em que `ATOS` os declare. Cada grupo só existe quando tem ato — sem grupo
+    acima, as terminais não desenham filete.
+
+    Encerrar leva `secundario`, como no Edital: contornado pelo grupo, e discreto mesmo fora dele.
+    {% endcomment %}
+    {% if atos %}
+    {% regroup atos|dictsort:"irreversivel" by irreversivel as grupos %}
+    {% for grupo in grupos %}
+    {% if grupo.grouper %}
+    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
+      {% for ato in grupo.list %}
       <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+        <span class="marca-irreversivel">irreversível</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <ul class="lista-acoes em-linha">
+      {% for ato in grupo.list %}
+      <li>
+        <a class="botao secundario" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
         {% comment %}
         A ativação é derivada: publicar o primeiro Edital do Processo já a pratica, com o motivo
         "Ativação derivada da publicação do primeiro Edital do Processo". O ato continua existindo
@@ -209,10 +234,15 @@ coisa que ela não pode ver.
           para quando a abertura formal precisa vir antes.</span>
         {% endif %}
       </li>
-      {% empty %}
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
       {% endfor %}
     </ul>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <ul class="lista-acoes">
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+    </ul>
+    {% endif %}
 
     {% comment %}
     Depois da lista, e não antes dela: o impedimento explica por que "Cancelar Processo" — que está

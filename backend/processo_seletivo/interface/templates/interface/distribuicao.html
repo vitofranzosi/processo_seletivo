@@ -97,7 +97,7 @@ O desfecho agrupado por motivo, e não uma linha por inscrição: vinte e sete r
 são três linhas. A informação — "o que impede" — some no meio da repetição.
 {% endcomment %}
 <div class="resultado-do-lote" role="status">
-  <p><strong>{{ consolidacao.feitas }}</strong> consolidada(s), <strong>{{ consolidacao.recusadas }}</strong> recusada(s).</p>
+  <p><strong>{{ consolidacao.feitas }}</strong> {{ consolidacao.feitas|plural:"consolidada,consolidadas" }}, <strong>{{ consolidacao.recusadas }}</strong> {{ consolidacao.recusadas|plural:"recusada,recusadas" }}.</p>
   {% if consolidacao.agrupados %}
   <ul>
     {% for grupo in consolidacao.agrupados %}

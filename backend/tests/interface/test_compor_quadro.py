@@ -702,7 +702,7 @@ def test_remover_a_ultima_lista_reservada_diz_que_a_ampla_voltou_a_ser_o_total(
 
     corpo = client.get(resposta["Location"]).content.decode()
     assert "não declara mais lista reservada" in corpo
-    assert "80 vaga(s) imediata(s)" in corpo
+    assert "as 80 vagas imediatas" in " ".join(corpo.split())
     assert LinhaDoQuadroDeVagas.objects.get().vagas_imediatas == 80
 
 
