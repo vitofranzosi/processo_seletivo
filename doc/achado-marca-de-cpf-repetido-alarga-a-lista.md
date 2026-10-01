@@ -37,3 +37,10 @@ texto nem reorganiza tela. A decisão foi registrada no research dela (D-021).
   pede atenção.
 - Encurtar para "⚠ CPF repetido" (sem "neste Perfil") cabe, mas o Perfil é o que distingue a
   coincidência que importa da que não importa, e o `title` já diz a frase inteira.
+
+## Decisão
+
+**Fechado em 01/10/2026, por decisão do usuário: a marca fica como está.** A linha que a carrega
+continua em duas linhas, porque é a que pede atenção; as linhas sem a marca já têm 39,5 px. Não muda
+texto nem posição da marca. Registrado na
+[reavaliação do polish](reavaliacao-polish-ui-2026-10-01.md), §4.
