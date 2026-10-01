@@ -68,7 +68,7 @@ FR-1028; SC-388, SC-389, SC-390; UX-138, UX-139).
   escreve a posição em `[data-ordem]` quando a legenda o tiver ([D-004](research.md)); caso novo em
   `backend/tests/javascript/ordenacao.test.js`; rodar `tests/test_javascript.py`
 - [x] T013 [US2] Em F`base.html`: `fieldset.linha` posicionado; `fieldset.linha>.acoes-da-linha` no
-  canto da legenda, e no fluxo abaixo de 48 rem; saem as regras de `.campos>.acoes-da-linha` e da
+  canto da legenda, e no fluxo abaixo de 60 rem (a `058` corrigiu o número, que dizia 48); saem as regras de `.campos>.acoes-da-linha` e da
   reserva de rótulo ([D-003](research.md)); em F`_acoes_da_linha.html` sai `.rotulo-vazio`
 - [x] T014 [P] [US2] [US3] F`_evento.html`: legenda em duas vozes com `[data-ordem]`; ações depois da
   legenda; Descrição `largo`; "Onde acontece" no fim da faixa, até 20 rem ([D-006](research.md))

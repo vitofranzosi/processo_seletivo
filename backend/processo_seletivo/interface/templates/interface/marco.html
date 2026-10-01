@@ -60,6 +60,10 @@ o marco parecer pronto (`FR-814`).
 {% endcomment %}
 <section aria-labelledby="indicador-titulo">
   <h2 id="indicador-titulo">Recortes deste marco</h2>
+  {% comment %} A mesma moldura da Lista: a 375 px a tabela rola dentro dela, e não a página (058, FR-1073).
+  Focável e nomeada porque, ao contrário da Lista, há células sem link ("Não se aplica"): sem foco, quem
+  usa só o teclado não rolaria até elas. {% endcomment %}
+  <div class="rolavel-no-estreito" tabindex="0" role="region" aria-labelledby="indicador-titulo">
   <table>
     <caption class="sub">Feitos por operação:
       ordem {{ indicador.totais.ordenar.feitos }} de {{ indicador.totais.ordenar.aplicaveis }} ·
@@ -86,6 +90,7 @@ o marco parecer pronto (`FR-814`).
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 
 {% if conducao_para_emitir %}<p class="ajuda">{{ conducao_para_emitir }} A presidência não é papel: ela vem da composição da comissão.</p>{% endif %}

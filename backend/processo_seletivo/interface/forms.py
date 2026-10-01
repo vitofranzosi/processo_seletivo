@@ -1166,6 +1166,16 @@ def perfis_alterados(digitados, gravados):
     }
 
 
+def _no_campo(valor):
+    """O número sem zeros à direita, no formato que o campo numérico aceita (058, FR-1078).
+
+    As colunas guardam quatro casas, e a leitura devolve `25.0000` onde se escreveu `25`. Com ponto
+    — o `value` de um campo numérico é sempre com ponto; quem o mostra com vírgula é o navegador.
+    Nada é arredondado: é o mesmo número, e o que "Salvar rascunho" grava não muda (D-005).
+    """
+    return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
+
+
 def _o_que_o_cartao_mostra(perfil):
     """O Perfil na forma em que a leitura do formulário e a gravação escrevem igual.
 
@@ -1176,9 +1186,6 @@ def _o_que_o_cartao_mostra(perfil):
 
     def texto(valor):
         return (valor or "").strip() if isinstance(valor, str) or valor is None else str(valor)
-
-    def percentual(valor):
-        return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
 
     reserva = perfil.get("reserveType") or "NONE"
     return (
@@ -1207,7 +1214,7 @@ def _o_que_o_cartao_mostra(perfil):
                     texto(modalidade.get("id")),
                     texto(modalidade.get("code")),
                     texto(modalidade.get("name")),
-                    percentual((modalidade.get("normativeRule") or {}).get("percentage")),
+                    _no_campo((modalidade.get("normativeRule") or {}).get("percentage")),
                     texto((modalidade.get("normativeRule") or {}).get("foundation")),
                     texto((modalidade.get("normativeRule") or {}).get("version")),
                     arredondamento_para_o_formulario(
@@ -1421,16 +1428,16 @@ def etapas_do_edital(edital):
             "id": str(etapa.id),
             "name": etapa.name,
             "order": etapa.order,
-            "weight": "" if etapa.weight is None else f"{etapa.weight:f}",
+            "weight": _no_campo(etapa.weight),
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
-            "minimumScore": "" if etapa.minimum_score is None else f"{etapa.minimum_score:f}",
+            "minimumScore": _no_campo(etapa.minimum_score),
             "evaluationsPerRegistration": (
                 ""
                 if etapa.evaluations_per_registration is None
                 else etapa.evaluations_per_registration
             ),
-            "maximumScore": "" if etapa.maximum_score is None else f"{etapa.maximum_score:f}",
+            "maximumScore": _no_campo(etapa.maximum_score),
             "forma": etapa.forma,
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,

@@ -84,6 +84,8 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
     {% endif %}
   </header>
   {% if processo.editais.all %}
+  {% comment %} Abaixo de 60 rem a tabela rola dentro da moldura, e não é recortada pelo cartão (058, FR-1071). {% endcomment %}
+  <div class="rolavel-no-estreito">
   <table>
     <caption>{{ processo.editais.all|length }} {{ processo.editais.all|length|plural:"Edital,Editais" }} neste Processo</caption>
     <thead>
@@ -123,6 +125,7 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p class="sem-edital">Nenhum Edital neste Processo.</p>
   {% endif %}

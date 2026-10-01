@@ -1,0 +1,63 @@
+{
+ "status": 302,
+ "destino": "/gestao/editais/81e3a637-cfb8-4190-9480-6b32eb13472c/compor/etapas?salvo=etapas",
+ "etapas": [
+  {
+   "id": "455b8fe4-6224-479b-9cf3-7282a0695f18",
+   "name": "Prova objetiva",
+   "order": "1",
+   "weight": "2.0000",
+   "eliminatory": "True",
+   "classificatory": "True",
+   "minimum_score": "6.0000",
+   "evaluations_per_registration": "None",
+   "maximum_score": "None",
+   "forma": "PONTUADA",
+   "rotulo_favoravel": "",
+   "rotulo_desfavoravel": "",
+   "evento_id": "9209ca57-6478-452d-835f-1f45135942d3"
+  },
+  {
+   "id": "0b22ec20-3b75-44a4-9aa3-0b36711c70eb",
+   "name": "Análise de títulos",
+   "order": "2",
+   "weight": "1.0000",
+   "eliminatory": "False",
+   "classificatory": "True",
+   "minimum_score": "None",
+   "evaluations_per_registration": "None",
+   "maximum_score": "None",
+   "forma": "PONTUADA",
+   "rotulo_favoravel": "",
+   "rotulo_desfavoravel": "",
+   "evento_id": "None"
+  },
+  {
+   "id": "eee824c3-b19c-4bdf-846e-dffca5fcef53",
+   "name": "Análise documental",
+   "order": "3",
+   "weight": "None",
+   "eliminatory": "True",
+   "classificatory": "False",
+   "minimum_score": "None",
+   "evaluations_per_registration": "None",
+   "maximum_score": "None",
+   "forma": "DECISORIA",
+   "rotulo_favoravel": "Deferido",
+   "rotulo_desfavoravel": "Indeferido",
+   "evento_id": "None"
+  }
+ ],
+ "registro": {
+  "actor_subject": "ana.gestora",
+  "permission": "edital:elaborar",
+  "institution_scope": "cefor",
+  "operation": "ALTERAR_RASCUNHO",
+  "aggregate_type": "Edital",
+  "previous_state": "EM_ELABORACAO",
+  "new_state": "EM_ELABORACAO",
+  "reason": "Etapas de Avaliação",
+  "idempotency_key": "",
+  "detalhe": "None"
+ }
+}

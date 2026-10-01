@@ -273,7 +273,7 @@ def test_a_jornada_completa_pela_interface_administrativa(
     resposta = client.post(consolidar, {**selecao, "confirmar": "1"})
     assert resposta.status_code == 302
     corpo = client.get(organizacao).content.decode()
-    assert "2 </strong> consolidada(s)" in corpo.replace("\n", " ") or "consolidada(s)" in corpo
+    assert "2 </strong> consolidadas" in corpo.replace("\n", " ") or "consolidadas" in corpo
 
     # 3. Consulta um Resultado com a origem dele.
     corpo = client.get(

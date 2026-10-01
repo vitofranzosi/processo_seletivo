@@ -68,7 +68,7 @@ que ela apurou, e quem audita precisa ver as duas.
   {% if passo.movimentos %}
   <ul class="consequencias">
     {% for movimento in passo.movimentos %}
-    <li>Reversão de cota: {{ movimento.quantidade }} vaga(s) — {{ movimento.causa }}</li>
+    <li>Reversão de cota: {{ movimento.quantidade|contagem:"vaga,vagas" }} — {{ movimento.causa }}</li>
     {% endfor %}
   </ul>
   {% else %}

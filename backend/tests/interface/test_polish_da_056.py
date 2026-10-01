@@ -257,9 +257,8 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
     for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
         assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo
     revisao = (GESTAO / "compor_revisao.html").read_text()
-    assert (
-        ".conferencia .dados-da-inscricao{grid-template-columns:fit-content(16rem) 1fr" in revisao
-    )
+    # A coluna de 16 rem, que a 058 tornou igual em todo bloco (FR-1080).
+    assert ".conferencia .dados-da-inscricao{grid-template-columns:min(16rem,40%) 1fr" in revisao
 
 
 # --- F5 — texto longo em área de texto (FR-1035, FR-1036) --------------------------------------

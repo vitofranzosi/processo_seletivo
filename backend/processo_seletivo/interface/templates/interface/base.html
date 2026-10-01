@@ -489,10 +489,15 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    dentro, e o cabeçalho simplesmente sai da tela. Com cinquenta linhas isso significa olhar duas
    colunas de caixas sem saber de que Etapa é cada uma, que é a informação de que a tela inteira
    depende. Em tela estreita a rolagem horizontal é necessária, e ali o que fixa é a coluna de
-   nomes. {% endcomment %}
+   nomes.
+
+   **A Lista de Editais e a Condução do marco adotam a mesma moldura** (058, FR-1071, FR-1073, D-003),
+   pelo mesmo limiar. A 375 px a tabela de cada Processo passava da largura do cartão, e o cartão a
+   recortava em silêncio: as ações da última coluna ficavam fora de alcance. Na Condução, a tabela dos
+   recortes empurrava a página inteira. Acima de 60 rem a moldura é bloco comum, sem rolagem. {% endcomment %}
 .distribuicao-moldura{overflow-x:visible}
 @media (max-width:60rem){
-  .distribuicao-moldura{overflow-x:auto}
+  .distribuicao-moldura,.rolavel-no-estreito{overflow-x:auto}
 }
 .distribuicao{background:var(--branco);
   border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}

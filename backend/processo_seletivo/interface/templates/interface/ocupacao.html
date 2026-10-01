@@ -114,7 +114,7 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   {% if recorte.movimentos %}
   <ul class="consequencias">
     {% for movimento in recorte.movimentos %}
-    <li>Reversão de cota: {{ movimento.quantidade }} vaga(s) da lista reservada para a ampla concorrência — {{ movimento.causa }}</li>
+    <li>Reversão de cota: {{ movimento.quantidade|contagem:"vaga,vagas" }} da lista reservada para a ampla concorrência — {{ movimento.causa }}</li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -170,20 +170,35 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   <p class="nota">Este recorte ainda não tem ordem emitida, e a apuração conta sobre a ordem: emita a ordem deste recorte na <a href="{% url 'interface:ordenacao' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">classificação dele</a> e volte aqui. É estado do percurso, e não erro.</p>
   {% endif %}
   {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.temOrdem %}
+  {% if recorte.estado == "NOT_APPRAISED" %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
-    {% if recorte.estado == "NOT_APPRAISED" %}
     <button type="submit" class="botao">Apurar a ocupação deste recorte</button>
-    {% else %}
-    <label for="motivo-{{ forloop.counter }}">Motivo da nova apuração</label>
-    <input type="text" id="motivo-{{ forloop.counter }}" name="motivo" required
-           aria-describedby="motivo-ajuda-{{ forloop.counter }}">
-    <p class="ajuda" id="motivo-ajuda-{{ forloop.counter }}">A apuração vigente não é alterada: a nova a sucede, e a anterior continua legível.</p>
-    <button type="submit" class="botao">Emitir nova apuração</button>
-    {% endif %}
   </form>
+  {% else %}
+  {% comment %}
+  A nova apuração tem o formulário do Corte, e não a fileira `acoes` do de um botão: a fileira punha
+  o motivo e o botão lado a lado, com o botão esticado à altura da área de texto (058, D-013).
+  {% endcomment %}
+  <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
+    {% comment %}
+    O motivo que sucede um ato tem um controle só (058, FR-1082, D-007): área de texto de três linhas
+    na largura de leitura, como na Ordenação e no Corte. Era campo de uma linha esticado a 1.232 px.
+    {% endcomment %}
+    <p class="campo">
+      <label for="motivo-{{ forloop.counter }}">Motivo da nova apuração</label>
+      <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="3" required
+                aria-describedby="motivo-ajuda-{{ forloop.counter }}"></textarea>
+      <span class="ajuda" id="motivo-ajuda-{{ forloop.counter }}">A apuração vigente não é alterada: a nova a sucede, e a anterior continua legível.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Emitir nova apuração</button></p>
+  </form>
+  {% endif %}
   {% endif %}
 
   {% comment %}

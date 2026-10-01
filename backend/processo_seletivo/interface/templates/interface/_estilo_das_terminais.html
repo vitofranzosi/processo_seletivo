@@ -1,0 +1,14 @@
+{% comment %} O grupo de ações do Edital (057, FR-1043 a FR-1047) e os atos do Processo (058, FR-1069). Em linha,
+   e não uma por linha: sete botões empilhados empurravam o cartão do Edital para 495 px. As que
+   encerram ou interrompem vêm depois de um filete, **contornadas** em vermelho — o vermelho cheio era
+   o único botão preenchido da tela, e fazia do gesto excepcional o mais forte. O filete só existe
+   quando há grupo acima dele. Só nestas telas: na confirmação do Cancelar, o botão cheio é a ação que
+   a pessoa veio praticar, e fica.
+
+   Num parcial, e não na folha comum, pela mesma razão da 057 (D-024): só estas duas telas desenham
+   o grupo, e a folha comum viaja em toda página — inclusive na de distribuição, que tem teto. Um
+   arquivo para as duas, porque uma cópia por tela divergiria (058, D-002). {% endcomment %}
+.lista-acoes.em-linha{flex-direction:row;flex-wrap:wrap;align-items:center}
+.lista-acoes+.terminais{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--borda)}
+.terminais .botao{background:var(--branco);color:var(--vermelho);border-color:var(--vermelho)}
+.terminais .botao:hover{background:var(--vermelho-fundo)}

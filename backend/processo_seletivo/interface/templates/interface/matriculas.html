@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Exportar para matrícula — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -70,19 +70,19 @@ esquecimento.
 {% endif %}
 
 {% if composicao %}
-<section aria-labelledby="lacunas" class="resumo">
+<section aria-labelledby="lacunas">
   <h2 id="lacunas">O que sairá vazio, e por quê</h2>
   {% comment %}
   UX-060: o resumo vem **antes** do download. Depois dele ninguém lê — e uma planilha com células
   vazias e sem explicação é preenchida à mão por quem a recebe, que é exatamente o erro silencioso
   que esta feature existe para fechar.
   {% endcomment %}
-  <p class="nota">{{ populacao.rotulo }} — <strong>{{ composicao.quantidade }}</strong> linha(s).
+  <p class="nota">{{ populacao.rotulo }} — <strong>{{ composicao.quantidade }}</strong> {{ composicao.quantidade|plural:"linha,linhas" }}.
     Leia este resumo antes de baixar: é ele que impede uma célula vazia de virar preenchimento
     manual no destino.</p>
   <dl class="meta">
     {% for item in relatorio %}
-    <dt>{{ item.coluna }}{% if item.quantidade %} <span class="codigo">{{ item.quantidade }} linha(s)</span>{% endif %}</dt>
+    <dt>{{ item.coluna }}{% if item.quantidade %} <span class="codigo">{{ item.quantidade|contagem:"linha,linhas" }}</span>{% endif %}</dt>
     <dd>
       {{ item.razao }}
       {% if item.pessoas %}

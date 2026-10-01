@@ -39,7 +39,9 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
 
 {% if linhas %}
 <div class="rolagem">
-  <table>
+  {% comment %} `tabela` para a regra de coluna numérica alcançar a nota (058, FR-1075); sem a classe, o
+  `numero` da célula não fazia nada e a nota saía à esquerda. {% endcomment %}
+  <table class="tabela">
     <caption class="oculto">Resultados da Etapa {{ etapa.name }}</caption>
     <thead>
       <tr>
@@ -67,8 +69,11 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         Três ramos, e o terceiro é a ausência dita por extenso: a Ocorrência não pontuou e não
         registrou sentido, porque não houve conclusão sob forma nenhuma. Imprimir um traço faria a
         célula parecer um dado que faltou, e ela é um dado que não existe (D-1).
+
+        **Só a nota vai à direita** (058, FR-1075, D-009): o rótulo da decisória e "não avaliada" são
+        texto, e texto à direita sozinho, numa coluna que mistura os dois, parece desalinhado.
         {% endcomment %}
-        <td class="numero">{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% elif resultado.forma == "PONTUADA" %}{{ resultado.pontuacao|pontuacao }}{% else %}<span class="ajuda">não avaliada</span>{% endif %}</td>
+        <td{% if resultado.forma == "PONTUADA" %} class="numero"{% endif %}>{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% elif resultado.forma == "PONTUADA" %}{{ resultado.pontuacao|pontuacao }}{% else %}<span class="ajuda">não avaliada</span>{% endif %}</td>
         <td>{% if resultado.origem == "OCORRENCIA" %}Ocorrência{% else %}Avaliação{% endif %}</td>
         <td>{{ resultado.get_consequencia_display }}</td>
         <td class="motivo-da-prontidao">
