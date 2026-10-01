@@ -1,5 +1,37 @@
 {% load interface_extras %}<fieldset class="linha modalidade">
-  <legend>Modalidade de Concorrência</legend>
+  {% comment %}
+  A legenda diz qual Modalidade é — pelo Código, que é como o quadro e os documentos a citam —, e as
+  duas ações moram na linha dela, e não numa linha só delas (056, FR-1023, FR-1024; ver
+  `_evento.html`). Sem posição: a Modalidade não se reordena.
+  {% endcomment %}
+  <legend data-rotulo="Modalidade de Concorrência"><span class="categoria">Modalidade de Concorrência</span>{% if modalidade.code %}<span class="nome">{{ modalidade.code }}</span>{% endif %}</legend>
+  {% comment %}
+  **A linha do quadro sai junto, e o `junto=` é o que a faz sair.** Ela vive noutra seção — o quadro
+  é seção do cartão do Perfil, e não parte da Modalidade —, então `closest fieldset` não a alcança.
+  Sem isto ela ficava para trás apontando uma Modalidade que o formulário já não envia, e o
+  salvamento seguinte era recusado com uma mensagem sobre uma Modalidade que a pessoa acabara de
+  remover e que não aparecia mais em lugar nenhum.
+  {% endcomment %}
+  {% with alvo="quadro-de-"|add:modalidade.id %}
+  <p class="acoes-da-linha"><span class="grupo">
+    {% comment %}
+    O mesmo `alvo` nos dois atributos, e por isso escrito uma vez só: `junto=` diz ao servidor o que
+    apagar, e `data-junto` diz a `remocao.js` o que **contar** antes de perguntar. Repetir o valor
+    deixaria os dois se afastarem em silêncio — e o silêncio seria a confirmação subcontando o que
+    se perde, que é o oposto do que a FR-038 promete.
+    {% endcomment %}
+    {% comment %}
+    **"Aplicar aos demais Perfis", pelo código** (051, FR-924, UX-110): nasce onde o código falta,
+    substitui os campos onde ele existe, e nunca remove Modalidade nem toca o quadro do destino.
+    {% endcomment %}
+    {% if quantos_perfis and quantos_perfis > 1 %}<button type="submit" class="acao" name="aplicar"
+            value="modalidade:{{ indice }}:{{ sub }}" formnovalidate>Aplicar aos demais Perfis ({{ quantos_perfis|add:"-1" }})</button>{% endif %}
+    <button type="button" class="acao perigo"
+            hx-get="{% url 'interface:fragmento-remover' %}?junto={{ alvo }}"
+            data-junto="{{ alvo }}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
+  </span></p>
+  {% endwith %}
   {% comment %}
   Os dois identificadores viajam ocultos. O da Regra existe mesmo antes de a Regra existir: a
   gravação preserva o `id` recebido, e uma linha que nascesse sem identidade não teria o que
@@ -69,31 +101,4 @@
         que o quadro de vagas sugere quando o percentual não dá número inteiro.</span>
     </p>
   </div>
-  {% comment %}
-  **A linha do quadro sai junto, e o `junto=` é o que a faz sair.** Ela vive noutra seção — o quadro
-  é seção do cartão do Perfil, e não parte da Modalidade —, então `closest fieldset` não a alcança.
-  Sem isto ela ficava para trás apontando uma Modalidade que o formulário já não envia, e o
-  salvamento seguinte era recusado com uma mensagem sobre uma Modalidade que a pessoa acabara de
-  remover e que não aparecia mais em lugar nenhum.
-  {% endcomment %}
-  {% with alvo="quadro-de-"|add:modalidade.id %}
-  <p class="remover">
-    {% comment %}
-    O mesmo `alvo` nos dois atributos, e por isso escrito uma vez só: `junto=` diz ao servidor o que
-    apagar, e `data-junto` diz a `remocao.js` o que **contar** antes de perguntar. Repetir o valor
-    deixaria os dois se afastarem em silêncio — e o silêncio seria a confirmação subcontando o que
-    se perde, que é o oposto do que a FR-038 promete.
-    {% endcomment %}
-    {% comment %}
-    **"Aplicar aos demais Perfis", pelo código** (051, FR-924, UX-110): nasce onde o código falta,
-    substitui os campos onde ele existe, e nunca remove Modalidade nem toca o quadro do destino.
-    {% endcomment %}
-    {% if quantos_perfis and quantos_perfis > 1 %}<button type="submit" class="acao" name="aplicar"
-            value="modalidade:{{ indice }}:{{ sub }}" formnovalidate>Aplicar aos demais Perfis ({{ quantos_perfis|add:"-1" }})</button>{% endif %}
-    <button type="button" class="acao perigo"
-            hx-get="{% url 'interface:fragmento-remover' %}?junto={{ alvo }}"
-            data-junto="{{ alvo }}"
-            hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
-  </p>
-  {% endwith %}
 </fieldset>

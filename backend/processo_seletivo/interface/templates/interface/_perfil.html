@@ -50,10 +50,15 @@ campos já é o digitado.
   construiria a estrutura antes de existir a regra que a consome (FR-013).
   {% endcomment %}
   <div class="campos">
+    {% comment %}
+    Área de texto, e não campo de uma linha (056, FR-1035): a Descrição é frase, e num campo de
+    386 px o valor saía cortado — no Compor, a Descrição do Edital já era área de texto. Mesmo
+    `name`, mesmo valor enviado; duas linhas, e a alça para crescer.
+    {% endcomment %}
     <p class="campo">
       <label for="perfil-{{ indice }}-description">Descrição</label>
-      <input type="text" id="perfil-{{ indice }}-description"
-             name="perfil-{{ indice }}-description" value="{{ perfil.description|default:'' }}">
+      <textarea id="perfil-{{ indice }}-description" name="perfil-{{ indice }}-description"
+                rows="2">{{ perfil.description|default:'' }}</textarea>
     </p>
     <p class="campo">
       <label for="perfil-{{ indice }}-workload">Carga horária</label>

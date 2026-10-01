@@ -111,9 +111,41 @@ CAMPOS_EVENTO = [
     # entre itens, e quem recusa dois é a conferência de publicação — não este campo.
     ("isRegistrationPeriod", "É o período de inscrições", BOOLEANO),
 ]
+# A ordem em que o cartão do Perfil **se desenha**, que é a do editor do Compor (056, FR-1038,
+# D-013): o que identifica o Perfil primeiro, os Requisitos depois. `CAMPOS_PERFIL` fica na ordem
+# dele porque a referência de cada campo é a posição ali (`g{grupo}c{campo}`) — reordená-lo
+# renomearia todo campo do Perfil. A apresentação reordena depois de a referência ser atribuída.
+ORDEM_DO_PERFIL_NO_COMPOR = (
+    "name",
+    "locality",
+    "description",
+    "workload",
+    "compensation",
+    "duties",
+    "requirements",
+    "immediateVacancies",
+    "reserveLimit",
+    "generalCompetitionModalityId",
+    "callForm",
+)
+
+
+def na_ordem_do_compor(grupo):
+    """Os campos do grupo na ordem em que se desenham; só o Perfil muda, e nenhum nome muda."""
+    campos = grupo.get("campos") or []
+    if grupo.get("tipo") != "Perfil":
+        return campos
+    posicao = {chave: indice for indice, chave in enumerate(ORDEM_DO_PERFIL_NO_COMPOR)}
+    return sorted(campos, key=lambda campo: posicao.get(campo["chave"], len(posicao)))
+
+
+# Título, Descrição e Declaração são **texto longo** (056, FR-1036, D-011): num campo de uma linha
+# de 312 px os três saíam cortados, e no Compor a Descrição já era área de texto. `TEXTO` e
+# `TEXTO_LONGO` são convertidos pelo mesmo caminho (`_converter`, `_para_formulario`) — a troca é
+# de controle, e não do que se lê, se compara ou se grava. O nome do campo é posicional e não muda.
 CAMPOS_RAIZ = [
-    ("title", "Título do Edital", TEXTO),
-    ("description", "Descrição", TEXTO),
+    ("title", "Título do Edital", TEXTO_LONGO),
+    ("description", "Descrição", TEXTO_LONGO),
     # O teto de inscrições por pessoa. **Retificável por decisão anterior**: reduzi-lo não invalida
     # quem já se inscreveu — "publicação anterior não se reescreve: quem entrou sob a norma que a
     # admitia permanece".
@@ -124,7 +156,11 @@ CAMPOS_RAIZ = [
     #
     # **O momento da coleta não aparece nesta lista**, e a ausência é a decisão: ele é não
     # retificável, com razão escrita no contrato, e seu rótulo está em `ROTULO_DO_EXCLUIDO`.
-    ("matriculationRequest/declarationText", "Declaração do Requerimento de Matrícula", TEXTO),
+    (
+        "matriculationRequest/declarationText",
+        "Declaração do Requerimento de Matrícula",
+        TEXTO_LONGO,
+    ),
 ]
 
 # O método do sorteio comum ao Edital (030, FR-429). **Nove campos, e não dez**: a Etapa que

@@ -10,6 +10,8 @@ submissão" precisa listar os anexos, entregar o arquivo de cada um e dizer de q
 um é o modelo — senão quem homologa vê duas listas sem relação e cruza as duas de cabeça.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -69,8 +71,11 @@ def test_a_revisao_diz_de_qual_requisito_o_anexo_e_modelo(client, seletor_ligado
     corpo = client.get(
         reverse("interface:compor-etapa", args=[edital.id, "revisao"])
     ).content.decode()
+    # O texto da página, e não o HTML: desde a `056` o rótulo e o valor moram em `dt` e `dd`
+    # vizinhos, e a linha "modelo de: …" é o que se lê em sequência, e não uma cadeia da marcação.
+    texto = " ".join(re.sub(r"<[^>]+>", " ", corpo).split())
 
-    assert f"modelo de: {documento.name}" in corpo
+    assert f"modelo de: {documento.name}" in texto
 
 
 def test_o_anexo_sem_vinculo_diz_que_nao_e_modelo_de_nada(client, seletor_ligado, edital):

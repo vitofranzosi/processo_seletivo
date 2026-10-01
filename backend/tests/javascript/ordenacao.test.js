@@ -167,3 +167,28 @@ test("uma lista de uma linha só não oferece movimento", () => {
   assert.equal(lista.children[0].baixo.disabled, true);
   assert.equal(legendaDe(lista.children[0]), "Evento do Cronograma 1 de 1");
 });
+
+/* 056, FR-1024 e FR-1025: a legenda em duas vozes — a categoria com a posição, e o nome do item.
+   A posição vai para `[data-ordem]`, e o nome continua; sem isso, a reescrita da legenda inteira
+   apagava o que diz **qual** Evento é. */
+test("a posição vai para o lugar dela, e o nome do item continua na legenda", () => {
+  const lista = cronograma();
+  const lugares = lista.children.map((item) => {
+    const legenda = item.filhos.find((filho) => filho.tagName === "legend");
+    const lugar = { textContent: "" };
+    legenda.textContent = "Evento do Cronograma Inscrições";
+    legenda.querySelector = (seletor) => (seletor === "[data-ordem]" ? lugar : null);
+    return lugar;
+  });
+  lista.clicar(lista.children[0].baixo);
+
+  assert.deepEqual(
+    lugares.map((lugar) => lugar.textContent),
+    [" 2 de 3", " 1 de 3", " 3 de 3"],
+    "a posição acompanha a linha que se moveu"
+  );
+  assert.ok(
+    lista.children.every((item) => legendaDe(item) === "Evento do Cronograma Inscrições"),
+    "o texto da legenda fora do lugar da posição não é tocado"
+  );
+});
