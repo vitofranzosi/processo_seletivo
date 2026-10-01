@@ -4,6 +4,9 @@
 [auditoria de polish de 30/09](auditoria-polish-ui-2026-09-30.md) depois dos três lotes. Nada foi
 implementado aqui.
 
+> **Série encerrada em 01/10/2026.** O resultado final, contra estas medidas, está no
+> [encerramento](encerramento-polish-ui-2026-10-01.md).
+
 > **Não vira escopo por estar escrito aqui.** O lote de resíduos proposto no §6 tem prompt próprio
 > ([`058`](prompt/058-polish-residuos.md)); decidir se e quando rodá-lo é do usuário.
 

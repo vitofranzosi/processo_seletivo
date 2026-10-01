@@ -2,6 +2,9 @@
 
 **Data:** 2026-09-30 · **Natureza:** auditoria de acabamento — nada foi implementado.
 
+> **Série encerrada em 01/10/2026.** O resultado final, contra estas medidas, está no
+> [encerramento](encerramento-polish-ui-2026-10-01.md).
+
 > **Não vira escopo por estar escrito aqui.** É registro e proposta de priorização; decidir se, quando
 > e em que lotes corrigir é do usuário.
 
