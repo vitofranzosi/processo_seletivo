@@ -1,5 +1,9 @@
 {% extends "interface/base.html" %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}
+{% comment %} Três colunas, e não as cinco da mesa: aqui não há modelo nem leitura (057, D-013). Vale também
+   abaixo de 34 rem, onde a entrega já desce para a linha de baixo. {% endcomment %}
+ul.documentos{grid-template-columns:minmax(0,1fr) auto auto}
+ul.documentos .arquivo{font-size:.8125rem;color:var(--texto-fraco)}
 {% comment %} O resumo criptográfico do arquivo: 64 caracteres que precisam ser lidos um a um quando alguém
    confere, e por isso monoespaçados e com quebra em qualquer ponto. Mora aqui, e não na folha comum,
    porque só esta tela o mostra (057, D-013); os cartões de `.requisitos-apresentados` saíram com a
@@ -107,7 +111,8 @@
   requisito e o que chegou para ele —, e aqui cada documento era um cartão de largura total. Uma
   linha por requisito, numa grade comum: o nome e o que se sabe do arquivo à esquerda, a marca de
   facultativo numa coluna, as ações à direita. As colunas do modelo e da leitura, que a mesa tem e
-  esta tela não, ficam vazias — como a mesa já faz com o requisito que não fornece modelo.
+  esta tela não, saem da grade no estilo desta página — células vazias para preenchê-las viravam
+  faixas em branco abaixo de 34 rem, onde a mesa as põe em linha própria.
   {% endcomment %}
   <ul class="documentos">
     {% for documento in documentos %}
@@ -115,7 +120,7 @@
       <span class="requisito"><strong>{{ documento.nome }}</strong>
         {% if documento.razao %}<span class="razao">{{ documento.razao }}</span>{% endif %}
         {% if documento.enviado %}
-        <span class="instrucao">{{ documento.enviado.nome_original }} · {{ documento.tamanho }}
+        <span class="arquivo">{{ documento.enviado.nome_original }} · {{ documento.tamanho }}
           · {{ documento.enviado.uploaded_at|date:"d/m/Y H\hi" }}</span>
         {% comment %}
         O mesmo resumo que vai no comprovante do candidato (D9). O sistema já confere sozinho a cada
@@ -127,8 +132,6 @@
         {% endif %}
       </span>
       <span class="celula-marca">{% if not documento.obrigatorio %}<span class="marca">facultativo</span>{% endif %}</span>
-      <span class="modelo"></span>
-      <span class="leitura"></span>
       {% if documento.enviado %}
       <span class="entrega">
         <a class="acao" href="{% url 'interface:documento-da-inscricao' inscricao.id documento.id %}"

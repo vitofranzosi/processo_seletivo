@@ -24,7 +24,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.interface.forms import opcoes_do_metodo
-from processo_seletivo.interface.templatetags.interface_extras import plural
+from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
 from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -1075,7 +1075,7 @@ def _modalidade_nova(valores, conteudo, codigos_por_perfil):
                 "grupo": f"Linha do quadro {modalidade['code']}",
                 "rotulo": "Acréscimo",
                 "antes": "—",
-                "depois": f"{vagas} {plural(vagas, 'vaga,vagas')}",
+                "depois": contagem(vagas, "vaga,vagas"),
             }
         )
     return alteracoes, resumo
@@ -2295,7 +2295,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 "grupo": f"Linha do quadro {recorte}",
                 "rotulo": "Acréscimo",
                 "antes": "—",
-                "depois": f"{quantidade} {plural(quantidade, 'vaga,vagas')}",
+                "depois": contagem(quantidade, "vaga,vagas"),
             }
         )
 

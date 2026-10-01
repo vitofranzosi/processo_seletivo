@@ -8,7 +8,7 @@ pessoa ao mesmo beco, só que em silêncio.
 {% endcomment %}
 <li>
   {% if acao.disponivel %}
-  <a class="botao {{ peso }}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
+  <a class="botao{% if peso %} {{ peso }}{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
   {% if acao.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
   {% else %}
   <span class="botao desabilitado" aria-disabled="true"

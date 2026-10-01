@@ -264,3 +264,27 @@ a coluna de ações. É defeito anterior, medido igual antes e depois, e virou r
 procurava `class="ficha"` exato perto de "Alocado nesta Etapa". A ficha passou a ser
 `class="ficha curta"` (D-014), e a asserção passou a aceitar o prefixo. O que ela protege — a frase
 mora na ficha, e não numa faixa de aviso ou de erro — continua o mesmo.
+
+## D-024 — As regras de uma tela só vão para o estilo dela
+
+**Decisão**: depois da revisão de código, as regras que só o Detalhe do Edital desenha
+(`.lista-acoes.em-linha`, o filete das terminais, `.terminais .botao`, `.colunas.ao-topo`), as que só
+a Lista desenha (`.acao.zerada`, o filete das terminais em linha) e as que só a Alocação desenha (o
+`thead` fixo, a linha de grupo, o cabeçalho compacto, "Distribuir" em linha própria) saíram da folha
+comum para o `{% block estilo_da_pagina %}` de cada tela, como o prompt pede. O filete passou a ter
+seletor de irmão (`.lista-acoes+.terminais`, `.acoes>*+.terminais`): sem grupo acima, as terminais
+não desenham divisor. As declarações de `flex` de `.coluna-toda` saíram, porque o
+`thead th>*{display:block}` as vencia e nenhuma valia.
+
+## D-025 — Um filtro só para "N vaga(s)"
+
+**Decisão**: `contagem` em `interface_extras`, ao lado de `plural`, devolve o número e as palavras no
+número dele. Revisão, Supervisão, Condução e o resumo do Retificar passam por ele; saem os dois
+auxiliares locais que a primeira versão criara.
+
+## D-026 — Três colunas nos documentos da inscrição
+
+**Decisão**: as duas células vazias que completavam a grade de cinco colunas da mesa saíram, e a
+página declara três colunas. Abaixo de 34 rem as células vazias viravam faixas em branco, porque a
+mesa as põe em linha própria. O nome do arquivo tem classe própria (`.arquivo`), e não a da instrução
+do Edital.

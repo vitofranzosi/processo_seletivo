@@ -33,7 +33,7 @@ from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.interface import origens
 from processo_seletivo.interface.forms import ZONA
 from processo_seletivo.interface.origens import Rotulada
-from processo_seletivo.interface.templatetags.interface_extras import plural, pontuacao
+from processo_seletivo.interface.templatetags.interface_extras import contagem, plural, pontuacao
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     criterio_com_a_ausencia,
     forma_de_convocacao_por_extenso,
@@ -163,7 +163,10 @@ def _perfil(perfil, snapshot):
         )
         linhas.append(
             origens.com_origem(
-                Rotulada("Quadro", f"{recorte} — {_vagas(linha.get('immediateVacancies', 0))}"),
+                Rotulada(
+                    "Quadro",
+                    f"{recorte} — {contagem(linha.get('immediateVacancies', 0), 'vaga,vagas')}",
+                ),
                 origens.da_linha_do_quadro(
                     linha.get("immediateVacancies"), modalidade_da_linha, perfil
                 )
@@ -250,12 +253,6 @@ def arredondamento_da_reserva(rounding):
     return quadro.em_palavras(rounding)
 
 
-def _vagas(quantidade, *, imediatas=False):
-    """`1 vaga`, `2 vagas imediatas` — a tela escrevia `vaga(s)` (057, FR-1058)."""
-    texto = f"{quantidade} {plural(quantidade, 'vaga,vagas')}"
-    return f"{texto} {plural(quantidade, 'imediata,imediatas')}" if imediatas else texto
-
-
 def _versao(valor):
     """A versão da norma, em dd/mm/aaaa quando ela é uma data (057, FR-1058).
 
@@ -284,7 +281,7 @@ def _ampla(perfil):
 
 def _vagas_e_quadro(perfil):
     """O que o Edital publica e o que o quadro reparte, lado a lado (027, FR-326)."""
-    total = perfil.get("immediateVacancies", 0)
+    publicadas = contagem(perfil.get("immediateVacancies", 0), "vaga imediata,vagas imediatas")
     linhas = [
         linha
         for linha in perfil.get("vacancyTable") or []
@@ -293,9 +290,9 @@ def _vagas_e_quadro(perfil):
     if not linhas:
         # Acervo: publicado antes de o quadro existir. Ausência é "não declarou", e nunca zero — a
         # frase diz o que falta em vez de inventar um número que o Edital não tem.
-        return f"{_vagas(total, imediatas=True)} · o quadro de vagas não é declarado"
+        return f"{publicadas} · o quadro de vagas não é declarado"
     soma = sum(linha["immediateVacancies"] for linha in linhas)
-    return f"{_vagas(total, imediatas=True)} · o quadro reparte {soma}"
+    return f"{publicadas} · o quadro reparte {soma}"
 
 
 def _listas_sem_linha(perfil, denominacoes):

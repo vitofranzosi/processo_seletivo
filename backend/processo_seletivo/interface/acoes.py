@@ -270,7 +270,10 @@ def hierarquia(conjunto):
         (por_chave[chave] for chave in PREFERENCIA_DA_PRINCIPAL if chave in por_chave), None
     )
     terminais = [acao for acao in conjunto if acao.chave in TERMINAIS]
-    secundarias = [acao for acao in conjunto if acao is not principal and acao not in terminais]
+    # Por identidade, e não por igualdade: duas `Acao` iguais campo a campo seriam ambas retiradas
+    # de uma parte por estar a outra noutra, e a repartição perderia uma ação (FR-1064).
+    fora = {id(principal), *map(id, terminais)}
+    secundarias = [acao for acao in conjunto if id(acao) not in fora]
     return Hierarquia(principal, secundarias, terminais)
 
 
@@ -283,7 +286,8 @@ def da_linha(conjunto):
     conjunto = list(conjunto)
     frequentes = [acao for chave in FREQUENTES for acao in conjunto if acao.chave == chave]
     terminais = [acao for acao in conjunto if acao.chave in TERMINAIS]
-    demais = [acao for acao in conjunto if acao not in frequentes and acao not in terminais]
+    fora = {*map(id, frequentes), *map(id, terminais)}
+    demais = [acao for acao in conjunto if id(acao) not in fora]
     return Hierarquia(None, frequentes + demais, terminais)
 
 

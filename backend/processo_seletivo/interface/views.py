@@ -3474,8 +3474,9 @@ def detalhe(request, edital_id):
             "documentos": _documentos_publicados(edital),
             "pendencias": pendencias,
             "acoes": conjunto,
-            # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002): a lista e a
-            # mensagem de ausência continuam saindo de `acoes`, que é o que a FR-023 guarda.
+            # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002). É de `grupo` que
+            # a tela desenha a lista **e** a mensagem de ausência — uma variável só, que é o que a
+            # FR-023 guarda; `acoes` fica para quem lê o conjunto inteiro, na ordem de origem.
             "grupo": acoes.hierarquia(conjunto),
             "impedido_por_segregacao": segregacao,
             # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):

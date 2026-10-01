@@ -15,8 +15,9 @@ from django.urls import reverse
 
 from processo_seletivo.interface import acoes, revisao
 from processo_seletivo.interface.acoes import Acao
+from processo_seletivo.interface.templatetags.interface_extras import contagem
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade import FONTE, PORTAL, sem_prosa
+from tests.interface.test_acessibilidade import FONTE, PORTAL, _estilo_proprio, sem_prosa
 from tests.interface.test_acoes import homologado
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
@@ -28,6 +29,11 @@ def regra(seletor, folha=FOLHA):
     """O corpo da regra cujo seletor é exatamente `seletor`, sem espaços, ou `None`."""
     achado = re.search(rf"(?:^|[}}\n])[ \t]*{re.escape(seletor)}\{{([^}}]*)\}}", folha)
     return achado.group(1).replace("\n", "").replace(" ", "") if achado else None
+
+
+def da_pagina(template):
+    """A folha própria de uma tela: as regras que só ela desenha não vão na folha comum."""
+    return sem_prosa(_estilo_proprio(GESTAO / template))
 
 
 def _acao(chave, motivo="", quantidade=None, estilo="secundario"):
@@ -98,11 +104,15 @@ def test_o_detalhe_desenha_as_terminais_por_ultimo_e_so_contornadas():
     assert "Nenhum ato disponível para seus papéis nesta situação." in detalhe
     assert '<div class="colunas ao-topo">' in detalhe
 
-    assert "flex-direction:row" in regra(".lista-acoes.em-linha")
-    assert "border-top:1px" in regra(".terminais")
-    contorno = regra(".terminais .botao")
+    folha = da_pagina("detalhe.html")
+    assert "flex-direction:row" in regra(".lista-acoes.em-linha", folha)
+    # O filete só existe quando há grupo acima dele: sem a lista, não há o que separar.
+    assert "border-top:1px" in regra(".lista-acoes+.terminais", folha)
+    contorno = regra(".terminais .botao", folha)
     assert "background:var(--branco)" in contorno and "color:var(--vermelho)" in contorno
-    assert "align-items:flex-start" in regra(".colunas.ao-topo")
+    assert "align-items:flex-start" in regra(".colunas.ao-topo", folha)
+    for seletor in (".lista-acoes.em-linha", ".terminais .botao", ".colunas.ao-topo"):
+        assert regra(seletor) is None, f"{seletor} é desta tela, e não da folha comum"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -116,7 +126,11 @@ def test_o_homologado_tem_publicar_como_unica_cheia(
 
     corpo = client.get(reverse("interface:detalhe", args=[alvo.id])).content.decode()
 
-    cheias = re.findall(r'class="botao " href="[^"]*">([^<]+)<', corpo)
+    cheias = [
+        rotulo
+        for classes, rotulo in re.findall(r'<a class="([^"]*)" href="[^"]*">([^<]+)<', corpo)
+        if classes.split() == ["botao"]
+    ]
     assert cheias == ["Publicar"], cheias
     _, terminais = corpo.split('class="lista-acoes em-linha terminais"', 1)
     assert "Cancelar" in terminais.split("</ul>", 1)[0]
@@ -147,7 +161,7 @@ def test_a_lista_poe_as_frequentes_primeiro_e_as_terminais_no_fim():
     assert [a.chave for a in linha.terminais] == ["encerrar", "cancelar"]
     lista = (GESTAO / "lista.html").read_text()
     assert '<span class="acoes terminais">' in lista
-    assert "border-left:1px" in regra(".acoes>.terminais")
+    assert "border-left:1px" in regra(".acoes>*+.terminais", da_pagina("lista.html"))
 
 
 def test_o_contador_zero_esmaece_sem_perder_o_rotulo():
@@ -161,7 +175,7 @@ def test_o_contador_zero_esmaece_sem_perder_o_rotulo():
         {"acao": Acao("inscricoes", "Inscrições recebidas (7)", "/i", quantidade=7)},
     )
     assert "zerada" not in com_sete
-    assert "color:var(--texto-fraco)" in regra(".acao.zerada")
+    assert "color:var(--texto-fraco)" in regra(".acao.zerada", da_pagina("lista.html"))
 
 
 # --- D2 — o glossário recolhido (FR-1051 a FR-1053) --------------------------------------------
@@ -208,23 +222,28 @@ def test_o_glossario_do_assistente_fica_como_esta():
 
 
 def test_a_revisao_escreve_numeros_datas_e_plurais_como_gente():
-    assert revisao._vagas(1) == "1 vaga"
-    assert revisao._vagas(2, imediatas=True) == "2 vagas imediatas"
-    assert revisao._vagas(0, imediatas=True) == "0 vagas imediatas"
+    assert contagem(1, "vaga,vagas") == "1 vaga"
+    assert contagem(2, "vaga imediata,vagas imediatas") == "2 vagas imediatas"
+    assert contagem(0, "vaga imediata,vagas imediatas") == "0 vagas imediatas"
     assert revisao._versao("2014-06-09") == "09/06/2014"
     assert revisao._versao("2ª edição") == "2ª edição", "versão que não é data sai como está"
     fonte = (RAIZ / "interface/revisao.py").read_text()
     assert not re.findall(r'f"[^"\n]*\(s\)', fonte), "nenhum plural com parênteses na Revisão"
 
 
-def test_o_que_sai_da_tela_fica_como_estava():
-    """FR-1060: `objeto_legivel` alimenta o registro do gesto da Retificação, e não muda."""
-    from processo_seletivo.interface.retificacao import objeto_legivel
+def test_o_plural_se_resolve_num_lugar_so():
+    """Os quatro módulos que escreviam `vaga(s)` para a tela passam pelo mesmo `contagem`.
 
-    assert (
-        objeto_legivel({"admits": True, "durationDays": 2})
-        == "Admite recurso em 2 dia(s) corrido(s)"
-    )
+    No Retificar só o resumo do acréscimo é da tela: `objeto_legivel` alimenta o registro do gesto,
+    e fica como está até alguém decidir sobre ele (FR-1060, `doc/achado-f8-...`).
+    """
+    for modulo in ("revisao", "supervisao", "conducao_do_marco", "retificacao"):
+        fonte = (RAIZ / f"interface/{modulo}.py").read_text()
+        assert "contagem(" in fonte, modulo
+        if modulo != "retificacao":
+            assert not re.findall(r"f\"[^\"\n]*\bvaga\(s\)", fonte), modulo
+    resumo = (RAIZ / "interface/retificacao.py").read_text()
+    assert '"depois": contagem(' in resumo
 
 
 # --- T3 — sem caixa dentro de caixa (FR-1054 a FR-1057) ----------------------------------------
@@ -271,7 +290,12 @@ def test_os_documentos_da_inscricao_seguem_a_mesa():
     # As regras dos cartões saíram com eles, e o resumo do arquivo foi para a página.
     assert regra(".requisitos-apresentados") is None and regra(".acoes-do-documento") is None
     assert regra(".resumo-do-arquivo") is None
-    assert ".resumo-do-arquivo{" in detalhe
+    folha = da_pagina("inscricao_detalhe.html")
+    assert regra(".resumo-do-arquivo", folha)
+    # Três colunas, sem as células vazias que viravam faixas em branco abaixo de 34 rem.
+    assert regra("ul.documentos", folha) == "grid-template-columns:minmax(0,1fr)autoauto"
+    assert '<span class="modelo"></span>' not in detalhe and '<span class="leitura">' not in detalhe
+    assert 'class="instrucao"' not in detalhe, "o arquivo não se veste de instrução do Edital"
 
 
 def test_a_ficha_curta_tem_a_largura_do_conteudo():
@@ -293,7 +317,8 @@ def test_a_matriz_agrupa_por_edital_e_fixa_o_cabecalho():
     for rotulo in ("Distribuir", 'aria-label="Marcar todos em', 'aria-label="Desmarcar todos em'):
         assert rotulo in cabecalho
 
-    assert "position:sticky;top:0" in regra(".distribuicao thead")
+    assert "position:sticky;top:0" in regra(".distribuicao thead", da_pagina("alocacoes.html"))
+    assert regra(".distribuicao thead") is None, "regra só desta tela, fora da folha comum"
     assert "sticky" not in regra(".distribuicao thead th"), "duas linhas fixas se sobrepunham"
 
 

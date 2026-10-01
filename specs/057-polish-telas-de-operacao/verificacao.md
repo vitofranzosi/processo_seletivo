@@ -68,14 +68,14 @@ Medido no mesmo banco, com o mesmo método, sobre a árvore do PR.
 | 9 | Atenção do Processo | 6 cartões com borda no cartão, faixa verde | **lista com filete**, faixa **âmbar** (`rgb(138,83,0)`) única; zero caixas com borda dentro de outra | lista, âmbar | ✓ |
 | 10 | Atenção da Supervisão | 6 cartões | idem, a mesma regra | idem | ✓ |
 | 11 | Auditoria do 51/2026: média por evento | 105,2 px | **60,3 px** (1.262 → 723 px para 12 eventos) | ≤ 70 | ✓ |
-| 12 | Detalhe da inscrição: documentos | 2 cartões de 1.232 × 114 | `ul.documentos`, uma linha por requisito (~69 px), zero caixas dentro de caixa | desenho da mesa | ✓ |
+| 12 | Detalhe da inscrição: documentos | 2 cartões de 1.232 × 114 | `ul.documentos` em três colunas, uma linha por requisito (~69 px), zero caixas dentro de caixa; abaixo de 34 rem, sem faixas em branco (D-026) | desenho da mesa | ✓ |
 | 13 | Distribuição: ficha | 1.232 px | **433 px** | largura do conteúdo | ✓ |
 | 14 | Minha etapa: ficha | 1.232 px | **582 px** | largura do conteúdo | ✓ |
 | 15 | Revisão do 76/2027 | "Peso: 2.0000", "20.0000%", "versão 2014-06-09", "vaga(s)" | **"Peso: 2"**, **"Nota mínima: 6"**, **"Peso: 1"**, **"20%"**, **"versão 09/06/2014"**, **"2 vagas imediatas"**, "1 vaga", "0 vagas"; nenhum "(s)", nenhuma data aaaa-mm-dd | como o critério | ✓ |
 | 16 | Alocação: largura da página | 1.398 px | **1.280 px** (a matriz termina em x = 1.256, a borda do conteúdo) | ≤ 1.280 | ✓ |
 | 17 | Alocação: altura do `thead` | 174 px | **127 px**; "Edital 01/2026" uma vez, sobre as três Etapas dele | ≤ 130 | ✓ |
 | 18 | Portal: seletor × "Enviar" | duas linhas (y 1.157 e 1.201) | **uma linha** (y 1.157 e 1.157), a dica logo abaixo | uma linha a 1.280 | ✓ |
-| 19 | HTML da distribuição | 83.294 | **83.444** (+150) | < 120.000 | ✓ |
+| 19 | HTML da distribuição | 83.294 | **82.477** (−817; era 83.444 antes de as regras de uma tela só irem para o estilo dela, D-024) | < 120.000 | ✓ |
 
 ### As listas de ações (2ª decisão recebida)
 
@@ -104,7 +104,13 @@ O portal ("Sua inscrição" de MARIA), à parte: 4 destinos antes, os mesmos 4 d
 
 `cd backend && make lint check test-pg DB_NAME=ps057t`, sobre a árvore do PR: `ruff check` e
 `ruff format --check` limpos, `manage.py check` sem problemas, e **9.099 passando e 11 pulados** em
-869 s — os mesmos onze pulados deliberados de antes. Os testes de JavaScript vêm junto, por
+869 s — os mesmos onze pulados deliberados de antes.
+
+Depois das correções da revisão de código, rodada de novo em 01/10: **9.098 passando, 11 pulados e
+1 falha alheia** — `test_consolidado_datado.py::test_a_vigencia_em_outro_dia_e_declarada`, que
+procura uma frase do PDF que a quebra de linha passou a partir quando a data virou. Nenhum arquivo
+de `publicacoes/` está no diff; o teste reprova isolado no mesmo commit, e está
+[registrado](../../doc/achado-consolidado-datado-quebra-linha.md). Os testes de JavaScript vêm junto, por
 `tests/test_javascript.py`.
 
 ### Comentários da folha

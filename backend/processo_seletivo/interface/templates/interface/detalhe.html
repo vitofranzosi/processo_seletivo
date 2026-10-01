@@ -1,5 +1,18 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} O grupo de ações do Edital (057, FR-1043 a FR-1047), no estilo desta página porque só ela o
+   desenha. Em linha, e não uma por linha: sete botões empilhados empurravam o cartão para 495 px.
+   As que encerram ou interrompem o Edital vêm depois de um filete, **contornadas** em vermelho — o
+   vermelho cheio era o único botão preenchido da tela, e fazia do gesto excepcional o mais forte. O
+   filete só existe quando há grupo acima dele. Só aqui: na confirmação do Cancelar, o botão cheio é a
+   ação que a pessoa veio praticar, e fica. {% endcomment %}
+.lista-acoes.em-linha{flex-direction:row;flex-wrap:wrap;align-items:center}
+.lista-acoes+.terminais{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--borda)}
+.terminais .botao{background:var(--branco);color:var(--vermelho);border-color:var(--vermelho)}
+.terminais .botao:hover{background:var(--vermelho-fundo)}
+.colunas.ao-topo{align-items:flex-start}
+{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›

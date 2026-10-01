@@ -46,7 +46,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
 )
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
-from processo_seletivo.interface.templatetags.interface_extras import plural
+from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.ocupacao.application.selectors import apuracao_vigente
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 from processo_seletivo.processos.models import Edital
@@ -698,7 +698,7 @@ def acervo_sem_quadro(edital, conteudo, encaminhar):
             # com a unidade; a frase diz o que ele significa.
             mensagem=(
                 f"O Perfil {_citado(rotulo)}, do Edital {rotulo_do_edital(edital)}, publica "
-                f"{total} {plural(total, 'vaga imediata,vagas imediatas')} e não publica "
+                f"{contagem(total, 'vaga imediata,vagas imediatas')} e não publica "
                 f"quantidade para todos os seus recortes: a ocupação e a convocação não têm o que "
                 f"apurar nos que ficaram sem."
             ),

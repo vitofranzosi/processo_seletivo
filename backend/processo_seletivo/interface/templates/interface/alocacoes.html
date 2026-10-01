@@ -1,5 +1,19 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} **O cabeçalho inteiro fica fixo, e não cada célula** (057, D-016): com a linha de grupo do Edital
+   em cima, `sticky` em cada `th` com `top:0` sobrepunha as duas linhas.
+
+   E a altura dele é decidida aqui (057, FR-1061): eram 174 px. Entrelinha curta para o nome de duas
+   linhas, e o respiro de cada degrau reduzido ao que ainda os separa. "Distribuir" na linha dele, em
+   negrito: leva a outra tela, e "Distribuir Todos" numa linha só se lia como um comando. {% endcomment %}
+.distribuicao thead{position:sticky;top:0;z-index:2}
+.distribuicao thead .grupos th[scope=colgroup]{padding-block:.1rem;border-bottom:1px solid var(--fundo);
+  font-weight:600;font-size:.8125rem}
+.distribuicao thead tr+tr th{padding-block:.3rem}
+.distribuicao thead th .situacao{padding-block:.05rem}
+.coluna-toda .destino{display:block;font-weight:600}
+{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›

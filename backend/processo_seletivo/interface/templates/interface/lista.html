@@ -1,5 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Processos Seletivos{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
+   só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
+   é resposta. {% endcomment %}
+.acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
+.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
+{% endblock %}
 {% block conteudo %}
 <h1>Processos Seletivos</h1>
 <p class="sub">Processos e Editais do escopo <strong>{{ ator.institution_scope }}</strong>.</p>
