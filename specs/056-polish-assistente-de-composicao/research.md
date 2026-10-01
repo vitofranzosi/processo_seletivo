@@ -251,3 +251,25 @@ medição, com ou sem a feature.
 
 **Não vira registro.** Não é defeito: enquanto não há Regra, o identificador não designa nada; na
 primeira gravação ele passa a ser o da Regra, e dali em diante é estável.
+
+## D-016 — O dois-pontos fica no rótulo, e três testes da Revisão leem o texto, e não o HTML
+
+**Decisão.** O `dt` da Revisão leva o dois-pontos ("Origem:"), e um espaço separa o termo da
+definição. O teste do anexo (`test_revisao_anexos.py`), que procurava "modelo de: …" no HTML cru,
+passa a procurar no texto da página — a mesma normalização que `test_revisao_origem_e_definitivos.py`
+já fazia.
+
+**O conflito.** A suíte de checkpoint reprovou três testes que procuram a linha "Rótulo: valor"
+contígua. É exatamente a forma que a 7ª decisão recebida manda trocar pela grade de `dl`: o conteúdo
+é o mesmo (52 de 52 itens iguais na comparação de antes e depois), e a apresentação separa rótulo e
+valor em dois elementos.
+
+**Por que não sai o item.** O prompt manda tirar do lote o item que exige mudar comportamento, texto
+ou domínio. Nenhum dos três muda: com o dois-pontos no rótulo, o texto da página — o que um leitor
+de tela lê em sequência e o que se copia — continua sendo, palavra por palavra, a linha de antes. Dois
+dos três testes passam sem mudança por isso; o terceiro lia a marcação, e passa a ler o texto, sem
+mudar o que verifica: que a Revisão diz de qual requisito o anexo é modelo.
+
+**Descartado.** O rótulo sem dois-pontos, mais limpo na coluna, mudaria o texto lido em sequência
+("Origem LP02") — e aí sim seria mudança de texto, e os dois testes que leem o texto teriam de mudar
+de asserção.

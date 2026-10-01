@@ -725,12 +725,16 @@ qualquer que seja a altura dele — símbolo de 40 px ou ação em texto da Moda
 `rem` a mais é a metade da altura da legenda, cuja base é onde o preenchimento do cartão começa.
 
 Em janela estreita não há lado: a legenda da Modalidade e as duas ações dela não cabem juntas, e o
-grupo volta ao fluxo, abaixo da legenda e à direita, como era.
+grupo volta ao fluxo, abaixo da legenda e à direita, como era. No fluxo ele **quebra**: o `fieldset`
+cresce até o conteúdo mínimo dele, e as duas ações em texto da Modalidade, numa fileira só, alargavam
+o cartão do Perfil inteiro para 481 px numa janela de 375.
 {% endcomment %}
 fieldset.linha>.acoes-da-linha{position:absolute;top:0;right:1rem;margin:0;padding:0 .4rem;
   background:var(--branco);transform:translateY(calc(-50% - .7rem))}
-@media (max-width:60rem){fieldset.linha>.acoes-da-linha{position:static;transform:none;
-  padding:0;margin:0 0 .75rem}}
+@media (max-width:60rem){
+  fieldset.linha>.acoes-da-linha{position:static;transform:none;padding:0;margin:0 0 .75rem}
+  fieldset.linha>.acoes-da-linha .grupo{flex-wrap:wrap;justify-content:flex-end}
+}
 {% comment %} Alvos iguais e encostados viram um alvo só, e o vizinho aqui descarta trabalho não enviado.
    As duas advertências: `.perigo` na linha de formulário, `.perigoso` no Anexo, onde remover
    apaga o arquivo no servidor. {% endcomment %}

@@ -128,7 +128,7 @@ FR-1028; SC-388, SC-389, SC-390; UX-138, UX-139).
 
 - [ ] T029 Conferir o diff contra a FR-1041 (ajuda, gravação, PDF, padrão de interação); `make lint
   check test-pg` com `DB_NAME` próprio; nada editado durante a suíte (FR-1040; SC-396)
-- [ ] T030 Medida "depois" no mesmo banco (1280 e 375 px), envio de todas as etapas (FR-1039,
+- [x] T030 Medida "depois" no mesmo banco (1280 e 375 px), envio de todas as etapas (FR-1039,
   SC-395), tamanho da distribuição, 375 px (FR-1042, SC-397); capturas "depois"; `verificacao.md` completo
 - [ ] T031 `rastreabilidade.md` requisito a requisito; reverter `.claude/launch.json`; commit e PR sem merge
 

@@ -151,7 +151,12 @@ def test_a_folha_leva_o_grupo_para_a_borda_e_o_devolve_em_tela_estreita():
     corpo = regra("fieldset.linha>.acoes-da-linha")
     assert "position:absolute" in corpo and "right:1rem" in corpo
     assert re.search(
-        r"@media \(max-width:60rem\)\{fieldset\.linha>\.acoes-da-linha\{position:static", FOLHA
+        r"@media \(max-width:60rem\)\{\s*fieldset\.linha>\.acoes-da-linha\{position:static", FOLHA
+    )
+    # No fluxo o grupo quebra: o `fieldset` cresce até o conteúdo mínimo, e as duas ações em texto
+    # da Modalidade numa fileira só alargavam o cartão do Perfil para 481 px numa janela de 375.
+    assert re.search(r"fieldset\.linha>\.acoes-da-linha \.grupo\{flex-wrap:wrap", FOLHA), (
+        "o grupo no fluxo precisa quebrar"
     )
     # O que a mudança tornou morto sai junto: a reserva de rótulo e a coluna dentro da faixa.
     assert ".campos>.acoes-da-linha" not in FOLHA
@@ -247,7 +252,7 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
         reverse("interface:compor-etapa", args=[composto.id, "revisao"])
     ).content.decode()
 
-    assert '<dl class="dados-da-inscricao"><dt>Início</dt>' in corpo
+    assert '<dl class="dados-da-inscricao"><dt>Início:</dt> <dd>' in corpo
     corridas = re.findall(r'<span class="detalhe">([^<]*)</span>', corpo)
     for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
         assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo

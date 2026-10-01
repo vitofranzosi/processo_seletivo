@@ -2,4 +2,8 @@
 As linhas de um item da Revisão: a rotulada em par de termo e definição, a corrida em texto (056,
 FR-1033). Um parcial porque dois blocos da tela desenham linhas — a conferência e o que não se
 corrige depois de publicado —, e as duas grafias não podem se afastar.
-{% endcomment %}{% for trecho in linhas|em_trechos %}{% if trecho.pares %}<dl class="dados-da-inscricao">{% for linha in trecho.linhas %}<dt>{{ linha.rotulo }}</dt><dd>{{ linha.valor }}</dd>{% endfor %}</dl>{% else %}{% for linha in trecho.linhas %}<span class="detalhe">{{ linha }}</span>{% endfor %}{% endif %}{% endfor %}
+
+O dois-pontos fica no rótulo, e o espaço entre o termo e a definição também: lido em sequência — por
+leitor de tela, ao copiar, ou por quem confere o texto da página —, o par continua sendo a linha de
+antes, "Rótulo: valor" (FR-1034, D-016). A coluna é apresentação; o texto é o mesmo.
+{% endcomment %}{% for trecho in linhas|em_trechos %}{% if trecho.pares %}<dl class="dados-da-inscricao">{% for linha in trecho.linhas %}<dt>{{ linha.rotulo }}:</dt> <dd>{{ linha.valor }}</dd>{% endfor %}</dl>{% else %}{% for linha in trecho.linhas %}<span class="detalhe">{{ linha }}</span>{% endfor %}{% endif %}{% endfor %}
