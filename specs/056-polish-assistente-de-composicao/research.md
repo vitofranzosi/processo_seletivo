@@ -58,7 +58,7 @@ situação e deixar só a cor do número: é o que a 3ª decisão proíbe.
 
 **Decisão.** O grupo de ações passa a ser o filho seguinte à legenda, e a folha o posiciona no canto
 superior direito do cartão, centrado na borda de cima — a mesma linha em que a legenda está, do
-outro lado. Abaixo de 48 rem de janela ele volta ao fluxo, numa linha própria à direita, abaixo da
+outro lado. Abaixo de 60 rem de janela ele volta ao fluxo, numa linha própria à direita, abaixo da
 legenda.
 
 **Por quê.** A legenda de um `fieldset` é desenhada **sobre** a borda, e é isso que a torna a "linha
@@ -72,9 +72,13 @@ do que resolvem:
 
 Posicionado, o grupo não ocupa linha nenhuma. Em tela estreita não há lado para ele: a legenda
 ("MODALIDADE DE CONCORRÊNCIA PPI") e as ações da Modalidade ("Aplicar aos demais Perfis (1)",
-"Remover esta Modalidade", ~380 px) não cabem juntas a 375 px. A partir de 48 rem cabem com folga —
-o cartão de Modalidade, o mais estreito, tem ~640 px de largura útil ali. É o que a FR-1026 pede: a
-legenda e as ações nunca se sobrepõem.
+"Remover esta Modalidade", ~380 px) não cabem juntas a 375 px. A partir de 60 rem cabem com folga —
+o cartão de Modalidade, o mais estreito, já tem ~640 px de largura útil a 48 rem. É o que a FR-1026
+pede: a legenda e as ações nunca se sobrepõem.
+
+> **Corrigido pela `058`** (01/10/2026, a partir da reavaliação do polish, §6): esta decisão dizia
+> 48 rem, e a folha e o PR da `056` usam 60 — o limiar das demais réguas estreitas da folha da gestão.
+> O texto passou a dizer o valor que está na folha; a folha não mudou.
 
 ## D-004 — A legenda segue o desenho do Retificar, e o nome é o do servidor
 

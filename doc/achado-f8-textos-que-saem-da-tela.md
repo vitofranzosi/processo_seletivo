@@ -5,7 +5,7 @@
 [auditoria de polish](auditoria-polish-ui-2026-09-30.md).
 **Natureza:** registro do que ficou de fora de propósito. Não é defeito novo, e nada aqui virou
 escopo.
-**Situação:** **aberto** — decidir se, quando e como é do usuário.
+**Situação:** a parte que é só tela **resolvida pela `058`** em 01/10/2026 (ver o fim); o que grava ato fica como está, por decisão do usuário registrada na reavaliação de 01/10.
 
 ## O que a 057 trocou
 
@@ -53,3 +53,22 @@ Sete asserções prendiam a grafia antiga do texto que a 7ª decisão manda troc
 para a nova, sem mudar o que verificam: `test_revisao.py` (três), `test_advertencias_do_quadro.py`,
 `test_retificar_modalidade.py`, `test_sinal_do_acervo_sem_quadro.py` e
 `test_us1_declaracao_unica_de_vagas.py`.
+
+## Situação em 01/10/2026 — o que era só tela, resolvido pela `058`
+
+A `058` tratou as duas partes que este registro mandava para ela, e só elas:
+
+- **"Fora da lista do F8, na tela"**: os plurais de `distribuicao.html`, `matriculas.html`,
+  `recurso.html`, `ocupacao.html` (l. 117), `ocupacao_historico.html` e `compor_base.html` passaram
+  ao `plural` e ao `contagem` (FR-1076). Cada um foi conferido antes: nenhum vai para ato, registro
+  ou documento. Três asserções que prendiam a grafia antiga foram reescritas para a nova
+  (`test_compor_quadro.py`, `test_consolidar_todas_as_prontas.py`, `test_resultado_da_etapa.py`).
+  Na Matrículas do 51/2026, as 8 ocorrências de "linha(s)" viraram "1 linha".
+- **Os campos numéricos das Etapas** (FR-1078, FR-1079): Peso, Nota mínima e Pontuação máxima
+  chegam ao campo sem zeros à direita ("2", "6"). O envio de "Salvar rascunho" muda de grafia nos
+  três valores e designa o mesmo número; o **rascunho gravado** — as linhas das Etapas e o registro
+  da gravação — foi comparado antes e depois no mesmo banco e saiu **idêntico**.
+
+**Continua como estava, por decisão**: o que sai da tela e grava ato — `objeto_legivel`,
+`validation.py` e `ocupacao.html` l. 207. Fora desta lista e também intocados: "N linha(s) em LP01"
+de `compor_perfis.html`, e o motivo da prévia de exportação em `views.py`, que grava.

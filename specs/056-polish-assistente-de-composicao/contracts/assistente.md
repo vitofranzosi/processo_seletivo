@@ -20,7 +20,7 @@ Cada linha diz o que o elemento garante e a medida que o prende. Medido a 1280 �
 | A legenda nomeia o item | `.categoria` com a posição em `[data-ordem]` (coleções ordenáveis) e `.nome` com o identificador, quando houver |
 | A confirmação não muda | `data-rotulo` da legenda igual à categoria de antes |
 | O grupo não se chama pelas ações | nenhum botão dentro da `legend` |
-| Em tela estreita não há sobreposição | abaixo de 48 rem, o grupo volta ao fluxo, abaixo da legenda |
+| Em tela estreita não há sobreposição | abaixo de 60 rem, o grupo volta ao fluxo, abaixo da legenda |
 
 ## Faixa do Evento
 

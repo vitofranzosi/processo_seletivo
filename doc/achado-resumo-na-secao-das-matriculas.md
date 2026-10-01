@@ -34,3 +34,10 @@ números em bloco.
 
 Uma linha de template, e a medida de conferência. Sem efeito na folha, portanto sem efeito no teto de
 caracteres da tela de distribuição.
+
+## Situação em 01/10/2026 — resolvido pela `058`
+
+A `058` tirou a classe da `section` (FR-1074), como a `055` fez na Ocupação, sem regra nova. Medido
+no mesmo banco, a 1280 × 900: a seção é bloco, o título fica em y = 560 e a nota em y = 600, os dois
+em x = 24 — antes, a nota estava em x = 268, ao lado do título. Medidas em
+`specs/058-polish-residuos/verificacao.md`.

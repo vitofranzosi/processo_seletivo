@@ -24,3 +24,11 @@ Manter a classe viva com uma regra de enfeite seria enganar a guarda. A `055` fi
 A mesma coisa na `resultados.html`: `class="tabela"` na tabela. Uma palavra, sem regra nova. Conferir
 antes se a coluna mistura número e texto ("favorável", "não avaliada") — à direita, o texto também
 vai, e isso pode ser o que se quer ou não.
+
+## Situação em 01/10/2026 — resolvido pela `058`
+
+A `058` pôs `class="tabela"` na tabela dos Resultados (FR-1075). A coluna mistura número e texto, e
+por isso só a célula da Etapa pontuada leva `numero`: o rótulo da decisória ("Deferido") e "não
+avaliada" ficam à esquerda. Medido no banco da auditoria: as notas do 51/2026 passaram de 12 px da
+borda esquerda a 12 px da direita; "Deferido", na Análise documental, continua à esquerda. Medidas
+em `specs/058-polish-residuos/verificacao.md`.

@@ -4,7 +4,7 @@
 **Origem:** a passada a 375 px da `057` (polish das telas de operação), que a
 [auditoria de polish](auditoria-polish-ui-2026-09-30.md) não tinha feito.
 **Natureza:** defeito anterior à `057`, medido igual antes e depois dela. Não virou escopo.
-**Situação:** **aberto** — decidir se, quando e como corrigir é do usuário.
+**Situação:** **resolvido pela `058`** em 01/10/2026 (ver o fim). Aberto até ali, com a decisão de se, quando e como corrigir nas mãos do usuário, que a tomou com a `058`.
 
 ## O que se mediu
 
@@ -30,3 +30,17 @@ comportamento em tela estreita.
 - **Lista**: a mesma solução da matriz de Alocação — o cartão rola na horizontal abaixo de 60 rem —
   ou empilhar as células da linha.
 - **Condução**: uma moldura com rolagem para a tabela do indicador.
+
+## Situação em 01/10/2026 — resolvido pela `058`
+
+A `058` adotou a solução da matriz de Alocação (FR-1071 a FR-1073): abaixo de 60 rem, a tabela de
+cada Processo da Lista e a tabela "Recortes deste marco" da Condução ficam numa moldura que rola na
+horizontal, na mesma regra da `.distribuicao-moldura`. As células não foram empilhadas. Medido no
+banco da auditoria, a 375 px:
+
+- **Lista**: documento com 375 px; as molduras rolam até 531 e 570 px, além do último botão (519 e
+  558), e roladas ao fim mostram os 21 botões de ação. Antes, os 21 ficavam recortados.
+- **Condução**: documento com 375 px (antes, 486), e `innerWidth` também 375 no viewport emulado.
+
+Em tela larga nada muda, e o cabeçalho fixo da Alocação continua fixo. Medidas em
+`specs/058-polish-residuos/verificacao.md`.
