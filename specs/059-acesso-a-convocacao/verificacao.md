@@ -92,3 +92,14 @@ em todas as tabelas. Com ele a garantia é a soma de três parcelas medidas (`D-
 | `test_o_item_da_lista_nao_consulta_nada_em_tabela_nenhuma` | **reprovou**: "2 consulta(s) para 4 itens" |
 
 A consulta indevida foi revertida em seguida; `views.py` voltou idêntico ao commit.
+
+## A suíte completa depois das correções (06/10/2026, commit `f8d0aecb`)
+
+`cd backend && make test-pg DB_NAME=test_ps_059`, numa rodada inteira:
+
+**9195 passando, 11 pulados, nenhuma falha** (925 s).
+
+É o que a rodada anterior deixava esperar: os 9193 dela, mais o guardião do README corrigido, mais o
+teste de zero consultas por item. Os 11 pulados são os mesmos onze do `AGENTS.md`. O `make lint
+check` da mesma árvore: `ruff check` e `ruff format --check` verdes, `check` sem problemas,
+`makemigrations --check` sem mudança.
