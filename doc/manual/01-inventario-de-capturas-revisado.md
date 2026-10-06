@@ -175,3 +175,78 @@ refazer a captura, não para aceitá-la.
 
 `SS-090` fica em `S-01` porque é o assistente de elaboração, e não uma tela de exceção — o
 `§I.2` já mandava colher as fases 1 a 5 na primeira sessão.
+
+---
+
+## R5 · Reconciliação com a `main` de 06/10/2026
+
+**Feita sobre `4602b04`, por leitura de templates, views e `git`** — não por coleta. Entre a S-00 e
+esta data entraram as features `019` a `058`, incluindo a série de polish visual (`055`–`058`), e
+nenhuma captura foi refeita. Esta seção diz o que cada entrada do inventário encontra hoje, quais
+telas novas não têm captura prevista, e o que está vencido nas páginas e nos PNGs do piloto. Ela
+**não** autoriza a coleta: a tabela de coleta das telas novas, com estado necessário, é tarefa da
+S-00R (`00-…`, §I.0-bis).
+
+### R5.1 · Situação de cada entrada
+
+Legenda: **ok** · **rótulo** (mudou rótulo, a tela é a mesma) · **tela** (mudou o conteúdo ou a
+estrutura) · **premissa** (a entrada partia de algo que já era falso em 08/09) · **n/c** (rótulo
+existe, estado não reproduzido).
+
+| Situação | Entradas |
+|---|---|
+| **ok** | SS-004 (n/c), 006, 007, 008, 018, 020, 024–027, 029, 030, 033–035, 036, 037–040, 041, 042, 043, 044, 046–048, 049, 050–053 (052–053 n/c), 054, 056, 057, 060, 061, 063 (n/c), 067, 068, 069, 070, 072, 081, 082, 084, 086, 088, 089 |
+| **rótulo** | SS-011 (estados em caixa baixa, barra numerada numa linha), 015 (rótulos da forma decisória obrigatórios), 016 (não há "faixa": é "Pontuação máxima"), 028 (a autoridade aparece só pelo cargo — `054`) |
+| **tela** | SS-001, 002 (vitrine com busca, filtros e grupos), 003 (lista com cartões e "Visão Geral"), 005 (ações por peso, terminais à parte), 009 (painel do Processo e "Novo Edital neste Processo"), 012 (cartão "Este Edital está vazio" → "Partir de um Edital anterior"), 013 (visão do conjunto, quadro de vagas, duplicar, aplicar a todos, forma de convocação), 017 (o marco abre por "Como a ordem deste marco é produzida"; recurso, sorteio e corte recolhíveis), 019 (bloco do Requerimento), 021 (seções vazias compactas), 022 (leitura tabular, "O que não se corrige depois de publicado"), 023 (o documento é o ato oficial da `054`), 031 (Requerimento e "Não se aplicam"), 032 (página da seleção refeita), 045 (matriz agrupada por Edital), 055 (consolidar passa por "Confira antes de consolidar"), 058 (emitir passa por "Confira antes de emitir"; ordem por recorte), 062 (verificação de publicabilidade; aviso prévio da definitiva), 064, 065 (prazo de recurso, publicações anteriores), 066 (fundamentação de quem avaliou), 071 (conferir o que se contesta; instrução), 079 (recusa anunciada antes da escolha), 083 (acrescentar Modalidade, critério, linha do quadro), 090 (os três modos de recurso, num bloco recolhível) |
+| **premissa** | SS-014 (o período de inscrições se marca no passo Inscrição, não no Cronograma), 059 (não há "coluna de desempate": os critérios aparecem em parágrafo), 073 (a tarja "não utilizar" perdeu o fundamento — §H.2), 085 (a trilha é lista, não tabela; não há "coluna do ator") |
+| **n/c** | SS-074 a 078, 080, 087 (a `058` mexeu justamente em 375 px) |
+
+**`SS-010` volta** ("Novo Edital neste Processo" → "Novo Edital"), e com ela o §4 desta revisão
+deixa de valer.
+
+### R5.2 · Telas sem captura prevista
+
+**Gestão:** Visão Geral (`040`–`042`) · Supervisão do Processo (`022`/`045`) · Novo Edital
+(SS-010) · Partir de um Edital anterior e sua confirmação (`023`) · Corte e progressão e o
+histórico do corte (`014`) · Ocupação de vagas e histórico (`016`) · Convocação, histórico,
+desfecho, atestado, gestos em lote (`019`/`050`) · Sorteio — relação, ocorrência, realizar, anular
+(`021`/`035`) · Tela do marco e sua conferência (`049`) · Exportar para matrícula (`031`) ·
+Instrução do recurso (`036`) · as três confirmações (consolidar, emitir, retirar atribuições) ·
+dentro do assistente: prévia de "Aplicar aos demais Perfis", duplicar Perfil, método do sorteio,
+Requerimento · na Retificação: os gestos de acrescentar.
+
+**Portal:** Convocação (`019`) · Requerimento de Matrícula e anterior (`029`) · Relação de
+habilitados (`021`) · Verificar este sorteio (`021`) · rascunho fechado (§H.9, fechada) ·
+"Encontramos participação anterior" e "Mudar de modalidade descarta documentos" (antigas, nunca
+inventariadas).
+
+### R5.3 · O piloto
+
+**PNGs:** `p-01` (página da seleção), `p-06` (prévia da publicação), `p-08`, `p-09` (resultado
+público) e `p-10` (acompanhar) estão **vencidas**; `p-07` só em parte; `p-02` a `p-05`, `p-11` e
+`p-12` continuam válidas como recorte. As cores não mudaram — o que mudou é estrutura, conteúdo e
+espaçamento. `p-05` mostra um CPF com dígito verificador válido, contra a regra do §F.2: na coleta
+definitiva, CPF de teste inválido.
+
+**Trechos vencidos por página**, para as sessões que as revisarem:
+
+- `c-12`: o aviso de que o rascunho não avisa o prazo (fechado, §H.9); "o e-mail serve só para o
+  código" (já era falso — há confirmação de envio, e hoje convocação); o fim da jornada sem
+  convocação e Requerimento; "em preenchimento" em "Minhas inscrições" (a tela diz "Inscrição não
+  enviada").
+- `c-18`: "nome e cargo" da autoridade (só cargo, `054`); "nenhuma das duas tem valor por omissão"
+  (a primeira opção vem marcada); a recusa da definitiva (agora anunciada antes); as portas novas de
+  publicação (sorteio e tela do marco); a seção "Resultados divulgados" da página da seleção.
+- `c-08` (espécime): falta abrir o Perfil na tabela da `053`; "não tem valor por omissão" (vem
+  marcado "Fica por último"); a pendência agora aparece na própria etapa; a janela recursal mora num
+  bloco recolhível.
+- `c-03`: o corte existe; "ninguém é notificado de nada" (falso para convocação e confirmação);
+  "Consolidar resultados" é "Consolidar as N prontas"; "Emitir ordem" ganhou confirmação; as 16
+  fases e os dez atos.
+- `index.html`: o exemplo do bloco "Limitação conhecida" (§H.2, caiu).
+
+**Ferramentas:** `cdp.mjs` e `smtp.mjs` continuam servindo — o primeiro é genérico, o segundo lê as
+mesmas variáveis e ignora as mensagens que não trazem seis dígitos (a caixa agora recebe também
+confirmações e convocações). O `LEIA-ME.md` está errado em três pontos: o exemplo de recorte usa
+`main article`, que nenhuma tela do portal tem; a porta citada é a de uma entrada sem SMTP; e não diz
+que o seletor de identidade pede papéis além do nome.
