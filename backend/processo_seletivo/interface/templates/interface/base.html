@@ -16,7 +16,8 @@ a{color:var(--verde-texto)}
 main:focus{outline:none}
 header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem;
   display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
-header.topo .marca{font-weight:600;letter-spacing:.02em}
+header.topo .marca{font-weight:600;letter-spacing:.02em;color:var(--branco);text-decoration:none}
+header.topo .marca:hover{text-decoration:underline}
 header.topo .marca span{font-weight:300;opacity:.85}
 header.topo .identidade{margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.875rem}
 header.topo .identidade a,header.topo .identidade button{color:var(--branco)}
@@ -1266,7 +1267,9 @@ escape do guardião por mudar de lugar.
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
-  <span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span>
+  {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
+     dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
+  <a class="marca" href="{% url 'interface:lista' %}">Cefor<span>/Ifes</span> · Processos Seletivos</a>
   {% if ator %}
   <div class="identidade">
     {% comment %} UX-008: quem só executa trabalho futuro chega às próprias Etapas sem passar por tela
