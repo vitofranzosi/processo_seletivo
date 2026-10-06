@@ -54,6 +54,12 @@ DA_019 = [
     RAIZ / "convocacao/domain/especie.py",
     RAIZ / "convocacao/domain/fundamento.py",
     RAIZ / "convocacao/domain/alcance.py",
+    # A `059`: o caminho do candidato até a convocação. As frases de situação do acompanhamento e o
+    # chamado ao requerimento falam da convocação a quem sofre a consequência de uma afirmação falsa
+    # — a lista é literal, e template novo escaparia dela em silêncio.
+    PORTAL / "_convocacao_da_inscricao.html",
+    PORTAL / "_chamado_do_requerimento.html",
+    PORTAL / "inscricoes.html",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a

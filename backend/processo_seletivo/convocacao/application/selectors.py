@@ -87,6 +87,35 @@ def chamada_em_aberto(inscricao):
     return None
 
 
+def vigentes_por_inscricao(inscricao_ids):
+    """A convocação que o portal mostra de cada Inscrição pedida: `{inscricao_id: Convocacao}`.
+
+    **A vigente mais recente, e não a em aberto** (059, `D-001`). `chamada_em_aberto`, acima,
+    responde se o requerimento abre — e some com a convocação desfechada. O portal precisa dela
+    também: quem atendeu continua vendo que foi chamado e o que se registrou. Esta é a regra que a
+    tela da convocação já usava dentro da view; morar aqui é o que faz a lista, o acompanhamento e
+    a tela mostrarem a **mesma** convocação (`FR-1100`).
+
+    **Por conjunto, e em número fixo de consultas.** A lista de inscrições é o lugar onde uma
+    leitura por item passa despercebida com três e mata com trezentas — o defeito que
+    `tests/performance/test_area_do_candidato.py` existe para pegar. Inscrição sem
+    convocação não aparece no dicionário; lista vazia não consulta nada.
+    """
+    if not inscricao_ids:
+        return {}
+    por_inscricao = {}
+    for convocacao in (
+        Convocacao.objects.filter(inscricao_id__in=inscricao_ids, sucessoras__isnull=True)
+        .prefetch_related("desfechos", "comunicacoes")
+        .order_by("-criado_em", "-id")
+    ):
+        # A ordem decrescente faz a primeira vista ser a mais recente; as seguintes da mesma
+        # Inscrição — vigentes em paralelo, que o domínio não produz — ficam de fora, como ficavam
+        # no `.first()` da view.
+        por_inscricao.setdefault(convocacao.inscricao_id, convocacao)
+    return por_inscricao
+
+
 def envio_de(convocacao):
     """O instante do envio bem-sucedido mais recente, ou `None` (`R-009`).
 

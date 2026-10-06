@@ -291,8 +291,9 @@ de uma inscrição inexistente.
   (antes: só digitando o endereço).
 - **SC-425**: Num Edital que pede o requerimento na convocação, quem foi convocado chega ao
   requerimento a partir de "Minhas inscrições" em **2** cliques (antes: nenhum caminho).
-- **SC-426**: A lista custa o mesmo número de consultas com uma e com cinco inscrições convocadas, e
-  **zero** consultas às tabelas do requerimento.
+- **SC-426**: A leitura das convocações custa o mesmo número de consultas com uma e com duas
+  inscrições convocadas; a lista a faz **uma** vez, sem consulta por item; e a lista faz **zero**
+  consultas às tabelas do requerimento.
 - **SC-427**: Em cada uma das cinco rotas — acompanhamento, convocação, requerimento, requerimento
   anterior e lista —, a pessoa não titular não vê nada da inscrição alheia, e a recusa é idêntica à
   de identificador inexistente.

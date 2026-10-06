@@ -95,9 +95,8 @@ backend/processo_seletivo/
 backend/tests/
 ├── interface/test_portal_caminho_da_convocacao.py   # novo: US1, US2, US3
 ├── authorization/test_convocacao_alheia.py          # novo: US4
-├── unit ou integration/convocacao/…                 # vigentes_por_inscricao
-├── performance/test_area_do_candidato.py            # + lista com convocações constante
-├── integration/requerimentos/test_orcamento_de_consulta.py  # + zero com convocação na lista
+├── integration/convocacao/test_vigentes_por_inscricao.py  # a regra e o custo do seletor
+├── performance/test_lista_com_convocacao.py         # uma consulta, zero no requerimento
 └── test_vocabulario_da_convocacao.py                # DA_019 + parciais novos (D-011)
 ```
 
@@ -108,7 +107,7 @@ portal só traduz para a tela.
 
 | Risco | Contenção |
 |---|---|
-| A lista passar a consultar por item | Teste de desempenho com 1 e 5 inscrições convocadas, igualdade estrita |
+| A lista passar a consultar por item | Seletor com o mesmo custo para uma e duas convocadas; a lista com uma consulta só à tabela das convocações |
 | O acompanhamento passar a ler o requerimento de quem não foi convocado | O teste da `029` continua prendendo zero, sem ser reescrito |
 | Duas regras de vigência divergirem | A view da convocação passa a usar o mesmo seletor; teste com sucessão nos três lugares |
 | Template novo fugir da varredura da `019` | `DA_019` estendida no mesmo commit |

@@ -1,0 +1,21 @@
+{% comment %}
+O chamado ao Requerimento de Matricula, na tela da convocacao e na secao do acompanhamento (059,
+D-007).
+
+**Esta era a porta que faltava.** Quando o Edital pede o requerimento na convocacao, ele so abre
+depois da chamada — e nenhuma tela do portal levava a ele. A pessoa convocada nao tinha como cumprir
+pelo portal a etapa que decide a vaga.
+
+**A view decide o que aparece, e ela pergunta a politica da 029** (FR-1099). Este parcial so traduz:
+"preencher" nos dois estados abertos, "conferir" depois do envio — inclusive com a convocacao ja
+desfechada, porque o que se mandou continua legivel. "Ainda indisponivel" e "nao aplicavel" nao
+mostram nada: um botao que so levaria a recusa e pior do que nenhum.
+
+O mesmo texto para "disponivel" e "em preenchimento": a tela do requerimento ja diz se ha rascunho, e
+a pessoa encontra la o que ja preencheu.
+{% endcomment %}
+{% if requerimento == "preencher" %}
+<p><a class="principal" href="{% url 'portal:requerimento' inscricao.id %}">Preencher Requerimento de Matrícula</a></p>
+{% elif requerimento == "conferir" %}
+<p><span aria-hidden="true">✓</span> Requerimento de Matrícula enviado. <a href="{% url 'portal:requerimento' inscricao.id %}">Conferir o Requerimento de Matrícula enviado</a></p>
+{% endif %}

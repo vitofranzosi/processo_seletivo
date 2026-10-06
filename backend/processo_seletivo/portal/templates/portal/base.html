@@ -548,6 +548,19 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
   color:var(--texto-fraco);overflow-wrap:anywhere}
 .selecao .principal{margin-top:.5rem;justify-self:start}
+/* A convocação aberta no item da lista (059). Peso, e não cor de alerta: a situação vem por texto e
+   símbolo, e o que a destaca das linhas cinzas acima é ser a única em tom de texto. */
+.minhas-inscricoes .situacao.convocada{color:var(--texto);font-weight:700}
+/* **As ações do item ficam acima do título esticado** (059, D-010). O `::after` do título cobre o
+   cartão inteiro e é posicionado; o que não é posicionado pinta por baixo dele. Medido em 06/10:
+   no centro de "Acompanhar", `elementFromPoint` devolvia o título, e o clique do mouse levava a
+   "Sua inscrição". Teclado e leitor de tela não eram afetados — o link sempre recebeu foco. */
+.minhas-inscricoes a.principal,.minhas-inscricoes a.acompanhar{position:relative;z-index:1}
+.minhas-inscricoes a.acompanhar{justify-self:start;font-size:.9375rem}
+/* A convocação no acompanhamento (059): o painel de sempre, e a lista de definição mais curta que a da
+   conferência — três pares, e o último parágrafo sem a margem que empurraria a borda para baixo. */
+.convocacao-da-inscricao dl.campos{margin-bottom:.75rem}
+.convocacao-da-inscricao>p:last-child{margin-bottom:0}
 /* A conferência do que foi enviado (010). Sem tabela e sem largura fixa, como o resto da base do
    candidato: é o que sustenta 375px sem rolagem horizontal. */
 dl.campos{display:grid;gap:.15rem;margin:0 0 1.5rem}
