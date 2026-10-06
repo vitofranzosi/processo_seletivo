@@ -2,6 +2,7 @@ import pytest
 
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers, complete_draft
+from tests.fixtures.publicacao import SIGNATORY
 
 
 @pytest.mark.django_db(transaction=True)
@@ -42,13 +43,7 @@ def test_one_actor_cannot_prepare_homologate_and_publish(
     )
     denied = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000499",
-                "name": "Autoridade",
-                "role": "Diretor",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **{**actor, "HTTP_IF_MATCH": '"4"'},
     )

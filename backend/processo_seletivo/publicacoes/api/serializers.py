@@ -20,16 +20,29 @@ class TransicaoSerializer(serializers.Serializer):
 
 
 class SignatorySerializer(serializers.Serializer):
+    """Só o identificador da autoridade habilitada (060, R-014).
+
+    Nome, cargo e ato de nomeação saem do registro de autoridades da unidade do Edital, e não de
+    quem publica. Recusá-los, em vez de aceitá-los e ignorá-los, é o contrato honesto: quem os
+    enviasse acreditaria que valem. A autoridade é conferida no comando, contra a unidade e a
+    vigência.
+    """
+
     authorityId = serializers.UUIDField()
-    # O nome pode vir vazio (054, FR-992): o catálogo de autoridades só tem o cargo enquanto o Cefor
-    # não fornece o nome, e exigi-lo aqui empurraria quem integra pela API a repor a designação do
-    # cargo no lugar do nome — o defeito que a `054` tirou do documento. O cargo continua exigido.
-    name = serializers.CharField(max_length=255, allow_blank=True)
-    role = serializers.CharField(min_length=1, max_length=255)
-    # O ato de nomeação de quem assina (054, FR-991): opcional, porque o catálogo pode não o ter.
-    appointment = serializers.CharField(
-        max_length=255, required=False, allow_blank=True, default=""
-    )
+
+    def to_internal_value(self, data):
+        # Aqui, e não em `validate`: o serializer é aninhado, e só o dado cru diz o que veio além do
+        # identificador — `validate` já o recebe sem as chaves que o contrato não declara.
+        retiradas = sorted(set(data or {}) - {"authorityId"}) if isinstance(data, dict) else []
+        if retiradas:
+            raise serializers.ValidationError(
+                {
+                    campo: "Não é mais aceito: nome, cargo e ato de nomeação vêm do registro de "
+                    "autoridades da unidade."
+                    for campo in retiradas
+                }
+            )
+        return super().to_internal_value(data)
 
 
 class PublicacaoRequestSerializer(serializers.Serializer):

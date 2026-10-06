@@ -54,6 +54,7 @@ permanecem preservados.</p>
         {% else %}<span class="pendente">ainda não publicado</span>{% endif %}</dd>
       {% if participantes.signatario %}
       <dt>Autoridade Signatária</dt><dd>{{ participantes.signatario }}</dd>
+      {% if participantes.unidade %}<dt>Unidade</dt><dd>{{ participantes.unidade }}</dd>{% endif %}
       {% endif %}
     </dl>
   </section>

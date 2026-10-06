@@ -294,7 +294,7 @@ catálogo (FR-1117).
 ## R-014 — Contratos de API
 
 **Decisão.** `SignatorySerializer` (`publicacoes/api/serializers.py`) passa a aceitar
-**somente** `authorityId`, e recusa as chaves `name`, `role` e `appointment` com `400`. Aceitá-las e
+**somente** `authorityId`, e recusa as chaves `name`, `role` e `appointment` com `422 invalid_payload`. Aceitá-las e
 ignorá-las seria um contrato que mente: quem as envia acredita que valem. O `openapi.yaml` da `001`
 (`SignatorySnapshot`) é emendado; `SignatarioRegistrado`, a saída, ganha `unit`. A consulta pública
 (`PublicacaoDetalheSerializer`) acrescenta `unit: {code, acronym, name}` (FR-1131).

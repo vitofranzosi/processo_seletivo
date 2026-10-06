@@ -73,7 +73,8 @@ sem reverificar (comportamento de hoje).
 { "signatory": { "authorityId": "<uuid>" }, "reason": "…" }
 ```
 
-`name`, `role` e `appointment` deixam de ser aceitos: **400** se presentes (research R-014). O
+`name`, `role` e `appointment` deixam de ser aceitos: **422 `invalid_payload`** se presentes, como
+toda recusa de validação da API (research R-014). O
 `SignatorySnapshot` do `openapi.yaml` da `001` é emendado.
 
 ## A consulta pública

@@ -59,13 +59,7 @@ def test_published_retification_preserves_original_and_creates_consolidated_vers
     )
     published = api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao.id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000602",
-                "name": "Diretora",
-                "role": "Diretora",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **{**actor_headers("publicador-r", ["retificacao:publicar"]), "HTTP_IF_MATCH": '"3"'},
     )
@@ -164,8 +158,6 @@ def homologate_and_publish(
     retificacao_id,
     *,
     suffix,
-    authority="00000000-0000-0000-0000-000000000602",
-    role="Diretora",
     key="retificacao-chave-k1",
 ):
     api_client.post(
@@ -181,7 +173,7 @@ def homologate_and_publish(
     )
     return api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
-        {"signatory": {"authorityId": authority, "name": "Diretora", "role": role}},
+        {"signatory": SIGNATORY},
         format="json",
         **actor_headers(f"publicador-{suffix}", ["retificacao:publicar"], if_match=3, key=key),
     )
@@ -421,13 +413,7 @@ def test_returned_retification_is_rebased_and_republished(
     )
     published = api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000602",
-                "name": "Diretora",
-                "role": "Diretora",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **actor_headers("publicador-c", ["retificacao:publicar"], if_match=7),
     )
@@ -877,7 +863,6 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         api_client,
         first.data["id"],
         suffix="a",
-        authority="00000000-0000-0000-0000-000000000602",
         key="retificacao-chave-k1",
     )
     assert published.status_code == 201
@@ -886,7 +871,6 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         api_client,
         second.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
     # A divergência de conteúdo é diagnosticada antes de o efeito ser medido: o caminho já não
@@ -937,7 +921,6 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
             api_client,
             first.data["id"],
             suffix="a",
-            authority="00000000-0000-0000-0000-000000000602",
             key="retificacao-chave-k1",
         ).status_code
         == 201
@@ -960,8 +943,6 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         api_client,
         revert.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000602",
-        role="Diretora-Geral",
         key="retificacao-chave-k2",
     )
     assert published.status_code == 201
@@ -1129,7 +1110,6 @@ def test_removing_the_addressed_profile_is_key_not_found_and_not_a_silent_hit(
         api_client,
         renomear_o_segundo.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1183,7 +1163,6 @@ def test_an_unrelated_removal_no_longer_defeats_a_retification(
         api_client,
         renomear_o_segundo.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1357,7 +1336,6 @@ def test_appending_at_the_end_survives_an_unrelated_removal(
         api_client,
         acrescentar.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1538,7 +1516,6 @@ def test_the_key_alone_does_not_authorize_a_replace(api_client, manager_headers,
         api_client,
         sem_hash.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 

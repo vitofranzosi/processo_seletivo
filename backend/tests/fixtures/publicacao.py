@@ -2,13 +2,13 @@
 
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.edital import actor_headers, complete_draft
 
-SIGNATORY = {
-    "authorityId": "00000000-0000-0000-0000-000000000601",
-    "name": "Diretora",
-    "role": "Diretora-Geral",
-}
+# Só o identificador desde a 060: nome, cargo e ato de nomeação vêm do registro de autoridades. É
+# a `AUTORIDADE_DA_SUITE`, que a fixture `autouse` garante no Cefor com o nome e o cargo que este
+# dicionário trazia por extenso — e por isso as asserções sobre o signatário continuam valendo.
+SIGNATORY = {"authorityId": str(AUTORIDADE_DA_SUITE)}
 
 
 def publish_original(
@@ -57,6 +57,7 @@ def levar_a_publicacao(
     antes_de_submeter=None,
     chave="publication-key-0001",
     signatory=None,
+    escopo="cefor",
 ):
     """De rascunho a publicado, sobre um Edital que já existe.
 
@@ -67,8 +68,12 @@ def levar_a_publicacao(
 
     `chave` distingue as reservas de idempotência: elas são por ator, operação e chave, e repetir a
     mesma com outro conteúdo é conflito — corretamente.
+
+    `escopo` é a unidade dos atores (060): publicar um Edital de outra unidade pede atores dela.
     """
-    preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"], key=chave)
+    preparer = actor_headers(
+        "preparador", ["edital:elaborar", "edital:submeter"], key=chave, escopo=escopo
+    )
     gravado = api_client.put(
         f"/api/v1/admin/editais/{edital.id}/rascunho",
         draft or complete_draft(),
@@ -122,7 +127,7 @@ def levar_a_publicacao(
         {"reason": "OK"},
         format="json",
         **{
-            **actor_headers("homologador", ["edital:homologar"], key=chave),
+            **actor_headers("homologador", ["edital:homologar"], key=chave, escopo=escopo),
             "HTTP_IF_MATCH": f'"{edital.revision}"',
         },
     )
@@ -133,7 +138,7 @@ def levar_a_publicacao(
         {"signatory": signatory or SIGNATORY},
         format="json",
         **{
-            **actor_headers("publicador", ["edital:publicar"], key=chave),
+            **actor_headers("publicador", ["edital:publicar"], key=chave, escopo=escopo),
             "HTTP_IF_MATCH": f'"{edital.revision}"',
         },
     )

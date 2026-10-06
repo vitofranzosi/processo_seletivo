@@ -67,23 +67,12 @@ exatamente onde a linha se acrescenta.
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% if ato.exige_signatario %}
   {% comment %}
-  O mesmo catálogo do fluxo do Edital (FR-039). São dois caminhos de publicação, e este é o de
-  corrigir um Edital já publicado — deixá-lo de fora manteria o UUID digitado exatamente aqui.
+  A mesma escolha do fluxo do Edital (060, FR-1125): as autoridades vigentes da unidade, no dia da
+  Retificação, e não as do dia em que o Edital foi publicado.
   {% endcomment %}
   <fieldset>
     <legend>Autoridade Signatária</legend>
-    <p class="campo largo">
-      <label for="signatario">Quem assina institucionalmente esta Retificação
-        <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="signatario" name="signatario" required aria-required="true"
-              aria-describedby="ajuda-sig-ret">
-        <option value="">— escolha a autoridade —</option>
-        {% for autoridade in autoridades %}
-        <option value="{{ autoridade.chave }}">{{ autoridade }}</option>
-        {% endfor %}
-      </select>
-      <span class="ajuda" id="ajuda-sig-ret">Fica registrada na Publicação da Retificação.</span>
-    </p>
+    {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="signatario" rotulo="Quem responde institucionalmente por esta Retificação" ajuda="Fica registrada na Publicação da Retificação." com_vazio=True %}
   </fieldset>
   {% endif %}
   {% if ato.exige_motivo %}

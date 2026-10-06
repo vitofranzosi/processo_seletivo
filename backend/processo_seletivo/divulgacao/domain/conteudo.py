@@ -166,7 +166,7 @@ def _algoritmo_do_sorteio(sorteio):
     return (declarado or {}).get("algorithm", "")
 
 
-def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retificacoes=()):
+def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, unidade, retificacoes=()):
     """A forma final de `conteudo_publico` — a pública, acrescida do que o ato de publicar decide.
 
     **A projeção individual não entra.** O resumo publicado é o do que foi divulgado, que é o que a
@@ -192,6 +192,15 @@ def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, retifi
             "publicado_em": publicado_em.isoformat(),
             "signatario_nome": signatario.nome,
             "signatario_cargo": signatario.cargo,
+            # O ato de nomeação e a unidade entraram com a 060 (FR-1128). Ficam **nos bytes**, como
+            # o signatário: a página e o documento os leem daqui, e a unidade renomeada depois não
+            # alcança o ato já praticado.
+            "signatario_ato_de_nomeacao": signatario.ato_de_nomeacao,
+            "unidade": {
+                "sigla": unidade.sigla,
+                "nome": unidade.nome,
+                "cabecalho": list(unidade.cabecalho),
+            },
             **({"retificacoes": list(retificacoes)} if retificacoes else {}),
         },
         "posicoes": composicao["posicoes"],

@@ -292,7 +292,8 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
 - **FR-989**: O documento **publicado** MUST trazer, depois do conteúdo normativo e antes do bloco de
   autoridade, o local e a data do ato: *"Vitória (ES), 29 de setembro de 2026."*. O local é constante
   do compositor, como a unidade já é. A data é a da Publicação, no fuso do Cefor, por extenso. *Emenda
-  a `FR-036` da `008`, que proibia praça e data.*
+  a `FR-036` da `008`, que proibia praça e data.* *Emendada pela `060` (FR-1113): o local deixou de
+  ser constante e passou a ser o da unidade do Edital.*
 - **FR-990**: Local e data MUST chegar ao compositor como contexto do ato, fora do conteúdo publicado:
   o SHA-256 do conteúdo não muda por eles, e a prévia não os tem (`008`, FR-034, FR-035 e FR-041).
 - **FR-991**: A Publicação MUST registrar o ato de nomeação de quem assina, ao lado do nome e do cargo,
@@ -447,6 +448,9 @@ Cefor fornecer nome e ato de nomeação, eles entram no catálogo, revisados em 
 seguinte os imprime. A rubrica *"Autoridade responsável pelo ato"* continua, porque a pergunta sobre
 como o ato é assinado continua aberta: anunciar registro é verdade em qualquer resposta, e simular
 assinatura não seria.
+
+*Emendada pela `060` (FR-1124): o catálogo deixou de existir. Nome e ato de nomeação passaram ao
+registro de autoridades da unidade, onde continuam opcionais pela mesma razão (FR-1116).*
 
 ### D-006 — A declaração vai à Matrícula, qualquer que seja o momento
 

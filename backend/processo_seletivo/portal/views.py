@@ -2173,6 +2173,20 @@ def _confirmar_por_email(request, registro):
     )
 
 
+def _unidade_da_versao(versao):
+    """A unidade como a Publicação que originou esta versão a registrou (060, FR-1115).
+
+    Da Publicação, e não do registro de Unidades: o comprovante prova o que o candidato aceitou, e a
+    unidade renomeada depois não reescreve o papel que ele guardou.
+    """
+    publicacao = versao.source_publication
+    return {
+        "sigla": publicacao.unidade_sigla,
+        "nome": publicacao.unidade_nome,
+        "cabecalho": list(publicacao.unidade_cabecalho),
+    }
+
+
 def _dados_do_comprovante(request, registro, conteudo, versao):
     """Os fatos do comprovante, num lugar só.
 
@@ -2187,6 +2201,7 @@ def _dados_do_comprovante(request, registro, conteudo, versao):
     modalidade = _modalidade_da_inscricao(conteudo, registro)
     aceita = registro.versao_aceita
     return {
+        "unidade": _unidade_da_versao(versao),
         "protocolo": registro.protocolo,
         "codigo_de_verificacao": codigo_de_verificacao(registro, enviados),
         "endereco": request.build_absolute_uri(reverse("portal:vitrine")),
@@ -2265,6 +2280,7 @@ def comprovante(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            "unidade": _unidade_da_versao(versao),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,

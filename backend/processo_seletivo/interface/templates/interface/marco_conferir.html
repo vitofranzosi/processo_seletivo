@@ -66,7 +66,7 @@ está feito, e o que o domínio impede agora. Esta tela não grava nada.
   {% endfor %}
   {% if operacao == "publicar" %}
   <input type="hidden" name="natureza" value="{{ natureza }}">
-  <input type="hidden" name="autoridade" value="{{ autoridade.chave }}">
+  <input type="hidden" name="autoridade" value="{{ autoridade.pk }}">
   {% if exige_declaracao %}
   <p class="campo">
     <label for="declaracao_de_encerramento">Declaração de encerramento do prazo recursal</label>

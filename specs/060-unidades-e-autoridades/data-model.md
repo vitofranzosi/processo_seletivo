@@ -20,8 +20,10 @@ que já existem. Nenhuma chave estrangeira nova em `ProcessoSeletivo`, `Edital` 
 | `registrada_em` | instante | da primeira sincronização |
 | `alterada_em` | instante, nulo | da última mudança aplicada |
 
-**Restrições no banco** (R-006): `codigo` único; gatilho recusa `DELETE`; gatilho recusa `UPDATE`
-que mude `codigo`; `CHECK` de 1 a 2 linhas em `cabecalho`.
+**Restrições no banco** (R-006): `codigo` único; código, nome e local não vazios; gatilho recusa
+`DELETE`; gatilho recusa `UPDATE` que mude `codigo`. As uma ou duas linhas de `cabecalho` são
+conferidas pela sincronização (`unidade_malformada`), e não por `CHECK`: o tamanho de uma lista JSON
+não se escreve do mesmo jeito nos dois bancos, e a única porta que grava a tabela é a sincronização.
 
 **Origem**: `unidades/unidades.json`, aplicado por `sincronizar_unidades` (R-003,
 [contrato](contracts/registro-de-unidades.md)). Nenhuma tela escreve nesta tabela.

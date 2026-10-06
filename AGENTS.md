@@ -37,6 +37,14 @@ migrations acabaram de criar. O comando informa quantas protegeu, no formato `N 
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
 — eram 18, são **34** — e é por isso que a armadilha é o zero, e não o total.
 
+**Depois dos três, o `make preparar` sincroniza as Unidades** declaradas em
+`backend/processo_seletivo/unidades/unidades.json` (060). Sem isso, a criação de Processo recusa com
+`unidade_nao_registrada` e a publicação não tem cabeçalho. A linha que ele imprime,
+`Unidades: C criadas, A alteradas, M sem mudança`, diz se aplicou alguma coisa. As tabelas da `060`
+**não** são append-only — nada se exclui nelas por gatilho, mas elas mudam —, e o `M` continua 34.
+A suíte não depende do comando: uma fixture `autouse` registra o Cefor em todo caso que toca o banco,
+porque os casos transacionais truncam as tabelas e a linha que uma migration criasse sumiria.
+
 **Migration desaplicada contamina a sessão inteira.** O sintoma é `relation ... does not exist` num
 arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, confira
 `manage.py migrate --check`.
@@ -82,7 +90,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **9129 passando e 11 pulados** (medido em 2026-10-01, na `058`, sobre a `057`). Os onze
+Contra PostgreSQL a suíte fecha em **9247 passando e 11 pulados** (medido em 2026-10-06, na `060`; eram 9129 na `058`, e os onze pulados são os mesmos). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
@@ -94,7 +102,7 @@ Para chegar lá é preciso o **par**:
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 
 **A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 85 — custa
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 89 — custa
 **~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
 custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
 declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles

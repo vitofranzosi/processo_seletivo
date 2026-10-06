@@ -7,10 +7,10 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from processo_seletivo.publicacoes.domain.autoridades import quem_assinou
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.unidades.domain.rotulos import quem_assinou
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
@@ -262,6 +262,8 @@ def participantes_do_edital(edital):
         "signatario": (
             quem_assinou(publicacao.signatory_name, publicacao.signatory_role) if publicacao else ""
         ),
+        # A unidade congelada na Publicação, ao lado de quem respondeu pelo ato (060, FR-1131).
+        "unidade": publicacao.unidade_nome if publicacao else "",
     }
 
 
