@@ -41,8 +41,8 @@ total esperado de uma rodada inteira é, portanto, **9194 passando e 11 pulados*
 depois da correção não foi repetida, porque a correção é uma linha de README e nenhum código mudou. Os **11 pulados** são os mesmos onze do `CLAUDE.md` — nenhum teste desta
 feature pula.
 
-Os testes desta feature: 5 do seletor, 23 de tela, 2 de orçamento da lista, 13 de autorização, 3 da
-varredura da `019` — **46**. Os testes vizinhos que a feature podia quebrar, sem edição:
+Os testes desta feature, na rodada acima: 5 do seletor, 23 de tela, 2 de orçamento da lista, 13 de
+autorização, 3 da varredura da `019` — **46**. Depois da revisão do PR entrou o 47º (abaixo). Os testes vizinhos que a feature podia quebrar, sem edição:
 `test_portal_convocacao.py` (16), `test_orcamento_de_consulta.py` (o zero da lista e do
 acompanhamento), `test_portal_requerimento_convocacao.py`, `test_area_do_candidato.py`.
 
@@ -69,3 +69,26 @@ dois estão presos em teste de tela: `TestRequerimentoNaConvocacao` e
 
 **Trilha (`D-008`)**: provada em `test_so_a_tela_da_convocacao_registra_leitura` — a lista e o
 acompanhamento não acrescentam `CONVOCACAO_LER`; a tela da convocação acrescenta uma.
+
+## A garantia contra N+1, fechada na revisão do PR (06/10/2026)
+
+**A crítica.** A primeira redação da `SC-426` justificava ter medido com uma e duas convocadas, e não
+com cinco, pela dificuldade de montar o cenário — e dificuldade de fixture não é garantia. E as duas
+camadas que existiam tinham uma lacuna: o teste da lista contava só as consultas a `convocacao_*`, e
+uma consulta por item a outra tabela passaria por ele.
+
+**O fecho.** `test_o_item_da_lista_nao_consulta_nada_em_tabela_nenhuma`: o laço de
+`_item_da_lista` e o desenho de `inscricoes.html`, sobre quatro itens nos três estados (uma
+convocação aberta, uma concluída, duas inscrições sem convocação), com **zero** consultas, contadas
+em todas as tabelas. Com ele a garantia é a soma de três parcelas medidas (`D-002`).
+
+**Conferido que ele detecta.** Introduzida de propósito em `_item_da_lista` uma leitura de
+`convocacao.apuracao` (uma consulta por item a `ocupacao_*`):
+
+| Teste | Com a consulta indevida |
+|---|---|
+| `test_a_lista_le_a_convocacao_numa_consulta_so` (filtra `convocacao_`) | **passou** — a lacuna era real |
+| `test_a_lista_de_quem_foi_convocado_nao_toca_o_requerimento` | passou |
+| `test_o_item_da_lista_nao_consulta_nada_em_tabela_nenhuma` | **reprovou**: "2 consulta(s) para 4 itens" |
+
+A consulta indevida foi revertida em seguida; `views.py` voltou idêntico ao commit.

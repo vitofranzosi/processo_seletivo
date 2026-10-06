@@ -93,3 +93,91 @@ def test_a_lista_de_quem_foi_convocado_nao_toca_o_requerimento(client, cenario, 
     assert any("convocacao_" in c["sql"] for c in capturadas), (
         "a medição precisa enxergar a leitura da convocação, ou o zero acima não diz nada"
     )
+
+
+@pytest.fixture
+def dois_titulares(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """Duas vagas e faixa de três: dois titulares, que se convocam sem disputar vaga."""
+    from tests.fixtures.corte import regra
+
+    return montar_cenario_da_convocacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="portal-059-itens",
+        geral=2,
+        cut=regra(surplusCount=1),
+    )
+
+
+def test_o_item_da_lista_nao_consulta_nada_em_tabela_nenhuma(dois_titulares, gestor):
+    """**Zero consultas por item, qualquer que seja a tabela** — a terceira parcela da garantia.
+
+    O custo da lista é a soma de três coisas: o que ela já lia antes da `059` (fixo), a leitura das
+    convocações (constante, provada em `test_vigentes_por_inscricao.py` com uma e duas convocadas)
+    e o que cada item custa ao ser montado e desenhado. Se a terceira for zero, a soma não cresce
+    com o número de itens — e essa é a garantia contra N+1, sem precisar montar cinco certames.
+
+    O teste acima, que filtra por `convocacao_`, não bastava para a terceira parcela: um item que
+    lesse `chamada.inscricao` ou `chamada.apuracao` faria uma consulta por item a **outra** tabela,
+    e passaria por ele. Aqui nada passa: a medição conta tudo.
+
+    **Os itens são de várias pessoas**, e não de uma: `_item_da_lista` não olha a identidade, e é
+    assim que um cenário só dá itens nos três estados — convocação aberta, concluída e nenhuma —,
+    o que a lista de uma pessoa, presa a um Perfil por Edital, não daria sem dois certames.
+    """
+    from django.template.loader import render_to_string
+
+    from processo_seletivo.convocacao.application.desfechar import desfechar
+    from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.portal import views
+
+    edital, _, inscricoes = dois_titulares
+    fila = selectors.contexto_do_recorte(
+        edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+    )["fila"]
+    convocar(edital, gestor, fila[0], idempotency_key="itens-aberta")
+    concluida = convocar(edital, gestor, fila[1], idempotency_key="itens-concluida")
+    desfechar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        convocacao_id=concluida["id"],
+        especie=nomes_da_convocacao.ACEITE,
+        fundamento="Manifestação registrada em processo.",
+        idempotency_key="itens-concluida-desfecho",
+        correlation_id="teste-059",
+    )
+    # O que a view lê antes do laço, do mesmo jeito que ela lê.
+    registros = list(
+        Inscricao.objects.filter(id__in=[i.id for i in inscricoes]).select_related("edital")
+    )
+    conteudos = views._conteudos_publicados(registros)
+    convocacoes = views._convocacoes_da_lista(registros)
+    agora = timezone.now()
+
+    with CaptureQueriesContext(connection) as capturadas:
+        itens = [
+            views._item_da_lista(
+                registro, conteudos.get(registro.edital_id), agora, convocacoes.get(registro.id)
+            )
+            for registro in registros
+        ]
+        html = render_to_string("portal/inscricoes.html", {"inscricoes": itens})
+
+    estados = sorted(
+        "aberta"
+        if item["convocacao_aberta"]
+        else "concluida"
+        if item["convocacao_concluida"]
+        else "nenhuma"
+        for item in itens
+    )
+    assert estados.count("aberta") == 1 and estados.count("concluida") == 1, estados
+    assert "nenhuma" in estados, "os três estados precisam estar no laço medido"
+    assert "Convocação aberta" in html and "Convocação: Aceite" in html
+    assert [c["sql"] for c in capturadas] == [], (
+        f"{len(capturadas)} consulta(s) para {len(itens)} itens: "
+        "o custo passou a crescer com a lista"
+    )

@@ -51,6 +51,22 @@ inscrições e fatal com trezentas — é o defeito que `tests/performance/test_
 existe para pegar. E a `029` decidiu que o estado do requerimento não aparece em listagem: *"se lê
 na tela dele"*.
 
+**A garantia contra N+1 é uma soma, e cada parcela é medida.** O custo da lista é o que ela já lia
+antes desta feature (fixo, preso em `test_area_do_candidato.py`), mais a leitura das convocações
+(constante: o mesmo número de consultas com uma e com duas convocadas, e feita uma vez por lista),
+mais o custo de cada item. A terceira parcela é **zero, em tabela nenhuma**: o laço de
+`_item_da_lista` e o desenho do template, sobre itens nos três estados, não consultam nada. Se as
+três parcelas valem, o custo não cresce com o número de itens — seja qual for esse número.
+
+**Por que a prova é por composição, e não por "uma pessoa com cinco certames".** Montar esse
+cenário pede cinco Editais publicados num teste, e as fixtures de hoje colidem já no segundo:
+reaproveitam o `process_payload` e os identificadores fixos do rascunho. Isso é custo de fixture, e
+**não** impossibilidade — cinco inscrições em certames diferentes existem. A composição não depende
+desse custo: ela prova que nenhum item custa nada, o que vale para cinco e para trezentos. A
+primeira redação deste teste filtrava só `convocacao_`, e uma consulta por item a outra tabela
+(`chamada.apuracao`, `chamada.inscricao`) passaria por ele — foi conferido introduzindo uma: os
+testes por tabela continuaram verdes e o de zero reprovou.
+
 **Alternativa.** Pôr "Preencher Requerimento de Matrícula" direto na lista: descartada. Custaria a
 leitura do requerimento por item e desfaria a decisão da `029`. O chamado fica a um clique, na
 convocação (`SC-425`: dois cliques).

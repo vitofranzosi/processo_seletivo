@@ -107,7 +107,7 @@ portal só traduz para a tela.
 
 | Risco | Contenção |
 |---|---|
-| A lista passar a consultar por item | Seletor com o mesmo custo para uma e duas convocadas; a lista com uma consulta só à tabela das convocações |
+| A lista passar a consultar por item | Por composição (`D-002`): seletor com o mesmo custo para uma e duas convocadas, uma leitura por lista, e zero consultas por item em tabela nenhuma |
 | O acompanhamento passar a ler o requerimento de quem não foi convocado | O teste da `029` continua prendendo zero, sem ser reescrito |
 | Duas regras de vigência divergirem | A view da convocação passa a usar o mesmo seletor; teste com sucessão nos três lugares |
 | Template novo fugir da varredura da `019` | `DA_019` estendida no mesmo commit |
