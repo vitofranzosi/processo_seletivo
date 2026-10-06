@@ -15,6 +15,12 @@ Sua inscrição continua valendo sob a versão que você aceitou.
 {% endif %}
 
 {% comment %}
+A convocação vem antes de tudo o que segue, porque é a única coisa aqui com prazo correndo contra a
+pessoa (059, D-005). Some quando não há convocação dela — nem bloco vazio, nem "aguardando".
+{% endcomment %}
+{% include "portal/_convocacao_da_inscricao.html" %}
+
+{% comment %}
 Dois blocos, e a distinção entre eles é o ponto da tela: o primeiro fala de você, o segundo fala do
 processo. Uma data alcançada no Cronograma não é notícia sobre a sua participação (FR-076, FR-077).
 {% endcomment %}
