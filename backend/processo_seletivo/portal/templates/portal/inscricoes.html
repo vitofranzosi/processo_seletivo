@@ -31,7 +31,21 @@ para esta apagava a cor de estado daquela. Nome próprio no lugar de disputa de 
     {% else %}
     <span class="situacao">Inscrição não enviada</span>
     {% endif %}
-    {% if inscricao.enviada %}
+    {% comment %}
+    **A convocação aberta muda a ação principal, e a concluída vira nota** (059, D-003, D-004). A
+    mensagem de convocação manda a pessoa para esta lista, e era aqui que ela lia só "Acompanhar" —
+    o acompanhamento não falava de convocação, e nenhuma tela levava à dela. Texto e símbolo, como a
+    situação acima: cor sozinha não informa quem não a distingue.
+
+    "Acompanhar" continua no item como link, e não como segunda ação principal: uma ação principal
+    por item é o que a lista existe para garantir.
+    {% endcomment %}
+    {% if inscricao.convocacao_aberta %}
+    <span class="situacao convocada"><span aria-hidden="true">➜</span> Convocação aberta</span>
+    <a class="principal" href="{% url 'portal:convocacao' inscricao.id %}">{{ inscricao.acao }}</a>
+    <a class="acompanhar" href="{% url 'portal:acompanhamento' inscricao.id %}">Acompanhar</a>
+    {% elif inscricao.enviada %}
+    {% if inscricao.convocacao_concluida %}<span class="meta">Convocação: {{ inscricao.convocacao_concluida }}</span>{% endif %}
     <a class="principal" href="{% url 'portal:acompanhamento' inscricao.id %}">{{ inscricao.acao }}</a>
     {% else %}
     <a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.acao }}</a>

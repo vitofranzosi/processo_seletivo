@@ -984,7 +984,21 @@ def _conteudos_publicados(inscricoes):
     return conteudos
 
 
-def _item_da_lista(registro, conteudo, agora):
+def _convocacoes_da_lista(minhas):
+    """A convocação vigente de cada inscrição **enviada**, numa leitura por conjunto (059, `D-002`).
+
+    Só as enviadas, porque rascunho não é convocado: quem só tem rascunho não paga consulta nenhuma.
+    E **nada do requerimento** — a `029` decidiu que o estado dele se lê na tela dele, e o chamado
+    fica a um clique, na convocação.
+    """
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
+
+    return vigentes_por_inscricao(
+        [registro.id for registro in minhas if registro.status == Inscricao.Status.SUBMETIDA]
+    )
+
+
+def _item_da_lista(registro, conteudo, agora, convocacao=None):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -993,8 +1007,15 @@ def _item_da_lista(registro, conteudo, agora):
     A ação principal é uma só por item, e é inequívoca: rascunho se continua, enviada se acompanha
     (`SC-UX-005`). Duas ações lado a lado devolveriam à pessoa a decisão que a lista existe para
     tomar por ela.
+
+    **Com convocação aberta, a ação principal é "Ver convocação"** (059, `D-003`): o prazo corre do
+    envio da comunicação, e a lista é para onde a mensagem manda a pessoa. "Acompanhar" continua no
+    item, como link — sem ele, quem foi chamado perderia o caminho para o resultado e o recurso.
+    Concluída, a convocação vira nota e a ação volta a ser "Acompanhar" (`D-004`).
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
+    chamada = _convocacao_para_a_tela(convocacao, agora)
+    aberta = chamada["convocacao"] is not None and chamada["desfecho"] is None
     fechada = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
@@ -1017,7 +1038,13 @@ def _item_da_lista(registro, conteudo, agora):
         # O rascunho que o prazo fechou não se continua: se consulta (009, FR-032). "Continuar"
         # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
         "fechada": fechada,
-        "acao": "Acompanhar"
+        "convocacao_aberta": aberta,
+        "convocacao_concluida": chamada["desfecho"].get_especie_display()
+        if chamada["desfecho"]
+        else "",
+        "acao": "Ver convocação"
+        if aberta
+        else "Acompanhar"
         if enviada
         else "Consultar inscrição"
         if fechada
@@ -1234,12 +1261,18 @@ def inscricoes(request):
     )
     conteudos = _conteudos_publicados(minhas)
     agora = timezone.now()
+    convocacoes = _convocacoes_da_lista(minhas)
     return render(
         request,
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id), agora)
+                _item_da_lista(
+                    registro,
+                    conteudos.get(registro.edital_id),
+                    agora,
+                    convocacoes.get(registro.id),
+                )
                 for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
@@ -1474,19 +1507,30 @@ def acompanhamento(request, inscricao_id):
     por Retificação precisa aparecer remarcada. Os dados da inscrição continuam vindo da versão
     **aceita**, e é justamente por lerem versões diferentes que o aviso da `FR-078` existe.
     """
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
+
     registro, _identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
     recorriveis = objetos_recorriveis(registro)
     resultados_das_etapas = resultados_visiveis(registro)
+    agora = timezone.now()
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     return render(
         request,
         "portal/acompanhamento.html",
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
+            # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta
+            # continua vindo só da tela dela (`D-008`). E o requerimento só é perguntado quando a
+            # convocação existe — é o que mantém o zero da `029` para quem não foi chamado
+            # (`D-006`).
+            **_convocacao_para_a_tela(chamada, agora),
+            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "fatos": _fatos_da_participacao(registro),
-            "cronograma": leitura.cronograma(versao.content, timezone.now()),
+            "cronograma": leitura.cronograma(versao.content, agora),
             # **Acréscimo, e não reescrita.** `_fatos_da_participacao` continua descrevendo fatos
             # da própria inscrição — o que a pessoa fez —, e a publicação é ato de terceiro sobre
             # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
@@ -1918,24 +1962,15 @@ def convocacao(request, inscricao_id):
     **Ler não move o relógio** (`FR-288b`). O prazo corre do envio da comunicação, e abrir esta
     página não é nem o envio nem o recebimento: o acesso fica na trilha, e o prazo fica onde estava.
     """
-    from processo_seletivo.convocacao.application.selectors import (
-        desfecho_de,
-        envio_de,
-        estado_de,
-    )
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
     from processo_seletivo.convocacao.models import Convocacao
 
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     agora = timezone.now()
     # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
-    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale.
-    chamada = (
-        Convocacao.objects.filter(inscricao=registro)
-        .filter(sucessoras__isnull=True)
-        .prefetch_related("desfechos", "comunicacoes")
-        .order_by("-criado_em")
-        .first()
-    )
+    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale. A regra mora no
+    # seletor da `019`, e não aqui: a lista e o acompanhamento mostram a mesma (059, `FR-1100`).
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     # **O certame chegou a convocar neste recorte?** É esta pergunta que separa as duas ausências.
     houve_convocacao_no_recorte = (
         Convocacao.objects.filter(edital=registro.edital, perfil_id=registro.profile_id).exists()
@@ -1949,14 +1984,59 @@ def convocacao(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
-            "convocacao": chamada,
-            "desfecho": desfecho_de(chamada) if chamada else None,
-            "enviada_em": envio_de(chamada) if chamada else None,
-            "estado": estado_de(chamada, agora=agora) if chamada else None,
+            **_convocacao_para_a_tela(chamada, agora),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
         },
     )
+
+
+def _convocacao_para_a_tela(chamada, agora):
+    """O que as telas do candidato dizem de uma convocação — uma tradução só, para três lugares.
+
+    A tela da convocação, a seção do acompanhamento e o item da lista (059) leem as mesmas quatro
+    coisas, e calculá-las em cada view faria a lista dizer "aberta" de uma convocação que a tela
+    diz desfechada. **Aberta é a que não tem desfecho**, em qualquer estado de prazo: o vencimento
+    decorrido não decide nada sozinho (`FR-274`).
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        envio_de,
+        estado_de,
+    )
+
+    if chamada is None:
+        return {"convocacao": None, "desfecho": None, "enviada_em": None, "estado": None}
+    return {
+        "convocacao": chamada,
+        "desfecho": desfecho_de(chamada),
+        "enviada_em": envio_de(chamada),
+        "estado": estado_de(chamada, agora=agora),
+    }
+
+
+# O chamado que cada estado de leitura da `029` produz (059, `D-007`). "Ainda indisponível" e "não
+# aplicável" ficam de fora de propósito: um botão que só levaria a recusa é pior do que nenhum.
+CHAMADO_DO_REQUERIMENTO = {
+    requerimento_nomes.DISPONIVEL: "preencher",
+    requerimento_nomes.EM_PREENCHIMENTO: "preencher",
+    requerimento_nomes.ESTADO_ENVIADO: "conferir",
+}
+
+
+def _requerimento_da_convocacao(registro, chamada, conteudo):
+    """O chamado ao requerimento — `"preencher"`, `"conferir"` ou `""` —, **só** onde há convocação.
+
+    Sem convocação vigente a resposta é vazia sem consulta nenhuma, e é isso que mantém o zero que a
+    `029` prende para o acompanhamento de quem não foi chamado (059, `D-006`). Com ela, a pergunta
+    vai à mesma política que a tela do requerimento consulta (`FR-1099`): decidir aqui seria uma
+    segunda leitura de disponibilidade, e a pessoa leria um chamado que o comando recusa.
+    """
+    if chamada is None:
+        return ""
+    estado = preencher_requerimento.apurar(registro, conteudo).estado_de_leitura
+    return CHAMADO_DO_REQUERIMENTO.get(estado, "")
 
 
 def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
