@@ -447,15 +447,32 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    empurrarem a largura faria o corpo da página rolar na horizontal. {% endcomment %}
 .serie{margin:0 0 1rem}
 .serie figcaption{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .35rem}
-.serie .barras{display:flex;align-items:flex-end;gap:2px;height:5rem;margin:0 0 .5rem;padding:0;
-  list-style:none;border-bottom:1px solid var(--borda);overflow-x:auto}
+{% comment %} A escala fica à esquerda, com o pico no topo e o zero na base da faixa das barras. A
+   altura de 5rem se repete na escala e na coluna de propósito: as duas precisam começar e terminar
+   na mesma linha, e a data abaixo da barra não pode entrar nessa conta. {% endcomment %}
+.serie .grafico{display:flex;align-items:flex-start;gap:.4rem}
+.serie .escala{display:flex;flex-direction:column;justify-content:space-between;height:5rem;
+  font-size:.7rem;line-height:1;color:var(--texto-fraco);text-align:right;
+  font-variant-numeric:tabular-nums}
+.serie .barras{display:flex;flex:1 1 auto;min-width:0;margin:0 0 .5rem;padding:0;
+  list-style:none;overflow-x:auto}
+{% comment %} A barra tem **teto de largura**. Sem ele, `flex` crescia até ocupar a faixa inteira, e um
+   período de um dia virava um bloco verde da largura da página. O piso de .4rem é o que obriga
+   sessenta dias a rolar dentro do contêiner, em vez de sumirem em fios. O espaço entre barras é
+   margem da barra, e não `gap` da lista: com `gap`, a linha de base quebrava em tracejado. {% endcomment %}
+.serie .barras li{display:flex;flex-direction:column;flex:1 1 0;min-width:.4rem;max-width:2.5rem}
+.serie .coluna{display:flex;align-items:flex-end;height:5rem;border-bottom:1px solid var(--borda)}
 {% comment %} `height` não é a última declaração de propósito: uma regra terminada em porcentagem seguida da
    chave de fechamento produz, no corpo servido, a mesma dupla de caracteres que fecha uma tag de
    template. A varredura de sintaxe não interpretada procura substring, e não sabe que ali é folha
    de estilo — e a prosa deste comentário, que também vai para a página, evita escrevê-la. {% endcomment %}
-.serie .barras li{height:100%;flex:1 0 .4rem;display:flex;align-items:flex-end}
-.serie .barra{display:block;width:100%;min-height:1px;background:var(--verde);
-  border-radius:2px 2px 0 0}
+.serie .barra{display:block;width:calc(100% - 2px);margin:0 1px;min-height:1px;
+  background:var(--verde);border-radius:2px 2px 0 0}
+{% comment %} A data nasce alinhada à esquerda da sua barra e invade as vizinhas, que não têm rótulo;
+   a última se alinha pela direita, senão a data de hoje seria cortada pela borda da faixa. {% endcomment %}
+.serie .dia{height:1rem;margin-top:.2rem;font-size:.7rem;line-height:1rem;white-space:nowrap;
+  color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.serie .barras li:last-child .dia{align-self:flex-end}
 .serie .equivalente summary{color:var(--verde-texto);font-size:.875rem;cursor:pointer}
 .medidor{display:grid;gap:.3rem;margin:0 0 1rem}
 .medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
