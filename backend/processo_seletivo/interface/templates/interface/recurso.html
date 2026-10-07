@@ -118,8 +118,16 @@ que esta feature não amplia.
   {% comment %}
   **Por referência, e nunca por cópia** (FR-531). O caminho serve os bytes do documento original,
   conferidos contra o resumo que a inscrição gravou — não há segundo arquivo em lugar nenhum.
+
+  **Aba própria, e não a mesma** — o defeito que a 012 corrigiu na Mesa (FR-112). O PDF é servido
+  `inline`: na mesma aba ele substitui esta página, e quem já tinha escrito a motivação do
+  julgamento para conferir uma última coisa no documento saía daqui com o texto não enviado — e
+  voltar não garante o texto de volta, porque a página é `no-store` e o navegador não a guarda.
+  E na aba própria o visualizador do navegador mostra
+  a barra inteira — ampliar e girar inclusive.
   {% endcomment %}
-  <a class="acao" href="{% url 'interface:recurso-documento-instruido' peca.id ato.documento_id %}">O
+  <a class="acao" href="{% url 'interface:recurso-documento-instruido' peca.id ato.documento_id %}"
+     target="_blank" rel="noopener">O
     documento citado — {{ ato.documento.nome_original }}</a>
   {% endfor %}
 </p>
