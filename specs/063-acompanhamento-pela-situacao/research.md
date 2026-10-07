@@ -118,8 +118,14 @@ quem já lê as outras (`objetos_recorriveis`).
 
 ### D-007 — Nenhuma consulta nova, provado por contagem
 
-**Decisão.** A view chama `situacao_da_inscricao` com o que já leu. Um teste conta as consultas do
-acompanhamento com uma lista e com três, com e sem convocação, e exige o mesmo número (SC-454).
+**Decisão.** A view chama `situacao_da_inscricao` com o que já leu. Um teste mede as consultas
+**da derivação** — `ordenar_cartoes` e `situacao_da_inscricao` — com seis cartões em dois marcos, e
+exige zero (SC-454).
+
+**Por que não a página inteira** (medido na implementação). A primeira versão do teste comparava a
+página com uma lista e com seis, e reprovou: 23 contra 38 consultas, sem nada desta feature no
+caminho. `objetos_recorriveis`, da `018`, avalia a janela recursal publicação a publicação. É achado
+registrado na spec (A-1), e não escopo: o que esta feature promete é não somar nada.
 
 **Por quê.** O `test_orcamento_de_consulta.py` da `029` já prende o zero do requerimento sem
 convocação; esta feature não pode ser a que o quebra, e a regra mais simples é não ler nada novo.

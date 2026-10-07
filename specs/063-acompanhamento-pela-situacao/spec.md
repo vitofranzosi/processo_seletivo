@@ -497,14 +497,37 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   teste.
 - **SC-453**: Para cada situação, a frase de consequência é uma das duas neutras ou uma declarada
   por ato; nenhuma outra frase de consequência existe nos templates da tela.
-- **SC-454**: O número de consultas do acompanhamento não cresce com o número de listas e de marcos
-  da inscrição.
+- **SC-454**: A situação e os cartões não acrescentam consulta ao acompanhamento: a derivação roda
+  sem consulta nenhuma, em qualquer número de listas e de marcos. *(Redação corrigida na
+  implementação: a página inteira já crescia três consultas por publicação antes desta feature —
+  ver "Achados durante a implementação".)*
 - **SC-455**: A demonstração percorre, pelo portal, os cinco casos — duas listas, classificação sem
   ocupação, cadastro reserva, convocação aberta com ação e prazo, desfecho registrado —, sem shell
   para ver a tela.
 - **SC-456**: A 375 px, nenhuma das telas dos cinco casos tem rolagem horizontal.
 
 ---
+
+## Achados durante a implementação
+
+Registro para decisão do usuário, e não escopo desta feature.
+
+- **A-1 · O acompanhamento já crescia três consultas por publicação.** Medido em 07/10/2026 no
+  teste de custo: 23 consultas com uma publicação vigente, 38 com seis (dois marcos × três listas),
+  sem nada desta feature no caminho. A origem é `objetos_recorriveis`
+  (`recursos/application/interpor.py`, da `018`/`047`), que avalia a janela recursal publicação a
+  publicação e relê a versão consolidada do ato em cada uma. A SC-454 foi reescrita para medir o
+  que esta feature promete — não somar nada —, e o teste prova que a derivação roda com zero
+  consultas.
+- **A-2 · Quatro varreduras de vocabulário liam menos do que pareciam.** O padrão que tira o
+  comentário de linha, `^\s*#.*$` com `re.S`, casava do primeiro `#` até o fim do arquivo; e o de
+  docstring, `""".*?"""`, atravessava o código entre duas docstrings. Descoberto quando a exceção
+  literal da UX-058 não achou o rótulo em `portal/situacao.py`. **Corrigido** nas duas varreduras
+  que esta feature estende (`test_vocabulario_da_convocacao.py`, `test_vocabulario_do_requerimento.py`),
+  sem revelar violação nos arquivos que já estavam nelas. **Não corrigido**, por ser de outras
+  features: `test_vocabulario_do_corte.py` e `test_vocabulario_da_ocupacao.py` — medido em
+  07/10/2026, a correção as faria ler ~23 mil e ~29 mil caracteres a mais, e nenhuma palavra
+  proibida aparece neles.
 
 ## Assumptions
 

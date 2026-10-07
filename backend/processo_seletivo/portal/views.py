@@ -2077,6 +2077,7 @@ def convocacao(request, inscricao_id):
             "selecao": _selecao(versao),
             **_convocacao_para_a_tela(chamada, agora),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
         },

@@ -31,7 +31,7 @@ P = `backend/processo_seletivo/portal/`; T = `backend/tests/`.
 - [X] T005 [US1] Em P`views.py`, na view `acompanhamento`: localizar o Perfil da inscrição em `versao.content["profiles"]`, ordenar os cartões e chamar `situacao.situacao_da_inscricao` com o que a view já lê; passar `situacao` e `cartoes` ao contexto, mantendo as chaves que os outros blocos usam (D-001, D-007)
 - [X] T006 [US1] Em P`templates/portal/acompanhamento.html`, conforme o contrato §1: `section.situacao` logo depois do subtítulo (h2 "Sua situação", rótulo, h3 "Por quê", h3 "O que fazer"); depois o aviso de retificação, a convocação, "Classificação por lista" com um `section.cartao-de-lista` por cartão (h3 "{lista} — {marco}", natureza e data, posição oficial ou "Sem posição nesta lista" com o motivo, prazo recursal, "Ver o resultado completo"), e os blocos de etapas, recursos, participação e cronograma na ordem da FR-1183; reescrever os comentários de template que descreviam o bloco por marco (D-009, FR-1182)
 - [X] T007 [US1] Na folha do portal (P`templates/portal/base.html` ou o CSS em P`static/portal/`, onde as regras de `.resultado-divulgado` moram hoje), as regras de `.situacao`, `.rotulo-da-situacao` e `.cartao-de-lista`, substituindo as de `.resultado-divulgado` que perderem uso; nenhuma classe no template sem regra (memória "classe no template exige regra na folha"); `@media` em linhas separadas (memória do `}}`)
-- [ ] T008 [US1] Testes TA: duas listas → topo "Aguardando chamada", porquê com "Ampla concorrência" e o nome da reserva, cada um com a posição oficial, e a frase de mais de uma lista; dois cartões de `h3` distinto; o bloco de situação antes de qualquer cartão e de "Resultado das etapas"; hierarquia h1 → h2 → h3 sem salto (US1 cenários 1–2, SC-450, SC-451)
+- [X] T008 [US1] Testes TA: duas listas → topo "Aguardando chamada", porquê com "Ampla concorrência" e o nome da reserva, cada um com a posição oficial, e a frase de mais de uma lista; dois cartões de `h3` distinto; o bloco de situação antes de qualquer cartão e de "Resultado das etapas"; hierarquia h1 → h2 → h3 sem salto (US1 cenários 1–2, SC-450, SC-451)
 - [X] T009 [US1] Adaptar T`portal/test_acompanhamento_resultado.py` à marcação nova sem afrouxar: "Classificação final" continua presente por cartão; "uma linha por marco" vira "um cartão por lista e marco"; a ordem normativa dos marcos continua provada; o caminho continua sendo a vigente (D-012)
 
 **Checkpoint**: o defeito que motivou a feature está corrigido e provado.
@@ -40,45 +40,45 @@ P = `backend/processo_seletivo/portal/`; T = `backend/tests/`.
 
 **Goal**: FR-1169, FR-1170, FR-1177 (aguardando), FR-1178, FR-1179. **Independent Test**: classificada sem convocação, com e sem forma de convocação declarada, preliminar e definitiva.
 
-- [ ] T010 [US2] Testes TA: só preliminar → "Aguardando resultado definitivo" e "pode mudar", com o prazo de recurso quando aberto; Perfil `callForm=PUBLICATION` → a frase de publicação e nenhuma de e-mail/mensagem; sem `callForm` → só a frase neutra; definitiva sem convocação mas com apuração de ocupação emitida → continua "Aguardando chamada" (a apuração não é lida) (US2 cenários 1–3)
+- [X] T010 [US2] Testes TA: só preliminar → "Aguardando resultado definitivo" e "pode mudar", com o prazo de recurso quando aberto; Perfil `callForm=PUBLICATION` → a frase de publicação e nenhuma de e-mail/mensagem; sem `callForm` → só a frase neutra; definitiva sem convocação mas com apuração de ocupação emitida → continua "Aguardando chamada" (a apuração não é lida) (US2 cenários 1–3)
 
 ## Phase 5: User Story 3 — Cadastro reserva sem pertença (P2)
 
 **Goal**: FR-1180. **Independent Test**: Perfil com `reserveType` `LIMITED`, `UNLIMITED` e `NONE`.
 
-- [ ] T011 [P] [US3] Testes TU das três frases de cadastro reserva e do Perfil ausente do vigente (nenhuma frase); teste TA com `LIMITED` de limite N: a frase do Edital aparece, e "você está no cadastro reserva" não (US3 cenários 1–2)
+- [X] T011 [P] [US3] Testes TU das três frases de cadastro reserva e do Perfil ausente do vigente (nenhuma frase); teste TA com `LIMITED` de limite N: a frase do Edital aparece, e "você está no cadastro reserva" não (US3 cenários 1–2)
 
 ## Phase 6: User Story 4 — Convocação aberta (P1)
 
 **Goal**: FR-1175, FR-1176, FR-1177 (convocado), FR-1183, D-008. **Independent Test**: convocada com Requerimento disponível e vencimento futuro.
 
 - [X] T012 [US4] Em P`templates/portal/_convocacao_da_inscricao.html`, deixar só os dados (espécie, comunicação enviada em, prazo) e "Ver convocação"; as frases de estado e o chamado ao requerimento passam a sair do topo (D-008); atualizar o comentário
-- [ ] T013 [US4] Testes TA com `tests/fixtures/convocacao.py`: Requerimento disponível → "Convocado", "Preencher o Requerimento de Matrícula", prazo com data e hora, "a comissão poderá registrar o não atendimento desta convocação"; comunicação não enviada **e** comunicação com falha → "o prazo ainda não começou" e nenhuma frase de consequência; vencimento decorrido sem desfecho → situação "Convocado", a data em que o prazo terminou, "ainda não foi registrado", nenhuma frase de consequência; convocação sem vencimento → nenhuma frase de consequência; em nenhum cenário "perderá"; Requerimento enviado → "conferir", sem "deferido"/"homologado"/"matrícula efetivada"; Edital sem Requerimento → "Siga as instruções do Edital para esta convocação" e sem "matrícula"/"contratação" no topo; o porquê nomeia a lista da convocação e o número da chamada (US4 cenários 1–6)
+- [X] T013 [US4] Testes TA com `tests/fixtures/convocacao.py`: Requerimento disponível → "Convocado", "Preencher o Requerimento de Matrícula", prazo com data e hora, "a comissão poderá registrar o não atendimento desta convocação"; comunicação não enviada **e** comunicação com falha → "o prazo ainda não começou" e nenhuma frase de consequência; vencimento decorrido sem desfecho → situação "Convocado", a data em que o prazo terminou, "ainda não foi registrado", nenhuma frase de consequência; convocação sem vencimento → nenhuma frase de consequência; em nenhum cenário "perderá"; Requerimento enviado → "conferir", sem "deferido"/"homologado"/"matrícula efetivada"; Edital sem Requerimento → "Siga as instruções do Edital para esta convocação" e sem "matrícula"/"contratação" no topo; o porquê nomeia a lista da convocação e o número da chamada (US4 cenários 1–6)
 - [X] T014 [US4] Adaptar T`interface/test_portal_caminho_da_convocacao.py` (e o que T001 tiver listado) às frases no topo, sem afrouxar: cada asserção que lia o parcial passa a ler o topo e continua provando o mesmo estado (D-012)
 
 ## Phase 7: User Story 5 — O desfecho registrado (P2)
 
 **Goal**: FR-1172. **Independent Test**: convocação com cada desfecho.
 
-- [ ] T015 [P] [US5] Testes TU: os sete desfechos → os sete rótulos da tabela; desfecho sucedido → vale o vigente; nenhum rótulo "matriculado"/"contratado"
-- [ ] T016 [US5] Teste TA: desfecho *Aceite* registrado com `desfechar` → "Vaga aceita", fundamento e data no porquê, "Nada por enquanto" (US5 cenários 1–2)
+- [X] T015 [P] [US5] Testes TU: os sete desfechos → os sete rótulos da tabela; desfecho sucedido → vale o vigente; nenhum rótulo "matriculado"/"contratado"
+- [X] T016 [US5] Teste TA: desfecho *Aceite* registrado com `desfechar` → "Vaga aceita", fundamento e data no porquê, "Nada por enquanto" (US5 cenários 1–2)
 
 ## Phase 8: User Story 6 — Eliminada, sem posição, ou sem resultado (P2)
 
 **Goal**: FR-1168 (degraus 3, 6, 7), FR-1182, FR-1185. **Independent Test**: três inscrições.
 
-- [ ] T017 [US6] Testes TA: Resultado de Etapa eliminada visível → "Eliminado", etapa e motivo no porquê, recurso quando aberto; sem posição em todas as listas → "Não classificado" e o cartão "Sem posição nesta lista" com motivo; inscrição recém-enviada → "Inscrição enviada", data do envio, "Nada por enquanto", e nenhum bloco de resultado (FR-056 preservada) (US6 cenários 1–3)
+- [X] T017 [US6] Testes TA: Resultado de Etapa eliminada visível → "Eliminado", etapa e motivo no porquê, recurso quando aberto; sem posição em todas as listas → "Não classificado" e o cartão "Sem posição nesta lista" com motivo; inscrição recém-enviada → "Inscrição enviada", data do envio, "Nada por enquanto", e nenhum bloco de resultado (FR-056 preservada) (US6 cenários 1–3)
 
 ## Phase 9: Polish & cross-cutting
 
-- [ ] T018 Em P`templates/portal/convocacao.html`, trocar "quem está na lista pode ser chamado quando uma vaga vagar" pela constante neutra de P`situacao.py` passada pelo contexto da view `convocacao` (FR-1184, D-011); teste TA da frase nova e da ausência da antiga
-- [ ] T019 [P] Acrescentar P`situacao.py` e P`templates/portal/acompanhamento.html` às listas literais de T`test_vocabulario_da_convocacao.py` e T`test_vocabulario_do_requerimento.py`; nesta segunda, uma tabela `PERMITIDOS` por arquivo, com o motivo, retira de P`situacao.py` só a cadeia exata "Indeferido na convocação" antes da varredura, e um teste prova que qualquer outra ocorrência de `deferid` no módulo ainda reprova (D-010, Clarifications)
-- [ ] T020 Teste TA de vocabulário renderizado: para cada cenário da matriz, o HTML do acompanhamento não contém as palavras da UX-158 (SC-452); no cenário do desfecho Indeferimento, só a cadeia exata "Indeferido na convocação" é retirada antes de procurar `deferid`, que continua proibido no resto do HTML; teste de que as únicas frases de consequência do HTML são as constantes de P`situacao.py` e de que nenhuma diz "perderá" (SC-453); e o texto do `section.situacao` renderizado, em todos os cenários, não contém "marco", "faixa", "apuração" nem "homologação" (UX-156)
-- [ ] T021 Teste TA de contagem de consultas: o acompanhamento com uma lista e um marco gasta o mesmo número de consultas que com três listas e dois marcos, com e sem convocação (SC-454, D-007); conferir que T`integration/requerimentos/test_orcamento_de_consulta.py` continua verde
-- [ ] T022 Linha da `063` no `README.md` (tabela de specs, depois da `062`) — o guardião `test_readme_acompanha_o_codigo.py` cobra
+- [X] T018 Em P`templates/portal/convocacao.html`, trocar "quem está na lista pode ser chamado quando uma vaga vagar" pela constante neutra de P`situacao.py` passada pelo contexto da view `convocacao` (FR-1184, D-011); teste TA da frase nova e da ausência da antiga
+- [X] T019 [P] Acrescentar P`situacao.py` e P`templates/portal/acompanhamento.html` às listas literais de T`test_vocabulario_da_convocacao.py` e T`test_vocabulario_do_requerimento.py`; nesta segunda, uma tabela `PERMITIDOS` por arquivo, com o motivo, retira de P`situacao.py` só a cadeia exata "Indeferido na convocação" antes da varredura, e um teste prova que qualquer outra ocorrência de `deferid` no módulo ainda reprova (D-010, Clarifications). *Ao fazê-lo, corrigido nas duas varreduras o padrão de comentário de linha e de docstring, que apagava quase todo arquivo com comentário — achado A-2 da spec*
+- [X] T020 Teste TA de vocabulário renderizado: para cada cenário da matriz, o HTML do acompanhamento não contém as palavras da UX-158 (SC-452); no cenário do desfecho Indeferimento, só a cadeia exata "Indeferido na convocação" é retirada antes de procurar `deferid`, que continua proibido no resto do HTML; teste de que as únicas frases de consequência do HTML são as constantes de P`situacao.py` e de que nenhuma diz "perderá" (SC-453); e o texto do `section.situacao` renderizado, em todos os cenários, não contém "marco", "faixa", "apuração" nem "homologação" (UX-156)
+- [X] T021 Teste TA de custo: a derivação (`ordenar_cartoes`, `situacao_da_inscricao`) roda com zero consultas, com seis cartões em dois marcos (SC-454, D-007); conferir que T`integration/requerimentos/test_orcamento_de_consulta.py` continua verde. *A primeira versão comparava a página inteira e mediu 23 × 38 consultas, custo anterior à feature — achado A-1 da spec*
+- [X] T022 Linha da `063` no `README.md` (tabela de specs, depois da `062`) — o guardião `test_readme_acompanha_o_codigo.py` cobra
 - [ ] T023 `cd backend && make lint check test-pg DB_NAME=ps_063`; atualizar no `AGENTS.md` o número de passando e conferir que os pulados continuam os onze
 - [ ] T024 Demonstração (quickstart §3, SC-455, SC-456) em `ps_063_demo`: os cinco casos pelo portal a 1280 × 900 e a 375 px, com o *Aceite* de Ana Silva registrado pela gestão; registrar o que se mediu em `specs/063-acompanhamento-pela-situacao/verificacao.md`, com capturas
-- [ ] T025 Matriz de rastreabilidade `specs/063-acompanhamento-pela-situacao/rastreabilidade.md`: cada FR-, SC- e UX- desta spec com a tarefa e o teste que o prova
+- [X] T025 Matriz de rastreabilidade `specs/063-acompanhamento-pela-situacao/rastreabilidade.md`: cada FR-, SC- e UX- desta spec com a tarefa e o teste que o prova
 
 ## Dependencies & Execution Order
 

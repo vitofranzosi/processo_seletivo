@@ -20,7 +20,11 @@ decide a vaga e o que a pessoa fizer dentro do prazo.
 
 {% if not convocacao %}
 {% if houve_convocacao_no_recorte %}
-<p class="aviso" role="status">As convocações deste Processo Seletivo já começaram, e você <strong>não foi chamado</strong> até agora. Continue acompanhando: quem está na lista pode ser chamado quando uma vaga vagar.</p>
+{% comment %}
+A segunda frase prometia chamada "quando uma vaga vagar" — consequência que nenhum ato declarou. A
+frase neutra é a mesma do acompanhamento, e vem da mesma constante (063, FR-1184, D-011).
+{% endcomment %}
+<p class="aviso" role="status">As convocações deste Processo Seletivo já começaram, e você <strong>não foi chamado</strong> até agora. {{ novas_chamadas }}</p>
 {% else %}
 <p class="aviso" role="status">Ainda <strong>não há convocação</strong> neste Processo Seletivo. Esta página passa a mostrar a sua chamada quando ela acontecer.</p>
 {% endif %}

@@ -57,6 +57,7 @@ a   Ver o que enviei
 4. Frase de consequência só das constantes (SC-453), e nenhuma afirmação de perda automática.
    Na varredura do requerimento (UX-058), só a cadeia exata "Indeferido na convocação" é retirada
    antes de procurar `deferid`; qualquer outra ocorrência reprova.
-5. O número de consultas não depende de quantas listas e marcos a inscrição tem (SC-454).
+5. A derivação (`ordenar_cartoes`, `situacao_da_inscricao`) roda sem consulta nenhuma (SC-454); o
+   crescimento da página por publicação é anterior à feature (achado A-1 da spec).
 6. Sem convocação, zero consulta ao requerimento (decisão 006 da `059`, `test_orcamento_de_consulta`).
 7. Nenhum texto do corte nem da apuração (`FR-1169`, `FR-1171`): a função não os recebe.
