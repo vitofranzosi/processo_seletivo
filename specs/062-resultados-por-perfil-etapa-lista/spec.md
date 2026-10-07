@@ -195,7 +195,8 @@ cada caso.
    ver minha situação", e a identificação devolve a pessoa ao Edital — sem pedir nome e CPF a quem
    ainda não os informou, porque voltar a uma página pública não pratica ato nenhum.
 2. **Given** uma pessoa conectada com inscrição enviada no Edital, **When** abre a página, **Then**
-   a ação leva direto à inscrição, onde a situação é mostrada, sem pedir nova identificação.
+   a ação leva direto ao acompanhamento da inscrição, onde a situação é mostrada, sem pedir nova
+   identificação.
 3. **Given** uma pessoa conectada sem inscrição enviada no Edital, **When** abre a página, **Then**
    o convite não aparece.
 4. **Given** qualquer um dos casos, **When** a página é lida, **Then** o convite não fica dentro de
@@ -274,7 +275,8 @@ cada caso.
   depois da identificação, MUST devolver a pessoa à página do Edital. Esse caminho MUST NOT pedir
   nome e CPF: eles continuam sendo pedidos só a quem volta a caminho de uma vaga.
 - **FR-1162**: Para quem está conectado com exatamente uma inscrição enviada no Edital, a ação MUST
-  ser "Ver minha situação" e levar direto a essa inscrição; com mais de uma, "Ver minhas
+  ser "Ver minha situação" e levar direto ao acompanhamento dessa inscrição, onde a situação
+  divulgada aparece; com mais de uma, "Ver minhas
   inscrições", levando à lista de inscrições da pessoa.
 - **FR-1163**: Para quem está conectado sem inscrição enviada no Edital, o convite MUST NOT
   aparecer.

@@ -31,7 +31,7 @@ section.resultados[.em-destaque]  aria-labelledby="resultados-titulo"
     p  "Participou deste processo seletivo?"
     p  "Consulte sua classificação e situação individual."
     a  "Entrar para ver minha situação"  → /selecoes/acesso?destino=/selecoes/<edital>/
-       ou "Ver minha situação"           → /selecoes/inscricoes/<id>/   (uma inscrição enviada)
+       ou "Ver minha situação"           → /selecoes/inscricoes/<id>/acompanhamento   (uma enviada)
        ou "Ver minhas inscrições"        → /selecoes/inscricoes/        (mais de uma)
 ```
 

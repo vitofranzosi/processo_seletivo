@@ -203,6 +203,10 @@ def _rotulos(publicacao):
         # **A lista é o que distingue as ordens de um mesmo marco** (`021`): sem ela, a página do
         # Edital oferecia três links de texto idêntico para a ampla, a PcD e a PPI.
         "lista": nome_da_lista(cabecalho),
+        # **O nome do Perfil no dia da publicação** (062, D-009). A página do Edital agrupa por
+        # Perfil com o nome vigente, e é este que ela usa quando uma Retificação retirou o Perfil
+        # que já tinha resultado: sem ele, o grupo ficaria sem nome, ou com o identificador.
+        "perfil": cabecalho.get("perfil", ""),
     }
 
 

@@ -53,7 +53,7 @@ ItemDoHistorico
 | Quem lê | Convite |
 |---|---|
 | sem sessão | "Entrar para ver minha situação" → acesso, com destino na página do Edital |
-| sessão, 1 inscrição enviada no Edital | "Ver minha situação" → a inscrição |
+| sessão, 1 inscrição enviada no Edital | "Ver minha situação" → o acompanhamento da inscrição, onde a situação divulgada aparece |
 | sessão, 2 ou mais enviadas | "Ver minhas inscrições" → a lista |
 | sessão, nenhuma enviada | sem convite |
 | nenhum resultado divulgado | sem bloco, e portanto sem convite |
