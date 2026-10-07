@@ -77,6 +77,21 @@ Fechadas pelo usuário antes desta spec. Não se reabrem aqui.
 
 ---
 
+## Clarifications
+
+### Session 2026-10-07
+
+- Q: Com dois Perfis, a página terá dois links "Ampla concorrência" para destinos diferentes — o
+  que `FR-1154` exige e `UX-152`/`SC-444` proibiam. Qual das duas regras cede? → A: Nenhuma muda de
+  propósito: o **texto visível** continua sendo o nome da lista, e o **nome acessível** do link — o
+  que o leitor de tela anuncia e o comando de voz reconhece — começa por esse texto e acrescenta a
+  etapa e o Perfil. Vale também para os links do histórico, que acrescentam ainda natureza e data.
+  `UX-152` e `SC-444` passam a falar de nome acessível. Decidido pelo usuário em 07/10/2026.
+- Q: As decisões que a spec tomou por conta própria (D-001 a D-004) ficam como estão? → A: Sim,
+  confirmadas pelo usuário em 07/10/2026.
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Achar o resultado da própria vaga (Priority: P1)
@@ -106,6 +121,9 @@ como texto do link.
    título da etapa (decisão recebida 2).
 4. **Given** a lista "Ampla concorrência", gravada sem nome, **When** a página é aberta, **Then**
    ela aparece com esse nome, como no documento oficial.
+5. **Given** dois Perfis, cada um com a sua "Ampla concorrência", **When** o leitor de tela lista
+   os links da página, **Then** os dois começam por "Ampla concorrência" e se distinguem pela etapa
+   e pelo Perfil que vêm em seguida.
 
 ---
 
@@ -225,9 +243,11 @@ cada caso.
 
 ### Cada lista
 
-- **FR-1154**: Cada lista MUST mostrar, na própria linha, o nome dela como texto do link para a
-  publicação vigente, a natureza dessa publicação e a data em que ela foi publicada (decisões
-  recebidas 2 e 3).
+- **FR-1154**: Cada lista MUST mostrar, na própria linha, o nome dela como texto visível do link
+  para a publicação vigente, a natureza dessa publicação e a data em que ela foi publicada
+  (decisões recebidas 2 e 3). O nome acessível do link MUST começar pelo texto visível e
+  acrescentar o nome da etapa e o do Perfil, para que links de mesmo texto em Perfis diferentes
+  se distingam sem depender da posição na página (*Clarifications*, 07/10).
 - **FR-1155**: A natureza e a data MUST NOT aparecer no título da etapa nem no do Perfil, mesmo
   quando todas as listas da etapa coincidem (decisão recebida 2).
 - **FR-1156**: O prazo de recurso aberto MUST continuar aparecendo na linha da lista a que se
@@ -239,6 +259,8 @@ cada caso.
   com a contagem total no resumo; uma etapa sem publicação sucedida MUST NOT mostrar o bloco.
 - **FR-1158**: Cada item do histórico MUST dizer a lista, a natureza, a data de publicação e que foi
   sucedido, e levar à página da publicação (`FR-772`, decisão recebida 5).
+  O texto visível do link MUST ser o nome da lista, e o nome acessível MUST começar por ele e
+  acrescentar a natureza, a data, a etapa e o Perfil.
 - **FR-1159**: O histórico MUST manter as cadeias separadas: uma publicação MUST aparecer só sob a
   lista e a etapa a que pertence, e dentro de cada lista da mais recente para a mais antiga.
 
@@ -266,7 +288,8 @@ cada caso.
 
 - **UX-151**: Os títulos MUST formar uma hierarquia sem saltos: o do bloco, abaixo dele o de cada
   Perfil, abaixo o de cada etapa.
-- **UX-152**: Nenhum par de links do bloco MUST ter o mesmo texto e destinos diferentes.
+- **UX-152**: Nenhum par de links do bloco MUST ter o mesmo nome acessível e destinos diferentes.
+  O texto visível pode se repetir entre Perfis; o nome acessível, não.
 - **UX-153**: A 375 px, o bloco MUST caber sem rolagem horizontal da página, e a natureza, a data e
   o prazo de recurso MUST quebrar para baixo do nome da lista em vez de alargar a linha.
 - **UX-154**: A distinção entre vigente e sucedido MUST continuar dita em texto, e não só por cor
@@ -288,8 +311,8 @@ cada caso.
 - **SC-443**: Na página de um Edital com dois Perfis e três listas cada, a pessoa encontra o link
   da lista em que concorreu lendo só o título do próprio Perfil, o da etapa e o nome da lista — sem
   ler nenhuma linha de outro Perfil.
-- **SC-444**: Em nenhum dos cenários de aceitação desta spec dois links do bloco têm o mesmo texto e
-  destinos diferentes.
+- **SC-444**: Em nenhum dos cenários de aceitação desta spec dois links do bloco têm o mesmo nome
+  acessível e destinos diferentes, e todo nome acessível começa pelo texto visível do link.
 - **SC-445**: Numa etapa em que as listas estão em fases diferentes, a página diz a fase certa de
   cada lista em 100% dos casos.
 - **SC-446**: O número de blocos de histórico na página é no máximo o número de etapas com
