@@ -15,8 +15,9 @@ do corte, que o achado só inferia.
 > **Faixa de identificadores.** Abre em **FR-1140** e **SC-440**; não há requisito de experiência.
 > O teto medido em 06/10/2026 em todas as worktrees, com quatro dígitos, era de mil cento e trinta e
 > um para os requisitos funcionais, quatrocentos e trinta e quatro para os critérios e cento e
-> cinquenta para os de experiência — da `060`, aberta em revisão e ainda não mergeada; por isso o
-> número vai por extenso, e a faixa desta deixa folga para ela crescer. As decisões desta spec nascem
+> cinquenta para os de experiência — da `060`, então em revisão; por isso o número vai por extenso,
+> e a faixa desta deixou folga para ela crescer. A `060` foi mergeada no mesmo dia (PR #254) com esse
+> mesmo teto, e as duas faixas não se tocam. As decisões desta spec nascem
 > em `D-001` e moram no [research.md](research.md); decisão de outra feature é citada pela feature e
 > pelo número dela, por extenso.
 

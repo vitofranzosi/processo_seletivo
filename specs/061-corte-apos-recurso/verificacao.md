@@ -50,3 +50,8 @@ cd backend && make lint check test-pg POSTGRES_USER=$USER POSTGRES_PASSWORD= DB_
   o `DB_NAME` passado —, e não do diff.
 - `test-pg`: **9202 passando e 11 pulados**, em 987 s. São os 9195 da `059` mais os 7 desta; os onze
   pulados são os mesmos.
+
+**Medido sobre a `main` anterior à `060`.** A `060` foi mergeada durante esta suíte, e a branch não
+foi atualizada localmente: o merge traria um arquivo protegido do app (`.claude/launch.json`), que
+ele só aceita de origem confirmada. O `AGENTS.md` fica com o total da `060` (9313), e o desta sobre
+a `main` atual — esperado 9320, os 9313 mais os 7 — é o que o CI mede no PR.

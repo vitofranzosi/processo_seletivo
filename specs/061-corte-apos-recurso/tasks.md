@@ -46,7 +46,7 @@ reprodução foi escrito antes da correção e falhou contra a `main`.
 - [X] T012 [P] Registrar `doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md` (`D-002`)
 - [X] T013 [P] Linha da `061` na tabela de incrementos do `README.md`
 - [X] T014 Medir o depois no banco de demonstração e guardar em `verificacao.md`
-- [X] T015 `cd backend && make lint check test-pg` com banco próprio; o total em `verificacao.md` e no `AGENTS.md`
+- [X] T015 `cd backend && make lint check test-pg` com banco próprio; o total em `verificacao.md`
 
 ---
 
