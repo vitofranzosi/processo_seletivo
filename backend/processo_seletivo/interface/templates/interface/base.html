@@ -1035,8 +1035,12 @@ ul.documentos .entrega.ausente{font-style:italic}
    altura por construção, e não por ajuste de margem. {% endcomment %}
 .barra-do-painel{display:flex;align-items:center;justify-content:space-between;gap:1rem;
   padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
-.barra-do-painel h2{margin:0;font-size:1rem;overflow-wrap:anywhere}
-.barra-do-painel .acao{flex:0 0 auto}
+{% comment %} A margem à direita é o que leva as duas ações para a ponta: com três filhos, o
+   `space-between` sozinho punha "Abrir em aba própria" no meio da barra, longe do "Fechar". {% endcomment %}
+.barra-do-painel h2{margin:0 auto 0 0;font-size:1rem;overflow-wrap:anywhere}
+{% comment %} `line-height` herdado porque a barra tem um link e um botão lado a lado: o link herda o 1,5 do
+   corpo, e o botão fica com o `normal` do navegador — 30 px e 25 px na mesma linha. {% endcomment %}
+.barra-do-painel .acao{flex:0 0 auto;line-height:inherit}
 .painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
   border-radius:4px;background:var(--branco)}
 
