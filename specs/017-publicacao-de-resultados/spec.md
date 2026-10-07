@@ -459,6 +459,8 @@ finalidade exige, e o resto não sai porque estava à mão na mesma consulta.
 - **FR-028** — A publicação registra o instante em que foi praticada.
 - **FR-029** — A publicação registra a autoridade signatária — nome, cargo e identificador —
   escolhida no catálogo existente, persistida no ato e imune a alterações posteriores do catálogo.
+  *Emendada pela `060` (FR-1128): o catálogo deu lugar ao registro de autoridades da unidade, e a
+  publicação passou a registrar também o ato de nomeação e a unidade.*
 - **FR-030** — Repetir a confirmação com a mesma chave devolve o desfecho da primeira e não cria
   publicação equivalente.
 - **FR-031** — A confirmação carrega a identificação do que foi lido na prévia; divergência entre

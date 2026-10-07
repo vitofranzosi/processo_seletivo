@@ -124,15 +124,9 @@ que está impedido. Só a confirmação, lá, pratica — um ato por recorte, ca
         {% for valor, rotulo in naturezas %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
       </select>
     </p>
-    <p class="campo">
-      <label for="autoridade">Autoridade signatária</label>
-      <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
-        {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade }}</option>{% endfor %}
-      </select>
-      <span id="ajuda-autoridade" class="ajuda">A mesma para todas as publicações deste gesto. Nome e cargo ficam gravados em cada uma.</span>
-    </p>
+    {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="autoridade" rotulo="Autoridade signatária" ajuda="A mesma para todas as publicações deste gesto. Nome, cargo e ato de nomeação ficam gravados em cada uma." %}
     {% endif %}
-    <button type="submit" class="botao{% if not forloop.first %} secundario{% endif %}">{{ gesto.nome }}…</button>
+    <button type="submit" class="botao{% if not forloop.first %} secundario{% endif %}"{% if gesto.operacao == "publicar" and not escolha_da_autoridade.opcoes %} disabled{% endif %}>{{ gesto.nome }}…</button>
   </form>
   {% endfor %}
   </div>

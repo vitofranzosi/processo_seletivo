@@ -34,8 +34,9 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_SECAO,
     CORPO_TEXTO,
     NEGRITO,
-    ORGAO,
     Composicao,
+    UnidadeDoAto,
+    linhas_do_orgao,
     render_documento,
 )
 
@@ -59,7 +60,7 @@ def render_comprovante_pdf(dados: dict) -> bytes:
     é o que torna o resultado testável byte a byte.
     """
     composicao = Composicao()
-    _timbre(composicao)
+    _timbre(composicao, dados)
     _identificacao(composicao, dados)
     _dados_da_inscricao(composicao, dados)
     _documentos(composicao, dados)
@@ -70,9 +71,12 @@ def render_comprovante_pdf(dados: dict) -> bytes:
     )
 
 
-def _timbre(composicao):
+def _timbre(composicao, dados):
+    # A unidade da Publicação que originou a versão que o candidato aceitou, e não a do registro de
+    # Unidades no momento do download: o comprovante prova o que foi aceito (060, FR-1115).
+    unidade = UnidadeDoAto(cabecalho=tuple(dados["unidade"]["cabecalho"]), local="")
     composicao.espaco(ALTURA_DO_BRASAO - 10)
-    for indice, linha in enumerate(ORGAO):
+    for indice, linha in enumerate(linhas_do_orgao(unidade)):
         composicao.escrever(
             linha, tamanho=CORPO_TEXTO, alinhamento=CENTRO, antes=0.0 if indice else 4.0
         )

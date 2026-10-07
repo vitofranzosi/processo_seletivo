@@ -22,6 +22,31 @@ def encerrar_conexoes_da_thread():
             conexao.connection = None
 
 
+_FIXTURES_DE_BANCO = frozenset(
+    {"db", "transactional_db", "django_db_reset_sequences", "django_db_serialized_rollback"}
+)
+
+
+@pytest.fixture(autouse=True)
+def unidade_e_autoridades_da_suite(request):
+    """O Cefor e as autoridades de teste, em todo caso que toca o banco (060, R-012).
+
+    Ativa só com banco — marcador `django_db` ou uma das fixtures dele, inclusive indireta —, para
+    que os testes puros não paguem conexão. O helper do pytest-django é pedido antes de gravar: é
+    ele que decide se o caso é transacional, e gravar antes dele seria gravar fora do caso. Os
+    valores e a razão de não serem data migration estão em `tests/fixtures/autoridades.py`.
+    """
+    usa_banco = request.node.get_closest_marker("django_db") or (
+        _FIXTURES_DE_BANCO & set(request.fixturenames)
+    )
+    if not usa_banco:
+        return
+    request.getfixturevalue("_django_db_helper")
+    from tests.fixtures.autoridades import garantir_o_cefor
+
+    garantir_o_cefor()
+
+
 @pytest.fixture
 def api_client():
     return APIClient()

@@ -26,6 +26,7 @@ from processo_seletivo.divulgacao.domain.conteudo import compor
 from processo_seletivo.divulgacao.models import PublicacaoResultado
 from processo_seletivo.shared.api.problems import DomainError
 from tests.conftest import encerrar_conexoes_da_thread
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import ator_publicador, emitir, montar_ato_publicavel
 
 pytestmark = [
@@ -86,7 +87,7 @@ def test_publicar_espera_a_emissao_concorrente_e_recusa_o_ato_ja_sucedido(cenari
                 marco_id=cenario["marco"],
                 ato_id=ato.id,
                 natureza="PRELIMINAR",
-                autoridade="diretoria-cefor",
+                autoridade=str(AUTORIDADE_DO_RESULTADO),
                 confirmacao_da_previa=confirmacao,
                 idempotency_key="publicar-0754-corrida",
                 correlation_id="teste",
@@ -147,7 +148,7 @@ def test_duas_publicacoes_concorrentes_do_mesmo_ato_produzem_uma(cenario):
                         marco_id=cenario["marco"],
                         ato_id=ato.id,
                         natureza="PRELIMINAR",
-                        autoridade="diretoria-cefor",
+                        autoridade=str(AUTORIDADE_DO_RESULTADO),
                         confirmacao_da_previa=confirmacao,
                         idempotency_key=chave,
                         correlation_id="teste",

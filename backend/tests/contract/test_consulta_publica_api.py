@@ -86,6 +86,12 @@ def test_publication_detail_matches_contract(api_client, edital_publicado):
     assert body["sourceType"] == "EDITAL"
     assert body["sourceId"] == str(edital_publicado.id)
     assert body["signatory"]["role"] == "Diretora-Geral"
+    # A unidade que praticou o ato, lida das colunas congeladas da Publicação (060, FR-1131).
+    assert body["unit"] == {
+        "code": "cefor",
+        "acronym": "Cefor",
+        "name": "Centro de Referência em Formação e em Educação a Distância",
+    }
     assert body["documentUrl"] == f"/api/v1/public/publicacoes/{publicacao.id}/documento"
     assert "immutable" in response["Cache-Control"]
 

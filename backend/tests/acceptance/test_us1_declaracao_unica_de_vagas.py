@@ -20,12 +20,13 @@ from processo_seletivo.editais.models.perfis import LinhaDoQuadroDeVagas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import DocumentoPublicado
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.interface.conftest import identificar, marco_de_sorteio_no_formulario
 from tests.interface.test_fluxo import EVENTOS, texto_de_pdf_bytes
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.acceptance]
 
-SIGNATARIO = {"signatario": "reitoria"}
+SIGNATARIO = {"signatario": str(AUTORIDADE_DA_SUITE)}
 PERFIL_SEM_COTA = {
     "perfil-0-id": "cccccccc-0000-4000-8000-00000000e001",
     "perfil-0-code": "DOC-INFO",

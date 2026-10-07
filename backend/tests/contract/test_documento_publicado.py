@@ -51,6 +51,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     MODO_PREVIA,
     MODO_PUBLICADO,
     AutoridadeSignataria,
+    UnidadeDoAto,
     render_edital_pdf,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -74,10 +75,16 @@ AUTORIDADE = AutoridadeSignataria(
 DATA_DO_ATO = date.fromisoformat(
     json.loads((FIXTURES / "contexto_publicado.json").read_text(encoding="utf-8"))["data_do_ato"]
 )
+# A unidade do ato, desde a `060` (FR-1112, FR-1113): o cabeçalho e o local que eram as constantes
+# `ORGAO` e `LOCAL`. Versionada ao lado, e **o PDF de referência não foi refeito**: é o que prova a
+# FR-1114 — compor a partir da Unidade do Cefor produz os mesmos bytes que as constantes produziam.
+_UNIDADE = json.loads((FIXTURES / "unidade_publicada.json").read_text(encoding="utf-8"))
+UNIDADE = UnidadeDoAto(cabecalho=tuple(_UNIDADE["cabecalho"]), local=_UNIDADE["local"])
 
 
 def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
     """Compõe como a publicação compõe — em modo publicado, com a autoridade e a data da fixture."""
+    kwargs.setdefault("unidade", UNIDADE)
     if modo == MODO_PUBLICADO:
         kwargs.setdefault("autoridade", AUTORIDADE)
         kwargs.setdefault("data_do_ato", DATA_DO_ATO)
@@ -202,7 +209,7 @@ def test_a_previa_traz_o_mesmo_conteudo_normativo_do_publicado():
 def test_modo_desconhecido_e_recusado_em_vez_de_cair_no_publicado():
     """Errar o nome do modo não pode produzir, em silêncio, um documento com cara de publicado."""
     with pytest.raises(ValueError):
-        render_edital_pdf(SNAPSHOT, HASH, modo="PREVIEW_")
+        render_edital_pdf(SNAPSHOT, HASH, modo="PREVIEW_", unidade=UNIDADE)
 
 
 # ---------------------------------------------------------------------------
