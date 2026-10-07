@@ -85,7 +85,7 @@ def test_a_vigente_diz_que_e_a_vigente(client, retificada):
     """Quem abre a vigente precisa saber que está lendo o que vale (FR-090)."""
     corpo = abrir(client, retificada["nova"])
 
-    assert "Este é o resultado vigente deste marco." in corpo
+    assert "Esta é a versão que vale." in corpo
 
 
 def test_a_sucedida_continua_dizendo_que_foi_sucedida(client, retificada):
@@ -93,7 +93,7 @@ def test_a_sucedida_continua_dizendo_que_foi_sucedida(client, retificada):
     corpo = abrir(client, retificada["publicacao"])
 
     assert "foi sucedido" in corpo
-    assert "Este é o resultado vigente deste marco." not in corpo
+    assert "Esta é a versão que vale." not in corpo
 
 
 def test_a_primeira_publicacao_do_marco_nao_diz_que_corrige(
@@ -107,7 +107,7 @@ def test_a_primeira_publicacao_do_marco_nao_diz_que_corrige(
     corpo = abrir(client, peca["publicacao"])
 
     assert "retificado em" not in corpo.lower()
-    assert "Este é o resultado vigente deste marco." in corpo
+    assert "Esta é a versão que vale." in corpo
 
 
 def _gestor():
