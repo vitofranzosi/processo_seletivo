@@ -5,6 +5,7 @@ de uma sucedida já levava à vigente. Faltava a direção inversa: o preliminar
 sucedeu só era alcançável por quem tinha guardado o endereço dele.
 """
 
+import json
 import re
 import uuid
 
@@ -128,8 +129,15 @@ def _ato(edital, versao, *, lista_id=None, anterior=None):
     )
 
 
-def _publicar(edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anterior=None):
-    """A mesma gravação de `test_publicacao_por_lista.py`: o que se testa aqui é a leitura."""
+def _publicar(
+    edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anterior=None, lista_nome=""
+):
+    """A mesma gravação de `test_publicacao_por_lista.py`: o que se testa aqui é a leitura.
+
+    `lista_nome` é o que `compor` grava no cabeçalho: o nome da Modalidade, ou vazio no ato sem
+    lista.
+    """
+    cabecalho = {"marco": "Classificacao final", "lista": lista_nome}
     return PublicacaoResultado.objects.create(
         edital=edital,
         ato=ato,
@@ -138,7 +146,7 @@ def _publicar(edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anter
         lista_id=lista_id,
         natureza=natureza,
         publicacao_anterior=anterior,
-        conteudo_publico=b'{"cabecalho": {"marco": "Classificacao final"}, "posicoes": []}',
+        conteudo_publico=json.dumps({"cabecalho": cabecalho, "posicoes": []}).encode(),
         conteudo_publico_hash="0" * 64,
         publicado_por="cpf:publicadora",
         publicado_em=timezone.now(),
@@ -183,3 +191,41 @@ def test_o_historico_de_uma_lista_nao_aparece_sob_outra(client, certame_com_list
 
     assert "publicacoes-anteriores" not in item_da_pcd
     assert f"/resultados/{ppi_1.id}/" not in item_da_pcd
+
+
+def test_as_ordens_de_um_mesmo_marco_tem_links_que_se_distinguem(client, certame_com_listas):
+    """Três listas no mesmo marco eram três links de texto idêntico, e as anteriores também.
+
+    A página do Edital dizia natureza e marco, e só a lista distingue as três ordens: quem chegava
+    não tinha como saber qual abrir, e o leitor de tela anunciava três vezes o mesmo link. A ampla
+    concorrência, gravada sem nome, aparece pelo nome do recorte, como no documento oficial.
+    """
+    edital, versao = certame_com_listas
+    for lista_id, nome in (
+        (None, ""),
+        (LISTA_PCD, "Pessoas com deficiência"),
+        (LISTA_PPI, "Pessoas pretas, pardas e indígenas"),
+    ):
+        ato = _ato(edital, versao, lista_id=lista_id)
+        preliminar = _publicar(edital, ato, lista_id=lista_id, lista_nome=nome)
+        _publicar(
+            edital,
+            ato,
+            lista_id=lista_id,
+            natureza=Natureza.DEFINITIVA,
+            anterior=preliminar,
+            lista_nome=nome,
+        )
+
+    secao = secao_de_resultados(pagina_do_edital(client, edital))
+    textos = re.findall(r'<a href="/selecoes/resultados/[^"]+/">(.*?)</a>', secao, re.S)
+
+    assert len(textos) == 6
+    assert len(set(textos)) == 6, f"links indistinguíveis: {textos}"
+    for nome in (
+        "Ampla concorrência",
+        "Pessoas com deficiência",
+        "Pessoas pretas, pardas e indígenas",
+    ):
+        assert f"Resultado definitivo — Classificacao final — {nome}" in textos
+        assert f"Resultado preliminar — Classificacao final — {nome}" in textos

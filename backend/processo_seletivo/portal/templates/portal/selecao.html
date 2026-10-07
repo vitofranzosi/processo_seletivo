@@ -96,7 +96,7 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
   <ul class="resultados-divulgados">
     {% for item in resultados_divulgados %}
     <li>
-      <a href="{% url 'portal:resultado' item.publicacao.id %}">{{ item.natureza_rotulo }} — {{ item.marco }}</a>
+      <a href="{% url 'portal:resultado' item.publicacao.id %}">{{ item.natureza_rotulo }} — {{ item.marco }} — {{ item.lista }}</a>
       <span class="meta">publicado em {{ item.publicacao.publicado_em|date:"d/m/Y" }}</span>
       {% comment %}
       O prazo que ainda corre (047, FR-770). Encerrado, nada é dito aqui: a página do resultado diz
@@ -113,7 +113,7 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
         <summary>Publicações anteriores ({{ item.anteriores|length }})</summary>
         <ul>
           {% for anterior in item.anteriores %}
-          <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.natureza_rotulo }} — {{ anterior.marco }}</a>
+          <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.natureza_rotulo }} — {{ anterior.marco }} — {{ anterior.lista }}</a>
             <span class="meta">publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
           {% endfor %}
         </ul>
