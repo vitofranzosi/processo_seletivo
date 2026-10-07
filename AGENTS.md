@@ -82,7 +82,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **9195 passando e 11 pulados** (medido em 2026-10-06, na `059`, sobre a `058`). Os onze
+Contra PostgreSQL a suíte fecha em **9202 passando e 11 pulados** (medido em 2026-10-06, na `061`, sobre a `059`). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
