@@ -100,6 +100,13 @@ das situações são constantes de `portal/situacao.py`. O template não escreve
 lugar só, a prova é ler um dicionário, e a varredura do template só precisa garantir que ele não
 acrescentou nenhuma.
 
+**A frase do convocado não promete perda** (revisão da análise, Clarifications). O não atendimento
+é ato de quem conduz (FR-274), e o prazo só corre do envio bem-sucedido da comunicação (`envio_de`
+ignora a falha). Por isso a frase diz o que a comissão **poderá** registrar, e só aparece no único
+estado em que ela é verdadeira — `CONVOCADO_PRAZO_EM_CURSO` com vencimento. Com o vencimento
+decorrido, a tela diz a data e que o resultado ainda não foi registrado, e a situação continua
+"Convocado": dizer outra coisa seria a tela decidindo o desfecho.
+
 ### D-006 — O cartão por lista nasce em `situacoes_do_candidato`, com duas chaves a mais
 
 **Decisão.** `situacoes_do_candidato` passa a devolver também `lista` (`nome_da_lista(cabecalho)`) e
@@ -146,6 +153,14 @@ literais de `test_vocabulario_da_convocacao.py` e `test_vocabulario_do_requerime
 **Por quê.** As varreduras do repositório têm lista literal, e tela nova escapa delas em silêncio. O
 HTML renderizado não carrega `{% comment %}`, e é o que a pessoa lê — o comentário pode explicar por
 que "Classificado" é proibido sem reprovar a varredura.
+
+**A exceção do "Indeferido na convocação" é literal** (revisão da análise). O rótulo nomeia o
+desfecho que a `019` registra, e não um juízo sobre o requerimento; mas `portal/situacao.py` também
+escreve as frases do Requerimento de Matrícula, e é ali que a UX-058 mais precisa valer. Por isso o
+módulo **entra** na varredura da `029`, e a varredura retira, antes de procurar `deferid`, só a
+cadeia exata do rótulo — por arquivo, numa tabela de permitidos com o motivo. O mesmo vale para o
+HTML renderizado do cenário do desfecho Indeferimento: tirada a cadeia exata, `deferid` continua
+proibido.
 
 ### D-011 — A frase da tela da convocação sem chamada
 

@@ -41,7 +41,7 @@ a   Ver o que enviei
 | Situação | Porquê | Ação | Prazo | Consequência | Canal / reserva | Recurso |
 |---|---|---|---|---|---|---|
 | Vaga aceita e demais desfechos | fundamento e data do registro; lista e chamada da convocação | Nada por enquanto. | — | — | — | se houver objeto |
-| Convocado | espécie, lista, nº da chamada, data | Preencher o Requerimento de Matrícula / Requerimento enviado — conferir / Siga as instruções do Edital para esta convocação. | vencimento, ou aviso de prazo não iniciado / decorrido | "Se você não atender no prazo, você perderá esta convocação." (só com prazo não decorrido) | — | se houver objeto |
+| Convocado | espécie, lista, nº da chamada, data | Preencher o Requerimento de Matrícula / Requerimento enviado — conferir / Siga as instruções do Edital para esta convocação. | vencimento; ou "o prazo ainda não começou" (sem envio bem-sucedido); ou "o prazo terminou em …; o resultado da convocação ainda não foi registrado" (vencimento decorrido, sem desfecho) | "Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação." — **só** com envio bem-sucedido, vencimento registrado e prazo não encerrado; nos demais casos, nenhuma | — | se houver objeto |
 | Eliminado | etapa e motivo | Nada por enquanto. | — | — | — | se houver objeto |
 | Aguardando chamada | cada lista com posição, natureza, etapa e data | Nada por enquanto. | — | "Novas chamadas, se houver, serão publicadas conforme o Edital." | se o Perfil declarar | se houver objeto |
 | Aguardando resultado definitivo | cada lista, e "a classificação é preliminar e pode mudar" | Nada por enquanto. | — | — | — | se houver objeto |
@@ -54,7 +54,9 @@ a   Ver o que enviei
    presentes (SC-450).
 2. A posição de cada cartão é a de `SituacaoDivulgada.posicao`, sem transformação (SC-451).
 3. Nenhuma das palavras da UX-158 no HTML renderizado de nenhum cenário (SC-452).
-4. Frase de consequência só das constantes (SC-453).
+4. Frase de consequência só das constantes (SC-453), e nenhuma afirmação de perda automática.
+   Na varredura do requerimento (UX-058), só a cadeia exata "Indeferido na convocação" é retirada
+   antes de procurar `deferid`; qualquer outra ocorrência reprova.
 5. O número de consultas não depende de quantas listas e marcos a inscrição tem (SC-454).
 6. Sem convocação, zero consulta ao requerimento (decisão 006 da `059`, `test_orcamento_de_consulta`).
 7. Nenhum texto do corte nem da apuração (`FR-1169`, `FR-1171`): a função não os recebe.

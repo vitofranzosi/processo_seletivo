@@ -34,7 +34,7 @@ Banco `ps_063_demo`, cópia de `ps_062_demo`, migrada (`createdb -T ps_062_demo 
 | (a) duas listas | `edson.silva.ciclo@exemplo.test`, Edital 72/2026 | topo "Aguardando chamada"; porquê com "Ampla concorrência: 8º lugar…" e a lista da reserva com "2º lugar…"; dois cartões de título distinto |
 | (b) classificação sem ocupação | o mesmo | nenhuma palavra de ocupação; "Nada por enquanto" e a frase neutra de novas chamadas |
 | (c) cadastro reserva | o mesmo (Perfil com cadastro reserva limitado a 9) | "O Edital prevê cadastro reserva de até 9 pessoas para este Perfil." — e nada de "você está no cadastro reserva" |
-| (d) convocação aberta | `mariana.reis.ciclo@exemplo.test`, Edital 72/2026 | topo "Convocado"; ação "Preencher o Requerimento de Matrícula"; prazo 09/10/2026 às 18h00; a frase "você perderá esta convocação" |
+| (d) convocação aberta | `mariana.reis.ciclo@exemplo.test`, Edital 72/2026 | topo "Convocado"; ação "Preencher o Requerimento de Matrícula"; prazo 09/10/2026 às 18h00; "a comissão poderá registrar o não atendimento desta convocação" se a comunicação já foi enviada, ou "o prazo ainda não começou" se não foi |
 | (e) desfecho | `ana@exemplo.test`, Edital 51/2026, depois de a gestão registrar o *Aceite* na tela da convocação | topo "Vaga aceita", com fundamento e data; nada de "matriculado" |
 
 Em cada caso, a 1280 × 900 e a 375 px: a largura de rolagem do documento é igual à da tela.

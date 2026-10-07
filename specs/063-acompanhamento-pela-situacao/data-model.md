@@ -48,8 +48,8 @@ com o protocolo e o link para a peça (caso-limite da spec).
 | `principal` | texto | a ação, ou "Nada por enquanto." (FR-1178) |
 | `link` | URL opcional | Requerimento (preencher/conferir) ou convocação |
 | `prazo` | instante opcional | o vencimento da convocação (FR-1176) |
-| `aviso_de_prazo` | texto opcional | "o prazo ainda não começou…" ou "o prazo informado já passou… não decide nada sozinho" (FR-1176, FR-274) |
-| `consequencia` | texto opcional | uma das duas frases neutras (FR-1177) |
+| `aviso_de_prazo` | texto opcional | "o prazo ainda não começou…" (sem envio bem-sucedido) ou "o prazo desta convocação terminou em …; o resultado da convocação ainda não foi registrado…" (vencimento decorrido, sem desfecho) (FR-1176, FR-274) |
+| `consequencia` | texto opcional | uma das duas frases neutras (FR-1177); a do convocado só com envio, vencimento e prazo em curso |
 | `canal` | texto opcional | "As convocações deste Perfil são feitas por …" (FR-1179) |
 | `reserva` | texto opcional | "O Edital prevê cadastro reserva …" (FR-1180) |
 | `recurso` | lista opcional | `{rotulo, fecha_em}` de cada objeto recorrível, e o link "Recorrer de um resultado" |

@@ -70,7 +70,8 @@ Fechados pelo usuário em três rodadas de revisão da pesquisa. Não se reabrem
    pessoa lê como aprovado.
 5. **Ação, prazo e consequência vêm do Edital ou do ato de convocação**, nunca de frase fixa da tela.
    Sem isso, a frase neutra: "novas chamadas, se houver, serão publicadas conforme o Edital"; "você
-   perderá esta convocação".
+   perderá esta convocação". *(A segunda foi substituída pelo usuário na revisão da análise, em
+   07/10 — ver Clarifications.)*
 6. **O vocabulário é o do Edital** ("cadastro reserva" × "lista de espera"; matrícula × contratação).
    O domínio informa situação, ação esperada, prazo e consequência, e a tela não decide por tipo de
    certame — nenhum `if curso / else servidor`.
@@ -145,6 +146,21 @@ afirmação — e, fora dela, registro para decisão do usuário (governança).
   contratação? → A: **"Vaga aceita"**, com o fundamento e a data do registro; os demais desfechos
   seguem a mesma regra de linguagem simples (tabela da FR-1172); nunca "matriculado" nem
   "contratado". A lacuna L-3 fica registrada.
+- Q: (revisão da análise) Que consequência a tela diz para quem foi convocado, se o não atendimento
+  só existe quando alguém o registra (FR-274) e o prazo só começa com o envio bem-sucedido da
+  comunicação? → A: **Nenhuma perda automática.** Comunicação não enviada (ou com falha): "o prazo
+  ainda não começou", sem frase de consequência. Prazo iniciado e não encerrado: "Se você não
+  atender no prazo, a comissão poderá registrar o não atendimento desta convocação." Prazo encerrado
+  sem desfecho: a data do vencimento e que o resultado da convocação ainda não foi registrado, com a
+  situação mantida em "Convocado". Sem vencimento: nenhuma consequência baseada em prazo. **Esta
+  resposta substitui a segunda frase neutra do princípio 5** ("você perderá esta convocação"), que
+  afirmava efeito que nenhum ato produz sozinho.
+- Q: (revisão da análise) O rótulo "Indeferido na convocação" esbarra na proibição de "deferido" /
+  "indeferido" das telas do requerimento (UX-058); como conviver? → A: **Exceção literal, e só para
+  esse rótulo.** A varredura do requerimento continua valendo sobre `portal/situacao.py` e sobre o
+  HTML renderizado, inclusive no cenário do desfecho Indeferimento; apenas a cadeia exata do rótulo
+  do desfecho da convocação é retirada antes de procurar `deferid`, de modo que o requerimento nunca
+  apareça como deferido ou indeferido.
 
 **Consequência das três respostas para o princípio 3.** Dos quatro atos que o princípio nomeia, a
 convocação (com o desfecho) e o Requerimento de Matrícula alimentam a situação nesta feature; o
@@ -248,19 +264,23 @@ futuro; conferir ação, prazo e consequência no topo.
 1. **Given** uma convocação vigente sem desfecho, com vencimento e Requerimento de Matrícula
    disponível, **When** a pessoa abre a tela, **Then** o topo diz "Convocado", o porquê cita a
    espécie, a lista e a data da convocação, e o que fazer traz "Preencher o Requerimento de
-   Matrícula", o prazo com data e hora e "se você não atender no prazo, você perderá esta
-   convocação".
-2. **Given** a comunicação da convocação ainda não enviada, **When** a pessoa abre a tela, **Then**
-   o que fazer diz que o prazo ainda não começou a correr, como a `059` já diz.
-3. **Given** o vencimento decorrido sem desfecho, **When** a pessoa abre a tela, **Then** a tela não
-   diz que ela perdeu a vaga: diz que o prazo passou, que isso não decide nada sozinho e que procure
-   o atendimento se atendeu (FR-274).
+   Matrícula", o prazo com data e hora e "Se você não atender no prazo, a comissão poderá registrar
+   o não atendimento desta convocação."
+2. **Given** a comunicação da convocação ainda não enviada, ou enviada com falha, **When** a pessoa
+   abre a tela, **Then** o que fazer diz que o prazo ainda não começou a correr, como a `059` já diz,
+   e nenhuma frase de consequência aparece.
+3. **Given** o vencimento decorrido sem desfecho, **When** a pessoa abre a tela, **Then** a situação
+   continua "Convocado", e a tela diz a data em que o prazo terminou e que o resultado da convocação
+   ainda não foi registrado — sem dizer que ela perdeu a vaga nem a convocação (FR-274) —, e que
+   procure o atendimento se atendeu.
 4. **Given** o Requerimento já enviado, **When** a pessoa abre a tela, **Then** o que fazer diz que
    o requerimento foi enviado, com o caminho para conferi-lo, sem "deferido", "homologado" nem
    "matrícula efetivada" (UX-058).
 5. **Given** uma convocação de um Edital que não declara Requerimento de Matrícula, **When** a pessoa
    abre a tela, **Then** a ação é "siga as instruções do Edital para esta convocação", e a tela não
    diz "matrícula" nem "contratação".
+6. **Given** uma convocação sem vencimento, **When** a pessoa abre a tela, **Then** nenhuma frase de
+   consequência baseada em prazo aparece.
 
 ---
 
@@ -395,13 +415,17 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   objeto recorrível com prazo aberto (com data e hora de encerramento); e, na convocação sem
   Requerimento, "siga as instruções do Edital para esta convocação".
 - **FR-1176**: O prazo da convocação DEVE ser o vencimento registrado nela, com data e hora, e DEVE
-  ser chamado "prazo desta convocação". Sem comunicação enviada, a tela DEVE dizer que o prazo não
-  começou; com vencimento decorrido sem desfecho, DEVE dizer que isso não decide nada sozinho
-  (FR-274).
+  ser chamado "prazo desta convocação". Sem comunicação enviada com sucesso, a tela DEVE dizer que
+  o prazo não começou. Com vencimento decorrido sem desfecho, a situação DEVE continuar "Convocado",
+  e a tela DEVE dizer a data em que o prazo terminou e que o resultado da convocação ainda não foi
+  registrado, sem afirmar perda (FR-274).
 - **FR-1177**: A consequência DEVE vir do Edital ou do ato quando ele a declarar; enquanto nenhum
-  dos dois a declarar em forma estruturada (L-4), a tela DEVE usar só as duas frases neutras dos
-  princípios recebidos: "Novas chamadas, se houver, serão publicadas conforme o Edital." (aguardando)
-  e "Se você não atender no prazo, você perderá esta convocação." (convocado). Nenhuma outra frase de
+  dos dois a declarar em forma estruturada (L-4), a tela DEVE usar só as duas frases neutras:
+  "Novas chamadas, se houver, serão publicadas conforme o Edital." (aguardando) e "Se você não
+  atender no prazo, a comissão poderá registrar o não atendimento desta convocação." (convocado,
+  **somente** com a comunicação enviada, vencimento registrado e prazo não encerrado). Sem
+  comunicação enviada, sem vencimento ou com o prazo encerrado, nenhuma frase de consequência. A
+  tela NÃO DEVE afirmar perda automática da convocação ou da vaga. Nenhuma outra frase de
   consequência DEVE existir na tela.
 - **FR-1178**: "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa.
 - **FR-1179**: O canal citado DEVE ser o que o Perfil declara na forma de convocação ("por
