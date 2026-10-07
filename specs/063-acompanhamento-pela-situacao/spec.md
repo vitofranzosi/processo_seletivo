@@ -199,8 +199,8 @@ e que o canal citado é o que o Perfil declara.
 **Acceptance Scenarios**:
 
 1. **Given** uma inscrição classificada só em resultado **preliminar**, **When** a pessoa abre a
-   tela, **Then** a situação diz que a classificação é preliminar e pode mudar, e o que fazer
-   mostra o prazo de recurso quando ele está aberto.
+   tela, **Then** a situação é "Aguardando resultado definitivo", o porquê diz que a classificação é
+   preliminar e pode mudar, e o que fazer mostra o prazo de recurso quando ele está aberto.
 2. **Given** um Perfil que declara convocação **por publicação**, **When** a pessoa está aguardando
    chamada, **Then** o que fazer diz que as convocações são publicadas no endereço do certame, e a
    tela não promete e-mail nem mensagem.
@@ -256,8 +256,8 @@ futuro; conferir ação, prazo e consequência no topo.
    diz que ela perdeu a vaga: diz que o prazo passou, que isso não decide nada sozinho e que procure
    o atendimento se atendeu (FR-274).
 4. **Given** o Requerimento já enviado, **When** a pessoa abre a tela, **Then** o que fazer diz que
-   o requerimento foi enviado e quando, sem "deferido", "homologado" nem "matrícula efetivada"
-   (UX-058).
+   o requerimento foi enviado, com o caminho para conferi-lo, sem "deferido", "homologado" nem
+   "matrícula efetivada" (UX-058).
 5. **Given** uma convocação de um Edital que não declara Requerimento de Matrícula, **When** a pessoa
    abre a tela, **Then** a ação é "siga as instruções do Edital para esta convocação", e a tela não
    diz "matrícula" nem "contratação".
@@ -345,18 +345,20 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   vigentes da inscrição, e o template só a apresenta. A mesma derivação DEVE ser a que os testes
   consultam.
 - **FR-1168**: O conjunto de situações DEVE ser finito e fechado, com esta precedência (a primeira
-  que se aplica vence): desfecho da convocação vigente; convocação vigente sem desfecho; eliminação
-  em Etapa visível; classificação em ao menos uma lista vigente ("Aguardando chamada"); sem posição
-  em todas as listas vigentes ("Não classificado"); inscrição enviada sem resultado ("Inscrição
-  enviada").
+  que se aplica vence): desfecho da convocação vigente; convocação vigente sem desfecho
+  ("Convocado"); eliminação em Etapa visível ("Eliminado"); classificação em ao menos uma lista com
+  publicação vigente definitiva ("Aguardando chamada"); classificação só em publicações preliminares
+  ("Aguardando resultado definitivo"); sem posição em todas as listas vigentes ("Não classificado");
+  inscrição enviada sem resultado ("Inscrição enviada").
 - **FR-1169**: Nenhuma situação DEVE ser derivada da posição. A tela NÃO DEVE afirmar ocupação,
   convocação, eliminação, direito à vaga, pertença a cadastro reserva ou posição na fila de chamada
   que nenhum ato registrou. A apuração de ocupação NÃO DEVE ser consultada para a situação: ela não
   registra quem ocupa (L-1), e só a convocação tira a pessoa de "Aguardando chamada".
 - **FR-1170**: O estado posterior à classificação e anterior a qualquer convocação DEVE ser
   "Aguardando chamada", identificado como provisório, e NÃO DEVE ser "Classificado" nem "Aprovado".
-  Quando todas as classificações vigentes da inscrição forem preliminares, a situação DEVE dizer que
-  a classificação é preliminar e pode mudar.
+  Quando todas as classificações vigentes da inscrição forem preliminares, a situação DEVE ser
+  "Aguardando resultado definitivo", e o porquê DEVE dizer que a classificação é preliminar e pode
+  mudar.
 - **FR-1171**: O resultado individual do corte (`014`) NÃO DEVE aparecer na tela — nem na
   situação, nem no porquê, nem nos cartões —, porque o corte não é ato divulgado ao candidato (L-2).
 - **FR-1172**: Quando a situação vier de desfecho da convocação vigente, o rótulo DEVE ser o desta
@@ -462,7 +464,7 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
 
 ### Measurable Outcomes
 
-- **SC-450**: Nas seis situações do conjunto fechado, o primeiro conteúdo depois do título é o bloco
+- **SC-450**: Em todas as situações do conjunto fechado, o primeiro conteúdo depois do título é o bloco
   de situação com as três partes; em 100% dos casos de teste as três estão presentes.
 - **SC-451**: Na inscrição em duas listas (Edson, Edital 72/2026), os cartões têm títulos distintos
   e cada posição aparece ao lado do nome da sua lista; a posição exibida é igual à oficial em 100%
