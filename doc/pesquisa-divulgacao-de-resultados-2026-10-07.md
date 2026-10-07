@@ -53,6 +53,34 @@ não estado do domínio.
   linha "até aqui, dentro das vagas" desenhada nela misturaria dois atos; se aparecer, é na
   publicação do corte ou no acompanhamento.
 
+**Princípios fechados para a spec do acompanhamento** (segunda e terceira rodadas de 07/10). A
+próxima spec é a do acompanhamento do candidato, sem nova rodada de pesquisa, e parte destes pontos:
+
+- A situação pessoal nunca é inferida da posição. A tela não deduz ocupação, convocação, eliminação,
+  direito à vaga **nem posição na fila de chamada**; tudo deriva de atos já produzidos.
+- A classificação oficial é imutável: quem é 2º continua 2º, mesmo depois de a vaga ser ocupada pelo
+  1º. Nada de "1º da fila".
+- O topo da tela segue sempre **Situação → Por quê → O que fazer**, e "nada por enquanto" é resposta
+  válida. Etapas, notas, pesos e publicações vêm depois, como evidência.
+- Estados provisórios são claramente distintos dos definitivos: "Aguardando chamada", e não
+  "Classificado", que o candidato lê como aprovado.
+- Ação, prazo e consequência vêm do Edital ou do ato de convocação, nunca de frase fixa da tela.
+  "Pode ser chamado se surgir vaga" e "a vaga passa ao próximo" só aparecem se o ato ou o Edital
+  disserem isso; sem isso, a frase neutra ("novas chamadas, se houver, serão publicadas conforme o
+  Edital"; "você perderá esta convocação").
+- O vocabulário é o do Edital: "cadastro reserva" ou "lista de espera"; matrícula ou contratação. O
+  domínio informa situação, ação esperada, prazo e consequência, e a tela não decide por tipo de
+  certame.
+- Nada de prometer canal que o Edital não usa: convocação por publicação não manda e-mail.
+- Linguagem simples (Lei 15.263/2025), com as frases testadas com candidatos.
+
+**O que não muda por simplicidade.** A frase da publicação que sucede outra continua nomeando a
+decisão que a motivou (`REC-…`), porque a `FR-088` da `018` o exige: simplifica-se a frase, não se
+remove a rastreabilidade. As vagas por lista na página da publicação saem da distribuição que o
+Edital declara — no 72/2026, 2 de ampla concorrência e 1 reservada a pessoas pretas, pardas e
+indígenas —, e não de "conforme as regras de reserva"; falta decidir, na spec da publicação, se a
+página lê a versão que o ato citou ou a vigente.
+
 **Três núcleos, e não uma spec.** Na ordem sugerida: (1) situação e acompanhamento do candidato — o
 maior ganho e o defeito mais grave, o mesmo candidato com 8º e 2º lugar em cartões idênticos; (2) a
 publicação pública; (3) retificação e histórico, onde o sistema já está à frente das bancas. A
