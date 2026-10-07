@@ -14,6 +14,7 @@ ele confira. O instante impresso é `publicado_em`, que é um fato passado — u
 geração faria o mesmo resultado produzir arquivos diferentes a cada download.
 """
 
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA_DO_BRASAO,
     ANTES_DE_LINHA,
@@ -99,7 +100,7 @@ def _identificacao(composicao, cabecalho):
             ("EDITAL", cabecalho["edital"]),
             ("PERFIL", cabecalho["perfil"]),
             ("MARCO", cabecalho["marco"]),
-            ("LISTA DE CONCORRÊNCIA", cabecalho.get("lista") or "Ampla concorrência"),
+            ("LISTA DE CONCORRÊNCIA", nome_da_lista(cabecalho)),
             ("NATUREZA", cabecalho["natureza_rotulo"]),
             # **A causa da retificação, quando existe** (FR-088). Sem ela, o documento de uma
             # divulgação que corrige outra afirmava uma ordem nova sem dizer que corrigia nada —

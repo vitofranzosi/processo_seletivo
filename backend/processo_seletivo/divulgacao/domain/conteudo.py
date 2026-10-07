@@ -211,6 +211,18 @@ def _titulo(rotulo, perfil):
     return f"{rotulo} — {perfil}" if perfil else rotulo
 
 
+def nome_da_lista(cabecalho):
+    """O recorte que a publicação ordena, com nome mesmo quando é a ampla concorrência.
+
+    `compor` grava `lista` vazia no ato sem lista — e o ato sem lista **é** a ampla concorrência, o
+    que toda publicação anterior à `021` também é. O vazio é verdade nos bytes e não serve a quem
+    lê: a página do Edital listava as três ordens de um marco com o mesmo texto, e só a lista as
+    distingue. Uma função só para o documento e para a página, para que os dois não divirjam no
+    nome do mesmo recorte.
+    """
+    return cabecalho.get("lista") or "Ampla concorrência"
+
+
 def _escala(marco):
     """As casas decimais que o **marco** declarou — a apresentação não decide de novo.
 
