@@ -7,6 +7,8 @@ habilitado nela naquele dia.*
 `make test-pg` fechou em **9129 passando e 11 pulados**, em 906 s — os números que o `AGENTS.md`
 registrava para a `058`. **Ao fechar** (T046, mesmo dia): **9247 passando e 11 pulados**, em 906 s —
 os mesmos onze pulados, comparados por lista e não por total; os 118 a mais são os testes da `060`.
+Sobre a `main` com a `059` (merge de 06/10): **9313 passando e 11 pulados** — os 9195 dela e os 118 da
+`060`, com os mesmos onze pulados.
 
 Cada linha aponta o lugar do código e o que o prende. Caminhos de teste relativos a `backend/tests/`.
 **TR** = `unidades/test_registro.py`; **TS** = `unidades/test_sincronizacao.py`; **TV** =
