@@ -35,6 +35,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain.documentos import (
     OBRIGATORIO,
     aplicaveis,
@@ -2530,6 +2531,11 @@ def resultado(request, publicacao_id):
         {
             "publicacao": publicacao,
             "cabecalho": conteudo["cabecalho"],
+            # **A lista, sempre com nome** — também a ampla concorrência, gravada sem ele. A página
+            # do Edital já dizia a lista de cada link (#255), e quem chegava à publicação da ampla
+            # não encontrava nela, nem no título da aba, de que lista era: as três ordens de um
+            # marco abriam com o mesmo cabeçalho.
+            "lista": nome_da_lista(conteudo["cabecalho"]),
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
