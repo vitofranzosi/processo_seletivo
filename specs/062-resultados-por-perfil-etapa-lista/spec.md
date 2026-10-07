@@ -192,7 +192,8 @@ cada caso.
 
 1. **Given** uma pessoa não conectada, **When** abre a página de um Edital com resultado divulgado,
    **Then** o bloco mostra "Participou deste processo seletivo?", a explicação e a ação "Entrar para
-   ver minha situação", e a identificação devolve a pessoa ao Edital.
+   ver minha situação", e a identificação devolve a pessoa ao Edital — sem pedir nome e CPF a quem
+   ainda não os informou, porque voltar a uma página pública não pratica ato nenhum.
 2. **Given** uma pessoa conectada com inscrição enviada no Edital, **When** abre a página, **Then**
    a ação leva direto à inscrição, onde a situação é mostrada, sem pedir nova identificação.
 3. **Given** uma pessoa conectada sem inscrição enviada no Edital, **When** abre a página, **Then**
@@ -270,9 +271,11 @@ cada caso.
   publicações e fora de qualquer Perfil, etapa ou lista, o convite "Participou deste processo
   seletivo? Consulte sua classificação e situação individual." (decisão recebida 6).
 - **FR-1161**: Para quem não está conectado, a ação MUST ser "Entrar para ver minha situação" e,
-  depois da identificação, MUST devolver a pessoa à página do Edital.
+  depois da identificação, MUST devolver a pessoa à página do Edital. Esse caminho MUST NOT pedir
+  nome e CPF: eles continuam sendo pedidos só a quem volta a caminho de uma vaga.
 - **FR-1162**: Para quem está conectado com exatamente uma inscrição enviada no Edital, a ação MUST
-  levar direto a essa inscrição; com mais de uma, à lista de inscrições da pessoa.
+  ser "Ver minha situação" e levar direto a essa inscrição; com mais de uma, "Ver minhas
+  inscrições", levando à lista de inscrições da pessoa.
 - **FR-1163**: Para quem está conectado sem inscrição enviada no Edital, o convite MUST NOT
   aparecer.
 

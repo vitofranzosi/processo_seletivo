@@ -69,6 +69,12 @@ POST —, e a página do Edital é pública, GET, e não pratica ato nenhum. O d
 contra o próprio host por `_destino_seguro`, e qualquer outra rota continua indo para "Minhas
 inscrições".
 
+**E nome e CPF continuam sendo pedidos só a caminho de uma vaga.** `_entrar` hoje manda a
+"Seus dados" **todo** destino de quem ainda não tem o núcleo da identidade, porque até aqui todo
+destino era uma vaga. Com a página do Edital entrando, a mesma linha passaria a cobrar CPF de quem só
+veio olhar — e quem tem inscrição enviada já o informou, de modo que a cobrança só alcançaria quem
+não tem situação nenhuma a ver. A condição passa a ser "o destino é uma vaga" (`FR-1161`).
+
 **Alternativas**: não passar destino e deixar a pessoa em "Minhas inscrições" — descartado: a
 lista não mostra classificação, e quem veio do Edital perderia o lugar. Mandar direto à inscrição
 depois da identificação — descartado: antes de entrar não se sabe qual é, e o destino teria de

@@ -55,16 +55,16 @@ P = `backend/processo_seletivo/portal/`; T = `backend/tests/portal/`.
 
 **Goal**: FR-1160 a FR-1163. **Independent Test**: sem sessão, com sessão e uma inscrição enviada, com sessão sem inscrição enviada.
 
-- [ ] T016 [US4] Em P`views.py`, `_de_volta_a_vaga` reconhece também `portal:selecao` e devolve a página do Edital com `#resultados-titulo`; atualizar a docstring com o porquê (página pública, GET, sem ato) (D-007)
+- [ ] T016 [US4] Em P`views.py`, `_de_volta_a_vaga` reconhece também `portal:selecao` e devolve a página do Edital com `#resultados-titulo`; atualizar a docstring com o porquê (página pública, GET, sem ato); e em `_entrar` o desvio para "Seus dados" por falta de núcleo passa a valer só quando o destino é uma vaga (D-007, FR-1161)
 - [ ] T017 [US4] Em P`views.py`, na view `selecao`, montar `contexto["convite_da_situacao"]` a partir de `iniciadas` já lidas: sem sessão → acesso com `destino` na página do Edital; uma enviada → a inscrição; duas ou mais → a lista; nenhuma → `None` (D-003 da spec)
 - [ ] T018 [US4] Em P`templates/portal/selecao.html` e P`templates/portal/base.html`, o `aside.convite-da-situacao` depois dos grupos, com o texto da decisão recebida 6 e a regra de estilo dele
-- [ ] T019 [US4] Testes em TR: os quatro casos da tabela do data-model; o convite fora de qualquer `div.resultados-do-perfil`; a volta do acesso com `destino` da página do Edital leva a ela na âncora; um `destino` de outra rota continua indo para "Minhas inscrições" (US4 cenários 1–4, SC-447)
+- [ ] T019 [US4] Testes em TR: os quatro casos da tabela do data-model; o convite fora de qualquer `div.resultados-do-perfil`; a volta do acesso com `destino` da página do Edital leva a ela na âncora, sem passar por "Seus dados" quando falta o núcleo, enquanto o `destino` de vaga continua passando; um `destino` de outra rota continua indo para "Minhas inscrições" (US4 cenários 1–4, SC-447)
 
 ## Phase 7: Polish & Cross-Cutting
 
 - [ ] T020 Teste em TR do custo constante: a mesma página com N e 2N publicações faz o mesmo número de consultas (SC-448, D-011)
 - [ ] T021 Teste em TR de que o destaque continua com o Edital encerrado e some com inscrições abertas, e de que a página de cada publicação não mudou (FR-1164, FR-1165)
-- [ ] T022 Verificar no navegador conforme o [quickstart](quickstart.md) §3, a 1280 × 900 e a 375 px (largura de rolagem do documento = 375; natureza e data quebrando), e a ida e volta pelo convite (UX-153, UX-154, SC-449)
+- [ ] T022 Verificar no navegador conforme o [quickstart](quickstart.md) §3, a 1280 × 900 e a 375 px (largura de rolagem do documento = 375; natureza e data quebrando), e a ida e volta pelo convite; registrar as medidas em `specs/062-resultados-por-perfil-etapa-lista/verificacao.md` (UX-153, UX-154, SC-449)
 - [ ] T023 Escrever `specs/062-resultados-por-perfil-etapa-lista/rastreabilidade.md` com uma linha para cada FR-, SC- e UX- da spec: onde entrou e o teste que o prende
 - [ ] T024 `cd backend && make lint check test-pg DB_NAME=ps_062`, depois de mesclar `origin/main`; registrar o total em `verificacao.md` da feature
 

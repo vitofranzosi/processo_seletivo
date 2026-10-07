@@ -74,6 +74,7 @@ specs/062-resultados-por-perfil-etapa-lista/
 ├── research.md          # D-005 a D-012
 ├── data-model.md        # a árvore e as ordens
 ├── quickstart.md
+├── verificacao.md       # medidas no navegador e o total da suíte (T022, T024)
 ├── contracts/
 │   └── bloco-de-resultados.md
 ├── checklists/
