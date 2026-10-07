@@ -19,6 +19,7 @@ from processo_seletivo.divulgacao.models import (
     PublicacaoResultado,
     SituacaoDivulgada,
 )
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import montar_ato_publicavel, montar_marco, pontuar
 from tests.interface.conftest import identificar
 
@@ -146,7 +147,7 @@ def test_publicar_pela_tela_cria_a_publicacao_e_leva_ao_historico(client, seleto
         ),
         {
             "natureza": "PRELIMINAR",
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             "confirmacao_da_previa": confirmacao,
             "chave_idempotencia": chave,
         },
@@ -252,7 +253,7 @@ def _formulario(client, url, **campos):
     corpo = client.get(url).content.decode()
     return {
         "natureza": "PRELIMINAR",
-        "autoridade": "diretoria-cefor",
+        "autoridade": str(AUTORIDADE_DO_RESULTADO),
         "confirmacao_da_previa": re.search(
             r'name="confirmacao_da_previa" value="([^"]+)"', corpo
         ).group(1),
@@ -286,7 +287,8 @@ def test_a_recusa_do_post_devolve_o_status_declarado_no_contrato(
 
     # 422 — autoridade fora do catálogo.
     autoridade = client.post(
-        _confirmar(cenario), _formulario(client, _previa(cenario), autoridade="prefeitura-alheia")
+        _confirmar(cenario),
+        _formulario(client, _previa(cenario), autoridade="00000000-0000-0000-0000-00000000dead"),
     )
     assert autoridade.status_code == 422
 
@@ -305,7 +307,7 @@ def test_a_recusa_do_post_devolve_o_status_declarado_no_contrato(
         _confirmar(cenario, ato=antigo),
         {
             "natureza": "DEFINITIVA",
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             "confirmacao_da_previa": "0" * 64,
             "chave_idempotencia": "chave-0756-sucedido",
         },
@@ -329,7 +331,7 @@ def test_a_recusa_recompoe_a_assinatura_para_a_reconfirmacao(client, seletor_lig
         _confirmar(cenario),
         {
             "natureza": "PRELIMINAR",
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             "confirmacao_da_previa": assinatura,
             "chave_idempotencia": chave,
         },

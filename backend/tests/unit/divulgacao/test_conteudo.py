@@ -57,14 +57,14 @@ def test_o_empate_residual_vira_posicao_compartilhada(com_empate):
 def test_a_natureza_e_o_titulo_sao_texto_e_nao_enum(com_empate):
     """`PRELIMINAR` é grafia interna; o que se divulga é "Resultado preliminar" (FR-013)."""
     from processo_seletivo.divulgacao.domain.conteudo import conteudo_divulgado
-    from processo_seletivo.publicacoes.domain.autoridades import escolher
+    from tests.fixtures.autoridades import assinatura_do_resultado
 
     projecao = compor(com_empate["ato"])
     conteudo = conteudo_divulgado(
         projecao,
         natureza="PRELIMINAR",
         publicado_em=com_empate["ato"].emitido_em,
-        signatario=escolher("diretoria-cefor"),
+        **assinatura_do_resultado(),
     )
 
     assert conteudo["cabecalho"]["natureza_rotulo"] == "Resultado preliminar"

@@ -13,10 +13,8 @@ from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
-from processo_seletivo.publicacoes.infrastructure.pdf import (
-    AutoridadeSignataria,
-    render_edital_pdf,
-)
+from processo_seletivo.publicacoes.application.contexto_do_ato import contexto_do_ato
+from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.publicacoes.models import (
     DocumentoPublicado,
     Homologacao,
@@ -30,7 +28,6 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, 
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
-from processo_seletivo.shared.tempo import ZONA
 
 
 def _decimal_canonico(valor):
@@ -682,10 +679,12 @@ def revoke_homologation(
 
 
 def publish_edital(
-    *, actor, edital_id, expected_revision, signatory, reason, idempotency_key, correlation_id
+    *, actor, edital_id, expected_revision, autoridade_id, reason, idempotency_key, correlation_id
 ):
     require_permission(actor, "edital:publicar")
-    payload = {"signatory": signatory, "reason": reason}
+    # O identificador, e não o dicionário de antes: nome, cargo e ato de nomeação saem do registro
+    # de autoridades, e não de quem publica (060, FR-1125).
+    payload = {"autoridade": str(autoridade_id or ""), "reason": reason}
     with command_context() as now:
         idem = reserve(
             actor=actor,
@@ -729,19 +728,17 @@ def publish_edital(
             raise DomainError(
                 "blocking_findings", "; ".join(item.message for item in impeditivos), 422
             )
-        # A autoridade é contexto do ato, não conteúdo publicado: ela chega por parâmetro
-        # porque o documento é composto **antes** de a `Publicacao` existir (`008`, FR-034).
-        # A data do ato é o `now` desta transação, no fuso institucional (`054`, FR-989): é o dia
-        # em que a Publicação nasce, e não o do relógio do servidor em UTC.
+        # A autoridade e a unidade são contexto do ato, não conteúdo publicado: chegam por
+        # parâmetro porque o documento é composto **antes** de a `Publicacao` existir (`008`,
+        # FR-034). A autoridade é conferida aqui, sob trava, contra a unidade do Edital e a data do
+        # ato — o `now` desta transação, no fuso institucional (`054`, FR-989; `060`, FR-1126).
+        ato = contexto_do_ato(edital, autoridade_id, now)
         pdf = render_edital_pdf(
             revisao.content,
             revisao.content_hash,
-            autoridade=AutoridadeSignataria(
-                nome=signatory["name"],
-                cargo=signatory["role"],
-                ato_de_nomeacao=signatory.get("appointment", ""),
-            ),
-            data_do_ato=now.astimezone(ZONA).date(),
+            unidade=ato.para_o_compositor,
+            autoridade=ato.assinante,
+            data_do_ato=ato.data_do_ato,
         )
         document_hash = hashlib.sha256(pdf).hexdigest()
         publication = Publicacao.objects.create(
@@ -754,10 +751,7 @@ def publish_edital(
             canonical_content=revisao.canonical_content,
             canonical_schema_version=revisao.canonical_schema_version,
             published_by=actor.subject,
-            signatory_id=signatory["authorityId"],
-            signatory_name=signatory["name"],
-            signatory_role=signatory["role"],
-            signatory_appointment=signatory.get("appointment", ""),
+            **ato.colunas,
         )
         document = DocumentoPublicado.objects.create(
             publicacao=publication,

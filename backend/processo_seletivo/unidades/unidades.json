@@ -1,0 +1,9 @@
+{
+  "cefor": {
+    "sigla": "Cefor",
+    "nome": "Centro de Referência em Formação e em Educação a Distância",
+    "cabecalho": ["Centro de Referência em Formação", "e em Educação a Distância"],
+    "local": "Vitória (ES)",
+    "ativa": true
+  }
+}

@@ -120,7 +120,7 @@ def disponiveis(retificacao, ator):
             yield ato
 
 
-def executar(ato, request, ator, retificacao, signatario=None):
+def executar(ato, request, ator, retificacao, autoridade_id=None):
     argumentos = {
         "actor": ator,
         "retificacao_id": retificacao.id,
@@ -131,7 +131,7 @@ def executar(ato, request, ator, retificacao, signatario=None):
         "correlation_id": request.correlation_id,
     }
     if ato.chave == "publicar":
-        return publish_retification(**argumentos, signatory=signatario)
+        return publish_retification(**argumentos, autoridade_id=autoridade_id)
     return transition_retification(
         **argumentos, action=ato.chave, reason=(request.POST.get("motivo") or "").strip()
     )

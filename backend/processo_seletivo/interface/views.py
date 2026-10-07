@@ -179,6 +179,7 @@ from processo_seletivo.processos.application.selectors import (
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.aplicacao import criar_retificacao_com_gestos
+from processo_seletivo.publicacoes.application.contexto_do_ato import unidade_para_o_compositor
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
@@ -190,7 +191,6 @@ from processo_seletivo.publicacoes.application.selectors import (
     impede_por_segregacao,
     participantes_do_edital,
 )
-from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
@@ -217,6 +217,13 @@ from processo_seletivo.shared.arquivos import aceitar, tamanho_legivel
 from processo_seletivo.shared.canonical import canonical_sha256
 from processo_seletivo.shared.http import marcar_como_privada
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
+from processo_seletivo.unidades.application import selectors as unidades_selectors
+from processo_seletivo.unidades.application.autoridades import cadastrar as cadastrar_autoridade
+from processo_seletivo.unidades.application.autoridades import corrigir as corrigir_autoridade
+from processo_seletivo.unidades.application.autoridades import encerrar as encerrar_autoridade
+from processo_seletivo.unidades.domain import vigencia as vigencia_de_autoridade
+from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
+from processo_seletivo.unidades.domain.rotulos import rotulo_da_autoridade
 
 # Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
 ORDEM_SITUACAO = [
@@ -287,6 +294,9 @@ def lista(request):
             "pode_criar": ator.can("processo:criar"),
             # Sem consulta nova: a capacidade já veio na sessão (040, FR-605).
             "pode_ver_visao": ator.can(visao_institucional.CONSULTAR),
+            # O caminho para as autoridades da unidade (060), condicionado à permissão pela razão
+            # da visão geral: oferecer um destino que a autorização recusa é o `N-03` da 038.
+            "pode_gerir_autoridades": ator.can(GERIR_AUTORIDADES),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
         },
@@ -3414,7 +3424,15 @@ def previa_documento(request, edital_id):
     edital, desvio = _edital_com_previa(request, edital_id)
     if desvio is not None:
         return desvio
-    documento = render_edital_pdf(edital_snapshot(edital), "", modo=MODO_PREVIA)
+    # A unidade registrada agora: a prévia não é ato e não congela nada, mas abre com o cabeçalho
+    # que o documento publicado vai ter (060, FR-1112).
+    unidade = unidades_selectors.exigir_unidade(edital.institution_scope)
+    documento = render_edital_pdf(
+        edital_snapshot(edital),
+        "",
+        modo=MODO_PREVIA,
+        unidade=unidade_para_o_compositor(unidade),
+    )
     resposta = HttpResponse(documento, content_type="application/pdf")
     nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
     resposta["Content-Disposition"] = f'inline; filename="{nome}"'
@@ -3696,8 +3714,12 @@ def praticar_ato(request, edital_id, acao):
         "rotulo_previa": ROTULO_DA_PREVIA.get(edital.status, "Ver o Edital"),
         # Passagem de bastão dita antes do ato (FR-028): quem submete está entregando a alguém.
         "entrega_para": acoes.entrega_para(ato),
-        "autoridades": autoridades.CATALOGO,
+        "escolha_da_autoridade": _escolha_da_autoridade(edital),
     }
+    # Sem autoridade vigente na unidade, publicar é recusa certa (060, FR-1127): o comando a
+    # recusaria, e oferecer o botão só adiaria a recusa para depois do clique.
+    if ato.exige_signatario and not contexto["escolha_da_autoridade"]["opcoes"]:
+        contexto["recusa_certa"] = True
 
     if request.method == "GET":
         return render(request, "interface/confirmar.html", contexto)
@@ -3806,6 +3828,26 @@ def _artefatos_enviados(request, ator):
     return dados
 
 
+def _escolha_da_autoridade(edital):
+    """As autoridades que a tela de publicar oferece: as da unidade do Edital, vigentes hoje (060).
+
+    Hoje no fuso institucional, que é o dia que o comando confere (FR-1119). A unidade é dita pela
+    sigla registrada (UX-150); só o escopo sem unidade registrada, que não tem nome, aparece pelo
+    código — e ali a publicação é recusada de qualquer modo.
+    """
+    hoje = timezone.now().astimezone(ZONA_INSTITUCIONAL).date()
+    unidade = unidades_selectors.unidade(edital.institution_scope)
+    return {
+        "unidade": unidade.sigla if unidade else edital.institution_scope,
+        "opcoes": [
+            {"valor": str(autoridade.pk), "rotulo": rotulo_da_autoridade(autoridade)}
+            for autoridade in unidades_selectors.autoridades_vigentes(
+                edital.institution_scope, hoje
+            )
+        ],
+    }
+
+
 def _executar(ato, request, ator, edital):
     argumentos = {
         "actor": ator,
@@ -3820,21 +3862,9 @@ def _executar(ato, request, ator, edital):
             raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
         argumentos["reason"] = motivo
     if ato.exige_signatario:
-        # A autoridade vem do catálogo declarado (FR-039). Nome, cargo e identificador saem da
-        # entrada escolhida — nenhum deles é digitado, e o identificador não é sequer exibido.
-        autoridade = autoridades.escolher(request.POST.get("signatario"))
-        if autoridade is None:
-            raise DomainError(
-                "signatario_obrigatorio",
-                "Escolha a Autoridade Signatária que assina este Edital.",
-                422,
-            )
-        argumentos["signatory"] = {
-            "authorityId": str(autoridade.identificador),
-            "name": autoridade.nome,
-            "role": autoridade.cargo,
-            "appointment": autoridade.ato_de_nomeacao,
-        }
+        # Só o identificador da autoridade escolhida. Nome, cargo e ato de nomeação saem do
+        # registro, e a conferência contra a unidade e a vigência é do comando (060, FR-1126).
+        argumentos["autoridade_id"] = request.POST.get("signatario", "")
         argumentos["reason"] = (request.POST.get("motivo") or "").strip()
     return ato.command(**argumentos)
 
@@ -4386,37 +4416,24 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "recusa_certa": bool(impedimento),
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
-        "autoridades": autoridades.CATALOGO,
+        "escolha_da_autoridade": _escolha_da_autoridade(item.edital),
         # O que a conferência do ato sabe e descartava (027, FR-336). A submissão de um rascunho
         # mostra as advertências dele; a Retificação as calculava e jogava fora, de modo que o
         # mesmo conteúdo dizia duas coisas diferentes conforme o caminho por onde chegava.
         "advertencias": advertencias_do_ato(item),
     }
+    if ato.exige_signatario and not contexto["escolha_da_autoridade"]["opcoes"]:
+        contexto["recusa_certa"] = True
     if request.method == "GET":
         return render(request, "interface/retificacao_confirmar.html", contexto)
 
     try:
         if ato.exige_motivo and not (request.POST.get("motivo") or "").strip():
             raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
-        signatario = None
-        if ato.exige_signatario:
-            # **São dois fluxos de publicação**, e o do Edital não é o único: corrigir um Edital
-            # publicado passa por aqui. Deixar este de fora manteria o UUID digitado exatamente
-            # onde a correção acontece (FR-039).
-            autoridade = autoridades.escolher(request.POST.get("signatario"))
-            if autoridade is None:
-                raise DomainError(
-                    "signatario_obrigatorio",
-                    "Escolha a Autoridade Signatária que assina esta Retificação.",
-                    422,
-                )
-            signatario = {
-                "authorityId": str(autoridade.identificador),
-                "name": autoridade.nome,
-                "role": autoridade.cargo,
-                "appointment": autoridade.ato_de_nomeacao,
-            }
-        atos_retificacao.executar(ato, request, ator, item, signatario)
+        # **São dois fluxos de publicação**, e o do Edital não é o único: corrigir um Edital
+        # publicado passa por aqui. A autoridade é conferida pelo comando, como lá (060, FR-1126).
+        autoridade_id = request.POST.get("signatario", "") if ato.exige_signatario else None
+        atos_retificacao.executar(ato, request, ator, item, autoridade_id)
     except DomainError as exc:
         contexto["erro"] = exc.detail
         return render(request, "interface/retificacao_confirmar.html", contexto, status=exc.status)
@@ -4622,6 +4639,14 @@ OPERACOES = {
     # eles são auditados sob o juízo e sob a decisão, que esta tela não reúne. Rótulo para o que não
     # se exibe seria promessa de uma tela que não existe.
     "recurso:interpor": "Recurso interposto",
+    # O registro de Unidades e as autoridades da unidade (060). A sincronização registra sob o ator
+    # `implantacao`; a manutenção das autoridades, sob quem a fez na tela. Os detalhes — antes e
+    # depois — vão em `detalhe`, e o rótulo diz só o que aconteceu.
+    "REGISTRAR_UNIDADE": "Registro da unidade",
+    "ALTERAR_UNIDADE": "Alteração da unidade",
+    "CADASTRAR_AUTORIDADE": "Cadastro de autoridade",
+    "CORRIGIR_AUTORIDADE": "Correção de autoridade",
+    "ENCERRAR_AUTORIDADE": "Encerramento de autoridade",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -7974,7 +7999,7 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 ),
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
-                "autoridades": autoridades.CATALOGO,
+                "escolha_da_autoridade": _escolha_da_autoridade(edital),
                 "confirmacao_da_previa": assinatura_da_previa(
                     ato=ato, publicacao_anterior=sucede, projecao=projecao
                 ),
@@ -8227,7 +8252,7 @@ def marco(request, edital_id, marco_id):
                 "indicador": indicador,
                 "gestos": _gestos_oferecidos(conteudo, perfil, marco_publicado, pode, indicador),
                 "naturezas": list(Natureza.choices),
-                "autoridades": autoridades.CATALOGO,
+                "escolha_da_autoridade": _escolha_da_autoridade(edital),
                 # **Quem não pratica sabe a quem pedir**, pelo mecanismo único (`FR-829`; 037,
                 # `FR-543a`) — e cada frase só existe para quem não tem aquele eixo.
                 "conducao_para_emitir": (
@@ -8349,7 +8374,11 @@ def gesto_do_marco(request, edital_id, marco_id, operacao):
                     "verbo": conducao_do_marco.verbo_da_confirmacao(operacao, len(a_praticar)),
                     "natureza": natureza,
                     "natureza_rotulo": dict(Natureza.choices).get(natureza, ""),
-                    "autoridade": autoridades.escolher(autoridade),
+                    # Relida pelo identificador, na unidade do Edital: a de outra unidade não se
+                    # mostra, e o comando a recusaria na confirmação (060, FR-1126).
+                    "autoridade": unidades_selectors.autoridade_da_unidade(
+                        autoridade, edital.institution_scope
+                    ),
                     # **Por recorte, e não por marco** (RC-121): o campo aparece quando algum ato
                     # do alcance não tem janela computável, e cada item diz se a leva.
                     "exige_declaracao": any(item["com_declaracao"] for item in a_praticar),
@@ -9603,3 +9632,117 @@ def anular_o_sorteio(request, edital_id, marco_id):
             raise Http404 from recusa
         _recusa_do_sorteio(request, ANULACAO, recusa)
     return redirect(destino)
+
+
+# ---------------------------------------------------------------------------
+# As autoridades da unidade (060). Leitura e gestos, pela permissão do Gestor (D-005).
+# ---------------------------------------------------------------------------
+
+GRUPOS_DE_AUTORIDADES = (
+    ("vigentes", "Vigentes", "Nenhuma autoridade vigente hoje: a publicação fica indisponível."),
+    ("futuras", "A partir de uma data futura", "Nenhuma com vigência a começar."),
+    ("encerradas", "Encerradas", "Nenhuma encerrada."),
+)
+
+
+def _autoridades_em_grupos(codigo, hoje):
+    """As autoridades da unidade, separadas pela situação de hoje (UX-149)."""
+    grupos = {chave: [] for chave, _, _ in GRUPOS_DE_AUTORIDADES}
+    destino = {
+        vigencia_de_autoridade.VIGENTE: "vigentes",
+        vigencia_de_autoridade.FUTURA: "futuras",
+        vigencia_de_autoridade.ENCERRADA: "encerradas",
+    }
+    for autoridade in unidades_selectors.autoridades_da_unidade(codigo):
+        grupos[destino[vigencia_de_autoridade.situacao(autoridade, hoje)]].append(
+            {
+                "id": str(autoridade.pk),
+                "rotulo": rotulo_da_autoridade(autoridade),
+                "periodo": vigencia_de_autoridade.periodo(autoridade),
+                "usada": autoridade.usada_em is not None,
+                "cargo": autoridade.cargo,
+                "nome": autoridade.nome,
+                "ato_de_nomeacao": autoridade.ato_de_nomeacao,
+                "inicio_iso": autoridade.inicio_vigencia.isoformat(),
+            }
+        )
+    return [
+        {"chave": chave, "titulo": titulo, "vazio": vazio, "itens": grupos[chave]}
+        for chave, titulo, vazio in GRUPOS_DE_AUTORIDADES
+    ]
+
+
+def _praticar_na_autoridade(acao, ator, dados, chave, correlacao):
+    comuns = {"actor": ator, "idempotency_key": chave, "correlation_id": correlacao}
+    if acao == "cadastrar":
+        return cadastrar_autoridade(
+            cargo=dados["cargo"],
+            nome=dados["nome"],
+            ato_de_nomeacao=dados["ato_de_nomeacao"],
+            inicio_vigencia=dados["inicio_vigencia"],
+            **comuns,
+        )
+    if acao == "corrigir":
+        return corrigir_autoridade(
+            autoridade_id=dados["autoridade"],
+            cargo=dados["cargo"],
+            nome=dados["nome"],
+            ato_de_nomeacao=dados["ato_de_nomeacao"],
+            inicio_vigencia=dados["inicio_vigencia"],
+            **comuns,
+        )
+    if acao == "encerrar":
+        return encerrar_autoridade(
+            autoridade_id=dados["autoridade"], fim_vigencia=dados["fim_vigencia"], **comuns
+        )
+    raise DomainError("acao_desconhecida", "Ação desconhecida.", 422)
+
+
+@require_http_methods(["GET", "POST"])
+def autoridades(request):
+    """As autoridades que podem responder pelos atos da unidade (060, FR-1122, UX-149).
+
+    **A recusa mora na aplicação, e a tela apenas a antecipa**, como na visão institucional: quem
+    colar o endereço sem a permissão recebe a recusa que nomeia o que falta. A autoridade de outra
+    unidade responde 404, indistinguível de inexistente — o comando a procura só no escopo do ator.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return redirect(reverse("interface:identificar"))
+    require_authorization_base(
+        ator.can(GERIR_AUTORIDADES),
+        bases=[base_de_permissao("gerir as autoridades da unidade")],
+    )
+    unidade = unidades_selectors.unidade(ator.institution_scope)
+    erro = ""
+    status = 200
+    if request.method == "POST" and unidade is not None:
+        acao = request.POST.get("acao", "")
+        try:
+            _praticar_na_autoridade(
+                acao,
+                ator,
+                forms.ler_autoridade(request.POST),
+                request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+                getattr(request, "correlation_id", ""),
+            )
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            erro, status = recusa.detail, recusa.status
+        else:
+            return redirect(f"{reverse('interface:autoridades')}?feito={acao}")
+    hoje = timezone.now().astimezone(ZONA_INSTITUCIONAL).date()
+    return render(
+        request,
+        "interface/autoridades.html",
+        {
+            "unidade": unidade,
+            "codigo": ator.institution_scope,
+            "grupos": _autoridades_em_grupos(ator.institution_scope, hoje) if unidade else [],
+            "hoje_iso": hoje.isoformat(),
+            "chave_idempotencia": f"ui-{uuid4().hex}",
+            "erro": erro,
+        },
+        status=status,
+    )

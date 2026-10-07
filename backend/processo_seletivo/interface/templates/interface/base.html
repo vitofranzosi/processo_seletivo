@@ -915,6 +915,15 @@ ul.comissao{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(24rem
    diferentes. A ação vai para o rodapé do cartão, e os rodapés se alinham. {% endcomment %}
 ul.comissao>li{display:flex;flex-direction:column;margin-bottom:0}
 ul.comissao .gerir-membro{margin-top:auto;padding-top:.5rem}
+{% comment %} As autoridades da unidade (060), em cartões como os da Comissão, e por regras
+   próprias: o cargo por extenso de uma diretoria passa de setenta caracteres, e uma lista em linha
+   o encostava no cartão seguinte. {% endcomment %}
+ul.autoridades{list-style:none;padding:0;margin:0;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(24rem,100%),1fr));gap:.75rem}
+ul.autoridades>li{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;display:flex;flex-direction:column}
+ul.autoridades .cabeca{margin-bottom:.5rem}
+ul.autoridades .gerir-membro{margin-top:auto;padding-top:.5rem}
 
 {% comment %} Poucas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
    outra, com um vão no meio que o olho tinha de atravessar a cada linha. {% endcomment %}

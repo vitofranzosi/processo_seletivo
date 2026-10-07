@@ -1169,19 +1169,28 @@ components:
       properties:
         signatory: { $ref: '#/components/schemas/SignatorySnapshot' }
         reason: { type: string, minLength: 1 }
+    # Só o identificador da autoridade habilitada na unidade do Edital (060, R-014). Nome, cargo e ato
+    # de nomeação vêm do registro de autoridades, e não de quem publica: `name`, `role` e
+    # `appointment` deixaram de ser aceitos, e a recusa é `422 invalid_payload`. A autoridade de
+    # outra unidade, fora de vigência ou inexistente é recusada pelo comando (060, FR-1126).
     SignatorySnapshot:
       type: object
       additionalProperties: false
-      required: [authorityId, name, role]
+      required: [authorityId]
       properties:
         authorityId: { $ref: '#/components/schemas/Id' }
-        # Vazio enquanto o catálogo de autoridades não tiver o nome próprio (054, FR-992).
-        name: { type: string, maxLength: 255 }
-        role: { type: string, minLength: 1 }
-        # O ato de nomeação de quem assina (054, FR-991); opcional.
-        appointment: { type: string, maxLength: 255 }
-    # Quem assinou, como a Publicação registrou (054, FR-991, FR-992). O nome pode vir vazio: pela
-    # interface, o catálogo de autoridades só tem o cargo enquanto o Cefor não fornece o nome.
+    # Quem assinou, como a Publicação registrou (054, FR-991, FR-992). O nome pode vir vazio: o
+    # registro de autoridades admite só o cargo enquanto o Cefor não fornece o nome (060, FR-1116).
+    # A unidade que praticou o ato, como a Publicação registrou no dia (060, FR-1131). Lida das
+    # colunas congeladas, e não do registro de Unidades: renomeada depois, a consulta não muda.
+    UnidadeRegistrada:
+      type: object
+      additionalProperties: false
+      required: [code, acronym, name]
+      properties:
+        code: { type: string }
+        acronym: { type: string }
+        name: { type: string }
     SignatarioRegistrado:
       type: object
       additionalProperties: false
@@ -1300,11 +1309,12 @@ components:
       allOf:
         - $ref: '#/components/schemas/PublicacaoResponse'
         - type: object
-          required: [sourceType, sourceId, signatory, content, documentUrl]
+          required: [sourceType, sourceId, signatory, unit, content, documentUrl]
           properties:
             sourceType: { type: string, enum: [EDITAL, RETIFICACAO] }
             sourceId: { $ref: '#/components/schemas/Id' }
             signatory: { $ref: '#/components/schemas/SignatarioRegistrado' }
+            unit: { $ref: '#/components/schemas/UnidadeRegistrada' }
             content: { type: object, additionalProperties: true }
             documentUrl: { type: string, format: uri-reference }
     RetificacaoPublicaResponse:

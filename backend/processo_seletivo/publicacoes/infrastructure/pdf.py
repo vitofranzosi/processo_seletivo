@@ -342,6 +342,22 @@ class AutoridadeSignataria:
 
 
 @dataclass(frozen=True)
+class UnidadeDoAto:
+    """A unidade que pratica o ato, como o documento a diz — o cabeçalho e o local (060, FR-1112).
+
+    Contexto do ato, como a autoridade: não entra no snapshot, e o hash do conteúdo não muda por
+    ela. Até a 060 eram as constantes `ORGAO` e `LOCAL`, e todo documento dizia o Cefor — inclusive
+    o de um Edital de campus. **Obrigatória nos dois modos**, porque a prévia também imprime o
+    cabeçalho, e **sem valor padrão**: um padrão seria o Cefor de novo, escondido num argumento.
+    """
+
+    # As linhas da unidade abaixo de `INSTITUICAO`, uma ou duas, na quebra em que foram registradas.
+    cabecalho: tuple[str, ...]
+    # O local do fecho — *"Vitória (ES)"*. Só o documento publicado o imprime.
+    local: str
+
+
+@dataclass(frozen=True)
 class Consolidacao:
     """As datas que o documento de uma Retificação declara abaixo do anúncio (054, FR-995).
 
@@ -865,12 +881,18 @@ class Composicao:
 ALTURA_DO_BRASAO = 42.0
 LARGURA_DO_BRASAO = ALTURA_DO_BRASAO * brasao.LARGURA / brasao.ALTURA
 
-ORGAO = (
+# As linhas que todo documento do Ifes abre, qualquer que seja a unidade. As da unidade vêm depois,
+# de `UnidadeDoAto` (060, FR-1112): até a 060, as quatro eram uma constante só, e as duas últimas
+# diziam o Cefor em todo documento.
+INSTITUICAO = (
     "Ministério da Educação",
     "Instituto Federal do Espírito Santo",
-    "Centro de Referência em Formação",
-    "e em Educação a Distância",
 )
+
+
+def linhas_do_orgao(unidade):
+    """As linhas do órgão no cabeçalho: as da instituição e as da unidade, nesta ordem."""
+    return (*INSTITUICAO, *unidade.cabecalho)
 
 
 # "Edital", o número e o ano no começo do título, com ou sem o "Nº" e as grafias dele. O que vem
@@ -943,7 +965,7 @@ def marca_de_consolidacao(consolidacao):
     return frase + "."
 
 
-def _cabecalho(composicao, snapshot, consolidacao=None):
+def _cabecalho(composicao, snapshot, unidade, consolidacao=None):
     """A abertura de um ato administrativo (FR-005 a FR-007).
 
     Calibrado contra os Editais 62/2026 e 73/2026 do Cefor: a hierarquia vem de **peso, caixa alta
@@ -953,7 +975,7 @@ def _cabecalho(composicao, snapshot, consolidacao=None):
     # O brasão é desenhado fora do fluxo, em posição fixa na primeira página; aqui só se reserva
     # a altura dele, para que o órgão comece abaixo e não por baixo.
     composicao.espaco(ALTURA_DO_BRASAO + 6)
-    for indice, linha in enumerate(ORGAO):
+    for indice, linha in enumerate(linhas_do_orgao(unidade)):
         composicao.escrever(
             linha,
             tamanho=CORPO_INSTITUCIONAL,
@@ -2472,17 +2494,16 @@ def norma_acrescentada(key, snapshot):
     return [texto for texto, _ in _norma_da_secao({"key": key}, snapshot)]
 
 
-# Onde o Cefor pratica o ato (054, FR-989, D-004). Constante, como a unidade (`ORGAO`): nenhum
-# cadastro de praça é criado para uma linha que é a mesma em todo Edital.
-LOCAL = "Vitória (ES)"
+def fecho(local, data_do_ato):
+    """`Vitória (ES), 29 de setembro de 2026.` — o local e a data do ato (054, FR-989).
+
+    O local é o da unidade do Edital (060, FR-1113). A 054 o fixou como constante porque o Cefor
+    publica de Vitória; um Edital do Campus Serra não é praticado lá.
+    """
+    return f"{local}, {humano.data_por_extenso(data_do_ato)}."
 
 
-def fecho(data_do_ato):
-    """`Vitória (ES), 29 de setembro de 2026.` — o local e a data do ato (054, FR-989)."""
-    return f"{LOCAL}, {humano.data_por_extenso(data_do_ato)}."
-
-
-def _autoridade(composicao, autoridade, data_do_ato):
+def _autoridade(composicao, autoridade, data_do_ato, local):
     """O fecho do ato: local e data, e quem o praticou — como registro, não como assinatura.
 
     **Local e data** (054, FR-989, emenda à FR-036 da 008). A `008` os proibia — *"a data do ato não
@@ -2502,7 +2523,7 @@ def _autoridade(composicao, autoridade, data_do_ato):
     linha do nome; com nome, o cargo vem abaixo, e o ato de nomeação por último.
     """
     composicao.escrever(
-        fecho(data_do_ato),
+        fecho(local, data_do_ato),
         tamanho=CORPO_TEXTO,
         antes=ANTES_DE_SECAO + 8,
         alinhamento=DIREITA,
@@ -2637,6 +2658,8 @@ def render_edital_pdf(
     snapshot: dict,
     content_hash: str,
     modo: str = MODO_PUBLICADO,
+    *,
+    unidade: UnidadeDoAto,
     autoridade: AutoridadeSignataria | None = None,
     data_do_ato: date | None = None,
     consolidacao: Consolidacao | None = None,
@@ -2651,6 +2674,9 @@ def render_edital_pdf(
     `data_do_ato` e `consolidacao` são contexto do ato, como a autoridade (054, FR-990, FR-995), e
     seguem a mesma regra de presença: a data é obrigatória no publicado e recusada na prévia; a
     consolidação só existe no documento de uma Retificação, que é sempre publicado.
+
+    `unidade` é obrigatória nos dois modos (060, FR-1112): a prévia também abre com o cabeçalho, e
+    só o publicado fecha com o local.
     """
     if modo not in MODOS:
         raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
@@ -2668,7 +2694,7 @@ def render_edital_pdf(
         raise ValueError("O documento publicado exige a data do ato.")
 
     composicao = Composicao()
-    _cabecalho(composicao, snapshot, consolidacao)
+    _cabecalho(composicao, snapshot, unidade, consolidacao)
     _secoes(composicao, snapshot)
     if not previa:
         # Autoridade e verificação são **um** bloco: quem assinou e a prova do que assinou não se
@@ -2676,7 +2702,7 @@ def render_edital_pdf(
         # página deixa o SHA-256 sozinho na seguinte — que foi o que o primeiro exemplo com dois
         # Perfis mostrou, e que o cenário de referência escondia por caber.
         with composicao.bloco():
-            _autoridade(composicao, autoridade, data_do_ato)
+            _autoridade(composicao, autoridade, data_do_ato, unidade.local)
             _integridade(composicao, snapshot, content_hash)
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = edital if previa else f"{edital} · Verificação {content_hash[:16]}…"

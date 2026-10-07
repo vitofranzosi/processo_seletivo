@@ -18,6 +18,7 @@ from django.test import Client
 from django.urls import reverse
 
 from processo_seletivo.divulgacao.models import PublicacaoResultado
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import (
     emitir,
     entrar_como_titular,
@@ -49,7 +50,7 @@ def _publicar_pela_tela(client, cenario, ato, *, natureza):
         ),
         {
             "natureza": natureza,
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             # Desde a 018, publicar como definitivo exige declarar expressamente que o prazo
             # recursal se encerrou — enquanto o Edital não declara janela computável, é a pessoa
             # que responde por essa afirmação (FR-085). Na preliminar o campo nem aparece.
@@ -162,7 +163,7 @@ def test_o_percurso_inteiro_da_divulgacao(
         ),
         {
             "natureza": "PRELIMINAR",
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             "confirmacao_da_previa": "0" * 64,
             "chave_idempotencia": "outra-chave-0780",
         },
