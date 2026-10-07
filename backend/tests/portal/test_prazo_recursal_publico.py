@@ -83,7 +83,9 @@ def test_prazo_aberto_na_pagina_do_resultado_e_na_lista_do_edital(
     )
 
     lista = pagina_do_edital(client, cenario)
-    trecho = re.search(r'<ul class="resultados-divulgados">.*?</ul>', lista, flags=re.S).group(0)
+    # A linha da lista, onde o prazo mora desde a 062 (`FR-1156`): a árvore trocou a lista única
+    # de vigentes por uma lista por etapa, e o prazo continua na linha do resultado a que se aplica.
+    trecho = re.search(r'<li class="lista-divulgada">.*?</li>', lista, flags=re.S).group(0)
     assert f"recurso até {na_zona(fecha).strftime('%d/%m/%Y')}" in trecho
 
 
