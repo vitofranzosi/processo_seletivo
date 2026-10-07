@@ -66,7 +66,7 @@ P = `backend/processo_seletivo/portal/`; T = `backend/tests/portal/`.
 - [X] T021 Teste em TR de que o destaque continua com o Edital encerrado e some com inscrições abertas, e de que a página de cada publicação não mudou (FR-1164, FR-1165)
 - [X] T022 Verificar no navegador conforme o [quickstart](quickstart.md) §3, a 1280 × 900 e a 375 px (largura de rolagem do documento = 375; natureza e data quebrando), e a ida e volta pelo convite; registrar as medidas em `specs/062-resultados-por-perfil-etapa-lista/verificacao.md` (UX-153, UX-154, SC-449)
 - [X] T023 Escrever `specs/062-resultados-por-perfil-etapa-lista/rastreabilidade.md` com uma linha para cada FR-, SC- e UX- da spec: onde entrou e o teste que o prende
-- [ ] T024 `cd backend && make lint check test-pg DB_NAME=ps_062`, depois de mesclar `origin/main`; registrar o total em `verificacao.md` da feature
+- [X] T024 `cd backend && make lint check test-pg DB_NAME=ps_062`, depois de mesclar `origin/main`; registrar o total em `verificacao.md` da feature
 
 ## Dependencies & Execution Order
 

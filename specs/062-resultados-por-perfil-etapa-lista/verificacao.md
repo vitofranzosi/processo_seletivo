@@ -49,4 +49,8 @@ lista é qual. É o achado de `acompanhamento.html` registrado na spec, fora do 
 
 ## 5. A suíte
 
-Ver o final deste arquivo, preenchido em T024.
+`make lint check test-pg DB_NAME=ps_062`, em 07/10/2026, depois de mesclar a `main` com a `061`:
+lint e check limpos; **9347 passando, 11 pulados, 1 falha**, em 993 s. A falha era
+`test_readme_acompanha_o_codigo.py`: a tabela de incrementos do README não tinha a linha da `062`.
+A linha entrou, e o guardião passou isolado junto com `test_citacoes_de_requisito.py` (8 casos).
+Os onze pulados são os de sempre — 9 pares de vocabulário, a recusa por vendor e o E2E da Caixa.
