@@ -138,7 +138,8 @@ def test_o_percurso_inteiro_da_divulgacao(
     outra = Client()
     entrar_como_titular(outra, sem_posicao)
     area_dela = _conteudo(outra.get(reverse("portal:acompanhamento", args=[sem_posicao.id])))
-    assert "Você não foi classificado" in area_dela
+    assert "Não classificado" in area_dela
+    assert "Sem posição nesta lista" in area_dela
     assert sem_posicao.nome not in pagina
 
     # ---- 6. O documento -------------------------------------------------------------------------

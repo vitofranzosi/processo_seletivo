@@ -4,6 +4,48 @@
 <h1>Acompanhar</h1>
 <p class="sub">{{ selecao.processo_titulo }}</p>
 
+{% comment %}
+**Situação → Por quê → O que fazer, antes de qualquer documento** (063, FR-1166). A pessoa chega
+perguntando em que pé está, e a tela respondia com evidência: o resultado de cada Etapa, um bloco
+por publicação, a convocação no meio. Quem estava em duas listas lia "8º lugar" e "2º lugar" sob o
+mesmo título.
+
+Tudo o que este bloco diz sai de `portal/situacao.py`, e o template não escreve frase nenhuma de
+situação, de consequência, de canal ou de cadastro reserva (D-005). Mudar uma redação é mudar a
+constante — e é ali que a varredura de vocabulário a lê.
+
+As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausência (FR-1178).
+{% endcomment %}
+{% with acao=situacao.o_que_fazer %}
+<section class="situacao-da-inscricao" aria-labelledby="situacao-titulo">
+  <h2 id="situacao-titulo">Sua situação</h2>
+  <p class="rotulo-da-situacao {% if situacao.provisoria %}provisoria{% else %}registrada{% endif %}">{{ situacao.rotulo }}</p>
+  <h3>Por quê</h3>
+  <ul class="porque">
+    {% for linha in situacao.porque %}
+    <li>{{ linha.texto }}{% if linha.link %} <a href="{{ linha.link }}">{{ linha.link_rotulo }}</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <h3>O que fazer</h3>
+  <p class="acao-principal">{{ acao.principal }}</p>
+  {% if acao.link %}<p><a class="principal" href="{{ acao.link }}">{{ acao.link_rotulo }}</a></p>{% endif %}
+  {% if acao.prazo %}<p class="prazo-da-convocacao"><strong>Prazo desta convocação:</strong> até {{ acao.prazo|date:"d/m/Y" }} às {{ acao.prazo|date:"H\hi" }}.</p>{% endif %}
+  {% if acao.aviso_de_prazo %}<p class="aviso" role="status">{{ acao.aviso_de_prazo }}</p>{% endif %}
+  {% if acao.consequencia %}<p class="consequencia">{{ acao.consequencia }}</p>{% endif %}
+  {% if acao.canal %}<p class="meta">{{ acao.canal }}</p>{% endif %}
+  {% if acao.reserva %}<p class="meta">{{ acao.reserva }}</p>{% endif %}
+  {% comment %}
+  O recurso é ação **opcional**, e por isso vem depois do "Nada por enquanto": ninguém precisa
+  recorrer, mas quem discorda precisa saber até quando dá (auditoria de 13/09). O botão só aparece
+  quando há o que contestar — um botão que sempre recusa é pior do que nenhum (FR-013).
+  {% endcomment %}
+  {% for alvo in acao.recurso %}
+  <p class="meta">Se você discordar de {{ alvo.rotulo }}, pode recorrer até {{ alvo.fecha_em|date:"d/m/Y" }} às {{ alvo.fecha_em|date:"H\hi" }}.</p>
+  {% endfor %}
+  {% if recorriveis %}<p><a href="{% url 'portal:recorrer' inscricao.id %}">Recorrer de um resultado</a></p>{% endif %}
+</section>
+{% endwith %}
+
 {% if retificado %}
 {% comment %}
 Informa, e não altera nada: a versão aceita pela inscrição permanece a que foi aceita, e nada é
@@ -15,42 +57,47 @@ Sua inscrição continua valendo sob a versão que você aceitou.
 {% endif %}
 
 {% comment %}
-A convocação vem antes de tudo o que segue, porque é a única coisa aqui com prazo correndo contra a
-pessoa (059, D-005). Some quando não há convocação dela — nem bloco vazio, nem "aguardando".
+Os dados da convocação, sem as frases de estado, que subiram para o topo (063, D-008): duas redações
+do mesmo estado fazem a pessoa achar que são dois estados.
 {% endcomment %}
 {% include "portal/_convocacao_da_inscricao.html" %}
 
 {% comment %}
-Dois blocos, e a distinção entre eles é o ponto da tela: o primeiro fala de você, o segundo fala do
-processo. Uma data alcançada no Cronograma não é notícia sobre a sua participação (FR-076, FR-077).
-{% endcomment %}
-<h2>Sua participação</h2>
-<ul class="linha-do-tempo pessoal">
-  {% for fato in fatos %}
-  <li class="marco concluido">
-    <span class="rotulo">✓ {{ fato.rotulo }}</span>
-    <span class="quando">{{ fato.quando|date:"d/m/Y" }} às {{ fato.quando|date:"H:i" }}</span>
-  </li>
-  {% empty %}
-  <li class="marco"><span class="rotulo">Nada registrado ainda.</span></li>
-  {% endfor %}
-</ul>
+**Um cartão por lista e por marco** (063, FR-1181, D-009). Cada lista é uma cadeia de publicações
+própria (a decisão do eixo da lista, da `021`), e o título do cartão começa pela lista porque é ela
+que distingue um cartão do vizinho. A posição é a oficial daquela lista, sem reordenar nem escolher
+a melhor: quem é 2º continua 2º.
 
-{% comment %}
 A pontuação é **rotulada**, e não seguida do substantivo: ela chega como texto já formatado
-(`22,00`), e `pluralize` sobre texto não conta — daria "22,00 ponto" para qualquer valor. Rotular
-acerta em todos, inclusive em `1,00`.
+(`22,00`), e `pluralize` sobre texto não conta. E `is not None` em vez da verdade do valor: zero é
+nota, e esconder o zero faria parecer que ela não foi apurada.
 
-O resultado divulgado, **um bloco por marco** e cada um nomeado pelo seu marco (FR-057). Sem o nome,
-a pessoa leria duas posições diferentes sem saber a que cada uma se refere.
+Não havendo publicação vigente alguma, **nada aparece** — o topo diz "Inscrição enviada" (FR-056).
 
-Não havendo publicação vigente alguma, **nada aparece** — nem um bloco vazio, nem "aguardando
-resultado". A ausência é dita em ausência de dado, e não num `if` de template que afirmasse algo que
-ninguém decidiu (I-004, FR-056).
-
-Fica fora de "Sua participação" pela distinção da 010: aquela lista é o que **você fez**; divulgar é
-ato da instituição sobre você.
+Quem não recebeu posição numa lista vê o motivo aqui — e o nome dela **não** está na lista pública.
+As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
 {% endcomment %}
+{% for cartao in resultados_divulgados %}
+{% if forloop.first %}<h2>Classificação por lista</h2>{% endif %}
+<section class="cartao-de-lista" aria-labelledby="lista-{{ forloop.counter }}">
+  <h3 id="lista-{{ forloop.counter }}">{{ cartao.lista }} — {{ cartao.marco }}</h3>
+  <p class="meta">{{ cartao.natureza_rotulo }} · publicado em {{ cartao.publicacao.publicado_em|date:"d/m/Y" }}</p>
+  {% if cartao.classificada %}
+  <p class="posicao"><strong>{{ cartao.posicao }}º lugar</strong>{% if cartao.compartilhada %} — posição compartilhada{% endif %}{% if cartao.pontuacao is not None %} · pontuação {{ cartao.pontuacao|pontuacao }}{% endif %}</p>
+  {% else %}
+  <p class="posicao"><strong>Sem posição nesta lista</strong></p>
+  {% if cartao.motivo %}<p class="meta">{{ cartao.motivo }}</p>{% endif %}
+  {% endif %}
+  {% with prazo=prazo_por_publicacao|dicionario_simples:cartao.publicacao.id %}
+  {% if prazo %}
+  <p class="meta">Cabe recurso contra este resultado até {{ prazo|date:"d/m/Y" }} às {{ prazo|date:"H\hi" }}.</p>
+  {% endif %}
+  {% endwith %}
+  {% comment %}O caminho leva sempre à publicação **vigente** (FR-061).{% endcomment %}
+  <p><a href="{% url 'portal:resultado' cartao.publicacao.id %}">Ver o resultado completo<span class="oculto"> — {{ cartao.lista }} — {{ cartao.marco }}</span></a></p>
+</section>
+{% endfor %}
+
 {% for etapa in resultados_das_etapas %}
 {% if forloop.first %}
 <h2>Resultado das etapas</h2>
@@ -74,6 +121,9 @@ ato da instituição sobre você.
 
   A frase fica porque é a regra escrita no lugar onde alguém a lê antes de mexer; o que mudou é que
   agora ela diz **qual** parecer proíbe.
+
+  Desde a 063 este bloco é **evidência**, e vem depois da situação e da classificação por lista: a
+  pessoa lê primeiro em que pé está, e depois de onde isso veio (FR-1183).
 {% endcomment %}
 {% endif %}
 <section class="resultado-da-etapa" aria-labelledby="etapa-{{ forloop.counter }}">
@@ -132,43 +182,6 @@ ato da instituição sobre você.
 </section>
 {% endfor %}
 
-{% for resultado in resultados_divulgados %}
-{% if forloop.first %}<h2>Resultado divulgado</h2>{% endif %}
-<section class="resultado-divulgado" aria-labelledby="marco-{{ forloop.counter }}">
-  <h3 id="marco-{{ forloop.counter }}">{{ resultado.marco }}</h3>
-  <p class="sub">{{ resultado.natureza_rotulo }}</p>
-  {% if resultado.classificada %}
-  {% comment %}
-  O mesmo filtro da Etapa, acima, e pela razão que o comentário de lá registra: esta página
-  imprimia "pontuação 8,0000" numa linha e "pontuação 8,00" na seguinte, sobre a mesma nota.
-
-  E `is not None` em vez da verdade do valor: zero é nota, e a condição anterior a escondia — quem
-  tirasse zero lia a posição sem pontuação alguma, como se ela não tivesse sido apurada.
-  {% endcomment %}
-  <p class="posicao"><strong>{{ resultado.posicao }}º lugar</strong>{% if resultado.compartilhada %} — posição compartilhada{% endif %}{% if resultado.pontuacao is not None %} · pontuação {{ resultado.pontuacao|pontuacao }}{% endif %}</p>
-  {% else %}
-  {% comment %}
-  Quem não recebeu posição vê a própria situação e o motivo aqui — e o nome dela **não** está na
-  lista pública. As duas coisas ao mesmo tempo são possíveis porque as projeções são duas
-  (FR-017, FR-059).
-  {% endcomment %}
-  <p class="posicao"><strong>Você não foi classificado neste marco.</strong></p>
-  {% if resultado.motivo %}<p class="meta">{{ resultado.motivo }}</p>{% endif %}
-  {% endif %}
-  {% comment %}O caminho leva sempre à publicação **vigente** (FR-061).{% endcomment %}
-  <p><a href="{% url 'portal:resultado' resultado.publicacao.id %}">Ver o resultado completo</a></p>
-  {% comment %}
-  O prazo aqui, junto do resultado que ele alcança. A data existia só dentro de "Recorrer", isto é,
-  depois de a pessoa já ter decidido — e é ela que decide se ainda dá tempo de decidir.
-  {% endcomment %}
-  {% with prazo=prazo_por_publicacao|dicionario_simples:resultado.publicacao.id %}
-  {% if prazo %}
-  <p class="meta">Cabe recurso contra este resultado até {{ prazo|date:"d/m/Y" }} às {{ prazo|date:"H\hi" }}.</p>
-  {% endif %}
-  {% endwith %}
-</section>
-{% endfor %}
-
 {% if meus_recursos %}
 <h2>Seus recursos</h2>
 {% comment %}
@@ -186,13 +199,21 @@ peça — não de coluna (D-010, FR-014).
 </ul>
 {% endif %}
 
-{% if recorriveis %}
 {% comment %}
-**A ação não aparece quando não há o que contestar** (FR-013). Um botão que sempre recusa ensina a
-pessoa a desconfiar da tela, e é pior do que a ausência dele.
+Dois blocos, e a distinção entre eles é o ponto: o primeiro fala de você, o segundo fala do
+processo. Uma data alcançada no Cronograma não é notícia sobre a sua participação (FR-076, FR-077).
 {% endcomment %}
-<p><a class="principal" href="{% url 'portal:recorrer' inscricao.id %}">Recorrer de um resultado</a></p>
-{% endif %}
+<h2>Sua participação</h2>
+<ul class="linha-do-tempo pessoal">
+  {% for fato in fatos %}
+  <li class="marco concluido">
+    <span class="rotulo">✓ {{ fato.rotulo }}</span>
+    <span class="quando">{{ fato.quando|date:"d/m/Y" }} às {{ fato.quando|date:"H:i" }}</span>
+  </li>
+  {% empty %}
+  <li class="marco"><span class="rotulo">Nada registrado ainda.</span></li>
+  {% endfor %}
+</ul>
 
 <h2>Cronograma do processo</h2>
 <ul class="linha-do-tempo processo">
