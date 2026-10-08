@@ -50,7 +50,11 @@ def cartao(
     rotulo = {"DEFINITIVA": "Resultado definitivo", "PRELIMINAR": "Resultado preliminar"}
     return {
         "publicacao": SimpleNamespace(
-            id=uuid.uuid4(), lista_id=lista_id, natureza=natureza, publicado_em=INSTANTE
+            id=uuid.uuid4(),
+            lista_id=lista_id,
+            natureza=natureza,
+            publicado_em=INSTANTE,
+            get_natureza_display=lambda: rotulo[natureza],
         ),
         "marco": marco,
         "marco_codigo": codigo,
@@ -385,6 +389,46 @@ class TestRecurso:
         acao = calcular(cartoes=[cartao()], recorriveis=[alvo]).o_que_fazer
         assert acao.principal == situacao.NADA_POR_ENQUANTO
         assert acao.recurso == ({"rotulo": "Classificação final", "fecha_em": INSTANTE},)
+
+
+class TestRotulosQueNaoSeConfundem:
+    """Achados da revisão de código da 063."""
+
+    def test_o_recurso_de_cada_lista_diz_a_lista(self):
+        """Duas listas no mesmo marco davam duas linhas "Classificação final" idênticas."""
+        ampla = cartao(posicao=8)
+        ppi = cartao(lista_id=PPI, lista="Pessoas pretas, pardas e indígenas", posicao=2)
+        recorriveis = [
+            {
+                "tipo": "publicacao",
+                "id": c["publicacao"].id,
+                "rotulo": "Classificação final",
+                "fecha_em": INSTANTE,
+            }
+            for c in (ampla, ppi)
+        ]
+        recurso = calcular(cartoes=[ampla, ppi], recorriveis=recorriveis).o_que_fazer.recurso
+
+        assert [alvo["rotulo"] for alvo in recurso] == [
+            "Ampla concorrência — Classificação final",
+            "Pessoas pretas, pardas e indígenas — Classificação final",
+        ]
+
+    def test_o_recurso_de_etapa_continua_nomeado_pela_etapa(self):
+        alvo = {
+            "tipo": "resultado",
+            "id": uuid.uuid4(),
+            "rotulo": "Prova escrita",
+            "fecha_em": INSTANTE,
+        }
+        recurso = calcular(cartoes=[cartao()], recorriveis=[alvo]).o_que_fazer.recurso
+        assert recurso[0]["rotulo"] == "Prova escrita"
+
+    def test_sem_natureza_no_cabecalho_usa_a_da_publicacao(self):
+        sem_natureza = {**cartao(), "natureza_rotulo": ""}
+        texto = textos(calcular(cartoes=[sem_natureza]))
+        assert "no resultado definitivo de Classificação final" in texto
+        assert "no  de" not in texto
 
 
 class TestOQueAFuncaoNaoSabe:

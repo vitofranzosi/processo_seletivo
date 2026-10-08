@@ -53,7 +53,8 @@ MARCO_INTERMEDIARIO = "00000000-0000-4000-8000-000000000822"
 # **O que a tela não pode dizer**, com o que cada palavra afirmaria (UX-158). "Classificado" sai
 # como palavra inteira: "Não classificado" é rótulo do conjunto fechado, e diz o contrário.
 PROIBIDAS = {
-    r"(?<!Não )\bClassificad[oa]\b": "lido como aprovado (FR-1170)",
+    # Em qualquer caixa: "você está classificado" engana tanto quanto o rótulo (revisão da 063).
+    r"(?i)(?<!não )\bclassificad[oa]\b": "lido como aprovado (FR-1170)",
     r"\bAprovad[oa]\b": "nenhum ato aprova",
     r"[Dd]entro das vagas": "a ocupação não registra a pessoa (L-1)",
     r"[Ll]ista de espera": "vocabulário que o domínio não tem (L-5)",
@@ -89,11 +90,17 @@ def texto(html):
 
 
 def conferir_vocabulario(pagina):
-    """A varredura do HTML renderizado: o que a pessoa lê, sem comentário de template."""
+    """A varredura do HTML renderizado: o que a pessoa lê, sem comentário de template.
+
+    **A proibição do requerimento lê o topo, e não a página** (revisão da 063). A UX-058 protege o
+    Requerimento de Matrícula, cujo chamado mora no topo; "Recurso indeferido", em "Seus recursos",
+    é o nome que a `018` dá à decisão de um recurso, e reprová-lo seria a varredura governando outra
+    feature.
+    """
     lido = texto(pagina)
     achados = [f"{p!r}: {porque}" for p, porque in PROIBIDAS.items() if re.search(p, lido)]
     assert achados == [], "; ".join(achados)
-    sem_o_rotulo = lido.replace(ROTULO_DO_INDEFERIMENTO, "")
+    sem_o_rotulo = texto(topo(pagina)).replace(ROTULO_DO_INDEFERIMENTO, "")
     assert not re.search(r"deferid", sem_o_rotulo, re.I), (
         "o requerimento não aparece como deferido nem indeferido (UX-058)"
     )
@@ -170,6 +177,7 @@ def publicar(
     marco_id=MARCO,
     marco="Classificação final",
     codigo="M2",
+    publicado_em=None,
 ):
     edital, _ = certame
     origem = ato(certame, lista_id=lista_id, marco_id=marco_id)
@@ -186,7 +194,7 @@ def publicar(
         conteudo_publico_hash="0" * 64,
         publicado_por="cpf:publicadora",
         # Fora da janela recursal de cinco dias, para que o recurso só apareça onde o teste o pede.
-        publicado_em=timezone.now() - timedelta(days=10),
+        publicado_em=publicado_em or timezone.now() - timedelta(days=10),
         signatario_id=uuid.uuid4(),
         signatario_nome="Diretora-Geral",
         signatario_cargo="Diretoria",
@@ -258,6 +266,50 @@ class TestDuasListas:
         niveis = [int(n) for n in re.findall(r"<h([1-6])\b", abrir(client, edson(certame)))]
         assert niveis[0] == 1
         assert all(depois <= antes + 1 for antes, depois in zip(niveis, niveis[1:], strict=False))
+
+
+class TestRecursoPorLista:
+    def test_com_o_prazo_aberto_cada_lista_tem_a_sua_linha(self, client, certame):
+        """Revisão da 063: as duas linhas de recurso diziam só "Classificação final"."""
+        (pessoa,) = inscrever(certame[0], 1, primeiro=6305)
+        agora = timezone.now()
+        situar(publicar(certame, publicado_em=agora), pessoa, posicao=8)
+        situar(
+            publicar(certame, lista_id=LISTA_PPI, lista=PPI, publicado_em=agora), pessoa, posicao=2
+        )
+
+        bloco = texto(topo(abrir(client, pessoa)))
+        linhas = re.findall(r"Se você discordar de (.*?), pode recorrer", bloco)
+
+        assert linhas == [
+            "Ampla concorrência — Classificação final",
+            f"{PPI} — Classificação final",
+        ]
+
+
+class TestAVarredura:
+    """A varredura do teste também é testada: uma que não enxerga aprova tudo, calada."""
+
+    PAGINA = (
+        '<section class="situacao-da-inscricao"><p>{topo}</p></section>'
+        '<ul class="meus-recursos"><li>{fora}</li></ul>'
+    )
+
+    def test_classificado_em_minuscula_reprova(self):
+        with pytest.raises(AssertionError, match="FR-1170"):
+            conferir_vocabulario(self.PAGINA.format(topo="Você está classificado.", fora=""))
+
+    def test_nao_classificado_passa(self):
+        conferir_vocabulario(self.PAGINA.format(topo="Não classificado", fora=""))
+
+    def test_recurso_indeferido_fora_do_topo_passa(self):
+        conferir_vocabulario(
+            self.PAGINA.format(topo="Nada por enquanto.", fora="Recurso indeferido")
+        )
+
+    def test_requerimento_indeferido_no_topo_reprova(self):
+        with pytest.raises(AssertionError, match="UX-058"):
+            conferir_vocabulario(self.PAGINA.format(topo="Requerimento indeferido", fora=""))
 
 
 # --- US2: classificação sem ocupação definida ----------------------------------------------------

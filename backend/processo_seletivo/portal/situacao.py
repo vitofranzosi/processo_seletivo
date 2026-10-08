@@ -176,7 +176,7 @@ def situacao_da_inscricao(
     terminado — chega já derivado em `estado`, pela mesma função que a tela da convocação usa
     (`estado_de`, da `019`): duas contas do mesmo prazo discordariam na fronteira.
     """
-    recurso = _recurso(recorriveis)
+    recurso = _recurso(recorriveis, cartoes)
     em_analise = _recursos_em_analise(recursos)
 
     if convocacao is not None and desfecho is not None:
@@ -400,10 +400,20 @@ def _linha_da_convocacao(convocacao, perfil, cartoes):
     )
 
 
+def natureza_do_cartao(cartao):
+    """A natureza gravada no cabeçalho, ou a da coluna da publicação quando o cabeçalho não a traz.
+
+    O cabeçalho congelado é a fonte, porque é o que a publicação disse; mas `situacoes_do_candidato`
+    devolve vazio quando a chave falta, e a frase sairia "no  de Classificação final". A coluna
+    `natureza` existe em toda publicação, e o rótulo dela é o mesmo que `compor` congela.
+    """
+    return cartao["natureza_rotulo"] or cartao["publicacao"].get_natureza_display()
+
+
 def _linha_do_cartao(cartao):
     """Cada lista com a sua posição oficial, sem escolher a melhor nem reordenar (FR-1174)."""
     onde = (
-        f"no {cartao['natureza_rotulo'].lower()} de {cartao['marco']}, "
+        f"no {natureza_do_cartao(cartao).lower()} de {cartao['marco']}, "
         f"publicado em {_data(cartao['publicacao'].publicado_em)}"
     )
     if cartao["classificada"]:
@@ -419,9 +429,27 @@ def _definitiva(cartao):
     return cartao["publicacao"].natureza == Natureza.DEFINITIVA
 
 
-def _recurso(recorriveis):
+def _recurso(recorriveis, cartoes):
+    """O que se pode contestar agora, cada objeto nomeado de modo que não se confunda com o vizinho.
+
+    **A publicação é nomeada pela lista e pelo marco.** `objetos_recorriveis` (`018`) a rotula só
+    pelo marco, e quem está na ampla e numa reserva lia duas linhas idênticas — "Se você discordar
+    de Classificação final" — sem saber qual era qual, o mesmo defeito dos cartões que esta
+    feature corrige. A lista sai do cartão da mesma publicação; o Resultado de Etapa já é nomeado
+    pela Etapa.
+    """
+    lista_da_publicacao = {
+        str(cartao["publicacao"].id): cartao["lista"] for cartao in cartoes if cartao.get("lista")
+    }
     return tuple(
-        {"rotulo": alvo["rotulo"], "fecha_em": alvo["fecha_em"]}
+        {
+            "rotulo": (
+                f"{lista_da_publicacao[str(alvo['id'])]} — {alvo['rotulo']}"
+                if alvo.get("tipo") == "publicacao" and str(alvo["id"]) in lista_da_publicacao
+                else alvo["rotulo"]
+            ),
+            "fecha_em": alvo["fecha_em"],
+        }
         for alvo in recorriveis
         if alvo.get("fecha_em")
     )
@@ -468,6 +496,7 @@ __all__ = [
     "Situacao",
     "frase_da_reserva",
     "frase_do_canal",
+    "natureza_do_cartao",
     "nome_da_lista_da_convocacao",
     "ordenar_cartoes",
     "situacao_da_inscricao",

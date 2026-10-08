@@ -81,7 +81,7 @@ As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
 {% if forloop.first %}<h2>Classificação por lista</h2>{% endif %}
 <section class="cartao-de-lista" aria-labelledby="lista-{{ forloop.counter }}">
   <h3 id="lista-{{ forloop.counter }}">{{ cartao.lista }} — {{ cartao.marco }}</h3>
-  <p class="meta">{{ cartao.natureza_rotulo }} · publicado em {{ cartao.publicacao.publicado_em|date:"d/m/Y" }}</p>
+  <p class="meta">{{ cartao.natureza_rotulo|default:cartao.publicacao.get_natureza_display }} · publicado em {{ cartao.publicacao.publicado_em|date:"d/m/Y" }}</p>
   {% if cartao.classificada %}
   <p class="posicao"><strong>{{ cartao.posicao }}º lugar</strong>{% if cartao.compartilhada %} — posição compartilhada{% endif %}{% if cartao.pontuacao is not None %} · pontuação {{ cartao.pontuacao|pontuacao }}{% endif %}</p>
   {% else %}
