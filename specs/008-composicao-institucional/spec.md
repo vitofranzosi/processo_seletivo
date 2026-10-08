@@ -363,6 +363,10 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   `rótulo: valor`.
 - **FR-016**: NÃO DEVE ser criada uma tabela única contendo todos os campos do Perfil. Descrição,
   atribuições, requisitos e modalidades permanecem blocos próprios.
+  > **Emendado pela `064` (FR-1186 a FR-1191, 08/10/2026):** quando dois ou mais Perfis têm
+  > atribuições idênticas, o bloco próprio de cada um é a remissão à subseção comum, posta ao fim da
+  > seção de Perfis, que traz o texto uma vez e nomeia os códigos. Perfil de texto próprio continua
+  > como aqui.
 - **FR-017**: Requisitos permanecem em lista.
 - **FR-018**: Modalidades de concorrência DEVEM ser apresentadas em tabela simples com modalidade,
   percentual e fundamento. Versão e vigência da Regra Normativa, quando existirem, DEVEM permanecer
@@ -387,6 +391,8 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   de texto livre não tem limite de tamanho, e atribuições de três páginas tornariam a regra
   impossível de cumprir. A cascata preserva a intenção — quebrar no lugar menos ruim disponível — e
   termina sempre em uma alternativa que existe.*
+  > **Emendado pela `064` (FR-1190 e FR-1193, 08/10/2026):** no Perfil agrupado, o sub-bloco de
+  > atribuições é a remissão; a subseção comum obedece a esta mesma cascata, como se fosse um Perfil.
 - **FR-022**: O título de um Perfil NÃO DEVE ficar isolado no fim de uma página.
 
 ### Cronograma e Etapas (US3)
