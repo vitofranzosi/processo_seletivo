@@ -35,7 +35,7 @@ Captura: [a-duas-listas-375](capturas/a-duas-listas-375.jpg).
 ## 3. A suíte
 
 `make lint check test-pg DB_NAME=ps_063`: lint e formatação limpos (1306 arquivos), `check` sem
-problemas, **9438 passando e 11 pulados** em 1180 s — os mesmos onze do `AGENTS.md`.
+problemas, **9438 passando e 11 pulados** em 1180 s — os mesmos onze do `AGENTS.md`. Depois das correções da revisão de código (08/10), **9446 passando e 11 pulados** em 925 s.
 
 ## 4. O que se viu e não é desta feature
 
