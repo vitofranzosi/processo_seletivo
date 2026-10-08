@@ -137,6 +137,7 @@ from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapea
 from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
+    CARACTERE_SEM_GRAFIA,
     fatos_do_conteudo_publicado,
     validate_for_publication,
 )
@@ -697,6 +698,11 @@ DESTINO_DA_PENDENCIA = {
     # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
     # olhar o caminho inteiro — o segmento de coleção sozinho não distingue um do outro.
     "classificationMilestones": ("classificacao", "#titulo-classificacao", True),
+    # O método de sorteio comum é campo de raiz, e se compõe na Classificação, ao lado dos marcos
+    # que o herdam. Sem esta linha, o caractere sem grafia num campo dele (achado de 08/10)
+    # aparecia como não corrigível — e o `common_draw_method_invalid`, que tem o mesmo caminho,
+    # também.
+    "drawMethod": ("classificacao", "#titulo-classificacao", True),
     # O texto da declaração do Requerimento de Matrícula (029). É campo de **raiz**, como `title`,
     # e se resolve na etapa `Inscrição`, que é onde ele é composto. Sem esta linha a pendência
     # cairia em `(None, "", False)` e apareceria como **não corrigível** — o sistema apontaria um
@@ -720,7 +726,12 @@ DESTINO_POR_CODIGO = {
 # alheia, título ou ordem trocados, que a tela não corrige: a pendência oferecia um caminho que não
 # existe, que é o que a `FR-007` proíbe. Achado da revisão do PR 221.
 DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
-CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_universal_empty"})
+# O caractere sem grafia no texto da seção se corrige no mesmo lugar (achado de 08/10) — e só no
+# texto: o título da seção é do catálogo, e a pendência sobre ele é tão incorrigível quanto a de
+# topologia.
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset(
+    {"attachment_cited_without_label", "section_universal_empty", CARACTERE_SEM_GRAFIA}
+)
 
 
 def _destino(caminho, codigo=""):
@@ -739,7 +750,7 @@ def _destino(caminho, codigo=""):
         # Só os dois avisos do texto se corrigem na etapa Conteúdo. O resto do que se diz sobre uma
         # seção é topologia do catálogo, que nenhuma etapa corrige — e a busca por segmento, abaixo,
         # mandava `/sections/id=…/title` para a Identificação, porque `title` ali é o do Edital.
-        if codigo in CODIGOS_DO_TEXTO_DA_SECAO:
+        if codigo in CODIGOS_DO_TEXTO_DA_SECAO and not caminho.endswith("/title"):
             return DESTINO_DO_TEXTO_DA_SECAO
         return (None, "", False)
     if caminho in DESTINO_DA_PENDENCIA:
@@ -3398,11 +3409,21 @@ def previa(request, edital_id):
     if desvio is not None:
         return desvio
     origem = ORIGEM_DA_PREVIA.get(request.GET.get("origem", ""))
+    # **O que o documento não imprime é dito aqui, e não só na Revisão** (achado de 08/10). Na
+    # prévia o caractere aparece como `[U+2265]`, e quem lê só o PDF precisa saber o que aquilo
+    # significa e onde se corrige. Só esta pendência: as demais são da Revisão, e repeti-las aqui
+    # faria da prévia uma segunda Revisão.
+    sem_grafia = [
+        item
+        for item in _pendencias(edital, ator=identidade.ator_da_sessao(request))
+        if item["codigo"] == CARACTERE_SEM_GRAFIA
+    ]
     return render(
         request,
         "interface/previa.html",
         {
             "edital": edital,
+            "sem_grafia": sem_grafia,
             "voltar": reverse("interface:compor-etapa", args=[edital.id, origem])
             if origem
             else reverse("interface:detalhe", args=[edital.id]),
