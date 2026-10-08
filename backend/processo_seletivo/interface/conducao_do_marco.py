@@ -26,6 +26,7 @@ não entra aqui, pela mesma razão que não entra na ocupação.
 
 from django.db import transaction
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.auditoria.models import IdempotencyRecord
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
@@ -63,6 +64,7 @@ from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir
 from processo_seletivo.divulgacao.models import Natureza, PublicacaoResultado
 from processo_seletivo.editais.domain import marcos
 from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
 from processo_seletivo.ocupacao.application.selectors import (
     apuracao_vigente,
@@ -72,9 +74,10 @@ from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import ProcessoSeletivo
 from processo_seletivo.publicacoes.application.selectors import effective_version
-from processo_seletivo.publicacoes.domain.autoridades import escolher
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.shared.tempo import ZONA
+from processo_seletivo.unidades.application.autoridades import conferir
 
 ORDENAR, CORTAR, APURAR, PUBLICAR = "ordenar", "cortar", "apurar", "publicar"
 OPERACOES = (ORDENAR, CORTAR, APURAR, PUBLICAR)
@@ -578,30 +581,35 @@ def _alcance_da_apuracao(edital, conteudo, perfil, marco):
                 )
             )
             continue
+        publicadas = linha.get("immediateVacancies") or 0
         itens.append(
             _item(
                 lista_id,
                 rotulo,
                 PRATICAR,
-                resumo=f"{linha.get('immediateVacancies') or 0} vaga(s) publicada(s) no quadro",
+                # Só a conferência do gesto lê o resumo (057, FR-1059); nada dele vai para o ato.
+                resumo=f"{contagem(publicadas, 'vaga publicada,vagas publicadas')} no quadro",
                 assinatura=assinatura_da_apuracao(edital, perfil["id"], marco_id, lista_id),
             )
         )
     return itens
 
 
-def conferir_natureza_e_autoridade(natureza, autoridade):
-    """As duas escolhas que a publicação pede uma vez para o marco (`FR-826`)."""
+def conferir_natureza_e_autoridade(natureza, autoridade, edital):
+    """As duas escolhas que a publicação pede uma vez para o marco (`FR-826`).
+
+    A autoridade é conferida contra a unidade do Edital e a data de hoje, sem trava: é conferência,
+    e cada recorte a confere de novo, travada, ao publicar (060, FR-1126).
+    """
     if natureza not in Natureza.values:
         raise DomainError(
             "publication_nature_required", "Escolha a natureza do resultado a divulgar.", 422
         )
-    if escolher(autoridade) is None:
-        raise DomainError(
-            "publication_authority_required",
-            "Escolha a autoridade signatária entre as do catálogo.",
-            422,
-        )
+    conferir(
+        autoridade,
+        unidade_codigo=edital.institution_scope,
+        data=timezone.now().astimezone(ZONA).date(),
+    )
 
 
 def exige_declaracao(ato, marco_id, natureza):
@@ -622,7 +630,7 @@ def exige_declaracao(ato, marco_id, natureza):
 
 
 def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade):
-    conferir_natureza_e_autoridade(natureza, autoridade)
+    conferir_natureza_e_autoridade(natureza, autoridade, edital)
     marco_id = str(marco["id"])
     itens = []
     for lista_id, rotulo in recortes_do_marco(conteudo, perfil):
@@ -673,7 +681,7 @@ def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade
         partes = [
             "ninguém concorreu — a lista vazia é divulgada"
             if not projecao["situacoes"]
-            else f"{posicoes} posição(ões) divulgada(s)"
+            else contagem(posicoes, "posição divulgada,posições divulgadas")
         ]
         if afericao.nivel == AVISO:
             partes.append("sucede a divulgação vigente deste recorte")

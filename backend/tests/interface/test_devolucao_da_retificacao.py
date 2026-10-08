@@ -14,6 +14,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
@@ -147,7 +148,7 @@ def test_a_publicada_nao_e_devolvida(client, em_revisao):
     ato(client, em_revisao, "homologar", motivo="Conferido")
     identificar(client, "carla.publicadora", ["publicador"])
     em_revisao.refresh_from_db()
-    ato(client, em_revisao, "publicar", signatario="reitoria")
+    ato(client, em_revisao, "publicar", signatario=str(AUTORIDADE_DA_SUITE))
     em_revisao.refresh_from_db()
     assert em_revisao.status == Retificacao.Status.PUBLICADA
 

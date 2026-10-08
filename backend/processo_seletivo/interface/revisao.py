@@ -21,6 +21,7 @@ nasce.
 elabora; o que este módulo garante é que nenhuma delas fique de fora.
 """
 
+import re
 from datetime import datetime
 
 from processo_seletivo.editais.domain import marcos as regras_do_marco
@@ -31,6 +32,8 @@ from processo_seletivo.editais.domain.mutabilidade import RAIZ
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.interface import origens
 from processo_seletivo.interface.forms import ZONA
+from processo_seletivo.interface.origens import Rotulada
+from processo_seletivo.interface.templatetags.interface_extras import contagem, plural, pontuacao
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     criterio_com_a_ausencia,
     forma_de_convocacao_por_extenso,
@@ -87,11 +90,14 @@ def _perfil(perfil, snapshot):
         # Ler os dois juntos é o que torna a divergência visível no único momento em que corrigi-la
         # ainda é barato — depois da publicação, a mesma informação custa uma Retificação.
         _vagas_e_quadro(perfil),
-        f"Cadastro Reserva: {RESERVA.get(perfil.get('reserveType'), '—')}"
-        + (f" em {perfil['reserveLimit']}" if perfil.get("reserveLimit") is not None else ""),
+        Rotulada(
+            "Cadastro Reserva",
+            RESERVA.get(perfil.get("reserveType"), "—")
+            + (f" em {perfil['reserveLimit']}" if perfil.get("reserveLimit") is not None else ""),
+        ),
     ]
     if perfil.get("locality"):
-        linhas.append(f"Localidade: {perfil['locality']}")
+        linhas.append(Rotulada("Localidade", perfil["locality"]))
     # O que o documento imprime sobre a vaga e a conferência não lia. Impressos só quando
     # declarados, como no documento: ausência é "não declarou", e não um valor padrão.
     for rotulo, chave in (
@@ -101,18 +107,18 @@ def _perfil(perfil, snapshot):
         ("Atribuições", "duties"),
     ):
         if perfil.get(chave):
-            linhas.append(f"{rotulo}: {perfil[chave]}")
+            linhas.append(Rotulada(rotulo, perfil[chave]))
     for requisito in perfil.get("requirements") or []:
-        linhas.append(f"Requisito: {requisito}")
+        linhas.append(Rotulada("Requisito", requisito))
     for modalidade in perfil.get("competitionModalities") or []:
         regra = modalidade.get("normativeRule") or {}
         partes = [f"{modalidade.get('code', '')} — {modalidade.get('name', '')}"]
         if regra.get("percentage"):
-            partes.append(f"{regra['percentage']}%")
+            partes.append(f"{pontuacao(regra['percentage'])}%")
         if regra.get("foundation"):
             partes.append(regra["foundation"])
             if regra.get("version"):
-                partes.append(f"versão {regra['version']}")
+                partes.append(f"versão {_versao(regra['version'])}")
         if regra.get("effectiveFrom"):
             # A data como foi declarada, sem conversão de fuso: vigência é dia, e levar
             # `2014-06-09T00:00Z` para o horário de Brasília a publicaria como 08/06.
@@ -128,12 +134,12 @@ def _perfil(perfil, snapshot):
         gesto = origens.gesto_da_modalidade(_alcance_dos_gestos(snapshot), perfil, modalidade)
         linhas.append(
             origens.com_origem(
-                "Modalidade: " + " · ".join(partes),
+                Rotulada("Modalidade", " · ".join(partes)),
                 origens.frase_do_gesto(gesto) if gesto else "",
             )
         )
     if perfil.get("competitionModalities"):
-        linhas.append(f"Ampla concorrência: {_ampla(perfil)}")
+        linhas.append(Rotulada("Ampla concorrência", _ampla(perfil)))
     # O quadro de vagas, na ordem declarada e com a linha geral primeiro. Quem submete precisa ver
     # os números que vai congelar — e o quadro é o que separa o certame de existir como documento.
     denominacoes = {
@@ -157,7 +163,10 @@ def _perfil(perfil, snapshot):
         )
         linhas.append(
             origens.com_origem(
-                f"Quadro: {recorte} — {linha.get('immediateVacancies', 0)} vaga(s)",
+                Rotulada(
+                    "Quadro",
+                    f"{recorte} — {contagem(linha.get('immediateVacancies', 0), 'vaga,vagas')}",
+                ),
                 origens.da_linha_do_quadro(
                     linha.get("immediateVacancies"), modalidade_da_linha, perfil
                 )
@@ -171,9 +180,13 @@ def _perfil(perfil, snapshot):
         # lado dos números, qual recorte fica sem quantidade — e não descobrir na etapa seguinte
         # que uma das listas que ele declarou não terá o que apurar (FR-326).
         linhas.append(
-            "Sem linha no quadro: "
-            + ", ".join(sem_linha)
-            + " — a ocupação e a convocação não terão quantidade a apurar nesse(s) recorte(s)."
+            Rotulada(
+                "Sem linha no quadro",
+                ", ".join(sem_linha)
+                + " — a ocupação e a convocação não terão quantidade a apurar "
+                + plural(len(sem_linha), "nesse recorte,nesses recortes")
+                + ".",
+            )
         )
     # A reversão e a forma de comunicar a convocação: duas das declarações que mais pesam na
     # operação, e que depois da publicação só se corrigem por Retificação. A reversão só é dita
@@ -184,8 +197,10 @@ def _perfil(perfil, snapshot):
         gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "vacancyReversion")
         linhas.append(
             origens.com_origem(
-                "Reverter vaga reservada não preenchida para a ampla concorrência: "
-                + REVERSAO.get(especie, especie or "não"),
+                Rotulada(
+                    "Reverter vaga reservada não preenchida para a ampla concorrência",
+                    REVERSAO.get(especie, especie or "não"),
+                ),
                 origens.frase_do_gesto(gesto) if gesto else "",
             )
         )
@@ -194,8 +209,10 @@ def _perfil(perfil, snapshot):
     gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "callForm")
     linhas.append(
         origens.com_origem(
-            "Como a convocação é comunicada: "
-            + forma_de_convocacao_por_extenso(perfil.get("callForm")),
+            Rotulada(
+                "Como a convocação é comunicada",
+                forma_de_convocacao_por_extenso(perfil.get("callForm")),
+            ),
             origens.frase_do_gesto(gesto)
             if gesto
             else origens.da_forma_de_convocacao(perfil, (snapshot or {}).get("profiles") or []),
@@ -206,8 +223,11 @@ def _perfil(perfil, snapshot):
     for fato in perfil.get("declaredFacts") or []:
         tipo = TIPO_DO_FATO.get(fato.get("type"), fato.get("type") or "")
         linhas.append(
-            f"Fato exigido do candidato: {fato.get('label') or fato.get('code', '')} "
-            f"({tipo}, código {fato.get('code', '')})"
+            Rotulada(
+                "Fato exigido do candidato",
+                f"{fato.get('label') or fato.get('code', '')} "
+                f"({tipo}, código {fato.get('code', '')})",
+            )
         )
     return {"titulo": f"{perfil.get('code', '')} — {perfil.get('name', '')}", "linhas": linhas}
 
@@ -233,6 +253,16 @@ def arredondamento_da_reserva(rounding):
     return quadro.em_palavras(rounding)
 
 
+def _versao(valor):
+    """A versão da norma, em dd/mm/aaaa quando ela é uma data (057, FR-1058).
+
+    A versão é texto livre de quem declara a norma: "2014-06-09" é a forma que o catálogo grava, mas
+    nada impede "2ª edição". Só a data reconhecível muda de grafia; o resto sai como está.
+    """
+    texto = str(valor)
+    return _dia(texto) if re.fullmatch(r"\d{4}-\d{2}-\d{2}", texto) else texto
+
+
 def _dia(valor):
     try:
         return datetime.fromisoformat(str(valor)).strftime("%d/%m/%Y")
@@ -251,7 +281,7 @@ def _ampla(perfil):
 
 def _vagas_e_quadro(perfil):
     """O que o Edital publica e o que o quadro reparte, lado a lado (027, FR-326)."""
-    total = perfil.get("immediateVacancies", 0)
+    publicadas = contagem(perfil.get("immediateVacancies", 0), "vaga imediata,vagas imediatas")
     linhas = [
         linha
         for linha in perfil.get("vacancyTable") or []
@@ -260,9 +290,9 @@ def _vagas_e_quadro(perfil):
     if not linhas:
         # Acervo: publicado antes de o quadro existir. Ausência é "não declarou", e nunca zero — a
         # frase diz o que falta em vez de inventar um número que o Edital não tem.
-        return f"{total} vaga(s) imediata(s) · o quadro de vagas não é declarado"
+        return f"{publicadas} · o quadro de vagas não é declarado"
     soma = sum(linha["immediateVacancies"] for linha in linhas)
-    return f"{total} vaga(s) imediata(s) · o quadro reparte {soma}"
+    return f"{publicadas} · o quadro reparte {soma}"
 
 
 def _listas_sem_linha(perfil, denominacoes):
@@ -282,12 +312,12 @@ def _listas_sem_linha(perfil, denominacoes):
 
 
 def _evento(evento, _snapshot):
-    periodo = f"Início: {_instante(evento.get('startAt')) or '—'}"
+    periodo = _instante(evento.get("startAt")) or "—"
     if evento.get("endAt"):
         periodo += f" · Término: {_instante(evento['endAt'])}"
-    linhas = [evento.get("description", ""), periodo]
+    linhas = [evento.get("description", ""), Rotulada("Início", periodo)]
     if evento.get("location"):
-        linhas.append(f"Onde acontece: {evento['location']}")
+        linhas.append(Rotulada("Onde acontece", evento["location"]))
     # Decidido na etapa Inscrição, e dito aqui porque é propriedade do Evento no que se congela:
     # é por ela que o portal abre e fecha as inscrições.
     if evento.get("isRegistrationPeriod"):
@@ -302,31 +332,31 @@ def _etapa(etapa, snapshot):
     caracteres = [rotulo for chave, rotulo in CARATER if etapa.get(chave)]
     linhas = [
         origens.com_origem(
-            "Caráter: " + (" e ".join(caracteres) if caracteres else "não informado"),
+            Rotulada("Caráter", " e ".join(caracteres) if caracteres else "não informado"),
             origens.da_etapa(etapa),
         )
     ]
     if etapa.get("weight") is not None:
-        linhas.append(f"Peso: {etapa['weight']}")
+        linhas.append(Rotulada("Peso", pontuacao(etapa["weight"])))
     if etapa.get("minimumScore") is not None:
-        linhas.append(f"Nota mínima: {etapa['minimumScore']}")
+        linhas.append(Rotulada("Nota mínima", pontuacao(etapa["minimumScore"])))
     # O incremento da `012`. Estavam no formulário e no documento publicado, e faltavam
     # justamente aqui — na tela cuja pergunta é "o que será congelado". Quem submetia congelava
     # dois campos que a conferência não mostrava, e a pontuação máxima é o teto contra o qual
     # cada avaliação da Etapa é validada depois. Impressos só quando declarados, como no
     # documento: ausência é "o Edital não declarou", e não "declarou o padrão".
     if etapa.get("maximumScore") is not None:
-        linhas.append(f"Pontuação máxima: {etapa['maximumScore']}")
+        linhas.append(Rotulada("Pontuação máxima", pontuacao(etapa["maximumScore"])))
     # A forma, e os rótulos só onde eles existem: quem revisa precisa ver que esta Etapa não pontua
     # antes de submeter, e não descobrir isso no documento publicado (D-008).
     if etapa.get("forma") == "DECISORIA":
         favoravel = etapa.get("rotuloFavoravel") or "—"
         desfavoravel = etapa.get("rotuloDesfavoravel") or "—"
-        linhas.append(f"Conclusão: decisão, sem nota ({favoravel} / {desfavoravel})")
+        linhas.append(Rotulada("Conclusão", f"decisão, sem nota ({favoravel} / {desfavoravel})"))
     else:
-        linhas.append("Conclusão: com pontuação")
+        linhas.append(Rotulada("Conclusão", "com pontuação"))
     if etapa.get("evaluationsPerRegistration") is not None:
-        linhas.append(f"Avaliações por inscrição: {etapa['evaluationsPerRegistration']}")
+        linhas.append(Rotulada("Avaliações por inscrição", etapa["evaluationsPerRegistration"]))
     vinculado = next(
         (
             evento
@@ -337,7 +367,10 @@ def _etapa(etapa, snapshot):
     )
     if vinculado:
         linhas.append(
-            f"Datas do Evento “{vinculado.get('type', '')}”: {_instante(vinculado.get('startAt'))}"
+            Rotulada(
+                f"Datas do Evento “{vinculado.get('type', '')}”",
+                _instante(vinculado.get("startAt")),
+            )
         )
     return {"titulo": f"{etapa.get('order', '')}. {etapa.get('name', '')}", "linhas": linhas}
 
@@ -380,11 +413,11 @@ def _alcance(documento, snapshot):
 
 def _documento(documento, snapshot):
     linhas = [
-        "Exigência: " + ("obrigatória" if documento.get("required", True) else "facultativa"),
-        f"Aplica-se a: {_alcance(documento, snapshot)}",
+        Rotulada("Exigência", "obrigatória" if documento.get("required", True) else "facultativa"),
+        Rotulada("Aplica-se a", _alcance(documento, snapshot)),
     ]
     if documento.get("instructions"):
-        linhas.append(f"Instruções: {documento['instructions']}")
+        linhas.append(Rotulada("Instruções", documento["instructions"]))
     return {
         "titulo": f"{documento.get('order', '')}. {documento.get('name', '')}",
         "linhas": linhas,
@@ -443,7 +476,9 @@ def _anexo(anexo, snapshot):
     return {
         "titulo": anexo.get("label") or "sem rótulo",
         "linhas": [
-            "modelo de: " + ", ".join(modelos) if modelos else "não é modelo de nenhum requisito",
+            Rotulada("modelo de", ", ".join(modelos))
+            if modelos
+            else "não é modelo de nenhum requisito",
         ],
         "anexo_id": identidade,
     }
@@ -614,12 +649,12 @@ def _marcos_agrupados(snapshot):
                 titulo = f"{posicao + 1}º marco — {titulo}"
             item = {
                 "titulo": titulo,
-                "linhas": [f"Denominação: {_denominacao(grupo)}"]
-                + [f"{rotulo}: {valor}" for rotulo, valor in grupo["pares"]]
+                "linhas": [Rotulada("Denominação", _denominacao(grupo))]
+                + [Rotulada(rotulo, valor) for rotulo, valor in grupo["pares"]]
                 # A origem do materializado (051, FR-934, FR-935): quem o gesto alcançou e ainda
                 # tem o valor que ele gravou. O que foi editado depois não aparece aqui.
                 + [
-                    f"Origem: {_enumerar(codigos)} — {origens.frase_do_gesto(gesto)}"
+                    Rotulada("Origem", f"{_enumerar(codigos)} — {origens.frase_do_gesto(gesto)}")
                     for gesto, codigos in (grupo.get("gestos") or {}).values()
                 ],
             }
@@ -660,7 +695,7 @@ def _classificacao(snapshot):
             {
                 "titulo": "Método do sorteio comum a este Edital",
                 "linhas": [
-                    f"{rotulo}: {_com_origem_do_metodo(campo, valor, comum, snapshot)}"
+                    Rotulada(rotulo, _com_origem_do_metodo(campo, valor, comum, snapshot))
                     for campo, _, rotulo in CAMPOS_DO_METODO
                     if (valor := _valor_do_campo_do_metodo(campo, comum))
                 ],

@@ -21,13 +21,13 @@ CINCO_DADOS = ("Sorteio", "Algoritmo", "Semente", "Resumo da rela", "Resumo do m
 
 def _divulgado(ato):
     """O documento é renderizado sobre o conteúdo **divulgado**, e não sobre a composição crua."""
-    from processo_seletivo.publicacoes.domain.autoridades import escolher
+    from tests.fixtures.autoridades import assinatura_do_resultado
 
     return conteudo_divulgado(
         compor(ato),
         natureza="PRELIMINAR",
         publicado_em=timezone.now(),
-        signatario=escolher("diretoria-cefor"),
+        **assinatura_do_resultado(),
     )
 
 

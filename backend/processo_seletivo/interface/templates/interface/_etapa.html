@@ -1,5 +1,9 @@
 {% load interface_extras %}<fieldset class="linha etapa">
-  <legend>Etapa de Avaliação</legend>
+  {% comment %}
+  A legenda diz qual Etapa é, e as ações moram na linha dela (056, FR-1023, FR-1024; ver `_evento.html`).
+  {% endcomment %}
+  <legend data-rotulo="Etapa de Avaliação"><span class="categoria">Etapa de Avaliação<span data-ordem></span></span>{% if etapa_linha.name %}<span class="nome">{{ etapa_linha.name }}</span>{% endif %}</legend>
+  {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover esta Etapa" %}
   <input type="hidden" name="etapa-{{ indice }}-id" value="{{ etapa_linha.id }}">
   {% comment %}
   A ordem é dado enviado, e não a posição da linha: a leitura descarta a posição visual antes de
@@ -197,6 +201,5 @@
                {% if etapa_linha.classificatory %}checked{% endif %}> Classificatória
       </label>
     </fieldset>
-    {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover esta Etapa" %}
   </div>
 </fieldset>

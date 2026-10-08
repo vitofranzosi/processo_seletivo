@@ -1,0 +1,1 @@
+{% if acao.disponivel %}<a class="acao{% if acao.estilo == 'perigoso' %} perigoso{% endif %}{% if acao.quantidade == 0 %} zerada{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}

@@ -48,6 +48,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     AutoridadeSignataria,
     render_edital_pdf,
 )
+from tests.fixtures.autoridades import UNIDADE_DA_SUITE
 
 HASH = "a" * 64
 
@@ -61,7 +62,8 @@ DATA_DA_SUITE = date(2026, 9, 29)
 
 
 def documento(conteudo, content_hash=HASH, *, modo=None, **kwargs):
-    """Compõe como a publicação compõe, com a autoridade e a data que esta suíte usa."""
+    """Compõe como a publicação compõe, com a autoridade, a data e a unidade que esta suíte usa."""
+    kwargs.setdefault("unidade", UNIDADE_DA_SUITE)
     if modo is not None:
         if modo == MODO_PUBLICADO and "autoridade" in kwargs:
             kwargs.setdefault("data_do_ato", DATA_DA_SUITE)
@@ -1167,7 +1169,7 @@ def test_compor_publicado_sem_autoridade_e_recusado():
     cometer por esquecimento. Mesmo desenho que a `007` deu ao hash da prévia, e pela mesma razão.
     """
     with pytest.raises(ValueError):
-        render_edital_pdf(snapshot(), HASH)
+        render_edital_pdf(snapshot(), HASH, unidade=UNIDADE_DA_SUITE)
 
 
 def test_oferecer_autoridade_na_previa_e_recusado():
@@ -1178,7 +1180,9 @@ def test_oferecer_autoridade_na_previa_e_recusado():
     from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA
 
     with pytest.raises(ValueError):
-        render_edital_pdf(snapshot(), HASH, modo=MODO_PREVIA, autoridade=autoridade())
+        render_edital_pdf(
+            snapshot(), HASH, modo=MODO_PREVIA, unidade=UNIDADE_DA_SUITE, autoridade=autoridade()
+        )
 
 
 def test_a_previa_nao_compoe_bloco_de_autoridade():

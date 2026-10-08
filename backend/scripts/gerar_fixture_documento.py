@@ -26,6 +26,7 @@ django.setup()
 
 from processo_seletivo.publicacoes.infrastructure.pdf import (  # noqa: E402
     AutoridadeSignataria,
+    UnidadeDoAto,
     render_edital_pdf,
 )
 from processo_seletivo.shared.canonical import canonical_sha256  # noqa: E402
@@ -42,11 +43,14 @@ def main():
     # A data do ato, desde a `054` (FR-990): contexto obrigatório do publicado, versionada ao lado
     # pela mesma razão da autoridade.
     contexto = json.loads((FIXTURES / "contexto_publicado.json").read_text(encoding="utf-8"))
+    # A unidade do ato, desde a `060` (FR-1112): o cabeçalho e o local deixaram de ser constantes.
+    unidade = json.loads((FIXTURES / "unidade_publicada.json").read_text(encoding="utf-8"))
     destino = FIXTURES / "documento_publicado_v1.pdf"
     destino.write_bytes(
         render_edital_pdf(
             snapshot,
             canonical_sha256(snapshot),
+            unidade=UnidadeDoAto(cabecalho=tuple(unidade["cabecalho"]), local=unidade["local"]),
             autoridade=AutoridadeSignataria(**assinante),
             data_do_ato=date.fromisoformat(contexto["data_do_ato"]),
         )

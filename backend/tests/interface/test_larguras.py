@@ -224,7 +224,9 @@ def test_a_marca_do_perfil_e_menor_que_a_do_edital(da_visao_geral):
     A comparação é **numérica**, e não a presença da regra: quem aumentar a marca do Edital sem
     olhar para esta passa a ter as duas iguais de novo, e uma asserção de existência não veria.
     """
-    do_edital = float(re.search(r"\n\.marca\{[^}]*font-size:([\d.]+)rem", da_visao_geral).group(1))
+    do_edital = float(
+        re.search(r"\nmain \.marca\{[^}]*font-size:([\d.]+)rem", da_visao_geral).group(1)
+    )
     do_perfil = float(
         re.search(r"\.tabela-de-perfis \.marca\{[^}]*font-size:([\d.]+)rem", da_visao_geral).group(
             1
@@ -298,3 +300,16 @@ def test_nenhuma_tela_anuncia_um_estado_como_sucesso(client, seletor_ligado, ges
 
     assert "Você integra a comissão de" in corpo
     assert 'class="sucesso"' not in corpo
+
+
+def test_a_marca_de_atencao_nao_alcanca_a_marca_do_cabecalho(da_visao_geral):
+    """A marca de atenção e a marca do cabeçalho dividem a classe `.marca`.
+
+    Escrita sem escopo, a regra da Visão Geral pintava também o `Cefor/Ifes · Processos Seletivos`
+    do topo: fundo creme e borda âmbar sob texto branco, e o nome do sistema sumia — só nesta tela,
+    que é a única a declarar a regra. Nenhuma asserção sobre a marcação via, porque o HTML do
+    cabeçalho é o mesmo em toda tela; por isso o guardião é, de novo, sobre a forma do seletor.
+    """
+    soltas = re.findall(r"(?:^|[\n,}])\.marca(?=[{.,:\s])", da_visao_geral)
+
+    assert not soltas, soltas

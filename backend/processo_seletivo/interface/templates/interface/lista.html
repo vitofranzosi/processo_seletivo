@@ -1,5 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Processos Seletivos{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
+   só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
+   é resposta. {% endcomment %}
+.acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
+.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
+{% endblock %}
 {% block conteudo %}
 <h1>Processos Seletivos</h1>
 <p class="sub">Processos e Editais do escopo <strong>{{ ator.institution_scope }}</strong>.</p>
@@ -25,7 +32,7 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
-{% if pode_criar or pode_ver_visao %}
+{% if pode_criar or pode_ver_visao or pode_gerir_autoridades %}
 <p class="acoes-do-painel">
   {% if pode_criar %}<a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>{% endif %}
   {% comment %}
@@ -37,6 +44,7 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
   E não vai no cabeçalho de `base.html`: lá só existe um link, e ele não depende de papel nenhum.
   {% endcomment %}
   {% if pode_ver_visao %}<a class="botao secundario" href="{% url 'interface:visao-geral' %}">Visão Geral</a>{% endif %}
+  {% if pode_gerir_autoridades %}<a class="botao secundario" href="{% url 'interface:autoridades' %}">Autoridades da unidade</a>{% endif %}
 </p>
 {% endif %}
 
@@ -77,6 +85,8 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
     {% endif %}
   </header>
   {% if processo.editais.all %}
+  {% comment %} Abaixo de 60 rem a tabela rola dentro da moldura, e não é recortada pelo cartão (058, FR-1071). {% endcomment %}
+  <div class="rolavel-no-estreito">
   <table>
     <caption>{{ processo.editais.all|length }} {{ processo.editais.all|length|plural:"Edital,Editais" }} neste Processo</caption>
     <thead>
@@ -100,8 +110,13 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
           {% if edital.acoes %}
           <div class="acoes">
             {% comment %} A mesma advertência que `detalhe.html` já dá: "Cancelar" e "Encerrar" interrompem
-            o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara. {% endcomment %}
-            {% for acao in edital.acoes %}{% if acao.disponivel %}<a class="acao{% if acao.estilo == 'perigoso' %} perigoso{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}<span class="acao desabilitado">{{ acao.rotulo }}</span>{% endif %}{% endfor %}
+            o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara.
+
+            **E a mesma ordem** (057, FR-1049, FR-1050): as que se praticam todo dia primeiro, as que
+            encerram ou interrompem por último, num grupo próprio que não se confunde com "Retificar".
+            O contador zerado esmaece sem sumir: "nenhuma inscrição" também é resposta. {% endcomment %}
+            {% for acao in edital.grupo.secundarias %}{% include "interface/_acao_de_linha.html" %}{% endfor %}
+            {% if edital.grupo.terminais %}<span class="acoes terminais">{% for acao in edital.grupo.terminais %}{% include "interface/_acao_de_linha.html" %}{% endfor %}</span>{% endif %}
           </div>
           {% else %}
           <span class="nenhuma">Nenhuma ação disponível para seus papéis</span>
@@ -111,6 +126,7 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p class="sem-edital">Nenhum Edital neste Processo.</p>
   {% endif %}

@@ -27,6 +27,14 @@
        a numeração iria parar no rótulo errado se a ordem dos blocos mudasse. */
     var legenda = linha.querySelector(":scope > legend");
     if (!legenda) return;
+    /* A legenda que também diz **qual** item é (056, FR-1024, FR-1025): "Evento do Cronograma 1 de
+       3 · Inscrições". Reescrevê-la inteira apagaria o nome; a posição vai só para o lugar dela, e
+       a categoria — que a confirmação de remoção lê em `data-rotulo` — continua a do servidor. */
+    var ordem = legenda.querySelector("[data-ordem]");
+    if (ordem) {
+      ordem.textContent = " " + (indice + 1) + " de " + total;
+      return;
+    }
     var base = legenda.dataset.rotulo || legenda.textContent.trim();
     legenda.dataset.rotulo = base;
     legenda.textContent = base + " " + (indice + 1) + " de " + total;

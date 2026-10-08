@@ -542,6 +542,16 @@ ficava com 550 px enquanto sobravam 412 px de tela, e uma página A4 renderizava
 A separação entre a largura do texto e a da estrutura está em `shared/_tokens.css.html` — é ela que
 faz esta feature caber na tela.
 
+**A barra do painel oferece a aba própria**, ao lado do fechar. Ampliar e girar o documento são do
+visualizador de PDF do navegador, e são só visualização: o arquivo do candidato, o resumo e a
+trilha não mudam. Mas o visualizador encolhe a própria barra para caber na moldura, e no Firefox o
+menu que guarda "Girar" some — a foto tirada de lado só se endireitava pelo atalho R, que ninguém
+adivinha. A aba própria devolve a barra inteira em qualquer navegador, sem texto de ajuda que
+valesse para um navegador e mentisse para o outro. É o mesmo endereço: a mesma Atribuição, a mesma
+conferência, e uma abertura a mais na trilha, que é o que ela é. Controles próprios de zoom e
+rotação foram descartados: o visualizador nativo não se deixa comandar de fora da moldura, e
+recarregá-la a cada clique gravaria uma abertura por clique.
+
 **FR-111** — **O seletor de identidade oferece quem tem trabalho de comissão.** Presidir e avaliar
 não são papéis — vêm do vínculo, objeto a objeto —, e nenhuma caixa daquela tela os concede. Quem
 digitava o próprio nome, ou aceitava o exemplo que vinha preenchido, entrava sem vínculo nenhum e

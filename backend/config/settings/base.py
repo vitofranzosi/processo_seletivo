@@ -112,6 +112,12 @@ INSTALLED_APPS = [
     # `convocacao` (`domain/disponibilidade.py::exigido_na_inscricao`), para que o ciclo
     # `inscricoes → requerimentos → convocacao → inscricoes` não se feche.
     "processo_seletivo.requerimentos",
+    # A unidade que pratica o ato e quem pode responder por ele (060). App próprio porque quatro
+    # apps a leem — a criação de Processo, as duas publicações e o comprovante — e nenhum é dono
+    # dela; `seguranca` é dono do escopo, mas não guarda cadastro, e pôr as tabelas em `publicacoes`
+    # faria `processos` depender de quem publica. A Unidade materializa o `institution_scope`, e
+    # nada aponta para ela por chave estrangeira (060, D-001).
+    "processo_seletivo.unidades",
     # A exportação de matrículas (031): o que o candidato declarou no Requerimento, no formato que
     # o Registro Acadêmico importa. App próprio, e é o **último** da lista por uma razão que vale
     # como teste: ele é a ponta da leitura, e **ninguém o importa**. A `029` custou uma sessão a um

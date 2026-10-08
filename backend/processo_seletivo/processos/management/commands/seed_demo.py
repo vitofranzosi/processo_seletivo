@@ -26,13 +26,19 @@ from processo_seletivo.publicacoes.application.retificacoes import (
 )
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
+from processo_seletivo.shared.tempo import ZONA
+from processo_seletivo.unidades.application.autoridades import cadastrar as cadastrar_autoridade
+from processo_seletivo.unidades.application.selectors import autoridades_vigentes
+from processo_seletivo.unidades.application.sincronizacao import ler as ler_unidades
+from processo_seletivo.unidades.application.sincronizacao import sincronizar as sincronizar_unidades
+from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 
 ESCOPO = "cefor"
-SIGNATARIO = {
-    "authorityId": "00000000-0000-0000-0000-0000000000a1",
-    "name": "Reitora do IFES",
-    "role": "Reitora",
-}
+# As autoridades que a demonstração usa, só com o cargo, como o registro inicial do Cefor fica até
+# o Cefor fornecer nome e portaria (060, FR-1124). São cadastradas pelo comando, com um Gestor, e
+# reaproveitadas quando a demonstração roda de novo com outro código.
+CARGO_DO_EDITAL = "Reitora"
+CARGO_DO_RESULTADO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
 
 
 @contextlib.contextmanager
@@ -634,12 +640,38 @@ class Command(BaseCommand):
             ),
         )
 
+    def _unidade_e_autoridades(self):
+        """O Cefor registrado e as duas autoridades da demonstração, vigentes há um ano (060).
+
+        O registro de Unidades vem do arquivo, como na implantação; as autoridades, do comando de
+        cadastro, como pela tela — a demonstração percorre o fluxo real, e não grava direto.
+        """
+        sincronizar_unidades(ler_unidades())
+        gestor = ator("gabriel.gestor", GERIR_AUTORIDADES)
+        hoje = timezone.now().astimezone(ZONA).date()
+        vigentes = {
+            autoridade.cargo: autoridade
+            for autoridade in autoridades_vigentes(ESCOPO, hoje)
+            if not autoridade.nome
+        }
+        self.autoridades = {}
+        for cargo in (CARGO_DO_EDITAL, CARGO_DO_RESULTADO):
+            autoridade = vigentes.get(cargo) or cadastrar_autoridade(
+                actor=gestor,
+                cargo=cargo,
+                inicio_vigencia=hoje - timedelta(days=365),
+                idempotency_key=f"seed-demo-autoridade-{cargo[:20]}",
+                correlation_id="seed-demo",
+            )
+            self.autoridades[cargo] = str(autoridade.pk)
+
     def handle(self, *args, **opcoes):
         with _relogio_atrasado(opcoes["dias_atras"]):
             self._semear(**opcoes)
 
     def _semear(self, **opcoes):
         self.janela_recursal = opcoes["janela_recursal"]
+        self._unidade_e_autoridades()
         codigo = opcoes["codigo"]
         existente = ProcessoSeletivo.objects.filter(
             institution_scope=ESCOPO, institutional_code=codigo
@@ -923,7 +955,7 @@ class Command(BaseCommand):
             actor=publicador,
             edital_id=edital.id,
             expected_revision=edital.revision,
-            signatory=SIGNATARIO,
+            autoridade_id=self.autoridades[CARGO_DO_EDITAL],
             reason="Publicação do edital original.",
             idempotency_key=f"seed-demo-pub-{edital.id.hex[:12]}",
             correlation_id="seed-demo",
@@ -1072,7 +1104,7 @@ class Command(BaseCommand):
             actor=publicador,
             retificacao_id=retificacao.id,
             expected_revision=retificacao.revision,
-            signatory=SIGNATARIO,
+            autoridade_id=self.autoridades[CARGO_DO_EDITAL],
             idempotency_key=f"seed-demo-{sufixo}-publicar",
             correlation_id=f"seed-demo-{sufixo}",
         )
@@ -1447,7 +1479,7 @@ class Command(BaseCommand):
             marco_id=marco_id,
             ato_id=ato.id,
             natureza="PRELIMINAR",
-            autoridade="diretoria-cefor",
+            autoridade=self.autoridades[CARGO_DO_RESULTADO],
             confirmacao_da_previa=assinatura_da_previa(
                 ato=ato, publicacao_anterior=None, projecao=compor(ato)
             ),
@@ -1787,7 +1819,7 @@ class Command(BaseCommand):
                 actor=publicador,
                 retificacao_id=retificacao.id,
                 expected_revision=retificacao.revision,
-                signatory=SIGNATARIO,
+                autoridade_id=self.autoridades[CARGO_DO_EDITAL],
                 idempotency_key=f"seed-demo-{sufixo}-publicar",
                 correlation_id=correlacao,
             )

@@ -1,5 +1,21 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Revisão{% endblock %}
+{% comment %}
+A coluna dos rótulos (056, FR-1033, D-010). A grade é a de "Dados da inscrição" — `auto 1fr` —, e
+aqui ela ganha um teto: o rótulo mais longo ("Reverter vaga reservada não preenchida para a ampla
+concorrência") levaria todos os valores do item para o meio da linha. Com o teto, ele quebra dentro
+da coluna dele. O corpo menor é o que as linhas já tinham como `.detalhe`.
+
+**E a mesma largura em todo bloco** (058, FR-1080, D-006). Com `fit-content`, cada bloco media a
+coluna pelo seu rótulo mais longo, e os valores começavam em nove posições diferentes na Revisão do
+76/2027. O teto de 16 rem virou a largura: cabe numa linha todo rótulo comum ("Como a convocação é
+comunicada", o maior, tem 14,3 rem). O `min` só age em tela estreita, para a coluna não tomar o
+cartão.
+{% endcomment %}
+{% block estilo_da_pagina %}
+.conferencia .dados-da-inscricao{grid-template-columns:min(16rem,40%) 1fr;font-size:.875rem;
+  margin:.2rem 0 .1rem}
+{% endblock %}
 {% block etapa %}
 <section aria-labelledby="revisao-titulo" class="pendencias">
   <h2 id="revisao-titulo">O que falta para submeter</h2>
@@ -38,7 +54,7 @@
         próprio tamanho (`test_escala_da_mesa`).
         {% endcomment %}
         {% if item.diverge %}<span class="detalhe"><strong>{{ item.diverge }}</strong></span>{% endif %}
-        {% for linha in item.linhas %}{% if linha %}<span class="detalhe">{{ linha }}</span>{% endif %}{% endfor %}
+        {% include "interface/_linhas_da_revisao.html" with linhas=item.linhas %}
         {% comment %}
         Os bytes do anexo, e não só a linha que diz que ele existe: conferir o que não se pode abrir
         não é conferir, e é este o canal de quem homologa (020, FR-018).
@@ -70,7 +86,7 @@ ganhou selo (`FR-428` da `030`), e é por isso que o aviso mora aqui.
     {% for item in definitivos %}
     <li>
       <strong>{{ item.titulo }}</strong>
-      {% for linha in item.linhas %}<span class="detalhe">{{ linha }}</span>{% endfor %}
+      {% include "interface/_linhas_da_revisao.html" with linhas=item.linhas %}
     </li>
     {% endfor %}
   </ul>

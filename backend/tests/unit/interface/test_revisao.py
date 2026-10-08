@@ -170,15 +170,15 @@ def test_a_conferencia_mostra_cota_etapa_e_texto(api_client, manager_headers, pr
         linha for bloco in blocos for item in bloco["itens"] for linha in item["linhas"]
     )
 
-    # A forma canônica é a do conteúdo publicado. Humanizá-la para leitura é assunto da
-    # materialização, e a `007` a trata — aqui o que importa é a cota aparecer na conferência.
-    assert "Modalidade: PPI" in tudo and "20.0000%" in tudo
+    # A forma canônica é a do conteúdo publicado; a conferência a escreve como gente (057,
+    # FR-1058): sem os zeros que não dizem nada, com vírgula, sem arredondar.
+    assert "Modalidade: PPI" in tudo and "20%" in tudo and "20.0000%" not in tudo
     assert "Lei 12.711/2012" in tudo
     assert "Prova didática" in "\n".join(
         item["titulo"] for bloco in blocos for item in bloco["itens"]
     )
     assert "Caráter: eliminatória e classificatória" in tudo
-    assert "Peso: 2.0000" in tudo
+    assert "Peso: 2" in tudo.split("\n"), "sem os zeros que não dizem nada (057, FR-1058)"
     assert "O presente Edital estabelece as normas" in tudo, "o texto da seção, não só o título"
     # E a seção vazia diz que não sai, em vez de mostrar o número do catálogo (054, FR-985).
     assert "Vazia — não sai no documento." in tudo
@@ -206,7 +206,7 @@ def test_a_conferencia_mostra_o_que_a_012_acrescentou_a_etapa(
         linha for bloco in blocos for item in bloco["itens"] for linha in item["linhas"]
     )
 
-    assert "Pontuação máxima: 100.0000" in tudo
+    assert "Pontuação máxima: 100" in tudo.split("\n")
     assert "Avaliações por inscrição: 2" in tudo
 
 

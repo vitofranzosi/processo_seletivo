@@ -1,4 +1,4 @@
-{% comment %}
+{% load interface_extras %}{% comment %}
 Uma linha do conteúdo vigente, aberta para edição.
 
 Vive num arquivo próprio porque a tela passou a desenhá-la dentro de sete seções, e repetir
@@ -18,7 +18,8 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
     `campo.valor` já traz o que a pessoa digitou quando houve POST — a reexibição é resolvida
     antes de chegar aqui, e não por um filtro repetido em cada controle.
     {% endcomment %}
-    {% for campo in grupo.campos %}
+    {% comment %}Na ordem do editor do Compor, sem mudar nome de campo (056, FR-1038, D-013).{% endcomment %}
+    {% for campo in grupo|campos_na_ordem_do_compor %}
     <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' or campo.tipo == 'lista_de_texto' %} largo{% endif %}">
       <label for="c-{{ campo.referencia }}">{{ campo.rotulo }}</label>
       {% if campo.tipo == 'lista_de_texto' %}
@@ -31,8 +32,13 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
                 aria-describedby="ajuda-{{ campo.referencia }}">{{ campo.valor }}</textarea>
       <span class="ajuda" id="ajuda-{{ campo.referencia }}">Um requisito por linha. A lista inteira é substituída.</span>
       {% elif campo.tipo == 'texto_longo' %}
+      {% comment %}
+      Duas linhas para o que é frase — título e descrição —, e quatro para a declaração, que é um
+      parágrafo e é assim que o Compor a desenha; cinco para o texto corrido de verdade, como a seção
+      (056, FR-1036, D-014). Com duas, a declaração do banco de demonstração ainda rolava.
+      {% endcomment %}
       <textarea id="c-{{ campo.referencia }}"
-                name="campo:{{ campo.referencia }}" rows="5"
+                name="campo:{{ campo.referencia }}" rows="{% if campo.chave == 'title' or campo.chave == 'description' %}2{% elif campo.chave == 'matriculationRequest/declarationText' %}4{% else %}5{% endif %}"
                 {% if campo.descricao %}aria-describedby="atual-{{ campo.referencia }}"{% endif %}>{{ campo.valor }}</textarea>
       {% if campo.descricao %}
       <span class="ajuda" id="atual-{{ campo.referencia }}">Hoje: {{ campo.descricao }}.</span>

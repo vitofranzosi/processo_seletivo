@@ -1,5 +1,8 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Cronograma{% endblock %}
+{% comment %} "Onde acontece" no fim da faixa do Evento, com coluna curta que não cresce: quem cresce é a
+   Descrição, que é obrigatória e saía cortada (056, FR-1028, D-006). Só esta etapa desenha Evento. {% endcomment %}
+{% block estilo_da_pagina %}.campo.local{flex:0 1 20rem}{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"

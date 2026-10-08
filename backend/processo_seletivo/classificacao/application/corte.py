@@ -335,6 +335,11 @@ def _reingressou(edital, geracao):
     participantes que ele congelou, **e** o Resultado superado ser de uma das Etapas que produziram
     a ordem. Sem a segunda, o deferimento na Etapa governada obsoletaria o corte — que é justamente
     o que a `FR-230` proíbe.
+
+    **E há uma terceira, que faltou até a `061`: o sucessor não estar entre os Resultados que o ato
+    já cita** (FR-1140, FR-1141). Sem ela, o primeiro deferimento numa Etapa da ordem obsoletava
+    para sempre toda geração daquela lista — inclusive a emitida sobre a ordem sucessora, que já o
+    considerou, e a sucessora que a recusa mandava emitir.
     """
     from processo_seletivo.resultados.models import ResultadoEtapa
 
@@ -351,12 +356,22 @@ def _reingressou(edital, geracao):
     }
     if not participantes or not etapas_da_ordem:
         return []
-    reingressaram = ResultadoEtapa.vigentes.filter(
-        edital=edital,
-        inscricao_id__in=participantes,
-        etapa_id__in=etapas_da_ordem,
-        resultado_anterior__isnull=False,
-    ).exists()
+    # **A identidade, e não o instante** (061, D-001). O `stageResults` é o que o ato leu, conferido
+    # pela trigger de proveniência contra a linha append-only; comparar `consolidado_em` com
+    # `emitido_em` diria o mesmo dependendo de relógio, e o seed tem caminho legítimo de relógio
+    # atrasado. Um sucessor citado já está dentro da ordem: não há o que reingressar, e acusá-lo
+    # exigiria a geração sucessora idêntica que a `FR-230` recusa.
+    citados = [str(item.get("id")) for item in (universo.get("stageResults") or [])]
+    reingressaram = (
+        ResultadoEtapa.vigentes.filter(
+            edital=edital,
+            inscricao_id__in=participantes,
+            etapa_id__in=etapas_da_ordem,
+            resultado_anterior__isnull=False,
+        )
+        .exclude(id__in=citados)
+        .exists()
+    )
     if not reingressaram:
         return []
     return [

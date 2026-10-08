@@ -67,6 +67,16 @@ class Publicacao(models.Model):
     # no momento do ato, como nome e cargo, e imutável como eles (054, FR-991). Vazio nas
     # Publicações anteriores à `054`, que não o registraram, e enquanto o Cefor não o fornecer.
     signatory_appointment = models.CharField(max_length=255, blank=True, default="")
+    # A unidade que praticou o ato, como estava no dia (060, FR-1128). Copiada do registro de
+    # Unidades e imutável como o signatário: a unidade pode ser renomeada depois, e a Publicação
+    # continua dizendo o nome que o documento imprimiu. Colunas, e não chave estrangeira, pela mesma
+    # razão — a FK faria o nome do dia se perder na primeira renomeação (FR-1129). Vazias só em
+    # banco de demonstração anterior à 060, que se re-semeia.
+    unidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    unidade_sigla = models.CharField(max_length=30, blank=True, default="")
+    unidade_nome = models.CharField(max_length=255, blank=True, default="")
+    unidade_cabecalho = models.JSONField(default=list)
+    unidade_local = models.CharField(max_length=120, blank=True, default="")
 
     class Meta:
         constraints = [

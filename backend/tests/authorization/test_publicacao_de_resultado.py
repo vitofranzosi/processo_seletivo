@@ -13,6 +13,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.divulgacao.models import PublicacaoResultado
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import montar_ato_publicavel, publicar_o_ato
 from tests.interface.conftest import identificar
 
@@ -84,7 +85,7 @@ def test_o_presidente_que_emitiu_nao_publica_nem_por_post(client, seletor_ligado
         _confirmar(cenario),
         {
             "natureza": "PRELIMINAR",
-            "autoridade": "diretoria-cefor",
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
             "confirmacao_da_previa": "0" * 64,
             "chave_idempotencia": "tentativa-0755",
         },

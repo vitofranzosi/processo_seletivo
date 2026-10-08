@@ -10,6 +10,7 @@ import pytest
 
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.shared.canonical import canonical_sha256
+from tests.fixtures.autoridades import UNIDADE_DA_SUITE
 from tests.fixtures.snapshot import DOCUMENTO, MODALIDADE, PERFIL, rascunho_completo
 from tests.unit.publicacoes.test_pdf import DATA_DA_SUITE, texto_de
 
@@ -68,6 +69,7 @@ def _texto(snapshot):
     documento = render_edital_pdf(
         snapshot,
         canonical_sha256(snapshot),
+        unidade=UNIDADE_DA_SUITE,
         autoridade=compositor.AutoridadeSignataria(nome="Diretora", cargo="Diretora-Geral"),
         data_do_ato=DATA_DA_SUITE,
     )

@@ -73,6 +73,13 @@ PAPEIS = {
             # identidade e não deve conhecer quem a consome. A grafia é conferida por
             # `tests/authorization/test_visao_institucional.py`.
             "visao:consultar",
+            # Manter as autoridades da própria unidade — cadastrar, corrigir e encerrar (060,
+            # `D-005`). **Configuração administrativa da unidade, e não ato de publicação**: quem a
+            # tem não publica por tê-la, e quem publica não a ganha por publicar. Permissão própria,
+            # e não efeito de outra, para que destacá-la para outro papel — se o Ifes pedir gestão
+            # centralizada — custe esta linha e nenhuma mudança no modelo. A grafia é conferida por
+            # `tests/authorization/test_gerir_autoridades.py`.
+            "autoridade:gerir",
         ],
     ),
     # Papel **próprio**, e não uma capacidade acrescentada a um existente (D-005, T-005). Cada

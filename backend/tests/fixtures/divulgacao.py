@@ -20,6 +20,7 @@ from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from tests.conftest import ator_institucional
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
 from tests.fixtures.edital import corte_que_nao_governa, identificador
 from tests.fixtures.mesa import concluir_como, distribuir_para
@@ -347,7 +348,7 @@ def publicar_o_ato(
     ator=None,
     *,
     natureza="PRELIMINAR",
-    autoridade="diretoria-cefor",
+    autoridade=str(AUTORIDADE_DO_RESULTADO),
     chave="publicar-017",
     ato=None,
     declaracao=None,

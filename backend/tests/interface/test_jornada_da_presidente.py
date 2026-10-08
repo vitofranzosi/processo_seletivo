@@ -129,7 +129,8 @@ def test_a_confirmacao_de_atribuicao_nao_usa_estilo_de_alerta(
     ).content.decode()
 
     trecho = corpo.split("Alocado nesta Etapa")[0][-260:]
-    assert 'class="ficha"' in trecho
+    # `ficha curta` desde a 057 (FR-1057): a mesma ficha, na largura do que diz.
+    assert 'class="ficha' in trecho
     assert 'class="aviso"' not in trecho
     assert 'class="erro"' not in trecho
 

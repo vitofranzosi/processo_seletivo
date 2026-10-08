@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Exportar para matrícula — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
@@ -16,10 +16,16 @@ FR-424 e T031g: os termos deste vocabulário se definem no primeiro uso visível
 lista literal de `tests/test_vocabulario_da_composicao.py::TELAS` no mesmo commit — a lista não é
 `glob`, por decisão escrita, e sem a entrada a tela escaparia da regra em silêncio.
 {% endcomment %}
-<p class="definicoes"><dfn>Geração</dfn> é o ato de montar o arquivo de uma população escolhida: ela
-  não altera nada e não guarda o arquivo, e repeti-la produz o mesmo conteúdo.
-  <dfn>Faixa</dfn> é o intervalo de renda declarado, em salários mínimos — e a lacuna da coluna 31,
-  abaixo, existe porque a faixa daqui e a do destino não medem a mesma coisa.</p>
+{% comment %} Recolhido, no mesmo lugar e com o mesmo texto (057, FR-1051, D-009): serve ao primeiro contato e
+   ficava na frente da ação em todos os outros. O rótulo não usa os termos que o bloco define — senão
+   ele seria o primeiro uso, fora do `dfn`. {% endcomment %}
+<details class="como-preencher">
+  <summary>Termos desta tela</summary>
+  <p class="definicoes"><dfn>Geração</dfn> é o ato de montar o arquivo de uma população escolhida: ela
+    não altera nada e não guarda o arquivo, e repeti-la produz o mesmo conteúdo.
+    <dfn>Faixa</dfn> é o intervalo de renda declarado, em salários mínimos — e a lacuna da coluna 31,
+    abaixo, existe porque a faixa daqui e a do destino não medem a mesma coisa.</p>
+</details>
 
 {% comment %}
 FR-456 e §18: o arquivo não é persistido. Dizê-lo na tela é o que impede alguém de procurá-lo
@@ -54,7 +60,7 @@ esquecimento.
       — rascunho não é declaração.</span>
   </p>
   <p class="salvar">
-    <button type="submit" class="acao">Ver o que sairá vazio</button>
+    <button type="submit" class="botao">Ver o que sairá vazio</button>
   </p>
 </form>
 {% else %}
@@ -64,19 +70,19 @@ esquecimento.
 {% endif %}
 
 {% if composicao %}
-<section aria-labelledby="lacunas" class="resumo">
+<section aria-labelledby="lacunas">
   <h2 id="lacunas">O que sairá vazio, e por quê</h2>
   {% comment %}
   UX-060: o resumo vem **antes** do download. Depois dele ninguém lê — e uma planilha com células
   vazias e sem explicação é preenchida à mão por quem a recebe, que é exatamente o erro silencioso
   que esta feature existe para fechar.
   {% endcomment %}
-  <p class="nota">{{ populacao.rotulo }} — <strong>{{ composicao.quantidade }}</strong> linha(s).
+  <p class="nota">{{ populacao.rotulo }} — <strong>{{ composicao.quantidade }}</strong> {{ composicao.quantidade|plural:"linha,linhas" }}.
     Leia este resumo antes de baixar: é ele que impede uma célula vazia de virar preenchimento
     manual no destino.</p>
   <dl class="meta">
     {% for item in relatorio %}
-    <dt>{{ item.coluna }}{% if item.quantidade %} <span class="codigo">{{ item.quantidade }} linha(s)</span>{% endif %}</dt>
+    <dt>{{ item.coluna }}{% if item.quantidade %} <span class="codigo">{{ item.quantidade|contagem:"linha,linhas" }}</span>{% endif %}</dt>
     <dd>
       {{ item.razao }}
       {% if item.pessoas %}

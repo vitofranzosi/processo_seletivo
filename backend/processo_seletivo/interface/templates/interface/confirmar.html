@@ -75,25 +75,12 @@ a apuração vai alcançar — e os dois em números, para não ter de abrir out
 
   {% if ato.exige_signatario %}
   {% comment %}
-  FR-039: escolher, não digitar. Este era o campo mais hostil do produto — um UUID de trinta e seis
-  caracteres, à mão, no ato de maior consequência do sistema —, e nome e cargo eram redigitados a
-  cada publicação. Agora os três saem da entrada escolhida, e o identificador não é sequer exibido:
-  é dado de vínculo, não de leitura.
+  Escolher, não digitar: nome, cargo e ato de nomeação saem do registro de autoridades da unidade do
+  Edital, e o identificador não é sequer exibido (060, FR-1125; a 007 já o tinha tirado da tela).
   {% endcomment %}
   <fieldset>
     <legend>Autoridade Signatária</legend>
-    <p class="campo largo">
-      <label for="signatario">Quem assina institucionalmente este Edital
-        <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="signatario" name="signatario" required aria-required="true"
-              aria-describedby="ajuda-sig">
-        <option value="">— escolha a autoridade —</option>
-        {% for autoridade in autoridades %}
-        <option value="{{ autoridade.chave }}">{{ autoridade }}</option>
-        {% endfor %}
-      </select>
-      <span class="ajuda" id="ajuda-sig">Fica registrada na Publicação e aparece no documento.</span>
-    </p>
+    {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="signatario" rotulo="Quem responde institucionalmente por este Edital" ajuda="Fica registrada na Publicação e aparece no documento." com_vazio=True %}
   </fieldset>
   {% endif %}
 

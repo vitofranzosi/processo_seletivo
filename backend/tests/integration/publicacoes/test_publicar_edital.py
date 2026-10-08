@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
 from tests.fixtures.edital import actor_headers, complete_draft
+from tests.fixtures.publicacao import SIGNATORY
 
 
 def prepare_homologated(api_client, manager_headers, process_payload):
@@ -39,13 +40,7 @@ def prepare_homologated(api_client, manager_headers, process_payload):
 def test_publication_is_atomic_and_idempotent(api_client, manager_headers, process_payload):
     edital = prepare_homologated(api_client, manager_headers, process_payload)
     publisher = actor_headers("publicador", ["edital:publicar"], if_match=4)
-    payload = {
-        "signatory": {
-            "authorityId": "00000000-0000-0000-0000-000000000498",
-            "name": "Autoridade",
-            "role": "Diretor",
-        }
-    }
+    payload = {"signatory": SIGNATORY}
     first = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes", payload, format="json", **publisher
     )
@@ -66,13 +61,7 @@ def test_database_trigger_rejects_publication_update(api_client, manager_headers
     if connection.vendor != "postgresql":
         pytest.skip("trigger validado somente no PostgreSQL")
     edital = prepare_homologated(api_client, manager_headers, process_payload)
-    payload = {
-        "signatory": {
-            "authorityId": "00000000-0000-0000-0000-000000000497",
-            "name": "Autoridade",
-            "role": "Diretor",
-        }
-    }
+    payload = {"signatory": SIGNATORY}
     api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes",
         payload,
@@ -96,13 +85,7 @@ def test_pdf_failure_rolls_back_entire_publication(
     monkeypatch.setattr(
         "processo_seletivo.publicacoes.application.publish_edital.render_edital_pdf", fail_pdf
     )
-    payload = {
-        "signatory": {
-            "authorityId": "00000000-0000-0000-0000-000000000495",
-            "name": "Autoridade",
-            "role": "Diretor",
-        }
-    }
+    payload = {"signatory": SIGNATORY}
     with pytest.raises(RuntimeError):
         api_client.post(
             f"/api/v1/admin/editais/{edital.id}/publicacoes",
@@ -120,13 +103,7 @@ def test_concurrent_publications_create_exactly_one(api_client, manager_headers,
     if connection.vendor != "postgresql":
         pytest.skip("concorrência validada somente no PostgreSQL")
     edital = prepare_homologated(api_client, manager_headers, process_payload)
-    payload = {
-        "signatory": {
-            "authorityId": "00000000-0000-0000-0000-000000000494",
-            "name": "Autoridade",
-            "role": "Diretor",
-        }
-    }
+    payload = {"signatory": SIGNATORY}
 
     def publish(index):
         close_old_connections()

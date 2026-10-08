@@ -70,6 +70,21 @@ def test_sem_autenticacao_a_pagina_mostra_o_resultado(client, cenario, publicada
     assert "Assinado por Diretora-Geral do Centro de Referência" in corpo
 
 
+def test_a_publicacao_da_ampla_diz_que_e_da_ampla(client, publicada):
+    """A lista no título da página e no da aba, também quando é a ampla concorrência.
+
+    Gravada sem nome, a ampla abria com o mesmo cabeçalho e a mesma aba das outras ordens do marco;
+    a página do Edital já dizia a lista de cada link (#255), e a publicação não.
+    """
+    resposta = client.get(reverse("portal:resultado", args=[publicada.id]))
+    html = resposta.content.decode()
+
+    assert re.search(r"<h1>\s*Resultado preliminar — Ampla concorrência\s*</h1>", html)
+    titulo = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+    assert "Ampla concorrência" in titulo
+    assert "marco" not in _conteudo(resposta).split("<table")[0], "palavra de quem conduz"
+
+
 def test_a_pagina_nao_exibe_uuid_como_informacao(client, publicada):
     """FR-049: nenhum código interno é apresentado a quem lê.
 

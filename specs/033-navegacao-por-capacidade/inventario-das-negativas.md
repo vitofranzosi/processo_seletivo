@@ -196,6 +196,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7305 | `_marco_para_conduzir` | sim | sim | escopo institucional ∪ inexistente | **acrescentada pela `049`** — **porta `_marco_para_conduzir`**: a consulta filtra por `institution_scope`; a autorização vem depois, por `require_authorization_base`, com as bases das duas famílias — classificar ou auditar, **ou** publicar resultado (`FR-830`) |
 | 7331 | `_marco_do_edital` | sim | não | objeto inexistente | **acrescentada pela `049`** — marco que a norma vigente não publica: removido por Retificação, ou identificador de nada. Os atos do marco removido continuam nas telas de histórico. A porta já filtrou escopo e autorização antes |
 | 7453 | `gesto_do_marco` | sim | não | objeto inexistente | **acrescentada pela `049`** — operação fora de `ordenar`, `cortar`, `apurar` e `publicar`. As portas do ato unitário — `_edital_para_classificar` e `_edital_para_publicar` — decidem escopo e autorização logo depois (`FR-829`) |
+| 9731 | `autoridades` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `060`** — autoridade de outra unidade, ou identificador de nada, ao corrigir ou encerrar: o comando procura só no escopo do ator, e os dois casos caem no mesmo `not_found` (`FR-1122`). A autorização vem antes, por `require_authorization_base` com a permissão `autoridade:gerir`, que responde **403** e nomeia o que falta |
 
 ---
 
@@ -212,6 +213,7 @@ O que mudou desde então, e por quê:
 | **75 → 72** | as quatro portas desta feature deixaram de decidir autorização com `raise Http404`: a decisão passou a `require_authorization_base`, e três dos pontos sumiram com ela. O de `_etapa_para_distribuir` não sumiu — ele **se dividiu**, e o que restou é o do escopo (`FR-488`) |
 | **72 → 73** | a `031` acrescentou `exportar_matriculas` |
 | **+3 funções** | a `049` acrescentou a tela do marco: a porta `_marco_para_conduzir`, o marco fora da norma vigente e a operação inexistente. O recorte que a confirmação traz e o marco já não tem **não** é 404 — é recusa nomeada no desfecho, e nada é praticado nele; o que nem identidade é cai no `_identidade_ou_404` de sempre |
+| **+1 função** | a `060` acrescentou a tela das autoridades da unidade: a autoridade de outra unidade ou inexistente, ao corrigir ou encerrar |
 
 **A linha da `031` é o detector funcionando, e na primeira oportunidade real.** Ela não veio desta
 feature: entrou pela `main`, no merge, e a `T038` reprovou a suíte pedindo que fosse classificada.

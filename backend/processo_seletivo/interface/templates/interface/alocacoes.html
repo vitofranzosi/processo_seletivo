@@ -1,5 +1,19 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} **O cabeçalho inteiro fica fixo, e não cada célula** (057, D-016): com a linha de grupo do Edital
+   em cima, `sticky` em cada `th` com `top:0` sobrepunha as duas linhas.
+
+   E a altura dele é decidida aqui (057, FR-1061): eram 174 px. Entrelinha curta para o nome de duas
+   linhas, e o respiro de cada degrau reduzido ao que ainda os separa. "Distribuir" na linha dele, em
+   negrito: leva a outra tela, e "Distribuir Todos" numa linha só se lia como um comando. {% endcomment %}
+.distribuicao thead{position:sticky;top:0;z-index:2}
+.distribuicao thead .grupos th[scope=colgroup]{padding-block:.1rem;border-bottom:1px solid var(--fundo);
+  font-weight:600;font-size:.8125rem}
+.distribuicao thead tr+tr th{padding-block:.3rem}
+.distribuicao thead th .situacao{padding-block:.05rem}
+.coluna-toda .destino{display:block;font-weight:600}
+{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
@@ -103,8 +117,21 @@
   <div class="distribuicao-moldura">
     <table class="distribuicao">
       <thead>
+        {% comment %}
+        **O Edital uma vez, sobre as Etapas dele** (057, FR-1061, D-016). O número saía numa pastilha
+        em cada coluna — "01/2026" três vezes seguidas —, e era ele que, junto com os dois botões,
+        dava ao cabeçalho 174 px e à página 1.398 px numa janela de 1.280. A seleção já devolve as
+        colunas agrupadas por Edital, e o `regroup` só as conta.
+        {% endcomment %}
+        {% regroup matriz.colunas by edital as grupos %}
+        <tr class="grupos">
+          <th scope="col" rowspan="2" class="rotulo">Avaliador</th>
+          {% for grupo in grupos %}
+          <th scope="colgroup" colspan="{{ grupo.list|length }}">Edital {{ grupo.grouper.number }}/{{ grupo.grouper.year }}</th>
+          {% endfor %}
+          <th scope="col" rowspan="2" class="num">Etapas</th>
+        </tr>
         <tr>
-          <th scope="col" class="rotulo">Avaliador</th>
           {% for coluna in matriz.colunas %}
           <th scope="col">
             {% comment %}
@@ -115,7 +142,6 @@
             {% endcomment %}
             <span class="etapa-nome">{{ coluna.nome }}</span>
             <span class="etapa-medida">
-              <span class="codigo">{{ coluna.edital.number }}/{{ coluna.edital.year }}</span>
               {% comment %}
               O número sozinho não dizia de quê. Numa tela que conta Etapas, membros e inscrições,
               um "5" em pastilha verde é uma adivinha — e a resposta muda a leitura da coluna.
@@ -131,27 +157,27 @@
             Etapa não tinha link em tela nenhuma do sistema — nem aqui, nem no Processo, nem no
             Edital, nem em Minhas Etapas —, e por isso a 012 inteira só era alcançável digitando a
             URL. É aqui que ela pertence: esta é a tela onde as Etapas estão.
-            {% endcomment %}
-            <a class="acao" href="{% url 'interface:distribuicao' coluna.edital.id coluna.etapa_id %}"
-               aria-label="Distribuir inscrições de {{ coluna.nome }}, Edital {{ coluna.edital.number }}/{{ coluna.edital.year }}">Distribuir</a>
-            {% comment %}
+
             "Distribuir" sai desta tela e leva ao trabalho da Etapa; "todos"/"nenhum" mexem na
-            coluna que está logo abaixo. São movimentos de tamanhos diferentes e paravam com o
-            mesmo desenho — e os dois botões ainda saíam em caixa baixa enquanto o link saía em
-            maiúsculas, porque botão não herda `text-transform` do `thead`, e âncora herda.
+            coluna que está logo abaixo. Os três vão no desenho de ligação, num bloco só (057,
+            FR-1061): eram um botão e uma faixa, e somavam metade da altura do cabeçalho. O que
+            separa os dois movimentos agora é o peso e a linha — "Distribuir" em negrito, sozinho.
             {% endcomment %}
-            {% if matriz.linhas and tem_presidente %}
             <span class="coluna-toda">
-              <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="ligacao"
-                      aria-label="Marcar todos em {{ coluna.nome }}">Todos</button>
-              <span aria-hidden="true">·</span>
-              <button type="submit" name="coluna_nenhum" value="{{ coluna.chave }}" class="ligacao"
-                      aria-label="Desmarcar todos em {{ coluna.nome }}">Nenhum</button>
+              <a class="ligacao destino" href="{% url 'interface:distribuicao' coluna.edital.id coluna.etapa_id %}"
+                 aria-label="Distribuir inscrições de {{ coluna.nome }}, Edital {{ coluna.edital.number }}/{{ coluna.edital.year }}">Distribuir</a>
+              {% if matriz.linhas and tem_presidente %}
+              <span>
+                <button type="submit" name="coluna_todos" value="{{ coluna.chave }}" class="ligacao"
+                        aria-label="Marcar todos em {{ coluna.nome }}">Todos</button>
+                <span aria-hidden="true">·</span>
+                <button type="submit" name="coluna_nenhum" value="{{ coluna.chave }}" class="ligacao"
+                        aria-label="Desmarcar todos em {{ coluna.nome }}">Nenhum</button>
+              </span>
+              {% endif %}
             </span>
-            {% endif %}
           </th>
           {% endfor %}
-          <th scope="col" class="num">Etapas</th>
         </tr>
       </thead>
       <tbody>

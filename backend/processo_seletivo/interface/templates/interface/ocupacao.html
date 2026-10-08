@@ -14,9 +14,15 @@ Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141)
 ramo, porque uma definição que só aparece em um dos ramos não é "no primeiro uso" — é "às vezes".
 Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (FR-425).
 {% endcomment %}
-<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
-  concorrência, ou uma Modalidade de Concorrência declarada. <dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
-  colocado ao último que o alvo alcançou.</p>
+{% comment %} Recolhido, no mesmo lugar e com o mesmo texto (057, FR-1051, D-009): serve ao primeiro contato e
+   ficava na frente da ação em todos os outros. O rótulo não usa os termos que o bloco define — senão
+   ele seria o primeiro uso, fora do `dfn`. {% endcomment %}
+<details class="como-preencher">
+  <summary>Termos desta tela</summary>
+  <p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
+    concorrência, ou uma Modalidade de Concorrência declarada. <dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
+    colocado ao último que o alvo alcançou.</p>
+</details>
 {% if conducao_para_emitir %}
 {% comment %}
 **Quem lê e não pratica o ato sabe a quem pedir** (045, FR-740). O sinal da Atenção traz a auditoria
@@ -47,7 +53,12 @@ quantidades de apuração não são desenhadas — nem como zero, nem como traç
 aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emitir.
 {% endcomment %}
 {% for recorte in recortes %}
-<section aria-labelledby="recorte-{{ forloop.counter }}" class="resumo">
+{% comment %}
+Sem `.resumo` na `section` (055, FR-1000): a classe é a dos blocos de números, e aqui fazia de
+título, números, notas e links itens de uma mesma fileira — os quatro números numa coluna de 70 px
+ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe desenha o que promete.
+{% endcomment %}
+<section aria-labelledby="recorte-{{ forloop.counter }}">
   <h2 id="recorte-{{ forloop.counter }}">{{ recorte.rotulo }}</h2>
 
   {% if recorte.estado == "NO_VACANCY_TABLE" %}
@@ -68,9 +79,9 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
 
   {% elif recorte.estado == "NOT_APPRAISED" %}
   <p class="aviso" role="status">Ocupação ainda não apurada.</p>
-  <dl class="meta">
-    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
-  </dl>
+  <ul class="resumo" aria-label="Vagas publicadas">
+    <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+  </ul>
   <p class="nota">A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas estão ocupadas e quantas faltam só existem depois de uma apuração emitida.</p>
 
   {% else %}
@@ -82,12 +93,12 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
     {% endfor %}
   </ul>
   {% endif %}
-  <dl class="meta">
-    <dt>Publicadas</dt><dd>{{ recorte.publicadas }}</dd>
-    <dt>Efetivas</dt><dd>{{ recorte.efetivas }}</dd>
-    <dt>Ocupadas</dt><dd>{{ recorte.ocupadas }}</dd>
-    <dt>A ocupar</dt><dd>{{ recorte.faltando }}</dd>
-  </dl>
+  <ul class="resumo" aria-label="Vagas, pela apuração vigente">
+    <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+    <li><strong>{{ recorte.efetivas }}</strong>Efetivas</li>
+    <li><strong>{{ recorte.ocupadas }}</strong>Ocupadas</li>
+    <li><strong>{{ recorte.faltando }}</strong>A ocupar</li>
+  </ul>
   {% if recorte.efetivas != recorte.publicadas %}
   <p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>
   {% endif %}
@@ -103,7 +114,7 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   {% if recorte.movimentos %}
   <ul class="consequencias">
     {% for movimento in recorte.movimentos %}
-    <li>Reversão de cota: {{ movimento.quantidade }} vaga(s) da lista reservada para a ampla concorrência — {{ movimento.causa }}</li>
+    <li>Reversão de cota: {{ movimento.quantidade|contagem:"vaga,vagas" }} da lista reservada para a ampla concorrência — {{ movimento.causa }}</li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -159,20 +170,35 @@ aparece é a quantidade **publicada**, que é fato do Edital, e a ação de emit
   <p class="nota">Este recorte ainda não tem ordem emitida, e a apuração conta sobre a ordem: emita a ordem deste recorte na <a href="{% url 'interface:ordenacao' edital.id marco_id %}{% if recorte.listaId %}?lista={{ recorte.listaId }}{% endif %}">classificação dele</a> e volte aqui. É estado do percurso, e não erro.</p>
   {% endif %}
   {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.temOrdem %}
+  {% if recorte.estado == "NOT_APPRAISED" %}
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
-    {% if recorte.estado == "NOT_APPRAISED" %}
     <button type="submit" class="botao">Apurar a ocupação deste recorte</button>
-    {% else %}
-    <label for="motivo-{{ forloop.counter }}">Motivo da nova apuração</label>
-    <input type="text" id="motivo-{{ forloop.counter }}" name="motivo" required
-           aria-describedby="motivo-ajuda-{{ forloop.counter }}">
-    <p class="ajuda" id="motivo-ajuda-{{ forloop.counter }}">A apuração vigente não é alterada: a nova a sucede, e a anterior continua legível.</p>
-    <button type="submit" class="botao">Emitir nova apuração</button>
-    {% endif %}
   </form>
+  {% else %}
+  {% comment %}
+  A nova apuração tem o formulário do Corte, e não a fileira `acoes` do de um botão: a fileira punha
+  o motivo e o botão lado a lado, com o botão esticado à altura da área de texto (058, D-013).
+  {% endcomment %}
+  <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
+    {% comment %}
+    O motivo que sucede um ato tem um controle só (058, FR-1082, D-007): área de texto de três linhas
+    na largura de leitura, como na Ordenação e no Corte. Era campo de uma linha esticado a 1.232 px.
+    {% endcomment %}
+    <p class="campo">
+      <label for="motivo-{{ forloop.counter }}">Motivo da nova apuração</label>
+      <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="3" required
+                aria-describedby="motivo-ajuda-{{ forloop.counter }}"></textarea>
+      <span class="ajuda" id="motivo-ajuda-{{ forloop.counter }}">A apuração vigente não é alterada: a nova a sucede, e a anterior continua legível.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Emitir nova apuração</button></p>
+  </form>
+  {% endif %}
   {% endif %}
 
   {% comment %}

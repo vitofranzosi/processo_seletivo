@@ -6,7 +6,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 """
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ from processo_seletivo.editais.domain import duplicacao, quadro, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
+from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1166,6 +1167,16 @@ def perfis_alterados(digitados, gravados):
     }
 
 
+def _no_campo(valor):
+    """O número sem zeros à direita, no formato que o campo numérico aceita (058, FR-1078).
+
+    As colunas guardam quatro casas, e a leitura devolve `25.0000` onde se escreveu `25`. Com ponto
+    — o `value` de um campo numérico é sempre com ponto; quem o mostra com vírgula é o navegador.
+    Nada é arredondado: é o mesmo número, e o que "Salvar rascunho" grava não muda (D-005).
+    """
+    return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
+
+
 def _o_que_o_cartao_mostra(perfil):
     """O Perfil na forma em que a leitura do formulário e a gravação escrevem igual.
 
@@ -1176,9 +1187,6 @@ def _o_que_o_cartao_mostra(perfil):
 
     def texto(valor):
         return (valor or "").strip() if isinstance(valor, str) or valor is None else str(valor)
-
-    def percentual(valor):
-        return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
 
     reserva = perfil.get("reserveType") or "NONE"
     return (
@@ -1207,7 +1215,7 @@ def _o_que_o_cartao_mostra(perfil):
                     texto(modalidade.get("id")),
                     texto(modalidade.get("code")),
                     texto(modalidade.get("name")),
-                    percentual((modalidade.get("normativeRule") or {}).get("percentage")),
+                    _no_campo((modalidade.get("normativeRule") or {}).get("percentage")),
                     texto((modalidade.get("normativeRule") or {}).get("foundation")),
                     texto((modalidade.get("normativeRule") or {}).get("version")),
                     arredondamento_para_o_formulario(
@@ -1421,16 +1429,16 @@ def etapas_do_edital(edital):
             "id": str(etapa.id),
             "name": etapa.name,
             "order": etapa.order,
-            "weight": "" if etapa.weight is None else f"{etapa.weight:f}",
+            "weight": _no_campo(etapa.weight),
             "eliminatory": etapa.eliminatory,
             "classificatory": etapa.classificatory,
-            "minimumScore": "" if etapa.minimum_score is None else f"{etapa.minimum_score:f}",
+            "minimumScore": _no_campo(etapa.minimum_score),
             "evaluationsPerRegistration": (
                 ""
                 if etapa.evaluations_per_registration is None
                 else etapa.evaluations_per_registration
             ),
-            "maximumScore": "" if etapa.maximum_score is None else f"{etapa.maximum_score:f}",
+            "maximumScore": _no_campo(etapa.maximum_score),
             "forma": etapa.forma,
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
@@ -1749,3 +1757,33 @@ def ultimo_local_declarado(edital):
         if evento.location:
             return evento.location
     return ""
+
+
+# ---------------------------------------------------------------------------
+# As autoridades da unidade (060). Leitura, e nada além: quem decide se o cargo basta, se a data
+# retroage e se a autoridade é desta unidade é o comando.
+# ---------------------------------------------------------------------------
+
+
+def _data(dados, campo):
+    """A data do campo `date`, ou `None` se vazia. Malformada é recusa, e não `None` em silêncio."""
+    valor = _texto(dados, campo)
+    if not valor:
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except ValueError as exc:
+        raise DomainError(
+            "data_invalida", "Informe a data no formato dia/mês/ano.", 422, campo=campo
+        ) from exc
+
+
+def ler_autoridade(dados):
+    return {
+        "autoridade": _texto(dados, "autoridade"),
+        "cargo": _texto(dados, "cargo"),
+        "nome": _texto(dados, "nome"),
+        "ato_de_nomeacao": _texto(dados, "ato_de_nomeacao"),
+        "inicio_vigencia": _data(dados, "inicio_vigencia"),
+        "fim_vigencia": _data(dados, "fim_vigencia"),
+    }

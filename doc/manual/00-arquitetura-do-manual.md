@@ -30,6 +30,33 @@ manual precisa ensinar, em que ordem, para quem, com quais imagens e com qual li
 > a revisão vive em `doc/manual/01-inventario-de-capturas-revisado.md`, e é ela que autoriza S-01.
 > As respostas de design estão em `doc/manual/piloto/relatorio-s00.md`.
 
+> **Revisão 5 — 06/10/2026, sobre a `main` @ `4602b04`.** Nenhuma sessão de produção rodou depois do
+> piloto, e o produto andou ~790 commits e quarenta features (`019` a `058`) sem que este documento
+> acompanhasse. A revisão foi feita por auditoria contra o código e as specs, não contra relatórios,
+> e as mudanças estão marcadas **(R5)** no ponto em que valem. As de direção, que uma sessão futura
+> precisa conhecer antes de escrever qualquer capítulo:
+>
+> 1. **O ciclo não termina na divulgação.** Depois da ordem vêm o corte, a apuração de ocupação, a
+>    convocação com suplência, o Requerimento de Matrícula e a exportação para o Registro Acadêmico.
+>    O mapa passou de 16 para **19 fases** (§B.2), e o quadro "onde estou" do piloto precisa ser
+>    regerado.
+> 2. **São sete papéis**, e não seis: entrou o **Exportador de matrículas** (§A.1).
+> 3. **O Gestor alcança todos os atos da presidência** — distribuir, consolidar, emitir, cortar,
+>    sortear, apurar e convocar aceitam as duas bases. Isso muda a orientação para equipe pequena:
+>    o Gestor que pratica esses atos perde a elegibilidade para julgar (§A.3).
+> 4. **A reavaliação determinada por recurso tem caminho** (§H.2). A caixa "⛔ não utilize" sai de
+>    C-19, e a espécie volta à tabela com procedimento.
+> 5. **Segunda e terceira correções factuais de peso:** o Processo nasce junto com o primeiro
+>    Edital e publicar ativa o Processo — o alerta "ative antes de publicar" era falso; e acrescentar
+>    Editais a um Processo **tem tela** desde 16/09 (§H.17).
+> 6. **Capítulos novos**, com sufixo de letra para não renumerar referências (§C): C-11a, C-17a,
+>    C-17b, C-20a a C-20d, C-21a e C-22.
+> 7. **As capturas e as quatro páginas do piloto estão vencidas** — a série de polish (`055` a
+>    `058`) mudou a folha e os componentes, e várias telas fotografadas mudaram de conteúdo. O
+>    inventário ganhou uma revisão própria (`01-…`, §R5). As páginas do piloto **não** foram
+>    reescritas: continuam valendo como padrão editorial, que era a função delas, e são revistas
+>    nas sessões que as citam.
+
 **Base da descoberta:** `main` @ `a6f25a4`. Fontes lidas: `README.md`, a Constituição, as 18 pastas
 de `specs/`, os quatro relatórios de auditoria E2E (`doc/e2e/015`, `017`, `018`, `020-polish`), os
 documentos de decisão em `doc/`, e — como fonte de verdade final — o código: `interface/urls.py`,
@@ -37,10 +64,10 @@ documentos de decisão em `doc/`, e — como fonte de verdade final — o códig
 templates das duas interfaces e os enums de domínio.
 
 > **Uma advertência sobre as specs.** A numeração não é sequência pedagógica e nem sequência
-> histórica confiável: falta a pasta 019 (feature não construída) e a 012 e a 013 foram revisadas
-> em conjunto por um terceiro documento. As duas coisas continuam verdadeiras, e a `021` e a `022`,
-> posteriores a esta descoberta, não as alteram. **A `014` e a `016`, que esta advertência listava
-> como ausentes, existem desde 12/09/2026** — foram construídas, e as pastas estão lá.
+> histórica confiável: a 012 e a 013 foram revisadas em conjunto por um terceiro documento, e há
+> pasta que registra decisão sem construir nada — a `039` (catálogo de modalidades) entrou na `main`
+> como registro, e a Modalidade continua dentro do Perfil. **A `014`, a `016` e a `019`, que esta
+> advertência já listou como ausentes, existem e foram construídas. (R5)**
 >
 > **Sobre o `README.md`, esta advertência envelheceu — corrigida em 10/09/2026.** A defasagem que
 > ela registrava era textual: "descreve o produto até a spec 004" e "a interface administrativa e
@@ -64,16 +91,21 @@ templates das duas interfaces e os enums de domínio.
 O sistema reconhece identidade de três maneiras distintas, e essa distinção é a espinha do manual.
 
 **1. Papéis nomeados** (`interface/identidade.py::PAPEIS`) — conjuntos fixos de permissões que, na
-implantação institucional, virarão grupos do diretório. São **seis**:
+implantação institucional, virarão grupos do diretório. São **sete (R5)**:
 
 | Papel | O que pode fazer |
 |---|---|
-| **Elaborador** | Elaborar e submeter Edital; elaborar e submeter Retificação |
+| **Elaborador** | Elaborar e submeter Edital; elaborar e submeter Retificação; partir de um Edital anterior num rascunho vazio |
 | **Homologador** | Homologar e devolver Edital; homologar Retificação; revogar homologação |
 | **Publicador** | Publicar Edital, publicar Retificação e **publicar resultado** |
-| **Gestor** | Criar/ativar/encerrar/cancelar Processo; criar/encerrar/cancelar Edital; cancelar Retificação; **constituir a comissão**; consultar inscrições recebidas |
+| **Gestor** | Criar o Processo com o primeiro Edital e **acrescentar Editais** a ele; ativar/encerrar/cancelar Processo; encerrar/cancelar Edital; cancelar Retificação; **constituir a comissão**; consultar inscrições recebidas; **ler a Visão Geral institucional** |
 | **Julgador de recursos** | Admitir e julgar recursos — e nada mais |
-| **Auditor** | Consultar a trilha de auditoria e as telas de leitura |
+| **Auditor** | Consultar a trilha de auditoria e as telas de leitura — ordenação, corte, sorteio, convocação, publicações —, sem emitir nada |
+| **Exportador de matrículas** **(R5)** | Exportar, de um Edital que coleta Requerimento de Matrícula, o arquivo para o Registro Acadêmico |
+
+**(R5)** O sétimo papel é próprio pela mesma razão do julgador: pendurá-lo no Gestor daria a quem
+abre um dossiê por vez um arquivo com CPF, RG, filiação e endereço da população inteira. Nenhum
+outro papel o recebe.
 
 **2. Capacidades verificadas contra o vínculo** — não são papéis; são conferidas objeto a objeto:
 
@@ -82,25 +114,38 @@ implantação institucional, virarão grupos do diretório. São **seis**:
 | **Presidência da comissão** (`comissao:presidir`) | Ser designado PRESIDENTE na comissão daquele Processo |
 | **Avaliação atribuída** (`avaliacao:atribuida`) | Receber a Atribuição de uma inscrição numa Etapa |
 
-**3. Identidade do candidato** — outra sessão, outro domínio, outro endereço (`/selecoes/`).
-Obtida por código enviado por e-mail, sem senha.
+> **(R5) A presidência não é papel, mas o Gestor alcança tudo o que ela pratica.** Distribuir,
+> registrar impedimento, reabrir, consolidar, registrar ocorrência, emitir a ordem, cortar,
+> sortear, apurar a ocupação, convocar e instruir recurso aceitam duas bases, e cada uma basta
+> sozinha: presidir **este** Processo, ou deter a permissão de gerir comissão, que é do Gestor. A
+> segunda existe para a comissão ainda vazia e para a intervenção da administração. Era assim já
+> em `a6f25a4` — a omissão é desta descoberta, não do código —, e é o que impede o manual de tratar
+> "Gestor" e "Presidente" como trilhas disjuntas. A consequência para equipe pequena está na §A.3.
 
-**4. Público anônimo** — sem identidade nenhuma. Vê a vitrine, a página da seleção, o PDF do
-Edital, os anexos e os resultados divulgados.
+**3. Identidade do candidato** — outra sessão, outro domínio, outro endereço (`/selecoes/`).
+Obtida por código enviado por e-mail, sem senha. **(R5)** Além de inscrever-se e recorrer, o
+candidato vê a própria convocação, preenche o Requerimento de Matrícula (e consulta as versões que
+ele corrigiu) e baixa o comprovante em PDF.
+
+**4. Público anônimo** — sem identidade nenhuma. Vê a vitrine (com busca e filtros), a página da
+seleção, o PDF do Edital e de cada Retificação, os anexos e os resultados divulgados — e, **(R5)**
+quando o marco ordena por sorteio, a relação de habilitados, a verificação do sorteio e o
+manifesto que permite conferi-lo por conta própria.
 
 ### A.2 Agrupamento pedagógico — e o que foi descartado
 
-O manual **não** terá um capítulo por permissão. Terá **oito públicos**:
+O manual **não** terá um capítulo por permissão. Terá **nove públicos (R5)**:
 
 | Público do manual | Reúne | Por quê |
 |---|---|---|
-| **Quem organiza o certame** | Gestor | Abre e fecha o Processo, cria o Edital, monta a comissão. É o dono do ciclo |
+| **Quem organiza o certame** | Gestor | Abre e fecha o Processo, cria os Editais, monta a comissão, lê a supervisão do Processo e a Visão Geral institucional. É o dono do ciclo |
 | **Quem redige o Edital** | Elaborador | Passa 90% do tempo num assistente de nove passos. Merece o capítulo mais denso |
 | **Quem aprova** | Homologador | Trabalho curto, decisão pesada, vocabulário próprio (fundamento, devolução, revogação) |
-| **Quem assina e publica** | Publicador | Pratica os dois atos irreversíveis do sistema: publicar Edital e divulgar resultado |
-| **Quem preside a avaliação** | Presidente da comissão | Distribui, controla impedimento e ocorrência, consolida, emite classificação |
+| **Quem assina e publica** | Publicador | Publica Edital, Retificação e resultado — os atos que tornam algo público |
+| **Quem conduz a avaliação e o que vem depois** | Presidente da comissão — ou o Gestor, pela mesma porta (§A.1) | Distribui, controla impedimento e ocorrência, consolida, emite a ordem; e, **(R5)** depois dela, corta, sorteia, apura a ocupação, convoca e instrui recurso |
 | **Quem avalia** | Membro da comissão / avaliador | Só vê o que lhe foi atribuído. Manual curtíssimo e autossuficiente |
 | **Quem julga recursos** | Julgador | Papel deliberadamente isolado — quem julga não pode ter atuado |
+| **Quem exporta para matrícula (R5)** | Exportador de matrículas | Tarefa curta e rara, com o maior volume de dado pessoal do sistema num arquivo só |
 | **Quem se inscreve e quem consulta** | Candidato + público anônimo | Mesma superfície, o segundo é o primeiro sem sessão |
 
 Mais o **Auditor**, que não é uma jornada e sim uma leitura transversal: ganha um capítulo de
@@ -118,11 +163,14 @@ figura separada neste sistema:
   publicar quando a mesma pessoa elaborou e homologou a revisão. Separá-los é conteúdo, não
   organização.
 - **Presidente** ≠ **gestor** — também não podem ser fundidos, e pela razão inversa: o gestor
-  *constitui* a comissão mas não pode presidi-la por isso; a presidência é vínculo.
+  *constitui* a comissão mas não pode presidi-la por isso; a presidência é vínculo. **(R5)** A
+  distância, porém, é menor do que esta linha sugeria: os atos da presidência aceitam também a
+  permissão do Gestor (§A.1), e o Gestor que os pratica passa a ter autoria na cadeia do resultado,
+  com o efeito que a §A.3 descreve.
 
 ### A.3 · A equipe real — acúmulo de papéis numa operação de duas ou três pessoas
 
-Os seis papéis descrevem **funções**, não pessoas. Uma pessoa pode acumular vários, e a operação
+Os sete papéis descrevem **funções**, não pessoas. Uma pessoa pode acumular vários, e a operação
 inicial prevista é de **duas a três pessoas**. Isso não invalida a arquitetura — mas obriga o
 manual a ensinar *como acumular*, porque o sistema tem regras que olham para **quem foi a pessoa**,
 e não só para qual permissão ela tem.
@@ -132,8 +180,8 @@ e não só para qual permissão ela tem.
 | Regra | O que o sistema exige | Mínimo de pessoas |
 |---|---|---|
 | **Publicar Edital ou Retificação** | Quem publica não pode ser a mesma pessoa que elaborou **e** homologou aquela revisão. Basta que uma das duas etapas anteriores tenha sido de outra pessoa | **2** |
-| **Julgar recurso** | Quem julga não pode ter concluído a avaliação que fundamentou o resultado atacado, nem o consolidado, nem emitido o ato de classificação atacado, nem praticado a publicação atacada — nem ter impedimento declarado quanto àquela inscrição | **2**, com divisão rígida |
-| **Reavaliação determinada por recurso** | Exige avaliador diferente do que concluiu a original | **2 avaliadores** — mas a espécie está fora do manual (§H.2) |
+| **Julgar recurso** | Quem julga não pode ter concluído a avaliação que fundamentou o resultado atacado, nem o consolidado, nem emitido o ato de classificação atacado, nem praticado a publicação atacada — nem ter impedimento declarado quanto àquela inscrição. **(R5)** O impedimento olha também a Etapa que a decisão vai alcançar, e **realizar um sorteio conta como emitir** o ato de ordenação que ele constitui | **2**, com divisão rígida |
+| **Reavaliação determinada por recurso** | Exige avaliador diferente do que concluiu a original; a distribuição abre uma vaga a mais para isso | **2 avaliadores** — **(R5)** e a espécie tem caminho de cumprimento (§H.2) |
 
 **E uma que não existe, e é bom o manual dizer:** emitir o ato de classificação e publicar o
 resultado são permissões distintas e **não** têm checagem de identidade. A mesma pessoa pode fazer
@@ -160,10 +208,27 @@ Na configuração de duas pessoas, note o detalhe que parece errado e não é: *
 resultado é a Pessoa 1**, que também o emitiu. Se a Pessoa 2 publicasse, ela ficaria impedida de
 julgar os recursos contra a própria publicação — e a equipe perderia o único julgador possível.
 
+**(R5) Ter o papel não obriga a usá-lo, e numa equipe pequena usar é o problema.** Na
+configuração de duas pessoas, quem julga é também Gestor — e o Gestor tem base para consolidar,
+emitir a ordem, realizar o sorteio e convocar (§A.1). O sistema **deixa**; se ela o fizer no
+caminho do resultado atacado, fica impedida de julgar, e era a única que podia. Na de três pessoas
+o risco desaparece, porque a Pessoa 3 não tem papel de Gestor. O manual precisa dizer isso em C-04 e
+repetir em uma linha em cada capítulo desses atos. Três notas que completam a tabela:
+
+- **instruir o recurso não impede** — instruir não é julgar, e a presidência pode juntar parecer
+  sem perder nada. Instruir um *documento* da inscrição, porém, pede a permissão de consultar
+  inscrições, que é do Gestor: na configuração de duas pessoas, só a Pessoa 2 o faz;
+- **o Exportador de matrículas não entra em regra de identidade nenhuma**, e por isso não aparece
+  na tabela. Onde colocá-lo é decisão sobre dado pessoal, não sobre segregação — a instituição
+  precisa tomá-la explicitamente;
+- **a convocação é ato da mesma porta da presidência**, e quem convoca não fica impedido por isso:
+  a regra de julgamento olha o resultado atacado, não o que veio depois dele.
+
 **O que uma equipe de duas pessoas perde**, e o manual deve dizer sem rodeio:
 
 - **não há reavaliação por recurso** — com um avaliador só, não existe o "avaliador diverso" que
-  ela exige (a espécie já está fora do manual por outro motivo, §H.2);
+  ela exige. **(R5)** Agora que a espécie tem caminho (§H.2), esta perda deixa de ser teórica:
+  uma decisão que determine reavaliação não terá quem a cumpra;
 - **não há substituto para o avaliador impedido** — registrar impedimento numa inscrição deixa
   aquela inscrição sem quem a avalie;
 - **a pluralidade da comissão é nominal** — presidência e único membro são a mesma pessoa.
@@ -183,25 +248,42 @@ com a tabela acima.
 
 ### B.1 O que o sistema realmente suporta hoje
 
-A sequência do briefing está quase certa. Três correções que o código impõe:
+A sequência do briefing está quase certa. Quatro correções que o código impõe **(R5, revistas)**:
 
-1. **Antes de "planejar" existe um ato próprio:** o **Processo Seletivo** é criado e depois
-   **ativado**; o Edital nasce dentro dele. São duas entidades com ciclos de vida separados.
+1. **O Processo Seletivo nasce junto com o primeiro Edital**, numa tela só; outros Editais se
+   acrescentam depois, pela página do Processo. São duas entidades com ciclos de vida separados.
+   Ativar o Processo é opcional: **publicar o primeiro Edital o ativa**, e a trilha registra que a
+   ativação foi derivada daquela publicação.
 2. **"Revisar" e "homologar" são o mesmo degrau**, praticado por uma pessoa só.
 3. **"Corrigir/reavaliar" não vem depois de "julgar" como fase própria** — é *efeito* do
-   julgamento, e uma das quatro espécies de decisão **não tem caminho de cumprimento** (§H.2).
+   julgamento. As quatro espécies de decisão têm caminho de cumprimento; o da reavaliação passa
+   por distribuir a outro avaliador e consolidar (§H.2).
+4. **O ciclo não termina na divulgação.** A ordem pode vir de cálculo ou de sorteio; o corte decide
+   quem segue para a Etapa seguinte ou quem entra na faixa de vagas; e depois vêm a apuração de
+   ocupação, a convocação com suplência, o Requerimento de Matrícula e a exportação. A cadeia é
+   imposta: a convocação recusa recorte sem ordem vigente e sem apuração emitida, e a apuração
+   recusa recorte sem quadro publicado. O resultado definitivo **não** é pré-condição de convocar —
+   o momento é decisão institucional, e o manual precisa dizê-lo.
 
 ### B.2 O mapa
 
+**(R5)** O mapa passou de 16 para **19 fases**. As fases 1 a 15 mantêm o número; a 16 antiga
+(encerrar) virou a 19, e as três novas entram antes dela. "Presidência" abaixo quer dizer
+**presidência ou Gestor** — a mesma porta (§A.1).
+
 ```
 ┌─ FASE 1 · ABRIR ───────────────────────────────── Gestor
-│  Criar Processo Seletivo → Ativar Processo → Criar Edital
+│  Criar Processo e primeiro Edital (uma tela) · Novo Edital neste Processo
+│  (Ativar é opcional: publicar o primeiro Edital ativa o Processo)
 │
 ├─ FASE 2 · ELABORAR ────────────────────────────── Elaborador
+│  [Partir de um Edital anterior — só com o rascunho vazio]
 │  Assistente de 9 passos:
 │  Identificação → Perfis de Vaga → Cronograma → Etapas de Avaliação →
 │  Classificação → Inscrição → Anexos → Conteúdo → Revisão
-│  ↓  Submeter para revisão            ◆ congela a revisão
+│  (duplicar Perfil · aplicar a todos os Perfis · quadro de vagas por modalidade ·
+│   corte e recurso declarados no marco · Requerimento de Matrícula no passo Inscrição)
+│  ↓  Submeter para revisão            ◆ congela a revisão — pendência "Impede" recusa
 │
 ├─ FASE 3 · APROVAR ─────────────────────────────── Homologador
 │  Homologar (com fundamento)   ⟲ Devolver para elaboração
@@ -209,18 +291,19 @@ A sequência do briefing está quase certa. Três correções que o código imp�
 │  ↓
 ├─ FASE 4 · PUBLICAR ────────────────────────────── Publicador
 │  Publicar (autoridade signatária)     ■ SEM RETORNO
-│  → Edital público e imutável, PDF gerado com hash
-│  → aparece na vitrine pública
+│  → Edital público e imutável; o PDF gerado é o ato oficial
+│  → aparece na vitrine pública; o primeiro Edital ativa o Processo
 │
 ├─ FASE 5 · RECEBER INSCRIÇÕES ──────────────────── Candidato
-│  Entrar por código → escolher vaga e modalidade → dados →
-│  documentos → fatos exigidos → revisar → Enviar inscrição
-│  → Comprovante com protocolo   ■ fatos declarados congelam no envio
+│  Entrar por código → Seus dados (nome e CPF, uma vez) → escolher vaga e
+│  modalidade → documentos → [Requerimento, se pedido na inscrição] →
+│  fatos exigidos → revisar → Enviar inscrição
+│  → Comprovante com protocolo (e PDF)  ■ fatos declarados e CPF congelam no envio
 │
 ├─ FASE 6 · ORGANIZAR A COMISSÃO ───────────────── Gestor        ∥ paralela à 5
 │  Comissão do Processo (presidente + membros) → Alocação por Etapa
 │
-├─ FASE 7 · DISTRIBUIR ──────────────────────────── Presidente
+├─ FASE 7 · DISTRIBUIR ──────────────────────────── Presidência
 │  Propor distribuição (rodízio) → Confirmar esta distribuição
 │  ⟲ Registrar impedimento    ⟲ Retirar as selecionadas
 │
@@ -230,14 +313,20 @@ A sequência do briefing está quase certa. Três correções que o código imp�
 │  Salvar sem concluir → Concluir avaliação   ■ concluída vira leitura
 │  ⟲ Reabertura é ato da presidência (Conclusões preservadas)
 │
-├─ FASE 9 · CONSOLIDAR ──────────────────────────── Presidente
+├─ FASE 9 · CONSOLIDAR ──────────────────────────── Presidência
 │  ⟲ Registrar ocorrência (elimina quem não foi avaliado)
-│  Prontidão da Etapa → Consolidar resultados
+│  Prontidão da Etapa → Consolidar as N prontas
 │  → Resultado da Etapa: Habilitada | Eliminada     ■ SEM RETORNO por inscrição
 │
-├─ FASE 10 · CLASSIFICAR ────────────────────────── Presidente
-│  Ordenação do marco: cálculo + desempate → Emitir ordem
+├─ FASE 10 · CLASSIFICAR E CORTAR ───────────────── Presidência
+│  um recorte por vez (ampla e cada lista reservada), ou o marco inteiro pela tela do marco
+│  Marco por pontuação: cálculo + desempate → Emitir ordem
+│  Marco por sorteio: Publicar a relação → observar a ocorrência (semente) →
+│                     Realizar o sorteio (sem prévia)
+│                     ⟲ Anular = Retificar + sorteio sucessor; não desfaz
 │  → Ato de classificação                            ■ imutável
+│  Corte (quando o marco corta): conferir a faixa → Emitir corte   ■ imutável
+│  → a faixa alimenta a Etapa seguinte (volta à fase 7 para ela) ou a ocupação
 │
 ├─ FASE 11 · DIVULGAR ───────────────────────────── Publicador
 │  Prévia da publicação → Publicar este resultado    ■ SEM RETORNO
@@ -250,16 +339,18 @@ A sequência do briefing está quase certa. Três correções que o código imp�
 │  ■ só dentro da janela recursal declarada no marco
 │
 ├─ FASE 13 · JULGAR ─────────────────────────────── Julgador
-│  Recursos recebidos → peça → Admitir | Não admitir → Julgar
+│  [Instruir — Presidência: juntar parecer ou documento à peça  ■ acrescenta]
+│  Recursos aguardando decisão → peça → Admitir | Não admitir → Julgar
 │  quatro espécies:
 │    · Indeferir                    → nenhum efeito
 │    · Deferir fixando a correção   → Resultado sucessor (append-only)
-│    · Deferir determinando reavaliação → ⛔ NÃO UTILIZAR nesta versão (§H.2)
+│    · Deferir determinando reavaliação → distribuir a OUTRO avaliador →
+│      Mesa → consolidar em cumprimento → Resultado sucessor
 │    · Determinar providência a jusante → pendência registrada
 │  ■ non reformatio in pejus: a correção não pode piorar quem recorreu
 │  ■ julgador que atuou no ato atacado está impedido
 │
-├─ FASE 14 · REFAZER E REPUBLICAR ───────────────── Presidente + Publicador
+├─ FASE 14 · REFAZER E REPUBLICAR ───────────────── Presidência + Publicador
 │  Resultado superado → classificação fica OBSOLETA →
 │  Emitir ato sucessor (com motivo) → nova Publicação sucede a anterior
 │  ■ a publicação anterior permanece consultável, dizendo que foi sucedida
@@ -268,9 +359,29 @@ A sequência do briefing está quase certa. Três correções que o código imp�
 │  Publicar resultado DEFINITIVO — porta de fato, cinco impedimentos:
 │  recurso pendente · reingresso pendente · reavaliação pendente ·
 │  providência pendente · janela recursal ainda aberta
+│  (e mais: corte obsoleto recusa QUALQUER divulgação; definitiva não é
+│   sucedida por preliminar; marco sem prazo computável exige declaração
+│   expressa de encerramento do prazo — a lista completa está em C-20)
 │
-└─ FASE 16 · ENCERRAR ───────────────────────────── Gestor
-   Encerrar Edital (motivo)  → Encerrar Processo     ■ SEM RETORNO
+├─ FASE 16 · OCUPAR ─────────────────────────────── Presidência         (R5)
+│  Apurar a ocupação por recorte: publicadas · efetivas · ocupadas · faltando
+│  ■ imutável (sucessão com motivo)   → Faixa seguinte leva o déficit ao corte
+│
+├─ FASE 17 · CONVOCAR ───────────────────────────── Presidência         (R5)
+│  Convocar (a espécie sai da posição: vaga inicial | suplência | regularizar)
+│  → comunicação: e-mail individual OU registro da publicação, conforme o Edital
+│  → desfecho (aceite, regularização, desistência, não atendimento…)
+│  gestos em lote: convocar titulares · não atendimento dos vencidos ·
+│  emitir pendentes · atestado de fato externo       ■ cada ato fica
+│  Candidato: vê a convocação no portal (hoje só por endereço — §H.18)
+│
+├─ FASE 18 · MATRICULAR ─────────────── Candidato → Exportador           (R5)
+│  Requerimento de Matrícula (se pedido na convocação) → Enviar  ■ imutável
+│  Exportador: escolher a população → conferir → Baixar o arquivo
+│  ■ a geração fica registrada; o arquivo não é guardado
+│
+└─ FASE 19 · ENCERRAR ───────────────────────────── Gestor
+   Encerrar cada Edital (motivo) → só então Encerrar o Processo   ■ SEM RETORNO
    ⟲ Cancelar Edital / Processo — interrupção, não encerramento
 ```
 
@@ -279,10 +390,22 @@ A sequência do briefing está quase certa. Três correções que o código imp�
 - **Retificação** — ciclo próprio e completo (elaborar → submeter → homologar → publicar), disponível
   a qualquer momento com o Edital publicado, inclusive com inscrições em andamento e inclusive
   depois de resultados emitidos. Tem **vigência**: uma Retificação pode entrar em vigor no futuro.
-- **Composição da comissão** (fase 6) roda em paralelo às inscrições (fase 5).
-- **Avaliação de várias Etapas** roda em paralelo; cada Etapa consolida no seu tempo.
+- **Composição da comissão** (fase 6) roda em paralelo às inscrições (fase 5) — **(R5)** mas só
+  até a alocação: **distribuir é recusado enquanto o período de inscrições corre**, e a tela diz
+  "Ainda não é possível distribuir esta Etapa."
+- **Avaliação de várias Etapas** roda em paralelo; cada Etapa consolida no seu tempo — salvo a
+  Etapa governada por um corte, que só recebe a faixa depois de o corte ser emitido.
 - **Recursos** de vários candidatos correm juntos e são julgados um a um.
 - **Auditoria** é consultável em qualquer instante, por Processo e por Edital.
+- **(R5) Vários Editais no mesmo Processo**, cada um no seu ponto do ciclo; e, dentro de um marco,
+  **cada recorte** (a ampla e cada lista reservada) tem sua ordem, seu corte, sua apuração, seu
+  sorteio e sua convocação — a tela do marco mostra os recortes lado a lado e pratica o gesto que
+  falta em todos de uma vez.
+- **(R5) Rodadas de convocação** sucedem-se enquanto houver vaga e fila: desfechos, vencidos,
+  suplentes e faixa seguinte.
+- **(R5) Supervisão** — a página do Processo e a Supervisão mostram o pulso das inscrições, os
+  próximos marcos e os sinais de "Atenção" a qualquer momento; a Visão Geral faz o mesmo para a
+  instituição inteira.
 
 ### B.4 Pontos sem retorno
 
@@ -293,29 +416,47 @@ O manual precisa marcá-los com o mesmo símbolo, sempre:
 | **Submeter para revisão** | O formulário fecha; a revisão congela |
 | **Publicar Edital** | Imutável; correção só por Retificação |
 | **Publicar Retificação** | Idem; a versão consolidada nasce |
-| **Enviar inscrição** | Os fatos declarados congelam com o valor do envio |
+| **Enviar inscrição** | Os fatos declarados congelam com o valor do envio; **(R5)** o CPF passa a só ser corrigido pelo atendimento |
 | **Concluir avaliação** | Vira leitura; só a presidência reabre |
 | **Registrar ocorrência** | Elimina, e não se desfaz |
 | **Consolidar o Resultado da Etapa** | Não reconsolida; corrigir exige recurso |
 | **Emitir ordem** | Ato imutável; corrigir exige ato sucessor |
-| **Publicar resultado** | Público; corrigir exige publicação sucessora |
-| **Encerrar / Cancelar** | Nenhuma transição posterior |
+| **(R5) Publicar a relação do sorteio** | Endereço público e estável; substituir exige relação sucessora com motivo |
+| **(R5) Realizar o sorteio** | Ordem e ato constituídos de uma vez, **sem prévia**; anular constitui um sucessor, não desfaz |
+| **(R5) Emitir corte / faixa seguinte** | A faixa só muda por geração sucessora, com motivo |
+| **Publicar resultado** | Público; corrigir exige publicação sucessora; **(R5)** definitiva não é sucedida por preliminar |
+| **(R5) Instruir, admitir, julgar recurso** | Cada registro acontece uma vez; instruir de novo acrescenta |
+| **(R5) Apurar a ocupação** | Imutável; nova apuração exige motivo |
+| **(R5) Convocar · registrar desfecho · atestar fato externo** | Registram e comunicam; nenhum se desfaz |
+| **(R5) Enviar o Requerimento de Matrícula** | Imutável; "Conferir e atualizar" só com convocação em aberto, e cria um sucessor |
+| **(R5) Gerar o arquivo de matrícula** | A geração fica registrada; o arquivo não é guardado |
+| **Encerrar / Cancelar** | Nenhuma transição posterior; **(R5)** o Processo só encerra com todos os Editais encerrados ou cancelados |
+
+**(R5)** Eram dez linhas; são dezoito, e algumas reúnem mais de um ato — hoje são mais de vinte. O `⛔` do §G.2 continua reservado a eles, e a régua "forte,
+rara" passa a valer por capítulo, não pelo manual inteiro.
 
 ### B.5 Atos históricos — o que nunca desaparece
 
 Publicações, documentos publicados, versões consolidadas, atos administrativos, conclusões
 preservadas, Resultados de Etapa, atos de classificação e suas posições, publicações de resultado
-e situações divulgadas, recursos, juízos de admissibilidade e decisões, e a trilha de auditoria.
+e situações divulgadas, recursos, juízos de admissibilidade e decisões, e a trilha de auditoria —
+e, **(R5)**, instruções de recurso; cortes e suas gerações; relações, ocorrências e sorteios;
+apurações de ocupação e seus movimentos; convocações, desfechos, comunicações e atestados;
+Requerimentos de Matrícula e as versões que corrigiram; gerações do arquivo de matrícula.
 **Nada é excluído.** Encerrar e cancelar são atos motivados que preservam tudo.
 
 ### B.6 De quem é cada ação
 
-- **Do candidato:** entrar, escolher vaga e modalidade, preencher, anexar, declarar, enviar,
-  acompanhar, recorrer, gerir os próprios e-mails, vincular participação anterior.
+- **Do candidato:** entrar, informar nome e CPF uma vez, escolher vaga e modalidade, preencher,
+  anexar, declarar, enviar, acompanhar, recorrer, gerir os próprios e-mails, vincular participação
+  anterior — e **(R5)** ver a convocação e enviar o Requerimento de Matrícula.
 - **Da comissão:** distribuir (presidência), avaliar (membros), impedir, registrar ocorrência,
-  consolidar, emitir a ordem classificatória, reabrir avaliação.
-- **Da autoridade institucional:** criar e ativar o Processo, criar o Edital, homologar, publicar
-  Edital e Retificação, divulgar resultado, julgar recurso, encerrar e cancelar.
+  consolidar, emitir a ordem classificatória, reabrir avaliação — e **(R5)** sortear, cortar,
+  apurar a ocupação, convocar e instruir recurso. Tudo o que é da presidência aceita também o
+  Gestor (§A.1).
+- **Da autoridade institucional:** criar o Processo e seus Editais, homologar, publicar Edital e
+  Retificação, divulgar resultado, julgar recurso, encerrar e cancelar — e **(R5)** exportar para
+  matrícula, que é papel à parte.
 
 ---
 
@@ -326,9 +467,9 @@ Nenhum capítulo é numerado por spec. A organização atende às duas entradas 
 seu papel) ou pela Parte 4 (a tarefa pelo nome).
 
 ```
-PARTE 1 — ENTENDER O SISTEMA          (leitura linear, 5 capítulos curtos)
-PARTE 2 — AS FASES DO PROCESSO        (o corpo do manual, 12 capítulos, ordem cronológica)
-PARTE 3 — TRILHAS POR PAPEL           (8 páginas-roteiro, sem conteúdo próprio: apontam)
+PARTE 1 — ENTENDER O SISTEMA          (leitura linear, 6 capítulos curtos)
+PARTE 2 — AS FASES DO PROCESSO        (o corpo do manual, 25 capítulos, ordem cronológica)
+PARTE 3 — TRILHAS POR PAPEL           (9 páginas-roteiro, sem conteúdo próprio: apontam)
 PARTE 4 — TAREFAS FREQUENTES          (receitas curtas, entrada por verbo)
 PARTE 5 — SITUAÇÕES EXCEPCIONAIS      (o que fazer quando dá errado)
 PARTE 6 — REFERÊNCIA                  (glossário, mapa de telas, limites, FAQ)
@@ -348,55 +489,80 @@ vezes.
 | C-02 | As duas portas: a área de gestão e o portal público |
 | C-03 | O ciclo completo em um mapa |
 | C-04 | Quem faz o quê — e por que ninguém faz tudo |
-| C-05 | Cinco ideias que explicam todo o resto |
+| C-05 | Seis ideias que explicam todo o resto **(R5: eram cinco)** |
+| C-22 | A Visão Geral da instituição **(R5)** |
 
 ### Parte 2 — As fases do processo
 
+**(R5) Regra de numeração.** Os códigos C-01 a C-21 não mudam: o §D, o §F, o inventário e o piloto
+os citam. Capítulo novo da Parte 2 recebe **sufixo de letra** junto do capítulo da fase vizinha, de
+modo que a leitura cronológica se mantém sem renumerar nada; capítulo novo de outra Parte vai para
+o fim da numeração (C-22).
+
 | # | Capítulo | Fase |
 |---|---|---|
-| C-06 | Abrir o Processo Seletivo e criar o Edital | 1 |
-| C-07 | Elaborar o Edital I — identificação, perfis, vagas e cronograma | 2 |
-| C-08 | Elaborar o Edital II — etapas de avaliação e regra de classificação | 2 |
-| C-09 | Elaborar o Edital III — inscrição, anexos, conteúdo e revisão final | 2 |
-| C-10 | Submeter, homologar e publicar | 3–4 |
+| C-06 | Abrir o Processo Seletivo, criar Editais e partir de um anterior | 1 |
+| C-07 | Elaborar o Edital I — identificação, Perfis, quadro de vagas e cronograma | 2 |
+| C-08 | Elaborar o Edital II — Etapas, marcos, desempate, sorteio, corte e recurso | 2 |
+| C-09 | Elaborar o Edital III — inscrição, Requerimento, anexos, conteúdo e revisão final | 2 |
+| C-10 | Submeter, homologar e publicar o ato oficial | 3–4 |
 | C-11 | O período de inscrições, visto de dentro | 5 |
+| C-11a | **(R5)** Acompanhar o certame: o Processo, a Supervisão e os sinais de Atenção | 5–19 |
 | C-12 | Inscrever-se — o manual do candidato | 5 |
 | C-13 | Montar a comissão e alocar por Etapa | 6 |
 | C-14 | Distribuir o trabalho | 7 |
 | C-15 | Avaliar — o manual do avaliador | 8 |
 | C-16 | Consolidar o resultado de cada Etapa | 9 |
-| C-17 | Classificar | 10 |
+| C-17 | Classificar — por recorte e pela tela do marco | 10 |
+| C-17a | **(R5)** Ordenar por sorteio público | 10 |
+| C-17b | **(R5)** Cortar: quem segue para a Etapa seguinte ou para as vagas | 10 |
 | C-18 | Divulgar o resultado | 11 |
-| C-19 | Recursos — interpor, admitir e julgar | 12–13 |
+| C-19 | Recursos — interpor, instruir, admitir e julgar | 12–13 |
 | C-20 | Refazer e republicar depois de um recurso | 14–15 |
-| C-21 | Encerrar o certame | 16 |
+| C-20a | **(R5)** Apurar a ocupação das vagas | 16 |
+| C-20b | **(R5)** Convocar, chamar de novo e suplência | 17 |
+| C-20c | **(R5)** O Requerimento de Matrícula | 5, 18 |
+| C-20d | **(R5)** Exportar para matrícula | 18 |
+| C-21 | Encerrar o certame | 19 |
+| C-21a | **(R5)** Retificar um Edital publicado | paralela |
 
-*(São 16 capítulos na Parte 2; a numeração acima já os contempla — C-07 a C-09 são o assistente
-dividido em três, que é o trecho mais longo do manual.)*
+*(São 25 capítulos na Parte 2. C-07 a C-09 continuam sendo o assistente dividido em três. **(R5)**
+A Retificação foi promovida de receita a capítulo porque a `048` a fez acrescentar Perfil,
+Modalidade, linha do quadro, critério, Evento e Anexo, com "aplicar a todos" — não cabe mais numa
+receita. R-01 fica como receita curta que aponta para C-21a.)*
 
 ### Parte 3 — Trilhas por papel
 
 `T-01` Gestor · `T-02` Elaborador · `T-03` Homologador · `T-04` Publicador ·
 `T-05` Presidente da comissão · `T-06` Avaliador · `T-07` Julgador de recursos ·
-`T-08` Candidato
+`T-08` Candidato · `T-09` Exportador de matrículas **(R5)**
+
+**(R5)** `T-01` (Gestor) aponta também para os capítulos de `T-05`, com a advertência da §A.3: o
+Gestor **pode** praticá-los, e numa equipe de duas pessoas não deve.
 
 ### Parte 4 — Tarefas frequentes
 
-`R-01` Corrigir algo num Edital já publicado (Retificação) · `R-02` Encerrar as inscrições antes
-do prazo · `R-03` Trocar um avaliador no meio da Etapa · `R-04` Reabrir uma avaliação já concluída ·
-`R-05` Conferir quantas inscrições chegaram e o que veio · `R-06` Baixar o comprovante ou o PDF
-oficial · `R-07` Acrescentar um e-mail à conta do candidato · `R-08` Vincular uma participação
-anterior · `R-09` Emitir um ato de classificação sucessor · `R-10` Consultar quem fez o quê
-(auditoria)
+`R-01` Corrigir algo num Edital já publicado (Retificação — aponta para C-21a) · `R-02` Encerrar as
+inscrições antes do prazo · `R-03` Trocar um avaliador no meio da Etapa · `R-04` Reabrir uma
+avaliação já concluída · `R-05` Conferir quantas inscrições chegaram e o que veio · `R-06` Baixar o
+comprovante ou o PDF oficial · `R-07` Acrescentar um e-mail à conta do candidato · `R-08` Vincular
+uma participação anterior · `R-09` Emitir um ato de classificação sucessor · `R-10` Consultar quem
+fez o quê (auditoria) · **(R5)** `R-11` Começar um Edital a partir de um anterior · `R-12` Duplicar
+um Perfil e aplicar um ajuste a todos · `R-13` Cumprir uma reavaliação determinada por recurso ·
+`R-14` Pedir a faixa seguinte quando faltam candidatos
+
+*(R5: `R-02` não foi reconferida contra a tela atual.)*
 
 ### Parte 5 — Situações excepcionais
 
 `X-01` O Edital voltou para elaboração (devolução) · `X-02` A homologação foi revogada ·
 `X-03` Cancelar em vez de encerrar — e por que não é a mesma coisa · `X-04` Um candidato não pôde
 ser avaliado (ocorrência) · `X-05` Um avaliador está impedido · `X-06` Deu empate ·
-`X-07` "Este ato está obsoleto" — o que aconteceu e o que fazer · `X-08` A publicação definitiva
-está bloqueada · `X-09` O prazo de recurso acabou · `X-10` Um recurso não pode piorar a situação
-de quem recorreu
+`X-07` "Este ato está obsoleto" — o que aconteceu e o que fazer · `X-08` A publicação está
+bloqueada **(R5: os impedimentos são bem mais que os cinco da definitiva — a lista está em C-20)** · `X-09` O prazo de recurso acabou ·
+`X-10` Um recurso não pode piorar a situação de quem recorreu · **(R5)** `X-11` O Processo não
+encerra: há Edital pendente · `X-12` O sorteio precisa ser anulado · `X-13` "Você não tem
+permissão para isto" — ler a recusa explicada
 
 ### Parte 6 — Referência
 
@@ -413,8 +579,9 @@ alertas · o que NÃO entra.**
 ### C-01 · O que este sistema faz (e o que ele não faz)
 
 - **Público:** todos, inclusive quem só vai ler uma vez.
-- **Objetivo:** o leitor sai sabendo que o sistema conduz um certame do Edital à divulgação do
-  resultado, e que **uma publicação realizada não é reescrita** — correções geram atos novos, por
+- **Objetivo:** o leitor sai sabendo que o sistema conduz um certame do Edital **(R5)** à
+  exportação para matrícula — passando por divulgação, convocação e Requerimento —, que **o PDF
+  que o sistema gera é o ato oficial**, e que **uma publicação realizada não é reescrita** — correções geram atos novos, por
   cima, nunca por dentro.
 - **Vocabulário — regra para o manual inteiro:** dizer **imutável**, nunca "definitivo", ao falar
   do que uma publicação trava. O sistema usa *definitiva* como **natureza** de um resultado
@@ -439,14 +606,20 @@ alertas · o que NÃO entra.**
   antes de ser enviada.
 - **Telas:** vitrine pública; lista de Processos Seletivos.
 - **Screenshots:** SS-002, SS-003.
-- **Alertas:** 💡 quem digita o endereço raiz cai na vitrine pública, não na gestão.
+- **(R5) Acrescentar:** o cabeçalho da gestão tem "Minhas Etapas" para qualquer pessoa
+  identificada; a lista traz "Novo Processo Seletivo" e, para o Gestor, "Visão Geral". A vitrine
+  ganhou busca, filtros e ordenação, e a consulta fica no endereço — pode ser compartilhada.
+- **Alertas:** 💡 quem digita o endereço raiz cai na vitrine pública, não na gestão. **(R5)** 💡 a
+  vitrine não tem caminho para a gestão; quem opera guarda o endereço `/gestao/`.
 - **NÃO entra:** como entrar (§H.1 — não há login institucional documentável ainda).
 
 ### C-03 · O ciclo completo em um mapa
 
 - **Público:** todos.
 - **Objetivo:** dar ao leitor a figura que ele vai revisitar o manual inteiro.
-- **Assuntos:** as 16 fases, quem pratica cada uma, o que corre em paralelo, os pontos sem retorno.
+- **Assuntos:** as **19 fases (R5)**, quem pratica cada uma, o que corre em paralelo, os pontos sem
+  retorno. **(R5)** O mapa precisa mostrar as duas origens da ordem (cálculo ou sorteio), o corte
+  que devolve à fase 7 para a Etapa seguinte, e a cauda ocupar → convocar → matricular.
 - **Telas:** nenhuma — este capítulo é **diagrama**, não captura.
 - **Screenshots:** nenhum. Ilustração vetorial (§G.4).
 - **Alertas:** ✅ um quadro "onde estou" que reaparece no topo de cada capítulo da Parte 2.
@@ -456,9 +629,12 @@ alertas · o que NÃO entra.**
 
 - **Público:** todos, sobretudo gestores.
 - **Objetivo:** entender a segregação de funções como regra de trabalho, não como burocracia.
-- **Assuntos:** os seis papéis; a presidência e a atribuição como vínculos, não papéis; por que quem
-  elabora não homologa; por que quem elaborou **e** homologou não publica; por que julgar recurso é
-  papel isolado.
+- **Assuntos:** os **sete (R5)** papéis; a presidência e a atribuição como vínculos, não papéis;
+  **(R5)** que o Gestor alcança os atos da presidência; por que a mesma pessoa não pode elaborar,
+  homologar **e** publicar a mesma revisão — e pode fazer duas das três; por que julgar recurso é
+  papel isolado; por que exportar para matrícula também é. **(R5)** O aviso que a tela de
+  homologação dá um ato antes ("Depois de homologar, você não poderá publicar esta revisão") e a
+  recusa explicada (`033`), que nomeia a permissão que teria servido.
 - **Bloco obrigatório — "E se somos duas ou três pessoas?"** Fecha o capítulo e é, para a operação
   inicial prevista, a parte mais útil dele. Traz: papéis são funções e podem ser acumulados; as
   três regras que olham para a pessoa e não para a permissão; a regra de ouro — **escolha primeiro
@@ -469,38 +645,51 @@ alertas · o que NÃO entra.**
   peça de recurso com o impedimento nomeado.
 - **Screenshots:** SS-004, SS-005, SS-088.
 - **Exemplo:** a elaboradora tenta homologar e recebe recusa nominal; e a configuração de duas
-  pessoas do §A.3, com os nomes do certame-exemplo.
+  pessoas do §A.3, com os nomes do certame-exemplo. **(R5)** O bloco "duas ou três pessoas" ganha
+  a frase da §A.3: *o Gestor pode consolidar, emitir e convocar — e, se for também quem julga, não
+  deve*.
 - **Alertas:** ⚠ ação cinzenta com um motivo ao lado não é defeito — é o sistema avisando antes.
   ⚠ acumular papéis é legítimo; acumular **atos do mesmo caso** é o que o sistema recusa.
 - **NÃO entra:** nomes de permissões em formato técnico; a lista completa de permissões por papel
   (vai para `G-05`).
 
-### C-05 · Cinco ideias que explicam todo o resto
+### C-05 · Seis ideias que explicam todo o resto
 
 - **Público:** todos.
-- **Objetivo:** entregar de uma vez os cinco conceitos sem os quais todo o resto parece arbitrário.
+- **Objetivo:** entregar de uma vez os seis conceitos sem os quais todo o resto parece arbitrário.
 - **Assuntos:** (1) publicação é imutável; (2) retificação corrige por cima e tem vigência;
   (3) versão vigente ≠ versão histórica; (4) ato emitido é fotografia, não fórmula viva;
-  (5) tudo fica registrado.
+  (5) tudo fica registrado; **(R5)** (6) **o documento publicado é o ato oficial** — o PDF que o
+  sistema gera é o que vale (`054`), traz no fecho local, data, autoridade e ato de nomeação, e
+  não se regenera depois: mudar o sistema não muda o que já foi publicado.
 - **Telas:** detalhe do Edital publicado com a lista de documentos publicados; ato de classificação
   marcado como sucedido.
 - **Screenshots:** SS-006, SS-007.
 - **Alertas:** 🔎 caixa "O que muda depois?" em cada uma das cinco.
 - **NÃO entra:** hash, assinatura, estrutura de dados.
 
-### C-06 · Abrir o Processo Seletivo e criar o Edital
+### C-06 · Abrir o Processo Seletivo, criar Editais e partir de um anterior
 
-- **Público:** gestor.
-- **Objetivo:** sair com um Processo ativo e um Edital em elaboração.
+- **Público:** gestor; elaborador para a última seção.
+- **Objetivo:** sair com um Processo e um Edital em elaboração — **(R5)** e saber acrescentar outro
+  Edital ao mesmo Processo e começar um Edital a partir de outro já publicado.
 - **Pré-requisitos:** ter o papel de gestor.
-- **Assuntos:** Processo × Edital; código institucional; ativar; numeração do Edital única por ano.
-  **(S-00)** O Processo **nasce com o primeiro Edital**, numa tela só — o capítulo ensina a tela como
-  ela é. Acrescentar um segundo Edital a um Processo existente é capacidade do domínio **sem tela**;
-  não se promete aqui, e o fato vai em uma linha para `G-03`.
-- **Telas:** lista de Processos; Novo Processo e primeiro Edital; detalhe do Processo.
-- **Screenshots:** SS-008, SS-009. **(S-00)** `SS-010` foi removida: a tela não existe.
+- **Assuntos:** Processo × Edital; código institucional; numeração do Edital única por ano. O
+  Processo **nasce com o primeiro Edital**, numa tela só. **(R5)** "Novo Edital neste Processo"
+  existe desde 16/09 e o capítulo volta a ensinar um Processo com vários Editais. A página do
+  Processo é hoje um painel ("Onde cada Edital está", pulso de inscrições, próximos marcos,
+  Atenção) — aqui só a apresentação; a leitura é de C-11a. **(R5)** "Partir de um Edital
+  anterior": só com o rascunho vazio, o que vem junto e o que não vem, e o aviso que acompanha
+  todos os passos ("datas, vagas e prazos são da oferta anterior"); Cronograma copiado e vencido
+  deixa o passo pendente e a Revisão impede publicar.
+- **Telas:** lista de Processos; Novo Processo e primeiro Edital; detalhe do Processo; **(R5)** Novo
+  Edital; Partir de um Edital anterior e sua confirmação.
+- **Screenshots:** SS-008, SS-009, **(R5)** SS-010 volta (Novo Edital), mais as do reaproveitamento
+  (`01-…`, §R5).
 - **Exemplo:** *Processo Seletivo Simplificado 2026 · Edital 03/2026 — Auxiliar de Biblioteca*.
-- **Alertas:** 🕒 ative o Processo antes de publicar o Edital.
+- **Alertas:** ~~🕒 ative o Processo antes de publicar o Edital.~~ **(R5) Era falso:** publicar o
+  primeiro Edital ativa o Processo; ativar à mão é opcional. ⚠ partir de um anterior **substitui**
+  o que já estiver composto — a tela pede confirmação.
 - **NÃO entra:** comissão (é a fase 6, e tem capítulo).
 
 ### C-07 · Elaborar o Edital I — identificação, perfis, vagas e cronograma
@@ -509,15 +698,33 @@ alertas · o que NÃO entra.**
 - **Objetivo:** os três primeiros passos do assistente prontos e sem pendências.
 - **Pré-requisitos:** Edital em elaboração.
 - **Assuntos:** o assistente e seus nove passos; estados dos passos (pendente / pronta para
-  revisar / concluída); Perfil de Vaga; modalidades e reserva; vagas imediatas × cadastro de
-  reserva; requisitos; Cronograma e Eventos; **qual Evento é o período de inscrições**.
-- **Telas:** passo Identificação; passo Perfis (com linha de modalidade); passo Cronograma.
-- **Screenshots:** SS-011, SS-012, SS-013, SS-014.
-- **Exemplo:** um perfil com ampla concorrência + PPI, 2 vagas + cadastro de reserva.
-- **Alertas:** ⚠ sem um Evento marcado como período de inscrições, o Edital publica e **ninguém
-  consegue se inscrever**. 💡 o assistente pode ser percorrido fora de ordem, mas cada passo
-  depende do anterior para oferecer escolhas — siga a ordem na primeira vez.
-- **NÃO entra:** etapas de avaliação e classificação (C-08).
+  revisar / concluída) — **(R5)** os estados não bloqueiam nada, quem barra é a Revisão; "Salvar
+  rascunho" e o rascunho local do navegador ("Restaurar o que eu havia digitado"); Perfil de Vaga;
+  modalidades e reserva; vagas imediatas × cadastro de reserva; requisitos; Cronograma e Eventos.
+  **(R5) Novos no passo Perfis:** a visão do conjunto ("Perfis deste Edital (N)", um cartão aberto
+  por vez); o **quadro de vagas por modalidade**, que só aparece quando há lista reservada e é
+  conferido contra as vagas imediatas; "Duplicar este Perfil"; o bloco "Declarado uma vez para
+  todos os Perfis" e "Aplicar aos demais Perfis (N)"; os **fatos exigidos do candidato** (a tela é
+  esta, o conceito é de C-08); "Qual delas é a ampla concorrência"; a reversão de vaga reservada
+  não preenchida; **"Como a convocação é comunicada"**. **(R5)** A Identificação agora tem título e
+  descrição editáveis. O Evento ganhou tipo, término opcional e "Onde acontece".
+- **Telas:** passo Identificação; passo Perfis (com linha de modalidade **e quadro de vagas**);
+  passo Cronograma.
+- **Screenshots:** SS-011, SS-012, SS-013, SS-014 **(R5: SS-013 e SS-014 mudam de conteúdo — ver
+  `01-…`, §R5)**.
+- **Exemplo:** **(R5, reescrito)** um Perfil com 2 vagas + cadastro de reserva, com a lista
+  reservada PPI declarada — a ampla concorrência **não** se declara como Modalidade: é a linha geral
+  do quadro ("Nenhuma — a ampla concorrência é só a linha geral do quadro").
+- **Alertas:** ~~⚠ sem um Evento marcado como período de inscrições…~~ **(R5)** o período de
+  inscrições **não se escolhe mais no Cronograma**: escolhe-se no passo Inscrição (C-09), e a
+  ausência é Aviso na Revisão. ⚠ **(R5)** Evento vencido deixa o passo Cronograma pendente; período
+  de inscrições já encerrado **impede** publicar. ⚠ **(R5)** Perfil cujo marco corta precisa
+  declarar "Como a convocação é comunicada" — sem isso a Revisão **impede** submeter (`051`); e
+  só a forma "por mensagem individual" faz o sistema enviar e-mail na convocação. ⚠ **(R5)** o Evento exige hora:
+  Evento só com data sai "às 00h" no documento. 💡 o assistente pode ser percorrido fora de ordem,
+  mas cada passo depende do anterior para oferecer escolhas — siga a ordem na primeira vez.
+- **NÃO entra:** etapas de avaliação e classificação (C-08); **(R5)** o catálogo de modalidades da
+  `039` — a spec é registro de decisão, e a Modalidade continua dentro do Perfil.
 
 ### C-08 · Elaborar o Edital II — etapas de avaliação e regra de classificação
 
@@ -525,35 +732,62 @@ alertas · o que NÃO entra.**
 - **Objetivo:** compor uma regra de avaliação e de classificação que o sistema consiga executar e
   que um leitor do Edital consiga reconstituir.
 - **Pré-requisitos:** perfis e cronograma prontos.
-- **Assuntos:** Etapa de Avaliação; **as duas formas** — pontuada (nota, faixa, nota mínima) e
-  decisória (dois rótulos escolhidos pelo Edital, p.ex. Deferida/Indeferida); peso; vínculo da
-  Etapa a um Evento do cronograma; **Marco Classificatório**; quais Etapas o marco combina;
-  normalização, escala e arredondamento; critérios de desempate e o que cada um compara; o que
-  acontece quando o dado do desempate falta; **fatos declarados**; **a janela recursal declarada no
-  marco**.
-- **Telas:** passo Etapas de Avaliação; passo Classificação (marco + critérios).
-- **Screenshots:** SS-015, SS-016, SS-017, SS-018.
+- **Assuntos:** Etapa de Avaliação; **as duas formas** — pontuada (nota, **(R5)** pontuação
+  máxima — o termo "faixa" sai —, nota mínima) e decisória (dois rótulos escolhidos pelo Edital,
+  p.ex. Deferida/Indeferida); peso; **(R5)** caráter eliminatório/classificatório; avaliações por
+  inscrição; vínculo da Etapa a um Evento do cronograma; **Marco Classificatório**; **(R5)** "Como
+  a ordem deste marco é produzida" — pela pontuação combinada **ou por sorteio** (com o método do
+  sorteio declarado no Edital); quais Etapas o marco combina — com uma Etapa só, a tela não pergunta
+  como as pontuações se combinam; normalização, escala e arredondamento; critérios de desempate e o
+  que cada um compara; o que acontece quando o dado do desempate falta; **fatos declarados**; **a
+  janela recursal declarada no marco** — **(R5)** três opções: admite, não admite, não declara;
+  **(R5) a Regra de corte** (quantos progridem, suplentes, empate na última posição, Etapa que o
+  corte alimenta, faixa seguinte); vários marcos por Perfil (o par preliminar/final); a visão do
+  conjunto "Classificação dos Perfis deste Edital (N)".
+- **Telas:** passo Etapas de Avaliação; passo Classificação (marco + critérios **+ corte +
+  recurso**; **(R5)** marco de sorteio).
+- **Screenshots:** SS-015, SS-016, SS-017, SS-018 **(R5: as quatro mudam — §R5 do inventário;
+  e o espécime de C-08 do piloto precisa ser recapturado na tela da `053`)**.
 - **Exemplo:** Etapa 1 decisória (Deferida/Indeferida) + Etapa 2 pontuada (0–100, mínima 60, peso 2);
-  marco FINAL combinando as duas, três critérios de desempate, recurso em 5 dias corridos.
+  marco FINAL combinando as duas, três critérios de desempate, recurso em 5 dias corridos, **(R5)**
+  corte "quantas vagas o quadro publicar no recorte".
 - **Alertas:** ⚠ **declare a janela recursal aqui.** Se o marco não disser que admite recurso e por
   quantos dias, o resultado definitivo depois exigirá uma declaração escrita de encerramento de
   prazo — e recurso nenhum terá prazo computável. ⚠ um critério de desempate precisa dizer *o que*
-  compara.
-- **NÃO entra:** como se calcula a nota final passo a passo (vai para C-17).
+  compara. **(R5)** ⚠ sem corte não há faixa, e sem faixa não há convocação: o primeiro marco já
+  nasce com o corte "o que o quadro publicar"; Perfil sem nenhum marco que corte **impede**
+  publicar. ⚠ **(R5)** duas avaliações por inscrição sem regra de combinação impedem publicar
+  quando o fluxo exige o Resultado da Etapa. ⚠ **(R5)** a mesma Etapa tem um peso só, em todos os
+  marcos que a enumeram. ⚠ **(R5)** prazos só em dias corridos. ⚠ **(R5)** o prazo de recurso escrito como Evento do Cronograma é
+  texto livre e não se liga à janela do marco: confira que as duas datas batem (RC-76).
+- **NÃO entra:** como se calcula a nota final passo a passo (vai para C-17); a execução do sorteio
+  e do corte (C-17a, C-17b).
 
 ### C-09 · Elaborar o Edital III — inscrição, anexos, conteúdo e revisão final
 
 - **Público:** elaborador.
 - **Objetivo:** fechar a composição e submeter sem pendências impeditivas.
-- **Assuntos:** Documento Exigido (por perfil e por modalidade); vínculo de um documento a um
-  **modelo oficial**; Anexo do Edital (rótulo editorial + arquivo); seções textuais do Conteúdo;
-  o painel "O que falta para submeter"; "O que será congelado na submissão"; a prévia do documento.
+- **Assuntos:** **(R5)** o **período de inscrições** ("Evento do Cronograma", ou "Este Edital não
+  recebe inscrições pelo sistema"); **(R5)** o teto "Inscrições por candidato neste Edital";
+  Documento Exigido (por perfil e por modalidade — **(R5)** com o grupo "Em todos os Perfis");
+  vínculo de um documento a um **modelo oficial**; **(R5)** o Requerimento de Matrícula ("Quando
+  pedir": não pede / no ato da inscrição / quando o candidato for convocado; texto da declaração
+  de veracidade); Anexo do Edital (rótulo editorial + arquivo; cada operação grava na hora, o passo
+  não tem "Salvar rascunho"); **(R5)** o Conteúdo como **22 seções fixas**, numeradas como sairão no
+  documento — 5 compostas automaticamente, nenhuma com redação padrão, seção vazia não sai no
+  documento; o painel "O que falta para submeter", com itens **Impede** e **Aviso** — **(R5)** é o
+  mesmo exame da publicação, de modo que o que passa aqui é executável; "O que será congelado na
+  submissão"; **(R5)** "O que não se corrige depois de publicado (N)"; a prévia do documento, que
+  não traz local, data nem autoridade.
 - **Telas:** passo Inscrição; passo Anexos; passo Conteúdo; passo Revisão; Prévia do Edital.
-- **Screenshots:** SS-019, SS-020, SS-021, SS-022, SS-023.
+- **Screenshots:** SS-019, SS-020, SS-021, SS-022, SS-023 **(R5: SS-019 e SS-021 mudam — §R5 do
+  inventário)**.
 - **Exemplo:** três documentos exigidos, um deles só para PPI, com o modelo de autodeclaração
-  anexado.
+  anexado; **(R5)** Requerimento de Matrícula pedido "quando o candidato for convocado".
 - **Alertas:** ⚠ remover um anexo apaga o arquivo do rascunho — reenviar é o único caminho de volta.
-  ✅ ao terminar: nenhuma pendência impeditiva no painel de revisão.
+  **(R5)** ⚠ Apresentação e Disposições Finais vazias geram Aviso na Revisão. ⚠ o momento do
+  Requerimento **não** se retifica depois de publicado; a declaração, sim. ✅ ao terminar: nenhuma
+  pendência impeditiva no painel de revisão.
 - **NÃO entra:** a submissão em si (C-10).
 
 ### C-10 · Submeter, homologar e publicar
@@ -563,7 +797,11 @@ alertas · o que NÃO entra.**
 - **Pré-requisitos:** composição sem pendências impeditivas.
 - **Assuntos:** submeter e o que congela; a trilha de estados do Edital; homologar com fundamento;
   devolver com motivo; revogar homologação; publicar com autoridade signatária; o documento
-  publicado; a segregação que impede a mesma pessoa de fechar o ciclo; "Quem atuou".
+  publicado; a segregação que impede a mesma pessoa de fechar o ciclo; "Quem atuou". **(R5)** O
+  aviso de segregação um ato antes, na homologação; os avisos não impeditivos do quadro de vagas
+  na confirmação; a conferência da prévia contra o original pelo homologador (processo
+  institucional, sem tela própria); o fecho do PDF publicado (local, data, autoridade, ato de
+  nomeação); publicar o primeiro Edital ativa o Processo.
 - **Telas:** confirmação de submissão; detalhe em revisão; confirmação de homologação; confirmação
   de publicação; detalhe publicado com documentos.
 - **Screenshots:** SS-024, SS-025, SS-026, SS-027, SS-028, SS-029.
@@ -578,12 +816,36 @@ alertas · o que NÃO entra.**
 - **Objetivo:** acompanhar o que está chegando sem interferir.
 - **Assuntos:** a lista de inscrições recebidas e o contador; rascunhos "em preenchimento" ×
   inscrições enviadas; abrir uma inscrição recebida; ver os documentos apresentados; o que o gestor
-  **não** pode fazer com uma inscrição.
+  **não** pode fazer com uma inscrição. **(R5)** A ação no Edital chama-se "Inscrições recebidas
+  (N)"; a lista ganhou filtro por Perfil, busca por "Nome, protocolo ou CPF", filtro de
+  Concorrência e as colunas Protocolo / Candidato / CPF / Perfil / Concorrência / Documentos /
+  Situação. O detalhe mostra "Versão do Edital aceita", "Código de verificação" (para conferir
+  contra o comprovante), o Requerimento de Matrícula quando há, e "Não se aplicam a esta
+  inscrição" — os documentos que o recorte documental (`044`) tirou da lista dela.
 - **Telas:** Inscrições recebidas; detalhe da inscrição recebida.
-- **Screenshots:** SS-030, SS-031.
+- **Screenshots:** SS-030, SS-031 **(R5: as duas mudam — §R5 do inventário)**.
 - **Alertas:** ⚠ rascunho não é inscrição; o contador só conta o que foi enviado.
-  ⚠ dado pessoal — consulte só o necessário.
-- **NÃO entra:** avaliação.
+  ⚠ dado pessoal — consulte só o necessário. **(R5)** 🔎 a lista de documentos exigidos congela no
+  envio, como os fatos declarados.
+- **NÃO entra:** avaliação; o pulso das inscrições (C-11a).
+
+### C-11a · Acompanhar o certame: o Processo, a Supervisão e os sinais de Atenção **(R5)**
+
+- **Público:** gestor e presidência; auditor para a parte que lê.
+- **Objetivo:** saber, sem abrir Edital por Edital, onde cada um está e o que pede atenção.
+- **Pré-requisitos:** um Processo com Edital publicado.
+- **Assuntos:** a página do Processo como painel — "Onde cada Edital está", o pulso de inscrições,
+  os próximos marcos, "Aguardando quem elabora"; a **Supervisão do Processo** (`022`), só para a
+  gestão da comissão e a presidência; os **sinais de Atenção** (`038`/`045`) — ato obsoleto, ato
+  não divulgado, ordem sem ocupação apurada, recurso em que todos estão impedidos, Etapa pronta para
+  distribuir —, cada um levando à tela que resolve; por que cada pessoa vê só os sinais do que ela
+  alcança, e a frase de ausência é relativa a isso; o cartão "O que fazer agora" do Edital, com a
+  ação principal, as secundárias e as terminais, e "aguardando quem…".
+- **Telas:** detalhe do Processo; Supervisão do Processo; detalhe do Edital com o cartão de ações.
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** 🔎 nenhum sinal pratica nada — todos levam a uma tela onde o ato acontece.
+  ⚠ quem não alcança a Supervisão recebe "não encontrado", e não a recusa explicada.
+- **NÃO entra:** a Visão Geral institucional (C-22).
 
 ### C-12 · Inscrever-se — o manual do candidato
 
@@ -594,12 +856,26 @@ alertas · o que NÃO entra.**
   e-mail (sem senha); escolher vaga e modalidade; preencher; enviar documentos; declarar os fatos
   exigidos; revisar; enviar; o comprovante e o protocolo; retomar um rascunho; o aviso "o Edital foi
   atualizado"; acompanhar; gerir os e-mails da conta; vincular participação anterior.
-- **Telas:** vitrine; página da seleção; Entrar; Informe o código; Minhas inscrições; Sua inscrição;
-  Revisar e enviar; Comprovante; Acompanhar; Acesso à conta.
-- **Screenshots:** SS-032 a SS-042.
+- **(R5) Assuntos novos:** a vitrine com busca, filtros e os quatro grupos (abertas, próximas,
+  encerradas, outras); a página da seleção com a situação ("Acontecendo agora", "Próximo, em…"),
+  as Retificações com "O que mudou", os resultados divulgados e, quando há, o bloco do sorteio;
+  **"Seus dados"** — nome e CPF uma única vez, antes da primeira inscrição; "Encontramos
+  participação anterior" logo após o código; a escolha de modalidade gravada na hora, e a
+  confirmação quando mudar de modalidade **descarta documentos**; o Requerimento de Matrícula
+  quando pedido na inscrição (a inscrição só é enviada depois dele); o e-mail "Inscrição
+  recebida"; o comprovante em PDF; "Minha inscrição" (o que foi enviado); o aviso de rascunho
+  fechado quando o período termina.
+- **Telas:** vitrine; página da seleção; Entrar; Informe o código; **(R5)** Seus dados; Minhas
+  inscrições; Sua inscrição; Revisar e enviar; Comprovante; Acompanhar; Acesso à conta.
+- **Screenshots:** SS-032 a SS-042 **(R5: várias mudam, e entram as de "Seus dados", rascunho
+  fechado e Requerimento — §R5 do inventário)**.
 - **Exemplo:** Ana concorre à ampla; Carla concorre por PPI e vê aparecer a autodeclaração.
-- **Alertas:** ⚠ os dados exigidos pelo Edital **congelam no envio** e não mudam depois.
-  ⚠ enquanto não clicar em *Enviar inscrição*, ninguém recebeu nada. 🕒 confira o prazo no cartão.
+- **Alertas:** ⚠ os dados exigidos pelo Edital **congelam no envio** e não mudam depois — **(R5)**
+  o CPF também, que depois só o atendimento corrige. ⚠ enquanto não clicar em *Enviar inscrição*,
+  ninguém recebeu nada. 🕒 confira o prazo no cartão. ~~"o rascunho não te avisa"~~ **(R5)** o
+  rascunho avisa: o período encerrado fecha a inscrição com uma frase clara (§H.9). 💡 **(R5)**
+  quem abre um link guardado sem estar identificado recebe "não encontrado": entre primeiro, depois
+  abra o link (§H.10, aberta).
 - **NÃO entra:** recurso (C-19 tem a parte do candidato; aqui só uma remissão).
 
 ### C-13 · Montar a comissão e alocar por Etapa
@@ -611,8 +887,16 @@ alertas · o que NÃO entra.**
   vários de uma vez; a matriz de alocação por Etapa; inativar membro; alocações órfãs.
 - **Telas:** Comissão do Processo; confirmação; Alocação por Etapa.
 - **Screenshots:** SS-043, SS-044, SS-045.
-- **Alertas:** 👤 designar a presidência não dá poderes de gestão, e ser gestor não dá a presidência.
-  ⚠ sem alocação a Etapa não pode ser distribuída.
+- **(R5) Rótulos atuais:** "Adicionar membro" → "Continuar"; "Adicionar vários de uma vez" →
+  "Conferir a lista" → "Confirmar inclusão de N"; por membro, "Alterar função" e "Remover da
+  comissão" — **"inativar membro" não é rótulo de tela**: remover inativa o membro e as alocações
+  dele, sem apagar nada. Na Alocação, o botão diz "Salvar distribuição" embora o ato seja alocar, e
+  cada coluna tem o link "Distribuir". A alocação só existe depois de o Edital ser publicado, e a
+  matriz fica desabilitada sem presidência.
+- **Alertas:** 👤 designar a presidência não dá poderes de gestão, e ser gestor não dá a presidência
+  — **(R5)** mas o Gestor pratica os atos dela pela própria permissão (§A.1). ⚠ sem alocação a Etapa
+  não pode ser distribuída. ⚠ **(R5)** a comissão alcança todos os Perfis e polos do Processo:
+  distribuição e alocação não filtram por Perfil.
 - **NÃO entra:** distribuir inscrições (C-14).
 
 ### C-14 · Distribuir o trabalho
@@ -620,7 +904,12 @@ alertas · o que NÃO entra.**
 - **Público:** presidente da comissão.
 - **Objetivo:** cada inscrição com um avaliador responsável, em cada Etapa.
 - **Pré-requisitos:** inscrições recebidas e alocação feita.
-- **Assuntos:** onde a presidência encontra a Etapa (**o caminho não é anunciado — ver §H.13**);
+- **Assuntos:** onde a presidência encontra a Etapa (**(R5)** Alocação por Etapa → "Distribuir";
+  "Minhas Etapas" de quem preside e não avalia aponta esse caminho, e a Supervisão leva direto à
+  distribuição — a remissão antiga a §H.13 estava errada, era §H.8, e H.8 está fechada);
+  **(R5)** os números-filtro da Etapa e a seção "Distribuir o que falta"; "Distribuir as
+  selecionadas"; o filtro "fora do corte" e as inscrições "aguardando a Etapa anterior";
+  **distribuir é recusado enquanto o período de inscrições corre**;
   quem está alocado; propor distribuição por rodízio; conferir a carga antes de gravar; confirmar;
   distribuir uma a uma; retirar atribuições; atribuições órfãs; registrar impedimento.
 - **Telas:** Distribuição da Etapa (proposta e confirmada); Impedimentos.
@@ -637,11 +926,14 @@ alertas · o que NÃO entra.**
 - **Assuntos:** Minhas Etapas; a Mesa; ler os documentos apresentados; **avaliação decisória** (os
   rótulos que o Edital escolheu + parecer obrigatório no sentido desfavorável); **avaliação
   pontuada** (nota dentro da faixa); salvar sem concluir; concluir; por que a conclusão vira
-  leitura; o que fazer se errou.
+  leitura; o que fazer se errou. **(R5)** Quem já tem Resultado na Etapa não pode ser concluído, e a
+  Mesa diz por quê antes do clique (a exceção é a reavaliação determinada por recurso); inscrição
+  fora do corte não aparece na Mesa; "Próxima pendente".
 - **Telas:** Minhas Etapas; Minha Mesa; Inscrição na Mesa (decisória e pontuada).
 - **Screenshots:** SS-050, SS-051, SS-052, SS-053.
 - **Alertas:** ⛔ **concluir não se desfaz por você** — reabrir é ato da presidência.
-  ⚠ você só vê o que lhe foi atribuído; isso é proposital.
+  ⚠ você só vê o que lhe foi atribuído; isso é proposital. ⚠ **(R5)** a Mesa não avisa quando a
+  inscrição é uma reavaliação determinada por recurso — a presidência precisa dizer.
 - **NÃO entra:** consolidação, classificação, recursos.
 
 ### C-16 · Consolidar o resultado de cada Etapa
@@ -650,33 +942,87 @@ alertas · o que NÃO entra.**
 - **Objetivo:** transformar avaliações concluídas em Resultados oficiais da Etapa.
 - **Pré-requisitos:** avaliações concluídas.
 - **Assuntos:** prontidão × oficial; registrar ocorrência (quem não pôde ser avaliado); consolidar
-  em lote; Habilitada × Eliminada; o que decide a consequência em cada forma; eliminada numa Etapa
+  em lote — **(R5)** "Consolidar as N prontas" ou "Consolidar as selecionadas", sempre pela
+  conferência "Confira antes de consolidar"; Habilitada × Eliminada; o que decide a consequência em cada forma; eliminada numa Etapa
   não aparece na Etapa seguinte; Conclusões preservadas e reabertura; a tela de Resultados da Etapa.
 - **Telas:** Registrar ocorrência (2 passos); prontidão antes de consolidar; Resultados da Etapa;
   Conclusões preservadas.
 - **Screenshots:** SS-054, SS-055, SS-056, SS-057.
 - **Alertas:** ⛔ **consolidar não se refaz** — a correção depois disso é matéria de recurso.
-  ⚠ ocorrência elimina; leia a revisão antes de "Registrar mesmo assim".
+  ⚠ ocorrência elimina; leia a revisão antes de "Registrar mesmo assim". ~~alerta da §H.11~~
+  **(R5)** a Mesa recusa concluir depois do Resultado, e a ordem "ocorrência antes" deixou de ser
+  cuidado do operador. ⚠ **(R5)** a reavaliação cumprida **não** entra em "Consolidar as N prontas":
+  marque a linha e use "Consolidar as selecionadas" (§H.2).
 - **NÃO entra:** classificação.
 
-### C-17 · Classificar
+### C-17 · Classificar — por recorte e pela tela do marco
 
-- **Público:** presidente da comissão; auditor como leitor.
+- **Público:** presidente da comissão (ou Gestor); auditor como leitor.
 - **Objetivo:** emitir a ordem classificatória e saber explicá-la.
 - **Pré-requisitos:** Etapas do marco consolidadas.
-- **Assuntos:** o marco e seu universo; a ordem calculada antes de emitir; como a nota combinada se
-  forma; o desempate critério a critério e a proveniência de cada par; empate residual e posição
-  compartilhada; participantes sem posição; emitir; o ato como fotografia; obsolescência
-  (regra mudou / universo mudou); ato sucessor.
-- **Telas:** Ordenação do marco; Ato de classificação (posições + proveniência); ato obsoleto com
-  divergências.
+- **Assuntos:** o marco e seu universo; **(R5)** o **recorte** — um marco com lista reservada tem
+  uma ordem por lista, navegada pela aba "Recorte: X", com três estados vazios distintos; a ordem
+  calculada antes de emitir; como a nota combinada se forma; o desempate critério a critério e a
+  proveniência de cada par; empate residual e posição compartilhada; participantes sem posição;
+  emitir — **(R5)** em dois passos, "Emitir ordem" → "Confira antes de emitir" → "Emitir a ordem",
+  com "Decisões de recurso que este ato executa" quando houver providência a cumprir; o ato como
+  fotografia; obsolescência (regra mudou / universo mudou); ato sucessor. **(R5) A tela do marco**
+  (`049`): a tabela "Recortes deste marco" com Ordem · Corte · Apuração · Publicação (Feito /
+  Obsoleto / Falta / Não se aplica); "Conduzir o marco inteiro" oferece só os gestos que faltam,
+  passa por uma conferência que não grava ("Serão praticados", "Ficam de fora", "Impedidos") e
+  pratica o primeiro ato de cada recorte — suceder continua na tela do recorte, com motivo.
+- **Telas:** Ordenação do marco; **(R5)** confirmação da emissão; Ato de classificação (posições +
+  proveniência); ato obsoleto com divergências; **(R5)** tela do marco e sua conferência.
 - **Screenshots:** SS-058, SS-059, SS-060, SS-061.
 - **Exemplo:** 1º Ana 95 · 2º Bruno 88 · 3º Carla 82 · 4º Diego 75, com empate desfeito por fato
   declarado.
 - **Alertas:** 🔎 quem foi eliminado em Etapa anterior à última **não aparece** entre "considerados
   sem posição" — essa história é contada pelos Resultados de Etapa. ⚠ emitir com a página velha é
-  recusado.
-- **NÃO entra:** divulgação.
+  recusado. ⚠ **(R5)** "Ninguém concorreu por este recorte" ainda emite a ordem vazia — e é o certo.
+- **NÃO entra:** divulgação; sorteio (C-17a); corte (C-17b).
+
+### C-17a · Ordenar por sorteio público **(R5)**
+
+- **Público:** presidência (ou Gestor); publicador para a classificação; público e candidato como
+  leitores.
+- **Objetivo:** produzir uma ordem por sorteio que qualquer pessoa consiga conferir sem pedir nada.
+- **Pré-requisitos:** marco declarado "Por sorteio", com o método no Edital; inscrições encerradas.
+- **Assuntos:** o método declarado no Edital (algoritmo, fonte da semente, ocorrência, derivação,
+  normalização, substituição) e por que alterá-lo é Retificação; os três atos, recorte a recorte —
+  **"Publicar e congelar a relação"** (recusado com inscrições em curso; pode partir das habilitadas
+  numa Etapa), **"Observar a ocorrência na fonte"** (ninguém digita a semente; a ocorrência precisa
+  ser posterior ao congelamento; "indisponível" fica registrado e aciona a substituição),
+  **"Realizar o sorteio"** (um botão, sem prévia, que constitui o ato); publicar a classificação do
+  sorteio; **anular** — Retificar declarando a ocorrência nova → relação nova com motivo → observar →
+  "Anular e constituir o sucessor"; o lado público: relação de habilitados, "Verificar este
+  sorteio", o manifesto e o verificador independente.
+- **Telas:** Sorteio — marco; Relação de habilitados (pública); Verificar este sorteio (pública).
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⛔ realizar não tem prévia nem volta; anular **não** desfaz, constitui um sucessor.
+  👤 **realizar o sorteio conta como emitir o ato de ordenação**: quem sorteia fica impedido de
+  julgar recurso contra aquela ordem (§A.3). 🔎 a relação de habilitados é pública e nominal —
+  é a única lista de Etapa que o público vê (§H.4).
+- **NÃO entra:** o método do sorteio em detalhe matemático (vai para `G-05`); declarar o marco de
+  sorteio (C-08).
+
+### C-17b · Cortar: quem segue para a Etapa seguinte ou para as vagas **(R5)**
+
+- **Público:** presidência (ou Gestor); auditor como leitor.
+- **Objetivo:** emitir a faixa que o marco declara e saber o que ela faz e o que **não** faz.
+- **Pré-requisitos:** ordem vigente no recorte; Regra de corte publicada no marco.
+- **Assuntos:** o que o corte é — a faixa que progride, calculada da ordem e da regra (alvo fixo ou
+  lido do quadro, suplentes, empate na última posição) — e o que ele não é: não elimina, não grava
+  Resultado, não ocupa vaga; os dois usos — **marco intermediário** (a faixa alimenta a Etapa
+  seguinte, que só recebe quem está nela; os demais aparecem "fora do corte") e **marco final** (a
+  faixa é o universo da ocupação e da convocação); "A faixa calculada" e a tabela Progride / Fora
+  da faixa; "Emitir corte"; nova geração com motivo; "Continuar corte" → "Emitir faixa seguinte",
+  quando a regra admite continuação; o histórico do corte e a reprodução da faixa; o corte obsoleto.
+- **Telas:** Corte e progressão; Corte — histórico.
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⛔ emitir corte não tem volta; corrigir é nova geração. ⚠ **corte obsoleto impede
+  qualquer publicação** de resultado e trava a Etapa governada — refaça o corte antes de divulgar.
+  💡 abrir a tela calcula e não grava nada.
+- **NÃO entra:** ocupação (C-20a).
 
 ### C-18 · Divulgar o resultado
 
@@ -685,71 +1031,212 @@ alertas · o que NÃO entra.**
 - **Pré-requisitos:** ato de classificação vigente.
 - **Assuntos:** a prévia e o que será divulgado; preliminar × definitiva; a revalidação na
   confirmação; a página pública estável; o documento oficial; a situação de cada participante na
-  área do candidato; o histórico de publicações do marco; sucessão de publicação.
+  área do candidato; o histórico de publicações do marco; sucessão de publicação. **(R5)** As
+  portas novas: o destino "divulgar o resultado" no card Classificação do Edital, "Publicar a
+  classificação deste sorteio" e o gesto "Publicar o resultado do marco…" na tela do marco; a
+  "Declaração de encerramento do prazo recursal" na definitiva sem janela computável; "Um
+  resultado definitivo não é sucedido por um preliminar"; **um documento público por marco e por
+  lista de concorrência** — não há documento único do marco. Do lado público: "Prazo de recurso
+  aberto… até" / "encerrado em…" e "Publicações anteriores deste resultado (N)"; num marco de
+  sorteio a coluna de pontuação some e entra "Esta ordem foi produzida por sorteio público".
 - **Telas:** Prévia da publicação; Resultado divulgado (público, desktop e celular); Acompanhar
   (candidato); Resultados divulgados (histórico).
-- **Screenshots:** SS-062 a SS-067.
-- **Alertas:** ⚠ **quem emitiu o ato não é quem o publica.** ⚠ a prévia envelhece: se algo mudar
-  entre abrir e confirmar, a confirmação é recusada — e isso é proteção, não erro.
-  🔎 nenhum candidato é notificado; a divulgação é passiva (§H.5).
+- **Screenshots:** SS-062 a SS-067 **(R5: mudam — §R5 do inventário)**.
+- **Alertas:** ~~⚠ **quem emitiu o ato não é quem o publica.**~~ **(R5) Era impreciso:** são
+  permissões diferentes, mas não há checagem de identidade entre emitir e publicar (§A.3) — a mesma
+  pessoa, com as duas bases, pratica as duas. O que a regra protege é o julgador. ⚠ a prévia
+  envelhece: se algo mudar entre abrir e confirmar, a confirmação é recusada — e isso é proteção,
+  não erro. 🔎 nenhum candidato é notificado de resultado; a divulgação é passiva (§H.5 — o
+  sistema avisa por e-mail outras coisas, não esta).
 - **NÃO entra:** recursos.
 
-### C-19 · Recursos — interpor, admitir e julgar
+### C-19 · Recursos — interpor, instruir, admitir e julgar
 
-- **Público:** candidato (primeira metade), julgador (segunda metade).
+- **Público:** candidato (primeira metade), julgador (segunda metade); **(R5)** presidência ou
+  Gestor para a instrução.
 - **Objetivo:** o candidato recorre no prazo; o julgador admite e julga com efeito correto.
-- **Pré-requisitos:** resultado divulgado, ou Resultado de Etapa visível ao candidato.
-- **Assuntos:** o que pode ser atacado (a publicação, ou um Resultado de Etapa); a janela recursal;
-  o protocolo do recurso; admissibilidade ≠ mérito; **as três espécies de decisão utilizáveis** e o
-  efeito de cada uma; impedimento do julgador; a proibição de agravar a situação de quem recorreu;
-  onde o candidato acompanha.
-- **Tratamento da quarta espécie:** *Deferir determinando reavaliação* **sai do fluxo principal**.
-  Ela não é ensinada como opção disponível, não entra na tabela de espécies e não recebe
-  procedimento. Aparece uma única vez, ao fim do capítulo, numa **caixa de limitação conhecida**
-  com o texto: *"⛔ Não utilize esta opção nesta versão do sistema."* — seguido de uma frase
-  dizendo o que acontece se alguém a usar (o marco fica impedido de chegar a resultado definitivo)
-  e da remissão a `G-03`. **(S-00)** Essa caixa usa o componente
-  **`Limitação conhecida desta versão`** do §G.3, e **não** o callout `⛔`: o glifo permanece na
-  frase, mas o bloco não é do tipo "ato sem retorno" — uma capacidade que não deve ser usada é outra
-  coisa, e misturar as duas apagaria a distinção que se pede ao leitor que memorize. O manual não normaliza uma capacidade que não fecha operacionalmente.
-- **Telas:** Acompanhar → Recorrer; Recurso (candidato); Recursos recebidos; peça do recurso;
-  Admissibilidade; Julgar.
-- **Screenshots:** SS-068 a SS-074.
-- **Alertas:** ⛔ **Não utilize "Deferir determinando reavaliação" nesta versão.** A decisão fica
-  registrada, nada a cumpre, e o marco passa a ficar permanentemente impedido de chegar a
-  resultado definitivo — §H.2. Redação categórica e sem contorno sugerido: **não há** contorno.
-  ⚠ julgar é papel próprio: quem atuou no ato atacado está impedido.
-  ⚠ a espécie escolhida determina o efeito — indeferir não muda nada, corrigir cria um Resultado
-  novo, providência a jusante só registra pendência.
+- **Pré-requisitos:** resultado divulgado. **(R5)** O Resultado de Etapa só fica visível ao
+  candidato depois que existe uma publicação vigente de um marco que conta aquela Etapa — não logo
+  após a consolidação; e o botão "Recorrer de um resultado" só aparece quando há algo recorrível
+  dentro do prazo.
+- **Assuntos:** o que pode ser atacado (a publicação, ou um Resultado de Etapa) — **(R5)** e o que
+  não pode: a convocação e a relação de habilitados ao sorteio; a janela recursal; o protocolo do
+  recurso; admissibilidade ≠ mérito; **(R5) as quatro espécies de decisão**, com os rótulos da tela
+  — "Indeferir", "Deferir fixando a correção", "Deferir determinando reavaliação", "Deferir
+  determinando providência a jusante" — e o efeito de cada uma; "Etapa alcançada pela decisão";
+  impedimento do julgador; a proibição de agravar a situação de quem recorreu; onde o candidato
+  acompanha. **(R5) A instrução do recurso** (`036`): não é o julgador quem instrui — é a
+  presidência ou o Gestor, que junta à peça o parecer atacado e/ou o documento, com razão escrita
+  ("Instruir o recurso"); o julgador lê o que foi instruído enquanto o recurso não é decidido, e o
+  acesso acaba com a decisão; quem instrui não fica impedido de nada. A entrada do julgador é a
+  ação "Recursos aguardando decisão (N)", que conta só os pendentes.
+- **~~Tratamento da quarta espécie~~ — (R5) revogado.** A caixa "⛔ Não utilize" e a exclusão da
+  espécie da tabela saem, porque o diagnóstico que as motivava não se confirmou (§H.2). *Deferir
+  determinando reavaliação* entra na tabela de espécies como as outras, e o seu cumprimento é a
+  receita `R-13`: distribuir a **outro** avaliador (a distribuição abre uma vaga extra), concluir na
+  Mesa e consolidar pela seleção. O componente `Limitação conhecida desta versão` do §G.3 fica sem
+  caso de uso no manual por ora — e continua definido, para o próximo.
+- **Telas:** Acompanhar → Recorrer; Recurso (candidato); Recursos recebidos; peça do recurso
+  (**(R5)** com "Conferir o que se contesta" e "Instrução do recurso"); Admissibilidade; Julgar.
+- **Screenshots:** SS-068 a SS-074 **(R5: SS-071 muda; SS-073 perde a tarja "não utilizar")**.
+- **Alertas:** ⚠ julgar é papel próprio: quem atuou no ato atacado está impedido — **(R5)**
+  incluindo quem realizou o sorteio que constituiu a ordem atacada. ⚠ a espécie escolhida determina
+  o efeito — indeferir não muda nada, corrigir cria um Resultado novo, reavaliar pede uma nova
+  avaliação por outra pessoa, providência a jusante registra pendência que o próximo ato precisa
+  citar. ⚠ **(R5)** depois da decisão de reavaliar, a peça diz "Nenhum — este recurso não produziu
+  resultado sucessor" e não indica o próximo passo: o manual é quem indica (§H.2).
 - **NÃO entra:** o refazimento do resultado (C-20).
 
 ### C-20 · Refazer e republicar depois de um recurso
 
-- **Público:** presidente da comissão e publicador.
+- **Público:** presidente da comissão (ou Gestor) e publicador.
 - **Objetivo:** cumprir uma decisão recursal até a nova divulgação.
 - **Assuntos:** o Resultado sucessor citando o anterior e a decisão; o original permanece;
-  reabilitação e progressão retroativa; a classificação fica obsoleta com o motivo certo; emitir o
-  ato sucessor; a publicação sucessora; a anterior continua consultável dizendo que foi sucedida;
-  **os cinco impedimentos da publicação definitiva**; a declaração de encerramento de prazo quando
-  o marco não declarou janela.
+  reabilitação e progressão retroativa ("Reabilitada por recurso" na distribuição da Etapa
+  seguinte); **(R5)** a reavaliação cumprida; **(R5)** a providência a jusante, citada em "Decisões
+  de recurso que este ato executa" ao emitir o ato sucessor; a classificação fica obsoleta com o
+  motivo certo; emitir o ato sucessor; **(R5)** o corte sucessor, quando a faixa ficou obsoleta; a
+  publicação sucessora; a anterior continua consultável dizendo que foi sucedida; **(R5) os
+  impedimentos da publicação**, que são mais que os cinco da definitiva:
+  - barram qualquer natureza: marco removido por Retificação · ato sucedido · reingresso pendente ·
+    corte obsoleto · ato desatualizado · prévia envelhecida;
+  - barram só a definitiva: recurso pendente · reavaliação pendente · providência pendente · janela
+    recursal ainda aberta · declaração de encerramento exigida (marco sem janela computável) ·
+    declaração recusada (marco que tem janela);
+  - e duas regras de forma: definitiva não é sucedida por preliminar; autoridade obrigatória.
 - **Telas:** Resultados da Etapa depois dos recursos; ordenação obsoleta; ato sucessor; prévia da
-  segunda publicação; publicação anterior preservada; recusa da definitiva.
-- **Screenshots:** SS-075 a SS-080.
+  segunda publicação; publicação anterior preservada; recusa da definitiva — **(R5)** que hoje é
+  anunciada antes da escolha ("Este marco ainda não pode ser publicado como definitivo").
+- **Screenshots:** SS-075 a SS-080 **(R5: SS-079 muda)**.
 - **Alertas:** ⚠ a publicação fica bloqueada — inclusive como preliminar — enquanto houver quem
-  foi reabilitado e ainda não tem Resultado na Etapa seguinte.
+  foi reabilitado e ainda não tem Resultado na Etapa seguinte. ⚠ **(R5)** um recurso deferido
+  depois da convocação torna obsoletos a ordem, o corte e a apuração, e a convocação passa a ser
+  recusada até a apuração seguinte.
 - **NÃO entra:** o julgamento em si.
+
+### C-20a · Apurar a ocupação das vagas **(R5)**
+
+- **Público:** presidência (ou Gestor); auditor como leitor.
+- **Objetivo:** saber, por recorte, quantas vagas existem, quantas estão ocupadas e quantas faltam.
+- **Pré-requisitos:** ordem vigente no recorte e quadro de vagas publicado.
+- **Assuntos:** os quatro números — publicadas, efetivas, ocupadas, a ocupar —, e os movimentos que
+  os explicam (reversão de vaga reservada não preenchida para a ampla, quando o Edital declara);
+  "Apurar a ocupação deste recorte"; a apuração obsoleta e "Emitir nova apuração" com motivo; o
+  déficit e "Pedir a faixa seguinte com este déficit", que leva ao corte; o histórico do recorte.
+- **Telas:** Ocupação de vagas; Histórico da ocupação.
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⛔ apurar não tem volta; corrigir é nova apuração com motivo. 🔎 apurar não seleciona
+  ninguém: quem escolhe é o corte, quem chama é a convocação. ⚠ sem apuração emitida, a convocação
+  é recusada.
+- **NÃO entra:** convocar (C-20b).
+
+### C-20b · Convocar, chamar de novo e suplência **(R5)**
+
+- **Público:** presidência (ou Gestor); candidato para a parte do portal.
+- **Objetivo:** chamar quem a faixa e a apuração indicam, comunicar, registrar o que cada pessoa
+  respondeu e seguir a fila até as vagas fecharem.
+- **Pré-requisitos:** apuração emitida no recorte; forma de convocação declarada no Perfil.
+- **Assuntos:** as três espécies, **derivadas da posição** e não escolhidas — vaga inicial,
+  suplência, para regularizar; "Convocar os titulares num ato só", com o vencimento do prazo
+  (Evento do Cronograma ou data e hora) e o fundamento; a comunicação — **e-mail individual** quando
+  o Perfil declara "mensagem individual", ou o registro de onde e quando a lista foi publicada,
+  quando declara "por publicação" (o sistema registra a publicação, não a faz); "Comunicações que
+  ainda não saíram"; "Chamar uma pessoa da fila"; os desfechos (aceite, regularização,
+  indeferimento, desistência expressa, não atendimento, cancelamento por inércia, reclassificação);
+  "Atestar fato externo" como insumo da inércia; "Registrar o não atendimento das N" vencidas;
+  quando a fila esgota, a faixa seguinte; o histórico. Do lado do candidato: a tela "Convocação",
+  com espécie, prazo e "O que fazer".
+- **Telas:** Convocação; Histórico da convocação; Convocação (portal).
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⛔ convocar comunica no mesmo ato; desfecho e atestado não se desfazem. ⚠ falha de
+  envio do e-mail não inicia o prazo. ⚠ **o portal não tem link para a tela de convocação** — o
+  e-mail leva a "Minhas inscrições", e nem ela nem Acompanhar apontam a convocação (§H.18). Até a
+  correção, o manual do candidato e a comunicação precisam dizer o caminho. 🕒 o resultado
+  definitivo **não** é pré-condição de convocar; o momento é decisão institucional.
+- **NÃO entra:** o Requerimento (C-20c); recurso contra a convocação, que não existe.
+
+### C-20c · O Requerimento de Matrícula **(R5)**
+
+- **Público:** candidato; presidência e Gestor como leitores.
+- **Objetivo:** o candidato envia uma vez os dados de matrícula, no momento que o Edital declarou.
+- **Pré-requisitos:** Edital que declara o Requerimento — "no ato da inscrição" (a inscrição só é
+  enviada depois dele) ou "quando o candidato for convocado" (só com convocação em aberto).
+- **Assuntos:** "O que já sabemos" e os links para corrigir na origem; os quatro estados ("Ainda não
+  é a hora", "O que falta você informar", "Enviado", não se aplica); o CEP que preenche município e
+  UF; a declaração de veracidade; "Guardar e continuar depois" × "Enviar requerimento"; "Conferir e
+  atualizar" quando reconvocado, que cria um sucessor; o requerimento anterior consultável.
+- **Telas:** Requerimento de Matrícula (portal); Requerimento anterior; o bloco na inscrição
+  recebida (gestão).
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⛔ enviado não muda; atualizar só com convocação em aberto, e cria um sucessor.
+  ⚠ quando pedido na convocação, **nenhuma tela do portal leva ao requerimento** (§H.18).
+  💡 sem a base de CEP carregada, o candidato digita o endereço inteiro e o envio conclui.
+- **NÃO entra:** a matrícula em si — o sistema não matricula ninguém.
+
+### C-20d · Exportar para matrícula **(R5)**
+
+- **Público:** Exportador de matrículas.
+- **Objetivo:** gerar o arquivo que o Registro Acadêmico importa, com a população certa.
+- **Pré-requisitos:** papel de Exportador; Edital publicado que declara o Requerimento.
+- **Assuntos:** "Quem entra no arquivo" — os convocados de um marco, ou um resultado definitivo
+  divulgado e não sucedido; quem não enviou Requerimento é nomeado, e a geração é recusada; "Ver o
+  que sairá vazio"; "Baixar o arquivo" (`.xlsx`); a norma de cada pessoa é a do ato que a alcançou,
+  não a vigente; o arquivo não é guardado, e a geração fica registrada sem dado de candidato.
+- **Telas:** Exportar para matrícula.
+- **Screenshots:** novas (`01-…`, §R5).
+- **Alertas:** ⚠ o arquivo reúne CPF, RG, filiação e endereço da população inteira — guarde e
+  descarte conforme a política de dados da instituição. 🔎 baixar de novo gera outra geração
+  registrada.
+- **NÃO entra:** a importação no sistema acadêmico, que é fora do sistema.
 
 ### C-21 · Encerrar o certame
 
 - **Público:** gestor.
 - **Objetivo:** fechar Edital e Processo com o registro correto.
 - **Assuntos:** encerrar × cancelar; o motivo; o que permanece consultável; quando encerrar em
-  relação ao resultado definitivo (**o sistema não orienta — §H.7**).
+  relação ao resultado definitivo e à convocação (**o sistema não orienta — §H.7**); **(R5)** o
+  Processo só encerra com **todos os Editais encerrados ou cancelados** — a tela lista os pendentes
+  em "O encerramento e o cancelamento do Processo estão impedidos"; o desfecho que a página pública
+  da seleção passa a mostrar.
 - **Telas:** confirmação de encerramento; detalhe encerrado.
 - **Screenshots:** SS-081, SS-082.
 - **Alertas:** ⚠ depois de encerrado nenhuma Retificação pode ser publicada.
-  ⚠ cancelar registra interrupção administrativa — não é a mesma coisa.
-- **NÃO entra:** nomeação, convocação, posse — não existem (§H.7).
+  ⚠ cancelar registra interrupção administrativa — não é a mesma coisa. 🔎 **(R5)** cancelar o
+  Edital não gera Publicação.
+- **NÃO entra:** nomeação e posse — não existem (§H.7). ~~convocação~~ **(R5)** a convocação existe
+  e tem capítulo (C-20b).
+
+### C-21a · Retificar um Edital publicado **(R5)**
+
+- **Público:** elaborador, homologador e publicador — o mesmo trio do C-10.
+- **Objetivo:** corrigir ou acrescentar a um Edital publicado sem reescrevê-lo.
+- **Pré-requisitos:** Edital publicado e não encerrado.
+- **Assuntos:** o que a Retificação pode mudar e o que não pode — cada campo tem natureza própria
+  (`026`), e a Revisão do Edital já mostrou "O que não se corrige depois de publicado"; o que ela
+  pode **acrescentar** (`048`): Perfil, Modalidade, linha do quadro, critério de desempate, Evento e
+  Anexo, com "aplicar a todos" na conferência; o que ela pode fazer nascer (janela recursal, regra de
+  corte, reversão de vaga); o que não acrescenta (Documento Exigido, Seção); "O que vai mudar" em
+  português; vigência, inclusive futura; o mesmo ciclo submeter → homologar → publicar; o que o
+  candidato com rascunho aberto vê ("O Edital foi atualizado"); a Retificação exigida para anular um
+  sorteio.
+- **Telas:** Retificar; Detalhe da Retificação.
+- **Screenshots:** SS-083, SS-084 **(R5: SS-083 muda)**, mais as de acrescentar.
+- **Alertas:** ⛔ publicar a Retificação não tem volta. ⚠ ato histórico continua lendo a norma que
+  citou — uma Retificação não muda o que já foi emitido.
+- **NÃO entra:** o detalhe de cada campo retificável (vai para `G-01`).
+
+### C-22 · A Visão Geral da instituição **(R5)**
+
+- **Público:** gestor; quem decide processo institucional.
+- **Objetivo:** ler o conjunto dos Processos da instituição sem abrir um por um.
+- **Pré-requisitos:** papel de Gestor.
+- **Assuntos:** o que a Visão Geral mostra (`040`–`042`) e, principalmente, o que ela declara que
+  **não mede** — matrícula efetivada, classificados, convocados, ocupação, requerimentos, divisão por
+  campus, tipo de Processo e ano de ingresso.
+- **Telas:** Visão Geral.
+- **Screenshots:** nova (`01-…`, §R5).
+- **Alertas:** 🔎 é leitura: nada nela pratica ato.
+- **NÃO entra:** a supervisão de um Processo (C-11a).
 
 ### G-03 · O que o sistema não faz hoje
 
@@ -761,20 +1248,26 @@ limitações que não interrompem nenhuma tarefa (§H.0).
 - **Objetivo:** que ninguém procure por horas uma função que não existe, e que a instituição saiba
   o que precisa resolver por fora do sistema.
 - **Pré-requisitos:** nenhum; é seção de referência, alcançável do menu e por remissão.
-- **Assuntos:** consulta pública por data; Resultado de Etapa não público; ausência de comunicação
-  ativa; ausência de corte e progressão automática entre Etapas; o ciclo terminar na divulgação;
-  múltiplos marcos sem orientação; capacidades sem tela — **(S-00)** entre elas, **acrescentar um
-  segundo Edital a um Processo já criado**, que existe no domínio e não tem tela; e — em caixa
-  própria e destacada — a espécie de decisão recursal que não deve ser usada.
+- **Assuntos (R5, revistos):** consulta pública do conteúdo vigente numa data passada (§H.3,
+  estreitada); Resultado de Etapa não público, salvo a relação do sorteio (§H.4); avisos por
+  e-mail só em quatro situações — código, confirmação da inscrição, mudança de credencial e
+  convocação por mensagem individual —, nunca de resultado, Retificação ou prazo (§H.5); efetivar a
+  matrícula, nomeação e posse, validade e prorrogação do Edital, recurso contra a convocação (§H.7);
+  a mesma Etapa com peso único em todos os marcos (§H.13); a prova de reprodutibilidade do ato de
+  classificação sem tela e o cancelamento de Evento só pela API (§H.14); prazos só em dias corridos;
+  sem carga retroativa de Edital com inscrições encerradas; importação de notas e prova objetiva,
+  heteroidentificação como fluxo e segunda instância recursal fora do sistema; cancelamento do
+  Edital sem Publicação. **Saíram** (fechadas): corte e progressão, o ciclo terminar na divulgação,
+  o segundo Edital sem tela, e a caixa da reavaliação.
 - **Telas:** nenhuma.
 - **Screenshots:** nenhum.
 - **Alertas:** nenhum. Esta seção **é** o alerta.
 - **Forma:** uma lista de fatos em linguagem neutra, cada um com uma frase de "o que fazer no
   lugar" quando houver alternativa institucional (avisar candidatos por outro canal, publicar o
   intermediário fora do sistema). Sem tom de desculpa e sem prometer data.
-- **NÃO entra:** defeitos de UX que o manual já mitiga (§H.8), distinções que são conteúdo e não
-  falta (§H.12), nada sobre o repositório ou sobre specs, e nenhum item que já tenha alerta inline
-  no capítulo da tarefa — nesse caso `G-03` apenas o repete em uma linha, para quem chegou por aqui.
+- **NÃO entra:** defeitos de UX que o manual já mitiga, distinções que são conteúdo e não falta
+  (§H.12), nada sobre o repositório ou sobre specs, e nenhum item que já tenha alerta inline no
+  capítulo da tarefa — nesse caso `G-03` apenas o repete em uma linha, para quem chegou por aqui.
 
 ---
 
@@ -786,29 +1279,42 @@ Legenda: ● capítulo obrigatório · ○ leitura recomendada · — não se ap
 > publicador e presidência lê a **união** das três colunas — e é para isso que os capítulos são
 > curtos e as trilhas da Parte 3 são páginas de roteamento (§A.3).
 
-| Capítulo | Gestor | Elabor. | Homol. | Public. | Presid. | Avaliad. | Julgad. | Candid. | Auditor |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| C-01 O que o sistema faz | ● | ● | ● | ● | ● | ● | ● | ○ | ● |
-| C-02 As duas portas | ● | ● | ● | ● | ● | ● | ● | ● | ● |
-| C-03 O ciclo em um mapa | ● | ● | ● | ● | ● | ○ | ○ | ○ | ● |
-| C-04 Quem faz o quê | ● | ● | ● | ● | ● | ○ | ● | — | ● |
-| C-05 Cinco ideias | ● | ● | ● | ● | ● | ○ | ● | ○ | ● |
-| C-06 Abrir o Processo | ● | ○ | — | — | ○ | — | — | — | ○ |
-| C-07 Elaborar I | ○ | ● | ● | ○ | — | — | — | — | ○ |
-| C-08 Elaborar II | ○ | ● | ● | ○ | ● | ○ | ○ | — | ○ |
-| C-09 Elaborar III | ○ | ● | ● | ○ | — | — | — | — | ○ |
-| C-10 Submeter/homologar/publicar | ● | ● | ● | ● | — | — | — | — | ● |
-| C-11 Inscrições por dentro | ● | — | — | — | ○ | — | — | — | ○ |
-| C-12 Inscrever-se | ○ | ○ | — | — | — | — | — | ● | — |
-| C-13 Comissão e alocação | ● | — | — | — | ● | ○ | — | — | ○ |
-| C-14 Distribuir | ○ | — | — | — | ● | ○ | — | — | ○ |
-| C-15 Avaliar | — | — | — | — | ● | ● | ○ | — | ○ |
-| C-16 Consolidar | ○ | — | — | — | ● | ○ | ○ | — | ● |
-| C-17 Classificar | ○ | ○ | — | ○ | ● | — | ● | — | ● |
-| C-18 Divulgar | ○ | — | — | ● | ● | — | ○ | ○ | ● |
-| C-19 Recursos | ○ | — | — | ○ | ○ | — | ● | ● | ● |
-| C-20 Refazer e republicar | ○ | — | — | ● | ● | ○ | ● | ○ | ● |
-| C-21 Encerrar | ● | — | — | ○ | — | — | — | — | ○ |
+**(R5)** Coluna nova para o Exportador; linhas novas para os capítulos com sufixo. A coluna do
+Gestor sobe em C-14 a C-17b e C-20 a C-20b porque ele alcança esses atos (§A.1) — e lê-los é
+também o que o permite **não** praticá-los quando for o julgador.
+
+| Capítulo | Gestor | Elabor. | Homol. | Public. | Presid. | Avaliad. | Julgad. | Export. | Candid. | Auditor |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| C-01 O que o sistema faz | ● | ● | ● | ● | ● | ● | ● | ● | ○ | ● |
+| C-02 As duas portas | ● | ● | ● | ● | ● | ● | ● | ● | ● | ● |
+| C-03 O ciclo em um mapa | ● | ● | ● | ● | ● | ○ | ○ | ○ | ○ | ● |
+| C-04 Quem faz o quê | ● | ● | ● | ● | ● | ○ | ● | ● | — | ● |
+| C-05 Seis ideias | ● | ● | ● | ● | ● | ○ | ● | ○ | ○ | ● |
+| C-06 Abrir o Processo | ● | ○ | — | — | ○ | — | — | — | — | ○ |
+| C-07 Elaborar I | ○ | ● | ● | ○ | — | — | — | — | — | ○ |
+| C-08 Elaborar II | ○ | ● | ● | ○ | ● | ○ | ○ | — | — | ○ |
+| C-09 Elaborar III | ○ | ● | ● | ○ | — | — | — | ○ | — | ○ |
+| C-10 Submeter/homologar/publicar | ● | ● | ● | ● | — | — | — | — | — | ● |
+| C-11 Inscrições por dentro | ● | — | — | — | ○ | — | — | — | — | ○ |
+| C-11a Acompanhar o certame | ● | — | — | ○ | ● | — | — | — | — | ○ |
+| C-12 Inscrever-se | ○ | ○ | — | — | — | — | — | — | ● | — |
+| C-13 Comissão e alocação | ● | — | — | — | ● | ○ | — | — | — | ○ |
+| C-14 Distribuir | ● | — | — | — | ● | ○ | — | — | — | ○ |
+| C-15 Avaliar | — | — | — | — | ● | ● | ○ | — | — | ○ |
+| C-16 Consolidar | ● | — | — | — | ● | ○ | ○ | — | — | ● |
+| C-17 Classificar | ● | ○ | — | ○ | ● | — | ● | — | — | ● |
+| C-17a Sorteio | ● | ○ | — | ● | ● | — | ● | — | ○ | ● |
+| C-17b Corte | ● | ○ | — | ○ | ● | — | ○ | — | — | ● |
+| C-18 Divulgar | ○ | — | — | ● | ● | — | ○ | — | ○ | ● |
+| C-19 Recursos | ○ | — | — | ○ | ● | — | ● | — | ● | ● |
+| C-20 Refazer e republicar | ● | — | — | ● | ● | ○ | ● | — | ○ | ● |
+| C-20a Ocupação | ● | — | — | — | ● | — | — | ○ | — | ○ |
+| C-20b Convocação | ● | — | — | — | ● | — | — | ○ | ● | ○ |
+| C-20c Requerimento de Matrícula | ○ | ○ | — | — | ○ | — | — | ● | ● | — |
+| C-20d Exportar para matrícula | ○ | — | — | — | — | — | — | ● | — | ○ |
+| C-21 Encerrar | ● | — | — | ○ | — | — | — | — | — | ○ |
+| C-21a Retificar | ● | ● | ● | ● | ○ | — | — | — | ○ | ○ |
+| C-22 Visão Geral | ● | — | — | — | — | — | — | — | — | — |
 
 ---
 
@@ -819,16 +1325,16 @@ aparece pela primeira vez · `SAIBA MAIS` = caixa lateral, não bloqueia a leitu
 
 | Conceito | Como dizer ao leitor | Quando |
 |---|---|---|
-| **Processo Seletivo** | O certame inteiro. Guarda um ou mais Editais e a comissão | INÍCIO |
+| **Processo Seletivo** | O certame inteiro. Guarda um ou mais Editais — **(R5)** acrescentáveis pela tela — e a comissão | INÍCIO |
 | **Edital** | O documento normativo que rege a seleção. Nasce em elaboração e termina publicado | INÍCIO |
 | **Publicação** | O ato que torna o Edital público e **imutável**. Não se reescreve | INÍCIO |
 | **Retificação** | A correção de um Edital já publicado, com aprovação própria e data de vigência | INÍCIO |
 | **Versão vigente / versão histórica** | O que vale hoje × o que valia numa data | INÍCIO |
-| **Segregação de funções** | Quem elabora não homologa; quem elaborou e homologou não publica | INÍCIO |
+| **Segregação de funções** | **(R5, corrigido)** Uma pessoa pode fazer dois dos três atos — elaborar, homologar, publicar —, mas não os três na mesma revisão; e quem tocou o resultado atacado não julga o recurso contra ele | INÍCIO |
 | **Perfil de Vaga** | Cada cargo/função ofertado, com seus requisitos e vagas | USO (C-07) |
-| **Modalidade** | Como se concorre dentro do perfil: ampla, PPI, PcD… | USO (C-07) |
+| **Modalidade** | Como se concorre dentro do perfil: PPI, PcD… **(R5)** A ampla concorrência **não** é uma Modalidade a declarar: é a linha geral do quadro | USO (C-07) |
 | **Cadastro de reserva** | Vagas além das imediatas | USO (C-07) |
-| **Cronograma / Evento** | As datas do certame; um Evento é o período de inscrições | USO (C-07) |
+| **Cronograma / Evento** | As datas do certame; um Evento é o período de inscrições — **(R5)** escolhido no passo Inscrição —, e Eventos também datam o sorteio e o vencimento da convocação | USO (C-07) |
 | **Etapa de Avaliação** | Cada fase de análise; tem forma, peso e Evento próprios | USO (C-08) |
 | **Forma pontuada** | A Etapa produz nota numa faixa, com nota mínima opcional | USO (C-08) |
 | **Forma decisória** | A Etapa produz um de dois rótulos escolhidos pelo Edital | USO (C-08) |
@@ -840,8 +1346,8 @@ aparece pela primeira vez · `SAIBA MAIS` = caixa lateral, não bloqueia a leitu
 | **Anexo do Edital** | Arquivo que o Edital fornece — modelos, formulários | USO (C-09) |
 | **Revisão** | O conteúdo congelado na submissão, que será homologado | USO (C-10) |
 | **Fundamento / motivo** | O texto que justifica um ato e fica registrado | USO (C-10) |
-| **Autoridade signatária** | Quem assina institucionalmente a publicação | USO (C-10) |
-| **Documento publicado** | O PDF oficial gerado na publicação | USO (C-10) |
+| **Autoridade signatária** | Quem responde pelo ato, registrada no documento — **(R5)** não é assinatura digital | USO (C-10) |
+| **Documento publicado** | O PDF gerado na publicação — **(R5)** é o Edital oficial, não uma cópia dele, e não se regenera | USO (C-10) |
 | **Rascunho de inscrição** | Começada e não enviada. Ninguém a recebeu | USO (C-11/C-12) |
 | **Protocolo** | O identificador legível da inscrição e do recurso | USO (C-12) |
 | **Comissão / presidente / membro** | Quem avalia, e quem organiza quem avalia | USO (C-13) |
@@ -861,12 +1367,29 @@ aparece pela primeira vez · `SAIBA MAIS` = caixa lateral, não bloqueia a leitu
 | **Publicação preliminar / definitiva** | Sujeita a recurso × final | USO (C-18) |
 | **Sucessão de publicação** | A nova publicação substitui a anterior, que continua legível | USO (C-18) |
 | **Recurso / admissibilidade / mérito** | Contestar; ser recebido; ser decidido | USO (C-19) |
-| **Espécies de decisão** | Indeferir · corrigir · determinar reavaliação · providência | USO (C-19) |
+| **Espécies de decisão** | Indeferir · corrigir · determinar reavaliação · providência — **(R5)** as quatro ensinadas | USO (C-19) |
 | **Não agravar quem recorreu** | O recurso nunca piora a situação de quem o interpôs | USO (C-19) |
 | **Resultado sucessor** | O Resultado corrigido, que nasce ao lado do original | USO (C-20) |
 | **Trilha de auditoria** | O registro de quem fez o quê, quando e por quê | SAIBA MAIS (C-05), capítulo em G |
 | **Acesso sem senha** | Entrar por código enviado ao e-mail | USO (C-12) |
 | **Vincular participação anterior** | Reunir inscrições feitas com outro e-mail | SAIBA MAIS (C-12) |
+| **(R5) Recorte / lista de concorrência** | A lista em que a pessoa concorre dentro do Perfil: a geral (ampla) ou uma reservada. Cada uma tem sua ordem, corte, apuração e convocação | USO (C-07) |
+| **(R5) Quadro de vagas** | Quantas vagas cada lista tem, conferido contra as vagas imediatas | USO (C-07) |
+| **(R5) Duplicar / aplicar a todos / partir de um anterior** | Copiar um valor, sem vínculo com a origem | USO (C-06, C-07) |
+| **(R5) Pendência que impede** | O que a Revisão recusa porque o certame não teria como ser conduzido | USO (C-09) |
+| **(R5) Lista exigida** | Os documentos pedidos àquela inscrição, que congelam no envio | USO (C-11, C-12) |
+| **(R5) Origem da ordem** | Calculada pela pontuação ou produzida por sorteio | USO (C-08) |
+| **(R5) Sorteio: relação, ocorrência, semente, verificação** | A ordem vem de uma fonte pública sobre uma lista congelada, e qualquer um a confere | USO (C-17a) |
+| **(R5) Corte / faixa / geração** | Quem segue adiante; não elimina nem ocupa vaga; corrigir é nova geração | USO (C-17b) |
+| **(R5) Apuração de ocupação** | Publicadas, efetivas, ocupadas, a ocupar | USO (C-20a) |
+| **(R5) Convocação: espécie, vencimento, desfecho** | Por que a pessoa foi chamada, até quando, e o que ela respondeu | USO (C-20b) |
+| **(R5) Atestado de fato externo** | O registro de algo que aconteceu fora do sistema | SAIBA MAIS (C-20b) |
+| **(R5) Requerimento de Matrícula** | Dados de matrícula pedidos uma vez; o enviado não muda | USO (C-09, C-20c) |
+| **(R5) Instrução do recurso** | Juntar à peça o que o julgador precisa ler; não dá acesso permanente a ninguém | USO (C-19) |
+| **(R5) Natureza não regride** | Um resultado definitivo não é sucedido por um preliminar | SAIBA MAIS (C-18) |
+| **(R5) Ativação derivada** | Publicar o primeiro Edital ativa o Processo | SAIBA MAIS (C-06) |
+| **(R5) Pulso, Atenção, Visão Geral** | Leituras da condução; não praticam nada | SAIBA MAIS (C-11a, C-22) |
+| **(R5) Recusa explicada** | A tela diz qual permissão serviria e a quem pedir | INÍCIO (C-04) |
 
 **Conceitos que NÃO entram no manual** (existem no sistema e não são do usuário): identificadores
 técnicos e UUIDs, versão de esquema do conteúdo, resumo criptográfico, controle otimista de
@@ -1025,6 +1548,11 @@ duas vezes no mesmo estado.
 > **não** produz o certame do §F.1 — nem os perfis, nem as Etapas, nem o elenco, cujos nomes ainda
 > colidem com os dos candidatos. **Leia as duas: esta pelo conteúdo, aquela pela forma e pelas
 > mudanças.**
+>
+> **(R5)** E há uma terceira camada: o mesmo `01-…` ganhou a seção **§R5**, com a situação de cada
+> captura contra o código de 06/10, a volta da `SS-010` e as telas novas sem captura prevista. O
+> certame do §F.1 continua o mesmo; ele só precisa **ir mais longe** — corte, ocupação,
+> convocação, Requerimento e exportação — e ganhar um segundo Perfil com marco de sorteio.
 
 ---
 
@@ -1048,12 +1576,14 @@ mesmo tipo, nunca no corpo do texto e nunca em títulos.
 | 🕒 | **Quando fazer** | Pré-condição temporal ou de estado | quando houver |
 | 💡 | **Dica** | Atalho legítimo, jeito mais rápido | com parcimônia |
 | ⚠️ | **Atenção** | Consequência indesejada, erro comum | forte, rara |
-| ⛔ | **Sem retorno** | Os dez atos irreversíveis do §B.4 | exatamente onde eles estão |
+| ⛔ | **Sem retorno** | Os atos irreversíveis do §B.4 — **(R5)** eram dez, hoje são mais de vinte | exatamente onde eles estão |
 | 🔎 | **O que muda depois** | O efeito invisível de um ato | 1 por ato importante |
 | ✅ | **Você terminou quando…** | Fecha capítulo e tarefa | 1 no fim de cada procedimento |
 
-`⛔` é distinta de `⚠️` de propósito: hoje o produto trata dez atos como irreversíveis, e misturá-los
-com avisos comuns apagaria a única distinção que o leitor precisa memorizar.
+`⛔` é distinta de `⚠️` de propósito: o produto trata como irreversíveis os atos do §B.4, e misturá-los
+com avisos comuns apagaria a única distinção que o leitor precisa memorizar. **(R5)** Com mais de vinte
+atos, a raridade passa a ser medida por capítulo: num capítulo de operação, `⛔` aparece no ato
+que o capítulo ensina, e não em cada remissão a outro.
 
 ### G.3 Componentes
 
@@ -1061,7 +1591,7 @@ com avisos comuns apagaria a única distinção que o leitor precisa memorizar.
   trilhas da Parte 3.
 - **Cartão de tela** — miniatura + nome da tela + endereço + "chega-se aqui por…". Usado no mapa de
   telas (`G-02`) e no topo de cada procedimento.
-- **Linha do tempo horizontal** — as 16 fases, com a fase atual em destaque. Repetida, reduzida, no
+- **Linha do tempo horizontal** — as **19 (R5)** fases, com a fase atual em destaque. Repetida, reduzida, no
   topo de cada capítulo da Parte 2 (o quadro "onde estou").
 - **Linha do tempo vertical** — dentro de um capítulo, para sequências de ato (submeter → homologar
   → publicar), com o ator ao lado de cada nó.
@@ -1070,8 +1600,9 @@ com avisos comuns apagaria a única distinção que o leitor precisa memorizar.
   captura anotada, e o resultado esperado.
 - **(S-00) Bloco "Limitação conhecida desta versão"** — moldura própria, barra vermelha à
   esquerda, **sem marcador emoji**, com o veredicto em destaque na primeira frase. Existe para a
-  capacidade que o sistema oferece e que não deve ser usada (`§H.2`, em C-19). **Não é um oitavo
-  callout**: `⛔` continua reservado aos dez atos irreversíveis do §B.4, e este bloco é da família de
+  capacidade que o sistema oferece e que não deve ser usada. **(R5)** O único caso que o motivava
+  (`§H.2`, em C-19) caiu; o componente fica definido e sem uso até aparecer outro. **Não é um oitavo
+  callout**: `⛔` continua reservado aos atos irreversíveis do §B.4, e este bloco é da família de
   "por trás disto". Forma fixada e demonstrada em `doc/manual/piloto/index.html`.
 - **Bloco "por trás disto"** — recuado, cinza, tipograficamente menor. Só quando explicar o
   mecanismo evita erro: por que a prévia envelhece, por que a conclusão trava, por que a definitiva
@@ -1079,20 +1610,22 @@ com avisos comuns apagaria a única distinção que o leitor precisa memorizar.
 
 ### G.4 Ilustrações vetoriais (não capturas)
 
-Quatro, e são as que carregam o manual: o mapa das 16 fases (C-03); o quadro de papéis e o que cada
+Quatro, e são as que carregam o manual: o mapa das **19 (R5)** fases (C-03); o quadro de papéis e o que cada
 um pode (C-04); o diagrama "elaborar × retificar" (C-05); e o diagrama do efeito das espécies de
-decisão recursal (C-19) — três caminhos desenhados e o quarto grafado como indisponível, para que
-a ilustração não ofereça o que o texto proíbe. Devem ser SVG, legíveis em claro e escuro, e nunca conter texto que só
+decisão recursal (C-19) — **(R5)** os quatro caminhos desenhados, a reavaliação inclusive, que tem
+cumprimento. **(R5) Candidata a quinta:** a cadeia ordem → corte → apuração → convocação de um
+recorte, que é a parte do certame que o leitor menos consegue reconstituir sozinho. Devem ser SVG, legíveis em claro e escuro, e nunca conter texto que só
 existe na imagem.
 
 ### G.5 Navegação
 
-- **(S-00) O quadro "onde estou"** é uma **faixa de dezesseis traços**, um por fase, com o traço
+- **(S-00) O quadro "onde estou"** é uma **faixa de dezesseis traços** — **(R5) dezenove**: o
+  piloto precisa ser regerado a partir do `data-fase`, que é para isso que ele existe —, um por fase, com o traço
   atual mais alto e na cor de acento, e acima dela uma linha em texto:
-  `Fase 11 de 16 · Divulgar · o trabalho é do publicador`. Entra logo abaixo do resumo e antes do
+  `Fase 11 de 19 · Divulgar · o trabalho é do publicador`. Entra logo abaixo do resumo e antes do
   primeiro callout, **só nos capítulos da Parte 2** — C-03 é a linha do tempo inteira e não a
   repete. É gerado de um único atributo (`data-fase`), o que garante o mesmo nome de fase em vinte
-  capítulos. Dezesseis rótulos legíveis não cabem em 375 px sem rolagem horizontal, e este é o
+  e cinco capítulos. Dezenove rótulos legíveis não cabem em 375 px sem rolagem horizontal, e este é o
   último lugar do manual onde se pode pedir isso ao leitor.
 - **Menu lateral** persistente com as seis Partes; a Parte aberta expande; capítulo atual marcado.
 - **Breadcrumb**: `Manual › Parte 2 · As fases › C-16 Consolidar o resultado de cada Etapa`.
@@ -1178,16 +1711,16 @@ Três destinos, e cada lacuna tem exatamente um:
 
 | Destino | O que vai | Lacunas |
 |---|---|---|
-| **Alerta inline + `G-03`** | Afeta a ação em curso: o leitor faria algo errado, ou ficaria esperando algo que não vem | H.1, H.2, H.4, H.5, H.9, H.10, H.11 |
-| **Só `G-03`** | Fato relevante do produto que não muda nenhuma tarefa | H.3, H.6, H.7, H.13, H.14, **H.17 (S-00)** |
-| **Nem no manual** | Achado interno; o manual o **resolve** escrevendo bem, ou ele é sobre o repositório | H.8, H.12, H.15 |
+| **Alerta inline + `G-03`** | Afeta a ação em curso: o leitor faria algo errado, ou ficaria esperando algo que não vem | H.1, H.2 (orientação), H.4, H.5, H.10, **H.18 (R5)** |
+| **Só `G-03`** | Fato relevante do produto que não muda nenhuma tarefa | H.3 e H.14 (estreitadas), H.7 (o que resta), H.13 (peso único), **H.19 (R5)** |
+| **Nem no manual** | Achado interno; o manual o **resolve** escrevendo bem, ou ele é sobre o repositório | H.12, H.15 |
+| **(R5) Fechadas — saem do roteamento** | O produto resolveu; o assunto vira conteúdo do capítulo | H.6, H.8, H.9, H.11, H.17 |
 
-Detalhando as três exceções da última linha, porque são as que costumam vazar para o texto por
+Detalhando as exceções da terceira linha (**(R5)** H.8 já não está entre elas), porque são as que costumam vazar para o texto por
 descuido:
 
-- **H.8** (o caminho da presidência não é anunciado) — o manual **é** a mitigação. C-14 abre
-  nomeando o caminho e pronto; escrever "o sistema não te leva até aqui" só ensinaria desconfiança.
-  Fica no backlog de produto (§H.16), não no manual.
+- ~~**H.8**~~ — **(R5)** fechada, e já estava quando este inventário a deu como aberta (§H.8). A
+  regra que ela ilustrava continua valendo: o manual não escreve "o sistema não te leva até aqui".
 - **H.12** (o recurso escolhe o objeto) — não é lacuna, é conteúdo. Vira exemplo em C-19.
 - **H.15** (documentação defasada) — é instrução para quem produz o manual, nunca para quem o lê.
 
@@ -1203,6 +1736,11 @@ produção** — o ambiente de produção recusa iniciar com ele ligado — e a 
 institucional é incremento futuro. *No manual:* C-02 diz que o acesso é institucional e remete à
 área de TI; nenhuma captura da tela de seleção de identidade entra no manual do usuário (pode
 entrar em `G-05`).
+
+> *(R5) Continua aberta, e mudou de peso.* A preparação para produção de 30/09
+> (`doc/implantacao-em-producao-ubuntu.md`, §1) a registra como bloqueador: sem adaptador
+> institucional, `/gestao/` responde 503 em produção. O manual institucional não tem como ser usado
+> em produção antes dele — o que não impede de escrevê-lo.
 
 **H.2 · A decisão "deferir determinando reavaliação" não tem caminho de cumprimento.**
 Achado E2E18-001, **aberto**, P1. A decisão é registrada, a Etapa passa a mostrar a pendência, e
@@ -1222,6 +1760,14 @@ inventar procedimento e não sugerir contorno: **não há** contorno. Ver també
 > é ela que não é o caminho; a recusa agora diz qual é. O registro, com o que a tela ainda não
 > orienta, está em `doc/validacao-de-unidades-pre-piloto-2026-09-28.md`. Quem for escrever C-19
 > precisa refazer esta decisão editorial a partir da tela atual.
+>
+> *(R5) Decisão editorial refeita.* A espécie volta à tabela de C-19 e o cumprimento vira a receita
+> `R-13`: distribuir a **outro** avaliador (a vaga extra), concluir na Mesa, e consolidar marcando a
+> linha e usando **"Consolidar as selecionadas"** — "Consolidar as N prontas" não a alcança. O que
+> resta são **lacunas de orientação**, que vão como alerta inline: a peça do recurso, depois da
+> decisão, diz "Nenhum — este recurso não produziu resultado sucessor" sem indicar o próximo passo;
+> a faixa de prontidão não filtra as reavaliações; "Reabrir" continua oferecido em Conclusões
+> preservadas, e é recusado; a Mesa não diz à avaliadora que é uma reavaliação.
 
 **H.3 · A consulta pública histórica não tem tela.**
 O sistema sabe responder "qual era o conteúdo vigente em tal data" e "quais Retificações houve",
@@ -1229,14 +1775,30 @@ mas **só pela API**. A página pública da seleção mostra apenas o vigente e 
 *No manual:* C-05 ensina o conceito de versão vigente × histórica porque ele governa o
 comportamento; e `G-03` registra que a consulta por data não tem interface.
 
+> *(R5) Fechada em parte.* A página pública lista o Edital de abertura e cada Retificação, com PDF,
+> "vigente desde" e "O que mudou", e avisa quando o Edital foi retificado (`024`); as publicações
+> de resultado sucedidas também ficam listadas (`047`). O que segue sem tela é consultar o conteúdo
+> vigente numa data passada qualquer — só pela API.
+
 **H.4 · O Resultado de Etapa não é público.**
 O candidato vê o próprio ("Eliminada na Análise de requisitos") dentro da sua inscrição; o público
 não vê Resultado de Etapa em lugar nenhum. Só o ato de classificação é divulgado. *No manual:*
 dito explicitamente em C-16 e C-18.
 
+> *(R5) Continua aberta, com duas precisões.* O candidato só vê o próprio Resultado de Etapa depois
+> que existe publicação vigente de um marco que conta aquela Etapa — não logo após a consolidação.
+> E há uma exceção pública: num marco de sorteio, a relação de habilitados é publicada, nominal,
+> antes do sorteio.
+
 **H.5 · Não há comunicação ativa.**
 Ninguém é notificado de nada. E-mail é usado só para o código de acesso do candidato. Publicação é
 passiva: quem não abrir a página não fica sabendo. *No manual:* alerta em C-18 e entrada em `G-03`.
+
+> *(R5) Mudou — e já era impreciso em 08/09.* O sistema envia e-mail em quatro situações: o código
+> de acesso; a confirmação do envio da inscrição (existia desde 01/09); o aviso de mudança de
+> credencial; e a **convocação**, quando o Perfil declara "por mensagem individual". Resultado,
+> Retificação e prazos continuam sem aviso. O alerta de C-18 fica, restrito a resultado; C-20b
+> ganha o seu.
 
 **H.6 · Não há corte nem progressão automática entre Etapas.**
 A feature existiria na 014, que não foi construída. Quem passa para a Etapa seguinte é quem tem
@@ -1245,6 +1807,8 @@ Resultado Habilitada; não há "aprovar os N primeiros". *No manual:* `G-03`.
 > *Nota de 28/09/2026 — o código andou depois desta seção.* A `014` foi construída: o corte existe
 > e tem tela (`interface:corte`), e a progressão entre Etapas passa por ele. Esta limitação não vale
 > mais, e quem for escrever C-14 ou `G-03` precisa partir da tela atual.
+>
+> *(R5) Fechada.* Sai de `G-03`; o assunto é C-17b.
 
 **H.7 · O ciclo termina na publicação definitiva.**
 Não existem homologação do resultado final, nomeação, convocação ou posse. E o sistema **não
@@ -1254,6 +1818,11 @@ encerramento faz e declara que o momento é decisão institucional, não do sist
 > *Nota de 28/09/2026 — o código andou depois desta seção.* A convocação, a chamada e a suplência
 > existem desde a `019` (`interface:convocacao`), e o Requerimento de Matrícula e a exportação para o
 > Registro Acadêmico desde a `029` e a `031`. O ciclo não termina mais na publicação definitiva.
+>
+> *(R5) Fechada quanto à convocação; o resto fica em `G-03`:* efetivar a matrícula no sistema
+> acadêmico (o arquivo é entregue, não importado), nomeação e posse, validade e prorrogação do
+> Edital, recurso contra a convocação. E o momento de encerrar continua decisão institucional — o
+> que mudou é que encerrar o Processo agora **exige** os Editais encerrados ou cancelados.
 
 **H.8 · O caminho da presidência até distribuir e consolidar não é anunciado.**
 Achado E2E15-016, aberto: "Minhas Etapas" do presidente diz que ele não tem Etapas atribuídas, e o
@@ -1264,33 +1833,57 @@ quem lê. Fica no backlog de produto (§H.16).
 > *Nota de 28/09/2026 — corrigido no produto.* "Minhas Etapas" de quem preside e não avalia agora
 > diz que presidir não atribui trabalho de avaliação e aponta **Gerir comissão** e **Alocação por
 > Etapa** (`interface/templates/interface/minhas_etapas.html`). O E2E15-016 não está mais aberto.
+>
+> *(R5) Precisão:* a correção é de 01/09 (`9ed2bf2d`), **anterior** à base desta descoberta. O
+> inventário a deu como aberta lendo o relatório E2E sem conferir a tela — que é exatamente o
+> risco que a §H.15 descreve.
 
 **H.9 · O rascunho não avisa que o período encerrou.**
 Achado E2E15-007, aberto: com as inscrições encerradas, a revisão do rascunho ainda convida a
 prosseguir. *No manual:* alerta em C-12 ("confira o prazo na página da seleção; o rascunho não te
 avisa").
 
+> *(R5) Fechada em 28/09 (PR #215, RC-49).* O rascunho fechado diz "O período de inscrições terminou
+> em… Esta inscrição não foi enviada e não pode mais ser", some o botão de revisar, e "Minhas
+> inscrições" oferece "Consultar inscrição". O alerta de C-12 sai; a tela vira captura.
+
 **H.10 · Um candidato deslogado recebe 404 na própria inscrição.**
 Achado E2E15-013, aberto: um link guardado no celular vira beco em vez de convite a entrar. *No
 manual:* dica em C-12 — entre primeiro, depois abra o link.
+
+> *(R5) Continua aberta*, e o link "Entrar" do cabeçalho não guarda o destino: depois de entrar, a
+> pessoa cai em "Minhas inscrições".
 
 **H.11 · A Mesa aceita concluir avaliação de inscrição que já tem Resultado.**
 Achado E2E15-003, aberto, **depende de decisão de governança**. Produz um par contraditório nos
 registros. *No manual:* não documentar como comportamento; alerta em C-16 para a presidência
 registrar ocorrência **antes** de as avaliações pendentes serem concluídas.
 
+> *(R5) Fechada em 28/09 (PR #220, RC-62), por decisão do usuário:* a Mesa recusa concluir avaliação
+> de inscrição que já tem Resultado, salvo reavaliação determinada, e avisa antes do clique. O
+> alerta de C-16 sai.
+
 **H.12 · Recursos escolhem o objeto, e o vocabulário do objeto é sutil.**
 Um recurso pode atacar a publicação **ou** um Resultado de Etapa, e o efeito de cada escolha é
 diferente. Não é defeito; é uma distinção que o manual precisa ensinar com exemplo, em C-19.
+**(R5)** E C-19 diz também o que não é atacável: a convocação e a relação de habilitados.
 
 **H.13 · Múltiplos marcos por perfil são aceitos e não têm jornada.**
 A composição aceita mais de um marco classificatório por perfil; nada no produto sugere quando
 usar. *No manual:* C-08 documenta um marco; `G-03` registra a capacidade sem orientação.
 
+> *(R5) Mudou: virou regra, e sobrou outra lacuna.* A `046` exige ao menos um marco que corte por
+> Perfil, e o par preliminar sem corte + final com corte é jornada prevista — C-08 o ensina. O que
+> vai para `G-03` é outra coisa: a mesma Etapa tem um peso só em todos os marcos que a enumeram.
+
 **H.14 · Capacidades sem tela.**
 A prova de reprodutibilidade do ato de classificação e o teto de inscrições por candidato existem
 no domínio e não têm interface (o teto só é configurável fora do assistente). *No manual:*
 `G-03`, sem procedimento.
+
+> *(R5) Metade fechada.* O teto de inscrições ganhou tela no passo Inscrição (e na Retificação e no
+> portal), e a reprodução do **corte** tem tela no histórico do corte. Seguem sem tela a prova de
+> reprodutibilidade do ato de **classificação** e o cancelamento de um Evento do Cronograma.
 
 **H.17 · Acrescentar um Edital a um Processo já criado não tem tela. (S-00)**
 Encontrado ao montar o certame do piloto. `/gestao/processos/criar` cria o Processo **junto com** o
@@ -1300,7 +1893,24 @@ alcança. *No manual:* **só `G-03`**, em uma linha, junto do `H.14` — o fato 
 deve fazer agora, porque a tela o conduz corretamente pelo caminho que existe. C-06 perde a promessa
 de ensinar "um Processo com vários Editais", e a captura `SS-010` sai do inventário.
 
+> *(R5) Fechada em 16/09 (`6f0f9887`).* "Novo Edital neste Processo", na página do Processo, para
+> quem tem o papel de Gestor. C-06 volta a ensinar um Processo com vários Editais, e a `SS-010`
+> volta ao inventário.
+
 **H.16 · Backlog de produto — o que não é problema de manual.**
+
+> *(R5) O quadro abaixo está obsoleto nas quatro linhas:* H.2 não se confirmou, H.11 e H.17 foram
+> fechadas, e H.8 já estava fechada. O backlog de hoje, para quem decide produto — **registro, não
+> escopo de nenhuma feature**:
+>
+> | | Lacuna | Natureza |
+> |---|---|---|
+> | 1 | **H.1** — sem adaptador institucional de identidade | Bloqueador de produção |
+> | 2 | **H.18** — o portal não leva à convocação nem ao Requerimento pedido na convocação | Defeito de navegação, com efeito no prazo do candidato |
+> | 3 | **H.2** — lacunas de orientação da reavaliação | Polish de UX; o manual mitiga |
+> | 4 | **H.10** — link guardado vira "não encontrado" para quem não entrou | Polish de UX; o manual mitiga |
+>
+> O texto original fica abaixo, como registro do que se decidia em 08/09.
 Três das lacunas acima são candidatas a correção no produto, e a distinção entre elas importa:
 
 | | Lacuna | Natureza | Recomendação |
@@ -1324,6 +1934,32 @@ verifiquei dois deles (a lista de anexos ganhou cartão com posição; a Retific
 português) que os relatórios ainda descrevem como abertos. **Consequência operacional:** toda
 sessão de produção do manual deve **conferir a tela ao vivo** antes de escrever sobre um achado,
 e nunca escrever a partir do relatório sozinho.
+
+> *(R5)* O README está em dia desde 28/09 e um teste o mantém assim
+> (`tests/test_readme_acompanha_o_codigo.py`), mas a tabela de módulos repete 14 linhas — registro
+> para quem cuida do README. O estado reconciliado dos achados E2E está no anexo 1 da auditoria de
+> 26/09. A consequência operacional continua de pé, e esta revisão a confirma: H.8 estava fechada
+> quando este inventário a deu como aberta.
+
+**H.18 · O portal não leva à convocação nem ao Requerimento pedido na convocação. (R5)**
+Nenhum template do portal tem link para a tela "Convocação" do candidato (`portal:convocacao`); o
+e-mail de convocação aponta para "Minhas inscrições", e nem ela nem "Acompanhar" mostram a
+chamada. Quando o Edital pede o Requerimento de Matrícula "quando o candidato for convocado",
+nenhuma tela do portal leva a ele — o cartão só aparece quando o pedido é na inscrição. Na prática,
+o candidato só chega pelo endereço digitado. Conferido por busca nos templates em 06/10. *No
+manual:* alerta em C-20b e C-20c, e a comunicação de convocação precisa dizer o caminho até a
+correção. É o item 2 do backlog da §H.16, e decisão do usuário.
+
+**H.19 · Limitações declaradas pelas features 019–058 que o leitor precisa encontrar. (R5)**
+Todas em `G-03`, uma linha cada, com a fonte: prazos só em dias corridos (`019`); sem carga
+retroativa de Edital com inscrições encerradas (decisão de 25/09); cancelamento do Edital não gera
+Publicação (RC-120); um documento público por marco **e por lista** de concorrência (DP-15); o
+sistema registra onde a convocação foi publicada, não a publica (`047`); importação de notas,
+heteroidentificação como fluxo, cascata entre recortes e segunda instância recursal estão fora
+(`019`, `021`, `047`); a comissão alcança todos os Perfis e polos, sem filtro por Perfil na
+distribuição (DP-11, aberta). O prazo de recurso escrito no Cronograma é texto livre e não se liga
+à janela do marco — as duas datas podem discordar, e a da tela é a verdadeira (RC-76): esta vai
+**também** como alerta inline em C-07 e C-08.
 
 ---
 
@@ -1414,13 +2050,35 @@ adquirido de entrar no manual.
 enquadramento, o inventário do §F é revisado antes de qualquer sessão de captura — e é para isso
 que ele existe.
 
+### I.0-bis · A reconciliação (S-00R) **(R5)**
+
+**Esta Revisão 5 é a primeira metade de uma sessão que o plano não previa**, e o gate da S-00 não
+basta mais para autorizar a coleta: o padrão editorial que o piloto fixou continua valendo
+(anatomia, callouts, densidade, anotação), mas o **inventário** e o **espécime de C-08** foram
+aprovados sobre telas que mudaram. Antes de S-01, a S-00R entrega:
+
+1. **feito nesta revisão:** §A, §B, §C, §C.bis, §D, §E, §G e §H revistos contra o código de 06/10;
+   a situação de cada captura em `01-…`, §R5, com as telas novas sem captura;
+2. **a fazer:** o espécime de C-08 recapturado na tela da `053` (a Classificação mostra hoje um
+   Perfil por vez, e o bloco do recurso é recolhível);
+3. **a fazer:** o quadro "onde estou" do piloto regerado para 19 fases;
+4. **a fazer:** o `LEIA-ME.md` das ferramentas corrigido — o exemplo de recorte usa um seletor que
+   nenhuma tela do portal tem, e a porta citada não é a de nenhuma entrada com SMTP;
+5. **a fazer:** o inventário de `01-…`, §R5, transformado em tabela de coleta com estado necessário
+   para cada captura nova, como a §F faz para as antigas.
+
+**As quatro páginas do piloto não são reescritas na S-00R.** Elas cumpriram a função de fixar o
+padrão; o conteúdo de C-03, C-12 e C-18 é revisto nas sessões que os escrevem (S-05, S-09, S-12),
+e o que está vencido em cada uma está listado em `01-…`, §R5.
+
 ### I.1 · As fases da produção
 
 **Fase 0 — Piloto editorial.** Acima. Termina com um padrão aprovado e, se for o caso, com o §F
 corrigido.
 
 **Fase 1 — Coleta.** O certame do §F.1 percorrido **inteiro** pelo navegador, na ordem da jornada,
-capturando as 88 imagens já sob o padrão aprovado. Banco limpo, seletor de identidade ligado,
+capturando as ~~88~~ **89 (S-00)** imagens já sob o padrão aprovado — **(R5)** mais as telas novas
+de `01-…`, §R5, e com o certame indo até a exportação. Banco limpo, seletor de identidade ligado,
 entrada própria no `launch.json`, PDFs fictícios dos candidatos.
 
 **Fase 2 — Esqueleto definitivo e sistema visual.** O provisório do piloto vira definitivo: as
@@ -1446,9 +2104,11 @@ mais no máximo dois arquivos do repositório.
 | # | Sessão | Entrega | Precisa ler |
 |---|---|---|---|
 | **S-00** | **Piloto editorial** | **Layout provisório, C-03, C-12, C-18, o bloco-espécime de C-08, 8–12 capturas, padrão de anotação e régua de densidade** | **§C.bis, §G, §F.1** |
-| S-01 | Capturar as fases 1–5 | SS-001 a SS-042 | §F, padrão aprovado em S-00 |
-| S-02 | Capturar as fases 6–11 | SS-043 a SS-067 | idem |
-| S-03 | Capturar as fases 12–16 e as exceções | SS-068 a SS-087 | idem |
+| **S-00R** | **Reconciliação (R5)** | **§I.0-bis — metade feita nesta revisão** | **§A–§H, `01-…` §R5** |
+| S-01 | Capturar as fases 1–5 | SS-001 a SS-042, **(R5)** com a SS-010 de volta e as do reaproveitamento | §F, padrão aprovado em S-00, `01-…` §R5 |
+| S-02 | Capturar as fases 6–11 | SS-043 a SS-067, **(R5)** mais sorteio e corte | idem |
+| S-03 | Capturar as fases 12–15 e as exceções | SS-068 a ~~SS-087~~ **SS-088** *(a linha voltou a 087 num merge de 12/09; corrigida)* | idem |
+| **S-03b** | **(R5) Capturar as fases 16–19** | Ocupação, convocação (gestão e portal), Requerimento, exportação, encerramento com Edital pendente, Supervisão e Visão Geral | idem — sequencial depois da S-03 |
 | S-04 | Esqueleto definitivo e sistema visual | Menu, busca, glossário com âncoras | §G, saída de S-00 |
 | S-05 | As quatro ilustrações vetoriais | 4 SVG | §B, §G.4 |
 | S-06 | C-06, C-07 | Abrir o Processo + Elaborar I | §C.bis, capturas de S-01 |
@@ -1457,17 +2117,20 @@ mais no máximo dois arquivos do repositório.
 | S-09 | C-11 + revisão de C-12 | Inscrições por dentro; C-12 revisto | §C.bis, saída de S-00 |
 | S-10 | C-13, C-14, C-15 | Comissão, distribuição e avaliação | §C.bis |
 | S-11 | C-16, C-17 | Consolidação e classificação | §C.bis |
-| S-12 | Revisão de C-18 + C-19 | C-18 revisto; recursos | §C.bis, §H.2 |
+| S-12 | Revisão de C-18 + C-19 | C-18 revisto; recursos — **(R5)** com a reavaliação como espécie normal | §C.bis, §H.2 e `doc/validacao-de-unidades-pre-piloto-2026-09-28.md` |
 | S-13 | C-20 | Refazer e republicar | §C.bis |
-| S-14 | C-21 + Parte 1 (C-01 a C-05, com C-03 revisto) | Encerramento e visão geral | tudo escrito até aqui |
-| S-15 | Parte 3 (8 trilhas) | Páginas-roteiro | §D |
-| S-16 | Parte 4 (10 tarefas) | Receitas | §C, capítulos prontos |
-| S-17 | Parte 5 (10 situações) | Tabelas de decisão | §B.4, §H |
+| **S-13a** | **(R5) C-17a, C-17b, C-20a** | Sorteio, corte, ocupação | §C.bis, capturas de S-02/S-03b |
+| **S-13b** | **(R5) C-20b, C-20c, C-20d** | Convocação, Requerimento, exportação | §C.bis, §H.18 |
+| **S-13c** | **(R5) C-11a, C-21a, C-22** | Acompanhar, Retificar, Visão Geral | §C.bis |
+| S-14 | C-21 + Parte 1 (C-01 a C-05, com C-03 revisto) | Encerramento e visão geral — **(R5)** C-21 com o encerramento que exige Editais finais | tudo escrito até aqui |
+| S-15 | Parte 3 (~~8~~ **9** trilhas) | Páginas-roteiro | §D |
+| S-16 | Parte 4 (~~10~~ **14** tarefas) | Receitas | §C, capítulos prontos |
+| S-17 | Parte 5 (~~10~~ **13** situações) | Tabelas de decisão | §B.4, §H |
 | S-18 | Parte 6, com `G-03` | Glossário, mapa de telas, limites, FAQ | §E, §H.0, §H |
 | S-19 | Revisão final de consistência | Rótulos conferidos contra a interface ao vivo | — |
 
-**Vinte sessões.** S-01 a S-03 exigem o sistema no ar e não podem ser paralelizadas entre si — o
-certame é sequencial. Da S-06 em diante, cada sessão depende apenas do acervo de capturas, do
+**Vinte sessões — (R5) vinte e cinco**, com a S-00R e as quatro novas. S-01 a S-03b exigem o
+sistema no ar e não podem ser paralelizadas entre si — o certame é sequencial. Da S-06 em diante, cada sessão depende apenas do acervo de capturas, do
 padrão aprovado em S-00 e deste documento; várias podem ser retomadas fora de ordem sem perda.
 
 ### I.3 · Duas decisões editoriais a preservar
@@ -1481,8 +2144,8 @@ os demais participam. O fio narrativo é o que torna a segregação de funções
 explicá-la em abstrato: o leitor **vê** que são pessoas diferentes. Nenhuma sessão deve trocar
 nomes por "o elaborador", "o usuário A".
 
-**O manual é grande porque a jornada é grande.** São 21 capítulos principais porque o certame tem,
-de fato, 16 fases e nove públicos. A tentação de comprimir isso num material de quinze páginas
+**O manual é grande porque a jornada é grande.** São ~~21~~ **31 (R5)** capítulos principais porque o
+certame tem, de fato, ~~16~~ **19** fases e ~~nove~~ **dez** públicos. A tentação de comprimir isso num material de quinze páginas
 produziria um manual que não serve para operar. A resposta correta ao tamanho já está na
 arquitetura — conteúdo modular, capítulos curtos, entrada por papel e por tarefa —, e não em
 eliminar complexidade que existe no produto. **Não reduzir escopo por parecer grande.**

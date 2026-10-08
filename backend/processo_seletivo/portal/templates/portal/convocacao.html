@@ -53,6 +53,8 @@ decide a vaga e o que a pessoa fizer dentro do prazo.
   <p>Siga as instruções do Edital para esta convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
   {% endif %}
 </section>
+{% comment %}O caminho ao requerimento, quando a politica da 029 diz que ele cabe (059, D-007).{% endcomment %}
+{% include "portal/_chamado_do_requerimento.html" %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 {% endif %}
 {% endblock %}

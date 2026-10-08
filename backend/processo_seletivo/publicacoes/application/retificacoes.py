@@ -11,6 +11,7 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.contexto_do_ato import contexto_do_ato
 from processo_seletivo.publicacoes.application.publish_edital import congelar_artefatos
 from processo_seletivo.publicacoes.domain.changes import (
     AcrescimoPosicionado,
@@ -39,7 +40,6 @@ from processo_seletivo.publicacoes.domain.conflicts import (
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.domain.elevacao import elevar, elevar_alteracoes
 from processo_seletivo.publicacoes.infrastructure.pdf import (
-    AutoridadeSignataria,
     Consolidacao,
     render_edital_pdf,
 )
@@ -851,7 +851,7 @@ def _consolidacao(edital, base, now, effective_at):
 
 
 def publish_retification(
-    *, actor, retificacao_id, expected_revision, signatory, idempotency_key, correlation_id
+    *, actor, retificacao_id, expected_revision, autoridade_id, idempotency_key, correlation_id
 ):
     require_permission(actor, "retificacao:publicar")
     with command_context() as now:
@@ -859,7 +859,7 @@ def publish_retification(
             actor=actor,
             operation=f"retificacao:publicar:{retificacao_id}",
             key=idempotency_key,
-            payload={"signatory": signatory},
+            payload={"autoridade": str(autoridade_id or "")},
         )
         if idem.result_id:
             return Publicacao.objects.get(pk=idem.result_id), idem.response_status
@@ -890,17 +890,15 @@ def publish_retification(
         _recusar_troca_pelo_objeto_inteiro(base_publicacao, content)
         _recusar_o_que_o_ato_acrescenta(edital, base_publicacao, content)
         canonical = canonical_bytes(content)
-        # O documento consolidado usa a mesma composição e a autoridade da própria Publicação
-        # da Retificação (`008`, FR-043).
+        # O documento consolidado usa a mesma composição, e a autoridade e a unidade da própria
+        # Publicação da Retificação, conferidas no dia dela (`008`, FR-043; `060`, FR-1130).
+        ato = contexto_do_ato(edital, autoridade_id, now)
         pdf = render_edital_pdf(
             content,
             canonical_sha256(content),
-            autoridade=AutoridadeSignataria(
-                nome=signatory["name"],
-                cargo=signatory["role"],
-                ato_de_nomeacao=signatory.get("appointment", ""),
-            ),
-            data_do_ato=now.astimezone(ZONA).date(),
+            unidade=ato.para_o_compositor,
+            autoridade=ato.assinante,
+            data_do_ato=ato.data_do_ato,
             consolidacao=_consolidacao(edital, item.base_snapshot, now, effective_at),
         )
         publication = Publicacao.objects.create(
@@ -913,10 +911,7 @@ def publish_retification(
             canonical_content=canonical,
             canonical_schema_version=SCHEMA_VERSION,
             published_by=actor.subject,
-            signatory_id=signatory["authorityId"],
-            signatory_name=signatory["name"],
-            signatory_role=signatory["role"],
-            signatory_appointment=signatory.get("appointment", ""),
+            **ato.colunas,
         )
         DocumentoPublicado.objects.create(
             publicacao=publication, bytes=pdf, document_hash=hashlib.sha256(pdf).hexdigest()

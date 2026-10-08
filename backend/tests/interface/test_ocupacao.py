@@ -167,9 +167,11 @@ def test_a_pagina_nao_tem_tabela_horizontal_a_375px(client, seletor_ligado, cena
     pagina = abrir(client, edital).content.decode()
 
     assert "<table" not in pagina
-    # `dl.meta` é o vocabulário que as telas irmãs já usam para pares rótulo/valor. Classe nova
+    # `ul.resumo`, os blocos com que a Convocação mostra os mesmos quatro números: o vocabulário
+    # que as telas irmãs já usam, e que quebra em linhas no celular. Era `dl.meta` até a `055`, que
+    # tirou os números da fileira em que cada um ficava entre dois rótulos (FR-1000). Classe nova
     # exigiria regra nova na folha, e a varredura de CSS recusa classe sem desenho.
-    assert 'class="meta"' in pagina
+    assert '<ul class="resumo"' in pagina
 
 
 def test_a_acao_da_faixa_seguinte_aparece_so_onde_ha_deficit(

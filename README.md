@@ -49,6 +49,7 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `convocacao` | Convocação, chamada, suplência e desfecho |
 | `requerimentos` | Requerimento de Matrícula e base local de referência de CEP |
 | `matriculas` | Exportação para o Registro Acadêmico — registra a geração, e não guarda o arquivo |
+| `unidades` | Unidades institucionais e autoridades habilitadas: o que o documento diz da unidade e quem pode responder pelos atos dela |
 | `interface` | Interface administrativa, em `/gestao/` |
 | `portal` | Consulta pública e área do candidato, em `/selecoes/` |
 | `seguranca` | Ator autenticado, permissões, autorização por objeto e papéis do banco |
@@ -144,7 +145,8 @@ createdb processo_seletivo
 cd backend && make preparar
 ```
 
-`make preparar` faz os três passos na mesma ordem do compose e pela mesma razão. Os três são
+`make preparar` faz os três passos na mesma ordem do compose e pela mesma razão, e depois
+sincroniza o registro de Unidades declarado em `unidades/unidades.json` (060). Os quatro são
 idempotentes: rodar de novo sobre banco já preparado não faz mal.
 
 O projeto separa a role de migração da de runtime: a de runtime não recebe `UPDATE` nem `DELETE`
@@ -424,6 +426,14 @@ Incrementos, na ordem em que foram especificados:
 | [`052`](specs/052-perfis-visao-do-conjunto/spec.md) | Perfis de Vaga: a tabela do conjunto e um cartão à vista por vez, sobre o mesmo formulário |
 | [`053`](specs/053-classificacao-visao-do-conjunto/spec.md) | Classificação: a tabela dos Perfis com os marcos, a origem do "aplicar a todos" e um Perfil à vista por vez, sobre o mesmo formulário |
 | [`054`](specs/054-edital-como-ato-oficial/spec.md) | O Edital do sistema como ato oficial: o catálogo de 22 seções das famílias do Cefor, sem redação padrão; o fecho com local, data e ato de nomeação; o consolidado datado; a declaração do Requerimento; o total de vagas |
+| [`055`](specs/055-polish-folha-e-componentes/spec.md) | Polish da folha e dos componentes (lote 1 da auditoria de polish): os números da Ocupação e do Corte em blocos; célula de tabela mais justa; uma altura para botões, ações de barra e controles; títulos em escala; a barra de filtro alinhada pelo topo; a seleção sem o vão do sorteio; campos com a largura do conteúdo |
+| [`056`](specs/056-polish-assistente-de-composicao/spec.md) | Polish do assistente de composição (lote 2 da auditoria de polish): o stepper numa linha; as ações do cartão na linha da legenda, e a legenda dizendo qual item é; o Evento com as datas lado a lado; o Conteúdo do Edital compacto; a Revisão com os rótulos numa coluna; texto longo em área de texto; Anexos na largura das outras etapas; o Perfil do Retificar na ordem do Compor |
+| [`057`](specs/057-polish-telas-de-operacao/spec.md) | Polish das telas de operação (lote 3 da auditoria de polish): uma ação em destaque no Detalhe do Edital e na Condução do marco, com Encerrar e Cancelar por último e só contornados; a Lista de Editais com as ações frequentes primeiro; o glossário das telas de marco recolhido; Atenção, Auditoria e documentos da inscrição sem caixa dentro de caixa; números, datas e plurais como gente escreve; a matriz de Alocação cabendo na janela; o envio de documento do portal numa linha |
+| [`058`](specs/058-polish-residuos/spec.md) | Polish, os resíduos dos três lotes: os atos irreversíveis do Processo contornados e à parte, como os do Edital; a Lista de Editais e a Condução do marco com moldura que rola em tela estreita; a seção das Matrículas empilhada; a nota dos Resultados à direita; plurais de tela no número deles; os números das Etapas sem zeros; a coluna de rótulos da Revisão com largura única; o motivo de sucessão com o mesmo controle nas quatro telas |
+| [`059`](specs/059-acesso-a-convocacao/spec.md) | O caminho do candidato até a convocação e o Requerimento de Matrícula: "Minhas inscrições" indica a convocação aberta e leva a ela com "Ver convocação"; o acompanhamento ganha a seção da convocação, aberta ou concluída; a convocação e essa seção oferecem "Preencher Requerimento de Matrícula" quando o Edital o pede na convocação; a recusa uniforme da titularidade provada nos caminhos novos |
+| [`060`](specs/060-unidades-e-autoridades/spec.md) | Unidades institucionais e autoridades de publicação: o escopo institucional ganha Unidade registrada, o documento oficial diz a unidade do Edital no cabeçalho e no local, e a autoridade é escolhida entre as habilitadas e vigentes da unidade, cadastradas pelo Gestor da unidade, sem mudar o código e sem excluir nada |
+| [`061`](specs/061-corte-apos-recurso/spec.md) | O corte emitido depois do recurso não nasce obsoleto: o reingresso que obsoleta a faixa é o de Resultado sucessor que o ato de ordenação lido ainda não cita; o deferimento já considerado pela ordem sucessora deixa de travar a Etapa governada e a publicação, e o recurso deferido depois do corte continua obsoletando-o |
+| [`062`](specs/062-resultados-por-perfil-etapa-lista/spec.md) | Resultados divulgados por Perfil, etapa e lista: a página pública do Edital agrupa os resultados como a seção Vagas, com natureza e data na linha de cada lista, um histórico recolhido por etapa e o nome acessível de cada link levando etapa e Perfil; um convite separado leva à situação individual, e voltar ao Edital depois de entrar não pede nome e CPF |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

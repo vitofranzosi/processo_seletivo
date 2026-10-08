@@ -145,9 +145,11 @@ def complete_draft(seed=0):
     }
 
 
-def actor_headers(subject, permissions, *, if_match=None, key="publication-key-0001"):
+def actor_headers(
+    subject, permissions, *, if_match=None, key="publication-key-0001", escopo="cefor"
+):
     headers = {
-        "HTTP_AUTHORIZATION": f"Bearer {subject}|cefor|{','.join(permissions)}",
+        "HTTP_AUTHORIZATION": f"Bearer {subject}|{escopo}|{','.join(permissions)}",
         "HTTP_IDEMPOTENCY_KEY": key,
         "HTTP_X_CORRELATION_ID": f"correlation-{subject}",
     }

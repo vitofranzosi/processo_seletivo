@@ -5,6 +5,7 @@ de uma sucedida já levava à vigente. Faltava a direção inversa: o preliminar
 sucedeu só era alcançável por quem tinha guardado o endereço dele.
 """
 
+import json
 import re
 import uuid
 
@@ -22,6 +23,9 @@ from tests.fixtures.publicacao import publish_original
 from tests.fixtures.sorteio import LISTA_PCD, LISTA_PPI, MARCO, marco_com_metodo
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+
+PCD = "Pessoas com deficiência"
+PPI = "Pessoas pretas, pardas e indígenas"
 
 
 @pytest.fixture
@@ -128,8 +132,15 @@ def _ato(edital, versao, *, lista_id=None, anterior=None):
     )
 
 
-def _publicar(edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anterior=None):
-    """A mesma gravação de `test_publicacao_por_lista.py`: o que se testa aqui é a leitura."""
+def _publicar(
+    edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anterior=None, lista_nome=""
+):
+    """A mesma gravação de `test_publicacao_por_lista.py`: o que se testa aqui é a leitura.
+
+    `lista_nome` é o que `compor` grava no cabeçalho: o nome da Modalidade, ou vazio no ato sem
+    lista.
+    """
+    cabecalho = {"marco": "Classificacao final", "lista": lista_nome}
     return PublicacaoResultado.objects.create(
         edital=edital,
         ato=ato,
@@ -138,7 +149,7 @@ def _publicar(edital, ato, *, lista_id=None, natureza=Natureza.PRELIMINAR, anter
         lista_id=lista_id,
         natureza=natureza,
         publicacao_anterior=anterior,
-        conteudo_publico=b'{"cabecalho": {"marco": "Classificacao final"}, "posicoes": []}',
+        conteudo_publico=json.dumps({"cabecalho": cabecalho, "posicoes": []}).encode(),
         conteudo_publico_hash="0" * 64,
         publicado_por="cpf:publicadora",
         publicado_em=timezone.now(),
@@ -167,19 +178,70 @@ def test_a_cadeia_de_tres_aparece_em_ordem_e_so_a_ultima_e_vigente(client, certa
 
 
 def test_o_historico_de_uma_lista_nao_aparece_sob_outra(client, certame_com_listas):
-    """A decisão do eixo da lista, da 021: a cadeia da PPI não é a da PcD."""
+    """A decisão do eixo da lista, da 021: a cadeia da PPI não é a da PcD.
+
+    **Desde a 062 o histórico é um bloco por etapa** (D-001), e não um por lista — a garantia muda
+    de lugar sem mudar de conteúdo: a linha vigente da PcD não carrega histórico, e o item sucedido
+    da PPI diz que é da PPI.
+    """
     edital, versao = certame_com_listas
     da_ppi = _ato(edital, versao, lista_id=LISTA_PPI)
-    ppi_1 = _publicar(edital, da_ppi, lista_id=LISTA_PPI)
-    _publicar(edital, da_ppi, lista_id=LISTA_PPI, natureza=Natureza.DEFINITIVA, anterior=ppi_1)
+    ppi_1 = _publicar(edital, da_ppi, lista_id=LISTA_PPI, lista_nome=PPI)
+    _publicar(
+        edital,
+        da_ppi,
+        lista_id=LISTA_PPI,
+        natureza=Natureza.DEFINITIVA,
+        anterior=ppi_1,
+        lista_nome=PPI,
+    )
     da_pcd = _ato(edital, versao, lista_id=LISTA_PCD)
-    pcd = _publicar(edital, da_pcd, lista_id=LISTA_PCD)
+    pcd = _publicar(edital, da_pcd, lista_id=LISTA_PCD, lista_nome=PCD)
 
     secao = secao_de_resultados(pagina_do_edital(client, edital))
-    itens = re.findall(
-        r"<li>\s*<a href=\"/selecoes/resultados/.*?</li>\s*(?=<li>|</ul>)", secao, re.S
+    linhas = re.findall(r'<li class="lista-divulgada">.*?</li>', secao, re.S)
+    linha_da_pcd = next(linha for linha in linhas if f"/resultados/{pcd.id}/" in linha)
+    historico = re.search(r'<details class="publicacoes-anteriores">.*?</details>', secao, re.S)
+    item_da_ppi = re.search(
+        rf'<li><a href="/selecoes/resultados/{ppi_1.id}/">.*?</li>', historico.group(0), re.S
     )
-    item_da_pcd = next(item for item in itens if f"/resultados/{pcd.id}/" in item)
 
-    assert "publicacoes-anteriores" not in item_da_pcd
-    assert f"/resultados/{ppi_1.id}/" not in item_da_pcd
+    assert f"/resultados/{ppi_1.id}/" not in linha_da_pcd
+    assert "publicacoes-anteriores" not in linha_da_pcd
+    assert item_da_ppi is not None
+    assert item_da_ppi.group(0).split("<span")[0].endswith(PPI)
+    assert PCD not in item_da_ppi.group(0)
+
+
+def test_as_ordens_de_um_mesmo_marco_tem_links_que_se_distinguem(client, certame_com_listas):
+    """Três listas no mesmo marco eram três links de texto idêntico, e as anteriores também (#255).
+
+    A página do Edital dizia natureza e marco, e só a lista distingue as três ordens: quem chegava
+    não tinha como saber qual abrir, e o leitor de tela anunciava três vezes o mesmo link. A ampla
+    concorrência, gravada sem nome, aparece pelo nome do recorte, como no documento oficial.
+
+    **Desde a 062 o texto visível é só o nome da lista**, e o que distingue a vigente da anterior
+    da mesma lista é o nome acessível, que continua pela natureza, pela etapa e pelo Perfil (D-006).
+    """
+    edital, versao = certame_com_listas
+    for lista_id, nome in ((None, ""), (LISTA_PCD, PCD), (LISTA_PPI, PPI)):
+        ato = _ato(edital, versao, lista_id=lista_id)
+        preliminar = _publicar(edital, ato, lista_id=lista_id, lista_nome=nome)
+        _publicar(
+            edital,
+            ato,
+            lista_id=lista_id,
+            natureza=Natureza.DEFINITIVA,
+            anterior=preliminar,
+            lista_nome=nome,
+        )
+
+    secao = secao_de_resultados(pagina_do_edital(client, edital))
+    links = re.findall(r'<a href="/selecoes/resultados/[^"]+/">(.*?)</a>', secao, re.S)
+    visiveis = [link.split("<span")[0] for link in links]
+    acessiveis = [re.sub(r"<[^>]+>", "", link) for link in links]
+
+    assert len(links) == 6
+    assert len(set(acessiveis)) == 6, f"nomes acessíveis indistinguíveis: {acessiveis}"
+    for nome in ("Ampla concorrência", PCD, PPI):
+        assert visiveis.count(nome) == 2, "a vigente e a anterior, cada uma com o nome da lista"

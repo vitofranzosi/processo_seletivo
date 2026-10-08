@@ -15,7 +15,7 @@ própria view.
 import json
 import logging
 from hashlib import sha256
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
@@ -35,6 +35,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain.documentos import (
     OBRIGATORIO,
     aplicaveis,
@@ -412,7 +413,10 @@ def selecao(request, edital_id):
     contexto["desfecho"] = desfechos([versao.edital])[versao.edital_id]
     # Só o desfecho do próprio Edital fecha o recebimento; o do Processo é dito como fato.
     contexto["encerra_o_edital"] = bool(contexto["desfecho"] and contexto["desfecho"].do_edital)
-    iniciadas = _inscricoes_iniciadas(request, edital_id)
+    # Uma leitura da identidade para a página inteira: as inscrições dela e o convite para a
+    # situação (062) perguntam a mesma coisa, e perguntar duas vezes custaria duas consultas.
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    iniciadas = _inscricoes_iniciadas(identidade, edital_id)
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
         for perfil in versao.content.get("profiles") or []
@@ -461,6 +465,16 @@ def selecao(request, edital_id):
             vigente=versao.content,
         )
         item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    # **E a forma da seção Vagas: Perfil, etapa, lista** (062, `FR-1148`). A lista acima continua
+    # sendo o que decide se o bloco existe; a árvore é a mesma leitura reorganizada, sem consulta.
+    contexto["resultados_por_perfil"] = leitura.resultados_por_perfil(
+        contexto["resultados_divulgados"], versao.content
+    )
+    contexto["convite_da_situacao"] = (
+        _convite_da_situacao(identidade, iniciadas, edital_id)
+        if contexto["resultados_divulgados"]
+        else None
+    )
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
     # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
@@ -511,13 +525,41 @@ def selecao(request, edital_id):
     return marcar_como_privada(resposta) if iniciadas else resposta
 
 
-def _inscricoes_iniciadas(request, edital_id):
+def _convite_da_situacao(identidade, iniciadas, edital_id):
+    """O caminho para a própria situação, conforme quem lê (062, `FR-1160` a `FR-1163`, D-003).
+
+    Mandar "Entrar" a quem já entrou seria um passo inútil, e oferecer "ver minha situação" a quem
+    não enviou inscrição seria uma promessa vazia. Com mais de uma enviada, o destino é a lista, e
+    não uma inscrição escolhida pelo sistema. Nenhuma leitura nova: as inscrições são as que a
+    página já leu para o convite de cada vaga.
+    """
+    if identidade is None:
+        aqui = reverse("portal:selecao", args=[edital_id])
+        return {
+            "texto": "Entrar para ver minha situação",
+            "url": f"{reverse('portal:acesso')}?{urlencode({'destino': aqui})}",
+        }
+    enviadas = [
+        registro for registro in iniciadas.values() if registro.status == Inscricao.Status.SUBMETIDA
+    ]
+    if not enviadas:
+        return None
+    if len(enviadas) == 1:
+        return {
+            "texto": "Ver minha situação",
+            # O acompanhamento, e não a inscrição: é ali que a situação divulgada aparece; a página
+            # da inscrição mostra o que foi enviado, e mandar para lá prometeria o que ela não diz.
+            "url": reverse("portal:acompanhamento", args=[enviadas[0].id]),
+        }
+    return {"texto": "Ver minhas inscrições", "url": reverse("portal:inscricoes")}
+
+
+def _inscricoes_iniciadas(identidade, edital_id):
     """As inscrições que **esta** pessoa já abriu neste Edital, por Perfil.
 
     Sem identidade não há o que procurar, e é por isso que a consulta nem acontece: a página
     pública continua sendo pública, e ninguém descobre inscrição de terceiro por ela.
     """
-    identidade = identidade_do_candidato.identidade_da_sessao(request)
     if identidade is None:
         return {}
     return {
@@ -780,7 +822,11 @@ def _entrar(request, identidade):
     identidade_do_candidato.abrir_sessao(request, identidade)
     if not destino:
         return redirect(reverse("portal:inscricoes"))
-    if nucleo_da_identidade.falta_o_nucleo(identidade):
+    # **Nome e CPF só a caminho de uma vaga** (062, `FR-1161`). Até a `062` todo destino era uma
+    # vaga, e por isso a condição não o conferia; com a página do Edital entrando, a mesma linha
+    # cobraria CPF de quem só veio olhar a própria situação — e quem tem inscrição enviada já o
+    # informou, de modo que a cobrança só alcançaria quem não tem situação nenhuma a ver.
+    if _destino_e_vaga(destino) and nucleo_da_identidade.falta_o_nucleo(identidade):
         # Quem veio a caminho de uma vaga e ainda não tem nome nem CPF informa os dois agora, e
         # volta para a vaga em seguida. Mandá-la primeiro ao convite e só depois ao formulário
         # acrescentaria uma tela sem acrescentar nada.
@@ -804,17 +850,35 @@ def _de_volta_a_vaga(destino):
     o certame, mostra o que a vaga é e já traz o mesmo POST no lugar certo; e, se a inscrição já
     existir, o caminho para continuá-la.
 
-    Destino que não seja uma vaga volta para a lista de inscrições: nada mais era oferecido por
-    aqui, e um destino inesperado não é convite a praticar ato nenhum.
+    Destino que não seja uma vaga nem a página do Edital volta para a lista de inscrições: nada mais
+    era oferecido por aqui, e um destino inesperado não é convite a praticar ato nenhum.
+
+    **E a página do Edital, desde a `062`** (`FR-1161`, D-007): quem entra pelo convite "Entrar para
+    ver minha situação" volta ao bloco de resultados, onde o convite já leva à inscrição. A
+    restrição acima é contra **praticar ato** a partir de um endereço compartilhado; a página do
+    Edital é pública, é GET e não pratica ato nenhum. Qualquer outra rota continua indo para a
+    lista.
     """
-    try:
-        rota = resolve(urlparse(destino).path)
-    except Resolver404:
-        return reverse("portal:inscricoes")
-    if rota.view_name != "portal:inscrever":
+    rota = _rota_do_destino(destino)
+    if rota is not None and rota.view_name == "portal:selecao":
+        selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
+        return f"{selecao}#resultados-titulo"
+    if rota is None or rota.view_name != "portal:inscrever":
         return reverse("portal:inscricoes")
     selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
     return f"{selecao}#vaga-{rota.kwargs['profile_id']}"
+
+
+def _rota_do_destino(destino):
+    try:
+        return resolve(urlparse(destino).path)
+    except Resolver404:
+        return None
+
+
+def _destino_e_vaga(destino):
+    rota = _rota_do_destino(destino)
+    return rota is not None and rota.view_name == "portal:inscrever"
 
 
 def _desafio_provado(request):
@@ -984,7 +1048,21 @@ def _conteudos_publicados(inscricoes):
     return conteudos
 
 
-def _item_da_lista(registro, conteudo, agora):
+def _convocacoes_da_lista(minhas):
+    """A convocação vigente de cada inscrição **enviada**, numa leitura por conjunto (059, `D-002`).
+
+    Só as enviadas, porque rascunho não é convocado: quem só tem rascunho não paga consulta nenhuma.
+    E **nada do requerimento** — a `029` decidiu que o estado dele se lê na tela dele, e o chamado
+    fica a um clique, na convocação.
+    """
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
+
+    return vigentes_por_inscricao(
+        [registro.id for registro in minhas if registro.status == Inscricao.Status.SUBMETIDA]
+    )
+
+
+def _item_da_lista(registro, conteudo, agora, convocacao=None):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -993,8 +1071,15 @@ def _item_da_lista(registro, conteudo, agora):
     A ação principal é uma só por item, e é inequívoca: rascunho se continua, enviada se acompanha
     (`SC-UX-005`). Duas ações lado a lado devolveriam à pessoa a decisão que a lista existe para
     tomar por ela.
+
+    **Com convocação aberta, a ação principal é "Ver convocação"** (059, `D-003`): o prazo corre do
+    envio da comunicação, e a lista é para onde a mensagem manda a pessoa. "Acompanhar" continua no
+    item, como link — sem ele, quem foi chamado perderia o caminho para o resultado e o recurso.
+    Concluída, a convocação vira nota e a ação volta a ser "Acompanhar" (`D-004`).
     """
     enviada = registro.status == Inscricao.Status.SUBMETIDA
+    chamada = _convocacao_para_a_tela(convocacao, agora)
+    aberta = chamada["convocacao"] is not None and chamada["desfecho"] is None
     fechada = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
@@ -1017,7 +1102,13 @@ def _item_da_lista(registro, conteudo, agora):
         # O rascunho que o prazo fechou não se continua: se consulta (009, FR-032). "Continuar"
         # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
         "fechada": fechada,
-        "acao": "Acompanhar"
+        "convocacao_aberta": aberta,
+        "convocacao_concluida": chamada["desfecho"].get_especie_display()
+        if chamada["desfecho"]
+        else "",
+        "acao": "Ver convocação"
+        if aberta
+        else "Acompanhar"
         if enviada
         else "Consultar inscrição"
         if fechada
@@ -1234,12 +1325,18 @@ def inscricoes(request):
     )
     conteudos = _conteudos_publicados(minhas)
     agora = timezone.now()
+    convocacoes = _convocacoes_da_lista(minhas)
     return render(
         request,
         "portal/inscricoes.html",
         {
             "inscricoes": [
-                _item_da_lista(registro, conteudos.get(registro.edital_id), agora)
+                _item_da_lista(
+                    registro,
+                    conteudos.get(registro.edital_id),
+                    agora,
+                    convocacoes.get(registro.id),
+                )
                 for registro in minhas
             ],
             # O convite de retomada só aparece para quem pode aceitá-lo: identidade sem inscrição
@@ -1474,19 +1571,30 @@ def acompanhamento(request, inscricao_id):
     por Retificação precisa aparecer remarcada. Os dados da inscrição continuam vindo da versão
     **aceita**, e é justamente por lerem versões diferentes que o aviso da `FR-078` existe.
     """
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
+
     registro, _identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
     recorriveis = objetos_recorriveis(registro)
     resultados_das_etapas = resultados_visiveis(registro)
+    agora = timezone.now()
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     return render(
         request,
         "portal/acompanhamento.html",
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
+            # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta
+            # continua vindo só da tela dela (`D-008`). E o requerimento só é perguntado quando a
+            # convocação existe — é o que mantém o zero da `029` para quem não foi chamado
+            # (`D-006`).
+            **_convocacao_para_a_tela(chamada, agora),
+            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "fatos": _fatos_da_participacao(registro),
-            "cronograma": leitura.cronograma(versao.content, timezone.now()),
+            "cronograma": leitura.cronograma(versao.content, agora),
             # **Acréscimo, e não reescrita.** `_fatos_da_participacao` continua descrevendo fatos
             # da própria inscrição — o que a pessoa fez —, e a publicação é ato de terceiro sobre
             # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
@@ -1918,24 +2026,15 @@ def convocacao(request, inscricao_id):
     **Ler não move o relógio** (`FR-288b`). O prazo corre do envio da comunicação, e abrir esta
     página não é nem o envio nem o recebimento: o acesso fica na trilha, e o prazo fica onde estava.
     """
-    from processo_seletivo.convocacao.application.selectors import (
-        desfecho_de,
-        envio_de,
-        estado_de,
-    )
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
     from processo_seletivo.convocacao.models import Convocacao
 
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     agora = timezone.now()
     # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
-    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale.
-    chamada = (
-        Convocacao.objects.filter(inscricao=registro)
-        .filter(sucessoras__isnull=True)
-        .prefetch_related("desfechos", "comunicacoes")
-        .order_by("-criado_em")
-        .first()
-    )
+    # substituída, e mostrar a anterior diria à pessoa um prazo que já não vale. A regra mora no
+    # seletor da `019`, e não aqui: a lista e o acompanhamento mostram a mesma (059, `FR-1100`).
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     # **O certame chegou a convocar neste recorte?** É esta pergunta que separa as duas ausências.
     houve_convocacao_no_recorte = (
         Convocacao.objects.filter(edital=registro.edital, perfil_id=registro.profile_id).exists()
@@ -1949,14 +2048,59 @@ def convocacao(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
-            "convocacao": chamada,
-            "desfecho": desfecho_de(chamada) if chamada else None,
-            "enviada_em": envio_de(chamada) if chamada else None,
-            "estado": estado_de(chamada, agora=agora) if chamada else None,
+            **_convocacao_para_a_tela(chamada, agora),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
         },
     )
+
+
+def _convocacao_para_a_tela(chamada, agora):
+    """O que as telas do candidato dizem de uma convocação — uma tradução só, para três lugares.
+
+    A tela da convocação, a seção do acompanhamento e o item da lista (059) leem as mesmas quatro
+    coisas, e calculá-las em cada view faria a lista dizer "aberta" de uma convocação que a tela
+    diz desfechada. **Aberta é a que não tem desfecho**, em qualquer estado de prazo: o vencimento
+    decorrido não decide nada sozinho (`FR-274`).
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        envio_de,
+        estado_de,
+    )
+
+    if chamada is None:
+        return {"convocacao": None, "desfecho": None, "enviada_em": None, "estado": None}
+    return {
+        "convocacao": chamada,
+        "desfecho": desfecho_de(chamada),
+        "enviada_em": envio_de(chamada),
+        "estado": estado_de(chamada, agora=agora),
+    }
+
+
+# O chamado que cada estado de leitura da `029` produz (059, `D-007`). "Ainda indisponível" e "não
+# aplicável" ficam de fora de propósito: um botão que só levaria a recusa é pior do que nenhum.
+CHAMADO_DO_REQUERIMENTO = {
+    requerimento_nomes.DISPONIVEL: "preencher",
+    requerimento_nomes.EM_PREENCHIMENTO: "preencher",
+    requerimento_nomes.ESTADO_ENVIADO: "conferir",
+}
+
+
+def _requerimento_da_convocacao(registro, chamada, conteudo):
+    """O chamado ao requerimento — `"preencher"`, `"conferir"` ou `""` —, **só** onde há convocação.
+
+    Sem convocação vigente a resposta é vazia sem consulta nenhuma, e é isso que mantém o zero que a
+    `029` prende para o acompanhamento de quem não foi chamado (059, `D-006`). Com ela, a pergunta
+    vai à mesma política que a tela do requerimento consulta (`FR-1099`): decidir aqui seria uma
+    segunda leitura de disponibilidade, e a pessoa leria um chamado que o comando recusa.
+    """
+    if chamada is None:
+        return ""
+    estado = preencher_requerimento.apurar(registro, conteudo).estado_de_leitura
+    return CHAMADO_DO_REQUERIMENTO.get(estado, "")
 
 
 def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
@@ -2173,6 +2317,20 @@ def _confirmar_por_email(request, registro):
     )
 
 
+def _unidade_da_versao(versao):
+    """A unidade como a Publicação que originou esta versão a registrou (060, FR-1115).
+
+    Da Publicação, e não do registro de Unidades: o comprovante prova o que o candidato aceitou, e a
+    unidade renomeada depois não reescreve o papel que ele guardou.
+    """
+    publicacao = versao.source_publication
+    return {
+        "sigla": publicacao.unidade_sigla,
+        "nome": publicacao.unidade_nome,
+        "cabecalho": list(publicacao.unidade_cabecalho),
+    }
+
+
 def _dados_do_comprovante(request, registro, conteudo, versao):
     """Os fatos do comprovante, num lugar só.
 
@@ -2187,6 +2345,7 @@ def _dados_do_comprovante(request, registro, conteudo, versao):
     modalidade = _modalidade_da_inscricao(conteudo, registro)
     aceita = registro.versao_aceita
     return {
+        "unidade": _unidade_da_versao(versao),
         "protocolo": registro.protocolo,
         "codigo_de_verificacao": codigo_de_verificacao(registro, enviados),
         "endereco": request.build_absolute_uri(reverse("portal:vitrine")),
@@ -2265,6 +2424,7 @@ def comprovante(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            "unidade": _unidade_da_versao(versao),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,
@@ -2371,6 +2531,11 @@ def resultado(request, publicacao_id):
         {
             "publicacao": publicacao,
             "cabecalho": conteudo["cabecalho"],
+            # **A lista, sempre com nome** — também a ampla concorrência, gravada sem ele. A página
+            # do Edital já dizia a lista de cada link (#255), e quem chegava à publicação da ampla
+            # não encontrava nela, nem no título da aba, de que lista era: as três ordens de um
+            # marco abriam com o mesmo cabeçalho.
+            "lista": nome_da_lista(conteudo["cabecalho"]),
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,

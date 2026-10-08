@@ -416,9 +416,19 @@ def test_o_cabecalho_da_matriz_nao_e_fixado_dentro_de_um_contentor_de_rolagem():
 
 
 TELAS = sorted(BASE.parent.glob("*.html"))
+# O portal entrou na varredura depois de "Guardar e continuar depois" sair com o desenho nativo do
+# navegador — Arial de 13 px e borda em relevo — ao lado do botão principal do Requerimento (055,
+# FR-1009). A guarda olhava só a gestão, e o candidato é quem mais estranha um botão sem estilo.
+TELAS_DO_PORTAL = sorted(
+    (Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templates/portal").glob(
+        "*.html"
+    )
+)
 
 
-@pytest.mark.parametrize("template", [p for p in TELAS], ids=lambda p: p.name)
+@pytest.mark.parametrize(
+    "template", TELAS + TELAS_DO_PORTAL, ids=lambda p: f"{p.parent.name}/{p.name}"
+)
 def test_todo_botao_de_envio_declara_o_seu_peso(template):
     """Botão sem classe cai no desenho do navegador, e sai cinza no meio de uma tela verde.
 

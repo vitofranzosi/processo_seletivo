@@ -578,6 +578,11 @@ datas nos vínculos, agrupamento do caráter, confirmação ao remover e a mensa
     persiste nome, cargo e identificador da autoridade no ato, e esse registro é imutável.
   - Autoridade retirada NÃO DEVE ser oferecida em novos atos.
   - *Integração com diretório institucional permanece fora de escopo.*
+  - ***Revogada pela `060` (FR-1124).*** O produto passou a ser do Ifes, com várias unidades, e o
+    catálogo em código deixava qualquer operador escolher autoridade de qualquer unidade e exigia
+    implantar de novo a cada troca de gestão. As autoridades passaram a ser cadastradas por unidade,
+    com vigência, pelo Gestor da unidade (`060`, FR-1116, FR-1122). O que esta FR garantia ao ato
+    continua: nada se digita, e a Publicação guarda nome, cargo e identificador, imutáveis.
 - **FR-040**: O assistente DEVE distinguir três estados de etapa: **pendente**, **pronta para
   revisar** e **concluída**. Uma etapa cujo conteúdo veio de padrão do sistema e que **nunca foi
   gravada** é "pronta para revisar"; ter sido **gravada ao menos uma vez** a torna "concluída". Os

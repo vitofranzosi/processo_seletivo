@@ -151,7 +151,7 @@ def test_a_cota_acrescentada_com_vagas_leva_a_propria_linha(publicado):
             "immediateVacancies": 0,
         },
     }
-    assert [linha_["depois"] for linha_ in resumo] == ["EP — Escola pública", "0 vaga(s)"]
+    assert [linha_["depois"] for linha_ in resumo] == ["EP — Escola pública", "0 vagas"]
 
 
 @pytest.mark.parametrize(

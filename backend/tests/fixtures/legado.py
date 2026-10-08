@@ -25,6 +25,7 @@ from processo_seletivo.publicacoes.domain.elevacao import (
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.canonical import canonical_bytes, canonical_sha256
+from tests.fixtures.autoridades import COLUNAS_DO_CEFOR
 from tests.fixtures.edital import actor_headers, complete_draft
 from tests.fixtures.publicacao import SIGNATORY
 
@@ -110,8 +111,10 @@ def publicar_na_versao_anterior(
         canonical_schema_version=versao,
         published_by="publicador",
         signatory_id=SIGNATORY["authorityId"],
-        signatory_name=SIGNATORY["name"],
-        signatory_role=SIGNATORY["role"],
+        # O signatário e a unidade como a Publicação da `AUTORIDADE_DA_SUITE` os congelaria (060).
+        signatory_name="Diretora",
+        signatory_role="Diretora-Geral",
+        **COLUNAS_DO_CEFOR,
     )
     DocumentoPublicado.objects.create(
         publicacao=publicacao,
@@ -203,8 +206,10 @@ def publicar_sem_aferir(
         canonical_schema_version=versao,
         published_by="publicador",
         signatory_id=SIGNATORY["authorityId"],
-        signatory_name=SIGNATORY["name"],
-        signatory_role=SIGNATORY["role"],
+        # O signatário e a unidade como a Publicação da `AUTORIDADE_DA_SUITE` os congelaria (060).
+        signatory_name="Diretora",
+        signatory_role="Diretora-Geral",
+        **COLUNAS_DO_CEFOR,
     )
     DocumentoPublicado.objects.create(
         publicacao=publicacao,

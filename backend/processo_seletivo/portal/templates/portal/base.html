@@ -239,8 +239,7 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .vagas-da-selecao{grid-area:vagas;min-width:0}
 /* O sorteio **acima** do cronograma na coluna lateral, e logo depois das vagas no celular: quando
    ele existe, é a pergunta mais urgente da página — "a lista já fechou? quando é?" —, e ela vem
-   antes do calendário inteiro (021). Sem sorteio a área fica vazia, e uma linha vazia de altura
-   automática não ocupa nada. */
+   antes do calendário inteiro (021). */
 .sorteio-da-selecao{grid-area:sorteio;min-width:0}
 .cronograma-da-selecao{grid-area:cronograma;min-width:0}
 .documentos-da-selecao{grid-area:documentos;min-width:0}
@@ -251,6 +250,12 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .acoes-do-sorteio li+li{margin-top:.35rem}
 @media (min-width:60rem){
   .corpo-da-selecao{grid-template-columns:minmax(0,1fr) 19rem;
+    grid-template-areas:"vagas cronograma" "documentos cronograma"}
+  /* A área do sorteio só existe quando ele existe (055, FR-1015). Declarada sempre, ela ficava
+     vazia e **não** desaparecia: as Vagas ocupam as duas linhas de cima, e a altura delas se
+     repartia entre a linha do sorteio e a do cronograma — que começava 315 px abaixo do topo das
+     Vagas. Sem `:has`, a grade volta a ser a de antes. */
+  .corpo-da-selecao:has(>.sorteio-da-selecao){
     grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma"}
   /* O título da coluna lateral alinha com o da principal: sem isto, o `margin-top` de `h2` deixava
      os dois em alturas diferentes e a lateral parecia ter escorregado. */
@@ -297,7 +302,6 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .agora-e-proximo .rotulo-do-momento{font-weight:600}
 /* O prazo recursal (047, FR-769, FR-770): texto, e não botão — a página não oferece ação. */
 .prazo-recursal{margin:.5rem 0}
-.resultados-divulgados .prazo-recursal{display:block;margin:.1rem 0 0;font-size:.875rem}
 /* O histórico recolhido de um resultado (047, FR-772, FR-773). Discreto de propósito: é registro
    consultável, e não o que vale. */
 .publicacoes-anteriores{margin:.35rem 0 0;font-size:.875rem}
@@ -328,7 +332,6 @@ details.como-converter li{margin-bottom:.4rem}
 .envio .acao.perigo{border-color:var(--vermelho);color:var(--vermelho);background:var(--branco)}
 .envio .acao.perigo:hover{background:var(--vermelho-fundo)}
 .envio .acao[disabled]{opacity:.6;cursor:progress}
-.envio .linha{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .rotulo-arquivo{display:block;font-weight:600;width:100%}
 /* O resumo dos documentos junto ao cabeçalho (SC-UX-003). Discreto: informa estado, não
    compete com a ação principal. A marca ✓/○ acompanha a cor porque cor sozinha não distingue
@@ -349,6 +352,9 @@ details.como-converter li{margin-bottom:.4rem}
 .campo label{font-weight:600}
 .campo input,.campo select{width:100%;padding:.6rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit;background:var(--branco)}
+/* A altura da consulta da Vitrine, e pela mesma razão que ela registra (055, FR-1012): com o mesmo
+   preenchimento, o `select` e a data saíam com 42 px e o texto com 40, na mesma linha. */
+.campo :is(input,select):not([type=checkbox],[type=radio],[type=file]){height:2.625rem}
 /* Um telefone não precisa de trinta e dois rem: campo com a largura do que se escreve nele diz,
    sozinho, quanto se espera — e um campo largo demais parece formulário mal montado. */
 .campo.curto{max-width:15rem}
@@ -392,12 +398,17 @@ details.como-converter li{margin-bottom:.4rem}
    e nao ha ponto de quebra escrito a mao para manter. O minimo usa `min()` porque piso rigido em
    tela de 375px empurra a grade para fora e cria rolagem lateral — defeito que esta folha ja
    registrou uma vez. */
-.grade-de-campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));
+.grade-de-campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(16rem,100%),1fr));
   gap:0 1rem;align-items:start}
 .grade-de-campos .campo{max-width:none;margin-bottom:.7rem}
 /* O campo que pede a linha inteira, mesmo dentro da grade: endereco e nome nao cabem em meia
    coluna sem cortar o que a pessoa digitou. */
 .grade-de-campos .campo.largo{grid-column:1/-1}
+/* `auto-fill`, e não `auto-fit` (055, FR-1016): o segundo recolhe as colunas vazias, e o grupo de um
+   campo só esticava esse campo à linha inteira — 1.232 px para um telefone. Com as colunas
+   reservadas, o campo curto fica com uma; e o largo, que continua pedindo a linha, para no tamanho
+   de um nome. */
+.grade-de-campos .largo>:is(input,select){max-width:40rem}
 /* O bloco do que o sistema ja sabe: duas colunas de rotulo e valor, densas, porque ele e
    referencia — a pessoa confere e segue. Ocupava 434px numa tela de conferencia. */
 .ja-sabemos{display:grid;grid-template-columns:auto 1fr;gap:.2rem .75rem;margin:0 0 1.25rem;
@@ -536,6 +547,19 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875rem;
   color:var(--texto-fraco);overflow-wrap:anywhere}
 .selecao .principal{margin-top:.5rem;justify-self:start}
+/* A convocação aberta no item da lista (059). Peso, e não cor de alerta: a situação vem por texto e
+   símbolo, e o que a destaca das linhas cinzas acima é ser a única em tom de texto. */
+.minhas-inscricoes .situacao.convocada{color:var(--texto);font-weight:700}
+/* **As ações do item ficam acima do título esticado** (059, D-010). O `::after` do título cobre o
+   cartão inteiro e é posicionado; o que não é posicionado pinta por baixo dele. Medido em 06/10:
+   no centro de "Acompanhar", `elementFromPoint` devolvia o título, e o clique do mouse levava a
+   "Sua inscrição". Teclado e leitor de tela não eram afetados — o link sempre recebeu foco. */
+.minhas-inscricoes a.principal,.minhas-inscricoes a.acompanhar{position:relative;z-index:1}
+.minhas-inscricoes a.acompanhar{justify-self:start;font-size:.9375rem}
+/* A convocação no acompanhamento (059): o painel de sempre, e a lista de definição mais curta que a da
+   conferência — três pares, e o último parágrafo sem a margem que empurraria a borda para baixo. */
+.convocacao-da-inscricao dl.campos{margin-bottom:.75rem}
+.convocacao-da-inscricao>p:last-child{margin-bottom:0}
 /* A conferência do que foi enviado (010). Sem tabela e sem largura fixa, como o resto da base do
    candidato: é o que sustenta 375px sem rolagem horizontal. */
 dl.campos{display:grid;gap:.15rem;margin:0 0 1.5rem}
@@ -746,9 +770,28 @@ form.convite{margin:.75rem 0 0}
    continua lendo "(posição compartilhada)" na própria célula (FR-014, FR-052). */
 .compartilhada{color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
 .nenhuma{color:var(--texto-fraco);font-size:.875rem}
-.resultados-divulgados{list-style:none;padding:0;margin:0 0 2rem;display:grid;gap:.5rem}
-.resultados-divulgados li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline}
-.resultados-divulgados .meta{color:var(--texto-fraco);font-size:.875rem}
+/* Os resultados divulgados na forma da seção Vagas: Perfil, etapa, lista (062, FR-1148). A
+   etapa leva um fio à esquerda para que as listas se leiam como dela, e não do Perfil; e o título
+   dela fica abaixo do do Perfil, que é o mesmo da seção Vagas — com o `h4` no negrito padrão, a
+   etapa pesava mais que o Perfil que a contém. */
+.resultados-do-perfil{margin:0 0 1.5rem}
+.resultados-do-perfil h3{margin:1.25rem 0 .5rem}
+.resultados-da-etapa{margin:0 0 1rem;padding-left:.75rem;border-left:2px solid var(--borda)}
+.resultados-da-etapa h4{margin:0 0 .4rem;font-size:.9375rem;font-weight:600}
+.listas-da-etapa{list-style:none;padding:0;margin:0;display:grid;gap:.4rem}
+/* A linha quebra em vez de alargar: a 375 px, natureza e data descem para baixo do nome da lista
+   (UX-153), e o prazo recursal ocupa sempre a linha dele. */
+.lista-divulgada{display:flex;flex-wrap:wrap;gap:.1rem .75rem;align-items:baseline}
+.lista-divulgada .meta{color:var(--texto-fraco);font-size:.875rem}
+.lista-divulgada .prazo-recursal{flex-basis:100%;margin:0;font-size:.875rem}
+/* O caminho para a própria situação (062, FR-1160): depois da árvore e separado dela por um fio,
+   porque é outra tarefa — consultar a si, e não a publicação. */
+.convite-da-situacao{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--borda)}
+.convite-da-situacao p{margin:.25rem 0}
+/* Texto para o leitor de tela e invisível na tela — a mesma regra da gestão. É o que completa o
+   nome acessível dos links de resultado com a etapa e o Perfil (062, D-006). */
+.oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
 /* Um bloco por marco divulgado, na Área do Candidato. Cada um se fecha em si porque cada um é um
    ato administrativo distinto, e lê-los em sequência sem fronteira confundiria os dois (FR-057). */
 .resultado-divulgado{border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem;

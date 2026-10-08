@@ -9,6 +9,7 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
+from processo_seletivo.unidades.application.selectors import exigir_unidade
 
 
 def create_process_with_first_edital(*, actor, data, idempotency_key, correlation_id):
@@ -17,6 +18,10 @@ def create_process_with_first_edital(*, actor, data, idempotency_key, correlatio
         idem = reserve(actor=actor, operation="processo:criar", key=idempotency_key, payload=data)
         if idem.result_id:
             return ProcessoSeletivo.objects.get(pk=idem.result_id), idem.response_status
+        # Processo novo só nasce em Unidade registrada e ativa (060, FR-1110). Sem ela, o primeiro
+        # documento publicado não teria o que dizer no cabeçalho — e a recusa aqui é mais cedo e
+        # mais clara do que lá.
+        exigir_unidade(actor.institution_scope, ativa=True)
         # Dois `create`, dois `except` (FR-022). Envolvê-los num bloco só devolvia sempre a
         # mensagem do Processo, inclusive quando o conflito era do Edital: `Edital` é único por
         # `(escopo, número, ano)` — não por Processo —, então repetir o número de qualquer outro
@@ -91,6 +96,9 @@ def add_edital(*, actor, processo_id, data, idempotency_key, correlation_id):
         # Depois da repetição idempotente, como nos demais comandos: reenviar a requisição que já
         # criou o Edital continua devolvendo o mesmo Edital, mesmo com o Processo já encerrado.
         ensure_processo_accepts_changes(processo)
+        # O Edital novo também, e pela mesma razão: o Processo de uma Unidade desativada termina o
+        # que tem, mas não ganha Edital (060, FR-1110).
+        exigir_unidade(actor.institution_scope, ativa=True)
         try:
             edital = Edital.objects.create(
                 processo=processo,

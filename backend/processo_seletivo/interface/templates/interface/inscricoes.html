@@ -67,7 +67,7 @@ resposta, e não ausência de resposta.
   </p>
   {% if perfil %}<input type="hidden" name="perfil" value="{{ perfil }}">{% endif %}
   <p class="acoes">
-    <button type="submit" class="acao">Filtrar</button>
+    <button type="submit" class="botao">Filtrar</button>
     {% if filtrando %}
     <a class="acao" href="{% url 'interface:inscricoes' edital.id %}">Limpar</a>{% endif %}
   </p>

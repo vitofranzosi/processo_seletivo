@@ -83,7 +83,8 @@ def test_o_formulario_exibe_o_que_esta_gravado(api_client, edital_em_elaboracao)
 
     linha = next(item for item in linhas if item["id"] == ETAPA["A"])
     assert linha["evaluationsPerRegistration"] == 3
-    assert linha["maximumScore"] == "50.0000"
+    # O número gravado, sem os zeros que a coluna de quatro casas acrescenta (058, FR-1078).
+    assert linha["maximumScore"] == "50"
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,6 @@ from datetime import date
 
 import pytest
 
-from processo_seletivo.publicacoes.domain import autoridades
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     MODO_PREVIA,
     AutoridadeSignataria,
@@ -18,6 +17,8 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     render_edital_pdf,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.unidades.domain.rotulos import quem_assinou
+from tests.fixtures.autoridades import UNIDADE_DA_SUITE
 from tests.unit.publicacoes.test_pdf import documento, snapshot, texto_de
 
 CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
@@ -29,6 +30,7 @@ DECLARACAO = (
 
 def _publicado(conteudo=None, **kwargs):
     conteudo = conteudo or snapshot()
+    kwargs.setdefault("unidade", UNIDADE_DA_SUITE)
     kwargs.setdefault("autoridade", AutoridadeSignataria(nome="", cargo=CARGO))
     kwargs.setdefault("data_do_ato", date(2026, 9, 29))
     return texto_de(render_edital_pdf(conteudo, canonical_sha256(conteudo), **kwargs))
@@ -47,12 +49,19 @@ def test_o_publicado_traz_local_e_data_antes_da_autoridade():
 def test_a_previa_recusa_data_e_consolidacao():
     """FR-990: a data é contexto do ato, e a prévia não decorre de ato nenhum."""
     with pytest.raises(ValueError):
-        render_edital_pdf(snapshot(), "", modo=MODO_PREVIA, data_do_ato=date(2026, 9, 29))
+        render_edital_pdf(
+            snapshot(),
+            "",
+            modo=MODO_PREVIA,
+            unidade=UNIDADE_DA_SUITE,
+            data_do_ato=date(2026, 9, 29),
+        )
     with pytest.raises(ValueError):
         render_edital_pdf(
             snapshot(),
             "",
             modo=MODO_PREVIA,
+            unidade=UNIDADE_DA_SUITE,
             consolidacao=Consolidacao(date(2026, 4, 7), (date(2026, 8, 24),)),
         )
     assert "Vitória (ES)" not in texto_de(documento(snapshot(), modo=MODO_PREVIA))
@@ -61,7 +70,10 @@ def test_a_previa_recusa_data_e_consolidacao():
 def test_o_publicado_sem_data_e_recusado():
     with pytest.raises(ValueError, match="data do ato"):
         render_edital_pdf(
-            snapshot(), "a" * 64, autoridade=AutoridadeSignataria(nome="", cargo=CARGO)
+            snapshot(),
+            "a" * 64,
+            unidade=UNIDADE_DA_SUITE,
+            autoridade=AutoridadeSignataria(nome="", cargo=CARGO),
         )
 
 
@@ -100,18 +112,11 @@ def test_com_nome_e_ato_de_nomeacao_o_fecho_os_imprime():
     ]
 
 
-def test_o_catalogo_nao_traz_designacao_no_lugar_do_nome():
-    """FR-992: enquanto o Cefor não fornece os nomes, as entradas têm só o cargo."""
-    for autoridade in autoridades.CATALOGO:
-        assert autoridade.cargo
-        assert autoridade.nome == ""
-        assert str(autoridade) == autoridade.cargo
-
-
 def test_quem_assinou_nao_deixa_separador_pendurado():
-    """FR-994."""
-    assert autoridades.quem_assinou("", CARGO) == CARGO
-    assert autoridades.quem_assinou("Maria", "Diretora") == "Maria — Diretora"
+    """FR-994. O catálogo de que a 054 falava saiu com a 060; o registro de autoridades admite o
+    nome vazio pelo mesmo motivo, e é `tests/unidades/` que o prende."""
+    assert quem_assinou("", CARGO) == CARGO
+    assert quem_assinou("Maria", "Diretora") == "Maria — Diretora"
 
 
 # --- A marca do consolidado (FR-995) -------------------------------------------------------------

@@ -17,6 +17,7 @@ from processo_seletivo.divulgacao.application.publicar import (
 from processo_seletivo.divulgacao.domain.conteudo import compor
 from processo_seletivo.divulgacao.models import PublicacaoResultado, SituacaoDivulgada
 from processo_seletivo.shared.api.problems import DomainError
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import (
     ator_publicador,
     emitir,
@@ -143,7 +144,7 @@ def test_a_mesma_chave_repetida_devolve_a_primeira_publicacao(cenario):
         "marco_id": cenario["marco"],
         "ato_id": cenario["ato"].id,
         "natureza": "PRELIMINAR",
-        "autoridade": "diretoria-cefor",
+        "autoridade": str(AUTORIDADE_DO_RESULTADO),
         "confirmacao_da_previa": assinatura_da_previa(
             ato=cenario["ato"], publicacao_anterior=None, projecao=compor(cenario["ato"])
         ),
@@ -207,7 +208,7 @@ def test_a_confirmacao_calculada_sobre_outra_projecao_e_recusada(cenario):
             marco_id=cenario["marco"],
             ato_id=cenario["ato"].id,
             natureza="PRELIMINAR",
-            autoridade="diretoria-cefor",
+            autoridade=str(AUTORIDADE_DO_RESULTADO),
             confirmacao_da_previa="0" * 64,
             idempotency_key="publicar-0753-falsa",
             correlation_id="teste",
@@ -239,7 +240,7 @@ def test_a_confirmacao_da_outra_ponta_da_cadeia_e_recusada(cenario):
             marco_id=cenario["marco"],
             ato_id=cenario["ato"].id,
             natureza="DEFINITIVA",
-            autoridade="diretoria-cefor",
+            autoridade=str(AUTORIDADE_DO_RESULTADO),
             confirmacao_da_previa=da_leitura_antiga,
             idempotency_key="publicar-0753-tarde",
             correlation_id="teste",
@@ -269,8 +270,9 @@ def test_a_assinatura_da_previa_nao_contem_o_instante(cenario):
     )
 
 
-def test_a_autoridade_fora_do_catalogo_e_recusada(cenario):
-    """O identificador nunca é digitado: a escolha vem do catálogo (FR-029)."""
+def test_a_autoridade_fora_do_registro_da_unidade_e_recusada(cenario):
+    """O identificador nunca é digitado: a escolha vem das autoridades da unidade (FR-029; 060,
+    FR-1126). Inexistente e de outra unidade recusam com o mesmo código."""
     projecao = compor(cenario["ato"])
 
     with pytest.raises(DomainError) as recusa:
@@ -281,7 +283,7 @@ def test_a_autoridade_fora_do_catalogo_e_recusada(cenario):
             marco_id=cenario["marco"],
             ato_id=cenario["ato"].id,
             natureza="PRELIMINAR",
-            autoridade="prefeitura-de-outro-lugar",
+            autoridade="00000000-0000-0000-0000-00000000dead",
             confirmacao_da_previa=assinatura_da_previa(
                 ato=cenario["ato"], publicacao_anterior=None, projecao=projecao
             ),
@@ -289,7 +291,7 @@ def test_a_autoridade_fora_do_catalogo_e_recusada(cenario):
             correlation_id="teste",
         )
 
-    assert recusa.value.code == "publication_authority_required"
+    assert recusa.value.code == "autoridade_indisponivel"
 
 
 def test_o_ato_sucedido_nao_e_publicavel_pelo_comando(cenario, gestor):
@@ -306,7 +308,7 @@ def test_o_ato_sucedido_nao_e_publicavel_pelo_comando(cenario, gestor):
             marco_id=cenario["marco"],
             ato_id=antigo.id,
             natureza="PRELIMINAR",
-            autoridade="diretoria-cefor",
+            autoridade=str(AUTORIDADE_DO_RESULTADO),
             confirmacao_da_previa=assinatura_da_previa(
                 ato=antigo, publicacao_anterior=None, projecao=projecao
             ),

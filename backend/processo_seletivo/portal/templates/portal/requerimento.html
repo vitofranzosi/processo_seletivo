@@ -201,7 +201,7 @@ rolagem inteira de volta.
   {% endif %}
 
   <div class="acoes">
-    {% if not conferindo %}<button type="submit" name="guardar" value="1">Guardar e continuar depois</button>{% endif %}
+    {% if not conferindo %}<button type="submit" name="guardar" value="1" class="secundario">Guardar e continuar depois</button>{% endif %}
     <button type="submit" name="enviar" value="1" class="principal">{% if conferindo %}Salvar a atualização{% else %}Enviar requerimento{% endif %}</button>
   </div>
 </form>

@@ -3,6 +3,7 @@ import pytest
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import Publicacao
 from tests.fixtures.edital import actor_headers, complete_draft
+from tests.fixtures.publicacao import SIGNATORY
 
 
 @pytest.mark.django_db(transaction=True)
@@ -41,13 +42,7 @@ def test_us4_complete_publication_flow(api_client, manager_headers, process_payl
     )
     published = api_client.post(
         f"/api/v1/admin/editais/{edital.id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000496",
-                "name": "Diretora",
-                "role": "Diretora-Geral",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **{**publisher, "HTTP_IF_MATCH": '"4"'},
     )

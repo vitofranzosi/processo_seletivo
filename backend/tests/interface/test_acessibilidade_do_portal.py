@@ -78,9 +78,19 @@ def test_a_base_do_portal_leva_o_foco_ao_conteudo():
 
 
 def test_nada_no_portal_fixa_largura_em_pixel():
-    """Largura fixa é o que produz rolagem horizontal em 375 px (FR-079)."""
+    """Largura fixa é o que produz rolagem horizontal em 375 px (FR-079).
+
+    **Zero e um pixel não contam** (062, D-006). São a técnica do texto só para leitor de tela — a
+    `.oculto`, que completa o nome acessível dos links de resultado —, e uma caixa de um pixel não
+    empurra a página de lado. Trocar a unidade para escapar da regra esconderia a exceção; aqui ela
+    fica escrita.
+    """
     corpo = (PORTAL / "base.html").read_text()
-    regras = re.findall(r"(?<!max-)(?<!min-)width:\s*(\d+)px", corpo)
+    regras = [
+        largura
+        for largura in re.findall(r"(?<!max-)(?<!min-)width:\s*(\d+)px", corpo)
+        if int(largura) > 1
+    ]
 
     assert regras == [], f"largura fixa em pixel: {regras}"
 

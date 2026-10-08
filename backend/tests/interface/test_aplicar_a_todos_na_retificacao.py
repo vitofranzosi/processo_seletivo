@@ -17,6 +17,7 @@ from django.urls import reverse
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.interface.retificacao import campos_editaveis
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.publicacao import publish_original
 from tests.fixtures.snapshot import fato, rascunho_completo
 from tests.interface.conftest import identificar
@@ -231,7 +232,7 @@ def test_prazo_e_forma_de_convocacao_para_todos_num_ato_so(client, seletor_ligad
     identificar(client, "bruno.homologador", ["homologador"])
     assert ato("homologar", motivo="Conferido").status_code == 302
     identificar(client, "carla.publicadora", ["publicador"])
-    assert ato("publicar", signatario="reitoria").status_code == 302
+    assert ato("publicar", signatario=str(AUTORIDADE_DA_SUITE)).status_code == 302
     assert VersaoConsolidada.objects.filter(edital=edital).count() == versoes + 1
     vigente_depois = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     for perfil in vigente_depois.content["profiles"]:

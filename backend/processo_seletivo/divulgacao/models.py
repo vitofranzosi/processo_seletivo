@@ -69,9 +69,19 @@ class PublicacaoResultado(models.Model):
     publicado_por = models.CharField(max_length=255)
     publicado_em = models.DateTimeField()
     signatario_id = models.UUIDField()
-    # Nome e cargo são persistidos: retirar a autoridade do catálogo não altera ato já praticado.
+    # Nome, cargo e ato de nomeação são persistidos: encerrar a autoridade ou cadastrar outra no
+    # lugar não altera ato já praticado. O ato de nomeação chegou com a 060 (FR-1128); antes, só a
+    # Publicação de Edital o guardava.
     signatario_nome = models.CharField(max_length=255)
     signatario_cargo = models.CharField(max_length=255)
+    signatario_ato_de_nomeacao = models.CharField(max_length=255, blank=True, default="")
+    # A unidade que praticou o ato, como estava no dia — as mesmas colunas de `Publicacao` (060,
+    # FR-1128). O documento as lê do `conteudo_publico`; estas existem para consulta.
+    unidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    unidade_sigla = models.CharField(max_length=30, blank=True, default="")
+    unidade_nome = models.CharField(max_length=255, blank=True, default="")
+    unidade_cabecalho = models.JSONField(default=list)
+    unidade_local = models.CharField(max_length=120, blank=True, default="")
     # A declaração expressa de que o prazo recursal se encerrou, exigida **somente** quando a
     # natureza é definitiva e o marco não tem janela computável (FR-085, FR-086). Onde há janela, o
     # sistema verifica: pedir a declaração ali seria pedir à pessoa que respondesse pelo que a

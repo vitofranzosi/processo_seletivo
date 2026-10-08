@@ -41,8 +41,15 @@ def _texto_da_secao(edital, chave, texto, base=None):
 
 
 def _documentos(edital):
+    """O texto de cada documento publicado, **em linha corrida**.
+
+    A frase da marca ocupa duas linhas do PDF, e onde a linha quebra depende da largura das datas
+    por extenso — que muda com o dia. Comparada com as quebras, a mesma frase passava em 30/09 e
+    reprovava em 01/10 ("…, com\nvigência a partir de…"). O que se prova aqui é o que o documento
+    diz, e não onde o compositor quebrou a linha.
+    """
     return [
-        texto_de(bytes(publicacao.documento.bytes))
+        " ".join(texto_de(bytes(publicacao.documento.bytes)).split())
         for publicacao in Publicacao.objects.filter(edital=edital).order_by("publication_order")
     ]
 
@@ -72,7 +79,7 @@ def test_a_segunda_retificacao_lista_as_duas(api_client, edital):
     retify(api_client, edital, _texto_da_secao(edital, "certificado", "Dois."), suffix="b")
 
     *_, ultimo = _documentos(edital)
-    assert f"retificado em {_hoje()} e em {_hoje()}." in ultimo.replace("\n", " ")
+    assert f"retificado em {_hoje()} e em {_hoje()}." in ultimo
 
 
 def test_a_vigencia_em_outro_dia_e_declarada(api_client, edital):
@@ -110,7 +117,7 @@ def test_a_marca_lista_so_o_que_a_versao_base_incorpora(api_client, edital):
     publish_retification(api_client, r1, suffix="r1")
 
     *_, documento_de_r1 = _documentos(edital)
-    texto = documento_de_r1.replace("\n", " ")
+    texto = documento_de_r1
     assert f"Publicado em {_hoje()}; retificado em {_hoje()}." in texto
     assert f"retificado em {_hoje()} e em" not in texto
     # A marca e o conteúdo dizem a mesma coisa: R1 está, R2 não.

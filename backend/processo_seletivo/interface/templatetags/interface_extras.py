@@ -92,6 +92,16 @@ def plural(quantidade, formas):
 
 
 @register.filter
+def contagem(quantidade, formas):
+    """`1 vaga`, `3 vagas imediatas`: o número e as palavras no número dele (057, FR-1058).
+
+    A tela escrevia `vaga(s) imediata(s)` em quatro módulos, cada um com a sua grafia; o lugar de
+    resolver o plural é um só, e é este, ao lado de `plural`.
+    """
+    return f"{quantidade} {plural(quantidade, formas)}"
+
+
+@register.filter
 def legenda_do_perfil(perfil):
     """`Perfil LP03 — Vitória`: o que distingue um cartão dos outros (052, FR-944).
 
@@ -430,3 +440,34 @@ def arredondamentos_da_reserva():
     from processo_seletivo.editais.domain.quadro import ARREDONDAMENTOS
 
     return list(ARREDONDAMENTOS.items())
+
+
+@register.filter
+def em_trechos(linhas):
+    """As linhas de um item da Revisão, em trechos: os rotulados juntos, os corridos juntos.
+
+    O rotulado vira `dl` — o rótulo numa coluna, o valor ao lado (056, FR-1033) —, e o corrido
+    continua `span`. A ordem é a das linhas: um trecho só junta vizinhos, e nenhuma linha muda de
+    lugar (FR-1034). Linha vazia não desenha, como antes.
+
+    "Rotulada" é a linha que nasceu por `origens.Rotulada`, e não a que tem dois-pontos: o texto de
+    quem elabora também pode ter, e não é rótulo.
+    """
+    trechos = []
+    for linha in linhas or []:
+        if not linha:
+            continue
+        pares = hasattr(linha, "rotulo")
+        if trechos and trechos[-1]["pares"] is pares:
+            trechos[-1]["linhas"].append(linha)
+        else:
+            trechos.append({"pares": pares, "linhas": [linha]})
+    return trechos
+
+
+@register.filter
+def campos_na_ordem_do_compor(grupo):
+    """Os campos de uma linha do Retificar na ordem em que se desenham (056, FR-1038)."""
+    from processo_seletivo.interface.retificacao import na_ordem_do_compor
+
+    return na_ordem_do_compor(grupo)

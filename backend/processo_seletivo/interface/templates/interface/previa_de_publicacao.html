@@ -100,15 +100,9 @@ FR-040).
   </div>
   {% endif %}
 
-  <div class="campo">
-    <label for="autoridade">Autoridade signatária</label>
-    <select id="autoridade" name="autoridade" required aria-describedby="ajuda-autoridade">
-      {% for autoridade in autoridades %}<option value="{{ autoridade.chave }}">{{ autoridade }}</option>{% endfor %}
-    </select>
-    <p id="ajuda-autoridade" class="ajuda">Quem assina institucionalmente o ato. Nome e cargo ficam gravados na publicação.</p>
-  </div>
+  {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="autoridade" rotulo="Autoridade signatária" ajuda="Quem responde institucionalmente pelo ato. Nome, cargo e ato de nomeação ficam gravados na publicação." %}
 
-  <button type="submit" class="botao perigoso">Publicar este resultado</button>
+  <button type="submit" class="botao perigoso"{% if not escolha_da_autoridade.opcoes %} disabled{% endif %}>Publicar este resultado</button>
   {% comment %}
   Cancelar tem de **chegar a algum lugar**, e o lugar depende de quem desiste. Quem consulta o ato
   volta para ele, que é de onde veio. Quem só publica não o alcança, e mandá-lo para lá trocaria a

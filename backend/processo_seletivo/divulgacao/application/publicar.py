@@ -51,7 +51,10 @@ from processo_seletivo.divulgacao.models import (
     SituacaoDivulgada,
 )
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
-from processo_seletivo.publicacoes.domain.autoridades import escolher
+from processo_seletivo.publicacoes.application.contexto_do_ato import (
+    colunas_da_unidade,
+    contexto_do_ato,
+)
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -143,14 +146,10 @@ def publicar_resultado(
             # mundo depois dele — inclusive quando esse mundo já mudou (FR-030).
             return PublicacaoResultado.objects.get(pk=reserva.result_id)
 
-        assinante = escolher(autoridade)
-        if assinante is None:
-            raise DomainError(
-                "publication_authority_required",
-                "Escolha a autoridade signatária entre as do catálogo.",
-                422,
-                campo="autoridade",
-            )
+        # A autoridade habilitada na unidade do Edital e vigente hoje, conferida e travada — a mesma
+        # regra da publicação do Edital e da Retificação (060, FR-1125, FR-1126).
+        contexto = contexto_do_ato(edital, autoridade, agora)
+        assinante = contexto.autoridade
         if natureza not in Natureza.values:
             raise DomainError(
                 "publication_authority_required"
@@ -214,6 +213,7 @@ def publicar_resultado(
             natureza=natureza,
             publicado_em=agora,
             signatario=assinante,
+            unidade=contexto.unidade,
             # **A causa é congelada no ato de publicar** (FR-088). Divulgação que sucede outra e
             # nasce de decisão de recurso é apresentada por ela — na página e no documento, que
             # leem os mesmos bytes. Derivá-la na leitura faria uma decisão posterior reescrever a
@@ -236,9 +236,11 @@ def publicar_resultado(
                 conteudo_publico_hash=canonical_sha256(conteudo),
                 publicado_por=actor.subject,
                 publicado_em=agora,
-                signatario_id=assinante.identificador,
+                signatario_id=assinante.pk,
                 signatario_nome=assinante.nome,
                 signatario_cargo=assinante.cargo,
+                signatario_ato_de_nomeacao=assinante.ato_de_nomeacao,
+                **colunas_da_unidade(contexto.unidade),
                 prazo_encerrado_declarado_em=agora if declaracao else None,
                 prazo_encerrado_declarado_por=actor.subject if declaracao else "",
                 prazo_encerrado_fundamento=declaracao,

@@ -125,6 +125,27 @@ def test_o_documento_instruido_abre_para_quem_so_julga(client, seletor_ligado, i
     assert client.get(recebida).status_code == 403
 
 
+def test_o_documento_instruido_abre_em_aba_propria(client, seletor_ligado, instruivel):
+    """O PDF é servido `inline`: na mesma aba ele substitui a peça, e leva a motivação junto.
+
+    É o defeito que a 012 corrigiu na Mesa (FR-112). Quem julga escreve a motivação na mesma
+    página em que o documento citado está ligado, e a página é `no-store`: abrir o documento por
+    cima dela e voltar não garante o texto de volta.
+    """
+    instruir_pela_tela(client, instruivel)
+
+    corpo = abrir_a_peca(client, instruivel["recurso"])
+
+    caminho = reverse(
+        "interface:recurso-documento-instruido",
+        args=[instruivel["recurso"].id, instruivel["documento"].id],
+    )
+    ligacao = re.search(r'<a [^>]*href="' + re.escape(caminho) + r'"[^>]*>', corpo)
+    assert ligacao, "a peça liga o documento citado"
+    assert 'target="_blank"' in ligacao.group(0)
+    assert 'rel="noopener"' in ligacao.group(0)
+
+
 def test_depois_de_decidido_a_tela_diz_que_houve_e_que_o_alcance_terminou(
     client, seletor_ligado, instruivel
 ):

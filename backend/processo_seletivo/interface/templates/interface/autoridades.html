@@ -1,0 +1,119 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Autoridades da unidade{% endblock %}
+{% block conteudo %}
+{% comment %}
+As autoridades que podem responder pelos atos da unidade (060, FR-1122, UX-149).
+
+Da unidade de quem opera, e de nenhuma outra: a de outra unidade é indistinguível de inexistente.
+Três grupos, porque a pergunta de quem abre esta tela é qual delas responde hoje, qual passa a
+responder depois e qual já respondeu. A situação é derivada da vigência; nenhuma coluna a guarda.
+
+Nada aqui se exclui. Retirar de uso é encerrar a vigência, e o fim é inclusivo: encerrada hoje, a
+autoridade continua sendo oferecida até o fim deste dia. Depois do primeiro ato publicado, o
+registro não se corrige, porque a Publicação já o cita pelo identificador.
+{% endcomment %}
+<h1>Autoridades da unidade</h1>
+{% if unidade %}<p class="sub">{{ unidade.nome }}</p>{% endif %}
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if request.GET.feito == "cadastrar" %}<p class="sucesso" role="status">Autoridade cadastrada.</p>{% endif %}
+{% if request.GET.feito == "corrigir" %}<p class="sucesso" role="status">Autoridade corrigida.</p>{% endif %}
+{% if request.GET.feito == "encerrar" %}<p class="sucesso" role="status">Vigência encerrada.</p>{% endif %}
+
+{% if not unidade %}
+<p class="aviso" role="status">{{ codigo }} não é uma unidade registrada no sistema. As unidades
+  são registradas na implantação; enquanto esta não estiver, não há autoridade a cadastrar.</p>
+{% else %}
+
+{% for grupo in grupos %}
+<section aria-labelledby="grupo-{{ grupo.chave }}">
+  <h2 id="grupo-{{ grupo.chave }}">{{ grupo.titulo }}</h2>
+  {% if grupo.itens %}
+  {% comment %} Cartões em grade, como os da Comissão: o cargo por extenso de uma diretoria
+     passa de setenta caracteres, e uma lista em linha o encostava no cartão seguinte. {% endcomment %}
+  <ul class="autoridades" aria-label="{{ grupo.titulo }}">
+    {% for item in grupo.itens %}
+    <li>
+      <div class="cabeca"><strong>{{ item.rotulo }}</strong></div>
+      <span class="ajuda">{{ item.periodo }}</span>
+      {% if item.usada %}<span class="ajuda">Já usada em ato publicado — para corrigir, encerre e cadastre outra.</span>{% endif %}
+      {% if grupo.chave != "encerradas" %}
+      <details class="gerir-membro">
+        <summary>Gerir {{ item.rotulo }}</summary>
+        {% if not item.usada %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="corrigir">
+          <input type="hidden" name="autoridade" value="{{ item.id }}">
+          <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-c{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+          <p class="campo">
+            <label for="cargo-{{ item.id }}">Cargo <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input id="cargo-{{ item.id }}" name="cargo" type="text" value="{{ item.cargo }}" required aria-required="true" maxlength="255">
+          </p>
+          <p class="campo">
+            <label for="nome-{{ item.id }}">Nome</label>
+            <input id="nome-{{ item.id }}" name="nome" type="text" value="{{ item.nome }}" maxlength="255">
+          </p>
+          <p class="campo">
+            <label for="ato-{{ item.id }}">Ato de nomeação</label>
+            <input id="ato-{{ item.id }}" name="ato_de_nomeacao" type="text" value="{{ item.ato_de_nomeacao }}" maxlength="255">
+          </p>
+          <p class="campo">
+            <label for="inicio-{{ item.id }}">Início da vigência <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input id="inicio-{{ item.id }}" name="inicio_vigencia" type="date" value="{{ item.inicio_iso }}" required aria-required="true">
+          </p>
+          <button type="submit" class="acao" aria-label="Corrigir {{ item.rotulo }}">Corrigir</button>
+        </form>
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="encerrar">
+          <input type="hidden" name="autoridade" value="{{ item.id }}">
+          <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-e{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+          <p class="campo">
+            <label for="fim-{{ item.id }}">Fim da vigência <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input id="fim-{{ item.id }}" name="fim_vigencia" type="date" value="{{ hoje_iso }}" min="{{ hoje_iso }}" required aria-required="true" aria-describedby="ajuda-fim-{{ item.id }}">
+            <span class="ajuda" id="ajuda-fim-{{ item.id }}">A autoridade continua disponível até o fim deste dia.</span>
+          </p>
+          <button type="submit" class="acao perigoso" aria-label="Encerrar a vigência de {{ item.rotulo }}">Encerrar a vigência</button>
+        </form>
+      </details>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="vazio" role="status">{{ grupo.vazio }}</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section aria-labelledby="cadastrar-titulo" class="adicionar">
+  <h2 id="cadastrar-titulo">Cadastrar autoridade</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="cadastrar">
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+    <p class="campo">
+      <label for="cargo">Cargo <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input id="cargo" name="cargo" type="text" required aria-required="true" maxlength="255">
+    </p>
+    <p class="campo">
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" type="text" maxlength="255" aria-describedby="ajuda-nome">
+      <span class="ajuda" id="ajuda-nome">Sem nome, o documento diz só o cargo.</span>
+    </p>
+    <p class="campo">
+      <label for="ato_de_nomeacao">Ato de nomeação</label>
+      <input id="ato_de_nomeacao" name="ato_de_nomeacao" type="text" maxlength="255" aria-describedby="ajuda-ato">
+      <span class="ajuda" id="ajuda-ato">A portaria que nomeia ou delega — por exemplo, Portaria nº 123, de 2 de janeiro de 2026.</span>
+    </p>
+    <p class="campo">
+      <label for="inicio_vigencia">Início da vigência <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input id="inicio_vigencia" name="inicio_vigencia" type="date" value="{{ hoje_iso }}" required aria-required="true">
+    </p>
+    <p class="salvar"><button type="submit" class="botao">Cadastrar autoridade</button></p>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

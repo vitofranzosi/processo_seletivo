@@ -1,5 +1,8 @@
 {% extends "interface/compor_base.html" %}
 {% block etapa_titulo %}Anexos{% endblock %}
+{% comment %} A lista vazia na largura da lista cheia — e do formulário de acrescentar logo abaixo —, e não na
+   medida de leitura: eram três larguras na mesma etapa (056, FR-1037). {% endcomment %}
+{% block estilo_da_pagina %}#anexos-lista>.vazio{max-width:none}{% endblock %}
 {% block etapa %}
 <section aria-labelledby="anexos-titulo">
   <h2 id="anexos-titulo">Anexos do Edital</h2>

@@ -107,7 +107,7 @@ class PublishEditalView(APIView):
             actor=request.user,
             edital_id=edital_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
-            signatory=serializer.validated_data["signatory"],
+            autoridade_id=serializer.validated_data["signatory"]["authorityId"],
             reason=serializer.validated_data["reason"],
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
@@ -208,7 +208,7 @@ class PublishRetificationView(APIView):
             actor=request.user,
             retificacao_id=retificacao_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
-            signatory=serializer.validated_data["signatory"],
+            autoridade_id=serializer.validated_data["signatory"]["authorityId"],
             idempotency_key=idempotency_key(request),
             correlation_id=request.correlation_id,
         )

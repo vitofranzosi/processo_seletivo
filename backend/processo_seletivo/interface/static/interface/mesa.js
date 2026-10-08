@@ -35,6 +35,7 @@
     trabalho.classList.remove("com-documento");
     if (pagina) pagina.classList.remove("com-documento");
     quadro.src = "about:blank";
+    avulso.removeAttribute("href");
     links.forEach(function (link) {
       link.removeAttribute("aria-current");
     });
@@ -43,6 +44,12 @@
   function abrir(link) {
     quadro.src = link.getAttribute("href");
     titulo.textContent = link.getAttribute("data-documento");
+    avulso.setAttribute("href", link.getAttribute("href"));
+    // O nome acessível começa pelo texto visível: quem comanda por voz diz o que lê.
+    avulso.setAttribute(
+      "aria-label",
+      "Abrir em aba própria: " + link.getAttribute("data-documento")
+    );
     painel.hidden = false;
     trabalho.classList.add("com-documento");
     if (pagina) pagina.classList.add("com-documento");
@@ -78,6 +85,22 @@
   } else if (larga.addListener) {
     larga.addListener(aoMudar);
   }
+
+  // **A barra inteira do visualizador, a um clique.** A moldura tem a largura de meia tela, e o
+  // visualizador de PDF do navegador encolhe a própria barra para caber nela: no Firefox, o menu
+  // que guarda "Girar" some, e girar a foto tirada de lado só se faz pelo atalho R, que ninguém
+  // adivinha. Em aba própria a barra volta inteira, em qualquer navegador — e sem texto de ajuda
+  // que valesse para um navegador e mentisse para o outro.
+  //
+  // É o mesmo endereço do painel: a mesma Atribuição, a mesma conferência e uma abertura a mais na
+  // trilha, que é o que ela é. Girar e ampliar continuam sendo da visualização, e o arquivo do
+  // candidato não muda.
+  var avulso = document.createElement("a");
+  avulso.className = "acao";
+  avulso.textContent = "Abrir em aba própria";
+  avulso.setAttribute("target", "_blank");
+  avulso.setAttribute("rel", "noopener");
+  titulo.parentNode.appendChild(avulso);
 
   // O fechar mora na barra, ao lado do nome do documento — e não no fim do painel, a uma tela de
   // distância do que ele fecha.
