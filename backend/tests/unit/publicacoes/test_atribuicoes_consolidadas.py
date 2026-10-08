@@ -260,18 +260,37 @@ def test_o_que_o_documento_distingue_impede(variante):
 
 @pytest.mark.parametrize(
     ("um", "outro"),
-    [("●", "▪"), ("●", "•"), ("●​", "●")],
-    ids=["dois-marcadores-que-sairiam-como-interrogacao", "marcador-e-bolinha", "largura-zero"],
+    [
+        ("● Conhecer a proposta.", "▪ Conhecer a proposta."),
+        ("● Conhecer a proposta.", "• Conhecer a proposta."),
+        ("●\u200b Conhecer a proposta.", "● Conhecer a proposta."),
+        ("Seleção do curso.", "Selec\u0327a\u0303o do curso."),
+    ],
+    ids=["bolinha-e-quadrado", "bolinha-e-marcador", "largura-zero", "nfc-e-nfd"],
 )
-def test_a_comparacao_e_do_texto_registrado_e_nao_do_impresso(um, outro):
-    """Caso-limite da spec: dois símbolos que o documento trocaria pelo mesmo "?" não se juntam.
+def test_o_que_a_grafia_normaliza_nao_impede(um, outro):
+    """FR-1187: a comparação é do texto normalizado, que é o que o documento imprime.
 
-    A comparação é sobre o texto registrado (FR-1187). Comparar o impresso juntaria textos que só
-    saem iguais porque perderam o símbolo — e a correção desse "?" é outra feature.
+    Marcadores cheios viram `•`, o invisível some e o decomposto se compõe — o significado
+    sobrevive, e o documento imprime os dois iguais. Agrupam, na função e no documento.
     """
-    assert (
-        agrupados(("A", f"{um} Conhecer a proposta."), ("B", f"{outro} Conhecer a proposta.")) == []
-    )
+    assert agrupados(("A", um), ("B", outro)) == [["A", "B"]]
+    conteudo = edital(perfil("A", um, numero=1), perfil("B", outro, numero=2))
+    assert "Atribuições comuns aos Perfis A e B" in texto_de(documento(conteudo, modo=MODO_PREVIA))
+
+
+def test_caracteres_sem_grafia_diferentes_nao_se_juntam():
+    """Caso-limite: o que a grafia não normaliza continua distinto — `≥` não é `≤`.
+
+    Na prévia, cada um aparece como o próprio código, e não como o mesmo "?"; na publicação, os
+    dois são recusados antes de compor.
+    """
+    um, outro = "Nota ≥ 7 no curso.", "Nota ≤ 7 no curso."
+    assert agrupados(("A", um), ("B", outro)) == []
+    conteudo = edital(perfil("A", um, numero=1), perfil("B", outro, numero=2))
+    previa = texto_de(documento(conteudo, modo=MODO_PREVIA))
+    assert "Atribuições comuns" not in previa
+    assert "[U+2265]" in previa and "[U+2264]" in previa
 
 
 def test_texto_vazio_nunca_agrupa():

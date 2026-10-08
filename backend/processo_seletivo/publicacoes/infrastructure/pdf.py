@@ -508,11 +508,16 @@ def grupos_de_atribuicoes(perfis) -> list[list[dict]]:
     "diferente" sobre dois que só diferem em espaço. A quebra de linha conta, porque é fronteira; o
     espaço e a quantidade de linhas em branco, não.
 
-    **A comparação é sobre o texto registrado, e não sobre o que sai impresso** — e esta é a única
-    distância entre os dois. O documento troca por "?" o que a fonte não representa, e comparar o
-    impresso juntaria dois textos que só saem iguais porque perderam o mesmo símbolo: `●` e `▪`
-    imprimem o mesmo "?" e continuam diferentes aqui. Quem um dia normalizar esses símbolos não deve
-    trocar a chave pelo impresso.
+    **A comparação é sobre o texto normalizado por `grafia`, que é o que sai impresso.** A primeira
+    versão comparava o texto cru, porque o documento trocava por "?" o que a fonte não representa, e
+    o impresso juntaria `●` e `≥` por terem perdido o mesmo símbolo. Com a correção do "?", essa
+    perda deixou de existir: o que `grafia` normaliza mantém o significado — `●` e `▪` são o
+    marcador `•`, o espaço de largura zero some, `ç` decomposto é `ç` —, e o que ela não normaliza
+    é recusado na publicação e aparece como `[U+2265]` na prévia, distinto de qualquer outro. Dois
+    Perfis colados do Word em momentos diferentes, com um invisível de diferença, imprimem o mesmo
+    texto e se juntam (decisão do responsável pelo produto, 08/10/2026). A chave normaliza ela
+    mesma, e não confia em quem a chama: o documento já recebe o snapshot normalizado, mas a regra
+    não pode depender do caminho.
 
     Nada além da identidade inteira agrupa (FR-1188): nem denominação, nem subconjunto, nem os
     mesmos parágrafos em outra ordem — o sistema não tem como saber que a ordem é indiferente. Texto
@@ -524,9 +529,8 @@ def grupos_de_atribuicoes(perfis) -> list[list[dict]]:
         return []
     por_chave: dict[tuple[str, ...], list[dict]] = {}
     for perfil in perfis:
-        chave = tuple(
-            " ".join(paragrafo.split()) for paragrafo in _paragrafos(perfil.get("duties"))
-        )
+        texto = grafia.normalizar(perfil.get("duties") or "")
+        chave = tuple(" ".join(paragrafo.split()) for paragrafo in _paragrafos(texto))
         if chave:
             por_chave.setdefault(chave, []).append(perfil)
     return [grupo for grupo in por_chave.values() if len(grupo) > 1]

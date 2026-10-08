@@ -54,16 +54,24 @@ reduzido a `" ".join(parágrafo.split())`. Perfis com a mesma chave não vazia f
 **Por quê**: é exatamente a estrutura que o documento imprime — `_paragrafos` define as fronteiras e
 `_quebrar` descarta o espaço —, e por isso é o que o FR-1187 descreve: a quebra de linha conta
 (é fronteira), o espaço e a quantidade de linhas em branco não. Reusar `_paragrafos` em vez de
-reescrever a separação garante que chave e impressão nunca divergem. A comparação é sobre o texto
-registrado, antes de qualquer codificação: dois símbolos diferentes que hoje saem como "?" dão
-chaves diferentes.
+reescrever a separação garante que chave e impressão nunca divergem.
+
+**Emenda de 08/10/2026, ao integrar a correção do "?" (#265).** A primeira versão comparava o texto
+registrado, antes de qualquer codificação, para que dois símbolos que o documento trocava pelo mesmo
+"?" dessem chaves diferentes. O #265 passou a normalizar o snapshot antes de compor — marcadores
+cheios viram `•`, invisíveis somem, o texto é composto em NFC — e a recusar na publicação o que não
+normaliza. Integrada a `main`, o documento agrupava `●` com `•` e a função testada não: as duas
+divergiam. O responsável pelo produto escolheu a comparação normalizada, e a chave passou a aplicar
+`grafia.normalizar` ela mesma, para valer igual em qualquer caminho de chamada.
 
 **Alternativas descartadas**:
 - *Comparar a string crua* — dois Perfis colados em momentos diferentes divergem num espaço final
   que ninguém vê, e a consolidação não dispararia no caso real.
 - *Normalizar caixa, acento ou pontuação* — juntaria textos que o leitor vê diferentes.
 - *Ordenar os parágrafos* — o sistema não tem como saber que a ordem é indiferente (spec, casos-limite).
-- *Comparar o que sai impresso* — juntaria textos distintos que perderam o mesmo símbolo para o "?".
+- *Comparar o que sai impresso* — descartada na primeira versão, porque juntaria textos distintos
+  que perderam o mesmo símbolo para o "?". Com o #265 essa perda não existe mais, e a normalizada
+  passou a ser a decisão (emenda acima).
 
 ---
 

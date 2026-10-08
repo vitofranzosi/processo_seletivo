@@ -165,9 +165,10 @@ dois documentos guardados.
   documento da Retificação.
 - **Retificação que deixa um grupo com um Perfil só.** O grupo se desfaz e esse Perfil volta a
   trazer o próprio texto.
-- **Caractere que o documento não representa.** A igualdade é a do texto registrado, e não a do que
-  sai impresso (FR-1187): dois textos que diferem num símbolo que hoje sai como "?" nos dois **não**
-  se juntam. A correção desse "?" é outra (1º ajuste).
+- **Caractere que a grafia normaliza.** `●` e `▪` são o marcador `•`, o espaço de largura zero some,
+  `ç` decomposto é `ç`: dois textos que só diferem nisso imprimem iguais e **se juntam** (FR-1187).
+- **Caractere que o documento não representa.** `≥` e `≤` continuam distintos: não se juntam, a
+  prévia mostra cada um pelo próprio código, e a publicação os recusa antes de compor (1º ajuste).
 - **Item partido em duas linhas por quebra rígida de texto colado.** Cada linha continua sendo um
   parágrafo, como hoje; dois textos com as mesmas quebras se juntam, com quebras diferentes não
   (7º ajuste).
@@ -182,15 +183,22 @@ dois documentos guardados.
   documento MUST imprimir esse texto uma única vez, numa subseção comum (FR-1189), com os mesmos
   parágrafos, na mesma ordem e com o mesmo texto que sairiam no bloco de cada Perfil — sem
   acrescentar, suprimir nem reordenar nada.
-- **FR-1187**: Atribuições são idênticas quando, no texto registrado na versão que se compõe, têm a
-  mesma sequência de parágrafos e cada parágrafo tem as mesmas palavras na mesma ordem. **A quebra de
+- **FR-1187**: Atribuições são idênticas quando, no texto da versão que se compõe, normalizado como o
+  documento o normaliza para imprimir, têm a mesma sequência de parágrafos e cada parágrafo tem as mesmas palavras na mesma ordem. **A quebra de
   linha é fronteira de parágrafo e MUST contar**: um item escrito numa linha e o mesmo item partido em
   duas são textos diferentes, porque o documento os imprime diferentes. Só três coisas MUST NOT
   contar, porque o documento não as distingue: a quantidade de espaço entre palavras, o espaço nas
   pontas de cada linha e a quantidade de linhas em branco entre dois parágrafos — uma ou várias,
   a fronteira é uma só. Letra, maiúscula, acento, pontuação, símbolo e a ordem dos parágrafos MUST
-  contar. A comparação MUST ser feita sobre o texto registrado, e nunca sobre o que o documento
-  imprime.
+  contar. A comparação MUST ser feita sobre o texto normalizado pela correção do "?" (1º ajuste) —
+  marcadores cheios como `•`, invisíveis removidos, composição NFC —, que é o que o documento
+  imprime; o caractere que essa normalização não resolve MUST continuar distinto de qualquer outro.
+  > **Emendado em 08/10/2026, depois da revisão, por decisão do responsável pelo produto.** A primeira
+  > redação comparava o texto registrado, para que dois símbolos que o documento trocava pelo mesmo
+  > "?" não se juntassem. A correção do "?" (#265) acabou com essa perda: o que ela normaliza mantém o
+  > significado, e o que não normaliza é recusado na publicação e aparece pelo próprio código na
+  > prévia. Comparar o texto cru deixaria de fora o caso real — textos colados do editor em momentos
+  > diferentes, com um invisível de diferença.
 - **FR-1188**: Nada além da identidade do FR-1187 MUST agrupar Perfis: nem denominação, nem código,
   nem localidade, nem coincidência parcial — subconjunto, interseção ou os mesmos parágrafos em outra
   ordem. Texto vazio MUST NOT formar grupo. Edital de um Perfil só MUST NOT ter subseção comum.

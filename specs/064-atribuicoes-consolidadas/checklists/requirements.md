@@ -38,9 +38,9 @@
   dizer que um documento oficial já gerado, ou o de um Perfil só, não mudou em nada — a mesma
   garantia que a `008` já dá ao documento publicado.
 - A regra de identidade (`FR-1187`) é escrita em termos do que o leitor vê — parágrafos, palavras,
-  ordem — e não da função que a calcula. Ela fixa que a comparação é sobre o texto registrado, e não
-  sobre o impresso, para que a correção do "?" (fora do escopo) não junte por acidente textos que
-  hoje saem iguais só porque perderam o mesmo símbolo.
+  ordem — e não da função que a calcula. Na primeira redação ela comparava o texto registrado, para
+  não juntar textos que saíam iguais só por terem perdido o mesmo símbolo para o "?"; emendada em
+  08/10/2026, depois da correção do "?", para comparar o texto normalizado.
 - Os casos-limite são requisitos sem identificador: a rastreabilidade, quando vier, precisa de uma
   linha para cada um, como para os `FR-` e `SC-`.
 - As emendas aos FR-016 e FR-021 da `008` foram anotadas no próprio spec da `008`, no padrão das

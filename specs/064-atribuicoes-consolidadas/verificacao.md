@@ -132,3 +132,24 @@ fechou em **69 passed**.
 
 Suíte completa depois das correções, `make test-pg DB_NAME=ps_064`, sem outra suíte no cluster:
 **9432 passed, 11 skipped** em 936 s — os 9427 de antes mais os cinco casos novos da revisão.
+
+## Integração com a correção do "?" (#265) — 08/10/2026
+
+O CI do #264 ficou verde às 17:38Z; o #265 entrou na `main` às 18:59Z, mexendo no mesmo renderizador.
+Integrada a `main` (merge `5d635ddf`, sem conflito textual), os testes das duas features passaram —
+1092 em `tests/unit/publicacoes`, `tests/contract` e nos dois arquivos do #265 —, mas o documento e a
+função de agrupamento passaram a divergir, porque o #265 normaliza o snapshot antes de compor:
+
+| Dois Perfis que só diferem em | função | documento |
+|---|---|---|
+| `●` × `•` | não agrupava | agrupava |
+| `●` + largura zero × `●` | não agrupava | agrupava |
+| NFC × NFD | não agrupava | agrupava |
+
+O responsável pelo produto escolheu a comparação normalizada. A chave passou a aplicar
+`grafia.normalizar`; o FR-1187, dois casos-limite, a D-002 e a rastreabilidade foram emendados; e
+os testes passaram a provar a regra na função **e** na prévia, com o par `≥` × `≤` confirmando que o
+que a grafia não resolve continua distinto. O arquivo novo fechou em **71 passed**.
+
+Suíte completa sobre a branch integrada e com a emenda, `make test-pg DB_NAME=ps_064`, sem outra
+suíte no cluster: **9526 passed, 11 skipped** em 976 s.
