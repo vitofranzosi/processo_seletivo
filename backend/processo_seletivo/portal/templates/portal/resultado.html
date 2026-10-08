@@ -1,8 +1,13 @@
 {% extends "portal/base.html" %}{% load interface_extras %}
-{% block titulo %}{{ cabecalho.titulo }}{% endblock %}
+{% block titulo %}{{ cabecalho.titulo }} — {{ lista }}{% endblock %}
 {% block conteudo %}
-<h1>{{ cabecalho.natureza_rotulo }}</h1>
-<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}{% if cabecalho.lista %} · {{ cabecalho.lista }}{% endif %}</p>
+{% comment %}
+**A lista no título, e não no fim do subtítulo** — e com nome também quando é a ampla concorrência.
+Antes ela era a última coisa da linha, e só aparecia quando a lista tinha nome: a publicação da ampla
+não dizia de que lista era, e as três ordens de um marco tinham o mesmo título de aba.
+{% endcomment %}
+<h1>{{ cabecalho.natureza_rotulo }} — {{ lista }}</h1>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
 
 {% comment %}
 A sucessão dita **em texto**, e não só por cor: quem lê sem enxergar cor precisa da mesma
@@ -23,7 +28,8 @@ outro (FR-044, SC-006).
 abria a vigente não tinha como saber se estava lendo o que vale ou um histórico — que é a
 oportunidade nº 3 do relatório da E2E-017.
 {% endcomment %}
-<p class="vigente" role="status">Este é o resultado vigente deste marco.</p>
+{% comment %}"Marco" é palavra de quem conduz o certame, e não de quem o disputa.{% endcomment %}
+<p class="vigente" role="status">Esta é a versão que vale.</p>
 {% endif %}
 
 {% if correcoes %}

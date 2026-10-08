@@ -22,6 +22,7 @@ from processo_seletivo.sorteios.application.relacao import publicar_relacao
 from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
 from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import FonteDeTeste
 from processo_seletivo.sorteios.models import Sorteio
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.divulgacao import ator_publicador
 from tests.fixtures.sorteio import LISTA_PCD, LISTA_PPI, METODO, certame_com_cotas, presidente
 
@@ -83,7 +84,7 @@ def _publicar(certame, sorteio, *, chave, natureza="PRELIMINAR"):
         marco_id=sorteio.marco_id,
         ato_id=sorteio.ato_id,
         natureza=natureza,
-        autoridade="diretoria-cefor",
+        autoridade=str(AUTORIDADE_DO_RESULTADO),
         confirmacao_da_previa=assinatura_da_previa(
             ato=sorteio.ato, publicacao_anterior=anterior, projecao=projecao
         ),

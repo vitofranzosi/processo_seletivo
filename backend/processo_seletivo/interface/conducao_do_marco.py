@@ -26,6 +26,7 @@ não entra aqui, pela mesma razão que não entra na ocupação.
 
 from django.db import transaction
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.auditoria.models import IdempotencyRecord
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
@@ -73,9 +74,10 @@ from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import ProcessoSeletivo
 from processo_seletivo.publicacoes.application.selectors import effective_version
-from processo_seletivo.publicacoes.domain.autoridades import escolher
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.shared.tempo import ZONA
+from processo_seletivo.unidades.application.autoridades import conferir
 
 ORDENAR, CORTAR, APURAR, PUBLICAR = "ordenar", "cortar", "apurar", "publicar"
 OPERACOES = (ORDENAR, CORTAR, APURAR, PUBLICAR)
@@ -593,18 +595,21 @@ def _alcance_da_apuracao(edital, conteudo, perfil, marco):
     return itens
 
 
-def conferir_natureza_e_autoridade(natureza, autoridade):
-    """As duas escolhas que a publicação pede uma vez para o marco (`FR-826`)."""
+def conferir_natureza_e_autoridade(natureza, autoridade, edital):
+    """As duas escolhas que a publicação pede uma vez para o marco (`FR-826`).
+
+    A autoridade é conferida contra a unidade do Edital e a data de hoje, sem trava: é conferência,
+    e cada recorte a confere de novo, travada, ao publicar (060, FR-1126).
+    """
     if natureza not in Natureza.values:
         raise DomainError(
             "publication_nature_required", "Escolha a natureza do resultado a divulgar.", 422
         )
-    if escolher(autoridade) is None:
-        raise DomainError(
-            "publication_authority_required",
-            "Escolha a autoridade signatária entre as do catálogo.",
-            422,
-        )
+    conferir(
+        autoridade,
+        unidade_codigo=edital.institution_scope,
+        data=timezone.now().astimezone(ZONA).date(),
+    )
 
 
 def exige_declaracao(ato, marco_id, natureza):
@@ -625,7 +630,7 @@ def exige_declaracao(ato, marco_id, natureza):
 
 
 def _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade):
-    conferir_natureza_e_autoridade(natureza, autoridade)
+    conferir_natureza_e_autoridade(natureza, autoridade, edital)
     marco_id = str(marco["id"])
     itens = []
     for lista_id, rotulo in recortes_do_marco(conteudo, perfil):

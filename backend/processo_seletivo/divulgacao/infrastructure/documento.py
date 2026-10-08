@@ -14,6 +14,7 @@ ele confira. O instante impresso é `publicado_em`, que é um fato passado — u
 geração faria o mesmo resultado produzir arquivos diferentes a cada download.
 """
 
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA_DO_BRASAO,
     ANTES_DE_LINHA,
@@ -25,9 +26,10 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     DIREITA,
     ESQUERDA,
     NEGRITO,
-    ORGAO,
     Composicao,
+    UnidadeDoAto,
     _tabela,
+    linhas_do_orgao,
     render_documento,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -56,8 +58,11 @@ def render_resultado_pdf(conteudo: dict) -> bytes:
 
 
 def _timbre(composicao, cabecalho):
+    # A unidade vem do conteúdo congelado, e não do registro de Unidades (060, FR-1112): o documento
+    # deriva dos mesmos bytes que a página, e a unidade renomeada depois não alcança o ato.
+    unidade = UnidadeDoAto(cabecalho=tuple(cabecalho["unidade"]["cabecalho"]), local="")
     composicao.espaco(ALTURA_DO_BRASAO - 10)
-    for indice, linha in enumerate(ORGAO):
+    for indice, linha in enumerate(linhas_do_orgao(unidade)):
         composicao.escrever(
             linha, tamanho=CORPO_TEXTO, alinhamento=CENTRO, antes=0.0 if indice else 4.0
         )
@@ -95,7 +100,7 @@ def _identificacao(composicao, cabecalho):
             ("EDITAL", cabecalho["edital"]),
             ("PERFIL", cabecalho["perfil"]),
             ("MARCO", cabecalho["marco"]),
-            ("LISTA DE CONCORRÊNCIA", cabecalho.get("lista") or "Ampla concorrência"),
+            ("LISTA DE CONCORRÊNCIA", nome_da_lista(cabecalho)),
             ("NATUREZA", cabecalho["natureza_rotulo"]),
             # **A causa da retificação, quando existe** (FR-088). Sem ela, o documento de uma
             # divulgação que corrige outra afirmava uma ordem nova sem dizer que corrigia nada —
@@ -189,6 +194,7 @@ def _autoridade(composicao, cabecalho):
         composicao.escrever(
             cabecalho["signatario_cargo"], tamanho=CORPO_TEXTO, fonte=NEGRITO, alinhamento=CENTRO
         )
+        _ato_de_nomeacao(composicao, cabecalho)
         return
     composicao.escrever(
         cabecalho["signatario_nome"], tamanho=CORPO_TEXTO, fonte=NEGRITO, alinhamento=CENTRO
@@ -196,6 +202,17 @@ def _autoridade(composicao, cabecalho):
     composicao.escrever(
         cabecalho["signatario_cargo"], tamanho=CORPO_NOTA, alinhamento=CENTRO, antes=2.0
     )
+    _ato_de_nomeacao(composicao, cabecalho)
+
+
+def _ato_de_nomeacao(composicao, cabecalho):
+    """O ato de nomeação, quando registrado — como o fecho do Edital o imprime (054, FR-993).
+
+    A Publicação de Resultado passou a congelá-lo com a 060 (FR-1128); antes, ela não o tinha.
+    """
+    ato = str(cabecalho.get("signatario_ato_de_nomeacao") or "").strip()
+    if ato:
+        composicao.escrever(ato, tamanho=CORPO_NOTA, alinhamento=CENTRO)
 
 
 def _sorteio(composicao, cabecalho):

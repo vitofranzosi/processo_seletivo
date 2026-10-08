@@ -59,13 +59,7 @@ def test_published_retification_preserves_original_and_creates_consolidated_vers
     )
     published = api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao.id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000602",
-                "name": "Diretora",
-                "role": "Diretora",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **{**actor_headers("publicador-r", ["retificacao:publicar"]), "HTTP_IF_MATCH": '"3"'},
     )
@@ -164,8 +158,6 @@ def homologate_and_publish(
     retificacao_id,
     *,
     suffix,
-    authority="00000000-0000-0000-0000-000000000602",
-    role="Diretora",
     key="retificacao-chave-k1",
 ):
     api_client.post(
@@ -181,7 +173,7 @@ def homologate_and_publish(
     )
     return api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
-        {"signatory": {"authorityId": authority, "name": "Diretora", "role": role}},
+        {"signatory": SIGNATORY},
         format="json",
         **actor_headers(f"publicador-{suffix}", ["retificacao:publicar"], if_match=3, key=key),
     )
@@ -421,13 +413,7 @@ def test_returned_retification_is_rebased_and_republished(
     )
     published = api_client.post(
         f"/api/v1/admin/retificacoes/{retificacao_id}/publicacoes",
-        {
-            "signatory": {
-                "authorityId": "00000000-0000-0000-0000-000000000602",
-                "name": "Diretora",
-                "role": "Diretora",
-            }
-        },
+        {"signatory": SIGNATORY},
         format="json",
         **actor_headers("publicador-c", ["retificacao:publicar"], if_match=7),
     )
@@ -877,7 +863,6 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         api_client,
         first.data["id"],
         suffix="a",
-        authority="00000000-0000-0000-0000-000000000602",
         key="retificacao-chave-k1",
     )
     assert published.status_code == 201
@@ -886,7 +871,6 @@ def test_retification_emptied_before_its_publication_is_rejected_with_problem_de
         api_client,
         second.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
     # A divergência de conteúdo é diagnosticada antes de o efeito ser medido: o caminho já não
@@ -937,7 +921,6 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
             api_client,
             first.data["id"],
             suffix="a",
-            authority="00000000-0000-0000-0000-000000000602",
             key="retificacao-chave-k1",
         ).status_code
         == 201
@@ -960,8 +943,6 @@ def test_retification_may_revert_a_previous_one_and_reproduce_the_original_docum
         api_client,
         revert.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000602",
-        role="Diretora-Geral",
         key="retificacao-chave-k2",
     )
     assert published.status_code == 201
@@ -1129,7 +1110,6 @@ def test_removing_the_addressed_profile_is_key_not_found_and_not_a_silent_hit(
         api_client,
         renomear_o_segundo.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1183,7 +1163,6 @@ def test_an_unrelated_removal_no_longer_defeats_a_retification(
         api_client,
         renomear_o_segundo.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1357,7 +1336,6 @@ def test_appending_at_the_end_survives_an_unrelated_removal(
         api_client,
         acrescentar.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1538,7 +1516,6 @@ def test_the_key_alone_does_not_authorize_a_replace(api_client, manager_headers,
         api_client,
         sem_hash.data["id"],
         suffix="b",
-        authority="00000000-0000-0000-0000-000000000603",
         key="retificacao-chave-k2",
     )
 
@@ -1631,3 +1608,89 @@ def test_cancelling_a_published_retification_says_it_is_final_and_offers_no_way_
     assert recusa.status_code == 409
     assert "final não pode ser cancelada" in str(recusa.data)
     assert "devolvida" not in str(recusa.data)
+
+
+ATRIBUICOES_DO_POLO = (
+    "Conhecer a proposta da Instituição e o projeto pedagógico do curso.\n"
+    "Contribuir nas atividades síncronas e assíncronas do ambiente virtual."
+)
+
+
+def _tres_polos_de_mesmo_texto():
+    """O rascunho mínimo publicável com três Perfis de mesmas atribuições (064, D-007).
+
+    O segundo e o terceiro saem de `duplicar_perfil`, como a etapa Perfis os cria: é ela que dá
+    identidade nova a Perfil, linha do quadro e marco, e remapeia as referências internas — e
+    montá-los à mão é o que costuma deixar referência apontando a origem.
+    """
+    from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
+    from tests.fixtures.edital import complete_draft
+
+    rascunho = complete_draft()
+    origem = {**rascunho["profiles"][0], "name": "Tutor Polo A", "duties": ATRIBUICOES_DO_POLO}
+    copias = [
+        {
+            **duplicar_perfil(origem, codigo=codigo, localidade="", etapas_do_edital=[]),
+            "name": f"Tutor Polo {letra}",
+        }
+        for codigo, letra in (("P2", "B"), ("P3", "C"))
+    ]
+    return {**rascunho, "profiles": [origem, *copias]}
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
+    api_client, manager_headers, process_payload
+):
+    """064, FR-1196: o documento guardado fica; o da Retificação agrupa pela versão retificada.
+
+    Três Perfis de mesmo texto publicam uma subseção comum. Retificadas as atribuições do terceiro,
+    o documento da Retificação agrupa só os dois que continuam iguais, e o terceiro traz o próprio
+    texto. O que a Retificação mudou continua dito por Perfil e campo — nunca pela subseção, que só
+    existe no documento.
+    """
+    from processo_seletivo.publicacoes.domain.alteracoes import alteracoes_legiveis
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=_tres_polos_de_mesmo_texto()
+    )
+    original = Publicacao.objects.get(edital=edital, publication_order=1)
+    bytes_do_original = bytes(original.documento.bytes)
+    assert "Atribuições comuns aos Perfis P1, P2 e P3" in texto_de(bytes_do_original)
+
+    base = VersaoConsolidada.objects.get(edital=edital)
+    terceiro = base.content["profiles"][2]
+    assert terceiro["code"] == "P3"
+    criada = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {
+                "targetPath": f"/profiles/id={terceiro['id']}/duties",
+                "operation": "REPLACE",
+                "newValue": "Orientar os estudantes nas atividades presenciais do polo.",
+            }
+        ],
+        key="retificacao-chave-064",
+    )
+    assert criada.status_code == 201, criada.data
+    publicada = homologate_and_publish(
+        api_client, criada.data["id"], suffix="064", key="retificacao-chave-064"
+    )
+    assert publicada.status_code == 201, publicada.data
+
+    original.refresh_from_db()
+    assert bytes(original.documento.bytes) == bytes_do_original
+    retificado = texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes))
+    assert "Atribuições comuns aos Perfis P1 e P2" in retificado
+    assert "Atribuições comuns aos Perfis P1, P2 e P3" not in retificado
+    assert "Orientar os estudantes nas atividades presenciais do polo." in retificado
+
+    alteracoes = Retificacao.objects.get(pk=criada.data["id"]).alteracoes.all()
+    legiveis = alteracoes_legiveis(base.content, alteracoes)
+    assert len(legiveis) == 1
+    assert legiveis[0]["campo"] == "Atribuições"
+    assert "Tutor Polo C" in legiveis[0]["onde"]
+    assert "comuns" not in str(legiveis)

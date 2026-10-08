@@ -13,7 +13,7 @@ export
 endif
 endif
 
-.PHONY: install check lint test test-pg contract preparar provisionar migrate runserver seed ceps ceps-situacao
+.PHONY: install check lint test test-pg contract preparar provisionar migrate unidades runserver seed ceps ceps-situacao
 
 install:
 	uv sync --extra dev
@@ -58,10 +58,14 @@ contract:
 # Sub-make em cada linha, e não `preparar: provisionar migrate provisionar`, porque o make executa
 # cada alvo **uma vez por invocação**: a segunda passada — a que tranca as tabelas — seria
 # silenciosamente descartada como já satisfeita, e o banco subiria com metade da imutabilidade.
+#
+# A sincronização das Unidades vem por último, e com a role de runtime: é dado, e não esquema, e só
+# depois da segunda passada a role tem privilégio sobre as tabelas que a migration criou (060).
 preparar:
 	$(MAKE) provisionar
 	$(MAKE) migrate
 	$(MAKE) provisionar
+	$(MAKE) unidades
 
 provisionar:
 	DB_ROLE=runtime DB_RUNTIME_USER='$(POSTGRES_USER)' DB_RUNTIME_PASSWORD='$(POSTGRES_PASSWORD)' \
@@ -71,6 +75,11 @@ provisionar:
 
 migrate:
 	DB_ROLE=migration uv run python manage.py migrate
+
+# O registro de Unidades declarado em `unidades/unidades.json` (060). Idempotente: sem mudança no
+# arquivo, diz `0 criadas, 0 alteradas` e não grava nada.
+unidades:
+	uv run python manage.py sincronizar_unidades
 
 # A carga inicial da base de referência de CEP (029). **Não entra no `preparar`**, e a ausência é
 # decisão: `preparar` roda em toda máquina de desenvolvimento e em cada banco de teste, e 379 MB de

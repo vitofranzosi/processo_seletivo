@@ -51,6 +51,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     MODO_PREVIA,
     MODO_PUBLICADO,
     AutoridadeSignataria,
+    UnidadeDoAto,
     render_edital_pdf,
 )
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -74,10 +75,16 @@ AUTORIDADE = AutoridadeSignataria(
 DATA_DO_ATO = date.fromisoformat(
     json.loads((FIXTURES / "contexto_publicado.json").read_text(encoding="utf-8"))["data_do_ato"]
 )
+# A unidade do ato, desde a `060` (FR-1112, FR-1113): o cabeçalho e o local que eram as constantes
+# `ORGAO` e `LOCAL`. Versionada ao lado, e **o PDF de referência não foi refeito**: é o que prova a
+# FR-1114 — compor a partir da Unidade do Cefor produz os mesmos bytes que as constantes produziam.
+_UNIDADE = json.loads((FIXTURES / "unidade_publicada.json").read_text(encoding="utf-8"))
+UNIDADE = UnidadeDoAto(cabecalho=tuple(_UNIDADE["cabecalho"]), local=_UNIDADE["local"])
 
 
 def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
     """Compõe como a publicação compõe — em modo publicado, com a autoridade e a data da fixture."""
+    kwargs.setdefault("unidade", UNIDADE)
     if modo == MODO_PUBLICADO:
         kwargs.setdefault("autoridade", AUTORIDADE)
         kwargs.setdefault("data_do_ato", DATA_DO_ATO)
@@ -202,7 +209,7 @@ def test_a_previa_traz_o_mesmo_conteudo_normativo_do_publicado():
 def test_modo_desconhecido_e_recusado_em_vez_de_cair_no_publicado():
     """Errar o nome do modo não pode produzir, em silêncio, um documento com cara de publicado."""
     with pytest.raises(ValueError):
-        render_edital_pdf(SNAPSHOT, HASH, modo="PREVIEW_")
+        render_edital_pdf(SNAPSHOT, HASH, modo="PREVIEW_", unidade=UNIDADE)
 
 
 # ---------------------------------------------------------------------------
@@ -282,13 +289,44 @@ def test_as_regras_de_apresentacao_valem_tambem_na_previa():
     assert "20%" in texto
 
 
+def _com_atribuicoes_comuns():
+    """O snapshot da fixture com três Perfis, dois de mesmas atribuições (064, FR-1194).
+
+    A fixture tem um Perfil só, e por isso nunca compõe a subseção comum. Sem este segundo caso, a
+    igualdade de quebras entre prévia e publicado não seria afirmada sobre o documento que a `064`
+    passou a compor.
+    """
+    perfil = SNAPSHOT["profiles"][0]
+    return {
+        **SNAPSHOT,
+        "profiles": [
+            perfil,
+            {**perfil, "id": "33333333-3333-3333-3333-000000000064", "code": "DOC-INFO-2"},
+            {
+                **perfil,
+                "id": "33333333-3333-3333-3333-000000000065",
+                "code": "DOC-MAT",
+                "duties": "Ministrar aulas de Matemática nos cursos técnicos.",
+            },
+        ],
+    }
+
+
+COM_ATRIBUICOES_COMUNS = _com_atribuicoes_comuns()
+CENARIOS_DE_PAGINACAO = [
+    pytest.param(SNAPSHOT, id="fixture"),
+    pytest.param(COM_ATRIBUICOES_COMUNS, id="atribuicoes-comuns"),
+]
+
+
 # ---------------------------------------------------------------------------
 # 008 — Prévia e publicado são o mesmo documento (FR-041, FR-042)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.contract
-def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
+@pytest.mark.parametrize("conteudo", CENARIOS_DE_PAGINACAO)
+def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado(conteudo):
     """FR-042: a marca de prévia não pode deslocar o conteúdo.
 
     Enquanto ela for escrita **dentro** do fluxo, tudo desce — e a prévia passa a quebrar em
@@ -296,8 +334,9 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
     revisando uma paginação que não é a que sai. É o defeito que D-011 corrige tirando a marca do
     fluxo: fora dele, a igualdade é garantida por construção, e não por coincidência de medida.
     """
-    publicado = paginas_de(documento(SNAPSHOT, HASH))
-    previa = paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    resumo = canonical_sha256(conteudo)
+    publicado = paginas_de(documento(conteudo, resumo))
+    previa = paginas_de(documento(conteudo, resumo, modo=MODO_PREVIA))
 
     # O publicado pode ter **mais** páginas: o fechamento do ato — autoridade e verificação — só
     # existe nele, e é um bloco coeso que pode não caber na última página do corpo. O que FR-041
@@ -315,24 +354,35 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
 
 
 @pytest.mark.contract
-def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes():
+@pytest.mark.parametrize("conteudo", CENARIOS_DE_PAGINACAO)
+def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes(conteudo):
     """As diferenças entre os dois modos são as declaradas, e nenhuma outra.
 
     O teste acima compara página a página; este compara o documento inteiro, e por isso pega o que
     aquele não pegaria: uma linha que só existisse num dos modos sem mudar quebra nenhuma.
     """
+    resumo = canonical_sha256(conteudo)
     publicado = [
         linha
-        for pagina in paginas_de(documento(SNAPSHOT, HASH))
+        for pagina in paginas_de(documento(conteudo, resumo))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
     previa = [
         linha
-        for pagina in paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
+        for pagina in paginas_de(documento(conteudo, resumo, modo=MODO_PREVIA))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
 
     assert previa == publicado
+
+
+@pytest.mark.contract
+def test_o_cenario_de_atribuicoes_comuns_compoe_mesmo_a_subsecao_comum():
+    """064: o segundo cenário de paginação só vale se de fato compuser a subseção comum."""
+    texto = "\n".join(
+        linha for pagina in paginas_de(documento(COM_ATRIBUICOES_COMUNS)) for linha in pagina
+    )
+    assert "Atribuições comuns aos Perfis DOC-INFO e DOC-INFO-2" in texto
 
 
 @pytest.mark.contract

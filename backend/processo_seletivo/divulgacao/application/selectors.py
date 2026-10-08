@@ -5,6 +5,7 @@ append-only. Não há coluna de vigência a alternar, e por isso não há estado
 (T-002).
 """
 
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.divulgacao.models import (
     DocumentoDoResultado,
     PublicacaoResultado,
@@ -199,6 +200,13 @@ def _rotulos(publicacao):
         "marco": cabecalho.get("marco", ""),
         "marco_codigo": cabecalho.get("marco_codigo", ""),
         "titulo": cabecalho.get("titulo", ""),
+        # **A lista é o que distingue as ordens de um mesmo marco** (`021`): sem ela, a página do
+        # Edital oferecia três links de texto idêntico para a ampla, a PcD e a PPI.
+        "lista": nome_da_lista(cabecalho),
+        # **O nome do Perfil no dia da publicação** (062, D-009). A página do Edital agrupa por
+        # Perfil com o nome vigente, e é este que ela usa quando uma Retificação retirou o Perfil
+        # que já tinha resultado: sem ele, o grupo ficaria sem nome, ou com o identificador.
+        "perfil": cabecalho.get("perfil", ""),
     }
 
 

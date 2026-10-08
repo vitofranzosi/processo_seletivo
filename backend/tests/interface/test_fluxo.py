@@ -18,6 +18,7 @@ from processo_seletivo.publicacoes.models import (
     RevisaoEdital,
 )
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.edital import mudanca_de_vagas
 from tests.fixtures.publicacao import publish_original, retify
 from tests.interface.conftest import (
@@ -69,7 +70,7 @@ EVENTOS = {
 }
 # A autoridade vem do catálogo declarado: a tela oferece a escolha, e nome, cargo e identificador
 # saem da entrada. Nenhum deles é digitado (FR-039).
-SIGNATARIO = {"signatario": "reitoria"}
+SIGNATARIO = {"signatario": str(AUTORIDADE_DA_SUITE)}
 
 
 @pytest.fixture

@@ -48,6 +48,7 @@ class PublicacaoDetalheSerializer(PublicacaoPublicaSerializer):
     sourceType = serializers.SerializerMethodField()
     sourceId = serializers.SerializerMethodField()
     signatory = serializers.SerializerMethodField()
+    unit = serializers.SerializerMethodField()
     content = serializers.SerializerMethodField()
     documentUrl = serializers.SerializerMethodField()
 
@@ -64,6 +65,11 @@ class PublicacaoDetalheSerializer(PublicacaoPublicaSerializer):
             "role": obj.signatory_role,
             "appointment": obj.signatory_appointment,
         }
+
+    def get_unit(self, obj):
+        """A unidade como a Publicação a congelou no dia, e não como o registro a diz hoje (060,
+        FR-1131): renomeada depois, a consulta não muda."""
+        return {"code": obj.unidade_codigo, "acronym": obj.unidade_sigla, "name": obj.unidade_nome}
 
     def get_content(self, obj):
         return publicacao_content(obj)

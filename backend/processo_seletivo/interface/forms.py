@@ -6,7 +6,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 """
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ from processo_seletivo.editais.domain import duplicacao, quadro, secoes
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
+from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1756,3 +1757,33 @@ def ultimo_local_declarado(edital):
         if evento.location:
             return evento.location
     return ""
+
+
+# ---------------------------------------------------------------------------
+# As autoridades da unidade (060). Leitura, e nada além: quem decide se o cargo basta, se a data
+# retroage e se a autoridade é desta unidade é o comando.
+# ---------------------------------------------------------------------------
+
+
+def _data(dados, campo):
+    """A data do campo `date`, ou `None` se vazia. Malformada é recusa, e não `None` em silêncio."""
+    valor = _texto(dados, campo)
+    if not valor:
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except ValueError as exc:
+        raise DomainError(
+            "data_invalida", "Informe a data no formato dia/mês/ano.", 422, campo=campo
+        ) from exc
+
+
+def ler_autoridade(dados):
+    return {
+        "autoridade": _texto(dados, "autoridade"),
+        "cargo": _texto(dados, "cargo"),
+        "nome": _texto(dados, "nome"),
+        "ato_de_nomeacao": _texto(dados, "ato_de_nomeacao"),
+        "inicio_vigencia": _data(dados, "inicio_vigencia"),
+        "fim_vigencia": _data(dados, "fim_vigencia"),
+    }
