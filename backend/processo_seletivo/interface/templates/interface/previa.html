@@ -15,6 +15,15 @@
 fosse publicado agora, a partir do que está gravado. Nada foi registrado por abrir esta tela:
 nenhuma Publicação, Revisão ou documento foi criado.</p>
 
+{% if sem_grafia %}
+<section aria-labelledby="sem-grafia-titulo" class="pendencias">
+  <h2 id="sem-grafia-titulo">O que o documento não consegue imprimir</h2>
+  <p>Onde a prévia mostra um código como <code>[U+2265]</code>, o texto tem um caractere que o
+  documento oficial não imprime. A publicação fica impedida até o trecho ser reescrito.</p>
+  {% include "interface/_pendencias.html" with itens=sem_grafia com_link=True %}
+</section>
+{% endif %}
+
 <p class="navegacao-etapa">
   <a href="{{ voltar }}" class="botao">‹ {{ rotulo_voltar }}</a>
   <a href="{% url 'interface:previa-documento' edital.id %}" class="acao"
