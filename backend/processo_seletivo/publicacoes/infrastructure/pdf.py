@@ -7,7 +7,9 @@ porque o mesmo snapshot sempre produz os mesmos bytes, e o hash do conteúdo apa
 documento.
 
 Sem dependência externa. O texto usa `WinAnsiEncoding`, que cobre o português — a versão
-anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro.
+anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro. O que o
+WinAnsi não cobre é normalizado ou recusado por `publicacoes.domain.grafia`, e nunca trocado por
+`?` em silêncio no Edital (`doc/achado-documento-troca-caractere-por-interrogacao.md`).
 """
 
 import re
@@ -23,6 +25,7 @@ from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
+from processo_seletivo.publicacoes.domain import grafia
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     ETAPA_NAO_IDENTIFICADA,
     criterio_com_a_ausencia,
@@ -274,7 +277,9 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
     tabela = _ASCII_NEGRITO if fonte == NEGRITO else _ASCII_REGULAR
     indice = 1 if fonte == NEGRITO else 0
     total = 0
-    for caractere in str(texto):
+    # Mede-se o que vai ser desenhado: sem normalizar, um espaço de largura zero colado do Word
+    # contava como o glifo mais largo, e a linha quebrava cedo por causa de um caractere que some.
+    for caractere in grafia.normalizar(texto):
         base = caractere.translate(_BASE_ACENTUADA)
         codigo = ord(base)
         if 32 <= codigo <= 126:
@@ -389,10 +394,55 @@ RESERVA = {
 }
 
 
-def _texto_pdf(valor: str) -> bytes:
-    """WinAnsi cobre o português; o que não couber vira '?' em vez de quebrar o documento."""
-    escapado = str(valor).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+class CaractereSemGrafia(ValueError):
+    """Um texto do Edital chegou ao papel com caractere que o documento não imprime."""
+
+
+def _texto_pdf(valor: str, *, estrito: bool = False) -> bytes:
+    """O texto no repertório do WinAnsi, depois da normalização de `grafia`.
+
+    **No Edital, o que sobra não pode virar `?`** (achado de 08/10). A validação recusa a publicação
+    antes de o documento ser composto, e `estrito` é a segunda camada: se um campo impresso escapou
+    dela, a publicação falha alto em vez de sair com a interrogação no ato oficial.
+
+    Os outros documentos — comprovante, divulgação — continuam com o `?`. Neles o texto é nome de
+    candidato, que nenhuma validação de publicação alcança; é registro à parte.
+    """
+    normalizado = grafia.normalizar(valor)
+    if estrito and (faltantes := grafia.sem_grafia(normalizado)):
+        raise CaractereSemGrafia(
+            "O documento não imprime "
+            + ", ".join(grafia.descrever(caractere) for caractere in faltantes)
+            + f" em {normalizado!r}."
+        )
+    escapado = normalizado.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
     return escapado.encode("cp1252", "replace")
+
+
+def _grafado(valor, *, previa: bool):
+    """O snapshot com todo texto normalizado — e, na prévia, com o que sobra à vista.
+
+    Normalizar **antes** de compor, e não só ao escrever, é o que faz o separador de linha do Word
+    separar parágrafo e o invisível não ocupar largura: a composição decide parágrafos e quebras
+    lendo o texto, e precisa ler o que vai ser impresso.
+
+    Na prévia, o caractere sem grafia sai como `[U+2265]`, e não como `?`: quem revisa vê o que
+    precisa reescrever, e o código é o que se procura no mapa de caracteres. A paginação da prévia
+    deixa de ser a da publicação nesse caso, e não importa — com ele, a publicação está recusada.
+    """
+    if isinstance(valor, str):
+        texto = grafia.normalizar(valor)
+        if previa:
+            texto = "".join(
+                caractere if grafia.representavel(caractere) else f"[{grafia.codigo(caractere)}]"
+                for caractere in texto
+            )
+        return texto
+    if isinstance(valor, dict):
+        return {chave: _grafado(item, previa=previa) for chave, item in valor.items()}
+    if isinstance(valor, list):
+        return [_grafado(item, previa=previa) for item in valor]
+    return valor
 
 
 def _quebrar(
@@ -2582,7 +2632,9 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
-def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=False):
+def _fluxo_da_pagina(
+    linhas, rodape, pagina, marca="", tracos=(), com_brasao=False, *, estrito=False
+):
     partes = []
     if com_brasao:
         # `cm` põe a matriz de escala e a posição; `Do` desenha o XObject. `q`/`Q` isolam a
@@ -2633,7 +2685,7 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
             + b"/"
             + fonte.encode()
             + f" {tamanho:.1f} Tf {x:.1f} {y:.1f} Td (".encode()
-            + _texto_pdf(texto)
+            + _texto_pdf(texto, estrito=estrito)
             + b") Tj"
             + (b" 0 Tw" if espaco else b"")
             + b" ET"
@@ -2648,7 +2700,7 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
             b"BT /"
             + REGULAR.encode()
             + f" {CORPO_NOTA:.1f} Tf {x:.1f} {RODAPE - 16:.1f} Td (".encode()
-            + _texto_pdf(texto)
+            + _texto_pdf(texto, estrito=estrito)
             + b") Tj ET"
         )
     return b"\n".join(partes)
@@ -2693,6 +2745,7 @@ def render_edital_pdf(
     if not previa and data_do_ato is None:
         raise ValueError("O documento publicado exige a data do ato.")
 
+    snapshot = _grafado(snapshot, previa=previa)
     composicao = Composicao()
     _cabecalho(composicao, snapshot, unidade, consolidacao)
     _secoes(composicao, snapshot)
@@ -2710,10 +2763,13 @@ def render_edital_pdf(
         composicao,
         identificacao=identificacao,
         marca=MARCA_DE_PREVIA if previa else "",
+        estrito=True,
     )
 
 
-def render_documento(composicao, *, identificacao, marca="", com_brasao=True) -> bytes:
+def render_documento(
+    composicao, *, identificacao, marca="", com_brasao=True, estrito=False
+) -> bytes:
     """Pagina uma composição e monta o arquivo PDF.
 
     Extraída de `render_edital_pdf` quando o comprovante de inscrição passou a ser gerado no
@@ -2722,6 +2778,9 @@ def render_documento(composicao, *, identificacao, marca="", com_brasao=True) ->
 
     O resultado é determinístico — não há data de criação embutida, nem identificador aleatório —,
     e é isso que permite publicar o resumo de um documento gerado e esperar que ele confira.
+
+    `estrito` recusa caractere sem grafia em vez de trocá-lo por `?` (achado de 08/10), e só o
+    Edital o liga: é o único documento cujo texto passa por validação antes de ser composto.
     """
     paginas = composicao.paginar()
     fluxos = [
@@ -2732,6 +2791,7 @@ def render_documento(composicao, *, identificacao, marca="", com_brasao=True) ->
             marca=marca,
             tracos=tracos,
             com_brasao=com_brasao and numero == 1,
+            estrito=estrito,
         )
         for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]
