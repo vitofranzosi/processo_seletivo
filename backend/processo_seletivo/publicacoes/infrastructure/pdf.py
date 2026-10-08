@@ -7,7 +7,9 @@ porque o mesmo snapshot sempre produz os mesmos bytes, e o hash do conteúdo apa
 documento.
 
 Sem dependência externa. O texto usa `WinAnsiEncoding`, que cobre o português — a versão
-anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro.
+anterior codificava em ASCII e destruía todo acento de um documento oficial brasileiro. O que o
+WinAnsi não cobre é normalizado ou recusado por `publicacoes.domain.grafia`, e nunca trocado por
+`?` em silêncio no Edital (`doc/achado-documento-troca-caractere-por-interrogacao.md`).
 """
 
 import re
@@ -23,6 +25,7 @@ from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
+from processo_seletivo.publicacoes.domain import grafia
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     ETAPA_NAO_IDENTIFICADA,
     criterio_com_a_ausencia,
@@ -274,7 +277,9 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
     tabela = _ASCII_NEGRITO if fonte == NEGRITO else _ASCII_REGULAR
     indice = 1 if fonte == NEGRITO else 0
     total = 0
-    for caractere in str(texto):
+    # Mede-se o que vai ser desenhado: sem normalizar, um espaço de largura zero colado do Word
+    # contava como o glifo mais largo, e a linha quebrava cedo por causa de um caractere que some.
+    for caractere in grafia.normalizar(texto):
         base = caractere.translate(_BASE_ACENTUADA)
         codigo = ord(base)
         if 32 <= codigo <= 126:
@@ -389,10 +394,55 @@ RESERVA = {
 }
 
 
-def _texto_pdf(valor: str) -> bytes:
-    """WinAnsi cobre o português; o que não couber vira '?' em vez de quebrar o documento."""
-    escapado = str(valor).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+class CaractereSemGrafia(ValueError):
+    """Um texto do Edital chegou ao papel com caractere que o documento não imprime."""
+
+
+def _texto_pdf(valor: str, *, estrito: bool = False) -> bytes:
+    """O texto no repertório do WinAnsi, depois da normalização de `grafia`.
+
+    **No Edital, o que sobra não pode virar `?`** (achado de 08/10). A validação recusa a publicação
+    antes de o documento ser composto, e `estrito` é a segunda camada: se um campo impresso escapou
+    dela, a publicação falha alto em vez de sair com a interrogação no ato oficial.
+
+    Os outros documentos — comprovante, divulgação — continuam com o `?`. Neles o texto é nome de
+    candidato, que nenhuma validação de publicação alcança; é registro à parte.
+    """
+    normalizado = grafia.normalizar(valor)
+    if estrito and (faltantes := grafia.sem_grafia(normalizado)):
+        raise CaractereSemGrafia(
+            "O documento não imprime "
+            + ", ".join(grafia.descrever(caractere) for caractere in faltantes)
+            + f" em {normalizado!r}."
+        )
+    escapado = normalizado.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
     return escapado.encode("cp1252", "replace")
+
+
+def _grafado(valor, *, previa: bool):
+    """O snapshot com todo texto normalizado — e, na prévia, com o que sobra à vista.
+
+    Normalizar **antes** de compor, e não só ao escrever, é o que faz o separador de linha do Word
+    separar parágrafo e o invisível não ocupar largura: a composição decide parágrafos e quebras
+    lendo o texto, e precisa ler o que vai ser impresso.
+
+    Na prévia, o caractere sem grafia sai como `[U+2265]`, e não como `?`: quem revisa vê o que
+    precisa reescrever, e o código é o que se procura no mapa de caracteres. A paginação da prévia
+    deixa de ser a da publicação nesse caso, e não importa — com ele, a publicação está recusada.
+    """
+    if isinstance(valor, str):
+        texto = grafia.normalizar(valor)
+        if previa:
+            texto = "".join(
+                caractere if grafia.representavel(caractere) else f"[{grafia.codigo(caractere)}]"
+                for caractere in texto
+            )
+        return texto
+    if isinstance(valor, dict):
+        return {chave: _grafado(item, previa=previa) for chave, item in valor.items()}
+    if isinstance(valor, list):
+        return [_grafado(item, previa=previa) for item in valor]
+    return valor
 
 
 def _quebrar(
@@ -443,6 +493,47 @@ def _paragrafos(texto) -> list[str]:
     return [
         bloco.strip() for bloco in re.split(r"[\r\n]+", str(texto or "").strip()) if bloco.strip()
     ]
+
+
+def grupos_de_atribuicoes(perfis) -> list[list[dict]]:
+    """Os Perfis que imprimem as mesmas atribuições, para que elas saiam uma vez só (064).
+
+    Dez Perfis de Tutor, um por polo, com o mesmo texto de atribuições, repetiam esse texto dez
+    vezes no documento. "Associar a outro Perfil" é, no sistema, duplicar ou colar: são cópias
+    independentes, e nada as liga. Por isso a igualdade só pode ser a do texto (FR-1187).
+
+    **A chave reusa `_paragrafos`, e não uma separação própria.** É ela que decide onde o documento
+    quebra parágrafo, e `_quebrar` descarta o espaço entre palavras; a chave é feita das mesmas duas
+    peças, e por isso nunca diz "igual" sobre dois textos que o documento imprime diferentes, nem
+    "diferente" sobre dois que só diferem em espaço. A quebra de linha conta, porque é fronteira; o
+    espaço e a quantidade de linhas em branco, não.
+
+    **A comparação é sobre o texto normalizado por `grafia`, que é o que sai impresso.** A primeira
+    versão comparava o texto cru, porque o documento trocava por "?" o que a fonte não representa, e
+    o impresso juntaria `●` e `≥` por terem perdido o mesmo símbolo. Com a correção do "?", essa
+    perda deixou de existir: o que `grafia` normaliza mantém o significado — `●` e `▪` são o
+    marcador `•`, o espaço de largura zero some, `ç` decomposto é `ç` —, e o que ela não normaliza
+    é recusado na publicação e aparece como `[U+2265]` na prévia, distinto de qualquer outro. Dois
+    Perfis colados do Word em momentos diferentes, com um invisível de diferença, imprimem o mesmo
+    texto e se juntam (decisão do responsável pelo produto, 08/10/2026). A chave normaliza ela
+    mesma, e não confia em quem a chama: o documento já recebe o snapshot normalizado, mas a regra
+    não pode depender do caminho.
+
+    Nada além da identidade inteira agrupa (FR-1188): nem denominação, nem subconjunto, nem os
+    mesmos parágrafos em outra ordem — o sistema não tem como saber que a ordem é indiferente. Texto
+    vazio não forma grupo, e o Edital de um Perfil não tem grupo. Os grupos saem na ordem do
+    primeiro Perfil de cada um, e os Perfis de cada grupo na ordem recebida — a do snapshot, por
+    código.
+    """
+    if len(perfis) < 2:
+        return []
+    por_chave: dict[tuple[str, ...], list[dict]] = {}
+    for perfil in perfis:
+        texto = grafia.normalizar(perfil.get("duties") or "")
+        chave = tuple(" ".join(paragrafo.split()) for paragrafo in _paragrafos(texto))
+        if chave:
+            por_chave.setdefault(chave, []).append(perfil)
+    return [grupo for grupo in por_chave.values() if len(grupo) > 1]
 
 
 def _instante(valor) -> str:
@@ -1950,10 +2041,29 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
     subtítulo numerado, e reserva a grade para o que é matriz.
 
     A subseção é numerada a partir da seção-mãe já resolvida, como as Etapas (FR-013).
+
+    **As atribuições idênticas saem uma vez** (064). O Perfil cujo texto é igual ao de outro traz,
+    no lugar do bloco, a remissão ao item que o imprime; esse item é uma subseção comum **depois do
+    último Perfil**, numerada em continuação a eles. É a emenda aos FR-016 e FR-021 da `008`, que
+    faziam das atribuições um bloco de cada Perfil. Pôr a subseção comum no fim, e não antes dos
+    Perfis nem em seção própria, é o que deixa intactos os números dos Perfis, das seções seguintes
+    e das tabelas — que o texto livre do Edital cita ("conforme o item 11.2") e que uma inserção no
+    meio deslocaria em silêncio.
     """
     perfis = snapshot.get("profiles") or []
     if len(perfis) > 1:
         _quadro_de_perfis(composicao, perfis, tabelas)
+
+    # O número de cada subseção comum, calculado **uma vez** e antes do laço: a remissão sai antes
+    # do item a que ela remete, e o número que ela imprime e o que a subseção imprime vêm da mesma
+    # lista — duas contagens poderiam divergir e publicar uma remissão para o item errado. A chave
+    # do dicionário é a identidade do objeto, e não o `id` do Perfil, que nada obriga a ser único no
+    # snapshot que chega aqui.
+    comuns = [
+        (f"{secao}.{posicao}", grupo)
+        for posicao, grupo in enumerate(grupos_de_atribuicoes(perfis), len(perfis) + 1)
+    ]
+    item_comum = {id(perfil): numero for numero, grupo in comuns for perfil in grupo}
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):
@@ -1983,7 +2093,18 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                             ["Cadastro reserva", _reserva(perfil)],
                         ],
                     )
-            if perfil.get("duties"):
+            if id(perfil) in item_comum:
+                # Rótulo e valor na mesma linha, como "Localidade:" no Edital de um Perfil: a
+                # remissão é um valor curto, e o rótulo continua onde o candidato o procura. Com o
+                # espaço de sub-bloco, e não o de linha: é o mesmo degrau do cabeçalho
+                # "Atribuições" do Perfil vizinho, e os dois não podem parecer níveis diferentes.
+                with composicao.bloco():
+                    _pares(
+                        composicao,
+                        [["Atribuições", f"as descritas no item {item_comum[id(perfil)]}."]],
+                        antes=ANTES_DE_BLOCO,
+                    )
+            elif perfil.get("duties"):
                 with composicao.bloco():
                     composicao.escrever(
                         "Atribuições",
@@ -2035,6 +2156,93 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
             _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
             _marcos(composicao, snapshot, perfil, len(perfis) > 1)
 
+    for numero, grupo in comuns:
+        _atribuicoes_comuns(composicao, grupo, numero)
+
+
+def _atribuicoes_comuns(composicao, grupo, numero):
+    """A subseção que imprime uma vez as atribuições de um grupo de Perfis (064).
+
+    **O título nomeia os códigos, e nunca a denominação.** Dois "Tutor presencial" de textos
+    diferentes não se juntam, e dois Perfis de denominações diferentes e mesmo texto se juntam: o
+    que diz a quem o texto vale é o código, que é único no Edital.
+
+    **Um bloco coeso, ao contrário do Perfil.** A paginação só faz saltar inteiro o bloco coeso: o
+    que não cabe no resto da página mas cabe numa página inteira começa na seguinte, e o que não
+    cabe nem nela desce aos parágrafos, cada um num bloco próprio — a cascata do FR-021 da `008`,
+    que a subseção comum obedece como um Perfil. Aberto como o Perfil se abre, ele começaria no
+    rodapé mesmo cabendo inteiro na página seguinte.
+
+    Os parágrafos são os do primeiro Perfil do grupo, que são, pela regra que formou o grupo, os de
+    todos; recuo 18 porque o título da subseção é o rótulo deles.
+    """
+    linhas = _linhas_sem_partir(
+        f"{numero} Atribuições comuns aos Perfis",
+        _codigos_enumerados([perfil.get("code", "") for perfil in grupo]),
+        CORPO_BLOCO,
+        NEGRITO,
+    )
+    with composicao.bloco():
+        for indice, linha in enumerate(linhas):
+            composicao.escrever(
+                linha,
+                tamanho=CORPO_BLOCO,
+                fonte=NEGRITO,
+                antes=ANTES_DE_BLOCO + 4 if indice == 0 else 0.0,
+                junto=True,
+            )
+        for paragrafo in _paragrafos(grupo[0].get("duties")):
+            with composicao.bloco():
+                composicao.escrever(
+                    paragrafo,
+                    tamanho=CORPO_TEXTO,
+                    recuo=18,
+                    antes=ANTES_DE_LINHA,
+                    justificar=True,
+                )
+
+
+def _codigos_enumerados(codigos):
+    """Os códigos como o título os enumera — "A, B e C" —, em pedaços que não se partem.
+
+    **O código é texto livre**, e nada impede que ele contenha a vírgula ou o " e " da própria
+    enumeração: "Tutor e Mediador" e "TEC" sairiam "Tutor e Mediador e TEC", que se lê como três
+    Perfis. Quando algum código do grupo tem um desses separadores, **todos** vão entre aspas — no
+    grupo inteiro, e não só no ambíguo, para que a regra de leitura seja uma só dentro do título.
+
+    Cada pedaço é um código com o separador que o segue, e o " e " anda junto do último: é o que
+    `_linhas_sem_partir` recebe para não quebrar a linha dentro de um código.
+    """
+    if any(", " in codigo or " e " in codigo for codigo in codigos):
+        codigos = [f"“{codigo}”" for codigo in codigos]
+    if len(codigos) <= 1:
+        return list(codigos)
+    return [f"{codigo}," for codigo in codigos[:-2]] + [codigos[-2], f"e {codigos[-1]}"]
+
+
+def _linhas_sem_partir(inicio, pedacos, tamanho, fonte):
+    """O título em linhas que quebram **entre** os pedaços, nunca dentro de um.
+
+    `_quebrar` reflui por palavra, e um código com espaço — "ADS - P06", que é como os polos do
+    Edital 90/2026 se chamam — saía partido: "ADS" no fim de uma linha e "- P06" no começo da
+    outra, e o candidato não acha o próprio código. O espaço inseparável não resolve, porque
+    `_quebrar` divide em todo espaço que `str.split` reconhece, e ele está entre eles.
+
+    O pedaço maior que a linha inteira sai sozinho, e é `escrever` que o parte — o último degrau de
+    sempre, para que a composição conclua.
+    """
+    disponivel = LARGURA - 2 * MARGEM
+    linhas, atual = [], inicio
+    for pedaco in pedacos:
+        candidato = f"{atual} {pedaco}"
+        if largura(candidato, tamanho, fonte) <= disponivel:
+            atual = candidato
+            continue
+        linhas.append(atual)
+        atual = pedaco
+    linhas.append(atual)
+    return linhas
+
 
 def _reserva(perfil):
     reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
@@ -2043,16 +2251,19 @@ def _reserva(perfil):
     return reserva or "—"
 
 
-def _pares(composicao, pares, *, recuo=18.0):
+def _pares(composicao, pares, *, recuo=18.0, antes=ANTES_DE_LINHA):
     """Rótulo em negrito e valor na mesma linha — tipografia, não grade.
 
     Tabela é para comparar muitas linhas; poucos atributos de um único objeto se descrevem com
     peso tipográfico. Emoldurar quatro pares produz ficha administrativa, não Edital.
+
+    `antes` é o espaço acima de cada par: o de linha, quando os pares se seguem; o de sub-bloco,
+    quando o par ocupa o lugar de um sub-bloco, como a remissão às atribuições comuns (064).
     """
     for rotulo, valor in pares:
         largura_do_rotulo = largura(f"{rotulo}: ", CORPO_TEXTO, NEGRITO)
         composicao.escrever(
-            f"{rotulo}:", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo, antes=ANTES_DE_LINHA
+            f"{rotulo}:", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo, antes=antes
         )
         composicao.escrever(
             valor,
@@ -2582,7 +2793,9 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
-def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=False):
+def _fluxo_da_pagina(
+    linhas, rodape, pagina, marca="", tracos=(), com_brasao=False, *, estrito=False
+):
     partes = []
     if com_brasao:
         # `cm` põe a matriz de escala e a posição; `Do` desenha o XObject. `q`/`Q` isolam a
@@ -2633,7 +2846,7 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
             + b"/"
             + fonte.encode()
             + f" {tamanho:.1f} Tf {x:.1f} {y:.1f} Td (".encode()
-            + _texto_pdf(texto)
+            + _texto_pdf(texto, estrito=estrito)
             + b") Tj"
             + (b" 0 Tw" if espaco else b"")
             + b" ET"
@@ -2648,7 +2861,7 @@ def _fluxo_da_pagina(linhas, rodape, pagina, marca="", tracos=(), com_brasao=Fal
             b"BT /"
             + REGULAR.encode()
             + f" {CORPO_NOTA:.1f} Tf {x:.1f} {RODAPE - 16:.1f} Td (".encode()
-            + _texto_pdf(texto)
+            + _texto_pdf(texto, estrito=estrito)
             + b") Tj ET"
         )
     return b"\n".join(partes)
@@ -2693,6 +2906,7 @@ def render_edital_pdf(
     if not previa and data_do_ato is None:
         raise ValueError("O documento publicado exige a data do ato.")
 
+    snapshot = _grafado(snapshot, previa=previa)
     composicao = Composicao()
     _cabecalho(composicao, snapshot, unidade, consolidacao)
     _secoes(composicao, snapshot)
@@ -2710,10 +2924,13 @@ def render_edital_pdf(
         composicao,
         identificacao=identificacao,
         marca=MARCA_DE_PREVIA if previa else "",
+        estrito=True,
     )
 
 
-def render_documento(composicao, *, identificacao, marca="", com_brasao=True) -> bytes:
+def render_documento(
+    composicao, *, identificacao, marca="", com_brasao=True, estrito=False
+) -> bytes:
     """Pagina uma composição e monta o arquivo PDF.
 
     Extraída de `render_edital_pdf` quando o comprovante de inscrição passou a ser gerado no
@@ -2722,6 +2939,9 @@ def render_documento(composicao, *, identificacao, marca="", com_brasao=True) ->
 
     O resultado é determinístico — não há data de criação embutida, nem identificador aleatório —,
     e é isso que permite publicar o resumo de um documento gerado e esperar que ele confira.
+
+    `estrito` recusa caractere sem grafia em vez de trocá-lo por `?` (achado de 08/10), e só o
+    Edital o liga: é o único documento cujo texto passa por validação antes de ser composto.
     """
     paginas = composicao.paginar()
     fluxos = [
@@ -2732,6 +2952,7 @@ def render_documento(composicao, *, identificacao, marca="", com_brasao=True) ->
             marca=marca,
             tracos=tracos,
             com_brasao=com_brasao and numero == 1,
+            estrito=estrito,
         )
         for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]

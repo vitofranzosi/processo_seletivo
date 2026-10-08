@@ -40,7 +40,11 @@ from processo_seletivo.editais.domain.documentos import (
     perfis_que_o_documento_publicado_alcanca,
     rotulo_da_modalidade,
 )
-from processo_seletivo.editais.domain.perfis import ProfileValidationError, validate_normative_rule
+from processo_seletivo.editais.domain.perfis import (
+    CAMPOS_DO_METODO,
+    ProfileValidationError,
+    validate_normative_rule,
+)
 from processo_seletivo.editais.domain.secoes import CATALOGO, GERADA, TEXTUAL, Secao
 from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.inscricoes.domain.periodo import (
@@ -48,6 +52,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
     evento_designado,
     periodo_de_inscricoes,
 )
+from processo_seletivo.publicacoes.domain import grafia
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.tempo import ZONA
 
@@ -1574,6 +1579,7 @@ def validate_for_publication(
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
     findings.extend(_secao_universal_vazia(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
+    findings.extend(_caractere_sem_grafia(snapshot))
     return findings
 
 
@@ -3283,6 +3289,208 @@ def _percentual_legivel(percentual: Decimal) -> str:
     """O percentual sem zeros à direita, para que a advertência se leia como uma frase."""
     normalizado = percentual.normalize()
     return f"{normalizado:f}"
+
+
+CARACTERE_SEM_GRAFIA = "caractere_sem_grafia"
+
+
+def _nome(entidade, *chaves):
+    """Como a mensagem identifica a entidade: o primeiro texto que ela tiver, entre as chaves."""
+    for chave in chaves:
+        valor = entidade.get(chave)
+        if isinstance(valor, str) and valor.strip():
+            return valor.strip()
+    return ""
+
+
+def _textos_do_metodo(metodo, caminho, lugar):
+    """Os campos do método de sorteio que o documento imprime — o `text`, quando é par."""
+    if not isinstance(metodo, dict):
+        return
+    for campo, _, rotulo in CAMPOS_DO_METODO:
+        valor = metodo.get(campo)
+        if isinstance(valor, dict):
+            yield f"{caminho}/{campo}/text", f"no campo «{rotulo}» {lugar}", valor.get("text")
+        else:
+            yield f"{caminho}/{campo}", f"no campo «{rotulo}» {lugar}", valor
+
+
+def _textos_impressos(snapshot: dict):
+    """`(caminho, lugar, texto)` de cada texto livre que o documento oficial imprime.
+
+    **Só os impressos** — decisão do responsável pelo produto, 08/10/2026: a descrição da
+    Modalidade, por exemplo, aparece só na web, que é UTF-8, e recusar o `≥` dela seria recusar o
+    que não perde nada. A lista é a do renderizador, e não se confia na memória dela: um teste
+    injeta um caractere sem grafia em **cada** texto de um snapshot completo e exige que, onde a
+    validação não recusa, o documento publicado saia — e ele falha alto se o caractere chega ao
+    papel.
+
+    `lugar` já vem com a preposição, porque é o que abre a frase da mensagem.
+    """
+    for campo, lugar in (
+        ("title", "no título do Edital"),
+        ("number", "no número do Edital"),
+        ("description", "na descrição do Edital"),
+        ("processoTitle", "no título do Processo Seletivo"),
+        ("processoCode", "no código do Processo Seletivo"),
+    ):
+        yield campo, lugar, snapshot.get(campo)
+    requerimento = snapshot.get("matriculationRequest")
+    if isinstance(requerimento, dict):
+        yield (
+            "matriculationRequest/declarationText",
+            "na declaração do Requerimento de Matrícula",
+            requerimento.get("declarationText"),
+        )
+    yield from _textos_do_metodo(
+        snapshot.get("drawMethod"), "/drawMethod", "do método de sorteio comum a este Edital"
+    )
+    for posicao, secao in enumerate(snapshot.get("sections") or []):
+        if not isinstance(secao, dict):
+            continue
+        caminho = _caminho_da_entidade("sections", secao, posicao)
+        titulo = _nome(secao, "title", "key")
+        yield f"{caminho}/title", f"no título da seção «{titulo}»", secao.get("title")
+        yield f"{caminho}/content", f"no texto da seção «{titulo}»", secao.get("content")
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if not isinstance(perfil, dict):
+            continue
+        caminho = _caminho_da_entidade("profiles", perfil, posicao)
+        do_perfil = f"do Perfil «{_nome(perfil, 'name', 'code')}»"
+        for campo, lugar in (
+            ("name", "no nome"),
+            ("code", "no código"),
+            ("description", "na descrição"),
+            ("duties", "nas atribuições"),
+            ("workload", "na carga horária"),
+            ("compensation", "na remuneração"),
+            ("locality", "na localidade"),
+        ):
+            yield f"{caminho}/{campo}", f"{lugar} {do_perfil}", perfil.get(campo)
+        requisitos = perfil.get("requirements")
+        for indice, requisito in enumerate(requisitos if isinstance(requisitos, list) else []):
+            yield (
+                f"{caminho}/requirements/{indice}",
+                f"no {indice + 1}º requisito {do_perfil}",
+                requisito,
+            )
+        for ordem, modalidade in enumerate(perfil.get("competitionModalities") or []):
+            if not isinstance(modalidade, dict):
+                continue
+            caminho_da_modalidade = (
+                f"{caminho}/{_caminho_da_entidade('competitionModalities', modalidade, ordem)[1:]}"
+            )
+            da_modalidade = f"da Modalidade «{_nome(modalidade, 'name', 'code')}» {do_perfil}"
+            yield (
+                f"{caminho_da_modalidade}/name",
+                f"no nome {da_modalidade}",
+                modalidade.get("name"),
+            )
+            yield (
+                f"{caminho_da_modalidade}/code",
+                f"no código {da_modalidade}",
+                modalidade.get("code"),
+            )
+            regra = modalidade.get("normativeRule")
+            if isinstance(regra, dict):
+                yield (
+                    f"{caminho_da_modalidade}/normativeRule/foundation",
+                    f"no fundamento {da_modalidade}",
+                    regra.get("foundation"),
+                )
+        for ordem, fato in enumerate(perfil.get("declaredFacts") or []):
+            if isinstance(fato, dict):
+                yield (
+                    f"{caminho}/{_caminho_da_entidade('declaredFacts', fato, ordem)[1:]}/label",
+                    f"no rótulo do fato declarado «{_nome(fato, 'label', 'code')}» {do_perfil}",
+                    fato.get("label"),
+                )
+        marcos = perfil.get("classificationMilestones")
+        for ordem, marco in enumerate(marcos if isinstance(marcos, list) else []):
+            if not isinstance(marco, dict):
+                continue
+            caminho_do_marco = (
+                f"{caminho}/{_caminho_da_entidade('classificationMilestones', marco, ordem)[1:]}"
+            )
+            do_marco = f"do marco «{_nome(marco, 'name', 'code')}» {do_perfil}"
+            yield f"{caminho_do_marco}/name", f"no nome {do_marco}", marco.get("name")
+            yield f"{caminho_do_marco}/code", f"no código {do_marco}", marco.get("code")
+            yield from _textos_do_metodo(
+                marco.get("drawMethod"), f"{caminho_do_marco}/drawMethod", f"do método {do_marco}"
+            )
+    for colecao, campos, entidade, chaves in (
+        (
+            "schedule",
+            (("description", "na descrição"), ("location", "no local")),
+            "do Evento",
+            ("description",),
+        ),
+        (
+            "stages",
+            (
+                ("name", "no nome"),
+                ("rotuloFavoravel", "no rótulo do resultado favorável"),
+                ("rotuloDesfavoravel", "no rótulo do resultado desfavorável"),
+            ),
+            "da Etapa",
+            ("name",),
+        ),
+        ("attachments", (("label", "no rótulo"),), "do Anexo", ("label",)),
+        (
+            "documentRequirements",
+            (("name", "no nome"), ("instructions", "nas instruções")),
+            "do documento exigido",
+            ("name", "key"),
+        ),
+    ):
+        for posicao, item in enumerate(snapshot.get(colecao) or []):
+            if not isinstance(item, dict):
+                continue
+            caminho = _caminho_da_entidade(colecao, item, posicao)
+            for campo, lugar in campos:
+                yield (
+                    f"{caminho}/{campo}",
+                    f"{lugar} {entidade} «{_nome(item, *chaves)}»",
+                    item.get(campo),
+                )
+
+
+def _caractere_sem_grafia(snapshot: dict) -> list[ValidationFinding]:
+    """Texto impresso com caractere que o documento oficial não desenha.
+
+    O achado e a decisão de 08/10 estão em
+    `doc/achado-documento-troca-caractere-por-interrogacao.md`.
+
+    O renderizador trocava o caractere por `?` em silêncio, e o Edital 90/2026 saiu na prévia com
+    uma interrogação no lugar de cada marcador das atribuições. O que `grafia.normalizar` resolve
+    sem mudar o significado — marcador cheio, invisível, espaço tipográfico, texto decomposto — não
+    chega aqui; o que sobra, sim.
+
+    **Impeditivo, e nos dois atos.** A Constituição (Princípio II) pede que a divergência entre a
+    versão homologada e o documento impeça a publicação, e a Retificação recompõe o documento
+    inteiro: um Edital publicado antes desta regra, com o `?` no papel, só se retifica corrigindo o
+    texto que o produziu — e a mensagem diz qual é.
+    """
+    findings = []
+    for caminho, lugar, texto in _textos_impressos(snapshot):
+        if not isinstance(texto, str):
+            continue
+        faltantes = grafia.sem_grafia(texto)
+        if not faltantes:
+            continue
+        descritos = [grafia.descrever(caractere) for caractere in faltantes]
+        nomes = " e ".join(filter(None, (", ".join(descritos[:-1]), descritos[-1])))
+        um_so = len(faltantes) == 1
+        findings.append(
+            _impeditivo(
+                CARACTERE_SEM_GRAFIA,
+                f"{lugar[0].upper()}{lugar[1:]}, há {nomes} — "
+                f"{'caractere' if um_so else 'caracteres'} que o documento oficial não imprime. "
+                f"Reescreva o trecho sem {'ele' if um_so else 'eles'}.",
+                caminho,
+            )
+        )
+    return findings
 
 
 def blocking_findings(findings):
