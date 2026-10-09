@@ -177,3 +177,39 @@ def test_a_funcao_nao_muda_o_snapshot():
     pdf.itens_do_documento(snapshot)
     pdf.tabelas_do_documento(snapshot)
     assert json.dumps(snapshot, sort_keys=True) == antes
+
+
+# --- o documento não muda (FR-1219, SC-466, D-014) --------------------------------------------
+
+DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
+CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
+# O contexto do ato com que cada cenário foi publicado na auditoria de 08/10/2026: A com nome e ato
+# de nomeação fictícios, B só com o cargo, como o registro inicial do Cefor está hoje.
+AUTORIDADES = {
+    "A": pdf.AutoridadeSignataria(
+        nome="Fulana de Tal",
+        cargo=CARGO,
+        ato_de_nomeacao="Portaria nº 0000, de 2 de janeiro de 2026 (fictícia)",
+    ),
+    "B": pdf.AutoridadeSignataria(nome="", cargo=CARGO),
+}
+
+
+@pytest.mark.parametrize("cenario", ["A", "B"])
+def test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes(cenario):
+    from datetime import date
+
+    congelado = json.loads(
+        (CONGELADOS / f"{cenario}-conteudo-publicado.json").read_text(encoding="utf-8")
+    )
+    documento = pdf.render_edital_pdf(
+        congelado["content"],
+        congelado["hash"],
+        unidade=pdf.UnidadeDoAto(
+            cabecalho=("Centro de Referência em Formação", "e em Educação a Distância"),
+            local="Vitória (ES)",
+        ),
+        autoridade=AUTORIDADES[cenario],
+        data_do_ato=date(2026, 10, 8),
+    )
+    assert documento == (DOCUMENTOS / f"{cenario}-publicado.pdf").read_bytes()
