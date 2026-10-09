@@ -105,7 +105,7 @@ e nenhuma remissão é dada como correta.
 ### Implementação
 
 - [ ] T026 [US2] Em `backend/processo_seletivo/editais/domain/validation.py`, a conferência das remissões (`D-011`): itens do documento = função de T010 + os números de subitem lidos nas seções textuais (coerentes e em conflito, com seção e parágrafo); percorre `_textos_impressos`, lê as remissões, cruza e emite os três códigos de aviso, com a descrição de cada item ("a Etapa «…»", "o Perfil «CÓDIGO — nome»", "a subseção comum de atribuições", "o parágrafo N da seção «…»"); a remissão a um item único coerente não emite nada. Ordem: os achados de remissão de cada seção logo depois dos de numeração dela, e os dos demais campos ao fim (`D-007`). Registrar em `validate_for_publication`
-- [ ] T027 [US2] Em `backend/processo_seletivo/interface/views.py`, acrescentar os três códigos de remissão a `CODIGOS_DO_TEXTO_DA_SECAO` (com a âncora por seção de T019 quando o caminho é de seção); em `backend/processo_seletivo/interface/templatetags/interface_extras.py`, os códigos de remissão em `RESUMO_DAS_REPETIDAS` ("{n} remissões a conferir")
+- [ ] T027 [US2] Em `backend/processo_seletivo/interface/views.py`, acrescentar os três códigos de remissão a `CODIGOS_DO_TEXTO_DA_SECAO` (com a âncora por seção de T019 quando o caminho é de seção); em `backend/processo_seletivo/interface/templatetags/interface_extras.py`, os códigos de remissão em `RESUMO_DAS_REPETIDAS` ("{n} avisos de remissão")
 - [ ] T028 [US2] Rodar T021 a T024: verdes
 
 **Checkpoint**: numeração e remissões completas na elaboração.

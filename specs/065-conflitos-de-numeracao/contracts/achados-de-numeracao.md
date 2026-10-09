@@ -56,5 +56,4 @@ remissão dela; em seguida as remissões dos demais campos (`D-007`, `UX-161`).
 
 ## 5. Na Revisão
 
-O conflito, impeditivo, nunca é dobrado. As remissões repetidas se dobram em "{n} remissões a
-conferir", abrindo-se como as demais (`D-016`).
+O conflito, impeditivo, nunca é dobrado. As remissões repetidas se dobram em "{n} avisos de remissão", abrindo-se como as demais (`D-016`).

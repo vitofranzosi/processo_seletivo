@@ -192,5 +192,5 @@ testes de orçamento de consulta da Revisão e da etapa Conteúdo não podem mud
 ## D-016 — O resumo das repetidas
 
 Na Revisão, `agrupar_repetidas` dobra avisos repetidos numa linha que se abre. As remissões entram
-nele como as remissões a anexo já entram ("{n} remissões a conferir"); o conflito de numeração, que
+nele como as remissões a anexo já entram ("{n} avisos de remissão" — e não "remissões a conferir", perto demais do "conferida" que `FR-1209` proíbe); o conflito de numeração, que
 é impeditivo, nunca se dobra — é a regra do próprio filtro.
