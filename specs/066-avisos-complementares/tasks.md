@@ -326,9 +326,9 @@ simultâneas.
   - os números da suíte, medidos em T058, com falhas e pulados juntos
 - [X] T056 [P] Atualizar a linha da `066` em `README.md`, de "especificada e planejada" para o que foi entregue
 - [X] T057 Criar `specs/066-avisos-complementares/rastreabilidade.md`, com uma linha por FR, SC e UX, inclusive `FR-1255a` e `FR-1260a`, apontando o lugar no código e o teste que o prende (T`test_citacoes_de_requisito.py::test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature`)
-- [ ] T058 `cd backend && make lint check test-pg DB_NAME=ps_066`, com `ruff check` **e** `ruff format --check`, sem editar nada durante a suíte. Registrar passando, pulados e tempo. Os pulados não mudam, e qualquer pulado novo é conferido um a um
+- [X] T058 `cd backend && make lint check test-pg DB_NAME=ps_066`, com `ruff check` **e** `ruff format --check`, sem editar nada durante a suíte. Registrar passando, pulados e tempo. Os pulados não mudam, e qualquer pulado novo é conferido um a um
 - [X] T059 Criar `specs/066-avisos-complementares/verificacao.md`: o roteiro de quickstart.md §1 a §5a pela interface do ator, com o correio de desenvolvimento, e capturas a 1280 × 900 e 375 px (Princípio VI). Medir e registrar o tempo de compor e confirmar um aviso de resultado a partir de um modelo, no roteiro §1 (SC-485, meta de 3 minutos)
-- [ ] T060 Antes de integrar:
+- [X] T060 Antes de integrar:
   - `gh pr view 266 --json state`;
   - medir de novo o teto de FR, SC e UX em todas as worktrees;
   - se a `065` tiver crescido para dentro da faixa da 066, renumerar antes do merge;
