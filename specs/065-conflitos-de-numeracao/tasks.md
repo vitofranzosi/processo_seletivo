@@ -154,8 +154,8 @@ mostrados como aviso na confirmação (`SC-470`).
 - [X] T039 Demonstração pelo canal de quem elabora (Princípio VI, [quickstart.md](quickstart.md) §6): num banco copiado da base, com `INTERFACE_SELETOR_IDENTIDADE=true` e uma entrada **acrescentada** ao `.claude/launch.json` (desfeita no fim com `git checkout -- .claude/launch.json`), escrever "3.1" em "Da Inscrição", ver o achado, seguir o link, ter a submissão recusada, corrigir e ver o achado sumir; captura de tela registrada em `verificacao.md`
 - [X] T040 [P] `specs/065-conflitos-de-numeracao/rastreabilidade.md`: uma linha por `FR-1198` a `FR-1220`, `SC-462` a `SC-470`, `UX-159` a `UX-161`, `D-001` a `D-016` e por **caso-limite** da spec, cada uma com o teste que a prende
 - [X] T041 [P] README: a linha da `065` passa de "(especificada)" ao que foi entregue; e a seção de números da suíte do `AGENTS.md`, se a contagem de pulados ou o total mudarem de natureza (não mudam por teste novo que passa)
-- [ ] T042 `cd backend && make lint check test-pg` com `DB_NAME` próprio da worktree (`ruff check` **e** `ruff format --check`); registrar o total em `verificacao.md`
-- [ ] T043 Atualizar o *Status* de `spec.md` para "Implementado", e marcar as tarefas
+- [X] T042 `cd backend && make lint check test-pg` com `DB_NAME` próprio da worktree (`ruff check` **e** `ruff format --check`); registrar o total em `verificacao.md`
+- [X] T043 Atualizar o *Status* de `spec.md` para "Implementado", e marcar as tarefas
 
 ---
 

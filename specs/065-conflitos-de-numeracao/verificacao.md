@@ -114,3 +114,18 @@ Elaborador. Capturas em `demonstracao/`:
 4. a confirmação da submissão mostra os 4 impedimentos restantes, com as mesmas mensagens
    (`3-submissao-barrada.jpg`). O botão de confirmar não foi acionado: a recusa está provada por
    `test_a_submissao_e_recusada_e_corrigir_libera`.
+
+## A suíte inteira (T042)
+
+`make lint check` (com `DB_NAME`, `DB_USER` e `DB_RUNTIME_USER` como variáveis do Make — a worktree
+não tem `.env`): `ruff check` e `ruff format --check` limpos, `manage.py check` sem problemas,
+nenhuma migration pendente.
+
+`make test-pg DB_NAME=ps065 POSTGRES_USER=saymoncastro`, sobre `6268e16f`:
+
+```text
+9692 passed, 11 skipped in 934.23s (0:15:34)
+```
+
+Os onze pulados são os deliberados que o `AGENTS.md` reparte. Sem `.env`, `ARQUIVOS_CANDIDATOS_RAIZ`
+fica vazio, como no CI.

@@ -5,7 +5,7 @@ auditoria que fundamenta a feature no primeiro commit.
 
 **Created**: 2026-10-08
 
-**Status**: Especificada — decisões fechadas pelo responsável pelo produto em 08/10/2026 (ver *Decisões*)
+**Status**: Implementado — decisões fechadas pelo responsável pelo produto em 08/10/2026 (ver *Decisões*); verificação em [verificacao.md](verificacao.md)
 
 **Input**: o achado **ED-01** da [auditoria do Edital em PDF de 08/10/2026](../../doc/auditoria-edital-pdf-2026-10-08.md)
 e o pedido do responsável pelo produto, na mesma data, de tratá-lo como a próxima feature, com estes
