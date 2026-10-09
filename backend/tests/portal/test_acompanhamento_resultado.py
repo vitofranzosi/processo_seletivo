@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 # O que a tela diz quando há resultado. Se alguma destas frases aparecer antes de publicar, a
 # ausência da I-004 deixou de valer.
 MARCAS_DE_RESULTADO = (
-    "Resultado divulgado",
+    "Classificação por lista",
     "lugar",
     "Resultado preliminar",
     "Resultado definitivo",
@@ -62,6 +62,16 @@ def _conteudo(resposta):
     return re.search(r"<main[^>]*>(.*)</main>", corpo, re.DOTALL).group(1)
 
 
+def cartoes(corpo):
+    """Os cartões da classificação por lista (063, FR-1181), cada um com o seu texto.
+
+    As asserções sobre o resultado divulgado leem **o cartão**, e não a página: desde a 063 o topo
+    também cita a lista, o marco e a posição no porquê, e uma contagem sobre a página inteira
+    contaria as duas menções do mesmo ato.
+    """
+    return re.findall(r'<section class="cartao-de-lista".*?</section>', corpo, re.DOTALL)
+
+
 def test_sem_publicacao_o_acompanhamento_nao_menciona_resultado(client, cenario):
     """SC-008: o ato **está emitido** e mesmo assim nada aparece — divulgar é outro ato (FR-056).
 
@@ -83,16 +93,19 @@ def test_a_classificada_ve_natureza_posicao_pontuacao_e_o_caminho(client, cenari
 
     corpo = abrir(client, primeira)
 
-    assert "Resultado divulgado" in corpo
-    assert "Classificação final" in corpo, "o bloco é nomeado pelo marco (FR-057)"
-    assert "Resultado preliminar" in corpo
-    assert "1º lugar" in corpo
-    assert "pontuação 90,00" in corpo, (
+    assert "Classificação por lista" in corpo
+    [cartao] = cartoes(corpo)
+    assert "Ampla concorrência — Classificação final" in cartao, (
+        "o cartão é nomeado pela lista e pelo marco (FR-057, FR-1181)"
+    )
+    assert "Resultado preliminar" in cartao
+    assert "1º lugar" in cartao
+    assert "pontuação 90,00" in cartao, (
         "a pontuação é rotulada: ela chega como texto já formatado, e `pluralize` sobre texto "
         "daria 'ponto' para qualquer valor"
     )
     assert "90,00 ponto" not in corpo
-    assert reverse("portal:resultado", args=[publicacao.id]) in corpo
+    assert reverse("portal:resultado", args=[publicacao.id]) in cartao
 
 
 def test_a_nao_classificada_ve_a_propria_situacao_e_o_motivo(client, cenario):
@@ -102,8 +115,9 @@ def test_a_nao_classificada_ve_a_propria_situacao_e_o_motivo(client, cenario):
 
     corpo = abrir(client, sem_posicao)
 
-    assert "Você não foi classificado" in corpo
-    assert "Classificação final" in corpo
+    [cartao] = cartoes(corpo)
+    assert "Sem posição nesta lista" in cartao, "a ausência de posição é da lista (FR-1182)"
+    assert "Classificação final" in cartao
 
     # A página pública, por **outro** cliente: com a sessão da candidata aberta, o cabeçalho do
     # portal traz o nome dela em toda página, e a asserção casaria com o cabeçalho em vez de com a
@@ -124,8 +138,11 @@ def test_o_caminho_leva_sempre_a_publicacao_vigente(client, cenario, gestor):
 
     assert reverse("portal:resultado", args=[segunda.id]) in corpo
     assert reverse("portal:resultado", args=[primeira.id]) not in corpo
-    assert "Resultado definitivo" in corpo
-    assert corpo.count("Classificação final") == 1, "uma linha por marco, e não uma por publicação"
+    [cartao] = cartoes(corpo)
+    assert "Resultado definitivo" in cartao
+    assert "Resultado preliminar" not in corpo, (
+        "um cartão por lista e marco, e não um por publicação: a sucedida não aparece"
+    )
 
 
 def test_os_dois_marcos_aparecem_na_ordem_normativa_e_nao_na_de_publicacao(
@@ -177,11 +194,12 @@ def test_os_dois_marcos_aparecem_na_ordem_normativa_e_nao_na_de_publicacao(
 
     corpo = abrir(client, inscricoes[0])
 
-    assert "Classificação da análise documental" in corpo
-    assert "Classificação final" in corpo
-    assert corpo.index("Classificação da análise documental") < corpo.index(
-        "Classificação final"
-    ), "a ordem é a normativa (`marco_codigo`), e não a ordem em que se publicou"
+    titulos = [re.search(r"<h3[^>]*>(.*?)</h3>", cartao).group(1) for cartao in cartoes(corpo)]
+    assert len(titulos) == 2
+    assert "Classificação da análise documental" in titulos[0]
+    assert "Classificação final" in titulos[1], (
+        "a ordem é a normativa (`marco_codigo`), e não a ordem em que se publicou"
+    )
 
 
 def _consolidar_a_primeira(cenario, gestor, inscricoes):

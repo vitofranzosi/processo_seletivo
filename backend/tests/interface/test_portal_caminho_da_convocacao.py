@@ -336,6 +336,13 @@ class TestAcompanhamento:
         )
         return bloco
 
+    def topo(self, pagina):
+        """O bloco de situação (063, D-008): as frases de estado da convocação moram nele."""
+        (bloco,) = re.findall(
+            r'<section class="situacao-da-inscricao".*?</section>', pagina, flags=re.S
+        )
+        return bloco
+
     def test_a_secao_mostra_a_chamada_o_prazo_e_o_caminho(self, client, certame, gestor):
         edital, _, _ = certame
         vencimento = timezone.localtime(timezone.now() + timedelta(days=4))
@@ -354,10 +361,13 @@ class TestAcompanhamento:
     def test_antes_do_envio_diz_que_o_prazo_nao_comecou(self, client, certame, gestor):
         pessoa, _ = convocada(certame, gestor, client, "a-sem-envio")
 
-        secao = self.secao(self.abrir(client, pessoa))
+        topo = self.topo(self.abrir(client, pessoa))
 
-        assert "ainda não foi enviada" in secao
-        assert "não começou a correr" in secao
+        assert "ainda não foi enviada" in topo
+        assert "não começou a correr" in topo
+        assert "poderá registrar o não atendimento" not in topo, (
+            "sem envio não há prazo correndo, e nenhuma consequência de prazo (FR-1177)"
+        )
 
     def test_vencimento_decorrido_nao_decide_nada_sozinho(self, client, certame, gestor):
         edital, _, _ = certame
@@ -375,20 +385,25 @@ class TestAcompanhamento:
         with mock.patch(
             "django.utils.timezone.now", return_value=timezone.now() + timedelta(days=2)
         ):
-            secao = self.secao(self.abrir(client, pessoa))
+            topo = self.topo(self.abrir(client, pessoa))
 
-        assert "já passou" in secao
-        assert "não decide nada sozinho" in secao
+        # O vencimento não decide nada sozinho (`FR-274`): a situação continua "Convocado", e a tela
+        # diz que o prazo terminou e que o resultado ainda não foi registrado — sem afirmar perda.
+        assert "Convocado" in topo
+        assert "terminou em" in topo
+        assert "ainda não foi registrado" in topo
+        assert "perd" not in topo
+        assert "poderá registrar o não atendimento" not in topo
 
     def test_a_concluida_continua_consultavel(self, client, certame, gestor):
         edital, _, _ = certame
         pessoa, declarado = convocada(certame, gestor, client, "a-concluida")
         responder(edital, gestor, declarado["id"], "a-concluida-desf")
 
-        secao = self.secao(self.abrir(client, pessoa))
+        pagina = self.abrir(client, pessoa)
 
-        assert "Situação registrada: Aceite" in secao
-        assert reverse("portal:convocacao", args=[pessoa.id]) in secao
+        assert "Vaga aceita" in self.topo(pagina), "o desfecho em linguagem simples (FR-1172)"
+        assert reverse("portal:convocacao", args=[pessoa.id]) in self.secao(pagina)
 
     def test_a_sucessora_ocupa_o_lugar_da_sucedida(self, client, certame, gestor):
         """`FR-1100`: a lista, o acompanhamento e a tela mostram a mesma convocação."""

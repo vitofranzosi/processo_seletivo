@@ -87,6 +87,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
+from processo_seletivo.portal import situacao as situacao_da_inscricao
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
@@ -1580,26 +1581,52 @@ def acompanhamento(request, inscricao_id):
     resultados_das_etapas = resultados_visiveis(registro)
     agora = timezone.now()
     chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
+    convocacao = _convocacao_para_a_tela(chamada, agora)
+    requerimento = _requerimento_da_convocacao(registro, chamada, versao.content)
+    recursos = recursos_do_titular(registro)
+    # **O Perfil do conteúdo vigente**, de onde saem o canal e o cadastro reserva: são fatos sobre
+    # as próximas chamadas, e o calendário de hoje é o vigente — a mesma razão do Cronograma (063,
+    # D-004). Vazio quando uma Retificação o retirou, e então nem canal nem reserva são ditos.
+    perfil = _perfil_do_conteudo(versao.content, registro.profile_id)
+    # **Um cartão por lista e por marco** (063, D-006), na ordem do certame e, dentro do marco, na
+    # das listas do Perfil.
+    cartoes = situacao_da_inscricao.ordenar_cartoes(situacoes_do_candidato(registro), perfil)
     return render(
         request,
         "portal/acompanhamento.html",
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            # **A situação antes de tudo** (063, FR-1166): Situação → Por quê → O que fazer, saída
+            # de uma função pura sobre o que esta view já leu — nenhuma consulta a mais (D-007).
+            # Ela não recebe o corte nem a apuração de ocupação, e é isso que a impede de deduzir
+            # vaga da posição (FR-1169, FR-1171).
+            "situacao": situacao_da_inscricao.situacao_da_inscricao(
+                inscricao=registro,
+                perfil=perfil,
+                cartoes=cartoes,
+                resultados_das_etapas=resultados_das_etapas,
+                convocacao=convocacao["convocacao"],
+                desfecho=convocacao["desfecho"],
+                estado=convocacao["estado"],
+                requerimento=requerimento,
+                recorriveis=recorriveis,
+                recursos=recursos,
+            ),
             # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
             # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta
             # continua vindo só da tela dela (`D-008`). E o requerimento só é perguntado quando a
             # convocação existe — é o que mantém o zero da `029` para quem não foi chamado
             # (`D-006`).
-            **_convocacao_para_a_tela(chamada, agora),
-            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
+            **convocacao,
+            "requerimento": requerimento,
             "fatos": _fatos_da_participacao(registro),
             "cronograma": leitura.cronograma(versao.content, agora),
             # **Acréscimo, e não reescrita.** `_fatos_da_participacao` continua descrevendo fatos
             # da própria inscrição — o que a pessoa fez —, e a publicação é ato de terceiro sobre
             # ela. Misturar as duas coisas na mesma lista devolveria à tela justamente a confusão
             # que a FR-077 da 010 nomeia (FR-060).
-            "resultados_divulgados": situacoes_do_candidato(registro),
+            "resultados_divulgados": cartoes,
             # **O Resultado individual de cada Etapa**, quando a publicação vigente de um marco do
             # Perfil já autoriza mostrá-lo (018, D-003). É acréscimo à mesma tela, e não segunda
             # fonte: `situacoes_do_candidato` responde "o que o marco divulgou sobre mim", e este
@@ -1626,7 +1653,7 @@ def acompanhamento(request, inscricao_id):
             # Os recursos que a pessoa já interpôs, e o que pode ser contestado agora. A ação
             # **não** é oferecida quando a interposição não é possível: um botão que sempre recusa
             # é pior do que nenhum botão (FR-013).
-            "meus_recursos": recursos_do_titular(registro),
+            "meus_recursos": recursos,
             "recorriveis": recorriveis,
             # O prazo ao lado do resultado que ele alcança, e não só dentro da tela de interposição.
             # Ele existia — a tela "Recorrer" já dizia "até 16/09/2026 às 23h59" —, mas só depois de
@@ -2050,6 +2077,7 @@ def convocacao(request, inscricao_id):
             "selecao": _selecao(versao),
             **_convocacao_para_a_tela(chamada, agora),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
+            "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
             "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
         },

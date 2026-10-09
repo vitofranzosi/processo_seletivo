@@ -115,5 +115,7 @@ def test_o_individual_existe_e_e_alcancavel_por_quem_tem_direito(client, publica
         reverse("portal:acompanhamento", args=[sem_posicao.inscricao_id])
     ).content.decode()
 
-    assert "Você não foi classificado" in corpo
+    # Desde a 063, a situação no topo e a ausência de posição no cartão da lista (FR-1182).
+    assert "Não classificado" in corpo
+    assert "Sem posição nesta lista" in corpo
     assert cenario["edital"] is not None
