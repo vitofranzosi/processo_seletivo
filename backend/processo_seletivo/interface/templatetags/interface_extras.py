@@ -240,6 +240,32 @@ def ordena_por_sorteio(marco):
 
 
 @register.filter
+def declara_sorteio(marco):
+    """O marco, como a tela o tem agora, **declara** ordem por sorteio? (067, D-004)
+
+    Não é `ordena_por_sorteio`, que também lê o método: o arredondamento sai da tela pela forma
+    declarada, a mesma que a validação dispensa e o documento omite. Um cartão do acervo sem forma
+    e com método continua perguntando o arredondamento — e a validação continua exigindo.
+    """
+    from processo_seletivo.editais.domain import marcos
+
+    return marcos.declara_sorteio(marco or {})
+
+
+@register.filter
+def arredondamento_oculto(marco, campo):
+    """O valor que o campo oculto do arredondamento leva sob sorteio: o do marco, ou o padrão.
+
+    É o padrão de marco novo (`ARREDONDAMENTO_PADRAO`), e não um segundo padrão do template: a
+    troca para pontuação devolve os campos com o mesmo valor com que um marco novo nasceria.
+    """
+    from processo_seletivo.editais.domain.marcos import ARREDONDAMENTO_PADRAO
+
+    valor = (marco or {}).get(campo)
+    return ARREDONDAMENTO_PADRAO[campo] if valor in (None, "") else valor
+
+
+@register.filter
 def pergunta_a_combinacao(marco):
     """A tela pergunta como as pontuações se combinam? Só com duas ou mais Etapas (FR-415)."""
     from processo_seletivo.editais.domain import marcos

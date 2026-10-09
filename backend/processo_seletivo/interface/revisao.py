@@ -515,7 +515,11 @@ def _leitura_do_marco(marco, perfil, snapshot):
         pares.append(("Combinação", _combinacao(marco, etapas) or "nenhuma Etapa enumerada"))
         if NORMALIZACAO_DO_MARCO.get(marco.get("normalization")):
             pares.append(("Normalização", NORMALIZACAO_DO_MARCO[marco["normalization"]]))
-    if arredondamento := _arredondamento(marco):
+    # O arredondamento e o empate seguem a forma **declarada**, que é a do documento (067, D-004):
+    # a Revisão mostra o que o documento vai imprimir. A combinação e o bloco do sorteio continuam
+    # pela forma resolvida, como antes.
+    declara_sorteio = regras_do_marco.declara_sorteio(marco)
+    if not declara_sorteio and (arredondamento := _arredondamento(marco)):
         pares.append(
             (
                 "Arredondamento",
@@ -558,7 +562,7 @@ def _leitura_do_marco(marco, perfil, snapshot):
         # Logo depois do corte, e sem par quando não declarados: "essa quantidade" é a que ele
         # acabou de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado"
         # aqui leria como o silêncio legítimo do recurso, que não é.
-        if empate := _empate_no_corte(marco):
+        if not declara_sorteio and (empate := _empate_no_corte(marco)):
             pares.append(("Empate no corte", empate))
         if continuacao := _continuacao_do_corte(marco):
             pares.append(("Continuação", continuacao))

@@ -633,6 +633,14 @@ def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
         arredondamento_publicado,
     )
 
+    # **Sob sorteio declarado, a ausência é a resposta certa** (067, ED-03, FR-1311). A ordem
+    # sorteada não vem de nota, e não há o que arredondar: exigir a declaração obrigava quem elabora
+    # a publicar uma conta que não existe — a auditoria de 08/10/2026 só montou o cenário A assim, e
+    # o documento a imprimia. O declarado continua conferido na forma (FR-1312), como o desfecho de
+    # empate sob sorteio (`FR-928`): só a ausência fica livre. A forma é a **declarada**
+    # (`declara_sorteio`, D-004) — o marco do acervo que não a declara continua exigindo.
+    if marcos.declara_sorteio(marco) and not _arredondamento_declarado(marco):
+        return []
     try:
         arredondamento_publicado(marco)
     except RegraIncompleta as falta:
@@ -645,6 +653,14 @@ def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
             )
         ]
     return []
+
+
+def _arredondamento_declarado(marco) -> bool:
+    """Algum dos dois campos do arredondamento foi declarado? `{}`, ou `None` nos dois, não é."""
+    arredondamento = marco.get("rounding")
+    if not isinstance(arredondamento, dict):
+        return arredondamento is not None
+    return any(arredondamento.get(campo) is not None for campo in ("scale", "mode"))
 
 
 def _divisor_do_marco(marco, etapas, caminho) -> list[ValidationFinding]:

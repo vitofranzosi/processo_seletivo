@@ -3015,11 +3015,20 @@ def fragmento_marco_recomposto(request, indice, sub):
         return HttpResponse(status=204)
     if marco is None:
         return HttpResponse(status=204)
+    exibido = _reexibir_marco(marco)
+    if marcos.declara_sorteio(marco):
+        # Sob sorteio a gravação não leva arredondamento (067, D-008), e o marco lido do formulário
+        # vem com `{}`. Mas o cartão leva oculto o que veio oculto: é o que a troca para pontuação,
+        # no próximo recompor, devolve à tela — o arredondamento que o marco tinha, e não o padrão.
+        base = f"marco-{indice}-{sub}"
+        exibido.update(
+            scale=request.GET.get(f"{base}-scale", ""), mode=request.GET.get(f"{base}-mode", "")
+        )
     return render(
         request,
         "interface/_marco.html",
         {
-            "marco": _reexibir_marco(marco),
+            "marco": exibido,
             "indice": indice,
             "sub": sub,
             "quantos_perfis": edital.perfis.count() if edital else 0,

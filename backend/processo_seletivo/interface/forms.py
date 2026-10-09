@@ -13,6 +13,7 @@ from uuid import uuid4
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import duplicacao, quadro, secoes
+from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
@@ -247,6 +248,14 @@ def _marcos(dados, prefixo):
             )
         escala = _inteiro_opcional(dados, f"{base}-scale")
         modo = _texto(dados, f"{base}-mode")
+        # Sob sorteio declarado, nada de arredondamento no conteúdo (067, D-008): a ordem sorteada
+        # não vem de nota, e o documento já não o imprimiria — mas o conteúdo publicado continuaria
+        # afirmando uma conta que não existe. Os ocultos do cartão só servem à troca de forma.
+        arredondamento = (
+            {}
+            if _texto(dados, f"{base}-orderProduction") == POR_SORTEIO
+            else {"scale": escala, "mode": modo}
+        )
         marcos.append(
             {
                 "id": _texto(dados, f"{base}-id"),
@@ -265,7 +274,7 @@ def _marcos(dados, prefixo):
                 "normalization": _texto(dados, f"{base}-normalization"),
                 # Escala e modo viajam mesmo vazios: é a validação que recusa, com mensagem que
                 # nomeia o que falta — e não o formulário, que devolveria silêncio.
-                "rounding": {"scale": escala, "mode": modo},
+                "rounding": arredondamento,
                 # A janela recursal do marco. **Ausente quando o marco não a declara**, e a
                 # ausência é a afirmação certa: sem prazo publicado, ninguém inventa prazo
                 # (FR-020, FR-028, FR-030).

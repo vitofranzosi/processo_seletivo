@@ -1741,7 +1741,7 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 # sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um marco
                 # antigo que carrega método, e documento publicado não muda de conteúdo.
                 forma = marco.get("orderProduction") or ""
-                sorteia = forma == regras_do_marco.POR_SORTEIO
+                sorteia = regras_do_marco.declara_sorteio(marco)
                 pares = []
                 ordem = FORMA_DA_ORDEM.get(forma)
                 if ordem:
@@ -1756,7 +1756,12 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                     normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
                     if normalizacao:
                         pares.append(["Normalização", normalizacao])
-                arredondamento = _arredondamento(marco)
+                # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
+                # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
+                # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
+                # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
+                # pela função que a validação e a Revisão também leem (D-004).
+                arredondamento = "" if sorteia else _arredondamento(marco)
                 if arredondamento:
                     pares.append(["Arredondamento", arredondamento])
                 _pares(composicao, pares, recuo=32.0)
@@ -1783,7 +1788,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 corte = _regra_de_corte(marco, etapas)
                 if corte:
                     posteriores.append(["Corte", corte])
-                    if empate := _empate_no_corte(marco):
+                    # A ordem sorteada é total — cada posição é única —, e o empate na última
+                    # posição não acontece (067, FR-1314). A validação já não exige o desfecho
+                    # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
+                    if not sorteia and (empate := _empate_no_corte(marco)):
                         posteriores.append(["Empate no corte", empate])
                     if continuacao := _continuacao_do_corte(marco):
                         posteriores.append(["Continuação", continuacao])
