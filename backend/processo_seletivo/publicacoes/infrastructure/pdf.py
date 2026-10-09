@@ -22,6 +22,7 @@ from django.utils import timezone
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain import quadro as quadro_do_perfil
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
@@ -1873,9 +1874,16 @@ def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False)
     **Sem quadro, o bloco não sai — e nenhuma frase o substitui.** Um "quadro não declarado"
     impresso seria uma afirmação nova sobre um Edital que não a fez, e é o que a SC-050 cobra:
     nenhum Edital publicado antes desta feature passa a afirmar zero vaga em lugar nenhum.
+
+    **Sem vaga imediata, nem quadro nem reversão** (067, ED-12, D-003). O Perfil só de cadastro de
+    reserva imprimia um quadro inteiro de zeros e a frase sobre "vagas reservadas" que não existem
+    — reserva de vaga onde não há vaga (16 Perfis no cenário B da auditoria de 08/10/2026). O que
+    é verdade continua: a linha do Perfil, com 0 vaga e o cadastro, e a tabela de Modalidades, com
+    percentual e fundamento. **E nenhuma frase o substitui**: como a reserva se aplica ao cadastro
+    (RC-58) não é regra que o sistema declare — a convocação desses Perfis é feita fora dele.
     """
     linhas_do_quadro = perfil.get("vacancyTable") or []
-    if not linhas_do_quadro:
+    if not linhas_do_quadro or quadro_do_perfil.sem_vaga_imediata(perfil):
         return
     denominacoes = {
         str(modalidade.get("id")): (
@@ -2716,7 +2724,9 @@ def tabelas_do_documento(snapshot):
             perfis = snapshot.get("profiles") or []
             total += 1 if len(perfis) > 1 else 0
             for perfil in perfis:
-                total += 1 if perfil.get("vacancyTable") else 0
+                # O quadro sai pela mesma regra de `_quadro_de_vagas_do_perfil` (067, D-007).
+                sai = perfil.get("vacancyTable") and not quadro_do_perfil.sem_vaga_imediata(perfil)
+                total += 1 if sai else 0
                 total += 1 if perfil.get("competitionModalities") else 0
         elif corpo is _cronograma:
             total += 1

@@ -117,17 +117,17 @@ recusado.
 
 ### Testes
 
-- [ ] T028 [P] [US4] Em `backend/tests/unit/publicacoes/test_perfil_sem_vaga_imediata.py` (novo), a tabela do Perfil do contrato (`FR-1321` a `FR-1323`): Perfil sem vaga imediata não tem "Quadro de vagas" nem frase de reversão, e tem a tabela de Modalidades com percentual e fundamento, a forma de convocação e os marcos; Perfil com 6 vagas e uma linha em 0 tem quadro com a linha em 0 e a reversão; as legendas "Tabela N" saem sem lacuna; nenhuma frase nova sobre cadastro (`FR-1322`); Perfil incoerente (total 0, linha positiva) tem quadro; Perfil sem vaga e sem cadastro (`reserveType` `NONE`) também não tem quadro nem reversão; a tabela de Perfis continua sem a linha de total quando o total do Edital é 0
-- [ ] T029 [P] [US4] No mesmo arquivo, o snapshot congelado de B: exatamente 2 legendas "Quadro de vagas" (TD-ADM, TD-INFO-EDU) e 2 frases de reversão; 18 tabelas de Modalidades; e `tabelas_do_documento(B)` igual ao número de legendas "Tabela N" do documento composto (o guardião da `065` em `test_itens_do_documento.py` cobre o geral; este prende o caso)
-- [ ] T030 [P] [US4] Em `backend/tests/interface/test_correcoes_de_norma_na_revisao.py`, a Revisão do Perfil sem vaga imediata mostra a reversão declarada seguida de "não sai no documento: o Perfil não tem vaga imediata", e a do Perfil com vaga não (`UX-192`)
-- [ ] T031 [P] [US4] Em `backend/tests/unit/editais/test_predicados_da_067.py` ou arquivo de validação existente, `FR-1324`: o conteúdo de B continua com o mesmo conjunto de achados de validação de antes desta história (a reversão declarada aceita; `reserve_only_convocation_external` 16 vezes na publicação)
-- [ ] T032 [US4] Rodar T028 a T031 contra o código da fase anterior: falham pelo quadro e pela reversão impressos e pela nota ausente; T031 passa (é guarda)
+- [X] T028 [P] [US4] Em `backend/tests/unit/publicacoes/test_perfil_sem_vaga_imediata.py` (novo), a tabela do Perfil do contrato (`FR-1321` a `FR-1323`): Perfil sem vaga imediata não tem "Quadro de vagas" nem frase de reversão, e tem a tabela de Modalidades com percentual e fundamento, a forma de convocação e os marcos; Perfil com 6 vagas e uma linha em 0 tem quadro com a linha em 0 e a reversão; as legendas "Tabela N" saem sem lacuna; nenhuma frase nova sobre cadastro (`FR-1322`); Perfil incoerente (total 0, linha positiva) tem quadro; Perfil sem vaga e sem cadastro (`reserveType` `NONE`) também não tem quadro nem reversão; a tabela de Perfis continua sem a linha de total quando o total do Edital é 0
+- [X] T029 [P] [US4] No mesmo arquivo, o snapshot congelado de B: exatamente 2 legendas "Quadro de vagas" (TD-ADM, TD-INFO-EDU) e 2 frases de reversão; 18 tabelas de Modalidades; e `tabelas_do_documento(B)` igual ao número de legendas "Tabela N" do documento composto (o guardião da `065` em `test_itens_do_documento.py` cobre o geral; este prende o caso)
+- [X] T030 [P] [US4] Em `backend/tests/interface/test_correcoes_de_norma_na_revisao.py`, a Revisão do Perfil sem vaga imediata mostra a reversão declarada seguida de "não sai no documento: o Perfil não tem vaga imediata", e a do Perfil com vaga não (`UX-192`)
+- [X] T031 [P] [US4] Em `backend/tests/unit/editais/test_predicados_da_067.py` ou arquivo de validação existente, `FR-1324`: o conteúdo de B continua com o mesmo conjunto de achados de validação de antes desta história (a reversão declarada aceita; `reserve_only_convocation_external` 16 vezes na publicação)
+- [X] T032 [US4] Rodar T028 a T031 contra o código da fase anterior: falham pelo quadro e pela reversão impressos e pela nota ausente; T031 passa (é guarda)
 
 ### Implementação
 
-- [ ] T033 [US4] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_quadro_de_vagas_do_perfil` retorna sem tabela e sem reversão quando `sem_vaga_imediata(perfil)`; `tabelas_do_documento` conta o quadro só quando ele sai; docstrings com ED-12 e `D-003` (por que nenhuma frase substitui o quadro)
-- [ ] T034 [US4] Em `backend/processo_seletivo/interface/revisao.py`, a nota da reversão do Perfil sem vaga imediata (`UX-192`)
-- [ ] T035 [US4] Rodar T028 a T031, `tests/unit/publicacoes/test_itens_do_documento.py` (o guardião da `065`, exceto o de bytes, que muda em US5) e `tests/interface/test_compor_quadro.py`: verdes
+- [X] T033 [US4] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_quadro_de_vagas_do_perfil` retorna sem tabela e sem reversão quando `sem_vaga_imediata(perfil)`; `tabelas_do_documento` conta o quadro só quando ele sai; docstrings com ED-12 e `D-003` (por que nenhuma frase substitui o quadro)
+- [X] T034 [US4] Em `backend/processo_seletivo/interface/revisao.py`, a nota da reversão do Perfil sem vaga imediata (`UX-192`)
+- [X] T035 [US4] Rodar T028 a T031, `tests/unit/publicacoes/test_itens_do_documento.py` (o guardião da `065`, exceto o de bytes, que muda em US5) e `tests/interface/test_compor_quadro.py`: verdes
 
 **Checkpoint**: ED-12 fechado.
 

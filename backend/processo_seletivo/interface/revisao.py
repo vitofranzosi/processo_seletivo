@@ -195,11 +195,15 @@ def _perfil(perfil, snapshot):
     especie = (perfil.get("vacancyReversion") or {}).get("kind")
     if especie or set(denominacoes) - {str(perfil.get("generalCompetitionModalityId"))}:
         gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "vacancyReversion")
+        reversao = REVERSAO.get(especie, especie or "não")
+        if especie and quadro.sem_vaga_imediata(perfil):
+            # O documento não a imprime sem vaga imediata (067, ED-12, UX-192): dito aqui, quem
+            # submete sabe que a declaração continua no conteúdo e fica fora do ato.
+            reversao = f"{reversao} — não sai no documento: o Perfil não tem vaga imediata"
         linhas.append(
             origens.com_origem(
                 Rotulada(
-                    "Reverter vaga reservada não preenchida para a ampla concorrência",
-                    REVERSAO.get(especie, especie or "não"),
+                    "Reverter vaga reservada não preenchida para a ampla concorrência", reversao
                 ),
                 origens.frase_do_gesto(gesto) if gesto else "",
             )
