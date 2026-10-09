@@ -150,3 +150,9 @@ Em 2026-10-09, sobre `799f17a8`, com `make lint check test-pg DB_NAME=ps068`:
 - `manage.py check`: nenhum problema;
 - **10078 passando, 11 pulados**, em 999 s — os mesmos onze pulados deliberados do `AGENTS.md`. Antes
   desta feature eram 9959 passando: a diferença são os testes novos e os casos parametrizados novos.
+
+**Depois de integrar a `main` com a `066`** (PR #269, mergeado enquanto esta feature terminava; o
+único conflito foi a linha do total da suíte no `AGENTS.md`), sobre o merge `f4b97a98`, com o mesmo
+comando: `ruff check` e `ruff format --check` limpos (1386 arquivos), `manage.py check` sem problemas,
+e **10408 passando, 11 pulados**, em 1095 s — os mesmos onze pulados.
+
