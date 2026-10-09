@@ -180,8 +180,15 @@ def test_a_funcao_nao_muda_o_snapshot():
 
 
 # --- o documento não muda (FR-1219, SC-466, D-014) --------------------------------------------
+#
+# **Até a `067`, que o muda de propósito** (ED-02, ED-03, ED-12). Os PDFs da auditoria continuam
+# onde estão, e não são regravados: são evidência de uma auditoria datada, e regravá-los apagaria
+# o que ela viu. Os bytes esperados passam a ser os de `specs/067-…/demonstracao/`, e o que mudou
+# entre um e outro é preso, trecho a trecho, por `test_documento_da_auditoria_depois_da_067.py`
+# (D-010).
 
 DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
+ESPERADOS = RAIZ / "specs" / "067-correcoes-de-norma-do-edital" / "demonstracao"
 CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
 # O contexto do ato com que cada cenário foi publicado na auditoria de 08/10/2026: A com nome e ato
 # de nomeação fictícios, B só com o cargo, como o registro inicial do Cefor está hoje.
@@ -196,7 +203,7 @@ AUTORIDADES = {
 
 
 @pytest.mark.parametrize("cenario", ["A", "B"])
-def test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes(cenario):
+def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_067(cenario):
     from datetime import date
 
     congelado = json.loads(
@@ -212,4 +219,4 @@ def test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes(cenario):
         autoridade=AUTORIDADES[cenario],
         data_do_ato=date(2026, 10, 8),
     )
-    assert documento == (DOCUMENTOS / f"{cenario}-publicado.pdf").read_bytes()
+    assert documento == (ESPERADOS / f"{cenario}-publicado-067.pdf").read_bytes()

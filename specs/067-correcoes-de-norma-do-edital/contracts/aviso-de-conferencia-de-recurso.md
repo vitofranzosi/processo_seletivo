@@ -36,7 +36,7 @@ Três partes, nesta ordem:
    `“{nome}” ({Perfis}) — não cabe recurso`. Marcos de mesmo nome e mesma regra são uma regra só;
    `{Perfis}` são os códigos na ordem do conteúdo, separados por vírgula, ou `N Perfis` acima de seis.
 2. **O Cronograma.** `O Cronograma tem N Evento(s) de recurso: ` + cada Evento como
-   `{descrição ou tipo} — de {início} a {término}` (ou `— em {início}` sem término), separados por
+   `{descrição ou tipo} — de {início}, a {término}` (ou `— em {início}` sem término), separados por
    `; `, na ordem do Cronograma, + `.` — ou `O Cronograma não tem Evento de recurso.`
 3. **A orientação.** `O sistema não relaciona o Cronograma aos marcos: confira se há período de
    recurso para o resultado de cada marco e se os demais períodos são contra outros atos, ditos assim

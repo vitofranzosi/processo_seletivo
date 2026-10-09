@@ -190,3 +190,31 @@ def test_a_reversao_do_perfil_com_vaga_nao_tem_a_nota():
     linhas = _linhas_do_perfil(conteudo, codigo)
 
     assert not [linha for linha in linhas if "não sai no documento" in linha]
+
+
+# ---- ED-02: o aviso de conferência de recurso na Revisão (UX-191) -------------------------------
+
+
+def test_a_revisao_mostra_o_aviso_com_link_para_o_cronograma_e_nao_impede(
+    client, seletor_ligado, edital
+):
+    from tests.interface.conftest import compor_rascunho, identificar
+    from tests.interface.test_compor import PERFIL, eventos, perfis
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    marco = marco_de_sorteio_no_formulario(PERFIL)
+    base = f"marco-{PERFIL}-0"
+    marco.update({f"{base}-appealDeclaration": "admite", f"{base}-appealDurationDays": "2"})
+    compor_rascunho(client, edital, perfis(), eventos(), marco)
+    edital.refresh_from_db()
+
+    resposta = client.get(reverse("interface:compor-etapa", args=[edital.id, "revisao"]))
+    pendencias = resposta.context["pendencias"]
+    (aviso,) = [p for p in pendencias if p["codigo"] == "appeal_schedule_review"]
+    html = " ".join(resposta.content.decode().split())
+
+    assert "Prazos de recurso a conferir." in html
+    assert "O Cronograma não tem Evento de recurso" in html
+    assert reverse("interface:compor-etapa", args=[edital.id, "cronograma"]) in html
+    assert aviso["etapa"] == "cronograma" and aviso["corrigivel"]
+    assert aviso["severidade"] == "aviso"

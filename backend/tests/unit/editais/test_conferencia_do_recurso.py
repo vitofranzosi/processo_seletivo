@@ -106,7 +106,7 @@ def test_o_cenario_b_lista_os_quatro_eventos_na_ordem_e_resume_os_perfis():
     posicoes = [
         aviso.message.index(trecho)
         for trecho in (
-            "Recurso contra a homologação preliminar das inscrições — de 31/10/2026",
+            "Recurso contra a homologação preliminar das inscrições — de 31/10/2026,",
             "Recurso contra o resultado preliminar da prova de títulos — de 17/11/2026",
             "Recurso contra o resultado preliminar da heteroidentificação — de 27/11/2026",
             "Recurso contra o resultado preliminar da análise documental — de 08/12/2026",
@@ -119,10 +119,8 @@ def test_a_negativa_tambem_e_regra_de_recurso():
     (aviso,) = _avisos(_a(janela={"admits": False}))
 
     assert (
-        "“Classificação por sorteio eletrônico” (INF-BJN, INF-IUN, INF-SMT, INF-VAL) — não "(
-            "cabe recurso"
-        )
-        in aviso.message
+        "“Classificação por sorteio eletrônico” (INF-BJN, INF-IUN, INF-SMT, INF-VAL) — não cabe "
+        "recurso" in aviso.message
     )
 
 
