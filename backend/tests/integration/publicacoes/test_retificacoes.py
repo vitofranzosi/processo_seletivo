@@ -1694,3 +1694,65 @@ def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
     assert legiveis[0]["campo"] == "Atribuições"
     assert "Tutor Polo C" in legiveis[0]["onde"]
     assert "comuns" not in str(legiveis)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_retificacao_reagrupa_os_marcos_e_o_documento_original_nao_muda(
+    api_client, manager_headers, process_payload
+):
+    """068, FR-1358: o documento guardado fica; o da Retificação agrupa os marcos pela versão nova.
+
+    Três Perfis de marcos idênticos publicam uma subseção comum de marcos. Retificado o prazo de
+    recurso do marco do terceiro, o consolidado da Retificação agrupa só os dois que continuam
+    iguais, e o terceiro imprime os próprios marcos, com o prazo novo.
+    """
+    rascunho = _tres_polos_de_mesmo_texto()
+    # O código e o nome do marco são re-derivados do Perfil na duplicação (043, FR-644); aqui eles
+    # voltam a ser os da origem, para que os três marcos imprimam o mesmo texto.
+    origem = rascunho["profiles"][0]["classificationMilestones"][0]
+    for perfil in rascunho["profiles"][1:]:
+        for marco in perfil["classificationMilestones"]:
+            marco["code"], marco["name"] = origem["code"], origem["name"]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    original = Publicacao.objects.get(edital=edital, publication_order=1)
+    bytes_do_original = bytes(original.documento.bytes)
+    texto_original = " ".join(texto_de(bytes_do_original).split())
+    assert "Marcos classificatórios comuns aos Perfis P1, P2 e P3" in texto_original
+
+    base = VersaoConsolidada.objects.get(edital=edital)
+    terceiro = base.content["profiles"][2]
+    marco = terceiro["classificationMilestones"][0]
+    prazo = {**(marco.get("appealWindow") or {}), "admits": True, "durationDays": 9}
+    prazo.setdefault("unit", "DIAS_CORRIDOS")
+    criada = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {
+                "targetPath": (
+                    f"/profiles/id={terceiro['id']}/classificationMilestones/id={marco['id']}"
+                    "/appealWindow"
+                ),
+                "operation": "REPLACE",
+                "newValue": prazo,
+            }
+        ],
+        key="retificacao-chave-068",
+    )
+    assert criada.status_code == 201, criada.data
+    publicada = homologate_and_publish(
+        api_client, criada.data["id"], suffix="068", key="retificacao-chave-068"
+    )
+    assert publicada.status_code == 201, publicada.data
+
+    original.refresh_from_db()
+    assert bytes(original.documento.bytes) == bytes_do_original
+    retificado = " ".join(
+        texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes)).split()
+    )
+    assert "Marcos classificatórios comuns aos Perfis P1 e P2" in retificado
+    assert "Marcos classificatórios comuns aos Perfis P1, P2 e P3" not in retificado
+    assert "Marcos classificatórios — P3" in retificado
+    assert "no prazo de 9 (nove) dias corridos" in retificado

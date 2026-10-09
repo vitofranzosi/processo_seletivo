@@ -28,7 +28,12 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18
+        # **Pelo espelho do Docker Hub, e não por ele.** O Docker Hub limita os downloads sem login
+        # por IP, e o IP do runner é compartilhado: em 09/10/2026 o PR #270 caiu duas vezes seguidas
+        # em `toomanyrequests` antes de rodar um teste sequer, com o código verde. O `mirror.gcr.io`
+        # é o cache público do Docker Hub mantido pelo Google, serve a mesma imagem oficial e não
+        # pede login. Serviço sobe antes de qualquer passo, e por isso o espelho vai no nome.
+        image: mirror.gcr.io/library/postgres:18
         env:
           POSTGRES_DB: processo_seletivo_test
           POSTGRES_USER: postgres
@@ -71,6 +76,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # As imagens da pilha — `postgres`, `mailpit` e a base `python` do `Dockerfile` — vêm do Docker
+      # Hub, que limita o download sem login por IP (o `toomanyrequests` do PR #270, em 09/10/2026).
+      # Elas são baixadas do espelho e marcadas com o nome de sempre: o `compose` só baixa imagem
+      # que não há, e o build usa a base que já está no runner. Configurar o espelho no daemon não
+      # bastou — na primeira falha dele o daemon voltava ao Docker Hub, e o `mailpit` caiu no limite.
+      # O `compose.yaml` e o `Dockerfile` não mudam: a pilha que se testa é a que a pessoa sobe. A
+      # lista abaixo repete as imagens deles; imagem trocada lá e esquecida aqui volta a vir do Docker
+      # Hub, e o job continua certo — só volta a depender do limite.
+      - name: Baixar as imagens do Docker Hub pelo espelho
+        run: |
+          for imagem in postgres:18 axllent/mailpit:latest python:3.13-slim-bookworm; do
+            caminho=$([[ "$imagem" == */* ]] && echo "$imagem" || echo "library/$imagem")
+            docker pull "mirror.gcr.io/$caminho"
+            docker tag "mirror.gcr.io/$caminho" "$imagem"
+          done
 
       # A cópia é o primeiro passo do README. Se ela deixar de bastar — variável nova exigida e não
       # acrescentada ao exemplo —, é aqui que aparece, e não no primeiro dia de quem chega.

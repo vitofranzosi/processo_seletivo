@@ -65,7 +65,8 @@ def test_o_acervo_sem_forma_declarada_sai_como_sempre_saiu(forma):
 def test_o_cenario_a_da_auditoria_nao_tem_nenhuma_das_duas_linhas():
     corrido = " ".join(texto_de(composto("A")).split())
 
-    assert corrido.count("Ordem: por sorteio") == 4
+    # Uma vez, e não quatro, desde a `068`: os quatro marcos são idênticos e saem na subseção comum.
+    assert corrido.count("Ordem: por sorteio") == 1
     assert "Arredondamento" not in corrido
     assert "Empate no corte" not in corrido
-    assert corrido.count("Continuação: Poderá haver chamada") == 4
+    assert corrido.count("Continuação: Poderá haver chamada") == 1

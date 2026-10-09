@@ -523,8 +523,13 @@ def test_a_numeracao_dos_perfis_das_secoes_e_das_tabelas_nao_se_move():
     assert numeracao(agrupado) == numeracao(distinto)
 
 
-def test_os_demais_blocos_continuam_em_cada_perfil():
-    """FR-1197: requisitos, remuneração, quadros e modalidades não se consolidam."""
+def test_os_demais_blocos_seguem_a_regra_deles_com_ou_sem_atribuicoes_agrupadas():
+    """FR-1197, emendado pela `068`: a consolidação das atribuições não muda a dos outros blocos.
+
+    Até a `068`, requisitos, quadros e modalidades saíam em cada Perfil; desde ela, os idênticos
+    saem uma vez (FR-1342, FR-1344, FR-1352). A remuneração continua em cada Perfil. O que este
+    teste prende é que agrupar as atribuições não mexe em nada disso.
+    """
     agrupado = edital(
         *(
             perfil(c, texto(*ITENS), numero=n, compensation="R$ 1.100,00 mensais")
@@ -532,9 +537,11 @@ def test_os_demais_blocos_continuam_em_cada_perfil():
         )
     )
     com, sem = texto_de(documento(agrupado)), texto_de(documento(_distintos(agrupado)))
-    for marca in ("Requisitos", "• Mestrado em Computação", "Remuneração: R$ 1.100,00 mensais"):
-        assert com.count(marca) == sem.count(marca) == 3, marca
-    assert com.count("Modalidades de concorrência") == sem.count("Modalidades de concorrência") == 3
+    assert com.count("Remuneração: R$ 1.100,00 mensais") == 3
+    assert sem.count("Remuneração: R$ 1.100,00 mensais") == 3
+    for marca in ("• Mestrado em Computação", "Requisitos comuns aos Perfis"):
+        assert com.count(marca) == sem.count(marca) == 1, marca
+    assert com.count("Modalidades de concorrência") == sem.count("Modalidades de concorrência") == 1
 
 
 def _pagina_de(paginas, predicado):

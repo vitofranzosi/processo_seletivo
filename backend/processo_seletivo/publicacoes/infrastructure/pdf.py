@@ -13,7 +13,7 @@ WinAnsi não cobre é normalizado ou recusado por `publicacoes.domain.grafia`, e
 """
 
 import re
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -1239,13 +1239,15 @@ def _tabela(
                         primeira_da_linha = False
                     deslocamento += colunas[indice]
 
-    if legenda:
+    # A legenda pode vir já em linhas: a que nomeia Perfis quebra entre os códigos, e nunca
+    # dentro de um (068, R-008).
+    for indice, linha in enumerate([legenda] if isinstance(legenda, str) else legenda or []):
         composicao.escrever(
-            legenda,
+            linha,
             tamanho=CORPO_TEXTO,
             fonte=NEGRITO,
             recuo=recuo,
-            antes=ANTES_DE_BLOCO,
+            antes=ANTES_DE_BLOCO if indice == 0 else 0.0,
             junto=True,
         )
 
@@ -1691,7 +1693,9 @@ def _metodo_do_marco(snapshot, perfil, marco):
     return pares
 
 
-def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
+def _marcos(
+    composicao, snapshot, perfil, nomear_perfil=False, *, comum=False, metodo_remetido=None
+):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
 
     **Deixou de ser tabela, e a troca é a resposta ao que faltava.** Três colunas cabiam enquanto o
@@ -1707,116 +1711,146 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
     O `snapshot` inteiro chega aqui porque as Etapas são do Edital, não do Perfil: sem elas não há
     como resolver `stageId` para nome nem ler o peso publicado. Os fatos, ao contrário, são do
     Perfil que os declara.
+
+    **Na subseção comum (068), `comum`**: sem o rótulo "Marcos classificatórios" — o título da
+    subseção o diz — e um degrau à esquerda, como a `064` fez com as atribuições. O texto é o mesmo,
+    linha a linha (FR-1348); muda só o recuo, que é hierarquia, e não regra. `metodo_remetido` diz,
+    por marco, o item em que as linhas do método comum já saíram (FR-1349).
     """
     marcos = perfil.get("classificationMilestones") or []
     if not marcos:
         return
     etapas = por_identificador(snapshot.get("stages"))
     fatos = por_identificador(perfil.get("declaredFacts"))
+    metodo_remetido = metodo_remetido or {}
+    # O degrau do marco: 32 no Perfil, sob o rótulo; 18 na subseção comum, sob o título dela.
+    degrau = 18.0 if comum else 32.0
+
+    # **Na subseção comum, o marco quebra entre as suas partes** — cabeçalho e pares, sorteio,
+    # recurso e corte, desempate —, e não salta inteiro. Um marco de 25 linhas coeso deixava um
+    # terço da página em branco antes da subseção (cenário B da auditoria, p. 9): o branco que a
+    # `064` registrou e esta feature existe para não repetir. As partes são fronteiras semânticas,
+    # como as do Perfil (FR-021 da `008`). No Perfil, o marco continua coeso como sempre foi: o
+    # Edital de um Perfil sai com os mesmos bytes (FR-1356).
+    def parte():
+        return composicao.bloco() if comum else nullcontext()
+
     titulo = "Marcos classificatórios"
     if nomear_perfil:
         titulo = f"{titulo} — {perfil.get('code', '')}"
     with composicao.bloco(coeso=False):
-        composicao.escrever(
-            titulo,
-            tamanho=CORPO_TEXTO,
-            fonte=NEGRITO,
-            recuo=18,
-            antes=ANTES_DE_BLOCO,
-            junto=True,
-        )
+        if not comum:
+            composicao.escrever(
+                titulo,
+                tamanho=CORPO_TEXTO,
+                fonte=NEGRITO,
+                recuo=18,
+                antes=ANTES_DE_BLOCO,
+                junto=True,
+            )
         for marco in marcos:
-            with composicao.bloco():
-                composicao.escrever(
-                    f"{marco.get('code', '')} — {marco.get('name', '')}",
-                    tamanho=CORPO_TEXTO,
-                    fonte=NEGRITO,
-                    recuo=32,
-                    antes=ANTES_DE_BLOCO,
-                    junto=True,
-                )
-                # **Tudo abaixo é decidido pela forma que o marco declara**, e não pela inferida
-                # (032, FR-464). A distinção protege o acervo: marco composto antes da `030` não
-                # declara `orderProduction`, e a ausência **é** a afirmação — ele não ganha o par
-                # `Ordem` e sai do documento exatamente como sempre saiu, com a combinação que
-                # sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um marco
-                # antigo que carrega método, e documento publicado não muda de conteúdo.
-                forma = marco.get("orderProduction") or ""
-                sorteia = regras_do_marco.declara_sorteio(marco)
-                pares = []
-                ordem = FORMA_DA_ORDEM.get(forma)
-                if ordem:
-                    pares.append(["Ordem", ordem])
-                # **Aquela ordem não vem de nota** (032, FR-468). Imprimir "soma ponderada da
-                # Etapa…" sob um marco de sorteio era o documento afirmando um método falso — o
-                # `ACH-50` da auditoria de 16/09/2026, lido no papel que a candidata recebe.
-                if not sorteia:
-                    combinacao = _combinacao(marco, etapas)
-                    if combinacao:
-                        pares.append(["Combinação", combinacao])
-                    normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
-                    if normalizacao:
-                        pares.append(["Normalização", normalizacao])
-                # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
-                # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
-                # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
-                # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
-                # pela função que a validação e a Revisão também leem (D-004).
-                arredondamento = "" if sorteia else _arredondamento(marco)
-                if arredondamento:
-                    pares.append(["Arredondamento", arredondamento])
-                _pares(composicao, pares, recuo=32.0)
+            with composicao.bloco(coeso=not comum):
+                with parte():
+                    composicao.escrever(
+                        f"{marco.get('code', '')} — {marco.get('name', '')}",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=degrau,
+                        antes=ANTES_DE_BLOCO,
+                        junto=True,
+                    )
+                    # **Tudo abaixo é decidido pela forma que o marco declara**, e não pela inferida
+                    # (032, FR-464). A distinção protege o acervo: marco composto antes da `030` não
+                    # declara `orderProduction`, e a ausência **é** a afirmação — ele não ganha o
+                    # par `Ordem` e sai do documento exatamente como sempre saiu, com a combinação
+                    # que sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um
+                    # marco antigo que carrega método, e documento publicado não muda de conteúdo.
+                    forma = marco.get("orderProduction") or ""
+                    sorteia = regras_do_marco.declara_sorteio(marco)
+                    pares = []
+                    ordem = FORMA_DA_ORDEM.get(forma)
+                    if ordem:
+                        pares.append(["Ordem", ordem])
+                    # **Aquela ordem não vem de nota** (032, FR-468). Imprimir "soma ponderada da
+                    # Etapa…" sob um marco de sorteio era o documento afirmando um método falso — o
+                    # `ACH-50` da auditoria de 16/09/2026, lido no papel que a candidata recebe.
+                    if not sorteia:
+                        combinacao = _combinacao(marco, etapas)
+                        if combinacao:
+                            pares.append(["Combinação", combinacao])
+                        normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
+                        if normalizacao:
+                            pares.append(["Normalização", normalizacao])
+                    # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
+                    # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
+                    # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
+                    # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
+                    # pela função que a validação e a Revisão também leem (D-004).
+                    arredondamento = "" if sorteia else _arredondamento(marco)
+                    if arredondamento:
+                        pares.append(["Arredondamento", arredondamento])
+                    _pares(composicao, pares, recuo=degrau)
                 # O bloco do método, entre o arredondamento e o recurso — a ordem é a que
                 # `contracts/marco-no-documento.md` fixa, e ela faz parte do contrato.
                 if sorteia and (metodo := _metodo_do_marco(snapshot, perfil, marco)):
-                    # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
-                    # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
-                    if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
-                        metodo = [*metodo, ["Habilitação", habilitacao]]
-                    composicao.escrever(
-                        "Sorteio",
-                        tamanho=CORPO_TEXTO,
-                        fonte=NEGRITO,
-                        recuo=32,
-                        antes=ANTES_DE_LINHA,
-                        junto=True,
-                    )
-                    _pares(composicao, metodo, recuo=46.0)
-                posteriores = []
-                janela = _janela_recursal(marco)
-                if janela:
-                    posteriores.append(["Recurso", janela])
-                corte = _regra_de_corte(marco, etapas)
-                if corte:
-                    posteriores.append(["Corte", corte])
-                    # A ordem sorteada é total — cada posição é única —, e o empate na última
-                    # posição não acontece (067, FR-1314). A validação já não exige o desfecho
-                    # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
-                    if not sorteia and (empate := _empate_no_corte(marco)):
-                        posteriores.append(["Empate no corte", empate])
-                    if continuacao := _continuacao_do_corte(marco):
-                        posteriores.append(["Continuação", continuacao])
-                _pares(composicao, posteriores, recuo=32.0)
+                    with parte():
+                        # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
+                        # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
+                        # As linhas do método comum saem uma vez no documento (068, FR-1349): aqui,
+                        # se já saíram noutro item, fica a remissão — e a habilitação, que é do
+                        # marco.
+                        if (remetido := metodo_remetido.get(id(marco))) is not None:
+                            metodo = [
+                                ["Método", f"o comum a este Edital, descrito no item {remetido}."]
+                            ]
+                        if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+                            metodo = [*metodo, ["Habilitação", habilitacao]]
+                        composicao.escrever(
+                            "Sorteio",
+                            tamanho=CORPO_TEXTO,
+                            fonte=NEGRITO,
+                            recuo=degrau,
+                            antes=ANTES_DE_LINHA,
+                            junto=True,
+                        )
+                        _pares(composicao, metodo, recuo=degrau + 14)
+                with parte():
+                    posteriores = []
+                    janela = _janela_recursal(marco)
+                    if janela:
+                        posteriores.append(["Recurso", janela])
+                    corte = _regra_de_corte(marco, etapas)
+                    if corte:
+                        posteriores.append(["Corte", corte])
+                        # A ordem sorteada é total — cada posição é única —, e o empate na última
+                        # posição não acontece (067, FR-1314). A validação já não exige o desfecho
+                        # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
+                        if not sorteia and (empate := _empate_no_corte(marco)):
+                            posteriores.append(["Empate no corte", empate])
+                        if continuacao := _continuacao_do_corte(marco):
+                            posteriores.append(["Continuação", continuacao])
+                    _pares(composicao, posteriores, recuo=degrau)
                 criterios = sorted(
                     marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
                 )
                 if not criterios:
                     continue
-                composicao.escrever(
-                    "Critérios de desempate:",
-                    tamanho=CORPO_TEXTO,
-                    fonte=NEGRITO,
-                    recuo=32,
-                    antes=ANTES_DE_LINHA,
-                    junto=True,
-                )
-                for indice, criterio in enumerate(criterios, start=1):
+                with parte():
                     composicao.escrever(
-                        f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
+                        "Critérios de desempate:",
                         tamanho=CORPO_TEXTO,
-                        recuo=46,
+                        fonte=NEGRITO,
+                        recuo=degrau,
                         antes=ANTES_DE_LINHA,
+                        junto=True,
                     )
+                    for indice, criterio in enumerate(criterios, start=1):
+                        composicao.escrever(
+                            f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
+                            tamanho=CORPO_TEXTO,
+                            recuo=degrau + 14,
+                            antes=ANTES_DE_LINHA,
+                        )
 
 
 def _fatos_declarados(composicao, perfil):
@@ -1932,17 +1966,9 @@ def _reversao_declarada(composicao, perfil):
     especie = (perfil.get("vacancyReversion") or {}).get("kind")
     if not especie:
         return
-    frases = {
-        "ON_EXHAUSTION": (
-            "Havendo ausência de candidatos aprovados na reserva de vagas, o quantitativo será "
-            "destinado à respectiva ampla concorrência."
-        ),
-        "ON_BALANCE": (
-            "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não "
-            "preenchido será destinado à respectiva ampla concorrência."
-        ),
-    }
-    frase = frases.get(especie)
+    # A frase é a de `FRASE_DA_REVERSAO`, a mesma que a seção consolidada imprime (068): duas
+    # grafias da mesma regra em dois lugares é como uma delas fica para trás.
+    frase = FRASE_DA_REVERSAO.get(especie)
     if not frase:
         return
     with composicao.bloco():
@@ -2108,122 +2134,731 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
 
     A subseção é numerada a partir da seção-mãe já resolvida, como as Etapas (FR-013).
 
-    **As atribuições idênticas saem uma vez** (064). O Perfil cujo texto é igual ao de outro traz,
-    no lugar do bloco, a remissão ao item que o imprime; esse item é uma subseção comum **depois do
-    último Perfil**, numerada em continuação a eles. É a emenda aos FR-016 e FR-021 da `008`, que
-    faziam das atribuições um bloco de cada Perfil. Pôr a subseção comum no fim, e não antes dos
-    Perfis nem em seção própria, é o que deixa intactos os números dos Perfis, das seções seguintes
-    e das tabelas — que o texto livre do Edital cita ("conforme o item 11.2") e que uma inserção no
-    meio deslocaria em silêncio.
+    **Com dois ou mais Perfis, o que se repete sai uma vez** (064 e 068). As atribuições (064), os
+    requisitos e os marcos idênticos vão a subseções comuns **depois do último Perfil**, e cada
+    Perfil do grupo remete a elas; as vagas saem numa tabela Perfil × lista e as modalidades em
+    tabelas agrupadas, logo depois da tabela de Perfis; as frases de reversão e de convocação, uma
+    vez, abaixo delas. Pôr as subseções no fim, e não antes dos Perfis, é o que deixa intactos os
+    números dos Perfis — que o texto livre do Edital cita ("conforme o item 5.2") e que uma
+    inserção no meio deslocaria em silêncio a cada Retificação que desfizesse um grupo (068, D-001).
+
+    O Edital de um Perfil não passa por nada disso: sai como saía, byte a byte (068, FR-1356).
     """
     perfis = snapshot.get("profiles") or []
-    if len(perfis) > 1:
-        _quadro_de_perfis(composicao, perfis, tabelas)
-
-    # O número de cada subseção comum, calculado **uma vez** e antes do laço: a remissão sai antes
-    # do item a que ela remete, e o número que ela imprime e o que a subseção imprime vêm da mesma
-    # lista — duas contagens poderiam divergir e publicar uma remissão para o item errado. A chave
-    # do dicionário é a identidade do objeto, e não o `id` do Perfil, que nada obriga a ser único no
-    # snapshot que chega aqui.
-    comuns = [
-        (f"{secao}.{posicao}", grupo)
-        for posicao, grupo in enumerate(grupos_de_atribuicoes(perfis), len(perfis) + 1)
-    ]
-    item_comum = {id(perfil): numero for numero, grupo in comuns for perfil in grupo}
+    if len(perfis) == 1:
+        _perfil_unico(composicao, snapshot, perfis[0], secao, tabelas)
+        return
+    if not perfis:
+        return
+    plano = plano_de_consolidacao(snapshot, secao)
+    _quadro_de_perfis(composicao, perfis, tabelas)
+    _tabela_de_vagas(composicao, plano, tabelas)
+    _frases_consolidadas(composicao, plano.reversoes)
+    for grupo in plano.modalidades:
+        _tabela_de_modalidades(composicao, grupo, len(perfis), tabelas)
+    _frases_consolidadas(composicao, plano.convocacoes)
 
     for ordem, perfil in enumerate(perfis, 1):
         with composicao.bloco(coeso=False):
-            with composicao.bloco():
-                composicao.escrever(
-                    f"{secao}.{ordem} {perfil.get('code', '')} — {perfil.get('name', '')}",
-                    tamanho=CORPO_BLOCO,
-                    fonte=NEGRITO,
-                    antes=ANTES_DE_BLOCO + 4,
-                    junto=True,
-                )
-                if perfil.get("description"):
-                    composicao.escrever(
-                        perfil["description"],
-                        tamanho=CORPO_TEXTO,
-                        recuo=18,
-                        antes=ANTES_DE_PARAGRAFO,
-                        justificar=True,
-                    )
-            if len(perfis) == 1:
-                with composicao.bloco():
-                    _pares(
-                        composicao,
-                        [
-                            ["Localidade", perfil.get("locality", "") or "—"],
-                            ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
-                            ["Cadastro reserva", _reserva(perfil)],
-                        ],
-                    )
-            if id(perfil) in item_comum:
-                # Rótulo e valor na mesma linha, como "Localidade:" no Edital de um Perfil: a
-                # remissão é um valor curto, e o rótulo continua onde o candidato o procura. Com o
-                # espaço de sub-bloco, e não o de linha: é o mesmo degrau do cabeçalho
-                # "Atribuições" do Perfil vizinho, e os dois não podem parecer níveis diferentes.
-                with composicao.bloco():
-                    _pares(
-                        composicao,
-                        [["Atribuições", f"as descritas no item {item_comum[id(perfil)]}."]],
-                        antes=ANTES_DE_BLOCO,
-                    )
-            elif perfil.get("duties"):
-                with composicao.bloco():
-                    composicao.escrever(
-                        "Atribuições",
-                        tamanho=CORPO_TEXTO,
-                        fonte=NEGRITO,
-                        recuo=18,
-                        antes=ANTES_DE_BLOCO,
-                        junto=True,
-                    )
-                    for paragrafo in _paragrafos(perfil["duties"]):
-                        composicao.escrever(
-                            paragrafo,
-                            tamanho=CORPO_TEXTO,
-                            recuo=32,
-                            antes=ANTES_DE_LINHA,
-                            justificar=True,
-                        )
-            for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
-                if perfil.get(chave) and len(perfis) == 1:
-                    composicao.escrever(
-                        f"{rotulo}: {perfil[chave]}",
-                        tamanho=CORPO_TEXTO,
-                        recuo=18,
-                        antes=ANTES_DE_LINHA,
-                    )
-            if perfil.get("compensation") and len(perfis) > 1:
+            _identificacao_do_perfil(composicao, perfil, f"{secao}.{ordem}")
+            if numero := plano.remissao(perfil, ATRIBUICOES):
+                _remissao(composicao, "Atribuições", f"as descritas no item {numero}.")
+            else:
+                _atribuicoes(composicao, perfil)
+            if perfil.get("compensation"):
                 composicao.escrever(
                     f"Remuneração: {perfil['compensation']}",
                     tamanho=CORPO_TEXTO,
                     recuo=18,
                     antes=ANTES_DE_LINHA,
                 )
-            requisitos = perfil.get("requirements") or []
-            if requisitos:
-                with composicao.bloco():
-                    composicao.escrever(
-                        "Requisitos",
-                        tamanho=CORPO_TEXTO,
-                        fonte=NEGRITO,
-                        recuo=18,
-                        antes=ANTES_DE_BLOCO,
-                        junto=True,
-                    )
-                    for requisito in requisitos:
-                        composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+            if numero := plano.remissao(perfil, REQUISITOS):
+                _remissao(composicao, "Requisitos", f"os descritos no item {numero}.")
+            else:
+                _requisitos(composicao, perfil)
             _fatos_declarados(composicao, perfil)
-            _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, len(perfis) > 1)
-            _forma_de_convocacao_declarada(composicao, perfil)
-            _modalidades(composicao, perfil, tabelas, len(perfis) > 1)
-            _marcos(composicao, snapshot, perfil, len(perfis) > 1)
+            if numero := plano.remissao(perfil, MARCOS):
+                _remissao(composicao, "Marcos classificatórios", f"os descritos no item {numero}.")
+            else:
+                _marcos(composicao, snapshot, perfil, True, metodo_remetido=plano.metodo_remetido)
 
-    for numero, grupo in comuns:
-        _atribuicoes_comuns(composicao, grupo, numero)
+    for subsecao in plano.subsecoes:
+        if subsecao.materia == ATRIBUICOES:
+            _atribuicoes_comuns(composicao, subsecao.perfis, subsecao.numero)
+        elif subsecao.materia == REQUISITOS:
+            _requisitos_comuns(composicao, subsecao.perfis, subsecao.numero)
+        else:
+            _marcos_comuns(composicao, snapshot, subsecao, plano.metodo_remetido)
+
+
+def _perfil_unico(composicao, snapshot, perfil, secao, tabelas):
+    """O Perfil do Edital de um Perfil só — a composição de antes da `064`, sem mudar um item.
+
+    Os pares de identificação, a carga horária e o quadro e as modalidades dentro do Perfil: sem
+    tabela de Perfis acima, este é o único lugar onde eles saem.
+    """
+    with composicao.bloco(coeso=False):
+        _identificacao_do_perfil(composicao, perfil, f"{secao}.1")
+        with composicao.bloco():
+            _pares(
+                composicao,
+                [
+                    ["Localidade", perfil.get("locality", "") or "—"],
+                    ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
+                    ["Cadastro reserva", _reserva(perfil)],
+                ],
+            )
+        _atribuicoes(composicao, perfil)
+        for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
+            if perfil.get(chave):
+                composicao.escrever(
+                    f"{rotulo}: {perfil[chave]}",
+                    tamanho=CORPO_TEXTO,
+                    recuo=18,
+                    antes=ANTES_DE_LINHA,
+                )
+        _requisitos(composicao, perfil)
+        _fatos_declarados(composicao, perfil)
+        _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, False)
+        _forma_de_convocacao_declarada(composicao, perfil)
+        _modalidades(composicao, perfil, tabelas, False)
+        _marcos(composicao, snapshot, perfil, False)
+
+
+def _identificacao_do_perfil(composicao, perfil, numero):
+    with composicao.bloco():
+        composicao.escrever(
+            f"{numero} {perfil.get('code', '')} — {perfil.get('name', '')}",
+            tamanho=CORPO_BLOCO,
+            fonte=NEGRITO,
+            antes=ANTES_DE_BLOCO + 4,
+            junto=True,
+        )
+        if perfil.get("description"):
+            composicao.escrever(
+                perfil["description"],
+                tamanho=CORPO_TEXTO,
+                recuo=18,
+                antes=ANTES_DE_PARAGRAFO,
+                justificar=True,
+            )
+
+
+def _atribuicoes(composicao, perfil):
+    """O bloco próprio de atribuições do Perfil — o que a `064` não juntou."""
+    if not perfil.get("duties"):
+        return
+    with composicao.bloco():
+        composicao.escrever(
+            "Atribuições",
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            recuo=18,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
+        )
+        for paragrafo in _paragrafos(perfil["duties"]):
+            composicao.escrever(
+                paragrafo,
+                tamanho=CORPO_TEXTO,
+                recuo=32,
+                antes=ANTES_DE_LINHA,
+                justificar=True,
+            )
+
+
+def _requisitos(composicao, perfil):
+    """O bloco próprio de requisitos — e a chave da identidade deles (068, R-002)."""
+    requisitos = perfil.get("requirements") or []
+    if not requisitos:
+        return
+    with composicao.bloco():
+        composicao.escrever(
+            "Requisitos",
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            recuo=18,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
+        )
+        for requisito in requisitos:
+            composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+
+
+def _remissao(composicao, rotulo, valor):
+    """Rótulo e valor na mesma linha, no lugar do bloco que o Perfil não imprime (064, 068).
+
+    Como "Localidade:" no Edital de um Perfil: a remissão é um valor curto, e o rótulo continua onde
+    o candidato o procura. Com o espaço de sub-bloco, e não o de linha: é o mesmo degrau do
+    cabeçalho do bloco no Perfil vizinho, e os dois não podem parecer níveis diferentes.
+    """
+    with composicao.bloco():
+        _pares(composicao, [[rotulo, valor]], antes=ANTES_DE_BLOCO)
+
+
+# ---------------------------------------------------------------------------
+# 068 — O plano de consolidação
+# ---------------------------------------------------------------------------
+
+ATRIBUICOES, REQUISITOS, MARCOS = "atribuicoes", "requisitos", "marcos"
+AMPLA_CONCORRENCIA = "Ampla concorrência"
+MATRIZ, FORMA_LONGA = "matriz", "longa"
+TITULO_DA_SUBSECAO = {
+    ATRIBUICOES: "Atribuições comuns aos Perfis",
+    REQUISITOS: "Requisitos comuns aos Perfis",
+    MARCOS: "Marcos classificatórios comuns aos Perfis",
+}
+# A frase que a subseção comum de marcos diz antes deles (068, FR-1347). O marco é **de cada
+# Perfil** — cada um tem a sua ordem e o seu resultado, e recorre-se contra o resultado de cada um.
+# Impresso uma vez sob "comuns aos Perfis …", sem ela, ele se leria como uma classificação conjunta:
+# no cenário B da auditoria, "os 10 primeiros" passaria a valer para os 18 Perfis somados. Ela não
+# fala em corte, porque nem todo marco tem corte, e afirmaria regra que o marco não declara.
+MARCOS_SEPARADAMENTE = (
+    "Os marcos abaixo se aplicam a cada um desses Perfis separadamente, sobre as inscrições do "
+    "próprio Perfil: cada Perfil tem a sua própria classificação e o seu próprio resultado."
+)
+FRASE_DA_REVERSAO = {
+    "ON_EXHAUSTION": (
+        "Havendo ausência de candidatos aprovados na reserva de vagas, o quantitativo será "
+        "destinado à respectiva ampla concorrência."
+    ),
+    "ON_BALANCE": (
+        "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não "
+        "preenchido será destinado à respectiva ampla concorrência."
+    ),
+}
+
+
+@dataclass(frozen=True)
+class SubsecaoComum:
+    """Uma subseção que imprime uma vez o bloco de um grupo de Perfis."""
+
+    numero: str
+    materia: str
+    perfis: tuple
+
+    @property
+    def codigos(self):
+        return tuple(perfil.get("code", "") for perfil in self.perfis)
+
+
+@dataclass(frozen=True)
+class TabelaDeVagas:
+    forma: str
+    cabecalho: tuple
+    linhas: tuple
+
+
+@dataclass(frozen=True)
+class GrupoDeModalidades:
+    perfis: tuple
+    cabecalho: tuple
+    linhas: tuple
+
+
+@dataclass(frozen=True)
+class FraseConsolidada:
+    """Uma frase do Perfil dita uma vez; `codigos` vazio quando ela vale para todos."""
+
+    texto: str
+    codigos: tuple = ()
+
+
+@dataclass(frozen=True)
+class PlanoDeConsolidacao:
+    """Tudo o que a composição decide antes de escrever a seção de Perfis (068, R-001).
+
+    **Antes, e não durante**: a remissão sai antes do item a que remete, e o método comum pode ser
+    impresso num Perfil e remetido de uma subseção posterior. O número tem de existir antes de a
+    primeira linha ser escrita, e tem de vir da mesma lista que numera as subseções — duas
+    contagens poderiam divergir e publicar uma remissão para o item errado. E as funções que dizem
+    o que o documento numera (`itens_do_documento`, `tabelas_do_documento`) leem este mesmo plano,
+    para que a conferência de remissões da `065` veja o que a composição escreve (D-004 dela).
+
+    As chaves de `remissoes` e de `metodo_remetido` são a identidade do objeto, e não o `id` do
+    Perfil ou do marco, que nada obriga a ser único no snapshot que chega aqui — é a escolha da
+    `064`. Por isso o plano vale para o snapshot de que foi calculado, e para nenhum outro.
+    """
+
+    subsecoes: tuple
+    remissoes: dict
+    listas: tuple
+    vagas: TabelaDeVagas | None
+    modalidades: tuple
+    reversoes: tuple
+    convocacoes: tuple
+    metodo_remetido: dict
+
+    def remissao(self, perfil, materia):
+        return self.remissoes.get((id(perfil), materia))
+
+
+def _itens_do_bloco(funcao, *argumentos, **nomeados):
+    """Os itens que `funcao` escreveria — a identidade de um bloco impresso (068, R-002, D-003).
+
+    É a definição literal de "o documento os imprimiria iguais": texto, fonte, corpo, recuo,
+    espaço, fronteiras de bloco, linha a linha. Uma chave por campos do snapshot teria de reproduzir
+    cada regra do compositor — o método que governa, a habilitação, a ordem dos critérios, as
+    omissões da `067` sob sorteio — e divergiria dele na primeira mudança.
+    """
+    rascunho = Composicao()
+    funcao(rascunho, *argumentos, **nomeados)
+    return tuple(rascunho.itens)
+
+
+def _agrupar(perfis, chave):
+    """Os grupos de dois ou mais Perfis de mesma chave, na ordem do primeiro de cada um.
+
+    Chave vazia — bloco que não sai — não agrupa, como na `064` (FR-1188).
+    """
+    por_chave = {}
+    for perfil in perfis:
+        if valor := chave(perfil):
+            por_chave.setdefault(valor, []).append(perfil)
+    return [tuple(grupo) for grupo in por_chave.values() if len(grupo) > 1]
+
+
+def plano_de_consolidacao(snapshot, secao=0):
+    """O plano da seção de Perfis, ou `None` com um Perfil só (068, R-001, R-003)."""
+    perfis = snapshot.get("profiles") or []
+    if len(perfis) < 2:
+        return None
+    grupos = [
+        (ATRIBUICOES, [tuple(grupo) for grupo in grupos_de_atribuicoes(perfis)]),
+        (REQUISITOS, _agrupar(perfis, lambda perfil: _itens_do_bloco(_requisitos, perfil))),
+        (
+            MARCOS,
+            _agrupar(perfis, lambda perfil: _itens_do_bloco(_marcos, snapshot, perfil, False)),
+        ),
+    ]
+    subsecoes, remissoes = [], {}
+    proximo = len(perfis) + 1
+    for materia, da_materia in grupos:
+        for grupo in da_materia:
+            numero = f"{secao}.{proximo}"
+            proximo += 1
+            subsecoes.append(SubsecaoComum(numero, materia, grupo))
+            for perfil in grupo:
+                remissoes[(id(perfil), materia)] = numero
+    listas = _ordem_das_listas(perfis)
+    return PlanoDeConsolidacao(
+        subsecoes=tuple(subsecoes),
+        remissoes=remissoes,
+        listas=listas,
+        vagas=_plano_da_tabela_de_vagas(perfis, listas),
+        modalidades=_grupos_de_modalidades(perfis, listas),
+        reversoes=_frases_da_reversao(perfis),
+        convocacoes=_frases_da_convocacao(perfis),
+        metodo_remetido=_metodo_remetido(snapshot, perfis, secao, subsecoes, remissoes),
+    )
+
+
+def _rotulo_da_lista(modalidade):
+    """Como a lista aparece no cabeçalho da tabela de vagas: o código, ou o nome sem código."""
+    return modalidade.get("code") or modalidade.get("name", "")
+
+
+def _reservadas_no_quadro(perfil):
+    """`[(rótulo, modalidade, linha)]` das listas reservadas do quadro, na ordem declarada."""
+    modalidades = {
+        str(modalidade.get("id")): modalidade
+        for modalidade in perfil.get("competitionModalities") or []
+        if modalidade.get("id")
+    }
+    reservadas = []
+    for linha in perfil.get("vacancyTable") or []:
+        if not linha.get("modalityId"):
+            continue
+        modalidade = modalidades.get(str(linha["modalityId"]), {})
+        reservadas.append((_rotulo_da_lista(modalidade), modalidade, linha))
+    return reservadas
+
+
+def _ordem_das_listas(perfis):
+    """Uma ordem de listas para o documento inteiro (068, R-005, ED-11).
+
+    A linha geral primeiro; as reservadas na ordem em que os quadros as declaram, Perfil a Perfil —
+    a primeira ocorrência decide —; as modalidades que nenhum quadro declara, na ordem do snapshot.
+    O quadro é a única ordem que alguém escolheu: a do snapshot é a do código, pela collation do
+    banco, e era por isso que o mesmo Perfil imprimia PPI, PcD no quadro e PcD, PPI na tabela de
+    modalidades.
+
+    A modalidade de ampla concorrência declarada não é lista: é a "grafia armadilha" da linha
+    geral, e fica de fora.
+    """
+    listas = [AMPLA_CONCORRENCIA]
+    for perfil in perfis:
+        for rotulo, _, _ in _reservadas_no_quadro(perfil):
+            if rotulo not in listas:
+                listas.append(rotulo)
+    for perfil in perfis:
+        geral = perfil.get("generalCompetitionModalityId")
+        for modalidade in perfil.get("competitionModalities") or []:
+            rotulo = _rotulo_da_lista(modalidade)
+            if modalidade.get("id") != geral and rotulo not in listas:
+                listas.append(rotulo)
+    return tuple(listas)
+
+
+def _com_vaga_no_quadro(perfil):
+    """O Perfil tem linha na tabela de vagas? Quadro declarado e vaga imediata (067, D-003)."""
+    return bool(perfil.get("vacancyTable")) and not quadro_do_perfil.sem_vaga_imediata(perfil)
+
+
+def _plano_da_tabela_de_vagas(perfis, listas):
+    """A tabela de vagas: matriz quando cabe, forma longa quando não (068, R-004, FR-1342)."""
+    com_vaga = [perfil for perfil in perfis if _com_vaga_no_quadro(perfil)]
+    if not com_vaga:
+        return None
+    por_perfil = []
+    for perfil in com_vaga:
+        celulas = {}
+        for linha in perfil.get("vacancyTable") or []:
+            if not linha.get("modalityId"):
+                celulas[AMPLA_CONCORRENCIA] = (AMPLA_CONCORRENCIA, linha)
+        for rotulo, modalidade, linha in _reservadas_no_quadro(perfil):
+            nome = modalidade.get("name", "")
+            completo = f"{nome} ({modalidade['code']})" if modalidade.get("code") else nome
+            celulas[rotulo] = (completo, linha)
+        por_perfil.append((perfil, celulas))
+    colunas = [rotulo for rotulo in listas if any(rotulo in celulas for _, celulas in por_perfil)]
+    matriz = tuple(
+        (
+            perfil.get("code", ""),
+            *(
+                str(celulas[rotulo][1].get("immediateVacancies", 0)) if rotulo in celulas else "—"
+                for rotulo in colunas
+            ),
+        )
+        for perfil, celulas in por_perfil
+    )
+    cabecalho = ("Perfil", *colunas)
+    if _cabe_lado_a_lado(cabecalho, matriz):
+        return TabelaDeVagas(MATRIZ, cabecalho, matriz)
+    longa = tuple(
+        (
+            perfil.get("code", "") if indice == 0 else "",
+            celulas[rotulo][0],
+            str(celulas[rotulo][1].get("immediateVacancies", 0)),
+        )
+        for perfil, celulas in por_perfil
+        for indice, rotulo in enumerate(rotulo for rotulo in colunas if rotulo in celulas)
+    )
+    return TabelaDeVagas(FORMA_LONGA, ("Perfil", "Lista de concorrência", "Vagas imediatas"), longa)
+
+
+def _cabe_lado_a_lado(cabecalho, linhas, recuo=0.0):
+    """As colunas cabem na página sem partir palavra? (068, R-004)
+
+    A largura mínima de uma coluna é a da sua maior palavra, no cabeçalho ou numa célula, mais o
+    padding. `_larguras_das_colunas` reparte o espaço entre as colunas longas, e uma palavra maior
+    que a coluna seria partida ao meio por `_quebrar` — o código da lista ilegível no cabeçalho.
+    """
+    minimas = [
+        max(
+            max(
+                largura(palavra, CORPO_TABELA, NEGRITO)
+                for palavra in (cabecalho[c].split() or [""])
+            ),
+            *(
+                largura(palavra, CORPO_TABELA, REGULAR)
+                for linha in linhas
+                for palavra in (str(linha[c]).split() or [""])
+            ),
+        )
+        + PADDING_DA_COLUNA
+        for c in range(len(cabecalho))
+    ]
+    return sum(minimas) <= LARGURA - 2 * MARGEM - recuo
+
+
+def _linhas_de_modalidades(perfil, listas):
+    """O cabeçalho e as linhas da tabela de modalidades do Perfil, na ordem das listas (068, R-005).
+
+    As células são as de `_modalidades`; muda só a ordem das linhas: a modalidade de ampla
+    concorrência declarada à frente, depois a ordem do documento, e o que ela não tem, como veio.
+    """
+    modalidades = perfil.get("competitionModalities") or []
+    if not modalidades:
+        return None
+    geral = perfil.get("generalCompetitionModalityId")
+
+    def posicao(par):
+        indice, modalidade = par
+        rotulo = _rotulo_da_lista(modalidade)
+        return (
+            0 if geral and modalidade.get("id") == geral else 1,
+            listas.index(rotulo) if rotulo in listas else len(listas),
+            indice,
+        )
+
+    linhas = []
+    for _, modalidade in sorted(enumerate(modalidades), key=posicao):
+        regra = modalidade.get("normativeRule") or {}
+        percentual = regra.get("percentage")
+        linhas.append(
+            [
+                f"{modalidade.get('code', '')} — {modalidade.get('name', '')}",
+                f"{humano.decimal(percentual)}%" if percentual else "",
+                regra.get("foundation", "") or "",
+            ]
+        )
+    cabecalho = ["Modalidade", "Percentual", "Fundamento normativo"]
+    presentes = [c for c in range(len(cabecalho)) if any(linha[c] for linha in linhas)]
+    return (
+        tuple(cabecalho[c] for c in presentes),
+        tuple(tuple(linha[c] or "—" for c in presentes) for linha in linhas),
+    )
+
+
+def _grupos_de_modalidades(perfis, listas):
+    """Uma tabela por grupo de Perfis de tabela idêntica — inclusive o grupo de um (068, R-006)."""
+    por_chave = {}
+    for perfil in perfis:
+        if tabela := _linhas_de_modalidades(perfil, listas):
+            por_chave.setdefault(tabela, []).append(perfil)
+    return tuple(
+        GrupoDeModalidades(tuple(grupo), cabecalho, linhas)
+        for (cabecalho, linhas), grupo in por_chave.items()
+    )
+
+
+def _frases_por_alcance(pares, alcance):
+    """Uma frase por texto, com os códigos — ou sem eles quando ela vale para todo o alcance."""
+    por_texto = {}
+    for perfil, texto in pares:
+        if texto:
+            por_texto.setdefault(texto, []).append(perfil)
+    if len(por_texto) == 1:
+        texto, grupo = next(iter(por_texto.items()))
+        if len(grupo) == len(alcance):
+            return (FraseConsolidada(texto),)
+    return tuple(
+        FraseConsolidada(texto, tuple(perfil.get("code", "") for perfil in grupo))
+        for texto, grupo in por_texto.items()
+    )
+
+
+def _frases_da_reversao(perfis):
+    """A reversão é regra sobre as quantidades: só os Perfis da tabela de vagas (FR-1350)."""
+    com_vaga = [perfil for perfil in perfis if _com_vaga_no_quadro(perfil)]
+    pares = [
+        (perfil, FRASE_DA_REVERSAO.get((perfil.get("vacancyReversion") or {}).get("kind")))
+        for perfil in com_vaga
+    ]
+    return _frases_por_alcance(pares, com_vaga)
+
+
+def _frases_da_convocacao(perfis):
+    """A convocação é regra do Perfil inteiro, com quadro ou sem ele (FR-1351)."""
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+        FORMA_DE_CONVOCACAO_POR_EXTENSO,
+    )
+
+    pares = []
+    for perfil in perfis:
+        forma = FORMA_DE_CONVOCACAO_POR_EXTENSO.get(perfil.get("callForm"))
+        pares.append(
+            (perfil, f"A convocação dos classificados será feita {forma}." if forma else None)
+        )
+    return _frases_por_alcance(pares, perfis)
+
+
+def _governado_pelo_metodo_comum(snapshot, perfil, marco):
+    return (
+        regras_do_marco.declara_sorteio(marco)
+        and _origem_do_metodo(snapshot, marco) == "comum a este Edital"
+        and bool(_metodo_do_marco(snapshot, perfil, marco))
+    )
+
+
+def _metodo_remetido(snapshot, perfis, secao, subsecoes, remissoes):
+    """O item em que as linhas do método comum saem, para cada marco que só remete a ele (FR-1349).
+
+    Os lugares em que marcos são impressos, na ordem do documento: os Perfis que imprimem os
+    próprios, depois as subseções comuns. O primeiro marco governado pelo método comum imprime as
+    sete linhas; os seguintes, a remissão. No caso comum — todos os marcos iguais — há um lugar só,
+    e nenhuma remissão.
+    """
+    lugares = [
+        (f"{secao}.{ordem}", perfil)
+        for ordem, perfil in enumerate(perfis, 1)
+        if (id(perfil), MARCOS) not in remissoes
+    ] + [(item.numero, item.perfis[0]) for item in subsecoes if item.materia == MARCOS]
+    primeiro, remetido = None, {}
+    for numero, perfil in lugares:
+        for marco in perfil.get("classificationMilestones") or []:
+            if not _governado_pelo_metodo_comum(snapshot, perfil, marco):
+                continue
+            if primeiro is None:
+                primeiro = numero
+            else:
+                remetido[id(marco)] = primeiro
+    return remetido
+
+
+# ---------------------------------------------------------------------------
+# 068 — A composição consolidada
+# ---------------------------------------------------------------------------
+
+
+def _legenda_com_codigos(tabelas, titulo, perfis, recuo):
+    """A legenda que nomeia Perfis, em linhas que nunca partem um código (068, R-008)."""
+    rotulo = "Perfil" if len(perfis) == 1 else "Perfis"
+    return _linhas_sem_partir(
+        tabelas.legenda(f"{titulo} — {rotulo}"),
+        _codigos_enumerados([perfil.get("code", "") for perfil in perfis]),
+        CORPO_TEXTO,
+        NEGRITO,
+        recuo=recuo,
+    )
+
+
+def _tabela_de_vagas(composicao, plano, tabelas):
+    """As vagas de todos os Perfis numa tabela: a resposta a "quantas vagas PPI no polo X" (D-002).
+
+    Substitui o quadro de vagas de cada Perfil. O cabeçalho traz o código da lista, para que dez
+    listas caibam numa página; o nome está na tabela de modalidades, logo abaixo, na mesma ordem.
+    Lista que o Perfil não declara sai "—", e não "0": zero seria afirmar uma lista que ele não tem.
+    """
+    vagas = plano.vagas
+    if vagas is None:
+        return
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            list(vagas.cabecalho),
+            [list(linha) for linha in vagas.linhas],
+            recuo=0.0,
+            alinhamentos=[ESQUERDA]
+            + (
+                [CENTRO] * (len(vagas.cabecalho) - 1)
+                if vagas.forma == MATRIZ
+                else [ESQUERDA, CENTRO]
+            ),
+            legenda=tabelas.legenda("Vagas por lista de concorrência"),
+        )
+
+
+def _tabela_de_modalidades(composicao, grupo, total_de_perfis, tabelas):
+    """Uma tabela de modalidades por grupo; sem qualificador quando o grupo é o Edital (R-006)."""
+    titulo = "Modalidades de concorrência"
+    if len(grupo.perfis) == total_de_perfis:
+        legenda = tabelas.legenda(titulo)
+    else:
+        legenda = _legenda_com_codigos(tabelas, titulo, grupo.perfis, recuo=0.0)
+    with composicao.bloco():
+        _tabela(
+            composicao,
+            list(grupo.cabecalho),
+            [list(linha) for linha in grupo.linhas],
+            recuo=0.0,
+            alinhamentos=[ESQUERDA if c == 0 else CENTRO for c in range(len(grupo.cabecalho))],
+            legenda=legenda,
+        )
+
+
+def _frases_consolidadas(composicao, frases):
+    """As frases que os Perfis repetiam, uma vez, logo abaixo das tabelas que elas governam.
+
+    O texto é o de sempre. Quando a frase não vale para todo o alcance, ela começa pelos códigos
+    dos Perfis a que vale — "Nos Perfis A e B, na hipótese …" —, numa frase quebrada por pedaços,
+    para que nenhum código se parta entre duas linhas (R-007, R-008).
+    """
+    for indice, frase in enumerate(frases):
+        antes = ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO
+        with composicao.bloco():
+            if not frase.codigos:
+                composicao.escrever(frase.texto, antes=antes, justificar=True)
+                continue
+            inicio = "No Perfil" if len(frase.codigos) == 1 else "Nos Perfis"
+            pedacos = _codigos_enumerados(list(frase.codigos))
+            pedacos[-1] = f"{pedacos[-1]},"
+            texto = f"{frase.texto[:1].lower()}{frase.texto[1:]}"
+            linhas = _linhas_sem_partir(inicio, [*pedacos, *texto.split()], CORPO_TEXTO, REGULAR)
+            _escrever_linhas(composicao, linhas, antes=antes)
+
+
+def _escrever_linhas(composicao, linhas, *, antes, recuo=0.0):
+    """Um parágrafo já quebrado em linhas, justificado como `escrever` justifica.
+
+    `escrever` reflui por palavra; aqui a quebra já foi decidida por pedaços, e reescrever cada
+    linha por `escrever` perderia a justificação — ele só justifica as linhas que ele mesmo quebra.
+    """
+    for indice, linha in enumerate(linhas):
+        composicao.itens.append(
+            (
+                "texto",
+                linha,
+                REGULAR,
+                CORPO_TEXTO,
+                recuo,
+                antes if indice == 0 else 0.0,
+                ESQUERDA,
+                False,
+                False,
+                indice < len(linhas) - 1,
+            )
+        )
+
+
+def _titulo_da_subsecao_comum(composicao, numero, materia, grupo):
+    """O título que nomeia os códigos, e nunca a denominação (064, FR-1189 dela)."""
+    linhas = _linhas_sem_partir(
+        f"{numero} {TITULO_DA_SUBSECAO[materia]}",
+        _codigos_enumerados([perfil.get("code", "") for perfil in grupo]),
+        CORPO_BLOCO,
+        NEGRITO,
+    )
+    for indice, linha in enumerate(linhas):
+        composicao.escrever(
+            linha,
+            tamanho=CORPO_BLOCO,
+            fonte=NEGRITO,
+            antes=ANTES_DE_BLOCO + 4 if indice == 0 else 0.0,
+            junto=True,
+        )
+
+
+def _requisitos_comuns(composicao, grupo, numero):
+    """A subseção que imprime uma vez os requisitos de um grupo de Perfis (068, FR-1352, D-003).
+
+    O molde da subseção de atribuições da `064`: um bloco coeso, os itens um degrau à esquerda —
+    o título da subseção é o rótulo deles —, com o marcador de sempre.
+    """
+    with composicao.bloco():
+        _titulo_da_subsecao_comum(composicao, numero, REQUISITOS, grupo)
+        for requisito in grupo[0].get("requirements") or []:
+            with composicao.bloco():
+                composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=18)
+
+
+def _marcos_comuns(composicao, snapshot, subsecao, metodo_remetido):
+    """A subseção que imprime uma vez os marcos de um grupo de Perfis (068, FR-1346 a FR-1348).
+
+    **Aberta, e não coesa como a das atribuições**: a coesão fica em cada marco, como no Perfil. O
+    título e a frase do FR-1347 vão `junto`, e a quebra de página os leva com o marco que salta.
+
+    Os marcos são compostos a partir do primeiro Perfil do grupo — pela regra que formou o grupo,
+    os de todos imprimem o mesmo texto.
+    """
+    with composicao.bloco(coeso=False):
+        _titulo_da_subsecao_comum(composicao, subsecao.numero, MARCOS, subsecao.perfis)
+        composicao.escrever(
+            MARCOS_SEPARADAMENTE,
+            tamanho=CORPO_TEXTO,
+            recuo=18,
+            antes=ANTES_DE_PARAGRAFO,
+            junto=True,
+            justificar=True,
+        )
+        _marcos(
+            composicao,
+            snapshot,
+            subsecao.perfis[0],
+            comum=True,
+            metodo_remetido=metodo_remetido,
+        )
 
 
 def _atribuicoes_comuns(composicao, grupo, numero):
@@ -2242,21 +2877,8 @@ def _atribuicoes_comuns(composicao, grupo, numero):
     Os parágrafos são os do primeiro Perfil do grupo, que são, pela regra que formou o grupo, os de
     todos; recuo 18 porque o título da subseção é o rótulo deles.
     """
-    linhas = _linhas_sem_partir(
-        f"{numero} Atribuições comuns aos Perfis",
-        _codigos_enumerados([perfil.get("code", "") for perfil in grupo]),
-        CORPO_BLOCO,
-        NEGRITO,
-    )
     with composicao.bloco():
-        for indice, linha in enumerate(linhas):
-            composicao.escrever(
-                linha,
-                tamanho=CORPO_BLOCO,
-                fonte=NEGRITO,
-                antes=ANTES_DE_BLOCO + 4 if indice == 0 else 0.0,
-                junto=True,
-            )
+        _titulo_da_subsecao_comum(composicao, numero, ATRIBUICOES, grupo)
         for paragrafo in _paragrafos(grupo[0].get("duties")):
             with composicao.bloco():
                 composicao.escrever(
@@ -2286,18 +2908,21 @@ def _codigos_enumerados(codigos):
     return [f"{codigo}," for codigo in codigos[:-2]] + [codigos[-2], f"e {codigos[-1]}"]
 
 
-def _linhas_sem_partir(inicio, pedacos, tamanho, fonte):
-    """O título em linhas que quebram **entre** os pedaços, nunca dentro de um.
+def _linhas_sem_partir(inicio, pedacos, tamanho, fonte, recuo=0.0):
+    """O texto em linhas que quebram **entre** os pedaços, nunca dentro de um.
 
     `_quebrar` reflui por palavra, e um código com espaço — "ADS - P06", que é como os polos do
     Edital 90/2026 se chamam — saía partido: "ADS" no fim de uma linha e "- P06" no começo da
     outra, e o candidato não acha o próprio código. O espaço inseparável não resolve, porque
     `_quebrar` divide em todo espaço que `str.split` reconhece, e ele está entre eles.
 
+    Serve aos títulos das subseções comuns (064), às legendas e às frases que enumeram códigos
+    (068); `recuo` estreita a linha para o texto que não começa na margem.
+
     O pedaço maior que a linha inteira sai sozinho, e é `escrever` que o parte — o último degrau de
     sempre, para que a composição conclua.
     """
-    disponivel = LARGURA - 2 * MARGEM
+    disponivel = LARGURA - 2 * MARGEM - recuo
     linhas, atual = [], inicio
     for pedaco in pedacos:
         candidato = f"{atual} {pedaco}"
@@ -2645,13 +3270,19 @@ def numeracao_impressa(snapshot):
     return numeracao(_grafado(snapshot, previa=False))
 
 
-# As naturezas dos itens que o documento imprime com número (065, D-004).
+# As naturezas dos itens que o documento imprime com número (065, D-004; 068).
 ITEM_SECAO, ITEM_PERFIL, ITEM_ATRIBUICOES_COMUNS, ITEM_ETAPA = (
     "secao",
     "perfil",
     "atribuicoes_comuns",
     "etapa",
 )
+ITEM_REQUISITOS_COMUNS, ITEM_MARCOS_COMUNS = "requisitos_comuns", "marcos_comuns"
+NATUREZA_DA_SUBSECAO = {
+    ATRIBUICOES: ITEM_ATRIBUICOES_COMUNS,
+    REQUISITOS: ITEM_REQUISITOS_COMUNS,
+    MARCOS: ITEM_MARCOS_COMUNS,
+}
 
 
 @dataclass(frozen=True)
@@ -2693,13 +3324,14 @@ def itens_do_documento(snapshot):
                         f"{perfil.get('code', '')} — {perfil.get('name', '')}",
                     )
                 )
-            for posicao, grupo in enumerate(grupos_de_atribuicoes(perfis), len(perfis) + 1):
-                codigos = _enumerar([perfil.get("code", "") for perfil in grupo])
+            # As subseções comuns são as do plano que a composição lê (068, R-009).
+            plano = plano_de_consolidacao(snapshot, numero)
+            for subsecao in plano.subsecoes if plano else ():
                 itens.append(
                     ItemDoDocumento(
-                        f"{numero}.{posicao}",
-                        ITEM_ATRIBUICOES_COMUNS,
-                        f"Atribuições comuns aos Perfis {codigos}",
+                        subsecao.numero,
+                        NATUREZA_DA_SUBSECAO[subsecao.materia],
+                        f"{TITULO_DA_SUBSECAO[subsecao.materia]} {_enumerar(subsecao.codigos)}",
                     )
                 )
         elif corpo is _etapas:
@@ -2713,16 +3345,19 @@ def itens_do_documento(snapshot):
 def tabelas_do_documento(snapshot):
     """Quantas tabelas — "Tabela N" — o documento terá (065, D-004).
 
-    A contagem acompanha `_Numerador` na composição: a tabela de Perfis só com mais de um Perfil;
-    por Perfil, o quadro de vagas quando há linha e a de Modalidades quando há alguma; o Cronograma.
-    E só em seção que sai no documento.
+    A contagem acompanha `_Numerador` na composição. Com um Perfil, o quadro de vagas quando há
+    linha e a de Modalidades quando há alguma; com dois ou mais (068), a de Perfis, a de vagas
+    quando algum Perfil tem linha nela, e uma de Modalidades por grupo — as do plano que a
+    composição lê. E o Cronograma. Só em seção que sai no documento.
     """
     snapshot = _grafado(snapshot, previa=False)
     total = 0
     for _, corpo in _materializaveis(snapshot):
         if corpo is _perfis:
             perfis = snapshot.get("profiles") or []
-            total += 1 if len(perfis) > 1 else 0
+            if plano := plano_de_consolidacao(snapshot):
+                total += 1 + (1 if plano.vagas else 0) + len(plano.modalidades)
+                continue
             for perfil in perfis:
                 # O quadro sai pela mesma regra de `_quadro_de_vagas_do_perfil` (067, D-007).
                 sai = perfil.get("vacancyTable") and not quadro_do_perfil.sem_vaga_imediata(perfil)

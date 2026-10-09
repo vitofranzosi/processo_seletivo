@@ -110,5 +110,14 @@ def test_o_documento_da_retificacao_mostra_as_seis(api_client, manager_headers, 
     assert "o quantitativo não preenchido" in corrido, "a reversão"
     assert "3º" in corrido, "o terceiro critério de desempate"
     assert "Egressos da escola pública" in corrido, "a Modalidade acrescentada"
-    # O quadro de vagas nomeia a lista como "Denominação (CÓDIGO)"; a tabela de Modalidades não.
-    assert "Egressos da escola pública (EPX)" in corrido, "e a linha dela no quadro"
+    # Desde a `068`, com mais de um Perfil, a linha do quadro mora na tabela de vagas: a lista vira
+    # coluna, com o código no cabeçalho, e o Perfil que a declara tem a célula dela.
+    linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
+    legenda = next(
+        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+    )
+    linha_do_perfil = linhas.index(principal["code"], legenda)
+    cabecalho = linhas[legenda + 1 : linha_do_perfil]
+    assert "EPX" in cabecalho, "e a linha dela no quadro"
+    celulas = linhas[linha_do_perfil + 1 : linha_do_perfil + len(cabecalho)]
+    assert celulas[cabecalho.index("EPX") - 1] == "0", "com a quantidade declarada"

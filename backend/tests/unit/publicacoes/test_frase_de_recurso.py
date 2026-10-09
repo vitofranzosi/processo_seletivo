@@ -101,20 +101,21 @@ def _corrido(documento):
     return " ".join(texto_de(documento).split())
 
 
-def test_o_documento_do_cenario_a_nomeia_o_resultado_nos_quatro_marcos():
+def test_o_documento_do_cenario_a_nomeia_o_resultado_do_marco():
     texto = _corrido(composto("A"))
     frase = (
         "Caberá recurso contra o resultado de “Classificação por sorteio eletrônico”, no prazo de "
         "2 (dois) dias corridos, contados da divulgação desse resultado."
     )
-    assert texto.count(frase) == 4
+    # Os quatro marcos idênticos saem uma vez, na subseção comum, desde a `068`.
+    assert texto.count(frase) == 1
     assert "contados da divulgação do resultado" not in texto
 
 
 def test_a_previa_imprime_a_mesma_frase():
     """FR-1304: uma frase só, para o publicado e para a prévia."""
     previa = _corrido(composto("A", modo=pdf.MODO_PREVIA))
-    assert previa.count("contra o resultado de “Classificação por sorteio eletrônico”") == 4
+    assert previa.count("contra o resultado de “Classificação por sorteio eletrônico”") == 1
 
 
 def test_o_nome_longo_quebra_sem_ser_truncado():

@@ -367,12 +367,19 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   > atribuições idênticas, o bloco próprio de cada um é a remissão à subseção comum, posta ao fim da
   > seção de Perfis, que traz o texto uma vez e nomeia os códigos. Perfil de texto próprio continua
   > como aqui.
+  > **Emendado pela `068` (FR-1342, FR-1346, FR-1352, 09/10/2026):** com dois ou mais Perfis, o
+  > mesmo vale para os requisitos e os marcos idênticos, em subseções comuns depois do último Perfil;
+  > e o quadro de vagas e as modalidades saem da subseção do Perfil para tabelas da seção — a de vagas,
+  > uma linha por Perfil, e as de modalidades, uma por grupo de Perfis de tabela idêntica.
 - **FR-017**: Requisitos permanecem em lista.
 - **FR-018**: Modalidades de concorrência DEVEM ser apresentadas em tabela simples com modalidade,
   percentual e fundamento. Versão e vigência da Regra Normativa, quando existirem, DEVEM permanecer
   no documento — em coluna ou em linha secundária —, e a frase técnica atual
   `Regra Normativa — fundamento: …; versão: …; percentual: …` deixa de ser composta. *Tabular não
   pode virar perder: o estado atual imprime esses dois campos, e a composição nova os mantém.*
+  > **Emendado pela `068` (FR-1344, FR-1345, 09/10/2026):** com dois ou mais Perfis, a tabela é da
+  > seção, e não do Perfil — uma por grupo de Perfis de tabela idêntica, nomeados na legenda —, e as
+  > linhas seguem a ordem das listas do quadro de vagas (ED-11 da auditoria de 08/10/2026).
 - **FR-019**: Nenhuma célula DEVE ser preenchida com informação inexistente. Modalidade sem
   percentual apresenta a célula vazia ou o traço de ausência já usado no documento, nunca um valor
   construído nem uma frase técnica.
@@ -393,6 +400,9 @@ evidência que o motivou — pertence a [research.md](./research.md) e [plan.md]
   termina sempre em uma alternativa que existe.*
   > **Emendado pela `064` (FR-1190 e FR-1193, 08/10/2026):** no Perfil agrupado, o sub-bloco de
   > atribuições é a remissão; a subseção comum obedece a esta mesma cascata, como se fosse um Perfil.
+  > **E pela `068` (FR-1357, 09/10/2026):** com dois ou mais Perfis, o Perfil não tem mais o sub-bloco
+  > de modalidades (vai para a tabela da seção), e os requisitos e os marcos idênticos são remissão;
+  > na subseção comum de marcos, cada marco quebra entre as suas partes, e nunca dentro de uma.
 - **FR-022**: O título de um Perfil NÃO DEVE ficar isolado no fim de uma página.
 
 ### Cronograma e Etapas (US3)

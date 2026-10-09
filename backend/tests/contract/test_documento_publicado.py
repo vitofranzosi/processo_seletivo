@@ -128,6 +128,9 @@ def paginas_de(pdf: bytes) -> list[list[str]]:
 # O que legitimamente distingue os dois modos. Tudo o mais tem de ser igual — é isso que FR-041
 # promete, e é a diferença entre "a prévia mostra o que será publicado" e "a prévia mostra outra
 # coisa parecida". Cresce com a `008`: a autoridade signatária entra aqui na entrega 5.
+RODAPE_DE_IDENTIFICACAO = re.compile(r"^Edital \d+/\d{4}( · |$)")
+
+
 def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     fora = False
     corpo = []
@@ -140,8 +143,13 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
-        # duas são metadado de página, não corpo.
-        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —", "Página ")):
+        # duas são metadado de página, não corpo. A identificação reconhecida pela forma, e não
+        # pelo "Edital 0" da fixture: os cenários da auditoria (068) são os Editais 91 e 92.
+        if (
+            marca_de_previa in linha
+            or RODAPE_DE_IDENTIFICACAO.match(linha)
+            or linha.startswith(("PRÉVIA —", "Página "))
+        ):
             continue
         if not fora:
             corpo.append(linha)
@@ -312,10 +320,27 @@ def _com_atribuicoes_comuns():
     }
 
 
+def _cenario_da_auditoria(nome):
+    """O conteúdo congelado de um cenário da auditoria do PDF de 08/10/2026.
+
+    É o documento que a `068` mais muda: tabela de vagas, modalidades e frases uma vez, requisitos
+    e marcos em subseções comuns. Sem ele, a igualdade de quebras entre prévia e publicado não seria
+    afirmada sobre a seção consolidada (FR-1356).
+    """
+    import json
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[3]
+    caminho = raiz / "doc" / "auditoria-edital-pdf-2026-10-08" / "snapshots" / nome
+    return json.loads(caminho.read_text(encoding="utf-8"))["content"]
+
+
 COM_ATRIBUICOES_COMUNS = _com_atribuicoes_comuns()
 CENARIOS_DE_PAGINACAO = [
     pytest.param(SNAPSHOT, id="fixture"),
     pytest.param(COM_ATRIBUICOES_COMUNS, id="atribuicoes-comuns"),
+    pytest.param(_cenario_da_auditoria("A-conteudo-publicado.json"), id="consolidado-A"),
+    pytest.param(_cenario_da_auditoria("B-conteudo-publicado.json"), id="consolidado-B"),
 ]
 
 
@@ -583,6 +608,19 @@ def test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa():
     assert any("Perfis de vaga" in legenda for legenda in legendas), (
         "a comparativa diz o que tabula: Perfis"
     )
-    quadros = [legenda for legenda in legendas if "Quadro de vagas" in legenda]
-    assert len(quadros) == 1, f"uma só tabela chamada quadro de vagas: {legendas}"
-    assert quadros[0].endswith("— DOC-INFO"), "e ela nomeia o Perfil de quem reparte"
+    # Desde a `068`, com mais de um Perfil, a repartição por lista é uma tabela só para todos os
+    # Perfis — "Vagas por lista de concorrência", uma linha por Perfil —, e nenhuma legenda repete
+    # outra. O Perfil sem quadro (P2) não tem linha nela.
+    titulos = [legenda.split(" — ", 1)[1] for legenda in legendas]
+    assert len(titulos) == len(set(titulos)), f"nenhuma legenda repete outra: {legendas}"
+    assert "Vagas por lista de concorrência" in titulos
+    assert not [titulo for titulo in titulos if titulo.startswith("Quadro de vagas")]
+    linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
+    inicio = next(
+        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+    )
+    fim = next(
+        i for i, linha in enumerate(linhas[inicio + 1 :], inicio + 1) if linha.startswith("Tabela ")
+    )
+    assert "DOC-INFO" in linhas[inicio:fim], "e ela nomeia o Perfil de quem reparte"
+    assert "P2" not in linhas[inicio:fim]

@@ -544,6 +544,14 @@ Todas mudam o documento **só dos Editais publicados depois** — documento publ
 
 - **ED-04 + ED-11:** consolidar o que se repete (regra comum, tabela única Perfil × lista, método
   uma vez). É a melhoria de maior ganho para o candidato e reaproveita a lógica de identidade da 064.
+
+> **Tratados depois desta auditoria.** ED-04 e ED-11 pela `068` (`specs/068-consolidacao-por-perfil/`),
+> em 09/10/2026, com as decisões do responsável pelo produto: subseções comuns de requisitos e de
+> marcos depois do último Perfil, junto das atribuições da `064`; tabela de vagas em matriz Perfil ×
+> lista e tabelas de modalidades agrupadas, na ordem do quadro; requisitos consolidados pela
+> identidade do texto impresso. Pelo fluxo real, A passou de 9 para 6 páginas (Perfis de 5 para 3) e
+> B de 36 para 14 (Perfis de 30 para 9). Os PDFs desta pasta continuam os da auditoria; os de depois
+> estão em `specs/068-…/demonstracao/`.
 - **ED-05:** reescrever as frases geradas (§5.2).
 - **ED-06:** quadro de alterações no consolidado.
 - **ED-09:** endereço do certame garantido no documento (com decisão).

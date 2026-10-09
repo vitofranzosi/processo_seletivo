@@ -122,8 +122,35 @@ def test_as_tabelas_seguintes_sao_numeradas_sem_lacuna():
 
     assert numeros == list(range(1, len(numeros) + 1))
     titulos = [titulo for _, titulo in _legendas(gerado)]
-    assert "Quadro de vagas — TP-01" not in titulos
-    assert "Modalidades de concorrência — TP-01" in titulos
+    # Desde a `068`, o quadro de cada Perfil é uma linha da tabela de vagas, e o Perfil sem vaga
+    # imediata não tem linha nela; as modalidades dele continuam, na tabela comum.
+    assert not [titulo for titulo in titulos if titulo.startswith("Quadro de vagas")]
+    assert titulos == [
+        "Perfis de vaga",
+        "Vagas por lista de concorrência",
+        "Modalidades de concorrência",
+        "Cronograma",
+    ]
+    assert _linhas_da_tabela_de_vagas(gerado) == [["TD-ADM", "6", "0"]]
+
+
+def _linhas_da_tabela_de_vagas(pdf_):
+    """As linhas da tabela de vagas, célula a célula, até a legenda seguinte (068)."""
+    linhas = [linha.strip() for linha in texto_de(pdf_).splitlines() if linha.strip()]
+    inicio = next(
+        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+    )
+    fim = next(
+        i for i, linha in enumerate(linhas[inicio + 1 :], inicio + 1) if LEGENDA.match(linha)
+    )
+    corpo = [
+        linha
+        for linha in linhas[inicio + 1 : fim]
+        if not linha.startswith(("Na hipótese", "Havendo", "destinado", "preenchido"))
+    ]
+    colunas = corpo.index(next(linha for linha in corpo if linha[:2] in ("TD", "TP")))
+    celulas = corpo[colunas:]
+    return [celulas[i : i + colunas] for i in range(0, len(celulas) - colunas + 1, colunas)]
 
 
 def test_a_contagem_de_tabelas_segue_o_documento():
@@ -142,17 +169,20 @@ def test_a_tabela_de_perfis_continua_sem_total_quando_o_edital_nao_tem_vaga():
 # ---- o cenário B da auditoria ------------------------------------------------------------------
 
 
-def test_o_cenario_b_tem_dois_quadros_e_duas_reversoes():
+def test_o_cenario_b_tem_vagas_so_dos_dois_perfis_com_vaga_e_uma_reversao():
+    """Os 16 Perfis de tutor presencial não têm linha na tabela de vagas nem são alcançados pela
+    reversão; os dois de tutor a distância, que têm vaga, sim — com a frase dita uma vez (068)."""
     gerado = composto("B")
     corrido = _corrido(gerado)
     titulos = [titulo for _, titulo in _legendas(gerado)]
 
-    assert [t for t in titulos if t.startswith("Quadro de vagas")] == [
-        "Quadro de vagas — TD-ADM",
-        "Quadro de vagas — TD-INFO-EDU",
+    assert not [t for t in titulos if t.startswith("Quadro de vagas")]
+    assert [linha[0] for linha in _linhas_da_tabela_de_vagas(gerado)] == ["TD-ADM", "TD-INFO-EDU"]
+    assert corrido.count("Na hipótese do não preenchimento total das vagas reservadas") == 1
+    assert "Nos Perfis" not in corrido
+    assert [t for t in titulos if t.startswith("Modalidades de concorrência")] == [
+        "Modalidades de concorrência"
     ]
-    assert corrido.count("Na hipótese do não preenchimento total das vagas reservadas") == 2
-    assert len([t for t in titulos if t.startswith("Modalidades de concorrência")]) == 18
     assert pdf.tabelas_do_documento(congelado("B")["content"]) == len(titulos)
 
 
