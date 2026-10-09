@@ -34,7 +34,7 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | FR-1306 | um aviso; regras agrupadas; Eventos na ordem; "N Perfis" | CR `test_o_cenario_a_tem_um_aviso_so_com_os_dois_lados`, `test_o_cenario_b_lista_os_quatro_eventos_na_ordem_e_resume_os_perfis`, `test_a_negativa_tambem_e_regra_de_recurso`, `test_mesmo_nome_e_prazos_diferentes_sao_duas_regras`, `test_cronograma_sem_evento_de_recurso_e_dito` |
 | FR-1307 | a orientação, sem afirmar correspondência | CR `test_o_cenario_a_tem_um_aviso_so_com_os_dois_lados` (mensagem literal), `test_cronograma_sem_evento_de_recurso_e_dito` |
 | FR-1308 | sem regra em marco, sem aviso | CR `test_sem_regra_de_recurso_em_marco_nenhum_nao_ha_aviso_mesmo_com_eventos_de_recurso` |
-| FR-1309 | aviso em todo ato, nunca impede | CR `test_na_retificacao_continua_aviso`; NP `test_a_submissao_devolve_o_aviso_e_o_edital_publica`, `test_o_edital_com_o_aviso_e_o_sorteio_sem_arredondamento_publica_e_imprime_o_novo`, `test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas`; TR `test_a_revisao_mostra_o_aviso_com_link_para_o_cronograma_e_nao_impede` |
+| FR-1309 | aviso em todo ato, nunca impede (e a tela da Retificação o mostra, T057) | CR `test_na_retificacao_continua_aviso`; NP `test_a_tela_da_retificacao_mostra_o_aviso_e_diz_que_ele_nao_impede`, `test_a_submissao_devolve_o_aviso_e_o_edital_publica`, `test_o_edital_com_o_aviso_e_o_sorteio_sem_arredondamento_publica_e_imprime_o_novo`, `test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas`; TR `test_a_revisao_mostra_o_aviso_com_link_para_o_cronograma_e_nao_impede` |
 | FR-1310 | o aviso não muda nada | CR `test_a_conferencia_nao_altera_o_conteudo` |
 | FR-1311 | sob sorteio declarado a ausência não é recusada; pontuação e acervo continuam | AS `test_sob_sorteio_a_ausencia_nao_e_recusada` (8 casos), `test_sob_pontuacao_a_ausencia_continua_recusada`, `test_sem_forma_declarada_a_ausencia_continua_recusada_mesmo_com_metodo_proprio` |
 | FR-1312 | o declarado continua conferido na forma | AS `test_sob_sorteio_o_declarado_continua_conferido_na_forma` (5 casos) |
@@ -44,7 +44,7 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | FR-1316 | o cartão não mostra nem grava; volta preenchido | TR `test_o_cartao_por_sorteio_nao_mostra_o_arredondamento_e_o_leva_oculto`, `test_o_cartao_por_sorteio_leva_oculto_o_arredondamento_que_o_marco_tinha`, `test_ao_passar_para_pontuacao_os_campos_voltam_preenchidos`, `test_salvar_o_marco_por_sorteio_nao_grava_arredondamento` |
 | FR-1317 | a dica de vazio da Retificação | TR `test_na_retificacao_o_vazio_do_modo_sob_sorteio_nao_anuncia_impedimento`, `test_na_retificacao_o_vazio_do_modo_sob_pontuacao_continua_anunciando` |
 | FR-1318 | a emissão recusa antes de calcular | EM `test_a_emissao_recusa_o_sorteio_antes_de_calcular`, `test_o_calculo_de_um_marco_por_sorteio_sem_arredondamento_quebraria` |
-| FR-1319 | o sorteio e a divulgação não leem arredondamento | EM `test_o_sorteio_sem_arredondamento_produz_a_ordem_do_algoritmo`, `test_a_divulgacao_nao_depende_do_arredondamento_do_marco_por_sorteio` |
+| FR-1319 | o sorteio, a divulgação e a verificação não leem arredondamento | EM `test_o_sorteio_sem_arredondamento_produz_a_ordem_do_algoritmo`, `test_a_divulgacao_nao_depende_do_arredondamento_do_marco_por_sorteio`, `test_a_divulgacao_e_a_verificacao_do_sorteio_nao_dependem_do_arredondamento` (T056) |
 | FR-1320 | o predicado | PR `test_sem_vaga_imediata` (9 casos) |
 | FR-1321 | sem quadro nem reversão; tabelas sem lacuna; contagem da `065` | PV `test_sem_vaga_imediata_nem_quadro_nem_reversao_e_o_resto_fica`, `test_as_tabelas_seguintes_sao_numeradas_sem_lacuna`, `test_a_contagem_de_tabelas_segue_o_documento`, `test_a_contagem_de_tabelas_dos_cenarios_segue_o_documento`; ID (guardião, verde) |
 | FR-1322 | o resto fica; nenhuma frase nova | PV `test_sem_vaga_imediata_nem_quadro_nem_reversao_e_o_resto_fica`, `test_nenhuma_frase_nova_sobre_a_reserva_no_cadastro` |
@@ -72,10 +72,16 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | SC-501 | PV `test_o_cenario_b_tem_dois_quadros_e_duas_reversoes`; cenário B pelo fluxo real (44 → 36 páginas) |
 | SC-502 | DA `test_a_diferenca_do_cenario_a_e_so_a_pretendida`, `test_a_diferenca_do_cenario_b_e_so_a_pretendida`; a mesma regra sobre os PDFs do fluxo real, antes × depois |
 | SC-503 | AS; NP `test_a_submissao_devolve_o_aviso_e_o_edital_publica`; cenário A sem arredondamento: recusado na `main`, publicado na `067` |
-| SC-504 | CR (cenários A e B); TR; cenários pelo fluxo real (o aviso na submissão) |
+| SC-504 | CR (cenários A e B); TR; cenários pelo fluxo real (o aviso na submissão); a jornada pela interface ([verificacao.md](verificacao.md), *A jornada pelo canal de cada ator*) |
 | SC-505 | CT `test_o_documento_publicado_continua_byte_a_byte_o_mesmo`, sem tocar a fixture |
-| SC-506 | NP `test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas`; A publicado na `main` e retificado na `067`, SHA-256 do original igual antes e depois |
+| SC-506 | NP `test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas`; A publicado na `main` e retificado na `067`, SHA-256 do original igual antes e depois; na jornada pela interface, o original baixado pela API pública antes e depois da Retificação tem o mesmo SHA-256 |
 | SC-507 | `make lint check test-pg` ([verificacao.md](verificacao.md)) |
+
+## Constituição
+
+| Princípio | Evidência |
+|---|---|
+| VI — jornada pelo canal do ator | a jornada completa pela interface administrativa e pela consulta pública — compor, submeter, homologar, publicar, baixar, retificar e baixar o consolidado — sem shell e sem banco (T055; [verificacao.md](verificacao.md)) |
 
 ## Decisões
 

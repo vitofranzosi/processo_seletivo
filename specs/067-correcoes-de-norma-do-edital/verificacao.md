@@ -137,12 +137,40 @@ Elaborador.
 
 Nada foi gravado pela interface; as trocas de forma ficaram sem salvar.
 
+## A jornada pelo canal de cada ator (T055, Constituição VI)
+
+A convergência acusou que a publicação e a Retificação tinham sido exercitadas só por comandos de
+aplicação, e que no navegador as trocas tinham ficado sem salvar. A jornada foi refeita **inteira
+pela interface administrativa e pela consulta pública**, sem shell e sem tocar o banco, num banco
+novo (`ps_067_jornada`, cópia do molde migrado, com as Unidades sincronizadas pelo passo de
+ambiente do `make preparar`). Runserver desta worktree na porta 8067 (`correcoes-067` no
+`.claude/launch.json`). Dados fictícios.
+
+| # | Ator (identidade de demonstração) | O que fez pela interface | O que se viu |
+|---|---|---|---|
+| 1 | `gabriel.gestor` — Gestor | cadastrou a autoridade signatária (fictícia) em *Autoridades da unidade*; criou o Processo `PS-DEMO-067` e o Edital 67/2026 | — |
+| 2 | `ana.elaboradora` — Elaborador | Perfis: `POLO-VIX` (10 vagas, quadro 7 + PPI 3, reversão) e `POLO-SER` (0 vaga, cadastro limitado a 10, quadro 0/0, reversão declarada); Cronograma com 5 Eventos, um deles "Recurso contra o resultado do sorteio"; Etapa "Análise documental"; método comum do sorteio; marco do POLO-VIX **por sorteio** com recurso de 2 dias, e "Aplicar aos demais Perfis" para o POLO-SER; período de inscrições | ao escolher "Por sorteio", "Casas decimais" e "Arredondamento" saíram do cartão (ocultos com 2 e meio para cima); a prévia do "aplicar" mostrou a frase "contra o resultado deste marco" (D-012) |
+| 3 | `ana.elaboradora` | Revisão e **submissão** | o aviso "Prazos de recurso a conferir" com os dois marcos e o Evento de recurso, link "Ir para Cronograma"; a submissão o repete como `Aviso:` e não impede (`jornada/1-revisao-com-o-aviso.jpg`) |
+| 4 | `bruno.homologador` — Homologador | **homologou** | a tela de homologação do Edital não mostra aviso nenhum — nenhum aviso aparece ali hoje |
+| 5 | `carla.publicadora` — Publicador | **publicou**, escolhendo a autoridade | o aviso na confirmação, e o ato disponível (`jornada/2-publicar-com-o-aviso.jpg`); a página do Edital publicado **não** mostra o aviso (FR-1328) |
+| 6 | público, sem identidade | baixou o documento por `/api/v1/public/publicacoes/<id>/documento` (o link da página do Edital) | `application/pdf`, 21 255 bytes, 4 páginas: as 2 frases de recurso nomeiam o seu marco; nenhum "Arredondamento", nenhum "Empate no corte", nenhuma frase "contados da divulgação do resultado"; **um** quadro (POLO-VIX) e **uma** reversão; o POLO-SER só com a tabela de Modalidades (`jornada/Edital-67-2026-publicado.pdf`, páginas 1 e 2) |
+| 7 | `ana.elaboradora` | **Retificação**: 4 vagas imediatas ao POLO-SER (3 AC, 1 PPI), "Ver o que vai mudar", "Criar Retificação", submissão | a tela de Retificação do marco por sorteio diz "Não declarado — a ordem é sorteada, e não há nota a arredondar" (FR-1317); a confirmação mostra o aviso (`jornada/3-retificacao-com-o-aviso.jpg`) |
+| 8 | `bruno.homologador`, `carla.publicadora` | homologou e publicou a Retificação | o aviso aparece também na homologação e na publicação da Retificação, e nenhuma delas é impedida |
+| 9 | público | baixou o consolidado e, de novo, o original | consolidado: "retificado em 9 de outubro de 2026", **dois** quadros e **duas** reversões — o POLO-SER, agora com vaga, passou a ter quadro e reversão (US4, cenário 5); frases nomeadas; nenhum arredondamento nem empate. Original: SHA-256 `9618b05b…0a905d7`, **o mesmo** do arquivo baixado logo depois da publicação (FR-1325) |
+| 10 | candidato, sem identidade | `/selecoes/` → a página do Edital | "Ler o Edital completo (PDF)" aponta para o consolidado, e "Edital de abertura" para o original (`jornada/4-pagina-publica-do-candidato.jpg`) |
+
+Páginas do publicado e do consolidado renderizadas por CoreGraphics e olhadas
+(`jornada/pagina-*.jpg`).
+
 ## Achados registrados, não tratados
 
 - **A dica de vazio do desfecho de empate, na Retificação, anuncia impedimento também sob sorteio**
   (`interface/retificacao.py`, `"cutRule/tieOutcome": "Não declarado — a publicação será
   impedida"`). Sob sorteio a validação não exige o desfecho (`FR-928`), e a dica afirma uma recusa
   que não acontece. É a mesma natureza do `FR-1317`, mas sobre outro campo e anterior a esta feature.
+- **Na mesma tela, "Como as pontuações se combinam" e "Normalização antes de combinar" também
+  anunciam "a publicação será impedida" sob sorteio** — visto na jornada pela interface (T055). A
+  combinação não é impressa nem lida sob sorteio; a dica de vazio é anterior a esta feature.
 - **O Perfil só de cadastro de reserva corta "os 10 primeiros"** (cenário B): a regra de corte
   continua impressa num Perfil sem vaga, e é parte do RC-58 que a `D-003` deixou aberto.
 - **Sem o quadro, a forma de convocação do Perfil sem vaga fica logo abaixo de "Dados exigidos", na
