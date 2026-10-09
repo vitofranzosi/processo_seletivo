@@ -123,11 +123,19 @@ def test_o_comando_diz_o_que_aplicou(tmp_path):
     saida = StringIO()
 
     call_command("sincronizar_unidades", "--arquivo", str(arquivo), stdout=saida)
-    assert saida.getvalue().strip() == "Unidades: 1 criadas, 0 alteradas, 1 sem mudança."
+    # A segunda linha é dos avisos (066): os três modelos iniciais de cada unidade que nunca os
+    # teve — o Cefor da fixture e a Serra que acabou de entrar —, e zero na passada seguinte.
+    assert saida.getvalue().strip().splitlines() == [
+        "Unidades: 1 criadas, 0 alteradas, 1 sem mudança.",
+        "Modelos de aviso: 6 criados.",
+    ]
 
     saida = StringIO()
     call_command("sincronizar_unidades", "--arquivo", str(arquivo), stdout=saida)
-    assert saida.getvalue().strip() == "Unidades: 0 criadas, 0 alteradas, 2 sem mudança."
+    assert saida.getvalue().strip().splitlines() == [
+        "Unidades: 0 criadas, 0 alteradas, 2 sem mudança.",
+        "Modelos de aviso: 0 criados.",
+    ]
 
 
 def test_o_comando_transforma_a_recusa_em_erro_de_comando(tmp_path):

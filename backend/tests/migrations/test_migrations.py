@@ -31,6 +31,8 @@ APPS = (
     "inscricoes",
     # O registro de unidades e autoridades da 060: duas tabelas que mudam e nunca se excluem.
     "unidades",
+    # Os avisos da 066: seis tabelas append-only e o modelo de aviso, que muda e não se exclui.
+    "avisos",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -111,6 +113,18 @@ TRIGGERS_POR_APP = {
         "autoridade_nao_se_exclui",
         "autoridade_unidade_imutavel",
         "autoridade_usada_imutavel",
+    ),
+    # Os avisos da 066. As seis de imutabilidade são **absolutas**: o envio não tem ato em curso que
+    # legitime mutação, e reenviar é aviso novo (`R-011`). A sétima recusa só a exclusão do modelo,
+    # que muda legitimamente quando a seleção o edita ou inativa.
+    "avisos": (
+        "aviso_append_only",
+        "publicacao_do_aviso_append_only",
+        "destinatario_do_aviso_append_only",
+        "tentativa_de_envio_append_only",
+        "resultado_da_tentativa_append_only",
+        "interrupcao_do_aviso_append_only",
+        "modelo_de_aviso_nao_se_exclui",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)

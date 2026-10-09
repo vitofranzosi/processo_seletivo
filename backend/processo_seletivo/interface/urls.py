@@ -1,6 +1,6 @@
 from django.urls import path
 
-from processo_seletivo.interface import views
+from processo_seletivo.interface import avisos, views
 
 app_name = "interface"
 
@@ -424,6 +424,37 @@ urlpatterns = [
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/publicacoes",
         views.publicacoes_do_marco,
         name="publicacoes-do-marco",
+    ),
+    # Os avisos complementares aos candidatos (066). O de resultado pende do **marco**, porque o
+    # aviso reúne as publicações vigentes do marco com a mesma natureza e deduplica por inscrição
+    # (`D-002`); o de chamada, da **convocação do marco**, com a comunicação âncora na consulta.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/avisos/novo",
+        avisos.aviso_do_resultado,
+        name="aviso-do-resultado",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/avisos/novo",
+        avisos.aviso_da_chamada,
+        name="aviso-da-chamada",
+    ),
+    path("editais/<uuid:edital_id>/avisos", avisos.avisos_do_edital, name="avisos-do-edital"),
+    path("avisos/<uuid:aviso_id>", avisos.aviso, name="aviso"),
+    path(
+        "avisos/<uuid:aviso_id>/interromper",
+        avisos.aviso_interromper,
+        name="aviso-interromper",
+    ),
+    path("avisos/<uuid:aviso_id>/reenviar", avisos.aviso_reenviar, name="aviso-reenviar"),
+    # Os modelos de aviso, de topo como as autoridades: pertencem à unidade, e não a Processo
+    # nenhum (`FR-1260`).
+    path("modelos-de-aviso", avisos.modelos_de_aviso, name="modelos-de-aviso"),
+    path("modelos-de-aviso/novo", avisos.modelo_de_aviso, name="modelo-de-aviso-novo"),
+    path("modelos-de-aviso/<uuid:modelo_id>", avisos.modelo_de_aviso, name="modelo-de-aviso"),
+    path(
+        "modelos-de-aviso/<uuid:modelo_id>/situacao",
+        avisos.modelo_de_aviso_situacao,
+        name="modelo-de-aviso-situacao",
     ),
     # A condução do marco (049). Pende do **marco**, e não do recorte: é a unidade do gesto e do
     # indicador (`D-001`). O GET mostra o estado de cada recorte e não grava nada; o POST confere o

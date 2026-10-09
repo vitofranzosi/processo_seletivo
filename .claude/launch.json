@@ -271,6 +271,16 @@
       "url": "http://localhost:8060"
     },
     {
+      "name": "avisos-066",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_066 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true PORTAL_IDENTIDADE_DEMO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-066 DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend uv run python manage.py runserver 8066"
+      ],
+      "port": 8066,
+      "url": "http://localhost:8066"
+    },
+    {
       "name": "correcoes-067",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

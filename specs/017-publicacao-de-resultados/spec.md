@@ -658,6 +658,12 @@ público que a 019 poderá referenciar.
 
 **Comunicação ativa** — e-mail, SMS, push, WhatsApp.
 
+> *Revisão de 2026-10-09, pela `066`, com a redação acima preservada.* O e-mail deixa de estar
+> inteiramente fora: a `FR-084` da `010`, revisada na mesma data, admite o **aviso complementar
+> vinculado a ato oficial**, e a publicação de resultado desta feature é um dos atos que ele pode
+> citar. Esta feature continua sem enviar nada: publicar não dispara aviso, e o aviso é gesto
+> posterior, de outra capacidade, especificado na `066`. SMS, push e WhatsApp continuam fora.
+
 **Integrações externas** — Diário Oficial, portal institucional externo, redes sociais, assinatura
 ICP-Brasil.
 

@@ -23,6 +23,11 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
 VIEWS = RAIZ / "processo_seletivo/interface/views.py"
+#: Os módulos de view cujas negativas o inventário precisa cobrir. **Lista literal, e por isso
+#: precisa crescer junto**: as views dos avisos (066) moram em módulo próprio, e uma varredura só de
+#: `views.py` as deixaria escapar caladas — o defeito de toda varredura com lista literal, que a
+#: `066` registrou no `R-015` antes de escrever a primeira view.
+MODULOS_DE_VIEW = (VIEWS, RAIZ / "processo_seletivo/interface/avisos.py")
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 
 #: As sete portas de autorização da gestão — a sétima, da tela do marco, veio com a `049`. Literal
@@ -172,16 +177,25 @@ def _funcoes_registradas():
 
 
 def _funcoes_que_recusam():
-    pais = _pais()
     encontradas = set()
-    for no in ast.walk(_ARVORE):
-        if not _e_http404(no):
-            continue
-        atual = pais.get(no)
-        while atual is not None and not isinstance(atual, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            atual = pais.get(atual)
-        encontradas.add(atual.name if atual is not None else "(módulo)")
+    for modulo in MODULOS_DE_VIEW:
+        arvore = ast.parse(modulo.read_text())
+        pais = {filho: no for no in ast.walk(arvore) for filho in ast.iter_child_nodes(no)}
+        for no in ast.walk(arvore):
+            if not _e_http404(no):
+                continue
+            atual = pais.get(no)
+            while atual is not None and not isinstance(
+                atual, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ):
+                atual = pais.get(atual)
+            encontradas.add(atual.name if atual is not None else "(módulo)")
     return encontradas
+
+
+def test_a_varredura_alcanca_todo_modulo_de_view_declarado():
+    """A lista literal precisa existir no disco: um módulo renomeado sairia da varredura calado."""
+    assert all(modulo.exists() for modulo in MODULOS_DE_VIEW)
 
 
 def test_o_inventario_cobre_toda_funcao_que_responde_inexistente():

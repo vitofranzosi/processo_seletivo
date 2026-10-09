@@ -1,0 +1,42 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Modelos de aviso{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <span aria-current="page">Modelos de aviso</span>
+</nav>
+
+<h1>Modelos de aviso</h1>
+<p class="sub">Os textos que a unidade reutiliza nos avisos aos candidatos. Editar um modelo não muda aviso já confirmado, e inativá-lo só o tira da lista de escolha.</p>
+
+{% if salvo %}<p class="sucesso" role="status" tabindex="-1" autofocus>Modelo “{{ salvo }}” salvo.</p>{% endif %}
+
+<p><a class="botao" href="{% url 'interface:modelo-de-aviso-novo' %}">Novo modelo</a></p>
+
+{% if modelos %}
+<div class="tabela-rolavel">
+<table>
+  <caption class="oculto">Modelos de aviso da unidade</caption>
+  <thead><tr><th scope="col">Nome</th><th scope="col">Assunto</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead>
+  <tbody>
+  {% for modelo in modelos %}
+    <tr>
+      <td><a href="{% url 'interface:modelo-de-aviso' modelo.id %}">{{ modelo.nome }}</a></td>
+      <td>{{ modelo.assunto }}</td>
+      <td>{% if modelo.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+      <td>
+        <form method="post" action="{% url 'interface:modelo-de-aviso-situacao' modelo.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="ativo" value="{% if modelo.ativo %}0{% else %}1{% endif %}">
+          <button type="submit" class="acao">{% if modelo.ativo %}Inativar{% else %}Reativar{% endif %} “{{ modelo.nome }}”</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="nenhuma">A unidade ainda não tem modelos de aviso.</p>
+{% endif %}
+{% endblock %}
