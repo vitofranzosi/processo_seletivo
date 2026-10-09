@@ -218,3 +218,17 @@ def test_a_revisao_mostra_o_aviso_com_link_para_o_cronograma_e_nao_impede(
     assert reverse("interface:compor-etapa", args=[edital.id, "cronograma"]) in html
     assert aviso["etapa"] == "cronograma" and aviso["corrigivel"]
     assert aviso["severidade"] == "aviso"
+
+
+def test_a_ajuda_do_arredondamento_tem_destino_quando_o_marco_e_por_sorteio(client, tres_perfis):
+    """Achado da revisão (FR-427): o item "Casas decimais e arredondamento" da ajuda leva a
+    `#…-scale`, e sob sorteio o campo saiu — o destino passa a ser a forma da ordem."""
+    resposta = client.post(_url(tres_perfis, "classificacao"), marco_de_sorteio_no_formulario(P1))
+    assert resposta.status_code == 302, resposta.content
+    corpo = client.get(_url(tres_perfis, "classificacao")).content.decode()
+
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
+    alvos = re.findall(r'<dt><a href="#([^"]+)">', bloco)
+    identificadores = set(re.findall(r'id="([^"]+)"', corpo))
+    assert sorted(alvo for alvo in alvos if alvo not in identificadores) == []
+    assert f'href="#marco-{P1}-0-orderProduction">Casas decimais e arredondamento' in bloco

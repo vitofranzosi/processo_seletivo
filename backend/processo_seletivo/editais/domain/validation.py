@@ -1616,9 +1616,10 @@ def eventos_de_recurso(snapshot: dict) -> list[dict]:
     desaconselha (`EventoCronograma.is_registration_period`). Aqui o texto só decide o que se
     **mostra** a quem elabora.
     """
+    eventos = snapshot.get("schedule")
     return [
         evento
-        for evento in snapshot.get("schedule") or []
+        for evento in (eventos if isinstance(eventos, list) else [])
         if isinstance(evento, dict)
         and _PALAVRA_DE_RECURSO.search(
             f"{evento.get('type') or ''} {evento.get('description') or ''}"
@@ -1656,9 +1657,13 @@ def _conferencia_do_recurso(snapshot: dict) -> list[ValidationFinding]:
         resultado_do_marco,
     )
 
+    # **Conteúdo malformado não derruba a conferência** — quem o acusa é a validação de forma, e
+    # uma exceção aqui apagaria a mensagem dela (achado da revisão da 067: a Retificação que remove
+    # o início de um Evento de recurso devolvia erro interno no lugar de `field_required`).
     regras = {}
     for perfil in _perfis_bem_formados(snapshot):
-        for marco in perfil.get("classificationMilestones") or []:
+        marcos_do_perfil = perfil.get("classificationMilestones")
+        for marco in marcos_do_perfil if isinstance(marcos_do_perfil, list) else []:
             if not isinstance(marco, dict) or not isinstance(marco.get("appealWindow"), dict):
                 continue
             janela = marco["appealWindow"]
@@ -1687,7 +1692,7 @@ def _conferencia_do_recurso(snapshot: dict) -> list[ValidationFinding]:
 
         def periodo(evento):
             if evento.get("endAt"):
-                return f"de {_instante(evento['startAt'])}, a {_instante(evento['endAt'])}"
+                return f"de {_instante(evento.get('startAt'))}, a {_instante(evento['endAt'])}"
             return f"em {_instante(evento.get('startAt'))}"
 
         quantos = (

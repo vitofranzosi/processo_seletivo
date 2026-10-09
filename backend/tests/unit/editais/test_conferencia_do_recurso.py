@@ -197,3 +197,19 @@ def test_o_evento_cancelado_continua_listado_como_o_documento_o_imprime():
     assert "O Cronograma tem 1 Evento de recurso: Recurso contra o sorteio — em 17/11/2026" in (
         aviso.message
     )
+
+
+def test_conteudo_malformado_nao_derruba_a_conferencia():
+    """Achado da revisão: a Retificação que remove o início de um Evento de recurso levantava
+    `KeyError` — erro interno no lugar do `field_required` que a validação já diz."""
+    sem_inicio = _evento(1, "Recurso", "Recurso contra o sorteio", "2026-11-17T12:00:00+00:00")
+    sem_inicio.pop("startAt")
+    sem_inicio["endAt"] = "2026-11-18T02:59:00+00:00"
+    (aviso,) = _avisos(_a(schedule=[sem_inicio]), ATO_DE_RETIFICACAO)
+    assert "Recurso contra o sorteio — de —, a 17/11/2026, às 23h59" in aviso.message
+
+    conteudo = _a()
+    conteudo["profiles"][0]["classificationMilestones"] = "não é lista"
+    conteudo["schedule"] = "não é lista"
+    eventos_de_recurso(conteudo)
+    validate_for_publication(conteudo, ato=ATO_DE_RETIFICACAO)

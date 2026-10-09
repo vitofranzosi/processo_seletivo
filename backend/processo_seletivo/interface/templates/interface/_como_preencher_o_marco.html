@@ -24,7 +24,11 @@ dada, que é o passo anterior ao que ela procurava.
     <dt><a href="#{{ ancora }}-stages">Etapas que entram na ordem</a></dt>
     <dd>Só Etapas classificatórias. O peso de cada uma é o que ela já publica; aqui se escolhe
       quais entram.</dd>
-    <dt><a href="#{{ ancora }}-scale">Casas decimais e arredondamento</a></dt>
+    {% comment %}
+    Sob sorteio o campo sai do cartão (067, D-008), e o item leva à pergunta que o tirou — a forma
+    da ordem —, em vez de a uma âncora que a tela não tem (FR-427; achado da revisão da 067).
+    {% endcomment %}
+    <dt><a href="#{{ ancora }}-{{ campo_do_arredondamento|default:'scale' }}">Casas decimais e arredondamento</a></dt>
     <dd>O arredondamento só se aplica à ordem por pontuação: é aplicado uma vez, sobre a pontuação
       combinada. Sob sorteio não há nota a arredondar, e o cartão não o pergunta. O marco novo já
       nasce com duas casas e meio para cima, que é o que este projeto pratica — e os dois são

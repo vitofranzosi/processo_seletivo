@@ -162,6 +162,22 @@ ambiente do `make preparar`). Runserver desta worktree na porta 8067 (`correcoes
 Páginas do publicado e do consolidado renderizadas por CoreGraphics e olhadas
 (`jornada/pagina-*.jpg`).
 
+## Revisão do diff contra a `main`
+
+Revisão independente do diff de produção, antes do PR. Dois defeitos reais, corrigidos com teste
+escrito antes (cada um falhou pelo motivo apontado e passou depois da correção):
+
+| Achado | Correção | Teste |
+|---|---|---|
+| A conferência de recurso levantava `KeyError: 'startAt'` quando uma Retificação removia o início de um Evento de recurso — erro interno no lugar do `field_required` que a validação já diz; `schedule` ou `classificationMilestones` que não são lista também a derrubavam | `evento.get('startAt')`, e as coleções só são percorridas quando são lista | CR `test_conteudo_malformado_nao_derruba_a_conferencia` |
+| O item "Casas decimais e arredondamento" da ajuda da etapa levava a `#…-scale`, que some do cartão quando o primeiro marco é por sorteio (FR-427) | o item leva à forma da ordem — a pergunta que tirou o campo — quando o marco da âncora declara sorteio; uma nota visível no cartão foi tentada e descartada, porque a FR-428 proíbe ajuda visível nos cartões | TR `test_a_ajuda_do_arredondamento_tem_destino_quando_o_marco_e_por_sorteio` |
+
+Registrado sem correção: um rascunho anterior à `067` com marco por sorteio e arredondamento
+gravado aparece como "alterado" na primeira prévia ou recusa depois da implantação — o
+arredondamento oculto passa a ser enviado vazio. É verdade (salvar vai tirá-lo) e transitório.
+Também transitório: a pendência de arredondamento **malformado** sob sorteio aponta para `scale`,
+que não está no cartão; salvar o passo grava `{}` e a pendência some.
+
 ## Achados registrados, não tratados
 
 - **A dica de vazio do desfecho de empate, na Retificação, anuncia impedimento também sob sorteio**
