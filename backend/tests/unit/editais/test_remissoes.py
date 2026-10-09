@@ -275,3 +275,46 @@ def test_no_cenario_b_o_item_8_1_e_a_unica_remissao_ambigua():
 
 def test_no_cenario_a_nao_ha_remissao_a_acusar():
     assert _remissoes(_congelado("A-conteudo-publicado.json")) == []
+
+
+# --- o contrato G1: nenhum aviso com código de impeditivo (D-006) -----------------------------
+
+
+def test_os_codigos_de_aviso_nao_coincidem_com_impeditivo_nenhum():
+    """`advertencias_do_ato` descarta o aviso cujo código é o de um impeditivo de publicação."""
+    from processo_seletivo.editais.domain.validation import (
+        CONFLITO_DE_NUMERACAO,
+        CONFLITO_DE_NUMERACAO_NA_RETIFICACAO,
+        TITULO_TRANSCRITO,
+        blocking_findings,
+    )
+
+    texto = (
+        "9.4 O prazo é de três dias.\n11. DOS RECURSOS\nConforme o item 9.4.\n"
+        "Vale o item 7.3.\nAs vagas estão no Quadro 2."
+    )
+    base = _conteudo(etapas=[ETAPA], recursos="Texto.", **ANTES)
+    etapas = _numero(base, "etapas")
+    texto += f"\n{etapas}.1 Repetido.\nConforme o item {etapas}.1."
+    conteudo = _conteudo(etapas=[ETAPA], recursos=texto, **ANTES)
+
+    publicacao = validate_for_publication(conteudo, ato=ATO_DE_PUBLICACAO)
+    retificacao = validate_for_publication(conteudo, ato=ATO_DE_RETIFICACAO)
+    impeditivos = {achado.code for achado in blocking_findings(publicacao)}
+    avisos = {
+        achado.code
+        for achado in publicacao + retificacao
+        if achado.code in CODIGOS_DA_NUMERACAO_DIGITADA and achado.severity == Severity.WARNING
+    }
+    assert avisos == {
+        CONFLITO_DE_NUMERACAO_NA_RETIFICACAO,
+        TITULO_TRANSCRITO,
+        REMISSAO_AMBIGUA,
+        REMISSAO_SEM_DESTINO,
+        REMISSAO_SUSPEITA,
+    }
+    assert CONFLITO_DE_NUMERACAO in impeditivos
+    assert not (avisos & impeditivos)
+    assert not blocking_findings(
+        [a for a in retificacao if a.code in CODIGOS_DA_NUMERACAO_DIGITADA]
+    ), "na Retificação nada desta feature impede (D-002)"
