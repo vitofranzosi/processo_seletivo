@@ -322,9 +322,12 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
     assert (
         "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in tudo
     )
+    # A frase do documento, com o resultado nomeado pela denominação, que está na linha de cima
+    # (067, FR-1304, D-012): com o nome dentro da frase, cada Perfil viraria um grupo.
+    assert "Denominação: Classificação final" in tudo
     assert (
-        "Recurso: Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do "
-        "resultado." in tudo
+        "Recurso: Caberá recurso contra o resultado deste marco, no prazo de 5 (cinco) dias "
+        "corridos, contados da divulgação desse resultado." in tudo
     )
     assert "Corte: Progridem os 3 (três) primeiros desta ordem, mais 1 (um) suplente." in tudo
     # As frases do documento, e não uma redação própria da conferência (014, FR-185).

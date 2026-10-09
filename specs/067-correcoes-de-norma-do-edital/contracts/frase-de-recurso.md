@@ -35,3 +35,9 @@ já faz com todo texto do documento.
 ## No documento
 
 O rótulo continua "Recurso:", na mesma posição do bloco do marco (depois do sorteio, antes do corte).
+
+## Na Revisão (`D-012`)
+
+A Revisão chama a mesma função com `objeto="deste marco"`: `Caberá recurso contra o resultado deste
+marco, no prazo de {prazo}, contados da divulgação desse resultado.` / `Não caberá recurso contra o
+resultado deste marco.` A denominação do marco é a linha imediatamente acima.

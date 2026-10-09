@@ -541,7 +541,9 @@ def _leitura_do_marco(marco, perfil, snapshot):
                 or "Etapa declarada que não existe neste Edital",
             )
         )
-    pares.append(("Recurso", _janela_recursal(marco) or "nada declarado"))
+    # "deste marco" no lugar do nome (067, D-012): a denominação está na linha de cima, e com o nome
+    # na frase cada Perfil seria um grupo — o que a nota abaixo, sobre a denominação, já recusa.
+    pares.append(("Recurso", _janela_recursal(marco, objeto="deste marco") or "nada declarado"))
     regra = marco.get("cutRule")
     if isinstance(regra, dict):
         # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.

@@ -168,6 +168,24 @@ feature; a spec o registra em *Assumptions*.
 
 ---
 
+## D-012 — Na Revisão, o resultado é "deste marco", e o nome fica na linha da denominação
+
+**Decisão.** `_janela_recursal(marco, *, objeto=None)`: o documento não passa `objeto`, e a frase
+nomeia o marco entre aspas; a Revisão passa `objeto="deste marco"`.
+
+**Por quê.** Achado na implementação de US1: a Revisão agrupa os marcos de mesma regra de Perfis
+diferentes — 16 Perfis com o mesmo corte são um item, não dezesseis —, e agrupa pelos pares
+`(rótulo, valor)` do marco, **sem** a denominação, que nasce do Perfil (030, a derivada "Classificação
+final — nome do Perfil"). Com o nome dentro da frase de recurso, cada Perfil virou um grupo, e dois
+testes do agrupamento da Revisão caíram. A denominação já é a linha de cima de cada grupo; a frase
+diz "deste marco", e o objeto continua dito.
+
+**Descartado.** Agrupar ignorando a linha de recurso (esconderia divergência real de prazo); e
+substituir o nome depois do agrupamento por uma marca (mais código para dizer a mesma coisa que a
+linha da denominação já diz).
+
+---
+
 ## Mapa (levantado em 09/10/2026, `99d32e16`)
 
 | Peça | Onde | O que muda |

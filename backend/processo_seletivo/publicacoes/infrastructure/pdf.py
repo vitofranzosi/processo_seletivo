@@ -1367,15 +1367,62 @@ POR_EXTENSO = {
 }
 
 
-def _janela_recursal(marco):
-    """A frase normativa do prazo recursal, como um Edital a escreve (FR-030).
-
-    *"Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado."*
+def prazo_do_recurso(marco):
+    """O prazo recursal do marco como o Edital o escreve — `2 (dois) dias corridos` —, ou `""`.
 
     **O número por extenso entre parênteses não é enfeite**: é como um ato administrativo escreve
     prazo, e é o que impede que um dígito trocado passe despercebido. Fora da tabela de números
     conhecidos, imprime-se só o algarismo — inventar a grafia de "cento e vinte e três" aqui seria
     mais chance de errar do que de acertar.
+
+    **Função própria porque tem dois leitores** (067, D-005): a frase do marco, logo abaixo, e o
+    aviso de conferência de recurso da validação, que põe o prazo dos marcos ao lado dos Eventos do
+    Cronograma. Uma segunda redação do mesmo prazo seria a segunda fonte que o Princípio II proíbe.
+    """
+    janela = marco.get("appealWindow") if isinstance(marco, dict) else None
+    if not isinstance(janela, dict) or not janela.get("admits"):
+        return ""
+    dias = janela.get("durationDays")
+    if not isinstance(dias, int) or isinstance(dias, bool) or dias <= 0:
+        return ""
+    extenso = POR_EXTENSO.get(dias)
+    quantos = f"{dias} ({extenso})" if extenso else str(dias)
+    return f"{quantos} {'dias corridos' if dias != 1 else 'dia corrido'}"
+
+
+def resultado_do_marco(marco):
+    """Como o documento nomeia o resultado do marco: o nome entre aspas, ou o código, ou `""`.
+
+    **Entre aspas, e não com artigo** (067, D-001). A auditoria sugeria "contra o resultado da
+    Classificação por sorteio eletrônico", mas o nome do marco não tem gênero conhecido — "da Prova
+    final", "do Sorteio público" —, e o documento não adivinha. As aspas dispensam o artigo para
+    qualquer nome. O nome entra como foi escrito, aparado nas pontas; sem nome, o código — o que só
+    uma prévia de rascunho pode ter, porque a gravação exige nome.
+    """
+    if not isinstance(marco, dict):
+        return ""
+    nome = str(marco.get("name") or "").strip() or str(marco.get("code") or "").strip()
+    return f"“{nome}”" if nome else ""
+
+
+def _janela_recursal(marco, *, objeto=None):
+    """A frase normativa do recurso, que diz **de qual resultado** se recorre (FR-030; 067, ED-02).
+
+    *"Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias
+    corridos, contados da divulgação desse resultado."*
+
+    **A frase não dizia o objeto, e o candidato não tinha como descobri-lo.** "Contados da
+    divulgação do resultado" convivia, no mesmo documento, com o período de recurso do Cronograma e
+    com o da seção textual — no cenário A da auditoria de 08/10/2026, um contra o sorteio, outro
+    contra a análise documental —, e nada dizia qual era qual. O recurso que o sistema processa é
+    contra a publicação do resultado **deste marco** (`doc/decisao-018-escopo-institucional-do-
+    recurso.md`, §1), e é ele que a frase passa a nomear (`resultado_do_marco`). Sem nome e sem
+    código — só numa prévia de rascunho —, sai a frase de antes: o documento não inventa nome.
+
+    **`objeto` é só da Revisão** (067, D-012). Ela agrupa marcos de Perfis diferentes que declaram a
+    mesma regra, com a denominação de cada grupo na linha de cima; com o nome dentro da frase, cada
+    Perfil viraria um grupo. Ela passa `"deste marco"`, e a frase é a mesma, com o nome dito pela
+    linha da denominação. O documento compõe um marco por vez, e nunca passa `objeto`.
 
     **O silêncio não imprime nada, e a negativa imprime** (FR-028, FR-113). São coisas diferentes:
     marco que nada declara conserva as vias que a lei dá fora deste sistema, e escrever "não cabe
@@ -1386,17 +1433,20 @@ def _janela_recursal(marco):
     janela = marco.get("appealWindow")
     if not isinstance(janela, dict):
         return ""
+    if objeto is None:
+        resultado = resultado_do_marco(marco)
+        objeto = f"de {resultado}" if resultado else ""
     if janela.get("admits") is False:
-        return "Não caberá recurso contra o resultado deste marco."
-    if not janela.get("admits"):
+        return f"Não caberá recurso contra o resultado {objeto or 'deste marco'}."
+    prazo = prazo_do_recurso(marco)
+    if not prazo:
         return ""
-    dias = janela.get("durationDays")
-    if not isinstance(dias, int) or isinstance(dias, bool) or dias <= 0:
-        return ""
-    extenso = POR_EXTENSO.get(dias)
-    quantos = f"{dias} ({extenso})" if extenso else str(dias)
-    plural = "dias corridos" if dias != 1 else "dia corrido"
-    return f"Caberá recurso no prazo de {quantos} {plural}, contados da divulgação do resultado."
+    if objeto:
+        return (
+            f"Caberá recurso contra o resultado {objeto}, no prazo de {prazo}, contados da "
+            "divulgação desse resultado."
+        )
+    return f"Caberá recurso no prazo de {prazo}, contados da divulgação do resultado."
 
 
 def _regra_de_corte(marco, etapas):

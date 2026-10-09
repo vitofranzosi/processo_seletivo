@@ -128,8 +128,9 @@ um direito sem objeto é norma que o candidato não consegue exercer com seguran
    linha diz *"Não caberá recurso contra o resultado de “Nome do marco”."*
 4. **Given** um marco que nada declara sobre recurso, **When** o documento é composto, **Then**
    nenhuma linha de recurso sai — como hoje.
-5. **Given** o mesmo rascunho, **When** quem elabora abre a Revisão ou a prévia, **Then** lê a mesma
-   frase que o documento publicado imprimirá.
+5. **Given** o mesmo rascunho, **When** quem elabora abre a prévia, **Then** lê a mesma frase que o
+   documento publicado imprimirá; **and When** abre a Revisão, **Then** lê a mesma frase com o
+   resultado dito "deste marco", logo abaixo da denominação do marco (`D-012`).
 
 ---
 
@@ -352,7 +353,9 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
 - **FR-1303**: Marco que nada declara sobre recurso MUST continuar sem frase de recurso (`FR-028`,
   `FR-113`).
 - **FR-1304**: A frase MUST ser uma só para o documento publicado, a prévia, o consolidado de
-  Retificação e a Revisão — composta num único lugar e lida pelos quatro.
+  Retificação e a Revisão — composta num único lugar e lida pelos quatro. Na Revisão, que agrupa os
+  marcos de mesma regra de Perfis diferentes e mostra a denominação de cada grupo na linha de cima,
+  o resultado é dito "deste marco" em vez do nome (`D-012`).
 
 **Aviso de conferência de recurso (ED-02, `D-002`)**
 

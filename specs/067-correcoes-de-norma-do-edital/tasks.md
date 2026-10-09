@@ -28,8 +28,8 @@ fictícios.
 
 ## Phase 1: Setup
 
-- [ ] T001 Medir o ponto de partida: `uv run pytest` contra PostgreSQL (`TEST_DB_ENGINE=postgresql DB_USER=$(whoami) DB_RUNTIME_USER=$(whoami) DB_NAME=ps067`) sobre `tests/unit/editais tests/unit/publicacoes tests/unit/interface tests/contract tests/integration/publicacoes tests/interface/test_compor_quadro.py`; verde, e o total registrado num `specs/067-correcoes-de-norma-do-edital/verificacao.md` novo, seção "Ponto de partida"
-- [ ] T002 [P] Gravar o texto de referência dos PDFs da auditoria para a comparação: `pdftotext -layout` de `doc/auditoria-edital-pdf-2026-10-08/pdf/A-publicado.pdf` e `B-publicado.pdf` no scratchpad (não versionado); conferir que `test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes` passa na `main`
+- [X] T001 Medir o ponto de partida: `uv run pytest` contra PostgreSQL (`TEST_DB_ENGINE=postgresql DB_USER=$(whoami) DB_RUNTIME_USER=$(whoami) DB_NAME=ps067`) sobre `tests/unit/editais tests/unit/publicacoes tests/unit/interface tests/contract tests/integration/publicacoes tests/interface/test_compor_quadro.py`; verde, e o total registrado num `specs/067-correcoes-de-norma-do-edital/verificacao.md` novo, seção "Ponto de partida"
+- [X] T002 [P] Gravar o texto de referência dos PDFs da auditoria para a comparação: `pdftotext -layout` de `doc/auditoria-edital-pdf-2026-10-08/pdf/A-publicado.pdf` e `B-publicado.pdf` no scratchpad (não versionado); conferir que `test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes` passa na `main`
 
 ---
 
@@ -39,14 +39,14 @@ Bloqueiam US3, US4 e o aviso de US2. Independentes entre si.
 
 ### Testes (primeiro; falham por `ImportError`/`AttributeError`)
 
-- [ ] T003 [P] Em `backend/tests/unit/editais/test_predicados_da_067.py` (novo), `declara_sorteio` ([contracts/documento-sob-sorteio-e-sem-vaga.md](contracts/documento-sob-sorteio-e-sem-vaga.md), `D-004`): verdadeiro só com `orderProduction == "POR_SORTEIO"`; falso com `"POR_PONTUACAO"`, `""`, ausente, e com forma ausente e `drawMethod` próprio declarado (acervo)
-- [ ] T004 [P] No mesmo arquivo, `sem_vaga_imediata` (`FR-1320`, `D-007`): verdadeiro com total 0 e todas as linhas em 0; falso com total 6 e uma linha em 0; falso com total 0 e uma linha positiva (incoerente); falso sem quadro (`vacancyTable` ausente ou `[]`); falso com `immediateVacancies` `False` (booleano) ou ausente; verdadeiro com total 0 e `reserveType` `NONE` (caso-limite: a regra é a mesma)
+- [X] T003 [P] Em `backend/tests/unit/editais/test_predicados_da_067.py` (novo), `declara_sorteio` ([contracts/documento-sob-sorteio-e-sem-vaga.md](contracts/documento-sob-sorteio-e-sem-vaga.md), `D-004`): verdadeiro só com `orderProduction == "POR_SORTEIO"`; falso com `"POR_PONTUACAO"`, `""`, ausente, e com forma ausente e `drawMethod` próprio declarado (acervo)
+- [X] T004 [P] No mesmo arquivo, `sem_vaga_imediata` (`FR-1320`, `D-007`): verdadeiro com total 0 e todas as linhas em 0; falso com total 6 e uma linha em 0; falso com total 0 e uma linha positiva (incoerente); falso sem quadro (`vacancyTable` ausente ou `[]`); falso com `immediateVacancies` `False` (booleano) ou ausente; verdadeiro com total 0 e `reserveType` `NONE` (caso-limite: a regra é a mesma)
 
 ### Implementação
 
-- [ ] T005 [P] Em `backend/processo_seletivo/editais/domain/marcos.py`, `declara_sorteio(marco)`, ao lado de `ordena_por_sorteio`, com docstring do porquê da forma declarada (`D-004`: o acervo sem forma sai como sempre saiu)
-- [ ] T006 [P] Em `backend/processo_seletivo/editais/domain/quadro.py`, `sem_vaga_imediata(perfil)`, com docstring (`D-007`: o incoerente continua com quadro para que o erro se veja)
-- [ ] T007 Rodar T003 e T004: verdes
+- [X] T005 [P] Em `backend/processo_seletivo/editais/domain/marcos.py`, `declara_sorteio(marco)`, ao lado de `ordena_por_sorteio`, com docstring do porquê da forma declarada (`D-004`: o acervo sem forma sai como sempre saiu)
+- [X] T006 [P] Em `backend/processo_seletivo/editais/domain/quadro.py`, `sem_vaga_imediata(perfil)`, com docstring (`D-007`: o incoerente continua com quadro para que o erro se veja)
+- [X] T007 Rodar T003 e T004: verdes
 
 **Checkpoint**: os predicados existem; nada os usa ainda.
 
@@ -62,16 +62,16 @@ frase de marco termina em "contados da divulgação do resultado".
 
 ### Testes
 
-- [ ] T008 [P] [US1] Em `backend/tests/unit/publicacoes/test_frase_de_recurso.py` (novo), a tabela de [contracts/frase-de-recurso.md](contracts/frase-de-recurso.md) (`FR-1300`, `FR-1301`, `FR-1302`, `FR-1303`): afirmativa com nome (2 e 1 dia; 11 dias sem extenso), negativa com nome, sem nome com código, sem nome e sem código (frases de hoje), silêncio (`""`), prazo inválido (0, negativo, booleano, ausente) → `""`; nome com aspas próprias sai como foi escrito; nome com espaços nas pontas é aparado; `prazo_do_recurso` devolve `2 (dois) dias corridos` e `1 (um) dia corrido` (`FR-1300` a `FR-1303`)
-- [ ] T009 [P] [US1] No mesmo arquivo, a frase no **documento composto**: o snapshot congelado de A (`doc/auditoria-edital-pdf-2026-10-08/snapshots/A-conteudo-publicado.json`) renderizado tem 4 ocorrências de "Caberá recurso contra o resultado de “Classificação por sorteio eletrônico”, no prazo de 2 (dois) dias corridos, contados da divulgação desse resultado." no texto corrido, e nenhuma de "contados da divulgação do resultado"; o nome longo (255 caracteres) quebra sem truncar; o modo prévia imprime a mesma frase (`FR-1304`)
-- [ ] T010 [P] [US1] Em `backend/tests/unit/interface/test_revisao.py` (acréscimo), a Revisão do marco mostra a mesma frase que `_janela_recursal` devolve (`FR-1304`)
-- [ ] T011 [US1] Rodar T008 a T010 contra a `main`: falham por `ImportError` (`prazo_do_recurso`) ou pela frase antiga, e nenhum por outra razão
+- [X] T008 [P] [US1] Em `backend/tests/unit/publicacoes/test_frase_de_recurso.py` (novo), a tabela de [contracts/frase-de-recurso.md](contracts/frase-de-recurso.md) (`FR-1300`, `FR-1301`, `FR-1302`, `FR-1303`): afirmativa com nome (2 e 1 dia; 11 dias sem extenso), negativa com nome, sem nome com código, sem nome e sem código (frases de hoje), silêncio (`""`), prazo inválido (0, negativo, booleano, ausente) → `""`; nome com aspas próprias sai como foi escrito; nome com espaços nas pontas é aparado; `prazo_do_recurso` devolve `2 (dois) dias corridos` e `1 (um) dia corrido` (`FR-1300` a `FR-1303`)
+- [X] T009 [P] [US1] No mesmo arquivo, a frase no **documento composto**: o snapshot congelado de A (`doc/auditoria-edital-pdf-2026-10-08/snapshots/A-conteudo-publicado.json`) renderizado tem 4 ocorrências de "Caberá recurso contra o resultado de “Classificação por sorteio eletrônico”, no prazo de 2 (dois) dias corridos, contados da divulgação desse resultado." no texto corrido, e nenhuma de "contados da divulgação do resultado"; o nome longo (255 caracteres) quebra sem truncar; o modo prévia imprime a mesma frase (`FR-1304`)
+- [X] T010 [P] [US1] Em `backend/tests/unit/interface/test_revisao.py` (acréscimo), a Revisão do marco mostra a mesma frase que `_janela_recursal` devolve, com o resultado dito "deste marco" abaixo da denominação (`FR-1304`, `D-012` — achado na implementação: o nome na frase desfazia o agrupamento por Perfil)
+- [X] T011 [US1] Rodar T008 a T010 contra a `main`: falham por `ImportError` (`prazo_do_recurso`) ou pela frase antiga, e nenhum por outra razão
 
 ### Implementação
 
-- [ ] T012 [US1] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, extrair `prazo_do_recurso(marco)` e reescrever `_janela_recursal(marco)` pela tabela do contrato; a docstring cita ED-02, `D-001` (por que aspas: o nome não tem gênero) e mantém os parágrafos do silêncio e da negativa
-- [ ] T013 [US1] Atualizar de propósito `backend/tests/unit/publicacoes/test_pdf.py` (as duas asserções da frase, linhas ~1639 e ~1655) e `backend/tests/integration/publicacoes/test_documento_da_retificacao_que_acrescenta.py` ("Caberá recurso no prazo de 3 (três)") para a frase nova, com o nome do marco do teste
-- [ ] T014 [US1] Rodar T008 a T010 e os testes de T013: verdes
+- [X] T012 [US1] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, extrair `prazo_do_recurso(marco)` e reescrever `_janela_recursal(marco)` pela tabela do contrato; a docstring cita ED-02, `D-001` (por que aspas: o nome não tem gênero) e mantém os parágrafos do silêncio e da negativa
+- [X] T013 [US1] Atualizar de propósito `backend/tests/unit/publicacoes/test_pdf.py` (as duas asserções da frase, linhas ~1639 e ~1655) e `backend/tests/integration/publicacoes/test_documento_da_retificacao_que_acrescenta.py` ("Caberá recurso no prazo de 3 (três)") para a frase nova, com o nome do marco do teste
+- [X] T014 [US1] Rodar T008 a T010 e os testes de T013: verdes
 
 **Checkpoint**: a frase tem objeto no documento, na prévia e na Revisão.
 

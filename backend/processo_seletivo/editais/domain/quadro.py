@@ -96,3 +96,32 @@ def sugestao(*, percentual, vagas_imediatas, rounding=None):
     else:
         valor = None
     return Sugestao(valor=valor, piso=piso, teto=teto, conta=conta)
+
+
+def sem_vaga_imediata(perfil) -> bool:
+    """O Perfil só tem cadastro de reserva — nenhuma vaga imediata, em lista nenhuma? (067, D-007)
+
+    É o Perfil cujo quadro o documento deixa de imprimir, com a frase de reversão: um quadro
+    inteiro de zeros e uma frase sobre "vagas reservadas" afirmavam reserva de vaga onde não há vaga
+    (ED-12 da auditoria de 08/10/2026). O compositor, a contagem de tabelas e a Revisão leem este
+    predicado, para que nenhum dos três discorde do outro sobre o mesmo Perfil.
+
+    **Zero no total e zero em toda linha.** O Perfil com total zero e uma linha positiva é
+    incoerente — a validação o recusa — e responde "tem vaga": o quadro continua saindo na prévia,
+    que é onde o erro precisa ser visto. **Sem quadro declarado**, a resposta também é não: o acervo
+    anterior à `025` já não imprime quadro, e nada aqui muda para ele.
+    """
+    if not isinstance(perfil, dict):
+        return False
+    total = perfil.get("immediateVacancies")
+    linhas = perfil.get("vacancyTable")
+    if isinstance(total, bool) or total != 0:
+        return False
+    if not isinstance(linhas, list) or not linhas:
+        return False
+    return all(
+        isinstance(linha, dict)
+        and not isinstance(linha.get("immediateVacancies"), bool)
+        and linha.get("immediateVacancies") == 0
+        for linha in linhas
+    )
