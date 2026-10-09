@@ -109,3 +109,22 @@ def test_a_divulgacao_nao_depende_do_arredondamento_do_marco_por_sorteio():
     """A escala da divulgação cai no padrão — e o sorteio não tem pontuação a formatar."""
     assert _escala({"rounding": {}}) == ESCALA_PADRAO
     assert _escala({}) == ESCALA_PADRAO
+
+
+def test_a_divulgacao_e_a_verificacao_do_sorteio_nao_dependem_do_arredondamento(pronto):  # noqa: F811
+    """FR-1319, pelo caminho inteiro: compor o que se divulga e verificar o sorteio, que o cidadão
+    refaz pela página pública, sobre o ato de um marco publicado sem arredondamento."""
+    from processo_seletivo.divulgacao.domain.conteudo import compor
+    from processo_seletivo.sorteios.application.verificacao import verificar
+
+    certame, relacao, ocorrencia = pronto
+    declarado = _constituir(certame, relacao, ocorrencia)
+    ato = AtoDeOrdenacao.objects.get(pk=declarado["ato"])
+
+    divulgado = compor(ato)
+    assert [linha["posicao"] for linha in divulgado["posicoes"]] == [1, 2, 3, 4, 5]
+    assert not any(linha["compartilhada"] for linha in divulgado["posicoes"]), "ordem total"
+    assert all(not linha.get("pontuacao") for linha in divulgado["posicoes"]), "sorteio não pontua"
+
+    verificado = verificar(ato.sorteio)
+    assert verificado["integro"], verificado["conferencias"]

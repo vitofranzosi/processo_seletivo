@@ -142,3 +142,28 @@ def test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas(
 
     # FR-1327: a forma do conteúdo não mudou.
     assert consolidado.canonical_schema_version == original.canonical_schema_version
+
+
+def test_a_tela_da_retificacao_mostra_o_aviso_e_diz_que_ele_nao_impede(
+    api_client, edital, client, settings
+):
+    """FR-1309: a confirmação da Retificação mostra o aviso, e ele não tira o botão do ato."""
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    publicado = levar_a_publicacao(api_client, edital, draft=_rascunho())
+    mudanca = [{"operation": "REPLACE", "targetPath": "/description", "newValue": "Corrigida."}]
+    retificacao = create_retification(api_client, publicado, mudanca)
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    tela = " ".join(
+        client.get(reverse("interface:retificacao-ato", args=[retificacao.id, "submeter"]))
+        .content.decode()
+        .split()
+    )
+    # Como aviso, e não como impedimento: a linha de aviso, e o botão do ato continua na tela.
+    assert "<strong>Aviso:</strong> Prazos de recurso a conferir." in tela
+    assert 'type="submit"' in tela
+    assert "blocking_findings" not in tela
