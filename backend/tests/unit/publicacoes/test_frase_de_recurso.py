@@ -141,3 +141,22 @@ def test_a_revisao_diz_o_resultado_pela_denominacao_da_linha_de_cima():
         == "Não caberá recurso contra o resultado deste marco."
     )
     assert _janela_recursal(marco(None), objeto="deste marco") == ""
+
+
+def test_dois_marcos_no_mesmo_perfil_nomeiam_cada_um_o_seu_resultado():
+    conteudo = congelado("A")["content"]
+    perfil = conteudo["profiles"][0]
+    (primeiro,) = perfil["classificationMilestones"]
+    segundo = {
+        **primeiro,
+        "id": "00000000-0000-4000-8000-000000067f01",
+        "code": "FINAL",
+        "name": "Classificação final",
+        "appealWindow": admite(5),
+        "cutRule": None,
+    }
+    perfil["classificationMilestones"] = [primeiro, segundo]
+    texto = _corrido(composto("A", conteudo))
+
+    assert "contra o resultado de “Classificação por sorteio eletrônico”, no prazo de 2" in texto
+    assert "contra o resultado de “Classificação final”, no prazo de 5 (cinco)" in texto

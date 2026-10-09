@@ -187,3 +187,13 @@ def test_a_conferencia_nao_altera_o_conteudo():
     antes = copy.deepcopy(conteudo)
     _avisos(conteudo)
     assert conteudo == antes
+
+
+def test_o_evento_cancelado_continua_listado_como_o_documento_o_imprime():
+    evento = _evento(1, "Recurso", "Recurso contra o sorteio", "2026-11-17T12:00:00+00:00")
+    evento["status"] = "CANCELADO"
+    (aviso,) = _avisos(_a(schedule=[evento]))
+
+    assert "O Cronograma tem 1 Evento de recurso: Recurso contra o sorteio — em 17/11/2026" in (
+        aviso.message
+    )

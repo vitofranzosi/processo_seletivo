@@ -5,7 +5,7 @@ já tem a `065` (PR #266) e a auditoria que fundamenta esta feature.
 
 **Created**: 2026-10-09
 
-**Status**: Draft — decisões fechadas pelo responsável pelo produto em 09/10/2026 (ver *Decisões*)
+**Status**: Implementado — decisões fechadas pelo responsável pelo produto em 09/10/2026 (ver *Decisões*); verificação em [verificacao.md](verificacao.md)
 
 **Input**: os achados **ED-02**, **ED-03** e **ED-12** da [auditoria do Edital em PDF de
 08/10/2026](../../doc/auditoria-edital-pdf-2026-10-08.md) (§11, §12.1, §5.2 L7 e L10, §8 C1 a C4) e o
