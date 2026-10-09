@@ -145,3 +145,10 @@ nenhuma migration pendente.
 
 Os onze pulados são os deliberados que o `AGENTS.md` reparte. Sem `.env`, `ARQUIVOS_CANDIDATOS_RAIZ`
 fica vazio, como no CI.
+
+**Depois da revisão do PR, sobre a combinação com a `main`** (que trouxe a `063` e o PR 252; merge
+`66e50230`): `make lint check` limpo, e `make test-pg DB_NAME=ps065 POSTGRES_USER=saymoncastro`:
+
+```text
+9825 passed, 11 skipped in 1058.39s (0:17:38)
+```
