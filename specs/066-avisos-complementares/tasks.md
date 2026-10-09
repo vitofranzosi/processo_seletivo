@@ -22,7 +22,7 @@ Caminhos:
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente da worktree:
+- [X] T001 Conferir o ambiente da worktree:
   - `uv sync --extra dev` e `backend/.env` com `DB_NAME=ps_066`;
   - `manage.py migrate --check` sem pipe;
   - os guardiões verdes **antes** de mudar qualquer coisa: T`test_situacoes_de_mensagem.py`, T`migrations/test_migrations.py`, T`integration/test_database_permissions.py`, T`test_gramatica_das_portas.py`, T`test_citacoes_de_requisito.py`, T`test_readme_acompanha_o_codigo.py`, T`test_vocabulario_da_convocacao.py`, T`interface/test_polish_da_056.py` e T`integration/convocacao/`.
@@ -34,44 +34,44 @@ Caminhos:
 **⚠️ Nenhuma história começa antes desta fase terminar.** É onde os guardiões globais de `R-015`
 mudam, para que nenhum deles seja descoberto no fim da suíte de 15 minutos.
 
-- [ ] T002 [P] Em `backend/config/settings/base.py`, `EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))`, com comentário: gap I-4, os quatro envios, os 120 s do gunicorn (`R-006`). Teste em T`unit/test_configuracao_de_correio.py`: o setting existe, é inteiro e chega ao backend SMTP do Django (`get_connection().timeout`)
-- [ ] T003 [P] Mover `destinatario_de` de `backend/processo_seletivo/convocacao/application/comunicar.py` para `backend/processo_seletivo/identidade/application/endereco.py`, sem mudar comportamento (data-model §3):
+- [X] T002 [P] Em `backend/config/settings/base.py`, `EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))`, com comentário: gap I-4, os quatro envios, os 120 s do gunicorn (`R-006`). Teste em T`unit/test_configuracao_de_correio.py`: o setting existe, é inteiro e chega ao backend SMTP do Django (`get_connection().timeout`)
+- [X] T003 [P] Mover `destinatario_de` de `backend/processo_seletivo/convocacao/application/comunicar.py` para `backend/processo_seletivo/identidade/application/endereco.py`, sem mudar comportamento (data-model §3):
   - `comunicar.py` importa de lá e mantém o nome no `__all__` por reexportação;
   - rodar T`integration/convocacao/test_comunicacao.py` verde, sem edição
-- [ ] T004 [P] Settings da feature:
+- [X] T004 [P] Settings da feature:
   - em `backend/config/settings/base.py`: `AVISOS_AOS_CANDIDATOS` (`== "true"`, padrão `"false"`), `AVISOS_LIMITE_POR_MINUTO=60`, `AVISOS_MAX_TENTATIVAS=3`, `AVISOS_INTERVALOS_DE_RETENTATIVA="5,15"`, `AVISOS_ALERTA_DE_PENDENTE_MIN=10`, `AVISOS_JANELA_DE_DESPACHO_HORAS=24`;
   - em `backend/config/settings/development.py` e `backend/config/settings/test.py`, a chave ligada;
   - acrescentar as variáveis comentadas a `backend/.env.example` (`R-005`, `R-013`, `R-016`)
-- [ ] T005 Criar o app A (`apps.py`, `__init__.py`, `models.py`, `domain/`, `application/`, `management/commands/`) e registrá-lo em `INSTALLED_APPS` de `backend/config/settings/base.py`
-- [ ] T006 Modelos em A`models.py`, conforme data-model §1:
+- [X] T005 Criar o app A (`apps.py`, `__init__.py`, `models.py`, `domain/`, `application/`, `management/commands/`) e registrá-lo em `INSTALLED_APPS` de `backend/config/settings/base.py`
+- [X] T006 Modelos em A`models.py`, conforme data-model §1:
   - `ModeloDeAviso`, mutável, com `delete()` que recusa;
   - `Aviso`, `PublicacaoDoAviso`, `DestinatarioDoAviso`, `TentativaDeEnvio`, `ResultadoDaTentativa` e `InterrupcaoDoAviso`, com `save()` que recusa linha existente e `delete()` que recusa sempre, no padrão de `convocacao/models.py:75-81`;
   - os `CHECK` e `UNIQUE` do data-model: `(aviso, inscricao)`, `(destinatario, numero)`, OneToOne do resultado e da interrupção, e nome do modelo único por escopo sem caixa;
   - o índice em `PublicacaoDoAviso.publicacao`
-- [ ] T007 Migration A`migrations/0001_initial.py`:
+- [X] T007 Migration A`migrations/0001_initial.py`:
   - as tabelas;
   - gatilho `BEFORE UPDATE OR DELETE` nas seis append-only, e `BEFORE DELETE` em `ModeloDeAviso`, no padrão de `convocacao/migrations/0001_initial.py:27-47`;
   - sem importar `domain` nem `application` (`test_migrations_do_not_import_domain_or_application_code`)
-- [ ] T008 Em `backend/processo_seletivo/seguranca/papeis.py`, acrescentar as seis tabelas append-only a `TABELAS_APPEND_ONLY`. `ModeloDeAviso` fica fora (data-model §1.1). Rodar `provisionar_papeis`, `migrate` e `provisionar_papeis` e conferir **`40 de 40`**. T`integration/test_database_permissions.py` passa a cobrir as seis pela parametrização existente
-- [ ] T009 Em T`migrations/test_migrations.py`:
+- [X] T008 Em `backend/processo_seletivo/seguranca/papeis.py`, acrescentar as seis tabelas append-only a `TABELAS_APPEND_ONLY`. `ModeloDeAviso` fica fora (data-model §1.1). Rodar `provisionar_papeis`, `migrate` e `provisionar_papeis` e conferir **`40 de 40`**. T`integration/test_database_permissions.py` passa a cobrir as seis pela parametrização existente
+- [X] T009 Em T`migrations/test_migrations.py`:
   - subir a contagem com o app `avisos` e a justificativa escrita, no idioma do arquivo;
   - acrescentar os sete gatilhos a `TRIGGERS_POR_APP["avisos"]` (memória "migrations têm contagem por app")
-- [ ] T010 [P] TU e TI de imutabilidade, em T`unit/avisos/test_append_only.py`, no padrão de T`unit/convocacao/test_append_only.py`:
+- [X] T010 [P] TU e TI de imutabilidade, em T`unit/avisos/test_append_only.py`, no padrão de T`unit/convocacao/test_append_only.py`:
   - `save` de linha existente e `delete` recusam nas seis;
   - `delete` de `ModeloDeAviso` recusa;
   - `UPDATE`/`DELETE` direto em SQL recusado pelo gatilho
-- [ ] T011 [P] A`domain/nomes.py`:
+- [X] T011 [P] A`domain/nomes.py`:
   - os códigos de recusa de contracts/telas.md, inclusive `aviso_envio_desabilitado`;
   - os resultados de tentativa (`ACEITA`, `FALHA_TEMPORARIA`, `FALHA_DEFINITIVA`, `INDETERMINADA`);
   - os estados derivados (data-model §2), as origens, os motivos e as elegibilidades
-- [ ] T012 [P] A`domain/variaveis.py`:
+- [X] T012 [P] A`domain/variaveis.py`:
   - a lista fechada da `FR-1255`, com a coluna por origem de contracts/mensagem.md;
   - `{link_da_publicacao}` só com uma publicação citada;
   - a sintaxe `{nome}`, com `{{ }}` literal;
   - a validação que devolve a variável desconhecida ou sem valor, nomeada.
 
   TU em T`unit/avisos/test_variaveis.py`, com um caso por linha e por coluna da tabela, `{posicao}` e `{modalidade}` recusadas, e `{link_da_publicacao}` com duas publicações recusada
-- [ ] T013 [P] A`domain/mensagem.py`, composição pura (contracts/mensagem.md):
+- [X] T013 [P] A`domain/mensagem.py`, composição pura (contracts/mensagem.md):
   - assunto e corpo resolvidos;
   - linha de retificação com as datas;
   - rodapé com `{destino_oficial}`, na ordem link → referência → página;
@@ -81,16 +81,16 @@ mudam, para que nenhum deles seja descoberto no fim da suíte de 15 minutos.
   - a mensagem final com um `To`, sem `Cc`/`Bcc`, e `Auto-Submitted: auto-generated`.
 
   TU em T`unit/avisos/test_mensagem.py`
-- [ ] T014 [P] A`domain/estado.py`, derivação pura do estado do destinatário e do aviso (data-model §2), inclusive a janela de despacho (`R-016`), a chave desligada (ninguém elegível ao despacho) e o aviso concluído. TU em T`unit/avisos/test_estado.py`, com um caso por linha da tabela e o limite exato da janela
-- [ ] T015 [P] A`domain/resposta.py`, classificação pela fase SMTP (`R-004`). TU em T`unit/avisos/test_resposta.py`, com um caso por linha da tabela de `R-004`:
+- [X] T014 [P] A`domain/estado.py`, derivação pura do estado do destinatário e do aviso (data-model §2), inclusive a janela de despacho (`R-016`), a chave desligada (ninguém elegível ao despacho) e o aviso concluído. TU em T`unit/avisos/test_estado.py`, com um caso por linha da tabela e o limite exato da janela
+- [X] T015 [P] A`domain/resposta.py`, classificação pela fase SMTP (`R-004`). TU em T`unit/avisos/test_resposta.py`, com um caso por linha da tabela de `R-004`:
   - `SMTPSenderRefused` e `SMTPRecipientsRefused` 4xx e 5xx;
   - `SMTPDataError` no `DATA` e na confirmação final;
   - código `-1`, código 999 e código 250 em `SMTPDataError`, todos `INDETERMINADA`;
   - `SMTPServerDisconnected`, `socket.timeout` e `OSError`;
   - `ValueError` na preparação, `FALHA_DEFINITIVA`;
   - retorno 0
-- [ ] T016 Em I`identidade.py`, `aviso:enviar` nos papéis publicador e gestor, com comentário (`D-004`, `FR-1275`). Teste em T`authorization/test_papel_do_aviso.py`, junto dos de `test_visao_institucional.py`: `aviso:enviar` não traz `resultado:publicar`, `comissao:gerir` nem outra capacidade, e o papel julgador não a tem
-- [ ] T017 A`application/comando.py`, `comando_de_aviso` (`R-009`):
+- [X] T016 Em I`identidade.py`, `aviso:enviar` nos papéis publicador e gestor, com comentário (`D-004`, `FR-1275`). Teste em T`authorization/test_papel_do_aviso.py`, junto dos de `test_visao_institucional.py`: `aviso:enviar` não traz `resultado:publicar`, `comissao:gerir` nem outra capacidade, e o papel julgador não a tem
+- [X] T017 A`application/comando.py`, `comando_de_aviso` (`R-009`):
   - `command_context`;
   - `ProcessoSeletivo.select_for_update()` filtrado pelo escopo, que responde 404 para outra unidade;
   - autorização pela origem: resultado = `actor.can("aviso:enviar")` ou `pode_gerir_comissao`; chamada = `pode_gerir_comissao`;
@@ -99,8 +99,8 @@ mudam, para que nenhum deles seja descoberto no fim da suíte de 15 minutos.
   - `reservar` da idempotência.
 
   TI em T`integration/avisos/test_autorizacao.py`, por papel × origem × escopo, com a presidência ativa, a inativa e o publicador na chamada
-- [ ] T018 [P] Em T`test_gramatica_das_portas.py`, `VIEWS` passa a varrer também I`avisos.py`, com comentário: a varredura literal deixaria as views novas escaparem (`R-015`). Criar I`avisos.py` vazio, com docstring, para que o guardião o encontre desde já
-- [ ] T019 [P] (`FR-1280`) Criar A`application/despacho.py` só com a docstring da 4ª situação e a constante `REVISAO_DA_FR_084_PELA_066 = "2026-10-09"`. Em T`test_situacoes_de_mensagem.py`:
+- [X] T018 [P] Em T`test_gramatica_das_portas.py`, `VIEWS` passa a varrer também I`avisos.py`, com comentário: a varredura literal deixaria as views novas escaparem (`R-015`). Criar I`avisos.py` vazio, com docstring, para que o guardião o encontre desde já
+- [X] T019 [P] (`FR-1280`) Criar A`application/despacho.py` só com a docstring da 4ª situação e a constante `REVISAO_DA_FR_084_PELA_066 = "2026-10-09"`. Em T`test_situacoes_de_mensagem.py`:
   - `SITUACOES` ganha o módulo;
   - `test_sao_tres_situacoes…` vira quatro, renomeado;
   - a conferência da spec exige "revisada pela `066`", a data e "quatro" no trecho da `FR-084`, e continua exigindo a redação anterior

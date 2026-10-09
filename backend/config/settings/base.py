@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     # nenhum outro conhece não entra em ciclo nenhum, e `tests/test_matriculas_e_ponta.py` prende
     # essa propriedade. Se algum dia outro app o importar, a feature deixou de ser ponta.
     "processo_seletivo.matriculas",
+    "processo_seletivo.avisos",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
@@ -182,6 +183,32 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+# **Sem limite, um servidor de correio que aceita a conexão e não responde prende o worker** até os
+# 120 s do gunicorn — e o código de acesso é o único fator de autenticação do candidato (gap I-4 do
+# runbook). O backend SMTP do Django aplica este valor à conexão, e por isso ele vale para os quatro
+# envios de uma vez: código, comprovante, convocação e aviso (066, `R-006`, `FR-1270`).
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
+
+# Os avisos complementares aos candidatos (066). **Desligados por padrão**, e é produção quem herda
+# o padrão: a ativação depende da validação institucional de LGPD e da infraestrutura de correio
+# (`D-009`). Desligada, ninguém confirma aviso e o despacho não tenta nada; o histórico e os modelos
+# continuam (`FR-1282`).
+AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "false").lower() == "true"
+# O ritmo é o do timer: no máximo este número por execução, uma execução por minuto (`R-005`).
+# Valor inicial, e não compromisso: o limite real é o da conta de envio da instituição.
+AVISOS_LIMITE_POR_MINUTO = int(os.getenv("AVISOS_LIMITE_POR_MINUTO", "60"))
+AVISOS_MAX_TENTATIVAS = int(os.getenv("AVISOS_MAX_TENTATIVAS", "3"))
+# Minutos de espera antes da 2ª, da 3ª… tentativa de uma falha temporária (`FR-1269`).
+AVISOS_INTERVALOS_DE_RETENTATIVA = tuple(
+    int(minutos)
+    for minutos in os.getenv("AVISOS_INTERVALOS_DE_RETENTATIVA", "5,15").split(",")
+    if minutos.strip()
+)
+# Pendente há mais que isto faz o histórico dizer que o despacho pode estar parado (`FR-1272`).
+AVISOS_ALERTA_DE_PENDENTE_MIN = int(os.getenv("AVISOS_ALERTA_DE_PENDENTE_MIN", "10"))
+# **A janela é o que impede religar a chave de disparar mensagem antiga** (`R-016`, `FR-1283`): o
+# banco não vê a chave mudar, e por isso o critério é a idade do aviso, e não o instante da ativação.
+AVISOS_JANELA_DE_DESPACHO_HORAS = int(os.getenv("AVISOS_JANELA_DE_DESPACHO_HORAS", "24"))
 
 # Existe um proxy à frente da aplicação? (010) Só com isto ligado o cabeçalho `X-Forwarded-For` é
 # lido para distinguir origens no limite de solicitações de código. Ele é escrito pelo cliente:
