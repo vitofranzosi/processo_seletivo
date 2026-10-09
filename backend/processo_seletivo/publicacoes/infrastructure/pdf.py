@@ -2568,6 +2568,103 @@ def numeracao(snapshot):
     return numeros
 
 
+def numeracao_impressa(snapshot):
+    """`numeracao` sobre o texto como o documento o imprime, já normalizado (065, FR-1202).
+
+    O compositor normaliza o snapshot antes de compor (`_grafado`), e é sobre o normalizado que ele
+    decide se uma seção textual tem parágrafo. Uma seção que só tivesse caractere invisível sairia
+    vazia — e sem número — no documento, e com número numa leitura do texto cru. A conferência da
+    numeração digitada compara com o que sai impresso, e por isso lê daqui.
+    """
+    return numeracao(_grafado(snapshot, previa=False))
+
+
+# As naturezas dos itens que o documento imprime com número (065, D-004).
+ITEM_SECAO, ITEM_PERFIL, ITEM_ATRIBUICOES_COMUNS, ITEM_ETAPA = (
+    "secao",
+    "perfil",
+    "atribuicoes_comuns",
+    "etapa",
+)
+
+
+@dataclass(frozen=True)
+class ItemDoDocumento:
+    """Um número que o documento imprime como identificação, e o que ele identifica (065)."""
+
+    numero: str
+    natureza: str
+    descricao: str
+
+
+def itens_do_documento(snapshot):
+    """As seções e subseções que o documento imprime com número, pela regra que as compõe (065).
+
+    **Mora aqui, e não na validação**, porque é a mesma regra da composição (D-004): as seções são
+    as de `numeracao`; as subseções de Perfis são as de `_perfis`, com as comuns da `064` depois do
+    último Perfil; as de Etapas, as de `_etapas`. Reescrevê-la noutro módulo seria a segunda regra
+    de numeração que a `054` (FR-985) existe para não ter. O guardião
+    (`tests/unit/publicacoes/test_itens_do_documento.py`) compõe o documento de verdade e compara.
+
+    **Não compõe e não muda nada**: nenhuma linha da composição depende desta função, e o documento
+    sai com os mesmos bytes (FR-1219). O preâmbulo não tem número, e não é item.
+    """
+    snapshot = _grafado(snapshot, previa=False)
+    numeros = numeracao(snapshot)
+    itens = []
+    for secao, corpo in _materializaveis(snapshot):
+        numero = numeros.get(secao.get("key"))
+        if not numero:
+            continue
+        itens.append(ItemDoDocumento(str(numero), ITEM_SECAO, secao.get("title", "")))
+        if corpo is _perfis:
+            perfis = snapshot.get("profiles") or []
+            for ordem, perfil in enumerate(perfis, 1):
+                itens.append(
+                    ItemDoDocumento(
+                        f"{numero}.{ordem}",
+                        ITEM_PERFIL,
+                        f"{perfil.get('code', '')} — {perfil.get('name', '')}",
+                    )
+                )
+            for posicao, grupo in enumerate(grupos_de_atribuicoes(perfis), len(perfis) + 1):
+                codigos = _enumerar([perfil.get("code", "") for perfil in grupo])
+                itens.append(
+                    ItemDoDocumento(
+                        f"{numero}.{posicao}",
+                        ITEM_ATRIBUICOES_COMUNS,
+                        f"Atribuições comuns aos Perfis {codigos}",
+                    )
+                )
+        elif corpo is _etapas:
+            for ordem, etapa in enumerate(snapshot.get("stages") or [], 1):
+                itens.append(
+                    ItemDoDocumento(f"{numero}.{ordem}", ITEM_ETAPA, etapa.get("name", ""))
+                )
+    return itens
+
+
+def tabelas_do_documento(snapshot):
+    """Quantas tabelas — "Tabela N" — o documento terá (065, D-004).
+
+    A contagem acompanha `_Numerador` na composição: a tabela de Perfis só com mais de um Perfil;
+    por Perfil, o quadro de vagas quando há linha e a de Modalidades quando há alguma; o Cronograma.
+    E só em seção que sai no documento.
+    """
+    snapshot = _grafado(snapshot, previa=False)
+    total = 0
+    for _, corpo in _materializaveis(snapshot):
+        if corpo is _perfis:
+            perfis = snapshot.get("profiles") or []
+            total += 1 if len(perfis) > 1 else 0
+            for perfil in perfis:
+                total += 1 if perfil.get("vacancyTable") else 0
+                total += 1 if perfil.get("competitionModalities") else 0
+        elif corpo is _cronograma:
+            total += 1
+    return total
+
+
 # A seção que abre o Edital não é seção: é preâmbulo (FR-010). Nos Editais de referência o ato
 # enunciativo da autoridade — "A Diretora [...] faz saber [...]" — vem logo abaixo do título, sem
 # número e sem cabeçalho, e a numeração começa nas disposições preliminares. Numerá-lo como "1."

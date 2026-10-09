@@ -367,6 +367,12 @@ RESUMO_DAS_REPETIDAS = {
     # As duas seções universais vazias (054, FR-986) — no Edital intocado, as duas juntas.
     "section_universal_empty": "{n} seções que todo Edital do Cefor tem estão vazias",
     "attachment_cited_without_label": "{n} remissões a anexo sem rótulo correspondente",
+    # As remissões internas (065, D-016), como as remissões a anexo. "Avisos", e não "remissões a
+    # conferir": a FR-1209 proíbe dizer que alguma foi conferida, e as duas palavras ficariam perto
+    # demais. O conflito de numeração não entra: é impeditivo, e impedimento não se dobra.
+    "cross_reference_ambiguous": "{n} avisos de remissão",
+    "cross_reference_without_target": "{n} avisos de remissão",
+    "cross_reference_suspected": "{n} avisos de remissão",
 }
 
 

@@ -138,6 +138,7 @@ from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     CARACTERE_SEM_GRAFIA,
+    CODIGOS_DA_NUMERACAO_DIGITADA,
     fatos_do_conteudo_publicado,
     validate_for_publication,
 )
@@ -734,7 +735,26 @@ DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
 # topologia.
 CODIGOS_DO_TEXTO_DA_SECAO = frozenset(
     {"attachment_cited_without_label", "section_universal_empty", CARACTERE_SEM_GRAFIA}
+    # A numeração digitada e as remissões (065) também se corrigem no texto da seção.
+    | CODIGOS_DA_NUMERACAO_DIGITADA
 )
+# O identificador da seção no caminho do achado: `/sections/id=<uuid>/content`.
+SECAO_DO_CAMINHO = re.compile(r"^/sections/id=([^/]+)/content$")
+
+
+def _ancora_da_secao(caminho, codigo, chaves_das_secoes):
+    """A legenda da seção, para os achados da 065 (D-008, UX-160); `None` para os demais.
+
+    O achado de numeração diz "a seção sai como 4", e a pessoa precisa chegar ao campo cuja legenda
+    mostra esse 4 — o topo da etapa a deixaria procurando entre vinte e duas seções. Só os códigos
+    desta feature: trocar o destino dos avisos que já existiam é melhoria à parte, e mudaria o que
+    outras features prendem por teste.
+    """
+    if codigo not in CODIGOS_DA_NUMERACAO_DIGITADA:
+        return None
+    encontrado = SECAO_DO_CAMINHO.match(caminho or "")
+    chave = chaves_das_secoes.get(encontrado.group(1)) if encontrado else None
+    return f"#titulo-{chave}" if chave else None
 
 
 def _destino(caminho, codigo=""):
@@ -919,8 +939,14 @@ def _pendencias(edital, *, agora=None, ator=None, snapshot=None):
         if edital.status in ANTES_DA_PUBLICACAO
         else fatos_do_conteudo_publicado(snapshot)
     )
+    chaves_das_secoes = {
+        str(secao.get("id")): secao.get("key")
+        for secao in snapshot.get("sections") or []
+        if isinstance(secao, dict)
+    }
     for item in achados:
         etapa, ancora, corrigivel = _destino(item.path, item.code)
+        ancora = _ancora_da_secao(item.path, item.code, chaves_das_secoes) or ancora
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),

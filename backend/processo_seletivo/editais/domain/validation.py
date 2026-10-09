@@ -1580,6 +1580,7 @@ def validate_for_publication(
     findings.extend(_secao_universal_vazia(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     findings.extend(_caractere_sem_grafia(snapshot))
+    findings.extend(_numeracao_e_remissoes(snapshot, ato=ato))
     return findings
 
 
@@ -3491,6 +3492,380 @@ def _caractere_sem_grafia(snapshot: dict) -> list[ValidationFinding]:
             )
         )
     return findings
+
+
+# --- A numeração digitada e as remissões (065) --------------------------------------------------
+#
+# O texto das seções é transcrito do Word com a numeração do original, e o número da seção é
+# calculado (054, FR-985): quando os dois divergem, o ato oficial imprime "3.1" dentro da seção 4 e
+# remissões que apontam para outro lugar — o ED-01 da auditoria de 08/10/2026. O reconhecimento
+# mora em `numeracao_digitada`; aqui se cruza com o documento e se escreve a mensagem.
+
+CONFLITO_DE_NUMERACAO = "typed_numbering_conflict"
+# **Código próprio na Retificação, e não o mesmo com outra severidade** (065, D-006).
+# `advertencias_do_ato` descarta da confirmação da Retificação todo código que seria impeditivo numa
+# publicação; com o mesmo código, o aviso da D-002 — a única proteção que a Retificação tem contra o
+# conflito que ela mesma introduz — sumiria da tela em silêncio. O acervo sem quadro resolveu o
+# mesmo problema do mesmo jeito.
+CONFLITO_DE_NUMERACAO_NA_RETIFICACAO = "typed_numbering_conflict_in_retification"
+TITULO_TRANSCRITO = "typed_numbering_suspected_title"
+REMISSAO_AMBIGUA = "cross_reference_ambiguous"
+REMISSAO_SEM_DESTINO = "cross_reference_without_target"
+REMISSAO_SUSPEITA = "cross_reference_suspected"
+CODIGOS_DA_NUMERACAO_DIGITADA = frozenset(
+    {
+        CONFLITO_DE_NUMERACAO,
+        CONFLITO_DE_NUMERACAO_NA_RETIFICACAO,
+        TITULO_TRANSCRITO,
+        REMISSAO_AMBIGUA,
+        REMISSAO_SEM_DESTINO,
+        REMISSAO_SUSPEITA,
+    }
+)
+
+# O começo do parágrafo que a mensagem cita: o bastante para achá-lo por busca no campo (SC-468).
+_TAMANHO_DO_TRECHO = 80
+
+
+def _trecho(paragrafo: str) -> str:
+    """O começo do parágrafo, cortado em fim de palavra e com reticências quando cortado."""
+    if len(paragrafo) <= _TAMANHO_DO_TRECHO:
+        return paragrafo
+    corte = paragrafo[:_TAMANHO_DO_TRECHO]
+    espaco = corte.rfind(" ")
+    if espaco > 0:
+        corte = corte[:espaco]
+    return corte.rstrip(" ,;:") + "…"
+
+
+def _secoes_impressas(snapshot: dict):
+    """`(posição, seção, número, parágrafos)` das textuais que saem no documento, na ordem dele.
+
+    **O número é o do documento impresso** (`pdf.numeracao_impressa`), lido do compositor por
+    importação adiada: é a regra única da `054` (FR-985), e reescrevê-la aqui seria a segunda (065,
+    D-004). `0` é o preâmbulo, que sai sem número. Os parágrafos são os da composição — texto
+    normalizado por `grafia`, dividido por `_paragrafos` —, e o ordinal da mensagem é o desta
+    divisão (D-009).
+
+    **Conteúdo malformado não quebra a conferência**, como em `_perfis_bem_formados`: o trabalho
+    dela é acusar, e quem acusa a forma é `_violacoes_da_colecao`.
+    """
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    try:
+        numeros = pdf.numeracao_impressa(snapshot)
+    except (AttributeError, TypeError):
+        return []
+    impressas = []
+    for posicao, secao in _secoes_textuais(snapshot):
+        numero = numeros.get(secao.get("key"))
+        if numero is None:
+            continue
+        paragrafos = pdf._paragrafos(grafia.normalizar(str(secao.get("content") or "")))
+        impressas.append((posicao, secao, numero, paragrafos))
+    return sorted(impressas, key=lambda item: item[1].get("order") or 0)
+
+
+def _mensagem_do_conflito(titulo, numero, afetados, ato) -> str:
+    if numero == 0:
+        abertura, de_onde = "O preâmbulo sai no documento sem número", "por número de subitem"
+        orientacao = (
+            "Subitem numerado não cabe no preâmbulo: leve o parágrafo para a seção a que ele "
+            "pertence ou retire o número."
+        )
+    else:
+        abertura = f"A seção «{titulo}» sai no documento como {numero}"
+        de_onde = "por número de outra seção"
+        orientacao = (
+            f"No documento, os subitens desta seção começam por {numero}. Corrija a numeração no "
+            "texto da seção."
+        )
+    quantos = "1 parágrafo começa" if len(afetados) == 1 else f"{len(afetados)} parágrafos começam"
+    lista = "; ".join(f"parágrafo {ordinal}, «{_trecho(texto)}»" for ordinal, texto in afetados)
+    mensagem = f"Conflito de numeração — comprovado. {abertura}, e {quantos} {de_onde}: {lista}. "
+    mensagem += orientacao
+    if ato == ATO_DE_RETIFICACAO:
+        mensagem += (
+            " Na Retificação, isto é aviso e não impede o ato: se ninguém corrigir, o consolidado "
+            "sai assim."
+        )
+    return mensagem
+
+
+def _numeracao_digitada(impressas, *, ato: str) -> list[ValidationFinding]:
+    """O subitem com número de outra seção, e o título do original colado no texto (065).
+
+    **Conflito comprovado** (FR-1200): parágrafo que começa por número de subitem cujo primeiro
+    grupo não é o número com que a seção sai no documento — ou qualquer subitem no preâmbulo, que
+    sai sem número. É **impeditivo** no Edital (D-001): com a forma estreita de
+    `numeracao_digitada`, "3.1" dentro da seção 4 sempre se lê como o item 3.1 deste Edital. Na
+    Retificação é **aviso**, com código próprio (D-002, D-006): retificar um ato antigo não pode
+    exigir corrigir toda a numeração dele, e o conflito que a própria Retificação introduz também
+    não é bloqueado.
+
+    **Um achado por seção** (FR-1215), que enumera os parágrafos — o cenário B da auditoria seria
+    quinze linhas na Revisão, e assim são cinco.
+
+    **Suspeita** (FR-1201): o parágrafo com forma de título de seção ("11. DA CONVOCAÇÃO") e outro
+    número. "11." sozinho também abre lista, e por isso é aviso nos dois atos.
+
+    **Nada é renumerado** (FR-1203): a mensagem diz por qual número os subitens começam, e só.
+    """
+    from processo_seletivo.editais.domain.numeracao_digitada import (
+        numero_de_subitem,
+        titulo_transcrito,
+    )
+
+    na_retificacao = ato == ATO_DE_RETIFICACAO
+    findings = []
+    for posicao, secao, numero, paragrafos in impressas:
+        titulo = _nome(secao, "title", "key")
+        caminho = f"{_caminho_da_entidade('sections', secao, posicao)}/content"
+        afetados, titulos = [], []
+        for ordinal, paragrafo in enumerate(paragrafos, 1):
+            subitem = numero_de_subitem(paragrafo)
+            if subitem is not None:
+                if subitem.primeiro != numero or numero == 0:
+                    afetados.append((ordinal, paragrafo))
+                continue
+            transcrito = titulo_transcrito(paragrafo)
+            if transcrito is not None and transcrito != numero:
+                titulos.append((ordinal, paragrafo))
+        if afetados:
+            findings.append(
+                ValidationFinding(
+                    Severity.WARNING if na_retificacao else Severity.BLOCKING_ERROR,
+                    CONFLITO_DE_NUMERACAO_NA_RETIFICACAO
+                    if na_retificacao
+                    else CONFLITO_DE_NUMERACAO,
+                    _mensagem_do_conflito(titulo, numero, afetados, ato),
+                    caminho,
+                )
+            )
+        onde = f"«{titulo}» ({numero})" if numero else "o preâmbulo"
+        for ordinal, paragrafo in titulos:
+            findings.append(
+                ValidationFinding(
+                    Severity.WARNING,
+                    TITULO_TRANSCRITO,
+                    f"Numeração a conferir — suspeita. O parágrafo {ordinal} da seção {onde} "
+                    f"parece o título de uma seção do original: «{_trecho(paragrafo)}». O "
+                    "documento já imprime o título da seção; confira se a linha deve sair do "
+                    "texto.",
+                    caminho,
+                )
+            )
+    return findings
+
+
+def _numeracao_e_remissoes(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """A numeração digitada e as remissões, seção a seção, na ordem do documento (065, D-007).
+
+    Os achados de uma seção ficam juntos — os de numeração e logo depois os de remissão dela —, para
+    que quem corrige percorra o texto uma vez (UX-161); as remissões dos demais campos vêm depois.
+    """
+    impressas = _secoes_impressas(snapshot)
+    numeracao = _numeracao_digitada(impressas, ato=ato)
+    remissoes = _remissoes_internas(snapshot, impressas)
+    ordem = [
+        f"{_caminho_da_entidade('sections', secao, posicao)}/content"
+        for posicao, secao, _, _ in impressas
+    ]
+    juntos = []
+    for caminho in ordem:
+        juntos.extend(achado for achado in numeracao if achado.path == caminho)
+        juntos.extend(achado for achado in remissoes if achado.path == caminho)
+    das_secoes = set(ordem)
+    juntos.extend(achado for achado in numeracao + remissoes if achado.path not in das_secoes)
+    return juntos
+
+
+def _chave_do_numero(numero: str) -> tuple:
+    """ "04.1" e "4.1" são o mesmo item: a comparação é por grupo, como número."""
+    return tuple(int(grupo) for grupo in numero.split("."))
+
+
+def _enumerar_descricoes(partes):
+    return partes[0] if len(partes) == 1 else f"{', '.join(partes[:-1])} e {partes[-1]}"
+
+
+_DESCRICAO_DO_ITEM = {
+    "secao": "a seção {numero}, «{descricao}»",
+    "perfil": "o Perfil «{descricao}»",
+    "atribuicoes_comuns": "a subseção «{descricao}»",
+    "etapa": "a Etapa «{descricao}»",
+}
+
+
+def _itens_impressos(snapshot, impressas):
+    """`{número: [(descrição, seção em que sai, se está fora da sua seção)]}` e os totais (D-011).
+
+    Os itens do documento vêm do compositor (`pdf.itens_do_documento`, D-004); os subitens
+    digitados, da leitura dos parágrafos — os coerentes **e** os em conflito, porque os dois saem
+    impressos.
+    """
+    from processo_seletivo.editais.domain.numeracao_digitada import numero_de_subitem
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    try:
+        do_documento = pdf.itens_do_documento(snapshot)
+        tabelas = pdf.tabelas_do_documento(snapshot)
+    except (AttributeError, TypeError):
+        do_documento, tabelas = [], 0
+    mapa, secoes_ = {}, []
+    for item in do_documento:
+        if item.natureza == "secao":
+            secoes_.append(int(item.numero))
+        descricao = _DESCRICAO_DO_ITEM[item.natureza].format(
+            numero=item.numero, descricao=item.descricao
+        )
+        mapa.setdefault(_chave_do_numero(item.numero), []).append((descricao, None, False))
+    for _, secao, numero, paragrafos in impressas:
+        titulo = _nome(secao, "title", "key")
+        for ordinal, paragrafo in enumerate(paragrafos, 1):
+            subitem = numero_de_subitem(paragrafo)
+            if subitem is None:
+                continue
+            onde = (
+                f"o parágrafo {ordinal} da seção «{titulo}»"
+                if numero
+                else (f"o parágrafo {ordinal} do preâmbulo")
+            )
+            fora = numero == 0 or subitem.primeiro != numero
+            mapa.setdefault(_chave_do_numero(subitem.texto), []).append((onde, numero, fora))
+    return mapa, max(secoes_, default=0), tabelas
+
+
+def _remissoes_internas(snapshot: dict, impressas) -> list[ValidationFinding]:
+    """A remissão que aponta para mais de um item, para nenhum, ou que é suspeita (065).
+
+    **Avisos, e nunca impeditivos** (FR-1211, D-003): a remissão pode ser a outro ato, e o sistema
+    não tem como distinguir sempre — o fundamento da decisão do RC-21, de 28/09.
+
+    **Em todo texto livre impresso** (FR-1204, D-003), pela lista de `_textos_impressos`: a alínea
+    "e" dos documentos do 28/2026 remete ao item 5.14. Ficam de fora o título da seção, que é do
+    catálogo, e o rótulo do Anexo, que nomeia o próprio Anexo.
+
+    **Nada diz que uma remissão está certa** (FR-1209): o número com um item só não gera achado, e o
+    destino único não prova que a remissão cita o que quis citar. A única exceção é o destino único
+    que é ele mesmo um subitem fora da sua seção — o número existe, mas no lugar errado (FR-1208).
+    """
+    from processo_seletivo.editais.domain.numeracao_digitada import remissoes
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    mapa, total_de_secoes, total_de_tabelas = _itens_impressos(snapshot, impressas)
+    das_secoes = {
+        f"{_caminho_da_entidade('sections', secao, posicao)}/content": (secao, numero, paragrafos)
+        for posicao, secao, numero, paragrafos in impressas
+    }
+    findings, vistas = [], set()
+    for caminho, lugar, texto in _textos_impressos(snapshot):
+        if not isinstance(texto, str) or caminho.startswith("/attachments"):
+            continue
+        if caminho.startswith("/sections") and not caminho.endswith("/content"):
+            continue
+        if caminho.startswith("/sections"):
+            if caminho not in das_secoes:
+                continue
+            secao, numero, paragrafos = das_secoes[caminho]
+            titulo = _nome(secao, "title", "key")
+            lugar = f"no texto da seção «{titulo}» ({numero})" if numero else "no preâmbulo"
+            trechos = list(enumerate(paragrafos, 1))
+        else:
+            trechos = [(None, " ".join(pdf._paragrafos(grafia.normalizar(texto))))]
+        for ordinal, trecho in trechos:
+            for remissao in remissoes(trecho):
+                chave = (caminho, remissao.especie, remissao.numeros)
+                if chave in vistas:
+                    continue
+                vistas.add(chave)
+                onde = f"{lugar[0].upper()}{lugar[1:]}"
+                if ordinal is not None:
+                    onde += f", no parágrafo {ordinal}"
+                abertura = f"{onde}, há a remissão «{remissao.literal}»"
+                findings.extend(
+                    _achados_da_remissao(
+                        remissao, abertura, caminho, mapa, total_de_secoes, total_de_tabelas
+                    )
+                )
+    return findings
+
+
+def _sem_destino(remissao, abertura, caminho, alvo):
+    exemplo = alvo.split(" e ")[0].replace("itens", "item")
+    return ValidationFinding(
+        Severity.WARNING,
+        REMISSAO_SEM_DESTINO,
+        f"Remissão sem destino neste documento. {abertura}, e este documento não tem {alvo}. "
+        "Se a remissão é a outro ato, deixe isso explícito no texto (por exemplo, "
+        f"«{exemplo} do Edital nº …»); se é a este Edital, corrija o número.",
+        caminho,
+    )
+
+
+def _achados_da_remissao(remissao, abertura, caminho, mapa, total_de_secoes, total_de_tabelas):
+    if remissao.especie == "quadro":
+        return [
+            ValidationFinding(
+                Severity.WARNING,
+                REMISSAO_SUSPEITA,
+                f"Remissão a conferir — suspeita. {abertura}. As tabelas deste documento se chamam "
+                "«Tabela N», e nenhuma se chama «Quadro». Se o quadro está num Anexo, cite o Anexo "
+                f"(por exemplo, «{remissao.literal} do Anexo III»); se é uma tabela deste "
+                "documento, use o nome com que ela sai.",
+                caminho,
+            )
+        ]
+    if remissao.especie in ("tabela", "secao"):
+        limite = total_de_tabelas if remissao.especie == "tabela" else total_de_secoes
+        alem = [numero for numero in remissao.numeros if not 0 < int(numero) <= limite]
+        if not alem:
+            return []
+        nome = "Tabela" if remissao.especie == "tabela" else "seção"
+        alvo = _enumerar_descricoes([f"{nome} {numero}" for numero in alem])
+        return [_sem_destino(remissao, abertura, caminho, alvo)]
+    ambiguos, ausentes, fora = [], [], []
+    for numero in remissao.numeros:
+        destinos = mapa.get(_chave_do_numero(numero), [])
+        if len(destinos) > 1:
+            ambiguos.append((numero, destinos))
+        elif not destinos:
+            ausentes.append(numero)
+        elif destinos[0][2]:
+            fora.append((numero, destinos[0]))
+    achados = []
+    if ambiguos:
+        detalhe = " ".join(
+            f"Este documento tem {len(destinos)} itens {numero}: "
+            f"{_enumerar_descricoes([descricao for descricao, _, _ in destinos])}."
+            for numero, destinos in ambiguos
+        )
+        achados.append(
+            ValidationFinding(
+                Severity.WARNING,
+                REMISSAO_AMBIGUA,
+                f"Remissão ambígua. {abertura}. {detalhe} O sistema não sabe a qual deles o texto "
+                "se refere: confira a remissão e a numeração digitada.",
+                caminho,
+            )
+        )
+    if ausentes:
+        palavra = "item" if len(ausentes) == 1 else "itens"
+        alvo = f"{palavra} {_enumerar_descricoes(ausentes)}"
+        achados.append(_sem_destino(remissao, abertura, caminho, alvo))
+    for numero, (descricao, numero_da_secao, _) in fora:
+        sai = f"que sai como {numero_da_secao}" if numero_da_secao else "que sai sem número"
+        achados.append(
+            ValidationFinding(
+                Severity.WARNING,
+                REMISSAO_SUSPEITA,
+                f"Remissão a conferir — suspeita. {abertura}. O único item {numero} deste "
+                f"documento é {descricao}, {sai} — o número existe, mas fora da sua seção. "
+                "Corrija a numeração da seção e confira a remissão.",
+                caminho,
+            )
+        )
+    return achados
 
 
 def blocking_findings(findings):
