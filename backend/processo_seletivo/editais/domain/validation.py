@@ -3826,6 +3826,8 @@ _DESCRICAO_DO_ITEM = {
     "secao": "a seção {numero}, «{descricao}»",
     "perfil": "o Perfil «{descricao}»",
     "atribuicoes_comuns": "a subseção «{descricao}»",
+    "requisitos_comuns": "a subseção «{descricao}»",
+    "marcos_comuns": "a subseção «{descricao}»",
     "etapa": "a Etapa «{descricao}»",
 }
 

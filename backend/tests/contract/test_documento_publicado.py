@@ -583,6 +583,19 @@ def test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa():
     assert any("Perfis de vaga" in legenda for legenda in legendas), (
         "a comparativa diz o que tabula: Perfis"
     )
-    quadros = [legenda for legenda in legendas if "Quadro de vagas" in legenda]
-    assert len(quadros) == 1, f"uma só tabela chamada quadro de vagas: {legendas}"
-    assert quadros[0].endswith("— DOC-INFO"), "e ela nomeia o Perfil de quem reparte"
+    # Desde a `068`, com mais de um Perfil, a repartição por lista é uma tabela só para todos os
+    # Perfis — "Vagas por lista de concorrência", uma linha por Perfil —, e nenhuma legenda repete
+    # outra. O Perfil sem quadro (P2) não tem linha nela.
+    titulos = [legenda.split(" — ", 1)[1] for legenda in legendas]
+    assert len(titulos) == len(set(titulos)), f"nenhuma legenda repete outra: {legendas}"
+    assert "Vagas por lista de concorrência" in titulos
+    assert not [titulo for titulo in titulos if titulo.startswith("Quadro de vagas")]
+    linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
+    inicio = next(
+        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+    )
+    fim = next(
+        i for i, linha in enumerate(linhas[inicio + 1 :], inicio + 1) if linha.startswith("Tabela ")
+    )
+    assert "DOC-INFO" in linhas[inicio:fim], "e ela nomeia o Perfil de quem reparte"
+    assert "P2" not in linhas[inicio:fim]
