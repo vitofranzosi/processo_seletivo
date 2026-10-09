@@ -1,0 +1,162 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Avisar candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{{ voltar }}">{% if universo.origem == "CHAMADA" %}Convocação{% else %}Avisos aos candidatos{% endif %}</a> ›
+  <span aria-current="page">Avisar candidatos</span>
+</nav>
+
+<h1>Avisar candidatos</h1>
+<p class="sub">{{ universo.cabecalho.processo }} · {{ universo.cabecalho.edital }} · {{ universo.cabecalho.perfil }}{% if universo.cabecalho.marco %} — {{ universo.cabecalho.marco }}{% endif %}</p>
+
+{% comment %}
+O aviso não é o ato (D-001): a frase diz o que ele é antes de qualquer outra coisa, e a prévia não
+grava nada.
+{% endcomment %}
+<p class="imutavel">Esta é uma <strong>prévia</strong>: nada foi gravado. O aviso é um e-mail complementar: ele aponta a publicação oficial, não a substitui e não muda prazo, situação nem direito de ninguém.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível enviar:</strong> {{ erro.detail }}</p>{% endif %}
+{% if previa.erro and not erro %}<p class="erro" role="alert"><strong>O texto precisa de ajuste:</strong> {{ previa.erro.detail }}</p>{% endif %}
+
+{% if not habilitado %}
+<p class="aviso" role="status"><strong>O envio de avisos está desabilitado nesta instalação.</strong> Ele depende da validação institucional de proteção de dados e da infraestrutura de correio. Os modelos de texto podem ser preparados enquanto isso.</p>
+{% endif %}
+
+<section aria-labelledby="titulo-quem">
+  <h2 id="titulo-quem">Quem recebe, e de onde veio</h2>
+  {% if universo.origem == "CHAMADA" %}
+  <p>As convocações da chamada publicada em <strong>{{ universo.referencia }}</strong>. A lista é a do ato, e ninguém a escolhe: quem não segue convocado aparece abaixo, com o motivo, e não recebe.</p>
+  {% else %}
+  <p>As inscrições consideradas no <strong>resultado {{ universo.natureza|lower }}</strong>{% if universo.cabecalho.marco %} de {{ universo.cabecalho.marco }}{% endif %}, em {{ universo.publicacoes|length }} publicaç{{ universo.publicacoes|length|pluralize:"ão,ões" }}{% if universo.publicacoes|length > 1 %} — uma por lista; quem está em mais de uma recebe um aviso só{% endif %}. A lista é a do ato, e ninguém a escolhe.</p>
+  {% if universo.retificadora %}<p class="aviso"><strong>Publicação retificadora.</strong> A mensagem diz que esta publicação retifica a anterior, e não diz que a situação de alguém mudou.</p>{% endif %}
+  {% if naturezas_pendentes|length > 1 %}<p class="ajuda">Há também resultado de outra natureza ainda não avisado neste marco: cada natureza tem o seu aviso.</p>{% endif %}
+  {% endif %}
+  <ul class="contagens-do-aviso">
+    <li><strong>{{ contagens.com_endereco }}</strong> com endereço de e-mail — recebem</li>
+    <li><strong>{{ contagens.sem_endereco }}</strong> sem endereço — ficam registrados no aviso e não recebem</li>
+    {% if contagens.nao_elegiveis %}<li><strong>{{ contagens.nao_elegiveis }}</strong> não elegíve{{ contagens.nao_elegiveis|pluralize:"l,is" }} para o aviso{% for motivo, quantos in previa.inelegiveis.items %} — {{ quantos }} por {{ motivo }}{% endfor %}</li>{% endif %}
+  </ul>
+  <details>
+    <summary>Ver a lista ({{ contagens.universo }})</summary>
+    <div class="tabela-rolavel">
+    <table>
+      <caption class="oculto">Destinatários do aviso</caption>
+      <thead><tr><th scope="col">Protocolo</th><th scope="col">Nome</th><th scope="col">No aviso</th></tr></thead>
+      <tbody>
+      {% for linha in universo.linhas %}
+        <tr>
+          <td>{{ linha.inscricao.protocolo }}</td>
+          <td>{{ linha.inscricao.nome }}</td>
+          <td>{% if linha.elegibilidade != "ELEGIVEL" %}não elegível para o aviso{% elif linha.endereco %}recebe{% else %}sem endereço{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </details>
+</section>
+
+{% if habilitado %}
+{% if modelos and not texto_fixo %}
+<form method="get" action="{{ acao }}">
+  {% if natureza %}<input type="hidden" name="natureza" value="{{ natureza }}">{% endif %}
+  {% if reenvio and universo.origem != "CHAMADA" %}<input type="hidden" name="reenvio" value="1">{% endif %}
+  {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
+  {% if comunicacao_id %}<input type="hidden" name="comunicacao" value="{{ comunicacao_id }}">{% endif %}
+  {% if motivo_do_reenvio %}<input type="hidden" name="motivo" value="{{ motivo_do_reenvio }}">{% endif %}
+  <div class="campo">
+    <label for="modelo">Modelo de texto</label>
+    <select id="modelo" name="modelo">
+      {% for item in modelos %}<option value="{{ item.id }}"{% if modelo and item.id == modelo.id %} selected{% endif %}>{{ item.nome }}</option>{% endfor %}
+    </select>
+    <p class="ajuda">Escolher outro modelo troca o texto abaixo pelo dele.</p>
+  </div>
+  <button type="submit" class="botao secundario">Usar este modelo</button>
+</form>
+{% endif %}
+
+<form method="post" action="{{ acao }}">
+  {% csrf_token %}
+  <input type="hidden" name="chave" value="{{ chave }}">
+  <input type="hidden" name="assinatura" value="{{ previa.assinatura }}">
+  {% if natureza %}<input type="hidden" name="natureza" value="{{ natureza }}">{% endif %}
+  {% if reenvio and universo.origem != "CHAMADA" %}<input type="hidden" name="reenvio" value="1">{% endif %}
+  {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
+  {% if comunicacao_id %}<input type="hidden" name="comunicacao" value="{{ comunicacao_id }}">{% endif %}
+  {% if modelo %}<input type="hidden" name="modelo" value="{{ modelo.id }}">{% endif %}
+  {% if motivo_do_reenvio %}<input type="hidden" name="motivo" value="{{ motivo_do_reenvio }}">{% endif %}
+
+  {% if texto_fixo %}
+  <section aria-labelledby="titulo-texto-fixo">
+    <h2 id="titulo-texto-fixo">O texto, o mesmo do aviso anterior</h2>
+    <p class="ajuda">Tentar de novo o que não saiu reenvia o texto confirmado, sem edição. O nome de cada pessoa entra no lugar de <code>{{ "{" }}nome_do_candidato{{ "}" }}</code>.</p>
+    <p><strong>Assunto:</strong> {{ texto_fixo.assunto }}</p>
+    <pre class="texto-do-aviso">{{ texto_fixo.corpo }}</pre>
+  </section>
+  {% else %}
+  <div class="campo">
+    <label for="assunto">Assunto</label>
+    <input type="text" id="assunto" name="assunto" value="{{ assunto }}" maxlength="150" required aria-describedby="ajuda-assunto">
+    <p id="ajuda-assunto" class="ajuda">O assunto aparece na notificação do celular e na lista da caixa de entrada: não nomeie modalidade, lista ou procedimento de reserva de vagas.</p>
+  </div>
+  <div class="campo">
+    <label for="corpo">Texto do aviso</label>
+    <textarea id="corpo" name="corpo" rows="10" maxlength="5000" required aria-describedby="ajuda-corpo">{{ corpo }}</textarea>
+    <p id="ajuda-corpo" class="ajuda">Texto simples. As variáveis abaixo são trocadas pelo sistema; nenhuma traz posição, resultado, motivo ou modalidade.</p>
+  </div>
+  <ul class="variaveis-do-aviso" aria-label="Variáveis disponíveis neste aviso">
+    {% for variavel in variaveis %}<li><code>{{ "{" }}{{ variavel.nome }}{{ "}" }}</code> — {{ variavel.significado }}</li>{% endfor %}
+  </ul>
+  <p><strong>Rodapé fixo</strong>, acrescentado pelo sistema a toda mensagem e não editável:</p>
+  <pre class="texto-do-aviso rodape-fixo">{{ rodape }}</pre>
+
+  {% if reenvio %}
+  <div class="campo">
+    <label for="justificativa">Por que avisar de novo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="justificativa" name="justificativa" rows="3" required aria-required="true">{{ justificativa }}</textarea>
+    <p class="ajuda">Este ato já foi avisado. O motivo fica registrado no aviso e na trilha.</p>
+  </div>
+  {% endif %}
+
+  <button type="submit" name="acao" value="previa" class="botao secundario">Atualizar a prévia</button>
+
+  {% if previa.exemplo %}
+  <section aria-labelledby="titulo-exemplo">
+    <h2 id="titulo-exemplo">A mensagem, como sai para {{ previa.exemplo.nome }}</h2>
+    <p><strong>Assunto:</strong> {{ previa.exemplo.assunto_e_corpo.0 }}</p>
+    <pre class="texto-do-aviso">{{ previa.exemplo.assunto_e_corpo.1 }}</pre>
+    {% if contagens.com_endereco > 1 %}
+    <input type="hidden" name="exemplo" value="{{ proximo_exemplo }}">
+    <button type="submit" name="acao" value="previa" class="acao">Ver a mensagem de outra pessoa</button>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if not motivo_do_reenvio %}
+  <div class="campo caracter">
+    <label><input type="checkbox" name="salvar_como_modelo" value="1"> Salvar este texto como novo modelo</label>
+  </div>
+  <div class="campo">
+    <label for="nome_do_modelo">Nome do novo modelo</label>
+    <input type="text" id="nome_do_modelo" name="nome_do_modelo" maxlength="120">
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">
+    <h2 id="titulo-consequencias">O que acontece ao enviar</h2>
+    <ul>
+      <li>O e-mail sai para <strong>{{ contagens.com_endereco }} pessoa{{ contagens.com_endereco|pluralize }}</strong>, aos poucos, a partir do próximo minuto.</li>
+      <li><strong>O envio não se desfaz.</strong> Dá para interromper o que ainda não saiu; o que o servidor de correio já aceitou não volta.</li>
+      <li>O sistema registra o que o servidor de correio aceitou ou recusou — e não sabe se a pessoa leu.</li>
+    </ul>
+  </section>
+
+  <button type="submit" name="acao" value="confirmar" class="botao perigoso"{% if not contagens.com_endereco or previa.erro %} disabled{% endif %}>Enviar a {{ contagens.com_endereco }} pessoa{{ contagens.com_endereco|pluralize }}</button>
+  <a class="botao secundario" href="{{ voltar }}">Cancelar</a>
+</form>
+{% endif %}
+{% endblock %}

@@ -118,9 +118,24 @@ class Contexto:
 
 
 @contextmanager
-def comando_de_aviso(*, actor, processo_id, origem, operation, payload, idempotency_key):
-    """Abre a transação, trava o Processo, autoriza pela origem, confere o estado e reserva."""
-    recusar_se_desabilitado()
+def comando_de_aviso(
+    *,
+    actor,
+    processo_id,
+    origem,
+    operation,
+    payload,
+    idempotency_key,
+    protetor=False,
+):
+    """Abre a transação, trava o Processo, autoriza pela origem, confere o estado e reserva.
+
+    **O ato protetor passa onde o que envia não passa** (`protetor=True`). Interromper só impede
+    mensagens de saírem: recusá-lo com a chave desligada, ou com o Processo encerrado, deixaria sem
+    freio justamente o envio que alguém quer parar (`FR-1282`, `D-006`).
+    """
+    if not protetor:
+        recusar_se_desabilitado()
     with command_context() as now:
         processo = (
             ProcessoSeletivo.objects.select_for_update()
@@ -132,7 +147,8 @@ def comando_de_aviso(*, actor, processo_id, origem, operation, payload, idempote
         if processo is None:
             raise nao_encontrado()
         base = exigir_base(actor, processo, origem=origem)
-        recusar_processo_em_estado_final(processo)
+        if not protetor:
+            recusar_processo_em_estado_final(processo)
         reserva, criada = reservar(
             actor=actor, operation=operation, key=idempotency_key, payload=payload
         )

@@ -1,0 +1,78 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Aviso aos candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> ›
+  <span aria-current="page">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }}</span>
+</nav>
+
+<h1>Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}</h1>
+<p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }} · confirmado por {{ aviso.solicitado_por }}</p>
+
+{% if confirmado is not None %}<p class="sucesso" role="status" tabindex="-1" autofocus>Aviso confirmado para {{ confirmado }} pessoa{{ confirmado|pluralize }}. O envio começa no próximo minuto, aos poucos.</p>{% endif %}
+{% if modelo_salvo %}<p class="sucesso" role="status">O texto foi salvo como o modelo “{{ modelo_salvo }}”.</p>{% endif %}
+{% if modelo_nao_salvo %}<p class="aviso" role="status">O aviso foi confirmado, mas o modelo não foi salvo: {{ modelo_nao_salvo }}</p>{% endif %}
+{% if interrompido_agora %}<p class="sucesso" role="status">Aviso interrompido. O que ainda não tinha saído não sai mais.</p>{% endif %}
+
+{% if despacho_parado %}
+{% comment %} FR-1272: pendente há mais que o limite. Um timer desligado não dispara alerta nenhum, e é esta frase que o revela. {% endcomment %}
+<p class="aviso" role="alert"><strong>O despacho pode não estar processando.</strong> Há destinatários pendentes há mais de {{ alerta_minutos }} minutos. Confira o serviço de despacho no servidor.</p>
+{% endif %}
+
+<section aria-labelledby="titulo-ato">
+  <h2 id="titulo-ato">O ato citado</h2>
+  {% if aviso.origem == "CHAMADA" %}
+  <p>Chamada publicada em <strong>{{ aviso.referencia_da_publicacao }}</strong>.</p>
+  {% else %}
+  <p>Resultado {{ aviso.natureza|lower }}{% if aviso.retificadora %}, em publicação retificadora{% endif %}:</p>
+  <ul>{% for item in publicacoes %}<li><a href="{% url 'portal:resultado' item.publicacao.id %}">Publicação de {{ item.publicacao.publicado_em|date:"d/m/Y" }} às {{ item.publicacao.publicado_em|date:"H:i" }}</a></li>{% endfor %}</ul>
+  {% endif %}
+  {% if aviso.aviso_anterior %}<p>Reenvio do <a href="{% url 'interface:aviso' aviso.aviso_anterior.id %}">aviso de {{ aviso.aviso_anterior.solicitado_em|date:"d/m/Y" }}</a>.{% if aviso.justificativa %} Justificativa: {{ aviso.justificativa }}{% endif %}</p>{% endif %}
+</section>
+
+<section aria-labelledby="titulo-envio">
+  <h2 id="titulo-envio">O envio</h2>
+  {% comment %} UX-172: o que o servidor de correio aceitou, e nunca o que chegou à caixa de ninguém. {% endcomment %}
+  <ul class="contagens-do-aviso">
+    {% for item in contagens %}<li><strong>{{ item.quantos }}</strong> — {{ item.rotulo }}</li>{% endfor %}
+  </ul>
+  {% if interrompido %}<p class="aviso">Este aviso foi interrompido por {{ aviso.interrupcao.interrompido_por }} em {{ aviso.interrupcao.interrompido_em|date:"d/m/Y" }} às {{ aviso.interrupcao.interrompido_em|date:"H:i" }}. Motivo: {{ aviso.interrupcao.motivo }}</p>{% endif %}
+  {% if pode_agir and habilitado %}
+  <p class="acoes">
+    {% if not concluido and not interrompido %}<a class="botao perigoso" href="{% url 'interface:aviso-interromper' aviso.id %}">Interromper o envio</a>{% endif %}
+    {% if reenviaveis.REENVIO_DE_FALHAS %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_DE_FALHAS">Tentar de novo as {{ reenviaveis.REENVIO_DE_FALHAS }} que não saíram</a>{% endif %}
+    {% if reenviaveis.REENVIO_JUSTIFICADO %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_JUSTIFICADO">Reenviar, com justificativa, {{ reenviaveis.REENVIO_JUSTIFICADO }} de resultado indeterminado ou interrompido</a>{% endif %}
+  </p>
+  {% endif %}
+  {% if reenviaveis.REENVIO_JUSTIFICADO and not interrompido %}<p class="ajuda">Resultado indeterminado quer dizer que a conexão caiu no meio, e a mensagem pode ter saído. O sistema nunca a reenvia sozinho.</p>{% endif %}
+  <details>
+    <summary>Ver os destinatários ({{ estados|length }})</summary>
+    <div class="tabela-rolavel">
+    <table>
+      <caption class="oculto">Destinatários do aviso e o resultado do envio</caption>
+      <thead><tr><th scope="col">Protocolo</th><th scope="col">Nome</th><th scope="col">Envio</th><th scope="col">Tentativas</th></tr></thead>
+      <tbody>
+      {% for linha in estados %}
+        <tr>
+          <td>{{ linha.destinatario.inscricao.protocolo }}</td>
+          <td>{{ linha.destinatario.inscricao.nome }}</td>
+          <td>{{ linha.rotulo }}{% if linha.motivo %}: {{ linha.motivo }}{% endif %}</td>
+          <td>{{ linha.tentativas }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </details>
+</section>
+
+<section aria-labelledby="titulo-texto">
+  <h2 id="titulo-texto">O texto enviado</h2>
+  <p><strong>Assunto:</strong> {{ aviso.assunto }}</p>
+  <pre class="texto-do-aviso">{{ aviso.corpo }}</pre>
+  <p class="ajuda">O nome de cada pessoa entra no lugar de <code>{{ "{" }}nome_do_candidato{{ "}" }}</code>.{% if aviso.modelo %} O texto partiu do modelo “{{ aviso.modelo.nome }}”; editar o modelo não muda este aviso.{% endif %}</p>
+</section>
+{% endblock %}

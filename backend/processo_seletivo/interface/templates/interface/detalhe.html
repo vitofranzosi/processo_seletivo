@@ -181,6 +181,14 @@ permanecem preservados.</p>
 </section>
 {% endif %}
 
+{% if pode_ver_avisos %}
+<section aria-labelledby="avisos-titulo" class="cartao">
+  <h2 id="avisos-titulo">Avisos aos candidatos</h2>
+  <p class="ajuda">E-mails complementares sobre resultados e chamadas publicados: quem recebe sai do ato, e o aviso não substitui a publicação.</p>
+  <p><a class="acao" href="{% url 'interface:avisos-do-edital' edital.id %}">Ver e enviar avisos</a></p>
+</section>
+{% endif %}
+
 {% if pendencias %}
 <section aria-labelledby="pendencias-titulo" class="pendencias">
   <h2 id="pendencias-titulo">Validação do conteúdo</h2>

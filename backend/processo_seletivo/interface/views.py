@@ -162,6 +162,7 @@ from processo_seletivo.interface import (
 )
 from processo_seletivo.interface import aplicacao as aplicacao_ui
 from processo_seletivo.interface import aplicacao_na_retificacao as gesto_na_retificacao
+from processo_seletivo.interface import avisos as avisos_da_interface
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -298,6 +299,8 @@ def lista(request):
             # O caminho para as autoridades da unidade (060), condicionado à permissão pela razão
             # da visão geral: oferecer um destino que a autorização recusa é o `N-03` da 038.
             "pode_gerir_autoridades": ator.can(GERIR_AUTORIDADES),
+            # Os modelos de aviso da unidade (066): por papel, como as autoridades (`D-004`).
+            "pode_gerir_modelos": ator.can("aviso:enviar"),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
         },
@@ -3518,6 +3521,9 @@ def detalhe(request, edital_id):
             # FR-023 guarda; `acoes` fica para quem lê o conjunto inteiro, na ordem de origem.
             "grupo": acoes.hierarquia(conjunto),
             "impedido_por_segregacao": segregacao,
+            # O caminho para os avisos aos candidatos (066), condicionado a quem os lê: oferecer um
+            # destino que a autorização recusa é o `N-03` da 038.
+            "pode_ver_avisos": _pode_ver_avisos(ator, edital),
             # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
             # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
             # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
@@ -8088,6 +8094,12 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
     return redirect(reverse("interface:publicacoes-do-marco", args=[edital_id, marco_id]))
 
 
+def _pode_ver_avisos(ator, edital):
+    from processo_seletivo.avisos.application.comando import pode_consultar
+
+    return pode_consultar(ator, edital.processo)
+
+
 @require_http_methods(["GET"])
 def publicacoes_do_marco(request, edital_id, marco_id):
     """O que foi divulgado, quando, por quem — e o que vale hoje (FR-068).
@@ -8120,6 +8132,9 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 # sendo `resultado:publicar`.
                 "pode_ver_o_ato": _pode_ver_a_classificacao(ator, edital),
                 "publicada_agora": request.session.pop("resultado_da_publicacao", None),
+                # "Avisar candidatos" ao lado da publicação vigente, e a linha do último aviso
+                # (066, `UX-174`, `UX-175`). O aviso é gesto posterior, de outra capacidade.
+                "avisos": avisos_da_interface.contexto_do_marco(ator, edital, marco_id),
             },
         )
     )

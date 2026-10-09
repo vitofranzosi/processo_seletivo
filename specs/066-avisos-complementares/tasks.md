@@ -115,17 +115,17 @@ FR-1274, FR-1276 a FR-1279, FR-1282, FR-1283, UX-171 a UX-176. **Independent Tes
 publicado em duas listas, com uma inscrição nas duas; avisar e despachar; cada inscrição considerada
 recebe exatamente uma mensagem.
 
-- [ ] T020 [US1] A`application/destinatarios.py`, `universo_do_resultado(edital, marco_id, natureza)`:
+- [X] T020 [US1] A`application/destinatarios.py`, `universo_do_resultado(edital, marco_id, natureza)`:
   - publicações vigentes da natureza que nenhum `PublicacaoDoAviso` de aviso `PRIMEIRO_AVISO` citou (`D-002`);
   - `SituacaoDivulgada` distinta por inscrição;
   - o endereço por `identidade.application.endereco.destinatario_de` em lote, sem N+1;
   - `retificadora` quando alguma publicação tem `publicacao_anterior`
-- [ ] T021 [US1] A`application/previa.py`, prévia sem gravar nada:
+- [X] T021 [US1] A`application/previa.py`, prévia sem gravar nada:
   - o ato citado e a origem por extenso;
   - as contagens com e sem endereço;
   - a mensagem composta para a primeira pessoa da lista, com "ver outra";
   - a assinatura `canonical_sha256` de `R-010`, sem o texto
-- [ ] T022 [US1] A`application/confirmar.py`, `confirmar_aviso_do_resultado`, dentro de `comando_de_aviso`:
+- [X] T022 [US1] A`application/confirmar.py`, `confirmar_aviso_do_resultado`, dentro de `comando_de_aviso`:
   - confere a assinatura, que vira `aviso_previa_defasada`;
   - valida as variáveis pela origem;
   - recusa `aviso_sem_publicacao_nova` e `aviso_sem_elegivel`;
@@ -133,36 +133,36 @@ recebe exatamente uma mensagem.
   - grava `Aviso`, `PublicacaoDoAviso` e `DestinatarioDoAviso` em `bulk_create`;
   - `auditar` com ato citado, origem, contagens e `correlation_id`, sem endereços (`FR-1278`);
   - `finish` da idempotência
-- [ ] T023 [US1] A`application/despacho.py`, completar pelo contrato `contracts/despacho.md`:
+- [X] T023 [US1] A`application/despacho.py`, completar pelo contrato `contracts/despacho.md`:
   - passos 0 a 6, com a chave, a trava global (`pg_try_advisory_lock`) e as órfãs;
   - a seleção dentro da janela, ordenada e limitada;
   - a abertura da conexão por `get_connection()`;
   - por destinatário, a trava do aviso (`pg_advisory_xact_lock`), a conferência da interrupção, a `TentativaDeEnvio` confirmada, a preparação antes da rede, `send_messages`, o `ResultadoDaTentativa` por `domain/resposta.py` e a parada na indeterminada;
   - o resumo sem dado pessoal
-- [ ] T024 [US1] A`management/commands/despachar_avisos.py`, com `--limite`. A saída é diferente de 0 só quando a conexão não abre
-- [ ] T025 [US1] A`application/selectors.py`:
+- [X] T024 [US1] A`management/commands/despachar_avisos.py`, com `--limite`. A saída é diferente de 0 só quando a conexão não abre
+- [X] T025 [US1] A`application/selectors.py`:
   - o histórico do aviso, com contagens por estado em consultas constantes e destinatários paginados;
   - a linha de estado do último aviso por publicação e natureza (`UX-175`);
   - o alerta de pendente antigo (`FR-1272`);
   - a lista de avisos do Edital
-- [ ] T026 [US1] Views em I`avisos.py` e rotas em I`urls.py`, para `aviso-do-resultado` (GET prévia, POST confirmação), `aviso` e `avisos-do-edital` (contracts/telas.md):
+- [X] T026 [US1] Views em I`avisos.py` e rotas em I`urls.py`, para `aviso-do-resultado` (GET prévia, POST confirmação), `aviso` e `avisos-do-edital` (contracts/telas.md):
   - POST-redirect-GET;
   - `marcar_como_privada` na prévia;
   - links absolutos por `request.build_absolute_uri`;
   - com a chave desligada, a prévia só com a explicação (`FR-1282`)
-- [ ] T027 [US1] Acrescentar a `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` uma linha por função de I`avisos.py` com `raise Http404`, classificada
-- [ ] T028 [US1] Templates em I`templates/interface/`:
+- [X] T027 [US1] Acrescentar a `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` uma linha por função de I`avisos.py` com `raise Http404`, classificada
+- [X] T028 [US1] Templates em I`templates/interface/`:
   - `aviso_previa.html`: origem, contagens, `<ol class="consequencias">`, assunto com a orientação fixa (`FR-1258`), corpo com as variáveis ao lado (`UX-176`), rodapé visível e não editável, aviso de irreversibilidade e "Enviar a N pessoas" (`UX-173`);
   - `aviso.html` e `avisos_do_edital.html`;
   - em `publicacoes_do_marco.html`, o botão "Avisar candidatos" e a linha de estado por natureza, e nenhum botão na publicação sucedida (`UX-174`)
-- [ ] T029 [US1] Na folha da gestão, as regras de toda classe nova (memória "classe no template exige regra na folha"), com `@media` em linhas separadas (T`interface/test_polish_da_056.py`). 375 px sem rolagem horizontal
-- [ ] T030 [US1] Criar T`test_vocabulario_do_aviso.py`, com lista literal dos templates da feature:
+- [X] T029 [US1] Na folha da gestão, as regras de toda classe nova (memória "classe no template exige regra na folha"), com `@media` em linhas separadas (T`interface/test_polish_da_056.py`). 375 px sem rolagem horizontal
+- [X] T030 [US1] Criar T`test_vocabulario_do_aviso.py`, com lista literal dos templates da feature:
   - nenhum "entregue", "recebida", "lida", "notificação oficial" (`UX-171`, `UX-172`);
   - "aceita pelo servidor de correio" presente no histórico;
   - rodar T`test_vocabulario_da_convocacao.py`, que a Phase 5 vai tocar.
 
   A varredura de acessibilidade (T`interface/test_acessibilidade.py`) usa `glob` sobre os templates da gestão e alcança os novos sem edição: rodá-la (SC-486)
-- [ ] T031 [US1] TI em T`integration/avisos/test_aviso_do_resultado.py`, cenários 1 a 5 da US1:
+- [X] T031 [US1] TI em T`integration/avisos/test_aviso_do_resultado.py`, cenários 1 a 5 da US1:
   - deduplicação AC + reserva;
   - `SEM_POSICAO` incluído, sem dizê-lo no corpo;
   - sem endereço registrado e fora do envio;
@@ -172,21 +172,21 @@ recebe exatamente uma mensagem.
   - prévia defasada;
   - idempotência no duplo POST;
   - publicar não dispara aviso (`FR-1243`)
-- [ ] T032 [US1] TI em T`integration/avisos/test_despacho.py`, caminho feliz pelo comando:
+- [X] T032 [US1] TI em T`integration/avisos/test_despacho.py`, caminho feliz pelo comando:
   - uma mensagem por destinatário elegível;
   - um `To` só;
   - o texto confirmado com o nome resolvido;
   - `ACEITA` registrada;
   - a chave desligada sem tentativa;
   - a janela vencida que expira sem envio (`FR-1283`)
-- [ ] T033 [US1] TT em T`interface/test_avisos.py`:
+- [X] T033 [US1] TT em T`interface/test_avisos.py`:
   - o botão na publicação vigente e não na sucedida;
   - o rótulo "Enviar a N pessoas";
   - a orientação do assunto;
   - o rodapé não editável;
   - escopo de outra unidade com 404;
   - a chave desligada com explicação e sem formulário
-- [ ] T034 [US1] TI em T`integration/avisos/test_orcamento_do_aviso.py`, no padrão de T`integration/requerimentos/test_orcamento_de_consulta.py`: o histórico do aviso com 50 e com 500 destinatários faz o mesmo número de consultas; a confirmação com 1.000 responde sem envio e em menos de 2 s, medido no teste (SC-482)
+- [X] T034 [US1] TI em T`integration/avisos/test_orcamento_do_aviso.py`, no padrão de T`integration/requerimentos/test_orcamento_de_consulta.py`: o histórico do aviso com 50 e com 500 destinatários faz o mesmo número de consultas; a confirmação com 1.000 responde sem envio e em menos de 2 s, medido no teste (SC-482)
 
 **Checkpoint**: o pedido do setor para resultados funciona de ponta a ponta, com o correio de
 desenvolvimento.
@@ -196,8 +196,8 @@ desenvolvimento.
 **Goal**: FR-1248, FR-1255a, FR-1243, D-002 na retificação. **Independent Test**: avisar, retificar
 uma lista, avisar de novo.
 
-- [ ] T035 [US2] Em A`application/confirmar.py` e A`domain/mensagem.py`, garantir a linha fixa de retificação com as datas das publicações retificadas (`FR-1248`), e nenhum texto do sistema que afirme mudança de situação
-- [ ] T036 [US2] TI em T`integration/avisos/test_aviso_da_retificacao.py`, cenários 1 a 4 da US2:
+- [X] T035 [US2] Em A`application/confirmar.py` e A`domain/mensagem.py`, garantir a linha fixa de retificação com as datas das publicações retificadas (`FR-1248`), e nenhum texto do sistema que afirme mudança de situação
+- [X] T036 [US2] TI em T`integration/avisos/test_aviso_da_retificacao.py`, cenários 1 a 4 da US2:
   - só a sucessora é nova, e os destinatários são os dela;
   - a linha fixa presente;
   - o primeiro aviso intacto (assunto, corpo, destinatários e tentativas);
