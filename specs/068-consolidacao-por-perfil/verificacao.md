@@ -144,4 +144,9 @@ antes e depois. Gravadas em `demonstracao/`: `pagina-A-antes-02/03`, `pagina-A-d
 
 ## Suíte e verificação estática (T039)
 
-Preenchido ao fim, sobre o commit final.
+Em 2026-10-09, sobre `799f17a8`, com `make lint check test-pg DB_NAME=ps068`:
+
+- `ruff check`: **All checks passed!**; `ruff format --check`: 1335 arquivos já formatados;
+- `manage.py check`: nenhum problema;
+- **10078 passando, 11 pulados**, em 999 s — os mesmos onze pulados deliberados do `AGENTS.md`. Antes
+  desta feature eram 9959 passando: a diferença são os testes novos e os casos parametrizados novos.

@@ -148,7 +148,7 @@ três Perfis têm reversão — a frase nomeia os dois.
 - [X] T036 [P] Notas de emenda nos FRs alcançados: `specs/008-composicao-institucional/spec.md` (FR-016, FR-018, FR-021), `specs/025-quadro-de-vagas-por-modalidade/spec.md` (FR-169) e `specs/064-atribuicoes-consolidadas/spec.md` (FR-1197)
 - [X] T037 [P] `specs/068-consolidacao-por-perfil/rastreabilidade.md`: uma linha por FR, SC e caso-limite, com o teste que o cobre (molde da `065`)
 - [X] T038 [P] Linha da `068` na tabela de incrementos do `README.md`; nota "tratados depois desta auditoria" na §12.2 de `doc/auditoria-edital-pdf-2026-10-08.md` (ED-04 e ED-11), sem regravar os PDFs da auditoria
-- [ ] T039 `cd backend && make lint check` e `make DB_NAME=ps068 test-pg` (SC-515); números (passando, pulados, tempo) em `verificacao.md`, e em `AGENTS.md` se mudarem os pulados
+- [X] T039 `cd backend && make lint check` e `make DB_NAME=ps068 test-pg` (SC-515); números (passando, pulados, tempo) em `verificacao.md`, e em `AGENTS.md` se mudarem os pulados
 - [X] T040 Registrar em `verificacao.md` os achados do caminho que não viraram escopo (spec, *O que esta feature não cobre*)
 
 ---
