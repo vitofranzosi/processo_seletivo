@@ -3,6 +3,12 @@
 Cada requisito, critério, decisão e caso-limite da spec, com o teste que o prende. Os casos-limite
 entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 
+> **Nota da `067` (09/10/2026).** `test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes`
+> foi renomeado para `test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_067`: a
+> `067` muda o documento de propósito (ED-02, ED-03, ED-12), e os bytes esperados passaram a ser os
+> de `specs/067-correcoes-de-norma-do-edital/demonstracao/`. A prova de `FR-1219` sobre a composição
+> da `065` continua na fixture de contrato, que não mudou.
+
 **Arquivos de teste**
 
 | Sigla | Arquivo |

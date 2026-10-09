@@ -23,6 +23,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
+from processo_seletivo.editais.domain.marcos import declara_sorteio
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
@@ -1450,7 +1451,13 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                             if isinstance(marco.get("appealWindow"), dict)
                             else "Em branco — este marco continua sem prever recurso"
                         ),
-                        "rounding/mode": "Não declarado — a publicação será impedida",
+                        # Sob sorteio declarado o vazio é legítimo (067, FR-1317): a ordem é
+                        # sorteada, e a validação não exige o que não tem o que arredondar.
+                        "rounding/mode": (
+                            "Não declarado — a ordem é sorteada, e não há nota a arredondar"
+                            if declara_sorteio(marco)
+                            else "Não declarado — a publicação será impedida"
+                        ),
                         "orderProduction": "Não declarada — lida como o Edital sempre a leu",
                         "operation": "Não declarada — a publicação será impedida",
                         "normalization": "Não declarada — a publicação será impedida",

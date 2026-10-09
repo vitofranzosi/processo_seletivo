@@ -22,6 +22,7 @@ from django.utils import timezone
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
+from processo_seletivo.editais.domain import quadro as quadro_do_perfil
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
@@ -1367,15 +1368,62 @@ POR_EXTENSO = {
 }
 
 
-def _janela_recursal(marco):
-    """A frase normativa do prazo recursal, como um Edital a escreve (FR-030).
-
-    *"Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado."*
+def prazo_do_recurso(marco):
+    """O prazo recursal do marco como o Edital o escreve — `2 (dois) dias corridos` —, ou `""`.
 
     **O número por extenso entre parênteses não é enfeite**: é como um ato administrativo escreve
     prazo, e é o que impede que um dígito trocado passe despercebido. Fora da tabela de números
     conhecidos, imprime-se só o algarismo — inventar a grafia de "cento e vinte e três" aqui seria
     mais chance de errar do que de acertar.
+
+    **Função própria porque tem dois leitores** (067, D-005): a frase do marco, logo abaixo, e o
+    aviso de conferência de recurso da validação, que põe o prazo dos marcos ao lado dos Eventos do
+    Cronograma. Uma segunda redação do mesmo prazo seria a segunda fonte que o Princípio II proíbe.
+    """
+    janela = marco.get("appealWindow") if isinstance(marco, dict) else None
+    if not isinstance(janela, dict) or not janela.get("admits"):
+        return ""
+    dias = janela.get("durationDays")
+    if not isinstance(dias, int) or isinstance(dias, bool) or dias <= 0:
+        return ""
+    extenso = POR_EXTENSO.get(dias)
+    quantos = f"{dias} ({extenso})" if extenso else str(dias)
+    return f"{quantos} {'dias corridos' if dias != 1 else 'dia corrido'}"
+
+
+def resultado_do_marco(marco):
+    """Como o documento nomeia o resultado do marco: o nome entre aspas, ou o código, ou `""`.
+
+    **Entre aspas, e não com artigo** (067, D-001). A auditoria sugeria "contra o resultado da
+    Classificação por sorteio eletrônico", mas o nome do marco não tem gênero conhecido — "da Prova
+    final", "do Sorteio público" —, e o documento não adivinha. As aspas dispensam o artigo para
+    qualquer nome. O nome entra como foi escrito, aparado nas pontas; sem nome, o código — o que só
+    uma prévia de rascunho pode ter, porque a gravação exige nome.
+    """
+    if not isinstance(marco, dict):
+        return ""
+    nome = str(marco.get("name") or "").strip() or str(marco.get("code") or "").strip()
+    return f"“{nome}”" if nome else ""
+
+
+def _janela_recursal(marco, *, objeto=None):
+    """A frase normativa do recurso, que diz **de qual resultado** se recorre (FR-030; 067, ED-02).
+
+    *"Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias
+    corridos, contados da divulgação desse resultado."*
+
+    **A frase não dizia o objeto, e o candidato não tinha como descobri-lo.** "Contados da
+    divulgação do resultado" convivia, no mesmo documento, com o período de recurso do Cronograma e
+    com o da seção textual — no cenário A da auditoria de 08/10/2026, um contra o sorteio, outro
+    contra a análise documental —, e nada dizia qual era qual. O recurso que o sistema processa é
+    contra a publicação do resultado **deste marco** (`doc/decisao-018-escopo-institucional-do-
+    recurso.md`, §1), e é ele que a frase passa a nomear (`resultado_do_marco`). Sem nome e sem
+    código — só numa prévia de rascunho —, sai a frase de antes: o documento não inventa nome.
+
+    **`objeto` é só da Revisão** (067, D-012). Ela agrupa marcos de Perfis diferentes que declaram a
+    mesma regra, com a denominação de cada grupo na linha de cima; com o nome dentro da frase, cada
+    Perfil viraria um grupo. Ela passa `"deste marco"`, e a frase é a mesma, com o nome dito pela
+    linha da denominação. O documento compõe um marco por vez, e nunca passa `objeto`.
 
     **O silêncio não imprime nada, e a negativa imprime** (FR-028, FR-113). São coisas diferentes:
     marco que nada declara conserva as vias que a lei dá fora deste sistema, e escrever "não cabe
@@ -1386,17 +1434,20 @@ def _janela_recursal(marco):
     janela = marco.get("appealWindow")
     if not isinstance(janela, dict):
         return ""
+    if objeto is None:
+        resultado = resultado_do_marco(marco)
+        objeto = f"de {resultado}" if resultado else ""
     if janela.get("admits") is False:
-        return "Não caberá recurso contra o resultado deste marco."
-    if not janela.get("admits"):
+        return f"Não caberá recurso contra o resultado {objeto or 'deste marco'}."
+    prazo = prazo_do_recurso(marco)
+    if not prazo:
         return ""
-    dias = janela.get("durationDays")
-    if not isinstance(dias, int) or isinstance(dias, bool) or dias <= 0:
-        return ""
-    extenso = POR_EXTENSO.get(dias)
-    quantos = f"{dias} ({extenso})" if extenso else str(dias)
-    plural = "dias corridos" if dias != 1 else "dia corrido"
-    return f"Caberá recurso no prazo de {quantos} {plural}, contados da divulgação do resultado."
+    if objeto:
+        return (
+            f"Caberá recurso contra o resultado {objeto}, no prazo de {prazo}, contados da "
+            "divulgação desse resultado."
+        )
+    return f"Caberá recurso no prazo de {prazo}, contados da divulgação do resultado."
 
 
 def _regra_de_corte(marco, etapas):
@@ -1691,7 +1742,7 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 # sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um marco
                 # antigo que carrega método, e documento publicado não muda de conteúdo.
                 forma = marco.get("orderProduction") or ""
-                sorteia = forma == regras_do_marco.POR_SORTEIO
+                sorteia = regras_do_marco.declara_sorteio(marco)
                 pares = []
                 ordem = FORMA_DA_ORDEM.get(forma)
                 if ordem:
@@ -1706,7 +1757,12 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                     normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
                     if normalizacao:
                         pares.append(["Normalização", normalizacao])
-                arredondamento = _arredondamento(marco)
+                # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
+                # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
+                # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
+                # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
+                # pela função que a validação e a Revisão também leem (D-004).
+                arredondamento = "" if sorteia else _arredondamento(marco)
                 if arredondamento:
                     pares.append(["Arredondamento", arredondamento])
                 _pares(composicao, pares, recuo=32.0)
@@ -1733,7 +1789,10 @@ def _marcos(composicao, snapshot, perfil, nomear_perfil=False):
                 corte = _regra_de_corte(marco, etapas)
                 if corte:
                     posteriores.append(["Corte", corte])
-                    if empate := _empate_no_corte(marco):
+                    # A ordem sorteada é total — cada posição é única —, e o empate na última
+                    # posição não acontece (067, FR-1314). A validação já não exige o desfecho
+                    # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
+                    if not sorteia and (empate := _empate_no_corte(marco)):
                         posteriores.append(["Empate no corte", empate])
                     if continuacao := _continuacao_do_corte(marco):
                         posteriores.append(["Continuação", continuacao])
@@ -1815,9 +1874,16 @@ def _quadro_de_vagas_do_perfil(composicao, perfil, tabelas, nomear_perfil=False)
     **Sem quadro, o bloco não sai — e nenhuma frase o substitui.** Um "quadro não declarado"
     impresso seria uma afirmação nova sobre um Edital que não a fez, e é o que a SC-050 cobra:
     nenhum Edital publicado antes desta feature passa a afirmar zero vaga em lugar nenhum.
+
+    **Sem vaga imediata, nem quadro nem reversão** (067, ED-12, D-003). O Perfil só de cadastro de
+    reserva imprimia um quadro inteiro de zeros e a frase sobre "vagas reservadas" que não existem
+    — reserva de vaga onde não há vaga (16 Perfis no cenário B da auditoria de 08/10/2026). O que
+    é verdade continua: a linha do Perfil, com 0 vaga e o cadastro, e a tabela de Modalidades, com
+    percentual e fundamento. **E nenhuma frase o substitui**: como a reserva se aplica ao cadastro
+    (RC-58) não é regra que o sistema declare — a convocação desses Perfis é feita fora dele.
     """
     linhas_do_quadro = perfil.get("vacancyTable") or []
-    if not linhas_do_quadro:
+    if not linhas_do_quadro or quadro_do_perfil.sem_vaga_imediata(perfil):
         return
     denominacoes = {
         str(modalidade.get("id")): (
@@ -2658,7 +2724,9 @@ def tabelas_do_documento(snapshot):
             perfis = snapshot.get("profiles") or []
             total += 1 if len(perfis) > 1 else 0
             for perfil in perfis:
-                total += 1 if perfil.get("vacancyTable") else 0
+                # O quadro sai pela mesma regra de `_quadro_de_vagas_do_perfil` (067, D-007).
+                sai = perfil.get("vacancyTable") and not quadro_do_perfil.sem_vaga_imediata(perfil)
+                total += 1 if sai else 0
                 total += 1 if perfil.get("competitionModalities") else 0
         elif corpo is _cronograma:
             total += 1

@@ -195,11 +195,15 @@ def _perfil(perfil, snapshot):
     especie = (perfil.get("vacancyReversion") or {}).get("kind")
     if especie or set(denominacoes) - {str(perfil.get("generalCompetitionModalityId"))}:
         gesto = origens.gesto_do_campo(_alcance_dos_gestos(snapshot), perfil, "vacancyReversion")
+        reversao = REVERSAO.get(especie, especie or "não")
+        if especie and quadro.sem_vaga_imediata(perfil):
+            # O documento não a imprime sem vaga imediata (067, ED-12, UX-192): dito aqui, quem
+            # submete sabe que a declaração continua no conteúdo e fica fora do ato.
+            reversao = f"{reversao} — não sai no documento: o Perfil não tem vaga imediata"
         linhas.append(
             origens.com_origem(
                 Rotulada(
-                    "Reverter vaga reservada não preenchida para a ampla concorrência",
-                    REVERSAO.get(especie, especie or "não"),
+                    "Reverter vaga reservada não preenchida para a ampla concorrência", reversao
                 ),
                 origens.frase_do_gesto(gesto) if gesto else "",
             )
@@ -515,7 +519,11 @@ def _leitura_do_marco(marco, perfil, snapshot):
         pares.append(("Combinação", _combinacao(marco, etapas) or "nenhuma Etapa enumerada"))
         if NORMALIZACAO_DO_MARCO.get(marco.get("normalization")):
             pares.append(("Normalização", NORMALIZACAO_DO_MARCO[marco["normalization"]]))
-    if arredondamento := _arredondamento(marco):
+    # O arredondamento e o empate seguem a forma **declarada**, que é a do documento (067, D-004):
+    # a Revisão mostra o que o documento vai imprimir. A combinação e o bloco do sorteio continuam
+    # pela forma resolvida, como antes.
+    declara_sorteio = regras_do_marco.declara_sorteio(marco)
+    if not declara_sorteio and (arredondamento := _arredondamento(marco)):
         pares.append(
             (
                 "Arredondamento",
@@ -541,7 +549,9 @@ def _leitura_do_marco(marco, perfil, snapshot):
                 or "Etapa declarada que não existe neste Edital",
             )
         )
-    pares.append(("Recurso", _janela_recursal(marco) or "nada declarado"))
+    # "deste marco" no lugar do nome (067, D-012): a denominação está na linha de cima, e com o nome
+    # na frase cada Perfil seria um grupo — o que a nota abaixo, sobre a denominação, já recusa.
+    pares.append(("Recurso", _janela_recursal(marco, objeto="deste marco") or "nada declarado"))
     regra = marco.get("cutRule")
     if isinstance(regra, dict):
         # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.
@@ -556,7 +566,7 @@ def _leitura_do_marco(marco, perfil, snapshot):
         # Logo depois do corte, e sem par quando não declarados: "essa quantidade" é a que ele
         # acabou de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado"
         # aqui leria como o silêncio legítimo do recurso, que não é.
-        if empate := _empate_no_corte(marco):
+        if not declara_sorteio and (empate := _empate_no_corte(marco)):
             pares.append(("Empate no corte", empate))
         if continuacao := _continuacao_do_corte(marco):
             pares.append(("Continuação", continuacao))

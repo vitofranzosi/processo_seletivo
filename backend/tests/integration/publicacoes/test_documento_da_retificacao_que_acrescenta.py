@@ -101,7 +101,11 @@ def test_o_documento_da_retificacao_mostra_as_seis(api_client, manager_headers, 
     texto = texto_de(bytes(publicacao.documento.bytes))
     corrido = " ".join(texto.split())
 
-    assert "Caberá recurso no prazo de 3 (três)" in corrido, "a janela que nasceu"
+    # A frase nomeia o resultado desde a `067` (ED-02).
+    assert (
+        "Caberá recurso contra o resultado de “Classificação final”, no prazo de 3 (três)"
+        in corrido
+    ), "a janela que nasceu"
     assert "Progridem os 2 (dois) primeiros desta ordem" in corrido, "a regra de corte"
     assert "o quantitativo não preenchido" in corrido, "a reversão"
     assert "3º" in corrido, "o terceiro critério de desempate"
