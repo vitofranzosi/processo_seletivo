@@ -192,6 +192,20 @@ que não está no cartão; salvar o passo grava `{}` e a pendência some.
 - **Sem o quadro, a forma de convocação do Perfil sem vaga fica logo abaixo de "Dados exigidos", na
   margem zero** — a ED-15 da auditoria (frases do Perfil fora do recuo), que esta feature não trata.
 
+## Suíte completa depois da convergência e da revisão
+
+Em 2026-10-09, sobre `2f34a7b8` (T055–T057 e as correções da revisão), com `DB_NAME=ps_067_base`:
+
+```text
+cd backend && make lint check test-pg
+ruff check: All checks passed! · ruff format --check: 1331 files already formatted
+manage.py check: no issues · makemigrations --check: No changes detected
+9959 passed, 11 skipped in 1030.32s
+```
+
+Os mesmos onze pulados deliberados. Os quatro testes a mais que na rodada anterior são os da
+convergência (T056, T057) e os dois da revisão.
+
 ## Suíte completa (T054)
 
 Em 2026-10-09, sobre `2ce6a130`, com `DB_NAME=ps_067_base` (banco de teste `test_ps_067_base`):
