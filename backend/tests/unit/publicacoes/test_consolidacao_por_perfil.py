@@ -833,3 +833,28 @@ def test_as_subsecoes_saem_na_ordem_atribuicoes_requisitos_marcos():
         "5.6 Requisitos",
         "5.7 Marcos classificatórios",
     ]
+
+
+# ---------------------------------------------------------------------------
+# Casos-limite da spec
+# ---------------------------------------------------------------------------
+
+
+def test_codigo_com_o_separador_da_enumeracao_vai_entre_aspas_no_titulo_e_na_frase():
+    """A regra da `064` vale nos títulos e nas frases novas: "A e B" não se lê como dois Perfis."""
+    conteudo = edital(
+        perfil("Tutor e Mediador"),
+        perfil("TEC"),
+        perfil("ADM", convocacao="INDIVIDUAL_MESSAGE"),
+    )
+    texto = corrido(conteudo)
+    assert "Requisitos comuns aos Perfis “Tutor e Mediador”, “TEC” e “ADM”" in texto
+    assert "Nos Perfis “Tutor e Mediador” e “TEC”, a convocação dos classificados" in texto
+
+
+def test_o_que_a_grafia_normaliza_nao_impede_o_agrupamento():
+    """Requisitos colados do editor com um invisível de diferença imprimem igual, e se juntam."""
+    invisivel = "\u200b"  # espaço de largura zero, escrito como escape para se ver
+    conteudo = cenario_a(**{"INF-IUN": {"requisitos": (REQUISITOS[0] + invisivel, REQUISITOS[1])}})
+    assert ("5.5", "requisitos", QUATRO) in materias(plano(conteudo))
+    assert corrido(conteudo).count(REQUISITOS[0]) == 1

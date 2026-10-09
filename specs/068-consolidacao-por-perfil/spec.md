@@ -5,7 +5,7 @@ tem a `065` (PR #266) e a `067` (PR #268), as duas que mexeram nas mesmas funç�
 
 **Created**: 2026-10-09
 
-**Status**: Draft — decisões fechadas pelo responsável pelo produto em 09/10/2026 (ver *Decisões*)
+**Status**: Implementado — decisões fechadas pelo responsável pelo produto em 09/10/2026 (ver *Decisões*); verificação em [verificacao.md](verificacao.md)
 
 **Input**: os achados **ED-04** e **ED-11** da [auditoria do Edital em PDF de
 08/10/2026](../../doc/auditoria-edital-pdf-2026-10-08.md) (§6.2, §6.3, §9, §11, §12.2) e o pedido do
