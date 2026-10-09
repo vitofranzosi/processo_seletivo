@@ -353,8 +353,8 @@ achado de numeração.
   impeditivos — pela mesma razão da remissão a anexo sem rótulo (RC-21, decisão do usuário de
   28/09/2026): a remissão pode ser a outro ato, e o sistema não tem como distinguir sempre (`D-003`).
 - **FR-1212**: Os achados MUST aparecer nas mesmas superfícies em que as pendências do Edital em
-  elaboração já aparecem — a etapa Conteúdo, a Revisão, a página do Edital e a submissão —, com o
-  mesmo destino de correção das demais pendências de seção: o campo da seção na etapa Conteúdo. O
+  elaboração já aparecem — a etapa Conteúdo, a Revisão, a página do Edital e a submissão —, e o achado
+  sobre texto de seção MUST levar ao campo daquela seção na etapa Conteúdo (`UX-160`). O
   impeditivo MUST impedir a submissão e a publicação como os demais, e a recusa MUST trazer a mesma
   mensagem da Revisão.
 - **FR-1213**: Na Retificação, todos os achados desta feature sobre o conteúdo consolidado MUST ser

@@ -95,7 +95,8 @@ backend/processo_seletivo/
 
 backend/tests/
 ├── unit/editais/test_numeracao_digitada.py           # NOVO — formas e conjunto de prova (SC-464)
-├── unit/editais/test_conflito_de_numeracao.py         # NOVO — achados no snapshot (FR-1198..1217)
+├── unit/editais/test_conflito_de_numeracao.py         # NOVO — achados de numeração no snapshot
+├── unit/editais/test_remissoes.py                     # NOVO — achados de remissão
 ├── unit/publicacoes/test_itens_do_documento.py        # NOVO — o guardião (D-004)
 ├── integration/publicacoes/test_numeracao_na_publicacao.py   # NOVO — submissão, publicação, Retificação, Edital publicado
 ├── interface/test_numeracao_na_revisao.py             # NOVO — etapa Conteúdo, Revisão, link, recusa
