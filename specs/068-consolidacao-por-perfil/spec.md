@@ -35,7 +35,8 @@ E as respostas do responsável pelo produto às três perguntas desta spec, na m
 9. **Requisitos:** os idênticos **se consolidam**, e o critério de identidade de todos os blocos é o
    da `064` — o texto impresso.
 
-> **Faixa de identificadores.** Abre em **FR-1340**, **SC-510** e **UX-200**. O teto medido em
+> **Faixa de identificadores.** Abre em **FR-1340** e **SC-510**; não há requisito de experiência — a
+> faixa **UX-200** fica reservada e sem uso. O teto medido em
 > 09/10/2026 na `main` e em todas as worktrees era o da `067` (mil trezentos e vinte e oito para os
 > requisitos funcionais, quinhentos e sete para os critérios de sucesso, cento e noventa e três
 > para a experiência); a `066-avisos-complementares`, em PR aberto (#269), fica abaixo disso. O
@@ -295,8 +296,9 @@ documentos guardados.
   dos Perfis e os das subseções de atribuições comuns da `064` MUST ser os mesmos com e sem esta
   feature; os títulos MUST seguir a regra de enumeração de códigos da `064` (FR-1189 dela).
 - **FR-1347**: A subseção comum de marcos MUST dizer, antes dos marcos, que eles se aplicam a cada um
-  dos Perfis nomeados **separadamente** — cada um com a sua ordem, o seu corte e o seu resultado.
-  Essa frase não é regra nova: é o que a posição do marco dentro do Perfil dizia, e que a
+  dos Perfis nomeados **separadamente**, sobre as inscrições do próprio Perfil — cada um com a sua
+  classificação e o seu resultado ([contrato §6](contracts/documento.md)). Ela não fala em corte,
+  porque nem todo marco tem corte, e afirmaria regra que o marco não declara. Essa frase não é regra nova: é o que a posição do marco dentro do Perfil dizia, e que a
   consolidação tira dele.
 - **FR-1348**: O texto dos marcos na subseção comum MUST ser, linha a linha, o que cada Perfil do grupo
   imprimiria — sem acrescentar, suprimir, reordenar ou reescrever nada.

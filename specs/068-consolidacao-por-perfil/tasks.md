@@ -38,7 +38,7 @@ Bloqueia todas as histórias. Nada no documento muda nesta fase.
 
 ### Testes (primeiro; falham por `AttributeError`)
 
-- [ ] T003 Em `backend/tests/unit/publicacoes/test_consolidacao_por_perfil.py` (novo), o plano (R-001, R-002, [data-model.md](data-model.md)): com um Perfil, "sem consolidação"; grupos de requisitos e de marcos pela identidade do bloco composto — título do Perfil fora da comparação, qualquer outra linha diferente separa (prazo de recurso, corte, critério de desempate, nome do marco, um requisito a mais, outra ordem), grupo de um não existe, bloco vazio não agrupa; grupos na ordem do primeiro Perfil; os grupos de atribuições são os de `grupos_de_atribuicoes`; números das subseções em continuação — atribuições, requisitos, marcos (FR-1359) —, e os dos Perfis e das atribuições não dependem dos outros grupos
+- [ ] T003 Em `backend/tests/unit/publicacoes/test_consolidacao_por_perfil.py` (novo), o plano (FR-1340, FR-1359, R-001, R-002, [data-model.md](data-model.md)): com um Perfil, "sem consolidação"; grupos de requisitos e de marcos pela identidade do bloco composto — título do Perfil fora da comparação, qualquer outra linha diferente separa (prazo de recurso, corte, critério de desempate, nome do marco, um requisito a mais, outra ordem), grupo de um não existe, bloco vazio não agrupa; grupos na ordem do primeiro Perfil; os grupos de atribuições são os de `grupos_de_atribuicoes`; números das subseções em continuação — atribuições, requisitos, marcos (FR-1359) —, e os dos Perfis e das atribuições não dependem dos outros grupos
 - [ ] T004 No mesmo arquivo, a ordem das listas (R-005, FR-1345): linha geral primeiro; reservadas na ordem do primeiro quadro que as declara; as que nenhum quadro declara, na ordem do snapshot; a modalidade de ampla concorrência declarada à frente das reservadas na tabela de modalidades
 - [ ] T005 No mesmo arquivo, o auxiliar de linhas por pedaços (R-008): quebra só entre códigos ("ADS - P06" inteiro); aspas em todos quando algum código tem vírgula ou " e " (regra da `064`)
 
@@ -64,12 +64,12 @@ modalidades; mesma ordem de listas nas duas.
 
 - [ ] T009 [P] [US1] Em `backend/tests/unit/publicacoes/test_consolidacao_por_perfil.py`, a tabela de vagas ([contrato §2](contracts/documento.md)): legenda, cabeçalho (código; nome sem código; "Ampla concorrência"), uma linha por Perfil com quadro e com vaga imediata, "—" na lista não declarada, nenhum Perfil imprime "Quadro de vagas —" nem "Modalidades de concorrência — <código>" no próprio bloco; Perfil sem quadro e sem vaga imediata sem linha; nenhum Perfil com quadro → nenhuma tabela de vagas; forma longa quando a matriz não cabe (dez listas de códigos longos); cabeçalho repetido na quebra (FR-1342, FR-1343, FR-1357)
 - [ ] T010 [P] [US1] No mesmo arquivo, as tabelas de modalidades ([contrato §3](contracts/documento.md)): uma só, sem qualificador, quando todas são iguais; uma por grupo, com "— Perfil X" / "— Perfis X e Y", quando diferem (percentual, fundamento, conjunto); ordem das linhas = ordem das colunas da tabela de vagas (ED-11); coluna vazia omitida como hoje (FR-1344, FR-1345)
-- [ ] T011 [P] [US1] No mesmo arquivo, o Edital de um Perfil: os mesmos bytes que a composição de hoje (snapshot sintético e `tests/contract/fixtures/documento_publicado_v1.pdf`), sem tabela de vagas (FR-1356, R-003)
+- [ ] T011 [P] [US1] No mesmo arquivo, o Edital de um Perfil: os mesmos bytes que a composição de hoje (snapshot sintético e `tests/contract/fixtures/documento_publicado_v1.pdf`), sem tabela de vagas (FR-1356, R-003); e, com vários Perfis, compor não muda o snapshot nem o hash dele (FR-1341)
 
 ### Implementação
 
 - [ ] T012 [US1] Em `pdf.py`, `_tabela_de_vagas` (matriz e forma longa, R-004) e `_tabelas_de_modalidades` (R-006), compostas em `_perfis` depois de `_quadro_de_perfis`; `_tabela` aceita legenda em linhas; com dois ou mais Perfis, o bloco do Perfil deixa de chamar `_quadro_de_vagas_do_perfil` e `_modalidades`; com um, nada muda
-- [ ] T013 [US1] Em `pdf.py`, `tabelas_do_documento` lê o plano (R-009); acrescentar a `CASOS` de `backend/tests/unit/publicacoes/test_itens_do_documento.py` os casos "modalidades em dois grupos", "nenhum Perfil com quadro" e "Perfil sem vaga imediata entre Perfis com vaga", e rodar o guardião
+- [ ] T013 [US1] Em `pdf.py`, `tabelas_do_documento` lê o plano (FR-1355, R-009); acrescentar a `CASOS` de `backend/tests/unit/publicacoes/test_itens_do_documento.py` os casos "modalidades em dois grupos", "nenhum Perfil com quadro" e "Perfil sem vaga imediata entre Perfis com vaga", e rodar o guardião
 - [ ] T014 [US1] Atualizar de propósito os testes que afirmavam o quadro e as modalidades dentro de cada Perfil num documento de vários Perfis (`test_perfil_sem_vaga_imediata.py`, `test_pdf_classificacao.py`, `test_atribuicoes_consolidadas.py` e os que a suíte apontar), pela regra do plano; cada um registrado em `verificacao.md`
 - [ ] T015 [US1] Rodar T009–T011, o guardião e `tests/unit/publicacoes`: verdes
 
@@ -112,7 +112,7 @@ três Perfis têm reversão — a frase nomeia os dois.
 
 ### Testes (primeiro)
 
-- [ ] T023 [P] [US3] Em `test_consolidacao_por_perfil.py`, as frases ([contrato §4](contracts/documento.md)): reversão sem prefixo quando todos os Perfis da tabela de vagas têm a mesma espécie; uma por espécie, com "No Perfil X, " / "Nos Perfis X e Y, " e minúscula, quando não; Perfil fora da tabela de vagas nunca alcançado; convocação pela mesma regra sobre o Edital inteiro; Perfil sem forma declarada nunca alcançado; nenhuma frase dentro do bloco do Perfil; código "ADS - P06" não partido
+- [ ] T023 [P] [US3] Em `test_consolidacao_por_perfil.py`, as frases ([contrato §4](contracts/documento.md)): reversão sem prefixo quando todos os Perfis da tabela de vagas têm a mesma espécie; uma por espécie, com "No Perfil X, " / "Nos Perfis X e Y, " e minúscula, quando não; Perfil fora da tabela de vagas nunca alcançado; convocação pela mesma regra sobre o Edital inteiro; Perfil sem forma declarada nunca alcançado; nenhuma frase dentro do bloco do Perfil (FR-1350, FR-1351); código "ADS - P06" não partido
 - [ ] T024 [P] [US3] No mesmo arquivo, os requisitos comuns: subseção "Requisitos comuns aos Perfis …" com os itens e o marcador de hoje, remissão "Requisitos: os descritos no item N.k." no Perfil do grupo; lista vazia não agrupa; requisitos que diferem num item não agrupam; a subseção vem depois das de atribuições e antes das de marcos
 
 ### Implementação
@@ -148,7 +148,7 @@ três Perfis têm reversão — a frase nomeia os dois.
 - [ ] T036 [P] Notas de emenda nos FRs alcançados: `specs/008-composicao-institucional/spec.md` (FR-016, FR-018, FR-021), `specs/025-quadro-de-vagas-por-modalidade/spec.md` (FR-169) e `specs/064-atribuicoes-consolidadas/spec.md` (FR-1197)
 - [ ] T037 [P] `specs/068-consolidacao-por-perfil/rastreabilidade.md`: uma linha por FR, SC e caso-limite, com o teste que o cobre (molde da `065`)
 - [ ] T038 [P] Linha da `068` na tabela de incrementos do `README.md`; nota "tratados depois desta auditoria" na §12.2 de `doc/auditoria-edital-pdf-2026-10-08.md` (ED-04 e ED-11), sem regravar os PDFs da auditoria
-- [ ] T039 `cd backend && make lint check` e `make DB_NAME=ps068 test-pg`; números (passando, pulados, tempo) em `verificacao.md`, e em `AGENTS.md` se mudarem os pulados
+- [ ] T039 `cd backend && make lint check` e `make DB_NAME=ps068 test-pg` (SC-515); números (passando, pulados, tempo) em `verificacao.md`, e em `AGENTS.md` se mudarem os pulados
 - [ ] T040 Registrar em `verificacao.md` os achados do caminho que não viraram escopo (spec, *O que esta feature não cobre*)
 
 ---
