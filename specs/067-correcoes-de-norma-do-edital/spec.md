@@ -390,7 +390,8 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
   arredondamento nem empate no corte.
 - **FR-1316**: A tela de composição do marco MUST NOT mostrar nem exigir os campos de arredondamento
   de marco por sorteio, e salvar um marco por sorteio pela tela MUST NOT gravar arredondamento. Ao
-  passar para ordem por pontuação, os campos MUST voltar, preenchidos com o padrão de marco novo.
+  passar para ordem por pontuação, os campos MUST voltar, preenchidos com o arredondamento que o
+  marco tinha ou, sem ele, com o padrão de marco novo.
 - **FR-1317**: A tela da Retificação MUST NOT anunciar, para o arredondamento ausente de marco por
   sorteio, que a publicação será impedida.
 - **FR-1318**: Emitir a classificação de um marco por sorteio pelo caminho da ordenação por pontuação
