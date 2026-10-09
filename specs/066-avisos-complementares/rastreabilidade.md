@@ -51,7 +51,7 @@ Testes, sob `tests/`:
 | **FR-1261** | `Aviso.assunto` e `Aviso.corpo` congelados; `salvar_como_novo_modelo` | TM `test_editar_o_modelo_nao_muda_o_aviso_enviado` |
 | **FR-1262** | `confirmar_aviso_do_resultado` (justificativa) | TR `test_com_justificativa_e_reenvio_ligado_ao_anterior`; TC `test_avisar_de_novo_exige_justificativa` |
 | **FR-1263** | `comando_de_aviso` reserva a idempotência | TR `test_o_duplo_clique_devolve_o_mesmo_aviso` |
-| **FR-1264** | `confirmar_reenvio`, `universo_do_reenvio`, `ALCANCE_DO_REENVIO` | TJ `test_o_expirado_so_volta_por_aviso_filho`; TT `test_o_reenvio_de_falhas_mostra_o_texto_do_anterior_sem_edicao` |
+| **FR-1264** | `confirmar_reenvio`, `universo_do_reenvio`, `ALCANCE_DO_REENVIO` | TJ `test_o_expirado_so_volta_por_aviso_filho`, `test_o_segundo_reenvio_de_falhas_do_mesmo_aviso_e_recusado`, `test_o_que_o_reenvio_nao_entregou_se_reenvia_a_partir_dele`; TT `test_o_reenvio_de_falhas_mostra_o_texto_do_anterior_sem_edicao`, `test_o_reenvio_de_falhas_feito_some_do_pai_e_vira_link` |
 | **FR-1265** | A confirmação não envia; `despachar_avisos` | TR `test_a_confirmacao_nao_envia_nada`; TD |
 | **FR-1266** | A`application/despacho.py` `_iniciar` antes do envio | TF `test_tentativa_orfa_e_marcada_indeterminada_e_nao_se_repete` |
 | **FR-1267** | `_marcar_orfas`; `resposta.do_envio` | TF `test_aceita_e_derruba_e_indeterminada_para_a_execucao_e_nunca_se_repete`; TU `test_resposta.py` |
@@ -69,7 +69,7 @@ Testes, sob `tests/`:
 | **FR-1279** | `resposta` sem o texto do servidor | TU `test_resposta.py` `test_o_detalhe_nao_leva_o_endereco`; TF `test_o_detalhe_tecnico_nao_leva_endereco_nem_nome` |
 | **FR-1280** | `test_situacoes_de_mensagem.py` com quatro situações e a revisão da `066` | TS |
 | **FR-1281** | `get_connection()` no despacho | TG |
-| **FR-1282** | `recusar_se_desabilitado`; `despachar` desabilitado | TA `test_chave_desligada_recusa_antes_de_tudo`; TJ `test_desligada_o_despacho_nao_tenta_nada`, `test_desligada_o_reenvio_e_recusado`, `test_desligada_o_historico_continua_legivel`; TT `test_a_chave_desligada_explica_e_nao_oferece_formulario` |
+| **FR-1282** | `recusar_se_desabilitado`; `despachar` desabilitado | TA `test_chave_desligada_recusa_antes_de_tudo`; TJ `test_desligada_o_despacho_nao_tenta_nada`, `test_desligada_o_reenvio_e_recusado`, `test_desligada_o_historico_continua_legivel`; TT `test_a_chave_desligada_explica_e_nao_oferece_formulario`, `test_a_chave_desligada_ainda_oferece_interromper` |
 | **FR-1283** | A`domain/estado.py` `janela_passou`, `EXPIRADA_SEM_ENVIO` | TU `test_estado.py` `TestAJanela`; TJ `test_religada_fora_da_janela_expira_sem_envio`, `test_o_timer_parado_por_dias_nao_dispara_o_antigo`; TD `test_janela_vencida_expira_sem_envio` |
 
 ## 2. Experiência e linguagem

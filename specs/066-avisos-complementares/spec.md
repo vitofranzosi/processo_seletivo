@@ -590,6 +590,10 @@ matriz de rastreabilidade.
     mensagem pode ter saído. Na interrompida, alguém decidiu pará-la. O texto pode ser editado, e a
     prévia é nova.
 
+  Um aviso DEVE ter **no máximo um** reenvio de falhas. O estado dos destinatários do aviso anterior
+  não muda depois do reenvio, e um segundo mandaria de novo a quem o primeiro já entregou. O que o
+  reenvio não entregou se reenvia a partir dele (revisão de código de 09/10/2026).
+
 **Envio**
 
 - **FR-1265**: A confirmação NÃO DEVE enviar mensagem dentro da requisição. Ela DEVE gravar o aviso e

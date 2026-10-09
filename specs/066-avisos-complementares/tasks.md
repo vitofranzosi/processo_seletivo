@@ -334,6 +334,11 @@ simultâneas.
   - se a `065` tiver crescido para dentro da faixa da 066, renumerar antes do merge;
   - conferir que o `M` e a contagem de migrations não colidem com a 065 mergeada
 
+### Correções da revisão de código (09/10/2026)
+
+- [X] T061 Recusar o segundo reenvio de falhas do mesmo aviso, sob a trava do Processo e já na prévia, com `aviso_falhas_ja_reenviadas`; na tela do aviso, o botão vira link para o reenvio feito (`FR-1264`). Em `backend/processo_seletivo/avisos/application/confirmar.py`, `avisos/application/selectors.py`, `interface/avisos.py` e `interface/templates/interface/aviso.html`. Antes, dois cliques davam duas cópias a cada pessoa, provado contra o PostgreSQL
+- [X] T062 Oferecer "Interromper o envio" também com a chave desligada, como a contracts/telas.md já mandava, em `backend/processo_seletivo/interface/templates/interface/aviso.html`
+
 ---
 
 ## Dependencies & Execution Order

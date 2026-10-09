@@ -130,6 +130,17 @@ def test_a_chave_desligada_explica_e_nao_oferece_formulario(client, publicado, s
     assert 'value="confirmar"' not in corpo
 
 
+def test_a_chave_desligada_ainda_oferece_interromper(client, publicado, settings):
+    """Interromper é o ato que protege: desligada a chave, é o freio do que sairia ao religá-la."""
+    declarado = avisar_resultado(publicado["edital"], publicado["publicacao"].marco_id)
+    settings.AVISOS_AOS_CANDIDATOS = False
+    identificar(client, "publicadora", ["publicador"])
+
+    corpo = client.get(reverse("interface:aviso", args=[declarado["aviso"]])).content.decode()
+
+    assert "Interromper o envio" in corpo
+
+
 def test_outra_unidade_e_inexistente(client, publicado):
     identificar(client, "de-fora", ["publicador"], escopo="campus")
 
@@ -250,3 +261,40 @@ def test_o_reenvio_de_falhas_mostra_o_texto_do_anterior_sem_edicao(client, publi
     assert "O texto, o mesmo do aviso anterior" in corpo
     assert 'name="corpo"' not in corpo
     assert "Enviar a 2 pessoas" in corpo
+
+
+def test_o_reenvio_de_falhas_feito_some_do_pai_e_vira_link(client, publicado, settings):
+    from django.utils import timezone
+
+    from processo_seletivo.avisos.application import destinatarios, previa
+    from processo_seletivo.avisos.application.confirmar import confirmar_reenvio
+    from processo_seletivo.avisos.application.despacho import despachar
+    from tests.fixtures import correio
+
+    declarado = avisar_resultado(publicado["edital"], publicado["publicacao"].marco_id)
+    correio.usar(settings, correio.recusa(550), correio.recusa(550))
+    despachar()
+    pai = Aviso.objects.get(pk=declarado["aviso"])
+    universo = destinatarios.universo_do_reenvio(
+        pai, motivo=nomes.REENVIO_DE_FALHAS, agora=timezone.now()
+    )
+    filho = confirmar_reenvio(
+        actor=PUBLICADORA,
+        aviso_id=pai.id,
+        motivo=nomes.REENVIO_DE_FALHAS,
+        assinatura=previa.assinatura(universo, motivo=nomes.REENVIO_DE_FALHAS),
+        enderecos={},
+        idempotency_key="reenvio-pela-tela",
+        correlation_id="teste-066",
+    )
+    identificar(client, "publicadora", ["publicador"])
+
+    corpo = client.get(reverse("interface:aviso", args=[pai.id])).content.decode()
+    previa_de_novo = client.get(
+        reverse("interface:aviso-reenviar", args=[pai.id]) + f"?motivo={nomes.REENVIO_DE_FALHAS}"
+    )
+
+    assert "que não saíram</a>" not in corpo
+    assert "já foram reenviadas" in corpo
+    assert reverse("interface:aviso", args=[filho["aviso"]]) in corpo
+    assert previa_de_novo.status_code == 409

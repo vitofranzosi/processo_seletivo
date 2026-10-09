@@ -13,7 +13,7 @@ recusada — e o operador vê a lista nova antes de mandar.
 
 from processo_seletivo.avisos.application import destinatarios, previa
 from processo_seletivo.avisos.application.comando import comando_de_aviso, processo_do_ator
-from processo_seletivo.avisos.domain import nomes
+from processo_seletivo.avisos.domain import mensagem, nomes
 from processo_seletivo.avisos.domain.mensagem import validar_texto
 from processo_seletivo.avisos.domain.variaveis import validar
 from processo_seletivo.avisos.models import (
@@ -326,6 +326,28 @@ def confirmar_aviso_da_chamada(
         )
 
 
+def recusar_falhas_ja_reenviadas(anterior):
+    """**Um aviso tem um reenvio de falhas só** (`FR-1264`).
+
+    O estado dos destinatários do anterior nunca muda — as tabelas são append-only —, e por isso a
+    falha que o filho entregou continua falha no pai. Um segundo reenvio de falhas sobre o mesmo
+    pai mandaria de novo a quem o primeiro já entregou, sem justificativa e com a mesma assinatura
+    de prévia: foi o defeito que a revisão de código de 09/10/2026 provou, duas cópias por pessoa.
+    O que o filho não entregou se reenvia a partir dele.
+    """
+    from processo_seletivo.avisos.application.selectors import reenvio_de_falhas_de
+
+    filho = reenvio_de_falhas_de(anterior)
+    if filho is not None:
+        raise DomainError(
+            nomes.AVISO_FALHAS_JA_REENVIADAS,
+            "As mensagens que não saíram deste aviso já foram reenviadas, no aviso de "
+            f"{mensagem.instante(filho.solicitado_em)}. O que não saiu no reenvio se tenta de "
+            "novo a partir dele.",
+            409,
+        )
+
+
 def confirmar_reenvio(
     *,
     actor,
@@ -375,6 +397,10 @@ def confirmar_reenvio(
     ) as ctx:
         if ctx.repetido:
             return ctx.desfecho_anterior
+        # Sob a trava do Processo: dois cliques simultâneos se enfileiram, e o segundo encontra o
+        # filho que o primeiro gravou.
+        if motivo == nomes.REENVIO_DE_FALHAS:
+            recusar_falhas_ja_reenviadas(anterior)
         universo = destinatarios.universo_do_reenvio(anterior, motivo=motivo, agora=timezone.now())
         _recusar_defasada(universo, assinatura, motivo=motivo)
         _recusar_sem_elegivel(universo)
@@ -410,6 +436,7 @@ def validar_texto_do_modelo(*, assunto, corpo):
 
 __all__ = [
     "confirmar_reenvio",
+    "recusar_falhas_ja_reenviadas",
     "confirmar_aviso_da_chamada",
     "confirmar_aviso_do_resultado",
     "validar_texto_do_modelo",

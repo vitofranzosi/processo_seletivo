@@ -52,6 +52,7 @@ indeterminadas), `salvar_como_modelo` e `nome_do_modelo` (opcionais).
 | `aviso_chamada_por_mensagem_individual` | Perfil `INDIVIDUAL_MESSAGE` (`FR-1245`) | 409 |
 | `aviso_processo_em_estado_final` | `ensure_processo_accepts_changes` (`FR-1244`) | 409 |
 | `aviso_concluido` | interromper um aviso concluído | 409 |
+| `aviso_falhas_ja_reenviadas` | segundo reenvio de falhas do mesmo aviso, na prévia ou na confirmação (`FR-1264`) | 409 |
 | `aviso_envio_desabilitado` | confirmar aviso ou reenvio com a chave desligada (`FR-1282`) | 409 |
 | `idempotency_conflict` | mesma chave com outro conteúdo, como hoje | 409 |
 

@@ -467,7 +467,10 @@ def aviso_interromper(request, aviso_id):
 def aviso_reenviar(request, aviso_id):
     """A prévia do aviso filho: falhas e expiradas, ou — com justificativa — indeterminadas e
     interrompidas (`R-011`, `FR-1264`)."""
-    from processo_seletivo.avisos.application.confirmar import confirmar_reenvio
+    from processo_seletivo.avisos.application.confirmar import (
+        confirmar_reenvio,
+        recusar_falhas_ja_reenviadas,
+    )
 
     ator, anterior = _aviso_para_ler(request, aviso_id)
     if ator is None:
@@ -477,6 +480,9 @@ def aviso_reenviar(request, aviso_id):
     motivo = dados.get("motivo") or nomes.REENVIO_DE_FALHAS
     if motivo not in nomes.ALCANCE_DO_REENVIO:
         raise nao_encontrado()
+    if motivo == nomes.REENVIO_DE_FALHAS:
+        # Antes da prévia, e não só na confirmação: a tela não oferece o que vai recusar.
+        recusar_falhas_ja_reenviadas(anterior)
     universo = destinatarios.universo_do_reenvio(anterior, motivo=motivo, agora=timezone.now())
     acao = reverse("interface:aviso-reenviar", args=[anterior.id])
     extra = {

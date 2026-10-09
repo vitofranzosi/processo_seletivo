@@ -40,13 +40,15 @@
     {% for item in contagens %}<li><strong>{{ item.quantos }}</strong> — {{ item.rotulo }}</li>{% endfor %}
   </ul>
   {% if interrompido %}<p class="aviso">Este aviso foi interrompido por {{ aviso.interrupcao.interrompido_por }} em {{ aviso.interrupcao.interrompido_em|date:"d/m/Y" }} às {{ aviso.interrupcao.interrompido_em|date:"H:i" }}. Motivo: {{ aviso.interrupcao.motivo }}</p>{% endif %}
-  {% if pode_agir and habilitado %}
+  {% comment %} Interromper é o ato que protege, e não depende da chave: desligada, ele é o único freio do que sairia ao religá-la dentro da janela (FR-1282). {% endcomment %}
+  {% if pode_agir %}
   <p class="acoes">
     {% if not concluido and not interrompido %}<a class="botao perigoso" href="{% url 'interface:aviso-interromper' aviso.id %}">Interromper o envio</a>{% endif %}
-    {% if reenviaveis.REENVIO_DE_FALHAS %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_DE_FALHAS">Tentar de novo as {{ reenviaveis.REENVIO_DE_FALHAS }} que não saíram</a>{% endif %}
-    {% if reenviaveis.REENVIO_JUSTIFICADO %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_JUSTIFICADO">Reenviar, com justificativa, {{ reenviaveis.REENVIO_JUSTIFICADO }} de resultado indeterminado ou interrompido</a>{% endif %}
+    {% if habilitado and reenviaveis.REENVIO_DE_FALHAS and not reenvio_de_falhas %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_DE_FALHAS">Tentar de novo as {{ reenviaveis.REENVIO_DE_FALHAS }} que não saíram</a>{% endif %}
+    {% if habilitado and reenviaveis.REENVIO_JUSTIFICADO %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_JUSTIFICADO">Reenviar, com justificativa, {{ reenviaveis.REENVIO_JUSTIFICADO }} de resultado indeterminado ou interrompido</a>{% endif %}
   </p>
   {% endif %}
+  {% if reenvio_de_falhas %}<p>As que não saíram já foram reenviadas, no <a href="{% url 'interface:aviso' reenvio_de_falhas.id %}">aviso de {{ reenvio_de_falhas.solicitado_em|date:"d/m/Y" }} às {{ reenvio_de_falhas.solicitado_em|date:"H:i" }}</a>. O que não saiu nele se tenta de novo a partir de lá.</p>{% endif %}
   {% if reenviaveis.REENVIO_JUSTIFICADO and not interrompido %}<p class="ajuda">Resultado indeterminado quer dizer que a conexão caiu no meio, e a mensagem pode ter saído. O sistema nunca a reenvia sozinho.</p>{% endif %}
   <details>
     <summary>Ver os destinatários ({{ estados|length }})</summary>

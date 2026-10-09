@@ -147,11 +147,21 @@ def historico(aviso, *, agora):
         "concluido": estado_.concluido([estado for _, estado, _ in estados]),
         "interrompido": _tem_interrupcao(aviso),
         "despacho_parado": despacho_parado(aviso, estados, agora=agora),
+        "reenvio_de_falhas": reenvio_de_falhas_de(aviso),
         "reenviaveis": {
             motivo: sum(1 for _, estado, _ in estados if estado in alcance)
             for motivo, alcance in nomes.ALCANCE_DO_REENVIO.items()
         },
     }
+
+
+def reenvio_de_falhas_de(aviso):
+    """O reenvio de falhas que este aviso já teve, ou `None` — há no máximo um (`FR-1264`)."""
+    return (
+        Aviso.objects.filter(aviso_anterior=aviso, motivo=nomes.REENVIO_DE_FALHAS)
+        .order_by("solicitado_em")
+        .first()
+    )
 
 
 def ultimo_aviso_das_publicacoes(publicacoes):
@@ -195,6 +205,7 @@ __all__ = [
     "estados_do_aviso",
     "historico",
     "linha_de_estado",
+    "reenvio_de_falhas_de",
     "tentativas_de",
     "ultimo_aviso_das_publicacoes",
 ]

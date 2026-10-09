@@ -135,6 +135,53 @@ def test_o_expirado_so_volta_por_aviso_filho(avisado, relogio):
     assert len(mail.outbox) == 2
 
 
+def _reenviar_falhas(aviso, chave):
+    from processo_seletivo.avisos.application import destinatarios, previa
+
+    universo = destinatarios.universo_do_reenvio(
+        aviso, motivo=nomes.REENVIO_DE_FALHAS, agora=timezone.now()
+    )
+    return confirmar_reenvio(
+        actor=PUBLICADORA,
+        aviso_id=aviso.id,
+        motivo=nomes.REENVIO_DE_FALHAS,
+        assinatura=previa.assinatura(universo, motivo=nomes.REENVIO_DE_FALHAS),
+        enderecos={},
+        idempotency_key=chave,
+        correlation_id="teste-066",
+    )
+
+
+def test_o_segundo_reenvio_de_falhas_do_mesmo_aviso_e_recusado(avisado, relogio):
+    """O estado do pai nunca muda, e um segundo filho mandaria de novo a quem o primeiro entregou.
+
+    Antes da correção da revisão de código de 09/10/2026, este caso dava quatro mensagens para duas
+    pessoas: duas cópias para cada uma.
+    """
+    relogio(hours=25)
+    _reenviar_falhas(avisado, "primeiro-clique")
+
+    with pytest.raises(DomainError) as erro:
+        _reenviar_falhas(avisado, "segundo-clique")
+
+    assert erro.value.code == nomes.AVISO_FALHAS_JA_REENVIADAS
+    assert Aviso.objects.filter(aviso_anterior=avisado).count() == 1
+    despachar()
+    destinos = [mensagem.to[0] for mensagem in mail.outbox]
+    assert len(destinos) == len(set(destinos)) == 2
+
+
+def test_o_que_o_reenvio_nao_entregou_se_reenvia_a_partir_dele(avisado, relogio):
+    relogio(hours=25)
+    filho = Aviso.objects.get(pk=_reenviar_falhas(avisado, "do-pai")["aviso"])
+    relogio(hours=50)
+
+    neto = Aviso.objects.get(pk=_reenviar_falhas(filho, "do-filho")["aviso"])
+
+    assert neto.aviso_anterior_id == filho.id
+    assert neto.corpo == avisado.corpo
+
+
 def test_desligada_o_historico_continua_legivel(avisado, client, settings):
     from tests.interface.conftest import identificar
 
