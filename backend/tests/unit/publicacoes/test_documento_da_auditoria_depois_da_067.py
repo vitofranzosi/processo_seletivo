@@ -16,7 +16,18 @@ import re
 import pytest
 
 from tests.unit.publicacoes.cenarios_da_auditoria import composto, publicado_na_auditoria
+from tests.unit.publicacoes.test_itens_do_documento import RAIZ
 from tests.unit.publicacoes.test_pdf import texto_de
+
+# **O "agora" desta comparação é o documento que a `067` gravou**, e não o que o compositor faz
+# hoje: a `068` mudou o documento de novo (ED-04), e a evidência do que a `067` fez continua sendo
+# a dela. O que a `068` mudou é preso por `test_documento_da_auditoria_depois_da_068.py`.
+DEMONSTRACAO_067 = RAIZ / "specs" / "067-correcoes-de-norma-do-edital" / "demonstracao"
+
+
+def da_067(cenario):
+    return (DEMONSTRACAO_067 / f"{cenario}-publicado-067.pdf").read_bytes()
+
 
 RODAPE = re.compile(r" ?Edital \d+/\d+ · Verificação [0-9a-f]+… Página \d+ de \d+")
 CABECALHOS = (
@@ -55,7 +66,7 @@ def _substituir(texto, de_antes, agora, quantas):
 
 def test_a_diferenca_do_cenario_a_e_so_a_pretendida():
     antes = _corrido(publicado_na_auditoria("A"))
-    agora = _corrido(composto("A"))
+    agora = _corrido(da_067("A"))
 
     esperado = _substituir(antes, *_recurso("Classificação por sorteio eletrônico", 2, "dois"), 4)
     esperado = _substituir(esperado, " Arredondamento: 2 casas decimais, meio para cima", "", 4)
@@ -70,7 +81,7 @@ def test_a_diferenca_do_cenario_a_e_so_a_pretendida():
 
 def test_a_diferenca_do_cenario_b_e_so_a_pretendida():
     antes = _corrido(publicado_na_auditoria("B"))
-    agora = _corrido(composto("B"))
+    agora = _corrido(da_067("B"))
 
     esperado = _substituir(
         antes, *_recurso("Classificação final pela prova de títulos", 3, "três"), 18
