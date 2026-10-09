@@ -94,6 +94,11 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
 .marcos h3{font-size:.9375rem;margin:0 0 .25rem}
 .marcos h4{font-size:.875rem;margin:0 0 .25rem}
 .campo.caracter label{display:inline-flex;align-items:center;gap:.35rem;margin-right:1rem}
+{% comment %} A caixa herdava `width:100%` de `.campo input`, e cem por cento de um rótulo `inline-flex`, que
+   mede o próprio conteúdo, é circular: o Chrome desenhava a marca, o Safari a resolvia em zero e
+   restavam só as palavras "Eliminatória" e "Classificatória". Dois nomes de classe, como em
+   `.campo.escolha input`, para não depender da ordem na folha. {% endcomment %}
+.campo.caracter input{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
 .resumo{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:0;list-style:none}
 .resumo li{background:var(--branco);border:1px solid var(--borda);border-radius:4px;
   padding:.5rem .85rem;font-size:.875rem}
