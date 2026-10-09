@@ -667,20 +667,39 @@ def test_marcos_com_metodo_proprio_e_com_o_comum_nao_se_juntam():
     assert ("5.6", "marcos", QUATRO[:3]) in materias(plano(conteudo))
 
 
-def test_um_bloco_coeso_por_marco_na_subsecao_comum():
-    """A cascata do Perfil vale na subseção (FR-1357): o marco não se parte entre páginas."""
-    ruido = "\n".join(
-        f"Atribuição {n} do polo, com texto suficiente para ocupar a linha." for n in range(40)
-    )
-    conteudo = cenario_a(**{codigo: {"atribuicoes": ruido} for codigo in QUATRO})
-    paginas = paginas_de(documento(conteudo))
-    onde = {
-        numero
-        for numero, pagina in enumerate(paginas, 1)
+def _pagina_de_cada_linha(conteudo):
+    return [
+        (numero, linha)
+        for numero, pagina in enumerate(paginas_de(documento(conteudo)), 1)
         for linha in pagina
-        if linha.startswith("SORTEIO —") or linha.startswith("Continuação:")
-    }
-    assert len(onde) == 1
+    ]
+
+
+@pytest.mark.parametrize("folga", range(0, 40, 3))
+def test_o_marco_da_subsecao_comum_quebra_entre_as_partes_e_nunca_dentro_de_uma(folga):
+    """FR-1357: o marco quebra entre cabeçalho e pares, sorteio, recurso e corte, desempate.
+
+    Inteiro e coeso, ele saltava de página e deixava um terço dela em branco antes da subseção
+    (cenário B da auditoria). Cada parte continua inteira: o cabeçalho com a ordem, o sorteio com
+    todas as linhas do método, o recurso com o corte e a continuação. A `folga` empurra a subseção
+    linha a linha pelo pé da página, para que a quebra caia em todo ponto possível.
+    """
+    ruido = "\n".join(f"Atribuição {n} do polo." for n in range(folga))
+    conteudo = cenario_a(**{codigo: {"atribuicoes": ruido} for codigo in QUATRO})
+    paginas = _pagina_de_cada_linha(conteudo)
+
+    def pagina(prefixo):
+        (numero,) = {n for n, linha in paginas if linha.startswith(prefixo)}
+        return numero
+
+    assert pagina("SORTEIO —") == pagina("Ordem:")
+    assert pagina("Sorteio") == pagina("Algoritmo:") == pagina("Habilitação:")
+    assert pagina("Recurso:") == pagina("Corte:") == pagina("Continuação:")
+    # Com atribuições, a subseção de marcos é a 5.7; sem, a 5.6.
+    titulo = [n for n, linha in paginas if " Marcos classificatórios comuns aos" in f" {linha[4:]}"]
+    assert titulo == [pagina("Os marcos abaixo")] == [pagina("SORTEIO —")], (
+        "o título e a frase vão com o primeiro marco"
+    )
 
 
 def test_a_conferencia_de_remissoes_le_as_subsecoes_novas():

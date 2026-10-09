@@ -14,7 +14,7 @@ convocação, com os códigos que as iniciam; e o item em que as linhas do méto
 **Rationale**: a remissão sai **antes** do item a que remete, e o método comum pode ser impresso num
 Perfil e remetido de uma subseção posterior — ou o contrário. O número tem de existir antes de a
 primeira linha ser escrita, e tem de vir da mesma lista que numera as subseções: é o que a `064` já
-fazia com `item_comum`, generalizado. E `itens_do_documento` e `tabelas_do_documento` (065, D-004)
+fazia com `item_comum`, generalizado. E `itens_do_documento` e `tabelas_do_documento` (a decisão 004 da `065`)
 precisam da mesma resposta sem compor o documento inteiro (R-009).
 
 **Alternatives considered**: decidir durante a composição — a remissão precisaria de um número que
@@ -120,7 +120,7 @@ requisitos e de marcos, com as naturezas `atribuicoes_comuns`, `requisitos_comun
 o Cronograma; com um Perfil, a contagem de hoje. `validation._DESCRICAO_DO_ITEM` ganha as duas
 naturezas novas. O guardião `test_itens_do_documento.py` ganha casos com grupos de cada matéria.
 
-**Rationale**: a `065` (D-004 dela) exige uma regra só para o que o documento numera, presa por um
+**Rationale**: a `065` (a decisão 004 dela) exige uma regra só para o que o documento numera, presa por um
 guardião que compõe o documento de verdade. Sem a natureza nova em `_DESCRICAO_DO_ITEM`, a
 conferência de remissões cai com `KeyError` no primeiro Edital consolidado — é o erro que o pedido
 desta feature avisou.
@@ -130,8 +130,11 @@ desta feature avisou.
 **Decision**: título "N.k Marcos classificatórios comuns aos Perfis …" (`_linhas_sem_partir`); logo
 abaixo, a frase do FR-1347; depois os marcos, compostos pela mesma `_marcos`, sem o rótulo "Marcos
 classificatórios" (o título da subseção o substitui) e com o recuo deslocado um degrau para a
-esquerda (marco a 18, pares a 18, método a 32), como a `064` fez com as atribuições. Um bloco coeso
-por marco, como no Perfil. No Perfil agrupado, `_pares` com "Marcos classificatórios" e "os
+esquerda (marco a 18, pares a 18, método a 32), como a `064` fez com as atribuições. Cada marco
+quebra entre as suas partes — cabeçalho e pares, sorteio, recurso e corte, desempate —, cada parte
+um bloco coeso (FR-1357); o título e a frase vão `junto`, e a quebra os leva com a primeira. *Revisto
+na implementação*: a primeira versão fazia do marco inteiro um bloco coeso, como no Perfil, e no
+cenário B ele saltava e deixava um terço da p. 9 em branco. No Perfil agrupado, `_pares` com "Marcos classificatórios" e "os
 descritos no item N.k.", com o espaço de sub-bloco. Requisitos: o mesmo molde — "N.k Requisitos
 comuns aos Perfis …", os itens com o marcador, e "Requisitos: os descritos no item N.k." no Perfil.
 

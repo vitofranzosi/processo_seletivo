@@ -99,7 +99,7 @@ bloco por Perfil. **Nunca** se afrouxa a asserção, e cada caso é registrado e
 
 A `066-avisos-complementares` (PR #269, aberto) toca `publicacoes_do_marco.html` e a spec da `017`, e
 não o compositor nem `validation.py` naquilo que esta feature muda. A faixa desta (`FR-1340`,
-`SC-510`, `UX-200`) fica acima do teto dela. Depois do merge de qualquer uma, a outra atualiza a
+`SC-510`) fica acima do teto dela. Depois do merge de qualquer uma, a outra atualiza a
 branch e roda `test_citacoes_de_requisito.py`.
 
 ## Project Structure

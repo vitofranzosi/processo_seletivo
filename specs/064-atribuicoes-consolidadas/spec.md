@@ -241,6 +241,10 @@ dois documentos guardados.
   remissão MUST apontar número de outro documento.
 - **FR-1197**: Requisitos, modalidades, fundamentos, quadros de vagas, marcos de classificação e os
   demais blocos do Perfil MUST continuar impressos em cada Perfil, como antes desta feature.
+  > **Emendado pela `068` (FR-1340 a FR-1359, 09/10/2026):** os requisitos e os marcos idênticos
+  > passam a sair uma vez, em subseções comuns depois das de atribuições, pela mesma identidade do
+  > texto impresso; o quadro de vagas e as modalidades, em tabelas da seção. A numeração das tabelas
+  > muda (a `068` não tem o FR-1192 desta), e a das subseções de atribuições, não.
 
 ### Key Entities
 

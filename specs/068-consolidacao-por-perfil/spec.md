@@ -36,7 +36,7 @@ E as respostas do responsável pelo produto às três perguntas desta spec, na m
    da `064` — o texto impresso.
 
 > **Faixa de identificadores.** Abre em **FR-1340** e **SC-510**; não há requisito de experiência — a
-> faixa **UX-200** fica reservada e sem uso. O teto medido em
+> faixa de experiência não é usada. O teto medido em
 > 09/10/2026 na `main` e em todas as worktrees era o da `067` (mil trezentos e vinte e oito para os
 > requisitos funcionais, quinhentos e sete para os critérios de sucesso, cento e noventa e três
 > para a experiência); a `066-avisos-complementares`, em PR aberto (#269), fica abaixo disso. O
@@ -125,7 +125,7 @@ que a ordem das listas é a mesma na tabela de vagas e na de modalidades.
    vagas e na de modalidades (ED-11).
 3. **Given** um Perfil sem vaga imediata (só cadastro de reserva), **When** o documento é composto,
    **Then** ele não tem linha na tabela de vagas e nenhum zero é impresso por ele — a regra da `067`
-   (D-003 dela) — e continua presente na tabela de modalidades.
+   (a decisão 003 dela) — e continua presente na tabela de modalidades.
 4. **Given** um Edital de um Perfil só, **When** o documento é composto, **Then** ele sai com os
    mesmos bytes de antes desta feature.
 
@@ -276,7 +276,7 @@ documentos guardados.
   coluna cortada.
 - **FR-1343**: A tabela única MUST conter, para cada Perfil com quadro e com vaga imediata, exatamente
   os números do quadro dele, cada um na lista a que pertence; lista que o Perfil não declara MUST sair
-  "—". Perfil sem quadro ou sem vaga imediata MUST NOT ter linha (`067`, D-003 dela).
+  "—". Perfil sem quadro ou sem vaga imediata MUST NOT ter linha (`067`, a decisão 003 dela).
 - **FR-1344**: As tabelas de modalidades MUST se agrupar pela identidade do FR-1340: uma tabela por
   grupo de Perfis de tabela idêntica, com legenda que nomeia os códigos do grupo — ou nenhum, quando o
   grupo é o Edital inteiro —, logo depois da tabela de vagas.
@@ -333,7 +333,7 @@ documentos guardados.
   remete; e cada subseção comum MUST ser objeto de remissão de todos os Perfis que nomeia, e de nenhum
   outro.
 - **FR-1355**: As funções que dizem quais itens e quantas tabelas o documento imprime — usadas pela
-  conferência de remissões da `065` (D-004 dela) — MUST continuar sendo a mesma regra da composição,
+  conferência de remissões da `065` (a decisão 004 dela) — MUST continuar sendo a mesma regra da composição,
   com as subseções comuns novas e a contagem nova de tabelas.
 - **FR-1356**: O documento de Edital de um Perfil só MUST sair com os mesmos bytes de antes desta
   feature; a prévia e o publicado MUST consolidar do mesmo modo e quebrar nas mesmas páginas.
@@ -341,7 +341,14 @@ documentos guardados.
 **Paginação**
 
 - **FR-1357**: As subseções comuns MUST obedecer à paginação do Perfil (FR-020 a FR-022 da `008`),
-  como a da `064`; a tabela única MUST repetir o cabeçalho quando atravessa a página, como as demais.
+  como a da `064`: título nunca sozinho no pé da página, e quebra só em fronteira semântica. Na
+  subseção comum de marcos, cada marco MUST quebrar entre as suas partes — cabeçalho e pares,
+  sorteio, recurso e corte, desempate — e nunca dentro de uma; o título e a frase do FR-1347 MUST ir
+  com a primeira. A tabela única MUST repetir o cabeçalho quando atravessa a página, como as demais.
+  > **Precisado na implementação (09/10/2026).** A primeira versão mantinha o marco coeso, como no
+  > Perfil; no cenário B ele saltava inteiro e deixava um terço da p. 9 em branco — o custo que a
+  > auditoria registrou para a `064` (§9). No Perfil o marco continua coeso: o Edital de um Perfil sai
+  > com os mesmos bytes (FR-1356).
 
 **Publicação e Retificação**
 
@@ -414,22 +421,29 @@ cenários da auditoria.
 Tomadas pelo responsável pelo produto em 09/10/2026, sobre as opções apresentadas com a medição da
 evidência 4.
 
-- **D-001 — As subseções comuns ficam depois do último Perfil.** Junto das atribuições comuns da
-  `064`, numeradas em continuação. *Alternativas descartadas:* antes dos Perfis — leitura do geral
-  para o particular, mas uma Retificação que desfizesse um grupo renumeraria todos os Perfis, e o
-  "item 3.5" digitado no texto livre passaria a ser outro Perfil sem aviso; na primeira ocorrência —
-  nenhum número novo, mas quem lê o primeiro Perfil não sabe que a regra é comum, e a Retificação
-  desse Perfil mudaria a "casa" da regra. O custo de navegação da `064` (remissão da p. 7 à p. 39 em
-  B) cai com a própria consolidação, que encolhe a seção.
-- **D-002 — Tabela única em matriz, e modalidades uma vez.** Uma linha por Perfil, uma coluna por
-  lista, no lugar do quadro de cada Perfil; as tabelas de modalidades, com percentual e fundamento,
-  uma por grupo de Perfis de tabela idêntica — uma só quando todos são iguais —, na ordem das colunas
-  (ED-11). *Alternativas descartadas:* tabela longa com percentual e fundamento em cada linha —
-  repetiria o fundamento por linha, até 72 linhas em B; consolidar só as modalidades — o quadro de
-  cada Perfil continuaria, e a pergunta "quantas vagas PPI no polo X" continuaria pedindo o Perfil.
-- **D-003 — Requisitos idênticos se consolidam, e "idêntico" é o texto impresso.** O critério da `064`
-  vale para todos os blocos: requisitos, tabelas de modalidades e marcos. *Alternativa descartada:*
-  manter os requisitos em cada Perfil — são curtos, mas 16 vezes os mesmos em B.
+### D-001 — As subseções comuns ficam depois do último Perfil
+
+Junto das atribuições comuns da `064`, numeradas em continuação. *Alternativas descartadas:* antes
+dos Perfis — leitura do geral para o particular, mas uma Retificação que desfizesse um grupo
+renumeraria todos os Perfis, e o "item 3.5" digitado no texto livre passaria a ser outro Perfil sem
+aviso; na primeira ocorrência — nenhum número novo, mas quem lê o primeiro Perfil não sabe que a
+regra é comum, e a Retificação desse Perfil mudaria a "casa" da regra. O custo de navegação da `064`
+(remissão da p. 7 à p. 39 em B) cai com a própria consolidação, que encolhe a seção.
+
+### D-002 — Tabela única em matriz, e modalidades uma vez
+
+Uma linha por Perfil, uma coluna por lista, no lugar do quadro de cada Perfil; as tabelas de
+modalidades, com percentual e fundamento, uma por grupo de Perfis de tabela idêntica — uma só quando
+todos são iguais —, na ordem das colunas (ED-11). *Alternativas descartadas:* tabela longa com
+percentual e fundamento em cada linha — repetiria o fundamento por linha, até 72 linhas em B;
+consolidar só as modalidades — o quadro de cada Perfil continuaria, e a pergunta "quantas vagas PPI
+no polo X" continuaria pedindo o Perfil.
+
+### D-003 — Requisitos idênticos se consolidam, e "idêntico" é o texto impresso
+
+O critério da `064` vale para todos os blocos: requisitos, tabelas de modalidades e marcos.
+*Alternativa descartada:* manter os requisitos em cada Perfil — são curtos, mas 16 vezes os mesmos
+em B.
 
 ---
 

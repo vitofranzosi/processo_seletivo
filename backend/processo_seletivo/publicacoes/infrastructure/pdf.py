@@ -13,7 +13,7 @@ WinAnsi não cobre é normalizado ou recusado por `publicacoes.domain.grafia`, e
 """
 
 import re
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -1725,6 +1725,16 @@ def _marcos(
     metodo_remetido = metodo_remetido or {}
     # O degrau do marco: 32 no Perfil, sob o rótulo; 18 na subseção comum, sob o título dela.
     degrau = 18.0 if comum else 32.0
+
+    # **Na subseção comum, o marco quebra entre as suas partes** — cabeçalho e pares, sorteio,
+    # recurso e corte, desempate —, e não salta inteiro. Um marco de 25 linhas coeso deixava um
+    # terço da página em branco antes da subseção (cenário B da auditoria, p. 9): o branco que a
+    # `064` registrou e esta feature existe para não repetir. As partes são fronteiras semânticas,
+    # como as do Perfil (FR-021 da `008`). No Perfil, o marco continua coeso como sempre foi: o
+    # Edital de um Perfil sai com os mesmos bytes (FR-1356).
+    def parte():
+        return composicao.bloco() if comum else nullcontext()
+
     titulo = "Marcos classificatórios"
     if nomear_perfil:
         titulo = f"{titulo} — {perfil.get('code', '')}"
@@ -1739,103 +1749,108 @@ def _marcos(
                 junto=True,
             )
         for marco in marcos:
-            with composicao.bloco():
-                composicao.escrever(
-                    f"{marco.get('code', '')} — {marco.get('name', '')}",
-                    tamanho=CORPO_TEXTO,
-                    fonte=NEGRITO,
-                    recuo=degrau,
-                    antes=ANTES_DE_BLOCO,
-                    junto=True,
-                )
-                # **Tudo abaixo é decidido pela forma que o marco declara**, e não pela inferida
-                # (032, FR-464). A distinção protege o acervo: marco composto antes da `030` não
-                # declara `orderProduction`, e a ausência **é** a afirmação — ele não ganha o par
-                # `Ordem` e sai do documento exatamente como sempre saiu, com a combinação que
-                # sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um marco
-                # antigo que carrega método, e documento publicado não muda de conteúdo.
-                forma = marco.get("orderProduction") or ""
-                sorteia = regras_do_marco.declara_sorteio(marco)
-                pares = []
-                ordem = FORMA_DA_ORDEM.get(forma)
-                if ordem:
-                    pares.append(["Ordem", ordem])
-                # **Aquela ordem não vem de nota** (032, FR-468). Imprimir "soma ponderada da
-                # Etapa…" sob um marco de sorteio era o documento afirmando um método falso — o
-                # `ACH-50` da auditoria de 16/09/2026, lido no papel que a candidata recebe.
-                if not sorteia:
-                    combinacao = _combinacao(marco, etapas)
-                    if combinacao:
-                        pares.append(["Combinação", combinacao])
-                    normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
-                    if normalizacao:
-                        pares.append(["Normalização", normalizacao])
-                # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
-                # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
-                # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
-                # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
-                # pela função que a validação e a Revisão também leem (D-004).
-                arredondamento = "" if sorteia else _arredondamento(marco)
-                if arredondamento:
-                    pares.append(["Arredondamento", arredondamento])
-                _pares(composicao, pares, recuo=degrau)
+            with composicao.bloco(coeso=not comum):
+                with parte():
+                    composicao.escrever(
+                        f"{marco.get('code', '')} — {marco.get('name', '')}",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=degrau,
+                        antes=ANTES_DE_BLOCO,
+                        junto=True,
+                    )
+                    # **Tudo abaixo é decidido pela forma que o marco declara**, e não pela inferida
+                    # (032, FR-464). A distinção protege o acervo: marco composto antes da `030` não
+                    # declara `orderProduction`, e a ausência **é** a afirmação — ele não ganha o
+                    # par `Ordem` e sai do documento exatamente como sempre saiu, com a combinação
+                    # que sempre imprimiu. Ler a forma por inferência aqui mudaria a saída de um
+                    # marco antigo que carrega método, e documento publicado não muda de conteúdo.
+                    forma = marco.get("orderProduction") or ""
+                    sorteia = regras_do_marco.declara_sorteio(marco)
+                    pares = []
+                    ordem = FORMA_DA_ORDEM.get(forma)
+                    if ordem:
+                        pares.append(["Ordem", ordem])
+                    # **Aquela ordem não vem de nota** (032, FR-468). Imprimir "soma ponderada da
+                    # Etapa…" sob um marco de sorteio era o documento afirmando um método falso — o
+                    # `ACH-50` da auditoria de 16/09/2026, lido no papel que a candidata recebe.
+                    if not sorteia:
+                        combinacao = _combinacao(marco, etapas)
+                        if combinacao:
+                            pares.append(["Combinação", combinacao])
+                        normalizacao = NORMALIZACAO_DO_MARCO.get(marco.get("normalization"))
+                        if normalizacao:
+                            pares.append(["Normalização", normalizacao])
+                    # **E também não há o que arredondar** (067, ED-03, FR-1313). O sorteio tem a
+                    # mesma razão da combinação, e o arredondamento ficou para trás: a validação o
+                    # exigia de todo marco, a tela o preenchia, e o documento imprimia "2 casas
+                    # decimais, meio para cima" sob uma ordem sorteada. A forma aqui é a declarada,
+                    # pela função que a validação e a Revisão também leem (D-004).
+                    arredondamento = "" if sorteia else _arredondamento(marco)
+                    if arredondamento:
+                        pares.append(["Arredondamento", arredondamento])
+                    _pares(composicao, pares, recuo=degrau)
                 # O bloco do método, entre o arredondamento e o recurso — a ordem é a que
                 # `contracts/marco-no-documento.md` fixa, e ela faz parte do contrato.
                 if sorteia and (metodo := _metodo_do_marco(snapshot, perfil, marco)):
-                    # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
-                    # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
-                    # As linhas do método comum saem uma vez no documento (068, FR-1349): aqui,
-                    # se já saíram noutro item, fica a remissão — e a habilitação, que é do marco.
-                    if (remetido := metodo_remetido.get(id(marco))) is not None:
-                        metodo = [
-                            ["Método", f"o comum a este Edital, descrito no item {remetido}."]
-                        ]
-                    if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
-                        metodo = [*metodo, ["Habilitação", habilitacao]]
+                    with parte():
+                        # Depois dos sete, e fora deles: não é campo do método comum, e por isso não
+                        # entra na comparação que nomeia a divergência (`_publica_a_mesma_norma`).
+                        # As linhas do método comum saem uma vez no documento (068, FR-1349): aqui,
+                        # se já saíram noutro item, fica a remissão — e a habilitação, que é do
+                        # marco.
+                        if (remetido := metodo_remetido.get(id(marco))) is not None:
+                            metodo = [
+                                ["Método", f"o comum a este Edital, descrito no item {remetido}."]
+                            ]
+                        if habilitacao := _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas):
+                            metodo = [*metodo, ["Habilitação", habilitacao]]
+                        composicao.escrever(
+                            "Sorteio",
+                            tamanho=CORPO_TEXTO,
+                            fonte=NEGRITO,
+                            recuo=degrau,
+                            antes=ANTES_DE_LINHA,
+                            junto=True,
+                        )
+                        _pares(composicao, metodo, recuo=degrau + 14)
+                with parte():
+                    posteriores = []
+                    janela = _janela_recursal(marco)
+                    if janela:
+                        posteriores.append(["Recurso", janela])
+                    corte = _regra_de_corte(marco, etapas)
+                    if corte:
+                        posteriores.append(["Corte", corte])
+                        # A ordem sorteada é total — cada posição é única —, e o empate na última
+                        # posição não acontece (067, FR-1314). A validação já não exige o desfecho
+                        # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
+                        if not sorteia and (empate := _empate_no_corte(marco)):
+                            posteriores.append(["Empate no corte", empate])
+                        if continuacao := _continuacao_do_corte(marco):
+                            posteriores.append(["Continuação", continuacao])
+                    _pares(composicao, posteriores, recuo=degrau)
+                criterios = sorted(
+                    marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
+                )
+                if not criterios:
+                    continue
+                with parte():
                     composicao.escrever(
-                        "Sorteio",
+                        "Critérios de desempate:",
                         tamanho=CORPO_TEXTO,
                         fonte=NEGRITO,
                         recuo=degrau,
                         antes=ANTES_DE_LINHA,
                         junto=True,
                     )
-                    _pares(composicao, metodo, recuo=degrau + 14)
-                posteriores = []
-                janela = _janela_recursal(marco)
-                if janela:
-                    posteriores.append(["Recurso", janela])
-                corte = _regra_de_corte(marco, etapas)
-                if corte:
-                    posteriores.append(["Corte", corte])
-                    # A ordem sorteada é total — cada posição é única —, e o empate na última
-                    # posição não acontece (067, FR-1314). A validação já não exige o desfecho
-                    # sob sorteio (`FR-928`); o documento ainda o imprimia quando gravado.
-                    if not sorteia and (empate := _empate_no_corte(marco)):
-                        posteriores.append(["Empate no corte", empate])
-                    if continuacao := _continuacao_do_corte(marco):
-                        posteriores.append(["Continuação", continuacao])
-                _pares(composicao, posteriores, recuo=degrau)
-                criterios = sorted(
-                    marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0
-                )
-                if not criterios:
-                    continue
-                composicao.escrever(
-                    "Critérios de desempate:",
-                    tamanho=CORPO_TEXTO,
-                    fonte=NEGRITO,
-                    recuo=degrau,
-                    antes=ANTES_DE_LINHA,
-                    junto=True,
-                )
-                for indice, criterio in enumerate(criterios, start=1):
-                    composicao.escrever(
-                        f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
-                        tamanho=CORPO_TEXTO,
-                        recuo=degrau + 14,
-                        antes=ANTES_DE_LINHA,
-                    )
+                    for indice, criterio in enumerate(criterios, start=1):
+                        composicao.escrever(
+                            f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
+                            tamanho=CORPO_TEXTO,
+                            recuo=degrau + 14,
+                            antes=ANTES_DE_LINHA,
+                        )
 
 
 def _fatos_declarados(composicao, perfil):
