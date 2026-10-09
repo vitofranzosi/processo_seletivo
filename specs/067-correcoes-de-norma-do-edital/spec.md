@@ -137,7 +137,7 @@ um direito sem objeto é norma que o candidato não consegue exercer com seguran
 
 Ao abrir a Revisão do cenário A, quem elabora vê um aviso: os marcos publicam recurso de 2 dias
 contra "Classificação por sorteio eletrônico", nos 4 Perfis; o Cronograma tem um Evento de recurso,
-"Recurso — Prazo para interposição de recurso", de 26/11/2026 a 27/11/2026. O aviso pede que ela
+"Prazo para interposição de recurso", de 26/11/2026 a 27/11/2026. O aviso pede que ela
 confira se o Cronograma tem o período de recurso de cada resultado de marco, e se os demais períodos
 são de outros atos, ditos assim no texto. Ela percebe que o período do Cronograma é o da análise
 documental e que falta o do sorteio — e corrige o Cronograma ou o marco antes de submeter.
@@ -289,8 +289,8 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
 - **Evento de recurso** é o Evento do Cronograma cujo tipo ou descrição tem uma palavra iniciada por
   "recurs" (recurso, recursos, recursal), sem distinguir maiúsculas. "Prazo recursal" conta;
   "Concurso" e "percurso" não contam.
-- **Evento cancelado** continua listado, com a marca de cancelado: o aviso mostra o Cronograma como o
-  documento o imprime.
+- **Evento cancelado** continua listado, sem marca: o aviso mostra o Cronograma como o documento o
+  imprime, e o documento não marca o cancelado.
 - **Evento de um instante** (sem término) é listado com a data e a hora de início.
 - **Marcos com o mesmo nome e o mesmo prazo em vários Perfis** são uma linha só do aviso, com os
   Perfis enumerados; mesmo nome e prazos diferentes são linhas diferentes.
@@ -362,8 +362,8 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
   que não cabe —, a validação do Edital MUST emitir **um** aviso de conferência de recurso, que
   enumera: (a) cada regra de recurso de marco — nome do marco, Perfis em que está e o prazo, ou "não
   cabe recurso" —, agrupando numa linha marcos de mesmo nome e mesma regra; e (b) cada Evento de
-  recurso, na ordem do Cronograma, com tipo, descrição e período como o documento os imprime — ou a
-  afirmação de que o Cronograma não tem Evento de recurso.
+  recurso, na ordem do Cronograma, como o documento o imprime — a descrição (ou o tipo, sem
+  descrição), o início e o término —, ou a afirmação de que o Cronograma não tem Evento de recurso.
 - **FR-1307**: O aviso MUST pedir que quem elabora confira se o Cronograma tem o período de recurso
   de cada resultado de marco, e se os demais períodos de recurso são contra outros atos, ditos assim
   no texto do Edital. Ele MUST NOT afirmar que algum Evento corresponde a algum marco, nem que falta
@@ -429,8 +429,8 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
 ### Requisitos de experiência
 
 - **UX-190**: O aviso de conferência de recurso MUST usar a linguagem de quem elabora — "marco",
-  "Perfil", "prazo", "Cronograma", "Evento" —, com o nome do marco e o tipo e a descrição do Evento
-  como a tela os mostra; nenhum código interno, caminho ou nome de campo.
+  "Perfil", "prazo", "Cronograma", "Evento" —, com o nome do marco e o Evento como o documento o
+  imprime; nenhum código interno, caminho ou nome de campo.
 - **UX-191**: O aviso MUST levar à etapa do Cronograma, onde se corrige o período, e nomear os Perfis
   dos marcos, onde se corrige a regra.
 - **UX-192**: Na Revisão, a reversão declarada de Perfil sem vaga imediata MUST continuar visível,
@@ -446,8 +446,8 @@ Exemplos normativos do tom e do conteúdo; a redação final é do plano, desde 
 | Onde | Texto |
 |---|---|
 | Documento, marco que admite recurso | Recurso: Caberá recurso contra o resultado de “Classificação por sorteio eletrônico”, no prazo de 2 (dois) dias corridos, contados da divulgação desse resultado. |
-| Revisão, aviso (cenário A) | **Prazos de recurso a conferir.** Os marcos publicam recurso: “Classificação por sorteio eletrônico” (INF-BJN, INF-IUN, INF-SMT, INF-VAL) — 2 (dois) dias corridos, contados da divulgação desse resultado. O Cronograma tem 1 Evento de recurso: Recurso — Prazo para interposição de recurso, de 26/11/2026, às 0h, a 27/11/2026, às 23h59. O sistema não relaciona o Cronograma aos marcos: confira se há período de recurso para o resultado de cada marco e se os demais períodos são contra outros atos, ditos assim no texto. |
-| Revisão, aviso (cenário B, resumido) | **Prazos de recurso a conferir.** Os marcos publicam recurso: “Classificação final pela prova de títulos” (18 Perfis) — 3 (três) dias corridos… O Cronograma tem 4 Eventos de recurso: Recurso — Recurso contra a homologação preliminar das inscrições, de 31/10/2026 … a 02/11/2026 …; Recurso — Recurso contra o resultado preliminar da prova de títulos, …; … |
+| Revisão, aviso (cenário A) | **Prazos de recurso a conferir.** Os marcos publicam recurso: “Classificação por sorteio eletrônico” (INF-BJN, INF-IUN, INF-SMT, INF-VAL) — 2 (dois) dias corridos, contados da divulgação desse resultado. O Cronograma tem 1 Evento de recurso: Prazo para interposição de recurso — de 26/11/2026, às 00h, a 27/11/2026, às 23h59. O sistema não relaciona o Cronograma aos marcos: confira se há período de recurso para o resultado de cada marco e se os demais períodos são contra outros atos, ditos assim no texto. |
+| Revisão, aviso (cenário B, resumido) | **Prazos de recurso a conferir.** Os marcos publicam recurso: “Classificação final pela prova de títulos” (18 Perfis) — 3 (três) dias corridos… O Cronograma tem 4 Eventos de recurso: Recurso contra a homologação preliminar das inscrições — de 31/10/2026, às 00h, a 02/11/2026, às 23h59; Recurso contra o resultado preliminar da prova de títulos — …; … |
 | Revisão, sem Evento de recurso | … O Cronograma não tem Evento de recurso: o resultado destes marcos não tem período de recurso publicado no Cronograma. … |
 | Revisão, reversão de Perfil sem vaga imediata | Reverter vaga reservada não preenchida para a ampla concorrência: a quantidade que ficou sem preencher — não sai no documento: o Perfil não tem vaga imediata. |
 
