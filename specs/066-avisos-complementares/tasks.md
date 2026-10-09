@@ -313,21 +313,21 @@ simultâneas.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T054 [P] `doc/implantacao-em-producao-ubuntu.md`:
+- [X] T054 [P] `doc/implantacao-em-producao-ubuntu.md`:
   - `ps-avisos.service` e `ps-avisos.timer`, da contracts/despacho.md, na §21;
   - `EMAIL_TIMEOUT` na §16, com o gap I-4 resolvido;
   - `AVISOS_AOS_CANDIDATOS` desligada até a validação de LGPD e do correio;
   - conferência de `systemctl list-timers`, porque o timer desabilitado não alerta (risco do plano);
   - o limite da conta de envio a obter do setor de correio
-- [ ] T055 [P] `AGENTS.md`:
+- [X] T055 [P] `AGENTS.md`:
   - `40 de 40` no parágrafo do `provisionar_papeis`, e "o `M` continua 34" vira 40;
   - a linha `Modelos de aviso` do `make preparar`;
   - a chave `AVISOS_AOS_CANDIDATOS` em *Subir o ambiente*;
   - os números da suíte, medidos em T058, com falhas e pulados juntos
-- [ ] T056 [P] Atualizar a linha da `066` em `README.md`, de "especificada e planejada" para o que foi entregue
-- [ ] T057 Criar `specs/066-avisos-complementares/rastreabilidade.md`, com uma linha por FR, SC e UX, inclusive `FR-1255a` e `FR-1260a`, apontando o lugar no código e o teste que o prende (T`test_citacoes_de_requisito.py::test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature`)
+- [X] T056 [P] Atualizar a linha da `066` em `README.md`, de "especificada e planejada" para o que foi entregue
+- [X] T057 Criar `specs/066-avisos-complementares/rastreabilidade.md`, com uma linha por FR, SC e UX, inclusive `FR-1255a` e `FR-1260a`, apontando o lugar no código e o teste que o prende (T`test_citacoes_de_requisito.py::test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature`)
 - [ ] T058 `cd backend && make lint check test-pg DB_NAME=ps_066`, com `ruff check` **e** `ruff format --check`, sem editar nada durante a suíte. Registrar passando, pulados e tempo. Os pulados não mudam, e qualquer pulado novo é conferido um a um
-- [ ] T059 Criar `specs/066-avisos-complementares/verificacao.md`: o roteiro de quickstart.md §1 a §5a pela interface do ator, com o correio de desenvolvimento, e capturas a 1280 × 900 e 375 px (Princípio VI). Medir e registrar o tempo de compor e confirmar um aviso de resultado a partir de um modelo, no roteiro §1 (SC-485, meta de 3 minutos)
+- [X] T059 Criar `specs/066-avisos-complementares/verificacao.md`: o roteiro de quickstart.md §1 a §5a pela interface do ator, com o correio de desenvolvimento, e capturas a 1280 × 900 e 375 px (Princípio VI). Medir e registrar o tempo de compor e confirmar um aviso de resultado a partir de um modelo, no roteiro §1 (SC-485, meta de 3 minutos)
 - [ ] T060 Antes de integrar:
   - `gh pr view 266 --json state`;
   - medir de novo o teto de FR, SC e UX em todas as worktrees;

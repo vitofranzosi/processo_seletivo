@@ -17,7 +17,7 @@ MODELOS_INICIAIS = (
         "Divulgação de resultado",
         ASSUNTO_NEUTRO,
         "Olá, {nome_do_candidato}.\n\n"
-        "Foi publicado em {data_da_publicacao} o resultado {natureza_do_resultado} da etapa\n"
+        "Foi publicado em {data_da_publicacao} o resultado {natureza_do_resultado} da etapa "
         "{etapa}, do {perfil}, no {edital}.\n\n"
         "Para consultar a sua situação, entre na área do candidato:\n"
         "{area_do_candidato}\n\n"
@@ -27,7 +27,7 @@ MODELOS_INICIAIS = (
         "Publicação retificadora",
         ASSUNTO_NEUTRO,
         "Olá, {nome_do_candidato}.\n\n"
-        "Foi publicada em {data_da_publicacao} uma publicação retificadora do resultado\n"
+        "Foi publicada em {data_da_publicacao} uma publicação retificadora do resultado "
         "{natureza_do_resultado} da etapa {etapa}, do {perfil}, no {edital}.\n\n"
         "Consulte a publicação vigente e a sua situação na área do candidato:\n"
         "{area_do_candidato}",
@@ -36,9 +36,9 @@ MODELOS_INICIAIS = (
         "Nova chamada publicada",
         ASSUNTO_NEUTRO,
         "Olá, {nome_do_candidato}.\n\n"
-        "Foi publicada em {data_da_publicacao} uma nova chamada do {perfil}, no {edital}, e a\n"
+        "Foi publicada em {data_da_publicacao} uma nova chamada do {perfil}, no {edital}, e a "
         "sua inscrição está entre as convocadas.\n\n"
-        "O que fazer e até quando estão na publicação oficial. Acompanhe também pela área do\n"
+        "O que fazer e até quando estão na publicação oficial. Acompanhe também pela área do "
         "candidato: {area_do_candidato}",
     ),
 )

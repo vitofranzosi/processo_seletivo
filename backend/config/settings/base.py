@@ -207,7 +207,8 @@ AVISOS_INTERVALOS_DE_RETENTATIVA = tuple(
 # Pendente há mais que isto faz o histórico dizer que o despacho pode estar parado (`FR-1272`).
 AVISOS_ALERTA_DE_PENDENTE_MIN = int(os.getenv("AVISOS_ALERTA_DE_PENDENTE_MIN", "10"))
 # **A janela é o que impede religar a chave de disparar mensagem antiga** (`R-016`, `FR-1283`): o
-# banco não vê a chave mudar, e por isso o critério é a idade do aviso, e não o instante da ativação.
+# banco não vê a chave mudar, e por isso o critério é a idade do aviso, e não o instante da
+# ativação.
 AVISOS_JANELA_DE_DESPACHO_HORAS = int(os.getenv("AVISOS_JANELA_DE_DESPACHO_HORAS", "24"))
 
 # Existe um proxy à frente da aplicação? (010) Só com isto ligado o cabeçalho `X-Forwarded-For` é

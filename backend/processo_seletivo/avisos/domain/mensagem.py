@@ -18,13 +18,19 @@ from processo_seletivo.avisos.domain.variaveis import escapar, resolver, resolve
 
 # **O rodapé é do sistema, e não da seleção** (`FR-1257`). É ele que impede o aviso de ser lido como
 # o ato: aponta a publicação oficial, diz que ela é a referência e que o aviso não a substitui.
-RODAPE = """—
-A publicação oficial está em {destino_oficial} e é a referência para prazos e
-resultados, conforme o {edital}. Este aviso não substitui a publicação.
-{frase_da_chamada}Em caso de dúvida, fale com {atendimento}.
-
-Cefor/Ifes — Seleções
-Esta mensagem é automática; não responda."""
+#
+# **Um parágrafo por linha, sem quebra no meio da frase**: quem quebra a linha é o leitor de e-mail,
+# na largura da tela de quem lê. A quebra fixa em 80 colunas deixava palavra sozinha na linha
+# seguinte em toda tela mais estreita que isso — a do celular, que é onde o aviso é lido.
+RODAPE = (
+    "—\n"
+    "A publicação oficial está em {destino_oficial} e é a referência para prazos e resultados, "
+    "conforme o {edital}. Este aviso não substitui a publicação.\n"
+    "{frase_da_chamada}Em caso de dúvida, fale com {atendimento}.\n"
+    "\n"
+    "Cefor/Ifes — Seleções\n"
+    "Esta mensagem é automática; não responda."
+)
 
 # **Só na chamada.** Sem esta frase, quem recebe o aviso de uma chamada por publicação contaria o
 # prazo a partir do e-mail — e o Edital o conta da publicação (`D-001`).

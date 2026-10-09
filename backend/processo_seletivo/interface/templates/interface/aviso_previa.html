@@ -74,7 +74,7 @@ grava nada.
     </select>
     <p class="ajuda">Escolher outro modelo troca o texto abaixo pelo dele.</p>
   </div>
-  <button type="submit" class="botao secundario">Usar este modelo</button>
+  <p class="botoes-do-aviso"><button type="submit" class="botao secundario">Usar este modelo</button></p>
 </form>
 {% endif %}
 
@@ -121,7 +121,7 @@ grava nada.
   </div>
   {% endif %}
 
-  <button type="submit" name="acao" value="previa" class="botao secundario">Atualizar a prévia</button>
+  <p class="botoes-do-aviso"><button type="submit" name="acao" value="previa" class="botao secundario">Atualizar a prévia</button></p>
 
   {% if previa.exemplo %}
   <section aria-labelledby="titulo-exemplo">
@@ -130,7 +130,7 @@ grava nada.
     <pre class="texto-do-aviso">{{ previa.exemplo.assunto_e_corpo.1 }}</pre>
     {% if contagens.com_endereco > 1 %}
     <input type="hidden" name="exemplo" value="{{ proximo_exemplo }}">
-    <button type="submit" name="acao" value="previa" class="acao">Ver a mensagem de outra pessoa</button>
+    <p class="botoes-do-aviso"><button type="submit" name="acao" value="previa" class="acao">Ver a mensagem de outra pessoa</button></p>
     {% endif %}
   </section>
   {% endif %}
@@ -155,8 +155,10 @@ grava nada.
     </ul>
   </section>
 
-  <button type="submit" name="acao" value="confirmar" class="botao perigoso"{% if not contagens.com_endereco or previa.erro %} disabled{% endif %}>Enviar a {{ contagens.com_endereco }} pessoa{{ contagens.com_endereco|pluralize }}</button>
-  <a class="botao secundario" href="{{ voltar }}">Cancelar</a>
+  <p class="botoes-do-aviso">
+    <button type="submit" name="acao" value="confirmar" class="botao perigoso"{% if not contagens.com_endereco or previa.erro %} disabled{% endif %}>Enviar a {{ contagens.com_endereco }} pessoa{{ contagens.com_endereco|pluralize }}</button>
+    <a class="botao secundario" href="{{ voltar }}">Cancelar</a>
+  </p>
 </form>
 {% endif %}
 {% endblock %}
