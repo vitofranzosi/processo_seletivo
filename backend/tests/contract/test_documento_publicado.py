@@ -128,6 +128,9 @@ def paginas_de(pdf: bytes) -> list[list[str]]:
 # O que legitimamente distingue os dois modos. Tudo o mais tem de ser igual — é isso que FR-041
 # promete, e é a diferença entre "a prévia mostra o que será publicado" e "a prévia mostra outra
 # coisa parecida". Cresce com a `008`: a autoridade signatária entra aqui na entrega 5.
+RODAPE_DE_IDENTIFICACAO = re.compile(r"^Edital \d+/\d{4}( · |$)")
+
+
 def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     fora = False
     corpo = []
@@ -140,8 +143,13 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
-        # duas são metadado de página, não corpo.
-        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —", "Página ")):
+        # duas são metadado de página, não corpo. A identificação reconhecida pela forma, e não
+        # pelo "Edital 0" da fixture: os cenários da auditoria (068) são os Editais 91 e 92.
+        if (
+            marca_de_previa in linha
+            or RODAPE_DE_IDENTIFICACAO.match(linha)
+            or linha.startswith(("PRÉVIA —", "Página "))
+        ):
             continue
         if not fora:
             corpo.append(linha)
@@ -312,10 +320,27 @@ def _com_atribuicoes_comuns():
     }
 
 
+def _cenario_da_auditoria(nome):
+    """O conteúdo congelado de um cenário da auditoria do PDF de 08/10/2026.
+
+    É o documento que a `068` mais muda: tabela de vagas, modalidades e frases uma vez, requisitos
+    e marcos em subseções comuns. Sem ele, a igualdade de quebras entre prévia e publicado não seria
+    afirmada sobre a seção consolidada (FR-1356).
+    """
+    import json
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[3]
+    caminho = raiz / "doc" / "auditoria-edital-pdf-2026-10-08" / "snapshots" / nome
+    return json.loads(caminho.read_text(encoding="utf-8"))["content"]
+
+
 COM_ATRIBUICOES_COMUNS = _com_atribuicoes_comuns()
 CENARIOS_DE_PAGINACAO = [
     pytest.param(SNAPSHOT, id="fixture"),
     pytest.param(COM_ATRIBUICOES_COMUNS, id="atribuicoes-comuns"),
+    pytest.param(_cenario_da_auditoria("A-conteudo-publicado.json"), id="consolidado-A"),
+    pytest.param(_cenario_da_auditoria("B-conteudo-publicado.json"), id="consolidado-B"),
 ]
 
 
