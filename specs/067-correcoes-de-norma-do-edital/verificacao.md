@@ -150,4 +150,16 @@ Nada foi gravado pela interface; as trocas de forma ficaram sem salvar.
 
 ## Suíte completa (T054)
 
-PREENCHER
+Em 2026-10-09, sobre `2ce6a130`, com `DB_NAME=ps_067_base` (banco de teste `test_ps_067_base`):
+
+```text
+cd backend && make lint check test-pg
+ruff check: All checks passed! · ruff format --check: 1331 files already formatted
+manage.py check: no issues · makemigrations --check: No changes detected
+9955 passed, 11 skipped in 1096.75s
+```
+
+Os onze pulados são os mesmos onze deliberados do `AGENTS.md` (9 do vocabulário da composição, a
+recusa por vendor e o E2E da fonte real). A rodada anterior, sobre `b4ba653d`, tinha dado 9952
+passados e **1 falha** — `test_toda_pasta_de_specs_aparece_na_tabela_de_incrementos`: a `067` não
+estava na tabela de incrementos do README; corrigido em `2ce6a130`.

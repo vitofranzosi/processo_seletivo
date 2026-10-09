@@ -180,7 +180,7 @@ recusado.
 - [X] T051 [P] `specs/067-correcoes-de-norma-do-edital/rastreabilidade.md`: cada `FR-`, `SC-`, `UX-`, decisão e caso-limite com o teste que o prende (modelo da `065`)
 - [X] T052 [P] `specs/067-correcoes-de-norma-do-edital/verificacao.md` completo: ponto de partida, testes da feature (com a falha antes do código), cenários, diff, páginas, suíte; e o status da spec para "Implementado"
 - [X] T053 [P] Registrar no fim da auditoria (`doc/auditoria-edital-pdf-2026-10-08.md`, nota curta abaixo da §12.1) que ED-02, ED-03 e ED-12 foram tratados pela `067`, e o que ficou aberto (RC-58; a conferência humana do objeto do recurso)
-- [ ] T054 (`SC-507`) `cd backend && make lint check` e a suíte completa contra PostgreSQL com `DB_NAME=ps067`; registrar o total e os pulados em `verificacao.md`; se os números do `AGENTS.md` mudarem, atualizá-los
+- [X] T054 (`SC-507`) `cd backend && make lint check` e a suíte completa contra PostgreSQL com `DB_NAME=ps067`; registrar o total e os pulados em `verificacao.md`; se os números do `AGENTS.md` mudarem, atualizá-los
 
 ---
 
