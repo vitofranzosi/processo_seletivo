@@ -545,35 +545,68 @@ remover o antigo e corrigir o nome.
 
 - **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
   técnico no servidor.
-- **FR-084** *(revisada pela `019` em 2026-09-12 — a redação anterior está ao fim desta alínea)*:
-  Além do desafio, o sistema envia mensagem em exatamente **três** situações, todas nominais: a
+- **FR-084** *(revisada pela `019` em 2026-09-12 e pela `066` em 2026-10-09 — as redações
+  anteriores estão ao fim desta alínea)*:
+  Além do desafio, o sistema envia mensagem em exatamente **quatro** situações, todas nominais: a
   confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
   endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
-  (`FR-018b`); e a **convocação**, quando o Perfil publicado declara que este Edital comunica por
-  mensagem individual (`019`, `FR-287`). O canal passar a existir não torna comunicação transacional
-  escopo implícito: aviso de retificação, de resultado, lembrete e campanha continuam fora, e
-  acrescentar uma quarta situação exige revisar esta regra de novo.
+  (`FR-018b`); a **convocação**, quando o Perfil publicado declara que este Edital comunica por
+  mensagem individual (`019`, `FR-287`); e o **aviso complementar vinculado a ato oficial**
+  (`066`), que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado
+  identifica. O canal passar a existir não torna comunicação transacional escopo implícito:
+  lembrete, campanha, aviso que nenhum ato oficial fundamente e aviso disparado pela publicação sem
+  decisão humana continuam fora, e acrescentar uma quinta situação exige revisar esta regra de novo.
 
-  **A terceira quebra o critério que unia as duas primeiras, e é por isso que a revisão é escrita, e
-  não uma exceção silenciosa.** As duas primeiras eram recibo de ato que a própria pessoa praticou;
-  a convocação é ato da Administração dirigido a ela, e o prazo dela corre do envio (`019`,
-  `FR-269a`). O que a admite não é semelhança com as outras duas, e sim **norma publicada**: o
-  Edital declara a forma de comunicar, e três dos quatro Editais da amostra — o 77, o 58 e o 59, no
-  item 8.3 — convocam por mensagem individual. Um sistema que recusasse enviá-la não estaria
-  protegendo o candidato: estaria deixando de cumprir o Edital.
+  **A quarta é a primeira que não produz efeito nenhum, e é isso que a delimita.** O aviso não
+  inicia, não suspende e não altera prazo; não altera classificação, situação da inscrição nem
+  direito; e não substitui a publicação oficial, que permanece a referência, conforme o Edital. Ele
+  não se confunde com a terceira situação: a convocação por mensagem individual **é** o ato que faz
+  o prazo correr (`019`, `FR-269a`), e o aviso só aponta para um ato que já existe. Sem essa
+  fronteira, uma mensagem de cortesia passaria a ser lida como a convocação, e a pessoa contaria o
+  prazo a partir dela.
 
-  **A convocação entra por declaração, e nunca por padrão.** Perfil que não declarou `callForm` não
-  recebe mensagem nenhuma — a `019` recusa convocar, com `forma_de_comunicacao_nao_declarada`, em
-  vez de escolher a forma. E Perfil que declarou comunicação por publicação não gera envio
-  individual: a terceira situação existe onde o Edital a criou, e em lugar nenhum mais.
+  **O que a admite é a demanda do setor e a lista que o sistema já tem.** O setor responsável pelos
+  processos seletivos pediu, em 09/10/2026, que cada convocação ou resultado publicado pudesse ser
+  avisado aos candidatos, com texto da própria seleção. Os Editais da amostra já tratam o e-mail
+  como canal que o candidato deve acompanhar — o 77 (9.3) e o 57 (11.4) —, sem fazer dele o ato. E,
+  para os atos que esta revisão alcança, quem é destinatário não é escolha de ninguém: o resultado
+  publicado guarda, congelada, cada inscrição que considerou, e a chamada guarda cada inscrição que
+  convocou. Os destinatários saem do ato, e nunca de filtro.
 
-  As três exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a
-  primeira, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
-  guardar; sem a segunda, quem anexa um endereço à conta alheia não deixa sinal nenhum para a
-  titular; sem a terceira, o Edital que promete convocar por mensagem individual não é cumprido pelo
-  sistema que o publicou.
+  **A quarta entra por gesto, e nunca por padrão.** Publicar não envia nada. Quem envia é uma
+  pessoa com capacidade própria para isso, que não é a de publicar, depois de ver os destinatários,
+  o texto e o ato citado. As regras de conteúdo, de destinatários e de envio são da `066`.
 
-  > **Redação anterior, preservada porque a regra mandava revisá-la e não substituí-la em silêncio:**
+  > **Redação anterior, da revisão da `019` em 2026-09-12, preservada porque a regra mandava
+  > revisá-la e não substituí-la em silêncio:**
+  > Além do desafio, o sistema envia mensagem em exatamente **três** situações, todas nominais: a
+  > confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
+  > endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
+  > (`FR-018b`); e a **convocação**, quando o Perfil publicado declara que este Edital comunica por
+  > mensagem individual (`019`, `FR-287`). O canal passar a existir não torna comunicação transacional
+  > escopo implícito: aviso de retificação, de resultado, lembrete e campanha continuam fora, e
+  > acrescentar uma quarta situação exige revisar esta regra de novo.
+  >
+  > **A terceira quebra o critério que unia as duas primeiras, e é por isso que a revisão é escrita, e
+  > não uma exceção silenciosa.** As duas primeiras eram recibo de ato que a própria pessoa praticou;
+  > a convocação é ato da Administração dirigido a ela, e o prazo dela corre do envio (`019`,
+  > `FR-269a`). O que a admite não é semelhança com as outras duas, e sim **norma publicada**: o
+  > Edital declara a forma de comunicar, e três dos quatro Editais da amostra — o 77, o 58 e o 59, no
+  > item 8.3 — convocam por mensagem individual. Um sistema que recusasse enviá-la não estaria
+  > protegendo o candidato: estaria deixando de cumprir o Edital.
+  >
+  > **A convocação entra por declaração, e nunca por padrão.** Perfil que não declarou `callForm` não
+  > recebe mensagem nenhuma — a `019` recusa convocar, com `forma_de_comunicacao_nao_declarada`, em
+  > vez de escolher a forma. E Perfil que declarou comunicação por publicação não gera envio
+  > individual: a terceira situação existe onde o Edital a criou, e em lugar nenhum mais.
+  >
+  > As três exceções são nominais porque o custo de não tê-las é concreto e verificado — sem a
+  > primeira, quem fecha a aba antes de baixar o PDF fica sem o protocolo que a própria página manda
+  > guardar; sem a segunda, quem anexa um endereço à conta alheia não deixa sinal nenhum para a
+  > titular; sem a terceira, o Edital que promete convocar por mensagem individual não é cumprido pelo
+  > sistema que o publicou.
+  >
+  > **Redação original, anterior à `019`, preservada pela mesma razão:**
   > *"Além do desafio, esta feature envia mensagem em exatamente **duas** situações, e as duas são
   > recibo de ato que a própria pessoa praticou: a confirmação do envio da inscrição, endereçada à
   > credencial que praticou o ato; e o aviso de que um endereço passou a alcançar — ou deixou de
