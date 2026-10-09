@@ -180,13 +180,15 @@ Cada destinatário passa por estados derivados de registros append-only, nunca d
 | Estado | Quando |
 |---|---|
 | **Pendente** | sem tentativa ainda |
-| **Em tentativa** | a tentativa foi registrada, e o resultado ainda não |
+| **Em envio** | a tentativa foi registrada há pouco, e o resultado ainda não |
 | **Aceita pelo servidor** | o servidor de correio aceitou a mensagem |
 | **Falha temporária** | o servidor **respondeu** a um comando da mensagem que não a aceitava agora (4xx); elegível a nova tentativa automática |
 | **Falha definitiva** | o servidor **respondeu** que não a aceita (5xx), ou o limite de tentativas se esgotou |
 | **Sem endereço** | não há endereço de destino |
 | **Indeterminada** | a tentativa começou e não se sabe se o servidor aceitou: queda do processo, queda da conexão, timeout ou resposta que não se pôde ler, em qualquer ponto depois do início da mensagem |
 | **Expirada sem envio** | o aviso passou da janela de despacho sem que a tentativa começasse (`D-009`) |
+| **Interrompido antes do envio** | o aviso foi interrompido antes de a tentativa começar (`D-006`) |
+| **Não elegível** | na chamada, a convocação não segue em curso (`D-003`); nunca recebe mensagem |
 
 Registrar a tentativa **antes** de chamar o servidor, numa gravação própria e já confirmada, é o que
 torna a queda do processo observável. Uma tentativa sem resultado é, por definição, indeterminada,
@@ -580,9 +582,13 @@ matriz de rastreabilidade.
   DEVE ser recusada.
 - **FR-1263**: A confirmação DEVE ser idempotente: repetir a mesma confirmação, por duplo clique ou
   reenvio do navegador, DEVE devolver o aviso já criado, sem criar outro.
-- **FR-1264**: O reenvio das tentativas em falha definitiva DEVE ser gesto explícito, sem
-  justificativa, e alcançar só esses destinatários. O reenvio de tentativa indeterminada DEVE exigir
-  justificativa, porque a mensagem pode ter saído.
+- **FR-1264**: O reenvio DEVE ser gesto explícito, por aviso filho, e alcançar só os destinatários
+  do estado escolhido:
+  - **falha definitiva** e **expirada sem envio**: sem justificativa, porque a mensagem não saiu.
+    O texto é o do aviso anterior;
+  - **indeterminada** e **interrompido antes do envio**: com justificativa. Na indeterminada, a
+    mensagem pode ter saído. Na interrompida, alguém decidiu pará-la. O texto pode ser editado, e a
+    prévia é nova.
 
 **Envio**
 

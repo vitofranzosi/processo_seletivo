@@ -236,15 +236,17 @@ trocada entre a prévia e a confirmação mudam a assinatura, e a confirmação 
 
 ## R-011 — Reenvio é um aviso novo, filho do anterior
 
-**Decision**: o reenvio cria um `Aviso` com `aviso_anterior` e motivo `REENVIO_DE_FALHAS` ou
-`REENVIO_JUSTIFICADO`.
+**Decision**: o reenvio cria um `Aviso` com `aviso_anterior`, e os destinatários são os do anterior
+no estado escolhido (`FR-1264`):
 
-- Os destinatários são os do anterior no estado escolhido: falha definitiva, ou indeterminada.
-- O texto é **o mesmo**, copiado do anterior.
-- A justificativa é obrigatória quando entram indeterminadas (`FR-1264`).
+| Motivo | Estados alcançados | Justificativa | Texto |
+|---|---|---|---|
+| `REENVIO_DE_FALHAS` | falha definitiva; expirada sem envio | não | **o mesmo**, copiado do anterior: é terminar de entregar o que foi confirmado |
+| `REENVIO_JUSTIFICADO` | indeterminada; interrompido antes do envio | **sim** | **editável**, com prévia nova: a interrupção costuma ser por texto errado, e repetir o texto errado não serviria |
 
-O reenvio intencional de uma publicação inteira (`FR-1262`) é a mesma coisa, com universo completo e
-justificativa obrigatória.
+O reenvio intencional de uma publicação inteira já avisada (`FR-1262`) é `REENVIO_JUSTIFICADO` com o
+universo completo, texto editável e justificativa obrigatória. É o caminho de quem interrompeu um
+aviso com o modelo errado e quer mandar o certo também a quem já recebeu o errado.
 
 **Rationale**: o reenvio passa pelo mesmo caminho — prévia, confirmação, despacho, histórico — sem
 tabela nem estado novos. "Pendente outra vez" não precisa existir: o destinatário do aviso filho
@@ -324,7 +326,7 @@ de fragmento.
 | `tests/test_situacoes_de_mensagem.py` | `SITUACOES` ganha `avisos/application/despacho.py`; `test_sao_tres_situacoes…` vira quatro; a conferência da spec lê "revisada pela `066`" e a data |
 | `seguranca/papeis.py` (`TABELAS_APPEND_ONLY`) | +6 tabelas. O `M` do `provisionar_papeis` vai de 34 para **40**, e o `AGENTS.md` acompanha |
 | `tests/migrations/test_migrations.py` | contagem do app novo, com justificativa, e os gatilhos em `TRIGGERS_POR_APP` |
-| inventário de negativas da `033` | cada `Http404` novo precisa de linha |
+| inventário de negativas da `033` (`tests/test_gramatica_das_portas.py`) | cada `Http404` novo precisa de linha em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md`. **O guardião varre só `interface/views.py`** (`VIEWS`, linha 25). As views novas em `interface/avisos.py` escapariam caladas, e por isso o guardião passa a varrer também esse módulo |
 | varreduras de vocabulário com lista literal | as telas novas entram na lista. Uma tela nova escapa calada |
 | `test_acessibilidade*` e `test_estaticos` | toda classe nova precisa de regra na folha. CSS com `}}` numa linha reprova |
 | `test_orcamento_de_consulta` | o histórico do aviso é medido com 500 destinatários: consultas constantes |

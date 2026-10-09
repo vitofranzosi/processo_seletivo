@@ -143,6 +143,8 @@ aviso não concluído pode ser interrompido.
 publicações = PublicacaoResultado vigentes (sucessoras vazias) do (edital, perfil, marco),
               com a natureza escolhida,
               sem PublicacaoDoAviso de aviso PRIMEIRO_AVISO
+              — em qualquer estado: interrompido ou expirado também conta como avisado,
+                e avisar de novo é reenvio justificado (FR-1262, R-011)
 universo    = SituacaoDivulgada dessas publicações, distinta por inscrição
 elegível    = todos
 ```

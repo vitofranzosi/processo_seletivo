@@ -18,7 +18,7 @@ sessão de gestão e filtram pelo escopo do ator: objeto de outra unidade respon
 | `editais/<e>/marcos/<m>/convocacao/avisos/novo?lista=&comunicacao=<id>` | `aviso-da-chamada` | prévia: o universo da referência daquela comunicação, elegíveis e não elegíveis com motivo | confirma | base de comissão |
 | `avisos/<id>` | `aviso` | histórico: texto enviado, ato citado, contagens por estado, destinatários paginados, alerta de despacho parado | — | quem pode enviar pela origem, ou `auditoria:consultar` |
 | `avisos/<id>/interromper` | `aviso-interromper` | confirmação: quantas já foram aceitas e não voltam (`UX-177`) | interrompe, com motivo | a mesma porta do envio |
-| `avisos/<id>/reenviar?estado=` | `aviso-reenviar` | prévia do aviso filho: destinatários em falha definitiva ou indeterminada | confirma o reenvio (`R-011`) | a mesma porta do envio |
+| `avisos/<id>/reenviar?estado=` | `aviso-reenviar` | prévia do aviso filho, com os destinatários do estado (falha definitiva e expirada sem envio; ou indeterminada e interrompido antes do envio, com justificativa e texto editável) | confirma o reenvio (`R-011`) | a mesma porta do envio |
 | `editais/<e>/avisos` | `avisos-do-edital` | lista dos avisos do Edital | — | como `aviso` |
 | `modelos-de-aviso` | `modelos-de-aviso` | lista dos modelos da unidade, ativos e inativos | — | `aviso:enviar` |
 | `modelos-de-aviso/novo` | `modelo-de-aviso-novo` | formulário | cria | `aviso:enviar` |
