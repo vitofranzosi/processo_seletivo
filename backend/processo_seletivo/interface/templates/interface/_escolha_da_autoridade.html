@@ -1,0 +1,28 @@
+{% comment %}
+A escolha da autoridade, nas quatro telas que publicam (060, FR-1125, FR-1127, UX-148).
+
+Só as autoridades habilitadas na unidade do Edital e vigentes hoje. Cada opção diz quem assina e,
+quando houver, o ato de nomeação, que é o que distingue duas autoridades do mesmo cargo. O valor
+enviado é o identificador: ninguém o digita e a tela não o mostra.
+
+Sem nenhuma vigente, a frase toma o lugar da lista, e quem inclui este trecho desabilita o botão de
+confirmar. A recusa continua sendo do comando: a tela só a antecipa.
+
+Recebe: `escolha` (opcoes, unidade), `campo` (o nome do campo), `rotulo`, `ajuda`, `com_vazio`.
+{% endcomment %}
+{% if escolha.opcoes %}
+<p class="campo largo">
+  <label for="{{ campo }}">{{ rotulo }} <span class="obrigatorio" aria-hidden="true">*</span></label>
+  <select id="{{ campo }}" name="{{ campo }}" required aria-required="true"
+          aria-describedby="ajuda-{{ campo }}">
+    {% if com_vazio %}<option value="">— escolha a autoridade —</option>{% endif %}
+    {% for opcao in escolha.opcoes %}
+    <option value="{{ opcao.valor }}">{{ opcao.rotulo }}</option>
+    {% endfor %}
+  </select>
+  <span class="ajuda" id="ajuda-{{ campo }}">{{ ajuda }}</span>
+</p>
+{% else %}
+<p class="aviso" role="status">Nenhuma autoridade vigente para {{ escolha.unidade }} hoje. Quem tem a
+  permissão de gerir autoridades da unidade as cadastra.</p>
+{% endif %}

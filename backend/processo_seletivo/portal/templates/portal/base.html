@@ -302,7 +302,6 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .agora-e-proximo .rotulo-do-momento{font-weight:600}
 /* O prazo recursal (047, FR-769, FR-770): texto, e não botão — a página não oferece ação. */
 .prazo-recursal{margin:.5rem 0}
-.resultados-divulgados .prazo-recursal{display:block;margin:.1rem 0 0;font-size:.875rem}
 /* O histórico recolhido de um resultado (047, FR-772, FR-773). Discreto de propósito: é registro
    consultável, e não o que vale. */
 .publicacoes-anteriores{margin:.35rem 0 0;font-size:.875rem}
@@ -771,9 +770,28 @@ form.convite{margin:.75rem 0 0}
    continua lendo "(posição compartilhada)" na própria célula (FR-014, FR-052). */
 .compartilhada{color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
 .nenhuma{color:var(--texto-fraco);font-size:.875rem}
-.resultados-divulgados{list-style:none;padding:0;margin:0 0 2rem;display:grid;gap:.5rem}
-.resultados-divulgados li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline}
-.resultados-divulgados .meta{color:var(--texto-fraco);font-size:.875rem}
+/* Os resultados divulgados na forma da seção Vagas: Perfil, etapa, lista (062, FR-1148). A
+   etapa leva um fio à esquerda para que as listas se leiam como dela, e não do Perfil; e o título
+   dela fica abaixo do do Perfil, que é o mesmo da seção Vagas — com o `h4` no negrito padrão, a
+   etapa pesava mais que o Perfil que a contém. */
+.resultados-do-perfil{margin:0 0 1.5rem}
+.resultados-do-perfil h3{margin:1.25rem 0 .5rem}
+.resultados-da-etapa{margin:0 0 1rem;padding-left:.75rem;border-left:2px solid var(--borda)}
+.resultados-da-etapa h4{margin:0 0 .4rem;font-size:.9375rem;font-weight:600}
+.listas-da-etapa{list-style:none;padding:0;margin:0;display:grid;gap:.4rem}
+/* A linha quebra em vez de alargar: a 375 px, natureza e data descem para baixo do nome da lista
+   (UX-153), e o prazo recursal ocupa sempre a linha dele. */
+.lista-divulgada{display:flex;flex-wrap:wrap;gap:.1rem .75rem;align-items:baseline}
+.lista-divulgada .meta{color:var(--texto-fraco);font-size:.875rem}
+.lista-divulgada .prazo-recursal{flex-basis:100%;margin:0;font-size:.875rem}
+/* O caminho para a própria situação (062, FR-1160): depois da árvore e separado dela por um fio,
+   porque é outra tarefa — consultar a si, e não a publicação. */
+.convite-da-situacao{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--borda)}
+.convite-da-situacao p{margin:.25rem 0}
+/* Texto para o leitor de tela e invisível na tela — a mesma regra da gestão. É o que completa o
+   nome acessível dos links de resultado com a etapa e o Perfil (062, D-006). */
+.oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
 /* Um bloco por marco divulgado, na Área do Candidato. Cada um se fecha em si porque cada um é um
    ato administrativo distinto, e lê-los em sequência sem fronteira confundiria os dois (FR-057). */
 .resultado-divulgado{border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem;

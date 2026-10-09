@@ -30,8 +30,8 @@ from processo_seletivo.divulgacao.models import (
 )
 from processo_seletivo.interface import conducao_do_marco
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
-from processo_seletivo.publicacoes.domain.autoridades import escolher
 from processo_seletivo.shared.api.problems import DomainError
+from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
 from tests.fixtures.corte import MARCO
 from tests.fixtures.recortes import (
     MODALIDADE_PCD,
@@ -204,7 +204,7 @@ def test_o_publico_lendo_um_ato_anterior_aparece_como_obsoleto(client, cenario, 
     ordenar_tudo(client, edital)
     publicar(client)
     pagina = conferir(
-        client, edital, "publicar", natureza="PRELIMINAR", autoridade="diretoria-cefor"
+        client, edital, "publicar", natureza="PRELIMINAR", autoridade=str(AUTORIDADE_DO_RESULTADO)
     ).content.decode()
     confirmar(client, edital, "publicar", pagina)
     emitir_recorte(edital, gestor, chave="marco-049-sucessora", motivo="Recurso deferido.")
@@ -534,7 +534,7 @@ def test_operacao_inexistente_e_404(client, cenario):
 
 def _conferir_publicacao(client, edital, natureza="PRELIMINAR"):
     return conferir(
-        client, edital, "publicar", natureza=natureza, autoridade="diretoria-cefor"
+        client, edital, "publicar", natureza=natureza, autoridade=str(AUTORIDADE_DO_RESULTADO)
     ).content.decode()
 
 
@@ -552,9 +552,7 @@ def test_um_gesto_publica_um_resultado_por_recorte(client, cenario):
     assert publicacoes.count() == 3
     assert {item.natureza for item in publicacoes} == {Natureza.PRELIMINAR}
     assert {item.publicado_por for item in publicacoes} == {"paula.publicadora"}
-    assert {item.signatario_id for item in publicacoes} == {
-        escolher("diretoria-cefor").identificador
-    }
+    assert {item.signatario_id for item in publicacoes} == {AUTORIDADE_DO_RESULTADO}
     assert DocumentoDoResultado.objects.filter(publicacao__in=publicacoes).count() == 3
 
 
@@ -662,7 +660,9 @@ def test_sem_natureza_a_conferencia_nao_e_composta(client, cenario):
     ordenar_tudo(client, edital)
     publicar(client)
 
-    resposta = conferir(client, edital, "publicar", natureza="", autoridade="diretoria-cefor")
+    resposta = conferir(
+        client, edital, "publicar", natureza="", autoridade=str(AUTORIDADE_DO_RESULTADO)
+    )
 
     assert resposta.status_code == 302
     assert "natureza" in tela(client, edital).content.decode()

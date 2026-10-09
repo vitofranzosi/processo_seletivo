@@ -24,8 +24,9 @@ def test_openapi_has_explicit_publication_workflow_and_signatory():
     for path, operation_id in expected.items():
         assert paths[path]["post"]["operationId"] == operation_id
     assert document["components"]["schemas"]["PublicacaoRequest"]["required"] == ["signatory"]
-    assert set(document["components"]["schemas"]["SignatorySnapshot"]["required"]) == {
-        "authorityId",
-        "name",
-        "role",
-    }
+    # Só o identificador desde a 060 (R-014): nome, cargo e ato de nomeação vêm do registro de
+    # autoridades da unidade, e o contrato recusa os três se vierem.
+    signatario = document["components"]["schemas"]["SignatorySnapshot"]
+    assert signatario["required"] == ["authorityId"]
+    assert set(signatario["properties"]) == {"authorityId"}
+    assert signatario["additionalProperties"] is False

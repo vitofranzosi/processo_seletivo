@@ -11,6 +11,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.edital import caminho_linha_geral, caminho_perfil
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
@@ -186,7 +187,7 @@ def test_fluxo_da_retificacao_ate_a_publicacao(client, seletor_ligado, edital, v
     assert ato("homologar", motivo="Conferido").status_code == 302
     identificar(client, "carla.publicadora", ["publicador"])
     retificacao.refresh_from_db()
-    resposta = ato("publicar", signatario="reitoria")
+    resposta = ato("publicar", signatario=str(AUTORIDADE_DA_SUITE))
     assert resposta.status_code == 302
 
     depois = client.get(f"/api/v1/public/editais/{edital.id}/versao-vigente").json()["content"][

@@ -93,35 +93,74 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
 <section class="resultados{% if not recebe_inscricoes %} em-destaque{% endif %}"
          aria-labelledby="resultados-titulo">
   <h2 id="resultados-titulo">Resultados divulgados</h2>
-  <ul class="resultados-divulgados">
-    {% for item in resultados_divulgados %}
-    <li>
-      <a href="{% url 'portal:resultado' item.publicacao.id %}">{{ item.natureza_rotulo }} — {{ item.marco }}</a>
-      <span class="meta">publicado em {{ item.publicacao.publicado_em|date:"d/m/Y" }}</span>
+  {% comment %}
+  **A forma da seção Vagas: Perfil, etapa, lista** (062, FR-1148 a FR-1159). Antes era uma lista em
+  ordem de publicação — seis linhas no mesmo nível num Edital de dois Perfis e três listas, cada uma
+  com o seu "Publicações anteriores" —, e quem chegava perguntando pela própria vaga tinha de ler
+  todas para achar a sua.
+
+  **Natureza e data ficam na linha da lista, sempre** (decisão recebida 2): cada lista é a sua
+  cadeia (021) e pode estar em fase diferente das vizinhas, e um "Resultado definitivo" no título da
+  etapa afirmaria o que vale só para parte delas.
+
+  **O texto visível do link é o nome da lista, e o nome acessível continua até a etapa e o Perfil**
+  (Clarifications de 07/10, D-006). Com dois Perfis há dois "Ampla concorrência"; o texto oculto
+  vem **depois** do visível, e é por isso que o nome que o leitor de tela anuncia — e que o comando
+  de voz reconhece — começa pelo que está na tela.
+  {% endcomment %}
+  {% for perfil in resultados_por_perfil %}
+  <div class="resultados-do-perfil">
+    <h3>{{ perfil.nome }}</h3>
+    {% for etapa in perfil.etapas %}
+    <div class="resultados-da-etapa">
+      <h4>{{ etapa.nome }}</h4>
+      <ul class="listas-da-etapa">
+        {% for lista in etapa.listas %}
+        <li class="lista-divulgada">
+          <a href="{% url 'portal:resultado' lista.publicacao.id %}">{{ lista.nome }}<span class="oculto"> — {{ etapa.nome }} — {{ perfil.nome }}</span></a>
+          <span class="meta">{{ lista.natureza_rotulo }} · publicado em {{ lista.publicacao.publicado_em|date:"d/m/Y" }}</span>
+          {% comment %}
+          O prazo que ainda corre (047, FR-770), na lista a que se aplica. Encerrado, nada é dito
+          aqui: a página do resultado diz quando encerrou, e a lista fica com o que decide agir.
+          {% endcomment %}
+          {% if lista.recurso_ate %}<span class="prazo-recursal">recurso até {{ lista.recurso_ate|date:"d/m/Y" }} às {{ lista.recurso_ate|date:"H\hi" }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
       {% comment %}
-      O prazo que ainda corre (047, FR-770). Encerrado, nada é dito aqui: a página do resultado diz
-      quando encerrou, e a lista fica com o que decide agir.
+      **O histórico da etapa, recolhido e num bloco só** (047, FR-772; 062, D-001). O vigente vem
+      primeiro, e o que ele sucedeu fica a um clique, dito em texto como sucedido (017, FR-052).
+      Um bloco por etapa, e não um por lista: eram três "Publicações anteriores (1)" no mesmo nível
+      do resultado que vale. Cada item diz a lista de onde veio, e as cadeias não se misturam.
       {% endcomment %}
-      {% if item.recurso_ate %}<span class="prazo-recursal">recurso até {{ item.recurso_ate|date:"d/m/Y" }} às {{ item.recurso_ate|date:"H\hi" }}</span>{% endif %}
-      {% comment %}
-      **O histórico desta lista, recolhido** (047, FR-772, D-007). O vigente vem primeiro, e o que
-      ele sucedeu fica a um clique, dito em texto como sucedido (017, FR-052): preservar não é
-      anunciar, e o histórico nunca aparece como o que vale.
-      {% endcomment %}
-      {% if item.anteriores %}
+      {% if etapa.anteriores %}
       <details class="publicacoes-anteriores">
-        <summary>Publicações anteriores ({{ item.anteriores|length }})</summary>
+        <summary>Publicações anteriores ({{ etapa.anteriores|length }})</summary>
         <ul>
-          {% for anterior in item.anteriores %}
-          <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.natureza_rotulo }} — {{ anterior.marco }}</a>
-            <span class="meta">publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
+          {% for anterior in etapa.anteriores %}
+          <li><a href="{% url 'portal:resultado' anterior.publicacao.id %}">{{ anterior.lista }}<span class="oculto"> — {{ anterior.natureza_rotulo }}, publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} — {{ etapa.nome }} — {{ perfil.nome }}</span></a>
+            <span class="meta">{{ anterior.natureza_rotulo }} · publicado em {{ anterior.publicacao.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
           {% endfor %}
         </ul>
       </details>
       {% endif %}
-    </li>
+    </div>
     {% endfor %}
-  </ul>
+  </div>
+  {% endfor %}
+  {% comment %}
+  **O caminho para a própria situação, separado dos documentos** (062, FR-1160 a FR-1163). "Fui
+  classificado?" não se responde lendo a publicação, e o único caminho era o "Entrar" do topo, sem
+  relação visível com os resultados. Depois da árvore (D-002), porque o bloco existe para levar à
+  publicação oficial; e fora de qualquer Perfil, porque é outra tarefa.
+  {% endcomment %}
+  {% if convite_da_situacao %}
+  <aside class="convite-da-situacao" aria-label="Sua situação">
+    <p><strong>Participou deste processo seletivo?</strong></p>
+    <p>Consulte sua classificação e situação individual.</p>
+    <a class="documento secundaria" href="{{ convite_da_situacao.url }}">{{ convite_da_situacao.texto }}</a>
+  </aside>
+  {% endif %}
 </section>
 {% endif %}
 

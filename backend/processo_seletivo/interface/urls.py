@@ -12,6 +12,9 @@ urlpatterns = [
     # do escopo, como a lista, e não de agregado nenhum — ela observa a fronteira **entre** os
     # Processos, que é justamente o nível que não existia (FR-581).
     path("visao-geral", views.visao_geral, name="visao-geral"),
+    # As autoridades da unidade (060): de topo, como a visão geral, porque não pertencem a Processo
+    # nenhum — respondem pelos atos de todos os da unidade.
+    path("autoridades", views.autoridades, name="autoridades"),
     path("processos/criar", views.criar_processo, name="processo-criar"),
     path("processos/<uuid:processo_id>/", views.processo_detalhe, name="processo-detalhe"),
     path(

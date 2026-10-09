@@ -49,6 +49,7 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `convocacao` | Convocação, chamada, suplência e desfecho |
 | `requerimentos` | Requerimento de Matrícula e base local de referência de CEP |
 | `matriculas` | Exportação para o Registro Acadêmico — registra a geração, e não guarda o arquivo |
+| `unidades` | Unidades institucionais e autoridades habilitadas: o que o documento diz da unidade e quem pode responder pelos atos dela |
 | `interface` | Interface administrativa, em `/gestao/` |
 | `portal` | Consulta pública e área do candidato, em `/selecoes/` |
 | `seguranca` | Ator autenticado, permissões, autorização por objeto e papéis do banco |
@@ -144,7 +145,8 @@ createdb processo_seletivo
 cd backend && make preparar
 ```
 
-`make preparar` faz os três passos na mesma ordem do compose e pela mesma razão. Os três são
+`make preparar` faz os três passos na mesma ordem do compose e pela mesma razão, e depois
+sincroniza o registro de Unidades declarado em `unidades/unidades.json` (060). Os quatro são
 idempotentes: rodar de novo sobre banco já preparado não faz mal.
 
 O projeto separa a role de migração da de runtime: a de runtime não recebe `UPDATE` nem `DELETE`
@@ -429,6 +431,10 @@ Incrementos, na ordem em que foram especificados:
 | [`057`](specs/057-polish-telas-de-operacao/spec.md) | Polish das telas de operação (lote 3 da auditoria de polish): uma ação em destaque no Detalhe do Edital e na Condução do marco, com Encerrar e Cancelar por último e só contornados; a Lista de Editais com as ações frequentes primeiro; o glossário das telas de marco recolhido; Atenção, Auditoria e documentos da inscrição sem caixa dentro de caixa; números, datas e plurais como gente escreve; a matriz de Alocação cabendo na janela; o envio de documento do portal numa linha |
 | [`058`](specs/058-polish-residuos/spec.md) | Polish, os resíduos dos três lotes: os atos irreversíveis do Processo contornados e à parte, como os do Edital; a Lista de Editais e a Condução do marco com moldura que rola em tela estreita; a seção das Matrículas empilhada; a nota dos Resultados à direita; plurais de tela no número deles; os números das Etapas sem zeros; a coluna de rótulos da Revisão com largura única; o motivo de sucessão com o mesmo controle nas quatro telas |
 | [`059`](specs/059-acesso-a-convocacao/spec.md) | O caminho do candidato até a convocação e o Requerimento de Matrícula: "Minhas inscrições" indica a convocação aberta e leva a ela com "Ver convocação"; o acompanhamento ganha a seção da convocação, aberta ou concluída; a convocação e essa seção oferecem "Preencher Requerimento de Matrícula" quando o Edital o pede na convocação; a recusa uniforme da titularidade provada nos caminhos novos |
+| [`060`](specs/060-unidades-e-autoridades/spec.md) | Unidades institucionais e autoridades de publicação: o escopo institucional ganha Unidade registrada, o documento oficial diz a unidade do Edital no cabeçalho e no local, e a autoridade é escolhida entre as habilitadas e vigentes da unidade, cadastradas pelo Gestor da unidade, sem mudar o código e sem excluir nada |
+| [`061`](specs/061-corte-apos-recurso/spec.md) | O corte emitido depois do recurso não nasce obsoleto: o reingresso que obsoleta a faixa é o de Resultado sucessor que o ato de ordenação lido ainda não cita; o deferimento já considerado pela ordem sucessora deixa de travar a Etapa governada e a publicação, e o recurso deferido depois do corte continua obsoletando-o |
+| [`062`](specs/062-resultados-por-perfil-etapa-lista/spec.md) | Resultados divulgados por Perfil, etapa e lista: a página pública do Edital agrupa os resultados como a seção Vagas, com natureza e data na linha de cada lista, um histórico recolhido por etapa e o nome acessível de cada link levando etapa e Perfil; um convite separado leva à situação individual, e voltar ao Edital depois de entrar não pede nome e CPF |
+| [`064`](specs/064-atribuicoes-consolidadas/spec.md) | As atribuições idênticas saem uma vez no documento do Edital: Perfis de texto integralmente igual remetem a uma subseção comum ao fim da seção de Perfis, que nomeia os códigos; a numeração dos Perfis, das seções e das tabelas não muda, e nenhum dado, tela ou documento já publicado muda |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

@@ -404,3 +404,115 @@ def caminho_de_volta(parametros, destino):
         }
     )
     return f"{destino}?{consulta}" if consulta else destino
+
+
+# ---------------------------------------------------------------------------
+# Os resultados divulgados, por Perfil, etapa e lista (062, FR-1148 a FR-1159)
+# ---------------------------------------------------------------------------
+
+
+def resultados_por_perfil(vigentes, conteudo):
+    """As vigentes do Edital na forma da seção Vagas: Perfil, etapa, lista (062, D-005).
+
+    **A página listava as vigentes em ordem de publicação**, e num Edital encerrado com dois Perfis
+    e três listas eram seis linhas no mesmo nível, com o Perfil escondido no nome do marco e a
+    ordem entre Perfis decidida pelo acaso do instante. Quem chega pergunta pela vaga, e a vaga já
+    está organizada logo abaixo, na seção Vagas — a árvore repete essa organização.
+
+    Recebe as vigentes de `historico_publico_do_edital`, já com `recurso_ate`, e o conteúdo vigente
+    que a página já carregou. Não lê nada: tudo o que ela ordena está nas colunas da publicação, no
+    cabeçalho congelado (já decodificado) e no conteúdo vigente (D-011).
+
+    **As cadeias não se fundem.** Cada lista continua sendo a sua cadeia (a decisão do eixo da
+    lista, da `021`): a natureza e a data ficam na linha da lista, e nunca sobem para a etapa
+    (`FR-1155`); o histórico é um bloco por etapa, mas cada item diz a lista de onde veio.
+    """
+    perfis_vigentes = conteudo.get("profiles") or []
+    posicao_do_perfil = {str(perfil.get("id")): i for i, perfil in enumerate(perfis_vigentes)}
+    nome_vigente = {str(perfil.get("id")): perfil.get("name") or "" for perfil in perfis_vigentes}
+    ordem_das_listas = {
+        str(perfil.get("id")): {
+            str(modalidade.get("id")): i
+            for i, modalidade in enumerate(perfil.get("competitionModalities") or [])
+        }
+        for perfil in perfis_vigentes
+    }
+
+    grupos = {}
+    for item in vigentes:
+        publicacao = item["publicacao"]
+        grupos.setdefault(str(publicacao.perfil_id), {}).setdefault(
+            str(publicacao.marco_id), []
+        ).append(item)
+
+    perfis = []
+    for perfil_id, por_marco in grupos.items():
+        todas = [item for itens in por_marco.values() for item in itens]
+        etapas = [
+            _etapa(marco_id, itens, ordem_das_listas.get(perfil_id, {}))
+            for marco_id, itens in por_marco.items()
+        ]
+        # **A ordem do certame, e não a de divulgação** (D-010): o mesmo `marco_codigo` congelado
+        # que a Área do Candidato usa para ordenar as situações da pessoa.
+        etapas.sort(key=lambda etapa: (etapa["codigo"], etapa["nome"]))
+        perfis.append(
+            {
+                "perfil_id": perfil_id,
+                # **O nome vigente, que é o da seção Vagas** (D-004 da spec). O congelado só entra
+                # quando uma Retificação tirou o Perfil do Edital: um resultado publicado não deixa
+                # de ser alcançável porque a vaga mudou, e não há outro nome a dar.
+                "nome": nome_vigente.get(perfil_id) or _mais_recente(todas).get("perfil", ""),
+                "etapas": etapas,
+                "_ordem": (
+                    (0, posicao_do_perfil[perfil_id], None)
+                    if perfil_id in posicao_do_perfil
+                    else (1, 0, _mais_recente(todas)["publicacao"].publicado_em)
+                ),
+            }
+        )
+    perfis.sort(key=lambda perfil: perfil.pop("_ordem"))
+    return perfis
+
+
+def _etapa(marco_id, itens, ordem_das_listas):
+    itens = sorted(itens, key=lambda item: _chave_da_lista(item, ordem_das_listas))
+    # As listas de uma etapa podem ter sido publicadas sob versões diferentes; o título é o da
+    # vigente mais recente, sem corte nem reescrita (decisão recebida 4).
+    recente = _mais_recente(itens)
+    return {
+        "marco_id": marco_id,
+        "nome": recente.get("marco", ""),
+        "codigo": recente.get("marco_codigo", ""),
+        "listas": [
+            {
+                "lista_id": item["publicacao"].lista_id,
+                "nome": item["lista"],
+                "publicacao": item["publicacao"],
+                "natureza_rotulo": item["natureza_rotulo"],
+                "recurso_ate": item.get("recurso_ate"),
+            }
+            for item in itens
+        ],
+        # Na ordem das listas, e dentro de cada uma da mais recente para a mais antiga — que é a
+        # ordem em que `historico_publico_do_edital` já entrega a cadeia.
+        "anteriores": [anterior for item in itens for anterior in item["anteriores"]],
+    }
+
+
+def _chave_da_lista(item, ordem_das_listas):
+    """Ampla concorrência primeiro; depois a ordem em que o Perfil declara as Modalidades (D-008).
+
+    O recorte sem lista **é** a ampla concorrência — o mesmo do sorteio, e não a Modalidade que um
+    Edital eventualmente declare com esse nome. Uma lista que o vigente já não conhece vai para o
+    fim, pelo nome gravado, em vez de sumir.
+    """
+    lista_id = item["publicacao"].lista_id
+    if lista_id is None:
+        return (0, 0, "")
+    if str(lista_id) in ordem_das_listas:
+        return (1, ordem_das_listas[str(lista_id)], "")
+    return (2, 0, item["lista"])
+
+
+def _mais_recente(itens):
+    return max(itens, key=lambda item: item["publicacao"].publicado_em)

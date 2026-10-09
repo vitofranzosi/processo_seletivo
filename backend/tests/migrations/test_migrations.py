@@ -29,6 +29,8 @@ APPS = (
     "recursos",
     # A lista exigida da 044: uma tabela append-only, e a coerência dela contra a inscrição enviada.
     "inscricoes",
+    # O registro de unidades e autoridades da 060: duas tabelas que mudam e nunca se excluem.
+    "unidades",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -99,6 +101,16 @@ TRIGGERS_POR_APP = {
         "item_da_lista_exigida_append_only",
         "item_da_lista_exigida_coerente",
         "valor_de_fato_append_only",
+    ),
+    # O registro da 060. **Não são append-only** — desativar a unidade e encerrar a autoridade são
+    # `UPDATE` —, e por isso as tabelas ficam fora de `TABELAS_APPEND_ONLY`: os gatilhos recusam a
+    # exclusão, a troca do código e da unidade, e a reescrita do que já respondeu por um ato.
+    "unidades": (
+        "unidade_nao_se_exclui",
+        "unidade_codigo_imutavel",
+        "autoridade_nao_se_exclui",
+        "autoridade_unidade_imutavel",
+        "autoridade_usada_imutavel",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -598,7 +610,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # o que ele passa a afirmar. `ADD COLUMN` com padrão constante não reescreve linha nem
         # dispara o gatilho append-only, e as Publicações anteriores ficam com o campo vazio, que é
         # verdade — não o registraram (054, FR-991).
-        "publicacoes": 9,
+        # **Sobe para 10 com a 060**: a `publicacoes/0010` acrescenta à `Publicacao` as cinco
+        # colunas da unidade que praticou o ato — código, sigla, nome, linhas do cabeçalho e
+        # local —, congeladas no dia como o signatário. Não é a 022 tocando o que lê: é outra
+        # feature, registrando no ato a unidade que o documento passou a dizer. `ADD COLUMN` com
+        # padrão constante, sem reescrever linha nem disparar o gatilho append-only (060, FR-1128).
+        "publicacoes": 10,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
         #
@@ -608,7 +625,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # dimensão da lista de concorrência, que a 021 abriu no ato, atravessando até a divulgação
         # — três atos raiz num marco exigem três publicações, e a constraint de hoje recusava a
         # segunda. A metade sem lista mantém nome e garantia (021, D-015, FR-068).
-        "divulgacao": 3,
+        # **Sobe para 4 com a 060**: a `divulgacao/0004` acrescenta à `PublicacaoResultado` o ato de
+        # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
+        # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
+        # linha nem dispara o gatilho append-only (060, FR-1128).
+        "divulgacao": 4,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
@@ -718,7 +739,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         "classificacao": 6,
         "comissoes": 1,
         # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
-        "divulgacao": 3,
+        # **Sobe para 4 com a 060**: a `divulgacao/0004` acrescenta à `PublicacaoResultado` o ato de
+        # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
+        # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
+        # linha nem dispara o gatilho append-only (060, FR-1128).
+        "divulgacao": 4,
         # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
         # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
         # da supervisão.
@@ -784,7 +809,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # o que ele passa a afirmar. `ADD COLUMN` com padrão constante não reescreve linha nem
         # dispara o gatilho append-only, e as Publicações anteriores ficam com o campo vazio, que é
         # verdade — não o registraram (054, FR-991).
-        "publicacoes": 9,
+        # **Sobe para 10 com a 060**: a `publicacoes/0010` acrescenta à `Publicacao` as cinco
+        # colunas da unidade que praticou o ato — código, sigla, nome, linhas do cabeçalho e
+        # local —, congeladas no dia como o signatário. Não é a 022 tocando o que lê: é outra
+        # feature, registrando no ato a unidade que o documento passou a dizer. `ADD COLUMN` com
+        # padrão constante, sem reescrever linha nem disparar o gatilho append-only (060, FR-1128).
+        "publicacoes": 10,
         # **Sobe para 2 com a 036**: a `recursos/0002` cria o `AtoDeInstrucao` — o ato pelo qual a
         # autoridade anexa a **um** recurso o parecer atacado e o documento citado, para que quem
         # julga decida com o que se contesta à vista. Não é a 022 tocando o que lê: é outra feature,

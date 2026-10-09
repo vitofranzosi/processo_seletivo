@@ -15,7 +15,7 @@ própria view.
 import json
 import logging
 from hashlib import sha256
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
@@ -35,6 +35,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain.documentos import (
     OBRIGATORIO,
     aplicaveis,
@@ -412,7 +413,10 @@ def selecao(request, edital_id):
     contexto["desfecho"] = desfechos([versao.edital])[versao.edital_id]
     # Só o desfecho do próprio Edital fecha o recebimento; o do Processo é dito como fato.
     contexto["encerra_o_edital"] = bool(contexto["desfecho"] and contexto["desfecho"].do_edital)
-    iniciadas = _inscricoes_iniciadas(request, edital_id)
+    # Uma leitura da identidade para a página inteira: as inscrições dela e o convite para a
+    # situação (062) perguntam a mesma coisa, e perguntar duas vezes custaria duas consultas.
+    identidade = identidade_do_candidato.identidade_da_sessao(request)
+    iniciadas = _inscricoes_iniciadas(identidade, edital_id)
     contexto["perfis"] = [
         _perfil_da_vitrine(perfil, iniciadas, versao.content)
         for perfil in versao.content.get("profiles") or []
@@ -461,6 +465,16 @@ def selecao(request, edital_id):
             vigente=versao.content,
         )
         item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    # **E a forma da seção Vagas: Perfil, etapa, lista** (062, `FR-1148`). A lista acima continua
+    # sendo o que decide se o bloco existe; a árvore é a mesma leitura reorganizada, sem consulta.
+    contexto["resultados_por_perfil"] = leitura.resultados_por_perfil(
+        contexto["resultados_divulgados"], versao.content
+    )
+    contexto["convite_da_situacao"] = (
+        _convite_da_situacao(identidade, iniciadas, edital_id)
+        if contexto["resultados_divulgados"]
+        else None
+    )
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
     # alcançável: quem se inscreveu não tinha por onde saber que participava de um sorteio nem que a
     # lista já estava fechada. A garantia que a feature existe para produzir — *o universo foi
@@ -511,13 +525,41 @@ def selecao(request, edital_id):
     return marcar_como_privada(resposta) if iniciadas else resposta
 
 
-def _inscricoes_iniciadas(request, edital_id):
+def _convite_da_situacao(identidade, iniciadas, edital_id):
+    """O caminho para a própria situação, conforme quem lê (062, `FR-1160` a `FR-1163`, D-003).
+
+    Mandar "Entrar" a quem já entrou seria um passo inútil, e oferecer "ver minha situação" a quem
+    não enviou inscrição seria uma promessa vazia. Com mais de uma enviada, o destino é a lista, e
+    não uma inscrição escolhida pelo sistema. Nenhuma leitura nova: as inscrições são as que a
+    página já leu para o convite de cada vaga.
+    """
+    if identidade is None:
+        aqui = reverse("portal:selecao", args=[edital_id])
+        return {
+            "texto": "Entrar para ver minha situação",
+            "url": f"{reverse('portal:acesso')}?{urlencode({'destino': aqui})}",
+        }
+    enviadas = [
+        registro for registro in iniciadas.values() if registro.status == Inscricao.Status.SUBMETIDA
+    ]
+    if not enviadas:
+        return None
+    if len(enviadas) == 1:
+        return {
+            "texto": "Ver minha situação",
+            # O acompanhamento, e não a inscrição: é ali que a situação divulgada aparece; a página
+            # da inscrição mostra o que foi enviado, e mandar para lá prometeria o que ela não diz.
+            "url": reverse("portal:acompanhamento", args=[enviadas[0].id]),
+        }
+    return {"texto": "Ver minhas inscrições", "url": reverse("portal:inscricoes")}
+
+
+def _inscricoes_iniciadas(identidade, edital_id):
     """As inscrições que **esta** pessoa já abriu neste Edital, por Perfil.
 
     Sem identidade não há o que procurar, e é por isso que a consulta nem acontece: a página
     pública continua sendo pública, e ninguém descobre inscrição de terceiro por ela.
     """
-    identidade = identidade_do_candidato.identidade_da_sessao(request)
     if identidade is None:
         return {}
     return {
@@ -780,7 +822,11 @@ def _entrar(request, identidade):
     identidade_do_candidato.abrir_sessao(request, identidade)
     if not destino:
         return redirect(reverse("portal:inscricoes"))
-    if nucleo_da_identidade.falta_o_nucleo(identidade):
+    # **Nome e CPF só a caminho de uma vaga** (062, `FR-1161`). Até a `062` todo destino era uma
+    # vaga, e por isso a condição não o conferia; com a página do Edital entrando, a mesma linha
+    # cobraria CPF de quem só veio olhar a própria situação — e quem tem inscrição enviada já o
+    # informou, de modo que a cobrança só alcançaria quem não tem situação nenhuma a ver.
+    if _destino_e_vaga(destino) and nucleo_da_identidade.falta_o_nucleo(identidade):
         # Quem veio a caminho de uma vaga e ainda não tem nome nem CPF informa os dois agora, e
         # volta para a vaga em seguida. Mandá-la primeiro ao convite e só depois ao formulário
         # acrescentaria uma tela sem acrescentar nada.
@@ -804,17 +850,35 @@ def _de_volta_a_vaga(destino):
     o certame, mostra o que a vaga é e já traz o mesmo POST no lugar certo; e, se a inscrição já
     existir, o caminho para continuá-la.
 
-    Destino que não seja uma vaga volta para a lista de inscrições: nada mais era oferecido por
-    aqui, e um destino inesperado não é convite a praticar ato nenhum.
+    Destino que não seja uma vaga nem a página do Edital volta para a lista de inscrições: nada mais
+    era oferecido por aqui, e um destino inesperado não é convite a praticar ato nenhum.
+
+    **E a página do Edital, desde a `062`** (`FR-1161`, D-007): quem entra pelo convite "Entrar para
+    ver minha situação" volta ao bloco de resultados, onde o convite já leva à inscrição. A
+    restrição acima é contra **praticar ato** a partir de um endereço compartilhado; a página do
+    Edital é pública, é GET e não pratica ato nenhum. Qualquer outra rota continua indo para a
+    lista.
     """
-    try:
-        rota = resolve(urlparse(destino).path)
-    except Resolver404:
-        return reverse("portal:inscricoes")
-    if rota.view_name != "portal:inscrever":
+    rota = _rota_do_destino(destino)
+    if rota is not None and rota.view_name == "portal:selecao":
+        selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
+        return f"{selecao}#resultados-titulo"
+    if rota is None or rota.view_name != "portal:inscrever":
         return reverse("portal:inscricoes")
     selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
     return f"{selecao}#vaga-{rota.kwargs['profile_id']}"
+
+
+def _rota_do_destino(destino):
+    try:
+        return resolve(urlparse(destino).path)
+    except Resolver404:
+        return None
+
+
+def _destino_e_vaga(destino):
+    rota = _rota_do_destino(destino)
+    return rota is not None and rota.view_name == "portal:inscrever"
 
 
 def _desafio_provado(request):
@@ -2253,6 +2317,20 @@ def _confirmar_por_email(request, registro):
     )
 
 
+def _unidade_da_versao(versao):
+    """A unidade como a Publicação que originou esta versão a registrou (060, FR-1115).
+
+    Da Publicação, e não do registro de Unidades: o comprovante prova o que o candidato aceitou, e a
+    unidade renomeada depois não reescreve o papel que ele guardou.
+    """
+    publicacao = versao.source_publication
+    return {
+        "sigla": publicacao.unidade_sigla,
+        "nome": publicacao.unidade_nome,
+        "cabecalho": list(publicacao.unidade_cabecalho),
+    }
+
+
 def _dados_do_comprovante(request, registro, conteudo, versao):
     """Os fatos do comprovante, num lugar só.
 
@@ -2267,6 +2345,7 @@ def _dados_do_comprovante(request, registro, conteudo, versao):
     modalidade = _modalidade_da_inscricao(conteudo, registro)
     aceita = registro.versao_aceita
     return {
+        "unidade": _unidade_da_versao(versao),
         "protocolo": registro.protocolo,
         "codigo_de_verificacao": codigo_de_verificacao(registro, enviados),
         "endereco": request.build_absolute_uri(reverse("portal:vitrine")),
@@ -2345,6 +2424,7 @@ def comprovante(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            "unidade": _unidade_da_versao(versao),
             "perfil": _perfil_legivel(_perfil_do_conteudo(conteudo, registro.profile_id)),
             "modalidade": _modalidade_da_inscricao(conteudo, registro),
             "identidade": identidade,
@@ -2451,6 +2531,11 @@ def resultado(request, publicacao_id):
         {
             "publicacao": publicacao,
             "cabecalho": conteudo["cabecalho"],
+            # **A lista, sempre com nome** — também a ampla concorrência, gravada sem ele. A página
+            # do Edital já dizia a lista de cada link (#255), e quem chegava à publicação da ampla
+            # não encontrava nela, nem no título da aba, de que lista era: as três ordens de um
+            # marco abriam com o mesmo cabeçalho.
+            "lista": nome_da_lista(conteudo["cabecalho"]),
             "posicoes": conteudo["posicoes"],
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
