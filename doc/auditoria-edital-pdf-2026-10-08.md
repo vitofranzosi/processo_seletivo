@@ -530,6 +530,16 @@ de configuração · **E** validação de regra de negócio · **F** conteúdo d
 Todas mudam o documento **só dos Editais publicados depois** — documento publicado não se regenera
 (FR-091) —, o que é argumento para fazê-las antes do piloto.
 
+> **Tratados depois desta auditoria.** ED-01 pela `065` (PR #266). ED-02, ED-03 e ED-12 pela `067`
+> (`specs/067-correcoes-de-norma-do-edital/`), em 09/10/2026, com as decisões do responsável pelo
+> produto: a frase de recurso nomeia o resultado pelo nome do marco entre aspas; um aviso de
+> conferência, nunca impeditivo, põe os prazos dos marcos ao lado dos Eventos de recurso do
+> Cronograma; sob sorteio declarado, nem arredondamento (exigido ou impresso) nem empate no corte; e
+> o Perfil sem vaga imediata não imprime quadro nem reversão, **sem** regra nova para a reserva no
+> cadastro. **Continua aberto:** a regra de reserva no cadastro (RC-58), e a correspondência entre o
+> prazo do marco e o período do Cronograma, que o aviso mostra e só a conferência humana resolve.
+> Os PDFs desta pasta continuam os da auditoria; os de depois estão em `specs/067-…/demonstracao/`.
+
 ### 12.2 Curto prazo
 
 - **ED-04 + ED-11:** consolidar o que se repete (regra comum, tabela única Perfil × lista, método

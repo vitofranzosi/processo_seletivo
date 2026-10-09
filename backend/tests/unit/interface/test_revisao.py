@@ -322,16 +322,19 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
     assert (
         "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in tudo
     )
+    # A frase do documento, com o resultado nomeado pela denominação, que está na linha de cima
+    # (067, FR-1304, D-012): com o nome dentro da frase, cada Perfil viraria um grupo.
+    assert "Denominação: Classificação final" in tudo
     assert (
-        "Recurso: Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do "
-        "resultado." in tudo
+        "Recurso: Caberá recurso contra o resultado deste marco, no prazo de 5 (cinco) dias "
+        "corridos, contados da divulgação desse resultado." in tudo
     )
     assert "Corte: Progridem os 3 (três) primeiros desta ordem, mais 1 (um) suplente." in tudo
-    # As frases do documento, e não uma redação própria da conferência (014, FR-185).
-    assert (
-        "Empate no corte: Havendo empate na última posição, progridem todos os empatados, ainda "
-        "que excedam essa quantidade." in tudo
-    )
+    # As frases do documento, e não uma redação própria da conferência (014, FR-185). O empate no
+    # corte **não** sai sob sorteio declarado, como no documento: a ordem sorteada é total (067,
+    # FR-1315). A frase dele sob pontuação está em `test_correcoes_de_norma_na_revisao.py`.
+    assert "Empate no corte" not in tudo
+    assert "Arredondamento" not in tudo
     assert (
         "Continuação: Poderá haver chamada, nesta ordem, além dos que este corte publicar." in tudo
     )

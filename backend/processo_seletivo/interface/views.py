@@ -1690,6 +1690,7 @@ def compor_etapa(request, edital_id, etapa):
             "ancora_do_marco": _ancora_do_primeiro_marco(perfis)
             if etapa == "classificacao"
             else "",
+            "campo_do_arredondamento": _campo_do_arredondamento(perfis),
             # O método do sorteio comum ao Edital (030, FR-429): o passo o oferece uma vez, e cada
             # cartão de marco o referencia em vez de redigitá-lo.
             #
@@ -1998,6 +1999,18 @@ def _conferir_marcos_em_transito(edital, perfis):
                     f"O Perfil {perfil.get('code') or ''} leva marcos que citam Etapa ou fato que "
                     "não são deste Edital nem deste Perfil. Remova-o e duplique a origem de novo."
                 )
+
+
+def _campo_do_arredondamento(perfis):
+    """Para onde a ajuda "Casas decimais e arredondamento" leva no marco da âncora (067, FR-427).
+
+    Sob sorteio declarado o campo não está no cartão (D-008); o destino passa a ser a forma da
+    ordem, que é a pergunta que o tirou — o texto da ajuda já diz que sob sorteio não se arredonda.
+    """
+    for perfil in perfis or []:
+        if perfil.get("marcos"):
+            return "orderProduction" if marcos.declara_sorteio(perfil["marcos"][0]) else "scale"
+    return "scale"
 
 
 def _ancora_do_primeiro_marco(perfis):
@@ -3018,11 +3031,20 @@ def fragmento_marco_recomposto(request, indice, sub):
         return HttpResponse(status=204)
     if marco is None:
         return HttpResponse(status=204)
+    exibido = _reexibir_marco(marco)
+    if marcos.declara_sorteio(marco):
+        # Sob sorteio a gravação não leva arredondamento (067, D-008), e o marco lido do formulário
+        # vem com `{}`. Mas o cartão leva oculto o que veio oculto: é o que a troca para pontuação,
+        # no próximo recompor, devolve à tela — o arredondamento que o marco tinha, e não o padrão.
+        base = f"marco-{indice}-{sub}"
+        exibido.update(
+            scale=request.GET.get(f"{base}-scale", ""), mode=request.GET.get(f"{base}-mode", "")
+        )
     return render(
         request,
         "interface/_marco.html",
         {
-            "marco": _reexibir_marco(marco),
+            "marco": exibido,
             "indice": indice,
             "sub": sub,
             "quantos_perfis": edital.perfis.count() if edital else 0,

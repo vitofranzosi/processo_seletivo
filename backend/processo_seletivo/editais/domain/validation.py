@@ -633,6 +633,14 @@ def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
         arredondamento_publicado,
     )
 
+    # **Sob sorteio declarado, a ausência é a resposta certa** (067, ED-03, FR-1311). A ordem
+    # sorteada não vem de nota, e não há o que arredondar: exigir a declaração obrigava quem elabora
+    # a publicar uma conta que não existe — a auditoria de 08/10/2026 só montou o cenário A assim, e
+    # o documento a imprimia. O declarado continua conferido na forma (FR-1312), como o desfecho de
+    # empate sob sorteio (`FR-928`): só a ausência fica livre. A forma é a **declarada**
+    # (`declara_sorteio`, D-004) — o marco do acervo que não a declara continua exigindo.
+    if marcos.declara_sorteio(marco) and not _arredondamento_declarado(marco):
+        return []
     try:
         arredondamento_publicado(marco)
     except RegraIncompleta as falta:
@@ -645,6 +653,14 @@ def _arredondamento_do_marco(marco, caminho) -> list[ValidationFinding]:
             )
         ]
     return []
+
+
+def _arredondamento_declarado(marco) -> bool:
+    """Algum dos dois campos do arredondamento foi declarado? `{}`, ou `None` nos dois, não é."""
+    arredondamento = marco.get("rounding")
+    if not isinstance(arredondamento, dict):
+        return arredondamento is not None
+    return any(arredondamento.get(campo) is not None for campo in ("scale", "mode"))
 
 
 def _divisor_do_marco(marco, etapas, caminho) -> list[ValidationFinding]:
@@ -1581,7 +1597,124 @@ def validate_for_publication(
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
     findings.extend(_caractere_sem_grafia(snapshot))
     findings.extend(_numeracao_e_remissoes(snapshot, ato=ato))
+    findings.extend(_conferencia_do_recurso(snapshot))
     return findings
+
+
+CONFERENCIA_DO_RECURSO = "appeal_schedule_review"
+# Palavra iniciada por "recurs" — recurso, recursos, recursal —, e não "concurso" nem "percurso".
+_PALAVRA_DE_RECURSO = re.compile(r"\brecurs\w*", re.IGNORECASE)
+# Acima disto, "18 Perfis" em vez da enumeração: no cenário B ela ocuparia a mensagem inteira.
+_PERFIS_ENUMERADOS_ATE = 6
+
+
+def eventos_de_recurso(snapshot: dict) -> list[dict]:
+    """Os Eventos do Cronograma que falam de recurso no tipo ou na descrição (067, FR-1305).
+
+    **Texto livre, e por isso só alimenta aviso.** O tipo do Evento não é vocabulário fechado, e
+    nada liga Evento a marco: inferir dali uma regra de direito é o que o modelo do Cronograma
+    desaconselha (`EventoCronograma.is_registration_period`). Aqui o texto só decide o que se
+    **mostra** a quem elabora.
+    """
+    eventos = snapshot.get("schedule")
+    return [
+        evento
+        for evento in (eventos if isinstance(eventos, list) else [])
+        if isinstance(evento, dict)
+        and _PALAVRA_DE_RECURSO.search(
+            f"{evento.get('type') or ''} {evento.get('description') or ''}"
+        )
+    ]
+
+
+def _conferencia_do_recurso(snapshot: dict) -> list[ValidationFinding]:
+    """Os prazos de recurso dos marcos ao lado dos Eventos de recurso do Cronograma (067, ED-02).
+
+    **O documento publicava dois prazos de recurso sem nada que os relacionasse.** No cenário A da
+    auditoria de 08/10/2026, cada marco por sorteio dizia "2 dias, contados da divulgação do
+    resultado" — o do sorteio, em 16/11 —, e o único período de recurso do Cronograma era o da
+    análise documental, de 26/11 a 27/11. O sistema não tem como provar que um corresponde ao
+    outro: o Evento é texto livre, e nenhum campo o liga a marco. O que ele pode é pôr os dois
+    lados na frente de quem elabora, antes do ato (D-002) — e é só isso que este aviso faz.
+
+    **Sempre que algum marco publica regra de recurso** — que cabe, ou que não cabe —, e só então:
+    recurso contra ato fora dos marcos (homologação, heteroidentificação) é legítimo, e um
+    Cronograma com Eventos de recurso sem marco que os declare não é, por si, divergência.
+
+    **Aviso, em todo ato, e com código que não coincide com impeditivo nenhum** — a confirmação da
+    Retificação não o subtrai (`advertencias_do_ato`). O caminho é `schedule`, que a interface leva
+    à etapa Cronograma; o caminho exato `/schedule` é o do período de inscrições.
+
+    **O aviso não afirma correspondência, falta nem sobra** (FR-1307): no cenário B, três dos quatro
+    períodos de recurso são contra atos que o sistema não modela como marco, e estão certos.
+    """
+    # A grafia do prazo e do instante é a do documento, e mora no compositor — a mesma razão da
+    # importação adiada de `itens_do_documento` (065, decisão 004): duas grafias do mesmo prazo
+    # seriam duas normas.
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        _instante,
+        prazo_do_recurso,
+        resultado_do_marco,
+    )
+
+    # **Conteúdo malformado não derruba a conferência** — quem o acusa é a validação de forma, e
+    # uma exceção aqui apagaria a mensagem dela (achado da revisão da 067: a Retificação que remove
+    # o início de um Evento de recurso devolvia erro interno no lugar de `field_required`).
+    regras = {}
+    for perfil in _perfis_bem_formados(snapshot):
+        marcos_do_perfil = perfil.get("classificationMilestones")
+        for marco in marcos_do_perfil if isinstance(marcos_do_perfil, list) else []:
+            if not isinstance(marco, dict) or not isinstance(marco.get("appealWindow"), dict):
+                continue
+            janela = marco["appealWindow"]
+            if janela.get("admits") is False:
+                regra = "não cabe recurso"
+            elif prazo := prazo_do_recurso(marco):
+                regra = f"{prazo}, contados da divulgação desse resultado"
+            else:
+                continue
+            chave = (resultado_do_marco(marco) or "“sem denominação”", regra)
+            regras.setdefault(chave, []).append(str(perfil.get("code") or ""))
+    if not regras:
+        return []
+
+    def perfis(codigos):
+        if len(codigos) > _PERFIS_ENUMERADOS_ATE:
+            return f"{len(codigos)} Perfis"
+        return ", ".join(codigos)
+
+    marcos_ = "; ".join(
+        f"{resultado} ({perfis(codigos)}) — {regra}"
+        for (resultado, regra), codigos in regras.items()
+    )
+    eventos = eventos_de_recurso(snapshot)
+    if eventos:
+
+        def periodo(evento):
+            if evento.get("endAt"):
+                return f"de {_instante(evento.get('startAt'))}, a {_instante(evento['endAt'])}"
+            return f"em {_instante(evento.get('startAt'))}"
+
+        quantos = (
+            "1 Evento de recurso" if len(eventos) == 1 else f"{len(eventos)} Eventos de recurso"
+        )
+        cronograma = f"O Cronograma tem {quantos}: " + "; ".join(
+            f"{evento.get('description') or evento.get('type') or ''} — {periodo(evento)}"
+            for evento in eventos
+        )
+    else:
+        cronograma = "O Cronograma não tem Evento de recurso"
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            CONFERENCIA_DO_RECURSO,
+            f"Prazos de recurso a conferir. Os marcos publicam recurso: {marcos_}. {cronograma}. "
+            "O sistema não relaciona o Cronograma aos marcos: confira se há período de recurso "
+            "para o resultado de cada marco e se os demais períodos são contra outros atos, "
+            "ditos assim no texto do Edital.",
+            "schedule",
+        )
+    ]
 
 
 def _perfis_bem_formados(snapshot: dict) -> list[dict]:

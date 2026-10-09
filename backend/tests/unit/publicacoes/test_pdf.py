@@ -1632,11 +1632,16 @@ def test_a_janela_declarada_vira_frase_normativa():
     from processo_seletivo.publicacoes.infrastructure.pdf import _janela_recursal
 
     frase = _janela_recursal(
-        {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
+        {
+            "name": "Classificação final",
+            "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+        }
     )
 
+    # Desde a `067` (ED-02) a frase nomeia o resultado de que se recorre.
     assert frase == (
-        "Caberá recurso no prazo de 5 (cinco) dias corridos, contados da divulgação do resultado."
+        "Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias "
+        "corridos, contados da divulgação desse resultado."
     )
 
 
@@ -1650,9 +1655,11 @@ def test_a_negativa_declarada_tambem_e_frase():
     """
     from processo_seletivo.publicacoes.infrastructure.pdf import _janela_recursal
 
-    frase = _janela_recursal({"appealWindow": {"admits": False, "durationDays": None}})
+    frase = _janela_recursal(
+        {"name": "Classificação final", "appealWindow": {"admits": False, "durationDays": None}}
+    )
 
-    assert frase == "Não caberá recurso contra o resultado deste marco."
+    assert frase == "Não caberá recurso contra o resultado de “Classificação final”."
 
 
 def test_o_silencio_do_edital_continua_sem_frase():
