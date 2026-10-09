@@ -130,15 +130,18 @@ do parágrafo; espaço, travessão ou hífen e espaço; o fim do parágrafo. Nã
 que vem logo depois for algarismo, barra, vírgula, dois-pontos, "%", "º" ou "ª" — o que já exclui
 datas, números de lei, valores, CEP e números de processo, porque nenhum deles cabe em grupos de dois
 algarismos —, nem se a primeira palavra depois do número estiver na lista de unidades (pontos,
-ponto, pts, horas, hora, h, minutos, min, dias, dia, semanas, meses, mês, anos, ano). O primeiro
-grupo é comparado como inteiro ("04.1" é da seção 4).
+ponto, pts, horas, hora, h, minutos, min, dias, dia, semanas, meses, mês, anos, ano — e, desde a
+revisão do PR, mil, milhão, milhões, vez, vezes, salário, salários), nem se o começo do parágrafo for
+inteiro um intervalo de horas ou de datas (a `D-017` da spec). O primeiro grupo é comparado como
+inteiro ("04.1" é da seção 4).
 
 **Título transcrito** (`FR-1201`): um grupo de um ou dois algarismos, ponto ou hífen, espaço, e o
 resto do parágrafo com ao menos três letras, todas maiúsculas.
 
 **Remissão** (`FR-1204`): "item", "itens", "subitem" ou "subitens", em qualquer caixa, seguidos de
 um número de subitem (ou de um grupo só, para o nível de seção), e de mais números ligados por
-vírgula, "e", "ou" ou "a" (o "a" marca intervalo: confere-se as duas pontas). "Tabela N" e "Quadro
+vírgula, "e", "ou" ou "a" (o "a" marca intervalo: confere-se as duas pontas). Número que continua
+além de quatro grupos, ou com terceiro algarismo, não é remissão — nem ao seu prefixo (`D-017`). "Tabela N" e "Quadro
 N", com N de até três algarismos. A remissão **não é deste documento** quando, logo depois do último
 número — no máximo oito palavras adiante, sem atravessar ponto final —, o texto diz "do Edital nº",
 "da Resolução", "da Portaria", "da Lei", "do Decreto", "do art.", "do artigo", "da Instrução

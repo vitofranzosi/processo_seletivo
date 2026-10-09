@@ -132,6 +132,11 @@ def test_remissao_a_secao_so_e_acusada_acima_do_total():
     assert achado.code == REMISSAO_SEM_DESTINO
 
 
+def test_remissao_acima_de_quatro_niveis_nao_vira_remissao_a_outro_item():
+    """ "item 9.1.1.1.1" não é lido como "item 9.1.1.1", que não existe e geraria aviso falso."""
+    assert _remissoes(_conteudo(recursos="Conforme o item 9.1.1.1.1, cabe recurso.", **ANTES)) == []
+
+
 def test_tabela_so_e_acusada_acima_do_total():
     conteudo = _conteudo(eventos=[EVENTO], inscricao="Conforme a Tabela 1.", **ANTES)
     assert pdf.tabelas_do_documento(conteudo) == 1

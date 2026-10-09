@@ -237,6 +237,9 @@ achado de numeração.
 | Percentual | "25% das vagas…" | "%" em seguida |
 | Ordinal | "1º …", "2ª chamada…" | "º"/"ª" em seguida |
 | Decimal com unidade | "7.5 pontos", "6.0 (seis) pontos" | palavra de unidade em seguida |
+| Decimal com multiplicador ou grandeza | "1.2 mil candidatos", "3.5 vezes o valor", "1.5 salário mínimo" | palavra de unidade em seguida (`D-017`) |
+| Intervalo de horas | "8.30 às 12.00 – atendimento", "13.00 às 17.30h" | a expressão inteira é intervalo de horas (`FR-1199`, `D-017`) |
+| Intervalo de datas | "10.10 a 20.10 – período de recurso", "25.10 a 05.11.2026", "10.10 até 20.10" | a expressão inteira é intervalo de datas (`FR-1199`, `D-017`) |
 | Número de processo, CEP, telefone | "23185.000123/2026-11", "29.000-000", "(27) 3198-0925" | grupos com mais de dois algarismos, hífen ou parêntese |
 | Ano solto | "2026. Fica…" | um grupo só |
 | Lista de um nível | "1. Ler o Edital", "1) …", "I – …", "a) …" | não é número de subitem (dois ou mais grupos) |
@@ -278,6 +281,9 @@ achado de numeração.
   errado.
 - **Remissão a nível único** ("item 5", "seção 9"): não é conferida, salvo quando o número passa do
   total de seções do documento (sem destino).
+- **Número maior que o de subitem** ("item 10.1.1.1.1", "item 4.123"): a remissão é ignorada
+  inteira, e não lida como remissão ao prefixo ("10.1.1.1", "4") — que seria um item que o texto não
+  citou. Numa lista, só o número maior sai dela (`D-017`).
 - **"Tabela N"** existente: nenhum achado. Acima do número de tabelas do documento: sem destino. A
   numeração das tabelas muda com o número de Perfis, e é por isso que ela entra.
 - **Mesma remissão repetida** na mesma seção: um achado só.
@@ -312,7 +318,13 @@ achado de numeração.
   dois algarismos separados por ponto, seguido de espaço, ponto, parêntese de fechamento, hífen,
   travessão ou do fim do parágrafo — e **não** seguido de algarismo, barra, vírgula, dois-pontos,
   "%", "º", "ª" ou palavra de unidade. Os casos legítimos da tabela de *Edge Cases* MUST NOT ser
-  números de subitem. O primeiro grupo é comparado como número, e não como texto.
+  números de subitem. O primeiro grupo é comparado como número, e não como texto. **Também não é
+  número de subitem** o começo de parágrafo que forma, inteiro, um **intervalo de horas** — duas
+  horas "H.MM" (hora até 23, minutos de dois algarismos até 59) ligadas por "às" — ou um **intervalo
+  de datas** — dois "D.MM" (dia de 1 a 31, mês de dois algarismos de 01 a 12, dias diferentes) ligados
+  por "a" ou "até", com o ano opcional na segunda ponta. A exclusão é da expressão inteira, e não do
+  número seguido de "a" ou "às": o intervalo de subitens ("1.1 a 1.3", "10.10 a 10.12") continua
+  número de subitem (`D-017`).
 - **FR-1200**: É **conflito comprovado de numeração** o parágrafo cujo número de subitem tem o
   primeiro grupo diferente do número com que a seção sai no documento, e qualquer número de subitem no
   preâmbulo, que sai sem número.
@@ -511,6 +523,21 @@ fundamento da decisão do RC-21, de 28/09 —; e a remissão aparece também for
 alínea "e" dos documentos do 28/2026 remete ao item 5.14). **Limite mantido:** achar um destino único
 não prova que a referência está correta, e nada no sistema diz que está (`FR-1209`). Atende
 `FR-1204` e `FR-1211`.
+
+#### D-017 — Intervalos de hora e de data, multiplicadores, e a remissão acima de quatro níveis
+
+Fechada pelo responsável pelo produto em 09/10/2026, na revisão do PR. A revisão reproduziu cinco
+começos de parágrafo legítimos lidos como subitem — "8.30 às 12.00 – …", "10.10 a 20.10 – …", "1.5
+salário mínimo", "1.2 mil candidatos", "3.5 vezes o valor" —, e cada um, numa seção de outro número,
+impedia a submissão com a orientação de "corrigir a numeração". **Decidido:** ampliar as unidades
+(mil, milhão, milhões, vez, vezes, salário, salários), como *Assumptions* já previa; e reconhecer
+os intervalos de hora e de data **pela expressão inteira**, explicitado em `FR-1199`. **Descartada:**
+excluir qualquer número seguido de "a" ou "às" — tiraria do impeditivo o intervalo de subitens e
+conflitos reais. **Erro aceito:** "10.10 a 10.12" é ambíguo (de 10/10 a 10/12, ou dos itens 10.10 a
+10.12) e continua subitem; um dia.mês sozinho ("12.10 Feriado") também. **Na mesma revisão:** o
+número de remissão acima de quatro níveis virava remissão ao seu prefixo ("item 10.1.1.1.1" → "item
+10.1.1.1"); passa a ser ignorado inteiro, mantido o limite de quatro níveis. O conflito comprovado
+continua impeditivo (`D-001`).
 
 ## Limitações remanescentes
 

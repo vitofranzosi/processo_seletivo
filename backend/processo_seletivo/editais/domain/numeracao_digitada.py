@@ -61,12 +61,63 @@ UNIDADES = frozenset(
         "meses",
         "ano",
         "anos",
+        # Multiplicadores e grandezas (revisão do PR, 09/10/2026): "1.2 mil candidatos", "3.5
+        # vezes o valor", "1.5 salário mínimo". Decimal com ponto é raro em português, mas aparece
+        # no texto colado, e cada um destes impedia a submissão de um Edital certo.
+        "mil",
+        "milhão",
+        "milhões",
+        "vez",
+        "vezes",
+        "salário",
+        "salários",
     }
 )
 
 # O parêntese logo depois do número — "6.0 (seis) pontos" — é a grafia por extenso, e a unidade é a
 # palavra seguinte a ele.
 _EXTENSO_ENTRE_PARENTESES = re.compile(r"^\([^)]*\)\s*")
+
+# **Intervalos de hora e de data no começo do parágrafo** (FR-1199, emendado na revisão do PR em
+# 09/10/2026). "8.30 às 12.00 – atendimento" e "10.10 a 20.10 – período de recurso" têm a forma de
+# subitem no primeiro número, e cada um impedia a submissão com a orientação de "corrigir a
+# numeração", que não faz sentido. **Reconhece-se a expressão inteira**, e não o número seguido de
+# "a" ou "às": "1.1 a 1.3 aplicam-se…" continua subitem, e um conflito de verdade continua
+# impeditivo.
+#
+# - **Horas**: as duas pontas com minutos de dois algarismos (00 a 59) e hora até 23, ligadas por
+#   "às" — o conectivo de hora. Com "a", "8.10 a 8.12" é intervalo de subitens, e continua lido
+#   assim.
+# - **Datas**: as duas pontas como dia (1 a 31) e mês de dois algarismos (01 a 12), ligadas por "a"
+#   ou "até", com o ano opcional na segunda, e **dias diferentes**. Um intervalo de subitens fica
+#   numa seção só e repete o primeiro grupo; "10.10 a 10.12" é ambíguo — de 10/10 a 10/12, ou dos
+#   itens 10.10 a 10.12 —, e continua subitem. O erro aceito fica desse lado porque o subitem é a
+#   leitura natural de um parágrafo do Edital, e a data, a exceção.
+_FIM_DA_EXPRESSAO = r"(?=[.,;:)]?(?:\s|\Z)|\s*[–—-]\s)"
+_INTERVALO_DE_HORAS = re.compile(
+    r"^(?P<h1>\d{1,2})\.(?P<m1>\d{2})\s+(?:às|as)\s+(?P<h2>\d{1,2})\.(?P<m2>\d{2})h?"
+    + _FIM_DA_EXPRESSAO,
+    re.I,
+)
+_INTERVALO_DE_DATAS = re.compile(
+    r"^(?P<d1>\d{1,2})\.(?P<m1>\d{2})\s+(?:a|até)\s+(?P<d2>\d{1,2})\.(?P<m2>\d{2})"
+    r"(?:[./]\d{2}(?:\d{2})?)?" + _FIM_DA_EXPRESSAO,
+    re.I,
+)
+
+
+def _intervalo_de_horas_ou_datas(texto: str) -> bool:
+    if casado := _INTERVALO_DE_HORAS.match(texto):
+        horas = (int(casado["h1"]), int(casado["h2"]))
+        minutos = (int(casado["m1"]), int(casado["m2"]))
+        if all(hora <= 23 for hora in horas) and all(minuto <= 59 for minuto in minutos):
+            return True
+    if casado := _INTERVALO_DE_DATAS.match(texto):
+        dias = (int(casado["d1"]), int(casado["d2"]))
+        meses = (int(casado["m1"]), int(casado["m2"]))
+        if all(1 <= dia <= 31 for dia in dias) and all(1 <= mes <= 12 for mes in meses):
+            return dias[0] != dias[1]
+    return False
 
 
 @dataclass(frozen=True)
@@ -84,8 +135,9 @@ def _sem_marcadores(paragrafo: str) -> str:
 
 def numero_de_subitem(paragrafo: str) -> NumeroDeSubitem | None:
     """O número de subitem com que o parágrafo começa, ou `None` (FR-1199)."""
-    casado = _NUMERO_DE_SUBITEM.match(_sem_marcadores(paragrafo))
-    if casado is None:
+    texto = _sem_marcadores(paragrafo)
+    casado = _NUMERO_DE_SUBITEM.match(texto)
+    if casado is None or _intervalo_de_horas_ou_datas(texto):
         return None
     depois = casado["depois"]
     separador = _SEPARADOR.match(depois)
@@ -120,7 +172,10 @@ def titulo_transcrito(paragrafo: str) -> int | None:
 
 # --- as remissões (FR-1204) -------------------------------------------------------------------
 
-_NUMERO = r"\d{1,2}(?:\.\d{1,2}){0,3}(?![\d/])"
+# O número da remissão não pode ser **prefixo** de outro número: sem o `\.\d` no fim, "item
+# 10.1.1.1.1" virava a remissão a "10.1.1.1" e "item 4.123" a "4" — remissões a outro item, que o
+# texto não fez (revisão do PR, 09/10/2026). Acima de quatro níveis, a remissão é ignorada inteira.
+_NUMERO = r"\d{1,2}(?:\.\d{1,2}){0,3}(?![\d/]|\.\d)"
 _LISTA = rf"{_NUMERO}(?:(?:\s*,\s*|\s+(?:e|ou|a)\s+){_NUMERO})*"
 _REMISSAO_A_ITEM = re.compile(
     rf"(?i:\b(?P<palavra>(?:sub)?ite(?:m|ns))\b)\s+(?:n[º°o.]\s*)?(?P<lista>{_LISTA})"

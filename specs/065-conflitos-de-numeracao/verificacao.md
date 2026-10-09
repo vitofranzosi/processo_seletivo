@@ -100,6 +100,22 @@ Word, o parágrafo é um só. Fica como limitação observada: **um parágrafo q
 é mais provavelmente o fim de uma remissão partida do que um subitem**, e excluí-lo da forma de
 `FR-1199` seria uma emenda à spec — registro para decisão, e não mudança feita aqui.
 
+## Correções da revisão do PR (09/10/2026, D-017)
+
+A revisão reproduziu cinco começos de parágrafo legítimos lidos como subitem — e, numa seção de outro
+número, impeditivos: "8.30 às 12.00 – …", "10.10 a 20.10 – …", "1.5 salário mínimo", "1.2 mil
+candidatos", "3.5 vezes o valor"; e a remissão "item 10.1.1.1.1" lida como "item 10.1.1.1".
+
+- **Prova de reprovação.** Com o `numeracao_digitada.py` anterior, os 13 casos novos que exigem a
+  correção caem (8 do conjunto de prova, 3 de remissão no módulo puro, 1 de conflito, 1 de remissão
+  na validação); com o corrigido, os 167 testes de unidade da feature passam. Os 6 casos de forma
+  parecida que **continuam** subitem ("1.1 a 1.3", "8.10 a 8.12", "10.10 a 10.12", "4.1 às pessoas…",
+  hora 25, mês 13) passam com os dois — a exclusão é da expressão inteira.
+- **O conflito real continua impeditivo**: os cinco exemplos e um "3.1" na seção que sai como 4 dão um
+  achado só, impeditivo, que cita o parágrafo 6 e nenhum dos cinco.
+- **A amostra não mudou.** `fp_amostra.py` sobre os nove Editais, antes e depois: 587 subitens, 91
+  remissões e as mesmas acusações — nenhum subitem nem remissão real se perdeu.
+
 ## Pelo canal de quem elabora (T039, Princípio VI)
 
 Banco `ps_065_demo` com o rascunho do cenário B; `runserver` na porta 8065 por uma entrada

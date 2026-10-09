@@ -20,7 +20,7 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | Requisito | O que prende | Teste |
 |---|---|---|
 | FR-1198 | parágrafos da composição, texto normalizado | CN `test_linha_em_branco_nao_conta_como_paragrafo`, `test_zero_a_esquerda_e_invisivel_colado_nao_sao_conflito` |
-| FR-1199 | forma do número de subitem e os legítimos | ND `test_reconhece_o_numero_de_subitem`, `test_numero_legitimo_nao_e_subitem` (42 casos) |
+| FR-1199 | forma do número de subitem e os legítimos, inclusive os intervalos de hora e de data | ND `test_reconhece_o_numero_de_subitem`, `test_numero_legitimo_nao_e_subitem` (49 casos), `test_o_intervalo_so_e_excluido_pela_expressao_inteira` |
 | FR-1200 | conflito comprovado, inclusive no preâmbulo | CN `test_subitens_de_outra_secao_sao_um_conflito_comprovado_e_impeditivo`, `test_subitem_no_preambulo_e_conflito` |
 | FR-1201 | título transcrito como suspeita | ND `test_reconhece_o_titulo_transcrito`, `test_nao_e_titulo_transcrito`; CN `test_titulo_transcrito_com_outro_numero_e_suspeita` |
 | FR-1202 | a numeração do momento | CN `test_a_conferencia_acompanha_a_numeracao_do_momento` |
@@ -85,12 +85,14 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | D-014 | ID `test_o_documento_publicado_na_auditoria…`; CT |
 | D-015 | os testes de orçamento de consulta da interface, inalterados e verdes na suíte |
 | D-016 | NR `test_remissoes_repetidas_se_dobram_e_o_conflito_nunca` |
+| D-017 | ND `test_numero_legitimo_nao_e_subitem` (os cinco da revisão e três variações), `test_o_intervalo_so_e_excluido_pela_expressao_inteira`, `test_numero_maior_que_o_de_subitem_e_ignorado_inteiro`, `test_na_lista_so_o_numero_maior_e_ignorado`; CN `test_intervalo_de_hora_ou_de_data_nao_e_conflito_e_o_conflito_real_continua_impeditivo`; RM `test_remissao_acima_de_quatro_niveis_nao_vira_remissao_a_outro_item` |
 
 ## Casos-limite da spec
 
 | Caso-limite | Teste |
 |---|---|
 | Data, número de lei, valor, hora, percentual, ordinal, decimal com unidade, processo/CEP/telefone, ano, lista de um nível | ND `test_numero_legitimo_nao_e_subitem` |
+| Decimal com multiplicador; intervalo de horas; intervalo de datas | ND `test_numero_legitimo_nao_e_subitem`, `test_o_intervalo_so_e_excluido_pela_expressao_inteira`; CN `test_intervalo_de_hora_ou_de_data_nao_e_conflito…` |
 | Invisível colado do Word; zero à esquerda | CN `test_zero_a_esquerda_e_invisivel_colado_nao_sao_conflito`; ND `04.1` |
 | Subitem de três ou quatro níveis | ND `4.2.1`, `4.2.1.3` |
 | Separadores depois do número | ND `4.1.`, `4.1)`, `4.1 –`, `4.1 -`, `4.1` |
@@ -105,6 +107,7 @@ entram aqui porque nenhuma ferramenta os cobra (nota em *Assumptions* da spec).
 | Remissão a outro ato ou a Anexo | ND `test_remissao_a_outro_ato…`; RM `test_remissao_a_outro_ato_ou_anexo_nao_e_conferida` |
 | Remissão a subitem em conflito | RM `test_destino_unico_em_paragrafo_em_conflito_e_suspeita` |
 | Remissão a nível único | RM `test_remissao_a_secao_so_e_acusada_acima_do_total` |
+| Número maior que o de subitem | ND `test_numero_maior_que_o_de_subitem_e_ignorado_inteiro`, `test_na_lista_so_o_numero_maior_e_ignorado`; RM `test_remissao_acima_de_quatro_niveis…` |
 | "Tabela N" | RM `test_tabela_so_e_acusada_acima_do_total` |
 | Mesma remissão repetida | RM `test_a_mesma_remissao_na_mesma_secao_sai_uma_vez` |
 | Onde se procura remissão | RM `test_a_remissao_e_procurada_em_todo_texto_impresso`, `test_o_rotulo_do_anexo_e_o_titulo_da_secao_nao_sao_remissao` |

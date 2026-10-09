@@ -131,6 +131,23 @@ def test_secao_misturada_acusa_so_os_de_outra_secao():
     assert f"«{numero}.1 " not in achado.message
 
 
+def test_intervalo_de_hora_ou_de_data_nao_e_conflito_e_o_conflito_real_continua_impeditivo():
+    """Os falsos positivos da revisão do PR (09/10/2026), ao lado de um conflito de verdade."""
+    legitimos = (
+        "8.30 às 12.00 – atendimento presencial.\n"
+        "10.10 a 20.10 – período de recurso.\n"
+        "1.5 salário mínimo é o valor da bolsa.\n"
+        "1.2 mil candidatos inscritos na edição anterior.\n"
+        "3.5 vezes o valor da taxa."
+    )
+    assert _achados(_conteudo(**ANTES, inscricao=legitimos)) == []
+    [achado] = _achados(_conteudo(**ANTES, inscricao=f"{legitimos}\n3.1 A inscrição é gratuita."))
+    assert achado.code == CONFLITO_DE_NUMERACAO
+    assert achado.severity == Severity.BLOCKING_ERROR
+    assert "1 parágrafo começa" in achado.message
+    assert "parágrafo 6, «3.1 A inscrição é gratuita.»" in achado.message
+
+
 def test_zero_a_esquerda_e_invisivel_colado_nao_sao_conflito():
     assert _achados(_conteudo(**ANTES, inscricao="04.1 A inscrição é gratuita.")) == []
     assert _achados(_conteudo(**ANTES, inscricao="4.1​ A inscrição é gratuita.")) == []

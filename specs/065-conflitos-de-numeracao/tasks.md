@@ -159,6 +159,14 @@ mostrados como aviso na confirmação (`SC-470`).
 
 ---
 
+## Phase 8: Correções da revisão do PR (09/10/2026, `D-017`)
+
+- [X] T044 Em `backend/processo_seletivo/editais/domain/numeracao_digitada.py`: unidades mil, milhão, milhões, vez, vezes, salário, salários; intervalo de horas e de datas reconhecido pela expressão inteira (`FR-1199` emendado); número de remissão que continua além de quatro grupos ignorado inteiro
+- [X] T045 [P] Testes: os cinco exemplos da revisão e três variações no conjunto de prova; as formas parecidas que continuam subitem; o conflito real ao lado deles, ainda impeditivo; a remissão acima de quatro níveis, sozinha e em lista — e a prova de que reprovam sem a correção
+- [X] T046 Artefatos (`spec.md`, `research.md`, `rastreabilidade.md`, `verificacao.md`); combinação com a `main` validada por `make lint check test-pg`
+
+---
+
 ## Dependencies & Execution Order
 
 - **Setup (T001–T002)** → **Foundational (T003–T011)** → as histórias.

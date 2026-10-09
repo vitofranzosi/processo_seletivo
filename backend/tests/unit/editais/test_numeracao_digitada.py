@@ -105,6 +105,17 @@ LEGITIMOS = [
     "Os candidatos aprovados serão convocados.",
     # número no meio do parágrafo não é começo de parágrafo
     "Conforme o 4.1, a inscrição é gratuita.",
+    # os cinco falsos positivos da revisão do PR (09/10/2026): intervalos de hora e de data,
+    # reconhecidos pela expressão inteira, e decimais com multiplicador ou grandeza
+    "8.30 às 12.00 – atendimento presencial.",
+    "10.10 a 20.10 – período de recurso.",
+    "1.5 salário mínimo é o valor da bolsa.",
+    "1.2 mil candidatos inscritos na edição anterior.",
+    "3.5 vezes o valor da taxa.",
+    # variações das mesmas expressões
+    "13.00 às 17.30h, de segunda a sexta-feira.",
+    "25.10 a 05.11.2026 — período de inscrição.",
+    "10.10 até 20.10, inclusive.",
 ]
 
 
@@ -115,6 +126,28 @@ def test_numero_legitimo_nao_e_subitem(paragrafo):
 
 def test_o_conjunto_de_prova_tem_o_tamanho_que_a_spec_pede():
     assert len(LEGITIMOS) >= 40
+
+
+@pytest.mark.parametrize(
+    ("paragrafo", "texto"),
+    [
+        # intervalo de subitens: "a" não é o conectivo de hora, e o primeiro grupo se repete
+        ("1.1 a 1.3 aplicam-se aos candidatos com deficiência.", "1.1"),
+        ("8.10 a 8.12 tratam do recurso.", "8.10"),
+        # ambíguo — de 10/10 a 10/12, ou dos itens 10.10 a 10.12 —, e fica com o subitem
+        ("10.10 a 10.12 tratam do recurso.", "10.10"),
+        # "às" sem a outra ponta não é intervalo de hora
+        ("4.1 às pessoas com deficiência é assegurado atendimento.", "4.1"),
+        # pontas que não são hora nem data
+        ("9.30 às 25.00 é o horário estendido.", "9.30"),
+        ("10.13 a 20.13 tratam do recurso.", "10.13"),
+    ],
+)
+def test_o_intervalo_so_e_excluido_pela_expressao_inteira(paragrafo, texto):
+    """A exclusão é da expressão de hora ou de data, e não do número seguido de "a" ou "às"."""
+    numero = numero_de_subitem(paragrafo)
+    assert numero is not None, paragrafo
+    assert numero.texto == texto
 
 
 # --- o título transcrito (FR-1201) ------------------------------------------------------------
@@ -223,6 +256,19 @@ def test_a_exclusao_alcanca_ate_oito_palavras():
 def test_varias_remissoes_no_mesmo_texto():
     achadas = remissoes("Conforme o item 4.1 e a Tabela 2, observado o subitem 5.3.")
     assert [remissao.literal for remissao in achadas] == ["item 4.1", "Tabela 2", "subitem 5.3"]
+
+
+@pytest.mark.parametrize(
+    "texto",
+    ["conforme o item 10.1.1.1.1, o candidato", "conforme o item 4.123, o candidato"],
+)
+def test_numero_maior_que_o_de_subitem_e_ignorado_inteiro(texto):
+    """Sem virar remissão a "10.1.1.1" nem a "4" — itens que o texto não citou."""
+    assert remissoes(texto) == []
+
+
+def test_na_lista_so_o_numero_maior_e_ignorado():
+    assert _uma("nos itens 4.1 e 10.1.1.1.1").numeros == ("4.1",)
 
 
 def test_palavra_sem_numero_nao_e_remissao():
