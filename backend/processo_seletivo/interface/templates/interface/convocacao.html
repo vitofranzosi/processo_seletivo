@@ -376,6 +376,20 @@ A situação vai ao lado do nome, em cor e em palavra (a cor sozinha não é inf
 atestado abrem quando alguém os pede; e reenviar uma mensagem já enviada deixa de ser o botão mais
 chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pessoa.
 {% endcomment %}
+{% if chamadas_publicadas.itens %}
+<section aria-labelledby="avisos-das-chamadas">
+  <h2 id="avisos-das-chamadas">Avisar os convocados de uma chamada publicada</h2>
+  <p class="ajuda">Um e-mail complementar a quem a publicação convocou e segue em curso. O prazo continua correndo da publicação, como o Edital diz, e não do aviso.</p>
+  <ul>
+  {% for item in chamadas_publicadas.itens %}
+    <li>{{ item.referencia }} — {{ item.quantas }} convocaç{{ item.quantas|pluralize:"ão,ões" }}{% if item.avisada %} · já avisada{% endif %}
+      {% if chamadas_publicadas.habilitado %}<a class="acao" href="{% url 'interface:aviso-da-chamada' edital.id marco_id %}?comunicacao={{ item.comunicacao }}{% if lista_id %}&amp;lista={{ lista_id }}{% endif %}">Avisar os convocados desta publicação</a>{% else %}<span class="nenhuma">envio de avisos desabilitado nesta instalação</span>{% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <section aria-labelledby="chamadas">
   <h2 id="chamadas">Chamadas praticadas</h2>
   {% if not leitura.linhas %}

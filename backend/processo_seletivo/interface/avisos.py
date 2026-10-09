@@ -619,3 +619,51 @@ def modelo_de_aviso_situacao(request, modelo_id):
     modelo = mudar_situacao(actor=ator, modelo_id=modelo_id, ativo=request.POST.get("ativo") == "1")
     request.session["modelo_de_aviso_salvo"] = modelo.nome
     return redirect(reverse("interface:modelos-de-aviso"))
+
+
+def chamadas_publicadas(ator, edital, marco_id, lista_id):
+    """As chamadas do recorte comunicadas por publicação, uma por referência (`UX-174`, `D-003`).
+
+    **Uma linha por referência, e não um botão por convocação**: o aviso é sobre a publicação, e
+    quarenta chamadas de um mesmo gesto são uma publicação só. Perfil que convoca por mensagem
+    individual não tem comunicação por publicação, e a lista sai vazia (`FR-1245`).
+    """
+    from processo_seletivo.avisos.models import Aviso
+    from processo_seletivo.convocacao.models import ComunicacaoEmitida
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import FORMA_POR_PUBLICACAO
+
+    if base_do_aviso(ator, edital.processo, origem=nomes.CHAMADA) is None:
+        return {"habilitado": envio_habilitado(), "itens": []}
+    por_referencia = {}
+    for referencia, comunicacao_id, convocacao_id in (
+        ComunicacaoEmitida.objects.filter(
+            convocacao__edital=edital,
+            convocacao__marco_id=marco_id,
+            convocacao__lista_id=lista_id,
+            forma=FORMA_POR_PUBLICACAO,
+            resultado="ENVIADA",
+        )
+        .order_by("enviado_em", "id")
+        .values_list("referencia_da_publicacao", "id", "convocacao_id")
+    ):
+        item = por_referencia.setdefault(
+            referencia,
+            {"referencia": referencia, "comunicacao": comunicacao_id, "convocacoes": set()},
+        )
+        item["convocacoes"].add(convocacao_id)
+    avisadas = set(
+        Aviso.objects.filter(
+            edital=edital,
+            origem=nomes.CHAMADA,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            referencia_da_publicacao__in=list(por_referencia),
+        ).values_list("referencia_da_publicacao", flat=True)
+    )
+    return {
+        "habilitado": envio_habilitado(),
+        "itens": [
+            {**item, "quantas": len(item["convocacoes"]), "avisada": item["referencia"] in avisadas}
+            for item in por_referencia.values()
+        ],
+    }

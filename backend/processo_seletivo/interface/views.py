@@ -7374,6 +7374,13 @@ def convocacao(request, edital_id, marco_id):
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
+                # O aviso complementar das chamadas comunicadas por publicação (066, `UX-174`): a
+                # mesma porta da comunicação, e nada para quem convoca por mensagem individual.
+                "chamadas_publicadas": avisos_da_interface.chamadas_publicadas(
+                    ator, edital, marco_id, lista_id
+                )
+                if pode_emitir
+                else {"itens": []},
                 # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
                 # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e
                 # quem acabara de desfechar lia "Apuração emitida".

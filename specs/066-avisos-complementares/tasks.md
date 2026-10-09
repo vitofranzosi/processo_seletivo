@@ -150,7 +150,7 @@ recebe exatamente uma mensagem.
   - `marcar_como_privada` na prévia;
   - links absolutos por `request.build_absolute_uri`;
   - com a chave desligada, a prévia só com a explicação (`FR-1282`)
-- [X] T027 [US1] Acrescentar a `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` uma linha por função de I`avisos.py` com `raise Http404`, classificada
+- [X] T027 [US1] Acrescentar a `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` uma linha por função de I`avisos.py` com `raise Http404`, classificada. *Na implementação, nenhuma view de I`avisos.py` levanta `Http404`: as recusas são `DomainError`, que o middleware traduz em página, e o inventário não ganhou linha. O guardião (T018) passa a acusar a primeira que aparecer.*
 - [X] T028 [US1] Templates em I`templates/interface/`:
   - `aviso_previa.html`: origem, contagens, `<ol class="consequencias">`, assunto com a orientação fixa (`FR-1258`), corpo com as variáveis ao lado (`UX-176`), rodapé visível e não editável, aviso de irreversibilidade e "Enviar a N pessoas" (`UX-173`);
   - `aviso.html` e `avisos_do_edital.html`;
@@ -211,18 +211,18 @@ uma lista, avisar de novo.
 **Goal**: FR-1245, FR-1251, FR-1252, D-003, D-004 (chamada), UX-178. **Independent Test**: num
 Perfil `PUBLICATION`, três convocações com a mesma referência, uma com desistência.
 
-- [ ] T037 [US3] Em A`application/destinatarios.py`, `universo_da_chamada(edital, marco_id, lista_id, comunicacao_id)`:
+- [X] T037 [US3] Em A`application/destinatarios.py`, `universo_da_chamada(edital, marco_id, lista_id, comunicacao_id)`:
   - a referência da comunicação âncora;
   - todas as convocações do recorte com `ComunicacaoEmitida(PUBLICATION, ENVIADA)` daquela referência, inclusive sucedidas, desfechadas e vencidas;
   - a elegibilidade pelos seletores existentes (`desfecho_de`, `estado_de`, a vigência), com o motivo;
   - a recusa `aviso_chamada_por_mensagem_individual` pela `forma_declarada` da versão citada
-- [ ] T038 [US3] Em A`application/previa.py` e A`application/confirmar.py`, a origem `CHAMADA`:
+- [X] T038 [US3] Em A`application/previa.py` e A`application/confirmar.py`, a origem `CHAMADA`:
   - a assinatura cobre recorte, referência e elegibilidades;
   - `DestinatarioDoAviso` grava todo o universo com `convocacao` e `elegibilidade`;
   - recusa `aviso_sem_elegivel`
-- [ ] T039 [US3] View e rota `aviso-da-chamada` em I`avisos.py` e I`urls.py`, com a linha no inventário de negativas. Em I`templates/interface/convocacao.html`, no cartão da chamada por publicação, "Avisar os convocados desta publicação", só com `PUBLICATION`. Na prévia, o universo e, à parte, quem recebe e quem não é elegível, com o motivo (`UX-178`)
-- [ ] T040 [US3] Rodar e adaptar T`test_vocabulario_da_convocacao.py` (lista literal `DA_019`, que inclui `convocacao.html`) sem afrouxar. Se o texto novo colidir com termo proibido ali, trocar o texto, e não a regra
-- [ ] T041 [US3] TI em T`integration/avisos/test_aviso_da_chamada.py`, cenários 1 a 5 da US3:
+- [X] T039 [US3] View e rota `aviso-da-chamada` em I`avisos.py` e I`urls.py`, com a linha no inventário de negativas. Em I`templates/interface/convocacao.html`, no cartão da chamada por publicação, "Avisar os convocados desta publicação", só com `PUBLICATION`. *Na implementação, a ação fica numa seção própria da tela, uma linha por referência publicada, e não um botão por cartão: quarenta chamadas de um mesmo gesto são uma publicação só.* Na prévia, o universo e, à parte, quem recebe e quem não é elegível, com o motivo (`UX-178`)
+- [X] T040 [US3] Rodar e adaptar T`test_vocabulario_da_convocacao.py` (lista literal `DA_019`, que inclui `convocacao.html`) sem afrouxar. Se o texto novo colidir com termo proibido ali, trocar o texto, e não a regra
+- [X] T041 [US3] TI em T`integration/avisos/test_aviso_da_chamada.py`, cenários 1 a 5 da US3:
   - universo de três, envio a dois, um não elegível com o motivo;
   - histórico com os três e nenhum registro de convocação alterado;
   - todas vencidas, recusado com explicação;
@@ -236,19 +236,19 @@ Perfil `PUBLICATION`, três convocações com a mesma referência, uma com desis
 **Goal**: FR-1260, FR-1260a, FR-1261, FR-1277 (modelos), D-008. **Independent Test**: os três
 iniciais presentes; editar, inativar e reativar; o aviso enviado não muda.
 
-- [ ] T042 [P] [US4] A`domain/modelos_iniciais.py` com os três textos de contracts/mensagem.md, assunto "Processo Seletivo Ifes — Nova publicação disponível". TU: os três passam pela validação de variáveis, e o terceiro só usa variáveis da chamada
-- [ ] T043 [US4] A`application/modelos.py`:
+- [X] T042 [P] [US4] A`domain/modelos_iniciais.py` com os três textos de contracts/mensagem.md, assunto "Processo Seletivo Ifes — Nova publicação disponível". TU: os três passam pela validação de variáveis, e o terceiro só usa variáveis da chamada
+- [X] T043 [US4] A`application/modelos.py`:
   - criar, editar, inativar e reativar, com `record_event` do estado anterior e do novo (`FR-1277`);
   - `garantir_modelos_iniciais(unidade)`, que **só insere**, só se a unidade não tiver modelo inicial, e nunca relê nem atualiza texto (`R-012`).
 
-  Chamá-la de `backend/processo_seletivo/unidades/application/sincronizacao.py`, dentro da transação que já trava as unidades. Fazer a linha impressa do `make preparar` dizer `Modelos de aviso: C criados`. Chamá-la também em `garantir_o_cefor` de `backend/tests/fixtures/autoridades.py`
-- [ ] T044 [US4] Views, rotas e templates `modelos-de-aviso`, `modelo-de-aviso-novo`, `modelo-de-aviso` e `modelo-de-aviso-situacao`:
+  Chamá-la de `backend/processo_seletivo/unidades/application/sincronizacao.py`, dentro da transação que já trava as unidades. Fazer a linha impressa do `make preparar` dizer `Modelos de aviso: C criados`. ~~Chamá-la também em `garantir_o_cefor`~~ — **desvio deliberado na implementação**: a fixture é autouse em todo caso que toca o banco, e gravar três modelos e três eventos de trilha em cada um derrubaria os testes que contam registros de auditoria. Os casos que precisam dos modelos iniciais chamam `garantir_modelos_iniciais()` explicitamente
+- [X] T044 [US4] Views, rotas e templates `modelos-de-aviso`, `modelo-de-aviso-novo`, `modelo-de-aviso` e `modelo-de-aviso-situacao`:
   - em I`avisos.py`, I`urls.py`, I`templates/interface/modelos_de_aviso.html` e `modelo_de_aviso.html`;
   - porta `aviso:enviar`;
   - linhas no inventário de negativas;
   - "Salvar como novo modelo" na confirmação do aviso (`FR-1261`), sem tocar no modelo de origem;
   - o seletor da prévia só com os ativos
-- [ ] T045 [US4] TI em T`integration/avisos/test_modelos.py`, cenários 1 a 6 da US4:
+- [X] T045 [US4] TI em T`integration/avisos/test_modelos.py`, cenários 1 a 6 da US4:
   - os três iniciais na primeira sincronização;
   - inativados e ressincronizados, continuam inativos e sem cópia;
   - **duas sincronizações simultâneas**, por thread, sem duplicata;
@@ -267,18 +267,18 @@ iniciais presentes; editar, inativar e reativar; o aviso enviado não muda.
 **Independent Test**: servidor simulado que falha, aceita e derruba, devolve 0, e duas execuções
 simultâneas.
 
-- [ ] T046 [US5] A`application/interromper.py`, numa transação com `pg_advisory_xact_lock(aviso)`. Grava `InterrupcaoDoAviso` com motivo, e recusa `aviso_concluido`. View `aviso-interromper` e template `aviso_interromper.html` em I, com quantas já foram aceitas e "não podem ser recuperadas" (`UX-177`), e a linha no inventário de negativas
-- [ ] T047 [US5] Reenvio como aviso filho (`R-011`, `FR-1262`, `FR-1264`), em A`application/confirmar.py`:
+- [X] T046 [US5] A`application/interromper.py`, numa transação com `pg_advisory_xact_lock(aviso)`. Grava `InterrupcaoDoAviso` com motivo, e recusa `aviso_concluido`. View `aviso-interromper` e template `aviso_interromper.html` em I, com quantas já foram aceitas e "não podem ser recuperadas" (`UX-177`), e a linha no inventário de negativas
+- [X] T047 [US5] Reenvio como aviso filho (`R-011`, `FR-1262`, `FR-1264`), em A`application/confirmar.py`:
   - `REENVIO_DE_FALHAS`, com os destinatários em falha definitiva e em expirada sem envio, sem justificativa e com o texto do anterior;
   - `REENVIO_JUSTIFICADO`, com indeterminadas, interrompidos antes do envio ou a publicação inteira já avisada, com justificativa obrigatória e texto editável numa prévia nova.
 
   View `aviso-reenviar` em I`avisos.py`, com prévia, confirmação e a linha no inventário. Recusa com a chave desligada. TI em T`integration/avisos/test_reenvio.py`, com um caso por linha da tabela de `R-011` e o caso "interrompi com o modelo errado e mando o certo a todos"
-- [ ] T048 [US5] Backends de correio simulados em T`fixtures/correio.py`, no padrão de `tests.unit.convocacao.test_mensagem.CorreioQueFalha`:
+- [X] T048 [US5] Backends de correio simulados em T`fixtures/correio.py`, no padrão de `tests.unit.convocacao.test_mensagem.CorreioQueFalha`:
   - um que recusa a abertura;
   - um que levanta cada exceção de `R-004`;
   - um que devolve 0;
   - um que "aceita e derruba", com `SMTPServerDisconnected` depois do conteúdo
-- [ ] T049 [US5] TI em T`integration/avisos/test_despacho_falhas.py`, cenários 2, 3, 7 e 10 da US5:
+- [X] T049 [US5] TI em T`integration/avisos/test_despacho_falhas.py`, cenários 2, 3, 7 e 10 da US5:
   - abertura recusada, sem tentativa e com saída diferente de 0;
   - falha temporária retentada só depois do intervalo e definitiva no limite;
   - recusa 5xx definitiva;
@@ -288,23 +288,23 @@ simultâneas.
   - **500 destinatários com o limite 60 concluem em 9 execuções** (≤ 15 min de timer), contra servidor simulado (SC-483);
   - `detalhe_tecnico` sem endereço nem nome em todo resultado de falha (`FR-1279`);
   - nenhuma tentativa indeterminada repetida e nenhuma duplicada, nos cenários desta tarefa e de T050 (SC-484)
-- [ ] T050 [US5] TI `transaction=True` em T`integration/avisos/test_despacho_concorrencia.py`, cenários 1, 4 e 5 da US5:
+- [X] T050 [US5] TI `transaction=True` em T`integration/avisos/test_despacho_concorrencia.py`, cenários 1, 4 e 5 da US5:
   - duas execuções em threads, uma sai pela trava, sem tentativa duplicada;
   - a inserção concorrente da mesma `(destinatario, numero)` barrada pelo `UNIQUE`;
   - aviso interrompido com 200 pendentes, nenhum tentado;
   - **interrupção durante a execução**, por um backend que interrompe o aviso ao receber a 2ª mensagem: nenhuma tentativa começa depois
-- [ ] T051 [US5] TI em T`integration/avisos/test_chave_e_janela.py`, cenários 8 e 9 da US5:
+- [X] T051 [US5] TI em T`integration/avisos/test_chave_e_janela.py`, cenários 8 e 9 da US5:
   - chave desligada: confirmação recusada, reenvio recusado, despacho sem tentativa, histórico e modelos acessíveis;
   - religada dentro da janela, o pendente sai;
   - religada fora dela, expira sem envio;
   - timer "parado" (relógio adiantado), expira sem envio
-- [ ] T052 [US5] Guardião da `FR-1281` em T`test_avisos_sem_correio_real.py`. Varre por `tokenize` (a varredura lê o código, não a prosa) os módulos de A e falha se algum:
+- [X] T052 [US5] Guardião da `FR-1281` em T`test_avisos_sem_correio_real.py`. Varre por `tokenize` (a varredura lê o código, não a prosa) os módulos de A e falha se algum:
   - importar `smtplib` para abrir conexão;
   - passar `backend=` a `get_connection`;
   - instanciar backend de correio diretamente.
 
   Incluir um caso que prova que a varredura enxerga o padrão (SC-488)
-- [ ] T053 [US5] TT em T`interface/test_avisos.py`:
+- [X] T053 [US5] TT em T`interface/test_avisos.py`:
   - interromper diz quantas foram aceitas e que não voltam;
   - o histórico mostra "resultado indeterminado" com o caminho do reenvio justificado;
   - o alerta de despacho parado aparece depois do limite

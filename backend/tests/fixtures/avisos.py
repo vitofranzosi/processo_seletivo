@@ -1,7 +1,7 @@
-"""Os atalhos dos testes da `066`: o resultado publicado, a prévia e a confirmação como a tela os faz.
+"""Os atalhos dos testes da `066`: o resultado publicado, a prévia e a confirmação, como na tela.
 
-**Funções, e não fixtures** — a regra que `tests/fixtures/corte.py` registra: importar uma fixture de
-outro módulo a redefine no importador, e o `F811` acusa; importar uma função comum, não.
+**Funções, e não fixtures** — a regra que `tests/fixtures/corte.py` registra: importar uma fixture
+de outro módulo a redefine no importador, e o `F811` acusa; importar uma função comum, não.
 """
 
 from processo_seletivo.avisos.application import destinatarios, previa
@@ -102,4 +102,39 @@ def avisar_chamada(
         idempotency_key=chave,
         correlation_id="teste-066",
         justificativa=justificativa,
+    )
+
+
+def engordar(publicacao, quantos):
+    """Inscrições consideradas na publicação, gravadas em lote: o cenário que a fixture não faz.
+
+    São linhas novas, e não alterações: a `SituacaoDivulgada` é append-only, e acrescentar a ela é o
+    que a publicação faz.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.divulgacao.models import SituacaoDivulgada
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    agora = timezone.now()
+    inscricoes = Inscricao.objects.bulk_create(
+        Inscricao(
+            identity_subject=f"cand:orcamento-{indice}",
+            edital=publicacao.edital,
+            profile_id=publicacao.perfil_id,
+            nome=f"Pessoa {indice}",
+            email=f"pessoa{indice}@exemplo.test",
+            protocolo=f"ORC-{indice:05d}",
+            created_at=agora,
+        )
+        for indice in range(quantos)
+    )
+    SituacaoDivulgada.objects.bulk_create(
+        SituacaoDivulgada(
+            publicacao=publicacao,
+            inscricao=inscricao,
+            situacao=SituacaoDivulgada.Situacao.CLASSIFICADA,
+            posicao=100 + indice,
+        )
+        for indice, inscricao in enumerate(inscricoes)
     )

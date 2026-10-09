@@ -193,3 +193,60 @@ def test_criar_e_inativar_pela_tela(client):
     assert resposta.status_code == 302
     modelo.refresh_from_db()
     assert not modelo.ativo
+
+
+def test_o_historico_mostra_o_indeterminado_e_o_caminho_do_reenvio(client, publicado, settings):
+    from processo_seletivo.avisos.application.despacho import despachar
+    from tests.fixtures import correio
+
+    declarado = avisar_resultado(publicado["edital"], publicado["publicacao"].marco_id)
+    correio.usar(settings, correio.aceita_e_derruba())
+    despachar()
+    identificar(client, "publicadora", ["publicador"])
+
+    corpo = client.get(reverse("interface:aviso", args=[declarado["aviso"]])).content.decode()
+
+    assert "resultado indeterminado" in corpo
+    assert "O sistema nunca a reenvia sozinho." in corpo
+    assert "Reenviar, com justificativa" in corpo
+
+
+def test_o_alerta_de_despacho_parado_aparece_depois_do_limite(
+    client, publicado, settings, monkeypatch
+):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    declarado = avisar_resultado(publicado["edital"], publicado["publicacao"].marco_id)
+    identificar(client, "publicadora", ["publicador"])
+    url = reverse("interface:aviso", args=[declarado["aviso"]])
+
+    assert "O despacho pode não estar processando." not in client.get(url).content.decode()
+
+    real = timezone.now
+    monkeypatch.setattr(
+        timezone,
+        "now",
+        lambda: real() + timedelta(minutes=settings.AVISOS_ALERTA_DE_PENDENTE_MIN + 1),
+    )
+    assert "O despacho pode não estar processando." in client.get(url).content.decode()
+
+
+def test_o_reenvio_de_falhas_mostra_o_texto_do_anterior_sem_edicao(client, publicado, settings):
+    from processo_seletivo.avisos.application.despacho import despachar
+    from tests.fixtures import correio
+
+    declarado = avisar_resultado(publicado["edital"], publicado["publicacao"].marco_id)
+    correio.usar(settings, correio.recusa(550), correio.recusa(550))
+    despachar()
+    identificar(client, "publicadora", ["publicador"])
+
+    corpo = client.get(
+        reverse("interface:aviso-reenviar", args=[declarado["aviso"]])
+        + f"?motivo={nomes.REENVIO_DE_FALHAS}"
+    ).content.decode()
+
+    assert "O texto, o mesmo do aviso anterior" in corpo
+    assert 'name="corpo"' not in corpo
+    assert "Enviar a 2 pessoas" in corpo

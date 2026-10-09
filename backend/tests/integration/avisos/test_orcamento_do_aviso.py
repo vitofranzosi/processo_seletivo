@@ -16,42 +16,10 @@ from django.utils import timezone
 from processo_seletivo.avisos.application import destinatarios, selectors
 from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.models import Aviso
-from processo_seletivo.divulgacao.models import SituacaoDivulgada
-from processo_seletivo.inscricoes.models import Inscricao
-from tests.fixtures.avisos import avisar_resultado
+from tests.fixtures.avisos import avisar_resultado, engordar
 from tests.fixtures.divulgacao import montar_ato_publicavel, publicar_o_ato
 
 pytestmark = [pytest.mark.integration, pytest.mark.performance, pytest.mark.django_db]
-
-
-def _engordar(publicacao, quantos):
-    """Mil inscrições consideradas na publicação, gravadas em lote: o cenário que a fixture não faz.
-
-    São linhas novas, e não alterações: a `SituacaoDivulgada` é append-only, e acrescentar a ela é o
-    que a publicação faz.
-    """
-    agora = timezone.now()
-    inscricoes = Inscricao.objects.bulk_create(
-        Inscricao(
-            identity_subject=f"cand:orcamento-{indice}",
-            edital=publicacao.edital,
-            profile_id=publicacao.perfil_id,
-            nome=f"Pessoa {indice}",
-            email=f"pessoa{indice}@exemplo.test",
-            protocolo=f"ORC-{indice:05d}",
-            created_at=agora,
-        )
-        for indice in range(quantos)
-    )
-    SituacaoDivulgada.objects.bulk_create(
-        SituacaoDivulgada(
-            publicacao=publicacao,
-            inscricao=inscricao,
-            situacao=SituacaoDivulgada.Situacao.CLASSIFICADA,
-            posicao=100 + indice,
-        )
-        for indice, inscricao in enumerate(inscricoes)
-    )
 
 
 def _cenario(gestor, api_client, manager_headers, process_payload, *, seed, codigo, primeiro):
@@ -83,7 +51,7 @@ def pequeno_e_grande(gestor, api_client, manager_headers, process_payload):
     grande = _cenario(
         gestor, api_client, manager_headers, process_payload, seed=1, codigo="0662", primeiro=801
     )
-    _engordar(grande["publicacao"], 1000)
+    engordar(grande["publicacao"], 1000)
     return pequeno, grande
 
 
