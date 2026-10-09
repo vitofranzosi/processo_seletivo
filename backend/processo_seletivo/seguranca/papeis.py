@@ -118,6 +118,18 @@ TABELAS_APPEND_ONLY = (
     # Inscrição; reescrevê-la mudaria, depois do fato, o que se pediu a alguém — e é contra ela que
     # quem analisa decide se faltou documento.
     "inscricoes_itemdalistaexigida",
+    # As seis dos avisos aos candidatos (066): o aviso, as publicações que ele cita, o universo de
+    # destinatários, e o início e o resultado de cada tentativa de envio, mais a interrupção.
+    # Append-only pela razão das demais, e com um agravante próprio: é este registro que diz se uma
+    # mensagem saiu. Reescrever uma tentativa apagaria a prova de que o servidor de correio aceitou,
+    # ou faria o despacho tomar por pendente o que já foi enviado — e reenviar (066, `R-003`,
+    # `FR-1277`). O modelo de aviso fica fora: ele muda, e só não se exclui.
+    "avisos_aviso",
+    "avisos_publicacaodoaviso",
+    "avisos_destinatariodoaviso",
+    "avisos_tentativadeenvio",
+    "avisos_resultadodatentativa",
+    "avisos_interrupcaodoaviso",
 )
 
 

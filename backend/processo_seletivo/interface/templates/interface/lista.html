@@ -32,7 +32,7 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
-{% if pode_criar or pode_ver_visao or pode_gerir_autoridades %}
+{% if pode_criar or pode_ver_visao or pode_gerir_autoridades or pode_gerir_modelos %}
 <p class="acoes-do-painel">
   {% if pode_criar %}<a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>{% endif %}
   {% comment %}
@@ -45,6 +45,7 @@ responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
   {% endcomment %}
   {% if pode_ver_visao %}<a class="botao secundario" href="{% url 'interface:visao-geral' %}">Visão Geral</a>{% endif %}
   {% if pode_gerir_autoridades %}<a class="botao secundario" href="{% url 'interface:autoridades' %}">Autoridades da unidade</a>{% endif %}
+  {% if pode_gerir_modelos %}<a class="botao secundario" href="{% url 'interface:modelos-de-aviso' %}">Modelos de aviso</a>{% endif %}
 </p>
 {% endif %}
 
