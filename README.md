@@ -36,40 +36,26 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `processos` | Processo Seletivo, Edital, atos administrativos e desfecho |
 | `editais` | Perfis de Vaga, quadro de vagas, Modalidades, Cronograma, Etapas, documentos exigidos, Anexos e validação |
 | `publicacoes` | Publicação, Retificação, versões consolidadas, documento publicado e consulta pública |
-| `identidade` | Identidade do candidato e acesso sem senha, por código enviado ao e-mail |
-| `inscricoes` | Inscrição, documentos submetidos e fatos declarados pelo candidato |
+| `identidade` | Identidade do candidato, acesso sem senha por código enviado ao e-mail e reconciliação com a participação anterior |
+| `inscricoes` | Inscrição, período de inscrições, documentos enviados e fatos declarados pelo candidato |
 | `comissoes` | Comissão do Processo e alocação dos membros às Etapas |
-| `avaliacoes` | Atribuição, avaliação e impedimento |
-| `resultados` | Resultado da Etapa |
-| `classificacao` | Ordem classificatória e corte entre Etapas |
+| `avaliacoes` | Distribuição das atribuições, Mesa de avaliação, impedimento e conclusão |
+| `resultados` | Resultado da Etapa: consolidação, Ocorrência e progressão entre Etapas |
+| `classificacao` | Ordenação, corte entre Etapas e o ato de classificação |
 | `sorteios` | Relação de habilitados congelada, ocorrência da fonte externa e o sorteio auditável |
 | `ocupacao` | Apuração da ocupação e movimento de vagas entre listas de concorrência |
-| `divulgacao` | Publicação de resultado, situação individual divulgada e o documento dela |
+| `divulgacao` | Publicação de resultado, a porta da definitividade, a situação individual divulgada e o documento dela |
 | `recursos` | Recurso, juízo de admissibilidade, instrução e decisão |
 | `convocacao` | Convocação, chamada, suplência e desfecho |
 | `requerimentos` | Requerimento de Matrícula e base local de referência de CEP |
 | `matriculas` | Exportação para o Registro Acadêmico — registra a geração, e não guarda o arquivo |
 | `unidades` | Unidades institucionais e autoridades habilitadas: o que o documento diz da unidade e quem pode responder pelos atos dela |
 | `avisos` | Avisos complementares aos candidatos sobre atos publicados: destinatários tirados do ato, modelos da unidade e o despacho periódico, que registra o que o servidor de correio aceitou |
-| `interface` | Interface administrativa, em `/gestao/` |
-| `portal` | Consulta pública e área do candidato, em `/selecoes/` |
+| `interface` | Interface administrativa, em `/gestao/`: composição, Retificação e condução do Processo |
+| `portal` | Consulta pública e área do candidato, em `/selecoes/`: vitrine, inscrição, acompanhamento e recurso |
 | `seguranca` | Ator autenticado, permissões, autorização por objeto e papéis do banco |
 | `auditoria` | Registro append-only e idempotência |
 | `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
-| `interface` | Interface administrativa da gestão: composição, Retificação e condução do Processo |
-| `portal` | Portal do candidato: vitrine, inscrição, acompanhamento e recurso |
-| `identidade` | Identidade do candidato, acesso por código e reconciliação com a participação anterior |
-| `inscricoes` | Inscrição, documentos enviados e período de inscrições |
-| `comissoes` | Comissão, alocação por Etapa e impedimentos |
-| `avaliacoes` | Distribuição, Mesa de avaliação e conclusão |
-| `resultados` | Resultado da Etapa: consolidação, Ocorrência e progressão entre Etapas |
-| `classificacao` | Corte, ordenação e o ato de classificação |
-| `ocupacao` | Ocupação de vagas entre as listas de concorrência |
-| `divulgacao` | Publicação de resultados e a porta da definitividade |
-| `recursos` | Recurso, instrução, admissibilidade e julgamento |
-| `convocacao` | Convocação, chamada e suplência |
-| `requerimentos` | Requerimento de Matrícula |
-| `matriculas` | Exportação de matrículas para o Registro Acadêmico |
 
 Operações de workflow são commands explícitos e transacionais. O controle otimista usa `ETag` /
 `If-Match`; commands irreversíveis exigem `Idempotency-Key`. Erros usam `application/problem+json`.
@@ -212,6 +198,18 @@ O portal do candidato envia código de acesso por e-mail. No compose há um cole
 a mensagem chega em <http://localhost:8025>, e é de lá que se lê o código. Nativamente o backend de
 e-mail é o de console — **a mensagem é impressa no terminal onde o servidor está rodando**, e é
 preciso garimpá-la no log.
+
+Os avisos complementares aos candidatos (066) **não saem no clique**. A confirmação grava o aviso e
+responde; quem envia é `manage.py despachar_avisos`, que em produção roda num timer a cada minuto e
+em desenvolvimento ninguém roda por você. Depois de confirmar um aviso, rode-o à mão. O `make` não
+tem alvo para ele, e o `.env` precisa ser exportado antes:
+
+```bash
+cd backend && set -a && . ./.env && set +a && uv run python manage.py despachar_avisos
+```
+
+No compose, `docker compose exec app python manage.py despachar_avisos`. Nativamente a mensagem sai
+no terminal **do comando**, e não no do servidor; no compose, chega em <http://localhost:8025>.
 
 ## Antes de receber dado pessoal real
 
