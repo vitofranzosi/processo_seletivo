@@ -87,7 +87,7 @@
 <nav class="trilha-nav" aria-label="Você está em"></nav>
 <article class="pagina" id="pg-inicio" data-camada="entender" data-titulo="Início">
 <section id="inicio">
-  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026</p>
+  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026 · specs 055–068 acrescentadas em 10/10/2026</p>
   <h1>Sistema de Processos Seletivos e Editais</h1>
   <p class="lead">
     Do Edital ao Registro Acadêmico: como um processo seletivo é montado, conduzido e concluído neste
@@ -199,18 +199,19 @@
     <a class="cartao" href="#operar-por-marco"><span class="etiqueta">Conduzir <span class="selo selo-impl">Implementado</span></span><h4>Operar por marco</h4><p>Ordenar, cortar, apurar e publicar todos os recortes de um marco num gesto conferido.</p></a>
     <a class="cartao" href="#convocacao"><span class="etiqueta">Concluir <span class="selo selo-impl">Implementado</span></span><h4>Convocação em fluxo</h4><p>Convocar titulares num ato, registrar vencidos em lote, apuração seguinte automática.</p></a>
     <a class="cartao" href="#painel"><span class="etiqueta">Acompanhar <span class="selo selo-impl">Implementado</span></span><h4>Painel e visão institucional</h4><p>Pulso de inscrições, condições de atenção por papel, visão de todos os Editais por Perfil.</p></a>
+    <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-impl">Implementado</span></span><h4>Avisos aos candidatos</h4><p>Um e-mail que aponta o resultado ou a chamada publicada, por gesto de uma pessoa; desligado em produção até a LGPD.</p></a>
   </div>
 
 </section>
 <section id="estado-atual">
   <h2>Estado atual do sistema</h2>
   <div class="numeros">
-    <div><b>54</b><span>especificações em <code>specs/</code> (001 a 053)</span></div>
-    <div><b>19</b><span>módulos de domínio</span></div>
-    <div><b>34</b><span>tabelas append-only, em duas camadas</span></div>
-    <div><b>46</b><span>gatilhos de banco</span></div>
-    <div><b>98 + 33</b><span>rotas na gestão e no portal</span></div>
-    <div><b>8 889</b><span>testes passando contra PostgreSQL</span></div>
+    <div><b>69</b><span>pastas em <code>specs/</code> (001 a 068)</span></div>
+    <div><b>21</b><span>módulos de domínio</span></div>
+    <div><b>40</b><span>tabelas append-only, em duas camadas</span></div>
+    <div><b>58</b><span>gatilhos de banco</span></div>
+    <div><b>109 + 33</b><span>rotas na gestão e no portal</span></div>
+    <div><b>10 408</b><span>testes passando contra PostgreSQL</span></div>
   </div>
   <div class="aviso aviso-nota">
     <span class="titulo">Em uma frase</span>
@@ -756,7 +757,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <div class="aviso aviso-chave">
       <span class="titulo">Três coisas que o mapa ensina</span>
       <ul>
-        <li><strong>O que é do Edital vale para todos os Perfis; o que é do Perfil se repete.</strong> Etapas e cronograma são uma vez só; cotas, quadro e marcos são por Perfil. Por isso existem <a href="#duplicar-perfil">Duplicar Perfil</a> e <a href="#heranca">Aplicar a todos</a>.</li>
+        <li><strong>O que é do Edital vale para todos os Perfis; o que é do Perfil se repete.</strong> Etapas e cronograma são uma vez só; cotas, quadro e marcos são por Perfil — no documento, o que sai idêntico entre Perfis é impresso uma vez (064, 068), mas o dado continua repetido. Por isso existem <a href="#duplicar-perfil">Duplicar Perfil</a> e <a href="#heranca">Aplicar a todos</a>.</li>
         <li><strong>A inscrição caminha em duas unidades diferentes.</strong> Na avaliação, a unidade é a inscrição numa Etapa. Da ordenação em diante, é o <a href="#g-recorte">recorte</a>: a mesma pessoa cotista aparece na ordem da ampla e na ordem da sua cota.</li>
         <li><strong>O ato de ordenação tem duas saídas paralelas.</strong> Uma é a publicação (que abre prazo de recurso); a outra é o corte (de que dependem a Etapa seguinte, as vagas e a convocação). Nenhuma espera a outra — e nenhuma dispara sozinha.</li>
       </ul>
@@ -1117,7 +1118,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <div class="d-altera"><b>Depois poderá alterar</b>Datas, descrição e local por Retificação; acrescentar Evento.</div>
         <div class="d-trava"><b>Fica travado</b>O tipo do Evento e o vínculo Etapa–Evento. Evento vencido não impede, mas período de inscrições encerrado impede publicar.</div>
       </div>
-      <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o prazo de recurso do cronograma não é o do sistema</span><p>O prazo que o sistema aplica mora no marco (passo 8). O Evento “Prazo de recurso” é texto: nada confere que os dois digam o mesmo. Confira à mão.</p></div>
+      <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o prazo de recurso do cronograma não é o do sistema</span><p>O prazo que o sistema aplica mora no marco (passo 8). O Evento “Prazo de recurso” é texto, e nada os liga. Desde a 067, a Revisão os põe lado a lado no aviso <em>“Prazos de recurso a conferir”</em> — os prazos dos marcos e os Eventos cujo tipo ou descrição tem uma palavra começada por “recurs” —, sem afirmar que correspondem. A conferência continua sua.</p></div>
     </div>
 
     <div class="passo-tutorial" id="t-07"><span class="num">7</span>
@@ -1183,6 +1184,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <p>Anexe os PDFs (o sistema não numera — o rótulo é seu). Transcreva o texto do Edital nas seções
       textuais que ele tem: são 17 no catálogo, todas nascem vazias, e a vazia não sai no documento. Cada
       seção mostra, na legenda, o número que terá no documento, ou <em>“vazia — não sai no documento”</em>.
+      <strong>É a legenda que dita o número</strong>: o “3.1” do original numa seção que sai como 4 impede
+      submeter e publicar, e a etapa Conteúdo diz qual parágrafo, na própria seção (065).
       As geradas (Perfis, Etapas, Cronograma, Documentos, Anexos) se compõem sozinhas. Na Revisão:
       “O que falta para submeter” (<strong>Impede</strong> e <strong>Aviso</strong>, cada um com “Ir para”),
       “O que será congelado”, “O que não se corrige depois de publicado”, e
@@ -1202,8 +1205,9 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <p class="onde">Revisão › <span class="rotulo-ui">Submeter para revisão</span> · página do Edital › <span class="rotulo-ui">Homologar</span> › <span class="rotulo-ui">Publicar</span></p>
       <p>Três atos, cada um com tela de confirmação que diz as consequências antes do clique. Homologar pede
       o fundamento; o Homologador pode <em>Devolver para elaboração</em> (com motivo) ou, depois,
-      <em>Revogar homologação</em>. Publicar pede “Quem assina institucionalmente este Edital” (catálogo
-      fixo) e revalida tudo contra o instante do ato. Publicado: o PDF é gerado e preservado com resumo
+      <em>Revogar homologação</em>. Publicar pede “Quem responde institucionalmente por este Edital”,
+      escolhida entre as autoridades vigentes da unidade do Edital — sem nenhuma, o botão fica
+      desabilitado e a tela diz que o Gestor as cadastra (060) —, e revalida tudo contra o instante do ato. Publicado: o PDF é gerado e preservado com resumo
       criptográfico, os anexos congelam, o Edital aparece no portal, e o Processo passa a <em>Ativo</em>
       sozinho. <strong>As inscrições abrem quando começa o Evento designado</strong> — não há ato de “abrir”.</p>
       <div class="decisao">
@@ -1291,7 +1295,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       “Falta”, “Obsoleto” ou “Não se aplica”.</p>
       <ol>
         <li><span class="rotulo-ui">Ordenar o marco…</span> → conferência (“Serão praticados (3)”) → <span class="rotulo-ui">Emitir 3 ordens</span>. A ampla inclui todo mundo, inclusive os cotistas. Empate que sobrevive aos critérios vira posição compartilhada.</li>
-        <li><span class="rotulo-ui">Publicar o resultado do marco…</span>, natureza <em>Resultado preliminar</em>, autoridade signatária → <span class="rotulo-ui">Publicar 3 resultados</span>. Quem publica precisa da permissão própria. Abre o prazo de recurso de 3 dias.</li>
+        <li><span class="rotulo-ui">Publicar o resultado do marco…</span>, natureza <em>Resultado preliminar</em>, autoridade signatária → <span class="rotulo-ui">Publicar 3 resultados</span>. Quem publica precisa da permissão própria. Abre o prazo de recurso de 3 dias. Se quiser, em <span class="rotulo-ui">Resultados divulgados</span>, <span class="rotulo-ui">Avisar candidatos</span> manda um e-mail que aponta a publicação; em desenvolvimento, rode <code>manage.py despachar_avisos</code> depois de confirmar.</li>
         <li>Recursos chegam pelo portal. O Julgador admite (ou não) e julga; deferindo com correção, nasce um Resultado sucessor e a ordem daquele recorte fica <strong>obsoleta</strong> — emita a sucessora na tela do recorte, com motivo.</li>
         <li>Encerrado o prazo e sem recurso pendente, publique como <em>Resultado definitivo</em>.</li>
       </ol>
@@ -1321,7 +1325,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       </div>
       <div class="aviso aviso-risco"><span class="titulo">Três cuidados reais nesta fase</span>
         <ul>
-          <li>O candidato não tem link no portal para a página de convocação nem para o Requerimento pedido na convocação: oriente-o pelo endereço. <a href="#convocacao">Detalhes →</a></li>
+          <li>O candidato chega à convocação por <span class="rotulo-ui">Minhas inscrições</span> › <span class="rotulo-ui">Ver convocação</span>, e ao Requerimento pedido na convocação por lá ou pelo topo do acompanhamento (059). Convocação por publicação não manda mensagem: o portal só mostra a chamada a quem entra. <a href="#convocacao">Detalhes →</a></li>
           <li>Registrar o <em>Aceite</em> antes de o convocado enviar o Requerimento fecha o Requerimento para sempre, e a exportação daquele marco passa a ser recusada.</li>
           <li>Convocar não exige resultado publicado nem prazo de recurso encerrado: a ordem de conferir isso é sua.</li>
         </ul>
@@ -1413,7 +1417,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>Como a ordem se forma</td><td>Pela pontuação combinada das Etapas · por sorteio</td><td>“Como a ordem deste marco é produzida”</td><td>Mutuamente exclusivos.</td></tr>
         <tr><td>Quais Etapas pesam</td><td>As classificatórias; decisórias entram como “porta” (quem foi eliminado nelas fica sem posição)</td><td>“Etapas que entram na ordem”</td><td>Não se retifica.</td></tr>
         <tr><td>Como combinar</td><td>Soma ponderada · média ponderada; normalização nenhuma ou pela soma dos pesos</td><td>Cartão do marco (com 2+ Etapas)</td><td>Com uma Etapa, a pontuação é a dela.</td></tr>
-        <tr><td>Arredondamento</td><td>0 a 4 casas; meio para cima · meio para par · truncar</td><td>Cartão do marco</td><td>Aplicado uma vez, no fim. Padrão: 2 casas, meio para cima.</td></tr>
+        <tr><td>Arredondamento</td><td>0 a 4 casas; meio para cima · meio para par · truncar</td><td>Cartão do marco</td><td>Aplicado uma vez, no fim. Padrão: 2 casas, meio para cima. Só na ordem por pontuação: sob sorteio declarado, o cartão não pergunta, e o documento não imprime (067).</td></tr>
         <tr><td>Desempate</td><td>Maior pontuação numa Etapa · maior ou menor valor de fato declarado; em ordem; quando o valor falta: fica por último ou o critério não se aplica</td><td>Critérios de desempate</td><td><strong>Não há desempate por sorteio.</strong> O empate residual vira posição compartilhada. <a href="#desempate">Mais</a></td></tr>
         <tr><td>Recurso</td><td>Admite em N dias corridos · não admite · não declarar</td><td>“Recurso contra o resultado”</td><td>Não declarar = prazo não computável (juízo humano). Só dias corridos.</td></tr>
         <tr><td>Corte</td><td>Não corta · quantidade fixa · quantas vagas o quadro publicar; suplentes; empate na última posição (todos progridem · estrito); Etapa que o corte alimenta; faixa seguinte (admite · não admite)</td><td>“Regra de corte”</td><td>O alvo fixo vale igual em cada lista. <a href="#corte">Mais</a></td></tr>
@@ -1445,7 +1449,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <thead><tr><th>Decisão</th><th>Opções reais</th><th>Onde</th><th>Observações</th></tr></thead>
       <tbody>
         <tr><td>Natureza do resultado</td><td>Preliminar · definitivo</td><td>Publicar resultado</td><td>Definitivo não volta a preliminar.</td></tr>
-        <tr><td>Quem assina</td><td>Catálogo fixo de autoridades signatárias</td><td>Publicar (Edital, Retificação, resultado)</td><td>Não se digita nome. Hoje as entradas têm só o cargo; nome e ato de nomeação entram no catálogo quando o Cefor os fornecer.</td></tr>
+        <tr><td>Quem assina</td><td>As autoridades habilitadas da unidade, vigentes no dia do ato</td><td>Publicar (Edital, Retificação, resultado)</td><td>Não se digita nome na publicação. O Gestor as mantém em <span class="rotulo-ui">Autoridades da unidade</span> — cargo, nome, ato de nomeação e vigência (060).</td></tr>
+        <tr><td>Unidade (cabeçalho e local do ato)</td><td>A unidade do Processo, registrada em <code>unidades/unidades.json</code></td><td>Todo documento oficial</td><td>Sem tela: é declarada pela implantação. Hoje só o Cefor, com local <em>Vitória (ES)</em>.</td></tr>
         <tr><td>Como a convocação é comunicada</td><td>Por publicação · por mensagem individual (e-mail)</td><td>Cartão do Perfil ou “Declarado uma vez para todos os Perfis”</td><td>Obrigatória quando o Perfil corta.</td></tr>
         <tr><td>Prazo da convocação</td><td>Data e hora, ou fim de um Evento do cronograma; ou sem prazo</td><td>Tela de convocação, por ato</td><td>O prazo corre do envio da comunicação. Sem dias úteis.</td></tr>
         <tr><td>Texto do Edital</td><td>Catálogo fixo de 22 seções: 17 textuais, que nascem vazias, e 5 geradas; anexos PDF rotulados por você</td><td>Passos <em>Conteúdo</em> e <em>Anexos</em></td><td>Quem elabora não acrescenta, remove nem reordena seção. A textual vazia não sai no documento. Aviso quando a Apresentação ou as Disposições Finais vão vazias.</td></tr>
@@ -1525,7 +1530,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>corrigir o Edital publicado</td><td class="centro"><span class="m m-sim">✓</span></td><td>Retificação</td><td>Nos campos retificáveis. <a href="#pg-impacto">O que muda</a></td></tr>
         <tr><td>acrescentar uma cota esquecida depois de publicar</td><td class="centro"><span class="m m-sim">✓</span></td><td>Retificação › Acrescentar Modalidade</td><td>Vale para inscrições futuras.</td></tr>
         <tr><td>acrescentar uma Etapa depois de publicar</td><td class="centro"><span class="m m-nao">—</span></td><td>—</td><td>Não há “acrescentar Etapa” na Retificação.</td></tr>
-        <tr><td>Requerimento de Matrícula</td><td class="centro"><span class="m m-parc">◐</span></td><td>Inscrição</td><td>Na inscrição ou na convocação; pedido na convocação, o portal não tem link para ele.</td></tr>
+        <tr><td>Requerimento de Matrícula</td><td class="centro"><span class="m m-parc">◐</span></td><td>Inscrição</td><td>Na inscrição ou na convocação; pedido na convocação, o portal leva a ele pela convocação e pelo acompanhamento (059). Registrar o <em>Aceite</em> antes do envio o fecha.</td></tr>
         <tr><td>reaproveitar um Edital anterior</td><td class="centro"><span class="m m-sim">✓</span></td><td>Identificação › Partir de um Edital anterior</td><td>Não copia teto nem Requerimento.</td></tr>
       </tbody>
     </table></div>
@@ -1634,7 +1639,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>Rascunho</td><td>Livre. Remover Evento vinculado a uma Etapa é recusado na gravação. Evento no passado deixa o passo “pendente” e gera aviso; período de inscrições já encerrado impede publicar.</td></tr>
         <tr><td>Retificação</td><td>Datas, descrição e local retificáveis; nova versão a partir da vigência. A fase e o período de inscrições são lidos da versão vigente — encurtar o período por Retificação é legítimo. Tipo do Evento e vínculo Etapa–Evento não mudam. Evento acrescentado entra sem período de inscrições.</td></tr>
         <tr><td>Efeito nas Etapas</td><td>A Etapa mostra as datas do Evento vinculado, mas o período só <em>informa</em>: avaliar fora dele é registrado, não bloqueado. Distribuir exige o período de inscrições encerrado.</td></tr>
-        <tr><td>Efeito no recurso</td><td>Nenhum: o prazo de recurso é o do marco. Mudar o Evento “Prazo de recurso” não muda o prazo aplicado.</td></tr>
+        <tr><td>Efeito no recurso</td><td>Nenhum: o prazo de recurso é o do marco. Mudar o Evento “Prazo de recurso” não muda o prazo aplicado — a Revisão só os põe lado a lado, no aviso <em>“Prazos de recurso a conferir”</em> (067).</td></tr>
       </tbody>
     </table></div>
 
@@ -1669,7 +1674,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     </table></div>
 
     <h3>Um recurso foi deferido</h3>
-    <p>Nasce um Resultado sucessor (ou a inscrição volta para reavaliação). A ordem do recorte fica <strong>obsoleta</strong> (“resultado superado por recurso”), e com ela o corte (“ordem sucedida”). Emita a ordem sucessora citando a decisão, corte de novo, e publique — no mesmo endereço público, que passa a dizer que a publicação anterior foi sucedida. Quem foi reabilitado vai ao topo da fila de convocação.</p>
+    <p>Nasce um Resultado sucessor (ou a inscrição volta para reavaliação). A ordem do recorte fica <strong>obsoleta</strong> (“resultado superado por recurso”) e, se a Etapa do recurso produziu a ordem e a pessoa estava no ato, o corte também (“participante reingressou”). Emita a ordem sucessora citando a decisão, corte de novo — o corte emitido sobre a ordem sucessora nasce em dia (061) —, e publique — no mesmo endereço público, que passa a dizer que a publicação anterior foi sucedida. Quem foi reabilitado vai ao topo da fila de convocação.</p>
   </section>
 
   <section id="impacto-publicar">
@@ -1805,7 +1810,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Só os N melhores da primeira fase fazem a segunda.</td></tr>
       <tr><th>O que configurar</th><td>Dois marcos no mesmo Perfil. “1ª fase” enumera a objetiva, corta com quantidade fixa (ex.: 3× as vagas digitado como número) e governa a discursiva. “Final” enumera as duas, com pesos e média ponderada, e corta pelo quadro.</td></tr>
       <tr><th>Decisões</th><td>Quantos passam; o desfecho do empate na fronteira; os pesos.</td></tr>
-      <tr><th>Limites</th><td>Dois marcos não podem governar a mesma Etapa; um marco por pontuação não governa Etapa que ele mesmo enumera. O alvo fixo vale igual para cada lista. Se um recurso mudar a ordem da 1ª fase, o corte fica obsoleto e a Etapa governada para até a geração sucessora.</td></tr>
+      <tr><th>Limites</th><td>Dois marcos não podem governar a mesma Etapa; um marco por pontuação não governa Etapa que ele mesmo enumera. O alvo fixo vale igual para cada lista. Se um recurso mudar a ordem da 1ª fase depois do corte, o corte fica obsoleto e a Etapa governada para até a geração sucessora. Quem foi eliminado antes da última Etapa do marco e é reabilitado não obsoleta o corte (achado aberto).</td></tr>
     </tbody></table></div>
 
     <h3 id="r-cotas">Receita 6 — Ampla concorrência com cotas</h3>
@@ -1821,7 +1826,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Qualquer seleção com reserva legal de vagas.</td></tr>
       <tr><th>O que configurar</th><td>Modalidades com percentual, fundamento, versão e arredondamento; quadro de vagas; reversão; documento de autodeclaração com alcance “Modalidade em todos os Perfis”.</td></tr>
       <tr><th>Decisões</th><td>As quantidades (o percentual sugere); se a cota reverte e quando.</td></tr>
-      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. Heteroidentificação não existe no sistema: é conduzida fora dele. O resultado publicado não diz de qual lista é — o cotista vê dois blocos do mesmo marco. <a href="#reservas">Mais</a></td></tr>
+      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. Heteroidentificação não existe no sistema: é conduzida fora dele. <a href="#reservas">Mais</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-reserva">Receita 7 — Suplentes e cadastro de reserva</h3>
@@ -1995,7 +2000,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr><td><em>“O ato de ordenação vigente do marco …, do Edital …, não foi divulgado.”</em> (ou <em>“…não é o que está divulgado: o público lê um ato anterior.”</em>)</td><td>Ordem vigente sem divulgação vigente, ou divulgação defasada</td><td>—</td><td>Divulgar o resultado</td><td><span class="rotulo-ui">Abrir a divulgação do resultado</span></td><td>Publicador</td></tr>
           <tr><td><em>“Há recurso aguardando &lt;admissibilidade | julgamento&gt; no Edital … para o qual todos os membros da comissão estão impedidos de julgar.”</em></td><td>Peça pendente e nenhum membro livre</td><td>—</td><td>Alguém fora da comissão com a permissão de julgar</td><td><span class="rotulo-ui">Abrir os recursos do Edital</span></td><td>Julgador</td></tr>
           <tr><td><em>“Há recurso aguardando … com membro da comissão desimpedido para decidi-lo.”</em></td><td>Peça pendente — inclusive a recém-interposta, antes da admissibilidade</td><td>esperando de pendentes (recursos)</td><td>Admitir ou julgar</td><td><span class="rotulo-ui">Abrir os recursos do Edital</span></td><td>Julgador</td></tr>
-          <tr><td><em>“O Perfil X, do Edital …, publica N vaga(s) imediata(s) e não publica quantidade para todos os seus recortes…”</em></td><td>Perfil com vaga imediata e sem linha do quadro para algum recorte</td><td>recortes sem linha</td><td>Retificar o quadro de vagas</td><td><span class="rotulo-ui">Retificar o quadro de vagas do Edital</span> — ou, sem permissão, a frase <em>“A Retificação depende da permissão de retificar. Peça a alguém com a permissão de retificar que a proponha.”</em></td><td>Gestão</td></tr>
+          <tr><td><em>“O Perfil X, do Edital …, publica N vagas imediatas e não publica quantidade para todos os seus recortes…”</em></td><td>Perfil com vaga imediata e sem linha do quadro para algum recorte</td><td>recortes sem linha</td><td>Retificar o quadro de vagas</td><td><span class="rotulo-ui">Retificar o quadro de vagas do Edital</span> — ou, sem permissão, a frase <em>“A Retificação depende da permissão de retificar. Peça a alguém com a permissão de retificar que a proponha.”</em></td><td>Gestão</td></tr>
         </tbody>
       </table>
     </div>
@@ -2234,6 +2239,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr><td>Consolidar</td><td><span class="m m-sim">✓</span></td><td><span class="rotulo-ui">Consolidar as N prontas</span> numa decisão, depois de conferir a consequência de cada uma</td><td><a href="#consolidacao">Consolidação</a></td></tr>
           <tr><td>Registrar ausências</td><td><span class="m m-sim">✓</span></td><td>Várias inscrições, um motivo, uma confirmação</td><td><a href="#ocorrencia">Ocorrência</a></td></tr>
           <tr><td>Ordenar, cortar, apurar e publicar um marco</td><td><span class="m m-sim">✓</span></td><td>Na tela do marco, <span class="rotulo-ui">Conduzir o marco inteiro</span>: o estado de cada recorte em cada operação, e um gesto que pratica o mesmo ato em <strong>todos os recortes do marco</strong> daquele Perfil (<em>“Emitir 3 ordens”</em>, <em>“Apurar 3 recortes”</em>, <em>“Publicar 3 resultados”</em>), depois de <span class="rotulo-ui">Confira antes de confirmar</span> com <em>Serão praticados · Ficam de fora · Impedidos</em>. Sucessão continua um recorte por vez, com motivo</td><td><a href="#operar-por-marco">Operar por marco</a></td></tr>
+          <tr><td>Avisar os candidatos de um marco</td><td><span class="m m-sim">✓</span></td><td>Um gesto alcança todos os participantes, deduplicados por inscrição; o envio sai fora da requisição, a 60 por minuto, sem prender a tela (066)</td><td><a href="#resultados">Resultados</a></td></tr>
           <tr><td>Convocar</td><td><span class="m m-parc">◐</span></td><td><span class="rotulo-ui">Convocar os titulares num ato só</span>; o não atendimento de todos os vencidos num gesto; as comunicações pendentes de uma vez. O suplente continua chamado um a um (<span class="rotulo-ui">Chamar uma pessoa da fila</span>)</td><td><a href="#convocacao">Convocação</a></td></tr>
           <tr><td>Compor Perfis e Classificação</td><td><span class="m m-sim">✓</span></td><td>Nas duas etapas, tabela do conjunto (um Perfil por linha; na etapa Perfis: código, localidade, vagas, reserva, Modalidades, situação) e um editor por vez com <em>Próximo</em>; <span class="rotulo-ui">Aplicar aos demais Perfis</span> para Modalidades e marcos; duplicar Perfil; padrões do Edital</td><td><a href="#perfis">Perfis</a> · <a href="#heranca">Padrão e aplicar a todos</a></td></tr>
         </tbody>
@@ -2669,7 +2675,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           </tr>
           <tr>
             <td>5</td><td><strong>Classificação</strong></td>
-            <td>O método do sorteio comum ao Edital. Por Perfil, os marcos: como a ordem é produzida, Etapas enumeradas, combinação, arredondamento, recurso, método do sorteio, regra de corte e critérios de desempate. Ver <a href="#classificacao">Classificação</a></td>
+            <td>O método do sorteio comum ao Edital. Por Perfil, os marcos: como a ordem é produzida, Etapas enumeradas, combinação, arredondamento (só na ordem por pontuação), recurso, método do sorteio, regra de corte e critérios de desempate. Ver <a href="#classificacao">Classificação</a></td>
             <td>Perfis + Etapas</td>
           </tr>
           <tr>
@@ -2688,7 +2694,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           </tr>
           <tr>
             <td>8</td><td><strong>Conteúdo</strong></td>
-            <td>O texto das 7 seções textuais do catálogo. As 5 geradas dizem de onde vêm, com <span class="rotulo-ui">Ir para …</span></td>
+            <td>O texto das 17 seções textuais do catálogo. As 5 geradas dizem de onde vêm, com <span class="rotulo-ui">Ir para …</span></td>
             <td>Tudo o que gera conteúdo</td>
           </tr>
           <tr>
@@ -2778,7 +2784,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <details><summary>Em detalhes</summary>
         <p>
           A conferência roda em quatro momentos: na Revisão e na página do Edital (antes de
-          publicar), na submissão, e de novo na publicação. Na publicação ela é refeita contra o
+          publicar), na submissão, e de novo na publicação. A etapa Conteúdo mostra, em cada seção, os
+          achados de numeração e de remissão daquela seção (065). Na publicação ela é refeita contra o
           instante do ato, porque um período de inscrições aberto na submissão pode ter encerrado
           depois.
         </p>
@@ -2798,7 +2805,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <code>validate_for_publication</code> em <code>editais/domain/validation.py</code>. O
           enum de severidade declara também <code>INFO</code>, mas <strong>nenhuma regra o emite</strong>:
           na prática são dois níveis. A Retificação usa a mesma função com um ato mais estreito,
-          que não prende o acervo publicado antes de cada regra existir.
+          que não prende o acervo publicado antes de cada regra existir — e nela o conflito de
+          numeração é só aviso, com código próprio (<code>typed_numbering_conflict_in_retification</code>):
+          a Retificação pode introduzir um conflito sem ser impedida (065, decisões 002 e 006).
         </p>
       </details>
     </div>
@@ -2845,7 +2854,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           </tr>
           <tr>
             <td>O marco fecha</td>
-            <td><code>order_production_nao_declarada</code>, <code>order_production_contradiz_o_metodo</code>, <code>milestone_without_stage</code>, <code>milestone_stage_missing</code>, <code>milestone_stage_without_weight</code>, <code>milestone_stage_not_classificatory</code>, <code>milestone_rounding_invalid</code>, <code>appeal_window_invalid</code></td>
+            <td><code>order_production_nao_declarada</code>, <code>order_production_contradiz_o_metodo</code>, <code>milestone_without_stage</code>, <code>milestone_stage_missing</code>, <code>milestone_stage_without_weight</code>, <code>milestone_stage_not_classificatory</code>, <code>milestone_rounding_invalid</code> (não exigido sob sorteio declarado, 067), <code>appeal_window_invalid</code></td>
             <td>—</td>
           </tr>
           <tr>
@@ -2871,7 +2880,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr>
             <td>Cronograma e inscrição</td>
             <td><code>registration_period_ambiguous</code>, <code>registration_period_closed</code>, <code>registration_period_cancelled</code>, <code>matriculation_request_without_declaration</code></td>
-            <td><code>registration_period_missing</code>, <code>schedule_event_in_past</code>, <code>schedule_event_year_mismatch</code>, <code>stage_without_schedule_event</code></td>
+            <td><code>registration_period_missing</code>, <code>schedule_event_in_past</code>, <code>schedule_event_year_mismatch</code>, <code>stage_without_schedule_event</code>, <code>appeal_schedule_review</code> (prazos de recurso a conferir, 067)</td>
           </tr>
           <tr>
             <td>Documentos exigidos</td>
@@ -2882,6 +2891,16 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
             <td>Anexos e seções</td>
             <td><code>attachment_label_required</code>, <code>attachment_reference_dangling</code></td>
             <td><code>attachment_duplicate_label</code>, <code>attachment_cited_without_label</code>, <code>section_universal_empty</code></td>
+          </tr>
+          <tr>
+            <td>Numeração e remissões do texto (065)</td>
+            <td><code>typed_numbering_conflict</code> — parágrafo que começa por subitem de outra seção, ou subitem no preâmbulo</td>
+            <td><code>typed_numbering_suspected_title</code>, <code>cross_reference_ambiguous</code>, <code>cross_reference_without_target</code>, <code>cross_reference_suspected</code>; na Retificação, também o conflito (<code>…_in_retification</code>)</td>
+          </tr>
+          <tr>
+            <td>O documento tem grafia para o texto</td>
+            <td><code>caractere_sem_grafia</code> — caractere que a fonte do documento não tem, em vez de sair “?” (08/10)</td>
+            <td><code>vacancy_table_absent_in_archive</code>, <code>reserve_only_convocation_external</code></td>
           </tr>
         </tbody>
       </table>
@@ -2959,6 +2978,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
                 <li><strong>impede</strong> o período declarado cancelado.</li>
               </ul>
             </li>
+            <li>Em todo ato em que algum marco declara regra de recurso, o aviso <em>“Prazos de recurso a conferir”</em> põe os prazos dos marcos ao lado dos Eventos cujo tipo ou descrição tem uma palavra começada por “recurs”. Não afirma correspondência, e não se dispensa (067).</li>
           </ul>
         </dd>
         <dt>O que não posso</dt>
@@ -3187,11 +3207,15 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o texto da seção é corrido</span>
       <p>
         A seção textual não tem tabela, subitem numerado nem negrito: o quadro de uma matriz
-        curricular, por exemplo, não tem como ser escrito. E o subitem transcrito carrega o número
-        do original, que deixa de casar com o da seção quando o Cronograma, anexo nos Editais do
-        Cefor, entra no corpo como seção: no 28/2026, <em>“9.1 Caberá recurso…”</em> sai sob
-        <strong>10. Dos Recursos</strong>. Registrado na verificação da spec 054, como decisão do
-        usuário.
+        curricular, por exemplo, não tem como ser escrito — e a tabela colada como texto
+        (<em>“1.1 Doutorado — 10 pontos”</em>) impede a submissão; a saída é reescrevê-la ou levá-la a um
+        Anexo. O subitem transcrito carrega o número do original, que deixa de casar com o da seção
+        quando o Cronograma entra no corpo: no 28/2026, <em>“9.1 Caberá recurso…”</em> saía sob
+        <strong>10. Dos Recursos</strong>. Desde a 065 isso é <strong>detectado</strong>: o parágrafo que
+        começa por subitem de outra seção impede submeter e publicar o Edital, e a remissão
+        <em>“item N.N”</em>, <em>“Tabela N”</em> ou <em>“Quadro N”</em> ambígua ou sem destino é aviso. A
+        conferência prova incoerência, nunca correção. Falta a numeração automática dos parágrafos, que é
+        a solução estrutural.
       </p>
       <p>
         Mudar o catálogo de novo não tranca o acervo: desde a 054, a Retificação confere as seções
@@ -3386,18 +3410,33 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <li><span class="passo">5 · Consequência</span><span class="titulo">O Processo é ativado, se ainda estava em elaboração</span><p>Com o motivo “Ativação derivada da publicação do primeiro Edital do Processo.” Quem publica não precisa de <code>processo:ativar</code>: é efeito do ato, não um segundo ato.</p></li>
     </ol>
 
-    <h3>Autoridade Signatária</h3>
+    <h3>Autoridade Signatária e Unidade</h3>
     <p>
-      Publicar pede <span class="rotulo-ui">Quem assina institucionalmente este Edital</span>,
-      escolhida num <strong>catálogo fixo</strong>. Nada se digita. O catálogo distingue o cargo,
-      obrigatório, do nome próprio e do ato de nomeação, opcionais; hoje as três entradas têm só o
-      cargo — Reitora; Pró-Reitor de Ensino; Diretora-Geral do Centro de Referência em Formação e
-      em Educação a Distância —, porque o nome de quem assina é pergunta com o Cefor. Nome, cargo,
-      ato de nomeação e identificador ficam gravados na Publicação, e retirar alguém do catálogo não
-      altera o que já foi assinado.
+      Publicar pede <span class="rotulo-ui">Quem responde institucionalmente por este Edital</span>
+      (<em>“… por esta Retificação”</em>; no resultado, <span class="rotulo-ui">Autoridade
+      signatária</span>), escolhida entre as <strong>autoridades habilitadas da unidade</strong> do
+      Edital que estão vigentes hoje. Nada se digita no ato. Desde a 060, o catálogo fixo em código
+      deu lugar a um registro por unidade, mantido pelo Gestor na tela
+      <span class="rotulo-ui">Autoridades da unidade</span>: cargo, obrigatório; nome e ato de nomeação,
+      opcionais; início e fim da vigência. A autoridade se corrige só antes do primeiro uso, e se
+      encerra sem retroagir. É habilitação, e não lotação: o Reitor que responde por um campus é
+      cadastrado naquele campus. O domínio confere de novo sob trava: autoridade de outra unidade ou
+      inexistente recebe a mesma recusa (<code>autoridade_indisponivel</code>), e a encerrada,
+      <code>autoridade_fora_de_vigencia</code>. Nome, cargo, ato de nomeação e identificador ficam
+      gravados na Publicação, e encerrar a vigência não altera o que já foi assinado.
     </p>
     <p>
-      O documento publicado termina com o <strong>fecho do ato</strong>: o local e a data por
+      A <strong>Unidade</strong> é o escopo institucional do Processo, materializado: sigla, nome,
+      cabeçalho de uma ou duas linhas e local do ato. É declarada em <code>unidades/unidades.json</code>
+      e sincronizada pelo <code>make preparar</code>; não tem tela. Criar Processo ou Edital num escopo
+      sem Unidade registrada e ativa é recusado (<code>unidade_nao_registrada</code>). O cabeçalho do
+      documento é <em>“Ministério da Educação”</em>, <em>“Instituto Federal do Espírito Santo”</em> e as
+      linhas da Unidade, e a Publicação <strong>congela</strong> a Unidade: código, sigla, nome,
+      cabeçalho e local. Hoje há uma, o Cefor. Não confunda com a <em>Localidade</em> do Perfil: um
+      Edital do Cefor com polo em Serra sai com o cabeçalho do Cefor.
+    </p>
+    <p>
+      O documento publicado termina com o <strong>fecho do ato</strong>: o local da Unidade e a data por
       extenso — <em>“Vitória (ES), 29 de setembro de 2026.”</em>, no fuso institucional —, a rubrica
       <em>“Autoridade responsável pelo ato”</em>, que é um registro e não uma assinatura, e abaixo o
       nome, quando houver; o cargo; e o ato de nomeação, quando houver. Sem nome, sai o cargo, e nada
@@ -3405,8 +3444,10 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       SHA-256 do conteúdo não muda por eles.
     </p>
     <p class="miudo">
-      Registrado na verificação da spec 054, a conferir com o nome: o 28/2026 diz <em>“Diretora do
-      Centro…”</em>, e o catálogo, <em>“Diretora-Geral do Centro…”</em>.
+      A divergência registrada na verificação da 054 — o 28/2026 diz <em>“Diretora do Centro…”</em>, e
+      o catálogo dizia <em>“Diretora-Geral do Centro…”</em> — deixou de ser de código: o cargo é texto
+      que o Gestor cadastra. Antes da primeira publicação real, as autoridades do Cefor precisam ser
+      cadastradas pela tela.
     </p>
 
     <div class="conceito" id="c-publicacao">
@@ -3418,7 +3459,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Exemplo</dt>
         <dd>“Publicação original nº 1, publicado em 28/02/2026 10:00”, e depois “Retificação nº 2”.</dd>
         <dt>O que o documento contém</dt>
-        <dd>Brasão e órgão, o anúncio do ato, a marca de versão consolidada (só no documento de uma Retificação), a descrição, a Apresentação, as seções numeradas (as vazias são puladas, textuais e geradas, e a numeração segue sem salto), o fecho com local, data e autoridade, e a verificação de integridade. Com mais de um Perfil e alguma vaga imediata, a tabela de Perfis termina numa linha <em>Total</em>, que não soma o cadastro reserva.</dd>
+        <dd>Brasão, as linhas da instituição e as da Unidade, o anúncio do ato, a marca de versão consolidada (só no documento de uma Retificação), a descrição, a Apresentação, as seções numeradas (as vazias são puladas, textuais e geradas, e a numeração segue sem salto), o fecho com local, data e autoridade, e a verificação de integridade. Com mais de um Perfil e alguma vaga imediata, a tabela de Perfis termina numa linha <em>Total</em>, que não soma o cadastro reserva. Com dois ou mais Perfis, o que sairia repetido sai uma vez (064, 068): uma tabela <em>“Vagas por lista de concorrência”</em>, Perfil × lista; uma tabela de Modalidades por grupo de Perfis de tabela idêntica, com a mesma ordem de listas no documento inteiro; as frases de reversão e de convocação abaixo delas; e, depois do último Perfil, as subseções <em>“Atribuições comuns aos Perfis …”</em>, <em>“Requisitos comuns aos Perfis …”</em> e <em>“Marcos classificatórios comuns aos Perfis …”</em>, a que cada Perfil remete pelo item. O método comum do sorteio também sai uma vez. O Edital de um Perfil só sai como antes. O recurso, quando o marco o declara, sai com objeto: <em>“Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias corridos, contados da divulgação desse resultado.”</em> (067).</dd>
         <dt>O que não posso</dt>
         <dd>
           <ul>
@@ -3476,7 +3517,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>Comandos do rito</dt><dd><code>publicacoes/application/publish_edital.py</code> (<code>submit_edital</code>, <code>homologate_edital</code>, <code>return_edital_to_drafting</code>, <code>revoke_homologation</code>, <code>publish_edital</code>, <code>_ativar_o_processo_na_primeira_publicacao</code>)</dd>
       <dt>Encerrar e cancelar</dt><dd><code>processos/application/finalizacao.py</code> · <code>processos/domain/finalizacao.py</code></dd>
       <dt>Segregação</dt><dd><code>impede_por_segregacao</code>, <code>homologar_fecharia_a_publicacao</code> em <code>publicacoes/application/selectors.py</code></dd>
-      <dt>Autoridades</dt><dd><code>publicacoes/domain/autoridades.py</code></dd>
+      <dt>Unidade e autoridades</dt><dd><code>unidades/models.py</code> · <code>unidades/application/autoridades.py</code> · <code>publicacoes/application/contexto_do_ato.py</code></dd>
       <dt>Documento publicado (PDF) e brasão</dt><dd><code>publicacoes/infrastructure/pdf.py</code></dd>
     </dl></div></details>
   </section>
@@ -3547,7 +3588,10 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
             Retificação publicada <em>gera</em> uma Publicação: o documento dela é o Edital
             consolidado inteiro, que se declara consolidado logo abaixo do anúncio —
             <em>“Versão consolidada. Publicado em …; retificado em ….”</em>, com a vigência quando
-            ela começa em outro dia.
+            ela começa em outro dia. O consolidado de um Edital anterior a 09/10 sai no desenho de hoje,
+            consolidando os Perfis pela versão retificada (068) — e uma <em>“Tabela N”</em> digitada no
+            texto pode passar a designar outra tabela; só a que fica sem destino é acusada. Na
+            Retificação, os achados de numeração e de remissão são só aviso (065).
           </p>
         </div>
         <div>
@@ -3793,7 +3837,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           Atribuições, Requisitos), as vagas imediatas, o cadastro reserva, as Modalidades, o quadro de
           vagas, a ampla concorrência declarada, a reversão, a forma de convocação e os fatos exigidos.
           Os marcos de classificação do Perfil se compõem na etapa <span class="rotulo-ui">Classificação</span>.</dd>
-        <dt>O que não posso</dt><dd>Agrupar Perfis por polo ou curso. Repetir Código no mesmo Edital.
+        <dt>O que não posso</dt><dd>Agrupar Perfis por polo ou curso — o documento junta sozinho o que sai idêntico (064, 068), mas não é agrupamento configurável. Repetir Código no mesmo Edital.
           Depois de publicado, mudar o Código ou a espécie do cadastro reserva: esses dois não se
           retificam.</dd>
         <dt>Relaciona-se com</dt><dd><a href="#modalidades">Modalidade</a> ·
@@ -4123,7 +4167,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><strong>CALCULA</strong></td><td>Só a linha da ampla <em>quando o Perfil não tem cota</em>:
           ela é o próprio total, gravada ao salvar. Removida a última cota, volta a valer o total, com o
           aviso “O Perfil X não declara mais lista reservada: a ampla concorrência volta a ser as N
-          vaga(s) imediata(s) do Perfil, e o quadro deixa de repartir.”</td></tr>
+          vagas imediatas do Perfil, e o quadro deixa de repartir.”</td></tr>
         <tr><td><strong>SUGERE</strong></td><td>A quantidade de cada <em>cota</em>: <code>vagas × percentual</code>,
           com piso e teto. O <span class="rotulo-ui">Arredondamento da reserva</span> escolhe entre eles.
           O botão <span class="rotulo-ui">Preencher pelo percentual as linhas vazias do quadro</span> põe
@@ -4282,7 +4326,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Relaciona-se com</dt><dd><a href="#corte">Corte</a> (os “excedentes” da regra de corte são
           outra coisa) · <a href="#convocacao">Convocação</a> · <a href="#g-cadastro-de-reserva">Glossário</a></dd>
         <dt>Na interface</dt><dd>Etapa Perfis; Retificação (<span class="rotulo-ui">Limite do Cadastro Reserva</span>);
-          PDF (coluna “Cadastro reserva”); portal; Revisão; tabela da etapa.</dd>
+          PDF (coluna “Cadastro reserva”; o Perfil sem vaga imediata não imprime quadro nem reversão, 067); portal, inclusive no acompanhamento de quem aguarda chamada, como fato do Edital (063); Revisão; tabela da etapa.</dd>
         <dt>Evidência técnica</dt><dd><code>PerfilVaga.reserve_type</code>/<code>reserve_limit</code> ·
           <code>editais/domain/perfis.py</code> (<code>validate_profile</code>) · <code>portal/views.py</code>
           (<code>_oferta</code>) · <code>publicacoes/infrastructure/pdf.py</code></dd>
@@ -4355,7 +4399,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         reverteria, nada é gravado por esse caminho, e a reversão continua sendo ato da tela.</li>
       <li>O saldo sai das <strong>efetivas</strong>, nunca das publicadas. É isso que impede a reversão de
         duplicar: cedidas todas, a apuração seguinte já chega com as efetivas reduzidas, e o saldo dá zero.</li>
-      <li>O PDF imprime a frase da espécie logo abaixo do quadro. Sem declaração, nenhuma frase.</li>
+      <li>O PDF imprime a frase da espécie logo abaixo do quadro — com dois ou mais Perfis, abaixo da tabela única, uma vez por espécie, e sem nomear Perfil quando todos declaram a mesma (068). Sem declaração, nenhuma frase. Perfil sem vaga imediata não tem quadro nem frase de reversão no documento; a Revisão a mostra com <em>“não sai no documento”</em> (067).</li>
     </ul>
   </section>
 
@@ -4565,9 +4609,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h2>Perfis, vagas e Modalidades depois de publicar <span class="selo selo-impl">Implementado</span></h2>
     <p>Pela tela de <a href="#retificacao">Retificação</a> (<code>/gestao/editais/&lt;id&gt;/retificar</code>):</p>
     <ul>
-      <li><strong>Alterar no Perfil:</strong> requisitos, “Modalidade que é a ampla concorrência”, denominação,
-        descrição, localidade, atribuições, carga horária, remuneração, <strong>Vagas imediatas</strong>,
-        <strong>Limite do Cadastro Reserva</strong>, forma de convocação e o gatilho da reversão (que nasce
+      <li><strong>Alterar no Perfil</strong>, na ordem da composição desde a 056: denominação, localidade,
+        descrição, carga horária, remuneração, atribuições, requisitos, <strong>Vagas imediatas</strong>,
+        <strong>Limite do Cadastro Reserva</strong>, “Modalidade que é a ampla concorrência”, forma de convocação e o gatilho da reversão (que nasce
         se não havia).</li>
       <li><strong>Alterar na Modalidade:</strong> denominação, descrição, percentual, fundamento, versão e
         “Vigente desde”. Não se retificam o código nem o arredondamento, e a regra normativa não nasce onde
@@ -5350,7 +5394,7 @@ Se já houver Resultado
       O que a tela não deveria ter oferecido — seleção vazia, Etapa sem regra, inscrição fora do
       conjunto da Etapa — é <strong>erro do pedido</strong> e impede qualquer criação. O que o
       caminho normal encontra — sem conclusão, norma incompatível, já consolidada — é
-      <strong>recusa de linha</strong>, e o lote segue: <em>“N consolidada(s), M recusada(s)”</em>.
+      <strong>recusa de linha</strong>, e o lote segue: <em>“N consolidadas, M recusadas”</em>.
     </p>
 
     <h3>A norma que governou, comparada com a vigente — e só onde importa</h3>
@@ -5518,7 +5562,7 @@ Se já houver Resultado
           com empate na fronteira e qual Etapa a faixa governa.</dd>
         <dt>Efeito aqui</dt><dd>Na Etapa governada, quem do recorte não está na faixa fica
           <code>fora-do-corte</code>. Perfil ou lista sem corte emitido não é afetado. Corte obsoleto
-          bloqueia a consolidação da Etapa até emitir a geração sucessora.</dd>
+          bloqueia distribuir, concluir e consolidar na Etapa até emitir a geração sucessora.</dd>
         <dt>Em detalhes</dt><dd>Campos da regra, contagem por pessoas, empate e continuação:
           <a href="#corte">Corte, em Marcos e classificação</a>.</dd>
         <dt>Evidência técnica</dt><dd><code>classificacao/domain/faixa.py</code> ·
@@ -6127,7 +6171,7 @@ Empate na posição 32 (fronteira do alvo) não interessa ao corte:
     <ul>
       <li><strong>Sucessão</strong>: com geração vigente, emitir de novo pede <span class="rotulo-ui">Motivo da sucessão</span> e substitui a geração inteira.</li>
       <li><strong>Faixa seguinte</strong>: só com <span class="rotulo-ui">Admite continuar…</span>; campos <span class="rotulo-ui">Quantos alcançar</span> e <span class="rotulo-ui">Motivo</span>, botão <span class="rotulo-ui">Emitir faixa seguinte</span>. Acrescenta, não substitui.</li>
-      <li><strong>Obsolescência</strong> (derivada): a ordem foi sucedida, a regra mudou, o quadro mudou (só no alvo do quadro) ou um participante reingressou. A tela diz <span class="rotulo-ui">A faixa emitida está obsoleta</span>: a faixa continua valendo, mas a Etapa governada não admite trabalho novo até a geração sucessora.</li>
+      <li><strong>Obsolescência</strong> (derivada): a ordem foi sucedida, a regra mudou, o quadro mudou (só no alvo do quadro) ou um participante reingressou — por recurso deferido numa Etapa que produziu a ordem, sobre quem estava no ato, com Resultado sucessor que a ordem lida ainda não cita. Desde a 061, o corte emitido sobre a ordem sucessora nasce em dia; antes, nascia obsoleto, e a geração sucessora também. A tela diz <span class="rotulo-ui">A faixa emitida está obsoleta</span>: a faixa continua valendo, mas a Etapa governada não admite trabalho novo até a geração sucessora.</li>
     </ul>
 
     <div class="aviso aviso-confunda"><span class="titulo">Não confunda</span>
@@ -6271,7 +6315,7 @@ FILA        = chamáveis
       <ul>
         <li>O botão <span class="rotulo-ui">Pedir a faixa seguinte com este déficit</span> aparece também quando o Edital <strong>não admite</strong> faixa seguinte; o clique é sempre recusado, sob o título errado “Não foi possível apurar:”. Depois de uma continuação, o mesmo déficit pode ser pedido de novo. <span class="selo selo-parc">Parcial</span></li>
         <li>Uma mudança de habilitação na Etapa governada (reabilitação por recurso, Resultado consolidado depois) <strong>não</strong> torna a apuração obsoleta: os números continuam “vigentes”. <span class="selo selo-infer">Inferido</span></li>
-        <li>Os quatro números saem espremidos numa coluna estreita; e o histórico não traduz a causa “efeito de convocação”, deixando um item de lista vazio.</li>
+        <li>O histórico não traduz a causa “efeito de convocação”, deixando um item de lista vazio.</li>
       </ul>
     </div>
 
@@ -6803,7 +6847,7 @@ FILA        = chamáveis
       </table>
     </div>
     <p class="miudo">
-      O próprio comando recusa ainda: autoridade signatária fora do catálogo, prévia defasada (409), o
+      O próprio comando recusa ainda: autoridade que não é da unidade do Edital ou está fora de vigência, prévia defasada (409), o
       mesmo ato já divulgado na mesma natureza (409) e preliminar depois de definitivo. Publicar de novo
       um marco que já tem resultado divulgado é só <strong>aviso</strong>: a nova publicação sucede a
       anterior.
@@ -6833,35 +6877,53 @@ FILA        = chamáveis
     <p>
       O PDF é gerado uma vez, no próprio ato, a partir do mesmo conteúdo publicado: processo, Edital,
       Perfil, marco, <strong>lista de concorrência</strong> (“Ampla concorrência” quando é a ampla),
-      natureza, ato de origem, data, a tabela, a seção do sorteio quando é o caso, nome e cargo da
-      autoridade signatária e o SHA-256 do conteúdo. Não é assinatura digital: é a identificação de quem
+      natureza, ato de origem, data, a tabela, a seção do sorteio quando é o caso, o cabeçalho da Unidade,
+      nome, cargo e ato de nomeação da autoridade signatária e o SHA-256 do conteúdo. Não é assinatura digital: é a identificação de quem
       assina mais o resumo do que foi divulgado.
     </p>
     <p>
       O endereço público é <strong>estável e histórico</strong>. A publicação sucedida continua no mesmo
       lugar e diz <em>“Este resultado foi sucedido.”</em>, com <span class="rotulo-ui">Ver o resultado
-      vigente</span>; a vigente diz <em>“Este é o resultado vigente deste marco.”</em> e lista
+      vigente</span>; a vigente diz <em>“Esta é a versão que vale.”</em> e lista
       <span class="rotulo-ui">Publicações anteriores deste resultado (N)</span>. Quando a correção veio de
       recurso: <em>“… retificado em … em razão do julgamento do(s) recurso(s) …”</em>. A página mostra
       também o prazo de recurso — <em>“Prazo de recurso aberto, de … até …”</em> ou <em>“Prazo de recurso
       encerrado em …”</em>. O PDF antigo não muda.
     </p>
 
-    <h3>O que o candidato vê</h3>
+    <h3>Avisar os candidatos <span class="selo selo-impl">Implementado</span></h3>
     <p>
-      No acompanhamento da inscrição, <span class="rotulo-ui">Resultado divulgado</span>: “<strong>35º
-      lugar</strong> · pontuação …” ou <em>“Você não foi classificado neste marco.”</em> com o motivo, o
-      prazo <em>“Cabe recurso contra este resultado até … às …”</em> e <span class="rotulo-ui">Ver o
-      resultado completo</span>. Ver <a href="#area-do-candidato">Área do candidato</a>.
+      Em <span class="rotulo-ui">Resultados divulgados</span> do marco, a seção <span class="rotulo-ui">Avisar
+      candidatos</span> diz o último aviso (<em>“Último aviso: …”</em>, com as contagens) ou <em>“Nenhum
+      aviso enviado sobre este marco.”</em>, e oferece <span class="rotulo-ui">Avisar candidatos — resultado
+      preliminar</span> (ou definitivo) para cada publicação vigente que nenhum aviso citou. Os destinatários
+      são deduzidos — todos os participantes, deduplicados por inscrição, inclusive quem ficou sem posição —,
+      e ninguém os acrescenta nem exclui. A prévia mostra a mensagem do modelo escolhido; confirmar grava, e
+      o envio sai pelo despacho (066). Quem pode: <code>aviso:enviar</code> (Publicador e Gestor) ou a
+      presidência da comissão. A página do Edital tem <span class="rotulo-ui">Avisos aos candidatos</span> ›
+      <span class="rotulo-ui">Ver e enviar avisos</span>, com o histórico, e cada aviso pode ser
+      interrompido ou reenviado. Com a chave desligada, a tela diz <em>“O envio de avisos está desabilitado
+      nesta instalação.”</em>
     </p>
 
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o resultado não diz de qual lista é</span>
+    <h3>O que o candidato vê</h3>
+    <p>
+      No acompanhamento da inscrição, <span class="rotulo-ui">Classificação por lista</span>: um cartão
+      <em>“{lista} — {marco}”</em> por lista em que concorre, com “<strong>35º lugar</strong> · pontuação …”
+      ou <em>“Sem posição nesta lista”</em> e o motivo, e <span class="rotulo-ui">Ver o resultado
+      completo</span>. O prazo sobe para o topo: <em>“Se você discordar de {lista — marco}, pode recorrer
+      até …”</em> (063). Ver <a href="#area-do-candidato">Área do candidato</a>.
+    </p>
+
+    <div class="aviso aviso-lacuna"><span class="titulo">Parcial: a gestão não diz de qual lista é</span>
       <p>
-        A página pública do Edital (“Resultado preliminar — Classificação final”), o histórico da gestão,
-        a prévia e a área do candidato não nomeiam o recorte. Num marco com cotas, as linhas saem
-        idênticas. E como o cotista está também na lista da ampla, ele vê <strong>dois blocos com o
-        mesmo título</strong> e posições diferentes. O PDF e a página do resultado dizem a lista.
-        <span class="selo selo-lacun">Lacuna</span>
+        Até 06/10, nenhuma superfície fora do PDF nomeava o recorte, e o cotista via dois blocos com o
+        mesmo título. Hoje o portal diz a lista em toda parte: a página do Edital nomeia o link pela lista
+        (062), a página da publicação a põe no título e na aba, inclusive <em>“Ampla concorrência”</em>, e
+        o acompanhamento tem um cartão por lista (063). <strong>Na gestão, não:</strong> o histórico
+        <span class="rotulo-ui">Resultados divulgados</span> do marco mistura as listas numa tabela sem
+        coluna de lista, e a prévia <span class="rotulo-ui">Publicar resultado</span> não nomeia o recorte.
+        <span class="selo selo-parc">Parcial</span>
       </p>
     </div>
     <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: corte e faixa não são divulgados</span>
@@ -7036,7 +7098,7 @@ não é    a posição na ordem cai porque OUTRA pessoa foi corrigida</pre>
     </ol>
     <p>
       Nada é recalculado sozinho: a cascata é de <strong>bloqueio</strong>. A publicação é recusada até o
-      ato sucessor, e o corte do recorte fica obsoleto. Se a pessoa foi <strong>reabilitada</strong>, ela
+      ato sucessor, e o corte do recorte, se já emitido e se o recurso é sobre Etapa que produziu a ordem, fica obsoleto. Se a pessoa foi <strong>reabilitada</strong>, ela
       vai para o topo da fila de chamada. Na <a href="#operar-por-marco">Condução do marco</a>, só o
       recorte alcançado fica obsoleto. Um recurso só pode ser julgado depois do definitivo quando o marco
       não declara janela: com janela, o definitivo exige prazo fechado e nada pendente.
@@ -7072,7 +7134,6 @@ não é    a posição na ordem cai porque OUTRA pessoa foi corrigida</pre>
       <ul>
         <li>Não há prazo de resposta para admissibilidade nem julgamento, e o candidato não é avisado da decisão: ele a lê ao entrar no portal.</li>
         <li>A reavaliação determinada não diz o próximo passo nas telas: a peça mostra “Sucessor — Nenhum”.</li>
-        <li>O prazo contra Resultado de Etapa só aparece nas opções de <span class="rotulo-ui">Recorrer de um resultado</span>, e não no acompanhamento.</li>
       </ul>
     </div>
 
@@ -7319,10 +7380,17 @@ Em paralelo, se o Edital pede:
         <thead><tr><th>Forma declarada</th><th>O que o sistema faz</th><th>De quando o prazo corre</th></tr></thead>
         <tbody>
           <tr><td>Por mensagem individual</td><td>Envia o e-mail <strong>no mesmo ato</strong> de convocar, fora da transação, com a chave reservada antes (um duplo clique não manda duas). Vai para o e-mail principal da identidade, ou, sem ele, o da Inscrição. Diz o Edital, o prazo e manda a pessoa à área do candidato — sem CPF, sem posição, sem link que autentica</td><td>Do envio com sucesso</td></tr>
-          <tr><td>Por publicação</td><td><strong>Não publica.</strong> Quem conduz publica a lista fora e registra <span class="rotulo-ui">Onde e quando a lista foi publicada</span></td><td>Do <strong>instante em que a publicação é registrada</strong> — não da data escrita no texto</td></tr>
+          <tr><td>Por publicação</td><td><strong>Não publica.</strong> Quem conduz publica a lista fora e registra <span class="rotulo-ui">Onde e quando a lista foi publicada</span>. Depois, pode <span class="rotulo-ui">Avisar os convocados de uma chamada publicada</span> por e-mail — só os que seguem em curso (066)</td><td>Do <strong>instante em que a publicação é registrada</strong> — não da data escrita no texto</td></tr>
           <tr><td>Não declarada</td><td>O gesto dos titulares não é oferecido; a chamada individual nasce, mas não se comunica</td><td>Não corre</td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="aviso aviso-confunda"><span class="titulo">Não confunda</span>
+      <h4>Comunicação da convocação ≠ aviso</h4>
+      <div class="par">
+        <div><strong>Comunicação</strong><p>É ato: a mensagem individual enviada, ou a publicação registrada. É dela que o prazo da convocação corre.</p></div>
+        <div><strong>Aviso complementar</strong><p>É e-mail sem efeito (066): aponta a chamada já publicada. O prazo continua correndo da publicação, e não do aviso — o rodapé o diz. Nos Perfis que convocam por mensagem individual, a chamada não oferece aviso.</p></div>
+      </div>
     </div>
     <p class="miudo">A falha de envio não apaga a convocação: ela fica com o prazo não iniciado e volta para <span class="rotulo-ui">Comunicações que ainda não saíram</span>. Uma emissão que reservou a chave e não registrou o que aconteceu fica de fora, e a tela manda conferir o histórico antes de emitir de novo.</p>
 
@@ -7540,12 +7608,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     <h4>Versionamento</h4>
     <p>Um requerimento enviado é <strong>imutável</strong>. Corrigir é criar um <strong>sucessor</strong>, que cita o anterior e a convocação que autorizou a correção — e ele só nasce se há <strong>chamada em aberto</strong> e se algo mudou. É assim que quem declarou na inscrição, em março, confere o endereço ao ser convocado em setembro. O anterior continua legível em <span class="rotulo-ui">Ver o requerimento anterior</span>, buscado <em>dentro da cadeia da inscrição do titular</em>, nunca por identificador solto.</p>
 
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o candidato não chega ao requerimento pela navegação</span>
-      <p>O único link para o requerimento é o cartão da inscrição em rascunho, quando o Edital pede
-      <em>na inscrição</em>. Depois do envio da inscrição, e em todo Edital que pede <em>na
-      convocação</em>, nenhuma tela do portal leva à página do requerimento — nem o acompanhamento, nem
-      a convocação. A página funciona, mas só abre pelo endereço. Ver <a href="#area-do-candidato">Área
-      do candidato</a>. <span class="selo selo-nop">Implementado, não operacionalizado</span></p>
+    <div class="aviso aviso-nota"><span class="titulo">Como o candidato chega ao requerimento</span>
+      <p>Pedido <em>na inscrição</em>, pelo cartão do rascunho. Pedido <em>na convocação</em>, pela
+      tela da convocação e pelo topo do acompanhamento: <span class="rotulo-ui">Preencher Requerimento de
+      Matrícula</span> enquanto está disponível ou em rascunho, <span class="rotulo-ui">Conferir o
+      Requerimento de Matrícula enviado</span> depois do envio (059). Quem decide se o chamado aparece é a
+      mesma política que decide se a página abre; convocação desfechada sem envio não mostra chamado.
+      Até a 059, a página só abria pelo endereço. <span class="selo selo-impl">Implementado</span></p>
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
@@ -7731,7 +7800,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
         </g>
         <g>
           <rect class="cx" x="394" y="60" width="170" height="42" rx="7"/><text class="rt" x="408" y="79">Minhas inscrições</text><text class="rt-p" x="408" y="94">rascunhos e enviadas</text>
-          <rect class="cx" x="394" y="112" width="170" height="42" rx="7"/><text class="rt" x="408" y="131">Acompanhamento</text><text class="rt-p" x="408" y="146">situação por Etapa, com motivo</text>
+          <rect class="cx" x="394" y="112" width="170" height="42" rx="7"/><text class="rt" x="408" y="131">Acompanhamento</text><text class="rt-p" x="408" y="146">situação, por quê, o que fazer</text>
           <rect class="cx" x="394" y="164" width="170" height="42" rx="7"/><text class="rt" x="408" y="183">Resultado publicado</text><text class="rt-p" x="408" y="198">lista pública + situação própria</text>
           <rect class="cx" x="394" y="216" width="170" height="42" rx="7"/><text class="rt" x="408" y="235">Sorteio</text><text class="rt-p" x="408" y="250">relação, manifesto, verificação</text>
         </g>
@@ -7742,13 +7811,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <rect class="cx" x="584" y="216" width="170" height="42" rx="7"/><text class="rt" x="598" y="235">Anexar prova</text><text class="rt-p" x="598" y="250">não aceito, por decisão</text>
         </g>
         <g>
-          <rect class="cx-r" x="774" y="60" width="170" height="42" rx="7"/><text class="rt" x="788" y="79">Convocação</text><text class="rt-p" x="788" y="94">página sem link no portal</text>
-          <rect class="cx-r" x="774" y="112" width="170" height="42" rx="7"/><text class="rt" x="788" y="131">Requerimento</text><text class="rt-p" x="788" y="146">sem link fora do rascunho</text>
+          <rect class="cx" x="774" y="60" width="170" height="42" rx="7"/><text class="rt" x="788" y="79">Convocação</text><text class="rt-p" x="788" y="94">Ver convocação, na lista</text>
+          <rect class="cx" x="774" y="112" width="170" height="42" rx="7"/><text class="rt" x="788" y="131">Requerimento</text><text class="rt-p" x="788" y="146">rascunho, convocação, situação</text>
           <rect class="cx" x="774" y="164" width="170" height="42" rx="7"/><text class="rt" x="788" y="183">Desfecho</text><text class="rt-p" x="788" y="198">registrado pela comissão</text>
           <rect class="cx-z" x="774" y="216" width="170" height="42" rx="7"/><text class="rt" x="788" y="235">Registro Acadêmico</text><text class="rt-p" x="788" y="250">exportação pela instituição</text>
         </g>
 
-        <text class="rt-p" x="14" y="340">Verde: o candidato leva um artefato. Vermelho: a página existe, mas nenhuma tela do portal leva a ela. Azul: sai do sistema.</text>
+        <text class="rt-p" x="14" y="340">Verde: o candidato leva um artefato. Azul: sai do sistema.</text>
       </svg>
       <figcaption>
         O acompanhamento, o comprovante, a convocação e o requerimento pendem da
@@ -7774,27 +7843,25 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
         <p>Período aberto e Edital recebendo (inclusive período não cancelado), versão reconhecida — se o Edital foi retificado, a pessoa lê as alterações e confirma <span class="rotulo-ui">Li as alterações e quero continuar</span> —, Perfil existente, Modalidade válida, documentos aplicáveis, obrigatórios presentes, formato e integridade dos arquivos, as duas declarações, o Requerimento de Matrícula quando coletado na inscrição, o <strong>teto por candidato</strong>, os fatos declarados e a unicidade. No mesmo ato é <strong>gravada a lista de documentos exigidos</strong>, com o que foi pedido, o que era facultativo e o que não se aplicava. A tela validou para não oferecer o que seria recusado — ela não é fronteira de segurança.</p></li>
       <li><span class="passo">7 · Comprovante</span><span class="titulo">Protocolo legível, PDF autenticável e e-mail <span class="selo selo-impl">Implementado</span></span>
         <p><code>INS-2026-K7M4Q2PX</code>: opaco de propósito — uma sequência diria quantas inscrições existem —, e legível de propósito — sem <code>0</code>/<code>O</code> nem <code>1</code>/<code>I</code>/<code>L</code>, porque é ditado ao telefone. O ano é o do <em>envio</em>. O comprovante traz um código de verificação que só o servidor sabe gerar; quem confere é a gestão, na inscrição. Uma cópia vai por e-mail (<em>“Inscrição recebida — INS-…”</em>).</p></li>
-      <li><span class="passo">8 · Acompanhamento</span><span class="titulo">A situação por Etapa, com o motivo escrito <span class="selo selo-impl">Implementado</span></span>
-        <p>Não é um rótulo solto: <em>“Habilitada · pontuação 8”</em> com o motivo, e, no resultado desfavorável, a <span class="rotulo-ui">Fundamentação escrita por quem avaliou</span> — só a do próprio candidato. O resultado divulgado vem por marco, com <em>“Nº lugar”</em> ou <em>“Você não foi classificado neste marco.”</em>, e o prazo: <em>“Cabe recurso contra este resultado até …”</em>.</p></li>
+      <li><span class="passo">8 · Acompanhamento</span><span class="titulo">Primeiro a situação, depois a evidência <span class="selo selo-impl">Implementado</span></span>
+        <p>Desde a 063, a página abre por <span class="rotulo-ui">Sua situação</span>: um rótulo, o <em>por quê</em> e o <em>o que fazer</em> — <em>“Convocado”</em>, <em>“Aguardando chamada”</em>, <em>“Aguardando resultado definitivo”</em>, <em>“Eliminado”</em>, ou o desfecho da convocação, como <em>“Vaga aceita”</em>. Logo abaixo, o prazo: <em>“Se você discordar de {lista — marco}, pode recorrer até …”</em>, também para Resultado de Etapa. Depois vêm a <span class="rotulo-ui">Classificação por lista</span> — um cartão <em>“{lista} — {marco}”</em> com <em>“Nº lugar”</em> ou <em>“Sem posição nesta lista”</em> e o motivo — e as Etapas: <em>“Habilitada · pontuação 8”</em> com o motivo e, no desfavorável, a <span class="rotulo-ui">Fundamentação escrita por quem avaliou</span>, só a do próprio candidato. Ver <a href="#g-situacao-da-inscricao">Situação da inscrição</a>.</p></li>
       <li><span class="passo">9 · Resultado</span><span class="titulo">A lista pública e a situação individual são coisas separadas <span class="selo selo-impl">Implementado</span></span>
-        <p>A lista pública nomeia apenas quem recebeu posição, e diz o prazo de recurso. Quem não recebeu vê a própria situação dentro da própria inscrição — as duas projeções são gravadas em lugares diferentes. Ver <a href="#resultados">Resultados</a>.</p></li>
+        <p>A lista pública nomeia apenas quem recebeu posição, e diz o prazo de recurso. Quem não recebeu vê a própria situação dentro da própria inscrição — as duas projeções são gravadas em lugares diferentes. Na página do Edital, abaixo dos resultados, <em>“Participou deste processo seletivo?”</em> leva à situação individual (062). Ver <a href="#resultados">Resultados</a>.</p></li>
       <li><span class="passo">10 · Recurso</span><span class="titulo">Prazo declarado, protocolo próprio, sem anexo por decisão <span class="selo selo-impl">Implementado</span></span>
         <p><span class="rotulo-ui">Recorrer de um resultado</span> só aparece quando há o que contestar. O formulário tem <span class="rotulo-ui">O que você está contestando</span> e <span class="rotulo-ui">Sua razão</span> — e nenhum campo de anexo: a primeira versão não aceita anexos, por decisão escrita; a prova que já está na inscrição chega a quem julga pela <em>instrução</em>, praticada por quem gere a comissão ou preside o Processo. Ver <a href="#recursos">Recursos</a>.</p></li>
-      <li><span class="passo">11 · Convocação</span><span class="titulo">A chamada tem página própria — que o portal não mostra <span class="selo selo-nop">Implementado, não operacionalizado</span></span>
-        <p>A página da convocação existe dentro da inscrição, com a espécie, o fundamento, o prazo e, depois, a situação registrada. Mas nenhuma tela do portal leva a ela. Ver a lacuna abaixo e <a href="#convocacao">Convocação</a>.</p></li>
+      <li><span class="passo">11 · Convocação</span><span class="titulo">A chamada tem página própria, e o portal leva a ela <span class="selo selo-impl">Implementado</span></span>
+        <p>A página da convocação existe dentro da inscrição, com a espécie, o fundamento, o prazo e, depois, a situação registrada. Em <span class="rotulo-ui">Minhas inscrições</span>, a inscrição com convocação aberta diz <em>“➜ Convocação aberta”</em> e troca a ação principal por <span class="rotulo-ui">Ver convocação</span>; a concluída vira nota, <em>“Convocação: {espécie}”</em>. O acompanhamento tem a seção <span class="rotulo-ui">Convocação</span>, com o mesmo link (059). Só a abertura da tela da convocação grava leitura na trilha. Ver <a href="#convocacao">Convocação</a>.</p></li>
       <li><span class="passo">12 · Requerimento</span><span class="titulo">Só quando o Edital o declara <span class="selo selo-parc">Parcial</span></span>
-        <p>Na inscrição — anunciado por um cartão no rascunho, e sem ele o envio é recusado — ou na convocação, enquanto a chamada não tem desfecho. Fora do rascunho não há link para ele. Ver <a href="#matricula">Requerimento de Matrícula</a>.</p></li>
+        <p>Na inscrição — anunciado por um cartão no rascunho, e sem ele o envio é recusado — ou na convocação, enquanto a chamada não tem desfecho. Pedido na convocação, o chamado aparece na tela da convocação e no topo do acompanhamento: <span class="rotulo-ui">Preencher…</span> ou, depois do envio, <span class="rotulo-ui">Conferir…</span> (059). Ver <a href="#matricula">Requerimento de Matrícula</a>.</p></li>
     </ol>
 
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: a convocação e o requerimento não têm porta no portal</span>
-      <p>A página <code>/selecoes/inscricoes/&lt;id&gt;/convocacao</code> funciona — distingue
-      <em>“Ainda não há convocação neste Processo Seletivo”</em> de <em>“você não foi chamado até
-      agora”</em>, e registra a leitura na trilha sem mover o prazo —, mas nenhum template aponta para
-      ela. O e-mail de convocação manda a pessoa a <span class="rotulo-ui">Minhas inscrições</span>, que
-      leva ao acompanhamento, que não menciona convocação: a linha <span class="rotulo-ui">Sua
-      participação</span> só lista <em>“Inscrição enviada”</em>. O mesmo vale para o requerimento
-      pedido na convocação, e para o requerimento já enviado. Quem é convocado só chega à própria
-      chamada digitando o endereço. <span class="selo selo-nop">Implementado, não operacionalizado</span></p>
+    <div class="aviso aviso-nota"><span class="titulo">Até 06/10, a convocação não tinha porta no portal</span>
+      <p>A página <code>/selecoes/inscricoes/&lt;id&gt;/convocacao</code> funcionava, e nenhum template
+      apontava para ela: o e-mail de convocação mandava a <span class="rotulo-ui">Minhas inscrições</span>,
+      que levava a um acompanhamento sem convocação. A 059 deu a porta sem rota nova, e a mensagem de
+      convocação continua mandando a <span class="rotulo-ui">Minhas inscrições</span> — que agora a
+      mostra. Quem não foi chamado lê <em>“… você não foi chamado até agora. Novas chamadas, se houver,
+      serão publicadas conforme o Edital.”</em> (063).</p>
     </div>
 
     <h3 id="pagina-publica-do-edital">O que a página pública do Edital mostra</h3>
@@ -7805,7 +7872,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td>Cabeçalho</td><td>O título do Edital, e o Processo logo abaixo</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Situação</td><td>O desfecho vence o período: <em>“Edital cancelado em …”</em>, <em>“Processo seletivo encerrado em …”</em>; senão, o período — <em>“Faltam N dias.”</em>, <em>“Último dia.”</em>, <em>“Inscrições encerradas em …”</em>, <em>“Período de inscrições cancelado. Não recebe inscrições.”</em>. O motivo do ato de encerramento não é exibido</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Agora e próximo</td><td><em>“Acontecendo agora, até …: {Evento}”</em> e <em>“Próximo, em …: {Evento}”</em>, pela mesma régua que a gestão usa; Evento cancelado é dito cancelado. Sem Evento, nada é dito</td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Resultados divulgados</td><td>Cada publicação vigente, com <em>“recurso até …”</em> enquanto o prazo corre, e <span class="rotulo-ui">Publicações anteriores (N)</span> com as sucedidas, rotuladas <em>“sucedido”</em></td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Resultados divulgados</td><td>Por Perfil, depois por etapa, depois por lista (062). Os Perfis na ordem da seção Vagas, com o nome vigente; o que saiu por Retificação vai para o fim, com o nome publicado. As etapas na ordem do certame. Em cada etapa, a ampla primeiro e as cotas na ordem das Modalidades; o <strong>texto do link é o nome da lista</strong>, com <em>“{natureza} · publicado em …”</em> e <em>“recurso até …”</em> enquanto o prazo corre. Um só <span class="rotulo-ui">Publicações anteriores (N)</span> por etapa, cada item com a lista e <em>“sucedido”</em>. Abaixo, <em>“Participou deste processo seletivo?”</em>: <span class="rotulo-ui">Entrar para ver minha situação</span>, <span class="rotulo-ui">Ver minha situação</span> ou <span class="rotulo-ui">Ver minhas inscrições</span>, conforme quem lê; sem inscrição enviada, o convite não aparece</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Vagas</td><td>Por Perfil: vagas imediatas (ou <em>“Cadastro reserva”</em> quando é o que há), requisitos, atribuições, carga horária, remuneração, as Modalidades de concorrência pelo nome, e <em>“N documentos que serão pedidos”</em> com <em>“Se concorrer em {Modalidade}, também: …”</em>. <strong>Não há quantidade de vagas por Modalidade</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
           <tr><td>Teto</td><td>Quando o Edital declara, a frase do documento; atingido, o convite dá lugar a <em>“Limite atingido: você já enviou N inscrições neste Edital.”</em></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Sorteio público</td><td>Relação de habilitados, manifesto e verificação. Ver <a href="#sorteio">Sorteio</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
@@ -7823,7 +7890,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     <div class="aviso aviso-risco"><span class="titulo">O que ainda pede atenção</span>
       <ul>
         <li><strong>O mesmo prazo em formatos diferentes.</strong> O portal diz <em>“Faltam N dias.”</em>; a supervisão da gestão ainda diz <em>“Encerra em 2 semanas, 5 dias”</em>.</li>
-        <li><strong>O candidato não lê “titular” nem “suplente”</strong>, nem a própria posição na fila de chamada: só <em>“Nº lugar”</em>. Quem não foi chamado lê <em>“quem está na lista pode ser chamado quando uma vaga vagar”</em> — frase que também aparece a quem foi eliminado.</li>
+        <li><strong>O candidato não lê “titular” nem “suplente”</strong>, nem a própria posição na fila de chamada: lê <em>“Nº lugar”</em> por lista e uma situação derivada, como <em>“Aguardando chamada”</em>. Por decisão da 063, nenhuma situação afirma perda: com o prazo da convocação encerrado, ele continua <em>“Convocado”</em> até a comissão registrar o desfecho.</li>
       </ul>
     </div>
 
@@ -7856,7 +7923,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       </div>
       <div class="cartao">
         <span class="etiqueta">Credencial</span><h4><code>CandidateEmail</code></h4>
-        <p>Um endereço <strong>cujo controle foi provado</strong>. Uma identidade pode ter várias; uma é a principal — é para ela que vão a convocação e o aviso de mudança de acesso. A chave de igualdade é a forma canônica do endereço.</p>
+        <p>Um endereço <strong>cujo controle foi provado</strong>. Uma identidade pode ter várias; uma é a principal — é para ela que vão a convocação, o aviso de mudança de acesso e os avisos complementares (066). A chave de igualdade é a forma canônica do endereço.</p>
       </div>
       <div class="cartao">
         <span class="etiqueta">Prova</span><h4><code>DesafioDeAcesso</code></h4>
@@ -7921,20 +7988,21 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <table>
         <thead><tr><th>Recurso</th><th>Onde</th><th>Como se chega</th><th>Selo</th></tr></thead>
         <tbody>
-          <tr><td>Lista das próprias inscrições — rascunhos e enviadas, com <span class="rotulo-ui">Continuar inscrição</span>, <span class="rotulo-ui">Consultar inscrição</span> ou <span class="rotulo-ui">Acompanhar</span></td><td><code>/selecoes/inscricoes/</code></td><td>Menu <span class="rotulo-ui">Minhas inscrições</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Lista das próprias inscrições — rascunhos e enviadas, com <span class="rotulo-ui">Continuar inscrição</span>, <span class="rotulo-ui">Consultar inscrição</span>, <span class="rotulo-ui">Acompanhar</span> ou, com convocação aberta, <span class="rotulo-ui">Ver convocação</span></td><td><code>/selecoes/inscricoes/</code></td><td>Menu <span class="rotulo-ui">Minhas inscrições</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Gerir endereços: adicionar, tornar principal, remover</td><td><code>/selecoes/conta</code></td><td><span class="rotulo-ui">Acesso à conta</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Seus dados (nome e CPF)</td><td><code>/selecoes/meus-dados</code></td><td><span class="rotulo-ui">Corrigir nome e CPF</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Rascunho: concorrência, documentos, revisão</td><td><code>/selecoes/inscricoes/&lt;id&gt;/</code>, <code>…/revisao</code></td><td>Lista</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>O que enviei: dados, documentos recebidos, arquivo</td><td><code>/selecoes/inscricoes/&lt;id&gt;/</code> (enviada)</td><td><span class="rotulo-ui">Ver o que enviei</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Acompanhamento por Etapa, resultado divulgado, parecer do próprio, prazo recursal</td><td><code>…/acompanhamento</code></td><td><span class="rotulo-ui">Acompanhar</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Acompanhamento pela situação: situação, classificação por lista, Etapas, parecer do próprio, prazo recursal</td><td><code>…/acompanhamento</code></td><td><span class="rotulo-ui">Acompanhar</span>; <span class="rotulo-ui">Ver minha situação</span>, na página do Edital</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Comprovante em tela e em PDF</td><td><code>…/comprovante</code>, <code>…/comprovante.pdf</code></td><td><span class="rotulo-ui">Baixar comprovante</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Interpor recurso e acompanhar a peça (sem anexo, por decisão)</td><td><code>…/recorrer</code>, <code>/selecoes/recursos/&lt;id&gt;</code></td><td><span class="rotulo-ui">Recorrer de um resultado</span>; <span class="rotulo-ui">Seus recursos</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Convocação recebida</td><td><code>…/convocacao</code></td><td><strong>nenhum link</strong></td><td><span class="selo selo-nop">Implementado, não operacionalizado</span></td></tr>
-          <tr><td>Requerimento de Matrícula, e a versão anterior</td><td><code>…/requerimento</code></td><td>Cartão no rascunho (na inscrição); depois, <strong>nenhum link</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
+          <tr><td>Convocação recebida</td><td><code>…/convocacao</code></td><td><span class="rotulo-ui">Ver convocação</span>, em Minhas inscrições e na seção Convocação do acompanhamento</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Requerimento de Matrícula, e a versão anterior</td><td><code>…/requerimento</code></td><td>Cartão no rascunho (na inscrição); na convocação e no topo do acompanhamento, <span class="rotulo-ui">Preencher…</span> ou <span class="rotulo-ui">Conferir…</span></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Resultado divulgado, em tela e em PDF, com prazo de recurso e publicações anteriores</td><td><code>/selecoes/resultados/&lt;id&gt;/</code></td><td>Acompanhamento; página do Edital</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Relação de habilitados e verificação do sorteio</td><td><code>/selecoes/sorteio/…</code></td><td>Página do Edital</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Aceitar, recusar ou desistir da convocação pelo portal</td><td>—</td><td>—</td><td><span class="selo selo-lacun">Lacuna</span></td></tr>
-          <tr><td>Aviso por e-mail de resultado, retificação ou decisão de recurso</td><td>—</td><td>fora por regra (ver abaixo)</td><td><span class="selo selo-lacun">Lacuna</span></td></tr>
+          <tr><td>Aviso por e-mail de resultado, de publicação retificadora do resultado e de chamada por publicação</td><td>caixa de e-mail</td><td>enviado pela seleção, por gesto de uma pessoa (066); desligado em produção até a validação de LGPD</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Aviso por e-mail de decisão de recurso, de requerimento pendente ou de Retificação do Edital; lembrete de prazo</td><td>—</td><td>fora por regra (ver abaixo)</td><td><span class="selo selo-lacun">Lacuna</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -7962,13 +8030,14 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <div class="aba" data-rotulo="O candidato vê">
         <h4 class="aba-titulo">O candidato vê</h4>
         <ul>
+          <li>A própria situação, derivada a cada leitura — rótulo, por quê, o que fazer —, com o canal da convocação e, se o Edital prevê, o cadastro reserva como fato do Edital, nunca como pertença.</li>
           <li>A própria situação por Etapa — habilitada ou eliminada, pontuação e motivo —, quando a publicação do marco autoriza.</li>
           <li>O parecer de quem o avaliou, só o dele, no resultado desfavorável, enquanto cabe contestar.</li>
-          <li>A própria posição no resultado divulgado (<em>“Nº lugar”</em>) e a lista pública, com o prazo de recurso.</li>
+          <li>A própria posição em cada lista do resultado divulgado (<em>“Nº lugar”</em> ou <em>“Sem posição nesta lista”</em>) e a lista pública, com o prazo de recurso.</li>
           <li>Os documentos que enviou, o que era facultativo, o comprovante e o código de verificação.</li>
-          <li>A própria convocação — espécie, fundamento, vencimento, <em>“Comunicação enviada em”</em> e, depois, <em>“Situação registrada: {desfecho} — {fundamento}”</em>; dois avisos de prazo (<em>“O seu prazo não começou a correr”</em>, <em>“O prazo informado… já passou. Isso não decide nada sozinho”</em>). <strong>Só pela URL direta.</strong></li>
-          <li>O próprio requerimento, enviado e anterior, quando consegue chegar à página.</li>
-          <li><strong>Não vê:</strong> “titular”, “suplente”, a posição na fila de chamada, os números da ocupação, o atestado de fato externo, parecer ou nota de terceiros.</li>
+          <li>A própria convocação — espécie, fundamento, vencimento, <em>“Comunicação enviada em”</em> e, depois, <em>“Situação registrada: {desfecho} — {fundamento}”</em>; dois avisos de prazo (<em>“O seu prazo não começou a correr”</em>, <em>“O prazo informado… já passou. Isso não decide nada sozinho”</em>), por <span class="rotulo-ui">Ver convocação</span>.</li>
+          <li>O próprio requerimento, enviado e anterior.</li>
+          <li><strong>Não vê:</strong> “titular”, “suplente”, “classificado”, “aprovado”, “dentro das vagas”, “lista de espera”, a posição na fila de chamada, os números da ocupação, o atestado de fato externo, parecer ou nota de terceiros.</li>
         </ul>
       </div>
       <div class="aba" data-rotulo="A comissão e a gestão veem">
@@ -8002,10 +8071,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       </div>
     </div>
 
-    <h3>Os quatro e-mails que o sistema envia</h3>
+    <h3>Os e-mails que o sistema envia</h3>
     <p>
-      O sistema envia mensagem em exatamente quatro situações, e uma varredura na suíte reprova qualquer
-      envio num módulo não declarado — a quinta não entra calada.
+      Além do código de acesso, o sistema envia mensagem em exatamente quatro situações, e uma varredura
+      na suíte reprova qualquer envio num módulo não declarado — a próxima não entra calada. A quarta
+      entrou em 09/10 com a 066, revisando a regra da área do candidato (FR-084 da <code>010</code>): o
+      <strong>aviso complementar</strong>, vinculado a ato oficial já publicado e sem efeito sobre prazo,
+      classificação, situação ou direito.
     </p>
     <div class="rolagem">
       <table>
@@ -8015,21 +8087,26 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td>Mudança de acesso à conta</td><td><em>“Mudança no acesso à sua conta — Seleções Cefor/Ifes”</em></td><td>O e-mail principal</td><td>Qual endereço foi acrescentado ou removido, e com quem falar se não foi a pessoa</td></tr>
           <tr><td>Inscrição recebida</td><td><em>“Inscrição recebida — INS-…”</em></td><td>O e-mail gravado na Inscrição</td><td>Protocolo, código de verificação, Perfil, concorrência, documentos recebidos e o endereço para voltar. Sem CPF e sem telefone. Enviado depois de gravar — falha de envio não custa a inscrição</td></tr>
           <tr><td>Convocação, quando o Edital comunica por mensagem individual</td><td><em>“Convocação — Edital N/AAAA”</em></td><td>O e-mail principal (ou o da Inscrição)</td><td>O Edital, o prazo e o atendimento, e o endereço de <span class="rotulo-ui">Minhas inscrições</span>. Sem CPF, sem posição, sem link que autentica. Ver <a href="#convocacao">Convocação</a></td></tr>
+          <tr><td>Aviso complementar, quando alguém da seleção o envia</td><td>O do modelo; os três iniciais usam o neutro <em>“Processo Seletivo Ifes — Nova publicação disponível”</em></td><td>O e-mail principal (ou o da Inscrição)</td><td>O texto do modelo, com variáveis controladas, e um rodapé fixo que aponta a publicação oficial e diz que o aviso não a substitui. Sem posição, sem resultado individual, sem a situação de ninguém: orienta a consulta na área do candidato. Ver <a href="#resultados">Resultados</a></td></tr>
         </tbody>
       </table>
     </div>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: nenhum aviso depois da inscrição, fora a convocação</span>
-      <p>Não há e-mail de resultado divulgado, de Retificação, de decisão de recurso, de requerimento
-      pendente, nem lembrete de prazo. O candidato precisa voltar ao portal para saber. Não é
-      esquecimento: a regra da área do candidato só admite e-mail que seja recibo de ato da própria
-      pessoa ou ato que o Edital declara comunicar assim, e um quinto aviso exige rever a regra — não
-      acrescentar um remetente. <span class="selo selo-lacun">Lacuna</span></p>
+    <div class="aviso aviso-lacuna"><span class="titulo">O que continua sem aviso</span>
+      <p>Desde a 066, a seleção pode avisar por e-mail quem participou de um resultado publicado — inclusive
+      de uma publicação que retifica outra — e quem foi convocado numa chamada por publicação. O aviso
+      <strong>nunca é automático</strong>: publicar ou comunicar não o dispara, só o gesto de uma pessoa.
+      Continuam sem e-mail a decisão de recurso, o requerimento pendente, a Retificação do <em>Edital</em>
+      e o lembrete de prazo; o candidato volta ao portal para saber. Acrescentar um deles exige rever a
+      regra de novo, como a 066 fez — não acrescentar um remetente. E a chave
+      <code>AVISOS_AOS_CANDIDATOS</code> vem desligada em produção até a validação de LGPD.
+      <span class="selo selo-parc">Parcial</span></p>
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>Código e aviso de mudança</dt><dd><a href="../../backend/processo_seletivo/identidade/application/mensagem.py">identidade/application/mensagem.py</a></dd>
       <dt>Confirmação de inscrição</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/mensagem.py">inscricoes/application/mensagem.py</a></dd>
       <dt>Convocação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
+      <dt>Aviso complementar</dt><dd><code>avisos/application/despacho.py</code> · <code>avisos/domain/modelos_iniciais.py</code> · <code>interface/avisos.py</code></dd>
       <dt>A varredura das quatro situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code></dd>
       <dt>O que a gestão lê de uma inscrição</dt><dd><code>inscricoes/application/consulta.py</code> · <code>interface/templates/interface/inscricao_detalhe.html</code></dd>
     </dl></div></details>
@@ -8161,8 +8238,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
         <tbody>
           <tr><td><strong>Elaborador</strong></td><td><code>edital:elaborar</code>, <code>edital:submeter</code>, <code>retificacao:elaborar</code>, <code>retificacao:submeter</code></td><td>Quem escreve não conclui sozinho</td></tr>
           <tr><td><strong>Homologador</strong></td><td><code>edital:homologar</code>, <code>retificacao:homologar</code></td><td>A segunda assinatura</td></tr>
-          <tr><td><strong>Publicador</strong></td><td><code>edital:publicar</code>, <code>retificacao:publicar</code>, <code>resultado:publicar</code></td><td>Divulgar resultado é capacidade <em>própria</em>: emitir a ordem não dá o poder de publicá-la</td></tr>
-          <tr><td><strong>Gestor</strong></td><td><code>processo:criar|ativar|encerrar|cancelar</code>, <code>edital:criar|encerrar|cancelar</code>, <code>retificacao:cancelar</code>, <code>comissao:gerir</code>, <code>inscricao:consultar</code>, <code>visao:consultar</code></td><td>Conduz o certame. Ler dado pessoal de candidato é permissão própria; ler o panorama institucional também — está no Gestor porque é ele quem conduz os Processos do escopo</td></tr>
+          <tr><td><strong>Publicador</strong></td><td><code>edital:publicar</code>, <code>retificacao:publicar</code>, <code>resultado:publicar</code>, <code>aviso:enviar</code></td><td>Divulgar resultado é capacidade <em>própria</em>: emitir a ordem não dá o poder de publicá-la. Avisar os candidatos também: quem avisa não ganha, por avisar, o poder de publicar (066)</td></tr>
+          <tr><td><strong>Gestor</strong></td><td><code>processo:criar|ativar|encerrar|cancelar</code>, <code>edital:criar|encerrar|cancelar</code>, <code>retificacao:cancelar</code>, <code>comissao:gerir</code>, <code>inscricao:consultar</code>, <code>visao:consultar</code>, <code>autoridade:gerir</code>, <code>aviso:enviar</code></td><td>Conduz o certame. Ler dado pessoal de candidato é permissão própria; ler o panorama institucional também — está no Gestor porque é ele quem conduz os Processos do escopo. Manter as autoridades da unidade é configuração administrativa, e não dá o poder de publicar (060)</td></tr>
           <tr><td><strong>Julgador de recursos</strong></td><td><code>recurso:julgar</code></td><td>Papel <strong>próprio</strong>: pendurá-lo em qualquer papel existente concederia o julgamento, por construção, a quem tende a estar impedido</td></tr>
           <tr><td><strong>Auditor</strong></td><td><code>auditoria:consultar</code></td><td>Lê a trilha e o que ela sustenta — e consulta, sem agir, o trabalho das Etapas e dos marcos</td></tr>
           <tr><td><strong>Exportador de matrículas</strong></td><td><code>matricula:exportar</code></td><td>Papel <strong>próprio</strong>: ler um dossiê por vez e baixar o conjunto inteiro são atos distintos. Nenhum outro papel exporta</td></tr>
@@ -8252,6 +8329,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
 <tr><td>Compor, submeter e homologar Edital ou Retificação <small>(Elaborador, Homologador)</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Publicar Edital ou Retificação</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Ativar, encerrar, cancelar Processo; encerrar, cancelar Edital</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Gerir as autoridades da unidade</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span> <small>403</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Gerir os modelos de aviso</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr class="grupo"><th colspan="10">Comissão e avaliação</th></tr>
 <tr><td>Constituir e gerir a comissão</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span> <small>403</small></td><td class="centro"><span class="m m-nao">—</span> <small>403</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Alocar membros às Etapas</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
@@ -8270,6 +8349,9 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
 <tr><td>Convocar, registrar desfecho, comunicar, atestar</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Conduzir o sorteio</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Divulgar resultado</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Avisar os candidatos de um resultado publicado</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Avisar os convocados de uma chamada por publicação</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Ler o histórico de avisos</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr class="grupo"><th colspan="10">Recursos</th></tr>
 <tr><td>Ver recursos do Edital; admitir e julgar</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span> <small>³</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Instruir recurso com parecer</td><td class="centro"><span class="m m-parc">◐</span> <small>+ Julgador</small></td><td class="centro"><span class="m m-parc">◐</span> <small>P + Julgador</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-parc">◐</span> <small>+ base</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
@@ -8361,7 +8443,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           trabalho daquele Processo — e só dele. Não cria Processo, não lê dossiê, não vê a Visão
           Geral.</p></div>
         <div><strong>Gestor</strong><p>Papel em todo o escopo. Gere qualquer comissão, cria Processo e
-          Edital, lê inscrições recebidas, vê a Visão Geral. Não avalia sem alocação.</p></div>
+          Edital, lê inscrições recebidas, vê a Visão Geral, mantém as autoridades da unidade e avisa os
+          candidatos. Não avalia sem alocação.</p></div>
       </div>
       <p class="par-rodape">As duas bases são aceitas pelas mesmas portas de gestão, cada uma bastando
         sozinha; a trilha registra qual delas autorizou cada ato.</p>
@@ -8410,7 +8493,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr>
             <td><strong>São puramente derivados</strong></td>
             <td>Nunca gravados: calculados a cada leitura, de registros que existem.</td>
-            <td><a href="#estados-evento">Fase do Evento</a> · <a href="#estados-prontidao">Prontidão</a> · <a href="#estados-recurso">Situação do recurso</a> · <a href="#estados-convocacao">prazo da convocação</a> · <a href="#estados-requerimento">leitura do requerimento</a> · obsolescência · titular/suplente · fila · trilha da composição</td>
+            <td><a href="#estados-evento">Fase do Evento</a> · <a href="#estados-prontidao">Prontidão</a> · <a href="#estados-recurso">Situação do recurso</a> · <a href="#estados-convocacao">prazo da convocação</a> · <a href="#estados-requerimento">leitura do requerimento</a> · <a href="#g-situacao-da-inscricao">situação da inscrição</a>, no portal · obsolescência · titular/suplente · fila · trilha da composição</td>
           </tr>
         </tbody>
       </table>
@@ -8621,7 +8704,7 @@ sorteio: não realizado ──realizar──▶ realizado ──anular (relaçã
         <tbody>
           <tr><td>sem corte</td><td>o marco não corta, ou ainda não se cortou</td><td>a Etapa seguinte recebe todos os habilitados; <strong>sem faixa, ninguém é convocável</strong></td></tr>
           <tr><td>geração vigente</td><td>emitida pela gestão da comissão sobre ordem vigente</td><td>define quem progride (<code>PROGREDIU</code> / <code>FORA_DA_FAIXA</code>); continuações acrescentam faixas se a regra admite</td></tr>
-          <tr><td>obsoleta</td><td>quatro causas: ordem sucedida, regra alterada, quadro alterado (alvo do quadro), participante reingressou</td><td>a faixa continua valendo, mas a Etapa governada não admite trabalho novo</td></tr>
+          <tr><td>obsoleta</td><td>quatro causas: ordem sucedida, regra alterada, quadro alterado (alvo do quadro), participante reingressou (só o que a ordem lida ainda não cita, 061)</td><td>a faixa continua valendo, mas a Etapa governada não admite trabalho novo</td></tr>
           <tr><td>sucedida</td><td>nova raiz, com motivo</td><td>—</td></tr>
         </tbody>
       </table>
@@ -8819,16 +8902,17 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
         <rect class="cx-z" x="480" y="30" width="390" height="150" rx="10"/>
         <text class="rt-t" x="500" y="56">2 · Privilégio ausente</text>
         <text class="rt-p" x="500" y="78">O papel de runtime tem SELECT e INSERT nas</text>
-        <text class="rt-p" x="500" y="96">34 tabelas append-only — e nada mais.</text>
+        <text class="rt-p" x="500" y="96">40 tabelas append-only — e nada mais.</text>
         <text class="rt-p" x="500" y="122">Recusa antes, mesmo que o gatilho seja removido.</text>
         <text class="rt-p" x="500" y="152">Quem migra é outro papel, e nenhuma das duas</text>
         <text class="rt-p" x="500" y="168">camadas depende de a aplicação se comportar.</text>
       </svg>
       <figcaption>
-        A implantação tem três passos nesta ordem: <strong>provisionar papéis → migrar → provisionar
-        de novo</strong>. Não é redundância: papel e privilégio padrão precisam existir antes de
+        A preparação do banco tem três passos nesta ordem: <strong>provisionar papéis → migrar → provisionar
+        de novo</strong> — e o <code>make preparar</code> acrescenta um quarto, sincronizar as Unidades
+        (060), sem o qual criar Processo é recusado. Não é redundância: papel e privilégio padrão precisam existir antes de
         qualquer tabela, e privilégio <em>sobre</em> tabela só pode ser concedido depois que ela existe.
-        O comando informa quantas protegeu — hoje <code>34 de 34</code> — para que a etapa esquecida
+        O comando informa quantas protegeu — hoje <code>40 de 40</code> — para que a etapa esquecida
         apareça no momento em que é esquecida. O total cresce a cada tabela nova; o que denuncia a
         segunda passada que não rodou é o primeiro número vir <code>0</code>.
       </figcaption>
@@ -8839,15 +8923,19 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
       <p><strong>Exemplo:</strong> o valor que a inscrição congelou no envio (<code>ValorDeFato</code>) estava na lista e não tinha gatilho — uma camada só. Desde 26/09 tem gatilho e recusa no modelo.</p>
       <details><summary>Em detalhes</summary>
         <p>
-          Os 46 gatilhos estão em 22 migrations e cobrem 38 tabelas: as 34 append-only (a posição na
-          ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e quatro
-          que não são append-only mas travam o que ficou final — o artefato de anexo congelado, a
-          alteração normativa e a Retificação finais, e o Requerimento de Matrícula enviado.
+          Os 58 gatilhos estão em 24 migrations e cobrem 47 tabelas: as 40 append-only (a posição na
+          ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e sete
+          que não são append-only mas travam o que ficou final ou não se exclui — o artefato de anexo
+          congelado, a alteração normativa e a Retificação finais, o Requerimento de Matrícula enviado,
+          a Unidade e a Autoridade (060, que não se excluem, e a usada não se reescreve) e o modelo de
+          aviso (066, que não se exclui).
         </p>
         <p>
-          As duas tabelas acrescentadas desde 20/09 são o <strong>valor de fato</strong> da inscrição e o
+          Das tabelas acrescentadas desde 20/09, duas são o <strong>valor de fato</strong> da inscrição e o
           <strong>item da lista exigida</strong>: o que o sistema pediu ao candidato no instante do envio,
-          para que a Mesa e o portal leiam o pedido, e não o recalculem.
+          para que a Mesa e o portal leiam o pedido, e não o recalculem. As outras seis são do
+          <strong>aviso aos candidatos</strong> (066): o aviso, as publicações que ele cita, os
+          destinatários, as tentativas de envio, os resultados de cada tentativa e as interrupções.
         </p>
       </details>
       <details><summary>Implementação</summary>
@@ -8938,7 +9026,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       </table>
     </div>
 
-    <h3>Os quatro e-mails que o sistema envia</h3>
+    <h3>Os e-mails que o sistema envia</h3>
     <div class="rolagem">
       <table>
         <thead><tr><th>Mensagem</th><th>Por que existe</th></tr></thead>
@@ -8947,13 +9035,18 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Aviso de mudança de credencial</td><td>Diz à caixa principal que outra passou a alcançar a conta, ou deixou de alcançar</td></tr>
           <tr><td>Confirmação do envio da inscrição</td><td>Recibo do ato mais importante da pessoa, com o protocolo; sem CPF e sem telefone. Sai depois de gravar: falha de envio não custa a inscrição</td></tr>
           <tr><td>Convocação por mensagem individual</td><td>Ato da Administração dirigido à pessoa, admitido porque o Edital declara que comunica assim</td></tr>
+          <tr><td>Aviso complementar (066)</td><td>Aponta um ato já publicado — resultado, publicação retificadora, chamada por publicação — e não tem efeito sobre prazo nem direito. Enviado por gesto de uma pessoa, nunca pelo ato</td></tr>
         </tbody>
       </table>
     </div>
     <p class="miudo">
-      Resultado, Retificação e lembrete <strong>não</strong> geram e-mail, por regra: um quinto motivo
-      exige revisar a regra, e a contagem é conferida por teste. Nenhuma notificação vai à comissão, ao
-      gestor ou ao julgador.
+      O aviso é gravado na confirmação e enviado fora da requisição por <code>manage.py
+      despachar_avisos</code>, que em produção roda num temporizador a cada minuto — e em desenvolvimento
+      ninguém roda por você. A tentativa é registrada antes de chamar o servidor de correio; a de resultado
+      indeterminado nunca é repetida pelo despacho; limite de 60 por minuto, 3 tentativas, janela de 24 h.
+      O que se lê no histórico é <em>“aceita pelo servidor de correio”</em>, nunca “entregue”. A Retificação
+      do Edital e o lembrete <strong>não</strong> geram e-mail, por regra, e a contagem é conferida por
+      teste. Nenhuma notificação vai à comissão, ao gestor ou ao julgador.
     </p>
 
     <h3>O que ainda não está garantido</h3>
@@ -8961,8 +9054,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <span class="titulo">Quatro fragilidades conhecidas</span>
       <ul>
         <li><strong>Autenticação institucional real não existe.</strong> A gestão só identifica pelo seletor de demonstração — a própria tela o diz — e a API aceita um token de desenvolvimento. A configuração de produção recusa subir com o seletor, com o provedor de identidade de demonstração do portal ou com a fonte de demonstração do sorteio, e exige uma classe de autenticação que o repositório ainda não tem. É a condicionante que separa o piloto da operação institucional.</li>
-        <li><strong>Não há política de retenção nem de descarte.</strong> Nenhum código apaga ou expira documento do candidato, e não há decisão escrita sobre quanto tempo eles ficam, nem sobre a gestão ver rascunhos. É decisão de implantação e de LGPD, junto com o código de acesso por e-mail como fator único.</li>
-        <li><strong>Não há caminho de produção.</strong> A única imagem é de desenvolvimento, e não há servidor de aplicação entre as dependências. Um proxy de produção pode ter o próprio limite de tamanho de envio, que só se confere quando ele existir.</li>
+        <li><strong>Não há política de retenção nem de descarte.</strong> Nenhum código apaga ou expira documento do candidato, e não há decisão escrita sobre quanto tempo eles ficam, nem sobre a gestão ver rascunhos. É decisão de implantação e de LGPD, junto com o código de acesso por e-mail como fator único — e, desde a 066, com a base legal do uso do e-mail para aviso e a retenção da lista de destinatários, que são precondição para ligar os avisos em produção.</li>
+        <li><strong>O caminho de produção está escrito, e não está no ar.</strong> Desde 30/09, <code>doc/implantacao-em-producao-ubuntu.md</code> descreve a VM, o gunicorn atrás de nginx, o backup e a restauração, ensaiados em parte; nenhum arquivo de nginx ou systemd é versionado, e o gunicorn é instalado fora do <em>lock</em>. A própria peça declara dois bloqueadores: a autenticação e a política de retenção.</li>
         <li><strong>Identificadores internos aparecem para quem julga.</strong> A tela do recurso exibe UUIDs crus na proveniência. Não é vazamento de dado pessoal, mas é vocabulário de arquitetura na cara do usuário.</li>
       </ul>
     </div>
@@ -8990,7 +9083,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <dt>Limite de campos</dt><dd><code>config/settings/base.py</code> (<code>DATA_UPLOAD_MAX_NUMBER_FIELDS</code>) · <code>interface/erros.py</code></dd>
           <dt>Barreiras de produção</dt><dd><code>config/settings/production.py</code> — seletor, identidade demo do portal, fonte de demonstração do sorteio, <code>API_AUTHENTICATION_CLASSES</code></dd>
           <dt>Autenticação provisória</dt><dd><code>seguranca/api/authentication.py</code></dd>
-          <dt>E-mails</dt><dd><code>identidade/application/mensagem.py</code> · <code>inscricoes/application/mensagem.py</code> · <code>convocacao/application/comunicar.py</code></dd>
+          <dt>E-mails</dt><dd><code>identidade/application/mensagem.py</code> · <code>inscricoes/application/mensagem.py</code> · <code>convocacao/application/comunicar.py</code> · <code>avisos/application/despacho.py</code></dd>
           <dt>Ações em lote explícitas</dt><dd><code>.specify/memory/constitution.md</code> (versão 1.2.0, 28/09)</dd>
           <dt>Observabilidade</dt><dd><a href="../../backend/processo_seletivo/shared/observability.py">shared/observability.py</a> (logs em JSON, recusas de domínio) · <code>/health</code>, <code>/readiness</code>, <code>/metrics</code></dd>
         </dl>
@@ -9006,7 +9099,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Catálogo de capacidades</h1>
-    <p class="lead">O que este sistema consegue modelar hoje — 102 capacidades, cada uma com o selo
+    <p class="lead">O que este sistema consegue modelar hoje — 119 capacidades, cada uma com o selo
     que a cadeia <em>tela → regra → efeito</em> sustenta. Filtre por palavra ou por selo para descobrir,
     em segundos, se o seu cenário é suportado.</p>
   </header>
@@ -9045,8 +9138,16 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="nop"><td><a href="#retificacao">Editar uma Retificação devolvida</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Existe no código (API); a tela não reabre as alterações.</td></tr>
 <tr data-marca="parc"><td><a href="#reaproveitar">Criar a partir de Edital anterior</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Não copia teto nem Requerimento, e não avisa.</td></tr>
 <tr data-marca="impl"><td><a href="#composicao">Seções de texto de catálogo fixo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>22 seções desde a spec 054, sem redação padrão; a vazia não sai. Quem elabora não acrescenta seção.</td></tr>
-<tr data-marca="impl"><td><a href="#publicacao">Fecho do ato: local, data e autoridade</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O catálogo tem só o cargo até o Cefor fornecer nome e ato de nomeação.</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Fecho do ato: local, data e autoridade</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O local vem da Unidade, e a autoridade, do registro da unidade (060).</td></tr>
 <tr data-marca="impl"><td><a href="#retificacao">Documento consolidado da Retificação com data</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>“Versão consolidada”, com a data original e a de cada Retificação.</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Unidade: cabeçalho e local do documento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Declarada em arquivo pela implantação, sem tela (060).</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Autoridades habilitadas por unidade, com vigência</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Gestor, em Autoridades da unidade (060).</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Documento que imprime uma vez o que se repete entre Perfis</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Vagas por lista, Modalidades agrupadas, subseções comuns (064, 068).</td></tr>
+<tr data-marca="impl"><td><a href="#anexos">Conferência da numeração digitada e das remissões</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Impede no Edital, avisa na Retificação; prova incoerência, nunca correção (065).</td></tr>
+<tr data-marca="lacun"><td><a href="#anexos">Numeração automática dos parágrafos</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A solução estrutural do conflito de numeração.</td></tr>
+<tr data-marca="impl"><td><a href="#recursos">Frase de recurso que nomeia o resultado do marco</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>(067)</td></tr>
+<tr data-marca="impl"><td><a href="#marco">Marco por sorteio sem arredondamento nem empate no corte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Nem pedido, nem gravado, nem impresso (067).</td></tr>
+<tr data-marca="impl"><td><a href="#reversao">Perfil sem vaga imediata sem quadro nem reversão no documento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>A Revisão diz que não sai (067).</td></tr>
 <tr data-marca="impl"><td><a href="#anexos">Anexos PDF rotulados e congelados na publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O sistema não numera.</td></tr>
 <tr data-marca="impl"><td><a href="#estrutura">Encerrar e cancelar Processo e Edital</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Processo só encerra com todos os Editais finais.</td></tr>
 <tr data-marca="nop"><td><a href="#cronograma">Cancelar um Evento do cronograma</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só pela API; tem efeito (período cancelado não recebe).</td></tr>
@@ -9096,6 +9197,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#ocorrencia">Ocorrência (quem faltou)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Sempre elimina, com motivo.</td></tr>
 <tr data-marca="impl"><td><a href="#progressao">Progressão automática entre Etapas</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Eliminado sai; habilitação exigida na anterior.</td></tr>
 <tr data-marca="impl"><td><a href="#corte">Corte que governa a Etapa seguinte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
+<tr data-marca="impl"><td><a href="#corte">Corte emitido depois do recurso, em dia</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Reabilitado antes da última Etapa do marco ainda não o alcança (061).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Sorteio</td></tr>
 <tr data-marca="impl"><td><a href="#sorteio">Marco por sorteio público</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#sorteio">Método comum ao Edital ou próprio do marco</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -9118,7 +9220,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#resultados">Prévia assinada antes de publicar</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#resultados">Publicação sucessora no mesmo endereço</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="prev"><td><a href="#resultados">Documento único com todas as listas do marco</a></td><td><span class="selo selo-prev">Previsto</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Decisão pendente.</td></tr>
-<tr data-marca="lacun"><td><a href="#resultados">Resultado que diz de qual lista é</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>O cotista vê dois blocos iguais.</td></tr>
+<tr data-marca="parc"><td><a href="#resultados">Resultado que diz de qual lista é</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No portal, sim (062, 063); o histórico e a prévia da gestão, não.</td></tr>
 <tr data-marca="lacun"><td><a href="#resultados">Divulgar o corte (faixa) ao público</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#recursos">Recurso com janela, admissibilidade e mérito</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="na"><td><a href="#recursos">Anexo de prova pelo recorrente</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Não aceito, por decisão; a comissão instrui.</td></tr>
@@ -9131,9 +9233,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#convocacao">Apuração seguinte emitida pelo desfecho</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só se não move vaga entre listas.</td></tr>
 <tr data-marca="nop"><td><a href="#convocacao">Corrigir convocação ou suceder desfecho</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Existe no código, sem tela.</td></tr>
 <tr data-marca="na"><td><a href="#convocacao">Candidato responder à convocação pelo portal</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Todo desfecho é registrado pela comissão.</td></tr>
-<tr data-marca="nop"><td><a href="#convocacao">Página de convocação com link no portal</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só pelo endereço direto.</td></tr>
+<tr data-marca="impl"><td><a href="#convocacao">Página de convocação com link no portal</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Ver convocação, em Minhas inscrições e no acompanhamento (059).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Matrícula e integração</td></tr>
-<tr data-marca="parc"><td><a href="#matricula">Requerimento de Matrícula na inscrição ou na convocação</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Na convocação, sem link no portal.</td></tr>
+<tr data-marca="impl"><td><a href="#matricula">Requerimento de Matrícula na inscrição ou na convocação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pedido na convocação, o chamado está na convocação e no acompanhamento (059).</td></tr>
 <tr data-marca="impl"><td><a href="#matricula">Base local de CEP</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="parc"><td><a href="#registro-academico">Exportação .xlsx de 34 colunas</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Nunca importada no destino.</td></tr>
 <tr data-marca="na"><td><a href="#registro-academico">Registrar matrícula efetivada</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>O sistema declara que não sabe.</td></tr>
@@ -9142,9 +9244,17 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr class="grupo-linha"><td colspan="6">Portal e acompanhamento</td></tr>
 <tr data-marca="impl"><td><a href="#area-do-candidato">Acesso sem senha por código no e-mail</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Rascunho, documentos, envio, protocolo, comprovante</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
-<tr data-marca="impl"><td><a href="#jornada">Acompanhamento por Etapa com motivo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
+<tr data-marca="impl"><td><a href="#jornada">Acompanhamento pela situação do candidato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Situação, por quê, o que fazer; nenhuma perda automática (063).</td></tr>
+<tr data-marca="impl"><td><a href="#resultados">Classificação por lista no acompanhamento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Um cartão por lista e marco (063).</td></tr>
+<tr data-marca="impl"><td><a href="#recursos">Prazo de recurso de Resultado de Etapa no acompanhamento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No topo da página (063).</td></tr>
+<tr data-marca="impl"><td><a href="#jornada">Resultados da página do Edital por Perfil, etapa e lista</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Com o convite à situação individual (062).</td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Página pública do Edital com situação e histórico</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
-<tr data-marca="lacun"><td><a href="#quem-ve-o-que">Avisos por e-mail de resultado ou retificação</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Só 4 situações de e-mail.</td></tr>
+<tr data-marca="impl"><td><a href="#resultados">Avisar por e-mail os candidatos de um resultado publicado</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Por gesto, nunca pelo ato; desligado em produção até a LGPD (066).</td></tr>
+<tr data-marca="impl"><td><a href="#cronograma">Prazos de recurso conferidos lado a lado com o Cronograma</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Aviso da Revisão; não prova correspondência (067).</td></tr>
+<tr data-marca="impl"><td><a href="#convocacao-fluxo">Avisar os convocados de uma chamada por publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Provado pela suíte, não percorrido na tela (066).</td></tr>
+<tr data-marca="impl"><td><a href="#quem-ve-o-que">Modelos de aviso por unidade, com três iniciais</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Editáveis, inativáveis, nunca excluídos.</td></tr>
+<tr data-marca="impl"><td><a href="#quem-ve-o-que">Interromper e reenviar um aviso</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O reenvio alcança falhas e expirados, ou, com justificativa, os indeterminados.</td></tr>
+<tr data-marca="lacun"><td><a href="#quem-ve-o-que">Avisos de recurso decidido, Retificação do Edital ou convocação para Etapa</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Heteroidentificação, entrevista e títulos não têm ato no sistema.</td></tr>
 <tr data-marca="impl"><td><a href="#painel">Painel do Processo (pulso e atenção por papel)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>8 espécies de sinal.</td></tr>
 <tr data-marca="impl"><td><a href="#visao-institucional">Visão institucional por Edital e Perfil</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só Gestor.</td></tr>
 <tr data-marca="lacun"><td><a href="#painel">Progresso da avaliação no painel</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td></td></tr>
@@ -9226,10 +9336,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <section id="perguntas-operar">
     <h2>Pessoas e operação</h2>
     <details class="pergunta"><summary>Como a comissão é montada?</summary><div><p>O Gestor cria a comissão do Processo e designa presidente e membros (só essas duas funções). A partir daí, a presidência gere a comissão, aloca e distribui. <a href="#comissao">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>As próprias inscrições, a situação em cada Etapa com o motivo, o resultado divulgado com o prazo de recurso, os recursos, o comprovante. A página de convocação existe, mas não tem link no portal. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
+    <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>A própria situação — rótulo, por quê, o que fazer —, a posição em cada lista, a situação em cada Etapa com o motivo, o prazo de recurso, os recursos, o comprovante, a convocação e o requerimento pedido nela. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
     <details class="pergunta"><summary>Quem pode publicar um resultado?</summary><div><p>Quem tem a permissão de publicar (papel Publicador). Quem emitiu a ordem não ganha, por isso, o poder de publicá-la. <a href="#pg-permissoes">Matriz de permissões</a></p></div></details>
     <details class="pergunta"><summary>Somos duas ou três pessoas. Dá para acumular papéis?</summary><div><p>Sim, com dois cuidados: a mesma pessoa não pode submeter, homologar <em>e</em> publicar o mesmo Edital; e quem julga recursos não pode ter avaliado, consolidado, ordenado ou publicado o que se contesta. Escolha primeiro quem vai julgar. <a href="#pg-permissoes">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real; regra de combinação para dupla avaliação; barema, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; notificação de resultado por e-mail; link no portal para a convocação; integração validada com o Registro Acadêmico. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real; regra de combinação para dupla avaliação; barema, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
   </section>
 
   <section id="excecoes">
@@ -9264,7 +9374,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Glossário</h1>
-    <p class="lead">101 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
+    <p class="lead">110 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
     caminho para a explicação completa. Todos sustentados pelo código — nenhum é aspiracional.</p>
   </header>
 
@@ -9336,16 +9446,26 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">A inscrição de Ana atribuída a Marta na Prova.</dd>
   <dd class="rel"><a href="#g-alocacao">Alocação em Etapa</a> · <a href="#g-distribuicao">Distribuição</a></dd>
   <dd class="mais"><a href="#distribuicao">Saiba mais →</a></dd>
+  <dt id="g-atribuicoes-do-perfil" data-letra="A">Atribuições do Perfil</dt>
+  <dd class="def">As atividades da função ofertada, escritas no Perfil. Não confunda com a <a href="#g-atribuicao">atribuição</a> de uma inscrição a um avaliador.</dd>
+  <dd class="ex">No Edital de vários Perfis, as atribuições idênticas saem uma vez, em “Atribuições comuns aos Perfis …”, e cada Perfil remete ao item.</dd>
+  <dd class="rel"><a href="#g-perfil">Perfil</a> · <a href="#g-subsecao-comum">Subseção comum</a></dd>
+  <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-autoridade-signataria" data-letra="A">Autoridade signatária</dt>
-  <dd class="def">Quem assina institucionalmente um Edital, uma Retificação ou um resultado — escolhida num catálogo fixo, nunca digitada.</dd>
-  <dd class="ex">Diretora-Geral do Centro de Referência em Formação e em Educação a Distância — hoje o catálogo tem só o cargo.</dd>
-  <dd class="rel"><a href="#g-publicacao">Publicação</a></dd>
+  <dd class="def">Quem responde institucionalmente por um Edital, uma Retificação ou um resultado — escolhida entre as autoridades habilitadas na Unidade do Edital, vigentes no dia do ato, nunca digitada no ato. É habilitação, e não lotação.</dd>
+  <dd class="ex">Diretora-Geral do Centro de Referência em Formação e em Educação a Distância, com nome e ato de nomeação quando o Gestor os cadastrar.</dd>
+  <dd class="rel"><a href="#g-publicacao">Publicação</a> · <a href="#g-unidade">Unidade</a></dd>
   <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-avaliacao" data-letra="A">Avaliação</dt>
   <dd class="def">A conclusão de um avaliador sobre uma inscrição numa Etapa: nota, ou decisão e parecer. Rascunho até ser concluída.</dd>
   <dd class="ex">Marta conclui “Deferido”.</dd>
   <dd class="rel"><a href="#g-consolidacao">Consolidação</a> · <a href="#g-mesa">Mesa de avaliação</a></dd>
   <dd class="mais"><a href="#mesa">Saiba mais →</a></dd>
+  <dt id="g-aviso-complementar" data-letra="A">Aviso complementar</dt>
+  <dd class="def">E-mail que aponta um ato já publicado — resultado, publicação retificadora ou chamada por publicação — e não tem efeito sobre prazo, classificação, situação ou direito. Nasce do gesto de uma pessoa, nunca do ato.</dd>
+  <dd class="ex">“Processo Seletivo Ifes — Nova publicação disponível”, com o rodapé que diz que o aviso não substitui a publicação.</dd>
+  <dd class="rel"><a href="#g-modelo-de-aviso">Modelo de aviso</a> · <a href="#g-despacho">Despacho</a> · <a href="#g-convocacao">Convocação</a></dd>
+  <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
   <dt id="g-cadastro-de-reserva" data-letra="C">Cadastro de reserva</dt>
   <dd class="def">A declaração do Perfil sobre o que se oferece além das vagas imediatas: não há, limitado a N, ilimitado. Publicada, sem execução pelo sistema.</dd>
   <dd class="ex">“Cadastro reserva limitado em 20”.</dd>
@@ -9361,6 +9481,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">A nota 78,5 concluída antes de a presidência reabrir.</dd>
   <dd class="rel"><a href="#g-avaliacao">Avaliação</a> · <a href="#g-reabertura">Reabertura</a></dd>
   <dd class="mais"><a href="#mesa">Saiba mais →</a></dd>
+  <dt id="g-conflito-de-numeracao" data-letra="C">Conflito de numeração</dt>
+  <dd class="def">Parágrafo de seção textual que começa pelo subitem de outra seção — o “3.1” do original numa seção que sai como 4. Impede submeter e publicar o Edital; na Retificação, é aviso.</dd>
+  <dd class="ex">No 28/2026, “9.1 Caberá recurso…” sob “10. Dos Recursos”.</dd>
+  <dd class="rel"><a href="#g-remissao">Remissão interna</a></dd>
+  <dd class="mais"><a href="#anexos">Saiba mais →</a></dd>
   <dt id="g-consolidacao" data-letra="C">Consolidação</dt>
   <dd class="def">O ato de quem gere a comissão (a presidência ou o Gestor) que transforma as avaliações prontas de uma Etapa em Resultado, aplicando a regra publicada. Confirma um cálculo; não se digita nota.</dd>
   <dd class="ex">“Consolidar as 120 prontas” → 98 habilitadas, 22 eliminadas.</dd>
@@ -9396,6 +9521,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">“Não atendimento à convocação”, registrado no gesto dos vencidos.</dd>
   <dd class="rel"><a href="#g-convocacao">Convocação</a> · <a href="#g-efeito-de-ocupacao">Efeito de ocupação</a></dd>
   <dd class="mais"><a href="#convocacao">Saiba mais →</a></dd>
+  <dt id="g-despacho" data-letra="D">Despacho</dt>
+  <dd class="def">O envio dos avisos confirmados, fora da requisição, por <code>manage.py despachar_avisos</code> — em produção, a cada minuto. Registra a tentativa antes de chamar o servidor de correio e nunca repete a de resultado indeterminado.</dd>
+  <dd class="ex">60 por minuto, três tentativas, janela de 24 horas.</dd>
+  <dd class="rel"><a href="#g-aviso-complementar">Aviso complementar</a></dd>
+  <dd class="mais"><a href="#auditoria">Saiba mais →</a></dd>
   <dt id="g-distribuicao" data-letra="D">Distribuição</dt>
   <dd class="def">O ato de atribuir inscrições aos avaliadores alocados — à mão ou confirmando uma proposta de rodízio que o sistema calcula e não grava sozinho.</dd>
   <dd class="ex">“Propor distribuição” → “Confirmar esta distribuição”.</dd>
@@ -9551,6 +9681,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">PPI 25% — Lei 12.711/2012.</dd>
   <dd class="rel"><a href="#g-reserva-de-vaga">Reserva de vaga (cota)</a> · <a href="#g-quadro">Quadro de vagas</a> · <a href="#g-recorte">Recorte</a></dd>
   <dd class="mais"><a href="#modalidades">Saiba mais →</a></dd>
+  <dt id="g-modelo-de-aviso" data-letra="M">Modelo de aviso</dt>
+  <dd class="def">O texto de um aviso, com variáveis controladas e assunto, mantido pela unidade. Editável, inativável e reativável, nunca excluído. Toda unidade começa com três: “Divulgação de resultado”, “Publicação retificadora” e “Nova chamada publicada”.</dd>
+  <dd class="ex">“Olá, {nome_do_candidato}. Foi publicado em {data_da_publicacao} o resultado …”</dd>
+  <dd class="rel"><a href="#g-aviso-complementar">Aviso complementar</a> · <a href="#g-unidade">Unidade</a></dd>
+  <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
   <dt id="g-obsolescencia" data-letra="O">Obsolescência</dt>
   <dd class="def">A marca de que um ato emitido (ordem, corte, apuração) foi calculado sob uma norma ou um conjunto que mudou. É comparação, não estado; o caminho é emitir sucessor.</dd>
   <dd class="ex">“O ato vigente está obsoleto”: resultado superado por recurso.</dd>
@@ -9676,6 +9811,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Relação do recorte PPI com 45 participantes.</dd>
   <dd class="rel"><a href="#g-sorteio">Sorteio</a> · <a href="#g-semente">Semente</a></dd>
   <dd class="mais"><a href="#sorteio-rito">Saiba mais →</a></dd>
+  <dt id="g-remissao" data-letra="R">Remissão interna</dt>
+  <dd class="def">Referência do texto a outro ponto do mesmo documento — “item N.N”, “Tabela N”, “Quadro N”. Ambígua ou sem destino, a Revisão avisa; a conferência prova incoerência, nunca correção.</dd>
+  <dd class="ex">“conforme o item 7.3”, num Edital sem item 7.3.</dd>
+  <dd class="rel"><a href="#g-conflito-de-numeracao">Conflito de numeração</a></dd>
+  <dd class="mais"><a href="#anexos">Saiba mais →</a></dd>
   <dt id="g-requerimento" data-letra="R">Requerimento de Matrícula</dt>
   <dd class="def">A coleta, uma vez, dos dados que a vaga exige — na inscrição ou na convocação, se o Edital declarar. Não é Etapa.</dd>
   <dd class="ex">Filiação, documentos, endereço, renda.</dd>
@@ -9716,16 +9856,26 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Os dígitos dos cinco bilhetes premiados do concurso 5900, na ordem.</dd>
   <dd class="rel"><a href="#g-sorteio">Sorteio</a> · <a href="#g-relacao">Relação de habilitados</a></dd>
   <dd class="mais"><a href="#sorteio-rito">Saiba mais →</a></dd>
+  <dt id="g-situacao-da-inscricao" data-letra="S">Situação da inscrição</dt>
+  <dd class="def">O que o acompanhamento diz primeiro ao candidato: um rótulo, o por quê e o que fazer, derivados a cada leitura e nunca gravados. Precedência fechada: o desfecho da convocação, Convocado, Eliminado, Aguardando chamada, Aguardando resultado definitivo, Não classificado, Inscrição enviada. Nenhuma afirma perda.</dd>
+  <dd class="ex">“Aguardando chamada” — só depois de publicação definitiva, e antes de qualquer convocação.</dd>
+  <dd class="rel"><a href="#g-situacao-divulgada">Situação divulgada</a> · <a href="#g-desfecho">Desfecho</a></dd>
+  <dd class="mais"><a href="#jornada">Saiba mais →</a></dd>
   <dt id="g-situacao-divulgada" data-letra="S">Situação divulgada</dt>
   <dd class="def">A linha, congelada na publicação, que diz a cada participante se foi classificado ou ficou sem posição, e por quê. Só o titular a vê.</dd>
-  <dd class="ex">“Você não foi classificado neste marco.”</dd>
-  <dd class="rel"><a href="#g-publicacao-resultado">Publicação de resultado</a></dd>
+  <dd class="ex">No acompanhamento: “Sem posição nesta lista”, com o motivo.</dd>
+  <dd class="rel"><a href="#g-publicacao-resultado">Publicação de resultado</a> · <a href="#g-situacao-da-inscricao">Situação da inscrição</a></dd>
   <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
   <dt id="g-sorteio" data-letra="S">Sorteio</dt>
   <dd class="def">Uma forma de o marco produzir a ordem: função determinística sobre uma semente externa, a partir de uma relação congelada, verificável por qualquer pessoa. Não é Etapa nem desempate.</dd>
   <dd class="ex">Marco “Por sorteio” com a Loteria Federal.</dd>
   <dd class="rel"><a href="#g-semente">Semente</a> · <a href="#g-relacao">Relação de habilitados</a> · <a href="#g-marco">Marco classificatório</a></dd>
   <dd class="mais"><a href="#sorteio">Saiba mais →</a></dd>
+  <dt id="g-subsecao-comum" data-letra="S">Subseção comum aos Perfis</dt>
+  <dd class="def">No Edital de dois ou mais Perfis, o texto idêntico — atribuições, requisitos, marcos — impresso uma vez depois do último Perfil, a que cada Perfil remete pelo item. Nada confere que as cópias continuam iguais: a que diverge não se junta.</dd>
+  <dd class="ex">“Requisitos comuns aos Perfis P01, P02 e P03”; no Perfil, “Requisitos: os descritos no item 5.4.”</dd>
+  <dd class="rel"><a href="#g-aplicar-a-todos">Aplicar a todos</a> · <a href="#g-atribuicoes-do-perfil">Atribuições do Perfil</a></dd>
+  <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-sucessao" data-letra="S">Sucessão</dt>
   <dd class="def">A forma de corrigir um ato sem reescrevê-lo: nasce outro, que cita o anterior e o motivo. Vigente é o que ninguém sucedeu.</dd>
   <dd class="ex">Ordem sucessora depois de um recurso.</dd>
@@ -9761,6 +9911,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">APLICAR_A_TODOS por Paulo, alcance 6 Perfis.</dd>
   <dd class="rel"><a href="#g-gesto">Gesto em lote</a></dd>
   <dd class="mais"><a href="#auditoria">Saiba mais →</a></dd>
+  <dt id="g-unidade" data-letra="U">Unidade</dt>
+  <dd class="def">O escopo institucional, materializado: sigla, nome, cabeçalho e local do ato. Declarada em <code>unidades/unidades.json</code>, sem tela; sem ela, criar Processo é recusado. A Publicação a congela.</dd>
+  <dd class="ex">Cefor — “Vitória (ES)” no fecho do ato.</dd>
+  <dd class="rel"><a href="#g-autoridade-signataria">Autoridade signatária</a> · <a href="#g-modelo-de-aviso">Modelo de aviso</a></dd>
+  <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-universo" data-letra="U">Universo (de um ato)</dt>
   <dd class="def">O recorte da norma e dos participantes que governou um cálculo, congelado no ato. É o que torna a obsolescência uma comparação.</dd>
   <dd class="ex">As Etapas, pesos e desempates vigentes quando a ordem foi emitida.</dd>
@@ -9808,30 +9963,30 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <strong>operação institucional</strong>: não há autenticação real nem caminho de produção.
     </p>
 
-    <h3>Os números de hoje, contra os de 20/09</h3>
+    <h3>Os números de hoje, contra os de 30/09</h3>
     <div class="numeros">
-      <div><b>55</b><span>pastas de especificação (eram 39), com a 054, mergeada em 30/09</span></div>
-      <div><b>34</b><span>tabelas append-only (eram 33)</span></div>
-      <div><b>46</b><span>gatilhos de banco (eram 43)</span></div>
-      <div><b>85</b><span>migrations (eram 80), com a da 054</span></div>
-      <div><b>19</b><span>módulos de domínio (sem mudança)</span></div>
-      <div><b>351</b><span>arquivos Python de aplicação (eram 330)</span></div>
-      <div><b>146</b><span>templates (eram 130)</span></div>
-      <div><b>696</b><span>arquivos de teste Python, + 11 de JavaScript (eram 605 + 9)</span></div>
-      <div><b>98</b><span>rotas da gestão (eram 89); o portal segue com 33</span></div>
-      <div><b>8</b><span>espécies de sinal na Atenção (eram 10)</span></div>
+      <div><b>69</b><span>pastas de especificação (eram 55), até a 068, mergeada em 09/10</span></div>
+      <div><b>40</b><span>tabelas append-only (eram 34): as seis do aviso aos candidatos</span></div>
+      <div><b>58</b><span>gatilhos de banco (eram 46)</span></div>
+      <div><b>90</b><span>migrations (eram 85)</span></div>
+      <div><b>21</b><span>módulos de domínio (eram 19): <code>unidades</code> e <code>avisos</code></span></div>
+      <div><b>392</b><span>arquivos Python de aplicação (eram 351)</span></div>
+      <div><b>161</b><span>templates (eram 146)</span></div>
+      <div><b>777</b><span>arquivos de teste Python, + 13 de JavaScript (eram 706 + 12)</span></div>
+      <div><b>109</b><span>rotas da gestão (eram 98); o portal segue com 33</span></div>
+      <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
-      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–053 e a revisão 012-013)</dd>
+      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–068 e a revisão 012-013)</dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 46, em 22 migrations, sobre 38 tabelas</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 58, em 24 migrations, sobre 47 tabelas</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code> (mais <code>interface</code> e <code>shared</code>, que não são domínio)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 81,6 mil linhas</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 8 889 passando e 11 pulados (medido em 29/09)</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 90,4 mil linhas</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 10 408 passando e 11 pulados (medido em 09/10, com a 068 integrada, e registrado no <code>AGENTS.md</code>; esta revisão não a rodou)</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>o último <em>commit</em> de 20/09/2026, <code>fa4b5b22</code>; 313 <em>commits</em> desde então</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 30/09, <code>86bbf49</code>, medida pelo mesmo método — que reproduz ali os números publicados naquela data, exceto os arquivos de teste, contados em 29/09; 169 <em>commits</em> desde então, até <code>0edc0f8d</code></dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -9842,8 +9997,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#composicao">Configuração do Edital</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Assistente de 9 passos, validação em 3 níveis, prévia do documento. <a href="#padroes">Padrões</a> e <span class="rotulo-ui">Aplicar a todos</span> com prévia; tabela do conjunto e um editor por vez em Perfis e Classificação; <a href="#duplicar-perfil">duplicar Perfil</a>; teto de inscrições declarável; rascunho local que restaura sem perder; a Revisão diz o que não se corrige depois de publicar</td>
-            <td>Granularidade: curso, polo, submodalidades; a seção textual sem tabela nem subitem numerado. A Revisão de um Edital já publicado ainda fala em “submeter” e mostra a norma anterior à Retificação</td>
+            <td>Assistente de 9 passos, validação em dois níveis efetivos (impede e avisa), prévia do documento. <a href="#padroes">Padrões</a> e <span class="rotulo-ui">Aplicar a todos</span> com prévia; tabela do conjunto e um editor por vez em Perfis e Classificação; <a href="#duplicar-perfil">duplicar Perfil</a>; teto de inscrições declarável; rascunho local que restaura sem perder; a Revisão diz o que não se corrige depois de publicar</td>
+            <td>Granularidade: curso, polo, submodalidades; a seção textual sem tabela nem numeração automática — a numeração digitada é conferida desde a 065. A Revisão de um Edital já publicado ainda fala em “submeter” e mostra a norma anterior à Retificação</td>
           </tr>
           <tr>
             <td><strong><a href="#retificacao">Publicação e Retificação</a></strong></td>
@@ -9860,8 +10015,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#area-do-candidato">Área do candidato</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Acesso sem senha, reconciliação, múltiplas credenciais, acompanhamento com motivo. A página do Edital diz o desfecho (cancelado, encerrado), o prazo recursal e leva às publicações anteriores</td>
-            <td>O candidato não recebe e-mail de resultado nem de Retificação — por regra, não por esquecimento</td>
+            <td>Acesso sem senha, reconciliação, múltiplas credenciais, acompanhamento que abre pela situação, com a classificação por lista (063); convocação e requerimento com porta (059). A página do Edital diz o desfecho (cancelado, encerrado), o prazo recursal, organiza os resultados por Perfil, etapa e lista e leva à própria situação (062)</td>
+            <td>Aviso por e-mail de resultado e de chamada por publicação existe (066), e está desligado em produção até a validação de LGPD; decisão de recurso e Retificação do Edital continuam sem aviso, por regra</td>
           </tr>
           <tr>
             <td><strong><a href="#comissao">Comissão e alocação</a></strong></td>
@@ -9915,19 +10070,19 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
             <td><strong><a href="#recursos">Recursos</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
             <td>Janela, protocolo, tempestividade, impedimento nomeado, 4 espécies de decisão, vedação de piora, instrução. O recurso aparece na condução desde que chega. A janela de um resultado já divulgado segue a versão que o ato citou, salvo o que a Retificação concede</td>
-            <td>A janela e o Evento “prazo para recurso” do Cronograma não se conferem; UUIDs crus na tela de quem julga. Anexo de prova pelo recorrente: fora, por decisão</td>
+            <td>A janela e o Evento “prazo para recurso” do Cronograma não se conferem — a Revisão os põe lado a lado desde a 067; UUIDs crus na tela de quem julga. Anexo de prova pelo recorrente: fora, por decisão</td>
           </tr>
           <tr>
             <td><strong><a href="#convocacao">Convocação e suplência</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
             <td>3 espécies, 7 desfechos, atestado de fato externo, fila derivada, comunicação append-only. Porta pela página do Edital e pela ocupação; convocar os titulares num ato; registrar o não atendimento de todos os vencidos num gesto; apuração seguinte emitida pelo desfecho</td>
-            <td>O candidato não chega à própria convocação pelo portal (a página existe, sem link); corrigir uma convocação ou um desfecho com motivo não tem tela. <a href="#cadastro-de-reserva">Cadastro de reserva</a> sem vagas imediatas não convoca — fora do piloto, por decisão</td>
+            <td>Corrigir uma convocação ou um desfecho com motivo não tem tela. <a href="#cadastro-de-reserva">Cadastro de reserva</a> sem vagas imediatas não convoca — fora do piloto, por decisão</td>
           </tr>
           <tr>
             <td><strong><a href="#matricula">Requerimento de Matrícula</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Momento declarado, base local de CEP, versionamento, imutabilidade do enviado; a declaração publicada no Edital (054)</td>
-            <td>O portal só leva a ele pelo rascunho: pedido na convocação, abre apenas pelo endereço. Não aparece na condução do Processo</td>
+            <td>Momento declarado, base local de CEP, versionamento, imutabilidade do enviado; a declaração publicada no Edital (054); o portal leva a ele pelo rascunho, pela convocação e pelo acompanhamento (059)</td>
+            <td>Não aparece na condução do Processo, e nada conta os pendentes. Registrar o <em>Aceite</em> antes do envio fecha o requerimento</td>
           </tr>
           <tr>
             <td><strong><a href="#registro-academico">Exportação acadêmica</a></strong></td>
@@ -9944,7 +10099,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#auditoria">Auditoria e imutabilidade</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>34 tabelas em duas camadas independentes, 46 gatilhos, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance</td>
+            <td>40 tabelas em duas camadas independentes, 58 gatilhos, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance</td>
             <td>—</td>
           </tr>
           <tr>
@@ -9962,8 +10117,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#publicacao">Documento como ato oficial</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos. Desde a spec 054 (30/09): 22 seções sem redação padrão, fecho com local e data, consolidado datado, declaração do Requerimento e total de vagas</td>
-            <td>Como o ato é assinado, e o nome de quem assina, dependem do Cefor. A seção textual não tem tabela nem subitem numerado</td>
+            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos. Desde a spec 054 (30/09): 22 seções sem redação padrão, fecho com local e data, consolidado datado, declaração do Requerimento e total de vagas. Desde 09/10: cabeçalho e local da Unidade e autoridades com vigência (060); numeração digitada e remissões conferidas (065); recurso com objeto, sorteio sem conta, Perfil sem vaga sem quadro (067); o repetido impresso uma vez (064, 068) — de 36 para 14 páginas no cenário maior da auditoria</td>
+            <td>Como o ato é assinado depende do Cefor; o nome de quem assina só falta cadastrar. A seção textual não tem tabela nem numeração automática. Acessibilidade e navegação do PDF (ED-07, ED-08) e a linguagem das frases geradas (ED-05) seguem abertas</td>
           </tr>
         </tbody>
       </table>
@@ -10038,6 +10193,17 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Consolidado da Retificação sem data</td><td>Saía igual ao original, sem data nem marca de retificado; só o SHA-256 os distinguia</td><td>30/09, spec 054: <em>“Versão consolidada. Publicado em …; retificado em ….”</em> abaixo do anúncio</td></tr>
           <tr><td>Declaração do Requerimento não publicada</td><td>O candidato aceitava uma declaração que o Edital não publicava (<code>029</code>, Q-10)</td><td>30/09, spec 054: publicada por extenso na seção Da Matrícula</td></tr>
           <tr><td>Ato sem local nem data</td><td>O documento oficial terminava sem data, e com o cargo no lugar do nome</td><td>30/09, spec 054: fecho com local e data; o nome sai só quando registrado</td></tr>
+          <tr><td>Convocação sem porta no portal</td><td>A página da convocação e o Requerimento pedido nela só abriam pelo endereço; a mensagem de convocação mandava a uma lista que não a mostrava</td><td>06/10, spec 059: <span class="rotulo-ui">Ver convocação</span> em Minhas inscrições e no acompanhamento; o chamado do Requerimento na convocação e no topo do acompanhamento</td></tr>
+          <tr><td>Resultado que não dizia a lista</td><td>Seis links de mesmo texto na página do Edital; o cotista via dois blocos iguais com posições diferentes</td><td>07/10, PR 255, spec 062 e PR 262: Perfil → etapa → lista, a lista no título da publicação; spec 063, a classificação por lista no acompanhamento. Na gestão, segue aberto</td></tr>
+          <tr><td>Corte que nascia obsoleto depois do recurso</td><td>Recurso deferido → ordem sucessora → corte: o corte nascia obsoleto, e a geração sucessora também; a recusa mandava a uma saída que não existia</td><td>06/10, spec 061: a pergunta exclui o sucessor que a ordem lida já cita</td></tr>
+          <tr><td>Situação do candidato sem precedência</td><td>O acompanhamento abria pelas Etapas; o prazo contra Resultado de Etapa não aparecia; quem não fora chamado lia que “uma vaga pode vagar”, inclusive o eliminado</td><td>09/10, spec 063: situação, por quê, o que fazer, com precedência fechada e nenhuma perda automática</td></tr>
+          <tr><td>Catálogo fixo de autoridades no código</td><td>Três cargos sem nome; mudar o signatário era mudar código; o cabeçalho e o local eram do Cefor para qualquer ato</td><td>06/10, spec 060: Unidades e autoridades habilitadas com vigência, mantidas pelo Gestor</td></tr>
+          <tr><td>O documento imprimia o comum N vezes (ED-04, ED-11)</td><td>No cenário maior da auditoria do PDF, 36 páginas; a ordem das listas mudava de Perfil para Perfil</td><td>08–09/10, specs 064 e 068: o idêntico sai uma vez; 36 → 14 páginas</td></tr>
+          <tr><td>Subitem com o número de outra seção (ED-01)</td><td>“3.1” dentro da seção 4, e remissões para lugar nenhum, publicados sem aviso</td><td>09/10, spec 065: impeditivo no Edital, aviso na Retificação; a numeração automática segue aberta</td></tr>
+          <tr><td>Recurso sem objeto, sorteio com conta, Perfil sem vaga com quadro (ED-02, ED-03, ED-12)</td><td>“Caberá recurso no prazo de N dias” sem dizer de quê; arredondamento exigido e impresso num marco por sorteio; quadro e reversão num Perfil só de cadastro</td><td>09/10, spec 067</td></tr>
+          <tr><td>Caractere trocado por “?” no documento</td><td>A fonte do PDF não tinha o caractere, e ele saía “?” em silêncio no ato oficial</td><td>08/10: impeditivo <code>caractere_sem_grafia</code> nos dois atos</td></tr>
+          <tr><td>Candidato sem aviso de resultado</td><td>Nenhum e-mail depois da inscrição, fora a convocação por mensagem individual</td><td>09/10, spec 066, revisando a regra da área do candidato: aviso complementar por gesto, desligado em produção até a LGPD</td></tr>
+          <tr><td>Série de polimento da interface</td><td>Números espremidos, plurais com “(s)”, caixa dentro de caixa, tela estreita a 375 px</td><td>01/10, specs 055 a 058, encerrada por decisão do usuário (<code>doc/encerramento-polish-ui-2026-10-01.md</code>)</td></tr>
           <tr><td>README com <code>31 de 31</code></td><td>O número de tabelas protegidas estava desatualizado</td><td>O README deixou de fixar o número; um teste confere a tabela de incrementos contra <code>specs/</code></td></tr>
         </tbody>
       </table>
@@ -10057,7 +10223,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td>Campo <code>Status</code> das especificações</td>
             <td><code>Draft</code></td>
-            <td>48 das 54 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
+            <td>58 das 69 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
             <td>Primeira linha <code>**Status**</code> de cada <code>spec.md</code>. Quem declara uma spec concluída é decisão ainda pendente (DP-12, no registro de decisões do produto)</td>
           </tr>
           <tr>
@@ -10164,12 +10330,12 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <table>
         <thead><tr><th>Achado</th><th>O quê</th><th>Estado</th></tr></thead>
         <tbody>
-          <tr><td><code>AX-3</code></td><td>Catálogo de Seções fechado; oito seções de Editais reais sem onde morar</td><td><span class="selo selo-parc">Parcial</span> spec 054: catálogo de 22 seções, das quatro famílias da amostra; a seção textual continua sem tabela nem subitem numerado</td></tr>
+          <tr><td><code>AX-3</code></td><td>Catálogo de Seções fechado; oito seções de Editais reais sem onde morar</td><td><span class="selo selo-parc">Parcial</span> spec 054: catálogo de 22 seções, das quatro famílias da amostra; a seção textual continua sem tabela e sem numeração automática, e a numeração digitada é conferida desde a 065</td></tr>
           <tr><td><code>AX-4</code></td><td>A ficha de avaliação varia por curso; a Etapa é do Edital</td><td><span class="selo selo-lacun">Aberto</span> espera a decisão de quais famílias entram no alvo</td></tr>
           <tr><td><code>AX-5</code></td><td>Curso, Área e Campus ofertante não existem</td><td><span class="selo selo-lacun">Aberto</span></td></tr>
           <tr><td><code>AX-6</code></td><td>O código real é o par <em>(perfil × polo)</em>, e o sistema tem um eixo só</td><td><span class="selo selo-lacun">Aberto</span></td></tr>
           <tr><td><code>AX-10</code></td><td>“Documentos exigidos” funde quatro categorias distintas</td><td><span class="selo selo-parc">Parcial</span> a exigência por Modalidade existe desde a spec 044; “obrigatório sob condição” (sexo, idade, vínculo) foi recusado por decisão</td></tr>
-          <tr><td><code>AX-11</code></td><td>Fatos e marcos são do certame e moram no Perfil</td><td><span class="selo selo-parc">Parcial</span> <span class="rotulo-ui">Aplicar a todos</span> produz as N cópias num gesto; o documento imprime N vezes e nada confere a igualdade</td></tr>
+          <tr><td><code>AX-11</code></td><td>Fatos e marcos são do certame e moram no Perfil</td><td><span class="selo selo-parc">Parcial</span> <span class="rotulo-ui">Aplicar a todos</span> produz as N cópias num gesto; desde a 064 e a 068, o documento imprime uma vez o que sai idêntico — atribuições, requisitos, marcos, Modalidades, frases de reversão e convocação. Nada confere que as cópias continuam iguais: a que diverge simplesmente não se junta, sem aviso</td></tr>
           <tr><td><code>AX-15</code></td><td>Submodalidades de PPI/PPIQ não existem</td><td><span class="selo selo-lacun">Aberto</span> excluído da spec 044 por decisão</td></tr>
         </tbody>
       </table>
@@ -10208,6 +10374,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Processos Seletivos</td><td><code>/gestao/</code></td><td>quem se identificou</td></tr>
         <tr><td>Identificar-se</td><td><code>/gestao/identificar</code></td><td>qualquer pessoa (seletor de demonstração)</td></tr>
         <tr><td>Visão Geral dos Processos Seletivos <span class="selo selo-impl">nova</span></td><td><code>/gestao/visao-geral</code></td><td>Gestor (<code>visao:consultar</code>)</td></tr>
+        <tr><td>Autoridades da unidade <span class="selo selo-impl">nova</span></td><td><code>/gestao/autoridades</code></td><td>Gestor (<code>autoridade:gerir</code>); outra unidade, 404</td></tr>
+        <tr><td>Modelos de aviso · novo · editar · inativar ou reativar <span class="selo selo-impl">nova</span></td><td><code>/gestao/modelos-de-aviso</code> e sub-rotas</td><td>Publicador e Gestor (<code>aviso:enviar</code>); a presidência usa, não gere</td></tr>
         <tr><td>Criar Processo Seletivo</td><td><code>/gestao/processos/criar</code></td><td>Gestor</td></tr>
         <tr><td>Página do Processo</td><td><code>/gestao/processos/&lt;id&gt;/</code></td><td>quem tem papel no escopo</td></tr>
         <tr><td>Ativar / Encerrar / Cancelar Processo</td><td><code>/gestao/processos/&lt;id&gt;/atos/&lt;ato&gt;</code></td><td>Gestor</td></tr>
@@ -10258,6 +10426,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Sorteio · publicar a relação · registrar a ocorrência · realizar · anular</td><td><code>…/sorteio</code> e sub-rotas</td><td>idem</td></tr>
         <tr><td>Publicar resultado — prévia e confirmação</td><td><code>…/atos/&lt;ato&gt;/publicar</code> · <code>…/publicar/confirmar</code></td><td>Publicador (<code>resultado:publicar</code>)</td></tr>
         <tr><td>Resultados divulgados</td><td><code>…/publicacoes</code></td><td>Publicador ou Auditor</td></tr>
+        <tr><td>Avisar candidatos — resultado <span class="selo selo-impl">nova</span></td><td><code>…/marcos/&lt;marco&gt;/avisos/novo</code></td><td><code>aviso:enviar</code> ou a presidência da comissão</td></tr>
+        <tr><td>Avisar os convocados de uma chamada publicada <span class="selo selo-impl">nova</span></td><td><code>…/marcos/&lt;marco&gt;/convocacao/avisos/novo</code></td><td>quem gere a comissão ou a preside</td></tr>
+        <tr><td>Avisos aos candidatos · aviso · interromper · reenviar <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/avisos</code> · <code>/gestao/avisos/&lt;id&gt;</code> e sub-rotas</td><td>quem pode enviar, ou o Auditor (ler)</td></tr>
         <tr><td>Convocação — quem foi chamado e o que respondeu · histórico</td><td><code>…/convocacao?lista=…</code> · <code>…/convocacao/historico</code></td><td>quem gere a comissão ou a preside</td></tr>
         <tr><td>Convocar uma pessoa · desfecho · comunicar</td><td><code>…/convocacao/convocar</code> · <code>…/convocacao/&lt;id&gt;/desfecho</code> · <code>…/comunicar</code></td><td>idem</td></tr>
         <tr><td>Convocar os titulares num ato <span class="selo selo-impl">nova</span></td><td><code>…/convocacao/titulares</code></td><td>idem</td></tr>
@@ -10356,6 +10527,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Numeração romana dos anexos</strong></td><td>28/09: a Revisão avisa o anexo citado sem rótulo correspondente</td><td>registro pré-piloto de 28/09</td></tr>
         <tr><td><strong>Teste instável: CPF no corpo × token CSRF</strong></td><td>28/09: o token é retirado antes de afirmar</td><td><code>tests/integration/identidade/test_adicionar_credencial.py</code></td></tr>
         <tr><td><strong>README declara 31 tabelas</strong></td><td>O README deixou de fixar o número; um teste confere a tabela de incrementos</td><td><code>tests/test_readme_acompanha_o_codigo.py</code></td></tr>
+        <tr><td><strong>O candidato não chega à convocação nem ao requerimento pedido nela</strong></td><td>Spec 059 (06/10): <span class="rotulo-ui">Ver convocação</span> em Minhas inscrições; a seção Convocação e o chamado do Requerimento no acompanhamento</td><td><code>portal/templates/portal/inscricoes.html</code>; <code>_chamado_do_requerimento.html</code></td></tr>
+        <tr><td><strong>O prazo contra Resultado de Etapa não aparece no acompanhamento</strong></td><td>Spec 063 (09/10): o topo diz <em>“Se você discordar de {Etapa}, pode recorrer até …”</em></td><td><code>portal/situacao.py</code></td></tr>
+        <tr><td><strong>O corte emitido depois do recurso nasce obsoleto</strong></td><td>Spec 061 (06/10): a pergunta do reingresso exclui o sucessor que a ordem lida já cita</td><td><code>classificacao/application/corte.py</code> (<code>_reingressou</code>)</td></tr>
+        <tr><td><strong>Casas decimais e arredondamento pedidos num marco de sorteio</strong></td><td>Spec 067 (09/10): sob sorteio declarado, nem pedidos, nem gravados, nem impressos</td><td><code>editais/domain/validation.py</code>; <code>interface/forms.py</code></td></tr>
+        <tr><td><strong>O candidato não recebe aviso de resultado</strong></td><td>Spec 066 (09/10): aviso complementar por gesto, de resultado e de chamada por publicação; a chave fica desligada em produção até a LGPD</td><td><code>avisos/</code>; <code>tests/test_situacoes_de_mensagem.py</code></td></tr>
         <tr><td><strong>Custo de consulta num Processo grande</strong></td><td>Medido em 28/09: linear, ~7 consultas por Edital + 3 por Etapa. Otimizar é decisão, não lacuna</td><td><code>doc/validacao-de-unidades-pre-piloto-2026-09-28.md</code></td></tr>
       </tbody>
     </table></div>
@@ -10367,9 +10543,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Leitura múltipla não consolida</strong></td><td>Spec 046: a Etapa com duas avaliações por inscrição não se publica quando o resultado dela é necessário (aviso quando não é). A Ocorrência numa Etapa assim não trava mais a seguinte (28/09)</td><td>A <strong>regra de combinação</strong> das avaliações — decidido esperar um Edital real de dupla leitura</td></tr>
         <tr><td><strong>Ampla concorrência: três nomes para duas coisas</strong></td><td>27/09: o recorte nulo é a forma canônica, oferecido na inscrição e nomeado na gestão</td><td>A Modalidade de ampla declarada continua possível e sem vagas; a validação ainda pede ao Perfil só de cotas que aponte uma ampla</td></tr>
         <tr><td><strong>Percentuais de cota não confrontados entre linhas</strong> (<code>AX-7</code>)</td><td>A Revisão mostra a divergência entre Perfis, e as tabelas de conjunto os põem lado a lado</td><td>Nenhuma validação compara percentual ou desempate de Modalidades de mesmo código</td></tr>
-        <tr><td><strong>Fatos e marcos declarados uma vez e gravados N vezes</strong> (<code>AX-11</code>)</td><td>Spec 051: <span class="rotulo-ui">Aplicar a todos</span> materializa o valor em todos os Perfis, com prévia — sem campo no Edital</td><td>O documento imprime o comum N vezes, e nada confere que as cópias continuam iguais</td></tr>
+        <tr><td><strong>Fatos e marcos declarados uma vez e gravados N vezes</strong> (<code>AX-11</code>)</td><td>Spec 051: <span class="rotulo-ui">Aplicar a todos</span> materializa o valor em todos os Perfis, com prévia — sem campo no Edital</td><td>O documento já imprime uma vez o que sai idêntico (064, 068). Nada confere que as cópias continuam iguais: a que diverge não se junta, sem aviso; e corrigir uma vírgula numa Retificação ainda é editar N cartões</td></tr>
         <tr><td><strong>Documentos exigidos fundem categorias</strong> (<code>AX-10</code>)</td><td>Spec 044: exigência por código de Modalidade em todos os Perfis, e a lista pedida é gravada no envio</td><td>O seletor de Modalidade de cada documento continua uma lista longa (“Modalidade de um Perfil”), sem agrupamento por Perfil</td></tr>
-        <tr><td><strong>Seções do documento</strong> (<code>AX-3</code>)</td><td>Spec 054 (30/09): catálogo de 22 seções, sem redação padrão; a vazia não sai (<code>editais/domain/secoes.py</code>)</td><td>Tabela, subitem numerado e negrito no texto da seção; o subitem transcrito carrega o número do original</td></tr>
+        <tr><td><strong>Seções do documento</strong> (<code>AX-3</code>)</td><td>Spec 054 (30/09): catálogo de 22 seções, sem redação padrão; a vazia não sai (<code>editais/domain/secoes.py</code>)</td><td>Tabela, numeração automática e negrito no texto da seção. O subitem transcrito com número de outra seção impede desde a 065, e a remissão sem destino é avisada</td></tr>
+        <tr><td><strong>O resultado publicado não diz de qual lista é</strong></td><td>O portal diz a lista em toda parte: página do Edital (062), página da publicação, acompanhamento (063)</td><td>O histórico <span class="rotulo-ui">Resultados divulgados</span> da gestão não tem coluna de lista, e a prévia de publicação não nomeia o recorte</td></tr>
+        <tr><td><strong>Quem assina, e como</strong> (DP-20)</td><td>Spec 060: o nome e o ato de nomeação viraram dado que o Gestor cadastra, com vigência</td><td>Cadastrar as autoridades do Cefor antes da primeira publicação real; como o ato é assinado continua com o Cefor</td></tr>
         <tr><td><strong>“Qual Edital precisa de atenção?”</strong></td><td>O recurso é agregado por Edital</td><td>Os demais sinais continuam lista plana</td></tr>
       </tbody>
     </table></div>
@@ -10428,13 +10606,34 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       </p>
     </div>
 
+    <h4>Encontradas desde 30/09</h4>
+    <div class="aviso aviso-lacuna">
+      <span class="titulo">Lacuna: a reabilitação de quem foi eliminado antes da última Etapa do marco não alcança o corte</span>
+      <p>
+        A pessoa reabilitada não estava entre os participantes da ordem. A ordem acusa <em>participantes
+        alterados</em>, mas o corte só fica obsoleto depois que a ordem sucessora é emitida — e, nessa
+        janela, a Etapa governada segue recebendo trabalho sob a faixa antiga. Confirmado em 07/10 por
+        teste; separado da 061 por decisão do usuário, com três saídas propostas.
+      </p>
+      <p class="miudo"><strong>Evidência:</strong> <code>doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md</code>;
+        <code>tests/integration/classificacao/test_corte_reabilitado_antes_do_marco.py</code>.</p>
+    </div>
+    <ul>
+      <li><strong>Três grafias para o mesmo desfecho no portal.</strong> A lista diz <em>“Convocação: Aceite”</em>, a tela da convocação <em>“Situação registrada: Aceite — …”</em>, e o topo do acompanhamento <em>“Vaga aceita”</em>. A 063 deixou a lista de fora, por decisão.</li>
+      <li><strong>O reenvio da convocação sugere prazo novo.</strong> <em>“Comunicação enviada em”</em> mostra só o último envio, e a mensagem de reenvio diz <em>“contado do envio desta mensagem”</em> (<code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code>).</li>
+      <li><strong>O acompanhamento cresce três consultas por publicação</strong>: 23 com uma, 38 com seis (063, A-1). Nenhum requisito limita o custo.</li>
+      <li><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong>, e por isso não tem aviso; a 066 declara que não encerra a demanda do setor.</li>
+      <li><strong>A marca do Cefor fora do documento.</strong> O título e o topo das telas, os e-mails e a vitrine do portal (<em>“Unidade: CEFOR”</em>, o código e não a sigla) continuam presos ao Cefor; o seletor de identidade só oferece o escopo <code>cefor</code> (<code>doc/pendencias-da-060.md</code>).</li>
+      <li><strong>O documento oficial, depois da auditoria de 08/10.</strong> Fechados ED-01 a ED-04, ED-11 e ED-12; seguem abertos, entre outros, a linguagem das frases geradas (ED-05), a navegação e a acessibilidade do PDF (ED-07, ED-08), o endereço do certame (ED-09) e a forma de convocação na margem (ED-15). Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada (<code>doc/auditoria-edital-pdf-2026-10-08.md</code>).</li>
+      <li><strong>A regra da reserva no cadastro</strong> (RC-58) segue sem decisão, e o Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em>.</li>
+    </ul>
+
     <h4>Configuração sem consumidor</h4>
     <div class="rolagem"><table>
       <thead><tr><th>Campo</th><th>Onde é gravado</th><th>O que acontece</th><th class="centro">Selo</th></tr></thead>
       <tbody>
         <tr><td><strong>Cadastro Reserva limitado em N</strong> (<code>reserveLimit</code>)</td><td>Perfil, na composição</td><td>Sai no documento; nenhuma regra de ocupação, classificação ou convocação o aplica</td><td class="centro"><span class="selo selo-nop">Implementado, não operacionalizado</span></td></tr>
         <tr><td><code>callRules</code>, <code>calculation</code>, <code>distribution</code> da regra normativa</td><td>Modalidade, pela API e pelo reuso; a composição preserva o valor sem mostrá-lo</td><td>Publicados, não retificáveis, sem tela e sem leitor. A ordem de 27/09 manda deixar de pedir o que ficar sem consumidor</td><td class="centro"><span class="selo selo-nop">Implementado, não operacionalizado</span></td></tr>
-        <tr><td>Casas decimais e Arredondamento num marco de sorteio</td><td>Classificação</td><td>Pedidos em todo marco, inclusive onde não há pontuação a arredondar; o padrão os preenche</td><td class="centro"><span class="selo selo-parc">Parcial</span></td></tr>
         <tr><td>Descrição da Modalidade</td><td>Chega pela API ou pelo reuso</td><td>A etapa Perfis não a desenha nem a leva oculta: gravar a etapa pode apagá-la (a confirmar)</td><td class="centro"><span class="selo selo-infer">Inferido</span></td></tr>
       </tbody>
     </table></div>
@@ -10445,7 +10644,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <li><strong>Reuso sem o teto.</strong> Partir de um Edital anterior não copia o limite de inscrições por candidato, e nada avisa.</li>
       <li><strong>Editar uma Retificação devolvida</strong> só pela API: pela tela, o caminho é cancelá-la e criar outra. Ver <a href="#estados-retificacao">Estados da Retificação</a>.</li>
       <li><strong>Suceder uma convocação ou um desfecho, com motivo</strong>: a aplicação faz, nenhuma tela oferece — um vencimento digitado errado, ou a inércia de quem já aceitou, não se registram pela interface. Ver <a href="#convocacao">Convocação</a>.</li>
-      <li><strong>O candidato chegar à própria convocação e ao requerimento pedido na convocação</strong>: as páginas existem, e nenhuma tela do portal leva a elas. Ver <a href="#area-do-candidato">Área do candidato</a>.</li>
     </ul>
 
     <h4>O que a tela diz e não é o vigente</h4>
@@ -10478,10 +10676,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <tbody>
         <tr><td>Somar o barema fora e digitar o total</td><td>Não há barema como objeto</td></tr>
         <tr><td>Verificar a autodeclaração (heteroidentificação) fora</td><td>Não há Etapa aplicável só a quem declarou a Modalidade, nem comissão própria</td></tr>
-        <tr><td>Conferir que o Cronograma e a janela recursal dizem a mesma data</td><td>O Evento “prazo para recurso” é texto livre; nada o liga ao marco que abre a janela (decidido: depois do piloto)</td></tr>
+        <tr><td>Conferir que o Cronograma e a janela recursal dizem a mesma data</td><td>O Evento “prazo para recurso” é texto livre; nada o liga ao marco que abre a janela (decidido: depois do piloto). Desde a 067, a Revisão os põe lado a lado, sem afirmar que correspondem</td></tr>
         <tr><td>Declarar a hora real do Evento, e não <code>00:00</code></td><td>A hora é obrigatória, e meia-noite sai “às 00h” no documento (decidido: rever com a spec do documento)</td></tr>
         <tr><td>Conferir a prévia contra o Edital original na homologação</td><td>Decidido em 28/09: o setor redige fora e transcreve</td></tr>
-        <tr><td>Assinar o ato</td><td>Como o ato é assinado no piloto, e o nome de quem assina, dependem do Cefor</td></tr>
+        <tr><td>Assinar o ato</td><td>Como o ato é assinado no piloto depende do Cefor; o nome e o ato de nomeação de quem assina se cadastram em <span class="rotulo-ui">Autoridades da unidade</span>, antes da primeira publicação real</td></tr>
+        <tr><td>Avisar os convocados para heteroidentificação, entrevista ou títulos</td><td>Essas convocações não têm ato no sistema, e o aviso só aponta ato publicado (066)</td></tr>
         <tr><td>Publicar nos sítios do Ifes/Cefor; transmitir o sorteio; importar no Registro Acadêmico</td><td>São sistemas fora deste</td></tr>
         <tr><td>Contar prazos em dias úteis</td><td>A janela conta dias corridos; o operador digita a data</td></tr>
         <tr><td>Comunicar o cancelamento de um Edital</td><td>O cancelamento gera ato e trilha, e nenhuma Publicação (decidido: agora não)</td></tr>
@@ -10490,7 +10689,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Divergências entre código e documentação</h4>
     <ul>
-      <li>48 das 54 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12).</li>
+      <li>58 das 69 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12).</li>
       <li><code>doc/achado-suite-em-sqlite.md</code> nomeia uma causa; são três (o <code>CLAUDE.md</code> as reparte).</li>
       <li>Um critério da spec 008 pede o Processo na primeira página do documento, e o renderizador nunca o imprimiu — o que é o certo para os Editais reais.</li>
       <li>A spec 046 lista um consumidor do Resultado que o código torna inalcançável.</li>
@@ -10529,7 +10728,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta</td></tr>
         <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; “só se o setor precisar”</td></tr>
         <tr><td><strong>DP-18</strong></td><td>Quem faz o teste operacional com o setor, e quando?</td><td>O roteiro e um ensaio existem; o teste com uma pessoa do setor não</td></tr>
-        <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto, e o nome de quem assina</td><td>Resposta do Cefor. O resto da DP-20 está decidido e executado pela spec 054, mergeada em 30/09</td></tr>
+        <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto</td><td>Resposta do Cefor. O nome de quem assina deixou de ser decisão: é cadastro, desde a 060. O resto da DP-20 foi executado pela 054</td></tr>
+        <tr><td><strong>Avisos em produção</strong> (066)</td><td>Qual a base legal do uso do e-mail para aviso, quanto tempo fica a lista de destinatários, e qual o limite da conta de correio institucional?</td><td>Validação do encarregado de dados; só então se liga <code>AVISOS_AOS_CANDIDATOS</code></td></tr>
+        <tr><td><strong>Reabilitado antes do marco</strong> (061)</td><td>Estender a pergunta do reingresso, delegá-la à ordem, ou manter e dizer?</td><td>Escolha entre as três saídas do achado</td></tr>
+        <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Todas registradas na spec 063 para decisão</td></tr>
       </tbody>
     </table></div>
     <p class="miudo">
@@ -10659,6 +10861,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>20/09/2026</td><td>specs 001–038</td><td>Primeira reconstrução do produto a partir do código.</td></tr>
           <tr><td>29/09/2026</td><td><code>main</code> em <code>3a53b23</code>, specs 001–053</td><td>Reauditoria contra o código; três camadas (entender, operar, consultar); tutorial, catálogo de capacidades, “o que consigo configurar”, impacto de mudanças, receitas, sorteio, Perfis e reservas em profundidade; lacunas revistas uma a uma. Registro em <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>.</td></tr>
           <tr><td>30/09/2026</td><td><code>main</code> em <code>86bbf49</code>, spec 054</td><td>A spec 054 (o Edital do sistema como ato oficial, PR 233) descrita como entregue: catálogo de 22 seções, fecho, consolidado datado, declaração do Requerimento e total de vagas no documento. Registro no mesmo arquivo.</td></tr>
+          <tr><td>10/10/2026</td><td><code>main</code> em <code>0edc0f8d</code>, specs 055–068</td><td>As catorze specs mergeadas entre 30/09 e 09/10 descritas como entregues: a convocação com porta no portal, o acompanhamento pela situação, os resultados por Perfil, etapa e lista, as Unidades e autoridades com vigência, os avisos aos candidatos, o corte em dia depois do recurso e o documento que confere a numeração e imprime uma vez o que se repete. Registro em <code>docs/visao-sistema/CHANGELOG-2026-10.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -10667,6 +10870,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <span class="titulo">Onde esta documentação não alcança</span>
       <ul>
         <li>Não validei o <strong>sistema de destino do Registro Acadêmico</strong> — ele não está disponível aqui. O que o sistema produz está descrito; o que acontece depois da importação, não.</li>
+        <li>A revisão de 10/10 também foi feita por leitura do código e das specs, sem rodar a suíte nem percorrer o produto; o número da suíte é o do <code>AGENTS.md</code>, medido em 09/10.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
