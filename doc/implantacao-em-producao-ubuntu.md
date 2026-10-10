@@ -122,8 +122,8 @@ Tudo nesta seção é **constatado**.
 | Linguagem e framework | Python `>=3.13,<3.14`, Django 5.2.17, DRF 3.16.1, psycopg 3.3 (binary), openpyxl 3.1.5 | `backend/pyproject.toml:9-18`, `backend/uv.lock` |
 | Gerenciador de dependências | `uv`, com lock versionado; o Dockerfile fixa o uv 0.9 | `backend/uv.lock`, `Dockerfile:14` |
 | SGBD | **Somente PostgreSQL**; SQLite só na suíte. O CI valida contra o PostgreSQL 18 | `config/settings/base.py:257-266`, `config/settings/test.py`, `.github/workflows/backend.yml` |
-| Papéis do banco | Dois papéis: migração (dono do esquema) e runtime (DML). O runtime **não** tem `UPDATE`/`DELETE` em 34 tabelas append-only, que também têm gatilhos | `processo_seletivo/seguranca/papeis.py:26-121`, `seguranca/management/commands/provisionar_papeis.py` |
-| Preparação do banco | provisionar → migrar → provisionar de novo; a segunda passada é a que tranca | `backend/Makefile` (`preparar`), `scripts/docker/entrypoint.sh` |
+| Papéis do banco | Dois papéis: migração (dono do esquema) e runtime (DML). O runtime **não** tem `UPDATE`/`DELETE` em 40 tabelas append-only, que também têm gatilhos | `processo_seletivo/seguranca/papeis.py:26-133`, `seguranca/management/commands/provisionar_papeis.py` |
+| Preparação do banco | provisionar → migrar → provisionar de novo; a segunda passada é a que tranca. Depois, o registro das Unidades (060), com a role de runtime | `backend/Makefile` (`preparar`), `scripts/docker/entrypoint.sh` |
 | Settings | `base`, `development`, `test` e `production`. `production` **recusa subir** com qualquer pressuposto inseguro | `config/settings/production.py` |
 | Entrada WSGI | `config.wsgi` usa `production` por padrão; o **`manage.py` usa `development`** | `config/wsgi.py:14`, `manage.py:7` |
 | Servidor de aplicação | **Nenhum** entre as dependências. O Dockerfile roda `runserver` e se declara só de desenvolvimento | `pyproject.toml:9-18`, `Dockerfile:8-10,59` |
@@ -659,16 +659,26 @@ exec setpriv --reuid=processoseletivo --regid=processoseletivo --init-groups -- 
 SCRIPT
 ```
 
-**`ps-migrar`** — provisionar, migrar e provisionar de novo, **sem senha de superusuário em lugar
-nenhum**. O provisionamento conecta como `postgres`, por *peer*, pelo socket local, e usa as
-settings `base`: o comando só precisa do banco, e as barreiras de `production` não têm o que dizer
-sobre ele. As senhas dos papéis vêm do ambiente, nunca da linha de comando, onde apareceriam no `ps`.
-Sequência ensaiada: `0 de 34`, as migrations, e `34 de 34`.
+**`ps-migrar`** — provisionar, migrar, provisionar de novo e sincronizar as Unidades, **sem senha de
+superusuário em lugar nenhum**. O provisionamento conecta como `postgres`, por *peer*, pelo socket
+local, e usa as settings `base`: o comando só precisa do banco, e as barreiras de `production` não
+têm o que dizer sobre ele. As senhas dos papéis vêm do ambiente, nunca da linha de comando, onde
+apareceriam no `ps`. Sequência ensaiada em 29/09: `0 de 34`, as migrations, e `34 de 34`; desde a
+`066` o total é 40.
+
+O quarto passo veio com a `060`, depois do ensaio, e **não foi executado numa VM**: é o
+`sincronizar_unidades` que o `make preparar` e o `entrypoint.sh` do compose já rodam
+(`scripts/docker/entrypoint.sh:51-54`). Sem ele, o banco sobe sem Unidade registrada, a criação de
+Processo recusa com `unidade_nao_registrada`, a publicação sai sem cabeçalho, e a unidade fica sem
+os três modelos iniciais de aviso da `066`, que o mesmo comando cria. Roda com a role de runtime e
+depois da segunda passada pela mesma razão do `Makefile`: é dado, e não esquema, e só então a role
+tem privilégio sobre as tabelas que a migration criou. Fica fora do `--so-provisionar`, usado na
+restauração, porque o dump já traz as Unidades.
 
 ```bash
 sudo tee /usr/local/sbin/ps-migrar >/dev/null <<'SCRIPT'
 #!/usr/bin/env bash
-# Provisionar, migrar, provisionar de novo — a ordem de seguranca/papeis.py.
+# Provisionar, migrar, provisionar de novo — a ordem de seguranca/papeis.py —, e as Unidades (060).
 # Uso: sudo ps-migrar [--so-provisionar] [DIR_DA_RELEASE]   (padrão: a release ativa)
 set -euo pipefail
 [ "$(id -u)" -eq 0 ] || { echo "execute com sudo" >&2; exit 1; }
@@ -700,6 +710,8 @@ read -r n m <<<"$(echo "$saida" | sed -nE 's/.* ([0-9]+) de ([0-9]+) tabelas app
 if [ -z "${n:-}" ] || [ "$n" != "$m" ]; then
   echo "FALHA: a segunda passada trancou ${n:-?} de ${m:-?} tabelas append-only." >&2; exit 1
 fi
+# Dado, e não esquema: com a role de runtime e depois da segunda passada. Idempotente.
+echo "== unidades";          /usr/local/sbin/ps-manage --release "$RELEASE" sincronizar_unidades
 SCRIPT
 ```
 
@@ -1003,21 +1015,30 @@ nomeando o que falta: corrija o `app.env` e repita.
 sudo ps-migrar "$R"
 ```
 
-Saída esperada, tal como no ensaio:
+Saída esperada. As três primeiras seções são as do ensaio, com o total de hoje; as linhas das
+Unidades são as que o comando imprime (`unidades/management/commands/sincronizar_unidades.py:32-41`),
+e não vieram de VM:
 
 ```
 == provisionar (1/2)
-Papéis provisionados. 0 de 34 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
+Papéis provisionados. 0 de 40 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
 As demais ainda não existem neste banco. Aplique as migrations e execute este comando outra vez…
 == migrate
   Applying … OK
 == provisionar (2/2)
-Papéis provisionados. 34 de 34 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
+Papéis provisionados. 40 de 40 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
+== unidades
+Unidades: 1 criadas, 0 alteradas, 0 sem mudança.
+Modelos de aviso: 3 criados.
 ```
 
-O `34` cresce a cada tabela append-only nova. O que importa é o **N igual ao M** na segunda
+O `40` cresce a cada tabela append-only nova. O que importa é o **N igual ao M** na segunda
 passada; o script falha se não for. Os três passos são idempotentes
-(`seguranca/papeis.py:11-16`).
+(`seguranca/papeis.py:11-16`), e o quarto também: numa atualização ele diz `0 criadas` quando o
+`unidades.json` não mudou, e `Modelos de aviso: 0 criados` para sempre depois da primeira vez — a
+unidade que editou ou inativou os modelos continua com os dela. O `1` é o Cefor, a única unidade
+declarada hoje em `backend/processo_seletivo/unidades/unidades.json`; as demais entram nesse arquivo
+quando o Ifes as fornecer ([`pendencias-da-060.md`](pendencias-da-060.md)).
 
 **Como verificar:**
 
@@ -1029,6 +1050,8 @@ sudo -u postgres psql -d processo_seletivo -Atc \
 #   processo_seletivo_runtime|f|f|f          ← nenhum dos dois é superusuário
 sudo -u postgres psql -d processo_seletivo -Atc \
   "select has_table_privilege('processo_seletivo_runtime','auditoria_registroauditoria','DELETE')"   # f
+sudo -u postgres psql -d processo_seletivo -Atc "select codigo, sigla from unidades_unidade"
+#   cefor|Cefor                              ← sem linha, a criação de Processo recusa
 ```
 
 ### 11.3 Base de CEP (opcional, recomendada)
@@ -1835,10 +1858,10 @@ R=/opt/processoseletivo/releases/<nome-construído>
 #   sudo -u postgres psql -c 'ALTER DATABASE processo_seletivo RENAME TO processo_seletivo_avariado_<data>'
 sudo -u postgres createdb --encoding=UTF8 --locale=pt_BR.UTF-8 --template=template0 processo_seletivo
 sudo -u postgres psql -c 'REVOKE CONNECT ON DATABASE processo_seletivo FROM PUBLIC;'
-sudo ps-migrar --so-provisionar "$R"                       # 1ª passada: cria os papéis — "0 de 34"
+sudo ps-migrar --so-provisionar "$R"                       # 1ª passada: cria os papéis — "0 de 40"
 sudo sh -c "runuser -u postgres -- pg_restore --exit-on-error --single-transaction -d processo_seletivo \
   < /srv/restauracao/var/backups/processoseletivo/banco/<ARQUIVO>.dump"
-sudo ps-migrar --so-provisionar "$R"                       # 2ª passada — "34 de 34"
+sudo ps-migrar --so-provisionar "$R"                       # 2ª passada — "40 de 40"
 sudo ps-manage --release "$R" migrate --check; echo $?     # 0
 ```
 
@@ -2208,7 +2231,12 @@ Leia as notas do PR ou da release. **Variável nova exigida** por `production.py
 
 ### 22.3a Sem migrations — segundos de indisponibilidade
 
+Sem migration o `ps-migrar` não roda, e com ele não rodaria a sincronização das Unidades. Uma
+release pode mudar o `unidades.json` sem mudar o esquema — é assim que uma unidade nova entra —, e
+por isso a sincronização vem aqui à parte. Sem mudança no arquivo, ela não grava nada.
+
 ```bash
+sudo ps-manage --release "$R" sincronizar_unidades   # "Unidades: 0 criadas, 0 alteradas, …" se nada mudou
 sudo ps-ativar "$R"          # ativada: …; o nginx mostra "indisponível" nos ~2–5 s do restart
 ```
 
@@ -2272,7 +2300,7 @@ sudo -u postgres psql -c 'REVOKE CONNECT ON DATABASE processo_seletivo FROM PUBL
 sudo ps-migrar --so-provisionar "$A"
 sudo sh -c "runuser -u postgres -- pg_restore --exit-on-error --single-transaction -d processo_seletivo \
   < /var/backups/processoseletivo/banco/pre-deploy-<carimbo>.dump"
-sudo ps-migrar --so-provisionar "$A"                          # "34 de 34" (ou o M da release anterior)
+sudo ps-migrar --so-provisionar "$A"                          # "40 de 40" (ou o M da release anterior)
 sudo ps-manage --release "$A" migrate --check; echo $?        # 0
 sudo ps-ativar "$A"
 sudo rm /etc/nginx/processoseletivo.manutencao
@@ -2475,7 +2503,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 - Evidência:
   - o README, § "Antes de receber dado pessoal real", a lista como precondição;
   - não há comando de expurgo (os únicos comandos são `provisionar_papeis`, `carregar_ceps`,
-    `situacao_dos_ceps` e `seed_demo`);
+    `situacao_dos_ceps`, `sincronizar_unidades`, `despachar_avisos` e `seed_demo`);
   - `DesafioDeAcesso.email_canonico` guarda qualquer endereço digitado (`identidade/models.py`).
 - Efeito: dado pessoal acumulado sem prazo, na produção e nos backups.
 - Correção: decisão institucional e, depois dela, rotina no código.
@@ -2667,7 +2695,7 @@ sudo -u postgres createdb --encoding=UTF8 --locale=pt_BR.UTF-8 --template=templa
 sudo -u postgres psql -c 'REVOKE CONNECT ON DATABASE processo_seletivo FROM PUBLIC;'
 # Segredos: app.env + migracao.env (§10.2) → COFRE
 sudo ps-manage --release "$R" check --deploy                 # só W005 e W021
-sudo ps-migrar "$R"                                          # 0 de 34 … 34 de 34
+sudo ps-migrar "$R"                                          # 0 de 40 … 40 de 40 · Unidades: 1 criadas
 # Serviço: gunicorn.conf.py + unit (§12)
 sudo systemctl daemon-reload && sudo systemctl enable processoseletivo && sudo ps-ativar "$R"
 # TLS: nginx provisório (§13.2) → certbot (§13.3) → certbot renew --dry-run
@@ -2686,6 +2714,7 @@ R=$(sudo ps-construir <SHA> | tail -1)
 sudo ps-manage --release "$R" check --deploy
 sudo ps-manage --release "$R" --migracao migrate --plan
 # SEM migrations:
+sudo ps-manage --release "$R" sincronizar_unidades
 sudo ps-ativar "$R"
 # COM migrations:
 sudo touch /etc/nginx/processoseletivo.manutencao
@@ -2746,6 +2775,7 @@ APLICAÇÃO
 [ ] Settings de produção: seletor, identidade demo e sorteio demo ausentes
 [ ] Migrations aplicadas: migrate --check = 0; readiness = ready
 [ ] Provisionamento: "N de N tabelas append-only" na 2ª passada
+[ ] Unidades: "Unidades: … criadas" no ps-migrar; o Cefor em unidades_unidade
 [ ] gunicorn como processoseletivo, em 127.0.0.1:8000; systemd-analyze security revisado
 [ ] Estáticos: /static/interface/htmx.min.js = 200
 [ ] Base de CEP carregada (se usada): situacao_dos_ceps = 0

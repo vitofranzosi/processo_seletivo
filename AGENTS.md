@@ -109,7 +109,7 @@ Para chegar lá é preciso o **par**:
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 
 **A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 89 — custa
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 90 — custa
 **~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
 custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
 declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
