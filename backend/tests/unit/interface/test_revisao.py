@@ -305,7 +305,11 @@ def _com_perfis(quantos):
 
 
 def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
-    """Tudo o que a etapa Classificação congela, com as frases do documento."""
+    """Tudo o que a etapa Classificação congela, com as frases do documento.
+
+    **As frases da redação 2 desde a `069`** (FR-1364): a Revisão mostra o que o documento composto
+    deste rascunho vai imprimir; os rótulos continuam os dos campos.
+    """
     itens = _classificacao(rascunho_completo())
     tudo = "\n".join(_texto(item) for item in itens)
 
@@ -317,31 +321,36 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
     assert "Semente: Os cinco números sorteados, na ordem dos prêmios." in comum["linhas"]
 
     assert "Ordem: por sorteio" in tudo
-    assert "Sorteio: método próprio deste marco — diverge do comum deste Edital" in tudo
+    assert "Sorteio: método próprio deste sorteio, diferente do comum deste Edital" in tudo
     assert "Sorteio — Ocorrência: 5901" in tudo
     assert (
-        "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in tudo
+        "Habilitação: Participam do sorteio só as inscrições habilitadas na Etapa “Prova "
+        "didática”." in tudo
     )
     # A frase do documento, com o resultado nomeado pela denominação, que está na linha de cima
     # (067, FR-1304, D-012): com o nome dentro da frase, cada Perfil viraria um grupo.
     assert "Denominação: Classificação final" in tudo
     assert (
-        "Recurso: Caberá recurso contra o resultado deste marco, no prazo de 5 (cinco) dias "
-        "corridos, contados da divulgação desse resultado." in tudo
+        "Recurso: Contra o resultado deste marco: no prazo de 5 (cinco) dias corridos, contados "
+        "da divulgação desse resultado." in tudo
     )
-    assert "Corte: Progridem os 3 (três) primeiros desta ordem, mais 1 (um) suplente." in tudo
+    assert (
+        "Corte: Seguem no processo os 3 (três) primeiros classificados, mais 1 (um) suplente."
+        in (tudo)
+    )
     # As frases do documento, e não uma redação própria da conferência (014, FR-185). O empate no
     # corte **não** sai sob sorteio declarado, como no documento: a ordem sorteada é total (067,
     # FR-1315). A frase dele sob pontuação está em `test_correcoes_de_norma_na_revisao.py`.
     assert "Empate no corte" not in tudo
     assert "Arredondamento" not in tudo
     assert (
-        "Continuação: Poderá haver chamada, nesta ordem, além dos que este corte publicar." in tudo
+        "Continuação: Depois, poderão ser chamados outros candidatos, além desses, seguindo a "
+        "mesma ordem." in tudo
     )
     assert "Etapa que o corte alimenta: nenhuma" in tudo
     assert (
-        "Desempate, 2º: maior valor declarado em Meses de experiência; sem o valor, o critério "
-        "não se aplica" in tudo
+        "Desempate, 2º: maior número de meses de experiência, informado na inscrição; para quem "
+        "não o tiver, o critério não se aplica" in tudo
     )
 
 
@@ -355,7 +364,10 @@ def test_o_marco_de_pontuacao_mostra_a_combinacao_e_nao_o_sorteio():
     conteudo.pop("drawMethod")
     tudo = "\n".join(_texto(item) for item in _classificacao(conteudo))
 
-    assert "Combinação: soma ponderada das Etapas Prova didática (peso 2) e" in tudo
+    assert (
+        "Combinação: A nota final é a soma das pontuações nas Etapas “Prova didática” (peso 2)"
+        in (tudo)
+    )
     assert "Normalização: nenhuma" in tudo
     assert "Sorteio" not in tudo
     assert "Corte: este marco não corta" in tudo
@@ -374,7 +386,7 @@ def test_marcos_iguais_em_perfis_diferentes_aparecem_uma_vez():
     # instante vazio do PDF é "—", e passava pelo filtro como valor declarado.
     assert not [linha for linha in marcos[0]["linhas"] if linha.startswith("Sorteio —")]
     # A habilitação é do marco, e não do método comum: quem referencia o comum sorteia todos.
-    assert "Habilitação: participam todas as inscrições submetidas" in marcos[0]["linhas"]
+    assert "Habilitação: Participam do sorteio todas as inscrições enviadas." in marcos[0]["linhas"]
     assert "Denominação: Classificação final — o nome de cada Perfil" in marcos[0]["linhas"]
     assert "diverge" not in marcos[0]
 
@@ -389,7 +401,7 @@ def test_o_marco_que_diverge_diz_em_que():
     assert [item["titulo"] for item in marcos] == ["3 Perfis: LP01, LP02 e LP04", "Perfil LP03"]
     assert marcos[1]["diverge"] == "Diverge do marco de 3 Perfis em: Corte."
     assert (
-        "Corte: Progridem os 5 (cinco) primeiros desta ordem, mais 1 (um) suplente."
+        "Corte: Seguem no processo os 5 (cinco) primeiros classificados, mais 1 (um) suplente."
         in (marcos[1]["linhas"])
     )
 
@@ -420,10 +432,9 @@ def test_o_perfil_mostra_convocacao_reversao_e_fatos():
     perfis = next(bloco for bloco in revisao.blocos(conteudo) if bloco["etapa"] == "perfis")
     principal = "\n".join(perfis["itens"][0]["linhas"])
 
-    assert (
-        "Como a convocação é comunicada: por publicação no endereço eletrônico do certame"
-        in principal
-    )
+    # Na redação 2 (V4): o lugar da publicação é texto de quem elabora, e a forma não o diz.
+    assert "Como a convocação é comunicada: por publicação" in principal
+    assert "endereço eletrônico do certame" not in principal
     assert (
         "Reverter vaga reservada não preenchida para a ampla concorrência: só quando a lista "
         "reservada esgota" in principal

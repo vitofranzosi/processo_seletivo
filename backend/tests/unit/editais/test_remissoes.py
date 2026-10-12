@@ -45,6 +45,11 @@ EVENTO = {
 
 
 def _secoes(**redigidas):
+    """As seções pelo catálogo da `054`: a apresentação plana, em que a `065` foi escrita.
+
+    Na apresentação por perguntas (069) os números são outros e a regra é a do prefixo apresentado;
+    os casos dela estão em `test_numeracao_apresentada_nas_conferencias.py`.
+    """
     return [
         {
             "id": f"00000000-0000-0000-0000-{secao.order:012d}",
@@ -58,7 +63,7 @@ def _secoes(**redigidas):
                 else {"content": redigidas.get(secao.key.replace("-", "_"), "")}
             ),
         }
-        for secao in secoes.CATALOGO
+        for secao in secoes.CATALOGO_DA_054
     ]
 
 

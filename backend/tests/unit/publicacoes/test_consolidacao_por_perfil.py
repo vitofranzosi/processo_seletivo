@@ -11,10 +11,15 @@ documento composto**: o que a spec afirma é sobre o artefato que o candidato l�
 
 A prova de que nenhuma regra se perdeu, Perfil a Perfil, está em
 `test_equivalencia_da_consolidacao.py`.
+
+**As frases são as da redação 2 desde a `069`** (contrato de redação): a consolidação da `068` é a
+mesma, e os rótulos e as frases que ela imprime uma vez são os novos — "Regras de classificação", a
+reversão e a convocação na voz do candidato.
 """
 
 import copy
 import json
+import re
 
 import pytest
 
@@ -42,7 +47,15 @@ METODO = {
         "text": "Não havendo extração na data prevista, vale a extração seguinte da mesma fonte.",
     },
 }
-LINHAS_DO_METODO = ("Algoritmo:", "Fonte:", "Ocorrência:", "Quando:", "Derivação:", "Semente:")
+# As linhas do método comum, na redação 2: a abertura diz a fonte, a ocorrência e o instante; os
+# pares, o algoritmo, como o concurso é escolhido, a semente e a substituição.
+LINHAS_DO_METODO = (
+    "A ordem será definida a partir do resultado",
+    "algoritmo IFES-SORTEIO-SHA256-v1",
+    "Qual concurso:",
+    "Semente:",
+    "Se faltar:",
+)
 REQUISITOS = (
     "Diploma de curso superior de graduação reconhecido pelo MEC",
     "Acesso a computador com conexão à internet",
@@ -55,19 +68,17 @@ NOMES = {
 PERCENTUAIS = {"PPI": "25.0000", "PcD": "5.0000", "PTT": None}
 FUNDAMENTO = "Resolução CS nº 10/2017 do Ifes"
 REVERSAO_ESGOTAMENTO = (
-    "Havendo ausência de candidatos aprovados na reserva de vagas, o quantitativo será destinado "
-    "à respectiva ampla concorrência."
+    "Se não houver candidatos aprovados para as vagas reservadas de um código, essas vagas passam "
+    "para a ampla concorrência do mesmo código."
 )
 REVERSAO_SALDO = (
-    "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não preenchido "
-    "será destinado à respectiva ampla concorrência."
+    "As vagas reservadas de um código que não forem preenchidas passam para a ampla concorrência "
+    "do mesmo código."
 )
-CONVOCACAO_PUBLICACAO = (
-    "A convocação dos classificados será feita por publicação no endereço eletrônico do certame."
-)
+CONVOCACAO_PUBLICACAO = "A convocação dos classificados será feita por publicação."
 SEPARADAMENTE = (
-    "Os marcos abaixo se aplicam a cada um desses Perfis separadamente, sobre as inscrições do "
-    "próprio Perfil: cada Perfil tem a sua própria classificação e o seu próprio resultado."
+    "A classificação é feita separadamente em cada Perfil: cada Perfil tem a sua própria "
+    "classificação e o seu próprio resultado."
 )
 
 
@@ -211,7 +222,10 @@ def linhas(conteudo):
     return [
         linha
         for linha in texto_de(documento(conteudo)).splitlines()
-        if linha.strip() and not linha.startswith("Edital ")
+        if linha.strip()
+        and not linha.startswith("Edital ")
+        # O número da página do rodapé, que o extrator pode dar numa linha própria (069).
+        and not re.fullmatch(r"Página \d+ de \d+", linha.strip())
     ]
 
 
@@ -567,7 +581,7 @@ def test_os_marcos_iguais_saem_uma_vez_numa_subsecao_que_nomeia_os_perfis():
     conteudo = cenario_a()
     subsecao = _subsecao(conteudo, "5.6")
     assert subsecao[0] == (
-        "5.6 Marcos classificatórios comuns aos Perfis INF-BJN, INF-IUN, INF-SMT e INF-VAL"
+        "5.6 Regras de classificação comuns aos Perfis INF-BJN, INF-IUN, INF-SMT e INF-VAL"
     )
     assert corrido(conteudo).count("SORTEIO — Classificação por sorteio eletrônico") == 1
 
@@ -582,8 +596,8 @@ def test_a_frase_que_aplica_os_marcos_a_cada_perfil_vem_antes_deles():
 def test_os_marcos_da_subsecao_sao_linha_a_linha_os_do_perfil():
     """FR-1348: o mesmo texto, sem acrescentar, suprimir nem reordenar."""
     conteudo = cenario_a()
-    # O rótulo "Marcos classificatórios" do Perfil é o que o título da subseção substitui.
-    antes = _marcos_do_perfil_sozinho(perfil("INF-BJN")).removeprefix("Marcos classificatórios ")
+    # O rótulo "Regras de classificação" do Perfil é o que o título da subseção substitui.
+    antes = _marcos_do_perfil_sozinho(perfil("INF-BJN")).removeprefix("Regras de classificação ")
     depois = " ".join(" ".join(_subsecao(conteudo, "5.6")[1:]).split())
     assert depois == " ".join(f"{SEPARADAMENTE} {antes}".split())
 
@@ -592,13 +606,13 @@ def test_cada_perfil_do_grupo_remete_a_subsecao_e_nenhum_outro_remete():
     outro = {"marcos": [marco("x", name="Sorteio público")]}
     conteudo = cenario_a(**{"INF-VAL": outro})
     for codigo in QUATRO[:3]:
-        assert "Marcos classificatórios: os descritos no item 5.6." in " ".join(
+        assert "Regras de classificação: as descritas no item 5.6." in " ".join(
             bloco_do_perfil(conteudo, codigo)
         )
     proprio = bloco_do_perfil(conteudo, "INF-VAL")
-    assert "Marcos classificatórios — INF-VAL" in proprio
-    assert not any("os descritos no item 5.6" in linha for linha in proprio)
-    assert "5.6 Marcos classificatórios comuns aos Perfis INF-BJN, INF-IUN e INF-SMT" in (
+    assert "Regras de classificação — INF-VAL" in proprio
+    assert not any("as descritas no item 5.6" in linha for linha in proprio)
+    assert "5.6 Regras de classificação comuns aos Perfis INF-BJN, INF-IUN e INF-SMT" in (
         secao_de_perfis(conteudo)
     )
 
@@ -610,15 +624,15 @@ def test_marcos_diferentes_em_todos_nao_criam_subsecao():
             for codigo in QUATRO
         }
     )
-    assert "Marcos classificatórios comuns" not in corrido(conteudo)
+    assert "Regras de classificação comuns" not in corrido(conteudo)
     for codigo in QUATRO:
-        assert f"Marcos classificatórios — {codigo}" in bloco_do_perfil(conteudo, codigo)
+        assert f"Regras de classificação — {codigo}" in bloco_do_perfil(conteudo, codigo)
 
 
 def test_perfil_sem_marco_nao_remete_nem_imprime_marcos():
     conteudo = cenario_a(**{"INF-IUN": {"marcos": []}})
     bloco = bloco_do_perfil(conteudo, "INF-IUN")
-    assert not any("Marcos classificatórios" in linha for linha in bloco)
+    assert not any("Regras de classificação" in linha for linha in bloco)
 
 
 def test_o_metodo_comum_sai_uma_vez_quando_todos_os_marcos_sao_iguais():
@@ -635,18 +649,18 @@ def test_dois_grupos_pelo_metodo_comum_imprimem_as_linhas_uma_vez_e_o_segundo_re
     for rotulo in LINHAS_DO_METODO:
         assert texto.count(rotulo) == 1, rotulo
     primeiro, segundo = _subsecao(conteudo, "5.6"), _subsecao(conteudo, "5.7")
-    assert any(linha.startswith("Algoritmo:") for linha in primeiro)
+    assert any(linha.startswith("Qual concurso:") for linha in primeiro)
     assert "Método:" in segundo
     assert "o comum a este Edital, descrito no item 5.6." in segundo
-    assert "Habilitação:" in segundo
-    assert not any(linha.startswith("Algoritmo:") for linha in segundo)
+    assert "• Participam do sorteio todas as inscrições enviadas." in segundo
+    assert not any(linha.startswith("Qual concurso:") for linha in segundo)
 
 
 def test_o_perfil_com_marco_proprio_imprime_o_metodo_e_o_grupo_seguinte_remete_a_ele():
     """O primeiro lugar, na ordem do documento, é o Perfil 5.1 — antes das subseções."""
     outro = {"marcos": [marco("x", name="Sorteio público")]}
     conteudo = cenario_a(**{"INF-BJN": outro})
-    assert any(linha.startswith("Algoritmo:") for linha in bloco_do_perfil(conteudo, "INF-BJN"))
+    assert any(linha.startswith("Qual concurso:") for linha in bloco_do_perfil(conteudo, "INF-BJN"))
     assert "o comum a este Edital, descrito no item 5.1." in _subsecao(conteudo, "5.6")
 
 
@@ -656,7 +670,7 @@ def test_metodo_proprio_continua_no_marco_e_agrupa_quando_identico():
         **{codigo: {"marcos": [marco(codigo, drawMethod=proprio)]} for codigo in QUATRO}
     )
     subsecao = " ".join(_subsecao(conteudo, "5.6"))
-    assert "Método: próprio deste marco" in subsecao
+    assert "Método: próprio deste sorteio" in subsecao
     assert "Concurso 6101" in subsecao
     assert "descrito no item" not in corrido(conteudo)
 
@@ -677,7 +691,7 @@ def _pagina_de_cada_linha(conteudo):
 
 @pytest.mark.parametrize("folga", range(0, 40, 3))
 def test_o_marco_da_subsecao_comum_quebra_entre_as_partes_e_nunca_dentro_de_uma(folga):
-    """FR-1357: o marco quebra entre cabeçalho e pares, sorteio, recurso e corte, desempate.
+    """FR-1357: o marco quebra entre as partes — cabeçalho e ordem, sorteio, recurso, corte.
 
     Inteiro e coeso, ele saltava de página e deixava um terço dela em branco antes da subseção
     (cenário B da auditoria). Cada parte continua inteira: o cabeçalho com a ordem, o sorteio com
@@ -692,12 +706,15 @@ def test_o_marco_da_subsecao_comum_quebra_entre_as_partes_e_nunca_dentro_de_uma(
         (numero,) = {n for n, linha in paginas if linha.startswith(prefixo)}
         return numero
 
-    assert pagina("SORTEIO —") == pagina("Ordem:")
-    assert pagina("Sorteio") == pagina("Algoritmo:") == pagina("Habilitação:")
-    assert pagina("Recurso:") == pagina("Corte:") == pagina("Continuação:")
+    # As partes, na redação 2 (069): o cabeçalho com a habilitação; o sorteio com todas as linhas
+    # do método; o recurso; a unidade do corte, com os suplentes e a continuação (FR-1375).
+    assert pagina("SORTEIO —") == pagina("• Participam do sorteio")
+    assert pagina("Sorteio") == pagina("Método:") == pagina("Se faltar:")
+    assert pagina("Recurso") == pagina("Contra o resultado de")
+    assert pagina("• Passam para a Etapa") == pagina("• Depois, poderão ser chamados")
     # Com atribuições, a subseção de marcos é a 5.7; sem, a 5.6.
-    titulo = [n for n, linha in paginas if " Marcos classificatórios comuns aos" in f" {linha[4:]}"]
-    assert titulo == [pagina("Os marcos abaixo")] == [pagina("SORTEIO —")], (
+    titulo = [n for n, linha in paginas if " Regras de classificação comuns aos" in f" {linha[4:]}"]
+    assert titulo == [pagina("A classificação é feita")] == [pagina("SORTEIO —")], (
         "o título e a frase vão com o primeiro marco"
     )
 
@@ -709,7 +726,7 @@ def test_a_conferencia_de_remissoes_le_as_subsecoes_novas():
     mapa, _, tabelas = _itens_impressos(pdf._grafado(cenario_a(), previa=False), [])
     assert mapa[(5, 6)] == [
         (
-            "a subseção «Marcos classificatórios comuns aos Perfis INF-BJN, INF-IUN, INF-SMT e "
+            "a subseção «Regras de classificação comuns aos Perfis INF-BJN, INF-IUN, INF-SMT e "
             "INF-VAL»",
             None,
             False,
@@ -731,12 +748,12 @@ def test_cada_frase_sai_uma_vez_sem_prefixo_quando_vale_para_todos():
     assert texto.count(CONVOCACAO_PUBLICACAO) == 1
     for codigo in QUATRO:
         bloco = " ".join(bloco_do_perfil(conteudo, codigo))
-        assert "Havendo ausência" not in bloco and "A convocação" not in bloco
+        assert "Se não houver candidatos" not in bloco and "A convocação" not in bloco
 
 
 def test_a_reversao_vem_logo_abaixo_da_tabela_de_vagas_e_a_convocacao_depois_das_modalidades():
     secao = secao_de_perfis(cenario_a())
-    reversao = next(i for i, linha in enumerate(secao) if linha.startswith("Havendo ausência"))
+    reversao = next(i for i, linha in enumerate(secao) if linha.startswith("Se não houver"))
     convocacao = next(i for i, linha in enumerate(secao) if linha.startswith("A convocação"))
     vagas = next(i for i, linha in enumerate(secao) if "Vagas por lista" in linha)
     modalidades = next(i for i, linha in enumerate(secao) if "Modalidades de concorrência" in linha)
@@ -760,7 +777,7 @@ def test_perfil_sem_reversao_nao_e_alcancado_e_os_outros_sao_nomeados():
     texto = corrido(conteudo)
     minuscula = REVERSAO_ESGOTAMENTO[0].lower() + REVERSAO_ESGOTAMENTO[1:]
     assert f"Nos Perfis INF-BJN, INF-SMT e INF-VAL, {minuscula}" in texto
-    assert texto.count("Havendo ausência") + texto.count("havendo ausência") == 1
+    assert texto.count("Se não houver candidatos") + texto.count("se não houver candidatos") == 1
 
 
 def test_perfil_fora_da_tabela_de_vagas_nao_e_alcancado_pela_reversao():
@@ -772,7 +789,7 @@ def test_perfil_fora_da_tabela_de_vagas_nao_e_alcancado_pela_reversao():
 def test_um_perfil_so_e_nomeado_no_singular():
     conteudo = cenario_a(**{"INF-VAL": {"convocacao": "INDIVIDUAL_MESSAGE"}})
     texto = corrido(conteudo)
-    assert "No Perfil INF-VAL, a convocação dos classificados será feita por mensagem" in texto
+    assert "No Perfil INF-VAL, a convocação será feita por mensagem individual" in texto
     assert (
         "Nos Perfis INF-BJN, INF-IUN e INF-SMT, a convocação dos classificados será feita por "
         "publicação" in texto
@@ -831,7 +848,7 @@ def test_as_subsecoes_saem_na_ordem_atribuicoes_requisitos_marcos():
     assert [titulo.split(" comuns")[0] for titulo in titulos] == [
         "5.5 Atribuições",
         "5.6 Requisitos",
-        "5.7 Marcos classificatórios",
+        "5.7 Regras de classificação",
     ]
 
 

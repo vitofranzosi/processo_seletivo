@@ -10,6 +10,7 @@ import re
 import pytest
 from django.urls import reverse
 
+from processo_seletivo.interface.forms import rotulo_do_numero
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.infrastructure.pdf import numeracao
@@ -64,10 +65,16 @@ def test_cada_secao_mostra_o_numero_do_documento_ou_que_nao_sai(client, composto
         elif secao["numero"] == 0:
             assert legenda == f"{secao['title']} (preâmbulo, sem número)"
         else:
-            assert legenda == f"{secao['numero']}. {secao['title']}"
+            # "3. " para a seção e "3.1 " para a subseção, como o documento imprime (069, R-003);
+            # a das Etapas diz os números delas, que saem como subseções da seleção.
+            if secao["key"] != "etapas":
+                assert secao["rotulo_do_numero"] == rotulo_do_numero(secao["numero"])
+            assert legenda == f"{secao['rotulo_do_numero']}{secao['title']}"
 
     assert legendas["apresentacao"].endswith("(preâmbulo, sem número)")
-    assert legendas["publico-alvo"].startswith("1. ")
+    # Público-alvo sai reunido em "Quem pode se inscrever?", e a pergunta vem antes dele.
+    assert legendas["publico-alvo"].startswith("1.1 ")
+    assert "<h3>1. Quem pode se inscrever?</h3>" in resposta.content.decode()
     assert legendas["certificado"].endswith("(vazia — não sai no documento)")
 
 
@@ -135,3 +142,25 @@ def test_gravar_a_etapa_com_tudo_vazio_a_conclui(client, seletor_ligado, edital)
     edital.refresh_from_db()
     assert not edital.secoes.exists()
     assert _estado_do_conteudo(client, edital) == "concluida"
+
+
+def test_a_pergunta_que_sai_pelo_gerado_nao_se_diz_vazia(client, composto):
+    """069: "Como se inscrever?" sai pelo teto de inscrições, ainda que o texto esteja vazio."""
+    Edital.objects.filter(pk=composto.pk).update(max_inscricoes_por_candidato=1)
+    resposta = client.get(_etapa(composto))
+    inscricao = next(s for s in resposta.context["secoes"] if s["key"] == "inscricao")
+    assert inscricao["numero"] is not None
+    assert inscricao["sai_sem_texto"]
+    assert re.search(r'data-secao="inscricao"\s+data-estado="sai"', resposta.content.decode())
+    legendas = _legendas(resposta.content.decode())
+    assert "vazia" not in legendas["inscricao"]
+
+
+def test_a_pergunta_vem_antes_do_primeiro_membro_mesmo_vazio(client, composto):
+    """069: com Público-alvo vazio, "Quem pode se inscrever?" sai pelos requisitos dos Perfis."""
+    edital = Edital.objects.get(pk=composto.pk)
+    edital.secoes.filter(key="publico-alvo").delete()
+    html = client.get(_etapa(composto)).content.decode()
+    assert re.search(
+        r"<h3>\d+\. Quem pode se inscrever\?</h3>\s*<fieldset[^>]*data-secao=\"publico-alvo\"", html
+    )

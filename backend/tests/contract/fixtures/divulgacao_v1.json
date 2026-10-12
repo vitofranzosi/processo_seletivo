@@ -1,0 +1,404 @@
+{
+  "cabecalho": {
+    "unidade": {
+      "cabecalho": [
+        "Centro de Referência em Formação",
+        "e em Educação a Distância"
+      ]
+    },
+    "titulo": "Resultado final — Classificação por sorteio eletrônico (Tutoria)",
+    "processo": "PS-2026-091 — Seleção de tutores UAB",
+    "edital": "Edital nº 91/2026",
+    "perfil": "TP-03 — Tutor presencial · Polo Aracruz",
+    "marco": "Classificação por sorteio eletrônico",
+    "lista": "Pessoas pretas, pardas e indígenas (PPI)",
+    "natureza_rotulo": "Resultado final, após recursos",
+    "retificacoes": [
+      {
+        "recurso": "REC-2026-0012",
+        "quando": "2026-11-03T14:20:00+00:00"
+      },
+      {
+        "recurso": "REC-2026-0019",
+        "quando": "2026-11-04T02:40:00+00:00"
+      }
+    ],
+    "ato": {
+      "emitido_em": "2026-11-02T21:15:00+00:00"
+    },
+    "publicado_em": "2026-11-05T13:00:00+00:00",
+    "signatario_nome": "Maria da Penha Araújo",
+    "signatario_cargo": "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância",
+    "signatario_ato_de_nomeacao": "Portaria nº 1.234, de 2 de janeiro de 2026",
+    "sorteio": {
+      "id": "SRT-2026-0042",
+      "algoritmo": "PCG64 sobre SHA-256 (v2)",
+      "semente": "Concurso 2871 da Lotofácil — 03 05 07 08 11 12 14 15 17 18 20 21 22 23 25",
+      "relacao_resumo": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+      "metodo_resumo": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "manifesto_resumo": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
+    }
+  },
+  "posicoes": [
+    {
+      "posicao": 1,
+      "compartilhada": false,
+      "candidato": "Bruno Íris Fonseca 01",
+      "protocolo": "INS-2026-1001",
+      "modalidade": "",
+      "pontuacao": "99,10"
+    },
+    {
+      "posicao": 2,
+      "compartilhada": false,
+      "candidato": "Cecília Araújo 02",
+      "protocolo": "INS-2026-1002",
+      "modalidade": "",
+      "pontuacao": "98,20"
+    },
+    {
+      "posicao": 3,
+      "compartilhada": false,
+      "candidato": "Débora Conceição 03",
+      "protocolo": "INS-2026-1003",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "97,30"
+    },
+    {
+      "posicao": 4,
+      "compartilhada": false,
+      "candidato": "Élcio Mônaco 04",
+      "protocolo": "INS-2026-1004",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 5,
+      "compartilhada": false,
+      "candidato": "Fábio Ítalo Guimarães 05",
+      "protocolo": "INS-2026-1005",
+      "modalidade": "",
+      "pontuacao": "95,50"
+    },
+    {
+      "posicao": 6,
+      "compartilhada": false,
+      "candidato": "Gisele Assunção 06",
+      "protocolo": "INS-2026-1006",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "94,60"
+    },
+    {
+      "posicao": 7,
+      "compartilhada": true,
+      "candidato": "Heitor Gonçalves 07",
+      "protocolo": "INS-2026-1007",
+      "modalidade": "",
+      "pontuacao": "93,70"
+    },
+    {
+      "posicao": 7,
+      "compartilhada": true,
+      "candidato": "Iara Tupinambá 08",
+      "protocolo": "INS-2026-1008",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 9,
+      "compartilhada": false,
+      "candidato": "João Antônio Sá 09",
+      "protocolo": "INS-2026-1009",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "91,90"
+    },
+    {
+      "posicao": 10,
+      "compartilhada": false,
+      "candidato": "Ana Lúcia Ribeiro 10",
+      "protocolo": "INS-2026-1010",
+      "modalidade": "",
+      "pontuacao": "90,00"
+    },
+    {
+      "posicao": 11,
+      "compartilhada": false,
+      "candidato": "Bruno Íris Fonseca 11",
+      "protocolo": "INS-2026-1011",
+      "modalidade": "",
+      "pontuacao": "89,10"
+    },
+    {
+      "posicao": 12,
+      "compartilhada": false,
+      "candidato": "Cecília Araújo 12",
+      "protocolo": "INS-2026-1012",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 13,
+      "compartilhada": false,
+      "candidato": "Débora Conceição 13",
+      "protocolo": "INS-2026-1013",
+      "modalidade": "",
+      "pontuacao": "87,30"
+    },
+    {
+      "posicao": 14,
+      "compartilhada": false,
+      "candidato": "Élcio Mônaco 14",
+      "protocolo": "INS-2026-1014",
+      "modalidade": "",
+      "pontuacao": "86,40"
+    },
+    {
+      "posicao": 15,
+      "compartilhada": false,
+      "candidato": "Fábio Ítalo Guimarães 15",
+      "protocolo": "INS-2026-1015",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "85,50"
+    },
+    {
+      "posicao": 16,
+      "compartilhada": false,
+      "candidato": "Gisele Assunção 16",
+      "protocolo": "INS-2026-1016",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 17,
+      "compartilhada": false,
+      "candidato": "Heitor Gonçalves 17",
+      "protocolo": "INS-2026-1017",
+      "modalidade": "",
+      "pontuacao": "83,70"
+    },
+    {
+      "posicao": 18,
+      "compartilhada": false,
+      "candidato": "Iara Tupinambá 18",
+      "protocolo": "INS-2026-1018",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "82,80"
+    },
+    {
+      "posicao": 19,
+      "compartilhada": false,
+      "candidato": "João Antônio Sá 19",
+      "protocolo": "INS-2026-1019",
+      "modalidade": "",
+      "pontuacao": "81,90"
+    },
+    {
+      "posicao": 20,
+      "compartilhada": false,
+      "candidato": "Ana Lúcia Ribeiro 20",
+      "protocolo": "INS-2026-1020",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 21,
+      "compartilhada": false,
+      "candidato": "Bruno Íris Fonseca 21",
+      "protocolo": "INS-2026-1021",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "79,10"
+    },
+    {
+      "posicao": 22,
+      "compartilhada": false,
+      "candidato": "Cecília Araújo 22",
+      "protocolo": "INS-2026-1022",
+      "modalidade": "",
+      "pontuacao": "78,20"
+    },
+    {
+      "posicao": 23,
+      "compartilhada": false,
+      "candidato": "Débora Conceição 23",
+      "protocolo": "INS-2026-1023",
+      "modalidade": "",
+      "pontuacao": "77,30"
+    },
+    {
+      "posicao": 24,
+      "compartilhada": false,
+      "candidato": "Élcio Mônaco 24",
+      "protocolo": "INS-2026-1024",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 25,
+      "compartilhada": false,
+      "candidato": "Fábio Ítalo Guimarães 25",
+      "protocolo": "INS-2026-1025",
+      "modalidade": "",
+      "pontuacao": "75,50"
+    },
+    {
+      "posicao": 26,
+      "compartilhada": false,
+      "candidato": "Gisele Assunção 26",
+      "protocolo": "INS-2026-1026",
+      "modalidade": "",
+      "pontuacao": "74,60"
+    },
+    {
+      "posicao": 27,
+      "compartilhada": false,
+      "candidato": "Heitor Gonçalves 27",
+      "protocolo": "INS-2026-1027",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "73,70"
+    },
+    {
+      "posicao": 28,
+      "compartilhada": false,
+      "candidato": "Iara Tupinambá 28",
+      "protocolo": "INS-2026-1028",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 29,
+      "compartilhada": false,
+      "candidato": "João Antônio Sá 29",
+      "protocolo": "INS-2026-1029",
+      "modalidade": "",
+      "pontuacao": "71,90"
+    },
+    {
+      "posicao": 30,
+      "compartilhada": false,
+      "candidato": "Ana Lúcia Ribeiro 30",
+      "protocolo": "INS-2026-1030",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "70,00"
+    },
+    {
+      "posicao": 31,
+      "compartilhada": false,
+      "candidato": "Bruno Íris Fonseca 31",
+      "protocolo": "INS-2026-1031",
+      "modalidade": "",
+      "pontuacao": "69,10"
+    },
+    {
+      "posicao": 32,
+      "compartilhada": false,
+      "candidato": "Cecília Araújo 32",
+      "protocolo": "INS-2026-1032",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 33,
+      "compartilhada": false,
+      "candidato": "Débora Conceição 33",
+      "protocolo": "INS-2026-1033",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "67,30"
+    },
+    {
+      "posicao": 34,
+      "compartilhada": false,
+      "candidato": "Élcio Mônaco 34",
+      "protocolo": "INS-2026-1034",
+      "modalidade": "",
+      "pontuacao": "66,40"
+    },
+    {
+      "posicao": 35,
+      "compartilhada": false,
+      "candidato": "Fábio Ítalo Guimarães 35",
+      "protocolo": "INS-2026-1035",
+      "modalidade": "",
+      "pontuacao": "65,50"
+    },
+    {
+      "posicao": 36,
+      "compartilhada": false,
+      "candidato": "Gisele Assunção 36",
+      "protocolo": "INS-2026-1036",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 37,
+      "compartilhada": false,
+      "candidato": "Heitor Gonçalves 37",
+      "protocolo": "INS-2026-1037",
+      "modalidade": "",
+      "pontuacao": "63,70"
+    },
+    {
+      "posicao": 38,
+      "compartilhada": false,
+      "candidato": "Iara Tupinambá 38",
+      "protocolo": "INS-2026-1038",
+      "modalidade": "",
+      "pontuacao": "62,80"
+    },
+    {
+      "posicao": 39,
+      "compartilhada": false,
+      "candidato": "João Antônio Sá 39",
+      "protocolo": "INS-2026-1039",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "61,90"
+    },
+    {
+      "posicao": 40,
+      "compartilhada": false,
+      "candidato": "Ana Lúcia Ribeiro 40",
+      "protocolo": "INS-2026-1040",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 41,
+      "compartilhada": false,
+      "candidato": "Bruno Íris Fonseca 41",
+      "protocolo": "INS-2026-1041",
+      "modalidade": "",
+      "pontuacao": "59,10"
+    },
+    {
+      "posicao": 42,
+      "compartilhada": false,
+      "candidato": "Cecília Araújo 42",
+      "protocolo": "INS-2026-1042",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "58,20"
+    },
+    {
+      "posicao": 43,
+      "compartilhada": false,
+      "candidato": "Débora Conceição 43",
+      "protocolo": "INS-2026-1043",
+      "modalidade": "",
+      "pontuacao": "57,30"
+    },
+    {
+      "posicao": 44,
+      "compartilhada": false,
+      "candidato": "Élcio Mônaco 44",
+      "protocolo": "INS-2026-1044",
+      "modalidade": "",
+      "pontuacao": ""
+    },
+    {
+      "posicao": 45,
+      "compartilhada": false,
+      "candidato": "Fábio Ítalo Guimarães 45",
+      "protocolo": "INS-2026-1045",
+      "modalidade": "PPI — Pessoas pretas, pardas e indígenas",
+      "pontuacao": "55,50"
+    }
+  ]
+}

@@ -241,3 +241,62 @@ def remissoes(texto: str) -> list[Remissao]:
                 )
             )
     return sorted(achadas, key=lambda remissao: remissao.inicio)
+
+
+# --- a remissão pelo título (069, FR-1400, R-013) ---------------------------------------------
+
+# O que faz de um título no meio do texto uma citação de seção: a palavra que a anuncia — "seção",
+# "item", "capítulo" —, as aspas, ou a caixa alta com que o original imprime os títulos. Sem nenhum
+# deles, "da inscrição" é só palavra: "o prazo da inscrição" não cita a seção "Da Inscrição".
+_ANUNCIO_DE_SECAO = r"(?:se[çc][ãa]o|item|cap[íi]tulo|t[óo]pico)"
+_ABRE_ASPAS = "«“\"'"
+_FECHA_ASPAS = "»”\"'"
+
+
+@dataclass(frozen=True)
+class RemissaoPorTitulo:
+    """Uma citação de seção pelo título: como está no texto, o título citado e onde começa."""
+
+    literal: str
+    titulo: str
+    inicio: int
+
+
+def remissoes_por_titulo(texto: str, titulos) -> list[RemissaoPorTitulo]:
+    """As citações, em `texto`, de algum dos `titulos`, na ordem em que aparecem (R-013).
+
+    **Leitor puro**: não sabe que títulos o documento tem — quem decide se a citação tem destino é
+    a validação. Um título é citado quando vem depois de "seção" (ou "item", "capítulo"), entre
+    aspas, ou em caixa alta; a comparação ignora a caixa nos dois primeiros casos. Uma citação só
+    por trecho do texto: o mesmo trecho não é lido como dois títulos.
+    """
+    texto = str(texto or "")
+    achadas, ocupados = [], []
+    # Os títulos mais longos primeiro: "Da Inscrição" não pode tomar o lugar de um título que o
+    # contenha. A ordem de quem chega é preservada no empate — e não a de um `set`, que muda com
+    # o `PYTHONHASHSEED`: "Etapas de Avaliação" e "Etapas de avaliação" casam o mesmo trecho, e o
+    # vencedor decidia, de um processo para outro, se a mensagem sugeria o destino.
+    for titulo in sorted(dict.fromkeys(str(t) for t in titulos if t), key=len, reverse=True):
+        nome = re.escape(titulo)
+        # Depois de "seção"/"item", a inicial do título vale como escrita: "item da inscrição" e
+        # "item do certificado" são prosa, e "item Da Inscrição" é citação.
+        inicial = rf"(?-i:{re.escape(titulo[0])})" if titulo[0].isalpha() else re.escape(titulo[0])
+        padroes = (
+            re.compile(
+                rf"\b{_ANUNCIO_DE_SECAO}\s+(?:[dn][oa]s?\s+)?[{_ABRE_ASPAS}]?"
+                rf"{inicial}{re.escape(titulo[1:])}[{_FECHA_ASPAS}]?(?!\w)",
+                re.IGNORECASE,
+            ),
+            re.compile(rf"[{_ABRE_ASPAS}]{nome}[{_FECHA_ASPAS}]", re.IGNORECASE),
+            re.compile(rf"(?<!\w){re.escape(titulo.upper())}(?!\w)"),
+        )
+        for padrao in padroes:
+            for casado in padrao.finditer(texto):
+                inicio, fim = casado.span()
+                if any(inicio < fim_ and inicio_ < fim for inicio_, fim_ in ocupados):
+                    continue
+                ocupados.append((inicio, fim))
+                achadas.append(
+                    RemissaoPorTitulo(literal=casado.group(0), titulo=titulo, inicio=inicio)
+                )
+    return sorted(achadas, key=lambda remissao: remissao.inicio)

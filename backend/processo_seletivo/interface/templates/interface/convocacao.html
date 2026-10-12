@@ -135,7 +135,7 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
   <p class="nota">Fica de fora {{ titulares.parada.protocolo }} — {{ titulares.parada.nome }}: {% if titulares.parada.motivo == "reabilitado" %}a decisão de recurso a pôs à frente, e ela não está entre as vagas da apuração; o gesto para nela, e chamá-la é a chamada individual.{% else %}é suplente. O gesto convoca só titulares; chamar a vaga que vagou é a chamada individual, abaixo.{% endif %}</p>
   {% endif %}
   <dl class="dados-da-inscricao">
-    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação no endereço eletrônico do certame — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
+    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
     <dt>Fundamento</dt><dd>{{ titulares.fundamento }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
   </dl>
   <form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">

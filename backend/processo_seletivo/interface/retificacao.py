@@ -351,7 +351,7 @@ ESPECIES_DE_REVERSAO = (
 # **As duas são normais**, e a amostra tem as duas: o 69/2026 (7.2) convoca por publicação; o 77, o
 # 58 e o 59 (8.3) por mensagem individual, com o prazo contado do recebimento.
 FORMAS_DE_CONVOCACAO = (
-    ("PUBLICATION", "Por publicação no endereço eletrônico do certame"),
+    ("PUBLICATION", "Por publicação"),
     ("INDIVIDUAL_MESSAGE", "Por mensagem individual à pessoa convocada"),
 )
 # A espécie do gatilho da reversão (016, D-007). **Só entra quando o objeto existe**, como os

@@ -105,8 +105,10 @@ DOCUMENTOS = [
     [
         ("De todos os candidatos", "o bloco sem restrição se anuncia como de todos"),
         ("Documento de identificacao", "o nome do requisito vai para o documento"),
-        ("Frente e verso", "a instrução ao candidato também"),
-        ("modalidade", "o bloco restrito nomeia a modalidade a que se dirige"),
+        # **Forma atualizada pela `069`** (D3, D5): a instrução segue o travessão em minúscula, e o
+        # bloco restrito nomeia a lista pelas vagas a que ela concorre.
+        ("frente e verso", "a instrução ao candidato também"),
+        ("às vagas para", "o bloco restrito nomeia a modalidade a que se dirige"),
         ("Laudo comprobatorio", "e o requisito daquela modalidade"),
     ],
 )
@@ -121,7 +123,7 @@ def test_o_bloco_de_um_perfil_nomeia_o_perfil():
 
     texto = _texto(_snapshot(documentos))
 
-    assert "perfil" in texto
+    assert "Também, de quem concorre ao Perfil P1" in texto
 
 
 def test_perfis_de_mesmo_nome_produzem_cabecalhos_distinguiveis():
@@ -147,8 +149,8 @@ def test_perfis_de_mesmo_nome_produzem_cabecalhos_distinguiveis():
 
     texto = _texto(snapshot)
 
-    assert "Dos candidatos ao perfil P1 — Tutor Presencial:" in texto
-    assert "Dos candidatos ao perfil P2 — Tutor Presencial:" in texto
+    assert "Também, de quem concorre ao Perfil P1 — Tutor Presencial:" in texto
+    assert "Também, de quem concorre ao Perfil P2 — Tutor Presencial:" in texto
 
 
 def test_sem_documento_exigido_a_secao_nao_e_composta():
@@ -198,10 +200,11 @@ def test_documentos_do_mesmo_codigo_saem_num_grupo_so_sem_perfil():
 
     texto = _texto(_com_pcd_nos_perfis(_snapshot(documentos)))
 
-    assert texto.count("Dos candidatos concorrentes na modalidade Pessoas com Deficiencia:") == 1
+    grupo = "Também, de quem concorre às vagas para pessoas com Deficiencia (PcD):"
+    assert texto.count(grupo) == 1
     assert "Laudo comprobatorio" in texto
     assert "Autodeclaracao PcD (facultativo)" in texto
-    assert "Dos candidatos ao perfil" not in texto
+    assert "concorre ao Perfil" not in texto
 
 
 def test_o_grupo_exato_continua_como_estava_ao_lado_do_transversal():
@@ -212,5 +215,5 @@ def test_o_grupo_exato_continua_como_estava_ao_lado_do_transversal():
 
     texto = _texto(_com_pcd_nos_perfis(_snapshot(documentos)))
 
-    assert "Dos candidatos ao perfil P1" in texto
-    assert "Dos candidatos concorrentes na modalidade Pessoas com Deficiencia:" in texto
+    assert "Também, de quem concorre ao Perfil P1" in texto
+    assert "Também, de quem concorre às vagas para pessoas com Deficiencia (PcD):" in texto

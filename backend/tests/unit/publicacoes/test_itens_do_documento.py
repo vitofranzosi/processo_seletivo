@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from processo_seletivo.editais.domain import secoes
-from processo_seletivo.publicacoes.infrastructure import pdf
+from processo_seletivo.publicacoes.infrastructure import apresentacao, pdf
 
 RAIZ = Path(__file__).resolve().parents[4]
 CONGELADOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "snapshots"
@@ -24,7 +24,9 @@ def _congelado(nome):
     return json.loads((CONGELADOS / nome).read_text(encoding="utf-8"))["content"]
 
 
-def _secoes(**redigidas):
+def _secoes(*, catalogo=secoes.CATALOGO_DA_054, **redigidas):
+    """Pelo catálogo da `054` por padrão — a apresentação plana; os casos "por perguntas" pedem o da
+    `069` (R-003), e o guardião compara as duas com a composição de verdade."""
     return [
         {
             "id": f"00000000-0000-0000-0000-{secao.order:012d}",
@@ -38,7 +40,7 @@ def _secoes(**redigidas):
                 else {"content": redigidas.get(secao.key.replace("-", "_"), "")}
             ),
         }
-        for secao in secoes.CATALOGO
+        for secao in catalogo
     ]
 
 
@@ -77,12 +79,14 @@ def _etapa(ordem):
     return {"id": f"s-{ordem}", "name": f"Etapa {ordem}", "order": ordem}
 
 
-def _sintetico(perfis, *, etapas=(), eventos=(EVENTO,), **redigidas):
+def _sintetico(
+    perfis, *, etapas=(), eventos=(EVENTO,), catalogo=secoes.CATALOGO_DA_054, **redigidas
+):
     return {
         "number": "1",
         "year": 2026,
         "title": "Edital",
-        "sections": _secoes(**redigidas),
+        "sections": _secoes(catalogo=catalogo, **redigidas),
         "profiles": list(perfis),
         "schedule": list(eventos),
         "stages": list(etapas),
@@ -122,10 +126,59 @@ CASOS = {
 }
 
 
+def levado_ao_catalogo_novo(conteudo):
+    # Adiado: `cenarios_da_auditoria` importa deste módulo.
+    from tests.unit.publicacoes.cenarios_da_auditoria import levado_ao_catalogo_novo as levar
+
+    return levar(conteudo)
+
+
+# Os mesmos casos na apresentação por perguntas (069, R-003): seções reunidas, subseções N.k
+# textuais e geradas, e as Etapas como subseções da seleção.
+POR_PERGUNTAS = {
+    "por perguntas: cenario A": lambda: levado_ao_catalogo_novo(
+        _congelado("A-conteudo-publicado.json")
+    ),
+    "por perguntas: cenario B": lambda: levado_ao_catalogo_novo(
+        _congelado("B-conteudo-publicado.json")
+    ),
+    "por perguntas: um Perfil só": lambda: _sintetico(
+        [_perfil("P1")], catalogo=secoes.CATALOGO_DA_069
+    ),
+    "por perguntas: com Etapas": lambda: _sintetico(
+        [_perfil("P1")], etapas=[_etapa(1), _etapa(2)], catalogo=secoes.CATALOGO_DA_069
+    ),
+    "por perguntas: seções textuais reunidas": lambda: _sintetico(
+        [_perfil("P1", atribuicoes="Mediar."), _perfil("P2", atribuicoes="Corrigir.")],
+        etapas=[_etapa(1)],
+        catalogo=secoes.CATALOGO_DA_069,
+        apresentacao="A Diretora torna público.",
+        publico_alvo="Graduados.",
+        requisitos_gerais="Ter disponibilidade.",
+        inscricao="A inscrição é gratuita.",
+        atendimento_pcd="Atendimento especializado.",
+        classificacao="A seleção tem uma etapa.",
+        verificacao_autodeclaracao="A comissão verifica.",
+        matricula="A matrícula é presencial.",
+        acesso_ao_curso="O curso é a distância.",
+        recursos="Cabe recurso.",
+    ),
+}
+CASOS.update(POR_PERGUNTAS)
+
+
 def _colhidos(snapshot):
-    """Os números que a composição de verdade escreve: seções, subseções e legendas de tabela."""
+    """Os números que a composição de verdade escreve: seções, subseções e legendas de tabela.
+
+    Pela apresentação do snapshot (069): a plana pelo `_secoes`, a por perguntas pelo compositor
+    dela. O sumário fica de fora, porque não é negrito: os títulos colhidos são os do corpo.
+    """
     composicao = pdf.Composicao()
-    pdf._secoes(composicao, pdf._grafado(snapshot, previa=False))
+    grafado = pdf._grafado(snapshot, previa=False)
+    if pdf.por_perguntas(grafado):
+        apresentacao.compor(composicao, grafado)
+    else:
+        pdf._secoes(composicao, grafado)
     secoes_, subsecoes, tabelas = set(), set(), []
     for item in composicao.itens:
         if item[0] != "texto" or item[2] != pdf.NEGRITO or not item[1]:
@@ -190,9 +243,13 @@ def test_a_funcao_nao_muda_o_snapshot():
 # a ser os de `specs/068-…/demonstracao/`; os da `067` ficam como evidência dela, e o que a `068`
 # mudou é preso por `test_documento_da_auditoria_depois_da_068.py` e, Perfil a Perfil, por
 # `test_equivalencia_da_consolidacao.py`.
+#
+# **E depois a `069`**, que muda a redação, a fonte, a hierarquia e a navegação: os bytes esperados
+# passam a ser os de `specs/069-…/demonstracao/`, e os da `068` ficam como evidência dela. O que a
+# `069` mudou é preso por `test_documento_da_auditoria_depois_da_069.py`.
 
 DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
-ESPERADOS = RAIZ / "specs" / "068-consolidacao-por-perfil" / "demonstracao"
+ESPERADOS = RAIZ / "specs" / "069-edital-linguagem-simples" / "demonstracao"
 CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
 # O contexto do ato com que cada cenário foi publicado na auditoria de 08/10/2026: A com nome e ato
 # de nomeação fictícios, B só com o cargo, como o registro inicial do Cefor está hoje.
@@ -207,7 +264,7 @@ AUTORIDADES = {
 
 
 @pytest.mark.parametrize("cenario", ["A", "B"])
-def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_068(cenario):
+def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_069(cenario):
     from datetime import date
 
     congelado = json.loads(
@@ -219,8 +276,10 @@ def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_068(cenar
         unidade=pdf.UnidadeDoAto(
             cabecalho=("Centro de Referência em Formação", "e em Educação a Distância"),
             local="Vitória (ES)",
+            # A sigla da Unidade, que o anúncio em caixa alta preserva (069, FR-1377).
+            sigla="Cefor",
         ),
         autoridade=AUTORIDADES[cenario],
         data_do_ato=date(2026, 10, 8),
     )
-    assert documento == (ESPERADOS / f"{cenario}-publicado-068.pdf").read_bytes()
+    assert documento == (ESPERADOS / f"{cenario}-plana-069.pdf").read_bytes()

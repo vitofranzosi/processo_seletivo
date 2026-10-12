@@ -452,8 +452,9 @@ def test_publicar_logo_apos_a_previa_produz_o_mesmo_conteudo_normativo(
     assert MARCA_DE_PREVIA in visualizado
     assert MARCA_DE_PREVIA not in publicado
     # **Forma atualizada**: o bloco de verificação deixou o caixa alta e virou nota subordinada.
-    assert "Verificação de integridade" in publicado
-    assert "Verificação de integridade" not in visualizado
+    # **Forma atualizada pela `069`** (F1): "Autenticidade", a mesma verificação.
+    assert "Autenticidade —" in publicado
+    assert "Autenticidade —" not in visualizado
 
 
 ETAPAS = {
@@ -496,8 +497,10 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
     assert previa.index("Prova didática") < previa.index("Análise de títulos")
     # **Forma atualizada pela `008`/US3**: peso e nota mínima viraram pares rótulo-valor da Etapa
     # (FR-027). O que esta jornada guarda é que a ponderação chega à prévia — e continua chegando.
-    assert "Peso" in previa and "2" in previa
-    assert "Nota mínima" in previa and "7" in previa
+    # **Forma atualizada pela `069`** (E2): os pares viraram frase, com os mesmos valores.
+    corrida = " ".join(previa.split())
+    assert "peso 2" in corrida
+    assert "nota mínima de 7" in corrida
     assert "eliminatória" in previa
 
     praticar(client, Edital.objects.get(), "submeter")
@@ -508,7 +511,9 @@ def test_etapas_aparecem_na_previa_e_no_documento_publicado_na_ordem_definida(
 
     publicado = texto_de_pdf_bytes(bytes(DocumentoPublicado.objects.get().bytes))
     assert publicado.index("Prova didática") < publicado.index("Análise de títulos")
-    assert "ETAPAS DE AVALIAÇÃO" in publicado
+    # Desde a `069` (FR-1368), as Etapas são subseções de "Como será a seleção?".
+    assert re.search(r"^\d+\. Como será a seleção\?$", publicado, re.M)
+    assert re.search(r"^\d+\.\d+ Prova didática$", publicado, re.M)
 
 
 PERFIS_COM_COTA = {
@@ -574,7 +579,8 @@ def test_secao_textual_editada_aparece_no_documento(client, seletor_ligado, edit
     )
 
     previa = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
-    assert "DOS RECURSOS" in previa
+    # O título da `069` (FR-1367): "Como recorrer?", e não "DOS RECURSOS".
+    assert re.search(r"^\d+\. Como recorrer\?$", previa, re.M)
     assert "Recurso em até três dias úteis, pelo sistema." in previa
 
 
@@ -602,4 +608,4 @@ def test_alterar_o_cronograma_reflete_na_secao_gerada_sem_sincronizar_nada(
 
     depois = texto_do_pdf(client.get(reverse("interface:previa-documento", args=[edital.id])))
     assert "Inscrições, com isenção de taxa" in depois
-    assert "CRONOGRAMA" in depois
+    assert re.search(r"^\d+\. Cronograma$", depois, re.M)

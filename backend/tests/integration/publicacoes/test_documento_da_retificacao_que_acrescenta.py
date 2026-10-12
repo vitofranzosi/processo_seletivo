@@ -102,19 +102,25 @@ def test_o_documento_da_retificacao_mostra_as_seis(api_client, manager_headers, 
     corrido = " ".join(texto.split())
 
     # A frase nomeia o resultado desde a `067` (ED-02).
+    # Na apresentação por perguntas (069), o recurso sai em "Como recorrer?", com o alcance dito
+    # pelo código quando só um Perfil tem o marco (R6).
     assert (
-        "Caberá recurso contra o resultado de “Classificação final”, no prazo de 3 (três)"
+        "Para o Perfil P1 — contra o resultado de “Classificação final”: no prazo de 3 (três)"
         in corrido
     ), "a janela que nasceu"
-    assert "Progridem os 2 (dois) primeiros desta ordem" in corrido, "a regra de corte"
-    assert "o quantitativo não preenchido" in corrido, "a reversão"
+    # Na redação 2 desde a `069` (K4, V2).
+    assert "Seguem no processo os 2 (dois) primeiros classificados" in corrido, "a regra de corte"
+    assert "que não forem preenchidas passam para a ampla concorrência" in corrido, "a reversão"
     assert "3º" in corrido, "o terceiro critério de desempate"
     assert "Egressos da escola pública" in corrido, "a Modalidade acrescentada"
     # Desde a `068`, com mais de um Perfil, a linha do quadro mora na tabela de vagas: a lista vira
     # coluna, com o código no cabeçalho, e o Perfil que a declara tem a célula dela.
     linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
     legenda = next(
-        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+        i
+        for i, linha in enumerate(linhas)
+        # A matriz da `069` chama-se "Vagas por Perfil e lista de concorrência".
+        if linha.startswith("Tabela ") and linha.endswith("lista de concorrência")
     )
     linha_do_perfil = linhas.index(principal["code"], legenda)
     cabecalho = linhas[legenda + 1 : linha_do_perfil]

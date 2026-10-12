@@ -30,13 +30,14 @@ from tests.fixtures.publicacao import (
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
-# Com o rascunho mínimo, as seções que saem são: Disposições Preliminares (1), Informações Gerais
-# (2), Perfis de Vaga (3) e Da Inscrição (4) — e o Cronograma depois.
+# Com o rascunho mínimo, as seções que saem, na apresentação por perguntas da `069` (R-003), são:
+# Disposições preliminares (1), Informações gerais (2), "Quantas vagas há, e onde?" (3), Cronograma
+# (4) e "Como se inscrever?" (5). Até a `069`, a Inscrição saía como 4, antes do Cronograma.
 COERENTE = {
     "disposicoes-preliminares": "O processo seletivo será conduzido pela Comissão.",
     "informacoes-gerais": "O curso é a distância.",
     "inscricao": (
-        "4.1 A inscrição será feita pela internet.\n4.2 O candidato anexará os documentos."
+        "5.1 A inscrição será feita pela internet.\n5.2 O candidato anexará os documentos."
     ),
 }
 
@@ -79,8 +80,8 @@ def test_a_submissao_com_conflito_e_recusada_nomeando_secao_e_paragrafos(api_cli
     assert resposta.status_code == 422, resposta.content
     corpo = resposta.content.decode()
     assert "blocking_findings" in corpo
-    assert "«Da Inscrição»" in corpo
-    assert "como 4" in corpo
+    assert "«Como se inscrever?»" in corpo
+    assert "como 5" in corpo
     assert "«9.1 A inscrição será feita pela internet.»" in corpo
     edital.refresh_from_db()
     assert edital.status == Edital.Status.EM_ELABORACAO

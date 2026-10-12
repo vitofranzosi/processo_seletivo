@@ -137,7 +137,7 @@ def _texto_transcrito(secao):
     )
 
 
-def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
+def secoes(edital_id="11111111-1111-1111-1111-111111111111", *, catalogo_=None):
     """As seções do catálogo, como `edital_snapshot` as materializa.
 
     O documento é composto a partir delas: sem `sections` não há o que compor. Construí-las aqui a
@@ -146,9 +146,15 @@ def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
     **Cada textual com um texto próprio**, como um Edital transcrito por inteiro: desde a `054` o
     catálogo não tem redação padrão (FR-983), e a textual vazia não sai no documento (FR-982). Os
     testes que precisam da vazia a esvaziam.
+
+    **Pelo catálogo da `054`, por padrão** (069, R-014): os casos desta suíte e das que a importam
+    afirmam a apresentação plana — a dos Editais publicados antes da `069` e a dos consolidados
+    deles, que continua a sair. Os da apresentação por perguntas pedem `CATALOGO_DA_069`, ou usam
+    `por_perguntas()`.
     """
     from processo_seletivo.editais.domain import secoes as catalogo
 
+    catalogo_ = catalogo.CATALOGO_DA_054 if catalogo_ is None else catalogo_
     return [
         {
             "id": str(catalogo.identidade(edital_id, secao.key)),
@@ -158,7 +164,7 @@ def secoes(edital_id="11111111-1111-1111-1111-111111111111"):
             "type": secao.type,
             **({"source": secao.source} if secao.gerada else {"content": _texto_transcrito(secao)}),
         }
-        for secao in catalogo.CATALOGO
+        for secao in catalogo_
     ]
 
 
@@ -316,7 +322,8 @@ def test_document_reproduces_every_profile_of_the_homologated_version():
     assert perfil["locality"] in texto
     assert perfil["requirements"][0] in texto
     assert "Vagas imediatas" in texto and "3" in texto
-    assert "limitado em 6" in texto
+    # **Forma atualizada pela `069`** (P2): o cadastro dito pelo efeito, com o extenso.
+    assert "até 6 (seis) classificados" in texto
 
 
 def test_document_reproduces_competition_modalities_and_their_normative_rule():
@@ -354,7 +361,9 @@ def test_document_preserves_portuguese_accents():
     # **Forma atualizada pela calibração contra o Edital 146/2025**: a identificação do órgão
     # passou a caixa mista, como nos três alvos. O que este teste guarda é a **acentuação**, e
     # `Espírito` a exercita igualmente bem.
-    for esperado in ("Informática", "inscrições", "indígenas", "Seleção", "Espírito"):
+    # "Computação" no lugar de "Seleção", que vinha da descrição do Edital: a descrição é nota da
+    # equipe e não sai mais no ato (069, FR-1378).
+    for esperado in ("Informática", "inscrições", "indígenas", "Computação", "Espírito"):
         assert esperado in texto, esperado
     # A versão anterior codificava em ASCII e produzia exatamente estas formas mutiladas.
     for mutilado in ("Inform?tica", "inscri??es", "ind?genas", "Sele??o", "ESP?RITO"):
@@ -371,7 +380,7 @@ def test_a_declaracao_de_integridade_identifica_sem_expor_uuid():
 
     assert HASH in texto
     assert HASH[:16] in texto  # rodapé de cada página
-    assert "deriva integralmente da versão homologada" in texto
+    assert "corresponde integralmente à versão homologada" in texto
     assert "Edital 07/2026" in texto
     assert "PS-DEMO-2026" in texto
     assert "Processo Seletivo Simplificado 2026" in texto
@@ -479,8 +488,9 @@ def test_etapas_aparecem_com_caracter_peso_e_nota_minima():
     # referência ao Cronograma virou a linha "Realização". Os fatos que este teste guarda —
     # caráter, peso, nota mínima presentes, forma canônica ausente e data derivada do Evento —
     # são invariantes e continuam.
+    # **Forma atualizada pela `069`** (E2): os pares viraram uma frase, com os mesmos valores.
     assert "eliminatória e classificatória" in texto
-    assert "Peso" in texto and "Nota mínima" in texto
+    assert "peso 2" in texto and "nota mínima de 7" in texto
     assert "2.0000" not in texto and "7.0000" not in texto
     assert "INSCRICAO" not in texto
     assert "01/09/2026, às 09h" in texto
@@ -606,9 +616,11 @@ def test_nenhuma_linha_do_documento_ultrapassa_a_margem():
     from processo_seletivo.publicacoes.infrastructure.pdf import (
         LARGURA,
         MARGEM,
-        largura,
+        METRICA_DO_EDITAL,
     )
 
+    # O Edital mede pela fonte que embute (069, FR-1381); a Helvetica é a do comprovante.
+    largura = METRICA_DO_EDITAL.largura
     util = LARGURA - 2 * MARGEM
     for pdf in (documento(snapshot(), HASH), documento(dois_perfis(), HASH)):
         for linha, fonte, tamanho, recuo in linhas_desenhadas(pdf):
@@ -691,8 +703,8 @@ def test_o_ato_sai_sempre_do_numero_e_do_ano(titulo, anuncio):
 def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
     """RC-12, pela DP-20: o teto executado na submissão é publicado no documento (015, FR-063)."""
     sem_teto = texto_de(documento(snapshot(), HASH))
+    assert "Cada candidato pode enviar" not in sem_teto
     assert "inscrição enviada" not in sem_teto
-    assert "inscrições enviadas" not in sem_teto
 
     um = [
         linha
@@ -700,7 +712,7 @@ def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
             documento(snapshot(maxInscricoesPorCandidato=1), HASH)
         )
     ]
-    frase = "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+    frase = "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
     assert frase in um
     # Dentro da seção "Da Inscrição", depois do texto de quem redigiu, e antes da seção seguinte.
     inicio = next(i for i, linha in enumerate(um) if linha.endswith(". DA INSCRIÇÃO"))
@@ -710,7 +722,7 @@ def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
     assert inicio < um.index(frase) < seguinte
 
     dois = texto_de(documento(snapshot(maxInscricoesPorCandidato=2), HASH))
-    assert "no máximo 2 inscrições enviadas neste Edital" in dois
+    assert "no máximo 2 (duas) inscrições neste Edital" in dois
 
 
 def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
@@ -722,7 +734,10 @@ def test_as_secoes_normativas_sao_numeradas_em_sequencia_continua():
     """
     import re as _re
 
-    from processo_seletivo.publicacoes.infrastructure.pdf import CORPO_SECAO
+    # **Forma atualizada pela `069`** (FR-1382): o título de seção tem corpo próprio.
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        CORPO_TITULO_DE_SECAO as CORPO_SECAO,
+    )
 
     for conteudo in (snapshot(), sem_etapas()):
         # Título de seção tem forma própria — negrito, no corpo da seção. Casar só pelo texto
@@ -866,7 +881,7 @@ def test_um_subbloco_maior_que_a_pagina_quebra_por_dentro_e_a_composicao_conclui
     assert len(paginas) >= 3, "o cenário extremo deveria ocupar várias páginas"
     texto = texto_de(pdf)
     assert "Atribuição 1:" in texto and "Atribuição 60:" in texto, "conteúdo perdido na quebra"
-    assert "Verificação de integridade" in texto, "a composição não chegou ao fim"
+    assert "Autenticidade —" in texto, "a composição não chegou ao fim"
 
 
 def test_o_quadro_de_modalidades_nao_inventa_celula_nem_perde_informacao():
@@ -970,12 +985,15 @@ def test_o_cronograma_e_apresentado_em_tabela_com_colunas_alinhadas():
     pdf = documento(snapshot(), HASH)
     texto = texto_de(pdf)
 
-    for coluna in ("Evento", "Início", "Término"):
+    # **Forma atualizada pela `069`**: o período numa coluna, "de … a …" (texto alvo da spec).
+    for coluna in ("Evento", "Quando"):
         assert coluna in texto, coluna
 
     # Alinhamento é uma propriedade de posição, não de texto: as células de uma coluna começam
     # todas no mesmo x. Conferir o texto não distinguiria uma tabela de uma lista.
-    from processo_seletivo.publicacoes.infrastructure.pdf import largura
+    from processo_seletivo.publicacoes.infrastructure.pdf import METRICA_DO_EDITAL
+
+    largura = METRICA_DO_EDITAL.largura
 
     # Uma coluna só se prova alinhada com várias células nela: o cenário-base tem um Evento, e
     # `01/09` e `20/09` são de colunas diferentes — início e término.
@@ -1048,13 +1066,12 @@ def test_a_etapa_apresenta_carater_peso_e_nota_em_pares_rotulo_valor():
     `caráter: eliminatória e classificatória; peso: 2; nota mínima: 7` é escrita de banco de
     dados. O que o candidato precisa ler é um quadro.
     """
-    texto = texto_de(documento(snapshot(), HASH))
+    texto = " ".join(texto_de(documento(snapshot(), HASH)).split())
 
     assert "caráter: eliminatória e classificatória; peso:" not in texto
-    for rotulo in ("Caráter:", "Peso:", "Nota mínima:"):
-        assert rotulo in texto, rotulo
-    assert "eliminatória e classificatória" in texto
-    assert "2" in texto and "7" in texto
+    # **Forma atualizada pela `069`** (E2): os pares viraram uma frase — sem "Caráter:" nem "Peso:"
+    # —, com os mesmos valores, na ordem em que a Etapa os declara.
+    assert "Etapa eliminatória e classificatória, com nota mínima de 7 e peso 2." in texto
 
     # A data continua vindo do Evento vinculado, e não é digitada de novo na Etapa (FR-028).
     assert "01/09/2026, às 09h" in texto
@@ -1113,7 +1130,14 @@ def test_o_espaco_antes_de_secao_bloco_e_paragrafo_e_decrescente():
 
 def test_nenhuma_linha_ultrapassa_a_margem_em_nenhum_cenario():
     """FR-029: inclusive no cenário longo, e inclusive nas células das tabelas."""
-    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        LARGURA,
+        MARGEM,
+        METRICA_DO_EDITAL,
+    )
+
+    # O Edital mede pela fonte que embute (069, FR-1381); a Helvetica é a do comprovante.
+    largura = METRICA_DO_EDITAL.largura
 
     util = LARGURA - 2 * MARGEM
     for conteudo in (
@@ -1211,15 +1235,13 @@ def test_a_verificacao_vem_depois_da_assinatura_e_nao_e_secao_do_edital():
     assert "Versão do schema" not in texto
     assert HASH in texto, "o SHA-256 completo permanece"
     assert HASH[:16] in texto, "e o abreviado permanece no rodapé"
-    assert "deriva integralmente da versão homologada" in texto
+    assert "corresponde integralmente à versão homologada" in texto
 
     # **Forma atualizada**: o bloco deixou de ser um título em caixa alta seguido de quatro
     # linhas e passou a três linhas de nota abaixo de um fio. Ele precisa estar presente e
     # precisa estar **abaixo** — em corpo de texto, lia-se como a décima primeira seção.
     verificacao = next(
-        indice
-        for indice, linha in enumerate(linhas)
-        if linha.startswith("Verificação de integridade")
+        indice for indice, linha in enumerate(linhas) if linha.startswith("Autenticidade —")
     )
     assert linhas.index(AUTORIDADE[0]) < verificacao
 
@@ -1265,7 +1287,14 @@ def test_uma_celula_longa_nao_empurra_as_colunas_para_fora_da_pagina():
     útil e joga as colunas seguintes para fora do papel: o Edital publicado perde início e
     término sem que nada acuse.
     """
-    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        LARGURA,
+        MARGEM,
+        METRICA_DO_EDITAL,
+    )
+
+    # O Edital mede pela fonte que embute (069, FR-1381); a Helvetica é a do comprovante.
+    largura = METRICA_DO_EDITAL.largura
 
     conteudo = snapshot()
     conteudo["schedule"] = [{**conteudo["schedule"][0], "description": "D" * 500}]
@@ -1411,7 +1440,14 @@ def test_o_texto_normativo_alcanca_as_duas_margens():
     Só é possível porque a largura é real: a folga da linha é distribuída entre os seus espaços,
     e sem medir não há folga a distribuir.
     """
-    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        LARGURA,
+        MARGEM,
+        METRICA_DO_EDITAL,
+    )
+
+    # O Edital mede pela fonte que embute (069, FR-1381); a Helvetica é a do comprovante.
+    largura = METRICA_DO_EDITAL.largura
 
     pdf = documento(snapshot())
     util = LARGURA - 2 * MARGEM
@@ -1496,10 +1532,15 @@ def test_o_documento_abre_com_o_brasao_da_republica():
     assert brasao.FLUXO in pdf, "o fluxo da imagem não foi embutido"
 
     # E é desenhada **só na primeira página**: repeti-la seria papel timbrado, não ato.
+    # O operador de desenho da imagem, com o nome dela: "Do" sozinho também aparece em texto — o
+    # sumário da `069` (FR-1372) repete os títulos, e "Documentos" está entre eles.
+    from processo_seletivo.publicacoes.infrastructure.pdf import NOME_DO_BRASAO
+
+    desenho = f"/{NOME_DO_BRASAO} Do".encode()
     fluxos = CONTEUDO_DA_PAGINA.findall(pdf)
-    assert b"Do" in fluxos[0]
+    assert desenho in fluxos[0]
     for seguinte in fluxos[1:]:
-        assert b"Do" not in seguinte
+        assert desenho not in seguinte
 
     # O órgão começa abaixo do brasão, e não por baixo dele.
     from processo_seletivo.publicacoes.infrastructure.pdf import ALTURA_DO_BRASAO, TOPO
@@ -1560,7 +1601,12 @@ def test_suprimir_o_preambulo_nao_abre_lacuna_na_numeracao():
         secao for secao in snapshot()["sections"] if secao.get("key") != "apresentacao"
     ]
     texto = texto_de(documento(snapshot(sections=sem_apresentacao), HASH))
-    numeros = [int(m.group(1)) for m in _re.finditer(r"^(\d+)\. [A-ZÀ-Ú]", texto, _re.M)]
+    # Sem as linhas do sumário (069, FR-1372), que repetem os títulos com o pontilhado.
+    numeros = [
+        int(m.group(1))
+        for m in _re.finditer(r"^(\d+)\. [A-ZÀ-Ú][^\n]*$", texto, _re.M)
+        if " . ." not in m.group(0)
+    ]
     assert numeros == list(range(1, len(numeros) + 1)), numeros
 
 
@@ -1619,8 +1665,8 @@ def test_a_etapa_decisoria_imprime_os_rotulos_e_nao_imprime_nota():
 
     texto = texto_de(documento(conteudo))
 
-    assert "Deferido ou Indeferido" in texto
-    assert "Nota mínima" not in texto and "Pontuação máxima" not in texto
+    assert "o resultado é “Deferido” ou “Indeferido”" in texto
+    assert "nota mínima" not in texto.lower() and "pontuação máxima" not in texto.lower()
 
 
 # ---------------------------------------------------------------------------
