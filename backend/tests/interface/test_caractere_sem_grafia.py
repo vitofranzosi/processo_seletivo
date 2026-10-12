@@ -5,6 +5,8 @@ onde corrigir. O caminho aqui é o real: o texto entra pelo formulário da etapa
 colado do Word.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -57,7 +59,12 @@ def test_a_previa_nomeia_o_caractere_e_o_documento_o_mostra_pelo_codigo(
     # O que a lista resolve sai resolvido; o que sobra aparece pelo código, nunca como `?`.
     assert "• Conhecer o curso;" in documento
     assert "• Experiência [U+2265] 2 anos." in documento
-    assert "?" not in documento
+    # Nenhum "?" de substituição. Os títulos em pergunta da `069` ("Quantas vagas há, e onde?")
+    # têm o seu, no fim do título — e só ali.
+    sem_os_titulos = [
+        linha for linha in documento.splitlines() if not re.search(r"\w\?( \. \.|$)", linha)
+    ]
+    assert "?" not in "\n".join(sem_os_titulos)
 
 
 @pytest.mark.django_db

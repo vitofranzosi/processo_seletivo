@@ -345,6 +345,9 @@ documento servido tem os mesmos bytes; retificá-lo e conferir que o consolidado
   resultado pelo nome do marco entre aspas tipográficas: *"Caberá recurso contra o resultado de
   “{nome}”, no prazo de {N} ({por extenso}) {dias corridos | dia corrido}, contados da divulgação
   desse resultado."* O número por extenso e o singular seguem a regra de hoje (`FR-030`).
+  *Emendada pela `069` (FR-1363, FR-1369): na redação 2 a frase é "Contra o resultado de “{nome}”: no
+  prazo de …", sem canal, e no Edital por perguntas ela sai em "Como recorrer?", e não no marco. Os
+  atos publicados antes continuam com a frase que publicaram (FR-1397).*
 - **FR-1301**: A frase de marco que declara que não cabe recurso MUST ser *"Não caberá recurso contra
   o resultado de “{nome}”."*
 - **FR-1302**: O nome é o do marco, na grafia publicada; sem nome, o código; sem os dois — o que só

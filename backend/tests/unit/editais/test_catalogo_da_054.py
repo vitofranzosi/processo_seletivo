@@ -45,22 +45,33 @@ def _com_textos(**textos):
 
 
 def _titulos_numerados(texto):
-    """Os títulos de seção: o número, e um texto todo em caixa alta."""
+    """Os títulos de seção: o número, e um texto todo em caixa alta.
+
+    Sem as linhas do sumário (069, FR-1372), que repetem o título seguido do pontilhado: o título é
+    o do corpo do documento.
+    """
     return [
         (numero, titulo)
         for numero, titulo in re.findall(r"^(\d+)\. (.+)$", texto, re.M)
-        if titulo == titulo.upper()
+        if titulo == titulo.upper() and " . ." not in titulo
     ]
 
 
 def test_as_quinze_secoes_do_28_2026_tem_lugar_no_catalogo():
-    """SC-361: 15 de 15, e na ordem do original, salvo a entrevista PcD (R-001)."""
+    """SC-361: 15 de 15, e na ordem do original, salvo a entrevista PcD (R-001).
+
+    A ordem é a do catálogo da `054`, congelado: a da `069` reúne a verificação da autodeclaração na
+    seleção, e por isso não segue a ordem do 28/2026 — o que este caso prova é a decisão da `054`.
+    As chaves continuam todas no catálogo vigente (FR-1367).
+    """
+    da_054 = {secao.key: secao for secao in secoes.CATALOGO_DA_054}
     assert len(SECOES_DO_28_2026) == 15
     assert set(SECOES_DO_28_2026.values()) <= set(secoes.POR_CHAVE)
+    assert set(SECOES_DO_28_2026.values()) <= set(da_054)
 
-    ordem = [secoes.POR_CHAVE[chave].order for chave in SECOES_DO_28_2026.values()]
+    ordem = [da_054[chave].order for chave in SECOES_DO_28_2026.values()]
     sem_a_entrevista = [
-        secoes.POR_CHAVE[chave].order
+        da_054[chave].order
         for titulo, chave in SECOES_DO_28_2026.items()
         if chave != "atendimento-pcd"
     ]

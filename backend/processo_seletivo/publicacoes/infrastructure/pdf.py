@@ -16,6 +16,7 @@ import re
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import date, datetime
+from urllib.parse import quote
 
 from django.utils import timezone
 
@@ -23,16 +24,23 @@ from django.utils import timezone
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
 from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import quadro as quadro_do_perfil
+from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
 from processo_seletivo.editais.domain.secoes import GERADA
 from processo_seletivo.publicacoes.domain import grafia
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     ETAPA_NAO_IDENTIFICADA,
+    REDACAO_1,
+    REDACAO_2,
+    REDACAO_VIGENTE,
     criterio_com_a_ausencia,
+    frase_da_convocacao,
+    inicial_minuscula,
     por_identificador,
 )
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
+from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
@@ -292,6 +300,22 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
     return total * tamanho / 1000
 
 
+class Metrica:
+    """Como a composição mede o texto — a Helvetica de hoje, salvo quando outra é dada (069, R-005).
+
+    **Da composição, e não do módulo.** O Edital passa a embutir a fonte e a medir pelas larguras
+    dela, e o comprovante e a divulgação continuam com a Helvetica, byte a byte (FR-1383): as duas
+    medidas só convivem se cada composição carregar a sua. Uma função global trocada pelo Edital
+    mudaria, na mesma chamada, a quebra de linha de todo comprovante emitido depois.
+    """
+
+    def largura(self, texto: str, tamanho: float, fonte: str = REGULAR) -> float:
+        return largura(texto, tamanho, fonte)
+
+
+HELVETICA = Metrica()
+
+
 # Os níveis tipográficos do documento, e apenas estes (FR-009). Nomeá-los é o que impede que a
 # hierarquia volte a ser um punhado de números literais espalhados pela composição.
 # Calibrados contra os Editais 62/2026, 73/2026 e 146/2025 do Cefor. A identificação do órgão é
@@ -307,6 +331,19 @@ CORPO_TEXTO = 10.5
 # corpo é o que permite à coluna caber sem apertar a célula.
 CORPO_TABELA = 9.5
 CORPO_NOTA = 7.5
+# **A hierarquia da `069`** (FR-1382): o título de seção ganha corpo e um fio abaixo, e a subseção
+# um corpo próprio. A calibração da `008` — título no corpo do texto, a hierarquia pelo peso — dava
+# título e parágrafo quase iguais num documento longo, e a auditoria de 08/10 o apontou (ED-16 e o
+# teste heurístico). `CORPO_SECAO` continua o de antes: é o do comprovante e da divulgação, que não
+# mudam (FR-1383).
+CORPO_TITULO_DE_SECAO = 12.5
+CORPO_SUBSECAO = 11.0
+# O fundo do bloco destacado: o resumo, os dados do sorteio e a declaração (FR-1382). Mais claro que
+# o cinza do cabeçalho de tabela, e só um tom — nenhuma informação depende de cor.
+CINZA_DO_DESTAQUE = "0.95"
+# Quanto o fio fica abaixo da linha de base do título de seção: o bastante para passar sob as
+# descidas dele.
+FIO_SOB_O_TITULO = 4.0
 
 ESQUERDA, CENTRO, DIREITA = "esquerda", "centro", "direita"
 
@@ -361,6 +398,10 @@ class UnidadeDoAto:
     cabecalho: tuple[str, ...]
     # O local do fecho — *"Vitória (ES)"*. Só o documento publicado o imprime.
     local: str
+    # A sigla da unidade — "Cefor" —, que o anúncio em caixa alta preserva como foi registrada
+    # (069, FR-1377) e o título do arquivo nomeia como autor (FR-1384). Vazia onde quem compõe não
+    # a tem: o anúncio preserva então só a sigla da instituição e as palavras de caixa mista.
+    sigla: str = ""
 
 
 @dataclass(frozen=True)
@@ -447,30 +488,36 @@ def _grafado(valor, *, previa: bool):
 
 
 def _quebrar(
-    texto: str, tamanho: float, recuo: float, fonte: str = REGULAR, limite: float | None = None
+    texto: str,
+    tamanho: float,
+    recuo: float,
+    fonte: str = REGULAR,
+    limite: float | None = None,
+    metrica: Metrica = HELVETICA,
 ) -> list[str]:
     """Reflui por largura real, e não por contagem de caracteres (FR-002, FR-032).
 
     `limite` é a largura da coluna, quando o texto é célula de tabela: sem ele o refluxo usaria a
-    página inteira e a célula atravessaria as colunas vizinhas.
+    página inteira e a célula atravessaria as colunas vizinhas. `metrica` é a da composição (069).
     """
     # A tolerância existe porque a largura de uma coluna é calculada a partir da largura do seu
     # próprio conteúdo: sem ela, a igualdade exata falha por arredondamento e a célula que definiu
     # a coluna é a primeira a quebrar dentro dela — foi assim que um `40` virou `4` e `0`.
     disponivel = (limite if limite is not None else LARGURA - 2 * MARGEM - recuo) + 0.01
+    medir = metrica.largura
     linhas, atual = [], ""
     for palavra in str(texto).split():
         candidato = f"{atual} {palavra}".strip()
-        if largura(candidato, tamanho, fonte) <= disponivel:
+        if medir(candidato, tamanho, fonte) <= disponivel:
             atual = candidato
             continue
         if atual:
             linhas.append(atual)
         # Uma palavra sozinha mais larga que o espaço disponível não tem onde quebrar por espaço.
         # Parti-la é feio; deixá-la atravessar a margem é pior, e é o que acontecia.
-        while largura(palavra, tamanho, fonte) > disponivel and len(palavra) > 1:
+        while medir(palavra, tamanho, fonte) > disponivel and len(palavra) > 1:
             corte = len(palavra)
-            while corte > 1 and largura(palavra[:corte], tamanho, fonte) > disponivel:
+            while corte > 1 and medir(palavra[:corte], tamanho, fonte) > disponivel:
                 corte -= 1
             linhas.append(palavra[:corte])
             palavra = palavra[corte:]
@@ -604,10 +651,19 @@ def _grade(quadro, base):
     return formas
 
 
-def _moldura(topo, base):
-    """O contorno de um bloco, da primeira à última linha que ele colocou na página."""
+# A moldura que pede fundo: o bloco destacado (069, FR-1382). Um valor de `moldura`, e não um campo
+# novo do item `abre`, porque o item é tupla de três posições que a paginação e os testes desmontam.
+DESTAQUE = "destaque"
+
+
+def _moldura(topo, base, destaque=False):
+    """O contorno de um bloco, da primeira à última linha que ele colocou na página.
+
+    Com `destaque`, a forma é `caixa`: o mesmo retângulo, com fundo, que o escritor desenha antes
+    de qualquer outro traço e de todo texto.
+    """
     return (
-        "ret",
+        "caixa" if destaque else "ret",
         MARGEM - 6,
         base - 4,
         LARGURA - 2 * MARGEM + 12,
@@ -615,7 +671,7 @@ def _moldura(topo, base):
     )
 
 
-def _espacamento(texto, fonte, tamanho, recuo):
+def _espacamento(texto, fonte, tamanho, recuo, metrica=HELVETICA):
     """Quanto acrescentar a cada espaço para a linha alcançar a margem direita.
 
     É a justificação dos Editais de referência, e ela só é possível por causa de FR-002: sem
@@ -625,20 +681,42 @@ def _espacamento(texto, fonte, tamanho, recuo):
     espacos = str(texto).count(" ")
     if not espacos:
         return 0.0
-    folga = (LARGURA - 2 * MARGEM - recuo) - largura(texto, tamanho, fonte)
+    folga = (LARGURA - 2 * MARGEM - recuo) - metrica.largura(texto, tamanho, fonte)
     if folga <= 0:
         return 0.0
     por_espaco = folga / espacos
     return por_espaco if por_espaco <= tamanho * 0.35 else 0.0
 
 
-def _x(texto, fonte, tamanho, recuo, alinhamento):
+def _x(texto, fonte, tamanho, recuo, alinhamento, metrica=HELVETICA):
     """Onde a linha começa. Centralizar e alinhar à direita só é possível por causa de FR-002."""
     if alinhamento == ESQUERDA:
         return MARGEM + recuo
     util = LARGURA - 2 * MARGEM
-    sobra = util - largura(texto, tamanho, fonte)
+    sobra = util - metrica.largura(texto, tamanho, fonte)
     return MARGEM + (sobra / 2 if alinhamento == CENTRO else sobra)
+
+
+# Acima desta fração da área útil em branco, um bloco divisível se divide em vez de saltar
+# (069, R-011). Heurística calibrada nos cenários A e B, e não requisito: o requisito é o
+# equilíbrio.
+FRACAO_EM_BRANCO = 0.5
+# Abaixo de tantas linhas, o bloco não se divide pelo equilíbrio: partir um bloco de três linhas
+# deixa uma ou duas de cada lado, que é a viúva que a coesão existe para evitar.
+LINHAS_PARA_DIVIDIR = 4
+
+
+# O bloco coeso que nem o equilíbrio divide: o sumário (069). Verdadeiro como `coeso`, e por isso
+# salta inteiro como qualquer coeso; só a divisão por equilíbrio o distingue.
+INTEIRO = "inteiro"
+
+
+def _divisivel(itens, inicio, fim):
+    """O bloco tem o que dividir: linhas bastantes para que a divisão **possa** deixar duas de
+    cada lado. Onde ela cai é o espaço que decide, e uma linha só no alto da página seguinte não
+    está excluída — é a troca aceita contra a meia página em branco (FR-1392)."""
+    linhas = sum(1 for item in itens[inicio : fim + 1] if item[0] == "texto" and item[1])
+    return linhas >= LINHAS_PARA_DIVIDIR
 
 
 class Composicao:
@@ -651,8 +729,22 @@ class Composicao:
 
     ESPESSURA_DO_FIO = 0.6
 
-    def __init__(self):
+    def __init__(
+        self, metrica: Metrica = HELVETICA, redacao: int = REDACAO_VIGENTE, equilibrio=False
+    ):
         self.itens: list = []
+        # A regra de equilíbrio da paginação do Edital (069, FR-1392, R-011). Desligada por padrão:
+        # o comprovante e a divulgação paginam como sempre, byte a byte (FR-1383).
+        self.equilibrio = equilibrio
+        # A medida de toda quebra, posição e justificação desta composição (069, R-005).
+        self.metrica = metrica
+        # A redação das frases geradas (069, R-004). A vigente em todo documento composto agora; a
+        # 1 só nas provas da história da `067` e da `068`, que compõem como se compunha.
+        self.redacao = redacao
+        # Os endereços escritos inteiros, antes do refluxo (069, R-012): uma palavra mais larga que
+        # a coluna se parte, e o link do primeiro pedaço — "https://selecao.cefor.ifes.ed" — levaria
+        # a outro lugar. Só vira link o que casar com um destes.
+        self.enderecos: set = set()
 
     def escrever(
         self,
@@ -682,7 +774,8 @@ class Composicao:
         # A última linha de um parágrafo **não** se justifica: esticar os espaços de uma linha
         # curta produz o rio de branco que denuncia justificação feita sem cuidado. É a regra que
         # todo texto normativo segue, e é o que os Editais de referência fazem.
-        partes = _quebrar(texto, tamanho, recuo, fonte)
+        _registrar_enderecos(self, texto)
+        partes = _quebrar(texto, tamanho, recuo, fonte, metrica=self.metrica)
         for indice, parte in enumerate(partes):
             self.itens.append(
                 (
@@ -825,7 +918,13 @@ class Composicao:
                 rastro.insert(0, atual.pop())
             for aberto in pilha:
                 if aberto["moldura"] and aberto["topo"] is not None:
-                    tracos.append(_moldura(aberto["topo"], rastro[0][4] if rastro else y))
+                    tracos.append(
+                        _moldura(
+                            aberto["topo"],
+                            rastro[0][4] if rastro else y,
+                            aberto["moldura"] == DESTAQUE,
+                        )
+                    )
             if quadro is not None:
                 tracos.extend(_grade(quadro, rastro[0][4] if rastro else y))
             paginas.append((atual, tracos))
@@ -892,7 +991,19 @@ class Composicao:
                 fim, altura = self._extensao(self.itens, indice)
                 cabe_aqui = y - altura >= RODAPE + 24
                 if coeso and not cabe_aqui and altura <= util and atual:
-                    nova_pagina()
+                    # **Equilíbrio** (069, FR-1392): saltar o bloco inteiro deixaria mais da metade
+                    # da área útil em branco, e ele pode se dividir — então divide-se, e a cascata
+                    # desce para as unidades dele. Bloco destacado não se divide por isso: a
+                    # moldura partida é pior que o branco.
+                    em_branco = (y - (RODAPE + 24)) / util
+                    if not (
+                        self.equilibrio
+                        and em_branco > FRACAO_EM_BRANCO
+                        and not moldura
+                        and coeso != INTEIRO
+                        and _divisivel(self.itens, indice, fim)
+                    ):
+                        nova_pagina()
                 # Não cabendo nem numa página inteira, o bloco é aberto e a mesma decisão desce
                 # para os sub-blocos — que é o degrau seguinte da cascata, não um caso especial.
                 # Se a última linha da página já ocupa este `y` — é o caso do título que veio
@@ -912,7 +1023,7 @@ class Composicao:
                         quadro = None
                 aberto = pilha.pop()
                 if aberto["moldura"] and aberto["topo"] is not None:
-                    tracos.append(_moldura(aberto["topo"], y))
+                    tracos.append(_moldura(aberto["topo"], y, aberto["moldura"] == DESTAQUE))
                 indice += 1
                 continue
 
@@ -950,8 +1061,10 @@ class Composicao:
                     quadro["cabecalho"] = (antes_do_cabecalho, y)
             y -= altura
             if texto:
-                x = _x(texto, fonte, tamanho, recuo, alinhamento)
-                espaco = _espacamento(texto, fonte, tamanho, recuo) if justificar else 0.0
+                x = _x(texto, fonte, tamanho, recuo, alinhamento, self.metrica)
+                espaco = (
+                    _espacamento(texto, fonte, tamanho, recuo, self.metrica) if justificar else 0.0
+                )
                 atual.append((texto, fonte, tamanho, x, y, junto, espaco))
                 if repetir:
                     cabecalho_ativo.append((texto, fonte, tamanho, x))
@@ -1036,6 +1149,33 @@ def anuncio_do_ato(snapshot):
     return f"{ato} — {titulo}" if titulo else ato
 
 
+# A sigla da instituição, que todo anúncio preserva como é escrita (069, FR-1377).
+SIGLA_DA_INSTITUICAO = "Ifes"
+_CAIXA_MISTA = re.compile(r"[a-zà-ÿ][A-ZÀ-Þ]")
+
+
+def anuncio_em_caixa_alta(anuncio, sigla=""):
+    """O anúncio em caixa alta, com as siglas como foram escritas (069, FR-1377, ED-24).
+
+    `upper()` puro escrevia "EAD" e "CEFOR": a sigla da unidade e a da instituição saem como
+    registradas, e a palavra de caixa mista ("EaD") também — a caixa dela é parte da grafia. O resto
+    sobe, como nos Editais de referência.
+    """
+    preservadas = {palavra for palavra in (sigla, SIGLA_DA_INSTITUICAO) if palavra}
+
+    def subir(palavra):
+        nucleo = palavra.strip("()[],.;:“”\"'")
+        if nucleo in preservadas or _CAIXA_MISTA.search(nucleo):
+            return palavra
+        return palavra.upper()
+
+    # A barra e o hífen também separam: "Cefor/Ifes" e "Cefor-Ifes" guardam as duas siglas.
+    return " ".join(
+        "".join(subir(parte) for parte in re.split(r"([/\-–])", palavra))
+        for palavra in anuncio.split(" ")
+    )
+
+
 def marca_de_consolidacao(consolidacao):
     """`Versão consolidada. Publicado em …; retificado em ….` (054, FR-995).
 
@@ -1078,7 +1218,7 @@ def _cabecalho(composicao, snapshot, unidade, consolidacao=None):
     # Separá-los em linhas de corpos diferentes é o que fazia o documento parecer capa de
     # relatório: lá, o que identifica o ato é uma sentença, não um título.
     composicao.escrever(
-        anuncio_do_ato(snapshot).upper(),
+        anuncio_em_caixa_alta(anuncio_do_ato(snapshot), unidade.sigla),
         tamanho=CORPO_ATO,
         fonte=NEGRITO,
         antes=24,
@@ -1091,8 +1231,9 @@ def _cabecalho(composicao, snapshot, unidade, consolidacao=None):
             antes=ANTES_DE_BLOCO,
             alinhamento=CENTRO,
         )
-    if snapshot.get("description"):
-        composicao.escrever(snapshot["description"], tamanho=CORPO_TEXTO, antes=20, justificar=True)
+    # **A descrição administrativa não é do ato** (069, FR-1378, ED-25): ela diz à equipe e ao
+    # portal de que se trata o Edital, e no documento ela se lia como o primeiro parágrafo da norma.
+    # Continua no conteúdo e no portal.
 
 
 PADDING_DA_COLUNA = 12.0
@@ -1114,7 +1255,7 @@ class _Numerador:
         return f"Tabela {self.contagem} — {titulo}"
 
 
-def _x_na_celula(texto, fonte, tamanho, recuo, coluna, alinhamento):
+def _x_na_celula(texto, fonte, tamanho, recuo, coluna, alinhamento, metrica=HELVETICA):
     """Onde a célula começa dentro da sua coluna.
 
     Centralizar o cabeçalho é o que os Editais de referência fazem — e só é possível porque a
@@ -1122,10 +1263,12 @@ def _x_na_celula(texto, fonte, tamanho, recuo, coluna, alinhamento):
     """
     if alinhamento != CENTRO:
         return recuo
-    return recuo + max((coluna - PADDING_DA_COLUNA - largura(texto, tamanho, fonte)) / 2, 0.0)
+    return recuo + max(
+        (coluna - PADDING_DA_COLUNA - metrica.largura(texto, tamanho, fonte)) / 2, 0.0
+    )
 
 
-def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
+def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel, metrica=HELVETICA):
     """A largura de cada coluna, medida pelo conteúdo **e limitada à área útil** (D-007).
 
     Medir pelo conteúdo é o que evita a proporção fixa que quebra no primeiro dado real. Mas
@@ -1144,8 +1287,8 @@ def _larguras_das_colunas(cabecalho, linhas, tamanho, disponivel):
     colunas = len(linhas[0])
     naturais = [
         max(
-            largura(cabecalho[c], tamanho, NEGRITO) if cabecalho else 0.0,
-            *(largura(linha[c], tamanho, REGULAR) for linha in linhas),
+            metrica.largura(cabecalho[c], tamanho, NEGRITO) if cabecalho else 0.0,
+            *(metrica.largura(linha[c], tamanho, REGULAR) for linha in linhas),
         )
         + PADDING_DA_COLUNA
         for c in range(colunas)
@@ -1195,18 +1338,28 @@ def _tabela(
     if not linhas:
         return
     disponivel = LARGURA - 2 * MARGEM - recuo
+    metrica = composicao.metrica
     colunas = _larguras_das_colunas(
-        cabecalho, linhas + ([rodape] if rodape else []), tamanho, disponivel
+        cabecalho, linhas + ([rodape] if rodape else []), tamanho, disponivel, metrica
     )
 
     por_coluna = alinhamentos or [ESQUERDA] * len(linhas[0])
 
     def escrever_linha(celulas, fonte, repetir=False, alinhamento=None):
+        for celula in celulas:
+            _registrar_enderecos(composicao, celula)
         refluidas = [
             # O teto do refluxo é a largura da coluna menos o mesmo padding com que ela foi
             # medida. Descontar mais do que se somou faria a célula que **definiu** a coluna
             # quebrar dentro dela — `Campus Serra` virava duas linhas.
-            _quebrar(celula, tamanho, 0.0, fonte, limite=colunas[c] - PADDING_DA_COLUNA)
+            _quebrar(
+                celula,
+                tamanho,
+                0.0,
+                fonte,
+                limite=colunas[c] - PADDING_DA_COLUNA,
+                metrica=metrica,
+            )
             for c, celula in enumerate(celulas)
         ]
         with composicao.linha_de_tabela():
@@ -1222,6 +1375,7 @@ def _tabela(
                             deslocamento,
                             colunas[indice],
                             alinhamento or por_coluna[indice],
+                            metrica,
                         )
                         composicao.escrever(
                             texto,
@@ -1591,6 +1745,547 @@ FORMA_DA_ORDEM = {
 }
 
 
+# ---------------------------------------------------------------------------
+# 069 — A redação 2 das frases geradas
+# ---------------------------------------------------------------------------
+#
+# **Cada frase daqui diz o mesmo que a da redação 1, na voz do candidato** (FR-1360, FR-1361). As
+# variantes, a frase de antes e a nota de equivalência de cada uma estão em
+# `specs/069-edital-linguagem-simples/contracts/redacao.md`, e um teste prende cada uma
+# (`tests/unit/publicacoes/test_redacao_das_frases.py`). As funções da redação 1 continuam acima,
+# intactas: os atos publicados antes da `069` as dizem, e as provas da história da `067` e da `068`
+# as leem (R-004).
+#
+# **Os nomes declarados vão entre aspas, sem artigo** — a Etapa, o marco, a fonte e a ocorrência do
+# sorteio —, pela regra da decisão 001 da `067`: o nome não tem gênero conhecido, e o documento não
+# adivinha.
+
+CLASSIFICACAO_SEPARADA = (
+    "A classificação é feita separadamente em cada Perfil: cada Perfil tem a sua própria "
+    "classificação e o seu próprio resultado."
+)
+CABECALHO_DO_DESEMPATE = "Critérios de desempate, nesta ordem:"
+FRASE_DE_AUTENTICIDADE = (
+    "Autenticidade — este documento corresponde integralmente à versão homologada do Edital "
+    "identificada abaixo."
+)
+ANUNCIO_DOS_DADOS_DECLARADOS = "Na inscrição, informe também:"
+# O rótulo que a `068` gerava com o termo do sistema (FR-1366, D-007). Só o rótulo muda: o número e
+# o destino da remissão são os mesmos (FR-1399).
+ROTULO_DAS_REGRAS = {REDACAO_1: "Marcos classificatórios", REDACAO_2: "Regras de classificação"}
+# "Inscrições" é feminino: "1 (uma)", "2 (duas)". O resto da tabela não tem gênero.
+_POR_EXTENSO_FEMININO = {1: "uma", 2: "duas"}
+
+
+def _aspas(nome):
+    return f"“{nome}”"
+
+
+def _numero_por_extenso(numero, *, feminino=False):
+    """`15 (quinze)`, ou só o algarismo fora da tabela — a regra de `prazo_do_recurso`."""
+    extenso = (_POR_EXTENSO_FEMININO if feminino else {}).get(numero) or POR_EXTENSO.get(numero)
+    return f"{numero} ({extenso})" if extenso else str(numero)
+
+
+def _inteiro(valor):
+    return isinstance(valor, int) and not isinstance(valor, bool)
+
+
+def frase_da_forma_da_ordem(marco):
+    """C3 — "A ordem de classificação segue a nota final.", ou `""`.
+
+    Sob sorteio, a forma é dita pelo título da subseção e pela habilitação (C2, C4). Marco do acervo
+    que não declara a forma não ganha a frase, como não ganhava o par `Ordem` (032, FR-464).
+    """
+    if marco.get("orderProduction") == "POR_PONTUACAO":
+        return "A ordem de classificação segue a nota final."
+    return ""
+
+
+def frase_da_habilitacao(snapshot, perfil, marco, etapas):
+    """C4 e C5 — quem participa do sorteio, pela mesma leitura de `_habilitacao_ao_sorteio`."""
+    lida = _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas)
+    if not lida:
+        return ""
+    if lida == "participam todas as inscrições submetidas":
+        return "Participam do sorteio todas as inscrições enviadas."
+    identidade = marco.get("id")
+    metodo = (
+        regras_do_marco.metodo_que_governa(
+            snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+        )
+        if identidade
+        else None
+    ) or marco.get("drawMethod")
+    etapa = etapas.get(str((metodo or {}).get("qualifyingStageId"))) or {}
+    return f"Participam do sorteio só as inscrições habilitadas na Etapa {_aspas(etapa['name'])}."
+
+
+def _peso_um(etapa):
+    return etapa.get("weight") is not None and humano.decimal(etapa["weight"]) == "1"
+
+
+def frases_da_combinacao(marco, etapas):
+    """C6 a C10 — a conta da nota final, dita como conta.
+
+    **A Etapa decisória sai da conta e é dita à parte** (C10): na redação 1 ela aparecia na lista da
+    soma com "(não pontua)", que dizia a mesma coisa num lugar onde parecia parcela. A média
+    ponderada de uma Etapa só é a pontuação dela, e sai como a C6.
+    """
+    operacao = marco.get("operation")
+    resolvidas = [
+        etapas.get(str(identificador)) or {} for identificador in marco.get("stages") or []
+    ]
+    pontuadas = [etapa for etapa in resolvidas if etapa.get("forma") != DECISORIA]
+    decisorias = [etapa for etapa in resolvidas if etapa.get("forma") == DECISORIA]
+    normaliza = marco.get("normalization") == "PELA_SOMA_DOS_PESOS"
+
+    def nome(etapa):
+        # A Etapa que o conteúdo não resolve é dita como ausente, e sem aspas: entre aspas, a
+        # ausência se leria como o nome de uma Etapa.
+        return _aspas(etapa["name"]) if etapa.get("name") else ETAPA_NAO_IDENTIFICADA
+
+    def com_peso(etapa):
+        if etapa.get("weight") is None:
+            return nome(etapa)
+        return f"{nome(etapa)} (peso {humano.decimal(etapa['weight'])})"
+
+    frases = []
+    if pontuadas and operacao in OPERACAO_DO_MARCO:
+        if len(pontuadas) == 1:
+            etapa = pontuadas[0]
+            simples = (
+                operacao == "MEDIA_PONDERADA" or _peso_um(etapa) or etapa.get("weight") is None
+            )
+            if simples and not normaliza:
+                frases.append(f"A nota final é a pontuação obtida na Etapa {nome(etapa)}.")
+            else:
+                frases.append(
+                    f"A nota final é a pontuação obtida na Etapa {com_peso(etapa)}, multiplicada "
+                    "pelo seu peso."
+                )
+        elif operacao == "SOMA_PONDERADA":
+            frases.append(
+                "A nota final é a soma das pontuações nas Etapas "
+                f"{_enumerar([com_peso(etapa) for etapa in pontuadas])}, cada uma multiplicada "
+                "pelo seu peso."
+            )
+        else:
+            frases.append(
+                "A nota final é a média ponderada das pontuações nas Etapas "
+                f"{_enumerar([com_peso(etapa) for etapa in pontuadas])}."
+            )
+        if normaliza:
+            frases.append("Depois, o resultado é dividido pela soma dos pesos.")
+    if len(decisorias) == 1:
+        frases.append(f"A Etapa {nome(decisorias[0])} não entra na conta: ela não dá pontos.")
+    elif decisorias:
+        frases.append(
+            f"As Etapas {_enumerar([nome(etapa) for etapa in decisorias])} não entram na conta: "
+            "elas não dão pontos."
+        )
+    return frases
+
+
+_MODO_DO_ARREDONDAMENTO_2 = {
+    "MEIO_PARA_CIMA": "; a partir da metade, arredonda-se para cima",
+    "MEIO_PARA_PAR": "; na metade exata, arredonda-se para o algarismo par mais próximo",
+    "TRUNCAR": ", desprezando-se as demais",
+}
+
+
+def frase_do_arredondamento(marco):
+    """C11 a C14 — a escala e o modo, dito pelo que acontece na metade (L7). `""` sem escala."""
+    arredondamento = marco.get("rounding") or {}
+    escala, modo = arredondamento.get("scale"), arredondamento.get("mode")
+    if not _inteiro(escala):
+        return ""
+    if escala == 0:
+        para = "um número inteiro"
+    else:
+        para = "1 casa decimal" if escala == 1 else f"{escala} casas decimais"
+    regra = _MODO_DO_ARREDONDAMENTO_2.get(modo, "")
+    if modo == "TRUNCAR" and escala == 0:
+        regra = ", desprezando-se as casas decimais"
+    return f"A nota final é arredondada para {para}{regra}."
+
+
+def frases_da_ordem(snapshot, perfil, marco):
+    """Como a ordem do marco nasce, em frases: C3 a C14, e C4 ou C5 sob sorteio.
+
+    **A mesma decisão da redação 1, pela forma declarada** (032, FR-468; 067, ED-03): sob sorteio
+    não há conta nem arredondamento, e a habilitação só sai com o método que a governa.
+    """
+    etapas = por_identificador(snapshot.get("stages"))
+    if regras_do_marco.declara_sorteio(marco):
+        if not _metodo_do_marco(snapshot, perfil, marco):
+            return []
+        habilitacao = frase_da_habilitacao(snapshot, perfil, marco, etapas)
+        return [habilitacao] if habilitacao else []
+    frases = []
+    if forma := frase_da_forma_da_ordem(marco):
+        frases.append(forma)
+    frases.extend(frases_da_combinacao(marco, etapas))
+    if arredondamento := frase_do_arredondamento(marco):
+        frases.append(arredondamento)
+    return frases
+
+
+EMPATE_NO_CORTE_2 = {
+    "ADMITS_SURPLUS": (
+        "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
+        "esse número."
+    ),
+    "STRICT": "Se houver empate na última posição, esse número não é ultrapassado.",
+}
+CONTINUACAO_DO_CORTE_2 = {
+    # **Sem condição** (K9): "se ainda sobrarem vagas" era a condição que a primeira redação da
+    # amostra acrescentava, e que a norma declarada não tem (achado 1 da conferência por enunciado).
+    "ALLOWED": (
+        "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem."
+    ),
+    "NONE": "Não serão chamados candidatos além desses.",
+}
+SUPLENTES_SEM_CADASTRO = (
+    "Os suplentes são chamados, na ordem, para as vagas deste Edital que não forem preenchidas "
+    "pelos primeiros classificados."
+)
+
+
+def frase_da_continuacao(marco):
+    """K9 e K10 — a continuação além dos que o corte publica, ou `""`."""
+    regra = marco.get("cutRule")
+    return (
+        CONTINUACAO_DO_CORTE_2.get(regra.get("continuation"), "") if isinstance(regra, dict) else ""
+    )
+
+
+def frases_do_corte(marco, etapas, *, sem_cadastro):
+    """K1 a K10 — **a unidade indivisível** (FR-1375, R-009): corte, empate, suplentes, continuação.
+
+    O empate fala de "esse número", e a continuação de "além desses": separadas na partilha parcial
+    entre o comum e o de um grupo, as frases perderiam o referente — foi o terceiro erro da amostra.
+    Por isso saem sempre juntas, e quem agrupa compara a unidade inteira.
+
+    **A explicação dos suplentes só sai sem cadastro de reserva em Perfil nenhum** (K7, FR-1362):
+    com cadastro, como os suplentes e o cadastro se relacionam é a pendência DP-05, e o documento
+    não a explica. `sem_cadastro` é do Edital, e não do Perfil: a frase diz "as vagas deste
+    Edital".
+    """
+    regra = marco.get("cutRule")
+    if not isinstance(regra, dict):
+        return []
+    um_so = False
+    if regra.get("targetKind") == "FROM_VACANCY_TABLE":
+        quantos = (
+            "os primeiros classificados de cada lista de concorrência, em número igual ao das "
+            "vagas dessa lista"
+        )
+    else:
+        alvo = regra.get("targetCount")
+        if not _inteiro(alvo) or alvo < 0:
+            return []
+        um_so = alvo == 1
+        quantos = (
+            "o 1 (um) primeiro classificado"
+            if um_so
+            else f"os {_numero_por_extenso(alvo)} primeiros classificados"
+        )
+    excedente = regra.get("surplusCount")
+    com_suplentes = _inteiro(excedente) and excedente > 0
+    plural = not (um_so and not com_suplentes)
+    governada = regra.get("governedStage")
+    destino = etapas.get(str(governada)) if governada else None
+    nome = destino.get("name") if isinstance(destino, dict) else ""
+    if nome:
+        inicio = f"{'Passam' if plural else 'Passa'} para a Etapa {_aspas(nome)}"
+    else:
+        inicio = "Seguem no processo" if plural else "Segue no processo"
+    frase = f"{inicio} {quantos}"
+    if com_suplentes:
+        suplentes = "suplentes" if excedente != 1 else "suplente"
+        frase += f", mais {_numero_por_extenso(excedente)} {suplentes}"
+    unidade = [f"{frase}."]
+    if not regras_do_marco.declara_sorteio(marco):
+        if empate := EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), ""):
+            unidade.append(empate)
+    if com_suplentes and sem_cadastro:
+        unidade.append(SUPLENTES_SEM_CADASTRO)
+    if continuacao := frase_da_continuacao(marco):
+        unidade.append(continuacao)
+    return unidade
+
+
+def frases_do_desempate(marco, etapas, fatos):
+    """T8 — os critérios na ordem declarada, cada um com o efeito da ausência ("1º …")."""
+    criterios = sorted(marco.get("tiebreakers") or [], key=lambda item: item.get("order") or 0)
+    return [
+        f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos, redacao=REDACAO_2)}"
+        for indice, criterio in enumerate(criterios, start=1)
+    ]
+
+
+def frase_do_recurso(marco, *, objeto=None):
+    """R1 a R5 — de que resultado se recorre, e em que prazo; nunca o canal (FR-1363).
+
+    O objeto e o silêncio seguem `_janela_recursal`: sem declaração, nada; a negativa é norma, e
+    sai.
+    `objeto` é só da Revisão, que agrupa marcos de nomes diferentes ("deste marco", 067, D-012).
+    """
+    janela = marco.get("appealWindow")
+    if not isinstance(janela, dict):
+        return ""
+    if objeto is None:
+        resultado = resultado_do_marco(marco)
+        objeto = f"de {resultado}" if resultado else ""
+    if janela.get("admits") is False:
+        return f"Não caberá recurso contra o resultado {objeto or 'deste marco'}."
+    prazo = prazo_do_recurso(marco)
+    if not prazo:
+        return ""
+    if objeto:
+        return (
+            f"Contra o resultado {objeto}: no prazo de {prazo}, contados da divulgação desse "
+            "resultado."
+        )
+    return f"Cabe recurso no prazo de {prazo}, contados da divulgação do resultado."
+
+
+def _origem_do_metodo_2(snapshot, marco):
+    """S2 a S4 — a origem do método na palavra do candidato: "deste sorteio", não "deste marco"."""
+    origem = _origem_do_metodo(snapshot, marco)
+    if origem == "comum a este Edital":
+        return origem
+    if origem.endswith("diverge do comum deste Edital"):
+        return "próprio deste sorteio, diferente do comum deste Edital"
+    return "próprio deste sorteio"
+
+
+def dados_do_sorteio(snapshot, perfil, marco):
+    """S1 a S7 — os dados que permitem a qualquer pessoa refazer o sorteio (FR-1376, FR-465).
+
+    `(abertura, pares)`, ou `None` sem método. A abertura diz a fonte, a ocorrência e o instante;
+    os pares, o método com o algoritmo, como o concurso é escolhido, a semente e a substituição —
+    os sete campos, e só os declarados, como a redação 1 (`_metodo_do_marco`).
+    """
+    identidade = marco.get("id")
+    metodo = (
+        regras_do_marco.metodo_que_governa(
+            snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+        )
+        if identidade
+        else None
+    ) or marco.get("drawMethod")
+    if not isinstance(metodo, dict) or not metodo:
+        return None
+    partes = []
+    if ocorrencia := _valor_do_campo_do_metodo("occurrence", metodo):
+        partes.append(f"de {_aspas(ocorrencia)}")
+    if fonte := _valor_do_campo_do_metodo("source", metodo):
+        partes.append(f"da fonte {_aspas(fonte)}")
+    if metodo.get("occurrenceAt"):
+        partes.append(f"de {_valor_do_campo_do_metodo('occurrenceAt', metodo)}")
+    conferir = "Com os dados abaixo, qualquer pessoa pode refazer o sorteio e conferir o resultado."
+    abertura = (
+        f"A ordem será definida a partir do resultado {', '.join(partes)}. {conferir}"
+        if partes
+        else conferir
+    )
+    algoritmo = _valor_do_campo_do_metodo("algorithm", metodo)
+    metodo_ = _origem_do_metodo_2(snapshot, marco) + (
+        f"; algoritmo {algoritmo}." if algoritmo else "."
+    )
+    pares = [["Método", metodo_]]
+    if derivacao := _valor_do_campo_do_metodo("derivation", metodo):
+        pares.append(["Qual concurso", derivacao])
+    if semente := _valor_do_campo_do_metodo("normalization", metodo):
+        pares.append(["Semente", f"o número usado no sorteio: {inicial_minuscula(semente)}"])
+    if substituicao := _valor_do_campo_do_metodo("substitutionRule", metodo):
+        pares.append(["Se faltar", substituicao])
+    return abertura, pares
+
+
+FRASE_DA_REVERSAO_2 = {
+    "ON_EXHAUSTION": (
+        "Se não houver candidatos aprovados para as vagas reservadas de um código, essas vagas "
+        "passam para a ampla concorrência do mesmo código."
+    ),
+    "ON_BALANCE": (
+        "As vagas reservadas de um código que não forem preenchidas passam para a ampla "
+        "concorrência do mesmo código."
+    ),
+}
+
+
+def frase_da_reversao(especie, *, redacao=REDACAO_VIGENTE):
+    """V1 e V2 — o gatilho e o destino; "a respectiva" ampla concorrência é a do mesmo código."""
+    tabela = FRASE_DA_REVERSAO if redacao == REDACAO_1 else FRASE_DA_REVERSAO_2
+    return tabela.get(especie, "")
+
+
+def frase_do_periodo_de_inscricoes(evento):
+    """V9 — **frase nova, gerada** do Evento marcado como período de inscrições (FR-1369)."""
+    inicio, fim = evento.get("startAt"), evento.get("endAt")
+    periodo = f"de {_instante(inicio)}, a {_instante(fim)}" if fim else f"em {_instante(inicio)}"
+    return f"Período de inscrições: {periodo} (Cronograma, nº {evento.get('order', '')})."
+
+
+def itens_dos_dados_declarados(fatos):
+    """V10 — "a data de nascimento;", "o número de meses de experiência." — sem o tipo (FR-1366)."""
+    itens = []
+    for fato in fatos:
+        rotulo = inicial_minuscula(fato.get("label") or fato.get("code") or "")
+        if fato.get("type") == "DATA":
+            itens.append(f"a {rotulo}")
+        elif fato.get("type") == "INTEIRO":
+            itens.append(f"o número de {rotulo}")
+        else:
+            itens.append(rotulo)
+    return [
+        f"{item}{'.' if indice == len(itens) - 1 else ';'}" for indice, item in enumerate(itens)
+    ]
+
+
+def frase_do_uso_no_desempate(numero):
+    """V10 — onde os dados declarados são usados, quando algum critério os usa."""
+    return f"Esses dados são usados no desempate (item {numero})."
+
+
+def lembrete_do_requerimento(numero, *, na_inscricao=False):
+    """V13 — **frase nova** (ED-18): o Requerimento enviado na inscrição, lembrado onde se busca."""
+    if na_inscricao:
+        return f"A inscrição inclui o Requerimento de Matrícula (item {numero})."
+    return (
+        f"Além destes documentos, a inscrição inclui o Requerimento de Matrícula (item {numero})."
+    )
+
+
+def frase_da_etapa(etapa, eventos):
+    """E1 a E3 — o caráter, a forma de concluir, a pontuação e o período, em frases.
+
+    Só o que está declarado, pela régua de `_etapas` (FR-009, FR-066): imprimir "peso 1" onde o
+    Edital nada disse seria o documento afirmando regra que a Publicação não contém. E tudo o que
+    está declarado: os pares da redação 1 saíam para qualquer forma de Etapa, e as frases também.
+    """
+    caracteres = _enumerar([rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)])
+    partes = []
+    if etapa.get("maximumScore") is not None:
+        partes.append(f"pontuação máxima de {humano.decimal(etapa['maximumScore'])}")
+    if etapa.get("minimumScore") is not None:
+        partes.append(f"nota mínima de {humano.decimal(etapa['minimumScore'])}")
+    if etapa.get("weight") is not None:
+        partes.append(f"peso {humano.decimal(etapa['weight'])}")
+    frases = []
+    if etapa.get("forma") == DECISORIA:
+        favoravel = etapa.get("rotuloFavoravel") or "favorável"
+        desfavoravel = etapa.get("rotuloDesfavoravel") or "desfavorável"
+        resultado = f"o resultado é {_aspas(favoravel)} ou {_aspas(desfavoravel)}."
+        frases.append(f"Etapa {caracteres}: {resultado}" if caracteres else f"O{resultado[1:]}")
+        if partes:
+            frases.append(f"A Etapa tem {_enumerar(partes)}.")
+    elif caracteres or partes:
+        frase = f"Etapa {caracteres}" if caracteres else "Etapa"
+        if partes:
+            frase += f", com {_enumerar(partes)}" if caracteres else f" com {_enumerar(partes)}"
+        frases.append(f"{frase}.")
+    previstas = etapa.get("evaluationsPerRegistration")
+    if _inteiro(previstas):
+        quantas = _numero_por_extenso(previstas, feminino=True)
+        avaliacoes = "avaliação" if previstas == 1 else "avaliações"
+        frases.append(f"Cada inscrição recebe {quantas} {avaliacoes}.")
+    evento = eventos.get(etapa.get("scheduleEventId")) if etapa.get("scheduleEventId") else None
+    if evento and evento.get("startAt"):
+        if evento.get("endAt"):
+            frases.append(
+                f"Será feita de {_instante(evento['startAt'])}, a {_instante(evento['endAt'])}."
+            )
+        else:
+            frases.append(f"Será feita em {_instante(evento['startAt'])}.")
+    return " ".join(frases)
+
+
+def texto_do_documento(documento):
+    """D5 — o nome, "(facultativo)" quando é, e a instrução depois do travessão, em minúscula."""
+    texto = documento.get("name", "") or ""
+    if not documento.get("required", True):
+        texto += " (facultativo)"
+    if documento.get("instructions"):
+        texto += f" — {inicial_minuscula(documento['instructions'])}"
+    return texto
+
+
+def frase_do_cadastro(perfil):
+    """P2 — o cadastro de reserva por extenso (FR-1371), com o limite como é."""
+    tipo, limite = perfil.get("reserveType"), perfil.get("reserveLimit")
+    if tipo == "LIMITED" and _inteiro(limite):
+        return f"cadastro de reserva de até {_numero_por_extenso(limite)} classificados por Perfil"
+    if tipo == "UNLIMITED":
+        return "cadastro de reserva sem limite de classificados"
+    if tipo == "NONE":
+        return "não há cadastro de reserva"
+    return ""
+
+
+def _igual_em_todos(perfis, chave):
+    valores = {repr(perfil.get(chave)) for perfil in perfis}
+    return len(valores) == 1 and bool(perfis[0].get(chave))
+
+
+def frase_dos_atributos_comuns(perfis):
+    """P1 — o que é **igual em todos os Perfis**, uma vez (FR-1374), ou `""`.
+
+    Só o que é igual em todos, por identidade do valor: nome, descrição, carga horária,
+    remuneração e cadastro de reserva. A descrição só entra junto do nome comum — sem ele, "Em
+    todos os Perfis: atua no polo…" não diria de quem; a tabela de características a leva.
+
+    **O Edital de um Perfil não tem "todos os Perfis"**, e a frase sai como "Perfil P1: …": a
+    matriz de vagas não traz nome e a tabela de características só existe com dois Perfis, e sem
+    esta frase o corpo calava o nome, a descrição, a carga horária, a remuneração e o cadastro do
+    único Perfil — que a apresentação plana imprime.
+    """
+    if not perfis:
+        return ""
+    partes = []
+    if _igual_em_todos(perfis, "name"):
+        nome = perfis[0]["name"]
+        if _igual_em_todos(perfis, "description"):
+            descricao = inicial_minuscula(perfis[0]["description"]).rstrip(". ")
+            nome = f"{nome} — {descricao}"
+        partes.append(nome)
+    if _igual_em_todos(perfis, "workload"):
+        partes.append(f"carga horária de {perfis[0]['workload']}")
+    if _igual_em_todos(perfis, "compensation"):
+        partes.append(f"remuneração: {inicial_minuscula(perfis[0]['compensation'])}")
+    cadastros = {frase_do_cadastro(perfil) for perfil in perfis}
+    if len(cadastros) == 1 and (cadastro := cadastros.pop()):
+        partes.append(cadastro)
+    if not partes:
+        return ""
+    if len(perfis) == 1:
+        return f"Perfil {perfis[0].get('code', '')}: {'; '.join(partes)}."
+    return f"Em todos os Perfis: {'; '.join(partes)}."
+
+
+def remissao_as_regras(numero, *, redacao=REDACAO_VIGENTE):
+    """G2 — o rótulo e a remissão às regras comuns: o mesmo número e o mesmo destino (FR-1399)."""
+    if redacao == REDACAO_1:
+        return ROTULO_DAS_REGRAS[REDACAO_1], f"os descritos no item {numero}."
+    return ROTULO_DAS_REGRAS[REDACAO_2], f"as descritas no item {numero}."
+
+
+def titulo_da_subsecao_comum(materia, *, redacao=REDACAO_VIGENTE):
+    """G3 — o título da subseção comum da `068`; só o de marcos muda na redação 2."""
+    if materia == MARCOS and redacao != REDACAO_1:
+        return f"{ROTULO_DAS_REGRAS[REDACAO_2]} comuns aos Perfis"
+    return TITULO_DA_SUBSECAO[materia]
+
+
+def sem_cadastro_de_reserva(snapshot):
+    """Nenhum Perfil do Edital tem cadastro de reserva? — a condição da K7 (FR-1362)."""
+    perfis = snapshot.get("profiles") or []
+    return bool(perfis) and all(perfil.get("reserveType") == "NONE" for perfil in perfis)
+
+
 def _publica_a_mesma_norma(proprio, comum):
     """Os dois métodos publicam a mesma norma? (032, FR-466)
 
@@ -1694,6 +2389,179 @@ def _metodo_do_marco(snapshot, perfil, marco):
 
 
 def _marcos(
+    composicao, snapshot, perfil, nomear_perfil=False, *, comum=False, metodo_remetido=None
+):
+    """As regras de classificação do Perfil, na redação da composição (069, R-004).
+
+    A redação 2 diz a mesma regra em frases e itens, sem os rótulos "Ordem:", "Corte:",
+    "Continuação:" (FR-1366); a 1 é a de antes, intacta, para as provas da história.
+    """
+    if composicao.redacao == REDACAO_1:
+        _marcos_na_redacao_1(
+            composicao,
+            snapshot,
+            perfil,
+            nomear_perfil,
+            comum=comum,
+            metodo_remetido=metodo_remetido,
+        )
+        return
+    _marcos_na_redacao_2(
+        composicao, snapshot, perfil, nomear_perfil, comum=comum, metodo_remetido=metodo_remetido
+    )
+
+
+def _marcos_na_redacao_2(
+    composicao, snapshot, perfil, nomear_perfil=False, *, comum=False, metodo_remetido=None
+):
+    """As regras de classificação de cada marco, na ordem do contrato da `068` (069, FR-1360).
+
+    A ordem é a de antes: como a ordem nasce, o sorteio, o recurso, a unidade do corte e o
+    desempate. O que muda é a forma: os pares viram frases, e as frases da mesma regra viram itens
+    de lista, com o recuo pendente que o ED-16 pedia. A coesão e a quebra por partes na subseção
+    comum são as da `068`.
+    """
+    marcos = perfil.get("classificationMilestones") or []
+    if not marcos:
+        return
+    etapas = por_identificador(snapshot.get("stages"))
+    fatos = por_identificador(perfil.get("declaredFacts"))
+    metodo_remetido = metodo_remetido or {}
+    sem_cadastro = sem_cadastro_de_reserva(snapshot)
+    degrau = 18.0 if comum else 32.0
+
+    def parte():
+        return composicao.bloco() if comum else nullcontext()
+
+    titulo = ROTULO_DAS_REGRAS[REDACAO_2]
+    if nomear_perfil:
+        titulo = f"{titulo} — {perfil.get('code', '')}"
+    with composicao.bloco(coeso=False):
+        if not comum:
+            composicao.escrever(
+                titulo,
+                tamanho=CORPO_TEXTO,
+                fonte=NEGRITO,
+                recuo=18,
+                antes=ANTES_DE_BLOCO,
+                junto=True,
+            )
+        for marco in marcos:
+            with composicao.bloco(coeso=not comum):
+                with parte():
+                    composicao.escrever(
+                        f"{marco.get('code', '')} — {marco.get('name', '')}",
+                        tamanho=CORPO_TEXTO,
+                        fonte=NEGRITO,
+                        recuo=degrau,
+                        antes=ANTES_DE_BLOCO,
+                        junto=True,
+                    )
+                    for frase in frases_da_ordem(snapshot, perfil, marco):
+                        _item(composicao, "•", frase, recuo=degrau)
+                sorteia = regras_do_marco.declara_sorteio(marco)
+                if sorteia and (dados := dados_do_sorteio(snapshot, perfil, marco)):
+                    with parte():
+                        abertura, pares = dados
+                        # As linhas do método comum saem uma vez no documento (068, FR-1349):
+                        # aqui, se já saíram noutro item, fica a remissão.
+                        if (remetido := metodo_remetido.get(id(marco))) is not None:
+                            abertura = ""
+                            pares = [
+                                ["Método", f"o comum a este Edital, descrito no item {remetido}."]
+                            ]
+                        # Os dados para conferir o sorteio, em bloco destacado (FR-1376, FR-1382).
+                        with composicao.bloco(moldura=DESTAQUE):
+                            composicao.escrever(
+                                "Sorteio",
+                                tamanho=CORPO_TEXTO,
+                                fonte=NEGRITO,
+                                recuo=degrau,
+                                antes=ANTES_DE_BLOCO,
+                                junto=True,
+                            )
+                            if abertura:
+                                composicao.escrever(
+                                    abertura,
+                                    recuo=degrau + 14,
+                                    antes=ANTES_DE_LINHA,
+                                    justificar=True,
+                                )
+                            _pares(composicao, pares, recuo=degrau + 14)
+                            composicao.espaco(4.0)
+                if recurso := frase_do_recurso(marco):
+                    with parte():
+                        composicao.escrever(
+                            "Recurso",
+                            tamanho=CORPO_TEXTO,
+                            fonte=NEGRITO,
+                            recuo=degrau,
+                            antes=ANTES_DE_LINHA,
+                            junto=True,
+                        )
+                        composicao.escrever(
+                            recurso, recuo=degrau + 14, antes=ANTES_DE_LINHA, justificar=True
+                        )
+                if corte := frases_do_corte(marco, etapas, sem_cadastro=sem_cadastro):
+                    with parte():
+                        for indice, frase in enumerate(corte):
+                            _item(
+                                composicao,
+                                "•",
+                                frase,
+                                recuo=degrau,
+                                antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_LINHA,
+                            )
+                if desempate := frases_do_desempate(marco, etapas, fatos):
+                    with parte():
+                        composicao.escrever(
+                            CABECALHO_DO_DESEMPATE,
+                            tamanho=CORPO_TEXTO,
+                            fonte=NEGRITO,
+                            recuo=degrau,
+                            antes=ANTES_DE_LINHA,
+                            junto=True,
+                        )
+                        for frase in desempate:
+                            ordinal, texto = frase.split(" ", 1)
+                            _item(composicao, ordinal, texto, recuo=degrau + 14)
+
+
+def _item(composicao, marcador, texto, *, recuo, antes=ANTES_DE_LINHA, fonte=REGULAR):
+    """Um item de lista: o marcador na margem e o texto alinhado depois dele (069, ED-16, FR-1382).
+
+    **O recuo pendente é a largura do marcador e do espaço**, medida pela métrica da composição: a
+    segunda linha começa exatamente sob a primeira palavra do item, e não sob o marcador — era o
+    ED-16 da auditoria. O marcador e a primeira linha são um texto só, e por isso o item se lê como
+    antes ("• requisito") em qualquer extração.
+
+    **O item não se parte entre páginas** (FR-1391): a continuação de um critério sozinha no topo da
+    página seguinte perde o marcador que diz de que item ela é. O que for maior que a página cai no
+    último degrau da cascata, e se parte entre linhas — a única exceção que a FR-1391 admite.
+    """
+    prefixo = f"{marcador} "
+    pendente = composicao.metrica.largura(prefixo, CORPO_TEXTO, fonte)
+    _registrar_enderecos(composicao, texto)
+    linhas = _quebrar(texto, CORPO_TEXTO, recuo + pendente, fonte, metrica=composicao.metrica)
+    with composicao.bloco():
+        for indice, linha in enumerate(linhas):
+            composicao.itens.append(
+                (
+                    "texto",
+                    f"{prefixo}{linha}" if indice == 0 else linha,
+                    fonte,
+                    CORPO_TEXTO,
+                    recuo if indice == 0 else recuo + pendente,
+                    antes if indice == 0 else 0.0,
+                    ESQUERDA,
+                    False,
+                    False,
+                    False,
+                )
+            )
+
+
+def _marcos_na_redacao_1(
     composicao, snapshot, perfil, nomear_perfil=False, *, comum=False, metodo_remetido=None
 ):
     """Os marcos classificatórios por extenso, com o que basta para refazer a ordem publicada.
@@ -1845,8 +2713,9 @@ def _marcos(
                         junto=True,
                     )
                     for indice, criterio in enumerate(criterios, start=1):
+                        frase = criterio_com_a_ausencia(criterio, etapas, fatos, redacao=REDACAO_1)
                         composicao.escrever(
-                            f"{indice}º {criterio_com_a_ausencia(criterio, etapas, fatos)}",
+                            f"{indice}º {frase}",
                             tamanho=CORPO_TEXTO,
                             recuo=degrau + 14,
                             antes=ANTES_DE_LINHA,
@@ -1872,6 +2741,20 @@ def _fatos_declarados(composicao, perfil):
     """
     fatos = perfil.get("declaredFacts") or []
     if not fatos:
+        return
+    if composicao.redacao != REDACAO_1:
+        # V10: os mesmos dados, sem o tipo entre parênteses (FR-1366), em itens de lista.
+        with composicao.bloco():
+            composicao.escrever(
+                ANUNCIO_DOS_DADOS_DECLARADOS,
+                tamanho=CORPO_TEXTO,
+                fonte=NEGRITO,
+                recuo=18,
+                antes=ANTES_DE_BLOCO,
+                junto=True,
+            )
+            for item in itens_dos_dados_declarados(fatos):
+                _item(composicao, "•", item, recuo=32)
         return
     with composicao.bloco():
         composicao.escrever(
@@ -1966,9 +2849,9 @@ def _reversao_declarada(composicao, perfil):
     especie = (perfil.get("vacancyReversion") or {}).get("kind")
     if not especie:
         return
-    # A frase é a de `FRASE_DA_REVERSAO`, a mesma que a seção consolidada imprime (068): duas
+    # A frase é a de `frase_da_reversao`, a mesma que a seção consolidada imprime (068): duas
     # grafias da mesma regra em dois lugares é como uma delas fica para trás.
-    frase = FRASE_DA_REVERSAO.get(especie)
+    frase = frase_da_reversao(especie, redacao=composicao.redacao)
     if not frase:
         return
     with composicao.bloco():
@@ -1994,19 +2877,11 @@ def _forma_de_convocacao_declarada(composicao, perfil):
     em módulos diferentes é como uma delas fica para trás — e aqui a renomeação seria uma
     Retificação, que o outro lado nem veria.
     """
-    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
-        FORMA_DE_CONVOCACAO_POR_EXTENSO,
-    )
-
-    frase = FORMA_DE_CONVOCACAO_POR_EXTENSO.get(perfil.get("callForm"))
+    frase = frase_da_convocacao(perfil.get("callForm"), redacao=composicao.redacao)
     if not frase:
         return
     with composicao.bloco():
-        composicao.escrever(
-            f"A convocação dos classificados será feita {frase}.",
-            antes=4.0,
-            justificar=True,
-        )
+        composicao.escrever(frase, antes=4.0, justificar=True)
 
 
 def _modalidades(composicao, perfil, tabelas, nomear_perfil=False):
@@ -2077,21 +2952,19 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
     """
     linhas = []
     for perfil in perfis:
-        reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
-        if perfil.get("reserveLimit") is not None:
-            reserva = f"{reserva} em {perfil['reserveLimit']}"
         linhas.append(
             [
                 f"{perfil.get('code', '')} — {perfil.get('name', '')}",
                 perfil.get("locality", "") or "—",
                 str(perfil.get("immediateVacancies", 0)),
-                reserva or "—",
+                _reserva(perfil, redacao=composicao.redacao),
                 perfil.get("workload", "") or "—",
             ]
         )
+    cadastro = "Cadastro reserva" if composicao.redacao == REDACAO_1 else "Cadastro de reserva"
     _tabela(
         composicao,
-        ["Perfil", "Localidade", "Vagas", "Cadastro reserva", "Carga horária"],
+        ["Perfil", "Localidade", "Vagas", cadastro, "Carga horária"],
         linhas,
         recuo=0.0,
         alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA, CENTRO],
@@ -2150,7 +3023,9 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
         return
     if not perfis:
         return
-    plano = plano_de_consolidacao(snapshot, secao)
+    plano = plano_de_consolidacao(
+        snapshot, secao, metrica=composicao.metrica, redacao=composicao.redacao
+    )
     _quadro_de_perfis(composicao, perfis, tabelas)
     _tabela_de_vagas(composicao, plano, tabelas)
     _frases_consolidadas(composicao, plano.reversoes)
@@ -2178,7 +3053,7 @@ def _perfis(composicao, snapshot, secao=0, tabelas=None):
                 _requisitos(composicao, perfil)
             _fatos_declarados(composicao, perfil)
             if numero := plano.remissao(perfil, MARCOS):
-                _remissao(composicao, "Marcos classificatórios", f"os descritos no item {numero}.")
+                _remissao(composicao, *remissao_as_regras(numero, redacao=composicao.redacao))
             else:
                 _marcos(composicao, snapshot, perfil, True, metodo_remetido=plano.metodo_remetido)
 
@@ -2205,7 +3080,12 @@ def _perfil_unico(composicao, snapshot, perfil, secao, tabelas):
                 [
                     ["Localidade", perfil.get("locality", "") or "—"],
                     ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
-                    ["Cadastro reserva", _reserva(perfil)],
+                    [
+                        "Cadastro reserva"
+                        if composicao.redacao == REDACAO_1
+                        else "Cadastro de reserva",
+                        _reserva(perfil, redacao=composicao.redacao),
+                    ],
                 ],
             )
         _atribuicoes(composicao, perfil)
@@ -2229,7 +3109,7 @@ def _identificacao_do_perfil(composicao, perfil, numero):
     with composicao.bloco():
         composicao.escrever(
             f"{numero} {perfil.get('code', '')} — {perfil.get('name', '')}",
-            tamanho=CORPO_BLOCO,
+            tamanho=CORPO_SUBSECAO,
             fonte=NEGRITO,
             antes=ANTES_DE_BLOCO + 4,
             junto=True,
@@ -2282,7 +3162,10 @@ def _requisitos(composicao, perfil):
             junto=True,
         )
         for requisito in requisitos:
-            composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+            if composicao.redacao == REDACAO_1:
+                composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=32)
+            else:
+                _item(composicao, "•", requisito, recuo=32, antes=0.0)
 
 
 def _remissao(composicao, rotulo, valor):
@@ -2393,7 +3276,7 @@ class PlanoDeConsolidacao:
         return self.remissoes.get((id(perfil), materia))
 
 
-def _itens_do_bloco(funcao, *argumentos, **nomeados):
+def _itens_do_bloco(funcao, *argumentos, redacao=REDACAO_VIGENTE, **nomeados):
     """Os itens que `funcao` escreveria — a identidade de um bloco impresso (068, R-002, D-003).
 
     É a definição literal de "o documento os imprimiria iguais": texto, fonte, corpo, recuo,
@@ -2401,7 +3284,7 @@ def _itens_do_bloco(funcao, *argumentos, **nomeados):
     cada regra do compositor — o método que governa, a habilitação, a ordem dos critérios, as
     omissões da `067` sob sorteio — e divergiria dele na primeira mudança.
     """
-    rascunho = Composicao()
+    rascunho = Composicao(redacao=redacao)
     funcao(rascunho, *argumentos, **nomeados)
     return tuple(rascunho.itens)
 
@@ -2418,17 +3301,28 @@ def _agrupar(perfis, chave):
     return [tuple(grupo) for grupo in por_chave.values() if len(grupo) > 1]
 
 
-def plano_de_consolidacao(snapshot, secao=0):
-    """O plano da seção de Perfis, ou `None` com um Perfil só (068, R-001, R-003)."""
+def plano_de_consolidacao(snapshot, secao=0, *, metrica=HELVETICA, redacao=REDACAO_VIGENTE):
+    """O plano da seção de Perfis, ou `None` com um Perfil só (068, R-001, R-003).
+
+    `metrica` é a da composição que vai escrever a seção (069): ela decide se a tabela de vagas
+    cabe lado a lado. Quem só conta itens e tabelas não depende dela — a forma da tabela muda, a
+    quantidade não.
+    """
     perfis = snapshot.get("profiles") or []
     if len(perfis) < 2:
         return None
     grupos = [
         (ATRIBUICOES, [tuple(grupo) for grupo in grupos_de_atribuicoes(perfis)]),
-        (REQUISITOS, _agrupar(perfis, lambda perfil: _itens_do_bloco(_requisitos, perfil))),
+        (
+            REQUISITOS,
+            _agrupar(perfis, lambda perfil: _itens_do_bloco(_requisitos, perfil, redacao=redacao)),
+        ),
         (
             MARCOS,
-            _agrupar(perfis, lambda perfil: _itens_do_bloco(_marcos, snapshot, perfil, False)),
+            _agrupar(
+                perfis,
+                lambda perfil: _itens_do_bloco(_marcos, snapshot, perfil, False, redacao=redacao),
+            ),
         ),
     ]
     subsecoes, remissoes = [], {}
@@ -2445,10 +3339,10 @@ def plano_de_consolidacao(snapshot, secao=0):
         subsecoes=tuple(subsecoes),
         remissoes=remissoes,
         listas=listas,
-        vagas=_plano_da_tabela_de_vagas(perfis, listas),
+        vagas=_plano_da_tabela_de_vagas(perfis, listas, metrica),
         modalidades=_grupos_de_modalidades(perfis, listas),
-        reversoes=_frases_da_reversao(perfis),
-        convocacoes=_frases_da_convocacao(perfis),
+        reversoes=_frases_da_reversao(perfis, redacao),
+        convocacoes=_frases_da_convocacao(perfis, redacao),
         metodo_remetido=_metodo_remetido(snapshot, perfis, secao, subsecoes, remissoes),
     )
 
@@ -2505,7 +3399,7 @@ def _com_vaga_no_quadro(perfil):
     return bool(perfil.get("vacancyTable")) and not quadro_do_perfil.sem_vaga_imediata(perfil)
 
 
-def _plano_da_tabela_de_vagas(perfis, listas):
+def _plano_da_tabela_de_vagas(perfis, listas, metrica=HELVETICA):
     """A tabela de vagas: matriz quando cabe, forma longa quando não (068, R-004, FR-1342)."""
     com_vaga = [perfil for perfil in perfis if _com_vaga_no_quadro(perfil)]
     if not com_vaga:
@@ -2533,7 +3427,7 @@ def _plano_da_tabela_de_vagas(perfis, listas):
         for perfil, celulas in por_perfil
     )
     cabecalho = ("Perfil", *colunas)
-    if _cabe_lado_a_lado(cabecalho, matriz):
+    if _cabe_lado_a_lado(cabecalho, matriz, metrica=metrica):
         return TabelaDeVagas(MATRIZ, cabecalho, matriz)
     longa = tuple(
         (
@@ -2547,7 +3441,7 @@ def _plano_da_tabela_de_vagas(perfis, listas):
     return TabelaDeVagas(FORMA_LONGA, ("Perfil", "Lista de concorrência", "Vagas imediatas"), longa)
 
 
-def _cabe_lado_a_lado(cabecalho, linhas, recuo=0.0):
+def _cabe_lado_a_lado(cabecalho, linhas, recuo=0.0, metrica=HELVETICA):
     """As colunas cabem na página sem partir palavra? (068, R-004)
 
     A largura mínima de uma coluna é a da sua maior palavra, no cabeçalho ou numa célula, mais o
@@ -2557,11 +3451,11 @@ def _cabe_lado_a_lado(cabecalho, linhas, recuo=0.0):
     minimas = [
         max(
             max(
-                largura(palavra, CORPO_TABELA, NEGRITO)
+                metrica.largura(palavra, CORPO_TABELA, NEGRITO)
                 for palavra in (cabecalho[c].split() or [""])
             ),
             *(
-                largura(palavra, CORPO_TABELA, REGULAR)
+                metrica.largura(palavra, CORPO_TABELA, REGULAR)
                 for linha in linhas
                 for palavra in (str(linha[c]).split() or [""])
             ),
@@ -2639,28 +3533,25 @@ def _frases_por_alcance(pares, alcance):
     )
 
 
-def _frases_da_reversao(perfis):
+def _frases_da_reversao(perfis, redacao=REDACAO_VIGENTE):
     """A reversão é regra sobre as quantidades: só os Perfis da tabela de vagas (FR-1350)."""
     com_vaga = [perfil for perfil in perfis if _com_vaga_no_quadro(perfil)]
     pares = [
-        (perfil, FRASE_DA_REVERSAO.get((perfil.get("vacancyReversion") or {}).get("kind")))
+        (
+            perfil,
+            frase_da_reversao((perfil.get("vacancyReversion") or {}).get("kind"), redacao=redacao),
+        )
         for perfil in com_vaga
     ]
     return _frases_por_alcance(pares, com_vaga)
 
 
-def _frases_da_convocacao(perfis):
+def _frases_da_convocacao(perfis, redacao=REDACAO_VIGENTE):
     """A convocação é regra do Perfil inteiro, com quadro ou sem ele (FR-1351)."""
-    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
-        FORMA_DE_CONVOCACAO_POR_EXTENSO,
-    )
-
-    pares = []
-    for perfil in perfis:
-        forma = FORMA_DE_CONVOCACAO_POR_EXTENSO.get(perfil.get("callForm"))
-        pares.append(
-            (perfil, f"A convocação dos classificados será feita {forma}." if forma else None)
-        )
+    pares = [
+        (perfil, frase_da_convocacao(perfil.get("callForm"), redacao=redacao) or None)
+        for perfil in perfis
+    ]
     return _frases_por_alcance(pares, perfis)
 
 
@@ -2702,7 +3593,7 @@ def _metodo_remetido(snapshot, perfis, secao, subsecoes, remissoes):
 # ---------------------------------------------------------------------------
 
 
-def _legenda_com_codigos(tabelas, titulo, perfis, recuo):
+def _legenda_com_codigos(tabelas, titulo, perfis, recuo, metrica=HELVETICA):
     """A legenda que nomeia Perfis, em linhas que nunca partem um código (068, R-008)."""
     rotulo = "Perfil" if len(perfis) == 1 else "Perfis"
     return _linhas_sem_partir(
@@ -2711,6 +3602,7 @@ def _legenda_com_codigos(tabelas, titulo, perfis, recuo):
         CORPO_TEXTO,
         NEGRITO,
         recuo=recuo,
+        metrica=metrica,
     )
 
 
@@ -2746,7 +3638,9 @@ def _tabela_de_modalidades(composicao, grupo, total_de_perfis, tabelas):
     if len(grupo.perfis) == total_de_perfis:
         legenda = tabelas.legenda(titulo)
     else:
-        legenda = _legenda_com_codigos(tabelas, titulo, grupo.perfis, recuo=0.0)
+        legenda = _legenda_com_codigos(
+            tabelas, titulo, grupo.perfis, recuo=0.0, metrica=composicao.metrica
+        )
     with composicao.bloco():
         _tabela(
             composicao,
@@ -2775,7 +3669,13 @@ def _frases_consolidadas(composicao, frases):
             pedacos = _codigos_enumerados(list(frase.codigos))
             pedacos[-1] = f"{pedacos[-1]},"
             texto = f"{frase.texto[:1].lower()}{frase.texto[1:]}"
-            linhas = _linhas_sem_partir(inicio, [*pedacos, *texto.split()], CORPO_TEXTO, REGULAR)
+            linhas = _linhas_sem_partir(
+                inicio,
+                [*pedacos, *texto.split()],
+                CORPO_TEXTO,
+                REGULAR,
+                metrica=composicao.metrica,
+            )
             _escrever_linhas(composicao, linhas, antes=antes)
 
 
@@ -2805,15 +3705,16 @@ def _escrever_linhas(composicao, linhas, *, antes, recuo=0.0):
 def _titulo_da_subsecao_comum(composicao, numero, materia, grupo):
     """O título que nomeia os códigos, e nunca a denominação (064, FR-1189 dela)."""
     linhas = _linhas_sem_partir(
-        f"{numero} {TITULO_DA_SUBSECAO[materia]}",
+        f"{numero} {titulo_da_subsecao_comum(materia, redacao=composicao.redacao)}",
         _codigos_enumerados([perfil.get("code", "") for perfil in grupo]),
-        CORPO_BLOCO,
+        CORPO_SUBSECAO,
         NEGRITO,
+        metrica=composicao.metrica,
     )
     for indice, linha in enumerate(linhas):
         composicao.escrever(
             linha,
-            tamanho=CORPO_BLOCO,
+            tamanho=CORPO_SUBSECAO,
             fonte=NEGRITO,
             antes=ANTES_DE_BLOCO + 4 if indice == 0 else 0.0,
             junto=True,
@@ -2829,6 +3730,9 @@ def _requisitos_comuns(composicao, grupo, numero):
     with composicao.bloco():
         _titulo_da_subsecao_comum(composicao, numero, REQUISITOS, grupo)
         for requisito in grupo[0].get("requirements") or []:
+            if composicao.redacao != REDACAO_1:
+                _item(composicao, "•", requisito, recuo=18, antes=0.0)
+                continue
             with composicao.bloco():
                 composicao.escrever(f"• {requisito}", tamanho=CORPO_TEXTO, recuo=18)
 
@@ -2845,7 +3749,7 @@ def _marcos_comuns(composicao, snapshot, subsecao, metodo_remetido):
     with composicao.bloco(coeso=False):
         _titulo_da_subsecao_comum(composicao, subsecao.numero, MARCOS, subsecao.perfis)
         composicao.escrever(
-            MARCOS_SEPARADAMENTE,
+            MARCOS_SEPARADAMENTE if composicao.redacao == REDACAO_1 else CLASSIFICACAO_SEPARADA,
             tamanho=CORPO_TEXTO,
             recuo=18,
             antes=ANTES_DE_PARAGRAFO,
@@ -2908,7 +3812,7 @@ def _codigos_enumerados(codigos):
     return [f"{codigo}," for codigo in codigos[:-2]] + [codigos[-2], f"e {codigos[-1]}"]
 
 
-def _linhas_sem_partir(inicio, pedacos, tamanho, fonte, recuo=0.0):
+def _linhas_sem_partir(inicio, pedacos, tamanho, fonte, recuo=0.0, metrica=HELVETICA):
     """O texto em linhas que quebram **entre** os pedaços, nunca dentro de um.
 
     `_quebrar` reflui por palavra, e um código com espaço — "ADS - P06", que é como os polos do
@@ -2926,7 +3830,7 @@ def _linhas_sem_partir(inicio, pedacos, tamanho, fonte, recuo=0.0):
     linhas, atual = [], inicio
     for pedaco in pedacos:
         candidato = f"{atual} {pedaco}"
-        if largura(candidato, tamanho, fonte) <= disponivel:
+        if metrica.largura(candidato, tamanho, fonte) <= disponivel:
             atual = candidato
             continue
         linhas.append(atual)
@@ -2935,7 +3839,19 @@ def _linhas_sem_partir(inicio, pedacos, tamanho, fonte, recuo=0.0):
     return linhas
 
 
-def _reserva(perfil):
+def _reserva(perfil, *, redacao=REDACAO_VIGENTE):
+    """O cadastro de reserva do Perfil, como valor de célula ou de par.
+
+    Na redação 2, pelo efeito (P2): "até 15 (quinze) classificados", e não "limitado em 15".
+    """
+    if redacao != REDACAO_1:
+        tipo, limite = perfil.get("reserveType"), perfil.get("reserveLimit")
+        if tipo == "LIMITED" and _inteiro(limite):
+            return f"até {_numero_por_extenso(limite)} classificados"
+        if tipo == "UNLIMITED":
+            return "sem limite de classificados"
+        if tipo == "NONE":
+            return "não há"
     reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
     if perfil.get("reserveLimit") is not None:
         reserva = f"{reserva} em {perfil['reserveLimit']}"
@@ -2952,7 +3868,7 @@ def _pares(composicao, pares, *, recuo=18.0, antes=ANTES_DE_LINHA):
     quando o par ocupa o lugar de um sub-bloco, como a remissão às atribuições comuns (064).
     """
     for rotulo, valor in pares:
-        largura_do_rotulo = largura(f"{rotulo}: ", CORPO_TEXTO, NEGRITO)
+        largura_do_rotulo = composicao.metrica.largura(f"{rotulo}: ", CORPO_TEXTO, NEGRITO)
         composicao.escrever(
             f"{rotulo}:", tamanho=CORPO_TEXTO, fonte=NEGRITO, recuo=recuo, antes=antes
         )
@@ -2979,6 +3895,26 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     # travessões em todo Edital anterior ao degrau 11 ocuparia largura para afirmar nada — e a
     # ausência já significa "não declarado", que é diferente de "acontece em lugar nenhum".
     algum_local = any((evento.get("location") or "").strip() for evento in eventos)
+    if composicao.redacao != REDACAO_1:
+        # O período numa coluna, como se lê: "de … a …" (texto alvo da spec). Início e término
+        # em duas colunas obrigavam a juntar de cabeça as duas metades de cada linha.
+        _tabela(
+            composicao,
+            ["Nº", "Evento", "Quando", *(["Onde"] if algum_local else [])],
+            [
+                [
+                    str(evento.get("order", "")),
+                    evento.get("description") or evento.get("type", ""),
+                    _periodo_do_evento(evento),
+                    *([evento.get("location") or "—"] if algum_local else []),
+                ]
+                for evento in eventos
+            ],
+            recuo=0.0,
+            alinhamentos=[CENTRO, ESQUERDA, ESQUERDA, *([ESQUERDA] if algum_local else [])],
+            legenda=tabelas.legenda("Cronograma"),
+        )
+        return
     linhas = [
         [
             str(evento.get("order", "")),
@@ -3002,6 +3938,13 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
 CARATER_DA_ETAPA = (("eliminatory", "eliminatória"), ("classificatory", "classificatória"))
 
 
+def _periodo_do_evento(evento):
+    """`de 03/11/2026, às 08h, a 10/11/2026, às 23h59`, ou o instante único."""
+    if evento.get("endAt"):
+        return f"de {_instante(evento.get('startAt'))}, a {_instante(evento['endAt'])}"
+    return _instante(evento.get("startAt"))
+
+
 def _etapas(composicao, snapshot, secao=0, tabelas=None):
     """As Etapas na ordem definida, com o que estiver informado.
 
@@ -3020,11 +3963,16 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
         with composicao.bloco():
             composicao.escrever(
                 f"{secao}.{ordem} {etapa.get('name', '')}",
-                tamanho=CORPO_BLOCO,
+                tamanho=CORPO_SUBSECAO,
                 fonte=NEGRITO,
                 antes=ANTES_DE_BLOCO + 2,
                 junto=True,
             )
+            if composicao.redacao != REDACAO_1:
+                # E1 a E3: os pares viram uma frase, com o mesmo que estava declarado.
+                if frase := frase_da_etapa(etapa, eventos):
+                    composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
             pares = []
             if caracteres:
@@ -3106,7 +4054,16 @@ def _nomes_do_alcance(snapshot):
     return perfis, modalidades
 
 
-def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo=None, snapshot=None):
+def _titulo_do_grupo(
+    perfil_id,
+    modalidade_id,
+    perfis,
+    modalidades,
+    codigo=None,
+    snapshot=None,
+    *,
+    redacao=REDACAO_VIGENTE,
+):
     """O cabeçalho que diz **a quem** aquele bloco de documentos se dirige.
 
     A aplicabilidade é dado estruturado; aqui ela vira a frase que o candidato lê para saber se
@@ -3114,6 +4071,8 @@ def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo=None,
     exigido de todo mundo — que é exatamente o erro que a lista única de documentos produz nos
     Editais escritos à mão.
     """
+    if redacao != REDACAO_1:
+        return _titulo_do_grupo_2(perfil_id, modalidade_id, perfis, codigo, snapshot)
     if codigo:
         # O recorte transversal (044, FR-712): um grupo por código, sem Perfil. O título é o que o
         # PDF já imprimia para "Todos os Perfis + Modalidade" — a diferença é que agora ele é
@@ -3133,6 +4092,39 @@ def _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo=None,
         f"Dos candidatos ao perfil {perfis.get(perfil_id, '')} concorrentes na modalidade "
         f"{modalidades.get(modalidade_id, '')}:"
     )
+
+
+def _lista_por_extenso(modalidade):
+    """`pessoas pretas, pardas e indígenas (PPI)` — o nome em minúscula, e o código."""
+    nome = inicial_minuscula(modalidade.get("name") or "")
+    codigo = modalidade.get("code") or ""
+    if nome and codigo:
+        return f"{nome} ({codigo})"
+    return nome or codigo
+
+
+def _titulo_do_grupo_2(perfil_id, modalidade_id, perfis, codigo, snapshot):
+    """D1 a D4 — a quem o grupo de documentos se dirige, e que é **além** dos de todos.
+
+    "Também" diz o que a redação 1 deixava implícito: os documentos do grupo se somam aos que todos
+    apresentam. O alcance é o mesmo — todos, o Perfil, a lista, o Perfil e a lista.
+    """
+    modalidades = {}
+    for perfil in (snapshot or {}).get("profiles") or []:
+        for modalidade in perfil.get("competitionModalities") or []:
+            modalidades.setdefault(modalidade.get("id"), modalidade)
+            modalidades.setdefault(("codigo", modalidade.get("code")), modalidade)
+    if codigo:
+        lista = modalidades.get(("codigo", codigo)) or {"code": codigo}
+        return f"Também, de quem concorre às vagas para {_lista_por_extenso(lista)}:"
+    if perfil_id is None and modalidade_id is None:
+        return "De todos os candidatos:"
+    lista = _lista_por_extenso(modalidades.get(modalidade_id) or {})
+    if modalidade_id is None:
+        return f"Também, de quem concorre ao Perfil {perfis.get(perfil_id, '')}:"
+    if perfil_id is None:
+        return f"Também, de quem concorre às vagas para {lista}:"
+    return f"Também, de quem concorre ao Perfil {perfis.get(perfil_id, '')} nas vagas para {lista}:"
 
 
 def _anexos(composicao, snapshot, secao=0, tabelas=None):
@@ -3188,12 +4180,25 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
     for (perfil_id, modalidade_id, codigo), documentos in grupos.items():
         with composicao.bloco():
             composicao.escrever(
-                _titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo, snapshot),
+                _titulo_do_grupo(
+                    perfil_id,
+                    modalidade_id,
+                    perfis,
+                    modalidades,
+                    codigo,
+                    snapshot,
+                    redacao=composicao.redacao,
+                ),
                 tamanho=CORPO_TEXTO,
                 fonte=NEGRITO,
                 antes=ANTES_DE_BLOCO,
                 junto=True,
             )
+            if composicao.redacao != REDACAO_1:
+                # D5, em alíneas com o recuo pendente (ED-16).
+                for indice, documento in enumerate(documentos):
+                    _item(composicao, _alinea(indice), texto_do_documento(documento), recuo=18.0)
+                continue
             for indice, documento in enumerate(documentos):
                 texto = f"{_alinea(indice)} {documento.get('name', '')}"
                 if documento.get("instructions"):
@@ -3239,8 +4244,22 @@ def _materializaveis(snapshot):
     return materializaveis
 
 
+def _apresentacao():
+    from processo_seletivo.publicacoes.infrastructure import apresentacao
+
+    return apresentacao
+
+
+def por_perguntas(snapshot):
+    """O documento deste snapshot sai na apresentação por perguntas? (069, R-001)"""
+    return catalogo.apresentacao_de(snapshot) == catalogo.POR_PERGUNTAS
+
+
 def numeracao(snapshot):
     """O número que cada seção terá no documento: `{chave: número}` (054, FR-985).
+
+    **Pela apresentação do snapshot** (069, R-003): na por perguntas, o número é o apresentado —
+    "N" para a seção, "N.k" para a chave que sai como subseção. Na plana, o de sempre.
 
     `None` para a seção que não sai; `0` para o preâmbulo, que sai sem número. **Uma regra só**, a
     que o compositor usa, lida também pela etapa Conteúdo e pela Revisão: eram três numerações — a
@@ -3248,6 +4267,8 @@ def numeracao(snapshot):
     com 22 seções e textuais vazias a tela diria "15" para a seção que o documento imprime como "9"
     (RC-26).
     """
+    if por_perguntas(snapshot):
+        return _apresentacao().numeracao(snapshot)
     numeros = {secao.get("key"): None for secao in snapshot.get("sections") or []}
     proximo = 1
     for secao, _ in _materializaveis(snapshot):
@@ -3307,6 +4328,8 @@ def itens_do_documento(snapshot):
     sai com os mesmos bytes (FR-1219). O preâmbulo não tem número, e não é item.
     """
     snapshot = _grafado(snapshot, previa=False)
+    if por_perguntas(snapshot):
+        return _apresentacao().itens(snapshot)
     numeros = numeracao(snapshot)
     itens = []
     for secao, corpo in _materializaveis(snapshot):
@@ -3331,7 +4354,8 @@ def itens_do_documento(snapshot):
                     ItemDoDocumento(
                         subsecao.numero,
                         NATUREZA_DA_SUBSECAO[subsecao.materia],
-                        f"{TITULO_DA_SUBSECAO[subsecao.materia]} {_enumerar(subsecao.codigos)}",
+                        f"{titulo_da_subsecao_comum(subsecao.materia)} "
+                        f"{_enumerar(subsecao.codigos)}",
                     )
                 )
         elif corpo is _etapas:
@@ -3340,6 +4364,9 @@ def itens_do_documento(snapshot):
                     ItemDoDocumento(f"{numero}.{ordem}", ITEM_ETAPA, etapa.get("name", ""))
                 )
     return itens
+
+
+LEGENDA_DE_TABELA = re.compile(r"^Tabela \d+ — ")
 
 
 def tabelas_do_documento(snapshot):
@@ -3351,6 +4378,16 @@ def tabelas_do_documento(snapshot):
     composição lê. E o Cronograma. Só em seção que sai no documento.
     """
     snapshot = _grafado(snapshot, previa=False)
+    if por_perguntas(snapshot):
+        # A contagem é a da composição, e não uma segunda regra: compõe-se o corpo e contam-se as
+        # legendas que ele escreveu.
+        rascunho = Composicao()
+        _apresentacao().compor(rascunho, snapshot)
+        return sum(
+            1
+            for item in rascunho.itens
+            if item[0] == "texto" and item[2] == NEGRITO and LEGENDA_DE_TABELA.match(item[1])
+        )
     total = 0
     for _, corpo in _materializaveis(snapshot):
         if corpo is _perfis:
@@ -3375,7 +4412,7 @@ def tabelas_do_documento(snapshot):
 SECAO_DE_PREAMBULO = "apresentacao"
 
 
-def _secoes(composicao, snapshot):
+def _secoes(composicao, snapshot, *, paginas=None, com_sumario=False, fecho=None):
     """Preâmbulo, e depois as seções numeradas em dois passos (FR-010 a FR-012).
 
     **A ordem dos dois passos é o requisito.** Numerar durante a iteração produziria `5.`, `7.`,
@@ -3399,31 +4436,162 @@ def _secoes(composicao, snapshot):
     numeraveis = [
         (secao, corpo) for secao, corpo in materializaveis if secao.get("key") != SECAO_DE_PREAMBULO
     ]
+    rotulos = [
+        f"{numero}. {secao.get('title', '').upper()}"
+        for numero, (secao, _) in enumerate(numeraveis, 1)
+    ]
+    # O sumário também na apresentação plana (R-016): é navegação, e não move número nem remissão.
+    if com_sumario:
+        sumario(composicao, rotulos, paginas or {})
     for numero, (secao, corpo) in enumerate(numeraveis, 1):
-        titulo = f"{numero}. {secao.get('title', '').upper()}"
+        titulo = rotulos[numero - 1]
+        with com_o_fecho(composicao, fecho if numero == len(numeraveis) else None):
+            composicao.escrever(
+                titulo,
+                tamanho=CORPO_TITULO_DE_SECAO,
+                fonte=NEGRITO,
+                antes=ANTES_DE_SECAO,
+                junto=True,
+            )
+            if corpo is not None:
+                corpo(composicao, snapshot, numero, tabelas)
+            else:
+                _texto_da_secao(composicao, secao, snapshot)
+    if not numeraveis and fecho is not None:
+        fecho()
+    return rotulos
+
+
+@contextmanager
+def com_o_fecho(composicao, fecho):
+    """A última seção e o fecho num bloco só (069, FR-1391, contrato do documento §7).
+
+    A página só com a data, a autoridade e a autenticidade era o defeito da auditoria: o fecho é
+    coeso, e quando não cabia saltava sozinho. Agora ele vai com a última seção sempre que as duas
+    cabem numa página; e quando não cabem, a última linha da seção pede companhia (`junto`), e a
+    quebra a leva junto com o fecho — o ato nunca começa uma página pela própria data.
+    """
+    if fecho is None:
+        yield
+        return
+    with composicao.bloco():
+        yield
+        prender_a_ultima_linha(composicao)
+        fecho()
+
+
+def prender_a_ultima_linha(composicao):
+    """Marca a última linha escrita como `junto`: a quebra que vier logo depois a leva.
+
+    **Não a linha de dentro de um quadro ou de uma moldura.** A quebra leva a linha e não a grade
+    nem o contorno: a última célula da tabela saía sozinha no alto da página do fecho, fora do
+    quadro, e a última linha do destaque, fora da moldura, deixando a faixa vazia na página de
+    antes. Terminando a seção num deles, o fecho volta a poder começar a página — o defeito antigo,
+    e menor que uma célula sem a tabela dela.
+    """
+    for indice in range(len(composicao.itens) - 1, -1, -1):
+        item = composicao.itens[indice]
+        if item[0] == "fecha_linha" or (item[0] == "fecha" and item[1]):
+            return
+        if item[0] == "texto" and item[1]:
+            composicao.itens[indice] = (*item[:7], True, *item[8:])
+            return
+
+
+def sumario(composicao, rotulos, paginas):
+    """O sumário das seções numeradas, com a página em que cada uma começa (069, FR-1372).
+
+    Composto em passadas (R-012): a primeira descobre as páginas, a seguinte as imprime, e uma
+    terceira converge se o sumário tiver mudado a paginação. **Inteiro**: salta para a página
+    seguinte quando não cabe, e o equilíbrio não o divide — partido, ele seria pior para quem o usa
+    que o branco que deixa (verificação, achado 5).
+    """
+    if not rotulos:
+        return
+    medida = composicao.metrica.largura
+    util = LARGURA - 2 * MARGEM
+    ponto = medida(" .", CORPO_TEXTO)
+    with composicao.bloco(coeso=INTEIRO):
         composicao.escrever(
-            titulo, tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ANTES_DE_SECAO, junto=True
+            "Sumário",
+            tamanho=CORPO_SUBSECAO,
+            fonte=NEGRITO,
+            antes=ANTES_DE_SECAO,
+            junto=True,
         )
-        if corpo is not None:
-            corpo(composicao, snapshot, numero, tabelas)
-        else:
-            paragrafos = [(texto, 0.0) for texto in _paragrafos(secao.get("content", ""))]
-            paragrafos += _norma_da_secao(secao, snapshot)
-            for indice, (paragrafo, recuo) in enumerate(paragrafos):
+        for indice, rotulo in enumerate(rotulos):
+            pagina = str(paginas.get(rotulo, 0))
+            livre = util - medida(pagina, CORPO_TEXTO) - medida(rotulo, CORPO_TEXTO) - 8.0
+            pontos = " ." * max(int(livre / ponto), 0)
+            composicao.escrever(
+                f"{rotulo}{pontos}",
+                antes=ANTES_DE_LINHA if indice else ANTES_DE_PARAGRAFO,
+            )
+            composicao.escrever(pagina, alinhamento=DIREITA, antes=-(CORPO_TEXTO * 1.45))
+
+
+def _paginas_das_secoes(paginas, rotulos):
+    """Em que página começa cada seção: a do título dela, desenhado no corpo do título de seção."""
+    achadas = {}
+    for numero, (linhas, _) in enumerate(paginas, 1):
+        for texto, fonte, tamanho, *_ in linhas:
+            if fonte != NEGRITO or tamanho != CORPO_TITULO_DE_SECAO:
+                continue
+            for rotulo in rotulos:
+                if rotulo not in achadas and (texto == rotulo or rotulo.startswith(f"{texto} ")):
+                    achadas[rotulo] = numero
+                    break
+    return achadas
+
+
+def _texto_da_secao(composicao, secao, snapshot, *, antes=ANTES_DE_BLOCO):
+    """O texto de quem redigiu, e depois a norma que o sistema acrescenta (054, FR-984).
+
+    **A declaração do Requerimento sai em bloco destacado** (069, FR-1382), e a frase que a anuncia
+    vai com ela: as duas são uma regra, e a paginação não as separa quando cabem numa página
+    (FR-1391).
+    """
+    paragrafos = [(texto, 0.0) for texto in _paragrafos(secao.get("content", ""))]
+    paragrafos += _norma_da_secao(secao, snapshot, composicao.redacao)
+    declaracao = [texto for texto, recuo in paragrafos if recuo == RECUO_DA_DECLARACAO]
+    corrido = [(texto, recuo) for texto, recuo in paragrafos if recuo != RECUO_DA_DECLARACAO]
+    anuncio = corrido.pop() if declaracao and corrido else None
+    for indice, (paragrafo, recuo) in enumerate(corrido):
+        composicao.escrever(
+            paragrafo,
+            tamanho=CORPO_TEXTO,
+            recuo=recuo,
+            antes=antes if indice == 0 else ANTES_DE_PARAGRAFO,
+            justificar=True,
+        )
+    if not declaracao:
+        return
+    with composicao.bloco():
+        if anuncio is not None:
+            composicao.escrever(
+                anuncio[0],
+                tamanho=CORPO_TEXTO,
+                antes=antes if not corrido else ANTES_DE_PARAGRAFO,
+                justificar=True,
+                junto=True,
+            )
+        with composicao.bloco(moldura=DESTAQUE):
+            for indice, paragrafo in enumerate(declaracao):
                 composicao.escrever(
                     paragrafo,
                     tamanho=CORPO_TEXTO,
-                    recuo=recuo,
-                    antes=ANTES_DE_BLOCO if indice == 0 else ANTES_DE_PARAGRAFO,
+                    recuo=RECUO_NO_DESTAQUE,
+                    antes=ANTES_DE_BLOCO + 2 if indice == 0 else ANTES_DE_PARAGRAFO,
                     justificar=True,
                 )
+            composicao.espaco(4.0)
 
 
 # A seção textual onde a norma da inscrição que o sistema executa é publicada.
 SECAO_DA_INSCRICAO = "inscricao"
 
 
-def teto_de_inscricoes(snapshot):
+def teto_de_inscricoes(snapshot, *, redacao=REDACAO_VIGENTE):
     """A frase do teto de inscrições por candidato, ou `None` sem teto (015, FR-063).
 
     **O RC-12 da auditoria de 26/09, corrigido pela DP-20.** O teto era executado na submissão
@@ -3439,9 +4607,18 @@ def teto_de_inscricoes(snapshot):
     teto = snapshot.get("maxInscricoesPorCandidato")
     if not isinstance(teto, int) or isinstance(teto, bool):
         return None
+    if redacao == REDACAO_1:
+        if teto == 1:
+            return "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+        return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
+    # V7, V8: "enviar" diz o mesmo que "ter enviada" — o rascunho não conta (FR-064) —, e o número
+    # ganha o extenso, como todo número de regra do documento.
     if teto == 1:
-        return "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
-    return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
+        return "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
+    return (
+        f"Cada candidato pode enviar no máximo {_numero_por_extenso(teto, feminino=True)} "
+        "inscrições neste Edital."
+    )
 
 
 # A seção textual onde a declaração do Requerimento de Matrícula é publicada (054, FR-996, D-006).
@@ -3453,11 +4630,14 @@ MOMENTO_DO_REQUERIMENTO = {
 }
 
 # O recuo da declaração transcrita: é texto que o candidato aceitará, e não redação do Edital, e o
-# recuo é o que o separa das frases que o anunciam.
+# recuo é o que o separa das frases que o anunciam. Desde a `069` ela sai em bloco destacado, e o
+# recuo marca qual parágrafo vai para dentro dele; dentro, o texto fica a `RECUO_NO_DESTAQUE` da
+# margem, que é o que o contorno deixa livre.
 RECUO_DA_DECLARACAO = 18.0
+RECUO_NO_DESTAQUE = 8.0
 
 
-def requerimento_de_matricula(snapshot):
+def requerimento_de_matricula(snapshot, *, redacao=REDACAO_VIGENTE):
     """As frases do Requerimento de Matrícula e a declaração, ou `[]` sem Requerimento (FR-996).
 
     **A Q-10 da `029`, fechada pela `054`.** O candidato aceita a declaração no portal, e o Edital
@@ -3474,15 +4654,23 @@ def requerimento_de_matricula(snapshot):
     if not isinstance(requerimento, dict) or not requerimento.get("moment"):
         return []
     momento = MOMENTO_DO_REQUERIMENTO.get(requerimento["moment"], str(requerimento["moment"]))
-    partes = [(f"O Requerimento de Matrícula será enviado {momento}.", 0.0)]
     declaracao = _paragrafos(requerimento.get("declarationText", ""))
-    if declaracao:
-        partes.append(("Ao enviá-lo, o candidato declarará:", 0.0))
-        partes.extend((paragrafo, RECUO_DA_DECLARACAO) for paragrafo in declaracao)
+    if redacao == REDACAO_1:
+        partes = [(f"O Requerimento de Matrícula será enviado {momento}.", 0.0)]
+        if declaracao:
+            partes.append(("Ao enviá-lo, o candidato declarará:", 0.0))
+    else:
+        # V11, V12: no presente, e a frase que anuncia a declaração junto da que diz o momento — as
+        # duas são uma regra só, e a paginação não as separa da declaração (FR-1391).
+        anuncio = f"O Requerimento de Matrícula é enviado {momento}."
+        if declaracao:
+            anuncio += " Ao enviá-lo, o candidato declara:"
+        partes = [(anuncio, 0.0)]
+    partes.extend((paragrafo, RECUO_DA_DECLARACAO) for paragrafo in declaracao)
     return partes
 
 
-def _norma_da_secao(secao, snapshot):
+def _norma_da_secao(secao, snapshot, redacao=REDACAO_VIGENTE):
     """Os parágrafos que o sistema acrescenta a uma seção textual, depois do texto de quem redigiu.
 
     **Na seção, e não num cabeçalho próprio.** O catálogo é fixo (006, FR-034), e uma seção nova só
@@ -3493,10 +4681,10 @@ def _norma_da_secao(secao, snapshot):
     FR-984): a norma que o sistema executa não pode depender de alguém ter escrito na seção.
     """
     if secao.get("key") == SECAO_DA_INSCRICAO:
-        frase = teto_de_inscricoes(snapshot)
+        frase = teto_de_inscricoes(snapshot, redacao=redacao)
         return [(frase, 0.0)] if frase else []
     if secao.get("key") == SECAO_DA_MATRICULA:
-        return requerimento_de_matricula(snapshot)
+        return requerimento_de_matricula(snapshot, redacao=redacao)
     return []
 
 
@@ -3576,7 +4764,9 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.regua()
     composicao.escrever(
         "Verificação de integridade — este documento deriva integralmente da versão homologada "
-        "identificada abaixo.",
+        "identificada abaixo."
+        if composicao.redacao == REDACAO_1
+        else FRASE_DE_AUTENTICIDADE,
         tamanho=CORPO_NOTA,
         antes=ANTES_DE_LINHA + 3,
     )
@@ -3594,9 +4784,20 @@ def _integridade(composicao, snapshot, content_hash):
 
 
 def _fluxo_da_pagina(
-    linhas, rodape, pagina, marca="", tracos=(), com_brasao=False, *, estrito=False
+    linhas,
+    rodape,
+    pagina,
+    marca="",
+    tracos=(),
+    com_brasao=False,
+    *,
+    estrito=False,
+    metrica=HELVETICA,
+    fio_sob_o_titulo=False,
 ):
     partes = []
+    if fio_sob_o_titulo:
+        tracos = [*tracos, *_fios_sob_os_titulos(linhas)]
     if com_brasao:
         # `cm` põe a matriz de escala e a posição; `Do` desenha o XObject. `q`/`Q` isolam a
         # transformação para que nada depois dela herde a escala da imagem.
@@ -3609,8 +4810,19 @@ def _fluxo_da_pagina(
     # Os fios primeiro: no PDF, o que é emitido depois cobre o que veio antes. Emitir contorno
     # antes de letra garante que nenhum fio passe por cima de um glifo — sem precisar de camada,
     # z-index ou qualquer conceito de composição gráfica (D-002).
-    for forma in tracos:
-        if forma[0] == "fundo":
+    # A caixa do bloco destacado vem antes de todo outro traço: o fundo dela cobriria o que viesse
+    # antes. A ordenação é estável, e sem caixa a ordem dos traços é a de sempre — o comprovante e a
+    # divulgação saem com os mesmos bytes.
+    for forma in sorted(tracos, key=lambda traco: traco[0] != "caixa"):
+        if forma[0] == "caixa":
+            _, x, y, largura_do_traco, altura = forma
+            partes.append(
+                f"{CINZA_DO_DESTAQUE} g "
+                f"{x:.1f} {y:.1f} {largura_do_traco:.1f} {altura:.1f} re f 0 g "
+                f"{Composicao.ESPESSURA_DO_FIO} w "
+                f"{x:.1f} {y:.1f} {largura_do_traco:.1f} {altura:.1f} re S".encode()
+            )
+        elif forma[0] == "fundo":
             _, x, y, largura_do_traco, altura = forma
             partes.append(
                 f"{CINZA_DO_CABECALHO} g "
@@ -3655,7 +4867,7 @@ def _fluxo_da_pagina(
     # num canto, e fica em corpo de nota para não competir com o conteúdo.
     for texto, x in (
         (rodape, MARGEM),
-        (pagina, LARGURA - MARGEM - largura(pagina, CORPO_NOTA, REGULAR)),
+        (pagina, LARGURA - MARGEM - metrica.largura(pagina, CORPO_NOTA, REGULAR)),
     ):
         partes.append(
             b"BT /"
@@ -3665,6 +4877,25 @@ def _fluxo_da_pagina(
             + b") Tj ET"
         )
     return b"\n".join(partes)
+
+
+def _fios_sob_os_titulos(linhas):
+    """O fio fino sob cada título de seção do Edital (069, FR-1382).
+
+    **Derivado da linha desenhada**, e não um traço da composição: o título que a quebra de página
+    leva para a página seguinte leva o fio junto, sem que a paginação precise saber dele. Título que
+    quebra em duas linhas ganha o fio só abaixo da última.
+    """
+    fios = []
+    for indice, (_, fonte, tamanho, _, y, _) in enumerate(linhas):
+        if fonte != NEGRITO or tamanho != CORPO_TITULO_DE_SECAO:
+            continue
+        seguinte = linhas[indice + 1] if indice + 1 < len(linhas) else None
+        if seguinte and seguinte[1] == NEGRITO and seguinte[2] == CORPO_TITULO_DE_SECAO:
+            continue
+        altura = y - FIO_SOB_O_TITULO
+        fios.append(("seg", MARGEM, altura, LARGURA - MARGEM, altura))
+    return fios
 
 
 def render_edital_pdf(
@@ -3707,25 +4938,385 @@ def render_edital_pdf(
         raise ValueError("O documento publicado exige a data do ato.")
 
     snapshot = _grafado(snapshot, previa=previa)
-    composicao = Composicao()
-    _cabecalho(composicao, snapshot, unidade, consolidacao)
-    _secoes(composicao, snapshot)
-    if not previa:
-        # Autoridade e verificação são **um** bloco: quem assinou e a prova do que assinou não se
-        # separam por acidente de paginação. Sem isso, um documento que termina perto do fim da
-        # página deixa o SHA-256 sozinho na seguinte — que foi o que o primeiro exemplo com dois
-        # Perfis mostrou, e que o cenário de referência escondia por caber.
-        with composicao.bloco():
-            _autoridade(composicao, autoridade, data_do_ato, unidade.local)
-            _integridade(composicao, snapshot, content_hash)
+    perguntas = por_perguntas(snapshot)
+
+    def compor(paginas):
+        # A fonte embutida mede o texto do Edital (069, FR-1381): a quebra, a justificação e a
+        # posição são as do glifo que o arquivo carrega, em qualquer leitor.
+        composicao = Composicao(metrica=METRICA_DO_EDITAL, equilibrio=True)
+        _cabecalho(composicao, snapshot, unidade, consolidacao)
+
+        def fecho():
+            # Autoridade e verificação são **um** bloco: quem assinou e a prova do que assinou não
+            # se separam por acidente de paginação. Sem isso, um documento que termina perto do fim
+            # da página deixa o SHA-256 sozinho na seguinte — que foi o que o primeiro exemplo com
+            # dois Perfis mostrou, e que o cenário de referência escondia por caber.
+            with composicao.bloco():
+                _autoridade(composicao, autoridade, data_do_ato, unidade.local)
+                _integridade(composicao, snapshot, content_hash)
+
+        # O fecho entra **dentro** do bloco da última seção (069): ver `com_o_fecho`.
+        fecho_do_ato = None if previa else fecho
+        if perguntas:
+            plano = _apresentacao().compor(
+                composicao, snapshot, paginas=paginas, fecho=fecho_do_ato
+            )
+            rotulos = [secao.rotulo for secao in plano.secoes]
+        else:
+            rotulos = _secoes(
+                composicao, snapshot, paginas=paginas, com_sumario=True, fecho=fecho_do_ato
+            )
+        return composicao, rotulos
+
+    # O sumário diz a página de cada seção, e a página depende do sumário: compõe-se até as páginas
+    # que ele imprime serem as em que as seções caem (R-012). Converge na segunda ou na terceira.
+    paginas = {}
+    for _ in range(4):
+        composicao, rotulos = compor(paginas)
+        paginado = composicao.paginar()
+        achadas = _paginas_das_secoes(paginado, rotulos)
+        if achadas == paginas:
+            break
+        paginas = achadas
     edital = f"Edital {snapshot.get('number', '')}/{snapshot.get('year', '')}"
     identificacao = edital if previa else f"{edital} · Verificação {content_hash[:16]}…"
-    return render_documento(
+    return _arquivo_do_edital(
         composicao,
         identificacao=identificacao,
         marca=MARCA_DE_PREVIA if previa else "",
-        estrito=True,
+        paginas=paginado,
+        navegacao=navegacao_do_edital(snapshot, unidade, rotulos),
     )
+
+
+METRICA_DO_EDITAL = fonte_do_edital.METRICA
+
+
+@dataclass(frozen=True)
+class Navegacao:
+    """O que o arquivo do Edital oferece para navegar (069, FR-1384 a FR-1388, R-012).
+
+    `marcadores` são `(nível, texto, prefixo)`: o texto do marcador e o começo da linha em negrito
+    que o documento imprime para a seção ("5. ") ou a subseção ("5.1 "). `sumario` são os rótulos
+    das seções como o sumário os imprime, na ordem.
+    """
+
+    titulo: str
+    autor: str
+    marcadores: tuple = ()
+    sumario: tuple = ()
+
+
+def navegacao_do_edital(snapshot, unidade, rotulos):
+    """Título, autor e marcadores do Edital, pela lista de itens que numera o documento (R-003)."""
+    marcadores = []
+    for item in itens_do_documento(snapshot):
+        if item.natureza == ITEM_SECAO:
+            marcadores.append((1, f"{item.numero}. {item.descricao}", f"{item.numero}. "))
+        else:
+            marcadores.append((2, f"{item.numero} {item.descricao}", f"{item.numero} "))
+    sigla = getattr(unidade, "sigla", "") or ""
+    # O anúncio em caixa mista: "Edital nº 91/2026 — …", que é o que o leitor mostra na janela.
+    titulo = re.sub(r"^EDITAL N[ºO°]", "Edital nº", anuncio_do_ato(snapshot))
+    return Navegacao(
+        titulo=titulo,
+        autor=f"Ifes — {sigla}" if sigla else "Ifes",
+        marcadores=tuple(marcadores),
+        sumario=tuple(rotulos),
+    )
+
+
+def _cadeia_do_pdf(valor):
+    """Uma cadeia de texto do PDF: literal quando ASCII; `<FEFF…>` em UTF-16BE, quando não."""
+    valor = str(valor)
+    try:
+        valor.encode("ascii")
+    except UnicodeEncodeError:
+        return "<FEFF" + valor.encode("utf-16-be").hex().upper() + ">"
+    return "(" + valor.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") + ")"
+
+
+# Os endereços que o texto impresso escreve e que viram link (R-012). Nenhum é acrescentado: o link
+# cobre o que está desenhado, e só isso.
+ENDERECO_DE_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
+ENDERECO_DA_WEB = re.compile(r"https?://[^\s»”\"<>]+[^\s»”\"<>.,;:)]")
+
+
+def _registrar_enderecos(composicao, texto):
+    """Guarda, na composição, os endereços do texto inteiro — antes de o refluxo os partir."""
+    enderecos = getattr(composicao, "enderecos", None)
+    if enderecos is None:
+        return
+    for padrao in (ENDERECO_DE_EMAIL, ENDERECO_DA_WEB):
+        enderecos.update(casado.group(0) for casado in padrao.finditer(str(texto)))
+
+
+def _uri(endereco):
+    """O alvo do link em ASCII, como a `/URI` exige: o acento vai em `%XX`, do UTF-8."""
+    return quote(endereco, safe=":/?#[]@!$&'()*+,;=%~-._")
+
+
+def _posicoes_dos_titulos(paginas, marcadores):
+    """`[(página, y)]` de cada marcador: a linha em negrito que começa pelo prefixo dele.
+
+    Procura em ordem, a partir do anterior, porque o mesmo prefixo pode reaparecer adiante — e o
+    sumário, que repete os títulos, não é negrito, e por isso não é confundido com eles.
+    """
+    posicoes, pagina, linha = [], 0, 0
+    for _, _, prefixo in marcadores:
+        achado = None
+        for numero in range(pagina, len(paginas)):
+            linhas = paginas[numero][0]
+            for indice in range(linha if numero == pagina else 0, len(linhas)):
+                texto, fonte, tamanho, _, y, _ = linhas[indice]
+                if fonte == NEGRITO and texto.startswith(prefixo):
+                    achado = (numero, indice, y + tamanho)
+                    break
+            if achado:
+                break
+        if achado is None:
+            posicoes.append(None)
+            continue
+        pagina, linha = achado[0], achado[1] + 1
+        posicoes.append((achado[0], achado[2]))
+    return posicoes
+
+
+def _anotacoes(paginas, navegacao, metrica, posicoes, enderecos=None):
+    """Por página, os links: do sumário para a seção, e dos endereços escritos no texto.
+
+    `enderecos`, os escritos inteiros: o pedaço de um endereço partido pelo refluxo não vira link.
+    """
+    por_numero = {}
+    for (nivel, _, prefixo), posicao in zip(navegacao.marcadores, posicoes, strict=True):
+        if nivel == 1 and posicao is not None:
+            por_numero[prefixo] = posicao
+    anotacoes = [[] for _ in paginas]
+    for numero, (linhas, _) in enumerate(paginas):
+        for texto, fonte, tamanho, x, y, espaco in linhas:
+            retangulo_da_linha = (MARGEM, y - 3, LARGURA - MARGEM, y + tamanho)
+            if fonte == REGULAR and " ." in texto:
+                for rotulo in navegacao.sumario:
+                    prefixo = rotulo.split(" ", 1)[0] + " "
+                    if texto.startswith(rotulo) and prefixo in por_numero:
+                        anotacoes[numero].append(
+                            ("destino", retangulo_da_linha, por_numero[prefixo])
+                        )
+                        break
+            for padrao, esquema in ((ENDERECO_DE_EMAIL, "mailto:"), (ENDERECO_DA_WEB, "")):
+                for casado in padrao.finditer(texto):
+                    if esquema and texto[: casado.start()].endswith(("/", ":")):
+                        continue
+                    if enderecos is not None and casado.group(0) not in enderecos:
+                        continue
+                    antes = texto[: casado.start()]
+                    inicio = x + metrica.largura(antes, tamanho, fonte) + espaco * antes.count(" ")
+                    fim = inicio + metrica.largura(casado.group(0), tamanho, fonte)
+                    fim += espaco * casado.group(0).count(" ")
+                    anotacoes[numero].append(
+                        ("endereco", (inicio, y - 3, fim, y + tamanho), esquema + casado.group(0))
+                    )
+    return anotacoes
+
+
+def _numero(valor):
+    return f"{valor:.2f}".rstrip("0").rstrip(".")
+
+
+def _arquivo_do_edital(composicao, *, identificacao, marca="", paginas=None, navegacao=None):
+    """O arquivo do Edital: o de `render_documento`, com a fonte embutida (069, R-005).
+
+    **Escritor próprio, e não um parâmetro do compartilhado.** O comprovante se regenera a cada
+    download e promete ao candidato o SHA-256 do arquivo; o escritor dele não pode mudar um byte
+    (FR-1383). O do Edital muda só no que é do Edital: as fontes `/TrueType` embutidas nos mesmos
+    recursos `F1` e `F2`, a medida da página pela fonte embutida e o fio sob os títulos de seção.
+
+    Objetos: 1 catálogo, 2 páginas, 3 brasão, depois as seis das fontes e os pares página/conteúdo
+    — numeração fixa, para que o mesmo snapshot dê os mesmos bytes. Com `navegacao` (069, R-012),
+    depois deles: o `/Info`, a raiz e os itens dos marcadores, e as anotações de link. Sem data e
+    sem `/ID`, e sem `/StructTreeRoot` — o arquivo continua sem marcação (FR-1388).
+    """
+    paginas = paginas if paginas is not None else composicao.paginar()
+    fluxos = [
+        _fluxo_da_pagina(
+            linhas,
+            identificacao,
+            f"Página {numero} de {len(paginas)}",
+            marca=marca,
+            tracos=tracos,
+            com_brasao=numero == 1,
+            estrito=True,
+            metrica=composicao.metrica,
+            fio_sob_o_titulo=True,
+        )
+        for numero, (linhas, tracos) in enumerate(paginas, 1)
+    ]
+    objetos_das_fontes, ids_das_fontes = fonte_do_edital.objetos(4)
+    primeira_pagina = 4 + len(objetos_das_fontes)
+    ids_paginas = [primeira_pagina + indice * 2 for indice in range(len(fluxos))]
+    objetos = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        (
+            b"<< /Type /Pages /Kids ["
+            + b" ".join(f"{identificador} 0 R".encode() for identificador in ids_paginas)
+            + f"] /Count {len(fluxos)} >>".encode()
+        ),
+        _objeto_do_brasao(),
+        *objetos_das_fontes,
+    ]
+    recursos = (
+        f"/Resources << /Font << /F1 {ids_das_fontes[REGULAR]} 0 R "
+        f"/F2 {ids_das_fontes[NEGRITO]} 0 R >> "
+        f"/XObject << /{NOME_DO_BRASAO} 3 0 R >> >> "
+    ).encode()
+    if navegacao is None:
+        for indice, fluxo in enumerate(fluxos):
+            objetos.append(
+                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {LARGURA} {ALTURA}] ".encode()
+                + recursos
+                + f"/Contents {ids_paginas[indice] + 1} 0 R >>".encode()
+            )
+            objetos.append(
+                b"<< /Length "
+                + str(len(fluxo)).encode()
+                + b" >>\nstream\n"
+                + fluxo
+                + b"\nendstream"
+            )
+        return _montar_o_arquivo(objetos)
+
+    posicoes = _posicoes_dos_titulos(paginas, navegacao.marcadores)
+    anotacoes = _anotacoes(
+        paginas, navegacao, composicao.metrica, posicoes, getattr(composicao, "enderecos", None)
+    )
+    marcadores = [
+        (nivel, texto, posicao)
+        for (nivel, texto, _), posicao in zip(navegacao.marcadores, posicoes, strict=True)
+        if posicao is not None
+    ]
+    id_da_informacao = primeira_pagina + 2 * len(fluxos)
+    id_dos_marcadores = id_da_informacao + 1
+    ids_dos_itens = [id_dos_marcadores + 1 + indice for indice in range(len(marcadores))]
+    proxima = id_dos_marcadores + 1 + len(marcadores)
+    ids_das_anotacoes = []
+    for da_pagina in anotacoes:
+        ids_das_anotacoes.append(list(range(proxima, proxima + len(da_pagina))))
+        proxima += len(da_pagina)
+
+    objetos[0] = (
+        b"<< /Type /Catalog /Pages 2 0 R /Lang (pt-BR) "
+        b"/ViewerPreferences << /DisplayDocTitle true >> /PageMode /UseOutlines "
+        + f"/Outlines {id_dos_marcadores} 0 R >>".encode()
+    )
+    for indice, fluxo in enumerate(fluxos):
+        anotadas = ""
+        if ids_das_anotacoes[indice]:
+            anotadas = "/Annots [" + " ".join(f"{i} 0 R" for i in ids_das_anotacoes[indice]) + "] "
+        objetos.append(
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {LARGURA} {ALTURA}] ".encode()
+            + recursos
+            + f"{anotadas}/Contents {ids_paginas[indice] + 1} 0 R >>".encode()
+        )
+        objetos.append(
+            b"<< /Length " + str(len(fluxo)).encode() + b" >>\nstream\n" + fluxo + b"\nendstream"
+        )
+    objetos.append(
+        f"<< /Title {_cadeia_do_pdf(navegacao.titulo)} "
+        f"/Author {_cadeia_do_pdf(navegacao.autor)} >>".encode()
+    )
+
+    def destino(posicao):
+        pagina, topo = posicao
+        return f"/Dest [{ids_paginas[pagina]} 0 R /XYZ null {_numero(topo + 4)} null]"
+
+    # Os dois níveis: cada seção, e as subseções dela logo abaixo, fechadas (`/Count` negativo).
+    pais = [indice for indice, (nivel, _, _) in enumerate(marcadores) if nivel == 1]
+    filhos = {pai: [] for pai in pais}
+    pai_atual = None
+    for indice, (nivel, _, _) in enumerate(marcadores):
+        if nivel == 1:
+            pai_atual = indice
+        elif pai_atual is not None:
+            filhos[pai_atual].append(indice)
+    soltos = [
+        i
+        for i, (nivel, _, _) in enumerate(marcadores)
+        if nivel != 1 and not any(i in lista for lista in filhos.values())
+    ]
+    topo_da_arvore = sorted(pais + soltos)
+    objetos.append(
+        (
+            f"<< /Type /Outlines /First {ids_dos_itens[topo_da_arvore[0]]} 0 R "
+            f"/Last {ids_dos_itens[topo_da_arvore[-1]]} 0 R /Count {len(topo_da_arvore)} >>"
+            if topo_da_arvore
+            else "<< /Type /Outlines /Count 0 >>"
+        ).encode()
+    )
+    irmaos = {}
+    for grupo in (topo_da_arvore, *filhos.values()):
+        for posicao, indice in enumerate(grupo):
+            irmaos[indice] = (
+                grupo[posicao - 1] if posicao else None,
+                grupo[posicao + 1] if posicao + 1 < len(grupo) else None,
+            )
+    pai_de = {filho: pai for pai, lista in filhos.items() for filho in lista}
+    for indice, (_, texto, posicao) in enumerate(marcadores):
+        anterior, seguinte = irmaos[indice]
+        pai = ids_dos_itens[pai_de[indice]] if indice in pai_de else id_dos_marcadores
+        partes = [f"<< /Title {_cadeia_do_pdf(texto)} /Parent {pai} 0 R"]
+        if anterior is not None:
+            partes.append(f"/Prev {ids_dos_itens[anterior]} 0 R")
+        if seguinte is not None:
+            partes.append(f"/Next {ids_dos_itens[seguinte]} 0 R")
+        if filhos.get(indice):
+            partes.append(
+                f"/First {ids_dos_itens[filhos[indice][0]]} 0 R "
+                f"/Last {ids_dos_itens[filhos[indice][-1]]} 0 R /Count -{len(filhos[indice])}"
+            )
+        partes.append(f"{destino(posicao)} >>")
+        objetos.append(" ".join(partes).encode())
+    for da_pagina in anotacoes:
+        for especie, (x0, y0, x1, y1), alvo in da_pagina:
+            retangulo = " ".join(_numero(valor) for valor in (x0, y0, x1, y1))
+            acao = (
+                destino(alvo)
+                if especie == "destino"
+                else (f"/A << /S /URI /URI {_cadeia_do_pdf(_uri(alvo))} >>")
+            )
+            objetos.append(
+                f"<< /Type /Annot /Subtype /Link /Rect [{retangulo}] /Border [0 0 0] "
+                f"{acao} >>".encode()
+            )
+    return _montar_o_arquivo(objetos, informacao=id_da_informacao)
+
+
+def _objeto_do_brasao():
+    return (
+        f"<< /Type /XObject /Subtype /Image /Width {brasao.LARGURA} "
+        f"/Height {brasao.ALTURA} /ColorSpace /DeviceRGB /BitsPerComponent 8 "
+        f"/Filter /FlateDecode /Length {len(brasao.FLUXO)} >>\nstream\n".encode()
+        + brasao.FLUXO
+        + b"\nendstream"
+    )
+
+
+def _montar_o_arquivo(objetos, *, raiz=1, informacao=None):
+    """Os objetos numerados, a tabela de referências e o trailer — sem `/ID` e sem data."""
+    saida = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    deslocamentos = []
+    for indice, objeto in enumerate(objetos, 1):
+        deslocamentos.append(len(saida))
+        saida.extend(f"{indice} 0 obj\n".encode() + objeto + b"\nendobj\n")
+    xref = len(saida)
+    saida.extend(f"xref\n0 {len(objetos) + 1}\n0000000000 65535 f \n".encode())
+    for deslocamento in deslocamentos:
+        saida.extend(f"{deslocamento:010d} 00000 n \n".encode())
+    info = f" /Info {informacao} 0 R" if informacao else ""
+    saida.extend(
+        f"trailer << /Size {len(objetos) + 1} /Root {raiz} 0 R{info} >>\nstartxref\n{xref}\n"
+        "%%EOF\n".encode()
+    )
+    return bytes(saida)
 
 
 def render_documento(

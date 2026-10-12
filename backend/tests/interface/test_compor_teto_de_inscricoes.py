@@ -49,7 +49,7 @@ from tests.unit.publicacoes.test_pdf import texto_de
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 DECLARACOES = {"veracidade": True, "ciencia": True}
-FRASE_DE_UM = "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital."
+FRASE_DE_UM = "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
 
 
 class _Campos(HTMLParser):

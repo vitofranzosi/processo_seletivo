@@ -572,6 +572,10 @@ def test_a_subsecao_comum_que_cabe_numa_pagina_sai_inteira_e_o_titulo_nunca_fica
 
     O enchimento varia o quanto da página o último Perfil ocupa, para que em alguma das variantes a
     subseção comum comece perto do rodapé — que é onde um bloco que não salta inteiro se partiria.
+
+    **Desde a `069`, com o equilíbrio** (FR-1392, R-011): saltar a subseção inteira não pode deixar
+    mais da metade da página em branco. Quando ela começa com a página ainda vazia, divide-se —
+    e então o título fica com o primeiro item e cada lado leva ao menos dois.
     """
     itens = [
         f"Atribuição {n}: acompanhar os estudantes nas atividades do curso." for n in range(1, 26)
@@ -587,7 +591,12 @@ def test_a_subsecao_comum_que_cabe_numa_pagina_sai_inteira_e_o_titulo_nunca_fica
     titulo = _pagina_de(paginas, lambda t: "Atribuições comuns aos Perfis" in t)
     corpo = _pagina_de(paginas, lambda t: t.startswith("Atribuição "))
     assert len(titulo) == 1
-    assert corpo == titulo, f"a subseção que cabe numa página saiu partida: {titulo} e {corpo}"
+    if corpo == titulo:
+        return
+    assert corpo == [titulo[0], titulo[0] + 1], f"partida longe do título: {titulo} e {corpo}"
+    por_pagina = [sum(1 for t in paginas[n - 1] if t.startswith("Atribuição ")) for n in corpo]
+    assert min(por_pagina) >= 2, f"a divisão deixou um item sozinho: {por_pagina}"
+    assert por_pagina[0] > len(itens) / 2, "dividiu-se sem a página estar mais vazia que cheia"
 
 
 def test_edital_de_um_perfil_nao_tem_subsecao_comum_nem_remissao():

@@ -80,12 +80,17 @@ class PerfilVaga(models.Model):
     #
     # **Vazio, e não nulo**, pela mesma razão de `especie_de_reversao` acima: é a grafia deste
     # repositório para texto ausente, e os dois valores declaráveis são não vazios.
+    #
+    # **Os rótulos são os da redação 2** (069, R-004): "Por publicação", sem "no endereço eletrônico
+    # do certame" — o lugar é texto de quem elabora. São cópia da frase do documento, e uma segunda
+    # redação da mesma forma na tela seria a segunda norma que a FR-1364 proíbe. Os valores gravados
+    # não mudam, e a migration da troca não toca o banco.
     forma_de_convocacao = models.CharField(
         max_length=32,
         blank=True,
         default="",
         choices=[
-            ("PUBLICATION", "Por publicação no endereço eletrônico do certame"),
+            ("PUBLICATION", "Por publicação"),
             ("INDIVIDUAL_MESSAGE", "Por mensagem individual à pessoa convocada"),
         ],
     )

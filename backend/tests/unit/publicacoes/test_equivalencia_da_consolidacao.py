@@ -17,6 +17,12 @@ exigidos, a remuneração — são comparadas como multiconjunto:
 
 O multiconjunto pega a frase perdida, a duplicada e a de outro Perfil. O que muda de propósito —
 recuo, posição, número da tabela, a ordem das linhas de modalidades (ED-11) — não entra na unidade.
+
+**Na redação 1, explicitamente** (069, R-004). Esta é a prova do que a `068` fez, e as frases que
+ela compara são as que a `068` publicava; a `069` reescreveu as frases geradas, e a redação 1
+continua existindo no compositor justamente para que esta prova continue de pé. A equivalência da
+redação 2 com a 1 é a da `069`: por variante (`test_redacao_das_frases.py`) e por enunciado
+(`specs/069-…/demonstracao/equivalencia.md`).
 """
 
 import copy
@@ -87,7 +93,7 @@ def _tokens(itens):
 
 
 def _composicao_da_secao(conteudo):
-    composicao = pdf.Composicao()
+    composicao = pdf.Composicao(redacao=pdf.REDACAO_1)
     pdf._perfis(composicao, pdf._grafado(conteudo, previa=False), SECAO, pdf._Numerador())
     return _tokens(composicao.itens)
 
@@ -471,7 +477,7 @@ def test_a_leitura_pega_a_frase_que_alcancasse_outro_perfil(monkeypatch):
     monkeypatch.setattr(
         pdf,
         "_frases_da_convocacao",
-        lambda perfis: (pdf.FraseConsolidada(cenarios.CONVOCACAO_PUBLICACAO),),
+        lambda perfis, redacao=None: (pdf.FraseConsolidada(cenarios.CONVOCACAO_PUBLICACAO),),
     )
     with pytest.raises(AssertionError, match="sobram"):
         _comparar(cenarios.cenario_a(**{"INF-VAL": {"convocacao": None}}))

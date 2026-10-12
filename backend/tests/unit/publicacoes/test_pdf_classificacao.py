@@ -6,6 +6,11 @@ O ato de classificação sempre foi reprodutível *por dentro*. O que a auditori
 sem a escala, o modo de arredondamento, a normalização nem os pesos das Etapas que combina. Um
 candidato — ou um juiz — que lesse só o documento oficial não chegava ao mesmo resultado.
 
+**Na redação 2 desde a `069`** (contrato de redação, §1 a §5): os pares viraram frases, e cada
+caso afirma a frase nova com a mesma força com que afirmava a antiga — o mesmo parâmetro, o mesmo
+alvo, a mesma ausência. A redação 1 está presa, variante por variante, em
+`test_redacao_das_frases.py`.
+
 O que se prova aqui é isso, e nada mais forte: que cada parâmetro que fecha a conta está no
 documento, junto da regra que o usa, escrito com os **nomes publicados**. As garantias que este
 trabalho não pode quebrar — nenhum identificador técnico no papel, decimais em português —
@@ -125,13 +130,13 @@ def texto(conteudo):
 @pytest.mark.parametrize(
     ("trecho", "porque"),
     [
-        ("1º maior pontuação na Etapa Prova didática", "o alvo de Etapa vira o nome publicado"),
+        ("1º maior pontuação na Etapa “Prova didática”", "o alvo de Etapa vira o nome publicado"),
         (
-            "2º maior valor declarado em Meses de experiência em EaD",
+            "2º maior número de meses de experiência em EaD, informado na inscrição",
             "o alvo de fato vira o rótulo publicado",
         ),
         (
-            "3º menor valor declarado em Data de nascimento",
+            "3º data de nascimento mais antiga, informada na inscrição",
             "e o de menor valor também — o tipo muda a frase, não a resolução do alvo",
         ),
     ],
@@ -157,14 +162,14 @@ def test_a_ordem_impressa_e_a_declarada_e_nao_a_posicao_no_conteudo():
 
     posicoes = [escrito.index(f"{ordem}º ") for ordem in (1, 2, 3)]
     assert posicoes == sorted(posicoes)
-    assert "1º maior pontuação na Etapa Prova didática" in escrito
+    assert "1º maior pontuação na Etapa “Prova didática”" in escrito
 
 
 @pytest.mark.parametrize(
     ("quando_ausente", "frase"),
     [
-        ("ULTIMO_NO_CRITERIO", "sem o valor, fica por último neste critério"),
-        ("CRITERIO_NAO_SE_APLICA", "sem o valor, o critério não se aplica"),
+        ("ULTIMO_NO_CRITERIO", "quem não o informar fica em último lugar neste critério"),
+        ("CRITERIO_NAO_SE_APLICA", "para quem não o tiver, o critério não se aplica"),
     ],
 )
 def test_o_criterio_declara_o_que_fazer_na_ausencia_do_valor(quando_ausente, frase):
@@ -182,9 +187,9 @@ def test_o_criterio_declara_o_que_fazer_na_ausencia_do_valor(quando_ausente, fra
 @pytest.mark.parametrize(
     ("trecho", "porque"),
     [
-        ("Dados exigidos na inscrição", "o bloco se anuncia"),
-        ("Data de nascimento (data)", "o fato sai com rótulo e tipo publicados"),
-        ("Meses de experiência em EaD (número inteiro)", "e o tipo inteiro também tem nome"),
+        ("Na inscrição, informe também:", "o bloco se anuncia"),
+        ("• a data de nascimento;", "o fato sai com o rótulo publicado, e o tipo diz a forma"),
+        ("• o número de meses de experiência em EaD.", "e o tipo inteiro também"),
     ],
 )
 def test_o_perfil_anuncia_os_dados_que_a_inscricao_vai_exigir(trecho, porque):
@@ -197,15 +202,15 @@ def test_os_dados_exigidos_vem_antes_das_modalidades_e_dos_marcos_que_os_consome
     escrito = texto(com_classificacao())
 
     assert (
-        escrito.index("Dados exigidos na inscrição")
+        escrito.index("Na inscrição, informe também:")
         < escrito.index("Modalidades de concorrência")
-        < escrito.index("Marcos classificatórios")
+        < escrito.index("Regras de classificação")
     )
 
 
 def test_perfil_sem_fato_declarado_nao_compoe_o_bloco():
     """Título sobre nada afirmaria que a inscrição exige dados que este Edital não declara."""
-    assert "Dados exigidos na inscrição" not in texto(com_classificacao(fatos=[]))
+    assert "Na inscrição, informe também:" not in texto(com_classificacao(fatos=[]))
 
 
 # ---------------------------------------------------------------------------
@@ -217,12 +222,16 @@ def test_perfil_sem_fato_declarado_nao_compoe_o_bloco():
     ("trecho", "porque"),
     [
         (
-            "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)",
+            "A nota final é a soma das pontuações nas Etapas “Prova didática” (peso 2) e "
+            "“Análise de títulos” (peso 1), cada uma multiplicada pelo seu peso.",
             "o peso de cada Etapa aparece junto da regra que o usa, e não só na seção da Etapa",
         ),
-        ("Normalização:", "a normalização é declarada, e não deduzida da operação"),
-        ("Arredondamento:", "a escala e o modo saem do snapshot para o papel"),
-        ("2 casas decimais, meio para cima", "e saem por extenso, não como enum"),
+        ("A ordem de classificação segue a nota final.", "a forma da ordem é declarada"),
+        (
+            "A nota final é arredondada para 2 casas decimais; a partir da metade, arredonda-se "
+            "para cima.",
+            "a escala e o modo saem do snapshot para o papel, por extenso e não como enum",
+        ),
     ],
 )
 def test_o_marco_publica_o_que_basta_para_refazer_a_conta(trecho, porque):
@@ -230,23 +239,37 @@ def test_o_marco_publica_o_que_basta_para_refazer_a_conta(trecho, porque):
     assert trecho in texto(com_classificacao()), porque
 
 
+NORMALIZADA = "Depois, o resultado é dividido pela soma dos pesos."
+
+
 @pytest.mark.parametrize(
-    ("normalizacao", "frase"),
-    [("NENHUMA", "nenhuma"), ("PELA_SOMA_DOS_PESOS", "pela soma dos pesos")],
+    ("normalizacao", "declarada"),
+    [("NENHUMA", False), ("PELA_SOMA_DOS_PESOS", True)],
 )
-def test_a_normalizacao_sai_por_extenso(normalizacao, frase):
+def test_a_normalizacao_sai_por_extenso(normalizacao, declarada):
+    """A normalização declarada é um passo da conta, e sai como passo; sem ela, não há passo."""
     escrito = texto(com_classificacao(marcos=[marco(normalization=normalizacao)]))
 
-    assert f"Normalização: {frase}" in escrito
+    assert (NORMALIZADA in escrito) is declarada
     assert normalizacao not in escrito
 
 
 @pytest.mark.parametrize(
     ("arredondamento", "frase"),
     [
-        ({"scale": 0, "mode": "TRUNCAR"}, "sem casas decimais, truncamento"),
-        ({"scale": 1, "mode": "MEIO_PARA_PAR"}, "1 casa decimal, meio para par"),
-        ({"scale": 4, "mode": "MEIO_PARA_CIMA"}, "4 casas decimais, meio para cima"),
+        (
+            {"scale": 0, "mode": "TRUNCAR"},
+            "arredondada para um número inteiro, desprezando-se as casas decimais.",
+        ),
+        (
+            {"scale": 1, "mode": "MEIO_PARA_PAR"},
+            "arredondada para 1 casa decimal; na metade exata, arredonda-se para o algarismo par "
+            "mais próximo.",
+        ),
+        (
+            {"scale": 4, "mode": "MEIO_PARA_CIMA"},
+            "arredondada para 4 casas decimais; a partir da metade, arredonda-se para cima.",
+        ),
     ],
 )
 def test_a_escala_e_o_modo_do_arredondamento_saem_em_portugues(arredondamento, frase):
@@ -265,7 +288,7 @@ def test_o_peso_fracionario_do_marco_sai_com_virgula():
 
     escrito = texto(com_classificacao(etapas=fracionaria))
 
-    assert "Prova didática (peso 1,75)" in escrito
+    assert "“Prova didática” (peso 1,75)" in escrito
     assert not re.search(r"\d\.\d{4}\b", escrito)
 
 
@@ -278,12 +301,12 @@ def test_etapa_decisoria_enumerada_e_porta_e_nao_ganha_peso():
 
     escrito = texto(com_classificacao(etapas=porta))
 
-    assert "Prova didática (não pontua)" in escrito
-    assert "Prova didática (peso" not in escrito
+    assert "A Etapa “Prova didática” não entra na conta: ela não dá pontos." in escrito
+    assert "“Prova didática” (peso" not in escrito
 
 
 def test_perfil_sem_marco_nao_compoe_o_bloco():
-    assert "Marcos classificatórios" not in texto(com_classificacao(marcos=[]))
+    assert "Regras de classificação" not in texto(com_classificacao(marcos=[]))
 
 
 # ---------------------------------------------------------------------------
@@ -307,8 +330,8 @@ def test_alvo_inexistente_nao_derruba_o_documento_e_nao_imprime_identificador():
     escrito = texto(com_classificacao(marcos=[marco(tiebreakers=perdidos)]))
 
     assert "1º maior pontuação na Etapa não identificada neste Edital" in escrito
-    assert "2º maior valor declarado em dado não identificado neste Edital" in escrito
-    assert "3º menor valor declarado em dado não identificado neste Edital" in escrito
+    assert "2º maior valor de dado não identificado neste Edital" in escrito
+    assert "3º menor valor de dado não identificado neste Edital" in escrito
     assert ENTREVISTA not in escrito
 
 
@@ -316,7 +339,7 @@ def test_etapa_enumerada_que_o_edital_nao_carrega_e_dita_como_ausente():
     """Deixá-la cair em silêncio faria o documento anunciar uma combinação menor do que a regra."""
     escrito = texto(com_classificacao(marcos=[marco(stages=[DIDATICA, ENTREVISTA])]))
 
-    assert "Prova didática (peso 2) e Etapa não identificada neste Edital" in escrito
+    assert "“Prova didática” (peso 2) e Etapa não identificada neste Edital" in escrito
     assert ENTREVISTA not in escrito
 
 
@@ -357,7 +380,14 @@ def test_nenhuma_linha_da_classificacao_ultrapassa_a_margem():
     encher a linha. Um rótulo longo empurrando um valor longo é exatamente o caso em que o refluxo
     passaria da margem sem nenhum teste existente notar.
     """
-    from processo_seletivo.publicacoes.infrastructure.pdf import LARGURA, MARGEM, largura
+    from processo_seletivo.publicacoes.infrastructure.pdf import (
+        LARGURA,
+        MARGEM,
+        METRICA_DO_EDITAL,
+    )
+
+    # O Edital mede pela fonte que embute (069, FR-1381); a Helvetica é a do comprovante.
+    largura = METRICA_DO_EDITAL.largura
     from tests.unit.publicacoes.test_pdf import linhas_desenhadas
 
     muitas = [
@@ -393,9 +423,9 @@ def test_com_mais_de_um_perfil_o_bloco_diz_de_qual_perfil_e_o_marco():
 
     escrito = texto(snapshot(profiles=[primeiro, segundo], stages=ETAPAS))
 
-    assert "Marcos classificatórios — DOC-INFO" in escrito
-    assert "Marcos classificatórios — DOC-MAT" in escrito
-    assert "soma ponderada da Etapa Análise de títulos (peso 1)" in escrito
+    assert "Regras de classificação — DOC-INFO" in escrito
+    assert "Regras de classificação — DOC-MAT" in escrito
+    assert "A nota final é a pontuação obtida na Etapa “Análise de títulos”." in escrito
 
 
 # ---------------------------------------------------------------------------
@@ -470,8 +500,11 @@ def documento_de_sorteio(*, no_marco=None, no_edital=None):
 
 def test_o_marco_declara_como_a_ordem_dele_e_produzida():
     """`FR-464`: a primeira coisa que a seção do marco diz é de onde a ordem vem."""
-    assert "Ordem: pela pontuação combinada das Etapas" in texto(com_classificacao())
-    assert "Ordem: por sorteio" in documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+    assert "A ordem de classificação segue a nota final." in texto(com_classificacao())
+    # Sob sorteio, a forma é dita pelo bloco do sorteio e por quem participa dele (C2, C4).
+    sorteio = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
+    assert "Sorteio A ordem será definida a partir do resultado de" in sorteio
+    assert "Participam do sorteio todas as inscrições enviadas." in sorteio
 
 
 def test_o_marco_do_acervo_sem_forma_declarada_sai_exatamente_como_hoje():
@@ -486,22 +519,23 @@ def test_o_marco_do_acervo_sem_forma_declarada_sai_exatamente_como_hoje():
 
     escrito = texto(com_classificacao(marcos=[do_acervo]))
 
-    assert "Ordem:" not in escrito
-    assert "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)" in (
-        escrito
+    assert "A ordem de classificação segue a nota final." not in escrito
+    assert (
+        "A nota final é a soma das pontuações nas Etapas “Prova didática” (peso 2) e “Análise de "
+        "títulos” (peso 1)" in escrito
     )
 
 
 @pytest.mark.parametrize(
     ("rotulo", "trecho"),
     [
-        ("Algoritmo", "IFES-SORTEIO-SHA256-v1"),
-        ("Fonte", "Loteria Federal"),
-        ("Ocorrência", "Concurso 6100"),
-        ("Quando", "20/11/2026, às 20h"),
-        ("Derivação", "o primeiro concurso realizado após a data programada do sorteio"),
-        ("Semente", "os dígitos das cinco dezenas, em sequência"),
-        ("Se faltar", "a ocorrência seguinte da mesma fonte"),
+        ("Algoritmo", "algoritmo IFES-SORTEIO-SHA256-v1."),
+        ("Fonte", "da fonte “Loteria Federal”"),
+        ("Ocorrência", "do resultado de “Concurso 6100”"),
+        ("Quando", "de 20/11/2026, às 20h."),
+        ("Derivação", "Qual concurso: o primeiro concurso realizado após a data programada"),
+        ("Semente", "Semente: o número usado no sorteio: os dígitos das cinco dezenas"),
+        ("Se faltar", "Se faltar: a ocorrência seguinte da mesma fonte"),
     ],
 )
 def test_o_documento_imprime_os_sete_dados_do_metodo(rotulo, trecho):
@@ -513,23 +547,25 @@ def test_o_documento_imprime_os_sete_dados_do_metodo(rotulo, trecho):
     """
     escrito = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
 
-    assert f"{rotulo}: {trecho}" in escrito
+    assert trecho in escrito, rotulo
 
 
-def test_os_rotulos_do_metodo_saem_do_vocabulario_do_dominio():
-    """Princípio I: o documento e a tela de composição dizem a mesma coisa com as mesmas palavras.
+def test_os_campos_do_metodo_saem_todos_do_vocabulario_do_dominio():
+    """Cada um dos sete campos do método tem o seu valor no papel (FR-465, FR-1376).
 
     A varredura é sobre a **fonte**, e não sobre a grafia: se `CAMPOS_DO_METODO` ganhar um oitavo
     campo, ou perder um, este teste falha antes de o documento passar a omitir algo que a norma
-    declara. É o que impede o renderizador de inventar um oitavo nome para a mesma coisa.
+    declara. Desde a `069` a redação diz os campos em frases (a fonte e a ocorrência na abertura),
+    e por isso a varredura é pelo valor de cada campo, e não pelo rótulo.
     """
     from processo_seletivo.editais.domain.perfis import CAMPOS_DO_METODO
+    from processo_seletivo.publicacoes.infrastructure.pdf import _valor_do_campo_do_metodo
 
     escrito = documento_de_sorteio(no_edital=METODO_DO_EDITAL)
 
     assert len(CAMPOS_DO_METODO) == 7
-    for _, _, rotulo in CAMPOS_DO_METODO:
-        assert f"{rotulo}:" in escrito, rotulo
+    for campo, _, rotulo in CAMPOS_DO_METODO:
+        assert _valor_do_campo_do_metodo(campo, METODO_DO_EDITAL) in escrito, rotulo
 
 
 @pytest.mark.parametrize(
@@ -539,9 +575,9 @@ def test_os_rotulos_do_metodo_saem_do_vocabulario_do_dominio():
         (
             METODO_PROPRIO,
             METODO_DO_EDITAL,
-            "Método: próprio deste marco — diverge do comum deste Edital",
+            "Método: próprio deste sorteio, diferente do comum deste Edital",
         ),
-        (METODO_PROPRIO, None, "Método: próprio deste marco"),
+        (METODO_PROPRIO, None, "Método: próprio deste sorteio"),
     ],
 )
 def test_o_documento_diz_qual_metodo_governa_o_marco(no_marco, no_edital, grafia):
@@ -557,7 +593,8 @@ def test_o_proprio_identico_ao_comum_nao_e_anunciado_como_divergente():
     """
     escrito = documento_de_sorteio(no_marco=METODO_DO_EDITAL, no_edital=METODO_DO_EDITAL)
 
-    assert "Método: próprio deste marco" in escrito
+    assert "Método: próprio deste sorteio" in escrito
+    assert "diferente do comum" not in escrito
     assert "diverge" not in escrito
 
 
@@ -568,6 +605,7 @@ def test_o_marco_que_sorteia_nao_imprime_combinacao_de_pontuacoes():
     assert "Combinação" not in escrito
     assert "Normalização:" not in escrito
     assert "soma ponderada" not in escrito
+    assert "A nota final" not in escrito
 
 
 def test_o_marco_que_ordena_por_pontuacao_nao_ganha_bloco_de_sorteio():
@@ -576,7 +614,7 @@ def test_o_marco_que_ordena_por_pontuacao_nao_ganha_bloco_de_sorteio():
 
     assert "Sorteio" not in escrito
     assert "Método:" not in escrito
-    assert "soma ponderada das Etapas Prova didática (peso 2)" in escrito
+    assert "nas Etapas “Prova didática” (peso 2)" in escrito
 
 
 # ---------------------------------------------------------------------------
@@ -642,8 +680,8 @@ def test_o_metodo_do_marco_igual_ao_comum_nao_e_anunciado_como_divergente():
 
     escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
 
-    assert "Método: próprio deste marco" in escrito
-    assert "diverge" not in escrito
+    assert "Método: próprio deste sorteio" in escrito
+    assert "diferente do comum" not in escrito
 
 
 def test_a_divergencia_real_continua_sendo_nomeada():
@@ -656,7 +694,7 @@ def test_a_divergencia_real_continua_sendo_nomeada():
 
     escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
 
-    assert "Método: próprio deste marco — diverge do comum deste Edital" in escrito
+    assert "Método: próprio deste sorteio, diferente do comum deste Edital" in escrito
 
 
 def test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha():
@@ -671,10 +709,10 @@ def test_a_etapa_de_habilitacao_declarada_nao_cria_divergencia_sozinha():
 
     escrito = documento_de_sorteio(no_marco=proprio, no_edital=comum)
 
-    assert "Método: próprio deste marco" in escrito
-    assert "diverge" not in escrito
-    assert "Habilitação: participam apenas as inscrições habilitadas na Etapa Prova didática" in (
-        escrito
+    assert "Método: próprio deste sorteio" in escrito
+    assert "diferente do comum" not in escrito
+    assert (
+        "Participam do sorteio só as inscrições habilitadas na Etapa “Prova didática”." in escrito
     )
 
 
@@ -705,12 +743,12 @@ def cortado(**regra):
     [
         (
             "ADMITS_SURPLUS",
-            "Empate no corte: Havendo empate na última posição, progridem todos os empatados, "
-            "ainda que excedam essa quantidade.",
+            "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
+            "esse número.",
         ),
         (
             "STRICT",
-            "Empate no corte: Havendo empate na última posição, essa quantidade não é excedida.",
+            "Se houver empate na última posição, esse número não é ultrapassado.",
         ),
     ],
 )
@@ -718,7 +756,7 @@ def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
     """`FR-181` declara, `FR-185` publica: com alvo 10 e três empatados na 10ª, um leva doze."""
     escrito = texto(com_classificacao(marcos=[cortado(tieOutcome=desfecho, continuation="NONE")]))
 
-    assert "Corte: Progridem os 10 (dez) primeiros desta ordem." in escrito
+    assert "Seguem no processo os 10 (dez) primeiros classificados." in escrito
     assert frase in escrito
 
 
@@ -727,9 +765,9 @@ def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
     [
         (
             "ALLOWED",
-            "Continuação: Poderá haver chamada, nesta ordem, além dos que este corte publicar.",
+            "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem.",
         ),
-        ("NONE", "Continuação: Não haverá chamada além dos que este corte publicar."),
+        ("NONE", "Não serão chamados candidatos além desses."),
     ],
 )
 def test_o_documento_imprime_a_continuacao_do_corte(continuacao, frase):
@@ -747,8 +785,8 @@ def test_o_empate_e_a_continuacao_seguem_o_corte_e_so_ele():
     sem_alvo = texto(com_classificacao(marcos=[cortado(targetCount=None, tieOutcome="STRICT")]))
 
     for escrito in (sem_corte, sem_alvo):
-        assert "Empate no corte" not in escrito
-        assert "Continuação" not in escrito
+        assert "Se houver empate" not in escrito
+        assert "além desses" not in escrito
 
 
 def test_o_alvo_de_um_concorda_com_o_numero():
@@ -758,8 +796,10 @@ def test_o_alvo_de_um_concorda_com_o_numero():
         com_classificacao(marcos=[cortado(targetCount=1, surplusCount=1, tieOutcome="STRICT")])
     )
 
-    assert "Corte: Progride o 1 (um) primeiro desta ordem." in um
-    assert "Corte: Progridem o 1 (um) primeiro desta ordem, mais 1 (um) suplente." in com_suplente
+    assert "Segue no processo o 1 (um) primeiro classificado." in um
+    assert "Seguem no processo o 1 (um) primeiro classificado, mais 1 (um) suplente." in (
+        com_suplente
+    )
 
 
 def test_o_sorteio_sem_etapa_de_habilitacao_diz_que_todas_participam():
@@ -768,8 +808,8 @@ def test_o_sorteio_sem_etapa_de_habilitacao_diz_que_todas_participam():
     proprio = documento_de_sorteio(no_marco={**METODO_PROPRIO, "qualifyingStageId": None})
 
     for escrito in (comum, proprio):
-        assert "Habilitação: participam todas as inscrições submetidas" in escrito
+        assert "Participam do sorteio todas as inscrições enviadas." in escrito
 
 
 def test_a_habilitacao_fica_no_bloco_do_sorteio_e_nao_no_marco_de_pontuacao():
-    assert "Habilitação" not in texto(com_classificacao())
+    assert "Participam do sorteio" not in texto(com_classificacao())

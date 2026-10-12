@@ -3645,6 +3645,10 @@ TITULO_TRANSCRITO = "typed_numbering_suspected_title"
 REMISSAO_AMBIGUA = "cross_reference_ambiguous"
 REMISSAO_SEM_DESTINO = "cross_reference_without_target"
 REMISSAO_SUSPEITA = "cross_reference_suspected"
+# A remissão a uma seção pelo título que ela não tem no documento (069, FR-1400, R-013). Código à
+# parte, e não mais um da `065`: a remissão numérica tem as regras dela, e este aviso só existe no
+# ato de publicação.
+REMISSAO_PELO_TITULO = "cross_reference_by_section_title"
 CODIGOS_DA_NUMERACAO_DIGITADA = frozenset(
     {
         CONFLITO_DE_NUMERACAO,
@@ -3696,10 +3700,58 @@ def _secoes_impressas(snapshot: dict):
             continue
         paragrafos = pdf._paragrafos(grafia.normalizar(str(secao.get("content") or "")))
         impressas.append((posicao, secao, numero, paragrafos))
-    return sorted(impressas, key=lambda item: item[1].get("order") or 0)
+    # Na ordem do documento: na apresentação por perguntas (069, R-003) ela é a do número
+    # apresentado, e não a `order` do catálogo — "Atendimento à pessoa com deficiência" sai dentro
+    # de "Como se inscrever?", antes de "Quais documentos enviar?".
+    return sorted(impressas, key=lambda item: _grupos_apresentados(item[2]))
 
 
-def _mensagem_do_conflito(titulo, numero, afetados, ato) -> str:
+def _grupos_apresentados(numero) -> tuple:
+    """O número com que a seção sai — `4`, `"4"` ou `"4.1"` — como tupla de grupos (069, R-003)."""
+    return tuple(int(grupo) for grupo in str(numero).split("."))
+
+
+def _numeros_apresentados(snapshot) -> frozenset:
+    """Os números que o documento imprime como seção ou subseção, como tuplas de grupos (069).
+
+    É o que a conferência de conflito lê para saber **de quem** é um número digitado: o número
+    apresentado mais longo que o prefixa. Lidos de `pdf.itens_do_documento`, a regra que compõe.
+    """
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    try:
+        itens = pdf.itens_do_documento(snapshot)
+    except (AttributeError, TypeError):
+        return frozenset()
+    return frozenset(_grupos_apresentados(item.numero) for item in itens)
+
+
+def _subitem_coerente(digitado: str, numero, apresentados) -> bool:
+    """O subitem digitado pertence à seção ou subseção em que está escrito? (065; 069, R-003)
+
+    **Pelo prefixo apresentado.** O dono de um número digitado é o número impresso mais longo que o
+    prefixa: "8.1.2" é da subseção 8.1, se ela existe, e da seção 8, se não. O subitem é coerente
+    quando o dono é a própria seção ou subseção **e** o número não é ele mesmo um item impresso —
+    "8.1" no texto da seção 8 que imprime a subseção 8.1 seriam dois itens 8.1 no ato.
+
+    Na apresentação plana as seções textuais não têm subseção impressa, e a regra se reduz à da
+    `065`: o primeiro grupo é o número da seção.
+    """
+    if not numero:
+        return False
+    grupos = _grupos_apresentados(digitado)
+    if grupos in apresentados:
+        return False
+    proprio = _grupos_apresentados(numero)
+    prefixos = [
+        prefixo
+        for prefixo in apresentados | {proprio}
+        if len(prefixo) < len(grupos) and grupos[: len(prefixo)] == prefixo
+    ]
+    return bool(prefixos) and max(prefixos, key=len) == proprio
+
+
+def _mensagem_do_conflito(titulo, numero, afetados, ato, ocupados=()) -> str:
     if numero == 0:
         abertura, de_onde = "O preâmbulo sai no documento sem número", "por número de subitem"
         orientacao = (
@@ -3707,11 +3759,18 @@ def _mensagem_do_conflito(titulo, numero, afetados, ato) -> str:
             "pertence ou retire o número."
         )
     else:
-        abertura = f"A seção «{titulo}» sai no documento como {numero}"
-        de_onde = "por número de outra seção"
+        especie = "subseção" if "." in str(numero) else "seção"
+        abertura = f"A {especie} «{titulo}» sai no documento como {numero}"
+        de_onde = "por número de outra seção" if especie == "seção" else "por número de outro item"
         orientacao = (
-            f"No documento, os subitens desta seção começam por {numero}. Corrija a numeração no "
-            "texto da seção."
+            f"No documento, os subitens desta {especie} começam por {numero}"
+            + (
+                f", e {_enumerar_descricoes(ocupados)} "
+                f"{'já é subseção' if len(ocupados) == 1 else 'já são subseções'} dela"
+                if ocupados
+                else ""
+            )
+            + f". Corrija a numeração no texto da {especie}."
         )
     quantos = "1 parágrafo começa" if len(afetados) == 1 else f"{len(afetados)} parágrafos começam"
     lista = "; ".join(f"parágrafo {ordinal}, «{_trecho(texto)}»" for ordinal, texto in afetados)
@@ -3725,7 +3784,9 @@ def _mensagem_do_conflito(titulo, numero, afetados, ato) -> str:
     return mensagem
 
 
-def _numeracao_digitada(impressas, *, ato: str) -> list[ValidationFinding]:
+def _numeracao_digitada(
+    impressas, *, ato: str, apresentados=frozenset()
+) -> list[ValidationFinding]:
     """O subitem com número de outra seção, e o título do original colado no texto (065).
 
     **Conflito comprovado** (FR-1200): parágrafo que começa por número de subitem cujo primeiro
@@ -3758,12 +3819,21 @@ def _numeracao_digitada(impressas, *, ato: str) -> list[ValidationFinding]:
         for ordinal, paragrafo in enumerate(paragrafos, 1):
             subitem = numero_de_subitem(paragrafo)
             if subitem is not None:
-                if subitem.primeiro != numero or numero == 0:
+                if not _subitem_coerente(subitem.texto, numero, apresentados):
                     afetados.append((ordinal, paragrafo))
                 continue
             transcrito = titulo_transcrito(paragrafo)
-            if transcrito is not None and transcrito != numero:
+            if transcrito is not None and transcrito != _grupos_apresentados(numero)[0]:
                 titulos.append((ordinal, paragrafo))
+        # As subseções que o documento imprime dentro desta seção, para a mensagem dizer por que
+        # o número digitado não cabe (069): "8.1 e 8.2 já são subseções dela".
+        proprio = _grupos_apresentados(numero)
+        # Pelos grupos, como número: "8.2" vem antes de "8.10".
+        ocupados = [
+            ".".join(map(str, grupos))
+            for grupos in sorted(apresentados)
+            if numero and len(grupos) == len(proprio) + 1 and grupos[: len(proprio)] == proprio
+        ]
         if afetados:
             findings.append(
                 ValidationFinding(
@@ -3771,7 +3841,7 @@ def _numeracao_digitada(impressas, *, ato: str) -> list[ValidationFinding]:
                     CONFLITO_DE_NUMERACAO_NA_RETIFICACAO
                     if na_retificacao
                     else CONFLITO_DE_NUMERACAO,
-                    _mensagem_do_conflito(titulo, numero, afetados, ato),
+                    _mensagem_do_conflito(titulo, numero, afetados, ato, ocupados),
                     caminho,
                 )
             )
@@ -3798,8 +3868,11 @@ def _numeracao_e_remissoes(snapshot: dict, *, ato: str) -> list[ValidationFindin
     que quem corrige percorra o texto uma vez (UX-161); as remissões dos demais campos vêm depois.
     """
     impressas = _secoes_impressas(snapshot)
-    numeracao = _numeracao_digitada(impressas, ato=ato)
+    apresentados = _numeros_apresentados(snapshot)
+    numeracao = _numeracao_digitada(impressas, ato=ato, apresentados=apresentados)
     remissoes = _remissoes_internas(snapshot, impressas)
+    if ato == ATO_DE_PUBLICACAO:
+        remissoes = remissoes + _remissao_a_secao_pelo_titulo(snapshot, impressas)
     ordem = [
         f"{_caminho_da_entidade('sections', secao, posicao)}/content"
         for posicao, secao, _, _ in impressas
@@ -3811,6 +3884,85 @@ def _numeracao_e_remissoes(snapshot: dict, *, ato: str) -> list[ValidationFindin
     das_secoes = set(ordem)
     juntos.extend(achado for achado in numeracao + remissoes if achado.path not in das_secoes)
     return juntos
+
+
+def _remissao_a_secao_pelo_titulo(snapshot: dict, impressas) -> list[ValidationFinding]:
+    """A seção citada pelo título que ela não tem no documento (069, FR-1400, R-013).
+
+    **Aviso, e nunca impeditivo, e o texto não muda.** Os títulos procurados são os que o documento
+    não imprime: os do catálogo da `054` — com que o texto do Word cita as seções — e os do catálogo
+    vigente cuja seção não sai. O destino vem de `DESTINOS_DOS_TITULOS_DA_054`, e só os que saem no
+    documento são sugeridos: um destino sugere a seção; a seção que foi repartida diz isso e lista
+    os lugares, porque o sistema não sabe de qual parte o texto fala.
+
+    Só no ato de publicação: na Retificação o documento é o consolidado do original, e o original
+    imprime os títulos que o texto dele cita.
+    """
+    from processo_seletivo.editais.domain import secoes as catalogo
+    from processo_seletivo.editais.domain.numeracao_digitada import remissoes_por_titulo
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    try:
+        itens = pdf.itens_do_documento(snapshot)
+    except (AttributeError, TypeError):
+        return []
+    impressos = {str(item.descricao or "").casefold(): item.numero for item in itens}
+    # Uma grafia por título, a da `054` primeiro: é ela que `DESTINOS_DOS_TITULOS_DA_054` conhece,
+    # e "Etapas de avaliação", do catálogo vigente, casa o mesmo trecho que "Etapas de Avaliação".
+    candidatos = {}
+    for secao in (*catalogo.CATALOGO_DA_054, *catalogo.CATALOGO):
+        if secao.title.casefold() not in impressos and secao.key != "apresentacao":
+            candidatos.setdefault(secao.title.casefold(), secao.title)
+    if not candidatos:
+        return []
+    destinos_por_titulo = {
+        titulo.casefold(): destinos
+        for titulo, destinos in catalogo.DESTINOS_DOS_TITULOS_DA_054.items()
+    }
+    findings = []
+    for posicao, secao, numero, paragrafos in impressas:
+        titulo = _nome(secao, "title", "key")
+        onde = f"no texto da seção «{titulo}» ({numero})" if numero else "no preâmbulo"
+        caminho = f"{_caminho_da_entidade('sections', secao, posicao)}/content"
+        vistas = set()
+        for ordinal, paragrafo in enumerate(paragrafos, 1):
+            for remissao in remissoes_por_titulo(paragrafo, candidatos.values()):
+                if remissao.titulo in vistas:
+                    continue
+                vistas.add(remissao.titulo)
+                previstos = destinos_por_titulo.get(remissao.titulo.casefold(), ())
+                destinos = [
+                    (destino, impressos[destino.casefold()])
+                    for destino in previstos
+                    if destino.casefold() in impressos
+                ]
+                repartida = len(previstos) > 1
+                mensagem = (
+                    f"Remissão a conferir. {onde[0].upper()}{onde[1:]}, no parágrafo {ordinal}, "
+                    f"há a remissão «{remissao.literal}», e este documento não tem seção com esse "
+                    "título."
+                )
+                lugares = (
+                    _enumerar_descricoes(
+                        [f"«{destino}» (item {item})" for destino, item in destinos]
+                    )
+                    if destinos
+                    else ""
+                )
+                if repartida and destinos:
+                    mensagem += (
+                        f" A matéria de «{remissao.titulo}» foi repartida neste documento, e está "
+                        f"em {lugares}: confira a qual delas a remissão se refere."
+                    )
+                elif destinos:
+                    mensagem += f" A matéria dela está em {lugares}: confira o destino da remissão."
+                else:
+                    mensagem += " Confira o destino da remissão."
+                mensagem += " O sistema não altera o texto."
+                findings.append(
+                    ValidationFinding(Severity.WARNING, REMISSAO_PELO_TITULO, mensagem, caminho)
+                )
+    return findings
 
 
 def _chave_do_numero(numero: str) -> tuple:
@@ -3829,6 +3981,9 @@ _DESCRICAO_DO_ITEM = {
     "requisitos_comuns": "a subseção «{descricao}»",
     "marcos_comuns": "a subseção «{descricao}»",
     "etapa": "a Etapa «{descricao}»",
+    # A subseção da apresentação por perguntas (069, R-003): a textual reunida sob a pergunta, e a
+    # gerada — requisitos, atribuições, regras de classificação, dados do sorteio.
+    "subsecao": "a subseção {numero}, «{descricao}»",
 }
 
 
@@ -3848,6 +4003,7 @@ def _itens_impressos(snapshot, impressas):
     except (AttributeError, TypeError):
         do_documento, tabelas = [], 0
     mapa, secoes_ = {}, []
+    apresentados = frozenset(_grupos_apresentados(item.numero) for item in do_documento)
     for item in do_documento:
         if item.natureza == "secao":
             secoes_.append(int(item.numero))
@@ -3866,7 +4022,7 @@ def _itens_impressos(snapshot, impressas):
                 if numero
                 else (f"o parágrafo {ordinal} do preâmbulo")
             )
-            fora = numero == 0 or subitem.primeiro != numero
+            fora = not _subitem_coerente(subitem.texto, numero, apresentados)
             mapa.setdefault(_chave_do_numero(subitem.texto), []).append((onde, numero, fora))
     return mapa, max(secoes_, default=0), tabelas
 

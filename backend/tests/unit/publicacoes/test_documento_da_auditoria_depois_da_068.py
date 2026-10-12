@@ -1,9 +1,16 @@
 """O que a `068` mudou nos documentos da auditoria — e só isso (ED-04, ED-11; SC-510 a SC-514).
 
 O "antes" é o documento que a `067` gravou (`specs/067-…/demonstracao/`), que era a `main` antes
-desta feature; o "agora", o que o compositor faz hoje com o mesmo conteúdo e o mesmo contexto do
-ato. A equivalência **dentro** da seção de Perfis — cada Perfil com toda a regra que tinha — é
-provada por `test_equivalencia_da_consolidacao.py`. Aqui se prende o resto:
+desta feature; o "agora", o documento que a `068` gravou (`specs/068-…/demonstracao/`) com o mesmo
+conteúdo e o mesmo contexto do ato.
+
+**O "agora" é o PDF da `068`, e não o que o compositor faz hoje** — a mesma decisão que a `068`
+tomou para a prova da `067`. A `069` mudou o documento de novo (a redação, a fonte, a hierarquia, a
+navegação), e a evidência do que a `068` fez continua sendo a dela. O que a `069` mudou é preso por
+`test_documento_da_auditoria_depois_da_069.py`.
+
+A equivalência **dentro** da seção de Perfis — cada Perfil com toda a regra que tinha — é provada
+por `test_equivalencia_da_consolidacao.py`. Aqui se prende o resto:
 
 - **fora** da seção de Perfis, o texto é o mesmo, palavra por palavra — salvo o número das
   "Tabela N", que a tabela única desloca;
@@ -17,13 +24,20 @@ import re
 import pytest
 
 from processo_seletivo.publicacoes.infrastructure.pdf import RODAPE as MARGEM_DE_BAIXO
-from tests.unit.publicacoes.cenarios_da_auditoria import composto
 from tests.unit.publicacoes.test_documento_da_auditoria_depois_da_067 import (
     CABECALHOS,
     RODAPE,
     da_067,
 )
+from tests.unit.publicacoes.test_itens_do_documento import RAIZ
 from tests.unit.publicacoes.test_pdf import alturas_por_pagina, paginas_de, texto_de
+
+DEMONSTRACAO_068 = RAIZ / "specs" / "068-consolidacao-por-perfil" / "demonstracao"
+
+
+def da_068(cenario):
+    return (DEMONSTRACAO_068 / f"{cenario}-publicado-068.pdf").read_bytes()
+
 
 SECOES = {
     "A": ("5. PERFIS DE VAGA", "6. DA INSCRIÇÃO"),
@@ -48,7 +62,7 @@ def _fora_da_secao_de_perfis(documento, cenario):
 
 @pytest.mark.parametrize("cenario", ["A", "B"])
 def test_fora_da_secao_de_perfis_o_texto_e_o_mesmo(cenario):
-    assert _fora_da_secao_de_perfis(composto(cenario), cenario) == _fora_da_secao_de_perfis(
+    assert _fora_da_secao_de_perfis(da_068(cenario), cenario) == _fora_da_secao_de_perfis(
         da_067(cenario), cenario
     )
 
@@ -78,7 +92,7 @@ def _ocorrencias(documento, trecho):
 def test_o_que_se_repetia_sai_uma_vez(cenario, trecho, antes):
     """SC-512: o texto dos marcos, o método, as frases, as modalidades e os requisitos, uma vez."""
     assert _ocorrencias(da_067(cenario), trecho) == antes
-    assert _ocorrencias(composto(cenario), trecho) == 1
+    assert _ocorrencias(da_068(cenario), trecho) == 1
 
 
 def _paginas_da_secao(documento, cenario):
@@ -96,7 +110,7 @@ def _paginas_da_secao(documento, cenario):
 )
 def test_as_paginas_caem_ate_a_meta(cenario, total_antes, secao_antes, total_meta, secao_meta):
     """SC-510 e SC-511, sobre o conteúdo congelado; o fluxo real está em `verificacao.md`."""
-    antes, agora = da_067(cenario), composto(cenario)
+    antes, agora = da_067(cenario), da_068(cenario)
     primeira, ultima = _paginas_da_secao(antes, cenario)
     assert (len(paginas_de(antes)), ultima - primeira + 1) == (total_antes, secao_antes)
     primeira, ultima = _paginas_da_secao(agora, cenario)
@@ -121,4 +135,4 @@ def _branco_no_pe(documento, cenario):
 @pytest.mark.parametrize("cenario", ["A", "B"])
 def test_o_espaco_liberado_nao_vira_branco(cenario):
     """SC-514: a soma do branco no pé das páginas da seção de Perfis cai."""
-    assert _branco_no_pe(composto(cenario), cenario) < _branco_no_pe(da_067(cenario), cenario)
+    assert _branco_no_pe(da_068(cenario), cenario) < _branco_no_pe(da_067(cenario), cenario)

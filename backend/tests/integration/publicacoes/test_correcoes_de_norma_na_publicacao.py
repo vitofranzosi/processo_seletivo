@@ -85,9 +85,10 @@ def test_o_edital_com_o_aviso_e_o_sorteio_sem_arredondamento_publica_e_imprime_o
     assert publicado.status == Edital.Status.PUBLICADO
 
     texto = _corrido(Publicacao.objects.get(edital=publicado))
-    assert "Caberá recurso contra o resultado de “" in texto
-    assert "Arredondamento" not in texto
-    assert "Empate no corte" not in texto
+    # Na redação 2 desde a `069` (R1, C15, K6): a frase nomeia o resultado; nada de conta.
+    assert "Contra o resultado de “" in texto
+    assert "arredondada" not in texto
+    assert "Se houver empate" not in texto
 
 
 def test_a_pagina_do_edital_publicado_nao_mostra_o_aviso(api_client, edital):
@@ -113,7 +114,9 @@ def test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas(
     api_client, edital, monkeypatch
 ):
     with monkeypatch.context() as remendo:
-        remendo.setattr(pdf, "_janela_recursal", _frase_de_antes)
+        # A frase do documento é a de `frase_do_recurso` desde a `069`; é ela que volta a ser a
+        # da `main` de antes da `067`.
+        remendo.setattr(pdf, "frase_do_recurso", _frase_de_antes)
         publicado = levar_a_publicacao(api_client, edital, draft=_rascunho())
     original = Publicacao.objects.get(edital=publicado)
     documento = DocumentoPublicado.objects.get(publicacao=original)
@@ -135,7 +138,7 @@ def test_o_publicado_antes_nao_muda_e_a_retificacao_sai_pelas_regras_novas(
     consolidado = Publicacao.objects.filter(edital=publicado).latest("publication_order")
     assert consolidado.pk != original.pk
     texto = _corrido(consolidado)
-    assert "Caberá recurso contra o resultado de “" in texto, "FR-1326"
+    assert "Contra o resultado de “" in texto, "FR-1326"
     assert "contados da divulgação do resultado" not in texto
     documento.refresh_from_db()
     assert bytes(documento.bytes) == bytes_de_antes

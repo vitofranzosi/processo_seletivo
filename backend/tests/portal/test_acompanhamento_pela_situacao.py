@@ -330,7 +330,8 @@ class TestSemOcupacaoDefinida:
         """O Perfil declara convocação por publicação: nada de e-mail nem mensagem (FR-1179)."""
         bloco = texto(topo(abrir(client, edson(certame, primeiro=6312))))
 
-        assert "por publicação no endereço eletrônico do certame" in bloco
+        # A forma na redação 2 (V4): o lugar da publicação é texto de quem elabora.
+        assert "As convocações deste Perfil são feitas por publicação." in bloco
         assert "e-mail" not in bloco
         assert "mensagem" not in bloco
 

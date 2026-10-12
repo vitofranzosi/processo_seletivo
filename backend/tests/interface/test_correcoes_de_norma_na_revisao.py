@@ -52,8 +52,12 @@ def test_a_revisao_do_marco_por_pontuacao_continua_listando():
     conteudo.pop("drawMethod")
     tudo = _texto_da_classificacao(conteudo)
 
-    assert "Arredondamento: 2 casas decimais, meio para cima" in tudo
-    assert "Empate no corte: Havendo empate na última posição" in tudo
+    # As frases da redação 2 (C11, K6), as que o documento imprime.
+    assert (
+        "Arredondamento: A nota final é arredondada para 2 casas decimais; a partir da metade, "
+        "arredonda-se para cima." in tudo
+    )
+    assert "Empate no corte: Se houver empate na última posição" in tudo
 
 
 # ---- ED-03: o cartão do marco (FR-1316, UX-193, D-008) ------------------------------------------
