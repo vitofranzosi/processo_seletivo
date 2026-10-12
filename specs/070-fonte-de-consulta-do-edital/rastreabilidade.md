@@ -44,7 +44,7 @@ Cada linha aponta o lugar do código e o que o prende.
 | **FR-1418** | D`domain/catalogo.py` (`resolver`, `opcoes_de_modalidade`) | UC `test_modalidade_de_outro_perfil_…`; TT `test_perfil_inexistente_…` |
 | **FR-1419** | D`domain/catalogo.py` (parâmetros só de listas) | UC `test_o_catalogo_nao_tem_pergunta_de_texto_livre` |
 | **FR-1420** | D`domain/catalogo.py` (`trata`, `acompanha`); D`domain/respostas.py` (`_secoes`) | UM `test_ca04_e_ca05_…` |
-| **FR-1421** | D`domain/estruturas.py` (tipos); D`domain/respostas.py` (tabela de decisão) | UM US3; TT `test_o_tipo_vem_em_palavras` |
+| **FR-1421** | D`domain/estruturas.py` (tipos); D`domain/respostas.py` (tabela de decisão; `_remissao_a_anexo`, `D-011`) | UM US3; TT `test_o_tipo_vem_em_palavras`; UK `test_a_selecao_que_remete_ao_anexo_iv_…`, `test_remissao_a_anexo_fora_do_nucleo_…` |
 | **FR-1422** | D`domain/explicacao.py` (`nao_informa`) | UM `test_ca10_ausencia_pura_…`, `test_negativa_declarada_…`; UE `test_negativa_so_aparece_…` |
 | **FR-1423** | D`domain/explicacao.py` (`depende_da_leitura`, `varias_fontes`); D`domain/respostas.py` (`_p05`, documento divergente) | UM `test_ca11_…`, `test_ca10_tec_lab_…`; UK `test_o_documento_divergente_…` |
 | **FR-1424** | D`domain/respostas.py` (`_p11`); D`domain/canal.py` | UM `test_ca27_dois_canais_…`; TT `test_dois_canais_…` |
@@ -53,7 +53,7 @@ Cada linha aponta o lugar do código e o que o prende.
 | **FR-1427** | D`domain/respostas.py` (`_p03`, linha sem modalidade) | UM `test_ca03_…` |
 | **FR-1428** | D`domain/respostas.py` (`_p03`, cadastro de reserva e reversão) | UK `test_cadastro_de_reserva_limite_e_reversao_…`; verificação, passo 5 |
 | **FR-1429** | D`domain/respostas.py` (`_p01`, `_p02`); D`application/consultar.py` (`_desfecho`) | UM `test_ca28_…`, `test_o_desfecho_do_edital_prevalece_…`; ID; UK `test_o_desfecho_do_edital_prevalece_sobre_o_cronograma`, `test_o_desfecho_do_processo_…`, `test_desfecho_sem_data_…` |
-| **FR-1430** | D`domain/anexos.py`; D`domain/respostas.py` (`_aviso_de_anexos`) | UA, inclusive `test_a_citacao_pede_romano_valido_…`; UM `test_ca13_…`; TT `test_o_aviso_de_anexo_leva_ao_anexo` |
+| **FR-1430** | D`domain/anexos.py`; D`domain/respostas.py` (`_aviso_de_anexos`, `_remissao_a_anexo`) | UK `test_a_selecao_que_remete_ao_anexo_iv_…`; UA, inclusive `test_a_citacao_pede_romano_valido_…`; UM `test_ca13_…`; TT `test_o_aviso_de_anexo_leva_ao_anexo` |
 | **FR-1431** | D`domain/leitura.py` (`onde_*`) | UL `test_nenhuma_localizacao_usa_numero_impresso`; UM `test_ca16_…` |
 | **FR-1432** | D`domain/estruturas.py` (`Referencia`, `ROTULO_DA_NATUREZA`) | US |
 | **FR-1433** | D`domain/leitura.py` (`texto`, sem tratamento) | UL `test_todo_texto_do_edital_e_identico_ao_publicado` |

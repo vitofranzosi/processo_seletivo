@@ -70,6 +70,7 @@
 | Reproduzir o "Edital completo" antes de depender dele | achado de 12/10; `FR-1437`, `FR-1443`, `SC-535`, `D-004` |
 | Fase A sem modelo; isolamento futuro sem infraestrutura antecipada | `FR-1447`, `FR-1448`, `SC-536` |
 | Alcance da tela sem capacidade nova — análise de 12/10, item C1 | `FR-1445`, `D-010` |
+| "Respondida" exige cobertura do enunciado; anexo no núcleo é "Depende da leitura" — validação de 12/10 | `FR-1421`, `FR-1430`, `D-011` |
 
 ## Notes
 

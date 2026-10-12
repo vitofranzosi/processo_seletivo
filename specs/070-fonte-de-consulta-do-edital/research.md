@@ -304,6 +304,9 @@ autodeclaração. Os dois casos se resolvem pelo segundo caminho.
 
 ## R-013 — O tipo da resposta: uma tabela de decisão por pergunta
 
+*Emenda de 12/10/2026 (`D-011`).* Acima da tabela abaixo, vale: "Respondida" exige cobertura do
+enunciado. O texto que é o núcleo da resposta e remete a anexo leva a "Depende da leitura".
+
 **Decisão.** O tipo é calculado por regras fixas, no contrato
 [resposta.md](contracts/resposta.md#tipos-por-pergunta). A regra geral:
 

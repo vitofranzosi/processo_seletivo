@@ -66,10 +66,10 @@ O número de consultas ao banco por resposta é preso por teste (`R-019`). São 
 |---|---|
 | `ruff check` e `ruff format --check` | limpos, 1427 arquivos |
 | `manage.py check` e `makemigrations --check` | sem problema, nenhuma migration |
-| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5); **10606** depois da validação (§6) |
-| pulados | **11**, os mesmos onze nas três; os testes da `070` não pulam nada |
-| falhas e erros | nenhum nas três |
-| tempo | 1256s; 1213s depois da revisão; 1244s depois da validação |
+| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5); **10606** depois da validação (§6); **10608** depois da decisão 011 |
+| pulados | **11**, os mesmos onze nas quatro; os testes da `070` não pulam nada |
+| falhas e erros | nenhum nas quatro |
+| tempo | 1256s; 1213s; 1244s; 1128s |
 
 O `makemigrations --check` avisa que o banco `ps_070` não existe — é o banco de desenvolvimento,
 que esta worktree não criou; a suíte usa o de teste. Não é do diff.
@@ -193,5 +193,72 @@ consulta não lê (pela camada de conteúdo, porque o 92/2026 não está no banc
 | `P-12`: "as Retificações publicadas em X" para uma só, contando o próprio ato | Redação | Singular e plural, e "esta" à parte |
 | "retificada em 12/10/2026 e em 12/10/2026" | Redação | Data e hora na linha da versão |
 | Perfil só de reserva: "não tem vagas imediatas" lia-se como "não há seleção" | Redação | "…: a seleção forma cadastro de reserva." |
-| A `P-07` do 92/2026 é "Respondida" com os critérios de pontuação no Anexo IV, que a consulta não lê | **Regra** | Não mudou: decisão do usuário com o setor — se a resposta cujo essencial está em anexo deve ser "Depende da leitura" |
+| A `P-07` do 92/2026 é "Respondida" com os critérios de pontuação no Anexo IV, que a consulta não lê | **Regra** | Decidido pelo usuário: "Respondida" exige cobertura do enunciado; a resposta passa a "Depende da leitura", nomeia o que remete ao anexo e o anexo (`D-011`) |
+
+## 7. Conferência documental para a T046 (12/10/2026)
+
+Feita pelo agente, a pedido do usuário, com os Editais reais do Cefor disponíveis localmente
+(57, 58, 59, 77 e 78/2026; 14, 28, 35, 69, 76, 89 e 90/2026; 140, 146 e 173/2025 — quinze com texto
+extraível; o 62 e o 73/2026 são imagem). **A revisão institucional não está concluída**: a T046
+continua aberta até a manifestação do setor. O que segue separa o verificado do que só o setor
+decide.
+
+### 7.1 Canal de dúvidas e restrições expressas
+
+**Verificado** — a detecção da `070` (`canal.py`) rodada sobre o texto de cada Edital, com um
+parágrafo por item numerado, e comparada à leitura da cláusula:
+
+| Forma da cláusula | Editais | O que a `070` faz |
+|---|---|---|
+| "Quaisquer **dúvidas** … deverão ser esclarecidas **exclusivamente** pelo e-mail X **ou** pelo whatsapp Y" | 28, 35, 57, 76 | Acha a cláusula. Conta e-mail e whatsapp como dois canais: "Fontes divergentes", embora a cláusula ofereça os dois |
+| "**Contatos** e informações adicionais … serão obtidas, **exclusivamente**, pelo e-mail X" | 14, 89, 90, 140, 146, 173 | Acha a cláusula |
+| "**Informações** a respeito das inscrições e seleção serão fornecidas **exclusivamente** por e-mail, no endereço X" | 58, 59, 77, 78 | **Não acha.** Toma no lugar o e-mail da coordenação do curso, de um parágrafo sobre certificado ou acesso ao ambiente — **canal errado** |
+| Sem cláusula de canal no texto | 69 | Cai no institucional, como deve |
+
+Além disso, em **9** dos 14 Editais com canal a resposta seria "Fontes divergentes" por parágrafos
+que não são canal de dúvidas: a heteroidentificação por videoconferência, o Napne, a secretaria
+acadêmica, os endereços da Receita e do Flash Player, o telefone de um setor.
+
+**"Exclusivamente" aparece na cláusula de canal de 12 dos 15 Editais.** O ponto para revisão da
+`FR-1442` sairia em quase todo Edital: a questão da `DA-02` não é exceção, é a regra no Cefor.
+
+**Depende do setor** — emenda de `R-011`, com estas evidências:
+
+1. acrescentar "informações a respeito" (ou "informações sobre as inscrições") aos termos de
+   dúvida, para as cláusulas dos FIC (58, 59, 77, 78);
+2. contatos **do mesmo parágrafo** são um canal só ("e-mail ou whatsapp"); a divergência fica entre
+   parágrafos;
+3. endereço eletrônico não é canal de dúvidas, salvo na cláusula que o diz;
+4. restringir a busca às seções em que o Edital põe a cláusula (disposições gerais ou finais), em vez
+   de todas;
+5. decidir, antes da abertura pública, como o assistente trata o "exclusivamente" de quase todos os
+   Editais (`DA-02`).
+
+### 7.2 Seções e fontes por pergunta (`D-007`)
+
+**Verificado no código.** O guardião de cobertura (`SC-533`) e a tabela de pertinência sobre os
+três Editais do corpus, que estão na estrutura de seções do sistema.
+
+**Verificado nos Editais reais, por amostra.** Os assuntos ficam fora do capítulo "natural":
+
+- o 89/2026 trata a inscrição em mais de um Perfil no capítulo das inscrições (3.11: "será
+  considerada válida apenas a última inscrição") — coberto pela `P-06`, que trata `inscricao`;
+- o 57/2026 declara "não cabendo recurso" no capítulo das inscrições (5.4 e 5.10), e não no de
+  recursos. A `P-08` trata só `recursos`: ela não mostraria essa negativa declarada.
+
+**Não verificável documentalmente.** Os Editais reais não estão na estrutura de seções do sistema
+(chaves `inscricao`, `recursos`…); como um Edital real se distribui por elas depende de como o setor
+o compõe. **Depende do setor:** se a `P-08` deve acompanhar também `inscricao` (caso do 57/2026), e
+a conferência da tabela com Editais compostos no sistema.
+
+### 7.3 Linguagem das respostas
+
+**Verificado.** Termos que as respostas usam e que nenhum dos quinze Editais usa: "vagas
+imediatas", "lista de concorrência", "soma ponderada", "decisória", "pontuada" e "mensagem
+individual". Alguns vêm do documento que o próprio sistema compõe ("soma ponderada" está no PDF da
+`068`), outros só da tela. Os rótulos de valores estão em `duvidas/domain/rotulos.py`, e as formas
+da explicação em contracts/resposta.md §4.
+
+**Depende do setor:** se a resposta fala a língua dos Editais do Cefor ou a do documento que o
+sistema compõe, e a revisão de cada forma da explicação para quem se candidata.
 

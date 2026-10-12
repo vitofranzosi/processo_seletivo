@@ -1145,6 +1145,61 @@ def _futuro(contexto, codigo, perfil, modalidade, referencias):
     return com_futuro, Aviso(AVISO_RETIFICACAO_FUTURA, " ".join(linhas))
 
 
+#: **As perguntas em que o texto citado é a própria resposta ao enunciado** (`D-011`): os
+#: requisitos, as Etapas e os marcos, o método do sorteio. Se esse texto remete a um anexo, parte da
+#: resposta está lá. Nas outras, a remissão é contexto, e o aviso `DETALHE_EM_ANEXO` basta:
+#:
+#: - `P-01`, `P-02` e `P-03` respondem com datas e números, que os cartões trazem inteiros — a
+#:   descrição de Evento que cita a ficha do Anexo IV não tira data nenhuma da resposta;
+#: - na `P-05` o anexo é o modelo do documento a enviar, e na `P-12` os anexos são a pergunta;
+#: - `P-06`, `P-08` e `P-10` já são "Depende da leitura" quando há texto sobre o assunto;
+#: - na `P-11` o texto é o canal.
+ANEXO_NO_NUCLEO = ("P-04", "P-07", "P-09")
+
+
+def _remissao_a_anexo(contexto, codigo, referencias):
+    """`(onde, anexos)` quando o que responde à pergunta remete a anexo que a consulta não lê.
+
+    **"Respondida" exige cobertura do enunciado** (`D-011`). A `P-07` do 92/2026 dizia "Respondida"
+    com os critérios de pontuação da prova de títulos no Anexo IV: resposta parcial apresentada como
+    completa (validação de 12/10). Conta só o núcleo da resposta — os cartões que não são seção
+    inteira. As seções que acompanham não mudam o tipo (`D-007`), e as que tratam do assunto já o
+    mudam.
+    """
+    if codigo not in ANEXO_NO_NUCLEO:
+        return None
+    onde, rotulos_dos_anexos = [], []
+    publicados = anexos.por_identificador(contexto.conteudo)
+    for referencia in referencias:
+        if referencia.natureza != TEXTO or referencia.caminho.startswith("/sections/"):
+            continue
+        citados = anexos.citados(referencia.conteudo)
+        if not citados:
+            continue
+        lugar = referencia.localizacao
+        if lugar not in onde:
+            onde.append(lugar)
+        for identificador in citados:
+            anexo = publicados.get(identificador)
+            rotulo = (
+                anexo.get("label", "")
+                if anexo is not None
+                else f"Anexo {identificador.upper()}, que não está entre os anexos publicados"
+            )
+            if rotulo not in rotulos_dos_anexos:
+                rotulos_dos_anexos.append(rotulo)
+    return (onde, rotulos_dos_anexos) if onde else None
+
+
+def _explicacao_incompleta(explicacao_atual, remissao, canal):
+    onde, rotulos_dos_anexos = remissao
+    return (
+        f"{explicacao_atual} Esta resposta não está completa: {'; '.join(onde)} "
+        f"{'remete' if len(onde) == 1 else 'remetem'} ao {'; ao '.join(rotulos_dos_anexos)}, que "
+        f"esta consulta não lê. {explicacao.encaminhar(canal)}"
+    )
+
+
 def _aviso_de_anexos(contexto, referencias):
     textos = [referencia.conteudo for referencia in referencias if referencia.natureza == TEXTO]
     encontrados, _inexistentes = anexos.resolver(textos, contexto.conteudo)
@@ -1206,6 +1261,13 @@ def responder(contexto: Contexto, codigo: str, *, perfil=None, modalidade=None) 
     """
     parametros, rascunho = _rascunho(contexto, codigo, perfil, modalidade)
     referencias = tuple(_com_origem(contexto, item) for item in rascunho.referencias)
+    remissao = _remissao_a_anexo(contexto, codigo, referencias)
+    if remissao is not None and rascunho.tipo == RESPONDIDA:
+        # Sem tipo novo (`D-011`): o que falta está em texto que o sistema não lê, como em
+        # "Depende da leitura". A explicação do que há se preserva, e o que falta é nomeado.
+        rascunho.tipo = DEPENDE_DA_LEITURA
+        canal = canais.em_palavras(canais.canal(contexto.conteudo, contexto.canal_institucional))
+        rascunho.explicacao = _explicacao_incompleta(rascunho.explicacao, remissao, canal)
     referencias, aviso_de_futuro = _futuro(contexto, codigo, perfil, modalidade, referencias)
     avisos = []
     for aviso in (

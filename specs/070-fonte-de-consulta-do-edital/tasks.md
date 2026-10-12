@@ -452,6 +452,8 @@ teste com dois canais.
   - Cada linha aponta o lugar no código e o teste que a prende
     (T`test_citacoes_de_requisito.py::test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature`).
 - [ ] T046 Revisão com o setor de seleção, **que é do usuário, e não do agente**.
+  *Conferência documental feita pelo agente em 12/10 (verificacao.md §7); a manifestação do setor
+  continua pendente, e a tarefa fica aberta.*
   - O que se revisa: a tabela de pertinência (`D-007`), as listas de termos de dúvida e de
     exclusividade (`R-011`) e as formas da explicação (contracts/resposta.md §4).
   - O agente prepara o roteiro e registra o resultado em `verificacao.md`.

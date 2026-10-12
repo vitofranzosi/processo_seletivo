@@ -50,12 +50,12 @@ revisão também.
 | `P-01` | Evento de período existe | — | — (a pergunta não é oferecida sem o Evento) | — |
 | `P-02` | sempre — com todos os Eventos encerrados, "não há datas por vir neste cronograma" é dado, e não ausência | — | — | — |
 | `P-03` | sempre | — | — | — |
-| `P-04` | Requisitos do Perfil e nenhuma seção | Requisitos do Perfil **e** seção `requisitos-gerais` preenchida, ou só a seção | — (não oferecida) | — |
+| `P-04` | Requisitos do Perfil, nenhuma seção, e nenhum requisito que remeta a anexo | Requisitos do Perfil **e** seção `requisitos-gerais` preenchida, ou só a seção, ou requisito que remete a anexo (`D-011`) | — (não oferecida) | — |
 | `P-05` | Nenhum veredito `divergente` | Algum veredito `divergente` (`R-008`) | — (não oferecida) | — |
 | `P-06` | Teto declarado e seção `inscricao` vazia | Seção `inscricao` preenchida, com ou sem teto | Nem teto nem seção | — |
-| `P-07` | sempre | — | — | — |
+| `P-07` | nenhum nome de Etapa ou de marco remete a anexo | Etapa ou marco que remete a anexo, como a ficha do Anexo IV do 92/2026 (`D-011`) | — | — |
 | `P-08` | Só a janela declarada — inclusive a negativa declarada (`FR-1422`) | Duas ou mais fontes de naturezas diferentes, ou só texto | Nenhuma: nem janela, nem seção, nem Evento (`FR-1422`) | — |
-| `P-09` | sempre | — | — | — |
+| `P-09` | o método não remete a anexo | texto do método que remete a anexo (`D-011`) | — | — |
 | `P-10` | Forma de convocação e seções vazias | Forma e alguma das seções, ou só as seções | — | — |
 | `P-11` | Um canal do Edital, ou o institucional | — | Nem Edital nem implantação | Mais de um canal distinto no Edital |
 | `P-12` | sempre | — | — | — |
@@ -65,10 +65,14 @@ pede: listados inteiros, dão `RESPONDIDA`. A seção `requisitos-gerais`, que �
 leva a `DEPENDE_DA_LEITURA`. O mesmo vale na `P-10` para as seções `convocacao` e `matricula`, diante
 da forma de convocação declarada.
 
-**`DETALHE_EM_ANEXO` como tipo não é produzido na Fase A.** Nenhuma pergunta do catálogo pede um
-detalhe que só um anexo contenha. Ele existe na spec (`FR-1421`) para a pergunta livre da Fase B,
-como a pontuação de um título (`CA-13` na forma original). Na Fase A, o anexo aparece como **aviso**
-`DETALHE_EM_ANEXO`. É o caso da `P-07` do 92/2026, que é o `CA-13` como a `FR-1450` o mapeia.
+**`DETALHE_EM_ANEXO` como tipo não é produzido na Fase A.** Ele existe na spec (`FR-1421`) para a
+pergunta livre da Fase B, como a pontuação de um título (`CA-13` na forma original). Na Fase A, o
+anexo aparece como **aviso** `DETALHE_EM_ANEXO`, e, quando o texto que responde ao enunciado remete a
+ele, a resposta é "Depende da leitura" (`D-011`).
+
+*Emenda de 12/10/2026.* A primeira versão deste parágrafo dizia que nenhuma pergunta do catálogo pede
+um detalhe que só um anexo contenha. A validação mostrou o contrário na `P-07` do 92/2026: a ficha
+de pontuação da prova de títulos está só no Anexo IV.
 
 ---
 

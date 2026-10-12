@@ -486,11 +486,15 @@ que a abertura pública vai precisar.
   |---|---|
   | **Respondida pelos dados** | os dados estruturados determinam a resposta |
   | **O Edital não informa** | nenhuma fonte trata do assunto |
-  | **Depende da leitura do Edital** | o assunto está só em texto que o sistema não interpreta, ou em fontes de naturezas diferentes que o sistema não concilia |
+  | **Depende da leitura do Edital** | o assunto está só em texto que o sistema não interpreta, ou em fontes de naturezas diferentes que o sistema não concilia, ou parte do que o enunciado pede está num anexo que o sistema não lê (`D-011`) |
   | **Fontes divergentes** | duas fontes que o sistema compara divergem (`FR-1424`) |
   | **Detalhe em anexo** | o detalhe pedido está num anexo |
 
   Avisos MAY acompanhar qualquer tipo: Retificação futura, desfecho, detalhe em anexo.
+
+  **"Respondida pelos dados" MUST exigir cobertura suficiente para responder ao enunciado**
+  (`D-011`). Resposta parcial MUST NOT ser apresentada como completa. O tipo "Detalhe em anexo" fica
+  para a pergunta livre da Fase B; na Fase A, a falta de cobertura por anexo é "Depende da leitura".
 - **FR-1422**: "O Edital não informa" MUST NOT ser expresso como negativa ("não cabe", "não há",
   "não é permitido"). Negativa MUST aparecer só quando o Edital a declara, e então como dado
   declarado.
@@ -530,6 +534,10 @@ que a abertura pública vai precisar.
     publicado de mesmo rótulo, com o aviso de que o sistema não lê o conteúdo dele.
   - Citação sem anexo correspondente MUST virar ponto para revisão (`FR-1443`).
   - A resposta MUST NOT afirmar nada sobre o conteúdo de um anexo.
+  - Quando o texto que responde ao enunciado remete a um anexo — os requisitos, as Etapas e os
+    marcos, o método do sorteio —, a resposta MUST ser "Depende da leitura do Edital", MUST
+    preservar a explicação do que os cartões mostram e MUST nomear o que remete ao anexo e o anexo
+    (`D-011`).
 - **FR-1431**: Seções MUST ser identificadas pelo título. MUST NOT ser identificadas pelo número com
   que saem no documento, que é posicional e muda entre versões. Numeração digitada dentro do texto
   sai como está, porque é texto do Edital.
@@ -889,6 +897,41 @@ dado de pessoas, e pede capacidade própria. A decisão é dela.
 
 **Alternativa descartada.** Uma capacidade de leitura (`duvidas:conferir`) dada aos papéis do setor.
 É mais um papel a manter, para ler o que é público.
+
+### D-011 — "Respondida" exige cobertura do enunciado; o anexo que completa a resposta a torna "Depende da leitura"
+
+*Decisão do usuário, 12/10/2026, depois da validação de correção e referências
+(verificacao.md §6).*
+
+**Decisão.** Uma resposta só é "Respondida pelos dados" quando os cartões bastam para responder ao
+enunciado da pergunta. Quando o texto que **é** a resposta remete a um anexo que o sistema não lê, a
+resposta passa a "Depende da leitura do Edital":
+
+- a explicação do que os cartões mostram se preserva;
+- a ela se acrescenta o que falta — o lugar do texto que remete e o rótulo do anexo — e o
+  encaminhamento ao canal;
+- o aviso `DETALHE_EM_ANEXO`, com o link do anexo, continua.
+
+Nenhum tipo novo e nenhuma estrutura genérica de avaliação de cobertura. A regra vale onde o texto
+citado é o próprio núcleo da resposta:
+
+| Pergunta | O anexo citado no núcleo… |
+|---|---|
+| `P-04` requisitos | é parte dos requisitos: muda o tipo |
+| `P-07` seleção | é parte das Etapas ou dos marcos (a ficha de pontuação): muda o tipo |
+| `P-09` sorteio | é parte do método: muda o tipo |
+| `P-01`, `P-02`, `P-03` | não muda: a resposta são datas e números, que os cartões trazem inteiros |
+| `P-05` | não muda: o anexo é o modelo do documento a enviar, e a pergunta é quais documentos |
+| `P-06`, `P-08`, `P-10` | não muda: texto sobre o assunto já leva a "Depende da leitura" |
+| `P-11`, `P-12` | não muda: o texto é o canal; os anexos são a pergunta |
+
+**Por quê.** A `P-07` do 92/2026 ("Como será a seleção?") saía "Respondida": a prova de títulos é
+pontuada "conforme a Ficha de Avaliação do Anexo IV", e os critérios e os pontos da ficha não estão
+no conteúdo publicado. O tipo dizia completa uma resposta sem o que a pessoa mais quer saber.
+
+**Alternativa descartada.** Mudar o tipo sempre que um cartão citar anexo: a `P-02` do 92/2026
+passaria a "Depende da leitura" porque a descrição de um Evento cita a ficha — e todas as datas
+estão nos cartões.
 
 ---
 

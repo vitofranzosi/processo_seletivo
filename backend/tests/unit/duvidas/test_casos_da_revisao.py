@@ -372,3 +372,49 @@ def test_perfil_so_de_reserva_diz_que_a_selecao_forma_cadastro():
 def test_a_explicacao_das_datas_nao_tem_ponto_duplo():
     explicacao = responder(contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA), "P-02").explicacao
     assert ".”" not in explicacao.conteudo
+
+
+# ---- "Respondida" exige cobertura do enunciado (`D-011`) --------------------------------------
+
+
+def test_a_selecao_que_remete_ao_anexo_iv_nao_e_respondida_como_completa():
+    """A `P-07` do 92/2026: a prova de títulos é pontuada "conforme a Ficha de Avaliação do Anexo
+    IV", e a ficha — os critérios e os pontos — não está no conteúdo publicado. Dizer
+    "Respondida" apresentava a resposta parcial como completa."""
+    contexto = contexto_do_corpus("92", ANTES_DA_VIGENCIA_FUTURA)
+    resposta = responder(contexto, "P-07", perfil="TD-ADM")
+    assert resposta.tipo == DEPENDE_DA_LEITURA
+
+    explicacao = resposta.explicacao.conteudo
+    # O que há continua dito; o que falta é nomeado, com o anexo, e encaminhado.
+    assert explicacao.startswith("As Etapas e as regras de classificação do Perfil TD-ADM")
+    assert "Esta resposta não está completa: Etapa “Prova de títulos" in explicacao
+    assert "remete ao ANEXO IV — FICHA DE AVALIAÇÃO DA PROVA DE TÍTULOS" in explicacao
+    assert explicacao.endswith(
+        "Em caso de dúvida, procure o canal que o Edital informa "
+        "(selecao.uab.demo@exemplo.ifes.edu.br)."
+    )
+    # Nada sobre o conteúdo do anexo (`FR-1430`), e o link para ele.
+    assert "ponto" not in explicacao.lower()
+    aviso = next(a for a in resposta.avisos if a.tipo == "DETALHE_EM_ANEXO")
+    assert [link.rotulo for link in aviso.links] == [
+        "ANEXO IV — FICHA DE AVALIAÇÃO DA PROVA DE TÍTULOS"
+    ]
+
+
+def test_remissao_a_anexo_fora_do_nucleo_nao_muda_o_tipo():
+    """As datas do 92/2026 estão inteiras nos cartões, ainda que um Evento cite a ficha do Anexo IV;
+    e na `P-05` do 91/2026 o anexo é o modelo do documento a enviar."""
+    datas = responder(contexto_do_corpus("92", ANTES_DA_VIGENCIA_FUTURA), "P-02")
+    assert any("Anexo IV" in r.conteudo for r in datas.referencias)
+    assert datas.tipo != DEPENDE_DA_LEITURA
+    assert "não está completa" not in datas.explicacao.conteudo
+
+    documentos = responder(
+        contexto_do_corpus("91", ANTES_DA_VIGENCIA_FUTURA),
+        "P-05",
+        perfil="INF-BJN",
+        modalidade="PPI",
+    )
+    assert any("Anexo I" in r.conteudo for r in documentos.referencias)
+    assert "não está completa" not in documentos.explicacao.conteudo
