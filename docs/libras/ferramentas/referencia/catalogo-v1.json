@@ -1,0 +1,4200 @@
+{
+ "descricao": "Registro da versão 1 do catálogo (rodada 1, 2026-10-11), antes das correções da rodada 2. Identificadores, classificação e título de cada unidade; ocorrências (linhas de cobertura); situação de cada linha; métricas publicadas na viabilidade da rodada 1.",
+ "unidades": {
+  "LIB-0001": {
+   "chave": "orgao",
+   "titulo": "Identificação do órgão emissor",
+   "classificacao": "EXATA",
+   "familia": "ATO",
+   "origem": "A+E",
+   "ocorrencias": [
+    "E91-001",
+    "E92-001",
+    "E01-001"
+   ]
+  },
+  "LIB-0002": {
+   "chave": "anuncio",
+   "titulo": "Anúncio do ato: número, ano e objeto do Edital",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A+D",
+   "ocorrencias": [
+    "E91-002",
+    "E92-002",
+    "E01-002"
+   ]
+  },
+  "LIB-0003": {
+   "chave": "descricao",
+   "titulo": "Descrição resumida do Edital",
+   "classificacao": "ESPECIALIZADA",
+   "familia": "ATO",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-003",
+    "E92-003",
+    "E01-003"
+   ]
+  },
+  "LIB-0004": {
+   "chave": "preambulo",
+   "titulo": "Preâmbulo: a autoridade torna pública a abertura",
+   "classificacao": "SEMELHANTE",
+   "familia": "ATO",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-004",
+    "E92-004"
+   ]
+  },
+  "LIB-0005": {
+   "chave": "titulo_secao",
+   "titulo": "Abertura de seção numerada",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A",
+   "ocorrencias": [
+    "E91-006",
+    "E91-010",
+    "E91-013",
+    "E91-015",
+    "E91-017",
+    "E91-047",
+    "E91-052",
+    "E91-063",
+    "E91-066",
+    "E91-068",
+    "E91-071",
+    "E91-083",
+    "E91-086",
+    "E91-088",
+    "E91-092",
+    "E91-094",
+    "E91-096",
+    "E92-006",
+    "E92-011",
+    "E92-016",
+    "E92-150",
+    "E92-156",
+    "E92-174",
+    "E92-178",
+    "E92-180",
+    "E92-183",
+    "E92-186",
+    "E92-206",
+    "E92-210",
+    "E92-213",
+    "E92-215",
+    "E92-217",
+    "E01-004",
+    "E01-028",
+    "E01-030",
+    "E01-037",
+    "E01-041",
+    "E01-046",
+    "E01-049"
+   ]
+  },
+  "LIB-0006": {
+   "chave": "comissao",
+   "titulo": "Condução do certame por comissão designada",
+   "classificacao": "SEMELHANTE",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-007",
+    "E92-007"
+   ]
+  },
+  "LIB-0007": {
+   "chave": "duvidas",
+   "titulo": "Canal de atendimento a dúvidas",
+   "classificacao": "SEMELHANTE",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-008",
+    "E92-220"
+   ]
+  },
+  "LIB-0008": {
+   "chave": "publicacoes_oficiais",
+   "titulo": "Local oficial das publicações do certame",
+   "classificacao": "INÉDITA",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-009"
+   ]
+  },
+  "LIB-0009": {
+   "chave": "oferta_curso",
+   "titulo": "Caracterização da oferta do curso",
+   "classificacao": "INÉDITA",
+   "familia": "OFE",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-011"
+   ]
+  },
+  "LIB-0010": {
+   "chave": "carga_duracao",
+   "titulo": "Carga horária e duração do curso",
+   "classificacao": "INÉDITA",
+   "familia": "OFE",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-012"
+   ]
+  },
+  "LIB-0011": {
+   "chave": "publico_alvo",
+   "titulo": "Público-alvo",
+   "classificacao": "INÉDITA",
+   "familia": "OFE",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-014"
+   ]
+  },
+  "LIB-0012": {
+   "chave": "remissao_requisitos_perfil",
+   "titulo": "Remissão aos requisitos específicos do Perfil",
+   "classificacao": "SEMELHANTE",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-016",
+    "E92-015"
+   ]
+  },
+  "LIB-0013": {
+   "chave": "quadro_perfis",
+   "titulo": "Quadro de Perfis de vaga (tabela)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-018",
+    "E92-017",
+    "E01-005"
+   ]
+  },
+  "LIB-0014": {
+   "chave": "matriz_vagas",
+   "titulo": "Vagas por lista de concorrência (matriz)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "A+B",
+   "ocorrencias": [
+    "E91-019",
+    "E92-018",
+    "E01-006"
+   ]
+  },
+  "LIB-0015": {
+   "chave": "reversao_ausencia",
+   "titulo": "Reversão de vagas: ausência de aprovados na reserva",
+   "classificacao": "EXATA",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-020"
+   ]
+  },
+  "LIB-0016": {
+   "chave": "tabela_modalidades",
+   "titulo": "Modalidades de concorrência (tabela)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-021",
+    "E92-020",
+    "E01-007",
+    "E01-008"
+   ]
+  },
+  "LIB-0017": {
+   "chave": "convocacao_publicacao",
+   "titulo": "Forma de convocação: publicação no endereço eletrônico",
+   "classificacao": "EXATA",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-022"
+   ]
+  },
+  "LIB-0018": {
+   "chave": "identificacao_perfil",
+   "titulo": "Identificação do Perfil (código, nome e descrição)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-023",
+    "E91-026",
+    "E91-029",
+    "E91-032",
+    "E92-022",
+    "E92-029",
+    "E92-036",
+    "E92-042",
+    "E92-048",
+    "E92-054",
+    "E92-060",
+    "E92-066",
+    "E92-072",
+    "E92-078",
+    "E92-084",
+    "E92-090",
+    "E92-096",
+    "E92-102",
+    "E92-108",
+    "E92-114",
+    "E92-120",
+    "E92-126",
+    "E01-010",
+    "E01-020"
+   ]
+  },
+  "LIB-0019": {
+   "chave": "remissao_comum",
+   "titulo": "Remissão a bloco comum de Perfis",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-024",
+    "E91-025",
+    "E91-027",
+    "E91-028",
+    "E91-030",
+    "E91-031",
+    "E91-033",
+    "E91-034",
+    "E92-028",
+    "E92-035",
+    "E92-037",
+    "E92-039",
+    "E92-041",
+    "E92-043",
+    "E92-045",
+    "E92-047",
+    "E92-049",
+    "E92-051",
+    "E92-053",
+    "E92-055",
+    "E92-057",
+    "E92-059",
+    "E92-061",
+    "E92-063",
+    "E92-065",
+    "E92-067",
+    "E92-069",
+    "E92-071",
+    "E92-073",
+    "E92-075",
+    "E92-077",
+    "E92-079",
+    "E92-081",
+    "E92-083",
+    "E92-085",
+    "E92-087",
+    "E92-089",
+    "E92-091",
+    "E92-093",
+    "E92-095",
+    "E92-097",
+    "E92-099",
+    "E92-101",
+    "E92-103",
+    "E92-105",
+    "E92-107",
+    "E92-109",
+    "E92-111",
+    "E92-113",
+    "E92-115",
+    "E92-117",
+    "E92-119",
+    "E92-121",
+    "E92-123",
+    "E92-125",
+    "E92-127",
+    "E92-129",
+    "E92-131"
+   ]
+  },
+  "LIB-0020": {
+   "chave": "titulo_subsecao_comum",
+   "titulo": "Título de subseção comum aos Perfis",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-035",
+    "E91-038",
+    "E92-132",
+    "E92-134",
+    "E92-140"
+   ]
+  },
+  "LIB-0021": {
+   "chave": "req_diploma_graduacao",
+   "titulo": "Requisito: diploma de graduação reconhecido pelo MEC",
+   "classificacao": "SEMELHANTE",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-036",
+    "E92-135"
+   ]
+  },
+  "LIB-0022": {
+   "chave": "req_acesso_computador",
+   "titulo": "Requisito: acesso a computador com internet",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-037"
+   ]
+  },
+  "LIB-0023": {
+   "chave": "marcos_separadamente",
+   "titulo": "Marcos aplicados a cada Perfil separadamente",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-039",
+    "E92-141"
+   ]
+  },
+  "LIB-0024": {
+   "chave": "identificacao_marco",
+   "titulo": "Identificação do marco classificatório",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-040",
+    "E92-142",
+    "E01-013",
+    "E01-022"
+   ]
+  },
+  "LIB-0025": {
+   "chave": "ordem_sorteio",
+   "titulo": "Forma da ordem: por sorteio",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-041"
+   ]
+  },
+  "LIB-0026": {
+   "chave": "metodo_sorteio",
+   "titulo": "Método do sorteio público",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-042"
+   ]
+  },
+  "LIB-0027": {
+   "chave": "habilitacao_todas",
+   "titulo": "Habilitação ao sorteio: todas as inscrições submetidas",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-043"
+   ]
+  },
+  "LIB-0028": {
+   "chave": "recurso_marco",
+   "titulo": "Prazo de recurso contra o resultado do marco",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-044",
+    "E92-145",
+    "E01-016"
+   ]
+  },
+  "LIB-0029": {
+   "chave": "corte_quadro",
+   "titulo": "Corte pelo quadro de vagas, com suplentes",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-045"
+   ]
+  },
+  "LIB-0030": {
+   "chave": "continuacao_admitida",
+   "titulo": "Continuação admitida além do corte",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-046",
+    "E92-148"
+   ]
+  },
+  "LIB-0031": {
+   "chave": "canal_inscricao",
+   "titulo": "Canal e período de inscrição",
+   "classificacao": "SEMELHANTE",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-048",
+    "E92-151"
+   ]
+  },
+  "LIB-0032": {
+   "chave": "indicacao_perfil_lista",
+   "titulo": "Indicação do Perfil e da lista na inscrição",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-049"
+   ]
+  },
+  "LIB-0033": {
+   "chave": "concorrencia_simultanea",
+   "titulo": "Concorrência simultânea às vagas reservadas e à ampla",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-050"
+   ]
+  },
+  "LIB-0034": {
+   "chave": "teto",
+   "titulo": "Limite de inscrições por candidato",
+   "classificacao": "EXATA",
+   "familia": "INS",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-051",
+    "E92-155",
+    "E01-029"
+   ]
+  },
+  "LIB-0035": {
+   "chave": "doc_cab_todos",
+   "titulo": "Documentos exigidos de todos os candidatos (cabeçalho)",
+   "classificacao": "EXATA",
+   "familia": "DOC",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-053",
+    "E92-157",
+    "E01-031"
+   ]
+  },
+  "LIB-0036": {
+   "chave": "doc_identificacao",
+   "titulo": "Documento: identificação com foto",
+   "classificacao": "SEMELHANTE",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-054",
+    "E92-158",
+    "E01-032"
+   ]
+  },
+  "LIB-0037": {
+   "chave": "doc_cpf",
+   "titulo": "Documento: comprovante de CPF",
+   "classificacao": "SEMELHANTE",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-055",
+    "E92-159"
+   ]
+  },
+  "LIB-0038": {
+   "chave": "doc_diploma",
+   "titulo": "Documento: diploma de graduação",
+   "classificacao": "SEMELHANTE",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-056",
+    "E92-160",
+    "E01-034"
+   ]
+  },
+  "LIB-0039": {
+   "chave": "doc_quitacao_eleitoral",
+   "titulo": "Documento: certidão de quitação eleitoral",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-057"
+   ]
+  },
+  "LIB-0040": {
+   "chave": "doc_nome_social",
+   "titulo": "Documento facultativo: requerimento de nome social",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D+C",
+   "ocorrencias": [
+    "E91-058"
+   ]
+  },
+  "LIB-0041": {
+   "chave": "doc_cab_modalidade",
+   "titulo": "Documentos exigidos dos candidatos de uma modalidade (cabeçalho)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "DOC",
+   "origem": "C+D",
+   "ocorrencias": [
+    "E91-059",
+    "E91-061",
+    "E92-168",
+    "E92-170",
+    "E92-172",
+    "E01-035"
+   ]
+  },
+  "LIB-0042": {
+   "chave": "doc_autodeclaracao_etnico",
+   "titulo": "Documento: autodeclaração étnico-racial conforme modelo",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-060",
+    "E92-169",
+    "E01-036"
+   ]
+  },
+  "LIB-0043": {
+   "chave": "doc_laudo",
+   "titulo": "Documento: laudo médico",
+   "classificacao": "SEMELHANTE",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-062",
+    "E92-171"
+   ]
+  },
+  "LIB-0044": {
+   "chave": "convocacao_heteroidentificacao",
+   "titulo": "Convocação para verificação da autodeclaração (heteroidentificação)",
+   "classificacao": "SEMELHANTE",
+   "familia": "AFI",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-064",
+    "E92-175"
+   ]
+  },
+  "LIB-0045": {
+   "chave": "indeferimento_autodeclaracao",
+   "titulo": "Efeito do indeferimento da autodeclaração",
+   "classificacao": "INÉDITA",
+   "familia": "AFI",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-065"
+   ]
+  },
+  "LIB-0046": {
+   "chave": "etapa_decisoria",
+   "titulo": "Etapa decisória (ficha)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ETA",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E91-067",
+    "E92-182",
+    "E01-040"
+   ]
+  },
+  "LIB-0047": {
+   "chave": "classificacao_sorteio_texto",
+   "titulo": "Classificação por sorteio quando inscritos excedem vagas (texto livre)",
+   "classificacao": "INÉDITA",
+   "familia": "CLA",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-069"
+   ]
+  },
+  "LIB-0048": {
+   "chave": "analise_sorteados_texto",
+   "titulo": "Análise documental dos sorteados até as vagas (texto livre)",
+   "classificacao": "INÉDITA",
+   "familia": "CLA",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-070"
+   ]
+  },
+  "LIB-0049": {
+   "chave": "cronograma_tabela",
+   "titulo": "Cronograma: abertura da tabela",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "A",
+   "ocorrencias": [
+    "E91-072",
+    "E92-187",
+    "E01-042"
+   ]
+  },
+  "LIB-0050": {
+   "chave": "ev_inscricoes",
+   "titulo": "Evento: período de inscrições",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-073",
+    "E92-190",
+    "E01-043"
+   ]
+  },
+  "LIB-0051": {
+   "chave": "ev_relacao_sorteio",
+   "titulo": "Evento: divulgação da relação de participantes do sorteio",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-074"
+   ]
+  },
+  "LIB-0052": {
+   "chave": "ev_sorteio",
+   "titulo": "Evento: sorteio público",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-075"
+   ]
+  },
+  "LIB-0053": {
+   "chave": "ev_ordem_sorteio",
+   "titulo": "Evento: divulgação da ordem do sorteio",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-076"
+   ]
+  },
+  "LIB-0054": {
+   "chave": "ev_analise_documental",
+   "titulo": "Evento: análise documental",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-077",
+    "E92-200"
+   ]
+  },
+  "LIB-0055": {
+   "chave": "ev_resultado_preliminar",
+   "titulo": "Evento: resultado preliminar",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-078",
+    "E92-195",
+    "E92-198",
+    "E92-201"
+   ]
+  },
+  "LIB-0056": {
+   "chave": "ev_recurso",
+   "titulo": "Evento: prazo de recurso",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-079",
+    "E92-192",
+    "E92-196",
+    "E92-199",
+    "E92-202"
+   ]
+  },
+  "LIB-0057": {
+   "chave": "ev_resultado_final",
+   "titulo": "Evento: resultado final",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-080",
+    "E92-203",
+    "E01-045"
+   ]
+  },
+  "LIB-0058": {
+   "chave": "ev_matriculas_homologadas",
+   "titulo": "Evento: divulgação das matrículas homologadas",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-081"
+   ]
+  },
+  "LIB-0059": {
+   "chave": "ev_inicio_atividades",
+   "titulo": "Evento: início das aulas",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E91-082"
+   ]
+  },
+  "LIB-0060": {
+   "chave": "recurso_texto_canal",
+   "titulo": "Recurso: objeto, prazo e canal (texto livre)",
+   "classificacao": "SEMELHANTE",
+   "familia": "REC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-084",
+    "E92-207"
+   ]
+  },
+  "LIB-0061": {
+   "chave": "recurso_vedacoes",
+   "titulo": "Recurso: vedação de outros canais e de recurso fora do prazo",
+   "classificacao": "SEMELHANTE",
+   "familia": "REC",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-085",
+    "E92-209"
+   ]
+  },
+  "LIB-0062": {
+   "chave": "convocacao_suplentes",
+   "titulo": "Convocação de suplentes em caso de desistência",
+   "classificacao": "SEMELHANTE",
+   "familia": "CON",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-087",
+    "E92-212"
+   ]
+  },
+  "LIB-0063": {
+   "chave": "matricula_documentacao",
+   "titulo": "Matrícula a partir da documentação da inscrição",
+   "classificacao": "INÉDITA",
+   "familia": "CON",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-089"
+   ]
+  },
+  "LIB-0064": {
+   "chave": "requerimento_momento",
+   "titulo": "Momento de envio do Requerimento de Matrícula",
+   "classificacao": "EXATA",
+   "familia": "CON",
+   "origem": "C",
+   "ocorrencias": [
+    "E91-090",
+    "E01-047"
+   ]
+  },
+  "LIB-0065": {
+   "chave": "declaracao_requerimento",
+   "titulo": "Declaração de veracidade do Requerimento de Matrícula",
+   "classificacao": "SEMELHANTE",
+   "familia": "CON",
+   "origem": "C+D",
+   "ocorrencias": [
+    "E91-091",
+    "E01-048"
+   ]
+  },
+  "LIB-0066": {
+   "chave": "certificado",
+   "titulo": "Condição para o certificado",
+   "classificacao": "INÉDITA",
+   "familia": "OFE",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-093"
+   ]
+  },
+  "LIB-0067": {
+   "chave": "relacao_anexos",
+   "titulo": "Relação de anexos do Edital",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "DOC",
+   "origem": "A+D",
+   "ocorrencias": [
+    "E91-095",
+    "E92-216",
+    "E01-050"
+   ]
+  },
+  "LIB-0068": {
+   "chave": "casos_omissos",
+   "titulo": "Casos omissos",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E91-097",
+    "E92-219"
+   ]
+  },
+  "LIB-0069": {
+   "chave": "fecho",
+   "titulo": "Local e data do ato",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A+E",
+   "ocorrencias": [
+    "E91-098",
+    "E92-221",
+    "E01-051"
+   ]
+  },
+  "LIB-0070": {
+   "chave": "autoridade",
+   "titulo": "Autoridade responsável pelo ato",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A+E",
+   "ocorrencias": [
+    "E91-099",
+    "E92-222",
+    "E01-052"
+   ]
+  },
+  "LIB-0071": {
+   "chave": "integridade",
+   "titulo": "Verificação de integridade do documento",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A",
+   "ocorrencias": [
+    "E91-100",
+    "E92-223",
+    "E01-053"
+   ]
+  },
+  "LIB-0072": {
+   "chave": "rodape",
+   "titulo": "Rodapé de página (Edital, verificação e paginação)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A",
+   "ocorrencias": [
+    "E91-101",
+    "E92-224",
+    "E01-054"
+   ]
+  },
+  "LIB-0073": {
+   "chave": "finalidade_cadastro_reserva",
+   "titulo": "Finalidade de cadastro de reserva e convocação conforme a necessidade",
+   "classificacao": "INÉDITA",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-008"
+   ]
+  },
+  "LIB-0074": {
+   "chave": "sem_vinculo",
+   "titulo": "Ausência de vínculo empregatício do bolsista",
+   "classificacao": "INÉDITA",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-009"
+   ]
+  },
+  "LIB-0075": {
+   "chave": "vedacao_acumulo_bolsas",
+   "titulo": "Vedação de acúmulo de bolsas",
+   "classificacao": "SEMELHANTE",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-010",
+    "E92-014"
+   ]
+  },
+  "LIB-0076": {
+   "chave": "req_nacionalidade",
+   "titulo": "Requisito geral: nacionalidade",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-012"
+   ]
+  },
+  "LIB-0077": {
+   "chave": "req_quitacao",
+   "titulo": "Requisito geral: quitação eleitoral e militar",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-013"
+   ]
+  },
+  "LIB-0078": {
+   "chave": "reversao_saldo",
+   "titulo": "Reversão de vagas: não preenchimento total das reservadas",
+   "classificacao": "EXATA",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E92-019"
+   ]
+  },
+  "LIB-0079": {
+   "chave": "convocacao_mensagem",
+   "titulo": "Forma de convocação: mensagem individual",
+   "classificacao": "EXATA",
+   "familia": "PER",
+   "origem": "C",
+   "ocorrencias": [
+    "E92-021",
+    "E01-009"
+   ]
+  },
+  "LIB-0080": {
+   "chave": "atrib_tutoria_distancia",
+   "titulo": "Atribuições da tutoria a distância",
+   "classificacao": "SEMELHANTE",
+   "familia": "PER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-023",
+    "E92-030"
+   ]
+  },
+  "LIB-0081": {
+   "chave": "remuneracao_bolsa",
+   "titulo": "Remuneração do Perfil",
+   "classificacao": "EXATA",
+   "familia": "PER",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-024",
+    "E92-031",
+    "E92-038",
+    "E92-044",
+    "E92-050",
+    "E92-056",
+    "E92-062",
+    "E92-068",
+    "E92-074",
+    "E92-080",
+    "E92-086",
+    "E92-092",
+    "E92-098",
+    "E92-104",
+    "E92-110",
+    "E92-116",
+    "E92-122",
+    "E92-128"
+   ]
+  },
+  "LIB-0082": {
+   "chave": "req_graduacao_area",
+   "titulo": "Requisito: graduação em áreas específicas",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-025"
+   ]
+  },
+  "LIB-0083": {
+   "chave": "req_experiencia_magisterio",
+   "titulo": "Requisito: experiência mínima no magistério",
+   "classificacao": "SEMELHANTE",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-026",
+    "E92-033",
+    "E92-136"
+   ]
+  },
+  "LIB-0084": {
+   "chave": "fatos_declarados",
+   "titulo": "Dados exigidos na inscrição",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "PER",
+   "origem": "A+D",
+   "ocorrencias": [
+    "E92-027",
+    "E92-034",
+    "E92-040",
+    "E92-046",
+    "E92-052",
+    "E92-058",
+    "E92-064",
+    "E92-070",
+    "E92-076",
+    "E92-082",
+    "E92-088",
+    "E92-094",
+    "E92-100",
+    "E92-106",
+    "E92-112",
+    "E92-118",
+    "E92-124",
+    "E92-130",
+    "E01-012"
+   ]
+  },
+  "LIB-0085": {
+   "chave": "req_mestrado_graduacao_computacao",
+   "titulo": "Requisito: mestrado em qualquer área com graduação em Computação",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-032"
+   ]
+  },
+  "LIB-0086": {
+   "chave": "atrib_tutoria_presencial",
+   "titulo": "Atribuições da tutoria presencial (comuns aos polos)",
+   "classificacao": "INÉDITA",
+   "familia": "PER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-133"
+   ]
+  },
+  "LIB-0087": {
+   "chave": "req_residencia",
+   "titulo": "Requisito: residência no município do polo",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-137"
+   ]
+  },
+  "LIB-0088": {
+   "chave": "req_disponibilidade",
+   "titulo": "Requisito: disponibilidade de horas semanais",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-138"
+   ]
+  },
+  "LIB-0089": {
+   "chave": "req_habilidade_ava",
+   "titulo": "Requisito: habilidade com computador e ambiente virtual",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-139"
+   ]
+  },
+  "LIB-0090": {
+   "chave": "ordem_pontuacao",
+   "titulo": "Forma da ordem: pela pontuação combinada das Etapas",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E92-143",
+    "E01-014",
+    "E01-023"
+   ]
+  },
+  "LIB-0091": {
+   "chave": "calculo_nota",
+   "titulo": "Regra de cálculo da nota classificatória",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "C+D",
+   "ocorrencias": [
+    "E92-144",
+    "E01-015",
+    "E01-024"
+   ]
+  },
+  "LIB-0092": {
+   "chave": "corte_fixo",
+   "titulo": "Corte com quantidade fixa",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E92-146",
+    "E01-017",
+    "E01-025"
+   ]
+  },
+  "LIB-0093": {
+   "chave": "empate_excedente",
+   "titulo": "Empate no corte: todos os empatados progridem",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E92-147",
+    "E01-026"
+   ]
+  },
+  "LIB-0094": {
+   "chave": "criterios_desempate",
+   "titulo": "Critérios de desempate",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CLA",
+   "origem": "C+D",
+   "ocorrencias": [
+    "E92-149"
+   ]
+  },
+  "LIB-0095": {
+   "chave": "arquivo_documentos",
+   "titulo": "Formato e limite do arquivo de documentos",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-152"
+   ]
+  },
+  "LIB-0096": {
+   "chave": "sem_conferencia",
+   "titulo": "Ausência de conferência na inscrição e responsabilidade do candidato",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-153"
+   ]
+  },
+  "LIB-0097": {
+   "chave": "limite_paginas",
+   "titulo": "Indeferimento por excesso de páginas",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-154"
+   ]
+  },
+  "LIB-0098": {
+   "chave": "doc_experiencia",
+   "titulo": "Documento: comprovante de experiência no magistério",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-161"
+   ]
+  },
+  "LIB-0099": {
+   "chave": "doc_pontuacao",
+   "titulo": "Documentos passíveis de pontuação (facultativo)",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D+C",
+   "ocorrencias": [
+    "E92-162"
+   ]
+  },
+  "LIB-0100": {
+   "chave": "doc_disponibilidade",
+   "titulo": "Documento: declaração de disponibilidade conforme modelo",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-163"
+   ]
+  },
+  "LIB-0101": {
+   "chave": "doc_cab_perfil",
+   "titulo": "Documentos exigidos dos candidatos a um Perfil (cabeçalho)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "DOC",
+   "origem": "C+B+D",
+   "ocorrencias": [
+    "E92-164",
+    "E92-166",
+    "E01-033"
+   ]
+  },
+  "LIB-0102": {
+   "chave": "doc_residencia",
+   "titulo": "Documento: comprovante de residência no município do polo",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-165"
+   ]
+  },
+  "LIB-0103": {
+   "chave": "doc_mestrado",
+   "titulo": "Documento: diploma de mestrado",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-167"
+   ]
+  },
+  "LIB-0104": {
+   "chave": "doc_autodeclaracao_genero",
+   "titulo": "Documento: autodeclaração de identidade de gênero conforme modelo",
+   "classificacao": "INÉDITA",
+   "familia": "DOC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-173"
+   ]
+  },
+  "LIB-0105": {
+   "chave": "criterio_fenotipico",
+   "titulo": "Critério fenotípico exclusivo da verificação",
+   "classificacao": "INÉDITA",
+   "familia": "AFI",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-176"
+   ]
+  },
+  "LIB-0106": {
+   "chave": "nao_comparecimento_heteroidentificacao",
+   "titulo": "Efeito do não comparecimento à verificação",
+   "classificacao": "INÉDITA",
+   "familia": "AFI",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-177"
+   ]
+  },
+  "LIB-0107": {
+   "chave": "atendimento_especializado",
+   "titulo": "Atendimento especializado à pessoa com deficiência",
+   "classificacao": "INÉDITA",
+   "familia": "AFI",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-179"
+   ]
+  },
+  "LIB-0108": {
+   "chave": "etapa_pontuada",
+   "titulo": "Etapa pontuada (ficha)",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ETA",
+   "origem": "A+B+D",
+   "ocorrencias": [
+    "E92-181",
+    "E01-038",
+    "E01-039"
+   ]
+  },
+  "LIB-0109": {
+   "chave": "nota_final_titulos",
+   "titulo": "Nota final pela prova de títulos (texto livre)",
+   "classificacao": "INÉDITA",
+   "familia": "CLA",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-184"
+   ]
+  },
+  "LIB-0110": {
+   "chave": "codigo_unico",
+   "titulo": "Concorrência a um único código de inscrição (texto livre)",
+   "classificacao": "INÉDITA",
+   "familia": "INS",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-185"
+   ]
+  },
+  "LIB-0111": {
+   "chave": "ev_publicacao_edital",
+   "titulo": "Evento: publicação do Edital",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-188"
+   ]
+  },
+  "LIB-0112": {
+   "chave": "ev_impugnacao",
+   "titulo": "Evento: prazo para impugnação do Edital",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-189"
+   ]
+  },
+  "LIB-0113": {
+   "chave": "ev_homologacao_inscricoes",
+   "titulo": "Evento: homologação das inscrições",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-191",
+    "E92-193"
+   ]
+  },
+  "LIB-0114": {
+   "chave": "ev_avaliacao",
+   "titulo": "Evento: realização de avaliação",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-194",
+    "E01-044"
+   ]
+  },
+  "LIB-0115": {
+   "chave": "ev_heteroidentificacao",
+   "titulo": "Evento: verificação da autodeclaração",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-197"
+   ]
+  },
+  "LIB-0116": {
+   "chave": "ev_curso_formacao",
+   "titulo": "Evento: curso de formação dos convocados",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-204"
+   ]
+  },
+  "LIB-0117": {
+   "chave": "ev_inicio_convocacoes",
+   "titulo": "Evento: início das convocações",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "CRO",
+   "origem": "B+D",
+   "ocorrencias": [
+    "E92-205"
+   ]
+  },
+  "LIB-0118": {
+   "chave": "recurso_sem_documentos",
+   "titulo": "Vedação de envio de documentos na fase recursal",
+   "classificacao": "INÉDITA",
+   "familia": "REC",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-208"
+   ]
+  },
+  "LIB-0119": {
+   "chave": "convocacao_manifestacao",
+   "titulo": "Convocação por mensagem e prazo de manifestação",
+   "classificacao": "INÉDITA",
+   "familia": "CON",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-211"
+   ]
+  },
+  "LIB-0120": {
+   "chave": "prazo_validade",
+   "titulo": "Prazo de validade do processo seletivo",
+   "classificacao": "INÉDITA",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-214"
+   ]
+  },
+  "LIB-0121": {
+   "chave": "aceitacao_normas",
+   "titulo": "Aceitação das normas pela inscrição",
+   "classificacao": "INÉDITA",
+   "familia": "GER",
+   "origem": "D",
+   "ocorrencias": [
+    "E92-218"
+   ]
+  },
+  "LIB-0122": {
+   "chave": "req_mestrado_area",
+   "titulo": "Requisito: mestrado na área ou em área afim",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E01-011"
+   ]
+  },
+  "LIB-0123": {
+   "chave": "empate_estrito",
+   "titulo": "Empate no corte: a quantidade não é excedida",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E01-018"
+   ]
+  },
+  "LIB-0124": {
+   "chave": "continuacao_nao",
+   "titulo": "Continuação não admitida",
+   "classificacao": "EXATA",
+   "familia": "CLA",
+   "origem": "C",
+   "ocorrencias": [
+    "E01-019",
+    "E01-027"
+   ]
+  },
+  "LIB-0125": {
+   "chave": "req_curso_tecnico",
+   "titulo": "Requisito: curso técnico na área",
+   "classificacao": "INÉDITA",
+   "familia": "REQ",
+   "origem": "D",
+   "ocorrencias": [
+    "E01-021"
+   ]
+  },
+  "LIB-0126": {
+   "chave": "consolidacao",
+   "titulo": "Marca de versão consolidada",
+   "classificacao": "PARAMETRIZÁVEL",
+   "familia": "ATO",
+   "origem": "A",
+   "ocorrencias": []
+  }
+ },
+ "linhas": {
+  "E91": [
+   {
+    "id": "E91-001",
+    "item": "Cabeçalho",
+    "unidade": "LIB-0001",
+    "situacao": "INÉDITA",
+    "palavras": 18
+   },
+   {
+    "id": "E91-002",
+    "item": "Anúncio do ato",
+    "unidade": "LIB-0002",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E91-003",
+    "item": "Descrição (abaixo do anúncio)",
+    "unidade": "LIB-0003",
+    "situacao": "INÉDITA",
+    "palavras": 20
+   },
+   {
+    "id": "E91-004",
+    "item": "Preâmbulo",
+    "unidade": "LIB-0004",
+    "situacao": "INÉDITA",
+    "palavras": 51
+   },
+   {
+    "id": "E91-005",
+    "item": "Preâmbulo (fim)",
+    "unidade": null,
+    "situacao": "NÃO SE TRADUZ",
+    "palavras": 9
+   },
+   {
+    "id": "E91-006",
+    "item": "1",
+    "unidade": "LIB-0005",
+    "situacao": "INÉDITA",
+    "palavras": 3
+   },
+   {
+    "id": "E91-007",
+    "item": "1, §1",
+    "unidade": "LIB-0006",
+    "situacao": "INÉDITA",
+    "palavras": 14
+   },
+   {
+    "id": "E91-008",
+    "item": "1, §2",
+    "unidade": "LIB-0007",
+    "situacao": "INÉDITA",
+    "palavras": 19
+   },
+   {
+    "id": "E91-009",
+    "item": "1, §3",
+    "unidade": "LIB-0008",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E91-010",
+    "item": "2",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 6
+   },
+   {
+    "id": "E91-011",
+    "item": "2, §1",
+    "unidade": "LIB-0009",
+    "situacao": "INÉDITA",
+    "palavras": 28
+   },
+   {
+    "id": "E91-012",
+    "item": "2, §2",
+    "unidade": "LIB-0010",
+    "situacao": "INÉDITA",
+    "palavras": 14
+   },
+   {
+    "id": "E91-013",
+    "item": "3",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 2
+   },
+   {
+    "id": "E91-014",
+    "item": "3, §1",
+    "unidade": "LIB-0011",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E91-015",
+    "item": "4",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E91-016",
+    "item": "4, §1",
+    "unidade": "LIB-0012",
+    "situacao": "INÉDITA",
+    "palavras": 18
+   },
+   {
+    "id": "E91-017",
+    "item": "5",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 4
+   },
+   {
+    "id": "E91-018",
+    "item": "5, Tabela 1",
+    "unidade": "LIB-0013",
+    "situacao": "INÉDITA",
+    "palavras": 76
+   },
+   {
+    "id": "E91-019",
+    "item": "5, Tabela 2",
+    "unidade": "LIB-0014",
+    "situacao": "INÉDITA",
+    "palavras": 29
+   },
+   {
+    "id": "E91-020",
+    "item": "5, após a Tabela 2",
+    "unidade": "LIB-0015",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E91-021",
+    "item": "5, Tabela 3",
+    "unidade": "LIB-0016",
+    "situacao": "INÉDITA",
+    "palavras": 41
+   },
+   {
+    "id": "E91-022",
+    "item": "5, após a Tabela 3",
+    "unidade": "LIB-0017",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E91-023",
+    "item": "5.1",
+    "unidade": "LIB-0018",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E91-024",
+    "item": "5.1 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-025",
+    "item": "5.1 › Marcos classificatórios",
+    "unidade": "LIB-0019",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 7
+   },
+   {
+    "id": "E91-026",
+    "item": "5.2",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 20
+   },
+   {
+    "id": "E91-027",
+    "item": "5.2 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-028",
+    "item": "5.2 › Marcos classificatórios",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E91-029",
+    "item": "5.3",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 21
+   },
+   {
+    "id": "E91-030",
+    "item": "5.3 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-031",
+    "item": "5.3 › Marcos classificatórios",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E91-032",
+    "item": "5.4",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 21
+   },
+   {
+    "id": "E91-033",
+    "item": "5.4 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-034",
+    "item": "5.4 › Marcos classificatórios",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E91-035",
+    "item": "5.5",
+    "unidade": "LIB-0020",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E91-036",
+    "item": "5.5, 1º marcador",
+    "unidade": "LIB-0021",
+    "situacao": "INÉDITA",
+    "palavras": 14
+   },
+   {
+    "id": "E91-037",
+    "item": "5.5, 2º marcador",
+    "unidade": "LIB-0022",
+    "situacao": "INÉDITA",
+    "palavras": 8
+   },
+   {
+    "id": "E91-038",
+    "item": "5.6",
+    "unidade": "LIB-0020",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 11
+   },
+   {
+    "id": "E91-039",
+    "item": "5.6, frase inicial",
+    "unidade": "LIB-0023",
+    "situacao": "INÉDITA",
+    "palavras": 29
+   },
+   {
+    "id": "E91-040",
+    "item": "5.6 › marco SORTEIO",
+    "unidade": "LIB-0024",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-041",
+    "item": "5.6 › Ordem",
+    "unidade": "LIB-0025",
+    "situacao": "INÉDITA",
+    "palavras": 3
+   },
+   {
+    "id": "E91-042",
+    "item": "5.6 › Sorteio",
+    "unidade": "LIB-0026",
+    "situacao": "INÉDITA",
+    "palavras": 57
+   },
+   {
+    "id": "E91-043",
+    "item": "5.6 › Sorteio › Habilitação",
+    "unidade": "LIB-0027",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-044",
+    "item": "5.6 › Recurso",
+    "unidade": "LIB-0028",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E91-045",
+    "item": "5.6 › Corte",
+    "unidade": "LIB-0029",
+    "situacao": "INÉDITA",
+    "palavras": 21
+   },
+   {
+    "id": "E91-046",
+    "item": "5.6 › Continuação",
+    "unidade": "LIB-0030",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E91-047",
+    "item": "6",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-048",
+    "item": "6, §1",
+    "unidade": "LIB-0031",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E91-049",
+    "item": "6, §2",
+    "unidade": "LIB-0032",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E91-050",
+    "item": "6, §3",
+    "unidade": "LIB-0033",
+    "situacao": "INÉDITA",
+    "palavras": 15
+   },
+   {
+    "id": "E91-051",
+    "item": "6, frase final (gerada)",
+    "unidade": "LIB-0034",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E91-052",
+    "item": "7",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 6
+   },
+   {
+    "id": "E91-053",
+    "item": "7, grupo 1",
+    "unidade": "LIB-0035",
+    "situacao": "INÉDITA",
+    "palavras": 4
+   },
+   {
+    "id": "E91-054",
+    "item": "7, grupo 1, a",
+    "unidade": "LIB-0036",
+    "situacao": "INÉDITA",
+    "palavras": 15
+   },
+   {
+    "id": "E91-055",
+    "item": "7, grupo 1, b",
+    "unidade": "LIB-0037",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E91-056",
+    "item": "7, grupo 1, c",
+    "unidade": "LIB-0038",
+    "situacao": "INÉDITA",
+    "palavras": 15
+   },
+   {
+    "id": "E91-057",
+    "item": "7, grupo 1, d",
+    "unidade": "LIB-0039",
+    "situacao": "INÉDITA",
+    "palavras": 5
+   },
+   {
+    "id": "E91-058",
+    "item": "7, grupo 1, e",
+    "unidade": "LIB-0040",
+    "situacao": "INÉDITA",
+    "palavras": 8
+   },
+   {
+    "id": "E91-059",
+    "item": "7, grupo 2",
+    "unidade": "LIB-0041",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E91-060",
+    "item": "7, grupo 2, a",
+    "unidade": "LIB-0042",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E91-061",
+    "item": "7, grupo 3",
+    "unidade": "LIB-0041",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E91-062",
+    "item": "7, grupo 3, a",
+    "unidade": "LIB-0043",
+    "situacao": "INÉDITA",
+    "palavras": 14
+   },
+   {
+    "id": "E91-063",
+    "item": "8",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E91-064",
+    "item": "8, §1",
+    "unidade": "LIB-0044",
+    "situacao": "INÉDITA",
+    "palavras": 28
+   },
+   {
+    "id": "E91-065",
+    "item": "8, §2",
+    "unidade": "LIB-0045",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E91-066",
+    "item": "9",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 4
+   },
+   {
+    "id": "E91-067",
+    "item": "9.1",
+    "unidade": "LIB-0046",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E91-068",
+    "item": "10",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 4
+   },
+   {
+    "id": "E91-069",
+    "item": "10, §1",
+    "unidade": "LIB-0047",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E91-070",
+    "item": "10, §2",
+    "unidade": "LIB-0048",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E91-071",
+    "item": "11",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 2
+   },
+   {
+    "id": "E91-072",
+    "item": "11, Tabela 4 (cabeçalho)",
+    "unidade": "LIB-0049",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E91-073",
+    "item": "11, Evento 1",
+    "unidade": "LIB-0050",
+    "situacao": "INÉDITA",
+    "palavras": 11
+   },
+   {
+    "id": "E91-074",
+    "item": "11, Evento 2",
+    "unidade": "LIB-0051",
+    "situacao": "INÉDITA",
+    "palavras": 15
+   },
+   {
+    "id": "E91-075",
+    "item": "11, Evento 3",
+    "unidade": "LIB-0052",
+    "situacao": "INÉDITA",
+    "palavras": 15
+   },
+   {
+    "id": "E91-076",
+    "item": "11, Evento 4",
+    "unidade": "LIB-0053",
+    "situacao": "INÉDITA",
+    "palavras": 11
+   },
+   {
+    "id": "E91-077",
+    "item": "11, Evento 5",
+    "unidade": "LIB-0054",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E91-078",
+    "item": "11, Evento 6",
+    "unidade": "LIB-0055",
+    "situacao": "INÉDITA",
+    "palavras": 11
+   },
+   {
+    "id": "E91-079",
+    "item": "11, Evento 7",
+    "unidade": "LIB-0056",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E91-080",
+    "item": "11, Evento 8",
+    "unidade": "LIB-0057",
+    "situacao": "INÉDITA",
+    "palavras": 8
+   },
+   {
+    "id": "E91-081",
+    "item": "11, Evento 9",
+    "unidade": "LIB-0058",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E91-082",
+    "item": "11, Evento 10",
+    "unidade": "LIB-0059",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E91-083",
+    "item": "12",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-084",
+    "item": "12, §1",
+    "unidade": "LIB-0060",
+    "situacao": "INÉDITA",
+    "palavras": 19
+   },
+   {
+    "id": "E91-085",
+    "item": "12, §2",
+    "unidade": "LIB-0061",
+    "situacao": "INÉDITA",
+    "palavras": 11
+   },
+   {
+    "id": "E91-086",
+    "item": "13",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-087",
+    "item": "13, §1",
+    "unidade": "LIB-0062",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E91-088",
+    "item": "14",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-089",
+    "item": "14, §1",
+    "unidade": "LIB-0063",
+    "situacao": "INÉDITA",
+    "palavras": 16
+   },
+   {
+    "id": "E91-090",
+    "item": "14, frase gerada",
+    "unidade": "LIB-0064",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E91-091",
+    "item": "14, declaração",
+    "unidade": "LIB-0065",
+    "situacao": "INÉDITA",
+    "palavras": 39
+   },
+   {
+    "id": "E91-092",
+    "item": "15",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-093",
+    "item": "15, §1",
+    "unidade": "LIB-0066",
+    "situacao": "INÉDITA",
+    "palavras": 20
+   },
+   {
+    "id": "E91-094",
+    "item": "16",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 2
+   },
+   {
+    "id": "E91-095",
+    "item": "16, relação",
+    "unidade": "LIB-0067",
+    "situacao": "INÉDITA",
+    "palavras": 21
+   },
+   {
+    "id": "E91-096",
+    "item": "17",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 3
+   },
+   {
+    "id": "E91-097",
+    "item": "17, §1",
+    "unidade": "LIB-0068",
+    "situacao": "INÉDITA",
+    "palavras": 16
+   },
+   {
+    "id": "E91-098",
+    "item": "Fecho",
+    "unidade": "LIB-0069",
+    "situacao": "INÉDITA",
+    "palavras": 7
+   },
+   {
+    "id": "E91-099",
+    "item": "Autoridade",
+    "unidade": "LIB-0070",
+    "situacao": "INÉDITA",
+    "palavras": 29
+   },
+   {
+    "id": "E91-100",
+    "item": "Verificação de integridade",
+    "unidade": "LIB-0071",
+    "situacao": "INÉDITA",
+    "palavras": 33
+   },
+   {
+    "id": "E91-101",
+    "item": "Rodapé (todas as páginas)",
+    "unidade": "LIB-0072",
+    "situacao": "INÉDITA",
+    "palavras": 59
+   }
+  ],
+  "E92": [
+   {
+    "id": "E92-001",
+    "item": "Cabeçalho",
+    "unidade": "LIB-0001",
+    "situacao": "EXATA",
+    "palavras": 18
+   },
+   {
+    "id": "E92-002",
+    "item": "Anúncio do ato",
+    "unidade": "LIB-0002",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 34
+   },
+   {
+    "id": "E92-003",
+    "item": "Descrição (abaixo do anúncio)",
+    "unidade": "LIB-0003",
+    "situacao": "ESPECIALIZADA",
+    "palavras": 18
+   },
+   {
+    "id": "E92-004",
+    "item": "Preâmbulo",
+    "unidade": "LIB-0004",
+    "situacao": "SEMELHANTE",
+    "palavras": 75
+   },
+   {
+    "id": "E92-005",
+    "item": "Preâmbulo (fim)",
+    "unidade": null,
+    "situacao": "NÃO SE TRADUZ",
+    "palavras": 9
+   },
+   {
+    "id": "E92-006",
+    "item": "1",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E92-007",
+    "item": "1.1",
+    "unidade": "LIB-0006",
+    "situacao": "SEMELHANTE",
+    "palavras": 22
+   },
+   {
+    "id": "E92-008",
+    "item": "1.2",
+    "unidade": "LIB-0073",
+    "situacao": "INÉDITA",
+    "palavras": 28
+   },
+   {
+    "id": "E92-009",
+    "item": "1.3",
+    "unidade": "LIB-0074",
+    "situacao": "INÉDITA",
+    "palavras": 16
+   },
+   {
+    "id": "E92-010",
+    "item": "1.4",
+    "unidade": "LIB-0075",
+    "situacao": "INÉDITA",
+    "palavras": 19
+   },
+   {
+    "id": "E92-011",
+    "item": "2",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 5
+   },
+   {
+    "id": "E92-012",
+    "item": "2.1",
+    "unidade": "LIB-0076",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E92-013",
+    "item": "2.2",
+    "unidade": "LIB-0077",
+    "situacao": "INÉDITA",
+    "palavras": 16
+   },
+   {
+    "id": "E92-014",
+    "item": "2.3",
+    "unidade": "LIB-0075",
+    "situacao": "SEMELHANTE",
+    "palavras": 17
+   },
+   {
+    "id": "E92-015",
+    "item": "2.4",
+    "unidade": "LIB-0012",
+    "situacao": "SEMELHANTE",
+    "palavras": 11
+   },
+   {
+    "id": "E92-016",
+    "item": "3",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E92-017",
+    "item": "3, Tabela 1",
+    "unidade": "LIB-0013",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 443
+   },
+   {
+    "id": "E92-018",
+    "item": "3, Tabela 2",
+    "unidade": "LIB-0014",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 24
+   },
+   {
+    "id": "E92-019",
+    "item": "3, após a Tabela 2",
+    "unidade": "LIB-0078",
+    "situacao": "INÉDITA",
+    "palavras": 19
+   },
+   {
+    "id": "E92-020",
+    "item": "3, Tabela 3",
+    "unidade": "LIB-0016",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 88
+   },
+   {
+    "id": "E92-021",
+    "item": "3, após a Tabela 3",
+    "unidade": "LIB-0079",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-022",
+    "item": "3.1",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 27
+   },
+   {
+    "id": "E92-023",
+    "item": "3.1 › Atribuições",
+    "unidade": "LIB-0080",
+    "situacao": "INÉDITA",
+    "palavras": 41
+   },
+   {
+    "id": "E92-024",
+    "item": "3.1 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-025",
+    "item": "3.1 › Requisitos, 1º",
+    "unidade": "LIB-0082",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E92-026",
+    "item": "3.1 › Requisitos, 2º",
+    "unidade": "LIB-0083",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E92-027",
+    "item": "3.1 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "INÉDITA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-028",
+    "item": "3.1 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 7
+   },
+   {
+    "id": "E92-029",
+    "item": "3.2",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 12
+   },
+   {
+    "id": "E92-030",
+    "item": "3.2 › Atribuições",
+    "unidade": "LIB-0080",
+    "situacao": "SEMELHANTE",
+    "palavras": 56
+   },
+   {
+    "id": "E92-031",
+    "item": "3.2 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-032",
+    "item": "3.2 › Requisitos, 1º",
+    "unidade": "LIB-0085",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-033",
+    "item": "3.2 › Requisitos, 2º",
+    "unidade": "LIB-0083",
+    "situacao": "SEMELHANTE",
+    "palavras": 10
+   },
+   {
+    "id": "E92-034",
+    "item": "3.2 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-035",
+    "item": "3.2 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-036",
+    "item": "3.3",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-037",
+    "item": "3.3 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 6
+   },
+   {
+    "id": "E92-038",
+    "item": "3.3 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-039",
+    "item": "3.3 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 6
+   },
+   {
+    "id": "E92-040",
+    "item": "3.3 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-041",
+    "item": "3.3 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-042",
+    "item": "3.4",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-043",
+    "item": "3.4 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-044",
+    "item": "3.4 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-045",
+    "item": "3.4 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-046",
+    "item": "3.4 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-047",
+    "item": "3.4 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-048",
+    "item": "3.5",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-049",
+    "item": "3.5 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-050",
+    "item": "3.5 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-051",
+    "item": "3.5 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-052",
+    "item": "3.5 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-053",
+    "item": "3.5 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-054",
+    "item": "3.6",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-055",
+    "item": "3.6 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-056",
+    "item": "3.6 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-057",
+    "item": "3.6 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-058",
+    "item": "3.6 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-059",
+    "item": "3.6 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-060",
+    "item": "3.7",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-061",
+    "item": "3.7 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-062",
+    "item": "3.7 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-063",
+    "item": "3.7 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-064",
+    "item": "3.7 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-065",
+    "item": "3.7 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-066",
+    "item": "3.8",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-067",
+    "item": "3.8 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-068",
+    "item": "3.8 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-069",
+    "item": "3.8 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-070",
+    "item": "3.8 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-071",
+    "item": "3.8 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-072",
+    "item": "3.9",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-073",
+    "item": "3.9 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-074",
+    "item": "3.9 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-075",
+    "item": "3.9 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-076",
+    "item": "3.9 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-077",
+    "item": "3.9 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-078",
+    "item": "3.10",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-079",
+    "item": "3.10 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-080",
+    "item": "3.10 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-081",
+    "item": "3.10 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-082",
+    "item": "3.10 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-083",
+    "item": "3.10 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-084",
+    "item": "3.11",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-085",
+    "item": "3.11 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-086",
+    "item": "3.11 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-087",
+    "item": "3.11 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-088",
+    "item": "3.11 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-089",
+    "item": "3.11 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-090",
+    "item": "3.12",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-091",
+    "item": "3.12 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-092",
+    "item": "3.12 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-093",
+    "item": "3.12 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-094",
+    "item": "3.12 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-095",
+    "item": "3.12 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-096",
+    "item": "3.13",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-097",
+    "item": "3.13 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-098",
+    "item": "3.13 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-099",
+    "item": "3.13 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-100",
+    "item": "3.13 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-101",
+    "item": "3.13 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-102",
+    "item": "3.14",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-103",
+    "item": "3.14 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-104",
+    "item": "3.14 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-105",
+    "item": "3.14 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-106",
+    "item": "3.14 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-107",
+    "item": "3.14 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-108",
+    "item": "3.15",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-109",
+    "item": "3.15 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-110",
+    "item": "3.15 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-111",
+    "item": "3.15 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-112",
+    "item": "3.15 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-113",
+    "item": "3.15 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-114",
+    "item": "3.16",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-115",
+    "item": "3.16 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-116",
+    "item": "3.16 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-117",
+    "item": "3.16 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-118",
+    "item": "3.16 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-119",
+    "item": "3.16 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-120",
+    "item": "3.17",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-121",
+    "item": "3.17 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-122",
+    "item": "3.17 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-123",
+    "item": "3.17 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-124",
+    "item": "3.17 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-125",
+    "item": "3.17 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-126",
+    "item": "3.18",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-127",
+    "item": "3.18 › Atribuições",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-128",
+    "item": "3.18 › Remuneração",
+    "unidade": "LIB-0081",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-129",
+    "item": "3.18 › Requisitos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-130",
+    "item": "3.18 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "EXATA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-131",
+    "item": "3.18 › Marcos",
+    "unidade": "LIB-0019",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-132",
+    "item": "3.19",
+    "unidade": "LIB-0020",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 22
+   },
+   {
+    "id": "E92-133",
+    "item": "3.19, lista",
+    "unidade": "LIB-0086",
+    "situacao": "INÉDITA",
+    "palavras": 85
+   },
+   {
+    "id": "E92-134",
+    "item": "3.20",
+    "unidade": "LIB-0020",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 22
+   },
+   {
+    "id": "E92-135",
+    "item": "3.20, 1º",
+    "unidade": "LIB-0021",
+    "situacao": "SEMELHANTE",
+    "palavras": 13
+   },
+   {
+    "id": "E92-136",
+    "item": "3.20, 2º",
+    "unidade": "LIB-0083",
+    "situacao": "SEMELHANTE",
+    "palavras": 40
+   },
+   {
+    "id": "E92-137",
+    "item": "3.20, 3º",
+    "unidade": "LIB-0087",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E92-138",
+    "item": "3.20, 4º",
+    "unidade": "LIB-0088",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E92-139",
+    "item": "3.20, 5º",
+    "unidade": "LIB-0089",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-140",
+    "item": "3.21",
+    "unidade": "LIB-0020",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 25
+   },
+   {
+    "id": "E92-141",
+    "item": "3.21, frase inicial",
+    "unidade": "LIB-0023",
+    "situacao": "EXATA",
+    "palavras": 29
+   },
+   {
+    "id": "E92-142",
+    "item": "3.21 › marco FINAL",
+    "unidade": "LIB-0024",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E92-143",
+    "item": "3.21 › Ordem",
+    "unidade": "LIB-0090",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-144",
+    "item": "3.21 › Combinação, Normalização, Arredondamento",
+    "unidade": "LIB-0091",
+    "situacao": "INÉDITA",
+    "palavras": 37
+   },
+   {
+    "id": "E92-145",
+    "item": "3.21 › Recurso",
+    "unidade": "LIB-0028",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 25
+   },
+   {
+    "id": "E92-146",
+    "item": "3.21 › Corte",
+    "unidade": "LIB-0092",
+    "situacao": "INÉDITA",
+    "palavras": 26
+   },
+   {
+    "id": "E92-147",
+    "item": "3.21 › Empate no corte",
+    "unidade": "LIB-0093",
+    "situacao": "INÉDITA",
+    "palavras": 17
+   },
+   {
+    "id": "E92-148",
+    "item": "3.21 › Continuação",
+    "unidade": "LIB-0030",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-149",
+    "item": "3.21 › Critérios de desempate",
+    "unidade": "LIB-0094",
+    "situacao": "INÉDITA",
+    "palavras": 75
+   },
+   {
+    "id": "E92-150",
+    "item": "4",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E92-151",
+    "item": "4.1",
+    "unidade": "LIB-0031",
+    "situacao": "SEMELHANTE",
+    "palavras": 15
+   },
+   {
+    "id": "E92-152",
+    "item": "4.2",
+    "unidade": "LIB-0095",
+    "situacao": "INÉDITA",
+    "palavras": 33
+   },
+   {
+    "id": "E92-153",
+    "item": "4.3",
+    "unidade": "LIB-0096",
+    "situacao": "INÉDITA",
+    "palavras": 20
+   },
+   {
+    "id": "E92-154",
+    "item": "4.4",
+    "unidade": "LIB-0097",
+    "situacao": "INÉDITA",
+    "palavras": 24
+   },
+   {
+    "id": "E92-155",
+    "item": "4, frase final (gerada)",
+    "unidade": "LIB-0034",
+    "situacao": "EXATA",
+    "palavras": 10
+   },
+   {
+    "id": "E92-156",
+    "item": "5",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E92-157",
+    "item": "5, grupo 1",
+    "unidade": "LIB-0035",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E92-158",
+    "item": "5, grupo 1, a",
+    "unidade": "LIB-0036",
+    "situacao": "SEMELHANTE",
+    "palavras": 27
+   },
+   {
+    "id": "E92-159",
+    "item": "5, grupo 1, b",
+    "unidade": "LIB-0037",
+    "situacao": "SEMELHANTE",
+    "palavras": 7
+   },
+   {
+    "id": "E92-160",
+    "item": "5, grupo 1, c",
+    "unidade": "LIB-0038",
+    "situacao": "SEMELHANTE",
+    "palavras": 8
+   },
+   {
+    "id": "E92-161",
+    "item": "5, grupo 1, d",
+    "unidade": "LIB-0098",
+    "situacao": "INÉDITA",
+    "palavras": 35
+   },
+   {
+    "id": "E92-162",
+    "item": "5, grupo 1, e",
+    "unidade": "LIB-0099",
+    "situacao": "INÉDITA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-163",
+    "item": "5, grupo 1, f",
+    "unidade": "LIB-0100",
+    "situacao": "INÉDITA",
+    "palavras": 14
+   },
+   {
+    "id": "E92-164",
+    "item": "5, grupo 2",
+    "unidade": "LIB-0101",
+    "situacao": "INÉDITA",
+    "palavras": 8
+   },
+   {
+    "id": "E92-165",
+    "item": "5, grupo 2, a",
+    "unidade": "LIB-0102",
+    "situacao": "INÉDITA",
+    "palavras": 12
+   },
+   {
+    "id": "E92-166",
+    "item": "5, grupo 3",
+    "unidade": "LIB-0101",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 15
+   },
+   {
+    "id": "E92-167",
+    "item": "5, grupo 3, a",
+    "unidade": "LIB-0103",
+    "situacao": "INÉDITA",
+    "palavras": 4
+   },
+   {
+    "id": "E92-168",
+    "item": "5, grupo 4",
+    "unidade": "LIB-0041",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 11
+   },
+   {
+    "id": "E92-169",
+    "item": "5, grupo 4, a",
+    "unidade": "LIB-0042",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 10
+   },
+   {
+    "id": "E92-170",
+    "item": "5, grupo 5",
+    "unidade": "LIB-0041",
+    "situacao": "EXATA",
+    "palavras": 8
+   },
+   {
+    "id": "E92-171",
+    "item": "5, grupo 5, a",
+    "unidade": "LIB-0043",
+    "situacao": "SEMELHANTE",
+    "palavras": 25
+   },
+   {
+    "id": "E92-172",
+    "item": "5, grupo 6",
+    "unidade": "LIB-0041",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 9
+   },
+   {
+    "id": "E92-173",
+    "item": "5, grupo 6, a",
+    "unidade": "LIB-0104",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E92-174",
+    "item": "6",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 5
+   },
+   {
+    "id": "E92-175",
+    "item": "6.1",
+    "unidade": "LIB-0044",
+    "situacao": "SEMELHANTE",
+    "palavras": 24
+   },
+   {
+    "id": "E92-176",
+    "item": "6.2",
+    "unidade": "LIB-0105",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E92-177",
+    "item": "6.3",
+    "unidade": "LIB-0106",
+    "situacao": "INÉDITA",
+    "palavras": 20
+   },
+   {
+    "id": "E92-178",
+    "item": "7",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 7
+   },
+   {
+    "id": "E92-179",
+    "item": "7, §1",
+    "unidade": "LIB-0107",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E92-180",
+    "item": "8",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E92-181",
+    "item": "8.1",
+    "unidade": "LIB-0108",
+    "situacao": "INÉDITA",
+    "palavras": 42
+   },
+   {
+    "id": "E92-182",
+    "item": "8.2",
+    "unidade": "LIB-0046",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 29
+   },
+   {
+    "id": "E92-183",
+    "item": "9",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E92-184",
+    "item": "9, §1",
+    "unidade": "LIB-0109",
+    "situacao": "INÉDITA",
+    "palavras": 26
+   },
+   {
+    "id": "E92-185",
+    "item": "9, §2",
+    "unidade": "LIB-0110",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E92-186",
+    "item": "10",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 2
+   },
+   {
+    "id": "E92-187",
+    "item": "10, Tabela 4 (cabeçalho)",
+    "unidade": "LIB-0049",
+    "situacao": "EXATA",
+    "palavras": 9
+   },
+   {
+    "id": "E92-188",
+    "item": "10, Evento 1",
+    "unidade": "LIB-0111",
+    "situacao": "INÉDITA",
+    "palavras": 9
+   },
+   {
+    "id": "E92-189",
+    "item": "10, Evento 2",
+    "unidade": "LIB-0112",
+    "situacao": "INÉDITA",
+    "palavras": 18
+   },
+   {
+    "id": "E92-190",
+    "item": "10, Evento 3",
+    "unidade": "LIB-0050",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 18
+   },
+   {
+    "id": "E92-191",
+    "item": "10, Evento 4",
+    "unidade": "LIB-0113",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E92-192",
+    "item": "10, Evento 5",
+    "unidade": "LIB-0056",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 18
+   },
+   {
+    "id": "E92-193",
+    "item": "10, Evento 6",
+    "unidade": "LIB-0113",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 10
+   },
+   {
+    "id": "E92-194",
+    "item": "10, Evento 7",
+    "unidade": "LIB-0114",
+    "situacao": "INÉDITA",
+    "palavras": 23
+   },
+   {
+    "id": "E92-195",
+    "item": "10, Evento 8",
+    "unidade": "LIB-0055",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 12
+   },
+   {
+    "id": "E92-196",
+    "item": "10, Evento 9",
+    "unidade": "LIB-0056",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 25
+   },
+   {
+    "id": "E92-197",
+    "item": "10, Evento 10",
+    "unidade": "LIB-0115",
+    "situacao": "INÉDITA",
+    "palavras": 39
+   },
+   {
+    "id": "E92-198",
+    "item": "10, Evento 11",
+    "unidade": "LIB-0055",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 10
+   },
+   {
+    "id": "E92-199",
+    "item": "10, Evento 12",
+    "unidade": "LIB-0056",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 18
+   },
+   {
+    "id": "E92-200",
+    "item": "10, Evento 13",
+    "unidade": "LIB-0054",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 18
+   },
+   {
+    "id": "E92-201",
+    "item": "10, Evento 14",
+    "unidade": "LIB-0055",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 11
+   },
+   {
+    "id": "E92-202",
+    "item": "10, Evento 15",
+    "unidade": "LIB-0056",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 19
+   },
+   {
+    "id": "E92-203",
+    "item": "10, Evento 16",
+    "unidade": "LIB-0057",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 13
+   },
+   {
+    "id": "E92-204",
+    "item": "10, Evento 17",
+    "unidade": "LIB-0116",
+    "situacao": "INÉDITA",
+    "palavras": 26
+   },
+   {
+    "id": "E92-205",
+    "item": "10, Evento 18",
+    "unidade": "LIB-0117",
+    "situacao": "INÉDITA",
+    "palavras": 21
+   },
+   {
+    "id": "E92-206",
+    "item": "11",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E92-207",
+    "item": "11.1",
+    "unidade": "LIB-0060",
+    "situacao": "SEMELHANTE",
+    "palavras": 28
+   },
+   {
+    "id": "E92-208",
+    "item": "11.2",
+    "unidade": "LIB-0118",
+    "situacao": "INÉDITA",
+    "palavras": 11
+   },
+   {
+    "id": "E92-209",
+    "item": "11.3",
+    "unidade": "LIB-0061",
+    "situacao": "SEMELHANTE",
+    "palavras": 19
+   },
+   {
+    "id": "E92-210",
+    "item": "12",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E92-211",
+    "item": "12.1",
+    "unidade": "LIB-0119",
+    "situacao": "INÉDITA",
+    "palavras": 28
+   },
+   {
+    "id": "E92-212",
+    "item": "12.2",
+    "unidade": "LIB-0062",
+    "situacao": "SEMELHANTE",
+    "palavras": 22
+   },
+   {
+    "id": "E92-213",
+    "item": "13",
+    "unidade": "LIB-0005",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E92-214",
+    "item": "13, §1",
+    "unidade": "LIB-0120",
+    "situacao": "INÉDITA",
+    "palavras": 24
+   },
+   {
+    "id": "E92-215",
+    "item": "14",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 2
+   },
+   {
+    "id": "E92-216",
+    "item": "14, relação",
+    "unidade": "LIB-0067",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 59
+   },
+   {
+    "id": "E92-217",
+    "item": "15",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E92-218",
+    "item": "15.1",
+    "unidade": "LIB-0121",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E92-219",
+    "item": "15.2",
+    "unidade": "LIB-0068",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 16
+   },
+   {
+    "id": "E92-220",
+    "item": "15.3",
+    "unidade": "LIB-0007",
+    "situacao": "SEMELHANTE",
+    "palavras": 8
+   },
+   {
+    "id": "E92-221",
+    "item": "Fecho",
+    "unidade": "LIB-0069",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E92-222",
+    "item": "Autoridade",
+    "unidade": "LIB-0070",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 16
+   },
+   {
+    "id": "E92-223",
+    "item": "Verificação de integridade",
+    "unidade": "LIB-0071",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 34
+   },
+   {
+    "id": "E92-224",
+    "item": "Rodapé (todas as páginas)",
+    "unidade": "LIB-0072",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 139
+   }
+  ],
+  "E01": [
+   {
+    "id": "E01-001",
+    "item": "Cabeçalho",
+    "unidade": "LIB-0001",
+    "situacao": "EXATA",
+    "palavras": 18
+   },
+   {
+    "id": "E01-002",
+    "item": "Anúncio do ato",
+    "unidade": "LIB-0002",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E01-003",
+    "item": "Descrição (abaixo do anúncio)",
+    "unidade": "LIB-0003",
+    "situacao": "ESPECIALIZADA",
+    "palavras": 7
+   },
+   {
+    "id": "E01-004",
+    "item": "1",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E01-005",
+    "item": "1, Tabela 1",
+    "unidade": "LIB-0013",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 37
+   },
+   {
+    "id": "E01-006",
+    "item": "1, Tabela 2",
+    "unidade": "LIB-0014",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 15
+   },
+   {
+    "id": "E01-007",
+    "item": "1, Tabela 3",
+    "unidade": "LIB-0016",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 29
+   },
+   {
+    "id": "E01-008",
+    "item": "1, Tabela 4",
+    "unidade": "LIB-0016",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 14
+   },
+   {
+    "id": "E01-009",
+    "item": "1, após a Tabela 4",
+    "unidade": "LIB-0079",
+    "situacao": "EXATA",
+    "palavras": 12
+   },
+   {
+    "id": "E01-010",
+    "item": "1.1",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 14
+   },
+   {
+    "id": "E01-011",
+    "item": "1.1 › Requisitos",
+    "unidade": "LIB-0122",
+    "situacao": "INÉDITA",
+    "palavras": 8
+   },
+   {
+    "id": "E01-012",
+    "item": "1.1 › Dados exigidos",
+    "unidade": "LIB-0084",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 17
+   },
+   {
+    "id": "E01-013",
+    "item": "1.1 › Marcos › FINAL",
+    "unidade": "LIB-0024",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E01-014",
+    "item": "1.1 › Ordem",
+    "unidade": "LIB-0090",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E01-015",
+    "item": "1.1 › Combinação, Normalização, Arredondamento",
+    "unidade": "LIB-0091",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 24
+   },
+   {
+    "id": "E01-016",
+    "item": "1.1 › Recurso",
+    "unidade": "LIB-0028",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 21
+   },
+   {
+    "id": "E01-017",
+    "item": "1.1 › Corte",
+    "unidade": "LIB-0092",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 15
+   },
+   {
+    "id": "E01-018",
+    "item": "1.1 › Empate no corte",
+    "unidade": "LIB-0123",
+    "situacao": "INÉDITA",
+    "palavras": 13
+   },
+   {
+    "id": "E01-019",
+    "item": "1.1 › Continuação",
+    "unidade": "LIB-0124",
+    "situacao": "INÉDITA",
+    "palavras": 10
+   },
+   {
+    "id": "E01-020",
+    "item": "1.2",
+    "unidade": "LIB-0018",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 12
+   },
+   {
+    "id": "E01-021",
+    "item": "1.2 › Requisitos",
+    "unidade": "LIB-0125",
+    "situacao": "INÉDITA",
+    "palavras": 6
+   },
+   {
+    "id": "E01-022",
+    "item": "1.2 › Marcos › RESERVA",
+    "unidade": "LIB-0024",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 11
+   },
+   {
+    "id": "E01-023",
+    "item": "1.2 › Ordem",
+    "unidade": "LIB-0090",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E01-024",
+    "item": "1.2 › Combinação, Normalização, Arredondamento",
+    "unidade": "LIB-0091",
+    "situacao": "EXATA",
+    "palavras": 24
+   },
+   {
+    "id": "E01-025",
+    "item": "1.2 › Corte",
+    "unidade": "LIB-0092",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E01-026",
+    "item": "1.2 › Empate no corte",
+    "unidade": "LIB-0093",
+    "situacao": "EXATA",
+    "palavras": 17
+   },
+   {
+    "id": "E01-027",
+    "item": "1.2 › Continuação",
+    "unidade": "LIB-0124",
+    "situacao": "EXATA",
+    "palavras": 10
+   },
+   {
+    "id": "E01-028",
+    "item": "2",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E01-029",
+    "item": "2, frase gerada",
+    "unidade": "LIB-0034",
+    "situacao": "EXATA",
+    "palavras": 10
+   },
+   {
+    "id": "E01-030",
+    "item": "3",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 6
+   },
+   {
+    "id": "E01-031",
+    "item": "3, grupo 1",
+    "unidade": "LIB-0035",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E01-032",
+    "item": "3, grupo 1, a",
+    "unidade": "LIB-0036",
+    "situacao": "SEMELHANTE",
+    "palavras": 13
+   },
+   {
+    "id": "E01-033",
+    "item": "3, grupo 2",
+    "unidade": "LIB-0101",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 9
+   },
+   {
+    "id": "E01-034",
+    "item": "3, grupo 2, a",
+    "unidade": "LIB-0038",
+    "situacao": "SEMELHANTE",
+    "palavras": 12
+   },
+   {
+    "id": "E01-035",
+    "item": "3, grupo 3",
+    "unidade": "LIB-0041",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 10
+   },
+   {
+    "id": "E01-036",
+    "item": "3, grupo 3, a",
+    "unidade": "LIB-0042",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 11
+   },
+   {
+    "id": "E01-037",
+    "item": "4",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 4
+   },
+   {
+    "id": "E01-038",
+    "item": "4.1",
+    "unidade": "LIB-0108",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 16
+   },
+   {
+    "id": "E01-039",
+    "item": "4.2",
+    "unidade": "LIB-0108",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E01-040",
+    "item": "4.3",
+    "unidade": "LIB-0046",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 9
+   },
+   {
+    "id": "E01-041",
+    "item": "5",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 2
+   },
+   {
+    "id": "E01-042",
+    "item": "5, Tabela 5 (cabeçalho)",
+    "unidade": "LIB-0049",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 8
+   },
+   {
+    "id": "E01-043",
+    "item": "5, Evento 1",
+    "unidade": "LIB-0050",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 18
+   },
+   {
+    "id": "E01-044",
+    "item": "5, Evento 2",
+    "unidade": "LIB-0114",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 14
+   },
+   {
+    "id": "E01-045",
+    "item": "5, Evento 3",
+    "unidade": "LIB-0057",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 12
+   },
+   {
+    "id": "E01-046",
+    "item": "6",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 3
+   },
+   {
+    "id": "E01-047",
+    "item": "6, frase gerada",
+    "unidade": "LIB-0064",
+    "situacao": "EXATA",
+    "palavras": 10
+   },
+   {
+    "id": "E01-048",
+    "item": "6, declaração",
+    "unidade": "LIB-0065",
+    "situacao": "SEMELHANTE",
+    "palavras": 42
+   },
+   {
+    "id": "E01-049",
+    "item": "7",
+    "unidade": "LIB-0005",
+    "situacao": "EXATA",
+    "palavras": 2
+   },
+   {
+    "id": "E01-050",
+    "item": "7, relação",
+    "unidade": "LIB-0067",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 14
+   },
+   {
+    "id": "E01-051",
+    "item": "Fecho",
+    "unidade": "LIB-0069",
+    "situacao": "EXATA",
+    "palavras": 7
+   },
+   {
+    "id": "E01-052",
+    "item": "Autoridade",
+    "unidade": "LIB-0070",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 5
+   },
+   {
+    "id": "E01-053",
+    "item": "Verificação de integridade",
+    "unidade": "LIB-0071",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 28
+   },
+   {
+    "id": "E01-054",
+    "item": "Rodapé (todas as páginas)",
+    "unidade": "LIB-0072",
+    "situacao": "PARAMETRIZÁVEL",
+    "palavras": 39
+   }
+  ]
+ },
+ "metricas": {
+  "unidades": 126,
+  "ocorrencias": 374,
+  "novas_por_edital": {
+   "91/2026": 72,
+   "92/2026": 49,
+   "01/2026": 4
+  },
+  "unidades_por_numero_de_editais": {
+   "1": 69,
+   "2": 31,
+   "3": 24
+  },
+  "palavras": 5801,
+  "palavras_em_unidade_recorrente_em_outro_edital": 0.72,
+  "palavras_com_texto_identico_em_outro_edital": 0.08,
+  "palavras_por_classificacao": {
+   "EXATA": 581,
+   "PARAMETRIZÁVEL": 3510,
+   "SEMELHANTE": 860,
+   "INÉDITA": 787,
+   "ESPECIALIZADA": 45
+  }
+ }
+}

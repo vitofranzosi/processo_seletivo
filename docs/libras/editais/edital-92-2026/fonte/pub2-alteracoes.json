@@ -1,0 +1,11 @@
+{
+ "justificativa": "Retirada da seção de atendimento à pessoa com deficiência.",
+ "vigencia": "None",
+ "alteracoes": [
+  {
+   "path": "/sections/id=1f13ba5e-a5ee-5429-b6f9-42b9624a37c8/content",
+   "op": "REPLACE",
+   "novo": ""
+  }
+ ]
+}

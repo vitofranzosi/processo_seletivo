@@ -1,0 +1,165 @@
+{
+ "descricao": "Entradas da sondagem de recorrência em editais reais do Cefor (viabilidade.md, §3). Os PDFs não estão no repositório: são os da amostra do projeto, em ~/Downloads na máquina da análise, e são públicos nos sítios do Cefor e do Ifes. 'familia' agrupa editais que copiam um ao outro (vagas remanescentes, mesmo curso em anos diferentes).",
+ "editais": [
+  {
+   "codigo": "R01",
+   "edital": "140/2025",
+   "arquivo": "EDITAL 140.2025 – SELEÇÃO DE CADASTRO DE RESERVA DE TUTOR PRESENCIAL .docx.pdf",
+   "familia": null,
+   "paginas": 27,
+   "palavras_extraidas": 6896
+  },
+  {
+   "codigo": "R02",
+   "edital": "35/2026",
+   "arquivo": "EDITAL Nº 35 _2026 – EDITAL CURSO DE PÓS-GRADUAÇÃO ESPECIALIZAÇÃO EM EDUCAÇÃO ESPECIAL INCLUSIVA_formatado16.04-mesclado.pdf",
+   "familia": null,
+   "paginas": 24,
+   "palavras_extraidas": 8520
+  },
+  {
+   "codigo": "R03",
+   "edital": "77/2026",
+   "arquivo": "EDITAL Nº 77_2026 – VAGAS REMANESCENTES DO CURSO FIC ACESSIBILIZAÇÃO  PEDAGÓGICA E METODOLÓGICA_retificado em 26.08.2026.pdf",
+   "familia": "fic-remanescentes",
+   "paginas": 9,
+   "palavras_extraidas": 3066
+  },
+  {
+   "codigo": "R04",
+   "edital": "58/2026",
+   "arquivo": "EDITAL UNIFICADO N-58-2026–CURSOS-DE-FORMACAO-INICIAL-E-CONTINUADA-02-2026-RETIFICADO-EM-06-07-2026.pdf",
+   "familia": "fic-unificado",
+   "paginas": 10,
+   "palavras_extraidas": 3753
+  },
+  {
+   "codigo": "R05",
+   "edital": "62/2026",
+   "arquivo": "EDITAL-62_2026-Selecao-Mediador-Pedagogico-TSE.pdf",
+   "familia": null,
+   "paginas": 8,
+   "palavras_extraidas": 0
+  },
+  {
+   "codigo": "R06",
+   "edital": "59/2026",
+   "arquivo": "EDITAL-N-59-2026–CURSO-LINGUA-BRASILEIRA-DE-SINAIS-LIBRAS-INICIANTE-A1-retificado-em-30-07-2026.pdf",
+   "familia": "libras-a1",
+   "paginas": 11,
+   "palavras_extraidas": 3339
+  },
+  {
+   "codigo": "R07",
+   "edital": "78/2026",
+   "arquivo": "EDITAL-N78-2026–VAGAS-REMANESCENTES-CURSO-LINGUA-BRASILEIRA-DE-SINAIS-LIBRAS-INICIANTE-A1.pdf",
+   "familia": "libras-a1",
+   "paginas": 11,
+   "palavras_extraidas": 3348
+  },
+  {
+   "codigo": "R08",
+   "edital": "57/2026",
+   "arquivo": "EDITAL-UNIFICADO-N-57-2026–CURSOS-DE-APERFEICOAMENTO-DO-CEFOR-02-2026-retificado.pdf",
+   "familia": null,
+   "paginas": 23,
+   "palavras_extraidas": 8941
+  },
+  {
+   "codigo": "R09",
+   "edital": "14/2026",
+   "arquivo": "EDITAL_14.2026_-_PROCESSO_DE_SELEÇÃO_DE_ORIENTADOR_DE_TFC_GESTÃO_EPT.pdf",
+   "familia": null,
+   "paginas": 17,
+   "palavras_extraidas": 4940
+  },
+  {
+   "codigo": "R10",
+   "edital": "173/2025",
+   "arquivo": "EDITAL_Nº_173_2025_-_SELEÇÃO_DE_CADASTRO_DE_RESERVA_DE_DESIGNER_EDUCACIONAL_-_PÓS-GRADUAÇÃO_LATO_SENSU_EM_ROCHAS_ORNAMENTAIS_RETIFICADO.pdf",
+   "familia": null,
+   "paginas": 18,
+   "palavras_extraidas": 5427
+  },
+  {
+   "codigo": "R11",
+   "edital": "28/2026",
+   "arquivo": "Edital 28.2026 CURSO PÓS-GRADUAÇÃO LATO SENSU EM INFORMÁTICA NA EDUCAÇÃO NA MODALIDADE EaD DO IFES_CEFOR_retificado em 24.08.2026.pdf",
+   "familia": "infoedu",
+   "paginas": 23,
+   "palavras_extraidas": 8593
+  },
+  {
+   "codigo": "R12",
+   "edital": "89/2026",
+   "arquivo": "Edital 89.2026 - Mediadores (TADS) .docx.pdf",
+   "familia": "tads",
+   "paginas": 26,
+   "palavras_extraidas": 7180
+  },
+  {
+   "codigo": "R13",
+   "edital": "90/2026",
+   "arquivo": "Edital 90.2026 - Tutor (TADS).docx (1).pdf",
+   "familia": "tads",
+   "paginas": 26,
+   "palavras_extraidas": 7148
+  },
+  {
+   "codigo": "R14",
+   "edital": "69/2026",
+   "arquivo": "Edital-69-2026-Chamada-Publica-para-Cadastramento-e-Selecao-Curso-Tecnico-Subsequente-em-Multimeios-Didaticos.pdf",
+   "familia": "tecnico-subsequente",
+   "paginas": 8,
+   "palavras_extraidas": 1843
+  },
+  {
+   "codigo": "R15",
+   "edital": "76/2026",
+   "arquivo": "Edital-76-2026-Chamada-Publica-para-Cadastro-de-reserva-e-Selecao-Curso-Tecnico-Subsequente-em-Secretaria-Escolar_retificado em 24.08.2026.pdf",
+   "familia": "tecnico-subsequente",
+   "paginas": 7,
+   "palavras_extraidas": 1832
+  },
+  {
+   "codigo": "R16",
+   "edital": "146/2025",
+   "arquivo": "Edital_146.2025_-_Assistente_Pedagógico_-_Equipe_UAB.docx.pdf",
+   "familia": null,
+   "paginas": 15,
+   "palavras_extraidas": 3731
+  },
+  {
+   "codigo": "R17",
+   "edital": "149/2024",
+   "arquivo": "Edital_149.2024_CURSO_PÓS-GRADUAÇÃO_LATO_SENSU_EM_INFORMÁTICA_NA_EDUCAÇÃO_NA_MODALIDADE_EaD_DO_IFES_CEFOR_retificado_em_31.01.2025-.pdf",
+   "familia": "infoedu",
+   "paginas": 24,
+   "palavras_extraidas": 7798
+  },
+  {
+   "codigo": "R18",
+   "edital": "158/2024",
+   "arquivo": "EDITAL__Nº_158_2024__EDITAL_DE_VAGAS_REMANESCENTES_CURSO_FIC_EDUCAÇÃO_ESPECIAL_NA_PERSPECTIVA_DA_EDUCAÇÃO_INCLUSIVA_retificado_em_31.01.2025.pdf",
+   "familia": "fic-remanescentes",
+   "paginas": 8,
+   "palavras_extraidas": 2499
+  },
+  {
+   "codigo": "R19",
+   "edital": "125/2024",
+   "arquivo": "EDITAL_UNIFICADO_Nº_1252024__CURSOS_DE_FORMAÇÃO_INICIAL_E_CONTINUADA_retificado_12.11_final.pdf",
+   "familia": "fic-unificado",
+   "paginas": 13,
+   "palavras_extraidas": 4663
+  },
+  {
+   "codigo": "R20",
+   "edital": "73/2026",
+   "arquivo": "Edital-73-2026.pdf",
+   "familia": null,
+   "paginas": 27,
+   "palavras_extraidas": 0
+  }
+ ]
+}
