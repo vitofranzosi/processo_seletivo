@@ -62,8 +62,14 @@ def onde_secao(secao) -> str:
     return f"Seção “{secao.get('title', '')}”"
 
 
+def nome_do_evento(evento) -> str:
+    """O Evento como o documento o imprime na coluna "Evento": a descrição, e o tipo só sem ela
+    (`pdf._cronograma`). Pelo tipo, quem conferia no PDF não achava o nome (validação de 12/10)."""
+    return evento.get("description") or evento.get("type") or ""
+
+
 def onde_evento(evento) -> str:
-    return f"Cronograma — evento “{evento.get('type') or evento.get('description') or ''}”"
+    return f"Cronograma — evento “{nome_do_evento(evento)}”"
 
 
 def onde_documento(documento) -> str:

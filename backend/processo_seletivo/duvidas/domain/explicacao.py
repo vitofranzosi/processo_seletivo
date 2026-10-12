@@ -24,6 +24,8 @@ def plural(quantidade, singular, plural_):
 
 
 def encaminhar(canal_em_palavras: str) -> str:
+    if not canal_em_palavras:
+        return "Nem o Edital nem a implantação informam um canal para dúvidas."
     return f"Em caso de dúvida, procure {canal_em_palavras}."
 
 
@@ -76,6 +78,10 @@ def vagas(codigo, total, total_legivel, linhas, reserva, limite) -> str:
     if total is None:
         # Ausente não é zero (`FR-1422`): o cartão diz "não declarado", e a frase também.
         frase = f"O Edital não declara a quantidade de vagas imediatas do Perfil {codigo}."
+    elif total == 0 and reserva in ("LIMITED", "UNLIMITED"):
+        # Sem vaga imediata e com reserva, a seleção existe: forma o cadastro. "Não tem vagas"
+        # sozinho se lia como "não há seleção" (validação de 12/10).
+        frase = f"O Perfil {codigo} não tem vagas imediatas: a seleção forma cadastro de reserva."
     elif total == 0:
         frase = f"O Perfil {codigo} não tem vagas imediatas."
     else:

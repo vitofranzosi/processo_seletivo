@@ -43,8 +43,9 @@ Nenhum `403` novo: não há capacidade nova (`D-010`).
    modalidade (nativos) e o botão "Ver a resposta".
 5. **Resposta**, numa região com `aria-live="polite"` e foco movido para o título dela (`UX-204`):
    1. o aviso de mudança de versão, se houver (`UX-201`);
-   2. a versão: "Versão vigente desde {data} · publicada em {data} · retificada em {datas} ·
-      identificador {12 hex}";
+   2. a versão: "Versão vigente desde {data e hora} · publicada em {data e hora} · retificada em
+      {datas e horas} · identificador {12 hex}". Com a hora, porque atos do mesmo dia ficavam
+      indistinguíveis ("retificada em 12/10/2026 e em 12/10/2026");
    3. o tipo, em palavras (`UX-202`);
    4. os avisos;
    5. a explicação, rotulada "Explicação — produzida pelo sistema a partir das fontes abaixo; não é

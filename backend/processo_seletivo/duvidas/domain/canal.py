@@ -93,7 +93,9 @@ def canal(conteudo, canal_institucional: str = "") -> Canal:
 def em_palavras(canal_encontrado: Canal) -> str:
     """O canal para a explicação que encaminha (`FR-1423`)."""
     if not canal_encontrado.contatos:
-        return "o atendimento institucional"
+        # Sem canal nenhum, não há a quem encaminhar: "procure o atendimento institucional"
+        # mandava a um canal que a própria P-11 diz não existir (`FR-1441`, validação de 12/10).
+        return ""
     if canal_encontrado.divergente:
         return "um dos canais que o Edital informa, mostrados abaixo"
     if canal_encontrado.origem == CANAL_INSTITUCIONAL:

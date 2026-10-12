@@ -23,6 +23,7 @@ from tests.fixtures.corpus import conteudo, contexto_do_corpus
 from tests.unit.duvidas.conftest import em
 
 DEPOIS_DAS_RETIFICACOES = em("2026-10-20T12:00:00-03:00")
+SEM_CANAL = "Nem o Edital nem a implantação informam um canal para dúvidas."
 
 
 def responder_no_corpus(nome, codigo, instante=DEPOIS_DAS_RETIFICACOES, **parametros):
@@ -212,7 +213,9 @@ def test_ca10_tec_lab_depende_da_leitura_pelo_evento_que_fala_de_recurso():
     assert resposta.tipo == DEPENDE_DA_LEITURA
     assert "Resultado final e abertura do prazo recursal." in textos(resposta)
     assert "não cabe" not in resposta.explicacao.conteudo
-    assert "procure" in resposta.explicacao.conteudo
+    # O corpus não tem canal: o encaminhamento diz que não há, e não manda a atendimento nenhum
+    # (`FR-1441`; o caso com canal está em `test_casos_da_revisao.py`).
+    assert SEM_CANAL in resposta.explicacao.conteudo
 
 
 def test_ca10_ausencia_pura_e_o_edital_nao_informa_e_nunca_nao_cabe():
@@ -225,7 +228,7 @@ def test_ca10_ausencia_pura_e_o_edital_nao_informa_e_nunca_nao_cabe():
     assert resposta.tipo == NAO_INFORMA
     assert "não cabe" not in resposta.explicacao.conteudo.replace("não caiba", "")
     assert "Isso não quer dizer que não caiba" in resposta.explicacao.conteudo
-    assert "procure" in resposta.explicacao.conteudo
+    assert SEM_CANAL in resposta.explicacao.conteudo
 
 
 def test_negativa_declarada_e_dado_e_dita_como_o_edital_a_declara():

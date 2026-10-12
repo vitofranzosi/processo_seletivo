@@ -1,4 +1,5 @@
 {% extends "interface/base.html" %}
+{% load interface_extras %}
 {% block titulo %}Respostas do assistente de dúvidas — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block estilo_da_pagina %}
 {% comment %} As regras desta tela, e só dela (070, contracts/tela.md). O grupo das perguntas quebra
@@ -119,7 +120,7 @@
     {% for ato in resposta.mudanca.sem_efeito %}Não aplica a Retificação publicada em {{ ato.publicado_em|date:"d/m/Y" }}, vigente desde {{ ato.vigente_desde|date:"d/m/Y" }}. {% endfor %}
     A resposta anterior se referia à outra versão; nada dela é reaproveitado.</p>
   {% endif %}
-  <p class="versao">Versão vigente desde {{ resposta.versao.vigente_desde|date:"d/m/Y" }} · publicada em {{ resposta.versao.publicada_em|date:"d/m/Y" }}{% if resposta.versao.retificacoes %} · retificada em {% for publicada, vigente in resposta.versao.retificacoes %}{{ publicada|date:"d/m/Y" }}{% if not forloop.last %} e em {% endif %}{% endfor %}{% endif %} · identificador {{ resposta.versao.identificador_curto }}</p>
+  <p class="versao">Versão vigente desde {{ resposta.versao.vigente_desde|instante }} · publicada em {{ resposta.versao.publicada_em|instante }}{% if resposta.versao.retificacoes %} · retificada em {% for publicada, vigente in resposta.versao.retificacoes %}{{ publicada|instante }}{% if not forloop.last %} e em {% endif %}{% endfor %}{% endif %} · identificador {{ resposta.versao.identificador_curto }}</p>
   <p class="tipo">{% for chave, rotulo in rotulo_do_tipo.items %}{% if chave == resposta.tipo %}{{ rotulo }}{% endif %}{% endfor %}</p>
   {% for aviso in resposta.avisos %}
   <p class="aviso">{{ aviso.texto }}{% for link in aviso.links %} <a href="{{ link.url }}">{{ link.rotulo }}</a>{% endfor %}</p>

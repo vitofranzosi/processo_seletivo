@@ -309,3 +309,66 @@ def test_cadastro_de_reserva_limite_e_reversao_vem_em_palavras():
     reversao = _dados(inf_bjn)["Reverter vaga reservada não preenchida para a ampla concorrência"]
     assert reversao.conteudo == rotulos.em_palavras(rotulos.REVERSAO, "ON_EXHAUSTION")
     assert "não forma cadastro de reserva" in inf_bjn.explicacao.conteudo
+
+
+# ---- a validação de correção e referências de 12/10 (verificacao.md §6) ----------------------
+
+
+def test_sem_canal_nenhum_nao_encaminha_a_atendimento_que_nao_existe():
+    contexto = contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA)
+    sem_canal = responder(contexto, "P-08", perfil="TEC-LAB").explicacao.conteudo
+    assert "atendimento institucional" not in sem_canal
+    assert "Nem o Edital nem a implantação informam um canal para dúvidas." in sem_canal
+
+    com_canal = responder(
+        replace(contexto, canal_institucional="selecao@ifes.edu.br"), "P-08", perfil="TEC-LAB"
+    ).explicacao.conteudo
+    assert "procure o canal institucional (selecao@ifes.edu.br)" in com_canal
+
+
+def test_o_evento_e_nomeado_como_o_documento_o_imprime():
+    contexto = contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA)
+    evento = next(e for e in contexto.conteudo["schedule"] if e["isRegistrationPeriod"])
+    resposta = responder(contexto, "P-01")
+    assert {r.localizacao for r in resposta.referencias} == {
+        f"Cronograma — evento “{evento['description']}”"
+    }
+
+
+def test_a_etapa_decisoria_traz_os_rotulos_do_edital():
+    contexto = contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA)
+    decisoria = next(e for e in contexto.conteudo["stages"] if e.get("forma") == "DECISORIA")
+    textos = {
+        r.rotulo: r.conteudo
+        for r in responder(contexto, "P-07", perfil="DOC-INFO").referencias
+        if decisoria["name"] in r.localizacao
+    }
+    assert textos["Forma"] == "decisória"
+    assert textos["Resultado favorável"] == decisoria["rotuloFavoravel"]
+    assert textos["Resultado desfavorável"] == decisoria["rotuloDesfavoravel"]
+
+
+def test_o_documento_de_cada_retificacao_diz_o_que_contem_sem_se_contar():
+    contexto = contexto_do_corpus("01", em("2026-10-28T12:00:00-03:00"))
+    conteudos = [
+        r.conteudo for r in responder(contexto, "P-12").referencias if r.rotulo == "Publicado em"
+    ]
+    primeira = leitura.instante_legivel(contexto.atos[1].publicado_em)
+    assert conteudos[1].endswith("contém a publicação original e esta Retificação")
+    assert conteudos[2].endswith(
+        f"contém a publicação original, a Retificação publicada em {primeira} e esta"
+    )
+
+
+def test_perfil_so_de_reserva_diz_que_a_selecao_forma_cadastro():
+    resposta = responder(
+        contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA), "P-03", perfil="TEC-LAB"
+    )
+    assert resposta.explicacao.conteudo.startswith(
+        "O Perfil TEC-LAB não tem vagas imediatas: a seleção forma cadastro de reserva."
+    )
+
+
+def test_a_explicacao_das_datas_nao_tem_ponto_duplo():
+    explicacao = responder(contexto_do_corpus("01", ANTES_DA_VIGENCIA_FUTURA), "P-02").explicacao
+    assert ".”" not in explicacao.conteudo

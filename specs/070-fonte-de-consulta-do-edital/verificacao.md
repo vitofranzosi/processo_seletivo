@@ -20,7 +20,7 @@ vigência futura de 15 dias. Nada foi feito por banco ou shell, só pela tela.
 | 3 | `P-01` no presente | "As inscrições estão abertas até 01/11/2026, às 14h36." O aviso diz que a Retificação já publicada prorroga para 11/11/2026 a partir de 27/10/2026. A descrição literal traz "isenção de taxa até o 5º dia". O início leva à **publicação original** |
 | 4 | `P-01` em 28/10/2026, com a versão da resposta anterior | O aviso "Este Edital mudou desde a resposta anterior" vem **antes** da versão. A resposta diz 11/11/2026; o término leva ao documento **da Retificação** vigente desde 27/10/2026, e o início continua na original |
 | 5 | `P-03` do Professor de Informática | "3 vagas imediatas: 2 de ampla concorrência, 1 na modalidade PPP." O total e a ampla concorrência levam à primeira Retificação; a linha PPP, à original. Cadastro de reserva limitado a 6 |
-| 6 | `P-08` do Técnico de Laboratório | "Depende da leitura do Edital", com o Evento "Resultado final e abertura do prazo recursal" inteiro. A explicação não diz que não cabe recurso e encaminha ao atendimento institucional |
+| 6 | `P-08` do Técnico de Laboratório | "Depende da leitura do Edital", com o Evento "Resultado final e abertura do prazo recursal" inteiro. A explicação não diz que não cabe recurso e encaminha ao atendimento institucional. *Depois da validação de 12/10 (§6): sem canal configurado na demonstração, diz que nem o Edital nem a implantação informam um canal* |
 | 7 | Os links dos cartões | Os dois documentos de ato e o cronograma da página pública respondem 200, os documentos como `application/pdf`. Nenhum link se chama "Edital completo" |
 | 8 | 375 px de largura | `scrollWidth` = `clientWidth` = 375, sem elemento além da borda. Captura feita na sessão |
 | 9 | 1280 × 900 | Resposta da `P-08` legível, com os três rótulos de natureza em palavras. Captura feita na sessão |
@@ -66,10 +66,10 @@ O número de consultas ao banco por resposta é preso por teste (`R-019`). São 
 |---|---|
 | `ruff check` e `ruff format --check` | limpos, 1427 arquivos |
 | `manage.py check` e `makemigrations --check` | sem problema, nenhuma migration |
-| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5) |
-| pulados | **11**, os mesmos onze nas duas; os testes da `070` não pulam nada |
-| falhas e erros | nenhum nas duas |
-| tempo | 1256s; 1213s depois da revisão |
+| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5); **10606** depois da validação (§6) |
+| pulados | **11**, os mesmos onze nas três; os testes da `070` não pulam nada |
+| falhas e erros | nenhum nas três |
+| tempo | 1256s; 1213s depois da revisão; 1244s depois da validação |
 
 O `makemigrations --check` avisa que o banco `ps_070` não existe — é o banco de desenvolvimento,
 que esta worktree não criou; a suíte usa o de teste. Não é do diff.
@@ -115,8 +115,9 @@ A revisão é do setor, e não do agente. O que levar a ela:
    (`duvidas/domain/cobertura.py`, `SEM_PERGUNTA`):
    - as atribuições do Perfil;
    - a descrição do Edital;
-   - os rótulos da Etapa decisória;
    - as regras de convocação da modalidade.
+
+   Os rótulos da Etapa decisória, que estavam nesta lista, passaram à `P-07` na validação (§6).
 
    Decidir se entram numa pergunta, nova ou existente.
 
@@ -169,4 +170,28 @@ em `tests/unit/duvidas/test_casos_da_revisao.py`.
 
 **Ficou registrado, e não corrigido:** a heurística do canal (item 4 da seção 3), que é das listas
 de `R-011`.
+
+## 6. Validação de correção e referências (12/10/2026)
+
+Feita pelo agente, a pedido do usuário, no Edital 01/2026 do banco de demonstração: cada valor das
+respostas conferido contra o PDF do ato a que o cartão leva (os três atos, por `pdftotext`), em todas
+as perguntas e nos dois Perfis. **Não substitui a T046**: a linguagem para o candidato, a pertinência
+e as decisões de regra continuam com o setor.
+
+**Correto.** Todos os valores e textos conferem com o documento. Cada valor leva ao ato que o fixou:
+as vagas do DOC-INFO à 1ª Retificação (2 → 3, ampla 1 → 2), a vaga PPP e a reserva à original. Em
+28/10, o término leva à 2ª Retificação, cujo documento contém o 11/11 e as vagas da 1ª. O anexo: a
+autodeclaração do 01/2026 leva ao Anexo I pelo vínculo; a `P-07` do 92/2026 avisa o Anexo IV, que a
+consulta não lê (pela camada de conteúdo, porque o 92/2026 não está no banco de demonstração).
+
+| Observação | Tipo | O que se fez |
+|---|---|---|
+| Sem canal nenhum, as respostas mandavam "procurar o atendimento institucional", que a `P-11` dizia não existir | Erro factual (`FR-1441`) | "Nem o Edital nem a implantação informam um canal para dúvidas." |
+| O Evento era nomeado pelo tipo ("Prova objetiva"), que o cronograma do PDF não imprime | Redação | Pela descrição, como o documento |
+| A Etapa decisória dizia "favorável ou desfavorável"; o Edital diz "Deferido ou Indeferido" | Redação | Os rótulos do Edital, em cartão de texto |
+| Na `P-02`, a descrição do Evento terminada em ponto dava "“…dia.”." | Redação | Sem o ponto final dentro da frase |
+| `P-12`: "as Retificações publicadas em X" para uma só, contando o próprio ato | Redação | Singular e plural, e "esta" à parte |
+| "retificada em 12/10/2026 e em 12/10/2026" | Redação | Data e hora na linha da versão |
+| Perfil só de reserva: "não tem vagas imediatas" lia-se como "não há seleção" | Redação | "…: a seleção forma cadastro de reserva." |
+| A `P-07` do 92/2026 é "Respondida" com os critérios de pontuação no Anexo IV, que a consulta não lê | **Regra** | Não mudou: decisão do usuário com o setor — se a resposta cujo essencial está em anexo deve ser "Depende da leitura" |
 

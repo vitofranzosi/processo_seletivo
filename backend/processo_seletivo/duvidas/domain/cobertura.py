@@ -176,8 +176,8 @@ COBERTURA = {
     "/stages/*/evaluationsPerRegistration": excluido(
         "quantas avaliações cada inscrição recebe é organização interna da banca"
     ),
-    "/stages/*/rotuloFavoravel": SEM_PERGUNTA,
-    "/stages/*/rotuloDesfavoravel": SEM_PERGUNTA,
+    "/stages/*/rotuloFavoravel": ("P-07",),
+    "/stages/*/rotuloDesfavoravel": ("P-07",),
     "/stages/*/scheduleEventId": excluido(
         "vínculo entre Etapa e Evento; a data da Etapa aparece pelo cronograma"
     ),

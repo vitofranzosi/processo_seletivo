@@ -100,6 +100,8 @@ def test_a_resposta_traz_versao_tipo_e_os_tres_rotulos_em_palavras(client, edita
     assert 'aria-live="polite"' in corpo
     assert 'id="titulo-resposta" tabindex="-1" autofocus' in corpo
     assert "Versão vigente desde" in corpo
+    # Com a hora: atos do mesmo dia eram indistinguíveis só pela data (validação de 12/10).
+    assert re.search(r"publicada em \d{2}/\d{2}/\d{4} \d{2}:\d{2}", corpo)
     assert "Respondida pelos dados" in corpo
     for rotulo in ("Texto do Edital", "Dado da versão vigente", "Explicação"):
         assert rotulo in corpo

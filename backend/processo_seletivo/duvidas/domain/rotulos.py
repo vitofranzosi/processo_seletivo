@@ -79,7 +79,8 @@ QUANDO_FALTA = {
 
 FORMA_DA_ETAPA = {
     "PONTUADA": "pontuada",
-    "DECISORIA": "decisória (favorável ou desfavorável)",
+    # Os rótulos do resultado vêm em cartão próprio, nas palavras do Edital (`_cartoes_da_etapa`).
+    "DECISORIA": "decisória",
 }
 
 UNIDADE_DO_PRAZO = {

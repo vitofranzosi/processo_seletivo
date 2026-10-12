@@ -94,9 +94,14 @@ Escrita por `duvidas/domain/explicacao.py`, em linguagem simples, com só valore
 | `P-01` futuro | "As inscrições começam em {início} e vão até {término}." |
 | `P-01` encerrado | "O período de inscrições terminou em {término}." |
 | `P-03` | "O Perfil {código} tem {total} vagas imediatas: {n} de ampla concorrência{, n na modalidade X…}. {Cadastro de reserva: …}" |
+| `P-03`, só reserva | "O Perfil {código} não tem vagas imediatas: a seleção forma cadastro de reserva. {Cadastro de reserva: …}" |
 | `P-08`, dependente | "O Edital trata de recurso em mais de um lugar, mostrados abaixo. Esta consulta não os concilia; em caso de dúvida, procure {canal}." |
 | `P-08`, não informa | "O Edital não traz informação sobre recurso contra este resultado. Isso não quer dizer que não caiba; procure {canal}." |
 | `P-11`, divergente | "O Edital informa mais de um canal para dúvidas, mostrados abaixo." |
+| Sem canal nenhum, onde as formas acima dizem "procure {canal}" | "Nem o Edital nem a implantação informam um canal para dúvidas." (`FR-1441`) |
+
+O Evento é nomeado como o documento o imprime na coluna "Evento" do cronograma: pela descrição, e
+pelo tipo só quando não há descrição.
 
 **Proibido na explicação:**
 

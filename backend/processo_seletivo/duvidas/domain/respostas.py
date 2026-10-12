@@ -142,7 +142,8 @@ def _p02(contexto, parametros, pergunta, canal):
     em_andamento, por_vir = [], []
     for evento, _inicio, _fim, fase in pendentes:
         rascunho.referencias.extend(_com_links(_cartoes_do_evento(evento), links))
-        nome = f"“{evento.get('type') or evento.get('description') or ''}”"
+        # Sem o ponto final da descrição: dentro da frase, "“…dia.”." punha ponto duplo.
+        nome = f"“{leitura.nome_do_evento(evento).rstrip('.')}”"
         (em_andamento if fase == "EM_ANDAMENTO" else por_vir).append(nome)
     if contexto.desfecho is not None and contexto.desfecho.do_edital:
         # O desfecho prevalece sobre o cronograma (`FR-1429`), como na `P-01`: o Edital cancelado
@@ -449,6 +450,24 @@ def _cartoes_da_etapa(etapa):
             rotulos.em_palavras(rotulos.FORMA_DA_ETAPA, etapa.get("forma")),
         )
     )
+    if etapa.get("forma") == "DECISORIA":
+        # Os rótulos **deste** Edital ("Deferido", "Indeferido"), como o documento os imprime; o
+        # genérico "favorável ou desfavorável" só quando o Edital não os declara (`pdf.py`).
+        _juntar(
+            cartoes,
+            leitura.texto(
+                onde,
+                f"{base}/rotuloFavoravel",
+                etapa.get("rotuloFavoravel"),
+                rotulo="Resultado favorável",
+            ),
+            leitura.texto(
+                onde,
+                f"{base}/rotuloDesfavoravel",
+                etapa.get("rotuloDesfavoravel"),
+                rotulo="Resultado desfavorável",
+            ),
+        )
     cartoes.append(
         leitura.dado(
             onde,
@@ -864,15 +883,26 @@ def _p11(contexto, parametros, pergunta, canal):
 
 
 def _descricao_do_que_contem(ato, atos_por_id):
+    """Singular e plural, e o próprio ato à parte: "as Retificações publicadas em X" para uma só,
+    e incluindo a própria, era o que a validação de 12/10 achou."""
     if ato.ato == "ORIGINAL":
         return "contém a publicação original"
-    retificacoes = [
+    anteriores = [
         atos_por_id[identificador]
         for identificador in ato.contem
-        if identificador in atos_por_id and atos_por_id[identificador].ato != "ORIGINAL"
+        if identificador in atos_por_id
+        and identificador != ato.publicacao_id
+        and atos_por_id[identificador].ato != "ORIGINAL"
     ]
-    datas = ", ".join(leitura.instante_legivel(item.publicado_em) for item in retificacoes)
-    return f"contém a publicação original e as Retificações publicadas em {datas}"
+    datas = [leitura.instante_legivel(item.publicado_em) for item in anteriores]
+    if not datas:
+        return "contém a publicação original e esta Retificação"
+    if len(datas) == 1:
+        return f"contém a publicação original, a Retificação publicada em {datas[0]} e esta"
+    return (
+        f"contém a publicação original, as Retificações publicadas em {', '.join(datas[:-1])} "
+        f"e em {datas[-1]}, e esta"
+    )
 
 
 def _p12(contexto, parametros, pergunta, canal):
