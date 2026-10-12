@@ -211,6 +211,9 @@ dois documentos guardados.
   MUST cair entre dois códigos, e nunca dentro de um. Quando algum código do grupo contém a vírgula
   ou o " e " da enumeração, todos os códigos do grupo MUST ir entre aspas — *"Atribuições comuns aos
   Perfis “Tutor e Mediador” e “TEC”"* —, para que o título não se leia como outra lista.
+  *Emendada pela `069` (FR-1368, FR-1374): no Edital por perguntas as atribuições saem na subseção
+  "Atribuições" de "Quantas vagas há, e onde?", uma vez por texto idêntico, com o grupo dito por
+  rótulo ("Para os Perfis TP-01 a TP-16:"). A apresentação plana continua a desta spec.*
 - **FR-1190**: Cada Perfil agrupado MUST trazer, no lugar e na posição do seu bloco de atribuições,
   o rótulo "Atribuições" seguido da remissão ao número da sua subseção comum — *"as descritas no item
   4.11."* —, e nenhum outro texto de atribuições. Perfil não agrupado MUST continuar trazendo o

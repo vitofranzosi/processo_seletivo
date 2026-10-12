@@ -139,6 +139,7 @@ from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     CARACTERE_SEM_GRAFIA,
     CODIGOS_DA_NUMERACAO_DIGITADA,
+    REMISSAO_PELO_TITULO,
     fatos_do_conteudo_publicado,
     validate_for_publication,
 )
@@ -735,8 +736,10 @@ DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
 # topologia.
 CODIGOS_DO_TEXTO_DA_SECAO = frozenset(
     {"attachment_cited_without_label", "section_universal_empty", CARACTERE_SEM_GRAFIA}
-    # A numeração digitada e as remissões (065) também se corrigem no texto da seção.
+    # A numeração digitada e as remissões (065) também se corrigem no texto da seção, e a remissão
+    # pelo título (069, R-013) também.
     | CODIGOS_DA_NUMERACAO_DIGITADA
+    | {REMISSAO_PELO_TITULO}
 )
 # O identificador da seção no caminho do achado: `/sections/id=<uuid>/content`.
 SECAO_DO_CAMINHO = re.compile(r"^/sections/id=([^/]+)/content$")
@@ -750,7 +753,7 @@ def _ancora_da_secao(caminho, codigo, chaves_das_secoes):
     desta feature: trocar o destino dos avisos que já existiam é melhoria à parte, e mudaria o que
     outras features prendem por teste.
     """
-    if codigo not in CODIGOS_DA_NUMERACAO_DIGITADA:
+    if codigo not in CODIGOS_DA_NUMERACAO_DIGITADA | {REMISSAO_PELO_TITULO}:
         return None
     encontrado = SECAO_DO_CAMINHO.match(caminho or "")
     chave = chaves_das_secoes.get(encontrado.group(1)) if encontrado else None
@@ -1781,6 +1784,11 @@ def compor_etapa(request, edital_id, etapa):
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
                 else forms.secoes_do_edital(edital, snapshot_da_etapa)
+            ),
+            # Na apresentação por perguntas o número vem do servidor, e o script da etapa não o
+            # reconta (069, R-003).
+            "numeracao_apresentada": (
+                etapa == "conteudo" and forms.numeracao_apresentada(snapshot_da_etapa)
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,

@@ -557,6 +557,16 @@ Todas mudam o documento **só dos Editais publicados depois** — documento publ
 - **ED-09:** endereço do certame garantido no documento (com decisão).
 - **ED-15, ED-16, ED-17, ED-18:** ajustes de composição, todos pequenos.
 
+> **Tratados depois desta auditoria.** ED-05, ED-07 (parte P), ED-08, ED-14, ED-16, ED-18, ED-22,
+> ED-24 e ED-25 pela `069` (`specs/069-edital-linguagem-simples/`), em 12/10/2026: as frases geradas
+> na redação 2, sem rótulos internos; os Editais novos organizados pelas perguntas do candidato, com
+> resumo e sumário; a fonte embutida (Edital Sans, da Liberation Sans 2.1.5, OFL 1.1), a hierarquia
+> tipográfica e o item de lista com recuo pendente; título, idioma, marcadores, links e nome do
+> arquivo no download; a última seção junto com o fecho. Os Editais publicados antes e os
+> consolidados deles mantêm a estrutura do original. **Continua aberto:** o PDF marcado (o arquivo
+> continua `Tagged: no`), o ED-06 e o ED-09. Os PDFs desta pasta continuam os da auditoria; os de
+> depois estão em `specs/069-…/demonstracao/`.
+
 ### 12.3 Opcionais
 
 - ED-14 (fontes embutidas), ED-19 (ordem declarada dos Perfis), ED-21 (descrição da Etapa),

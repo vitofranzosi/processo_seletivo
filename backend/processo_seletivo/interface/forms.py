@@ -829,6 +829,12 @@ def secoes_do_edital(edital, snapshot=None):
     """
     redigidas = {item.key: item.content for item in edital.secoes.all()}
     numeros = pdf.numeracao(snapshot) if snapshot is not None else {}
+    grupos = _grupos_sem_principal(snapshot)
+    etapas = _numeros_das_etapas(snapshot)
+    sai_sem_texto = _principais_que_saem_sem_texto(snapshot)
+    no_corpo = (
+        pdf._apresentacao().membros_no_corpo(snapshot) if numeracao_apresentada(snapshot) else {}
+    )
     return [
         {
             "key": secao.key,
@@ -840,11 +846,94 @@ def secoes_do_edital(edital, snapshot=None):
             "etapa_da_origem": ORIGEM.get(secao.source, ("", ""))[1],
             "content": redigidas.get(secao.key, ""),
             "numero": numeros.get(secao.key),
+            "rotulo_do_numero": (
+                ""
+                if secao.key in no_corpo
+                else etapas.get(secao.key) or rotulo_do_numero(numeros.get(secao.key))
+            ),
+            # O membro sozinho na seção sai como o corpo dela, sem subtítulo (069): a legenda
+            # diz isso, em vez de um "3. Público-alvo" que o documento não imprime.
+            "estado_apresentado": (
+                f" (sai como o texto de {no_corpo[secao.key]})" if secao.key in no_corpo else ""
+            ),
+            "grupo": grupos.get(secao.key, ""),
+            "sai_sem_texto": secao.key in sai_sem_texto,
             "norma": pdf.norma_acrescentada(secao.key, snapshot) if snapshot is not None else [],
             "preambulo": secao.key == pdf.SECAO_DE_PREAMBULO,
         }
         for secao in secoes.CATALOGO
     ]
+
+
+def rotulo_do_numero(numero):
+    """O número como a legenda o imprime: "3. " para a seção, "3.1 " para a subseção (069, R-003).
+
+    Igual ao documento: a seção leva ponto depois do número, e a subseção não. Vazio para a seção
+    que não sai e para o preâmbulo.
+    """
+    if not numero:
+        return ""
+    return f"{numero} " if "." in str(numero) else f"{numero}. "
+
+
+def numeracao_apresentada(snapshot):
+    """O documento deste conteúdo sai por perguntas? Então o número vem do servidor (069, R-003).
+
+    Na apresentação por perguntas, as seções se reúnem e o número não é a contagem das que saem: o
+    script da etapa, que recontava, passa a ler o número que o servidor calculou.
+    """
+    return snapshot is not None and pdf.por_perguntas(snapshot)
+
+
+def _grupos_sem_principal(snapshot):
+    """`{chave: "3. Quem pode se inscrever?"}` para o primeiro membro de cada seção reunida sem
+    texto próprio (069, FR-1368): a etapa Conteúdo mostra o título da pergunta antes da subseção
+    3.1, que sem ele apareceria sozinha."""
+    if not numeracao_apresentada(snapshot):
+        return {}
+    grupos = {}
+    for secao in pdf._apresentacao().plano(snapshot).secoes:
+        if secao.entrada.principal is not None:
+            continue
+        # O primeiro membro do catálogo, tenha ele texto ou não: a seção pode sair só pelo que o
+        # sistema gera nela (os requisitos dos Perfis), e o campo vazio ainda é onde o texto entra.
+        if secao.entrada.membros:
+            grupos[secao.entrada.membros[0]] = secao.rotulo
+    return grupos
+
+
+def _principais_que_saem_sem_texto(snapshot):
+    """As chaves principais cuja pergunta sai mesmo sem o texto delas (069, FR-1369).
+
+    "Como se inscrever?" sai pelo período de inscrições, "Como recorrer?" pelo recurso dos marcos:
+    a etapa Conteúdo diz que a seção sai — como diz da seção com norma acrescentada (054, UX-132) —,
+    e não "vazia — não sai no documento", que seria falso.
+    """
+    if not numeracao_apresentada(snapshot):
+        return set()
+    return {
+        secao.entrada.principal
+        for secao in pdf._apresentacao().plano(snapshot).secoes
+        if secao.entrada.principal
+        # O lembrete do Requerimento não conta: o plano só o imprime quando a seção existe por
+        # outra razão, e com ele só, esvaziar a principal tira a seção do documento.
+        and any(
+            parte.chave != secao.entrada.principal
+            and parte.lugar != secoes.LEMBRETE_DO_REQUERIMENTO
+            for parte in secao.partes
+        )
+    }
+
+
+def _numeros_das_etapas(snapshot):
+    """Na apresentação por perguntas a legenda das Etapas diz os números delas: "8.3 a 8.4 " (069).
+
+    "8. Etapas de avaliação" diria um item 8 que o documento dá à seleção inteira.
+    """
+    if not numeracao_apresentada(snapshot):
+        return {}
+    faixa = pdf._apresentacao().faixa_das_etapas(snapshot)
+    return {secoes.CHAVE_DAS_ETAPAS: f"{faixa} "} if faixa else {}
 
 
 # Como cada origem é lida por quem elabora, e onde ela se edita. A chave é a coleção do snapshot,

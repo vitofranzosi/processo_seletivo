@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 import pytest
@@ -1649,6 +1650,8 @@ def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
     o documento da Retificação agrupa só os dois que continuam iguais, e o terceiro traz o próprio
     texto. O que a Retificação mudou continua dito por Perfil e campo — nunca pela subseção, que só
     existe no documento.
+
+    **Desde a `069`**, a subseção é "Atribuições", e os grupos se dizem por rótulo (FR-1374).
     """
     from processo_seletivo.publicacoes.domain.alteracoes import alteracoes_legiveis
 
@@ -1657,7 +1660,11 @@ def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
     )
     original = Publicacao.objects.get(edital=edital, publication_order=1)
     bytes_do_original = bytes(original.documento.bytes)
-    assert "Atribuições comuns aos Perfis P1, P2 e P3" in texto_de(bytes_do_original)
+    # Na apresentação por perguntas (069, FR-1374), o texto igual sai uma vez na subseção
+    # "Atribuições", sem rótulo de grupo — e é a subseção da `064` dita de outro jeito.
+    texto_original = texto_de(bytes_do_original)
+    assert re.search(r"^\d+\.\d+ Atribuições$", texto_original, re.M)
+    assert "Para os Perfis" not in texto_original
 
     base = VersaoConsolidada.objects.get(edital=edital)
     terceiro = base.content["profiles"][2]
@@ -1684,8 +1691,8 @@ def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
     original.refresh_from_db()
     assert bytes(original.documento.bytes) == bytes_do_original
     retificado = texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes))
-    assert "Atribuições comuns aos Perfis P1 e P2" in retificado
-    assert "Atribuições comuns aos Perfis P1, P2 e P3" not in retificado
+    assert "Para os Perfis P1 e P2:" in retificado
+    assert "Para o Perfil P3 — Tutor Polo C:" in retificado
     assert "Orientar os estudantes nas atividades presenciais do polo." in retificado
 
     alteracoes = Retificacao.objects.get(pk=criada.data["id"]).alteracoes.all()
@@ -1706,6 +1713,9 @@ def test_a_retificacao_reagrupa_os_marcos_e_o_documento_original_nao_muda(
     Três Perfis de marcos idênticos publicam uma subseção comum de marcos. Retificado o prazo de
     recurso do marco do terceiro, o consolidado da Retificação agrupa só os dois que continuam
     iguais, e o terceiro imprime os próprios marcos, com o prazo novo.
+
+    **Desde a `069`**, o Edital novo sai por perguntas, e o recurso de cada marco mora em "Como
+    recorrer?" (FR-1369): o reagrupamento aparece ali, com o alcance dito pelo código.
     """
     rascunho = _tres_polos_de_mesmo_texto()
     # O código e o nome do marco são re-derivados do Perfil na duplicação (043, FR-644); aqui eles
@@ -1718,7 +1728,9 @@ def test_a_retificacao_reagrupa_os_marcos_e_o_documento_original_nao_muda(
     original = Publicacao.objects.get(edital=edital, publication_order=1)
     bytes_do_original = bytes(original.documento.bytes)
     texto_original = " ".join(texto_de(bytes_do_original).split())
-    assert "Marcos classificatórios comuns aos Perfis P1, P2 e P3" in texto_original
+    # Na apresentação por perguntas (069, FR-1369), o recurso sai em "Como recorrer?": uma frase
+    # só, sem alcance, quando os três marcos dizem o mesmo.
+    assert "Para os Perfis" not in texto_original.split("Como recorrer?")[-1]
 
     base = VersaoConsolidada.objects.get(edital=edital)
     terceiro = base.content["profiles"][2]
@@ -1752,7 +1764,8 @@ def test_a_retificacao_reagrupa_os_marcos_e_o_documento_original_nao_muda(
     retificado = " ".join(
         texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes)).split()
     )
-    assert "Marcos classificatórios comuns aos Perfis P1 e P2" in retificado
-    assert "Marcos classificatórios comuns aos Perfis P1, P2 e P3" not in retificado
-    assert "Marcos classificatórios — P3" in retificado
-    assert "no prazo de 9 (nove) dias corridos" in retificado
+    # Só o terceiro admite recurso agora: o alcance da frase é ele, pelo código (R6).
+    recorrer = retificado.split("Como recorrer?")[-1]
+    assert "Para o Perfil P3 — contra o resultado de" in recorrer
+    assert "no prazo de 9 (nove) dias corridos" in recorrer.split("Para o Perfil P3")[1]
+    assert "Para os Perfis P1" not in recorrer and "Para todos os Perfis" not in recorrer

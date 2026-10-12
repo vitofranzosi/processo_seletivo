@@ -103,9 +103,11 @@ def _corrido(documento):
 
 def test_o_documento_do_cenario_a_nomeia_o_resultado_do_marco():
     texto = _corrido(composto("A"))
+    # **Na redação 2 desde a `069`** (R1): o objeto e o prazo são os mesmos; a frase abre pelo
+    # resultado, porque sai em "Como recorrer?" — e, na apresentação plana, sob o rótulo "Recurso".
     frase = (
-        "Caberá recurso contra o resultado de “Classificação por sorteio eletrônico”, no prazo de "
-        "2 (dois) dias corridos, contados da divulgação desse resultado."
+        "Contra o resultado de “Classificação por sorteio eletrônico”: no prazo de 2 (dois) dias "
+        "corridos, contados da divulgação desse resultado."
     )
     # Os quatro marcos idênticos saem uma vez, na subseção comum, desde a `068`.
     assert texto.count(frase) == 1
@@ -115,7 +117,7 @@ def test_o_documento_do_cenario_a_nomeia_o_resultado_do_marco():
 def test_a_previa_imprime_a_mesma_frase():
     """FR-1304: uma frase só, para o publicado e para a prévia."""
     previa = _corrido(composto("A", modo=pdf.MODO_PREVIA))
-    assert previa.count("contra o resultado de “Classificação por sorteio eletrônico”") == 1
+    assert previa.count("o resultado de “Classificação por sorteio eletrônico”: no prazo") == 1
 
 
 def test_o_nome_longo_quebra_sem_ser_truncado():
@@ -125,7 +127,7 @@ def test_o_nome_longo_quebra_sem_ser_truncado():
         for item in perfil["classificationMilestones"]:
             item["name"] = longo
     texto = _corrido(composto("A", conteudo))
-    assert f"contra o resultado de “{longo}”, no prazo" in texto
+    assert f"o resultado de “{longo}”: no prazo" in texto
 
 
 def test_a_revisao_diz_o_resultado_pela_denominacao_da_linha_de_cima():
@@ -159,5 +161,5 @@ def test_dois_marcos_no_mesmo_perfil_nomeiam_cada_um_o_seu_resultado():
     perfil["classificationMilestones"] = [primeiro, segundo]
     texto = _corrido(composto("A", conteudo))
 
-    assert "contra o resultado de “Classificação por sorteio eletrônico”, no prazo de 2" in texto
-    assert "contra o resultado de “Classificação final”, no prazo de 5 (cinco)" in texto
+    assert "o resultado de “Classificação por sorteio eletrônico”: no prazo de 2" in texto
+    assert "o resultado de “Classificação final”: no prazo de 5 (cinco)" in texto

@@ -82,7 +82,9 @@ def test_us4_published_document_matches_the_homologated_content(
         # **Forma atualizada pela `008`/US2**: a identificação do Perfil virou quadro, e rótulo e
         # valor passaram a ser células distintas. O que esta aceitação guarda é que o número de
         # vagas do conteúdo homologado chega ao documento — e continua chegando.
-        assert "Vagas imediatas" in texto
+        # **E pela `069`** (FR-1373): no Edital por perguntas o número sai na tabela "Vagas por
+        # Perfil e lista de concorrência", na coluna do total.
+        assert "Vagas por Perfil e lista de concorrência" in texto
         assert str(perfil["immediateVacancies"]) in texto
     for evento in revisao.content["schedule"]:
         assert evento["description"] in texto, evento["description"]

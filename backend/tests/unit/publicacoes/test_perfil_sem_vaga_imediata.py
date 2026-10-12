@@ -16,7 +16,14 @@ from processo_seletivo.publicacoes.infrastructure import pdf
 from tests.unit.publicacoes.cenarios_da_auditoria import composto, congelado
 from tests.unit.publicacoes.test_pdf import documento, snapshot, texto_de
 
-REVERSOES = ("Na hipótese do não preenchimento total", "Havendo ausência de candidatos aprovados")
+# As duas espécies, na redação 2 desde a `069` (V1, V2), e as da redação 1, que também não saem.
+REVERSOES = (
+    "As vagas reservadas de um código que não forem preenchidas",
+    "Se não houver candidatos aprovados para as vagas reservadas",
+    "Na hipótese do não preenchimento total",
+    "Havendo ausência de candidatos aprovados",
+)
+SALDO = REVERSOES[0]
 LEGENDA = re.compile(r"^Tabela (\d+) — (.+)$")
 
 
@@ -91,7 +98,9 @@ def test_nenhuma_frase_nova_sobre_a_reserva_no_cadastro():
     corrido = _corrido(_texto_com(_perfil("TP-01", 0, [0, 0])))
 
     assert "vaga imediata" not in corrido.lower().replace("vagas imediatas", "")
-    assert "cadastro de reserva" not in corrido.lower()
+    # O rótulo do par que diz o cadastro do Perfil é dado, e não frase sobre a reserva: desde a
+    # `069` ele diz "Cadastro de reserva" por extenso (P2), e sai da varredura.
+    assert "cadastro de reserva" not in corrido.lower().replace("cadastro de reserva:", "")
 
 
 def test_com_vaga_o_quadro_sai_inteiro_com_a_linha_em_zero_e_a_reversao():
@@ -99,7 +108,7 @@ def test_com_vaga_o_quadro_sai_inteiro_com_a_linha_em_zero_e_a_reversao():
 
     assert "Quadro de vagas" in corrido
     assert "Pretos, pardos e indígenas (PPI) 0" in corrido
-    assert "Na hipótese do não preenchimento total das vagas reservadas" in corrido
+    assert SALDO in corrido
 
 
 def test_o_incoerente_continua_com_quadro_para_que_o_erro_se_veja():
@@ -146,7 +155,7 @@ def _linhas_da_tabela_de_vagas(pdf_):
     corpo = [
         linha
         for linha in linhas[inicio + 1 : fim]
-        if not linha.startswith(("Na hipótese", "Havendo", "destinado", "preenchido"))
+        if not linha.startswith(("As vagas reservadas", "Se não houver", "concorrência do", "para"))
     ]
     colunas = corpo.index(next(linha for linha in corpo if linha[:2] in ("TD", "TP")))
     celulas = corpo[colunas:]
@@ -178,7 +187,7 @@ def test_o_cenario_b_tem_vagas_so_dos_dois_perfis_com_vaga_e_uma_reversao():
 
     assert not [t for t in titulos if t.startswith("Quadro de vagas")]
     assert [linha[0] for linha in _linhas_da_tabela_de_vagas(gerado)] == ["TD-ADM", "TD-INFO-EDU"]
-    assert corrido.count("Na hipótese do não preenchimento total das vagas reservadas") == 1
+    assert corrido.count(SALDO) == 1
     assert "Nos Perfis" not in corrido
     assert [t for t in titulos if t.startswith("Modalidades de concorrência")] == [
         "Modalidades de concorrência"

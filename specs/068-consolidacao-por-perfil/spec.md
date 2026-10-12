@@ -300,6 +300,10 @@ documentos guardados.
   classificação e o seu resultado ([contrato §6](contracts/documento.md)). Ela não fala em corte,
   porque nem todo marco tem corte, e afirmaria regra que o marco não declara. Essa frase não é regra nova: é o que a posição do marco dentro do Perfil dizia, e que a
   consolidação tira dele.
+  *Emendada pela `069` (FR-1368, FR-1375): no Edital por perguntas não há subseção comum depois do
+  último Perfil; as regras de classificação saem em "Como será a seleção?", com a mesma frase da
+  separação, o comum uma vez e o que difere por grupo. A apresentação plana — a dos Editais
+  publicados antes e dos consolidados deles — continua a desta spec.*
 - **FR-1348**: O texto dos marcos na subseção comum MUST ser, linha a linha, o que cada Perfil do grupo
   imprimiria — sem acrescentar, suprimir, reordenar ou reescrever nada.
 - **FR-1349**: As linhas do método comum do sorteio (algoritmo, fonte, ocorrência, quando, derivação,

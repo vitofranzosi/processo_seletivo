@@ -45,19 +45,22 @@ from processo_seletivo.publicacoes.infrastructure import pdf
 # conferência uma segunda grafia da regra — e é na primeira divergência entre as duas que quem
 # submete confere uma coisa e publica outra. `divulgacao` já importa do PDF pela mesma razão.
 from processo_seletivo.publicacoes.infrastructure.pdf import (
+    EMPATE_NO_CORTE_2,
     FORMA_DA_ORDEM,
     NORMALIZACAO_DO_MARCO,
+    SUPLENTES_SEM_CADASTRO,
     TIPO_DO_FATO,
-    _arredondamento,
-    _combinacao,
-    _continuacao_do_corte,
-    _empate_no_corte,
     _enumerar,
-    _habilitacao_ao_sorteio,
-    _janela_recursal,
-    _origem_do_metodo,
-    _regra_de_corte,
+    _origem_do_metodo_2,
     _valor_do_campo_do_metodo,
+    frase_da_continuacao,
+    frase_da_forma_da_ordem,
+    frase_da_habilitacao,
+    frase_do_arredondamento,
+    frase_do_recurso,
+    frases_da_combinacao,
+    frases_do_corte,
+    sem_cadastro_de_reserva,
     teto_de_inscricoes,
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
@@ -428,7 +431,7 @@ def _documento(documento, snapshot):
     }
 
 
-def _secao(secao, numeros):
+def _secao(secao, numeros, no_corpo=None):
     if secao.get("type") == catalogo.GERADA:
         origem = {
             "profiles": "Perfis",
@@ -457,6 +460,14 @@ def _secao(secao, numeros):
         return {"titulo": titulo, "linhas": [vazia]}
     if numero == 0:
         return {"titulo": f"{titulo} (preâmbulo, sem número)", "linhas": [detalhe]}
+    # O membro sozinho na seção sai como o corpo dela, sem subtítulo (069): "3. Público-alvo"
+    # nomearia um título que o documento não imprime.
+    if secao.get("key") in (no_corpo or {}):
+        rotulo = no_corpo[secao["key"]]
+        return {"titulo": f"{titulo} — sai como o texto de {rotulo}", "linhas": [detalhe]}
+    # A subseção da apresentação por perguntas sai como "3.1 Público-alvo", sem o ponto (069).
+    if "." in str(numero):
+        return {"titulo": f"{numero} {titulo}", "linhas": [detalhe]}
     return {"titulo": f"{numero}. {titulo}", "linhas": [detalhe]}
 
 
@@ -491,13 +502,14 @@ def _anexo(anexo, snapshot):
 def _leitura_do_marco(marco, perfil, snapshot):
     """Os pares `(rótulo, valor)` que um marco declara, na ordem em que o documento os imprime.
 
-    **A frase é a do documento** (`_combinacao`, `_regra_de_corte`, `_janela_recursal`,
-    `_empate_no_corte`, `_continuacao_do_corte`, `_habilitacao_ao_sorteio`): é a mesma regra, e
-    duas redações dela seriam duas normas. O empate, a continuação e a habilitação tinham aqui
-    redação própria enquanto o documento os calava; o documento passou a imprimi-los, e as frases
-    moram lá. O que a conferência ainda acrescenta é o silêncio dito como silêncio ("nada
-    declarado") e a Etapa que o corte alimenta quando não há nenhuma — que o documento cala de
-    propósito, e quem submete precisa ver.
+    **A frase é a do documento** (`frases_da_combinacao`, `frases_do_corte`, `frase_do_recurso`,
+    `frase_da_continuacao`, `frase_da_habilitacao`): é a mesma regra, e duas redações dela seriam
+    duas normas (FR-1364). Desde a `069` o valor é a frase da redação 2, a que o documento composto
+    deste rascunho vai imprimir; o rótulo continua o do campo, que é a palavra da equipe (R-004).
+    O empate, a continuação e a habilitação tinham aqui redação própria enquanto o documento os
+    calava; o documento passou a imprimi-los, e as frases moram lá. O que a conferência ainda
+    acrescenta é o silêncio dito como silêncio ("nada declarado") e a Etapa que o corte alimenta
+    quando não há nenhuma — que o documento cala de propósito, e quem submete precisa ver.
 
     **Sem a denominação e sem o código**, que viajam à parte: os dois nascem do Perfil (030,
     FR-420), e deixá-los aqui faria dois marcos com a mesma regra parecerem diferentes só porque
@@ -512,18 +524,34 @@ def _leitura_do_marco(marco, perfil, snapshot):
     )
     pares = []
     if FORMA_DA_ORDEM.get(marco.get("orderProduction")):
-        pares.append(("Ordem", FORMA_DA_ORDEM[marco["orderProduction"]]))
+        # Sob sorteio o documento não tem frase para a forma (C2): ela é o título do bloco. Aqui
+        # o par continua, com o valor do campo.
+        pares.append(("Ordem", frase_da_forma_da_ordem(marco) or "por sorteio"))
     if not sorteia:
         # Sob sorteio a combinação não é impressa, e pela razão do documento (032, FR-468): a
-        # ordem não vem de nota, e mostrá-la afirmaria um método que o marco não usa.
-        pares.append(("Combinação", _combinacao(marco, etapas) or "nenhuma Etapa enumerada"))
+        # ordem não vem de nota, e mostrá-la afirmaria um método que o marco não usa. A frase é a
+        # do documento, com a Etapa que não pontua (C6 a C10); a normalização continua no par
+        # dela, com o valor do campo — "nenhuma" diz à equipe o que o documento cala.
+        normalizada = "Depois, o resultado é dividido pela soma dos pesos."
+        combinacao = " ".join(
+            frase for frase in frases_da_combinacao(marco, etapas) if frase != normalizada
+        )
+        if not combinacao and marco.get("stages"):
+            # O rascunho com Etapas escolhidas e operação ainda não declarada: o documento cala a
+            # conta, mas "nenhuma Etapa" contradiria a escolha que a pendência manda completar.
+            nomes = [
+                (etapas.get(str(identificador)) or {}).get("name") or "Etapa não identificada"
+                for identificador in marco["stages"]
+            ]
+            combinacao = f"operação não declarada, sobre {_enumerar(nomes)}"
+        pares.append(("Combinação", combinacao or "nenhuma Etapa enumerada"))
         if NORMALIZACAO_DO_MARCO.get(marco.get("normalization")):
             pares.append(("Normalização", NORMALIZACAO_DO_MARCO[marco["normalization"]]))
     # O arredondamento e o empate seguem a forma **declarada**, que é a do documento (067, D-004):
     # a Revisão mostra o que o documento vai imprimir. A combinação e o bloco do sorteio continuam
     # pela forma resolvida, como antes.
     declara_sorteio = regras_do_marco.declara_sorteio(marco)
-    if not declara_sorteio and (arredondamento := _arredondamento(marco)):
+    if not declara_sorteio and (arredondamento := frase_do_arredondamento(marco)):
         pares.append(
             (
                 "Arredondamento",
@@ -531,7 +559,7 @@ def _leitura_do_marco(marco, perfil, snapshot):
             )
         )
     if sorteia:
-        pares.append(("Sorteio", f"método {_origem_do_metodo(snapshot, marco)}"))
+        pares.append(("Sorteio", f"método {_origem_do_metodo_2(snapshot, marco)}"))
         proprio = marco.get("drawMethod") or {}
         # Só o método **próprio**: o comum já está no alto do bloco, uma vez. E só com ele
         # declarado — o instante vazio sai do PDF como "—", que é verdadeiro e passaria pelo
@@ -545,30 +573,36 @@ def _leitura_do_marco(marco, perfil, snapshot):
         pares.append(
             (
                 "Habilitação",
-                _habilitacao_ao_sorteio(snapshot, perfil, marco, etapas)
+                frase_da_habilitacao(snapshot, perfil, marco, etapas)
                 or "Etapa declarada que não existe neste Edital",
             )
         )
     # "deste marco" no lugar do nome (067, D-012): a denominação está na linha de cima, e com o nome
     # na frase cada Perfil seria um grupo — o que a nota abaixo, sobre a denominação, já recusa.
-    pares.append(("Recurso", _janela_recursal(marco, objeto="deste marco") or "nada declarado"))
+    pares.append(("Recurso", frase_do_recurso(marco, objeto="deste marco") or "nada declarado"))
     regra = marco.get("cutRule")
     if isinstance(regra, dict):
-        # A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai vazia.
+        # A unidade do corte, como o documento a imprime (K1 a K10): o corte, o empate, os suplentes
+        # e a continuação. A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai
+        # vazia.
+        unidade = frases_do_corte(marco, etapas, sem_cadastro=sem_cadastro_de_reserva(snapshot))
         pares.append(
             (
                 "Corte",
                 origens.com_origem(
-                    _regra_de_corte(marco, etapas) or "declarado sem alvo", origens.do_corte(regra)
+                    unidade[0] if unidade else "declarado sem alvo", origens.do_corte(regra)
                 ),
             )
         )
-        # Logo depois do corte, e sem par quando não declarados: "essa quantidade" é a que ele
-        # acabou de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado"
-        # aqui leria como o silêncio legítimo do recurso, que não é.
-        if not declara_sorteio and (empate := _empate_no_corte(marco)):
+        # Logo depois do corte, e sem par quando não declarados: "esse número" é o que ele acabou
+        # de dizer, e a ausência impede a publicação (FR-182, FR-226) — "nada declarado" aqui
+        # leria como o silêncio legítimo do recurso, que não é.
+        empate = EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), "")
+        if not declara_sorteio and empate:
             pares.append(("Empate no corte", empate))
-        if continuacao := _continuacao_do_corte(marco):
+        if SUPLENTES_SEM_CADASTRO in unidade:
+            pares.append(("Suplentes", SUPLENTES_SEM_CADASTRO))
+        if continuacao := frase_da_continuacao(marco):
             pares.append(("Continuação", continuacao))
         if regra.get("governedStage") == "NONE":
             pares.append(("Etapa que o corte alimenta", "nenhuma"))
@@ -734,7 +768,14 @@ def _classificacao(snapshot):
 def _secoes_do_documento(snapshot):
     """As seções com o número do documento, calculado uma vez para todas (054, FR-985)."""
     numeros = pdf.numeracao(snapshot)
-    return [_secao(secao, numeros) for secao in snapshot.get("sections") or []]
+    # Na apresentação por perguntas as Etapas saem como subseções da seleção, e a linha delas diz
+    # os números delas (069, R-003).
+    no_corpo = {}
+    if pdf.por_perguntas(snapshot):
+        if numeros.get(catalogo.CHAVE_DAS_ETAPAS):
+            numeros[catalogo.CHAVE_DAS_ETAPAS] = pdf._apresentacao().faixa_das_etapas(snapshot)
+        no_corpo = pdf._apresentacao().membros_no_corpo(snapshot)
+    return [_secao(secao, numeros, no_corpo) for secao in snapshot.get("sections") or []]
 
 
 def _cada(chave, leitura):

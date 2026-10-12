@@ -258,7 +258,8 @@ def test_percentual_peso_e_nota_saem_em_portugues():
     # peso e nota mínima viraram pares rótulo-valor da Etapa. Os valores continuam obrigatórios e
     # continuam em português — que é o que este teste guarda.
     assert "20%" in texto
-    assert "Peso:" in texto and "Nota mínima:" in texto
+    # **Forma atualizada pela `069`** (E2): os pares viraram frase, com os mesmos valores.
+    assert "nota mínima de 7" in texto and "peso 2" in texto
 
 
 @pytest.mark.contract
@@ -440,18 +441,24 @@ def test_a_regra_classificatoria_publicada_e_reconstituivel_no_documento():
     """
     texto = texto_de(documento(SNAPSHOT, HASH))
 
+    # **Na redação 2 desde a `069`**: os mesmos parâmetros, ditos na voz do candidato.
+    texto = " ".join(texto.split())
     # O alvo de cada tipo de critério, resolvido — e não o enum nem o identificador.
-    assert "1º maior pontuação na Etapa Prova didática" in texto
-    assert "2º maior valor declarado em Meses de experiência no ensino a distância" in texto
-    assert "3º menor valor declarado em Data de nascimento" in texto
+    assert "1º maior pontuação na Etapa “Prova didática”" in texto
+    assert (
+        "2º maior número de meses de experiência no ensino a distância, informado na inscrição"
+        in texto
+    )
+    assert "3º data de nascimento mais antiga, informada na inscrição" in texto
     # Os fatos que a inscrição vai exigir, anunciados antes dela.
-    assert "Dados exigidos na inscrição" in texto
-    assert "Data de nascimento (data)" in texto
+    assert "Na inscrição, informe também:" in texto
+    assert "• a data de nascimento" in texto
     # Os parâmetros que fecham a conta, junto da regra que os usa.
     assert (
-        "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)" in texto
+        "A nota final é a soma das pontuações nas Etapas “Prova didática” (peso 2) e “Análise de "
+        "títulos” (peso 1), cada uma multiplicada pelo seu peso." in texto
     )
-    assert "2 casas decimais, meio para cima" in texto
+    assert "arredondada para 2 casas decimais; a partir da metade, arredonda-se para cima" in texto
 
 
 @pytest.mark.contract
@@ -489,8 +496,9 @@ def test_a_reversao_declarada_sai_como_frase_abaixo_do_quadro():
     **Abaixo do quadro, e não em bloco próprio**, porque é uma regra sobre aqueles números: lida
     longe deles, quem lê teria de procurar a qual Perfil ela se aplica.
 
-    A frase é a do Edital, e não uma paráfrase do código: o 57/2026 escreve "na hipótese do não
-    preenchimento total", e é isso que sai sob `ON_BALANCE`.
+    A frase era a do Edital: o 57/2026 escreve "na hipótese do não preenchimento total", e era isso
+    que saía sob `ON_BALANCE`. Desde a `069` sai a redação 2 da mesma regra (V2 do contrato de
+    redação): "as vagas reservadas … que não forem preenchidas passam para a ampla concorrência".
     """
     com_reversao = {
         **SNAPSHOT,
@@ -503,8 +511,8 @@ def test_a_reversao_declarada_sai_como_frase_abaixo_do_quadro():
     # uma linha: o PDF quebra o parágrafo pela largura da página, e prender a quebra faria o teste
     # reprovar no dia em que alguém mudasse a margem.
     regiao = " ".join(partes[quadro:])
-    assert "não preenchimento total das vagas reservadas" in regiao
-    assert "destinado à respectiva ampla concorrência" in regiao
+    assert "vagas reservadas de um código que não forem preenchidas" in regiao
+    assert "passam para a ampla concorrência do mesmo código" in regiao
 
 
 @pytest.mark.contract
@@ -521,8 +529,8 @@ def test_a_reversao_por_esgotamento_sai_com_a_frase_daquele_gatilho():
     }
     texto = texto_de(documento(com_reversao, canonical_sha256(com_reversao)))
 
-    assert "ausência de candidatos aprovados" in texto
-    assert "não preenchimento total" not in texto
+    assert "Se não houver candidatos aprovados para as vagas reservadas" in " ".join(texto.split())
+    assert "que não forem preenchidas" not in texto
 
 
 @pytest.mark.contract
