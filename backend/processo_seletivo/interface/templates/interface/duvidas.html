@@ -1,0 +1,152 @@
+{% extends "interface/base.html" %}
+{% load interface_extras %}
+{% block titulo %}Respostas do assistente de dúvidas — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} As regras desta tela, e só dela (070, contracts/tela.md). O grupo das perguntas quebra
+   linha: sem `flex-wrap`, o `fieldset` cresce até o conteúdo mínimo e alarga a página a 375 px. {% endcomment %}
+.perguntas{display:flex;flex-wrap:wrap;gap:.35rem 1.25rem}
+.perguntas label{flex:1 1 18rem;font-weight:400}
+.resposta{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
+  margin:0 0 1.5rem}
+.resposta h2:focus{outline:2px solid var(--verde);outline-offset:2px}
+.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
+.tipo{font-weight:600;margin:0 0 .75rem}
+.explicacao{background:var(--cinza-fundo);border-left:4px solid var(--borda);padding:.7rem 1rem;
+  margin:0 0 1rem}
+.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
+.referencia h3{font-size:.9375rem;margin:0 0 .25rem}
+.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
+.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
+.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
+.futuro{font-size:.8125rem;margin:.25rem 0 0}
+.pontos li{margin:0 0 .5rem}
+{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Respostas do assistente de dúvidas</span>
+</nav>
+
+<h1>Respostas do assistente de dúvidas</h1>
+<p class="sub">{{ processo.title }} · {{ edital.title }}</p>
+<p class="imutavel">Validação interna: esta tela mostra o que o futuro assistente de dúvidas responderia sobre o Edital publicado. Nada dela é exibido a candidatos. Cada resposta diz de qual versão vem, e separa o texto do Edital, os dados da versão vigente e a explicação do sistema.</p>
+
+<form method="get" class="filtro" aria-label="Instante de referência">
+  <p class="campo">
+    <label for="em">Instante de referência</label>
+    <input type="datetime-local" id="em" name="em" value="{{ instante_no_campo }}" aria-describedby="ajuda-em">
+    <span class="ajuda" id="ajuda-em">Para conferir uma Retificação de vigência futura sem esperar o calendário. Só os atos já publicados contam.</span>
+  </p>
+  <p class="campo escolha"><button type="submit" class="acao">Consultar neste instante</button></p>
+</form>
+{% if recusa_do_instante %}<p class="aviso" role="status">{{ recusa_do_instante }}</p>{% endif %}
+<p class="versao">Consulta em {{ instante_legivel }}.</p>
+
+{% if not versao %}
+  {% if publicado %}
+  <p class="aviso" role="status">Não havia versão vigente deste Edital em {{ instante_legivel }}.</p>
+  {% else %}
+  <p class="aviso" role="status">Só Edital publicado tem respostas. Este ainda não foi publicado.</p>
+  {% endif %}
+{% else %}
+
+<section aria-labelledby="titulo-pontos">
+  <h2 id="titulo-pontos">Pontos para revisão antes da abertura pública</h2>
+  <p class="ajuda">Condições desta versão que o setor resolve — por Retificação ou por decisão institucional — antes de o assistente de dúvidas abrir ao público neste Edital. Nada aqui é corrigido nem gravado.</p>
+  {% if pontos %}
+  <ul class="pontos">
+    {% for ponto in pontos %}
+    <li>{{ ponto.descricao }}
+      {% for fonte in ponto.fontes %}<blockquote class="literal">{{ fonte.conteudo }}</blockquote>{% endfor %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhum ponto para revisão.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="titulo-perguntas">
+  <h2 id="titulo-perguntas">Perguntas sugeridas</h2>
+  <form method="get">
+    <input type="hidden" name="em" value="{{ instante_no_campo }}">
+    <input type="hidden" name="versao" value="{{ versao.id }}">
+    <fieldset>
+      <legend>Pergunta</legend>
+      <div class="perguntas">
+        {% for pergunta in perguntas %}
+        <label><input type="radio" name="pergunta" value="{{ pergunta.codigo }}" {% if pergunta.codigo == pergunta_escolhida %}checked{% endif %} required> {{ pergunta.texto }}</label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <p class="campo">
+      <label for="perfil">Perfil</label>
+      <select id="perfil" name="perfil" aria-describedby="ajuda-perfil">
+        <option value="">—</option>
+        {% for codigo, rotulo, _modalidades in perfis %}
+        <option value="{{ codigo }}" {% if codigo == perfil_escolhido %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-perfil">Para as perguntas sobre um Perfil.</span>
+    </p>
+    <p class="campo">
+      <label for="modalidade">Lista de concorrência</label>
+      <select id="modalidade" name="modalidade" aria-describedby="ajuda-modalidade">
+        <option value="nenhuma">Sem modalidade — o que vale para todos no Perfil</option>
+        {% for codigo, rotulo, modalidades in perfis %}
+        <optgroup label="{{ codigo }}">
+          {% for valor, nome in modalidades %}{% if valor != "nenhuma" %}
+          <option value="{{ valor }}" {% if valor == modalidade_escolhida and codigo == perfil_escolhido %}selected{% endif %}>{{ nome }}</option>
+          {% endif %}{% endfor %}
+        </optgroup>
+        {% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-modalidade">Só para "Que documentos preciso enviar?". A modalidade precisa ser do Perfil escolhido.</span>
+    </p>
+    <p><button type="submit" class="botao">Ver a resposta</button></p>
+  </form>
+</section>
+
+{% if recusa %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ recusa }}</p>{% endif %}
+
+{% if resposta %}
+<section class="resposta" aria-labelledby="titulo-resposta" aria-live="polite">
+  <h2 id="titulo-resposta" tabindex="-1" autofocus>Resposta</h2>
+  {% if resposta.mudanca %}
+  <p class="aviso" role="status"><strong>{% if resposta.mudanca.sem_efeito %}A versão do Edital desta resposta não é a da resposta anterior.{% else %}Este Edital mudou desde a resposta anterior.{% endif %}</strong>
+    {% for ato in resposta.mudanca.atos %}Aplica agora a Retificação publicada em {{ ato.publicado_em|date:"d/m/Y" }}, vigente desde {{ ato.vigente_desde|date:"d/m/Y" }}. {% endfor %}
+    {% for ato in resposta.mudanca.sem_efeito %}Não aplica a Retificação publicada em {{ ato.publicado_em|date:"d/m/Y" }}, vigente desde {{ ato.vigente_desde|date:"d/m/Y" }}. {% endfor %}
+    A resposta anterior se referia à outra versão; nada dela é reaproveitado.</p>
+  {% endif %}
+  <p class="versao">Versão vigente desde {{ resposta.versao.vigente_desde|instante }} · publicada em {{ resposta.versao.publicada_em|instante }}{% if resposta.versao.retificacoes %} · retificada em {% for publicada, vigente in resposta.versao.retificacoes %}{{ publicada|instante }}{% if not forloop.last %} e em {% endif %}{% endfor %}{% endif %} · identificador {{ resposta.versao.identificador_curto }}</p>
+  <p class="tipo">{% for chave, rotulo in rotulo_do_tipo.items %}{% if chave == resposta.tipo %}{{ rotulo }}{% endif %}{% endfor %}</p>
+  {% for aviso in resposta.avisos %}
+  <p class="aviso">{{ aviso.texto }}{% for link in aviso.links %} <a href="{{ link.url }}">{{ link.rotulo }}</a>{% endfor %}</p>
+  {% endfor %}
+  <div class="explicacao">
+    <p class="natureza">Explicação — produzida pelo sistema a partir das fontes abaixo; não é texto do Edital</p>
+    <p>{{ resposta.explicacao.conteudo }}</p>
+  </div>
+  <h3>Fontes</h3>
+  {% for referencia in resposta.referencias %}
+  <section class="referencia">
+    <p class="natureza">{% for chave, rotulo in rotulo_da_natureza.items %}{% if chave == referencia.natureza %}{{ rotulo }}{% endif %}{% endfor %}</p>
+    <h3>{{ referencia.localizacao }}{% if referencia.rotulo %} — {{ referencia.rotulo }}{% endif %}</h3>
+    {% if referencia.natureza == "TEXTO" %}
+    <details open><summary>Texto como publicado</summary><blockquote class="literal">{{ referencia.conteudo }}</blockquote></details>
+    {% else %}
+    <p class="literal">{{ referencia.conteudo }}</p>
+    {% endif %}
+    {% for valor in referencia.futuro %}<p class="futuro">A partir de {{ valor.vigente_desde|date:"d/m/Y" }}, por Retificação já publicada: {{ valor.valor }}</p>{% endfor %}
+    {% for origem in referencia.origens %}
+    <p class="origem">{% if origem.ato == "ORIGINAL" %}Publicação original de {{ origem.publicado_em|date:"d/m/Y" }}{% else %}Retificação publicada em {{ origem.publicado_em|date:"d/m/Y" }}, vigente desde {{ origem.vigente_desde|date:"d/m/Y" }}{% endif %} — <a href="{{ origem.documento }}">Abrir o documento deste ato</a></p>
+    {% endfor %}
+    {% for link in referencia.links %}<p class="origem"><a href="{{ link.url }}">{{ link.rotulo }}</a></p>{% endfor %}
+  </section>
+  {% endfor %}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}
