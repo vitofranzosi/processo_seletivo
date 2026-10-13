@@ -72,6 +72,17 @@ As nove questões da [priorização da auditoria](../../doc/auditoria-ux-convers
 | Q8 — Quantidade por modalidade | Fora deste incremento. |
 | Q9 — Próxima spec | Sim, com foco em encontrar, começar e acompanhar. |
 
+## Clarifications
+
+### Session 2026-10-12
+
+- Q: Quando um Edital tem vários resultados vigentes e o prazo de recurso não é o mesmo para todos, como
+  o cartão resume o prazo? → A: Opção A. Todos com recurso aberto e o mesmo término → o prazo uma vez.
+  Só parte com recurso aberto, ou términos diferentes → "Recurso aberto para N de M resultados · o
+  primeiro prazo termina em DD/MM às HHhMM", em que N conta os resultados vigentes com recurso aberto,
+  M conta todos os resultados vigentes, e o primeiro término considera só os prazos abertos. Sem prazo
+  aberto, nenhuma frase de prazo. Perfil, etapa e lista ficam na página da seleção.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Os cenários usam o banco de demonstração (`seed_demo`): o **Edital 01/2026**, aberto, com dois
@@ -221,15 +232,20 @@ seed não produz e são cobertos por testes com cenário próprio.
    recurso com data e hora, e o convite diz que leva aos resultados e ao prazo.
 2. **Given** um Edital com três resultados vigentes em listas diferentes, só um deles com prazo aberto,
    **When** a pessoa lê o cartão, **Then** ele diz quantos resultados foram publicados e a data do mais
-   recente, e diz que o recurso está aberto para um dos três, com o prazo — **sem** uma frase de prazo
-   que pareça valer para todos.
-3. **Given** um Edital cujos resultados vigentes têm todos o mesmo prazo aberto, **When** a pessoa lê o
+   recente, e "Recurso aberto para 1 de 3 resultados · o primeiro prazo termina em DD/MM às HHhMM" —
+   **sem** uma frase de prazo que pareça valer para todos.
+3. **Given** um Edital com dois resultados vigentes, ambos com recurso aberto mas com términos
+   diferentes, **When** a pessoa lê o cartão, **Then** ele diz "Recurso aberto para 2 de 2 resultados ·
+   o primeiro prazo termina em…", com o término mais próximo.
+4. **Given** um Edital cujos resultados vigentes têm todos o mesmo prazo aberto, **When** a pessoa lê o
    cartão, **Then** o prazo é dito uma vez, sem qualificação.
-4. **Given** um Edital com resultado vigente e prazo de recurso já encerrado, **When** a pessoa lê o
+5. **Given** um Edital com resultado vigente e prazo de recurso já encerrado, **When** a pessoa lê o
    cartão, **Then** o resultado é dito e nenhuma frase de prazo aparece.
-5. **Given** o Edital 26/2026, sem resultado publicado, **When** a pessoa lê o cartão, **Then** nenhuma
+6. **Given** um Edital cujo resultado preliminar foi sucedido pelo definitivo, **When** a pessoa lê o
+   cartão, **Then** só o vigente conta — a publicação sucedida não entra em N, em M nem na data.
+7. **Given** o Edital 26/2026, sem resultado publicado, **When** a pessoa lê o cartão, **Then** nenhuma
    frase de resultado ou de ausência de resultado aparece.
-6. **Given** qualquer cartão com resultado, **When** a pessoa abre a seleção, **Then** a página diz, no
+8. **Given** qualquer cartão com resultado, **When** a pessoa abre a seleção, **Then** a página diz, no
    mesmo instante de leitura, os mesmos resultados e prazos que o cartão resumiu.
 
 ---
@@ -365,9 +381,11 @@ faixas que terminam antes de 1.530 e de 570; o intervalo deixa folga para elas.
   todos os resultados vigentes do Edital.
 - **FR-1631**: Havendo prazo de recurso aberto para **todos** os resultados vigentes, e o mesmo prazo
   para todos, o cartão MUST dizer o prazo uma vez, com data e hora.
-- **FR-1632**: Havendo prazo de recurso aberto para só parte dos resultados vigentes, ou prazos
-  diferentes entre eles, o cartão MUST dizer para quantos dos resultados vigentes o recurso está aberto
-  e quando termina o primeiro prazo — e MUST NOT escrever uma frase de prazo sem essa qualificação.
+- **FR-1632**: Havendo prazo de recurso aberto para só parte dos resultados vigentes, ou términos
+  diferentes entre os abertos, o cartão MUST dizer "Recurso aberto para N de M resultados · o primeiro
+  prazo termina em DD/MM às HHhMM", em que N conta os resultados vigentes com recurso aberto, M conta
+  todos os resultados vigentes, e o primeiro término é o mais próximo **entre os prazos abertos** — e
+  MUST NOT escrever uma frase de prazo sem essa qualificação.
 - **FR-1633**: Prazo de recurso encerrado MUST NOT aparecer no cartão. Edital sem resultado vigente MUST
   NOT ter frase de resultado nem de ausência de resultado.
 - **FR-1634**: O convite do cartão MUST dizer para onde leva: aos resultados e ao prazo, quando há prazo
@@ -483,8 +501,10 @@ para todas:
 
 1. **Resultado:** um vigente → a natureza e a data; vários → quantos e a data do mais recente; a
    natureza só quando é a de todos (FR-1629, FR-1630).
-2. **Prazo:** aberto e igual para todos os vigentes → dito uma vez; em qualquer outro caso → "aberto
-   para N de M", com o término do primeiro; encerrado → nada (FR-1631 a FR-1633).
+2. **Prazo:** aberto e com o mesmo término para todos os vigentes → dito uma vez; só parte aberta, ou
+   términos diferentes → "Recurso aberto para N de M resultados · o primeiro prazo termina em…", com N
+   os vigentes de prazo aberto, M todos os vigentes e o primeiro término só entre os abertos; nenhum
+   aberto → nada (FR-1631 a FR-1633). Confirmado pelo responsável pelo produto em 12/10.
 3. **Nunca** uma frase de prazo sem escopo quando o prazo não é de todos.
 
 O nome de Perfil e lista fica na página da seleção, onde a árvore Perfil → etapa → lista da `062` já
@@ -527,9 +547,10 @@ feature depende disso.
 
 ## Assumptions
 
-- O catálogo continua na ordem de dezenas de seleções simultâneas, como a `024` assumiu; o custo de
-  montar o resumo de resultados não pode crescer com o número de cartões — é exigência para o plano
-  técnico.
+- O catálogo continua na ordem de dezenas de seleções simultâneas, como a `024` assumiu. O resumo de
+  resultados não pode ser lido **uma consulta por cartão**: a leitura é feita de uma vez para os
+  Editais da página. O processamento cresce com os dados lidos, e isso é aceitável; o que se evita é
+  o número de consultas crescer com o número de cartões.
 - "Tela estreita" e "tela larga" seguem o ponto em que a barra de consulta hoje deixa de caber numa
   linha; o plano fixa o valor.
 - Os números do SC-600 e do SC-601 são do conteúdo do seed: servem para comparar antes e depois no
