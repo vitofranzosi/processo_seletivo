@@ -88,7 +88,7 @@ specs/072-jornada-publica-do-portal/
 | Arquivo | O que prova |
 |---|---|
 | `tests/portal/test_resumo_do_acompanhamento.py` (**novo**, sem banco) | D-004: 1 vigente; vários com prazos iguais, parciais, diferentes, encerrados; natureza mista; vazio |
-| `tests/portal/test_acompanhamento_na_vitrine.py` (**novo**, com banco) | cartão × página no mesmo instante; sucedida fora; encerrado some; sem resultado nada; **orçamento: 1 e 4 Editais com resultado, mesmo número de consultas** — reaproveita `montar` e `consultas` de `test_prazo_recursal_publico.py` |
+| `tests/portal/test_acompanhamento_na_vitrine.py` (**novo**, com banco) | cartão × página no mesmo instante; sucedida fora; encerrado some; sem resultado nada; **orçamento: 1 e 3 Editais com resultado, mesmo número de consultas** — reaproveita `montar` e `consultas` de `test_prazo_recursal_publico.py` |
 | `tests/integration/portal/test_vitrine.py`, `test_consulta_da_vitrine.py` | título e aba, contagem de abertas, título do cartão, oferta por Perfil e teto, lugares, número não repetido, sigla, `open` dos filtros, busca por lugar com o casado primeiro, estado vazio |
 | `tests/integration/portal/test_detalhe_selecao.py` | volta condicional, resumo da oferta com âncoras, Requerimento presente/ausente/na convocação, POST preservado |
 | `tests/acceptance/portal/test_jornada_publica.py` (**novo**) | SC-603: identidade **nova** pelos formulários até o rascunho; recorrente; com sessão; mensagem uma vez; nenhum rascunho antes da confirmação; destino colado por terceiro |

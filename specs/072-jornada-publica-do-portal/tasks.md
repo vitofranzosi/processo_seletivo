@@ -50,12 +50,12 @@ antes da implementação dela.
 
 **Independent Test**: cartões do Edital 51/2026 e 26/2026 do seed; cenários de 1, 3 e 5 vigentes nos testes.
 
-- [ ] T016 [P] [US5] Testes sem banco em `tests/portal/test_resumo_do_acompanhamento.py`, com itens em `SimpleNamespace`: um vigente com e sem prazo; vários com prazo único igual; parcial ("1 de 3"); términos diferentes ("2 de 2", primeiro término entre os abertos); todos encerrados; natureza comum e mista; lista vazia → `None` (FR-1629 a FR-1633, D-004)
-- [ ] T017 [P] [US5] Testes com banco em `tests/portal/test_acompanhamento_na_vitrine.py`, reaproveitando `montar`, `depois_do_prazo` e `consultas` de `tests/portal/test_prazo_recursal_publico.py`: cartão diz o mesmo que a página no mesmo instante; sucedida fora de N, M e da data; prazo encerrado some; sem resultado nada; convite certo; **orçamento**: vitrine com 1 e com 4 Editais com resultado faz o mesmo número de consultas (FR-1634, FR-1635, SC-604)
-- [ ] T017b [P] [US5] Estender `tests/integration/portal/test_leitura_sem_escrita.py`: a vitrine com resultados e a seleção, abertas por anônimo, não gravam nada; com sessão, a única escrita admitida é a da própria sessão ao remover a chave de volta (FR-1637, SC-606)
-- [ ] T018 [US5] Função pura `resumo_do_acompanhamento(vigentes)` em `processo_seletivo/portal/leitura.py` (data-model, "Resumo do acompanhamento")
-- [ ] T019 [US5] Em `processo_seletivo/portal/views.py` (`vitrine`): um `agora` para a página; `historico_publico_dos_editais` para os Editais carregados; a função de T003 com o conteúdo vigente de cada um; `resumo_do_acompanhamento` por cartão; convite conforme o resumo (FR-1634)
-- [ ] T020 [US5] Bloco de acompanhamento e convites em `processo_seletivo/portal/templates/portal/_cartao_da_selecao.html`, e a regra dele em `processo_seletivo/portal/templates/portal/base.html` (FR-1629 a FR-1634, FR-1636)
+- [X] T016 [P] [US5] Testes sem banco em `tests/portal/test_resumo_do_acompanhamento.py`, com itens em `SimpleNamespace`: um vigente com e sem prazo; vários com prazo único igual; parcial ("1 de 3"); términos diferentes ("2 de 2", primeiro término entre os abertos); todos encerrados; natureza comum e mista; lista vazia → `None` (FR-1629 a FR-1633, D-004)
+- [X] T017 [P] [US5] Testes com banco em `tests/portal/test_acompanhamento_na_vitrine.py`, reaproveitando `montar`, `depois_do_prazo` e `consultas` de `tests/portal/test_prazo_recursal_publico.py`: cartão diz o mesmo que a página no mesmo instante; sucedida fora de N, M e da data; prazo encerrado some; sem resultado nada; convite certo; **orçamento**: vitrine com 1 e com 3 Editais com resultado faz o mesmo número de consultas (FR-1634, FR-1635, SC-604)
+- [X] T017b [P] [US5] Estender `tests/integration/portal/test_leitura_sem_escrita.py`: a vitrine com resultados e a seleção, abertas por anônimo, não gravam nada; com sessão, a única escrita admitida é a da própria sessão ao remover a chave de volta (FR-1637, SC-606)
+- [X] T018 [US5] Função pura `resumo_do_acompanhamento(vigentes)` em `processo_seletivo/portal/leitura.py` (data-model, "Resumo do acompanhamento")
+- [X] T019 [US5] Em `processo_seletivo/portal/views.py` (`vitrine`): um `agora` para a página; `historico_publico_dos_editais` para os Editais carregados; a função de T003 com o conteúdo vigente de cada um; `resumo_do_acompanhamento` por cartão; convite conforme o resumo (FR-1634)
+- [X] T020 [US5] Bloco de acompanhamento e convites em `processo_seletivo/portal/templates/portal/_cartao_da_selecao.html`, e a regra dele em `processo_seletivo/portal/templates/portal/base.html` (FR-1629 a FR-1634, FR-1636)
 
 **Checkpoint**: US1 + US5 = a vitrine inteira da 072.
 

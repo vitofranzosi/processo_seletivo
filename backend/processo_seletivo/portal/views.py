@@ -29,6 +29,7 @@ from processo_seletivo.divulgacao.application.selectors import (
     anteriores_da_cadeia,
     documento_do_resultado,
     historico_publico_do_edital,
+    historico_publico_dos_editais,
     situacoes_do_candidato,
     vigente_do_marco,
 )
@@ -298,8 +299,24 @@ def vitrine(request):
     # e só quando algum Edital ou Processo está em estado final.
     finais = desfechos([versao.edital for versao in versoes])
     siglas = _siglas_das_unidades(versoes)
+    # **O que foi publicado depois das inscrições, numa leitura para a página inteira** (072,
+    # FR-1629 a FR-1635, research T-001). As mesmas linhas e o mesmo prazo que a página da seleção
+    # mostra — `historico_publico_dos_editais` e `prazos_de_recurso` são as funções dela —, lidas
+    # de uma vez para todos os cartões, e julgadas no mesmo `agora` da página.
+    resultados = leitura.prazos_de_recurso(
+        historico_publico_dos_editais([versao.edital for versao in versoes]),
+        {versao.edital_id: versao.content for versao in versoes},
+        agora,
+    )
     selecoes = [
-        _selecao_da_vitrine(versao, agora, finais[versao.edital_id], siglas) for versao in versoes
+        _selecao_da_vitrine(
+            versao,
+            agora,
+            finais[versao.edital_id],
+            siglas,
+            leitura.resumo_do_acompanhamento(resultados.get(versao.edital_id, [])),
+        )
+        for versao in versoes
     ]
     selecoes.sort(
         key=lambda item: (
@@ -372,7 +389,7 @@ def _recortar_para_o_cartao(selecao, busca):
     )
 
 
-def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None):
+def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None, acompanhamento=None):
     """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
 
     Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
@@ -412,6 +429,8 @@ def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None):
         # O título do Edital é texto livre e costuma começar pelo número; repeti-lo na linha de
         # apoio era o mesmo dado duas vezes no mesmo cartão (FR-1606).
         "numero_no_titulo": bool(dados["titulo"]) and numero in dados["titulo"],
+        # Resultado e prazo de recurso, resumidos pela regra da D-004 (072).
+        "acompanhamento": acompanhamento,
         "dias_restantes": (
             _dias_ate(periodo.fim, agora)
             if periodo.estado == "aberto" and not (desfecho and desfecho.do_edital)

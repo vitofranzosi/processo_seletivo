@@ -595,3 +595,47 @@ def os_primeiros(itens, teto, termo="", texto=str):
         procurado = dobrar(termo)
         itens.sort(key=lambda item: procurado not in dobrar(texto(item)))
     return itens[:teto], max(len(itens) - teto, 0)
+
+
+# ---------------------------------------------------------------------------
+# O resumo do que foi publicado, no cartão da vitrine (072, D-004, FR-1629 a FR-1633)
+# ---------------------------------------------------------------------------
+
+NATUREZA_NO_PLURAL = {
+    "PRELIMINAR": "resultados preliminares",
+    "DEFINITIVA": "resultados definitivos",
+}
+
+
+def resumo_do_acompanhamento(vigentes):
+    """Resultado e prazo de recurso de um Edital, resumidos sem fazer um prazo valer para todos.
+
+    Recebe os vigentes já com `recurso_ate` (`prazos_de_recurso`) — as mesmas linhas que a página da
+    seleção mostra, de modo que cartão e página não têm como discordar (FR-1635). Devolve `None` sem
+    vigente: nenhuma frase de ausência (FR-1633).
+
+    **A regra é a da clarificação de 12/10** (D-004): com M vigentes e N deles de recurso aberto,
+
+    - o prazo é dito **uma vez** só quando N = M e todos terminam no mesmo instante;
+    - em qualquer outro caso com N > 0, "aberto para N de M" e o término **mais próximo entre os
+      abertos** — nunca uma frase de prazo sem escopo;
+    - a natureza só sai quando é a de todos: cada lista é a sua cadeia, e o preliminar de uma não
+      faz o Edital "preliminar" (062, FR-1155).
+
+    Perfil, etapa e lista ficam na página da seleção, onde a árvore da 062 já os organiza.
+    """
+    if not vigentes:
+        return None
+    naturezas = {item["publicacao"].natureza for item in vigentes}
+    comum = naturezas.pop() if len(naturezas) == 1 else None
+    terminos = [item["recurso_ate"] for item in vigentes if item.get("recurso_ate")]
+    todos_juntos = len(terminos) == len(vigentes) and len(set(terminos)) == 1
+    return {
+        "total": len(vigentes),
+        "mais_recente": max(item["publicacao"].publicado_em for item in vigentes),
+        "natureza": vigentes[0]["natureza_rotulo"] if comum else "",
+        "natureza_no_plural": NATUREZA_NO_PLURAL.get(comum, "") if comum else "",
+        "abertos": len(terminos),
+        "prazo_unico": terminos[0] if todos_juntos else None,
+        "primeiro_prazo": min(terminos) if terminos and not todos_juntos else None,
+    }

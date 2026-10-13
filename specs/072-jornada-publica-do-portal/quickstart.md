@@ -35,7 +35,7 @@ cd backend && uv run pytest -q tests/test_citacoes_de_requisito.py
 | **Começar — destino inválido** | `?destino=` externo, rota inexistente, Perfil que não é do Edital: nenhuma tela nomeia vaga, a volta segue o caminho de hoje | — |
 | **Preparar** | frase do Requerimento com momento "na inscrição"; ausente sem Requerimento e com "na convocação" | Edital 01/2026 do seed |
 | **Acompanhar** | resumo com 1, 3 e 5 vigentes: prazos iguais, parciais, diferentes, encerrados; sucedida fora da conta; sem resultado nada; cartão = página no mesmo instante (SC-604) | Edital 51/2026 do seed |
-| **Custo** | a vitrine com 1 e com 4 Editais com resultado faz o mesmo número de consultas | — |
+| **Custo** | a vitrine com 1 e com 3 Editais com resultado faz o mesmo número de consultas | — |
 | **Sem script** | consulta sem `hx-`/`onclick`; `open` vindo do servidor | página em `iframe` com `sandbox="allow-same-origin"` |
 | **Larguras** | — | sem rolagem lateral em 320, 360, 375, 390, 768, 1280, 1440 (SC-607) |
 
