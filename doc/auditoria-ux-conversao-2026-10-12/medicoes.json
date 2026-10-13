@@ -1,0 +1,166 @@
+{
+  "medido_em": "2026-10-12",
+  "commit": "b4a1abf4",
+  "banco": "ps_ux_conversao (make preparar + seed_demo)",
+  "edital_aberto": "5c696bcc-01af-4bac-ad00-2ec6934e0719 (Edital 01/2026 do seed)",
+  "script": "medir-primeira-tela.js",
+  "unidade": "px a partir do topo do documento",
+  "navegador": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.31226.1 Chrome/152.0.7977.130 Safari/537.36",
+  "vitrine": {
+    "320x568": {
+      "rolagemLateral": 0,
+      "formulario": [
+        203,
+        592
+      ],
+      "primeiroCartao": 657,
+      "tituloDoEditalVisivel": false,
+      "conviteVisivel": false,
+      "fundoDoConvite": 1159,
+      "fundoDoTituloDoEdital": 797
+    },
+    "360x800": {
+      "rolagemLateral": 0,
+      "formulario": [
+        203,
+        537
+      ],
+      "primeiroCartao": 602,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": false,
+      "fundoDoConvite": 1057,
+      "fundoDoTituloDoEdital": 719
+    },
+    "375x667": {
+      "rolagemLateral": 0,
+      "formulario": [
+        203,
+        537
+      ],
+      "primeiroCartao": 602,
+      "tituloDoEditalVisivel": false,
+      "conviteVisivel": false,
+      "fundoDoConvite": 1033,
+      "fundoDoTituloDoEdital": 719
+    },
+    "375x812": {
+      "rolagemLateral": 0,
+      "formulario": [
+        203,
+        537
+      ],
+      "primeiroCartao": 602,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": false,
+      "fundoDoConvite": 1033,
+      "fundoDoTituloDoEdital": 719
+    },
+    "390x844": {
+      "rolagemLateral": 0,
+      "formulario": [
+        203,
+        537
+      ],
+      "primeiroCartao": 602,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": false,
+      "fundoDoConvite": 1033,
+      "fundoDoTituloDoEdital": 719
+    },
+    "768x1024": {
+      "rolagemLateral": 0,
+      "formulario": [
+        189,
+        367
+      ],
+      "primeiroCartao": 433,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": true,
+      "fundoDoConvite": 771,
+      "fundoDoTituloDoEdital": 529
+    },
+    "1280x800": {
+      "rolagemLateral": 0,
+      "formulario": [
+        189,
+        289
+      ],
+      "primeiroCartao": 355,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": true,
+      "fundoDoConvite": 717,
+      "fundoDoTituloDoEdital": 451
+    },
+    "1440x900": {
+      "rolagemLateral": 0,
+      "formulario": [
+        189,
+        289
+      ],
+      "primeiroCartao": 355,
+      "tituloDoEditalVisivel": true,
+      "conviteVisivel": true,
+      "fundoDoConvite": 717,
+      "fundoDoTituloDoEdital": 451
+    }
+  },
+  "selecao": {
+    "320x568": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 758,
+      "tituloVagas": 809,
+      "primeiroInscreverSe": 1350,
+      "inscreverSeVisivel": false
+    },
+    "360x800": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 682,
+      "tituloVagas": 734,
+      "primeiroInscreverSe": 1275,
+      "inscreverSeVisivel": false
+    },
+    "375x667": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 682,
+      "tituloVagas": 734,
+      "primeiroInscreverSe": 1249,
+      "inscreverSeVisivel": false
+    },
+    "375x812": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 682,
+      "tituloVagas": 734,
+      "primeiroInscreverSe": 1249,
+      "inscreverSeVisivel": false
+    },
+    "390x844": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 657,
+      "tituloVagas": 709,
+      "primeiroInscreverSe": 1223,
+      "inscreverSeVisivel": false
+    },
+    "768x1024": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 518,
+      "tituloVagas": 569,
+      "primeiroInscreverSe": 783,
+      "inscreverSeVisivel": true
+    },
+    "1280x800": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 460,
+      "tituloVagas": 512,
+      "primeiroInscreverSe": 726,
+      "inscreverSeVisivel": true
+    },
+    "1440x900": {
+      "rolagemLateral": 0,
+      "fimDoCabecalho": 460,
+      "tituloVagas": 512,
+      "primeiroInscreverSe": 726,
+      "inscreverSeVisivel": true
+    }
+  },
+  "nota": "Medido duas vezes no mesmo dia; a segunda rodada corrigiu o seletor do título do Edital (a primeira media o do Processo). Os veredictos não mudaram."
+}
