@@ -13,6 +13,7 @@ from processo_seletivo.classificacao.domain.universo import (
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+    REDACAO_VIGENTE,
     criterio_por_extenso,
     por_identificador,
 )
@@ -274,13 +275,20 @@ def nomear_criterios(linhas, ato):
 
     A decoração é em memória e sobre `PosicaoNaOrdem`, que é append-only e recusa `save`: ela não
     tem como alcançar o banco.
+
+    **A frase é a da redação da Publicação que a versão cita** (069, FR-1397). O ato não guarda
+    texto, e a página o reconstrói; um ato emitido sobre uma versão publicada antes da `069` diz a
+    frase que publicou, e não a redação nova. É a mesma razão do nome do critério, pela versão do
+    ato: o que se lê de um ato antigo não muda depois.
     """
     conteudo = ato.versao.content
     nomes = nomes_do_marco(conteudo, perfil_id=ato.perfil_id, marco_id=ato.marco_id)
     etapas = por_identificador(conteudo.get("stages"))
     fatos = por_identificador(nomes["perfil"].get("declaredFacts"))
+    origem = getattr(ato.versao, "source_publication", None)
+    redacao = getattr(origem, "redacao_do_documento", None) or REDACAO_VIGENTE
     rotulos = {
-        str(criterio.get("id")): criterio_por_extenso(criterio, etapas, fatos)
+        str(criterio.get("id")): criterio_por_extenso(criterio, etapas, fatos, redacao=redacao)
         for criterio in nomes["marco"].get("tiebreakers") or []
     }
     for linha in linhas:

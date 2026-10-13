@@ -135,6 +135,18 @@ class PontoDaSerie:
     quantidade: int
 
 
+# Quantos dias, no máximo, o eixo do gráfico nomeia. Sessenta rótulos de data não cabem sob sessenta
+# barras de meio rem; sete cabem até na largura de um telefone, e com o primeiro e o último dia
+# nomeados quem lê situa os demais pela posição. A tabela equivalente continua nomeando todos.
+ROTULOS_NO_EIXO = 7
+
+
+@dataclass(frozen=True)
+class PontoNoEixo:
+    ponto: PontoDaSerie
+    rotulado: bool
+
+
 @dataclass(frozen=True)
 class PulsoDoEdital:
     edital: object
@@ -155,6 +167,25 @@ class PulsoDoEdital:
         isso não entra em nenhuma leitura textual.
         """
         return max((ponto.quantidade for ponto in self.serie), default=0)
+
+    @property
+    def eixo(self) -> tuple[PontoNoEixo, ...]:
+        """A série com a marca de quais dias o eixo nomeia — escala do desenho, como `pico`.
+
+        Um dia a cada `passo`, e sempre o último: é o "hoje" de um período em curso, o dia que mais
+        se procura. O penúltimo rótulo cai se ficar a menos de um `passo` do último, porque as duas
+        datas se sobreporiam sob barras estreitas.
+        """
+        total = len(self.serie)
+        passo = max(1, -(-total // ROTULOS_NO_EIXO))
+        return tuple(
+            PontoNoEixo(
+                ponto=ponto,
+                rotulado=indice == total - 1
+                or (indice % passo == 0 and total - 1 - indice >= passo),
+            )
+            for indice, ponto in enumerate(self.serie)
+        )
 
 
 @dataclass(frozen=True)

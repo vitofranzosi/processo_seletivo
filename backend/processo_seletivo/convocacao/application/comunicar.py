@@ -105,21 +105,13 @@ def forma_declarada(convocacao):
 def destinatario_de(convocacao):
     """Para onde a mensagem individual vai: a credencial principal, ou o endereço da Inscrição.
 
-    **A credencial vem primeiro porque ela é provada.** O endereço gravado na Inscrição é indício
-    histórico — a `010` o diz com todas as letras —, e a pessoa pode ter trocado de caixa desde
-    então. Ele continua sendo a saída quando não há credencial, que é o caso de quem se inscreveu
-    antes de o portal existir.
+    **A regra mora em `identidade/application/endereco.py`** desde a `066`, porque o aviso
+    complementar precisa exatamente dela, e duas cópias divergiriam no primeiro ajuste. Este nome
+    fica, para que nenhum chamador da convocação mude.
     """
-    from processo_seletivo.identidade.models import CandidateEmail
+    from processo_seletivo.identidade.application.endereco import endereco_da_inscricao
 
-    credencial = (
-        CandidateEmail.objects.filter(
-            identidade__subject=convocacao.inscricao.identity_subject, principal=True
-        )
-        .values_list("email_canonico", flat=True)
-        .first()
-    )
-    return credencial or convocacao.inscricao.email or ""
+    return endereco_da_inscricao(convocacao.inscricao)
 
 
 def comunicar(

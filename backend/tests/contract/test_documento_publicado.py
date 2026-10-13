@@ -128,6 +128,9 @@ def paginas_de(pdf: bytes) -> list[list[str]]:
 # O que legitimamente distingue os dois modos. Tudo o mais tem de ser igual — é isso que FR-041
 # promete, e é a diferença entre "a prévia mostra o que será publicado" e "a prévia mostra outra
 # coisa parecida". Cresce com a `008`: a autoridade signatária entra aqui na entrega 5.
+RODAPE_DE_IDENTIFICACAO = re.compile(r"^Edital \d+/\d{4}( · |$)")
+
+
 def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     fora = False
     corpo = []
@@ -140,8 +143,13 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
-        # duas são metadado de página, não corpo.
-        if marca_de_previa in linha or linha.startswith(("Edital 0", "PRÉVIA —", "Página ")):
+        # duas são metadado de página, não corpo. A identificação reconhecida pela forma, e não
+        # pelo "Edital 0" da fixture: os cenários da auditoria (068) são os Editais 91 e 92.
+        if (
+            marca_de_previa in linha
+            or RODAPE_DE_IDENTIFICACAO.match(linha)
+            or linha.startswith(("PRÉVIA —", "Página "))
+        ):
             continue
         if not fora:
             corpo.append(linha)
@@ -250,7 +258,8 @@ def test_percentual_peso_e_nota_saem_em_portugues():
     # peso e nota mínima viraram pares rótulo-valor da Etapa. Os valores continuam obrigatórios e
     # continuam em português — que é o que este teste guarda.
     assert "20%" in texto
-    assert "Peso:" in texto and "Nota mínima:" in texto
+    # **Forma atualizada pela `069`** (E2): os pares viraram frase, com os mesmos valores.
+    assert "nota mínima de 7" in texto and "peso 2" in texto
 
 
 @pytest.mark.contract
@@ -289,13 +298,61 @@ def test_as_regras_de_apresentacao_valem_tambem_na_previa():
     assert "20%" in texto
 
 
+def _com_atribuicoes_comuns():
+    """O snapshot da fixture com três Perfis, dois de mesmas atribuições (064, FR-1194).
+
+    A fixture tem um Perfil só, e por isso nunca compõe a subseção comum. Sem este segundo caso, a
+    igualdade de quebras entre prévia e publicado não seria afirmada sobre o documento que a `064`
+    passou a compor.
+    """
+    perfil = SNAPSHOT["profiles"][0]
+    return {
+        **SNAPSHOT,
+        "profiles": [
+            perfil,
+            {**perfil, "id": "33333333-3333-3333-3333-000000000064", "code": "DOC-INFO-2"},
+            {
+                **perfil,
+                "id": "33333333-3333-3333-3333-000000000065",
+                "code": "DOC-MAT",
+                "duties": "Ministrar aulas de Matemática nos cursos técnicos.",
+            },
+        ],
+    }
+
+
+def _cenario_da_auditoria(nome):
+    """O conteúdo congelado de um cenário da auditoria do PDF de 08/10/2026.
+
+    É o documento que a `068` mais muda: tabela de vagas, modalidades e frases uma vez, requisitos
+    e marcos em subseções comuns. Sem ele, a igualdade de quebras entre prévia e publicado não seria
+    afirmada sobre a seção consolidada (FR-1356).
+    """
+    import json
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[3]
+    caminho = raiz / "doc" / "auditoria-edital-pdf-2026-10-08" / "snapshots" / nome
+    return json.loads(caminho.read_text(encoding="utf-8"))["content"]
+
+
+COM_ATRIBUICOES_COMUNS = _com_atribuicoes_comuns()
+CENARIOS_DE_PAGINACAO = [
+    pytest.param(SNAPSHOT, id="fixture"),
+    pytest.param(COM_ATRIBUICOES_COMUNS, id="atribuicoes-comuns"),
+    pytest.param(_cenario_da_auditoria("A-conteudo-publicado.json"), id="consolidado-A"),
+    pytest.param(_cenario_da_auditoria("B-conteudo-publicado.json"), id="consolidado-B"),
+]
+
+
 # ---------------------------------------------------------------------------
 # 008 — Prévia e publicado são o mesmo documento (FR-041, FR-042)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.contract
-def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
+@pytest.mark.parametrize("conteudo", CENARIOS_DE_PAGINACAO)
+def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado(conteudo):
     """FR-042: a marca de prévia não pode deslocar o conteúdo.
 
     Enquanto ela for escrita **dentro** do fluxo, tudo desce — e a prévia passa a quebrar em
@@ -303,8 +360,9 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
     revisando uma paginação que não é a que sai. É o defeito que D-011 corrige tirando a marca do
     fluxo: fora dele, a igualdade é garantida por construção, e não por coincidência de medida.
     """
-    publicado = paginas_de(documento(SNAPSHOT, HASH))
-    previa = paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
+    resumo = canonical_sha256(conteudo)
+    publicado = paginas_de(documento(conteudo, resumo))
+    previa = paginas_de(documento(conteudo, resumo, modo=MODO_PREVIA))
 
     # O publicado pode ter **mais** páginas: o fechamento do ato — autoridade e verificação — só
     # existe nele, e é um bloco coeso que pode não caber na última página do corpo. O que FR-041
@@ -322,24 +380,35 @@ def test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado():
 
 
 @pytest.mark.contract
-def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes():
+@pytest.mark.parametrize("conteudo", CENARIOS_DE_PAGINACAO)
+def test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes(conteudo):
     """As diferenças entre os dois modos são as declaradas, e nenhuma outra.
 
     O teste acima compara página a página; este compara o documento inteiro, e por isso pega o que
     aquele não pegaria: uma linha que só existisse num dos modos sem mudar quebra nenhuma.
     """
+    resumo = canonical_sha256(conteudo)
     publicado = [
         linha
-        for pagina in paginas_de(documento(SNAPSHOT, HASH))
+        for pagina in paginas_de(documento(conteudo, resumo))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
     previa = [
         linha
-        for pagina in paginas_de(documento(SNAPSHOT, HASH, modo=MODO_PREVIA))
+        for pagina in paginas_de(documento(conteudo, resumo, modo=MODO_PREVIA))
         for linha in corpo_normativo(pagina, MARCA_DE_PREVIA)
     ]
 
     assert previa == publicado
+
+
+@pytest.mark.contract
+def test_o_cenario_de_atribuicoes_comuns_compoe_mesmo_a_subsecao_comum():
+    """064: o segundo cenário de paginação só vale se de fato compuser a subseção comum."""
+    texto = "\n".join(
+        linha for pagina in paginas_de(documento(COM_ATRIBUICOES_COMUNS)) for linha in pagina
+    )
+    assert "Atribuições comuns aos Perfis DOC-INFO e DOC-INFO-2" in texto
 
 
 @pytest.mark.contract
@@ -372,18 +441,24 @@ def test_a_regra_classificatoria_publicada_e_reconstituivel_no_documento():
     """
     texto = texto_de(documento(SNAPSHOT, HASH))
 
+    # **Na redação 2 desde a `069`**: os mesmos parâmetros, ditos na voz do candidato.
+    texto = " ".join(texto.split())
     # O alvo de cada tipo de critério, resolvido — e não o enum nem o identificador.
-    assert "1º maior pontuação na Etapa Prova didática" in texto
-    assert "2º maior valor declarado em Meses de experiência no ensino a distância" in texto
-    assert "3º menor valor declarado em Data de nascimento" in texto
+    assert "1º maior pontuação na Etapa “Prova didática”" in texto
+    assert (
+        "2º maior número de meses de experiência no ensino a distância, informado na inscrição"
+        in texto
+    )
+    assert "3º data de nascimento mais antiga, informada na inscrição" in texto
     # Os fatos que a inscrição vai exigir, anunciados antes dela.
-    assert "Dados exigidos na inscrição" in texto
-    assert "Data de nascimento (data)" in texto
+    assert "Na inscrição, informe também:" in texto
+    assert "• a data de nascimento" in texto
     # Os parâmetros que fecham a conta, junto da regra que os usa.
     assert (
-        "soma ponderada das Etapas Prova didática (peso 2) e Análise de títulos (peso 1)" in texto
+        "A nota final é a soma das pontuações nas Etapas “Prova didática” (peso 2) e “Análise de "
+        "títulos” (peso 1), cada uma multiplicada pelo seu peso." in texto
     )
-    assert "2 casas decimais, meio para cima" in texto
+    assert "arredondada para 2 casas decimais; a partir da metade, arredonda-se para cima" in texto
 
 
 @pytest.mark.contract
@@ -421,8 +496,9 @@ def test_a_reversao_declarada_sai_como_frase_abaixo_do_quadro():
     **Abaixo do quadro, e não em bloco próprio**, porque é uma regra sobre aqueles números: lida
     longe deles, quem lê teria de procurar a qual Perfil ela se aplica.
 
-    A frase é a do Edital, e não uma paráfrase do código: o 57/2026 escreve "na hipótese do não
-    preenchimento total", e é isso que sai sob `ON_BALANCE`.
+    A frase era a do Edital: o 57/2026 escreve "na hipótese do não preenchimento total", e era isso
+    que saía sob `ON_BALANCE`. Desde a `069` sai a redação 2 da mesma regra (V2 do contrato de
+    redação): "as vagas reservadas … que não forem preenchidas passam para a ampla concorrência".
     """
     com_reversao = {
         **SNAPSHOT,
@@ -435,8 +511,8 @@ def test_a_reversao_declarada_sai_como_frase_abaixo_do_quadro():
     # uma linha: o PDF quebra o parágrafo pela largura da página, e prender a quebra faria o teste
     # reprovar no dia em que alguém mudasse a margem.
     regiao = " ".join(partes[quadro:])
-    assert "não preenchimento total das vagas reservadas" in regiao
-    assert "destinado à respectiva ampla concorrência" in regiao
+    assert "vagas reservadas de um código que não forem preenchidas" in regiao
+    assert "passam para a ampla concorrência do mesmo código" in regiao
 
 
 @pytest.mark.contract
@@ -453,8 +529,8 @@ def test_a_reversao_por_esgotamento_sai_com_a_frase_daquele_gatilho():
     }
     texto = texto_de(documento(com_reversao, canonical_sha256(com_reversao)))
 
-    assert "ausência de candidatos aprovados" in texto
-    assert "não preenchimento total" not in texto
+    assert "Se não houver candidatos aprovados para as vagas reservadas" in " ".join(texto.split())
+    assert "que não forem preenchidas" not in texto
 
 
 @pytest.mark.contract
@@ -540,6 +616,19 @@ def test_as_duas_tabelas_de_vagas_nao_se_chamam_a_mesma_coisa():
     assert any("Perfis de vaga" in legenda for legenda in legendas), (
         "a comparativa diz o que tabula: Perfis"
     )
-    quadros = [legenda for legenda in legendas if "Quadro de vagas" in legenda]
-    assert len(quadros) == 1, f"uma só tabela chamada quadro de vagas: {legendas}"
-    assert quadros[0].endswith("— DOC-INFO"), "e ela nomeia o Perfil de quem reparte"
+    # Desde a `068`, com mais de um Perfil, a repartição por lista é uma tabela só para todos os
+    # Perfis — "Vagas por lista de concorrência", uma linha por Perfil —, e nenhuma legenda repete
+    # outra. O Perfil sem quadro (P2) não tem linha nela.
+    titulos = [legenda.split(" — ", 1)[1] for legenda in legendas]
+    assert len(titulos) == len(set(titulos)), f"nenhuma legenda repete outra: {legendas}"
+    assert "Vagas por lista de concorrência" in titulos
+    assert not [titulo for titulo in titulos if titulo.startswith("Quadro de vagas")]
+    linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
+    inicio = next(
+        i for i, linha in enumerate(linhas) if linha.endswith("por lista de concorrência")
+    )
+    fim = next(
+        i for i, linha in enumerate(linhas[inicio + 1 :], inicio + 1) if linha.startswith("Tabela ")
+    )
+    assert "DOC-INFO" in linhas[inicio:fim], "e ela nomeia o Perfil de quem reparte"
+    assert "P2" not in linhas[inicio:fim]

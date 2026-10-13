@@ -135,7 +135,7 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
   <p class="nota">Fica de fora {{ titulares.parada.protocolo }} — {{ titulares.parada.nome }}: {% if titulares.parada.motivo == "reabilitado" %}a decisão de recurso a pôs à frente, e ela não está entre as vagas da apuração; o gesto para nela, e chamá-la é a chamada individual.{% else %}é suplente. O gesto convoca só titulares; chamar a vaga que vagou é a chamada individual, abaixo.{% endif %}</p>
   {% endif %}
   <dl class="dados-da-inscricao">
-    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação no endereço eletrônico do certame — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
+    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
     <dt>Fundamento</dt><dd>{{ titulares.fundamento }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
   </dl>
   <form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">
@@ -376,6 +376,20 @@ A situação vai ao lado do nome, em cor e em palavra (a cor sozinha não é inf
 atestado abrem quando alguém os pede; e reenviar uma mensagem já enviada deixa de ser o botão mais
 chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pessoa.
 {% endcomment %}
+{% if chamadas_publicadas.itens %}
+<section aria-labelledby="avisos-das-chamadas">
+  <h2 id="avisos-das-chamadas">Avisar os convocados de uma chamada publicada</h2>
+  <p class="ajuda">Um e-mail complementar a quem a publicação convocou e segue em curso. O prazo continua correndo da publicação, como o Edital diz, e não do aviso.</p>
+  <ul>
+  {% for item in chamadas_publicadas.itens %}
+    <li>{{ item.referencia }} — {{ item.quantas }} convocaç{{ item.quantas|pluralize:"ão,ões" }}{% if item.avisada %} · já avisada{% endif %}
+      {% if chamadas_publicadas.habilitado %}<a class="acao" href="{% url 'interface:aviso-da-chamada' edital.id marco_id %}?comunicacao={{ item.comunicacao }}{% if lista_id %}&amp;lista={{ lista_id }}{% endif %}">Avisar os convocados desta publicação</a>{% else %}<span class="nenhuma">envio de avisos desabilitado nesta instalação</span>{% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <section aria-labelledby="chamadas">
   <h2 id="chamadas">Chamadas praticadas</h2>
   {% if not leitura.linhas %}

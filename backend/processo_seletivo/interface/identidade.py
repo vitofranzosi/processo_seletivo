@@ -33,6 +33,13 @@ PAPEIS = {
             # atos de autoridades distintas. Quem emitiu o ato não ganha, por tê-lo emitido, o
             # poder de divulgá-lo (017, FR-025, FR-026).
             "resultado:publicar",
+            # Avisar os candidatos de um ato publicado (066, `D-004`). **Capacidade própria, e não
+            # efeito de `resultado:publicar`**: quem publica o resultado não é necessariamente quem
+            # fala com o candidato, e quem avisa não ganha, por avisar, o poder de publicar
+            # (`FR-1275`). Vai a quem publica e a quem conduz o Processo; a presidência da comissão
+            # entra pelo vínculo, como em `comissao:gerir`. A grafia é conferida por
+            # `tests/authorization/test_papel_do_aviso.py`.
+            "aviso:enviar",
         ],
     ),
     "gestor": (
@@ -80,6 +87,9 @@ PAPEIS = {
             # centralizada — custe esta linha e nenhuma mudança no modelo. A grafia é conferida por
             # `tests/authorization/test_gerir_autoridades.py`.
             "autoridade:gerir",
+            # O mesmo aviso aos candidatos do publicador (066, `D-004`): quem conduz o Processo é
+            # quem mais fala com quem se inscreveu nele.
+            "aviso:enviar",
         ],
     ),
     # Papel **próprio**, e não uma capacidade acrescentada a um existente (D-005, T-005). Cada

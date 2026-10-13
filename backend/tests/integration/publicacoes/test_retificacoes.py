@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 import pytest
@@ -1608,3 +1609,163 @@ def test_cancelling_a_published_retification_says_it_is_final_and_offers_no_way_
     assert recusa.status_code == 409
     assert "final não pode ser cancelada" in str(recusa.data)
     assert "devolvida" not in str(recusa.data)
+
+
+ATRIBUICOES_DO_POLO = (
+    "Conhecer a proposta da Instituição e o projeto pedagógico do curso.\n"
+    "Contribuir nas atividades síncronas e assíncronas do ambiente virtual."
+)
+
+
+def _tres_polos_de_mesmo_texto():
+    """O rascunho mínimo publicável com três Perfis de mesmas atribuições (064, D-007).
+
+    O segundo e o terceiro saem de `duplicar_perfil`, como a etapa Perfis os cria: é ela que dá
+    identidade nova a Perfil, linha do quadro e marco, e remapeia as referências internas — e
+    montá-los à mão é o que costuma deixar referência apontando a origem.
+    """
+    from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
+    from tests.fixtures.edital import complete_draft
+
+    rascunho = complete_draft()
+    origem = {**rascunho["profiles"][0], "name": "Tutor Polo A", "duties": ATRIBUICOES_DO_POLO}
+    copias = [
+        {
+            **duplicar_perfil(origem, codigo=codigo, localidade="", etapas_do_edital=[]),
+            "name": f"Tutor Polo {letra}",
+        }
+        for codigo, letra in (("P2", "B"), ("P3", "C"))
+    ]
+    return {**rascunho, "profiles": [origem, *copias]}
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_retificacao_reagrupa_as_atribuicoes_e_o_documento_original_nao_muda(
+    api_client, manager_headers, process_payload
+):
+    """064, FR-1196: o documento guardado fica; o da Retificação agrupa pela versão retificada.
+
+    Três Perfis de mesmo texto publicam uma subseção comum. Retificadas as atribuições do terceiro,
+    o documento da Retificação agrupa só os dois que continuam iguais, e o terceiro traz o próprio
+    texto. O que a Retificação mudou continua dito por Perfil e campo — nunca pela subseção, que só
+    existe no documento.
+
+    **Desde a `069`**, a subseção é "Atribuições", e os grupos se dizem por rótulo (FR-1374).
+    """
+    from processo_seletivo.publicacoes.domain.alteracoes import alteracoes_legiveis
+
+    edital = publish_original(
+        api_client, manager_headers, process_payload, draft=_tres_polos_de_mesmo_texto()
+    )
+    original = Publicacao.objects.get(edital=edital, publication_order=1)
+    bytes_do_original = bytes(original.documento.bytes)
+    # Na apresentação por perguntas (069, FR-1374), o texto igual sai uma vez na subseção
+    # "Atribuições", sem rótulo de grupo — e é a subseção da `064` dita de outro jeito.
+    texto_original = texto_de(bytes_do_original)
+    assert re.search(r"^\d+\.\d+ Atribuições$", texto_original, re.M)
+    assert "Para os Perfis" not in texto_original
+
+    base = VersaoConsolidada.objects.get(edital=edital)
+    terceiro = base.content["profiles"][2]
+    assert terceiro["code"] == "P3"
+    criada = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {
+                "targetPath": f"/profiles/id={terceiro['id']}/duties",
+                "operation": "REPLACE",
+                "newValue": "Orientar os estudantes nas atividades presenciais do polo.",
+            }
+        ],
+        key="retificacao-chave-064",
+    )
+    assert criada.status_code == 201, criada.data
+    publicada = homologate_and_publish(
+        api_client, criada.data["id"], suffix="064", key="retificacao-chave-064"
+    )
+    assert publicada.status_code == 201, publicada.data
+
+    original.refresh_from_db()
+    assert bytes(original.documento.bytes) == bytes_do_original
+    retificado = texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes))
+    assert "Para os Perfis P1 e P2:" in retificado
+    assert "Para o Perfil P3 — Tutor Polo C:" in retificado
+    assert "Orientar os estudantes nas atividades presenciais do polo." in retificado
+
+    alteracoes = Retificacao.objects.get(pk=criada.data["id"]).alteracoes.all()
+    legiveis = alteracoes_legiveis(base.content, alteracoes)
+    assert len(legiveis) == 1
+    assert legiveis[0]["campo"] == "Atribuições"
+    assert "Tutor Polo C" in legiveis[0]["onde"]
+    assert "comuns" not in str(legiveis)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_retificacao_reagrupa_os_marcos_e_o_documento_original_nao_muda(
+    api_client, manager_headers, process_payload
+):
+    """068, FR-1358: o documento guardado fica; o da Retificação agrupa os marcos pela versão nova.
+
+    Três Perfis de marcos idênticos publicam uma subseção comum de marcos. Retificado o prazo de
+    recurso do marco do terceiro, o consolidado da Retificação agrupa só os dois que continuam
+    iguais, e o terceiro imprime os próprios marcos, com o prazo novo.
+
+    **Desde a `069`**, o Edital novo sai por perguntas, e o recurso de cada marco mora em "Como
+    recorrer?" (FR-1369): o reagrupamento aparece ali, com o alcance dito pelo código.
+    """
+    rascunho = _tres_polos_de_mesmo_texto()
+    # O código e o nome do marco são re-derivados do Perfil na duplicação (043, FR-644); aqui eles
+    # voltam a ser os da origem, para que os três marcos imprimam o mesmo texto.
+    origem = rascunho["profiles"][0]["classificationMilestones"][0]
+    for perfil in rascunho["profiles"][1:]:
+        for marco in perfil["classificationMilestones"]:
+            marco["code"], marco["name"] = origem["code"], origem["name"]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    original = Publicacao.objects.get(edital=edital, publication_order=1)
+    bytes_do_original = bytes(original.documento.bytes)
+    texto_original = " ".join(texto_de(bytes_do_original).split())
+    # Na apresentação por perguntas (069, FR-1369), o recurso sai em "Como recorrer?": uma frase
+    # só, sem alcance, quando os três marcos dizem o mesmo.
+    assert "Para os Perfis" not in texto_original.split("Como recorrer?")[-1]
+
+    base = VersaoConsolidada.objects.get(edital=edital)
+    terceiro = base.content["profiles"][2]
+    marco = terceiro["classificationMilestones"][0]
+    prazo = {**(marco.get("appealWindow") or {}), "admits": True, "durationDays": 9}
+    prazo.setdefault("unit", "DIAS_CORRIDOS")
+    criada = create_retification(
+        api_client,
+        edital,
+        base,
+        [
+            {
+                "targetPath": (
+                    f"/profiles/id={terceiro['id']}/classificationMilestones/id={marco['id']}"
+                    "/appealWindow"
+                ),
+                "operation": "REPLACE",
+                "newValue": prazo,
+            }
+        ],
+        key="retificacao-chave-068",
+    )
+    assert criada.status_code == 201, criada.data
+    publicada = homologate_and_publish(
+        api_client, criada.data["id"], suffix="068", key="retificacao-chave-068"
+    )
+    assert publicada.status_code == 201, publicada.data
+
+    original.refresh_from_db()
+    assert bytes(original.documento.bytes) == bytes_do_original
+    retificado = " ".join(
+        texto_de(bytes(Publicacao.objects.get(pk=publicada.data["id"]).documento.bytes)).split()
+    )
+    # Só o terceiro admite recurso agora: o alcance da frase é ele, pelo código (R6).
+    recorrer = retificado.split("Como recorrer?")[-1]
+    assert "Para o Perfil P3 — contra o resultado de" in recorrer
+    assert "no prazo de 9 (nove) dias corridos" in recorrer.split("Para o Perfil P3")[1]
+    assert "Para os Perfis P1" not in recorrer and "Para todos os Perfis" not in recorrer

@@ -44,7 +44,24 @@ DA_029 = [
     RAIZ / "requerimentos/application/preencher.py",
     RAIZ / "requerimentos/application/exigencia.py",
     RAIZ / "editais/application/requerimento.py",
+    # A `063`: o topo do acompanhamento chama, diz enviado e oferece a conferência do Requerimento
+    # de Matrícula — é ali que a pessoa mais quer ler "deferido", e onde a frase mais escorrega.
+    RAIZ / "portal/situacao.py",
+    PORTAL / "acompanhamento.html",
 ]
+
+# **A exceção é literal, por arquivo e com o motivo** (Clarifications da `063`). O rótulo nomeia o
+# desfecho que a `019` registra — "Indeferido na convocação" —, e não um juízo sobre o
+# requerimento. Só a cadeia exata sai antes da varredura; qualquer outra ocorrência de `deferid` no
+# mesmo arquivo continua reprovando, e o teste abaixo prova isso.
+PERMITIDOS = {
+    RAIZ / "portal/situacao.py": (
+        (
+            "Indeferido na convocação",
+            "rótulo do desfecho de indeferimento da convocação (019), e não do requerimento",
+        ),
+    ),
+}
 
 # Cada termo com o que ele afirmaria indevidamente. A frase entra na falha, para que quem a receba
 # entenda a fronteira em vez de só apagar a palavra.
@@ -67,8 +84,17 @@ PROIBIDOS = {
 # uma decisão a pesar. Proibir a palavra obrigaria a reescrever prosa clara para satisfazer o teste,
 # que é o modo de uma varredura passar a governar o produto em vez de guardá-lo.
 
+# **Nem o comentário de linha atravessa a quebra** (achado da `063`): com `re.S`, `#.*$` casava do
+# primeiro `#` até o fim do arquivo. `[^\n]*` para no fim da linha.
+#
+# **O padrão de docstring não atravessa código** (achado da `063`). A primeira versão, `""".*?"""`
+# com `re.S`, casava do fim de uma docstring até o início da seguinte e apagava o código entre as
+# duas — num módulo com docstring por função, a varredura lia quase nada e aprovava calada. É o
+# defeito que `test_vocabulario_da_convocacao.py` já registrava; a classe negada é a mesma de lá.
 SEM_COMENTARIO = re.compile(
-    r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}|^\s*#.*$|\"\"\".*?\"\"\"",
+    r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}"
+    r"|^[ \t]*#[^\n]*$"
+    r"|\"\"\"(?:(?!\"\"\").)*\"\"\"",
     re.S | re.M,
 )
 
@@ -76,6 +102,13 @@ SEM_COMENTARIO = re.compile(
 def visivel(caminho):
     """O arquivo sem comentário e sem docstring: o que ele de fato afirma a quem o lê."""
     return SEM_COMENTARIO.sub(" ", caminho.read_text())
+
+
+def sem_os_permitidos(caminho, corpo):
+    """O corpo sem as cadeias exatas que `PERMITIDOS` libera para **aquele** arquivo."""
+    for cadeia, _motivo in PERMITIDOS.get(caminho, ()):
+        corpo = corpo.replace(cadeia, " ")
+    return corpo
 
 
 def test_a_lista_de_superficies_existe_inteira():
@@ -87,7 +120,7 @@ def test_a_lista_de_superficies_existe_inteira():
 
 @pytest.mark.parametrize("caminho", DA_029, ids=lambda item: item.name)
 def test_nenhuma_superficie_da_029_afirma_desfecho_que_ela_nao_decide(caminho):
-    corpo = visivel(caminho).lower()
+    corpo = sem_os_permitidos(caminho, visivel(caminho)).lower()
     achados = [
         f"{termo!r} — {porque}" for termo, porque in PROIBIDOS.items() if re.search(termo, corpo)
     ]
@@ -134,3 +167,18 @@ def test_o_comentario_de_template_tambem_e_descartado(tmp_path):
     corpo = visivel(arquivo).lower()
 
     assert [termo for termo in PROIBIDOS if re.search(termo, corpo)] == []
+
+
+def test_a_excecao_e_so_a_cadeia_exata():
+    """A permissão não pode virar porta: "Requerimento indeferido" no mesmo arquivo reprova."""
+    caminho = RAIZ / "portal/situacao.py"
+    corpo = sem_os_permitidos(caminho, visivel(caminho) + '\nX = "Requerimento indeferido"\n')
+
+    assert [termo for termo in PROIBIDOS if re.search(termo, corpo.lower())] == [r"deferid"]
+
+
+def test_a_cadeia_permitida_existe_no_arquivo():
+    """Uma permissão para texto que sumiu é permissão morta, e esconderia a próxima palavra."""
+    for caminho, permitidos in PERMITIDOS.items():
+        for cadeia, _motivo in permitidos:
+            assert cadeia in visivel(caminho), f"{caminho.name}: {cadeia!r} não está mais lá"

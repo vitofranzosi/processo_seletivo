@@ -409,6 +409,9 @@ contando quantos campos exigiram digitação.
   incluído nele.
 - **FR-169**: O documento publicado MUST exibir o quadro na ordem declarada, com a linha geral em
   primeiro lugar, e MUST omitir a seção inteira quando não houver quadro, sem frase de ausência.
+  > **Emendado pela `068` (FR-1342, FR-1343, FR-1345, 09/10/2026):** com dois ou mais Perfis, o quadro
+  > de cada Perfil é uma linha da tabela de vagas da seção, com a linha geral na primeira coluna e as
+  > listas reservadas na ordem declarada; o Perfil sem quadro não tem linha, e nenhuma frase o diz.
 
 #### Retificação
 

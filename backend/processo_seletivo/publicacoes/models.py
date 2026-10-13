@@ -77,6 +77,12 @@ class Publicacao(models.Model):
     unidade_nome = models.CharField(max_length=255, blank=True, default="")
     unidade_cabecalho = models.JSONField(default=list)
     unidade_local = models.CharField(max_length=120, blank=True, default="")
+    # A redação das frases geradas com que o documento foi composto (069, FR-1397, R-004). A página
+    # do ato de ordenação reconstrói a frase do desempate na hora de exibir, e um ato publicado não
+    # pode passar a dizer, na tela, uma frase que nunca publicou: a redação é gravada no ato, e não
+    # deduzida de uma data de corte nem dos bytes. **Padrão 1**: toda Publicação anterior à coluna
+    # foi composta na redação 1, e é o que ela lê. Imutável como a tabela.
+    redacao_do_documento = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
         constraints = [

@@ -641,3 +641,26 @@ def test_o_edital_parado_nao_torna_parcial_a_leitura_de_quem_alcanca_tudo(
     )
 
     assert AUSENCIA_GLOBAL in atencao
+
+
+def test_o_grafico_tem_escala_e_datas_no_eixo(
+    client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
+):
+    """Sem eixo, as barras não diziam nem quando nem quanto, e a leitura dependia da tabela.
+
+    A escala e as datas são desenho, como as barras: ficam fora da árvore de acessibilidade, e
+    quem ouve a tela continua lendo os valores no equivalente textual.
+    """
+    from processo_seletivo.interface import supervisao as leitura
+
+    submeter(edital_c, 3, seed=2)
+
+    pulso = regiao(abrir(client, processo_a), "pulso-titulo")
+
+    item = next(i for i in leitura.pulso(processo_a).por_edital if i.edital.id == edital_c.id)
+    assert (
+        f'<div class="escala" aria-hidden="true"><span>{item.pico}</span><span>0</span></div>'
+        in pulso
+    )
+    hoje = item.serie[-1].dia.strftime("%d/%m")
+    assert f'<span class="dia">{hoje}</span>' in pulso, "o último dia da série não foi nomeado"

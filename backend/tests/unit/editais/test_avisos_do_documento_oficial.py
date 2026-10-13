@@ -70,9 +70,9 @@ def test_a_remissao_a_anexo_que_nao_existe_e_aviso_na_publicacao():
     assert len(achados) == 1
     assert achados[0].severity == Severity.WARNING
     assert "ANEXO IV" in achados[0].message
-    assert "«Da Inscrição»" in achados[0].message
-    # A Inscrição é a 7ª do catálogo desde a `054` (FR-980).
-    assert achados[0].path == "/sections/id=00000000-0000-0000-0000-000000000007/content"
+    assert "«Como se inscrever?»" in achados[0].message
+    # A Inscrição é a 8ª do catálogo da `069` (FR-1367): o Cronograma passou para antes dela.
+    assert achados[0].path == "/sections/id=00000000-0000-0000-0000-000000000008/content"
 
 
 def test_o_rotulo_do_anexo_pode_ser_escrito_em_qualquer_caixa():
@@ -123,7 +123,7 @@ def test_apresentacao_e_disposicoes_finais_vazias_recebem_um_aviso_cada():
     assert len(achados) == 2
     assert {achado.severity for achado in achados} == {Severity.WARNING}
     assert any("«Apresentação»" in achado.message for achado in achados)
-    assert any("«Disposições Finais»" in achado.message for achado in achados)
+    assert any("«Disposições finais»" in achado.message for achado in achados)
 
 
 def test_as_demais_vazias_nao_avisam():

@@ -159,6 +159,16 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       {% endif %}
     </p>
   </div>
+  {% comment %}
+  **Sob sorteio declarado o arredondamento sai da tela** (067, ED-03, D-008): a ordem sorteada não
+  vem de nota, e a validação deixou de exigi-lo. Os valores viajam ocultos — os do marco, ou o padrão
+  de marco novo — só para que a troca para pontuação, que recompõe o cartão pelo que o formulário
+  enviou, devolva os campos preenchidos. Gravar, a gravação não grava: `forms` manda `{}` sob sorteio.
+  {% endcomment %}
+  {% if marco|declara_sorteio %}
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-scale" value="{{ marco|arredondamento_oculto:'scale' }}">
+  <input type="hidden" name="marco-{{ indice }}-{{ sub }}-mode" value="{{ marco|arredondamento_oculto:'mode' }}">
+  {% else %}
   <div class="campos">
     <p class="campo curto">
       <label for="marco-{{ indice }}-{{ sub }}-scale">Casas decimais <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -178,6 +188,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       <span class="oculto" id="ajuda-modo-{{ indice }}-{{ sub }}">Aplicado uma vez, sobre a pontuação combinada.</span>
     </p>
   </div>
+  {% endif %}
   {% comment %}
   A janela recursal do marco (018, FR-030). **Não declarar é uma escolha legítima**, e é o que o
   formulário oferece por padrão: sem prazo publicado o sistema não inventa nenhum, e a

@@ -262,7 +262,7 @@ campos já é o digitado.
               data-resumo-individual_message="por mensagem individual"
               aria-describedby="ajuda-convocacao-{{ indice }}">
         <option value="">Não declarado — este Edital não diz como convoca</option>
-        <option value="PUBLICATION" {% if perfil.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação no endereço eletrônico do certame</option>
+        <option value="PUBLICATION" {% if perfil.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação</option>
         <option value="INDIVIDUAL_MESSAGE" {% if perfil.callForm == "INDIVIDUAL_MESSAGE" %}selected{% endif %}>Por mensagem individual à pessoa convocada</option>
       </select>
       <span class="oculto" id="ajuda-convocacao-{{ indice }}">Sem esta declaração o sistema recusa

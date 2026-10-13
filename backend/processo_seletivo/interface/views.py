@@ -137,6 +137,9 @@ from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapea
 from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
+    CARACTERE_SEM_GRAFIA,
+    CODIGOS_DA_NUMERACAO_DIGITADA,
+    REMISSAO_PELO_TITULO,
     fatos_do_conteudo_publicado,
     validate_for_publication,
 )
@@ -161,6 +164,7 @@ from processo_seletivo.interface import (
 )
 from processo_seletivo.interface import aplicacao as aplicacao_ui
 from processo_seletivo.interface import aplicacao_na_retificacao as gesto_na_retificacao
+from processo_seletivo.interface import avisos as avisos_da_interface
 from processo_seletivo.interface import retificacao as retificacao_ui
 from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -297,6 +301,8 @@ def lista(request):
             # O caminho para as autoridades da unidade (060), condicionado à permissão pela razão
             # da visão geral: oferecer um destino que a autorização recusa é o `N-03` da 038.
             "pode_gerir_autoridades": ator.can(GERIR_AUTORIDADES),
+            # Os modelos de aviso da unidade (066): por papel, como as autoridades (`D-004`).
+            "pode_gerir_modelos": ator.can("aviso:enviar"),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
         },
@@ -697,6 +703,11 @@ DESTINO_DA_PENDENCIA = {
     # onde o conteúdo não se corrige. A etapa que o trata é `classificacao`, e reconhecê-la exige
     # olhar o caminho inteiro — o segmento de coleção sozinho não distingue um do outro.
     "classificationMilestones": ("classificacao", "#titulo-classificacao", True),
+    # O método de sorteio comum é campo de raiz, e se compõe na Classificação, ao lado dos marcos
+    # que o herdam. Sem esta linha, o caractere sem grafia num campo dele (achado de 08/10)
+    # aparecia como não corrigível — e o `common_draw_method_invalid`, que tem o mesmo caminho,
+    # também.
+    "drawMethod": ("classificacao", "#titulo-classificacao", True),
     # O texto da declaração do Requerimento de Matrícula (029). É campo de **raiz**, como `title`,
     # e se resolve na etapa `Inscrição`, que é onde ele é composto. Sem esta linha a pendência
     # cairia em `(None, "", False)` e apareceria como **não corrigível** — o sistema apontaria um
@@ -720,7 +731,33 @@ DESTINO_POR_CODIGO = {
 # alheia, título ou ordem trocados, que a tela não corrige: a pendência oferecia um caminho que não
 # existe, que é o que a `FR-007` proíbe. Achado da revisão do PR 221.
 DESTINO_DO_TEXTO_DA_SECAO = ("conteudo", "#conteudo-titulo", True)
-CODIGOS_DO_TEXTO_DA_SECAO = frozenset({"attachment_cited_without_label", "section_universal_empty"})
+# O caractere sem grafia no texto da seção se corrige no mesmo lugar (achado de 08/10) — e só no
+# texto: o título da seção é do catálogo, e a pendência sobre ele é tão incorrigível quanto a de
+# topologia.
+CODIGOS_DO_TEXTO_DA_SECAO = frozenset(
+    {"attachment_cited_without_label", "section_universal_empty", CARACTERE_SEM_GRAFIA}
+    # A numeração digitada e as remissões (065) também se corrigem no texto da seção, e a remissão
+    # pelo título (069, R-013) também.
+    | CODIGOS_DA_NUMERACAO_DIGITADA
+    | {REMISSAO_PELO_TITULO}
+)
+# O identificador da seção no caminho do achado: `/sections/id=<uuid>/content`.
+SECAO_DO_CAMINHO = re.compile(r"^/sections/id=([^/]+)/content$")
+
+
+def _ancora_da_secao(caminho, codigo, chaves_das_secoes):
+    """A legenda da seção, para os achados da 065 (D-008, UX-160); `None` para os demais.
+
+    O achado de numeração diz "a seção sai como 4", e a pessoa precisa chegar ao campo cuja legenda
+    mostra esse 4 — o topo da etapa a deixaria procurando entre vinte e duas seções. Só os códigos
+    desta feature: trocar o destino dos avisos que já existiam é melhoria à parte, e mudaria o que
+    outras features prendem por teste.
+    """
+    if codigo not in CODIGOS_DA_NUMERACAO_DIGITADA | {REMISSAO_PELO_TITULO}:
+        return None
+    encontrado = SECAO_DO_CAMINHO.match(caminho or "")
+    chave = chaves_das_secoes.get(encontrado.group(1)) if encontrado else None
+    return f"#titulo-{chave}" if chave else None
 
 
 def _destino(caminho, codigo=""):
@@ -739,7 +776,7 @@ def _destino(caminho, codigo=""):
         # Só os dois avisos do texto se corrigem na etapa Conteúdo. O resto do que se diz sobre uma
         # seção é topologia do catálogo, que nenhuma etapa corrige — e a busca por segmento, abaixo,
         # mandava `/sections/id=…/title` para a Identificação, porque `title` ali é o do Edital.
-        if codigo in CODIGOS_DO_TEXTO_DA_SECAO:
+        if codigo in CODIGOS_DO_TEXTO_DA_SECAO and not caminho.endswith("/title"):
             return DESTINO_DO_TEXTO_DA_SECAO
         return (None, "", False)
     if caminho in DESTINO_DA_PENDENCIA:
@@ -905,8 +942,14 @@ def _pendencias(edital, *, agora=None, ator=None, snapshot=None):
         if edital.status in ANTES_DA_PUBLICACAO
         else fatos_do_conteudo_publicado(snapshot)
     )
+    chaves_das_secoes = {
+        str(secao.get("id")): secao.get("key")
+        for secao in snapshot.get("sections") or []
+        if isinstance(secao, dict)
+    }
     for item in achados:
         etapa, ancora, corrigivel = _destino(item.path, item.code)
+        ancora = _ancora_da_secao(item.path, item.code, chaves_das_secoes) or ancora
         pendencias.append(
             {
                 "severidade": SEVERIDADE.get(str(item.severity), "informacao"),
@@ -1650,6 +1693,7 @@ def compor_etapa(request, edital_id, etapa):
             "ancora_do_marco": _ancora_do_primeiro_marco(perfis)
             if etapa == "classificacao"
             else "",
+            "campo_do_arredondamento": _campo_do_arredondamento(perfis),
             # O método do sorteio comum ao Edital (030, FR-429): o passo o oferece uma vez, e cada
             # cartão de marco o referencia em vez de redigitá-lo.
             #
@@ -1740,6 +1784,11 @@ def compor_etapa(request, edital_id, etapa):
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
                 else forms.secoes_do_edital(edital, snapshot_da_etapa)
+            ),
+            # Na apresentação por perguntas o número vem do servidor, e o script da etapa não o
+            # reconta (069, R-003).
+            "numeracao_apresentada": (
+                etapa == "conteudo" and forms.numeracao_apresentada(snapshot_da_etapa)
             ),
             "reservas": forms.RESERVA,
             "conferencia": conferencia,
@@ -1958,6 +2007,18 @@ def _conferir_marcos_em_transito(edital, perfis):
                     f"O Perfil {perfil.get('code') or ''} leva marcos que citam Etapa ou fato que "
                     "não são deste Edital nem deste Perfil. Remova-o e duplique a origem de novo."
                 )
+
+
+def _campo_do_arredondamento(perfis):
+    """Para onde a ajuda "Casas decimais e arredondamento" leva no marco da âncora (067, FR-427).
+
+    Sob sorteio declarado o campo não está no cartão (D-008); o destino passa a ser a forma da
+    ordem, que é a pergunta que o tirou — o texto da ajuda já diz que sob sorteio não se arredonda.
+    """
+    for perfil in perfis or []:
+        if perfil.get("marcos"):
+            return "orderProduction" if marcos.declara_sorteio(perfil["marcos"][0]) else "scale"
+    return "scale"
 
 
 def _ancora_do_primeiro_marco(perfis):
@@ -2978,11 +3039,20 @@ def fragmento_marco_recomposto(request, indice, sub):
         return HttpResponse(status=204)
     if marco is None:
         return HttpResponse(status=204)
+    exibido = _reexibir_marco(marco)
+    if marcos.declara_sorteio(marco):
+        # Sob sorteio a gravação não leva arredondamento (067, D-008), e o marco lido do formulário
+        # vem com `{}`. Mas o cartão leva oculto o que veio oculto: é o que a troca para pontuação,
+        # no próximo recompor, devolve à tela — o arredondamento que o marco tinha, e não o padrão.
+        base = f"marco-{indice}-{sub}"
+        exibido.update(
+            scale=request.GET.get(f"{base}-scale", ""), mode=request.GET.get(f"{base}-mode", "")
+        )
     return render(
         request,
         "interface/_marco.html",
         {
-            "marco": _reexibir_marco(marco),
+            "marco": exibido,
             "indice": indice,
             "sub": sub,
             "quantos_perfis": edital.perfis.count() if edital else 0,
@@ -3398,11 +3468,21 @@ def previa(request, edital_id):
     if desvio is not None:
         return desvio
     origem = ORIGEM_DA_PREVIA.get(request.GET.get("origem", ""))
+    # **O que o documento não imprime é dito aqui, e não só na Revisão** (achado de 08/10). Na
+    # prévia o caractere aparece como `[U+2265]`, e quem lê só o PDF precisa saber o que aquilo
+    # significa e onde se corrige. Só esta pendência: as demais são da Revisão, e repeti-las aqui
+    # faria da prévia uma segunda Revisão.
+    sem_grafia = [
+        item
+        for item in _pendencias(edital, ator=identidade.ator_da_sessao(request))
+        if item["codigo"] == CARACTERE_SEM_GRAFIA
+    ]
     return render(
         request,
         "interface/previa.html",
         {
             "edital": edital,
+            "sem_grafia": sem_grafia,
             "voltar": reverse("interface:compor-etapa", args=[edital.id, origem])
             if origem
             else reverse("interface:detalhe", args=[edital.id]),
@@ -3497,6 +3577,9 @@ def detalhe(request, edital_id):
             # FR-023 guarda; `acoes` fica para quem lê o conjunto inteiro, na ordem de origem.
             "grupo": acoes.hierarquia(conjunto),
             "impedido_por_segregacao": segregacao,
+            # O caminho para os avisos aos candidatos (066), condicionado a quem os lê: oferecer um
+            # destino que a autorização recusa é o `N-03` da 038.
+            "pode_ver_avisos": _pode_ver_avisos(ator, edital),
             # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
             # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
             # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
@@ -7347,6 +7430,13 @@ def convocacao(request, edital_id, marco_id):
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
+                # O aviso complementar das chamadas comunicadas por publicação (066, `UX-174`): a
+                # mesma porta da comunicação, e nada para quem convoca por mensagem individual.
+                "chamadas_publicadas": avisos_da_interface.chamadas_publicadas(
+                    ator, edital, marco_id, lista_id
+                )
+                if pode_emitir
+                else {"itens": []},
                 # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
                 # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e
                 # quem acabara de desfechar lia "Apuração emitida".
@@ -8067,6 +8157,12 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
     return redirect(reverse("interface:publicacoes-do-marco", args=[edital_id, marco_id]))
 
 
+def _pode_ver_avisos(ator, edital):
+    from processo_seletivo.avisos.application.comando import pode_consultar
+
+    return pode_consultar(ator, edital.processo)
+
+
 @require_http_methods(["GET"])
 def publicacoes_do_marco(request, edital_id, marco_id):
     """O que foi divulgado, quando, por quem — e o que vale hoje (FR-068).
@@ -8099,6 +8195,9 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 # sendo `resultado:publicar`.
                 "pode_ver_o_ato": _pode_ver_a_classificacao(ator, edital),
                 "publicada_agora": request.session.pop("resultado_da_publicacao", None),
+                # "Avisar candidatos" ao lado da publicação vigente, e a linha do último aviso
+                # (066, `UX-174`, `UX-175`). O aviso é gesto posterior, de outra capacidade.
+                "avisos": avisos_da_interface.contexto_do_marco(ator, edital, marco_id),
             },
         )
     )

@@ -16,7 +16,8 @@ a{color:var(--verde-texto)}
 main:focus{outline:none}
 header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem;
   display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
-header.topo .marca{font-weight:600;letter-spacing:.02em}
+header.topo .marca{font-weight:600;letter-spacing:.02em;color:var(--branco);text-decoration:none}
+header.topo .marca:hover{text-decoration:underline}
 header.topo .marca span{font-weight:300;opacity:.85}
 header.topo .identidade{margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.875rem}
 header.topo .identidade a,header.topo .identidade button{color:var(--branco)}
@@ -94,6 +95,11 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
 .marcos h3{font-size:.9375rem;margin:0 0 .25rem}
 .marcos h4{font-size:.875rem;margin:0 0 .25rem}
 .campo.caracter label{display:inline-flex;align-items:center;gap:.35rem;margin-right:1rem}
+{% comment %} A caixa herdava `width:100%` de `.campo input`, e cem por cento de um rótulo `inline-flex`, que
+   mede o próprio conteúdo, é circular: o Chrome desenhava a marca, o Safari a resolvia em zero e
+   restavam só as palavras "Eliminatória" e "Classificatória". Dois nomes de classe, como em
+   `.campo.escolha input`, para não depender da ordem na folha. {% endcomment %}
+.campo.caracter input{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
 .resumo{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:0;list-style:none}
 .resumo li{background:var(--branco);border:1px solid var(--borda);border-radius:4px;
   padding:.5rem .85rem;font-size:.875rem}
@@ -446,15 +452,32 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
    empurrarem a largura faria o corpo da página rolar na horizontal. {% endcomment %}
 .serie{margin:0 0 1rem}
 .serie figcaption{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .35rem}
-.serie .barras{display:flex;align-items:flex-end;gap:2px;height:5rem;margin:0 0 .5rem;padding:0;
-  list-style:none;border-bottom:1px solid var(--borda);overflow-x:auto}
+{% comment %} A escala fica à esquerda, com o pico no topo e o zero na base da faixa das barras. A
+   altura de 5rem se repete na escala e na coluna de propósito: as duas precisam começar e terminar
+   na mesma linha, e a data abaixo da barra não pode entrar nessa conta. {% endcomment %}
+.serie .grafico{display:flex;align-items:flex-start;gap:.4rem}
+.serie .escala{display:flex;flex-direction:column;justify-content:space-between;height:5rem;
+  font-size:.7rem;line-height:1;color:var(--texto-fraco);text-align:right;
+  font-variant-numeric:tabular-nums}
+.serie .barras{display:flex;flex:1 1 auto;min-width:0;margin:0 0 .5rem;padding:0;
+  list-style:none;overflow-x:auto}
+{% comment %} A barra tem **teto de largura**. Sem ele, `flex` crescia até ocupar a faixa inteira, e um
+   período de um dia virava um bloco verde da largura da página. O piso de .4rem é o que obriga
+   sessenta dias a rolar dentro do contêiner, em vez de sumirem em fios. O espaço entre barras é
+   margem da barra, e não `gap` da lista: com `gap`, a linha de base quebrava em tracejado. {% endcomment %}
+.serie .barras li{display:flex;flex-direction:column;flex:1 1 0;min-width:.4rem;max-width:2.5rem}
+.serie .coluna{display:flex;align-items:flex-end;height:5rem;border-bottom:1px solid var(--borda)}
 {% comment %} `height` não é a última declaração de propósito: uma regra terminada em porcentagem seguida da
    chave de fechamento produz, no corpo servido, a mesma dupla de caracteres que fecha uma tag de
    template. A varredura de sintaxe não interpretada procura substring, e não sabe que ali é folha
    de estilo — e a prosa deste comentário, que também vai para a página, evita escrevê-la. {% endcomment %}
-.serie .barras li{height:100%;flex:1 0 .4rem;display:flex;align-items:flex-end}
-.serie .barra{display:block;width:100%;min-height:1px;background:var(--verde);
-  border-radius:2px 2px 0 0}
+.serie .barra{display:block;width:calc(100% - 2px);margin:0 1px;min-height:1px;
+  background:var(--verde);border-radius:2px 2px 0 0}
+{% comment %} A data nasce alinhada à esquerda da sua barra e invade as vizinhas, que não têm rótulo;
+   a última se alinha pela direita, senão a data de hoje seria cortada pela borda da faixa. {% endcomment %}
+.serie .dia{height:1rem;margin-top:.2rem;font-size:.7rem;line-height:1rem;white-space:nowrap;
+  color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.serie .barras li:last-child .dia{align-self:flex-end}
 .serie .equivalente summary{color:var(--verde-texto);font-size:.875rem;cursor:pointer}
 .medidor{display:grid;gap:.3rem;margin:0 0 1rem}
 .medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
@@ -1279,7 +1302,9 @@ escape do guardião por mudar de lugar.
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
-  <span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span>
+  {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
+     dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
+  <a class="marca" href="{% url 'interface:lista' %}">Cefor<span>/Ifes</span> · Processos Seletivos</a>
   {% if ator %}
   <div class="identidade">
     {% comment %} UX-008: quem só executa trabalho futuro chega às próprias Etapas sem passar por tela

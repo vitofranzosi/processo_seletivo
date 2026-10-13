@@ -50,3 +50,57 @@ test("a legenda diz o número, ou por que não há número", () => {
   });
   assert.deepEqual(regras.rotulos(0), { numero: "", estado: " (preâmbulo, sem número)" });
 });
+
+/* Na apresentação por perguntas (069, R-003), o número é o do servidor: "3.1 Público-alvo" não é a
+   contagem das seções que saem, e recontá-lo aqui daria "4." onde o documento imprime "3.1". */
+
+test("na apresentação por perguntas, o número é o que o servidor mandou", () => {
+  assert.deepEqual(
+    regras.rotulosApresentados({ estado: "texto", texto: "Graduados", rotuloDoServidor: "3.1 " }),
+    { numero: "3.1 ", estado: "" }
+  );
+});
+
+test("a seção esvaziada perde o número, e a preenchida espera o servidor", () => {
+  assert.deepEqual(
+    regras.rotulosApresentados({ estado: "texto", texto: "  ", rotuloDoServidor: "3.1 " }),
+    { numero: "", estado: " (vazia — não sai no documento)" }
+  );
+  assert.deepEqual(
+    regras.rotulosApresentados({ estado: "texto", texto: "Novo", rotuloDoServidor: "" }),
+    { numero: "", estado: " (sai no documento; o número aparece ao salvar)" }
+  );
+});
+
+test("o preâmbulo continua sem número na apresentação por perguntas", () => {
+  assert.deepEqual(
+    regras.rotulosApresentados({ estado: "texto", preambulo: true, texto: "A Diretora" }),
+    { numero: "", estado: " (preâmbulo, sem número)" }
+  );
+});
+
+test("o membro que sai como corpo da seção diz isso, sem número", () => {
+  assert.deepEqual(
+    regras.rotulosApresentados({
+      estado: "texto",
+      texto: "Graduados",
+      rotuloDoServidor: "",
+      estadoDoServidor: " (sai como o texto de 3. Quem pode se inscrever?)",
+    }),
+    { numero: "", estado: " (sai como o texto de 3. Quem pode se inscrever?)" }
+  );
+});
+
+test("esvaziar ou preencher uma seção torna provisórios os números das outras", () => {
+  const salvas = [
+    { apresentada: true, estado: "texto", texto: "Graduados", rotuloDoServidor: "3.1 " },
+    { apresentada: true, estado: "texto", texto: "Ser brasileiro", rotuloDoServidor: "3.2 " },
+  ];
+  assert.equal(regras.numeracaoDefasada(salvas), false);
+  const esvaziada = [{ ...salvas[0], texto: "" }, salvas[1]];
+  assert.equal(regras.numeracaoDefasada(esvaziada), true);
+  assert.deepEqual(regras.rotulosApresentados(esvaziada[1], true), {
+    numero: "",
+    estado: " (sai no documento; o número aparece ao salvar)",
+  });
+});

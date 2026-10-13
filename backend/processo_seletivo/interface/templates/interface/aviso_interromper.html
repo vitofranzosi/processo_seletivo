@@ -1,0 +1,35 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Interromper o aviso — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <a href="{% url 'interface:aviso' aviso.id %}">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }}</a> ›
+  <span aria-current="page">Interromper</span>
+</nav>
+
+<h1>Interromper o envio</h1>
+<p class="sub">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}, confirmado por {{ aviso.solicitado_por }}</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível interromper:</strong> {{ erro.detail }}</p>{% endif %}
+
+<section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">
+  <h2 id="titulo-consequencias">O que a interrupção faz, e o que não faz</h2>
+  <ul>
+    <li><strong>{{ aceitas }} mensage{{ aceitas|pluralize:"m,ns" }} já fo{{ aceitas|pluralize:"i,ram" }} aceita{{ aceitas|pluralize }} pelo servidor de correio e não pode{{ aceitas|pluralize:",m" }} ser recuperada{{ aceitas|pluralize }}.</strong> A interrupção não recolhe nada.</li>
+    <li>O que ainda não saiu não sai mais. Para mandar depois, é preciso um reenvio, com justificativa e prévia nova.</li>
+    <li>A interrupção fica registrada com o seu nome, o instante e o motivo.</li>
+  </ul>
+</section>
+
+<form method="post" action="{% url 'interface:aviso-interromper' aviso.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="chave" value="{{ chave }}">
+  <div class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true">{{ motivo }}</textarea>
+  </div>
+  <button type="submit" class="botao perigoso">Interromper o envio</button>
+  <a class="botao secundario" href="{% url 'interface:aviso' aviso.id %}">Voltar sem interromper</a>
+</form>
+{% endblock %}

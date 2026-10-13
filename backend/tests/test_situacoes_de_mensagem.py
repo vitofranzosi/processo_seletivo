@@ -9,6 +9,10 @@ que nada acusasse que a norma ficou para trás.
 Administração dirigido ao candidato, e não recibo de ato que ele praticou — o critério que unia as
 duas primeiras. Admiti-la exigiu a revisão, que está datada na spec e declarada em
 `convocacao/application/comunicar.py`.
+
+**A `066` acrescentou a quarta**, pelo mesmo caminho: a `FR-084` foi revisada de novo, com as
+redações anteriores preservadas, para admitir o aviso complementar vinculado a ato oficial — a
+primeira situação sem efeito nenhum. A data está declarada em `avisos/application/despacho.py`.
 """
 
 import io
@@ -17,18 +21,20 @@ from pathlib import Path
 
 import pytest
 
+from processo_seletivo.avisos.application.despacho import REVISAO_DA_FR_084_PELA_066
 from processo_seletivo.convocacao.application.comunicar import REVISAO_DA_FR_084
 
 RAIZ = Path(__file__).resolve().parents[1] / "processo_seletivo"
 SPEC_DA_010 = Path(__file__).resolve().parents[2] / "specs" / "010-area-do-candidato" / "spec.md"
 
-# As três situações da `FR-084` revisada, e o módulo onde cada uma vive. **Declaradas, e não
+# As quatro situações da `FR-084` revisada, e o módulo onde cada uma vive. **Declaradas, e não
 # descobertas**: é a lista contra a qual a varredura compara, e acrescentar uma linha aqui é o
 # gesto que obriga a revisar a norma antes — não depois.
 SITUACOES = {
     "identidade/application/mensagem.py": "o código de acesso e o aviso de mudança de credencial",
     "inscricoes/application/mensagem.py": "a confirmação do envio da inscrição",
     "convocacao/application/comunicar.py": "a convocação, quando o Edital a comunica por mensagem",
+    "avisos/application/despacho.py": "o aviso complementar vinculado a ato oficial (066)",
 }
 
 
@@ -92,10 +98,11 @@ def test_a_varredura_le_o_codigo_e_nao_a_prosa(tmp_path):
     assert _nomes_do_codigo(envia) & REMETENTES
 
 
-def test_sao_tres_situacoes_e_a_terceira_e_a_convocacao():
-    """Três, e não duas: a contagem asseverada é a da regra **revisada** (019, `T027`)."""
-    assert len(SITUACOES) == 3
+def test_sao_quatro_situacoes_e_a_quarta_e_o_aviso():
+    """Quatro: a contagem asseverada é a da regra revisada pela `066` (`FR-1280`)."""
+    assert len(SITUACOES) == 4
     assert "convocacao/application/comunicar.py" in SITUACOES
+    assert "avisos/application/despacho.py" in SITUACOES
 
 
 @pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
@@ -116,9 +123,26 @@ def test_a_declaracao_no_codigo_concorda_com_a_norma_escrita():
             "desfeita, ou REVISAO_DA_FR_084 foi declarada antes de existir"
         )
         assert REVISAO_DA_FR_084 in trecho, "a data declarada não é a que a spec registra"
-        assert "três" in trecho, "a regra revisada precisa dizer quantas situações admite"
+        assert "três" in trecho, "a redação da 019, preservada, dizia quantas situações admitia"
         assert "Redação anterior" in trecho, (
             "a regra mandava revisá-la, e não substituí-la em silêncio: a redação anterior fica"
         )
     else:
         assert "revisada pela `019`" not in trecho
+
+
+@pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
+def test_a_revisao_da_066_esta_na_norma_escrita():
+    """A quarta situação só existe porque a `FR-084` foi revisada de novo, e por escrito.
+
+    **Revisar, e não substituir.** A regra manda revisá-la para admitir outra situação; a redação
+    anterior fica, e é ela que se lê como "Redação anterior" no trecho.
+    """
+    texto = SPEC_DA_010.read_text(encoding="utf-8")
+    trecho = texto[texto.index("- **FR-084**") : texto.index("- **FR-084a**")]
+
+    assert f"pela `066` em {REVISAO_DA_FR_084_PELA_066}" in trecho
+    assert REVISAO_DA_FR_084_PELA_066 in trecho
+    assert "**quatro**" in trecho, "a regra vigente precisa dizer quantas situações admite"
+    assert "Redação anterior" in trecho
+    assert "Redação original" in trecho

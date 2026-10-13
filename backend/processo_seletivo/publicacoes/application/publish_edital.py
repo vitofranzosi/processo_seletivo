@@ -14,6 +14,7 @@ from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.contexto_do_ato import contexto_do_ato
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_VIGENTE
 from processo_seletivo.publicacoes.infrastructure.pdf import render_edital_pdf
 from processo_seletivo.publicacoes.models import (
     DocumentoPublicado,
@@ -751,6 +752,9 @@ def publish_edital(
             canonical_content=revisao.canonical_content,
             canonical_schema_version=revisao.canonical_schema_version,
             published_by=actor.subject,
+            # A redação com que o documento acima foi composto (069, FR-1397): a página do ato
+            # de ordenação a lê para dizer a frase que esta Publicação publicou.
+            redacao_do_documento=REDACAO_VIGENTE,
             **ato.colunas,
         )
         document = DocumentoPublicado.objects.create(

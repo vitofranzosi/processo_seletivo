@@ -1,0 +1,59 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Avisos aos candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Avisos aos candidatos</span>
+</nav>
+
+<h1>Avisos aos candidatos</h1>
+<p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }}</p>
+<p class="imutavel">O aviso é um e-mail complementar a um ato já publicado: ele aponta a publicação oficial, não a substitui e não muda prazo, situação nem direito de ninguém.</p>
+
+{% if not habilitado %}
+<p class="aviso" role="status"><strong>O envio de avisos está desabilitado nesta instalação.</strong> Ele depende da validação institucional de proteção de dados e da infraestrutura de correio.</p>
+{% endif %}
+
+{% if pode_avisar %}
+<section aria-labelledby="titulo-resultados">
+  <h2 id="titulo-resultados">Resultados publicados</h2>
+  {% if marcos %}
+  <ul>
+  {% for marco in marcos %}
+    <li>{{ marco.nome|default:"Marco" }}:
+      {% for natureza in marco.pendentes %}{% if habilitado %}<a class="acao" href="{% url 'interface:aviso-do-resultado' edital.id marco.marco_id %}?natureza={{ natureza }}">Avisar candidatos — resultado {{ natureza_rotulo|dicionario_simples:natureza }}</a>{% else %}resultado {{ natureza_rotulo|dicionario_simples:natureza }} ainda não avisado{% endif %} {% empty %}nada novo a avisar{% endfor %}
+    </li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhum resultado foi publicado neste Edital ainda.</p>
+  {% endif %}
+  <p class="ajuda">A chamada de convocação publicada é avisada pela tela da convocação do marco.</p>
+</section>
+{% endif %}
+
+<section aria-labelledby="titulo-historico">
+  <h2 id="titulo-historico">Avisos confirmados</h2>
+  {% if avisos %}
+  <div class="tabela-rolavel">
+  <table>
+    <caption class="oculto">Avisos confirmados neste Edital</caption>
+    <thead><tr><th scope="col">Confirmado em</th><th scope="col">Sobre</th><th scope="col">Destinatários com endereço</th><th scope="col">Por</th></tr></thead>
+    <tbody>
+    {% for item in avisos %}
+      <tr>
+        <td><a href="{% url 'interface:aviso' item.id %}">{{ item.solicitado_em|date:"d/m/Y" }} às {{ item.solicitado_em|date:"H:i" }}</a></td>
+        <td>{% if item.origem == "CHAMADA" %}Chamada publicada{% else %}Resultado {{ item.natureza|lower }}{% if item.retificadora %} (retificação){% endif %}{% endif %}{% if item.aviso_anterior %} — reenvio{% endif %}</td>
+        <td>{{ item.com_endereco }}</td>
+        <td>{{ item.solicitado_por }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="nenhuma">Nenhum aviso foi confirmado neste Edital.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -753,3 +753,13 @@ def test_fr595_a_razao_tambem_declara_que_e_parcial(client, certame):
     # Submetidas e Inscr./vaga são as duas parciais enquanto o período corre.
     parciais = [c for c in celulas if 'class="parcial"' in c]
     assert len(parciais) == 2, celulas
+
+
+def test_a_marca_do_cabecalho_devolve_a_lista(client):
+    """A Visão Geral não tem trilha, e nenhum link dela leva de volta à lista de Processos.
+
+    Até a marca virar link, o único caminho de volta era o botão do navegador — quem abria a
+    página pela lista ficava preso nela.
+    """
+    corpo = abrir(client)
+    assert re.search(rf'<a class="marca" href="{re.escape(reverse("interface:lista"))}"', corpo)

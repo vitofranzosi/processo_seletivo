@@ -108,6 +108,12 @@ def situacoes_do_candidato(inscricao):
                 "marco": cabecalho.get("marco", ""),
                 "marco_codigo": cabecalho.get("marco_codigo", ""),
                 "natureza_rotulo": cabecalho.get("natureza_rotulo", ""),
+                # **A lista é o que distingue duas situações do mesmo marco** (063, D-006). Quem
+                # concorre pela ampla e por uma reserva tem uma linha em cada cadeia, e o
+                # acompanhamento intitulava as duas só pelo marco: "8º lugar" e "2º lugar" sob o
+                # mesmo título. O nome é o da página pública, ampla concorrência incluída.
+                "lista": nome_da_lista(cabecalho),
+                "lista_id": linha.publicacao.lista_id,
                 "situacao": linha.situacao,
                 "classificada": linha.situacao == SituacaoDivulgada.Situacao.CLASSIFICADA,
                 "posicao": linha.posicao,

@@ -13,7 +13,36 @@ from processo_seletivo.editais.domain import secoes
 
 # A ordem declarada pela `054` (FR-980): a união das seções que se repetem nas quatro famílias da
 # amostra do Cefor, a oferta antes da inscrição. As 12 de antes mantêm a chave (FR-981).
+# O catálogo vigente é o da `069` (FR-1367): as chaves e os tipos da `054`, com a ordem e os títulos
+# do *Catálogo apresentado* da spec.
 ORDEM_ESPERADA = [
+    ("apresentacao", "Apresentação", secoes.TEXTUAL),
+    ("disposicoes-preliminares", "Disposições preliminares", secoes.TEXTUAL),
+    ("informacoes-gerais", "Informações gerais", secoes.TEXTUAL),
+    ("publico-alvo", "Público-alvo", secoes.TEXTUAL),
+    ("requisitos-gerais", "Requisitos gerais", secoes.TEXTUAL),
+    ("perfis", "Quantas vagas há, e onde?", secoes.GERADA),
+    ("cronograma", "Cronograma", secoes.GERADA),
+    ("inscricao", "Como se inscrever?", secoes.TEXTUAL),
+    ("atendimento-pcd", "Atendimento à pessoa com deficiência", secoes.TEXTUAL),
+    ("documentos-exigidos", "Quais documentos enviar?", secoes.GERADA),
+    ("classificacao", "Como será a seleção?", secoes.TEXTUAL),
+    ("etapas", "Etapas de avaliação", secoes.GERADA),
+    ("verificacao-autodeclaracao", "Verificação da autodeclaração", secoes.TEXTUAL),
+    ("recursos", "Como recorrer?", secoes.TEXTUAL),
+    ("convocacao", "Como será a convocação?", secoes.TEXTUAL),
+    ("matricula", "Como será a matrícula?", secoes.TEXTUAL),
+    ("acesso-ao-curso", "Acesso ao curso", secoes.TEXTUAL),
+    ("homologacao-matricula", "Homologação da matrícula", secoes.TEXTUAL),
+    ("certificado", "Certificado", secoes.TEXTUAL),
+    ("prazo-de-validade", "Prazo de validade", secoes.TEXTUAL),
+    ("anexos", "Anexos", secoes.GERADA),
+    ("disposicoes-finais", "Disposições finais", secoes.TEXTUAL),
+]
+
+# O da `054`, congelado (069): é o que os Editais publicados antes carregam no snapshot, e por ele a
+# apresentação plana se reconhece.
+ORDEM_ESPERADA_DA_054 = [
     ("apresentacao", "Apresentação", secoes.TEXTUAL),
     ("disposicoes-preliminares", "Disposições Preliminares", secoes.TEXTUAL),
     ("informacoes-gerais", "Informações Gerais sobre o Curso", secoes.TEXTUAL),
@@ -45,6 +74,10 @@ def test_o_catalogo_tem_as_secoes_declaradas_na_ordem():
     assert [(s.key, s.title, s.type) for s in secoes.CATALOGO] == ORDEM_ESPERADA
 
 
+def test_o_catalogo_da_054_continua_congelado():
+    assert [(s.key, s.title, s.type) for s in secoes.CATALOGO_DA_054] == ORDEM_ESPERADA_DA_054
+
+
 def test_a_ordem_declarada_e_uma_sequencia_sem_buraco():
     """`order` é conteúdo normativo e o documento o respeita; buraco ou repetição seria defeito."""
     assert [s.order for s in secoes.CATALOGO] == list(range(1, len(ORDEM_ESPERADA) + 1))
@@ -61,9 +94,12 @@ def test_as_posicoes_cumprem_a_leitura_de_um_edital():
     assert posicao["perfis"] < posicao["inscricao"], (
         "a oferta vem antes da inscrição, como nos quinze Editais da amostra (054, FR-980)"
     )
-    assert posicao["classificacao"] > posicao["etapas"], (
-        "a classificação vem depois das Etapas de Avaliação"
+    # Na `069` a seleção abre pelo texto de quem redigiu, e as Etapas saem como subseções dela
+    # (FR-1368): `classificacao` é a principal de "Como será a seleção?", e `etapas` vem depois.
+    assert posicao["etapas"] == posicao["classificacao"] + 1, (
+        "as Etapas de Avaliação saem dentro da seleção, depois do texto dela"
     )
+    assert posicao["cronograma"] < posicao["inscricao"], "o Cronograma vem antes da inscrição"
     assert posicao["disposicoes-finais"] == len(secoes.CATALOGO), "as disposições finais fecham"
 
 

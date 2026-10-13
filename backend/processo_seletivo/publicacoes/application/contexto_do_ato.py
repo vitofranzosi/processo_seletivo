@@ -22,7 +22,11 @@ class ContextoDoAto:
 
     @property
     def para_o_compositor(self):
-        return UnidadeDoAto(cabecalho=tuple(self.unidade.cabecalho), local=self.unidade.local)
+        return UnidadeDoAto(
+            cabecalho=tuple(self.unidade.cabecalho),
+            local=self.unidade.local,
+            sigla=self.unidade.sigla,
+        )
 
     @property
     def assinante(self):
@@ -56,7 +60,9 @@ def colunas_da_unidade(unidade):
 
 def unidade_para_o_compositor(unidade):
     """A Unidade registrada, como a prévia a compõe — a prévia não é ato e não congela nada."""
-    return UnidadeDoAto(cabecalho=tuple(unidade.cabecalho), local=unidade.local)
+    return UnidadeDoAto(
+        cabecalho=tuple(unidade.cabecalho), local=unidade.local, sigla=unidade.sigla
+    )
 
 
 def contexto_do_ato(edital, autoridade_id, now):

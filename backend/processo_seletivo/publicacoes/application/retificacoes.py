@@ -39,6 +39,7 @@ from processo_seletivo.publicacoes.domain.conflicts import (
 )
 from processo_seletivo.publicacoes.domain.consolidation import consolidate
 from processo_seletivo.publicacoes.domain.elevacao import elevar, elevar_alteracoes
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_VIGENTE
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     Consolidacao,
     render_edital_pdf,
@@ -911,6 +912,9 @@ def publish_retification(
             canonical_content=canonical,
             canonical_schema_version=SCHEMA_VERSION,
             published_by=actor.subject,
+            # A redação com que o documento acima foi composto (069, FR-1397): a página do ato
+            # de ordenação a lê para dizer a frase que esta Publicação publicou.
+            redacao_do_documento=REDACAO_VIGENTE,
             **ato.colunas,
         )
         DocumentoPublicado.objects.create(

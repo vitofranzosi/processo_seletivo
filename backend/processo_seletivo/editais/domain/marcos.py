@@ -125,6 +125,22 @@ def ordena_por_sorteio(forma_da_ordem, *, metodo_declarado) -> bool:
     return bool(metodo_declarado)
 
 
+def declara_sorteio(marco) -> bool:
+    """O marco **declara** que a ordem é sorteada? (067, D-004)
+
+    É a pergunta de que dependem o arredondamento e o empate no corte: sob sorteio não há nota a
+    arredondar, e a ordem sorteada é total — não há empate na última posição. A validação deixa de
+    exigir o arredondamento, e o documento e a Revisão deixam de imprimir os dois.
+
+    **A forma declarada, e não a inferida.** `ordena_por_sorteio` também lê o método próprio, e
+    `marco_ordena_por_sorteio` o método comum do Edital; os três concordam quando a forma está
+    declarada. Divergem no marco composto antes da `030`, que não a declara — e esse marco é
+    acervo: ele sempre exigiu e imprimiu arredondamento, e documento publicado não muda de conteúdo
+    porque uma regra de leitura mudou.
+    """
+    return isinstance(marco, dict) and marco.get("orderProduction") == POR_SORTEIO
+
+
 def exige_etapa(forma_da_ordem, *, metodo_declarado) -> bool:
     """Este marco precisa enumerar ao menos uma Etapa? (FR-432)
 

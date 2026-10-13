@@ -40,7 +40,40 @@
     return { numero: numero + ". ", estado: "" };
   }
 
-  var regras = { sai: sai, numerar: numerar, rotulos: rotulos };
+  /** Na apresentação por perguntas (069, R-003), o número é o que o servidor calculou.
+
+     As seções se reúnem sob a pergunta — "3.1 Público-alvo" —, e o número deixa de ser a contagem
+     das que saem: recontá-lo aqui seria a segunda regra que a `054` existe para não ter. O script
+     só diz se a seção sai com o que está no campo; o número novo aparece ao salvar.
+
+     `provisorio`: alguma seção mudou de "sai" para "não sai", ou o contrário, desde o que o
+     servidor numerou — digitando, ou depois de um envio recusado. Os números seguintes se
+     deslocam, e o do servidor deixaria de ser o do documento: nenhuma seção mostra número até
+     salvar. */
+  function rotulosApresentados(secao, provisorio) {
+    if (!sai(secao)) return { numero: "", estado: " (vazia — não sai no documento)" };
+    if (secao.preambulo) return { numero: "", estado: " (preâmbulo, sem número)" };
+    if (provisorio || !(secao.rotuloDoServidor || secao.estadoDoServidor)) {
+      return { numero: "", estado: " (sai no documento; o número aparece ao salvar)" };
+    }
+    return { numero: secao.rotuloDoServidor, estado: secao.estadoDoServidor || "" };
+  }
+
+  /** O servidor numerou outro conjunto de seções que o que os campos dizem agora? */
+  function numeracaoDefasada(secoes) {
+    return secoes.some(function (secao) {
+      if (!secao.apresentada || secao.preambulo) return false;
+      return sai(secao) !== Boolean(secao.rotuloDoServidor || secao.estadoDoServidor);
+    });
+  }
+
+  var regras = {
+    sai: sai,
+    numerar: numerar,
+    rotulos: rotulos,
+    rotulosApresentados: rotulosApresentados,
+    numeracaoDefasada: numeracaoDefasada,
+  };
   if (typeof module === "object" && module.exports) module.exports = regras;
 
   /* ── Montagem ────────────────────────────────────────────────────────────────────────────── */
@@ -57,13 +90,20 @@
       estado: conjunto.getAttribute("data-estado"),
       preambulo: conjunto.hasAttribute("data-preambulo"),
       texto: campo ? campo.value : "",
+      apresentada: conjunto.hasAttribute("data-numeracao-apresentada"),
+      rotuloDoServidor: conjunto.getAttribute("data-rotulo-do-numero") || "",
+      estadoDoServidor: conjunto.getAttribute("data-estado-do-servidor") || "",
     };
   }
 
   function atualizar() {
-    var numeros = numerar(conjuntos.map(ler));
+    var lidas = conjuntos.map(ler);
+    var numeros = numerar(lidas);
+    var provisorio = numeracaoDefasada(lidas);
     conjuntos.forEach(function (conjunto, indice) {
-      var texto = rotulos(numeros[indice]);
+      var texto = lidas[indice].apresentada
+        ? rotulosApresentados(lidas[indice], provisorio)
+        : rotulos(numeros[indice]);
       var numero = conjunto.querySelector("[data-numero]");
       var estado = conjunto.querySelector("[data-estado-texto]");
       if (numero && numero.textContent !== texto.numero) numero.textContent = texto.numero;

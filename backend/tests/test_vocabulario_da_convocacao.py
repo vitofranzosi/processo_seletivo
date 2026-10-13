@@ -60,6 +60,10 @@ DA_019 = [
     PORTAL / "_convocacao_da_inscricao.html",
     PORTAL / "_chamado_do_requerimento.html",
     PORTAL / "inscricoes.html",
+    # A `063`: o topo do acompanhamento passou a dizer o estado da convocação — prazo, consequência,
+    # desfecho —, e as frases moram no módulo, e não no template.
+    RAIZ / "portal/situacao.py",
+    PORTAL / "acompanhamento.html",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a
@@ -76,13 +80,17 @@ PROIBIDOS = {
     r"esta feature conta": "idem — a pergunta tem uma resposta só",
 }
 
+# **O comentário de linha não pode atravessar a quebra** (achado da `063`). Com `re.S`, o `.` de
+# `#.*$` casa `\n`, e o primeiro comentário de linha apagava o arquivo dali até o fim: a varredura
+# lia o cabeçalho e aprovava calada. `[^\n]*` para no fim da linha, que é onde o comentário acaba.
+#
 # **O padrão de docstring não pode atravessar código**, e é a diferença desta varredura para a da
 # `016`: `""".*?"""` com `re.S` casa do fim de uma docstring até o início da seguinte, engolindo
 # tudo o que estiver entre as duas — inclusive strings que a tela exibe. A classe negada abaixo
 # impede que o casamento atravesse outra aspa tripla.
 SEM_COMENTARIO = re.compile(
     r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}"
-    r"|^[ \t]*#.*$"
+    r"|^[ \t]*#[^\n]*$"
     r"|\"\"\"(?:(?!\"\"\").)*\"\"\"",
     re.S | re.M,
 )

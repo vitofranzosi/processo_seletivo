@@ -32,3 +32,10 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Unidades: {criadas} criadas, {alteradas} alteradas, {mantidas} sem mudança."
         )
+        # **Os modelos iniciais dos avisos nascem aqui, uma vez por unidade** (066, `R-012`): é o
+        # único ponto que já percorre todas as unidades com autor e trilha, e data migration não
+        # pode importar `application`. A linha diz quantos foram criados — zero, depois da primeira
+        # sincronização, e para sempre: a unidade que inativou os três continua com os dela.
+        from processo_seletivo.avisos.application.modelos import garantir_modelos_iniciais
+
+        self.stdout.write(f"Modelos de aviso: {garantir_modelos_iniciais()} criados.")

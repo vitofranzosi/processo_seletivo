@@ -53,8 +53,18 @@ def documento(edital):
 
 
 def test_o_documento_publicado_diz_que_a_ordem_daquele_marco_vem_de_sorteio(publicado_com_sorteio):
-    """`FR-464`, no artefato que a candidata baixa."""
-    assert "Ordem: por sorteio" in documento(publicado_com_sorteio)
+    """`FR-464`, no artefato que a candidata baixa.
+
+    **Na redação 2 desde a `069`** (C2, C4): a forma é dita pelo bloco do sorteio e por quem
+    participa dele, e não pelo par "Ordem:".
+    """
+    texto = documento(publicado_com_sorteio)
+    assert "Participam do sorteio todas as inscrições enviadas." in texto
+    # Na apresentação por perguntas (069), os dados saem na subseção própria da seleção.
+    assert re.search(
+        r"\d+\.\d+ Dados para conferir o sorteio A ordem será definida a partir do resultado de",
+        texto,
+    )
 
 
 def test_quem_recebe_o_documento_sabe_qual_ocorrencia_fixara_a_semente(publicado_com_sorteio):

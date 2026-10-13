@@ -193,7 +193,7 @@ def test_o_criterio_de_desempate_sai_pela_frase_publicada_e_nao_pelo_enum(
         client.get(_ato(cenario)).content.decode(), "Posições e valores de desempate"
     )
 
-    assert "maior pontuação na Etapa Prova didática" in desempate
+    assert "maior pontuação na Etapa “Prova didática”" in desempate
     assert "MAIOR_PONTUACAO_NA_ETAPA" in desempate
     assert CRITERIO in desempate
     # A mesma nota escrita do mesmo jeito na mesma tabela: `90`, e não `90` ao lado de `90.0000`.
@@ -226,7 +226,7 @@ def test_o_criterio_e_nomeado_pela_versao_que_o_ato_congelou(
         client.get(_ato(cenario)).content.decode(), "Posições e valores de desempate"
     )
 
-    assert "maior pontuação na Etapa Prova didática" in desempate
+    assert "maior pontuação na Etapa “Prova didática”" in desempate
     assert "renomeada por Retificação" not in desempate
 
 

@@ -1,15 +1,17 @@
 {% comment %}
-A convocacao no acompanhamento (059, US3, D-005).
+A convocacao no acompanhamento (059, US3, D-005; 063, D-008).
 
 **So existe quando ha convocacao da pessoa.** A frase da tela da convocacao para quem nao foi
-chamado — "quem esta na lista pode ser chamado quando uma vaga vagar" — aqui seria dita a toda
-inscricao do recorte, inclusive a eliminada, que nao esta em lista nenhuma.
+chamado aqui seria dita a toda inscricao do recorte, inclusive a eliminada, que nao esta em lista
+nenhuma.
 
 **Aberta ou concluida, ela fica.** Quem atendeu volta meses depois e encontra o que se registrou; e
-"Ver convocacao" continua levando a tela, que e onde a leitura entra na trilha (D-008).
+"Ver convocacao" continua levando a tela, que e onde a leitura entra na trilha (D-008 da 059).
 
-As frases de situacao sao as da tela da convocacao, de proposito: duas redacoes do mesmo estado
-fariam a pessoa achar que sao dois estados. E as mesmas proibicoes valem — nada de "recebida",
+**Desde a 063, so os dados.** As frases de estado — prazo nao iniciado, prazo encerrado sem
+registro, situacao registrada — e o chamado ao requerimento sairam daqui e subiram para o topo, que
+os diz a partir de `portal/situacao.py`. Duas redacoes do mesmo estado na mesma pagina fariam a
+pessoa achar que sao dois estados. As mesmas proibicoes continuam valendo: nada de "recebida",
 "lida" ou vaga prometida (UX-039, FR-292c).
 {% endcomment %}
 {% if convocacao %}
@@ -20,16 +22,6 @@ fariam a pessoa achar que sao dois estados. E as mesmas proibicoes valem — nad
     {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y H:i" }}</dd>{% endif %}
     {% if convocacao.vencimento %}<dt>Prazo para atender</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y H:i" }}, contado do envio da comunicação</dd>{% endif %}
   </dl>
-  {% if desfecho %}
-  <p>Situação registrada: {{ desfecho.get_especie_display }}</p>
-  {% elif estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}
-  <p class="aviso" role="status">A comunicação desta convocação ainda não foi enviada. <strong>O seu prazo não começou a correr.</strong></p>
-  {% elif estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}
-  <p class="aviso" role="status">O prazo informado nesta convocação já passou. Isso <strong>não decide nada sozinho</strong>: fale com o atendimento se você atendeu e não consta.</p>
-  {% else %}
-  <p>Siga as instruções da convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}.</p>
-  {% endif %}
-  {% include "portal/_chamado_do_requerimento.html" %}
   <p><a href="{% url 'portal:convocacao' inscricao.id %}">Ver convocação</a></p>
 </section>
 {% endif %}

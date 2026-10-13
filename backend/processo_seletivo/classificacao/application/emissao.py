@@ -10,6 +10,7 @@ from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrde
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
 
@@ -70,6 +71,16 @@ def emitir_ordem(
         if ctx.repetido:
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
+        # **A recusa do sorteio vem antes do cálculo** (067, D-009, FR-1318). Vinha depois, e era
+        # inofensivo enquanto a validação exigia arredondamento de todo marco. Desde que o marco
+        # por sorteio pode publicar sem ele (ED-03), um marco por sorteio que enumera Etapa, com
+        # pontuação de todos, chegaria a `combinar → arredondar` e levantaria `RegraIncompleta` —
+        # erro interno no lugar da recusa que diz o que fazer. A versão é a mesma que o cálculo lê.
+        _recusar_marco_de_sorteio(
+            effective_version(edital_id=edital.id, at=ctx.now).content,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+        )
         # **O cálculo vem antes da busca do vigente, e a ordem passou a importar** (034, `FR-491`).
         # O vigente é o **daquele recorte**, e quem diz qual recorte é — depois de reduzir ao nulo a
         # Modalidade que o Perfil aponta como sendo a ampla, e de recusar o identificador que não
@@ -83,7 +94,6 @@ def emitir_ordem(
             lista_id=lista_id,
             at=ctx.now,
         )
-        _recusar_marco_de_sorteio(proposta)
         recorte = proposta["lista_id"]
         vigente = AtoDeOrdenacao.objects.filter(
             edital=edital,
@@ -218,7 +228,7 @@ def _edital_do_processo(processo, edital_id):
     return edital
 
 
-def _recusar_marco_de_sorteio(proposta):
+def _recusar_marco_de_sorteio(conteudo, *, perfil_id, marco_id):
     """A ordem de um marco de sorteio não se emite por cálculo (`021`, `D-006`, `FR-069`).
 
     **A recusa é aqui porque o dano é irreversível.** O ato saía com `origem=COMPUTADO` e
@@ -227,7 +237,7 @@ def _recusar_marco_de_sorteio(proposta):
     append-only, e a sucessão de uma ordem sorteada nasce da anulação de um sorteio que, nesse
     caminho, nunca chegou a existir. Fechar só a tela deixaria a porta do comando aberta.
 
-    **Recebe a proposta inteira, e não só o marco** (030, FR-429). O marco pode referenciar o
+    **Recebe o conteúdo inteiro, e não só o marco** (030, FR-429). O marco pode referenciar o
     método comum do Edital em vez de declarar o próprio, e a resolução precisa do conteúdo inteiro
     para enxergá-lo: lendo só a chave do marco, um marco de sorteio que referencia o comum passaria
     por aqui e a ordem dele seria emitida por cálculo — que é exatamente o dano irreversível que
@@ -236,9 +246,7 @@ def _recusar_marco_de_sorteio(proposta):
     from processo_seletivo.editais.domain import marcos
 
     if not marcos.marco_ordena_por_sorteio(
-        proposta["versao"].content,
-        perfil_id=proposta["perfil"]["id"],
-        marco_id=proposta["marco"]["id"],
+        conteudo, perfil_id=str(perfil_id), marco_id=str(marco_id)
     ):
         return
     raise DomainError(

@@ -1,4 +1,8 @@
+import re
+
 from django.http import HttpResponse
+from django.utils import timezone
+from django.utils.http import content_disposition_header
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -123,14 +127,36 @@ class PublishedDocumentView(APIView):
 
     def get(self, request, publicacao_id):
         try:
-            document = DocumentoPublicado.objects.select_related("publicacao").get(
+            document = DocumentoPublicado.objects.select_related("publicacao__edital").get(
                 publicacao_id=publicacao_id
             )
         except DocumentoPublicado.DoesNotExist as exc:
             raise DomainError("not_found", "Documento não encontrado.", 404) from exc
         response = HttpResponse(bytes(document.bytes), content_type=document.content_type)
         response["ETag"] = f'"{document.document_hash}"'
+        # O número do Edital é texto livre: aspas e caracteres fora do ASCII vão pela forma que o
+        # navegador lê (`filename*`, RFC 6266), e não crus dentro de `filename="…"`.
+        response["Content-Disposition"] = content_disposition_header(
+            as_attachment=False, filename=nome_do_documento(document.publicacao)
+        )
         return response
+
+
+def nome_do_documento(publicacao):
+    """`edital-«n»-«ano».pdf`, ou `…-retificado-«AAAA-MM-DD».pdf` (069, FR-1387, R-012).
+
+    A data é a da publicação **no fuso institucional**: em UTC, a Retificação publicada às 23h de
+    Vitória sairia com o dia seguinte no nome. A barra do número vira hífen — "01/2026" não cabe
+    num nome de arquivo.
+    """
+    edital = publicacao.edital
+    nome = f"edital-{edital.number}-{edital.year}".replace("/", "-")
+    # O que nenhum sistema de arquivos aceita no nome, e o espaço, também viram hífen.
+    nome = re.sub(r'[\x00-\x1f\\:*?"<>|\s-]+', "-", nome)
+    if publicacao.publication_order > 1:
+        dia = timezone.localtime(publicacao.published_at).date().isoformat()
+        nome += f"-retificado-{dia}"
+    return f"{nome}.pdf"
 
 
 class CreateRetificationView(APIView):

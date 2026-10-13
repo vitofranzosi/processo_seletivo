@@ -36,39 +36,26 @@ Monólito modular em Python 3.13 / Django 5.2 LTS / DRF, sobre PostgreSQL. Cada 
 | `processos` | Processo Seletivo, Edital, atos administrativos e desfecho |
 | `editais` | Perfis de Vaga, quadro de vagas, Modalidades, Cronograma, Etapas, documentos exigidos, Anexos e validação |
 | `publicacoes` | Publicação, Retificação, versões consolidadas, documento publicado e consulta pública |
-| `identidade` | Identidade do candidato e acesso sem senha, por código enviado ao e-mail |
-| `inscricoes` | Inscrição, documentos submetidos e fatos declarados pelo candidato |
+| `identidade` | Identidade do candidato, acesso sem senha por código enviado ao e-mail e reconciliação com a participação anterior |
+| `inscricoes` | Inscrição, período de inscrições, documentos enviados e fatos declarados pelo candidato |
 | `comissoes` | Comissão do Processo e alocação dos membros às Etapas |
-| `avaliacoes` | Atribuição, avaliação e impedimento |
-| `resultados` | Resultado da Etapa |
-| `classificacao` | Ordem classificatória e corte entre Etapas |
+| `avaliacoes` | Distribuição das atribuições, Mesa de avaliação, impedimento e conclusão |
+| `resultados` | Resultado da Etapa: consolidação, Ocorrência e progressão entre Etapas |
+| `classificacao` | Ordenação, corte entre Etapas e o ato de classificação |
 | `sorteios` | Relação de habilitados congelada, ocorrência da fonte externa e o sorteio auditável |
 | `ocupacao` | Apuração da ocupação e movimento de vagas entre listas de concorrência |
-| `divulgacao` | Publicação de resultado, situação individual divulgada e o documento dela |
+| `divulgacao` | Publicação de resultado, a porta da definitividade, a situação individual divulgada e o documento dela |
 | `recursos` | Recurso, juízo de admissibilidade, instrução e decisão |
 | `convocacao` | Convocação, chamada, suplência e desfecho |
 | `requerimentos` | Requerimento de Matrícula e base local de referência de CEP |
 | `matriculas` | Exportação para o Registro Acadêmico — registra a geração, e não guarda o arquivo |
 | `unidades` | Unidades institucionais e autoridades habilitadas: o que o documento diz da unidade e quem pode responder pelos atos dela |
-| `interface` | Interface administrativa, em `/gestao/` |
-| `portal` | Consulta pública e área do candidato, em `/selecoes/` |
+| `avisos` | Avisos complementares aos candidatos sobre atos publicados: destinatários tirados do ato, modelos da unidade e o despacho periódico, que registra o que o servidor de correio aceitou |
+| `interface` | Interface administrativa, em `/gestao/`: composição, Retificação e condução do Processo |
+| `portal` | Consulta pública e área do candidato, em `/selecoes/`: vitrine, inscrição, acompanhamento e recurso |
 | `seguranca` | Ator autenticado, permissões, autorização por objeto e papéis do banco |
 | `auditoria` | Registro append-only e idempotência |
 | `shared` | Serialização canônica, concorrência otimista, Problem Details e observabilidade |
-| `interface` | Interface administrativa da gestão: composição, Retificação e condução do Processo |
-| `portal` | Portal do candidato: vitrine, inscrição, acompanhamento e recurso |
-| `identidade` | Identidade do candidato, acesso por código e reconciliação com a participação anterior |
-| `inscricoes` | Inscrição, documentos enviados e período de inscrições |
-| `comissoes` | Comissão, alocação por Etapa e impedimentos |
-| `avaliacoes` | Distribuição, Mesa de avaliação e conclusão |
-| `resultados` | Resultado da Etapa: consolidação, Ocorrência e progressão entre Etapas |
-| `classificacao` | Corte, ordenação e o ato de classificação |
-| `ocupacao` | Ocupação de vagas entre as listas de concorrência |
-| `divulgacao` | Publicação de resultados e a porta da definitividade |
-| `recursos` | Recurso, instrução, admissibilidade e julgamento |
-| `convocacao` | Convocação, chamada e suplência |
-| `requerimentos` | Requerimento de Matrícula |
-| `matriculas` | Exportação de matrículas para o Registro Acadêmico |
 
 Operações de workflow são commands explícitos e transacionais. O controle otimista usa `ETag` /
 `If-Match`; commands irreversíveis exigem `Idempotency-Key`. Erros usam `application/problem+json`.
@@ -211,6 +198,18 @@ O portal do candidato envia código de acesso por e-mail. No compose há um cole
 a mensagem chega em <http://localhost:8025>, e é de lá que se lê o código. Nativamente o backend de
 e-mail é o de console — **a mensagem é impressa no terminal onde o servidor está rodando**, e é
 preciso garimpá-la no log.
+
+Os avisos complementares aos candidatos (066) **não saem no clique**. A confirmação grava o aviso e
+responde; quem envia é `manage.py despachar_avisos`, que em produção roda num timer a cada minuto e
+em desenvolvimento ninguém roda por você. Depois de confirmar um aviso, rode-o à mão. O `make` não
+tem alvo para ele, e o `.env` precisa ser exportado antes:
+
+```bash
+cd backend && set -a && . ./.env && set +a && uv run python manage.py despachar_avisos
+```
+
+No compose, `docker compose exec app python manage.py despachar_avisos`. Nativamente a mensagem sai
+no terminal **do comando**, e não no do servidor; no compose, chega em <http://localhost:8025>.
 
 ## Antes de receber dado pessoal real
 
@@ -434,6 +433,13 @@ Incrementos, na ordem em que foram especificados:
 | [`060`](specs/060-unidades-e-autoridades/spec.md) | Unidades institucionais e autoridades de publicação: o escopo institucional ganha Unidade registrada, o documento oficial diz a unidade do Edital no cabeçalho e no local, e a autoridade é escolhida entre as habilitadas e vigentes da unidade, cadastradas pelo Gestor da unidade, sem mudar o código e sem excluir nada |
 | [`061`](specs/061-corte-apos-recurso/spec.md) | O corte emitido depois do recurso não nasce obsoleto: o reingresso que obsoleta a faixa é o de Resultado sucessor que o ato de ordenação lido ainda não cita; o deferimento já considerado pela ordem sucessora deixa de travar a Etapa governada e a publicação, e o recurso deferido depois do corte continua obsoletando-o |
 | [`062`](specs/062-resultados-por-perfil-etapa-lista/spec.md) | Resultados divulgados por Perfil, etapa e lista: a página pública do Edital agrupa os resultados como a seção Vagas, com natureza e data na linha de cada lista, um histórico recolhido por etapa e o nome acessível de cada link levando etapa e Perfil; um convite separado leva à situação individual, e voltar ao Edital depois de entrar não pede nome e CPF |
+| [`063`](specs/063-acompanhamento-pela-situacao/spec.md) | Acompanhamento pela situação do candidato: o topo da área da inscrição diz a situação, de que ato ela decorre e o que fazer — "Aguardando chamada", "Convocado", "Vaga aceita" —, derivada só de convocação, desfecho, resultado de etapa e classificação divulgada, nunca da posição; cada lista ganha cartão próprio com a posição oficial, e nenhuma frase promete perda ou vaga que o ato não declarou |
+| [`064`](specs/064-atribuicoes-consolidadas/spec.md) | As atribuições idênticas saem uma vez no documento do Edital: Perfis de texto integralmente igual remetem a uma subseção comum ao fim da seção de Perfis, que nomeia os códigos; a numeração dos Perfis, das seções e das tabelas não muda, e nenhum dado, tela ou documento já publicado muda |
+| [`065`](specs/065-conflitos-de-numeracao/spec.md) | Conflitos de numeração no Edital: o subitem digitado com número de outra seção impede a submissão e a publicação, e a etapa Conteúdo e a Revisão o acusam com seção, parágrafo e trecho, levando à legenda da seção; a remissão que aponta para mais de um item, para nenhum ou para o lugar errado é aviso, em todo texto impresso; na Retificação tudo é aviso; nada é renumerado, o PDF não muda e nenhum Edital publicado é reavaliado |
+| [`066`](specs/066-avisos-complementares/spec.md) | Avisos complementares aos candidatos, vinculados a ato oficial: a seleção avisa por e-mail quem um resultado publicado, sua retificação ou uma chamada comunicada por publicação alcançou — os destinatários saem do ato, e ninguém acrescenta nem tira —, com texto próprio e modelos da unidade; o aviso não produz efeito sobre prazo, situação ou direito, sai por despacho periódico fora da requisição, com a tentativa gravada antes do servidor de correio e o resultado indeterminado nunca reenviado sozinho, e fica desligado em produção até a validação de LGPD |
+| [`067`](specs/067-correcoes-de-norma-do-edital/spec.md) | Correções de norma do Edital em PDF (ED-02, ED-03 e ED-12 da auditoria de 08/10): a frase de recurso do marco nomeia o resultado de que se recorre, e a Revisão avisa — sem impedir — com os prazos dos marcos ao lado dos Eventos de recurso do Cronograma; sob sorteio, o arredondamento deixa de ser exigido e, com o empate no corte, de ser impresso; o Perfil sem vaga imediata não imprime quadro de zeros nem reversão; nenhum documento já publicado muda |
+| [`068`](specs/068-consolidacao-por-perfil/spec.md) | O que se repete por Perfil sai uma vez no Edital em PDF (ED-04 e ED-11 da auditoria de 08/10): com dois ou mais Perfis, as vagas numa tabela Perfil × lista e as modalidades em tabelas agrupadas, na ordem do quadro; reversão e convocação uma vez; requisitos e marcos idênticos em subseções comuns depois do último Perfil, com a frase que aplica os marcos a cada Perfil separadamente; o método comum do sorteio uma vez. Nenhuma regra muda, e a equivalência é provada Perfil a Perfil; a numeração das tabelas muda; o Edital de um Perfil e os documentos já publicados não mudam |
+| [`069`](specs/069-edital-linguagem-simples/spec.md) | O Edital oficial em linguagem simples, lote 1: as frases geradas na redação 2, sem rótulos internos, e a redação gravada no ato para a página do ato de ordenação; os Editais novos organizados pelas perguntas do candidato (catálogo com títulos e ordem novos, as chaves iguais), com seções reunidas, resumo feito só de dado, sumário e agrupamento por identidade; fonte embutida (Edital Sans, OFL), hierarquia tipográfica, paginação com equilíbrio e a última seção junto do fecho; título, idioma, marcadores, links e nome do arquivo. Os publicados antes não mudam, e os consolidados deles mantêm a estrutura do original; o PDF continua sem marcação |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

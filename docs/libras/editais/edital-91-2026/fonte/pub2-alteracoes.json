@@ -1,0 +1,21 @@
+{
+ "justificativa": "Prorrogação das inscrições e ampliação de vagas no polo Bom Jesus do Norte.",
+ "vigencia": "None",
+ "alteracoes": [
+  {
+   "path": "/schedule/id=6e8aef13-1ff1-5b7f-b49a-7e4ba64606d7/endAt",
+   "op": "REPLACE",
+   "novo": "2026-11-04T23:59:00-03:00"
+  },
+  {
+   "path": "/profiles/id=1b8b03eb-3518-54af-bcf4-4a59017eab1f/immediateVacancies",
+   "op": "REPLACE",
+   "novo": 45
+  },
+  {
+   "path": "/profiles/id=1b8b03eb-3518-54af-bcf4-4a59017eab1f/vacancyTable/id=3da086ad-0aaf-5524-8f57-95972c846d4d/immediateVacancies",
+   "op": "REPLACE",
+   "novo": 33
+  }
+ ]
+}

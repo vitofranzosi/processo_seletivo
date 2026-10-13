@@ -8,15 +8,25 @@ a página continua dizendo quantas submissões houve em cada dia.
 A faixa das barras rola no próprio contêiner. Um período de sessenta dias produz sessenta colunas,
 e deixá-las empurrarem a largura faria a página inteira rolar na horizontal — que é o que FR-016
 proíbe.
+
+A escala e as datas do eixo também são desenho, e ficam fora da árvore de acessibilidade junto com
+as barras. Sem elas o gráfico dizia só "subiu, desceu" — nem quando, nem quanto —, e a leitura
+dependia de abrir a tabela. O eixo nomeia alguns dias, e não todos: quais, decide `eixo`.
 {% endcomment %}
 <figure class="serie">
   <figcaption>Submissões por dia — Edital {{ item.edital.number }}/{{ item.edital.year }}</figcaption>
   {% if item.pico %}
-  <ul class="barras" aria-hidden="true">
-    {% for ponto in item.serie %}
-    <li><span class="barra" style="height:{% widthratio ponto.quantidade item.pico 100 %}%"></span></li>
-    {% endfor %}
-  </ul>
+  <div class="grafico">
+    <div class="escala" aria-hidden="true"><span>{{ item.pico }}</span><span>0</span></div>
+    <ul class="barras" aria-hidden="true">
+      {% for marcado in item.eixo %}
+      <li title="{{ marcado.ponto.dia|date:'d/m' }}: {{ marcado.ponto.quantidade }}">
+        <span class="coluna"><span class="barra" style="height:{% widthratio marcado.ponto.quantidade item.pico 100 %}%"></span></span>
+        <span class="dia">{% if marcado.rotulado %}{{ marcado.ponto.dia|date:"d/m" }}{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
   <details class="equivalente">
     <summary>Valores da série — {{ item.serie|length }} dia{{ item.serie|length|pluralize:"s" }}</summary>

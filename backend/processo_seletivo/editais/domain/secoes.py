@@ -61,6 +61,11 @@ def _gerada(key, title, order, source):
     return Secao(key=key, title=title, order=order, type=GERADA, source=source)
 
 
+# **O catálogo da 054** (FR-980, D-001), congelado: o que todo Edital publicado até a `069` carrega
+# no snapshot, com estes títulos e esta ordem. Não é mais o catálogo vigente — é o que o acervo diz,
+# e é por ele que a `069` reconhece a apresentação plana e lê as remissões textuais aos títulos de
+# antes (R-013).
+#
 # **O catálogo da 054** (FR-980, D-001): a união das seções que se repetem nas quatro famílias da
 # amostra do Cefor — FIC, pós-graduação e aperfeiçoamento, bolsista UAB/FAPES, chamada pública
 # técnica —, na ordem que os quinze Editais seguem, **a oferta antes da inscrição**. Eram 12
@@ -74,7 +79,7 @@ def _gerada(key, title, order, source):
 # confere a topologia contra a do Edital publicado, e não contra esta lista (054, D-003) —, mas
 # deixa o acervo com duas formas de documento, porque documento publicado não se regenera. É por
 # isso que ele foi decidido antes do piloto.
-CATALOGO: tuple[Secao, ...] = (
+CATALOGO_DA_054: tuple[Secao, ...] = (
     # O preâmbulo: sai sem número, logo abaixo do anúncio do ato (008, FR-010). Nos quinze Editais
     # da amostra ele abre pela autoridade que pratica o ato — "A Diretora do Cefor [...] faz saber".
     _textual("apresentacao", "Apresentação", 1),
@@ -115,6 +120,45 @@ CATALOGO: tuple[Secao, ...] = (
     _gerada("anexos", "Anexos", 21, "attachments"),
     _textual("disposicoes-finais", "Disposições Finais", 22),
 )
+
+
+# **O catálogo da 069** (FR-1367, D-001): a ordem e os títulos do *Catálogo apresentado* da spec —
+# a ordem das perguntas do candidato, títulos em pergunta onde ajudam e diretos onde funcionam
+# melhor. **As chaves e os tipos são os da 054** (FR-1367): a identidade `uuid5` do texto já escrito
+# num rascunho é pela chave, e a Retificação confere a topologia pela chave. Mudam o título e a
+# ordem, que o snapshot copia na submissão — e é por essa cópia que a apresentação por perguntas se
+# reconhece (R-001).
+#
+# O título da chave principal de uma seção apresentada é o da seção; o de uma chave que sai como
+# subseção (N.k) é o da subseção. `APRESENTACAO`, abaixo, diz quem é principal e quem é subseção.
+CATALOGO_DA_069: tuple[Secao, ...] = (
+    _textual("apresentacao", "Apresentação", 1),
+    _textual("disposicoes-preliminares", "Disposições preliminares", 2),
+    # "Informações gerais", para todo Edital (clarify, Q3): a seção serve às quatro famílias da
+    # amostra, inclusive à seleção de bolsista. O texto pode abrir subtítulo próprio ("Sobre o
+    # curso").
+    _textual("informacoes-gerais", "Informações gerais", 3),
+    _textual("publico-alvo", "Público-alvo", 4),
+    _textual("requisitos-gerais", "Requisitos gerais", 5),
+    _gerada("perfis", "Quantas vagas há, e onde?", 6, "profiles"),
+    _gerada("cronograma", "Cronograma", 7, "schedule"),
+    _textual("inscricao", "Como se inscrever?", 8),
+    _textual("atendimento-pcd", "Atendimento à pessoa com deficiência", 9),
+    _gerada("documentos-exigidos", "Quais documentos enviar?", 10, "documentRequirements"),
+    _textual("classificacao", "Como será a seleção?", 11),
+    _gerada("etapas", "Etapas de avaliação", 12, "stages"),
+    _textual("verificacao-autodeclaracao", "Verificação da autodeclaração", 13),
+    _textual("recursos", "Como recorrer?", 14),
+    _textual("convocacao", "Como será a convocação?", 15),
+    _textual("matricula", "Como será a matrícula?", 16),
+    _textual("acesso-ao-curso", "Acesso ao curso", 17),
+    _textual("homologacao-matricula", "Homologação da matrícula", 18),
+    _textual("certificado", "Certificado", 19),
+    _textual("prazo-de-validade", "Prazo de validade", 20),
+    _gerada("anexos", "Anexos", 21, "attachments"),
+    _textual("disposicoes-finais", "Disposições finais", 22),
+)
+CATALOGO = CATALOGO_DA_069
 
 POR_CHAVE = {secao.key: secao for secao in CATALOGO}
 
@@ -168,3 +212,162 @@ def identidade(edital_id, key: str) -> UUID:
 
 def e_textual(key: str) -> bool:
     return key in CHAVES_TEXTUAIS
+
+
+# --------------------------------------------------------------------------------------------------
+# 069 — As duas apresentações do documento (R-001, R-002)
+# --------------------------------------------------------------------------------------------------
+
+POR_PERGUNTAS = "por perguntas"
+PLANA = "plana"
+
+# Os lugares do conteúdo gerado numa seção apresentada (R-002): o que o sistema escreve a partir do
+# dado, e onde. Um nome por lugar, para que a composição e a numeração leiam a mesma lista.
+REQUISITOS_DOS_PERFIS = "requisitos dos Perfis"
+VAGAS = "vagas"
+ATRIBUICOES = "atribuições"
+PERIODO = "período de inscrições"
+DADOS_DECLARADOS = "dados declarados"
+TETO = "teto de inscrições"
+LEMBRETE_DO_REQUERIMENTO = "lembrete do Requerimento"
+REGRAS_DOS_MARCOS = "regras de classificação"
+DADOS_DO_SORTEIO = "dados do sorteio"
+ETAPAS = "etapas de avaliação"
+RECURSO_DOS_MARCOS = "recurso dos marcos"
+FORMA_DE_CONVOCACAO = "forma de convocação"
+REQUERIMENTO = "Requerimento de Matrícula"
+
+
+@dataclass(frozen=True)
+class SecaoApresentada:
+    """Uma seção do documento na apresentação por perguntas (R-002).
+
+    `principal` é a chave cujo texto sai no corpo da seção, sem subtítulo — no começo, ou onde
+    `partes` a puser. `partes` são, na ordem, as chaves que saem como subseções N.k — com o título
+    que têm no catálogo — e os lugares do conteúdo gerado. **Nada aqui muda chave**: a seção
+    reúne, na apresentação, o que o conteúdo guarda separado, e por isso o snapshot e a topologia
+    da Retificação ficam como estão.
+    """
+
+    titulo: str
+    principal: str | None = None
+    partes: tuple[str, ...] = ()
+
+    @property
+    def membros(self):
+        return tuple(
+            parte for parte in self.partes if parte in POR_CHAVE and parte != self.principal
+        )
+
+    @property
+    def ordem(self):
+        """As partes na ordem do documento, com a principal no começo se `partes` não a põe."""
+        if self.principal is None or self.principal in self.partes:
+            return self.partes
+        return (self.principal, *self.partes)
+
+    @property
+    def gerados(self):
+        return tuple(parte for parte in self.partes if parte not in POR_CHAVE)
+
+
+# A ordem e os títulos do *Catálogo apresentado* da spec (D-001), com as seções reunidas sob a
+# pergunta a que respondem (FR-1368) e cada regra gerada na seção que trata dela (FR-1369).
+APRESENTACAO: tuple[SecaoApresentada, ...] = (
+    SecaoApresentada("Disposições preliminares", "disposicoes-preliminares"),
+    SecaoApresentada("Informações gerais", "informacoes-gerais"),
+    SecaoApresentada(
+        "Quem pode se inscrever?",
+        partes=("publico-alvo", "requisitos-gerais", REQUISITOS_DOS_PERFIS),
+    ),
+    SecaoApresentada("Quantas vagas há, e onde?", "perfis", partes=(VAGAS, ATRIBUICOES)),
+    SecaoApresentada("Cronograma", "cronograma"),
+    SecaoApresentada(
+        "Como se inscrever?",
+        "inscricao",
+        partes=(PERIODO, DADOS_DECLARADOS, TETO, LEMBRETE_DO_REQUERIMENTO, "atendimento-pcd"),
+    ),
+    SecaoApresentada(
+        "Quais documentos enviar?", "documentos-exigidos", partes=(LEMBRETE_DO_REQUERIMENTO,)
+    ),
+    SecaoApresentada(
+        "Como será a seleção?",
+        "classificacao",
+        partes=(REGRAS_DOS_MARCOS, DADOS_DO_SORTEIO, ETAPAS, "verificacao-autodeclaracao"),
+    ),
+    # O recurso de cada marco e a forma de convocação vêm antes do texto de quem redigiu
+    # (contrato do documento §5): a regra do sistema primeiro, e o canal e o modo, que são do texto,
+    # depois.
+    SecaoApresentada("Como recorrer?", "recursos", partes=(RECURSO_DOS_MARCOS, "recursos")),
+    SecaoApresentada(
+        "Como será a convocação?", "convocacao", partes=(FORMA_DE_CONVOCACAO, "convocacao")
+    ),
+    SecaoApresentada(
+        "Como será a matrícula?",
+        "matricula",
+        partes=(REQUERIMENTO, "acesso-ao-curso", "homologacao-matricula"),
+    ),
+    SecaoApresentada("Certificado", "certificado"),
+    SecaoApresentada("Prazo de validade", "prazo-de-validade"),
+    SecaoApresentada("Anexos", "anexos"),
+    SecaoApresentada("Disposições finais", "disposicoes-finais"),
+)
+# A chave `etapas` não é principal nem membro: as Etapas saem como subseções da seleção, uma por
+# Etapa, pelo lugar `ETAPAS`. O preâmbulo (`apresentacao`) abre o documento, sem número.
+CHAVE_DAS_ETAPAS = "etapas"
+
+
+def assinatura(catalogo) -> frozenset:
+    """A marca de um catálogo: o conjunto `(chave, título, ordem)` das suas seções (R-001)."""
+    return frozenset((secao.key, secao.title, secao.order) for secao in catalogo)
+
+
+def assinatura_do_snapshot(snapshot) -> frozenset:
+    return frozenset(
+        (secao.get("key"), secao.get("title"), secao.get("order"))
+        for secao in (snapshot or {}).get("sections") or []
+        if isinstance(secao, dict)
+    )
+
+
+# **O registro das apresentações, explícito** (R-001). A assinatura do catálogo da `069` → por
+# perguntas; qualquer outra → plana. Explícito, e não "igual ao catálogo vigente": uma mudança
+# futura do catálogo devolveria em silêncio os Editais da `069` à forma plana. Quem mudar o
+# catálogo congela o de agora e o acrescenta aqui.
+APRESENTACOES = {assinatura(CATALOGO_DA_069): POR_PERGUNTAS}
+
+
+def apresentacao_de(snapshot) -> str:
+    """A apresentação do documento deste snapshot: pela assinatura do catálogo em que nasceu."""
+    return APRESENTACOES.get(assinatura_do_snapshot(snapshot), PLANA)
+
+
+# **Os títulos do catálogo anterior e para onde a matéria deles foi** (R-013, FR-1400). Um texto
+# livre que cite a seção pelo título de antes ("conforme a seção Perfis de Vaga") aponta para um
+# lugar que, na apresentação por perguntas, pode não existir com esse nome — ou existir repartido. O
+# aviso de conferência lê daqui: um destino só sugere a seção; mais de um diz que ela foi repartida.
+DESTINOS_DOS_TITULOS_DA_054 = {
+    "Perfis de Vaga": (
+        "Quantas vagas há, e onde?",
+        "Quem pode se inscrever?",
+        "Como será a seleção?",
+    ),
+    "Disposições Preliminares": ("Disposições preliminares",),
+    "Informações Gerais sobre o Curso": ("Informações gerais",),
+    "Público-Alvo": ("Quem pode se inscrever?",),
+    "Requisitos Gerais de Participação": ("Quem pode se inscrever?",),
+    "Da Inscrição": ("Como se inscrever?",),
+    "Documentos Exigidos para a Inscrição": ("Quais documentos enviar?",),
+    "Da Verificação da Autodeclaração": ("Como será a seleção?",),
+    "Do Atendimento à Pessoa com Deficiência": ("Como se inscrever?",),
+    "Etapas de Avaliação": ("Como será a seleção?",),
+    "Critérios de Classificação": ("Como será a seleção?",),
+    "Dos Recursos": ("Como recorrer?",),
+    "Da Convocação": ("Como será a convocação?",),
+    "Da Matrícula": ("Como será a matrícula?",),
+    "Do Acesso ao Curso": ("Como será a matrícula?",),
+    "Da Homologação da Matrícula": ("Como será a matrícula?",),
+    "Do Certificado": ("Certificado",),
+    "Do Prazo de Validade": ("Prazo de validade",),
+    "Disposições Finais": ("Disposições finais",),
+}

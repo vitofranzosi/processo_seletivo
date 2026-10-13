@@ -31,6 +31,8 @@ APPS = (
     "inscricoes",
     # O registro de unidades e autoridades da 060: duas tabelas que mudam e nunca se excluem.
     "unidades",
+    # Os avisos da 066: seis tabelas append-only e o modelo de aviso, que muda e não se exclui.
+    "avisos",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -111,6 +113,18 @@ TRIGGERS_POR_APP = {
         "autoridade_nao_se_exclui",
         "autoridade_unidade_imutavel",
         "autoridade_usada_imutavel",
+    ),
+    # Os avisos da 066. As seis de imutabilidade são **absolutas**: o envio não tem ato em curso que
+    # legitime mutação, e reenviar é aviso novo (`R-011`). A sétima recusa só a exclusão do modelo,
+    # que muda legitimamente quando a seleção o edita ou inativa.
+    "avisos": (
+        "aviso_append_only",
+        "publicacao_do_aviso_append_only",
+        "destinatario_do_aviso_append_only",
+        "tentativa_de_envio_append_only",
+        "resultado_da_tentativa_append_only",
+        "interrupcao_do_aviso_append_only",
+        "modelo_de_aviso_nao_se_exclui",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -603,7 +617,13 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # torna exclusivo com Perfil e Modalidade exata. É elaboração pela razão das anteriores: a
         # quem o documento é pedido é declarado pelo Edital. A coluna nasce vazia e a migration não
         # percorre linha publicada (044, FR-700, D-006).
-        "editais": 22,
+        #
+        # **Sobe para 23 com a 069**: a `editais/0023` troca os rótulos das `choices` da forma de
+        # convocação pelos da redação 2 ("Por publicação", sem "no endereço eletrônico do
+        # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
+        # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
+        # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
+        "editais": 23,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -615,7 +635,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # local —, congeladas no dia como o signatário. Não é a 022 tocando o que lê: é outra
         # feature, registrando no ato a unidade que o documento passou a dizer. `ADD COLUMN` com
         # padrão constante, sem reescrever linha nem disparar o gatilho append-only (060, FR-1128).
-        "publicacoes": 10,
+        # **Sobe para 11 com a 069**: a `publicacoes/0011` acrescenta à `Publicacao` a redação com
+        # que o documento foi composto, que a página do ato de ordenação lê para dizer a frase que o
+        # ato publicou (FR-1397). Não é tocar o que se lê: é outra feature, registrando no ato o que
+        # ele passa a afirmar. `ADD COLUMN` com padrão 1, sem reescrever linha nem disparar o
+        # gatilho append-only — e as anteriores leem 1, que é a redação que publicaram.
+        "publicacoes": 11,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
         #
@@ -782,7 +807,13 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # torna exclusivo com Perfil e Modalidade exata. É elaboração pela razão das anteriores: a
         # quem o documento é pedido é declarado pelo Edital. A coluna nasce vazia e a migration não
         # percorre linha publicada (044, FR-700, D-006).
-        "editais": 22,
+        #
+        # **Sobe para 23 com a 069**: a `editais/0023` troca os rótulos das `choices` da forma de
+        # convocação pelos da redação 2 ("Por publicação", sem "no endereço eletrônico do
+        # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
+        # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
+        # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
+        "editais": 23,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se
@@ -814,7 +845,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # local —, congeladas no dia como o signatário. Não é a 022 tocando o que lê: é outra
         # feature, registrando no ato a unidade que o documento passou a dizer. `ADD COLUMN` com
         # padrão constante, sem reescrever linha nem disparar o gatilho append-only (060, FR-1128).
-        "publicacoes": 10,
+        # **Sobe para 11 com a 069**: a `publicacoes/0011` acrescenta à `Publicacao` a redação com
+        # que o documento foi composto, que a página do ato de ordenação lê para dizer a frase que o
+        # ato publicou (FR-1397). Não é tocar o que se lê: é outra feature, registrando no ato o que
+        # ele passa a afirmar. `ADD COLUMN` com padrão 1, sem reescrever linha nem disparar o
+        # gatilho append-only — e as anteriores leem 1, que é a redação que publicaram.
+        "publicacoes": 11,
         # **Sobe para 2 com a 036**: a `recursos/0002` cria o `AtoDeInstrucao` — o ato pelo qual a
         # autoridade anexa a **um** recurso o parecer atacado e o documento citado, para que quem
         # julga decida com o que se contesta à vista. Não é a 022 tocando o que lê: é outra feature,

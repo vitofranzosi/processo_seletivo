@@ -39,8 +39,11 @@ fieldset.secao.gerada .acao{margin-left:.35rem}
     {% endif %}
     <p class="ajuda">As seções do Edital, na ordem e com o número em que saem no documento. O
       conjunto e a ordem são do sistema; o que se edita aqui é o texto das seções institucionais, e
-      só sai no documento a seção que tiver texto — as vazias não aparecem, e as seguintes são
-      numeradas sem salto. As demais são compostas a partir do que você já cadastrou — corrigi-las é
+      {% if numeracao_apresentada %}só sai no documento a seção que tiver texto ou o que o
+      sistema compõe nela, e as seções se reúnem sob perguntas, com subseções numeradas como 3.1 —
+      os números sem campo aqui são de subseções compostas pelo sistema. As demais{% else %}só sai no
+      documento a seção que tiver texto — as vazias não aparecem, e as seguintes são numeradas sem
+      salto. As demais{% endif %} são compostas a partir do que você já cadastrou — corrigi-las é
       corrigir o dado que as origina.</p>
 
     {% comment %}
@@ -51,11 +54,18 @@ fieldset.secao.gerada .acao{margin-left:.35rem}
     `texto` depende do que está no campo — é o que `conteudo.js` recalcula enquanto se digita.
     {% endcomment %}
     {% for secao in secoes %}
+    {% comment %}
+    Na apresentação por perguntas (069, FR-1368), a seção reunida sem texto próprio — "Quem pode se
+    inscrever?" — não tem campo: o título dela vem antes da primeira subseção, para que "3.1
+    Público-alvo" não apareça sem a pergunta a que responde.
+    {% endcomment %}
+    {% if secao.grupo %}<h3>{{ secao.grupo }}</h3>{% endif %}
     <fieldset class="linha secao{% if secao.gerada %} gerada{% endif %}"
               data-secao="{{ secao.key }}"
-              data-estado="{% if secao.gerada %}{% if secao.numero is None %}nao-sai{% else %}sai{% endif %}{% elif secao.norma %}sai{% else %}texto{% endif %}"
-              {% if secao.preambulo %}data-preambulo{% endif %}>
-      <legend id="titulo-{{ secao.key }}"><span data-numero>{% if secao.numero %}{{ secao.numero }}. {% endif %}</span>{{ secao.title }}<span data-estado-texto>{% if secao.numero is None %} (vazia — não sai no documento){% elif secao.numero == 0 %} (preâmbulo, sem número){% endif %}</span></legend>
+              data-estado="{% if secao.gerada %}{% if secao.numero is None %}nao-sai{% else %}sai{% endif %}{% elif secao.norma or secao.sai_sem_texto %}sai{% else %}texto{% endif %}"
+              {% if secao.preambulo %}data-preambulo{% endif %}
+              {% if numeracao_apresentada %}data-numeracao-apresentada data-rotulo-do-numero="{{ secao.rotulo_do_numero }}" data-estado-do-servidor="{{ secao.estado_apresentado }}"{% endif %}>
+      <legend id="titulo-{{ secao.key }}"><span data-numero>{{ secao.rotulo_do_numero }}</span>{{ secao.title }}<span data-estado-texto>{% if secao.estado_apresentado %}{{ secao.estado_apresentado }}{% elif secao.numero is None %} (vazia — não sai no documento){% elif secao.numero == 0 %} (preâmbulo, sem número){% endif %}</span></legend>
       {% if secao.gerada %}
       {% comment %}
       O caminho para a origem no fim da frase que a nomeia, e não num parágrafo só dele: era a linha a

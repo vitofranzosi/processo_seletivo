@@ -132,7 +132,7 @@
           <label for="edital-callForm">Como a convocação é comunicada</label>
           <select id="edital-callForm" name="edital-callForm"{% if pendentes.callForm is not None %} aria-describedby="pendente-edital-callForm"{% endif %}>
             <option value="">{% if comuns.callForm_varia %}Varia entre os Perfis{% else %}Não declarado{% endif %}</option>
-            <option value="PUBLICATION" {% if comuns.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação no endereço eletrônico do certame</option>
+            <option value="PUBLICATION" {% if comuns.callForm == "PUBLICATION" %}selected{% endif %}>Por publicação</option>
             <option value="INDIVIDUAL_MESSAGE" {% if comuns.callForm == "INDIVIDUAL_MESSAGE" %}selected{% endif %}>Por mensagem individual à pessoa convocada</option>
           </select>
           <button type="submit" class="acao" name="aplicar" value="edital:callForm"

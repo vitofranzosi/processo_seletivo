@@ -1,0 +1,223 @@
+# Verificação — 067, correções de norma do Edital em PDF
+
+## Ponto de partida (T001, T002)
+
+Medido em 2026-10-09 sobre `17f361b6` (spec, plano e tarefas, sem código), contra PostgreSQL, com
+`DB_NAME=ps067` e `pytest` chamado direto (a worktree não tem `.env`):
+
+```text
+tests/unit/editais tests/unit/publicacoes tests/unit/interface tests/contract
+tests/integration/publicacoes tests/interface/test_compor_quadro.py
+2202 passed in 120.39s
+```
+
+`test_o_documento_publicado_na_auditoria_sai_com_os_mesmos_bytes` (A e B) verde nesse ponto: o
+renderizador da `main` reproduz byte a byte os PDFs da auditoria.
+
+## Os testes da feature, antes do código
+
+Cada fase rodou contra o código da fase anterior e falhou só pelo comportamento que ia mudar:
+
+| Fase | Arquivo | Falha antes do código |
+|---|---|---|
+| 2 | `test_predicados_da_067.py` | `ImportError: cannot import name 'declara_sorteio'` |
+| US1 | `test_frase_de_recurso.py` | `ImportError: cannot import name 'prazo_do_recurso'` |
+| US1 | `test_revisao.py` (frase) | asserção — a frase antiga, sem objeto |
+| US3 | `test_arredondamento_sob_sorteio.py` | 8 casos: `milestone_rounding_invalid` sob sorteio |
+| US3 | `test_documento_sob_sorteio.py` | "Arredondamento" e "Empate no corte" impressos sob sorteio |
+| US3 | `test_correcoes_de_norma_na_revisao.py` | 6 casos: Revisão, cartão, ajuda, dica da Retificação |
+| US3 | `test_emissao_de_marco_por_sorteio.py` | a submissão recusava o marco sem arredondamento (`blocking_findings`) |
+| US4 | `test_perfil_sem_vaga_imediata.py`, Revisão | quadro e reversão impressos; nota ausente |
+| US2 | `test_conferencia_do_recurso.py` | `ImportError: cannot import name 'eventos_de_recurso'` |
+| US2 | `test_correcoes_de_norma_na_publicacao.py` | o aviso ausente da submissão e da Retificação |
+
+Dois testes de caso-limite foram escritos **depois** do código, como guarda, porque a análise da
+rastreabilidade os achou sem teste: dois marcos no mesmo Perfil e o Evento cancelado no aviso.
+
+**Achado na implementação de US1 (`D-012`).** Com o nome do marco dentro da frase, o agrupamento da
+Revisão — que junta os marcos de mesma regra de Perfis diferentes — separou cada Perfil num grupo, e
+`test_marcos_iguais_em_perfis_diferentes_aparecem_uma_vez` e `test_o_marco_que_diverge_diz_em_que`
+caíram. A Revisão passou a dizer "deste marco", com o nome na linha da denominação logo acima; o
+documento continua nomeando.
+
+**Testes antigos atualizados de propósito**, cada um no commit que muda o comportamento:
+`test_pdf.py` (as duas frases de recurso), `test_documento_da_retificacao_que_acrescenta.py` (a
+frase), `test_revisao.py` (a frase; sob sorteio, nem empate nem arredondamento) e
+`test_itens_do_documento.py` (o guardião de bytes, renomeado, aponta para `demonstracao/`).
+
+**Regressão das áreas.** Antes de US5: `tests/unit tests/interface tests/contract
+tests/integration/publicacoes tests/integration/classificacao tests/acceptance` — 6044 passados, e
+as 3 falhas esperadas (o teste da Revisão que ainda exigia o empate sob sorteio, e os dois de bytes
+que mudam em US5). Depois de US5, com `tests/integration/editais`: **6200 passed, 1 skipped**,
+inclusive `test_o_documento_publicado_continua_byte_a_byte_o_mesmo` — **a fixture de contrato não
+mudou** (`SC-505`).
+
+## A diferença de texto contra os PDFs da auditoria (SC-502, D-010)
+
+`test_documento_da_auditoria_depois_da_067.py` compõe os conteúdos congelados de A e B, extrai o
+texto (o mesmo extrator dos testes de contrato), neutraliza o rodapé de página, o cabeçalho de tabela
+repetido na quebra e o número das "Tabela N", e exige que o texto do PDF da auditoria, transformado
+**só** pelas mudanças pretendidas, seja **igual** ao de agora:
+
+| Cenário | Transformação aplicada ao texto da auditoria | Resultado |
+|---|---|---|
+| A | 4 frases de recurso trocadas pela que nomeia “Classificação por sorteio eletrônico”; 4 "Arredondamento" e 4 "Empate no corte" retirados | igual |
+| B | 18 frases trocadas pela que nomeia “Classificação final pela prova de títulos”; 16 quadros zerados com a reversão logo abaixo retirados (TP-01 a TP-16); as 18 linhas de arredondamento, sob pontuação, **ficam** | igual |
+
+**Prova de que a comparação reprova**: com a frase da continuação trocada por um instante
+("publicar" → "publicou"), o teste de A falha.
+
+Por `pdftotext -layout`, a diferença de A é a mesma: as 4 frases (2 linhas cada), 4 + 4 linhas
+retiradas, e o resto é paginação — o caractere de quebra de página em outra linha e o cabeçalho do
+Cronograma repetido numa página nova.
+
+## Os cenários pelo fluxo real (T047, T048)
+
+Roteiros da auditoria copiados para o scratchpad, com os caminhos trocados por variáveis e o conteúdo
+dos cenários intacto. Cada um num banco novo copiado de `ps_067_base` (migrado do zero), com dados
+fictícios; publicados pelos comandos de aplicação (`create_process_with_first_edital` →
+`replace_draft` → `submit_edital` → `homologate_edital` → `publish_edital`). **Antes** com o código
+da `main` (`99d32e16`, extraído por `git archive`), **depois** com o desta branch — o caminho do
+`pdf.py` em uso foi impresso em cada execução.
+
+O cenário B é o `cenario_b_corrigido.py` da `065`: desde a `065`, o B original é recusado na
+submissão pelos conflitos de numeração, na `main` também; a versão corrigida troca só os números de
+subitem.
+
+| Cenário | Banco | Achados da submissão | Páginas |
+|---|---|---|---|
+| A antes (`main`) | `ps_067_a_antes` | 1 aviso (Evento de 2027) | 9 |
+| A depois (`067`) | `ps_067_a_depois` | o mesmo + **o aviso de conferência de recurso** | 9 |
+| B corrigido antes | `ps_067_b_antes` | 16 avisos de reserva sem vaga imediata | 44 |
+| B corrigido depois | `ps_067_b_depois` | os mesmos + **o aviso de conferência**, com os 4 Eventos de recurso | **36** |
+| A sem arredondamento, `main` | `ps_067_a_sem_arred_main` | **recusado**: "O arredondamento do marco deve declarar `scale` como inteiro." (×4) — a recusa da auditoria, §3.3 | — |
+| A sem arredondamento, `067` | `ps_067_a_sem_arred` | publicado | 9 |
+
+**Diferença de texto, antes × depois do fluxo real**, pela mesma regra do teste (com o resumo de
+verificação também neutralizado, porque o conteúdo de cada banco tem identificadores próprios): A —
+só o pretendido; B — só o pretendido, com os 16 quadros retirados. E o documento de A **sem**
+arredondamento tem o mesmo texto do de A **com** arredondamento: sob sorteio ele nunca é impresso.
+
+## O acervo (US5, SC-506, FR-1325, FR-1326)
+
+No banco `ps_067_a_antes`, o Edital A publicado com o código da `main` foi retificado com o código
+desta branch (a Retificação de `cenario_a2.py`: prorrogação e +5 vagas no polo BJN).
+
+- SHA-256 do documento original antes e depois da Retificação: `aa6e8752…c939612b` — **igual**, e
+  igual ao do PDF gravado no ato de publicar com a `main`.
+- A confirmação da Retificação mostrou `appeal_schedule_review` entre os avisos, e ela publicou.
+- O consolidado ("retificado em 9 de outubro de 2026") saiu pelas regras novas: as 4 frases nomeiam
+  “Classificação por sorteio eletrônico”, nenhuma linha de arredondamento nem de empate no corte, e
+  nenhuma frase "contados da divulgação do resultado" (`pdftotext -raw`).
+
+## Páginas (T049)
+
+Renderizadas por CoreGraphics (`qrender_all.py`, escala 1,4 — o poppler desta máquina desenha o
+Helvetica-Bold como Regular) e olhadas, antes e depois. As escolhidas estão em `demonstracao/`:
+
+| Página | O que se vê |
+|---|---|
+| `pagina-A-antes-03.jpg` / `pagina-A-depois-03.jpg` | o marco por sorteio de INF-BJN: some "Arredondamento" e "Empate no corte"; "Recurso:" nomeia “Classificação por sorteio eletrônico”, com as aspas tipográficas desenhadas; rótulos em negrito |
+| `pagina-B-antes-08.jpg` / `pagina-B-depois-08.jpg` | TP-01: some a "Tabela 6 — Quadro de vagas — TP-01" de zeros e a reversão; a de Modalidades sobe para Tabela 6, com percentual e fundamento; o marco FINAL, por pontuação, continua com arredondamento e empate |
+| `pagina-B-depois-07.jpg` | TP-01: a forma de convocação continua, logo depois de "Dados exigidos na inscrição" |
+| `pagina-B-depois-04.jpg` | TD-ADM, com vaga: o quadro inteiro, inclusive "PTT 0", e a reversão |
+
+## Interface (T050)
+
+Runserver desta worktree na porta 8067 (entrada `correcoes-067` do `.claude/launch.json`), banco
+`ps_067_rascunho` com os rascunhos de A e B, identidade de demonstração `ana.elaboradora` /
+Elaborador.
+
+| Captura | O que se vê |
+|---|---|
+| `1-revisao-com-o-aviso-de-recurso.jpg` | a Revisão de A: o aviso "Prazos de recurso a conferir", com "Ir para Cronograma" (`/compor/cronograma#cronograma-titulo`); nenhuma linha de arredondamento ou empate na conferência do marco |
+| `2-cartao-por-sorteio-sem-arredondamento.jpg` | o cartão do marco por sorteio sem "Casas decimais" e "Arredondamento" (ocultos com 2 e meio para cima) |
+| `3-cartao-de-volta-a-pontuacao.jpg` | a mesma escolha trocada para pontuação: os campos voltam, preenchidos com 2 e "Meio para cima" |
+| `4-revisao-reversao-que-nao-sai.jpg` | a Revisão de B: na reversão de TP-01, "não sai no documento: o Perfil não tem vaga imediata" — nos 16 Perfis TP |
+
+Nada foi gravado pela interface; as trocas de forma ficaram sem salvar.
+
+## A jornada pelo canal de cada ator (T055, Constituição VI)
+
+A convergência acusou que a publicação e a Retificação tinham sido exercitadas só por comandos de
+aplicação, e que no navegador as trocas tinham ficado sem salvar. A jornada foi refeita **inteira
+pela interface administrativa e pela consulta pública**, sem shell e sem tocar o banco, num banco
+novo (`ps_067_jornada`, cópia do molde migrado, com as Unidades sincronizadas pelo passo de
+ambiente do `make preparar`). Runserver desta worktree na porta 8067 (`correcoes-067` no
+`.claude/launch.json`). Dados fictícios.
+
+| # | Ator (identidade de demonstração) | O que fez pela interface | O que se viu |
+|---|---|---|---|
+| 1 | `gabriel.gestor` — Gestor | cadastrou a autoridade signatária (fictícia) em *Autoridades da unidade*; criou o Processo `PS-DEMO-067` e o Edital 67/2026 | — |
+| 2 | `ana.elaboradora` — Elaborador | Perfis: `POLO-VIX` (10 vagas, quadro 7 + PPI 3, reversão) e `POLO-SER` (0 vaga, cadastro limitado a 10, quadro 0/0, reversão declarada); Cronograma com 5 Eventos, um deles "Recurso contra o resultado do sorteio"; Etapa "Análise documental"; método comum do sorteio; marco do POLO-VIX **por sorteio** com recurso de 2 dias, e "Aplicar aos demais Perfis" para o POLO-SER; período de inscrições | ao escolher "Por sorteio", "Casas decimais" e "Arredondamento" saíram do cartão (ocultos com 2 e meio para cima); a prévia do "aplicar" mostrou a frase "contra o resultado deste marco" (D-012) |
+| 3 | `ana.elaboradora` | Revisão e **submissão** | o aviso "Prazos de recurso a conferir" com os dois marcos e o Evento de recurso, link "Ir para Cronograma"; a submissão o repete como `Aviso:` e não impede (`jornada/1-revisao-com-o-aviso.jpg`) |
+| 4 | `bruno.homologador` — Homologador | **homologou** | a tela de homologação do Edital não mostra aviso nenhum — nenhum aviso aparece ali hoje |
+| 5 | `carla.publicadora` — Publicador | **publicou**, escolhendo a autoridade | o aviso na confirmação, e o ato disponível (`jornada/2-publicar-com-o-aviso.jpg`); a página do Edital publicado **não** mostra o aviso (FR-1328) |
+| 6 | público, sem identidade | baixou o documento por `/api/v1/public/publicacoes/<id>/documento` (o link da página do Edital) | `application/pdf`, 21 255 bytes, 4 páginas: as 2 frases de recurso nomeiam o seu marco; nenhum "Arredondamento", nenhum "Empate no corte", nenhuma frase "contados da divulgação do resultado"; **um** quadro (POLO-VIX) e **uma** reversão; o POLO-SER só com a tabela de Modalidades (`jornada/Edital-67-2026-publicado.pdf`, páginas 1 e 2) |
+| 7 | `ana.elaboradora` | **Retificação**: 4 vagas imediatas ao POLO-SER (3 AC, 1 PPI), "Ver o que vai mudar", "Criar Retificação", submissão | a tela de Retificação do marco por sorteio diz "Não declarado — a ordem é sorteada, e não há nota a arredondar" (FR-1317); a confirmação mostra o aviso (`jornada/3-retificacao-com-o-aviso.jpg`) |
+| 8 | `bruno.homologador`, `carla.publicadora` | homologou e publicou a Retificação | o aviso aparece também na homologação e na publicação da Retificação, e nenhuma delas é impedida |
+| 9 | público | baixou o consolidado e, de novo, o original | consolidado: "retificado em 9 de outubro de 2026", **dois** quadros e **duas** reversões — o POLO-SER, agora com vaga, passou a ter quadro e reversão (US4, cenário 5); frases nomeadas; nenhum arredondamento nem empate. Original: SHA-256 `9618b05b…0a905d7`, **o mesmo** do arquivo baixado logo depois da publicação (FR-1325) |
+| 10 | candidato, sem identidade | `/selecoes/` → a página do Edital | "Ler o Edital completo (PDF)" aponta para o consolidado, e "Edital de abertura" para o original (`jornada/4-pagina-publica-do-candidato.jpg`) |
+
+Páginas do publicado e do consolidado renderizadas por CoreGraphics e olhadas
+(`jornada/pagina-*.jpg`).
+
+## Revisão do diff contra a `main`
+
+Revisão independente do diff de produção, antes do PR. Dois defeitos reais, corrigidos com teste
+escrito antes (cada um falhou pelo motivo apontado e passou depois da correção):
+
+| Achado | Correção | Teste |
+|---|---|---|
+| A conferência de recurso levantava `KeyError: 'startAt'` quando uma Retificação removia o início de um Evento de recurso — erro interno no lugar do `field_required` que a validação já diz; `schedule` ou `classificationMilestones` que não são lista também a derrubavam | `evento.get('startAt')`, e as coleções só são percorridas quando são lista | CR `test_conteudo_malformado_nao_derruba_a_conferencia` |
+| O item "Casas decimais e arredondamento" da ajuda da etapa levava a `#…-scale`, que some do cartão quando o primeiro marco é por sorteio (FR-427) | o item leva à forma da ordem — a pergunta que tirou o campo — quando o marco da âncora declara sorteio; uma nota visível no cartão foi tentada e descartada, porque a FR-428 proíbe ajuda visível nos cartões | TR `test_a_ajuda_do_arredondamento_tem_destino_quando_o_marco_e_por_sorteio` |
+
+Registrado sem correção: um rascunho anterior à `067` com marco por sorteio e arredondamento
+gravado aparece como "alterado" na primeira prévia ou recusa depois da implantação — o
+arredondamento oculto passa a ser enviado vazio. É verdade (salvar vai tirá-lo) e transitório.
+Também transitório: a pendência de arredondamento **malformado** sob sorteio aponta para `scale`,
+que não está no cartão; salvar o passo grava `{}` e a pendência some.
+
+## Achados registrados, não tratados
+
+- **A dica de vazio do desfecho de empate, na Retificação, anuncia impedimento também sob sorteio**
+  (`interface/retificacao.py`, `"cutRule/tieOutcome": "Não declarado — a publicação será
+  impedida"`). Sob sorteio a validação não exige o desfecho (`FR-928`), e a dica afirma uma recusa
+  que não acontece. É a mesma natureza do `FR-1317`, mas sobre outro campo e anterior a esta feature.
+- **Na mesma tela, "Como as pontuações se combinam" e "Normalização antes de combinar" também
+  anunciam "a publicação será impedida" sob sorteio** — visto na jornada pela interface (T055). A
+  combinação não é impressa nem lida sob sorteio; a dica de vazio é anterior a esta feature.
+- **O Perfil só de cadastro de reserva corta "os 10 primeiros"** (cenário B): a regra de corte
+  continua impressa num Perfil sem vaga, e é parte do RC-58 que a `D-003` deixou aberto.
+- **Sem o quadro, a forma de convocação do Perfil sem vaga fica logo abaixo de "Dados exigidos", na
+  margem zero** — a ED-15 da auditoria (frases do Perfil fora do recuo), que esta feature não trata.
+
+## Suíte completa depois da convergência e da revisão
+
+Em 2026-10-09, sobre `2f34a7b8` (T055–T057 e as correções da revisão), com `DB_NAME=ps_067_base`:
+
+```text
+cd backend && make lint check test-pg
+ruff check: All checks passed! · ruff format --check: 1331 files already formatted
+manage.py check: no issues · makemigrations --check: No changes detected
+9959 passed, 11 skipped in 1030.32s
+```
+
+Os mesmos onze pulados deliberados. Os quatro testes a mais que na rodada anterior são os da
+convergência (T056, T057) e os dois da revisão.
+
+## Suíte completa (T054)
+
+Em 2026-10-09, sobre `2ce6a130`, com `DB_NAME=ps_067_base` (banco de teste `test_ps_067_base`):
+
+```text
+cd backend && make lint check test-pg
+ruff check: All checks passed! · ruff format --check: 1331 files already formatted
+manage.py check: no issues · makemigrations --check: No changes detected
+9955 passed, 11 skipped in 1096.75s
+```
+
+Os onze pulados são os mesmos onze deliberados do `AGENTS.md` (9 do vocabulário da composição, a
+recusa por vendor e o E2E da fonte real). A rodada anterior, sobre `b4ba653d`, tinha dado 9952
+passados e **1 falha** — `test_toda_pasta_de_specs_aparece_na_tabela_de_incrementos`: a `067` não
+estava na tabela de incrementos do README; corrigido em `2ce6a130`.

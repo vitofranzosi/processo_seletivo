@@ -256,6 +256,9 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
   remover ou reordenar seção (`006`, FR-034).
 - **FR-981**: As seções que já existiam MUST manter a chave, para que o texto já escrito num Edital em
   elaboração continue na seção em que foi escrito.
+  *Emendada pela `069` (FR-1367): o catálogo vigente passou a ter outra ordem e outros títulos, e as
+  chaves continuaram as mesmas — é o que esta FR protege. O catálogo desta spec fica congelado como o
+  dos Editais publicados antes.*
 - **FR-982**: A seção textual MUST poder ficar vazia, e a vazia MUST NOT ser composta no documento —
   nem na prévia, nem no publicado —, como a gerada cuja coleção está vazia. *Emenda a `FR-041` da
   `006`: a seção textual sem conteúdo deixa de ser impeditivo.*
@@ -272,6 +275,9 @@ declaração na seção Matrícula, idêntica à que o portal exibe, e a linha d
   Retificação e no documento:
   derivada da mesma regra, sobre o conteúdo que seria publicado; a seção que não sai no documento não
   recebe número em tela nenhuma. *Fecha a parte "numeração" do RC-26.*
+  *Emendada pela `069` (FR-1368, FR-1399): a regra continua uma só, e passa a ser consciente da
+  apresentação — no Edital por perguntas o número é o apresentado, "N" ou "N.k"; no publicado antes,
+  o de sempre.*
 - **FR-986**: A Revisão MUST avisar, sem impedir, quando a Apresentação ou as Disposições Finais vão
   ao ato vazias. São as duas seções que os quinze Editais da amostra têm sem exceção — o preâmbulo com
   a autoridade que pratica o ato, e os casos omissos. O aviso da redação padrão sem revisão (PR 220)

@@ -1,0 +1,24 @@
+# Scripts de análise documental: rodam no Python do sistema (3.9) e só com a biblioteca padrão, salvo os dois
+# que se executam pelo `manage.py shell` do backend. Os arquivos de dados são prosa; a linha longa é texto.
+target-version = "py39"
+line-length = 120
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[lint.per-file-ignores]
+"unidades.py" = ["E501"]
+"linhas.py" = ["E501"]
+"notas.py" = ["E501"]
+"origem_do_texto.py" = ["E501"]
+# Modelos de texto em Markdown dentro do código: a linha longa é a frase.
+"gerar.py" = ["E501"]
+"medir.py" = ["E501"]
+"sondagem_editais_reais.py" = ["E501"]
+"narrar.py" = ["E501"]
+"narrativas.py" = ["E501"]
+
+[format]
+# Os três arquivos de dados são tabelas escritas à mão, uma entrada por linha; o formatador as abriria em
+# milhares de linhas de uma palavra (5.770 só em `unidades.py`) e esconderia o que cada entrada diz.
+exclude = ["unidades.py", "linhas.py", "narrativas.py"]

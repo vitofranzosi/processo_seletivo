@@ -35,15 +35,22 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, são **34** — e é por isso que a armadilha é o zero, e não o total.
+— eram 18, depois 34, são **40** desde os avisos da `066` — e é por isso que a armadilha é o zero,
+e não o total.
 
 **Depois dos três, o `make preparar` sincroniza as Unidades** declaradas em
 `backend/processo_seletivo/unidades/unidades.json` (060). Sem isso, a criação de Processo recusa com
 `unidade_nao_registrada` e a publicação não tem cabeçalho. A linha que ele imprime,
 `Unidades: C criadas, A alteradas, M sem mudança`, diz se aplicou alguma coisa. As tabelas da `060`
-**não** são append-only — nada se exclui nelas por gatilho, mas elas mudam —, e o `M` continua 34.
+**não** são append-only — nada se exclui nelas por gatilho, mas elas mudam —, e não contam no `M`.
 A suíte não depende do comando: uma fixture `autouse` registra o Cefor em todo caso que toca o banco,
 porque os casos transacionais truncam as tabelas e a linha que uma migration criasse sumiria.
+
+**O mesmo comando cria os três modelos iniciais de aviso** de cada unidade (066), e imprime
+`Modelos de aviso: C criados` — três na primeira vez, **zero** daí em diante, para sempre: a unidade
+que editou ou inativou os modelos continua com os dela. A fixture `autouse` **não** os cria, de
+propósito: gravaria três modelos e três eventos de trilha em todo caso, e os testes que contam a
+trilha quebrariam em bloco. Quem precisa deles chama `garantir_modelos_iniciais()`.
 
 **Migration desaplicada contamina a sessão inteira.** O sintoma é `relation ... does not exist` num
 arquivo sorteado, longe da causa. Antes de investigar qualquer erro estranho, confira
@@ -90,7 +97,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **9348 passando e 11 pulados** (medido em 2026-10-07, na `062`, sobre a `main` que já tinha a `060` e a `061`: 9347 na rodada inteira e o guardião do README, que reprovou por falta da linha da `062` e passou isolado depois dela; os mesmos onze pulados). Os onze
+Contra PostgreSQL a suíte fecha em **10408 passando e 11 pulados** (medido em 2026-10-09, na `068` integrada à `main` que já tinha a `066` e a `067`, em 1095s; os mesmos onze pulados). Os onze
 são deliberados, e se repartem em três: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
@@ -102,7 +109,7 @@ Para chegar lá é preciso o **par**:
 conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
 
 **A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 89 — custa
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 90 — custa
 **~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
 custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
 declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
@@ -126,6 +133,12 @@ derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
 runserver local devolve 503. O portal do candidato precisa de `PORTAL_IDENTIDADE_DEMO=true` pelo
 mesmo motivo. Os dois deixam qualquer pessoa declarar quem é, e produção recusa subir com eles.
+
+**Os avisos aos candidatos (066) não saem no clique.** A confirmação grava o aviso e responde; quem
+envia é `manage.py despachar_avisos`, que em produção roda num timer a cada minuto e, em
+desenvolvimento, **ninguém roda por você**: rode-o à mão depois de confirmar, e a mensagem sai no
+terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem ligada no
+`development` e no `test`, e desligada em produção até a validação de LGPD.
 
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.
