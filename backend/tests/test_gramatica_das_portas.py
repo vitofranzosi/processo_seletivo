@@ -27,7 +27,13 @@ VIEWS = RAIZ / "processo_seletivo/interface/views.py"
 #: precisa crescer junto**: as views dos avisos (066) moram em módulo próprio, e uma varredura só de
 #: `views.py` as deixaria escapar caladas — o defeito de toda varredura com lista literal, que a
 #: `066` registrou no `R-015` antes de escrever a primeira view.
-MODULOS_DE_VIEW = (VIEWS, RAIZ / "processo_seletivo/interface/avisos.py")
+MODULOS_DE_VIEW = (
+    VIEWS,
+    RAIZ / "processo_seletivo/interface/avisos.py",
+    # A tela de validação do assistente de dúvidas (070). Recusa pelo `not_found` do domínio, e não
+    # por `Http404`, como a dos avisos; entra na varredura para que uma porta futura não escape.
+    RAIZ / "processo_seletivo/interface/duvidas.py",
+)
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 
 #: As sete portas de autorização da gestão — a sétima, da tela do marco, veio com a `049`. Literal

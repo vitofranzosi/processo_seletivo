@@ -126,6 +126,13 @@ INSTALLED_APPS = [
     # essa propriedade. Se algum dia outro app o importar, a feature deixou de ser ponta.
     "processo_seletivo.matriculas",
     "processo_seletivo.avisos",
+    # A fonte de consulta do assistente de dúvidas (070): responde a perguntas sugeridas sobre o
+    # Edital vigente, com a versão e a origem de cada informação. **Sem `models.py`**: nada é
+    # gravado, e a resposta deriva do conteúdo publicado, que é imutável (`D-006`). Registrada como
+    # os vizinhos porque as Fases B e C crescem dentro dela. O nome não é `consulta`, que já é a
+    # consulta pública de `publicacoes`, nem `assistente`, que na gestão é o de composição
+    # (`R-001`).
+    "processo_seletivo.duvidas",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são

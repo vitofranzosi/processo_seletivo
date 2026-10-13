@@ -1,6 +1,6 @@
 from django.urls import path
 
-from processo_seletivo.interface import avisos, views
+from processo_seletivo.interface import avisos, duvidas, views
 
 app_name = "interface"
 
@@ -35,6 +35,13 @@ urlpatterns = [
         name="supervisao",
     ),
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
+    # A validação interna das respostas do assistente de dúvidas (070). Só leitura, por GET, no
+    # alcance da página do Edital (`D-010`); nenhuma rota pública nesta fase (`D-001`).
+    path(
+        "editais/<uuid:edital_id>/duvidas/",
+        duvidas.respostas_do_assistente,
+        name="duvidas",
+    ),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),
     # Partir de um Edital anterior (023). Fora do POST da etapa porque não é gravação de etapa:

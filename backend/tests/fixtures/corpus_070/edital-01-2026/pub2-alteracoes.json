@@ -1,0 +1,16 @@
+{
+ "justificativa": "Ampliação de uma vaga imediata no perfil de docência.",
+ "vigencia": "None",
+ "alteracoes": [
+  {
+   "path": "/profiles/id=00000000-0000-0000-0001-0000000000b1/immediateVacancies",
+   "op": "REPLACE",
+   "novo": 3
+  },
+  {
+   "path": "/profiles/id=00000000-0000-0000-0001-0000000000b1/vacancyTable/id=00000000-0000-0000-0001-0000000000fa/immediateVacancies",
+   "op": "REPLACE",
+   "novo": 2
+  }
+ ]
+}
