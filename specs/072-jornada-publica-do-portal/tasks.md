@@ -103,13 +103,13 @@ antes da implementação dela.
 - [X] T037 Criar `specs/072-jornada-publica-do-portal/rastreabilidade.md`: FR-1600 a FR-1640 e SC-600 a SC-607 → teste ou verificação
 - [X] T038 Criar `specs/072-jornada-publica-do-portal/validacao-humana.md`: roteiro do percurso conduzido com cinco pessoas (SC-605), com tarefas, critérios e ficha de registro; e o texto de finalidade de "Seus dados" para validação por quem responde pela proteção de dados (FR-1627) — ambos marcados como pendentes
 - [X] T039 Guardião de citações: `uv run pytest -q tests/test_citacoes_de_requisito.py`
-- [ ] T040 Verificação canônica: `make lint check test-pg DB_NAME=ps_072_teste POSTGRES_USER=$USER`, com `uv run ruff format --check` incluído no `lint`
-- [ ] T041 Navegador, telas do SC-600 e do SC-601: script de medição da auditoria contra o seed; capturas em 375 × 667 e 1280 × 900 da vitrine e da seleção
-- [ ] T042 Navegador, SC-607: nenhuma rolagem lateral em 320, 360, 375, 390, 768, 1280 e 1440 nas telas alteradas
-- [ ] T043 Navegador, sem script: vitrine e seleção renderizadas em `iframe` com `sandbox="allow-same-origin"`; filtros recolhidos operáveis (FR-1603)
-- [ ] T044 Navegador, jornadas: visitante novo até "Seus dados" (o CPF fica para a pessoa — o agente não o digita) e, a partir dali, a candidata do fixture para volta, mensagem e confirmação; recorrente; participante no Edital 51/2026
-- [ ] T045 Registrar `specs/072-jornada-publica-do-portal/verificacao.md`: o que foi verificado, como, e o que continua pendente (SC-605, FR-1627)
-- [ ] T046 Desfazer a entrada temporária de `.claude/launch.json` (`git checkout -- .claude/launch.json`)
+- [X] T040 Verificação canônica: `make lint check test-pg DB_NAME=ps_072_teste POSTGRES_USER=$USER`, com `uv run ruff format --check` incluído no `lint`
+- [X] T041 Navegador, telas do SC-600 e do SC-601: script de medição da auditoria contra o seed; capturas em 375 × 667 e 1280 × 900 da vitrine e da seleção
+- [X] T042 Navegador, SC-607: nenhuma rolagem lateral em 320, 360, 375, 390, 768, 1280 e 1440 nas telas alteradas
+- [X] T043 Navegador, sem script: vitrine e seleção renderizadas em `iframe` com `sandbox="allow-same-origin"`; filtros recolhidos operáveis (FR-1603)
+- [X] T044 Navegador, jornadas: visitante novo até "Seus dados" (o CPF fica para a pessoa — o agente não o digita) e, a partir dali, a candidata do fixture para volta, mensagem e confirmação; recorrente; participante no Edital 51/2026
+- [X] T045 Registrar `specs/072-jornada-publica-do-portal/verificacao.md`: o que foi verificado, como, e o que continua pendente (SC-605, FR-1627)
+- [X] T046 Desfazer a entrada temporária de `.claude/launch.json` (`git checkout -- .claude/launch.json`)
 
 ## Dependencies & Execution Order
 
