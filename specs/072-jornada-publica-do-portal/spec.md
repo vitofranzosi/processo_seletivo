@@ -312,8 +312,10 @@ faixas que terminam antes de 1.530 e de 570; o intervalo deixa folga para elas.
   existem. A soma das vagas de Perfis diferentes MUST NOT ser apresentada como número único.
 - **FR-1609**: O cartão MUST dizer os lugares declarados pelos Perfis, cada lugar uma vez, no máximo
   três e "e mais N" além disso; sem lugar declarado, a linha MUST NOT existir.
-- **FR-1610**: A busca textual da vitrine MUST alcançar também os lugares que o cartão mostra, além do
-  que já alcança (título do Processo, título e número do Edital, unidade e nomes dos Perfis).
+- **FR-1610**: A busca textual da vitrine MUST alcançar também os lugares declarados pelos Perfis, além
+  do que já alcança (título do Processo, título e número do Edital, unidade e nomes dos Perfis). Com
+  busca ativa, os Perfis e os lugares que casam com o termo MUST vir primeiro no cartão, para que o
+  limite de três da FR-1608 e da FR-1609 nunca esconda o que fez o cartão ser encontrado.
 - **FR-1611**: O título da vitrine MUST ser "Processos seletivos", acompanhado da unidade quando o
   catálogo publicado for de uma unidade só; o título da aba do navegador MUST dizer o mesmo, e não
   "Seleções abertas".
