@@ -104,7 +104,7 @@ specs/072-jornada-publica-do-portal/
 | Risco | Tratamento |
 |---|---|
 | A extração do cálculo de prazo mudar a página da seleção | A página passa a chamar a função extraída; os testes da 047 e da 062 (`test_prazo_recursal_publico.py`, `test_resultados_por_perfil.py`, `test_historico_publico.py`) continuam verdes sem alteração |
-| N+1 na vitrine | Leitura em lote (T-001) e teste de orçamento com 1 e 4 Editais |
+| N+1 na vitrine | Leitura em lote (T-001) e teste de orçamento com 1 e 3 Editais |
 | Cache compartilhado guardar a página com o e-mail | Resposta privada sempre que a mensagem de volta é renderizada (T-003), com teste |
 | O contexto do acesso revelar existência de identidade | Derivado só do destino (T-004); teste compara o corpo com e sem identidade |
 | Desktop sem script ver os filtros recolhidos | Degradação aceita e registrada (T-002): funcional, com o `summary` à vista |

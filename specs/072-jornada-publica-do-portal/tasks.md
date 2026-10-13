@@ -100,9 +100,9 @@ antes da implementação dela.
 - [X] T034 [P] Teste novo `tests/portal/test_vocabulario_das_telas_publicas.py`: `PROIBIDAS` (importado de `tests/portal/test_acompanhamento_pela_situacao.py`) sobre o texto visível da vitrine, da seleção aberta e encerrada com resultado, e das telas de acesso com destino de vaga (FR-1638, research T-008)
 - [X] T035 [P] Atualizar `tests/interface/test_acessibilidade_do_portal.py`: a consulta continua sem `hx-`/`onclick`, com rótulos ligados e `summary` presente; mensagem de volta com `role="status"` (FR-1639, FR-1640)
 - [X] T036 Ajustar os testes de texto que a reconciliação aponta — `test_detalhe_selecao.py` ("Voltar aos resultados"), `tests/integration/portal/test_atos_que_respondem.py` ("Seus dados foram guardados"), `tests/acceptance/portal/test_entrar_sem_senha.py` e `tests/integration/identidade/test_mudanca_de_credencial.py` ("Sem senha") —, cada um relido contra a decisão que o originou
-- [ ] T037 Criar `specs/072-jornada-publica-do-portal/rastreabilidade.md`: FR-1600 a FR-1640 e SC-600 a SC-607 → teste ou verificação
-- [ ] T038 Criar `specs/072-jornada-publica-do-portal/validacao-humana.md`: roteiro do percurso conduzido com cinco pessoas (SC-605), com tarefas, critérios e ficha de registro; e o texto de finalidade de "Seus dados" para validação por quem responde pela proteção de dados (FR-1627) — ambos marcados como pendentes
-- [ ] T039 Guardião de citações: `uv run pytest -q tests/test_citacoes_de_requisito.py`
+- [X] T037 Criar `specs/072-jornada-publica-do-portal/rastreabilidade.md`: FR-1600 a FR-1640 e SC-600 a SC-607 → teste ou verificação
+- [X] T038 Criar `specs/072-jornada-publica-do-portal/validacao-humana.md`: roteiro do percurso conduzido com cinco pessoas (SC-605), com tarefas, critérios e ficha de registro; e o texto de finalidade de "Seus dados" para validação por quem responde pela proteção de dados (FR-1627) — ambos marcados como pendentes
+- [X] T039 Guardião de citações: `uv run pytest -q tests/test_citacoes_de_requisito.py`
 - [ ] T040 Verificação canônica: `make lint check test-pg DB_NAME=ps_072_teste POSTGRES_USER=$USER`, com `uv run ruff format --check` incluído no `lint`
 - [ ] T041 Navegador, telas do SC-600 e do SC-601: script de medição da auditoria contra o seed; capturas em 375 × 667 e 1280 × 900 da vitrine e da seleção
 - [ ] T042 Navegador, SC-607: nenhuma rolagem lateral em 320, 360, 375, 390, 768, 1280 e 1440 nas telas alteradas
