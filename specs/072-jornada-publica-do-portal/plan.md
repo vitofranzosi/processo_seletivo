@@ -35,8 +35,8 @@ versão vigente, só quando há destino de vaga (T-004).
 **Constraints**: sem script para a consulta funcionar; sem rolagem lateral de 320 a 1.440 px; resposta
 equivalente no acesso; nenhum GET abre inscrição; nenhum dado de navegação registrado.
 
-**Scale/Scope**: dezenas de seleções simultâneas (premissa da `024`); 6 templates, 1 folha, 2 módulos
-Python e 1 selector alterados; 1 script estático novo, de poucas linhas.
+**Scale/Scope**: dezenas de seleções simultâneas (premissa da `024`); 8 templates do portal, a folha
+(`base.html`), 2 módulos Python e 1 selector alterados; 1 script estático novo, de poucas linhas.
 
 ## Constitution Check
 
