@@ -2,7 +2,12 @@
 {% block titulo %}Entrar{% endblock %}
 {% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
-<h1>Entrar</h1>
+{% comment %}
+"Entrar" continua sendo o nome da porta (Q7); a caminho de uma vaga, a tela diz para que se entra
+(072, FR-1619).
+{% endcomment %}
+<h1>{% if vaga %}Confirme seu e-mail para se inscrever{% else %}Entrar{% endif %}</h1>
+{% include "portal/_vaga_do_destino.html" %}
 <p class="sub">Sem senha: enviamos um código para o seu e-mail.</p>
 
 <form method="post" action="{% url 'portal:acesso' %}" novalidate>

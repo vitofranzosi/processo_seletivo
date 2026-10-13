@@ -599,11 +599,64 @@ def selecao(request, edital_id):
     # redirecionamento, e aqui o critério é ainda mais estreito que o de `_destino_seguro` — o que
     # não é consulta reconhecida da vitrine simplesmente não sobrevive (T-007).
     contexto["voltar_para"] = leitura.caminho_de_volta(request.GET, reverse("portal:vitrine"))
+    # **"Voltar aos resultados" só para quem veio de resultados** (072, FR-1618). Quem chegou de uma
+    # campanha, de um aviso por e-mail ou de um compartilhamento nunca viu resultado nenhum.
+    contexto["volta_com_consulta"] = contexto["voltar_para"] != reverse("portal:vitrine")
+    # **O resumo do que a seleção oferece, no cabeçalho** (072, FR-1615, FR-1616). No celular a
+    # primeira tela era só cabeçalho, e a ação estava a quase duas telas (009, L4). O resumo não
+    # escolhe Perfil por ninguém: lista os que existem, com a quantidade dita como no cartão da
+    # vitrine, e cada um leva à sua vaga.
+    contexto["oferta_resumida"], contexto["oferta_a_mais"] = leitura.os_primeiros(
+        [
+            {
+                "id": str(perfil.get("id")),
+                "nome": perfil.get("name", ""),
+                "quantidade": leitura.quantidade_da_oferta(
+                    perfil.get("immediateVacancies") or 0, perfil.get("reserveType")
+                ),
+            }
+            for perfil in versao.content.get("profiles") or []
+            if perfil.get("name")
+        ],
+        5,
+    )
+    # **O Requerimento pedido na inscrição, antes da identificação** (072, FR-1626, D-006). Lido do
+    # conteúdo publicado: é o que o Edital declarou, e não o que a elaboração diz hoje.
+    contexto["requerimento_na_inscricao"] = (versao.content.get("matriculationRequest") or {}).get(
+        "moment"
+    ) == "AT_ENROLLMENT"
+    contexto["volta"] = _volta_para(request, identidade, edital_id, versao.content, contexto)
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
     # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
-    # histórico entregaria isso a quem sentar depois (FR-075a).
-    return marcar_como_privada(resposta) if iniciadas else resposta
+    # histórico entregaria isso a quem sentar depois (FR-075a). **E quando ela traz a mensagem de
+    # volta**, que diz o e-mail de quem entrou (072, research T-003): uma identidade nova não tem
+    # inscrição iniciada, e sem esta condição um cache compartilhado guardaria a página com o
+    # endereço de alguém.
+    return marcar_como_privada(resposta) if iniciadas or contexto["volta"] else resposta
+
+
+def _volta_para(request, identidade, edital_id, conteudo, contexto):
+    """A mensagem de volta da identificação, se ela for desta página — e lida uma vez só.
+
+    Fica na sessão até a pessoa abrir a página do Edital a que ela pertence: lida em outra página,
+    seria consumida sem ter sido vista. O Perfil é conferido contra a versão vigente, e sem
+    identidade na sessão não há o que dizer.
+    """
+    volta = request.session.get(CHAVE_DA_VOLTA)
+    if not volta or identidade is None or volta.get("edital") != str(edital_id):
+        return None
+    request.session.pop(CHAVE_DA_VOLTA, None)
+    perfis = {str(perfil.get("id")) for perfil in conteudo.get("profiles") or []}
+    if volta.get("perfil") not in perfis:
+        return None
+    return {
+        "perfil": volta["perfil"],
+        "email": identidade.email,
+        "dados_guardados": bool(volta.get("dados_guardados")),
+        # Sem inscrição recebida, a mensagem não convida a abrir nada (FR-1623).
+        "recebe": contexto["recebe_inscricoes"] and not contexto["teto_atingido"],
+    }
 
 
 def _convite_da_situacao(identidade, iniciadas, edital_id):
@@ -678,6 +731,10 @@ CHAVE_DA_FINALIDADE = "portal_acesso_finalidade"
 # Para onde voltar depois de informar nome e CPF: quem chegou a caminho de uma vaga não pode ser
 # despejado numa lista vazia e obrigado a procurar tudo de novo.
 CHAVE_DO_DESTINO = "portal_acesso_destino"
+# A volta da identificação para a vaga, lida uma vez pela página do Edital certo (072, research
+# T-003). Não é `CHAVE_DO_AVISO`: aquela é consumida pela tela seguinte, qualquer que seja ela — e
+# foi assim que "Seus dados foram guardados." aparecia na tela da inscrição, fora de contexto.
+CHAVE_DA_VOLTA = "portal_volta_a_vaga"
 # O que dizer sobre o último pedido de código — inclusive "nada foi enviado". Sobrevive ao
 # redirecionamento porque a tela que precisa da notícia é a seguinte, e é lida uma vez só.
 CHAVE_DO_ENVIO = "portal_acesso_envio"
@@ -740,8 +797,9 @@ def acesso(request):
         request.session[CHAVE_DO_DESTINO] = destino
     if identidade_do_candidato.identidade_autenticada(request):
         return redirect(reverse("portal:inscricoes"))
+    vaga = _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))
     if request.method != "POST":
-        return render(request, "portal/acesso_email.html", {"email": "", "erro": ""})
+        return render(request, "portal/acesso_email.html", {"email": "", "erro": "", "vaga": vaga})
 
     informado = request.POST.get("email", "").strip()
     if not endereco_aceitavel(informado):
@@ -749,7 +807,7 @@ def acesso(request):
         return render(
             request,
             "portal/acesso_email.html",
-            {"email": informado, "erro": "Informe um e-mail válido."},
+            {"email": informado, "erro": "Informe um e-mail válido.", "vaga": vaga},
         )
 
     canonico = canonizar(informado)
@@ -807,6 +865,7 @@ def acesso_codigo(request):
         ),
         "aviso": AVISO_NEUTRO,
         "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
+        "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
     }
     if request.method != "POST":
         return render(request, "portal/acesso_codigo.html", contexto)
@@ -913,6 +972,7 @@ def _entrar(request, identidade):
         # acrescentaria uma tela sem acrescentar nada.
         request.session[CHAVE_DO_DESTINO] = destino
         return redirect(reverse("portal:meus-dados"))
+    _guardar_a_volta(request, destino)
     return redirect(_de_volta_a_vaga(destino))
 
 
@@ -948,6 +1008,57 @@ def _de_volta_a_vaga(destino):
         return reverse("portal:inscricoes")
     selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
     return f"{selecao}#vaga-{rota.kwargs['profile_id']}"
+
+
+def _guardar_a_volta(request, destino, *, dados_guardados=False):
+    """Deixa para a página da vaga a mensagem que explica a confirmação (072, FR-1622, FR-1625).
+
+    Só quando o destino é uma vaga: é ali que falta um clique, e é esse clique que a mensagem
+    explica. O clique continua — abrir rascunho é POST desde a 009 —, e o que muda é a tela dizer.
+    """
+    rota = _rota_do_destino(destino)
+    if rota is None or rota.view_name != "portal:inscrever":
+        return
+    request.session[CHAVE_DA_VOLTA] = {
+        "edital": str(rota.kwargs["edital_id"]),
+        "perfil": str(rota.kwargs["profile_id"]),
+        "dados_guardados": dados_guardados,
+    }
+
+
+def _vaga_do_destino(destino):
+    """A vaga a caminho da qual a pessoa se identifica — ou `None` (072, FR-1619, FR-1620).
+
+    **Do destino, e nunca do e-mail.** O destino já passou pelas validações de hoje
+    (`_destino_seguro`, a rota resolvida), e o que se acrescenta é ler o Perfil na versão vigente do
+    Edital: rota que não é de vaga, Edital que não é público e Perfil que não é dele não viram
+    contexto. Como nada aqui depende do endereço informado, a resposta continua a mesma exista ou
+    não identidade para ele (010, FR-020, FR-021).
+    """
+    rota = _rota_do_destino(destino) if destino else None
+    if rota is None or rota.view_name != "portal:inscrever":
+        return None
+    try:
+        versao = selectors.selecao_publica(edital_id=rota.kwargs["edital_id"])
+    except DomainError:
+        return None
+    conteudo = versao.content
+    perfil = next(
+        (
+            perfil
+            for perfil in conteudo.get("profiles") or []
+            if str(perfil.get("id")) == str(rota.kwargs["profile_id"])
+        ),
+        None,
+    )
+    if perfil is None:
+        return None
+    return {
+        "perfil": perfil.get("name", ""),
+        "numero": conteudo.get("number", ""),
+        "ano": conteudo.get("year", ""),
+        "titulo": conteudo.get("title", ""),
+    }
 
 
 def _rota_do_destino(destino):
@@ -1017,7 +1128,7 @@ def acesso_reconciliar(request):
             dona or associacao.criar_identidade_com(desafio.email_canonico, informado),
         )
 
-    contexto = {"erro": ""}
+    contexto = {"erro": "", "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))}
     if request.method != "POST":
         return render(request, "portal/acesso_reconciliar.html", contexto)
 
@@ -1225,7 +1336,12 @@ def meus_dados(request):
         "nome": registro.nome,
         "cpf": formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
     }
-    contexto = {"dados": dados, "erros": {}, "cpf_editavel": editavel}
+    contexto = {
+        "dados": dados,
+        "erros": {},
+        "cpf_editavel": editavel,
+        "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
+    }
     if request.method != "POST":
         return render(request, "portal/meus_dados.html", contexto)
 
@@ -1236,8 +1352,12 @@ def meus_dados(request):
         return render(request, "portal/meus_dados.html", contexto)
 
     nucleo_da_identidade.gravar_nucleo(registro, nome=dados["nome"], cpf=dados["cpf"])
-    _avisar(request, "Seus dados foram guardados.")
     destino = request.session.pop(CHAVE_DO_DESTINO, "")
+    if destino and _destino_e_vaga(destino):
+        # A confirmação vai junto da vaga, e não na tela seguinte qualquer que seja (FR-1625).
+        _guardar_a_volta(request, destino, dados_guardados=True)
+        return redirect(_de_volta_a_vaga(destino))
+    _avisar(request, "Seus dados foram guardados.")
     if destino:
         return redirect(_de_volta_a_vaga(destino))
     return redirect(reverse("portal:inscricoes"))

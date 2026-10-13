@@ -65,15 +65,15 @@ antes da implementação dela.
 
 **Independent Test**: teste de aceitação com identidade nova atravessando os formulários (SC-603).
 
-- [ ] T021 [P] [US2] Testes em `tests/integration/portal/test_detalhe_selecao.py`: resumo da oferta no cabeçalho antes do botão do PDF, com âncora por Perfil e a ação para `#vagas-titulo` ("Ver vagas e inscrever-se" / "Ver vagas"); teto de 5; "← Todas as seleções" sem consulta e "← Voltar aos resultados" com consulta (FR-1615, FR-1616, FR-1618)
-- [ ] T022 [P] [US2] Testes em `tests/integration/portal/test_contexto_do_acesso.py` (novo): com destino de vaga, acesso, código, reconciliação e "Seus dados" nomeiam Perfil e Edital, e o `h1` do acesso diz que se confirma o e-mail para se inscrever; com destino externo, rota inexistente, página do Edital ou Perfil de outro Edital, nada é nomeado; o corpo da resposta ao pedir código é o mesmo exista ou não identidade; ajuda de spam na tela do código (FR-1619 a FR-1621, SC-602)
-- [ ] T023 [P] [US2] Teste de aceitação em `tests/acceptance/portal/test_jornada_publica.py` (novo): identidade **nova** — página da seleção → POST "Inscrever-se" → acesso → código lido da caixa de saída de teste → "Seus dados" **postado pelo formulário** com os valores de teste do repositório → volta com a vaga e a mensagem → **nenhuma** `Inscricao` existe → POST "Inscrever-se" → rascunho daquela vaga; recarregar não repete a mensagem; a resposta com mensagem é privada; destino colado por terceiro não abre inscrição; "Seus dados foram guardados." não aparece mais na tela da inscrição; com o período de inscrições encerrado entre o clique e a volta, a mensagem não convida a abrir inscrição (FR-1622 a FR-1625, SC-603)
-- [ ] T024 [US2] Em `processo_seletivo/portal/views.py`: `_vaga_do_destino(destino)` sobre `_rota_do_destino` e `selectors.selecao_publica` (research T-004); contexto passado por `acesso`, `acesso_codigo`, `acesso_reconciliar` e `meus_dados`
-- [ ] T025 [US2] Em `processo_seletivo/portal/views.py`: chave de sessão `portal_volta_a_vaga` gravada em `_entrar` e em `meus_dados` a caminho de uma vaga (sem o `_avisar` genérico nesse caso); `selecao` lê e remove a chave só para Perfil do próprio Edital, passa a mensagem ao template e marca a resposta como privada (research T-003); mensagem sem convite quando o Edital não recebe inscrição (FR-1623)
-- [ ] T026 [US2] Em `processo_seletivo/portal/views.py` (`selecao`): resumo da oferta com `quantidade_da_oferta` e `os_primeiros` (teto 5); volta condicional pela presença de consulta
-- [ ] T027 [US2] Em `processo_seletivo/portal/templates/portal/selecao.html`: volta condicional; resumo da oferta no cabeçalho antes do botão do PDF; mensagem de volta dentro do Perfil, com `role="status"`
-- [ ] T028 [US2] Em `processo_seletivo/portal/templates/portal/acesso_email.html`, `acesso_codigo.html` e `acesso_reconciliar.html`: bloco de contexto da vaga; `h1` do acesso com destino de vaga; ajuda de spam no código
-- [ ] T029 [US2] Regras em `processo_seletivo/portal/templates/portal/base.html`: resumo da oferta, contexto da vaga no acesso, mensagem de volta, `.perfil:target` com borda mais grossa e etiqueta textual, `scroll-margin-top` (FR-1617, research T-007)
+- [X] T021 [P] [US2] Testes em `tests/integration/portal/test_detalhe_selecao.py`: resumo da oferta no cabeçalho antes do botão do PDF, com âncora por Perfil e a ação para `#vagas-titulo` ("Ver vagas e inscrever-se" / "Ver vagas"); teto de 5; "← Todas as seleções" sem consulta e "← Voltar aos resultados" com consulta (FR-1615, FR-1616, FR-1618)
+- [X] T022 [P] [US2] Testes em `tests/integration/portal/test_contexto_do_acesso.py` (novo): com destino de vaga, acesso, código, reconciliação e "Seus dados" nomeiam Perfil e Edital, e o `h1` do acesso diz que se confirma o e-mail para se inscrever; com destino externo, rota inexistente, página do Edital ou Perfil de outro Edital, nada é nomeado; o corpo da resposta ao pedir código é o mesmo exista ou não identidade; ajuda de spam na tela do código (FR-1619 a FR-1621, SC-602)
+- [X] T023 [P] [US2] Teste de aceitação em `tests/acceptance/portal/test_jornada_publica.py` (novo): identidade **nova** — página da seleção → POST "Inscrever-se" → acesso → código lido da caixa de saída de teste → "Seus dados" **postado pelo formulário** com os valores de teste do repositório → volta com a vaga e a mensagem → **nenhuma** `Inscricao` existe → POST "Inscrever-se" → rascunho daquela vaga; recarregar não repete a mensagem; a resposta com mensagem é privada; destino colado por terceiro não abre inscrição; "Seus dados foram guardados." não aparece mais na tela da inscrição; com o período de inscrições encerrado entre o clique e a volta, a mensagem não convida a abrir inscrição (FR-1622 a FR-1625, SC-603)
+- [X] T024 [US2] Em `processo_seletivo/portal/views.py`: `_vaga_do_destino(destino)` sobre `_rota_do_destino` e `selectors.selecao_publica` (research T-004); contexto passado por `acesso`, `acesso_codigo`, `acesso_reconciliar` e `meus_dados`
+- [X] T025 [US2] Em `processo_seletivo/portal/views.py`: chave de sessão `portal_volta_a_vaga` gravada em `_entrar` e em `meus_dados` a caminho de uma vaga (sem o `_avisar` genérico nesse caso); `selecao` lê e remove a chave só para Perfil do próprio Edital, passa a mensagem ao template e marca a resposta como privada (research T-003); mensagem sem convite quando o Edital não recebe inscrição (FR-1623)
+- [X] T026 [US2] Em `processo_seletivo/portal/views.py` (`selecao`): resumo da oferta com `quantidade_da_oferta` e `os_primeiros` (teto 5); volta condicional pela presença de consulta
+- [X] T027 [US2] Em `processo_seletivo/portal/templates/portal/selecao.html`: volta condicional; resumo da oferta no cabeçalho antes do botão do PDF; mensagem de volta dentro do Perfil, com `role="status"`
+- [X] T028 [US2] Em `processo_seletivo/portal/templates/portal/acesso_email.html`, `acesso_codigo.html` e `acesso_reconciliar.html`: bloco de contexto da vaga; `h1` do acesso com destino de vaga; ajuda de spam no código
+- [X] T029 [US2] Regras em `processo_seletivo/portal/templates/portal/base.html`: resumo da oferta, contexto da vaga no acesso, mensagem de volta, `.perfil:target` com borda mais grossa e etiqueta textual, `scroll-margin-top` (FR-1617, research T-007)
 
 **Checkpoint**: o visitante novo vai do cartão ao rascunho sem perder a vaga de vista.
 
@@ -83,7 +83,7 @@ antes da implementação dela.
 
 **Independent Test**: identidade com núcleo, sem sessão e com sessão.
 
-- [ ] T030 [US3] Em `tests/acceptance/portal/test_jornada_publica.py`: identidade com nome e CPF, sem sessão → volta à vaga com mensagem, sem "Seus dados"; com sessão → POST abre o rascunho direto, sem mensagem; com rascunho → "Continuar inscrição" (US3, cenários 1 a 3)
+- [X] T030 [US3] Em `tests/acceptance/portal/test_jornada_publica.py`: identidade com nome e CPF, sem sessão → volta à vaga com mensagem, sem "Seus dados"; com sessão → POST abre o rascunho direto, sem mensagem; com rascunho → "Continuar inscrição" (US3, cenários 1 a 3)
 
 ## Phase 7: User Story 4 — Preparar antes de se identificar (P2)
 
@@ -91,15 +91,15 @@ antes da implementação dela.
 
 **Independent Test**: página de um Edital com Requerimento na inscrição, sem Requerimento e na convocação.
 
-- [ ] T031 [P] [US4] Testes em `tests/integration/portal/test_detalhe_selecao.py`: frase do Requerimento antes do primeiro Perfil com `matriculationRequest.moment` na inscrição; ausente sem Requerimento e com o momento na convocação; documentos e teto continuam (FR-1626, FR-1628)
-- [ ] T032 [US4] Em `processo_seletivo/portal/views.py` (`selecao`) e `processo_seletivo/portal/templates/portal/selecao.html`: ler `matriculationRequest.moment` da versão vigente e escrever a frase antes do primeiro Perfil
-- [ ] T033 [US4] Em `processo_seletivo/portal/templates/portal/meus_dados.html`: vaga do destino e o texto de finalidade proposto (FR-1627), com teste em `tests/integration/portal/test_contexto_do_acesso.py`
+- [X] T031 [P] [US4] Testes em `tests/integration/portal/test_detalhe_selecao.py`: frase do Requerimento antes do primeiro Perfil com `matriculationRequest.moment` na inscrição; ausente sem Requerimento e com o momento na convocação; documentos e teto continuam (FR-1626, FR-1628)
+- [X] T032 [US4] Em `processo_seletivo/portal/views.py` (`selecao`) e `processo_seletivo/portal/templates/portal/selecao.html`: ler `matriculationRequest.moment` da versão vigente e escrever a frase antes do primeiro Perfil
+- [X] T033 [US4] Em `processo_seletivo/portal/templates/portal/meus_dados.html`: vaga do destino e o texto de finalidade proposto (FR-1627), com teste em `tests/integration/portal/test_contexto_do_acesso.py`
 
 ## Phase 8: Polish & verificação
 
-- [ ] T034 [P] Teste novo `tests/portal/test_vocabulario_das_telas_publicas.py`: `PROIBIDAS` (importado de `tests/portal/test_acompanhamento_pela_situacao.py`) sobre o texto visível da vitrine, da seleção aberta e encerrada com resultado, e das telas de acesso com destino de vaga (FR-1638, research T-008)
-- [ ] T035 [P] Atualizar `tests/interface/test_acessibilidade_do_portal.py`: a consulta continua sem `hx-`/`onclick`, com rótulos ligados e `summary` presente; mensagem de volta com `role="status"` (FR-1639, FR-1640)
-- [ ] T036 Ajustar os testes de texto que a reconciliação aponta — `test_detalhe_selecao.py` ("Voltar aos resultados"), `tests/integration/portal/test_atos_que_respondem.py` ("Seus dados foram guardados"), `tests/acceptance/portal/test_entrar_sem_senha.py` e `tests/integration/identidade/test_mudanca_de_credencial.py` ("Sem senha") —, cada um relido contra a decisão que o originou
+- [X] T034 [P] Teste novo `tests/portal/test_vocabulario_das_telas_publicas.py`: `PROIBIDAS` (importado de `tests/portal/test_acompanhamento_pela_situacao.py`) sobre o texto visível da vitrine, da seleção aberta e encerrada com resultado, e das telas de acesso com destino de vaga (FR-1638, research T-008)
+- [X] T035 [P] Atualizar `tests/interface/test_acessibilidade_do_portal.py`: a consulta continua sem `hx-`/`onclick`, com rótulos ligados e `summary` presente; mensagem de volta com `role="status"` (FR-1639, FR-1640)
+- [X] T036 Ajustar os testes de texto que a reconciliação aponta — `test_detalhe_selecao.py` ("Voltar aos resultados"), `tests/integration/portal/test_atos_que_respondem.py` ("Seus dados foram guardados"), `tests/acceptance/portal/test_entrar_sem_senha.py` e `tests/integration/identidade/test_mudanca_de_credencial.py` ("Sem senha") —, cada um relido contra a decisão que o originou
 - [ ] T037 Criar `specs/072-jornada-publica-do-portal/rastreabilidade.md`: FR-1600 a FR-1640 e SC-600 a SC-607 → teste ou verificação
 - [ ] T038 Criar `specs/072-jornada-publica-do-portal/validacao-humana.md`: roteiro do percurso conduzido com cinco pessoas (SC-605), com tarefas, critérios e ficha de registro; e o texto de finalidade de "Seus dados" para validação por quem responde pela proteção de dados (FR-1627) — ambos marcados como pendentes
 - [ ] T039 Guardião de citações: `uv run pytest -q tests/test_citacoes_de_requisito.py`

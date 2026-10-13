@@ -295,6 +295,35 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .cabecalho-da-selecao .sub{margin-bottom:.75rem}
 .cabecalho-da-selecao .descricao{margin:.5rem 0 0;max-width:var(--leitura)}
 .acoes-da-selecao{margin:1rem 0 0}
+/* O resumo do que a seleção oferece (072, FR-1615). Logo abaixo do prazo, para caber na primeira
+   tela do celular junto com ele; cada Perfil é link para a sua vaga, e a ação leva à seção inteira.
+   Moldura leve: é atalho, e não um segundo cartão de vaga. */
+.oferta-da-selecao{margin:.75rem 0 0;padding:.75rem .9rem;border:1px solid var(--borda);
+  border-radius:6px;background:var(--branco);max-width:var(--leitura)}
+.oferta-da-selecao ul{list-style:none;margin:.25rem 0 .6rem;padding:0;display:grid;gap:.2rem}
+.oferta-da-selecao .a-mais{color:var(--texto-fraco)}
+.rotulo-da-oferta{margin:0;font-size:.8125rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--texto-fraco)}
+.ir-para-as-vagas{display:inline-block;padding:.55rem .9rem;border-radius:4px;
+  background:var(--verde);color:var(--branco);font-weight:600;text-decoration:none}
+.ir-para-as-vagas:hover{background:var(--verde-escuro)}
+/* A vaga indicada no endereço — pela volta da identificação, por uma campanha ou por um link
+   compartilhado (072, FR-1617). O fragmento não chega ao servidor, e por isso o destaque é da folha:
+   borda mais grossa e uma etiqueta em texto, além do tom, para não depender de cor. A margem de
+   rolagem impede que o alto do cartão fique colado à borda da tela. */
+.perfil{scroll-margin-top:1rem}
+.perfil:target{border-left:6px solid var(--verde);background:var(--verde-claro)}
+.perfil:target::before{content:"Vaga indicada";font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--verde-escuro)}
+/* A volta da identificação, dentro da vaga escolhida (072, FR-1622). Peso de aviso, e não de alerta:
+   é o passo seguinte dito em voz alta. */
+.volta-da-identificacao{margin:.25rem 0 .5rem;padding:.6rem .8rem;border-radius:4px;
+  border-left:4px solid var(--verde);background:var(--branco);font-size:.9375rem}
+/* O Requerimento pedido na inscrição, antes da primeira vaga (072, FR-1626). */
+.requerimento-na-inscricao{margin:.25rem 0 .75rem;max-width:var(--leitura);font-weight:600}
+/* A vaga a caminho da qual a pessoa se identifica, nas telas de acesso (072, FR-1619). */
+.vaga-do-destino{margin:0 0 1rem;padding:.6rem .8rem;border-left:4px solid var(--verde);
+  background:var(--branco);border-radius:0 4px 4px 0;max-width:var(--leitura)}
 
 /* O resultado ganha peso quando as inscrições não estão mais abertas: é o que a pessoa veio
    buscar. Com inscrição correndo, ele continua ali e não disputa com a vaga. */
