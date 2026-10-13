@@ -319,6 +319,12 @@ def consulta_da_vitrine(parametros, opcoes):
     # "Há consulta ativa" **não** inclui a ordenação: ordenar não reduz o catálogo, e tratá-la como
     # filtro faria a lista perder os grupos por um gesto que não filtrou nada (FR-146, FR-146a).
     consulta["ativa"] = any(consulta[chave] for chave in ("busca", "unidade", "situacao", "perfil"))
+    # **O grupo recolhido abre sozinho quando há filtro dele aplicado** (072, FR-1601). Fechado, ele
+    # esconderia a explicação da lista que a pessoa está vendo. A busca não conta: ela fica fora do
+    # grupo. A ordem padrão também não, pela mesma razão de não contar em `ativa`.
+    consulta["recolhidos_aplicados"] = any(
+        consulta[chave] for chave in ("unidade", "situacao", "perfil")
+    ) or (consulta["ordem"] != ORDEM_PADRAO)
     # A ordem padrão **não** entra no endereço. Sem esta linha, uma vitrine sem consulta nenhuma
     # punha `?ordem=prazo` no link de todo cartão: o endereço deixava de ser canônico, e quem
     # copiasse compartilharia um parâmetro que não escolheu.
@@ -369,6 +375,8 @@ def _texto_do_cartao(selecao):
         f"{selecao['numero']}/{selecao['ano']}",
         selecao["unidade"],
         *selecao["perfis"],
+        # O lugar passou a ser visto no cartão, e o que se vê é o que se busca (072, FR-1610).
+        *selecao.get("lugares_todos", []),
     ]
     return dobrar(" ".join(str(parte) for parte in partes))
 

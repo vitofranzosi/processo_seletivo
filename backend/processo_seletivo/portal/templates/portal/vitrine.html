@@ -1,9 +1,19 @@
 {% extends "portal/base.html" %}
-{% block titulo %}Seleções abertas{% endblock %}
+{% block titulo %}Processos seletivos{% endblock %}
 {% block conteudo %}
-<h1>Processos seletivos</h1>
-<p class="sub">Seleções publicadas pelo Cefor/Ifes. Cada uma abre a lista de vagas, os requisitos e
-  o Edital completo.</p>
+{% comment %}
+**O título, a aba e a primeira frase** (072, FR-1611, FR-1612). A aba dizia "Seleções abertas" sobre
+uma lista que tem encerradas, e o subtítulo descrevia a mecânica da página. Agora o título é o termo
+que quem procura reconhece, com a unidade quando o catálogo tem uma só; a primeira frase responde
+"tem alguma coisa aberta?" pelo mesmo critério do grupo das abertas; e o subtítulo diz o que se pode
+fazer aqui — sem adjetivo, sem promessa.
+{% endcomment %}
+<h1>Processos seletivos{% if unidade_do_catalogo %} do {{ unidade_do_catalogo }}/Ifes{% endif %}</h1>
+{% if selecoes %}
+<p class="abertas-agora">{% if abertas %}<strong>{{ abertas }}</strong> seleç{{ abertas|pluralize:"ão,ões" }} com inscrições abertas.{% else %}Nenhuma seleção com inscrições abertas agora.{% endif %}</p>
+{% endif %}
+<p class="sub">Confira vagas, requisitos e prazos e faça sua inscrição pelo próprio sistema, sem
+  senha.</p>
 
 {% comment %}
 O formulário só existe quando há catálogo: filtrar o vazio é um controle que não faz nada.
@@ -20,26 +30,29 @@ situação (FR-145).
 
 A contagem é **uma só**, do total encontrado, e não um número por grupo (FR-141).
 {% endcomment %}
+{% comment %}
+**Sem resultado, uma frase só, com caminho** (072, FR-1613). Eram duas — "Nenhuma seleção encontrada" e
+logo abaixo "Nenhuma seleção publicada corresponde a esses filtros" —, e nenhuma sugeria para onde ir.
+{% endcomment %}
 <p class="contagem" role="status">
   {% if total_encontrado %}
   <strong>{{ total_encontrado }}</strong> seleç{{ total_encontrado|pluralize:"ão,ões" }} encontrada{{ total_encontrado|pluralize:"s" }}{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
   {% else %}
   Nenhuma seleção encontrada{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
+  {% if abertas %}<a href="{% url 'portal:vitrine' %}?situacao=aberto">Ver as que estão com inscrições abertas</a> ou{% endif %}
+  <a href="{% url 'portal:vitrine' %}">Ver todas as seleções</a>.
   {% endif %}
 </p>
 
+{% comment %}
+Consulta sem resultado **não é erro** (FR-142): a frase acima diz o que foi procurado e oferece a
+volta ao catálogo. Tratar como falha faria alguém achar que a página quebrou, quando o que houve foi
+um catálogo que não tem aquilo hoje.
+{% endcomment %}
 {% if encontradas %}
 <ul class="selecoes">
   {% for selecao in encontradas %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
-{% else %}
-{% comment %}
-Consulta sem resultado **não é erro** (FR-142): a tela diz o que foi procurado e oferece a volta ao
-catálogo. Tratar como falha faria alguém achar que a página quebrou, quando o que houve foi um
-catálogo que não tem aquilo hoje.
-{% endcomment %}
-<p class="vazio">Nenhuma seleção publicada corresponde a esses filtros hoje.
-  <a href="{% url 'portal:vitrine' %}">Ver todas as seleções</a>.</p>
 {% endif %}
 
 {% else %}

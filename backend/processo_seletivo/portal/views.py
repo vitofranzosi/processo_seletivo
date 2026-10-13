@@ -297,7 +297,10 @@ def vitrine(request):
     # **O desfecho de todos os cartões numa leitura só** (047, `R-2`, `R-7`): uma consulta aos atos,
     # e só quando algum Edital ou Processo está em estado final.
     finais = desfechos([versao.edital for versao in versoes])
-    selecoes = [_selecao_da_vitrine(versao, agora, finais[versao.edital_id]) for versao in versoes]
+    siglas = _siglas_das_unidades(versoes)
+    selecoes = [
+        _selecao_da_vitrine(versao, agora, finais[versao.edital_id], siglas) for versao in versoes
+    ]
     selecoes.sort(
         key=lambda item: (
             leitura.ORDEM_DAS_SITUACOES.get(item["estado"], len(leitura.GRUPOS)),
@@ -311,11 +314,20 @@ def vitrine(request):
     opcoes = leitura.opcoes_da_consulta(selecoes)
     consulta = leitura.consulta_da_vitrine(request.GET, opcoes)
     encontradas = leitura.filtrar(selecoes, consulta)
+    for selecao in encontradas:
+        _recortar_para_o_cartao(selecao, consulta["busca"])
     return render(
         request,
         "portal/vitrine.html",
         {
             "selecoes": selecoes,
+            # **Quantas estão abertas agora, antes de qualquer cartão** (072, FR-1612). Pelo mesmo
+            # critério que forma o grupo "Inscrições abertas": dois números para a mesma pergunta
+            # seriam duas respostas.
+            "abertas": sum(1 for selecao in selecoes if selecao["estado"] == leitura.ABERTO),
+            # A unidade entra no título quando o catálogo tem uma só (FR-1611); com várias, o título
+            # não escolhe uma delas.
+            "unidade_do_catalogo": (opcoes["unidades"][0] if len(opcoes["unidades"]) == 1 else ""),
             "encontradas": encontradas,
             "total_encontrado": len(encontradas),
             "consulta": consulta,
@@ -332,7 +344,35 @@ def vitrine(request):
     )
 
 
-def _selecao_da_vitrine(versao, agora, desfecho=None):
+def _siglas_das_unidades(versoes):
+    """`{escopo: sigla}` do registro de Unidades, numa leitura para a página (072, research T-006).
+
+    O cartão dizia "Unidade: CEFOR" — a chave interna em caixa alta. A sigla é a do registro (060),
+    e sem registro a chave continua sendo o que há para dizer.
+    """
+    from processo_seletivo.unidades.models import Unidade
+
+    escopos = {versao.edital.institution_scope for versao in versoes}
+    if not escopos:
+        return {}
+    return dict(Unidade.objects.filter(codigo__in=escopos).values_list("codigo", "sigla"))
+
+
+def _recortar_para_o_cartao(selecao, busca):
+    """Os Perfis e os lugares que o cartão mostra: três de cada, e o resto contado (FR-1608 a 1610).
+
+    Feito depois da consulta, e não antes, porque com busca o que casa com o termo vem primeiro: o
+    teto não pode esconder o que fez o cartão ser encontrado.
+    """
+    selecao["ofertas"], selecao["ofertas_a_mais"] = leitura.os_primeiros(
+        selecao["ofertas_todas"], 3, busca, texto=lambda oferta: oferta["nome"]
+    )
+    selecao["lugares"], selecao["lugares_a_mais"] = leitura.os_primeiros(
+        selecao["lugares_todos"], 3, busca
+    )
+
+
+def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None):
     """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
 
     Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
@@ -342,11 +382,36 @@ def _selecao_da_vitrine(versao, agora, desfecho=None):
     perfis = versao.content.get("profiles") or []
     periodo = dados["periodo"]
     chave, rotulo = leitura.situacao_publica(periodo, desfecho)
+    numero = f"{dados['numero']}/{dados['ano']}"
     return {
         **dados,
+        # A sigla do registro, e é ela que a consulta usa: filtro, busca e cartão dizem o mesmo.
+        "unidade": (siglas or {}).get(versao.edital.institution_scope) or dados["unidade"],
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
-        "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
-        "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
+        # **A oferta por Perfil, e não a soma** (072, FR-1607, FR-1608). "3 vagas imediatas" num
+        # cartão de dois Perfis se lia como três para cada um — e um deles não tinha nenhuma.
+        "ofertas_todas": [
+            {
+                "nome": perfil.get("name", ""),
+                "quantidade": leitura.quantidade_da_oferta(
+                    perfil.get("immediateVacancies") or 0, perfil.get("reserveType")
+                ),
+            }
+            for perfil in perfis
+            if perfil.get("name")
+        ],
+        # O lugar, cada um uma vez, na ordem dos Perfis (FR-1609). Vazio é não declarado, e não
+        # vira frase.
+        "lugares_todos": list(
+            dict.fromkeys(
+                (perfil.get("locality") or "").strip()
+                for perfil in perfis
+                if (perfil.get("locality") or "").strip()
+            )
+        ),
+        # O título do Edital é texto livre e costuma começar pelo número; repeti-lo na linha de
+        # apoio era o mesmo dado duas vezes no mesmo cartão (FR-1606).
+        "numero_no_titulo": bool(dados["titulo"]) and numero in dados["titulo"],
         "dias_restantes": (
             _dias_ate(periodo.fim, agora)
             if periodo.estado == "aberto" and not (desfecho and desfecho.do_edital)
