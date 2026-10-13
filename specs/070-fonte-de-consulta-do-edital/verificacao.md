@@ -66,10 +66,10 @@ O número de consultas ao banco por resposta é preso por teste (`R-019`). São 
 |---|---|
 | `ruff check` e `ruff format --check` | limpos, 1427 arquivos |
 | `manage.py check` e `makemigrations --check` | sem problema, nenhuma migration |
-| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5); **10606** depois da validação (§6); **10608** depois da decisão 011 |
-| pulados | **11**, os mesmos onze nas quatro; os testes da `070` não pulam nada |
-| falhas e erros | nenhum nas quatro |
-| tempo | 1256s; 1213s; 1244s; 1128s |
+| passando | **10575** (eram 10408 na medição de 09/10); **10600** depois da revisão de código (§5); **10606** depois da validação (§6); **10608** depois da decisão 011; **10995** sobre a `main` com a `069` (§8) |
+| pulados | **11**, os mesmos onze em todas; os testes da `070` não pulam nada |
+| falhas e erros | nenhum em todas |
+| tempo | 1256s; 1213s; 1244s; 1128s; 1328s |
 
 O `makemigrations --check` avisa que o banco `ps_070` não existe — é o banco de desenvolvimento,
 que esta worktree não criou; a suíte usa o de teste. Não é do diff.
@@ -261,4 +261,53 @@ da explicação em contracts/resposta.md §4.
 
 **Depende do setor:** se a resposta fala a língua dos Editais do Cefor ou a do documento que o
 sistema compõe, e a revisão de cada forma da explicação para quem se candidata.
+
+## 8. A `069` na `main`: o merge e a revisão de vocabulário (T051)
+
+*12/10/2026.* A `069` (linguagem simples, PR #275) entrou na `main` depois do último push do PR #274,
+que ficou em conflito. O merge da `main` (`b4a1abf4`) teve um conflito só, no `README.md` — as duas
+linhas da tabela de incrementos —, resolvido com as duas.
+
+**O que a `069` mudou e afetou a `070`.** Todo Edital novo nasce agora no catálogo da `069`: as
+mesmas chaves, com títulos em pergunta, outra ordem e o documento por perguntas, que renumera as
+seções. Os Editais do corpus nasceram no da `054`, e republicá-los com o catálogo vigente trocava os
+títulos e fazia da numeração digitada do 92/2026 ("4.1" numa seção que agora sai como 5) um conflito
+impeditivo da `065`. Sete testes da `070` caíram por isso.
+
+- **Correção:** o corpus é publicado com o catálogo da `054`, como a própria `069` simula o acervo em
+  `tests/integration/publicacoes/test_retificacao_de_edital_antigo.py` (`tests/fixtures/corpus.py`).
+- **E o Edital novo:** `tests/integration/duvidas/test_edital_no_catalogo_da_069.py` publica o
+  91/2026 no catálogo vigente e confere que toda pergunta responde e que a seção é dita pelo título
+  da `069` ("Seção “Como recorrer?”").
+- Nenhum identificador colide: a `069` vai até FR-1400 e SC-524.
+
+**A revisão de vocabulário** que a seção *Compatibilidade com a 069* da spec previu, feita com o
+documento que o compositor da `069` produz para os Editais do corpus no catálogo vigente:
+
+| Assunto | A `070` diz (cartão ou explicação) | O documento da `069` diz |
+|---|---|---|
+| Vagas | "Vagas imediatas"; "lista de concorrência" | os mesmos termos ("São 3 vagas imediatas"; "Vagas imediatas por lista de concorrência") |
+| Cadastro de reserva | "limitado" + "Limite do cadastro de reserva: 6"; "não tem limite de quantidade" | "até 6 (seis) classificados"; "sem limite de classificados" |
+| Ordem do marco | "Ordem de classificação: por pontuação" | "A ordem de classificação segue a nota final." |
+| Combinação | "soma ponderada das Etapas" | "A nota final é a soma das pontuações nas Etapas …, cada uma multiplicada pelo seu peso." |
+| Arredondamento | "2 casas decimais, meio para cima" | "arredondada para 2 casas decimais; a partir da metade, arredonda-se para cima" |
+| Corte | "Quantidade que progride: 2"; "Suplentes além dessa quantidade: 1"; "Etapa para a qual progridem" | "Passam para a Etapa “Análise documental” os 2 (dois) primeiros classificados, mais 1 (um) suplente." |
+| Empate no corte | "a quantidade não é excedida por empate" | "Se houver empate na última posição, esse número não é ultrapassado." |
+| Continuação | "só os que o corte publicar" | "Não serão chamados candidatos além desses." |
+| Desempate por data | "menor valor declarado de Data de nascimento" | "data de nascimento mais antiga, informada na inscrição" — a forma genérica que a `069` decidiu, e o `CA-08` da auditoria pede |
+| Caráter da Etapa | "Forma: pontuada"; "Eliminatória: sim" | "Etapa eliminatória e classificatória, com nota mínima de 6 e peso 2" |
+| Recurso | "cabe, em 5 dias corridos" | "no prazo de 5 (cinco) dias corridos, contados da divulgação desse resultado" |
+| Convocação, Requerimento, teto | "por mensagem individual"; "no ato da inscrição"; "no máximo 1 inscrição enviada" | os mesmos termos |
+| Instrução de documento | o texto como publicado ("Frente e verso…") | a mesma instrução com inicial minúscula depois do travessão ("— frente e verso…") |
+
+**Conclusão.** As duas dizem os mesmos valores, como previsto. Onde a `069` reescreveu as regras de
+classificação em frases simples, a `070` ficou no vocabulário anterior. O caso mais sério é o do
+desempate por data: "menor valor declarado de Data de nascimento" é a forma que a `069` trocou por
+ser ambígua para quem lê.
+
+**Decisão do usuário, e não ajuste silencioso.** Alinhar os rótulos e as explicações da `070` às
+palavras da `069` muda a redação das respostas, que é assunto da T046. A `070` não pode **importar**
+as frases do compositor (`FR-1434`, decisão 003): o alinhamento, se decidido, é de vocabulário,
+escrito em `duvidas/domain/rotulos.py` e `explicacao.py`. A instrução de documento continua literal:
+a diferença de inicial é do documento, e o cartão "Texto do Edital" mostra o conteúdo publicado.
 

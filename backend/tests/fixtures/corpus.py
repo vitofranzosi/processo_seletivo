@@ -21,6 +21,7 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pytest
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -28,6 +29,7 @@ from processo_seletivo.editais.application.requerimento import (
     atualizar_requerimento_de_matricula,
 )
 from processo_seletivo.editais.application.teto import atualizar_teto_de_inscricoes
+from processo_seletivo.editais.domain import secoes, validation
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
@@ -123,12 +125,24 @@ def rascunho_do_conteudo(publicado, deslocamento):
 ELABORADOR = Actor("preparador", "cefor", frozenset({"edital:elaborar"}))
 
 
-def publicar_do_corpus(api_client, nome, *, ate=None, deslocamento=None, chave=None, mudar=None):
+def publicar_do_corpus(
+    api_client,
+    nome,
+    *,
+    ate=None,
+    deslocamento=None,
+    chave=None,
+    mudar=None,
+    catalogo_vigente=False,
+):
     """Publica o Edital `nome` do corpus pelo fluxo real e aplica as Retificações até a `ate`.
 
     `mudar` recebe uma cópia do conteúdo original e a altera antes do rascunho: é como os casos que
     o corpus não tem — dois canais de dúvida, um anexo citado que não existe — chegam ao banco pelo
     mesmo caminho dos outros. Com `mudar`, as Retificações do corpus não são aplicadas.
+
+    `catalogo_vigente` publica com o catálogo de hoje, como nasce todo Edital novo depois da `069`,
+    em vez do da `054`, em que o corpus nasceu.
 
     Devolve `(edital, deslocamento)`: os casos precisam do deslocamento para falar das datas.
     """
@@ -194,13 +208,24 @@ def publicar_do_corpus(api_client, nome, *, ate=None, deslocamento=None, chave=N
             )
             edital.refresh_from_db()
 
-    edital = levar_a_publicacao(
-        api_client,
-        edital,
-        draft=rascunho_do_conteudo(original, deslocamento),
-        antes_de_submeter=teto_e_requerimento,
-        chave=f"{chave}-publicacao",
-    )
+    # **Os Editais do corpus nasceram no catálogo da `054`**, antes da `069`: os títulos e a ordem
+    # das seções são os dele, e os parágrafos trazem a numeração digitada daquele documento ("4.1").
+    # Publicados com o catálogo vigente, o snapshot levaria os títulos da `069` e a apresentação por
+    # perguntas, que renumera as seções — e a numeração digitada do 92/2026 vira conflito impeditivo
+    # (065). O catálogo se troca só na publicação original, como em
+    # `tests/integration/publicacoes/test_retificacao_de_edital_antigo.py`: a Retificação confere a
+    # topologia pelo Edital publicado, e não pelo catálogo.
+    with pytest.MonkeyPatch.context() as antes_da_069:
+        if not catalogo_vigente:
+            antes_da_069.setattr(secoes, "CATALOGO", secoes.CATALOGO_DA_054)
+            antes_da_069.setattr(validation, "CATALOGO", secoes.CATALOGO_DA_054)
+        edital = levar_a_publicacao(
+            api_client,
+            edital,
+            draft=rascunho_do_conteudo(original, deslocamento),
+            antes_de_submeter=teto_e_requerimento,
+            chave=f"{chave}-publicacao",
+        )
 
     ultima = publicacoes_do(nome) if ate is None else ate
     for numero in range(2, ultima + 1):

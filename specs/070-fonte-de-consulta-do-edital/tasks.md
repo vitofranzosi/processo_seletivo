@@ -482,6 +482,8 @@ teste com dois canais.
     069* da spec;
   - conferir que a linha do inventário da `033` e a de `MODULOS_DE_VIEW` não colidem com outra feature
     integrada.
+  - *A `069` entrou na `main` em 12/10: merge e revisão de vocabulário em verificacao.md §8; o
+    alinhamento de vocabulário fica para a decisão do usuário com o setor.*
 
 ---
 
