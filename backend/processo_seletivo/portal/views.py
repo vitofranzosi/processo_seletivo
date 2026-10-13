@@ -94,7 +94,6 @@ from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.infrastructure.pdf import teto_de_inscricoes
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
-    conteudos_citados,
     janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
@@ -457,15 +456,12 @@ def selecao(request, edital_id):
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
     # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
-    # está carregada (RC-121); as citadas são lidas de uma vez para todos.
-    citados = conteudos_citados([item["publicacao"] for item in contexto["resultados_divulgados"]])
-    for item in contexto["resultados_divulgados"]:
-        janela = janela_da_publicacao_divulgada(
-            item["publicacao"],
-            conteudo=citados.get(item["publicacao"].ato_id) or {},
-            vigente=versao.content,
-        )
-        item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    # está carregada (RC-121) — e é a mesma função que a vitrine chama (072, FR-1635).
+    leitura.prazos_de_recurso(
+        {versao.edital_id: contexto["resultados_divulgados"]},
+        {versao.edital_id: versao.content},
+        agora,
+    )
     # **E a forma da seção Vagas: Perfil, etapa, lista** (062, `FR-1148`). A lista acima continua
     # sendo o que decide se o bloco existe; a árvore é a mesma leitura reorganizada, sem consulta.
     contexto["resultados_por_perfil"] = leitura.resultados_por_perfil(

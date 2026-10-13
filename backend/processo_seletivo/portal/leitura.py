@@ -516,3 +516,74 @@ def _chave_da_lista(item, ordem_das_listas):
 
 def _mais_recente(itens):
     return max(itens, key=lambda item: item["publicacao"].publicado_em)
+
+
+# ---------------------------------------------------------------------------
+# O prazo de recurso de cada resultado vigente (047, FR-770; 072, research T-001)
+# ---------------------------------------------------------------------------
+
+
+def prazos_de_recurso(vigentes_por_edital, conteudo_vigente, agora):
+    """Acrescenta `recurso_ate` a cada vigente: o fim da janela, só enquanto ela corre.
+
+    **Saiu de `views.selecao` para que a vitrine e a página digam o mesmo prazo** (072, FR-1635). A
+    conta é a da interposição (`janela_da_publicacao_divulgada`), sobre a versão que cada ato citou
+    e a vigente do Edital (RC-121); o que esta função acrescenta é só o corte por `agora`, que a
+    página fazia sozinha. Duas cópias do corte seriam duas réguas para o mesmo prazo.
+
+    Recebe `{edital_id: vigentes}` e `{edital_id: conteúdo vigente}` — um Edital, para a página;
+    todos os carregados, para a vitrine — e lê as versões citadas numa consulta só, para todos.
+    """
+    from processo_seletivo.recursos.application.selectors import (
+        conteudos_citados,
+        janela_da_publicacao_divulgada,
+    )
+
+    todas = [item for itens in vigentes_por_edital.values() for item in itens]
+    citados = conteudos_citados([item["publicacao"] for item in todas])
+    for edital_id, itens in vigentes_por_edital.items():
+        for item in itens:
+            janela = janela_da_publicacao_divulgada(
+                item["publicacao"],
+                conteudo=citados.get(item["publicacao"].ato_id) or {},
+                vigente=conteudo_vigente[edital_id],
+            )
+            item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    return vigentes_por_edital
+
+
+# ---------------------------------------------------------------------------
+# A oferta de cada Perfil, dita do mesmo jeito no cartão e na página (072, research T-005)
+# ---------------------------------------------------------------------------
+
+TIPOS_COM_RESERVA = ("LIMITED", "UNLIMITED")
+
+
+def quantidade_da_oferta(vagas, tipo_de_reserva):
+    """A quantidade, separada do nome do Perfil (072, FR-1607; Q6).
+
+    "Vaga" nomeia o Perfil e também a quantidade, e "2 vagas" num cartão de dois Perfis não diz qual
+    das duas coisas. Por isso a quantidade vem sempre com o número, e o nome do Perfil nunca leva a
+    palavra. Sem vaga imediata, o cadastro reserva **é** a oferta (024, FR-136); sem os dois, nada é
+    escrito — "0 vagas" em destaque leria como ausência.
+    """
+    reserva = tipo_de_reserva in TIPOS_COM_RESERVA
+    if vagas:
+        quantas = f"{vagas} vaga{'s' if vagas != 1 else ''}"
+        return f"{quantas} e cadastro reserva" if reserva else quantas
+    return "cadastro reserva" if reserva else ""
+
+
+def os_primeiros(itens, teto, termo="", texto=str):
+    """`(mostrados, sobram)`: até `teto` itens, e quantos ficaram de fora (072, FR-1608 a FR-1610).
+
+    **Com busca, o que casa com o termo vem primeiro.** O teto existe para que um Edital de trinta
+    polos não vire trinta linhas; sem esta ordem, ele esconderia justamente o Perfil que fez o
+    cartão ser encontrado — e o resultado pareceria erro (024, T-011: o que se busca é o que se vê).
+    A ordem entre os que casam, e entre os que não casam, é a publicada.
+    """
+    itens = list(itens)
+    if termo:
+        procurado = dobrar(termo)
+        itens.sort(key=lambda item: procurado not in dobrar(texto(item)))
+    return itens[:teto], max(len(itens) - teto, 0)

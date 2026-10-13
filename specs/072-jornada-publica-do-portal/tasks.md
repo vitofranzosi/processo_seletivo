@@ -14,15 +14,15 @@ antes da implementação dela.
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `manage.py migrate --check` (sem pipe) contra `ps_ux_conversao`, e a entrada temporária `ux-conversao` (porta 8077) em `.claude/launch.json`, a desfazer no fim (T046)
+- [X] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `manage.py migrate --check` (sem pipe) contra `ps_ux_conversao`, e a entrada temporária `ux-conversao` (porta 8077) em `.claude/launch.json`, a desfazer no fim (T046)
 
 ## Phase 2: Foundational — as leituras que mais de uma história usa
 
-- [ ] T002 Acrescentar `historico_publico_dos_editais(editais) -> {edital_id: vigentes}` em `processo_seletivo/divulgacao/application/selectors.py`, com o corpo de `historico_publico_do_edital` aplicado a `edital__in` (cadeia ligada em memória por Edital), e fazer a função de um Edital delegar a ela (research T-001)
-- [ ] T003 Extrair de `views.selecao` para `processo_seletivo/portal/leitura.py` a função que acrescenta `recurso_ate` aos vigentes (`conteudos_citados` + `janela_da_publicacao_divulgada` + `agora <= fim`), recebendo `vigentes`, o conteúdo vigente de cada Edital e `agora`; `views.selecao` passa a chamá-la em `processo_seletivo/portal/views.py`
-- [ ] T004 [P] Acrescentar em `processo_seletivo/portal/leitura.py` `quantidade_da_oferta(vagas, tipo_de_reserva)` (FR-1607) e `os_primeiros(itens, teto, termo, chave)` — itens até o teto, quantos sobram, e os que casam com o termo da busca primeiro (FR-1608 a FR-1610) — reusando `RESERVA` e `dobrar`
-- [ ] T005 [P] Testes sem banco das duas funções em `tests/portal/test_oferta_e_teto.py`: singular e plural, reserva com e sem vaga, sem reserva e sem vaga (vazio), teto exato, "e mais N", termo que casa além do teto vem primeiro
-- [ ] T006 Rodar sem alteração os testes da página da seleção que cobrem resultados e prazo (`tests/portal/test_prazo_recursal_publico.py`, `tests/portal/test_resultados_por_perfil.py`, `tests/integration/portal/test_historico_publico.py`, `tests/integration/portal/test_detalhe_selecao.py`) — prova de que T002 e T003 não mudaram a página
+- [X] T002 Acrescentar `historico_publico_dos_editais(editais) -> {edital_id: vigentes}` em `processo_seletivo/divulgacao/application/selectors.py`, com o corpo de `historico_publico_do_edital` aplicado a `edital__in` (cadeia ligada em memória por Edital), e fazer a função de um Edital delegar a ela (research T-001)
+- [X] T003 Extrair de `views.selecao` para `processo_seletivo/portal/leitura.py` a função que acrescenta `recurso_ate` aos vigentes (`conteudos_citados` + `janela_da_publicacao_divulgada` + `agora <= fim`), recebendo `vigentes`, o conteúdo vigente de cada Edital e `agora`; `views.selecao` passa a chamá-la em `processo_seletivo/portal/views.py`
+- [X] T004 [P] Acrescentar em `processo_seletivo/portal/leitura.py` `quantidade_da_oferta(vagas, tipo_de_reserva)` (FR-1607) e `os_primeiros(itens, teto, termo, chave)` — itens até o teto, quantos sobram, e os que casam com o termo da busca primeiro (FR-1608 a FR-1610) — reusando `RESERVA` e `dobrar`
+- [X] T005 [P] Testes sem banco das duas funções em `tests/portal/test_oferta_e_teto.py`: singular e plural, reserva com e sem vaga, sem reserva e sem vaga (vazio), teto exato, "e mais N", termo que casa além do teto vem primeiro
+- [X] T006 Rodar sem alteração os testes da página da seleção que cobrem resultados e prazo (`tests/portal/test_prazo_recursal_publico.py`, `tests/portal/test_resultados_por_perfil.py`, `tests/integration/portal/test_historico_publico.py`, `tests/integration/portal/test_detalhe_selecao.py`) — prova de que T002 e T003 não mudaram a página
 
 **Checkpoint**: leitura em lote e regra de prazo num lugar só; página da seleção inalterada.
 
