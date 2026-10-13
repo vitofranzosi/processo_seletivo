@@ -146,3 +146,30 @@ def test_seus_dados_nomeia_a_vaga_e_diz_para_que_servem_nome_e_cpf(client, selec
     assert CONTEXTO in dados
     assert "identificam você nas inscrições e nos resultados" in dados
     assert "uma única vez" in dados
+
+
+def test_o_numero_nao_se_repete_quando_o_titulo_do_edital_ja_o_traz(
+    client, raiz_de_arquivos, api_client, manager_headers, process_payload
+):
+    """O mesmo cuidado da FR-1606 no contexto: "Edital 01/2026 — Edital 01/2026 — …" foi visto no
+    navegador, com o seed, depois da primeira implementação."""
+    from datetime import timedelta
+
+    from tests.fixtures.selecao import publicar_selecao, rascunho_aberto_com_documentos
+
+    edital = publicar_selecao(
+        api_client,
+        manager_headers,
+        {
+            **process_payload,
+            "firstEdital": {**process_payload["firstEdital"], "title": "Edital 01/2026 — Docentes"},
+        },
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+
+    resposta = client.get(reverse("portal:acesso"), {"destino": a_vaga(edital)})
+    contexto = re.search(r'<p class="vaga-do-destino">(.*?)</p>', resposta.content.decode(), re.S)
+
+    assert contexto.group(1).count("01/2026") == 1
+    assert "Edital 01/2026 — Docentes" in contexto.group(1)
+    assert "<title>Confirme seu e-mail" in resposta.content.decode()

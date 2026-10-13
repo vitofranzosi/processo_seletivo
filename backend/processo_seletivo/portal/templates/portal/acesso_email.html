@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% block titulo %}Entrar{% endblock %}
+{% block titulo %}{% if vaga %}Confirme seu e-mail{% else %}Entrar{% endif %}{% endblock %}
 {% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
 {% comment %}

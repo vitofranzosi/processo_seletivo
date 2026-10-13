@@ -1053,11 +1053,15 @@ def _vaga_do_destino(destino):
     )
     if perfil is None:
         return None
+    numero = f"{conteudo.get('number', '')}/{conteudo.get('year', '')}"
+    titulo = conteudo.get("title", "")
     return {
         "perfil": perfil.get("name", ""),
-        "numero": conteudo.get("number", ""),
-        "ano": conteudo.get("year", ""),
-        "titulo": conteudo.get("title", ""),
+        "numero": numero,
+        "titulo": titulo,
+        # O título do Edital costuma começar pelo número; dizê-lo duas vezes era "Edital 01/2026 —
+        # Edital 01/2026 — …" (o mesmo cuidado da FR-1606 no cartão da vitrine).
+        "numero_no_titulo": bool(titulo) and numero in titulo,
     }
 
 

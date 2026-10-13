@@ -4,5 +4,5 @@ vaga" caía em telas que não diziam vaga nenhuma. O contexto vem do destino da 
 nunca do e-mail: a tela é a mesma para quem existe e para quem não existe (010, FR-020, FR-021).
 {% endcomment %}
 {% if vaga %}
-<p class="vaga-do-destino">Inscrição em <strong>{{ vaga.perfil }}</strong> · Edital {{ vaga.numero }}/{{ vaga.ano }}{% if vaga.titulo %} — {{ vaga.titulo }}{% endif %}</p>
+<p class="vaga-do-destino">Inscrição em <strong>{{ vaga.perfil }}</strong> · {% if vaga.numero_no_titulo %}{{ vaga.titulo }}{% else %}Edital {{ vaga.numero }}{% if vaga.titulo %} — {{ vaga.titulo }}{% endif %}{% endif %}</p>
 {% endif %}
