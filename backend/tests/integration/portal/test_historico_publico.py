@@ -142,9 +142,9 @@ def test_retificacao_com_vigencia_futura_e_ato_publicado_que_ainda_nao_vale(
     # é o fim da tarde daqui: verde o dia inteiro, vermelho no CI da madrugada.
     assert f"vigente desde {localtime(daqui_a_quinze).strftime('%d/%m/%Y')}" in pagina
     # E o conteúdo continua sendo o de hoje: duas vagas, e não três.
-    primeira_vaga = pagina[
-        pagina.index("Professor de Informática") : pagina.index("Técnico de Lab")
-    ]
+    # A seção das vagas: desde a 072 os nomes dos Perfis aparecem antes, no resumo do cabeçalho.
+    vagas = pagina[pagina.index('id="vagas-titulo"') :]
+    primeira_vaga = vagas[vagas.index("Professor de Informática") : vagas.index("Técnico de Lab")]
     assert "<strong>2</strong>" in primeira_vaga
     assert "<strong>3</strong>" not in primeira_vaga
 

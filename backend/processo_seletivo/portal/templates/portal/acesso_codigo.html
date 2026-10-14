@@ -4,6 +4,7 @@
 {% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
 <h1>Informe o código</h1>
+{% include "portal/_vaga_do_destino.html" %}
 {% comment %} A mesma frase para quem existe e para quem não existe — e o endereço fica à vista para a pessoa
    conferir se digitou certo, sem que ela precise voltar (UX-007). {% endcomment %}
 <p class="sub">{{ aviso }}</p>
@@ -29,6 +30,11 @@ parecia ter funcionado: a pessoa passava a esperar um e-mail que nunca saiu.
   <button type="submit" class="principal">Entrar</button>
 </form>
 
+{% comment %}
+Onde procurar antes de pedir outro (072, FR-1621): o código que não chega é o ponto em que mais se
+desiste (auditoria de 02/09, E2E-020), e o lugar mais comum dele é a caixa de spam.
+{% endcomment %}
+<p class="sub">Não chegou? Confira a caixa de spam ou de promoções.</p>
 <form method="post" action="{% url 'portal:acesso' %}" class="convite"
       id="reenvio" data-espera="{{ espera }}">
   {% csrf_token %}

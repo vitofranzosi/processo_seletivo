@@ -114,6 +114,15 @@ PAPEIS = {
     # mapa: este módulo é a fronteira de identidade, e não deve conhecer o app que consome a
     # permissão. A grafia é conferida por `tests/authorization/test_exportacao_de_matriculas.py`.
     "exportador": ("Exportador de matrículas", ["matricula:exportar"]),
+    # O piloto do assistente do Edital (071, `D-001`, `FR-1461`). Papel **próprio**, e não
+    # capacidade acrescentada ao Gestor ou a outro do setor: o piloto tem participantes escolhidos,
+    # e não um papel; e cada pergunta chama um serviço com custo e com efeito sobre a GPU. Nenhum
+    # papel existente ganha a permissão. Os registros do piloto não têm tela, e por isso não há
+    # segunda permissão. A grafia é conferida por `tests/authorization/test_papel_do_piloto.py`.
+    "participante-piloto-assistente": (
+        "Participante do piloto do assistente",
+        ["assistente:piloto"],
+    ),
 }
 
 

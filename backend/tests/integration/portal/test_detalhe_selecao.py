@@ -275,6 +275,8 @@ def test_campo_nao_declarado_nao_vira_rotulo_vazio_nem_nao_informado(
     )
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    # A seção das vagas: desde a 072 os nomes dos Perfis aparecem antes, no resumo do cabeçalho.
+    corpo = corpo[corpo.index('id="vagas-titulo"') :]
     segunda_vaga = corpo[corpo.index("Técnico de Laboratório") :]
 
     assert "não informado" not in corpo.lower()
@@ -302,6 +304,8 @@ def test_cadastro_reserva_sem_vaga_imediata_e_oferta_e_nao_ausencia(
     )
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    # A seção das vagas: desde a 072 os nomes dos Perfis aparecem antes, no resumo do cabeçalho.
+    corpo = corpo[corpo.index('id="vagas-titulo"') :]
     segunda_vaga = corpo[corpo.index("Técnico de Laboratório") :]
 
     assert "reserva-primeiro" in segunda_vaga
@@ -326,6 +330,8 @@ def test_havendo_vaga_imediata_o_numero_continua_sendo_a_noticia(
     edital = publicar_selecao(api_client, manager_headers, process_payload)
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    # A seção das vagas: desde a 072 os nomes dos Perfis aparecem antes, no resumo do cabeçalho.
+    corpo = corpo[corpo.index('id="vagas-titulo"') :]
     primeira_vaga = corpo[corpo.index("Professor de Informática") : corpo.index("Técnico de Lab")]
 
     assert "<strong>2</strong>" in primeira_vaga
@@ -369,6 +375,8 @@ def test_reserva_limitada_em_zero_nao_e_anunciada_como_sem_limite(
     edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    # A seção das vagas: desde a 072 os nomes dos Perfis aparecem antes, no resumo do cabeçalho.
+    corpo = corpo[corpo.index('id="vagas-titulo"') :]
     segunda_vaga = corpo[corpo.index("Técnico de Laboratório") :]
 
     assert "até 0 classificados" in segunda_vaga
@@ -454,3 +462,119 @@ def test_o_titulo_da_pagina_e_o_do_edital_e_nao_o_do_processo(
     assert re.search(r"<h1>\s*Primeiro Edital\s*</h1>", corpo)
     assert re.search(r"<title>\s*Primeiro Edital", corpo)
     assert "Processo Seletivo 2026" in corpo.split("<main")[1]
+
+
+# ---------------------------------------------------------------------------
+# A 072: o resumo da oferta com atalho para as vagas, a volta condicional e o Requerimento
+# ---------------------------------------------------------------------------
+
+
+def _cabecalho(corpo):
+    return re.search(r'<header class="cabecalho-da-selecao">.*?</header>', corpo, re.S).group(0)
+
+
+def _texto_de(html):
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cabecalho_resume_a_oferta_e_leva_a_cada_vaga(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1615 — no celular a primeira tela era só cabeçalho, e nada levava às vagas (009, L4).
+
+    O resumo não escolhe Perfil por ninguém: lista os que existem, cada um levando à sua vaga.
+    """
+    edital = publicar_selecao(
+        api_client, manager_headers, process_payload, rascunho=rascunho_aberto()
+    )
+    perfis = rascunho_de_selecao()["profiles"]
+
+    cabecalho = _cabecalho(client.get(reverse("portal:selecao", args=[edital.id])).content.decode())
+
+    texto = _texto_de(cabecalho)
+    assert "Professor de Informática — 2 vagas e cadastro reserva" in texto
+    assert "Técnico de Laboratório — cadastro reserva" in texto
+    for perfil in perfis:
+        assert f'href="#vaga-{perfil["id"]}"' in cabecalho
+    assert 'href="#vagas-titulo"' in cabecalho
+    assert "Ver vagas e inscrever-se" in texto
+    assert cabecalho.index('class="oferta-da-selecao"') < cabecalho.index("Ler o Edital completo")
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_sem_inscricoes_abertas_a_acao_do_resumo_so_leva_as_vagas(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1615 — o resumo não convida a se inscrever onde não se pode."""
+    edital = publicar_selecao(api_client, manager_headers, process_payload)
+
+    texto = _texto_de(
+        _cabecalho(client.get(reverse("portal:selecao", args=[edital.id])).content.decode())
+    )
+
+    assert "Ver vagas" in texto
+    assert "inscrever-se" not in texto
+
+
+def test_com_mais_de_cinco_perfis_o_resumo_conta_os_que_sobram():
+    """FR-1616 — o resumo é atalho, e não a lista inteira de novo."""
+    from django.template.loader import render_to_string
+
+    html = render_to_string(
+        "portal/_resumo_da_oferta.html",
+        {
+            "oferta_resumida": [
+                {"id": str(n), "nome": f"Polo {n}", "quantidade": "10 vagas"} for n in range(5)
+            ],
+            "oferta_a_mais": 3,
+            "recebe_inscricoes": True,
+        },
+    )
+
+    assert "e mais 3" in _texto_de(html)
+    assert 'href="#vagas-titulo"' in html
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_sem_consulta_a_volta_diz_todas_as_selecoes(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1618 — quem chegou de uma campanha ou de um e-mail nunca viu resultado nenhum."""
+    edital = publicar_selecao(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert "← Todas as seleções" in corpo
+    assert "Voltar aos resultados" not in corpo
+
+
+# --- Preparar: o Requerimento anunciado quando é pedido na inscrição (072, US4) ---
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("momento", "anuncia"), [("AT_ENROLLMENT", True), ("AT_CALL", False), ("", False)]
+)
+def test_o_requerimento_e_anunciado_so_quando_e_pedido_na_inscricao(
+    client, api_client, manager_headers, process_payload, momento, anuncia
+):
+    """FR-1626, D-006 — descobrir uma exigência dentro do rascunho é o defeito que a L7 corrigiu
+    para os documentos; o Requerimento ficou de fora. Pedido só na convocação, ele não é preciso
+    para se inscrever, e anunciá-lo faria a pessoa preparar o que talvez nunca lhe seja pedido."""
+    from tests.fixtures.requerimento import publicar_com_requerimento
+
+    edital = publicar_com_requerimento(api_client, manager_headers, process_payload, momento)
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    vagas = corpo[corpo.index('id="vagas-titulo"') :]
+    frase = "a inscrição pede o preenchimento do Requerimento de Matrícula"
+
+    assert (frase in _texto_de(vagas)) is anuncia
+    if anuncia:
+        assert vagas.index(frase) < vagas.index('<li class="perfil"'), "antes do primeiro Perfil"
+    assert "documentos que serão pedidos" in corpo, "os documentos continuam anunciados (FR-1628)"

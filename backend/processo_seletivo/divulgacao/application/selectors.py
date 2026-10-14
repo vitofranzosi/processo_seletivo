@@ -126,7 +126,12 @@ def situacoes_do_candidato(inscricao):
 
 
 def historico_publico_do_edital(edital):
-    """As vigentes do Edital, cada uma com as publicações que ela sucedeu (047, `FR-772`).
+    """As vigentes de um Edital — a leitura de vários, com um só (072, research T-001)."""
+    return historico_publico_dos_editais([edital]).get(edital.pk, [])
+
+
+def historico_publico_dos_editais(editais):
+    """As vigentes de cada Edital, cada uma com as publicações que ela sucedeu (047, `FR-772`).
 
     **Substitui `vigentes_do_edital`, que devolvia só a primeira metade da cadeia** (017, `FR-050`).
     A página pública anunciava só as vigentes, e o preliminar que o definitivo sucedeu continuava
@@ -140,9 +145,15 @@ def historico_publico_do_edital(edital):
 
     Duas consultas: as publicações e, por `prefetch`, as sucessoras que dizem qual é a vigente. A
     cadeia fica ligada em memória, e subi-la depois não consulta nada.
+
+    **De vários Editais numa leitura só** (072, research T-001). A vitrine resume os resultados de
+    cada cartão, e chamar a função de um Edital por cartão seria a consulta por linha que os
+    orçamentos recusam. O corpo é o mesmo: a vigência continua decidida num lugar só, e a página da
+    seleção é a vitrine com um Edital. Devolve `{edital_id: vigentes}`, sem chave para quem não tem
+    publicação.
     """
     linhas = list(
-        PublicacaoResultado.objects.filter(edital=edital)
+        PublicacaoResultado.objects.filter(edital__in=list(editais))
         .prefetch_related("sucessoras")
         .order_by("-publicado_em")
     )
@@ -158,20 +169,25 @@ def historico_publico_do_edital(edital):
 
     grupos = {}
     for publicacao in linhas:
-        grupos.setdefault((publicacao.marco_id, publicacao.lista_id), []).append(publicacao)
+        grupos.setdefault(
+            (publicacao.edital_id, publicacao.marco_id, publicacao.lista_id), []
+        ).append(publicacao)
 
-    vigentes = []
-    for cadeia in grupos.values():
+    por_edital = {}
+    for (edital_id, *_), cadeia in grupos.items():
         vigente = next((item for item in cadeia if not item.sucessoras.all()), None)
         if vigente is None:
             continue
-        vigentes.append(
+        por_edital.setdefault(edital_id, []).append(
             {
                 **_linha_publica(vigente),
                 "anteriores": [_linha_publica(item) for item in cadeia if item is not vigente],
             }
         )
-    return sorted(vigentes, key=lambda item: item["publicacao"].publicado_em)
+    return {
+        edital_id: sorted(vigentes, key=lambda item: item["publicacao"].publicado_em)
+        for edital_id, vigentes in por_edital.items()
+    }
 
 
 def anteriores_da_cadeia(publicacao):
@@ -260,6 +276,7 @@ __all__ = [
     "documento_do_resultado",
     "historico_do_marco",
     "historico_publico_do_edital",
+    "historico_publico_dos_editais",
     "publicacao_por_id",
     "situacoes_do_candidato",
     "vigente_do_marco",

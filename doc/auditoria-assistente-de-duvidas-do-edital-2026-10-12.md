@@ -831,8 +831,21 @@ antes de produção.
 > | Fase | Situação |
 > |---|---|
 > | A — Fonte de consulta confiável | spec [`070`](../specs/070-fonte-de-consulta-do-edital/spec.md) implementada em 12/10, sem merge; falta a revisão com o setor de seleção (T046) |
-> | B — Piloto interno com o LLM local | fase posterior, sem spec; depende da A e da confirmação do modelo e da GPU |
+> | B — Piloto interno com o LLM local | spec [`071`](../specs/071-piloto-assistente-do-edital/spec.md), aberta em 12/10, só especificada e empilhada sobre a `070`; depende da A, do acesso à L4 e da decisão sobre o ambiente do piloto com o setor (DP-1 da spec) |
 > | C — Interface pública e operação | fase posterior, sem spec; depende da B, da correção do [achado](achado-documento-ligado-nao-contem-a-versao-vigente.md), da LGPD e das cláusulas de exclusividade resolvidas por Edital |
+> | Assistente de acompanhamento da candidatura | **evolução posterior, sem spec e fora da `071`**: na área autenticada do candidato, resultados, convocações, prazos e próximos passos, a partir dos atos publicados e da própria inscrição. Depende da C em operação e de decisão própria sobre dado pessoal, porque lê a inscrição de alguém — o que nenhuma das fases A a C faz |
+>
+> A spec `071` difere da Fase B abaixo em cinco pontos:
+>
+> - o modelo recebe o conteúdo completo da versão vigente, e não unidades selecionadas; seleção só com
+>   necessidade demonstrada;
+> - a conversa tem continuação: o histórico da mesma versão, guardado no servidor, entra no contexto
+>   (o `DA-04` (b) ampliado às respostas conferidas);
+> - o serviço é escolhido por configuração entre o OpenRouter, para avaliação, e o Ollama, para a
+>   execução local, sem troca automática;
+> - o isolamento dos workers no piloto é um teto global menor que os processos, e o pool separado
+>   fica para a Fase C;
+> - a capacidade é própria, como a decisão 010 da `070` previa.
 >
 > A Fase A que a spec adotou difere da tabela abaixo em quatro pontos:
 >

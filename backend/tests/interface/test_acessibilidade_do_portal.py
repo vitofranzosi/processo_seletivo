@@ -234,3 +234,31 @@ def test_a_contagem_de_resultados_e_anunciada():
     vitrine = (PORTAL / "vitrine.html").read_text()
 
     assert 'role="status"' in vitrine
+
+
+def test_os_filtros_recolhidos_sao_um_controle_nativo_com_nome():
+    """072, FR-1600, FR-1603, FR-1640 — `<details>` abre por teclado, expõe aberto/fechado ao leitor
+    de tela, e o `<summary>` diz o que abre. A busca fica fora dele."""
+    consulta = (PORTAL / "_consulta.html").read_text()
+
+    assert '<details class="mais-filtros"' in consulta
+    assert "<summary>Mais filtros e ordenação</summary>" in consulta
+    assert consulta.index('id="busca"') < consulta.index('<details class="mais-filtros"')
+
+
+def test_a_mensagem_de_volta_e_anunciada_e_o_resumo_e_uma_regiao_nomeada():
+    """072, FR-1640 — a mensagem chega a quem não vê a vaga ganhar destaque; o resumo da oferta
+    aparece na navegação por marcos com o próprio rótulo."""
+    selecao = (PORTAL / "selecao.html").read_text()
+    resumo = (PORTAL / "_resumo_da_oferta.html").read_text()
+
+    assert '<p class="volta-da-identificacao" role="status">' in selecao
+    assert 'aria-labelledby="oferta-titulo"' in resumo and 'id="oferta-titulo"' in resumo
+
+
+def test_a_vaga_indicada_nao_depende_so_de_cor():
+    """072, FR-1617 — borda mais grossa e etiqueta em texto, além do tom de fundo."""
+    folha = (PORTAL / "base.html").read_text()
+
+    assert ".perfil:target{border-left:6px solid" in folha
+    assert '.perfil:target::before{content:"Vaga indicada"' in folha

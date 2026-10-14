@@ -149,6 +149,20 @@ def test_producao_nasce_sem_a_fonte_de_demonstracao():
         # Sem canal de atendimento declarado, duas telas do candidato viram beco sem saída.
         ({"PORTAL_ATENDIMENTO": None}, "PORTAL_ATENDIMENTO"),
         ({"PORTAL_ATENDIMENTO": "   "}, "PORTAL_ATENDIMENTO"),
+        # O piloto do assistente (071): ligado em produção, só com o serviço local, e com o
+        # tempo-limite abaixo do servidor de aplicação (`FR-1503`, `FR-1500`).
+        (
+            {"ASSISTENTE_PILOTO": "true", "ASSISTENTE_SERVICO": "openrouter"},
+            "ASSISTENTE_SERVICO",
+        ),
+        (
+            {
+                "ASSISTENTE_PILOTO": "true",
+                "ASSISTENTE_SERVICO": "ollama",
+                "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS": "115",
+            },
+            "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
+        ),
     ],
 )
 def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):
@@ -264,3 +278,9 @@ def test_manage_py_continua_em_desenvolvimento():
 
     assert resultado.returncode == 0, resultado.stderr
     assert resultado.stdout.split() == ["config.settings.development", "True"]
+
+
+def test_o_piloto_em_producao_aceita_o_servico_local():
+    """071: o piloto ligado com o Ollama e o tempo-limite padrão sobe (`FR-1503`)."""
+    configuracao = _carregar(ASSISTENTE_PILOTO="true", ASSISTENTE_SERVICO="ollama")
+    assert configuracao.ASSISTENTE_PILOTO is True

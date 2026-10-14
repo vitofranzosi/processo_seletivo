@@ -1,0 +1,19 @@
+{% comment %}
+**O que a seleção oferece, no cabeçalho** (072, FR-1615, FR-1616). No celular, a primeira tela era só
+cabeçalho, e o primeiro "Inscrever-se nesta vaga" estava a quase duas telas (009, L4, que deixou a
+solução como decisão de produto por causa dos Editais de vários Perfis). O resumo não escolhe por
+ninguém: lista os Perfis com a quantidade — dita como no cartão da vitrine —, cada um levando à sua
+vaga, e uma ação leva à seção inteira. Até cinco; o resto é contado.
+{% endcomment %}
+{% if oferta_resumida %}
+<nav class="oferta-da-selecao" aria-labelledby="oferta-titulo">
+  <p class="rotulo-da-oferta" id="oferta-titulo">O que esta seleção oferece</p>
+  <ul>
+    {% for oferta in oferta_resumida %}
+    <li><a href="#vaga-{{ oferta.id }}">{{ oferta.nome }}</a>{% if oferta.quantidade %} — {{ oferta.quantidade }}{% endif %}</li>
+    {% endfor %}
+    {% if oferta_a_mais %}<li class="a-mais">e mais {{ oferta_a_mais }} cargo{{ oferta_a_mais|pluralize }} ou curso{{ oferta_a_mais|pluralize }}</li>{% endif %}
+  </ul>
+  <a class="ir-para-as-vagas" href="#vagas-titulo">{% if recebe_inscricoes %}Ver vagas e inscrever-se{% else %}Ver vagas{% endif %}</a>
+</nav>
+{% endif %}

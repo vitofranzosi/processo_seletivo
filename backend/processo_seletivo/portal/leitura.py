@@ -319,6 +319,12 @@ def consulta_da_vitrine(parametros, opcoes):
     # "Há consulta ativa" **não** inclui a ordenação: ordenar não reduz o catálogo, e tratá-la como
     # filtro faria a lista perder os grupos por um gesto que não filtrou nada (FR-146, FR-146a).
     consulta["ativa"] = any(consulta[chave] for chave in ("busca", "unidade", "situacao", "perfil"))
+    # **O grupo recolhido abre sozinho quando há filtro dele aplicado** (072, FR-1601). Fechado, ele
+    # esconderia a explicação da lista que a pessoa está vendo. A busca não conta: ela fica fora do
+    # grupo. A ordem padrão também não, pela mesma razão de não contar em `ativa`.
+    consulta["recolhidos_aplicados"] = any(
+        consulta[chave] for chave in ("unidade", "situacao", "perfil")
+    ) or (consulta["ordem"] != ORDEM_PADRAO)
     # A ordem padrão **não** entra no endereço. Sem esta linha, uma vitrine sem consulta nenhuma
     # punha `?ordem=prazo` no link de todo cartão: o endereço deixava de ser canônico, e quem
     # copiasse compartilharia um parâmetro que não escolheu.
@@ -369,6 +375,8 @@ def _texto_do_cartao(selecao):
         f"{selecao['numero']}/{selecao['ano']}",
         selecao["unidade"],
         *selecao["perfis"],
+        # O lugar passou a ser visto no cartão, e o que se vê é o que se busca (072, FR-1610).
+        *selecao.get("lugares_todos", []),
     ]
     return dobrar(" ".join(str(parte) for parte in partes))
 
@@ -516,3 +524,118 @@ def _chave_da_lista(item, ordem_das_listas):
 
 def _mais_recente(itens):
     return max(itens, key=lambda item: item["publicacao"].publicado_em)
+
+
+# ---------------------------------------------------------------------------
+# O prazo de recurso de cada resultado vigente (047, FR-770; 072, research T-001)
+# ---------------------------------------------------------------------------
+
+
+def prazos_de_recurso(vigentes_por_edital, conteudo_vigente, agora):
+    """Acrescenta `recurso_ate` a cada vigente: o fim da janela, só enquanto ela corre.
+
+    **Saiu de `views.selecao` para que a vitrine e a página digam o mesmo prazo** (072, FR-1635). A
+    conta é a da interposição (`janela_da_publicacao_divulgada`), sobre a versão que cada ato citou
+    e a vigente do Edital (RC-121); o que esta função acrescenta é só o corte por `agora`, que a
+    página fazia sozinha. Duas cópias do corte seriam duas réguas para o mesmo prazo.
+
+    Recebe `{edital_id: vigentes}` e `{edital_id: conteúdo vigente}` — um Edital, para a página;
+    todos os carregados, para a vitrine — e lê as versões citadas numa consulta só, para todos.
+    """
+    from processo_seletivo.recursos.application.selectors import (
+        conteudos_citados,
+        janela_da_publicacao_divulgada,
+    )
+
+    todas = [item for itens in vigentes_por_edital.values() for item in itens]
+    citados = conteudos_citados([item["publicacao"] for item in todas])
+    for edital_id, itens in vigentes_por_edital.items():
+        for item in itens:
+            janela = janela_da_publicacao_divulgada(
+                item["publicacao"],
+                conteudo=citados.get(item["publicacao"].ato_id) or {},
+                vigente=conteudo_vigente[edital_id],
+            )
+            item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    return vigentes_por_edital
+
+
+# ---------------------------------------------------------------------------
+# A oferta de cada Perfil, dita do mesmo jeito no cartão e na página (072, research T-005)
+# ---------------------------------------------------------------------------
+
+TIPOS_COM_RESERVA = ("LIMITED", "UNLIMITED")
+
+
+def quantidade_da_oferta(vagas, tipo_de_reserva):
+    """A quantidade, separada do nome do Perfil (072, FR-1607; Q6).
+
+    "Vaga" nomeia o Perfil e também a quantidade, e "2 vagas" num cartão de dois Perfis não diz qual
+    das duas coisas. Por isso a quantidade vem sempre com o número, e o nome do Perfil nunca leva a
+    palavra. Sem vaga imediata, o cadastro reserva **é** a oferta (024, FR-136); sem os dois, nada é
+    escrito — "0 vagas" em destaque leria como ausência.
+    """
+    reserva = tipo_de_reserva in TIPOS_COM_RESERVA
+    if vagas:
+        quantas = f"{vagas} vaga{'s' if vagas != 1 else ''}"
+        return f"{quantas} e cadastro reserva" if reserva else quantas
+    return "cadastro reserva" if reserva else ""
+
+
+def os_primeiros(itens, teto, termo="", texto=str):
+    """`(mostrados, sobram)`: até `teto` itens, e quantos ficaram de fora (072, FR-1608 a FR-1610).
+
+    **Com busca, o que casa com o termo vem primeiro.** O teto existe para que um Edital de trinta
+    polos não vire trinta linhas; sem esta ordem, ele esconderia justamente o Perfil que fez o
+    cartão ser encontrado — e o resultado pareceria erro (024, T-011: o que se busca é o que se vê).
+    A ordem entre os que casam, e entre os que não casam, é a publicada.
+    """
+    itens = list(itens)
+    if termo:
+        procurado = dobrar(termo)
+        itens.sort(key=lambda item: procurado not in dobrar(texto(item)))
+    return itens[:teto], max(len(itens) - teto, 0)
+
+
+# ---------------------------------------------------------------------------
+# O resumo do que foi publicado, no cartão da vitrine (072, D-004, FR-1629 a FR-1633)
+# ---------------------------------------------------------------------------
+
+NATUREZA_NO_PLURAL = {
+    "PRELIMINAR": "resultados preliminares",
+    "DEFINITIVA": "resultados definitivos",
+}
+
+
+def resumo_do_acompanhamento(vigentes):
+    """Resultado e prazo de recurso de um Edital, resumidos sem fazer um prazo valer para todos.
+
+    Recebe os vigentes já com `recurso_ate` (`prazos_de_recurso`) — as mesmas linhas que a página da
+    seleção mostra, de modo que cartão e página não têm como discordar (FR-1635). Devolve `None` sem
+    vigente: nenhuma frase de ausência (FR-1633).
+
+    **A regra é a da clarificação de 12/10** (D-004): com M vigentes e N deles de recurso aberto,
+
+    - o prazo é dito **uma vez** só quando N = M e todos terminam no mesmo instante;
+    - em qualquer outro caso com N > 0, "aberto para N de M" e o término **mais próximo entre os
+      abertos** — nunca uma frase de prazo sem escopo;
+    - a natureza só sai quando é a de todos: cada lista é a sua cadeia, e o preliminar de uma não
+      faz o Edital "preliminar" (062, FR-1155).
+
+    Perfil, etapa e lista ficam na página da seleção, onde a árvore da 062 já os organiza.
+    """
+    if not vigentes:
+        return None
+    naturezas = {item["publicacao"].natureza for item in vigentes}
+    comum = naturezas.pop() if len(naturezas) == 1 else None
+    terminos = [item["recurso_ate"] for item in vigentes if item.get("recurso_ate")]
+    todos_juntos = len(terminos) == len(vigentes) and len(set(terminos)) == 1
+    return {
+        "total": len(vigentes),
+        "mais_recente": max(item["publicacao"].publicado_em for item in vigentes),
+        "natureza": vigentes[0]["natureza_rotulo"] if comum else "",
+        "natureza_no_plural": NATUREZA_NO_PLURAL.get(comum, "") if comum else "",
+        "abertos": len(terminos),
+        "prazo_unico": terminos[0] if todos_juntos else None,
+        "primeiro_prazo": min(terminos) if terminos and not todos_juntos else None,
+    }

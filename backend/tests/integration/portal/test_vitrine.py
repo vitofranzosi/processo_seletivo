@@ -91,8 +91,8 @@ def test_o_cartao_diz_para_qual_vaga_e_quantas(
 
     assert "Professor de Informática" in texto
     assert "Técnico de Laboratório" in texto
-    assert "vagas imediatas" in texto
-    assert "cadastro reserva" in texto
+    # A quantidade por Perfil, e não a soma dos Perfis (072, FR-1607, FR-1608).
+    assert "2 vagas e cadastro reserva" in texto
     assert "Ver vagas e inscrever-se" in texto, "o cartão convida, em vez de esperar adivinhação"
 
 
@@ -294,3 +294,206 @@ def test_selecao_sem_inscricao_aberta_tem_caminho_visivel(
 
     assert "Ver a seleção" in corpo
     assert "Ver vagas e inscrever-se" not in corpo, "encerrada não convida a inscrever-se"
+
+
+# ---------------------------------------------------------------------------
+# O cartão titulado pelo Edital, com a oferta por Perfil e o lugar (072, US1)
+# ---------------------------------------------------------------------------
+
+
+def _cartoes(corpo):
+    return corpo[corpo.index('<ul class="selecoes">') :]
+
+
+def _texto(html):
+    import re
+
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_titulo_e_a_aba_dizem_processos_seletivos_com_a_unidade(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1611 — a aba dizia "Seleções abertas" sobre uma lista que tem encerradas."""
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    assert "<title>Processos seletivos" in corpo
+    assert "Seleções abertas" not in corpo
+    assert "<h1>Processos seletivos do Cefor/Ifes</h1>" in corpo
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_a_vitrine_diz_quantas_estao_abertas_agora(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1612 — a resposta a "tem alguma coisa para mim?" antes de qualquer cartão."""
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    texto = _texto(corpo[: corpo.index('<form method="get" class="consulta"')])
+    assert "1 seleção com inscrições abertas." in texto
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_sem_nenhuma_aberta_a_vitrine_diz_que_nao_ha(
+    client, api_client, manager_headers, process_payload
+):
+    _publicar_em(
+        api_client, manager_headers, process_payload, situacao="futuro", seed=31, numero=31
+    )
+
+    corpo = client.get(reverse("portal:vitrine")).content.decode()
+
+    assert "Nenhuma seleção com inscrições abertas agora." in _texto(corpo)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_titulo_do_cartao_e_o_do_edital_e_o_processo_vem_como_apoio(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1604, FR-1605 — o mesmo título de Processo em todos os cartões não distingue nenhum.
+
+    Revisa o achado registrado da 024 (D-002): o conteúdo continua o de quem elabora; muda o peso.
+    """
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    cartao = _cartoes(client.get(reverse("portal:vitrine")).content.decode())
+
+    import re
+
+    (link,) = re.findall(r'<a class="titulo"[^>]*>(.*?)</a>', cartao, re.S)
+    assert link.strip() == "Primeiro Edital"
+    texto = _texto(cartao)
+    assert texto.index("Primeiro Edital") < texto.index("Processo Seletivo 2026")
+    assert "Cefor" in texto and "CEFOR" not in texto, "a sigla do registro, não a chave interna"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_cartao_diz_o_lugar_de_cada_perfil(client, api_client, manager_headers, process_payload):
+    """FR-1609 — "é perto de mim?" se respondia só dentro da página."""
+    _publicar_aberta(api_client, manager_headers, process_payload)
+
+    texto = _texto(_cartoes(client.get(reverse("portal:vitrine")).content.decode()))
+
+    assert "Campus Serra" in texto
+    assert "Campus Vitória" in texto
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_numero_do_edital_nao_se_repete_quando_ja_esta_no_titulo(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-1606 — o título do Edital é texto livre, e costuma começar pelo número."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from tests.fixtures.selecao import rascunho_aberto_com_documentos
+
+    publicar_selecao(
+        api_client,
+        manager_headers,
+        {
+            **process_payload,
+            "firstEdital": {
+                **process_payload["firstEdital"],
+                "title": "Edital 01/2026 — Professor de Informática",
+            },
+        },
+        rascunho=rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1)),
+    )
+
+    texto = _texto(_cartoes(client.get(reverse("portal:vitrine")).content.decode()))
+
+    assert texto.count("01/2026") == 1
+
+
+# --- A forma do cartão, renderizada sobre um contexto montado: os limites que o seed não produz ---
+
+
+def _cartao_sintetico(**mais):
+    from types import SimpleNamespace
+
+    from django.template.loader import render_to_string
+
+    selecao = {
+        "edital_id": "00000000-0000-4000-8000-000000072001",
+        "titulo": "Edital de polos",
+        "processo_titulo": "Processo Seletivo EaD",
+        "processo_codigo": "PS-EAD",
+        "numero": "07",
+        "ano": 2026,
+        "unidade": "Cefor",
+        "numero_no_titulo": False,
+        "ofertas": [],
+        "ofertas_a_mais": 0,
+        "lugares": [],
+        "lugares_a_mais": 0,
+        "periodo": SimpleNamespace(estado="aberto", inicio=None, fim=None, cancelado=False),
+        "dias_restantes": None,
+        "desfecho": None,
+        "estado": "aberto",
+        "situacao_chave": "aberto",
+        "situacao_rotulo": "Aberta",
+        "acompanhamento": None,
+        **mais,
+    }
+    html = render_to_string(
+        "portal/_cartao_da_selecao.html", {"selecao": selecao, "consulta": {"querystring": ""}}
+    )
+    return _texto(html), html
+
+
+def test_mais_de_tres_perfis_viram_e_mais_n():
+    """FR-1608 — um Edital de trinta polos não vira trinta linhas no cartão."""
+    ofertas = [{"nome": f"Polo {n}", "quantidade": "10 vagas"} for n in (1, 2, 3)]
+
+    texto, _ = _cartao_sintetico(ofertas=ofertas, ofertas_a_mais=27)
+
+    assert "Polo 1" in texto and "Polo 3" in texto
+    assert "e mais 27" in texto
+
+
+def test_sem_lugar_declarado_nao_ha_linha_de_lugar():
+    """FR-1609 — e nenhuma frase de ausência (024, D-009)."""
+    _, html = _cartao_sintetico(ofertas=[{"nome": "Professor", "quantidade": "1 vaga"}])
+
+    assert 'class="lugares"' not in html
+
+
+def test_perfil_sem_quantidade_aparece_so_pelo_nome():
+    """FR-1607 — sem vaga e sem reserva, nada de "0 vagas"."""
+    texto, _ = _cartao_sintetico(ofertas=[{"nome": "Bolsista", "quantidade": ""}])
+
+    assert "Bolsista" in texto
+    assert "0 vaga" not in texto
+
+
+def test_os_blocos_do_cartao_seguem_a_mesma_ordem():
+    """FR-1614 — a mesma informação na mesma posição em todos os cartões (024, UX-016)."""
+    _, html = _cartao_sintetico(
+        ofertas=[{"nome": "Professor", "quantidade": "1 vaga"}],
+        lugares=["Campus Serra"],
+    )
+
+    ordem = [
+        'class="marca-situacao',
+        'class="titulo"',
+        'class="ofertas"',
+        'class="lugares"',
+        'class="situacao',
+        'class="convite-da-vitrine"',
+        'class="dados-de-apoio"',
+    ]
+    posicoes = [html.index(marca) for marca in ordem]
+    assert posicoes == sorted(posicoes)

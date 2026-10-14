@@ -13,3 +13,8 @@ SORTEIO_FONTE_DE_DEMONSTRACAO = True
 # A suíte exercita os avisos da 066 com a chave ligada; os casos da chave desligada a desligam por
 # `settings` (`FR-1282`). O correio é o de memória do Django, que `setup_test_environment` impõe.
 AVISOS_AOS_CANDIDATOS = True
+
+# O piloto do assistente (071) ligado e **sem serviço**: os casos injetam a porta falsa, e nenhum
+# caminho chega à rede sem ela (`R-019`, `FR-1519`).
+ASSISTENTE_PILOTO = True
+ASSISTENTE_SERVICO = ""

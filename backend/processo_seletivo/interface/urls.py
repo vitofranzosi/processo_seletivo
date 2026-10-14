@@ -1,6 +1,6 @@
 from django.urls import path
 
-from processo_seletivo.interface import avisos, duvidas, views
+from processo_seletivo.interface import assistente, avisos, duvidas, views
 
 app_name = "interface"
 
@@ -41,6 +41,18 @@ urlpatterns = [
         "editais/<uuid:edital_id>/duvidas/",
         duvidas.respostas_do_assistente,
         name="duvidas",
+    ),
+    # O piloto interno do assistente do Edital (071): a pergunta livre, com a permissão própria
+    # além do alcance da página do Edital (`FR-1460`). Nenhuma rota pública (`FR-1462`).
+    path(
+        "editais/<uuid:edital_id>/assistente/",
+        assistente.conversar,
+        name="assistente",
+    ),
+    path(
+        "editais/<uuid:edital_id>/assistente/nova/",
+        assistente.nova_conversa,
+        name="assistente-nova",
     ),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),

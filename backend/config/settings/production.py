@@ -28,6 +28,9 @@ from django.utils.module_loading import import_string
 from .base import *  # noqa: F403
 from .base import (
     ARQUIVOS_CANDIDATOS_RAIZ,
+    ASSISTENTE_PILOTO,
+    ASSISTENTE_SERVICO,
+    ASSISTENTE_TEMPO_LIMITE_SEGUNDOS,
     BASE_DIR,
     DATABASES,
     DEFAULT_FROM_EMAIL,
@@ -193,6 +196,22 @@ _exigir(
     "declare o canal de atendimento ao candidato — um e-mail, um telefone ou o endereço de uma "
     "página. Duas telas mandam procurá-lo, e são os dois pontos em que o sistema não resolve "
     "sozinho: CPF congelado e participação anterior não confirmada.",
+)
+
+# O piloto do assistente (071) nasce na máquina da equipe, e não aqui. Ligado em produção, só com
+# o serviço local: a pergunta não sai da rede institucional (`FR-1503`). E com o tempo-limite
+# abaixo do gunicorn do guia de implantação (§12.1), que não é versionado e não se lê daqui.
+_exigir(
+    not ASSISTENTE_PILOTO or ASSISTENTE_SERVICO == "ollama",
+    "ASSISTENTE_SERVICO",
+    "o piloto do assistente, em produção, só fala com o serviço local; o OpenRouter é para a "
+    "avaliação na máquina da equipe, com perguntas sintéticas.",
+)
+_exigir(
+    not ASSISTENTE_PILOTO or ASSISTENTE_TEMPO_LIMITE_SEGUNDOS <= 110,
+    "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
+    "o tempo-limite da inferência precisa ficar abaixo dos 120 s do servidor de aplicação, para "
+    "que a pessoa receba 'tempo esgotado', e não um erro do servidor.",
 )
 
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.

@@ -26,6 +26,14 @@ dev = [
   "PyYAML>=6,<7",
   "jsonschema>=4.23,<5",
 ]
+# O piloto do assistente do Edital (071, `R-006`), e só ele: contar os tokens com o tokenizer
+# publicado do modelo, **antes** de enviar, para que nenhuma fonte seja cortada em silêncio pelo
+# serviço de inferência (`FR-1479`). Grupo opcional, e não dependência de execução: o piloto roda na
+# máquina da equipe, e a produção não o instala. Sem ele, o piloto diz "sem tokenizer" e não chama
+# nada. As alternativas — bytes como teto, BPE em Python puro, `transformers` — estão no research.
+assistente = [
+  "tokenizers>=0.23,<0.24",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["processo_seletivo"]

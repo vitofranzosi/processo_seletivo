@@ -91,3 +91,24 @@ def test_nenhuma_das_duas_registra_auditoria(client, selecao_retificada):
     client.get(reverse("portal:selecao", args=[selecao_retificada.id]))
 
     assert RegistroAuditoria.objects.count() == antes
+
+
+def test_com_resultado_publicado_a_vitrine_e_a_selecao_continuam_sem_escrita(
+    client, gestor, api_client, manager_headers, process_payload
+):
+    """072, FR-1637, SC-606 — a vitrine passou a ler resultados e prazos, e continua só lendo.
+
+    O resumo de cada cartão é derivado na renderização; nada dele é gravado — nem contador, nem
+    cache em tabela, nem registro de quem viu o prazo.
+    """
+    from tests.fixtures.divulgacao import publicar_o_ato
+    from tests.portal.test_prazo_recursal_publico import montar
+
+    cenario = montar(gestor, api_client, manager_headers, process_payload, seed=97)
+    publicar_o_ato(cenario, chave="publicar-072-97")
+
+    with CaptureQueriesContext(connection) as consultas:
+        client.get(reverse("portal:vitrine"))
+        client.get(reverse("portal:selecao", args=[cenario["edital"].id]))
+
+    assert escritas(consultas.captured_queries) == []

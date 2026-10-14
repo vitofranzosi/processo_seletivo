@@ -6,9 +6,18 @@ e três datas do calendário dos Editais, para que a situação de calendário p
 
 from datetime import datetime, timedelta
 
+import pytest
+
 from processo_seletivo.duvidas.domain import catalogo
 from processo_seletivo.duvidas.domain.respostas import responder
 from tests.fixtures.corpus import _atos_do_corpus, contexto_do_corpus
+from tests.fixtures.inferencia import contador_falso, porta_falsa, sem_rede  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def _nenhum_caso_alcanca_a_rede(sem_rede):  # noqa: F811
+    """O piloto (071) fala com serviço externo; nenhum caso deste pacote pode (`FR-1519`)."""
+
 
 DATAS = ("2026-10-20T12:00:00-03:00", "2026-10-27T12:00:00-03:00", "2026-12-15T12:00:00-03:00")
 
