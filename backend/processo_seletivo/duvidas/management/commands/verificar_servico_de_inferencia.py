@@ -55,6 +55,13 @@ class Command(BaseCommand):
             self._ollama()
         elif servico == inferencia.OPENROUTER:
             self._openrouter()
+        elif servico:
+            # Com maiúscula ou espaço, o valor existe e não é conhecido: dizer "nenhum serviço"
+            # mandava procurar a variável ausente, e não o valor errado (073, `FR-1661`).
+            self.divergencias.append(
+                f"serviço desconhecido: {servico!r} (ASSISTENTE_SERVICO); os aceitos são "
+                f"{inferencia.OLLAMA} e {inferencia.OPENROUTER}, e em produção só {inferencia.OLLAMA}"
+            )
         else:
             self.divergencias.append("nenhum serviço configurado (ASSISTENTE_SERVICO)")
         self.stdout.write(

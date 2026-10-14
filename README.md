@@ -239,8 +239,9 @@ inicialização, e recusa subir com mensagem que nomeia a variável a corrigir:
 - qualquer substituto de demonstração ligado — seletor de identidade da gestão, provedor de
   identidade do portal, fonte de sorteio de semente fixa;
 - raiz de arquivos do candidato ausente, relativa ou dentro da árvore do código;
-- backend de e-mail que não entrega (console, arquivo, memória ou nulo) ou remetente vazio — sem
-  entrega, o código de acesso iria para o log do servidor;
+- backend de e-mail que não entrega (console, arquivo, memória ou nulo), remetente vazio, ou o
+  backend SMTP sem `EMAIL_HOST` — sem entrega, o código de acesso iria para o log do servidor, e sem
+  servidor só o primeiro envio acusaria;
 - `PORTAL_ATRAS_DE_PROXY` não declarado, porque o limite de solicitações por origem depende da
   topologia, e `PORTAL_ATENDIMENTO` vazio, porque duas telas do candidato mandam procurá-lo;
 - `API_AUTHENTICATION_CLASSES` ausente ou apontando para o adaptador provisório.
@@ -258,6 +259,20 @@ caminhos conhecidamente inseguros — a responsabilidade pela escolha continua d
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
 ```
+
+**Configurar o correio e o Ollama, e comprovar que funcionam**, é a §10.4 do
+[guia de implantação](doc/implantacao-em-producao-ubuntu.md#104-configurar-verificar-e-testar-o-correio-e-o-ollama).
+Ela usa só o que a release já traz, em níveis que não se confundem:
+
+- ler a configuração, sem imprimir segredo;
+- conexão, segurança e conta do correio, sem enviar;
+- versão e modelo do Ollama, sem inferência;
+- o envio de teste e a inferência efetiva.
+
+Os mesmos exemplos rodam em desenvolvimento por `uv run python manage.py shell -v 0 -c '…'`. Lá a
+primeira linha diz `config.settings.development`, o correio é o de console (ou o coletor do
+compose) e o OpenRouter é admitido. A troca entre OpenRouter e Ollama na máquina da equipe está em
+[`doc/troca-do-servico-do-assistente.md`](doc/troca-do-servico-do-assistente.md).
 
 O passo a passo de implantação numa VM Ubuntu — arquitetura, hardening, backup e restauração,
 atualização, rollback, runbook e checklist de go-live —, com os bloqueadores que ainda impedem a
