@@ -1615,45 +1615,25 @@ mostra "o despacho pode não estar processando", e a conferência de `systemctl 
 
 ### 16.5 Trocar o servidor de correio
 
-Quando o setor de correio trocar o servidor ou a conta. **Os valores antigos ficam no cofre** (§10.2)
-até o teste passar: são eles o caminho de volta.
+Quando o setor de correio trocar o servidor ou a conta. Os valores antigos ficam no cofre (§10.2) até
+o teste passar: são eles o caminho de volta.
 
-**Antes, peça ao setor de correio:**
+1. **Peça ao setor de correio** o servidor e a porta — e se ele aceita STARTTLS na 587, porque a 465
+   não funciona (I-4) —, a conta, a senha e o remetente autorizado, o limite de envio por minuto e
+   por dia, e se SPF, DKIM e DMARC já cobrem o servidor novo.
+2. **Edite o arquivo:** `sudo -e /etc/processoseletivo/app.env` — `EMAIL_*`, `DEFAULT_FROM_EMAIL` e,
+   se o limite da conta mudou, `AVISOS_LIMITE_POR_MINUTO` (§16.2).
+3. **Reinicie o web:** `sudo systemctl restart processoseletivo`.
+4. **Teste** como na §16.3, com o servidor novo, e só então ponha a senha nova no cofre.
 
-- o servidor e a porta, e se ele aceita **STARTTLS na 587** — a 465 não funciona (I-4);
-- a conta de envio e a senha, e o remetente autorizado a enviar por ela;
-- o limite de envio da conta, por minuto e por dia;
-- se SPF, DKIM e DMARC do domínio remetente já cobrem o servidor novo.
+**O timer `ps-avisos` relê o `app.env` a cada minuto, e o web não**: o despacho roda pelo
+`ps-manage`, que carrega o arquivo a cada execução (§8.3), e o web o leu ao subir. Entre os passos 2
+e 3, os avisos já saem pelo servidor novo, e o código de acesso ainda pelo antigo — por isso o
+passo 3 vem logo depois do 2. Pela mesma razão, o `sendtestemail` do passo 4 prova o arquivo, e não
+o web.
 
-**O timer `ps-avisos` relê o `app.env` a cada minuto, e o serviço web não.** O despacho roda pelo
-`ps-manage`, que carrega o arquivo a cada execução (§8.3); o web o leu ao subir. Entre salvar o
-arquivo e reiniciar, os avisos já saem pelo servidor novo, e o código de acesso, o comprovante e a
-convocação ainda pelo antigo. Reinicie logo depois de salvar — e não só o timer.
-
-**[admin]**
-
-```bash
-# 1. A conectividade com o servidor novo, antes de mexer em qualquer coisa
-openssl s_client -starttls smtp -connect <SMTP_HOST_NOVO>:587 -servername <SMTP_HOST_NOVO> </dev/null 2>/dev/null | grep -E 'Verify return|Protocol'
-# 2. EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL e,
-#    se o limite da conta mudou, AVISOS_LIMITE_POR_MINUTO. A senha é digitada aqui, e só aqui.
-sudo -e /etc/processoseletivo/app.env
-# 3. O serviço web, que só lê o arquivo ao subir
-sudo systemctl restart processoseletivo
-```
-
-4. O teste da §16.3, inteiro, com o servidor novo. O `sendtestemail` passa pelo `ps-manage`, e por
-   isso prova o **arquivo**, e não o serviço web: o que garante o web é o passo 3. Para ver o web
-   enviar, peça um código de acesso no portal com uma caixa de teste da equipe, sem digitá-lo.
-5. `AVISOS_LIMITE_POR_MINUTO`, editado no passo 2, abaixo do limite por minuto da conta nova
-   (§16.2). Quem o usa é o despacho, que o lê na execução seguinte.
-6. A senha nova no cofre, no lugar da antiga.
-
-`production.py` **não confere `EMAIL_HOST`**: vazio, o serviço sobe, e o primeiro envio falha com
-`SMTPServerDisconnected: please run connect() first`. É o passo 4 que pega o erro, e por isso ele
-não é opcional.
-
-A **rotação só da senha** é o mesmo procedimento, do passo 2 em diante.
+`production.py` não confere `EMAIL_HOST`: vazio, o serviço sobe e o primeiro envio falha. É o passo
+4 que pega o erro. A rotação só da senha é o mesmo procedimento, do passo 2 em diante.
 
 ---
 
