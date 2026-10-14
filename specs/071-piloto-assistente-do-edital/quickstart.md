@@ -74,7 +74,10 @@ gasto do piloto (`FR-1507`). Sem ele, a verificação acusa divergência, e não
 sintética.
 
 1. `uv run python manage.py verificar_servico_de_inferencia`, no mesmo shell — **esperado:** o limite da chave, a conversa
-   sintética com término `stop`, o acréscimo por mensagem sugerido, nenhuma divergência.
+   sintética com término `stop`, o acréscimo medido contra o configurado, nenhuma divergência. O
+   acréscimo depende do provedor (ensaio de 14/10, `R-006`): fixe-o com
+   `ASSISTENTE_PROVEDOR=parasail` — o roteamento pelo mais barato recusava com 429 — e, com ele,
+   `ASSISTENTE_TOKENS_POR_CHAMADA=0 ASSISTENTE_TOKENS_POR_MENSAGEM=9`.
 2. `make runserver DB_NAME=piloto_assistente`, no mesmo shell, e identificar-se com o papel do setor **e** "Participante do piloto do
    assistente", abrir o 91/2026, "Conversar com o assistente (piloto)".
 3. Perguntar "Quantas vagas tem o polo de Bom Jesus do Norte?" e depois "E no polo de Iúna?".

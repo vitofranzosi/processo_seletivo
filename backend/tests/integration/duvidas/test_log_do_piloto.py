@@ -57,6 +57,7 @@ def test_a_linha_tem_os_campos_e_nenhum_texto(
         "modelo",
         "motivos",
         "origem",
+        "provedor",
         "segundos",
         "servico",
         "tipo",

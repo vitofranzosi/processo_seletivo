@@ -47,3 +47,7 @@ def test_a_contagem_real_soma_o_acrescimo_por_mensagem(settings, tmp_path):
     mensagens = [{"role": "system", "content": "Até quando"}, {"role": "user", "content": "vão"}]
 
     assert tokens.contar(mensagens) == (2 + 4) + (1 + 4)
+
+    # O acréscimo fixo entra uma vez por chamada, e não por mensagem (`R-006`, ensaio de 14/10).
+    settings.ASSISTENTE_TOKENS_POR_CHAMADA = 250
+    assert tokens.contar(mensagens) == 250 + (2 + 4) + (1 + 4)

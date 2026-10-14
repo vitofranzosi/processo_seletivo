@@ -134,12 +134,12 @@ def perguntar(*, edital_id, conversa, pergunta, instante, origem, correlacao="")
         return _gravar(troca, LIMITE_DE_USO, inicio, correlacao, medidos=medidos)
     if falha is not None:
         estado = falha.codigo if falha.codigo in ESTADOS else INDISPONIVEL
-        return _gravar(troca, estado, inicio, correlacao, medidos=medidos)
+        return _gravar(troca, estado, inicio, correlacao, medidos=medidos, provedor=falha.provedor)
     # O raciocínio do modelo não vai à troca, à tela nem ao log (`FR-1492`).
     devolucao = replace(devolucao, raciocinio="")
     troca.modelo_que_respondeu = devolucao.modelo
     informados, custo = devolucao.tokens_de_entrada, devolucao.custo
-    medida = dict(medidos=medidos, informados=informados, custo=custo)
+    medida = dict(medidos=medidos, informados=informados, custo=custo, provedor=devolucao.provedor)
     if devolucao.modelo != settings.ASSISTENTE_MODELO:
         # Outro modelo respondeu: a avaliação mediria o que não acredita medir (`FR-1499`).
         return _gravar(troca, MODELO_DIFERENTE, inicio, correlacao, **medida)
@@ -214,7 +214,9 @@ def _chave_da_conversa(conversa) -> int:
     return int.from_bytes(hashlib.sha256(f"conversa:{conversa}".encode()).digest()[:8], "big") >> 1
 
 
-def _gravar(troca, estado, inicio, correlacao, *, medidos=None, informados=None, custo=None):
+def _gravar(
+    troca, estado, inicio, correlacao, *, medidos=None, informados=None, custo=None, provedor=""
+):
     """A `ordem` alocada aqui, numa transação curta — a chamada já terminou (data-model §3).
 
     Duas abas da mesma conversa gravam na ordem em que terminam; a trava consultiva da conversa
@@ -232,11 +234,11 @@ def _gravar(troca, estado, inicio, correlacao, *, medidos=None, informados=None,
         )["ultima"]
         troca.ordem = (ultima or 0) + 1
         troca.save()
-    _registrar(troca, inicio, correlacao, medidos, informados, custo)
+    _registrar(troca, inicio, correlacao, medidos, informados, custo, provedor)
     return troca
 
 
-def _registrar(troca, inicio, correlacao, medidos, informados, custo):
+def _registrar(troca, inicio, correlacao, medidos, informados, custo, provedor=""):
     """Uma linha por troca, só com o necessário ao diagnóstico, e nunca texto (`FR-1508`)."""
     campos = {
         "edital": str(troca.edital_id),
@@ -244,6 +246,8 @@ def _registrar(troca, inicio, correlacao, medidos, informados, custo):
         "origem": troca.origem,
         "servico": troca.servico,
         "modelo": troca.modelo_que_respondeu or troca.modelo_configurado,
+        # Quem serviu ou recusou, no OpenRouter; vazio no Ollama, que é ele mesmo o serviço.
+        "provedor": provedor or None,
         "estado": troca.estado,
         "tipo": troca.tipo or None,
         "motivos": [motivo["regra"] for motivo in troca.conferencia or []],

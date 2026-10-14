@@ -5,11 +5,13 @@ contexto, descarta mensagens antigas sem erro; uma fonte cortada é uma condiç�
 ninguém vê. Por isso a contagem é a do modelo — e não por caracteres nem por palavras, que a spec
 proíbe —, e, sem ela, o piloto não chama o serviço.
 
-**O molde de conversa não é reproduzido.** Cada mensagem soma os tokens do conteúdo e um
-acréscimo fixo, `ASSISTENTE_TOKENS_POR_MENSAGEM`, que a verificação de conexão mede contra a
-contagem do próprio serviço. Reproduzir o molde Jinja do modelo pediria a biblioteca
-`transformers`. A margem do orçamento (`R-007`) cobre o erro dessa calibração, e a conferência
-depois da resposta acusa o corte.
+**O molde de conversa não é reproduzido.** Cada mensagem soma os tokens do conteúdo e um acréscimo,
+`ASSISTENTE_TOKENS_POR_MENSAGEM`; cada chamada, um acréscimo fixo, `ASSISTENTE_TOKENS_POR_CHAMADA` —
+o que o serviço acrescenta uma vez só, como o esquema da saída que, ao que tudo indica, o provedor
+do OpenRouter injeta. A verificação de conexão mede a soma dos dois contra a contagem do próprio
+serviço, e o log das trocas, com o medido e o informado, separa um do outro. Reproduzir o molde
+Jinja do modelo pediria a biblioteca `transformers`. A margem do orçamento (`R-007`) cobre o erro
+dessa calibração, e a conferência depois da resposta acusa o corte.
 
 **A biblioteca é do grupo opcional `assistente`**, que a produção não instala. Sem ela, ou sem o
 arquivo, `SemTokenizer` — e a pergunta fica com esse estado, sem chamada.
@@ -44,7 +46,18 @@ def contar_texto(texto: str) -> int:
     return len(tokenizer.encode(texto, add_special_tokens=False).ids)
 
 
+def acrescimo(quantas_mensagens: int) -> int:
+    """O que o serviço lê além do texto: o fixo da chamada e o de cada mensagem."""
+    por_mensagem = int(getattr(settings, "ASSISTENTE_TOKENS_POR_MENSAGEM", 8))
+    return (
+        int(getattr(settings, "ASSISTENTE_TOKENS_POR_CHAMADA", 0))
+        + quantas_mensagens * por_mensagem
+    )
+
+
 def contar(mensagens) -> int:
-    """Os tokens de uma lista de mensagens, com o acréscimo por mensagem."""
-    acrescimo = int(getattr(settings, "ASSISTENTE_TOKENS_POR_MENSAGEM", 8))
-    return sum(contar_texto(mensagem["content"]) + acrescimo for mensagem in mensagens)
+    """Os tokens de uma lista de mensagens, com os acréscimos da chamada e de cada mensagem."""
+    mensagens = list(mensagens)
+    return sum(contar_texto(mensagem["content"]) for mensagem in mensagens) + acrescimo(
+        len(mensagens)
+    )

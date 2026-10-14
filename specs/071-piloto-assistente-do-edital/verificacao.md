@@ -108,3 +108,37 @@ a conversa sintética. A primeira chamada externa espera o pedido do usuário.
 | A API do Ollama não diz se aceita `truncate` e `shift`, e uma sonda seria a segunda chamada que o `FR-1520` não permite | Eles vão à lista "a confirmar com a infraestrutura" (`R-017`) |
 | A verificação não tinha quantização esperada com que comparar (US7, cenário 2) | `ASSISTENTE_QUANTIZACAO`, vazia por padrão, e vazia é divergência (`R-009`) |
 | As doze perguntas da `070` "para cada Edital e parâmetro" dariam centenas de casos | Um Perfil por Edital, e a `P-05` com cada lista dele; a amostra está declarada na matriz |
+
+## 7. O primeiro ensaio no OpenRouter (14/10/2026)
+
+O `qwen/qwen3.8-27b`, o mesmo modelo previsto para a L4, numa chave com limite de gasto de US$ 10,
+pela tela, no banco `ps_071_corpus`. **Ensaio, e não resultado** (`FR-1516`).
+
+| O quê | O que se viu |
+|---|---|
+| Verificação de conexão | O modelo configurado respondeu, no formato exigido, com término `stop`, em 3,9 s. Divergência: o acréscimo configurado (2 × 8) muito abaixo do medido (257) |
+| Pergunta "Faça uma receita de bolo." | "Fora do escopo", conferida e mostrada, com o caminho oficial e o canal. Entrada medida 19333, informada 19211; US$ 0,0009; **33 s** |
+| "Quantas vagas tem o polo de Bom Jesus do Norte?" | O serviço recusou com 429 depois de 29 s; uma chamada, nenhuma retentativa |
+
+**Dois achados, corrigidos no mesmo dia:**
+
+- **O acréscimo de tokens é quase todo fixo por chamada** — 257 com 2 mensagens, 262 com 3 —, e
+  posto no acréscimo por mensagem sobrecontava cada turno de histórico. Entrou
+  `ASSISTENTE_TOKENS_POR_CHAMADA` (`R-006`).
+- **A recusa do serviço (429) tinha o texto do limite do piloto**, e parecia bloqueio da aplicação.
+  O `LIMITE_DO_SERVICO` ganhou texto próprio (contracts/tela.md §3).
+
+**Um terceiro achado, no mesmo ensaio:** com as duas correções, a pergunta sobre Bom Jesus do Norte
+foi respondida e conferida (45, pela fonte certa; medido 19290, informado 19291), mas 3 de 5
+perguntas voltaram com 429, depois de ~26 s cada. Sem troca de provedor (`FR-1499`), o roteamento
+do OpenRouter pelo mais barato caía num provedor que recusava, e a recusa não dizia qual. Entraram
+`ASSISTENTE_PROVEDOR`, que fixa um provedor sem troca, e o provedor no log de cada troca, inclusive
+o que recusou (`R-009`).
+
+**E a contagem depende do provedor.** Com o Parasail fixado, a mesma conversa de teste teve 17
+tokens além do texto, e não 257: os ~250 fixos eram do provedor que o roteamento escolhia,
+provavelmente pelo esquema da saída injetado na entrada. Com o Parasail, 0 por chamada e 9 por
+mensagem (`R-006`). A calibração vale para o provedor em que foi medida — mais um motivo para fixá-lo.
+
+**A observar:** 33 s numa pergunta com ~19 mil tokens de entrada é tempo do provedor externo, e não
+diz nada da L4; ele entra na medição do `SC-556`, lá.

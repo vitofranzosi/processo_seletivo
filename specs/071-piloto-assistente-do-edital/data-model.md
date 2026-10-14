@@ -51,7 +51,7 @@ Todas congeladas, como as da `070` (`duvidas/domain/estruturas.py`).
 A lista de mensagens de uma chamada (`R-003`), com:
 
 - `impressao_das_fontes`: SHA-256 da serialização das fontes (`R-004`);
-- `tokens_medidos`: pelo tokenizer, com o acréscimo por mensagem (`R-006`);
+- `tokens_medidos`: pelo tokenizer, com os acréscimos por chamada e por mensagem (`R-006`);
 - `historico_desde`: a ordem do turno mais antigo incluído, ou `None` quando não há histórico.
 
 ### `SaidaDoModelo`

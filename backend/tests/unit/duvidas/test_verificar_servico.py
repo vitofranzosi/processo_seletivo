@@ -25,6 +25,7 @@ def configuracao(settings, monkeypatch):
     settings.ASSISTENTE_QUANTIZACAO = "Q4_K_M"
     settings.ASSISTENTE_CONTEXTO_TOKENS = 32768
     settings.ASSISTENTE_TOKENS_POR_MENSAGEM = 8
+    settings.ASSISTENTE_TOKENS_POR_CHAMADA = 0
     # Um token a cada quatro caracteres: o tokenizer real não é dependência da suíte.
     monkeypatch.setattr(tokens, "contar_texto", lambda texto: len(texto) // 4)
 
@@ -55,9 +56,10 @@ def _respostas(**sobre):
 class Ollama:
     """Responde por caminho, e guarda os pedidos."""
 
-    def __init__(self, respostas, *, por_mensagem=6):
+    def __init__(self, respostas, *, por_mensagem=6, fixo=0):
         self.respostas = respostas
         self.por_mensagem = por_mensagem
+        self.fixo = fixo
         self.pedidos = []
 
     def __call__(self, pedido, timeout=None):
@@ -66,7 +68,7 @@ class Ollama:
         resposta = dict(self.respostas[caminho])
         if caminho == "/api/chat" and not resposta["prompt_eval_count"]:
             mensagens = json.loads(pedido.data)["messages"]
-            resposta["prompt_eval_count"] = sum(
+            resposta["prompt_eval_count"] = self.fixo + sum(
                 len(mensagem["content"]) // 4 + self.por_mensagem for mensagem in mensagens
             )
         return io.BytesIO(json.dumps(resposta).encode("utf-8"))
@@ -93,7 +95,7 @@ def test_sem_divergencia_imprime_o_que_o_servico_informa(monkeypatch, configurac
     assert f"Modelo configurado: {MODELO} — instalado: sim" in saida
     assert "quantização: Q4_K_M" in saida and "contexto do modelo: 40960" in saida
     assert "carregado: sim, 100% na GPU (17,3 GB)" in saida
-    assert "ASSISTENTE_TOKENS_POR_MENSAGEM sugerido: 6 (configurado: 8)" in saida
+    assert "Acréscimo além do texto: medido 12 tokens em 2 mensagens; configurado 16" in saida
     assert "término stop" in saida
     assert "A confirmar com a infraestrutura: OLLAMA_NUM_PARALLEL" in saida
     assert "truncate e shift" in saida
@@ -152,8 +154,25 @@ def test_o_acrescimo_subestimado_diverge(monkeypatch, configuracao):
     codigo, saida = _verificar(monkeypatch, Ollama(_respostas(), por_mensagem=12))
 
     assert codigo == 1
-    assert "sugerido: 12 (configurado: 8)" in saida
-    assert "acréscimo por mensagem configurado (8) é menor que o medido (12)" in saida
+    assert "o acréscimo configurado (16) é menor que o medido (24)" in saida
+
+
+def test_o_acrescimo_fixo_da_chamada_entra_na_conta(monkeypatch, configuracao, settings):
+    """O ensaio de 14/10: ~250 tokens por chamada, e quase nada por mensagem (`R-006`)."""
+    servico = Ollama(_respostas(), por_mensagem=3, fixo=257)
+
+    codigo, saida = _verificar(monkeypatch, servico)
+    assert codigo == 1
+    assert "o acréscimo configurado (16) é menor que o medido (263)" in saida
+
+    settings.ASSISTENTE_TOKENS_POR_CHAMADA = 250
+    settings.ASSISTENTE_TOKENS_POR_MENSAGEM = 7
+    codigo, saida = _verificar(monkeypatch, Ollama(_respostas(), por_mensagem=3, fixo=257))
+    assert codigo == 0, saida
+    assert (
+        "medido 263 tokens em 2 mensagens; configurado 264 (ASSISTENTE_TOKENS_POR_CHAMADA 250 + "
+        "2 × ASSISTENTE_TOKENS_POR_MENSAGEM 7)"
+    ) in saida
 
 
 def test_contexto_menor_que_o_configurado_diverge(monkeypatch, configuracao, settings):

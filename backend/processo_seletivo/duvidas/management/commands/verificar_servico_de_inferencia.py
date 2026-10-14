@@ -181,7 +181,8 @@ class Command(BaseCommand):
                 list(SINTETICA), ESQUEMA_DA_SAIDA, inferencia.parametros_configurados()
             )
         except inferencia.FalhaDoServico as falha:
-            self.stdout.write(f"Conversa sintética: falhou — {falha.motivo}")
+            de_quem = f", pelo provedor {falha.provedor}" if falha.provedor else ""
+            self.stdout.write(f"Conversa sintética: falhou — {falha.motivo}{de_quem}")
             self.divergencias.append(f"a conversa sintética falhou ({falha.codigo})")
             return
         segundos = f"{time.monotonic() - inicio:.1f}".replace(".", ",")
@@ -191,30 +192,33 @@ class Command(BaseCommand):
         except tokens.SemTokenizer as falta:
             texto = None
             self.divergencias.append(f"sem tokenizer: {falta}")
-        medida = (
-            f"(medidos {texto} + {len(SINTETICA)} × ? por mensagem)"
-            if texto is not None
-            else "(sem tokenizer para medir)"
-        )
-        if texto is not None and informados is not None:
-            sugerido = round((informados - texto) / len(SINTETICA))
-            medida = f"(medidos {texto} + {len(SINTETICA)} × {sugerido} por mensagem)"
         self.stdout.write(
             f"Conversa sintética: entrada {informados if informados is not None else '—'} tokens "
-            f"{medida}  saída {devolucao.tokens_de_saida or '—'}  término "
-            f"{devolucao.termino or '—'}  {segundos} s"
+            f"({'texto ' + str(texto) if texto is not None else 'sem tokenizer para medir'})  "
+            f"saída {devolucao.tokens_de_saida or '—'}  término {devolucao.termino or '—'}  "
+            f"{segundos} s"
         )
-        if texto is not None and informados is not None:
-            configurado = settings.ASSISTENTE_TOKENS_POR_MENSAGEM
+        if devolucao.provedor:
+            configurado = settings.ASSISTENTE_PROVEDOR or "nenhum — o OpenRouter escolhe"
             self.stdout.write(
-                f"ASSISTENTE_TOKENS_POR_MENSAGEM sugerido: {sugerido} (configurado: {configurado})"
+                f"Provedor que respondeu: {devolucao.provedor} (configurado: {configurado})"
             )
-            if sugerido > configurado:
+        if texto is not None and informados is not None:
+            # Uma chamada só não separa o fixo do por mensagem: a soma é o que ela mede, e o log das
+            # trocas, com duas ou mais quantidades de mensagens, separa um do outro (`R-006`).
+            medido = informados - texto
+            configurado = tokens.acrescimo(len(SINTETICA))
+            self.stdout.write(
+                f"Acréscimo além do texto: medido {medido} tokens em {len(SINTETICA)} mensagens; "
+                f"configurado {configurado} (ASSISTENTE_TOKENS_POR_CHAMADA "
+                f"{settings.ASSISTENTE_TOKENS_POR_CHAMADA} + {len(SINTETICA)} × "
+                f"ASSISTENTE_TOKENS_POR_MENSAGEM {settings.ASSISTENTE_TOKENS_POR_MENSAGEM})"
+            )
+            if medido > configurado:
                 # Subestimado, a aplicação conta menos do que o serviço lê, e um contexto estourado
                 # pode passar pela conferência da contagem (`FR-1482`).
                 self.divergencias.append(
-                    f"o acréscimo por mensagem configurado ({configurado}) é menor que o medido "
-                    f"({sugerido})"
+                    f"o acréscimo configurado ({configurado}) é menor que o medido ({medido})"
                 )
         elif informados is None:
             self.divergencias.append("o serviço não informou os tokens de entrada")

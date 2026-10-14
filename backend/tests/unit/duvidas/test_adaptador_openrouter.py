@@ -140,3 +140,28 @@ def test_sem_configuracao_nenhum_pedido_sai(settings):
         inferencia.conversar(MENSAGENS, ESQUEMA_DA_SAIDA, inferencia.parametros_configurados())
 
     assert recusa.value.codigo == inferencia.NAO_CONFIGURADO
+
+
+def test_o_provedor_fixo_vai_sem_troca(monkeypatch, openrouter, settings):
+    """Um provedor só (`FR-1499`): o roteamento pelo mais barato recusava com 429 (14/10)."""
+    settings.ASSISTENTE_PROVEDOR = "parasail"
+
+    _devolucao, servico = _chamar(monkeypatch, _resposta())
+    provedor = json.loads(servico.pedidos[0][0].data)["provider"]
+
+    assert provedor["order"] == ["parasail"]
+    assert provedor["allow_fallbacks"] is False
+
+
+def test_a_recusa_diz_qual_provedor_recusou(monkeypatch, openrouter):
+    corpo = {"error": {"code": 429, "metadata": {"provider_name": "Darkbloom", "raw": "x"}}}
+    recusa_429 = urllib.error.HTTPError(
+        "https://openrouter.invalid", 429, "x", {}, io.BytesIO(json.dumps(corpo).encode("utf-8"))
+    )
+
+    with pytest.raises(inferencia.FalhaDoServico) as recusa:
+        _chamar(monkeypatch, recusa_429)
+
+    assert recusa.value.codigo == LIMITE_DO_SERVICO
+    assert recusa.value.provedor == "Darkbloom"
+    assert CREDENCIAL not in str(recusa.value)
