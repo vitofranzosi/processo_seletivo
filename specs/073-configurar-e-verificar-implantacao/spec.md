@@ -35,7 +35,7 @@ O #281 resolveu a dispersão das instruções:
 
 - **O Ollama de produção não tem instrução de implantação.** O guia não cita nenhuma `ASSISTENTE_*`,
   e o roteiro do #281 é da máquina da equipe.
-- **Nenhum procedimento ensina a ver a configuração em uso.** O comando genérico que a mostraria
+- **Nenhum procedimento ensina a ver a configuração carregada.** O comando genérico que a mostraria
   imprime também a chave da aplicação e a senha do correio.
 - **Nenhum procedimento separa o teste de conexão da ação real.** O envio de teste sempre envia. A
   verificação do assistente sempre faz uma inferência, que carrega o modelo na GPU.
@@ -46,7 +46,8 @@ O #281 resolveu a dispersão das instruções:
 **Os comandos que já existem cobrem as três primeiras**, com exemplos completos. A auditoria os
 ensaiou (§4.3):
 
-- uma leitura fechada da configuração mostra o que o processo carregou sem revelar a senha;
+- uma leitura fechada da configuração, pelo shell que o framework já tem, mostra o que o processo
+  de diagnóstico carregou, sem revelar a senha;
 - a conexão de correio do framework conecta, negocia a segurança e autentica sem enviar;
 - duas leituras do Ollama não pedem inferência.
 
@@ -86,12 +87,12 @@ seção única do guia, nesta ordem:
 
 1. preenche o arquivo de ambiente;
 2. roda o pré-voo;
-3. vê a configuração em uso;
-4. testa a conexão sem enviar nada;
+3. vê a configuração que o processo de diagnóstico carregou;
+4. testa a conexão e a autenticação, sem enviar nada;
 5. reinicia o serviço e confirma que ele adotou o arquivo;
 6. envia uma mensagem de teste para uma caixa da equipe.
 
-Em cada falha, uma tabela de sintomas diz a causa provável e a ação.
+Em cada falha, uma tabela curta lista as causas possíveis do sintoma e como distinguir uma da outra.
 
 **Why this priority**: sem correio, nenhum candidato entra. É o primeiro bloqueio de toda
 implantação.
@@ -104,15 +105,17 @@ pessoa chega à mensagem recebida seguindo só a seção.
 1. **Given** o mecanismo de envio real com o servidor de correio vazio, **When** o serviço inicia ou
    o pré-voo roda, **Then** a inicialização é recusada com a variável e a ação, como as demais
    recusas de produção.
-2. **Given** a configuração preenchida, **When** a TI roda o comando de configuração em uso da
-   seção, **Then** vê o servidor, a porta, a segurança, o tempo-limite, a conta e o remetente, **and**
-   a senha aparece só como "presente" ou "ausente".
+2. **Given** a configuração preenchida, **When** a TI roda o exemplo de leitura da configuração,
+   **Then** vê o servidor, a porta, a segurança, o tempo-limite, a conta e o remetente, **and** a
+   senha aparece só como "presente" ou "ausente", **and** a seção diz que essa é a configuração do
+   processo de diagnóstico, e não prova a dos workers web que já estavam executando.
 3. **Given** a conta com senha errada, **When** a TI roda o teste de conexão da seção, **Then** o
    teste falha na autenticação, e a tabela de sintomas a leva a "credencial recusada", **and**
    nenhuma mensagem é enviada.
-4. **Given** um servidor que só aceita SSL implícito, **When** a TI roda o teste de conexão, **Then**
-   ele falha depois do tempo-limite configurado, e a tabela de sintomas nomeia a incompatibilidade
-   de segurança e a ação — e não "a porta 465".
+4. **Given** o teste de conexão termina em tempo esgotado, **When** a TI consulta a tabela, **Then**
+   ela lê as causas possíveis — rede ou firewall, endereço ou porta errados, servidor fora do ar,
+   segurança incompatível — e como distinguir cada uma, **and** a tabela não conclui por nenhuma
+   delas.
 5. **Given** o arquivo editado, **When** a TI segue o passo de reinício, **Then** ela confirma pelo
    comando da seção que o serviço subiu depois da última mudança do arquivo.
 6. **Given** a conexão testada sem falha, **When** a TI envia a mensagem de teste, **Then** a seção
@@ -123,8 +126,14 @@ pessoa chega à mensagem recebida seguindo só a seção.
 ### User Story 2 — A TI configura o Ollama de produção e o comprova sem disparar inferência (Priority: P1)
 
 Com o endereço do Ollama, o nome do modelo e a quantização, a pessoa da TI preenche o bloco do
-assistente no arquivo de ambiente. Ela vê a configuração em uso e testa a conexão com duas leituras
-que não pedem inferência. Só então roda a verificação existente, que faz a conversa sintética.
+assistente no arquivo de ambiente. Ela vê a configuração carregada e comprova em três níveis
+distintos:
+
+1. a **conexão**: o serviço responde e diz a versão;
+2. a **disponibilidade do modelo**: o modelo configurado está na lista dos instalados;
+3. a **inferência efetiva**: a verificação existente faz a conversa sintética.
+
+A versão, sozinha, não demonstra que o modelo está disponível nem que consegue executar.
 
 **Why this priority**: o Ollama é o único serviço que produção aceita para o assistente, e hoje
 nenhum documento da implantação o descreve.
@@ -139,8 +148,9 @@ casos pela seção, sem consultar código.
    configurado.
 2. **Given** o endereço com o sufixo do caminho da API, **When** a TI testa a conexão, **Then** a
    leitura falha, e a tabela de sintomas mostra a forma certa do endereço.
-3. **Given** o Ollama alcançável e o modelo instalado, **When** a TI testa a conexão, **Then** vê a
-   versão e o modelo na lista, **and** nenhuma inferência é feita.
+3. **Given** o Ollama alcançável e o modelo **não** instalado, **When** a TI consulta a versão,
+   **Then** a versão responde, **and** a seção diz que isso não basta, **and** o passo seguinte —
+   a lista dos modelos — mostra a ausência, sem nenhuma inferência.
 4. **Given** a conexão sem falha, **When** a TI roda a verificação existente, **Then** a saída
    termina em "Divergências: nenhuma", ou a seção diz o que fazer com cada divergência.
 5. **Given** o bloco do assistente com o piloto desligado, **When** a TI segue a seção, **Then** a
@@ -158,7 +168,7 @@ casos pela seção, sem consultar código.
 - **O tempo-limite do assistente está acima do limite do servidor de aplicação**, ou há serviço
   externo em produção. São recusas que já existem, e o pré-voo as mostra.
 - **O nome da variável foi digitado errado no arquivo.** O valor some sem aviso, e a aplicação usa
-  o padrão. A configuração em uso é o que revela isso.
+  o padrão. O exemplo de leitura da configuração é o que revela isso.
 
 ---
 
@@ -171,26 +181,32 @@ Esta feature abre em **FR-1650** e **SC-620**. A `072` vai até FR-1640 e SC-607
 #### A seção do guia
 
 - **FR-1650**: O guia de implantação MUST ter uma seção única "Configurar, verificar e testar", para
-  o correio e para o Ollama em produção. A ordem é: preencher → pré-voo → configuração em uso →
+  o correio e para o Ollama em produção. A ordem é: preencher → pré-voo → ler a configuração →
   testar a conexão → reiniciar e confirmar → testar o envio ou a inferência. Ela incorpora o §16.5,
   e não o duplica.
 - **FR-1651**: A seção MUST trazer exemplos completos do bloco de correio e do bloco do assistente
   do arquivo de ambiente de produção, coerentes com as variáveis que o sistema lê. Os valores a
   substituir vão marcados, e nenhum segredo aparece. No bloco do assistente entram a regra de
   produção — só o Ollama, com tempo-limite de no máximo 110 s — e a forma do endereço.
-- **FR-1652**: A seção MUST trazer um comando, feito só com o que existe, que mostra a configuração
-  em uso do correio, do atendimento, dos avisos e do assistente. Ele imprime os valores não secretos
-  e, de cada segredo, só "presente" ou "ausente". Ele MUST NOT usar comando que imprima segredos.
-- **FR-1653**: A seção MUST trazer, como passos distintos e explícitos:
-  - o **teste de conexão** do correio: conecta, negocia a segurança configurada e autentica, sem
-    enviar;
-  - o **envio de teste**;
-  - o **teste de conexão** do Ollama: versão e modelo instalado, sem inferência;
-  - a **verificação com inferência** que já existe.
+- **FR-1652**: A seção MUST trazer um **exemplo** de leitura da configuração do correio, do
+  atendimento, dos avisos e do assistente, feito com o shell que o framework já oferece, e não um
+  comando novo da aplicação. Ele imprime os valores não secretos e, de cada segredo, só "presente"
+  ou "ausente". Ele MUST NOT usar comando que imprima segredos. A seção MUST dizer que o exemplo
+  mostra a configuração carregada **pelo processo de diagnóstico**, e não comprova a dos workers web
+  que já estavam executando.
+- **FR-1653**: A seção MUST trazer passos distintos e explícitos, que preservam a diferença entre
+  conexão, autenticação, disponibilidade do modelo e ação efetiva:
+  - **correio, conexão e autenticação:** conecta, negocia a segurança configurada e autentica com a
+    conta, sem enviar. A saída de falha diz em qual das três etapas parou;
+  - **correio, envio de teste**, para uma caixa da equipe;
+  - **Ollama, conexão:** a versão;
+  - **Ollama, disponibilidade do modelo:** o modelo configurado na lista dos instalados;
+  - **Ollama, inferência efetiva:** a verificação que já existe.
 
-  Nenhum passo de conexão dispara o envio ou a inferência.
-- **FR-1654**: A seção MUST trazer uma tabela de sintomas → causa provável → ação, para os testes de
-  conexão e para as divergências da verificação existente. Ela cobre, no mínimo:
+  Nenhum passo anterior dispara o envio ou a inferência. A seção MUST dizer que a versão do Ollama,
+  sozinha, não demonstra que o modelo está disponível nem que consegue executar.
+- **FR-1654**: A seção MUST trazer uma tabela curta de sintoma → causas possíveis → como distinguir
+  e agir, para os testes e para as divergências da verificação existente. Ela cobre, no mínimo:
   - conexão recusada;
   - tempo esgotado;
   - segurança não negociada;
@@ -200,10 +216,12 @@ Esta feature abre em **FR-1650** e **SC-620**. A `072` vai até FR-1640 e SC-607
   - modelo não instalado;
   - quantização divergente;
   - contexto menor que o configurado.
-- **FR-1655**: A linha de tempo esgotado no correio MUST nomear a **incompatibilidade de segurança**:
-  o sistema só suporta STARTTLS, e o servidor pode exigir SSL implícito. A ação é pedir ao setor de
-  correio uma porta com STARTTLS, ou registrar a necessidade de suporte a SSL implícito. A seção MUST
-  NOT apresentar a porta 465 como o erro.
+- **FR-1655**: A linha de tempo esgotado no correio MUST listar as causas possíveis sem concluir por
+  nenhuma: rede ou firewall, endereço ou porta errados, servidor fora do ar e segurança incompatível
+  — o sistema só suporta STARTTLS, e o servidor pode exigir SSL implícito. Para cada uma, a linha diz
+  como distingui-la. Quando a segurança incompatível se confirmar, a ação é pedir ao setor de correio
+  uma porta com STARTTLS, ou registrar a necessidade de suporte a SSL implícito. A seção MUST NOT
+  apresentar a porta 465 como o erro.
 - **FR-1656**: A seção MUST dizer que os testes pelo script de operação provam o **arquivo**, e não
   o serviço em execução. E MUST trazer o comando que confirma que o serviço subiu depois da última
   mudança do arquivo, antes do envio de teste.
@@ -226,7 +244,7 @@ Esta feature abre em **FR-1650** e **SC-620**. A `072` vai até FR-1640 e SC-607
 
 A seção e as correções não leem dado pessoal. O único dado que entra é o destinatário do envio de
 teste, digitado por quem roda, que deve ser uma caixa da equipe e não é gravado. O comando de
-configuração em uso não imprime segredo, e o endereço do atendimento é público por natureza.
+exemplo de leitura da configuração não imprime segredo, e o endereço do atendimento é público por natureza.
 
 ---
 
@@ -260,7 +278,8 @@ que a TI já usa. A página fica registrada como evolução, e não descartada.
 A primeira revisão da auditoria propunha um comando agregador. O ensaio da §4.3 mostrou que os
 comandos existentes, com exemplos completos, cobrem os três motivos dela:
 
-- **a configuração em uso**, por uma leitura fechada que não imprime segredo;
+- **a configuração carregada**, por um exemplo de leitura fechada no shell do framework, que não
+  imprime segredo — e não por um comando novo;
 - **as recusas uma de cada vez**, que o pré-voo já repete em segundos, sem reiniciar;
 - **a conexão sem a ação real**, pela conexão de correio do framework e por duas leituras do Ollama.
 
@@ -273,11 +292,13 @@ Ver a configuração é ler. Testar a conexão contata o serviço sem efeito: na
 inferido. Testar a ação real envia uma mensagem ou carrega o modelo. Cada nível é um passo próprio
 da seção.
 
-### D-004 — A porta não é o erro; a incompatibilidade é
+### D-004 — Nem a porta nem o tempo esgotado são diagnóstico
 
 O sistema suporta STARTTLS e não SSL implícito. A porta convencional de SSL implícito só sugere a
-incompatibilidade, e o teste de conexão a revela. Suportar SSL implícito depende do setor de correio,
-e fica fora desta feature.
+incompatibilidade. E o tempo esgotado tem várias causas: rede, firewall, endereço, porta,
+indisponibilidade ou a própria segurança. A tabela lista as possibilidades e como distingui-las, e
+quem conclui é quem testa. Suportar SSL implícito depende do setor de correio, e fica fora desta
+feature.
 
 ### D-005 — As duas correções corrigem o que engana, e não acrescentam capacidade
 
