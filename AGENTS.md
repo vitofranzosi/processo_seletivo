@@ -99,7 +99,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **11177 passando e 12 pulados**, nenhuma falha (medido em 2026-10-14, na `071`, empilhada sobre a `070` em `ceadb141`, em 1270s). O décimo segundo pulado é da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda. Os
+Contra PostgreSQL a suíte fecha em **11263 passando e 12 pulados**, nenhuma falha (medido em 2026-10-14, na `071` atualizada com a `main` que já tem a `070` e a `072`, em `55889d11`, em 1311s). O décimo segundo pulado é da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda. Os
 doze são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da

@@ -24,6 +24,11 @@ aplicação e três do `--max-chamadas` e do total da avaliação — e pôs qua
 conta chamadas externas, a rodada que para na recusa pelo limite de gasto e a verificação no
 OpenRouter com e sem limite na chave; de 11180, 11177.
 
+**Depois de atualizar com a `main`** (`55889d11`, que traz a `070` mergeada e a `072`): **11263 passando
+e 12 pulados**, os mesmos doze, nenhuma falha, em 1311s, com lint e `check` limpos. Os 86 casos a
+mais são da `072`. O único conflito do merge foi a tabela de incrementos do README, onde as linhas
+da `071` e da `072` caíram no mesmo lugar; as duas ficaram.
+
 ## 2. A tela, pelo navegador (MVP, US1)
 
 **Ambiente.** Banco próprio da sessão, com o 91/2026 do corpus publicado pelo fluxo real, o seletor
