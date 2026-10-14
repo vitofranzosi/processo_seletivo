@@ -862,30 +862,30 @@ nomeia a variável.
 | Variável | Classe | Valor em produção | Evidência e observação |
 |---|---|---|---|
 | `DJANGO_SETTINGS_MODULE` | obrigatória, comum | `config.settings.production` | O `manage.py` cai em `development` sem ela (`manage.py:7`); o `wsgi.py` já usa `production` |
-| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:70-78`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
-| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:80-85`) |
-| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:257-266` |
-| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:248-256`) |
+| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:73-81`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
+| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:83-88`) |
+| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:352-361` |
+| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:343-351`) |
 | `DB_RUNTIME_USER` | comum | `processo_seletivo_runtime` | — |
-| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:230-234`) |
+| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:249-253`) |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | segredo | `processo_seletivo_owner`, `<GERAR_SEGREDO_ALEATORIO>` | **Só** em `migracao.env`: a aplicação em serviço não enxerga |
-| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:124-132`) |
+| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:127-135`) |
 | `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:146-160`) |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | comum | `<SMTP_HOST>`, `587`, `true` | Só STARTTLS: a porta 465 (SSL implícito) **não funciona** (`base.py:186-197`) |
 | `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5 |
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:161-166`) |
 | `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:192-199`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:175-183`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
-| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:199-228`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
-| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:237,250-255` |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:178-186`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
+| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:218-247`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
+| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:256,269-274` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
 | `DJANGO_SECURE_HSTS_PRELOAD` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
-| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:258-259`) |
+| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:277-278`) |
 | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | opcional | padrão, 10 MiB | Se mudar, ajuste o `client_max_body_size` de `/selecoes/` (§14) |
 | `EDITAL_ANEXOS_LIMITE_BYTES` | opcional | padrão, 5 MiB | Se mudar, ajuste o de `/gestao/` |
-| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:130-131` |
+| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:144-145` |
 
 **Proibidas em produção** — ausentes, ou `false`:
 
