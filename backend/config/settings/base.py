@@ -218,6 +218,51 @@ AVISOS_ALERTA_DE_PENDENTE_MIN = int(os.getenv("AVISOS_ALERTA_DE_PENDENTE_MIN", "
 # ativação.
 AVISOS_JANELA_DE_DESPACHO_HORAS = int(os.getenv("AVISOS_JANELA_DE_DESPACHO_HORAS", "24"))
 
+
+# O piloto interno do assistente do Edital (071, `R-009`). **Desligado por padrão**, e é produção
+# quem herda o padrão: o piloto roda na máquina da equipe, em sessões acompanhadas (`D-012`). Um
+# serviço por configuração, `ollama` ou `openrouter`, e nenhuma troca entre eles (`FR-1499`).
+ASSISTENTE_PILOTO = os.getenv("ASSISTENTE_PILOTO", "false").lower() == "true"
+ASSISTENTE_SERVICO = os.getenv("ASSISTENTE_SERVICO", "").strip()
+ASSISTENTE_ENDERECO = os.getenv("ASSISTENTE_ENDERECO", "").strip().rstrip("/")
+ASSISTENTE_MODELO = os.getenv("ASSISTENTE_MODELO", "").strip()
+# Só do ambiente, nunca de arquivo versionado nem do `.env` (`FR-1502`). Ninguém a imprime: ela só
+# existe no cabeçalho montado pelo adaptador.
+ASSISTENTE_CREDENCIAL = os.getenv("ASSISTENTE_CREDENCIAL", "")
+# Abaixo dos 120 s do gunicorn e dos 130 s do nginx do guia de implantação (§12.1, §14.2): a pessoa
+# recebe "tempo esgotado", e não um 502 (`FR-1500`).
+ASSISTENTE_TEMPO_LIMITE_SEGUNDOS = float(os.getenv("ASSISTENTE_TEMPO_LIMITE_SEGUNDOS", "90"))
+# O contexto **efetivo**, e não o nominal do modelo: o primeiro valor a medir na L4 (`FR-1480`).
+ASSISTENTE_CONTEXTO_TOKENS = int(os.getenv("ASSISTENTE_CONTEXTO_TOKENS", "32768"))
+# A reserva da resposta, inclusive do raciocínio quando ele está ligado (`R-007`).
+ASSISTENTE_SAIDA_MAXIMA_TOKENS = int(os.getenv("ASSISTENTE_SAIDA_MAXIMA_TOKENS", "2048"))
+# Sempre enviados, porque o padrão do serviço não é confiável (`FR-1498`). Pontos de partida: cada
+# troca registra os usados.
+ASSISTENTE_TEMPERATURA = float(os.getenv("ASSISTENTE_TEMPERATURA", "0.2"))
+ASSISTENTE_TOP_P = float(os.getenv("ASSISTENTE_TOP_P", "0.9"))
+ASSISTENTE_SEMENTE = int(os.getenv("ASSISTENTE_SEMENTE", "7"))
+ASSISTENTE_RACIOCINIO = os.getenv("ASSISTENTE_RACIOCINIO", "false").lower() == "true"
+# O `tokenizer.json` publicado com o modelo, fora do repositório (`R-006`).
+ASSISTENTE_TOKENIZER = os.getenv("ASSISTENTE_TOKENIZER", "").strip()
+# O acréscimo do molde de conversa por mensagem; quem o mede é a verificação de conexão.
+ASSISTENTE_TOKENS_POR_MENSAGEM = int(os.getenv("ASSISTENTE_TOKENS_POR_MENSAGEM", "8"))
+# Abaixo disto, os tokens que o serviço informa ter lido acusam um corte (`FR-1482`).
+ASSISTENTE_TOLERANCIA_DE_TOKENS = float(os.getenv("ASSISTENTE_TOLERANCIA_DE_TOKENS", "0.02"))
+# Menor que o número de processos que atendem requisições: com cinco, no máximo dois (`D-008`).
+ASSISTENTE_TETO_SIMULTANEO = int(os.getenv("ASSISTENTE_TETO_SIMULTANEO", "2"))
+ASSISTENTE_TURNOS_POR_CONVERSA = int(os.getenv("ASSISTENTE_TURNOS_POR_CONVERSA", "20"))
+ASSISTENTE_PERGUNTA_MAXIMA = int(os.getenv("ASSISTENTE_PERGUNTA_MAXIMA", "800"))
+# Exigir retenção zero do provedor no OpenRouter, quando o modelo tiver quem a ofereça.
+ASSISTENTE_ZDR = os.getenv("ASSISTENTE_ZDR", "false").lower() == "true"
+# `truncate`/`shift` desligados no Ollama, só depois de quem opera a L4 confirmar que a versão
+# instalada os aceita: a API não o informa, e uma versão que não os conhece os ignora em silêncio
+# (`R-017`). A conferência da contagem vale de qualquer modo.
+ASSISTENTE_OLLAMA_SEM_CORTE = os.getenv("ASSISTENTE_OLLAMA_SEM_CORTE", "false").lower() == "true"
+# A quantização que a avaliação mede, como o Ollama a escreve (`Q4_K_M`). Só a verificação de
+# conexão a lê, e vazia é divergência: sem ela, uma troca de quantização no servidor passaria por
+# outra configuração sem ninguém ver (US7, cenário 2; DP-7).
+ASSISTENTE_QUANTIZACAO = os.getenv("ASSISTENTE_QUANTIZACAO", "").strip()
+
 # Existe um proxy à frente da aplicação? (010) Só com isto ligado o cabeçalho `X-Forwarded-For` é
 # lido para distinguir origens no limite de solicitações de código. Ele é escrito pelo cliente:
 # confiar nele sem um proxy que o sobrescreva torna o limite por origem contornável com um
