@@ -142,3 +142,128 @@ mensagem (`R-006`). A calibração vale para o provedor em que foi medida — ma
 
 **A observar:** 33 s numa pergunta com ~19 mil tokens de entrada é tempo do provedor externo, e não
 diz nada da L4; ele entra na medição do `SC-556`, lá.
+
+## 8. As instruções 2, comparadas com as 1 (14/10/2026)
+
+A versão 2 das instruções fala ao candidato, e não ao setor de seleção (contracts/saida-do-modelo.md
+§4). Junto com ela, a conversa em que uma pergunta sugerida do protótipo da Fase C escolheu uma opção
+passa ao modelo, numa mensagem do sistema, a opção e o Perfil dela, e diz que a lista de concorrência
+não foi informada (§1). Antes, a opção só aparecia implícita no histórico, pelo nome do polo.
+
+**Ensaio, e não resultado** (`FR-1516`): uma chamada por caso, o mesmo modelo, o Parasail fixado, no
+banco `ps_071_corpus`. As execuções da versão 1 que já existiam e eram comparáveis não se repetiram.
+O "antes" da continuação e da factual é, por isso, uma execução anterior, da mesma pergunta no mesmo
+contexto.
+
+| Caso | Versão 1 | Versão 2 |
+|---|---|---|
+| "Preciso enviar todos?", depois de escolher Bom Jesus do Norte na sugestão de documentos | Conferida. Correta, mas longa: a lista de documentos de cada modalidade, uma depois da outra, repetindo a resposta anterior. 44,6 s; US$ 0,0056 (execução anterior) | **Recusada pela conferência nas duas tentativas** (`CITACAO_NAO_LITERAL`). O conteúdo estava certo e melhor: começa pela opção, separa o que vale para todos do documento a mais de PcD e de PPI, e diz que a lista de concorrência não foi informada. Mas marcou como citação as fontes calculadas dos documentos, que não são texto do Edital, e o candidato veria "não foi possível confirmar". 22,1 s e 32,2 s; US$ 0,0055 e 0,0019 |
+| "E se eu concorrer às vagas para pretos, pardos e indígenas?", na mesma opção | **Recusada pela conferência**, pelo mesmo motivo: citação de fonte calculada. 17,5 s; US$ 0,0053 | Conferida. Começa pela resposta (a autodeclaração étnico-racial) e mantém o modelo do Anexo I, a verificação complementar por webconferência e o que acontece com a autodeclaração indeferida. Repete a lista comum, e a citação "Conforme o modelo do Anexo I." fica solta. 9,5 s; US$ 0,0053 |
+| "Sou pessoa com deficiência. Preciso enviar algum documento a mais?", sem opção escolhida | Conferida. Correta: laudo médico dos últimos 12 meses, com a CID. Lista todos os documentos de PcD de uma vez. 23,3 s; US$ 0,0053 | Conferida. Correta, e separa os documentos comuns, válidos em todos os polos (com a fonte de cada um), do laudo, mantendo os 12 meses, a CID e o modelo do Anexo II. Não perguntou o polo, e não precisava: os documentos são os mesmos nos quatro. 45,7 s; US$ 0,0055 |
+| "Quantas vagas tem o polo de Bom Jesus do Norte?" | Conferida: 45 vagas imediatas, pela fonte certa. 34 s (execução anterior; o custo não fica na troca) | **Não obtida**: o Parasail recusou com 429 nas duas tentativas, em 0,6 s, sem custo |
+| "O curso oferece bolsa ou auxílio financeiro aos alunos?" | Conferida, "O Edital não informa", sem fonte. 24,6 s; US$ 0,0011 | A mesma resposta, palavra por palavra. 4,5 s; US$ 0,0012 |
+
+**Avaliação.**
+
+- **A versão 2 melhorou o conteúdo, e não o resultado.** Nas respostas conferidas (PPI e PcD), ela
+  começa pela resposta, usa as palavras do candidato, separa o comum do condicional e preserva mais
+  condições do que a 1, e não menos. Mas o caso que motivou a mudança, a continuação, foi recusado
+  nas duas tentativas. Para quem pergunta, uma recusa é pior que uma resposta longa.
+- **A recusa não é da versão 2, mas ela não a corrigiu.** O mesmo erro, citar como literal uma fonte
+  calculada, recusou o PPI na versão 1. Uma hipótese, não verificada: a versão 2 diz "a não ser numa
+  citação literal" ao proibir códigos, e isso empurra o modelo para a citação. A correção provável
+  é uma regra explícita, "fonte calculada ou dado nunca é citação", que seria a versão 3.
+- **Menor não quer dizer melhor, e nem sempre foi menor.** Nas conferidas, o tamanho ficou parecido.
+  A diferença está na ordem, na separação e nas condições mantidas.
+- **Latência e custo não distinguem as versões.** A latência variou de 4,5 s a 45,7 s dentro da
+  mesma versão, conforme o provedor. O custo é quase todo da entrada, ~19 mil tokens. A versão 2,
+  com a linha do sistema, soma de 300 a 370 tokens (~2%), e uma resposta em cache custou um terço.
+- **Uma chamada por caso não mede taxa.** Isto escolhe o próximo ajuste; quem mede é a rodada da
+  matriz.
+
+**A versão 3, no mesmo dia.** Ela muda só a distinção entre explicação e citação (contracts/saida-
+do-modelo.md §4). Foram feitas até quatro chamadas, com o modelo, o provedor, as fontes e a opção
+escolhida constantes, e sem retentativa.
+
+| Caso | Versão 3 |
+|---|---|
+| "Preciso enviar todos?" (2 chamadas) | **Não obtida**: o Parasail recusou as duas com 429, em 1,7 s e 0,7 s, sem custo. É falha do serviço, e não do prompt; o caso continua sem evidência na versão 3 |
+| PPI (2 chamadas) | **Conferidas as duas**, e sem nenhuma citação: os documentos calculados entraram como explicação e dado, com a referência. 31,9 s e 14,7 s; US$ 0,0054 e 0,0053 |
+
+**Revisão das fontes, afirmação por afirmação, nas duas respostas do PPI.**
+
+| Afirmação | Fonte | Sustenta? |
+|---|---|---|
+| Além dos documentos de todos, a autodeclaração étnico-racial; a lista de obrigatórios e o facultativo | F190, calculada, documentos de INF-BJN na lista PPI | Sim |
+| A autodeclaração segue o modelo do Anexo I | F93, texto, "Conforme o modelo do Anexo I." | Sim |
+| "Os candidatos sorteados para **essas vagas** serão convocados para verificação complementar … por webconferência" | F90, texto: "Os candidatos sorteados para as vagas reservadas a **pretos e pardos** serão convocados …" | **Não.** "Essas vagas" são as de pretos, pardos e indígenas; o Edital restringe a verificação a pretos e pardos. A paráfrase estendeu a regra a quem o Edital não nomeia |
+| Indeferida a autodeclaração, a pessoa fica só na ampla concorrência | F90 | Sim |
+| Quem concorre às reservadas concorre também às de ampla concorrência do mesmo polo (só na primeira) | F4, texto | Sim |
+
+- **O erro de classificação desapareceu** nas duas respostas do PPI.
+- **Os documentos comuns e condicionais ficaram preservados.** A resposta diz o que vale para todos e
+  o documento a mais da vaga PPI, mas ainda repete a lista comum inteira no trecho de dado.
+- **As referências sustentam quase tudo, mas não a afirmação da verificação complementar.** É a falha
+  que a conferência não prova (paráfrase fiel e condição omitida, `R-005`). As versões 1 e 2
+  tinham copiado esse trecho, e mantido "pretos e pardos". A versão 3, ao trocar a citação pela
+  explicação, perdeu a restrição.
+- **A linguagem é a do candidato**, sem código de Perfil nem termo interno.
+- **"Passou na conferência" quer dizer que passou nas verificações automáticas**, e não que está
+  correta. A correção, aqui, veio da revisão das fontes.
+
+**A versão 4, no mesmo dia: primeiro a causa, depois a regra.**
+
+- **Diagnóstico.** O contexto das duas respostas do PPI da versão 3 foi reconstruído, e a impressão das
+  fontes bate com a gravada em cada troca: é o contexto que o modelo recebeu.
+  - A única fonte sobre a verificação complementar é a F90, "Texto do Edital", com a restrição
+    literal, "vagas reservadas a pretos e pardos".
+  - Nenhuma fonte calculada, nenhum dado e nada no histórico fala de verificação para as vagas PPI
+    em geral. As fontes calculadas (F190 a F202) tratam só dos documentos da vaga PPI, corretamente
+    rotulada "Pretos, pardos e indígenas".
+  - A distinção chegou ao modelo, e foi ele que a ampliou ao parafrasear.
+- **A alteração** é só das instruções: a versão 4, com uma orientação geral sobre o alcance das
+  regras (contracts/saida-do-modelo.md §4). A conferência não mudou.
+- **A regressão** virou dois casos da matriz, `CB-17` (PPI em geral) e `CB-18` (candidato indígena),
+  na spec e em `matriz.json`.
+- **A rodada.** Até quatro chamadas, com a mesma configuração, sem mudar as instruções entre elas: o
+  PPI, o candidato indígena e duas da continuação. Um 429 teria uma nova tentativa depois do
+  intervalo indicado; o segundo interromperia.
+
+| Caso | Resultado | Tipo de falha |
+|---|---|---|
+| PPI, com Bom Jesus do Norte escolhido | Conferida. 38,2 s; US$ 0,0054 | Nenhuma |
+| Candidato indígena (`CB-18`) | **Não obtida.** 429 do Parasail, e de novo depois de 60 s. O serviço não indicou intervalo, só "retry shortly": a recusa é da cota compartilhada do modelo no Parasail (`limit_source: upstream_provider_shared_pool`) | Do serviço |
+| "Preciso enviar todos?" (2) | **Não tentada.** A rodada parou no segundo 429, como combinado. Modelo e provedor não foram trocados | Do serviço (bloqueio) |
+
+**Revisão das fontes, afirmação por afirmação, na resposta do PPI da versão 4.**
+
+| Afirmação | Fonte | Sustenta? |
+|---|---|---|
+| Além dos documentos de todos, a autodeclaração étnico-racial | F190 | Sim |
+| Os obrigatórios para todos no polo e o facultativo | F190, que os contém | Sim; F188, a lista sem reserva, seria a fonte mais direta |
+| O modelo do Anexo I | F93 | Sim |
+| "Os candidatos sorteados para as vagas reservadas a **pretos e pardos** serão convocados …" | F90 | **Sim: a restrição voltou** |
+| Indeferida a autodeclaração, a pessoa fica só na ampla concorrência | F90 | Sim |
+| Quem concorre às reservadas concorre também às de ampla concorrência do mesmo polo | F4 | Sim |
+
+- **Formato:** nenhuma citação, nenhum código, e o comum separado do condicional. Ainda repete a
+  lista comum, que a resposta anterior já tinha dado.
+- **Conteúdo:** nenhum erro achado na revisão.
+- **O que isso não prova:** é uma resposta só. O erro da versão 3 apareceu nas duas tentativas, e o
+  acerto da 4 numa. O caso que o separa, o do candidato indígena, ficou sem evidência pelo
+  bloqueio do serviço, e a continuação também.
+- **Se a ampliação reaparecer**, a recomendação é parar de emendar as instruções e comparar, nas
+  mesmas condições, com outro modelo ou com o Ollama.
+
+**O que continua valendo, e o que precisa ser refeito.** Uma nota de qualidade não atravessa versões
+das instruções (`FR-1515`). O que não depende do texto delas continua.
+
+| Continua valendo | Precisa ser refeito com a versão vigente |
+|---|---|
+| A suíte inteira: a conferência, os limites, a contagem de tokens, os adaptadores, a tela técnica e o protótipo. Ela usa o serviço falso, e nenhum caso depende do texto das instruções além do teste das versões | As observações de qualidade do ensaio da §7 (Bom Jesus do Norte, Iúna, PcD) e as continuações do protótipo de 14/10. São da versão 1 |
+| A calibração do acréscimo de tokens por provedor (§7) e a verificação de conexão, que medem a chamada, e não o conteúdo | A rodada da matriz e as medições na L4 (T058–T060), e os limiares da DP-3, que se propõem a partir delas |
+| A rodada seca da matriz (§3), que não chama o modelo | Esta comparação, depois de cada nova versão das instruções. Hoje a vigente é a 4, e `CB-17` e `CB-18` entram na rodada |
+| Os registros das versões 1 a 3: as trocas gravadas guardam `versao_das_instrucoes`, e os textos continuam em `INSTRUCOES_ANTERIORES` | — |
+
+**Pendente:** a conferência do painel com o teclado virtual aberto, num celular de verdade. A tela a
+375×420 é uma aproximação, e não a substitui.
