@@ -360,6 +360,8 @@ def _configuracao():
         "quantizacao": settings.ASSISTENTE_QUANTIZACAO,
         "parametros": inferencia.parametros_configurados(),
         "tokens_por_mensagem": settings.ASSISTENTE_TOKENS_POR_MENSAGEM,
+        "tokens_por_chamada": settings.ASSISTENTE_TOKENS_POR_CHAMADA,
+        "provedor": settings.ASSISTENTE_PROVEDOR,
         "tolerancia_de_tokens": settings.ASSISTENTE_TOLERANCIA_DE_TOKENS,
         "ollama_sem_corte": settings.ASSISTENTE_OLLAMA_SEM_CORTE,
         "zdr": settings.ASSISTENTE_ZDR,

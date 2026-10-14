@@ -246,6 +246,11 @@ ASSISTENTE_RACIOCINIO = os.getenv("ASSISTENTE_RACIOCINIO", "false").lower() == "
 ASSISTENTE_TOKENIZER = os.getenv("ASSISTENTE_TOKENIZER", "").strip()
 # O acréscimo do molde de conversa por mensagem; quem o mede é a verificação de conexão.
 ASSISTENTE_TOKENS_POR_MENSAGEM = int(os.getenv("ASSISTENTE_TOKENS_POR_MENSAGEM", "8"))
+# O acréscimo fixo de cada chamada, que não depende de quantas mensagens ela leva. No ensaio de
+# 14/10 no OpenRouter, eram ~250 tokens com 2 ou 3 mensagens — provavelmente o esquema da saída,
+# injetado pelo provedor —, e pô-los no acréscimo por mensagem sobrecontava cada turno de
+# histórico (`R-006`).
+ASSISTENTE_TOKENS_POR_CHAMADA = int(os.getenv("ASSISTENTE_TOKENS_POR_CHAMADA", "0"))
 # Abaixo disto, os tokens que o serviço informa ter lido acusam um corte (`FR-1482`).
 ASSISTENTE_TOLERANCIA_DE_TOKENS = float(os.getenv("ASSISTENTE_TOLERANCIA_DE_TOKENS", "0.02"))
 # Menor que o número de processos que atendem requisições: com cinco, no máximo dois (`D-008`).
@@ -254,6 +259,10 @@ ASSISTENTE_TURNOS_POR_CONVERSA = int(os.getenv("ASSISTENTE_TURNOS_POR_CONVERSA",
 ASSISTENTE_PERGUNTA_MAXIMA = int(os.getenv("ASSISTENTE_PERGUNTA_MAXIMA", "800"))
 # Exigir retenção zero do provedor no OpenRouter, quando o modelo tiver quem a ofereça.
 ASSISTENTE_ZDR = os.getenv("ASSISTENTE_ZDR", "false").lower() == "true"
+# O provedor do OpenRouter, fixo (`FR-1499`): sem troca automática, o roteamento pelo mais barato
+# caía num provedor que recusava 3 de 5 perguntas com 429 (ensaio de 14/10). Vazio, o OpenRouter
+# escolhe, ainda sem troca. O nome é o do OpenRouter, por exemplo `parasail`.
+ASSISTENTE_PROVEDOR = os.getenv("ASSISTENTE_PROVEDOR", "").strip()
 # `truncate`/`shift` desligados no Ollama, só depois de quem opera a L4 confirmar que a versão
 # instalada os aceita: a API não o informa, e uma versão que não os conhece os ignora em silêncio
 # (`R-017`). A conferência da contagem vale de qualquer modo.

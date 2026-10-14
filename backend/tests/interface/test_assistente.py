@@ -246,7 +246,7 @@ def test_a_retificacao_entre_perguntas_avisa_e_marca_a_anterior(
     [
         ("INDISPONIVEL", "O assistente não respondeu agora."),
         ("TEMPO_ESGOTADO", "O assistente não respondeu agora."),
-        ("LIMITE_DO_SERVICO", "O limite de perguntas foi atingido."),
+        ("LIMITE_DO_SERVICO", "O serviço do modelo recusou a pergunta por excesso de pedidos."),
         ("ORCAMENTO_ESGOTADO", "O limite de gasto do serviço desta configuração acabou."),
         ("RESPOSTA_MALFORMADA", "não produziu uma resposta completa e conferível"),
     ],

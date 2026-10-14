@@ -65,7 +65,8 @@ desabilita o botão e mostra "Consultando o Edital…" durante o envio.
 | `NAO_PASSOU_NA_CONFERENCIA` | "A resposta não foi mostrada porque não se sustentou nas fontes do Edital." | As perguntas sugeridas da `070`, o documento do Edital, o canal |
 | `INCOMPLETA`, `POSSIVEL_CORTE`, `RESPOSTA_MALFORMADA`, `MODELO_DIFERENTE` | "O assistente não produziu uma resposta completa e conferível." | Os mesmos |
 | `INDISPONIVEL`, `TEMPO_ESGOTADO` | "O assistente não respondeu agora." | Os mesmos |
-| `LIMITE_DE_USO`, `LIMITE_DO_SERVICO` | "O limite de perguntas foi atingido. Tente de novo em alguns minutos, ou comece outra conversa." | Os mesmos |
+| `LIMITE_DE_USO` | "O limite de perguntas foi atingido. Tente de novo em alguns minutos, ou comece outra conversa." | Os mesmos |
+| `LIMITE_DO_SERVICO` | "O serviço do modelo recusou a pergunta por excesso de pedidos. Tente de novo em alguns minutos." — separado do `LIMITE_DE_USO` em 14/10: com o mesmo texto, a recusa do serviço parecia do piloto | Os mesmos |
 | `ORCAMENTO_ESGOTADO` | "O limite de gasto do serviço desta configuração acabou." | Os mesmos |
 | `EXCEDE_O_CONTEXTO` | "Este Edital não cabe na configuração atual do piloto." | Os mesmos |
 | `PERGUNTA_RECUSADA` | O motivo: tamanho, ou dado pessoal com serviço externo | O formulário com a pergunta, para corrigir |
