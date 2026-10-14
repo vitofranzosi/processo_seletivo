@@ -1,0 +1,108 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Assistente do Edital (piloto) — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}
+{% comment %} As regras desta tela, e só dela (071, contracts/tela.md). Sem largura fixa: a 375 px a
+   página não rola na horizontal, e o texto longo quebra em qualquer ponto. {% endcomment %}
+.piloto{background:var(--cinza-fundo);border-left:4px solid var(--verde);padding:.7rem 1rem;
+  margin:0 0 1rem}
+.turno{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
+  margin:0 0 1.5rem}
+.turno h2{font-size:1rem;margin:0 0 .5rem}
+.turno h2:focus{outline:2px solid var(--verde);outline-offset:2px}
+.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
+.tipo{font-weight:600;margin:0 0 .75rem}
+.trecho{margin:0 0 .75rem;overflow-wrap:anywhere}
+.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
+.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
+.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
+.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
+.pergunta-feita{font-style:italic;overflow-wrap:anywhere;margin:0 0 .75rem}
+.conversa-nova{margin:1.5rem 0 0}
+{% endblock %}
+{% block conteudo %}
+<nav aria-label="Trilha de navegação" class="trilha">
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+  <span aria-current="page">Assistente do Edital (piloto)</span>
+</nav>
+
+<h1>Assistente do Edital (piloto)</h1>
+<p class="sub">{{ processo.title }} · {{ edital.title }}</p>
+<p class="piloto">Piloto interno do assistente do Edital. As respostas podem conter erros: confira cada uma nas fontes. Nada desta tela é visto por candidatos.</p>
+{% if externo %}
+<p class="aviso">As perguntas desta configuração saem da rede institucional. Faça só perguntas sobre Editais públicos, sem dado de pessoa.</p>
+{% endif %}
+<p class="ajuda">Pergunte como um candidato perguntaria, sobre este Edital. Não escreva nome, CPF, e-mail, telefone ou situação de ninguém. CPF, e-mail e telefone são mascarados no registro, mas o mascaramento não torna a conversa anônima.</p>
+
+{% if not publicado %}
+<p class="aviso" role="status">Só Edital publicado tem piloto. Este não tem versão vigente agora.</p>
+{% else %}
+<p class="versao">Versão vigente: {{ versao.identificador_curto }}, desde {{ vigente_desde }}.</p>
+
+<div aria-live="polite">
+{% for turno in turnos %}
+<section class="turno" aria-labelledby="troca-{{ turno.troca.ordem }}">
+  {% if turno.mudou %}
+  <p class="aviso" role="status">O Edital mudou desde a pergunta anterior{% if turno.atos_da_mudanca %} — {{ turno.atos_da_mudanca }}{% endif %}. Esta resposta usa a versão {{ turno.troca.versao_curta }}; as anteriores se referiam a outra versão, e não foram consideradas.</p>
+  {% endif %}
+  <h2 id="troca-{{ turno.troca.ordem }}" tabindex="-1">Pergunta {{ turno.troca.ordem }}</h2>
+  <p class="versao">Versão {{ turno.troca.versao_curta|default:"—" }}{% if turno.versao_anterior %} — versão anterior{% endif %}</p>
+  <p class="pergunta-feita">{{ turno.troca.pergunta }}</p>
+  {% if turno.historico_reduzido %}<p class="origem">{{ turno.historico_reduzido }}</p>{% endif %}
+  {% if turno.respondida %}
+  <p class="tipo">{{ turno.rotulo_do_tipo }}</p>
+  {% for aviso in turno.avisos %}
+  <p class="aviso">Aviso do sistema — {{ aviso.lugar }}: {{ aviso.conteudo }}</p>
+  {% endfor %}
+  {% for trecho in turno.trechos %}
+  <div class="trecho">
+    <span class="natureza">{{ trecho.rotulo }}</span>
+    <p class="literal">{{ trecho.texto }}</p>
+    {% if trecho.fontes %}<p class="origem">Fontes: {{ trecho.fontes|join:", " }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  {% if turno.caminho_oficial %}
+  <p class="origem">{{ turno.caminho_oficial.0 }}: <a href="{% url turno.caminho_oficial.1 %}">abrir</a>.</p>
+  {% endif %}
+  {% if turno.fontes %}
+  <details>
+    <summary>As fontes citadas, como estão no Edital ({{ turno.fontes|length }})</summary>
+    {% for fonte in turno.fontes %}
+    <div class="referencia">
+      <span class="natureza">{{ fonte.natureza }}</span>
+      <p><strong>{{ fonte.id }}</strong> — {{ fonte.lugar }}{% if fonte.rotulo %} — {{ fonte.rotulo }}{% endif %}</p>
+      <p class="literal">{{ fonte.conteudo }}</p>
+      {% if fonte.ato %}<p class="origem">{{ fonte.ato }}</p>{% endif %}
+      {% for origem in fonte.origens %}{% if origem.documento %}<p class="origem"><a href="{{ origem.documento }}">Abrir o documento deste ato</a></p>{% endif %}{% endfor %}
+      {% for link in fonte.links %}<p class="origem"><a href="{{ link.url }}">{{ link.rotulo }}</a></p>{% endfor %}
+    </div>
+    {% endfor %}
+  </details>
+  {% endif %}
+  {% else %}
+  <p class="aviso" role="status">{{ turno.texto_do_estado }}</p>
+  {% endif %}
+  <p class="origem">{% if canal %}Para tirar dúvidas pelo canal oficial: {{ canal }}.{% else %}Nem o Edital nem a implantação informam um canal para dúvidas.{% endif %}</p>
+</section>
+{% endfor %}
+</div>
+
+<form method="post" aria-label="Pergunta ao assistente">
+  {% csrf_token %}
+  <p class="campo">
+    <label for="pergunta">Sua pergunta sobre este Edital</label>
+    <textarea id="pergunta" name="pergunta" rows="3" maxlength="{{ pergunta_maxima }}" required aria-describedby="ajuda-pergunta"></textarea>
+    <span class="ajuda" id="ajuda-pergunta">Até {{ pergunta_maxima }} caracteres.</span>
+  </p>
+  <p class="campo escolha"><button type="submit" class="acao">Perguntar</button></p>
+</form>
+
+<form method="post" action="{% url 'interface:assistente-nova' edital.id %}" class="conversa-nova">
+  {% csrf_token %}
+  <button type="submit" class="acao">Começar outra conversa</button>
+</form>
+{% endif %}
+
+<p class="ajuda">Para conferir sem o assistente: <a href="{% url 'interface:duvidas' edital.id %}">as respostas às perguntas sugeridas e os documentos do Edital</a>.</p>
+{% endblock %}

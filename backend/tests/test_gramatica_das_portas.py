@@ -33,6 +33,8 @@ MODULOS_DE_VIEW = (
     # A tela de validação do assistente de dúvidas (070). Recusa pelo `not_found` do domínio, e não
     # por `Http404`, como a dos avisos; entra na varredura para que uma porta futura não escape.
     RAIZ / "processo_seletivo/interface/duvidas.py",
+    # O piloto do assistente do Edital (071): a negativa é a mesma da página do Edital.
+    RAIZ / "processo_seletivo/interface/assistente.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

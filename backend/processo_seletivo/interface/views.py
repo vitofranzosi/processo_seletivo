@@ -110,6 +110,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulgacao
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
+from processo_seletivo.duvidas.application.perguntar import PERMISSAO as PERMISSAO_DO_PILOTO
 from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application import teto as teto_command
 from processo_seletivo.editais.application.aplicacao import gravar_aplicacao
@@ -3580,6 +3581,10 @@ def detalhe(request, edital_id):
             # O caminho para os avisos aos candidatos (066), condicionado a quem os lê: oferecer um
             # destino que a autorização recusa é o `N-03` da 038.
             "pode_ver_avisos": _pode_ver_avisos(ator, edital),
+            # O piloto do assistente (071), só para quem participa dele, e só com o piloto ligado:
+            # a mesma regra que a tela aplica, para que a entrada não leve a uma recusa.
+            "pode_conversar_com_o_assistente": settings.ASSISTENTE_PILOTO
+            and ator.can(PERMISSAO_DO_PILOTO),
             # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
             # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
             # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e

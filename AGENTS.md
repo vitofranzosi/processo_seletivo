@@ -18,7 +18,9 @@ dia a dia:
 - **Publicação é ato imutável.** Não existe corrigir um Edital publicado; existe Retificar. As
   tabelas append-only são protegidas por trigger *e* por privilégio ausente — duas camadas
   independentes, e nenhuma delas é contornável em desenvolvimento.
-- **Nada é excluído.** Não escreva migration que apague dado normativo, nem comando que o faça.
+- **Nada é excluído.** Não escreva migration que apague dado normativo, nem comando que o faça. O
+  "nada" é sobre dado normativo: os registros do piloto do assistente (`071`) não são ato do
+  certame, e se excluem 90 dias depois do relatório final, por `excluir_registros_do_piloto`.
 - **Negar por padrão.** Toda operação exige permissão explícita e verificação de escopo.
 
 ## Subir o ambiente
@@ -97,11 +99,12 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **10995 passando e 11 pulados**, nenhuma falha (medido em 2026-10-12, na `070` sobre a `main` em `b4a1abf4`, que já tem a `069`, em 1328s; os mesmos onze pulados — os testes da `070` não pulam nada, e a tela dela não entra na lista literal da varredura de vocabulário). Os onze
-são deliberados, e se repartem em três: **9** são pares *termo × template* que
+Contra PostgreSQL a suíte fecha em **11263 passando e 12 pulados**, nenhuma falha (medido em 2026-10-14, na `071` atualizada com a `main` que já tem a `070` e a `072`, em `55889d11`, em 1311s). O décimo segundo pulado é da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda. Os
+doze são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
-é a recusa por vendor, que só aparece fora do PostgreSQL; e **1** é o E2E contra o serviço real da
-Caixa, atrás da chave `SORTEIO_E2E_FONTE_REAL`. Os dois últimos estão nomeados em
+é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
+Caixa, atrás da chave `SORTEIO_E2E_FONTE_REAL`; e **1** é a contagem real do tokenizer. A recusa por
+vendor e o E2E estão nomeados em
 [doc/achado-fonte-real-do-sorteio-sem-gatilho.md](doc/achado-fonte-real-do-sorteio-sem-gatilho.md).
 
 Para chegar lá é preciso o **par**:
@@ -139,6 +142,18 @@ envia é `manage.py despachar_avisos`, que em produção roda num timer a cada m
 desenvolvimento, **ninguém roda por você**: rode-o à mão depois de confirmar, e a mensagem sai no
 terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem ligada no
 `development` e no `test`, e desligada em produção até a validação de LGPD.
+
+**O piloto do assistente (071) pede três coisas de fora do repositório, e sem elas não chama o
+modelo.** O grupo opcional de dependências (`uv sync --extra dev --extra assistente`), que traz a
+`tokenizers`; o `tokenizer.json` do modelo, baixado para fora do repositório e apontado em
+`ASSISTENTE_TOKENIZER`; e, no OpenRouter, a credencial em `ASSISTENTE_CREDENCIAL`, lida de um arquivo
+fora do repositório — **nunca** do `.env`, que um `manage.py` à mão nem lê. Faltando a biblioteca ou
+o arquivo, toda pergunta termina em `SEM_TOKENIZER` ("falta o tokenizer do modelo"), sem chamada:
+não é o serviço que caiu. O OpenRouter é só do desenvolvimento, e a única barreira de gasto é o
+limite da própria chave, no painel dele: sem limite, a verificação de conexão acusa divergência e
+não manda a conversa sintética. O corpus da avaliação se publica por
+`scripts/publicar_corpus_do_piloto.py`, num banco **sem** `seed_demo`, cujo 01/2026 toma o número do
+01/2026 do corpus. O roteiro inteiro está no quickstart da `071`.
 
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.

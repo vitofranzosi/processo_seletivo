@@ -12,6 +12,9 @@ import re
 import pytest
 from django.urls import reverse
 
+# Os falsos do piloto do assistente (071), para a tela dele.
+from tests.fixtures.inferencia import contador_falso, porta_falsa, sem_rede  # noqa: F401
+
 
 def identificar(client, subject, papeis, escopo=None):
     """Identidade institucional pela própria tela.
