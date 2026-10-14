@@ -31,8 +31,13 @@ nome errado e a senha errada.
 
 ## C — O Ollama
 
-**Bloqueado até haver acesso à L4**, como o roteiro D da `071`. Siga os passos 5, 6 e 9 da §10.4, com
-o bloco do assistente preenchido.
+**Bloqueado até haver acesso à L4**, como o roteiro D da `071`. Antes, confira na máquina que vai
+rodar o roteiro:
+
+- o grupo de dependências `assistente` instalado (`uv pip show tokenizers` no ambiente da release);
+- o `tokenizer.json` no caminho de `ASSISTENTE_TOKENIZER`, legível pelo usuário da aplicação.
+
+Depois, siga os passos 5, 6 e 9 da §10.4, com o bloco do assistente preenchido.
 
 **Esperado:**
 

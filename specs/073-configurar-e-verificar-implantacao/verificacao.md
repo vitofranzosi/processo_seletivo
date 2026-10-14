@@ -43,8 +43,19 @@ falsos, locais e de vida curta. Os exemplos rodam do próprio Markdown, num proc
 `TimeoutError: timed out` (endereço sem rota) e `URLError … timed out` (Ollama sem rota) foram
 medidos contra `10.255.255.1`, em 14/10. Não entram na suíte porque dependem da rede de quem roda.
 
+## Estado
+
+**Implementada, com validação operacional pendente.** A implementação e a suíte estão fechadas, e
+falta comprovar a §10.4 com quem a vai seguir. Os resultados dos roteiros B e C entram aqui, com
+data, e só então o estado muda.
+
 ## Pendente
 
 - **SC-620 e o resto do SC-623:** a sessão conduzida com uma pessoa da TI, em homologação
   (quickstart B).
 - **A US2 contra a L4 real** (quickstart C), bloqueada até haver acesso, como o roteiro D da `071`.
+  Antes dela, confira na máquina que vai rodar o roteiro o grupo de dependências `assistente` e o
+  `tokenizer.json`.
+- **A release sem a biblioteca do tokenizer**, registrada para decisão em
+  [`doc/achado-release-sem-o-grupo-do-assistente.md`](../../doc/achado-release-sem-o-grupo-do-assistente.md).
+  A `073` só a documenta, e a correção não é o próximo incremento por estar escrita aqui.
