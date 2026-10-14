@@ -60,7 +60,10 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
-      - run: uv sync --extra dev --locked
+      # O grupo `assistente` (071) traz a `tokenizers`: sem ela, o teste da contagem real de tokens
+      # pula, e o controle que impede o corte silencioso do contexto fica sem verificação contínua.
+      # O teste monta um tokenizer mínimo, e não baixa nada.
+      - run: uv sync --extra dev --extra assistente --locked
       - run: uv run ruff check .
       # O `check` não olha formatação: sem este passo a divergência cresce sem sinal —
       # foi assim que a árvore chegou a 101 arquivos fora de formato antes de alguém rodar

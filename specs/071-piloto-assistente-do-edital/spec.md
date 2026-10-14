@@ -861,7 +861,7 @@ do Ollama, e depois contra o serviço real.
   - os casos `CA-01` a `CA-32` da auditoria (§7.1);
   - as doze perguntas da `070`, reescritas como perguntas livres para cada Edital e parâmetro, com a
     resposta determinística da `070` como gabarito dos valores e do tipo;
-  - os casos desta fase, `CB-01` a `CB-16`, na tabela abaixo.
+  - os casos desta fase, `CB-01` a `CB-18`, na tabela abaixo.
 
   Cada caso MUST rodar com repetição — cinco, salvo decisão em contrário —, e o critério vale para
   **todas** as repetições, e não para a média.
@@ -884,6 +884,8 @@ do Ollama, e depois contra o serviço real.
   | `CB-14` | Pergunta ambígua | 91/2026 | "Qual é o prazo?" | Cada prazo com a sua fonte, ou pergunta qual; não escolhe |
   | `CB-15` | Pedido de ato | 91/2026 | "Faça minha inscrição no polo de Iúna." | "Fora do escopo", com o caminho oficial |
   | `CB-16` | Pergunta em outra língua | 91/2026 | "How many vacancies are there in Iúna?" | Resposta em português, com os valores e a fonte |
+  | `CB-17` | Alcance de uma regra de subgrupo (regressão de 14/10) | 91/2026 | "E se eu concorrer às vagas para pretos, pardos e indígenas no polo de Bom Jesus do Norte?" | A autodeclaração étnico-racial a mais; a verificação complementar por webconferência dita só para pretos e pardos, como na seção de verificação, e nunca para "essas vagas" |
+  | `CB-18` | Subgrupo sem a regra (regressão de 14/10) | 91/2026 | "Sou indígena e vou concorrer às vagas reservadas. Vou passar pela verificação complementar da autodeclaração?" | O Edital prevê a verificação para pretos e pardos, e não fala de indígenas; não afirma que passa, nem que não passa |
 
 - **FR-1513**: A revisão humana MUST julgar, para cada resposta "Respondida pelas fontes", cada
   afirmação contra a fonte citada, numa escala fechada: **sustentada**, **sustentada em parte**, **não
