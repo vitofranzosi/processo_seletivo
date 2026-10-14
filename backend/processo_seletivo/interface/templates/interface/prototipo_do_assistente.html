@@ -1,0 +1,232 @@
+{% load static %}
+{% comment %} O painel de dúvidas do protótipo da Fase C, acrescentado à página pública da seleção
+   (prototipo_do_assistente.py). Um fragmento, e não uma página: por isso o estilo vem aqui, num bloco
+   com o nome que a varredura de classes lê. Tudo com o prefixo `pd-`, para não colidir com a folha
+   do portal. {% endcomment %}
+<style>
+{% block estilo_da_pagina %}
+.pd-abrir{position:fixed;right:1rem;bottom:1rem;z-index:20;background:var(--verde);
+  color:var(--branco);border-radius:999px;padding:.7rem 1.15rem;font-weight:600;
+  text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.pd-abrir:hover{background:var(--verde-escuro)}
+body:has(.pd-abrir){padding-bottom:4.5rem}
+body:has(.pd-painel[open]) .pd-abrir{display:none}
+.pd-painel{position:fixed;inset:0 0 0 auto;margin:0;width:min(28rem,100%);max-width:100%;
+  height:100%;height:100dvh;max-height:100%;padding:0;border:0;border-left:1px solid var(--borda);
+  background:var(--branco);color:var(--texto);z-index:30;box-shadow:-2px 0 12px rgba(0,0,0,.12)}
+/* Só a conversa rola. Sem `min-height:0` ela cresceria além do painel; sem `position:relative` nela,
+   os rótulos ocultos (`.pd-oculto`, absolutos) escapavam da rolagem dela e alongavam o painel — e o
+   foco na resposta nova rolava o painel inteiro, com o cabeçalho junto. */
+.pd-painel[open]{display:flex;flex-direction:column;overflow:hidden}
+.pd-painel::backdrop{background:rgba(0,0,0,.4)}
+@media (min-width:48rem){
+body:has(.pd-painel[open]){padding-right:28rem}
+}
+@media (max-width:47.99rem){
+.pd-painel{width:100%;border-left:0}
+}
+.pd-topo{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:.7rem 1rem;background:var(--verde-escuro);color:var(--branco)}
+.pd-topo h2{margin:0;font-size:1.05rem}
+.pd-ia{margin:0;font-size:.75rem;opacity:.9}
+.pd-fechar{color:var(--branco);text-decoration:none;font-size:1.6rem;line-height:1;
+  padding:.1rem .5rem;border-radius:4px}
+.pd-fechar:hover{background:rgba(255,255,255,.15)}
+.pd-versao{font-size:.75rem;color:var(--texto-fraco);margin:0;padding:.4rem 1rem 0}
+.pd-prototipo{font-size:.6875rem;margin:.25rem 1rem 0;padding:.15rem .45rem;width:fit-content;
+  background:var(--amarelo-fundo);color:var(--amarelo);border-radius:4px}
+.pd-conversa{position:relative;flex:1;min-height:0;overflow-y:auto;padding:.75rem 1rem}
+.pd-boas-vindas{margin:0 0 .75rem;font-size:.9375rem}
+.pd-troca{margin:0 0 1rem}
+.pd-pergunta{margin:0 0 .5rem auto;max-width:85%;width:fit-content;background:var(--verde-claro);
+  border-radius:12px 12px 2px 12px;padding:.5rem .75rem;font-size:.9375rem;font-weight:400;
+  line-height:1.45;overflow-wrap:anywhere}
+.pd-pergunta:focus{outline:2px solid var(--verde);outline-offset:2px}
+.pd-resposta{max-width:95%;background:var(--fundo);border:1px solid var(--borda);
+  border-radius:12px 12px 12px 2px;padding:.6rem .8rem}
+.pd-texto{margin:0 0 .5rem;white-space:pre-line;overflow-wrap:anywhere}
+.pd-citacao{margin:.5rem 0;padding:.4rem .7rem;border-left:3px solid var(--verde);
+  background:var(--branco)}
+.pd-citacao blockquote{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.pd-citacao figcaption{font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
+.pd-itens{margin:0 0 .5rem;padding-left:1.15rem}
+.pd-itens li{margin:0 0 .3rem;overflow-wrap:anywhere}
+.pd-detalhe{display:block;font-size:.8125rem;color:var(--texto-fraco)}
+.pd-nota{font-size:.875rem;font-weight:600;margin:0 0 .4rem}
+.pd-aviso{font-size:.875rem;background:var(--amarelo-fundo);border-left:3px solid var(--amarelo);
+  padding:.4rem .6rem;margin:0 0 .5rem}
+.pd-fontes{font-size:.875rem;margin:.25rem 0 0}
+.pd-fontes summary{cursor:pointer;color:var(--verde-texto)}
+.pd-fonte{border-top:1px solid var(--borda);padding:.5rem 0}
+.pd-natureza{font-size:.75rem;font-weight:600;color:var(--texto-fraco);margin:0}
+.pd-literal{margin:.25rem 0;white-space:pre-line;overflow-wrap:anywhere}
+.pd-literal mark{background:var(--verde-claro);color:inherit}
+.pd-link{margin:.1rem 0;font-size:.8125rem}
+.pd-origem{font-size:.75rem;color:var(--texto-fraco);margin:.4rem 0 0}
+.pd-anterior{font-size:.75rem;color:var(--texto-fraco);margin:0 0 .3rem}
+.pd-falha{margin:0;font-size:.9375rem}
+.pd-marco{font-size:.8125rem;text-align:center;color:var(--amarelo);border-top:1px dashed var(--amarelo);
+  border-bottom:1px dashed var(--amarelo);padding:.4rem;margin:0 0 1rem}
+.pd-espera{font-size:.875rem;color:var(--texto-fraco);margin:0}
+.pd-espera::before{content:"";display:inline-block;width:.6rem;height:.6rem;border-radius:50%;
+  background:var(--verde);margin-right:.45rem;animation:pd-pulsar 1.2s infinite}
+@keyframes pd-pulsar{
+50%{opacity:.25}
+}
+@media (prefers-reduced-motion:reduce){
+.pd-espera::before{animation:none}
+}
+.pd-sugestoes{margin:.25rem 0 0}
+.pd-sugestoes summary{cursor:pointer;font-size:.875rem;font-weight:600}
+.pd-lista{display:flex;flex-wrap:wrap;gap:.4rem;margin:.45rem 0 0}
+.pd-sugestao{border:1px solid var(--verde-texto);background:var(--branco);color:var(--verde-texto);
+  border-radius:999px;padding:.3rem .75rem;font:inherit;font-size:.875rem;cursor:pointer;
+  text-align:left}
+.pd-sugestao:hover{background:var(--verde-claro)}
+.pd-mais{margin:.5rem 0 0}
+.pd-mais summary{cursor:pointer;font-size:.875rem;color:var(--verde-texto)}
+.pd-opcoes{display:flex;flex-direction:column;align-items:flex-start;gap:.4rem;margin:.25rem 0 0}
+.pd-enviar{display:flex;gap:.5rem;align-items:flex-end;padding:.5rem 1rem;
+  border-top:1px solid var(--borda);margin:0}
+.pd-enviar textarea{flex:1;min-width:0;font:inherit;padding:.45rem .55rem;
+  border:1px solid var(--borda);border-radius:6px;resize:vertical}
+.pd-botao{background:var(--verde);color:var(--branco);border:0;border-radius:6px;
+  padding:.55rem 1rem;font:inherit;font-weight:600;cursor:pointer}
+.pd-botao:hover{background:var(--verde-escuro)}
+.pd-botao[aria-disabled="true"]{background:var(--texto-fraco);cursor:progress}
+.pd-rodape{padding:0 1rem .6rem;font-size:.75rem;color:var(--texto-fraco)}
+.pd-rodape p{margin:.15rem 0}
+.pd-acoes{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:baseline}
+.pd-acoes form{margin:0}
+.pd-discreto{background:none;border:0;padding:0;color:var(--verde-texto);text-decoration:underline;
+  font:inherit;cursor:pointer}
+.pd-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);
+  white-space:nowrap}
+.pd-estados{max-width:var(--pagina);margin:0 auto;padding:1rem 1rem 5rem;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.pd-estados a{margin-right:.75rem}
+{% endblock %}
+</style>
+
+{% if simulacao %}
+<nav class="pd-estados" aria-label="Estados simulados do protótipo">
+  Protótipo interno, estados simulados:
+  {% for chave, nome in estados_simulados %}<a href="{{ request.path }}?painel=1&simulacao={{ chave }}"{% if chave == simulacao %} aria-current="page"{% endif %}>{{ nome }}</a>{% endfor %}
+  <a href="{{ request.path }}?painel=1">Conversa real</a>
+</nav>
+{% endif %}
+
+<a class="pd-abrir" id="pd-abrir" href="{{ request.path }}?painel=1{% if simulacao %}&simulacao={{ simulacao }}{% endif %}" aria-controls="pd-painel" aria-expanded="{% if aberto %}true{% else %}false{% endif %}">Dúvidas sobre este Edital</a>
+
+<dialog id="pd-painel" class="pd-painel" aria-labelledby="pd-titulo" aria-describedby="pd-ia" data-espera="{{ espera_curta }}" data-espera-longa="{{ espera_longa }}" data-segundos="{{ segundos_ate_a_espera_longa }}"{% if aberto %} open{% endif %}>
+  <div class="pd-topo">
+    <div>
+      <h2 id="pd-titulo" tabindex="-1">Assistente do edital</h2>
+      <p class="pd-ia" id="pd-ia">Assistente de IA</p>
+    </div>
+    <a class="pd-fechar" id="pd-fechar" href="{{ request.path }}{% if simulacao %}?simulacao={{ simulacao }}{% endif %}" aria-label="Fechar o assistente" title="Fechar">×</a>
+  </div>
+  <p class="pd-versao" id="pd-versao">Edital {{ edital.number }}/{{ edital.year }} · versão vigente desde {{ vigente_desde }}</p>
+  <p class="pd-prototipo">Protótipo interno, não visto por candidatos{% if simulacao %} · estado simulado: as respostas do modelo são ilustrativas{% endif %}</p>
+
+  <div class="pd-conversa" id="pd-conversa">
+    {% if not mensagens and not pendente and not escolha %}
+    <p class="pd-boas-vindas">Pergunte sobre este Edital, ou comece por uma destas perguntas:</p>
+    {% endif %}
+    {% for m in mensagens %}
+    {% if m.mudanca %}<p class="pd-marco" role="note">{{ m.mudanca }}</p>{% endif %}
+    <section class="pd-troca" aria-labelledby="troca-{{ m.ordem }}">
+      <h3 class="pd-pergunta" id="troca-{{ m.ordem }}" tabindex="-1"><span class="pd-oculto">Pergunta {{ m.ordem }}: </span>{{ m.pergunta }}</h3>
+      <div class="pd-resposta">
+        {% if m.anterior %}<p class="pd-anterior">Sobre a versão anterior do Edital</p>{% endif %}
+        {% if m.respondida %}
+        {% if m.nota %}<p class="pd-nota">{{ m.nota }}</p>{% endif %}
+        {% for bloco in m.blocos %}
+        {% if bloco.tipo == "lista" %}
+        <ul class="pd-itens">{% for item in bloco.itens %}<li>{{ item.texto }}{% if item.detalhe %}<span class="pd-detalhe">{{ item.detalhe }}</span>{% endif %}</li>{% endfor %}</ul>
+        {% elif bloco.tipo == "citacao" %}
+        <figure class="pd-citacao"><blockquote>{{ bloco.texto }}</blockquote><figcaption>Texto do Edital{% if bloco.onde %} · {{ bloco.onde }}{% endif %}</figcaption></figure>
+        {% elif bloco.tipo == "aviso" %}
+        <p class="pd-aviso">{{ bloco.texto }}</p>
+        {% else %}
+        <p class="pd-texto">{{ bloco.texto }}</p>
+        {% endif %}
+        {% endfor %}
+        {% if m.caminho_oficial %}<p class="pd-texto"><a href="{{ m.caminho_oficial.1 }}">{{ m.caminho_oficial.0 }}</a></p>{% endif %}
+        {% if m.fontes %}
+        <details class="pd-fontes">
+          <summary>Consultar fontes</summary>
+          {% for fonte in m.fontes %}
+          <div class="pd-fonte">
+            <p class="pd-natureza">{{ fonte.natureza }} · {{ fonte.onde }}</p>
+            {% if fonte.literal %}<blockquote class="pd-literal">{% for texto, marcado in fonte.segmentos %}{% if marcado %}<mark>{{ texto }}</mark>{% else %}{{ texto }}{% endif %}{% endfor %}</blockquote>{% else %}<p class="pd-literal">{% for texto, marcado in fonte.segmentos %}{{ texto }}{% endfor %}</p>{% endif %}
+            {% for endereco in fonte.documentos %}<p class="pd-link"><a href="{{ endereco }}">Abrir o documento deste ato</a></p>{% endfor %}
+            {% for link in fonte.links %}<p class="pd-link"><a href="{{ link.url }}">{{ link.rotulo }}</a></p>{% endfor %}
+          </div>
+          {% endfor %}
+        </details>
+        {% endif %}
+        {% if m.sugestao %}<p class="pd-origem">Resposta pronta, montada a partir dos dados do Edital.</p>{% endif %}
+        {% else %}
+        <p class="pd-falha">{{ m.falha }}</p>
+        {% endif %}
+      </div>
+    </section>
+    {% endfor %}
+    {% if escolha %}
+    <section class="pd-troca" aria-labelledby="pd-escolha">
+      <h3 class="pd-pergunta" id="pd-escolha" tabindex="-1">{{ escolha.pergunta }}</h3>
+      <div class="pd-resposta">
+        <p class="pd-texto">Para qual opção?</p>
+        <form class="pd-opcoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="continuacao">{% else %}method="post" action="{% url 'interface:assistente-prototipo-sugestao' edital.id %}">{% csrf_token %}{% endif %}
+          <input type="hidden" name="sugestao" value="{{ escolha.codigo }}">
+          {% for codigo, nome in opcoes %}<button type="submit" class="pd-sugestao" name="perfil" value="{{ codigo }}">{{ nome }}</button>{% endfor %}
+        </form>
+      </div>
+    </section>
+    {% endif %}
+    <div id="pd-pendente"{% if not pendente %} hidden{% endif %}>
+      <p class="pd-pergunta" id="pd-pendente-pergunta">{{ pendente }}</p>
+      <p class="pd-espera" id="pd-espera" role="status">{{ espera }}</p>
+    </div>
+    {% if recusa %}<p class="pd-falha" role="alert">Esta pergunta não está disponível para este Edital.</p>{% endif %}
+    {% if not pendente and not escolha %}
+    <form class="pd-sugestoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1">{% else %}method="post" action="{% url 'interface:assistente-prototipo-sugestao' edital.id %}">{% csrf_token %}{% endif %}
+      {% if not mensagens %}
+      <div class="pd-lista">
+        {% for codigo, texto, da_opcao in principais %}<button type="submit" class="pd-sugestao" {% if simulacao %}name="simulacao" value="{% if da_opcao %}escolha{% else %}continuacao{% endif %}"{% else %}name="sugestao" value="{{ codigo }}"{% endif %}>{{ texto }}</button>{% endfor %}
+      </div>
+      {% endif %}
+      {% if mais or mensagens %}
+      <details class="pd-mais">
+        <summary>{% if mensagens %}Perguntas sugeridas{% else %}Mais dúvidas{% endif %}</summary>
+        <div class="pd-lista">
+          {% for codigo, texto, da_opcao in principais %}{% if mensagens %}<button type="submit" class="pd-sugestao" {% if simulacao %}name="simulacao" value="{% if da_opcao %}escolha{% else %}continuacao{% endif %}"{% else %}name="sugestao" value="{{ codigo }}"{% endif %}>{{ texto }}</button>{% endif %}{% endfor %}
+          {% for codigo, texto, da_opcao in mais %}<button type="submit" class="pd-sugestao" {% if simulacao %}name="simulacao" value="{% if da_opcao %}escolha{% else %}continuacao{% endif %}"{% else %}name="sugestao" value="{{ codigo }}"{% endif %}>{{ texto }}</button>{% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </form>
+    {% endif %}
+  </div>
+
+  <form class="pd-enviar" id="pd-enviar" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="espera">{% else %}method="post" action="{% url 'interface:assistente-prototipo-perguntar' edital.id %}">{% csrf_token %}{% endif %}
+    <label for="pd-campo-pergunta" class="pd-oculto">Sua pergunta sobre este Edital</label>
+    <textarea id="pd-campo-pergunta" name="pergunta" rows="2" maxlength="{{ pergunta_maxima }}" required placeholder="Escreva sua pergunta"></textarea>
+    <button type="submit" class="pd-botao" id="pd-botao-enviar"{% if pendente %} aria-disabled="true"{% endif %}>{% if pendente %}Aguardando…{% else %}Enviar{% endif %}</button>
+  </form>
+
+  <div class="pd-rodape">
+    <div class="pd-acoes">
+      {% for texto, endereco in atendimento %}{% if endereco %}<a href="{{ endereco }}">{% if atendimento|length == 1 %}Atendimento oficial{% else %}{{ texto }}{% endif %}</a>{% else %}<span>Atendimento oficial: {{ texto }}</span>{% endif %}{% endfor %}
+      {% if not simulacao %}
+      <form method="post" action="{% url 'interface:assistente-prototipo-nova' edital.id %}">
+        {% csrf_token %}
+        <button type="submit" class="pd-discreto">Nova conversa</button>
+      </form>
+      {% endif %}
+    </div>
+    <p>As respostas podem conter erros; vale o texto do Edital.</p>
+  </div>
+</dialog>
+<script src="{% static 'interface/prototipo-do-assistente.js' %}"></script>
