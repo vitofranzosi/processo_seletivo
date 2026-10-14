@@ -29,6 +29,7 @@ from processo_seletivo.divulgacao.application.selectors import (
     anteriores_da_cadeia,
     documento_do_resultado,
     historico_publico_do_edital,
+    historico_publico_dos_editais,
     situacoes_do_candidato,
     vigente_do_marco,
 )
@@ -94,7 +95,6 @@ from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.publicacoes.infrastructure.pdf import teto_de_inscricoes
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.recursos.application.selectors import (
-    conteudos_citados,
     janela_da_publicacao_divulgada,
     pareceres_do_titular,
     recursos_do_titular,
@@ -298,7 +298,26 @@ def vitrine(request):
     # **O desfecho de todos os cartões numa leitura só** (047, `R-2`, `R-7`): uma consulta aos atos,
     # e só quando algum Edital ou Processo está em estado final.
     finais = desfechos([versao.edital for versao in versoes])
-    selecoes = [_selecao_da_vitrine(versao, agora, finais[versao.edital_id]) for versao in versoes]
+    siglas = _siglas_das_unidades(versoes)
+    # **O que foi publicado depois das inscrições, numa leitura para a página inteira** (072,
+    # FR-1629 a FR-1635, research T-001). As mesmas linhas e o mesmo prazo que a página da seleção
+    # mostra — `historico_publico_dos_editais` e `prazos_de_recurso` são as funções dela —, lidas
+    # de uma vez para todos os cartões, e julgadas no mesmo `agora` da página.
+    resultados = leitura.prazos_de_recurso(
+        historico_publico_dos_editais([versao.edital for versao in versoes]),
+        {versao.edital_id: versao.content for versao in versoes},
+        agora,
+    )
+    selecoes = [
+        _selecao_da_vitrine(
+            versao,
+            agora,
+            finais[versao.edital_id],
+            siglas,
+            leitura.resumo_do_acompanhamento(resultados.get(versao.edital_id, [])),
+        )
+        for versao in versoes
+    ]
     selecoes.sort(
         key=lambda item: (
             leitura.ORDEM_DAS_SITUACOES.get(item["estado"], len(leitura.GRUPOS)),
@@ -312,11 +331,20 @@ def vitrine(request):
     opcoes = leitura.opcoes_da_consulta(selecoes)
     consulta = leitura.consulta_da_vitrine(request.GET, opcoes)
     encontradas = leitura.filtrar(selecoes, consulta)
+    for selecao in encontradas:
+        _recortar_para_o_cartao(selecao, consulta["busca"])
     return render(
         request,
         "portal/vitrine.html",
         {
             "selecoes": selecoes,
+            # **Quantas estão abertas agora, antes de qualquer cartão** (072, FR-1612). Pelo mesmo
+            # critério que forma o grupo "Inscrições abertas": dois números para a mesma pergunta
+            # seriam duas respostas.
+            "abertas": sum(1 for selecao in selecoes if selecao["estado"] == leitura.ABERTO),
+            # A unidade entra no título quando o catálogo tem uma só (FR-1611); com várias, o título
+            # não escolhe uma delas.
+            "unidade_do_catalogo": (opcoes["unidades"][0] if len(opcoes["unidades"]) == 1 else ""),
             "encontradas": encontradas,
             "total_encontrado": len(encontradas),
             "consulta": consulta,
@@ -333,7 +361,35 @@ def vitrine(request):
     )
 
 
-def _selecao_da_vitrine(versao, agora, desfecho=None):
+def _siglas_das_unidades(versoes):
+    """`{escopo: sigla}` do registro de Unidades, numa leitura para a página (072, research T-006).
+
+    O cartão dizia "Unidade: CEFOR" — a chave interna em caixa alta. A sigla é a do registro (060),
+    e sem registro a chave continua sendo o que há para dizer.
+    """
+    from processo_seletivo.unidades.models import Unidade
+
+    escopos = {versao.edital.institution_scope for versao in versoes}
+    if not escopos:
+        return {}
+    return dict(Unidade.objects.filter(codigo__in=escopos).values_list("codigo", "sigla"))
+
+
+def _recortar_para_o_cartao(selecao, busca):
+    """Os Perfis e os lugares que o cartão mostra: três de cada, e o resto contado (FR-1608 a 1610).
+
+    Feito depois da consulta, e não antes, porque com busca o que casa com o termo vem primeiro: o
+    teto não pode esconder o que fez o cartão ser encontrado.
+    """
+    selecao["ofertas"], selecao["ofertas_a_mais"] = leitura.os_primeiros(
+        selecao["ofertas_todas"], 3, busca, texto=lambda oferta: oferta["nome"]
+    )
+    selecao["lugares"], selecao["lugares_a_mais"] = leitura.os_primeiros(
+        selecao["lugares_todos"], 3, busca
+    )
+
+
+def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None, acompanhamento=None):
     """O cartão da vitrine: o da página da seleção, mais o que decide clicar.
 
     Perfis e vagas vêm do conteúdo publicado, e não de uma contagem própria: é o mesmo número que
@@ -343,11 +399,38 @@ def _selecao_da_vitrine(versao, agora, desfecho=None):
     perfis = versao.content.get("profiles") or []
     periodo = dados["periodo"]
     chave, rotulo = leitura.situacao_publica(periodo, desfecho)
+    numero = f"{dados['numero']}/{dados['ano']}"
     return {
         **dados,
+        # A sigla do registro, e é ela que a consulta usa: filtro, busca e cartão dizem o mesmo.
+        "unidade": (siglas or {}).get(versao.edital.institution_scope) or dados["unidade"],
         "perfis": [perfil.get("name", "") for perfil in perfis if perfil.get("name")],
-        "vagas": sum(perfil.get("immediateVacancies") or 0 for perfil in perfis),
-        "tem_reserva": any((perfil.get("reserveType") or "NONE") != "NONE" for perfil in perfis),
+        # **A oferta por Perfil, e não a soma** (072, FR-1607, FR-1608). "3 vagas imediatas" num
+        # cartão de dois Perfis se lia como três para cada um — e um deles não tinha nenhuma.
+        "ofertas_todas": [
+            {
+                "nome": perfil.get("name", ""),
+                "quantidade": leitura.quantidade_da_oferta(
+                    perfil.get("immediateVacancies") or 0, perfil.get("reserveType")
+                ),
+            }
+            for perfil in perfis
+            if perfil.get("name")
+        ],
+        # O lugar, cada um uma vez, na ordem dos Perfis (FR-1609). Vazio é não declarado, e não
+        # vira frase.
+        "lugares_todos": list(
+            dict.fromkeys(
+                (perfil.get("locality") or "").strip()
+                for perfil in perfis
+                if (perfil.get("locality") or "").strip()
+            )
+        ),
+        # O título do Edital é texto livre e costuma começar pelo número; repeti-lo na linha de
+        # apoio era o mesmo dado duas vezes no mesmo cartão (FR-1606).
+        "numero_no_titulo": bool(dados["titulo"]) and numero in dados["titulo"],
+        # Resultado e prazo de recurso, resumidos pela regra da D-004 (072).
+        "acompanhamento": acompanhamento,
         "dias_restantes": (
             _dias_ate(periodo.fim, agora)
             if periodo.estado == "aberto" and not (desfecho and desfecho.do_edital)
@@ -457,15 +540,12 @@ def selecao(request, edital_id):
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
     # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
-    # está carregada (RC-121); as citadas são lidas de uma vez para todos.
-    citados = conteudos_citados([item["publicacao"] for item in contexto["resultados_divulgados"]])
-    for item in contexto["resultados_divulgados"]:
-        janela = janela_da_publicacao_divulgada(
-            item["publicacao"],
-            conteudo=citados.get(item["publicacao"].ato_id) or {},
-            vigente=versao.content,
-        )
-        item["recurso_ate"] = janela[1] if janela is not None and agora <= janela[1] else None
+    # está carregada (RC-121) — e é a mesma função que a vitrine chama (072, FR-1635).
+    leitura.prazos_de_recurso(
+        {versao.edital_id: contexto["resultados_divulgados"]},
+        {versao.edital_id: versao.content},
+        agora,
+    )
     # **E a forma da seção Vagas: Perfil, etapa, lista** (062, `FR-1148`). A lista acima continua
     # sendo o que decide se o bloco existe; a árvore é a mesma leitura reorganizada, sem consulta.
     contexto["resultados_por_perfil"] = leitura.resultados_por_perfil(
@@ -519,11 +599,64 @@ def selecao(request, edital_id):
     # redirecionamento, e aqui o critério é ainda mais estreito que o de `_destino_seguro` — o que
     # não é consulta reconhecida da vitrine simplesmente não sobrevive (T-007).
     contexto["voltar_para"] = leitura.caminho_de_volta(request.GET, reverse("portal:vitrine"))
+    # **"Voltar aos resultados" só para quem veio de resultados** (072, FR-1618). Quem chegou de uma
+    # campanha, de um aviso por e-mail ou de um compartilhamento nunca viu resultado nenhum.
+    contexto["volta_com_consulta"] = contexto["voltar_para"] != reverse("portal:vitrine")
+    # **O resumo do que a seleção oferece, no cabeçalho** (072, FR-1615, FR-1616). No celular a
+    # primeira tela era só cabeçalho, e a ação estava a quase duas telas (009, L4). O resumo não
+    # escolhe Perfil por ninguém: lista os que existem, com a quantidade dita como no cartão da
+    # vitrine, e cada um leva à sua vaga.
+    contexto["oferta_resumida"], contexto["oferta_a_mais"] = leitura.os_primeiros(
+        [
+            {
+                "id": str(perfil.get("id")),
+                "nome": perfil.get("name", ""),
+                "quantidade": leitura.quantidade_da_oferta(
+                    perfil.get("immediateVacancies") or 0, perfil.get("reserveType")
+                ),
+            }
+            for perfil in versao.content.get("profiles") or []
+            if perfil.get("name")
+        ],
+        5,
+    )
+    # **O Requerimento pedido na inscrição, antes da identificação** (072, FR-1626, D-006). Lido do
+    # conteúdo publicado: é o que o Edital declarou, e não o que a elaboração diz hoje.
+    contexto["requerimento_na_inscricao"] = (versao.content.get("matriculationRequest") or {}).get(
+        "moment"
+    ) == "AT_ENROLLMENT"
+    contexto["volta"] = _volta_para(request, identidade, edital_id, versao.content, contexto)
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
     # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
-    # histórico entregaria isso a quem sentar depois (FR-075a).
-    return marcar_como_privada(resposta) if iniciadas else resposta
+    # histórico entregaria isso a quem sentar depois (FR-075a). **E quando ela traz a mensagem de
+    # volta**, que diz o e-mail de quem entrou (072, research T-003): uma identidade nova não tem
+    # inscrição iniciada, e sem esta condição um cache compartilhado guardaria a página com o
+    # endereço de alguém.
+    return marcar_como_privada(resposta) if iniciadas or contexto["volta"] else resposta
+
+
+def _volta_para(request, identidade, edital_id, conteudo, contexto):
+    """A mensagem de volta da identificação, se ela for desta página — e lida uma vez só.
+
+    Fica na sessão até a pessoa abrir a página do Edital a que ela pertence: lida em outra página,
+    seria consumida sem ter sido vista. O Perfil é conferido contra a versão vigente, e sem
+    identidade na sessão não há o que dizer.
+    """
+    volta = request.session.get(CHAVE_DA_VOLTA)
+    if not volta or identidade is None or volta.get("edital") != str(edital_id):
+        return None
+    request.session.pop(CHAVE_DA_VOLTA, None)
+    perfis = {str(perfil.get("id")) for perfil in conteudo.get("profiles") or []}
+    if volta.get("perfil") not in perfis:
+        return None
+    return {
+        "perfil": volta["perfil"],
+        "email": identidade.email,
+        "dados_guardados": bool(volta.get("dados_guardados")),
+        # Sem inscrição recebida, a mensagem não convida a abrir nada (FR-1623).
+        "recebe": contexto["recebe_inscricoes"] and not contexto["teto_atingido"],
+    }
 
 
 def _convite_da_situacao(identidade, iniciadas, edital_id):
@@ -598,6 +731,10 @@ CHAVE_DA_FINALIDADE = "portal_acesso_finalidade"
 # Para onde voltar depois de informar nome e CPF: quem chegou a caminho de uma vaga não pode ser
 # despejado numa lista vazia e obrigado a procurar tudo de novo.
 CHAVE_DO_DESTINO = "portal_acesso_destino"
+# A volta da identificação para a vaga, lida uma vez pela página do Edital certo (072, research
+# T-003). Não é `CHAVE_DO_AVISO`: aquela é consumida pela tela seguinte, qualquer que seja ela — e
+# foi assim que "Seus dados foram guardados." aparecia na tela da inscrição, fora de contexto.
+CHAVE_DA_VOLTA = "portal_volta_a_vaga"
 # O que dizer sobre o último pedido de código — inclusive "nada foi enviado". Sobrevive ao
 # redirecionamento porque a tela que precisa da notícia é a seguinte, e é lida uma vez só.
 CHAVE_DO_ENVIO = "portal_acesso_envio"
@@ -660,8 +797,9 @@ def acesso(request):
         request.session[CHAVE_DO_DESTINO] = destino
     if identidade_do_candidato.identidade_autenticada(request):
         return redirect(reverse("portal:inscricoes"))
+    vaga = _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))
     if request.method != "POST":
-        return render(request, "portal/acesso_email.html", {"email": "", "erro": ""})
+        return render(request, "portal/acesso_email.html", {"email": "", "erro": "", "vaga": vaga})
 
     informado = request.POST.get("email", "").strip()
     if not endereco_aceitavel(informado):
@@ -669,7 +807,7 @@ def acesso(request):
         return render(
             request,
             "portal/acesso_email.html",
-            {"email": informado, "erro": "Informe um e-mail válido."},
+            {"email": informado, "erro": "Informe um e-mail válido.", "vaga": vaga},
         )
 
     canonico = canonizar(informado)
@@ -727,6 +865,7 @@ def acesso_codigo(request):
         ),
         "aviso": AVISO_NEUTRO,
         "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
+        "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
     }
     if request.method != "POST":
         return render(request, "portal/acesso_codigo.html", contexto)
@@ -833,6 +972,7 @@ def _entrar(request, identidade):
         # acrescentaria uma tela sem acrescentar nada.
         request.session[CHAVE_DO_DESTINO] = destino
         return redirect(reverse("portal:meus-dados"))
+    _guardar_a_volta(request, destino)
     return redirect(_de_volta_a_vaga(destino))
 
 
@@ -868,6 +1008,61 @@ def _de_volta_a_vaga(destino):
         return reverse("portal:inscricoes")
     selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
     return f"{selecao}#vaga-{rota.kwargs['profile_id']}"
+
+
+def _guardar_a_volta(request, destino, *, dados_guardados=False):
+    """Deixa para a página da vaga a mensagem que explica a confirmação (072, FR-1622, FR-1625).
+
+    Só quando o destino é uma vaga: é ali que falta um clique, e é esse clique que a mensagem
+    explica. O clique continua — abrir rascunho é POST desde a 009 —, e o que muda é a tela dizer.
+    """
+    rota = _rota_do_destino(destino)
+    if rota is None or rota.view_name != "portal:inscrever":
+        return
+    request.session[CHAVE_DA_VOLTA] = {
+        "edital": str(rota.kwargs["edital_id"]),
+        "perfil": str(rota.kwargs["profile_id"]),
+        "dados_guardados": dados_guardados,
+    }
+
+
+def _vaga_do_destino(destino):
+    """A vaga a caminho da qual a pessoa se identifica — ou `None` (072, FR-1619, FR-1620).
+
+    **Do destino, e nunca do e-mail.** O destino já passou pelas validações de hoje
+    (`_destino_seguro`, a rota resolvida), e o que se acrescenta é ler o Perfil na versão vigente do
+    Edital: rota que não é de vaga, Edital que não é público e Perfil que não é dele não viram
+    contexto. Como nada aqui depende do endereço informado, a resposta continua a mesma exista ou
+    não identidade para ele (010, FR-020, FR-021).
+    """
+    rota = _rota_do_destino(destino) if destino else None
+    if rota is None or rota.view_name != "portal:inscrever":
+        return None
+    try:
+        versao = selectors.selecao_publica(edital_id=rota.kwargs["edital_id"])
+    except DomainError:
+        return None
+    conteudo = versao.content
+    perfil = next(
+        (
+            perfil
+            for perfil in conteudo.get("profiles") or []
+            if str(perfil.get("id")) == str(rota.kwargs["profile_id"])
+        ),
+        None,
+    )
+    if perfil is None:
+        return None
+    numero = f"{conteudo.get('number', '')}/{conteudo.get('year', '')}"
+    titulo = conteudo.get("title", "")
+    return {
+        "perfil": perfil.get("name", ""),
+        "numero": numero,
+        "titulo": titulo,
+        # O título do Edital costuma começar pelo número; dizê-lo duas vezes era "Edital 01/2026 —
+        # Edital 01/2026 — …" (o mesmo cuidado da FR-1606 no cartão da vitrine).
+        "numero_no_titulo": bool(titulo) and numero in titulo,
+    }
 
 
 def _rota_do_destino(destino):
@@ -937,7 +1132,7 @@ def acesso_reconciliar(request):
             dona or associacao.criar_identidade_com(desafio.email_canonico, informado),
         )
 
-    contexto = {"erro": ""}
+    contexto = {"erro": "", "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))}
     if request.method != "POST":
         return render(request, "portal/acesso_reconciliar.html", contexto)
 
@@ -1145,7 +1340,12 @@ def meus_dados(request):
         "nome": registro.nome,
         "cpf": formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
     }
-    contexto = {"dados": dados, "erros": {}, "cpf_editavel": editavel}
+    contexto = {
+        "dados": dados,
+        "erros": {},
+        "cpf_editavel": editavel,
+        "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
+    }
     if request.method != "POST":
         return render(request, "portal/meus_dados.html", contexto)
 
@@ -1156,8 +1356,12 @@ def meus_dados(request):
         return render(request, "portal/meus_dados.html", contexto)
 
     nucleo_da_identidade.gravar_nucleo(registro, nome=dados["nome"], cpf=dados["cpf"])
-    _avisar(request, "Seus dados foram guardados.")
     destino = request.session.pop(CHAVE_DO_DESTINO, "")
+    if destino and _destino_e_vaga(destino):
+        # A confirmação vai junto da vaga, e não na tela seguinte qualquer que seja (FR-1625).
+        _guardar_a_volta(request, destino, dados_guardados=True)
+        return redirect(_de_volta_a_vaga(destino))
+    _avisar(request, "Seus dados foram guardados.")
     if destino:
         return redirect(_de_volta_a_vaga(destino))
     return redirect(reverse("portal:inscricoes"))

@@ -1,4 +1,4 @@
-{% comment %}
+{% load static %}{% comment %}
 Busca, filtros e ordenação (024, FR-138 a FR-141).
 
 **`GET`, e nada de script.** A consulta **é** o endereço: assim ela é compartilhável, o botão
@@ -34,6 +34,19 @@ nenhuma é prometer resultado onde não há.
            placeholder="cargo, curso ou edital…">
   </p>
 
+  {% comment %}
+  **Os demais controles, recolhidos** (072, FR-1600 a FR-1603, D-003). No celular eles ocupavam metade
+  da primeira tela antes de qualquer oportunidade. Um `<details>` nativo funciona sem script e por
+  teclado, e chega aberto quando um filtro dele está aplicado — fechado, esconderia a explicação da
+  lista que a pessoa vê. A busca fica fora: é o que serve na primeira tela a quem já sabe o que
+  procura.
+
+  Em tela larga a barra cabe numa linha, e o script logo abaixo abre o grupo antes da primeira
+  pintura. Sem script, a tela larga mostra o grupo fechado — funciona do mesmo jeito.
+  {% endcomment %}
+  <details class="mais-filtros"{% if consulta.recolhidos_aplicados %} open{% endif %}>
+  <summary>Mais filtros e ordenação</summary>
+  <div class="campos-recolhidos">
   {% if opcoes.unidades|length > 1 %}
   <p class="campo">
     <label for="unidade">Unidade</label>
@@ -76,6 +89,9 @@ nenhuma é prometer resultado onde não há.
       <option value="recentes" {% if consulta.ordem == "recentes" %}selected{% endif %}>Mais recentes</option>
     </select>
   </p>
+  </div>
+  </details>
+  <script src="{% static 'portal/consulta.js' %}"></script>
 
   <p class="acoes">
     <button type="submit" class="principal">Filtrar</button>

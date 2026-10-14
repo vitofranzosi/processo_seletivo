@@ -7,7 +7,11 @@
 inteiro e refazia o filtro a cada seleção que abrisse — e o botão do navegador é o que sobrava, que
 ninguém sabe se preserva a lista.
 {% endcomment %}
-<p class="voltar"><a href="{{ voltar_para }}">← Voltar aos resultados</a></p>
+{% comment %}
+"Voltar aos resultados" só para quem veio de resultados (072, FR-1618): quem chegou de uma campanha,
+de um aviso ou de um compartilhamento nunca viu resultado nenhum.
+{% endcomment %}
+<p class="voltar"><a href="{{ voltar_para }}">{% if volta_com_consulta %}← Voltar aos resultados{% else %}← Todas as seleções{% endif %}</a></p>
 
 {% comment %}
 **O cabeçalho de identidade** — o que todo portal de concurso põe no alto, e que aqui estava
@@ -30,6 +34,8 @@ que decide se vale continuar lendo, e precisa ser encontrada sem leitura.
   <p class="sub">{% if titulo %}{{ processo_titulo }}{% if processo_codigo %} ({{ processo_codigo }}){% endif %}{% elif processo_codigo %}{{ processo_codigo }}{% endif %}{% if titulo or processo_codigo %} · {% endif %}Edital {{ numero }}/{{ ano }} · Unidade: {{ unidade }}</p>
 
   {% include "portal/_periodo.html" with dias_restantes=dias_restantes %}
+
+  {% include "portal/_resumo_da_oferta.html" %}
 
   {% comment %}
   **Agora e próximo** (047, FR-767, FR-768). Sai da lista de marcos que o pulso da gestão lê, e não
@@ -183,6 +189,13 @@ documentos, que é a ordem das perguntas de quem decide.
     há limite, e não há o que dizer.
     {% endcomment %}
     {% if teto %}<p class="meta">{{ teto }}</p>{% endif %}
+    {% comment %}
+    **O Requerimento pedido na inscrição, antes da primeira vaga** (072, FR-1626, D-006). A pessoa
+    descobria dentro do rascunho que "não consegue enviar a inscrição sem ele" — o mesmo defeito que
+    a L7 corrigiu para os documentos. Pedido só na convocação, não é preciso para se inscrever, e
+    anunciá-lo aqui faria preparar o que talvez nunca seja pedido.
+    {% endcomment %}
+    {% if requerimento_na_inscricao %}<p class="requerimento-na-inscricao">Além dos documentos, a inscrição pede o preenchimento do Requerimento de Matrícula.</p>{% endif %}
     <ul class="perfis">
       {% for perfil in perfis %}
       {% comment %}
@@ -199,6 +212,15 @@ documentos, que é a ordem das perguntas de quem decide.
       {% endcomment %}
       <li class="perfil" id="vaga-{{ perfil.id }}">
         <h3>{{ perfil.nome }}</h3>
+        {% comment %}
+        **A volta da identificação, junto da vaga que a pessoa escolheu** (072, FR-1622 a FR-1625).
+        Ela voltava à página rolada até aqui, sem destaque nem palavra, e precisava tocar o mesmo
+        botão de novo sem saber por quê. O toque continua — abrir rascunho é POST, e é isso que impede
+        um endereço compartilhado de criar inscrição em nome de alguém —; o que muda é a tela dizer.
+        {% endcomment %}
+        {% if volta and volta.perfil == perfil.id %}
+        <p class="volta-da-identificacao" role="status">{% if volta.dados_guardados %}Seus dados foram guardados. {% endif %}Você entrou como <strong>{{ volta.email }}</strong>.{% if volta.recebe %} Para abrir sua inscrição nesta vaga, toque em “Inscrever-se nesta vaga”.{% else %} As inscrições desta vaga não estão recebendo pedidos agora.{% endif %}</p>
+        {% endif %}
 
         <div class="corpo-vaga">
           {% if perfil.descricao %}<p class="meta">{{ perfil.descricao }}</p>{% endif %}

@@ -234,3 +234,57 @@ def test_a_ordem_padrao_nao_polui_o_endereco(client, catalogo):
     assert "?ordem=prazo" not in virgem
     assert "?" not in lista(virgem).split("</ul>")[0].split('href="')[1].split('"')[0]
     assert "ordem=recentes" in escolhida
+
+
+# ---------------------------------------------------------------------------
+# A consulta no celular: busca à vista, o resto recolhido (072, FR-1600 a FR-1603, FR-1610, FR-1613)
+# ---------------------------------------------------------------------------
+
+
+def _grupo_recolhido(corpo):
+    import re
+
+    (abertura,) = re.findall(r'<details class="mais-filtros"[^>]*>', corpo)
+    return abertura
+
+
+def test_sem_consulta_os_filtros_ficam_recolhidos_e_a_busca_fica_fora(client, catalogo):
+    corpo = buscar(client)
+
+    assert " open" not in _grupo_recolhido(corpo)
+    assert corpo.index('id="busca"') < corpo.index('<details class="mais-filtros"'), (
+        "a busca não se recolhe: é o que serve na primeira tela a quem já sabe o que procura"
+    )
+    for campo in ("situacao", "perfil", "ordem"):
+        assert corpo.index('<details class="mais-filtros"') < corpo.index(f'id="{campo}"')
+    assert "Mais filtros e ordenação" in corpo
+
+
+@pytest.mark.parametrize(
+    "parametros",
+    [{"situacao": "aberto"}, {"perfil": "Enfermeiro"}, {"ordem": "recentes"}],
+)
+def test_filtro_recolhido_aplicado_abre_o_grupo_na_chegada(client, catalogo, parametros):
+    """FR-1601 — esconder o filtro em vigor apagaria a explicação da lista que a pessoa vê."""
+    assert " open" in _grupo_recolhido(buscar(client, **parametros))
+
+
+def test_so_a_busca_nao_abre_o_grupo(client, catalogo):
+    assert " open" not in _grupo_recolhido(buscar(client, busca="Enfermeiro"))
+
+
+def test_a_busca_alcanca_o_lugar_e_o_casado_vem_primeiro(client, catalogo):
+    """FR-1610 — o lugar passou a ser visto no cartão, e o que se vê é o que se busca."""
+    corpo = buscar(client, busca="Cariacica")
+
+    assert "<strong>1</strong>" in corpo
+    assert "Campus Cariacica" in lista(corpo)
+
+
+def test_sem_resultado_uma_frase_so_com_caminho_para_as_abertas(client, catalogo):
+    """FR-1613 — a frase dizia o mesmo duas vezes e não sugeria caminho."""
+    corpo = buscar(client, busca="veterinária")
+
+    assert corpo.count("Nenhuma seleção") == 1
+    assert "?situacao=aberto" in corpo
+    assert "Ver todas as seleções" in corpo

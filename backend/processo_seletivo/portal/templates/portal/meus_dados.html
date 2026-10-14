@@ -6,7 +6,14 @@
 Pedidos uma vez na vida da identidade, e reusados em todas as inscrições seguintes. Quem veio da
 `009` nunca vê esta tela: a reconciliação já trouxe nome e CPF.
 {% endcomment %}
-<p class="sub">Pedimos uma única vez. Nas próximas inscrições, não perguntamos de novo.</p>
+{% include "portal/_vaga_do_destino.html" %}
+{% comment %}
+**Para que nome e CPF servem, dito no ponto da coleta** (072, FR-1627). A tela dizia só que pedia uma
+vez. O texto abaixo é a proposta que aguarda validação de quem responde pela proteção de dados
+(`specs/072-jornada-publica-do-portal/validacao-humana.md`); sem ela, a feature não se publica.
+{% endcomment %}
+<p class="sub">Seu nome completo e seu CPF identificam você nas inscrições e nos resultados. Pedimos
+  uma única vez: nas próximas inscrições, não perguntamos de novo.</p>
 
 <form method="post" action="{% url 'portal:meus-dados' %}" novalidate>
   {% csrf_token %}
