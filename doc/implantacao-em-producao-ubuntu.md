@@ -128,7 +128,7 @@ Tudo nesta seção é **constatado**.
 | Entrada WSGI | `config.wsgi` usa `production` por padrão; o **`manage.py` usa `development`** | `config/wsgi.py:14`, `manage.py:7` |
 | Servidor de aplicação | **Nenhum** entre as dependências. O Dockerfile roda `runserver` e se declara só de desenvolvimento | `pyproject.toml:9-18`, `Dockerfile:8-10,59` |
 | Workers, filas, agendador | **Não existem.** Prazos, fases do Cronograma e vigência de Retificação são calculados na leitura | ausência de celery, rq, huey, dramatiq e apscheduler; `inscricoes/domain/periodo.py`, `publicacoes/application/selectors.py` |
-| E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:172-178`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
+| E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:186-197`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
 | Cache | Nenhum `CACHES`. O limite de pedidos de código é contado **no banco** | `identidade/application/desafio.py:14-16` |
 | Sessões | Backend de banco padrão, cookie único `sessionid`, validade de 2 semanas. Nada limpa sessões expiradas | ausência de `SESSION_ENGINE` e `SESSION_COOKIE_AGE`; `production.py:242-247` |
 | Documentos do candidato | Disco, em `ARQUIVOS_CANDIDATOS_RAIZ`, como `inscricoes/<uuid>/<uuid>.pdf`. O arquivo nunca tem URL, e todo download passa pela aplicação | `inscricoes/storage.py:27-72`, `portal/arquivos.py` |
@@ -862,30 +862,30 @@ nomeia a variável.
 | Variável | Classe | Valor em produção | Evidência e observação |
 |---|---|---|---|
 | `DJANGO_SETTINGS_MODULE` | obrigatória, comum | `config.settings.production` | O `manage.py` cai em `development` sem ela (`manage.py:7`); o `wsgi.py` já usa `production` |
-| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:70-78`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
-| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:80-85`) |
-| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:257-266` |
-| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:248-256`) |
+| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:73-81`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
+| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:83-88`) |
+| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:352-361` |
+| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:343-351`) |
 | `DB_RUNTIME_USER` | comum | `processo_seletivo_runtime` | — |
-| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:230-234`) |
+| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:249-253`) |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | segredo | `processo_seletivo_owner`, `<GERAR_SEGREDO_ALEATORIO>` | **Só** em `migracao.env`: a aplicação em serviço não enxerga |
-| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:124-132`) |
-| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:143-157`) |
-| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | comum | `<SMTP_HOST>`, `587`, `true` | Só STARTTLS: a porta 465 (SSL implícito) **não funciona** (`base.py:172-178`) |
-| `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | — |
-| `EMAIL_HOST_PASSWORD` | segredo | do cofre | — |
-| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:158-163`) |
-| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:189-196`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:175-183`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
-| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:199-228`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
-| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:237,250-255` |
+| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:127-135`) |
+| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:146-160`) |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | comum | `<SMTP_HOST>`, `587`, `true` | Só STARTTLS: a porta 465 (SSL implícito) **não funciona** (`base.py:186-197`) |
+| `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5 |
+| `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5 |
+| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:161-166`) |
+| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:192-199`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:178-186`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
+| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:218-247`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
+| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:256,269-274` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
 | `DJANGO_SECURE_HSTS_PRELOAD` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
-| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:258-259`) |
+| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:277-278`) |
 | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | opcional | padrão, 10 MiB | Se mudar, ajuste o `client_max_body_size` de `/selecoes/` (§14) |
 | `EDITAL_ANEXOS_LIMITE_BYTES` | opcional | padrão, 5 MiB | Se mudar, ajuste o de `/gestao/` |
-| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:130-131` |
+| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:144-145` |
 
 **Proibidas em produção** — ausentes, ou `false`:
 
@@ -894,8 +894,8 @@ nomeia a variável.
 - `DB_USER` e `DB_PASSWORD`, fallback que mascararia um `DB_RUNTIME_*` ausente;
 - `TEST_DB_ENGINE`.
 
-O `DJANGO_DEBUG` do `.env.example` **não é lido** por código nenhum: `production` fixa
-`DEBUG = False` (`production.py:56`). As `POSTGRES_*` só servem ao `compose.yaml`.
+Não existe `DJANGO_DEBUG`: código nenhum o lê, e `production` fixa `DEBUG = False`
+(`production.py:59`). O `.env.example` o trazia até 14/10/2026 (M-8). As `POSTGRES_*` só servem ao `compose.yaml`.
 
 ### 10.2 Onde ficam e como se geram
 
@@ -1097,8 +1097,9 @@ bind = ["127.0.0.1:8000"]
 # durante uma Retificação com anexos, que são lidos inteiros em memória. Confira a RAM antes de subir.
 workers = 5
 worker_class = "sync"
-# 120 s porque o SMTP não tem timeout na aplicação (gap I-4) e há atos síncronos pesados, como a
-# consolidação e a exportação. Um worker preso além disso é morto, e o pedido recebe 502.
+# 120 s porque há atos síncronos pesados, como a consolidação e a exportação, e o e-mail sai dentro
+# da requisição — limitado a EMAIL_TIMEOUT (20 s) desde a 066. Um worker preso além disso é morto, e
+# o pedido recebe 502.
 timeout = 120
 graceful_timeout = 30
 keepalive = 2
@@ -1577,6 +1578,18 @@ conexão recusada, e **nenhuma** ocorrência do e-mail de teste.
 - **Limite da conta para os avisos**: obtenha do setor de correio quantas mensagens por minuto e por
   dia a conta aceita, e ajuste `AVISOS_LIMITE_POR_MINUTO` (padrão 60) **antes** de ligar os avisos.
 
+### 16.3 Teste
+
+```bash
+# Conectividade e TLS até o servidor
+openssl s_client -starttls smtp -connect <SMTP_HOST>:587 -servername <SMTP_HOST> </dev/null 2>/dev/null | grep -E 'Verify return|Protocol'
+# Envio real, com as settings de produção
+sudo ps-manage sendtestemail <CAIXA_DE_TESTE_DA_EQUIPE>
+journalctl -u processoseletivo --since "10 min ago" | grep -i 'Falha ao enviar' || echo "sem falha registrada"
+```
+
+**Sucesso** é a mensagem chegar na caixa de entrada, e não no spam, com o remetente certo.
+
 ### 16.4 Avisos aos candidatos (066)
 
 **Desligados em produção até duas validações**: a institucional de LGPD, com o encarregado de dados,
@@ -1600,17 +1613,27 @@ A unidade systemd está na §21.4. **Um timer desabilitado não alerta nada**: o
 mostra "o despacho pode não estar processando", e a conferência de `systemctl list-timers` da §21.4
 é a que pega o caso antes de alguém olhar a tela.
 
-### 16.3 Teste
+### 16.5 Trocar o servidor de correio
 
-```bash
-# Conectividade e TLS até o servidor
-openssl s_client -starttls smtp -connect <SMTP_HOST>:587 -servername <SMTP_HOST> </dev/null 2>/dev/null | grep -E 'Verify return|Protocol'
-# Envio real, com as settings de produção
-sudo ps-manage sendtestemail <CAIXA_DE_TESTE_DA_EQUIPE>
-journalctl -u processoseletivo --since "10 min ago" | grep -i 'Falha ao enviar' || echo "sem falha registrada"
-```
+Quando o setor de correio trocar o servidor ou a conta. Os valores antigos ficam no cofre (§10.2) até
+o teste passar: são eles o caminho de volta.
 
-**Sucesso** é a mensagem chegar na caixa de entrada, e não no spam, com o remetente certo.
+1. **Peça ao setor de correio** o servidor e a porta — e se ele aceita STARTTLS na 587, porque a 465
+   não funciona (I-4) —, a conta, a senha e o remetente autorizado, o limite de envio por minuto e
+   por dia, e se SPF, DKIM e DMARC já cobrem o servidor novo.
+2. **Edite o arquivo:** `sudo -e /etc/processoseletivo/app.env` — `EMAIL_*`, `DEFAULT_FROM_EMAIL` e,
+   se o limite da conta mudou, `AVISOS_LIMITE_POR_MINUTO` (§16.2).
+3. **Reinicie o web:** `sudo systemctl restart processoseletivo`.
+4. **Teste** como na §16.3, com o servidor novo, e só então ponha a senha nova no cofre.
+
+**O timer `ps-avisos` relê o `app.env` a cada minuto, e o web não**: o despacho roda pelo
+`ps-manage`, que carrega o arquivo a cada execução (§8.3), e o web o leu ao subir. Entre os passos 2
+e 3, os avisos já saem pelo servidor novo, e o código de acesso ainda pelo antigo — por isso o
+passo 3 vem logo depois do 2. Pela mesma razão, o `sendtestemail` do passo 4 prova o arquivo, e não
+o web.
+
+`production.py` não confere `EMAIL_HOST`: vazio, o serviço sobe e o primeiro envio falha. É o passo
+4 que pega o erro. A rotação só da senha é o mesmo procedimento, do passo 2 em diante.
 
 ---
 
@@ -2454,6 +2477,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 | Pacotes do SO | `apt list --upgradable`; `pro security-status` | sem atualização de segurança pendente há mais de uma semana |
 | Backup | `restic snapshots`; o `restauracoes.log` | snapshot de hoje; restauração testada há menos de 3 meses |
 | Dado pessoal em log | `sudo grep -cE '[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}' /var/log/nginx/processoseletivo.access.log` | 0 (CPF não trafega em URL) |
+| Porta do correio (I-4) | Pergunte ao setor de correio: **o servidor aceita STARTTLS na 587?** Confirme com o `openssl s_client` da §16.3 | sim. Se só aceitar a 465, o correio não funciona — o código não tem `EMAIL_USE_SSL` (I-4) —, e o candidato fica sem como entrar |
 | Avisos aos candidatos (066) | `sudo grep AVISOS_AOS_CANDIDATOS /etc/processoseletivo/*.env` | `false`, ou ausente, até a validação de LGPD com o encarregado de dados e a do limite da conta de correio (§16.4) |
 
 ### 25.2 LGPD — implicações operacionais
@@ -2532,7 +2556,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **I-4 — Não há `EMAIL_TIMEOUT` nem `EMAIL_USE_SSL`.** *O timeout foi resolvido pela 066
 (`EMAIL_TIMEOUT`, padrão 20 s); falta o `EMAIL_USE_SSL`.*
 
-- Evidência: `base.py:172-178`.
+- Evidência: `base.py:186-197`.
 - Efeito: um SMTP lento prendia o worker até 120 s, e a porta 465 continua inutilizável.
 - Correção: o `EMAIL_TIMEOUT` já está no `base.py`; falta o `EMAIL_USE_SSL`.
 
@@ -2588,7 +2612,8 @@ acesso, sem alternativa. Ação: SMTP institucional com redundância e monitorad
 - **M-6 — Não há antivírus nos uploads.** Mitigado por: só PDF por *magic bytes*, servido como
   `application/pdf`, nunca executado no servidor.
 - **M-7 — Métricas em memória, por worker.** Zeram no restart.
-- **M-8 — `DJANGO_DEBUG` no `.env.example` não é lido por código nenhum.** Engana quem lê.
+- **M-8 — `DJANGO_DEBUG` no `.env.example` não é lido por código nenhum.** *Resolvido em 14/10/2026:
+  a linha saiu do `.env.example`.*
 - **M-9 — Não há tags de release no repositório.** Implanta-se por SHA.
 - **M-10 — Não há ferramenta de anonimização** para gerar base de homologação a partir de
   produção.
