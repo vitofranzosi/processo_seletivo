@@ -36,6 +36,7 @@ from processo_seletivo.duvidas.application.limites import (
     recusa_antes_da_chamada,
     vaga_do_assistente,
 )
+from processo_seletivo.duvidas.domain import catalogo, leitura, respostas, sugestoes
 from processo_seletivo.duvidas.domain import conferencia as conferencias
 from processo_seletivo.duvidas.domain import fontes as derivacao
 from processo_seletivo.duvidas.domain import mensagens as montagem
@@ -50,6 +51,7 @@ from processo_seletivo.duvidas.domain.estruturas_do_piloto import (
     PERGUNTA_RECUSADA,
     POSSIVEL_CORTE,
     RESPONDIDA_E_CONFERIDA,
+    RESPOSTA_DA_SUGESTAO,
     SEM_TOKENIZER,
 )
 from processo_seletivo.duvidas.domain.mascara import mascarar, mascarar_resposta, tem_padrao_pessoal
@@ -104,8 +106,11 @@ def perguntar(*, edital_id, conversa, pergunta, instante, origem, correlacao="")
     )
     # O excesso, na ordem do `FR-1481`: sai o turno mais antigo, inteiro, até caber; nenhuma fonte é
     # cortada. Sem histórico e ainda sem caber, a pergunta não sai (`D-003`).
+    da_conversa = escolha_da_conversa(conversa, edital_id, lido.versao.id)
     while True:
-        montadas = montagem.montar(lido, fontes, [(p, r) for _, p, r in turnos], texto)
+        montadas = montagem.montar(
+            lido, fontes, [(p, r) for _, p, r in turnos], texto, da_conversa=da_conversa
+        )
         try:
             medidos = tokens.contar(montadas.mensagens)
         except tokens.SemTokenizer:
@@ -173,6 +178,74 @@ def perguntar(*, edital_id, conversa, pergunta, instante, origem, correlacao="")
     return _gravar(troca, estado, inicio, correlacao, **medida)
 
 
+def responder_sugestao(
+    *, edital_id, conversa, codigo, perfil, instante, origem, correlacao=""
+) -> TrocaDoPiloto:
+    """A pergunta sugerida, respondida pela `070`, gravada como turno da conversa (Fase C).
+
+    **Sem o modelo, e sem conferência**: a resposta sai dos dados, e é a mesma que a tela da `070`
+    mostra. **Com o tipo dela**: "depende da leitura" e o detalhe em anexo continuam ditos — ser
+    determinística não quer dizer que a pergunta foi respondida por inteiro.
+
+    O que entra nos trechos é o que o histórico vai repetir ao modelo: a explicação, os avisos e os
+    dados. O texto do Edital fica nas fontes citadas, e não nos trechos — ele já vai inteiro nas
+    fontes da chamada seguinte.
+
+    Levanta `SemVersaoVigente` como `perguntar`, e `catalogo.ParametroRecusado` quando a sugestão
+    não vale para este Edital ou para o Perfil escolhido.
+    """
+    inicio = time.monotonic()
+    lido = ler_contexto(edital_id=edital_id, instante=instante)
+    texto, resposta = resposta_da_sugestao(lido, codigo, perfil)
+    if catalogo.PERFIL not in catalogo.POR_CODIGO[codigo].parametros:
+        perfil = None
+    troca = TrocaDoPiloto(
+        conversa=conversa,
+        edital_id=edital_id,
+        instante=instante,
+        origem=origem,
+        pergunta=texto,
+        servico=settings.ASSISTENTE_SERVICO,
+        modelo_configurado=settings.ASSISTENTE_MODELO,
+        versao_das_instrucoes=montagem.VERSAO_DAS_INSTRUCOES,
+        versao=lido.versao.id,
+        versao_curta=lido.versao.identificador_curto,
+    )
+    # O limite da conversa vale também aqui: cada sugestão é um turno a mais no histórico.
+    recusa = recusa_antes_da_chamada(conversa=conversa)
+    if recusa is not None:
+        return _gravar(troca, recusa, inicio, correlacao)
+    preencher_com_a_resposta(troca, lido, codigo, resposta, perfil)
+    return _gravar(troca, RESPOSTA_DA_SUGESTAO, inicio, correlacao)
+
+
+def resposta_da_sugestao(lido, codigo, perfil):
+    """`(pergunta em palavras, resposta da 070)`, ou `catalogo.ParametroRecusado`.
+
+    A opção vai junto da pergunta, pelo nome que o candidato reconhece: é por ela que o modelo sabe,
+    na continuação, de qual opção se falava.
+    """
+    pergunta = catalogo.POR_CODIGO.get(codigo)
+    if pergunta is None or pergunta not in catalogo.oferecidas(lido.conteudo):
+        raise catalogo.ParametroRecusado("Esta pergunta não vale para este Edital.")
+    if catalogo.PERFIL not in pergunta.parametros:
+        perfil = None
+    modalidade = catalogo.SEM_MODALIDADE if catalogo.MODALIDADE in pergunta.parametros else None
+    resposta = respostas.responder(lido, codigo, perfil=perfil, modalidade=modalidade)
+    if not perfil:
+        return sugestoes.texto_no_painel(codigo), resposta
+    perfis = lido.conteudo.get("profiles") or []
+    opcao = sugestoes.nome_da_opcao(leitura.perfil_por_codigo(lido.conteudo, perfil), perfis)
+    return f"{sugestoes.texto_no_painel(codigo)} — {opcao}", resposta
+
+
+def preencher_com_a_resposta(troca, lido, codigo, resposta, perfil):
+    """O tipo, os trechos compostos para o painel e as fontes da `070` (`domain/sugestoes.py`)."""
+    troca.tipo = resposta.tipo
+    troca.trechos = sugestoes.compor(lido, codigo, resposta, perfil)
+    troca.fontes_citadas = [referencia.como_dict() for referencia in resposta.referencias]
+
+
 def avisos_da_aplicacao(fontes, citadas):
     """O que a aplicação acrescenta à resposta, sem o modelo (`FR-1490`).
 
@@ -194,20 +267,55 @@ def historico_permitido(conversa, edital_id, versao):
     **Lidos da tabela, e nunca do navegador** (`FR-1494`): um turno forjado num formulário não
     existe aqui. **Só da mesma versão vigente**: mudou a versão, o que se disse sobre a anterior não
     volta ao modelo — é o caminho pelo qual uma regra superada reapareceria sem ninguém perceber
-    (`D-006`). **Só os conferidos**: uma resposta recusada não foi mostrada, e não pode virar a
-    premissa da seguinte. A resposta vai como o texto dos trechos, sem as fontes: o histórico é
-    conversa, e não fonte; a conferência só aceita as fontes da chamada.
+    (`D-006`). **Só os conferidos**, e as sugestões respondidas pela `070`: uma resposta recusada
+    não foi mostrada, e não pode virar a premissa da seguinte; a da sugestão foi mostrada, e saiu
+    dos dados. A resposta vai como o texto dos trechos, sem as fontes: o histórico é conversa, e
+    não fonte; a conferência só aceita as fontes da chamada.
     """
     turnos = []
     for troca in TrocaDoPiloto.objects.filter(
         conversa=conversa,
         edital_id=edital_id,
         versao=versao,
-        estado=RESPONDIDA_E_CONFERIDA,
+        estado__in=(RESPONDIDA_E_CONFERIDA, RESPOSTA_DA_SUGESTAO),
     ).order_by("ordem"):
-        resposta = " ".join(trecho["texto"] for trecho in troca.trechos or [])
-        turnos.append((troca.ordem, troca.pergunta, resposta))
+        turnos.append((troca.ordem, troca.pergunta, texto_da_resposta(troca.trechos or [])))
     return turnos
+
+
+def escolha_da_conversa(conversa, edital_id, versao) -> str:
+    """A última opção escolhida por sugestão nesta conversa, na mesma versão, ou `""`.
+
+    Dita ao modelo numa mensagem própria (`mensagens.montar`): no histórico ela só aparecia
+    implícita, no nome do polo, e sem dizer que a lista de concorrência não foi informada.
+    """
+    trocas = TrocaDoPiloto.objects.filter(
+        conversa=conversa, edital_id=edital_id, versao=versao, estado=RESPOSTA_DA_SUGESTAO
+    ).order_by("-ordem")
+    for troca in trocas:
+        for trecho in troca.trechos or []:
+            if trecho["natureza"] == "contexto":
+                return trecho["texto"]
+    return ""
+
+
+def texto_da_resposta(trechos):
+    """A resposta como o histórico a repete: os trechos em sequência, e a lista como lista.
+
+    O trecho `contexto` fica de fora: ele vai ao modelo pela mensagem do sistema, e não como algo
+    que o assistente tenha dito.
+    """
+    trechos = [trecho for trecho in trechos if trecho["natureza"] != "contexto"]
+    if not any(trecho["natureza"] == "item" for trecho in trechos):
+        return " ".join(trecho["texto"] for trecho in trechos)
+    linhas = []
+    for trecho in trechos:
+        if trecho["natureza"] == "item":
+            detalhe = f" ({trecho['detalhe']})" if trecho.get("detalhe") else ""
+            linhas.append(f"- {trecho['texto']}{detalhe}")
+        else:
+            linhas.append(trecho["texto"])
+    return "\n".join(linhas)
 
 
 def _chave_da_conversa(conversa) -> int:
