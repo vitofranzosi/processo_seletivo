@@ -10,11 +10,11 @@ divergir do código.
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirmar que a branch contém a spec (#282) e o §16.5 (#281), e rodar `uv sync --extra dev` em `backend/`
+- [x] T001 Confirmar que a branch contém a spec (#282) e o §16.5 (#281), e rodar `uv sync --extra dev` em `backend/`
 
 ## Phase 2: Foundational
 
-- [ ] T002 Acrescentar `EMAIL_HOST` ao `AMBIENTE_MINIMO` de `backend/tests/test_configuracao_producao.py`, antes da regra nova, para que os casos de subprocesso e de carga continuem descrevendo um ambiente que sobe (risco do plano)
+- [x] T002 Acrescentar `EMAIL_HOST` ao `AMBIENTE_MINIMO` de `backend/tests/test_configuracao_producao.py`, antes da regra nova, para que os casos de subprocesso e de carga continuem descrevendo um ambiente que sobe (risco do plano)
 
 **Checkpoint**: `test_configuracao_producao.py` verde sem mudança de código.
 
@@ -25,17 +25,17 @@ divergir do código.
 **Independent Test**: os casos da regra nova e o teste do guia contra servidores SMTP falsos locais;
 em homologação, o quickstart B.
 
-- [ ] T003 [US1] Escrever em `backend/tests/test_configuracao_producao.py` os casos `EMAIL_HOST` ausente e só com espaços, com o backend SMTP, recusando com `EMAIL_HOST` (FR-1660)
-- [ ] T004 [US1] Acrescentar a recusa em `backend/config/settings/production.py`, só quando o backend for o SMTP, depois da recusa do remetente (R-006)
-- [ ] T005 [US1] Escrever a §10.4 em `doc/implantacao-em-producao-ubuntu.md`. Ela traz:
+- [x] T003 [US1] Escrever em `backend/tests/test_configuracao_producao.py` os casos `EMAIL_HOST` ausente e só com espaços, com o backend SMTP, recusando com `EMAIL_HOST` (FR-1660)
+- [x] T004 [US1] Acrescentar a recusa em `backend/config/settings/production.py`, só quando o backend for o SMTP, depois da recusa do remetente (R-006)
+- [x] T005 [US1] Escrever a §10.4 em `doc/implantacao-em-producao-ubuntu.md`. Ela traz:
   - os passos 1 a 4, 7 e 8 do contrato;
   - o bloco `app.env` do correio;
   - o exemplo de leitura, com a ressalva do processo de diagnóstico;
   - o exemplo de conexão sem envio;
   - os dois instantes do reinício;
   - as linhas de correio da tabela, sem concluir por causa nenhuma (FR-1650 a FR-1657)
-- [ ] T006 [US1] Fazer o §16.3, o §16.5, o §25 e o sumário de `doc/implantacao-em-producao-ubuntu.md` remeterem à §10.4. O §16.5 fica com o que só ele tem (R-001)
-- [ ] T007 [P] [US1] Criar `backend/tests/test_guia_configurar_verificar.py`, que prende a §10.4 a partir do próprio guia:
+- [x] T006 [US1] Fazer o §16.3, o §16.5, o §25 e o sumário de `doc/implantacao-em-producao-ubuntu.md` remeterem à §10.4. O §16.5 fica com o que só ele tem (R-001)
+- [x] T007 [P] [US1] Criar `backend/tests/test_guia_configurar_verificar.py`, que prende a §10.4 a partir do próprio guia:
   - variáveis dos blocos lidas pelas settings;
   - a leitura com segredos plantados não os imprime;
   - a conexão contra servidores SMTP falsos dá a última linha da tabela e não envia;
@@ -51,21 +51,21 @@ inferência efetiva.
 **Independent Test**: a mensagem do serviço desconhecido; o teste do guia contra um Ollama falso
 local.
 
-- [ ] T008 [US2] Escrever em `backend/tests/unit/duvidas/test_verificar_servico.py` os casos `Ollama` (desconhecido, com o valor e os aceitos) e vazio (nenhum serviço configurado), os dois saindo com 1 (FR-1661)
-- [ ] T009 [US2] Separar as duas mensagens em `backend/processo_seletivo/duvidas/management/commands/verificar_servico_de_inferencia.py` (R-007)
-- [ ] T010 [US2] Completar a §10.4 em `doc/implantacao-em-producao-ubuntu.md` com:
+- [x] T008 [US2] Escrever em `backend/tests/unit/duvidas/test_verificar_servico.py` os casos `Ollama` (desconhecido, com o valor e os aceitos) e vazio (nenhum serviço configurado), os dois saindo com 1 (FR-1661)
+- [x] T009 [US2] Separar as duas mensagens em `backend/processo_seletivo/duvidas/management/commands/verificar_servico_de_inferencia.py` (R-007)
+- [x] T010 [US2] Completar a §10.4 em `doc/implantacao-em-producao-ubuntu.md` com:
   - o bloco `app.env` do assistente;
   - os passos 5, 6 e 9, com a ressalva de que a versão sozinha não prova o modelo;
   - as linhas do Ollama na tabela
-- [ ] T011 [US2] Estender `backend/tests/test_guia_configurar_verificar.py` com um Ollama falso local: o passo 5 imprime a versão, o 6 diz "instalado" ou "NÃO instalado", e nenhum dos dois chama `/api/chat`
+- [x] T011 [US2] Estender `backend/tests/test_guia_configurar_verificar.py` com um Ollama falso local: o passo 5 imprime a versão, o 6 diz "instalado" ou "NÃO instalado", e nenhum dos dois chama `/api/chat`
 
 **Checkpoint**: US1 e US2 completas.
 
 ## Phase 5: Polish
 
-- [ ] T012 [P] Atualizar `README.md`, § Produção: a recusa nova na lista, e um parágrafo que aponta a §10.4 para produção e o roteiro de troca do assistente para desenvolvimento, dizendo o que difere entre os dois (FR-1658)
-- [ ] T013 [P] Escrever `specs/073-configurar-e-verificar-implantacao/rastreabilidade.md`, com cada FR e SC e onde é provado
-- [ ] T014 Rodar `make lint check test-pg DB_NAME=test_073` em `backend/` e registrar o resultado em `specs/073-configurar-e-verificar-implantacao/verificacao.md`
+- [x] T012 [P] Atualizar `README.md`, § Produção: a recusa nova na lista, e um parágrafo que aponta a §10.4 para produção e o roteiro de troca do assistente para desenvolvimento, dizendo o que difere entre os dois (FR-1658)
+- [x] T013 [P] Escrever `specs/073-configurar-e-verificar-implantacao/rastreabilidade.md`, com cada FR e SC e onde é provado
+- [x] T014 Rodar `make lint check test-pg DB_NAME=test_073` em `backend/` e registrar o resultado em `specs/073-configurar-e-verificar-implantacao/verificacao.md`
 
 ## Dependencies & Execution Order
 

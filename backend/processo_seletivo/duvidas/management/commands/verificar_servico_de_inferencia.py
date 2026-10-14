@@ -60,7 +60,8 @@ class Command(BaseCommand):
             # mandava procurar a variável ausente, e não o valor errado (073, `FR-1661`).
             self.divergencias.append(
                 f"serviço desconhecido: {servico!r} (ASSISTENTE_SERVICO); os aceitos são "
-                f"{inferencia.OLLAMA} e {inferencia.OPENROUTER}, e em produção só {inferencia.OLLAMA}"
+                f"{inferencia.OLLAMA} e {inferencia.OPENROUTER}, "
+                f"e em produção só {inferencia.OLLAMA}"
             )
         else:
             self.divergencias.append("nenhum serviço configurado (ASSISTENTE_SERVICO)")
