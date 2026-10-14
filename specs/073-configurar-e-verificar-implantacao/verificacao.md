@@ -17,7 +17,11 @@ referência, que tinha 11263:
 - 21 de `test_guia_configurar_verificar.py`;
 - 4 de `test_verificar_servico.py`;
 - 2 da recusa nova em `test_configuracao_producao.py`;
-- os demais do #280, que entrou na `main` no meio desta feature.
+- os outros 4 já estavam na base desta feature. Entre a medição de referência (`55889d11`) e a base
+  (`6fac8189`), a `main` ganhou três funções de teste.
+
+A suíte rodou **antes** do merge do #280 na branch. O #280 não toca nenhum arquivo desta feature, e o
+CI do PR roda sobre a `main` de agora.
 
 ## O que os testes exercitaram
 
