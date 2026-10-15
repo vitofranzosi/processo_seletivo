@@ -303,7 +303,9 @@ arquivo as repetia com números de semanas antes, e o README, o `Makefile` e as 
 agentes chegaram a dizer três coisas diferentes ao mesmo tempo.
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
-sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste:
+sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste. Isso vale
+com `DB_RUNTIME_USER` fora do ambiente: quando ele está definido, as settings o preferem a `DB_USER`
+(`config/settings/base.py`), e é ele que precisa apontar para o superusuário — é o que o `make` faz:
 
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
@@ -371,7 +373,22 @@ Requerimento de Matrícula e a condução do Processo publicado são incrementos
 abaixo. O estado de cada um está na pasta do incremento, e não aqui — este parágrafo descreve a
 `001`. Auditorias, achados e decisões que atravessam incrementos ficam em [`doc/`](doc/).
 
+**O sistema não está em produção.** A gestão não tem autenticação institucional — sem o seletor de
+identidade de desenvolvimento, `/gestao/` responde 503 — e ainda não existe a política de retenção que
+a seção [Antes de receber dado pessoal real](#antes-de-receber-dado-pessoal-real) exige. O retrato
+mais recente do que está pronto, do que falta e do que depende de decisão é a
+[auditoria de consolidação de 15/10/2026](doc/auditoria-de-consolidacao-2026-10-15.md), com a matriz
+de pendências, o roadmap proposto e as decisões pendentes.
+
 ## Documentação
+
+**Para quem usa o sistema:** a [Visão do Sistema](docs/visao-sistema/index.html) é o material de uso
+vigente — tutorial, papéis, o que se configura, perguntas frequentes —, revisado por ciclos. O manual
+de operação por papel está planejado em [`doc/manual/`](doc/manual/00-arquitetura-do-manual.md) e
+ainda não foi produzido. A implantação está em
+[`doc/implantacao-em-producao-ubuntu.md`](doc/implantacao-em-producao-ubuntu.md).
+
+**Para quem desenvolve:**
 
 O projeto usa [GitHub Spec Kit](https://github.com/github/spec-kit). Cada incremento tem sua pasta
 em `specs/`, com os mesmos artefatos:
