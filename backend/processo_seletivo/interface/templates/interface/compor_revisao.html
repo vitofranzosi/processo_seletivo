@@ -27,9 +27,21 @@ cartão.
 </section>
 
 <section aria-labelledby="conferencia-titulo">
+  {% comment %}
+  **Publicado, a conferência é a do conteúdo vigente, e a tela diz isso** (ED-07 da auditoria de
+  15/10). O título da submissão sobre o conteúdo vigente seria a mesma afirmação errada que a tela
+  fazia antes, só que ao contrário: diria rascunho onde há norma em vigor.
+  {% endcomment %}
+  {% if versao_vigente %}
+  <h2 id="conferencia-titulo">O conteúdo vigente</h2>
+  <p class="ajuda">Este Edital já foi publicado. O que segue é o conteúdo que vigora desde
+    {{ versao_vigente.valid_from|date:"d/m/Y" }} às {{ versao_vigente.valid_from|date:"H:i" }}: o publicado, com as Retificações já em
+    vigor. Retificação de vigência futura só entra aqui na data dela.</p>
+  {% else %}
   <h2 id="conferencia-titulo">O que será congelado na submissão</h2>
   <p class="ajuda">Este é o conteúdo que a submissão registra como versão candidata à Publicação.
     É lido do próprio conteúdo normativo — o mesmo que gera o documento.</p>
+  {% endif %}
 
   {% comment %}
   O `id` é o índice do bloco, e não a etapa: três blocos voltam para a etapa Inscrição — o teto, o

@@ -151,7 +151,10 @@ def test_o_aviso_da_redacao_padrao_nao_existe_mais():
 
 
 def test_os_codigos_novos_nao_coincidem_com_impeditivo_nenhum():
-    """`advertencias_do_ato` descarta aviso cujo código coincida com o de um impeditivo."""
+    """`advertencias_do_ato` descarta aviso cujo código coincida com o de um impeditivo.
+
+    No mesmo caminho, desde a issue #117; a exigência daqui, mais larga, continua valendo.
+    """
     conteudo = _conteudo(inscricao="Conforme o ANEXO IV.")
     achados = validate_for_publication(conteudo)
     impeditivos = {achado.code for achado in blocking_findings(achados)}

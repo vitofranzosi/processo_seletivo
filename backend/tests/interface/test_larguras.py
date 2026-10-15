@@ -313,3 +313,50 @@ def test_a_marca_de_atencao_nao_alcanca_a_marca_do_cabecalho(da_visao_geral):
     soltas = re.findall(r"(?:^|[\n,}])\.marca(?=[{.,:\s])", da_visao_geral)
 
     assert not soltas, soltas
+
+
+# ---- 375 px: as duas telas do percurso de 15/10 ------------------------------------------------
+#
+# A auditoria de consolidação de 15/10 mediu, por `scrollWidth` numa moldura de 375 px, duas telas
+# que nenhum guardião alcançava: a verificação pública do sorteio, a 673 px (PV-03), e o detalhe do
+# Edital na gestão, a 440 px (PV-04). Depois da correção as duas fecham em 375. A medida mora no
+# PR; o que fica aqui é o que a produz — a classe no elemento que transbordava e a regra na folha —,
+# como no resto deste arquivo.
+
+PORTAL = TEMPLATES / "portal" / "templates" / "portal"
+GESTAO = TEMPLATES / "interface" / "templates" / "interface"
+
+
+def _corpo_da_regra(seletor, css):
+    achado = re.search(rf"(?:^|[}}\n]){re.escape(seletor)}\{{([^}}]*)\}}", css)
+    return achado.group(1) if achado else ""
+
+
+def test_a_linha_de_comando_do_verificador_quebra_a_375_px(do_portal):
+    """PV-03: o `<code>` com o resumo de 64 caracteres sem espaço não pode ditar a largura.
+
+    Os resumos da seção Integridade já quebravam pela regra de `.resumos dd`; a linha de comando,
+    numa lista comum, não tinha regra nenhuma. Todo `<code>` fora daquela lista leva `.comando`.
+    """
+    fonte = (PORTAL / "verificacao_de_sorteio.html").read_text(encoding="utf-8")
+    fora_dos_resumos = fonte.split('<dl class="resumos">', 1)[0]
+
+    codigos = re.findall(r"<code[^>]*>", fora_dos_resumos)
+    assert codigos, "a linha de comando do verificador sumiu da tela"
+    assert all('class="comando"' in codigo for codigo in codigos), codigos
+    assert "overflow-wrap:anywhere" in _corpo_da_regra(".comando", do_portal)
+
+
+def test_a_acao_de_rotulo_longo_do_detalhe_quebra_a_375_px(da_gestao):
+    """PV-04: o rótulo da validação do assistente (070) é fixado pelo contrato, e por isso quebra.
+
+    A `.acao` é `nowrap` de propósito — na linha de tabela, partir o rótulo desalinha a linha —, e a
+    exceção é declarada por classe, e não tirando o `nowrap` de todas.
+    """
+    fonte = (GESTAO / "detalhe.html").read_text(encoding="utf-8")
+    link = re.search(r'<a class="([^"]*)"[^>]*>Ver as respostas do assistente', fonte)
+
+    assert link and "longa" in link.group(1).split()
+    regra = _corpo_da_regra(".acao.longa", da_gestao)
+    assert "white-space:normal" in regra
+    assert "max-width:100%" in regra
