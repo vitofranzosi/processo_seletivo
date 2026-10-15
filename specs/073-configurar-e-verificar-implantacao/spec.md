@@ -5,8 +5,9 @@ originou, sobre a `main` em `6fac8189`.
 
 **Created**: 2026-10-14
 
-**Status**: Draft. Escopo recortado pelo usuário em 14/10/2026 às lacunas que o
-[PR #281](https://github.com/vitofranzosi/processo_seletivo/pull/281) deixa. Sem plano nem tarefas.
+**Status**: Implementada, com validação operacional pendente (quickstart B e C). Escopo recortado
+pelo usuário em 14/10/2026 às lacunas que o
+[PR #281](https://github.com/vitofranzosi/processo_seletivo/pull/281) deixa.
 
 **Input**: a seção 5 da
 [auditoria de configurações](../../doc/auditoria-configuracoes-do-sistema-2026-10-14.md), com o

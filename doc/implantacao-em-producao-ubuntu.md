@@ -862,27 +862,27 @@ nomeia a variável.
 | Variável | Classe | Valor em produção | Evidência e observação |
 |---|---|---|---|
 | `DJANGO_SETTINGS_MODULE` | obrigatória, comum | `config.settings.production` | O `manage.py` cai em `development` sem ela (`manage.py:7`); o `wsgi.py` já usa `production` |
-| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:73-81`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
-| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:83-88`) |
+| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:74-82`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
+| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:84-89`) |
 | `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:352-361` |
 | `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:343-351`) |
 | `DB_RUNTIME_USER` | comum | `processo_seletivo_runtime` | — |
-| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:249-253`) |
+| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:259-263`) |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | segredo | `processo_seletivo_owner`, `<GERAR_SEGREDO_ALEATORIO>` | **Só** em `migracao.env`: a aplicação em serviço não enxerga |
-| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:127-135`) |
-| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:146-160`) |
-| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | comum | `<SMTP_HOST>`, `587`, `true` | Só STARTTLS: a porta 465 (SSL implícito) **não funciona** (`base.py:186-197`) |
-| `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5 |
-| `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5 |
-| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:161-166`) |
-| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:192-199`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:178-186`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
-| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:218-247`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
-| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:256,269-274` |
+| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:128-136`) |
+| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:147-161`) |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `EMAIL_HOST` obrigatória com o backend SMTP; as outras, comuns | `<SMTP_HOST>`, `587`, `true` | Recusa `EMAIL_HOST` vazio com o backend SMTP (`production.py:168-176`). Só STARTTLS: uma porta de SSL implícito, como costuma ser a 465, **não funciona** (`base.py:186-197`) |
+| `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5; testar: §10.4 |
+| `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
+| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:162-167`) |
+| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:202-209`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:188-196`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
+| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:228-257`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
+| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:266,279-284` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
 | `DJANGO_SECURE_HSTS_PRELOAD` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
-| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:277-278`) |
+| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:287-288`) |
 | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | opcional | padrão, 10 MiB | Se mudar, ajuste o `client_max_body_size` de `/selecoes/` (§14) |
 | `EDITAL_ANEXOS_LIMITE_BYTES` | opcional | padrão, 5 MiB | Se mudar, ajuste o de `/gestao/` |
 | `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:144-145` |
@@ -895,7 +895,7 @@ nomeia a variável.
 - `TEST_DB_ENGINE`.
 
 Não existe `DJANGO_DEBUG`: código nenhum o lê, e `production` fixa `DEBUG = False`
-(`production.py:59`). O `.env.example` o trazia até 14/10/2026 (M-8). As `POSTGRES_*` só servem ao `compose.yaml`.
+(`production.py:60`). O `.env.example` o trazia até 14/10/2026 (M-8). As `POSTGRES_*` só servem ao `compose.yaml`.
 
 ### 10.2 Onde ficam e como se geram
 
@@ -990,6 +990,236 @@ documentos e dados de matrícula, e o projeto não tem ferramenta de anonimizaç
 homologação com a **mesma `DJANGO_SECRET_KEY`** de produção validaria comprovantes de produção, então
 não reuse. Um piloto com a gestão operável antes do B-1 exigiria settings de desenvolvimento
 expostas numa rede, e essa é uma decisão de governança, fora do escopo deste documento.
+
+### 10.4 Configurar, verificar e testar o correio e o Ollama
+
+O caminho inteiro, do `app.env` ao correio e ao Ollama comprovados, só com o que a release já
+traz. Vale na implantação e em cada troca: de servidor de correio, de conta, de senha, de endereço
+ou de modelo do Ollama.
+
+**Os níveis não se confundem**, e cada passo diz o que prova:
+
+- **Ler a configuração** (passo 3) não contata ninguém.
+- **Conexão e conta** (passos 4 a 6) contatam o serviço sem efeito: nada é enviado, e nada é
+  inferido.
+- **Ação real** (passos 8 e 9) envia uma mensagem ou carrega o modelo na GPU.
+
+Não pule de nível: uma falha no 4 explica uma falha no 8 melhor do que o contrário.
+
+**[admin]**
+
+#### 1. Preencher
+
+```bash
+sudo -e /etc/processoseletivo/app.env
+```
+
+O bloco do correio, com os valores do setor de correio (§16.2). A senha é digitada aqui, e nunca na
+linha de comando:
+
+```
+DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=<SMTP_HOST>
+EMAIL_PORT=587
+EMAIL_USE_TLS=true
+EMAIL_TIMEOUT=20
+EMAIL_HOST_USER=<SMTP_USUARIO>
+EMAIL_HOST_PASSWORD=<SMTP_SENHA>
+DEFAULT_FROM_EMAIL=<REMETENTE>
+PORTAL_ATENDIMENTO="<CANAL_DE_ATENDIMENTO>"
+```
+
+**Só STARTTLS.** O sistema não fala SSL implícito: `EMAIL_USE_TLS=true` negocia a segurança
+**depois** de conectar, e não há variável para o contrário. Se o setor de correio só oferecer uma
+porta com SSL implícito — a 465 costuma ser essa —, a conexão não se completa. Peça uma porta com
+STARTTLS, a 587 por convenção.
+
+O bloco do assistente, **só se esta máquina for atender o piloto do assistente** com o Ollama da L4.
+Sem ele, nada muda: o assistente fica desligado.
+
+```
+ASSISTENTE_PILOTO=false
+ASSISTENTE_SERVICO=ollama
+ASSISTENTE_ENDERECO=http://<HOST_DO_OLLAMA>:11434
+ASSISTENTE_MODELO=<MODELO>
+ASSISTENTE_QUANTIZACAO=<QUANTIZACAO>
+ASSISTENTE_CONTEXTO_TOKENS=<CONTEXTO>
+ASSISTENTE_TEMPO_LIMITE_SEGUNDOS=90
+ASSISTENTE_TETO_SIMULTANEO=2
+ASSISTENTE_TOKENIZER=/var/lib/processoseletivo/assistente/tokenizer.json
+```
+
+- **`ASSISTENTE_SERVICO` é `ollama`, em minúsculas.** Produção recusa qualquer outro com o piloto
+  ligado, e o OpenRouter é só do desenvolvimento.
+- **`ASSISTENTE_ENDERECO` vai na raiz**, sem `/api` no fim: o sistema acrescenta o caminho.
+- **`ASSISTENTE_MODELO`** é o nome exato que `ollama list` mostra na L4, e
+  **`ASSISTENTE_QUANTIZACAO`** é a quantização como o Ollama a escreve, por exemplo `Q4_K_M`. Os
+  dois vêm de quem opera a L4.
+- **`ASSISTENTE_TEMPO_LIMITE_SEGUNDOS` fica em no máximo 110**: abaixo dos 120 s do gunicorn
+  (§12.1), para que a pessoa receba "tempo esgotado", e não um erro do servidor. Produção recusa
+  acima disso.
+- **Nenhuma variável numérica fica vazia.** Vazia, a carga das settings quebra antes de qualquer
+  comando. Ou se preenche, ou se omite a linha, e vale o padrão.
+- **O `tokenizer.json`** é o publicado com o modelo, copiado para o caminho acima com dono
+  `processoseletivo`. E **a release precisa da biblioteca do tokenizer**: no `ps-construir` (§8.3),
+  a linha do `uv sync` ganha `--extra assistente` — o mesmo grupo de dependências que a máquina da
+  equipe instala. Sem as duas coisas, toda pergunta termina em "falta o tokenizer do modelo".
+- **`ASSISTENTE_PILOTO=true`** liga o assistente para quem tem o papel do piloto. É decisão do
+  piloto, e não da implantação: os passos 5, 6 e 9 funcionam com ele desligado.
+
+#### 2. Pré-voo
+
+```bash
+sudo ps-manage check --deploy
+```
+
+O mesmo da §11.1. Cada recusa nomeia a variável. Corrija e repita: cada repetição leva segundos e
+não reinicia nada. Com o backend SMTP, `EMAIL_HOST` vazio é recusado aqui.
+
+#### 3. Ler a configuração
+
+```bash
+sudo ps-manage shell -v 0 -c '
+import os
+from django.conf import settings as s
+print(os.environ["DJANGO_SETTINGS_MODULE"])
+for nome in ("EMAIL_BACKEND", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USE_TLS", "EMAIL_TIMEOUT",
+             "EMAIL_HOST_USER", "DEFAULT_FROM_EMAIL", "PORTAL_ATENDIMENTO",
+             "AVISOS_AOS_CANDIDATOS", "AVISOS_LIMITE_POR_MINUTO",
+             "ASSISTENTE_PILOTO", "ASSISTENTE_SERVICO", "ASSISTENTE_ENDERECO", "ASSISTENTE_MODELO",
+             "ASSISTENTE_QUANTIZACAO", "ASSISTENTE_CONTEXTO_TOKENS",
+             "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS", "ASSISTENTE_TETO_SIMULTANEO", "ASSISTENTE_TOKENIZER"):
+    print(f"{nome} = {getattr(s, nome)!r}")
+for nome in ("EMAIL_HOST_PASSWORD", "ASSISTENTE_CREDENCIAL"):
+    print(f"{nome} presente: {bool(getattr(s, nome))}")
+'
+```
+
+- **A primeira linha tem de ser `config.settings.production`.** Outra coisa é o ambiente de
+  desenvolvimento.
+- **Os segredos aparecem só como "presente".** Não use `diffsettings` no lugar deste exemplo: ele
+  imprime a chave da aplicação e a senha do correio.
+- **Confira cada valor.** Um nome de variável digitado errado no `app.env` some sem aviso, e a
+  aplicação usa o padrão. É aqui que isso aparece.
+
+**O que isto prova, e o que não prova.** Prova a configuração que **este processo de diagnóstico**
+carregou ao ler o `app.env` agora. **Não** prova a dos workers do gunicorn que já estavam
+executando: eles leram o arquivo quando subiram. O mesmo vale para os passos 4 a 6, 8 e 9. É o
+passo 7 que liga as duas coisas.
+
+#### 4. Correio: conexão, segurança e conta, sem enviar
+
+```bash
+sudo ps-manage shell -v 0 -c '
+from django.core.mail import get_connection
+conexao = get_connection()
+conexao.open()
+conexao.close()
+print("conexão, segurança e conta aceitas; nada foi enviado")
+' 2>&1 | tail -n 1
+```
+
+Abre a conexão, negocia o STARTTLS e autentica com a conta, e fecha sem mandar mensagem. A última
+linha é a frase acima, ou o erro da etapa em que parou: veja a tabela no fim desta seção.
+
+#### 5. Ollama: conexão
+
+```bash
+sudo ps-manage shell -v 0 -c '
+import json, urllib.request
+from django.conf import settings as s
+with urllib.request.urlopen(s.ASSISTENTE_ENDERECO + "/api/version", timeout=10) as resposta:
+    print("o Ollama responde em", s.ASSISTENTE_ENDERECO, "- versão", json.load(resposta)["version"])
+' 2>&1 | tail -n 1
+```
+
+**A versão, sozinha, não demonstra que o modelo está disponível, nem que consegue executar.** Ela
+prova que há um Ollama naquele endereço, alcançável desta máquina e como o usuário da aplicação.
+
+#### 6. Ollama: o modelo configurado está instalado
+
+```bash
+sudo ps-manage shell -v 0 -c '
+import json, urllib.request
+from django.conf import settings as s
+with urllib.request.urlopen(s.ASSISTENTE_ENDERECO + "/api/tags", timeout=10) as resposta:
+    nomes = [modelo["name"] for modelo in json.load(resposta)["models"]]
+if s.ASSISTENTE_MODELO in nomes:
+    print(s.ASSISTENTE_MODELO, "instalado")
+else:
+    print(s.ASSISTENTE_MODELO, "NÃO instalado; instalados:", ", ".join(nomes) or "nenhum")
+' 2>&1 | tail -n 1
+```
+
+Prova que o nome confere com um modelo baixado. Ainda **não** prova que ele cabe na GPU nem que
+responde: isso é o passo 9.
+
+#### 7. Reiniciar e confirmar que o serviço adotou o arquivo
+
+```bash
+sudo systemctl restart processoseletivo
+systemctl show -p ActiveEnterTimestamp processoseletivo
+sudo stat -c '%y' /etc/processoseletivo/app.env
+curl -s -H 'Host: <DOMINIO>' -H 'X-Forwarded-Proto: https' http://127.0.0.1:8000/readiness
+```
+
+- **O instante em que o serviço subiu tem de ser posterior à última mudança do arquivo.** Só assim
+  os workers leram o que os passos 3 a 6 mostraram.
+- **A readiness responde `"status":"ready"`.**
+- **O timer dos avisos não precisa de reinício.** O `ps-avisos` relê o `app.env` a cada minuto
+  (§16.4). Entre a edição e este passo, os avisos já saem pela configuração nova, e o código de
+  acesso ainda pela antiga. Por isso este passo vem logo depois do 6.
+
+#### 8. Envio de teste
+
+```bash
+sudo ps-manage sendtestemail <CAIXA_DA_EQUIPE>
+journalctl -u processoseletivo --since "10 min ago" | grep -i 'Falha ao enviar' || echo "sem falha registrada"
+```
+
+**Aceita pelo servidor não é entregue.** Confira a caixa de entrada **e** o spam, e o remetente.
+
+Como os anteriores, este envio sai do processo de diagnóstico. **Em homologação**, a prova de que os
+workers entregam é pedir o código de acesso no portal com uma caixa da equipe. É envio real, para
+uma caixa nossa.
+
+#### 9. Inferência efetiva
+
+```bash
+sudo ps-manage verificar_servico_de_inferencia
+```
+
+A conversa sintética, sem conteúdo de Edital. Ela carrega o modelo na GPU e confere:
+
+- a quantização e o contexto contra o configurado;
+- a ocupação da GPU;
+- a contagem de tokens.
+
+A última linha é `Divergências: nenhuma`. Com divergência, o comando sai com código 1, e o
+assistente não deve ser ligado até a correção. Rode-o fora do horário de uso da L4: ele disputa a
+GPU.
+
+#### Quando algo falha
+
+A última linha do passo diz o que aparece. **Nenhuma linha da tabela é um diagnóstico.** Ela lista
+as causas possíveis e como separar uma da outra.
+
+| O que aparece | Causas possíveis | Como distinguir e agir |
+|---|---|---|
+| `ConnectionRefusedError` | porta errada; serviço de correio parado; firewall que rejeita | `nc -vz <SMTP_HOST> <PORTA>` desta máquina; confira a porta com o setor de correio |
+| `socket.gaierror` | nome do servidor digitado errado; DNS desta máquina | `getent hosts <SMTP_HOST>`; confira o nome com o setor de correio |
+| `TimeoutError: timed out` | rede ou firewall que descarta; endereço ou porta errados; servidor fora do ar | a conexão nem abriu. `nc -vz -w 5 <SMTP_HOST> <PORTA>`: sem resposta, peça a liberação à rede; com resposta, confira o endereço |
+| `SMTPServerDisconnected: Connection unexpectedly closed: timed out` | a porta espera TLS desde o início (SSL implícito, que o sistema não suporta); a porta é de outro serviço; servidor travado | a conexão abriu, e a saudação SMTP não veio. `openssl s_client -connect <SMTP_HOST>:<PORTA>`: se negociar TLS, é SSL implícito, e a ação é pedir a porta com STARTTLS. Se não negociar, confira a porta |
+| `SMTPNotSupportedError: STARTTLS extension not supported` | a porta não oferece STARTTLS; o servidor só cifra em outra porta | `openssl s_client -starttls smtp -connect <SMTP_HOST>:<PORTA>`; peça ao setor de correio a porta com STARTTLS |
+| `SMTPAuthenticationError` | usuário ou senha errados; conta sem permissão de envio por esse servidor | confira a conta no cofre e com o setor de correio. A senha nunca aparece na saída, e não precisa aparecer |
+| `URLError` … `Connection refused` (Ollama) | porta errada; Ollama parado; firewall | `nc -vz <HOST_DO_OLLAMA> 11434`; confira com quem opera a L4 |
+| `URLError` … `timed out` (Ollama) | rede ou firewall entre esta máquina e a L4; endereço errado | `nc -vz -w 5 <HOST_DO_OLLAMA> 11434`; peça a liberação à rede |
+| `HTTPError: HTTP Error 404` (Ollama) | `ASSISTENTE_ENDERECO` com `/api` ou outro caminho no fim | deixe só esquema, host e porta |
+| `NÃO instalado` (passo 6) | nome diferente do que `ollama list` mostra; modelo não baixado | compare com a lista impressa; peça a quem opera a L4 |
+| `serviço desconhecido` (passo 9) | `ASSISTENTE_SERVICO` com maiúscula, espaço ou outro valor | escreva `ollama` |
+| `sem tokenizer` (passo 9) | release construída sem `--extra assistente`; `tokenizer.json` fora do caminho ou sem permissão | veja o passo 1 |
+| `a quantização servida é` / `o contexto do modelo é` (passo 9) | o servidor serve outra versão do modelo; o valor configurado está errado | confirme com quem opera a L4 qual dos dois está certo, e corrija o outro |
+| `o modelo está` …`% na CPU` (passo 9) | o modelo não coube inteiro na GPU; outro serviço ocupa a GPU | `nvidia-smi` e `ollama ps` na L4, com quem a opera |
 
 ---
 
@@ -1580,13 +1810,12 @@ conexão recusada, e **nenhuma** ocorrência do e-mail de teste.
 
 ### 16.3 Teste
 
-```bash
-# Conectividade e TLS até o servidor
-openssl s_client -starttls smtp -connect <SMTP_HOST>:587 -servername <SMTP_HOST> </dev/null 2>/dev/null | grep -E 'Verify return|Protocol'
-# Envio real, com as settings de produção
-sudo ps-manage sendtestemail <CAIXA_DE_TESTE_DA_EQUIPE>
-journalctl -u processoseletivo --since "10 min ago" | grep -i 'Falha ao enviar' || echo "sem falha registrada"
-```
+Na §10.4, em dois níveis que não se confundem:
+
+- o **passo 4** conecta, negocia o STARTTLS e autentica, sem enviar;
+- o **passo 8** envia para uma caixa da equipe.
+
+A tabela no fim da §10.4 diz o que cada erro pode significar.
 
 **Sucesso** é a mensagem chegar na caixa de entrada, e não no spam, com o remetente certo.
 
@@ -1618,22 +1847,16 @@ mostra "o despacho pode não estar processando", e a conferência de `systemctl 
 Quando o setor de correio trocar o servidor ou a conta. Os valores antigos ficam no cofre (§10.2) até
 o teste passar: são eles o caminho de volta.
 
-1. **Peça ao setor de correio** o servidor e a porta — e se ele aceita STARTTLS na 587, porque a 465
-   não funciona (I-4) —, a conta, a senha e o remetente autorizado, o limite de envio por minuto e
-   por dia, e se SPF, DKIM e DMARC já cobrem o servidor novo.
-2. **Edite o arquivo:** `sudo -e /etc/processoseletivo/app.env` — `EMAIL_*`, `DEFAULT_FROM_EMAIL` e,
-   se o limite da conta mudou, `AVISOS_LIMITE_POR_MINUTO` (§16.2).
-3. **Reinicie o web:** `sudo systemctl restart processoseletivo`.
-4. **Teste** como na §16.3, com o servidor novo, e só então ponha a senha nova no cofre.
+1. **Peça ao setor de correio:**
+   - o servidor e uma porta com STARTTLS, a 587 por convenção — o sistema não fala SSL implícito
+     (I-4);
+   - a conta, a senha e o remetente autorizado;
+   - o limite de envio por minuto e por dia, que vai em `AVISOS_LIMITE_POR_MINUTO` (§16.2);
+   - se SPF, DKIM e DMARC já cobrem o servidor novo.
+2. **Siga a §10.4 inteira**, do passo 1 ao 8, com os valores novos. Só depois do passo 8 ponha a
+   senha nova no cofre.
 
-**O timer `ps-avisos` relê o `app.env` a cada minuto, e o web não**: o despacho roda pelo
-`ps-manage`, que carrega o arquivo a cada execução (§8.3), e o web o leu ao subir. Entre os passos 2
-e 3, os avisos já saem pelo servidor novo, e o código de acesso ainda pelo antigo — por isso o
-passo 3 vem logo depois do 2. Pela mesma razão, o `sendtestemail` do passo 4 prova o arquivo, e não
-o web.
-
-`production.py` não confere `EMAIL_HOST`: vazio, o serviço sobe e o primeiro envio falha. É o passo
-4 que pega o erro. A rotação só da senha é o mesmo procedimento, do passo 2 em diante.
+A rotação só da senha é o mesmo procedimento, sem o item 1.
 
 ---
 
@@ -2366,7 +2589,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 
 - 502 é o gunicorn sem responder; 504 é uma requisição que passou de 130 s.
 - `journalctl -u processoseletivo --since "30 min ago" | grep -E 'WORKER TIMEOUT|Booting worker|Exception'`
-- Timeouts em série costumam ser SMTP lento (I-4) ou uma operação pesada. Confira o SMTP (§16.3) e
+- Timeouts em série costumam ser SMTP lento (I-4) ou uma operação pesada. Confira o SMTP (§10.4, passo 4) e
   `ps -o pid,etime,rss,cmd -C gunicorn`.
 - Não fazer: aumentar os workers sem olhar a memória (`free -m`). Um OOM derruba o PostgreSQL junto.
 
@@ -2477,7 +2700,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 | Pacotes do SO | `apt list --upgradable`; `pro security-status` | sem atualização de segurança pendente há mais de uma semana |
 | Backup | `restic snapshots`; o `restauracoes.log` | snapshot de hoje; restauração testada há menos de 3 meses |
 | Dado pessoal em log | `sudo grep -cE '[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}' /var/log/nginx/processoseletivo.access.log` | 0 (CPF não trafega em URL) |
-| Porta do correio (I-4) | Pergunte ao setor de correio: **o servidor aceita STARTTLS na 587?** Confirme com o `openssl s_client` da §16.3 | sim. Se só aceitar a 465, o correio não funciona — o código não tem `EMAIL_USE_SSL` (I-4) —, e o candidato fica sem como entrar |
+| Porta do correio (I-4) | Pergunte ao setor de correio: **o servidor aceita STARTTLS na 587?** Confirme com o passo 4 da §10.4 e com o `openssl s_client` da tabela de lá | sim. Se só aceitar a 465, o correio não funciona — o código não tem `EMAIL_USE_SSL` (I-4) —, e o candidato fica sem como entrar |
 | Avisos aos candidatos (066) | `sudo grep AVISOS_AOS_CANDIDATOS /etc/processoseletivo/*.env` | `false`, ou ausente, até a validação de LGPD com o encarregado de dados e a do limite da conta de correio (§16.4) |
 
 ### 25.2 LGPD — implicações operacionais

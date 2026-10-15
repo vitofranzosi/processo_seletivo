@@ -233,3 +233,35 @@ def test_com_limite_de_gasto_a_conversa_sintetica_sai(monkeypatch, openrouter):
     assert codigo == 0, saida
     assert "Limite de gasto da chave: 5" in saida
     assert servico.caminhos == ["/key", "/chat/completions"]
+
+
+# ---- O valor do serviço (073, `FR-1661`) ------------------------------------------------------
+
+
+@pytest.mark.parametrize("valor", ["Ollama", "ollama ", "openai"])
+def test_o_servico_fora_do_vocabulario_e_desconhecido_e_nada_sai(
+    monkeypatch, configuracao, settings, valor
+):
+    """Com maiúscula ou espaço, o valor existe: "nenhum serviço" mandava procurar a variável."""
+    settings.ASSISTENTE_SERVICO = valor
+    servico = Ollama(_respostas())
+
+    codigo, saida = _verificar(monkeypatch, servico)
+
+    assert codigo == 1
+    assert f"serviço desconhecido: {valor!r} (ASSISTENTE_SERVICO)" in saida
+    assert "os aceitos são ollama e openrouter, e em produção só ollama" in saida
+    assert "nenhum serviço configurado" not in saida
+    assert servico.pedidos == []
+
+
+def test_o_servico_vazio_continua_nao_configurado(monkeypatch, configuracao, settings):
+    settings.ASSISTENTE_SERVICO = ""
+    servico = Ollama(_respostas())
+
+    codigo, saida = _verificar(monkeypatch, servico)
+
+    assert codigo == 1
+    assert "nenhum serviço configurado (ASSISTENTE_SERVICO)" in saida
+    assert "desconhecido" not in saida
+    assert servico.pedidos == []
