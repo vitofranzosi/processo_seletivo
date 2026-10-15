@@ -21,6 +21,8 @@ Dois caminhos, e os dois precisam valer:
   leitura do formulário, que conhece só os campos que desenha.
 """
 
+import html
+import re
 from datetime import UTC
 from zoneinfo import ZoneInfo
 
@@ -33,6 +35,7 @@ from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.editais.models.perfis import (
     LinhaDoQuadroDeVagas,
     MarcoClassificatorio,
+    ModalidadeConcorrencia,
     PerfilVaga,
 )
 from processo_seletivo.processos.models import Edital
@@ -148,7 +151,13 @@ PERFIL_COMPLETO = {
     "callInformation": {"prazo": "Cinco dias úteis a contar da convocação."},
     "competitionModalities": [
         {"id": MODALIDADE, "code": "AC", "name": "Ampla concorrência"},
-        {"id": PPI, "code": "PPI", "name": "Pretos, pardos e indígenas"},
+        # Com descrição, que a tela dos Perfis não desenha (ED-18 da auditoria de 15/10).
+        {
+            "id": PPI,
+            "code": "PPI",
+            "name": "Pretos, pardos e indígenas",
+            "description": "Reserva da Lei nº 12.711/2012.",
+        },
     ],
     "classificationMilestones": [MARCO_COMPLETO],
     # O quadro de vagas da `025`. É a quinta coleção do Perfil a atravessar este teste, e a razão
@@ -566,6 +575,37 @@ def test_regravar_os_perfis_pela_tela_preserva_os_marcos(client, seletor_ligado,
     assert _marcos_como_o_contrato_os_declara(edital) == [MARCO_COMPLETO]
 
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_regravar_os_perfis_pela_tela_preserva_a_descricao_da_modalidade(
+    client, seletor_ligado, edital
+):
+    """A descrição da Modalidade atravessa a tela que não a oferece (ED-18, auditoria de 15/10).
+
+    `ler_perfis` lê `modalidade-…-description`, e `_modalidade.html` não desenhava o campo: corrigir
+    qualquer coisa na etapa dos Perfis gravava a descrição como "". O envio aqui é o que a tela
+    desenha — o oculto vem da própria página, e não do teste —, e por isso a ausência dele na
+    página reprova o caso em vez de passar por omissão.
+    """
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = client.get(_etapa(edital, "perfis")).content.decode()
+    oculto = re.search(
+        r'<input type="hidden" name="modalidade-0-1-description" value="([^"]*)">', pagina
+    )
+    assert oculto, "a tela dos Perfis precisa levar a descrição da Modalidade no envio"
+
+    resposta = client.post(
+        _etapa(edital, "perfis"),
+        {**_perfil_como_a_tela_o_envia(), "modalidade-0-1-description": html.unescape(oculto[1])},
+    )
+    assert resposta.status_code == 302, resposta.content
+
+    assert ModalidadeConcorrencia.objects.get(pk=PPI).description == (
+        "Reserva da Lei nº 12.711/2012."
+    )
+
+
 # ---------------------------------------------------------------------------------------------
 # A revelação progressiva do marco (030, FR-418)
 # ---------------------------------------------------------------------------------------------
@@ -583,8 +623,6 @@ def test_regravar_os_perfis_pela_tela_preserva_os_marcos(client, seletor_ligado,
 # O irmão deste bloco é `tests/unit/editais/test_forma_da_ordem.py`, que prende o outro lado: o
 # que o rascunho guarda **não** alcança o conteúdo publicado. Os dois caminhos existem, e fechar
 # só um deixa o defeito vivo.
-
-import re  # noqa: E402
 
 from tests.interface.test_compor import PERFIL as PERFIL_DO_ASSISTENTE  # noqa: E402
 

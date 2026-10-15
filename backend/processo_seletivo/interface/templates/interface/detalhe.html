@@ -154,7 +154,7 @@ permanecem preservados.</p>
   </ul>
   {% comment %} A validação interna do assistente de dúvidas (070): só com publicação, porque só o
      Edital publicado tem respostas (`FR-1413`), e no alcance desta mesma página (`D-010`). {% endcomment %}
-  <p><a class="acao" href="{% url 'interface:duvidas' edital.id %}">Ver as respostas do assistente de dúvidas (validação interna)</a></p>
+  <p><a class="acao longa" href="{% url 'interface:duvidas' edital.id %}">Ver as respostas do assistente de dúvidas (validação interna)</a></p>
   {% if pode_conversar_com_o_assistente %}
   <p><a class="acao" href="{% url 'interface:assistente' edital.id %}">Conversar com o assistente (piloto)</a></p>
   {% endif %}

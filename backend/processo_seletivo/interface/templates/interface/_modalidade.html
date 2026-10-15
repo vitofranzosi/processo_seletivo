@@ -39,6 +39,13 @@
   {% endcomment %}
   <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-id" value="{{ modalidade.id }}">
   <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-ruleId" value="{{ modalidade.ruleId }}">
+  {% comment %}
+  **A descrição também viaja oculta**, porque esta tela não a oferece e `ler_perfis` a lê: sem o
+  campo, cada gravação dos Perfis trocava a descrição vinda da API, do seed ou de um Edital
+  reaproveitado por "" — em silêncio, e ela é texto que a Revisão e a Retificação mostram (ED-18 da
+  auditoria de 15/10). É a saída que o contrato do rascunho já fixa para o que a tela não desenha.
+  {% endcomment %}
+  <input type="hidden" name="modalidade-{{ indice }}-{{ sub }}-description" value="{{ modalidade.description|default:'' }}">
   <div class="campos">
     <p class="campo curto">
       <label for="modalidade-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
