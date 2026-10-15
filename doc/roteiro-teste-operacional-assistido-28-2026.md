@@ -47,7 +47,7 @@ Os papéis e as migrations, com papéis próprios do teste para não disputar os
 make preparar DB_NAME=ps_teste_operacional_28 POSTGRES_USER=$USER POSTGRES_PASSWORD= DB_MIGRATION_USER=pto28_owner DB_MIGRATION_PASSWORD=pto28 DB_RUNTIME_USER=pto28_runtime DB_RUNTIME_PASSWORD=pto28
 ```
 
-A saída tem de terminar em **`34 de 34 tabelas append-only`**. Se o primeiro número vier `0`, a segunda
+A saída tem de terminar em **`40 de 40 tabelas append-only` (eram 34 quando este roteiro foi escrito; o total cresce a cada tabela append-only nova — o sinal de alarme é o primeiro número vir `0`)**. Se o primeiro número vier `0`, a segunda
 passada do `provisionar` não rodou (ver o [CLAUDE.md](../CLAUDE.md)).
 
 O servidor, pelo papel de execução, com o seletor de identidade e o portal de demonstração ligados:
@@ -98,7 +98,7 @@ Com o ano de 2027 no Processo, os Eventos não disparam o aviso de ano divergent
 
 ### 1.4 Antes de a pessoa chegar
 
-- [ ] `make preparar` terminou em `34 de 34`, e `/gestao/` abre com *"Nenhum Processo Seletivo"*.
+- [ ] `make preparar` terminou em `40 de 40`, e `/gestao/` abre com *"Nenhum Processo Seletivo"*.
 - [ ] A sessão está identificada como na §1.2, e a tela parada em `/gestao/`.
 - [ ] O PDF do 28/2026 está aberto em outra janela, **do jeito que o setor o recebe**: o arquivo
       inteiro, sem os anexos recortados. Os Anexos II a VI estão nas páginas 17–18, 19, 20, 21 e

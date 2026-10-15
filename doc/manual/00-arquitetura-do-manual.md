@@ -57,6 +57,44 @@ manual precisa ensinar, em que ordem, para quem, com quais imagens e com qual li
 >    reescritas: continuam valendo como padrão editorial, que era a função delas, e são revistas
 >    nas sessões que as citam.
 
+> **Revisão 6 — 15/10/2026, sobre a `main` @ `db428b30`, feita pela auditoria de consolidação**
+> ([`doc/auditoria-de-consolidacao-2026-10-15.md`](../auditoria-de-consolidacao-2026-10-15.md)).
+> **Nenhuma sessão de produção do manual rodou depois da R5**, e a S-00R continua pela metade. O
+> produto andou da `059` à `072` (a `073` está na `main` só como spec; a implementação está no
+> PR #283, aberto). Esta revisão **não** reescreve capítulos: registra o que mudou de verdade no
+> que o manual precisa ensinar, conferido no código e num percurso pelo navegador contra o
+> `seed_demo` em 15/10, e as marcas **(R6)** ficam onde a mudança vale. As de direção:
+>
+> 1. **São oito papéis, e não sete.** Entrou o **Participante do piloto do assistente** (`071`),
+>    que **não entra no manual de operação**: é piloto interno, com participantes escolhidos, e a
+>    tela que ele abre não é funcionalidade liberada (§A.1, §G-03). O Gestor ganhou
+>    `autoridade:gerir` (`060`) e `aviso:enviar` (`066`); o Publicador, `aviso:enviar`.
+> 2. **H.18 fechou.** Desde a `059` o portal leva à convocação e ao Requerimento pedido nela
+>    ("Minhas inscrições" → Acompanhar). O alerta planejado para C-20b e C-20c sai.
+> 3. **H.5 fechou em parte.** Desde a `066` há **avisos aos candidatos**: um e-mail complementar a um
+>    resultado ou a uma chamada já publicados, com prévia, destinatários tirados do ato, modelos da
+>    unidade e rodapé fixo que diz que o aviso não substitui a publicação. Percorrido em 15/10:
+>    confirmar → `despachar_avisos` → histórico com o resultado do envio por pessoa. **Vem desligado
+>    em produção** (`AVISOS_AOS_CANDIDATOS`) até a validação de LGPD; Retificação e prazos continuam
+>    sem aviso. Precisa de capítulo próprio — **C-18a · Avisar os candidatos** — e de uma linha em
+>    `G-03` enquanto estiver desligado.
+> 4. **Capítulos que faltam**, além do C-18a: **C-06a · Autoridades da unidade** (`060`: sem
+>    autoridade vigente cadastrada o Edital não se publica, e a Unidade só se registra pelo arquivo
+>    `unidades.json`, sem tela); e uma linha em C-09/C-10 sobre o **documento em linguagem simples**
+>    (`069`), cujas frases novas ainda aguardam aprovação antes do primeiro Edital real (SC-517).
+> 5. **O assistente de dúvidas não entra no manual.** A consulta determinística da `070` é
+>    "validação interna" na tela do Edital, e o piloto da `071` e o protótipo da Fase C não são
+>    funcionalidade liberada. Entram só em `G-03`, como o que **não** está disponível.
+> 6. **A Visão do Sistema (`docs/visao-sistema/`) já cumpre parte do papel deste manual** — é hoje o
+>    material de uso mais completo (tutorial, papéis, configuração, perguntas), revisado por ciclos
+>    e atualizado até a `072` na mesma auditoria. Os dois documentos não se citavam. O formato do
+>    manual — continuar as 25 sessões em HTML, ou tomar a Visão como base e produzir só as trilhas
+>    por papel e as capturas — é decisão pendente do usuário
+>    ([decisões pendentes de 15/10](../auditoria-de-consolidacao-2026-10-15/decisoes-pendentes.md)).
+> 7. **A identidade da gestão continua sendo o seletor de demonstração.** Nada mudou em H.1: sem
+>    autenticação institucional, nenhuma captura da gestão pode mostrar a entrada real, e o manual
+>    não pode ser validado com usuários de produção.
+
 **Base da descoberta:** `main` @ `a6f25a4`. Fontes lidas: `README.md`, a Constituição, as 18 pastas
 de `specs/`, os quatro relatórios de auditoria E2E (`doc/e2e/015`, `017`, `018`, `020-polish`), os
 documentos de decisão em `doc/`, e — como fonte de verdade final — o código: `interface/urls.py`,
@@ -102,6 +140,11 @@ implantação institucional, virarão grupos do diretório. São **sete (R5)**:
 | **Julgador de recursos** | Admitir e julgar recursos — e nada mais |
 | **Auditor** | Consultar a trilha de auditoria e as telas de leitura — ordenação, corte, sorteio, convocação, publicações —, sem emitir nada |
 | **Exportador de matrículas** **(R5)** | Exportar, de um Edital que coleta Requerimento de Matrícula, o arquivo para o Registro Acadêmico |
+| **Participante do piloto do assistente** **(R6)** | Usar o assistente com modelo de linguagem no piloto interno (`071`). **Fora do manual de operação**: é piloto, não funcionalidade liberada |
+
+**(R6)** Duas permissões novas em papéis antigos: o **Gestor** mantém as **autoridades da unidade**
+(`autoridade:gerir`, `060`) e, com o **Publicador**, **avisa os candidatos** de um ato publicado
+(`aviso:enviar`, `066`; a presidência da comissão também avisa, pelo vínculo).
 
 **(R5)** O sétimo papel é próprio pela mesma razão do julgador: pendurá-lo no Gestor daria a quem
 abre um dossiê por vez um arquivo com CPF, RG, filiação e endereço da população inteira. Nenhum
@@ -1258,7 +1301,14 @@ limitações que não interrompem nenhuma tarefa (§H.0).
   sem carga retroativa de Edital com inscrições encerradas; importação de notas e prova objetiva,
   heteroidentificação como fluxo e segunda instância recursal fora do sistema; cancelamento do
   Edital sem Publicação. **Saíram** (fechadas): corte e progressão, o ciclo terminar na divulgação,
-  o segundo Edital sem tela, e a caixa da reavaliação.
+  o segundo Edital sem tela, e a caixa da reavaliação. **(R6)** Saiu também o portal que não leva à
+  convocação (`059`). **Entram:** os avisos aos candidatos desligados em produção até a validação de
+  LGPD, e sem aviso de Retificação ou de prazo (`066`); a Unidade sem tela de cadastro — só pelo
+  arquivo de implantação (`060`); nenhuma exportação de inscritos ou de resultados em planilha —
+  a única exportação estruturada é a de matrículas; o assistente de dúvidas não disponível ao
+  candidato (o que existe é validação interna da `070` e piloto interno da `071`). O comprovante que
+  mostra resumos SHA-256 e comandos de terminal ao candidato não entra aqui — é defeito de UX que o
+  C-12 mitiga em uma frase, e está na matriz de pendências de 15/10.
 - **Telas:** nenhuma.
 - **Screenshots:** nenhum.
 - **Alertas:** nenhum. Esta seção **é** o alerta.
@@ -1799,6 +1849,12 @@ passiva: quem não abrir a página não fica sabendo. *No manual:* alerta em C-1
 > credencial; e a **convocação**, quando o Perfil declara "por mensagem individual". Resultado,
 > Retificação e prazos continuam sem aviso. O alerta de C-18 fica, restrito a resultado; C-20b
 > ganha o seu.
+>
+> *(R6) Fechou em parte.* A `066` criou os **avisos aos candidatos** sobre resultado e chamada já
+> publicados (tela *Avisos aos candidatos* do Edital, *Modelos de aviso* da unidade, despacho por
+> `despachar_avisos`). Vêm desligados em produção até a validação de LGPD. Retificação e prazos
+> continuam sem aviso. *No manual:* capítulo C-18a, e o alerta de C-18 passa a dizer que o aviso
+> existe, mas não substitui a publicação.
 
 **H.6 · Não há corte nem progressão automática entre Etapas.**
 A feature existiria na 014, que não foi construída. Quem passa para a Etapa seguinte é quem tem
@@ -1949,6 +2005,9 @@ nenhuma tela do portal leva a ele — o cartão só aparece quando o pedido é n
 o candidato só chega pelo endereço digitado. Conferido por busca nos templates em 06/10. *No
 manual:* alerta em C-20b e C-20c, e a comunicação de convocação precisa dizer o caminho até a
 correção. É o item 2 do backlog da §H.16, e decisão do usuário.
+
+> *(R6) Fechou com a `059`.* "Minhas inscrições" e "Acompanhar" mostram a convocação e levam ao
+> Requerimento pedido nela. O alerta de C-20b e C-20c sai.
 
 **H.19 · Limitações declaradas pelas features 019–058 que o leitor precisa encontrar. (R5)**
 Todas em `G-03`, uma linha cada, com a fonte: prazos só em dias corridos (`019`); sem carga

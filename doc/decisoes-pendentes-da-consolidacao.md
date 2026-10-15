@@ -1,5 +1,11 @@
 # Decisões pendentes — o que a auditoria de consolidação deixou para o usuário
 
+> **Situação em 15/10/2026.** Das DP-01 a DP-21, as decisões ainda abertas — DP-09, DP-10, DP-11,
+> DP-12, DP-15, DP-18, o item 1 da DP-08 e os itens 4 e 5 da DP-20 — foram retomadas, com
+> recomendação, nas [decisões pendentes de 15/10](auditoria-de-consolidacao-2026-10-15/decisoes-pendentes.md).
+> A DP-07 (D-G2) está decidida e aguarda a preparação para produção. As demais estão decididas e
+> implementadas. Este documento fica como registro de cada decisão e da sua razão.
+
 **Situação: abertas, menos a `DP-01` a `DP-06`, decididas em 26/09, o item 2 da `DP-08`, decidido na mesma data, a `DP-13` e a `DP-14`, decididas em 27/09, a `DP-16` e a `DP-17`, decididas em 28/09, e a `DP-21`, decidida em 29/09** — as quatro primeiras com
 a proposta que abriu a [`045`](../specs/045-conducao-confiavel-processo/spec.md), a `DP-06` ao especificar a
 [`046`](../specs/046-contrato-de-executabilidade/spec.md), e a `DP-05` ao recusar a proposta de uma spec de
