@@ -35,6 +35,7 @@ from .base import (
     DATABASES,
     DEFAULT_FROM_EMAIL,
     EMAIL_BACKEND,
+    EMAIL_HOST,
     INTERFACE_SELETOR_IDENTIDADE,
     PORTAL_IDENTIDADE_DEMO,
     REST_FRAMEWORK,
@@ -163,6 +164,15 @@ _exigir(
     "DEFAULT_FROM_EMAIL",
     "sem remetente declarado a mensagem com o código de acesso não é enviada, e o candidato "
     "fica sem caminho para entrar.",
+)
+# **O backend SMTP sem servidor subia**, e só o primeiro envio acusava, com um "please run
+# connect() first" que não diz qual variável falta (073, `FR-1660`). A regra vale só para ele: é o
+# único backend que lê `EMAIL_HOST`, e um de terceiros, que o projeto não tem, poderia não precisar.
+_exigir(
+    EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend" or bool(EMAIL_HOST.strip()),
+    "EMAIL_HOST",
+    "com o envio por SMTP, declare o servidor de correio que o setor de correio forneceu; vazio, "
+    "o serviço sobe e o primeiro código de acesso não sai.",
 )
 
 # Há proxy à frente? (FR-030 da 010) A pergunta precisa ser **respondida**, e não assumida.
