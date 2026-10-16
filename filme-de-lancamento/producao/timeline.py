@@ -44,7 +44,7 @@ PLAYLIST = [
     ("sc_publica2", 0.0, 8),          # revisado, publicado, aberto a todos → inscrições
     ("sc_inscricao", b(46), 16),
     ("sc_assistente2", 0.0, 14),      # o assistente: pergunta sugerida × pergunta livre à IA
-    ("sc_comissao2", 0.0, 12),
+    ("sc_comissao2", 0.0, 15),
     ("sc_convocacao2", 0.0, 9),       # convocação e a planilha para o sistema acadêmico
     ("sc_diferenciais2", 0.0, 8),
     ("sc_final", b(110), 23),

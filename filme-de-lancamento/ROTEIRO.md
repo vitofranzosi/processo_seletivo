@@ -4,7 +4,7 @@
 
 | Arquivo | O que é |
 |---|---|
-| `sistema-de-processo-seletivo-lancamento.mp4` | versão de distribuição — 1920×1080, 30 fps, H.264 (CRF 20) + AAC 320 kb/s, 4min33s, ~490 MB |
+| `sistema-de-processo-seletivo-lancamento.mp4` | versão de distribuição — 1920×1080, 30 fps, H.264 (CRF 20) + AAC 320 kb/s, 4min38s, ~500 MB |
 | `sistema-de-processo-seletivo-lancamento-master.mp4` | master — mesma montagem em H.264 CRF 14, ~2,0 GB, para reedição |
 | `producao/` | as fontes da composição, para refazer um trecho |
 
@@ -314,3 +314,12 @@ vagas há?").
 convocação ou nenhum) e serve às seleções de estudantes; o exemplo é um Edital de professor. A
 legenda passou a dizer a condição: rótulo "Seleção de estudantes" e "Quando o Edital pede o
 Requerimento de Matrícula, o sistema gera a planilha no modelo do sistema acadêmico."
+
+**Sorteio (3:12–3:17).** Entre "O sistema classifica." e o recurso, a outra forma de classificar:
+*Ou por sorteio.* — com três garantias em linguagem simples, cada uma acendendo o item "confere"
+correspondente da página pública "Verificar este sorteio" (Edital 26/2026): *Lista fechada antes do
+sorteio.* (a relação publicada) · *Números de sorteio público, de fora.* (a semente) · *Qualquer
+pessoa refaz e confere.* (a ordem publicada). As três vêm da spec `021` (universo congelado antes da
+semente; semente de ocorrência futura de fonte pública externa — a Loteria Federal é o adaptador de
+referência —; ordem reproduzível por qualquer pessoa). A frase não nomeia a Loteria Federal porque a
+tela da demonstração mostra "Fonte de demonstração". Três compassos; o filme passou a 4min38s.

@@ -7,7 +7,8 @@ existem no sistema, mas não são assunto para quem não opera seleções."""
 from kit import *
 import sc_comissao as C
 
-DUR = 22.5
+DUR = 28.125
+SH = 5.625                                        # o sorteio entra entre o resultado e o recurso
 ZONE = ZONE_BOTTOM
 
 # a avaliação, numa tomada contínua sobre a mesma tela: o diploma aberto no visualizador, a lista com a
@@ -29,6 +30,15 @@ AV_NOTA = (1559, 1450, 1273, 330)
 STEPS = [("O documento, aberto ao lado.", 5.9, 7.7), ("Cada consulta, registrada.", 7.8, 9.6), ("A nota, com o parecer.", 9.7, 11.6)]
 RES_CROP = (0, 100, 2880, 1250)
 RES_TABLE = dom("p_resultado51", "POSIÇÃO CANDIDATO", "table")
+_SAR = (ZONE_R[2] - ZONE_R[0]) / (ZONE_R[3] - ZONE_R[1])
+SORT_K0 = (0, 110, 1250, 1250 / _SAR)              # "Sorteio verificado…" e os primeiros itens
+SORT_K1 = (0, 560, 1250, 1250 / _SAR)              # desce até a ordem publicada
+SORT_POSE = frame_in(SORT_K0, ZONE_R)
+SORT_ITEMS = [("Lista fechada antes do sorteio.", 17.7, (40, 728, 1880, 100)),        # a relação publicada — confere
+              ("Números de sorteio público, de fora.", 19.1, (40, 996, 1880, 95)),    # a semente — confere
+              ("Qualquer pessoa refaz e confere.", 20.5, (40, 1122, 1880, 105))]       # a ordem publicada — confere
+SORT_OK = dom("p_verificar26", "Sorteio verificado", "p")
+SORT_CONF = dom("p_verificar26", "A relação publicada", "dl")
 REC_FORM = (0, 120, 1150, 1260)
 REC_ZONE = (930, 60, 1860, 1010)
 
@@ -89,16 +99,35 @@ def draw(c, u):
         r = Card("p_resultado51.png", RES_CROP, moved(frame_in(RES_CROP, ZONE), dx=1300 * (1 - kin), dy=-1150 * kout)).draw(c, 1, glow=0.2)
         r.focus(c, RES_TABLE, prog(u, 12.8, 13.3) * (1 - kout), pad=10, color=MINT)
     cap(c, u, 12.3, 16.5, "O sistema classifica.", "Pelas regras do Edital — e o resultado é publicado, igual para todos.")
-    # C. quem discorda, recorre
-    if u > 16.8:
-        kin = e_out5(prog(u, 16.8, 17.5)); kout = e_in3(prog(u, 21.8, DUR))
+    # B2. ou por sorteio: três garantias em linguagem simples, cada uma acendendo o item "confere" da
+    # página pública de verificação (linhas medidas nos pixels da captura)
+    if 16.8 < u < 22.5:
+        kin = e_out5(prog(u, 16.8, 17.5)); kout = e_in3(prog(u, 21.85, 22.4))
+        crop = cam_at(u, [(17.4, SORT_K0), (19.0, SORT_K1)])
+        v = Card("p_verificar26.png", crop, moved(SORT_POSE, dx=1200 * (1 - kin), dy=-1200 * kout)).draw(c, 1, glow=0.2)
+        for i, (_, t0, box) in enumerate(SORT_ITEMS):
+            v.focus(c, box, prog(u, t0, t0 + 0.4) * (1 - (prog(u, SORT_ITEMS[i + 1][1], SORT_ITEMS[i + 1][1] + 0.3) if i < 2 else kout)),
+                    pad=10, color=MINT)
+    caption_block(c, u, 17.1, 21.8, "Ou por sorteio.", None, 146, 470, 64, tag_s="Classificação")
+    for i, (s_, t0, _) in enumerate(SORT_ITEMS):
+        k = e_outback(prog(u, t0, t0 + 0.45), 1.6) * (1 - e_in3(prog(u, 21.8, 22.3)))
+        if k <= 0.01: continue
+        y = 572 + i * 60
+        c.drawCircle(166, y - 11, 16 * k, paint(GREEN, clamp(k)))
+        pth = skia.Path(); pth.moveTo(158, y - 11); pth.lineTo(164, y - 4); pth.lineTo(175, y - 18)
+        c.drawPath(pth, paint("#ffffff", clamp(k), style="stroke", stroke=3.5))
+        kinetic(c, s_, 198, y, 32, u - t0, weight=620, align="left", out_t=21.8 - t0, stagger=0.012, rise=0.3)
+    # C. quem discorda, recorre (o mesmo relógio de antes, deslocado pelo sorteio)
+    u2 = u - SH
+    if u2 > 16.8:
+        kin = e_out5(prog(u2, 16.8, 17.5)); kout = e_in3(prog(u2, 21.8, DUR - SH))
         a = Card("p_elisa_recorrer_ok.png", REC_FORM, moved(frame_in(REC_FORM, REC_ZONE), dx=1100 * (1 - kin), dy=-1150 * kout)).draw(c, 1, glow=0.15)
         # caixas medidas nos pixels da captura (a tela não reabre: o recurso já foi interposto)
-        a.focus(c, (38, 574, 1044, 472), prog(u, 17.8, 18.3) * (1 - kout), pad=10, color=MINT)
-        a.focus(c, (48, 1216, 326, 84), prog(u, 19.0, 19.4) * (1 - kout), pad=8)
-    caption_block(c, u, 17.1, 21.7, "Quem discorda,", None, 146, 520, 76, tag_s="Recurso")
-    kinetic(c, "pode recorrer.", 146, 610, 76, u - 17.4, weight=780, align="left", out_t=21.7 - 17.4, color=MINT)
-    kinetic(c, "Pela internet — e cada recurso", 150, 680, 30, u - 17.9, weight=480, align="left", color=MUTED,
+        a.focus(c, (38, 574, 1044, 472), prog(u2, 17.8, 18.3) * (1 - kout), pad=10, color=MINT)
+        a.focus(c, (48, 1216, 326, 84), prog(u2, 19.0, 19.4) * (1 - kout), pad=8)
+    caption_block(c, u2, 17.1, 21.7, "Quem discorda,", None, 146, 520, 76, tag_s="Recurso")
+    kinetic(c, "pode recorrer.", 146, 610, 76, u2 - 17.4, weight=780, align="left", out_t=21.7 - 17.4, color=MINT)
+    kinetic(c, "Pela internet — e cada recurso", 150, 680, 30, u2 - 17.9, weight=480, align="left", color=MUTED,
             out_t=21.7 - 17.9, stagger=0.01, rise=0.3, blur_in=4)
-    kinetic(c, "é respondido e fica registrado.", 150, 722, 30, u - 18.0, weight=480, align="left", color=MUTED,
+    kinetic(c, "é respondido e fica registrado.", 150, 722, 30, u2 - 18.0, weight=480, align="left", color=MUTED,
             out_t=21.7 - 18.0, stagger=0.01, rise=0.3, blur_in=4)
