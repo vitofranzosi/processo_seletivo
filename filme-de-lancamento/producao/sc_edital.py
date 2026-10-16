@@ -118,7 +118,7 @@ def draw(c, T):
             ripple(c, *p_radio, prog(T, b(34.5), b(34.5) + 0.6))
             tag(c, "Nada começa do zero", 154, 900, env(T, b(34.1), b(35.3), 0.3, 0.3))
         if T > b(35.4):
-            cap(c, T, b(35.6), b(40.3), "Regras organizadas.", "Vagas, datas, etapas e critérios — cada coisa no seu lugar.", tag_s="Montar o Edital")
+            cap(c, T, b(35.6), b(39.95), "Regras organizadas.", "Vagas, datas, etapas e critérios — cada coisa no seu lugar.", tag_s="Montar o Edital")
         # cursor percorrendo a barra de etapas
         if b(35.2) < T < b(40.6):
             pts = []

@@ -265,3 +265,22 @@ macro passou a guiar a sequência inteira:
 
 A lei é citada pelo número e pelo nome, como no repositório (docs da `069` e a pesquisa de 07/10,
 com o link da Câmara). O filme passou a 4min31s.
+
+## Revisão de 15/10 — continuidade
+
+Diagnóstico de continuidade sobre o render (imagem vista quadro a quadro nas fronteiras; áudio
+medido, não ouvido) e quatro correções, sem mexer na estrutura:
+
+- **1:58,9 (publicação → inscrição).** A cena terminava clicando em "Ver vagas e inscrever-se" do
+  Edital 02 e o corte levava a outro percurso (procurar e se inscrever no Edital 01); o cartão e a
+  legenda sumiam a meio da saída. Agora a cena termina no destaque "Inscrições abertas", o cartão
+  sai para cima e a legenda acaba antes do corte.
+- **1:15,7.** "Regras organizadas." era cortada no meio da saída; agora termina 0,35 compasso antes.
+- **1:43,9.** A página do Edital saía num corte seco; agora sobe nos últimos 0,55 s.
+- **2:28,9 (inscrição → assistente), áudio.** A trilha caía a −34/−43 dB por ~0,4 s no corte. O pad
+  do assistente entra 0,5 s antes, o groove da inscrição faz cauda de um compasso e o baixo do
+  assistente entra no corte. No MP4 final o mínimo ali é −25,5 dB, na faixa das demais junções.
+  Falta confirmar ouvindo.
+
+Ficaram de fora: o "Convocado" já visível no Acompanhe (2:21–2:28), que antecipa a convocação
+(refinamento opcional), e o respiro de áudio em 2:55, que pode ser intencional.

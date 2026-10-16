@@ -44,8 +44,8 @@ def draw(c, u):
     cap(c, u, 5.6, 8.3, "Publicar.", "Um clique — e o Edital passa a valer, sem poder ser alterado.")
     # C. aberto a todos: a página pública do Edital, com o PDF e as inscrições
     if u > 8.6:
-        kin = e_out5(prog(u, 8.6, 9.4))
-        pub = Card(PUB, PUB_CROP, moved(frame_in(PUB_CROP, ZONE_BOTTOM), dy=900 * (1 - kin))).draw(c, 1, glow=0.2)
+        kin = e_out5(prog(u, 8.6, 9.4)); kout = e_in3(prog(u, 14.3, 14.95))
+        pub = Card(PUB, PUB_CROP, moved(frame_in(PUB_CROP, ZONE_BOTTOM), dy=900 * (1 - kin) - 1150 * kout)).draw(c, 1, glow=0.2)
         # o PDF gerado voa até o botão "Ler o Edital completo (PDF)"
         kp = e_io3(prog(u, 9.5, 10.7))
         if kp < 1 and u > 9.3:
@@ -54,10 +54,6 @@ def draw(c, u):
             Card(PDF1, (0, 0, 3570, 5052), Pose(lerp(a[0], z[0], kp), lerp(a[1], z[1], kp) - 120 * math.sin(math.pi * kp), w, 0, 0, -8 * (1 - kp), 0,
                  1 - e_in3(prog(kp, 0.8, 1)))).draw(c, 1 - e_in3(prog(kp, 0.8, 1)), radius=3, border=0.0)
         pub.focus(c, PUB_PDF, prog(u, 10.6, 11.0) * (1 - prog(u, 11.7, 12.0)), pad=8, color=MINT)
-        pub.focus(c, PUB_ABERTA, prog(u, 11.8, 12.3) * (1 - prog(u, 13.0, 13.3)), pad=10, color=MINT)
-        pi = pub.to_screen(PUB_INSC[0] + 215, PUB_INSC[1] + 43)
-        pub.focus(c, PUB_INSC, prog(u, 13.2, 13.6), pad=8)
-        cursor(c, *path_at(u, [(12.6, (1500, 760)), (13.7, pi), (DUR, pi)]), alpha=env(u, 12.6, DUR, 0.3, 0.0),
-               press=env(u, 14.2, 14.35, 0.03, 0.08))
-        ripple(c, *pi, prog(u, 14.25, 14.85))
-    cap(c, u, 9.0, 14.6, "Publicado, aberto a todos.", "Na hora, o Edital está na página pública — e as inscrições começam.")
+        # a cena termina em "Inscrições abertas": a inscrição é o capítulo seguinte, do ponto de vista do candidato
+        pub.focus(c, PUB_ABERTA, prog(u, 11.8, 12.3) * (1 - kout), pad=10, color=MINT)
+    cap(c, u, 9.0, 13.9, "Publicado, aberto a todos.", "Na hora, o Edital está na página pública — e as inscrições começam.")

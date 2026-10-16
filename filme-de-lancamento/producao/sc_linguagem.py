@@ -92,6 +92,10 @@ def back_pages(c, alpha):
 def draw(c, u):
     background(c, u + 88.875, grid=0.35, cam=((u + 88.875) * 12, 0))
     cam = camera(u)
+    kout = e_in3(prog(u, DUR - 0.55, DUR))          # sai para cima, como os demais cartões
+    if kout > 0:
+        s_, cd_, (csx, csy), vv = cam
+        cam = (s_, cd_, (csx, csy - 1250 * kout), vv)
     draw_doc(c, cam)
     # marcações no documento
     hl(c, cam, (384, 1565, 2700, 610), prog(u, 2.1, 2.6) * (1 - prog(u, 4.6, 4.9)))                 # o resumo

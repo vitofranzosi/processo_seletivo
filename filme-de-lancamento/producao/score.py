@@ -175,10 +175,12 @@ def LF(name, at, bars, gain, fi=0.0, fo=0.0, filt=None, target=0.12):
     if filt is not None:
         y = filt(y)
     mix.add(y, at, gain, fi, fo)
-LF("Airy Vox Synth", AS0, 14, 0.40, fi=0.8, fo=1.2, target=0.10)
-LF("Blueprint Beat 01", AS0, 3, 0.55, fi=0.4, filt=lambda y: sweep_lowpass(y, 500, 9000, 1.5), target=0.12)
+# o pad entra meio segundo antes do corte e o groove da inscrição faz cauda: as camadas se cruzam
+LF("Airy Vox Synth", AS0 - 0.5, 14, 0.40, fi=0.9, fo=1.2, target=0.10)
+LF("Rocket Fuel Beat 01", AS0, 1, 0.55, fo=0.6 * BAR, target=0.13)
+LF("Blueprint Beat 01", AS0, 3, 0.55, fi=0.15, filt=lambda y: sweep_lowpass(y, 500, 9000, 1.5), target=0.12)
 LF("Blueprint Beat 01", AS0 + 3 * BAR, 11, 0.60, fo=0.6, target=0.12)
-LF("Melodic Silk Bass", AS0 + 2 * BAR, 12, 0.40, fi=1.0, fo=0.8, target=0.11)
+LF("Melodic Silk Bass", AS0, 14, 0.40, fi=0.3, fo=0.8, target=0.11)
 LF("Pure Candy Synth Layers", AS0 + 9 * BAR, 5, 0.32, fi=1.5, fo=1.0, target=0.10)
 for u in [2.2, 5.9, 7.1, 13.2, 16.5]:
     fx.add(tick(0.22, 3600, 0.05), AS0 + u)
