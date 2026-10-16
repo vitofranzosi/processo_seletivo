@@ -14,7 +14,7 @@ LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps
 1. Abrir `http://localhost:8076/gestao/`, entrar pela demonstração como **Gestor**.
 2. A barra mostra *Trabalho* (Processos Seletivos, Minhas Etapas, Visão Geral) e *Unidade*
    (Autoridades da unidade, Modelos de aviso); Processos Seletivos está destacado.
-3. Abrir um Edital. O caminho do topo diz `Gestão de Processos Seletivos › Processos Seletivos`, a
+3. Abrir um Edital. O caminho do topo diz `GPS › Processos Seletivos`, em texto, a
    trilha da tela continua logo abaixo, e a barra destaca Processos Seletivos. Seguir "Visão Geral" pela barra: chega sem passar pela lista.
 4. "Trocar identidade" → página de acesso com continuar e trocar. Entrar como **Elaborador**: a
    barra não tem Visão Geral nem o grupo *Unidade*. Abrir `/gestao/visao-geral` à mão: a mesma
@@ -24,7 +24,7 @@ LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps
    por Enter; Tab entra nos itens; nenhuma rolagem horizontal.
 7. Esc fecha a barra aberta; tocar fora dela também.
 8. Só pelo teclado, na tela larga: o primeiro Tab mostra "Pular para o conteúdo", que leva o foco
-   ao conteúdo; sem ele, a ordem é marca, seções, pessoa e Sair, caminho, Trocar identidade.
+   ao conteúdo; sem ele, a ordem é marca, seções, Sair, Trocar identidade. A 375 px, a barra do topo continua à vista ao rolar.
 
 ## Inventário
 

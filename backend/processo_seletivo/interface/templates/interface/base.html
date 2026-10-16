@@ -32,12 +32,22 @@ como coluna. Navegador que não conhece `popover` não esconde o painel, e o bot
 Na tela cuja matriz não cabe ao lado da barra a 1.280 px (a Alocação), `.shell-recolhida` mantém
 na tela larga o desenho do celular: a `057` exige a matriz sem rolagem interna (DP-4 da `076`).
 
+No celular a barra do topo fica presa à janela, para que "Seções" esteja à mão no fim de uma
+página longa, e o `scroll-padding` impede que ela cubra o alvo do link de salto e das âncoras. Na
+Alocação ela não prende: o cabeçalho da matriz é que se prende à janela ali.
+
+Navegador sem `popover` (`@supports` no fim do trecho) mostra o painel dentro da barra do topo; a
+barra quebra a linha e o painel toma a largura toda, em vez de se espremer ao lado da marca. Com o
+painel aberto no celular e a janela alargada, ele ocupa o lugar da coluna, sem escurecer a página,
+até ser fechado.
+
 O item atual se marca por `[aria-current]`, e não por classe: `.x.atual` faria de `atual` um
 modificador cobrado em toda tela que já usa a palavra. A coluna do conteúdo é `minmax(0,1fr)` para
 que o que é largo role dentro da própria tabela, e não empurre a página.
 {% endcomment %}
 .barra-lateral{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--branco);
-  border-bottom:1px solid var(--borda)}
+  border-bottom:1px solid var(--borda);position:sticky;top:0;z-index:6}
+.shell-recolhida .barra-lateral{position:static}
 .barra-lateral .marca{font-weight:600;color:var(--verde-escuro);text-decoration:none;line-height:1.25}
 .barra-lateral .marca span{display:block;font-weight:400;font-size:.8125rem;color:var(--texto-fraco)}
 .abrir-secoes,.fechar-secoes{margin-left:auto;font:inherit;font-size:.875rem;padding:.35rem .8rem;
@@ -63,9 +73,12 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
 .pessoa-identificada form{margin:0}
 .cabecalho-de-contexto{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;
   padding:.6rem 1.5rem;background:var(--branco);border-bottom:1px solid var(--borda);font-size:.875rem}
-.caminho-da-secao{color:var(--texto-fraco)}
+.caminho-da-secao{margin:0;color:var(--texto-fraco)}
 .cabecalho-de-contexto>a{margin-left:auto}
 .area-de-trabalho{min-width:0}
+@media not all and (min-width:64rem){
+  html{scroll-padding-top:4.5rem}
+}
 @media (min-width:64rem){
   .shell{display:grid;grid-template-columns:15rem minmax(0,1fr)}
   .barra-lateral{position:sticky;top:0;height:100vh;flex-direction:column;align-items:stretch;
@@ -74,6 +87,8 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   .abrir-secoes,.fechar-secoes{display:none}
   .secoes-da-gestao{display:flex;flex-direction:column;flex:1;position:static;width:auto;
     height:auto;margin:0;padding:0;border:0;background:none;color:inherit;overflow:visible}
+  .secoes-da-gestao:popover-open{width:15rem}
+  .secoes-da-gestao::backdrop{background:none}
   .shell-recolhida{display:block}
   .shell-recolhida .barra-lateral{position:static;height:auto;flex-direction:row;align-items:center;
     gap:1rem;padding:.6rem 1rem;border-right:0;border-bottom:1px solid var(--borda)}
@@ -83,9 +98,16 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   .shell-recolhida .secoes-da-gestao:popover-open{position:fixed;inset:0 auto 0 0;
     width:min(18rem,85vw);height:100%;border-right:1px solid var(--borda);background:var(--branco);
     color:var(--texto);overflow-y:auto}
+  .shell-recolhida .secoes-da-gestao::backdrop{background:rgba(0,0,0,.3)}
 }
 @supports not selector(:popover-open){
-  .abrir-secoes,.fechar-secoes{display:none}
+  .shell .abrir-secoes,.shell .fechar-secoes{display:none}
+  .shell-recolhida .barra-lateral{flex-wrap:wrap}
+  .shell-recolhida .secoes-da-gestao{flex-basis:100%;min-width:0}
+  @media not all and (min-width:64rem){
+    .barra-lateral{flex-wrap:wrap}
+    .secoes-da-gestao{flex-basis:100%;min-width:0}
+  }
 }
 @media print{
   .shell{display:block}
@@ -1378,8 +1400,8 @@ escape do guardião por mudar de lugar.
 </head>
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
-{% if barra %}
-<div class="shell{% if barra_recolhida %} shell-recolhida{% endif %}">
+{% if navegacao.barra %}
+<div class="shell{% if navegacao.recolhida %} shell-recolhida{% endif %}">
 <div class="barra-lateral">
   {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
      dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
@@ -1390,7 +1412,7 @@ escape do guardião por mudar de lugar.
     {% comment %} Cada item só vem para quem o destino aceita (076, `FR-1714`): os predicados são
        os da lista, em `navegacao.py`. Grupo sem item não vem. {% endcomment %}
     <nav aria-label="Seções da gestão">
-      {% for grupo in barra %}
+      {% for grupo in navegacao.barra %}
       <p class="grupo-de-secoes" id="grupo-de-secoes-{{ forloop.counter }}">{{ grupo.nome }}</p>
       <ul aria-labelledby="grupo-de-secoes-{{ forloop.counter }}">
         {% for item in grupo.itens %}<li><a href="{{ item.endereco }}"{% if item.atual %} aria-current="{{ item.atual }}"{% endif %}>{{ item.rotulo }}</a></li>
@@ -1410,12 +1432,11 @@ escape do guardião por mudar de lugar.
 </div>
 <div class="area-de-trabalho">
 <header class="cabecalho-de-contexto">
-  {% comment %} O caminho para na seção (076, `FR-1718`): o Processo, o Edital e a Etapa já estão na
-     trilha que a própria tela traz, e repeti-los aqui poria o mesmo nome três vezes seguidas. {% endcomment %}
-  <nav aria-label="Caminho" class="caminho-da-secao">
-    <abbr title="Gestão de Processos Seletivos">GPS</abbr> ›
-    {% if secao_atual and request.path == secao_atual.endereco %}<span aria-current="page">{{ secao_atual.rotulo }}</span>{% elif secao_atual %}<a href="{{ secao_atual.endereco }}">{{ secao_atual.rotulo }}</a>{% endif %}
-  </nav>
+  {% comment %} O caminho para na seção (076, `FR-1718`), e é texto, e não navegação: o link da seção
+     já está na barra, e o Processo, o Edital e a Etapa estão na trilha que a própria tela traz.
+     Como link, a seção aparecia três vezes seguidas — barra, caminho, trilha — para quem
+     percorre os marcos de navegação. {% endcomment %}
+  <p class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › {{ navegacao.secao_atual }}</p>
   <a href="{% url 'interface:identificar' %}">Trocar identidade</a>
 </header>
 {% else %}
@@ -1430,7 +1451,7 @@ escape do guardião por mudar de lugar.
 <main id="conteudo" tabindex="-1">
 {% block conteudo %}{% endblock %}
 </main>
-{% if barra %}
+{% if navegacao.barra %}
 </div>
 </div>
 {% endif %}

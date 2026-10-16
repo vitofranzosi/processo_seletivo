@@ -29,7 +29,7 @@ def itens_da_barra(corpo):
 
 
 def caminho(corpo):
-    return corpo.split('<nav aria-label="Caminho"')[1].split("</nav>")[0]
+    return corpo.split('<p class="caminho-da-secao">')[1].split("</p>")[0]
 
 
 # ---- a moldura -------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ def test_o_salto_continua_o_primeiro_e_pula_a_barra(client, seletor_ligado):
     assert depois_do_body.startswith('<a class="pular" href="#conteudo">')
     assert '<main id="conteudo" tabindex="-1">' in corpo
     assert corpo.index('class="barra-lateral"') < corpo.index('<main id="conteudo"')
-    assert corpo.index('aria-label="Caminho"') < corpo.index('<main id="conteudo"')
+    assert corpo.index('class="caminho-da-secao"') < corpo.index('<main id="conteudo"')
 
 
 @pytest.mark.django_db
@@ -160,8 +160,23 @@ def test_montar_a_barra_nao_consulta_o_banco(settings, django_assert_num_queries
     }
     with django_assert_num_queries(0):
         contexto = navegacao.contexto_da_navegacao(pedido)
+        grupos = [grupo["nome"] for grupo in contexto["navegacao"]["barra"]]
 
-    assert [grupo["nome"] for grupo in contexto["barra"]] == ["Trabalho", "Unidade"]
+    assert grupos == ["Trabalho", "Unidade"]
+
+
+def test_a_barra_so_se_monta_quando_lida(monkeypatch):
+    """Os fragmentos que o htmx troca não têm barra: o processador não pode montá-la para eles."""
+
+    def nao_devia_ler(request):
+        raise AssertionError("a barra foi montada sem que ninguém a lesse")
+
+    monkeypatch.setattr(navegacao.identidade, "ator_da_sessao", nao_devia_ler)
+    pedido = RequestFactory().get("/gestao/editais/x/fragmentos/etapa")
+
+    contexto = navegacao.contexto_da_navegacao(pedido)
+
+    assert list(contexto) == ["navegacao"]
 
 
 def test_o_portal_nao_recebe_barra(settings):
@@ -212,22 +227,23 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
         barra(corpo)
     )
     assert barra(corpo).count("aria-current") == 1
-    assert '<span aria-current="page">Visão Geral</span>' in caminho(corpo)
+    assert caminho(corpo).endswith("› Visão Geral")
 
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_abaixo_da_secao_o_caminho_leva_a_ela_e_nao_repete_a_trilha(
+def test_abaixo_da_secao_o_caminho_a_nomeia_e_nao_repete_a_trilha(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
     """`FR-1716`, `FR-1718`: no Edital, a seção é Processos Seletivos; o caminho do topo para nela,
-    e a trilha da própria tela continua uma só, com o número do Edital."""
+    em texto — o link já está na barra —, e a trilha da própria tela continua uma só."""
     edital = publish_original(api_client, manager_headers, process_payload)
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
 
     assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
-    assert f'<a href="{reverse("interface:lista")}">Processos Seletivos</a>' in caminho(corpo)
+    assert caminho(corpo).endswith("› Processos Seletivos")
+    assert "<a " not in caminho(corpo)
     assert f"{edital.number}/{edital.year}" not in caminho(corpo)
     assert corpo.count('aria-label="Trilha de navegação"') == 1
 
@@ -250,3 +266,16 @@ def test_na_alocacao_a_barra_fica_recolhida(
 
     assert '<div class="shell shell-recolhida">' in alocacao.decode()
     assert '<div class="shell">' in lista.decode()
+
+
+def test_sem_popover_o_painel_toma_a_largura_da_barra():
+    """Navegador sem `popover` não esconde o painel: no celular e na Alocação, a barra do topo
+    quebra a linha e o painel ocupa a largura toda, em vez de se espremer ao lado da marca."""
+    from pathlib import Path
+
+    folha = (Path(navegacao.__file__).parent / "templates/interface/base.html").read_text()
+    bloco = folha.split("@supports not selector(:popover-open){")[1].split("\n}")[0]
+
+    assert ".barra-lateral{flex-wrap:wrap}" in bloco
+    assert ".secoes-da-gestao{flex-basis:100%;min-width:0}" in bloco
+    assert ".shell-recolhida .barra-lateral{flex-wrap:wrap}" in bloco

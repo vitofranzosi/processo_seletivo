@@ -13,6 +13,7 @@ endereço (`R-003`), que é hierárquico de propósito: as rotas da Mesa pendem 
 from dataclasses import dataclass
 
 from django.urls import reverse
+from django.utils.functional import SimpleLazyObject
 
 from processo_seletivo.interface import identidade
 from processo_seletivo.interface import visao_geral as visao_institucional
@@ -69,24 +70,29 @@ SECOES = (
 TELAS_LARGAS = frozenset({"interface:alocacoes"})
 
 
-def secao_do_caminho(caminho):
+def secao_do_caminho(caminho, enderecos=None):
     """A seção a que pertence a tela daquele endereço — a de prefixo mais longo.
 
     A lista responde na raiz da gestão, e por isso é o prefixo de todos: toda tela que não está sob
     outra seção é de Processos Seletivos — o Processo, o Edital, a composição, o recurso.
     """
-    candidatas = [s for s in SECOES if caminho.startswith(reverse(s.rota))]
-    return max(candidatas, key=lambda s: len(reverse(s.rota)), default=None)
+    enderecos = enderecos or _enderecos()
+    candidatas = [s for s in SECOES if caminho.startswith(enderecos[s.rota])]
+    return max(candidatas, key=lambda s: len(enderecos[s.rota]), default=None)
 
 
-def grupos_da_barra(ator, caminho):
+def _enderecos():
+    # Uma vez por pedido, e não guardado no módulo: o prefixo do endereço é do pedido.
+    return {secao.rota: reverse(secao.rota) for secao in SECOES}
+
+
+def grupos_da_barra(ator, caminho, atual, enderecos):
     """Os grupos com os itens que o ator alcança. Grupo sem item não vem (`FR-1714`)."""
-    atual = secao_do_caminho(caminho)
     grupos = {}
     for secao in SECOES:
         if not secao.alcanca(ator):
             continue
-        endereco = reverse(secao.rota)
+        endereco = enderecos[secao.rota]
         grupos.setdefault(secao.grupo, []).append(
             {
                 "rotulo": secao.rotulo,
@@ -98,20 +104,26 @@ def grupos_da_barra(ator, caminho):
     return [{"nome": nome, "itens": itens} for nome, itens in grupos.items()]
 
 
-def contexto_da_navegacao(request):
-    """A barra e a seção atual, a todo template da gestão.
-
-    O processador roda também no portal, que não tem barra; ali ele não lê nada.
-    """
-    if not request.path.startswith(reverse("interface:lista")):
-        return {}
+def _navegacao(request):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return {}
-    secao = secao_do_caminho(request.path)
-    rota = getattr(request.resolver_match, "view_name", None)
+    enderecos = _enderecos()
+    atual = secao_do_caminho(request.path, enderecos)
     return {
-        "barra": grupos_da_barra(ator, request.path),
-        "barra_recolhida": rota in TELAS_LARGAS,
-        "secao_atual": secao and {"rotulo": secao.rotulo, "endereco": reverse(secao.rota)},
+        "barra": grupos_da_barra(ator, request.path, atual, enderecos),
+        "recolhida": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
+        "secao_atual": atual.rotulo if atual else "",
     }
+
+
+def contexto_da_navegacao(request):
+    """A barra e a seção atual, a todo template da gestão, sob o nome `navegacao`.
+
+    **Preguiçosa**: só se monta quando o `base.html` a lê. O processador roda em toda resposta, e
+    os fragmentos que o htmx troca — muitos por minuto na composição — não têm barra. No portal,
+    que também não tem, ele nem a oferece.
+    """
+    if not request.path.startswith(reverse("interface:lista")):
+        return {}
+    return {"navegacao": SimpleLazyObject(lambda: _navegacao(request))}

@@ -37,8 +37,10 @@ em silêncio.
 
 ## R-004 — O caminho do topo para na seção
 
-**Decisão**: o cabeçalho de contexto diz *Gestão de Processos Seletivos › seção*. O resto do
-caminho é a trilha que a tela já tem.
+**Decisão**: o cabeçalho de contexto diz *GPS › seção*, em texto, e não como navegação. O resto
+do caminho é a trilha que a tela já tem, e o link da seção é o da barra. Na primeira versão a seção
+era link, e a revisão do PR mostrou o efeito: nas telas com trilha, "Processos Seletivos" aparecia
+como link três vezes seguidas — barra, caminho, trilha — para quem percorre os marcos.
 
 **Por quê**: 54 das 59 telas já abrem com `nav.trilha` ("Trilha de navegação"), com o código do
 Processo, o número do Edital e a Etapa — mais do que o topo saberia dizer sem tocar a view. Repetir
@@ -71,7 +73,7 @@ substring.
 ```
 link de salto
 .barra            marca · botão Seções · #secoes (popover) [ nav Seções da gestão (Trabalho, Unidade) · pessoa e Sair ]
-.area             header.contexto [ nav Caminho · Trocar identidade ] · main#conteudo (intacto)
+.area             header.contexto [ GPS › seção · Trocar identidade ] · main#conteudo (intacto)
 ```
 
 Na tela larga, `.barra` é uma coluna fixa de 15rem, presa ao rolar, com o pé no fim da altura da
@@ -85,6 +87,16 @@ Os guardiões que a varredura achou e que a estrutura respeita: `a.marca` com `h
 modificadora — o seletor é `[aria-current]` —, porque `.x.atual` faria de `atual` um modificador
 cobrado em toda tela (`test_acessibilidade.py`); o botão com `type="button"` e classe; nenhum
 `h1` fora do `main`; a barra e o caminho fora do `main`, que vários testes recortam.
+
+## R-008 — O que a revisão do PR acrescentou
+
+- **A barra se monta só quando lida.** O processador entrega um objeto preguiçoso sob o nome
+  `navegacao`; os fragmentos do htmx, que não estendem o `base.html`, não pagam a montagem.
+- **No celular a barra do topo fica presa à janela**, com `scroll-padding-top` para não cobrir o
+  alvo das âncoras; na Alocação, não, porque ali quem se prende à janela é o cabeçalho da matriz.
+- **Navegador sem `popover`**: a barra quebra a linha e o painel toma a largura toda.
+- **Painel aberto no celular e janela alargada**: ele ocupa a largura da coluna, sem escurecer a
+  página, até ser fechado — o painel aberto mora na camada de cima, e a folha não o devolve ao fluxo.
 
 ## R-007 — Medir antes de afirmar
 
