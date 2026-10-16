@@ -172,7 +172,7 @@ def aviso_do_resultado(request, edital_id, marco_id):
     """A prévia e a confirmação do aviso de resultado (contracts/telas.md)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = _edital_do_ator(ator, edital_id)
     exigir_base(ator, edital.processo, origem=nomes.RESULTADO)
     dados = request.POST if request.method == "POST" else request.GET
@@ -248,7 +248,7 @@ def aviso_da_chamada(request, edital_id, marco_id):
     """A prévia e a confirmação do aviso de uma chamada por publicação (`FR-1251`, `UX-178`)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = _edital_do_ator(ator, edital_id)
     exigir_base(ator, edital.processo, origem=nomes.CHAMADA)
     dados = request.POST if request.method == "POST" else request.GET
@@ -325,7 +325,7 @@ def aviso(request, aviso_id):
     """O histórico do aviso: texto enviado, ato, estados e alerta (contracts/telas.md)."""
     ator, aviso_ = _aviso_para_ler(request, aviso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     historico = avisos_selectors.historico(aviso_, agora=timezone.now())
     pode_agir = base_do_aviso(ator, aviso_.edital.processo, origem=aviso_.origem) is not None
     return marcar_como_privada(
@@ -354,7 +354,7 @@ def avisos_do_edital(request, edital_id):
 
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = _edital_do_ator(ator, edital_id)
     processo = edital.processo
     if not pode_consultar(ator, processo):
@@ -426,7 +426,7 @@ def aviso_interromper(request, aviso_id):
 
     ator, aviso_ = _aviso_para_ler(request, aviso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     exigir_base(ator, aviso_.edital.processo, origem=aviso_.origem)
     erro = None
     if request.method == "POST":
@@ -474,7 +474,7 @@ def aviso_reenviar(request, aviso_id):
 
     ator, anterior = _aviso_para_ler(request, aviso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     exigir_base(ator, anterior.edital.processo, origem=anterior.origem)
     dados = request.POST if request.method == "POST" else request.GET
     motivo = dados.get("motivo") or nomes.REENVIO_DE_FALHAS
@@ -549,7 +549,7 @@ def modelos_de_aviso(request):
 
     ator = _ator_que_gere(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     return marcar_como_privada(
         render(
             request,
@@ -569,7 +569,7 @@ def modelo_de_aviso(request, modelo_id=None):
 
     ator = _ator_que_gere(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     modelo = modelos_app.modelo_da_unidade(ator, modelo_id) if modelo_id else None
     erro = None
     if request.method == "POST":
@@ -621,7 +621,7 @@ def modelo_de_aviso_situacao(request, modelo_id):
 
     ator = _ator_que_gere(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     modelo = mudar_situacao(actor=ator, modelo_id=modelo_id, ativo=request.POST.get("ativo") == "1")
     request.session["modelo_de_aviso_salvo"] = modelo.nome
     return redirect(reverse("interface:modelos-de-aviso"))

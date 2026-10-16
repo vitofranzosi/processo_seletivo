@@ -1,9 +1,24 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base_de_acesso.html" %}
 {% block titulo %}Autenticação indisponível{% endblock %}
-{% block conteudo %}
-<h1>Autenticação institucional não configurada</h1>
-<p class="erro" role="alert">Esta interface exige autenticação institucional, que ainda não foi
-integrada. O seletor de identidade existe apenas em ambiente de desenvolvimento e está desligado
-aqui.</p>
-<p>Enquanto a integração com o diretório não ocorre, esta interface não pode ser usada.</p>
+{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
+{% block acesso %}
+{% comment %}
+Sem método de entrada (075, `FR-1691`): a mesma porta, sem ação de entrar. Continua respondendo 503
+— a gestão existe, e o que falta é configuração —, e não oferece escolha nenhuma: o seletor de
+demonstração não existe fora do desenvolvimento.
+{% endcomment %}
+<div class="cartao-de-acesso">
+  <span class="simbolo" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-marca"/></svg></span>
+  <h1>Autenticação institucional não configurada</h1>
+  <p class="chamada" role="alert">A entrada na gestão depende da autenticação institucional do Ifes,
+    que ainda não foi integrada a este ambiente.</p>
+  <p class="nota-do-metodo">Enquanto ela não estiver disponível, a gestão não pode ser usada aqui.</p>
+
+  <div class="separador">Candidatos</div>
+  <a class="atalho" href="{% url 'portal:inscricoes' %}">
+    <span class="icone"><svg class="i" aria-hidden="true"><use href="#i-usuarios"/></svg></span>
+    <span><strong>Procura suas inscrições?</strong><span>Acompanhe tudo pelo portal público</span></span>
+    <svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg>
+  </a>
+</div>
 {% endblock %}

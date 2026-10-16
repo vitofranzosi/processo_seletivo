@@ -36,6 +36,22 @@ button.sair:hover{background:rgba(255,255,255,.15)}
 header.topo a{color:var(--branco);text-decoration:none}
 header.topo .marca{font-weight:600;letter-spacing:.02em;font-size:1rem}
 header.topo .marca span{font-weight:300;opacity:.85}
+/* O nome do produto (075, `FR-1700`, `D-006`): por extenso, e a sigla só onde ele não cabe. No
+   celular o nome inteiro fica para quem ouve a tela — escondido da vista, e não da leitura —, e a
+   sigla, que não diz nada a quem chega pela primeira vez, fica só para os olhos. */
+header.topo .marca .nome-por-extenso{font-weight:600;opacity:1}
+header.topo .marca .sigla{display:none;font-weight:600;opacity:1}
+/* As duas portas (075, `FR-1699`): a do candidato primeiro e mais forte, a da gestão depois de um
+   filete e mais quieta — quem abre a raiz quase sempre procura vaga. */
+.acessos{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;min-width:0}
+header.topo a.porta-da-gestao{opacity:.86;font-size:.875rem;white-space:nowrap;padding-left:1rem;
+  border-left:1px solid rgba(255,255,255,.35)}
+header.topo a.porta-da-gestao:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
+@media (max-width:30rem){
+  header.topo .marca .nome-por-extenso{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap}
+  header.topo .marca .sigla{display:inline}
+}
 /* A mesma divisão da base administrativa: a página serve à estrutura, o texto tem medida própria.
    Aqui isso vale sobretudo pela vitrine, que empilhava cinco seleções em 1,8 tela com 346 px
    vazios de cada lado. */
@@ -950,7 +966,8 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
-  <span class="marca"><a href="{% url 'portal:vitrine' %}">Cefor<span>/Ifes</span> · Seleções</a></span>
+  <span class="marca"><a href="{% url 'portal:vitrine' %}">Cefor<span>/Ifes</span> · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
+  <nav class="acessos" aria-label="Acessos">
   {% comment %}
   A identidade aqui é a **do candidato**, de chave de sessão própria — nunca o `ator` da interface
   administrativa, que é outro eixo (FR-020, FR-021).
@@ -987,10 +1004,17 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
   {% endcomment %}
   {% block convite_de_entrar %}
   <span class="quem-esta">
-    <a class="no-topo" href="{% url 'portal:acesso' %}">Entrar</a>
+    <a class="no-topo" href="{% url 'portal:acesso' %}">Minhas inscrições</a>
   </span>
   {% endblock %}
   {% endif %}
+  {% comment %}
+  A porta da gestão, **só onde há por onde entrar nela** (075, `FR-1699`, decisão do responsável
+  pelo produto em 16/10). Em produção, enquanto a autenticação institucional não existe, ela levaria
+  a uma página que não deixa entrar — e o candidato não tem por que vê-la.
+  {% endcomment %}
+  {% if metodos_de_acesso %}<a class="porta-da-gestao" href="{% url 'interface:lista' %}">Área de gestão</a>{% endif %}
+  </nav>
 </header>
 <main id="conteudo" tabindex="-1">
 {% block conteudo %}{% endblock %}

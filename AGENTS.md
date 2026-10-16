@@ -137,7 +137,8 @@ derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
 
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
 runserver local devolve 503. Ele deixa qualquer pessoa declarar quem é, e produção recusa subir com
-ele. O portal do candidato **não** precisa de `PORTAL_IDENTIDADE_DEMO`: a tela que a chave
+ele. Desde a `075`, desligá-lo também **derruba a sessão de demonstração já aberta** — ligar de novo
+não a traz de volta —, e a vitrine deixa de oferecer "Área de gestão". O portal do candidato **não** precisa de `PORTAL_IDENTIDADE_DEMO`: a tela que a chave
 habilitava saiu na `010`, e o candidato entra por código enviado ao e-mail. A chave sobrevive só
 como armadilha — `production.py` recusa subir com ela ligada (`portal/identidade.py`,
 `provedor_de_demonstracao`, que ninguém chama).
