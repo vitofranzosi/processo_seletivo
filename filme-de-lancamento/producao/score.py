@@ -203,8 +203,8 @@ for i in range(5):
 fx.add(tick(0.22, 3600, 0.05), C0 + 4.35)
 for u in [4.8, 11.8, 16.8, 22.425]:
     fx.add(whoosh(0.8, 300, 5000, 0.6, 0.22), C0 + u - 0.1)
-# o sorteio: uma confirmação por garantia
-for j, u in enumerate([17.7, 19.1, 20.5]):
+# o sorteio (depois do recurso): uma confirmação por garantia
+for j, u in enumerate([23.325, 24.725, 26.125]):
     fx.add(blip(0.13, 1046 * 2 ** (j * 4 / 12)), C0 + u)
 for u in [5.9, 7.8, 9.7]:
     fx.add(whoosh(0.6, 500, 4000, 0.5, 0.12), C0 + u - 0.3)

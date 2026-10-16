@@ -323,3 +323,10 @@ pessoa refaz e confere.* (a ordem publicada). As três vêm da spec `021` (unive
 semente; semente de ocorrência futura de fonte pública externa — a Loteria Federal é o adaptador de
 referência —; ordem reproduzível por qualquer pessoa). A frase não nomeia a Loteria Federal porque a
 tela da demonstração mostra "Fonte de demonstração". Três compassos; o filme passou a 4min38s.
+
+**Ordem: recurso antes do sorteio.** Com o recurso logo depois do sorteio, parecia que se recorria do
+sorteio — cuja confiança vem de conferir, não de contestar —, e o recurso mostrado é contra uma prova
+avaliada por pessoas. A sequência passou a ser: *A comissão avalia. → O sistema classifica. → Quem
+discorda, pode recorrer.* e só então *Outra forma de classificar — Por sorteio.* (as três garantias),
+seguido da convocação. O filme não afirma que o sorteio não tem recurso: no sistema, o prazo de
+recurso é da publicação do resultado (`018`), não do método de classificação.
