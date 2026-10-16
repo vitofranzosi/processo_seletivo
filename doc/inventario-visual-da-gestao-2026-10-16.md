@@ -1,0 +1,254 @@
+# Inventário visual da gestão — 16/10/2026
+
+Linha de base de **todas as telas de `/gestao/`**, a 1280×900 e a 375×812, tirada antes de
+qualquer mudança no shell da gestão (etapa 2 da `075`). Serve para comparar antes e depois: o
+rebranding e a barra lateral não podem mudar o que uma tela mostra nem fazê-la estourar a largura
+sem que alguém veja.
+
+Nenhuma linha de código de produto mudou. Medido na `main` em `6fc3a85a`.
+
+## Como foi tirado
+
+- **Banco próprio**, `ps_inventario_telas`: `createdb`, `migrate`, `sincronizar_unidades` e
+  `seed_demo`, com `DB_USER=$USER DB_RUNTIME_USER=$USER LC_ALL=pt_BR.UTF-8
+  DJANGO_SETTINGS_MODULE=config.settings.development INTERFACE_SELETOR_IDENTIDADE=true`.
+- **Três objetos a mais que o seed não cria**, para que as telas que dependem deles tivessem o
+  que mostrar: dois recursos contra a publicação do resultado do Edital 51/2026 (Bruno Costa,
+  pendente; Clara Dias, admitido), gravados pelos comandos de aplicação `interpor` e `admitir`; e um
+  aviso de resultado, confirmado pela própria tela `aviso-do-resultado` depois de capturá-la.
+- **Identidade.** Cada tela tem uma identidade preferida — a que a alcança no uso real. Se ela não
+  carregasse, o roteiro tentava as outras na ordem e guardava a primeira que deu 200. Nenhuma tela
+  precisou do fallback. As identidades `inventario.*` não existem no seed: o seletor aceita qualquer
+  nome, e só os papéis contam.
+
+  | Identidade | Papéis | Para quê |
+  |---|---|---|
+  | `gustavo.gestor` | gestor | lista, Processo, comissão, inscrições, avisos |
+  | `ana.elaboradora` | elaborador | composição, prévia, Retificação |
+  | `bruno.homologador` | homologador | confirmações de homologar e devolver |
+  | `paula.publicadora` | publicador | confirmações de publicar, divulgação do resultado |
+  | `paulo.presidente` | nenhum (presidente da comissão) | distribuição, classificação, corte, ocupação, convocação, sorteio |
+  | `joana.avaliadora` | nenhum (membro alocado) | Minhas Etapas e a Mesa |
+  | `inventario.auditora` | auditor | auditoria do Edital e da comissão |
+  | `inventario.julgadora` | julgador | recursos |
+  | `inventario.exportadora` | exportador | exportação de matrículas |
+  | `inventario.piloto` | gestor + participante do piloto | assistente e protótipo (com `ASSISTENTE_PILOTO=true`) |
+
+- **Captura.** Chrome 155 por Playwright, contra um servidor WSGI numa thread do próprio roteiro.
+  Página inteira (`full_page`), com escala 1. A 375 px a janela é estreita mas **não** emula
+  dispositivo móvel. A captura tem a largura do conteúdo: uma tela que estoura sai mais larga que
+  375 px, e o estouro aparece na imagem.
+- **Medida.** `document.documentElement.scrollWidth` contra `clientWidth`. Estoura quando o primeiro
+  passa do segundo. A coluna de culpados lista o elemento mais externo que passa da borda e não está
+  dentro de um contêiner que rola.
+- **PNG comprimido**: 128 cores, sem pontilhado. As 166 capturas somam ~11 MB, abaixo dos 20 MB
+  combinados. Por isso ficaram **todas**, e não só as de 375 px.
+
+### Para repetir
+
+O roteiro e o gerador desta página estão na pasta ao lado. Os UUIDs de Processo e Edital no topo de
+`capturar.py` são os deste seed: um `seed_demo` novo sorteia outros, e eles precisam ser trocados.
+Os de Etapa e marco são fixos. Rode a partir de `backend/`, com o ambiente acima e
+`ASSISTENTE_PILOTO=true`:
+
+```bash
+uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py /caminho/de/saida
+```
+
+O depois do shell se compara pelo `resultados.json`, tela a tela: o `scrollWidth` de cada uma e o
+título (`h1`), e não o total.
+
+<!-- gerado por inventario-visual-da-gestao-2026-10-16/gerar_doc.py a partir de inventario-visual-da-gestao-2026-10-16/resultados.json -->
+
+| Números | |
+|---|---|
+| Rotas em `interface/urls.py` | 116 |
+| Rotas que renderizam tela por GET | 60 |
+| Variantes capturadas (rota × slug ou estado) | 83 de 84 |
+| Estouram a 375 px | 5 |
+| Estouram a 1280 px | 0 |
+| Rotas sem tela (POST, fragmento htmx, download) | 56 |
+
+## Telas
+
+| # | Rota (`name`) | Caminho medido | Identidade | Carregou | Estoura a 375 | Capturas |
+|---|---|---|---|---|---|---|
+| 1 | `lista` | `/gestao/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/lista--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/lista--1280.png) |
+| 2 | `identificar`<br>sem identidade | `/gestao/identificar` | sem identidade | sim | não | [375](inventario-visual-da-gestao-2026-10-16/identificar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/identificar--1280.png) |
+| 3 | `visao-geral` | `/gestao/visao-geral` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/visao-geral--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/visao-geral--1280.png) |
+| 4 | `autoridades` | `/gestao/autoridades` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/autoridades--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/autoridades--1280.png) |
+| 5 | `processo-criar` | `/gestao/processos/criar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/processo-criar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/processo-criar--1280.png) |
+| 6 | `processo-detalhe` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/processo-detalhe--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/processo-detalhe--1280.png) |
+| 7 | `edital-criar` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/editais/criar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/edital-criar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/edital-criar--1280.png) |
+| 8 | `processo-ato`<br>acao=ativar, Processo 2027 | `/gestao/processos/214d989f-3a43-4c89-9427-3e633623ebb8/atos/ativar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/processo-ato-ativar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/processo-ato-ativar--1280.png) |
+| 9 | `processo-ato`<br>acao=encerrar | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/encerrar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/processo-ato-encerrar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/processo-ato-encerrar--1280.png) |
+| 10 | `processo-ato`<br>acao=cancelar | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/cancelar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/processo-ato-cancelar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/processo-ato-cancelar--1280.png) |
+| 11 | `supervisao` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/supervisao` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/supervisao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/supervisao--1280.png) |
+| 12 | `detalhe`<br>Edital 51, publicado | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/detalhe-51--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/detalhe-51--1280.png) |
+| 13 | `detalhe`<br>Edital 76, em elaboração | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/detalhe-76--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/detalhe-76--1280.png) |
+| 14 | `detalhe`<br>Edital 26, sorteio | `/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/detalhe-26--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/detalhe-26--1280.png) |
+| 15 | `duvidas`<br>Edital 01 | `/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/duvidas/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/duvidas--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/duvidas--1280.png) |
+| 16 | `assistente`<br>Edital 01 | `/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/` | `inventario.piloto` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/assistente--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/assistente--1280.png) |
+| 17 | `assistente-prototipo`<br>Edital 01 | `/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/` | `inventario.piloto` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/assistente-prototipo--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/assistente-prototipo--1280.png) |
+| 18 | `compor`<br>Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor--1280.png) |
+| 19 | `compor-etapa`<br>etapa=identificacao, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/identificacao` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-identificacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-identificacao--1280.png) |
+| 20 | `compor-etapa`<br>etapa=perfis, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/perfis` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-perfis--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-perfis--1280.png) |
+| 21 | `compor-etapa`<br>etapa=cronograma, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/cronograma` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-cronograma--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-cronograma--1280.png) |
+| 22 | `compor-etapa`<br>etapa=etapas, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/etapas` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-etapas--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-etapas--1280.png) |
+| 23 | `compor-etapa`<br>etapa=classificacao, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/classificacao` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-classificacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-classificacao--1280.png) |
+| 24 | `compor-etapa`<br>etapa=inscricao, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/inscricao` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-inscricao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-inscricao--1280.png) |
+| 25 | `compor-etapa`<br>etapa=anexos, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/anexos` | `ana.elaboradora` | sim | **sim** (432 px) | [375](inventario-visual-da-gestao-2026-10-16/compor-anexos--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-anexos--1280.png) |
+| 26 | `compor-etapa`<br>etapa=conteudo, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/conteudo` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-conteudo--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-conteudo--1280.png) |
+| 27 | `compor-etapa`<br>etapa=revisao, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/revisao` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/compor-revisao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/compor-revisao--1280.png) |
+| 28 | `reaproveitar`<br>Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/reaproveitar` | `ana.elaboradora` | sim | **sim** (994 px) | [375](inventario-visual-da-gestao-2026-10-16/reaproveitar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/reaproveitar--1280.png) |
+| 29 | `previa`<br>Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/previa` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/previa--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/previa--1280.png) |
+| 30 | `ato`<br>acao=submeter, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/submeter` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-submeter--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-submeter--1280.png) |
+| 31 | `ato`<br>acao=homologar, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/homologar` | `bruno.homologador` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-homologar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-homologar--1280.png) |
+| 32 | `ato`<br>acao=devolver, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/devolver` | `bruno.homologador` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-devolver--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-devolver--1280.png) |
+| 33 | `ato`<br>acao=revogar-homologacao, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/revogar-homologacao` | `bruno.homologador` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-revogar-homologacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-revogar-homologacao--1280.png) |
+| 34 | `ato`<br>acao=publicar, Edital 76 | `/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/publicar` | `paula.publicadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-publicar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-publicar--1280.png) |
+| 35 | `ato`<br>acao=encerrar, Edital 51 | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/encerrar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-encerrar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-encerrar--1280.png) |
+| 36 | `ato`<br>acao=cancelar, Edital 51 | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/cancelar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-cancelar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-cancelar--1280.png) |
+| 37 | `retificar`<br>Edital 01 | `/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/retificar` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificar--1280.png) |
+| 38 | `auditoria` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/auditoria` | `inventario.auditora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/auditoria--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/auditoria--1280.png) |
+| 39 | `exportar-matriculas` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/matriculas` | `inventario.exportadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/exportar-matriculas--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/exportar-matriculas--1280.png) |
+| 40 | `inscricoes` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/inscricoes` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/inscricoes--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/inscricoes--1280.png) |
+| 41 | `inscricao-recebida`<br>Ana Silva | `/gestao/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/inscricao-recebida--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/inscricao-recebida--1280.png) |
+| 42 | `retificacao-detalhe`<br>Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/` | `ana.elaboradora` | sim | **sim** (388 px) | [375](inventario-visual-da-gestao-2026-10-16/retificacao-detalhe--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-detalhe--1280.png) |
+| 43 | `retificacao-ato`<br>acao=submeter, Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/submeter` | `ana.elaboradora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificacao-ato-submeter--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-ato-submeter--1280.png) |
+| 44 | `retificacao-ato`<br>acao=homologar, Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/homologar` | `bruno.homologador` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificacao-ato-homologar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-ato-homologar--1280.png) |
+| 45 | `retificacao-ato`<br>acao=publicar, Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/publicar` | `paula.publicadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificacao-ato-publicar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-ato-publicar--1280.png) |
+| 46 | `retificacao-ato`<br>acao=devolver, Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/devolver` | `bruno.homologador` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificacao-ato-devolver--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-ato-devolver--1280.png) |
+| 47 | `retificacao-ato`<br>acao=cancelar, Retificação publicada | `/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/cancelar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/retificacao-ato-cancelar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/retificacao-ato-cancelar--1280.png) |
+| 48 | `comissao` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/comissao` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/comissao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/comissao--1280.png) |
+| 49 | `alocacoes` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/alocacoes` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/alocacoes--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/alocacoes--1280.png) |
+| 50 | `auditoria-comissao` | `/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/auditoria` | `inventario.auditora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/auditoria-comissao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/auditoria-comissao--1280.png) |
+| 51 | `distribuicao`<br>Prova objetiva, Edital 51 | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/distribuicao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/distribuicao--1280.png) |
+| 52 | `registrar-ocorrencia` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/ocorrencia` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/registrar-ocorrencia--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/registrar-ocorrencia--1280.png) |
+| 53 | `impedimentos` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/impedimentos` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/impedimentos--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/impedimentos--1280.png) |
+| 54 | `trilha-da-avaliacao` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/trilha` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/trilha-da-avaliacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/trilha-da-avaliacao--1280.png) |
+| 55 | `resultados-da-etapa` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/resultados` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/resultados-da-etapa--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/resultados-da-etapa--1280.png) |
+| 56 | `ordenacao`<br>marco FINAL, Edital 51 | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ordenacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ordenacao--1280.png) |
+| 57 | `corte-historico` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/cortes/47f4cc31-35d4-440a-9a9c-2c1db924fd97` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/corte-historico--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/corte-historico--1280.png) |
+| 58 | `ato-de-ordenacao` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ato-de-ordenacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ato-de-ordenacao--1280.png) |
+| 59 | `corte` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/corte` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/corte--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/corte--1280.png) |
+| 60 | `ocupacao` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ocupacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ocupacao--1280.png) |
+| 61 | `ocupacao-historico` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao/historico` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/ocupacao-historico--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/ocupacao-historico--1280.png) |
+| 62 | `convocacao` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/convocacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/convocacao--1280.png) |
+| 63 | `convocacao-historico` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/historico` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/convocacao-historico--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/convocacao-historico--1280.png) |
+| 64 | `sorteio`<br>Edital 26 | `/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/marcos/00000000-0000-0000-0026-0000000000a1/sorteio` | `paulo.presidente` | sim | **sim** (643 px) | [375](inventario-visual-da-gestao-2026-10-16/sorteio--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/sorteio--1280.png) |
+| 65 | `previa-de-publicacao` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81/publicar` | `paula.publicadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/previa-de-publicacao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/previa-de-publicacao--1280.png) |
+| 66 | `publicacoes-do-marco` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/publicacoes` | `paula.publicadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/publicacoes-do-marco--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/publicacoes-do-marco--1280.png) |
+| 67 | `aviso-do-resultado` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/avisos/novo` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/aviso-do-resultado--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/aviso-do-resultado--1280.png) |
+| 68 | `aviso-da-chamada` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/avisos/novo` | nenhuma | **não** — 404 | — | — |
+| 69 | `avisos-do-edital`<br>antes de qualquer aviso | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/avisos-do-edital-antes--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/avisos-do-edital-antes--1280.png) |
+| 70 | `avisos-do-edital`<br>depois do aviso | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/avisos-do-edital--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/avisos-do-edital--1280.png) |
+| 71 | `aviso`<br>aviso de resultado confirmado para o inventário | `/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/aviso--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/aviso--1280.png) |
+| 72 | `aviso-interromper` | `/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/interromper` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/aviso-interromper--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/aviso-interromper--1280.png) |
+| 73 | `aviso-reenviar` | `/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/reenviar` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/aviso-reenviar--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/aviso-reenviar--1280.png) |
+| 74 | `modelos-de-aviso` | `/gestao/modelos-de-aviso` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/modelos-de-aviso--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/modelos-de-aviso--1280.png) |
+| 75 | `modelo-de-aviso-novo` | `/gestao/modelos-de-aviso/novo` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/modelo-de-aviso-novo--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/modelo-de-aviso-novo--1280.png) |
+| 76 | `modelo-de-aviso` | `/gestao/modelos-de-aviso/87c71c47-4017-4aed-b8fe-f29e379c3359` | `gustavo.gestor` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/modelo-de-aviso--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/modelo-de-aviso--1280.png) |
+| 77 | `marco`<br>condução do marco | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/conducao` | `paulo.presidente` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/marco--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/marco--1280.png) |
+| 78 | `conclusoes-preservadas` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/conclusoes` | `paulo.presidente` | sim | **sim** (835 px) | [375](inventario-visual-da-gestao-2026-10-16/conclusoes-preservadas--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/conclusoes-preservadas--1280.png) |
+| 79 | `recursos` | `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/recursos` | `inventario.julgadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/recursos--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/recursos--1280.png) |
+| 80 | `recurso`<br>recurso aguardando admissibilidade (criado para o inventário) | `/gestao/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac` | `inventario.julgadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/recurso-pendente--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/recurso-pendente--1280.png) |
+| 81 | `recurso`<br>recurso admitido (criado para o inventário) | `/gestao/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e` | `inventario.julgadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/recurso-admitido--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/recurso-admitido--1280.png) |
+| 82 | `minhas-etapas` | `/gestao/minhas-etapas` | `joana.avaliadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/minhas-etapas--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/minhas-etapas--1280.png) |
+| 83 | `mesa-inscricao` | `/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b` | `joana.avaliadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/mesa-inscricao--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/mesa-inscricao--1280.png) |
+| 84 | `minha-etapa` | `/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1` | `joana.avaliadora` | sim | não | [375](inventario-visual-da-gestao-2026-10-16/minha-etapa--375.png) · [1280](inventario-visual-da-gestao-2026-10-16/minha-etapa--1280.png) |
+
+### Não montadas
+
+- `aviso-da-chamada` (`/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/avisos/novo`): exige `?comunicacao=` de uma `ComunicacaoEmitida` **por publicação** e enviada; o `seed_demo` convoca, mas não emite comunicação nessa forma. Responde 404 sem ela, para qualquer identidade. Tentativas: gustavo.gestor:404, ana.elaboradora:404, bruno.homologador:404, paula.publicadora:404, paulo.presidente:404, joana.avaliadora:404, inventario.auditora:404, inventario.julgadora:404, inventario.exportadora:404, inventario.piloto:404.
+
+## Rotas sem tela
+
+Listadas para que a conta feche com o `urls.py`. Nenhuma foi capturada.
+
+| Rota (`name`) | Caminho | Por que não é tela |
+|---|---|---|
+| `sair` | `/gestao/sair` | só POST |
+| `assistente-nova` | `/gestao/editais/<uuid:edital_id>/assistente/nova/` | só POST |
+| `assistente-prototipo-perguntar` | `/gestao/editais/<uuid:edital_id>/assistente/prototipo/perguntar` | só POST |
+| `assistente-prototipo-sugestao` | `/gestao/editais/<uuid:edital_id>/assistente/prototipo/sugestao` | só POST |
+| `assistente-prototipo-nova` | `/gestao/editais/<uuid:edital_id>/assistente/prototipo/nova` | só POST |
+| `previa-documento` | `/gestao/editais/<uuid:edital_id>/previa/documento` | download: PDF da prévia do Edital |
+| `anexos` | `/gestao/editais/<uuid:edital_id>/anexos` | só POST |
+| `anexo-arquivo` | `/gestao/editais/<uuid:edital_id>/anexos/<uuid:anexo_id>/arquivo` | download: arquivo do Anexo do rascunho |
+| `documento-da-inscricao` | `/gestao/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>` | download: arquivo enviado pelo candidato |
+| `fragmento-etapa` | `/gestao/editais/<uuid:edital_id>/fragmentos/etapa` | fragmento htmx |
+| `fragmento-documento` | `/gestao/editais/<uuid:edital_id>/fragmentos/documento` | fragmento htmx |
+| `fragmento-perfil` | `/gestao/fragmentos/perfil` | fragmento htmx |
+| `fragmento-modalidade` | `/gestao/fragmentos/perfil/<str:indice>/modalidade` | fragmento htmx |
+| `fragmento-perfil-duplicado` | `/gestao/fragmentos/perfil/<str:indice>/duplicar` | fragmento htmx |
+| `fragmento-quadro` | `/gestao/fragmentos/perfil/<str:indice>/quadro` | fragmento htmx |
+| `fragmento-fato` | `/gestao/fragmentos/perfil/<str:indice>/fato` | fragmento htmx |
+| `fragmento-marco` | `/gestao/fragmentos/perfil/<str:indice>/marco` | fragmento htmx |
+| `fragmento-marco-recomposto` | `/gestao/fragmentos/perfil/<str:indice>/marco/<str:sub>/recompor` | fragmento htmx |
+| `fragmento-criterio` | `/gestao/fragmentos/perfil/<str:indice>/marco/<str:sub>/criterio` | fragmento htmx |
+| `fragmento-evento` | `/gestao/fragmentos/evento` | fragmento htmx |
+| `fragmento-retificacao-perfil` | `/gestao/fragmentos/retificacao/perfil` | fragmento htmx |
+| `fragmento-retificacao-evento` | `/gestao/fragmentos/retificacao/evento` | fragmento htmx |
+| `fragmento-retificacao-anexo` | `/gestao/fragmentos/retificacao/anexo` | fragmento htmx |
+| `fragmento-retificacao-linha-do-quadro` | `/gestao/fragmentos/retificacao/<uuid:edital_id>/linha-do-quadro` | fragmento htmx |
+| `fragmento-retificacao-modalidade` | `/gestao/fragmentos/retificacao/<uuid:edital_id>/modalidade` | fragmento htmx |
+| `fragmento-retificacao-criterio` | `/gestao/fragmentos/retificacao/<uuid:edital_id>/criterio` | fragmento htmx |
+| `fragmento-remover` | `/gestao/fragmentos/remover` | fragmento htmx |
+| `consolidar-resultados` | `/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar` | só POST |
+| `distribuicao-remover` | `/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover` | só POST |
+| `reabrir-avaliacao` | `/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/reabrir` | só POST |
+| `emitir-ordenacao` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/emitir` | só POST |
+| `emitir-corte` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/emitir` | só POST |
+| `emitir-apuracao` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/apurar` | só POST |
+| `causar-faixa` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/faixa-seguinte` | só POST |
+| `convocar` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/convocar` | só POST |
+| `convocar-titulares` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/titulares` | só POST |
+| `nao-atendimento-dos-vencidos` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/vencidos` | só POST |
+| `emitir-pendentes` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/pendentes` | só POST |
+| `desfechar` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/desfecho` | só POST |
+| `comunicar-convocacao` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/comunicar` | só POST |
+| `atestar` | `/gestao/inscricoes/<uuid:inscricao_id>/atestado` | só POST |
+| `continuar-corte` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar` | só POST |
+| `publicar-relacao-do-sorteio` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/relacao` | só POST |
+| `observar-ocorrencia-do-sorteio` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/ocorrencia` | só POST |
+| `realizar-sorteio` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/realizar` | só POST |
+| `anular-sorteio` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/anular` | só POST |
+| `publicar-resultado` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>/publicar/confirmar` | só POST |
+| `modelo-de-aviso-situacao` | `/gestao/modelos-de-aviso/<uuid:modelo_id>/situacao` | só POST |
+| `gesto-do-marco` | `/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao/<str:operacao>` | só POST |
+| `recurso-admitir` | `/gestao/recursos/<uuid:recurso_id>/admitir` | só POST |
+| `recurso-julgar` | `/gestao/recursos/<uuid:recurso_id>/julgar` | só POST |
+| `recurso-instruir` | `/gestao/recursos/<uuid:recurso_id>/instruir` | só POST |
+| `recurso-documento-instruido` | `/gestao/recursos/<uuid:recurso_id>/instrucao/<uuid:documento_id>` | download: arquivo juntado na instrução do recurso |
+| `mesa-avaliacao-gravar` | `/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao` | só POST |
+| `mesa-avaliacao-concluir` | `/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao/concluir` | só POST |
+| `mesa-documento` | `/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>` | download: arquivo da inscrição, aberto na Mesa |
+
+## Medições dos estouros
+
+| Tela | `scrollWidth` a 375 | Elemento mais externo que passa da borda |
+|---|---|---|
+| `compor-anexos` | 432 | `fieldset.linha.anexo-novo (432px)` |
+| `reaproveitar` | 994 | `fieldset (994px)` |
+| `retificacao-detalhe` | 388 | `table (388px)` |
+| `sorteio` | 643 | `code (639px)`, `code (639px)` |
+| `conclusoes-preservadas` | 835 | (ver abaixo) |
+
+### O que cada estouro é
+
+Fica registrado aqui. A correção é decisão do produto, e não entra no shell sem ser pedida.
+
+- **`conclusoes-preservadas`, 835 px.** A tabela está dentro de `.tabela-rolavel`, que rola. Mas cada
+  linha tem um `label.oculto` (`position:absolute`), e o contêiner que rola não é posicionado: o
+  rótulo invisível toma como referência um ancestral de fora e alarga a **página**. Nenhum elemento
+  visível passa da borda, e por isso a coluna de culpados ficou vazia. Achado pela sonda, e não pela
+  imagem.
+- **`reaproveitar`, 994 px.** A tabela das origens fica dentro de um `fieldset`, que cresce até o
+  conteúdo mínimo da tabela. A página inteira alarga, e não só a tabela.
+- **`sorteio`, 643 px.** Os dois `code` com hash SHA-256 (método e manifesto) não quebram linha.
+- **`compor-anexos`, 432 px.** A linha de Anexo novo (`fieldset.linha.anexo-novo`) não se ajusta à
+  largura.
+- **`retificacao-detalhe`, 388 px.** A tabela das alterações passa 13 px da borda.
+
+A 1280 px nenhuma tela estoura.
