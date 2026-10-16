@@ -155,6 +155,11 @@ não manda a conversa sintética. O corpus da avaliação se publica por
 `scripts/publicar_corpus_do_piloto.py`, num banco **sem** `seed_demo`, cujo 01/2026 toma o número do
 01/2026 do corpus. O roteiro inteiro está no quickstart da `071`.
 
+**O assistente na página pública da seleção (074) é só local**, pela chave
+`ASSISTENTE_NA_PAGINA_DO_EDITAL` — a entrada `assistente-074` do `.claude/launch.json` a liga. É a
+visão do candidato sem a gestão; produção recusa subir com ela. As sugestões não chamam o modelo; a
+pergunta livre chama, e custa.
+
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.
 

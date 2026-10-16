@@ -17,7 +17,7 @@ from django.urls import reverse
 
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPOSTA_DA_SUGESTAO
 from processo_seletivo.duvidas.models import TrocaDoPiloto
-from processo_seletivo.interface import prototipo_do_assistente as prototipo
+from processo_seletivo.interface import painel_do_assistente as painel_
 from tests.fixtures.corpus import publicar_do_corpus
 from tests.fixtures.inferencia import devolucao, saida
 from tests.fixtures.inferencia_corpus import fonte
@@ -84,7 +84,7 @@ def test_o_fundo_e_a_pagina_publica_e_o_painel_nasce_fechado(client, edital_91):
     assert 'aria-expanded="true"' in _texto(client.get(_url(edital_91) + "?painel=1"))
 
 
-@pytest.mark.parametrize(("estado", "_nome"), prototipo.ESTADOS_SIMULADOS)
+@pytest.mark.parametrize(("estado", "_nome"), painel_.ESTADOS_SIMULADOS)
 def test_os_estados_simulados_nao_chamam_nem_gravam(client, edital_91, porta_falsa, estado, _nome):
     porta = porta_falsa()
     identificar(client, "pessoa", PILOTO)
@@ -109,7 +109,7 @@ def test_cada_estado_mostra_o_que_promete(client, edital_91):
     assert "Assistente do edital" in inicio and "Assistente de IA" in inicio
     # Três à vista; as outras, recolhidas em "Mais dúvidas".
     a_vista = re.sub(r'<details class="pd-mais">.*?</details>', "", inicio)
-    assert a_vista.count('class="pd-sugestao"') == len(prototipo.SUGERIDAS) == 3
+    assert a_vista.count('class="pd-sugestao"') == len(painel_.SUGERIDAS) == 3
     assert "Mais dúvidas" in inicio
     assert "Polo Bom Jesus do Norte" in ver("escolha") and "Para qual opção?" in ver("escolha")
     assert "Texto do Edital ·" in ver("resposta")
@@ -119,12 +119,12 @@ def test_cada_estado_mostra_o_que_promete(client, edital_91):
     assert "Preciso enviar todos?" in continuacao
     # A espera diz que consulta, e nunca que confere: a conferência leva milissegundos.
     espera, longa = ver("espera"), ver("espera-longa")
-    assert prototipo.ESPERA in espera and prototipo.ESPERA_LONGA in longa
+    assert painel_.ESPERA in espera and painel_.ESPERA_LONGA in longa
     assert "conferi" not in espera.lower() and "conferi" not in longa.lower()
     # E não promete prazo: os 5 a 35 segundos do ensaio foram observados, e não são limite.
     assert not re.search(r"\d+\s*(segundos|s)\b", espera + longa)
     falha = ver("falha")
-    assert prototipo.NAO_CONFIRMADA in falha and prototipo.INDISPONIVEL_AGORA in falha
+    assert painel_.NAO_CONFIRMADA in falha and painel_.INDISPONIVEL_AGORA in falha
     mudanca = ver("mudanca")
     assert "O Edital mudou desde as respostas acima" in mudanca
     # O marco conta a mesma história da linha da versão no topo do painel.

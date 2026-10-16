@@ -597,6 +597,8 @@ do Ollama, e depois contra o serviço real.
   existentes: nenhum papel atual a recebe por efeito desta feature. Nenhuma tela MUST mostrar os
   registros do piloto (`FR-1509`).
 - **FR-1462**: O piloto MUST NOT ter rota pública, API pública nem entrada no portal.
+  *Nota de 14/10:* a `074` abre o painel na página pública **só no desenvolvimento local**, por
+  chave que produção recusa; este requisito continua valendo para o piloto e para a implantação.
 - **FR-1463**: O piloto com o setor de seleção MUST acontecer em **sessões acompanhadas pela equipe,
   na máquina da equipe**, com as configurações de desenvolvimento e o seletor de identidade
   existente. MUST NOT exigir instância exposta em rede nem autenticação nova. No início de cada
