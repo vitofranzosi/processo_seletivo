@@ -77,6 +77,7 @@ DST = f"{EDT}/distribuicao/{ETAPA}"
 ROTAS_A = [
     ("lista", "lista", "/gestao/", "gustavo.gestor", ""),
     ("identificar", "identificar", "/gestao/identificar", None, "sem identidade"),
+    ("identificar-demonstracao", "identificar-demonstracao", "/gestao/identificar/demonstracao", None, "sem identidade; etapa da página de acesso (075)"),
     ("visao-geral", "visao-geral", "/gestao/visao-geral", "gustavo.gestor", ""),
     ("autoridades", "autoridades", "/gestao/autoridades", "gustavo.gestor", ""),
     ("processo-criar", "processo-criar", "/gestao/processos/criar", "gustavo.gestor", ""),
@@ -187,7 +188,9 @@ def contexto_para(browser, quem):
     if quem is None:
         return ctx
     pg = ctx.new_page()
-    pg.goto(f"{BASE}/gestao/identificar")
+    # Desde a 075 o formulário mora na etapa da demonstração, e a página de acesso não emite o
+    # cookie de CSRF. O envio continua indo a `identificar`.
+    pg.goto(f"{BASE}/gestao/identificar/demonstracao")
     token = next(c["value"] for c in ctx.cookies() if c["name"] == "csrftoken")
     from urllib.parse import urlencode
 
@@ -274,7 +277,9 @@ with sync_playwright() as p:
         servidor.shutdown()
         sys.exit(0)
     rodar(ROTAS_A, browser, contextos, resultados)
-    aviso_id = criar_aviso(contextos)
+    # Reusar o aviso de uma passada anterior, em vez de confirmar outro: um segundo aviso mudaria a
+    # tela `avisos-do-edital` entre o antes e o depois, e a diferença não seria do shell.
+    aviso_id = os.environ.get("AVISO") or criar_aviso(contextos)
     print("aviso criado:", aviso_id, flush=True)
     if aviso_id:
         rodar([
