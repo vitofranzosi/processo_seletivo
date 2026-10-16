@@ -23,7 +23,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1791,
+   "altura": 1815,
    "titulo": "Processos Seletivos — Cefor/Ifes",
    "h1": "Processos Seletivos",
    "culpados": [],
@@ -45,20 +45,51 @@
   "1280": {
    "scrollWidth": 1280,
    "clientWidth": 1280,
-   "altura": 1345,
-   "titulo": "Identificar-se — Cefor/Ifes",
-   "h1": "Quem está usando o sistema?",
+   "altura": 900,
+   "titulo": "Acesso à gestão — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Bem-vindo à gestão",
    "culpados": [],
    "arquivo": "identificar--1280.png"
   },
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1739,
-   "titulo": "Identificar-se — Cefor/Ifes",
-   "h1": "Quem está usando o sistema?",
+   "altura": 812,
+   "titulo": "Acesso à gestão — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Bem-vindo à gestão",
    "culpados": [],
    "arquivo": "identificar--375.png"
+  }
+ },
+ {
+  "id": "identificar-demonstracao",
+  "rota": "identificar-demonstracao",
+  "caminho": "/gestao/identificar/demonstracao",
+  "obs": "sem identidade; etapa da página de acesso (075)",
+  "identidade": null,
+  "status": 200,
+  "final": "/gestao/identificar/demonstracao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "None:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1743,
+   "titulo": "Ambiente de demonstração — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Ambiente de demonstração",
+   "culpados": [],
+   "arquivo": "identificar-demonstracao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2482,
+   "titulo": "Ambiente de demonstração — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Ambiente de demonstração",
+   "culpados": [],
+   "arquivo": "identificar-demonstracao--375.png"
   }
  },
  {
@@ -85,7 +116,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2263,
+   "altura": 2287,
    "titulo": "Visão Geral dos Processos Seletivos — Cefor/Ifes",
    "h1": "Visão Geral",
    "culpados": [],
@@ -116,7 +147,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1711,
+   "altura": 1735,
    "titulo": "Autoridades da unidade — Cefor/Ifes",
    "h1": "Autoridades da unidade",
    "culpados": [],
@@ -147,7 +178,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1325,
+   "altura": 1349,
    "titulo": "Criar Processo Seletivo — Cefor/Ifes",
    "h1": "Criar Processo Seletivo",
    "culpados": [],
@@ -178,7 +209,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3343,
+   "altura": 3367,
    "titulo": "PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Processo Seletivo Simplificado 2026",
    "culpados": [],
@@ -209,7 +240,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1053,
+   "altura": 1077,
    "titulo": "Novo Edital em PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Novo Edital",
    "culpados": [],
@@ -240,7 +271,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 867,
+   "altura": 891,
    "titulo": "Ativar Processo — PS-DEMO-2026-R — Cefor/Ifes",
    "h1": "Ativar Processo",
    "culpados": [],
@@ -271,7 +302,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1510,
+   "altura": 1534,
    "titulo": "Encerrar Processo — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Encerrar Processo",
    "culpados": [],
@@ -302,7 +333,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1458,
+   "altura": 1482,
    "titulo": "Cancelar Processo — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Cancelar Processo",
    "culpados": [],
@@ -333,7 +364,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3071,
+   "altura": 3095,
    "titulo": "Supervisão — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Supervisão do Processo",
    "culpados": [],
@@ -364,7 +395,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2743,
+   "altura": 2767,
    "titulo": "Edital 51/2026 — Cefor/Ifes",
    "h1": "Edital 51/2026",
    "culpados": [],
@@ -395,7 +426,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3024,
+   "altura": 3048,
    "titulo": "Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -426,7 +457,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2620,
+   "altura": 2644,
    "titulo": "Edital 26/2026 — Cefor/Ifes",
    "h1": "Edital 26/2026",
    "culpados": [],
@@ -457,7 +488,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1934,
+   "altura": 1958,
    "titulo": "Respostas do assistente de dúvidas — 01/2026 — Cefor/Ifes",
    "h1": "Respostas do assistente de dúvidas",
    "culpados": [],
@@ -488,7 +519,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 926,
+   "altura": 950,
    "titulo": "Assistente do Edital (piloto) — 01/2026 — Cefor/Ifes",
    "h1": "Assistente do Edital (piloto)",
    "culpados": [],
@@ -519,7 +550,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2964,
+   "altura": 2998,
    "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
    "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
    "culpados": [],
@@ -550,7 +581,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1495,
+   "altura": 1519,
    "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -581,7 +612,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1495,
+   "altura": 1519,
    "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -612,7 +643,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2119,
+   "altura": 2143,
    "titulo": "Perfis de Vaga — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -643,7 +674,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3755,
+   "altura": 3779,
    "titulo": "Cronograma — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -674,7 +705,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3855,
+   "altura": 3879,
    "titulo": "Etapas de Avaliação — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -705,7 +736,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1711,
+   "altura": 1735,
    "titulo": "Classificação — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -736,7 +767,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 4478,
+   "altura": 4502,
    "titulo": "Inscrição — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -767,7 +798,7 @@
   "375": {
    "scrollWidth": 432,
    "clientWidth": 375,
-   "altura": 1555,
+   "altura": 1579,
    "titulo": "Anexos — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [
@@ -800,7 +831,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3963,
+   "altura": 3987,
    "titulo": "Conteúdo — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -831,7 +862,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 15215,
+   "altura": 15239,
    "titulo": "Revisão — Edital 76/2027 — Cefor/Ifes",
    "h1": "Edital 76/2027",
    "culpados": [],
@@ -862,7 +893,7 @@
   "375": {
    "scrollWidth": 994,
    "clientWidth": 375,
-   "altura": 2089,
+   "altura": 2113,
    "titulo": "Partir de um Edital anterior — Edital 76/2027 — Cefor/Ifes",
    "h1": "Partir de um Edital anterior",
    "culpados": [
@@ -926,7 +957,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3208,
+   "altura": 3232,
    "titulo": "Submeter para revisão — Edital 76/2027 — Cefor/Ifes",
    "h1": "Submeter para revisão",
    "culpados": [],
@@ -957,7 +988,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1067,
+   "altura": 1091,
    "titulo": "Homologar — Edital 76/2027 — Cefor/Ifes",
    "h1": "Homologar",
    "culpados": [],
@@ -988,7 +1019,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1162,
+   "altura": 1186,
    "titulo": "Devolver para elaboração — Edital 76/2027 — Cefor/Ifes",
    "h1": "Devolver para elaboração",
    "culpados": [],
@@ -1019,7 +1050,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 976,
+   "altura": 1000,
    "titulo": "Revogar homologação — Edital 76/2027 — Cefor/Ifes",
    "h1": "Revogar homologação",
    "culpados": [],
@@ -1050,7 +1081,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3550,
+   "altura": 3574,
    "titulo": "Publicar — Edital 76/2027 — Cefor/Ifes",
    "h1": "Publicar",
    "culpados": [],
@@ -1081,7 +1112,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 920,
+   "altura": 944,
    "titulo": "Encerrar — Edital 51/2026 — Cefor/Ifes",
    "h1": "Encerrar",
    "culpados": [],
@@ -1112,7 +1143,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 943,
+   "altura": 967,
    "titulo": "Cancelar — Edital 51/2026 — Cefor/Ifes",
    "h1": "Cancelar",
    "culpados": [],
@@ -1143,7 +1174,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 26985,
+   "altura": 27009,
    "titulo": "Retificar Edital 01/2026 — Cefor/Ifes",
    "h1": "Retificar Edital 01/2026",
    "culpados": [],
@@ -1174,7 +1205,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2309,
+   "altura": 2333,
    "titulo": "Auditoria — Edital 51/2026 — Cefor/Ifes",
    "h1": "Trilha de auditoria",
    "culpados": [],
@@ -1205,7 +1236,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 853,
+   "altura": 877,
    "titulo": "Exportar para matrícula — Edital 51/2026 — Cefor/Ifes",
    "h1": "Exportar para matrícula",
    "culpados": [],
@@ -1236,7 +1267,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1318,
+   "altura": 1342,
    "titulo": "Inscrições — Edital 51/2026 — Cefor/Ifes",
    "h1": "Inscrições — 5",
    "culpados": [],
@@ -1267,7 +1298,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2434,
+   "altura": 2458,
    "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
    "h1": "Ana Silva",
    "culpados": [],
@@ -1298,7 +1329,7 @@
   "375": {
    "scrollWidth": 388,
    "clientWidth": 375,
-   "altura": 1462,
+   "altura": 1486,
    "titulo": "Retificação — Edital 01/2026 — Cefor/Ifes",
    "h1": "Retificação do Edital 01/2026",
    "culpados": [
@@ -1331,7 +1362,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1241,
+   "altura": 1265,
    "titulo": "Submeter para revisão — Retificação — Cefor/Ifes",
    "h1": "Submeter para revisão",
    "culpados": [],
@@ -1362,7 +1393,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1299,
+   "altura": 1323,
    "titulo": "Homologar — Retificação — Cefor/Ifes",
    "h1": "Homologar",
    "culpados": [],
@@ -1393,7 +1424,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2166,
+   "altura": 2190,
    "titulo": "Publicar Retificação — Retificação — Cefor/Ifes",
    "h1": "Publicar Retificação",
    "culpados": [],
@@ -1424,7 +1455,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1394,
+   "altura": 1418,
    "titulo": "Devolver para elaboração — Retificação — Cefor/Ifes",
    "h1": "Devolver para elaboração",
    "culpados": [],
@@ -1455,7 +1486,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1282,
+   "altura": 1306,
    "titulo": "Cancelar Retificação — Retificação — Cefor/Ifes",
    "h1": "Cancelar Retificação",
    "culpados": [],
@@ -1486,7 +1517,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2666,
+   "altura": 2690,
    "titulo": "Comissão — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Comissão do Processo",
    "culpados": [],
@@ -1517,7 +1548,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1153,
+   "altura": 1177,
    "titulo": "Alocação por Etapa — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Alocação por Etapa",
    "culpados": [],
@@ -1548,7 +1579,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2289,
+   "altura": 2313,
    "titulo": "Auditoria da comissão — PS-DEMO-2026 — Cefor/Ifes",
    "h1": "Trilha de auditoria",
    "culpados": [],
@@ -1579,7 +1610,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3310,
+   "altura": 3334,
    "titulo": "Distribuir — Prova objetiva — Cefor/Ifes",
    "h1": "Prova objetiva",
    "culpados": [],
@@ -1641,7 +1672,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 973,
+   "altura": 997,
    "titulo": "Impedimentos — Prova objetiva — Cefor/Ifes",
    "h1": "Impedimentos",
    "culpados": [],
@@ -1672,7 +1703,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3331,
+   "altura": 3355,
    "titulo": "Trilha da avaliação — Prova objetiva — Cefor/Ifes",
    "h1": "Trilha de auditoria",
    "culpados": [],
@@ -1703,7 +1734,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1406,
+   "altura": 1430,
    "titulo": "Resultados — Prova objetiva — Cefor/Ifes",
    "h1": "Resultados da Etapa",
    "culpados": [],
@@ -1734,7 +1765,7 @@
   "375": {
    "scrollWidth": 835,
    "clientWidth": 375,
-   "altura": 1556,
+   "altura": 1580,
    "titulo": "Conclusões preservadas — Prova objetiva — Cefor/Ifes",
    "h1": "Conclusões preservadas",
    "culpados": [],
@@ -1765,7 +1796,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1941,
+   "altura": 1965,
    "titulo": "Classificação — Classificação final — Cefor/Ifes",
    "h1": "Classificação final",
    "culpados": [],
@@ -1796,7 +1827,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1824,
+   "altura": 1848,
    "titulo": "Corte — Classificação final — Cefor/Ifes",
    "h1": "Corte — Classificação final",
    "culpados": [],
@@ -1827,7 +1858,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2560,
+   "altura": 2584,
    "titulo": "Ato de classificação — Cefor/Ifes",
    "h1": "Ato de classificação",
    "culpados": [],
@@ -1858,7 +1889,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1997,
+   "altura": 2021,
    "titulo": "Corte — progressão para a Etapa seguinte — Cefor/Ifes",
    "h1": "Corte e progressão",
    "culpados": [],
@@ -1889,7 +1920,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1484,
+   "altura": 1508,
    "titulo": "Ocupação de vagas — quantas faltam em cada lista — Cefor/Ifes",
    "h1": "Ocupação de vagas",
    "culpados": [],
@@ -1920,7 +1951,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1120,
+   "altura": 1144,
    "titulo": "Histórico da ocupação — as apurações deste recorte — Cefor/Ifes",
    "h1": "Histórico da ocupação",
    "culpados": [],
@@ -1951,7 +1982,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3853,
+   "altura": 3877,
    "titulo": "Convocação — quem foi chamado e o que respondeu — Cefor/Ifes",
    "h1": "Convocação",
    "culpados": [],
@@ -2013,7 +2044,7 @@
   "375": {
    "scrollWidth": 643,
    "clientWidth": 375,
-   "altura": 3483,
+   "altura": 3507,
    "titulo": "Sorteio — Sorteio público — Cefor/Ifes",
    "h1": "Sorteio — Sorteio público",
    "culpados": [
@@ -2047,7 +2078,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1900,
+   "altura": 1924,
    "titulo": "Publicar resultado — Classificação final — Cefor/Ifes",
    "h1": "Publicar resultado",
    "culpados": [],
@@ -2109,7 +2140,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1290,
+   "altura": 1314,
    "titulo": "Condução do marco — Classificação final, Professor de Informática — Cefor/Ifes",
    "h1": "Classificação final — Professor de Informática",
    "culpados": [],
@@ -2171,7 +2202,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1669,
+   "altura": 1693,
    "titulo": "Recurso REC-2026-H6KTWZE7 — Cefor/Ifes",
    "h1": "Recurso REC-2026-H6KTWZE7",
    "culpados": [],
@@ -2202,7 +2233,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2106,
+   "altura": 2130,
    "titulo": "Recurso REC-2026-K97GMU9C — Cefor/Ifes",
    "h1": "Recurso REC-2026-K97GMU9C",
    "culpados": [],
@@ -2233,7 +2264,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1131,
+   "altura": 1155,
    "titulo": "Minhas Etapas — Cefor/Ifes",
    "h1": "Minhas Etapas",
    "culpados": [],
@@ -2264,7 +2295,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 934,
+   "altura": 958,
    "titulo": "Prova objetiva — Edital 51/2026 — Cefor/Ifes",
    "h1": "Prova objetiva",
    "culpados": [],
@@ -2295,7 +2326,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1490,
+   "altura": 1514,
    "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
    "h1": "Inscrição INS-2026-AF86BE7601",
    "culpados": [],
@@ -2326,7 +2357,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 886,
+   "altura": 910,
    "titulo": "Modelos de aviso — Cefor/Ifes",
    "h1": "Modelos de aviso",
    "culpados": [],
@@ -2357,7 +2388,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1723,
+   "altura": 1747,
    "titulo": "Novo modelo de aviso — Cefor/Ifes",
    "h1": "Novo modelo",
    "culpados": [],
@@ -2388,7 +2419,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1819,
+   "altura": 1843,
    "titulo": "Editar modelo de aviso — Cefor/Ifes",
    "h1": "Editar modelo",
    "culpados": [],
@@ -2419,7 +2450,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 812,
+   "altura": 820,
    "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Avisos aos candidatos",
    "culpados": [],
@@ -2463,7 +2494,7 @@
   "1280": {
    "scrollWidth": 1280,
    "clientWidth": 1280,
-   "altura": 2690,
+   "altura": 2027,
    "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Avisar candidatos",
    "culpados": [],
@@ -2472,7 +2503,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 3799,
+   "altura": 2825,
    "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Avisar candidatos",
    "culpados": [],
@@ -2494,7 +2525,7 @@
   "1280": {
    "scrollWidth": 1280,
    "clientWidth": 1280,
-   "altura": 1184,
+   "altura": 1280,
    "titulo": "Aviso aos candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Aviso de 16/10/2026 às 16:19",
    "culpados": [],
@@ -2503,7 +2534,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 1656,
+   "altura": 1848,
    "titulo": "Aviso aos candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Aviso de 16/10/2026 às 16:19",
    "culpados": [],
@@ -2534,7 +2565,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 883,
+   "altura": 907,
    "titulo": "Interromper o aviso — 51/2026 — Cefor/Ifes",
    "h1": "Interromper o envio",
    "culpados": [],
@@ -2565,7 +2596,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 2128,
+   "altura": 2152,
    "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Avisar candidatos",
    "culpados": [],
@@ -2596,7 +2627,7 @@
   "375": {
    "scrollWidth": 375,
    "clientWidth": 375,
-   "altura": 812,
+   "altura": 820,
    "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
    "h1": "Avisos aos candidatos",
    "culpados": [],
