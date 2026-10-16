@@ -932,6 +932,11 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .conferencias dt.divergente{color:var(--vermelho)}
 .conferencias dd{margin:.15rem 0 0;color:var(--texto-fraco)}
 .onde{display:block;font-size:.875rem;color:var(--texto-fraco);overflow-wrap:anywhere}
+/* A linha de comando do verificador quebra onde for preciso (PV-03 da auditoria de 15/10). Ela
+   carrega o resumo publicado, 64 caracteres sem espaço, e sem quebra levava a página a 673 px num
+   celular de 375. Quebrar não muda o que se copia, e rolagem própria esconderia o fim do resumo,
+   que é a parte que a pessoa confere. */
+.comando{overflow-wrap:anywhere}
 
 
 /* A proveniência do sorteio no resultado publicado (021, FR-046). Ela vem **antes** da tabela: quem

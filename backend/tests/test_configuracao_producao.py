@@ -28,6 +28,8 @@ AMBIENTE_MINIMO = {
     # o ambiente mínimo é o que **deve** subir; os que não entregam são exercidos abaixo.
     "DJANGO_EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
     "DEFAULT_FROM_EMAIL": "nao-responda@cefor.ifes.edu.br",
+    # O backend SMTP sem servidor subia e só falhava no primeiro envio (073, `FR-1660`).
+    "EMAIL_HOST": "smtp.cefor.ifes.edu.br",
     # A topologia precisa ser declarada: nenhum padrão serve para as duas (ver `production.py`).
     "PORTAL_ATRAS_DE_PROXY": "true",
     # Duas telas mandam procurar o atendimento; sem esta variável elas não dizem qual.
@@ -142,6 +144,10 @@ def test_producao_nasce_sem_a_fonte_de_demonstracao():
         ),
         ({"DEFAULT_FROM_EMAIL": None}, "DEFAULT_FROM_EMAIL"),
         ({"DEFAULT_FROM_EMAIL": "   "}, "DEFAULT_FROM_EMAIL"),
+        # A 073: o backend SMTP sem servidor. O primeiro envio falhava com "please run connect()
+        # first", que não diz qual variável faltava.
+        ({"EMAIL_HOST": None}, "EMAIL_HOST"),
+        ({"EMAIL_HOST": "   "}, "EMAIL_HOST"),
         # Não declarar é o caso perigoso, e é o padrão de quem não sabe que precisa declarar.
         ({"PORTAL_ATRAS_DE_PROXY": None}, "PORTAL_ATRAS_DE_PROXY"),
         ({"PORTAL_ATRAS_DE_PROXY": "sim"}, "PORTAL_ATRAS_DE_PROXY"),

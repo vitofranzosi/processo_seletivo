@@ -11,6 +11,11 @@ contratos estão em [contracts/](contracts/); o modelo de dados, em [data-model.
 | D — Ollama na L4 | Acesso de rede à L4 | O resultado 2 que conta, e o 3 (`SC-551` a `SC-558`) |
 | E — Exclusão | 90 dias depois do relatório final | `FR-1509` |
 
+**Para passar de B a D, ou de volta**, siga o
+[roteiro de troca de serviço](../../doc/troca-do-servico-do-assistente.md): um arquivo de ambiente por
+serviço, fora do repositório, um shell novo a cada troca e a verificação antes de seguir. Os `export`
+de B servem à primeira conversa; no mesmo shell, eles sobrevivem à troca.
+
 ---
 
 ## Preparação comum
@@ -121,7 +126,7 @@ a conclusão.
 o endereço, o nome **confirmado** do modelo, a quantização em `ASSISTENTE_QUANTIZACAO`, o
 `ASSISTENTE_CONTEXTO_TOKENS` a medir):
 
-1. `uv run python manage.py verificar_servico_de_inferencia`, no shell preparado como em B. **Esperado:** a versão, o modelo, a quantização, se
+1. `uv run python manage.py verificar_servico_de_inferencia`, num shell novo, preparado pelo roteiro de troca. **Esperado:** a versão, o modelo, a quantização, se
    está inteiro na GPU, se `truncate` e `shift` são aceitos, e a lista "a confirmar com a
    infraestrutura". Divergência sai com código 1, e o piloto não usa o serviço até a configuração
    ser corrigida.

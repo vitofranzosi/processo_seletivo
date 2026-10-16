@@ -197,6 +197,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     participantes_do_edital,
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
+from processo_seletivo.publicacoes.domain.elevacao import elevar
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import admitir as recursos_admitir
@@ -1554,7 +1555,23 @@ def compor_etapa(request, edital_id, etapa):
     vencidos = _vencidos_entre(eventos_do_cronograma, agora=agora) if etapa == "cronograma" else []
     # A conferência é lida do conteúdo canônico, e não montada bloco a bloco no template: é o que
     # impede a Revisão de envelhecer quando uma coleção nova entra no Edital.
-    snapshot_da_revisao = edital_snapshot(edital) if etapa == "revisao" else None
+    #
+    # **Publicado, o conteúdo é o vigente, e não o relacional** (ED-07 da auditoria de 15/10). A
+    # Retificação não reescreve as tabelas do Edital, que ficam no dia da publicação: lida delas, a
+    # Revisão de um Edital retificado mostrava a norma revogada — 40 vagas onde vigoram 45 —, sem
+    # aviso, a quem confere a regra para decidir sobre ela. Antes da publicação não há versão
+    # vigente, e o relacional é o próprio rascunho; com a vigência da publicação ainda no futuro,
+    # também não, e o relacional é o que ela publicou.
+    versao_vigente = (
+        supervisao_do_processo.versao_vigente_do_edital(edital) if etapa == "revisao" else None
+    )
+    snapshot_da_revisao = (
+        elevar(versao_vigente.content)
+        if versao_vigente is not None
+        else edital_snapshot(edital)
+        if etapa == "revisao"
+        else None
+    )
     conferencia = (
         revisao.blocos(
             snapshot_da_revisao,
@@ -1606,6 +1623,8 @@ def compor_etapa(request, edital_id, etapa):
             },
             "anexos": anexos,
             "recusa_de_anexo": recusa_de_anexo,
+            # A Revisão diz de que conteúdo fala: o vigente, quando há (ED-07).
+            "versao_vigente": versao_vigente,
             # O que a derivação reafirmou nesta gravação (027, FR-322). Sobrescrever em silêncio
             # seria trocar um defeito por outro: quem repartiu 60 na ampla e removeu a última lista
             # reservada precisa ver que a ampla voltou a ser o total.

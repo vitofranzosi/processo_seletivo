@@ -190,6 +190,13 @@ tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
 .acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
 .acao:hover{background:var(--verde-claro)}
+{% comment %}
+A ação de rótulo longo quebra em caixa, e não em linha (PV-04 da auditoria de 15/10). O `nowrap` da
+`.acao` é o certo na linha de tabela, mas o rótulo de validação do assistente, fixado pelo contrato
+da 070, levava o detalhe do Edital a 440 px num celular de 375. Em bloco embutido a borda contorna
+as duas linhas, em vez de se partir com o texto.
+{% endcomment %}
+.acao.longa{display:inline-block;max-width:100%;white-space:normal}
 .nenhuma{color:var(--texto-fraco);font-size:.8125rem}
 {% comment %}
 Uma caixa só, de 40 px, para o botão e para a ação que divide a barra com ele (055, FR-1006 e

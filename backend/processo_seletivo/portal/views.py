@@ -2996,8 +2996,15 @@ def _o_que_o_sistema_ja_sabe(registro, identidade, conteudo):
             "valor": _modalidade_da_inscricao(conteudo, registro),
             "origem": "da sua inscrição",
         },
-        {"rotulo": "Protocolo", "valor": registro.protocolo, "origem": "da sua inscrição"},
-    ]
+    ] + (
+        # **Sem protocolo, sem a linha** (PV-05 da auditoria de 15/10). O Requerimento se preenche
+        # antes do envio da inscrição, quando o protocolo ainda é `""`, e a linha aparecia com o
+        # rótulo e a origem e nada no lugar do valor — lida como dado perdido, e não como dado que
+        # ainda não existe.
+        [{"rotulo": "Protocolo", "valor": registro.protocolo, "origem": "da sua inscrição"}]
+        if registro.protocolo
+        else []
+    )
 
 
 def _grupos_para_a_tela(requerimento, enviado_por_referencia):

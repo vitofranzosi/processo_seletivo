@@ -239,8 +239,9 @@ inicialização, e recusa subir com mensagem que nomeia a variável a corrigir:
 - qualquer substituto de demonstração ligado — seletor de identidade da gestão, provedor de
   identidade do portal, fonte de sorteio de semente fixa;
 - raiz de arquivos do candidato ausente, relativa ou dentro da árvore do código;
-- backend de e-mail que não entrega (console, arquivo, memória ou nulo) ou remetente vazio — sem
-  entrega, o código de acesso iria para o log do servidor;
+- backend de e-mail que não entrega (console, arquivo, memória ou nulo), remetente vazio, ou o
+  backend SMTP sem `EMAIL_HOST` — sem entrega, o código de acesso iria para o log do servidor, e sem
+  servidor só o primeiro envio acusaria;
 - `PORTAL_ATRAS_DE_PROXY` não declarado, porque o limite de solicitações por origem depende da
   topologia, e `PORTAL_ATENDIMENTO` vazio, porque duas telas do candidato mandam procurá-lo;
 - `API_AUTHENTICATION_CLASSES` ausente ou apontando para o adaptador provisório.
@@ -258,6 +259,20 @@ caminhos conhecidamente inseguros — a responsabilidade pela escolha continua d
 ```bash
 cd backend && DJANGO_SETTINGS_MODULE=config.settings.production uv run python manage.py check --deploy
 ```
+
+**Configurar o correio e o Ollama, e comprovar que funcionam**, é a §10.4 do
+[guia de implantação](doc/implantacao-em-producao-ubuntu.md#104-configurar-verificar-e-testar-o-correio-e-o-ollama).
+Ela usa só o que a release já traz, em níveis que não se confundem:
+
+- ler a configuração, sem imprimir segredo;
+- conexão, segurança e conta do correio, sem enviar;
+- versão e modelo do Ollama, sem inferência;
+- o envio de teste e a inferência efetiva.
+
+Os mesmos exemplos rodam em desenvolvimento por `uv run python manage.py shell -v 0 -c '…'`. Lá a
+primeira linha diz `config.settings.development`, o correio é o de console (ou o coletor do
+compose) e o OpenRouter é admitido. A troca entre OpenRouter e Ollama na máquina da equipe está em
+[`doc/troca-do-servico-do-assistente.md`](doc/troca-do-servico-do-assistente.md).
 
 O passo a passo de implantação numa VM Ubuntu — arquitetura, hardening, backup e restauração,
 atualização, rollback, runbook e checklist de go-live —, com os bloqueadores que ainda impedem a
@@ -288,7 +303,9 @@ arquivo as repetia com números de semanas antes, e o README, o `Makefile` e as 
 agentes chegaram a dizer três coisas diferentes ao mesmo tempo.
 O alvo `test-pg` monta a conexão a partir do `POSTGRES_USER` do seu `.env`; à mão, fora do `make`,
 são necessárias as **duas** variáveis — sem `TEST_DB_ENGINE=postgresql` a suíte cai para SQLite, e
-sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste:
+sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar banco de teste. Isso vale
+com `DB_RUNTIME_USER` fora do ambiente: quando ele está definido, as settings o preferem a `DB_USER`
+(`config/settings/base.py`), e é ele que precisa apontar para o superusuário — é o que o `make` faz:
 
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
@@ -356,7 +373,22 @@ Requerimento de Matrícula e a condução do Processo publicado são incrementos
 abaixo. O estado de cada um está na pasta do incremento, e não aqui — este parágrafo descreve a
 `001`. Auditorias, achados e decisões que atravessam incrementos ficam em [`doc/`](doc/).
 
+**O sistema não está em produção.** A gestão não tem autenticação institucional — sem o seletor de
+identidade de desenvolvimento, `/gestao/` responde 503 — e ainda não existe a política de retenção que
+a seção [Antes de receber dado pessoal real](#antes-de-receber-dado-pessoal-real) exige. O retrato
+mais recente do que está pronto, do que falta e do que depende de decisão é a
+[auditoria de consolidação de 15/10/2026](doc/auditoria-de-consolidacao-2026-10-15.md), com a matriz
+de pendências, o roadmap proposto e as decisões pendentes.
+
 ## Documentação
+
+**Para quem usa o sistema:** a [Visão do Sistema](docs/visao-sistema/index.html) é o material de uso
+vigente — tutorial, papéis, o que se configura, perguntas frequentes —, revisado por ciclos. O manual
+de operação por papel está planejado em [`doc/manual/`](doc/manual/00-arquitetura-do-manual.md) e
+ainda não foi produzido. A implantação está em
+[`doc/implantacao-em-producao-ubuntu.md`](doc/implantacao-em-producao-ubuntu.md).
+
+**Para quem desenvolve:**
 
 O projeto usa [GitHub Spec Kit](https://github.com/github/spec-kit). Cada incremento tem sua pasta
 em `specs/`, com os mesmos artefatos:
@@ -448,6 +480,7 @@ Incrementos, na ordem em que foram especificados:
 | [`070`](specs/070-fonte-de-consulta-do-edital/spec.md) | Fase A do assistente de dúvidas do Edital: na gestão, a validação interna das respostas a doze perguntas sugeridas sobre o Edital vigente no instante consultado — com a versão, o tipo da resposta, cartões que separam texto do Edital, dado e explicação, e cada valor ligado ao documento do ato que o fixou (e nunca ao "Edital completo", que pode não conter a versão vigente). Ausente, dependente da leitura e canais divergentes aparecem como tais; os pontos para revisão antes da abertura pública ficam por Edital. Sem modelo de linguagem, sem rota pública, sem gravação |
 | [`071`](specs/071-piloto-assistente-do-edital/spec.md) | Fase B do assistente de dúvidas do Edital, o piloto interno — implementada; a avaliação no Ollama da L4, as medições e a sessão com o setor aguardam o acesso à L4: na gestão, para participantes com capacidade própria, a pergunta livre e de continuação sobre a fonte da `070`, com a versão conferida a cada pergunta; o serviço de inferência por configuração (OpenRouter para avaliação, Ollama na L4 para a execução local), sem troca automática nem retentativa; o contexto medido em tokens, sem corte silencioso; a resposta conferida pela aplicação contra as fontes entregues; e a avaliação em dois ambientes, com a fidelidade julgada por humanos |
 | [`072`](specs/072-jornada-publica-do-portal/spec.md) | A jornada pública do portal — encontrar, começar, preparar e acompanhar (alternativa A da auditoria de UX de 12/10): a vitrine titula o cartão pelo Edital, diz a oferta por Perfil e o lugar, recolhe os filtros no celular com a busca à vista e resume resultado e prazo de recurso sem fazer um prazo valer para todos; a página da seleção resume a oferta com atalho para as vagas e anuncia o Requerimento pedido na inscrição; as telas de acesso nomeiam a vaga do destino, e a volta à vaga explica a confirmação, que continua sendo POST. Sem domínio novo, sem instrumentação; percurso com cinco pessoas e texto de finalidade de nome e CPF pendentes de validação humana |
+| [`073`](specs/073-configurar-e-verificar-implantacao/spec.md) | Configurar, verificar e testar o correio e o Ollama na implantação — implementada, com validação operacional pendente, a partir da [auditoria de configurações](doc/auditoria-configuracoes-do-sistema-2026-10-14.md): uma seção única no guia de implantação, só com comandos que já existem, que separa ler a configuração, testar conexão e conta sem efeito, e a ação real; mais a recusa do backend SMTP sem servidor e a mensagem do serviço de inferência desconhecido. Sem comando novo; a sessão conduzida com a TI em homologação e o teste contra a L4 ficam pendentes; a página "Configuração e diagnóstico" fica para depois da autenticação da gestão |
 | [`074`](specs/074-assistente-na-pagina-do-edital-local/spec.md) | O assistente do Edital na página pública da seleção, **só no desenvolvimento local**: com a chave `ASSISTENTE_NA_PAGINA_DO_EDITAL`, o visitante abre o painel do protótipo da Fase C e conversa sem a identidade da gestão — sugestões pela `070`, pergunta livre pela `perguntar` da `071`, conversa por sessão e Edital. Desligada por padrão, recusada por produção; autenticação, `073`, L4 e os requisitos da abertura ao público registrados como pendências da implantação |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.

@@ -99,8 +99,8 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **11263 passando e 12 pulados**, nenhuma falha (medido em 2026-10-14, na `071` atualizada com a `main` que já tem a `070` e a `072`, em `55889d11`, em 1311s). O décimo segundo pulado é da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
-doze são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
+Contra PostgreSQL a suíte fecha em **11297 passando e 11 pulados**, nenhuma falha (medido em 2026-10-15, na `main` em `db428b30`, com o grupo `assistente` instalado, em 1312s; a medição anterior, de 14/10 em `55889d11`, dava 11263 e 12 sem o grupo). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
+doze — onze com o grupo — são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
 Caixa, atrás da chave `SORTEIO_E2E_FONTE_REAL`; e **1** é a contagem real do tokenizer. A recusa por
@@ -109,10 +109,12 @@ vendor e o E2E estão nomeados em
 
 Para chegar lá é preciso o **par**:
 `TEST_DB_ENGINE=postgresql` **e** `DB_USER`. Só o primeiro cai para SQLite; só o segundo tenta
-conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa.
+conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos dois casos avisa. Com
+`DB_RUNTIME_USER` no ambiente, as settings o preferem a `DB_USER`, e então é ele que precisa ser o
+superusuário — é o que o `make test-pg` faz, a partir do `POSTGRES_USER`.
 
 **A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 90 — custa
+tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 94 — custa
 **~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
 custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
 declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
@@ -134,8 +136,11 @@ silêncio quando uma migration muda.
 derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
 
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
-runserver local devolve 503. O portal do candidato precisa de `PORTAL_IDENTIDADE_DEMO=true` pelo
-mesmo motivo. Os dois deixam qualquer pessoa declarar quem é, e produção recusa subir com eles.
+runserver local devolve 503. Ele deixa qualquer pessoa declarar quem é, e produção recusa subir com
+ele. O portal do candidato **não** precisa de `PORTAL_IDENTIDADE_DEMO`: a tela que a chave
+habilitava saiu na `010`, e o candidato entra por código enviado ao e-mail. A chave sobrevive só
+como armadilha — `production.py` recusa subir com ela ligada (`portal/identidade.py`,
+`provedor_de_demonstracao`, que ninguém chama).
 
 **Os avisos aos candidatos (066) não saem no clique.** A confirmação grava o aviso e responde; quem
 envia é `manage.py despachar_avisos`, que em produção roda num timer a cada minuto e, em
