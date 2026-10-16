@@ -161,6 +161,7 @@ from processo_seletivo.interface import (
     demonstracao,
     forms,
     identidade,
+    navegacao,
     origens,
     revisao,
 )
@@ -299,13 +300,11 @@ def lista(request):
                 if situacao in contagem
             ],
             "pode_criar": ator.can("processo:criar"),
-            # Sem consulta nova: a capacidade já veio na sessão (040, FR-605).
-            "pode_ver_visao": ator.can(visao_institucional.CONSULTAR),
-            # O caminho para as autoridades da unidade (060), condicionado à permissão pela razão
-            # da visão geral: oferecer um destino que a autorização recusa é o `N-03` da 038.
-            "pode_gerir_autoridades": ator.can(GERIR_AUTORIDADES),
-            # Os modelos de aviso da unidade (066): por papel, como as autoridades (`D-004`).
-            "pode_gerir_modelos": ator.can("aviso:enviar"),
+            # Os três destinos que também estão na barra do shell (076) leem o mesmo predicado
+            # dela, e não uma cópia: a lista e a barra não podem oferecer coisas diferentes.
+            "pode_ver_visao": navegacao.pode_ver_visao(ator),
+            "pode_gerir_autoridades": navegacao.pode_gerir_autoridades(ator),
+            "pode_gerir_modelos": navegacao.pode_gerir_modelos(ator),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
         },

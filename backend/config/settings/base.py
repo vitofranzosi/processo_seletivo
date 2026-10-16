@@ -156,6 +156,8 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.request",
                 "processo_seletivo.interface.identidade.contexto_identidade",
+                # A barra do shell da gestão (076), derivada da identidade acima, sem consulta.
+                "processo_seletivo.interface.navegacao.contexto_da_navegacao",
                 "processo_seletivo.portal.identidade.contexto_candidato",
             ]
         },

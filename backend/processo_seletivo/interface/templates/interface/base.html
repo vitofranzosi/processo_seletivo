@@ -19,8 +19,66 @@ header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.
 header.topo .marca{font-weight:600;letter-spacing:.02em;color:var(--branco);text-decoration:none}
 header.topo .marca:hover{text-decoration:underline}
 header.topo .marca span{font-weight:300;opacity:.85}
-header.topo .identidade{margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.875rem}
-header.topo .identidade a,header.topo .identidade button{color:var(--branco)}
+{% comment %}
+O shell da gestão (076), no conceito A do estudo de 16/10: barra lateral branca com as seções, a
+seção atual em verde-claro com filete, a pessoa e "Sair" no pé, e o cabeçalho de contexto acima do
+`main`, que continua o mesmo. `header.topo` acima ficou só para a tela vista sem identidade.
+
+**Sem script** (R-005): a Visão Geral não carrega script nenhum, e um guardião prende isso. No
+celular as seções moram num painel `popover`, aberto pelo botão por `popovertarget`; o navegador
+anuncia o estado, fecha com Esc e com o toque fora. Na tela larga a folha mostra o painel sempre,
+como coluna. Navegador que não conhece `popover` não esconde o painel, e o botão sai.
+
+O item atual se marca por `[aria-current]`, e não por classe: `.x.atual` faria de `atual` um
+modificador cobrado em toda tela que já usa a palavra. A coluna do conteúdo é `minmax(0,1fr)` para
+que o que é largo role dentro da própria tabela, e não empurre a página.
+{% endcomment %}
+.barra-lateral{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--branco);
+  border-bottom:1px solid var(--borda)}
+.barra-lateral .marca{font-weight:600;color:var(--verde-escuro);text-decoration:none;line-height:1.25}
+.barra-lateral .marca span{display:block;font-weight:400;font-size:.8125rem;color:var(--texto-fraco)}
+.abrir-secoes,.fechar-secoes{margin-left:auto;font:inherit;font-size:.875rem;padding:.35rem .8rem;
+  cursor:pointer;background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde);
+  border-radius:4px}
+.fechar-secoes{align-self:flex-end;margin:.6rem 1rem 0}
+.secoes-da-gestao:popover-open{display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;
+  width:min(18rem,85vw);height:100%;margin:0;padding:0;border:0;border-right:1px solid var(--borda);
+  background:var(--branco);color:var(--texto);overflow-y:auto}
+.secoes-da-gestao::backdrop{background:rgba(0,0,0,.3)}
+.secoes-da-gestao ul{list-style:none;margin:0;padding:0}
+.secoes-da-gestao nav a{display:block;padding:.45rem 1rem .45rem .8rem;color:var(--texto);
+  text-decoration:none;border-left:3px solid transparent}
+.secoes-da-gestao nav a:hover{background:var(--fundo)}
+.secoes-da-gestao nav a[aria-current]{background:var(--verde-claro);border-left-color:var(--verde);
+  color:var(--verde-escuro);font-weight:600}
+.grupo-de-secoes{margin:1.25rem 1rem .35rem;font-size:.75rem;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--texto-fraco)}
+.pessoa-identificada{margin-top:auto;padding:1rem;border-top:1px solid var(--borda);font-size:.875rem;
+  display:flex;flex-direction:column;align-items:flex-start;gap:.35rem}
+.pessoa-identificada strong{overflow-wrap:anywhere}
+.pessoa-identificada span{color:var(--texto-fraco);font-size:.8125rem}
+.pessoa-identificada form{margin:0}
+.cabecalho-de-contexto{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;
+  padding:.6rem 1.5rem;background:var(--branco);border-bottom:1px solid var(--borda);font-size:.875rem}
+.caminho-da-secao{color:var(--texto-fraco)}
+.cabecalho-de-contexto>a{margin-left:auto}
+.area-de-trabalho{min-width:0}
+@media (min-width:64rem){
+  .shell{display:grid;grid-template-columns:15rem minmax(0,1fr)}
+  .barra-lateral{position:sticky;top:0;height:100vh;flex-direction:column;align-items:stretch;
+    gap:0;padding:0;border-bottom:0;border-right:1px solid var(--borda);overflow-y:auto}
+  .barra-lateral .marca{padding:1rem}
+  .abrir-secoes,.fechar-secoes{display:none}
+  .secoes-da-gestao{display:flex;flex-direction:column;flex:1;position:static;width:auto;
+    height:auto;margin:0;padding:0;border:0;background:none;color:inherit;overflow:visible}
+}
+@supports not selector(:popover-open){
+  .abrir-secoes,.fechar-secoes{display:none}
+}
+@media print{
+  .shell{display:block}
+  .barra-lateral,.cabecalho-de-contexto{display:none}
+}
 {% comment %} A página serve à **estrutura** — matriz de alocação, tabelas de oito colunas, o painel do
    documento ao lado do formulário. O texto tem medida própria logo abaixo: sem ela, alargar a
    página levaria as linhas de 147 para mais de 200 caracteres. {% endcomment %}
@@ -1308,23 +1366,51 @@ escape do guardião por mudar de lugar.
 </head>
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
-<header class="topo">
+{% if barra %}
+<div class="shell">
+<div class="barra-lateral">
   {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
      dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
-  <a class="marca" href="{% url 'interface:lista' %}">Cefor<span>/Ifes</span> · Gestão de Processos Seletivos</a>
-  {% if ator %}
-  <div class="identidade">
-    {% comment %} UX-008: quem só executa trabalho futuro chega às próprias Etapas sem passar por tela
-       administrativa nenhuma. O link não depende de papel — depende de estar identificado. {% endcomment %}
-    <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a>
-    <span>{{ ator.subject }}{% if papeis_do_ator %} — {{ papeis_do_ator|join:", " }}{% endif %}</span>
-    <form method="post" action="{% url 'interface:sair' %}" style="margin:0">
-      {% csrf_token %}
-      <button type="submit" class="acao" style="border-color:#fff;background:transparent">Sair</button>
-    </form>
+  <a class="marca" href="{% url 'interface:lista' %}">Gestão de Processos Seletivos<span>Cefor/Ifes</span></a>
+  <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
+  <div class="secoes-da-gestao" id="secoes-da-gestao" popover>
+    <button type="button" class="fechar-secoes" popovertarget="secoes-da-gestao" popovertargetaction="hide">Fechar</button>
+    {% comment %} Cada item só vem para quem o destino aceita (076, `FR-1714`): os predicados são
+       os da lista, em `navegacao.py`. Grupo sem item não vem. {% endcomment %}
+    <nav aria-label="Seções da gestão">
+      {% for grupo in barra %}
+      <p class="grupo-de-secoes" id="grupo-de-secoes-{{ forloop.counter }}">{{ grupo.nome }}</p>
+      <ul aria-labelledby="grupo-de-secoes-{{ forloop.counter }}">
+        {% for item in grupo.itens %}<li><a href="{{ item.endereco }}"{% if item.atual %} aria-current="{{ item.atual }}"{% endif %}>{{ item.rotulo }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </nav>
+    <div class="pessoa-identificada">
+      <strong>{{ ator.subject }}</strong>
+      {% if papeis_do_ator %}<span>{{ papeis_do_ator|join:", " }}</span>{% endif %}
+      <form method="post" action="{% url 'interface:sair' %}">
+        {% csrf_token %}
+        <button type="submit" class="acao">Sair</button>
+      </form>
+    </div>
   </div>
-  {% endif %}
+</div>
+<div class="area-de-trabalho">
+<header class="cabecalho-de-contexto">
+  {% comment %} O caminho para na seção (076, `FR-1718`): o Processo, o Edital e a Etapa já estão na
+     trilha que a própria tela traz, e repeti-los aqui poria o mesmo nome três vezes seguidas. {% endcomment %}
+  <nav aria-label="Caminho" class="caminho-da-secao">
+    <abbr title="Gestão de Processos Seletivos">GPS</abbr> ›
+    {% if secao_atual and request.path == secao_atual.endereco %}<span aria-current="page">{{ secao_atual.rotulo }}</span>{% elif secao_atual %}<a href="{{ secao_atual.endereco }}">{{ secao_atual.rotulo }}</a>{% endif %}
+  </nav>
+  <a href="{% url 'interface:identificar' %}">Trocar identidade</a>
 </header>
+{% else %}
+<header class="topo">
+  <a class="marca" href="{% url 'interface:lista' %}">Cefor<span>/Ifes</span> · Gestão de Processos Seletivos</a>
+</header>
+{% endif %}
 <!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
      BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
      existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
@@ -1332,5 +1418,9 @@ escape do guardião por mudar de lugar.
 <main id="conteudo" tabindex="-1">
 {% block conteudo %}{% endblock %}
 </main>
+{% if barra %}
+</div>
+</div>
+{% endif %}
 </body>
 </html>
