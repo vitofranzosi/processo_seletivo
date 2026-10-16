@@ -164,8 +164,21 @@ def test_a_recusa_da_conferencia_aparece_no_lugar_da_resposta(
     assert "São 45 vagas." not in corpo
 
 
-def test_nenhuma_rota_publica_leva_ao_piloto():
-    """`FR-1462`: o piloto só existe na gestão."""
+#: A exceção da `074` ao `FR-1462`, rota a rota: o painel na página da seleção, só no
+#: desenvolvimento local. Uma rota nova no mesmo módulo reprova até entrar aqui.
+ROTAS_DA_PAGINA_LOCAL = {
+    f"selecoes/<uuid:edital_id>/assistente/{envio}" for envio in ("perguntar", "sugestao", "nova")
+}
+
+
+def test_nenhuma_rota_publica_leva_ao_piloto(client, settings):
+    """`FR-1462`: o piloto só existe na gestão.
+
+    A exceção é a da `074`: as três rotas do portal que servem o painel na página da seleção, atrás
+    de uma chave que produção recusa (`FR-1683`). Elas são nomeadas uma a uma, e o caso prova que,
+    com a chave desligada, as três respondem 404 — sem isso, uma rota pública do assistente
+    escaparia por morar no mesmo módulo.
+    """
     from django.urls import get_resolver
 
     def nomes(padroes, prefixo=""):
@@ -175,10 +188,17 @@ def test_nenhuma_rota_publica_leva_ao_piloto():
             else:
                 yield prefixo + str(padrao.pattern), getattr(padrao.callback, "__module__", "")
 
-    do_piloto = [
+    do_assistente = [
         rota for rota, modulo in nomes(get_resolver().url_patterns) if "assistente" in modulo
     ]
-    assert do_piloto and all(rota.startswith("gestao/") for rota in do_piloto)
+    publicas = {rota for rota in do_assistente if not rota.startswith("gestao/")}
+    assert any(rota.startswith("gestao/") for rota in do_assistente)
+    assert publicas == ROTAS_DA_PAGINA_LOCAL
+
+    settings.ASSISTENTE_NA_PAGINA_DO_EDITAL = False
+    qualquer = "00000000-0000-0000-0000-000000000000"
+    for rota in publicas:
+        assert client.post("/" + rota.replace("<uuid:edital_id>", qualquer)).status_code == 404
 
 
 # ---- US2: a conversa continua, e a versão é conferida a cada pergunta -------------------------

@@ -28,6 +28,7 @@ from django.utils.module_loading import import_string
 from .base import *  # noqa: F403
 from .base import (
     ARQUIVOS_CANDIDATOS_RAIZ,
+    ASSISTENTE_NA_PAGINA_DO_EDITAL,
     ASSISTENTE_PILOTO,
     ASSISTENTE_SERVICO,
     ASSISTENTE_TEMPO_LIMITE_SEGUNDOS,
@@ -222,6 +223,16 @@ _exigir(
     "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
     "o tempo-limite da inferência precisa ficar abaixo dos 120 s do servidor de aplicação, para "
     "que a pessoa receba 'tempo esgotado', e não um erro do servidor.",
+)
+
+# O painel na página pública (074) deixa qualquer visitante conversar com o modelo, sem
+# autenticação nem os requisitos da abertura ao público, que são da implantação (`FR-1684`). Como o
+# seletor de identidade, ele existe só na máquina de desenvolvimento.
+_exigir(
+    not ASSISTENTE_NA_PAGINA_DO_EDITAL,
+    "ASSISTENTE_NA_PAGINA_DO_EDITAL",
+    "o assistente na página pública da seleção é só do desenvolvimento local; a abertura ao "
+    "público depende dos requisitos da implantação.",
 )
 
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.

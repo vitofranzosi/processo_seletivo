@@ -1,8 +1,8 @@
 {% load static %}
 {% comment %} O painel de dúvidas do protótipo da Fase C, acrescentado à página pública da seleção
-   (prototipo_do_assistente.py). Um fragmento, e não uma página: por isso o estilo vem aqui, num bloco
-   com o nome que a varredura de classes lê. Tudo com o prefixo `pd-`, para não colidir com a folha
-   do portal. {% endcomment %}
+   (prototipo_do_assistente.py) — e, no desenvolvimento local, pela própria página (074). Um
+   fragmento, e não uma página: por isso o estilo vem aqui, num bloco com o nome que a varredura de
+   classes lê. Tudo com o prefixo `pd-`, para não colidir com a folha do portal. {% endcomment %}
 <style>
 {% block estilo_da_pagina %}
 .pd-abrir{position:fixed;right:1rem;bottom:1rem;z-index:20;background:var(--verde);
@@ -127,7 +127,7 @@ body:has(.pd-painel[open]){padding-right:28rem}
     <a class="pd-fechar" id="pd-fechar" href="{{ request.path }}{% if simulacao %}?simulacao={{ simulacao }}{% endif %}" aria-label="Fechar o assistente" title="Fechar">×</a>
   </div>
   <p class="pd-versao" id="pd-versao">Edital {{ edital.number }}/{{ edital.year }} · versão vigente desde {{ vigente_desde }}</p>
-  <p class="pd-prototipo">Protótipo interno, não visto por candidatos{% if simulacao %} · estado simulado: as respostas do modelo são ilustrativas{% endif %}</p>
+  <p class="pd-prototipo">{% if local %}Ambiente local de desenvolvimento{% else %}Protótipo interno, não visto por candidatos{% endif %}{% if simulacao %} · estado simulado: as respostas do modelo são ilustrativas{% endif %}</p>
 
   <div class="pd-conversa" id="pd-conversa">
     {% if not mensagens and not pendente and not escolha %}
@@ -178,7 +178,7 @@ body:has(.pd-painel[open]){padding-right:28rem}
       <h3 class="pd-pergunta" id="pd-escolha" tabindex="-1">{{ escolha.pergunta }}</h3>
       <div class="pd-resposta">
         <p class="pd-texto">Para qual opção?</p>
-        <form class="pd-opcoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="continuacao">{% else %}method="post" action="{% url 'interface:assistente-prototipo-sugestao' edital.id %}">{% csrf_token %}{% endif %}
+        <form class="pd-opcoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="continuacao">{% else %}method="post" action="{{ rotas.sugestao }}">{% csrf_token %}{% endif %}
           <input type="hidden" name="sugestao" value="{{ escolha.codigo }}">
           {% for codigo, nome in opcoes %}<button type="submit" class="pd-sugestao" name="perfil" value="{{ codigo }}">{{ nome }}</button>{% endfor %}
         </form>
@@ -190,8 +190,9 @@ body:has(.pd-painel[open]){padding-right:28rem}
       <p class="pd-espera" id="pd-espera" role="status">{{ espera }}</p>
     </div>
     {% if recusa %}<p class="pd-falha" role="alert">Esta pergunta não está disponível para este Edital.</p>{% endif %}
+    {% if limite_de_conversas %}<p class="pd-falha" role="alert">Esta sessão chegou ao limite de conversas sobre este Edital.</p>{% endif %}
     {% if not pendente and not escolha %}
-    <form class="pd-sugestoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1">{% else %}method="post" action="{% url 'interface:assistente-prototipo-sugestao' edital.id %}">{% csrf_token %}{% endif %}
+    <form class="pd-sugestoes" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1">{% else %}method="post" action="{{ rotas.sugestao }}">{% csrf_token %}{% endif %}
       {% if not mensagens %}
       <div class="pd-lista">
         {% for codigo, texto, da_opcao in principais %}<button type="submit" class="pd-sugestao" {% if simulacao %}name="simulacao" value="{% if da_opcao %}escolha{% else %}continuacao{% endif %}"{% else %}name="sugestao" value="{{ codigo }}"{% endif %}>{{ texto }}</button>{% endfor %}
@@ -210,7 +211,7 @@ body:has(.pd-painel[open]){padding-right:28rem}
     {% endif %}
   </div>
 
-  <form class="pd-enviar" id="pd-enviar" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="espera">{% else %}method="post" action="{% url 'interface:assistente-prototipo-perguntar' edital.id %}">{% csrf_token %}{% endif %}
+  <form class="pd-enviar" id="pd-enviar" data-espera {% if simulacao %}method="get" action="{{ request.path }}"><input type="hidden" name="painel" value="1"><input type="hidden" name="simulacao" value="espera">{% else %}method="post" action="{{ rotas.perguntar }}">{% csrf_token %}{% endif %}
     <label for="pd-campo-pergunta" class="pd-oculto">Sua pergunta sobre este Edital</label>
     <textarea id="pd-campo-pergunta" name="pergunta" rows="2" maxlength="{{ pergunta_maxima }}" required placeholder="Escreva sua pergunta"></textarea>
     <button type="submit" class="pd-botao" id="pd-botao-enviar"{% if pendente %} aria-disabled="true"{% endif %}>{% if pendente %}Aguardando…{% else %}Enviar{% endif %}</button>
@@ -220,7 +221,7 @@ body:has(.pd-painel[open]){padding-right:28rem}
     <div class="pd-acoes">
       {% for texto, endereco in atendimento %}{% if endereco %}<a href="{{ endereco }}">{% if atendimento|length == 1 %}Atendimento oficial{% else %}{{ texto }}{% endif %}</a>{% else %}<span>Atendimento oficial: {{ texto }}</span>{% endif %}{% endfor %}
       {% if not simulacao %}
-      <form method="post" action="{% url 'interface:assistente-prototipo-nova' edital.id %}">
+      <form method="post" action="{{ rotas.nova }}">
         {% csrf_token %}
         <button type="submit" class="pd-discreto">Nova conversa</button>
       </form>

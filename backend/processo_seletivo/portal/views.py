@@ -85,6 +85,7 @@ from processo_seletivo.inscricoes.domain.pessoais import (
 from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
+from processo_seletivo.portal import assistente as assistente_do_edital
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
@@ -475,11 +476,13 @@ def _destino_seguro(request, padrao):
     return padrao
 
 
-def selecao(request, edital_id):
+def selecao(request, edital_id, *, assistente=True):
     """O detalhe de uma seleção, orientado à decisão de participar.
 
     Continua abrindo depois de encerrada e depois de cancelada (FR-017): o que foi publicado
     permanece legível. O que muda com o cancelamento é deixar de ser anunciado na vitrine.
+
+    `assistente=False` é do protótipo da gestão, que acrescenta o painel dele sobre esta página.
     """
     # **Um instante para a leitura inteira** (047, revisão do #193). A versão vigente, o período, o
     # prazo restante, o recebimento, o prazo de recurso, o cronograma e o próximo Evento eram
@@ -626,6 +629,10 @@ def selecao(request, edital_id):
         "moment"
     ) == "AT_ENROLLMENT"
     contexto["volta"] = _volta_para(request, identidade, edital_id, versao.content, contexto)
+    # **O assistente na página, só no desenvolvimento local** (074, `FR-1680`).
+    contexto["painel_do_assistente"] = (
+        assistente_do_edital.painel(request, versao.edital, agora) if assistente else ""
+    )
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
     # `Continuar inscrição` diz que aquela pessoa se inscreveu. Num computador compartilhado, o
@@ -633,7 +640,9 @@ def selecao(request, edital_id):
     # volta**, que diz o e-mail de quem entrou (072, research T-003): uma identidade nova não tem
     # inscrição iniciada, e sem esta condição um cache compartilhado guardaria a página com o
     # endereço de alguém.
-    return marcar_como_privada(resposta) if iniciadas or contexto["volta"] else resposta
+    # E quando traz o painel: a conversa é da sessão, e os formulários dele levam o token dela.
+    privada = iniciadas or contexto["volta"] or contexto["painel_do_assistente"]
+    return marcar_como_privada(resposta) if privada else resposta
 
 
 def _volta_para(request, identidade, edital_id, conteudo, contexto):
