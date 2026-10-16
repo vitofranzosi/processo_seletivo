@@ -18,3 +18,8 @@ AVISOS_AOS_CANDIDATOS = True
 # caminho chega à rede sem ela (`R-019`, `FR-1519`).
 ASSISTENTE_PILOTO = True
 ASSISTENTE_SERVICO = ""
+
+# O painel na página pública (074) **desligado**, e fixado aqui: o `make test-pg` exporta o `.env`,
+# e quem liga a chave lá para subir o servidor ligaria o painel em toda página de seleção da suíte.
+# Os casos da `074` a ligam por `settings`.
+ASSISTENTE_NA_PAGINA_DO_EDITAL = False

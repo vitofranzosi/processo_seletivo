@@ -11,6 +11,11 @@ contratos estão em [contracts/](contracts/); o modelo de dados, em [data-model.
 | D — Ollama na L4 | Acesso de rede à L4 | O resultado 2 que conta, e o 3 (`SC-551` a `SC-558`) |
 | E — Exclusão | 90 dias depois do relatório final | `FR-1509` |
 
+**Para passar de B a D, ou de volta**, siga o
+[roteiro de troca de serviço](../../doc/troca-do-servico-do-assistente.md): um arquivo de ambiente por
+serviço, fora do repositório, um shell novo a cada troca e a verificação antes de seguir. Os `export`
+de B servem à primeira conversa; no mesmo shell, eles sobrevivem à troca.
+
 ---
 
 ## Preparação comum
@@ -74,7 +79,10 @@ gasto do piloto (`FR-1507`). Sem ele, a verificação acusa divergência, e não
 sintética.
 
 1. `uv run python manage.py verificar_servico_de_inferencia`, no mesmo shell — **esperado:** o limite da chave, a conversa
-   sintética com término `stop`, o acréscimo por mensagem sugerido, nenhuma divergência.
+   sintética com término `stop`, o acréscimo medido contra o configurado, nenhuma divergência. O
+   acréscimo depende do provedor (ensaio de 14/10, `R-006`): fixe-o com
+   `ASSISTENTE_PROVEDOR=parasail` — o roteamento pelo mais barato recusava com 429 — e, com ele,
+   `ASSISTENTE_TOKENS_POR_CHAMADA=0 ASSISTENTE_TOKENS_POR_MENSAGEM=9`.
 2. `make runserver DB_NAME=piloto_assistente`, no mesmo shell, e identificar-se com o papel do setor **e** "Participante do piloto do
    assistente", abrir o 91/2026, "Conversar com o assistente (piloto)".
 3. Perguntar "Quantas vagas tem o polo de Bom Jesus do Norte?" e depois "E no polo de Iúna?".
@@ -118,7 +126,7 @@ a conclusão.
 o endereço, o nome **confirmado** do modelo, a quantização em `ASSISTENTE_QUANTIZACAO`, o
 `ASSISTENTE_CONTEXTO_TOKENS` a medir):
 
-1. `uv run python manage.py verificar_servico_de_inferencia`, no shell preparado como em B. **Esperado:** a versão, o modelo, a quantização, se
+1. `uv run python manage.py verificar_servico_de_inferencia`, num shell novo, preparado pelo roteiro de troca. **Esperado:** a versão, o modelo, a quantização, se
    está inteiro na GPU, se `truncate` e `shift` são aceitos, e a lista "a confirmar com a
    infraestrutura". Divergência sai com código 1, e o piloto não usa o serviço até a configuração
    ser corrigida.

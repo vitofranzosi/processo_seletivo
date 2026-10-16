@@ -52,7 +52,7 @@ para entregar o que ela precisa — o manifesto e o endereço da relação —, 
   <li><a href="{% url 'portal:relacao-de-habilitados' relacao.id %}">Abrir a relação publicada</a>
     — é dela que o resumo da relação se recalcula, sem depender de nós.</li>
   <li><a href="/static/portal/sorteio-cli.js">Baixar o verificador independente (JavaScript)</a> — rode assim:
-    <code>node sorteio-cli.js --resumo {{ sorteio.manifesto_hash }} &lt; manifesto.json</code>
+    <code class="comando">node sorteio-cli.js --resumo {{ sorteio.manifesto_hash }} &lt; manifesto.json</code>
     {% comment %}
     **O `--resumo` vem preenchido, e não é enfeite** (021, D-018, FR-078). A instrução anterior
     mandava rodar sem ele — que é exatamente o modo em que o programa confere apenas a coerência

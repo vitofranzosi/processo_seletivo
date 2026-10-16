@@ -91,8 +91,8 @@ Serviço: ollama em http://…:11434
 Versão do Ollama: …
 Modelo configurado: qwen3.8:27b — instalado: sim
   família: …   parâmetros: …   quantização: …   contexto do modelo: …
-Conversa sintética: entrada 41 tokens (medidos 33 + 2 × 4 por mensagem)  saída 12  término stop  2,8 s
-ASSISTENTE_TOKENS_POR_MENSAGEM sugerido: 4 (configurado: 8)
+Conversa sintética: entrada 41 tokens (texto 33)  saída 12  término stop  2,8 s
+Acréscimo além do texto: medido 8 tokens em 2 mensagens; configurado 16 (ASSISTENTE_TOKENS_POR_CHAMADA 0 + 2 × ASSISTENTE_TOKENS_POR_MENSAGEM 8)
 Modelo carregado: sim, 100% na GPU (… GB)
 truncate/shift: enviados (ASSISTENTE_OLLAMA_SEM_CORTE) | não enviados — a conferência da contagem é a única proteção
 A confirmar com a infraestrutura: OLLAMA_NUM_PARALLEL, OLLAMA_MAX_QUEUE, OLLAMA_KV_CACHE_TYPE,
@@ -104,7 +104,7 @@ Sai com código 1 se houver divergência entre o serviço e a configuração. N�
 divergências: o modelo não instalado; a quantização diferente de `ASSISTENTE_QUANTIZACAO`, ou ela
 vazia; o contexto do modelo menor que `ASSISTENTE_CONTEXTO_TOKENS`; o modelo fora da GPU, no todo ou
 em parte; na conversa sintética, outro modelo, término diferente de `stop`, tokens não informados, o
-acréscimo por mensagem configurado menor que o medido, e a falta do tokenizer. No OpenRouter, a
+acréscimo configurado — o fixo da chamada mais o de cada mensagem — menor que o medido, e a falta do tokenizer. No OpenRouter, a
 chave sem limite de gasto — e, sem ele, a conversa sintética não sai, porque ela também é uma
 chamada paga (`FR-1507`).
 

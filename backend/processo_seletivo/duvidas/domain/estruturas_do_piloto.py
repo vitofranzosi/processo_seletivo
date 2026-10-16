@@ -89,6 +89,10 @@ LIMITE_DE_USO = "LIMITE_DE_USO"
 EXCEDE_O_CONTEXTO = "EXCEDE_O_CONTEXTO"
 PERGUNTA_RECUSADA = "PERGUNTA_RECUSADA"
 SEM_TOKENIZER = "SEM_TOKENIZER"
+#: A pergunta sugerida, respondida pela `070` sem o modelo (protótipo da Fase C). Entra no histórico
+#: como as conferidas: quem clica numa sugestão e depois pergunta "preciso enviar todos?" espera que
+#: o modelo saiba do que se falava.
+RESPOSTA_DA_SUGESTAO = "RESPOSTA_DA_SUGESTAO"
 ESTADOS = (
     RESPONDIDA_E_CONFERIDA,
     NAO_PASSOU_NA_CONFERENCIA,
@@ -104,6 +108,7 @@ ESTADOS = (
     EXCEDE_O_CONTEXTO,
     PERGUNTA_RECUSADA,
     SEM_TOKENIZER,
+    RESPOSTA_DA_SUGESTAO,
 )
 
 TELA, AVALIACAO = "TELA", "AVALIACAO"

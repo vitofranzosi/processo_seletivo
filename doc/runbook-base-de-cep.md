@@ -112,8 +112,9 @@ Execução à mão é **só para recuperação** — nunca rotina.
 # O que está carregado agora
 make DB_NAME=<banco> ceps-situacao
 
-# Recarregar, ignorando o resumo igual
-make DB_NAME=<banco> CEPS_ZIP=/caminho/banco-ceps.zip ceps
+# Recarregar, ignorando o resumo igual — pelo manage.py, e não pelo `make ceps`, que sempre passa
+# `--se-mudou` (`backend/Makefile`) e, com o mesmo arquivo, não recarrega nada
+cd backend && DB_NAME=<banco> DB_ROLE=migration uv run python manage.py carregar_ceps /caminho/banco-ceps.zip
 ```
 
 Havendo dúvida sobre a integridade da base vigente, recarregar é seguro: a geração nova é construída

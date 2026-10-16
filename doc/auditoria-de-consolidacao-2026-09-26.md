@@ -1,5 +1,11 @@
 # Auditoria de consolidação — o que as auditorias anteriores ainda representam hoje
 
+> **Superado em parte — 15/10/2026.** Esta consolidação descreve a `main` até 29/09. A
+> [auditoria de consolidação de 15/10/2026](auditoria-de-consolidacao-2026-10-15.md) reconferiu as
+> unidades RC-1 a RC-160 contra a `main` em `db428b30`, e a sua
+> [matriz de pendências](auditoria-de-consolidacao-2026-10-15/matriz-pendencias.md) é hoje a lista
+> viva. Este documento fica como registro histórico e como fonte dos identificadores RC-.
+
 **Data:** 26/09/2026
 **Contra:** a `main` em `bb774d9` (merge do #168, 25/09 23:23), com a worktree sincronizada com `origin/main`
 **Atualização:** 26/09, depois dos merges do #171 (`2f38dc2`, só o registro do achado), do #173 (`47876ad`,

@@ -42,10 +42,11 @@ ESGOTADO = "o serviço não respondeu no tempo-limite"
 class FalhaDoServico(Exception):
     """Uma falha da chamada, com o código do estado que ela produz."""
 
-    def __init__(self, codigo: str, motivo: str):
+    def __init__(self, codigo: str, motivo: str, provedor: str = ""):
         super().__init__(f"{codigo}: {motivo}")
         self.codigo = codigo
         self.motivo = motivo
+        self.provedor = provedor
 
 
 def parametros_configurados() -> dict:
@@ -91,7 +92,7 @@ def _pedir(pedido) -> dict:
         with request.urlopen(pedido, timeout=settings.ASSISTENTE_TEMPO_LIMITE_SEGUNDOS) as resposta:
             bruto = resposta.read()
     except error.HTTPError as falha:
-        raise _do_http(falha.code) from None
+        raise _do_http(falha.code, _provedor_da_recusa(falha)) from None
     except TimeoutError:
         raise FalhaDoServico(TEMPO_ESGOTADO, "o serviço não respondeu no tempo-limite") from None
     except error.URLError as falha:
@@ -106,12 +107,29 @@ def _pedir(pedido) -> dict:
         raise FalhaDoServico(RESPOSTA_MALFORMADA, "o serviço não devolveu JSON") from None
 
 
-def _do_http(codigo: int) -> FalhaDoServico:
+def _provedor_da_recusa(falha) -> str:
+    """O provedor que recusou, quando o OpenRouter o diz no corpo do erro; senão, vazio.
+
+    Só esse nome sai do corpo, que é do serviço e não leva o que foi enviado: sem ele, um 429 não
+    diz se foi o roteador ou um provedor, nem qual (ensaio de 14/10).
+    """
+    try:
+        corpo = json.loads(falha.read().decode("utf-8"))
+        return str(corpo["error"]["metadata"]["provider_name"])
+    except Exception:  # noqa: BLE001 — sem corpo legível, a recusa continua sendo a mesma
+        return ""
+
+
+def _do_http(codigo: int, provedor: str = "") -> FalhaDoServico:
     if codigo == 402:
-        return FalhaDoServico(ORCAMENTO_ESGOTADO, "o serviço recusou por limite de gasto (402)")
+        return FalhaDoServico(
+            ORCAMENTO_ESGOTADO, "o serviço recusou por limite de gasto (402)", provedor
+        )
     if codigo == 429:
-        return FalhaDoServico(LIMITE_DO_SERVICO, "o serviço recusou por limite de uso (429)")
-    return FalhaDoServico(INDISPONIVEL, f"o serviço respondeu com erro HTTP {codigo}")
+        return FalhaDoServico(
+            LIMITE_DO_SERVICO, "o serviço recusou por limite de uso (429)", provedor
+        )
+    return FalhaDoServico(INDISPONIVEL, f"o serviço respondeu com erro HTTP {codigo}", provedor)
 
 
 def conversar(mensagens, esquema, parametros):

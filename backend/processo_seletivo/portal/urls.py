@@ -1,6 +1,6 @@
 from django.urls import path
 
-from processo_seletivo.portal import views
+from processo_seletivo.portal import assistente, views
 
 app_name = "portal"
 
@@ -118,6 +118,15 @@ urlpatterns = [
         name="manifesto-do-sorteio",
     ),
     path("<uuid:edital_id>/", views.selecao, name="selecao"),
+    # O assistente na página da seleção, só no desenvolvimento local (074): desligada a chave, as
+    # três respondem 404, como qualquer endereço que não existe.
+    path(
+        "<uuid:edital_id>/assistente/perguntar",
+        assistente.perguntar,
+        name="assistente-perguntar",
+    ),
+    path("<uuid:edital_id>/assistente/sugestao", assistente.sugestao, name="assistente-sugestao"),
+    path("<uuid:edital_id>/assistente/nova", assistente.nova, name="assistente-nova"),
     path(
         "<uuid:edital_id>/vagas/<uuid:profile_id>/inscrever",
         views.inscrever,

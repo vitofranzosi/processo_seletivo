@@ -99,7 +99,9 @@ Pela interface, a interrupção:
 ## 5a. A chave de habilitação (D-009)
 
 1. Desligar `AVISOS_AOS_CANDIDATOS` e reiniciar: "Avisar candidatos" aparece sem ação, com a
-   explicação. O histórico e os modelos abrem normalmente.
+   explicação. Em desenvolvimento a variável de ambiente não basta, porque
+   `config/settings/development.py` liga a chave no módulo; use um módulo de settings que a desligue
+   depois de importar o de desenvolvimento, ou `config.settings.base`. O histórico e os modelos abrem normalmente.
 2. Com um aviso confirmado e pendente, desligar a chave e rodar o despacho: nenhuma tentativa.
 3. Religar com o relógio adiantado além de `AVISOS_JANELA_DE_DESPACHO_HORAS`, pela suíte: os
    pendentes aparecem como "expirado sem envio", e nada sai.

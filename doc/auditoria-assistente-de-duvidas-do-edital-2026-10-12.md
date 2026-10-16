@@ -888,6 +888,125 @@ A Fase A satisfaz o princípio VI sozinha: o visitante faz algo novo, pelo próp
 | C4 | Registros mínimos (§7.4) e validação da LGPD (`DEP-07`) |
 | C5 | Liberação por Edital (`DA-10`), começando por um certame com equipe de plantão; revisão dos registros após o primeiro período |
 
+#### A experiência da Fase C — avaliação de 14/10
+
+Avaliada depois do primeiro ensaio da Fase B com um modelo de verdade, e antes de qualquer spec. A
+tela técnica do piloto (`071`) não é a do candidato: ela mostra cada turno como registro de
+avaliação, e não como conversa.
+
+**Direção aprovada pelo usuário:**
+
+- **Abertura voluntária**, por um botão "Dúvidas sobre este Edital" na página da seleção.
+- **No desktop, um painel lateral não modal.** A pessoa consulta a página enquanto conversa e
+  alterna entre as duas pelo teclado; prender o foco contradiria a razão de o painel ser lateral.
+- **No celular, tela cheia e modal.** O resto da página fica inerte, Esc fecha, e o foco volta ao
+  botão que abriu.
+- **As perguntas sugeridas são respondidas pela `070`, sem o modelo.**
+  - Preservam o tipo da resposta: "depende da leitura" e o detalhe em anexo continuam ditos, porque
+    ser determinística não quer dizer que a pergunta foi respondida por inteiro.
+  - Entram no histórico da pergunta seguinte, na mesma versão vigente. Quem clica em "Que documentos
+    preciso enviar?" e depois pergunta "Preciso enviar todos?" espera que o modelo saiba do que se
+    falava.
+- **A pergunta livre segue pelo fluxo da `071`.** Nenhum classificador decide se uma pergunta digitada
+  cabe na `070`: sugestão clicada usa a `070`, pergunta livre usa o modelo.
+- **A espera diz a etapa real, e nada além.**
+  - Enquanto o servidor responde, o painel mostra "Consultando as informações deste Edital…"; se
+    demorar, "A consulta está levando um pouco mais de tempo."
+  - Nada de "conferindo": a conferência leva milissegundos depois que o modelo responde, e o
+    navegador não saberia quando ela começa.
+  - Nada de porcentagem, contagem regressiva ou prazo: os 5 a 35 segundos do ensaio foram
+    observados, e não são limite.
+  - Nenhum texto gerado aparece antes da conferência. Por isso não há streaming.
+- **Fontes e versão continuam, discretas.**
+  - A citação literal aparece quando faz parte da resposta, identificada como texto do Edital, e não
+    em toda resposta.
+  - As fontes ficam a um clique.
+  - A versão vigente fica numa linha discreta.
+  - Quando o Edital muda no meio da conversa, um marco no histórico separa as respostas anteriores
+    das seguintes, para que as antigas não pareçam atualizadas.
+- **O canal oficial aparece no painel quando está configurado.** Quando não há canal, nada se inventa.
+- **"Não foi possível confirmar no Edital" não pode parecer "o serviço está ocupado".** O candidato lê
+  três situações, e não os catorze estados da `071`.
+
+**O protótipo.** É interno, com o mesmo acesso do piloto, em
+`/gestao/editais/<id>/assistente/prototipo/`, na branch `claude/assistente-prototipo-fase-c`, e não
+foi disponibilizado ao público.
+
+- O fundo é a página pública verdadeira da seleção, e o painel é acrescentado a ela.
+- `?simulacao=<estado>` mostra cada estado sem chamada nem gravação: início, resposta com fonte,
+  continuação, espera, espera longa, falha e mudança de versão. As respostas do modelo são
+  ilustrativas, e as fontes e as respostas das sugestões são as do Edital.
+- Sem o parâmetro, o protótipo conversa de verdade:
+  - a sugestão vai por `responder_sugestao`, que grava a troca no estado novo
+    `RESPOSTA_DA_SUGESTAO`, porque o histórico sai da tabela e não do navegador;
+  - a pergunta livre vai pela mesma `perguntar` da tela técnica;
+  - a conversa tem chave própria na sessão, e a tela técnica continua com a dela.
+
+**Achados do protótipo.**
+
+- **As explicações da `070` foram escritas para a tela de cartões.** Frases como "se cada um é
+  obrigatório ou facultativo está no cartão" e "os documentos abaixo" leem mal num balão de
+  conversa. O protótipo mostra os dados como linhas ("Documento exigido “Diploma de graduação” —
+  Obrigatoriedade: obrigatório"), mas a redação para o painel é da spec da Fase C. O contrato da
+  `070` não muda por isso. **E a frase passa ao modelo pelo histórico**: na conferência integrada de
+  14/10, a continuação "Preciso enviar todos?" foi respondida e conferida, mas repetiu "está no
+  cartão", que não faz sentido no painel.
+- **Nas perguntas por Perfil, o painel pede o Perfil.** No corpus, os quatro Perfis do 91/2026 têm o
+  mesmo nome, "Especialização em Informática na Educação", e o seletor do protótipo os distingue só
+  pelo código (`INF-BJN`). O candidato reconhece o polo, e não o código: o rótulo é da spec.
+- **A segunda rodada (14/10) aplicou a avaliação do protótipo.**
+  - Três sugestões à vista e as outras em "Mais dúvidas". Nenhum seletor na entrada: a pergunta que
+    depende da opção pergunta "Para qual opção?", com o nome do polo quando os nomes do curso se
+    repetem.
+  - As respostas das sugestões são recompostas para o painel a partir dos mesmos cartões da `070`
+    (`duvidas/domain/sugestoes.py`). Ficam com introdução curta, a lista dos obrigatórios com a
+    instrução de cada um, o facultativo e o que cada vaga reservada acrescenta, e sem "Perfil",
+    "sem modalidade", "certame" ou "cartão". O histórico leva ao modelo esse mesmo texto.
+  - O cabeçalho passou a dizer "Assistente do edital" e "Assistente de IA". O rodapé ficou com o
+    atendimento como link, "Nova conversa" e uma linha sobre a natureza da resposta. "Consultar
+    fontes" mostra o trecho citado marcado dentro da parte do Edital de onde ele saiu.
+  - O envio vai por `fetch` e troca só a conversa. Durante a espera, o botão diz "Aguardando…" e
+    recusa um segundo envio, mas o campo continua aberto, e o rascunho não se perde.
+  - Na simulação, o marco de mudança de versão usa a Retificação de verdade da versão vigente e
+    conta a mesma história da linha da versão no topo.
+- **O que falta na resposta do modelo está nas instruções, e não no painel.** Com o histórico limpo,
+  a continuação real "Preciso enviar todos?" deixou de repetir "está no cartão", mas ainda
+  enumerou os documentos de cada modalidade, em prosa longa. A causa é a primeira frase das
+  instruções da `071`: "Você explica um Edital publicado do Ifes **a servidores do setor de
+  seleção**". Nada nelas pede para responder primeiro e em poucas linhas, para usar a opção que a
+  conversa já escolheu, para listar em vez de narrar ou para não repetir.
+  - Proposta: uma versão 2 das instruções, para o candidato.
+  - É decisão da spec, e não do protótipo: mudar uma palavra sobe `VERSAO_DAS_INSTRUCOES`, e uma
+    nota de qualidade não atravessa versões (`FR-1515`). O custo de decidir agora é baixo, porque a
+    rodada na L4 (T058–T060) ainda não rodou.
+- **A versão 2 das instruções (14/10) foi escrita e comparada com a 1** — verificação da `071`,
+  §8. Ela fala ao candidato, e a opção escolhida numa sugestão passou a chegar ao modelo explícita,
+  com a lista de concorrência dita como não informada. O conteúdo melhorou nas respostas
+  conferidas (PPI e PcD), mas a continuação "Preciso enviar todos?" foi recusada pela conferência
+  nas duas tentativas: o modelo marcou como citação literal as fontes calculadas dos documentos. A
+  versão 1 errou do mesmo jeito no PPI. O próximo ajuste provável é uma regra explícita contra
+  isso (versão 3), que depende de decisão.
+- **A versão 3 (14/10) acabou com o erro de classificação no PPI, mas a revisão das fontes achou
+  outro.** As duas respostas conferidas estenderam a verificação complementar da autodeclaração,
+  que o Edital restringe a "pretos e pardos", a "essas vagas", as de pretos, pardos e indígenas.
+  A conferência não prova paráfrase. A continuação ficou sem evidência: o Parasail recusou com
+  429 as duas chamadas. O ajuste de instruções não está encerrado (verificação da `071`, §8).
+- **A causa foi diagnosticada antes da versão 4.** A fonte chegava ao modelo com a restrição a
+  "pretos e pardos", e foi ele que a ampliou. A versão 4 acrescentou só uma orientação geral sobre o
+  alcance das regras, e o erro virou regressão (`CB-17`, `CB-18`). Na única resposta obtida, a do
+  PPI, a restrição voltou. O caso do candidato indígena e a continuação ficaram sem evidência: o
+  Parasail recusou com 429, sem indicar intervalo, e a rodada parou.
+- **A espera real passou de 35 segundos.** A mesma pergunta levou 11,3 s na primeira rodada e 44,6 s
+  na segunda, as duas pelo Parasail. É por isso que o painel não promete prazo.
+- **O teclado virtual não foi validado num aparelho.** Sem o Xcode completo nesta máquina, o
+  Simulador iOS não abre. A aproximação foi a tela a 375×420, a área que sobra com o teclado
+  aberto: o cabeçalho fica fixo, e o campo e o botão permanecem visíveis. O painel modal acompanha
+  `visualViewport` para o caso do Safari, que não encolhe a janela. Falta a conferência num
+  celular de verdade.
+- **O teste da contagem real de tokens pulava no CI**, porque o CI não instalava o grupo `assistente`.
+  Desde 14/10 o CI o instala, e o controle que impede o corte silencioso do contexto passa a rodar a
+  cada PR.
+
 **Specs.** A Fase A é uma spec. As Fases B e C podem ser uma spec só, cujo cenário demonstrável é a
 pergunta livre na página pública, com o piloto como portão de qualidade. O piloto interno sozinho não
 satisfaz o princípio VI. B1 e B2, se forem antecipados, são trabalho técnico que precisa declarar a

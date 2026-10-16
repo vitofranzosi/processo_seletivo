@@ -976,6 +976,42 @@
       }
     },
     {
+      "id": "CB-17",
+      "categoria": "Alcance de uma regra de subgrupo (regressão de 14/10)",
+      "edital": {
+        "numero": "91",
+        "ano": 2026
+      },
+      "instante": null,
+      "perguntas": [
+        "E se eu concorrer às vagas para pretos, pardos e indígenas no polo de Bom Jesus do Norte?"
+      ],
+      "esperado": {
+        "tipo": "RESPONDIDA",
+        "valores": [],
+        "nenhum_valor": [],
+        "texto": "Autodeclaração étnico-racial a mais; verificação complementar só para pretos e pardos (seção de verificação, 1º parágrafo), nunca para 'essas vagas'"
+      }
+    },
+    {
+      "id": "CB-18",
+      "categoria": "Subgrupo sem a regra (regressão de 14/10)",
+      "edital": {
+        "numero": "91",
+        "ano": 2026
+      },
+      "instante": null,
+      "perguntas": [
+        "Sou indígena e vou concorrer às vagas reservadas. Vou passar pela verificação complementar da autodeclaração?"
+      ],
+      "esperado": {
+        "tipo": "RESPONDIDA",
+        "valores": [],
+        "nenhum_valor": [],
+        "texto": "A verificação é prevista para pretos e pardos; o Edital não fala de indígenas; não afirma que passa nem que não passa"
+      }
+    },
+    {
       "id": "CP-01-P-01",
       "categoria": "Pergunta da 070, reescrita como livre",
       "edital": {

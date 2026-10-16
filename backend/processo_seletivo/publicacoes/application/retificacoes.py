@@ -745,15 +745,21 @@ def advertencias_do_ato(retificacao):
     # A topologia de referência nas duas chamadas (054, FR-988): sem ela, o Edital publicado sob
     # um catálogo anterior veria a diferença de catálogo como impeditivo e advertência ao mesmo
     # tempo, e a confirmação mostraria ruído sobre seções que ninguém tocou.
+    #
+    # **A subtração é pelo par (código, caminho), e não pelo código** (issue #117, ED-13 da
+    # auditoria de 15/10). Pelo código, um impeditivo num Perfil apagava em silêncio a advertência
+    # de mesmo código noutro Perfil, e quem confirma o ato deixava de ver o aviso sobre aquele
+    # recorte. No mesmo caminho o par continua subtraindo, e por isso a variante da Retificação de
+    # um achado que impede a publicação ainda precisa de código próprio (`R-3` da `046`).
     topologia = topologia_publicada(retificacao.edital)
     impeditivos = {
-        item.code
+        (item.code, item.path)
         for item in blocking_findings(validate_for_publication(content, topologia=topologia))
     }
     return [
         item
         for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
-        if item.code not in impeditivos
+        if (item.code, item.path) not in impeditivos
     ]
 
 

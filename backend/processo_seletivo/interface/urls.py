@@ -1,6 +1,12 @@
 from django.urls import path
 
-from processo_seletivo.interface import assistente, avisos, duvidas, views
+from processo_seletivo.interface import (
+    assistente,
+    avisos,
+    duvidas,
+    prototipo_do_assistente,
+    views,
+)
 
 app_name = "interface"
 
@@ -53,6 +59,28 @@ urlpatterns = [
         "editais/<uuid:edital_id>/assistente/nova/",
         assistente.nova_conversa,
         name="assistente-nova",
+    ),
+    # O protótipo do painel de dúvidas (Fase C), com o mesmo acesso do piloto: a experiência se
+    # avalia aqui, e não numa rota que o candidato alcance.
+    path(
+        "editais/<uuid:edital_id>/assistente/prototipo/",
+        prototipo_do_assistente.prototipo,
+        name="assistente-prototipo",
+    ),
+    path(
+        "editais/<uuid:edital_id>/assistente/prototipo/perguntar",
+        prototipo_do_assistente.prototipo_perguntar,
+        name="assistente-prototipo-perguntar",
+    ),
+    path(
+        "editais/<uuid:edital_id>/assistente/prototipo/sugestao",
+        prototipo_do_assistente.prototipo_sugestao,
+        name="assistente-prototipo-sugestao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/assistente/prototipo/nova",
+        prototipo_do_assistente.prototipo_nova,
+        name="assistente-prototipo-nova",
     ),
     path("editais/<uuid:edital_id>/compor", views.compor, name="compor"),
     path("editais/<uuid:edital_id>/compor/<slug:etapa>", views.compor_etapa, name="compor-etapa"),

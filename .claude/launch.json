@@ -299,6 +299,16 @@
       ],
       "port": 8070,
       "url": "http://localhost:8070"
+    },
+    {
+      "name": "assistente-074",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_074_local DB_HOST=localhost DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me ASSISTENTE_NA_PAGINA_DO_EDITAL=true ASSISTENTE_SERVICO=openrouter ASSISTENTE_ENDERECO=https://openrouter.ai/api/v1 ASSISTENTE_MODELO=qwen/qwen3.8-27b ASSISTENTE_PROVEDOR=parasail ASSISTENTE_TOKENS_POR_CHAMADA=0 ASSISTENTE_TOKENS_POR_MENSAGEM=9 ASSISTENTE_TOKENIZER=\"$HOME/.config/processo-seletivo/qwen3.8-27b/tokenizer.json\" ASSISTENTE_CREDENCIAL=\"$(cat \"$HOME/.config/processo-seletivo/openrouter\")\" uv run python manage.py runserver 8074"
+      ],
+      "port": 8074,
+      "url": "http://localhost:8074"
     }
   ]
 }

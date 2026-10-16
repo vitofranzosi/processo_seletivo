@@ -140,6 +140,38 @@ class TestOPreenchimento:
         assert 'for="nome_da_mae"' in corpo
         assert preencher.vigente_de(inscricao) is not None, "o GET abriu o rascunho"
 
+    def test_antes_do_envio_da_inscricao_nao_ha_linha_de_protocolo(
+        self, client, selecao_na_inscricao, candidatos_registrados
+    ):
+        """PV-05 da auditoria de 15/10: a linha "Protocolo" aparecia sem valor antes do envio.
+
+        O protocolo nasce no envio da inscrição, e o Requerimento se preenche antes dele. A linha
+        volta quando ele existe — e o caso de baixo prende essa volta, para que omitir não vire
+        omitir sempre.
+        """
+        inscricao = pronta_para_enviar(selecao_na_inscricao)
+        assert inscricao.protocolo == "", "a premissa: inscrição ainda não enviada"
+        entrar_como(client, inscricao)
+
+        corpo = abrir(client, inscricao).content.decode()
+        ja_sabemos = corpo.split('<dl class="ja-sabemos">', 1)[1].split("</dl>", 1)[0]
+
+        assert "<dt>Vaga</dt>" in ja_sabemos, "a lista é a que se esperava"
+        assert "<dt>Protocolo</dt>" not in ja_sabemos
+
+    def test_com_protocolo_a_linha_aparece_com_o_valor(
+        self, client, selecao_na_inscricao, candidatos_registrados
+    ):
+        inscricao = pronta_para_enviar(selecao_na_inscricao)
+        type(inscricao).objects.filter(pk=inscricao.pk).update(protocolo="INS-2026-0917")
+        entrar_como(client, inscricao)
+
+        corpo = abrir(client, inscricao).content.decode()
+        ja_sabemos = corpo.split('<dl class="ja-sabemos">', 1)[1].split("</dl>", 1)[0]
+
+        assert "<dt>Protocolo</dt>" in ja_sabemos
+        assert "INS-2026-0917" in ja_sabemos
+
     def test_guardar_grava_sem_enviar(
         self, client, selecao_na_inscricao, candidatos_registrados, campos_declarados
     ):

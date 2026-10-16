@@ -22,7 +22,7 @@ from processo_seletivo.duvidas.infrastructure.inferencia import FalhaDoServico, 
 
 
 def corpo(mensagens, esquema, parametros) -> dict:
-    return {
+    enviado = {
         "model": settings.ASSISTENTE_MODELO,
         "messages": list(mensagens),
         "stream": False,
@@ -42,6 +42,10 @@ def corpo(mensagens, esquema, parametros) -> dict:
             "zdr": bool(settings.ASSISTENTE_ZDR),
         },
     }
+    if settings.ASSISTENTE_PROVEDOR:
+        # Um provedor só, e sem troca: a quantização do ensaio fica conhecida (`FR-1499`).
+        enviado["provider"]["order"] = [settings.ASSISTENTE_PROVEDOR]
+    return enviado
 
 
 def conversar(mensagens, esquema, parametros) -> Devolucao:

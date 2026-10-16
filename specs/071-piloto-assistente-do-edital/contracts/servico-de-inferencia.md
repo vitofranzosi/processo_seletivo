@@ -104,6 +104,10 @@ Cabeçalho `Authorization: Bearer <ASSISTENTE_CREDENCIAL>`.
 ```
 
 - **Nenhum vetor `models`**: ele troca de modelo em erro (`FR-1499`).
+- Com `ASSISTENTE_PROVEDOR`, `provider.order` leva só esse provedor, e o `allow_fallbacks: false`
+  impede qualquer outro: a quantização do ensaio fica conhecida (ensaio de 14/10).
+- A recusa traz, no corpo do erro, o provedor que recusou (`error.metadata.provider_name`): é o único
+  campo lido dali, e vai ao log da troca, como o provedor da resposta.
 - `zdr` vem de `ASSISTENTE_ZDR`. Ligado sem provedor que o ofereça para o modelo, o serviço recusa,
   e a recusa é o estado `INDISPONIVEL`, com o motivo no log.
 - O contexto do provedor não se fixa; `ASSISTENTE_CONTEXTO_TOKENS` é só o orçamento da aplicação.

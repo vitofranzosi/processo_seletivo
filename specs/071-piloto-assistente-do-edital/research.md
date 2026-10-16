@@ -224,6 +224,22 @@ mensagem, `ASSISTENTE_TOKENS_POR_MENSAGEM`, que a verificação de conexão **me
 conhecida, lê a contagem que o serviço informa, e subtrai a do conteúdo. Assim não é preciso
 reproduzir o molde Jinja do modelo, que exigiria a biblioteca `transformers`.
 
+**Achado do ensaio no OpenRouter (14/10): o acréscimo é quase todo fixo por chamada.** Com o
+`qwen/qwen3.8-27b`, o serviço leu 257 tokens além do texto numa conversa de 2 mensagens (a
+verificação) e 262 numa de 3 (a primeira pergunta da tela): cerca de 247 por chamada e 5 por
+mensagem. A causa mais provável — não confirmada — é o esquema da saída, que o provedor injeta na
+entrada. Posto inteiro no acréscimo por mensagem, como a verificação sugeria (128), ele sobrecontava
+cada turno de histórico em ~250 tokens, e uma continuação podia ser descartada como possível corte
+sem corte nenhum. Entrou `ASSISTENTE_TOKENS_POR_CHAMADA`, somado uma vez por chamada; a verificação
+passou a medir e comparar a soma dos dois acréscimos, e não a sugerir um valor por mensagem — uma
+chamada só não separa o fixo do variável, e o log das trocas, com o medido e o informado, separa. No
+Ollama, sem esquema injetado, o acréscimo pode ser outro, e a verificação da L4 o mede.
+
+**E ele depende do provedor (14/10, no mesmo ensaio).** Com o provedor fixado no Parasail
+(`ASSISTENTE_PROVEDOR`), a mesma conversa de teste teve 17 tokens além do texto, e não 257: o bloco
+fixo era do provedor que o roteamento pelo mais barato escolhia. A calibração vale para o provedor
+em que foi medida; com o Parasail, 0 por chamada e 9 por mensagem.
+
 **A conferência depois da resposta** (`FR-1482`). Se o serviço informar menos tokens de entrada do
 que a aplicação mediu, menos a tolerância `ASSISTENTE_TOLERANCIA_DE_TOKENS` (padrão 2%), a resposta
 é descartada como possível corte. Informar **mais** não descarta, mas fica no log: é sinal de que o
@@ -340,7 +356,8 @@ avisos:
 | `ASSISTENTE_TEMPERATURA`, `ASSISTENTE_TOP_P`, `ASSISTENTE_SEMENTE` | `0.2`, `0.9`, `7` | Sempre enviados (`FR-1498`) |
 | `ASSISTENTE_RACIOCINIO` | `false` | O modo de raciocínio; a DP-5 avalia os dois |
 | `ASSISTENTE_TOKENIZER` | vazio | O caminho do `tokenizer.json` |
-| `ASSISTENTE_TOKENS_POR_MENSAGEM` | `8` | O acréscimo medido (`R-006`) |
+| `ASSISTENTE_TOKENS_POR_MENSAGEM` | `8` | O acréscimo medido por mensagem (`R-006`) |
+| `ASSISTENTE_TOKENS_POR_CHAMADA` | `0` | O acréscimo fixo por chamada, medido no ensaio de 14/10 no OpenRouter em ~250 (`R-006`) |
 | `ASSISTENTE_TOLERANCIA_DE_TOKENS` | `0.02` | A conferência da contagem |
 | `ASSISTENTE_TETO_SIMULTANEO` | `2` | O teto global (`R-012`) |
 | `ASSISTENTE_TURNOS_POR_CONVERSA` | `20` | O limite por conversa (`FR-1496`, `FR-1507`) |
@@ -348,6 +365,7 @@ avisos:
 | `ASSISTENTE_OLLAMA_SEM_CORTE` | `false` | Enviar `truncate: false` e `shift: false` ao Ollama; liga-se só depois de quem opera a L4 confirmar que a versão instalada os aceita — a API não o informa (`R-017`) |
 | `ASSISTENTE_QUANTIZACAO` | vazio | A quantização que a avaliação mede, como o Ollama a escreve; só a verificação a lê, e vazia é divergência (US7, cenário 2; acrescentada na T055) |
 | `ASSISTENTE_ZDR` | `false` | Exigir retenção zero no OpenRouter, quando o modelo tiver provedor que a ofereça |
+| `ASSISTENTE_PROVEDOR` | vazio | O provedor do OpenRouter, fixo e sem troca (`FR-1499`); vazio, o OpenRouter escolhe, ainda sem troca. Entrou no ensaio de 14/10: o roteamento pelo mais barato recusava 3 de 5 perguntas com 429 |
 
 **O gasto no serviço externo é limitado pela credencial** (`FR-1507`, emendado em 14/10, DP-4): o
 limite de gasto configurado no OpenRouter, e não uma contagem da aplicação — o serviço externo é só
@@ -559,7 +577,7 @@ saída diferente de zero quando algo diverge da configuração:
 |---|---|---|
 | Ollama | `GET /api/version`; `GET /api/tags`; `POST /api/show` do modelo (família, parâmetros, quantização, contexto do modelo); `GET /api/ps` (carregado, memória na GPU) | o modelo existe; a quantização e a família; se está inteiro na GPU; se `truncate` e `shift` são aceitos |
 | OpenRouter | `GET /api/v1/key` (limite e uso) | o limite de gasto existe |
-| Os dois | Uma conversa sintética fixa, de duas mensagens, sem conteúdo de Edital | os tokens informados contra os medidos pelo tokenizer configurado; o `ASSISTENTE_TOKENS_POR_MENSAGEM` sugerido; o término e o tempo |
+| Os dois | Uma conversa sintética fixa, de duas mensagens, sem conteúdo de Edital | os tokens informados contra os medidos pelo tokenizer configurado; o acréscimo medido contra o configurado (por chamada e por mensagem); o término e o tempo |
 
 O que o serviço não informa — o paralelismo, a fila, o tipo do cache, os outros serviços da GPU — sai
 marcado "a confirmar com a infraestrutura", na ordem da lista da spec.
@@ -575,8 +593,8 @@ não permite. Eles entram na lista "a confirmar com a infraestrutura", com a ver
 `ASSISTENTE_QUANTIZACAO`, que não existia — sem um valor esperado, o cenário 2 da US7 não tinha com
 o que comparar —, e o contexto do modelo com `ASSISTENTE_CONTEXTO_TOKENS`, que não pode passar dele.
 A ocupação da GPU é lida **depois** da conversa sintética, que é o que carrega o modelo; antes dela,
-"não carregado" não diria nada. O acréscimo por mensagem sugerido só é divergência quando o
-configurado é **menor**: subestimado, a aplicação conta menos do que o serviço lê.
+"não carregado" não diria nada. O acréscimo só é divergência quando o configurado é **menor** que o
+medido: subestimado, a aplicação conta menos do que o serviço lê.
 
 **A DP-7 foi decidida pela opção (b)** (spec, `FR-1521`). A verificação não deixa estado: é rodada
 pela equipe antes de cada rodada de avaliação e de cada sessão com o setor, e o resultado vai ao

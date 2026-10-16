@@ -87,7 +87,7 @@
 <nav class="trilha-nav" aria-label="Você está em"></nav>
 <article class="pagina" id="pg-inicio" data-camada="entender" data-titulo="Início">
 <section id="inicio">
-  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026 · specs 055–068 acrescentadas em 10/10/2026</p>
+  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026 · specs 055–068 acrescentadas em 10/10/2026 · specs 069–072 acrescentadas em 15/10/2026</p>
   <h1>Sistema de Processos Seletivos e Editais</h1>
   <p class="lead">
     Do Edital ao Registro Acadêmico: como um processo seletivo é montado, conduzido e concluído neste
@@ -190,7 +190,7 @@
 <section id="recursos-disponiveis">
   <h2>Recursos disponíveis</h2>
   <div class="cartoes">
-    <a class="cartao" href="#composicao"><span class="etiqueta">Configurar <span class="selo selo-impl">Implementado</span></span><h4>Assistente do Edital</h4><p>Nove passos em ordem de dependência, validação que diz o que impede a publicação, prévia do documento oficial.</p></a>
+    <a class="cartao" href="#composicao"><span class="etiqueta">Configurar <span class="selo selo-impl">Implementado</span></span><h4>Composição do Edital</h4><p>Nove passos em ordem de dependência, validação que diz o que impede a publicação, prévia do documento oficial.</p></a>
     <a class="cartao" href="#heranca"><span class="etiqueta">Configurar em escala <span class="selo selo-impl">Implementado</span></span><h4>Duplicar e aplicar a todos</h4><p>Duplicar um Perfil; aplicar Modalidade, forma de convocação, reversão ou marco aos demais Perfis, com prévia.</p></a>
     <a class="cartao" href="#retificacao"><span class="etiqueta">Corrigir <span class="selo selo-impl">Implementado</span></span><h4>Retificação</h4><p>Altera, acrescenta e remove sobre o publicado, campo a campo, com vigência e rito próprios.</p></a>
     <a class="cartao" href="#jornada"><span class="etiqueta">Participar <span class="selo selo-impl">Implementado</span></span><h4>Portal do candidato</h4><p>Acesso por código no e-mail, rascunho, documentos, protocolo, acompanhamento, recurso.</p></a>
@@ -200,18 +200,20 @@
     <a class="cartao" href="#convocacao"><span class="etiqueta">Concluir <span class="selo selo-impl">Implementado</span></span><h4>Convocação em fluxo</h4><p>Convocar titulares num ato, registrar vencidos em lote, apuração seguinte automática.</p></a>
     <a class="cartao" href="#painel"><span class="etiqueta">Acompanhar <span class="selo selo-impl">Implementado</span></span><h4>Painel e visão institucional</h4><p>Pulso de inscrições, condições de atenção por papel, visão de todos os Editais por Perfil.</p></a>
     <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-impl">Implementado</span></span><h4>Avisos aos candidatos</h4><p>Um e-mail que aponta o resultado ou a chamada publicada, por gesto de uma pessoa; desligado em produção até a LGPD.</p></a>
+    <a class="cartao" href="#publicacao"><span class="etiqueta">Publicar <span class="selo selo-impl">Implementado</span></span><h4>Edital em linguagem simples</h4><p>O documento do Edital novo com resumo, sumário e seções organizadas pelas perguntas do candidato (069); as frases novas aguardam aprovação antes do primeiro Edital real.</p></a>
+    <a class="cartao" href="#assistente-do-edital"><span class="etiqueta">Tirar dúvidas <span class="selo selo-parc">Parcial</span></span><h4>Assistente de dúvidas, só interno</h4><p>Respostas prontas sobre o Edital publicado e um piloto com modelo de linguagem, na gestão e para participantes escolhidos. Nada aberto ao candidato.</p></a>
   </div>
 
 </section>
 <section id="estado-atual">
   <h2>Estado atual do sistema</h2>
   <div class="numeros">
-    <div><b>69</b><span>pastas em <code>specs/</code> (001 a 068)</span></div>
-    <div><b>21</b><span>módulos de domínio</span></div>
+    <div><b>74</b><span>pastas em <code>specs/</code> (001 a 073; a 073 só especificada)</span></div>
+    <div><b>22</b><span>módulos de domínio</span></div>
     <div><b>40</b><span>tabelas append-only, em duas camadas</span></div>
     <div><b>58</b><span>gatilhos de banco</span></div>
-    <div><b>109 + 33</b><span>rotas na gestão e no portal</span></div>
-    <div><b>10 408</b><span>testes passando contra PostgreSQL</span></div>
+    <div><b>116 + 33</b><span>rotas na gestão e no portal</span></div>
+    <div><b>11 297</b><span>testes passando contra PostgreSQL</span></div>
   </div>
   <div class="aviso aviso-nota">
     <span class="titulo">Em uma frase</span>
@@ -221,6 +223,17 @@
     demonstração) e o <strong>caminho de produção</strong>. Detalhes em
     <a href="#pg-hoje">Onde o sistema está hoje</a>; o que falta, em
     <a href="#pg-evolucoes">O que ainda precisa evoluir</a>.</p>
+  </div>
+  <div class="aviso aviso-risco">
+    <span class="titulo">O sistema não está em produção</span>
+    <p>Tudo o que esta documentação descreve roda em ambiente de desenvolvimento ou de demonstração.
+    Sem o seletor de identidade — que a configuração de produção recusa —, a entrada da gestão responde
+    <code>503</code>, <em>“Autenticação institucional não configurada”</em>, e ninguém cria, publica ou
+    conduz um Edital. A autenticação institucional respondida em 28/08 foi o LDAP do Ifes, e ela nunca
+    foi implementada; também não há política de retenção e descarte de dados pessoais. São os dois
+    bloqueadores que <code>doc/implantacao-em-producao-ubuntu.md</code> declara no §1. O assistente de
+    dúvidas sobre o Edital (070, 071) é validação interna e piloto, e não está aberto ao público. Ver
+    <a href="#maturidade">Maturidade</a>.</p>
   </div>
 
 </section>
@@ -235,6 +248,7 @@
     <a class="cartao" href="#pg-escala"><h4>Gestor</h4><p>Criar Processo e Edital, acompanhar pelo painel e pela visão institucional.</p></a>
     <a class="cartao" href="#recursos"><h4>Julgador de recursos</h4><p>Admissibilidade, mérito, impedimento e o Resultado sucessor.</p></a>
     <a class="cartao" href="#registro-academico"><h4>Registro Acadêmico</h4><p>O que chega, em que formato, e o que o sistema declara que não sabe.</p></a>
+    <a class="cartao" href="#assistente-do-edital"><h4>Participante do piloto do assistente</h4><p>Onde conversar com o assistente, o que ele confere antes de responder e o que fica gravado — e por quanto tempo.</p></a>
   </div>
 
   <h3>Quero saber…</h3>
@@ -246,6 +260,7 @@
     <a class="cartao" href="#classificacao"><p>O que é um Marco Classificatório</p></a>
     <a class="cartao" href="#pg-impacto"><p>O que acontece se eu mudar uma configuração</p></a>
     <a class="cartao" href="#pg-catalogo"><p>Se o sistema suporta o meu cenário</p></a>
+    <a class="cartao" href="#assistente-do-edital"><p>Se o candidato já tira dúvidas com um assistente (ainda não)</p></a>
     <a class="cartao" href="#pg-evolucoes"><p>O que ainda não funciona</p></a>
   </div>
 </section>
@@ -997,7 +1012,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
     └── Marco "FINAL" em cada Perfil · pela pontuação da Prova · desempate: nascido antes
                                      · recurso em 3 dias · corte: vagas do quadro + 10 suplentes</pre>
     </div>
-    <p>Os papéis vêm do seletor de identidade (fora de produção). Numa equipe pequena uma pessoa acumula
+    <p>Os papéis vêm do seletor de identidade, que só existe em desenvolvimento — o sistema ainda não está
+    em produção (ver <a href="#estado-atual">Estado atual</a>). Numa equipe pequena uma pessoa acumula
     vários — com dois cuidados: <strong>quem submete e homologa não pode também publicar</strong> o mesmo
     Edital, e <strong>quem julga recursos</strong> não pode ter avaliado, consolidado, ordenado ou publicado
     o que está sendo contestado. Veja <a href="#pg-permissoes">Quem pode fazer o quê</a>.</p>
@@ -1185,8 +1201,10 @@ INSCRIÇÃO (candidato × Perfil × lista)
       textuais que ele tem: são 17 no catálogo, todas nascem vazias, e a vazia não sai no documento. Cada
       seção mostra, na legenda, o número que terá no documento, ou <em>“vazia — não sai no documento”</em>.
       <strong>É a legenda que dita o número</strong>: o “3.1” do original numa seção que sai como 4 impede
-      submeter e publicar, e a etapa Conteúdo diz qual parágrafo, na própria seção (065).
-      As geradas (Perfis, Etapas, Cronograma, Documentos, Anexos) se compõem sozinhas. Na Revisão:
+      submeter e publicar, e a etapa Conteúdo diz qual parágrafo, na própria seção (065). Desde a 069, a
+      etapa mostra também a pergunta sob a qual cada seção sai — <em>“Como se inscrever?”</em>, <em>“Como
+      será a seleção?”</em> — e o documento abre com um resumo e um sumário que o sistema compõe.
+      As geradas (vagas, Etapas, Cronograma, documentos, Anexos) se compõem sozinhas. Na Revisão:
       “O que falta para submeter” (<strong>Impede</strong> e <strong>Aviso</strong>, cada um com “Ir para”),
       “O que será congelado”, “O que não se corrige depois de publicado”, e
       <span class="rotulo-ui">Visualizar Edital</span> — a prévia do PDF, que no piloto <strong>é o documento
@@ -2318,7 +2336,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <p class="lead">
       Como um certame nasce, como o Edital é composto em nove passos, o que impede publicá-lo, o que
       o ato de publicar faz, e como se corrige o que já foi publicado: pela Retificação, campo a
-      campo, sob um contrato que diz o que se corrige e o que não se corrige.
+      campo, sob um contrato que diz o que se corrige e o que não se corrige. No fim, o assistente de
+      dúvidas sobre o Edital publicado, que hoje é validação interna e piloto.
     </p>
   </header>
   <div class="nesta-pagina"></div>
@@ -3092,7 +3111,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Quando configurar</dt>
         <dd>Passo <span class="rotulo-ui">Inscrição</span>, campo <span class="rotulo-ui">Inscrições por candidato neste Edital</span> (“Deixe em branco para não limitar. Conta só a inscrição enviada: rascunho abandonado não consome.”).</dd>
         <dt>Onde aparece</dt>
-        <dd>No documento publicado (seção “Da Inscrição”, que sai com a frase ainda que não tenha texto), na página pública da seleção e na recusa do envio.</dd>
+        <dd>No documento publicado (seção “Como se inscrever?” — “Da Inscrição” nos Editais anteriores à 069 —, que sai com a frase ainda que não tenha texto), na página pública da seleção e na recusa do envio.</dd>
         <dt>O que posso depois de publicar</dt>
         <dd>Retificar o teto. Quem já enviou sob a regra anterior permanece.</dd>
         <dt>O que não posso</dt>
@@ -3118,7 +3137,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     </p>
     <div class="aviso aviso-nota"><span class="titulo">A declaração sai no documento</span>
       <p>
-        Desde a spec 054, o documento publica, na seção <em>Da Matrícula</em>, quando o Requerimento
+        Desde a spec 054, o documento publica, na seção <em>Da Matrícula</em> (<em>“Como será a matrícula?”</em> desde a 069), quando o Requerimento
         é enviado e a declaração por extenso, recuada — do mesmo campo que o portal exibe para
         aceite. A seção sai ainda que quem elabora não tenha escrito nada nela.
       </p>
@@ -3172,22 +3191,33 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       O documento tem um <strong>catálogo fixo de 22 seções</strong>, desde a spec 054 (eram 12). É a
       união das seções que se repetem nas quatro famílias da amostra do Cefor, na ordem que os
       Editais seguem — <strong>a oferta antes da inscrição</strong>. O conjunto e a ordem são do
-      sistema; quem elabora não acrescenta, remove nem reordena seção.
+      sistema; quem elabora não acrescenta, remove nem reordena seção. Desde a 069 (12/10), as mesmas
+      22 seções têm títulos novos, e várias são perguntas do candidato:
     </p>
     <ul>
       <li>
         <strong>17 textuais</strong>, cujo texto quem elabora transcreve no passo Conteúdo:
-        Apresentação (o preâmbulo, sem número), Disposições Preliminares, Informações Gerais sobre o
-        Curso, Público-Alvo, Requisitos Gerais de Participação, Da Inscrição, Da Verificação da
-        Autodeclaração, Do Atendimento à Pessoa com Deficiência, Critérios de Classificação, Dos
-        Recursos, Da Convocação, Da Matrícula, Do Acesso ao Curso, Da Homologação da Matrícula, Do
-        Certificado, Do Prazo de Validade, Disposições Finais.
+        Apresentação (o preâmbulo, sem número), Disposições preliminares, Informações gerais,
+        Público-alvo, Requisitos gerais, Como se inscrever?, Atendimento à pessoa com deficiência, Como
+        será a seleção?, Verificação da autodeclaração, Como recorrer?, Como será a convocação?, Como
+        será a matrícula?, Acesso ao curso, Homologação da matrícula, Certificado, Prazo de validade,
+        Disposições finais.
       </li>
       <li>
-        <strong>5 geradas</strong> do que foi declarado: Perfis de Vaga, Documentos Exigidos para a
-        Inscrição, Etapas de Avaliação, Cronograma, Anexos.
+        <strong>5 geradas</strong> do que foi declarado: Quantas vagas há, e onde?, Cronograma, Quais
+        documentos enviar?, Etapas de avaliação, Anexos.
       </li>
     </ul>
+    <p>
+      No Edital novo, o documento <strong>reúne seções sob a pergunta a que respondem</strong>, com
+      subseções numeradas como 3.1: <em>“Quem pode se inscrever?”</em> junta Público-alvo, Requisitos
+      gerais e os requisitos dos Perfis; <em>“Como será a seleção?”</em> leva as regras de
+      classificação, os dados do sorteio, as Etapas e a verificação da autodeclaração; <em>“Como será
+      a matrícula?”</em> leva o Requerimento, o acesso ao curso e a homologação. A etapa Conteúdo
+      mostra a pergunta acima das seções e avisa que os números sem campo são de subseções compostas
+      pelo sistema. Qual forma o documento toma é decidido pela assinatura do catálogo gravada no
+      Edital: o que nasceu antes da 069, e os consolidados dele, continuam na forma plana.
+    </p>
     <p>
       <strong>Nenhuma seção tem redação padrão.</strong> A textual nasce vazia, e a vazia não sai no
       documento — nem na prévia, nem no publicado —, como a gerada sem conteúdo; as seguintes são
@@ -3459,7 +3489,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dt>Exemplo</dt>
         <dd>“Publicação original nº 1, publicado em 28/02/2026 10:00”, e depois “Retificação nº 2”.</dd>
         <dt>O que o documento contém</dt>
-        <dd>Brasão, as linhas da instituição e as da Unidade, o anúncio do ato, a marca de versão consolidada (só no documento de uma Retificação), a descrição, a Apresentação, as seções numeradas (as vazias são puladas, textuais e geradas, e a numeração segue sem salto), o fecho com local, data e autoridade, e a verificação de integridade. Com mais de um Perfil e alguma vaga imediata, a tabela de Perfis termina numa linha <em>Total</em>, que não soma o cadastro reserva. Com dois ou mais Perfis, o que sairia repetido sai uma vez (064, 068): uma tabela <em>“Vagas por lista de concorrência”</em>, Perfil × lista; uma tabela de Modalidades por grupo de Perfis de tabela idêntica, com a mesma ordem de listas no documento inteiro; as frases de reversão e de convocação abaixo delas; e, depois do último Perfil, as subseções <em>“Atribuições comuns aos Perfis …”</em>, <em>“Requisitos comuns aos Perfis …”</em> e <em>“Marcos classificatórios comuns aos Perfis …”</em>, a que cada Perfil remete pelo item. O método comum do sorteio também sai uma vez. O Edital de um Perfil só sai como antes. O recurso, quando o marco o declara, sai com objeto: <em>“Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias corridos, contados da divulgação desse resultado.”</em> (067).</dd>
+        <dd>Brasão, as linhas da instituição e as da Unidade, o anúncio do ato, a marca de versão consolidada (só no documento de uma Retificação), a Apresentação, as seções numeradas (as vazias são puladas, textuais e geradas, e a numeração segue sem salto), o fecho com local, data e autoridade, e a verificação de integridade. Com mais de um Perfil e alguma vaga imediata, a tabela de Perfis termina numa linha <em>Total</em>, que não soma o cadastro reserva. Com dois ou mais Perfis, o que sairia repetido sai uma vez (064, 068): uma tabela <em>“Vagas por lista de concorrência”</em>, Perfil × lista; uma tabela de Modalidades por grupo de Perfis de tabela idêntica, com a mesma ordem de listas no documento inteiro; as frases de reversão e de convocação abaixo delas; e, depois do último Perfil, as subseções <em>“Atribuições comuns aos Perfis …”</em>, <em>“Requisitos comuns aos Perfis …”</em> e <em>“Marcos classificatórios comuns aos Perfis …”</em> — <em>“Regras de classificação comuns aos Perfis”</em> na redação 2 —, a que cada Perfil remete pelo item. O método comum do sorteio também sai uma vez. O Edital de um Perfil só sai como antes. O recurso, quando o marco o declara, sai com objeto: <em>“Caberá recurso contra o resultado de “Classificação final”, no prazo de 5 (cinco) dias corridos, contados da divulgação desse resultado.”</em> (067), que a redação 2 abre por <em>“Contra o resultado de “Classificação final”: no prazo de …”</em>.</dd>
+        <dd>Desde a 069 (12/10), o ato está em <strong>linguagem simples</strong>. A descrição administrativa do Edital deixou de ser impressa — continua no portal. Logo depois do preâmbulo vem o <em>“Resumo deste Edital”</em>, num bloco de fundo claro, com as linhas <em>Vagas</em>, <em>Cadastro de reserva</em>, <em>Inscrições</em>, <em>Por candidato</em>, <em>Seleção</em> e <em>Datas</em>, cada uma terminando no item que a regula, e a nota <em>“Este resumo repete informações do Edital. As regras completas estão nos itens indicados.”</em>; depois, o <em>“Sumário”</em>, com página. As frases que o sistema escreve passaram à <strong>redação 2</strong>, sem rótulo interno: <em>“Regras de classificação”</em> no lugar de <em>“Marcos classificatórios”</em>, <em>“Critérios de desempate, nesta ordem:”</em>, <em>“A nota final é …”</em>, <em>“Contra o resultado de “X”: no prazo de …”</em>, o sorteio que <em>“qualquer pessoa pode refazer”</em> com <em>Método</em>, <em>Qual concurso</em>, <em>Semente</em> e <em>Se faltar</em>. A fonte vai embutida (<em>Edital Sans</em>, da Liberation Sans, licença OFL), com hierarquia de títulos; o arquivo declara título, idioma e marcadores das seções, e o download se chama <code>edital-NN-AAAA.pdf</code> (ou <code>…-retificado-AAAA-MM-DD.pdf</code>). Não há chave que ligue ou desligue: a publicação grava qual redação usou. O PDF continua sem marcação para leitor de tela (<em>tags</em>).</dd>
+        <dd><strong>Pendente de aprovação:</strong> a 069 conferiu, enunciado por enunciado, que nenhuma regra foi acrescentada, retirada ou mudada (SC-517), e listou as frases <em>novas</em> — o resumo, a frase dos suplentes, as remissões de período, de desempate e do Requerimento, a convocação <em>“por publicação”</em> sem dizer onde, entre outras. A mesma SC-517 exige que o responsável pelo produto as aprove <strong>antes do primeiro Edital real</strong>, e o registro diz <em>“aguardando a aprovação”</em> (<code>specs/069-edital-linguagem-simples/demonstracao/equivalencia.md</code>).</dd>
         <dt>O que não posso</dt>
         <dd>
           <ul>
@@ -3791,6 +3823,100 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>Gramática, alterações e consolidação</dt><dd><code>publicacoes/domain/changes.py</code> · <code>publicacoes/domain/consolidation.py</code></dd>
       <dt>Contrato de mutabilidade</dt><dd><code>editais/domain/mutabilidade.py</code> (<code>CONTRATO</code>, <code>PODE_PASSAR_A_EXISTIR</code>) · guardião <code>tests/contract/test_mutabilidade.py</code></dd>
       <dt>Aplicar a todos na Retificação</dt><dd><code>interface/aplicacao_na_retificacao.py</code></dd>
+    </dl></div></details>
+  </section>
+
+  <!-- ============================================================ ASSISTENTE -->
+  <section id="assistente-do-edital">
+    <h2>O assistente de dúvidas do Edital: validação interna e piloto <span class="selo selo-parc">Parcial</span></h2>
+    <p class="lead">
+      Três telas da gestão respondem perguntas sobre um Edital publicado: a validação interna das
+      respostas prontas (070), o piloto do assistente que conversa com um modelo de linguagem (071) e
+      um protótipo de como isso apareceria ao candidato. O selo é <em>Parcial</em> porque o ator a
+      quem tudo isso se destina — o candidato — não tem canal nenhum para chegar a elas.
+    </p>
+    <div class="aviso aviso-chave">
+      <span class="titulo">Nada disto está aberto ao público</span>
+      <p>
+        Não há rota do assistente no portal (<code>/selecoes/</code>) nem na API pública: as três telas
+        estão sob <code>/gestao/</code>, que exige identificação. O piloto é <strong>interno</strong>,
+        com participantes escolhidos; o protótipo é uma tela de avaliação da experiência, sem
+        especificação própria; e nenhuma spec na <code>main</code> abre o assistente ao candidato.
+        Sem Edital publicado e vigente, nenhuma das três responde.
+      </p>
+    </div>
+
+    <div class="rolagem">
+      <table>
+        <thead><tr><th></th><th>Validação interna (070)</th><th>Piloto (071)</th><th>Protótipo (Fase C)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Onde</strong></td><td><code>/gestao/editais/&lt;id&gt;/duvidas/</code>; na página do Edital publicado, <span class="rotulo-ui">Ver as respostas do assistente de dúvidas (validação interna)</span></td><td><code>…/assistente/</code>; na página do Edital publicado, <span class="rotulo-ui">Conversar com o assistente (piloto)</span></td><td><code>…/assistente/prototipo/</code>; <strong>nenhum link</strong> leva a ela, só o endereço</td></tr>
+          <tr><td><strong>Quem abre</strong></td><td>Quem alcança a página do Edital; não há permissão própria</td><td>Quem tem o papel <em>Participante do piloto do assistente</em> (<code>assistente:piloto</code>) e o Edital no escopo, com a chave <code>ASSISTENTE_PILOTO</code> ligada; faltando qualquer dos três, <code>404</code></td><td>O mesmo acesso do piloto</td></tr>
+          <tr><td><strong>O que faz</strong></td><td>Doze perguntas fixas (<em>“Até quando posso me inscrever?”</em>, <em>“Quantas vagas há neste Perfil?”</em>, <em>“Posso recorrer? Em que prazo?”</em>…), respondidas pelo sistema a partir da versão vigente no <span class="rotulo-ui">Instante de referência</span>, sem modelo; e os <span class="rotulo-ui">Pontos para revisão antes da abertura pública</span></td><td>Pergunta livre, respondida por um modelo de linguagem; cada resposta é conferida antes de aparecer</td><td>A página pública real da seleção com um painel <em>“Assistente do edital”</em> por cima: três perguntas sugeridas, respondidas pela 070 sem modelo, e a pergunta livre pelo mesmo caminho do piloto; tem um modo de estados simulados, que não chama o modelo</td></tr>
+          <tr><td><strong>O que grava</strong></td><td>Nada</td><td>Cada troca, com a pergunta mascarada</td><td>Cada troca, numa conversa própria; o modo simulado não grava</td></tr>
+          <tr><td><strong>O que a tela diz de si</strong></td><td><em>“Validação interna: … Nada dela é exibido a candidatos.”</em></td><td><em>“Piloto interno do assistente do Edital. As respostas podem conter erros: confira cada uma nas fontes. Nada desta tela é visto por candidatos.”</em></td><td><em>“Protótipo interno, não visto por candidatos”</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>De onde vem a resposta</h3>
+    <p>
+      Da versão consolidada <strong>vigente no instante</strong>, a mesma que a página pública usa — nunca
+      do rascunho, das tabelas de elaboração ou de dado de candidato. Cada resposta diz de qual versão
+      vem, e separa o <em>texto do Edital</em>, o <em>dado da versão vigente</em> e a <em>explicação</em>
+      do sistema, com o ato de origem de cada fonte. Uma Retificação de vigência futura aparece como
+      aviso; se a versão muda entre duas perguntas, a validação interna diz <em>“Este Edital mudou desde a
+      resposta anterior.”</em>, e o piloto também avisa a mudança.
+    </p>
+    <p>
+      No piloto, o modelo recebe essas mesmas fontes, separadas das instruções, e a resposta passa por
+      uma conferência antes de ser mostrada: citação que não é literal, número, data ou contato sem
+      fonte, fonte inexistente e negativa não declarada recusam a resposta <strong>inteira</strong>. O
+      modelo que respondeu precisa ser o configurado, e a resposta incompleta ou possivelmente cortada
+      não aparece. Pergunta de outra seleção, fora do assunto ou sobre decisão ainda não tomada leva ao
+      atendimento oficial. Há teto de perguntas simultâneas, sem fila, e de turnos por conversa.
+    </p>
+
+    <h3>Os registros do piloto, e por que eles se excluem</h3>
+    <p>
+      O piloto grava cada troca — pergunta, resposta, fontes, a conferência, o serviço e o modelo — sem
+      coluna que identifique quem perguntou. CPF, e-mail e telefone são mascarados na pergunta, e o CPF
+      também na resposta; o código diz que isso não é anonimização. Esses registros
+      <strong>não são ato do certame</strong>: não estão entre as tabelas append-only, e
+      <code>manage.py excluir_registros_do_piloto --relatorio-final-em AAAA-MM-DD</code> os apaga 90 dias
+      depois do relatório final do piloto. A data é a que a equipe digita no comando — não fica
+      gravada em lugar nenhum, e nada agenda a exclusão. Antes do prazo, o comando recusa.
+    </p>
+
+    <h3>O que o piloto pede de fora do repositório</h3>
+    <ul>
+      <li>O grupo opcional de dependências <code>assistente</code> (<code>uv sync --extra dev --extra assistente</code>), que traz a biblioteca <code>tokenizers</code>. A imagem de contêiner instala só o grupo de desenvolvimento.</li>
+      <li>O <code>tokenizer.json</code> do modelo, num caminho fora do repositório apontado por <code>ASSISTENTE_TOKENIZER</code>. Faltando ele ou a biblioteca, toda pergunta termina em <em>“O piloto não está pronto: falta o tokenizer do modelo.”</em>, sem chamada ao serviço.</li>
+      <li>O serviço de inferência — um Ollama local ou, só em desenvolvimento, o OpenRouter, com a credencial em <code>ASSISTENTE_CREDENCIAL</code>, lida do ambiente e nunca do <code>.env</code>. A configuração de produção recusa subir com o piloto ligado e serviço que não seja o Ollama. No OpenRouter, a única barreira de gasto é o limite da própria chave.</li>
+    </ul>
+    <p>
+      Dois comandos sustentam a avaliação: <code>manage.py verificar_servico_de_inferencia</code> confere
+      o serviço contra a configuração — modelo, quantização, contexto e, no OpenRouter, o limite da
+      chave — sem gravar nada; <code>manage.py avaliar_assistente --saida …</code> roda a matriz de 95
+      casos e escreve o relatório da rodada, com as colunas de revisão humana em branco.
+    </p>
+
+    <h3>O que está em aberto</h3>
+    <ul>
+      <li><strong>A revisão das respostas prontas com o setor de seleção</strong> (T046 da 070): a conferência documental foi feita em 12/10; a manifestação do setor, não.</li>
+      <li><strong>O piloto no serviço local</strong> (T058 a T060 da 071): a verificação, a rodada completa com revisão humana e as medições de GPU esperam acesso à máquina; até lá, o que houve foi um ensaio no OpenRouter, em 14/10.</li>
+      <li><strong>A sessão acompanhada com o setor</strong> (T065 da 071).</li>
+      <li>A validação interna já acusa, como ponto para revisão, quando o documento que a página pública oferece como Edital completo não contém uma Retificação publicada depois dele; a correção ficou para depois.</li>
+    </ul>
+
+    <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>Respostas prontas e pontos para revisão</dt><dd><code>duvidas/application/consultar.py</code> · <code>duvidas/domain/catalogo.py</code> (P-01 a P-12) · <code>duvidas/domain/respostas.py</code> · <code>duvidas/domain/revisao.py</code></dd>
+      <dt>Telas</dt><dd><code>interface/duvidas.py</code> · <code>interface/assistente.py</code> (<code>_edital_do_piloto</code>) · <code>interface/prototipo_do_assistente.py</code></dd>
+      <dt>Papel do piloto</dt><dd><code>interface/identidade.py</code> (<code>PAPEIS</code>) · <code>tests/authorization/test_papel_do_piloto.py</code></dd>
+      <dt>A pergunta, os limites e a conferência</dt><dd><code>duvidas/application/perguntar.py</code> · <code>duvidas/domain/conferencia.py</code> · <code>duvidas/domain/mascara.py</code></dd>
+      <dt>Registros e exclusão</dt><dd><code>duvidas/models.py</code> (<code>TrocaDoPiloto</code>) · <code>duvidas/management/commands/</code></dd>
+      <dt>Configuração</dt><dd><code>config/settings/base.py</code> (<code>ASSISTENTE_*</code>) · <code>config/settings/production.py</code> · <code>backend/pyproject.toml</code> (grupo <code>assistente</code>)</dd>
+      <dt>Especificações</dt><dd><code>specs/070-fonte-de-consulta-do-edital/</code> · <code>specs/071-piloto-assistente-do-edital/</code> (o quickstart tem o roteiro inteiro)</dd>
     </dl></div></details>
   </section>
 
@@ -7830,11 +7956,14 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     <h3>A jornada, passo a passo</h3>
     <ol class="linha-tempo">
       <li><span class="passo">1 · Descoberta</span><span class="titulo">A vitrine lista as seleções <span class="selo selo-impl">Implementado</span></span>
-        <p>Página pública, sem autenticação. Só aparece o que foi publicado. As seleções vêm em grupos — <span class="rotulo-ui">Inscrições abertas</span>, <span class="rotulo-ui">Próximas seleções</span>, <span class="rotulo-ui">Inscrições encerradas</span>, <span class="rotulo-ui">Outras seleções publicadas</span> —, com filtros <span class="rotulo-ui">Procurar</span>, <span class="rotulo-ui">Unidade</span>, <span class="rotulo-ui">Situação</span>, <span class="rotulo-ui">Cargo ou curso</span> e <span class="rotulo-ui">Ordenar por</span>. O Edital cancelado sai da vitrine; o encerrado continua, dito como encerrado.</p></li>
+        <p>Página pública, sem autenticação. Só aparece o que foi publicado. O título é <span class="rotulo-ui">Processos seletivos</span> — com <em>“do Cefor/Ifes”</em> quando o catálogo tem uma unidade só —, seguido de quantas seleções estão com inscrições abertas. As seleções vêm em grupos — <span class="rotulo-ui">Inscrições abertas</span>, <span class="rotulo-ui">Próximas seleções</span>, <span class="rotulo-ui">Inscrições encerradas</span>, <span class="rotulo-ui">Outras seleções publicadas</span>. Só <span class="rotulo-ui">Procurar</span> fica sempre à vista; <span class="rotulo-ui">Unidade</span> (quando há mais de uma), <span class="rotulo-ui">Situação</span>, <span class="rotulo-ui">Cargo ou curso</span> e <span class="rotulo-ui">Ordenar por</span> ficam em <span class="rotulo-ui">Mais filtros e ordenação</span>, que abre sozinho em tela larga. O Edital cancelado sai da vitrine; o encerrado continua, dito como encerrado.</p>
+        <p>Desde a 072, o cartão leva o título do <strong>Edital</strong>, a oferta por Perfil (<em>“{Perfil} — N vagas”</em>, no máximo três, depois <em>“e mais N”</em>), <em>“Onde:”</em> com os lugares, o período e, quando há resultado, quantos foram publicados e até quando cabe recurso. O convite muda com a situação: <span class="rotulo-ui">Ver vagas e inscrever-se</span>, <span class="rotulo-ui">Ver resultados e prazo de recurso</span>, <span class="rotulo-ui">Ver resultado</span> (ou <em>resultados</em>) ou <span class="rotulo-ui">Ver a seleção</span>. A unidade sai pela sigla do registro de Unidades (<em>“Cefor”</em>), e a busca alcança também os lugares dos Perfis.</p></li>
       <li><span class="passo">2 · A seleção</span><span class="titulo">A página do Edital diz o que vale hoje, e o que está acontecendo <span class="selo selo-impl">Implementado</span></span>
         <p>Tudo derivado da versão vigente, no instante da leitura — nenhum texto mantido à mão. Ver <a href="#pagina-publica-do-edital">o que a página mostra</a>.</p></li>
       <li><span class="passo">3 · Início</span><span class="titulo"><span class="rotulo-ui">Inscrever-se nesta vaga</span> pede o endereço de e-mail <span class="selo selo-impl">Implementado</span></span>
-        <p>Não há senha e não há cadastro. O sistema envia um código de seis dígitos e responde sempre a mesma frase — <em>“Se este endereço puder ser utilizado, enviaremos um código de acesso.”</em> —, exista ou não conta associada. Na primeira vez, <span class="rotulo-ui">Seus dados</span> pede nome e CPF uma única vez. Ver <a href="#area-do-candidato">Área do candidato</a>.</p></li>
+        <p>Não há senha e não há cadastro. O sistema envia um código de seis dígitos e responde sempre a mesma frase — <em>“Se este endereço puder ser utilizado, enviaremos um código de acesso.”</em> —, exista ou não conta associada. Na primeira vez, <span class="rotulo-ui">Seus dados</span> pede nome e CPF uma única vez. Ver <a href="#area-do-candidato">Área do candidato</a>.</p>
+        <p>A caminho de uma vaga (072), a tela se chama <span class="rotulo-ui">Confirme seu e-mail para se inscrever</span>, e todas as telas do acesso repetem <em>“Inscrição em {Perfil} · Edital NN/AAAA — {título}”</em>, tirado do destino e nunca do e-mail. A do código diz <em>“Não chegou? Confira a caixa de spam ou de promoções.”</em>, e <span class="rotulo-ui">Seus dados</span> diz para que nome e CPF servem: <em>“Seu nome completo e seu CPF identificam você nas inscrições e nos resultados.”</em> Concluído o acesso, a pessoa volta à página da vaga, com <em>“Você entrou como {e-mail}”</em> e o convite a tocar em <span class="rotulo-ui">Inscrever-se nesta vaga</span>; o rascunho continua só nascendo desse toque.</p>
+        <p class="miudo"><strong>Pendente de validação humana.</strong> O texto de finalidade de nome e CPF (FR-1627) é proposta que aguarda quem responde pela proteção de dados — base legal, controlador, encarregado, e se <em>“resultados”</em> sugere que o CPF é publicado. O percurso com cinco pessoas de fora do projeto, no celular (SC-605), tem roteiro e não foi feito. A própria 072 se declara <em>“não validada nem pronta para publicação”</em> (<code>specs/072-jornada-publica-do-portal/validacao-humana.md</code>).</p></li>
       <li><span class="passo">4 · Preenchimento</span><span class="titulo">O rascunho é dele, e pode ser retomado <span class="selo selo-impl">Implementado</span></span>
         <p>Telefone e <strong>concorrência</strong>: o Perfil sem Modalidade não pergunta nada; o que declara só cotas, com vaga na linha geral, oferece também <span class="rotulo-ui">Ampla concorrência</span> <em>sem Modalidade</em> — e ela vem marcada, porque é o que um rascunho sem escolha é. Trocar de Modalidade depois de anexar documento pede confirmação do descarte. Os <strong>fatos declarados</strong> que o Edital pedir (uma data, um inteiro) vêm na revisão e servem ao <a href="#desempate">desempate</a>. Encerrado o período, o rascunho vira <span class="rotulo-ui">Consultar inscrição</span>, e não “continuar”.</p></li>
       <li><span class="passo">5 · Documentos</span><span class="titulo">Um arquivo por requisito aplicável <span class="selo selo-impl">Implementado</span></span>
@@ -7852,7 +7981,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <li><span class="passo">11 · Convocação</span><span class="titulo">A chamada tem página própria, e o portal leva a ela <span class="selo selo-impl">Implementado</span></span>
         <p>A página da convocação existe dentro da inscrição, com a espécie, o fundamento, o prazo e, depois, a situação registrada. Em <span class="rotulo-ui">Minhas inscrições</span>, a inscrição com convocação aberta diz <em>“➜ Convocação aberta”</em> e troca a ação principal por <span class="rotulo-ui">Ver convocação</span>; a concluída vira nota, <em>“Convocação: {espécie}”</em>. O acompanhamento tem a seção <span class="rotulo-ui">Convocação</span>, com o mesmo link (059). Só a abertura da tela da convocação grava leitura na trilha. Ver <a href="#convocacao">Convocação</a>.</p></li>
       <li><span class="passo">12 · Requerimento</span><span class="titulo">Só quando o Edital o declara <span class="selo selo-parc">Parcial</span></span>
-        <p>Na inscrição — anunciado por um cartão no rascunho, e sem ele o envio é recusado — ou na convocação, enquanto a chamada não tem desfecho. Pedido na convocação, o chamado aparece na tela da convocação e no topo do acompanhamento: <span class="rotulo-ui">Preencher…</span> ou, depois do envio, <span class="rotulo-ui">Conferir…</span> (059). Ver <a href="#matricula">Requerimento de Matrícula</a>.</p></li>
+        <p>Na inscrição — anunciado já na página pública, antes da identificação (<em>“Além dos documentos, a inscrição pede o preenchimento do Requerimento de Matrícula.”</em>, 072), e por um cartão no rascunho; sem ele o envio é recusado — ou na convocação, enquanto a chamada não tem desfecho. Pedido na convocação, o chamado aparece na tela da convocação e no topo do acompanhamento: <span class="rotulo-ui">Preencher…</span> ou, depois do envio, <span class="rotulo-ui">Conferir…</span> (059). Ver <a href="#matricula">Requerimento de Matrícula</a>.</p></li>
     </ol>
 
     <div class="aviso aviso-nota"><span class="titulo">Até 06/10, a convocação não tinha porta no portal</span>
@@ -7869,11 +7998,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <table>
         <thead><tr><th>Bloco</th><th>O que diz</th><th>Selo</th></tr></thead>
         <tbody>
-          <tr><td>Cabeçalho</td><td>O título do Edital, e o Processo logo abaixo</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Volta</td><td><em>“← Voltar aos resultados”</em> quando se chegou por uma consulta da vitrine; senão, <em>“← Todas as seleções”</em> (072)</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Cabeçalho</td><td>O título do Edital, e o Processo logo abaixo — nesta linha a unidade ainda sai como <em>“Unidade: CEFOR”</em>, a chave interna, e não a sigla que a vitrine passou a usar</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>O que esta seleção oferece</td><td>Logo no cabeçalho (072): cada Perfil com a quantidade, cada um com link para o próprio cartão na seção Vagas (no máximo cinco, depois <em>“e mais N”</em>), e o botão <span class="rotulo-ui">Ver vagas e inscrever-se</span> — ou <span class="rotulo-ui">Ver vagas</span>, quando não recebe inscrição. A vaga indicada no endereço aparece destacada</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Situação</td><td>O desfecho vence o período: <em>“Edital cancelado em …”</em>, <em>“Processo seletivo encerrado em …”</em>; senão, o período — <em>“Faltam N dias.”</em>, <em>“Último dia.”</em>, <em>“Inscrições encerradas em …”</em>, <em>“Período de inscrições cancelado. Não recebe inscrições.”</em>. O motivo do ato de encerramento não é exibido</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Agora e próximo</td><td><em>“Acontecendo agora, até …: {Evento}”</em> e <em>“Próximo, em …: {Evento}”</em>, pela mesma régua que a gestão usa; Evento cancelado é dito cancelado. Sem Evento, nada é dito</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Resultados divulgados</td><td>Por Perfil, depois por etapa, depois por lista (062). Os Perfis na ordem da seção Vagas, com o nome vigente; o que saiu por Retificação vai para o fim, com o nome publicado. As etapas na ordem do certame. Em cada etapa, a ampla primeiro e as cotas na ordem das Modalidades; o <strong>texto do link é o nome da lista</strong>, com <em>“{natureza} · publicado em …”</em> e <em>“recurso até …”</em> enquanto o prazo corre. Um só <span class="rotulo-ui">Publicações anteriores (N)</span> por etapa, cada item com a lista e <em>“sucedido”</em>. Abaixo, <em>“Participou deste processo seletivo?”</em>: <span class="rotulo-ui">Entrar para ver minha situação</span>, <span class="rotulo-ui">Ver minha situação</span> ou <span class="rotulo-ui">Ver minhas inscrições</span>, conforme quem lê; sem inscrição enviada, o convite não aparece</td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Vagas</td><td>Por Perfil: vagas imediatas (ou <em>“Cadastro reserva”</em> quando é o que há), requisitos, atribuições, carga horária, remuneração, as Modalidades de concorrência pelo nome, e <em>“N documentos que serão pedidos”</em> com <em>“Se concorrer em {Modalidade}, também: …”</em>. <strong>Não há quantidade de vagas por Modalidade</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
+          <tr><td>Vagas</td><td>Por Perfil: vagas imediatas (ou <em>“Cadastro reserva”</em> quando é o que há), requisitos, atribuições, carga horária, remuneração, as Modalidades de concorrência pelo nome, e <em>“N documentos que serão pedidos”</em> com <em>“Se concorrer em {Modalidade}, também: …”</em>. Quando o Requerimento de Matrícula é pedido na inscrição, a seção o diz antes do primeiro Perfil (072). <strong>Não há quantidade de vagas por Modalidade</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
           <tr><td>Teto</td><td>Quando o Edital declara, a frase do documento; atingido, o convite dá lugar a <em>“Limite atingido: você já enviou N inscrições neste Edital.”</em></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Sorteio público</td><td>Relação de habilitados, manifesto e verificação. Ver <a href="#sorteio">Sorteio</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Cronograma</td><td>Os Eventos com a fase de cada um</td><td><span class="selo selo-impl">Implementado</span></td></tr>
@@ -8067,6 +8198,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <li>A lista exigida completa de cada inscrição enviada, inclusive o que <em>não se aplicava</em>.</li>
           <li>O registro de cada geração de arquivo de matrícula — quem, quando, quantas linhas, quais requerimentos —, sem tela que o liste. O arquivo em si não é guardado.</li>
           <li>A matrícula efetivada: <strong>não existe em lugar nenhum</strong>.</li>
+          <li>As trocas do <a href="#assistente-do-edital">piloto do assistente</a> — a pergunta mascarada, a resposta, as fontes e a conferência —, sem tela que as liste e sem coluna de quem perguntou, até serem excluídas 90 dias depois do relatório final.</li>
         </ul>
       </div>
     </div>
@@ -8227,7 +8359,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
   <section id="papeis">
     <h2>Os papéis que existem hoje <span class="selo selo-impl">Implementado</span></h2>
     <p class="miudo">
-      Os papéis são atribuídos por um <strong>seletor de identidade que só existe fora de
+      São <strong>oito papéis</strong> em <code>PAPEIS</code> — o oitavo, do piloto do assistente, desde
+      a 071. Os papéis são atribuídos por um <strong>seletor de identidade que só existe fora de
       produção</strong> — a produção recusa iniciar com ele ligado. Quando o diretório institucional
       for integrado, cada papel corresponderá a um grupo dele; só o módulo de fronteira muda.
       <span class="selo selo-lacun">Lacuna</span> até lá: não há autenticação institucional.
@@ -8243,6 +8376,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td><strong>Julgador de recursos</strong></td><td><code>recurso:julgar</code></td><td>Papel <strong>próprio</strong>: pendurá-lo em qualquer papel existente concederia o julgamento, por construção, a quem tende a estar impedido</td></tr>
           <tr><td><strong>Auditor</strong></td><td><code>auditoria:consultar</code></td><td>Lê a trilha e o que ela sustenta — e consulta, sem agir, o trabalho das Etapas e dos marcos</td></tr>
           <tr><td><strong>Exportador de matrículas</strong></td><td><code>matricula:exportar</code></td><td>Papel <strong>próprio</strong>: ler um dossiê por vez e baixar o conjunto inteiro são atos distintos. Nenhum outro papel exporta</td></tr>
+          <tr><td><strong>Participante do piloto do assistente</strong></td><td><code>assistente:piloto</code></td><td>Papel <strong>próprio</strong> (071): o piloto tem participantes escolhidos, e cada pergunta chama um serviço com custo. Nenhum outro papel conversa com o assistente, e este não concede mais nada. Os registros do piloto não têm tela, e por isso não há segunda permissão. Ver <a href="#assistente-do-edital">o assistente de dúvidas</a></td></tr>
           <tr><td><strong>Presidente da comissão</strong></td><td>— <em>não é papel</em></td><td>É vínculo, na linha do membro. Autoriza gerir a comissão <em>daquele</em> Processo e conduzir o trabalho dele</td></tr>
           <tr><td><strong>Membro da comissão</strong></td><td>— <em>não é papel</em></td><td>Autoriza atuar nas Etapas a que estiver <strong>alocado</strong>, e só nelas</td></tr>
           <tr><td><strong>Candidato</strong></td><td>— <em>nenhuma</em></td><td>Não é ator institucional. O que ele tem é <strong>titularidade</strong> sobre a própria inscrição, no portal — ver <a href="#quem-ve-o-que">quem vê o quê</a></td></tr>
@@ -8315,7 +8449,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <strong>P</strong> = só no Processo que preside; <strong>A</strong> = com alocação na Etapa;
       <strong>A+T</strong> = com alocação, atribuição e inscrição participante; <strong>T</strong> =
       titularidade. “403” e “404” dizem o que a tela responde. Elaborador e Homologador ficam fora
-      das colunas: compor, submeter e homologar são só deles.
+      das colunas: compor, submeter e homologar são só deles. O Participante do piloto do assistente
+      também: a única coisa que o papel permite é o <a href="#assistente-do-edital">piloto</a>.
     </p>
     <div class="rolagem"><table class="matriz"><thead><tr><th>Operação</th><th class="centro">Gestor</th><th class="centro">Presidente</th><th class="centro">Membro alocado</th><th class="centro">Não alocado</th><th class="centro">Julgador</th><th class="centro">Publicador</th><th class="centro">Auditor</th><th class="centro">Exportador</th><th class="centro">Candidato</th></tr></thead><tbody>
 <tr class="grupo"><th colspan="10">Ver e acompanhar</th></tr>
@@ -9021,6 +9156,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Lista pública de resultado</td><td>Nomeia apenas quem recebeu posição; o valor de desempate nem é lido da base</td></tr>
           <tr><td>Exportação em massa</td><td>Papel próprio, população escolhida explicitamente, arquivo não retido, registro append-only sem dado de candidato</td></tr>
           <tr><td>Respostas de erro</td><td><code>application/problem+json</code>, sem <em>stack trace</em>, credencial ou detalhe interno</td></tr>
+          <tr><td>Perguntas do piloto do assistente</td><td>CPF, e-mail e telefone mascarados na pergunta gravada, e o CPF também na resposta — o que o próprio código diz não ser anonimização; nenhuma coluna diz quem perguntou. Com serviço de inferência externo, a pergunta que traz um desses dados é recusada, e não mascarada. As trocas se excluem 90 dias depois do relatório final do piloto. Ver <a href="#assistente-do-edital">o assistente</a></td></tr>
           <tr><td>Tamanho do envio</td><td>Um formulário aceita até 13.000 campos, limite medido para o maior Edital previsto (66 Perfis). O limite é global — vale também no portal —, e o corpo continua preso a 2,5 MB. Acima dele, a composição volta à etapa com recusa legível, em vez de uma página de erro</td></tr>
         </tbody>
       </table>
@@ -9053,7 +9189,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="aviso aviso-risco">
       <span class="titulo">Quatro fragilidades conhecidas</span>
       <ul>
-        <li><strong>Autenticação institucional real não existe.</strong> A gestão só identifica pelo seletor de demonstração — a própria tela o diz — e a API aceita um token de desenvolvimento. A configuração de produção recusa subir com o seletor, com o provedor de identidade de demonstração do portal ou com a fonte de demonstração do sorteio, e exige uma classe de autenticação que o repositório ainda não tem. É a condicionante que separa o piloto da operação institucional.</li>
+        <li><strong>Autenticação institucional real não existe.</strong> A gestão só identifica pelo seletor de demonstração — a própria tela o diz —, e sem ele <code>/gestao/identificar</code> responde <code>503</code> (<em>“Autenticação institucional não configurada”</em>); a API aceita um token de desenvolvimento. A autenticação respondida em 28/08 foi o LDAP do Ifes, adiada para incremento próprio, que não existe. A configuração de produção recusa subir com o seletor, com o provedor de identidade de demonstração do portal ou com a fonte de demonstração do sorteio, e exige uma classe de autenticação que o repositório ainda não tem. É a condicionante que separa o piloto da operação institucional.</li>
         <li><strong>Não há política de retenção nem de descarte.</strong> Nenhum código apaga ou expira documento do candidato, e não há decisão escrita sobre quanto tempo eles ficam, nem sobre a gestão ver rascunhos. É decisão de implantação e de LGPD, junto com o código de acesso por e-mail como fator único — e, desde a 066, com a base legal do uso do e-mail para aviso e a retenção da lista de destinatários, que são precondição para ligar os avisos em produção.</li>
         <li><strong>O caminho de produção está escrito, e não está no ar.</strong> Desde 30/09, <code>doc/implantacao-em-producao-ubuntu.md</code> descreve a VM, o gunicorn atrás de nginx, o backup e a restauração, ensaiados em parte; nenhum arquivo de nginx ou systemd é versionado, e o gunicorn é instalado fora do <em>lock</em>. A própria peça declara dois bloqueadores: a autenticação e a política de retenção.</li>
         <li><strong>Identificadores internos aparecem para quem julga.</strong> A tela do recurso exibe UUIDs crus na proveniência. Não é vazamento de dado pessoal, mas é vocabulário de arquitetura na cara do usuário.</li>
@@ -9099,7 +9235,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Catálogo de capacidades</h1>
-    <p class="lead">O que este sistema consegue modelar hoje — 119 capacidades, cada uma com o selo
+    <p class="lead">O que este sistema consegue modelar hoje — 123 capacidades, cada uma com o selo
     que a cadeia <em>tela → regra → efeito</em> sustenta. Filtre por palavra ou por selo para descobrir,
     em segundos, se o seu cenário é suportado.</p>
   </header>
@@ -9132,6 +9268,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#composicao">Assistente de nove passos com trilha pendente/concluída</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>“Concluída” significa “tem conteúdo”, não “está correto”.</td></tr>
 <tr data-marca="impl"><td><a href="#composicao">Validação que impede publicar (Impede / Aviso)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Inclui a família de executabilidade: Perfil sem marco, sem corte, sem forma de convocação…</td></tr>
 <tr data-marca="impl"><td><a href="#publicacao">Prévia do documento (PDF) antes de publicar</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No piloto, o PDF do sistema é o Edital oficial.</td></tr>
+<tr data-marca="impl"><td><a href="#publicacao">Edital em linguagem simples: resumo, sumário e seções pelas perguntas do candidato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Edital novo (069); o anterior e os consolidados dele seguem na forma plana. As frases novas aguardam aprovação antes do primeiro Edital real (SC-517).</td></tr>
 <tr data-marca="impl"><td><a href="#publicacao">Rito submeter → homologar → publicar, com segregação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Recusa só quando a mesma pessoa submeteu, homologou e publica.</td></tr>
 <tr data-marca="impl"><td><a href="#retificacao">Retificação campo a campo, com vigência</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Vigência futura sim, retroativa não.</td></tr>
 <tr data-marca="impl"><td><a href="#retificacao">Retificação acrescenta Perfil, cota, linha do quadro, critério, Evento, Anexo</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Não acrescenta Etapa, marco nem documento exigido.</td></tr>
@@ -9249,6 +9386,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#recursos">Prazo de recurso de Resultado de Etapa no acompanhamento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No topo da página (063).</td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Resultados da página do Edital por Perfil, etapa e lista</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Com o convite à situação individual (062).</td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Página pública do Edital com situação e histórico</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
+<tr data-marca="impl"><td><a href="#jornada">Vitrine e página da seleção com a oferta por Perfil, o resultado e o prazo de recurso</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>072; o percurso com pessoas (SC-605) e o texto de finalidade de nome e CPF (FR-1627) aguardam validação humana.</td></tr>
+<tr data-marca="impl"><td><a href="#assistente-do-edital">Respostas prontas sobre o Edital publicado, para validação interna</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>070, só na gestão; a revisão com o setor (T046) está aberta.</td></tr>
+<tr data-marca="parc"><td><a href="#assistente-do-edital">Assistente do Edital com modelo de linguagem (piloto)</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>071: papel próprio, chave desligada por padrão, resposta conferida antes de aparecer, registros excluídos 90 dias depois do relatório final. Nada aberto ao candidato.</td></tr>
 <tr data-marca="impl"><td><a href="#resultados">Avisar por e-mail os candidatos de um resultado publicado</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Por gesto, nunca pelo ato; desligado em produção até a LGPD (066).</td></tr>
 <tr data-marca="impl"><td><a href="#cronograma">Prazos de recurso conferidos lado a lado com o Cronograma</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Aviso da Revisão; não prova correspondência (067).</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao-fluxo">Avisar os convocados de uma chamada por publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Provado pela suíte, não percorrido na tela (066).</td></tr>
@@ -9262,7 +9402,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     </table></div>
     <p class="miudo">Fonte: leitura do código em 29/09/2026 (<code>main</code> em <code>3a53b23</code>), cruzada com a matriz de
     unidades da auditoria de consolidação (<code>doc/auditoria-de-consolidacao-2026-09-26.md</code>). As
-    linhas da spec 054 foram conferidas em 30/09/2026 (<code>main</code> em <code>86bbf49</code>). Onde a
+    linhas da spec 054 foram conferidas em 30/09/2026 (<code>main</code> em <code>86bbf49</code>); as das
+    055 a 068, em 10/10 (<code>0edc0f8d</code>); as das 069 a 072, em 15/10 (<code>db428b30</code>). Onde a
     cadeia foi lida e não executada, a página de referência diz <em>[a validar]</em>.</p>
   </section>
 
@@ -9339,7 +9480,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>A própria situação — rótulo, por quê, o que fazer —, a posição em cada lista, a situação em cada Etapa com o motivo, o prazo de recurso, os recursos, o comprovante, a convocação e o requerimento pedido nela. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
     <details class="pergunta"><summary>Quem pode publicar um resultado?</summary><div><p>Quem tem a permissão de publicar (papel Publicador). Quem emitiu a ordem não ganha, por isso, o poder de publicá-la. <a href="#pg-permissoes">Matriz de permissões</a></p></div></details>
     <details class="pergunta"><summary>Somos duas ou três pessoas. Dá para acumular papéis?</summary><div><p>Sim, com dois cuidados: a mesma pessoa não pode submeter, homologar <em>e</em> publicar o mesmo Edital; e quem julga recursos não pode ter avaliado, consolidado, ordenado ou publicado o que se contesta. Escolha primeiro quem vai julgar. <a href="#pg-permissoes">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real; regra de combinação para dupla avaliação; barema, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real; regra de combinação para dupla avaliação; barema, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O sistema já está em produção?</summary><div><p>Não. Sem o seletor de identidade de desenvolvimento, que a configuração de produção recusa, a gestão responde <code>503</code>; a autenticação institucional (o LDAP do Ifes, resposta de 28/08) não foi implementada, e não há política de retenção dos dados pessoais. O caminho de implantação está escrito, e esses são os dois bloqueadores que ele declara. <a href="#estado-atual">Estado atual</a></p></div></details>
+    <details class="pergunta"><summary>O candidato já pode tirar dúvidas com um assistente?</summary><div><p>Não. Existem, só na gestão, as respostas prontas sobre o Edital publicado, para validação interna (070), e um piloto com modelo de linguagem para participantes escolhidos (071), com um protótipo de como o painel apareceria na página pública. Nenhuma rota do portal os alcança. <a href="#assistente-do-edital">Mais</a></p></div></details>
+    <details class="pergunta"><summary>Por que o PDF do Edital novo tem resumo e perguntas como títulos?</summary><div><p>Desde a 069, o Edital novo sai em linguagem simples: um resumo que remete aos itens, um sumário, as seções reunidas sob as perguntas do candidato e as frases do sistema reescritas sem mudar regra. O documento já publicado não se regenera, e o Edital que nasceu antes, mesmo retificado depois, mantém a forma plana. As frases novas esperam a aprovação do responsável pelo produto antes do primeiro Edital real. <a href="#publicacao">Mais</a></p></div></details>
   </section>
 
   <section id="excecoes">
@@ -9374,7 +9518,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Glossário</h1>
-    <p class="lead">110 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
+    <p class="lead">115 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
     caminho para a explicação completa. Todos sustentados pelo código — nenhum é aspiracional.</p>
   </header>
 
@@ -9411,6 +9555,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Aplicar a Modalidade PcD do Perfil de Vitória aos outros seis Perfis.</dd>
   <dd class="rel"><a href="#g-duplicar">Duplicar Perfil</a> · <a href="#g-padrao">Padrão</a> · <a href="#g-excecao">Exceção (configuração)</a></dd>
   <dd class="mais"><a href="#heranca">Saiba mais →</a></dd>
+  <dt id="g-apresentacao-por-perguntas" data-letra="A">Apresentação por perguntas</dt>
+  <dd class="def">A forma do documento do Edital nascido depois da 069: as seções reunidas sob a pergunta do candidato a que respondem, com subseções numeradas, precedidas de resumo e sumário. Decidida pela assinatura do catálogo gravada no Edital; o Edital anterior mantém a forma plana.</dd>
+  <dd class="ex">“Quem pode se inscrever?” reúne Público-alvo, Requisitos gerais e os requisitos dos Perfis.</dd>
+  <dd class="rel"><a href="#g-resumo-do-edital">Resumo do Edital</a> · <a href="#g-redacao-do-documento">Redação do documento</a></dd>
+  <dd class="mais"><a href="#anexos">Saiba mais →</a></dd>
   <dt id="g-apuracao" data-letra="A">Apuração de ocupação</dt>
   <dd class="def">O ato que grava, para um recorte, as vagas publicadas, efetivas e ocupadas. “A ocupar” é a diferença, e não se grava.</dd>
   <dd class="ex">Publicadas 28 · efetivas 28 · ocupadas 26 · a ocupar 2.</dd>
@@ -9426,6 +9575,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">25% de 7 = 1,75: sugere 2, 2 ou 1, conforme a regra.</dd>
   <dd class="rel"><a href="#g-sugestao-percentual">Sugestão pelo percentual</a> · <a href="#g-modalidade">Modalidade de Concorrência</a></dd>
   <dd class="mais"><a href="#quadro-de-vagas">Saiba mais →</a></dd>
+  <dt id="g-assistente-de-duvidas" data-letra="A">Assistente de dúvidas</dt>
+  <dd class="def">Respostas a perguntas sobre um Edital publicado, tiradas da versão vigente: prontas, sem modelo, na validação interna (070), ou por um modelo de linguagem conferido antes de aparecer, no piloto (071). Só na gestão; nada aberto ao candidato. Não confundir com o assistente de nove passos da composição.</dd>
+  <dd class="ex">“Até quando posso me inscrever?”, respondida com a data e o ato de origem.</dd>
+  <dd class="rel"><a href="#g-piloto-do-assistente">Piloto do assistente</a> · <a href="#g-versao-consolidada">Versão Consolidada</a></dd>
+  <dd class="mais"><a href="#assistente-do-edital">Saiba mais →</a></dd>
   <dt id="g-atestado" data-letra="A">Atestado de fato externo</dt>
   <dd class="def">O registro, por quem constatou, de algo que aconteceu fora do sistema — não acessou o ambiente, faltou na primeira semana. É insumo do desfecho de inércia.</dd>
   <dd class="ex">“Não acessou o ambiente virtual até 10/03”.</dd>
@@ -9712,7 +9866,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-supervisao">Supervisão</a> · <a href="#g-visao-institucional">Visão institucional</a></dd>
   <dd class="mais"><a href="#painel">Saiba mais →</a></dd>
   <dt id="g-papel" data-letra="P">Papel</dt>
-  <dd class="def">Um conjunto de permissões do sistema: Elaborador, Homologador, Publicador, Gestor, Julgador de recursos, Auditor, Exportador de matrículas. Diferente de vínculo de comissão.</dd>
+  <dd class="def">Um conjunto de permissões do sistema — são oito: Elaborador, Homologador, Publicador, Gestor, Julgador de recursos, Auditor, Exportador de matrículas e Participante do piloto do assistente. Diferente de vínculo de comissão.</dd>
   <dd class="ex">O Publicador divulga resultados; não os emite.</dd>
   <dd class="rel"><a href="#g-presidencia">Presidência</a></dd>
   <dd class="mais"><a href="#papeis">Saiba mais →</a></dd>
@@ -9726,6 +9880,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">01/03 às 00h → 20/03 às 23h59.</dd>
   <dd class="rel"><a href="#g-cronograma">Cronograma</a> · <a href="#g-teto">Teto de inscrições</a></dd>
   <dd class="mais"><a href="#cronograma">Saiba mais →</a></dd>
+  <dt id="g-piloto-do-assistente" data-letra="P">Piloto do assistente</dt>
+  <dd class="def">O uso interno e controlado do assistente com modelo de linguagem (071), por quem tem o papel Participante do piloto do assistente, com a chave do piloto ligada. Cada troca é gravada com a pergunta mascarada e se exclui 90 dias depois do relatório final.</dd>
+  <dd class="ex">Uma servidora do setor pergunta pelo prazo de recurso e confere a resposta nas fontes citadas.</dd>
+  <dd class="rel"><a href="#g-assistente-de-duvidas">Assistente de dúvidas</a> · <a href="#g-papel">Papel</a></dd>
+  <dd class="mais"><a href="#assistente-do-edital">Saiba mais →</a></dd>
   <dt id="g-posicao" data-letra="P">Posição</dt>
   <dd class="def">O lugar de alguém num ato de ordenação. Empatados compartilham; as posições consumidas são puladas (1, 1, 3).</dd>
   <dd class="ex">Bruno, 35º.</dd>
@@ -9801,6 +9960,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">REC-2026-8H3K2MXQ.</dd>
   <dd class="rel"><a href="#g-admissibilidade">Admissibilidade</a> · <a href="#g-janela-recursal">Janela recursal</a></dd>
   <dd class="mais"><a href="#recursos">Saiba mais →</a></dd>
+  <dt id="g-redacao-do-documento" data-letra="R">Redação do documento</dt>
+  <dd class="def">A versão das frases que o sistema escreve no Edital, gravada em cada Publicação. A redação 2, da 069, diz a mesma regra sem rótulo interno; as frases novas aguardam a aprovação do responsável pelo produto antes do primeiro Edital real.</dd>
+  <dd class="ex">“Regras de classificação” no lugar de “Marcos classificatórios”.</dd>
+  <dd class="rel"><a href="#g-apresentacao-por-perguntas">Apresentação por perguntas</a> · <a href="#g-publicacao">Publicação</a></dd>
+  <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-regularizacao" data-letra="R">Regularização</dt>
   <dd class="def">Convocação de quem foi indeferido e está na faixa, para corrigir o que faltou. Regularizando, nasce um Resultado sucessor habilitado.</dd>
   <dd class="ex">Faltou o histórico escolar.</dd>
@@ -9836,6 +10000,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Preliminar em 30/03; definitivo em 08/04.</dd>
   <dd class="rel"><a href="#g-publicacao-resultado">Publicação de resultado</a></dd>
   <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
+  <dt id="g-resumo-do-edital" data-letra="R">Resumo do Edital</dt>
+  <dd class="def">O bloco que abre o documento do Edital novo, logo depois do preâmbulo: vagas, cadastro de reserva, inscrições, limite por candidato, seleção e datas, cada linha com o item que a regula. Repete o Edital; não acrescenta regra.</dd>
+  <dd class="ex">“Vagas: 40 vagas em quatro localidades … (item 3)”.</dd>
+  <dd class="rel"><a href="#g-apresentacao-por-perguntas">Apresentação por perguntas</a></dd>
+  <dd class="mais"><a href="#publicacao">Saiba mais →</a></dd>
   <dt id="g-retificacao" data-letra="R">Retificação</dt>
   <dd class="def">O ato que altera o conteúdo publicado, campo a campo, com rito e vigência próprios, sem reescrever a publicação anterior.</dd>
   <dd class="ex">Acrescentar a cota PcD esquecida.</dd>
@@ -9949,8 +10118,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <p class="lead">
       O que está pronto, o que está pela metade e o que falta, domínio a domínio — e o que a
       confrontação entre código, especificação, interface e documentação encontrou. Lido contra a
-      <code>main</code> de 29/09/2026 (<code>3a53b23a</code>), e acrescido da spec 054 contra a de
-      30/09/2026 (<code>86bbf49</code>).
+      <code>main</code> de 29/09/2026 (<code>3a53b23a</code>), acrescido da spec 054 contra a de
+      30/09/2026 (<code>86bbf49</code>), das 055 a 068 contra a de 10/10 (<code>0edc0f8d</code>) e das
+      069 a 072 contra a de 15/10 (<code>db428b30</code>).
     </p>
   </header>
   <div class="nesta-pagina"></div>
@@ -9963,30 +10133,30 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <strong>operação institucional</strong>: não há autenticação real nem caminho de produção.
     </p>
 
-    <h3>Os números de hoje, contra os de 30/09</h3>
+    <h3>Os números de hoje, contra os de 10/10</h3>
     <div class="numeros">
-      <div><b>69</b><span>pastas de especificação (eram 55), até a 068, mergeada em 09/10</span></div>
-      <div><b>40</b><span>tabelas append-only (eram 34): as seis do aviso aos candidatos</span></div>
-      <div><b>58</b><span>gatilhos de banco (eram 46)</span></div>
-      <div><b>90</b><span>migrations (eram 85)</span></div>
-      <div><b>21</b><span>módulos de domínio (eram 19): <code>unidades</code> e <code>avisos</code></span></div>
-      <div><b>392</b><span>arquivos Python de aplicação (eram 351)</span></div>
-      <div><b>161</b><span>templates (eram 146)</span></div>
-      <div><b>777</b><span>arquivos de teste Python, + 13 de JavaScript (eram 706 + 12)</span></div>
-      <div><b>109</b><span>rotas da gestão (eram 98); o portal segue com 33</span></div>
+      <div><b>74</b><span>pastas de especificação (eram 69), até a 073 — que, na <code>main</code>, é só especificação</span></div>
+      <div><b>40</b><span>tabelas append-only (sem mudança): os registros do piloto do assistente não entram, porque se excluem</span></div>
+      <div><b>58</b><span>gatilhos de banco (sem mudança)</span></div>
+      <div><b>94</b><span>migrations (eram 90)</span></div>
+      <div><b>22</b><span>módulos de domínio (eram 21): <code>duvidas</code>, da 070 e da 071</span></div>
+      <div><b>432</b><span>arquivos Python de aplicação (eram 392)</span></div>
+      <div><b>166</b><span>templates (eram 161)</span></div>
+      <div><b>849</b><span>arquivos de teste Python, + 13 de JavaScript (eram 777 + 13)</span></div>
+      <div><b>116</b><span>rotas da gestão (eram 109): uma da 070, duas do piloto e quatro do protótipo; o portal segue com 33</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
-      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–068 e a revisão 012-013)</dd>
+      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–073 e a revisão 012-013)</dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
       <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 58, em 24 migrations, sobre 47 tabelas</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code> (mais <code>interface</code> e <code>shared</code>, que não são domínio)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 90,4 mil linhas</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 10 408 passando e 11 pulados (medido em 09/10, com a 068 integrada, e registrado no <code>AGENTS.md</code>; esta revisão não a rodou)</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 101,8 mil linhas (eram 90,4 mil)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 11 297 passando e 11 pulados (medido em 15/10, em <code>db428b30</code>, com o grupo opcional <code>assistente</code> instalado, durante a auditoria de consolidação, e registrado no <code>AGENTS.md</code>; sem o grupo, há um pulado a mais: a contagem real de tokens da 071)</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 30/09, <code>86bbf49</code>, medida pelo mesmo método — que reproduz ali os números publicados naquela data, exceto os arquivos de teste, contados em 29/09; 169 <em>commits</em> desde então, até <code>0edc0f8d</code></dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 10/10, <code>0edc0f8d</code>, medida pelo mesmo método — que reproduz ali, sem exceção, os números publicados naquela data; 46 <em>commits</em> desde então, até <code>db428b30</code>. A de 30/09, <code>86bbf49</code>, reproduzia os dela, exceto os arquivos de teste, contados em 29/09</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -10009,8 +10179,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong>Inscrição</strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Conferências no servidor, protocolo, comprovante PDF, entrega mediada de documento. Teto de inscrições dito antes de se esgotar; ampla concorrência oferecida mesmo sem Modalidade de ampla; período cancelado e Processo encerrado fecham o recebimento</td>
-            <td>A página da seleção não diz quantas vagas há em cada lista</td>
+            <td>Conferências no servidor, protocolo, comprovante PDF, entrega mediada de documento. Teto de inscrições dito antes de se esgotar; ampla concorrência oferecida mesmo sem Modalidade de ampla; período cancelado e Processo encerrado fecham o recebimento. Desde a 072, a vitrine e a página da seleção dizem a oferta por Perfil, o resultado e o prazo de recurso, e o acesso a caminho de uma vaga a nomeia e volta a ela</td>
+            <td>A página da seleção não diz quantas vagas há em cada lista. A 072 se declara não validada: o percurso com cinco pessoas (SC-605) e o texto de finalidade de nome e CPF (FR-1627) esperam validação humana</td>
           </tr>
           <tr>
             <td><strong><a href="#area-do-candidato">Área do candidato</a></strong></td>
@@ -10105,20 +10275,26 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong>Autenticação institucional</strong></td>
             <td class="centro"><span class="selo selo-lacun">Lacuna</span></td>
-            <td>Só o seletor de demonstração; a produção recusa subir com ele</td>
-            <td><strong>Tudo</strong> — é a condicionante que separa piloto de operação institucional</td>
+            <td>Só o seletor de demonstração; a produção recusa subir com ele, e sem ele a gestão responde <code>503</code></td>
+            <td><strong>Tudo</strong> — é a condicionante que separa piloto de operação institucional. A resposta de 28/08 foi o LDAP do Ifes (spec 002), e não há código de LDAP no repositório</td>
           </tr>
           <tr>
             <td><strong>Implantação</strong></td>
             <td class="centro"><span class="selo selo-lacun">Lacuna</span></td>
             <td><code>wsgi</code>/<code>asgi</code> sobem com a configuração de produção, que recusa subir mal configurada</td>
-            <td>Não há imagem de produção (a única diz “Não é imagem de produção”) nem servidor de aplicação entre as dependências</td>
+            <td>Não há imagem de produção (a única diz “Não é imagem de produção”) nem servidor de aplicação entre as dependências. O caminho está escrito em <code>doc/implantacao-em-producao-ubuntu.md</code> e não está no ar. Configurar e verificar a implantação está especificado (073), sem implementação na <code>main</code></td>
           </tr>
           <tr>
             <td><strong><a href="#publicacao">Documento como ato oficial</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos. Desde a spec 054 (30/09): 22 seções sem redação padrão, fecho com local e data, consolidado datado, declaração do Requerimento e total de vagas. Desde 09/10: cabeçalho e local da Unidade e autoridades com vigência (060); numeração digitada e remissões conferidas (065); recurso com objeto, sorteio sem conta, Perfil sem vaga sem quadro (067); o repetido impresso uma vez (064, 068) — de 36 para 14 páginas no cenário maior da auditoria</td>
-            <td>Como o ato é assinado depende do Cefor; o nome de quem assina só falta cadastrar. A seção textual não tem tabela nem numeração automática. Acessibilidade e navegação do PDF (ED-07, ED-08) e a linguagem das frases geradas (ED-05) seguem abertas</td>
+            <td>Decidido em 28/09: no piloto, o PDF do sistema é o Edital oficial. Ato pelo número, anexo citado conferido, teto e corte inteiro impressos. Desde a spec 054 (30/09): 22 seções sem redação padrão, fecho com local e data, consolidado datado, declaração do Requerimento e total de vagas. Desde 09/10: cabeçalho e local da Unidade e autoridades com vigência (060); numeração digitada e remissões conferidas (065); recurso com objeto, sorteio sem conta, Perfil sem vaga sem quadro (067); o repetido impresso uma vez (064, 068) — de 36 para 14 páginas no cenário maior da auditoria. Desde 12/10 (069): resumo, sumário, seções reunidas pelas perguntas do candidato, frases na redação 2, fonte embutida, título, idioma e marcadores no arquivo</td>
+            <td>Como o ato é assinado depende do Cefor; o nome de quem assina só falta cadastrar. A seção textual não tem tabela nem numeração automática. As frases novas da 069 esperam a aprovação do responsável pelo produto antes do primeiro Edital real (SC-517). O PDF continua sem marcação para leitor de tela (a parte de ED-07 que exige decisão)</td>
+          </tr>
+          <tr>
+            <td><strong><a href="#assistente-do-edital">Assistente de dúvidas do Edital</a></strong></td>
+            <td class="centro"><span class="selo selo-parc">Parcial</span></td>
+            <td>Respostas prontas para doze perguntas, a partir da versão vigente, com os pontos para revisão (070); piloto interno com modelo de linguagem e conferência de cada resposta, papel próprio e registros que se excluem 90 dias depois do relatório final (071); protótipo da experiência sobre a página pública, sem link</td>
+            <td>Tudo o que o candidato veria: nenhuma rota pública, nenhuma spec que a abra. A revisão das respostas com o setor (T046 da 070), o piloto no serviço local (T058 a T060 da 071) e a sessão com o setor (T065)</td>
           </tr>
         </tbody>
       </table>
@@ -10138,6 +10314,14 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <p>
         E a decisão de 28/09 mudou o peso de um domínio: se o PDF do sistema é o Edital oficial, o que
         ele omite, erra ou inventa passa a ser norma publicada.
+      </p>
+      <p>
+        Em 15/10, nada mudou nessa condicionante: <strong>o sistema não está em produção</strong>. A
+        gestão responde <code>503</code> sem o seletor de identidade, o LDAP respondido em 28/08 não foi
+        implementado e não há política de retenção. O que entrou desde 10/10 — o Edital em linguagem
+        simples, a jornada pública do portal e o assistente de dúvidas — tem validação humana pendente
+        ou é interno: as frases novas da 069 e o percurso e o texto de finalidade da 072 esperam
+        aprovação, e o assistente é piloto, fechado ao candidato.
       </p>
     </div>
     <p>
@@ -10204,6 +10388,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Caractere trocado por “?” no documento</td><td>A fonte do PDF não tinha o caractere, e ele saía “?” em silêncio no ato oficial</td><td>08/10: impeditivo <code>caractere_sem_grafia</code> nos dois atos</td></tr>
           <tr><td>Candidato sem aviso de resultado</td><td>Nenhum e-mail depois da inscrição, fora a convocação por mensagem individual</td><td>09/10, spec 066, revisando a regra da área do candidato: aviso complementar por gesto, desligado em produção até a LGPD</td></tr>
           <tr><td>Série de polimento da interface</td><td>Números espremidos, plurais com “(s)”, caixa dentro de caixa, tela estreita a 375 px</td><td>01/10, specs 055 a 058, encerrada por decisão do usuário (<code>doc/encerramento-polish-ui-2026-10-01.md</code>)</td></tr>
+          <tr><td>Frases do documento em vocabulário interno (ED-05)</td><td><em>“Marcos classificatórios”</em>, regras escritas a partir dos nomes dos campos</td><td>12/10, spec 069: redação 2, conferida enunciado por enunciado contra a anterior; as frases novas aguardam aprovação (SC-517)</td></tr>
+          <tr><td>Documento longo sem navegação (ED-08, parte de ED-07)</td><td>44 páginas sem sumário nem marcadores; o arquivo sem título nem idioma</td><td>12/10, spec 069: resumo, sumário com página, marcadores, título, idioma e nome do arquivo. O PDF marcado para leitor de tela segue aberto</td></tr>
+          <tr><td>Vitrine com o código da unidade</td><td><em>“Unidade: CEFOR”</em> no cartão de cada seleção</td><td>14/10, spec 072: a sigla do registro de Unidades. A página da seleção ainda diz o código</td></tr>
           <tr><td>README com <code>31 de 31</code></td><td>O número de tabelas protegidas estava desatualizado</td><td>O README deixou de fixar o número; um teste confere a tabela de incrementos contra <code>specs/</code></td></tr>
         </tbody>
       </table>
@@ -10223,7 +10410,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td>Campo <code>Status</code> das especificações</td>
             <td><code>Draft</code></td>
-            <td>58 das 69 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
+            <td>63 das 74 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
             <td>Primeira linha <code>**Status**</code> de cada <code>spec.md</code>. Quem declara uma spec concluída é decisão ainda pendente (DP-12, no registro de decisões do produto)</td>
           </tr>
           <tr>
@@ -10392,6 +10579,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Auditoria do Edital</td><td><code>/gestao/editais/&lt;id&gt;/auditoria</code></td><td>Auditor</td></tr>
         <tr><td>Inscrições recebidas · Inscrição · documento</td><td><code>/gestao/editais/&lt;id&gt;/inscricoes</code> · <code>/gestao/inscricoes/&lt;id&gt;/</code> · <code>…/documentos/&lt;req&gt;</code></td><td>Gestor (<code>inscricao:consultar</code>); cada documento aberto é registrado</td></tr>
         <tr><td>Exportar para matrícula</td><td><code>/gestao/editais/&lt;id&gt;/matriculas</code></td><td>Exportador de matrículas</td></tr>
+        <tr><td>Respostas do assistente de dúvidas (validação interna) <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/duvidas/</code></td><td>quem alcança a página do Edital; só GET</td></tr>
+        <tr><td>Assistente do Edital (piloto) · começar outra conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/</code> · <code>…/assistente/nova/</code></td><td>Participante do piloto do assistente, com <code>ASSISTENTE_PILOTO</code> ligada; senão, 404</td></tr>
+        <tr><td>Protótipo do painel de dúvidas · perguntar · sugestão · nova conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/prototipo/</code> e sub-rotas</td><td>o mesmo acesso do piloto; nenhum link leva a ela</td></tr>
         <tr><td>Fragmentos do assistente e da Retificação (Perfil, Modalidade, quadro, fato, marco, critério, Evento, Anexo, linha do quadro; duplicar Perfil <span class="selo selo-impl">nova</span>; Modalidade e critério acrescentados <span class="selo selo-impl">nova</span>)</td><td><code>/gestao/fragmentos/…</code> · <code>/gestao/editais/&lt;id&gt;/fragmentos/…</code></td><td>pedaços de tela carregados pela própria composição</td></tr>
       </tbody>
     </table></div>
@@ -10444,7 +10634,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="rolagem"><table>
       <thead><tr><th>Tela</th><th>Rota</th><th>Quem abre</th></tr></thead>
       <tbody>
-        <tr><td>Seleções abertas</td><td><code>/selecoes/</code></td><td>qualquer pessoa</td></tr>
+        <tr><td>Processos seletivos (a vitrine)</td><td><code>/selecoes/</code></td><td>qualquer pessoa</td></tr>
         <tr><td>Página da seleção (título do Edital)</td><td><code>/selecoes/&lt;edital&gt;/</code></td><td>qualquer pessoa</td></tr>
         <tr><td>Inscrever-se nesta vaga</td><td><code>/selecoes/&lt;edital&gt;/vagas/&lt;perfil&gt;/inscrever</code></td><td>candidato identificado</td></tr>
         <tr><td>Entrar · Informe o código · Participação anterior</td><td><code>/selecoes/acesso</code> · <code>…/acesso/codigo</code> · <code>…/acesso/reconciliar</code> (e <code>/retomar</code>)</td><td>qualquer pessoa, pelo e-mail</td></tr>
@@ -10468,7 +10658,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       para declarar um Evento cancelado); <code>/api/v1/public/</code> (publicações e sorteio).
     </p>
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Rotas da gestão</dt><dd><code>interface/urls.py</code> (98 entradas)</dd>
+      <dt>Rotas da gestão</dt><dd><code>interface/urls.py</code> (116 entradas)</dd>
       <dt>Rotas do portal</dt><dd><code>portal/urls.py</code> (33 entradas)</dd>
       <dt>Raiz</dt><dd><code>config/urls.py</code></dd>
       <dt>Papéis e permissões</dt><dd><code>interface/identidade.py</code> (<code>PAPEIS</code>)</dd>
@@ -10556,7 +10746,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="rolagem"><table>
       <thead><tr><th>Lacuna</th><th>Situação</th><th>Evidência</th></tr></thead>
       <tbody>
-        <tr><td><strong>Autenticação institucional real</strong></td><td>A única condicionante de saída do piloto que resta. O adaptador é do software; o provedor é do Ifes</td><td><code>seguranca/api/authentication.py</code>: <em>“Adaptador provisório: token de desenvolvimento”</em></td></tr>
+        <tr><td><strong>Autenticação institucional real</strong></td><td>A única condicionante de saída do piloto que resta, e a razão de o sistema não estar em produção: sem o seletor de desenvolvimento, a gestão responde <code>503</code>. A resposta de 28/08 foi o LDAP do Ifes (spec 002, T056 aberta), nunca implementado. O adaptador é do software; o provedor é do Ifes</td><td><code>seguranca/api/authentication.py</code>: <em>“Adaptador provisório: token de desenvolvimento”</em></td></tr>
         <tr><td><strong>Fronteira 403 × 404 em três portas</strong> (<code>D-G2</code>)</td><td>Decisão mantida; execução mandada para a preparação de produção (28/09)</td><td><code>interface/views.py</code>: <code>raise Http404</code> em <code>criar_edital</code>, <code>reaproveitar</code>, <code>supervisao</code></td></tr>
         <tr><td><strong>Avisos de composição fora da Atenção</strong></td><td>Deliberado até decidir a fronteira</td><td><code>interface/supervisao.py</code> (<code>ESPECIES</code>)</td></tr>
         <tr><td><strong>Identificadores internos na tela de quem julga</strong></td><td>UUIDs crus na proveniência do recurso</td><td><code>interface/templates/interface/recurso.html</code></td></tr>
@@ -10623,9 +10813,19 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <li><strong>O reenvio da convocação sugere prazo novo.</strong> <em>“Comunicação enviada em”</em> mostra só o último envio, e a mensagem de reenvio diz <em>“contado do envio desta mensagem”</em> (<code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code>).</li>
       <li><strong>O acompanhamento cresce três consultas por publicação</strong>: 23 com uma, 38 com seis (063, A-1). Nenhum requisito limita o custo.</li>
       <li><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong>, e por isso não tem aviso; a 066 declara que não encerra a demanda do setor.</li>
-      <li><strong>A marca do Cefor fora do documento.</strong> O título e o topo das telas, os e-mails e a vitrine do portal (<em>“Unidade: CEFOR”</em>, o código e não a sigla) continuam presos ao Cefor; o seletor de identidade só oferece o escopo <code>cefor</code> (<code>doc/pendencias-da-060.md</code>).</li>
-      <li><strong>O documento oficial, depois da auditoria de 08/10.</strong> Fechados ED-01 a ED-04, ED-11 e ED-12; seguem abertos, entre outros, a linguagem das frases geradas (ED-05), a navegação e a acessibilidade do PDF (ED-07, ED-08), o endereço do certame (ED-09) e a forma de convocação na margem (ED-15). Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada (<code>doc/auditoria-edital-pdf-2026-10-08.md</code>).</li>
+      <li><strong>A marca do Cefor fora do documento.</strong> O título e o topo das telas, os e-mails e a página da seleção no portal (<em>“Unidade: CEFOR”</em>, o código e não a sigla) continuam presos ao Cefor — a vitrine passou a usar a sigla do registro de Unidades com a 072; o seletor de identidade só oferece o escopo <code>cefor</code> (<code>doc/pendencias-da-060.md</code>).</li>
+      <li><strong>O documento oficial, depois da auditoria de 08/10.</strong> Fechados ED-01 a ED-04, ED-11 e ED-12; a 069 tratou a linguagem das frases geradas (ED-05), a navegação (ED-08), a parte imediata de ED-07 — título, idioma, marcadores, nome do arquivo — e a fonte embutida (ED-14). Seguem abertos, entre outros, o PDF marcado para leitor de tela (o resto de ED-07), o quadro de alterações no consolidado (ED-06), o endereço do certame (ED-09) e a forma de convocação na margem (ED-15). Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada (<code>doc/auditoria-edital-pdf-2026-10-08.md</code>).</li>
       <li><strong>A regra da reserva no cadastro</strong> (RC-58) segue sem decisão, e o Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em>.</li>
+    </ul>
+
+    <h4>Abertas desde 10/10</h4>
+    <p>As entregas de 12 a 14/10 entraram com validação humana pendente, registrada nas próprias specs:</p>
+    <ul>
+      <li><strong>As frases novas do Edital em linguagem simples</strong> (069, SC-517) — o resumo, a frase dos suplentes, as remissões e a convocação <em>“por publicação”</em> sem dizer onde — esperam a aprovação do responsável pelo produto antes do primeiro Edital real (<code>specs/069-edital-linguagem-simples/demonstracao/equivalencia.md</code>).</li>
+      <li><strong>A jornada pública</strong> (072) se declara <em>“não validada nem pronta para publicação”</em>: o percurso com cinco pessoas de fora do projeto, no celular (SC-605), tem roteiro e não foi feito; o texto de finalidade de nome e CPF (FR-1627) espera quem responde pela proteção de dados. Custo registrado: o resumo da oferta empurra o primeiro <span class="rotulo-ui">Inscrever-se nesta vaga</span> cerca de 200 px para baixo — o caminho até a vaga passa a ser o atalho do resumo —, e a 320 px o resumo não cabe inteiro na primeira tela (<code>specs/072-jornada-publica-do-portal/verificacao.md</code>).</li>
+      <li><strong>As respostas prontas do assistente</strong> (070) esperam a revisão com o setor (T046). A conferência contra quinze Editais reais do Cefor mostrou a detecção do canal de atendimento errando em quatro deles e respondendo <em>“Fontes divergentes”</em> em 9 dos 14 que têm canal.</li>
+      <li><strong>O piloto do assistente</strong> (071) espera o serviço local para a verificação, a rodada com revisão humana e as medições (T058 a T060), e a sessão com o setor (T065).</li>
+      <li><strong>A versão consolidada de uma Retificação não lista a publicação original entre as aplicadas</strong>, e a Retificação de vigência futura troca a versão vigente na fronteira, sem ato novo. A 070 contorna as duas na leitura e acusa, como ponto para revisão, quando o documento oferecido como <span class="rotulo-ui">Ler o Edital completo (PDF)</span> não contém uma Retificação publicada depois dele.</li>
     </ul>
 
     <h4>Configuração sem consumidor</h4>
@@ -10689,7 +10889,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Divergências entre código e documentação</h4>
     <ul>
-      <li>58 das 69 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12).</li>
+      <li>63 das 74 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12) — entre elas a 069, a 070, a 071 e a 072.</li>
+      <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
+      <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
       <li><code>doc/achado-suite-em-sqlite.md</code> nomeia uma causa; são três (o <code>CLAUDE.md</code> as reparte).</li>
       <li>Um critério da spec 008 pede o Processo na primeira página do documento, e o renderizador nunca o imprimiu — o que é o certo para os Editais reais.</li>
       <li>A spec 046 lista um consumidor do Resultado que o código torna inalcançável.</li>
@@ -10731,6 +10933,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto</td><td>Resposta do Cefor. O nome de quem assina deixou de ser decisão: é cadastro, desde a 060. O resto da DP-20 foi executado pela 054</td></tr>
         <tr><td><strong>Avisos em produção</strong> (066)</td><td>Qual a base legal do uso do e-mail para aviso, quanto tempo fica a lista de destinatários, e qual o limite da conta de correio institucional?</td><td>Validação do encarregado de dados; só então se liga <code>AVISOS_AOS_CANDIDATOS</code></td></tr>
         <tr><td><strong>Reabilitado antes do marco</strong> (061)</td><td>Estender a pergunta do reingresso, delegá-la à ordem, ou manter e dizer?</td><td>Escolha entre as três saídas do achado</td></tr>
+        <tr><td><strong>Frases novas do Edital</strong> (069)</td><td>As frases que a redação 2 acrescenta, listadas na conferência de equivalência, podem ir ao primeiro Edital real?</td><td>Aprovação do responsável pelo produto (SC-517)</td></tr>
+        <tr><td><strong>Validação da jornada pública</strong> (072)</td><td>O texto de finalidade de nome e CPF está completo e correto? O percurso com cinco pessoas confirma a jornada?</td><td>Quem responde pela proteção de dados (FR-1627); o percurso com pessoas (SC-605)</td></tr>
+        <tr><td><strong>Respostas prontas do assistente</strong> (070)</td><td>A tabela de pertinência, os termos de dúvida e as formas da explicação servem ao setor?</td><td>Revisão com o setor de seleção (T046)</td></tr>
         <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Todas registradas na spec 063 para decisão</td></tr>
       </tbody>
     </table></div>
@@ -10862,6 +11067,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>29/09/2026</td><td><code>main</code> em <code>3a53b23</code>, specs 001–053</td><td>Reauditoria contra o código; três camadas (entender, operar, consultar); tutorial, catálogo de capacidades, “o que consigo configurar”, impacto de mudanças, receitas, sorteio, Perfis e reservas em profundidade; lacunas revistas uma a uma. Registro em <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>.</td></tr>
           <tr><td>30/09/2026</td><td><code>main</code> em <code>86bbf49</code>, spec 054</td><td>A spec 054 (o Edital do sistema como ato oficial, PR 233) descrita como entregue: catálogo de 22 seções, fecho, consolidado datado, declaração do Requerimento e total de vagas no documento. Registro no mesmo arquivo.</td></tr>
           <tr><td>10/10/2026</td><td><code>main</code> em <code>0edc0f8d</code>, specs 055–068</td><td>As catorze specs mergeadas entre 30/09 e 09/10 descritas como entregues: a convocação com porta no portal, o acompanhamento pela situação, os resultados por Perfil, etapa e lista, as Unidades e autoridades com vigência, os avisos aos candidatos, o corte em dia depois do recurso e o documento que confere a numeração e imprime uma vez o que se repete. Registro em <code>docs/visao-sistema/CHANGELOG-2026-10.md</code>.</td></tr>
+          <tr><td>15/10/2026</td><td><code>main</code> em <code>db428b30</code>, specs 069–072</td><td>As quatro specs mergeadas entre 12 e 14/10 descritas como entregues, cada uma com o que espera validação humana: o Edital em linguagem simples, a jornada pública do portal, as respostas prontas do assistente de dúvidas e o piloto interno do assistente, com o oitavo papel. A 073 é citada só como especificada. O fato de o sistema não estar em produção passou a ser dito no início e no estado do produto. Registro no mesmo arquivo.</td></tr>
         </tbody>
       </table>
     </div>
@@ -10871,6 +11077,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <ul>
         <li>Não validei o <strong>sistema de destino do Registro Acadêmico</strong> — ele não está disponível aqui. O que o sistema produz está descrito; o que acontece depois da importação, não.</li>
         <li>A revisão de 10/10 também foi feita por leitura do código e das specs, sem rodar a suíte nem percorrer o produto; o número da suíte é o do <code>AGENTS.md</code>, medido em 09/10.</li>
+        <li>A revisão de 15/10 seguiu o mesmo método: leitura do código e das specs, sem rodar a suíte, sem percorrer o produto e sem chamar o serviço de inferência. O número da suíte é o do <code>AGENTS.md</code>, medido em 14/10. Nada do piloto do assistente foi exercitado aqui.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -10900,10 +11107,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   fotografia do estado do sistema de Processos Seletivos e Editais do Cefor/Ifes.</p>
   <p>Reconstruída por leitura do código-fonte em 20/09/2026 e revista, de novo contra o código, em
   29/09/2026 (<code>main</code> em <code>3a53b23</code>, specs 001 a 053); a spec 054 foi acrescentada
-  em 30/09/2026 (<code>main</code> em <code>86bbf49</code>). Onde documentação e código
+  em 30/09/2026 (<code>main</code> em <code>86bbf49</code>), as 055 a 068 em 10/10/2026
+  (<code>0edc0f8d</code>) e as 069 a 072 em 15/10/2026 (<code>db428b30</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
-  registrada em <a href="#achados">Auditoria de consistência</a>. O registro desta revisão está em
-  <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>.</p>
+  registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
+  <code>docs/visao-sistema/CHANGELOG-2026-09.md</code> e <code>docs/visao-sistema/CHANGELOG-2026-10.md</code>.</p>
   <p>A <a href="../../.specify/memory/constitution.md">Constituição</a> é a autoridade de engenharia e
   domínio; em conflito com qualquer coisa escrita aqui, ela prevalece. As armadilhas de ambiente estão em
   <a href="../../AGENTS.md">AGENTS.md</a>.</p>

@@ -28,6 +28,7 @@ from django.utils.module_loading import import_string
 from .base import *  # noqa: F403
 from .base import (
     ARQUIVOS_CANDIDATOS_RAIZ,
+    ASSISTENTE_NA_PAGINA_DO_EDITAL,
     ASSISTENTE_PILOTO,
     ASSISTENTE_SERVICO,
     ASSISTENTE_TEMPO_LIMITE_SEGUNDOS,
@@ -35,6 +36,7 @@ from .base import (
     DATABASES,
     DEFAULT_FROM_EMAIL,
     EMAIL_BACKEND,
+    EMAIL_HOST,
     INTERFACE_SELETOR_IDENTIDADE,
     PORTAL_IDENTIDADE_DEMO,
     REST_FRAMEWORK,
@@ -164,6 +166,15 @@ _exigir(
     "sem remetente declarado a mensagem com o código de acesso não é enviada, e o candidato "
     "fica sem caminho para entrar.",
 )
+# **O backend SMTP sem servidor subia**, e só o primeiro envio acusava, com um "please run
+# connect() first" que não diz qual variável falta (073, `FR-1660`). A regra vale só para ele: é o
+# único backend que lê `EMAIL_HOST`, e um de terceiros, que o projeto não tem, poderia não precisar.
+_exigir(
+    EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend" or bool(EMAIL_HOST.strip()),
+    "EMAIL_HOST",
+    "com o envio por SMTP, declare o servidor de correio que o setor de correio forneceu; vazio, "
+    "o serviço sobe e o primeiro código de acesso não sai.",
+)
 
 # Há proxy à frente? (FR-030 da 010) A pergunta precisa ser **respondida**, e não assumida.
 #
@@ -212,6 +223,16 @@ _exigir(
     "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
     "o tempo-limite da inferência precisa ficar abaixo dos 120 s do servidor de aplicação, para "
     "que a pessoa receba 'tempo esgotado', e não um erro do servidor.",
+)
+
+# O painel na página pública (074) deixa qualquer visitante conversar com o modelo, sem
+# autenticação nem os requisitos da abertura ao público, que são da implantação (`FR-1684`). Como o
+# seletor de identidade, ele existe só na máquina de desenvolvimento.
+_exigir(
+    not ASSISTENTE_NA_PAGINA_DO_EDITAL,
+    "ASSISTENTE_NA_PAGINA_DO_EDITAL",
+    "o assistente na página pública da seleção é só do desenvolvimento local; a abertura ao "
+    "público depende dos requisitos da implantação.",
 )
 
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.

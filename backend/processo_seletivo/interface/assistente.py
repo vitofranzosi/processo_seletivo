@@ -67,9 +67,11 @@ TEXTO_DO_ESTADO = {
         "O limite de perguntas foi atingido. Tente de novo em alguns minutos, ou comece outra "
         "conversa."
     ),
+    # O limite é do serviço do modelo, e não do piloto: com o mesmo texto do `LIMITE_DE_USO`, quem
+    # lia achava que o piloto o tinha bloqueado (ensaio de 14/10). Recomeçar a conversa não ajuda.
     "LIMITE_DO_SERVICO": (
-        "O limite de perguntas foi atingido. Tente de novo em alguns minutos, ou comece outra "
-        "conversa."
+        "O serviço do modelo recusou a pergunta por excesso de pedidos. Tente de novo em alguns "
+        "minutos."
     ),
     "ORCAMENTO_ESGOTADO": "O limite de gasto do serviço desta configuração acabou.",
     "EXCEDE_O_CONTEXTO": "Este Edital não cabe na configuração atual do piloto.",
