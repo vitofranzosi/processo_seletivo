@@ -93,8 +93,9 @@ def draw(c, u):
     if u > 16.8:
         kin = e_out5(prog(u, 16.8, 17.5)); kout = e_in3(prog(u, 21.8, DUR))
         a = Card("p_elisa_recorrer_ok.png", REC_FORM, moved(frame_in(REC_FORM, REC_ZONE), dx=1100 * (1 - kin), dy=-1150 * kout)).draw(c, 1, glow=0.15)
-        a.focus(c, (48, 575, 1004, 440), prog(u, 17.8, 18.3) * (1 - kout), pad=8, color=MINT)
-        a.focus(c, (48, 1178, 330, 92), prog(u, 19.0, 19.4) * (1 - kout), pad=8)
+        # caixas medidas nos pixels da captura (a tela não reabre: o recurso já foi interposto)
+        a.focus(c, (38, 574, 1044, 472), prog(u, 17.8, 18.3) * (1 - kout), pad=10, color=MINT)
+        a.focus(c, (48, 1216, 326, 84), prog(u, 19.0, 19.4) * (1 - kout), pad=8)
     caption_block(c, u, 17.1, 21.7, "Quem discorda,", None, 146, 520, 76, tag_s="Recurso")
     kinetic(c, "pode recorrer.", 146, 610, 76, u - 17.4, weight=780, align="left", out_t=21.7 - 17.4, color=MINT)
     kinetic(c, "Pela internet — e cada recurso", 150, 680, 30, u - 17.9, weight=480, align="left", color=MUTED,
