@@ -4,7 +4,7 @@
 
 | Arquivo | O que é |
 |---|---|
-| `sistema-de-processo-seletivo-lancamento.mp4` | versão de distribuição — 1920×1080, 30 fps, H.264 (CRF 20) + AAC 320 kb/s, 4min31s, ~490 MB |
+| `sistema-de-processo-seletivo-lancamento.mp4` | versão de distribuição — 1920×1080, 30 fps, H.264 (CRF 20) + AAC 320 kb/s, 4min33s, ~490 MB |
 | `sistema-de-processo-seletivo-lancamento-master.mp4` | master — mesma montagem em H.264 CRF 14, ~2,0 GB, para reedição |
 | `producao/` | as fontes da composição, para refazer um trecho |
 
@@ -243,7 +243,9 @@ Cinco pontos levantados pelo responsável pelo produto, todos com telas reais:
   uma voltou "não foi possível confirmar" ("Até quando tenho isenção da taxa de inscrição?").
 - **A planilha da matrícula (3:28–3:38).** A planilha real, baixada da exportação do Edital 51/2026
   (aba `Import_ModeloCefor`, 34 colunas), se preenche a partir do Requerimento e segue para o
-  Registro Acadêmico, que a importa. O CPF não aparece no filme.
+  Registro Acadêmico, que a importa. A planilha não mostra o CPF; a tela do Requerimento, no
+  celular, mostra o CPF fictício da demonstração (111.444.777-35, o mesmo de todos os candidatos do
+  `seed_demo`).
 - **3:15 (agora 3:49).** A Visão Geral em recorte legível: indicadores e a lista de Editais.
 
 O filme passou a 4min37s. O banco `ps_filme` agora tem o Edital 02/2026 publicado.
@@ -284,3 +286,31 @@ medido, não ouvido) e quatro correções, sem mexer na estrutura:
 
 Ficaram de fora: o "Convocado" já visível no Acompanhe (2:21–2:28), que antecipa a convocação
 (refinamento opcional), e o respiro de áudio em 2:55, que pode ser intencional.
+
+## Revisão de 15/10 — a avaliação com o documento aberto
+
+"A comissão avalia." (2:59–3:07) mostrava a lista de documentos com botões "Abrir" e nada aberto.
+Agora é uma tomada contínua sobre a tela real da avaliação da Ana, com o diploma aberto no
+visualizador da própria Mesa: a câmera vai do documento à lista ("1 de 2 abertos por você",
+"aberto") e à nota 8,5 com o parecer. A legenda fica na coluna da esquerda, e três passos acendem
+junto com a câmera: *O documento, aberto ao lado. · Cada consulta, registrada. · A nota, com o
+parecer.* A cena ganhou um compasso (o filme passou a 4min33s), para o resultado e o recurso não
+ficarem apertados.
+
+O diploma é fictício (`producao/diploma.py`: "Universidade de Exemplo — modelo para demonstração,
+sem valor legal", marca d'água "DOCUMENTO FICTÍCIO"). Ele substituiu, só no banco `ps_filme`, o
+arquivo do diploma da inscrição da Ana no Edital 51, com o hash atualizado (`troca_diploma.py`) —
+a tela confere o arquivo pelo hash. A tabela de documentos enviados não é append-only.
+
+Do exemplo de referência ficaram de fora a moldura de navegador (nenhuma outra tela do filme a usa)
+e as palavras grandes sobre a tela (voltariam a sobrepor texto e interface).
+
+**Assistente (2:28–2:33).** A câmera aproxima do botão "Dúvidas sobre este Edital" antes do clique,
+recua para mostrar o painel deslizando sobre a página e então aproxima do cabeçalho, agora com a
+linha inteira de perguntas sugeridas (antes cortava "Que documentos preciso enviar?" e "Quantas
+vagas há?").
+
+**Matrícula (3:24–3:38).** O Requerimento de Matrícula é opcional por Edital (na inscrição, na
+convocação ou nenhum) e serve às seleções de estudantes; o exemplo é um Edital de professor. A
+legenda passou a dizer a condição: rótulo "Seleção de estudantes" e "Quando o Edital pede o
+Requerimento de Matrícula, o sistema gera a planilha no modelo do sistema acadêmico."

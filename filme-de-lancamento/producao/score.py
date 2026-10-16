@@ -194,17 +194,19 @@ fx.add(whoosh(0.9, 300, 6000, 0.6, 0.22), AS0 + 25.4)
 # ======================================================================= versão simples (15/10)
 C0 = TL.seg_start("sc_comissao2"); V0 = TL.seg_start("sc_convocacao2"); D0 = TL.seg_start("sc_diferenciais2")
 # comissão → resultado → recurso: groove contínuo, mais calmo que o anterior
-LF("Deep Cycles Beat", C0, 11, 0.62, fi=0.3, target=0.13)
-LF("Luminosity Synth Layers", C0, 11, 0.40, fi=1.0, target=0.11)
-LF("Melodic Silk Bass", C0, 11, 0.44, target=0.11)
-LF("Tight House Topper", C0 + 10 * BAR, 1, 0.35, target=0.09)
+LF("Deep Cycles Beat", C0, 12, 0.62, fi=0.3, target=0.13)
+LF("Luminosity Synth Layers", C0, 12, 0.40, fi=1.0, target=0.11)
+LF("Melodic Silk Bass", C0, 12, 0.44, target=0.11)
+LF("Tight House Topper", C0 + 11 * BAR, 1, 0.35, target=0.09)
 for i in range(5):
     fx.add(tick(0.10, 2800 + i * 200, 0.04), C0 + 2.3 + i * 0.12)
-fx.add(tick(0.22, 3600, 0.05), C0 + 5.05)
-for u in [5.4, 8.2, 14.2]:
+fx.add(tick(0.22, 3600, 0.05), C0 + 4.35)
+for u in [4.8, 11.8, 16.8]:
     fx.add(whoosh(0.8, 300, 5000, 0.6, 0.22), C0 + u - 0.1)
-fx.add(paper(0.18), C0 + 6.4)
-fx.add(blip(0.16, 1175), C0 + 9.3)
+for u in [5.9, 7.8, 9.7]:
+    fx.add(whoosh(0.6, 500, 4000, 0.5, 0.12), C0 + u - 0.3)
+    fx.add(blip(0.10, 1175), C0 + u + 0.15)
+fx.add(blip(0.16, 1175), C0 + 12.8)
 # convocação: respiro e retomada
 free("Afloat Pad", V0 - 0.3, 9 * BAR + 0.6, 0.45, fi=0.8, fo=0.8)
 LF("Blueprint Beat 01", V0, 9, 0.60, fi=0.6, target=0.12)

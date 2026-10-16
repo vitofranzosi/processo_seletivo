@@ -11,7 +11,9 @@ PX = 1986                                         # onde o painel começa na cap
 PAGE, S1, S2, S3 = "asd_0_pagina.png", "asd_1_inicio.png", "asd_2_opcao.png", "asd_3_resposta.png"
 L2, L3, L4 = "al1_2_espera.png", "al1_3_resposta.png", "al1_4_fontes.png"
 FULL = (0, 0, 2880, 2300)
-HEAD = (PX, 0, 894, 520)                          # o cabeçalho: "Assistente do edital · Assistente de IA"
+HEAD = (PX, 0, 894, 660)                          # o cabeçalho e a linha inteira de perguntas sugeridas
+BTN_WIN = (1700, 1360, 1180, 940)                 # o canto da página com o botão "Dúvidas sobre este Edital"
+SIDE = (1180, 0, 1700, 2300)                      # a metade direita da página: o painel desliza inteiro
 PANEL = (PX, 0, 894, 1250)
 ANSWER = (PX, 230, 894, 1110)
 COMPOSER = (PX, 1880, 894, 420)
@@ -30,7 +32,7 @@ TYPING = [f"al1_typ{i}.png" for i in range(7)]
 
 # (início, imagem): o que o painel mostra
 SEQ = [(0.0, PAGE), (2.3, S1), (6.0, S2), (7.2, S3), (12.2, S1), (16.6, L2), (17.9, L3), (21.3, L4)]
-KEYS = [(0.0, FULL), (2.6, FULL), (3.6, HEAD), (5.4, HEAD), (6.0, PANEL), (8.0, PANEL), (8.8, ANSWER), (11.6, ANSWER),
+KEYS = [(0.0, FULL), (1.2, FULL), (2.0, BTN_WIN), (2.35, BTN_WIN), (2.95, SIDE), (3.25, SIDE), (3.95, HEAD), (5.4, HEAD), (6.0, PANEL), (8.0, PANEL), (8.8, ANSWER), (11.6, ANSWER),
         (12.3, PANEL), (13.0, COMPOSER), (16.0, COMPOSER), (16.9, PANEL), (18.3, ANSWER), (24.0, ANSWER), (25.0, PANEL)]
 
 def pill(c, x, y, s, a, color="#d9a23a", ink="#f2c46b"):
@@ -95,7 +97,7 @@ def draw(c, u):
     pill(c, 150, 330, "Em breve", env(u, 0.7, 25.6, 0.4, 0.4))
     caption_block(c, u, 0.6, 5.5, "Um assistente com IA.", "Na página de cada seleção, para tirar dúvidas sobre o Edital.", 146, 560,
                   fit("Um assistente com IA.", 76), wrap=560)
-    block(c, u, 6.1, 11.9, "1 · Pergunta sugerida", "Resposta pronta.",
+    block(c, u, 6.1, 11.6, "1 · Pergunta sugerida", "Resposta pronta.",
           "Para as dúvidas mais comuns: a resposta vem montada com os dados do Edital.")
     block(c, u, 12.4, 16.5, "2 · Pergunta livre", "Ou pergunte do seu jeito.",
           "Escreva a dúvida com suas palavras. Quem responde é a IA.")

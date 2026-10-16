@@ -40,8 +40,11 @@ def draw(c, u):
         tag(c, "Requerimento · candidato", 110, 132, la, size=16)
         tag(c, "Planilha gerada pelo sistema", 520, 140, la * ks, size=16)
         tag(c, "Sistema acadêmico", 1580, 230, la * kb, size=16)
+    # o Requerimento de Matrícula é opcional por Edital (na inscrição, na convocação ou nenhum): é recurso
+    # das seleções de estudantes, e a legenda diz a condição
     cap(c, u, 6.8, 16.0, "Matrícula: planilha pronta.",
-        "O sistema gera a planilha no modelo de importação do sistema acadêmico — ninguém redigita nada.", tag_s="Matrícula")
+        "Quando o Edital pede o Requerimento de Matrícula, o sistema gera a planilha no modelo do sistema acadêmico.",
+        tag_s="Seleção de estudantes")
 
 # ---------------------------------------------------------------- a planilha real
 from openpyxl import load_workbook as _lw
