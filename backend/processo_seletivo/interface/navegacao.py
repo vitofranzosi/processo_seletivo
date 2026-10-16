@@ -62,6 +62,13 @@ SECOES = (
 )
 
 
+# As telas cuja matriz não cabe ao lado da barra a 1.280 px (DP-4). Nelas a barra fica recolhida
+# em qualquer largura, como no celular: a Alocação por Etapa, com nove Etapas, tem ~1.213 px de
+# matriz, e a 057 exige que ela caiba sem rolagem interna e com o cabeçalho preso à janela
+# (`FR-1062`). Pela rota, e não por marcação na tela, para não tocar o conteúdo dela.
+TELAS_LARGAS = frozenset({"interface:alocacoes"})
+
+
 def secao_do_caminho(caminho):
     """A seção a que pertence a tela daquele endereço — a de prefixo mais longo.
 
@@ -102,7 +109,9 @@ def contexto_da_navegacao(request):
     if ator is None:
         return {}
     secao = secao_do_caminho(request.path)
+    rota = getattr(request.resolver_match, "view_name", None)
     return {
         "barra": grupos_da_barra(ator, request.path),
+        "barra_recolhida": rota in TELAS_LARGAS,
         "secao_atual": secao and {"rotulo": secao.rotulo, "endereco": reverse(secao.rota)},
     }

@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-16
 
-**Status**: Especificada — as três decisões do responsável pelo produto tomadas em 16/10 (ver
+**Status**: Implementada — as quatro decisões do responsável pelo produto tomadas em 16/10 (ver
 *Decisões do responsável pelo produto*)
 
 **Input**: etapa 2 da sequência do [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md)
@@ -139,7 +139,8 @@ nenhuma tela passa a ter rolagem horizontal.
 - **Seção cujo acesso vem de vínculo, e não de papel.** Nenhuma das seções da barra é assim hoje;
   as telas de comissão e alocação são de um Processo, e continuam alcançadas pela lista.
 - **Tela com conteúdo largo a 1280 px** (matriz de alocação, tabelas de oito colunas). A barra tira
-  largura do conteúdo; nenhuma tela que cabia a 1280 pode passar a estourar.
+  largura do conteúdo; nenhuma tela que cabia a 1280 pode passar a estourar. A única que deixou de
+  caber, medida no inventário, foi a Alocação por Etapa: ali a barra fica recolhida (DP-4).
 - **Link de salto.** Continua o primeiro foco da página e leva ao conteúdo, passando por cima da
   barra e do caminho.
 - **Impressão.** A barra e o caminho não saem no papel.
@@ -185,6 +186,10 @@ nenhuma tela passa a ter rolagem horizontal.
   topo que a abre e fecha por toque e por teclado, e anuncia se está aberta. A moldura MUST NOT
   depender de script: a Visão Geral não carrega script nenhum, e continua sem carregar.
 
+- **FR-1724**: Tela cujo conteúdo a `057` obriga a caber a 1280 px sem rolagem interna — a matriz
+  da Alocação por Etapa (`FR-1062`) — MUST mostrar a barra recolhida em qualquer largura, como no
+  celular (DP-4). A escolha MUST vir do endereço da tela, sem marcação no conteúdo dela.
+
 #### O que não pode piorar
 
 - **FR-1720**: Nenhuma tela do inventário visual de 16/10 MUST deixar de carregar, nem passar a
@@ -217,7 +222,8 @@ Nenhuma. A barra é apresentação derivada das capacidades da identidade, que j
 
 ## Decisões do responsável pelo produto
 
-Tomadas em 16/10/2026, nas três propostas que a spec levou.
+Tomadas em 16/10/2026: as três primeiras nas propostas que a spec levou; a quarta durante a
+implementação, quando o inventário a revelou.
 
 - **DP-1 — Quais seções entram na barra.** As cinco do `FR-1713`. "Novo Processo Seletivo" fica
   na lista, por ser ação e não lugar. Os botões da lista continuam onde estão (`FR-1710`: o
@@ -228,6 +234,12 @@ Tomadas em 16/10/2026, nas três propostas que a spec levou.
   conteúdo das telas, e não da moldura —, e a comparação prova que nenhum deles piora. São eles:
   conclusoes-preservadas (835 px), reaproveitar (994), sorteio (643), compor-anexos (432) e
   retificacao-detalhe (388).
+- **DP-4 — A matriz da Alocação ao lado da barra.** Medida no inventário com a moldura, a matriz de
+  nove Etapas (~1.213 px) não cabe na área que a barra deixa a 1280 px, e a página passou a
+  estourar 197 px — contra a `FR-1062` da `057`. Decidido no mesmo dia: nessa tela a barra fica
+  recolhida em qualquer largura (`FR-1724`). Descartadas: rolar a matriz dentro de uma moldura de
+  altura limitada, que contraria a letra da `FR-1062`; e mostrar a barra fixa só acima de 1280 px,
+  que tiraria a barra do notebook comum.
 
 ## Assumptions
 

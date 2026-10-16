@@ -261,3 +261,30 @@ Fica registrado aqui. A correção é decisão do produto, e não entra no shell
 - **`retificacao-detalhe`, 388 px.** A tabela das alterações passa 13 px da borda.
 
 A 1280 px nenhuma tela estoura.
+
+## Depois do shell (076)
+
+O inventário foi refeito com a barra lateral e o cabeçalho de contexto da
+[`076`](../specs/076-shell-da-gestao/spec.md), no mesmo banco, com o mesmo roteiro e o mesmo
+`AVISO`. As capturas e o `resultados.json` estão em
+[`com-o-shell/`](inventario-visual-da-gestao-2026-10-16/com-o-shell/), e a comparação tela a tela
+sai de `comparar.py`, ao lado do roteiro:
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/resultados.json doc/inventario-visual-da-gestao-2026-10-16/com-o-shell/resultados.json
+```
+
+| | Linha de base | Com o shell |
+|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 — a mesma `aviso-da-chamada` fica de fora |
+| `status` diferente | — | nenhum |
+| Estouram a 375 px | 5 | os mesmos 5, com o mesmo `scrollWidth` |
+| Estouram a 1280 px | 0 | 0 |
+
+**A primeira medição achou uma regressão.** Com a barra sempre aberta, a matriz da Alocação por
+Etapa (~1.213 px com as nove Etapas do seed) não cabia na área de conteúdo a 1280 px, e a página
+passou a ter 1.477 px — contra a `FR-1062` da `057`, que quer a matriz sem rolagem interna e com o
+cabeçalho preso à janela. O responsável pelo produto decidiu (DP-4 da `076`) que, nessa tela, a
+barra fica recolhida em qualquer largura, como no celular. Com isso a página voltou a 1280.
+
+Os cinco estouros a 375 px continuam registrados acima e fora do escopo do shell (DP-3).

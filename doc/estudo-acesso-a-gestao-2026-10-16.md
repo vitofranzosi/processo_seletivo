@@ -3,7 +3,9 @@
 > **Desdobramento.** O responsável pelo produto escolheu o conceito A no mesmo dia, e a etapa 1 da
 > §7 virou a feature [`075`](../specs/075-entrada-da-gestao/spec.md), com o produto renomeado para
 > *Gestão de Processos Seletivos (GPS)*. Os protótipos descritos abaixo saíram nela; o que segue é
-> o registro do estudo como ele foi feito.
+> o registro do estudo como ele foi feito. A etapa 2, o shell, virou a
+> [`076`](../specs/076-shell-da-gestao/spec.md): as cinco seções na barra, sem chave liga/desliga,
+> e o caminho do topo parando na seção, porque 54 telas já têm a própria trilha.
 
 Primeira rodada do redesign do acesso: auditoria do que existe, proposta de navegação e três
 protótipos navegáveis. **Nada do comportamento atual mudou.** A tela de `/gestao/identificar`, o

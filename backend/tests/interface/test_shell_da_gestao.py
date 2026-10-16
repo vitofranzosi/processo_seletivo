@@ -230,3 +230,23 @@ def test_abaixo_da_secao_o_caminho_leva_a_ela_e_nao_repete_a_trilha(
     assert f'<a href="{reverse("interface:lista")}">Processos Seletivos</a>' in caminho(corpo)
     assert f"{edital.number}/{edital.year}" not in caminho(corpo)
     assert corpo.count('aria-label="Trilha de navegação"') == 1
+
+
+# ---- a tela larga ----------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_na_alocacao_a_barra_fica_recolhida(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """`FR-1724`: a matriz da Alocação não cabe ao lado da barra a 1.280 px, e a `057` a quer sem
+    rolagem interna (`FR-1062`). Ali a barra fica recolhida; nas outras telas, não."""
+    edital = publish_original(api_client, manager_headers, process_payload)
+    identificar(client, "gustavo.gestor", ["gestor"])
+
+    alocacao = client.get(reverse("interface:alocacoes", args=[edital.processo_id])).content
+    lista = client.get(reverse("interface:lista")).content
+
+    assert '<div class="shell shell-recolhida">' in alocacao.decode()
+    assert '<div class="shell">' in lista.decode()

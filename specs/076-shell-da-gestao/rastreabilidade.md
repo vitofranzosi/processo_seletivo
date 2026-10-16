@@ -19,6 +19,7 @@ Caminhos de teste relativos a `backend/tests/`. "Navegador" é o percurso do [qu
 | FR-1721 | `interface/test_shell_da_gestao.py` (`test_os_itens_sao_exatamente_os_destinos_que_abrem`); a suíte de autorização inteira, sem mudança |
 | FR-1722 | `performance/test_escala_da_mesa.py` (`test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito`); `interface/test_acessibilidade.py` (`test_nenhuma_classe_citada_deixa_de_existir_na_folha`) |
 | FR-1723 | `interface/test_acessibilidade.py`, `interface/test_larguras.py`, `interface/test_estaticos.py`, `test_vocabulario_da_composicao.py` sobre o `base.html` novo |
+| FR-1724 | `interface/test_shell_da_gestao.py` (`test_na_alocacao_a_barra_fica_recolhida`); inventário (a Alocação a 1280 px sem estouro) |
 | SC-660 | Navegador: um clique na barra a 1280 px; "Seções" e o item a 375 px |
 | SC-661 | `interface/test_shell_da_gestao.py` (`test_os_itens_sao_exatamente_os_destinos_que_abrem`, parametrizado por todo papel e pela identidade só com vínculo) |
 | SC-662 | Inventário refeito e comparado com o `resultados.json` da linha de base |

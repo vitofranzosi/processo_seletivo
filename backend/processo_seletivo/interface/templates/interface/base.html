@@ -29,6 +29,9 @@ celular as seções moram num painel `popover`, aberto pelo botão por `popovert
 anuncia o estado, fecha com Esc e com o toque fora. Na tela larga a folha mostra o painel sempre,
 como coluna. Navegador que não conhece `popover` não esconde o painel, e o botão sai.
 
+Na tela cuja matriz não cabe ao lado da barra a 1.280 px (a Alocação), `.shell-recolhida` mantém
+na tela larga o desenho do celular: a `057` exige a matriz sem rolagem interna (DP-4 da `076`).
+
 O item atual se marca por `[aria-current]`, e não por classe: `.x.atual` faria de `atual` um
 modificador cobrado em toda tela que já usa a palavra. A coluna do conteúdo é `minmax(0,1fr)` para
 que o que é largo role dentro da própria tabela, e não empurre a página.
@@ -71,6 +74,15 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   .abrir-secoes,.fechar-secoes{display:none}
   .secoes-da-gestao{display:flex;flex-direction:column;flex:1;position:static;width:auto;
     height:auto;margin:0;padding:0;border:0;background:none;color:inherit;overflow:visible}
+  .shell-recolhida{display:block}
+  .shell-recolhida .barra-lateral{position:static;height:auto;flex-direction:row;align-items:center;
+    gap:1rem;padding:.6rem 1rem;border-right:0;border-bottom:1px solid var(--borda)}
+  .shell-recolhida .barra-lateral .marca{padding:0}
+  .shell-recolhida .abrir-secoes,.shell-recolhida .fechar-secoes{display:block}
+  .shell-recolhida .secoes-da-gestao:not(:popover-open){display:none}
+  .shell-recolhida .secoes-da-gestao:popover-open{position:fixed;inset:0 auto 0 0;
+    width:min(18rem,85vw);height:100%;border-right:1px solid var(--borda);background:var(--branco);
+    color:var(--texto);overflow-y:auto}
 }
 @supports not selector(:popover-open){
   .abrir-secoes,.fechar-secoes{display:none}
@@ -1367,7 +1379,7 @@ escape do guardião por mudar de lugar.
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {% if barra %}
-<div class="shell">
+<div class="shell{% if barra_recolhida %} shell-recolhida{% endif %}">
 <div class="barra-lateral">
   {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
      dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
