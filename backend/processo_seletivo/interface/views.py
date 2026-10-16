@@ -158,6 +158,7 @@ from processo_seletivo.interface import (
     atos_processo,
     atos_retificacao,
     conducao_do_marco,
+    demonstracao,
     forms,
     identidade,
     origens,
@@ -251,7 +252,7 @@ ORDEM_SITUACAO = [
 def lista(request):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     processos = list(listar_processos(actor=ator))
     for processo in processos:
@@ -328,7 +329,7 @@ def visao_geral(request):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # **Pela porta que nomeia o que falta**, e não por `require_permission` (033, `FR-481`). A
     # recusa desta família tem de dizer qual capacidade faltou e a quem pedi-la, e
     # `require_permission` devolve *"A operação não é permitida"* — verdade, e não acionável.
@@ -367,7 +368,7 @@ def criar_processo(request):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     contexto = {
         "digitado": request.POST if request.method == "POST" else {},
@@ -427,7 +428,7 @@ def criar_edital(request, processo_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     processo = _processo_do_ator(ator, processo_id)
     if not ator.can("edital:criar"):
         # O mesmo 404 que a composição devolve: distinguir "não existe" de "você não pode" diria a
@@ -623,13 +624,47 @@ def _processo_do_formulario(dados):
     }
 
 
+def _escolha_de_identidade(request, *, proximo, erro=False, status=200):
+    """A escolha de identidades da demonstração (075, `FR-1692` a `FR-1695`).
+
+    Presidir e avaliar **não são papéis** — vêm do vínculo com a comissão —, e por isso as entradas
+    de comissão não concedem papel nenhum. Sem elas, quem quisesse percorrer a Mesa tinha de
+    adivinhar um nome que estivesse numa comissão.
+    """
+    entradas_de_comissao = demonstracao.comissoes()
+    entradas_de_papel = demonstracao.responsabilidades()
+    return render(
+        request,
+        "interface/identificar_demonstracao.html",
+        {
+            "comissoes": entradas_de_comissao,
+            "responsabilidades": entradas_de_papel,
+            "com_busca": len(entradas_de_comissao) + len(entradas_de_papel)
+            > demonstracao.LIMIAR_DA_BUSCA,
+            "proximo": proximo,
+            "erro": erro,
+        },
+        status=status,
+    )
+
+
 @require_http_methods(["GET", "POST"])
 def identificar(request):
-    """Seletor de identidade: substitui a autenticação institucional fora de produção."""
-    if not identidade.seletor_disponivel():
+    """A página de acesso à gestão, e o envio da identidade escolhida (075, `FR-1690`).
+
+    O método de entrada vem de `identidade.metodos_disponiveis()`. Sem nenhum — produção, enquanto
+    o diretório institucional não chega —, a página diz que a entrada não está configurada, com o
+    mesmo desenho, e não oferece ação nenhuma (`FR-1691`).
+    """
+    if not identidade.metodos_disponiveis():
         return render(request, "interface/sem_autenticacao.html", status=503)
+    proximo = identidade.destino_seguro(
+        request, request.POST.get("proximo") or request.GET.get("proximo")
+    )
     if request.method == "POST":
-        papeis = request.POST.getlist("papeis")
+        # Só papéis que existem: a lista de caixas é a do mapa, e o que vier fora dele é envio
+        # montado à mão, que não tem por que chegar à sessão.
+        papeis = [p for p in request.POST.getlist("papeis") if p in identidade.PAPEIS]
         # A identidade escolhida na lista tem prioridade sobre o campo livre: quem clicou num nome
         # sugerido disse o que queria, e o campo pode estar com o exemplo que veio preenchido.
         subject = (
@@ -641,36 +676,34 @@ def identificar(request):
             # ainda assim precisa entrar para ver `Minhas Etapas`. Exigir papel aqui tornava esse
             # ator, que é metade da feature, impossível de representar.
             identidade.identificar(request, subject=subject, papeis=papeis)
+            # O destino pedido antes da identificação, se for da gestão (`FR-1696`); senão, o
+            # lugar de sempre.
             return redirect(
-                reverse("interface:lista") if papeis else reverse("interface:minhas-etapas")
+                proximo
+                or (reverse("interface:lista") if papeis else reverse("interface:minhas-etapas"))
             )
-        return render(
-            request,
-            "interface/identificar.html",
-            {
-                "papeis": identidade.PAPEIS,
-                "erro": "Informe um nome.",
-                "com_trabalho": comissao_selectors.identidades_com_trabalho(
-                    identidade.ESCOPO_PADRAO
-                ),
-            },
-            status=422,
-        )
+        return _escolha_de_identidade(request, proximo=proximo, erro=True, status=422)
+    ator = identidade.ator_da_sessao(request)
     return render(
         request,
         "interface/identificar.html",
-        {
-            "papeis": identidade.PAPEIS,
-            # Presidir e avaliar **não são papéis** — vêm do vínculo com a comissão —, e por isso
-            # nenhuma caixa desta tela os concede. Sem esta lista, quem quisesse percorrer a Mesa
-            # tinha de adivinhar um nome que estivesse numa comissão.
-            "com_trabalho": comissao_selectors.identidades_com_trabalho(identidade.ESCOPO_PADRAO),
-        },
+        {"proximo": proximo, "iniciais": demonstracao.iniciais(ator.subject) if ator else ""},
+    )
+
+
+@require_http_methods(["GET"])
+def identificar_demonstracao(request):
+    """A escolha de identidades, em etapa própria da página de acesso (075, `FR-1692`)."""
+    if not identidade.metodos_disponiveis():
+        return render(request, "interface/sem_autenticacao.html", status=503)
+    return _escolha_de_identidade(
+        request, proximo=identidade.destino_seguro(request, request.GET.get("proximo"))
     )
 
 
 @require_http_methods(["POST"])
 def sair(request):
+    """Sai e volta à página de acesso (075, `FR-1697`)."""
     identidade.encerrar(request)
     return redirect(reverse("interface:identificar"))
 
@@ -1330,7 +1363,7 @@ def anexos_acao(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -1406,7 +1439,7 @@ def anexo_do_rascunho(request, edital_id, anexo_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -1425,7 +1458,7 @@ def compor_etapa(request, edital_id, etapa):
     """Composição em etapas (US2 e US3 da 002), no formato de assistente guiado."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     if etapa not in CHAVES_ETAPA:
         raise Http404
     edital = obter_edital(actor=ator, edital_id=edital_id)
@@ -1838,7 +1871,7 @@ def reaproveitar(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -3228,7 +3261,7 @@ def fragmento_etapa(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -3320,7 +3353,7 @@ def fragmento_retificacao_modalidade(request, edital_id):
     como na linha do quadro.
     """
     if identidade.ator_da_sessao(request) is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     campos = _campos_do_fragmento_de_retificacao(
         request,
         edital_id,
@@ -3344,7 +3377,7 @@ def fragmento_retificacao_criterio(request, edital_id):
     ele escolhe saem do conteúdo vigente **daquele** Edital.
     """
     if identidade.ator_da_sessao(request) is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     campos = _campos_do_fragmento_de_retificacao(
         request, edital_id, retificacao_ui.NOVO_CRITERIO, retificacao_ui.opcoes_do_criterio_novo
     )
@@ -3370,7 +3403,7 @@ def fragmento_retificacao_linha_do_quadro(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -3448,7 +3481,7 @@ def _edital_com_previa(request, edital_id):
     """O Edital cuja prévia se pode ver, ou a recusa que explica por quê."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return None, redirect(reverse("interface:identificar"))
+        return None, identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -3570,7 +3603,7 @@ def detalhe(request, edital_id):
     """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -3782,7 +3815,7 @@ def praticar_ato(request, edital_id, acao):
     """FR-010: nenhum ato irreversível ocorre sem confirmação que diga o que ele provoca."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     ato = atos.ATOS.get(acao)
     if edital is None or ato is None:
@@ -4011,7 +4044,7 @@ def retificar(request, edital_id):
     """Compõe uma Retificação editando o conteúdo vigente (US4 da 002)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -4236,7 +4269,7 @@ def _vigencia(dados):
 def retificacao_detalhe(request, retificacao_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     item = _retificacao_do_ator(ator, retificacao_id)
     return render(
         request,
@@ -4507,7 +4540,7 @@ def _anexo_legivel(base, alteracao, anterior):
 def praticar_ato_retificacao(request, retificacao_id, acao):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     item = _retificacao_do_ator(ator, retificacao_id)
     ato = atos_retificacao.ATOS.get(acao)
     if ato is None:
@@ -4791,7 +4824,7 @@ def auditoria(request, edital_id):
     """Trilha do Edital e de suas Retificações (US6 da 002)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -4884,7 +4917,7 @@ def processo_detalhe(request, processo_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     processo = _processo_do_ator(ator, processo_id)
     # Lido uma vez e passado adiante: `pode_gerir_comissao` consulta a comissão, e recalculá-lo
     # dentro de `sinais` custaria a mesma leitura duas vezes.
@@ -4963,7 +4996,7 @@ def supervisao(request, processo_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     processo = _processo_do_ator(ator, processo_id)
     if supervisao_do_processo.pode_supervisionar(ator, processo) is None:
         raise Http404
@@ -4991,7 +5024,7 @@ def supervisao(request, processo_id):
 def praticar_ato_processo(request, processo_id, acao):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     processo = _processo_do_ator(ator, processo_id)
     ato = atos_processo.ATOS.get(acao)
     if ato is None:
@@ -5040,7 +5073,7 @@ def inscricoes_recebidas(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     busca = (request.GET.get("busca") or "").strip()
     perfil = request.GET.get("perfil") or ""
     modalidade = request.GET.get("modalidade") or ""
@@ -5117,7 +5150,7 @@ def exportar_matriculas(request, edital_id):
 
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = (
         Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
         .select_related("processo")
@@ -5203,7 +5236,7 @@ def exportar_matriculas(request, edital_id):
 def inscricao_recebida(request, inscricao_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     contexto = inscricao_para_consulta(actor=ator, inscricao_id=inscricao_id)
     return marcar_como_privada(render(request, "interface/inscricao_detalhe.html", contexto))
 
@@ -5222,7 +5255,7 @@ def documento_da_inscricao(request, inscricao_id, requirement_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     documento = documento_para_consulta(
         actor=ator, inscricao_id=inscricao_id, requirement_id=requirement_id
     )
@@ -5354,7 +5387,7 @@ def comissao(request, processo_id):
     """Quem integra a comissão deste Processo (US1 e US2 da 011)."""
     ator, processo, _ = _processo_para_gerir(request, processo_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     erro = None
     if request.method == "POST":
@@ -5488,7 +5521,7 @@ def alocacoes(request, processo_id):
     """Quem atua em cada Etapa, por Edital (US3 e US4 da 011)."""
     ator, processo, _ = _processo_para_gerir(request, processo_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     erro = None
     if request.method == "POST":
@@ -5611,7 +5644,7 @@ def impedimentos(request, edital_id, etapa_id):
     """Registrar impedimento, e ver o que ele já tirou do conjunto (US5 da `012`)."""
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     erro, confirmacao, digitado = None, None, {}
     if request.method == "POST":
         dados = forms.ler_impedimento(request.POST)
@@ -5704,7 +5737,7 @@ def reabrir_avaliacao(request, edital_id, etapa_id):
     """
     ator, edital, _ = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     dados = forms.ler_reabertura(request.POST)
     try:
         avaliacao_app.reabrir(
@@ -5746,7 +5779,7 @@ def consolidar_resultados(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
     # **As identidades viajam num campo só**, e não num por inscrição. A conferência de todas as
     # prontas devolve centenas delas, e o Django recusa com 400 o envio de mais de mil campos
@@ -5836,7 +5869,7 @@ def registrar_ocorrencia(request, edital_id, etapa_id):
 
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     vigentes = etapas_vigentes(edital)
     erro, confirmacao = None, None
     motivo = (request.POST.get("motivo") or "").strip() if request.method == "POST" else ""
@@ -5920,7 +5953,7 @@ def remover_atribuicao(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:distribuicao", args=[edital_id, etapa_id])
     marcadas = request.POST.getlist("atribuicao_id")
     chave = request.POST.get("chave_idempotencia") or uuid4().hex
@@ -6009,7 +6042,7 @@ def distribuicao(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     erro = request.session.pop("erro_da_distribuicao", None)
     proposta = None
@@ -6162,7 +6195,7 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
     """O que o candidato enviou, sob a Atribuição que autoriza abrir (US3 da `012`)."""
     ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     try:
         contexto = mesa_app.inscricao_para_avaliar(
             ator=ator, edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id
@@ -6312,7 +6345,7 @@ def _registrar_avaliacao(
     """
     ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     dados = forms.ler_avaliacao(request.POST)
     destino = reverse("interface:mesa-inscricao", args=[edital_id, etapa_id, inscricao_id])
     argumentos = {
@@ -6387,7 +6420,7 @@ def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id
     """
     ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     try:
         documento, atribuicao = mesa_app.documento_para_avaliar(
             ator=ator,
@@ -6456,7 +6489,7 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     pagina = resultado_selectors.resultados_da_etapa(
         edital=edital,
         etapa_id=etapa_id,
@@ -6710,7 +6743,7 @@ def ordenacao(request, edital_id, marco_id):
     """
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # **Marco de sorteio não se ordena por aqui, e a porta é esta.** A tela da `015` pende do
     # marco, e o Edital publica em quais marcos a ordem nasce de sorteio: aberta num deles, ela
     # calculava a ordem por Etapas e oferecia "Emitir ordem". O ato saía com `origem=COMPUTADO` e
@@ -6952,7 +6985,7 @@ def emitir_ordenacao(request, edital_id, marco_id):
     """
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # Marco de sorteio não passa por aqui — ver a porta em `ordenacao`. Fechar só o GET deixaria
     # esta rota alcançável por quem tivesse a tela antiga aberta, e é ela que grava o ato.
     if _e_marco_de_sorteio(edital, marco_id):
@@ -7060,7 +7093,7 @@ def corte_historico(request, edital_id, corte_id):
     """
     ator, edital, _ = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     corte = corte_por_id(edital=edital, corte_id=corte_id)
     if corte is None:
         raise Http404
@@ -7180,7 +7213,7 @@ def corte(request, edital_id, marco_id):
     """
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # **Pela derivação única, e não só por `_identidade_ou_404`** (034, `FR-499`). Antes, um
     # identificador bem formado que não fosse Modalidade alguma do Perfil chegava ao corte como
     # recorte vazio — indistinguível de um recorte legítimo sem ordem, o que esconde erro de
@@ -7273,7 +7306,7 @@ def ocupacao(request, edital_id, marco_id):
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
     return marcar_como_privada(
@@ -7336,7 +7369,7 @@ def ocupacao_historico(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.GET.get("lista"))
     # **Sem `_perfil_do_marco` aqui, e a ausência é a regra.** Aquele helper resolve o marco na
     # versão **vigente** e levanta 404 quando ele não está nela — de modo que uma Retificação que
@@ -7365,7 +7398,7 @@ def emitir_apuracao_view(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
     try:
@@ -7402,7 +7435,7 @@ def convocacao(request, edital_id, marco_id):
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     perfil_id = _perfil_do_marco(edital, marco_id)
     # A mesma porta da ordenação e do corte (034, FR-499, FR-503): recorte que o Perfil não tem é
     # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
@@ -7490,7 +7523,7 @@ def convocacao_historico(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.GET.get("lista"))
     # **Sem `_perfil_do_marco` aqui, pela razão que a `016` já registra**: aquele helper resolve o
     # marco na versão vigente e levanta 404 quando ele não está nela, de modo que uma Retificação
@@ -7558,7 +7591,7 @@ def convocar_view(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # Normalizado também aqui, e não só na tela: o formulário antigo, ou forjado, chega ao comando
     # sem passar por ela — o mesmo cuidado da emissão da ordem (034, FR-499).
     lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
@@ -7645,7 +7678,7 @@ def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar):
     """
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     comum = {
@@ -7720,7 +7753,7 @@ def desfechar_view(request, edital_id, marco_id, convocacao_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     try:
@@ -7747,7 +7780,7 @@ def comunicar_view(request, edital_id, marco_id, convocacao_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
     try:
@@ -7782,7 +7815,7 @@ def atestar_view(request, inscricao_id):
         raise Http404
     ator, edital, _ = _edital_para_classificar(request, inscricao.edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = _destino_interno(
         request.POST.get("voltar"), reverse("interface:detalhe", args=[edital.id])
     )
@@ -7860,7 +7893,7 @@ def causar_faixa_view(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
     try:
@@ -7885,7 +7918,7 @@ def emitir_corte_view(request, edital_id, marco_id):
     """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
@@ -7915,7 +7948,7 @@ def continuar_corte_view(request, edital_id, marco_id):
     """A faixa seguinte, onde a regra publicada a admite (014, FR-202)."""
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
@@ -7947,7 +7980,7 @@ def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
     """A proveniência inteira do snapshot, pela porta de presidência ou auditoria."""
     ator, edital, _ = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     ato = ato_por_id(edital=edital, marco_id=marco_id, ato_id=ato_id)
     if ato is None:
         raise Http404
@@ -8046,7 +8079,7 @@ def previa_de_publicacao(request, edital_id, marco_id, ato_id):
     """
     ator, edital, _ = _edital_para_publicar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     ato = _ato_para_publicar(edital, marco_id, ato_id)
     return _renderizar_previa(request, ator, edital, ato, marco_id)
 
@@ -8148,7 +8181,7 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
     """O ato, pelo padrão POST-redirect-GET: publicado, a tela seguinte é o histórico do marco."""
     ator, edital, _ = _edital_para_publicar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     ato = _ato_para_publicar(edital, marco_id, ato_id)
     try:
         publicacao = publicar_resultado_do_marco(
@@ -8196,7 +8229,7 @@ def publicacoes_do_marco(request, edital_id, marco_id):
     """
     ator, edital, _ = _edital_para_publicar(request, edital_id, consulta=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     return marcar_como_privada(
         render(
             request,
@@ -8352,7 +8385,7 @@ def marco(request, edital_id, marco_id):
     """
     ator, edital, pode = _marco_para_conduzir(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
     indicador = conducao_do_marco.indicador_do_marco(
         edital,
@@ -8451,7 +8484,7 @@ def gesto_do_marco(request, edital_id, marco_id, operacao):
     else:
         ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     conteudo, perfil, marco_publicado = _marco_do_edital(edital, marco_id)
     destino = reverse("interface:marco", args=[edital.id, marco_id])
     natureza = request.POST.get("natureza", "")
@@ -8548,7 +8581,7 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     # **Consultar é de dois; reabrir é de um.** A auditoria lê esta página inteira e não age nela,
     # e é por isso que o formulário de reabertura depende da mesma base que a rota do ato exige.
     pode_reabrir = pode_gerir_comissao(ator, edital.processo) is not None
@@ -8672,7 +8705,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
     """
     ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     operacao = (request.GET.get("operacao") or "").strip()
     inscricao = (request.GET.get("inscricao") or "").strip()
     avaliador = (request.GET.get("avaliador") or "").strip()
@@ -8748,7 +8781,7 @@ def minhas_etapas(request):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     atribuicoes = comissao_selectors.minhas_etapas(ator)
     # Quanto falta em cada Etapa: a primeira pergunta de quem trabalha, e a tela respondia só
     # depois de entrar. As contagens vêm de uma agregação só, e não de uma consulta por Etapa.
@@ -8782,7 +8815,7 @@ def minha_etapa(request, edital_id, etapa_id):
     """A Etapa como contexto de trabalho — e nada além disso (§27 e §50 da spec)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = (
         Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
         .select_related("processo")
@@ -8877,7 +8910,7 @@ def auditoria_da_comissao(request, processo_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     processo = _processo_do_ator(ator, processo_id)
     require_permission(ator, "auditoria:consultar")
     operacao = (request.GET.get("operacao") or "").strip()
@@ -8943,7 +8976,7 @@ def recursos_do_edital(request, edital_id):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
@@ -9007,7 +9040,7 @@ def recurso_recebido(request, recurso_id):
     """
     ator, peca = _peca_para_julgar(request, recurso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     razao = impedimento(ator, peca)
     # **Uma pergunta, duas respostas** (036). A base da gestão da comissão decide dois blocos desta
@@ -9264,7 +9297,7 @@ def instruir_recurso(request, recurso_id):
 
     ator, peca = _peca_para_julgar(request, recurso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     try:
         recursos_instruir.instruir(
             actor=ator,
@@ -9330,7 +9363,7 @@ def documento_instruido(request, recurso_id, documento_id):
 
     ator, peca = _peca_para_julgar(request, recurso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     ato = ato_alcancado(peca, documento_id=documento_id)
     documento = ato.documento
     copia, calculado = copia_verificada(documento)
@@ -9375,7 +9408,7 @@ def _etapas_alcancaveis(peca):
 def admitir_recurso(request, recurso_id):
     ator, peca = _peca_para_julgar(request, recurso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     try:
         recursos_admitir.admitir(
@@ -9448,7 +9481,7 @@ def julgar_recurso(request, recurso_id):
     """
     ator, peca = _peca_para_julgar(request, recurso_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
 
     # A opção carrega `etapa|resultado`: a Etapa que a decisão alcança e a assinatura do Resultado
     # vigente que a tela leu para ela. Separá-los em dois campos deixaria a assinatura descolar da
@@ -9498,7 +9531,7 @@ def sorteio(request, edital_id, marco_id):
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     perfil_id = _perfil_do_marco(edital, marco_id)
     try:
         estado = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
@@ -9608,7 +9641,7 @@ def publicar_relacao_do_sorteio(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     lista_id = request.POST.get("lista_id") or None
     try:
@@ -9649,7 +9682,7 @@ def observar_ocorrencia_do_sorteio(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     estado = recortes_do_marco(
         edital=edital, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
@@ -9702,7 +9735,7 @@ def realizar_sorteio(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     try:
         _desfecho_do_sorteio(
@@ -9732,7 +9765,7 @@ def anular_o_sorteio(request, edital_id, marco_id):
 
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     destino = reverse("interface:sorteio", args=[edital_id, marco_id])
     try:
         _desfecho_do_sorteio(
@@ -9831,7 +9864,7 @@ def autoridades(request):
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     require_authorization_base(
         ator.can(GERIR_AUTORIDADES),
         bases=[base_de_permissao("gerir as autoridades da unidade")],

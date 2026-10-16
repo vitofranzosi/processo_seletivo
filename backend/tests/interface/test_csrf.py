@@ -31,7 +31,7 @@ def test_post_sem_token_e_recusado(cliente_rigoroso, seletor_ligado):
 @pytest.mark.django_db
 def test_post_vindo_do_formulario_da_interface_e_aceito(cliente_rigoroso, seletor_ligado):
     """O token que a própria tela emite continua valendo — a proteção não quebra o fluxo."""
-    formulario = cliente_rigoroso.get(reverse("interface:identificar"))
+    formulario = cliente_rigoroso.get(reverse("interface:identificar-demonstracao"))
     token = formulario.context["csrf_token"]
     resposta = cliente_rigoroso.post(
         reverse("interface:identificar"),
@@ -49,7 +49,7 @@ def test_ato_irreversivel_sem_token_nao_produz_efeito(
     processo = edital.processo
     # A sessão é aberta legitimamente, pelo formulário da própria interface: o que se verifica
     # aqui é que ter sessão aberta não basta para praticar o ato a partir de fora.
-    formulario = cliente_rigoroso.get(reverse("interface:identificar"))
+    formulario = cliente_rigoroso.get(reverse("interface:identificar-demonstracao"))
     cliente_rigoroso.post(
         reverse("interface:identificar"),
         {

@@ -1,0 +1,106 @@
+{% extends "interface/base_de_acesso.html" %}
+{% load static %}
+{% block titulo %}Ambiente de demonstração{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
+{% block acesso %}
+<div class="cartao-de-acesso largo">
+  <a class="voltar" href="{% url 'interface:identificar' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}"><svg class="i" aria-hidden="true"><use href="#i-voltar"/></svg>Voltar</a>
+  <h1>Ambiente de demonstração</h1>
+  <p class="chamada">Escolha com quem entrar. A identidade fica registrada na auditoria de cada ato
+    que você praticar.</p>
+
+  {% comment %}
+  A busca nasce escondida e só o script a mostra (075, `FR-1695`): sem ele, um campo que não filtra
+  nada seria uma promessa falsa — e a lista inteira continua na tela, cada linha um botão.
+  {% endcomment %}
+  {% if com_busca %}
+  <label class="busca-de-identidade" id="busca-de-identidade" hidden>
+    <svg class="i" aria-hidden="true"><use href="#i-busca"/></svg>
+    <span class="oculto">Buscar identidade, responsabilidade ou Processo</span>
+    <input type="search" autocomplete="off" spellcheck="false" placeholder="Buscar pessoa ou responsabilidade">
+  </label>
+  <p class="sem-resultado" id="busca-sem-resultado" role="status" hidden>Nenhuma identidade corresponde à busca.</p>
+  {% endif %}
+
+  {% comment %}
+  **Presidir e avaliar não são papéis.** As entradas de comissão não concedem papel nenhum: elas
+  vêm do vínculo com a comissão, objeto a objeto, e a frase do grupo diz isso a quem escolhe.
+  {% endcomment %}
+  {% if comissoes %}
+  <section class="grupo-de-identidades" aria-labelledby="grupo-comissoes" data-grupo-de-identidades>
+    <h2 id="grupo-comissoes">Comissões <span class="conta">{{ comissoes|length }}</span></h2>
+    <p>Presidir e avaliar não são papéis: vêm do vínculo com a comissão de um Processo.</p>
+    <ul class="identidades-da-demonstracao">
+      {% for pessoa in comissoes %}
+      <li data-busca="{{ pessoa.subject }} {{ pessoa.responsabilidade }} {{ pessoa.detalhes|join:' ' }}">
+        <form method="post" action="{% url 'interface:identificar' %}">
+          {% csrf_token %}
+          {% if proximo %}<input type="hidden" name="proximo" value="{{ proximo }}">{% endif %}
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="{{ pessoa.subject }}">
+            <span class="avatar" aria-hidden="true">{{ pessoa.iniciais }}</span>
+            <span><span class="nome">{{ pessoa.subject }}</span>
+              <span class="vinculo"><b>{{ pessoa.responsabilidade }}</b>{% for d in pessoa.detalhes %} · {{ d }}{% endfor %}</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="grupo-de-identidades" aria-labelledby="grupo-unidade" data-grupo-de-identidades>
+    <h2 id="grupo-unidade">Responsabilidades da unidade <span class="conta">{{ responsabilidades|length }}</span></h2>
+    <p>Cada entrada concede uma responsabilidade administrativa, com o nome de quem a exerceu neste
+      ambiente.</p>
+    <ul class="identidades-da-demonstracao">
+      {% for papel in responsabilidades %}
+      <li data-busca="{{ papel.rotulo }} {{ papel.descricao }} {{ papel.subject }}">
+        <form method="post" action="{% url 'interface:identificar' %}">
+          {% csrf_token %}
+          {% if proximo %}<input type="hidden" name="proximo" value="{{ proximo }}">{% endif %}
+          <input type="hidden" name="papeis" value="{{ papel.chave }}">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="{{ papel.subject }}">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-{{ papel.icone }}"/></svg></span>
+            <span><span class="nome">{{ papel.rotulo }}</span>
+              <span class="descricao">{{ papel.descricao }}</span>
+              <span class="como">como {{ papel.subject }}</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {% comment %}
+  O que a tela de antes fazia por inteiro — nome livre e qualquer combinação —, em segundo plano. Fica
+  aberto quando o envio voltou sem nome, para a recusa estar à vista junto do campo (`FR-1694`).
+  {% endcomment %}
+  <details class="avancado"{% if erro %} open{% endif %}>
+    <summary><svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg>Opções avançadas de demonstração</summary>
+    <p class="explicacao-avancada">Entre com outro nome e escolha as responsabilidades. Presidência e
+      avaliação não estão aqui: vêm do vínculo com a comissão.</p>
+    <form method="post" action="{% url 'interface:identificar' %}">
+      {% csrf_token %}
+      {% if proximo %}<input type="hidden" name="proximo" value="{{ proximo }}">{% endif %}
+      {% if erro %}<p class="recusa-do-nome" role="alert" id="recusa-do-nome">Informe um nome para entrar.</p>{% endif %}
+      <label class="rotulo" for="subject">Nome na auditoria</label>
+      <input type="text" id="subject" name="subject" autocomplete="off" spellcheck="false"
+             placeholder="nome.sobrenome"{% if erro %} aria-describedby="recusa-do-nome" aria-invalid="true" autofocus{% endif %}>
+      <fieldset>
+        <legend>Responsabilidades</legend>
+        {% for papel in responsabilidades %}
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="{{ papel.chave }}">
+          <strong>{{ papel.rotulo }}</strong>
+          <span>{{ papel.descricao }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" class="enviar-combinacao">Entrar com esta combinação</button>
+    </form>
+  </details>
+</div>
+{% endblock %}
+{% block script %}{% if com_busca %}<script src="{% static 'interface/acesso.js' %}" defer></script>{% endif %}{% endblock %}

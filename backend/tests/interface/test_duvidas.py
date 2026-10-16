@@ -47,7 +47,7 @@ def _texto(resposta):
 def test_sem_identidade_a_tela_pede_identificacao(client, edital_91):
     resposta = client.get(_url(edital_91))
     assert resposta.status_code == 302
-    assert resposta.url == reverse("interface:identificar")
+    assert resposta.url.startswith(reverse("interface:identificar") + "?proximo=")
 
 
 def test_fora_do_escopo_a_tela_responde_como_inexistente(client, edital_91):

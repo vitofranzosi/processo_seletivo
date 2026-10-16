@@ -22,7 +22,8 @@ def cenario(api_client, manager_headers, process_payload):
 def test_lista_exige_identificacao(client, seletor_ligado):
     resposta = client.get(reverse("interface:lista"))
     assert resposta.status_code == 302
-    assert resposta["Location"] == reverse("interface:identificar")
+    # E leva o próprio endereço como destino, para a pessoa voltar a ele (075, `FR-1696`).
+    assert resposta["Location"] == reverse("interface:identificar") + "?proximo=%2Fgestao%2F"
 
 
 @pytest.mark.django_db
