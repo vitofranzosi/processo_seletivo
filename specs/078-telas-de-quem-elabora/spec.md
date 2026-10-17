@@ -224,10 +224,15 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
   largura mínima do que carrega; o que for largo MUST rolar na própria moldura ou quebrar a linha.
 - **FR-1762**: As regras pontuais que a `077` pôs nas conclusões preservadas, em reaproveitar Edital
   e nos anexos da composição para essas duas causas MUST sair das telas; as três MUST continuar
-  cabendo na janela a 375 px. As correções da `077` que têm outra causa — o sorteio e o detalhe da
-  Retificação — MUST ficar como estão.
+  cabendo na janela a 375 px. A da vista do conjunto (as etapas Perfis e Classificação, `UX-121` da
+  `052`), que é a mesma correção para a mesma causa, MUST sair também. As correções da `077` que têm
+  outra causa — o sorteio e o detalhe da Retificação — MUST ficar como estão. Nenhuma tela MUST
+  repetir a correção que a folha comum faz.
+- **FR-1777**: Todo cartão dentro de `.colunas` — item flex — MUST poder encolher até a largura
+  disponível, abaixo da largura mínima do que carrega, pela folha comum: é a terceira causa da
+  mesma família, achada pelo inventário refeito desta feature.
 - **FR-1763**: Fora das três telas do `FR-1762`, nenhuma variante do inventário MUST mudar de
-  largura nem de altura por causa das regras dos `FR-1760` e `FR-1761`.
+  largura nem de altura por causa das regras dos `FR-1760`, `FR-1761` e `FR-1777`.
 
 #### A ação que o fluxo pede, antes do resto
 
@@ -285,8 +290,8 @@ Nenhuma. Só apresentação.
 
 ## Success Criteria *(mandatory)*
 
-- **SC-680**: As duas causas latentes deixam de depender de cada tela: **zero** regras pontuais
-  para elas fora da folha comum, e as três telas que a `077` corrigia continuam com a largura da
+- **SC-680**: As causas latentes deixam de depender de cada tela: **zero** regras pontuais
+  para elas fora da folha comum, inclusive a da vista do conjunto, e as três telas que a `077` corrigia continuam com a largura da
   janela a 375 px.
 - **SC-681**: Refeito o inventário visual, **zero** variantes estouram a 375 ou a 1280 px, e
   **nenhuma** muda de `status`, nos dois estados da barra.

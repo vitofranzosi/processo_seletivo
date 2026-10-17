@@ -395,6 +395,11 @@ ação de linha continua pequena, que é o que ela é numa tabela.
 .cartao{flex:1 1 320px;background:var(--branco);border:1px solid var(--borda);
   border-radius:6px;padding:1rem 1.25rem}
 .cartao h2{margin-bottom:.75rem}
+{% comment %} O cartão em `.colunas` é item flex, e item flex não encolhe abaixo do conteúdo mínimo — a mesma
+   família do `fieldset` (078, `FR-1777`). A tabela dos Editais, no detalhe do Processo, deixou o
+   cartão com 384 px a 375 de janela; encolhendo, a tabela rola na própria moldura. A sonda da 078,
+   com esta regra, não move caixa nenhuma nas 84 variantes do inventário. {% endcomment %}
+.colunas>.cartao{min-width:0}
 .participantes{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4rem .75rem;
   font-size:.9375rem}
 .participantes dt{color:var(--texto-fraco);font-size:.8125rem}
@@ -1529,7 +1534,7 @@ escape do guardião por mudar de lugar.
   {% comment %} As telas de uso diário sobrescrevem o bloco com a própria trilha, que sai do conteúdo
      delas (077, `FR-1746`, `R-001`): uma trilha por página, e só a tela sabe dizê-la — o nome da
      Etapa, o protocolo, a porta por onde se chegou. As demais ficam com o caminho até a seção. {% endcomment %}
-  {% block caminho_do_contexto %}<p class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › {{ navegacao.secao_atual }}</p>{% endblock %}
+  {% block caminho_do_contexto %}<p class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {{ navegacao.secao_atual }}</p>{% endblock %}
   <a href="{% url 'interface:identificar' %}">Trocar identidade</a>
 </header>
 {% else %}

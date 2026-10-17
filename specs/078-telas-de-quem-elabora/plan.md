@@ -54,6 +54,9 @@ Sem violação a justificar.
 | `processo_detalhe.html` | o bloco `caminho_do_contexto` com a trilha; a `div.colunas` antes de "Onde cada Edital está", com "O que fazer agora" em primeiro; os Editais em tabela; o estado vazio comum (R-003, R-004, R-005) |
 | `detalhe.html` | o bloco com a trilha; "O que fazer agora" antes de "Quem atuou" (R-003, R-004) |
 | `compor_base.html` | o bloco com a trilha, com o Processo entre a seção e o Edital (R-004) |
+| `views.py::_recarregar` (revisão do PR) | a composição relê o Edital com o Processo depois das gravações cuja tela é remontada (R-004) |
+| `_estilo_da_vista.html` (revisão do PR) | sem a cópia da regra das molduras (FR-1762) |
+| `base.html`, `_estilo_das_terminais.html`, `_produto_na_trilha.html` (revisão do PR) | `.colunas>.cartao{min-width:0}` na folha comum (FR-1777); `.colunas.ao-topo` no parcial das duas telas de detalhe; o produto da trilha numa fonte só |
 | `specs/077-telas-de-uso-diario/spec.md` e `rastreabilidade.md` | `FR-1745` e `FR-1748` anotadas como emendadas pela `078` |
 | `doc/inventario-visual-da-gestao-2026-10-16.md` e `depois-da-078/` | o inventário refeito nos dois estados da barra, a comparação e as capturas das telas que mudaram |
 

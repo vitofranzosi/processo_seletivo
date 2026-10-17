@@ -1,16 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ processo.institutional_code }}{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}
-{% comment %} O cartão é item flex de `.colunas`, e item flex não encolhe abaixo do conteúdo mínimo — a mesma
-   família do `fieldset` (`FR-1761`). Com a tabela dos Editais dentro, a 375 px ele ficava com 384 e
-   alargava a página (078, `FR-1773`); encolhendo, a tabela rola na própria moldura. Só aqui: a regra
-   geral para `.colunas` é achado registrado na pesquisa da 078. {% endcomment %}
-.colunas>.cartao{min-width:0}
-{% comment %} Pelo topo, como no detalhe do Edital (057, FR-1047): esticado pela tabela vizinha, "O que fazer
-   agora" ficava com um vão em branco abaixo dos atos. {% endcomment %}
-.colunas.ao-topo{align-items:flex-start}
-{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <span aria-current="page">{{ processo.institutional_code }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <span aria-current="page">{{ processo.institutional_code }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>{{ processo.title }}</h1>
 <p class="sub"><span class="codigo">{{ processo.institutional_code }}</span>

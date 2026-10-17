@@ -61,6 +61,15 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho já existe desde a `077`.
 - [x] T016 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1770, SC-686)
 - [x] T017 `rastreabilidade.md` com cada FR e SC; a `FR-1745` e a `FR-1748` da `077` anotadas como emendadas, na spec e na rastreabilidade dela
 
+## Emenda — revisão do PR (17/10)
+
+- [x] T018 `processo_seletivo/interface/views.py::_recarregar`: a composição relê o Edital com o Processo, e a trilha não paga consulta a mais na tela remontada depois de uma gravação; teste `test_reler_o_edital_nao_perde_o_processo` (R-004; FR-1768)
+- [x] T019 `_estilo_da_vista.html` sem a cópia da regra das molduras; `tests/interface/test_visao_dos_perfis.py::test_a_tabela_rola_dentro_do_proprio_conteiner` pela folha comum (FR-1762, SC-680)
+- [x] T020 `.colunas>.cartao{min-width:0}` na folha comum, e não no detalhe do Processo; `.colunas.ao-topo` no parcial `_estilo_das_terminais.html`, que as duas telas de detalhe já incluem (FR-1777)
+- [x] T021 O produto da trilha num parcial só, `_produto_na_trilha.html`, usado pelo `base.html` e pelas sete trilhas do cabeçalho; teste `test_o_produto_da_trilha_tem_uma_fonte_so`
+- [x] T022 `tests/interface/test_telas_de_quem_elabora.py`: a guarda das molduras reconhece `overflow`, `overflow-x` e `overflow-y`, `auto` e `scroll`, e qualquer posição não estática; `test_nenhuma_tela_repete_a_decisao_da_folha_comum` varre todo template e reprova só o par causa e correção; a fixture `edital` do conftest no lugar de uma cópia
+- [ ] T023 Inventário refeito nos dois estados da barra e comparado com `depois-da-078/`; `make lint check test-pg DB_NAME=ps_078`
+
 ## Dependencies
 
 US1 é independente das demais. US2, US3 e US4 tocam `processo_detalhe.html` e devem ir em sequência

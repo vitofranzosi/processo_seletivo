@@ -5,7 +5,7 @@
    partir da seção — a mesma que a barra marca (`FR-1752`). Começava em "Alocação por Etapa", e
    no cabeçalho, ao lado da barra que marcava Minhas Etapas, o par se contradizia. {% endcomment %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">
-  <abbr title="Gestão de Processos Seletivos">GPS</abbr> › {% if por_gestao %}
+  {% include "interface/_produto_na_trilha.html" %} {% if por_gestao %}
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
   <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›

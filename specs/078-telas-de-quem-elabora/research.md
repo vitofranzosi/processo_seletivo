@@ -66,8 +66,9 @@ onde a moldura rola — e assim os dois guardiões continuam dizendo o que dizia
 com as seis no mesmo seletor, reprovou o primeiro.
 
 **Bytes.** A folha comum vai em toda página, inclusive na distribuição, que tem teto de 120 000
-bytes. As duas mudanças somam pouco mais de cem bytes renderizados; o comentário vai em
-`{% comment %}`, que não sai na página.
+caracteres. Medido na distribuição: 94 957 antes; 95 113 com as duas regras; 95 144 com a do cartão
+em `.colunas`, que a revisão do PR acrescentou (`FR-1777`). Os comentários vão em `{% comment %}`,
+que não sai na página.
 
 **Alternativas**:
 - *Manter as regras pontuais e acrescentar a geral* — duas fontes para a mesma decisão, e a pontual
@@ -114,8 +115,14 @@ navegação" class="caminho-da-secao"`, e a tiram do `main`. As nove etapas da c
 
 **O Processo entra na trilha da composição.** Ela pulava do Processos Seletivos para o Edital,
 enquanto a do detalhe do Edital passa pelo Processo; a pessoa que sobe da composição para o
-Processo precisava de dois cliques. O `obter_edital` já traz o Processo junto (`select_related`):
-nenhuma consulta a mais.
+Processo precisava de dois cliques. O `obter_edital` já traz o Processo junto (`select_related`).
+
+**E o traz de novo depois de uma gravação.** A primeira versão dizia "nenhuma consulta a mais", e
+estava certa só para o `GET`: a composição relê o Edital com `refresh_from_db()` depois das
+gravações cuja tela é remontada — a recusa, a prévia de um gesto, o teto e o requerimento —, e
+`refresh_from_db()` descarta a relação em cache quando a instância relida não a traz. A revisão do
+PR achou; `views.py::_recarregar` relê com `select_related("processo")` (`from_queryset`, do Django
+5.1), e o Processo volta na mesma consulta.
 
 **"Compor" continua sendo a página atual.** O passo é dito pela navegação das etapas, com
 `aria-current="step"`; repeti-lo na trilha seria dizer duas vezes onde se está — o que esta
@@ -148,17 +155,24 @@ folha comum (memória "classe no template exige regra na folha").
 | `performance/test_escala_da_mesa.py` (120 000 bytes) | medido antes e depois |
 | `test_polish_da_058.py::test_as_terminais_moram_num_parcial_das_duas_telas` | afirmava que o detalhe do Processo **não** tem `.colunas.ao-topo` — registro de que só o Edital a usava (a decisão 002 da `058`), e não decisão contra o Processo. Passa a exigir a regra nas duas telas e nunca na folha comum. Achado pela suíte, e não previsto aqui |
 | `test_readme_acompanha_o_codigo.py` | a linha da `078` na tabela de incrementos do README |
+| `test_visao_dos_perfis.py::test_a_tabela_rola_dentro_do_proprio_conteiner` e `test_visao_da_classificacao.py::test_sem_script_a_etapa_e_a_de_sempre` | exigia a regra da vista do conjunto na página (`UX-121`); passa a exigir a da folha comum, e a ausência da cópia. Emenda da revisão do PR |
 
 Testes novos em `tests/interface/test_telas_de_quem_elabora.py`.
 
 ## Achados registrados, fora do escopo
 
-- **Item flex também cresce até o conteúdo mínimo.** É a terceira causa da mesma família: o
-  `.cartao` dentro de `.colunas` é item flex, e item flex não encolhe abaixo do conteúdo mínimo. A
-  tabela dos Editais (R-005) fez o detalhe do Processo estourar 9 px a 375 na primeira medição do
-  inventário refeito; a correção ficou na folha da tela (`.colunas>.cartao{min-width:0}`). A mesma
-  sonda do R-001, com a regra geral, não move caixa nenhuma em nenhuma das 84 variantes — subir a
-  regra para a folha comum é decisão de outro incremento.
+- **Item flex também cresce até o conteúdo mínimo — corrigido na folha comum, na revisão.** É a
+  terceira causa da mesma família: o `.cartao` dentro de `.colunas` é item flex, e item flex não
+  encolhe abaixo do conteúdo mínimo. A tabela dos Editais (R-005) fez o detalhe do Processo estourar
+  9 px a 375 na primeira medição do inventário refeito. A primeira correção ficou na folha da tela,
+  repetindo o remendo que esta feature existe para tirar; a mesma sonda do R-001, com a regra geral,
+  não move caixa nenhuma em nenhuma das 84 variantes, e a revisão do PR a subiu para o `base.html`
+  (`FR-1777`).
+- **A vista do conjunto tinha a sua cópia da regra das molduras.** `_estilo_da_vista.html`, das
+  etapas Perfis e Classificação, prendia a moldura da tabela com `position:relative` desde a `052`
+  (`UX-121`) — a mesma correção, para a mesma causa, que a `077` repetiu nas conclusões. A primeira
+  versão desta feature só tirou as três da `077`; a revisão do PR achou a quarta e a tirou. O teste
+  `test_nenhuma_tela_repete_a_decisao_da_folha_comum` passa a varrer todo template, e não uma lista.
 - **A posição muda a rasterização do texto dentro da moldura que rola.** Comparadas pixel a pixel
   com as capturas de antes, as variantes que têm moldura rolando a 375 px — a alocação, o histórico
   da convocação, o corte, a distribuição, a condução do marco, a ordenação, as publicações do marco,

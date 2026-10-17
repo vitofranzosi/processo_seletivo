@@ -49,23 +49,33 @@ def comeca_pelo_titulo(corpo):
 # ---- as causas latentes, na folha comum ------------------------------------------------------
 
 
+ROLA = re.compile(r"overflow(?:-[xy])?:(?:auto|scroll)")
+POSICIONA = re.compile(r"position:(?:relative|absolute|fixed|sticky)")
+
+
+def regras(folha):
+    """`(seletores, corpo)` de cada regra da folha, sem os comentários."""
+    for seletor, corpo in re.findall(r"([^{}]+)\{([^{}]*)\}", sem_comentarios(folha)):
+        yield {s.strip() for s in seletor.split(",") if s.strip()}, corpo
+
+
 def test_toda_moldura_que_rola_e_referencia_do_que_carrega():
-    """`FR-1760`: toda classe de moldura com `overflow-x:auto` na gestão ganha posição — onde ela
-    rola: as que só rolam no estreito ganham posição no mesmo `@media`, e na tela larga continuam
-    bloco comum (058, `FR-1071`; o cabeçalho fixo da distribuição)."""
-    molduras = set()
-    for seletor in re.findall(r"([^{}]+)\{position:relative\}", sem_comentarios(FOLHA)):
-        molduras |= {m.strip() for m in seletor.split(",")}
-    # Toda classe que a gestão faz rolar está na lista: uma moldura nova sem posição traria a causa
-    # de volta em silêncio.
-    rolam = set()
+    """`FR-1760`: toda moldura que rola na gestão — em `x` ou em `y`, por `auto` ou `scroll`, pela
+    forma longa ou pela abreviada — é posicionada. As que só rolam no estreito ganham posição no
+    mesmo `@media`, e na tela larga continuam bloco comum (058, `FR-1071`; o cabeçalho fixo da
+    distribuição)."""
+    rolam, posicionadas = set(), set()
     for template in TEMPLATES.glob("*.html"):
-        for regra in re.findall(
-            r"([^{}]+)\{[^{}]*overflow-x:auto", sem_comentarios(template.read_text())
-        ):
-            rolam |= {s.strip() for s in regra.split(",") if s.strip().startswith(".")}
+        for seletores, corpo in regras(template.read_text()):
+            if ROLA.search(corpo):
+                rolam |= {s for s in seletores if s.startswith(".")}
+            # Qualquer posição que não a estática serve de referência — o painel da barra no
+            # celular (076) é `position:fixed`, e já contém o que carrega.
+            if POSICIONA.search(corpo):
+                posicionadas |= seletores
+    # Uma moldura nova sem posição traria a causa de volta em silêncio.
     assert {".tabela-rolavel", ".rolagem", ".rolavel-no-estreito", ".serie .barras"} <= rolam
-    assert rolam <= molduras, rolam - molduras
+    assert rolam <= posicionadas, rolam - posicionadas
     estreito = re.search(r"@media \(max-width:60rem\)\{[^@]*?\{position:relative\}", FOLHA)
     assert estreito and ".rolavel-no-estreito" in estreito.group(0)
 
@@ -76,34 +86,77 @@ def test_todo_grupo_de_campos_pode_encolher():
     assert regra and "min-width:0" in regra.group(1)
 
 
+def test_todo_cartao_em_colunas_pode_encolher():
+    """`FR-1777`: o cartão é item flex de `.colunas`, e encolhe até a largura disponível."""
+    assert any(
+        ".colunas>.cartao" in seletores and "min-width:0" in corpo
+        for seletores, corpo in regras(regras_fora_de_media(FOLHA))
+    )
+
+
+MOLDURAS = (".tabela-rolavel", ".rolagem", ".rolavel-no-estreito", ".distribuicao-moldura")
+
+
 @pytest.mark.parametrize(
-    ("template", "regra"),
-    [
-        ("conclusoes.html", "position:relative"),
-        ("reaproveitar.html", "min-width:0"),
-        ("compor_anexos.html", "min-width:0"),
-    ],
+    "template",
+    [t for t in sorted(TEMPLATES.glob("*.html")) if t.name != "base.html"],
+    ids=lambda t: t.name,
 )
-def test_as_regras_pontuais_da_077_sairam_das_telas(template, regra):
-    """`FR-1762`, `SC-680`: a causa é da folha comum, e a tela não repete a decisão."""
-    assert regra not in (TEMPLATES / template).read_text()
+def test_nenhuma_tela_repete_a_decisao_da_folha_comum(template):
+    """`FR-1762`, `SC-680`: as três causas são da folha comum, e nenhuma tela as corrige de novo —
+    nem as três da 077, nem a vista do conjunto, que tinha a sua desde a 052 (`UX-121`). Só o par
+    exato *causa e correção* reprova: outro `min-width:0` ou outro `position:relative` na tela é
+    decisão dela."""
+    for seletores, corpo in regras(template.read_text()):
+        for seletor in seletores:
+            ultimo = seletor.split()[-1]
+            if "position:relative" in corpo:
+                assert not ultimo.endswith(MOLDURAS), (template.name, seletor)
+            if "min-width:0" in corpo:
+                assert not re.match(r"fieldset(\.|$|\[)", ultimo), (template.name, seletor)
+                assert ".colunas>.cartao" not in seletor, (template.name, seletor)
+
+
+def test_o_produto_da_trilha_tem_uma_fonte_so():
+    """O produto que abre toda trilha do cabeçalho vem de um parcial, e nenhuma tela o copia."""
+    literal = '<abbr title="Gestão de Processos Seletivos">GPS</abbr>'
+    assert literal in (TEMPLATES / "_produto_na_trilha.html").read_text()
+    for template in TEMPLATES.glob("*.html"):
+        if template.name == "_produto_na_trilha.html":
+            continue
+        texto = template.read_text()
+        assert literal not in texto, template.name
+        if "{% block caminho_do_contexto %}" in texto:
+            bloco = texto.split("{% block caminho_do_contexto %}")[1].split("{% endblock %}")[0]
+            assert '{% include "interface/_produto_na_trilha.html" %}' in bloco, template.name
+
+
+@pytest.mark.django_db
+def test_reler_o_edital_nao_perde_o_processo(edital):
+    """A trilha da composição lê o Processo, e a tela remontada depois de uma gravação relê o
+    Edital: relido, ele continua trazendo o Processo, sem consulta a mais (`FR-1768`)."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from processo_seletivo.interface.views import _recarregar
+    from processo_seletivo.processos.application.selectors import obter_edital
+    from processo_seletivo.seguranca.domain import Actor
+
+    ator = Actor(subject="ana", institution_scope=edital.institution_scope, permissions=frozenset())
+    relido = obter_edital(actor=ator, edital_id=edital.id)
+    with CaptureQueriesContext(connection) as consultas:
+        _recarregar(relido)
+        codigo = relido.processo.institutional_code
+    assert codigo == edital.processo.institutional_code
+    assert len(consultas.captured_queries) == 1
 
 
 # ---- fixtures --------------------------------------------------------------------------------
 
 
 @pytest.fixture
-def em_elaboracao(api_client, manager_headers, process_payload):
-    from processo_seletivo.processos.models import Edital
-
-    api_client.post("/api/v1/admin/processos", process_payload, format="json", **manager_headers)
-    return Edital.objects.select_related("processo").get()
-
-
-@pytest.fixture
 def publicado(api_client, manager_headers, process_payload):
-    edital = publish_original(api_client, manager_headers, process_payload)
-    return type(edital).objects.select_related("processo").get(pk=edital.pk)
+    return publish_original(api_client, manager_headers, process_payload)
 
 
 @pytest.fixture
@@ -132,16 +185,14 @@ def abrir_edital(client, edital):
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_no_processo_o_que_fazer_vem_antes_dos_editais_e_do_pulso(
-    client, seletor_ligado, em_elaboracao
-):
+def test_no_processo_o_que_fazer_vem_antes_dos_editais_e_do_pulso(client, seletor_ligado, edital):
     """`FR-1764`, `FR-1766`, `SC-683`: o cartão sobe inteiro, com "Elaborar o Edital" dentro."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = abrir_processo(client, em_elaboracao.processo)
+    corpo = abrir_processo(client, edital.processo)
 
     assert antes(corpo, 'id="acoes-processo"', 'id="editais-titulo"')
     cartao = conteudo(corpo).split('id="acoes-processo"')[1].split("</section>")[0]
-    assert reverse("interface:compor", args=[em_elaboracao.id]) in cartao
+    assert reverse("interface:compor", args=[edital.id]) in cartao
     assert ">Elaborar o Edital" in cartao
 
 
@@ -189,10 +240,10 @@ def test_no_edital_o_que_fazer_vem_antes_de_quem_atuou(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_no_processo_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, em_elaboracao):
+def test_no_processo_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, edital):
     """`FR-1767`, `FR-1768`, `SC-684`: GPS › Processos Seletivos › o código."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    processo = em_elaboracao.processo
+    processo = edital.processo
     corpo = abrir_processo(client, processo)
 
     trilha = trilha_unica_no_cabecalho(corpo)
@@ -203,18 +254,18 @@ def test_no_processo_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, em_elabo
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_no_edital_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, em_elaboracao):
+def test_no_edital_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, edital):
     """`FR-1767`, `FR-1768`, `SC-684`: GPS › Processos Seletivos › o código › o Edital."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    processo = em_elaboracao.processo
-    corpo = abrir_edital(client, em_elaboracao)
+    processo = edital.processo
+    corpo = abrir_edital(client, edital)
 
     trilha = trilha_unica_no_cabecalho(corpo)
     niveis = [
         f'<a href="{reverse("interface:lista")}">Processos Seletivos</a> ›',
         f'<a href="{reverse("interface:processo-detalhe", args=[processo.id])}">'
         f"{processo.institutional_code}</a> ›",
-        f'<span aria-current="page">Edital {em_elaboracao.number}/{em_elaboracao.year}</span>',
+        f'<span aria-current="page">Edital {edital.number}/{edital.year}</span>',
     ]
     posicoes = [trilha.index(nivel) for nivel in niveis]
     assert posicoes == sorted(posicoes)
@@ -225,12 +276,12 @@ def test_no_edital_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, em_elabora
 @pytest.mark.integration
 @pytest.mark.parametrize("etapa", CHAVES_ETAPA)
 def test_em_toda_etapa_da_composicao_a_trilha_passa_pelo_processo(
-    client, seletor_ligado, em_elaboracao, etapa
+    client, seletor_ligado, edital, etapa
 ):
     """`FR-1767`, `FR-1768`, `SC-684`: o Processo, que a trilha da composição pulava, entra entre a
     seção e o Edital; o passo continua marcado na navegação das etapas, e não na trilha."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    edital, processo = em_elaboracao, em_elaboracao.processo
+    processo = edital.processo
     corpo = client.get(reverse("interface:compor-etapa", args=[edital.id, etapa])).content.decode()
 
     trilha = trilha_unica_no_cabecalho(corpo)
@@ -298,15 +349,15 @@ def test_processo_sem_edital_mostra_o_estado_vazio(client, seletor_ligado, proce
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_sem_secao_do_processo_a_faixa_nao_vem(client, seletor_ligado, em_elaboracao):
+def test_sem_secao_do_processo_a_faixa_nao_vem(client, seletor_ligado, edital):
     """`FR-1776`: quem não alcança Supervisão, Comissão, Alocação nem Auditoria não vê a faixa —
     nem vazia —; o gestor continua vendo as mesmas seções."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    assert "acoes-do-painel" not in conteudo(abrir_processo(client, em_elaboracao.processo))
+    assert "acoes-do-painel" not in conteudo(abrir_processo(client, edital.processo))
 
     identificar(client, "marcia.gestora", ["gestor"])
-    corpo = abrir_processo(client, em_elaboracao.processo)
+    corpo = abrir_processo(client, edital.processo)
     faixa = conteudo(corpo).split('<p class="acoes-do-painel">')[1].split("</p>")[0]
-    processo = em_elaboracao.processo
+    processo = edital.processo
     for rota in ("interface:supervisao", "interface:comissao", "interface:alocacoes"):
         assert reverse(rota, args=[processo.id]) in faixa, rota

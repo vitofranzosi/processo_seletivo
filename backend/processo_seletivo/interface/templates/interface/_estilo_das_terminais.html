@@ -12,3 +12,8 @@
 .lista-acoes+.terminais{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--borda)}
 .terminais .botao{background:var(--branco);color:var(--vermelho);border-color:var(--vermelho)}
 .terminais .botao:hover{background:var(--vermelho-fundo)}
+{% comment %} As colunas pelo topo (057, FR-1047): cada cartão tem a altura do próprio conteúdo, e não a da
+   coluna vizinha. Era só do detalhe do Edital; a 078 o estendeu ao do Processo, onde "O que fazer
+   agora" passou a dividir a linha com a tabela dos Editais (`FR-1764`), e a regra veio para cá para
+   não haver uma cópia por tela. {% endcomment %}
+.colunas.ao-topo{align-items:flex-start}

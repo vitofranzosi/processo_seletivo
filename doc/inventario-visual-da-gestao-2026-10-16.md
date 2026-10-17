@@ -395,3 +395,9 @@ mesmo código — a hora da leitura na Supervisão, na Visão Geral e nas dúvid
 o cursor —, e a suavização do texto dentro das molduras que rolam a 375 px, que a posição nova muda
 em até 67 de 255, sem mover caixa nenhuma. A medição está no `R-001` e nos achados da
 [pesquisa da 078](../specs/078-telas-de-quem-elabora/research.md).
+
+**Depois da revisão do PR.** A revisão levou à folha comum a regra do cartão em `.colunas` e tirou a
+cópia da regra das molduras da vista do conjunto (Perfis e Classificação). Refeito nos dois estados
+da barra e comparado com `depois-da-078/`, o inventário dá as mesmas medidas campo a campo, sem
+estouro; pixel a pixel, só o que muda entre duas capturas do mesmo código — a hora da leitura e o
+cursor. As capturas de `depois-da-078/` continuam valendo.
