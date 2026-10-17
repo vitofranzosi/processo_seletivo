@@ -135,6 +135,14 @@ garantias deste sistema morarem no banco — gatilho append-only, privilégio au
 `select_for_update` que realmente tranca não são observáveis dentro de uma transação que vai ser
 desfeita.
 
+**A limpeza depois de cada caso transacional não é a do Django** desde 10/17. O `tests/conftest.py`
+trunca só as tabelas com linha, mais as que têm chave estrangeira para elas, que o PostgreSQL exige
+no mesmo `TRUNCATE`. E só emite o `post_migrate` quando `django_content_type` ou `auth_permission`
+mudaram. O banco que o caso seguinte recebe é o mesmo, e a suíte cai ~20% (576s → 451s, em rodadas
+seguidas). Desconfiou dela? `LIMPEZA_INTEGRAL=1` devolve a do Django. As medições, e a variante com
+`DELETE` que tiraria 60% mas expõe um teste dependente da ordem física das linhas, estão em
+[doc/estudo-limpeza-dos-casos-transacionais.md](doc/estudo-limpeza-dos-casos-transacionais.md).
+
 **`--reuse-db` não economiza nada, e já foi medido — não repita o experimento.** Duas rodadas com a
 bandeira ligada deram 670s e 686s, contra 733s sem ela; e a segunda, que **reusava** o banco, saiu
 mais lenta que a primeira, que o **criou**. A variação entre rodadas idênticas é de ~60s, uma ordem
