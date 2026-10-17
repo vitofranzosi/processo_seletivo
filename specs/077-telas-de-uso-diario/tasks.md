@@ -51,7 +51,7 @@ tem linha em [rastreabilidade.md](rastreabilidade.md). Caminhos relativos a `bac
 
 ## Phase 6: Polish & verificação
 
-- [ ] T017 `make lint check` e `make test-pg DB_NAME=ps_077`; o teto da distribuição medido de novo (FR-1751, SC-674)
+- [x] T017 `make lint check` e `make test-pg DB_NAME=ps_077`; o teto da distribuição medido de novo (FR-1751, SC-674) — 11 456 passando e 11 pulados, nenhuma falha; distribuição em 94 957 bytes
 - [x] T018 Inventário refeito com `BARRA=expandida` e `BARRA=recolhida` em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-077/`, comparado por `comparar.py` com `com-o-shell/`; as capturas das nove telas tocadas; a seção "Depois da 077" no `doc/inventario-visual-da-gestao-2026-10-16.md` (FR-1745, FR-1749, FR-1750, SC-671, SC-672)
 - [x] T019 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1749, SC-675)
 - [x] T020 `rastreabilidade.md` com cada FR e SC, e o achado do R-002 registrado na seção de fora de escopo
