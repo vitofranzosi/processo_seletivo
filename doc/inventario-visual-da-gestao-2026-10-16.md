@@ -304,3 +304,46 @@ capturas seriam as mesmas.
 | `status` diferente | — | nenhum | nenhum |
 | Estouram a 375 px | 5 | os mesmos 5 | os mesmos 5 |
 | Estouram a 1280 px | 0 | 0 | 0 |
+
+## Depois da 077
+
+O primeiro incremento da modernização por tela ([`077`](../specs/077-telas-de-uso-diario/spec.md))
+corrigiu os cinco estouros a 375 px, tirou da lista de Processos os três botões que a barra já
+oferece e levou a trilha das quatro telas de uso diário — a lista, Minhas Etapas, a Etapa e a
+inscrição da Mesa — para o cabeçalho de contexto. O inventário foi refeito sobre a `main` em
+`5c729dd0` com a mudança aplicada, no mesmo banco, com o mesmo roteiro e o mesmo `AVISO`, nos
+dois estados da barra. Em [`depois-da-077/`](inventario-visual-da-gestao-2026-10-16/depois-da-077/)
+estão o `resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-077/recolhida/), e as capturas das
+nove telas tocadas, a 1280 e a 375 px, com a barra expandida. As capturas das demais seriam as de
+`com-o-shell/`: o `resultados.json` mostra que nenhuma delas mudou.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/com-o-shell/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-077/resultados.json
+```
+
+| | Com o shell | Depois da 077, expandida | Depois da 077, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 5 | **0** | **0** |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as nove telas tocadas mudaram.** Comparando campo a campo — `scrollWidth`, título, `h1` e
+altura da página —, as diferenças estão todas nelas:
+
+| Tela | O que mudou |
+|---|---|
+| `conclusoes-preservadas` | `scrollWidth` a 375: 835 → 375 |
+| `reaproveitar` | `scrollWidth` a 375: 994 → 375 |
+| `sorteio` | `scrollWidth` a 375: 643 → 375; a página cresce 49 px, porque os resumos quebram a linha |
+| `compor-anexos` | `scrollWidth` a 375: 432 → 375 |
+| `retificacao-detalhe` | `scrollWidth` a 375: 388 → 375; a página cresce 8 px, com a tabela na moldura que rola |
+| `lista` | a página encurta 48 px a 1280 e 96 a 375: os três botões saíram da faixa |
+| `minha-etapa` | encurta 23 px a 375: a trilha subiu ao cabeçalho |
+| `mesa-inscricao` | encurta 37 px a 1280 e 23 a 375: a trilha subiu ao cabeçalho |
+| `minhas-etapas` | nada medido muda: o cabeçalho passa a ser a trilha, com o mesmo texto |
+
+Os cinco estouros descritos em *O que cada estouro é*, acima, ficam como registro da linha de base.
+A causa medida de cada um e a correção estão no `R-002` da
+[pesquisa da 077](../specs/077-telas-de-uso-diario/research.md).

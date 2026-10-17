@@ -1,10 +1,10 @@
 """As seções da gestão e quem as alcança — a barra lateral do shell (076).
 
 A barra está em toda tela, e por isso não pode oferecer o que a autorização recusa: seria o `N-03`
-da 038 repetido em 59 telas. Cada item leva o predicado que a **lista** já usava para o seu botão,
-e a lista passa a ler os predicados daqui (`R-002`): uma grafia só, e a barra e a lista não podem
-divergir. Retirar o link não substitui a recusa — a view de cada destino continua decidindo
-(`FR-482` da 033).
+da 038 repetido em 59 telas. Cada item leva o predicado que a **lista** usava para o seu botão
+(`R-002`). Desde a 077 a lista não tem mais esses botões (`FR-1740`), e o predicado mora só aqui.
+Retirar o link não substitui a recusa — a view de cada destino continua decidindo (`FR-482` da
+033).
 
 Nada aqui consulta o banco. As capacidades vêm da sessão (`FR-1715`), e a seção atual sai do
 endereço (`R-003`), que é hierárquico de propósito: as rotas da Mesa pendem de `minhas-etapas`.

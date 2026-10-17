@@ -134,15 +134,15 @@ def test_grupo_sem_item_nao_aparece(client, seletor_ligado):
 @pytest.mark.django_db
 @pytest.mark.integration
 @pytest.mark.parametrize("papel", sorted(PAPEIS))
-def test_a_lista_e_a_barra_oferecem_as_mesmas_secoes(client, seletor_ligado, papel):
-    """`R-002`: os botões da lista e os itens da barra leem o mesmo predicado."""
+def test_a_lista_deixou_as_secoes_para_a_barra(client, seletor_ligado, papel):
+    """`R-002`; desde a 077, `FR-1740`: os três botões que a lista tinha saíram dela, e as seções
+    estão só na barra. O que a barra oferece a cada papel é provado acima, contra o destino."""
     identificar(client, "pessoa.qualquer", [papel])
     corpo = client.get(reverse("interface:lista")).content.decode()
     conteudo = corpo.split('<main id="conteudo"')[1]
 
     for rota in ("interface:visao-geral", "interface:autoridades", "interface:modelos-de-aviso"):
-        destino = reverse(rota)
-        assert (f'href="{destino}"' in conteudo) == (destino in itens_da_barra(corpo)), rota
+        assert f'href="{reverse(rota)}"' not in conteudo, rota
 
 
 @pytest.mark.django_db
