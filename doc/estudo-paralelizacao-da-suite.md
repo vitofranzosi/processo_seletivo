@@ -3,9 +3,8 @@
 **Data:** 2026-10-17
 **Origem:** a queixa de 17/10 — `make test-pg` em ~22 min na máquina, o job `test` do CI em ~29 min
 (1729s de pytest no run `39026104033`), num processo só.
-**Natureza:** estudo com proposta. O que já está no PR é o que não muda comportamento de ninguém —
-a dependência e a correção de um arquivo de teste. **`Makefile` e workflow só mudam com o "sim" do
-usuário.**
+**Natureza:** estudo com proposta, **aprovada pelo usuário em 17/10** — o `Makefile`, o workflow e
+o `AGENTS.md` mudaram no mesmo PR, depois do "sim".
 
 ## A resposta curta
 
@@ -77,7 +76,7 @@ mas o disco e o WAL do cluster são um só. Oito também pesariam numa máquina 
 seguidas, com o Bluetooth do macOS tomando um núcleo inteiro. Os números acima são de uma rodada
 cada; a diferença entre 600s e 1441s está muito acima desse ruído, a entre 549s e 600s não.
 
-## A proposta
+## A proposta, aprovada
 
 1. **`Makefile`**: `test-pg` passa a rodar `pytest -n $(PYTEST_WORKERS) --dist worksteal`, com
    `PYTEST_WORKERS ?= 4`. `make test-pg PYTEST_WORKERS=0` volta ao serial, para depurar um caso
