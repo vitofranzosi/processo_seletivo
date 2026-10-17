@@ -22,6 +22,7 @@ dev = [
   "pytest>=8.4,<9",
   "pytest-django>=4.11,<5",
   "pytest-cov>=6.2,<7",
+  "pytest-xdist>=3.8,<4",
   "ruff>=0.14.14,<0.15",
   "PyYAML>=6,<7",
   "jsonschema>=4.23,<5",
