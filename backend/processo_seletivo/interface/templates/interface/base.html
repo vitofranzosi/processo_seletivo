@@ -98,6 +98,7 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
 .cabecalho-de-contexto{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;min-height:3.5rem;
   padding:.6rem 1.5rem;background:var(--branco);border-bottom:1px solid var(--borda);font-size:.875rem}
 .caminho-da-secao{margin:0;color:var(--texto-fraco)}
+.caminho-da-secao a{color:var(--verde-texto)}
 .cabecalho-de-contexto>a{margin-left:auto}
 .area-de-trabalho{min-width:0}
 @media not all and (min-width:64rem){
@@ -1512,7 +1513,10 @@ escape do guardião por mudar de lugar.
      já está na barra, e o Processo, o Edital e a Etapa estão na trilha que a própria tela traz.
      Como link, a seção aparecia três vezes seguidas — barra, caminho, trilha — para quem
      percorre os marcos de navegação. {% endcomment %}
-  <p class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › {{ navegacao.secao_atual }}</p>
+  {% comment %} As telas de uso diário sobrescrevem o bloco com a própria trilha, que sai do conteúdo
+     delas (077, `FR-1746`, `R-001`): uma trilha por página, e só a tela sabe dizê-la — o nome da
+     Etapa, o protocolo, a porta por onde se chegou. As demais ficam com o caminho até a seção. {% endcomment %}
+  {% block caminho_do_contexto %}<p class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › {{ navegacao.secao_atual }}</p>{% endblock %}
   <a href="{% url 'interface:identificar' %}">Trocar identidade</a>
 </header>
 {% else %}

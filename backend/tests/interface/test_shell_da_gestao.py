@@ -134,15 +134,15 @@ def test_grupo_sem_item_nao_aparece(client, seletor_ligado):
 @pytest.mark.django_db
 @pytest.mark.integration
 @pytest.mark.parametrize("papel", sorted(PAPEIS))
-def test_a_lista_e_a_barra_oferecem_as_mesmas_secoes(client, seletor_ligado, papel):
-    """`R-002`: os botões da lista e os itens da barra leem o mesmo predicado."""
+def test_a_lista_deixou_as_secoes_para_a_barra(client, seletor_ligado, papel):
+    """`R-002`; desde a 077, `FR-1740`: os três botões que a lista tinha saíram dela, e as seções
+    estão só na barra. O que a barra oferece a cada papel é provado acima, contra o destino."""
     identificar(client, "pessoa.qualquer", [papel])
     corpo = client.get(reverse("interface:lista")).content.decode()
     conteudo = corpo.split('<main id="conteudo"')[1]
 
     for rota in ("interface:visao-geral", "interface:autoridades", "interface:modelos-de-aviso"):
-        destino = reverse(rota)
-        assert (f'href="{destino}"' in conteudo) == (destino in itens_da_barra(corpo)), rota
+        assert f'href="{reverse(rota)}"' not in conteudo, rota
 
 
 @pytest.mark.django_db
@@ -214,6 +214,32 @@ def test_o_portal_nao_recebe_barra(settings):
 def test_a_secao_sai_do_endereco(caminho_pedido, secao):
     """`FR-1716`: cada tela pertence a uma seção só — a de prefixo mais longo."""
     assert navegacao.secao_do_caminho(caminho_pedido).rotulo == secao
+
+
+def test_a_view_pode_declarar_a_secao_que_o_endereco_nao_diz(settings):
+    """`FR-1752` da 077: a Etapa pela gestão mora sob Minhas Etapas, mas é de Processos Seletivos.
+    A declaração vale só para o pedido em que a view a fez."""
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    sessao = {
+        CHAVE_SESSAO: {
+            "subject": "g",
+            "escopo": "cefor",
+            "papeis": ["gestor"],
+            "origem": "demonstracao",
+        }
+    }
+    declarado = RequestFactory().get("/gestao/minhas-etapas/a/b")
+    declarado.session = sessao
+    navegacao.declarar_secao(declarado, "interface:lista")
+    sem_declarar = RequestFactory().get("/gestao/minhas-etapas/a/b")
+    sem_declarar.session = sessao
+
+    assert navegacao.contexto_da_navegacao(declarado)["navegacao"]["secao_atual"] == (
+        "Processos Seletivos"
+    )
+    assert navegacao.contexto_da_navegacao(sem_declarar)["navegacao"]["secao_atual"] == (
+        "Minhas Etapas"
+    )
 
 
 @pytest.mark.django_db

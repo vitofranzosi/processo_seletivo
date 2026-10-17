@@ -2,7 +2,11 @@
 {% block etapa_titulo %}Anexos{% endblock %}
 {% comment %} A lista vazia na largura da lista cheia — e do formulário de acrescentar logo abaixo —, e não na
    medida de leitura: eram três larguras na mesma etapa (056, FR-1037). {% endcomment %}
-{% block estilo_da_pagina %}#anexos-lista>.vazio{max-width:none}{% endblock %}
+{% block estilo_da_pagina %}#anexos-lista>.vazio{max-width:none}
+{% comment %} O campo de arquivo tem ~366 px de largura própria, e o cartão do anexo novo crescia até
+   ela: a 375 px a página tinha 432 px (077, `FR-1743`). {% endcomment %}
+fieldset.linha.anexo-novo{min-width:0}
+{% endblock %}
 {% block etapa %}
 <section aria-labelledby="anexos-titulo">
   <h2 id="anexos-titulo">Anexos do Edital</h2>

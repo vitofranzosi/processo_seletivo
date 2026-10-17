@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Processos Seletivos{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <span aria-current="page">Processos Seletivos</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 {% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
    só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
@@ -32,20 +33,15 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
-{% if pode_criar or pode_ver_visao or pode_gerir_autoridades or pode_gerir_modelos %}
+{% comment %}
+A faixa tem só a ação da lista (077, `FR-1740`, `FR-1741`). Visão Geral, Autoridades da unidade e
+Modelos de aviso eram botões aqui até a barra lateral da 076 recebê-los: a primeira tela do dia
+oferecia os mesmos três destinos duas vezes. Eles são lugares, e lugar é da barra; "Novo Processo
+Seletivo" é ação, e fica (DP-1 da 076). Sem ação nenhuma, a faixa não vem — nem vazia.
+{% endcomment %}
+{% if pode_criar %}
 <p class="acoes-do-painel">
-  {% if pode_criar %}<a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>{% endif %}
-  {% comment %}
-  O caminho para a visão institucional (040, FR-605). **Condicionado à capacidade**: oferecer um
-  destino que a autorização vai recusar é pior do que não oferecer — foi o defeito `N-03` da 038,
-  e é o que a 033 proíbe. Esconder o link não substitui a verificação: quem montar a URL à mão
-  recebe a mesma recusa, que mora na view.
-
-  E não vai no cabeçalho de `base.html`: lá só existe um link, e ele não depende de papel nenhum.
-  {% endcomment %}
-  {% if pode_ver_visao %}<a class="botao secundario" href="{% url 'interface:visao-geral' %}">Visão Geral</a>{% endif %}
-  {% if pode_gerir_autoridades %}<a class="botao secundario" href="{% url 'interface:autoridades' %}">Autoridades da unidade</a>{% endif %}
-  {% if pode_gerir_modelos %}<a class="botao secundario" href="{% url 'interface:modelos-de-aviso' %}">Modelos de aviso</a>{% endif %}
+  <a class="botao" href="{% url 'interface:processo-criar' %}">Novo Processo Seletivo</a>
 </p>
 {% endif %}
 

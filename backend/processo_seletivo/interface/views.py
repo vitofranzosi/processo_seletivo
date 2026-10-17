@@ -299,12 +299,9 @@ def lista(request):
                 for situacao in ORDEM_SITUACAO
                 if situacao in contagem
             ],
+            # Visão Geral, Autoridades e Modelos de aviso saíram da lista para a barra (077,
+            # `FR-1740`): a capacidade deles é decidida em `navegacao.py`, e só lá.
             "pode_criar": ator.can("processo:criar"),
-            # Os três destinos que também estão na barra do shell (076) leem o mesmo predicado
-            # dela, e não uma cópia: a lista e a barra não podem oferecer coisas diferentes.
-            "pode_ver_visao": navegacao.pode_ver_visao(ator),
-            "pode_gerir_autoridades": navegacao.pode_gerir_autoridades(ator),
-            "pode_gerir_modelos": navegacao.pode_gerir_modelos(ator),
             # Quem preside uma comissão tem o que fazer, mesmo sem papel sistêmico.
             "sem_papel": not ator.permissions and not vinculos,
         },
@@ -8870,6 +8867,10 @@ def minha_etapa(request, edital_id, etapa_id):
         if por_alocacao
         else (None, None, None)
     )
+    if por_gestao and not por_alocacao:
+        # Pela gestão, a Etapa é de Processos Seletivos, como a Alocação de onde se veio (077,
+        # `FR-1752`); o endereço, que é o de Minhas Etapas, diria a seção errada.
+        navegacao.declarar_secao(request, "interface:lista")
     # A resposta carrega protocolo de candidato: é dado pessoal, e não fica no cache (FR-056).
     return marcar_como_privada(
         render(

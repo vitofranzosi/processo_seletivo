@@ -1,13 +1,15 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
-{% block conteudo %}
-<div class="pagina-da-inscricao">
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+{% comment %} A trilha está no cabeçalho de contexto (077, `FR-1746`), e não mais no conteúdo: uma por
+   página. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">
+  <abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
   <a href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Minha Mesa</a> ›
   <span aria-current="page">Inscrição {{ inscricao.protocolo|default:inscricao.id }}</span>
-</nav>
+</nav>{% endblock %}
+{% block conteudo %}
+<div class="pagina-da-inscricao">
 
 <h1>Inscrição {{ inscricao.protocolo|default:inscricao.id }}</h1>
 {% comment %}

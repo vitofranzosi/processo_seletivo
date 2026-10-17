@@ -52,6 +52,9 @@
 
 <section aria-labelledby="alteracoes-titulo" class="consequencias">
   <h2 id="alteracoes-titulo">Alterações declaradas ({{ alteracoes|length }})</h2>
+  {% comment %} Na moldura que rola, como as outras tabelas largas: as quatro colunas passavam 13 px da
+     borda a 375 px, e a página inteira rolava para o lado (077, `FR-1743`). {% endcomment %}
+  <div class="tabela-rolavel">
   <table>
     <thead><tr>
       <th scope="col">Onde</th><th scope="col">Operação</th>
@@ -76,5 +79,6 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endblock %}

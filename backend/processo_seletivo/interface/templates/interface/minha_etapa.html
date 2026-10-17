@@ -1,15 +1,20 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
-{% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  {% if por_gestao %}
+{% comment %} A trilha está no cabeçalho de contexto (077, `FR-1746`), e não mais no conteúdo: uma por
+   página. Pelas duas portas de antes: quem gere chega pela Alocação, e a trilha é a dela, a
+   partir da seção — a mesma que a barra marca (`FR-1752`). Começava em "Alocação por Etapa", e
+   no cabeçalho, ao lado da barra que marcava Minhas Etapas, o par se contradizia. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">
+  <abbr title="Gestão de Processos Seletivos">GPS</abbr> › {% if por_gestao %}
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
+  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
   <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
   {% else %}
   <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
   {% endif %}
   <span aria-current="page">{{ etapa.name }}</span>
-</nav>
-
+</nav>{% endblock %}
+{% block conteudo %}
 <h1>{{ etapa.name }}</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
 

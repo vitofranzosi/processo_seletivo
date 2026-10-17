@@ -1,4 +1,10 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
+{% block estilo_da_pagina %}
+{% comment %} Os resumos SHA-256 do manifesto não tinham onde quebrar, e a 375 px a página tinha 643 px (077,
+   `FR-1743`). Quebram por caractere, sem hífen: copiar continua dando o valor inteiro. Os do método
+   já quebravam, por regra própria. {% endcomment %}
+.imutavel code{overflow-wrap:anywhere}
+{% endblock %}
 {% block titulo %}Sorteio — {{ marco.name }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
