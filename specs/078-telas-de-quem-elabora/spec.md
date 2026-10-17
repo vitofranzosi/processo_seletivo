@@ -262,6 +262,10 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
   com o mesmo rótulo do detalhe do Edital.
 - **FR-1769**: Nas demais telas da gestão — fora das da `077` e destas —, o cabeçalho de contexto
   MUST continuar o da `076`, e a trilha MUST continuar no conteúdo (`FR-1748` da `077`).
+  *Emendada pela [`079`](../079-telas-da-presidencia/spec.md) em 17/10/2026*: a Comissão, a
+  conferência da inclusão, a Alocação por Etapa e a Distribuição também passaram a ter a trilha no
+  cabeçalho (`FR-1780` da `079`). "As demais telas" são, daí em diante, as que nem a `077`, nem
+  esta, nem a `079` nomeiam (`FR-1782` da `079`).
 - **FR-1770**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
 

@@ -14,13 +14,8 @@
 .distribuicao thead th .situacao{padding-block:.05rem}
 .coluna-toda .destino{display:block;font-weight:600}
 {% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Alocação por Etapa</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Alocação por Etapa</span>
-</nav>
-
 {% comment %}
 “Alocação”, e não “Distribuição”. Esta tela põe **pessoas em Etapas** (011); a da 012 põe
 **inscrições em avaliadores**, e as duas se chamavam Distribuição em telas vizinhas — com
@@ -221,8 +216,10 @@
     </table>
   </div>
 
+  {% comment %} "Alocação", e não "distribuição" (079, `FR-1790`): a decisão do título, acima, valia em toda a
+     tela menos no botão que ela existe para apertar — e a resposta dele já dizia "Alocação salva.". {% endcomment %}
   {% if matriz.linhas and tem_presidente %}
-  <p class="salvar"><button type="submit" class="botao">Salvar distribuição</button></p>
+  <p class="salvar"><button type="submit" class="botao">Salvar alocação</button></p>
   {% endif %}
 </form>
 {% else %}

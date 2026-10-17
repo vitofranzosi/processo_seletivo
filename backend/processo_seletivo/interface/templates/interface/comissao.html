@@ -7,13 +7,8 @@ campos de texto já têm. Aqui, e não na folha, porque só esta tela o usa — 
 distribuição, que não tem margem.
 {% endcomment %}
 {% block estilo_da_pagina %}#identity_subject{max-width:20rem}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Comissão</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Comissão</span>
-</nav>
-
 <h1>Comissão do Processo</h1>
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
 
@@ -32,6 +27,17 @@ distribuição, que não tem margem.
   ninguém responder pelo trabalho distribuído.</p>
 {% endif %}
 
+{% comment %}
+Os membros com título, como os Editais do Processo (079, `FR-1787`): eram o conteúdo principal da
+página e a única região dela sem título, entre o filtro e as seções de inclusão. O número é o da
+comissão inteira — o recorte tem a linha dele, e um título que muda com o filtro diria duas coisas
+com o mesmo rótulo. Sem ninguém, o filtro procurava em nada e anunciava "(0 de 0)" antes de dizer
+que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
+{% endcomment %}
+<section aria-labelledby="membros-titulo">
+<h2 id="membros-titulo">Membros ({{ total_de_membros }})</h2>
+
+{% if total_de_membros %}
 <form method="get" class="filtro" role="search">
   <p class="campo">
     <label for="q">Procurar na comissão</label>
@@ -51,6 +57,7 @@ distribuição, que não tem margem.
 
 {% if filtrando %}
 <p class="ajuda" role="status">{{ membros|length }} de {{ total_de_membros }} membros.</p>
+{% endif %}
 {% endif %}
 
 {% if membros %}
@@ -120,10 +127,13 @@ distribuição, que não tem margem.
   </li>
   {% endfor %}
 </ul>
+{% elif filtrando and total_de_membros %}
+<p class="vazio" role="status">Nenhum membro corresponde ao filtro.</p>
 {% else %}
-<p class="vazio" role="status">
-  {% if filtrando %}Nenhum membro corresponde ao filtro.{% else %}Esta comissão ainda não tem membros.{% endif %}</p>
+<p class="vazio" role="status">Esta comissão ainda não tem membros.
+  <a href="#adicionar-titulo">Adicionar membro</a></p>
 {% endif %}
+</section>
 
 <section aria-labelledby="adicionar-titulo" class="adicionar">
   <h2 id="adicionar-titulo">Adicionar membro</h2>
