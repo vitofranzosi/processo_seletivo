@@ -19,7 +19,18 @@ Caminhos de teste relativos a `backend/tests/`. "Navegador" é o percurso do [qu
 | FR-1721 | `interface/test_shell_da_gestao.py` (`test_os_itens_sao_exatamente_os_destinos_que_abrem`); a suíte de autorização inteira, sem mudança |
 | FR-1722 | `performance/test_escala_da_mesa.py` (`test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito`); `interface/test_acessibilidade.py` (`test_nenhuma_classe_citada_deixa_de_existir_na_folha`) |
 | FR-1723 | `interface/test_acessibilidade.py`, `interface/test_larguras.py`, `interface/test_estaticos.py`, `test_vocabulario_da_composicao.py` sobre o `base.html` novo |
-| FR-1724 | `interface/test_shell_da_gestao.py` (`test_na_alocacao_a_barra_fica_recolhida`); inventário (a Alocação a 1280 px sem estouro) |
+| FR-1724 | `interface/test_shell_da_gestao.py` (`test_na_alocacao_a_barra_fica_no_topo`); inventário (a Alocação a 1280 px sem estouro) |
+| FR-1725 | `interface/test_shell_da_gestao.py` (`test_a_pessoa_aparece_como_avatar_e_nome`, `test_as_iniciais_do_avatar`, `test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado`); navegador |
+| FR-1726 | `interface/test_shell_da_gestao.py` (`test_cada_item_tem_icone_decorativo_e_nome_acessivel`); navegador — dica no ponteiro e no foco |
+| FR-1727 | `javascript/shell.test.js` (o controle diz o que fará); `interface/test_shell_da_gestao.py` (`test_o_controle_nasce_escondido_e_diz_o_que_fara`, `test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado`); navegador — clique, Enter e toque |
+| FR-1728 | `javascript/shell.test.js` (escolha guardada, padrão pela largura, armazenamento que recusa); `interface/test_shell_da_gestao.py` (`test_o_controle_nasce_escondido_e_diz_o_que_fara`, o script sem `defer`); navegador — navegar e recarregar |
+| FR-1729 | `interface/test_shell_da_gestao.py` (`test_o_controle_nasce_escondido_e_diz_o_que_fara`) |
+| FR-1730 | `interface/test_shell_da_gestao.py` (`test_na_alocacao_a_barra_fica_no_topo`, `test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado`); navegador a 375 px |
+| FR-1731 | `interface/test_shell_da_gestao.py` (`test_cada_item_tem_icone_decorativo_e_nome_acessivel`) |
+| FR-1732 | `interface/test_visao_geral.py` (`test_t011_o_controle_tem_dois_rotulos_e_a_legenda_e_invisivel`, sobre o conteúdo); `interface/test_estaticos.py` (o script existe) |
+| SC-665 | Navegador a 1280 px: `main` de ~1.024 para 1.212 px com a barra recolhida |
+| SC-666 | Navegador: recolher, abrir outra seção e recarregar |
+| SC-667 | Inventário com `BARRA=expandida` e com `BARRA=recolhida`, comparado com a linha de base |
 | SC-660 | Navegador: um clique na barra a 1280 px; "Seções" e o item a 375 px |
 | SC-661 | `interface/test_shell_da_gestao.py` (`test_os_itens_sao_exatamente_os_destinos_que_abrem`, parametrizado por todo papel e pela identidade só com vínculo) |
 | SC-662 | Inventário refeito e comparado com o `resultados.json` da linha de base |

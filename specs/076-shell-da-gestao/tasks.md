@@ -62,6 +62,20 @@ feito em 16/10.
 - [x] T020 A barra recolhida na Alocação por Etapa, pela rota (FR-1724, DP-4), com teste em `tests/interface/test_shell_da_gestao.py`; `tests/integration/avaliacoes/test_documento.py` passa a ler o primeiro item da lista **do conteúdo**
 - [x] T019 `make lint check test-pg` com `DB_NAME` próprio (SC-663)
 
+## Phase 8: User Story 5 — a barra retrátil (emenda de 16/10)
+
+**Goal**: na tela larga, recolher a barra a uma faixa de ícones e encontrá-la recolhida na tela seguinte.
+
+**Independent Test**: recolher, navegar, recarregar; a barra continua recolhida, com nome acessível e dica em cada item.
+
+- [x] T021 [US5] Emenda da spec, do plano e da pesquisa (FR-1725 a FR-1732, SC-665 a SC-667, DP-5, DP-6, R-009)
+- [x] T022 [US5] Ícone por seção em `processo_seletivo/interface/navegacao.py`, as iniciais da pessoa, e o modo da Alocação renomeado para `no_topo` (FR-1731, FR-1725)
+- [x] T023 [US5] `processo_seletivo/interface/static/interface/shell.js` e `tests/javascript/shell.test.js` (FR-1727, FR-1728, FR-1729)
+- [x] T024 [US5] A marcação e a folha no `base.html`: sprite, sigla, controle, rótulos que viram dica, avatar, os dois estados a partir de 64rem, movimento reduzido (FR-1725, FR-1726, FR-1730)
+- [x] T025 [P] [US5] Testes em `tests/interface/test_shell_da_gestao.py`; `tests/interface/test_visao_geral.py` passa a olhar o conteúdo da tela (FR-1732, DP-6)
+- [x] T026 [US5] Navegador: expandida, recolhida, troca repetida, navegação e recarga, celular, teclado e dicas (quickstart)
+- [x] T027 [US5] Inventário com a barra expandida e com ela recolhida, `BARRA=` no roteiro (SC-667)
+
 ## Dependencies
 
 - Phase 2 bloqueia todas as histórias. US1 bloqueia US3 e US4 (a moldura é onde o caminho e o botão

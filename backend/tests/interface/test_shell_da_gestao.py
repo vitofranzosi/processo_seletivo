@@ -85,7 +85,7 @@ def test_o_salto_continua_o_primeiro_e_pula_a_barra(client, seletor_ligado):
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_no_celular_a_barra_recolhe_sem_script(client, seletor_ligado):
-    """`FR-1719`: o botão abre o painel pelo comportamento nativo, e a moldura não traz script."""
+    """`FR-1719`: o botão abre o painel pelo comportamento nativo, sem script nenhum no caminho."""
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = client.get(reverse("interface:lista")).content.decode()
     moldura = barra(corpo)
@@ -93,8 +93,8 @@ def test_no_celular_a_barra_recolhe_sem_script(client, seletor_ligado):
     assert 'popovertarget="secoes-da-gestao">Seções</button>' in moldura
     assert '<div class="secoes-da-gestao" id="secoes-da-gestao" popover>' in moldura
     assert 'popovertargetaction="hide">Fechar</button>' in moldura
-    assert "<script" not in moldura
-    assert "<script" not in corpo.split('<main id="conteudo"')[0]
+    # O botão do celular não tem ligação de script: quem abre o painel é o atributo.
+    assert re.search(r'<button type="button" class="abrir-secoes" popovertarget="[^"]+">', moldura)
 
 
 # ---- a barra nunca oferece o que a autorização recusa ----------------------------------------
@@ -223,8 +223,11 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = client.get(reverse("interface:visao-geral")).content.decode()
 
-    assert f'<a href="{reverse("interface:visao-geral")}" aria-current="page">Visão Geral</a>' in (
-        barra(corpo)
+    destino = reverse("interface:visao-geral")
+    assert re.search(
+        rf'<a href="{destino}" aria-current="page">.*?'
+        r'<span class="rotulo-da-secao">Visão Geral</span>',
+        barra(corpo),
     )
     assert barra(corpo).count("aria-current") == 1
     assert caminho(corpo).endswith("› Visão Geral")
@@ -253,19 +256,22 @@ def test_abaixo_da_secao_o_caminho_a_nomeia_e_nao_repete_a_trilha(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_na_alocacao_a_barra_fica_recolhida(
+def test_na_alocacao_a_barra_fica_no_topo(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
     """`FR-1724`: a matriz da Alocação não cabe ao lado da barra a 1.280 px, e a `057` a quer sem
-    rolagem interna (`FR-1062`). Ali a barra fica recolhida; nas outras telas, não."""
+    rolagem interna (`FR-1062`). Ali a barra fica no topo, sem o script da preferência
+    (`FR-1730`); nas outras telas, não."""
     edital = publish_original(api_client, manager_headers, process_payload)
     identificar(client, "gustavo.gestor", ["gestor"])
 
     alocacao = client.get(reverse("interface:alocacoes", args=[edital.processo_id])).content
     lista = client.get(reverse("interface:lista")).content
 
-    assert '<div class="shell shell-recolhida">' in alocacao.decode()
+    assert '<div class="shell shell-barra-no-topo">' in alocacao.decode()
+    assert "shell.js" not in alocacao.decode()
     assert '<div class="shell">' in lista.decode()
+    assert "shell.js" in lista.decode()
 
 
 def test_sem_popover_o_painel_toma_a_largura_da_barra():
@@ -278,4 +284,95 @@ def test_sem_popover_o_painel_toma_a_largura_da_barra():
 
     assert ".barra-lateral{flex-wrap:wrap}" in bloco
     assert ".secoes-da-gestao{flex-basis:100%;min-width:0}" in bloco
-    assert ".shell-recolhida .barra-lateral{flex-wrap:wrap}" in bloco
+    assert ".shell-barra-no-topo .barra-lateral{flex-wrap:wrap}" in bloco
+
+
+# ---- a barra retrátil (US5) ------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_controle_nasce_escondido_e_diz_o_que_fara(client, seletor_ligado):
+    """`FR-1727`, `FR-1729`: sem script, o controle não aparece e a barra fica expandida — o
+    desenho sem `data-barra`. O script, que o liga, vem de arquivo estático, sem `defer`, dentro da
+    própria `.shell` (`FR-1728`, `FR-1732`)."""
+    identificar(client, "gustavo.gestor", ["gestor"])
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    controle = re.search(r"<button[^>]*data-alternar-barra[^>]*>(.*?)</button>", corpo, re.S)
+    assert controle, "o controle de recolher precisa existir na moldura"
+    abertura = controle.group(0).split(">")[0]
+    assert " hidden" in abertura
+    assert 'aria-expanded="true"' in abertura
+    assert 'aria-controls="secoes-da-gestao"' in abertura
+    assert "Recolher a barra lateral" in controle.group(1)
+
+    assert '<div class="shell">' in corpo
+    assert 'data-barra="' not in corpo
+    script = re.search(r'<script src="([^"]+)"([^>]*)></script>', barra_e_script(corpo))
+    assert script and script.group(1).endswith("interface/shell.js")
+    assert "defer" not in script.group(2)
+
+
+def barra_e_script(corpo):
+    return corpo.split('<div class="shell')[1].split('<div class="area-de-trabalho">')[0]
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado):
+    """`FR-1726`, `FR-1731`: o ícone é decorativo, o nome é o texto do item — que vira a dica
+    quando a barra recolhe —, e cada seção tem o seu ícone."""
+    identificar(client, "gustavo.gestor", ["gestor"])
+    moldura = barra(client.get(reverse("interface:lista")).content.decode())
+
+    itens = re.findall(
+        r'<li><a href="[^"]+"[^>]*><svg class="icone-da-secao" aria-hidden="true">'
+        r'<use href="#([\w-]+)"/></svg><span class="rotulo-da-secao">([^<]+)</span></a></li>',
+        moldura,
+    )
+    assert [rotulo for _, rotulo in itens] == [secao.rotulo for secao in navegacao.SECOES]
+    icones = [icone for icone, _ in itens]
+    assert len(set(icones)) == len(icones), "dois itens com o mesmo ícone"
+    for icone in icones + ["i-sair", "i-painel"]:
+        assert f'<symbol id="{icone}"' in moldura or f'<symbol id="{icone}"' in barra_e_script(
+            client.get(reverse("interface:lista")).content.decode()
+        ), icone
+    # O "Sair" também é ícone com nome por extenso.
+    assert '<span class="rotulo-da-secao">Sair</span></button>' in moldura
+
+
+@pytest.mark.parametrize(
+    ("nome", "esperado"),
+    [("gustavo.gestor", "GG"), ("ana", "A"), ("demo.auditor-x", "DA"), ("", "")],
+)
+def test_as_iniciais_do_avatar(nome, esperado):
+    """`FR-1725`: o avatar da barra recolhida."""
+    assert navegacao.iniciais(nome) == esperado
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_pessoa_aparece_como_avatar_e_nome(client, seletor_ligado):
+    """`FR-1725`: o avatar fica nos dois estados; o nome e as responsabilidades, só na expandida."""
+    identificar(client, "gustavo.gestor", ["gestor", "auditor"])
+    pe = barra(client.get(reverse("interface:lista")).content.decode()).split(
+        '<div class="pessoa-identificada">'
+    )[1]
+
+    assert '<span class="iniciais" aria-hidden="true" title="gustavo.gestor">GG</span>' in pe
+    assert "<strong>gustavo.gestor</strong><span>Gestor, Auditor</span>" in pe
+
+
+def test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado():
+    """`FR-1727`, `FR-1730`: os dois estados são da tela larga, a transição só existe a partir de um
+    gesto e some sob movimento reduzido."""
+    from pathlib import Path
+
+    folha = (Path(navegacao.__file__).parent / "templates/interface/base.html").read_text()
+    larga = folha.split("@media (min-width:64rem){\n  .shell{")[1].split("\n}")[0]
+
+    assert ".shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr)}" in larga
+    assert ".shell[data-animar]{transition:grid-template-columns" in larga
+    reduzido = folha.split("@media (prefers-reduced-motion:reduce){")[1].split("\n}")[0]
+    assert ".shell[data-animar]{transition:none}" in reduzido

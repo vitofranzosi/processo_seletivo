@@ -288,3 +288,19 @@ cabeçalho preso à janela. O responsável pelo produto decidiu (DP-4 da `076`) 
 barra fica recolhida em qualquer largura, como no celular. Com isso a página voltou a 1280.
 
 Os cinco estouros a 375 px continuam registrados acima e fora do escopo do shell (DP-3).
+
+**Depois da barra retrátil (emenda da 076).** A barra passou a ter dois estados na tela larga —
+expandida, de 16rem, e recolhida, de 4,25rem —, com a escolha guardada no navegador. O roteiro
+ganhou `BARRA=expandida|recolhida`, que grava a preferência antes de cada página, e o inventário foi
+refeito nos dois estados. Em [`com-o-shell/`](inventario-visual-da-gestao-2026-10-16/com-o-shell/)
+estão as capturas com a barra expandida; em
+[`com-o-shell/recolhida/`](inventario-visual-da-gestao-2026-10-16/com-o-shell/recolhida/), o
+`resultados.json` e as capturas a 1280 px com ela recolhida — a 375 px a preferência não vale, e as
+capturas seriam as mesmas.
+
+| | Linha de base | Expandida | Recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 5 | os mesmos 5 | os mesmos 5 |
+| Estouram a 1280 px | 0 | 0 | 0 |

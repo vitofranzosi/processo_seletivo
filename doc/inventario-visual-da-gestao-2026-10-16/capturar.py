@@ -185,6 +185,12 @@ MEDIR = r"""() => {
 
 def contexto_para(browser, quem):
     ctx = browser.new_context(viewport={"width": 1280, "height": 900}, device_scale_factor=1)
+    # A preferência da barra retrátil da 076 mora no armazenamento do navegador. `BARRA=recolhida`
+    # (ou `expandida`) a grava antes de cada página, como se a pessoa já a tivesse escolhido; sem a
+    # variável, vale o padrão de quem chega pela primeira vez.
+    barra = os.environ.get("BARRA")
+    if barra:
+        ctx.add_init_script(f"try {{ localStorage.setItem('gps.barra', '{barra}') }} catch (e) {{}}")
     if quem is None:
         return ctx
     pg = ctx.new_page()

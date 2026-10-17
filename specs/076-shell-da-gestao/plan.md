@@ -16,8 +16,9 @@ da lista — que passam a morar num lugar só.
 
 Django 5 sobre PostgreSQL. A identidade chega aos templates pelo processador de contexto de
 `interface/identidade.py`; a moldura chega pelo mesmo caminho, num processador próprio. Frente sem
-dependência nova e **sem script**: regras na folha inline do `base.html` e o `popover` nativo do
-navegador para recolher a barra no celular (R-005). A linha de base visual é o inventário de 16/10
+dependência nova: regras na folha inline do `base.html`, o `popover` nativo do navegador para o
+painel do celular (R-005), e — desde a emenda da barra retrátil (US5, DP-6) — um script estático
+curto, `static/interface/shell.js`, que guarda a escolha no navegador (R-009). A linha de base visual é o inventário de 16/10
 (`doc/inventario-visual-da-gestao-2026-10-16/resultados.json`), refeito depois da `075`.
 
 Detalhes e alternativas descartadas em [research.md](research.md).
@@ -47,7 +48,9 @@ Sem violação a justificar.
 | `interface/navegacao.py` (novo) | os itens da barra — rótulo, rota, grupo e predicado sobre o ator —, a seção atual pelo prefixo do caminho, e `contexto_da_navegacao(request)`, o processador de contexto |
 | `config/settings/base.py` | o processador novo na lista de `context_processors` |
 | `interface/views.py::lista` | `pode_ver_visao`, `pode_gerir_autoridades` e `pode_gerir_modelos` passam a vir dos predicados de `navegacao.py` (R-002); a tela não muda |
-| `interface/templates/interface/base.html` | a moldura (R-006) quando há identidade, com o botão "Seções" e o painel `popover`; o `header.topo` de hoje, só com a marca, quando não há; as regras novas na folha, junto das do cabeçalho; impressão sem barra nem caminho |
+| `interface/templates/interface/base.html` | a moldura (R-006) quando há identidade, com o botão "Seções" e o painel `popover`; o `header.topo` de hoje, só com a marca, quando não há; as regras novas na folha, junto das do cabeçalho; impressão sem barra nem caminho; na emenda, os dois estados da tela larga, o sprite de sete ícones, o avatar e o controle de recolher |
+| `interface/static/interface/shell.js` (novo, emenda) | o estado inicial, a troca e a memória da barra retrátil (R-009) |
+| `tests/javascript/shell.test.js` (novo, emenda) | as regras do script, pelo `node --test` que `tests/test_javascript.py` já roda |
 
 **A folha.** As regras novas entram num trecho próprio, logo depois das de `header.topo`, e a prosa
 que as explica vai em `{% comment %}` do Django, que não é servido. Nenhuma regra existente muda,
@@ -61,7 +64,9 @@ para `interface:sair`; a lista continua com os seus botões (DP-1).
 ## Decisões do responsável pelo produto
 
 DP-1 (as cinco seções), DP-2 (sem chave) e DP-3 (estouros registrados), tomadas em 16/10 nas
-propostas da spec. Nenhuma muda o desenho acima.
+propostas da spec; DP-4 (a barra no topo da Alocação), quando o inventário mostrou o conflito com a
+`057`; DP-5 (a barra retrátil entra nesta feature) e DP-6 (script com `localStorage`, e o guardião
+da Visão Geral restrito ao conteúdo), com o pedido da emenda.
 
 ## Testes que mudam, e por quê
 
@@ -72,7 +77,7 @@ asserção sobre o `title`. Os que poderiam reprovar dependem de escolhas que o 
 
 | Guardião | O que ele exige, e como a moldura atende |
 |---|---|
-| `test_visao_geral.py` (`"<script" not in corpo`) | nenhum script: `popover` nativo |
+| `test_visao_geral.py` (`"<script" not in corpo`) | na primeira versão, nenhum script; desde a emenda (DP-6), o guardião olha o conteúdo da tela, que é o que a `SC-226` da `042` protege |
 | `test_tela_de_autoridades.py`, `authorization/test_visao_institucional.py` | o link só com a capacidade — os mesmos predicados da lista |
 | `test_acessibilidade.py` (salto, `main`, controles nativos, botão com peso, classe sem regra, modificador órfão) | `main` intacto; item atual por `[aria-current]`; o botão com `type="button"` e classe |
 | `test_larguras.py` (sem px, `.marca` com escopo, o `@media` de 40rem da Visão Geral) | `rem`; `.barra .marca`; o ponto de 64rem que a folha já usa |

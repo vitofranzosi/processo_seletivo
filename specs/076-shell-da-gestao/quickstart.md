@@ -26,6 +26,19 @@ LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps
 8. Só pelo teclado, na tela larga: o primeiro Tab mostra "Pular para o conteúdo", que leva o foco
    ao conteúdo; sem ele, a ordem é marca, seções, Sair, Trocar identidade. A 375 px, a barra do topo continua à vista ao rolar.
 
+## A barra retrátil (US5)
+
+9. Na tela larga, o controle ao lado da marca diz "Recolher a barra lateral". Acioná-lo — clique,
+   Enter ou toque — recolhe a barra a uma faixa de ícones; o controle passa a dizer "Expandir a
+   barra lateral", e o conteúdo ganha a largura.
+10. Recolhida: o ponteiro ou o foco do teclado num ícone mostra o nome da seção; a seção atual
+    continua marcada; o pé mostra as iniciais e o "Sair" como ícone.
+11. Abrir outra seção e recarregar: a barra já aparece recolhida, sem passar pela expandida.
+12. A 375 px, com a preferência recolhida guardada: o painel "Seções" é o de sempre, com nomes.
+13. Na Alocação por Etapa, a barra fica no topo, qualquer que seja a preferência.
+14. Sem preferência guardada (`localStorage.removeItem("gps.barra")`), a barra começa expandida a
+    1280 px e recolhida a 1100 px.
+
 ## Inventário
 
 Com o mesmo ambiente, a partir de `backend/`:
@@ -34,5 +47,6 @@ Com o mesmo ambiente, a partir de `backend/`:
 AVISO=c1841d6c-924b-41a8-8d9a-99a17aacb900 uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py <pasta-de-saída>
 ```
 
-Comparar o `resultados.json` da saída com o da linha de base, tela a tela: status, `scrollWidth`
+Com `BARRA=recolhida` (ou `expandida`) na mesma linha, o roteiro grava a preferência antes de cada
+página. Comparar o `resultados.json` da saída com o da linha de base, tela a tela: status, `scrollWidth`
 contra `clientWidth` a 375 e a 1280.

@@ -72,7 +72,7 @@ substring.
 
 ```
 link de salto
-.barra            marca · botão Seções · #secoes (popover) [ nav Seções da gestão (Trabalho, Unidade) · pessoa e Sair ]
+.barra            marca (sigla GPS) · controle de recolher · botão Seções · #secoes (popover) [ nav Seções da gestão (Trabalho, Unidade) · avatar, pessoa e Sair ]
 .area             header.contexto [ GPS › seção · Trocar identidade ] · main#conteudo (intacto)
 ```
 
@@ -97,6 +97,28 @@ cobrado em toda tela (`test_acessibilidade.py`); o botão com `type="button"` e 
 - **Navegador sem `popover`**: a barra quebra a linha e o painel toma a largura toda.
 - **Painel aberto no celular e janela alargada**: ele ocupa a largura da coluna, sem escurecer a
   página, até ser fechado — o painel aberto mora na camada de cima, e a folha não o devolve ao fluxo.
+
+## R-009 — A barra retrátil (US5)
+
+**Decisão**: o estado é `data-barra` na própria `.shell`, posto por `static/interface/shell.js`,
+carregado **sem `defer`** de dentro da `.shell`, logo depois de ela abrir. Dali o script acha a
+`.shell` por `document.currentScript.parentElement`, lê a escolha do `localStorage` e põe o atributo
+antes de o navegador ler a barra — que, por isso, já nasce no estado certo. O controle, escondido no
+HTML, é ligado no `DOMContentLoaded`.
+
+**Por quê**: a regra do projeto é script em arquivo estático, sem script inline; no `head` o atributo
+teria de ir ao `html`, e cada regra do estado recolhido precisaria excluir a Alocação por `:not()`. De
+dentro da `.shell`, a Alocação simplesmente não carrega o script (`FR-1730`). A transição só existe
+com `data-animar`, que o clique põe: no carregamento não há do que transitar.
+
+**O nome é o texto, e a dica é o mesmo texto.** Cada item tem o ícone (decorativo) e um `span` com
+o nome. Expandida, o `span` está à vista; recolhida, ele vira a dica ao lado do ícone, com opacidade
+zero até o ponteiro ou o foco chegarem — e continua sendo o nome acessível. Sem `aria-label`, sem
+segundo texto a manter.
+
+**Alternativas**: cookie lido pelo servidor — exigiria requisição para gravar e misturaria
+preferência de apresentação com a sessão; `details`/`summary` — não lembra nada; um `aria-label`
+por item — duas grafias do mesmo nome.
 
 ## R-007 — Medir antes de afirmar
 

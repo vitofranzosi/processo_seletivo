@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-16
 
-**Status**: Implementada — as quatro decisões do responsável pelo produto tomadas em 16/10 (ver
+**Status**: Em emenda — a barra retrátil (US5), pedida em 16/10 com o PR aberto; as seis decisões do responsável pelo produto tomadas em 16/10 (ver
 *Decisões do responsável pelo produto*)
 
 **Input**: etapa 2 da sequência do [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md)
@@ -127,6 +127,35 @@ nenhuma tela passa a ter rolagem horizontal.
 3. **Given** um navegador sem script, **When** a página abre no celular, **Then** as seções
    continuam alcançáveis.
 
+### User Story 5 — Recolher a barra e encontrá-la recolhida (Priority: P2)
+
+*Emenda de 16/10/2026, com o PR da feature ainda aberto (DP-5).*
+
+Quem passa o dia numa tabela larga recolhe a barra a uma faixa de ícones e ganha largura para o
+conteúdo. Ao abrir outra tela, ou ao recarregar, a barra continua recolhida — e não pisca expandida
+antes de recolher. Com a barra recolhida, cada ícone diz o nome da seção ao receber o ponteiro ou o
+foco, e a seção atual continua marcada.
+
+**Why this priority**: recupera espaço onde ele falta, sem tirar a navegação de vista; a P1 já
+resolve o deslocamento.
+
+**Independent Test**: na tela larga, recolher pelo controle, navegar e recarregar; a barra continua
+recolhida, cada item tem nome acessível e dica, e o conteúdo usa a largura liberada.
+
+**Acceptance Scenarios**:
+
+1. **Given** a barra expandida na tela larga, **When** a pessoa aciona o controle, por ponteiro,
+   teclado ou toque, **Then** a barra recolhe a uma faixa de ícones, o controle passa a dizer
+   "Expandir a barra lateral" e o conteúdo ocupa a largura liberada.
+2. **Given** a barra recolhida, **When** a pessoa abre outra tela ou recarrega a página, **Then** a
+   barra já aparece recolhida, sem salto.
+3. **Given** a barra recolhida, **When** o ponteiro ou o foco do teclado chega a um item, **Then** o
+   nome completo da seção aparece ao lado dele.
+4. **Given** a barra recolhida na tela larga, **When** a mesma pessoa abre a gestão no celular,
+   **Then** o painel do celular é o de sempre, com ícones e nomes.
+5. **Given** um navegador sem script, **When** a gestão abre na tela larga, **Then** a barra está
+   expandida e o controle não aparece.
+
 ### Edge Cases
 
 - **Página sem identidade.** As telas que se mostram sem identidade (a recusa de quem não está
@@ -144,6 +173,12 @@ nenhuma tela passa a ter rolagem horizontal.
 - **Link de salto.** Continua o primeiro foco da página e leva ao conteúdo, passando por cima da
   barra e do caminho.
 - **Impressão.** A barra e o caminho não saem no papel.
+- **Preferência registrada e Alocação.** Na Alocação a barra continua no topo (`FR-1724`), qualquer
+  que seja a preferência; a preferência não muda, e vale de novo na tela seguinte.
+- **Armazenamento indisponível** (navegação privada que recusa gravar): o controle continua
+  recolhendo e expandindo; só a memória entre páginas se perde.
+- **Movimento reduzido.** Quem pede menos movimento ao sistema operacional vê a troca de estado sem
+  transição.
 
 ## Requirements *(mandatory)*
 
@@ -183,12 +218,38 @@ nenhuma tela passa a ter rolagem horizontal.
 #### Celular
 
 - **FR-1719**: Abaixo da largura de tablet, a barra MUST começar recolhida, atrás de um botão no
-  topo que a abre e fecha por toque e por teclado, e anuncia se está aberta. A moldura MUST NOT
-  depender de script: a Visão Geral não carrega script nenhum, e continua sem carregar.
+  topo que a abre e fecha por toque e por teclado, e anuncia se está aberta. Esse painel MUST NOT
+  depender de script.
 
 - **FR-1724**: Tela cujo conteúdo a `057` obriga a caber a 1280 px sem rolagem interna — a matriz
   da Alocação por Etapa (`FR-1062`) — MUST mostrar a barra recolhida em qualquer largura, como no
   celular (DP-4). A escolha MUST vir do endereço da tela, sem marcação no conteúdo dela.
+
+#### A barra retrátil (US5)
+
+- **FR-1725**: Na tela larga, a barra MUST ter dois estados. **Expandida** (cerca de 16rem): ícone
+  e nome de cada item, os títulos dos grupos, e a pessoa com nome, responsabilidades e "Sair".
+  **Recolhida** (cerca de 4,25rem): só os ícones, centralizados; um separador discreto no lugar do
+  título de cada grupo; a pessoa como avatar de iniciais e "Sair" como ícone. A seção atual MUST
+  continuar marcada nos dois estados.
+- **FR-1726**: Recolhida a barra, cada item — e o "Sair" — MUST manter o nome acessível completo,
+  e o nome MUST aparecer como dica ao receber o ponteiro e ao receber o foco do teclado.
+- **FR-1727**: Um controle no topo da barra MUST recolhê-la e expandi-la por ponteiro, teclado e
+  toque, e MUST dizer o que fará — "Recolher a barra lateral" ou "Expandir a barra lateral" — e o
+  estado em que a barra está. A troca MUST ter transição discreta, e nenhuma sob preferência por
+  movimento reduzido.
+- **FR-1728**: A escolha MUST persistir entre telas e recarregamentos, guardada no próprio
+  navegador, sem requisição ao servidor, e MUST valer antes do primeiro desenho da página, sem
+  salto. Sem escolha guardada, a barra MUST começar expandida a partir de 80rem de janela e
+  recolhida abaixo disso. A preferência MUST NOT afetar autenticação, autorização nem endereços.
+- **FR-1729**: Sem script, a barra MUST ficar expandida e o controle MUST NOT aparecer.
+- **FR-1730**: A preferência da tela larga MUST NOT valer no celular nem na Alocação (`FR-1724`).
+- **FR-1731**: Cada seção MUST ter ícone próprio, escolhido pelo significado, todos no mesmo
+  desenho de traço único; os ícones MUST ser decorativos para tecnologia assistiva — o nome vem do
+  rótulo.
+- **FR-1732**: O script da moldura MUST ser um arquivo estático, sem dependência; a garantia de
+  "zero JavaScript novo" da Visão Geral (`SC-226` da `042`) MUST continuar valendo para o conteúdo
+  da tela (DP-6).
 
 #### O que não pode piorar
 
@@ -219,11 +280,16 @@ Nenhuma. A barra é apresentação derivada das capacidades da identidade, que j
 - **SC-663**: A suíte contra PostgreSQL continua sem falhas.
 - **SC-664**: A barra e o caminho são percorríveis só pelo teclado, com foco visível, na tela larga
   e no celular.
+- **SC-665**: Recolhida a barra, o conteúdo ganha pelo menos 11rem de largura na tela larga.
+- **SC-666**: Recolhida numa tela, a barra aparece recolhida já no primeiro quadro da tela seguinte
+  e depois de recarregar.
+- **SC-667**: Refeito o inventário visual com a barra expandida e de novo com ela recolhida,
+  nenhuma variante passa a estourar a 375 ou a 1280 px.
 
 ## Decisões do responsável pelo produto
 
 Tomadas em 16/10/2026: as três primeiras nas propostas que a spec levou; a quarta durante a
-implementação, quando o inventário a revelou.
+implementação, quando o inventário a revelou; a quinta e a sexta com o pedido da barra retrátil.
 
 - **DP-1 — Quais seções entram na barra.** As cinco do `FR-1713`. "Novo Processo Seletivo" fica
   na lista, por ser ação e não lugar. Os botões da lista continuam onde estão (`FR-1710`: o
@@ -240,6 +306,15 @@ implementação, quando o inventário a revelou.
   recolhida em qualquer largura (`FR-1724`). Descartadas: rolar a matriz dentro de uma moldura de
   altura limitada, que contraria a letra da `FR-1062`; e mostrar a barra fixa só acima de 1280 px,
   que tiraria a barra do notebook comum.
+
+- **DP-5 — A barra retrátil entra na 076.** Pedida em 16/10 com o PR 291 aberto, como refinamento
+  do shell que ele introduz. Decidido: emendar a spec, o plano e as tarefas da 076 e entregar tudo
+  no mesmo PR. Descartadas: spec 077 em sessão nova, depois do merge; 077 empilhada nesta sessão.
+- **DP-6 — Script para lembrar a escolha.** Lembrar entre páginas sem servidor exige script, e a
+  moldura não tinha nenhum: `test_visao_geral.py` proibia `script` na página inteira, pela `SC-226`
+  da `042`. Decidido: um script estático curto, com a escolha no armazenamento local do
+  navegador; o guardião da Visão Geral passa a olhar o conteúdo da tela, que é o que a `SC-226`
+  protege. Descartada: recolher só por CSS, sem memória — a barra voltaria expandida a cada tela.
 
 ## Assumptions
 

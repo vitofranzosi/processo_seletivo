@@ -10,6 +10,7 @@ Nada aqui consulta o banco. As capacidades vêm da sessão (`FR-1715`), e a seç
 endereço (`R-003`), que é hierárquico de propósito: as rotas da Mesa pendem de `minhas-etapas`.
 """
 
+import re
 from dataclasses import dataclass
 
 from django.urls import reverse
@@ -48,6 +49,9 @@ class Secao:
     rota: str
     grupo: str
     alcanca: object
+    # O símbolo no sprite do `base.html` (`FR-1731`). Pelo significado: a pasta do Processo, a
+    # prancheta do trabalho alocado, o gráfico da visão, o prédio da unidade, o envelope do aviso.
+    icone: str
 
 
 TRABALHO = "Trabalho"
@@ -55,11 +59,19 @@ UNIDADE = "Unidade"
 
 # A ordem é a da barra. "Novo Processo Seletivo" não está aqui: é ação, e não lugar (DP-1).
 SECOES = (
-    Secao("Processos Seletivos", "interface:lista", TRABALHO, _toda_identidade),
-    Secao("Minhas Etapas", "interface:minhas-etapas", TRABALHO, _toda_identidade),
-    Secao("Visão Geral", "interface:visao-geral", TRABALHO, pode_ver_visao),
-    Secao("Autoridades da unidade", "interface:autoridades", UNIDADE, pode_gerir_autoridades),
-    Secao("Modelos de aviso", "interface:modelos-de-aviso", UNIDADE, pode_gerir_modelos),
+    Secao("Processos Seletivos", "interface:lista", TRABALHO, _toda_identidade, "i-pasta"),
+    Secao("Minhas Etapas", "interface:minhas-etapas", TRABALHO, _toda_identidade, "i-prancheta"),
+    Secao("Visão Geral", "interface:visao-geral", TRABALHO, pode_ver_visao, "i-grafico"),
+    Secao(
+        "Autoridades da unidade",
+        "interface:autoridades",
+        UNIDADE,
+        pode_gerir_autoridades,
+        "i-predio",
+    ),
+    Secao(
+        "Modelos de aviso", "interface:modelos-de-aviso", UNIDADE, pode_gerir_modelos, "i-envelope"
+    ),
 )
 
 
@@ -97,11 +109,22 @@ def grupos_da_barra(ator, caminho, atual, enderecos):
             {
                 "rotulo": secao.rotulo,
                 "endereco": endereco,
+                "icone": secao.icone,
                 # Na própria página, `page`; abaixo dela, `true` — a tela é daquela seção.
                 "atual": ("page" if caminho == endereco else "true") if secao is atual else "",
             }
         )
     return [{"nome": nome, "itens": itens} for nome, itens in grupos.items()]
+
+
+def iniciais(nome):
+    """As duas letras do avatar da barra recolhida: `gustavo.gestor` vira `GG`, `ana` vira `A`.
+
+    O nome da demonstração é um identificador, e não um nome civil: as partes se separam por ponto,
+    hífen, sublinhado ou espaço. O diretório institucional, quando chegar, traz o nome de verdade.
+    """
+    partes = [parte for parte in re.split(r"[.\-_\s]+", nome or "") if parte]
+    return "".join(parte[0] for parte in partes[:2]).upper()
 
 
 def _navegacao(request):
@@ -112,7 +135,8 @@ def _navegacao(request):
     atual = secao_do_caminho(request.path, enderecos)
     return {
         "barra": grupos_da_barra(ator, request.path, atual, enderecos),
-        "recolhida": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
+        "no_topo": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
+        "iniciais": iniciais(ator.subject),
         "secao_atual": atual.rotulo if atual else "",
     }
 
