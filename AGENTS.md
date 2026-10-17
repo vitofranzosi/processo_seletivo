@@ -99,7 +99,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **11297 passando e 11 pulados**, nenhuma falha (medido em 2026-10-15, na `main` em `db428b30`, com o grupo `assistente` instalado, em 1312s; a medição anterior, de 14/10 em `55889d11`, dava 11263 e 12 sem o grupo). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
+Contra PostgreSQL a suíte fecha em **11457 passando e 11 pulados**, nenhuma falha (medido em 2026-10-17, na `main` em `a41b67c0`, com o grupo `assistente` instalado — os mesmos números em série e com 4 ou 8 workers; a medição anterior, de 15/10 em `db428b30`, dava 11297 e 11). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
 doze — onze com o grupo — são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
@@ -113,18 +113,27 @@ conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos 
 `DB_RUNTIME_USER` no ambiente, as settings o preferem a `DB_USER`, e então é ele que precisa ser o
 superusuário — é o que o `make test-pg` faz, a partir do `POSTGRES_USER`.
 
-**A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 94 — custa
-**~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
-custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
-declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
-não podem terminar em `ROLLBACK`, e o Django limpa truncando as tabelas depois de cada um. A versão
-anterior deste parágrafo contava as declarações (791, em 09/20) como se fossem casos e concluía
-"~10%"; uma marca de classe ou de módulo alcança todos os casos abaixo dela, e é por isso que os
-dois números divergem por um fator de três. Não é desleixo de quem os
-escreveu: é consequência de as garantias deste sistema morarem no banco — gatilho append-only,
-privilégio ausente e `select_for_update` que realmente tranca não são observáveis dentro de uma
-transação que vai ser desfeita.
+**A suíte roda em paralelo, e leva ~10 minutos com 4 workers — 600s, contra 1441s em série** (medido
+em 2026-10-17, em `a41b67c0`). O `make test-pg` e o CI passam `-n 4 --dist worksteal`; cada worker
+cria o seu banco, `test_<DB_NAME>_gwN`, com os seus gatilhos e privilégios. **O `worksteal` é o que
+rende**: com a distribuição padrão os mesmos 4 workers deram 1057s, porque três ficavam ~6 minutos
+ociosos esperando o quarto. E 8 workers deram 549s — quase nada a mais, porque o WAL e o disco do
+cluster são um só, e cada caso transacional fica ~1,8× mais caro em companhia. Para o caso que só
+falha junto de outros, `make test-pg PYTEST_WORKERS=0` volta ao serial. As medições estão em
+[doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md). No CI, o primeiro run
+paralelo levou 836s de pytest e 14m35s de job, contra 1729s a 2856s em série — o runner varia muito.
+
+**A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
+migrations — hoje são 94 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
+`--reuse-db` sobre um caso só. O custo está nos casos transacionais: **3108 dos 11 468 coletados,
+27%, e 79% do tempo em série** (medido em 2026-10-17). Eles não podem terminar em `ROLLBACK`, e o
+Django limpa depois de cada um truncando as tabelas e refazendo o `post_migrate` — só essa limpeza
+é 44% da suíte serial. A versão de 09/28 deste parágrafo contava 2599 de 8375; a de 09/20 contava as
+declarações de `transaction=True` como se fossem casos e concluía "~10%" — uma marca de classe ou de
+módulo alcança todos os casos abaixo dela. Não é desleixo de quem os escreveu: é consequência de as
+garantias deste sistema morarem no banco — gatilho append-only, privilégio ausente e
+`select_for_update` que realmente tranca não são observáveis dentro de uma transação que vai ser
+desfeita.
 
 **`--reuse-db` não economiza nada, e já foi medido — não repita o experimento.** Duas rodadas com a
 bandeira ligada deram 670s e 686s, contra 733s sem ela; e a segunda, que **reusava** o banco, saiu
@@ -133,7 +142,11 @@ de grandeza acima do que a bandeira poupa. Ela trocaria 2 segundos por um banco 
 silêncio quando uma migration muda.
 
 **Um banco de teste por worktree.** Suítes paralelas disputam `test_processo_seletivo` e se
-derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
+derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão. Os workers de uma mesma suíte
+não precisam disso — o sufixo `_gwN` já os separa —, mas duas suítes com o mesmo `DB_NAME` geram os
+mesmos `_gwN` e voltam a se derrubar. Os papéis de conformidade de `test_database_permissions.py`,
+que são do cluster e não do banco, levam o worker e o `DB_NAME` no nome desde 10/17: com o nome
+fixo, os workers se derrubavam ali — 51 erros em 92 casos com `-n 4`.
 
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
 runserver local devolve 503. Ele deixa qualquer pessoa declarar quem é, e produção recusa subir com
