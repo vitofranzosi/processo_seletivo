@@ -120,7 +120,8 @@ rende**: com a distribuição padrão os mesmos 4 workers deram 1057s, porque tr
 ociosos esperando o quarto. E 8 workers deram 549s — quase nada a mais, porque o WAL e o disco do
 cluster são um só, e cada caso transacional fica ~1,8× mais caro em companhia. Para o caso que só
 falha junto de outros, `make test-pg PYTEST_WORKERS=0` volta ao serial. As medições estão em
-[doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md).
+[doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md). No CI, o primeiro run
+paralelo levou 836s de pytest e 14m35s de job, contra 1729s a 2856s em série — o runner varia muito.
 
 **A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
 migrations — hoje são 94 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com

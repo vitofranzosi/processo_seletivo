@@ -83,13 +83,26 @@ cada; a diferença entre 600s e 1441s está muito acima desse ruído, a entre 54
    que só falha em companhia.
 2. **Workflow**: o passo `uv run pytest` vira `uv run pytest -n 4 --dist worksteal`. O
    `ubuntu-latest` de repositório público tem 4 vCPUs, e o PostgreSQL do serviço divide com eles.
-   **A projeção — 1729s × 600/1441 ≈ 12 min — não está medida**, e a primeira execução no PR é que
-   diz. Se o runner saturar, 3 workers é o próximo passo, e não 8.
+   A projeção era de ~12 min (1729s × 600/1441); o medido está em *No CI, medido*, abaixo.
 3. **`AGENTS.md`**: o parágrafo do tempo da suíte e o de "um banco de teste por worktree" (o sufixo
    `_gwN` e o fim da disputa pelos papéis).
 
 O `make test` (SQLite) fica serial: ele não é o modo confiável, e os casos dele que acoplam pela
 ordem — o `~` literal do `AGENTS.md` — não ganham nada sendo embaralhados.
+
+## No CI, medido
+
+Os dois runs do PR #295, no runner `ubuntu-latest` (4 vCPUs):
+
+| Run | Commit | Pytest | Job `test` | Passando | Pulados |
+|---|---|---:|---:|---:|---:|
+| serial | `c7167c85` (sobre `a41b67c0`) | 2856s | 48m15s | 11 457 | 11 |
+| `-n 4 --dist worksteal` | `9b00eb7c` (com a `main` em `56b94623`) | **836s** | **14m35s** | 11 627 | 11 |
+
+O paralelo deu os mesmos 11 627 e 11 que o `make test-pg` local na mesma árvore (610s). As duas
+linhas não são do mesmo commit — o merge com a `main` trouxe 170 casos —, e **o runner varia
+muito**: o serial de referência da véspera, no run `39026104033`, levou 1729s, e o deste PR, 2856s.
+Contra o melhor serial conhecido o ganho é de ~2×; contra o do mesmo dia, de ~3,4×.
 
 ## O que não entrou, e fica registrado
 
