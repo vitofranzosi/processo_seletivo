@@ -5,7 +5,7 @@
 
 **Created**: 2026-10-17
 
-**Status**: Draft
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: etapa 4 da sequência do [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md)
 (§7) — a modernização por tela, incremental. Segundo incremento, depois das telas de uso diário
@@ -240,6 +240,10 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
   as colunas MUST continuar alinhadas pelo topo (`FR-1047` da `057`).
 - **FR-1766**: A 375 px, nas duas telas, "O que fazer agora" MUST ser a primeira região de conteúdo
   depois da situação e dos avisos sobre ela.
+- **FR-1776**: No detalhe do Processo, a faixa das seções do Processo — Supervisão, Comissão,
+  Alocação por Etapa, Auditoria da comissão — MUST NOT aparecer, nem vazia, para quem não alcança
+  nenhuma delas; para quem alcança, MUST continuar com os mesmos itens, no mesmo lugar (a regra da
+  lista na `FR-1741` da `077`).
 
 #### A trilha no cabeçalho de contexto
 
@@ -312,7 +316,9 @@ Nenhuma. Só apresentação.
   cabeçalho da página: repetir a ação fora do cartão separaria a ação da passagem de bastão e do
   motivo da indisponibilidade (`FR-1045` da `057`), e duplicaria o que a `077` acabou de deduplicar.
 - As seções do Processo na faixa abaixo do título — Supervisão, Comissão, Alocação por Etapa e
-  Auditoria da comissão — são lugares do próprio Processo, e não da barra; ficam onde estão.
+  Auditoria da comissão — são lugares do próprio Processo, e não da barra; ficam onde estão. Para
+  quem não alcança nenhuma, a faixa era um parágrafo vazio entre o título e a situação, e deixa de
+  vir (`FR-1776`), como a da lista na `077`.
 - O produto no começo da trilha é a sigla GPS, como na `076` e na `077`.
 - A tela mais estreita que se considera é a de 375 px, a mesma do inventário.
 - A validação com a equipe, recomendada desde a `075`, continua pendente; este incremento não a

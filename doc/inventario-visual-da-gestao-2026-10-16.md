@@ -347,3 +347,51 @@ altura da página —, as diferenças estão todas nelas:
 Os cinco estouros descritos em *O que cada estouro é*, acima, ficam como registro da linha de base.
 A causa medida de cada um e a correção estão no `R-002` da
 [pesquisa da 077](../specs/077-telas-de-uso-diario/research.md).
+
+## Depois da 078
+
+O segundo incremento da modernização por tela ([`078`](../specs/078-telas-de-quem-elabora/spec.md))
+levou à folha comum as duas causas que a `077` tinha corrigido tela a tela — a moldura que rola sem
+posição e o `fieldset` que não encolhe —, tirou as três regras pontuais, e mudou as telas de quem
+elabora: a trilha do detalhe do Processo, do detalhe do Edital e das nove etapas da composição subiu
+ao cabeçalho de contexto, "O que fazer agora" vem antes do resto, e os Editais do Processo são a
+tabela da lista. O inventário foi refeito sobre a `main` em `a41b67c0` com a mudança aplicada, no
+mesmo banco, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra. Antes da mudança, o
+mesmo roteiro reproduziu `depois-da-077/` sem diferença nenhuma.
+
+Em [`depois-da-078/`](inventario-visual-da-gestao-2026-10-16/depois-da-078/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-078/recolhida/), e as capturas, a
+1280 e a 375 px, do detalhe do Processo, dos três detalhes de Edital e de duas etapas da composição
+— a Identificação e os Anexos, que perderam a regra própria. As outras sete etapas mudam do mesmo
+jeito que a Identificação: só o cabeçalho de contexto.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-077/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-078/resultados.json
+```
+
+| | Depois da 077 | Depois da 078, expandida | Depois da 078, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas de quem elabora mudaram de medida.** Campo a campo — `scrollWidth`, título, `h1` e
+altura —, as diferenças estão nas 14 variantes desta feature, e em nenhuma outra:
+
+| Tela | O que mudou |
+|---|---|
+| `processo-detalhe` | cresce 76 px a 1280 (14 com a barra recolhida) e 181 a 375: os Editais em tabela ocupam mais altura que a lista corrida; "O que fazer agora" sobe de y ≈ 1700 para y ≈ 345 a 1280 |
+| `detalhe-26`, `detalhe-51`, `detalhe-76` | encurtam 37 px a 1280 e 23 a 375: a trilha subiu ao cabeçalho |
+| `compor` e as nove etapas | encurtam 37 px a 1280 e 2 a 375: a trilha subiu ao cabeçalho |
+
+As conclusões preservadas, reaproveitar e os anexos da composição continuam com `scrollWidth` de
+375 a 375 px, agora pela regra da folha comum; as conclusões saem idênticas pixel a pixel.
+
+**Pixel a pixel.** As capturas de antes e de depois foram tiradas no mesmo dia, no mesmo banco. Fora
+das 14 variantes, as que diferem são de dois tipos: o que muda entre duas capturas seguidas do
+mesmo código — a hora da leitura na Supervisão, na Visão Geral e nas dúvidas, cantos arredondados,
+o cursor —, e a suavização do texto dentro das molduras que rolam a 375 px, que a posição nova muda
+em até 67 de 255, sem mover caixa nenhuma. A medição está no `R-001` e nos achados da
+[pesquisa da 078](../specs/078-telas-de-quem-elabora/research.md).

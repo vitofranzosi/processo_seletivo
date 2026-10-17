@@ -51,8 +51,12 @@ def test_as_terminais_moram_num_parcial_das_duas_telas():
         assert "background:var(--branco)" in contorno and "color:var(--vermelho)" in contorno
     for seletor in (".lista-acoes.em-linha", ".lista-acoes+.terminais", ".terminais .botao"):
         assert regra(seletor) is None, f"{seletor} não é da folha comum"
-    assert regra(".colunas.ao-topo", da_pagina("detalhe.html"))
-    assert regra(".colunas.ao-topo", da_pagina("processo_detalhe.html")) is None
+    # O alinhamento pelo topo era só do Detalhe do Edital (D-002 da 058); a 078 o estendeu ao do
+    # Processo, onde "O que fazer agora" subiu para o lado da tabela dos Editais (`FR-1764` da 078).
+    # Continua regra de página, e não da folha comum.
+    for pagina in ("detalhe.html", "processo_detalhe.html"):
+        assert regra(".colunas.ao-topo", da_pagina(pagina)), pagina
+    assert regra(".colunas.ao-topo") is None
 
 
 @pytest.mark.django_db(transaction=True)

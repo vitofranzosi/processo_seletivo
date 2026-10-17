@@ -1,11 +1,4 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block estilo_da_pagina %}
-{% comment %} A 375 px a página tinha 835 px sem nada visível passando da borda (077, `FR-1743`): o rótulo
-   oculto de cada linha é `position:absolute`, a moldura que rola não era posicionada, e ele tomava
-   a página como referência e a alargava. Posicionada, a moldura passa a contê-lo, e ele rola com a
-   tabela. Só nesta tela: a regra geral é decisão de outro incremento (`R-002` da 077). {% endcomment %}
-.tabela-rolavel{position:relative}
-{% endblock %}
 {% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">
