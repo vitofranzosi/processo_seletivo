@@ -14,8 +14,11 @@
   var RECOLHIDA = "recolhida";
   var EXPANDIDA = "expandida";
   // Sem escolha guardada, a barra começa recolhida em janela estreita: entre 64 e 80rem ela
-  // comeria um quinto da largura de uma tela que já cabe com folga pequena (FR-1728).
-  var JANELA_LARGA = "(min-width: 80rem)";
+  // comeria um quinto da largura de uma tela que já cabe com folga pequena (FR-1728). **Menos na
+  // tela de toque**: ali não há ponteiro que mostre a dica, e a faixa de ícones deixaria quem toca
+  // adivinhando o nome de cada seção — o tablet deitado, entre 1024 e 1279 px, é exatamente essa
+  // faixa.
+  var COMECA_EXPANDIDA = "(min-width: 80rem), (pointer: coarse)";
 
   function estadoInicial(guardado, larga) {
     if (guardado === RECOLHIDA || guardado === EXPANDIDA) return guardado;
@@ -42,11 +45,13 @@
     }
   }
 
-  /** O controle diz o que fará, e não o que a barra é (FR-1727). */
-  function descrever(controle, estado) {
-    var recolhida = estado === RECOLHIDA;
-    controle.setAttribute("aria-expanded", recolhida ? "false" : "true");
-    controle.rotulo.textContent = recolhida ? "Expandir a barra lateral" : "Recolher a barra lateral";
+  /** O controle diz o que fará, e o que fará diz o estado (FR-1727).
+
+      Sem `aria-expanded`: recolhida, a barra continua inteira à vista e operante, só mais estreita,
+      e anunciar "recolhido" antes de ler todas as seções desmentiria o anúncio. */
+  function descrever(rotulo, estado) {
+    rotulo.textContent =
+      estado === RECOLHIDA ? "Expandir a barra lateral" : "Recolher a barra lateral";
   }
 
   function armazenamentoDoNavegador() {
@@ -60,6 +65,7 @@
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
       CHAVE: CHAVE,
+      COMECA_EXPANDIDA: COMECA_EXPANDIDA,
       estadoInicial: estadoInicial,
       alternar: alternar,
       ler: ler,
@@ -74,21 +80,21 @@
   var armazenamento = armazenamentoDoNavegador();
   shell.setAttribute(
     "data-barra",
-    estadoInicial(ler(armazenamento), window.matchMedia(JANELA_LARGA).matches)
+    estadoInicial(ler(armazenamento), window.matchMedia(COMECA_EXPANDIDA).matches)
   );
 
   document.addEventListener("DOMContentLoaded", function () {
     var botao = shell.querySelector("[data-alternar-barra]");
     if (!botao) return;
-    var controle = { setAttribute: botao.setAttribute.bind(botao), rotulo: botao.querySelector("[data-rotulo]") };
-    descrever(controle, shell.getAttribute("data-barra"));
+    var rotulo = botao.querySelector("[data-rotulo]");
+    descrever(rotulo, shell.getAttribute("data-barra"));
     botao.hidden = false;
     botao.addEventListener("click", function () {
       var novo = alternar(shell.getAttribute("data-barra"));
       // A transição só existe a partir de um gesto: no carregamento, a barra já nasce no estado.
       shell.setAttribute("data-animar", "");
       shell.setAttribute("data-barra", novo);
-      descrever(controle, novo);
+      descrever(rotulo, novo);
       gravar(armazenamento, novo);
     });
   });

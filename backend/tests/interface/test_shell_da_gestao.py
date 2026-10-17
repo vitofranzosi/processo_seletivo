@@ -303,9 +303,12 @@ def test_o_controle_nasce_escondido_e_diz_o_que_fara(client, seletor_ligado):
     assert controle, "o controle de recolher precisa existir na moldura"
     abertura = controle.group(0).split(">")[0]
     assert " hidden" in abertura
-    assert 'aria-expanded="true"' in abertura
-    assert 'aria-controls="secoes-da-gestao"' in abertura
-    assert "Recolher a barra lateral" in controle.group(1)
+    # O nome diz o que fará, e isso diz o estado; `aria-expanded` anunciaria "recolhido" sobre um
+    # painel que continua inteiro à vista.
+    assert "aria-expanded" not in abertura
+    assert '<span class="rotulo-da-secao" data-rotulo>Recolher a barra lateral</span>' in (
+        controle.group(1)
+    )
 
     assert '<div class="shell">' in corpo
     assert 'data-barra="' not in corpo
@@ -324,7 +327,8 @@ def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado)
     """`FR-1726`, `FR-1731`: o ícone é decorativo, o nome é o texto do item — que vira a dica
     quando a barra recolhe —, e cada seção tem o seu ícone."""
     identificar(client, "gustavo.gestor", ["gestor"])
-    moldura = barra(client.get(reverse("interface:lista")).content.decode())
+    corpo = client.get(reverse("interface:lista")).content.decode()
+    moldura = barra(corpo)
 
     itens = re.findall(
         r'<li><a href="[^"]+"[^>]*><svg class="icone-da-secao" aria-hidden="true">'
@@ -334,10 +338,9 @@ def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado)
     assert [rotulo for _, rotulo in itens] == [secao.rotulo for secao in navegacao.SECOES]
     icones = [icone for icone, _ in itens]
     assert len(set(icones)) == len(icones), "dois itens com o mesmo ícone"
+    sprite = barra_e_script(corpo)
     for icone in icones + ["i-sair", "i-painel"]:
-        assert f'<symbol id="{icone}"' in moldura or f'<symbol id="{icone}"' in barra_e_script(
-            client.get(reverse("interface:lista")).content.decode()
-        ), icone
+        assert f'<symbol id="{icone}"' in sprite, icone
     # O "Sair" também é ícone com nome por extenso.
     assert '<span class="rotulo-da-secao">Sair</span></button>' in moldura
 
@@ -370,9 +373,15 @@ def test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado():
     from pathlib import Path
 
     folha = (Path(navegacao.__file__).parent / "templates/interface/base.html").read_text()
-    larga = folha.split("@media (min-width:64rem){\n  .shell{")[1].split("\n}")[0]
+    larga = next(
+        bloco
+        for bloco in folha.split("@media (min-width:64rem){")[1:]
+        if "grid-template-columns:16rem" in bloco
+    ).split("\n}")[0]
 
-    assert ".shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr)}" in larga
+    assert ".shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr);" in larga
     assert ".shell[data-animar]{transition:grid-template-columns" in larga
+    # A coluna é pintada na `.shell` nos dois estados, e não só na barra, da altura da janela.
+    assert larga.count("background:linear-gradient(to right,var(--branco)") == 2
     reduzido = folha.split("@media (prefers-reduced-motion:reduce){")[1].split("\n}")[0]
     assert ".shell[data-animar]{transition:none}" in reduzido

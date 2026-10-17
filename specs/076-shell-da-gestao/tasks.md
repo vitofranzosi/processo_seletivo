@@ -76,6 +76,8 @@ feito em 16/10.
 - [x] T026 [US5] Navegador: expandida, recolhida, troca repetida, navegação e recarga, celular, teclado e dicas (quickstart)
 - [x] T027 [US5] Inventário com a barra expandida e com ela recolhida, `BARRA=` no roteiro (SC-667)
 
+- [x] T028 [US5] Achados da segunda revisão do PR: tela de toque começa expandida; coluna pintada na `.shell`; controle na última linha e ícones parados ao recolher; sem `aria-expanded`; teste dos ícones sem requisições repetidas
+
 ## Dependencies
 
 - Phase 2 bloqueia todas as histórias. US1 bloqueia US3 e US4 (a moldura é onde o caminho e o botão

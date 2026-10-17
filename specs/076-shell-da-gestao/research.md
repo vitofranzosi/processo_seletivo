@@ -106,6 +106,17 @@ carregado **sem `defer`** de dentro da `.shell`, logo depois de ela abrir. Dali 
 antes de o navegador ler a barra — que, por isso, já nasce no estado certo. O controle, escondido no
 HTML, é ligado no `DOMContentLoaded`.
 
+**Revisão do PR, segunda rodada.** O controle saiu do topo, ao lado da marca, para a última linha da
+barra: no topo, a faixa recolhida não comportava a sigla e o controle lado a lado, o topo crescia
+ao recolher e empurrava todos os itens para baixo — e o controle saía de baixo do ponteiro de quem
+recolhe e expande em seguida. Todo ícone tem o centro a 34px da borda nos dois estados, e o
+separador ocupa a altura do título que substitui: ao recolher, nada anda, e só os nomes saem. O
+controle perdeu `aria-expanded`: recolhida, a barra continua inteira à vista, e o anúncio de
+"recolhido" desmentiria o que vem a seguir; o nome do controle já diz o que ele fará. E a tela de
+toque começa expandida, porque a dica depende de ponteiro. A coluna da barra passou a ser pintada
+na própria `.shell`, para que uma captura de página inteira não mostre a barra parando no primeiro
+quadro.
+
 **Por quê**: a regra do projeto é script em arquivo estático, sem script inline; no `head` o atributo
 teria de ir ao `html`, e cada regra do estado recolhido precisaria excluir a Alocação por `:not()`. De
 dentro da `.shell`, a Alocação simplesmente não carrega o script (`FR-1730`). A transição só existe

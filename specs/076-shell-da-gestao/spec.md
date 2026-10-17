@@ -146,7 +146,7 @@ recolhida, cada item tem nome acessível e dica, e o conteúdo usa a largura lib
 
 1. **Given** a barra expandida na tela larga, **When** a pessoa aciona o controle, por ponteiro,
    teclado ou toque, **Then** a barra recolhe a uma faixa de ícones, o controle passa a dizer
-   "Expandir a barra lateral" e o conteúdo ocupa a largura liberada.
+   "Expandir a barra lateral" e o conteúdo ocupa a largura liberada. Nenhum ícone muda de lugar.
 2. **Given** a barra recolhida, **When** a pessoa abre outra tela ou recarrega a página, **Then** a
    barra já aparece recolhida, sem salto.
 3. **Given** a barra recolhida, **When** o ponteiro ou o foco do teclado chega a um item, **Then** o
@@ -234,14 +234,16 @@ recolhida, cada item tem nome acessível e dica, e o conteúdo usa a largura lib
   continuar marcada nos dois estados.
 - **FR-1726**: Recolhida a barra, cada item — e o "Sair" — MUST manter o nome acessível completo,
   e o nome MUST aparecer como dica ao receber o ponteiro e ao receber o foco do teclado.
-- **FR-1727**: Um controle no topo da barra MUST recolhê-la e expandi-la por ponteiro, teclado e
-  toque, e MUST dizer o que fará — "Recolher a barra lateral" ou "Expandir a barra lateral" — e o
-  estado em que a barra está. A troca MUST ter transição discreta, e nenhuma sob preferência por
-  movimento reduzido.
+- **FR-1727**: Um controle na última linha da barra — o único lugar dela que não se mexe ao
+  recolher — MUST recolhê-la e expandi-la por ponteiro, teclado e toque, e o nome dele MUST dizer o
+  que fará: "Recolher a barra lateral" ou "Expandir a barra lateral", o que basta para dizer o estado.
+  Ao recolher e ao expandir, os ícones MUST ficar onde estão, e só os nomes saem e voltam. A troca
+  MUST ter transição discreta, e nenhuma sob preferência por movimento reduzido.
 - **FR-1728**: A escolha MUST persistir entre telas e recarregamentos, guardada no próprio
   navegador, sem requisição ao servidor, e MUST valer antes do primeiro desenho da página, sem
-  salto. Sem escolha guardada, a barra MUST começar expandida a partir de 80rem de janela e
-  recolhida abaixo disso. A preferência MUST NOT afetar autenticação, autorização nem endereços.
+  salto. Sem escolha guardada, a barra MUST começar expandida a partir de 80rem de janela, ou em
+  tela de toque de qualquer largura — onde não há ponteiro que mostre a dica —, e recolhida nos
+  demais casos. A preferência MUST NOT afetar autenticação, autorização nem endereços.
 - **FR-1729**: Sem script, a barra MUST ficar expandida e o controle MUST NOT aparecer.
 - **FR-1730**: A preferência da tela larga MUST NOT valer no celular nem na Alocação (`FR-1724`).
 - **FR-1731**: Cada seção MUST ter ícone próprio, escolhido pelo significado, todos no mesmo

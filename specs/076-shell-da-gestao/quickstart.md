@@ -28,16 +28,17 @@ LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps
 
 ## A barra retrátil (US5)
 
-9. Na tela larga, o controle ao lado da marca diz "Recolher a barra lateral". Acioná-lo — clique,
+9. Na tela larga, o controle na última linha da barra diz "Recolher a barra lateral". Acioná-lo — clique,
    Enter ou toque — recolhe a barra a uma faixa de ícones; o controle passa a dizer "Expandir a
-   barra lateral", e o conteúdo ganha a largura.
+   barra lateral", o conteúdo ganha a largura, e nenhum ícone muda de lugar — o controle fica sob o
+   ponteiro para expandir de novo.
 10. Recolhida: o ponteiro ou o foco do teclado num ícone mostra o nome da seção; a seção atual
     continua marcada; o pé mostra as iniciais e o "Sair" como ícone.
 11. Abrir outra seção e recarregar: a barra já aparece recolhida, sem passar pela expandida.
 12. A 375 px, com a preferência recolhida guardada: o painel "Seções" é o de sempre, com nomes.
 13. Na Alocação por Etapa, a barra fica no topo, qualquer que seja a preferência.
 14. Sem preferência guardada (`localStorage.removeItem("gps.barra")`), a barra começa expandida a
-    1280 px e recolhida a 1100 px.
+    1280 px e recolhida a 1100 px — e expandida num tablet de toque, em qualquer largura.
 
 ## Inventário
 

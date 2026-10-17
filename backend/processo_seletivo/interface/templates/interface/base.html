@@ -58,9 +58,9 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   cursor:pointer;background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde);
   border-radius:4px}
 .fechar-secoes{align-self:flex-end;margin:.6rem 1rem 0}
-.alternar-barra{position:relative;flex:none;margin-left:auto;display:grid;place-items:center;
-  width:2rem;height:2rem;padding:0;border:0;border-radius:6px;background:none;color:var(--texto-fraco);
-  cursor:pointer}
+.alternar-barra{position:relative;display:flex;align-items:center;gap:.7rem;min-height:2.5rem;
+  margin:0 .5rem .5rem;padding:.4rem .75rem .4rem calc(.8125rem + 3px);border:0;border-radius:6px;
+  background:none;color:var(--texto-fraco);font:inherit;font-size:.875rem;text-align:left;cursor:pointer}
 .alternar-barra:hover{background:var(--fundo);color:var(--texto)}
 .secoes-da-gestao:popover-open{display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;
   width:min(18rem,85vw);height:100%;margin:0;padding:0;border:0;border-right:1px solid var(--borda);
@@ -68,14 +68,15 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
 .secoes-da-gestao::backdrop{background:rgba(0,0,0,.3)}
 .secoes-da-gestao ul{list-style:none;margin:0;padding:0 .5rem}
 .secoes-da-gestao nav a{position:relative;display:flex;align-items:center;gap:.7rem;min-height:2.5rem;
-  padding:.4rem .75rem;border-radius:6px;color:var(--texto);text-decoration:none;
+  padding:.4rem .75rem .4rem .8125rem;border-radius:6px;color:var(--texto);text-decoration:none;
   border-left:3px solid transparent}
 .secoes-da-gestao nav a:hover{background:var(--fundo)}
 .secoes-da-gestao nav a[aria-current]{background:var(--verde-claro);border-left-color:var(--verde);
   color:var(--verde-escuro);font-weight:600}
+.rotulo-da-secao{white-space:nowrap}
 .grupo-de-secoes{margin:1.25rem 1.25rem .35rem;font-size:.6875rem;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:var(--texto-fraco)}
-.pessoa-identificada{margin-top:auto;padding:.85rem 1rem;border-top:1px solid var(--borda);
+.pessoa-identificada{margin-top:auto;padding:.85rem 1rem .85rem 1.125rem;border-top:1px solid var(--borda);
   font-size:.875rem;display:flex;align-items:center;gap:.6rem}
 .iniciais{flex:none;display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;
   background:var(--verde-claro);color:var(--verde-escuro);font-size:.75rem;font-weight:600}
@@ -87,14 +88,11 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   padding:0;border-color:var(--borda);color:var(--texto-fraco)}
 .pessoa-identificada .acao:hover{color:var(--vermelho);border-color:var(--vermelho)}
 {% comment %} Um `span` só para três papéis: o nome visível do item, o nome acessível dele, e a dica
-   quando a barra recolhe. O "Sair" e o controle são ícone desde sempre, e a dica é tudo o que se vê
-   deles por escrito. {% endcomment %}
-.dica-da-barra,.pessoa-identificada .rotulo-da-secao{position:absolute;z-index:20;padding:.25rem .5rem;
+   quando a barra recolhe. O "Sair" é ícone desde sempre, e a dica é tudo o que se vê dele por
+   escrito na tela larga. {% endcomment %}
+.pessoa-identificada .rotulo-da-secao{position:absolute;z-index:20;padding:.25rem .5rem;
   border-radius:4px;background:var(--texto);color:var(--branco);font-size:.75rem;font-weight:400;
-  white-space:nowrap;pointer-events:none;opacity:0;right:0}
-.dica-da-barra{top:calc(100% + .35rem)}
-.pessoa-identificada .rotulo-da-secao{bottom:calc(100% + .35rem)}
-.alternar-barra:hover .dica-da-barra,.alternar-barra:focus-visible .dica-da-barra,
+  white-space:nowrap;pointer-events:none;opacity:0;right:0;bottom:calc(100% + .35rem)}
 .pessoa-identificada .acao:hover .rotulo-da-secao,.pessoa-identificada .acao:focus-visible .rotulo-da-secao{
   opacity:1}
 .cabecalho-de-contexto{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;min-height:3.5rem;
@@ -110,39 +108,45 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
     color:inherit;font-size:.8125rem}
 }
 @media (min-width:64rem){
-  .shell{display:grid;grid-template-columns:16rem minmax(0,1fr)}
+  {% comment %} A coluna da barra é pintada na própria `.shell`, além da barra: a barra tem a
+     altura da janela e acompanha a rolagem, e numa captura de página inteira ela pararia no
+     primeiro quadro, com o resto da coluna em cinza. {% endcomment %}
+  .shell{display:grid;grid-template-columns:16rem minmax(0,1fr);
+    background:linear-gradient(to right,var(--branco) calc(16rem - 1px),var(--borda) 0 16rem,transparent 0)}
   .shell[data-animar]{transition:grid-template-columns .18s ease}
   .barra-lateral{position:sticky;top:0;height:100vh;flex-direction:column;align-items:stretch;
-    gap:0;padding:0;border-bottom:0;border-right:1px solid var(--borda);overflow-y:auto}
-  .marca-da-barra{min-height:3.5rem;padding:0 .75rem 0 1rem;border-bottom:1px solid var(--borda)}
+    gap:0;padding:0;border-bottom:0;border-right:1px solid var(--borda);overflow:hidden auto}
+  .marca-da-barra{height:3.5rem;flex:none;overflow:hidden;padding:0 1rem 0 1.125rem;
+    border-bottom:1px solid var(--borda)}
   .abrir-secoes,.fechar-secoes{display:none}
   .secoes-da-gestao{display:flex;flex-direction:column;flex:1;position:static;width:auto;
     height:auto;margin:0;padding:0;border:0;background:none;color:inherit;overflow:visible}
   .secoes-da-gestao:popover-open{width:16rem}
   .secoes-da-gestao::backdrop{background:none}
-  .shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr)}
+  {% comment %} **Nada anda ao recolher, só os nomes saem.** Todo ícone da barra tem o centro a 34px
+     da borda — o centro da faixa de 4,25rem — nos dois estados: o dos itens (0,5rem da lista, 3px
+     do filete, 0,8125rem de recuo e metade do ícone), a sigla, o avatar e o controle. A coluna
+     encolhe pela direita. O separador ocupa a altura do título que ele substitui, e o controle mora
+     na última linha, presa ao fundo, para que nada suba nem desça debaixo do ponteiro de quem
+     recolhe e expande em seguida. {% endcomment %}
+  .shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr);
+    background:linear-gradient(to right,var(--branco) calc(4.25rem - 1px),var(--borda) 0 4.25rem,transparent 0)}
   .shell[data-barra=recolhida] .barra-lateral{overflow:visible}
-  .shell[data-barra=recolhida] .marca-da-barra{flex-direction:column;justify-content:center;gap:.4rem;
-    padding:.6rem 0}
-  .shell[data-barra=recolhida] .alternar-barra{margin:0}
   .shell[data-barra=recolhida] .nome-do-produto,.shell[data-barra=recolhida] .nome-da-pessoa{
     position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-  .shell[data-barra=recolhida] .grupo-de-secoes{height:1px;margin:.75rem 1rem;overflow:hidden;
+  .shell[data-barra=recolhida] .grupo-de-secoes{height:1px;margin:1.6rem 1rem .97rem;overflow:hidden;
     background:var(--borda);color:transparent}
-  .shell[data-barra=recolhida] .secoes-da-gestao nav a{justify-content:center;padding:.4rem 0}
-  .shell[data-barra=recolhida] .secoes-da-gestao nav .rotulo-da-secao{position:absolute;z-index:20;
-    left:calc(100% + .6rem);top:50%;transform:translateY(-50%);padding:.25rem .5rem;border-radius:4px;
-    background:var(--texto);color:var(--branco);font-size:.75rem;font-weight:400;white-space:nowrap;
-    pointer-events:none;opacity:0}
-  .shell[data-barra=recolhida] .secoes-da-gestao nav a:hover .rotulo-da-secao,
-  .shell[data-barra=recolhida] .secoes-da-gestao nav a:focus-visible .rotulo-da-secao{opacity:1}
-  .shell[data-barra=recolhida] .dica-da-barra,.shell[data-barra=recolhida] .pessoa-identificada .rotulo-da-secao{
-    top:50%;bottom:auto;right:auto;left:calc(100% + .6rem);transform:translateY(-50%)}
+  .shell[data-barra=recolhida] .secoes-da-gestao .rotulo-da-secao{position:absolute;z-index:20;
+    top:50%;bottom:auto;right:auto;left:calc(100% + .6rem);transform:translateY(-50%);
+    padding:.25rem .5rem;border-radius:4px;background:var(--texto);color:var(--branco);
+    font-size:.75rem;font-weight:400;white-space:nowrap;pointer-events:none;opacity:0}
+  .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):hover .rotulo-da-secao,
+  .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):focus-visible .rotulo-da-secao{opacity:1}
   .shell[data-barra=recolhida] .pessoa-identificada{flex-direction:column;padding:.75rem 0}
-  .shell-barra-no-topo{display:block}
+  .shell-barra-no-topo{display:block;background:none}
   .shell-barra-no-topo .barra-lateral{height:auto;flex-direction:row;align-items:center;
     gap:1rem;padding:.6rem 1rem;border-right:0;border-bottom:1px solid var(--borda)}
-  .shell-barra-no-topo .marca-da-barra{min-height:0;padding:0;border-bottom:0}
+  .shell-barra-no-topo .marca-da-barra{height:auto;padding:0;border-bottom:0}
   .shell-barra-no-topo .abrir-secoes,.shell-barra-no-topo .fechar-secoes{display:block}
   .shell-barra-no-topo .secoes-da-gestao:not(:popover-open){display:none}
   .shell-barra-no-topo .secoes-da-gestao:popover-open{position:fixed;inset:0 auto 0 0;
@@ -1473,9 +1477,6 @@ escape do guardião por mudar de lugar.
     {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
        dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
     <a class="marca" href="{% url 'interface:lista' %}"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
-    {% comment %} Escondido até o script ligá-lo: sem script, recolher não teria como ser lembrado,
-       e a barra fica expandida (`FR-1729`). {% endcomment %}
-    <button type="button" class="alternar-barra" data-alternar-barra aria-expanded="true" aria-controls="secoes-da-gestao" hidden><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"/></svg><span class="dica-da-barra" data-rotulo>Recolher a barra lateral</span></button>
   </div>
   <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
   <div class="secoes-da-gestao" id="secoes-da-gestao" popover>
@@ -1499,6 +1500,10 @@ escape do guardião por mudar de lugar.
         <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"/></svg><span class="rotulo-da-secao">Sair</span></button>
       </form>
     </div>
+    {% comment %} Escondido até o script ligá-lo: sem script, recolher não teria como ser lembrado,
+       e a barra fica expandida (`FR-1729`). Na última linha, presa ao fundo: é o único lugar da
+       barra que não se mexe ao recolher. {% endcomment %}
+    <button type="button" class="alternar-barra" data-alternar-barra hidden><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"/></svg><span class="rotulo-da-secao" data-rotulo>Recolher a barra lateral</span></button>
   </div>
 </div>
 <div class="area-de-trabalho">

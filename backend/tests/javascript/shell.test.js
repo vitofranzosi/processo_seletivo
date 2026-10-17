@@ -62,20 +62,18 @@ test("armazenamento que recusa não impede a troca nem derruba a leitura", () =>
   assert.equal(shell.ler(null), null);
 });
 
-test("o controle diz o que fará, e o estado em que a barra está", () => {
-  const atributos = {};
-  const controle = {
-    setAttribute: (nome, valor) => {
-      atributos[nome] = valor;
-    },
-    rotulo: { textContent: "" },
-  };
+test("sem escolha, a tela de toque começa expandida, qualquer que seja a largura", () => {
+  // Sem ponteiro, a dica não aparece, e a faixa de ícones não diria o nome de nada.
+  assert.match(shell.COMECA_EXPANDIDA, /\(min-width: 80rem\)/);
+  assert.match(shell.COMECA_EXPANDIDA, /\(pointer: coarse\)/);
+});
 
-  shell.descrever(controle, "expandida");
-  assert.equal(atributos["aria-expanded"], "true");
-  assert.equal(controle.rotulo.textContent, "Recolher a barra lateral");
+test("o controle diz o que fará, e isso basta para dizer o estado", () => {
+  const rotulo = { textContent: "" };
 
-  shell.descrever(controle, "recolhida");
-  assert.equal(atributos["aria-expanded"], "false");
-  assert.equal(controle.rotulo.textContent, "Expandir a barra lateral");
+  shell.descrever(rotulo, "expandida");
+  assert.equal(rotulo.textContent, "Recolher a barra lateral");
+
+  shell.descrever(rotulo, "recolhida");
+  assert.equal(rotulo.textContent, "Expandir a barra lateral");
 });
