@@ -2,10 +2,9 @@
    teto de bytes da distribuição, e estas regras só servem às etapas Perfis e Classificação. Um
    arquivo só para as duas, porque uma cópia por etapa divergiria. As classes nascem no
    `vista-do-conjunto.js`. */
-/* `position:relative` é o que prende a rolagem da tabela ao contêiner (UX-121): sem ele, o texto
-   oculto das células — `position:absolute` — tem a página por referência, e alargava a página
-   inteira a 817 px numa tela de 375, medido. */
-.visao-dos-perfis .tabela-rolavel{position:relative}
+/* A moldura da tabela não tem regra aqui: o `position:relative` que prende o texto oculto das células
+   à rolagem (UX-121; a página ia a 817 px numa tela de 375) é da folha comum desde a 078, para toda
+   moldura que rola (`FR-1760`). */
 .visao-dos-perfis table{font-size:.9rem}
 .visao-dos-perfis th,.visao-dos-perfis td{padding:.5rem .75rem;vertical-align:top}
 .visao-dos-perfis td.numero{text-align:right;font-variant-numeric:tabular-nums}

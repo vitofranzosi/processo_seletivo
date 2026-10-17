@@ -346,7 +346,11 @@ def test_o_script_nao_cria_remove_nem_renomeia_campo(script):
 
 def test_a_tabela_rola_dentro_do_proprio_conteiner(client, tres_perfis):
     """UX-121. O texto oculto das células é `position:absolute`, e sem um contêiner posicionado ele
-    tem a página por referência: medido a 375 px, a página inteira alargava para 817."""
+    tem a página por referência: medido a 375 px, a página inteira alargava para 817.
+
+    A regra era desta tela até a 078, que a levou à folha comum para toda moldura que rola
+    (`FR-1760` da 078): a página continua recebendo-a, e ela vale para a moldura da vista."""
     corpo = client.get(_url(tres_perfis, "perfis")).content.decode()
 
-    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" in corpo
+    assert re.search(r"(?m)^[^{}]*\.tabela-rolavel[,{][^{}]*\{?position:relative\}", corpo)
+    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" not in corpo

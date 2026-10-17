@@ -933,8 +933,8 @@ alertas · o que NÃO entra.**
 - **(R5) Rótulos atuais:** "Adicionar membro" → "Continuar"; "Adicionar vários de uma vez" →
   "Conferir a lista" → "Confirmar inclusão de N"; por membro, "Alterar função" e "Remover da
   comissão" — **"inativar membro" não é rótulo de tela**: remover inativa o membro e as alocações
-  dele, sem apagar nada. Na Alocação, o botão diz "Salvar distribuição" embora o ato seja alocar, e
-  cada coluna tem o link "Distribuir". A alocação só existe depois de o Edital ser publicado, e a
+  dele, sem apagar nada. Na Alocação, o botão diz "Salvar alocação" (era "Salvar distribuição" até a
+  `079`), e cada coluna tem o link "Distribuir". A alocação só existe depois de o Edital ser publicado, e a
   matriz fica desabilitada sem presidência.
 - **Alertas:** 👤 designar a presidência não dá poderes de gestão, e ser gestor não dá a presidência
   — **(R5)** mas o Gestor pratica os atos dela pela própria permissão (§A.1). ⚠ sem alocação a Etapa

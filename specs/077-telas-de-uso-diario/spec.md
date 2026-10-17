@@ -175,6 +175,11 @@ página tem uma trilha só.
   moldura ou quebrar a linha. Nenhum caractere de resumo criptográfico MUST se perder.
 - **FR-1745**: A 1280 px, essas cinco telas MUST continuar sem estouro, e a correção de cada uma
   MUST valer só nela: nenhuma outra tela do inventário MUST mudar de largura.
+  *Emendada pela [`078`](../078-telas-de-quem-elabora/spec.md) em 17/10/2026*: as correções das
+  conclusões preservadas, de reaproveitar e dos anexos da composição tinham causas que não eram das
+  telas — a moldura que rola sem posição e o `fieldset` que não encolhe —, e subiram para a folha
+  comum (`FR-1760` a `FR-1762` da `078`), depois de medido que a regra geral não muda a largura de
+  nenhuma outra tela. A do sorteio e a da Retificação continuam só nelas.
 
 #### A trilha no cabeçalho de contexto
 
@@ -187,6 +192,10 @@ página tem uma trilha só.
   por Etapa, a partir de Processos Seletivos e do Processo (`FR-1752`).
 - **FR-1748**: Nas demais telas da gestão, o cabeçalho de contexto MUST continuar o da `076` —
   o produto e a seção, em texto —, e a trilha MUST continuar no conteúdo delas.
+  *Emendada pela [`078`](../078-telas-de-quem-elabora/spec.md) em 17/10/2026*: o detalhe do
+  Processo, o do Edital e as etapas da composição também passaram a ter a trilha no cabeçalho
+  (`FR-1767` da `078`). "As demais telas" são, daí em diante, as que nem esta feature nem a `078`
+  nomeiam (`FR-1769` da `078`).
 - **FR-1749**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
 - **FR-1752**: Na Etapa aberta por quem gere a comissão sem estar alocado nela, a seção atual MUST

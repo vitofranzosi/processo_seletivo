@@ -165,11 +165,12 @@ def test_fora_das_telas_de_uso_diario_o_cabecalho_e_o_da_076(client, seletor_lig
 
 # ---- nenhuma tela rola para o lado -----------------------------------------------------------
 
+# As conclusões preservadas, reaproveitar e os anexos da composição estouravam por causas que não
+# eram delas — a moldura sem posição e o `fieldset` que não encolhe —, e a 078 as levou à folha
+# comum (`FR-1760` a `FR-1762` da 078, provados em `test_telas_de_quem_elabora.py`). Fica aqui a do
+# sorteio, que é da tela.
 CORRECOES = {
-    "conclusoes.html": ".tabela-rolavel{position:relative}",
-    "reaproveitar.html": "fieldset{min-width:0}",
     "sorteio.html": ".imutavel code{overflow-wrap:anywhere}",
-    "compor_anexos.html": "fieldset.linha.anexo-novo{min-width:0}",
 }
 
 

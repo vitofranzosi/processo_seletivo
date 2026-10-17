@@ -1,16 +1,15 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ processo.institutional_code }}{% endblock %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <span aria-current="page">{{ processo.institutional_code }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <span aria-current="page">{{ processo.institutional_code }}</span>
-</nav>
-
 <h1>{{ processo.title }}</h1>
 <p class="sub"><span class="codigo">{{ processo.institutional_code }}</span>
   <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span></p>
 
+{% comment %} Sem lugar nenhum a oferecer, a faixa não vem — nem vazia (078, `FR-1776`, a regra da lista na
+   077). Para quem elabora ela era um parágrafo em branco de 1,5rem entre o título e a situação. {% endcomment %}
+{% if pode_gerir_comissao or pode_auditar %}
 <p class="acoes-do-painel">
   {% if pode_gerir_comissao %}
   {% comment %}
@@ -26,6 +25,7 @@
   <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Auditoria da comissão</a>
   {% endif %}
 </p>
+{% endif %}
 
 {% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
 
@@ -42,6 +42,153 @@
 <p class="aviso"><strong>Cancelado.</strong> Interrupção administrativa anterior à conclusão
 regular. Os Editais mantêm suas próprias situações e todo o histórico permanece preservado.</p>
 {% endif %}
+
+{% comment %}
+**O que fazer agora, antes do resto** (078, `FR-1764`). O cartão vinha depois de "Onde cada Edital
+está", que no Processo do inventário tem 1250 px a 1280 de janela: "Elaborar o Edital" ficava a dois
+terços da página. Sobe inteiro, com a ordem de dentro intacta — os atos, as terminais por último, o
+impedimento depois deles (058, `FR-1069`, `FR-1070`) —, e a lista dos Editais vem ao lado, porque é
+o conteúdo próprio do Processo. O pulso e a Atenção continuam na página (038, `FR-556`), depois.
+{% endcomment %}
+<div class="colunas ao-topo">
+  <section aria-labelledby="acoes-processo" class="cartao">
+    <h2 id="acoes-processo">O que fazer agora</h2>
+
+    {% comment %}
+    FR-021: o próximo passo primeiro. A tela seguinte à criação destacava, em amarelo, por que o
+    cancelamento estava impedido — um ato que ninguém tentou — enquanto elaborar o Edital, que é o
+    motivo de tudo, existia como link discreto no número, no cartão ao lado.
+    {% endcomment %}
+    {% if elaboravel %}
+    <p class="proximo-passo">
+      <a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital
+        {{ elaboravel.number }}/{{ elaboravel.year }}</a>
+    </p>
+    {% elif aguardando_elaboracao %}
+    <p class="proximo-passo">
+      <strong>Aguardando quem elabora</strong> para compor o Edital
+      <a href="{% url 'interface:detalhe' aguardando_elaboracao.id %}">{{ aguardando_elaboracao.number }}/{{ aguardando_elaboracao.year }}</a>.
+    </p>
+    {% endif %}
+
+    {% comment %}
+    A regra que a 057 fixou para o Edital (058, FR-1069, D-001): nenhum ato do Processo é cheio, e os
+    irreversíveis — Encerrar e Cancelar — vêm por último, num grupo próprio depois de um filete, só
+    contornados. Eram os dois únicos botões preenchidos do cartão, verde e vermelho, logo acima do
+    aviso de que estavam impedidos. A repartição é pelo que o próprio ato declara (`irreversivel`), e
+    não por `hierarquia()`: a preferência de lá é a do Edital, e nenhum ato do Processo está nela.
+
+    `regroup` só junta vizinhos, e por isso o conjunto é ordenado antes: os não irreversíveis primeiro,
+    qualquer que seja a ordem em que `ATOS` os declare. Cada grupo só existe quando tem ato — sem grupo
+    acima, as terminais não desenham filete.
+
+    Encerrar leva `secundario`, como no Edital: contornado pelo grupo, e discreto mesmo fora dele.
+    {% endcomment %}
+    {% if atos %}
+    {% regroup atos|dictsort:"irreversivel" by irreversivel as grupos %}
+    {% for grupo in grupos %}
+    {% if grupo.grouper %}
+    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
+      {% for ato in grupo.list %}
+      <li>
+        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+        <span class="marca-irreversivel">irreversível</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <ul class="lista-acoes em-linha">
+      {% for ato in grupo.list %}
+      <li>
+        <a class="botao secundario" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+        {% comment %}
+        A ativação é derivada: publicar o primeiro Edital do Processo já a pratica, com o motivo
+        "Ativação derivada da publicação do primeiro Edital do Processo". O ato continua existindo
+        porque a abertura formal pode preceder a publicação — o que não pode é o painel apresentá-lo
+        como se fosse o passo que falta.
+        {% endcomment %}
+        {% if ato.chave == 'ativar' %}
+        <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe
+          para quando a abertura formal precisa vir antes.</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <ul class="lista-acoes">
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+    </ul>
+    {% endif %}
+
+    {% comment %}
+    Depois da lista, e não antes dela: o impedimento explica por que "Cancelar Processo" — que está
+    logo acima — seria recusado. Abrindo o cartão, ele anunciava a recusa de um ato que ninguém
+    tentou antes de mostrar qualquer ato que se pudesse praticar.
+    {% endcomment %}
+    {% if pendentes and processo.status != 'CANCELADO' %}
+    <details class="aviso">
+      <summary><strong>{% if processo.status == 'ATIVO' %}O encerramento e o cancelamento do Processo estão impedidos.{% else %}O cancelamento do Processo está impedido.{% endif %}</strong></summary>
+      <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
+      <ul class="impedimentos">
+        {% for edital in pendentes %}
+        <li><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
+          <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="ajuda">Encerrar ou cancelar o Processo não encerra nem cancela os Editais: cada um exige ato próprio.</p>
+    </details>
+    {% endif %}
+  </section>
+  <section aria-labelledby="editais-titulo" class="cartao">
+    <h2 id="editais-titulo">Editais ({{ editais|length }})</h2>
+    {% comment %}
+    A tabela da lista de Processos, e não uma lista corrida (078, `FR-1771`): é a mesma informação,
+    e lá ela já está em colunas desde a 058. O número, o título e a situação se liam numa linha que
+    quebrava onde desse — a pastilha caía sozinha embaixo do título longo. A coluna "O que posso
+    fazer" da lista não vem: as ações do Edital estão no Edital, e as do Processo no cartão ao lado.
+    {% endcomment %}
+    {% if editais %}
+    <div class="tabela-rolavel">
+    <table aria-labelledby="editais-titulo">
+      <thead>
+        <tr>
+          <th scope="col">Edital</th>
+          <th scope="col">Título</th>
+          <th scope="col">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for edital in editais %}
+        <tr>
+          <th scope="row"><a class="codigo" href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a></th>
+          <td><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.title }}</a></td>
+          <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    {% comment %} O estado vazio das outras telas, com a frase da lista (078, `FR-1772`). Era um item de lista
+       com a classe de "pendente", como se faltasse alguma coisa a alguém. {% endcomment %}
+    <p class="vazio">Nenhum Edital neste Processo.</p>
+    {% endif %}
+    {% comment %}
+    Junto da lista, e não no cartão de atos: quem vem acrescentar o segundo Edital está olhando
+    para o primeiro. O cartão ao lado é o do ciclo de vida do Processo — ativar, encerrar,
+    cancelar —, e acrescentar Edital não é um passo dele.
+    {% endcomment %}
+    {% if pode_criar_edital %}
+    <p>
+      <a class="botao secundario" href="{% url 'interface:edital-criar' processo.id %}">Novo Edital
+        neste Processo</a>
+    </p>
+    {% endif %}
+  </section>
+
+</div>
 
 {% comment %}
 038, FR-556: **o guia não desliga quando o Edital é publicado.** Até aqui esta página listava
@@ -148,120 +295,4 @@ coisa que ela não pode ver.
 </section>
 {% endif %}
 
-<div class="colunas">
-  <section aria-labelledby="editais-titulo" class="cartao">
-    <h2 id="editais-titulo">Editais ({{ editais|length }})</h2>
-    <ul class="resumo-lista">
-      {% for edital in editais %}
-      <li>
-        <a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
-        — {{ edital.title }}
-        <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span>
-      </li>
-      {% empty %}<li class="pendente">Nenhum Edital.</li>{% endfor %}
-    </ul>
-    {% comment %}
-    Junto da lista, e não no cartão de atos: quem vem acrescentar o segundo Edital está olhando
-    para o primeiro. O cartão ao lado é o do ciclo de vida do Processo — ativar, encerrar,
-    cancelar —, e acrescentar Edital não é um passo dele.
-    {% endcomment %}
-    {% if pode_criar_edital %}
-    <p>
-      <a class="botao secundario" href="{% url 'interface:edital-criar' processo.id %}">Novo Edital
-        neste Processo</a>
-    </p>
-    {% endif %}
-  </section>
-
-  <section aria-labelledby="acoes-processo" class="cartao">
-    <h2 id="acoes-processo">O que fazer agora</h2>
-
-    {% comment %}
-    FR-021: o próximo passo primeiro. A tela seguinte à criação destacava, em amarelo, por que o
-    cancelamento estava impedido — um ato que ninguém tentou — enquanto elaborar o Edital, que é o
-    motivo de tudo, existia como link discreto no número, no cartão ao lado.
-    {% endcomment %}
-    {% if elaboravel %}
-    <p class="proximo-passo">
-      <a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital
-        {{ elaboravel.number }}/{{ elaboravel.year }}</a>
-    </p>
-    {% elif aguardando_elaboracao %}
-    <p class="proximo-passo">
-      <strong>Aguardando quem elabora</strong> para compor o Edital
-      <a href="{% url 'interface:detalhe' aguardando_elaboracao.id %}">{{ aguardando_elaboracao.number }}/{{ aguardando_elaboracao.year }}</a>.
-    </p>
-    {% endif %}
-
-    {% comment %}
-    A regra que a 057 fixou para o Edital (058, FR-1069, D-001): nenhum ato do Processo é cheio, e os
-    irreversíveis — Encerrar e Cancelar — vêm por último, num grupo próprio depois de um filete, só
-    contornados. Eram os dois únicos botões preenchidos do cartão, verde e vermelho, logo acima do
-    aviso de que estavam impedidos. A repartição é pelo que o próprio ato declara (`irreversivel`), e
-    não por `hierarquia()`: a preferência de lá é a do Edital, e nenhum ato do Processo está nela.
-
-    `regroup` só junta vizinhos, e por isso o conjunto é ordenado antes: os não irreversíveis primeiro,
-    qualquer que seja a ordem em que `ATOS` os declare. Cada grupo só existe quando tem ato — sem grupo
-    acima, as terminais não desenham filete.
-
-    Encerrar leva `secundario`, como no Edital: contornado pelo grupo, e discreto mesmo fora dele.
-    {% endcomment %}
-    {% if atos %}
-    {% regroup atos|dictsort:"irreversivel" by irreversivel as grupos %}
-    {% for grupo in grupos %}
-    {% if grupo.grouper %}
-    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
-      {% for ato in grupo.list %}
-      <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        <span class="marca-irreversivel">irreversível</span>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <ul class="lista-acoes em-linha">
-      {% for ato in grupo.list %}
-      <li>
-        <a class="botao secundario" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% comment %}
-        A ativação é derivada: publicar o primeiro Edital do Processo já a pratica, com o motivo
-        "Ativação derivada da publicação do primeiro Edital do Processo". O ato continua existindo
-        porque a abertura formal pode preceder a publicação — o que não pode é o painel apresentá-lo
-        como se fosse o passo que falta.
-        {% endcomment %}
-        {% if ato.chave == 'ativar' %}
-        <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe
-          para quando a abertura formal precisa vir antes.</span>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-    {% endfor %}
-    {% else %}
-    <ul class="lista-acoes">
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-    </ul>
-    {% endif %}
-
-    {% comment %}
-    Depois da lista, e não antes dela: o impedimento explica por que "Cancelar Processo" — que está
-    logo acima — seria recusado. Abrindo o cartão, ele anunciava a recusa de um ato que ninguém
-    tentou antes de mostrar qualquer ato que se pudesse praticar.
-    {% endcomment %}
-    {% if pendentes and processo.status != 'CANCELADO' %}
-    <details class="aviso">
-      <summary><strong>{% if processo.status == 'ATIVO' %}O encerramento e o cancelamento do Processo estão impedidos.{% else %}O cancelamento do Processo está impedido.{% endif %}</strong></summary>
-      <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
-      <ul class="impedimentos">
-        {% for edital in pendentes %}
-        <li><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
-          <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
-        {% endfor %}
-      </ul>
-      <p class="ajuda">Encerrar ou cancelar o Processo não encerra nem cancela os Editais: cada um exige ato próprio.</p>
-    </details>
-    {% endif %}
-  </section>
-</div>
 {% endblock %}
