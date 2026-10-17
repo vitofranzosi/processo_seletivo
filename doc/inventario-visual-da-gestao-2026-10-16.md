@@ -401,3 +401,48 @@ cópia da regra das molduras da vista do conjunto (Perfis e Classificação). Re
 da barra e comparado com `depois-da-078/`, o inventário dá as mesmas medidas campo a campo, sem
 estouro; pixel a pixel, só o que muda entre duas capturas do mesmo código — a hora da leitura e o
 cursor. As capturas de `depois-da-078/` continuam valendo.
+
+## Depois da 079
+
+O terceiro incremento da modernização por tela ([`079`](../specs/079-telas-da-presidencia/spec.md))
+mudou as telas da presidência da comissão: a trilha da Comissão, da conferência da inclusão, da
+Alocação por Etapa e da Distribuição subiu ao cabeçalho de contexto; na Distribuição, os lugares da
+Etapa — Impedimentos, Registrar ocorrência, Resultados e Trilha — vêm logo abaixo do título; a
+Comissão tem a seção "Membros (N)"; e o botão da Alocação diz "Salvar alocação". Nenhuma regra da
+folha comum mudou. O inventário foi refeito sobre a branch da `078` (`e781dfb3`, PR 293) com a
+mudança aplicada, no mesmo banco, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra.
+Antes da mudança, o mesmo roteiro reproduziu `depois-da-078/` sem diferença nenhuma.
+
+Em [`depois-da-079/`](inventario-visual-da-gestao-2026-10-16/depois-da-079/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-079/recolhida/), e as capturas, a
+1280 e a 375 px, das três telas que mudaram. A conferência da inclusão não está no inventário — é a
+resposta a um envio, e o roteiro só abre telas pelo endereço —, e foi vista no navegador.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-078/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-079/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-078/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-079/resultados.json
+```
+
+O [`medidas.py`](inventario-visual-da-gestao-2026-10-16/medidas.py) é novo: compara largura, altura,
+título e `h1`, variante a variante, que o `comparar.py` não compara e que a `078` conferiu à mão.
+
+| | Depois da 078 | Depois da 079, expandida | Depois da 079, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da presidência mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`:
+
+| Tela | O que mudou |
+|---|---|
+| `alocacoes` | encurta 37 px a 1280 e 23 a 375: a trilha subiu ao cabeçalho; a barra continua no topo e a matriz, sem rolagem interna a 1280 |
+| `distribuicao` | encurta 37 px a 1280 e 23 a 375: a trilha subiu; a faixa dos lugares da Etapa sai de y ≈ 644 para y ≈ 170 a 1280, e de y ≈ 998 para y ≈ 284 a 375 |
+| `comissao` | cresce 11 px a 1280 e 46 a 375: o título "Membros (3)" ocupa mais do que a trilha que saiu |
+
+**Pixel a pixel.** Fora das três telas, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, cantos arredondados (até 28 de 255) e o cursor num campo da ocorrência. É também o
+que o diff permite: ele só toca os quatro templates da presidência.

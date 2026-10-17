@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Distribuir — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <span aria-current="page">{{ etapa.name }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
-  <span aria-current="page">{{ etapa.name }}</span>
-</nav>
-
 <h1>{{ etapa.name }}</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ processo.title }}</p>
 
@@ -35,6 +29,22 @@ mesma frase 75 vezes, uma por par, o que enterra a informação em vez de dá-la
   {% endif %}
 </div>
 {% endif %}
+
+{% comment %} Os lugares da Etapa logo abaixo do título (079, `FR-1785`), como os do Processo, da Comissão e da
+   Alocação. Ela morava depois de "Quem está alocado", que tem uma linha por pessoa: descia com a banca,
+   e no celular ficava abaixo da primeira tela. As mensagens do último envio vêm antes, como nas telas
+   vizinhas; as ações não saem do lugar, cada uma ao lado do número ou da frase a que responde. {% endcomment %}
+<p class="acoes-do-painel">
+  <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
+  {% comment %}
+  O caminho até o desfecho de quem **não foi avaliado** — faltou, não compareceu, descumpriu
+  pré-requisito. Ele sai daqui porque é aqui que a presidência acompanha a Etapa, e é uma tela
+  própria porque o ato tem conteúdo próprio e elimina (D-1).
+  {% endcomment %}
+  <a class="acao" href="{% url 'interface:registrar-ocorrencia' edital.id etapa.id %}">Registrar ocorrência</a>
+  <a class="acao" href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados</a>
+  <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Trilha</a>
+</p>
 
 {% comment %}
 O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar.
@@ -189,18 +199,6 @@ FR-422).
     <a href="{% url 'interface:alocacoes' processo.id %}">Alocar a comissão</a></p>
   {% endif %}
 </section>
-
-<p class="acoes-do-painel">
-  <a class="acao" href="{% url 'interface:impedimentos' edital.id etapa.id %}">Impedimentos</a>
-  {% comment %}
-  O caminho até o desfecho de quem **não foi avaliado** — faltou, não compareceu, descumpriu
-  pré-requisito. Ele sai daqui porque é aqui que a presidência acompanha a Etapa, e é uma tela
-  própria porque o ato tem conteúdo próprio e elimina (D-1).
-  {% endcomment %}
-  <a class="acao" href="{% url 'interface:registrar-ocorrencia' edital.id etapa.id %}">Registrar ocorrência</a>
-  <a class="acao" href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados</a>
-  <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Trilha</a>
-</p>
 
 {% if orfas %}
 <section aria-labelledby="orfas">
