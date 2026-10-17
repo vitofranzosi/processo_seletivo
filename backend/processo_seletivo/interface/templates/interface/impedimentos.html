@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Impedimentos — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Impedimentos</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
-  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
-  <span aria-current="page">Impedimentos</span>
-</nav>
-
 <h1>Impedimentos</h1>
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
 
@@ -56,6 +51,10 @@ atribuições e quantas conclusões o impedimento alcançará.
 FR-042: a `012` não infere impedimento por CPF, sobrenome ou coincidência de dado. Declarar é ato
 de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em vez de sugerir pares.
 {% endcomment %}
+{% comment %} Título para o que a tela existe para fazer (080, `FR-1807`): a página só tinha título para o que já
+   saiu do conjunto elegível, e o formulário de registrar vinha solto antes dele. {% endcomment %}
+<section aria-labelledby="registrar-titulo">
+<h2 id="registrar-titulo">Registrar um impedimento</h2>
 <form method="post">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
@@ -81,6 +80,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
   </p>
   <p class="acoes"><button type="submit" class="botao">Registrar impedimento</button></p>
 </form>
+</section>
 
 <section aria-labelledby="inelegiveis">
   <h2 id="inelegiveis">Avaliações fora do conjunto elegível</h2>
