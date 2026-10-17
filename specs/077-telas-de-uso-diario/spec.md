@@ -118,7 +118,9 @@ página tem uma trilha só.
 2. **Given** uma Etapa aberta a partir de Minhas Etapas, **When** a página abre, **Then** o
    cabeçalho mostra *GPS › Minhas Etapas › nome da Etapa*.
 3. **Given** a mesma Etapa aberta pela Alocação, por quem gere a comissão, **When** a página abre,
-   **Then** o cabeçalho mostra o caminho que a tela já mostrava, pela Alocação por Etapa.
+   **Then** o cabeçalho mostra o caminho da Alocação — *GPS › Processos Seletivos › código do
+   Processo › Alocação por Etapa › nome da Etapa* —, e a barra marca Processos Seletivos como a
+   seção atual.
 4. **Given** a lista de Processos ou Minhas Etapas, **When** a página abre, **Then** o cabeçalho
    mostra *GPS ›* e o nome da tela, marcado como a página atual.
 5. **Given** qualquer outra tela da gestão, **When** ela abre, **Then** o cabeçalho continua como
@@ -138,9 +140,11 @@ página tem uma trilha só.
 - **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). Nas quatro telas, o
   caminho sai com o cabeçalho; o título e a linha de baixo dele — o Edital e o Processo —
   continuam identificando o que se imprimiu.
-- **A Etapa aberta pela gestão.** O endereço é o de Minhas Etapas, e a barra destaca Minhas Etapas
-  (`076`), mas o caminho que a tela já dava, e que continua dando, passa pela Alocação por Etapa.
-  É o que a tela dizia antes, e não muda aqui.
+- **A Etapa aberta pela gestão.** O endereço é o de Minhas Etapas, e pelo endereço a barra
+  destacava Minhas Etapas (`076`), enquanto a trilha da tela passava pela Alocação por Etapa. No
+  conteúdo, as duas ficavam longe; no cabeçalho, ficam lado a lado, e se contradiriam. Por essa
+  porta, a seção é Processos Seletivos — a da Alocação de onde se veio —, a barra a marca, e a
+  trilha começa nela (`FR-1752`). Emenda de 17/10/2026, achada na revisão do PR.
 - **Rótulo invisível dentro de tabela que rola.** O estouro das conclusões preservadas vinha de um
   rótulo que só tecnologia assistiva lê, e não de nada visível. O rótulo continua existindo e
   sendo lido do mesmo jeito.
@@ -178,12 +182,17 @@ página tem uma trilha só.
   cabeçalho de contexto MUST mostrar a trilha da tela, como navegação nomeada: o produto, cada
   nível acima da tela como link, e a própria tela como a página atual.
 - **FR-1747**: Nessas quatro telas, a trilha MUST NOT aparecer de novo no conteúdo: a página MUST
-  ter uma trilha só. Os níveis e os rótulos MUST ser os que a tela já mostrava — inclusive o
-  caminho pela Alocação por Etapa, quando a Etapa é aberta pela gestão.
+  ter uma trilha só. Os níveis e os rótulos MUST ser os que a tela já mostrava, precedidos da
+  seção quando a trilha não começava nela — na Etapa aberta pela gestão, a trilha é a da Alocação
+  por Etapa, a partir de Processos Seletivos e do Processo (`FR-1752`).
 - **FR-1748**: Nas demais telas da gestão, o cabeçalho de contexto MUST continuar o da `076` —
   o produto e a seção, em texto —, e a trilha MUST continuar no conteúdo delas.
 - **FR-1749**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
+- **FR-1752**: Na Etapa aberta por quem gere a comissão sem estar alocado nela, a seção atual MUST
+  ser Processos Seletivos — a da Alocação por Etapa —, na barra e no começo da trilha do
+  cabeçalho, ainda que o endereço seja o de Minhas Etapas. Por quem está alocado, a seção MUST
+  continuar Minhas Etapas. A seção MUST NOT mudar o que a pessoa alcança nem o endereço.
 
 #### O que não pode piorar
 

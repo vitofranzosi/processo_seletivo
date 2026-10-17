@@ -56,6 +56,11 @@ tem linha em [rastreabilidade.md](rastreabilidade.md). Caminhos relativos a `bac
 - [x] T019 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1749, SC-675)
 - [x] T020 `rastreabilidade.md` com cada FR e SC, e o achado do R-002 registrado na seção de fora de escopo
 
+## Emenda — revisão do PR (17/10)
+
+- [x] T021 [US3] Pela gestão, a Etapa é de Processos Seletivos: `navegacao.declarar_secao`, chamado por `views.py::minha_etapa`, e a trilha da Alocação no cabeçalho de `minha_etapa.html`; testes em `tests/interface/test_telas_de_uso_diario.py` (R-005; FR-1747, FR-1752)
+- [x] T022 A `FR-1713` da `076` e a linha dela na rastreabilidade anotadas como emendadas pela `077`
+
 ## Dependencies
 
 T003 antes de T013–T016. US1 e US2 são independentes entre si e de T003. T017–T019 depois de tudo.

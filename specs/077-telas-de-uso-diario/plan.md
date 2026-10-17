@@ -46,8 +46,9 @@ Sem violação a justificar.
 | `interface/templates/interface/lista.html` | a faixa de ações só com "Novo Processo Seletivo", e só para quem pode criar; o bloco `caminho_do_contexto` com a trilha de um nível |
 | `interface/views.py::lista` | sem `pode_ver_visao`, `pode_gerir_autoridades` e `pode_gerir_modelos` no contexto |
 | `interface/navegacao.py` | a docstring deixa de dizer que a lista lê os predicados; eles continuam sendo os da barra |
+| `interface/navegacao.py::declarar_secao` e `views.py::minha_etapa` (emenda de 17/10) | pela gestão, a view declara Processos Seletivos como a seção da Etapa, e a barra a usa no lugar da do endereço (R-005; `FR-1752`) |
 | `interface/templates/interface/base.html` | o bloco `caminho_do_contexto` no `header.cabecalho-de-contexto`, cujo conteúdo padrão é o caminho da `076`; a regra `.caminho-da-secao a` |
-| `minhas_etapas.html`, `minha_etapa.html`, `mesa_inscricao.html` | a `nav.trilha` sai do conteúdo e vai para o bloco, com os mesmos níveis e rótulos |
+| `minhas_etapas.html`, `minha_etapa.html`, `mesa_inscricao.html` | a `nav.trilha` sai do conteúdo e vai para o bloco, com os mesmos níveis e rótulos; pela gestão, a da Etapa começa na seção e no Processo, como a da Alocação (R-005) |
 | `conclusoes.html` | `.tabela-rolavel{position:relative}` na folha da página (R-002) |
 | `reaproveitar.html` | `fieldset{min-width:0}` na folha da página |
 | `sorteio.html` | `.imutavel code{overflow-wrap:anywhere}` na folha da página |

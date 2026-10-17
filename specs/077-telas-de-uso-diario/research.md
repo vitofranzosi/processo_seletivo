@@ -72,6 +72,29 @@ shell no mesmo estado, por `comparar.py`. Entram no repositório os dois `result
 capturas das nove telas tocadas, a 1280 e a 375 px, com a barra expandida — as outras capturas
 seriam iguais às de `com-o-shell/`, e o `resultados.json` é o que prova isso.
 
+## R-005 — A seção da Etapa aberta pela gestão (emenda de 17/10)
+
+**Achado na revisão do PR.** A Etapa responde em `minhas-etapas/…` pelas duas portas, e a barra
+decide a seção pelo endereço (R-003 da `076`): marcava Minhas Etapas também para quem chegou pela
+Alocação. Com a trilha no conteúdo, a contradição ficava entre o topo e o corpo; no cabeçalho, ela
+ficou lado a lado com a barra — e o cabeçalho deixou de nomear a seção, contra a `FR-1718` da `076`.
+
+**Decisão**: a view declara a seção quando o endereço não basta (`navegacao.declarar_secao`), e a
+barra a usa no lugar da do endereço. Pela gestão, a seção é Processos Seletivos, e a trilha é a da
+própria Alocação — *Processos Seletivos › código do Processo › Alocação por Etapa* — seguida da
+Etapa. Por quem está alocado, nada muda.
+
+**Por quê**: só a view sabe por qual porta a pessoa chegou; o endereço é o mesmo. A barra se monta
+preguiçosa, na leitura do `base.html` (R-008 da `076`), depois de a view declarar — não custa
+consulta, e nenhuma outra tela muda, porque nenhuma outra declara.
+
+**Alternativas**:
+- *Trocar o endereço da Etapa pela gestão* — muda URL, contra a spec.
+- *Pôr "Minhas Etapas" antes de "Alocação por Etapa" na trilha* — diria que o gestor veio de onde
+  não veio.
+- *Só acrescentar "Processos Seletivos" à trilha, sem o Processo* — a Alocação é de um Processo, e
+  a trilha pularia um nível que a tela da Alocação mostra.
+
 ## Achados registrados, fora do escopo
 
 - **A causa das conclusões preservadas é latente em outras telas.** Toda `.tabela-rolavel` com um

@@ -199,6 +199,10 @@ recolhida, cada item tem nome acessível e dica, e o conteúdo usa a largura lib
 - **FR-1713**: A barra MUST agrupar as seções em *Trabalho* — Processos Seletivos, Minhas Etapas,
   Visão Geral — e *Unidade* — Autoridades da unidade, Modelos de aviso (DP-1). "Novo Processo
   Seletivo" MUST continuar na lista, e os botões da lista MUST continuar onde estão.
+  *Emendada pela [`077`](../077-telas-de-uso-diario/spec.md) em 16/10/2026*: a lista não tem mais os
+  botões de Visão Geral, Autoridades da unidade e Modelos de aviso, que ficam só na barra
+  (`FR-1740` da `077`). "Novo Processo Seletivo" continua na lista. A frase sobre os botões vale
+  para esta feature, e a `077` a substitui daí em diante.
 - **FR-1714**: Cada item MUST aparecer só para quem tem a capacidade que o destino exige, pelo
   mesmo critério que hoje condiciona os botões da lista. Grupo sem item MUST NOT aparecer.
   Processos Seletivos e Minhas Etapas MUST aparecer para toda identidade.

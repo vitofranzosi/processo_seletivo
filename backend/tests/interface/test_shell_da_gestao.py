@@ -216,6 +216,32 @@ def test_a_secao_sai_do_endereco(caminho_pedido, secao):
     assert navegacao.secao_do_caminho(caminho_pedido).rotulo == secao
 
 
+def test_a_view_pode_declarar_a_secao_que_o_endereco_nao_diz(settings):
+    """`FR-1752` da 077: a Etapa pela gestão mora sob Minhas Etapas, mas é de Processos Seletivos.
+    A declaração vale só para o pedido em que a view a fez."""
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    sessao = {
+        CHAVE_SESSAO: {
+            "subject": "g",
+            "escopo": "cefor",
+            "papeis": ["gestor"],
+            "origem": "demonstracao",
+        }
+    }
+    declarado = RequestFactory().get("/gestao/minhas-etapas/a/b")
+    declarado.session = sessao
+    navegacao.declarar_secao(declarado, "interface:lista")
+    sem_declarar = RequestFactory().get("/gestao/minhas-etapas/a/b")
+    sem_declarar.session = sessao
+
+    assert navegacao.contexto_da_navegacao(declarado)["navegacao"]["secao_atual"] == (
+        "Processos Seletivos"
+    )
+    assert navegacao.contexto_da_navegacao(sem_declarar)["navegacao"]["secao_atual"] == (
+        "Minhas Etapas"
+    )
+
+
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):

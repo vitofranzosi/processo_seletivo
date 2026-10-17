@@ -161,6 +161,7 @@ from processo_seletivo.interface import (
     demonstracao,
     forms,
     identidade,
+    navegacao,
     origens,
     revisao,
 )
@@ -8866,6 +8867,10 @@ def minha_etapa(request, edital_id, etapa_id):
         if por_alocacao
         else (None, None, None)
     )
+    if por_gestao and not por_alocacao:
+        # Pela gestão, a Etapa é de Processos Seletivos, como a Alocação de onde se veio (077,
+        # `FR-1752`); o endereço, que é o de Minhas Etapas, diria a seção errada.
+        navegacao.declarar_secao(request, "interface:lista")
     # A resposta carrega protocolo de candidato: é dado pessoal, e não fica no cache (FR-056).
     return marcar_como_privada(
         render(

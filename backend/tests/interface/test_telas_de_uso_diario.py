@@ -12,7 +12,7 @@ from django.urls import reverse
 
 from tests.interface.conftest import identificar
 from tests.interface.test_acessibilidade_da_012 import cenario  # noqa: F401 — fixture
-from tests.interface.test_shell_da_gestao import itens_da_barra
+from tests.interface.test_shell_da_gestao import barra, itens_da_barra
 
 TEMPLATES = (
     Path(__file__).resolve().parents[2] / "processo_seletivo" / "interface" / "templates"
@@ -103,21 +103,33 @@ def test_na_etapa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  
     assert f'<a href="{reverse("interface:minhas-etapas")}">Minhas Etapas</a> ›' in trilha
     # O conteúdo começa pelo título: a trilha que o abria subiu.
     assert conteudo(corpo).split(">", 1)[1].lstrip().startswith("<h1>")
+    # Por quem está alocado, a seção continua a do endereço (`FR-1752`).
+    assert f'<a href="{reverse("interface:minhas-etapas")}" aria-current="true">' in barra(corpo)
 
 
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_pela_gestao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cenario):  # noqa: F811
-    """`FR-1747`: a porta da gestão continua dizendo por onde se chegou."""
+    """`FR-1747`, `FR-1752`: a porta da gestão continua dizendo por onde se chegou — a trilha da
+    Alocação, a partir da seção —, e a barra marca a mesma seção que a trilha nomeia."""
     identificar(client, "carlos", ["gestor"])
+    processo = cenario["processo"]
     corpo = client.get(
         reverse("interface:minha-etapa", args=[cenario["edital"].id, cenario["etapa"]])
     ).content.decode()
 
     trilha = trilha_unica_no_cabecalho(corpo)
-    alocacao = reverse("interface:alocacoes", args=[cenario["processo"].id])
-    assert f'<a href="{alocacao}">Alocação por Etapa</a> ›' in trilha
+    niveis = [
+        f'<a href="{reverse("interface:lista")}">Processos Seletivos</a> ›',
+        f'<a href="{reverse("interface:processo-detalhe", args=[processo.id])}">'
+        f"{processo.institutional_code}</a> ›",
+        f'<a href="{reverse("interface:alocacoes", args=[processo.id])}">Alocação por Etapa</a> ›',
+    ]
+    posicoes = [trilha.index(nivel) for nivel in niveis]
+    assert posicoes == sorted(posicoes)
     assert "Minhas Etapas" not in trilha
+    assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
+    assert barra(corpo).count("aria-current") == 1
 
 
 @pytest.mark.django_db

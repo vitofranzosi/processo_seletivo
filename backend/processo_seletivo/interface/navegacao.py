@@ -93,6 +93,25 @@ def secao_do_caminho(caminho, enderecos=None):
     return max(candidatas, key=lambda s: len(enderecos[s.rota]), default=None)
 
 
+def declarar_secao(request, rota):
+    """A view diz a seção quando o endereço não basta para dizê-la (077, `FR-1752`).
+
+    A Etapa mora sob `minhas-etapas` porque é dali que o avaliador a alcança, mas quem gere a
+    comissão chega a ela pela Alocação, que é de Processos Seletivos. Pelo endereço, a barra
+    marcava Minhas Etapas e a trilha do cabeçalho, ao lado, dizia Alocação por Etapa: duas
+    orientações contraditórias na mesma faixa da tela. Só a view sabe a porta; ela a declara
+    antes de renderizar, e a barra, que só se monta quando lida, já a encontra.
+    """
+    request.secao_da_gestao = rota
+
+
+def _secao_da_tela(request, enderecos):
+    rota = getattr(request, "secao_da_gestao", None)
+    if rota is not None:
+        return next(secao for secao in SECOES if secao.rota == rota)
+    return secao_do_caminho(request.path, enderecos)
+
+
 def _enderecos():
     # Uma vez por pedido, e não guardado no módulo: o prefixo do endereço é do pedido.
     return {secao.rota: reverse(secao.rota) for secao in SECOES}
@@ -132,7 +151,7 @@ def _navegacao(request):
     if ator is None:
         return {}
     enderecos = _enderecos()
-    atual = secao_do_caminho(request.path, enderecos)
+    atual = _secao_da_tela(request, enderecos)
     return {
         "barra": grupos_da_barra(ator, request.path, atual, enderecos),
         "no_topo": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
