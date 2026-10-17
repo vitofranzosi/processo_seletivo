@@ -56,7 +56,7 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho já existe desde a `077`.
 
 ## Phase 7: Polish & verificação
 
-- [ ] T014 `make lint check` e `make test-pg DB_NAME=ps_078`; o teto da distribuição medido de novo (FR-1775, SC-685)
+- [x] T014 `make lint check` e `make test-pg DB_NAME=ps_078`; o teto da distribuição medido de novo (FR-1775, SC-685) — 11 480 passando e 11 pulados, nenhuma falha (a primeira rodada achou dois guardiões de texto, emendados: R-006); distribuição em 95 113 caracteres
 - [x] T015 Inventário refeito com `BARRA=expandida` e `BARRA=recolhida` em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-078/`, comparado por `comparar.py` com `depois-da-077/`, e as capturas comparadas pixel a pixel com as de antes; as capturas das telas que mudaram; a seção "Depois da 078" no `doc/inventario-visual-da-gestao-2026-10-16.md` (FR-1762, FR-1763, FR-1770, FR-1773, FR-1774, SC-681, SC-682)
 - [x] T016 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1770, SC-686)
 - [x] T017 `rastreabilidade.md` com cada FR e SC; a `FR-1745` e a `FR-1748` da `077` anotadas como emendadas, na spec e na rastreabilidade dela
