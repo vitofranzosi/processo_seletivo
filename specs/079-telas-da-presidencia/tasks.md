@@ -22,10 +22,10 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 
 **Independent Test**: a página tem uma `nav` "Trilha de navegação", no cabeçalho de contexto, e o `main` começa pelo título.
 
-- [ ] T003 [P] [US1] `comissao.html` e `comissao_confirmar.html`: a trilha sai do conteúdo e vai ao bloco `caminho_do_contexto`, com o produto pelo parcial (R-001; FR-1780, FR-1781)
-- [ ] T004 [P] [US1] `alocacoes.html`: a trilha no bloco; nada mais na moldura da matriz (R-001; FR-1780, FR-1781, FR-1784)
-- [ ] T005 [P] [US1] `distribuicao.html`: a trilha no bloco, com a Alocação por Etapa como nível acima da Etapa (R-001; FR-1780, FR-1781)
-- [ ] T006 [US1] Testes em `tests/interface/test_telas_da_presidencia.py`: a trilha única no cabeçalho e o conteúdo pelo título nas quatro telas, a conferência da inclusão e a da lista; a Alocação com a barra no topo; as filhas da Distribuição com o cabeçalho da `076` (FR-1780, FR-1781, FR-1782, FR-1784, SC-692)
+- [x] T003 [P] [US1] `comissao.html` e `comissao_confirmar.html`: a trilha sai do conteúdo e vai ao bloco `caminho_do_contexto`, com o produto pelo parcial (R-001; FR-1780, FR-1781)
+- [x] T004 [P] [US1] `alocacoes.html`: a trilha no bloco; nada mais na moldura da matriz (R-001; FR-1780, FR-1781, FR-1784)
+- [x] T005 [P] [US1] `distribuicao.html`: a trilha no bloco, com a Alocação por Etapa como nível acima da Etapa (R-001; FR-1780, FR-1781)
+- [x] T006 [US1] Testes em `tests/interface/test_telas_da_presidencia.py`: a trilha única no cabeçalho e o conteúdo pelo título nas quatro telas, a conferência da inclusão e a da lista; a Alocação com a barra no topo; as filhas da Distribuição com o cabeçalho da `076` (FR-1780, FR-1781, FR-1782, FR-1784, SC-692)
 
 ## Phase 4: User Story 2 — os lugares da Etapa logo abaixo do título (P1)
 
@@ -33,8 +33,8 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 
 **Independent Test**: a faixa vem depois do título e das mensagens do último envio, antes da ficha, com os mesmos quatro links; as ações não se movem.
 
-- [ ] T007 [US2] `distribuicao.html`: o `p.acoes-do-painel` com Impedimentos, Registrar ocorrência, Resultados e Trilha logo depois do resultado do lote, antes da ficha, com o comentário dele (R-002; FR-1785, FR-1786)
-- [ ] T008 [US2] Testes em `tests/interface/test_telas_da_presidencia.py`: a faixa antes da ficha e depois do resultado; os mesmos links na mesma ordem; a ordem relativa das ações e das frases que as precedem igual à de antes (FR-1785, FR-1786)
+- [x] T007 [US2] `distribuicao.html`: o `p.acoes-do-painel` com Impedimentos, Registrar ocorrência, Resultados e Trilha logo depois do resultado do lote, antes da ficha, com o comentário dele (R-002; FR-1785, FR-1786)
+- [x] T008 [US2] Testes em `tests/interface/test_telas_da_presidencia.py`: a faixa antes da ficha e depois do resultado; os mesmos links na mesma ordem; a ordem relativa das ações e das frases que as precedem igual à de antes (FR-1785, FR-1786)
 
 ## Phase 5: User Story 3 — a Comissão com título para quem está nela (P2)
 
@@ -42,8 +42,8 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 
 **Independent Test**: "Membros (N)" com o filtro e a lista; sem membro, sem filtro e com o link para a inclusão.
 
-- [ ] T009 [US3] `comissao.html`: a `section` com `h2` "Membros (N)" envolvendo o filtro, a linha do recorte e a lista; sem membro, sem filtro, com o estado vazio que leva a `#adicionar-titulo` (R-003; FR-1787, FR-1788)
-- [ ] T010 [US3] Testes em `tests/interface/test_telas_da_presidencia.py`: o título com o total, inclusive filtrado; a comissão vazia sem filtro e com o link; o recorte vazio com o filtro; a conferência sem mudança de conteúdo (FR-1787, FR-1788, FR-1789)
+- [x] T009 [US3] `comissao.html`: a `section` com `h2` "Membros (N)" envolvendo o filtro, a linha do recorte e a lista; sem membro, sem filtro, com o estado vazio que leva a `#adicionar-titulo` (R-003; FR-1787, FR-1788)
+- [x] T010 [US3] Testes em `tests/interface/test_telas_da_presidencia.py`: o título com o total, inclusive filtrado; a comissão vazia sem filtro e com o link; o recorte vazio com o filtro; a conferência sem mudança de conteúdo (FR-1787, FR-1788, FR-1789)
 
 ## Phase 6: User Story 4 — a ação principal da Alocação diz o que faz (P3)
 
@@ -51,15 +51,15 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 
 **Independent Test**: com presidência e membros, o botão diz "Salvar alocação"; sem presidência, não há botão.
 
-- [ ] T011 [US4] `alocacoes.html`: "Salvar alocação"; `doc/manual/00-arquitetura-do-manual.md` (C-13) com o rótulo atual (R-004; FR-1790)
-- [ ] T012 [US4] Testes em `tests/interface/test_telas_da_presidencia.py`: o rótulo com presidência e a ausência sem ela (FR-1790)
+- [x] T011 [US4] `alocacoes.html`: "Salvar alocação"; `doc/manual/00-arquitetura-do-manual.md` (C-13) com o rótulo atual (R-004; FR-1790)
+- [x] T012 [US4] Testes em `tests/interface/test_telas_da_presidencia.py`: o rótulo com presidência e a ausência sem ela (FR-1790)
 
 ## Phase 7: Polish & verificação
 
-- [ ] T013 `make lint check` e `make test-pg DB_NAME=ps_079`; o teto da Distribuição medido de novo (FR-1792, SC-694, SC-695)
-- [ ] T014 Inventário refeito com `BARRA=expandida` e `BARRA=recolhida` em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-079/`, comparado por `comparar.py` e por `medidas.py` (novo, na pasta do inventário) com `depois-da-078/`; as capturas das telas que mudaram; a seção "Depois da 079" no `doc/inventario-visual-da-gestao-2026-10-16.md` (FR-1783, FR-1784, FR-1791, SC-690, SC-691, SC-693)
-- [ ] T015 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1783, SC-696)
-- [ ] T016 `rastreabilidade.md` com cada FR e SC; a `FR-1769` da `078` anotada como emendada, na spec e na rastreabilidade dela; a linha da `079` no README, se a tabela de incrementos a cobrar
+- [x] T013 `make lint check` e `make test-pg DB_NAME=ps_079`; o teto da Distribuição medido de novo (FR-1792, SC-694, SC-695) — 11 627 passando e 11 pulados, nenhuma falha, em 2005s (com outra suíte rodando na mesma máquina); Distribuição de 95 144 para 95 092 caracteres (95 610 → 95 558 bytes)
+- [x] T014 Inventário refeito com `BARRA=expandida` e `BARRA=recolhida` em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-079/`, comparado por `comparar.py` e por `medidas.py` (novo, na pasta do inventário) com `depois-da-078/`; as capturas das telas que mudaram; a seção "Depois da 079" no `doc/inventario-visual-da-gestao-2026-10-16.md` (FR-1783, FR-1784, FR-1791, SC-690, SC-691, SC-693) — 0 estouros e nenhum `status` diferente nos dois estados da barra; só `comissao`, `alocacoes` e `distribuicao` mudam, e só de altura; a faixa da Distribuição de y ≈ 644 para ≈ 170 a 1280 e de ≈ 998 para ≈ 284 a 375; pixel a pixel, fora delas, só o ruído de duas capturas do mesmo código
+- [x] T015 O percurso do quickstart no navegador, a 1280 e a 375 px, só pelo teclado (FR-1783, SC-696) — como `paulo.presidente`: Comissão, filtro, conferência sem confirmar, Alocação com uma célula marcada e salva (desfeita depois, a 375), Distribuição pelo link da coluna, proposta do rodízio e uma distribuição recusada, que mostrou o resultado do lote acima da faixa
+- [x] T016 `rastreabilidade.md` com cada FR e SC; a `FR-1769` da `078` anotada como emendada, na spec e na rastreabilidade dela; a linha da `079` no README, que a tabela de incrementos cobra
 
 ## Dependencies
 

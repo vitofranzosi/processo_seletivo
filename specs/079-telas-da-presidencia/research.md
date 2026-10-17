@@ -127,3 +127,21 @@ fica registrado como achado. O link "Distribuir" de cada coluna está certo — 
 | `test_acessibilidade_da_012.py::test_as_telas_tem_titulo_e_trilha_de_navegacao` | continua igual — a trilha está na página, no cabeçalho |
 
 Testes novos em `tests/interface/test_telas_da_presidencia.py`.
+
+## Achados registrados, fora do escopo
+
+- **Na Distribuição, as duas ações sobre a seleção têm o mesmo peso, e uma não se desfaz.**
+  "Distribuir as selecionadas" e "Consolidar as selecionadas" são dois botões cheios lado a lado,
+  sobre a mesma seleção; o segundo transforma avaliações em Resultado da Etapa, que é imutável. A
+  frase antes deles diz isso (`FR-422` da `030`), e o pedido proibiu mudar peso de ação irreversível
+  sem a spec dizer por quê: esta não muda. Fica para quem decide o desenho das ações irreversíveis.
+- **O aviso da Alocação ainda diz "distribuir".** "Designe a presidência antes de distribuir." tem a
+  mesma divergência que o botão tinha (R-004), mas é guardado como frase por
+  `test_alocacoes.py::test_comissao_sem_presidente_nao_deixa_distribuir`, e não é a ação principal.
+- **As filhas da Distribuição continuam com a trilha no conteúdo.** Impedimentos, Registrar
+  ocorrência, Resultados, Trilha, as conclusões preservadas e a retirada de atribuições
+  (`distribuicao_remover_confirmar.html`) são o próximo grupo natural; a auditoria da comissão
+  também.
+- **O `comparar.py` do inventário não compara altura.** Ele acusa `status` e estouro, e a `078`
+  conferiu largura e altura à mão. Esta feature escreveu a conta (`medidas.py`, na pasta do
+  inventário), e não mudou o `comparar.py`, que outras features citam com a saída de hoje.

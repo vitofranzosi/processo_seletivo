@@ -6,7 +6,7 @@
 
 **Created**: 2026-10-17
 
-**Status**: Em especificação
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: etapa 4 da sequência do [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md)
 (§7) — a modernização por tela, incremental. Terceiro incremento, depois de quem avalia
