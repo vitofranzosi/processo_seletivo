@@ -1326,6 +1326,17 @@ def _progresso(edital, atual, *, agora=None, eventos_do_cronograma=None):
     ]
 
 
+def _recarregar(edital):
+    """Relê o Edital depois de uma gravação, sem perder o Processo que veio junto.
+
+    `refresh_from_db()` descarta a relação em cache quando a instância relida não a traz, e a
+    trilha da composição lê o código do Processo (078, `FR-1768`): cada tela remontada depois de
+    uma gravação — a recusa, a prévia de um gesto — pagava uma consulta a mais por isso. Relida
+    com o Processo, a instância o devolve na mesma consulta.
+    """
+    edital.refresh_from_db(from_queryset=Edital.objects.select_related("processo"))
+
+
 def _vizinhas(atual):
     indice = CHAVES_ETAPA.index(atual)
     return (
@@ -1491,7 +1502,7 @@ def compor_etapa(request, edital_id, etapa):
         digitados, previa, destino = _gesto(request, ator, edital, etapa, pedido, erros)
         if destino:
             return redirect(destino)
-        edital.refresh_from_db()
+        _recarregar(edital)
     elif request.method == "POST" and etapa in ETAPAS_GRAVAVEIS and request.POST.get("restaurar"):
         # **Reexibir o rascunho local, sem gravar nada** (RC-08; FR-020 da 002). A leitura é a
         # mesma da recusa, logo abaixo, e é por isso que a Modalidade, o fato, a linha do quadro e
@@ -1565,7 +1576,7 @@ def compor_etapa(request, edital_id, etapa):
                     )
                 except DomainError as exc:
                     erros.append(_recusa(exc, digitados, etapa))
-        edital.refresh_from_db()
+        _recarregar(edital)
 
     _, _, template = ETAPAS_COMPOSICAO[CHAVES_ETAPA.index(etapa)]
     # **Um instante para a página inteira** (`028`, FR-341). O selo da etapa Cronograma e as
@@ -2496,7 +2507,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
             teto=digitados["teto"],
             correlation_id=request.correlation_id,
         )
-        edital.refresh_from_db()
+        _recarregar(edital)
         # **Ato próprio, e antes do `replace_draft`** (029, T045). Os dois campos são de **raiz** do
         # Edital, e `replace_draft` não os carrega: passar por ele apagaria as coleções que ele
         # substitui sem gravar nenhum dos dois. O ato próprio também tem auditoria própria, com o
@@ -2504,7 +2515,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         #
         # **Antes, e não depois**: este comando faz `compare_and_swap` e a revisão sobe; chamá-lo
         # depois de `replace_draft` levaria a `expected_revision` obsoleta que o outro acabou de
-        # invalidar. Aqui, o `edital.refresh_from_db()` devolve a revisão que o `replace_draft`
+        # invalidar. Aqui, o `_recarregar(edital)` devolve a revisão que o `replace_draft`
         # seguinte vai declarar.
         atualizar_requerimento_de_matricula(
             actor=ator,
@@ -2514,7 +2525,7 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
             declaracao=digitados["requerimento_declaracao"],
             correlation_id=request.correlation_id,
         )
-        edital.refresh_from_db()
+        _recarregar(edital)
     elif etapa == "classificacao":
         # Só os marcos vêm do formulário; o resto de cada Perfil é o que já estava gravado.
         marcos_por_perfil = {str(chave): valor for chave, valor in digitados.items()}

@@ -282,6 +282,14 @@ table{width:100%;border-collapse:collapse}
    inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
    confere inscrições pelo celular estava lendo um layout quebrado. {% endcomment %}
 .tabela-rolavel{overflow-x:auto}
+{% comment %} **Toda moldura que rola é a referência do que carrega** (078, `FR-1760`). O rótulo oculto de cada
+   linha é `position:absolute`, e toma como referência o primeiro ancestral posicionado: com a moldura
+   sem posição, era a página — e o rótulo que caía além da borda alargava a página inteira, e não a
+   moldura. Foi o estouro de 835 px das conclusões preservadas, que a 077 corrigiu só naquela tela; a
+   sonda da 078 achou a mesma estrutura em outras 19 variantes, nenhuma estourando ainda. A regra não
+   move caixa nenhuma: muda só a quem conta o transbordo. As duas molduras que só rolam no estreito
+   ganham posição lá, no `@media` em que rolam: na tela larga elas são bloco comum (058). {% endcomment %}
+.tabela-rolavel,.rolagem,.rolagem-da-tabela,.serie .barras{position:relative}
 caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
 th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--borda);
   vertical-align:top;font-size:.9375rem}
@@ -387,6 +395,11 @@ ação de linha continua pequena, que é o que ela é numa tabela.
 .cartao{flex:1 1 320px;background:var(--branco);border:1px solid var(--borda);
   border-radius:6px;padding:1rem 1.25rem}
 .cartao h2{margin-bottom:.75rem}
+{% comment %} O cartão em `.colunas` é item flex, e item flex não encolhe abaixo do conteúdo mínimo — a mesma
+   família do `fieldset` (078, `FR-1777`). A tabela dos Editais, no detalhe do Processo, deixou o
+   cartão com 384 px a 375 de janela; encolhendo, a tabela rola na própria moldura. A sonda da 078,
+   com esta regra, não move caixa nenhuma nas 84 variantes do inventário. {% endcomment %}
+.colunas>.cartao{min-width:0}
 .participantes{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4rem .75rem;
   font-size:.9375rem}
 .participantes dt{color:var(--texto-fraco);font-size:.8125rem}
@@ -678,6 +691,7 @@ fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);p
 .distribuicao-moldura{overflow-x:visible}
 @media (max-width:60rem){
   .distribuicao-moldura,.rolavel-no-estreito{overflow-x:auto}
+  .distribuicao-moldura,.rolavel-no-estreito{position:relative}
 }
 .distribuicao{background:var(--branco);
   border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
@@ -1005,7 +1019,11 @@ fieldset.linha>.acoes-da-linha{position:absolute;top:0;right:1rem;margin:0;paddi
    navegador — que é justamente quem mais precisa dele. É a mesma medida dos campos do portal. {% endcomment %}
 form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.5rem;max-width:32rem}
-fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem}
+{% comment %} `min-width:0` (078, `FR-1761`): por padrão do navegador o `fieldset` não encolhe abaixo da largura
+   mínima do que carrega, e a tabela dentro dele nunca chegava a rolar na própria moldura — reaproveitar
+   tinha 994 px a 375 —, nem o campo de arquivo cabia no anexo novo. A 077 corrigiu as duas telas; a
+   causa é de todo grupo de campos. {% endcomment %}
+fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem;min-width:0}
 legend{font-weight:600;padding:0 .4rem}
 label{display:block;margin-bottom:.5rem}
 {% comment %}
@@ -1516,7 +1534,7 @@ escape do guardião por mudar de lugar.
   {% comment %} As telas de uso diário sobrescrevem o bloco com a própria trilha, que sai do conteúdo
      delas (077, `FR-1746`, `R-001`): uma trilha por página, e só a tela sabe dizê-la — o nome da
      Etapa, o protocolo, a porta por onde se chegou. As demais ficam com o caminho até a seção. {% endcomment %}
-  {% block caminho_do_contexto %}<p class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › {{ navegacao.secao_atual }}</p>{% endblock %}
+  {% block caminho_do_contexto %}<p class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {{ navegacao.secao_atual }}</p>{% endblock %}
   <a href="{% url 'interface:identificar' %}">Trocar identidade</a>
 </header>
 {% else %}

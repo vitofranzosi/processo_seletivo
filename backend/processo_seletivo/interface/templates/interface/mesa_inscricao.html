@@ -4,7 +4,7 @@
 {% comment %} A trilha está no cabeçalho de contexto (077, `FR-1746`), e não mais no conteúdo: uma por
    página. {% endcomment %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">
-  <abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  {% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
   <a href="{% url 'interface:minha-etapa' edital.id etapa_id %}">Minha Mesa</a> ›
   <span aria-current="page">Inscrição {{ inscricao.protocolo|default:inscricao.id }}</span>
 </nav>{% endblock %}

@@ -149,7 +149,10 @@ def test_sem_script_a_etapa_e_a_de_sempre(client, tres_perfis):
     )
     for perfil in (P1, P2, P3):
         assert " hidden" not in _cartao(corpo, perfil)
-    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" in corpo
+    # A moldura da vista é presa pela regra da folha comum desde a 078 (`FR-1760` da 078), e não
+    # por uma cópia desta etapa.
+    assert re.search(r"(?m)^[^{}]*\.tabela-rolavel[,{][^{}]*\{?position:relative\}", corpo)
+    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" not in corpo
 
 
 def test_as_frases_curtas_da_linha_moram_no_template(client, tres_perfis):

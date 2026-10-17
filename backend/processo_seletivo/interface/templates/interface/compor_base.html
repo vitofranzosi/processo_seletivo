@@ -1,12 +1,11 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{% block etapa_titulo %}Compor{% endblock %} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% comment %} A trilha no cabeçalho de contexto, como no detalhe do Edital (078, `FR-1767`, `FR-1768`), e com o
+   Processo que ela pulava: quem subia da composição ao Processo precisava passar pelo Edital. O passo
+   não entra — a navegação das etapas já o marca como atual. O Processo vem com o Edital
+   (`obter_edital`), sem consulta a mais. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Compor</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Compor</span>
-</nav>
-
 <h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ edital.title }}
   <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>

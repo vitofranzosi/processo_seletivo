@@ -1,10 +1,4 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block estilo_da_pagina %}
-{% comment %} O `fieldset` cresce, por padrão do navegador, até a largura mínima do que carrega, e a tabela das
-   origens nunca chegava a rolar dentro da moldura: a 375 px a página inteira tinha 994 px (077,
-   `FR-1743`). Há um `fieldset` só nesta tela. {% endcomment %}
-fieldset{min-width:0}
-{% endblock %}
 {% block titulo %}Partir de um Edital anterior — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block conteudo %}
 <nav aria-label="Trilha de navegação" class="trilha">

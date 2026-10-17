@@ -1,17 +1,8 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}
-{% comment %} As colunas pelo topo (057, FR-1047): "Quem atuou" tem a altura do próprio conteúdo, e não a da
-   coluna das ações. {% endcomment %}
-.colunas.ao-topo{align-items:flex-start}
-{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> ›
-  <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span>
-</nav>
-
 <h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ edital.title }}
   <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>
@@ -36,29 +27,10 @@ permanecem preservados.</p>
 {% endif %}
 
 {% comment %} Pelo topo (057, FR-1047): esticado pela coluna vizinha, "Quem atuou" tinha 495 px para 236 de conteúdo. {% endcomment %}
+{% comment %} "O que fazer agora" primeiro (078, `FR-1765`): a 375 px as colunas empilham, e a história do
+   Edital vinha antes do que fazer com ele. Na tela larga a ação passa para a esquerda, onde a leitura
+   começa; nada muda dentro dos cartões. {% endcomment %}
 <div class="colunas ao-topo">
-  <section aria-labelledby="participantes-titulo" class="cartao">
-    <h2 id="participantes-titulo">Quem atuou</h2>
-    <dl class="participantes">
-      <dt>Elaborou e submeteu</dt>
-      <dd>{% if participantes.elaborou %}{{ participantes.elaborou }}
-        <span class="quando">{{ participantes.elaborou_em|date:"d/m/Y H:i" }}</span>
-        {% else %}<span class="pendente">ainda não submetido</span>{% endif %}</dd>
-      <dt>Homologou</dt>
-      <dd>{% if participantes.homologou %}{{ participantes.homologou }}
-        <span class="quando">{{ participantes.homologou_em|date:"d/m/Y H:i" }}</span>
-        {% else %}<span class="pendente">ainda não homologado</span>{% endif %}</dd>
-      <dt>Publicou</dt>
-      <dd>{% if participantes.publicou %}{{ participantes.publicou }}
-        <span class="quando">{{ participantes.publicou_em|date:"d/m/Y H:i" }}</span>
-        {% else %}<span class="pendente">ainda não publicado</span>{% endif %}</dd>
-      {% if participantes.signatario %}
-      <dt>Autoridade Signatária</dt><dd>{{ participantes.signatario }}</dd>
-      {% if participantes.unidade %}<dt>Unidade</dt><dd>{{ participantes.unidade }}</dd>{% endif %}
-      {% endif %}
-    </dl>
-  </section>
-
   <section aria-labelledby="acoes-titulo" class="cartao">
     <h2 id="acoes-titulo">O que fazer agora</h2>
 
@@ -133,6 +105,28 @@ permanecem preservados.</p>
     </ul>
     {% endif %}
   </section>
+  <section aria-labelledby="participantes-titulo" class="cartao">
+    <h2 id="participantes-titulo">Quem atuou</h2>
+    <dl class="participantes">
+      <dt>Elaborou e submeteu</dt>
+      <dd>{% if participantes.elaborou %}{{ participantes.elaborou }}
+        <span class="quando">{{ participantes.elaborou_em|date:"d/m/Y H:i" }}</span>
+        {% else %}<span class="pendente">ainda não submetido</span>{% endif %}</dd>
+      <dt>Homologou</dt>
+      <dd>{% if participantes.homologou %}{{ participantes.homologou }}
+        <span class="quando">{{ participantes.homologou_em|date:"d/m/Y H:i" }}</span>
+        {% else %}<span class="pendente">ainda não homologado</span>{% endif %}</dd>
+      <dt>Publicou</dt>
+      <dd>{% if participantes.publicou %}{{ participantes.publicou }}
+        <span class="quando">{{ participantes.publicou_em|date:"d/m/Y H:i" }}</span>
+        {% else %}<span class="pendente">ainda não publicado</span>{% endif %}</dd>
+      {% if participantes.signatario %}
+      <dt>Autoridade Signatária</dt><dd>{{ participantes.signatario }}</dd>
+      {% if participantes.unidade %}<dt>Unidade</dt><dd>{{ participantes.unidade }}</dd>{% endif %}
+      {% endif %}
+    </dl>
+  </section>
+
 </div>
 
 {% if documentos %}
