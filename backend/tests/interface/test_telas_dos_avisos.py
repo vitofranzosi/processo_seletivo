@@ -69,11 +69,18 @@ def ate_os_avisos(edital):
     ]
 
 
+def rotulo_do_aviso(solicitado_em):
+    """Com a hora desde a `088` (`FR-2010`, `FR-2011`), que substitui o rótulo só com a data da
+    `FR-1941`: dois avisos do mesmo dia tinham o mesmo nome na trilha."""
+    local = timezone.localtime(solicitado_em)
+    return f"Aviso de {local:%d/%m/%Y} às {local:%H:%M}"
+
+
 def ate_o_aviso(edital, aviso_id, solicitado_em):
     return [
         *ate_os_avisos(edital),
         f'<a href="{reverse("interface:aviso", args=[aviso_id])}">'
-        f"Aviso de {timezone.localtime(solicitado_em):%d/%m/%Y}</a> ›",
+        f"{rotulo_do_aviso(solicitado_em)}</a> ›",
     ]
 
 
@@ -139,7 +146,7 @@ def test_no_aviso_e_na_interrupcao_a_trilha_passa_pelos_avisos(client, publicado
     historico = abrir_url(client, reverse("interface:aviso", args=[aviso.id]))
     trilha = trilha_unica_no_cabecalho(historico)
     niveis_em_ordem(trilha, ate_os_avisos(edital))
-    termina_em(trilha, f"Aviso de {timezone.localtime(aviso.solicitado_em):%d/%m/%Y}")
+    termina_em(trilha, rotulo_do_aviso(aviso.solicitado_em))
     assert comeca_pelo_titulo(historico)
 
     interromper = abrir_url(client, reverse("interface:aviso-interromper", args=[aviso.id]))

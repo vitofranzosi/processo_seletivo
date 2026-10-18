@@ -211,6 +211,9 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
   antes, junto da barra, e é pulado com ela.
 - **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). O título e a linha de
   baixo dele continuam identificando o Processo e o Edital impressos.
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 
 ## Requirements *(mandatory)*
 

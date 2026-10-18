@@ -191,6 +191,9 @@ sem presidência, não há botão, como antes.
 - **O link de salto.** Continua levando ao conteúdo, que agora começa pelo título.
 - **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). O título e a linha de
   baixo dele continuam identificando o Processo e a Etapa impressos.
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 
 ## Requirements *(mandatory)*
 

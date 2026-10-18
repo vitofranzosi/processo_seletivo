@@ -142,6 +142,9 @@ incremento.
   baixo dele continuam identificando a inscrição e o recurso impressos; o Edital impresso fica no
   título das Inscrições e no bloco "Conferir o que se contesta" do Recurso, e sai do papel da
   Inscrição recebida e dos Recursos, como já saiu das telas da `077` à `080` (D-004).
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 
 ## Requirements *(mandatory)*
 
