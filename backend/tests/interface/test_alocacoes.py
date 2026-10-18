@@ -156,7 +156,8 @@ def test_comissao_sem_presidente_nao_deixa_distribuir(client, seletor_ligado, ge
 
     corpo = client.get(url(processo_a)).content.decode()
 
-    assert "Designe a presidência antes de distribuir" in corpo
+    # "alocar" desde a 081 (`FR-1822`): distribuir é o ato da tela vizinha.
+    assert "Designe a presidência antes de alocar" in corpo
     # O rótulo é "Salvar alocação" desde a 079 (`FR-1790`): o antigo não acusaria mais nada.
     assert "Salvar alocação" not in corpo
     assert "disabled" in corpo

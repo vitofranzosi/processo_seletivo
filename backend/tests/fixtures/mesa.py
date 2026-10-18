@@ -10,6 +10,7 @@ from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 from processo_seletivo.comissoes.domain.funcoes import Funcao
 from tests.conftest import ator_institucional
 from tests.fixtures.comissao import (
+    DOCUMENTO_A,
     ETAPA_A1,
     alocar_em,
     constituir,
@@ -98,3 +99,43 @@ def constituir_presidencia(gestor, cenario, *, subject="paula"):
         correlation_id="teste",
     )
     return membro
+
+
+def montar_cenario_da_presidencia(gestor, api_client, manager_headers, *, seed=20):
+    """Edital com dupla avaliação e documento exigido, comissão com presidência, um membro alocado e
+    uma inscrição distribuída a ele: o ponto de partida das telas da presidência.
+
+    Nasceu como fixture de `test_acessibilidade_da_012.py`, e as telas da 077, da 079 e da 080 a
+    importavam de lá — com um `noqa` no import e outro em cada uso, porque o parâmetro sombreava o
+    nome importado (081, FR-1823). Daí a regra de `tests/fixtures/corte.py`: a função mora aqui, e
+    cada módulo declara a fixture dele.
+    """
+    edital = publicar_processo_com_etapas(
+        api_client,
+        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"mvp-test-key-{seed:04d}"},
+        {
+            "institutionalCode": "PS-2026-K1",
+            "title": "Processo acessível",
+            "firstEdital": {"number": "K1", "year": 2026, "title": "Edital acessível"},
+        },
+        seed=seed,
+        com_documentos=True,
+        avaliacoes=2,
+        # Duas avaliações por inscrição: depois da `046`, só existe no acervo (`FR-746`).
+        como_acervo=True,
+        maxima="100.0000",
+    )
+    etapa = identificador(ETAPA_A1, seed)
+    membros = constituir(
+        gestor,
+        edital.processo,
+        [("maria", Funcao.PRESIDENTE), ("joao", Funcao.MEMBRO)],
+        prefixo="acess",
+    )
+    alocar_em(gestor, edital.processo, membros["joao"], edital, etapa, chave="acess")
+    inscricao = inscrever(edital, 1, primeiro=2800, documentos=[identificador(DOCUMENTO_A, seed)])[
+        0
+    ]
+    contexto = {"edital": edital, "etapa": etapa, "processo": edital.processo, "membros": membros}
+    distribuir_para(contexto, gestor, ["joao"], [inscricao], chave="acess")
+    return {**contexto, "inscricao": inscricao}

@@ -435,12 +435,18 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
 
       Não há campo de pontuação nem de consequência aqui, e a ausência é a regra: a presidência
       confirma um cálculo, não o informa (FR-016).
+
+      Secundário e marcado, e não cheio como o vizinho (081, FR-1820): os dois agem sobre a mesma
+      seleção, e o desenho igual dizia que eram ações da mesma natureza — uma se retira na própria
+      tela, a outra começa um ato que não se corrige. É o desenho dos atos do Processo, que também
+      levam a uma conferência antes do ato.
       {% endcomment %}
-      <button type="submit" class="botao"
+      <button type="submit" class="botao secundario"
               formaction="{% url 'interface:consolidar-resultados' edital.id etapa.id %}"
               name="chave_idempotencia" value="{{ chave_consolidacao }}">
         Consolidar as selecionadas
       </button>
+      <span class="marca-irreversivel">irreversível</span>
     </p>
   </form>
 
