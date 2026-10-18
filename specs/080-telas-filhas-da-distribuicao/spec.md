@@ -207,6 +207,9 @@ consultas ficaram de fora porque não foram medidas, e não por decisão.
 - **FR-1803**: A Auditoria de um Edital e as demais telas da gestão — fora das da `077`, da `078`, da
   `079` e destas — MUST continuar com o cabeçalho de contexto da `076` e a trilha no conteúdo
   (`FR-1782` da `079`).
+  *Emendada pela [`082`](../082-trilha-da-conferencia-da-consolidacao/spec.md) em 17/10/2026*: a
+  conferência da consolidação, que também se abre da Distribuição e ficou fora da lista das filhas,
+  passou a ter a trilha no cabeçalho, a da Distribuição com "Conferir" no fim (`FR-1840` da `082`).
 - **FR-1804**: A trilha MUST ser a mesma para quem preside e para quem audita: nenhum nível MUST
   aparecer, sumir ou deixar de ser link conforme quem lê.
 - **FR-1805**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
