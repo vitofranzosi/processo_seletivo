@@ -207,6 +207,10 @@ consultas ficaram de fora porque não foram medidas, e não por decisão.
 - **FR-1803**: A Auditoria de um Edital e as demais telas da gestão — fora das da `077`, da `078`, da
   `079` e destas — MUST continuar com o cabeçalho de contexto da `076` e a trilha no conteúdo
   (`FR-1782` da `079`).
+  *Emendada pela [`083`](../083-telas-do-edital/spec.md) em 18/10/2026*: a Auditoria do Edital passou
+  a ter a trilha no cabeçalho, com as outras telas que se abrem do detalhe do Edital (`FR-1850` da
+  `083`); o modelo das três auditorias não tem mais trilha no conteúdo. O guardião das demais telas
+  passou à Supervisão do Processo (`FR-1853` da `083`).
 - **FR-1804**: A trilha MUST ser a mesma para quem preside e para quem audita: nenhum nível MUST
   aparecer, sumir ou deixar de ser link conforme quem lê.
 - **FR-1805**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar

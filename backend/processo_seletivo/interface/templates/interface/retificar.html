@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Retificar Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Retificar</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 /* O "aplicar a todos" na conferência (051). Aqui, e não em `base.html`: a folha de lá conta no teto
    de bytes da distribuição, e estas regras só servem a esta tela.
@@ -32,14 +33,12 @@
 #formulario-da-retificacao fieldset.linha:target{outline:2px solid var(--verde);outline-offset:2px}
 {% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Retificar</span>
-</nav>
-
 <h1>Retificar Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
+
+{% comment %} A resposta ao envio logo abaixo do título, antes de "Como funciona" (083, `FR-1856`): é ela que
+   a pessoa procura ao voltar do clique, como na Distribuição e nas telas da 080. {% endcomment %}
+{% include "interface/_erros.html" with titulo_da_recusa="Não foi possível prosseguir:" %}
 
 {% if pode_elaborar %}
 <p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
@@ -56,8 +55,6 @@ corrige é o caminho que não termina.
 <p class="aviso"><strong>Somente leitura.</strong> Você não tem a permissão
   <code>retificacao:elaborar</code>. Abaixo está o conteúdo vigente do Edital, como referência.</p>
 {% endif %}
-
-{% include "interface/_erros.html" with titulo_da_recusa="Não foi possível prosseguir:" %}
 
 {% if resumo or gestos or consequencias %}
 <section aria-labelledby="resumo-titulo" class="consequencias">

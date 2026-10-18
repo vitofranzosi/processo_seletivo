@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conferir — {{ nome }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:marco' edital.id marco.id %}">{{ marco.name }}</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:marco' edital.id marco.id %}">{{ marco.name }}</a> ›
-  <span aria-current="page">Conferir</span>
-</nav>
-
 <h1>Confira antes de confirmar</h1>
 <p class="sub">{{ nome }} — {{ marco.name }}, {{ perfil.name }}, Edital {{ edital.number }}/{{ edital.year }}</p>
 {% if operacao == "publicar" %}

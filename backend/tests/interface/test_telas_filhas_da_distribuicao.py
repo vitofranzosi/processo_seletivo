@@ -2,8 +2,8 @@
 
 Nas seis telas que se abrem a partir da Distribuição e na Auditoria da comissão a trilha mora no
 cabeçalho de contexto, e só lá — a das filhas é a da Distribuição com a tela no fim; a Auditoria
-do Edital, que divide o modelo de página, fica com o cabeçalho da 076. O que acabou de acontecer
-vem logo abaixo do título, Impedimentos ganha título para o registro e "Filtrar" é a ação
+do Edital, que divide o modelo de página, ficou com o cabeçalho da 076 até a 083. O que acabou de
+acontecer vem logo abaixo do título, Impedimentos ganha título para o registro e "Filtrar" é a ação
 principal das consultas. O desenho em si é provado no navegador e pelo inventário visual refeito
 (quickstart): aqui fica o que a marcação garante.
 """
@@ -20,7 +20,6 @@ from tests.interface.test_telas_da_presidencia import (
     niveis_em_ordem,
 )
 from tests.interface.test_telas_de_uso_diario import (
-    cabecalho,
     conteudo,
     trilha_unica_no_cabecalho,
 )
@@ -117,15 +116,10 @@ def test_na_auditoria_da_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_lig
     assert comeca_pelo_titulo(corpo)
 
 
-def test_a_auditoria_do_edital_continua_com_o_cabecalho_da_076(client, seletor_ligado, cenario):  # noqa: F811
-    """`FR-1803`: o mesmo modelo de página, e a trilha do Edital continua no conteúdo (D-002)."""
-    identificar(client, "carlos", ["gestor", "auditor"])
-    corpo = abrir(client, "interface:auditoria", cenario["edital"].id)
-
-    assert '<p class="caminho-da-secao">' in cabecalho(corpo)
-    assert 'aria-label="Trilha de navegação"' not in cabecalho(corpo)
-    assert conteudo(corpo).count('aria-label="Trilha de navegação"') == 1
-    assert '<span aria-current="page">Auditoria</span>' in conteudo(corpo)
+# A Auditoria do Edital tinha aqui o guardião da `FR-1803`, com o cabeçalho da 076 e a trilha no
+# conteúdo. A 083 a levou ao cabeçalho (`FR-1850` da 083), e o modelo das três auditorias não tem
+# mais trilha no conteúdo: a prova está em `test_telas_do_edital.py`, e a das demais telas, na
+# Supervisão, em `test_telas_de_uso_diario.py`.
 
 
 @pytest.mark.parametrize("rota", DA_AUDITORIA_TAMBEM)

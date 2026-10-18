@@ -1,18 +1,13 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Resultados divulgados{% endblock %}
+{% comment %}
+A trilha leva ao mesmo lugar que o botão do rodapé, e cai no mesmo 404 quando quem lê não
+alcança a tela da classificação. Sem o link, o degrau continua dizendo onde esta página fica —
+que é o que a trilha existe para dizer (E2E17-002). No cabeçalho de contexto desde a 083, com a
+mesma condição (D-003 da 083).
+{% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › {% if pode_ver_o_ato %}<a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a>{% else %}Classificação{% endif %} › <span aria-current="page">Resultados divulgados</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  {% comment %}
-  A trilha leva ao mesmo lugar que o botão do rodapé, e cai no mesmo 404 quando quem lê não
-  alcança a tela da classificação. Sem o link, o degrau continua dizendo onde esta página fica —
-  que é o que a trilha existe para dizer (E2E17-002).
-  {% endcomment %}
-  {% if pode_ver_o_ato %}<a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a>{% else %}Classificação{% endif %} ›
-  <span aria-current="page">Resultados divulgados</span>
-</nav>
-
 <h1>Resultados divulgados</h1>
 <p class="sub">O que foi divulgado neste marco, quando, por quem — e o que vale hoje.</p>
 
