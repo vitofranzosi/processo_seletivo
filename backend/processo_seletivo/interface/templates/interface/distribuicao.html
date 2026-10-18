@@ -175,8 +175,11 @@ FR-422).
   Secundário e marcado, como "Consolidar as selecionadas" lá embaixo (081, FR-1828): é o mesmo ato,
   e com dois desenhos a página dizia que a consolidação em lote era menos grave que a da seleção.
   {% endcomment %}
-  <p class="acoes"><button type="submit" class="botao secundario" aria-describedby="consolidar-prontas-irreversivel">{% if resumo.prontas == 1 %}Consolidar a inscrição pronta{% else %}Consolidar as {{ resumo.prontas }} prontas{% endif %}</button>
-    <span class="marca-irreversivel" id="consolidar-prontas-irreversivel">irreversível</span></p>
+  <p class="acoes">
+    <button type="submit" class="botao secundario"
+            aria-describedby="consolidar-prontas-irreversivel">{% if resumo.prontas == 1 %}Consolidar a inscrição pronta{% else %}Consolidar as {{ resumo.prontas }} prontas{% endif %}</button>
+    <span class="marca-irreversivel" id="consolidar-prontas-irreversivel">irreversível</span>
+  </p>
 </form>
 {% endif %}
 

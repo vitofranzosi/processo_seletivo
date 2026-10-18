@@ -421,8 +421,8 @@ ação de linha continua pequena, que é o que ela é numa tabela.
   background:var(--cinza-fundo);cursor:not-allowed}
 .acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
 {% comment %} `align-self` na própria marca, e não por contêiner (081, R-002): em qualquer linha flexível
-   ela esticaria até a altura do botão ao lado, e o fundo viraria uma faixa; fora de flex, não faz
-   nada. {% endcomment %}
+   ela esticaria até a altura do botão ao lado, e o fundo viraria uma faixa. Em grid ela também se
+   centraliza na célula; fora de flex e de grid, não faz nada. {% endcomment %}
 .marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
   color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px;
   align-self:center}

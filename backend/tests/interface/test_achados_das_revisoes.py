@@ -167,10 +167,11 @@ def declara_o_cenario_da_presidencia(arvore):
     """O módulo declara uma fixture `cenario` que chama `montar_cenario_da_presidencia`."""
     for no in arvore.body:
         if isinstance(no, ast.FunctionDef) and no.name == "cenario":
+            # Pelo nome importado ou pelo módulo (`mesa.montar_cenario_da_presidencia`).
             chamadas = {
-                chamada.func.id
+                getattr(chamada.func, "id", None) or getattr(chamada.func, "attr", None)
                 for chamada in ast.walk(no)
-                if isinstance(chamada, ast.Call) and isinstance(chamada.func, ast.Name)
+                if isinstance(chamada, ast.Call)
             }
             if "montar_cenario_da_presidencia" in chamadas:
                 return True
@@ -211,12 +212,15 @@ def test_toda_trilha_do_cabecalho_abre_com_a_mesma_navegacao():
         '<nav aria-label="Trilha de navegação" class="caminho-da-secao">'
         '{% include "interface/_produto_na_trilha.html" %}'
     )
-    inicio, fim = sem_espaco("{% block caminho_do_contexto %}"), sem_espaco("{% endblock %}")
+    inicio = sem_espaco("{% block caminho_do_contexto %}")
+    # `{% endblock %}` ou `{% endblock caminho_do_contexto %}`: o bloco termina no primeiro dos
+    # dois, e não no `endblock` do conteúdo, que tem trilhas próprias.
+    fim = re.compile(r"\{%endblock(?:caminho_do_contexto)?%\}")
     blocos = {}
     for template in sorted(TEMPLATES.glob("*.html")):
         texto = sem_espaco(template.read_text())
         if template.name != "base.html" and inicio in texto:
-            blocos[template.name] = texto.split(inicio)[1].split(fim)[0]
+            blocos[template.name] = fim.split(texto.split(inicio)[1])[0]
     # A lista da 077 é a primeira tela a sobrescrever: se ela sumir daqui, a leitura falhou.
     assert "lista.html" in blocos
     # Toda `nav` do bloco, e não só a primeira: a auditoria tem uma por ramo. Um bloco sem `nav` —

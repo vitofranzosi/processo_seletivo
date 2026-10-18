@@ -9,8 +9,9 @@ selecionadas" passa ao desenho secundário com a marca "irreversível" — o des
 Processo já têm —, e "Distribuir as selecionadas" fica como ação principal. Na Alocação, o aviso diz
 "antes de alocar". A montagem do `cenario` da presidência sai do módulo de teste da `012` para
 `tests/fixtures/mesa.py`, cada módulo declara a própria fixture, e um guardião confere a abertura da
-trilha em todos os templates que a sobrescrevem. Os outros sete achados ficam como decisão, na spec. Nenhuma migration, nenhuma permissão, nenhum
-endereço, nenhuma view, nenhuma mensagem de domínio.
+trilha em todos os templates que a sobrescrevem. Os outros sete achados ficam como decisão, na
+spec. Nenhuma migration, nenhuma permissão, nenhum endereço, nenhuma view, nenhuma mensagem de
+domínio.
 
 ## Technical Context
 

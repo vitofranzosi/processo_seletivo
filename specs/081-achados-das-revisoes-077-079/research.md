@@ -122,6 +122,21 @@ A revisão do PR 298 apontou nove achados, e o usuário pediu a correção de to
 Os dois guardiões novos foram provados por mutação: com a classe da trilha trocada na lista, e com o
 `cenario` importado de `test_telas_da_presidencia.py`, cada um reprova.
 
+## R-008 — A segunda revisão do PR (18/10)
+
+Uma segunda revisão, sobre o estado já emendado, apontou sete achados. Seis foram corrigidos:
+
+| Achado | Correção |
+|---|---|
+| O guardião da trilha lia até o primeiro `{% endblock %}` sem nome | aceita também `{% endblock caminho_do_contexto %}` (R-005) |
+| O guardião da fixture só via a chamada pelo nome importado | reconhece também `mesa.montar_cenario_da_presidencia(...)` |
+| O comentário da regra da marca omitia o grid | reescrito |
+| O botão das prontas numa linha de mais de 200 caracteres | um atributo por linha, como o vizinho |
+| A docstring de `montar_banca` sem `com_documentos` | completada |
+| Linha longa no resumo do plan | quebrada |
+
+O sétimo fica registrado, abaixo: a marca nos atos do Processo e do Edital.
+
 ## Achados registrados, fora do escopo
 
 - **A conferência da consolidação ainda tem a trilha no conteúdo.** "Processos Seletivos › Prova
@@ -130,3 +145,9 @@ Os dois guardiões novos foram provados por mutação: com a classe da trilha tr
   a listou entre as filhas. Visto no percurso desta feature, em 17/10/2026.
 - **Outras fixtures importadas de módulo de teste.** Ver o R-004: o mesmo padrão, com `noqa`, em dez
   importações da suíte; o guardião desta feature só cobre o `cenario` da presidência.
+- **A marca "irreversível" sem descrição acessível fora da Distribuição.** No detalhe do Processo e
+  em `_acao_do_edital.html`, que são o desenho que esta feature copiou, a marca continua um `span`
+  depois do botão, sem `aria-describedby`: o leitor de tela anuncia "irreversível" no foco de
+  "Consolidar", e não no de "Encerrar o Processo" ou de um ato do Edital. Corrigir é estender a
+  `FR-1827` a duas telas que o escopo desta feature não toca. Achado da segunda revisão do PR, em
+  18/10/2026.

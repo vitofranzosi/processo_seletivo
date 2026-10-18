@@ -30,7 +30,10 @@ def montar_banca(
     avaliadores=("joao", "ana"),
     com_documentos=False,
 ):
-    """Edital publicado com dupla avaliação, comissão constituída e avaliadores alocados."""
+    """Edital publicado com dupla avaliação, comissão constituída e avaliadores alocados.
+
+    `com_documentos` exige o documento da Etapa (`DOCUMENTO_A`), como as telas da presidência pedem.
+    """
     edital = publicar_processo_com_etapas(
         api_client,
         {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"mvp-test-key-{seed:04d}"},

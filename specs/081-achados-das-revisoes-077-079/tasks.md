@@ -54,3 +54,4 @@ Nenhuma.
 - [x] T020 `test_achados_das_revisoes.py`: testes da descrição acessível e das prontas; o guardião da fixture sobre todos os donos; o da trilha sem rigidez; o aviso e a regra sem texto literal; mutação nos dois guardiões (R-005, R-007; FR-1823, FR-1824, FR-1827, FR-1828, SC-711)
 - [x] T021 `test_telas_da_presidencia.py`: a contagem de cheios passa a 4, e o comentário diz o que mudou (R-006)
 - [x] T022 Inventário de depois refeito nos dois estados da barra; `make lint check test-pg DB_NAME=ps_081` (FR-1825, FR-1826, SC-714, SC-715)
+- [x] T023 Segunda revisão do PR: os guardiões aceitam `endblock` nomeado e chamada por atributo; comentário da marca, botão das prontas e docstring de `montar_banca` acertados; a marca fora da Distribuição registrada (R-008)
