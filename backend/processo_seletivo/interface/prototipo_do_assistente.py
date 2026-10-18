@@ -34,6 +34,7 @@ from processo_seletivo.duvidas.application.consultar import SemVersaoVigente, co
 from processo_seletivo.interface import painel_do_assistente as painel_
 from processo_seletivo.interface.assistente import _edital_do_piloto
 from processo_seletivo.portal import views as portal
+from processo_seletivo.shared.politica_de_conteudo import em_observacao
 
 CHAVE_DA_SESSAO = "assistente_prototipo"
 ROTA = "interface:assistente-prototipo"
@@ -48,6 +49,7 @@ def _destino(edital):
 
 
 @require_http_methods(["GET"])
+@em_observacao
 def prototipo(request, edital_id):
     edital, recusa = _edital_do_piloto(request, edital_id)
     if recusa is not None:

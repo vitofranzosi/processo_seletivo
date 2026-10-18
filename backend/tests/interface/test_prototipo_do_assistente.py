@@ -18,6 +18,7 @@ from django.urls import reverse
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPOSTA_DA_SUGESTAO
 from processo_seletivo.duvidas.models import TrocaDoPiloto
 from processo_seletivo.interface import painel_do_assistente as painel_
+from processo_seletivo.shared import politica_de_conteudo as politica
 from tests.fixtures.corpus import publicar_do_corpus
 from tests.fixtures.inferencia import devolucao, saida
 from tests.fixtures.inferencia_corpus import fonte
@@ -82,6 +83,16 @@ def test_o_fundo_e_a_pagina_publica_e_o_painel_nasce_fechado(client, edital_91):
     assert " open>" not in re.search(r'<dialog id="pd-painel"[^>]*>', corpo).group(0)
     assert 'aria-expanded="false"' in corpo
     assert 'aria-expanded="true"' in _texto(client.get(_url(edital_91) + "?painel=1"))
+
+
+def test_o_fundo_do_portal_fica_sob_a_politica_do_portal(client, edital_91):
+    """091, `FR-2104`: a página é a do portal, com a folha dele no documento — em observação, e não
+    em recusa, ainda que o endereço seja da gestão. Em recusa, o protótipo perderia o desenho."""
+    identificar(client, "pessoa", PILOTO)
+    resposta = client.get(_url(edital_91))
+
+    assert resposta["Content-Security-Policy-Report-Only"] == politica.POLITICA
+    assert "Content-Security-Policy" not in resposta
 
 
 @pytest.mark.parametrize(("estado", "_nome"), painel_.ESTADOS_SIMULADOS)

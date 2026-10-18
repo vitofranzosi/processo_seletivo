@@ -22,7 +22,13 @@ mudou = []
 for rid in sorted(set(base) & set(nova)):
     for largura in ("375", "1280"):
         a, b = base[rid].get(largura) or {}, nova[rid].get(largura) or {}
-        diferencas = {k: (a.get(k), b.get(k)) for k in CAMPOS if a.get(k) != b.get(k)}
+        # O conjunto da 091 declara à parte as regras que ela acrescentou (`estilos.py`); a soma
+        # das outras é o que se compara.
+        def valor(lado, k):
+            v = lado.get(k)
+            return v.split(" + ")[0] if k == "conjunto" and isinstance(v, str) else v
+
+        diferencas = {k: (a.get(k), b.get(k)) for k in CAMPOS if valor(a, k) != valor(b, k)}
         if diferencas:
             mudou.append((rid, largura, diferencas))
 

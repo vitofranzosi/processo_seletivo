@@ -97,7 +97,9 @@ def folha_da_pagina(cliente, url):
 
 # O endereço que a tag `estatico` recebe, num modelo: `{% estatico 'interface/telas/lista.css' %}`.
 _ESTATICO = re.compile(r"""\{%\s*estatico\s+['"]([^'"]+)['"]\s*%\}""")
-_BLOCO_DE_ESTILO = re.compile(r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", re.S)
+_BLOCO_DE_ESTILO = re.compile(
+    r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", re.S
+)
 
 
 def estilo_do_bloco(modelo):

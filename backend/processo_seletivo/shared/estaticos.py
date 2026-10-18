@@ -1,9 +1,10 @@
 """O endereço de um arquivo estático com a versão do conteúdo (089).
 
-`{% load estaticos %}` e `{% estatico 'interface/gestao/base.css' %}` dão o endereço de `{% static %}`
-com `?v=` e os 12 primeiros dígitos do SHA-256 do arquivo. Fora do HTML, a folha fica no cache do
-navegador; sem versão no endereço, a folha velha continuaria servida depois de mudar — a `053` mediu
-uma correção de JS como se não funcionasse porque o navegador rodava a `shell.js` da véspera.
+`{% load estaticos %}` e `{% estatico 'interface/gestao/base.css' %}` dão o endereço de
+`{% static %}` com `?v=` e os 12 primeiros dígitos do SHA-256 do arquivo. Fora do HTML, a folha
+fica no cache do navegador; sem versão no endereço, a folha velha continuaria servida depois de
+mudar — a `053` mediu uma correção de JS como se não funcionasse porque o navegador rodava a
+`shell.js` da véspera.
 
 O resumo é do **conteúdo**, e não da data do arquivo nem da versão do sistema: um `git checkout`
 muda a data sem mudar o arquivo, e uma implantação muda a versão sem mudar a folha — nos dois casos

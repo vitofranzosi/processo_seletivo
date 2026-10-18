@@ -34,10 +34,16 @@ CONJUNTO = r"""() => {
     }
   };
   for (const folha of document.styleSheets) andar(folha.cssRules, '');
+  // As regras que a 091 acrescenta no lugar dos `style=""` (`.simbolos`, `.largura-N`, `.altura-N`)
+  // não existiam antes; contadas, o conjunto mudaria em toda tela. Ficam de fora da soma, e a
+  // contagem as declara à parte.
+  const novas = linhas.filter((t) => /^\.(simbolos|largura-\d+|altura-\d+) \{/.test(t)).length;
+  const antigas = linhas.filter((t) => !/^\.(simbolos|largura-\d+|altura-\d+) \{/.test(t));
+  linhas.length = 0; linhas.push(...antigas);
   linhas.sort();
   let h = 2166136261;
   for (const t of linhas) { for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= 10; h = Math.imul(h, 16777619); }
-  return (h >>> 0).toString(16) + ' / ' + linhas.length + ' regras';
+  return (h >>> 0).toString(16) + ' / ' + linhas.length + ' regras' + (novas ? ' + ' + novas + ' da 091' : '');
 }"""
 
 # As violações da política de segurança de conteúdo (091), em recusa e em observação: o evento que o

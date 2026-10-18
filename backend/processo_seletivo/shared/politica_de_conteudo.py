@@ -19,7 +19,8 @@ barreira, e só pôde ser ligada quando a gestão deixou de ter estilo embutido 
   embutidos, e sob a política perderia o desenho e o que se expande nela. Ela é reconhecida pela
   marca que os modelos de depuração do Django põem no `<head>`, e não pelo status: a gestão também
   serve as próprias recusas com 404;
-- resposta que já traz política fica como está.
+- resposta que já traz política fica como está — é por aí que uma view sob `/gestao/` que serve
+  página do portal fica sob a regra do portal (`em_observacao`).
 
 O framework, na versão em uso (5.2), não traz middleware de CSP — ele chega na 6.0. Daí este, sem
 dependência nova (D-006 da `091`).
@@ -29,6 +30,8 @@ dependência nova (D-006 da `091`).
 aqui exigiria espelhar a exceção, e `frame-ancestors` vence o `X-Frame-Options` nos navegadores
 atuais: um erro aqui derrubaria a prévia ou abriria a gestão.
 """
+
+from functools import wraps
 
 from django.conf import settings
 
@@ -61,9 +64,7 @@ _MARCA_DA_DEPURACAO = b'<meta name="robots" content="NONE,NOARCHIVE">'
 
 def _e_pagina_de_depuracao(resposta):
     return (
-        settings.DEBUG
-        and not resposta.streaming
-        and _MARCA_DA_DEPURACAO in resposta.content[:2048]
+        settings.DEBUG and not resposta.streaming and _MARCA_DA_DEPURACAO in resposta.content[:2048]
     )
 
 
@@ -92,3 +93,22 @@ class PoliticaDeConteudoMiddleware:
         if cabecalho:
             resposta[cabecalho] = POLITICA
         return resposta
+
+
+def em_observacao(view):
+    """A view sob `/gestao/` que serve uma página do portal fica sob a regra do portal.
+
+    É o protótipo do painel de dúvidas (`interface/prototipo_do_assistente.py`): o fundo é a página
+    pública da seleção, de verdade, com a folha do portal no documento. Em recusa ela perderia o
+    desenho — o inventário da 091 mostrou a violação. A política vai em observação, como no portal,
+    e o middleware não a troca, porque a resposta já traz uma.
+    """
+
+    @wraps(view)
+    def envolvida(request, *args, **kwargs):
+        resposta = view(request, *args, **kwargs)
+        if resposta.get("Content-Type", "").startswith("text/html"):
+            resposta[CABECALHO_DE_OBSERVACAO] = POLITICA
+        return resposta
+
+    return envolvida

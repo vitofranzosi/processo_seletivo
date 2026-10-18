@@ -225,7 +225,7 @@ def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
     assert "/*" not in folha.split(".da-pagina")[0]
 
 
-# ---- o estilo de cada tela em arquivo (091) -------------------------------------------------------
+# ---- o estilo de cada tela em arquivo (091) ----------------------------------------------------
 
 MODELOS = RAIZ / "interface/templates/interface"
 
@@ -273,11 +273,13 @@ QUEM_CARREGA = {
 
 
 def test_cada_folha_de_tela_e_carregada_so_por_quem_a_usa():
-    """`FR-2096`, `SC-815`: nenhum arquivo de tela viaja numa tela que não o usa, e nenhuma tela que
-    tinha estilo deixa de carregá-lo. A base nunca cita arquivo de tela — senão ele iria em todas."""
+    """`FR-2096`, `SC-815`: nenhum arquivo de tela viaja numa tela que não o usa, e nenhuma tela
+    que tinha estilo deixa de carregá-lo. A base nunca cita arquivo de tela, que iria em todas."""
     citacoes = {}
     for modelo in sorted(MODELOS.glob("*.html")):
-        for caminho in re.findall(r"""\{%\s*estatico\s+'(interface/(?:telas|grupos)/[^']+)'""", modelo.read_text()):
+        for caminho in re.findall(
+            r"""\{%\s*estatico\s+'(interface/(?:telas|grupos)/[^']+)'""", modelo.read_text()
+        ):
             citacoes.setdefault(caminho, set()).add(modelo.name)
 
     assert citacoes == QUEM_CARREGA

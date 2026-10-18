@@ -33,7 +33,9 @@ OBSERVACAO = "Content-Security-Policy-Report-Only"
 
 def _texto(modelo):
     """O modelo sem os comentários de modelo: eles citam `<style>` e `style=""` para explicar."""
-    return re.sub(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", "", modelo.read_text(), flags=re.S)
+    return re.sub(
+        r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", "", modelo.read_text(), flags=re.S
+    )
 
 
 def _nome(caminho):
@@ -160,7 +162,9 @@ def test_a_recusa_da_propria_gestao_recebe_a_politica_mesmo_com_debug(settings):
     """A gestão serve as próprias recusas com 404; com `DEBUG`, elas não viram página de depuração.
     Reconhecer a depuração pelo status as deixaria sem política no servidor local."""
     settings.DEBUG = True
-    recusa = HttpResponse("<!DOCTYPE html><html><head></head><body>Recurso</body></html>", status=404)
+    recusa = HttpResponse(
+        "<!DOCTYPE html><html><head></head><body>Recurso</body></html>", status=404
+    )
 
     assert politica.cabecalho_para("/gestao/recursos/x", recusa) == RECUSA
 
@@ -244,7 +248,10 @@ def test_toda_pagina_com_htmx_herda_a_configuracao_que_o_desarma():
 
 @pytest.mark.parametrize(
     ("arquivo", "prefixo", "propriedade"),
-    [("interface/telas/minhas-etapas.css", "largura", "width"), ("interface/grupos/serie.css", "altura", "height")],
+    [
+        ("interface/telas/minhas-etapas.css", "largura", "width"),
+        ("interface/grupos/serie.css", "altura", "height"),
+    ],
 )
 def test_uma_classe_por_valor_de_zero_a_cem(arquivo, prefixo, propriedade):
     """A barra de Minhas Etapas e a da série saíram do `style=""` para classe: cada percentual
