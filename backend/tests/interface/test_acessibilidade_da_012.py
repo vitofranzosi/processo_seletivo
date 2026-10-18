@@ -10,9 +10,7 @@ import re
 import pytest
 from django.urls import reverse
 
-from tests.fixtures.comissao import DOCUMENTO_A, alocar_em, constituir, inscrever
-from tests.fixtures.edital import identificador
-from tests.fixtures.mesa import distribuir_para
+from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db]
@@ -22,38 +20,7 @@ SEED = 20
 
 @pytest.fixture
 def cenario(gestor, api_client, manager_headers, raiz_de_arquivos):
-    from processo_seletivo.comissoes.domain.funcoes import Funcao
-    from tests.fixtures.comissao import ETAPA_A1, publicar_processo_com_etapas
-
-    edital = publicar_processo_com_etapas(
-        api_client,
-        {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"mvp-test-key-{SEED:04d}"},
-        {
-            "institutionalCode": "PS-2026-K1",
-            "title": "Processo acessível",
-            "firstEdital": {"number": "K1", "year": 2026, "title": "Edital acessível"},
-        },
-        seed=SEED,
-        com_documentos=True,
-        avaliacoes=2,
-        # Duas avaliações por inscrição: depois da `046`, só existe no acervo (`FR-746`).
-        como_acervo=True,
-        maxima="100.0000",
-    )
-    etapa = identificador(ETAPA_A1, SEED)
-    membros = constituir(
-        gestor,
-        edital.processo,
-        [("maria", Funcao.PRESIDENTE), ("joao", Funcao.MEMBRO)],
-        prefixo="acess",
-    )
-    alocar_em(gestor, edital.processo, membros["joao"], edital, etapa, chave="acess")
-    inscricao = inscrever(edital, 1, primeiro=2800, documentos=[identificador(DOCUMENTO_A, SEED)])[
-        0
-    ]
-    contexto = {"edital": edital, "etapa": etapa, "processo": edital.processo, "membros": membros}
-    distribuir_para(contexto, gestor, ["joao"], [inscricao], chave="acess")
-    return {**contexto, "inscricao": inscricao}
+    return montar_cenario_da_presidencia(gestor, api_client, manager_headers, seed=SEED)
 
 
 def telas_da_presidencia(cenario):
