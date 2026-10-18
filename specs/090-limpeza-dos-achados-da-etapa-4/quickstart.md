@@ -1,0 +1,53 @@
+# Quickstart — 090
+
+## Ambiente
+
+Um banco de inventário próprio, cópia do mais recente (o seed da demonstração com os objetos que o
+[inventário](../../doc/inventario-visual-da-gestao-2026-10-16.md) descreve), para não mexer no de
+outra feature:
+
+```bash
+createdb -T ps_inventario_088 ps_inventario_090
+```
+
+O servidor, numa porta livre, com o seletor de identidade ligado (sem entrada nova no
+`.claude/launch.json`):
+
+```bash
+cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_090 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8290
+```
+
+## Percurso, a 1280 e a 375 px
+
+1. **A marca.** Como `gustavo.gestor`, o detalhe do Processo PS-DEMO-2026: na árvore de
+   acessibilidade, "Encerrar Processo" e "Cancelar Processo" têm "irreversível" como descrição; "Ver
+   a supervisão" e os demais, nenhuma. O mesmo no detalhe do Edital 51/2026 ("Encerrar", "Cancelar") e
+   do 76/2027 como `ana.elaboradora` (os atos indisponíveis seguem com o motivo). Como
+   `ana.elaboradora`, o detalhe da Retificação publicada do 01/2026.
+2. **A trilha das consultas.** Como `paulo.presidente`, os Resultados, a Trilha da avaliação e as
+   Conclusões preservadas da Prova objetiva do Edital 51/2026: a trilha tem quatro links. Como
+   `inventario.auditora`, as mesmas três: "Alocação por Etapa" e "Prova objetiva" são texto; seguir
+   "Processos Seletivos" e o Processo abre as duas telas.
+3. **O rodapé.** A 375 px, a conferência da interrupção de um aviso, a edição de um modelo de aviso e
+   a conferência de um ato do Processo: os botões do rodapé têm o rótulo numa linha, e o segundo vem
+   abaixo do primeiro quando os dois não cabem. A 1280 px, lado a lado, como antes.
+4. **A prévia pelo marco.** Como `paula.publicadora`, os Resultados divulgados do marco FINAL do Edital
+   51/2026, "Avisar candidatos": a trilha termina em "… › Classificação › Resultados divulgados ›
+   Avisar candidatos", e "Cancelar" volta aos Resultados divulgados. Trocar de modelo de texto mantém a
+   trilha. Pelos Avisos aos candidatos do mesmo Edital, a trilha é a de antes.
+
+## Inventário
+
+O mesmo roteiro, antes e depois da mudança, com a barra expandida e recolhida:
+
+```bash
+cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_090 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ASSISTENTE_PILOTO=true AVISO=<id do aviso do banco> BARRA=expandida PORTA=8197 uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py /caminho/de/saida
+```
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/resultados.json
+```
+
+Esperado: nenhum problema; `estouram na nova` vazio nas duas larguras; a 1280 px, só
+`aviso-do-resultado-pelo-marco` diferente (a trilha); a 375 px, além dela, só variantes com o rodapé
+comum, e só de altura. O mesmo com `BARRA=recolhida`, contra `depois-da-090/antes/recolhida/`.
