@@ -199,3 +199,5 @@ branch, cada passada num banco copiado de `ps_inventario_092`):
 - **O inventário do portal é por rastreamento.** Telas que só se alcançam por formulário (o envio de
   um documento, a recusa de um código) ficam fora dele; as regras que elas usam estão no mesmo arquivo,
   provado igual byte a byte (R-002).
+- **Os números da suíte** (`make lint check test-pg`, 4 workers, `ps_092`, 18/10/2026): **12.267
+  passando, 11 pulados**, nenhuma falha — os 12.212 da `091` mais os casos novos e parametrizados desta.
