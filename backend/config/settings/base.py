@@ -344,6 +344,9 @@ EDITAL_ANEXOS_LIMITE_BYTES = int(os.getenv("EDITAL_ANEXOS_LIMITE_BYTES", str(5 *
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 13_000
 
 MIDDLEWARE = [
+    # O primeiro, para que a resposta de todo middleware de dentro — a recusa do envio grande, a
+    # recusa do domínio — passe por ele na volta e leve a política (091, `politica_de_conteudo.py`).
+    "processo_seletivo.shared.politica_de_conteudo.PoliticaDeConteudoMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Antes do CSRF, que é quem lê o corpo primeiro: o envio acima do limite de campos morre nessa

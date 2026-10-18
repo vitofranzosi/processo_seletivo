@@ -156,7 +156,8 @@ def test_a_grade_da_tabela_filha_e_declarada_e_fecha_em_cem(da_visao_geral):
     """
     assert re.search(r"\.tabela-de-perfis\{[^}]*table-layout:fixed", da_visao_geral)
 
-    larguras = re.findall(r"\.tabela-de-perfis \.c-[\w-]+\{width:(\d+)%\}", da_visao_geral)
+    # O `;` antes da chave é da 091 (a varredura de sintaxe de modelo nas folhas estáticas).
+    larguras = re.findall(r"\.tabela-de-perfis \.c-[\w-]+\{width:(\d+)%;?\}", da_visao_geral)
 
     assert len(larguras) == 6, larguras
     assert sum(int(n) for n in larguras) == 100, larguras

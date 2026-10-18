@@ -1,6 +1,6 @@
 """O endereço de um arquivo estático com a versão do conteúdo (089).
 
-`{% load estaticos %}` e `{% estatico 'interface/gestao.css' %}` dão o endereço de `{% static %}`
+`{% load estaticos %}` e `{% estatico 'interface/gestao/base.css' %}` dão o endereço de `{% static %}`
 com `?v=` e os 12 primeiros dígitos do SHA-256 do arquivo. Fora do HTML, a folha fica no cache do
 navegador; sem versão no endereço, a folha velha continuaria servida depois de mudar — a `053` mediu
 uma correção de JS como se não funcionasse porque o navegador rodava a `shell.js` da véspera.
@@ -39,7 +39,18 @@ register = template.Library()
 # `<link>`. Uma lista só para a base e para a verificação de sistema (091, D-002): um `@import` num
 # arquivo de entrada daria um `<link>` só, mas o navegador só acharia os importados depois de
 # baixá-lo, e o endereço deles não levaria a versão do conteúdo.
-FOLHAS_DA_GESTAO = ("interface/gestao.css",)
+FOLHAS_DA_GESTAO = tuple(
+    f"interface/gestao/{area}.css"
+    for area in (
+        "base",
+        "moldura",
+        "impressao",
+        "componentes",
+        "formularios",
+        "tabelas",
+        "telas",
+    )
+)
 
 # As folhas que as bases carregam por esta tag, além das de tela. A verificação de sistema abaixo
 # confere cada uma, e também toda folha que um modelo cita pela tag (`folhas_citadas`).

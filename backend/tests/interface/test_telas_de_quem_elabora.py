@@ -16,14 +16,19 @@ from processo_seletivo.interface.views import CHAVES_ETAPA
 from processo_seletivo.processos.models import ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM, GESTAO_CSS, sem_comentarios
+from tests.interface.folha import (
+    ARQUIVOS_DA_FOLHA_COMUM,
+    FOLHA_COMUM,
+    FOLHAS_DE_TELA,
+    sem_comentarios,
+)
 from tests.interface.test_telas_de_uso_diario import (
     TEMPLATES,
     conteudo,
     trilha_unica_no_cabecalho,
 )
 
-# A folha comum saiu do modelo para `gestao.css` na 089.
+# A folha comum saiu do modelo para `gestao.css` na 089, e foi dividida por área na 091.
 FOLHA = FOLHA_COMUM
 
 
@@ -63,7 +68,8 @@ def test_toda_moldura_que_rola_e_referencia_do_que_carrega():
     distribuição)."""
     rolam, posicionadas = set(), set()
     # A folha comum entra junto dos modelos (089): fora do modelo, uma moldura nova nela escaparia.
-    for fonte in [*TEMPLATES.glob("*.html"), GESTAO_CSS]:
+    # E o estilo das telas, que saiu dos modelos na 091, pela mesma razão.
+    for fonte in [*TEMPLATES.glob("*.html"), *ARQUIVOS_DA_FOLHA_COMUM, *FOLHAS_DE_TELA]:
         for seletores, corpo in regras(fonte.read_text()):
             if ROLA.search(corpo):
                 rolam |= {s for s in seletores if s.startswith(".")}

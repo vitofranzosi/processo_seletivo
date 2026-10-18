@@ -2,7 +2,8 @@
 
 Até a `089` a folha comum era o `<style>` do `interface/base.html`, e os guardiões a liam de dois
 jeitos: o texto do modelo, ou o primeiro `<style>` da página renderizada. Ela saiu para
-`interface/static/interface/gestao.css`, e os tokens para `shared/static/shared/tokens.css`. No
+`interface/static/interface/gestao.css` — dividida por área na 091, em `interface/gestao/` —, e os
+tokens para `shared/static/shared/tokens.css`. No
 modelo e na página ficou um `<style>` só com o estilo da página — na lista, duas regras.
 
 **É aí que mora o perigo.** Um guardião que continuasse lendo o modelo ou o primeiro `<style>` não
@@ -16,13 +17,23 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.staticfiles import finders
 
+from processo_seletivo.shared.estaticos import FOLHAS_DA_GESTAO
+
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
-GESTAO_CSS = RAIZ / "interface/static/interface/gestao.css"
+ESTATICOS = RAIZ / "interface/static"
+# Desde a 091 a folha comum são sete arquivos por área, na ordem de `FOLHAS_DA_GESTAO` — a mesma
+# lista com que a base os carrega. E o estilo de cada tela, e de cada grupo de telas, é arquivo.
+ARQUIVOS_DA_FOLHA_COMUM = [ESTATICOS / caminho for caminho in FOLHAS_DA_GESTAO]
+FOLHAS_DE_TELA = sorted(
+    [*ESTATICOS.glob("interface/telas/*.css"), *ESTATICOS.glob("interface/grupos/*.css")]
+)
 TOKENS_CSS = RAIZ / "shared/static/shared/tokens.css"
+ERRO_CSS = RAIZ / "shared/static/shared/erro.css"
 
 # O texto dos arquivos, com os comentários — como os guardiões de texto liam o modelo, com os
-# `{% comment %}`. Quem descontava comentário continua descontando (`sem_comentarios`).
-FOLHA_COMUM = GESTAO_CSS.read_text()
+# `{% comment %}`. Quem descontava comentário continua descontando (`sem_comentarios`). A folha
+# comum é a soma dos arquivos, na ordem de carga: um guardião que lia "a folha" lê todos.
+FOLHA_COMUM = "".join(arquivo.read_text() for arquivo in ARQUIVOS_DA_FOLHA_COMUM)
 TOKENS = TOKENS_CSS.read_text()
 
 # Qualquer `<link>` e qualquer `<style>`, com os atributos que tiverem e na ordem que tiverem: um

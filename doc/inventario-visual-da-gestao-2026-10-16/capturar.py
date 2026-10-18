@@ -261,12 +261,62 @@ def capturar(rid, pg, largura, altura):
     return m
 
 
+# `CONFLITOS=<candidatos.json>` (091): em vez de capturar, mede em cada página quais pares de
+# seletores alargados alcançam um mesmo elemento (`depois-da-091/ordem.py`). Acumula em todas as
+# páginas e grava `conflitos.json` na saída.
+MEDIR_CONFLITOS = r"""(dados) => {
+  const todos = document.querySelectorAll('*'), lugar = new Map();
+  todos.forEach((e, i) => lugar.set(e, i));
+  const conjuntos = dados.seletores.map((s) => {
+    try { const c = new Set(); for (const e of document.querySelectorAll(s)) c.add(lugar.get(e)); return c; }
+    catch (e) { return null; }
+  });
+  const alcanca = (A, B) => {
+    if (!A || !B || !A.size || !B.size) return false;
+    const [menor, maior] = A.size < B.size ? [A, B] : [B, A];
+    for (const x of menor) if (maior.has(x)) return true;
+    return false;
+  };
+  // Cada par também com o sujeito no lugar do seletor: 0 nenhum, 1 o da esquerda, 2 o da direita,
+  // 3 os dois (`ordem.py`, `conflitos_entre_regras`).
+  const acertos = [[], [], [], []], s = dados.sujeitos;
+  dados.pares.forEach(([a, b], k) => {
+    [[a, b], [s[a], b], [a, s[b]], [s[a], s[b]]].forEach(([x, y], v) => {
+      if (alcanca(conjuntos[x], conjuntos[y])) acertos[v].push(k);
+    });
+  });
+  return {casou: conjuntos.map((c) => (c === null ? -1 : c.size)), acertos};
+}"""
+CONFLITOS = None
+if os.environ.get("CONFLITOS"):
+    _candidatos = json.loads(Path(os.environ["CONFLITOS"]).read_text())
+    CONFLITOS = {"dados": {"seletores": _candidatos["seletores"], "pares": _candidatos["pares"],
+                           "sujeitos": _candidatos["sujeitos"]},
+                 "casou": [0] * len(_candidatos["seletores"]), "acertos": [set() for _ in range(4)],
+                 "paginas": []}
+
+
+def medir_conflitos(rid, pg):
+    medido = pg.evaluate(MEDIR_CONFLITOS, CONFLITOS["dados"])
+    for k, n in enumerate(medido["casou"]):
+        if n < 0:
+            CONFLITOS["casou"][k] = -1
+        elif CONFLITOS["casou"][k] >= 0:
+            CONFLITOS["casou"][k] += n
+    for v in range(4):
+        CONFLITOS["acertos"][v] |= set(medido["acertos"][v])
+    CONFLITOS["paginas"].append(rid)
+
+
 def rodar(rotas, browser, contextos, resultados):
     for rid, nome, caminho, preferida, obs in rotas:
         quem, pg, status, final, tipo, tentativas = tentar(browser, contextos, caminho, preferida)
         linha = {"id": rid, "rota": nome, "caminho": caminho, "obs": obs, "identidade": quem,
                  "status": status, "final": final, "tipo": tipo, "tentativas": tentativas}
-        if pg is not None:
+        if pg is not None and CONFLITOS:
+            medir_conflitos(rid, pg)
+            pg.close()
+        elif pg is not None:
             linha["1280"] = capturar(rid, pg, 1280, 900)
             linha["375"] = capturar(rid, pg, 375, 812)
             pg.close()
@@ -314,4 +364,8 @@ with sync_playwright() as p:
     browser.close()
 
 (SAIDA / "resultados.json").write_text(json.dumps(resultados, ensure_ascii=False, indent=1))
+if CONFLITOS:
+    (SAIDA / "conflitos.json").write_text(json.dumps(
+        {"casou": CONFLITOS["casou"], "acertos": [sorted(a) for a in CONFLITOS["acertos"]],
+         "paginas": CONFLITOS["paginas"]}))
 servidor.shutdown()

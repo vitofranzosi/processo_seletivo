@@ -5,15 +5,8 @@
 .resposta{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
   margin:0 0 1.5rem}
 .resposta h2:focus{outline:2px solid var(--verde);outline-offset:2px}
-.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
-.tipo{font-weight:600;margin:0 0 .75rem}
 .explicacao{background:var(--cinza-fundo);border-left:4px solid var(--borda);padding:.7rem 1rem;
   margin:0 0 1rem}
-.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
 .referencia h3{font-size:.9375rem;margin:0 0 .25rem}
-.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
-.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
-.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
 .futuro{font-size:.8125rem;margin:.25rem 0 0}
 .pontos li{margin:0 0 .5rem}

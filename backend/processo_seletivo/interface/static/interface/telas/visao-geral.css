@@ -85,7 +85,7 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
 .o-que-nao-medimos .limite-permanente{margin:.4rem 0 .7rem;font-size:.88rem;line-height:1.45}
 .demais-limites>summary{display:inline-block;cursor:pointer;font-size:.82rem;font-weight:600;
   color:var(--verde-texto);padding:.2rem .5rem;border:1px solid #d7dce2;border-radius:4px;
-  max-width:100%}
+  max-width:100%;}
 .demais-limites>summary:hover{border-color:var(--verde-texto)}
 .demais-limites[open]>summary{margin-bottom:.5rem}
 
@@ -158,12 +158,15 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
    Somam 100, e por isso a última não precisa ser dita — mas é, porque uma soma que não fecha é o
    tipo de coisa que só aparece na tela. */
 .tabela-de-perfis{width:100%;border-collapse:collapse;table-layout:fixed}
-.tabela-de-perfis .c-perfil{width:26%}
-.tabela-de-perfis .c-vagas{width:12%}
-.tabela-de-perfis .c-submetidas{width:12%}
-.tabela-de-perfis .c-preenchimento{width:15%}
-.tabela-de-perfis .c-razao{width:14%}
-.tabela-de-perfis .c-atencao{width:21%}
+/* Regra terminada em porcentagem leva `;` antes da chave desde a 091: fora do modelo, esta folha
+   passou a ser varrida atrás de sintaxe de modelo vazada, e a dupla que a porcentagem e a chave
+   formariam é a que fecha uma tag (`test_estaticos.py`). O valor é o mesmo. */
+.tabela-de-perfis .c-perfil{width:26%;}
+.tabela-de-perfis .c-vagas{width:12%;}
+.tabela-de-perfis .c-submetidas{width:12%;}
+.tabela-de-perfis .c-preenchimento{width:15%;}
+.tabela-de-perfis .c-razao{width:14%;}
+.tabela-de-perfis .c-atencao{width:21%;}
 .tabela-de-perfis th,.tabela-de-perfis td{border-bottom:1px solid #eef1f4;padding:.35rem .5rem;
   text-align:left;vertical-align:top;font-size:.84rem}
 .tabela-de-perfis thead th{font-size:.7rem;font-weight:500;color:#6b7580;

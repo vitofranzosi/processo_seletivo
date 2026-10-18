@@ -18,8 +18,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from unidades import ler  # noqa: E402
 
-# Na ordem em que as folhas carregam: da mais geral à mais específica, e a impressão por último.
-AREAS = ("base", "moldura", "componentes", "formularios", "tabelas", "telas", "impressao")
+# Na ordem em que as folhas carregam: da mais geral à mais específica. A impressão logo depois da
+# moldura, e não no fim: o `@media print` da 088 estava ali, e disputa propriedade com centenas de
+# regras que vêm depois dele — no fim, ele passaria a vencê-las no papel (R-002 da 091).
+AREAS = ("base", "moldura", "impressao", "componentes", "formularios", "tabelas", "telas")
 
 # Palavras de seletor que dizem a tela (ou o painel de uma tela só). Uma regra que cita uma delas é
 # da tela, ainda que seja de tabela ou de campo.
@@ -40,6 +42,8 @@ TELAS = (
     "bastao", "acoes-do-painel", "navegacao-etapa", "contadores", "resumo-lista", "em-colunas",
     "etapa:has", "perfil-novo", "aninhada", "data-alterado", "alterad", "categor", "data-or",
     "reabertura", "motivos", "fatos-fixos", "definicoes", "declaracao-derivada", "como-preencher",
+    "impedimentos", "trilha", "pendencias", "p-erro", "p-aviso", "marcador", "tudo-certo",
+    "parecer-registrado", "codigo-de-verificacao", "linha-de-acoes", "atua", "adicionar",
 )
 TABELAS = (
     "table", "thead", "tbody", "caption", "th", "td", "tr", "tabela", "rolagem", "paginacao",
@@ -47,9 +51,9 @@ TABELAS = (
 FORMULARIOS = (
     "campo", "campos", "input", "select", "textarea", "label", "fieldset", "legend", "opcoes",
     "opcao", "dependentes", "escolha", "filtro", "filtros", "salvar", "obrigatorio", "opcional",
-    "erro", "recusa", "curto", "largo", "arquivo", "caracter", "linha",
+    "erro", "recusa", "curto", "largo", "arquivo", "caracter", "linha", "form",
 )
-BASE = ("*", "body", "a", "main", "h1", "h2", "h3", "p", "pular", "dfn", "hidden", "simbolos")
+BASE = ("*", "body", "a", "main", "h1", "h2", "h3", "p", "pular", "dfn", "hidden")
 
 
 def palavras(seletor):
@@ -59,20 +63,24 @@ def palavras(seletor):
     )
 
 
-def area_da_regra(cabeca, linha):
+def area_da_regra(cabeca, linha, regra=""):
     if cabeca.startswith("@media print"):
         return "impressao"
-    # O shell da 076 é um trecho contíguo, das linhas 26 a 179 (contadas no arquivo da 090 com a
-    # regra dos símbolos), e é a moldura inteira.
-    if 26 <= linha < 180:
+    # O cabeçalho do topo (as telas sem barra) e o shell da 076, das linhas 17 a 179 (contadas no
+    # arquivo da 090 com a regra dos símbolos): a moldura inteira.
+    if 17 <= linha < 180 or cabeca.startswith("header.topo"):
         return "moldura"
-    texto = cabeca
+    # Um bloco `@media` é da área das regras de dentro, e não da condição.
+    texto = re.sub(r"/\*.*?\*/", "", regra, flags=re.S) if cabeca.startswith("@") else cabeca
     for nome in TELAS:
-        if re.search(rf"(?<![\w-]){re.escape(nome)}(?![\w-])", texto):
+        # Prefixo, e não palavra inteira: `.distribuicao-moldura` é da Distribuição.
+        if re.search(rf"(?<![\w-]){re.escape(nome)}", texto):
             return "telas"
     p = palavras(texto)
-    if p & set(TABELAS) or re.search(r"\.s-[A-Z]", texto):
-        return "tabelas" if not re.search(r"\.s-[A-Z]", texto) else "componentes"
+    if re.search(r"\.s-[A-Z]", texto):
+        return "componentes"
+    if p & set(TABELAS) or any(w.startswith("tabela") for w in p):
+        return "tabelas"
     if p & set(FORMULARIOS):
         return "formularios"
     if p and p <= set(BASE) | {"focus", "focus-visible", "hover", "first-child", "last-child"}:
@@ -83,7 +91,7 @@ def area_da_regra(cabeca, linha):
 def classificar(caminho):
     unidades, resto = ler(Path(caminho).read_text(), origem=str(caminho))
     for u in unidades:
-        u.area = area_da_regra(u.cabeca, u.linha)
+        u.area = area_da_regra(u.cabeca, u.linha, u.regra)
     return unidades, resto
 
 

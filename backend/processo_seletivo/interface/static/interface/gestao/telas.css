@@ -1,0 +1,836 @@
+/* As regras que citam uma tela ou um painel de uma tela só, e que ficam na folha comum porque mais
+   de uma página as usa, ou porque saíram de lá antes de existir o estilo por tela. O estilo que é de
+   uma tela só mora em `interface/telas/`, e o de um grupo de telas, em `interface/grupos/`. Último
+   arquivo da folha comum: `[hidden]` está aqui, no fim, porque precisa vencer o `display` de toda
+   regra anterior (091, R-002). */
+/* Em linha e com respiro próprio. Era um parágrafo de `.acao` soltos: com três rótulos
+   curtos cabia tudo numa linha e passava, mas a tela do recurso oferece cinco caminhos
+   nomeados por Etapa — e ao quebrar, as linhas se encostavam, porque a altura de linha
+   não conhece o preenchimento de cada ação. */
+.acoes-do-painel{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0 0 1.5rem}
+/* `object.documento`, e não `.documento`: a altura de 75vh é do **visualizador de PDF** da prévia,
+   e o seletor solto alcançava também `fieldset.linha.documento` — o cartão do Documento Exigido no
+   assistente. O cartão ficava com 675 px numa janela de 900, independentemente do que carregasse:
+   os campos terminavam aos 444 px e sobravam 231 px de caixa vazia, que **cresciam com a janela**.
+   Removê-lo do próprio cartão não mudava nada, porque a altura nunca veio do conteúdo. */
+object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco)}
+.modalidades{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
+.modalidades h3{font-size:.9375rem;margin:0 0 .25rem}
+.quadro{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
+.quadro h3{font-size:.9375rem;margin:0 0 .25rem}
+/* A linha do quadro é rótulo e quantidade, e nada mais. O rótulo vem da Modalidade já declarada;
+   a linha geral se distingue pelo proprio texto e pelo peso tipografico do nome dela, e nunca por
+   cor. A medida do controle continua sendo a de `.campo.curto`: dar medida propria a esta linha
+   faria dois campos vizinhos do mesmo cartao terminarem em lugares diferentes. */
+.linha-do-quadro{padding:.15rem 0}
+.marcos{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
+.marcos h3{font-size:.9375rem;margin:0 0 .25rem}
+.marcos h4{font-size:.875rem;margin:0 0 .25rem}
+.processo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  margin-bottom:1.25rem;overflow:hidden}
+.processo>header{padding:1rem 1.25rem;border-bottom:1px solid var(--borda);
+  display:flex;align-items:baseline;gap:.75rem 1rem;flex-wrap:wrap}
+/* Dois grupos, e não seis itens soltos: quem é o Processo e como ele está de um lado; o que se
+   faz nele, do outro. Sem isso o estado caía depois dos botões, longe do título que ele qualifica. */
+.processo>header>.quem-e{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;min-width:0}
+.processo>header>.acoes{margin-left:auto}
+.sem-edital{padding:1rem 1.25rem;color:var(--texto-fraco)}
+/* Cada Processo monta a sua própria tabela, e sem largura declarada cada uma se media pelo que
+   tinha dentro: em cartões empilhados, "Situação" aparecia em posições diferentes a cada um, e o
+   olho que desce a lista precisava reencontrar as colunas. Três têm conteúdo limitado e recebem
+   medida; o título, que é o texto variável, fica com o que sobra.
+
+   As ações ganharam seis rem (057, FR-1049): em 24, as cinco ações de um Edital publicado quebravam
+   em três linhas e a linha tinha 118 px; em 30, quebram em duas, e quem passa a ditar a altura é o
+   título — 82 px. */
+.processo table th:nth-child(1){width:7rem}
+.processo table th:nth-child(3){width:8rem}
+.processo table th:nth-child(4){width:30rem}
+.processo table th:first-child{white-space:nowrap}
+/* **Toda moldura que rola é a referência do que carrega** (078, `FR-1760`). O rótulo oculto de cada
+   linha é `position:absolute`, e toma como referência o primeiro ancestral posicionado: com a moldura
+   sem posição, era a página — e o rótulo que caía além da borda alargava a página inteira, e não a
+   moldura. Foi o estouro de 835 px das conclusões preservadas, que a 077 corrigiu só naquela tela; a
+   sonda da 078 achou a mesma estrutura em outras 19 variantes, nenhuma estourando ainda. A regra não
+   move caixa nenhuma: muda só a quem conta o transbordo. As duas molduras que só rolam no estreito
+   ganham posição lá, no `@media` em que rolam: na tela larga elas são bloco comum (058). */
+.tabela-rolavel,.rolagem,.rolagem-da-tabela,.serie .barras{position:relative}
+
+/* Por que o lote recusou o que recusou, agrupado por motivo. Sem regra, a lista voltava ao
+   marcador e ao recuo do navegador dentro de uma faixa de aviso — a única do sistema a fazê-lo. */
+.motivos{list-style:none;padding:0;margin:.5rem 0 0;display:grid;gap:.35rem;font-size:.9375rem}
+.motivos .ajuda{margin:0 0 0 .35rem}
+
+/* O ato precisa de motivo, e o motivo precisa caber. */
+.reabertura{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start;min-width:11rem}
+.reabertura input[type=text]{width:100%;padding:.35rem .5rem;border:1px solid var(--borda);
+  border-radius:4px;font:inherit;font-size:.875rem}
+/*
+Uma caixa só, de 40 px, para o botão e para a ação que divide a barra com ele (055, FR-1006 e
+FR-1007). Eram três alturas na mesma linha — 26, 38 e 36 px no assistente —, e duas causas: a
+borda que só o secundário tinha, e o `line-height`, que o link herda do corpo e o botão não. Por
+isso `a.botao` tinha 44 px e `button.botao` 42. A entrelinha declarada iguala os dois.
+
+A borda transparente é a borda "da cor do fundo": o fundo pinta por baixo dela, no principal, no
+destrutivo e no `:hover`, sem uma regra de borda por variante (D-003). Fora das três barras, a
+ação de linha continua pequena, que é o que ela é numa tabela.
+*/
+.botao,:is(.navegacao-etapa,.salvar,.filtros) .acao{padding:.5rem 1.1rem;border-radius:4px;
+  font-size:.9375rem;line-height:1.375rem}
+.participantes{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4rem .75rem;
+  font-size:.9375rem}
+.participantes dt{color:var(--texto-fraco);font-size:.8125rem}
+.participantes dd{margin:0}
+.participantes .quando{color:var(--texto-fraco);font-size:.75rem;display:block}
+.participantes .pendente{color:var(--texto-fraco);font-style:italic}
+.lista-acoes{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;
+  align-items:flex-start}
+.lista-acoes li{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.remover-linha .ajuda{margin-left:.25rem}
+/* O que a Retificação não alcança naquela seção, e por quê (026, US6, FR-312). Fechado por
+   padrão: quem veio corrigir o que se corrige não atravessa a lista do que não se corrige para
+   chegar aos campos. Recuado e em corpo menor porque é nota de rodapé da seção, e não item dela —
+   se tivesse o peso de um cartão, disputaria a atenção com o trabalho. */
+.exclusoes{margin:1rem 0 0;font-size:.875rem;color:var(--texto-fraco)}
+.exclusoes>summary{cursor:pointer;padding:.35rem 0}
+.exclusoes h3{font-size:.8125rem;text-transform:uppercase;letter-spacing:.03em;margin:.75rem 0 .25rem}
+.exclusoes dl{margin:0;padding-left:1rem;border-left:2px solid var(--borda)}
+.exclusoes dt{font-weight:600;margin-top:.5rem}
+.exclusoes dd{margin:.1rem 0 0;max-width:var(--leitura)}
+/* O fundo une visualmente as linhas que compartilham posição. O rótulo continua em cada linha
+   para que a informação sobreviva à leitura por voz e ao recorte de uma linha isolada. */
+.grupo-empatado{background:var(--amarelo-fundo)}
+.grupo-empatado .situacao{display:block;width:max-content;margin-top:.25rem}
+.consequencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem}
+.consequencias h2{margin-bottom:.6rem}
+.consequencias ul{margin:0;padding-left:1.2rem}
+.consequencias li{margin-bottom:.4rem;font-size:.9375rem}
+.consequencias.irreversivel{border-left:4px solid var(--vermelho);background:var(--vermelho-fundo)}
+.consequencias.irreversivel h2{color:var(--vermelho)}
+/*
+As nove etapas numa linha (056, FR-1020, FR-1021, D-002). Era `flex:1 1 160px` com quebra: nove de
+160 px não cabem nos 1.232 px da página a 1280, e a fila virava 7 + 2, com as duas últimas
+esticadas a 613 px cada — 174 px de stepper, e o trabalho da etapa só começava em y = 524.
+
+Grade, e não flex, porque a grade quebra em **colunas iguais**: abaixo da largura que comporta as
+nove, a última linha continua com colunas do tamanho das outras, e não esticadas. `auto-fit`, e não
+`auto-fill`, para que numa página mais larga as nove estiquem em vez de deixar coluna vazia.
+*/
+.assistente{display:grid;grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr));
+  list-style:none;padding:0;margin:0 0 1.5rem;gap:.4rem}
+/* Cartões de altura igual. O `li` já esticava, mas quem desenha o cartão é o `a`, que tomava só
+   a altura do próprio conteúdo: "Etapas de Avaliação" quebra em duas linhas e ficava mais alto que
+   os vizinhos, com os menores desalinhados ao lado. */
+.assistente li{display:flex}
+/* O número à esquerda do nome e da situação, e não acima deles: é a linha que o número ocupava
+   sozinho que o stepper deixa de gastar. A linha do nome estica e a da situação fica na base, e
+   por isso as situações das nove continuam alinhadas quando um nome quebra e o vizinho não. */
+.assistente a{display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;
+  column-gap:.4rem;width:100%;padding:.45rem .6rem;border-radius:4px;text-decoration:none;
+  border:1px solid var(--borda);background:var(--branco);color:var(--texto-fraco)}
+.assistente a:hover{border-color:var(--verde)}
+.assistente .numero{grid-row:1/3;display:inline-block;width:1.4rem;height:1.4rem;line-height:1.4rem;
+  text-align:center;border-radius:50%;background:var(--cinza-fundo);color:var(--texto-fraco);
+  font-size:.75rem;font-weight:700}
+.assistente .nome{font-size:.8125rem;font-weight:600;line-height:1.25}
+/* A situação continua escrita (FR-1022), e sai da caixa-alta: "PRONTA PARA REVISAR" espaçada
+   pedia ~148 px numa coluna de ~105, quebrava em três linhas e levava o stepper acima de 80 px. A
+   palavra não muda — no HTML ela sempre foi minúscula; a caixa-alta era desta folha. */
+.assistente .estado{font-size:.75rem;line-height:1.3;padding-top:.1rem}
+.assistente .a-atual a{border-color:var(--verde);background:var(--verde-claro);color:var(--texto)}
+.assistente .a-atual .numero{background:var(--verde);color:var(--branco)}
+.assistente .a-atual .estado{color:var(--verde-texto)}
+.assistente .a-concluida a{color:var(--texto)}
+.assistente .a-concluida .numero{background:var(--sucesso);color:var(--branco)}
+.assistente .a-concluida .estado{color:var(--sucesso)}
+/* Pronta para revisar: nasceu do catálogo e ainda não foi gravada. Marcador vazado, para
+   não se confundir com o preenchido de concluída — a distinção não pode ser só de cor. */
+.assistente .a-pronta .numero{background:var(--branco);color:var(--texto-fraco);
+  border:2px solid var(--texto-fraco)}
+.assistente .a-pronta .estado{color:var(--texto-fraco)}
+
+/* A ajuda da lista, uma só, no lugar de uma por cartão. Fechada por padrão: quem já compôs um
+   Edital não a relê, e quem precisa dela acha pelo nome. `details` abre por teclado e por toque —
+   é o mesmo elemento que a Comissão e o portal já usam. */
+.como-preencher{margin:0 0 1rem;max-width:var(--leitura)}
+.como-preencher>summary{display:inline-block;cursor:pointer;font-size:.8125rem;font-weight:600;
+  color:var(--verde-texto);padding:.3rem .6rem;border:1px solid var(--borda);border-radius:4px}
+.como-preencher>summary:hover{border-color:var(--verde-texto)}
+.como-preencher[open]>summary{margin-bottom:.6rem}
+.como-preencher dl,.como-preencher>.definicoes{margin:0;padding:.75rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px}
+.como-preencher dt{font-size:.8125rem;font-weight:600;margin-bottom:.15rem}
+.como-preencher dd{margin:0 0 .6rem;font-size:.875rem;color:var(--texto-fraco)}
+.como-preencher dd:last-child{margin-bottom:0}
+/* `max-width:none` porque em Anexos e na Revisão a barra é filha direta de `main`, e `main>p` lhe
+   dava a medida de leitura: "Avançar" parava no meio da tela, a 607 px, e não na borda direita
+   como nas outras etapas, onde a barra mora dentro do formulário (056, FR-1037, D-012). */
+.navegacao-etapa{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;max-width:none;
+  padding:1rem 0 2rem;border-top:1px solid var(--borda);margin-top:1.5rem}
+.navegacao-etapa .botao:last-of-type{margin-left:auto}
+.contadores{display:flex;gap:1rem;margin:0 0 1rem;font-size:.875rem;color:var(--texto-fraco)}
+.contadores strong{color:var(--texto);font-size:1.1rem}
+.resumo-lista{list-style:none;padding:0;margin:0 0 .75rem;font-size:.9375rem}
+.resumo-lista li{padding:.3rem 0;border-bottom:1px solid var(--fundo)}
+.resumo-lista li:last-child{border-bottom:none}
+.consequencias table{margin-top:.5rem}
+.consequencias th[scope=row]{font-weight:600;font-size:.875rem}
+/* A trilha é uma sequência que se lê de cima a baixo, e cada ato era um cartão de ~100 px (057,
+   FR-1055, D-012): o filete separa um do outro, e a moldura não acrescentava nada que ele não diga.
+   Cabeça e corpo correm numa linha, como uma entrada de registro — quando, o quê, sobre o quê, por
+   quem e com que base —, e o motivo, quando há, ocupa a linha de baixo inteira. */
+.auditoria{list-style:none;padding:0;margin:0 0 1.5rem;border-top:1px solid var(--borda)}
+.auditoria li{padding:.5rem 0;border-bottom:1px solid var(--borda);display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:.2rem 1rem}
+.auditoria .cabeca{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap}
+.auditoria .quando{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.auditoria .operacao{font-size:.9375rem}
+.auditoria .agregado{font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;
+  background:var(--verde-claro);color:var(--verde-escuro);padding:.1rem .45rem;border-radius:3px}
+.auditoria .corpo{display:flex;gap:1rem;flex-wrap:wrap;font-size:.875rem;
+  color:var(--texto-fraco)}
+.auditoria .transicao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem}
+.auditoria .motivo{flex-basis:100%;margin:.1rem 0 0;font-size:.875rem;font-style:italic;color:var(--texto)}
+.impedimentos{list-style:none;padding:0;margin:.5rem 0}
+.impedimentos li{padding:.3rem 0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.trilha{font-size:.875rem;color:var(--texto-fraco);margin-bottom:1rem}
+.trilha a{color:var(--verde-texto)}
+/* A navegacao entre os recortes de um marco (034, FR-497). Nao e trilha — a trilha sobe a
+   hierarquia, e esta anda de lado entre irmaos —, e nao e aba de componente: o recorte atual e um
+   `span` com `aria-current`, e nao um link morto. O recorte em que se esta fica visualmente
+   preso, para que quem volta a tela depois de emitir saiba onde esta sem reler o cabecalho. */
+.recortes{margin:0 0 1.25rem}
+.recortes .sub{margin:0 0 .35rem}
+.recortes .abas{list-style:none;padding:0;margin:0;display:flex;gap:.5rem;flex-wrap:wrap}
+.recortes .abas li{font-size:.875rem}
+.recortes .abas a,.recortes .abas span{display:inline-block;padding:.3rem .7rem;border-radius:4px;
+  border:1px solid var(--borda)}
+.recortes .abas a{color:var(--verde-texto);text-decoration:none}
+.recortes .abas a:hover,.recortes .abas a:focus{background:var(--cinza-fundo)}
+.recortes .abas span{background:var(--cinza-fundo);font-weight:600;color:var(--texto)}
+/* A organização do trabalho (011). `.etapas` já existia e é o indicador de passos do
+   compositor — uma fileira horizontal de pontos —, e reusá-la aqui empilhava as Etapas em
+   colunas e cortava o rótulo "Sem membros alocados" em 375px. */
+.organizacao-etapas,.comissao,.atribuicoes{list-style:none;padding:0;margin:0}
+.organizacao-etapas>li,.comissao>li{background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;padding:1rem 1.25rem;margin-bottom:.75rem}
+.organizacao-etapas .cabeca,.comissao .cabeca{display:flex;gap:.5rem;align-items:center;
+  flex-wrap:wrap;margin-bottom:.5rem}
+/* O cartão de Etapa de quem avalia. Os três fatos — Edital, Processo e quanto falta — saíam num
+   `.corpo`, que só tem regra sob `.auditoria`: sem eixo e sem separador, os três viravam uma
+   frase corrida. Uma linha por fato resolve a leitura; o que sobra é a comparação entre cartões,
+   e essa é do medidor. */
+.comissao .contexto{display:flex;flex-direction:column;gap:.15rem;margin:0 0 .75rem;
+  font-size:.875rem;color:var(--texto-fraco)}
+.comissao .contexto .ator{color:var(--texto)}
+/* A mesma barra do progresso de documentos no portal, no canal da gestão: mesma trilha, mesmo
+   verde, mesmo estado completo. Duas paletas para a mesma ideia é como se perde um sistema.
+
+   Com um contorno a mais, e é o estado zerado que o exige: a trilha sozinha é cinza sobre branco,
+   e o cartão de quem não começou ficava sem barra nenhuma — justo o que a barra existe para
+   dizer. No portal a lista nunca começa vazia; aqui, começar do zero é o caso comum. */
+/* A região de Atenção da supervisão (022, UX-006). Forma única para os cinco, e sem cor de
+   severidade: os sinais são igualmente acionáveis, e pintar uns de vermelho seria a folha
+   decidindo uma ordenação que o domínio não determina.
+
+   **Uma lista, e não um cartão por sinal** (057, FR-1054, D-011). Eram seis cartões com borda dentro
+   do cartão do Processo, cada um com a faixa **verde** — a cor de "deu certo" para o que pede
+   atenção. A faixa agora é uma só, âmbar como a do aviso, e igual para todos: diz o nome da seção,
+   e não ordena nada. Entre um sinal e outro, um filete. */
+.sinais{list-style:none;margin:0;padding:0;border-left:4px solid var(--amarelo);background:var(--branco)}
+.sinais .sinal{padding:.6rem 1rem}
+.sinais .sinal+.sinal{border-top:1px solid var(--borda)}
+.sinais .mensagem{margin:0;max-width:var(--leitura)}
+.sinais .medida{margin:.25rem 0 0;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.sinais .acao{margin-top:.5rem}
+/* A série diária de submissões da supervisão (022, UX-008). As barras são **desenho** — o
+   template as marca `aria-hidden` —, e os valores vivem na tabela ao lado: nenhuma informação
+   depende de cor nem de imagem, e sem a folha a página continua dizendo quantas houve em cada dia.
+   A altura vem do template porque o denominador é o pico daquela série, e a folha não o conhece.
+   A faixa rola no próprio contêiner: sessenta dias produzem sessenta colunas, e deixá-las
+   empurrarem a largura faria o corpo da página rolar na horizontal. */
+.serie{margin:0 0 1rem}
+.serie figcaption{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .35rem}
+/* A escala fica à esquerda, com o pico no topo e o zero na base da faixa das barras. A
+   altura de 5rem se repete na escala e na coluna de propósito: as duas precisam começar e terminar
+   na mesma linha, e a data abaixo da barra não pode entrar nessa conta. */
+.serie .grafico{display:flex;align-items:flex-start;gap:.4rem}
+.serie .escala{display:flex;flex-direction:column;justify-content:space-between;height:5rem;
+  font-size:.7rem;line-height:1;color:var(--texto-fraco);text-align:right;
+  font-variant-numeric:tabular-nums}
+.serie .barras{display:flex;flex:1 1 auto;min-width:0;margin:0 0 .5rem;padding:0;
+  list-style:none;overflow-x:auto}
+/* A barra tem **teto de largura**. Sem ele, `flex` crescia até ocupar a faixa inteira, e um
+   período de um dia virava um bloco verde da largura da página. O piso de .4rem é o que obriga
+   sessenta dias a rolar dentro do contêiner, em vez de sumirem em fios. O espaço entre barras é
+   margem da barra, e não `gap` da lista: com `gap`, a linha de base quebrava em tracejado. */
+.serie .barras li{display:flex;flex-direction:column;flex:1 1 0;min-width:.4rem;max-width:2.5rem}
+.serie .coluna{display:flex;align-items:flex-end;height:5rem;border-bottom:1px solid var(--borda)}
+/* `height` não é a última declaração de propósito: uma regra terminada em porcentagem seguida da
+   chave de fechamento produz, no corpo servido, a mesma dupla de caracteres que fecha uma tag de
+   template. A varredura de sintaxe não interpretada procura substring, e não sabe que ali é folha
+   de estilo — e a prosa deste comentário, que também vai para a página, evita escrevê-la. */
+.serie .barra{display:block;width:calc(100% - 2px);margin:0 1px;min-height:1px;
+  background:var(--verde);border-radius:2px 2px 0 0}
+/* A data nasce alinhada à esquerda da sua barra e invade as vizinhas, que não têm rótulo;
+   a última se alinha pela direita, senão a data de hoje seria cortada pela borda da faixa. */
+.serie .dia{height:1rem;margin-top:.2rem;font-size:.7rem;line-height:1rem;white-space:nowrap;
+  color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.serie .barras li:last-child .dia{align-self:flex-end}
+.serie .equivalente summary{color:var(--verde-texto);font-size:.875rem;cursor:pointer}
+.medidor{display:grid;gap:.3rem;margin:0 0 1rem}
+.medidor .numeros{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
+  margin:0;font-size:.9375rem}
+.medidor .restante strong{font-size:1.25rem;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums}
+.medidor .taxa{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.medidor .trilha-do-medidor{height:.5rem;border-radius:999px;background:var(--cinza-fundo);
+  border:1px solid var(--borda);overflow:hidden}
+.medidor .feito{height:100%;background:var(--verde);border-radius:999px}
+.medidor .detalhe{margin:0;font-size:.8125rem;color:var(--texto-fraco)}
+/* Terminar é um estado, e não a ausência de pendências: sem a palavra e a barra cheia, a Etapa
+   pronta ficava idêntica à que ninguém começou. */
+.medidor.completo .restante{color:var(--sucesso);font-weight:600}
+.medidor.completo .feito{background:var(--sucesso)}
+.sem-distribuicao{margin:0 0 1rem;font-size:.8125rem;color:var(--texto-fraco);font-style:italic}
+.acao-do-cartao{margin:0}
+.atribuicoes li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
+.atribuicoes li:last-child{border-bottom:0}
+.linha-de-acoes{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0 0}
+.linha-de-acoes .campo{margin:0}
+.atua{font-size:.875rem;color:var(--texto-fraco);margin:.5rem 0 .25rem}
+.adicionar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-top:1.5rem}
+/* Seleção em lote (011). Quarenta caixas empilhadas viram uma coluna de rolagem infinita: a
+   grade as põe em colunas e o limite de altura mantém o botão ao alcance. */
+/* A matriz da distribuição: pessoas nas linhas, Etapas nas colunas.
+
+   **A moldura não pode ser um contêiner de rolagem em tela larga.** `overflow-x:auto` faz o
+   `overflow-y` computar para `auto` também, e aí o `position:sticky` do cabeçalho passa a valer
+   contra a moldura em vez da janela — como a moldura tem a altura do conteúdo, ela nunca rola por
+   dentro, e o cabeçalho simplesmente sai da tela. Com cinquenta linhas isso significa olhar duas
+   colunas de caixas sem saber de que Etapa é cada uma, que é a informação de que a tela inteira
+   depende. Em tela estreita a rolagem horizontal é necessária, e ali o que fixa é a coluna de
+   nomes.
+
+   **A Lista de Editais e a Condução do marco adotam a mesma moldura** (058, FR-1071, FR-1073, D-003),
+   pelo mesmo limiar. A 375 px a tabela de cada Processo passava da largura do cartão, e o cartão a
+   recortava em silêncio: as ações da última coluna ficavam fora de alcance. Na Condução, a tabela dos
+   recortes empurrava a página inteira. Acima de 60 rem a moldura é bloco comum, sem rolagem. */
+.distribuicao-moldura{overflow-x:visible}
+@media (max-width:60rem){
+  .distribuicao-moldura,.rolavel-no-estreito{overflow-x:auto}
+  .distribuicao-moldura,.rolavel-no-estreito{position:relative}
+}
+.distribuicao{background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;font-size:.9375rem}
+.distribuicao th,.distribuicao td{border-bottom:1px solid var(--fundo);vertical-align:middle}
+.distribuicao thead th{background:var(--branco);border-bottom:2px solid var(--borda);
+  font-size:.875rem;line-height:1.3;vertical-align:bottom;padding-inline:.35rem;
+  box-shadow:0 1px 0 var(--borda);
+  /* `thead th` global põe versalete em tudo que herda — e âncora herda, botão não. O
+     "Distribuir" saía em maiúsculas ao lado de um "todos" em caixa baixa, sem que nenhuma regra
+     tivesse pedido isso. A caixa passa a ser decidida por quem a quer. */
+  text-transform:none;letter-spacing:normal}
+.distribuicao thead th.rotulo,.distribuicao thead th.num{text-transform:uppercase;
+  letter-spacing:.04em;font-size:.75rem;color:var(--texto-fraco)}
+/* Três degraus: qual Etapa é, como ela está, o que se faz nela. E tudo centrado sobre a coluna
+   que o cabeçalho encima — encostado à esquerda de uma faixa de 390 px, ele deixava de apontar
+   para as marcas que descreve. */
+.distribuicao thead th:not(.rotulo):not(.num){text-align:center}
+.distribuicao thead th>*{display:block}
+.etapa-medida{justify-content:center}
+.etapa-nome{font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:.8125rem;line-height:1.15}
+/* As pastilhas voltam a abraçar o próprio conteúdo. Esticadas à largura da coluna por um
+   `display:block` herdado, `12/2027` e a contagem liam-se como campos, e não como etiquetas. */
+.etapa-medida{margin-top:.15rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.etapa-medida .codigo,.etapa-medida .situacao{display:inline-block}
+/* 12 rem, e não 14 (057, FR-1061): com nove Etapas, os 32 px eram o que faltava para a matriz caber
+   na coluna de conteúdo a 1.280 px, sem invadir a margem da página. */
+.distribuicao tbody th{font-weight:600;position:sticky;left:0;background:var(--branco);
+  min-width:12rem;box-shadow:1px 0 0 var(--fundo)}
+.distribuicao tbody th .codigo,.distribuicao tbody th .situacao{margin-left:.4rem;font-weight:400}
+.distribuicao tbody tr:hover th,.distribuicao tbody tr:hover td{background:var(--fundo)}
+/* "Todos" e "Nenhum" agem na coluna logo abaixo, e não na Etapa: peso de ligação, não de botão.
+   "Distribuir" divide o bloco com eles desde a 057, em negrito e na linha dele: leva a outra tela, e
+   "Distribuir Todos" numa linha só se lia como um comando. É bloco, e não `flex`: o
+   `thead th>*{display:block}` acima vence qualquer `display` daqui. */
+.coluna-toda{margin-top:.2rem;line-height:1.15;font-size:.75rem;color:var(--texto-fraco)}
+.ligacao{background:none;border:0;padding:0;font:inherit;color:var(--verde-texto);
+  text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.ligacao:hover{color:var(--verde-escuro)}
+/* A folga da tabela vai para as colunas de marca, e não para a última: com poucas Etapas, o
+   `Etapas` sozinho engolia 683 px e o total de cada linha ficava a meia tela das marcas que ele
+   soma. Aqui ele é estreito, como o número que é. */
+.distribuicao th.num,.distribuicao td.num{width:1%;white-space:nowrap}
+/* E a coluna larga deixa de ser problema quando **a célula inteira é o alvo**: a faixa toda
+   marca e desmarca, e a cor de fundo diz o estado sem depender de acertar 17 px. */
+.distribuicao td.marca{padding:0;text-align:center}
+.distribuicao td.marca label{display:flex;align-items:center;justify-content:center;
+  padding:.6rem;cursor:pointer;min-height:2.6rem}
+.distribuicao td.marca input{width:1.15rem;height:1.15rem;margin:0;cursor:pointer}
+.distribuicao td.marca label:hover{background:var(--cinza-fundo)}
+/* Sete linhas se acompanham a olho; trinta, não. O filete separa as colunas de marca sem
+   desenhar uma grade inteira. */
+.distribuicao td.marca+td.marca,.distribuicao thead th+th:not(.num){
+  border-left:1px solid var(--fundo)}
+.distribuicao td.marca:has(input:checked){background:var(--verde-claro)}
+.distribuicao tbody tr:hover td.marca:has(input:checked){background:var(--verde-claro)}
+.distribuicao td.num,.distribuicao th.num{text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--texto-fraco)}
+.distribuicao tbody tr:last-child th,.distribuicao tbody tr:last-child td{border-bottom:0}
+.gerir-membro{margin-top:.5rem}
+.gerir-membro>summary{display:inline-block;cursor:pointer;font-size:.875rem;
+  color:var(--verde-texto);border:1px solid var(--borda);border-radius:4px;padding:.25rem .6rem}
+.gerir-membro>summary:hover{border-color:var(--verde-texto)}
+.gerir-membro[open]>summary{margin-bottom:.5rem}
+/* Duas palavras não precisam da largura do cartão. E o rótulo fica sobre o seletor, e não ao
+   lado: em `.linha-de-acoes` os três — rótulo, seletor e botão — disputavam a mesma linha e o
+   seletor esticava para o que sobrasse. */
+.gerir-membro .linha-de-acoes{align-items:center}
+.gerir-membro select{width:auto;min-width:10rem;padding:.4rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--branco);font:inherit}
+/* O rótulo ao lado do que ele nomeia. Como `.campo`, ele crescia para preencher a linha e
+   empurrava o seletor para a outra ponta do cartão — rótulo numa margem, controle na outra, e o
+   botão sobrando para a linha de baixo. */
+.gerir-membro .campo{flex:0 0 auto;font-size:.8125rem;font-weight:600;margin:0}
+/* Remover é de outra natureza. Encostado no botão de alterar, o gesto errado fica à distância de
+   um deslize; a folga é o que separa o rotineiro do irreversível. */
+.gerir-membro form+form{margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--fundo)}
+.resumo-da-origem{color:var(--texto-fraco);font-size:.875rem;white-space:nowrap}
+.alocar-em-lote legend,.remover-em-lote legend{font-weight:600;font-size:.9375rem;padding:0 .35rem}
+.alocar-em-lote legend .ajuda,.remover-em-lote legend .ajuda{font-weight:400;margin-left:.35rem}
+.conferencia-lote{font-size:.9375rem}
+.conferencia-lote caption{text-align:left;color:var(--texto-fraco);padding-bottom:.5rem}
+.conferencia-lote th,.conferencia-lote td{border-bottom:1px solid var(--fundo)}
+.pendencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem}
+.pendencias h2{margin-bottom:.6rem}
+.pendencias ul{margin:0;padding-left:0;list-style:none}
+.pendencias li{padding:.35rem 0;border-bottom:1px solid var(--fundo);font-size:.9375rem}
+.pendencias li:last-child{border-bottom:none}
+.pendencias details.repetidas>summary{cursor:pointer}
+.pendencias details.repetidas>ul{margin:.35rem 0 0 1.25rem}
+.marcador{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;
+  padding:.1rem .45rem;border-radius:3px;margin-right:.5rem;letter-spacing:.03em}
+.p-erro .marcador{background:var(--vermelho-fundo);color:var(--vermelho)}
+.p-aviso .marcador{background:var(--amarelo-fundo);color:var(--amarelo)}
+.tudo-certo{color:var(--sucesso);font-weight:600;margin:0}
+/* Os fatos que a criação fixou, na mesma forma dos campos que se editam: rótulo pequeno em cima,
+   valor embaixo, na mesma margem esquerda. Como `dl.participantes` — grade `auto 1fr`, feita para
+   listar quem participa — os valores começavam 120 px à direita de tudo, e o cartão exibia três
+   margens esquerdas; e o bloco encostava no primeiro campo com zero de respiro, contra 12 px entre
+   todos os outros pares. O `dl` fica: "Processo Seletivo" **é** termo e definição. */
+.fatos-fixos{display:flex;flex-wrap:wrap;gap:.5rem 2.5rem;margin:0 0 1.25rem}
+.fatos-fixos>div{flex:0 1 auto}
+.fatos-fixos dt{font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
+.fatos-fixos dd{margin:0}
+/* Os termos do domínio definidos no primeiro uso da tela (030, FR-424, SC-141).
+
+   Peso de corpo de texto, e nao de rotulo: quem chega pela primeira vez le a definicao junto com o
+   resto, e nao como nota de rodape. O `dfn` do HTML e o elemento certo — ele marca a ocorrencia em
+   que o termo e definido, que e exatamente o que a FR-424 pede —, e sai em negrito em vez do
+   italico que os navegadores aplicam: a tela ja usa italico em nada, e uma segunda enfase visual
+   para a mesma coisa confundiria com citacao. */
+.definicoes{color:var(--texto);font-size:.875rem;margin:.25rem 0 1rem;max-width:var(--leitura)}
+/* O que o sistema **afirma** no lugar de uma pergunta que deixou de fazer (030, FR-416).
+
+   Não e ajuda, e por isso nao e `.ajuda`: ajuda explica como preencher um campo, e esta frase diz
+   o que vale quando nao ha campo nenhum. A decisao do projeto de nao levar ajuda visivel para
+   dentro dos cartoes de composicao continua de pe — o que entra aqui e declaracao, e ela precisa
+   ser lida por quem enxerga tanto quanto pela tecnologia assistiva.
+
+   Peso de corpo de texto, e nao de rotulo: ela e consequencia, e nao instrucao. */
+.declaracao-derivada{color:var(--texto);font-size:.875rem;margin:.25rem 0 .75rem;max-width:var(--leitura)}
+/* O Anexo grava por `submit` em formulários próprios, e não por HTMX: o grupo de símbolos convive
+   ali com dois botões de verbo, que gravam o que se editou acima. O que separa as duas famílias é
+   a fileira — conteúdo à esquerda, linha à direita —, e `margin-left:auto` é quem a separa. */
+.acoes-do-anexo{margin:.5rem 0 0;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.acoes-do-anexo .acoes-da-linha{margin:0 0 0 auto}
+.lista-acoes .motivo{display:block;font-size:.85rem;color:#4a4a4a;margin-top:.25rem}
+.bastao{background:var(--verde-claro);border-left:4px solid var(--verde);padding:.7rem 1rem;
+  margin:.8rem 0}
+.bastao .ajuda{display:block;margin-top:.3rem}
+/* Os recursos (018). A fundamentação e a motivação são texto **escrito por alguém** e lido
+   inteiro: ganham a largura de leitura e a moldura que as separa da prosa da tela, para que não
+   se confundam com o que o sistema diz. */
+.fundamentacao,.motivacao{max-width:var(--leitura);white-space:pre-wrap;background:var(--branco);
+  border:1px solid var(--borda);border-left:4px solid var(--borda);border-radius:4px;
+  padding:.75rem 1rem;margin:0 0 1.5rem}
+.julgado{margin:0 0 .35rem}
+/* O que a instrução anexou (036, FR-527). Reusa a moldura da fundamentação porque é a mesma espécie
+   de coisa — texto escrito por uma pessoa, lido inteiro —, e mudar de moldura entre os dois
+   sugeriria que um é menos oficial que o outro. O rótulo acima dele é o que diz **de quem** o texto
+   é: sem ele, o parecer atacado e a fundamentação de quem recorreu ficam dois parágrafos iguais, e
+   quem julga precisa saber qual é qual. */
+.instruido{max-width:var(--leitura);background:var(--branco);border:1px solid var(--borda);
+  border-left:4px solid var(--borda);border-radius:4px;padding:.75rem 1rem;margin:0 0 1rem}
+.instruido .rotulo-do-parecer{margin:0;font-size:.75rem;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--texto-fraco)}
+.instruido .texto-do-parecer{margin:.3rem 0 0;white-space:pre-wrap}
+/* A reabilitação por recurso, na linha da Mesa e no painel da Etapa: aviso e não erro, e por isso
+   verde — quem voltou ao certame não é uma pendência a resolver, é um fato a saber. */
+.reabilitada{margin:.25rem 0 0;font-size:.875rem;color:var(--verde-texto)}
+/* As decisões que o ato executa, na emissão: um bloco próprio dentro do formulário, porque marcar
+   uma delas é declarar cumprimento — e isso não é detalhe do mesmo grupo de campos. */
+.citacoes{border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;margin:0 0 1rem}
+.citacoes legend{font-weight:600;padding:0 .35rem}
+/* O histórico do par, recolhido: ele responde a uma pergunta que nem toda linha faz, e aberto
+   sempre encheria a listagem de quem não teve resultado superado. */
+.historico-do-par{margin:.35rem 0 0;font-size:.875rem}
+.historico-do-par summary{cursor:pointer;color:var(--verde-texto)}
+.historico-do-par ol{margin:.35rem 0 0;padding-left:1.2rem}
+/* Em `rem`, e não em pixel: o formulário acompanha o tamanho de texto de quem aumentou a fonte do
+   navegador — que é justamente quem mais precisa dele. É a mesma medida dos campos do portal. */
+form.identificar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.5rem;max-width:32rem}
+.papel{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.6rem}
+/* Dentro de uma linha de campos, a marcação preenche o que sobra: ela não tem largura própria a
+   defender, e o campo ao lado — que tem — fica com a sua. */
+.campos>.papel{flex:1 1 auto;align-items:center;margin-bottom:.9rem}
+.papel input{margin-top:.35rem}
+.papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}
+/* Consulta das inscrições recebidas (009). Reaproveita a tabela e o cartão que já existem; o que
+   é novo é a lista de requisitos, onde o arquivo aparece **dentro** do requisito que ele atende. */
+.dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
+.dados-da-inscricao dt{color:var(--texto-fraco)}
+.dados-da-inscricao dd{margin:0}
+/* O que saiu da Mesa: uma linha por retirada, com o motivo à vista. Era uma lista com marcador e
+   frases longas, em que o protocolo, o motivo e o instante se misturavam num parágrafo só. */
+ul.retiradas{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco);max-width:64rem}
+ul.retiradas>li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem 1rem;
+  padding:.7rem 1rem;border-bottom:1px solid var(--fundo)}
+ul.retiradas>li:last-child{border-bottom:0}
+ul.retiradas .qual{font-weight:600;flex:0 0 auto}
+ul.retiradas .porque{flex:1 1 18rem;color:var(--texto)}
+ul.retiradas .quando{color:var(--texto-fraco);font-size:.875rem;flex:0 0 auto;margin-left:auto}
+
+/* Os filtros da Mesa eram quatro links encostados, que se liam como uma frase. Agora são um
+   controle: cada um com o seu número, e o escolhido marcado por forma — o traço embaixo —, e não
+   só por cor. */
+.filtros-da-mesa{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem;padding:0}
+.filtros-da-mesa a{display:flex;flex-direction:column;gap:.1rem;text-decoration:none;
+  padding:.5rem .9rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco);
+  color:var(--texto);min-width:7.5rem}
+.filtros-da-mesa a:hover{border-color:var(--verde)}
+/* A causa do impedimento, ao lado da linha. Cinza e menor que o corpo: ela informa a ação
+   seguinte sem competir com o protocolo, que é o que se procura na varredura da tabela. */
+.motivo-da-prontidao{color:var(--texto-fraco);font-size:.85rem;max-width:22rem}
+/* O desfecho do lote, agrupado por causa. Fundo neutro e não de sucesso: um lote com
+   vinte e sete recusas não é um sucesso, e pintá-lo de verde diria o contrário. */
+.resultado-do-lote{background:var(--cinza-fundo);border-left:4px solid var(--borda);
+  padding:.75rem 1rem;margin:0 0 1rem}
+.resultado-do-lote ul{margin:.5rem 0 0;padding-left:1.2rem}
+.filtros-da-mesa a strong{font-size:1.25rem;line-height:1.1;font-weight:600}
+.filtros-da-mesa a span{font-size:.8125rem;color:var(--texto-fraco)}
+.filtros-da-mesa a[aria-current]{border-color:var(--verde);box-shadow:inset 0 -3px 0 var(--verde)}
+.filtros-da-mesa a[aria-current] span{color:var(--verde-texto);font-weight:600}
+/* Cartões de pessoa e de Etapa em grade: um por linha, com a página larga, dava um cartão de 1.450
+   px para três linhas de texto — e uma banca de sete virava uma página de rolagem. */
+ul.comissao{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(24rem,100%),1fr));
+  gap:.75rem}
+/* Cada cartão tem o conteúdo que tem — uma pessoa atua em duas Etapas, outra em nenhuma —, e com
+   os cartões medindo cada um a sua altura a fileira terminava em degraus, com os "Gerir" a alturas
+   diferentes. A ação vai para o rodapé do cartão, e os rodapés se alinham. */
+ul.comissao>li{display:flex;flex-direction:column;margin-bottom:0}
+ul.comissao .gerir-membro{margin-top:auto;padding-top:.5rem}
+/* As autoridades da unidade (060), em cartões como os da Comissão, e por regras
+   próprias: o cargo por extenso de uma diretoria passa de setenta caracteres, e uma lista em linha
+   o encostava no cartão seguinte. */
+ul.autoridades{list-style:none;padding:0;margin:0;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(24rem,100%),1fr));gap:.75rem}
+ul.autoridades>li{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;display:flex;flex-direction:column}
+ul.autoridades .cabeca{margin-bottom:.5rem}
+ul.autoridades .gerir-membro{margin-top:auto;padding-top:.5rem}
+
+/* Poucas colunas não precisam da página inteira: o protocolo ficava numa ponta e a situação na
+   outra, com um vão no meio que o olho tinha de atravessar a cada linha. */
+.lista-da-mesa{max-width:44rem}
+/* Escolhas que são muitas e curtas vão em colunas: duas atribuições por inscrição davam 48 caixas
+   empilhadas numa página de 25 — mil e seiscentos pixels para uma escolha que quase sempre é de
+   uma linha só. */
+fieldset.em-colunas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(20rem,100%),1fr));
+  gap:.15rem 1.5rem;align-content:start}
+fieldset.em-colunas legend{grid-column:1/-1}
+/* Cada caixa é uma linha: marca, nome e, quando há, a carga de hoje — lado a lado. Solta, a
+   `.ajuda` cai para a linha seguinte e o número deixa de pertencer a alguém. */
+fieldset.em-colunas>label{display:flex;align-items:baseline;gap:.4rem;font-size:.9375rem}
+fieldset.em-colunas>label input{flex:none;margin:0}
+fieldset.em-colunas>label .ajuda{margin:0}
+
+/* A tela onde o avaliador passa o dia. Ela era a menos desenhada do sistema: os pares rótulo/valor
+   saíam com o `dl` padrão do navegador — rótulo numa linha, valor indentado na seguinte —, a lista
+   de documentos era uma marcação com três pedaços soltos que quebravam em três linhas, e o
+   "não apresentado" reusava a caixa tracejada de estado vazio, que ali parecia uma área de
+   arrastar arquivo. */
+.ficha{display:flex;flex-wrap:wrap;gap:.25rem 2rem;margin:0 0 1.5rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+.ficha>div{display:flex;flex-direction:column;gap:.1rem}
+.ficha dt{color:var(--texto-fraco);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase}
+.ficha dd{margin:0}
+.ficha .destaque{font-weight:600;font-size:1.05rem}
+/* A ficha de dois ou três dados — Distribuição, Minha etapa — na largura do conteúdo (057, FR-1057).
+   A da mesa fica larga: divide a altura com a barra do painel, do outro lado. */
+.ficha.curta{width:fit-content}
+.ausente{color:var(--texto-fraco);font-style:italic}
+
+/* Um requisito por linha: o nome à esquerda, o que foi entregue à direita. Antes, nome, ação e
+   tamanho eram três pedaços em fluxo, e um documento ocupava três linhas irregulares. */
+/* A grade é da **lista**, e não de cada linha: com `display:grid` no `li`, cada linha formava a sua
+   própria grade e as colunas não se falavam — a marca caía num lugar diferente em cada uma, que é
+   exatamente o desalinhamento que se queria resolver. `display:contents` no `li` entrega os filhos
+   às trilhas da lista, e aí as três colunas valem para todas as linhas. */
+ul.documentos{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco);display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto}
+/* O nome primeiro, porque é o que se procura ao percorrer a lista; a marca em coluna própria, que é
+   o que a alinha sem precisar vir antes do nome; o modelo exigido, que a `020` acrescentou; e a
+   entrega à direita. A coluna do modelo existe mesmo quando o requisito não fornece um: célula
+   vazia mantém a grade alinhada, e sem ela cada linha empurraria a seguinte. */
+ul.documentos>li{display:contents}
+ul.documentos>li>*{padding:.7rem .5rem;border-bottom:1px solid var(--fundo);
+  display:flex;align-items:center;min-width:0}
+ul.documentos>li>*:first-child{padding-left:1rem;overflow-wrap:anywhere}
+ul.documentos>li>*:last-child{padding-right:1rem}
+ul.documentos>li:last-child>*{border-bottom:0}
+ul.documentos .entrega{justify-content:flex-end;white-space:nowrap}
+/* A instrução do Edital embaixo do nome, e não em coluna própria: ela é a condição do requisito, e
+   quem percorre a lista a lê junto dele. */
+ul.documentos .requisito{flex-direction:column;align-items:flex-start;gap:.15rem}
+ul.documentos .instrucao{font-size:.8125rem;color:var(--texto-fraco)}
+@media (max-width:34rem){
+  ul.documentos{grid-template-columns:minmax(0,1fr) auto}
+  ul.documentos .modelo{grid-column:1/-1;padding:0 1rem}
+  ul.documentos .entrega{grid-column:1/-1;padding:0 1rem .7rem}
+  ul.documentos>li>*:not(.entrega){border-bottom:0}
+}
+/* A marca é uma marca, e não uma célula: como item de grade direto ela recebia o preenchimento da
+   linha e a borda passava a envolver a célula inteira, virando uma caixa alta ao lado do nome. A
+   célula cuida do espaçamento; a marca volta ao seu tamanho. */
+ul.documentos .celula-marca{justify-content:flex-start}
+/* O formulário que o Edital fornecia na versão que a inscrição aceitou. Coluna própria e discreta:
+   é referência para conferir, e não a ação principal da tela — que é abrir o que o candidato
+   mandou (020, FR-050). */
+ul.documentos .modelo{justify-content:flex-start;white-space:nowrap}
+/* O que já foi aberto por esta pessoa. Numa inscrição de dez documentos, é a coluna que responde
+   "onde eu parei" — e o que ela marca é **aberto**, que é o que a trilha sabe: abrir não é ler, e
+   ler não é avaliar. */
+ul.documentos .leitura{gap:.4rem;color:var(--texto-fraco);font-size:.8125rem;white-space:nowrap}
+ul.documentos .marca-lida{color:var(--verde-texto);font-weight:600}
+@media (max-width:34rem){
+  ul.documentos{grid-template-columns:minmax(0,1fr) auto}
+  ul.documentos .leitura{grid-column:1/-1;padding-top:0}
+}
+ul.documentos .marca{font-size:.75rem;color:var(--texto-fraco);border:1px solid var(--borda);
+  border-radius:3px;padding:.05rem .35rem;font-weight:400;white-space:nowrap;line-height:1.5}
+ul.documentos .entrega{display:flex;align-items:center;gap:.6rem;font-size:.875rem;
+  color:var(--texto-fraco)}
+ul.documentos .entrega.ausente{font-style:italic}
+
+/* A nota é o que se lê primeiro ao voltar a uma avaliação concluída — e não a confirmação de que
+   ela foi salva. */
+.registro-da-avaliacao{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1.25rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:0 6px 6px 0;margin:0 0 1rem}
+.registro-da-avaliacao .nota{margin:0;display:flex;align-items:baseline;gap:.4rem}
+.registro-da-avaliacao .nota strong{font-size:1.75rem;line-height:1;font-weight:600}
+.registro-da-avaliacao .nota span{color:var(--texto-fraco)}
+.registro-da-avaliacao .quando{margin:0;color:var(--texto-fraco);font-size:.9375rem}
+.parecer-registrado h3{font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--texto-fraco);margin:0 0 .25rem;font-weight:600}
+.parecer-registrado p{margin:0 0 1rem;max-width:var(--leitura)}
+
+/* A Mesa de trabalho: o documento à esquerda, o formulário à direita — e uma coluna só enquanto
+   nada está aberto, que é como a tela sempre foi. O painel só existe em tela larga; abaixo disso
+   o link continua abrindo o documento em aba própria. */
+.mesa-trabalho{display:grid;gap:1.5rem}
+/* `:not([hidden])` **não é enfeite**: `display` de autor vence o `display:none` que o atributo
+   `hidden` traz do navegador, e sem esta guarda o painel aparecia vazio no alto de toda inscrição,
+   com o botão de fechar, antes de qualquer documento ser aberto. */
+.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.75rem;min-width:0}
+/* Mesmo desenho da ficha do candidato, do outro lado: as duas colunas passam a começar na mesma
+   altura por construção, e não por ajuste de margem. */
+.barra-do-painel{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+/* A margem à direita é o que leva as duas ações para a ponta: com três filhos, o
+   `space-between` sozinho punha "Abrir em aba própria" no meio da barra, longe do "Fechar". */
+.barra-do-painel h2{margin:0 auto 0 0;font-size:1rem;overflow-wrap:anywhere}
+/* `line-height` herdado porque a barra tem um link e um botão lado a lado: o link herda o 1,5 do
+   corpo, e o botão fica com o `normal` do navegador — 30 px e 25 px na mesma linha. */
+.barra-do-painel .acao{flex:0 0 auto;line-height:inherit}
+.painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--branco)}
+
+/* Sem documento aberto, a coluna é uma só — e o formulário de uma avaliação não tem o que fazer
+   com 1.480 px: a ficha esticava, a lista de documentos punha a ação a um palmo do nome, e a caixa
+   do parecer virava uma faixa. A página larga serve ao painel; o formulário tem a sua medida.
+
+   O limite é da **página**, e não só do formulário: posto apenas no formulário, o cabeçalho
+   atravessava a tela inteira e o conteúdo parava antes, deixando uma borda direita irregular que
+   parece defeito. Com o painel aberto, o limite sai — quem manda ali é o documento. */
+.pagina-da-inscricao{max-width:64rem}
+.pagina-da-inscricao.com-documento{max-width:none}
+.painel-avaliacao{min-width:0}
+.documentos a[aria-current]{font-weight:600;text-decoration:underline}
+@media (min-width:64rem){
+  .mesa-trabalho.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    align-items:start}
+  .mesa-trabalho.com-documento .painel-documento{position:sticky;top:1rem;
+    height:calc(100vh - 5rem)}
+}
+.codigo-de-verificacao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;
+  letter-spacing:.03em}
+/* A coincidência de CPF na listagem do que chegou (010). Por texto **e** por símbolo: quem
+   conduz o certame precisa enxergar sem depender de cor, e a marca fica junto do dado que ela
+   qualifica, não numa coluna à parte que ninguém lê. */
+.coincidencia{display:inline-block;margin-left:.35rem;padding:.05rem .4rem;border-radius:4px;
+  background:#fff4e5;border:1px solid #d98324;color:#8a4b00;font-size:.75rem;font-weight:600;
+  white-space:nowrap}
+fieldset.opcoes>.ajuda{margin:0 0 .6rem}
+
+/* Os blocos que abrem no cartão do marco. Fechado é o estado de quem não declarou, e o resumo ao
+   lado do rótulo diz o que há dentro sem pedir o clique — é ele que separa divulgação progressiva
+   de esconder informação. A borda à esquerda prende o conteúdo ao próprio resumo: sem ela, os
+   campos que aparecem pareciam pertencer ao cartão, e não ao bloco. */
+.bloco-do-marco{margin:0 0 .9rem}
+.bloco-do-marco>summary{font-size:.9375rem;font-weight:600;cursor:pointer;padding:.25rem 0;
+  display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+/* `display:flex` no `summary` **apaga o triângulo que o navegador desenha**, e sem ele um bloco
+   fechado se lê como um rótulo qualquer: nada na tela diz que há conteúdo ali. A marca volta
+   explícita, e gira ao abrir. */
+.bloco-do-marco>summary::before{content:"\25B8";color:var(--texto-fraco);font-size:.75rem;
+  transition:transform .12s;display:inline-block}
+.bloco-do-marco[open]>summary::before{transform:rotate(90deg)}
+.bloco-do-marco>summary .resumo-do-bloco{font-weight:400;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.bloco-do-marco[open]>summary{margin-bottom:.4rem}
+.bloco-do-marco>*:not(summary){border-left:2px solid var(--borda);padding-left:.9rem;
+  margin-left:.3rem}
+
+/* O que a opção marcada torna inaplicável sai da tela. A regra é sempre "esconde **quando** outra
+   opção está marcada", e nunca "esconde por padrão": onde `:has` não existir, tudo aparece como
+   antes — e o servidor, que é quem descarta de fato, continua correto de qualquer modo. */
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
+fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
+fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,
+fieldset.perfil:has(input[name$="-reserveType"]:checked:not([value="LIMITED"])) .so-limitada,
+fieldset.marco:has(select[name$="-cutTargetKind"] option[value="FIXED"]:not(:checked)) .so-fixo{
+  display:none}
+/* ── Retificação de Edital publicado ───────────────────────────────────────────────────────────
+   Um Edital institucional rende sessenta linhas editáveis e vários metros de rolagem. Tudo aqui
+   existe para a mesma pergunta: onde eu estou, o que eu já mudei, e como saio daqui. */
+
+/* O sumário. Barra de âncoras comuns — funciona sem script, é operável por teclado e o leitor de
+   tela a anuncia como lista de links. */
+.indice{display:flex;align-items:baseline;gap:.5rem .75rem;flex-wrap:wrap;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;padding:.6rem .9rem;margin:0 0 1.5rem}
+.indice .indice-rotulo{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600}
+.indice ul{display:flex;gap:.35rem .5rem;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.indice a{display:inline-flex;align-items:baseline;gap:.35rem;text-decoration:none;
+  font-size:.875rem;padding:.2rem .5rem;border-radius:4px}
+.indice a:hover{background:var(--verde-claro)}
+.indice .conta{font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+
+/* O título da seção separa o Cronograma das Etapas, e é o alvo das âncoras. `scroll-margin-top`
+   porque a âncora sem ele encosta o título na borda superior da janela, e a primeira linha da
+   seção fica fora de vista logo depois do salto. */
+.secao-da-retificacao{margin:0 0 2rem;scroll-margin-top:1rem}
+.secao-da-retificacao>h2{color:var(--texto-fraco);border-bottom:2px solid var(--borda);padding-bottom:.35rem;
+  margin:0 0 .9rem}
+
+/* A legenda em duas vozes. Sessenta cartões repetem a categoria — "Modalidade", "Seção" — e o que
+   distingue um do outro é o nome. Numa legenda inteiriça em caixa alta os dois tinham o mesmo
+   peso, e o olho que procura "AC — DOC-INFO" lia a palavra "MODALIDADE" sessenta vezes antes. */
+fieldset.linha>legend .categoria{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600;margin-right:.4rem}
+fieldset.linha>legend [data-ordem]{white-space:nowrap}
+
+/* A linha que ainda **não** integra o Edital tem a borda tracejada: ela é uma proposta dentro de
+   um formulário cheio de conteúdo vigente, e nada a distinguia dos cartões que já valem. */
+fieldset.linha.perfil-novo,fieldset.linha.evento-novo,fieldset.linha.anexo-novo,
+fieldset.linha.criterio-novo,fieldset.linha.modalidade-nova{
+  border-style:dashed}
+/* Modalidade, Fato, Marco e Critério pertencem ao Perfil imediatamente acima. Na lista plana eram
+   irmãos dele, e descobrir de quem era cada um exigia ler o sufixo do nome. */
+fieldset.linha.aninhada{margin-left:1.5rem;border-left:3px solid var(--borda)}
+
+/* O que você já mudou, enquanto muda. O resumo "antes e depois" só existe depois de um envio, e
+   até lá nada na tela distinguia um campo tocado de um campo intocado: quem alterou uma data no
+   primeiro cartão e seguiu rolando não tinha como reencontrá-la. A marca é do campo **e** da
+   linha, porque a linha é o que se acha rolando. */
+.campo[data-alterado] label{color:var(--verde-escuro)}
+.campo[data-alterado] input,.campo[data-alterado] select,.campo[data-alterado] textarea{
+  border-color:var(--verde);background:var(--verde-claro)}
+fieldset.linha[data-alterado]{border-color:var(--verde);box-shadow:inset 3px 0 0 var(--verde)}
+fieldset.linha[data-alterado].aninhada{border-left-color:var(--verde)}
+.remover-linha[data-alterado] label{color:var(--vermelho);font-weight:600}
+/* Cor não é o único portador: a legenda diz em palavras o que a borda diz em verde (WCAG 1.4.1). */
+fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.03em;color:var(--verde-escuro);background:var(--verde-claro);
+  padding:.1rem .4rem;border-radius:3px;margin-left:.4rem}
+
+/* Filtrar esconde e não remove, e o `hidden` precisa vencer o `display` que a regra do próprio
+   elemento declara — `.campos{display:flex}` é a que o alcança de perto. */
+[hidden]{display:none!important}
+
+/* O filtro, criado por `retificacao.js`. Não existe no HTML de propósito: sem script ele não
+   filtraria nada, e um controle que promete e não cumpre é pior que a ausência dele. */
+.filtro-da-retificacao{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+  background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.6rem .9rem;margin:0 0 1.5rem}
+.filtro-da-retificacao label{font-size:.8125rem;font-weight:600}
+.filtro-da-retificacao input[type=search]{padding:.4rem .5rem;border:1px solid var(--borda);
+  border-radius:4px;font:inherit;font-size:.875rem;min-width:16rem}
+.filtro-da-retificacao .marca{display:flex;align-items:center;gap:.4rem;font-size:.8125rem;
+  font-weight:600}
+.filtro-da-retificacao .achados{font-size:.8125rem;color:var(--texto-fraco);margin-left:auto}
+
+/* Quem acrescenta uma linha fica onde as linhas daquele tipo estão, e não numa área no fim. */
+.acrescentar{display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap;margin:.25rem 0 0}
+.acrescentar .ajuda{flex:1 1 20rem;margin:0}
+
+/* A barra que segue a rolagem. `sticky` e não `fixed`: ela ocupa lugar no fluxo, então o fim do
+   formulário não fica escondido atrás dela, e no fim da página ela repousa onde sempre esteve.
+   Sem duplicar botão nenhum — são os mesmos `submit` do formulário, com o mesmo nome e a mesma
+   ordem de tabulação. */
+.barra-de-acoes{position:sticky;bottom:0;z-index:5;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);margin-top:1.5rem}
+.barra-de-acoes .contagem{margin-left:auto;font-size:.875rem;color:var(--texto-fraco)}
+.barra-de-acoes .contagem strong{color:var(--verde-escuro)}
+
+/* O sorteio auditável (021). O que estas quatro regras precisam dizer é a **ordem dos fatos**:
+   primeiro o método, que veio do Edital e não se edita aqui; depois a ocorrência, cujo material
+   bruto fica à vista antes do ato; e então cada recorte, com o seu universo e o seu botão.
+
+   `.recorte` é bloco separado porque um marco com cotas tem três, e eles precisam ser lidos como
+   três coisas — publicar dois e esquecer o terceiro é o erro que a tela existe para evitar.
+
+   `.metodo` e `.ocorrencia` são listas de definição com o valor em monoespaçada onde ele é resumo
+   ou material bruto: são números que alguém vai comparar com outra tela. */
+.metodo,.ocorrencia{margin:.5rem 0 0;padding:0}
+.metodo dt,.ocorrencia dt{font-weight:600;font-size:.8125rem;color:var(--texto-fraco);
+  margin-top:.5rem}
+.metodo dd,.ocorrencia dd{margin:.1rem 0 0}
+.metodo dd code,.ocorrencia dd code{font-size:.8125rem;overflow-wrap:anywhere}
+.recorte{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:1rem 0}
+.recorte h3{margin:0 0 .5rem}
+
+
+/* As ocorrências que a indisponibilidade descartou (021, R-006). Elas ficam visíveis de propósito:
+   o descarte de ocorrência é justamente o que precisa ser auditável. */
+.descartadas{border-left:4px solid var(--amarelo);padding:.5rem 0 .5rem 1rem;margin:.75rem 0}
+.descartadas h3{margin:0 0 .35rem;font-size:.9375rem}
+.descartadas ul{margin:0;padding-left:1.1rem;color:var(--texto-fraco);font-size:.875rem}
+
+
+/* Os passos da anulação, numerados (021, FR-054). Anular é um percurso de quatro atos, e um deles
+   é uma Retificação: a lista existe para que a ordem seja lida antes de o formulário ser tentado. */
+.passos-da-anulacao{margin:.5rem 0 .75rem;padding-left:1.3rem;font-size:.875rem;
+  color:var(--texto-fraco)}
+.passos-da-anulacao li{margin:.2rem 0}

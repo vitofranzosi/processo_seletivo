@@ -1,0 +1,60 @@
+{
+ "regras": 562,
+ "pares_em_conflito": 281,
+ "seletores_sem_elemento": 101,
+ "pares_sem_saber": 44,
+ "por_area": {
+  "base": 13,
+  "moldura": 44,
+  "impressao": 1,
+  "componentes": 81,
+  "formularios": 62,
+  "tabelas": 16,
+  "telas": 345
+ },
+ "fora_da_area": [
+  [
+   203,
+   "main>p,main>section>p,.sub,.ajuda,.vazio,legend+p",
+   "formularios",
+   "componentes"
+  ],
+  [
+   344,
+   ".paginacao [aria-current]",
+   "tabelas",
+   "componentes"
+  ],
+  [
+   443,
+   ".remover-linha .ajuda",
+   "componentes",
+   "telas"
+  ],
+  [
+   545,
+   ".erro a",
+   "formularios",
+   "tabelas"
+  ],
+  [
+   812,
+   ".alocar-em-lote fieldset,.remover-em-lote fieldset",
+   "telas",
+   "formularios"
+  ],
+  [
+   1319,
+   "fieldset.opcoes>.ajuda",
+   "formularios",
+   "telas"
+  ],
+  [
+   1420,
+   "[hidden]",
+   "base",
+   "telas"
+  ]
+ ],
+ "trocas_de_ordem": 20969
+}

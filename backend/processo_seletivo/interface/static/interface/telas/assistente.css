@@ -6,13 +6,6 @@
   margin:0 0 1.5rem}
 .turno h2{font-size:1rem;margin:0 0 .5rem}
 .turno h2:focus{outline:2px solid var(--verde);outline-offset:2px}
-.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
-.tipo{font-weight:600;margin:0 0 .75rem}
 .trecho{margin:0 0 .75rem;overflow-wrap:anywhere}
-.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
-.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
-.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
-.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
 .pergunta-feita{font-style:italic;overflow-wrap:anywhere;margin:0 0 .75rem}
 .conversa-nova{margin:1.5rem 0 0}

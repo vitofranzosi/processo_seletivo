@@ -1,0 +1,12 @@
+/* O que as duas telas do assistente — a de dúvidas do Edital (070) e a do piloto (071) — desenham
+   igual: a versão do Edital, o tipo da resposta e a referência ao trecho. Até a 091 cada tela tinha a
+   sua cópia, regra por regra; aqui fica uma, carregada pelas duas antes da folha própria de cada
+   uma (091, FR-2098). Nenhum elemento das duas telas leva uma destas classes junto de uma classe da
+   folha própria, e por isso a ordem entre as duas folhas não muda o vencedor de nada (R-005). */
+.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
+.tipo{font-weight:600;margin:0 0 .75rem}
+.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
+.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
+.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
+.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}

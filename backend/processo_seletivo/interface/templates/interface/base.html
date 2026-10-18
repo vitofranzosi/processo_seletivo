@@ -8,7 +8,9 @@
 A folha comum saiu deste modelo para `interface/gestao.css`, e os tokens para `shared/tokens.css` (089):
 dentro do HTML, 53 KB de regras viajavam em toda resposta da gestão, sem cache, e impediam uma política
 de segurança de conteúdo. A ordem é a da cascata de antes — tokens, folha comum, estilo da página — e o
-`?v=` muda quando o arquivo muda (`shared/estaticos.py`).
+`?v=` muda quando o arquivo muda (`shared/estaticos.py`). Desde a 091 a folha comum são sete arquivos
+por área, em `interface/gestao/`, e `{% folhas_da_gestao %}` escreve um `<link>` para cada um, na ordem
+de `FOLHAS_DA_GESTAO` — vários `<link>`, e não um arquivo que importa os outros (D-002 da 091).
 {% endcomment %}
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 {% folhas_da_gestao %}

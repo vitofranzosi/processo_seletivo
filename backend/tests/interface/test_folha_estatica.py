@@ -22,7 +22,7 @@ from django.urls import reverse
 from processo_seletivo.shared import estaticos
 from tests.interface.conftest import identificar
 from tests.interface.folha import (
-    GESTAO_CSS,
+    ARQUIVOS_DA_FOLHA_COMUM,
     TOKENS,
     TOKENS_CSS,
     folha_aplicada,
@@ -55,18 +55,20 @@ def renderizar(caminho):
     )
 
 
-def test_os_dois_arquivos_sao_achados_pelos_finders():
+def test_os_arquivos_sao_achados_pelos_finders():
     """`FR-2035`: o runserver e o guia de produção servem o que os *finders* acham. Os tokens moram
-    em `shared/`, que não é app, e só são achados porque `STATICFILES_DIRS` os declara."""
-    assert Path(finders.find("interface/gestao.css")) == GESTAO_CSS
+    em `shared/`, que não é app, e só são achados porque `STATICFILES_DIRS` os declara. Desde a 091
+    a folha comum são os arquivos de `FOLHAS_DA_GESTAO`, e o `gestao.css` de um arquivo só saiu."""
+    assert [Path(finders.find(c)) for c in estaticos.FOLHAS_DA_GESTAO] == ARQUIVOS_DA_FOLHA_COMUM
     assert Path(finders.find("shared/tokens.css")) == TOKENS_CSS
+    assert finders.find("interface/gestao.css") is None
 
 
 def test_o_endereco_leva_o_resumo_do_conteudo():
-    endereco = renderizar("interface/gestao.css")
+    endereco = renderizar("interface/gestao/base.css")
 
-    assert re.fullmatch(r"/static/interface/gestao\.css\?v=[0-9a-f]{12}", endereco), endereco
-    assert renderizar("interface/gestao.css") == endereco
+    assert re.fullmatch(r"/static/interface/gestao/base\.css\?v=[0-9a-f]{12}", endereco), endereco
+    assert renderizar("interface/gestao/base.css") == endereco
 
 
 def test_o_endereco_muda_quando_o_arquivo_muda(tmp_path, monkeypatch):
@@ -77,11 +79,11 @@ def test_o_endereco_muda_quando_o_arquivo_muda(tmp_path, monkeypatch):
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: str(folha))
 
     folha.write_text("a{color:red}")
-    primeiro = renderizar("interface/gestao.css")
+    primeiro = renderizar("interface/gestao/base.css")
     folha.write_text("a{color:blue}")
-    segundo = renderizar("interface/gestao.css")
+    segundo = renderizar("interface/gestao/base.css")
     folha.write_text("a{color:red}")
-    terceiro = renderizar("interface/gestao.css")
+    terceiro = renderizar("interface/gestao/base.css")
 
     assert primeiro != segundo
     assert terceiro == primeiro
@@ -95,12 +97,12 @@ def test_a_folha_so_e_relida_quando_muda(tmp_path, monkeypatch):
     folha.write_text("a{color:red}")
 
     leituras = estaticos._resumo_do_arquivo.cache_info().misses
-    renderizar("interface/gestao.css")
-    renderizar("interface/gestao.css")
+    renderizar("interface/gestao/base.css")
+    renderizar("interface/gestao/base.css")
     assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 1
 
     folha.write_text("a{color:blue}")
-    renderizar("interface/gestao.css")
+    renderizar("interface/gestao/base.css")
     assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 2
 
 
@@ -211,7 +213,7 @@ def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
     cabeca_ = (
         "<head>"
         '<link href="/static/shared/tokens.css?v=1" rel="stylesheet">'
-        "<link rel='stylesheet' media=\"print\" href='/static/interface/gestao.css'>"
+        "<link rel='stylesheet' media=\"print\" href='/static/interface/gestao/tabelas.css'>"
         '<link rel="icon" href="/favicon.ico">'
         '<style media="screen">.da-pagina{color:red}</style>'
         "</head><body><style>.do-corpo{}</style></body>"

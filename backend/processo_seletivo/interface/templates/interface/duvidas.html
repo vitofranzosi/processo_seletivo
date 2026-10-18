@@ -2,7 +2,7 @@
 {% load interface_extras estaticos %}
 {% block titulo %}Respostas do assistente de dúvidas — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Respostas do assistente de dúvidas</span></nav>{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/duvidas.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/assistente.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/duvidas.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Respostas do assistente de dúvidas</h1>
 <p class="sub">{{ processo.title }} · {{ edital.title }}</p>

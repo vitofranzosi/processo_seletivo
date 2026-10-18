@@ -1,0 +1,43 @@
+/* As tabelas: célula, cabeçalho, legenda, a moldura que rola, a paginação (091). */
+/* A tabela de alterações da Retificação diz onde e qual campo, e embaixo o caminho normativo
+   para quem audita. Sem isto o campo colava no nome da entidade — "Evento do cronograma
+   “Inscrições”Término" — e o caminho saía do mesmo tamanho do que importa ler. */
+th .detalhe,td .detalhe{display:block;font-weight:400;color:var(--texto-fraco);font-size:.875rem}
+th code{display:block;font-weight:400;color:var(--texto-fraco);font-size:.75rem;word-break:break-all;margin-top:.25rem}
+table{width:100%;border-collapse:collapse}
+/* Sete colunas não cabem em 375px, e sem um contêiner que role a tabela empurra a **página**
+   inteira na horizontal — o cabeçalho e o texto passam a fugir da tela junto com ela. Quem
+   confere inscrições pelo celular estava lendo um layout quebrado. */
+.tabela-rolavel{overflow-x:auto}
+caption{text-align:left;padding:.75rem 1.25rem 0;color:var(--texto-fraco);font-size:.875rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--borda);
+  vertical-align:top;font-size:.9375rem}
+thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);background:var(--fundo);font-weight:600}
+/* `th` junto do `td`: a regra cobria só a célula comum, e a última linha de toda tabela com
+   cabeçalho de linha — `alocacoes`, `lista`, `supervisao`, `retificar` e as demais que usam
+   `th scope="row"` — ficava com um traço solto do tamanho daquela coluna, pendurado abaixo do
+   corpo. A `distribuicao` já contornava isso com regra própria; o buraco era da regra geral. */
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
+/* Texto para quem ouve a tela, e não para quem a vê. Cinco `caption` e um `label` usavam esta
+   classe — legendas de tabela que repetem o título logo acima, e o rótulo do motivo da
+   reabertura — e ela não existia: "Carga por avaliador nesta Etapa" aparecia impressa sob o
+   "Quem está alocado" que já a nomeia, e a lista de inscrições ganhava uma segunda legenda.
+   Não é `display:none`: isso a tiraria também de quem usa leitor de tela, que é justamente
+   para quem ela foi escrita. */
+/* Três telas paginam — conclusões, distribuição, impedimentos — e a navegação saía como três
+   pedaços de texto corrido: "Anterior Página 2 de 25 Próxima", sem alvo e sem separação. */
+.paginacao{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:1rem 0 2rem;
+  font-size:.875rem}
+.paginacao a{border:1px solid var(--verde);color:var(--verde-texto);border-radius:4px;
+  padding:.25rem .7rem;text-decoration:none}
+.paginacao a:hover{background:var(--verde-claro)}
+.erro a{color:var(--vermelho);font-weight:600}
+/* A linha escolhida, numa tabela de escolha única. O ponto do rádio é a marca correta e é pequena
+   demais para uma linha de seis colunas: quem confere o que marcou percorre a linha inteira com o
+   olho. `:has` degrada para "sem realce" onde não houver suporte — a escolha continua legível pelo
+   próprio controle, que é o que a acessibilidade exige. */
+tbody tr:has(input[type=radio]:checked){background:var(--verde-claro)}
+.rolagem{overflow-x:auto}
+.tabela-estreita{max-width:38rem}
+.tabela td.numero,.tabela th.numero{text-align:right;font-variant-numeric:tabular-nums}
