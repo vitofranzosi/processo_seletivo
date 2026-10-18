@@ -1,19 +1,33 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Retificação — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Retificação</span></nav>{% endblock %}
+{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Retificação</span>
-</nav>
-
 <h1>Retificação do Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ retificacao.justification }}
   <span class="situacao s-{{ retificacao.status }}">{{ retificacao.status|situacao }}</span></p>
 
 {% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
 
-<div class="colunas">
+{% comment %} O que fazer antes do que já se sabe, como no detalhe do Processo e no do Edital (078,
+   `FR-1765`; 083, `FR-1857`): à esquerda a 1280 px, em cima a 375. E pelo topo, como lá (057,
+   `FR-1047`): sem ato disponível, o cartão tem uma linha, e esticado à altura da Vigência ficava vazio. {% endcomment %}
+<div class="colunas ao-topo">
+  <section aria-labelledby="acoes-titulo" class="cartao">
+    <h2 id="acoes-titulo">O que fazer agora</h2>
+    <ul class="lista-acoes">
+      {% for ato in atos %}
+      <li>
+        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
+           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}">{{ ato.rotulo }}</a>
+        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+      </li>
+      {% empty %}
+      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
   <section aria-labelledby="vigencia-titulo" class="cartao">
     <h2 id="vigencia-titulo">Vigência</h2>
     {% if publicada %}
@@ -32,21 +46,6 @@
     muda para o público antes da Publicação".
     {% endcomment %}
     {% if not publicada %}<p class="ajuda">Nada muda para o público antes da Publicação.</p>{% endif %}
-  </section>
-
-  <section aria-labelledby="acoes-titulo" class="cartao">
-    <h2 id="acoes-titulo">O que fazer agora</h2>
-    <ul class="lista-acoes">
-      {% for ato in atos %}
-      <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
-      </li>
-      {% empty %}
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-      {% endfor %}
-    </ul>
   </section>
 </div>
 

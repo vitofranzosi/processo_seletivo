@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}
 {% block titulo %}Inscrições — {{ edital }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Inscrições</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Inscrições</span>
-</nav>
-
 <h1>Inscrições — {{ total }}</h1>
 <p class="sub">{{ edital.title }}</p>
 {% comment %}
@@ -84,7 +79,12 @@ estava na lista de rascunhos.
 {% elif filtrando %}
 <p class="vazio">Nenhuma inscrição recebida corresponde a este filtro.</p>
 {% else %}
-<p class="aviso">Nenhuma inscrição recebida até agora.</p>
+{% comment %}
+O estado vazio, e não o aviso (085, `FR-1918`): nenhuma inscrição é o estado normal de um Edital
+antes de as inscrições abrirem, e o amarelo das advertências dizia que havia algo a resolver. É o
+desenho da lista filtrada sem resultado, logo acima, e o da lista de Recursos.
+{% endcomment %}
+<p class="vazio">Nenhuma inscrição recebida até agora.</p>
 {% endif %}
 
 {% if em_preenchimento %}
@@ -95,11 +95,16 @@ e quem conduz a seleção precisa saber que há gente no meio do caminho quando 
 
 Pagina em separado, e com parâmetro próprio: são dois conjuntos com prazos distintos, e avançar
 na página dos rascunhos não pode arrastar quem estava conferindo o que já chegou.
+
+Região nomeada pelo próprio título (085, `FR-1919`), como a dos membros da Comissão: quem navega por
+regiões chega aos rascunhos sem atravessar a lista do que chegou.
 {% endcomment %}
-<h2>Em preenchimento — {{ total_rascunhos }}</h2>
+<section aria-labelledby="em-preenchimento">
+<h2 id="em-preenchimento">Em preenchimento — {{ total_rascunhos }}</h2>
 <p class="aviso">Rascunhos abertos e ainda não enviados. Não são inscrições recebidas, e podem
   nunca ser enviados.</p>
 {% include "interface/_tabela_de_inscricoes.html" with inscricoes=em_preenchimento legenda="Rascunhos em preenchimento neste Edital" %}
 {% include "interface/_paginacao_de_inscricoes.html" with pagina=pagina_rascunhos parametro="rascunhos" irma=pagina_da_irma rotulo="Páginas de rascunhos em preenchimento" %}
+</section>
 {% endif %}
 {% endblock %}

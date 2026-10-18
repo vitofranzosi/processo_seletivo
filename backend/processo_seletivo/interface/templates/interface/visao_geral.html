@@ -1,5 +1,8 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Visão Geral dos Processos Seletivos{% endblock %}
+{% comment %} A raiz da seção, como a lista (087, D-002). O rótulo é o que a barra dá à seção, e sai
+   de onde a barra o tira, para que os dois não divirjam. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 /* A visão institucional (040). As regras moram aqui porque é onde o CSS deste projeto mora: não
    há folha externa, e `interface/static/` só tem JavaScript. */

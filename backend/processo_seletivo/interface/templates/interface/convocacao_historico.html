@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Histórico da convocação — com a proveniência de cada ato{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Convocação</a> › <span aria-current="page">Histórico</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Convocação</a> ›
-  <span aria-current="page">Histórico</span>
-</nav>
-
 <h1>Histórico da convocação</h1>
 <p class="sub">Todos os atos deste <dfn>recorte</dfn> — que é a lista em que a pessoa concorre,
   a ampla concorrência ou uma Modalidade declarada —, do mais antigo ao mais novo, com a

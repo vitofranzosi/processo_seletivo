@@ -245,7 +245,10 @@ def test_a_view_pode_declarar_a_secao_que_o_endereco_nao_diz(settings):
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
-    """`FR-1716`, `FR-1718`: na Visão Geral o item é a página atual, e o caminho acaba nela."""
+    """`FR-1716`, `FR-1718`: na Visão Geral o item é a página atual, e o caminho acaba nela.
+
+    O caminho era o texto da 076; desde a 087 é a trilha de um nível, como a da lista (`FR-1971`
+    da 087)."""
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = client.get(reverse("interface:visao-geral")).content.decode()
 
@@ -256,7 +259,8 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
         barra(corpo),
     )
     assert barra(corpo).count("aria-current") == 1
-    assert caminho(corpo).endswith("› Visão Geral")
+    contexto = corpo.split('<header class="cabecalho-de-contexto">')[1].split("</header>")[0]
+    assert contexto.split("</nav>")[0].endswith('› <span aria-current="page">Visão Geral</span>')
 
 
 @pytest.mark.django_db
@@ -264,20 +268,23 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
 def test_abaixo_da_secao_o_caminho_a_nomeia_e_nao_repete_a_trilha(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
-    """`FR-1716`, `FR-1718`: nas inscrições do Edital, a seção é Processos Seletivos; o caminho do
-    topo para nela, em texto — o link já está na barra —, e a trilha da tela continua uma só.
+    """`FR-1716`, `FR-1718`: abaixo de Processos Seletivos, o caminho do topo para na seção, em
+    texto — o link já está na barra —, e não repete trilha nenhuma.
 
-    Era o detalhe do Edital até a 078, que levou a trilha dele ao cabeçalho (`FR-1767` da 078). As
-    inscrições recebidas, abaixo do Edital, continuam com o caminho desta feature."""
+    Desde a 087, a única tela da gestão com o caminho desta feature é a recusa: todas as outras
+    levaram a trilha ao cabeçalho, da 077 à 087 (os avisos do Edital por último, `FR-1940` da 086).
+    A recusa de uma página abaixo do Edital é o que sobra para provar o bloco padrão."""
     edital = publish_original(api_client, manager_headers, process_payload)
-    identificar(client, "gustavo.gestor", ["gestor"])
-    corpo = client.get(reverse("interface:inscricoes", args=[edital.id])).content.decode()
+    identificar(client, "joana.avaliadora", [])
+    resposta = client.get(reverse("interface:avisos-do-edital", args=[edital.id]))
+    corpo = resposta.content.decode()
 
+    assert resposta.status_code == 404
     assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
     assert caminho(corpo).endswith("› Processos Seletivos")
     assert "<a " not in caminho(corpo)
     assert f"{edital.number}/{edital.year}" not in caminho(corpo)
-    assert corpo.count('aria-label="Trilha de navegação"') == 1
+    assert 'aria-label="Trilha de navegação"' not in corpo
 
 
 # ---- a tela larga ----------------------------------------------------------------------------

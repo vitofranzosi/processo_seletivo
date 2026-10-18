@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Partir de um Edital anterior — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ voltar }}">Compor</a> › <span aria-current="page">Partir de um Edital anterior</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{{ voltar }}">Compor</a> ›
-  <span aria-current="page">Partir de um Edital anterior</span>
-</nav>
-
 <h1>Partir de um Edital anterior</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
 
@@ -64,12 +58,13 @@ outra vez na confirmação — a lista é o requisito, e uma advertência sem n�
     </p>
     <p class="acoes">
       {% comment %}
-      `.acao`, e não `.salvar`: a segunda é a barra de gravação, e traz filete e rodapé consigo —
+      `.acoes`, e não `.salvar`: a segunda é a barra de gravação, e traz filete e rodapé consigo —
       dentro do filtro ela desenhava uma caixa em volta do botão. É a mesma marcação de
-      `inscricoes.html`, que é onde esta barra já existe.
+      `inscricoes.html`, que é onde esta barra já existe — e, desde a 083, com o mesmo desenho:
+      "Filtrar" como ação principal e "Limpar" como secundária (`FR-1858`; `FR-1008` da 055).
       {% endcomment %}
-      <button type="submit" class="acao">Filtrar</button>
-      {% if busca %}<a href="{% url 'interface:reaproveitar' edital.id %}">Limpar</a>{% endif %}
+      <button type="submit" class="botao">Filtrar</button>
+      {% if busca %}<a class="acao" href="{% url 'interface:reaproveitar' edital.id %}">Limpar</a>{% endif %}
     </p>
   </form>
 
