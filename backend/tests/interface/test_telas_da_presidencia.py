@@ -12,8 +12,8 @@ import re
 import pytest
 from django.urls import reverse
 
+from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade_da_012 import cenario  # noqa: F401 — fixture
 from tests.interface.test_shell_da_gestao import barra
 from tests.interface.test_telas_de_uso_diario import (
     TEMPLATES,
@@ -22,6 +22,12 @@ from tests.interface.test_telas_de_uso_diario import (
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture
+def cenario(gestor, api_client, manager_headers, raiz_de_arquivos):
+    """O da `012`, declarado aqui e não importado de lá (081, FR-1823)."""
+    return montar_cenario_da_presidencia(gestor, api_client, manager_headers)
 
 
 def comeca_pelo_titulo(corpo):
@@ -50,7 +56,7 @@ def abrir(client, rota, *args):
 # ---- a trilha no cabeçalho -------------------------------------------------------------------
 
 
-def test_na_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):
     """`FR-1780`, `FR-1781`, `SC-692`: GPS › Processos Seletivos › código › Comissão."""
     identificar(client, "maria", [])
     processo = cenario["processo"]
@@ -72,7 +78,7 @@ def test_na_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario)
     ],
     ids=["um", "lista"],
 )
-def test_na_conferencia_a_trilha_passa_pela_comissao(client, seletor_ligado, cenario, envio):  # noqa: F811
+def test_na_conferencia_a_trilha_passa_pela_comissao(client, seletor_ligado, cenario, envio):
     """`FR-1780`, `FR-1781`, `FR-1789`: a conferência, de um e da lista, com a Comissão a um clique;
     o conteúdo dela não muda."""
     identificar(client, "maria", [])
@@ -92,7 +98,7 @@ def test_na_conferencia_a_trilha_passa_pela_comissao(client, seletor_ligado, cen
     assert "Cancelar e voltar" in conteudo(corpo)
 
 
-def test_na_alocacao_a_trilha_sobe_e_a_barra_continua_no_topo(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_alocacao_a_trilha_sobe_e_a_barra_continua_no_topo(client, seletor_ligado, cenario):
     """`FR-1780`, `FR-1781`, `FR-1784`: a trilha no cabeçalho, e a barra no topo em qualquer
     largura, sem o script da preferência (DP-4 da 076)."""
     identificar(client, "maria", [])
@@ -109,7 +115,7 @@ def test_na_alocacao_a_trilha_sobe_e_a_barra_continua_no_topo(client, seletor_li
     assert "Trilha de navegação" not in corpo.split('<div class="distribuicao-moldura">')[1]
 
 
-def test_na_distribuicao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_distribuicao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cenario):
     """`FR-1780`, `FR-1781`: a mesma trilha da Etapa aberta pela gestão (`FR-1752` da 077)."""
     identificar(client, "maria", [])
     edital, etapa, processo = cenario["edital"], cenario["etapa"], cenario["processo"]
@@ -136,7 +142,7 @@ def test_na_distribuicao_a_trilha_continua_pela_alocacao(client, seletor_ligado,
 LUGARES = ("Impedimentos", "Registrar ocorrência", "Resultados", "Trilha")
 
 
-def test_os_lugares_da_etapa_vem_logo_abaixo_do_titulo(client, seletor_ligado, cenario):  # noqa: F811
+def test_os_lugares_da_etapa_vem_logo_abaixo_do_titulo(client, seletor_ligado, cenario):
     """`FR-1785`, `SC-693`: a faixa antes da ficha, com os mesmos quatro links, na mesma ordem,
     no mesmo desenho."""
     identificar(client, "maria", [])
@@ -199,9 +205,11 @@ def test_nenhuma_acao_da_distribuicao_sai_do_lugar():
     ]
     niveis_em_ordem(corpo, marcos)
     assert corpo.count('<p class="acoes-do-painel">') == 1
-    # O desenho das ações não muda: as cheias continuam cheias, e a retirada contornada de perigo.
+    # A retirada continua contornada de perigo. As cheias eram seis até a 081, que tirou o desenho
+    # cheio das duas consolidações — a da seleção e a das prontas —, porque o ato não se desfaz
+    # (`FR-1820` e `FR-1828` da 081); as outras quatro não mudaram.
     assert '<button type="submit" class="acao perigoso">Retirar as selecionadas</button>' in corpo
-    assert corpo.count('class="botao"') == 6
+    assert corpo.count('class="botao"') == 4
 
 
 # ---- a Comissão ------------------------------------------------------------------------------
@@ -269,7 +277,7 @@ def test_recorte_vazio_mantem_o_filtro(client, seletor_ligado, processo_a, comis
 # ---- a Alocação ------------------------------------------------------------------------------
 
 
-def test_a_alocacao_salva_alocacao(client, seletor_ligado, cenario):  # noqa: F811
+def test_a_alocacao_salva_alocacao(client, seletor_ligado, cenario):
     """`FR-1790`: o botão depois da matriz diz o que faz, no mesmo desenho."""
     identificar(client, "maria", [])
     corpo = abrir(client, "interface:alocacoes", cenario["processo"].id)
@@ -290,4 +298,5 @@ def test_sem_presidencia_a_alocacao_continua_sem_botao(client, seletor_ligado, g
     corpo = abrir(client, "interface:alocacoes", processo_a.id)
 
     assert "Salvar alocação" not in corpo
-    assert "Designe a presidência antes de distribuir" in corpo
+    # "alocar" desde a 081 (`FR-1822`): é o ato desta tela, como o botão diz desde a 079.
+    assert "Designe a presidência antes de alocar" in corpo

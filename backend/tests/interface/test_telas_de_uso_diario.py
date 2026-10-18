@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
+from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade_da_012 import cenario  # noqa: F401 — fixture
 from tests.interface.test_shell_da_gestao import barra, itens_da_barra
 
 TEMPLATES = (
@@ -19,6 +19,12 @@ TEMPLATES = (
 ) / "interface"
 
 SECOES_DA_BARRA = ("interface:visao-geral", "interface:autoridades", "interface:modelos-de-aviso")
+
+
+@pytest.fixture
+def cenario(gestor, api_client, manager_headers, raiz_de_arquivos):
+    """O da `012`, declarado aqui e não importado de lá (081, FR-1823)."""
+    return montar_cenario_da_presidencia(gestor, api_client, manager_headers)
 
 
 def cabecalho(corpo):
@@ -92,7 +98,7 @@ def test_na_raiz_da_secao_a_trilha_tem_um_nivel(client, seletor_ligado, rota, ro
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_na_etapa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_etapa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):
     """`FR-1746`, `FR-1747`, `SC-673`: GPS › Minhas Etapas › a Etapa."""
     identificar(client, "joao", [])
     corpo = client.get(
@@ -109,7 +115,7 @@ def test_na_etapa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_pela_gestao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cenario):  # noqa: F811
+def test_pela_gestao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cenario):
     """`FR-1747`, `FR-1752`: a porta da gestão continua dizendo por onde se chegou — a trilha da
     Alocação, a partir da seção —, e a barra marca a mesma seção que a trilha nomeia."""
     identificar(client, "carlos", ["gestor"])
@@ -134,7 +140,7 @@ def test_pela_gestao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cen
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):
     """`FR-1746`, `FR-1747`, `SC-673`: cada nível acima da tela a um clique, do cabeçalho."""
     identificar(client, "joao", [])
     edital, etapa, inscricao = cenario["edital"], cenario["etapa"], cenario["inscricao"]
@@ -151,7 +157,7 @@ def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado,
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_fora_das_telas_de_uso_diario_o_cabecalho_e_o_da_076(client, seletor_ligado, cenario):  # noqa: F811
+def test_fora_das_telas_de_uso_diario_o_cabecalho_e_o_da_076(client, seletor_ligado, cenario):
     """`FR-1748`: a Supervisão do Processo continua com a trilha no conteúdo, e o cabeçalho para na
     seção. Era a trilha da avaliação até a 080 (`FR-1800` da 080), e a auditoria do Edital até a
     083 (`FR-1850` da 083), que as levaram ao cabeçalho."""

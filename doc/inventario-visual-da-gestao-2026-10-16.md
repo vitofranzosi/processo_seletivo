@@ -507,6 +507,51 @@ pulso do Processo, e marcas de cursor e de suavização em Minhas Etapas, na dev
 pontos isolados (até 4 de 255). É também o que o diff permite: ele só toca os seis templates do
 escopo.
 
+## Depois da 081
+
+A [`081`](../specs/081-achados-das-revisoes-077-079/spec.md) corrigiu os achados das revisões da
+`077` e da `079` que cabiam em apresentação: na Distribuição, "Consolidar as selecionadas" passou ao
+desenho secundário, com a marca "irreversível" logo depois — o desenho dos atos do Processo —, e
+"Distribuir as selecionadas" ficou como o único botão cheio sobre a seleção; na Alocação sem
+presidência, o aviso diz "antes de alocar". A folha comum ganhou `align-self:center`
+na própria marca, para ela não esticar em linha flexível. Na revisão do PR, a marca passou a descrever
+o botão para o leitor de tela, e "Consolidar as N prontas" ganhou o mesmo desenho e a mesma marca.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_081` — cópia
+do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. O de antes não difere em medida nenhuma de `depois-da-080/`, pelo `medidas.py`.
+
+Em [`depois-da-081/`](inventario-visual-da-gestao-2026-10-16/depois-da-081/) estão os dois
+`resultados.json`, de antes e de depois, com a barra expandida e recolhida, e as capturas da
+Distribuição e da Alocação, a 1280 e a 375 px. A Alocação do banco do inventário tem presidência, e o
+aviso não aparece nela: a frase é provada pelos testes.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/resultados.json
+```
+
+| | Antes da 081 | Depois da 081, expandida | Depois da 081, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só a Distribuição mudou de medida**, e só a 375 px: 3306 → 3332, nos dois estados da barra. Ali os
+dois botões já ficavam um sobre o outro, e a marca, que acompanha o segundo, ocupa uma linha a mais. A
+1280 px a altura não muda (2168): a marca cabe na linha dos botões, centrada, e o botão secundário tem
+a altura do principal (40 px, medido no navegador).
+
+**Pixel a pixel.** Fora da Distribuição, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas, no aviso
+e no pulso do Processo, e marcas de cursor e de suavização em pontos isolados. O depois foi refeito
+depois da revisão do PR, já em 18/10, e o pulso do Processo e as Autoridades mostram também a data
+nova (a série de submissões passou de 2 para 3 dias). O detalhe do Processo, que também usa a marca,
+a põe num `li` da `.lista-acoes`, que já centraliza: mover `align-self` para a marca não o move. O
+botão das prontas não aparece no banco do inventário, que não tem inscrição pronta: é provado pelos
+testes.
+
 ## Depois da 083
 
 O quinto incremento da modernização por tela ([`083`](../specs/083-telas-do-edital/spec.md)) mudou as
