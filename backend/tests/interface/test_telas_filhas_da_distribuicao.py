@@ -11,8 +11,8 @@ principal das consultas. O desenho em si é provado no navegador e pelo inventá
 import pytest
 from django.urls import reverse
 
+from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade_da_012 import cenario  # noqa: F401 — fixture
 from tests.interface.test_telas_da_presidencia import (
     abrir,
     ate_o_processo,
@@ -26,6 +26,13 @@ from tests.interface.test_telas_de_uso_diario import (
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture
+def cenario(gestor, api_client, manager_headers, raiz_de_arquivos):
+    """O da `012`, declarado aqui e não importado de lá (081, FR-1823)."""
+    return montar_cenario_da_presidencia(gestor, api_client, manager_headers)
+
 
 FILHAS = {
     "interface:impedimentos": "Impedimentos",
@@ -64,7 +71,7 @@ def entre(pagina, inicio, fim):
 def test_nas_filhas_a_trilha_e_a_da_distribuicao_com_a_tela(
     client,
     seletor_ligado,
-    cenario,  # noqa: F811
+    cenario,
     rota,
     atual,
 ):
@@ -81,7 +88,7 @@ def test_nas_filhas_a_trilha_e_a_da_distribuicao_com_a_tela(
     assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in corpo
 
 
-def test_na_conferencia_da_retirada_a_trilha_passa_pela_etapa(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_conferencia_da_retirada_a_trilha_passa_pela_etapa(client, seletor_ligado, cenario):
     """`FR-1800`, `FR-1801`, `FR-1809`: a conferência termina em Conferir, com a Etapa a um
     clique, como a da inclusão na comissão; o alcance e "Retirar" não mudam."""
     from processo_seletivo.avaliacoes.models import Atribuicao
@@ -104,7 +111,7 @@ def test_na_conferencia_da_retirada_a_trilha_passa_pela_etapa(client, seletor_li
     assert Atribuicao.objects.filter(ativo=True).count() == 1, "conferir não retira nada"
 
 
-def test_na_auditoria_da_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_auditoria_da_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):
     """`FR-1800`, `FR-1801`, `FR-1802`: GPS › Processos Seletivos › código › Auditoria da
     comissão."""
     identificar(client, "carlos", ["gestor", "auditor"])
@@ -117,7 +124,7 @@ def test_na_auditoria_da_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_lig
     assert comeca_pelo_titulo(corpo)
 
 
-def test_a_auditoria_do_edital_continua_com_o_cabecalho_da_076(client, seletor_ligado, cenario):  # noqa: F811
+def test_a_auditoria_do_edital_continua_com_o_cabecalho_da_076(client, seletor_ligado, cenario):
     """`FR-1803`: o mesmo modelo de página, e a trilha do Edital continua no conteúdo (D-002)."""
     identificar(client, "carlos", ["gestor", "auditor"])
     corpo = abrir(client, "interface:auditoria", cenario["edital"].id)
@@ -132,7 +139,7 @@ def test_a_auditoria_do_edital_continua_com_o_cabecalho_da_076(client, seletor_l
 def test_quem_audita_le_a_mesma_trilha_de_quem_preside(
     client,
     seletor_ligado,
-    cenario,  # noqa: F811
+    cenario,
     rota,
 ):
     """`FR-1804`: nenhum nível aparece, some ou deixa de ser link conforme quem lê (D-003)."""
@@ -148,7 +155,7 @@ def test_quem_audita_le_a_mesma_trilha_de_quem_preside(
 # ---- o que acabou de acontecer ---------------------------------------------------------------
 
 
-def test_na_ocorrencia_o_erro_vem_antes_da_explicacao(client, seletor_ligado, cenario):  # noqa: F811
+def test_na_ocorrencia_o_erro_vem_antes_da_explicacao(client, seletor_ligado, cenario):
     """`FR-1806`: logo depois do título e da Etapa, com o mesmo papel e o mesmo foco; a
     explicação continua antes do formulário."""
     identificar(client, "maria", [])
@@ -168,7 +175,7 @@ def test_na_ocorrencia_o_erro_vem_antes_da_explicacao(client, seletor_ligado, ce
 def test_nas_conclusoes_a_resposta_da_reabertura_vem_antes_do_filtro(
     client,
     seletor_ligado,
-    cenario,  # noqa: F811
+    cenario,
 ):
     """`FR-1806`: a resposta à reabertura antes da explicação e do filtro."""
     identificar(client, "maria", [])
@@ -184,7 +191,7 @@ def test_nas_conclusoes_a_resposta_da_reabertura_vem_antes_do_filtro(
     assert erro < pagina.index('<form method="get" class="filtro">')
 
 
-def test_nas_conclusoes_o_erro_do_filtro_fica_no_filtro(client, seletor_ligado, cenario):  # noqa: F811
+def test_nas_conclusoes_o_erro_do_filtro_fica_no_filtro(client, seletor_ligado, cenario):
     """`FR-1806`: o erro do filtro continua junto do campo a que se refere."""
     identificar(client, "maria", [])
     url = reverse("interface:conclusoes-preservadas", args=[cenario["edital"].id, cenario["etapa"]])
@@ -198,7 +205,7 @@ def test_nas_conclusoes_o_erro_do_filtro_fica_no_filtro(client, seletor_ligado, 
 # ---- títulos por região ----------------------------------------------------------------------
 
 
-def test_impedimentos_tem_titulo_para_o_registro(client, seletor_ligado, cenario):  # noqa: F811
+def test_impedimentos_tem_titulo_para_o_registro(client, seletor_ligado, cenario):
     """`FR-1807`: o formulário numa seção com título, antes das avaliações fora do conjunto; os
     campos e o botão não mudam."""
     identificar(client, "maria", [])
@@ -228,7 +235,7 @@ def test_impedimentos_tem_titulo_para_o_registro(client, seletor_ligado, cenario
 def test_nas_consultas_filtrar_e_a_acao_principal(
     client,
     seletor_ligado,
-    cenario,  # noqa: F811
+    cenario,
     rota,
     identidade,
 ):
