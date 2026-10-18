@@ -234,10 +234,17 @@ def tentar(browser, contextos, caminho, preferida):
     return None, None, status, final, tipo, tentativas
 
 
+# `ESTILOS=1` (089) acrescenta o resumo das regras que a página aplica (ver `estilos.py`).
+sys.path.insert(0, str(Path(__file__).parent))
+from estilos import ESTILOS  # noqa: E402
+
+
 def capturar(rid, pg, largura, altura):
     pg.set_viewport_size({"width": largura, "height": altura})
     pg.wait_for_timeout(150)
     m = pg.evaluate(MEDIR)
+    if os.environ.get("ESTILOS"):
+        m["estilos"] = pg.evaluate(ESTILOS)
     arquivo = SAIDA / "png" / f"{rid}--{largura}.png"
     pg.screenshot(path=str(arquivo), full_page=True)
     m["arquivo"] = arquivo.name

@@ -887,3 +887,46 @@ Nas seis, a barra lateral e "Trocar identidade" continuam fora do papel. No Ato,
 numa linha do A4 e quebra no identificador do ato, sem cortar nível. Com a mídia emulada a 1280 px, a
 coluna da barra continua pintada na `.shell` — fio e fundo cinza a 16rem —, como antes da `088`; no
 A4, que é mais estreito que a largura em que a regra da coluna vale, ela não aparece.
+
+## Depois da 089
+
+A folha comum da gestão saiu do `<style>` do `interface/base.html` para
+`interface/static/interface/gestao.css`, e os tokens para `shared/static/shared/tokens.css`
+([`089`](../specs/089-folha-estatica-da-gestao/spec.md)). Nenhuma regra muda; a prova é de que nada
+muda na tela.
+
+O inventário foi refeito sobre a `main` em `41cf1b4c` (com a `088`), num banco próprio,
+`ps_inventario_089` — cópia do `ps_inventario_088` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois
+estados da barra. O "antes" saiu duas vezes: da worktree antes da mudança e de um `git archive` de
+`41cf1b4c`. Em [`depois-da-089/`](inventario-visual-da-gestao-2026-10-16/depois-da-089/) estão os
+`resultados.json` de antes e de depois, das bases fora da gestão (`bases/`), o peso das respostas
+(`peso/`), a comparação pixel a pixel (`pixels.txt`) e os scripts da conversão, da equivalência e das
+mutações, com a saída. As capturas não estão: nenhuma muda.
+
+| | Antes da 089 | Depois, expandida | Depois, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 ou a 1280 px | 0 | 0 | 0 |
+| Largura, altura, título ou `h1` diferente | — | nenhuma | nenhuma |
+| Regras aplicadas diferentes (`estilos`) | — | nenhuma | nenhuma |
+| Pixels fora do ruído | — | nenhuma variante | nenhuma variante |
+
+**Três provas, porque cada uma sozinha engana.** O `medidas.py` vê caixas, e não cor. O
+[`pixels.py`](inventario-visual-da-gestao-2026-10-16/pixels.py) vê cor, mas duas capturas do mesmo
+código já diferem — a hora nas telas com hora, a suavização do texto em linhas finas de até 28/255 —, e
+a linha de ruído é o maior de três pares de capturas do mesmo código. E o resumo `estilos`
+([`estilos.py`](inventario-visual-da-gestao-2026-10-16/estilos.py), com `ESTILOS=1`) é a sequência das
+regras como o Chrome as interpretou, de todas as folhas da página, na ordem: igual nas 336 variantes.
+Ele pega o que o pixel deixaria passar numa tela que não o mostra, como uma regra descartada pelo
+navegador. O estilo computado de cada elemento foi tentado antes e descartado: varia entre duas
+passadas do mesmo código.
+
+As bases que dividem os tokens com a gestão — a vitrine e a entrada do portal e a página de erro, pelo
+[`capturar_bases.py`](inventario-visual-da-gestao-2026-10-16/capturar_bases.py) — são idênticas pixel a
+pixel, com as mesmas regras: 396 no portal, antes num `<style>` e agora 1 no `tokens.css` e 395 no
+documento.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/resultados.json
+```

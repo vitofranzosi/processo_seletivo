@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+{% load estaticos %}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Seleções abertas{% endblock %} — Cefor/Ifes</title>
+<link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 <style>
-{% include "shared/_tokens.css.html" %}
 /* A base do candidato é escrita para o celular primeiro, e alarga depois. É o inverso da base
    administrativa, que nasceu para uma tela larga e não tem nenhuma consulta de mídia: quem
    elabora um Edital está sentado; quem se inscreve, não necessariamente (FR-079). */

@@ -1,11 +1,11 @@
-{% comment %}
+/*
 Os tokens visuais do produto, num lugar só.
 
 Duas bases os incluem — a administrativa e a do portal — e é isso que impede as duas paletas de
 divergirem na primeira mudança de cor. O que está aqui é **só** token: as regras de cada canal
 continuam em cada base, porque o que o candidato lê num celular não é o que quem elabora lê num
 formulário de dez campos.
-{% endcomment %}
+*/
 :root{
   /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
      (precisa contrastar com fundos claros). Um só token para os dois papéis fazia

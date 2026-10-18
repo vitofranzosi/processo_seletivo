@@ -1,0 +1,4 @@
+linhas de regra: antes 818, depois 818
+comentários no <style> de antes: 163 (um é o do ponto de extensão, que fica no modelo)
+comentários em gestao.css: 163 (o cabeçalho da 089 mais os que vieram do modelo)
+IGUAIS: as mesmas regras, na mesma ordem

@@ -18,6 +18,7 @@ from tests.fixtures.comissao import constituir
 from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.fixtures.resultado import montar_etapa_de_leitura_unica, semear_prontas
 from tests.interface.conftest import identificar
+from tests.interface.folha import FOLHA_COMUM
 from tests.interface.test_telas_de_uso_diario import TEMPLATES, conteudo
 
 TESTES_DA_INTERFACE = Path(__file__).resolve().parent
@@ -133,7 +134,7 @@ def test_consolidar_as_selecionadas_continua_onde_e_como_estava(client, seletor_
 def test_a_marca_nao_estica_em_linha_flexivel():
     """`FR-1820`: em linha flexível a marca, que tem fundo, esticaria até a altura do botão; a
     regra mora na própria marca, e não num contêiner (R-002)."""
-    folha = (TEMPLATES / "base.html").read_text()
+    folha = FOLHA_COMUM  # a folha comum saiu do modelo na 089
     regra = re.search(r"^\.marca-irreversivel\s*\{([^}]*)\}", folha, re.M)
     assert regra, "a marca perdeu a regra própria"
     assert re.search(r"align-self\s*:\s*center", regra.group(1))

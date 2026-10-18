@@ -17,12 +17,13 @@ from processo_seletivo.interface import acoes, revisao
 from processo_seletivo.interface.acoes import Acao
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade import FONTE, PORTAL, _estilo_proprio, sem_prosa
+from tests.interface.folha import FOLHA_COMUM
+from tests.interface.test_acessibilidade import PORTAL, _estilo_proprio, sem_prosa
 from tests.interface.test_acoes import homologado
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
-FOLHA = sem_prosa(FONTE)
+FOLHA = sem_prosa(FOLHA_COMUM)
 
 
 def regra(seletor, folha=FOLHA):

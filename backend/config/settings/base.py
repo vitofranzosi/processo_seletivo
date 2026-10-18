@@ -148,8 +148,8 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # `shared/templates` não pertence a app nenhum: guarda o que os dois canais compartilham
-        # sem que um dependa do outro — hoje, os tokens visuais. `APP_DIRS` continua encontrando
-        # o resto.
+        # sem que um dependa do outro — hoje, a página de erro. Os tokens visuais moravam aqui até a
+        # 089, e passaram a `shared/static` (abaixo). `APP_DIRS` continua encontrando o resto.
         "DIRS": [BASE_DIR / "processo_seletivo" / "shared" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -159,11 +159,18 @@ TEMPLATES = [
                 # A barra do shell da gestão (076), derivada da identidade acima, sem consulta.
                 "processo_seletivo.interface.navegacao.contexto_da_navegacao",
                 "processo_seletivo.portal.identidade.contexto_candidato",
-            ]
+            ],
+            # O endereço versionado das folhas (089), nas bases dos dois canais e na página de erro.
+            # Mora em `shared/`, que não é app, e por isso é declarado aqui, e não descoberto.
+            "libraries": {"estaticos": "processo_seletivo.shared.estaticos"},
         },
     }
 ]
 STATIC_URL = "static/"
+# Os tokens visuais dos dois canais (089). Como os modelos de `shared/`, os estáticos de `shared/`
+# não pertencem a app nenhum: são declarados aqui, e o portal não passa a depender de um diretório
+# da gestão.
+STATICFILES_DIRS = [BASE_DIR / "processo_seletivo" / "shared" / "static"]
 
 # Seletor de identidade: substitui a autenticação institucional enquanto ela não existe.
 # Nunca deve estar ligado em produção — ver specs/002-frontend-administrativo/plan.md, Decisão 4.

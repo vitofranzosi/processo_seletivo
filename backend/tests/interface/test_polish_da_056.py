@@ -12,12 +12,13 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.interface.test_acessibilidade import FONTE, sem_prosa
+from tests.interface.folha import FOLHA_COMUM
+from tests.interface.test_acessibilidade import sem_prosa
 from tests.interface.test_conteudo_da_054 import composto  # noqa: F401
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
-FOLHA = sem_prosa(FONTE)
+FOLHA = sem_prosa(FOLHA_COMUM)
 
 
 def regra(seletor, folha=FOLHA):

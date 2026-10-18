@@ -17,24 +17,20 @@ import pytest
 from django.urls import reverse
 
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_da_pagina
 
 pytestmark = [pytest.mark.django_db]
-
-
-def folha(cliente, url):
-    corpo = cliente.get(url).content.decode()
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
 
 
 @pytest.fixture
 def da_gestao(client, seletor_ligado):
     identificar(client, "carlos", ["gestor"])
-    return folha(client, reverse("interface:lista"))
+    return folha_da_pagina(client, reverse("interface:lista"))
 
 
 @pytest.fixture
 def do_portal(client):
-    return folha(client, reverse("portal:vitrine"))
+    return folha_da_pagina(client, reverse("portal:vitrine"))
 
 
 @pytest.fixture
@@ -47,7 +43,7 @@ def da_visao_geral(client, seletor_ligado):
     nele por outro lugar, **no mesmo commit**.
     """
     identificar(client, "carlos", ["gestor"])
-    return folha(client, reverse("interface:visao-geral"))
+    return folha_da_pagina(client, reverse("interface:visao-geral"))
 
 
 # Tipos que o navegador desenha como caixa de texto. Os demais — `hidden`, `checkbox`, `radio`,

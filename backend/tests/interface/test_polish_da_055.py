@@ -12,13 +12,14 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.interface.test_acessibilidade import FONTE, sem_prosa
+from tests.interface.folha import FOLHA_COMUM
+from tests.interface.test_acessibilidade import sem_prosa
 from tests.interface.test_corte import _emitir_pela_tela, cliente_no_corte  # noqa: F401
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
 PORTAL = RAIZ / "portal/templates/portal"
-FOLHA = sem_prosa(FONTE)
+FOLHA = sem_prosa(FOLHA_COMUM)
 FOLHA_DO_PORTAL = sem_prosa((PORTAL / "base.html").read_text())
 
 
