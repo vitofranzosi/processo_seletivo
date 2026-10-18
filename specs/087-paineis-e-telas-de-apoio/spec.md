@@ -211,7 +211,8 @@ do Edital que a view já carrega com o Processo; nenhuma consulta a mais.
 
 As duas são itens da barra, e não telas abaixo de outra. A trilha delas é a da lista e de Minhas
 Etapas: um nível, a seção como página atual, sem link. O rótulo é o da barra — "Visão Geral",
-"Autoridades da unidade" —, o mesmo que o cabeçalho da `076` já mostrava como texto.
+"Autoridades da unidade" —, o mesmo que o cabeçalho da `076` já mostrava como texto, e sai de onde a
+barra e o cabeçalho da `076` o tiravam, e não de uma cópia: renomear a seção renomeia a trilha.
 
 ### D-003 — "Perguntar" é a ação principal; "Consultar neste instante" não
 

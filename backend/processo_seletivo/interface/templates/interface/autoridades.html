@@ -1,6 +1,8 @@
 {% extends "interface/base.html" %}
 {% block titulo %}Autoridades da unidade{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">Autoridades da unidade</span></nav>{% endblock %}
+{% comment %} A raiz da seção, como a lista (087, D-002). O rótulo é o que a barra dá à seção, e sai
+   de onde a barra o tira, para que os dois não divirjam. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
 {% block conteudo %}
 {% comment %}
 As autoridades que podem responder pelos atos da unidade (060, FR-1122, UX-149).

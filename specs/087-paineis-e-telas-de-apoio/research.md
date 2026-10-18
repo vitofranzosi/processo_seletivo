@@ -84,6 +84,25 @@ e a mesma Auditoria. A contagem do PR é a da `main` de quando ele for aberto.
 telas que o roteiro alcança por endereço — as conferências que respondem a um envio ficam fora dele.
 Pelo texto, nenhuma escapa.
 
+## R-006 — A revisão de código do PR
+
+A revisão do PR 301 (18/10, sem publicar no PR) achou cinco pontos, nenhum de regra; os cinco foram
+corrigidos:
+
+- **O rótulo dos painéis de seção era uma cópia.** A trilha da Visão Geral e das Autoridades
+  escrevia "Visão Geral" e "Autoridades da unidade" à mão, quando o cabeçalho da `076` e a barra o
+  liam de `navegacao.SECOES`. Renomear a seção mudaria a barra e não a trilha, contra a `FR-1971`.
+  Agora o rótulo sai de `navegacao.secao_atual`, e o teste compara a trilha com o item da barra. A
+  lista e Minhas Etapas, da `077`, continuam com a cópia: são de outra feature.
+- **A `FR-1974` só era provada em três telas.** Agora `barra_em_processos_seletivos` a prova nas
+  seis que pendem de Processos Seletivos.
+- **O Pulso da Supervisão era provado por contagem.** Agora por rótulo, na ordem.
+- **A conferência do Processo com o ato possível não era renderizada**; os guardiões do "Confirmar"
+  liam só o texto do template. Agora ativar um Processo em elaboração é aberto, e o botão é `botao`,
+  sem o de perigo.
+- **O percurso do quickstart mandava abrir o Assistente por um link que não existe.** O Assistente
+  abre pelo detalhe do Edital.
+
 ## Achados registrados, fora do escopo
 
 - **O ajudante `caminho()` de `test_shell_da_gestao.py` lê o `p.caminho-da-secao` da `076`**, e o

@@ -28,8 +28,10 @@ cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.developm
    praticar.
 3. Abrir o Edital 01/2026 e, dele, as Respostas do assistente de dúvidas: *GPS › Processos Seletivos
    › PS-DEMO-2026 › Edital 01/2026 › Respostas do assistente de dúvidas*. "Ver a resposta" é o único
-   botão principal. Pelo link do pé do Assistente, ou pelo endereço, abrir o Assistente do Edital:
-   "Perguntar" tem o desenho de ação principal — sem perguntar, porque a pergunta chama o modelo.
+   botão principal. Voltar ao Edital pela trilha e abrir "Conversar com o assistente (piloto)": o
+   Assistente do Edital diz *… › Edital 01/2026 › Assistente do Edital (piloto)*, e "Perguntar" tem
+   o desenho de ação principal — sem perguntar, porque a pergunta chama o modelo. O link do pé do
+   Assistente leva de volta às Respostas.
 4. Do Edital 01/2026, abrir "Encerrar": *… › Edital 01/2026 › Encerrar*, e "Cancelar e
    voltar".
 5. Na lista, "Novo Processo Seletivo": *GPS › Processos Seletivos › Criar*; "Cancelar".

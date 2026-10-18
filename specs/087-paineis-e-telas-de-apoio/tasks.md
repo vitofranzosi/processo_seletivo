@@ -44,6 +44,7 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 - [x] T013 O percurso do quickstart no navegador, a 1280 e a 375 px, pelo teclado (FR-1975, SC-775)
 - [x] T014 A contagem do fechamento por `trilhas_no_cabecalho.py`, refeita depois de trazer a `main`, e a lista no PR (R-005; SC-776)
 - [x] T015 `rastreabilidade.md` com cada FR e SC; a linha da `087` no README
+- [x] T016 Os achados da revisão de código do PR (R-006 da pesquisa): o rótulo dos painéis de seção lido da barra; a barra provada nas oito telas; o Pulso por rótulo; a conferência do Processo com o ato possível renderizada; o percurso do quickstart corrigido
 
 ## Dependencies
 

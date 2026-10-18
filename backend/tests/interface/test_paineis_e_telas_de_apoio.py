@@ -8,6 +8,8 @@ painéis. O desenho em si é provado no navegador e pelo inventário visual refe
 fica o que a marcação garante.
 """
 
+import re
+
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -48,6 +50,12 @@ def rotulo_do_h1(corpo):
     return conteudo(corpo).split("<h1>")[1].split("</h1>")[0]
 
 
+def barra_em_processos_seletivos(corpo):
+    """`FR-1974`: a barra marca Processos Seletivos, e só ela — a seção de antes, pelo endereço."""
+    assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
+    assert barra(corpo).count("aria-current") == 1
+
+
 def termina_em(trilha, atual):
     assert trilha.rstrip().endswith(f'<span aria-current="page">{atual}</span>'), trilha
 
@@ -69,7 +77,14 @@ def test_nos_paineis_de_secao_a_trilha_e_a_propria_secao(client, seletor_ligado,
     termina_em(trilha, secao)
     assert "<a " not in trilha
     assert comeca_pelo_titulo(corpo)
-    assert f'<a href="{reverse(rota)}" aria-current="page">' in barra(corpo)
+    # O rótulo é o que a barra dá à seção, lido do mesmo lugar (D-002).
+    item = re.search(
+        rf'<a href="{reverse(rota)}" aria-current="page">.*?'
+        r'<span class="rotulo-da-secao">([^<]+)</span>',
+        barra(corpo),
+        re.S,
+    )
+    assert item and item.group(1) == secao
 
 
 def test_na_supervisao_a_trilha_passa_pelo_processo(client, seletor_ligado, edital):
@@ -82,15 +97,15 @@ def test_na_supervisao_a_trilha_passa_pelo_processo(client, seletor_ligado, edit
     niveis_em_ordem(trilha, ate_o_processo(edital.processo))
     termina_em(trilha, "Supervisão")
     assert comeca_pelo_titulo(corpo)
-    assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
+    barra_em_processos_seletivos(corpo)
 
 
 @pytest.mark.parametrize("acao", ["encerrar", "cancelar"])
 def test_na_conferencia_do_ato_do_processo_a_trilha_termina_no_ato(
     client, seletor_ligado, edital, acao
 ):
-    """`FR-1970`, `FR-1972`, `FR-1973`: o Processo, e o ato — o rótulo do título — como página
-    atual."""
+    """`FR-1970`, `FR-1972`, `FR-1973`, `FR-1974`: o Processo, e o ato — o rótulo do título —
+    como página atual."""
     identificar(client, "gustavo.gestor", GESTOR)
     corpo = abrir(client, "interface:processo-ato", edital.processo.id, acao)
 
@@ -99,6 +114,7 @@ def test_na_conferencia_do_ato_do_processo_a_trilha_termina_no_ato(
     assert trilha.count("<a ") == 2
     termina_em(trilha, rotulo_do_h1(corpo))
     assert comeca_pelo_titulo(corpo)
+    barra_em_processos_seletivos(corpo)
 
 
 @pytest.mark.parametrize(
@@ -111,8 +127,8 @@ def test_na_conferencia_do_ato_do_processo_a_trilha_termina_no_ato(
 def test_nas_telas_do_assistente_a_trilha_e_a_do_edital(
     client, seletor_ligado, edital, rota, papeis, atual
 ):
-    """`FR-1970`, `FR-1972`, `FR-1973`, `SC-773`: GPS › Processos Seletivos › código › Edital ›
-    a tela. A trilha do conteúdo pulava o Processo (087, D-001)."""
+    """`FR-1970`, `FR-1972`, `FR-1973`, `FR-1974`, `SC-773`: GPS › Processos Seletivos › código ›
+    Edital › a tela. A trilha do conteúdo pulava o Processo (087, D-001)."""
     identificar(client, "gustavo.gestor", papeis)
     corpo = abrir(client, rota, edital.id)
 
@@ -120,12 +136,13 @@ def test_nas_telas_do_assistente_a_trilha_e_a_do_edital(
     niveis_em_ordem(trilha, ate_o_edital(edital))
     termina_em(trilha, atual)
     assert comeca_pelo_titulo(corpo)
+    barra_em_processos_seletivos(corpo)
 
 
 def test_na_conferencia_do_ato_do_edital_a_trilha_passa_pelo_processo(
     client, seletor_ligado, edital
 ):
-    """`FR-1970`, `FR-1972`, `FR-1973`, `SC-773`: o Processo, o Edital e o ato."""
+    """`FR-1970`, `FR-1972`, `FR-1973`, `FR-1974`, `SC-773`: o Processo, o Edital e o ato."""
     identificar(client, "gustavo.gestor", GESTOR)
     corpo = abrir(client, "interface:ato", edital.id, "encerrar")
 
@@ -133,10 +150,11 @@ def test_na_conferencia_do_ato_do_edital_a_trilha_passa_pelo_processo(
     niveis_em_ordem(trilha, ate_o_edital(edital))
     termina_em(trilha, rotulo_do_h1(corpo))
     assert comeca_pelo_titulo(corpo)
+    barra_em_processos_seletivos(corpo)
 
 
 def test_em_criar_processo_a_trilha_e_a_da_lista(client, seletor_ligado):
-    """`FR-1970`, `FR-1972`, `FR-1973`: GPS › Processos Seletivos › Criar."""
+    """`FR-1970`, `FR-1972`, `FR-1973`, `FR-1974`: GPS › Processos Seletivos › Criar."""
     identificar(client, "gustavo.gestor", GESTOR)
     corpo = abrir(client, "interface:processo-criar")
 
@@ -145,6 +163,7 @@ def test_em_criar_processo_a_trilha_e_a_da_lista(client, seletor_ligado):
     assert trilha.count("<a ") == 1
     termina_em(trilha, "Criar")
     assert comeca_pelo_titulo(corpo)
+    barra_em_processos_seletivos(corpo)
 
 
 @pytest.mark.parametrize(
@@ -219,6 +238,24 @@ def test_a_conferencia_do_processo_com_recusa_certa_continua_sem_confirmar(
     assert ">Cancelar e voltar</a>" in corpo
 
 
+def test_a_conferencia_do_processo_possivel_continua_com_o_mesmo_confirmar(
+    client, seletor_ligado, api_client, manager_headers, process_payload
+):
+    """`FR-1977`: com o ato possível — ativar um Processo em elaboração —, "Confirmar" continua
+    `botao`, sem o desenho de perigo, depois das consequências, com "Cancelar e voltar" ao lado."""
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    assert criado.status_code == 201, criado.content
+    processo = ProcessoSeletivo.objects.get(institutional_code=process_payload["institutionalCode"])
+    identificar(client, "gustavo.gestor", GESTOR)
+    corpo = conteudo(abrir(client, "interface:processo-ato", processo.id, "ativar"))
+
+    assert corpo.index('id="consequencias-titulo"') < corpo.index('<button type="submit"')
+    assert re.search(r'<button type="submit" class="botao ">\s*Confirmar: Ativar Processo', corpo)
+    assert ">Cancelar e voltar</a>" in corpo
+
+
 @pytest.mark.parametrize("template", ["confirmar.html", "processo_confirmar.html"])
 def test_o_confirmar_dos_atos_tem_o_desenho_de_antes(template):
     """`FR-1977`: `botao`, com o desenho de perigo quando o ato interrompe."""
@@ -266,5 +303,11 @@ def test_a_supervisao_tem_o_mesmo_pulso(client, seletor_ligado, edital):
 
     niveis_em_ordem(corpo, ['id="pulso-titulo"', "Lido em ", 'id="atencao-titulo"'])
     resumo = corpo.split('<ul class="resumo"')[1].split("</ul>")[0]
-    assert 2 <= resumo.count("<li>") <= 3
+    # Os rótulos de antes, nesta ordem; o terceiro só com período em curso (`FR-013`).
+    rotulos = re.findall(r"<li><strong>\d+</strong>([^<]+)</li>", resumo)
+    assert len(rotulos) >= 2
+    assert rotulos[0].startswith("inscriç") and rotulos[0].endswith(" no Processo")
+    assert rotulos[1] == "em preenchimento"
+    assert rotulos[2:] in ([], ["nas últimas 24 horas"])
+    assert resumo.count("<li>") == len(rotulos)
     assert "%" not in resumo
