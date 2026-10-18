@@ -15,14 +15,8 @@ ul.documentos .arquivo{font-size:.8125rem;color:var(--texto-fraco)}
   word-break:break-all;line-height:1.4}
 {% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' inscricao.edital.processo_id %}">{{ inscricao.edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' inscricao.edital.id %}">Edital {{ inscricao.edital.number }}/{{ inscricao.edital.year }}</a> › <a href="{% url 'interface:inscricoes' inscricao.edital_id %}">Inscrições</a> › <span aria-current="page">{{ inscricao.protocolo|default:"Em preenchimento" }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' inscricao.edital_id %}">Edital {{ inscricao.edital.number }}/{{ inscricao.edital.year }}</a> ›
-  <a href="{% url 'interface:inscricoes' inscricao.edital_id %}">Inscrições</a> ›
-  <span aria-current="page">{{ inscricao.protocolo|default:"Em preenchimento" }}</span>
-</nav>
-
 <h1>{{ inscricao.nome|default:"Inscrição em preenchimento" }}</h1>
 <p class="sub">{% if inscricao.protocolo %}Protocolo {{ inscricao.protocolo }} ·
   enviada em {{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}{% else %}Ainda não enviada{% endif %}</p>

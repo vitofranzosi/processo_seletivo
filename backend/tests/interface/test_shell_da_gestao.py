@@ -264,14 +264,15 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
 def test_abaixo_da_secao_o_caminho_a_nomeia_e_nao_repete_a_trilha(
     client, seletor_ligado, api_client, manager_headers, process_payload
 ):
-    """`FR-1716`, `FR-1718`: nas inscrições do Edital, a seção é Processos Seletivos; o caminho do
+    """`FR-1716`, `FR-1718`: nos avisos do Edital, a seção é Processos Seletivos; o caminho do
     topo para nela, em texto — o link já está na barra —, e a trilha da tela continua uma só.
 
-    Era o detalhe do Edital até a 078, que levou a trilha dele ao cabeçalho (`FR-1767` da 078). As
-    inscrições recebidas, abaixo do Edital, continuam com o caminho desta feature."""
+    Era o detalhe do Edital até a 078, que levou a trilha dele ao cabeçalho (`FR-1767` da 078), e as
+    inscrições recebidas até a 085 (`FR-1910` da 085). Os avisos aos candidatos, abaixo do Edital,
+    continuam com o caminho desta feature."""
     edital = publish_original(api_client, manager_headers, process_payload)
     identificar(client, "gustavo.gestor", ["gestor"])
-    corpo = client.get(reverse("interface:inscricoes", args=[edital.id])).content.decode()
+    corpo = client.get(reverse("interface:avisos-do-edital", args=[edital.id])).content.decode()
 
     assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
     assert caminho(corpo).endswith("› Processos Seletivos")

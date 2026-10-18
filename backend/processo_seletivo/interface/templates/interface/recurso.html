@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Recurso {{ peca.protocolo }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:recursos' edital.id %}">Recursos</a> › <span aria-current="page">{{ peca.protocolo }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:recursos' edital.id %}">Recursos</a> ›
-  <span aria-current="page">{{ peca.protocolo }}</span>
-</nav>
-
 <h1>Recurso {{ peca.protocolo }}</h1>
 <p class="sub">{{ resumo.situacao_rotulo }} · {{ resumo.objeto }}</p>
 

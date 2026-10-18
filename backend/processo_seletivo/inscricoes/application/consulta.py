@@ -43,7 +43,11 @@ CONSULTAR = "inscricao:consultar"
 def _edital_no_escopo(actor, edital_id):
     require_permission(actor, CONSULTAR)
     try:
-        return Edital.objects.get(pk=edital_id, institution_scope=actor.institution_scope)
+        # O Processo na mesma leitura: a trilha das Inscrições passa por ele (085, D-003), e sem a
+        # junção cada abertura da tela custaria uma consulta a mais.
+        return Edital.objects.select_related("processo").get(
+            pk=edital_id, institution_scope=actor.institution_scope
+        )
     except Edital.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
 
@@ -376,8 +380,11 @@ def inscricao_para_consulta(*, actor, inscricao_id):
     requisitos, e o arquivo aparece dentro do seu. Requisito sem arquivo aparece como requisito
     sem arquivo, que é informação — não uma linha que some.
     """
+    # `edital__processo`, e não só `edital`: a trilha da tela passa pelo Processo (085, D-003).
     inscricao = (
-        Inscricao.objects.select_related("edital", "versao_aceita").filter(pk=inscricao_id).first()
+        Inscricao.objects.select_related("edital__processo", "versao_aceita")
+        .filter(pk=inscricao_id)
+        .first()
     )
     if inscricao is None:
         require_permission(actor, CONSULTAR)
