@@ -122,6 +122,9 @@ mesmos antes e depois.
   Na conferência da emissão e no Ato, a linha abaixo do título nomeia o Edital; nas outras nove, o
   título e a linha de baixo nomeiam o marco, o Perfil ou a tela, e a folha impressa deixa de dizer de
   que Edital ela é (D-005).
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 - **O link de salto.** Continua levando ao conteúdo, que agora começa pelo título.
 
 ## Requirements *(mandatory)*
@@ -139,6 +142,8 @@ mesmos antes e depois.
   Processo e o Edital — e seguir pelos que a tela já mostrava entre o Edital e ela; o rótulo da tela
   MUST ser o que ela já mostrava como página atual. Os links que a tela já tinha MUST levar ao mesmo
   destino, inclusive ao mesmo recorte.
+  *Substituída em parte pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026* (`FR-2020`):
+  no Ato, "Classificação" leva ao recorte do ato, e não mais ao destino de antes.
 - **FR-1882**: Nessas onze telas a trilha MUST NOT aparecer de novo no conteúdo: a página MUST ter uma
   trilha só, e o conteúdo MUST começar pelo título.
   *Emenda a `FR-1803` da `080`*: "as demais telas", que continuam com o cabeçalho da `076`, deixam de
@@ -225,6 +230,9 @@ telas modernizadas, e é a mesma pergunta sobre impressão que a `081` deixou co
 acrescentar o Edital à linha abaixo do título muda texto, que a `FR-1887` proíbe. Fica registrado,
 com a contagem, na pesquisa.
 
+*Respondida em 18/10/2026*: o usuário aprovou imprimir a trilha, e a
+[`088`](../088-decisoes-da-etapa-4/spec.md) o executa.
+
 ### D-006 — No Ato, "Classificação" continua levando à ampla concorrência
 
 O link "Classificação" da trilha do Ato leva à Classificação do marco sem o recorte do ato: num ato da
@@ -232,6 +240,9 @@ lista PPI, ele abre a ordem da ampla concorrência — o desvio que a `FR-497` d
 conferência. É anterior a esta feature; ela só o levou ao cabeçalho. Levar o recorte muda o destino
 de um link, e a `FR-1881` pede o mesmo destino de antes. Fica registrado como achado, para uma feature
 que possa mudar o destino.
+
+*Respondida em 18/10/2026*: o usuário aprovou levar o recorte, e a
+[`088`](../088-decisoes-da-etapa-4/spec.md) o executa.
 
 ## Success Criteria *(mandatory)*
 

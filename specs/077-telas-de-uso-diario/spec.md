@@ -140,6 +140,9 @@ página tem uma trilha só.
 - **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). Nas quatro telas, o
   caminho sai com o cabeçalho; o título e a linha de baixo dele — o Edital e o Processo —
   continuam identificando o que se imprimiu.
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 - **A Etapa aberta pela gestão.** O endereço é o de Minhas Etapas, e pelo endereço a barra
   destacava Minhas Etapas (`076`), enquanto a trilha da tela passava pela Alocação por Etapa. No
   conteúdo, as duas ficavam longe; no cabeçalho, ficam lado a lado, e se contradiriam. Por essa

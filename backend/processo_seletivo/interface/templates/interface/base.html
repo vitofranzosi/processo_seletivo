@@ -167,9 +167,16 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
     .secoes-da-gestao{flex-basis:100%;min-width:0}
   }
 }
+{% comment %} **A trilha sai no papel** (088, D-001, aprovada pelo usuário em 18/10/2026). A 076 tirava
+   o cabeçalho de contexto inteiro, quando ele era só a seção e "Trocar identidade"; desde a 077 a
+   trilha mora nele, e a Mesa, o Ato, a Inscrição recebida e o Recurso, impressos, deixaram de dizer
+   de que Edital ou Etapa eram. Fica fora só o que é ação — "Trocar identidade" — e a moldura da
+   tela: a altura mínima e o fio de baixo, que no papel só separam uma linha do título (D-005).
+   {% endcomment %}
 @media print{
   .shell{display:block}
-  .barra-lateral,.cabecalho-de-contexto{display:none}
+  .barra-lateral,.cabecalho-de-contexto>a{display:none}
+  .cabecalho-de-contexto{display:block;min-height:0;border-bottom:0;padding-bottom:0}
 }
 {% comment %} A página serve à **estrutura** — matriz de alocação, tabelas de oito colunas, o painel do
    documento ao lado do formulário. O texto tem medida própria logo abaixo: sem ela, alargar a

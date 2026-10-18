@@ -130,6 +130,9 @@ teste que quebraria em silêncio quem mexesse no módulo da `012`.
 - **A recusa do domínio.** Quem enviar a alocação à mão, sem presidência, recebe a recusa do domínio,
   que diz "antes de distribuir trabalho" e não muda (D-007).
 - **Impressão.** A barra e o cabeçalho de contexto continuam fora do papel (`076`; D-002).
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 
 ## Requirements *(mandatory)*
 
@@ -207,6 +210,9 @@ a navegação nomeada dessas duas telas — o que a `FR-1746` da `077` exige ("c
 nas quatro telas dela —, ou dar ao produto um destino, que nenhuma spec definiu e que, para quem só
 avalia, não pode ser a lista. As duas são decisão de produto. **Pergunta ao usuário.**
 
+*Respondida em 18/10/2026*: o usuário decidiu que o landmark fica até haver autenticação; a
+[`088`](../088-decisoes-da-etapa-4/spec.md) registra a decisão, sem código.
+
 ### D-002 — A trilha continua fora do papel
 
 O cabeçalho de contexto não sai na impressão (`076`). Desde a `077`, a trilha mora nele, e a da Etapa
@@ -214,6 +220,9 @@ e da inscrição da Mesa deixou de ser impressa — e, depois da `078` à `080`,
 A `077` aceitou a perda por escrito, no caso-limite "Impressão", e a `076` também ("A barra e o caminho
 não saem no papel"). Imprimir a trilha reabre essas duas decisões, para todas as telas de uma vez. É
 decisão de produto. **Pergunta ao usuário.**
+
+*Respondida em 18/10/2026*: o usuário aprovou imprimir a trilha, e a
+[`088`](../088-decisoes-da-etapa-4/spec.md) o executa.
 
 ### D-003 — A abertura da trilha continua escrita em cada tela, e um guardião a confere
 

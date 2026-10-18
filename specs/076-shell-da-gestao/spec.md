@@ -173,6 +173,9 @@ recolhida, cada item tem nome acessível e dica, e o conteúdo usa a largura lib
 - **Link de salto.** Continua o primeiro foco da página e leva ao conteúdo, passando por cima da
   barra e do caminho.
 - **Impressão.** A barra e o caminho não saem no papel.
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 - **Preferência registrada e Alocação.** Na Alocação a barra continua no topo (`FR-1724`), qualquer
   que seja a preferência; a preferência não muda, e vale de novo na tela seguinte.
 - **Armazenamento indisponível** (navegação privada que recusa gravar): o controle continua

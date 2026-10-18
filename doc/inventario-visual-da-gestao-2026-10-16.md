@@ -833,3 +833,57 @@ variantes, as mesmas nos dois estados da barra. Com a barra expandida:
 
 Com a barra recolhida, as mesmas 21 variantes e as mesmas diferenças; só `duvidas` a 1280 parte de
 outra altura (1257 → 1220).
+
+## Depois da 088
+
+As quatro decisões do usuário de 18/10/2026 ([`088`](../specs/088-decisoes-da-etapa-4/spec.md)): a
+trilha do cabeçalho de contexto passa a sair no papel; o rótulo do aviso na trilha ganha a hora; e
+"Classificação", na trilha do Ato, leva ao recorte do ato. A quarta — o landmark sem link da lista e
+de Minhas Etapas — não muda nada.
+
+O inventário foi refeito sobre a `main` em `c97ff8af` (com a `081` à `087`), num banco próprio,
+`ps_inventario_088` — cópia do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois
+estados da barra, antes e depois da mudança. Em
+[`depois-da-088/`](inventario-visual-da-gestao-2026-10-16/depois-da-088/) estão os dois
+`resultados.json`, as capturas das telas que a feature toca — os três avisos e o Ato — e as de antes,
+em `antes/`.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-088/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-088/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-088/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-088/resultados.json
+```
+
+| | Antes da 088 | Depois da 088, expandida | Depois da 088, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Na tela, só uma variante mudou de medida**: `aviso-reenviar` a 1280 px, com a barra expandida,
+1405 → 1419 — o rótulo do aviso anterior, agora com a hora, leva a trilha a uma segunda linha. No
+histórico e na interrupção o rótulo cabe na mesma linha; com a barra recolhida, nenhuma variante
+muda. A regra de impressão não mexe em medida nenhuma da tela.
+
+### No papel
+
+O [`imprimir.py`](inventario-visual-da-gestao-2026-10-16/imprimir.py), no mesmo banco, abre seis
+telas, emula a mídia de impressão, lê o que fica visível do cabeçalho e da barra, e imprime cada uma
+em A4 pelo Chrome sem interface. Os resultados, as capturas com a mídia emulada (`--papel`) e a
+primeira página de cada PDF (`--a4`) estão em
+[`depois-da-088/impressao/`](inventario-visual-da-gestao-2026-10-16/depois-da-088/impressao/), e os
+de antes em `impressao/antes/`.
+
+| Tela | Antes, no papel | Depois, no papel, antes do título |
+|---|---|---|
+| Inscrição da Mesa | nada | GPS › Minhas Etapas › Minha Mesa › Inscrição INS-2026-AF86BE7601 |
+| Ato de classificação | nada | GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Classificação › Ato … |
+| Inscrição recebida | nada | GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Inscrições › INS-2026-AF86BE7601 |
+| Recurso | nada | GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Recursos › REC-2026-K97GMU9C |
+| Aviso | nada | GPS › … › Avisos aos candidatos › Aviso de 16/10/2026 às 16:19 |
+| Recusa (cabeçalho da `076`) | nada | GPS › Processos Seletivos |
+
+Nas seis, a barra lateral e "Trocar identidade" continuam fora do papel. No Ato, a trilha não cabe
+numa linha do A4 e quebra no identificador do ato, sem cortar nível. Com a mídia emulada a 1280 px, a
+coluna da barra continua pintada na `.shell` — fio e fundo cinza a 16rem —, como antes da `088`; no
+A4, que é mais estreito que a largura em que a regra da coluna vale, ela não aparece.
