@@ -1,6 +1,6 @@
-{% extends "interface/base_de_acesso.html" %}
+{% extends "interface/base_de_acesso.html" %}{% load estaticos %}
 {% block titulo %}Acesso à gestão{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
 {% block acesso %}
 <div class="cartao-de-acesso">
   <span class="simbolo" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-marca"/></svg></span>

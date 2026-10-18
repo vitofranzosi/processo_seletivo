@@ -1,0 +1,15 @@
+/* A altura de cada barra da série de inscrições (`_serie_de_inscricoes.html`), na supervisão e no
+   detalhe do Processo (091, D-005). Era `style="height:N%"` no modelo; o `widthratio` dá um inteiro
+   de 0 a 100, e há uma classe por valor. Cada regra termina em `%;}` pela mesma razão do
+   `telas/minhas-etapas.css`. */
+.altura-0{height:0%;} .altura-1{height:1%;} .altura-2{height:2%;} .altura-3{height:3%;} .altura-4{height:4%;} .altura-5{height:5%;} .altura-6{height:6%;} .altura-7{height:7%;} .altura-8{height:8%;} .altura-9{height:9%;}
+.altura-10{height:10%;} .altura-11{height:11%;} .altura-12{height:12%;} .altura-13{height:13%;} .altura-14{height:14%;} .altura-15{height:15%;} .altura-16{height:16%;} .altura-17{height:17%;} .altura-18{height:18%;} .altura-19{height:19%;}
+.altura-20{height:20%;} .altura-21{height:21%;} .altura-22{height:22%;} .altura-23{height:23%;} .altura-24{height:24%;} .altura-25{height:25%;} .altura-26{height:26%;} .altura-27{height:27%;} .altura-28{height:28%;} .altura-29{height:29%;}
+.altura-30{height:30%;} .altura-31{height:31%;} .altura-32{height:32%;} .altura-33{height:33%;} .altura-34{height:34%;} .altura-35{height:35%;} .altura-36{height:36%;} .altura-37{height:37%;} .altura-38{height:38%;} .altura-39{height:39%;}
+.altura-40{height:40%;} .altura-41{height:41%;} .altura-42{height:42%;} .altura-43{height:43%;} .altura-44{height:44%;} .altura-45{height:45%;} .altura-46{height:46%;} .altura-47{height:47%;} .altura-48{height:48%;} .altura-49{height:49%;}
+.altura-50{height:50%;} .altura-51{height:51%;} .altura-52{height:52%;} .altura-53{height:53%;} .altura-54{height:54%;} .altura-55{height:55%;} .altura-56{height:56%;} .altura-57{height:57%;} .altura-58{height:58%;} .altura-59{height:59%;}
+.altura-60{height:60%;} .altura-61{height:61%;} .altura-62{height:62%;} .altura-63{height:63%;} .altura-64{height:64%;} .altura-65{height:65%;} .altura-66{height:66%;} .altura-67{height:67%;} .altura-68{height:68%;} .altura-69{height:69%;}
+.altura-70{height:70%;} .altura-71{height:71%;} .altura-72{height:72%;} .altura-73{height:73%;} .altura-74{height:74%;} .altura-75{height:75%;} .altura-76{height:76%;} .altura-77{height:77%;} .altura-78{height:78%;} .altura-79{height:79%;}
+.altura-80{height:80%;} .altura-81{height:81%;} .altura-82{height:82%;} .altura-83{height:83%;} .altura-84{height:84%;} .altura-85{height:85%;} .altura-86{height:86%;} .altura-87{height:87%;} .altura-88{height:88%;} .altura-89{height:89%;}
+.altura-90{height:90%;} .altura-91{height:91%;} .altura-92{height:92%;} .altura-93{height:93%;} .altura-94{height:94%;} .altura-95{height:95%;} .altura-96{height:96%;} .altura-97{height:97%;} .altura-98{height:98%;} .altura-99{height:99%;}
+.altura-100{height:100%;}

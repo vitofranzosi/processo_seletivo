@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Comissão — {{ processo.institutional_code }}{% endblock %}
 {% comment %}
 O identificador tem a largura do que se escreve nele (055, FR-1016): vinte e poucos caracteres, e
@@ -6,7 +6,7 @@ não os 1.190 px que ele herdava por não declarar tipo. O Nome fica com a medid
 campos de texto já têm. Aqui, e não na folha, porque só esta tela o usa — e a folha viaja para a
 distribuição, que não tem margem.
 {% endcomment %}
-{% block estilo_da_pagina %}#identity_subject{max-width:20rem}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/comissao.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Comissão</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Comissão do Processo</h1>

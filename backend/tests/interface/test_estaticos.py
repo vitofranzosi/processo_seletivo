@@ -17,7 +17,7 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import identificar
-from tests.interface.folha import GESTAO_CSS, TOKENS_CSS
+from tests.interface.folha import ARQUIVOS_DA_FOLHA_COMUM, ERRO_CSS, FOLHAS_DE_TELA, TOKENS_CSS
 
 TELAS_COM_HTMX = ["perfis", "cronograma", "classificacao"]
 TELAS_COM_BOTAO_DINAMICO = ["perfis", "cronograma"]
@@ -105,9 +105,14 @@ def test_nenhuma_sintaxe_de_template_chega_ao_navegador(client, seletor_ligado, 
         assert residuo not in corpo, f"sintaxe de template não interpretada na página: {residuo}"
 
 
-@pytest.mark.parametrize("folha", [GESTAO_CSS, TOKENS_CSS], ids=lambda caminho: caminho.name)
+@pytest.mark.parametrize(
+    "folha",
+    [*ARQUIVOS_DA_FOLHA_COMUM, *FOLHAS_DE_TELA, TOKENS_CSS, ERRO_CSS],
+    ids=lambda caminho: f"{caminho.parent.name}/{caminho.name}",
+)
 def test_nenhuma_sintaxe_de_template_nas_folhas_estaticas(folha):
-    """`FR-2043`: as folhas saíram do modelo na 089, e deixaram de passar pela renderização.
+    """`FR-2043`, `FR-2111`: as folhas saíram do modelo na 089 e na 091, e deixaram de passar pela
+    renderização — a comum, as de tela e de grupo, os tokens e a da página de erro.
 
     O caso de cima varre a página renderizada; a folha comum não está mais nela. Um
     `{% endcomment %}` esquecido na conversão iria ao navegador como CSS quebrado, e o navegador

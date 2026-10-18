@@ -1,10 +1,5 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
-{% block estilo_da_pagina %}
-{% comment %} Os resumos SHA-256 do manifesto não tinham onde quebrar, e a 375 px a página tinha 643 px (077,
-   `FR-1743`). Quebram por caractere, sem hífen: copiar continua dando o valor inteiro. Os do método
-   já quebravam, por regra própria. {% endcomment %}
-.imutavel code{overflow-wrap:anywhere}
-{% endblock %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/sorteio.css' %}">{% endblock %}
 {% block titulo %}Sorteio — {{ marco.name }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Sorteio — {{ marco.name }}</span></nav>{% endblock %}
 {% block conteudo %}

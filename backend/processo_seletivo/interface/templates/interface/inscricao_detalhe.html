@@ -1,19 +1,5 @@
-{% extends "interface/base.html" %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}
-{% comment %} Três colunas, e não as cinco da mesa: aqui não há modelo nem leitura (057, D-013). Vale também
-   abaixo de 34 rem, onde a entrega já desce para a linha de baixo. {% endcomment %}
-ul.documentos{grid-template-columns:minmax(0,1fr) auto auto}
-ul.documentos .arquivo{font-size:.8125rem;color:var(--texto-fraco)}
-{% comment %} O resumo criptográfico do arquivo: 64 caracteres que precisam ser lidos um a um quando alguém
-   confere, e por isso monoespaçados e com quebra em qualquer ponto. Mora aqui, e não na folha comum,
-   porque só esta tela o mostra (057, D-013); os cartões de `.requisitos-apresentados` saíram com a
-   grade da mesa. {% endcomment %}
-.resumo-do-arquivo{display:flex;flex-wrap:wrap;gap:.35rem;align-items:baseline;
-  font-size:.8125rem;color:var(--texto-fraco)}
-.resumo-do-arquivo .rotulo{text-transform:uppercase;letter-spacing:.04em;font-size:.6875rem}
-.resumo-do-arquivo code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  word-break:break-all;line-height:1.4}
-{% endblock %}
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/lista-exigida.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/inscricao-detalhe.css' %}">{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' inscricao.edital.processo_id %}">{{ inscricao.edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' inscricao.edital.id %}">Edital {{ inscricao.edital.number }}/{{ inscricao.edital.year }}</a> › <a href="{% url 'interface:inscricoes' inscricao.edital_id %}">Inscrições</a> › <span aria-current="page">{{ inscricao.protocolo|default:"Em preenchimento" }}</span></nav>{% endblock %}
 {% block conteudo %}

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.interface.folha import FOLHA_COMUM
+from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
 from tests.interface.test_acessibilidade import sem_prosa
 from tests.interface.test_corte import _emitir_pela_tela, cliente_no_corte  # noqa: F401
 
@@ -272,7 +272,8 @@ def test_os_campos_da_comissao_tem_largura_pelo_conteudo():
 
     assert '<input id="identity_subject" name="identity_subject" type="text"' in corpo
     assert '<input id="display_label" name="display_label" type="text"' in corpo
-    assert "{% block estilo_da_pagina %}#identity_subject{max-width:20rem}{% endblock %}" in corpo
+    # A regra é da tela, no arquivo que o bloco dela carrega desde a 091, e é a única dele.
+    assert estilo_do_bloco(corpo).strip() == "#identity_subject{max-width:20rem}"
 
 
 def test_o_campo_de_arquivo_nao_herda_a_largura_da_linha():

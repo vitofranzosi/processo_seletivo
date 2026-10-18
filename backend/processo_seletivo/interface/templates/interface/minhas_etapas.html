@@ -1,6 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Minhas Etapas{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">Minhas Etapas</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/minhas-etapas.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Minhas Etapas</h1>
 <p class="sub">As Etapas em que você tem atribuição.</p>
@@ -70,7 +71,7 @@
          anunciá-la seria dizer três vezes a mesma coisa a quem usa leitor de tela. A cor também
          não carrega nada sozinha, pelo mesmo motivo. {% endcomment %}
       <div class="trilha-do-medidor" aria-hidden="true">
-        <div class="feito" style="width:{{ item.carga.percentual }}%"></div>
+        <div class="feito largura-{{ item.carga.percentual }}"></div>
       </div>
       <p class="detalhe">{{ item.carga.concluidas }} de {{ item.carga.total }}
         avalia{{ item.carga.total|pluralize:"ção,ções" }}

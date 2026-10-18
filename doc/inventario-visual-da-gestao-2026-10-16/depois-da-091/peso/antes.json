@@ -1,0 +1,42 @@
+[
+ {
+  "tela": "distribuicao",
+  "bytes": 18358,
+  "style": 3,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=f82053d4c710"
+  ],
+  "atributos_style": 1
+ },
+ {
+  "tela": "lista",
+  "bytes": 10995,
+  "style": 145,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=f82053d4c710"
+  ],
+  "atributos_style": 1
+ },
+ {
+  "tela": "minhas-etapas",
+  "bytes": 7264,
+  "style": 3,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=f82053d4c710"
+  ],
+  "atributos_style": 4
+ },
+ {
+  "tela": "visao-geral",
+  "bytes": 30663,
+  "style": 12216,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=f82053d4c710"
+  ],
+  "atributos_style": 1
+ }
+]

@@ -1,0 +1,160 @@
+/* A moldura da gestão: o cabeçalho do topo das telas sem barra e o shell da 076 — a barra lateral,
+   as seções, a pessoa identificada, o cabeçalho de contexto. Segundo arquivo da folha comum, depois
+   de `base.css` (091; a ordem de carga está em `shared/estaticos.py`, `FOLHAS_DA_GESTAO`). */
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+header.topo .marca{font-weight:600;letter-spacing:.02em;color:var(--branco);text-decoration:none}
+header.topo .marca:hover{text-decoration:underline}
+header.topo .marca span{font-weight:300;opacity:.85}
+/* O contêiner dos símbolos da barra: largura e altura zero pelos atributos, e fora do fluxo por esta
+   regra, que até a 091 era `style="position:absolute"` no próprio `<svg>` — atributo de estilo que a
+   política de segurança de conteúdo recusa. */
+.simbolos{position:absolute}
+/*
+O shell da gestão (076), no conceito A do estudo de 16/10: barra lateral branca com as seções, a
+seção atual em verde-claro com filete, a pessoa e "Sair" no pé, e o cabeçalho de contexto acima do
+`main`, que continua o mesmo. `header.topo` acima ficou só para a tela vista sem identidade.
+
+**Dois estados na tela larga** (US5): expandida, 16rem, com ícone e nome; recolhida, 4,25rem, só
+ícones, e o nome vira dica ao lado do ícone com o ponteiro ou o foco — o mesmo `span`, que continua
+sendo o nome acessível. O estado é `data-barra` na própria `.shell`, posto por `shell.js` antes de a
+barra ser lida; sem o atributo, a barra é a expandida, que é o desenho sem script. A transição só
+vale com `data-animar`, que o script põe no clique, e nunca sob movimento reduzido.
+
+**No celular, nada disso vale**: as seções moram num painel `popover`, aberto pelo botão "Seções"
+sem script; o navegador anuncia o estado, fecha com Esc e com o toque fora. A barra do topo fica
+presa à janela, e o `scroll-padding` impede que ela cubra o alvo do link de salto. Navegador sem
+`popover` mostra o painel dentro da barra do topo, que quebra a linha.
+
+**Na Alocação** (`.shell-barra-no-topo`, DP-4) a tela larga usa o desenho do celular, sem prender a
+barra: a `057` exige a matriz sem rolagem interna, com o cabeçalho dela preso à janela.
+
+O item atual se marca por `[aria-current]`, e não por classe: `.x.atual` faria de `atual` um
+modificador cobrado em toda tela que já usa a palavra. A coluna do conteúdo é `minmax(0,1fr)` para
+que o que é largo role dentro da própria tabela, e não empurre a página.
+*/
+.barra-lateral{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--branco);
+  border-bottom:1px solid var(--borda);position:sticky;top:0;z-index:6}
+.shell-barra-no-topo .barra-lateral{position:static}
+.marca-da-barra{display:flex;align-items:center;gap:.6rem;min-width:0}
+.barra-lateral .marca{display:flex;align-items:center;gap:.6rem;color:var(--verde-escuro);
+  text-decoration:none;line-height:1.2;font-weight:600;min-width:0}
+.sigla-do-produto{flex:none;display:grid;place-items:center;width:2rem;height:2rem;border-radius:6px;
+  background:var(--verde-escuro);color:var(--branco);font-size:.6875rem;letter-spacing:.04em}
+.nome-do-produto{font-size:.875rem}
+.nome-do-produto span{display:block;font-weight:400;font-size:.75rem;color:var(--texto-fraco)}
+.icone-da-secao{flex:none;width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.75;
+  stroke-linecap:round;stroke-linejoin:round}
+.abrir-secoes,.fechar-secoes{margin-left:auto;font:inherit;font-size:.875rem;padding:.35rem .8rem;
+  cursor:pointer;background:var(--branco);color:var(--verde-texto);border:1px solid var(--verde);
+  border-radius:4px}
+.fechar-secoes{align-self:flex-end;margin:.6rem 1rem 0}
+.alternar-barra{position:relative;display:flex;align-items:center;gap:.7rem;min-height:2.5rem;
+  margin:0 .5rem .5rem;padding:.4rem .75rem .4rem calc(.8125rem + 3px);border:0;border-radius:6px;
+  background:none;color:var(--texto-fraco);font:inherit;font-size:.875rem;text-align:left;cursor:pointer}
+.alternar-barra:hover{background:var(--fundo);color:var(--texto)}
+.secoes-da-gestao:popover-open{display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;
+  width:min(18rem,85vw);height:100%;margin:0;padding:0;border:0;border-right:1px solid var(--borda);
+  background:var(--branco);color:var(--texto);overflow-y:auto}
+.secoes-da-gestao::backdrop{background:rgba(0,0,0,.3)}
+.secoes-da-gestao ul{list-style:none;margin:0;padding:0 .5rem}
+.secoes-da-gestao nav a{position:relative;display:flex;align-items:center;gap:.7rem;min-height:2.5rem;
+  padding:.4rem .75rem .4rem .8125rem;border-radius:6px;color:var(--texto);text-decoration:none;
+  border-left:3px solid transparent}
+.secoes-da-gestao nav a:hover{background:var(--fundo)}
+.secoes-da-gestao nav a[aria-current]{background:var(--verde-claro);border-left-color:var(--verde);
+  color:var(--verde-escuro);font-weight:600}
+.rotulo-da-secao{white-space:nowrap}
+.grupo-de-secoes{margin:1.25rem 1.25rem .35rem;font-size:.6875rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--texto-fraco)}
+.pessoa-identificada{margin-top:auto;padding:.85rem 1rem .85rem 1.125rem;border-top:1px solid var(--borda);
+  font-size:.875rem;display:flex;align-items:center;gap:.6rem}
+.iniciais{flex:none;display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;
+  background:var(--verde-claro);color:var(--verde-escuro);font-size:.75rem;font-weight:600}
+.nome-da-pessoa{flex:1;min-width:0;line-height:1.3}
+.nome-da-pessoa strong{display:block;overflow-wrap:anywhere}
+.nome-da-pessoa span{display:block;color:var(--texto-fraco);font-size:.75rem}
+.pessoa-identificada form{margin:0}
+.pessoa-identificada .acao{position:relative;display:grid;place-items:center;width:2rem;height:2rem;
+  padding:0;border-color:var(--borda);color:var(--texto-fraco)}
+.pessoa-identificada .acao:hover{color:var(--vermelho);border-color:var(--vermelho)}
+/* Um `span` só para três papéis: o nome visível do item, o nome acessível dele, e a dica
+   quando a barra recolhe. O "Sair" é ícone desde sempre, e a dica é tudo o que se vê dele por
+   escrito na tela larga. */
+.pessoa-identificada .rotulo-da-secao{position:absolute;z-index:20;padding:.25rem .5rem;
+  border-radius:4px;background:var(--texto);color:var(--branco);font-size:.75rem;font-weight:400;
+  white-space:nowrap;pointer-events:none;opacity:0;right:0;bottom:calc(100% + .35rem)}
+.pessoa-identificada .acao:hover .rotulo-da-secao,.pessoa-identificada .acao:focus-visible .rotulo-da-secao{
+  opacity:1}
+.cabecalho-de-contexto{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap;min-height:3.5rem;
+  padding:.6rem 1.5rem;background:var(--branco);border-bottom:1px solid var(--borda);font-size:.875rem}
+.caminho-da-secao{margin:0;color:var(--texto-fraco)}
+.caminho-da-secao a{color:var(--verde-texto)}
+.cabecalho-de-contexto>a{margin-left:auto}
+.area-de-trabalho{min-width:0}
+@media not all and (min-width:64rem){
+  html{scroll-padding-top:4.5rem}
+  .alternar-barra{display:none}
+  .pessoa-identificada .acao{display:flex;gap:.35rem;width:auto;padding:0 .7rem}
+  .pessoa-identificada .rotulo-da-secao{position:static;opacity:1;padding:0;background:none;
+    color:inherit;font-size:.8125rem}
+}
+@media (min-width:64rem){
+  /* A coluna da barra é pintada na própria `.shell`, além da barra: a barra tem a
+     altura da janela e acompanha a rolagem, e numa captura de página inteira ela pararia no
+     primeiro quadro, com o resto da coluna em cinza. */
+  .shell{display:grid;grid-template-columns:16rem minmax(0,1fr);
+    background:linear-gradient(to right,var(--branco) calc(16rem - 1px),var(--borda) 0 16rem,transparent 0)}
+  .shell[data-animar]{transition:grid-template-columns .18s ease}
+  .barra-lateral{position:sticky;top:0;height:100vh;flex-direction:column;align-items:stretch;
+    gap:0;padding:0;border-bottom:0;border-right:1px solid var(--borda);overflow:hidden auto}
+  .marca-da-barra{height:3.5rem;flex:none;overflow:hidden;padding:0 1rem 0 1.125rem;
+    border-bottom:1px solid var(--borda)}
+  .abrir-secoes,.fechar-secoes{display:none}
+  .secoes-da-gestao{display:flex;flex-direction:column;flex:1;position:static;width:auto;
+    height:auto;margin:0;padding:0;border:0;background:none;color:inherit;overflow:visible}
+  .secoes-da-gestao:popover-open{width:16rem}
+  .secoes-da-gestao::backdrop{background:none}
+  /* **Nada anda ao recolher, só os nomes saem.** Todo ícone da barra tem o centro a 34px
+     da borda — o centro da faixa de 4,25rem — nos dois estados: o dos itens (0,5rem da lista, 3px
+     do filete, 0,8125rem de recuo e metade do ícone), a sigla, o avatar e o controle. A coluna
+     encolhe pela direita. O separador ocupa a altura do título que ele substitui, e o controle mora
+     na última linha, presa ao fundo, para que nada suba nem desça debaixo do ponteiro de quem
+     recolhe e expande em seguida. */
+  .shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr);
+    background:linear-gradient(to right,var(--branco) calc(4.25rem - 1px),var(--borda) 0 4.25rem,transparent 0)}
+  .shell[data-barra=recolhida] .barra-lateral{overflow:visible}
+  .shell[data-barra=recolhida] .nome-do-produto,.shell[data-barra=recolhida] .nome-da-pessoa{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .shell[data-barra=recolhida] .grupo-de-secoes{height:1px;margin:1.6rem 1rem .97rem;overflow:hidden;
+    background:var(--borda);color:transparent}
+  .shell[data-barra=recolhida] .secoes-da-gestao .rotulo-da-secao{position:absolute;z-index:20;
+    top:50%;bottom:auto;right:auto;left:calc(100% + .6rem);transform:translateY(-50%);
+    padding:.25rem .5rem;border-radius:4px;background:var(--texto);color:var(--branco);
+    font-size:.75rem;font-weight:400;white-space:nowrap;pointer-events:none;opacity:0}
+  .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):hover .rotulo-da-secao,
+  .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):focus-visible .rotulo-da-secao{opacity:1}
+  .shell[data-barra=recolhida] .pessoa-identificada{flex-direction:column;padding:.75rem 0}
+  .shell-barra-no-topo{display:block;background:none}
+  .shell-barra-no-topo .barra-lateral{height:auto;flex-direction:row;align-items:center;
+    gap:1rem;padding:.6rem 1rem;border-right:0;border-bottom:1px solid var(--borda)}
+  .shell-barra-no-topo .marca-da-barra{height:auto;padding:0;border-bottom:0}
+  .shell-barra-no-topo .abrir-secoes,.shell-barra-no-topo .fechar-secoes{display:block}
+  .shell-barra-no-topo .secoes-da-gestao:not(:popover-open){display:none}
+  .shell-barra-no-topo .secoes-da-gestao:popover-open{position:fixed;inset:0 auto 0 0;
+    width:min(18rem,85vw);height:100%;border-right:1px solid var(--borda);background:var(--branco);
+    color:var(--texto);overflow-y:auto}
+  .shell-barra-no-topo .secoes-da-gestao::backdrop{background:rgba(0,0,0,.3)}
+}
+@media (prefers-reduced-motion:reduce){
+  .shell[data-animar]{transition:none}
+}
+@supports not selector(:popover-open){
+  .shell .abrir-secoes,.shell .fechar-secoes{display:none}
+  .shell-barra-no-topo .barra-lateral{flex-wrap:wrap}
+  .shell-barra-no-topo .secoes-da-gestao{flex-basis:100%;min-width:0}
+  @media not all and (min-width:64rem){
+    .barra-lateral{flex-wrap:wrap}
+    .secoes-da-gestao{flex-basis:100%;min-width:0}
+  }
+}

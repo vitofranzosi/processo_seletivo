@@ -1,6 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Supervisão — {{ processo.institutional_code }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Supervisão</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/serie.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Supervisão do Processo</h1>
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>

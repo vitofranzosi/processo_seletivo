@@ -1,0 +1,69 @@
+[
+ {
+  "tela": "distribuicao",
+  "bytes": 18931,
+  "style": 0,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao/base.css?v=1d03949b554d",
+   "/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+   "/static/interface/gestao/impressao.css?v=e428d2f85646",
+   "/static/interface/gestao/componentes.css?v=f112eb7400e5",
+   "/static/interface/gestao/formularios.css?v=95c98ebb79ad",
+   "/static/interface/gestao/tabelas.css?v=4b337bfff617",
+   "/static/interface/gestao/telas.css?v=cabbb3409908"
+  ],
+  "atributos_style": 0
+ },
+ {
+  "tela": "lista",
+  "bytes": 11505,
+  "style": 0,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao/base.css?v=1d03949b554d",
+   "/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+   "/static/interface/gestao/impressao.css?v=e428d2f85646",
+   "/static/interface/gestao/componentes.css?v=f112eb7400e5",
+   "/static/interface/gestao/formularios.css?v=95c98ebb79ad",
+   "/static/interface/gestao/tabelas.css?v=4b337bfff617",
+   "/static/interface/gestao/telas.css?v=cabbb3409908",
+   "/static/interface/telas/lista.css?v=c5b032b9d795"
+  ],
+  "atributos_style": 0
+ },
+ {
+  "tela": "minhas-etapas",
+  "bytes": 7903,
+  "style": 0,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao/base.css?v=1d03949b554d",
+   "/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+   "/static/interface/gestao/impressao.css?v=e428d2f85646",
+   "/static/interface/gestao/componentes.css?v=f112eb7400e5",
+   "/static/interface/gestao/formularios.css?v=95c98ebb79ad",
+   "/static/interface/gestao/tabelas.css?v=4b337bfff617",
+   "/static/interface/gestao/telas.css?v=cabbb3409908",
+   "/static/interface/telas/minhas-etapas.css?v=3ccd576e8fd8"
+  ],
+  "atributos_style": 0
+ },
+ {
+  "tela": "visao-geral",
+  "bytes": 19108,
+  "style": 0,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao/base.css?v=1d03949b554d",
+   "/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+   "/static/interface/gestao/impressao.css?v=e428d2f85646",
+   "/static/interface/gestao/componentes.css?v=f112eb7400e5",
+   "/static/interface/gestao/formularios.css?v=95c98ebb79ad",
+   "/static/interface/gestao/tabelas.css?v=4b337bfff617",
+   "/static/interface/gestao/telas.css?v=cabbb3409908",
+   "/static/interface/telas/visao-geral.css?v=e3500c2be4bf"
+  ],
+  "atributos_style": 0
+ }
+]

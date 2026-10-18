@@ -567,9 +567,8 @@ def test_a_identificacao_nao_ganha_ajuda_expansivel(identificacao):
     Aplicar o padrão onde ele não tem o que carregar seria decalque, e não princípio. O que dava
     para tirar do caminho saiu para dentro do campo.
     """
-    assert "como-preencher" not in identificacao.replace(
-        identificacao[identificacao.index("<style>") : identificacao.index("</style>")], ""
-    )
+    # Sem estilo embutido desde a 091; a remoção fica para o dia em que um `<style>` voltar.
+    assert "como-preencher" not in re.sub(r"<style\b.*?</style>", "", identificacao, flags=re.S)
     campo = re.search(r"<textarea[^>]*id=\"ident-description\"[^>]*>", identificacao, re.S)
     assert campo and 'placeholder="Resumo do objeto do Edital"' in campo.group(0)
 

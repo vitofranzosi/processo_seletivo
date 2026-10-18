@@ -3,11 +3,13 @@
 Até a 089 a folha comum era o `<style>` do `interface/base.html`: 53 KB de regras em toda
 resposta HTML da gestão, sem cache, e o obstáculo maior a uma política de segurança de conteúdo.
 Ela saiu para `interface/static/interface/gestao.css`, e os tokens para
-`shared/static/shared/tokens.css`.
+`shared/static/shared/tokens.css`. Na 091 a folha comum se dividiu por área, nos arquivos de
+`FOLHAS_DA_GESTAO` (`interface/gestao/`), e o estilo de cada tela saiu para `interface/telas/` e
+`interface/grupos/`.
 
-A equivalência das regras — as mesmas, na mesma ordem — é provada uma vez, pelo script de
-`doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/`, contra o modelo de antes. Aqui fica o
-que tem de continuar verdade daqui em diante.
+A equivalência das regras é provada uma vez, pelos scripts do inventário (`depois-da-089/` e
+`depois-da-091/`, em `doc/inventario-visual-da-gestao-2026-10-16/`), contra a folha de antes. Aqui
+fica o que tem de continuar verdade daqui em diante.
 """
 
 import re
@@ -22,7 +24,7 @@ from django.urls import reverse
 from processo_seletivo.shared import estaticos
 from tests.interface.conftest import identificar
 from tests.interface.folha import (
-    GESTAO_CSS,
+    ARQUIVOS_DA_FOLHA_COMUM,
     TOKENS,
     TOKENS_CSS,
     folha_aplicada,
@@ -55,18 +57,20 @@ def renderizar(caminho):
     )
 
 
-def test_os_dois_arquivos_sao_achados_pelos_finders():
+def test_os_arquivos_sao_achados_pelos_finders():
     """`FR-2035`: o runserver e o guia de produção servem o que os *finders* acham. Os tokens moram
-    em `shared/`, que não é app, e só são achados porque `STATICFILES_DIRS` os declara."""
-    assert Path(finders.find("interface/gestao.css")) == GESTAO_CSS
+    em `shared/`, que não é app, e só são achados porque `STATICFILES_DIRS` os declara. Desde a 091
+    a folha comum são os arquivos de `FOLHAS_DA_GESTAO`, e o `gestao.css` de um arquivo só saiu."""
+    assert [Path(finders.find(c)) for c in estaticos.FOLHAS_DA_GESTAO] == ARQUIVOS_DA_FOLHA_COMUM
     assert Path(finders.find("shared/tokens.css")) == TOKENS_CSS
+    assert finders.find("interface/gestao.css") is None
 
 
 def test_o_endereco_leva_o_resumo_do_conteudo():
-    endereco = renderizar("interface/gestao.css")
+    endereco = renderizar("interface/gestao/base.css")
 
-    assert re.fullmatch(r"/static/interface/gestao\.css\?v=[0-9a-f]{12}", endereco), endereco
-    assert renderizar("interface/gestao.css") == endereco
+    assert re.fullmatch(r"/static/interface/gestao/base\.css\?v=[0-9a-f]{12}", endereco), endereco
+    assert renderizar("interface/gestao/base.css") == endereco
 
 
 def test_o_endereco_muda_quando_o_arquivo_muda(tmp_path, monkeypatch):
@@ -77,11 +81,11 @@ def test_o_endereco_muda_quando_o_arquivo_muda(tmp_path, monkeypatch):
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: str(folha))
 
     folha.write_text("a{color:red}")
-    primeiro = renderizar("interface/gestao.css")
+    primeiro = renderizar("interface/gestao/base.css")
     folha.write_text("a{color:blue}")
-    segundo = renderizar("interface/gestao.css")
+    segundo = renderizar("interface/gestao/base.css")
     folha.write_text("a{color:red}")
-    terceiro = renderizar("interface/gestao.css")
+    terceiro = renderizar("interface/gestao/base.css")
 
     assert primeiro != segundo
     assert terceiro == primeiro
@@ -95,12 +99,12 @@ def test_a_folha_so_e_relida_quando_muda(tmp_path, monkeypatch):
     folha.write_text("a{color:red}")
 
     leituras = estaticos._resumo_do_arquivo.cache_info().misses
-    renderizar("interface/gestao.css")
-    renderizar("interface/gestao.css")
+    renderizar("interface/gestao/base.css")
+    renderizar("interface/gestao/base.css")
     assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 1
 
     folha.write_text("a{color:blue}")
-    renderizar("interface/gestao.css")
+    renderizar("interface/gestao/base.css")
     assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 2
 
 
@@ -118,8 +122,15 @@ def test_a_verificacao_de_sistema_acusa_a_folha_que_falta(monkeypatch):
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: None)
     erros = estaticos.verificar_folhas()
 
-    assert [erro.id for erro in erros] == ["estaticos.E001"] * len(estaticos.FOLHAS)
-    assert set(estaticos.FOLHAS) == {"shared/tokens.css", "interface/gestao.css"}
+    # As folhas das bases e, desde a 091, toda folha que um modelo cita pela tag.
+    exigidas = dict.fromkeys(estaticos.FOLHAS) | estaticos.folhas_citadas()
+    assert [erro.id for erro in erros] == ["estaticos.E001"] * len(exigidas)
+    assert set(estaticos.FOLHAS) == {
+        "shared/tokens.css",
+        *estaticos.FOLHAS_DA_GESTAO,
+        "shared/erro.css",
+    }
+    assert "interface/telas/visao-geral.css" in exigidas
 
 
 @pytest.mark.django_db
@@ -130,14 +141,13 @@ def test_a_gestao_carrega_tokens_folha_comum_e_so_entao_o_estilo_da_pagina(clien
     identificar(client, "carlos", ["gestor"])
     corpo = client.get(reverse("interface:lista")).content
 
+    # Desde a 091 a folha comum são os arquivos de `FOLHAS_DA_GESTAO`, e o estilo da página é o
+    # arquivo da tela, por último; nenhum `<style>`.
     assert ordem_das_folhas(corpo) == [
         "/static/shared/tokens.css",
-        "/static/interface/gestao.css",
-        "<style>",
+        *(f"/static/{caminho}" for caminho in estaticos.FOLHAS_DA_GESTAO),
+        "/static/interface/telas/lista.css",
     ]
-    # E o `<style>` que sobra é o da página: na lista, as duas regras da tela, e nada da comum.
-    estilo = re.search(r"<style>(.*?)</style>", cabeca(corpo), re.S).group(1)
-    assert ".tabela-rolavel" not in estilo and ":root" not in estilo
 
 
 @pytest.mark.django_db
@@ -156,18 +166,25 @@ def test_as_outras_bases_carregam_os_tokens_antes_de_qualquer_regra(client, sele
     resposta = client.get(caminho)
 
     assert resposta.status_code == (404 if pagina == "página de erro" else 200)
-    assert ordem_das_folhas(resposta.content) == ["/static/shared/tokens.css", "<style>"]
+    # O portal ainda tem a folha no documento (091, D-007); a página de acesso e a de erro, não.
+    assert ordem_das_folhas(resposta.content) == [
+        "/static/shared/tokens.css",
+        {
+            "acesso da gestão": "/static/interface/grupos/acesso.css",
+            "vitrine do portal": "<style>",
+            "página de erro": "/static/shared/erro.css",
+        }[pagina],
+    ]
     assert "--verde:" in folha_aplicada(resposta.content)
 
 
 def test_o_modelo_da_gestao_nao_tem_regra_da_folha_comum():
     """`SC-795`: de 1.471 linhas de estilo para nenhuma regra comum. No modelo resta o ponto de
-    extensão do estilo por página, com o comentário que o explica."""
-    modelo = BASE.read_text()
-    estilo = re.search(r"<style>(.*?)</style>", modelo, re.S).group(1)
-    assert sem_comentarios(estilo).strip() == "{% block estilo_da_pagina %}{% endblock %}"
-    # Um `<style>` só no modelo; o comentário da `040` cita a palavra, e não conta.
-    assert sem_comentarios(modelo).count("<style>") == 1
+    extensão do estilo por página, com o comentário que o explica — e, desde a 091, nem o `<style>`
+    em volta dele: o bloco carrega `<link>`."""
+    modelo = sem_comentarios(BASE.read_text())
+    assert "{% block estilo_da_pagina %}{% endblock %}" in modelo
+    assert "<style" not in modelo
 
 
 def test_os_tokens_tem_um_lugar_so():
@@ -198,7 +215,7 @@ def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
     cabeca_ = (
         "<head>"
         '<link href="/static/shared/tokens.css?v=1" rel="stylesheet">'
-        "<link rel='stylesheet' media=\"print\" href='/static/interface/gestao.css'>"
+        "<link rel='stylesheet' media=\"print\" href='/static/interface/gestao/tabelas.css'>"
         '<link rel="icon" href="/favicon.ico">'
         '<style media="screen">.da-pagina{color:red}</style>'
         "</head><body><style>.do-corpo{}</style></body>"
@@ -208,3 +225,106 @@ def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
     assert folha.index("--verde:") < folha.index(".tabela-rolavel{") < folha.index(".da-pagina{")
     assert ".do-corpo" not in folha
     assert "/*" not in folha.split(".da-pagina")[0]
+
+
+# ---- o estilo de cada tela em arquivo (091) ----------------------------------------------------
+
+MODELOS = RAIZ / "interface/templates/interface"
+
+# Quem carrega cada arquivo de `telas/` e de `grupos/`. Escrito à mão, e não derivado dos modelos: é
+# a afirmação que o teste confere — "o estilo de uma tela não viaja nas outras" (040, FR-2096).
+QUEM_CARREGA = {
+    "interface/grupos/acesso.css": {
+        "base_de_acesso.html",
+        "identificar.html",
+        "identificar_demonstracao.html",
+        "sem_autenticacao.html",
+    },
+    "interface/grupos/assistente.css": {"assistente.html", "duvidas.html"},
+    "interface/grupos/aviso.css": {"aviso.html", "aviso_previa.html", "modelo_de_aviso.html"},
+    "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
+    "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
+    "interface/grupos/terminais.css": {
+        "detalhe.html",
+        "processo_detalhe.html",
+        "retificacao_detalhe.html",
+    },
+    "interface/grupos/vista.css": {"compor_classificacao.html", "compor_perfis.html"},
+    **{
+        f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
+        for tela in (
+            "alocacoes",
+            "assistente",
+            "comissao",
+            "compor-anexos",
+            "compor-conteudo",
+            "compor-cronograma",
+            "compor-revisao",
+            "duvidas",
+            "inscricao-detalhe",
+            "lista",
+            "marco",
+            "minhas-etapas",
+            "prototipo-do-assistente",
+            "retificar",
+            "sorteio",
+            "visao-geral",
+        )
+    },
+}
+
+
+def test_cada_folha_de_tela_e_carregada_so_por_quem_a_usa():
+    """`FR-2096`, `SC-815`: nenhum arquivo de tela viaja numa tela que não o usa, e nenhuma tela
+    que tinha estilo deixa de carregá-lo. A base nunca cita arquivo de tela, que iria em todas."""
+    citacoes = {}
+    for modelo in sorted(MODELOS.glob("*.html")):
+        for caminho in re.findall(
+            r"""\{%\s*estatico\s+'(interface/(?:telas|grupos)/[^']+)'""", modelo.read_text()
+        ):
+            citacoes.setdefault(caminho, set()).add(modelo.name)
+
+    assert citacoes == QUEM_CARREGA
+    arquivos = {
+        str(p.relative_to(RAIZ / "interface/static"))
+        for p in (RAIZ / "interface/static/interface").glob("*/*.css")
+        if p.parent.name in ("telas", "grupos")
+    }
+    assert arquivos == set(QUEM_CARREGA), "arquivo de tela que ninguém carrega, ou o contrário"
+    assert "base.html" not in set().union(*QUEM_CARREGA.values())
+
+
+def test_os_parciais_de_estilo_sairam():
+    """`FR-2095`: os cinco parciais viraram arquivos de `grupos/`; o `include` não tem mais alvo."""
+    assert list(MODELOS.glob("_estilo_*.html")) == []
+
+
+@pytest.mark.django_db
+def test_a_pagina_da_tela_carrega_o_grupo_antes_do_proprio(client, seletor_ligado):
+    """`FR-2096`: na ordem de antes — o parcial vinha antes das regras próprias no bloco."""
+    identificar(client, "carlos", ["gestor", "participante-piloto-assistente"])
+    corpo = client.get(reverse("interface:visao-geral")).content
+    folhas = ordem_das_folhas(corpo)
+
+    assert folhas[: 1 + len(estaticos.FOLHAS_DA_GESTAO)] == [
+        "/static/shared/tokens.css",
+        *(f"/static/{c}" for c in estaticos.FOLHAS_DA_GESTAO),
+    ]
+    assert folhas[-1] == "/static/interface/telas/visao-geral.css"
+
+
+def test_o_fragmento_do_prototipo_carrega_a_folha_dele():
+    """`FR-2099`: no corpo da página pública, por `<link>`, e sem `<style>`."""
+    modelo = sem_comentarios((MODELOS / "prototipo_do_assistente.html").read_text())
+
+    assert "{% estatico 'interface/telas/prototipo-do-assistente.css' %}" in modelo
+    assert "<style" not in modelo
+
+
+def test_a_pagina_de_erro_carrega_a_folha_dela():
+    """`FR-2100`: o estilo do `404.html` em `shared/erro.css`, como os tokens."""
+    modelo = sem_comentarios((RAIZ / "shared/templates/404.html").read_text())
+
+    assert "{% estatico 'shared/erro.css' %}" in modelo
+    assert "<style" not in modelo
+    assert finders.find("shared/erro.css")

@@ -1,0 +1,12 @@
+/* As regras desta tela, e só dela (070, contracts/tela.md). O grupo das perguntas quebra
+   linha: sem `flex-wrap`, o `fieldset` cresce até o conteúdo mínimo e alarga a página a 375 px. */
+.perguntas{display:flex;flex-wrap:wrap;gap:.35rem 1.25rem}
+.perguntas label{flex:1 1 18rem;font-weight:400}
+.resposta{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
+  margin:0 0 1.5rem}
+.resposta h2:focus{outline:2px solid var(--verde);outline-offset:2px}
+.explicacao{background:var(--cinza-fundo);border-left:4px solid var(--borda);padding:.7rem 1rem;
+  margin:0 0 1rem}
+.referencia h3{font-size:.9375rem;margin:0 0 .25rem}
+.futuro{font-size:.8125rem;margin:.25rem 0 0}
+.pontos li{margin:0 0 .5rem}

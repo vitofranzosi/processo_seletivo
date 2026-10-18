@@ -43,7 +43,7 @@ def test_o_cartao_diz_quanto_falta_e_o_quanto_ja_andou(client, seletor_ligado, c
     assert "3</strong>" in corpo and "pendentes" in corpo
     assert "40%" in corpo
     assert "2 de 5" in corpo
-    assert "width:40%" in corpo
+    assert 'class="feito largura-40"' in corpo
 
 
 def test_a_etapa_nao_comecada_nao_se_parece_com_a_quase_pronta(
@@ -53,7 +53,7 @@ def test_a_etapa_nao_comecada_nao_se_parece_com_a_quase_pronta(
     corpo = cartao(client, "joao")
 
     assert "0%" in corpo
-    assert "width:0%" in corpo
+    assert 'class="feito largura-0"' in corpo
     assert "Concluída" not in corpo
 
 

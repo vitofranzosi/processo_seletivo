@@ -1,0 +1,3 @@
+/* Os gestos lado a lado, alinhados pelo botão: o de publicar traz dois campos acima do dele (057, FR-1048). */
+.gestos{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:flex-end}
+.gestos .conferencia{margin:0}

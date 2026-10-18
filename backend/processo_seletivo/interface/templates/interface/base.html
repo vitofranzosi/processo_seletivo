@@ -3,16 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% comment %} O htmx, ao carregar, injeta um `<style>` com as regras do indicador de carregamento — que
+   nenhuma tela usa —, e pode avaliar texto de atributo como código — que nenhuma tela escreve. A
+   política de segurança de conteúdo recusaria os dois. Esta configuração os desliga sem script
+   embutido: o htmx a lê do `<meta>` ao iniciar (091, D-009). {% endcomment %}
+<meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
 <title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
 {% comment %}
 A folha comum saiu deste modelo para `interface/gestao.css`, e os tokens para `shared/tokens.css` (089):
 dentro do HTML, 53 KB de regras viajavam em toda resposta da gestão, sem cache, e impediam uma política
 de segurança de conteúdo. A ordem é a da cascata de antes — tokens, folha comum, estilo da página — e o
-`?v=` muda quando o arquivo muda (`shared/estaticos.py`).
+`?v=` muda quando o arquivo muda (`shared/estaticos.py`). Desde a 091 a folha comum são sete arquivos
+por área, em `interface/gestao/`, e `{% folhas_da_gestao %}` escreve um `<link>` para cada um, na ordem
+de `FOLHAS_DA_GESTAO` — vários `<link>`, e não um arquivo que importa os outros (D-002 da 091).
 {% endcomment %}
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
-<link rel="stylesheet" href="{% estatico 'interface/gestao.css' %}">
-<style>
+{% folhas_da_gestao %}
 {% comment %}
 **O estilo daquela página, e não de todas** (040).
 
@@ -28,9 +34,15 @@ reclamou — da primeira, deste comentário.
 **Quem preencher este bloco continua sob a regra das larguras.** `tests/interface/test_larguras.py`
 lê a folha **renderizada**, e há um caso que lê a da Visão Geral justamente para que estilo nenhum
 escape do guardião por mudar de lugar.
+
+**Desde a 091, o bloco carrega arquivos, e não regras.** Cada tela põe aqui o `<link>` do estilo
+dela — `interface/telas/<tela>.css`, e o do grupo de telas que divide as mesmas regras,
+`interface/grupos/<grupo>.css` —, pela tag `estatico`. O motivo da `040` continua o mesmo: o arquivo
+de uma tela só viaja para ela. E o de agora: sem `<style>` no documento, a política de segurança de
+conteúdo recusa estilo embutido. A prosa sobre "bytes na rede", acima, era de quando o comentário
+viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
 {% endcomment %}
 {% block estilo_da_pagina %}{% endblock %}
-</style>
 </head>
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
@@ -40,7 +52,7 @@ escape do guardião por mudar de lugar.
    antes de ela ser desenhada (`FR-1728`). Na Alocação a barra fica no topo, e a preferência não
    vale (`FR-1730`). {% endcomment %}
 {% if not navegacao.no_topo %}<script src="{% static 'interface/shell.js' %}"></script>{% endif %}
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
   <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 12.5l2 2 4-4"/></symbol>
   <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 20h18M7 16v-5M12 16V6M17 16v-8"/></symbol>

@@ -1,0 +1,38 @@
+/*
+A folha comum da gestão (089). Até a 089 ela era o `<style>` do `interface/base.html` e viajava em toda
+resposta HTML de `/gestao/`; agora viaja uma vez e fica no cache. As regras e a ordem são as de antes,
+linha a linha — vários guardiões ancoram no formato, e não se reformata.
+
+Carregada depois de `shared/tokens.css` e antes do estilo de cada página (o bloco `estilo_da_pagina`,
+que continua no modelo). Os comentários eram de modelo enquanto a folha estava no HTML; aqui são de CSS.
+
+Na 091 ela se dividiu por área — este arquivo é o primeiro de sete, em `interface/gestao/`, na ordem
+de `FOLHAS_DA_GESTAO` (`shared/estaticos.py`). "As regras e a ordem são as de antes" continua valendo
+onde importa: uma regra só mudou de lugar em relação a outra quando as duas não disputam propriedade
+em elemento nenhum, e a prova está em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/`.
+*/
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
+  background:var(--fundo);line-height:1.5;font-size:16px}
+a{color:var(--verde-texto)}
+.pular{position:absolute;left:-9999px;top:0;background:var(--branco);padding:.75rem 1rem;z-index:10}
+.pular:focus{left:0}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+main:focus{outline:none}
+/* A página serve à **estrutura** — matriz de alocação, tabelas de oito colunas, o painel do
+   documento ao lado do formulário. O texto tem medida própria logo abaixo: sem ela, alargar a
+   página levaria as linhas de 147 para mais de 200 caracteres. */
+main{max-width:var(--pagina);margin:0 auto;padding:1.5rem}
+/*
+A escala dos três níveis (055, FR-1010). Sem regra de h3, ele herdava 1,17em do navegador e saía
+**maior** que o h2 da mesma página — 18,7 px contra 16 no Processo, onde "Atenção" encimava o
+"Onde cada Edital está". As regras por contêiner que punham h2 em 1rem saíram junto (D-008): eram
+elas que davam à Revisão dois h2 irmãos de tamanhos diferentes. A prosa era comentário de Django
+enquanto a folha estava no HTML, porque a tela de distribuição estava no teto de caracteres; desde a
+089 a folha é estática, viaja uma vez, e o comentário é de CSS (D-002 da `089`).
+*/
+h1{font-size:1.6rem;margin:0 0 .25rem}
+h2{font-size:1.15rem;margin:0}
+h3{font-size:1rem}
+h1,h2,h3{font-weight:600}
+dfn{font-style:normal;font-weight:600}

@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Acesso à gestão{% endblock %} — Gestão de Processos Seletivos · Cefor/Ifes</title>
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
-<style>
-{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
-</style>
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
 </head>
 <body>
 {% comment %}
@@ -18,7 +16,7 @@ identidades e a entrada não configurada se leiam como a mesma porta.
 
 Os ícones vêm de um sprite inline: traço único, `currentColor`, sem biblioteca nem requisição.
 {% endcomment %}
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
   <symbol id="i-voltar" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>

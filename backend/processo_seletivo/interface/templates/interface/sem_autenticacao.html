@@ -1,6 +1,6 @@
-{% extends "interface/base_de_acesso.html" %}
+{% extends "interface/base_de_acesso.html" %}{% load estaticos %}
 {% block titulo %}Autenticação indisponível{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
 {% block acesso %}
 {% comment %}
 Sem método de entrada (075, `FR-1691`): a mesma porta, sem ação de entrar. Continua respondendo 503

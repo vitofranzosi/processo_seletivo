@@ -1,7 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Retificação — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Retificação</span></nav>{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_das_terminais.html" %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Retificação do Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ retificacao.justification }}
