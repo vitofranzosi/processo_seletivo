@@ -91,8 +91,11 @@ o conteúdo próprio do Processo. O pulso e a Atenção continuam na página (03
     <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
       {% for ato in grupo.list %}
       <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        <span class="marca-irreversivel">irreversível</span>
+        {% comment %} A marca descreve o ato (090, `FR-2060`), como na Distribuição (081, `FR-1827`): sem isso o
+           leitor de tela anunciava "Encerrar Processo" no foco, e "irreversível" só para quem lesse a
+           página linha a linha. {% endcomment %}
+        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}" aria-describedby="irreversivel-{{ ato.chave }}">{{ ato.rotulo }}</a>
+        <span class="marca-irreversivel" id="irreversivel-{{ ato.chave }}">irreversível</span>
       </li>
       {% endfor %}
     </ul>

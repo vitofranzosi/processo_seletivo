@@ -77,7 +77,7 @@ mesma condição (D-003 da 083).
   {% if not avisos.habilitado %}
   <p class="aviso" role="status">O envio de avisos está desabilitado nesta instalação.</p>
   {% else %}
-  {% for natureza in avisos.pendentes %}<p><a class="botao" href="{% url 'interface:aviso-do-resultado' edital.id marco_id %}?natureza={{ natureza }}">Avisar candidatos — resultado {{ avisos.natureza_rotulo|dicionario_simples:natureza }}</a></p>{% empty %}<p class="ajuda">Não há publicação vigente ainda não avisada neste marco.</p>{% endfor %}
+  {% for natureza in avisos.pendentes %}<p><a class="botao" href="{% url 'interface:aviso-do-resultado' edital.id marco_id %}?natureza={{ natureza }}&amp;de=marco">Avisar candidatos — resultado {{ avisos.natureza_rotulo|dicionario_simples:natureza }}</a></p>{% empty %}<p class="ajuda">Não há publicação vigente ainda não avisada neste marco.</p>{% endfor %}
   {% endif %}
 </section>
 {% endif %}

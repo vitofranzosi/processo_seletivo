@@ -1,6 +1,9 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Conclusões preservadas</span></nav>{% endblock %}
+{% comment %} Nomear não é abrir (090, `FR-2062`; o padrão da 083): a Alocação e a Etapa são telas de quem
+   gere a comissão, e para quem só audita ficam como texto — antes, eram dois links que lhe respondiam
+   403. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › {% if pode_gerir_a_comissao %}<a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a>{% else %}Alocação por Etapa › {{ etapa.name }}{% endif %} › <span aria-current="page">Conclusões preservadas</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Conclusões preservadas</h1>
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>

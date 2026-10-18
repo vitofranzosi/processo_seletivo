@@ -930,3 +930,38 @@ documento.
 ```bash
 python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/resultados.json
 ```
+
+## Depois da 090
+
+Os quatro achados menores da etapa 4 ([`090`](../specs/090-limpeza-dos-achados-da-etapa-4/spec.md)): a
+marca "irreversível" descreve o ato também para o leitor de tela, nos detalhes do Processo, do Edital e
+da Retificação; a Alocação e a Etapa da trilha das consultas da Etapa são texto para quem só audita; o
+rodapé comum (`.salvar`) quebra a linha entre os botões; e a prévia do aviso aberta pelos Resultados
+divulgados volta a eles.
+
+O inventário foi refeito sobre a `main` em `21e36bd4` (com a `089`), num banco próprio,
+`ps_inventario_090` — cópia do `ps_inventario_089` —, com o mesmo `AVISO`, nos dois estados da barra.
+O roteiro ganhou uma variante, `aviso-do-resultado-pelo-marco` (a prévia com `de=marco`, como
+`paula.publicadora`), capturada também no "antes", em que o parâmetro ainda não significava nada. A
+linha de base de antes é igual, em medidas, à de depois da `089`. Em
+[`depois-da-090/`](inventario-visual-da-gestao-2026-10-16/depois-da-090/) estão os `resultados.json` de
+antes e de depois e as capturas das variantes que mudam.
+
+| | Antes da 090 | Depois, expandida | Depois, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 85 de 86 | 85 de 86 | 85 de 86 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 ou a 1280 px | 0 | 0 | 0 |
+| Medida diferente a 1280 px | — | nenhuma | nenhuma |
+| Medida diferente a 375 px | — | 4, só de altura | as mesmas 4 |
+
+As quatro a 375 px são rodapés comuns com dois elementos que não cabiam lado a lado: a conferência da
+interrupção de um aviso (948 → 982), as do Encerrar (937 → 971) e do Cancelar (959 → 993) do Edital e a
+da ativação do Processo (862 → 874). Nas quatro o rótulo de cada botão voltou a uma linha só, e o
+segundo botão desce. A variante nova não muda de medida: a trilha troca "Avisos aos candidatos" por
+"Classificação › Resultados divulgados" na mesma linha — a Classificação em texto, porque a
+publicadora não a abre.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/resultados.json
+```
