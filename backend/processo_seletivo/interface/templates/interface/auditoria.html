@@ -1,19 +1,11 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{% if da_avaliacao %}Trilha da avaliação — {{ etapa.name }}{% elif da_comissao %}Auditoria da comissão — {{ processo.institutional_code }}{% else %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endif %}{% endblock %}
 {% comment %} A trilha da avaliação e a da comissão no cabeçalho de contexto (080, `FR-1800`): a primeira com os
-   níveis da Distribuição, de onde se abre; a segunda com os da Comissão, sua vizinha. A do Edital fica no
-   conteúdo, com o cabeçalho da 076 — é tela de quem audita o Edital, e não do fluxo da presidência
-   (D-002 da 080). {% endcomment %}
-{% block caminho_do_contexto %}{% if da_avaliacao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Trilha da avaliação</span></nav>{% elif da_comissao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Auditoria da comissão</span></nav>{% else %}{{ block.super }}{% endif %}{% endblock %}
+   níveis da Distribuição, de onde se abre; a segunda com os da Comissão, sua vizinha. A do Edital ficou
+   no conteúdo até a 083, que a levou ao cabeçalho com os níveis do detalhe do Edital (`FR-1850`): o
+   modelo das três auditorias não tem mais trilha no conteúdo. {% endcomment %}
+{% block caminho_do_contexto %}{% if da_avaliacao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Trilha da avaliação</span></nav>{% elif da_comissao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Auditoria da comissão</span></nav>{% else %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Auditoria</span></nav>{% endif %}{% endblock %}
 {% block conteudo %}
-{% if not da_avaliacao and not da_comissao %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Auditoria</span>
-</nav>
-{% endif %}
-
 <h1>Trilha de auditoria</h1>
 {% if da_avaliacao %}
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
