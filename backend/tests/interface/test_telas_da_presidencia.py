@@ -17,7 +17,6 @@ from tests.interface.test_acessibilidade_da_012 import cenario  # noqa: F401 —
 from tests.interface.test_shell_da_gestao import barra
 from tests.interface.test_telas_de_uso_diario import (
     TEMPLATES,
-    cabecalho,
     conteudo,
     trilha_unica_no_cabecalho,
 )
@@ -126,29 +125,9 @@ def test_na_distribuicao_a_trilha_continua_pela_alocacao(client, seletor_ligado,
     assert comeca_pelo_titulo(corpo)
 
 
-@pytest.mark.parametrize(
-    "rota",
-    [
-        "interface:impedimentos",
-        "interface:registrar-ocorrencia",
-        "interface:resultados-da-etapa",
-        "interface:conclusoes-preservadas",
-    ],
-)
-def test_as_filhas_da_distribuicao_continuam_com_o_cabecalho_da_076(
-    client,
-    seletor_ligado,
-    cenario,  # noqa: F811
-    rota,
-):
-    """`FR-1782`: fora das telas da 077, da 078 e destas, o cabeçalho para na seção, e a trilha
-    continua no conteúdo."""
-    identificar(client, "maria", [])
-    corpo = abrir(client, rota, cenario["edital"].id, cenario["etapa"])
-
-    assert '<p class="caminho-da-secao">' in cabecalho(corpo)
-    assert 'aria-label="Trilha de navegação"' not in cabecalho(corpo)
-    assert 'aria-label="Trilha de navegação"' in conteudo(corpo)
+# As filhas da Distribuição tinham aqui o guardião da `FR-1782`, com o cabeçalho da 076 e a trilha
+# no conteúdo. A 080 as levou ao cabeçalho (`FR-1800` da 080), e o guardião mudou para lá:
+# `test_telas_filhas_da_distribuicao.py`, que também prova a Auditoria do Edital ainda de fora.
 
 
 # ---- os lugares da Etapa, na Distribuição ----------------------------------------------------

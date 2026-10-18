@@ -1,14 +1,14 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Conclusões preservadas</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
-  <span aria-current="page">Conclusões preservadas</span>
-</nav>
-
 <h1>Conclusões preservadas</h1>
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %} A resposta à reabertura logo abaixo do título (080, `FR-1806`): vinha depois da explicação e do
+   filtro inteiro. O erro do filtro fica no filtro, junto do campo a que se refere. {% endcomment %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível reabrir:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">{{ resultado }}</p>{% endif %}
 
 {% comment %}
 FR-091: a preservação é **consultável**, e não apenas existente no banco. Reabrir devolve a
@@ -26,16 +26,14 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
            aria-describedby="ajuda-inscricao-conclusoes">
     <span class="ajuda" id="ajuda-inscricao-conclusoes">Protocolo da inscrição, como ele aparece na tabela — ou o identificador.</span>
   </p>
+  {% comment %} A ação principal da consulta, com o desenho de ação principal (080, D-004; `FR-1008` da 055). {% endcomment %}
   <p class="salvar">
-    <button type="submit" class="acao">Filtrar</button>
+    <button type="submit" class="botao">Filtrar</button>
     {% if inscricao_filtro %}
     <a class="acao" href="{% url 'interface:conclusoes-preservadas' edital.id etapa.id %}">Limpar</a>{% endif %}
   </p>
   {% if filtro_invalido %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ filtro_invalido }}</p>{% endif %}
 </form>
-
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível reabrir:</strong> {{ erro }}</p>{% endif %}
-{% if resultado %}<p class="sucesso" role="status" tabindex="-1">{{ resultado }}</p>{% endif %}
 
 {% if linhas %}
 <div class="tabela-rolavel">

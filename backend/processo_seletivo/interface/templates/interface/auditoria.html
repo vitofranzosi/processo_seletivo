@@ -1,19 +1,18 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{% if da_avaliacao %}Trilha da avaliação — {{ etapa.name }}{% elif da_comissao %}Auditoria da comissão — {{ processo.institutional_code }}{% else %}Auditoria — Edital {{ edital.number }}/{{ edital.year }}{% endif %}{% endblock %}
+{% comment %} A trilha da avaliação e a da comissão no cabeçalho de contexto (080, `FR-1800`): a primeira com os
+   níveis da Distribuição, de onde se abre; a segunda com os da Comissão, sua vizinha. A do Edital fica no
+   conteúdo, com o cabeçalho da 076 — é tela de quem audita o Edital, e não do fluxo da presidência
+   (D-002 da 080). {% endcomment %}
+{% block caminho_do_contexto %}{% if da_avaliacao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Trilha da avaliação</span></nav>{% elif da_comissao %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Auditoria da comissão</span></nav>{% else %}{{ block.super }}{% endif %}{% endblock %}
 {% block conteudo %}
+{% if not da_avaliacao and not da_comissao %}
 <nav aria-label="Trilha de navegação" class="trilha">
   <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  {% if da_avaliacao %}
-  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
-  <span aria-current="page">Trilha da avaliação</span>
-  {% elif da_comissao %}
-  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Auditoria da comissão</span>
-  {% else %}
   <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
   <span aria-current="page">Auditoria</span>
-  {% endif %}
 </nav>
+{% endif %}
 
 <h1>Trilha de auditoria</h1>
 {% if da_avaliacao %}
@@ -60,8 +59,10 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
       {% endfor %}
     </select>
   </p>
+  {% comment %} A ação principal das duas consultas, com o desenho de ação principal (080, D-004; `FR-1008` da
+     055). "Limpar" continua secundária. {% endcomment %}
   <p class="salvar">
-    <button type="submit" class="acao">Filtrar</button>
+    <button type="submit" class="botao">Filtrar</button>
     {% if inscricao_filtro or avaliador_filtro or operacao_filtro %}
     <a class="acao" href="{% url 'interface:trilha-da-avaliacao' edital.id etapa.id %}">Limpar</a>{% endif %}
   </p>
@@ -101,7 +102,7 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
     </select>
   </p>
   <p class="salvar">
-    <button type="submit" class="acao">Filtrar</button>
+    <button type="submit" class="botao">Filtrar</button>
     {% if pessoa_filtro or operacao_filtro %}
     <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Limpar</a>{% endif %}
   </p>

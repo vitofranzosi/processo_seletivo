@@ -1,14 +1,21 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Ocorrência — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Ocorrência</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
-  <span aria-current="page">Ocorrência</span>
-</nav>
-
 <h1>Registrar ocorrência na Etapa</h1>
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %} O que acabou de acontecer, logo abaixo do título (080, `FR-1806`), como na Distribuição e em
+   Impedimentos. Vinha depois da explicação do ato, onde quem voltou do envio não olha primeiro. A
+   explicação — "Não há desfazer." — continua antes da conferência e do formulário, que são o ato. {% endcomment %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível registrar:</strong> {{ erro }}</p>{% endif %}
+{% if resultado %}
+<p class="sucesso" role="status" tabindex="-1">{{ resultado.feitas }} ocorrênci{{ resultado.feitas|pluralize:"a,as" }} {{ resultado.verbo }}{{ resultado.feitas|pluralize:",s" }}{% if resultado.recusadas %}, e {{ resultado.recusadas }} inscriç{{ resultado.recusadas|pluralize:"ão,ões" }} recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.
+  Os Resultados estão em <a href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados da Etapa</a>.</p>
+{% for grupo in resultado.agrupados %}
+<p class="aviso">{{ grupo.motivo }} — {{ grupo.inscricoes|join:", " }}{% if grupo.restantes %} e mais {{ grupo.restantes }}{% endif %}.</p>
+{% endfor %}
+{% endif %}
 
 {% comment %}
 Esta tela existe porque o Edital produz desfecho para quem **não foi avaliado**: quem falta à
@@ -22,15 +29,6 @@ motivo constatado. E porque o ato elimina alguém que a Etapa nunca avaliou, e n
   avaliada nesta Etapa, e o Edital dá consequência ao fato. O Resultado nasce
   <strong>eliminado</strong>, com o motivo que você escrever, e ele é a resposta que ficará
   registrada se houver recurso. <strong>Não há desfazer.</strong></p>
-
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível registrar:</strong> {{ erro }}</p>{% endif %}
-{% if resultado %}
-<p class="sucesso" role="status" tabindex="-1">{{ resultado.feitas }} ocorrênci{{ resultado.feitas|pluralize:"a,as" }} {{ resultado.verbo }}{{ resultado.feitas|pluralize:",s" }}{% if resultado.recusadas %}, e {{ resultado.recusadas }} inscriç{{ resultado.recusadas|pluralize:"ão,ões" }} recusada{{ resultado.recusadas|pluralize:"s" }}{% endif %}.
-  Os Resultados estão em <a href="{% url 'interface:resultados-da-etapa' edital.id etapa.id %}">Resultados da Etapa</a>.</p>
-{% for grupo in resultado.agrupados %}
-<p class="aviso">{{ grupo.motivo }} — {{ grupo.inscricoes|join:", " }}{% if grupo.restantes %} e mais {{ grupo.restantes }}{% endif %}.</p>
-{% endfor %}
-{% endif %}
 
 {% comment %}
 A confirmação **declara o alcance** antes de o ato acontecer, como a do impedimento na 012: quem

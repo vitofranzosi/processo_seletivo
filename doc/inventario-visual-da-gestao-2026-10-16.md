@@ -446,3 +446,63 @@ título e `h1`, variante a variante, que o `comparar.py` não compara e que a `0
 duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
 pulso do Processo, cantos arredondados (até 28 de 255) e o cursor num campo da ocorrência. É também o
 que o diff permite: ele só toca os quatro templates da presidência.
+
+## Depois da 080
+
+O quarto incremento da modernização por tela ([`080`](../specs/080-telas-filhas-da-distribuicao/spec.md))
+mudou as telas que se abrem a partir da Distribuição e a Auditoria da comissão: a trilha de
+Impedimentos, Registrar ocorrência, Resultados, Trilha da avaliação, Conclusões preservadas, da
+conferência da retirada e da Auditoria da comissão subiu ao cabeçalho de contexto — a das filhas é a
+da Distribuição com a tela no fim; o resultado do último envio sobe para logo abaixo do título em
+Registrar ocorrência e nas Conclusões; Impedimentos ganha a seção "Registrar um impedimento"; e
+"Filtrar" tem o desenho de ação principal na Trilha, na Auditoria da comissão e nas Conclusões.
+Nenhuma regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `fbe5bba3`, num banco próprio, `ps_inventario_080` —
+cópia do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra,
+antes e depois da mudança. **O de antes não reproduz `depois-da-079/` em duas telas, por dado e não
+por código**: a Auditoria da comissão tem as duas alocações que o percurso da `079` gravou depois da
+captura dela (+359 px a 375, +132 a 1280), e o aviso, a hora da leitura. Nenhum arquivo de
+`backend/processo_seletivo/` mudou entre o merge da `079` e `fbe5bba3`. A linha de base desta
+comparação é, por isso, o de antes, guardado em
+[`depois-da-080/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-080/antes/).
+
+Em [`depois-da-080/`](inventario-visual-da-gestao-2026-10-16/depois-da-080/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-080/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das seis telas do escopo — e as de antes, em `antes/`. A
+conferência da retirada não está no inventário — é a resposta a um envio —, e foi vista no navegador.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-080/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-080/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-080/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-080/resultados.json
+```
+
+| | Antes da 080 | Depois da 080, expandida | Depois da 080, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 080 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `trilha-da-avaliacao` | 1682 → 1645 | 3349 → 3347 | a trilha saiu do conteúdo |
+| `auditoria-comissao` | 1233 → 1196 | 2649 → 2626 | a trilha saiu do conteúdo |
+| `conclusoes-preservadas` | 1347 → 1310 | 1574 → 1572 | a trilha saiu do conteúdo |
+| `resultados-da-etapa` | 901 → 900 | 1425 → 1423 | a trilha saiu; a 1280 a página cabe na janela |
+| `impedimentos` | 900 → 900 | 992 → 1045 | a trilha saiu, e o título "Registrar um impedimento" entrou |
+| `registrar-ocorrencia` | 900 → 900 | 812 → 812 | cabe na janela nas duas larguras; muda o desenho, não a medida |
+
+Com a barra recolhida, as mesmas telas e as mesmas diferenças, menos as que a 1280 cabem na janela
+(`conclusoes-preservadas` e `resultados-da-etapa` ficam em 900): `trilha-da-avaliacao` 1507 → 1470 e
+`auditoria-comissao` 1154 → 1117.
+
+**Pixel a pixel.** Fora das seis telas, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, e marcas de cursor e de suavização em Minhas Etapas, na devolução do ato e em
+pontos isolados (até 4 de 255). É também o que o diff permite: ele só toca os seis templates do
+escopo.
