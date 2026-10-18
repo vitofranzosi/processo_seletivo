@@ -6,6 +6,16 @@
 > o registro do estudo como ele foi feito. A etapa 2, o shell, virou a
 > [`076`](../specs/076-shell-da-gestao/spec.md): as cinco seções na barra, sem chave liga/desliga,
 > e o caminho do topo parando na seção, porque 54 telas já têm a própria trilha.
+> A etapa 4, a modernização tela a tela, foi da [`077`](../specs/077-telas-de-uso-diario/spec.md) à
+> [`087`](../specs/087-paineis-e-telas-de-apoio/spec.md), com a [`081`](../specs/081-achados-das-revisoes-077-079/spec.md)
+> e a [`082`](../specs/082-trilha-da-conferencia-da-consolidacao/spec.md) no meio: em 18/10, 58 das 59
+> telas da gestão têm a trilha no cabeçalho de contexto — a que falta é a recusa, que não tem trilha. As
+> perguntas de produto que as revisões deixaram viraram a [`088`](../specs/088-decisoes-da-etapa-4/spec.md)
+> e a [`090`](../specs/090-limpeza-dos-achados-da-etapa-4/spec.md); a folha saiu do documento e a
+> política de segurança de conteúdo passou a recusar estilo e script inline da
+> [`089`](../specs/089-folha-estatica-da-gestao/spec.md) à [`092`](../specs/092-folha-estatica-do-portal-e-csp/spec.md).
+> A etapa 3, a autenticação institucional, espera a conversa com a TI; o peso visual dos atos que não
+> se desfazem, diferente entre as telas de resultado e a Distribuição, espera decisão do produto.
 
 Primeira rodada do redesign do acesso: auditoria do que existe, proposta de navegação e três
 protótipos navegáveis. **Nada do comportamento atual mudou.** A tela de `/gestao/identificar`, o
