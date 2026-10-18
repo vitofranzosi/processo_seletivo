@@ -99,7 +99,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **11457 passando e 11 pulados**, nenhuma falha (medido em 2026-10-17, na `main` em `a41b67c0`, com o grupo `assistente` instalado — os mesmos números em série e com 4 ou 8 workers; a medição anterior, de 15/10 em `db428b30`, dava 11297 e 11). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
+Contra PostgreSQL a suíte fecha em **12268 passando e 11 pulados**, nenhuma falha (medido em 2026-10-18, na `main` em `2abd18db`, com o grupo `assistente` instalado e 4 workers, em 525s; a medição anterior, de 17/10 em `a41b67c0`, dava 11457 e 11 — a diferença é a dos testes das telas, da folha e da CSP, da `081` à `092`, e os pulados são os mesmos onze). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
 doze — onze com o grupo — são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
@@ -189,6 +189,16 @@ pergunta livre chama, e custa.
 
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.
+
+**Estilo e script escritos no template não funcionam: a CSP os recusa.** Desde a `091` e a `092`,
+`processo_seletivo/shared/politica_de_conteudo.py` responde todo HTML com `style-src 'self'` e
+`script-src 'self'`, sem `unsafe-inline`. Um `style="..."`, um `<style>`, um `<script>` ou um `onclick=` no
+template renderiza sem efeito e sem erro no servidor — a única pista é a violação no console do
+navegador. Estilo vai para arquivo: a folha comum da gestão em `interface/static/interface/gestao/`
+(sete arquivos, na ordem de `FOLHAS_DA_GESTAO`, em `shared/estaticos.py`), o de uma tela só em
+`interface/grupos/` ou `interface/telas/`, pelo bloco `estilo_da_pagina`, e a do portal em
+`portal/static/portal/portal.css`. Os guardiões que exigem regra para toda classe citada leem esses
+arquivos. A exceção conhecida é a página de falha de CSRF do próprio Django, que sai sem desenho.
 
 **O código de acesso do portal sai no terminal do servidor.** Na execução nativa o backend de
 e-mail é o de console: a mensagem é impressa onde o `runserver` está rodando, e não há outro lugar
