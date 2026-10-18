@@ -87,8 +87,9 @@ trilha; `test_shell_da_gestao.py` prende a seção que sai do endereço, que nã
 Edital, que esta feature não toca. A `FR-1803` da `080` é anotada como emendada.
 
 Os testes novos, em `tests/interface/test_telas_dos_avisos.py`, provam a trilha nas três variantes
-da prévia — a da chamada com a fixture `chamada_publicada` da `066`, que é transacional; é o único
-caso transacional do arquivo.
+da prévia — a da chamada com a fixture `chamada_publicada` da `066`. O módulo de onde ela vem é
+transacional, mas a fixture não precisa disso: aqui ela roda dentro da transação que se desfaz, e o
+arquivo não tem caso transacional nenhum (code review de 18/10).
 
 ## Achados (registrados, não corrigidos)
 
@@ -99,3 +100,18 @@ caso transacional do arquivo.
   que o seed não emite (como em 16/10). É provada pelos testes.
 - **Os estados vazios não aparecem no inventário** (R-004): o banco tem aviso, resultado e modelos.
   Uma variante "sem nada" pediria um Edital ou uma unidade a mais no seed.
+
+### Achados do code review de 18/10 (registrados, não corrigidos)
+
+- **`.salvar` não quebra a linha.** A regra comum é `display:flex` sem `flex-wrap`; a 375 px, na
+  conferência da interrupção, os dois botões encolhem lado a lado e cada rótulo vai a duas linhas
+  (+46 px no inventário). Nada estoura. Corrigir é mudar a folha comum, que serve dezenas de telas —
+  inclusive as conferências da `079` e da `080` —, e pede o inventário inteiro refeito: fica para quem
+  decidir mexer na regra geral.
+- **"Aviso de DD/MM/AAAA" sem a hora.** Dois avisos do mesmo dia — o pai e o filho de um reenvio —
+  têm na trilha o mesmo rótulo e destinos diferentes; só o `h1`, com a hora, os distingue. O rótulo é
+  o que a tela já usava, e a `FR-1941` o fixa: acrescentar a hora é mudar o requisito, e fica com o
+  produto.
+- **Os níveis até o Edital estão copiados em quatro templates.** Extraí-los num parcial seria o
+  movimento natural, mas a decisão 003 da `081` escolheu manter a abertura escrita em cada tela, com
+  um guardião, em vez de extrair; esta feature segue a decisão, e não a reabre.

@@ -36,8 +36,9 @@ aviso.
 
 **Uma trilha diz um nome e leva a outro lugar.** Na prévia do reenvio — "Tentar de novo as que não
 saíram" ou "Reenviar, com justificativa" —, o nível acima da tela se chama *Avisos aos candidatos* e
-leva ao aviso anterior, e não à lista dos avisos. **Medido em 18/10/2026**: um link de trilha, nas seis
-telas, cujo rótulo não nomeia o destino.
+leva ao aviso anterior, e não à lista dos avisos; no reenvio de um aviso de chamada, o nível se chama
+*Convocação* e leva ao mesmo aviso anterior. **Medido em 18/10/2026**: um link de trilha, nas seis
+telas, cujo rótulo não nomeia o destino — o da prévia, errado nas duas variantes do reenvio.
 
 **Nos modelos, o cabeçalho e a trilha se contradizem.** Os Modelos de aviso são uma seção da barra, no
 grupo Unidade, desde a `076`: a barra os marca e o cabeçalho diz *GPS › Modelos de aviso*. Logo abaixo,

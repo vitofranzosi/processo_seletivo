@@ -77,7 +77,7 @@ def ate_o_aviso(edital, aviso_id, solicitado_em):
     ]
 
 
-def abrir(client, url):
+def abrir_url(client, url):
     resposta = client.get(url)
     assert resposta.status_code == 200, url
     return resposta.content.decode()
@@ -117,7 +117,7 @@ def test_nos_avisos_do_edital_a_trilha_passa_pelo_processo(client, publicado):
     """`FR-1940`, `FR-1941`, `FR-1945`, `SC-762`, `SC-763`: GPS › Processos Seletivos › código ›
     Edital › Avisos aos candidatos, uma vez só, e o conteúdo começa pelo título."""
     identificar(client, "publicadora", ["publicador"])
-    corpo = abrir(client, reverse("interface:avisos-do-edital", args=[publicado["edital"].id]))
+    corpo = abrir_url(client, reverse("interface:avisos-do-edital", args=[publicado["edital"].id]))
 
     trilha = trilha_unica_no_cabecalho(corpo)
     niveis_em_ordem(trilha, ate_o_edital(publicado["edital"]))
@@ -136,13 +136,13 @@ def test_no_aviso_e_na_interrupcao_a_trilha_passa_pelos_avisos(client, publicado
     edital = publicado["edital"]
     identificar(client, "publicadora", ["publicador"])
 
-    historico = abrir(client, reverse("interface:aviso", args=[aviso.id]))
+    historico = abrir_url(client, reverse("interface:aviso", args=[aviso.id]))
     trilha = trilha_unica_no_cabecalho(historico)
     niveis_em_ordem(trilha, ate_os_avisos(edital))
     termina_em(trilha, f"Aviso de {timezone.localtime(aviso.solicitado_em):%d/%m/%Y}")
     assert comeca_pelo_titulo(historico)
 
-    interromper = abrir(client, reverse("interface:aviso-interromper", args=[aviso.id]))
+    interromper = abrir_url(client, reverse("interface:aviso-interromper", args=[aviso.id]))
     trilha = trilha_unica_no_cabecalho(interromper)
     niveis_em_ordem(trilha, ate_o_aviso(edital, aviso.id, aviso.solicitado_em))
     termina_em(trilha, "Interromper")
@@ -179,7 +179,7 @@ def test_a_previa_do_resultado_pende_dos_avisos_do_edital(client, publicado):
     """`FR-1942`, `FR-1951`: o nível acima é a lista dos avisos; a frase de que é uma prévia
     continua a primeira coisa depois do título, e o envio continua depois das consequências."""
     identificar(client, "publicadora", ["publicador"])
-    corpo = abrir(client, _url_da_previa(publicado))
+    corpo = abrir_url(client, _url_da_previa(publicado))
 
     trilha = trilha_unica_no_cabecalho(corpo)
     niveis_em_ordem(trilha, ate_os_avisos(publicado["edital"]))
@@ -195,6 +195,35 @@ def test_a_previa_do_resultado_pende_dos_avisos_do_edital(client, publicado):
 
 @pytest.mark.django_db
 @pytest.mark.integration
+def test_a_previa_recusada_mantem_a_trilha_e_o_erro_depois_da_frase_da_previa(client, publicado):
+    """Caso-limite e D-003: recusada a confirmação, a prévia volta com a mesma trilha, e o erro vem
+    logo depois da frase de que é uma prévia — antes de tudo o mais —, com o foco nele."""
+    identificar(client, "publicadora", ["publicador"])
+    resposta = client.post(
+        _url_da_previa(publicado),
+        {
+            "acao": "confirmar",
+            "natureza": nomes.PRELIMINAR,
+            "assinatura": "assinatura-vencida",
+            "chave": "previa-recusada-086",
+            "assunto": "Processo Seletivo Ifes — Nova publicação disponível",
+            "corpo": "Olá, {nome_do_candidato}. Saiu o resultado: {area_do_candidato}",
+        },
+    )
+    corpo = resposta.content.decode()
+
+    assert resposta.status_code >= 400
+    trilha = trilha_unica_no_cabecalho(corpo)
+    niveis_em_ordem(trilha, ate_os_avisos(publicado["edital"]))
+    termina_em(trilha, "Avisar candidatos")
+    pagina = conteudo(corpo)
+    erro = pagina.index('<p class="erro" role="alert" tabindex="-1" autofocus>')
+    assert pagina.index('<p class="imutavel">Esta é uma') < erro
+    assert erro < pagina.index('<section aria-labelledby="titulo-quem">')
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
 def test_a_previa_do_reenvio_pende_do_aviso_anterior(client, publicado, settings):
     """`FR-1942`, `FR-1943`, `SC-763`: a lista e o aviso anterior, cada um com o seu nome — antes,
     "Avisos aos candidatos" levava ao aviso anterior."""
@@ -205,7 +234,7 @@ def test_a_previa_do_reenvio_pende_do_aviso_anterior(client, publicado, settings
     correio.usar(settings, correio.recusa(550), correio.recusa(550))
     despachar()
     identificar(client, "publicadora", ["publicador"])
-    corpo = abrir(
+    corpo = abrir_url(
         client,
         reverse("interface:aviso-reenviar", args=[aviso.id]) + f"?motivo={nomes.REENVIO_DE_FALHAS}",
     )
@@ -237,7 +266,7 @@ def test_todo_link_da_trilha_leva_aonde_diz(client, publicado, settings):
     ]
     destino_por_rotulo = {}
     for url in urls:
-        for destino, rotulo in links_da_trilha(trilha_unica_no_cabecalho(abrir(client, url))):
+        for destino, rotulo in links_da_trilha(trilha_unica_no_cabecalho(abrir_url(client, url))):
             destino_por_rotulo.setdefault(rotulo, set()).add(destino)
 
     assert destino_por_rotulo["Avisos aos candidatos"] == {
@@ -256,14 +285,14 @@ def test_quem_so_consulta_le_a_mesma_trilha_de_quem_avisa(client, publicado):
         reverse("interface:aviso", args=[aviso.id]),
     ):
         identificar(client, "publicadora", ["publicador"])
-        de_quem_avisa = trilha_unica_no_cabecalho(abrir(client, url))
+        de_quem_avisa = trilha_unica_no_cabecalho(abrir_url(client, url))
         identificar(client, "auditora", ["auditor"])
-        de_quem_consulta = trilha_unica_no_cabecalho(abrir(client, url))
+        de_quem_consulta = trilha_unica_no_cabecalho(abrir_url(client, url))
         assert de_quem_consulta == de_quem_avisa, url
 
 
 @pytest.mark.integration
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_a_previa_da_chamada_pende_da_convocacao_e_o_reenvio_do_aviso(
     chamada_publicada,  # noqa: F811
     gestor,
@@ -282,7 +311,7 @@ def test_a_previa_da_chamada_pende_da_convocacao_e_o_reenvio_do_aviso(
     url = (
         reverse("interface:aviso-da-chamada", args=[edital.id, MARCO]) + f"?comunicacao={ancora.id}"
     )
-    corpo = abrir(client, url)
+    corpo = abrir_url(client, url)
     convocacao = reverse("interface:convocacao", args=[edital.id, MARCO])
 
     trilha = trilha_unica_no_cabecalho(corpo)
@@ -300,7 +329,7 @@ def test_a_previa_da_chamada_pende_da_convocacao_e_o_reenvio_do_aviso(
         idempotency_key="interromper-086",
         correlation_id="teste-086",
     )
-    reenvio = abrir(
+    reenvio = abrir_url(
         client,
         reverse("interface:aviso-reenviar", args=[aviso.id])
         + f"?motivo={nomes.REENVIO_JUSTIFICADO}",
@@ -319,7 +348,7 @@ def test_nos_modelos_a_trilha_comeca_na_secao_da_barra(client):
     """`FR-1944`, `FR-1950`, `SC-763`: a lista é a raiz da seção, sem link e sem "Processos
     Seletivos"; "Novo modelo" na faixa de ações."""
     identificar(client, "publicadora", ["publicador"])
-    corpo = abrir(client, reverse("interface:modelos-de-aviso"))
+    corpo = abrir_url(client, reverse("interface:modelos-de-aviso"))
 
     trilha = trilha_unica_no_cabecalho(corpo)
     termina_em(trilha, "Modelos de aviso")
@@ -348,7 +377,7 @@ def test_no_modelo_a_trilha_volta_aos_modelos(client):
         (reverse("interface:modelo-de-aviso", args=[modelo.id]), "Meu modelo"),
         (reverse("interface:modelo-de-aviso-novo"), "Novo modelo"),
     ):
-        corpo = abrir(client, url)
+        corpo = abrir_url(client, url)
         trilha = trilha_unica_no_cabecalho(corpo)
         assert secao in trilha
         termina_em(trilha, atual)
@@ -392,7 +421,7 @@ def test_os_avisos_do_edital_vazios_tem_o_estado_vazio_comum(
     )
     identificar(client, "publicadora", ["publicador"])
     pagina = conteudo(
-        abrir(client, reverse("interface:avisos-do-edital", args=[cenario["edital"].id]))
+        abrir_url(client, reverse("interface:avisos-do-edital", args=[cenario["edital"].id]))
     )
 
     assert '<p class="vazio">Nenhum resultado foi publicado neste Edital ainda.</p>' in pagina

@@ -18,7 +18,7 @@ Caminhos de teste relativos a `backend/tests/`. "Navegador" é o percurso do [qu
 | FR-1948 | `interface/test_telas_dos_avisos.py` (`test_os_avisos_do_edital_vazios_tem_o_estado_vazio_comum`, `test_nos_modelos_a_trilha_comeca_na_secao_da_barra`); navegador no 76/2027 |
 | FR-1949 | `interface/test_telas_dos_avisos.py` (`test_no_modelo_a_trilha_volta_aos_modelos`, `test_a_interrupcao_recusada_tem_a_mesma_trilha_e_o_erro_abaixo_do_titulo`) |
 | FR-1950 | `interface/test_telas_dos_avisos.py` (`test_nos_modelos_a_trilha_comeca_na_secao_da_barra`) |
-| FR-1951 | `interface/test_telas_dos_avisos.py` (`test_as_acoes_que_nao_se_desfazem_nao_mudam_de_desenho`, `test_a_previa_do_resultado_pende_dos_avisos_do_edital`); `interface/test_avisos.py`, sem mudança |
+| FR-1951 | `interface/test_telas_dos_avisos.py` (`test_as_acoes_que_nao_se_desfazem_nao_mudam_de_desenho`, `test_a_previa_do_resultado_pende_dos_avisos_do_edital`, `test_a_previa_recusada_mantem_a_trilha_e_o_erro_depois_da_frase_da_previa`); `interface/test_avisos.py`, sem mudança |
 | FR-1952 | Inventário refeito com `BARRA=expandida` e `BARRA=recolhida`, comparado por `comparar.py`, por `medidas.py` e pixel a pixel; `interface/test_acessibilidade.py`, `interface/test_larguras.py`, `interface/test_estaticos.py`, `interface/test_polish_da_055.py`, `test_vocabulario_do_aviso.py` |
 | SC-760 | Inventário: estouram a 375 e a 1280 px, zero; nenhum `status` diferente |
 | SC-761 | Inventário: fora das nove variantes do escopo, nenhuma muda de largura ou altura |
