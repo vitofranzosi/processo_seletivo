@@ -127,9 +127,10 @@ def test_o_homologado_tem_publicar_como_unica_cheia(
 
     corpo = client.get(reverse("interface:detalhe", args=[alvo.id])).content.decode()
 
+    # Depois do `href`, a ação irreversível traz a marca como descrição (090, `FR-2060`).
     cheias = [
         rotulo
-        for classes, rotulo in re.findall(r'<a class="([^"]*)" href="[^"]*">([^<]+)<', corpo)
+        for classes, rotulo in re.findall(r'<a class="([^"]*)" href="[^"]*"[^>]*>([^<]+)<', corpo)
         if classes.split() == ["botao"]
     ]
     assert cheias == ["Publicar"], cheias

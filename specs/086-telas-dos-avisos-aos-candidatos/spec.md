@@ -214,6 +214,9 @@ botões das duas telas vêm no rodapé comum, com os mesmos rótulos, desenhos e
   Avisos aos candidatos, no aviso de resultado; a Convocação do marco, no mesmo recorte de lista a que
   "Cancelar" leva, no aviso de chamada; os Avisos aos candidatos e o aviso anterior, no reenvio —, e a
   página atual MUST ser *Avisar candidatos*.
+  *Emendada pela [`090`](../090-limpeza-dos-achados-da-etapa-4/spec.md) em 18/10/2026*: a prévia do aviso de resultado tem uma segunda porta, os
+  Resultados divulgados do marco; aberta por eles, os níveis acima são os da trilha deles, e "Cancelar"
+  volta a eles (`FR-2067` da `090`).
 - **FR-1943**: Em toda trilha destas telas, cada link MUST levar à tela que o rótulo nomeia.
 - **FR-1944**: Nos Modelos de aviso, a trilha MUST ter um nível, a própria seção, como página atual e
   sem link (`FR-1746` da `077`); na edição de um modelo, a seção como link e o nome do modelo — ou *Novo
@@ -222,6 +225,8 @@ botões das duas telas vêm no rodapé comum, com os mesmos rótulos, desenhos e
   trilha só, e o conteúdo MUST começar pelo título.
 - **FR-1946**: A trilha MUST ser a mesma para quem avisa e para quem só consulta: nenhum nível MUST
   aparecer, sumir ou deixar de ser link conforme quem lê.
+  *Emendada pela [`090`](../090-limpeza-dos-achados-da-etapa-4/spec.md) em 18/10/2026*: na prévia aberta pelos Resultados divulgados, a Classificação é
+  link só para quem a abre, como na trilha dos próprios Resultados divulgados (`FR-2067` da `090`).
 - **FR-1947**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
 

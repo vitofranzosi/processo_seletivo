@@ -993,7 +993,10 @@ fieldset.linha>.acoes-da-linha{position:absolute;top:0;right:1rem;margin:0;paddi
   margin:.8rem 0}
 .bastao .ajuda{display:block;margin-top:.3rem}
 .botao.secundario:hover{background:var(--verde-claro)}
-.salvar{display:flex;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
+/* O rodapé quebra a linha entre os botões (090, `FR-2065`): sem `flex-wrap`, a 375 px eles encolhiam
+   lado a lado e cada rótulo ia a duas linhas — "Interromper o envio" e "Voltar sem interromper" na
+   interrupção de um aviso. Quando cabem, nada muda. */
+.salvar{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
 /* Os recursos (018). A fundamentação e a motivação são texto **escrito por alguém** e lido
    inteiro: ganham a largura de leitura e a moldura que as separa da prosa da tela, para que não
    se confundam com o que o sistema diz. */
