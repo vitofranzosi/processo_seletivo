@@ -1,11 +1,11 @@
 # Feature Specification: A folha da gestão por área, o estilo de cada tela em arquivo, e a política de segurança de conteúdo
 
 **Feature Branch**: `claude/folha-por-area-e-csp-091-cce475`, sobre a `main` em `21e36bd4` (com a `089`);
-a implementação espera o PR #307 (`090`), que muda uma regra da mesma folha
+a implementação começou depois do merge do PR #307 (`090`), que muda uma regra da mesma folha
 
 **Created**: 2026-10-18
 
-**Status**: Especificada — implementação depois do merge do PR #307
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: passos 2 e 3 de três, pedidos pelo usuário em 18/10/2026, depois de a `089` tirar a folha
 comum da gestão do HTML: dividir a folha comum por área e tirar as regras duplicadas; levar os cinco
@@ -288,6 +288,12 @@ assistente que diferem numa declaração ficam no arquivo de cada tela, e só a 
 arquivo comum das duas. Sair não pode mudar o vencedor (FR-2093): se uma regra entre as duas cópias
 disputa com elas, a segunda fica.
 
+Duplicada é dentro do que uma página carrega. A folha da página de acesso repete seis regras da folha
+comum (`*`, `a`, o salto, o foco do `main`, `.oculto`, os símbolos), mas as duas nunca carregam
+juntas: a `075` fez a entrada sem a moldura da gestão, de propósito. Tirar a repetição exigiria um
+terceiro arquivo carregado pelas duas bases — acoplar o que a `075` separou, por seis regras. Fica
+como está, e a pesquisa a registra (R-005).
+
 ### D-004 — O estilo da tela num arquivo por tela, ou por grupo
 
 Os parciais já são grupos — o do aviso serve a três telas, o do acesso a cinco —, e viram um arquivo
@@ -357,8 +363,8 @@ continua com o cabeçalho que já a faz, porque a prévia do PDF depende de uma 
 - **SC-814**: A suíte contra PostgreSQL continua sem falhas.
 - **SC-815**: **Nenhum** arquivo de estilo de tela é carregado por uma tela que não o usa, e **nenhuma**
   tela deixa de carregar o que usava.
-- **SC-816**: **Zero** pares de regras com o mesmo seletor, as mesmas declarações e a mesma mídia entre a
-  folha comum e os estilos de tela.
+- **SC-816**: **Zero** pares de regras com o mesmo seletor, as mesmas declarações e a mesma mídia entre as
+  folhas que uma mesma página carrega — a folha comum e os estilos de tela e de grupo.
 - **SC-817**: A resposta HTML da visão geral diminui pelo menos o tamanho do estilo que ela deixou de
   carregar (≈ 12 KB); a da Distribuição, da lista e de Minhas Etapas cresce **no máximo 1 KB** — o
   custo dos `<link>` da divisão —, e a Distribuição continua abaixo do teto.

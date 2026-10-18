@@ -965,3 +965,39 @@ publicadora não a abre.
 ```bash
 python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/resultados.json
 ```
+
+## Depois da 091
+
+A [`091`](specs/091-folha-por-area-e-csp/spec.md) divide a folha comum por área (sete arquivos em
+`interface/gestao/`), leva o estilo de cada tela e os parciais para `interface/telas/` e
+`interface/grupos/`, troca os `style=""` da gestão por classe e liga a política de segurança de
+conteúdo — em recusa na gestão, em observação no portal. Nada do que se vê deveria mudar.
+
+O inventário foi refeito num banco próprio, `ps_inventario_091` (cópia do `ps_inventario_090`), com o
+mesmo `AVISO`, nos dois estados da barra; antes e depois saíram de `git archive` — a `main` em
+`69c6ac1c` (com a `090`) e a branch em `002359f8` —, cada um com uma segunda passada para o ruído. O
+roteiro ganhou duas leituras: `VIOLACOES=1` (o evento `securitypolicyviolation` de cada página) e, com
+`ESTILOS=1`, o resumo das regras aplicadas como **conjunto** (`conjunto`), porque a divisão muda a
+sequência de propósito. O `capturar_bases.py` ganhou a página de erro sob a gestão. Em
+[`depois-da-091/`](inventario-visual-da-gestao-2026-10-16/depois-da-091/) estão os `resultados.json`, o
+peso, a impressão, os relatórios de pixel, a prova de ordem e a de mutação.
+
+| | Antes da 091 | Depois, expandida | Depois, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 85 de 86 | 85 de 86 | 85 de 86 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 ou a 1280 px | 0 | 0 | 0 |
+| Medida diferente | — | nenhuma | nenhuma |
+| Regras aplicadas diferentes (conjunto) | — | só as 3 do indicador do htmx, nas 6 telas com htmx | idem |
+| Pixels acima do ruído | — | 8, todas a hora na tela | 8, as mesmas |
+| Violações da política | — | 0 na gestão; 1 em observação no protótipo (o portal) | idem |
+
+As oito variantes acima do ruído — visão geral, supervisão, detalhe do Processo e dúvidas, a 1280 e a
+375 — diferem só na hora que a tela exibe ("14h20" antes, "14h51" depois); o par de ruído é da mesma
+passada e não a pega. As bases (vitrine, entrada do portal, as duas páginas de erro) são idênticas, e
+a impressão também. No portal, a vitrine e a entrada acusam, em observação, o `<style>` da folha dele —
+o previsto até ela sair do documento.
+
+```bash
+MEDIDAS_CAMPOS=scrollWidth,altura,titulo,h1,conjunto,violacoes python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/depois/resultados.json
+```

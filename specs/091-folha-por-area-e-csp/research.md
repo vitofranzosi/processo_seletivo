@@ -71,6 +71,37 @@ sai: deixá-lo como entrada que importa os outros é o que o D-002 descarta.
 **O comentário de topo** da `089` (linhas 1–8), que explica a folha inteira, vai para `base.css`, com
 uma linha que registra a divisão e aponta a lista de carga (R-004).
 
+**Na implementação** (`areas.py`, `ordem.py`, `ordem.json`): a unidade que muda de arquivo é a regra
+de primeiro nível — ou o bloco `@media` inteiro —, com os comentários que a precedem. Agrupar por
+"comentário e as regras que ele explica" foi tentado e descartado: o comentário explica a primeira
+regra, e as seguintes sem comentário são muitas vezes de outro assunto. A área de cada regra sai das
+palavras do seletor, da mais específica à mais geral (uma regra que cita uma tela é da tela); a de um
+`@media`, das regras de dentro.
+
+**A impressão carrega em terceiro, e não no fim.** O `@media print` da `088` está na linha 180, logo
+depois do shell, e disputa propriedade com centenas de regras que vêm depois dele: no fim da folha,
+ele passaria a vencê-las no papel. Com a impressão no fim, a prova empurrava 282 regras para o mesmo
+arquivo dela. A ordem de carga é base, moldura, impressão, componentes, formulários, tabelas, telas.
+
+**O resultado**: 562 regras — base 13, moldura 44, impressão 1, componentes 81, formulários 62,
+tabelas 16, telas 345 —, 20.969 pares de regras trocam de ordem, e nenhum deles disputa. **Sete regras
+ficam fora da área**, porque mudá-las de lugar inverteria um par que disputa:
+
+| Linha (antes) | Regra | Área do seletor | Arquivo |
+|---|---|---|---|
+| 203 | `main>p,main>section>p,.sub,.ajuda,.vazio,legend+p` (medida de leitura) | formulários | componentes |
+| 344 | `.paginacao [aria-current]` | tabelas | componentes |
+| 443 | `.remover-linha .ajuda` | componentes | telas |
+| 545 | `.erro a` | formulários | tabelas |
+| 812 | `.alocar-em-lote fieldset,.remover-em-lote fieldset` | telas | formulários |
+| 1319 | `fieldset.opcoes>.ajuda` | formulários | telas |
+| 1420 | `[hidden]` | base | telas — precisa vencer o `display` de toda regra anterior |
+
+**A área "telas" é a maior** (345 regras, 60 KB): a folha comum ainda guarda muito estilo que cita
+uma tela só — a Distribuição, a Mesa, a Retificação, o sorteio. Ficou na folha comum porque estava
+lá; levá-lo para os arquivos de tela é o mesmo movimento da parte B, regra a regra, com a mesma prova
+— um passo possível, e não desta feature.
+
 ## R-003 — A prova de que a ordem não importa
 
 A cascata decide entre duas declarações da mesma propriedade, no mesmo elemento, pela origem, pela
@@ -101,6 +132,27 @@ seletor só casa com o que o inventário não tem fica na ordem de antes (suposi
 A mesma prova serve à remoção de duplicadas (R-005): tirar a cópia de baixo é mover a de cima para o
 lugar dela, e cada regra entre as duas é um par que troca de ordem.
 
+**Na implementação, duas fontes de evidência a mais**, porque a primeira medida tratava como "casa
+com tudo" 87 seletores sem elemento no inventário — a série da supervisão, o lote da Distribuição, a
+paginação — e prendia `.campo`, `.ajuda` e `.salvar` depois deles:
+
+1. **O sujeito.** Um seletor sem elemento no inventário é medido também pelo último composto dele
+   (`.serie .barra` → `.barra`), mais largo. Se o sujeito casa, o inventário diz com quem ele divide
+   elemento.
+2. **As classes que os modelos escrevem** (`coocorrencia.py`). Para dois sujeitos alcançarem o mesmo
+   elemento, algum elemento de algum modelo da gestão tem de ter as classes dos dois. A leitura abre os
+   `{% if %}` do atributo (junta classes), trata `s-{{ x }}` como prefixo, dá às três classes
+   inteiramente variáveis (`peso`, `acao.estilo`, `linha.classe`) os valores que o Python lhes dá, e
+   conta as classes que os scripts criam (`className`, `classList`) e as que o Python monta. Classe que
+   nenhum modelo, script ou módulo da gestão escreve não está em elemento nenhum dela: é regra morta.
+
+Com as duas, os pares de regras em conflito caíram de 4.334 para 281, os "sem saber" — seletor e
+sujeito sem elemento, e classes que podem coincidir — para 44, e as regras fora da área, de 105 para 7.
+A solução que distribui as regras também mudou: empurrar sempre a regra de baixo para o arquivo da de
+cima cumpria a restrição, mas levava componentes inteiros para "telas"; a final minimiza a soma das
+distâncias entre a área desejada e o arquivo, sob as mesmas restrições (regressão isotônica, um corte
+mínimo por limiar).
+
 **E a prova final é a mesma da `089`**: o resumo das regras aplicadas por página (`estilos.py`),
 agora comparado como **conjunto**, e não como sequência — a sequência muda por construção —, mais
 medidas e pixels contra o ruído. Uma troca que a prova de ordem deixasse passar e mudasse algo
@@ -128,15 +180,24 @@ na primeira visita, sete pedidos em paralelo (o guia serve por HTTP/2); depois, 
 ## R-005 — Duplicadas
 
 "Duplicada" é o D-003: seletor, declarações e mídia iguais, depois de normalizar espaço e a ordem dos
-seletores numa lista. A varredura (`duplicadas.py`, na pasta da prova) roda sobre a folha comum mais
+seletores numa lista. A varredura (`equivalencia.py`, na pasta da prova) roda sobre a folha comum mais
 os estilos de tela, e a lista vai para esta seção na implementação, com a prova de ordem de cada
 remoção.
 
-**As duas telas do assistente** (`assistente.html`, 977 bytes de regras, e `duvidas.html`, 1.020):
-o pedido as aponta como quase iguais. As regras iguais vão para `telas/assistente-e-duvidas.css`
-(nome provisório), carregado pelas duas; as que diferem ficam em `telas/assistente.css` e
-`telas/duvidas.css`, depois do comum — a ordem relativa entre uma regra comum e uma própria passa
-pela prova do R-003.
+**Medido** (`equivalencia.py` na pasta da prova, sobre o que cada página carrega — a folha comum e os
+arquivos de tela e de grupo):
+
+- **Dentro da folha comum, nenhuma** regra idêntica a outra.
+- **Entre as duas telas do assistente, seis**: `.versao`, `.tipo`, `.natureza`, `.literal`, `.origem`
+  e `.referencia`. Foram para `grupos/assistente.css`, carregado pelas duas antes da folha própria de
+  cada uma. Elas sobem acima de regras próprias que as precediam (`.piloto`, `.turno`, `.trecho`;
+  `.perguntas`, `.resposta`, `.explicacao`); nenhum elemento dos modelos tem uma classe comum e uma
+  própria juntas (`coocorrencia.py`), e a ordem não muda o vencedor de nada. As regras quase iguais —
+  `.turno` × `.resposta`, `.turno h2:focus` × `.resposta h2:focus` — têm seletores diferentes e ficam
+  em cada tela.
+- **Entre a folha comum e a da página de acesso, seis** (`*`, `a`, `.pular:focus`, `main:focus`,
+  `.oculto`, `.simbolos`). As duas nunca carregam na mesma página (D-003): não são duplicadas na
+  cascata, e ficam.
 
 ## R-006 — O estilo das telas
 
@@ -170,9 +231,12 @@ próprio com um bloco de mesmo nome.
 Os cinco parciais: `_estilo_do_acesso` (13.978 bytes), `_estilo_das_terminais` (1.780), `_estilo_da_vista`
 (1.715), `_estilo_da_lista_exigida` (849), `_estilo_do_aviso` (549).
 
-**Destino**: `interface/static/interface/telas/` — um arquivo por parcial, com o nome do grupo
-(`acesso.css`, `terminais.css`, `vista.css`, `lista-exigida.css`, `aviso.css`), e um por tela com
-regras próprias, com o nome da tela (`visao-geral.css`, `retificar.css`, …). O bloco continua com o
+**Destino**: `interface/static/interface/grupos/` — um arquivo por parcial, com o nome do grupo
+(`acesso.css`, `terminais.css`, `vista.css`, `lista-exigida.css`, `aviso.css`), mais `serie.css` e
+`assistente.css`, da 091 —, e `interface/static/interface/telas/`, um por tela com regras próprias, com
+o nome da tela (`visao-geral.css`, `retificar.css`, …): 16, contando o do fragmento do protótipo e o de
+Minhas Etapas. Dois diretórios, e não um, para o nome do grupo não colidir com o de uma tela. A
+conversão é do `converter_telas.py`, na pasta da prova. O bloco continua com o
 nome `estilo_da_pagina`, agora fora do `<style>` e no `<head>`, com `<link>`s pela `estatico`; o
 `<style>` vazio sai da base. O comentário da `040` sobre o ponto de extensão fica no modelo, com a nota
 da mudança. Os `{% comment %}` de dentro dos blocos viram `/* */` no arquivo (D-002 da `089`); os que
@@ -203,6 +267,11 @@ tela só.
 `%}` numa folha reprova o guardião de sintaxe de modelo vazada (`test_estaticos.py`). Um guardião novo
 confere que o valor do modelo é sempre inteiro de 0 a 100 — o `round` e o `widthratio` garantem hoje —,
 e que as 101 de cada existem. **O valor aplicado é o mesmo**: `width:37%` pelo atributo e pela classe.
+
+**A mesma armadilha numa folha de tela.** A visão geral tinha sete regras terminadas em `%}` —
+`width:26%}` e `max-width:100%}` —, que dentro do modelo passavam porque nenhum guardião varria aquele
+bloco. Fora dele, o guardião de sintaxe vazada as acusou; ganharam `;` antes da chave, com um
+comentário, e o `test_larguras` que conta as larguras da tabela passou a aceitar o `;`.
 
 **O que o portal tem, para o passo dele (FR-2102)**: a folha de `portal/base.html` (≈ 70 KB, 5
 `{% comment %}`), o `style=""` de `_documentos.html:21`, e o `<style>` do fragmento do protótipo
@@ -237,13 +306,15 @@ resposta de todo middleware de dentro — a recusa de envio grande, a recusa do 
 | HTML com caminho sob `/gestao/` — telas, fragmentos do htmx, página de acesso, recusas, página de erro do sistema | `Content-Security-Policy` |
 | outro HTML — portal, página pública da seleção, página de erro fora da gestão | `Content-Security-Policy-Report-Only` |
 | não HTML — JSON, PDF, arquivo, estático, `/health` | nenhum |
-| HTML de status 404 ou 500 com `DEBUG` ligado (as páginas de depuração do Django) | nenhum (D-010) |
+| a página de depuração do Django, com `DEBUG` ligado | nenhum (D-010) |
 | resposta que já traz uma política | não é tocada |
 
-"HTML" é `Content-Type` começando por `text/html`. Com `DEBUG` ligado, todo `Http404` e toda exceção
-viram a página de depuração do framework, e por isso o status basta para reconhecê-la; um modelo do
-próprio sistema servido com 404 sob `DEBUG` também fica sem política — só no servidor local, e o mesmo
-modelo é testado com ela na suíte, que roda sem `DEBUG`.
+"HTML" é `Content-Type` começando por `text/html`. **A página de depuração é reconhecida pela marca, e
+não pelo status**: os modelos de depuração do Django (`technical_404.html`, `technical_500.html`) trazem
+`<meta name="robots" content="NONE,NOARCHIVE">` no `<head>`, e os do sistema, não. O plano era o
+status — 404 ou 500 com `DEBUG` —, e o inventário de impressão mostrou por que não: a gestão serve as
+próprias recusas com 404 ("Recurso não encontrado"), na moldura dela, e com `DEBUG` elas ficariam sem
+política no servidor local.
 
 **No runserver e em produção** (FR-2108): o cabeçalho sai da aplicação nos dois; o `staticfiles` do
 runserver e o nginx de produção servem as folhas e os scripts da própria origem, e os dois casam com
@@ -269,9 +340,27 @@ da `089` se repete onde um guardião lê o **texto do modelo** de uma tela ou de
 regra: depois da mudança, o modelo não tem regra, e a afirmação negativa passa vazia.
 
 **Candidatos** (varredura de `tests/` por `_estilo_`, `estilo_da_pagina`, `<style`, `gestao.css`,
-`FOLHA_COMUM`, `folha_aplicada`): 31 arquivos. A classificação um a um — o que lê, se fica silencioso
-sem repontar, a mutação — é a primeira tarefa da implementação, no formato do R-005 da `089`, com
-`mutacoes.py` novo na pasta da prova. Guardiões novos:
+`FOLHA_COMUM`, `folha_aplicada`, e por asserção com cara de CSS em teste que lê um dos 29 modelos que
+tinham estilo): 31 arquivos. **Na implementação**, a suíte apontou 12 falhas, todas de guardião que lia
+estilo no texto do modelo; a varredura das asserções achou os demais. Como cada um passou a ler:
+
+| Guardião (`tests/interface/…`) | Lia | Passa a ler | Silencioso sem repontar? |
+|---|---|---|---|
+| `folha.py` (`FOLHA_COMUM`) | `gestao.css` | os sete arquivos, somados na ordem de carga | sim — todos os 23 da `089` |
+| `folha.py` (`estilo_do_bloco`, novo) | — | os arquivos que o bloco `estilo_da_pagina` de um modelo carrega | — |
+| `test_acessibilidade.py` (`_estilo_proprio`) | o bloco, com o `include` resolvido | `estilo_do_bloco` | sim: as classes de tela seriam acusadas de órfãs, ou nenhuma lida |
+| `test_polish_da_055.py` (Comissão) | o texto exato do bloco | o arquivo da tela | quebrava |
+| `test_polish_da_056.py` (conteúdo, cronograma, revisão, anexos) | o texto do modelo | o arquivo da tela | quebrava |
+| `test_polish_da_057.py` (condução) e `058` (pelo `da_pagina`) | o texto do modelo | o arquivo da tela | quebrava / sim |
+| `test_telas_de_uso_diario.py` (sorteio) | o bloco | o arquivo da tela | quebrava; a negação sobre a comum, sim |
+| `test_completude_das_etapas.py` | `width:40%` no corpo | `largura-40` no corpo | quebrava |
+| `test_medida_dos_campos.py` | o corpo menos o `<style>` | o corpo menos qualquer `<style>` (não há) | quebrava (`index`) |
+| `test_telas_de_quem_elabora.py` (molduras que rolam) | modelos + `gestao.css` | modelos + os sete + os de tela e grupo | **sim**: o estilo das telas saiu dos modelos |
+| `test_estaticos.py` (sintaxe vazada) | `gestao.css`, tokens | todas as folhas estáticas | sim |
+| `test_larguras.py` (larguras da visão geral) | `%}` na regra | aceita `%;}` | quebrava |
+| `test_folha_estatica.py` (089) | a ordem tokens → `gestao.css` → `<style>` | tokens → sete → arquivo da tela | quebrava |
+
+**Guardiões novos** (`test_politica_de_conteudo.py`, e em `test_folha_estatica.py`):
 
 - nenhum `<style>`, `style=`, `<script>` sem `src`, `on*=` ou `javascript:` nos modelos (FR-2097,
   FR-2101, FR-2106), e nenhum `setAttribute("style"` nem `style=` em marcação montada pelos scripts;
@@ -280,7 +369,38 @@ sem repontar, a mutação — é a primeira tarefa da implementação, no format
 - o cabeçalho nos dois modos, a ausência fora do HTML e na depuração (FR-2112);
 - os arquivos novos varridos pelo guardião de sintaxe de modelo da `089` (FR-2111).
 
+**A mutação** (`mutacoes.py`, saída em `mutacoes.txt`): as 28 da `089`, repontadas para o arquivo de
+área onde a regra mora agora, mais 29 dos guardiões repontados e novos — o estilo das telas, a carga
+por tela, as classes por valor, os modelos, os scripts, o `<meta>` do htmx, a política, a página de
+depuração e o protótipo. **Todas reprovam**; sem mutação, os mesmos testes passam. Uma, na primeira
+rodada, não reprovou — e era a mutação que estava errada: renomear `.filtros-da-visao{` não tira a
+classe da folha, que tem outras regras dela; a refeita, numa classe que só uma regra define, reprova.
+
 ## R-011 — A prova no navegador
+
+**Resultado** (18/10/2026, `depois-da-091/`; antes de `69c6ac1c` + spec, depois de `002359f8`, os dois
+por `git archive`, banco `ps_inventario_091`, cópia do `ps_inventario_090`):
+
+- **Medidas**: nos dois estados da barra, 85 de 86 variantes capturadas (a `aviso-da-chamada` segue
+  sem captura, como desde o inventário de 16/10), **nenhum** `status` diferente, **zero** estouros a
+  375 e a 1280, nenhuma largura, altura, título ou `h1` diferente.
+- **Regras aplicadas, como conjunto**: iguais em 79 telas. Nas seis telas com htmx — composição e
+  Retificação —, três a menos, que são as do indicador que o htmx deixou de injetar (D-009): o resumo
+  delas depois é o mesmo de uma tela sem htmx. Nas da barra, uma a mais declarada à parte, `.simbolos`;
+  na supervisão e em Minhas Etapas, as classes de percentual.
+- **Pixels** (`pixels.py`, com um par de ruído de cada lado): 160 e 155 variantes idênticas, 2 e 7
+  dentro do ruído, e 8 em cada estado acima dele — visão geral, supervisão, detalhe do Processo e
+  dúvidas, a 1280 e a 375. **As oito são a hora na tela** ("14h20" antes, "14h51" depois, recortes
+  conferidos): o par de ruído é da mesma passada, e não a pega. As bases (vitrine, entrada do portal,
+  as duas páginas de erro): idênticas.
+- **Impressão** (`imprimir.py` da `088`): `impressao.json` igual, os PNG do papel idênticos, o texto
+  dos PDF igual.
+- **Violações da política**: **zero** em todas as variantes da gestão e da página de acesso, nos dois
+  estados. Na vitrine e na entrada do portal, uma em observação cada — o `<style>` da folha do portal,
+  a prevista. No protótipo do painel (a página do portal sob a gestão), uma em observação, a mesma.
+  **Na primeira passada**, o protótipo acusou uma violação em **recusa**: a view sob `/gestao/` serve a
+  página do portal, com a folha dele no documento. Corrigido com `em_observacao` (FR-2104), e a passada
+  final já não a tem.
 
 O inventário da `089` (`capturar.py` com `ESTILOS=1`, `capturar_bases.py`, `comparar.py`, `medidas.py`,
 `pixels.py`, `imprimir.py` da `088`) é refeito antes e depois, numa pasta `depois-da-091/`, com vários
@@ -294,12 +414,44 @@ pares de ruído. Duas mudanças nas ferramentas:
 
 ## R-012 — O peso
 
-A medir na implementação, antes e depois, no mesmo banco, pelo `pesar.py` da `089`: Distribuição,
-lista, Minhas Etapas e visão geral; o `len(corpo)` do guardião de escala; e o tamanho de cada arquivo
-novo. Esperado: a visão geral perde ≈ 12 KB; as outras três ganham os `<link>` (SC-817).
+**Medido em 18/10/2026**, pelo `pesar.py` da `089` (estendido com a visão geral e a contagem de
+`style=`), no banco `ps_inventario_091`; antes, um `git archive` da branch com a `main` em `69c6ac1c`;
+depois, o da branch em `002359f8`:
+
+| Página | Antes | Depois | Diferença | `style=` |
+|---|---|---|---|---|
+| Distribuição | 18.358 | 18.931 | +573 | 1 → 0 |
+| Lista de Processos | 10.995 | 11.505 | +510 | 1 → 0 |
+| Minhas Etapas | 7.264 | 7.903 | +639 | 4 → 0 |
+| Visão geral | 30.663 | 19.108 | −11.555 | 1 → 0 |
+
+O ganho das três primeiras são os seis `<link>` a mais da folha comum, cada um com a versão (≈ 85
+bytes), e, em Minhas Etapas, o `<link>` da folha da tela. O teto de 120.000 da Distribuição segue com
+folga. A folha comum tem 108.984 bytes nos sete arquivos (o `gestao.css` tinha 106.964; a diferença
+são os cabeçalhos de cada arquivo e o comentário dos símbolos); as de tela e de grupo, 51.179 —
+das quais ≈ 5 KB são as 202 classes de percentual.
 
 ## R-013 — Entrega
 
 Um PR, se couber. A ordem de trabalho é A, B, C e D, e D depende de B e C (a política recusaria o que
 eles tiram). Se D crescer — a prova de console achar o que este levantamento não achou —, A–C sai num
 PR e D num segundo, da mesma spec, aberto a partir do primeiro.
+
+**Coube**: o levantamento do R-001 não errou — nenhum script embutido, nenhum atributo de evento —, e D
+é um middleware, um `<meta>` e os testes. Um PR, com B e C, A e D em commits separados.
+
+## Achados
+
+- **Duas regras mortas na folha comum.** `.trilha` (e `.trilha a`) é classe do portal, que tem folha
+  própria; `.organizacao-etapas` não aparece em modelo, script ou módulo nenhum. Ficaram — tirar regra
+  sem uso não é duplicada, e é decisão do usuário.
+- **A área "telas" da folha comum tem 345 regras (60 KB)** que citam uma tela só. Levá-las para os
+  arquivos de tela é o mesmo movimento da parte B, com a mesma prova; reduziria a folha comum à metade.
+- **Sete regras terminadas em `%}` numa folha de tela** (a visão geral), que o guardião de sintaxe
+  vazada só passou a ver fora do modelo (R-007).
+- **A primeira prova de ordem era conservadora a ponto de não dividir nada**: tratar seletor sem
+  elemento no inventário como "casa com tudo" prendia 105 regras fora da área. O inventário não tem a
+  série, o lote, a paginação; a leitura das classes dos modelos tem (R-003).
+- **A gestão serve página do portal** no protótipo do painel: a política por caminho não basta, e a
+  view declara a da página que serve.
+- **Os números da suíte** (`make test-pg`, 4 workers, `ps_091`): 12.178 passando, 11 pulados.

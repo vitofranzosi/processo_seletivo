@@ -1,0 +1,59 @@
+ 1 REPROVA gestao/componentes.css: '\n.marca-irreversivel{' -> '.zzmut.marca-irreversivel{' | test_nenhum_modificador_fica_sem_a_base_que_o_usa | 1 failed, 1 passed in 0.86s
+ 1 REPROVA gestao/componentes.css: '\n.oculto{' -> '.ocultx{' | test_nenhuma_classe_citada_deixa_de_existir_na_folha | 1 failed, 6 passed in 0.84s
+ 1 REPROVA shared/tokens.css: '--texto:#1c1c1c;' -> '--texto:#bbbbbb;' | test_contraste_atende_wcag_aa | 1 failed, 14 passed in 0.84s
+ 1 REPROVA gestao/telas.css: '.distribuicao-moldura{overflow-x:visible' -> '.distribuicao-moldura{overflow-x:auto}' | test_o_cabecalho_da_matriz_nao_e_fixado_dentro_de_um_content | 1 failed in 0.84s
+ 2 REPROVA gestao/telas.css: '+' -> '.terminais .botao{color:red}' | test_o_detalhe_desenha_as_terminais_por_ultimo_e_so_contorna | 1 failed in 0.89s
+ 2 REPROVA gestao/telas.css: '+' -> '.requisitos-apresentados{color:red}' | test_os_documentos_da_inscricao_seguem_a_mesa | 1 failed in 0.90s
+ 3 REPROVA gestao/telas.css: '+' -> '.colunas.ao-topo{color:red}' | test_as_terminais_moram_num_parcial_das_duas_telas | 1 failed in 1.12s
+ 4 REPROVA gestao/telas.css: '+' -> '.imutavel code{overflow-wrap:anywhere}' | test_cada_correcao_vale_so_na_sua_tela | 1 failed in 0.14s
+ 5 REPROVA gestao/telas.css: '+' -> 'main .zzmut{max-width:600px}' | test_nenhuma_das_bases_crava_largura_em_pixel | 1 failed in 3.04s
+ 6 REPROVA gestao/telas.css: '+' -> '.so-admite{display:none}' | test_a_folha_nunca_esconde_por_padrao | 1 failed in 3.10s
+ 7 REPROVA gestao/telas.css: '.assistente .estado{font-size:.75rem;' -> '.assistente .estado{text-transform:upper' | test_a_situacao_da_etapa_continua_em_texto | 1 failed in 0.93s
+ 8 REPROVA gestao/telas.css: '+' -> '.acoes .marca-irreversivel{align-self:ce' | test_a_marca_nao_estica_em_linha_flexivel | 1 failed in 0.14s
+ 9 REPROVA gestao/telas.css: '+' -> '.distribuicao thead th .codigo{display:b' | tests/interface/test_alocacoes.py | 1 failed, 11 passed in 3.85s
+10 REPROVA gestao/componentes.css: '.acao.desabilitado{color:var(--texto-fra' -> '.acao.desabilitado{color:var(--verde);' | tests/interface/test_lista.py | 1 failed, 11 passed in 3.45s
+11 REPROVA gestao/componentes.css: '.s-PRESIDENTE{' -> '.s-PRESIDENTX{' | tests/interface/test_comissao.py | 1 failed, 9 passed in 3.56s
+13 REPROVA gestao/telas.css: '+' -> '{% comment %}' | test_nenhuma_sintaxe_de_template_nas_folhas_estaticas | 1 failed, 6 passed in 0.04s
+14 REPROVA shared/tokens.css: ' --pagina:96rem;' -> '' | test_a_pagina_nao_tem_largura_fixa_que_force_rolagem_horizon | 1 failed in 3.26s
+14 REPROVA shared/tokens.css: ' --pagina:96rem;' -> '' | test_as_duas_larguras_vivem_nos_tokens | 1 failed in 3.02s
+15 REPROVA gestao/tabelas.css: 'th,td{text-align:left;padding:.5rem .75r' -> 'th,td{text-align:left;padding:.4rem .75r' | test_a_celula_tem_o_preenchimento_do_portal | 1 failed in 0.86s
+16 REPROVA shared/tokens.css: '--leitura:68ch;' -> '--leitura:70ch;' | tests/interface/test_medida_dos_campos.py | 1 failed, 1 passed in 2.96s
+17 REPROVA gestao/moldura.css: 'background:linear-gradient(to right,var(' -> 'background:linear-gradient(to left,var(-' | test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcad | 1 failed in 0.11s
+18 REPROVA gestao/telas.css: '+' -> '.zzmoldura{overflow-x:auto}' | test_toda_moldura_que_rola_e_referencia_do_que_carrega | 1 failed in 0.26s
+19 REPROVA gestao/tabelas.css: '.tabela-rolavel{overflow-x:auto}' -> '.tabela-rolavel{overflow-x:scroll}' | test_o_conteiner_limita_a_rolagem_horizontal | 1 failed in 0.03s
+20 REPROVA gestao/telas.css: '.tabela-rolavel,.rolagem,.rolagem-da-tab' -> '.rolagem,.rolagem-da-tabela,.serie .barr' | tests/interface/test_visao_dos_perfis.py | 1 failed, 20 passed in 3.50s
+21 REPROVA gestao/telas.css: '.tabela-rolavel,.rolagem,.rolagem-da-tab' -> '.rolagem,.rolagem-da-tabela,.serie .barr' | tests/interface/test_visao_da_classificacao.py | 1 failed, 2 passed in 3.09s
+22 REPROVA gestao/tabelas.css: '.tabela-rolavel{overflow-x:auto}' -> '.tabela-rolavel{overflow-x:scroll}' | test_a_tabela_larga_rola_dentro_de_si_mesma | 1 failed in 3.24s
+23 REPROVA gestao/impressao.css: '.barra-lateral,.cabecalho-de-contexto>a{' -> '.barra-lateral,.cabecalho-de-contexto{di' | test_no_papel_sai_o_cabecalho_sem_trocar_identidade_e_sem_a_ | 1 failed in 0.18s
+23 REPROVA gestao/impressao.css: '.cabecalho-de-contexto{display:block;min' -> '.cabecalho-de-contexto{display:block;whi' | test_no_papel_a_trilha_quebra_a_linha | 1 failed in 0.17s
+24 REPROVA telas/visao-geral.css: '.o-que-nao-medimos .limite-permanente{' -> '.o-que-nao-medimos .limite-permanentx{' | test_nenhuma_classe_citada_deixa_de_existir_na_folha | 1 failed, 120 passed in 0.93s
+24 REPROVA grupos/aviso.css: '.texto-do-aviso{' -> '.texto-do-avisx{' | test_nenhuma_classe_citada_deixa_de_existir_na_folha | 1 failed, 52 passed in 0.88s
+25 REPROVA telas/comissao.css: '#identity_subject{max-width:20rem}' -> '#identity_subject{max-width:22rem}' | test_os_campos_da_comissao_tem_largura_pelo_conteudo | 1 failed in 0.85s
+26 REPROVA telas/compor-conteudo.css: 'fieldset.secao.gerada{border:0;' -> 'fieldset.secao.gerada{border:1px;' | test_a_secao_gerada_nao_tem_caixa_e_o_caminho_fica_na_frase | 1 failed in 3.89s
+26 REPROVA telas/compor-cronograma.css: '.campo.local{flex:0 1 20rem}' -> '.campo.local{flex:0 1 21rem}' | test_a_faixa_do_evento_poe_as_datas_juntas_e_o_local_no_fim | 1 failed in 0.93s
+26 REPROVA telas/compor-anexos.css: '#anexos-lista>.vazio{max-width:none}' -> '#anexos-lista>.vazio{max-width:10rem}' | test_a_navegacao_da_etapa_nao_herda_a_medida_de_leitura | 1 failed in 0.92s
+26 REPROVA telas/compor-revisao.css: 'grid-template-columns:min(16rem,40%) 1fr' -> 'grid-template-columns:min(18rem,40%) 1fr' | test_a_coluna_de_rotulos_da_revisao_tem_uma_largura_so | 1 failed in 1.01s
+27 REPROVA telas/marco.css: '.gestos{display:flex;flex-wrap:wrap' -> '.gestos{display:flex' | test_a_conducao_destaca_so_o_primeiro_gesto | 1 failed in 0.89s
+28 REPROVA grupos/terminais.css: 'flex-direction:row' -> 'flex-direction:column' | test_as_terminais_moram_num_parcial_das_duas_telas | 1 failed in 1.01s
+29 REPROVA telas/sorteio.css: '.imutavel code{overflow-wrap:anywhere}' -> '.imutavel code{overflow-wrap:normal}' | test_cada_correcao_vale_so_na_sua_tela | 1 failed in 0.12s
+30 REPROVA telas/visao-geral.css: '+' -> '.zzmut{max-width:600px}' | test_o_estilo_de_pagina_tambem_nao_crava_largura_em_pixel | 1 failed in 2.98s
+31 REPROVA telas/retificar.css: '+' -> '.zzmoldura{overflow-x:auto}' | test_toda_moldura_que_rola_e_referencia_do_que_carrega | 1 failed in 0.26s
+32 REPROVA telas/lista.css: '+' -> '{% comment %}' | test_nenhuma_sintaxe_de_template_nas_folhas_estaticas | 1 failed, 23 passed in 0.04s
+32 REPROVA grupos/serie.css: '.altura-3{height:3%;}' -> '.altura-3{height:3%}' | test_nenhuma_sintaxe_de_template_nas_folhas_estaticas | 1 failed, 11 passed in 0.04s
+33 REPROVA interface/lista.html: "{% estatico 'interface/telas/lista.css' " -> "{% estatico 'interface/telas/lista.css' " | test_cada_folha_de_tela_e_carregada_so_por_quem_a_usa | 1 failed in 0.04s
+33 REPROVA interface/aviso.html: '<link rel="stylesheet" href="{% estatico' -> '' | test_cada_folha_de_tela_e_carregada_so_por_quem_a_usa | 1 failed in 0.04s
+34 REPROVA interface/minhas_etapas.html: 'largura-{{ item.carga.percentual }}' -> 'largura-{{ item.carga.concluidas }}' | tests/interface/test_completude_das_etapas.py | 1 failed in 3.10s
+34 REPROVA telas/minhas-etapas.css: '.largura-37{width:37%;}' -> '' | test_uma_classe_por_valor_de_zero_a_cem | 1 failed in 0.05s
+35 REPROVA interface/lista.html: '<h1>Processos Seletivos</h1>' -> '<h1 style="color:red">Processos Seletivo' | test_nenhum_modelo_da_gestao_tem_estilo_embutido | 1 failed, 87 passed in 0.07s
+35 REPROVA interface/base.html: '<body>' -> '<body><style>.x{}</style>' | test_nenhum_modelo_da_gestao_tem_estilo_embutido | 1 failed, 56 passed in 0.06s
+36 REPROVA portal/vitrine.html: '+' -> '<script>alert(1)</script>' | test_nenhum_modelo_tem_script_embutido_nem_atributo_de_event | 1 failed, 163 passed in 0.10s
+36 REPROVA interface/lista.html: '<h1>Processos Seletivos</h1>' -> '<h1 onclick="x()">Processos Seletivos</h' | test_nenhum_modelo_tem_script_embutido_nem_atributo_de_event | 1 failed, 87 passed in 0.07s
+37 REPROVA interface/mesa.js: '+' -> 'x.setAttribute("style", "color:red");' | test_nenhum_script_escreve_estilo_que_a_politica_recusaria | 1 failed, 4 passed in 0.05s
+38 REPROVA interface/base.html: '"includeIndicatorStyles":false,' -> '' | test_toda_pagina_com_htmx_herda_a_configuracao_que_o_desarma | 1 failed in 0.05s
+39 REPROVA shared/politica_de_conteudo.py: '("style-src", "\'self\'"),' -> '("style-src", "\'self\' \'unsafe-inline\'"),' | test_a_politica_so_permite_a_propria_origem_e_nada_embutido | 1 failed in 0.04s
+40 REPROVA shared/politica_de_conteudo.py: 'EM_RECUSA = ("/gestao/",)' -> 'EM_RECUSA = ("/gestaox/",)' | test_toda_tela_da_gestao_recebe_a_politica_em_recusa | 1 failed in 3.01s
+41 REPROVA shared/politica_de_conteudo.py: '    if _e_pagina_de_depuracao(resposta):' -> '' | test_a_pagina_de_depuracao_fica_fora_so_com_debug | 1 failed in 0.05s
+42 REPROVA shared/politica_de_conteudo.py: '_MARCA_DA_DEPURACAO in resposta.content[' -> 'resposta.status_code in (404, 500)' | test_a_recusa_da_propria_gestao_recebe_a_politica_mesmo_com_ | 1 failed in 0.05s
+43 REPROVA interface/prototipo_do_assistente.py: '@em_observacao\n' -> '' | test_o_fundo_do_portal_fica_sob_a_politica_do_portal | 1 failed in 3.31s
+sem mutação: passa | 871 passed in 12.01s
+saida=0

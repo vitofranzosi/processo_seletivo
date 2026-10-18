@@ -89,9 +89,9 @@ o contrato com o navegador, e está no R-008, testado pela suíte.
 
 | Peça | Mudança |
 |---|---|
-| `interface/static/interface/gestao/{base,moldura,componentes,formularios,tabelas,telas,impressao}.css` | novos: as regras do `gestao.css` por área, com os comentários (R-002, R-003) |
+| `interface/static/interface/gestao/{base,moldura,impressao,componentes,formularios,tabelas,telas}.css` | novos: as regras do `gestao.css` por área, com os comentários (R-002, R-003) |
 | `interface/static/interface/gestao.css` | sai (D-002) |
-| `interface/static/interface/telas/*.css` | novos: um por parcial e um por tela com regras próprias, mais o do fragmento do protótipo (R-006) |
+| `interface/static/interface/grupos/*.css` e `interface/static/interface/telas/*.css` | novos: um por parcial (e os grupos novos, `serie` e `assistente`), e um por tela com regras próprias, mais o do fragmento do protótipo (R-006) |
 | `interface/templates/interface/_estilo_*.html` | saem (FR-2095) |
 | `shared/static/shared/erro.css` | novo: o `<style>` do `404.html` |
 | `shared/estaticos.py` | `FOLHAS_DA_GESTAO`, a tag `{% folhas_da_gestao %}`, e a verificação de sistema estendida a todo `{% estatico %}` dos modelos (R-004, R-006) |
@@ -101,7 +101,7 @@ o contrato com o navegador, e está no R-008, testado pela suíte.
 | os 27 modelos com bloco, o fragmento do protótipo, `minhas_etapas.html`, `_serie_de_inscricoes.html`, `404.html`, `portal/base.html` (só o `<meta>` do htmx) | `<link>` no bloco; classe no lugar de `style` |
 | `backend/tests/…` | os guardiões repontados (R-010); `tests/interface/test_politica_de_conteudo.py` e os guardiões novos |
 | `doc/implantacao-em-producao-ubuntu.md` | a nota da política e a linha da lista de verificação; `location` não muda (`/static/interface/` já cobre os subdiretórios) |
-| `doc/inventario-visual-da-gestao-2026-10-16/` | `ordem.py`, `areas.py`, `duplicadas.py`, `mutacoes.py`, a leitura de violações no `capturar.py`, `estilos.py` como conjunto; `depois-da-091/` |
+| `doc/inventario-visual-da-gestao-2026-10-16/` | `ordem.py`, `areas.py`, `equivalencia.py`, `mutacoes.py`, a leitura de violações no `capturar.py`, `estilos.py` como conjunto; `depois-da-091/` |
 
 ## Ordem
 
@@ -111,7 +111,7 @@ o contrato com o navegador, e está no R-008, testado pela suíte.
    console é exercitado contra uma página com política plantada.
 2. **B e C primeiro**, que não mudam a ordem de nada: parciais, blocos, fragmento, página de erro e
    `style=""` para arquivo e classe. Repontar os guardiões que liam modelos de tela.
-3. **A**: `areas.py` classifica as regras; `ordem.py` prova as trocas; `duplicadas.py` lista e prova;
+3. **A**: `areas.py` classifica as regras; `ordem.py` prova as trocas; `equivalencia.py` lista e prova;
    os sete arquivos; `FOLHA_COMUM` repontado; mutações.
 4. **D**: o middleware, o `<meta>` do htmx, os guardiões de embutido, o teste de cabeçalho; o guia.
 5. Medir depois e comparar — inventário, pixels, regras aplicadas como conjunto, impressão, console;

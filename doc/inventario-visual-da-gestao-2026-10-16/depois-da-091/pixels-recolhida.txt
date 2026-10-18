@@ -1,0 +1,16 @@
+no ruído  alocacoes--375.png: depois 9 px, máx 13; ruído 9 px, máx 13
+no ruído  auditoria-comissao--375.png: depois 9 px, máx 2; ruído 9 px, máx 2
+no ruído  compor--375.png: depois 28 px, máx 15; ruído 28 px, máx 15
+no ruído  detalhe-51--375.png: depois 150 px, máx 16; ruído 150 px, máx 16
+REPROVA   duvidas--1280.png: depois (300, 255); ruído (176, 255)
+REPROVA   duvidas--375.png: depois (300, 255); ruído (176, 255)
+no ruído  impedimentos--375.png: depois 6 px, máx 3; ruído 6 px, máx 3
+no ruído  lista--375.png: depois 22 px, máx 7; ruído 22 px, máx 7
+REPROVA   processo-detalhe--1280.png: depois (1464, 179); ruído (1349, 179)
+REPROVA   processo-detalhe--375.png: depois (638, 179); ruído (534, 179)
+no ruído  retificacao-ato-cancelar--375.png: depois 4 px, máx 4; ruído 4 px, máx 4
+REPROVA   supervisao--1280.png: depois (186, 163); ruído (103, 163)
+REPROVA   supervisao--375.png: depois (186, 163); ruído (131, 163)
+REPROVA   visao-geral--1280.png: depois (117, 152); ruído (66, 152)
+REPROVA   visao-geral--375.png: depois (117, 152); ruído (66, 152)
+comparadas: 170; idênticas: 155; dentro do ruído: 7; reprovadas: 8; só numa das passadas: []

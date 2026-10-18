@@ -19,13 +19,30 @@ uv sync --extra dev --extra assistente
 
 ## A ordem e as duplicadas (A)
 
+Na pasta da prova (`depois-da-091/`), sobre o `gestao-antes-da-divisao.css` guardado ali:
+
 ```bash
-uv run --with playwright python ../doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/ordem.py <antes>
+uv run --project ../../../backend --with playwright python ordem.py preparar gestao-antes-da-divisao.css
 ```
 
-Esperado: cada par que troca de ordem está classificado como "sem propriedade comum" ou "sem elemento
-comum no inventário"; nenhum par "disputa". A lista das regras que ficaram fora da área vai para o
-R-002 da pesquisa. O mesmo para `duplicadas.py`: zero pares iguais depois; cada remoção com a prova.
+```bash
+CONFLITOS=$PWD/candidatos.json PORTA=8192 uv run --with playwright python ../capturar.py elementos
+```
+
+(o segundo de `backend/`, com o ambiente do inventário e o caminho do `capturar.py`)
+
+```bash
+uv run --with networkx python ordem.py resolver gestao-antes-da-divisao.css elementos/conflitos.json <destino>
+```
+
+Esperado: `ordem.json` com 281 pares de regras em conflito, nenhum invertido na distribuição, e as sete
+regras fora da área do R-002.
+
+```bash
+python3 equivalencia.py
+```
+
+Esperado: `EQUIVALENTE: 562 regras e 162 comentários` e zero duplicadas no que uma página carrega.
 
 ## O estilo das telas e os atributos (B, C)
 
@@ -72,6 +89,14 @@ aplicadas (como conjunto) em cada variante, e zero violações na gestão e na p
 Com o servidor da worktree, abrir a visão geral, a Mesa com um documento aberto, a prévia do Edital com
 o PDF, uma tela da composição com htmx e a página de identificação; o console sem nenhuma mensagem de
 política. Plantar, pelo inspetor, `<div style="color:red">` numa tela: o navegador recusa e acusa.
+
+## A mutação
+
+```bash
+uv run python ../doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/mutacoes.py
+```
+
+Esperado: todas `REPROVA`, e `sem mutação: passa`.
 
 ## O peso
 
