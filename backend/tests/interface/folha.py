@@ -29,12 +29,17 @@ FOLHAS_DE_TELA = sorted(
 )
 TOKENS_CSS = RAIZ / "shared/static/shared/tokens.css"
 ERRO_CSS = RAIZ / "shared/static/shared/erro.css"
+# A folha do portal do candidato, que era o `<style>` do `portal/base.html` até a 092.
+PORTAL_CSS = RAIZ / "portal/static/portal/portal.css"
 
 # O texto dos arquivos, com os comentários — como os guardiões de texto liam o modelo, com os
 # `{% comment %}`. Quem descontava comentário continua descontando (`sem_comentarios`). A folha
 # comum é a soma dos arquivos, na ordem de carga: um guardião que lia "a folha" lê todos.
 FOLHA_COMUM = "".join(arquivo.read_text() for arquivo in ARQUIVOS_DA_FOLHA_COMUM)
 TOKENS = TOKENS_CSS.read_text()
+# Com os comentários, como os guardiões do portal liam o modelo — onde a folha já tinha `/* */`, e
+# nenhum `{% comment %}` (092).
+FOLHA_DO_PORTAL = PORTAL_CSS.read_text()
 
 # Qualquer `<link>` e qualquer `<style>`, com os atributos que tiverem e na ordem que tiverem: um
 # padrão preso à grafia de hoje deixaria de fora, em silêncio, a primeira folha escrita de outro

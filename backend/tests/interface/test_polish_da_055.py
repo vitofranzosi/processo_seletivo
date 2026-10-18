@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
+from tests.interface.folha import FOLHA_COMUM, PORTAL_CSS, estilo_do_bloco
 from tests.interface.test_acessibilidade import sem_prosa
 from tests.interface.test_corte import _emitir_pela_tela, cliente_no_corte  # noqa: F401
 
@@ -20,7 +20,8 @@ RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
 PORTAL = RAIZ / "portal/templates/portal"
 FOLHA = sem_prosa(FOLHA_COMUM)
-FOLHA_DO_PORTAL = sem_prosa((PORTAL / "base.html").read_text())
+# A folha do portal saiu do `base.html` na 092; o modelo não tem mais regra nenhuma.
+FOLHA_DO_PORTAL = sem_prosa(PORTAL_CSS.read_text())
 
 
 def regra(seletor, folha=FOLHA):

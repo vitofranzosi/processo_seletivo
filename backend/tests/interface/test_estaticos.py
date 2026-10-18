@@ -17,7 +17,13 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import identificar
-from tests.interface.folha import ARQUIVOS_DA_FOLHA_COMUM, ERRO_CSS, FOLHAS_DE_TELA, TOKENS_CSS
+from tests.interface.folha import (
+    ARQUIVOS_DA_FOLHA_COMUM,
+    ERRO_CSS,
+    FOLHAS_DE_TELA,
+    PORTAL_CSS,
+    TOKENS_CSS,
+)
 
 TELAS_COM_HTMX = ["perfis", "cronograma", "classificacao"]
 TELAS_COM_BOTAO_DINAMICO = ["perfis", "cronograma"]
@@ -107,12 +113,13 @@ def test_nenhuma_sintaxe_de_template_chega_ao_navegador(client, seletor_ligado, 
 
 @pytest.mark.parametrize(
     "folha",
-    [*ARQUIVOS_DA_FOLHA_COMUM, *FOLHAS_DE_TELA, TOKENS_CSS, ERRO_CSS],
+    [*ARQUIVOS_DA_FOLHA_COMUM, *FOLHAS_DE_TELA, TOKENS_CSS, ERRO_CSS, PORTAL_CSS],
     ids=lambda caminho: f"{caminho.parent.name}/{caminho.name}",
 )
 def test_nenhuma_sintaxe_de_template_nas_folhas_estaticas(folha):
-    """`FR-2043`, `FR-2111`: as folhas saíram do modelo na 089 e na 091, e deixaram de passar pela
-    renderização — a comum, as de tela e de grupo, os tokens e a da página de erro.
+    """`FR-2043`, `FR-2111`, `FR-2140`: as folhas saíram do modelo na 089, na 091 e na 092, e
+    deixaram de passar pela renderização — a comum, as de tela e de grupo, os tokens, a da página de
+    erro e a do portal.
 
     O caso de cima varre a página renderizada; a folha comum não está mais nela. Um
     `{% endcomment %}` esquecido na conversão iria ao navegador como CSS quebrado, e o navegador

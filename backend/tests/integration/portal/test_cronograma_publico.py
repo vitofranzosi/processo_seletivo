@@ -161,10 +161,11 @@ def test_sem_evento_publicado_a_secao_some_inteira(
     contexto = {**resposta.context[-1].flatten(), "cronograma": []}
 
     corpo = render_to_string("portal/selecao.html", contexto)
-    # A folha de estilo é embutida em toda página do portal, e ela **menciona**
-    # `.linha-do-tempo`. Afirmar sobre o documento inteiro acusaria a regra de CSS como se fosse
-    # marcação: é o mesmo tropeço que a `021` já registrou com a prosa de um comentário.
-    marcacao = corpo[corpo.index("</style>") :]
+    # A folha de estilo **menciona** `.linha-do-tempo`. Afirmar sobre o documento inteiro acusaria a
+    # regra de CSS como se fosse marcação: é o mesmo tropeço que a `021` já registrou com a prosa de
+    # um comentário. Até a 092 ela era embutida, e o recorte começava no `</style>`; desde então ela
+    # é arquivo, e o recorte é o `<body>` — o mesmo texto de antes.
+    marcacao = corpo[corpo.index("<body") :]
 
     assert "linha-do-tempo" not in marcacao
     assert "cronograma-titulo" not in marcacao
@@ -241,7 +242,7 @@ def test_evento_sem_termino_nao_acontece_para_sempre(
     edital = encerrar_inscricoes(api_client, edital, agora - timedelta(days=30))
 
     corpo = corpo_da_selecao(client, edital)
-    marcacao = corpo[corpo.index("</style>") :]
+    marcacao = corpo[corpo.index("<body") :]
 
     assert "Acontecendo agora" not in marcacao, "um Evento passado ainda se anuncia como corrente"
     assert marcacao.count('class="marco concluido"') == 2, "a prova sem término não foi concluída"
