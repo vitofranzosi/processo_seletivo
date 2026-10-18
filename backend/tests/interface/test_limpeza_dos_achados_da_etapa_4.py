@@ -146,9 +146,9 @@ def test_no_edital_o_ato_indisponivel_continua_descrito_pelo_motivo(
     assert "irreversivel-" not in acoes
 
 
-def test_na_retificacao_cancelar_e_anunciado_como_irreversivel(client, publicado):
+def test_na_retificacao_os_dois_atos_sem_volta_sao_anunciados(client, publicado):
     """`FR-2060`, `SC-801`: o mesmo desenho, e o mesmo defeito, no detalhe da Retificação
-    (D-001)."""
+    (D-001) — "Cancelar Retificação" em elaboração e "Publicar Retificação" homologada."""
     vigente = VersaoConsolidada.objects.filter(edital=publicado).latest("materialized_at")
     identificar(client, "ana.elaboradora", ["elaborador"])
     client.post(
@@ -164,6 +164,21 @@ def test_na_retificacao_cancelar_e_anunciado_como_irreversivel(client, publicado
     corpo = abrir(client, reverse("interface:retificacao-detalhe", args=[retificacao.id]))
 
     confere_a_marca(cartao(corpo, "acoes-titulo"), ["Cancelar Retificação"])
+
+    # Homologada, "Publicar Retificação" — o ato cheio da tela — tem a mesma descrição.
+    def ato(acao, **extra):
+        url = reverse("interface:retificacao-ato", args=[retificacao.id, acao])
+        chave = client.get(url).context["chave_idempotencia"]
+        assert client.post(url, {"chave_idempotencia": chave, **extra}).status_code == 302
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    ato("submeter")
+    identificar(client, "bruno.homologador", ["homologador"])
+    ato("homologar", motivo="Conferido")
+    identificar(client, "carla.publicadora", ["publicador"])
+    corpo = abrir(client, reverse("interface:retificacao-detalhe", args=[retificacao.id]))
+
+    confere_a_marca(cartao(corpo, "acoes-titulo"), ["Publicar Retificação"])
 
 
 # ---- a trilha das consultas da Etapa ----------------------------------------------------------
@@ -278,6 +293,9 @@ def test_a_trilha_nova_nao_custa_consulta(client, cenario, rota, leitor):
     client.get(url)  # aquece o que a sessão guarda na primeira leitura
     with CaptureQueriesContext(connection) as consultas:
         assert client.get(url).status_code == 200
+    # Igual ao de antes, e não "no máximo": uma consulta a menos fora das Conclusões seria sinal de
+    # que a porta deixou de perguntar alguma coisa. Uma mudança futura nestas views que mude a conta
+    # muda esta tabela, com a medição nova.
     menos = 1 if rota == "interface:conclusoes-preservadas" else 0
     assert len(consultas) == CONSULTAS_ANTES[(rota, leitor)] - menos
 

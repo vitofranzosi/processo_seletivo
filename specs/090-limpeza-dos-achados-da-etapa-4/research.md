@@ -152,6 +152,19 @@ três links de quem audita, a regra do rodapé e as quatro da prévia; as seis d
 falta da constante, que é a medição (Resultados 7, Trilha da avaliação 13, Conclusões 7, para as duas
 bases; a prévia, 10 pelas duas portas, com e sem auditoria).
 
+## R-006 — O code review do PR (18/10)
+
+Seis achados, quatro corrigidos:
+
+| Achado | Destino |
+|---|---|
+| A Classificação da prévia perguntava à presidência antes de olhar a auditoria | corrigido: a auditoria primeiro, em memória |
+| "Publicar Retificação" sem teste, embora o SC-801 o conte | corrigido: o teste da Retificação a leva até a homologação |
+| `pode_reabrir` como apelido de `pode_gerir_a_comissao` | corrigido: o apelido saiu; a chave do template ficou, porque diz o gesto |
+| O comentário da marca dentro do laço, na Retificação | corrigido: antes da lista |
+| O teste de custo prende números absolutos | mantido: "igual ao de antes" é o que a `FR-2064` pede, e "no máximo" deixaria passar uma porta que deixou de perguntar; o comentário diz que a tabela muda com medição nova |
+| `avisos.py` importa `_pode_ver_a_classificacao` de `views.py`, tarde | mantido: é a mesma pergunta da trilha dos Resultados divulgados, e copiá-la aqui é o que poderia divergir; tirá-la de `views.py` mexeria em três chamadas fora do escopo |
+
 ## Achados (registrados, não corrigidos)
 
 - **"Publicar resultado", no Ato de classificação, declara-se irreversível e não tem marca.** A ação

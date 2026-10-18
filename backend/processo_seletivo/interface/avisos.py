@@ -235,13 +235,16 @@ def _porta_dos_resultados_divulgados(ator, edital, marco_id, porta):
     """
     if porta != "marco" or not (ator.can("resultado:publicar") or ator.can("auditoria:consultar")):
         return {}
-    # Importada aqui porque `views` importa este módulo.
+    # Importada aqui porque `views` importa este módulo; é a mesma pergunta da trilha dos Resultados
+    # divulgados, e uma cópia dela aqui poderia divergir da de lá.
     from processo_seletivo.interface.views import _pode_ver_a_classificacao
 
     return {
         "de": "marco",
         "voltar": reverse("interface:publicacoes-do-marco", args=[edital.id, marco_id]),
-        "pode_ver_a_classificacao": _pode_ver_a_classificacao(ator, edital),
+        # A auditoria primeiro: ela responde em memória, e a presidência custa uma consulta.
+        "pode_ver_a_classificacao": ator.can("auditoria:consultar")
+        or _pode_ver_a_classificacao(ator, edital),
     }
 
 

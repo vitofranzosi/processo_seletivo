@@ -53,4 +53,4 @@ Nenhuma.
 - [x] T019 Percurso do quickstart no navegador, a 1280 e a 375 px, com quem preside e com quem só audita
 - [x] T020 O inventário em `doc/` e a linha do README
 - [ ] T021 `make lint check test-pg DB_NAME=ps_090 POSTGRES_USER=$USER` (FR-2071, SC-806)
-- [ ] T022 `/code-review` no PR; corrigir os achados confirmados
+- [x] T022 `/code-review` no PR; corrigir os achados confirmados

@@ -8609,8 +8609,7 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
         return identidade.pedir_identificacao(request)
     # **Consultar é de dois; reabrir é de um.** A auditoria lê esta página inteira e não age nela,
     # e é por isso que o formulário de reabertura depende da mesma base que a rota do ato exige — a
-    # que a porta acabou de perguntar (090).
-    pode_reabrir = pode_gerir_a_comissao
+    # que a porta acabou de perguntar (090), e que a trilha também usa.
     inscricao = (request.GET.get("inscricao") or "").strip()
     filtro_invalido = None
     procurada = _inscricao_do_filtro(edital, inscricao) if inscricao else None
@@ -8639,7 +8638,7 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
                 "pagina": pagina,
                 "inscricao_filtro": inscricao,
                 "filtro_invalido": filtro_invalido,
-                "pode_reabrir": pode_reabrir,
+                "pode_reabrir": pode_gerir_a_comissao,
                 "pode_gerir_a_comissao": pode_gerir_a_comissao,
                 "erro": request.session.pop("erro_da_reabertura", None),
                 "resultado": request.session.pop("resultado_da_reabertura", None),
