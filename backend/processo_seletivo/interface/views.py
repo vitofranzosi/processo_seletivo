@@ -8062,7 +8062,7 @@ def _edital_para_publicar(request, edital_id, *, consulta=False):
     if ator is None:
         return None, None, False
     pode_publicar = ator.can("resultado:publicar")
-    pode_consultar = pode_publicar or (consulta and ator.can("auditoria:consultar"))
+    pode_consultar = acoes.pode_consultar_a_divulgacao(ator) if consulta else pode_publicar
     # **O status desta porta sempre esteve certo; o que ela não dizia era o quê** (033, `FR-481`).
     # A frase genérica de antes — *"A operação não é permitida."* — nunca mentiu, porque não
     # nomeava nada. **É ao nomear que ela passa a poder mentir**, e esta porta tem modo: com

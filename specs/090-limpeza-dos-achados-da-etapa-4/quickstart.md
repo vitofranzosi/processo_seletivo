@@ -31,10 +31,15 @@ cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.developm
 3. **O rodapé.** A 375 px, a conferência da interrupção de um aviso, a edição de um modelo de aviso e
    a conferência de um ato do Processo: os botões do rodapé têm o rótulo numa linha, e o segundo vem
    abaixo do primeiro quando os dois não cabem. A 1280 px, lado a lado, como antes.
-4. **A prévia pelo marco.** Como `paula.publicadora`, os Resultados divulgados do marco FINAL do Edital
-   51/2026, "Avisar candidatos": a trilha termina em "… › Classificação › Resultados divulgados ›
-   Avisar candidatos", e "Cancelar" volta aos Resultados divulgados. Trocar de modelo de texto mantém a
-   trilha. Pelos Avisos aos candidatos do mesmo Edital, a trilha é a de antes.
+4. **A prévia pelo marco.** Neste banco o resultado do marco FINAL do Edital 51/2026 já foi avisado (o
+   `AVISO` do inventário), e os Resultados divulgados dizem "Não há publicação vigente ainda não avisada
+   neste marco", sem o link "Avisar candidatos" — que, com resultado pendente, leva a porta no endereço
+   (`test_os_resultados_divulgados_abrem_a_previa_pela_porta_deles`). Abra a prévia direto pelo
+   endereço do link, como `paula.publicadora`:
+   `/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/avisos/novo?de=marco`.
+   A trilha termina em "… › Classificação › Resultados divulgados › Avisar candidatos", com a
+   Classificação em texto (a publicadora não a abre), e "Cancelar" volta aos Resultados divulgados. Sem
+   `de=marco`, a trilha é a de antes, dos Avisos aos candidatos.
 
 ## Inventário
 

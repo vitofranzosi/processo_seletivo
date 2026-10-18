@@ -35,7 +35,7 @@ from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.domain.mensagem import RODAPE
 from processo_seletivo.avisos.domain.variaveis import SIGNIFICADO, VARIAVEIS
 from processo_seletivo.avisos.models import ModeloDeAviso
-from processo_seletivo.interface import identidade
+from processo_seletivo.interface import acoes, identidade
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada
 
@@ -226,14 +226,14 @@ def _porta_dos_resultados_divulgados(ator, edital, marco_id, porta):
     """A prévia aberta pelos Resultados divulgados volta a eles (090, `FR-2067`, `FR-2068`).
 
     **A porta vem do endereço**, e não da página anterior do navegador, que nem sempre vem e daria
-    duas trilhas ao mesmo endereço. Ela só vale para quem abre os Resultados divulgados — as
-    capacidades da consulta de `_edital_para_publicar` —; para os demais, inclusive quem a escrever
-    à mão, a prévia é a dos Avisos aos candidatos, que todo mundo que avisa abre.
+    duas trilhas ao mesmo endereço. Ela só vale para quem abre os Resultados divulgados — a mesma
+    pergunta da porta deles, `pode_consultar_a_divulgacao` —; para os demais, inclusive quem a
+    escrever à mão, a prévia é a dos Avisos aos candidatos, que todo mundo que avisa abre.
 
     A Classificação entra na trilha como na dos próprios Resultados divulgados: link só para quem a
     abre. É a única pergunta que custa consulta, e só nesta porta.
     """
-    if porta != "marco" or not (ator.can("resultado:publicar") or ator.can("auditoria:consultar")):
+    if porta != "marco" or not acoes.pode_consultar_a_divulgacao(ator):
         return {}
     # Importada aqui porque `views` importa este módulo; é a mesma pergunta da trilha dos Resultados
     # divulgados, e uma cópia dela aqui poderia divergir da de lá.

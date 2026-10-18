@@ -165,6 +165,16 @@ Seis achados, quatro corrigidos:
 | O teste de custo prende números absolutos | mantido: "igual ao de antes" é o que a `FR-2064` pede, e "no máximo" deixaria passar uma porta que deixou de perguntar; o comentário diz que a tabela muda com medição nova |
 | `avisos.py` importa `_pode_ver_a_classificacao` de `views.py`, tarde | mantido: é a mesma pergunta da trilha dos Resultados divulgados, e copiá-la aqui é o que poderia divergir; tirá-la de `views.py` mexeria em três chamadas fora do escopo |
 
+## R-007 — A segunda revisão do PR (18/10)
+
+Três achados, os três corrigidos:
+
+| Achado | Correção |
+|---|---|
+| O teste de custo da prévia aceitava de 0 a +1 consulta nas duas bases | exato: +1 sem auditoria, 0 com ela; com a ordem invertida, o caso da auditora reprova (contraprova feita) |
+| "Quem abre os Resultados divulgados" escrito em três lugares | `acoes.pode_consultar_a_divulgacao`, usada pela porta da consulta, pelo atalho do Ato de classificação e pela trilha da prévia |
+| O passo 4 do quickstart pedia um link que o banco do inventário não mostra | o passo diz por quê, e abre a prévia pelo endereço do link |
+
 ## Achados (registrados, não corrigidos)
 
 - **"Publicar resultado", no Ato de classificação, declara-se irreversível e não tem marca.** A ação

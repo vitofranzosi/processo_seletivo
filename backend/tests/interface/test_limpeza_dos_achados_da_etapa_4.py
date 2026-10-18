@@ -491,10 +491,18 @@ def test_a_porta_nao_muda_o_aviso(client, divulgado):
 CONSULTAS_DA_PREVIA_ANTES = {"publicador": 10, "publicador+auditor": 10}
 
 
-@pytest.mark.parametrize("papeis", [["publicador"], ["publicador", "auditor"]])
-def test_a_porta_custa_no_maximo_uma_consulta_e_so_pelo_marco(client, divulgado, papeis):
-    """`FR-2069`, R-004: pelos Avisos, nada a mais; pelos Resultados divulgados, no máximo a
-    pergunta da Classificação, a mesma que eles fazem."""
+@pytest.mark.parametrize(
+    ("papeis", "a_mais"),
+    [
+        # Sem auditoria, a Classificação pergunta à presidência: uma consulta, só nesta porta.
+        (["publicador"], 1),
+        # Com auditoria, a resposta sai da identidade, em memória, antes da presidência.
+        (["publicador", "auditor"], 0),
+    ],
+)
+def test_a_porta_custa_no_maximo_uma_consulta_e_so_pelo_marco(client, divulgado, papeis, a_mais):
+    """`FR-2069`, R-004: pelos Avisos, nada a mais; pelos Resultados divulgados, só a pergunta da
+    Classificação, a mesma que eles fazem — e nenhuma para quem audita."""
     identificar(client, "paula.publicadora", papeis)
 
     def contar(url):
@@ -507,4 +515,4 @@ def test_a_porta_custa_no_maximo_uma_consulta_e_so_pelo_marco(client, divulgado,
     pelo_marco = contar(url_da_previa(divulgado, natureza=nomes.PRELIMINAR, de="marco"))
     antes = CONSULTAS_DA_PREVIA_ANTES["+".join(papeis)]
     assert pelos_avisos == antes
-    assert antes <= pelo_marco <= antes + 1
+    assert pelo_marco == antes + a_mais
