@@ -186,8 +186,9 @@ main{max-width:var(--pagina);margin:0 auto;padding:1.5rem}
 A escala dos três níveis (055, FR-1010). Sem regra de h3, ele herdava 1,17em do navegador e saía
 **maior** que o h2 da mesma página — 18,7 px contra 16 no Processo, onde "Atenção" encimava o
 "Onde cada Edital está". As regras por contêiner que punham h2 em 1rem saíram junto (D-008): eram
-elas que davam à Revisão dois h2 irmãos de tamanhos diferentes. Prosa em comentário de Django, e
-não de CSS, porque a tela de distribuição está no teto de caracteres.
+elas que davam à Revisão dois h2 irmãos de tamanhos diferentes. A prosa era comentário de Django
+enquanto a folha estava no HTML, porque a tela de distribuição estava no teto de caracteres; desde a
+089 a folha é estática, viaja uma vez, e o comentário é de CSS (D-002 da `089`).
 */
 h1{font-size:1.6rem;margin:0 0 .25rem}
 h2{font-size:1.15rem;margin:0}

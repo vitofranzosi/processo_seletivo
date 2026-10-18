@@ -20,7 +20,7 @@ from tests.fixtures.corte import MARCO
 from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.fixtures.recortes import MODALIDADE_PPI, emitir_recorte, montar_cenario_7_1_2
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM
+from tests.interface.folha import FOLHA_COMUM, sem_comentarios
 from tests.interface.test_telas_de_inscricoes_e_recursos import (  # noqa: F401 — fixtures
     JULGADORA,
     cenario,
@@ -41,7 +41,7 @@ def regras_de_impressao():
     a CSS: lendo o modelo, `index` não acharia a regra; lendo o arquivo sem tirar os `/* */`, a
     prosa entraria na conta das chaves.
     """
-    folha = re.sub(r"/\*.*?\*/", "", FOLHA_COMUM, flags=re.S)
+    folha = sem_comentarios(FOLHA_COMUM)
     inicio = folha.index("@media print{") + len("@media print{")
     profundidade, fim = 1, inicio
     while profundidade:

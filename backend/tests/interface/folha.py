@@ -21,15 +21,29 @@ GESTAO_CSS = RAIZ / "interface/static/interface/gestao.css"
 TOKENS_CSS = RAIZ / "shared/static/shared/tokens.css"
 
 # O texto dos arquivos, com os comentários — como os guardiões de texto liam o modelo, com os
-# `{% comment %}`. Quem descontava comentário continua descontando (`sem_prosa`).
+# `{% comment %}`. Quem descontava comentário continua descontando (`sem_comentarios`).
 FOLHA_COMUM = GESTAO_CSS.read_text()
 TOKENS = TOKENS_CSS.read_text()
 
-_FOLHA_OU_ESTILO = re.compile(
-    r'<link rel="stylesheet" href="(?P<href>[^"?]+)(?:\?[^"]*)?">|<style>(?P<estilo>.*?)</style>',
-    re.S,
-)
-_COMENTARIO = re.compile(r"/\*.*?\*/", re.S)
+# Qualquer `<link>` e qualquer `<style>`, com os atributos que tiverem e na ordem que tiverem: um
+# padrão preso à grafia de hoje deixaria de fora, em silêncio, a primeira folha escrita de outro
+# jeito (`media="print"`, `href` antes de `rel`) — e o guardião aprovaria uma regra que não leu.
+_LINK_OU_ESTILO = re.compile(r"<link\b(?P<link>[^>]*)>|<style\b[^>]*>(?P<estilo>.*?)</style>", re.S)
+_REL = re.compile(r"""\brel\s*=\s*["']?([^"'>]*)""")
+_HREF = re.compile(r"""\bhref\s*=\s*["']?([^"'?#>\s]+)""")
+_COMENTARIO_CSS = re.compile(r"/\*.*?\*/", re.S)
+_COMENTARIO_DE_MODELO = re.compile(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", re.S)
+
+
+def sem_comentarios(texto, troca=""):
+    """O texto de uma folha sem os comentários, de CSS e de modelo.
+
+    Os comentários citam regras e classes o tempo todo, e citar não é definir. Uma remoção só, para
+    todos os guardiões: a forma do comentário já mudou uma vez (na 089, de `{% comment %}` para
+    `/* */`), e cada cópia da remoção era um lugar a esquecer. `troca` é o que fica no lugar —
+    um espaço, para quem não pode deixar dois seletores colarem.
+    """
+    return _COMENTARIO_DE_MODELO.sub(troca, _COMENTARIO_CSS.sub(troca, texto))
 
 
 def folha_aplicada(corpo):
@@ -48,13 +62,23 @@ def folha_aplicada(corpo):
         corpo = corpo.decode()
     cabeca = corpo[: corpo.index("</head>")]
     partes = []
-    for achado in _FOLHA_OU_ESTILO.finditer(cabeca):
-        if achado.group("href") is None:
+    for achado in _LINK_OU_ESTILO.finditer(cabeca):
+        if achado.group("link") is None:
             partes.append(achado.group("estilo"))
             continue
-        caminho = achado.group("href").removeprefix("/" + settings.STATIC_URL.strip("/") + "/")
+        rel = _REL.search(achado.group("link"))
+        if not rel or "stylesheet" not in rel.group(1).split():
+            continue
+        href = _HREF.search(achado.group("link"))
+        assert href, f"folha sem endereço: <link{achado.group('link')}>"
+        caminho = href.group(1).removeprefix("/" + settings.STATIC_URL.lstrip("/"))
         arquivo = finders.find(caminho)
-        assert arquivo, f"folha carregada e inexistente: {achado.group('href')}"
-        partes.append(_COMENTARIO.sub("", Path(arquivo).read_text()))
+        assert arquivo, f"folha carregada e inexistente: {href.group(1)}"
+        partes.append(sem_comentarios(Path(arquivo).read_text()))
     assert partes, "a página não carrega folha nenhuma"
     return "\n".join(partes)
+
+
+def folha_da_pagina(cliente, url):
+    """A folha que a página daquele endereço aplica, pedida pelo cliente já identificado."""
+    return folha_aplicada(cliente.get(url).content)

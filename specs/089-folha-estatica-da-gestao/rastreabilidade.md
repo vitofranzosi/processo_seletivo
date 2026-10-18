@@ -12,10 +12,10 @@ por `comparar.py`, `medidas.py` e `pixels.py`; "equivalência" é o script de eq
 | FR-2032 | `interface/test_folha_estatica.py` (as quatro bases carregam os tokens antes de todo `<style>`; o parcial não existe; um lugar só define os tokens) |
 | FR-2033 | Equivalência (o número de comentários convertidos é o de antes, menos o do ponto de extensão, que fica no modelo; nenhum fecha antes do fim) |
 | FR-2034 | `interface/test_folha_estatica.py` (endereço estável e endereço novo com conteúdo novo); navegador, a edição no runserver (quickstart) |
-| FR-2035 | `interface/test_folha_estatica.py` (os finders acham os dois arquivos com a configuração do projeto); o guia de implantação (R-006) |
+| FR-2035 | `interface/test_folha_estatica.py` (os finders acham os dois arquivos com a configuração do projeto; `test_a_verificacao_de_sistema_acusa_a_folha_que_falta`); `manage.py check` (`estaticos.E001`); o guia de implantação (R-006) |
 | FR-2036 | Diff do PR (nenhum `_estilo_*`, bloco `estilo_da_pagina` ou folha própria do portal muda além do `<link>` dos tokens); `interface/test_folha_estatica.py` (o `<style>` da página continua depois das folhas externas) |
 | FR-2037 | R-005: a contagem dos `style="`; nenhum cabeçalho de CSP no diff |
-| FR-2038 | Os guardiões do R-005, repontados; mutação |
+| FR-2038 | Os guardiões do R-005, repontados; mutação; `interface/test_folha_estatica.py` (`test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito`) |
 | FR-2039 | Os guardiões do R-005 que descontam `/* */`; mutação com violação dentro e fora de comentário |
 | FR-2040 | `performance/test_escala_da_mesa.py` (`test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito`, teto intacto); R-008 |
 | FR-2041 | Inventário, nos dois estados da barra: `comparar.py`, `medidas.py` (com o resumo `estilos` das regras aplicadas) e `pixels.py` contra três pares de ruído; `capturar_bases.py` para a vitrine, a entrada do portal e a página de erro |

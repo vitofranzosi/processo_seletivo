@@ -1597,6 +1597,15 @@ HTML
 
 ```bash
 sudo tee /etc/nginx/sites-available/processoseletivo >/dev/null <<'CONF'
+# Cache dos estáticos (089). As folhas de estilo vêm com `?v=<resumo do conteúdo>`, que muda quando o
+# arquivo muda: com o endereço versionado, o navegador pode guardá-las sem perguntar de novo, e cada
+# página deixa de esperar duas revalidações antes de desenhar. Sem `v` — os scripts, que não têm
+# versão —, "no-cache": revalida sempre, ou o navegador usaria o JS da release anterior.
+map $arg_v $cache_do_estatico {
+    ""      "no-cache";
+    default "public, max-age=31536000, immutable";
+}
+
 # Host desconhecido: recusa sem responder. ALLOWED_HOSTS já devolveria 400, mas assim a varredura
 # não chega à aplicação.
 server {
@@ -1649,19 +1658,18 @@ server {
     location ^~ /_erro/ { internal; root /var/www/processoseletivo; }
 
     # Estáticos: o projeto não tem STATIC_ROOT (gap I-3), e o collectstatic falha. Servem-se direto
-    # da release ativa: JS, e desde a 089 a folha comum da gestão e os tokens. "no-cache" porque os
-    # nomes não são versionados — sem isso, o navegador usaria o JS da release anterior depois de um
-    # deploy. As duas folhas levam `?v=<resumo do conteúdo>` no endereço, e mudam de endereço quando
-    # mudam; os scripts não, e é por eles que o "no-cache" continua necessário.
+    # da release ativa: JS, e desde a 089 a folha comum da gestão e os tokens. O cache vem do `map`
+    # do topo: imutável para o que é pedido com `?v=` (as folhas), "no-cache" para o resto (os
+    # scripts, cujos nomes não são versionados).
     location ^~ /static/interface/ {
         alias /opt/processoseletivo/current/backend/processo_seletivo/interface/static/interface/;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $cache_do_estatico always;
         add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
     location ^~ /static/portal/ {
         alias /opt/processoseletivo/current/backend/processo_seletivo/portal/static/portal/;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $cache_do_estatico always;
         add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
@@ -1669,7 +1677,7 @@ server {
     # gestão, o portal e a página de erro perdem a paleta inteira.
     location ^~ /static/shared/ {
         alias /opt/processoseletivo/current/backend/processo_seletivo/shared/static/shared/;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $cache_do_estatico always;
         add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
@@ -1716,8 +1724,10 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/readiness   # 403 de 
 curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/metrics     # 403
 curl -sI https://<DOMINIO>/static/interface/htmx.min.js | grep -Ei '^(HTTP|content-type|cache-control)'
 #   HTTP/2 200 · application/javascript · no-cache
-curl -sI https://<DOMINIO>/static/interface/gestao.css | grep -Ei '^(HTTP|content-type)'   # 200 · text/css
-curl -sI https://<DOMINIO>/static/shared/tokens.css | grep -Ei '^(HTTP|content-type)'      # 200 · text/css
+curl -sI 'https://<DOMINIO>/static/interface/gestao.css?v=1' | grep -Ei '^(HTTP|content-type|cache-control)'
+#   HTTP/2 200 · text/css · public, max-age=31536000, immutable
+curl -sI 'https://<DOMINIO>/static/shared/tokens.css?v=1' | grep -Ei '^(HTTP|content-type|cache-control)'
+#   HTTP/2 200 · text/css · public, max-age=31536000, immutable
 curl -sI --path-as-is https://<DOMINIO>/static/interface/../../../config/settings/base.py | head -1   # 400 ou 404, nunca 200
 curl -sk -o /dev/null -w '%{http_code}\n' -H 'Host: outro.exemplo' https://<IP_DO_SERVIDOR>/   # falha no handshake (000)
 curl -sI https://<DOMINIO>/selecoes/ | grep -Ei 'strict-transport|x-frame|x-content-type|referrer|cross-origin|server'

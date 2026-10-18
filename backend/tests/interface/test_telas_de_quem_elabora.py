@@ -16,7 +16,7 @@ from processo_seletivo.interface.views import CHAVES_ETAPA
 from processo_seletivo.processos.models import ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM, GESTAO_CSS
+from tests.interface.folha import FOLHA_COMUM, GESTAO_CSS, sem_comentarios
 from tests.interface.test_telas_de_uso_diario import (
     TEMPLATES,
     conteudo,
@@ -25,11 +25,6 @@ from tests.interface.test_telas_de_uso_diario import (
 
 # A folha comum saiu do modelo para `gestao.css` na 089.
 FOLHA = FOLHA_COMUM
-
-
-def sem_comentarios(folha):
-    folha = re.sub(r"\{% comment %\}.*?\{% endcomment %\}", "", folha, flags=re.DOTALL)
-    return re.sub(r"/\*.*?\*/", "", folha, flags=re.DOTALL)
 
 
 def regras_fora_de_media(folha):

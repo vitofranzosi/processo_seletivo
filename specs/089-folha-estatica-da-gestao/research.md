@@ -59,16 +59,24 @@ otimização para depois de medir.
 `shared/` registrada em `TEMPLATES.OPTIONS.libraries` (como `estaticos`), devolve
 `{% static %}` + `?v=` + os 12 primeiros dígitos hexadecimais do SHA-256 do conteúdo. O arquivo é
 achado pelos *finders* do `staticfiles` (`django.contrib.staticfiles.finders.find`), os mesmos que o
-runserver usa para servi-lo; arquivo ausente é erro na renderização, e não `<link>` quebrado em
-silêncio.
+runserver usa para servi-lo; arquivo ausente é erro (`ImproperlyConfigured`), e não `<link>` quebrado
+em silêncio. O resumo é memorizado por `(arquivo, st_mtime_ns, st_size)`: a página paga um `stat`, e
+só relê o arquivo quando ele mudou. **Na revisão do PR**, a primeira versão — recalcular a cada página
+com `DEBUG`, uma vez por processo sem ele — foi trocada por esta, que faz as duas coisas sem ramo e não
+lê 108 KB por página no runserver.
+
+**E a falta da folha é verificação de sistema** (`estaticos.E001`, registrada pelo `ready` da
+`interface`): o `check` e o `migrate` da implantação recusam seguir sem as duas folhas. Sem ela, a
+implantação subiria, passaria no `/health`, e todo pedido das quatro bases viraria 500 — o da página de
+erro inclusive, que também carrega os tokens.
 
 **Como funciona em cada lugar:**
 
 | Onde | Quem serve | Resumo | Efeito |
 |---|---|---|---|
-| runserver (`DEBUG=True`) | `staticfiles`, pelos finders | recalculado a cada renderização | editou a folha, a próxima página pede um endereço novo — o cache do navegador não serve a folha velha (a armadilha da memória "Preview reusa script em cache", com a `shell.js`, na `053`) |
-| testes (`DEBUG=False`) | o test client não pede a folha | calculado uma vez por processo | os guardiões leem o arquivo, não o endereço |
-| produção (guia) | nginx, por `alias` para os diretórios da release, `no-cache` | calculado uma vez por processo do gunicorn | a implantação reinicia o processo; se a folha mudou, o endereço muda, e mesmo um cache que ignorasse o `no-cache` não serve a velha |
+| runserver | `staticfiles`, pelos finders | relido quando a data ou o tamanho mudam | editou a folha, a próxima página pede um endereço novo — o cache do navegador não serve a folha velha (a armadilha da memória "Preview reusa script em cache", com a `shell.js`, na `053`) |
+| testes | o test client não pede a folha | idem | os guardiões leem o arquivo, não o endereço |
+| produção (guia) | nginx, por `alias` para os diretórios da release; com `?v=`, `max-age` de um ano e `immutable` | idem, por processo do gunicorn | a folha nova tem endereço novo; o navegador guarda a folha sem revalidar, e cada página deixa de esperar duas idas e voltas |
 
 **Descartados**: o `ManifestStaticFilesStorage` — exige `STATIC_ROOT` e `collectstatic` na
 implantação, e o guia serve os diretórios da release sem coletar (lacuna I-3, aberta); fechar a lacuna é
@@ -208,8 +216,9 @@ páginas perderiam a paleta inteira. O guia ganha:
 - o `location ^~ /static/shared/` com `alias` para `processo_seletivo/shared/static/shared/`, os mesmos
   cabeçalhos dos outros dois;
 - na tabela do §15.1 e na lista de componentes, "JS" passa a "JS e CSS";
-- na nota dos estáticos, que o `?v=` das folhas muda quando o conteúdo muda — o `no-cache` continua,
-  e continua necessário para os scripts, que não têm versão;
+- um `map $arg_v` no topo do site: o que vem com `?v=` (as folhas) recebe `max-age` de um ano e
+  `immutable`; o resto (os scripts, sem versão) continua `no-cache`. Na primeira versão as folhas
+  ficavam `no-cache`, e cada página revalidava as duas antes de desenhar; a revisão do PR trocou;
 - na lista de verificação (§ final), `curl` de `/static/interface/gestao.css` e
   `/static/shared/tokens.css` com 200 e `text/css`.
 
@@ -261,6 +270,15 @@ diante, nada além da revalidação. Antes, cada página levava ≈ 55 KB de fol
 empata na segunda página e ganha daí em diante.
 
 ## Achados
+
+- **A revisão do PR achou oito pontos, e os oito foram corrigidos no mesmo PR**: o apoio dos guardiões
+  passou a ler qualquer `<link rel="stylesheet">` e qualquer `<style>`, com os atributos em qualquer
+  ordem; o nginx do guia guarda as folhas versionadas por um ano (`immutable`), e o `no-cache` fica para
+  os scripts; a falta de uma folha é verificação de sistema (`estaticos.E001`); o resumo é memorizado
+  por data e tamanho, sem ramo por `DEBUG`; o comentário da escala de títulos que ainda dizia "prosa em
+  comentário de Django" ganhou a mesma nota da `089` do outro; a fonte única dos tokens passou a ser
+  conferida por todos os nomes, e não só por `--verde`; os seis invólucros `folha()` deram lugar a
+  `folha_da_pagina`; e as quatro remoções de comentário, a `sem_comentarios`.
 
 - **Uma mutação que não reprovou era mutação errada, não guardião fraco.** A primeira versão da do
   `test_polish_da_056` acrescentava `.assistente .estado{text-transform:uppercase}` no fim da folha; o

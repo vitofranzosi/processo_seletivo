@@ -15,12 +15,19 @@ from pathlib import Path
 
 import pytest
 from django.contrib.staticfiles import finders
-from django.template import Context, Template, TemplateSyntaxError
+from django.core.exceptions import ImproperlyConfigured
+from django.template import Context, Template
 from django.urls import reverse
 
 from processo_seletivo.shared import estaticos
 from tests.interface.conftest import identificar
-from tests.interface.folha import GESTAO_CSS, TOKENS_CSS, folha_aplicada
+from tests.interface.folha import (
+    GESTAO_CSS,
+    TOKENS,
+    TOKENS_CSS,
+    folha_aplicada,
+    sem_comentarios,
+)
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 BASE = RAIZ / "interface/templates/interface/base.html"
@@ -62,11 +69,10 @@ def test_o_endereco_leva_o_resumo_do_conteudo():
     assert renderizar("interface/gestao.css") == endereco
 
 
-def test_com_debug_o_endereco_muda_quando_o_arquivo_muda(settings, tmp_path, monkeypatch):
-    """`FR-2034`: no runserver, a folha editada ganha endereço novo na página seguinte, sem
-    reiniciar — e o navegador não serve a velha do cache (a armadilha da `053`, com a
-    `shell.js`)."""
-    settings.DEBUG = True
+def test_o_endereco_muda_quando_o_arquivo_muda(tmp_path, monkeypatch):
+    """`FR-2034`: a folha editada ganha endereço novo na página seguinte, sem reiniciar o servidor —
+    e o navegador não serve a velha do cache (a armadilha da `053`, com a `shell.js`). Desfeita a
+    edição, o endereço volta: é o conteúdo que decide, e não a data."""
     folha = tmp_path / "gestao.css"
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: str(folha))
 
@@ -81,29 +87,39 @@ def test_com_debug_o_endereco_muda_quando_o_arquivo_muda(settings, tmp_path, mon
     assert terceiro == primeiro
 
 
-def test_sem_debug_o_resumo_e_do_processo(settings, tmp_path, monkeypatch):
-    """Fora do `DEBUG`, um cálculo por processo: a implantação reinicia o processo, e o endereço
-    muda se, e só se, o arquivo mudou. Ler o arquivo a cada página seria custo sem ganho."""
-    settings.DEBUG = False
+def test_a_folha_so_e_relida_quando_muda(tmp_path, monkeypatch):
+    """O resumo fica memorizado pelo arquivo, pela data e pelo tamanho: as páginas pagam um `stat`,
+    e não a leitura de 106 KB a cada pedido."""
     folha = tmp_path / "gestao.css"
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: str(folha))
-    estaticos._resumo_do_processo.cache_clear()
-    try:
-        folha.write_text("a{color:red}")
-        primeiro = renderizar("teste/sem-debug.css")
-        folha.write_text("a{color:blue}")
-        assert renderizar("teste/sem-debug.css") == primeiro
-    finally:
-        estaticos._resumo_do_processo.cache_clear()
+    folha.write_text("a{color:red}")
+
+    leituras = estaticos._resumo_do_arquivo.cache_info().misses
+    renderizar("interface/gestao.css")
+    renderizar("interface/gestao.css")
+    assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 1
+
+    folha.write_text("a{color:blue}")
+    renderizar("interface/gestao.css")
+    assert estaticos._resumo_do_arquivo.cache_info().misses == leituras + 2
 
 
 def test_estatico_inexistente_e_erro_e_nao_link_quebrado():
     """Uma folha que não carrega deixa a página sem estilo, e ninguém vê o 404 do estático."""
-    with pytest.raises(TemplateSyntaxError, match="estático inexistente"):
+    with pytest.raises(ImproperlyConfigured, match="estático inexistente"):
         renderizar("interface/nao-existe.css")
 
 
-# ---- as quatro bases (FR-2031, FR-2032, SC-795) ------------------------------------------------
+def test_a_verificacao_de_sistema_acusa_a_folha_que_falta(monkeypatch):
+    """O `check` (e o `migrate` da implantação) recusa subir sem as folhas, em vez de cada página
+    virar 500 — a de erro inclusive, que também carrega os tokens."""
+    assert estaticos.verificar_folhas() == []
+
+    monkeypatch.setattr(estaticos.finders, "find", lambda caminho: None)
+    erros = estaticos.verificar_folhas()
+
+    assert [erro.id for erro in erros] == ["estaticos.E001"] * len(estaticos.FOLHAS)
+    assert set(estaticos.FOLHAS) == {"shared/tokens.css", "interface/gestao.css"}
 
 
 @pytest.mark.django_db
@@ -149,21 +165,46 @@ def test_o_modelo_da_gestao_nao_tem_regra_da_folha_comum():
     extensão do estilo por página, com o comentário que o explica."""
     modelo = BASE.read_text()
     estilo = re.search(r"<style>(.*?)</style>", modelo, re.S).group(1)
-    sem_comentario = re.sub(r"\{% comment %\}.*?\{% endcomment %\}", "", estilo, flags=re.S)
-
-    assert sem_comentario.strip() == "{% block estilo_da_pagina %}{% endblock %}"
+    assert sem_comentarios(estilo).strip() == "{% block estilo_da_pagina %}{% endblock %}"
     # Um `<style>` só no modelo; o comentário da `040` cita a palavra, e não conta.
-    sem_prosa = re.sub(r"\{% comment %\}.*?\{% endcomment %\}", "", modelo, flags=re.S)
-    assert sem_prosa.count("<style>") == 1
+    assert sem_comentarios(modelo).count("<style>") == 1
 
 
 def test_os_tokens_tem_um_lugar_so():
     """`FR-2032`, D-001: o parcial de tokens saiu, e o arquivo estático é a fonte única. Duas cópias
-    da paleta divergiriam na primeira mudança de cor — foi para impedir isso que ela se juntou."""
+    da paleta divergiriam na primeira mudança de cor — foi para impedir isso que ela se juntou.
+
+    Todos os nomes, e não um representante: uma tela que redeclarasse `--pagina` no próprio
+    `<style>` devolveria as medidas a duas fontes, com a paleta intacta.
+    """
     assert not (RAIZ / "shared/templates/shared/_tokens.css.html").exists()
-    declaram = [
-        caminho.relative_to(RAIZ)
+    nomes = set(re.findall(r"(--[\w-]+)\s*:", sem_comentarios(TOKENS)))
+    assert {"--verde", "--texto", "--leitura", "--pagina"} <= nomes
+
+    redeclarados = {
+        (str(caminho.relative_to(RAIZ)), nome)
         for caminho in sorted(RAIZ.rglob("*"))
-        if caminho.suffix in {".html", ".css"} and re.search(r"--verde\s*:", caminho.read_text())
-    ]
-    assert declaram == [Path("shared/static/shared/tokens.css")]
+        if caminho.suffix in {".html", ".css"} and caminho != TOKENS_CSS
+        for nome in re.findall(r"(--[\w-]+)\s*:", sem_comentarios(caminho.read_text()))
+        if nome in nomes
+    }
+    assert redeclarados == set(), sorted(redeclarados)
+
+
+def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
+    """O apoio dos guardiões lê toda folha do `<head>`, com os atributos em qualquer ordem: um
+    padrão preso à grafia de hoje deixaria de fora a primeira folha escrita de outro jeito, e o
+    guardião aprovaria uma regra que não leu."""
+    cabeca_ = (
+        "<head>"
+        '<link href="/static/shared/tokens.css?v=1" rel="stylesheet">'
+        "<link rel='stylesheet' media=\"print\" href='/static/interface/gestao.css'>"
+        '<link rel="icon" href="/favicon.ico">'
+        '<style media="screen">.da-pagina{color:red}</style>'
+        "</head><body><style>.do-corpo{}</style></body>"
+    )
+    folha = folha_aplicada(cabeca_)
+
+    assert folha.index("--verde:") < folha.index(".tabela-rolavel{") < folha.index(".da-pagina{")
+    assert ".do-corpo" not in folha
+    assert "/*" not in folha.split(".da-pagina")[0]

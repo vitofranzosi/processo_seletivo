@@ -246,10 +246,12 @@ explica o ponto de extensão do estilo por página fica no modelo, porque o pont
 
 ### D-003 — A versão é o resumo do conteúdo, no endereço
 
-O endereço da folha leva um parâmetro com o resumo criptográfico do conteúdo do arquivo. Em
-desenvolvimento, o resumo é recalculado a cada página — o arquivo editado ganha endereço novo sem
-reiniciar o servidor. Fora dele, é calculado uma vez por processo, e a implantação, que reinicia o
-processo, troca o endereço quando o arquivo mudou. Descartado: o armazenamento com manifesto do
+O endereço da folha leva um parâmetro com o resumo criptográfico do conteúdo do arquivo. O resumo é
+memorizado pelo arquivo, pela data e pelo tamanho dele: a página só relê a folha quando ela mudou — no
+servidor local, a edição ganha endereço novo sem reiniciar; em produção, a folha da implantação nova
+ganha endereço novo, e cada pedido custa só a consulta à data do arquivo. Como o endereço muda com o
+conteúdo, o servidor de produção pode mandar o navegador guardar a folha sem revalidá-la. Uma folha que
+falta é recusada pela verificação de sistema do framework, antes de o serviço atender alguém. Descartado: o armazenamento com manifesto do
 próprio framework, que exige coletar os estáticos num diretório na implantação — o guia de produção
 serve os diretórios de estáticos da release diretamente, sem coleta, e a coleta é uma lacuna aberta do
 guia; fechá-la é mudar a implantação, e não mover uma folha. Descartado também o número da versão do

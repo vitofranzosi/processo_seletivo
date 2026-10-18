@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import compor_rascunho, identificar
-from tests.interface.folha import FOLHA_COMUM, TOKENS
+from tests.interface.folha import FOLHA_COMUM, TOKENS, sem_comentarios
 
 BASE = (
     Path(__file__).resolve().parents[2]
@@ -526,8 +526,7 @@ def sem_prosa(texto):
     Custou uma varredura cega descobrir isto — a busca por uma classe casava com a **frase** que
     explicava a regra dela, e concluía que a regra existia.
     """
-    texto = re.sub(r"/\*.*?\*/", " ", texto, flags=re.S)
-    return re.sub(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", " ", texto, flags=re.S)
+    return sem_comentarios(texto, troca=" ")
 
 
 @pytest.mark.parametrize(
