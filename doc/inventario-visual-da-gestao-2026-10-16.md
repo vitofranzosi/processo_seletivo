@@ -680,3 +680,52 @@ duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Gera
 pulso do Processo, e marcas de suavização em pontos isolados da composição, das inscrições, da Mesa,
 do recurso, dos avisos e da Retificação (até 28 de 255). É também o que o diff permite: ele só toca
 os onze templates do escopo.
+
+## Depois da 085
+
+O sétimo incremento ([`085`](../specs/085-telas-de-inscricoes-e-recursos/spec.md)) mudou as telas de
+inscrições e de recursos: a trilha das Inscrições, da Inscrição recebida, dos Recursos e do Recurso
+subiu ao cabeçalho de contexto — a do Edital com a tela no fim, passando pelo Processo —; sem
+inscrição recebida, a lista mostra o estado vazio; e os rascunhos são região nomeada. A tela de
+recusa ficou fora (a decisão 002 da spec). Nenhuma regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_085` — cópia
+do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. **O de antes reproduz `depois-da-080/`**: nenhuma variante muda de medida, nos dois
+estados da barra. Ele está em [`depois-da-085/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/);
+em [`depois-da-085/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/), o de depois, com
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/recolhida/), e as capturas, a 1280
+e a 375 px e com a barra expandida, das cinco variantes do escopo, antes e depois.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/resultados.json
+```
+
+| | Antes da 085 | Depois da 085, expandida | Depois da 085, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 085 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `inscricao-recebida` | 1924 → 1887 | 2452 → 2450 | a trilha saiu do conteúdo |
+| `inscricoes` | 1021 → 984 | 1336 → 1335 | a trilha saiu do conteúdo |
+| `recurso-admitido` | 1527 → 1490 | 2108 → 2106 | a trilha saiu do conteúdo |
+| `recurso-pendente` | 1067 → 1030 | 1670 → 1669 | a trilha saiu do conteúdo |
+| `recursos` | 900 → 900 | 812 → 812 | cabe na janela nas duas larguras; muda o desenho, não a medida |
+
+A 375 px a página quase não encurta: a trilha sai do conteúdo e cresce no cabeçalho, onde quebra em
+duas ou três linhas. Com a barra recolhida, as mesmas diferenças, menos `inscricoes` a 1280, que cabe na
+janela (900 → 900). O estado vazio das Inscrições não aparece: o Edital do inventário tem inscrições.
+
+**Pixel a pixel.** Fora das cinco variantes, as capturas de antes e de depois diferem só no que muda
+entre duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, e pontos isolados de suavização (de 6 a 151 px, espalhados) na lista, em duas
+confirmações da Retificação, no novo modelo de aviso e na Revisão da composição. O diff de
+`backend/processo_seletivo/` toca os quatro templates do escopo e uma função de consulta.
