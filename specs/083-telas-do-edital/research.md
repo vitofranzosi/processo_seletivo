@@ -27,6 +27,12 @@ devolvia o `block.super`, passa a ter a trilha, e a trilha condicional do conte�
 
 ¹ Link só para quem alcança a tela da classificação; texto para os demais (D-003).
 
+**Os níveis de cima num parcial** (revisão do PR): Processos Seletivos, o Processo e o Edital vêm de
+`_ate_o_edital_na_trilha.html`, incluído nas onze telas que passam pelo Edital — o mesmo motivo do
+parcial do produto da `078`: renomear um nível não pode esquecer uma tela. A abertura da `nav` continua
+escrita em cada tela, que é o que a `081` decidiu e o guardião dela confere; o parcial vem depois do
+produto, e não muda a abertura. Novo Edital não o usa: lá ainda não há Edital.
+
 **Antes, medido nos templates de `cf6d7372`**: das doze, só Novo Edital passava pelo Processo, e a
 conferência do ato começava pelo Edital, sem Processos Seletivos (SC-733).
 
@@ -86,6 +92,12 @@ cartão de `.colunas`, antes de "Vigência". Os atos, o desenho de cada um (`bot
 `.colunas`, a ordem do código é a da leitura a 1280 px (da esquerda para a direita) e a do
 empilhamento a 375 px.
 
+**Pelo topo** (revisão do PR): `.colunas` passa a `.colunas ao-topo`, a regra da `057` (`FR-1047`) que o
+detalhe do Edital e o do Processo já usam, e a tela inclui o parcial `_estilo_das_terminais.html`, onde
+ela mora. Sem isso, a 1280 px, o cartão de "O que fazer agora" sem ato tinha uma linha e se esticava à
+altura da Vigência, vazio — o defeito que a `057` corrigiu no detalhe do Edital. As outras regras do
+parcial não casam aqui: a tela não tem `em-linha` nem `terminais`.
+
 ## R-005 — "Filtrar" e "Limpar" em Partir de um Edital anterior
 
 **Decisão**: `<button type="submit" class="acao">Filtrar</button>` passa a `class="botao"`, e o
@@ -120,3 +132,18 @@ os templates de `cf6d7372`, os onze casos do arquivo novo falham, e com os de ag
   prévia, a mudança é de uma classe.
 - **O nível do marco não diz o Perfil.** Dois marcos de Perfis diferentes costumam ter o mesmo nome
   (comentário de `marco.html`); a trilha diz só o nome, como dizia, e o `h1` desfaz a ambiguidade.
+
+## Revisão do PR (18/10/2026)
+
+`/code-review` no PR 303, sete achados, todos corrigidos neste PR:
+
+| Achado | Correção |
+|---|---|
+| Comentário em `test_telas_da_presidencia.py` dizia que o arquivo da `080` ainda provava a Auditoria do Edital de fora | reescrito: ela está no cabeçalho desde a `083` |
+| A linha da `FR-1748` na rastreabilidade da `077` dava o guardião na Auditoria do Edital | acrescentado o passo da `083`, à Supervisão |
+| O teste da conferência do ato dependia do espaço que o `{% if %}` vazio deixa na classe | a expressão aceita a classe com ou sem espaço |
+| `origem` e `destino` importadas de `test_reaproveitar.py`, com `noqa` em cada caso | declaradas no próprio módulo, sobre `publish_original` |
+| `next()` sem padrão sobre os gestos do marco | lista e asserção com mensagem |
+| O prefixo da trilha copiado em onze telas | o parcial `_ate_o_edital_na_trilha.html` (R-001) |
+| O detalhe da Retificação sem `ao-topo` | `ao-topo` e o parcial de estilo (R-004) |
+

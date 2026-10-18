@@ -1,6 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Retificar Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Retificar</span></nav>{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Retificar</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 /* O "aplicar a todos" na conferência (051). Aqui, e não em `base.html`: a folha de lá conta no teto
    de bytes da distribuição, e estas regras só servem a esta tela.

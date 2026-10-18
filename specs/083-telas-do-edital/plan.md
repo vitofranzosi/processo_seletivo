@@ -49,7 +49,7 @@ Sem violação a justificar.
 |---|---|
 | `interface/templates/interface/edital_criar.html` | o bloco `caminho_do_contexto` com a trilha (R-001) |
 | `retificar.html` | o bloco com a trilha; as recusas logo depois do título (R-001, R-003) |
-| `retificacao_detalhe.html` | o bloco com a trilha; "O que fazer agora" antes da Vigência (R-001, R-004) |
+| `retificacao_detalhe.html` | o bloco com a trilha; "O que fazer agora" antes da Vigência, pelo topo (R-001, R-004) |
 | `retificacao_confirmar.html` | o bloco com a trilha, terminando no ato (R-001) |
 | `previa.html` | o bloco com a trilha (R-001) |
 | `reaproveitar.html` | o bloco com a trilha; "Filtrar" como `botao` e "Limpar" como `acao` (R-001, R-005) |
@@ -59,6 +59,9 @@ Sem violação a justificar.
 | `previa_de_publicacao.html` | o bloco com a trilha, com o nível condicional; a recusa logo depois do título (R-001, R-003) |
 | `publicacoes_do_marco.html` | o bloco com a trilha, com o nível condicional (R-001) |
 | `auditoria.html` | o ramo do Edital no bloco; nenhuma trilha no conteúdo (R-001) |
+| `_ate_o_edital_na_trilha.html` (novo) | os níveis Processos Seletivos › Processo › Edital, incluídos nas onze telas que passam pelo Edital (R-001) |
+| `_estilo_das_terminais.html` | só o comentário: a `083` o inclui no detalhe da Retificação, pela `.colunas.ao-topo` (R-004) |
+| `specs/077-*` (rastreabilidade) | a `FR-1748`: o guardião passou à Supervisão |
 | `specs/079-*`, `080-*` (spec e rastreabilidade) | `FR-1782` e `FR-1803` anotadas como emendadas pela `083` |
 | `doc/inventario-visual-da-gestao-2026-10-16.md` e `depois-da-083/` | o inventário de antes e o de depois nos dois estados da barra, a comparação e as capturas das telas do escopo |
 

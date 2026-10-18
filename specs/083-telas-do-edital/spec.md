@@ -225,7 +225,8 @@ secundária; "Usar como base" e "Substituir pelo escolhido" não mudam.
 #### A ação que o fluxo pede, antes do resto
 
 - **FR-1857**: No detalhe da Retificação, a região "O que fazer agora" MUST vir antes da região
-  "Vigência"; os atos, o desenho de cada um e a marca "irreversível" MUST continuar os mesmos.
+  "Vigência", e cada uma MUST ter a altura do próprio conteúdo, como no detalhe do Edital (`FR-1047`
+  da `057`); os atos, o desenho de cada um e a marca "irreversível" MUST continuar os mesmos.
 
 #### A hierarquia das ações
 

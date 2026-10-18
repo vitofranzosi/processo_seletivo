@@ -552,7 +552,7 @@ barra expandida:
 | Tela | 1280 px | 375 px | Por quê |
 |---|---|---|---|
 | `retificar` | 14889 → 14852 | 26986 → 26984 | a trilha saiu do conteúdo |
-| `retificacao-detalhe` | 900 → 900 | 1471 → 1469 | a trilha saiu; "O que fazer agora" trocou de lugar com a Vigência, sem mudar a soma |
+| `retificacao-detalhe` | 900 → 900 | 1471 → 1469 | a trilha saiu; "O que fazer agora" trocou de lugar com a Vigência, sem mudar a soma, e os cartões vão pelo topo¹ |
 | `retificacao-ato-publicar` | 1429 → 1392 | 2168 → 2166 | a trilha saiu do conteúdo |
 | `retificacao-ato-devolver` | 966 → 929 | 1395 → 1393 | idem |
 | `retificacao-ato-cancelar`, `-homologar` | 937 → 900 | 1300 → 1298 | idem; a 1280 a página passa a caber na janela |
@@ -563,6 +563,10 @@ barra expandida:
 | `edital-criar` | 900 → 900 | 1071 → 1048 | idem; a trilha do conteúdo tinha duas linhas a 375 |
 | `marco` | 900 → 900 | 1308 → 1285 | idem |
 | `previa`, `publicacoes-do-marco` | 900 → 900 | sem mudança | cabem na janela; muda o desenho, não a medida |
+
+¹ Recapturada depois da revisão do PR, com `SO=retificacao-detalhe` nos dois estados da barra: o
+`ao-topo` muda o desenho a 1280 px (o cartão sem ato deixa de se esticar à altura da Vigência), e não
+a medida.
 
 Com a barra recolhida, as mesmas telas e as mesmas diferenças; mudam só as alturas de partida a 1280
 (`reaproveitar` 1301 → 1264, `retificacao-ato-publicar` 1389 → 1352, `retificar` 13952 → 13915).

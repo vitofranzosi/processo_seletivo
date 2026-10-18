@@ -15,11 +15,12 @@ import re
 import pytest
 from django.urls import reverse
 
+from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from tests.fixtures.divulgacao import montar_ato_publicavel
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
-from tests.interface.test_reaproveitar import destino, escolher, origem  # noqa: F401 — fixtures
+from tests.interface.test_reaproveitar import escolher
 from tests.interface.test_retificar import LINHA_GERAL, VAGAS, campos
 from tests.interface.test_telas_da_presidencia import (
     ate_o_processo,
@@ -87,9 +88,36 @@ def test_na_previa_a_trilha_passa_pelo_processo(client, seletor_ligado, edital):
 # ---- Partir de um Edital anterior ------------------------------------------------------------
 
 
+@pytest.fixture
+def origem(api_client, manager_headers, process_payload):
+    """Um Edital publicado do escopo: é o que pode servir de origem.
+
+    Declarada aqui, e não importada de `test_reaproveitar.py`: importada, ela sombreava o parâmetro
+    e pedia `noqa` em cada caso — o que a revisão da 077 apontou no cenário da presidência —, e a
+    origem rica de lá, do acervo e com anexo, não é o que estas telas precisam."""
+    return publish_original(api_client, manager_headers, process_payload)
+
+
+@pytest.fixture
+def destino(api_client, manager_headers, origem):
+    """O Edital em elaboração, vazio, de outro Processo — onde a origem se reaproveita."""
+    criado = api_client.post(
+        "/api/v1/admin/processos",
+        {
+            "institutionalCode": "PS-2027-083",
+            "title": "Processo Seletivo 2027",
+            "firstEdital": {"number": "83", "year": 2027, "title": "Edital da nova oferta"},
+        },
+        format="json",
+        **{**manager_headers, "HTTP_IDEMPOTENCY_KEY": "destino-083-0001"},
+    )
+    assert criado.status_code == 201, criado.content
+    return Edital.objects.get(processo_id=criado.json()["id"])
+
+
 @pytest.mark.django_db
 @pytest.mark.usefixtures("seletor_ligado")
-def test_em_partir_de_um_anterior_a_trilha_passa_pela_composicao(client, destino):  # noqa: F811
+def test_em_partir_de_um_anterior_a_trilha_passa_pela_composicao(client, destino):
     """`FR-1850`, `FR-1851`, `FR-1852`: … › Edital › Compor › Partir de um Edital anterior."""
     identificar(client, "ana.elaboradora", ["elaborador"])
     corpo = da_tela(client, "interface:reaproveitar", destino.id)
@@ -103,7 +131,7 @@ def test_em_partir_de_um_anterior_a_trilha_passa_pela_composicao(client, destino
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("seletor_ligado")
-def test_em_partir_de_um_anterior_filtrar_e_a_acao_do_filtro(client, destino, origem):  # noqa: F811
+def test_em_partir_de_um_anterior_filtrar_e_a_acao_do_filtro(client, destino, origem):
     """`FR-1858`: "Filtrar" com o desenho de ação principal e "Limpar" com o de secundária, como
     nas Inscrições; a escolha continua com o dela."""
     identificar(client, "ana.elaboradora", ["elaborador"])
@@ -119,7 +147,7 @@ def test_em_partir_de_um_anterior_filtrar_e_a_acao_do_filtro(client, destino, or
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("seletor_ligado")
-def test_na_conferencia_da_troca_a_trilha_e_a_de_partir_de_um_anterior(client, destino, origem):  # noqa: F811
+def test_na_conferencia_da_troca_a_trilha_e_a_de_partir_de_um_anterior(client, destino, origem):
     """`FR-1851`: a conferência da troca tem a trilha da tela de onde se abre, com ela no fim
     (D-001); `FR-1859`: "Substituir o conteúdo" não muda, e nada foi trocado."""
     identificar(client, "ana.elaboradora", ["elaborador"])
@@ -194,6 +222,8 @@ def test_na_retificacao_a_trilha_passa_pelo_processo_e_o_que_fazer_vem_primeiro(
     acoes = pagina.index('<h2 id="acoes-titulo">O que fazer agora</h2>')
     assert acoes < pagina.index('<h2 id="vigencia-titulo">Vigência</h2>')
     assert pagina.index('<h2 id="vigencia-titulo">') < pagina.index('id="alteracoes-titulo"')
+    # Pelo topo, como o detalhe do Edital: cada cartão com a altura do próprio conteúdo.
+    assert '<div class="colunas ao-topo">' in pagina
 
     detalhe = reverse("interface:retificacao-detalhe", args=[retificacao.id])
     corpo = da_tela(client, "interface:retificacao-ato", retificacao.id, "submeter")
@@ -201,7 +231,8 @@ def test_na_retificacao_a_trilha_passa_pelo_processo_e_o_que_fazer_vem_primeiro(
     niveis_em_ordem(trilha, [*ate_o_edital(edital), f'<a href="{detalhe}">Retificação</a> ›'])
     assert trilha.rstrip().endswith("</span>")
     assert comeca_pelo_titulo(corpo)
-    assert re.search(r'<button type="submit" class="botao ">\s*Confirmar:', corpo)
+    # O desenho, e não a grafia: o `{% if %}` vazio da classe deixa um espaço que não é desta regra.
+    assert re.search(r'<button type="submit" class="botao\s*">\s*Confirmar:', corpo)
     assert f'<a href="{detalhe}" class="acao">Cancelar e voltar</a>' in corpo
 
 
@@ -275,7 +306,9 @@ def test_no_marco_a_trilha_passa_pelo_processo_e_a_conferencia_pelo_marco(
     assert comeca_pelo_titulo(corpo)
 
     gestos = re.findall(r'<form method="post" action="([^"]+)" class="conferencia">', corpo)
-    gesto = next(acao for acao in gestos if not acao.rstrip("/").endswith("publicar"))
+    conferiveis = [acao for acao in gestos if not acao.rstrip("/").endswith("publicar")]
+    assert conferiveis, f"o cenário não oferece gesto além de publicar: {gestos}"
+    gesto = conferiveis[0]
     conferencia = client.post(gesto, {}).content.decode()
     trilha = trilha_unica_no_cabecalho(conferencia)
     conducao = reverse("interface:marco", args=[edital.id, marco])
