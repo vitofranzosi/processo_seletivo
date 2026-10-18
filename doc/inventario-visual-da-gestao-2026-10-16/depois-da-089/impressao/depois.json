@@ -1,0 +1,122 @@
+[
+ {
+  "id": "mesa-inscricao",
+  "status": 200,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Minhas Etapas › Minha Mesa › Inscrição INS-2026-AF86BE7601\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Inscrição INS-2026-AF86BE7601"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Minhas Etapas › Minha Mesa › Inscrição INS-2026-AF86BE7601",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Inscrição INS-2026-AF86BE7601"
+  }
+ },
+ {
+  "id": "ato-de-ordenacao",
+  "status": 200,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Classificação › Ato ac2080d5-e5a7-47ac-b251-246e03fbde81\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Ato de classificação"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Classificação › Ato ac2080d5-e5a7-47ac-b251-246e03fbde81",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Ato de classificação"
+  }
+ },
+ {
+  "id": "inscricao-recebida",
+  "status": 200,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Inscrições › INS-2026-AF86BE7601\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Ana Silva"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Inscrições › INS-2026-AF86BE7601",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Ana Silva"
+  }
+ },
+ {
+  "id": "recurso-admitido",
+  "status": 200,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Recursos › REC-2026-K97GMU9C\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Recurso REC-2026-K97GMU9C"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Recursos › REC-2026-K97GMU9C",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Recurso REC-2026-K97GMU9C"
+  }
+ },
+ {
+  "id": "recusa",
+  "status": 404,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos\n\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Recurso não encontrado"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Recurso não encontrado"
+  }
+ },
+ {
+  "id": "aviso",
+  "status": 200,
+  "tela": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Avisos aos candidatos › Aviso de 16/10/2026 às 16:19\nTrocar identidade",
+   "trocar_identidade_visivel": true,
+   "barra_visivel": true,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Aviso de 16/10/2026 às 16:19"
+  },
+  "papel": {
+   "cabecalho_visivel": true,
+   "texto_do_cabecalho": "GPS › Processos Seletivos › PS-DEMO-2026 › Edital 51/2026 › Avisos aos candidatos › Aviso de 16/10/2026 às 16:19",
+   "trocar_identidade_visivel": false,
+   "barra_visivel": false,
+   "cabecalho_antes_do_titulo": true,
+   "h1": "Aviso de 16/10/2026 às 16:19"
+  }
+ }
+]

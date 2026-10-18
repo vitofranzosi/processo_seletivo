@@ -25,6 +25,7 @@ from django.urls import reverse
 from processo_seletivo.interface import forms
 from processo_seletivo.interface.templatetags.interface_extras import legenda_do_perfil
 from processo_seletivo.interface.views import _pendencias_por_perfil
+from tests.interface.folha import folha_aplicada
 from tests.interface.test_aplicar_a_todos import P1, P2, P3, _perfis_no_formulario, _url
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -352,5 +353,8 @@ def test_a_tabela_rola_dentro_do_proprio_conteiner(client, tres_perfis):
     (`FR-1760` da 078): a página continua recebendo-a, e ela vale para a moldura da vista."""
     corpo = client.get(_url(tres_perfis, "perfis")).content.decode()
 
-    assert re.search(r"(?m)^[^{}]*\.tabela-rolavel[,{][^{}]*\{?position:relative\}", corpo)
+    # Na folha que a página aplica: a regra comum saiu do HTML para `gestao.css` na 089.
+    assert re.search(
+        r"(?m)^[^{}]*\.tabela-rolavel[,{][^{}]*\{?position:relative\}", folha_aplicada(corpo)
+    )
     assert ".visao-dos-perfis .tabela-rolavel{position:relative}" not in corpo

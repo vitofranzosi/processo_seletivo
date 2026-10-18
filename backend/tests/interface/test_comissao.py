@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from processo_seletivo.comissoes.models import MembroComissao
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_da_pagina
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -174,10 +175,6 @@ def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
     assert comissao_de_a["maria"].funcao == "PRESIDENTE"
 
 
-def folha_de_estilo(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
-
-
 def test_a_funcao_na_comissao_tem_cor_e_nao_so_forma(
     client, seletor_ligado, gestor, processo_a, comissao_de_a
 ):
@@ -189,7 +186,7 @@ def test_a_funcao_na_comissao_tem_cor_e_nao_so_forma(
     """
     identificar(client, "carlos", ["gestor"])
 
-    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+    css = folha_da_pagina(client, url(processo_a))
 
     assert ".s-PRESIDENTE{" in css
     assert ".s-MEMBRO{" in css
@@ -223,7 +220,7 @@ def test_a_marca_de_filtrar_nao_e_esticada_como_campo_de_texto(
     """
     identificar(client, "carlos", ["gestor"])
 
-    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+    css = folha_da_pagina(client, url(processo_a))
 
     assert "width:auto" in css.split(".campo.escolha input{")[1].split("}")[0]
 
@@ -234,7 +231,7 @@ def test_a_acao_do_cartao_fica_no_rodape_dele(
     """Uma pessoa atua em duas Etapas, outra em nenhuma: sem isso a fileira termina em degraus."""
     identificar(client, "carlos", ["gestor"])
 
-    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+    css = folha_da_pagina(client, url(processo_a))
 
     assert "margin-top:auto" in css.split("ul.comissao .gerir-membro{")[1].split("}")[0]
     assert "flex-direction:column" in css.split("ul.comissao>li{")[1].split("}")[0]

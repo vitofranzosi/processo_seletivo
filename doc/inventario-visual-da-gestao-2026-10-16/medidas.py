@@ -7,7 +7,8 @@ telas delas nenhuma variante mudou de medida, e faziam a conta à mão; esta é 
 import json
 import sys
 
-CAMPOS = ("scrollWidth", "altura", "titulo", "h1")
+# `estilos` (089) é o resumo das regras que a página aplica, quando a captura rodou com `ESTILOS=1`.
+CAMPOS = ("scrollWidth", "altura", "titulo", "h1", "estilos")
 
 base = {r["id"]: r for r in json.load(open(sys.argv[1]))}
 nova = {r["id"]: r for r in json.load(open(sys.argv[2]))}

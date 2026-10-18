@@ -1,4 +1,4 @@
-{% comment %}
+{% load estaticos %}{% comment %}
 A resposta institucional para endereço que não abre — nos dois canais.
 
 Django procura este template sempre que uma view levanta `Http404`. Sem ele, quem elabora recebia
@@ -18,8 +18,8 @@ canais e a resposta é a mesma: o endereço não abre para você, e daqui você 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Página não encontrada — Cefor/Ifes</title>
+<link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 <style>
-{% include "shared/_tokens.css.html" %}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
   background:var(--fundo);line-height:1.6;font-size:16px}

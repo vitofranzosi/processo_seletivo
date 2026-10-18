@@ -1,0 +1,2796 @@
+[
+ {
+  "id": "lista",
+  "rota": "lista",
+  "caminho": "/gestao/",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 993,
+   "titulo": "Processos Seletivos — Cefor/Ifes",
+   "h1": "Processos Seletivos",
+   "culpados": [],
+   "estilos": "41e99654 / 564 regras",
+   "arquivo": "lista--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1713,
+   "titulo": "Processos Seletivos — Cefor/Ifes",
+   "h1": "Processos Seletivos",
+   "culpados": [],
+   "estilos": "41e99654 / 564 regras",
+   "arquivo": "lista--375.png"
+  }
+ },
+ {
+  "id": "identificar",
+  "rota": "identificar",
+  "caminho": "/gestao/identificar",
+  "obs": "sem identidade",
+  "identidade": null,
+  "status": 200,
+  "final": "/gestao/identificar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "None:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à gestão — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Bem-vindo à gestão",
+   "culpados": [],
+   "estilos": "29eb815d / 111 regras",
+   "arquivo": "identificar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à gestão — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Bem-vindo à gestão",
+   "culpados": [],
+   "estilos": "29eb815d / 111 regras",
+   "arquivo": "identificar--375.png"
+  }
+ },
+ {
+  "id": "identificar-demonstracao",
+  "rota": "identificar-demonstracao",
+  "caminho": "/gestao/identificar/demonstracao",
+  "obs": "sem identidade; etapa da página de acesso (075)",
+  "identidade": null,
+  "status": 200,
+  "final": "/gestao/identificar/demonstracao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "None:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1743,
+   "titulo": "Ambiente de demonstração — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Ambiente de demonstração",
+   "culpados": [],
+   "estilos": "29eb815d / 111 regras",
+   "arquivo": "identificar-demonstracao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2482,
+   "titulo": "Ambiente de demonstração — Gestão de Processos Seletivos · Cefor/Ifes",
+   "h1": "Ambiente de demonstração",
+   "culpados": [],
+   "estilos": "29eb815d / 111 regras",
+   "arquivo": "identificar-demonstracao--375.png"
+  }
+ },
+ {
+  "id": "visao-geral",
+  "rota": "visao-geral",
+  "caminho": "/gestao/visao-geral",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/visao-geral",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1234,
+   "titulo": "Visão Geral dos Processos Seletivos — Cefor/Ifes",
+   "h1": "Visão Geral",
+   "culpados": [],
+   "estilos": "a01da68b / 623 regras",
+   "arquivo": "visao-geral--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2281,
+   "titulo": "Visão Geral dos Processos Seletivos — Cefor/Ifes",
+   "h1": "Visão Geral",
+   "culpados": [],
+   "estilos": "a01da68b / 623 regras",
+   "arquivo": "visao-geral--375.png"
+  }
+ },
+ {
+  "id": "autoridades",
+  "rota": "autoridades",
+  "caminho": "/gestao/autoridades",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/autoridades",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1391,
+   "titulo": "Autoridades da unidade — Cefor/Ifes",
+   "h1": "Autoridades da unidade",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "autoridades--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1729,
+   "titulo": "Autoridades da unidade — Cefor/Ifes",
+   "h1": "Autoridades da unidade",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "autoridades--375.png"
+  }
+ },
+ {
+  "id": "processo-criar",
+  "rota": "processo-criar",
+  "caminho": "/gestao/processos/criar",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/criar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Criar Processo Seletivo — Cefor/Ifes",
+   "h1": "Criar Processo Seletivo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-criar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1321,
+   "titulo": "Criar Processo Seletivo — Cefor/Ifes",
+   "h1": "Criar Processo Seletivo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-criar--375.png"
+  }
+ },
+ {
+  "id": "processo-detalhe",
+  "rota": "processo-detalhe",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2100,
+   "titulo": "PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Processo Seletivo Simplificado 2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "processo-detalhe--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3542,
+   "titulo": "PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Processo Seletivo Simplificado 2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "processo-detalhe--375.png"
+  }
+ },
+ {
+  "id": "edital-criar",
+  "rota": "edital-criar",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/editais/criar",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/editais/criar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Novo Edital em PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Novo Edital",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "edital-criar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1048,
+   "titulo": "Novo Edital em PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Novo Edital",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "edital-criar--375.png"
+  }
+ },
+ {
+  "id": "processo-ato-ativar",
+  "rota": "processo-ato",
+  "caminho": "/gestao/processos/214d989f-3a43-4c89-9427-3e633623ebb8/atos/ativar",
+  "obs": "acao=ativar, Processo 2027",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/214d989f-3a43-4c89-9427-3e633623ebb8/atos/ativar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Ativar Processo — PS-DEMO-2026-R — Cefor/Ifes",
+   "h1": "Ativar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-ativar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 862,
+   "titulo": "Ativar Processo — PS-DEMO-2026-R — Cefor/Ifes",
+   "h1": "Ativar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-ativar--375.png"
+  }
+ },
+ {
+  "id": "processo-ato-encerrar",
+  "rota": "processo-ato",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/encerrar",
+  "obs": "acao=encerrar",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/encerrar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 930,
+   "titulo": "Encerrar Processo — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Encerrar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-encerrar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1505,
+   "titulo": "Encerrar Processo — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Encerrar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-encerrar--375.png"
+  }
+ },
+ {
+  "id": "processo-ato-cancelar",
+  "rota": "processo-ato",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/cancelar",
+  "obs": "acao=cancelar",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/atos/cancelar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 901,
+   "titulo": "Cancelar Processo — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Cancelar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-cancelar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1454,
+   "titulo": "Cancelar Processo — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Cancelar Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "processo-ato-cancelar--375.png"
+  }
+ },
+ {
+  "id": "supervisao",
+  "rota": "supervisao",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/supervisao",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/supervisao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2040,
+   "titulo": "Supervisão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Supervisão do Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "supervisao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3066,
+   "titulo": "Supervisão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Supervisão do Processo",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "supervisao--375.png"
+  }
+ },
+ {
+  "id": "detalhe-51",
+  "rota": "detalhe",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "obs": "Edital 51, publicado",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1607,
+   "titulo": "Edital 51/2026 — Cefor/Ifes",
+   "h1": "Edital 51/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-51--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2738,
+   "titulo": "Edital 51/2026 — Cefor/Ifes",
+   "h1": "Edital 51/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-51--375.png"
+  }
+ },
+ {
+  "id": "detalhe-76",
+  "rota": "detalhe",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/",
+  "obs": "Edital 76, em elaboração",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1404,
+   "titulo": "Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-76--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3002,
+   "titulo": "Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-76--375.png"
+  }
+ },
+ {
+  "id": "detalhe-26",
+  "rota": "detalhe",
+  "caminho": "/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "obs": "Edital 26, sorteio",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1552,
+   "titulo": "Edital 26/2026 — Cefor/Ifes",
+   "h1": "Edital 26/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-26--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2615,
+   "titulo": "Edital 26/2026 — Cefor/Ifes",
+   "h1": "Edital 26/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "detalhe-26--375.png"
+  }
+ },
+ {
+  "id": "duvidas",
+  "rota": "duvidas",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/duvidas/",
+  "obs": "Edital 01",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/duvidas/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1220,
+   "titulo": "Respostas do assistente de dúvidas — 01/2026 — Cefor/Ifes",
+   "h1": "Respostas do assistente de dúvidas",
+   "culpados": [],
+   "estilos": "356f17da / 576 regras",
+   "arquivo": "duvidas--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1950,
+   "titulo": "Respostas do assistente de dúvidas — 01/2026 — Cefor/Ifes",
+   "h1": "Respostas do assistente de dúvidas",
+   "culpados": [],
+   "estilos": "356f17da / 576 regras",
+   "arquivo": "duvidas--375.png"
+  }
+ },
+ {
+  "id": "assistente",
+  "rota": "assistente",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/",
+  "obs": "Edital 01",
+  "identidade": "inventario.piloto",
+  "status": 200,
+  "final": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.piloto:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Assistente do Edital (piloto) — 01/2026 — Cefor/Ifes",
+   "h1": "Assistente do Edital (piloto)",
+   "culpados": [],
+   "estilos": "6c4d8565 / 575 regras",
+   "arquivo": "assistente--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 898,
+   "titulo": "Assistente do Edital (piloto) — 01/2026 — Cefor/Ifes",
+   "h1": "Assistente do Edital (piloto)",
+   "culpados": [],
+   "estilos": "6c4d8565 / 575 regras",
+   "arquivo": "assistente--375.png"
+  }
+ },
+ {
+  "id": "assistente-prototipo",
+  "rota": "assistente-prototipo",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/",
+  "obs": "Edital 01",
+  "identidade": "inventario.piloto",
+  "status": 200,
+  "final": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.piloto:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1822,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "culpados": [],
+   "estilos": "9fb9084d / 463 regras",
+   "arquivo": "assistente-prototipo--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2998,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "culpados": [],
+   "estilos": "9fb9084d / 463 regras",
+   "arquivo": "assistente-prototipo--375.png"
+  }
+ },
+ {
+  "id": "compor",
+  "rota": "compor",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor",
+  "obs": "Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/identificacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 945,
+   "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "compor--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1494,
+   "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "compor--375.png"
+  }
+ },
+ {
+  "id": "compor-identificacao",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/identificacao",
+  "obs": "etapa=identificacao, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/identificacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 945,
+   "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "compor-identificacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1494,
+   "titulo": "Identificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "compor-identificacao--375.png"
+  }
+ },
+ {
+  "id": "compor-perfis",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/perfis",
+  "obs": "etapa=perfis, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/perfis",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1213,
+   "titulo": "Perfis de Vaga — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "bc6c2fb0 / 575 regras",
+   "arquivo": "compor-perfis--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2118,
+   "titulo": "Perfis de Vaga — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "bc6c2fb0 / 575 regras",
+   "arquivo": "compor-perfis--375.png"
+  }
+ },
+ {
+  "id": "compor-cronograma",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/cronograma",
+  "obs": "etapa=cronograma, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/cronograma",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1761,
+   "titulo": "Cronograma — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "a90bf99f / 566 regras",
+   "arquivo": "compor-cronograma--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3754,
+   "titulo": "Cronograma — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "a90bf99f / 566 regras",
+   "arquivo": "compor-cronograma--375.png"
+  }
+ },
+ {
+  "id": "compor-etapas",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/etapas",
+  "obs": "etapa=etapas, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/etapas",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1852,
+   "titulo": "Etapas de Avaliação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "f338839d / 565 regras",
+   "arquivo": "compor-etapas--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3854,
+   "titulo": "Etapas de Avaliação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "f338839d / 565 regras",
+   "arquivo": "compor-etapas--375.png"
+  }
+ },
+ {
+  "id": "compor-classificacao",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/classificacao",
+  "obs": "etapa=classificacao, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/classificacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1003,
+   "titulo": "Classificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "bc6c2fb0 / 575 regras",
+   "arquivo": "compor-classificacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1710,
+   "titulo": "Classificação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "bc6c2fb0 / 575 regras",
+   "arquivo": "compor-classificacao--375.png"
+  }
+ },
+ {
+  "id": "compor-inscricao",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/inscricao",
+  "obs": "etapa=inscricao, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/inscricao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2446,
+   "titulo": "Inscrição — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "f338839d / 565 regras",
+   "arquivo": "compor-inscricao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 4478,
+   "titulo": "Inscrição — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "f338839d / 565 regras",
+   "arquivo": "compor-inscricao--375.png"
+  }
+ },
+ {
+  "id": "compor-anexos",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/anexos",
+  "obs": "etapa=anexos, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/anexos",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1036,
+   "titulo": "Anexos — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "1eebbcc / 563 regras",
+   "arquivo": "compor-anexos--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1555,
+   "titulo": "Anexos — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "1eebbcc / 563 regras",
+   "arquivo": "compor-anexos--375.png"
+  }
+ },
+ {
+  "id": "compor-conteudo",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/conteudo",
+  "obs": "etapa=conteudo, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/conteudo",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2908,
+   "titulo": "Conteúdo — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "ea82adac / 569 regras",
+   "arquivo": "compor-conteudo--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3963,
+   "titulo": "Conteúdo — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "ea82adac / 569 regras",
+   "arquivo": "compor-conteudo--375.png"
+  }
+ },
+ {
+  "id": "compor-revisao",
+  "rota": "compor-etapa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/revisao",
+  "obs": "etapa=revisao, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/compor/revisao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 8396,
+   "titulo": "Revisão — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6731c5d4 / 563 regras",
+   "arquivo": "compor-revisao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 15214,
+   "titulo": "Revisão — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Edital 76/2027",
+   "culpados": [],
+   "estilos": "6731c5d4 / 563 regras",
+   "arquivo": "compor-revisao--375.png"
+  }
+ },
+ {
+  "id": "reaproveitar",
+  "rota": "reaproveitar",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/reaproveitar",
+  "obs": "Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/reaproveitar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1264,
+   "titulo": "Partir de um Edital anterior — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Partir de um Edital anterior",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "reaproveitar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2088,
+   "titulo": "Partir de um Edital anterior — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Partir de um Edital anterior",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "reaproveitar--375.png"
+  }
+ },
+ {
+  "id": "previa",
+  "rota": "previa",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/previa",
+  "obs": "Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/previa",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Prévia — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Prévia do Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "previa--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Prévia — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Prévia do Edital 76/2027",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "previa--375.png"
+  }
+ },
+ {
+  "id": "ato-submeter",
+  "rota": "ato",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/submeter",
+  "obs": "acao=submeter, Edital 76",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/submeter",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2045,
+   "titulo": "Submeter para revisão — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Submeter para revisão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-submeter--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3186,
+   "titulo": "Submeter para revisão — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Submeter para revisão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-submeter--375.png"
+  }
+ },
+ {
+  "id": "ato-homologar",
+  "rota": "ato",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/homologar",
+  "obs": "acao=homologar, Edital 76",
+  "identidade": "bruno.homologador",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/homologar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "bruno.homologador:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Homologar — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Homologar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-homologar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1067,
+   "titulo": "Homologar — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Homologar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-homologar--375.png"
+  }
+ },
+ {
+  "id": "ato-devolver",
+  "rota": "ato",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/devolver",
+  "obs": "acao=devolver, Edital 76",
+  "identidade": "bruno.homologador",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/devolver",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "bruno.homologador:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Devolver para elaboração — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Devolver para elaboração",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-devolver--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1140,
+   "titulo": "Devolver para elaboração — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Devolver para elaboração",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-devolver--375.png"
+  }
+ },
+ {
+  "id": "ato-revogar-homologacao",
+  "rota": "ato",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/revogar-homologacao",
+  "obs": "acao=revogar-homologacao, Edital 76",
+  "identidade": "bruno.homologador",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/revogar-homologacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "bruno.homologador:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Revogar homologação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Revogar homologação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-revogar-homologacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 954,
+   "titulo": "Revogar homologação — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Revogar homologação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-revogar-homologacao--375.png"
+  }
+ },
+ {
+  "id": "ato-publicar",
+  "rota": "ato",
+  "caminho": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/publicar",
+  "obs": "acao=publicar, Edital 76",
+  "identidade": "paula.publicadora",
+  "status": 200,
+  "final": "/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/atos/publicar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paula.publicadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2257,
+   "titulo": "Publicar — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Publicar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-publicar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3550,
+   "titulo": "Publicar — Edital 76/2027 — Cefor/Ifes",
+   "h1": "Publicar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-publicar--375.png"
+  }
+ },
+ {
+  "id": "ato-encerrar",
+  "rota": "ato",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/encerrar",
+  "obs": "acao=encerrar, Edital 51",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/encerrar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Encerrar — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Encerrar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-encerrar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 937,
+   "titulo": "Encerrar — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Encerrar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-encerrar--375.png"
+  }
+ },
+ {
+  "id": "ato-cancelar",
+  "rota": "ato",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/cancelar",
+  "obs": "acao=cancelar, Edital 51",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/atos/cancelar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Cancelar — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Cancelar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-cancelar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 959,
+   "titulo": "Cancelar — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Cancelar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-cancelar--375.png"
+  }
+ },
+ {
+  "id": "retificar",
+  "rota": "retificar",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/retificar",
+  "obs": "Edital 01",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/retificar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 13915,
+   "titulo": "Retificar Edital 01/2026 — Cefor/Ifes",
+   "h1": "Retificar Edital 01/2026",
+   "culpados": [],
+   "estilos": "30015e5 / 577 regras",
+   "arquivo": "retificar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 26984,
+   "titulo": "Retificar Edital 01/2026 — Cefor/Ifes",
+   "h1": "Retificar Edital 01/2026",
+   "culpados": [],
+   "estilos": "30015e5 / 577 regras",
+   "arquivo": "retificar--375.png"
+  }
+ },
+ {
+  "id": "auditoria",
+  "rota": "auditoria",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/auditoria",
+  "obs": "",
+  "identidade": "inventario.auditora",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/auditoria",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.auditora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 996,
+   "titulo": "Auditoria — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "auditoria--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2309,
+   "titulo": "Auditoria — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "auditoria--375.png"
+  }
+ },
+ {
+  "id": "exportar-matriculas",
+  "rota": "exportar-matriculas",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/matriculas",
+  "obs": "",
+  "identidade": "inventario.exportadora",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/matriculas",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.exportadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Exportar para matrícula — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Exportar para matrícula",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "exportar-matriculas--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 831,
+   "titulo": "Exportar para matrícula — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Exportar para matrícula",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "exportar-matriculas--375.png"
+  }
+ },
+ {
+  "id": "inscricoes",
+  "rota": "inscricoes",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/inscricoes",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/inscricoes",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Inscrições — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Inscrições — 5",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "inscricoes--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1335,
+   "titulo": "Inscrições — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Inscrições — 5",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "inscricoes--375.png"
+  }
+ },
+ {
+  "id": "inscricao-recebida",
+  "rota": "inscricao-recebida",
+  "caminho": "/gestao/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/",
+  "obs": "Ana Silva",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1887,
+   "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Ana Silva",
+   "culpados": [],
+   "estilos": "dfe24399 / 573 regras",
+   "arquivo": "inscricao-recebida--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2450,
+   "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Ana Silva",
+   "culpados": [],
+   "estilos": "dfe24399 / 573 regras",
+   "arquivo": "inscricao-recebida--375.png"
+  }
+ },
+ {
+  "id": "retificacao-detalhe",
+  "rota": "retificacao-detalhe",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/",
+  "obs": "Retificação publicada",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Retificação — Edital 01/2026 — Cefor/Ifes",
+   "h1": "Retificação do Edital 01/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "retificacao-detalhe--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1469,
+   "titulo": "Retificação — Edital 01/2026 — Cefor/Ifes",
+   "h1": "Retificação do Edital 01/2026",
+   "culpados": [],
+   "estilos": "c1fd628b / 567 regras",
+   "arquivo": "retificacao-detalhe--375.png"
+  }
+ },
+ {
+  "id": "retificacao-ato-submeter",
+  "rota": "retificacao-ato",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/submeter",
+  "obs": "acao=submeter, Retificação publicada",
+  "identidade": "ana.elaboradora",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/submeter",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "ana.elaboradora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Submeter para revisão — Retificação — Cefor/Ifes",
+   "h1": "Submeter para revisão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-submeter--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1240,
+   "titulo": "Submeter para revisão — Retificação — Cefor/Ifes",
+   "h1": "Submeter para revisão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-submeter--375.png"
+  }
+ },
+ {
+  "id": "retificacao-ato-homologar",
+  "rota": "retificacao-ato",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/homologar",
+  "obs": "acao=homologar, Retificação publicada",
+  "identidade": "bruno.homologador",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/homologar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "bruno.homologador:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Homologar — Retificação — Cefor/Ifes",
+   "h1": "Homologar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-homologar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1298,
+   "titulo": "Homologar — Retificação — Cefor/Ifes",
+   "h1": "Homologar",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-homologar--375.png"
+  }
+ },
+ {
+  "id": "retificacao-ato-publicar",
+  "rota": "retificacao-ato",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/publicar",
+  "obs": "acao=publicar, Retificação publicada",
+  "identidade": "paula.publicadora",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/publicar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paula.publicadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1352,
+   "titulo": "Publicar Retificação — Retificação — Cefor/Ifes",
+   "h1": "Publicar Retificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-publicar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2166,
+   "titulo": "Publicar Retificação — Retificação — Cefor/Ifes",
+   "h1": "Publicar Retificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-publicar--375.png"
+  }
+ },
+ {
+  "id": "retificacao-ato-devolver",
+  "rota": "retificacao-ato",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/devolver",
+  "obs": "acao=devolver, Retificação publicada",
+  "identidade": "bruno.homologador",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/devolver",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "bruno.homologador:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 929,
+   "titulo": "Devolver para elaboração — Retificação — Cefor/Ifes",
+   "h1": "Devolver para elaboração",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-devolver--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1393,
+   "titulo": "Devolver para elaboração — Retificação — Cefor/Ifes",
+   "h1": "Devolver para elaboração",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-devolver--375.png"
+  }
+ },
+ {
+  "id": "retificacao-ato-cancelar",
+  "rota": "retificacao-ato",
+  "caminho": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/cancelar",
+  "obs": "acao=cancelar, Retificação publicada",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/retificacoes/392c15f3-8d3d-4552-b5dc-b83a1ca84cae/atos/cancelar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Cancelar Retificação — Retificação — Cefor/Ifes",
+   "h1": "Cancelar Retificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-cancelar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1298,
+   "titulo": "Cancelar Retificação — Retificação — Cefor/Ifes",
+   "h1": "Cancelar Retificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "retificacao-ato-cancelar--375.png"
+  }
+ },
+ {
+  "id": "comissao",
+  "rota": "comissao",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/comissao",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/comissao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2102,
+   "titulo": "Comissão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Comissão do Processo",
+   "culpados": [],
+   "estilos": "414b0778 / 563 regras",
+   "arquivo": "comissao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2730,
+   "titulo": "Comissão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Comissão do Processo",
+   "culpados": [],
+   "estilos": "414b0778 / 563 regras",
+   "arquivo": "comissao--375.png"
+  }
+ },
+ {
+  "id": "alocacoes",
+  "rota": "alocacoes",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/alocacoes",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/alocacoes",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 933,
+   "titulo": "Alocação por Etapa — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Alocação por Etapa",
+   "culpados": [],
+   "estilos": "c91b03a6 / 567 regras",
+   "arquivo": "alocacoes--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1148,
+   "titulo": "Alocação por Etapa — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Alocação por Etapa",
+   "culpados": [],
+   "estilos": "c91b03a6 / 567 regras",
+   "arquivo": "alocacoes--375.png"
+  }
+ },
+ {
+  "id": "auditoria-comissao",
+  "rota": "auditoria-comissao",
+  "caminho": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/auditoria",
+  "obs": "",
+  "identidade": "inventario.auditora",
+  "status": 200,
+  "final": "/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/auditoria",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.auditora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1117,
+   "titulo": "Auditoria da comissão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "auditoria-comissao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2626,
+   "titulo": "Auditoria da comissão — PS-DEMO-2026 — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "auditoria-comissao--375.png"
+  }
+ },
+ {
+  "id": "distribuicao",
+  "rota": "distribuicao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1",
+  "obs": "Prova objetiva, Edital 51",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1988,
+   "titulo": "Distribuir — Prova objetiva — Cefor/Ifes",
+   "h1": "Prova objetiva",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "distribuicao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3332,
+   "titulo": "Distribuir — Prova objetiva — Cefor/Ifes",
+   "h1": "Prova objetiva",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "distribuicao--375.png"
+  }
+ },
+ {
+  "id": "registrar-ocorrencia",
+  "rota": "registrar-ocorrencia",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/ocorrencia",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/ocorrencia",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Ocorrência — Prova objetiva — Cefor/Ifes",
+   "h1": "Registrar ocorrência na Etapa",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "registrar-ocorrencia--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Ocorrência — Prova objetiva — Cefor/Ifes",
+   "h1": "Registrar ocorrência na Etapa",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "registrar-ocorrencia--375.png"
+  }
+ },
+ {
+  "id": "impedimentos",
+  "rota": "impedimentos",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/impedimentos",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/impedimentos",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Impedimentos — Prova objetiva — Cefor/Ifes",
+   "h1": "Impedimentos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "impedimentos--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1045,
+   "titulo": "Impedimentos — Prova objetiva — Cefor/Ifes",
+   "h1": "Impedimentos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "impedimentos--375.png"
+  }
+ },
+ {
+  "id": "trilha-da-avaliacao",
+  "rota": "trilha-da-avaliacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/trilha",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/trilha",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1470,
+   "titulo": "Trilha da avaliação — Prova objetiva — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "trilha-da-avaliacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3347,
+   "titulo": "Trilha da avaliação — Prova objetiva — Cefor/Ifes",
+   "h1": "Trilha de auditoria",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "trilha-da-avaliacao--375.png"
+  }
+ },
+ {
+  "id": "resultados-da-etapa",
+  "rota": "resultados-da-etapa",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/resultados",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/resultados",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultados — Prova objetiva — Cefor/Ifes",
+   "h1": "Resultados da Etapa",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "resultados-da-etapa--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1423,
+   "titulo": "Resultados — Prova objetiva — Cefor/Ifes",
+   "h1": "Resultados da Etapa",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "resultados-da-etapa--375.png"
+  }
+ },
+ {
+  "id": "conclusoes-preservadas",
+  "rota": "conclusoes-preservadas",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/conclusoes",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/distribuicao/00000000-0000-0000-0051-0000000000d1/conclusoes",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Conclusões preservadas — Prova objetiva — Cefor/Ifes",
+   "h1": "Conclusões preservadas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "conclusoes-preservadas--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1572,
+   "titulo": "Conclusões preservadas — Prova objetiva — Cefor/Ifes",
+   "h1": "Conclusões preservadas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "conclusoes-preservadas--375.png"
+  }
+ },
+ {
+  "id": "ordenacao",
+  "rota": "ordenacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1",
+  "obs": "marco FINAL, Edital 51",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1299,
+   "titulo": "Classificação — Classificação final — Cefor/Ifes",
+   "h1": "Classificação final",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ordenacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1936,
+   "titulo": "Classificação — Classificação final — Cefor/Ifes",
+   "h1": "Classificação final",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ordenacao--375.png"
+  }
+ },
+ {
+  "id": "corte-historico",
+  "rota": "corte-historico",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/cortes/47f4cc31-35d4-440a-9a9c-2c1db924fd97",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/cortes/47f4cc31-35d4-440a-9a9c-2c1db924fd97",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1121,
+   "titulo": "Corte — Classificação final — Cefor/Ifes",
+   "h1": "Corte — Classificação final",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "corte-historico--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1819,
+   "titulo": "Corte — Classificação final — Cefor/Ifes",
+   "h1": "Corte — Classificação final",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "corte-historico--375.png"
+  }
+ },
+ {
+  "id": "ato-de-ordenacao",
+  "rota": "ato-de-ordenacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1576,
+   "titulo": "Ato de classificação — Cefor/Ifes",
+   "h1": "Ato de classificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-de-ordenacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2577,
+   "titulo": "Ato de classificação — Cefor/Ifes",
+   "h1": "Ato de classificação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ato-de-ordenacao--375.png"
+  }
+ },
+ {
+  "id": "corte",
+  "rota": "corte",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/corte",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/corte",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1203,
+   "titulo": "Corte — progressão para a Etapa seguinte — Cefor/Ifes",
+   "h1": "Corte e progressão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "corte--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2013,
+   "titulo": "Corte — progressão para a Etapa seguinte — Cefor/Ifes",
+   "h1": "Corte e progressão",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "corte--375.png"
+  }
+ },
+ {
+  "id": "ocupacao",
+  "rota": "ocupacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1110,
+   "titulo": "Ocupação de vagas — quantas faltam em cada lista — Cefor/Ifes",
+   "h1": "Ocupação de vagas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ocupacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1480,
+   "titulo": "Ocupação de vagas — quantas faltam em cada lista — Cefor/Ifes",
+   "h1": "Ocupação de vagas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ocupacao--375.png"
+  }
+ },
+ {
+  "id": "ocupacao-historico",
+  "rota": "ocupacao-historico",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao/historico",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/ocupacao/historico",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Histórico da ocupação — as apurações deste recorte — Cefor/Ifes",
+   "h1": "Histórico da ocupação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ocupacao-historico--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1115,
+   "titulo": "Histórico da ocupação — as apurações deste recorte — Cefor/Ifes",
+   "h1": "Histórico da ocupação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "ocupacao-historico--375.png"
+  }
+ },
+ {
+  "id": "convocacao",
+  "rota": "convocacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2603,
+   "titulo": "Convocação — quem foi chamado e o que respondeu — Cefor/Ifes",
+   "h1": "Convocação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "convocacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3848,
+   "titulo": "Convocação — quem foi chamado e o que respondeu — Cefor/Ifes",
+   "h1": "Convocação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "convocacao--375.png"
+  }
+ },
+ {
+  "id": "convocacao-historico",
+  "rota": "convocacao-historico",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/historico",
+  "obs": "",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/historico",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Histórico da convocação — com a proveniência de cada ato — Cefor/Ifes",
+   "h1": "Histórico da convocação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "convocacao-historico--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Histórico da convocação — com a proveniência de cada ato — Cefor/Ifes",
+   "h1": "Histórico da convocação",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "convocacao-historico--375.png"
+  }
+ },
+ {
+  "id": "sorteio",
+  "rota": "sorteio",
+  "caminho": "/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/marcos/00000000-0000-0000-0026-0000000000a1/sorteio",
+  "obs": "Edital 26",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/bd6e4985-c88c-4b8f-a04d-ea380376d781/marcos/00000000-0000-0000-0026-0000000000a1/sorteio",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2556,
+   "titulo": "Sorteio — Sorteio público — Cefor/Ifes",
+   "h1": "Sorteio — Sorteio público",
+   "culpados": [],
+   "estilos": "8ad5ae9 / 563 regras",
+   "arquivo": "sorteio--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3527,
+   "titulo": "Sorteio — Sorteio público — Cefor/Ifes",
+   "h1": "Sorteio — Sorteio público",
+   "culpados": [],
+   "estilos": "8ad5ae9 / 563 regras",
+   "arquivo": "sorteio--375.png"
+  }
+ },
+ {
+  "id": "previa-de-publicacao",
+  "rota": "previa-de-publicacao",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81/publicar",
+  "obs": "",
+  "identidade": "paula.publicadora",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/atos/ac2080d5-e5a7-47ac-b251-246e03fbde81/publicar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paula.publicadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1245,
+   "titulo": "Publicar resultado — Classificação final — Cefor/Ifes",
+   "h1": "Publicar resultado",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "previa-de-publicacao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1900,
+   "titulo": "Publicar resultado — Classificação final — Cefor/Ifes",
+   "h1": "Publicar resultado",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "previa-de-publicacao--375.png"
+  }
+ },
+ {
+  "id": "publicacoes-do-marco",
+  "rota": "publicacoes-do-marco",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/publicacoes",
+  "obs": "",
+  "identidade": "paula.publicadora",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/publicacoes",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paula.publicadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultados divulgados — Cefor/Ifes",
+   "h1": "Resultados divulgados",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "publicacoes-do-marco--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Resultados divulgados — Cefor/Ifes",
+   "h1": "Resultados divulgados",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "publicacoes-do-marco--375.png"
+  }
+ },
+ {
+  "id": "marco",
+  "rota": "marco",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/conducao",
+  "obs": "condução do marco",
+  "identidade": "paulo.presidente",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/conducao",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "paulo.presidente:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Condução do marco — Classificação final, Professor de Informática — Cefor/Ifes",
+   "h1": "Classificação final — Professor de Informática",
+   "culpados": [],
+   "estilos": "cb56ddb / 564 regras",
+   "arquivo": "marco--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1285,
+   "titulo": "Condução do marco — Classificação final, Professor de Informática — Cefor/Ifes",
+   "h1": "Classificação final — Professor de Informática",
+   "culpados": [],
+   "estilos": "cb56ddb / 564 regras",
+   "arquivo": "marco--375.png"
+  }
+ },
+ {
+  "id": "recursos",
+  "rota": "recursos",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/recursos",
+  "obs": "",
+  "identidade": "inventario.julgadora",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/recursos",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.julgadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recursos recebidos — Cefor/Ifes",
+   "h1": "Recursos recebidos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recursos--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recursos recebidos — Cefor/Ifes",
+   "h1": "Recursos recebidos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recursos--375.png"
+  }
+ },
+ {
+  "id": "recurso-pendente",
+  "rota": "recurso",
+  "caminho": "/gestao/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac",
+  "obs": "recurso aguardando admissibilidade (criado para o inventário)",
+  "identidade": "inventario.julgadora",
+  "status": 200,
+  "final": "/gestao/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.julgadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1030,
+   "titulo": "Recurso REC-2026-H6KTWZE7 — Cefor/Ifes",
+   "h1": "Recurso REC-2026-H6KTWZE7",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recurso-pendente--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1669,
+   "titulo": "Recurso REC-2026-H6KTWZE7 — Cefor/Ifes",
+   "h1": "Recurso REC-2026-H6KTWZE7",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recurso-pendente--375.png"
+  }
+ },
+ {
+  "id": "recurso-admitido",
+  "rota": "recurso",
+  "caminho": "/gestao/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e",
+  "obs": "recurso admitido (criado para o inventário)",
+  "identidade": "inventario.julgadora",
+  "status": 200,
+  "final": "/gestao/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "inventario.julgadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1490,
+   "titulo": "Recurso REC-2026-K97GMU9C — Cefor/Ifes",
+   "h1": "Recurso REC-2026-K97GMU9C",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recurso-admitido--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2106,
+   "titulo": "Recurso REC-2026-K97GMU9C — Cefor/Ifes",
+   "h1": "Recurso REC-2026-K97GMU9C",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "recurso-admitido--375.png"
+  }
+ },
+ {
+  "id": "minhas-etapas",
+  "rota": "minhas-etapas",
+  "caminho": "/gestao/minhas-etapas",
+  "obs": "",
+  "identidade": "joana.avaliadora",
+  "status": 200,
+  "final": "/gestao/minhas-etapas",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "joana.avaliadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas Etapas — Cefor/Ifes",
+   "h1": "Minhas Etapas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "minhas-etapas--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1149,
+   "titulo": "Minhas Etapas — Cefor/Ifes",
+   "h1": "Minhas Etapas",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "minhas-etapas--375.png"
+  }
+ },
+ {
+  "id": "minha-etapa",
+  "rota": "minha-etapa",
+  "caminho": "/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1",
+  "obs": "",
+  "identidade": "joana.avaliadora",
+  "status": 200,
+  "final": "/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "joana.avaliadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Prova objetiva — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Prova objetiva",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "minha-etapa--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 929,
+   "titulo": "Prova objetiva — Edital 51/2026 — Cefor/Ifes",
+   "h1": "Prova objetiva",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "minha-etapa--375.png"
+  }
+ },
+ {
+  "id": "mesa-inscricao",
+  "rota": "mesa-inscricao",
+  "caminho": "/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b",
+  "obs": "",
+  "identidade": "joana.avaliadora",
+  "status": 200,
+  "final": "/gestao/minhas-etapas/af86be76-27f3-4e6a-b621-2b0771c323b2/00000000-0000-0000-0051-0000000000d1/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "joana.avaliadora:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1006,
+   "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Inscrição INS-2026-AF86BE7601",
+   "culpados": [],
+   "estilos": "a71c7ab / 568 regras",
+   "arquivo": "mesa-inscricao--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1485,
+   "titulo": "Inscrição INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Inscrição INS-2026-AF86BE7601",
+   "culpados": [],
+   "estilos": "a71c7ab / 568 regras",
+   "arquivo": "mesa-inscricao--375.png"
+  }
+ },
+ {
+  "id": "modelos-de-aviso",
+  "rota": "modelos-de-aviso",
+  "caminho": "/gestao/modelos-de-aviso",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/modelos-de-aviso",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Modelos de aviso — Cefor/Ifes",
+   "h1": "Modelos de aviso",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "modelos-de-aviso--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 875,
+   "titulo": "Modelos de aviso — Cefor/Ifes",
+   "h1": "Modelos de aviso",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "modelos-de-aviso--375.png"
+  }
+ },
+ {
+  "id": "modelo-de-aviso-novo",
+  "rota": "modelo-de-aviso-novo",
+  "caminho": "/gestao/modelos-de-aviso/novo",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/modelos-de-aviso/novo",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1243,
+   "titulo": "Novo modelo de aviso — Cefor/Ifes",
+   "h1": "Novo modelo",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "modelo-de-aviso-novo--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1762,
+   "titulo": "Novo modelo de aviso — Cefor/Ifes",
+   "h1": "Novo modelo",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "modelo-de-aviso-novo--375.png"
+  }
+ },
+ {
+  "id": "modelo-de-aviso",
+  "rota": "modelo-de-aviso",
+  "caminho": "/gestao/modelos-de-aviso/87c71c47-4017-4aed-b8fe-f29e379c3359",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/modelos-de-aviso/87c71c47-4017-4aed-b8fe-f29e379c3359",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1315,
+   "titulo": "Editar modelo de aviso — Cefor/Ifes",
+   "h1": "Editar modelo",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "modelo-de-aviso--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1858,
+   "titulo": "Editar modelo de aviso — Cefor/Ifes",
+   "h1": "Editar modelo",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "modelo-de-aviso--375.png"
+  }
+ },
+ {
+  "id": "avisos-do-edital-antes",
+  "rota": "avisos-do-edital",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos",
+  "obs": "antes de qualquer aviso",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisos aos candidatos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "avisos-do-edital-antes--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisos aos candidatos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "avisos-do-edital-antes--375.png"
+  }
+ },
+ {
+  "id": "aviso-da-chamada",
+  "rota": "aviso-da-chamada",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/avisos/novo",
+  "obs": "",
+  "identidade": null,
+  "status": 404,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/convocacao/avisos/novo",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:404",
+   "ana.elaboradora:404",
+   "bruno.homologador:404",
+   "paula.publicadora:404",
+   "paulo.presidente:404",
+   "joana.avaliadora:404",
+   "inventario.auditora:404",
+   "inventario.julgadora:404",
+   "inventario.exportadora:404",
+   "inventario.piloto:404"
+  ]
+ },
+ {
+  "id": "aviso-do-resultado",
+  "rota": "aviso-do-resultado",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/avisos/novo",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/marcos/00000000-0000-0000-0051-0000000000a1/avisos/novo",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1994,
+   "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisar candidatos",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso-do-resultado--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2817,
+   "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisar candidatos",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso-do-resultado--375.png"
+  }
+ },
+ {
+  "id": "aviso",
+  "rota": "aviso",
+  "caminho": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900",
+  "obs": "aviso de resultado confirmado para o inventário",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1151,
+   "titulo": "Aviso aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Aviso de 16/10/2026 às 16:19",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1672,
+   "titulo": "Aviso aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Aviso de 16/10/2026 às 16:19",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso--375.png"
+  }
+ },
+ {
+  "id": "aviso-interromper",
+  "rota": "aviso-interromper",
+  "caminho": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/interromper",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/interromper",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Interromper o aviso — 51/2026 — Cefor/Ifes",
+   "h1": "Interromper o envio",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "aviso-interromper--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 948,
+   "titulo": "Interromper o aviso — 51/2026 — Cefor/Ifes",
+   "h1": "Interromper o envio",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "aviso-interromper--375.png"
+  }
+ },
+ {
+  "id": "aviso-reenviar",
+  "rota": "aviso-reenviar",
+  "caminho": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/reenviar",
+  "obs": "",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/avisos/c1841d6c-924b-41a8-8d9a-99a17aacb900/reenviar",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1405,
+   "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisar candidatos",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso-reenviar--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2144,
+   "titulo": "Avisar candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisar candidatos",
+   "culpados": [],
+   "estilos": "5e3a1826 / 568 regras",
+   "arquivo": "aviso-reenviar--375.png"
+  }
+ },
+ {
+  "id": "avisos-do-edital",
+  "rota": "avisos-do-edital",
+  "caminho": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos",
+  "obs": "depois do aviso",
+  "identidade": "gustavo.gestor",
+  "status": 200,
+  "final": "/gestao/editais/af86be76-27f3-4e6a-b621-2b0771c323b2/avisos",
+  "tipo": "text/html; charset=utf-8",
+  "tentativas": [
+   "gustavo.gestor:200"
+  ],
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisos aos candidatos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "avisos-do-edital--1280.png"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Avisos aos candidatos — 51/2026 — Cefor/Ifes",
+   "h1": "Avisos aos candidatos",
+   "culpados": [],
+   "estilos": "6228d106 / 562 regras",
+   "arquivo": "avisos-do-edital--375.png"
+  }
+ }
+]

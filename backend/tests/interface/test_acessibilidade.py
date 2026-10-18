@@ -13,19 +13,16 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import compor_rascunho, identificar
+from tests.interface.folha import FOLHA_COMUM, TOKENS, sem_comentarios
 
 BASE = (
     Path(__file__).resolve().parents[2]
     / "processo_seletivo/interface/templates/interface/base.html"
 )
+# O modelo é marcação: o link de salto, o `<main>`. A folha comum saiu dele para um arquivo estático
+# na 089, e os tokens, que tinham saído para uma parcial quando o canal público nasceu (009, T008),
+# também — a rubrica de contraste segue a paleta para onde ela foi, e vale para os dois canais.
 FONTE = BASE.read_text()
-# Os tokens saíram da base para uma parcial compartilhada quando o canal público nasceu (009,
-# T008). A rubrica de contraste segue a paleta para onde ela foi — e passa a valer para os dois
-# canais de uma vez, que é o ganho de tê-la num lugar só.
-TOKENS = (
-    Path(__file__).resolve().parents[2]
-    / "processo_seletivo/shared/templates/shared/_tokens.css.html"
-).read_text()
 MINIMO_AA = 4.5
 
 
@@ -407,7 +404,7 @@ def test_o_cabecalho_da_matriz_nao_e_fixado_dentro_de_um_contentor_de_rolagem():
     assert moldura, "a matriz precisa estar dentro de uma moldura identificável"
     classe = moldura.group(1)
 
-    fora_de_media = re.sub(r"@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}", "", FONTE)
+    fora_de_media = re.sub(r"@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}", "", FOLHA_COMUM)
     regra = re.search(rf"\.{classe}\{{([^}}]*)\}}", fora_de_media)
     assert regra, f".{classe} precisa declarar seu overflow fora de qualquer @media"
     assert "overflow-x:visible" in regra.group(1).replace(" ", ""), (
@@ -445,8 +442,10 @@ def test_todo_botao_de_envio_declara_o_seu_peso(template):
 
 
 PORTAL = Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templates/portal/base.html"
-# Dois canais, duas folhas, e a varredura valia só para um. O portal é o que o candidato vê.
-CANAIS = [(BASE.parent, FONTE), (PORTAL.parent, PORTAL.read_text())]
+# Dois canais, duas folhas, e a varredura valia só para um. O portal é o que o candidato vê. A folha
+# da gestão é a comum mais o que ficou no modelo (089): só o modelo, e as bases nunca seriam
+# achadas.
+CANAIS = [(BASE.parent, FOLHA_COMUM + FONTE), (PORTAL.parent, PORTAL.read_text())]
 
 
 _BLOCO_DE_ESTILO = re.compile(
@@ -527,8 +526,7 @@ def sem_prosa(texto):
     Custou uma varredura cega descobrir isto — a busca por uma classe casava com a **frase** que
     explicava a regra dela, e concluía que a regra existia.
     """
-    texto = re.sub(r"/\*.*?\*/", " ", texto, flags=re.S)
-    return re.sub(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", " ", texto, flags=re.S)
+    return sem_comentarios(texto, troca=" ")
 
 
 @pytest.mark.parametrize(

@@ -16,18 +16,15 @@ from processo_seletivo.interface.views import CHAVES_ETAPA
 from processo_seletivo.processos.models import ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.interface.folha import FOLHA_COMUM, GESTAO_CSS, sem_comentarios
 from tests.interface.test_telas_de_uso_diario import (
     TEMPLATES,
     conteudo,
     trilha_unica_no_cabecalho,
 )
 
-FOLHA = (TEMPLATES / "base.html").read_text()
-
-
-def sem_comentarios(folha):
-    folha = re.sub(r"\{% comment %\}.*?\{% endcomment %\}", "", folha, flags=re.DOTALL)
-    return re.sub(r"/\*.*?\*/", "", folha, flags=re.DOTALL)
+# A folha comum saiu do modelo para `gestao.css` na 089.
+FOLHA = FOLHA_COMUM
 
 
 def regras_fora_de_media(folha):
@@ -65,8 +62,9 @@ def test_toda_moldura_que_rola_e_referencia_do_que_carrega():
     mesmo `@media`, e na tela larga continuam bloco comum (058, `FR-1071`; o cabeçalho fixo da
     distribuição)."""
     rolam, posicionadas = set(), set()
-    for template in TEMPLATES.glob("*.html"):
-        for seletores, corpo in regras(template.read_text()):
+    # A folha comum entra junto dos modelos (089): fora do modelo, uma moldura nova nela escaparia.
+    for fonte in [*TEMPLATES.glob("*.html"), GESTAO_CSS]:
+        for seletores, corpo in regras(fonte.read_text()):
             if ROLA.search(corpo):
                 rolam |= {s for s in seletores if s.startswith(".")}
             # Qualquer posição que não a estática serve de referência — o painel da barra no

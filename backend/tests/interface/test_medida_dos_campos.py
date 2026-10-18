@@ -22,6 +22,7 @@ import pytest
 from django.urls import reverse
 
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_da_pagina
 
 pytestmark = [pytest.mark.django_db]
 
@@ -35,8 +36,7 @@ COMPOSTO_GERAL = re.compile(r"^(?:input(?:\[[^\]]+\])?|select|textarea|\.campo)$
 @pytest.fixture
 def folha(client, seletor_ligado):
     identificar(client, "carlos", ["gestor"])
-    corpo = client.get(reverse("interface:lista")).content.decode()
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    return folha_da_pagina(client, reverse("interface:lista"))
 
 
 def regras(folha):
