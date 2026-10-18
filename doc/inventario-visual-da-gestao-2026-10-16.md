@@ -506,3 +506,57 @@ duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Gera
 pulso do Processo, e marcas de cursor e de suavização em Minhas Etapas, na devolução do ato e em
 pontos isolados (até 4 de 255). É também o que o diff permite: ele só toca os seis templates do
 escopo.
+
+## Depois da 086
+
+O grupo das telas dos avisos aos candidatos ([`086`](../specs/086-telas-dos-avisos-aos-candidatos/spec.md))
+mudou os Avisos aos candidatos de um Edital, o histórico de um aviso, a prévia (de resultado, de
+chamada e de reenvio), a conferência da interrupção, os Modelos de aviso e a edição de um modelo: a
+trilha subiu ao cabeçalho de contexto — as telas de um Edital passam pelo Processo, a prévia diz a
+porta por onde se chegou, e os modelos começam na seção da barra —; os três estados vazios passaram a
+`.vazio`, os botões de dois formulários a `.salvar`, e "Novo modelo" a `.acoes-do-painel`. Nenhuma
+regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_086` —
+cópia do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra,
+antes e depois da mudança. O de antes é igual, variante a variante, a `depois-da-080/`, e está em
+[`depois-da-086/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/).
+
+Em [`depois-da-086/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das nove variantes do escopo — e as de antes, em `antes/`. A
+prévia da chamada continua fora do inventário (pede uma comunicação por publicação que o seed não
+emite), e os estados vazios não aparecem nele (o banco tem resultado, aviso e modelos): foram vistos
+no navegador e são provados pelos testes.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/resultados.json
+```
+
+| | Antes da 086 | Depois da 086, expandida | Depois da 086, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 086 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. As telas
+dos avisos têm a largura de leitura, e por isso as medidas são as mesmas nos dois estados da barra:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `aviso` | 1188 → 1151 | 1674 → 1672 | a trilha saiu do conteúdo |
+| `aviso-do-resultado` | 2031 → 1994 | 2819 → 2817 | a trilha saiu do conteúdo |
+| `aviso-reenviar` | 1442 → 1405 | 2146 → 2144 | a trilha saiu do conteúdo |
+| `aviso-interromper` | 900 → 900 | 902 → 948 | a trilha saiu, e os botões ganharam o rodapé, que a 375 quebra o rótulo |
+| `avisos-do-edital`, `avisos-do-edital-antes` | 900 → 900 | 814 → 812 | a trilha saiu; a 1280 a página cabe na janela |
+| `modelos-de-aviso` | 900 → 900 | 904 → 875 | a trilha saiu; a 1280 a página cabe na janela |
+| `modelo-de-aviso` | 1288 → 1315 | 1837 → 1858 | a trilha saiu, e os botões ganharam o rodapé |
+| `modelo-de-aviso-novo` | 1216 → 1243 | 1741 → 1762 | a trilha saiu, e os botões ganharam o rodapé |
+
+**Pixel a pixel.** Fora das nove variantes, as capturas de antes e de depois diferem só no que muda
+entre duas capturas do mesmo código — a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e
+no pulso do Processo, e marcas de suavização isoladas (até 39 de 255) —, nos dois estados da barra. É
+também o que o diff permite: ele só toca os seis templates do escopo.
