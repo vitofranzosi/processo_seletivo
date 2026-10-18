@@ -1,4 +1,5 @@
-{% comment %} Os níveis do Edital no começo da trilha do cabeçalho de contexto (084): Processos Seletivos, o
-   Processo e o Edital. Eram copiados, letra a letra, nas onze telas que pendem do Edital — como o produto
-   era, antes do parcial da 078. Lê o Processo pelo Edital, que as portas dessas telas trazem com
-   `select_related`: nenhuma consulta a mais. {% endcomment %}<a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
+{% comment %} Os níveis de cima da trilha das telas que se abrem do Edital: a seção, o Processo e o Edital.
+   A 083 e a 084 o criaram em paralelo, com o mesmo conteúdo, para as telas do Edital e as de resultado e
+   dos atos, que os copiavam letra a letra. Uma fonte só, como a do produto (078): renomear um nível não
+   pode esquecer uma tela. Lê o Processo pelo Edital, que as portas trazem com `select_related`: nenhuma
+   consulta a mais. O nível de baixo é de cada tela. {% endcomment %}<a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
