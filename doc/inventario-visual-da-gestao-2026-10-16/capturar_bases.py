@@ -31,7 +31,7 @@ from django.core.wsgi import get_wsgi_application  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
-from estilos import ESTILOS  # noqa: E402
+from estilos import CONJUNTO, ESCUTAR_VIOLACOES, ESTILOS, VIOLACOES  # noqa: E402
 
 settings.DEBUG = False
 
@@ -54,6 +54,8 @@ ROTAS = [
     ("portal-vitrine", "/selecoes/", 200),
     ("portal-acesso", "/selecoes/acesso", 200),
     ("pagina-de-erro", "/selecoes/nao-existe", 404),
+    # A mesma página de erro sob a gestão, onde a política da 091 recusa em vez de observar.
+    ("pagina-de-erro-da-gestao", "/gestao/nao-existe", 404),
 ]
 
 MEDIR = """() => {
@@ -68,6 +70,7 @@ resultados = []
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="chrome")
     ctx = browser.new_context(viewport={"width": 1280, "height": 900}, device_scale_factor=1)
+    ctx.add_init_script(ESCUTAR_VIOLACOES)
     for rid, caminho, esperado in ROTAS:
         pg = ctx.new_page()
         resp = pg.goto(BASE + caminho, wait_until="load")
@@ -79,6 +82,8 @@ with sync_playwright() as p:
             linha[str(largura)] = pg.evaluate(MEDIR)
             # O mesmo resumo das regras do `capturar.py`, sempre ligado aqui.
             linha[str(largura)]["estilos"] = pg.evaluate(ESTILOS)
+            linha[str(largura)]["conjunto"] = pg.evaluate(CONJUNTO)
+            linha[str(largura)]["violacoes"] = pg.evaluate(VIOLACOES)
             pg.screenshot(path=str(SAIDA / "png" / f"{rid}--{largura}.png"), full_page=True)
         resultados.append(linha)
         print(rid, linha["status"], linha["375"]["folhas"], flush=True)

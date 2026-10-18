@@ -1,26 +1,7 @@
-{% extends "interface/base.html" %}
+{% extends "interface/base.html" %}{% load estaticos %}
 {% block titulo %}Assistente do Edital (piloto) — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Assistente do Edital (piloto)</span></nav>{% endblock %}
-{% block estilo_da_pagina %}
-{% comment %} As regras desta tela, e só dela (071, contracts/tela.md). Sem largura fixa: a 375 px a
-   página não rola na horizontal, e o texto longo quebra em qualquer ponto. {% endcomment %}
-.piloto{background:var(--cinza-fundo);border-left:4px solid var(--verde);padding:.7rem 1rem;
-  margin:0 0 1rem}
-.turno{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
-  margin:0 0 1.5rem}
-.turno h2{font-size:1rem;margin:0 0 .5rem}
-.turno h2:focus{outline:2px solid var(--verde);outline-offset:2px}
-.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
-.tipo{font-weight:600;margin:0 0 .75rem}
-.trecho{margin:0 0 .75rem;overflow-wrap:anywhere}
-.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
-.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
-.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
-.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
-.pergunta-feita{font-style:italic;overflow-wrap:anywhere;margin:0 0 .75rem}
-.conversa-nova{margin:1.5rem 0 0}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/assistente.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Assistente do Edital (piloto)</h1>
 <p class="sub">{{ processo.title }} · {{ edital.title }}</p>

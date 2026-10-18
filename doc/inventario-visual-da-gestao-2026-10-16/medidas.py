@@ -5,10 +5,15 @@ telas delas nenhuma variante mudou de medida, e faziam a conta à mão; esta é 
 """
 
 import json
+import os
 import sys
 
 # `estilos` (089) é o resumo das regras que a página aplica, quando a captura rodou com `ESTILOS=1`.
-CAMPOS = ("scrollWidth", "altura", "titulo", "h1", "estilos")
+# `CAMPOS` pode ser trocado por `MEDIDAS_CAMPOS=scrollWidth,altura,conjunto` (091): a divisão da
+# folha muda a sequência das regras (`estilos`) de propósito, e o que tem de ficar igual é o conjunto.
+CAMPOS = tuple(
+    filter(None, os.environ.get("MEDIDAS_CAMPOS", "").split(","))
+) or ("scrollWidth", "altura", "titulo", "h1", "estilos", "conjunto", "violacoes")
 
 base = {r["id"]: r for r in json.load(open(sys.argv[1]))}
 nova = {r["id"]: r for r in json.load(open(sys.argv[2]))}

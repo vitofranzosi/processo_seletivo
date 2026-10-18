@@ -19,6 +19,10 @@ header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.
 header.topo .marca{font-weight:600;letter-spacing:.02em;color:var(--branco);text-decoration:none}
 header.topo .marca:hover{text-decoration:underline}
 header.topo .marca span{font-weight:300;opacity:.85}
+/* O contêiner dos símbolos da barra: largura e altura zero pelos atributos, e fora do fluxo por esta
+   regra, que até a 091 era `style="position:absolute"` no próprio `<svg>` — atributo de estilo que a
+   política de segurança de conteúdo recusa. */
+.simbolos{position:absolute}
 /*
 O shell da gestão (076), no conceito A do estudo de 16/10: barra lateral branca com as seções, a
 seção atual em verde-claro com filete, a pessoa e "Sair" no pé, e o cabeçalho de contexto acima do

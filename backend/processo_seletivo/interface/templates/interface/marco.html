@@ -1,11 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Condução do marco — {{ marco.name }}, {{ perfil.name }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">{{ marco.name }}</span></nav>{% endblock %}
-{% block estilo_da_pagina %}
-{% comment %} Os gestos lado a lado, alinhados pelo botão: o de publicar traz dois campos acima do dele (057, FR-1048). {% endcomment %}
-.gestos{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:flex-end}
-.gestos .conferencia{margin:0}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/marco.css' %}">{% endblock %}
 {% block conteudo %}
 {% comment %}
 **O Perfil entra no título** porque o marco mora nele, e os marcos de Perfis diferentes costumam

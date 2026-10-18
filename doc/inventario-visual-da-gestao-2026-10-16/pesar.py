@@ -27,6 +27,8 @@ TELAS = [
     ("distribuicao", f"/gestao/editais/{E51}/distribuicao/{ETAPA}", "paulo.presidente", []),
     ("lista", "/gestao/", "gustavo.gestor", ["gestor"]),
     ("minhas-etapas", "/gestao/minhas-etapas", "joana.avaliadora", []),
+    # A tela com o maior estilo próprio (12 KB), que a 091 leva para arquivo.
+    ("visao-geral", "/gestao/visao-geral", "gustavo.gestor", ["gestor"]),
 ]
 
 linhas = []
@@ -36,10 +38,11 @@ for nome, caminho, quem, papeis in TELAS:
     r = c.get(caminho)
     assert r.status_code == 200, (nome, r.status_code)
     corpo = r.content
-    estilo = sum(len(m) for m in re.findall(rb"<style>(.*?)</style>", corpo, re.S))
+    estilo = sum(len(m) for m in re.findall(rb"<style[^>]*>(.*?)</style>", corpo, re.S))
     links = re.findall(rb'<link rel="stylesheet" href="([^"]+)"', corpo)
+    atributos = len(re.findall(rb'\sstyle="', corpo))
     linhas.append({"tela": nome, "bytes": len(corpo), "style": estilo,
-                   "folhas": [l.decode() for l in links]})
+                   "folhas": [l.decode() for l in links], "atributos_style": atributos})
     print(f"{nome:15} {len(corpo):>8} bytes  <style> {estilo:>7}  folhas {len(links)}")
 
 if len(sys.argv) > 1:

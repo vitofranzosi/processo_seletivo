@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import compor_rascunho, identificar
-from tests.interface.folha import FOLHA_COMUM, TOKENS, sem_comentarios
+from tests.interface.folha import FOLHA_COMUM, TOKENS, estilo_do_bloco, sem_comentarios
 
 BASE = (
     Path(__file__).resolve().parents[2]
@@ -448,27 +448,19 @@ PORTAL = Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templat
 CANAIS = [(BASE.parent, FOLHA_COMUM + FONTE), (PORTAL.parent, PORTAL.read_text())]
 
 
-_BLOCO_DE_ESTILO = re.compile(
-    r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", re.S
-)
 _INCLUI = re.compile(r'\{%\s*include\s+"[\w/]+/([\w.\-]+)"')
 
 
-_INCLUSAO = re.compile(r"""\{%\s*include\s+["']([^"']+)["']\s*%\}""")
-
-
 def _estilo_proprio(template):
-    """O bloco de estilo da página, com os `include` de dentro dele resolvidos.
+    """O estilo que o bloco da página carrega, com os parciais de grupo resolvidos.
 
     A `044` pôs num parcial as regras que só a Mesa e o detalhe da consulta usam, incluído pelo
     bloco das duas: no `base.html` elas iam em toda página, e a tela de distribuição passou do teto
     de bytes. Sem resolver o `include`, as classes dessas duas páginas seriam acusadas de órfãs.
     """
-    achado = _BLOCO_DE_ESTILO.search(template.read_text())
-    if not achado:
-        return ""
-    raiz = template.parent.parent
-    return _INCLUSAO.sub(lambda inclusao: (raiz / inclusao.group(1)).read_text(), achado.group(1))
+    # Desde a 091 o bloco só carrega arquivos — `<link>` para `interface/telas/` e `grupos/` —, e
+    # os parciais viraram arquivos de `grupos/`: o que se lê é o texto deles (`estilo_do_bloco`).
+    return estilo_do_bloco(template.read_text())
 
 
 def folha_da_pagina(template, da_base, pasta):

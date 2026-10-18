@@ -1,5 +1,5 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_da_lista_exigida.html" %}{% endblock %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/lista-exigida.css' %}">{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
 {% comment %} A trilha está no cabeçalho de contexto (077, `FR-1746`), e não mais no conteúdo: uma por
    página. {% endcomment %}

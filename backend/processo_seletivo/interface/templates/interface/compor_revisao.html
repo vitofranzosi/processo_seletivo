@@ -1,4 +1,4 @@
-{% extends "interface/compor_base.html" %}
+{% extends "interface/compor_base.html" %}{% load estaticos %}
 {% block etapa_titulo %}Revisão{% endblock %}
 {% comment %}
 A coluna dos rótulos (056, FR-1033, D-010). A grade é a de "Dados da inscrição" — `auto 1fr` —, e
@@ -12,10 +12,7 @@ coluna pelo seu rótulo mais longo, e os valores começavam em nove posições d
 comunicada", o maior, tem 14,3 rem). O `min` só age em tela estreita, para a coluna não tomar o
 cartão.
 {% endcomment %}
-{% block estilo_da_pagina %}
-.conferencia .dados-da-inscricao{grid-template-columns:min(16rem,40%) 1fr;font-size:.875rem;
-  margin:.2rem 0 .1rem}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/compor-revisao.css' %}">{% endblock %}
 {% block etapa %}
 <section aria-labelledby="revisao-titulo" class="pendencias">
   <h2 id="revisao-titulo">O que falta para submeter</h2>

@@ -1,13 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Processos Seletivos{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">Processos Seletivos</span></nav>{% endblock %}
-{% block estilo_da_pagina %}
-{% comment %} A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
-   só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
-   é resposta. {% endcomment %}
-.acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
-.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/lista.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Processos Seletivos</h1>
 <p class="sub">Processos e Editais do escopo <strong>{{ ator.institution_scope }}</strong>.</p>

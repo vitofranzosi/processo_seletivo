@@ -118,8 +118,15 @@ def test_a_verificacao_de_sistema_acusa_a_folha_que_falta(monkeypatch):
     monkeypatch.setattr(estaticos.finders, "find", lambda caminho: None)
     erros = estaticos.verificar_folhas()
 
-    assert [erro.id for erro in erros] == ["estaticos.E001"] * len(estaticos.FOLHAS)
-    assert set(estaticos.FOLHAS) == {"shared/tokens.css", "interface/gestao.css"}
+    # As folhas das bases e, desde a 091, toda folha que um modelo cita pela tag.
+    exigidas = dict.fromkeys(estaticos.FOLHAS) | estaticos.folhas_citadas()
+    assert [erro.id for erro in erros] == ["estaticos.E001"] * len(exigidas)
+    assert set(estaticos.FOLHAS) == {
+        "shared/tokens.css",
+        *estaticos.FOLHAS_DA_GESTAO,
+        "shared/erro.css",
+    }
+    assert "interface/telas/visao-geral.css" in exigidas
 
 
 @pytest.mark.django_db
@@ -130,14 +137,13 @@ def test_a_gestao_carrega_tokens_folha_comum_e_so_entao_o_estilo_da_pagina(clien
     identificar(client, "carlos", ["gestor"])
     corpo = client.get(reverse("interface:lista")).content
 
+    # Desde a 091 a folha comum são os arquivos de `FOLHAS_DA_GESTAO`, e o estilo da página é o
+    # arquivo da tela, por último; nenhum `<style>`.
     assert ordem_das_folhas(corpo) == [
         "/static/shared/tokens.css",
-        "/static/interface/gestao.css",
-        "<style>",
+        *(f"/static/{caminho}" for caminho in estaticos.FOLHAS_DA_GESTAO),
+        "/static/interface/telas/lista.css",
     ]
-    # E o `<style>` que sobra é o da página: na lista, as duas regras da tela, e nada da comum.
-    estilo = re.search(r"<style>(.*?)</style>", cabeca(corpo), re.S).group(1)
-    assert ".tabela-rolavel" not in estilo and ":root" not in estilo
 
 
 @pytest.mark.django_db
@@ -156,18 +162,25 @@ def test_as_outras_bases_carregam_os_tokens_antes_de_qualquer_regra(client, sele
     resposta = client.get(caminho)
 
     assert resposta.status_code == (404 if pagina == "página de erro" else 200)
-    assert ordem_das_folhas(resposta.content) == ["/static/shared/tokens.css", "<style>"]
+    # O portal ainda tem a folha no documento (091, D-007); a página de acesso e a de erro, não.
+    assert ordem_das_folhas(resposta.content) == [
+        "/static/shared/tokens.css",
+        {
+            "acesso da gestão": "/static/interface/grupos/acesso.css",
+            "vitrine do portal": "<style>",
+            "página de erro": "/static/shared/erro.css",
+        }[pagina],
+    ]
     assert "--verde:" in folha_aplicada(resposta.content)
 
 
 def test_o_modelo_da_gestao_nao_tem_regra_da_folha_comum():
     """`SC-795`: de 1.471 linhas de estilo para nenhuma regra comum. No modelo resta o ponto de
-    extensão do estilo por página, com o comentário que o explica."""
-    modelo = BASE.read_text()
-    estilo = re.search(r"<style>(.*?)</style>", modelo, re.S).group(1)
-    assert sem_comentarios(estilo).strip() == "{% block estilo_da_pagina %}{% endblock %}"
-    # Um `<style>` só no modelo; o comentário da `040` cita a palavra, e não conta.
-    assert sem_comentarios(modelo).count("<style>") == 1
+    extensão do estilo por página, com o comentário que o explica — e, desde a 091, nem o `<style>`
+    em volta dele: o bloco carrega `<link>`."""
+    modelo = sem_comentarios(BASE.read_text())
+    assert "{% block estilo_da_pagina %}{% endblock %}" in modelo
+    assert "<style" not in modelo
 
 
 def test_os_tokens_tem_um_lugar_so():

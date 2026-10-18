@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from django.urls import reverse
 
-from tests.interface.folha import FOLHA_COMUM
+from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
 from tests.interface.test_acessibilidade import sem_prosa
 from tests.interface.test_conteudo_da_054 import composto  # noqa: F401
 
@@ -86,7 +86,7 @@ def test_a_marca_de_secao_vazia_continua_no_nome_do_campo(conteudo):
     secao = _secao(conteudo, "certificado")
     assert "(vazia — não sai no documento)</span></legend>" in secao
     assert 'aria-labelledby="titulo-certificado"' in secao
-    regras = (GESTAO / "compor_conteudo.html").read_text()
+    regras = estilo_do_bloco((GESTAO / "compor_conteudo.html").read_text())
     assert ".secao>legend [data-estado-texto]{text-transform:none" in regras
 
 
@@ -98,7 +98,7 @@ def test_a_secao_gerada_nao_tem_caixa_e_o_caminho_fica_na_frase(conteudo):
     assert "Não há texto a redigir: alterar aquele conteúdo altera esta seção." in secao
     paragrafo = re.search(r'<p class="ajuda">(.*?)</p>', secao, re.S).group(1)
     assert "Ir para Cronograma</a>" in paragrafo
-    regras = (GESTAO / "compor_conteudo.html").read_text()
+    regras = estilo_do_bloco((GESTAO / "compor_conteudo.html").read_text())
     assert "fieldset.secao.gerada{border:0;" in regras
     assert "fieldset.secao{max-width:calc(var(--leitura)" in regras
 
@@ -202,7 +202,7 @@ def test_a_faixa_do_evento_poe_as_datas_juntas_e_o_local_no_fim():
     assert ordem == sorted(ordem)
     assert '<p class="campo largo">\n      <label for="evento-{{ indice }}-description">' in corpo
     assert '<p class="campo local">' in corpo
-    cronograma = (GESTAO / "compor_cronograma.html").read_text()
+    cronograma = estilo_do_bloco((GESTAO / "compor_cronograma.html").read_text())
     assert ".campo.local{flex:0 1 20rem}" in cronograma
 
 
@@ -257,7 +257,7 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
     corridas = re.findall(r'<span class="detalhe">([^<]*)</span>', corpo)
     for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
         assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo
-    revisao = (GESTAO / "compor_revisao.html").read_text()
+    revisao = estilo_do_bloco((GESTAO / "compor_revisao.html").read_text())
     # A coluna de 16 rem, que a 058 tornou igual em todo bloco (FR-1080).
     assert ".conferencia .dados-da-inscricao{grid-template-columns:min(16rem,40%) 1fr" in revisao
 
@@ -301,7 +301,7 @@ def test_os_tres_campos_longos_do_retificar_sao_texto_longo():
 def test_a_navegacao_da_etapa_nao_herda_a_medida_de_leitura():
     """Em Anexos a barra é filha de `main`, e `main>p` a prendia em 685 px: "Avançar" no meio."""
     assert "max-width:none" in regra(".navegacao-etapa")
-    anexos = (GESTAO / "compor_anexos.html").read_text()
+    anexos = estilo_do_bloco((GESTAO / "compor_anexos.html").read_text())
     assert "#anexos-lista>.vazio{max-width:none}" in anexos
 
 

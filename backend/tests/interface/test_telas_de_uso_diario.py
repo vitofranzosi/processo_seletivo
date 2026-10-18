@@ -12,7 +12,7 @@ from django.urls import reverse
 
 from tests.fixtures.mesa import montar_cenario_da_presidencia
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM
+from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
 from tests.interface.test_shell_da_gestao import barra, itens_da_barra
 
 TEMPLATES = (
@@ -190,8 +190,8 @@ def test_cada_correcao_vale_so_na_sua_tela(template, regra):
 
     A largura medida é a do inventário refeito; aqui fica a garantia de que a correção não vazou.
     """
-    folha_da_tela = (TEMPLATES / template).read_text().split("{% block estilo_da_pagina %}")[1]
-    assert regra in folha_da_tela.split("{% endblock %}")[0]
+    # Desde a 091 o bloco carrega o arquivo da tela, e é nele que a regra mora.
+    assert regra in estilo_do_bloco((TEMPLATES / template).read_text())
     # A comum é `gestao.css` desde a 089; o modelo não tem mais folha, e a negação passaria sobre
     # ele.
     assert regra not in FOLHA_COMUM

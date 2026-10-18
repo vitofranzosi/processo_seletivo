@@ -1,6 +1,6 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{% if modelo %}Editar modelo{% else %}Novo modelo{% endif %} de aviso{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/aviso.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:modelos-de-aviso' %}">Modelos de aviso</a> › <span aria-current="page">{% if modelo %}{{ modelo.nome }}{% else %}Novo modelo{% endif %}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>{% if modelo %}Editar modelo{% else %}Novo modelo{% endif %}</h1>

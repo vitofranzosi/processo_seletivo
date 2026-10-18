@@ -1,4 +1,4 @@
-{% comment %}
+/*
 A folha das telas de acesso à gestão (075): a página de acesso, a escolha de identidades e a de
 entrada não configurada. Mora num parcial incluído pelo bloco `estilo_da_pagina` de cada uma, e não
 em `base.html`: as telas operacionais não carregam o que só a entrada usa, e o guardião de classes
@@ -8,7 +8,10 @@ Os tokens são os compartilhados. O que nasce aqui é só o que a entrada precis
 levemente esverdeada, os cinzas com contraste conferido — `--tinta-3` sobre `--fundo-p` dá 5,2:1, o
 cinza mais claro que escreve texto — e o verde profundo da coluna institucional. O verde fica numa
 superfície só; do lado do acesso ele aparece na ação principal e no foco.
-{% endcomment %}
+
+Desde a 091 o parcial é este arquivo, e o bloco de cada tela de acesso o carrega por `<link>`; o
+guardião de classes lê o arquivo pelo endereço do bloco, como lia o `include`.
+*/
 :root{
   --tinta:#0f1a14;--tinta-2:#36433b;--tinta-3:#5f6b64;--linha:#e3e7e4;--linha-forte:#cfd6d1;
   --fundo-p:#f6f7f6;--verde-50:#eef7f1;--verde-100:#d9eee0;--verde-profundo:#0c3b24;
@@ -29,22 +32,22 @@ main:focus{outline:none}
   white-space:nowrap;border:0}
 .i{width:1.125rem;height:1.125rem;flex:none;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;
   stroke-linejoin:round}
-{% comment %}
+/*
 O símbolo do produto. **Não é a marca do Ifes**, que vem do manual de identidade visual da Rede
 Federal e fica fora da 075: é uma lista que se ordena — o que um processo seletivo produz —, no
 lugar onde a marca oficial entraria.
-{% endcomment %}
+*/
 .simbolo{width:2rem;height:2rem;border-radius:8px;background:var(--verde);display:grid;place-items:center;flex:none}
 .simbolo svg{width:1.125rem;height:1.125rem;stroke:var(--branco);fill:none;stroke-width:2.25;stroke-linecap:round}
 .selo-ambiente{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:600;color:var(--amarelo);
   background:var(--amarelo-fundo);border:1px solid #f1dfb8;padding:.2rem .6rem .2rem .5rem;border-radius:999px;white-space:nowrap}
 .selo-ambiente::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:#d48a0b}
 
-{% comment %}
+/*
 A coluna institucional fica presa ao rolar, para que a lista de identidades, que é longa, role
 sozinha. O único elemento visual dela é uma grade de linhas finas que se apaga em direção ao texto
 — não é imagem nem ilustração —, e some no celular.
-{% endcomment %}
+*/
 .acesso{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100vh}
 .produto{position:sticky;top:0;height:100vh;background:var(--verde-profundo);color:var(--branco);
   padding:2.5rem clamp(2rem,5vw,4.5rem);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
@@ -183,3 +186,6 @@ sozinha. O único elemento visual dela é uma grade de linhas finas que se apaga
   .identidade-da-demonstracao{grid-template-columns:auto minmax(0,1fr);padding:.85rem}
   .identidade-da-demonstracao .acessar{grid-column:2;margin-top:.15rem}
 }
+/* O contêiner dos símbolos da entrada, fora do fluxo — era `style="position:absolute"` no `<svg>` até
+   a 091. */
+.simbolos{position:absolute}

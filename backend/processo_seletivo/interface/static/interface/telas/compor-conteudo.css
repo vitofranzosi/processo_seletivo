@@ -1,0 +1,7 @@
+fieldset.secao{max-width:calc(var(--leitura) + 2rem + 2px);padding:.5rem 1rem .6rem;margin-bottom:.5rem}
+fieldset.secao .campo{margin:0}
+.secao>legend [data-estado-texto]{text-transform:none;letter-spacing:0;font-weight:400}
+fieldset.secao.gerada{border:0;background:none;padding:0;margin-bottom:.9rem}
+fieldset.secao.gerada>legend{float:left;padding:0;margin-right:.6rem;line-height:1.5rem}
+fieldset.secao.gerada .ajuda{margin:0;font-size:.8125rem;line-height:1.5rem}
+fieldset.secao.gerada .acao{margin-left:.35rem}

@@ -82,3 +82,31 @@ def folha_aplicada(corpo):
 def folha_da_pagina(cliente, url):
     """A folha que a página daquele endereço aplica, pedida pelo cliente já identificado."""
     return folha_aplicada(cliente.get(url).content)
+
+
+# O endereço que a tag `estatico` recebe, num modelo: `{% estatico 'interface/telas/lista.css' %}`.
+_ESTATICO = re.compile(r"""\{%\s*estatico\s+['"]([^'"]+)['"]\s*%\}""")
+_BLOCO_DE_ESTILO = re.compile(r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", re.S)
+
+
+def estilo_do_bloco(modelo):
+    """O estilo que o `{% block estilo_da_pagina %}` de um modelo carrega, com os comentários (091).
+
+    Até a `091` o bloco **era** o estilo — regras e `{% comment %}` no próprio modelo, ou o
+    `include` de um parcial `_estilo_*`. Desde ela, o bloco só tem `<link>` para arquivos de
+    `interface/telas/` e `interface/grupos/`. Um guardião que continuasse lendo o texto do bloco
+    acharia só endereços, e a negação — "esta regra não está aqui" — passaria sem ler regra
+    nenhuma. Daqui sai o texto dos arquivos, na ordem do bloco, como o bloco era lido.
+
+    `modelo` é o texto do modelo; sem bloco, a resposta é vazia. Arquivo citado e inexistente
+    falha aqui, pelos mesmos *finders* que o servem.
+    """
+    achado = _BLOCO_DE_ESTILO.search(modelo)
+    if not achado:
+        return ""
+    partes = []
+    for caminho in _ESTATICO.findall(achado.group(1)):
+        arquivo = finders.find(caminho)
+        assert arquivo, f"folha citada no bloco e inexistente: {caminho}"
+        partes.append(Path(arquivo).read_text())
+    return "".join(partes)

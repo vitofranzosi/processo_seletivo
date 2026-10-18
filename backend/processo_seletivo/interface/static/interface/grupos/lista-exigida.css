@@ -1,8 +1,8 @@
-{% comment %}
+/*
 As regras da lista exigida (044), incluídas só pelas duas páginas que a mostram — a Mesa e o
 detalhe da consulta. No `base.html` elas iam embutidas em toda página, e a tela de distribuição
 passou do teto de bytes que `tests/performance/test_escala_da_mesa.py` mede.
-{% endcomment %}
+*/
 ul.documentos .razao,ul.nao-se-aplicam .razao{font-size:.8125rem;color:var(--texto-fraco)}
 h3#nao-se-aplicam{margin:1.25rem 0 .5rem;font-size:1rem}
 ul.nao-se-aplicam{list-style:none;margin:0;padding:0;border:1px dashed var(--borda);border-radius:6px}

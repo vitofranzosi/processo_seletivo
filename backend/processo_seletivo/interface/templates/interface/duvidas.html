@@ -1,28 +1,8 @@
 {% extends "interface/base.html" %}
-{% load interface_extras %}
+{% load interface_extras estaticos %}
 {% block titulo %}Respostas do assistente de dúvidas — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Respostas do assistente de dúvidas</span></nav>{% endblock %}
-{% block estilo_da_pagina %}
-{% comment %} As regras desta tela, e só dela (070, contracts/tela.md). O grupo das perguntas quebra
-   linha: sem `flex-wrap`, o `fieldset` cresce até o conteúdo mínimo e alarga a página a 375 px. {% endcomment %}
-.perguntas{display:flex;flex-wrap:wrap;gap:.35rem 1.25rem}
-.perguntas label{flex:1 1 18rem;font-weight:400}
-.resposta{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem;
-  margin:0 0 1.5rem}
-.resposta h2:focus{outline:2px solid var(--verde);outline-offset:2px}
-.versao{color:var(--texto-fraco);font-size:.875rem;margin:0 0 .5rem}
-.tipo{font-weight:600;margin:0 0 .75rem}
-.explicacao{background:var(--cinza-fundo);border-left:4px solid var(--borda);padding:.7rem 1rem;
-  margin:0 0 1rem}
-.referencia{border-top:1px solid var(--borda);padding:.75rem 0;margin:0}
-.referencia h3{font-size:.9375rem;margin:0 0 .25rem}
-.natureza{display:inline-block;font-size:.75rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--verde-texto);margin:0 0 .25rem}
-.literal{white-space:pre-line;overflow-wrap:anywhere;margin:.25rem 0}
-.origem{font-size:.8125rem;color:var(--texto-fraco);margin:.25rem 0 0}
-.futuro{font-size:.8125rem;margin:.25rem 0 0}
-.pontos li{margin:0 0 .5rem}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/duvidas.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Respostas do assistente de dúvidas</h1>
 <p class="sub">{{ processo.title }} · {{ edital.title }}</p>

@@ -194,6 +194,9 @@ def contexto_para(browser, quem):
     barra = os.environ.get("BARRA")
     if barra:
         ctx.add_init_script(f"try {{ localStorage.setItem('gps.barra', '{barra}') }} catch (e) {{}}")
+    # `VIOLACOES=1` (091): as violações da política de cada página, desde o primeiro script.
+    if os.environ.get("VIOLACOES"):
+        ctx.add_init_script(ESCUTAR_VIOLACOES)
     if quem is None:
         return ctx
     pg = ctx.new_page()
@@ -237,9 +240,10 @@ def tentar(browser, contextos, caminho, preferida):
     return None, None, status, final, tipo, tentativas
 
 
-# `ESTILOS=1` (089) acrescenta o resumo das regras que a página aplica (ver `estilos.py`).
+# `ESTILOS=1` (089) acrescenta o resumo das regras que a página aplica (ver `estilos.py`); a 091
+# acrescenta o mesmo resumo como conjunto, e as violações da política.
 sys.path.insert(0, str(Path(__file__).parent))
-from estilos import ESTILOS  # noqa: E402
+from estilos import CONJUNTO, ESCUTAR_VIOLACOES, ESTILOS, VIOLACOES  # noqa: E402
 
 
 def capturar(rid, pg, largura, altura):
@@ -248,6 +252,9 @@ def capturar(rid, pg, largura, altura):
     m = pg.evaluate(MEDIR)
     if os.environ.get("ESTILOS"):
         m["estilos"] = pg.evaluate(ESTILOS)
+        m["conjunto"] = pg.evaluate(CONJUNTO)
+    if os.environ.get("VIOLACOES"):
+        m["violacoes"] = pg.evaluate(VIOLACOES)
     arquivo = SAIDA / "png" / f"{rid}--{largura}.png"
     pg.screenshot(path=str(arquivo), full_page=True)
     m["arquivo"] = arquivo.name

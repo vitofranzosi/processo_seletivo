@@ -17,7 +17,7 @@ from processo_seletivo.interface import acoes, revisao
 from processo_seletivo.interface.acoes import Acao
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM
+from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
 from tests.interface.test_acessibilidade import PORTAL, _estilo_proprio, sem_prosa
 from tests.interface.test_acoes import homologado
 
@@ -145,7 +145,8 @@ def test_a_conducao_destaca_so_o_primeiro_gesto():
     marco = (GESTAO / "marco.html").read_text()
     assert 'class="botao{% if not forloop.first %} secundario{% endif %}"' in marco
     assert '<div class="gestos">' in marco
-    assert re.search(r"\.gestos\{display:flex;flex-wrap:wrap", marco)
+    # A regra mora no arquivo que o bloco da tela carrega (091).
+    assert re.search(r"\.gestos\{display:flex;flex-wrap:wrap", estilo_do_bloco(marco))
 
 
 # --- T1 — a coluna da Lista (FR-1049, FR-1050) -------------------------------------------------

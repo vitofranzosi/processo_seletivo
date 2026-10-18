@@ -1,7 +1,7 @@
 {% extends "interface/base_de_acesso.html" %}
-{% load static %}
+{% load static estaticos %}
 {% block titulo %}Ambiente de demonstração{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
 {% block acesso %}
 <div class="cartao-de-acesso largo">
   <a class="voltar" href="{% url 'interface:identificar' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}"><svg class="i" aria-hidden="true"><use href="#i-voltar"/></svg>Voltar</a>
