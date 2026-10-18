@@ -17,10 +17,11 @@
     <h2 id="acoes-titulo">O que fazer agora</h2>
     <ul class="lista-acoes">
       {% for ato in atos %}
+      {% comment %} A marca descreve o ato, como no Processo e no Edital (090, `FR-2060`). {% endcomment %}
       <li>
         <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}"{% if ato.irreversivel %} aria-describedby="irreversivel-{{ ato.chave }}"{% endif %}>{{ ato.rotulo }}</a>
+        {% if ato.irreversivel %}<span class="marca-irreversivel" id="irreversivel-{{ ato.chave }}">irreversível</span>{% endif %}
       </li>
       {% empty %}
       <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>

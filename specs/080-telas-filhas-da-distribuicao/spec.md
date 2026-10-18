@@ -201,6 +201,9 @@ consultas ficaram de fora porque não foram medidas, e não por decisão.
   cabeçalho de contexto MUST mostrar a trilha da tela, como navegação nomeada: o produto, cada nível
   acima da tela como link, e a própria tela como a página atual — como nas telas da `077`, da `078` e
   da `079` (`FR-1780` da `079`).
+  *Emendada pela [`090`](../090-limpeza-dos-achados-da-etapa-4/spec.md) em 18/10/2026*: em Resultados da Etapa, Trilha da avaliação e Conclusões
+  preservadas, a Alocação por Etapa e a Etapa são link só para quem pode abri-las, e texto para quem
+  não pode (`FR-2062` da `090`).
 - **FR-1801**: Nas seis telas que se abrem a partir da Distribuição, os níveis acima da tela MUST ser
   os da trilha da Distribuição — o Processo, a Alocação por Etapa e a Etapa —, e o rótulo da tela MUST
   ser o que ela já mostrava como página atual. Na Auditoria da comissão, o nível acima MUST ser o
@@ -222,6 +225,9 @@ consultas ficaram de fora porque não foram medidas, e não por decisão.
   edição de um modelo também passaram a ter a trilha no cabeçalho (`FR-1940` da `086`).
 - **FR-1804**: A trilha MUST ser a mesma para quem preside e para quem audita: nenhum nível MUST
   aparecer, sumir ou deixar de ser link conforme quem lê.
+  *Emendada pela [`090`](../090-limpeza-dos-achados-da-etapa-4/spec.md) em 18/10/2026*: nenhum nível aparece nem some conforme quem lê, mas a Alocação
+  por Etapa e a Etapa deixam de ser link para quem não as abre — quem audita sem presidir —, o padrão
+  "nomear não é abrir" da `083` (`FR-2062`, `FR-2063` da `090`).
 - **FR-1805**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
 
@@ -285,6 +291,10 @@ mostrar a Alocação e a Etapa só para a presidência — mas isso pede à view
 entrega hoje, e o pedido proíbe mudar view. A trilha no conteúdo já levava quem audita à Etapa, que
 é tela da presidência: a trilha nova mantém isso e acrescenta a Alocação, e a porta de cada tela de
 destino continua a dela. Fica registrado como achado.
+
+*Substituída pela [`090`](../090-limpeza-dos-achados-da-etapa-4/spec.md) em 18/10/2026*: a porta das três telas já pergunta se quem lê gere a
+comissão, e passou a entregar a resposta à trilha, sem consulta a mais; a Alocação e a Etapa são texto
+para quem só audita (`FR-2062` a `FR-2064` da `090`).
 
 ### D-004 — "Filtrar" tem o desenho de ação principal nas três consultas
 

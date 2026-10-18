@@ -155,6 +155,9 @@ ROTAS_A += [
     ("avisos-do-edital-antes", "avisos-do-edital", f"{EDT}/avisos", "gustavo.gestor", "antes de qualquer aviso"),
     ("aviso-da-chamada", "aviso-da-chamada", f"{MRC}/convocacao/avisos/novo", "gustavo.gestor", ""),
     ("aviso-do-resultado", "aviso-do-resultado", f"{MRC}/avisos/novo", "gustavo.gestor", ""),
+    # A prévia aberta pelos Resultados divulgados, que diz a porta no endereço desde a 090. Quem a
+    # abre é quem abre os Resultados divulgados; antes da 090 o parâmetro não significava nada.
+    ("aviso-do-resultado-pelo-marco", "aviso-do-resultado", f"{MRC}/avisos/novo?de=marco", "paula.publicadora", "porta dos Resultados divulgados (090)"),
 ]
 
 MEDIR = r"""() => {

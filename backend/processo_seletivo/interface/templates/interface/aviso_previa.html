@@ -1,8 +1,8 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Avisar candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
-{% comment %} A trilha é a da porta por onde se chegou (086, D-001): o reenvio, de resultado ou de chamada, pende do aviso anterior, e não da lista. {% endcomment %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › {% if anterior %}<a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <a href="{{ voltar }}">Aviso de {{ anterior.solicitado_em|date:"d/m/Y" }} às {{ anterior.solicitado_em|date:"H:i" }}</a>{% elif universo.origem == "CHAMADA" %}<a href="{{ voltar }}">Convocação</a>{% else %}<a href="{{ voltar }}">Avisos aos candidatos</a>{% endif %} › <span aria-current="page">Avisar candidatos</span></nav>{% endblock %}
+{% comment %} A trilha é a da porta por onde se chegou (086, D-001): o reenvio, de resultado ou de chamada, pende do aviso anterior, e não da lista. A quarta porta, a dos Resultados divulgados, veio com a 090 (`FR-2067`): a trilha é a deles, com a Classificação como lá. {% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › {% if anterior %}<a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <a href="{{ voltar }}">Aviso de {{ anterior.solicitado_em|date:"d/m/Y" }} às {{ anterior.solicitado_em|date:"H:i" }}</a>{% elif universo.origem == "CHAMADA" %}<a href="{{ voltar }}">Convocação</a>{% elif de == "marco" %}{% if pode_ver_a_classificacao %}<a href="{% url 'interface:ordenacao' edital.id marco_id %}">Classificação</a>{% else %}Classificação{% endif %} › <a href="{{ voltar }}">Resultados divulgados</a>{% else %}<a href="{{ voltar }}">Avisos aos candidatos</a>{% endif %} › <span aria-current="page">Avisar candidatos</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Avisar candidatos</h1>
 <p class="sub">{{ universo.cabecalho.processo }} · {{ universo.cabecalho.edital }} · {{ universo.cabecalho.perfil }}{% if universo.cabecalho.marco %} — {{ universo.cabecalho.marco }}{% endif %}</p>
@@ -58,6 +58,7 @@ grava nada.
 {% if modelos and not texto_fixo %}
 <form method="get" action="{{ acao }}">
   {% if natureza %}<input type="hidden" name="natureza" value="{{ natureza }}">{% endif %}
+  {% if de %}<input type="hidden" name="de" value="{{ de }}">{% endif %}
   {% if reenvio and universo.origem != "CHAMADA" %}<input type="hidden" name="reenvio" value="1">{% endif %}
   {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
   {% if comunicacao_id %}<input type="hidden" name="comunicacao" value="{{ comunicacao_id }}">{% endif %}
@@ -78,6 +79,7 @@ grava nada.
   <input type="hidden" name="chave" value="{{ chave }}">
   <input type="hidden" name="assinatura" value="{{ previa.assinatura }}">
   {% if natureza %}<input type="hidden" name="natureza" value="{{ natureza }}">{% endif %}
+  {% if de %}<input type="hidden" name="de" value="{{ de }}">{% endif %}
   {% if reenvio and universo.origem != "CHAMADA" %}<input type="hidden" name="reenvio" value="1">{% endif %}
   {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
   {% if comunicacao_id %}<input type="hidden" name="comunicacao" value="{{ comunicacao_id }}">{% endif %}

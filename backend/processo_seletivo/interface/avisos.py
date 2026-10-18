@@ -189,6 +189,7 @@ def aviso_do_resultado(request, edital_id, marco_id):
         "natureza": natureza,
         "naturezas_pendentes": pendentes,
         "voltar": reverse("interface:avisos-do-edital", args=[edital.id]),
+        **_porta_dos_resultados_divulgados(ator, edital, marco_id, dados.get("de")),
     }
     if request.method == "POST" and request.POST.get("acao") == "confirmar":
         try:
@@ -219,6 +220,29 @@ def aviso_do_resultado(request, edital_id, marco_id):
         return redirect(reverse("interface:aviso", args=[declarado["aviso"]]))
     contexto = _contexto_da_previa(request, ator, universo, motivo=motivo, acao=acao, extra=extra)
     return _renderizar_previa(request, contexto)
+
+
+def _porta_dos_resultados_divulgados(ator, edital, marco_id, porta):
+    """A prévia aberta pelos Resultados divulgados volta a eles (090, `FR-2067`, `FR-2068`).
+
+    **A porta vem do endereço**, e não da página anterior do navegador, que nem sempre vem e daria
+    duas trilhas ao mesmo endereço. Ela só vale para quem abre os Resultados divulgados — as
+    capacidades da consulta de `_edital_para_publicar` —; para os demais, inclusive quem a escrever
+    à mão, a prévia é a dos Avisos aos candidatos, que todo mundo que avisa abre.
+
+    A Classificação entra na trilha como na dos próprios Resultados divulgados: link só para quem a
+    abre. É a única pergunta que custa consulta, e só nesta porta.
+    """
+    if porta != "marco" or not (ator.can("resultado:publicar") or ator.can("auditoria:consultar")):
+        return {}
+    # Importada aqui porque `views` importa este módulo.
+    from processo_seletivo.interface.views import _pode_ver_a_classificacao
+
+    return {
+        "de": "marco",
+        "voltar": reverse("interface:publicacoes-do-marco", args=[edital.id, marco_id]),
+        "pode_ver_a_classificacao": _pode_ver_a_classificacao(ator, edital),
+    }
 
 
 def _depois_de_confirmar(request, ator, declarado):

@@ -1,11 +1,11 @@
 # Feature Specification: A limpeza dos achados da etapa 4
 
-**Feature Branch**: `claude/limpeza-achados-090-a308bc`, sobre a `main` em `46c374cc` (com a `088`); a
-implementação espera a [`089`](../089-folha-estatica-da-gestao/spec.md) na `main`
+**Feature Branch**: `claude/limpeza-achados-090-a308bc`, especificada sobre a `main` em `46c374cc` (com a
+`088`) e implementada sobre `21e36bd4`, com a [`089`](../089-folha-estatica-da-gestao/spec.md)
 
 **Created**: 2026-10-18
 
-**Status**: Especificada — implementação depois do merge do PR 306
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: os quatro achados menores que as revisões e as pesquisas da etapa 4 registraram e não
 corrigiram, que o usuário pediu em 18/10/2026 que virassem um incremento de limpeza. Cada um sai daqui

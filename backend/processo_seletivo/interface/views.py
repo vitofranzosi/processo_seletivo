@@ -6494,7 +6494,7 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     A resposta carrega pontuação e protocolo de candidato, e por isso não fica no cache do
     navegador (013, FR-039).
     """
-    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    ator, edital, etapa, pode_gerir_a_comissao = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
     pagina = resultado_selectors.resultados_da_etapa(
@@ -6537,6 +6537,8 @@ def resultados_da_etapa(request, edital_id, etapa_id):
                 # vocabulário do Edital, e não ao enum do domínio (FR-118).
                 "rotulo_favoravel": rotulos(etapa)[0],
                 "rotulo_desfavoravel": rotulos(etapa)[1],
+                # A Alocação e a Etapa da trilha só para quem as abre (090, `FR-2062`).
+                "pode_gerir_a_comissao": pode_gerir_a_comissao,
             },
         )
     )
@@ -8602,12 +8604,13 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
     pontuação, o parecer e a versão que governava (FR-054). Isso vive no registro append-only do
     domínio, e é o que esta tela lê.
     """
-    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    ator, edital, etapa, pode_gerir_a_comissao = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
     # **Consultar é de dois; reabrir é de um.** A auditoria lê esta página inteira e não age nela,
-    # e é por isso que o formulário de reabertura depende da mesma base que a rota do ato exige.
-    pode_reabrir = pode_gerir_comissao(ator, edital.processo) is not None
+    # e é por isso que o formulário de reabertura depende da mesma base que a rota do ato exige — a
+    # que a porta acabou de perguntar (090).
+    pode_reabrir = pode_gerir_a_comissao
     inscricao = (request.GET.get("inscricao") or "").strip()
     filtro_invalido = None
     procurada = _inscricao_do_filtro(edital, inscricao) if inscricao else None
@@ -8637,6 +8640,7 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
                 "inscricao_filtro": inscricao,
                 "filtro_invalido": filtro_invalido,
                 "pode_reabrir": pode_reabrir,
+                "pode_gerir_a_comissao": pode_gerir_a_comissao,
                 "erro": request.session.pop("erro_da_reabertura", None),
                 "resultado": request.session.pop("resultado_da_reabertura", None),
                 "chave_reabertura": uuid4().hex,
@@ -8673,16 +8677,6 @@ def _inscricao_do_filtro(edital, valor):
     return str(encontrada.id) if encontrada is not None else None
 
 
-def _pode_auditar_a_etapa(ator, edital):
-    """A porta das telas de Etapa: presidência **ou** auditoria (FR-091).
-
-    Separada de `_etapa_para_auditar` porque a tela do recurso precisa **oferecer ou não** o
-    caminho antes de alguém batê-lo: link para porta fechada responde 404, e 404 não explica nada
-    a quem o recebe.
-    """
-    return pode_gerir_comissao(ator, edital.processo) is not None or ator.can("auditoria:consultar")
-
-
 def _etapa_para_auditar(request, edital_id, etapa_id):
     """A porta da consulta: presidência **ou** auditoria — nunca as duas ao mesmo tempo (FR-091).
 
@@ -8695,10 +8689,16 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     abaixo filtra por `institution_scope`, de modo que Edital de outra unidade é indistinguível de
     Edital inexistente (`FR-487`). O que o 404 fazia **a mais** era esconder do ator do mesmo
     escopo a razão de a tela não abrir, e essa parte era ruído, não proteção.
+
+    **Devolve também se quem lê gere a comissão** (090, `FR-2064`). É o primeiro termo da porta, e
+    é a mesma pergunta das portas da Alocação e da Distribuição: a trilha destas telas oferece os
+    dois níveis só a quem os abre (`FR-2062`), e as Conclusões, a reabertura. Recalculá-lo na view
+    custava uma consulta à presidência por tela — que a decisão 003 da `080` deixou de pagar
+    aceitando, na trilha, dois links que respondiam 403 a quem só audita.
     """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return None, None, None
+        return None, None, None, False
     edital = (
         Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
         .select_related("processo")
@@ -8706,8 +8706,9 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
     )
     if edital is None:
         raise Http404
+    gere_a_comissao = pode_gerir_comissao(ator, edital.processo) is not None
     require_authorization_base(
-        _pode_auditar_a_etapa(ator, edital), bases=BASES_DA_GESTAO_OU_AUDITORIA
+        gere_a_comissao or ator.can("auditoria:consultar"), bases=BASES_DA_GESTAO_OU_AUDITORIA
     )
     try:
         etapa = etapa_vigente(edital, etapa_id)
@@ -8715,7 +8716,7 @@ def _etapa_para_auditar(request, edital_id, etapa_id):
         etapa = None
     if etapa is None:
         raise Http404
-    return ator, edital, etapa
+    return ator, edital, etapa, gere_a_comissao
 
 
 @require_http_methods(["GET"])
@@ -8726,7 +8727,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
     inscrição, por avaliador e por operação. As duas primeiras não saem de `aggregate_id` nem de
     `actor_subject` sozinhos, e a razão está em T-016.
     """
-    ator, edital, etapa = _etapa_para_auditar(request, edital_id, etapa_id)
+    ator, edital, etapa, pode_gerir_a_comissao = _etapa_para_auditar(request, edital_id, etapa_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
     operacao = (request.GET.get("operacao") or "").strip()
@@ -8761,6 +8762,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
                 "edital": edital,
                 "etapa": etapa,
                 "da_avaliacao": True,
+                "pode_gerir_a_comissao": pode_gerir_a_comissao,
                 "filtro_invalido": filtro_invalido,
                 "operacao_filtro": operacao,
                 "inscricao_filtro": inscricao,

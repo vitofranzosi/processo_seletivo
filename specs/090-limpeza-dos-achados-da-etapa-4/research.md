@@ -43,6 +43,12 @@ sempre — é ele que consulta a presidência — e o segundo é leitura da iden
 primeiro termo, em vez de recalculá-lo na view, deixa a contagem igual; medir antes e depois, nas três
 telas e para quem preside e quem audita, é o teste (`FR-2064`).
 
+**As Conclusões ficam uma consulta mais baratas.** A view já fazia a mesma pergunta de novo, para
+oferecer a reabertura (`pode_reabrir`), e passa a usar a resposta da porta: 7 → 6, para as duas bases
+(medido em 18/10/2026). Resultados (7) e Trilha da avaliação (13) não mudam. `_pode_auditar_a_etapa`,
+que a porta era a única a chamar, saiu: a pergunta composta mora agora na própria porta, com os dois
+termos separados.
+
 **Por quê é a mesma regra das portas de destino**: a Alocação abre por `_processo_para_gerir` e a
 Distribuição por `_etapa_para_distribuir`; as duas recusam com `pode_gerir_comissao(...) is None`. A
 Distribuição pede ainda a Etapa vigente — a mesma que `_etapa_para_auditar` já exigiu para abrir a tela
@@ -125,13 +131,26 @@ divulgados; com `de=marco` escrito à mão, a trilha não lhe ofereceria uma por
 
 ## R-005 — Testes que mudam
 
-Nenhum teste existente muda de asserção, salvo se a varredura do implement mostrar o contrário. Os
-que prendem a trilha das três consultas (`test_telas_filhas_da_distribuicao.py`) abrem como
-presidência, e a trilha da presidência não muda. Os da prévia (`test_telas_dos_avisos.py`) abrem pelo
-endereço sem `de`, que continua dando a trilha dos Avisos. As anotações de emenda na `080` e na `086`
-não mudam identificador nenhum.
+Três. Dois só no padrão que lê o link do ato: `test_polish_da_057.py::test_o_homologado_tem_publicar_como_unica_cheia`
+e `test_fluxo.py::test_encerrar_nao_se_parece_com_cancelar` esperavam o `>` logo depois do `href`, e o
+link irreversível do Edital passou a ter `aria-describedby` ali (R-001); aceitam agora atributos depois
+do `href`, com a mesma asserção. O terceiro muda de asserção:
+`test_telas_filhas_da_distribuicao.py::test_quem_audita_le_a_mesma_trilha_de_quem_preside`
+provava a `FR-1804` da `080` como estava escrita — a trilha idêntica, byte a byte, para quem preside e
+quem audita, com os dois links que recusam quem audita. Saiu, com um comentário no lugar, e a prova
+nova (o mesmo texto, e só os dois níveis sem link) está no módulo desta feature. A constante
+`DA_AUDITORIA_TAMBEM`, que só ele usava, saiu junto.
 
-Os testes novos ficam em `tests/interface/test_limpeza_dos_achados_da_etapa_4.py`.
+Os demais que prendem a trilha das três consultas abrem como presidência, e a trilha da presidência
+não muda. Os da prévia (`test_telas_dos_avisos.py`) abrem pelo endereço sem `de`, que continua dando a
+trilha dos Avisos; o `test_quem_so_consulta_le_a_mesma_trilha_de_quem_avisa` da `086` lê os Avisos e o
+histórico, que não mudam. As anotações de emenda na `080` e na `086` não mudam identificador nenhum.
+
+Os testes novos ficam em `tests/interface/test_limpeza_dos_achados_da_etapa_4.py`. Contra o código de
+antes, rodados em 18/10/2026 sobre `21e36bd4`: 22 reprovavam — as quatro marcas, as três trilhas e os
+três links de quem audita, a regra do rodapé e as quatro da prévia; as seis de custo reprovavam só por
+falta da constante, que é a medição (Resultados 7, Trilha da avaliação 13, Conclusões 7, para as duas
+bases; a prévia, 10 pelas duas portas, com e sem auditoria).
 
 ## Achados (registrados, não corrigidos)
 

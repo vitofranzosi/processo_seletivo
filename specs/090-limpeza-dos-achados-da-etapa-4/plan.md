@@ -60,9 +60,11 @@ Sem violação a justificar.
 ## Medições previstas
 
 - Consultas por tela, antes e depois, em Resultados, Trilha da avaliação e Conclusões preservadas, com
-  quem preside e com quem só audita: iguais (`FR-2064`). Na prévia: igual pelos Avisos; no máximo +1
-  pelos Resultados divulgados (R-004).
-- Inventário: só a variante nova muda a 1280 px; a 375 px, só as do R-003, e só de altura (`FR-2070`).
+  quem preside e com quem só audita: iguais (`FR-2064`) — medido, 7, 13 e 7 antes; 7, 13 e 6 depois
+  (R-002). Na prévia: igual pelos Avisos; no máximo +1 pelos Resultados divulgados (R-004) — medido,
+  10 antes pelas duas portas.
+- Inventário: nada muda a 1280 px — a variante nova muda o texto da trilha, não a medida —; a 375 px,
+  só as do R-003, e só de altura (`FR-2070`) — medido, quatro.
 
 ## Testes que mudam, e por quê
 

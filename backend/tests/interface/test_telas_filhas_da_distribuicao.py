@@ -40,12 +40,6 @@ FILHAS = {
     "interface:trilha-da-avaliacao": "Trilha da avaliação",
     "interface:conclusoes-preservadas": "Conclusões preservadas",
 }
-# As três que a auditoria também abre (`FR-091` da 012).
-DA_AUDITORIA_TAMBEM = (
-    "interface:resultados-da-etapa",
-    "interface:trilha-da-avaliacao",
-    "interface:conclusoes-preservadas",
-)
 
 
 def ate_a_etapa(contexto):
@@ -129,21 +123,11 @@ def test_na_auditoria_da_comissao_a_trilha_sobe_ao_cabecalho(client, seletor_lig
 # Supervisão, em `test_telas_de_uso_diario.py`.
 
 
-@pytest.mark.parametrize("rota", DA_AUDITORIA_TAMBEM)
-def test_quem_audita_le_a_mesma_trilha_de_quem_preside(
-    client,
-    seletor_ligado,
-    cenario,
-    rota,
-):
-    """`FR-1804`: nenhum nível aparece, some ou deixa de ser link conforme quem lê (D-003)."""
-    argumentos = (cenario["edital"].id, cenario["etapa"])
-    identificar(client, "maria", [])
-    da_presidencia = trilha_unica_no_cabecalho(abrir(client, rota, *argumentos))
-    identificar(client, "ana.auditora", ["auditor"])
-    da_auditoria = trilha_unica_no_cabecalho(abrir(client, rota, *argumentos))
-
-    assert da_auditoria == da_presidencia
+# `test_quem_audita_le_a_mesma_trilha_de_quem_preside` provava aqui a `FR-1804` como estava escrita:
+# trilha idêntica, byte a byte, para quem preside e quem audita — inclusive os dois links que
+# respondem 403 a quem audita (D-003). A 090 emendou a FR (`FR-2062` da 090): o texto continua o
+# mesmo, e a Alocação e a Etapa são texto para quem não as abre. A prova nova está em
+# `test_limpeza_dos_achados_da_etapa_4.py`.
 
 
 # ---- o que acabou de acontecer ---------------------------------------------------------------

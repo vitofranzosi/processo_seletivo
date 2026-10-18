@@ -7,7 +7,7 @@ Um banco de inventário próprio, cópia do mais recente (o seed da demonstraç�
 outra feature:
 
 ```bash
-createdb -T ps_inventario_088 ps_inventario_090
+createdb -T ps_inventario_089 ps_inventario_090
 ```
 
 O servidor, numa porta livre, com o seletor de identidade ligado (sem entrada nova no
@@ -41,13 +41,15 @@ cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.developm
 O mesmo roteiro, antes e depois da mudança, com a barra expandida e recolhida:
 
 ```bash
-cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_090 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ASSISTENTE_PILOTO=true AVISO=<id do aviso do banco> BARRA=expandida PORTA=8197 uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py /caminho/de/saida
+cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_090 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ASSISTENTE_PILOTO=true AVISO=c1841d6c-924b-41a8-8d9a-99a17aacb900 BARRA=expandida PORTA=8197 uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py /caminho/de/saida
 ```
 
 ```bash
 python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-090/resultados.json
 ```
 
-Esperado: nenhum problema; `estouram na nova` vazio nas duas larguras; a 1280 px, só
-`aviso-do-resultado-pelo-marco` diferente (a trilha); a 375 px, além dela, só variantes com o rodapé
-comum, e só de altura. O mesmo com `BARRA=recolhida`, contra `depois-da-090/antes/recolhida/`.
+Esperado: nenhum problema; `estouram na nova` vazio nas duas larguras; a 1280 px, nenhuma variante
+diferente (a de `aviso-do-resultado-pelo-marco` muda a trilha na mesma linha, e não de medida); a 375
+px, só variantes com o rodapé comum, e só de altura — medido em 18/10/2026: `aviso-interromper`,
+`ato-encerrar`, `ato-cancelar` e `processo-ato-ativar`. O mesmo com `BARRA=recolhida`, contra
+`depois-da-090/antes/recolhida/`.
